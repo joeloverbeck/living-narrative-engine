@@ -15,7 +15,8 @@ import { Registrar } from '../registrarHelpers.js';
 import { ActionIndexingService } from '../../turns/services/actionIndexingService';
 import ScopeRegistry from '../../scopeDsl/scopeRegistry.js';
 import ScopeEngine from '../../scopeDsl/engine.js';
-import ScopeCache, { LRUCache } from '../../scopeDsl/cache.js';
+import { LRUCache } from 'lru-cache';
+import ScopeCache from '../../scopeDsl/cache.js';
 
 /**
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
@@ -132,7 +133,7 @@ export function registerInfrastructure(container) {
     tokens.ScopeCache,
     (c) =>
       new ScopeCache({
-        cache: new LRUCache(256),
+        cache: new LRUCache({ max: 256 }),
         scopeEngine: c.resolve(tokens.ScopeEngine),
         safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
         logger: c.resolve(tokens.ILogger),

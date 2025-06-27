@@ -42,28 +42,29 @@ beforeEach(() => {
 
 describe('InitializationService constructor', () => {
   it('creates instance with valid dependencies', () => {
-    expect(() =>
-      new InitializationService({
-        log: { logger },
-        events: { validatedEventDispatcher: dispatcher, safeEventDispatcher },
-        llm: { llmAdapter, llmConfigLoader },
-        persistence: {
-          entityManager,
-          domUiFacade,
-          actionIndex,
-          gameDataRepository,
-          thoughtListener,
-          notesListener,
-          spatialIndexManager,
-        },
-        coreSystems: {
-          modsLoader,
-          scopeRegistry,
-          dataRegistry,
-          systemInitializer,
-          worldInitializer,
-        },
-      })
+    expect(
+      () =>
+        new InitializationService({
+          log: { logger },
+          events: { validatedEventDispatcher: dispatcher, safeEventDispatcher },
+          llm: { llmAdapter, llmConfigLoader },
+          persistence: {
+            entityManager,
+            domUiFacade,
+            actionIndex,
+            gameDataRepository,
+            thoughtListener,
+            notesListener,
+            spatialIndexManager,
+          },
+          coreSystems: {
+            modsLoader,
+            scopeRegistry,
+            dataRegistry,
+            systemInitializer,
+            worldInitializer,
+          },
+        })
     ).not.toThrow();
   });
 

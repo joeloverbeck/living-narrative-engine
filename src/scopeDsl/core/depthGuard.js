@@ -16,6 +16,6 @@ export default function createDepthGuard(maxDepth) {
           maxDepth
         );
       }
-    }
+    },
   };
 }

@@ -1,14 +1,3 @@
-T-06 LRU Cache Implementation
-Replace old cache with side-effect-free version.
-
-Files
-
-scopeDsl/cache/lruCache.js
-
-tests/cache/lruCache.test.js
-
-Implementation (per plan):
-
 export default function createLruCache(max=256){
 const map = new Map();
 function get(k){ if(!map.has(k)) return null;
@@ -18,10 +7,3 @@ else if(map.size>=max) map.delete(map.keys().next().value);
 map.set(k,v);}
 return { get, set, clear: () => map.clear(), get size(){ return map.size; } };
 }
-Tests
-
-Put >max items, oldest evicted.
-
-Hit moves key to MRU.
-
-size getter accurate.

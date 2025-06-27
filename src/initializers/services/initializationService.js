@@ -85,7 +85,13 @@ class InitializationService extends IInitializationService {
    * }} config.coreSystems - Core engine systems.
    * @description Initializes the complete game system.
    */
-  constructor({ log = {}, events = {}, llm = {}, persistence = {}, coreSystems = {} } = {}) {
+  constructor({
+    log = {},
+    events = {},
+    llm = {},
+    persistence = {},
+    coreSystems = {},
+  } = {}) {
     const { logger } = log;
     const { validatedEventDispatcher, safeEventDispatcher } = events;
     const { llmAdapter, llmConfigLoader } = llm;
@@ -98,7 +104,13 @@ class InitializationService extends IInitializationService {
       notesListener,
       spatialIndexManager,
     } = persistence;
-    const { modsLoader, scopeRegistry, dataRegistry, systemInitializer, worldInitializer } = coreSystems;
+    const {
+      modsLoader,
+      scopeRegistry,
+      dataRegistry,
+      systemInitializer,
+      worldInitializer,
+    } = coreSystems;
     super();
 
     assertMethods(

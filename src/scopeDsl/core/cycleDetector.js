@@ -10,10 +10,15 @@ export default function createCycleDetector() {
   return {
     enter(key) {
       if (stack.includes(key)) {
-        throw new ScopeCycleError(`Cycle: ${[...stack, key].join(' -> ')}`, [...stack, key]);
+        throw new ScopeCycleError(`Cycle: ${[...stack, key].join(' -> ')}`, [
+          ...stack,
+          key,
+        ]);
       }
       stack.push(key);
     },
-    leave() { stack.pop(); }
+    leave() {
+      stack.pop();
+    },
   };
 }

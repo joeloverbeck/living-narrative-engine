@@ -16,6 +16,7 @@
     "jsdom": "^26.1.0",
     "json-logic-js": "^2.0.5",
     "lodash": "^4.17.21",
+    "lru-cache": "^11.1.0",
     "pako": "^2.1.0",
     "semver": "^7.7.1",
     "tinyqueue": "^3.0.0",

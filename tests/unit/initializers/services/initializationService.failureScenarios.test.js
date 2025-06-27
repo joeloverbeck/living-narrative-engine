@@ -59,7 +59,10 @@ describe('InitializationService failure scenarios', () => {
         systemInitializer: { initializeAll: jest.fn() },
         worldInitializer: { initializeWorldEntities: jest.fn() },
       },
-      llm: { llmAdapter: { init: jest.fn() }, llmConfigLoader: { loadConfigs: jest.fn() } },
+      llm: {
+        llmAdapter: { init: jest.fn() },
+        llmConfigLoader: { loadConfigs: jest.fn() },
+      },
       persistence: {
         entityManager: {},
         domUiFacade: {},
@@ -76,8 +79,14 @@ describe('InitializationService failure scenarios', () => {
       log: { ...(defaults.log || {}), ...(overrides.log || {}) },
       events: { ...(defaults.events || {}), ...(overrides.events || {}) },
       llm: { ...(defaults.llm || {}), ...(overrides.llm || {}) },
-      persistence: { ...(defaults.persistence || {}), ...(overrides.persistence || {}) },
-      coreSystems: { ...(defaults.coreSystems || {}), ...(overrides.coreSystems || {}) },
+      persistence: {
+        ...(defaults.persistence || {}),
+        ...(overrides.persistence || {}),
+      },
+      coreSystems: {
+        ...(defaults.coreSystems || {}),
+        ...(overrides.coreSystems || {}),
+      },
     };
     return new InitializationService(deps);
   };
@@ -85,7 +94,9 @@ describe('InitializationService failure scenarios', () => {
   it('fails when ModsLoader.loadMods rejects', async () => {
     const error = new Error('load');
     const svc = createService({
-      coreSystems: { modsLoader: { loadMods: jest.fn().mockRejectedValueOnce(error) } },
+      coreSystems: {
+        modsLoader: { loadMods: jest.fn().mockRejectedValueOnce(error) },
+      },
     });
     const result = await svc.runInitializationSequence(WORLD);
     expect(result.success).toBe(false);

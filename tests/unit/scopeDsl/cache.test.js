@@ -3,7 +3,8 @@
  * @description Tests for src/scopeDsl/cache.js - Caching wrapper for scope resolution
  */
 
-import ScopeCache, { LRUCache } from '../../../src/scopeDsl/cache.js';
+import { LRUCache } from 'lru-cache';
+import ScopeCache from '../../../src/scopeDsl/cache.js';
 import { TURN_STARTED_ID } from '../../../src/constants/eventIds.js';
 
 // Mock cache implementation for testing
@@ -24,7 +25,7 @@ class MockCache {
     this.data.clear();
   }
 
-  size() {
+  get size() {
     return this.data.size;
   }
 }
@@ -185,7 +186,7 @@ describe('ScopeCache', () => {
         mockRuntimeCtx
       );
       expect(result).toBe(expectedResult);
-      expect(mockCache.size()).toBe(1);
+      expect(mockCache.size).toBe(1);
     });
 
     test('returns cached result on subsequent identical calls', () => {
@@ -205,7 +206,7 @@ describe('ScopeCache', () => {
       expect(mockScopeEngine.resolveFn).toHaveBeenCalledTimes(1); // Only called once
       expect(result1).toBe(expectedResult);
       expect(result2).toBe(expectedResult);
-      expect(mockCache.size()).toBe(1);
+      expect(mockCache.size).toBe(1);
     });
 
     test('different ASTs create separate cache entries', () => {
@@ -222,7 +223,7 @@ describe('ScopeCache', () => {
       cache.resolve(mockAst2, mockActorEntity, mockRuntimeCtx);
 
       expect(mockScopeEngine.resolveFn).toHaveBeenCalledTimes(2);
-      expect(mockCache.size()).toBe(2);
+      expect(mockCache.size).toBe(2);
     });
 
     test('different actor IDs create separate cache entries', () => {
@@ -239,7 +240,7 @@ describe('ScopeCache', () => {
       cache.resolve(mockAst, mockActorEntity2, mockRuntimeCtx);
 
       expect(mockScopeEngine.resolveFn).toHaveBeenCalledTimes(2);
-      expect(mockCache.size()).toBe(2);
+      expect(mockCache.size).toBe(2);
     });
   });
 
@@ -253,7 +254,7 @@ describe('ScopeCache', () => {
 
       // Add something to cache
       cache.resolve(mockAst, mockActorEntity, mockRuntimeCtx);
-      expect(mockCache.size()).toBe(1);
+      expect(mockCache.size).toBe(1);
 
       // Dispatch turn started event
       mockSafeEventDispatcher.dispatch(TURN_STARTED_ID, {
@@ -261,7 +262,7 @@ describe('ScopeCache', () => {
       });
 
       // Cache should be cleared
-      expect(mockCache.size()).toBe(0);
+      expect(mockCache.size).toBe(0);
       expect(mockLogger.debugCalls).toContain(
         'ScopeCache: Turn started, clearing cache'
       );
@@ -316,7 +317,7 @@ describe('ScopeCache', () => {
     });
 
     test('returns maxSize when available from cache implementation', () => {
-      const lruCache = new LRUCache(128);
+      const lruCache = new LRUCache({ max: 128 });
       const scopeCache = new ScopeCache({
         cache: lruCache,
         scopeEngine: mockScopeEngine,
@@ -377,7 +378,7 @@ describe('ScopeCache', () => {
 
   describe('LRU behavior with LRUCache', () => {
     test('evicts least recently used entries when cache is full', () => {
-      const lruCache = new LRUCache(2); // Small cache for testing
+      const lruCache = new LRUCache({ max: 2 }); // Small cache for testing
       const cachedScopeEngine = new ScopeCache({
         cache: lruCache,
         scopeEngine: mockScopeEngine,
@@ -405,7 +406,7 @@ describe('ScopeCache', () => {
         mockActorEntity,
         mockRuntimeCtx
       );
-      expect(lruCache.size()).toBe(2);
+      expect(lruCache.size).toBe(2);
 
       // Add one more entry - should evict the first one
       cachedScopeEngine.resolve(
@@ -413,7 +414,7 @@ describe('ScopeCache', () => {
         mockActorEntity,
         mockRuntimeCtx
       );
-      expect(lruCache.size()).toBe(2); // Still at max size
+      expect(lruCache.size).toBe(2); // Still at max size
 
       // The first entry should be evicted, so calling it again should hit the ScopeEngine
       cachedScopeEngine.resolve(

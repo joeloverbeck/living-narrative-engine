@@ -9,9 +9,9 @@ import { UnknownAstNodeError } from '../../errors/unknownAstNodeError.js';
 export default function createDispatcher(resolvers) {
   return {
     resolve(node, ctx) {
-      const r = resolvers.find(x => x.canResolve(node));
+      const r = resolvers.find((x) => x.canResolve(node));
       if (!r) throw new UnknownAstNodeError(node.type);
       return r.resolve(node, ctx);
-    }
+    },
   };
 }
