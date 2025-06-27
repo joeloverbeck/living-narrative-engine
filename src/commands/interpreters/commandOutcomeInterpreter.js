@@ -49,11 +49,19 @@ class CommandOutcomeInterpreter extends ICommandOutcomeInterpreter {
     );
   }
 
-  async interpret(result, turnContext) {
+  /**
+   * Validate the provided turn context and return the actor id.
+   *
+   * @param {ITurnContext} turnContext - Current turn context.
+   * @returns {string} Actor identifier from the context.
+   * @throws {Error} If the context or actor is invalid.
+   * @private
+   */
+  #validateTurnContext(turnContext) {
     if (!turnContext || typeof turnContext.getActor !== 'function') {
       const errorMsg = `CommandOutcomeInterpreter: Invalid turnContext provided.`;
       this.#logger.error(errorMsg, { receivedContextType: typeof turnContext });
-      await safeDispatchError(
+      safeDispatchError(
         this.#dispatcher,
         'Invalid turn context received by CommandOutcomeInterpreter.',
         {
@@ -69,7 +77,7 @@ class CommandOutcomeInterpreter extends ICommandOutcomeInterpreter {
     if (!actor || !actor.id) {
       const errorMsg = `CommandOutcomeInterpreter: Could not retrieve a valid actor or actor ID from turnContext.`;
       this.#logger.error(errorMsg, { actorInContext: actor });
-      await safeDispatchError(
+      safeDispatchError(
         this.#dispatcher,
         'Invalid actor in turn context for CommandOutcomeInterpreter.',
         {
@@ -80,19 +88,59 @@ class CommandOutcomeInterpreter extends ICommandOutcomeInterpreter {
       );
       throw new Error(errorMsg);
     }
-    const actorId = actor.id;
-    const originalInput = result.originalInput || '';
 
+    return actor.id;
+  }
+
+  /**
+   * Validate the command processor result object.
+   *
+   * @param {object} result - Result from the command processor.
+   * @param {string} actorId - Actor identifier for diagnostics.
+   * @returns {void}
+   * @throws {Error} If the result is invalid.
+   * @private
+   */
+  #validateResult(result, actorId) {
     if (!result || typeof result.success !== 'boolean') {
       const baseErrorMsg = `CommandOutcomeInterpreter: Invalid CommandResult - 'success' boolean is missing. Actor: ${actorId}.`;
       this.#logger.error(baseErrorMsg, { receivedResult: result });
-      await safeDispatchError(this.#dispatcher, baseErrorMsg, {
+      safeDispatchError(this.#dispatcher, baseErrorMsg, {
         raw: `Actor ${actorId}, Received Result: ${JSON.stringify(result)}`,
         stack: new Error().stack,
         timestamp: new Date().toISOString(),
       });
       throw new Error(baseErrorMsg);
     }
+  }
+
+  /**
+   * Resolve a meaningful actionId from the result and context.
+   *
+   * @param {object} result - Result from the command processor.
+   * @param {ITurnContext} turnContext - Current turn context.
+   * @returns {string} The resolved action identifier.
+   * @private
+   */
+  #resolveActionId(result, turnContext) {
+    let processedActionId = result.actionResult?.actionId;
+    if (typeof processedActionId !== 'string' || !processedActionId.trim()) {
+      const actorId = turnContext.getActor().id;
+      const chosenAction = turnContext.getChosenAction();
+      processedActionId =
+        chosenAction?.actionDefinitionId || 'core:unknown_action';
+      this.#logger.debug(
+        `CommandOutcomeInterpreter: actor ${actorId}: result.actionResult.actionId ('${result.actionResult?.actionId}') invalid/missing. Using action identifier: '${processedActionId}'.`
+      );
+    }
+    return processedActionId;
+  }
+
+  async interpret(result, turnContext) {
+    const actorId = this.#validateTurnContext(turnContext);
+    const originalInput = result.originalInput || '';
+
+    this.#validateResult(result, actorId);
 
     // result.turnEnded from CP is true if CP failed, false if CP succeeded.
     const cpFailureEndsTurn =
@@ -102,16 +150,7 @@ class CommandOutcomeInterpreter extends ICommandOutcomeInterpreter {
       `CommandOutcomeInterpreter: Interpreting for ${actorId}. CP_Success=${result.success}, CP_TurnEndedOnFail=${cpFailureEndsTurn}, Input="${originalInput}"`
     );
 
-    // Determine a valid actionId
-    let processedActionId = result.actionResult?.actionId;
-    if (typeof processedActionId !== 'string' || !processedActionId.trim()) {
-      const chosenAction = turnContext.getChosenAction(); // Might be null if not set or context changed
-      processedActionId =
-        chosenAction?.actionDefinitionId || 'core:unknown_action';
-      this.#logger.debug(
-        `CommandOutcomeInterpreter: actor ${actorId}: result.actionResult.actionId ('${result.actionResult?.actionId}') invalid/missing. Using action identifier: '${processedActionId}'.`
-      );
-    }
+    const processedActionId = this.#resolveActionId(result, turnContext);
 
     if (result.success) {
       const directive = TurnDirective.WAIT_FOR_EVENT;
