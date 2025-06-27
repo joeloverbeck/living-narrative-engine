@@ -608,33 +608,30 @@ class TurnManager extends ITurnManager {
       }
     }
 
-    // Schedule advanceTurn to run after the current event processing stack clears.
-    this.#setTimeout(() => {
-      // advanceTurn is async, so if we want to catch errors from it, we should.
-      this.advanceTurn().catch((advanceTurnError) => {
-        safeDispatchError(
-          this.#dispatcher,
-          'Error during scheduled turn advancement',
-          { error: advanceTurnError.message, entityId: endedActorId }
-        );
-        // This is a critical failure in turn advancement, dispatch system error and stop.
-        this.#dispatchSystemError(
-          'Critical error during scheduled turn advancement.',
-          advanceTurnError
-        ).catch((e) =>
-          logError(
-            this.#logger,
-            'Failed to dispatch system error for advanceTurn failure',
-            e
-          )
-        );
-        this.stop().catch((e) =>
-          this.#logger.error(
-            `Failed to stop manager after advanceTurn failure: ${e.message}`
-          )
-        );
-      });
-    }, 0);
+    // Advance the turn asynchronously via the subscription's scheduler.
+    this.advanceTurn().catch((advanceTurnError) => {
+      safeDispatchError(
+        this.#dispatcher,
+        'Error during scheduled turn advancement',
+        { error: advanceTurnError.message, entityId: endedActorId }
+      );
+      // This is a critical failure in turn advancement, dispatch system error and stop.
+      this.#dispatchSystemError(
+        'Critical error during scheduled turn advancement.',
+        advanceTurnError
+      ).catch((e) =>
+        logError(
+          this.#logger,
+          'Failed to dispatch system error for advanceTurn failure',
+          e
+        )
+      );
+      this.stop().catch((e) =>
+        this.#logger.error(
+          `Failed to stop manager after advanceTurn failure: ${e.message}`
+        )
+      );
+    });
   }
 
   /**
@@ -667,30 +664,6 @@ class TurnManager extends ITurnManager {
       },
       this.#logger
     );
-  }
-
-  /**
-   * Wrapper for scheduler.setTimeout.
-   *
-   * @param {() => void} fn - Callback to execute.
-   * @param {number} ms - Delay in milliseconds.
-   * @returns {any} Timeout identifier.
-   * @private
-   */
-  #setTimeout(fn, ms) {
-    return this.#scheduler.setTimeout(fn, ms);
-  }
-
-  /**
-   * Wrapper for scheduler.clearTimeout.
-   *
-   * @param {any} id - Timeout identifier.
-   * @returns {void}
-   * @private
-   */
-  // eslint-disable-next-line no-unused-private-class-members
-  #clearTimeout(id) {
-    this.#scheduler.clearTimeout(id);
   }
 }
 
