@@ -25,15 +25,10 @@ import { InvalidInstanceIdError } from '../../errors/invalidInstanceIdError.js';
  * @returns {void}
  * @private
  */
-function _assertIds(methodName, instanceId, componentTypeId, logger) {
+function _assertIds(context, instanceId, componentTypeId, logger) {
   try {
-    assertValidId(instanceId, methodName, logger);
-    assertNonBlankString(
-      componentTypeId,
-      'componentTypeId',
-      methodName,
-      logger
-    );
+    assertValidId(instanceId, context, logger);
+    assertNonBlankString(componentTypeId, 'componentTypeId', context, logger);
   } catch (err) {
     logger.error(err);
     throw new InvalidArgumentError(`Invalid ID: ${err.message}`);
@@ -47,18 +42,20 @@ function _assertIds(methodName, instanceId, componentTypeId, logger) {
  * @param {string} componentTypeId - Component type ID.
  * @param {object} componentData - Raw component data.
  * @param {import('../../interfaces/coreServices.js').ILogger} logger - Logger for reporting issues.
+ * @param {string} [context='EntityManager.addComponent'] - Method context for error messages.
  * @throws {InvalidArgumentError} If parameters are invalid.
  */
 export function validateAddComponentParams(
   instanceId,
   componentTypeId,
   componentData,
-  logger
+  logger,
+  context = 'EntityManager.addComponent'
 ) {
-  _assertIds('EntityManager.addComponent', instanceId, componentTypeId, logger);
+  _assertIds(context, instanceId, componentTypeId, logger);
 
   if (componentData === null) {
-    const errorMsg = `EntityManager.addComponent: componentData cannot be null for ${componentTypeId} on ${instanceId}`;
+    const errorMsg = `${context}: componentData cannot be null for ${componentTypeId} on ${instanceId}`;
     logger.error(errorMsg, {
       componentTypeId,
       instanceId,
@@ -68,7 +65,7 @@ export function validateAddComponentParams(
 
   if (componentData !== undefined && typeof componentData !== 'object') {
     const receivedType = typeof componentData;
-    const errorMsg = `EntityManager.addComponent: componentData for ${componentTypeId} on ${instanceId} must be an object. Received: ${receivedType}`;
+    const errorMsg = `${context}: componentData for ${componentTypeId} on ${instanceId} must be an object. Received: ${receivedType}`;
     logger.error(errorMsg, {
       componentTypeId,
       instanceId,
@@ -84,19 +81,16 @@ export function validateAddComponentParams(
  * @param {string} instanceId - Entity instance ID.
  * @param {string} componentTypeId - Component type ID.
  * @param {import('../../interfaces/coreServices.js').ILogger} logger - Logger for reporting issues.
+ * @param {string} [context='EntityManager.removeComponent'] - Method context for error messages.
  * @throws {InvalidArgumentError} If parameters are invalid.
  */
 export function validateRemoveComponentParams(
   instanceId,
   componentTypeId,
-  logger
+  logger,
+  context = 'EntityManager.removeComponent'
 ) {
-  _assertIds(
-    'EntityManager.removeComponent',
-    instanceId,
-    componentTypeId,
-    logger
-  );
+  _assertIds(context, instanceId, componentTypeId, logger);
 }
 
 /**

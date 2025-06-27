@@ -33,6 +33,15 @@ export class SpatialIndexSynchronizer {
    * @param {ISafeEventDispatcher} dependencies.safeEventDispatcher
    * @param {ILogger} dependencies.logger
    */
+  /**
+   * Initialize the synchronizer with required dependencies.
+   * @description Constructor for SpatialIndexSynchronizer.
+   *
+   * @param {object} dependencies - Constructor dependencies.
+   * @param {ISpatialIndexManager} dependencies.spatialIndexManager - Spatial index manager instance.
+   * @param {ISafeEventDispatcher} dependencies.safeEventDispatcher - Event dispatcher.
+   * @param {ILogger} dependencies.logger - Logger instance.
+   */
   constructor({ spatialIndexManager, safeEventDispatcher, logger }) {
     /** @private */
     this.spatialIndex = spatialIndexManager;
@@ -62,19 +71,36 @@ export class SpatialIndexSynchronizer {
   }
 
   /**
-   * Handles the creation or reconstruction of a new entity.
+   * Normalize an event object or payload to just the payload.
+   * @description Normalize an event object or payload to just the payload.
    *
-   * @param {EntityCreatedPayload | {type: string, payload: EntityCreatedPayload}} eventOrPayload
+   * @private
+   * @param {object|{payload: object}} eventOrPayload - Raw payload or event bus object.
+   * @returns {object|null} The extracted payload, or null if invalid.
+   */
+  #normalizePayload(eventOrPayload) {
+    const payload = eventOrPayload?.payload ?? eventOrPayload;
+    if (!payload || typeof payload !== 'object') {
+      return null;
+    }
+    return payload;
+  }
+
+  /**
+   * Handle the creation or reconstruction of a new entity.
+   * @description Handles the creation or reconstruction of a new entity.
+   * @param {EntityCreatedPayload | {type: string, payload: EntityCreatedPayload}} eventOrPayload - Event object or raw payload.
    */
   onEntityAdded(eventOrPayload) {
-    // EventBus passes { type, payload }, but we need just the payload
-    // Handle both formats for robustness
-    const payload = eventOrPayload?.payload || eventOrPayload;
-    if (!payload || typeof payload !== 'object') {
-      this.logger.warn('SpatialIndexSynchronizer.onEntityAdded: Invalid payload received', eventOrPayload);
+    const payload = this.#normalizePayload(eventOrPayload);
+    if (!payload) {
+      this.logger.warn(
+        'SpatialIndexSynchronizer.onEntityAdded: Invalid payload received',
+        eventOrPayload
+      );
       return;
     }
-    
+
     const { entity } = payload;
     if (!entity) return;
     this.logger.debug(
@@ -100,19 +126,20 @@ export class SpatialIndexSynchronizer {
   }
 
   /**
-   * Handles the removal of an entity.
-   *
-   * @param {EntityRemovedPayload | {type: string, payload: EntityRemovedPayload}} eventOrPayload
+   * Handle the removal of an entity.
+   * @description Handles the removal of an entity.
+   * @param {EntityRemovedPayload | {type: string, payload: EntityRemovedPayload}} eventOrPayload - Event object or raw payload.
    */
   onEntityRemoved(eventOrPayload) {
-    // EventBus passes { type, payload }, but we need just the payload
-    // Handle both formats for robustness
-    const payload = eventOrPayload?.payload || eventOrPayload;
-    if (!payload || typeof payload !== 'object') {
-      this.logger.warn('SpatialIndexSynchronizer.onEntityRemoved: Invalid payload received', eventOrPayload);
+    const payload = this.#normalizePayload(eventOrPayload);
+    if (!payload) {
+      this.logger.warn(
+        'SpatialIndexSynchronizer.onEntityRemoved: Invalid payload received',
+        eventOrPayload
+      );
       return;
     }
-    
+
     const { entity } = payload;
     if (!entity) return;
     const position = entity.getComponentData(POSITION_COMPONENT_ID);
@@ -126,20 +153,20 @@ export class SpatialIndexSynchronizer {
   }
 
   /**
-   * Handles changes to an entity's components, specifically looking for position changes.
-   * This now correctly uses the old and new component data to update the index.
-   *
-   * @param {ComponentAddedPayload | ComponentRemovedPayload | {type: string, payload: ComponentAddedPayload | ComponentRemovedPayload}} eventOrPayload
+   * Handle changes to an entity's components, updating the spatial index when position changes.
+   * @description Handles changes to an entity's components, updating the spatial index when position changes.
+   * @param {ComponentAddedPayload | ComponentRemovedPayload | {type: string, payload: ComponentAddedPayload | ComponentRemovedPayload}} eventOrPayload - Event object or raw payload.
    */
   onPositionChanged(eventOrPayload) {
-    // EventBus passes { type, payload }, but we need just the payload
-    // Handle both formats for robustness
-    const payload = eventOrPayload?.payload || eventOrPayload;
-    if (!payload || typeof payload !== 'object') {
-      this.logger.warn('SpatialIndexSynchronizer.onPositionChanged: Invalid payload received', eventOrPayload);
+    const payload = this.#normalizePayload(eventOrPayload);
+    if (!payload) {
+      this.logger.warn(
+        'SpatialIndexSynchronizer.onPositionChanged: Invalid payload received',
+        eventOrPayload
+      );
       return;
     }
-    
+
     const { entity, componentTypeId, oldComponentData } = payload;
     // This handler only cares about the position component
     if (componentTypeId !== POSITION_COMPONENT_ID) {

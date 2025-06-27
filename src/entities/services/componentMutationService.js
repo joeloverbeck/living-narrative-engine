@@ -102,40 +102,6 @@ export class ComponentMutationService {
   }
 
   /**
-   * Validate parameters for addComponent.
-   *
-   * @private
-   * @param {string} instanceId - Entity instance ID.
-   * @param {string} componentTypeId - Component type ID.
-   * @param {object} componentData - Raw component data.
-   * @throws {InvalidArgumentError} If parameters are invalid.
-   */
-  #validateAddComponentParams(instanceId, componentTypeId, componentData) {
-    validateAddComponentParamsUtil(
-      instanceId,
-      componentTypeId,
-      componentData,
-      this.#logger
-    );
-  }
-
-  /**
-   * Validate parameters for removeComponent.
-   *
-   * @private
-   * @param {string} instanceId - Entity instance ID.
-   * @param {string} componentTypeId - Component type ID.
-   * @throws {InvalidArgumentError} If parameters are invalid.
-   */
-  #validateRemoveComponentParams(instanceId, componentTypeId) {
-    validateRemoveComponentParamsUtil(
-      instanceId,
-      componentTypeId,
-      this.#logger
-    );
-  }
-
-  /**
    * Adds or updates a component on an existing entity instance.
    *
    * @param {string} instanceId - The ID of the entity instance.
@@ -146,10 +112,12 @@ export class ComponentMutationService {
    * @throws {ValidationError} If component data validation fails.
    */
   addComponent(instanceId, componentTypeId, componentData) {
-    this.#validateAddComponentParams(
+    validateAddComponentParamsUtil(
       instanceId,
       componentTypeId,
-      componentData
+      componentData,
+      this.#logger,
+      'ComponentMutationService.addComponent'
     );
 
     const entity = this.#entityRepository.get(instanceId);
@@ -219,7 +187,12 @@ export class ComponentMutationService {
    * @throws {Error} If component override does not exist or removal fails.
    */
   removeComponent(instanceId, componentTypeId) {
-    this.#validateRemoveComponentParams(instanceId, componentTypeId);
+    validateRemoveComponentParamsUtil(
+      instanceId,
+      componentTypeId,
+      this.#logger,
+      'ComponentMutationService.removeComponent'
+    );
 
     const entity = this.#entityRepository.get(instanceId);
     if (!entity) {
