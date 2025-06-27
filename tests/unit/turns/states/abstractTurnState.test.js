@@ -1,5 +1,9 @@
 import { describe, test, expect, jest, beforeEach } from '@jest/globals';
 import { AbstractTurnState } from '../../../../src/turns/states/abstractTurnState.js';
+import {
+  resolveLogger,
+  resolveSafeDispatcher,
+} from '../../../../src/turns/states/helpers/contextUtils.js';
 
 class TestState extends AbstractTurnState {}
 
@@ -24,16 +28,14 @@ const makeInvalidHandler = (logger = makeLogger()) => ({
   requestIdleStateTransition: jest.fn().mockResolvedValue(undefined),
 });
 
-describe('AbstractTurnState._resolveLogger', () => {
+describe('resolveLogger helper', () => {
   let logger;
   let handler;
-  let state;
 
   beforeEach(() => {
     jest.clearAllMocks();
     logger = makeLogger();
     handler = makeHandler(logger);
-    state = new TestState(handler);
   });
 
   test('returns logger from turn context when available', () => {
@@ -42,7 +44,7 @@ describe('AbstractTurnState._resolveLogger', () => {
     const consoleSpy = jest
       .spyOn(console, 'error')
       .mockImplementation(() => {});
-    const result = state._resolveLogger(ctx, handler);
+    const result = resolveLogger(ctx, handler);
     expect(result).toBe(ctxLogger);
     expect(ctx.getLogger).toHaveBeenCalled();
     expect(consoleSpy).not.toHaveBeenCalled();
@@ -58,7 +60,7 @@ describe('AbstractTurnState._resolveLogger', () => {
     const consoleSpy = jest
       .spyOn(console, 'error')
       .mockImplementation(() => {});
-    const result = state._resolveLogger(ctx, handler);
+    const result = resolveLogger(ctx, handler);
     expect(result).toBe(logger);
     expect(consoleSpy).toHaveBeenCalledTimes(1);
     expect(consoleSpy.mock.calls[0][0]).toMatch(
@@ -79,7 +81,7 @@ describe('AbstractTurnState._resolveLogger', () => {
     const consoleSpy = jest
       .spyOn(console, 'error')
       .mockImplementation(() => {});
-    const result = state._resolveLogger(ctx, handler);
+    const result = resolveLogger(ctx, handler);
     expect(result).toBe(console);
     expect(consoleSpy).toHaveBeenCalledTimes(2);
     expect(consoleSpy.mock.calls[1][0]).toMatch(
@@ -89,16 +91,14 @@ describe('AbstractTurnState._resolveLogger', () => {
   });
 });
 
-describe('AbstractTurnState._getSafeEventDispatcher', () => {
+describe('resolveSafeDispatcher helper', () => {
   let logger;
   let handler;
-  let state;
 
   beforeEach(() => {
     jest.clearAllMocks();
     logger = makeLogger();
     handler = makeHandler(logger);
-    state = new TestState(handler);
   });
 
   test('returns dispatcher from context when available', () => {
@@ -107,7 +107,7 @@ describe('AbstractTurnState._getSafeEventDispatcher', () => {
       getLogger: jest.fn(() => logger),
       getSafeEventDispatcher: jest.fn(() => dispatcher),
     };
-    const result = state._getSafeEventDispatcher(ctx, handler);
+    const result = resolveSafeDispatcher(ctx, handler);
     expect(result).toBe(dispatcher);
     expect(logger.warn).not.toHaveBeenCalled();
     expect(logger.error).not.toHaveBeenCalled();
@@ -121,7 +121,7 @@ describe('AbstractTurnState._getSafeEventDispatcher', () => {
       getLogger: jest.fn(() => logger),
       getSafeEventDispatcher: jest.fn(() => null),
     };
-    const result = state._getSafeEventDispatcher(ctx, handler);
+    const result = resolveSafeDispatcher(ctx, handler);
     expect(result).toBe(dispatcher);
     expect(handler.getSafeEventDispatcher).toHaveBeenCalled();
     expect(logger.warn).toHaveBeenCalledTimes(1);
@@ -137,7 +137,7 @@ describe('AbstractTurnState._getSafeEventDispatcher', () => {
         throw new Error('boom');
       }),
     };
-    const result = state._getSafeEventDispatcher(ctx, handler);
+    const result = resolveSafeDispatcher(ctx, handler);
     expect(result).toBe(dispatcher);
     expect(handler.getSafeEventDispatcher).toHaveBeenCalled();
     expect(logger.error).toHaveBeenCalledTimes(1);
@@ -149,7 +149,7 @@ describe('AbstractTurnState._getSafeEventDispatcher', () => {
       getLogger: jest.fn(() => logger),
       getSafeEventDispatcher: jest.fn(() => null),
     };
-    const result = state._getSafeEventDispatcher(ctx, handler);
+    const result = resolveSafeDispatcher(ctx, handler);
     expect(result).toBeNull();
     expect(logger.warn).toHaveBeenCalledTimes(1);
     expect(logger.warn.mock.calls[0][0]).toMatch(/unavailable/);
