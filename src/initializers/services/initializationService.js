@@ -238,7 +238,12 @@ class InitializationService extends IInitializationService {
         logger: this.#logger,
       }).validate(worldName);
       await this.#initializeScopeRegistry();
-      await this.#initLlmAdapter();
+      const llmReady = await this.#initLlmAdapter();
+      if (llmReady === false) {
+        throw new SystemInitializationError(
+          'LLM adapter initialization failed.'
+        );
+      }
       await this.#initSystems();
       await this.#initWorld(worldName);
       this.#setupPersistenceListeners();
@@ -314,6 +319,14 @@ class InitializationService extends IInitializationService {
     this.#logger.debug('ScopeRegistry initialized.');
   }
 
+  /**
+   * Attempts to initialize the configured LLM adapter.
+   *
+   * @private
+   * @async
+   * @returns {Promise<boolean>} `true` if the adapter is initialized and
+   *   operational, otherwise `false`.
+   */
   async #initLlmAdapter() {
     this.#logger.debug(
       'InitializationService: Attempting to initialize ConfigurableLLMAdapter...'
@@ -326,7 +339,7 @@ class InitializationService extends IInitializationService {
       this.#logger.error(
         'InitializationService: No ILLMAdapter provided. Skipping initialization.'
       );
-      return;
+      return false;
     }
 
     // Abort if adapter lacks an init method
@@ -334,7 +347,7 @@ class InitializationService extends IInitializationService {
       this.#logger.error(
         'InitializationService: ILLMAdapter missing required init() method.'
       );
-      return;
+      return false;
     }
 
     // Skip if adapter already initialized
@@ -342,10 +355,23 @@ class InitializationService extends IInitializationService {
       typeof adapter.isInitialized === 'function' &&
       adapter.isInitialized()
     ) {
+      if (typeof adapter.isOperational === 'function') {
+        if (!adapter.isOperational()) {
+          this.#logger.warn(
+            'InitializationService: ConfigurableLLMAdapter already initialized but not operational.'
+          );
+          return false;
+        }
+        this.#logger.debug(
+          'InitializationService: ConfigurableLLMAdapter already initialized. Skipping.'
+        );
+        return true;
+      }
+
       this.#logger.debug(
-        'InitializationService: ConfigurableLLMAdapter already initialized. Skipping.'
+        'InitializationService: ConfigurableLLMAdapter already initialized (no operational check available).'
       );
-      return;
+      return true;
     }
 
     const configLoader = this.#llmConfigLoader;
@@ -353,7 +379,7 @@ class InitializationService extends IInitializationService {
       this.#logger.error(
         'InitializationService: LlmConfigLoader missing or invalid. Cannot initialize adapter.'
       );
-      return;
+      return false;
     }
 
     this.#logger.debug(
@@ -363,18 +389,24 @@ class InitializationService extends IInitializationService {
     try {
       await adapter.init({ llmConfigLoader: configLoader });
 
-      if (
-        typeof adapter.isOperational === 'function' &&
-        adapter.isOperational()
-      ) {
-        this.#logger.debug(
-          'InitializationService: ConfigurableLLMAdapter initialized successfully and is operational.'
-        );
-      } else {
+      if (typeof adapter.isOperational === 'function') {
+        if (adapter.isOperational()) {
+          this.#logger.debug(
+            'InitializationService: ConfigurableLLMAdapter initialized successfully and is operational.'
+          );
+          return true;
+        }
+
         this.#logger.warn(
           'InitializationService: ConfigurableLLMAdapter.init() completed but the adapter is not operational. Check adapter-specific logs (e.g., LlmConfigLoader errors).'
         );
+        return false;
       }
+
+      this.#logger.debug(
+        'InitializationService: ConfigurableLLMAdapter initialized (no operational check available).'
+      );
+      return true;
     } catch (adapterInitError) {
       this.#logger.error(
         `InitializationService: CRITICAL error during ConfigurableLLMAdapter.init(): ${adapterInitError.message}`,
@@ -384,6 +416,7 @@ class InitializationService extends IInitializationService {
           errorObj: adapterInitError,
         }
       );
+      return false;
     }
   }
 
