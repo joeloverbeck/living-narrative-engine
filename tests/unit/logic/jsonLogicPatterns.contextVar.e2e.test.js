@@ -45,9 +45,6 @@ const mockEntityManager = {
   activeEntities: new Map(),
 };
 
-// Helper to create mock entity instance (mainly for satisfying EM mock types if needed)
-const createMockEntity = (id) => new Entity(id);
-
 // --- Test Suite ---
 
 describe('TEST-107: JSON Logic Context Variable Patterns (8-9)', () => {

@@ -9,6 +9,7 @@ import { createJsonLogicContext } from '../../../src/logic/contextAssembler.js';
 import Entity from '../../../src/entities/entity.js'; // Adjust path - Needed for mock setup
 import EntityDefinition from '../../../src/entities/entityDefinition.js'; // Added
 import EntityInstanceData from '../../../src/entities/entityInstanceData.js'; // Added
+import { createEntityInstance } from '../../common/entities/index.js';
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../core/interfaces/coreServices.js').ILogger} ILogger */
@@ -53,28 +54,6 @@ const mockEntityManager = {
 };
 
 const DUMMY_DEFINITION_ID_FOR_MOCKS = 'def:mock-complex-e2e';
-
-// Helper to create mock entity instance for tests
-// Updated createMockEntity
-const createMockEntity = (
-  instanceId,
-  definitionId = DUMMY_DEFINITION_ID_FOR_MOCKS,
-  initialComponents = {}
-) => {
-  const defIdToUse = definitionId.includes(':')
-    ? definitionId
-    : `test:${definitionId}`;
-  const genericDefinition = new EntityDefinition(defIdToUse, {
-    components: {},
-  });
-  const instanceData = new EntityInstanceData(
-    instanceId,
-    genericDefinition,
-    initialComponents
-  );
-  const entity = new Entity(instanceData);
-  return entity;
-};
 
 // --- Test Suite for Complex End-to-End Evaluation ---
 
@@ -124,7 +103,7 @@ describe('JsonLogicEvaluationService - Complex E2E Tests (Ticket 2.6.4)', () => 
     };
     const actorId = 'player:1';
     const statsComponentId = 'Stats';
-    const mockActor = createMockEntity(actorId);
+    const mockActor = createEntityInstance({ instanceId: actorId });
 
     beforeEach(() => {
       // Common setup: Actor entity exists
@@ -346,7 +325,7 @@ describe('JsonLogicEvaluationService - Complex E2E Tests (Ticket 2.6.4)', () => 
       '==': [{ var: 'actor.components.NonExistentComponent.value' }, null],
     };
     const actorId = 'player:2';
-    const mockActor = createMockEntity(actorId);
+    const mockActor = createEntityInstance({ instanceId: actorId });
     const missingComponentId = 'NonExistentComponent';
     /** @type {GameEvent} */
     const event = { type: 'CHECK', payload: {} };
@@ -443,7 +422,7 @@ describe('JsonLogicEvaluationService - Complex E2E Tests (Ticket 2.6.4)', () => 
       '==': [{ var: 'target.components.Inventory.items[0].id' }, 'item:key'],
     };
     const targetId = 'chest:1';
-    const mockTarget = createMockEntity(targetId);
+    const mockTarget = createEntityInstance({ instanceId: targetId });
     const inventoryComponentId = 'Inventory';
     /** @type {GameEvent} */
     const event = { type: 'INTERACT', payload: {} };
@@ -603,7 +582,8 @@ describe('JsonLogicEvaluationService - Complex E2E Tests (Ticket 2.6.4)', () => 
     test('should return true when actor.id is in the list ("player1")', () => {
       const actorId = 'player1';
       mockEntityManager.getEntityInstance.mockImplementation((id) => {
-        if (id === actorId) return createMockEntity(actorId);
+        if (id === actorId)
+          return createEntityInstance({ instanceId: actorId });
         return undefined;
       });
       const context = createJsonLogicContext(
@@ -623,7 +603,8 @@ describe('JsonLogicEvaluationService - Complex E2E Tests (Ticket 2.6.4)', () => 
     test('should return true when actor.id is in the list ("player2")', () => {
       const actorId = 'player2';
       mockEntityManager.getEntityInstance.mockImplementation((id) => {
-        if (id === actorId) return createMockEntity(actorId);
+        if (id === actorId)
+          return createEntityInstance({ instanceId: actorId });
         return undefined;
       });
       const context = createJsonLogicContext(
@@ -643,7 +624,8 @@ describe('JsonLogicEvaluationService - Complex E2E Tests (Ticket 2.6.4)', () => 
     test('should return false when actor.id is not in the list ("npc1")', () => {
       const actorId = 'npc1';
       mockEntityManager.getEntityInstance.mockImplementation((id) => {
-        if (id === actorId) return createMockEntity(actorId);
+        if (id === actorId)
+          return createEntityInstance({ instanceId: actorId });
         return undefined;
       });
       const context = createJsonLogicContext(
@@ -685,7 +667,7 @@ describe('JsonLogicEvaluationService - Complex E2E Tests (Ticket 2.6.4)', () => 
   describe('Target Component Presence Rule: { "==": [ { "var": "target.components.Shield" }, null ] }', () => {
     const rule = { '==': [{ var: 'target.components.Shield' }, null] }; // Rule is true if Shield component is missing
     const targetId = 'guard:1';
-    const mockTarget = createMockEntity(targetId);
+    const mockTarget = createEntityInstance({ instanceId: targetId });
     const shieldComponentId = 'Shield';
     /** @type {GameEvent} */
     const event = { type: 'ATTACK', payload: {} };

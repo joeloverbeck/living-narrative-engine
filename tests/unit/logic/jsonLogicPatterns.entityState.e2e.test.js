@@ -9,6 +9,7 @@ import { createJsonLogicContext } from '../../../src/logic/contextAssembler.js';
 import Entity from '../../../src/entities/entity.js'; // Adjust path if needed for mock creation
 import EntityDefinition from '../../../src/entities/entityDefinition.js'; // Added
 import EntityInstanceData from '../../../src/entities/entityInstanceData.js'; // Added
+import { createEntityInstance } from '../../common/entities/index.js';
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../../../src/interfaces/coreServices.js').ILogger} ILogger */ // Adjusted path
@@ -50,28 +51,6 @@ const mockEntityManager = {
 
 const DUMMY_DEFINITION_ID_FOR_MOCKS = 'def:mock-entity-state';
 
-// Helper to create mock entity instance for tests
-// Updated createMockEntity
-const createMockEntity = (
-  instanceId,
-  definitionId = DUMMY_DEFINITION_ID_FOR_MOCKS,
-  initialComponents = {}
-) => {
-  const defIdToUse = definitionId.includes(':')
-    ? definitionId
-    : `test:${definitionId}`;
-  const genericDefinition = new EntityDefinition(defIdToUse, {
-    components: {},
-  });
-  const instanceData = new EntityInstanceData(
-    instanceId,
-    genericDefinition,
-    initialComponents
-  );
-  const entity = new Entity(instanceData);
-  return entity;
-};
-
 // --- Test Suite ---
 
 describe('TEST-108: Validate JSON-LOGIC-PATTERNS.MD - Entity/Context State Patterns (10-11)', () => {
@@ -107,8 +86,8 @@ describe('TEST-108: Validate JSON-LOGIC-PATTERNS.MD - Entity/Context State Patte
     const rule = { '==': [{ var: 'target.id' }, 'npc:shopkeeper'] };
     const targetId = 'npc:shopkeeper';
     const otherTargetId = 'npc:guard';
-    const mockShopkeeper = createMockEntity(targetId);
-    const mockGuard = createMockEntity(otherTargetId);
+    const mockShopkeeper = createEntityInstance({ instanceId: targetId });
+    const mockGuard = createEntityInstance({ instanceId: otherTargetId });
 
     test('should evaluate true when targetId matches and entity exists', () => {
       // Arrange: EM finds the specific target
@@ -211,8 +190,8 @@ describe('TEST-108: Validate JSON-LOGIC-PATTERNS.MD - Entity/Context State Patte
     const rule = { '==': [{ var: 'actor.id' }, 'core:player'] };
     const actorId = 'core:player';
     const otherActorId = 'npc:ally';
-    const mockPlayer = createMockEntity(actorId);
-    const mockAlly = createMockEntity(otherActorId);
+    const mockPlayer = createEntityInstance({ instanceId: actorId });
+    const mockAlly = createEntityInstance({ instanceId: otherActorId });
 
     test('should evaluate true when actorId matches and entity exists', () => {
       // Arrange: EM finds the specific actor
@@ -310,7 +289,7 @@ describe('TEST-108: Validate JSON-LOGIC-PATTERNS.MD - Entity/Context State Patte
   describe('AC3: Pattern 11 - Target Existence Check {"!=": [{"var": "target"}, null]}', () => {
     const rule = { '!=': [{ var: 'target' }, null] };
     const targetId = 'item:chest';
-    const mockTarget = createMockEntity(targetId);
+    const mockTarget = createEntityInstance({ instanceId: targetId });
 
     test('should evaluate true when targetId resolves to an entity', () => {
       // Arrange: EM finds the target
@@ -385,7 +364,7 @@ describe('TEST-108: Validate JSON-LOGIC-PATTERNS.MD - Entity/Context State Patte
   describe('AC4: Pattern 11 - Actor Existence Check {"!=": [{"var": "actor"}, null]}', () => {
     const rule = { '!=': [{ var: 'actor' }, null] };
     const actorId = 'core:player';
-    const mockActor = createMockEntity(actorId);
+    const mockActor = createEntityInstance({ instanceId: actorId });
 
     test('should evaluate true when actorId resolves to an entity', () => {
       // Arrange: EM finds the actor

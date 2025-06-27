@@ -9,6 +9,7 @@ import { createJsonLogicContext } from '../../../src/logic/contextAssembler.js';
 import Entity from '../../../src/entities/entity.js'; // Adjust path - Needed for mock setup
 import EntityDefinition from '../../../src/entities/entityDefinition.js'; // Added
 import EntityInstanceData from '../../../src/entities/entityInstanceData.js'; // Added
+import { createEntityInstance } from '../../common/entities/index.js';
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../../../src/interfaces/coreServices.js').ILogger} ILogger */
@@ -50,36 +51,14 @@ const mockEntityManager = {
 
 const DUMMY_DEFINITION_ID_FOR_MOCKS = 'def:mock-json-logic';
 
-// Helper to create mock entity instance for tests
-// Updated createMockEntity
-const createMockEntity = (
-  instanceId,
-  definitionId = DUMMY_DEFINITION_ID_FOR_MOCKS,
-  initialComponents = {}
-) => {
-  const defIdToUse = definitionId.includes(':')
-    ? definitionId
-    : `test:${definitionId}`;
-  const genericDefinition = new EntityDefinition(defIdToUse, {
-    components: {},
-  });
-  const instanceData = new EntityInstanceData(
-    instanceId,
-    genericDefinition,
-    initialComponents
-  );
-  const entity = new Entity(instanceData);
-  return entity;
-};
-
 // --- Test Suite ---
 
 describe('JsonLogic Component Accessor Behavior (TEST-103)', () => {
   let service;
   const actorId = 'testActor:1';
   const targetId = 'testTarget:1';
-  const mockActor = createMockEntity(actorId);
-  const mockTarget = createMockEntity(targetId);
+  const mockActor = createEntityInstance({ instanceId: actorId });
+  const mockTarget = createEntityInstance({ instanceId: targetId });
   const compAId = 'compA';
   const compBId = 'compB'; // This component will typically be mocked as missing
   const compCId = 'ns:compC'; // Namespaced component ID

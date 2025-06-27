@@ -13,6 +13,7 @@ import {
 } from '@jest/globals';
 // Import ONLY createJsonLogicContext
 import { createJsonLogicContext } from '../../../src/logic/contextAssembler.js'; // Import the function under test
+import { createEntityInstance } from '../../common/entities/index.js';
 import { LOGGER_INFO_METHOD_ERROR } from '../../common/constants.js';
 
 // --- JSDoc Imports for Type Hinting ---
@@ -40,9 +41,6 @@ const mockEntityManager = {
   hasComponent: jest.fn(),
 };
 
-// Helper to create mock entity instance
-const createMockEntity = (id) => ({ id });
-
 // --- Test Suite ---
 
 describe('createJsonLogicContext (contextAssembler.js)', () => {
@@ -61,8 +59,8 @@ describe('createJsonLogicContext (contextAssembler.js)', () => {
     baseEvent = { type: 'TEST_EVENT', payload: { data: 'sample' } };
     actorId = 'player:1';
     targetId = 'npc:mob';
-    mockActorEntity = createMockEntity(actorId);
-    mockTargetEntity = createMockEntity(targetId);
+    mockActorEntity = createEntityInstance({ instanceId: actorId });
+    mockTargetEntity = createEntityInstance({ instanceId: targetId });
 
     // Default mock behavior: Entities NOT found
     mockEntityManager.getEntityInstance.mockReturnValue(undefined);
