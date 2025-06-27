@@ -98,5 +98,34 @@ describeActionDiscoverySuite(
         },
       ]);
     });
+
+    it('continues discovery when one candidate throws an error', async () => {
+      const bed = getBed();
+      const badDef = { id: 'bad', commandVerb: 'bad', scope: 'none' };
+      const okDef = { id: 'ok', commandVerb: 'wait', scope: 'none' };
+
+      bed.mocks.actionIndex.getCandidateActions.mockReturnValue([
+        badDef,
+        okDef,
+      ]);
+      bed.mocks.targetResolutionService.resolveTargets.mockResolvedValue([
+        { type: 'none', entityId: null },
+      ]);
+      bed.mocks.formatActionCommandFn.mockImplementation((def) => {
+        if (def.id === 'bad') throw new Error('boom');
+        return { ok: true, value: def.commandVerb };
+      });
+
+      const result = await bed.service.getValidActions({ id: 'actor' }, {});
+
+      expect(result.actions).toHaveLength(1);
+      expect(result.actions[0].id).toBe('ok');
+      expect(result.errors).toHaveLength(1);
+      expect(result.errors[0]).toMatchObject({
+        actionId: 'bad',
+        targetId: null,
+      });
+      expect(result.errors[0].error).toBeInstanceOf(Error);
+    });
   }
 );
