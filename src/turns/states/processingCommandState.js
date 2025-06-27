@@ -182,6 +182,7 @@ export class ProcessingCommandState extends AbstractTurnState {
       exceptionHandler: this._exceptionHandler,
       commandProcessor: this.#commandProcessor,
       commandOutcomeInterpreter: this._commandOutcomeInterpreter,
+      directiveStrategyResolver: this._directiveResolver,
     });
 
     this._logConstruction();

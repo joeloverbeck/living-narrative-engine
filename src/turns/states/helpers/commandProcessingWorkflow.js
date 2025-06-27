@@ -11,6 +11,7 @@
  * @typedef {import('../../interfaces/IActorTurnStrategy.js').ITurnAction} ITurnAction
  * @typedef {import('../../../../../interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor
  * @typedef {import('../../../../../interfaces/ICommandOutcomeInterpreter.js').ICommandOutcomeInterpreter} ICommandOutcomeInterpreter
+ * @typedef {import('../../interfaces/IDirectiveStrategyResolver.js').IDirectiveStrategyResolver} IDirectiveStrategyResolver
  */
 
 import {
@@ -30,6 +31,7 @@ export class CommandProcessingWorkflow {
   _exceptionHandler;
   _commandProcessor;
   _commandOutcomeInterpreter;
+  _directiveStrategyResolver;
 
   /**
    * Creates the workflow instance.
@@ -44,10 +46,12 @@ export class CommandProcessingWorkflow {
     exceptionHandler,
     commandProcessor,
     commandOutcomeInterpreter,
+    directiveStrategyResolver,
   }) {
     this._state = state;
     this._commandProcessor = commandProcessor;
     this._commandOutcomeInterpreter = commandOutcomeInterpreter;
+    this._directiveStrategyResolver = directiveStrategyResolver;
 
     if (!this._commandProcessor) {
       throw new Error(
@@ -57,6 +61,11 @@ export class CommandProcessingWorkflow {
     if (!this._commandOutcomeInterpreter) {
       throw new Error(
         'CommandProcessingWorkflow: commandOutcomeInterpreter is required.'
+      );
+    }
+    if (!this._directiveStrategyResolver) {
+      throw new Error(
+        'CommandProcessingWorkflow: directiveStrategyResolver is required.'
       );
     }
 
@@ -181,7 +190,7 @@ export class CommandProcessingWorkflow {
     const actorId = activeTurnCtx.getActor()?.id ?? 'UnknownActor';
 
     const directiveStrategy =
-      this._state._directiveResolver.resolveStrategy(directiveType);
+      this._directiveStrategyResolver.resolveStrategy(directiveType);
     if (!directiveStrategy) {
       const errorMsg = `${this._state.getStateName()}: Could not resolve ITurnDirectiveStrategy for directive '${directiveType}' (actor ${actorId}).`;
       logger.error(errorMsg);
