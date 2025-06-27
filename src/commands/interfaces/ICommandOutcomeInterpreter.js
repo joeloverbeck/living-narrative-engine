@@ -16,7 +16,7 @@ export class ICommandOutcomeInterpreter {
    * @async
    * @param {CommandResult} _result - The result object from command processing.
    * @param {ITurnContext} _turnContext - The active turn context for the actor whose result is being interpreted.
-   * @returns {Promise<TurnDirective | string>} A promise resolving to a TurnDirective enum value (string).
+   * @returns {Promise<TurnDirective>} A promise resolving to a TurnDirective enum value.
    * @throws {Error} If turnContext or result object is malformed.
    */
   async interpret(_result, _turnContext) {
