@@ -631,8 +631,6 @@ describe('ScopeEngine', () => {
       );
     });
 
-
-
     test('should pass trace object through resolveStep and resolveUnion', () => {
       // Union -> Step -> Filter
       const ast = parseDslExpression(
@@ -658,7 +656,12 @@ describe('ScopeEngine', () => {
         location: { id: 'loc456' },
       };
 
-      engine.resolve(ast, actorEntity, runtimeCtxWithLocation, mockTraceContext);
+      engine.resolve(
+        ast,
+        actorEntity,
+        runtimeCtxWithLocation,
+        mockTraceContext
+      );
 
       // Verify that the filter inside the step was traced
       expect(mockTraceContext.addLog).toHaveBeenCalledWith(

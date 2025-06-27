@@ -164,7 +164,7 @@ describe('SpeechBubbleRenderer additional branches', () => {
 
   it('adds player-speech class when speaker is player', () => {
     const { renderer, entityManager, documentContext } = setup();
-    const entity = { 
+    const entity = {
       hasComponent: jest.fn((componentId) => {
         // Return true for player_type component
         return componentId === 'core:player_type';
@@ -174,7 +174,7 @@ describe('SpeechBubbleRenderer additional branches', () => {
           return { type: 'human' };
         }
         return null;
-      })
+      }),
     };
     entityManager.getEntityInstance.mockReturnValue(entity);
     renderer.renderSpeech({ entityId: 'p1', speechContent: 'hello' });

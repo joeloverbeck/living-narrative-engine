@@ -5,7 +5,10 @@
 
 import { jest, describe, it, expect, beforeEach } from '@jest/globals';
 // Corrected the path to be relative to the test file's location as per the logs.
-import { EntityManagerTestBed, TestData } from '../../../common/entities/index.js';
+import {
+  EntityManagerTestBed,
+  TestData,
+} from '../../../common/entities/index.js';
 import EntityManager from '../../../../src/entities/entityManager.js';
 import EntityDefinition from '../../../../src/entities/entityDefinition.js';
 import {
@@ -99,9 +102,7 @@ describe('EntityManager Test Helpers: EntityManagerTestBed & TestData', () => {
 
         // Validator
         expect(bed.mocks.validator.validate).toBeDefined();
-        expect(jest.isMockFunction(bed.mocks.validator.validate)).toBe(
-          true
-        );
+        expect(jest.isMockFunction(bed.mocks.validator.validate)).toBe(true);
         // Check default implementation
         expect(bed.mocks.validator.validate()).toEqual({ isValid: true });
 
@@ -112,9 +113,9 @@ describe('EntityManager Test Helpers: EntityManagerTestBed & TestData', () => {
         expect(jest.isMockFunction(bed.mocks.logger.debug)).toBe(true);
 
         // Event Dispatcher
-        expect(
-          jest.isMockFunction(bed.mocks.eventDispatcher.dispatch)
-        ).toBe(true);
+        expect(jest.isMockFunction(bed.mocks.eventDispatcher.dispatch)).toBe(
+          true
+        );
       });
     });
 

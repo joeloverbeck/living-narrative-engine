@@ -56,7 +56,7 @@ describe('Entity Component Access in Scope Filtering Integration', () => {
       error: jest.fn(),
     };
     registry = new InMemoryDataRegistry();
-    
+
     // Set up event infrastructure with mocked validator
     const eventBus = new EventBus();
     const schemaValidator = {
@@ -103,7 +103,7 @@ describe('Entity Component Access in Scope Filtering Integration', () => {
         [NAME_COMPONENT_ID]: { text: '' },
       },
     });
-    
+
     const locationDefinition = new EntityDefinition('test:location', {
       components: {
         [NAME_COMPONENT_ID]: { text: '' },
@@ -125,43 +125,43 @@ describe('Entity Component Access in Scope Filtering Integration', () => {
     // Load actual core conditions from the mod files
     registry.store('conditions', 'core:entity-at-location', {
       id: 'core:entity-at-location',
-      description: 'True when the entity\'s current locationId matches the location under evaluation.',
+      description:
+        "True when the entity's current locationId matches the location under evaluation.",
       logic: {
         '==': [
           { var: 'entity.components.core:position.locationId' },
-          { var: 'location.id' }
-        ]
-      }
+          { var: 'location.id' },
+        ],
+      },
     });
 
     registry.store('conditions', 'core:entity-is-not-current-actor', {
-      id: 'core:entity-is-not-current-actor', 
-      description: 'True when the entity being evaluated is **not** the actor entity.',
+      id: 'core:entity-is-not-current-actor',
+      description:
+        'True when the entity being evaluated is **not** the actor entity.',
       logic: {
-        '!=': [
-          { var: 'entity.id' },
-          { var: 'actor.id' }
-        ]
-      }
+        '!=': [{ var: 'entity.id' }, { var: 'actor.id' }],
+      },
     });
 
     registry.store('conditions', 'core:entity-has-actor-component', {
       id: 'core:entity-has-actor-component',
-      description: 'Checks that the entity has the \'core:actor\' component.',
+      description: "Checks that the entity has the 'core:actor' component.",
       logic: {
-        '!!': { var: 'entity.components.core:actor' }
-      }
+        '!!': { var: 'entity.components.core:actor' },
+      },
     });
 
     registry.store('conditions', 'core:entity-is-following-actor', {
       id: 'core:entity-is-following-actor',
-      description: 'Checks if the entity\'s \'following\' component points to the actor\'s ID.',
+      description:
+        "Checks if the entity's 'following' component points to the actor's ID.",
       logic: {
         '==': [
           { var: 'entity.components.core:following.leaderId' },
-          { var: 'actor.id' }
-        ]
-      }
+          { var: 'actor.id' },
+        ],
+      },
     });
   });
 
@@ -180,8 +180,8 @@ describe('Entity Component Access in Scope Filtering Integration', () => {
       entityManager.createEntityInstance('test:location', {
         instanceId: locationId,
         componentOverrides: {
-          [NAME_COMPONENT_ID]: { text: 'The Tavern' }
-        }
+          [NAME_COMPONENT_ID]: { text: 'The Tavern' },
+        },
       });
 
       // Create hero at location
@@ -189,8 +189,8 @@ describe('Entity Component Access in Scope Filtering Integration', () => {
         instanceId: actorId,
         componentOverrides: {
           [POSITION_COMPONENT_ID]: { locationId },
-          [NAME_COMPONENT_ID]: { text: 'Hero' }
-        }
+          [NAME_COMPONENT_ID]: { text: 'Hero' },
+        },
       });
 
       // Create NPC at same location
@@ -198,8 +198,8 @@ describe('Entity Component Access in Scope Filtering Integration', () => {
         instanceId: targetId,
         componentOverrides: {
           [POSITION_COMPONENT_ID]: { locationId },
-          [NAME_COMPONENT_ID]: { text: 'Friendly NPC' }
-        }
+          [NAME_COMPONENT_ID]: { text: 'Friendly NPC' },
+        },
       });
 
       // Manually build spatial index to ensure it's populated
@@ -207,14 +207,19 @@ describe('Entity Component Access in Scope Filtering Integration', () => {
 
       // Test simple source resolution first (no filter)
       const simpleSourceContent = `test:all_positioned := entities(core:position)`;
-      const simpleSourceDefinitions = parseScopeDefinitions(simpleSourceContent, 'test.scope');
-      
+      const simpleSourceDefinitions = parseScopeDefinitions(
+        simpleSourceContent,
+        'test.scope'
+      );
+
       // Parse the DSL expression string into an AST
-      const simpleExpressionString = simpleSourceDefinitions.get('test:all_positioned');
+      const simpleExpressionString = simpleSourceDefinitions.get(
+        'test:all_positioned'
+      );
       const simpleAst = parseDslExpression(simpleExpressionString);
-      
+
       scopeRegistry.initialize({
-        'test:all_positioned': simpleAst
+        'test:all_positioned': simpleAst,
       });
 
       const actorEntity = entityManager.getEntityInstance(actorId);
@@ -259,14 +264,17 @@ describe('Entity Component Access in Scope Filtering Integration', () => {
   ]
 }]`;
 
-      const scopeDefinitions = parseScopeDefinitions(scopeContent, 'test.scope');
-      
+      const scopeDefinitions = parseScopeDefinitions(
+        scopeContent,
+        'test.scope'
+      );
+
       // Parse the DSL expression string into an AST
       const expressionString = scopeDefinitions.get('test:potential_targets');
       const ast = parseDslExpression(expressionString);
-      
+
       scopeRegistry.initialize({
-        'test:potential_targets': ast
+        'test:potential_targets': ast,
       });
 
       // Get actor entity for context
@@ -295,16 +303,16 @@ describe('Entity Component Access in Scope Filtering Integration', () => {
       entityManager.createEntityInstance('test:location', {
         instanceId: locationId,
         componentOverrides: {
-          [NAME_COMPONENT_ID]: { text: 'The Tavern' }
-        }
+          [NAME_COMPONENT_ID]: { text: 'The Tavern' },
+        },
       });
 
       entityManager.createEntityInstance('test:character', {
         instanceId: actorId,
         componentOverrides: {
           [POSITION_COMPONENT_ID]: { locationId },
-          [NAME_COMPONENT_ID]: { text: 'Hero' }
-        }
+          [NAME_COMPONENT_ID]: { text: 'Hero' },
+        },
       });
 
       // Create NPC without following component
@@ -312,9 +320,9 @@ describe('Entity Component Access in Scope Filtering Integration', () => {
         instanceId: targetId,
         componentOverrides: {
           [POSITION_COMPONENT_ID]: { locationId },
-          [NAME_COMPONENT_ID]: { text: 'Independent NPC' }
+          [NAME_COMPONENT_ID]: { text: 'Independent NPC' },
           // Note: No FOLLOWING_COMPONENT_ID
-        }
+        },
       });
 
       // Define scope that checks for following component
@@ -327,14 +335,17 @@ describe('Entity Component Access in Scope Filtering Integration', () => {
   ]
 }]`;
 
-      const scopeDefinitions = parseScopeDefinitions(scopeContent, 'test.scope');
-      
+      const scopeDefinitions = parseScopeDefinitions(
+        scopeContent,
+        'test.scope'
+      );
+
       // Parse the DSL expression string into an AST
       const expressionString = scopeDefinitions.get('test:non_followers');
       const ast = parseDslExpression(expressionString);
-      
+
       scopeRegistry.initialize({
-        'test:non_followers': ast
+        'test:non_followers': ast,
       });
 
       const actorEntity = entityManager.getEntityInstance(actorId);
@@ -370,24 +381,24 @@ describe('Entity Component Access in Scope Filtering Integration', () => {
       entityManager.createEntityInstance('test:location', {
         instanceId: locationId,
         componentOverrides: {
-          [NAME_COMPONENT_ID]: { text: 'Adventurers Guild' }
-        }
+          [NAME_COMPONENT_ID]: { text: 'Adventurers Guild' },
+        },
       });
 
       entityManager.createEntityInstance('test:character', {
         instanceId: actorId,
         componentOverrides: {
           [POSITION_COMPONENT_ID]: { locationId },
-          [NAME_COMPONENT_ID]: { text: 'Joel Overbeck' }
-        }
+          [NAME_COMPONENT_ID]: { text: 'Joel Overbeck' },
+        },
       });
 
       entityManager.createEntityInstance('test:character', {
         instanceId: targetId,
         componentOverrides: {
           [POSITION_COMPONENT_ID]: { locationId },
-          [NAME_COMPONENT_ID]: { text: 'Ninja Ninjason' }
-        }
+          [NAME_COMPONENT_ID]: { text: 'Ninja Ninjason' },
+        },
       });
 
       // Replicate the exact core:potential_leaders scope logic
@@ -400,14 +411,17 @@ describe('Entity Component Access in Scope Filtering Integration', () => {
   ]
 }]`;
 
-      const scopeDefinitions = parseScopeDefinitions(scopeContent, 'test.scope');
-      
+      const scopeDefinitions = parseScopeDefinitions(
+        scopeContent,
+        'test.scope'
+      );
+
       // Parse the DSL expression string into an AST
       const expressionString = scopeDefinitions.get('test:potential_leaders');
       const ast = parseDslExpression(expressionString);
-      
+
       scopeRegistry.initialize({
-        'test:potential_leaders': ast
+        'test:potential_leaders': ast,
       });
 
       const actorEntity = entityManager.getEntityInstance(actorId);
@@ -441,8 +455,8 @@ describe('Entity Component Access in Scope Filtering Integration', () => {
       entityManager.createEntityInstance('test:location', {
         instanceId: locationId,
         componentOverrides: {
-          [NAME_COMPONENT_ID]: { text: 'Actor Test Room' }
-        }
+          [NAME_COMPONENT_ID]: { text: 'Actor Test Room' },
+        },
       });
 
       entityManager.createEntityInstance('test:character', {
@@ -450,8 +464,8 @@ describe('Entity Component Access in Scope Filtering Integration', () => {
         componentOverrides: {
           [POSITION_COMPONENT_ID]: { locationId },
           [NAME_COMPONENT_ID]: { text: 'Actor with Components' },
-          [FOLLOWING_COMPONENT_ID]: { targetId: 'someone' }
-        }
+          [FOLLOWING_COMPONENT_ID]: { targetId: 'someone' },
+        },
       });
 
       // Define scope that uses actor.components access
@@ -462,14 +476,17 @@ describe('Entity Component Access in Scope Filtering Integration', () => {
   ]
 }]`;
 
-      const scopeDefinitions = parseScopeDefinitions(scopeContent, 'test.scope');
-      
+      const scopeDefinitions = parseScopeDefinitions(
+        scopeContent,
+        'test.scope'
+      );
+
       // Parse the DSL expression string into an AST
       const expressionString = scopeDefinitions.get('test:self_check');
       const ast = parseDslExpression(expressionString);
-      
+
       scopeRegistry.initialize({
-        'test:self_check': ast
+        'test:self_check': ast,
       });
 
       const actorEntity = entityManager.getEntityInstance(actorId);
@@ -492,4 +509,4 @@ describe('Entity Component Access in Scope Filtering Integration', () => {
       expect(result.has(actorId)).toBe(true);
     });
   });
-}); 
+});

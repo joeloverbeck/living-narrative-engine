@@ -259,13 +259,10 @@ describe('AI registration helpers', () => {
       { token: tokens.IAIGameStateProvider, Class: AIGameStateProvider },
     ];
 
-    test.each(services)(
-      'should register $token correctly',
-      ({ token }) => {
-        registerAIGameStateProviders(registrar, logger);
-        expect(container.isRegistered(token)).toBe(true);
-      }
-    );
+    test.each(services)('should register $token correctly', ({ token }) => {
+      registerAIGameStateProviders(registrar, logger);
+      expect(container.isRegistered(token)).toBe(true);
+    });
 
     it('should log after registering AI game state providers', () => {
       registerAIGameStateProviders(registrar, logger);

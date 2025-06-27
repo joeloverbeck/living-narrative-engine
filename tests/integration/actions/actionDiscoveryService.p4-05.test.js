@@ -134,7 +134,7 @@ describe('ADS-P4-05: Streamlined ActionDiscoveryService', () => {
       };
       mockActionIndex.getCandidateActions.mockReturnValue([actionDef]);
       mockTargetResolutionService.resolveTargets.mockResolvedValue([
-        { type: 'entity', entityId: 'target1' }
+        { type: 'entity', entityId: 'target1' },
       ]);
 
       const { actions } = await service.getValidActions(actorEntity, {});
@@ -142,7 +142,9 @@ describe('ADS-P4-05: Streamlined ActionDiscoveryService', () => {
       expect(actions).toHaveLength(1);
       expect(actions[0].id).toBe(actionDef.id);
       expect(mockPrereqService.evaluate).not.toHaveBeenCalled();
-      expect(mockTargetResolutionService.resolveTargets).toHaveBeenCalledTimes(1);
+      expect(mockTargetResolutionService.resolveTargets).toHaveBeenCalledTimes(
+        1
+      );
     });
   });
 
@@ -160,7 +162,7 @@ describe('ADS-P4-05: Streamlined ActionDiscoveryService', () => {
       mockPrereqService.evaluate.mockReturnValue(true);
       mockTargetResolutionService.resolveTargets.mockResolvedValue([
         { type: 'entity', entityId: 'goblin1' },
-        { type: 'entity', entityId: 'goblin2' }
+        { type: 'entity', entityId: 'goblin2' },
       ]);
 
       const { actions } = await service.getValidActions(actorEntity, {});
@@ -170,7 +172,9 @@ describe('ADS-P4-05: Streamlined ActionDiscoveryService', () => {
         expect.arrayContaining(['goblin1', 'goblin2'])
       );
       expect(mockPrereqService.evaluate).toHaveBeenCalledTimes(1);
-      expect(mockTargetResolutionService.resolveTargets).toHaveBeenCalledTimes(1);
+      expect(mockTargetResolutionService.resolveTargets).toHaveBeenCalledTimes(
+        1
+      );
 
       expect(mockFormatActionCommandFn).toHaveBeenCalledTimes(2);
       expect(mockFormatActionCommandFn).toHaveBeenCalledWith(
@@ -199,7 +203,7 @@ describe('ADS-P4-05: Streamlined ActionDiscoveryService', () => {
       mockActionIndex.getCandidateActions.mockReturnValue([actionDef]);
       mockPrereqService.evaluate.mockReturnValue(true);
       mockTargetResolutionService.resolveTargets.mockResolvedValue([
-        { type: 'entity', entityId: actorEntity.id }
+        { type: 'entity', entityId: actorEntity.id },
       ]);
 
       const { actions } = await service.getValidActions(actorEntity, {});
@@ -208,7 +212,9 @@ describe('ADS-P4-05: Streamlined ActionDiscoveryService', () => {
       expect(actions[0].id).toBe(actionDef.id);
       expect(actions[0].params.targetId).toBe(actorEntity.id);
       expect(mockPrereqService.evaluate).toHaveBeenCalledTimes(1);
-      expect(mockTargetResolutionService.resolveTargets).toHaveBeenCalledTimes(1);
+      expect(mockTargetResolutionService.resolveTargets).toHaveBeenCalledTimes(
+        1
+      );
       expect(mockFormatActionCommandFn).toHaveBeenCalledTimes(1);
       expect(mockFormatActionCommandFn).toHaveBeenCalledWith(
         actionDef,
@@ -229,7 +235,7 @@ describe('ADS-P4-05: Streamlined ActionDiscoveryService', () => {
       mockActionIndex.getCandidateActions.mockReturnValue([actionDef]);
       mockPrereqService.evaluate.mockReturnValue(true);
       mockTargetResolutionService.resolveTargets.mockResolvedValue([
-        { type: 'none', entityId: null }
+        { type: 'none', entityId: null },
       ]);
 
       const { actions } = await service.getValidActions(actorEntity, {});
@@ -238,7 +244,9 @@ describe('ADS-P4-05: Streamlined ActionDiscoveryService', () => {
       expect(actions[0].id).toBe(actionDef.id);
       expect(actions[0].params.targetId).toBeNull();
       expect(mockPrereqService.evaluate).toHaveBeenCalledTimes(1);
-      expect(mockTargetResolutionService.resolveTargets).toHaveBeenCalledTimes(1);
+      expect(mockTargetResolutionService.resolveTargets).toHaveBeenCalledTimes(
+        1
+      );
       expect(mockFormatActionCommandFn).toHaveBeenCalledTimes(1);
       expect(mockFormatActionCommandFn).toHaveBeenCalledWith(
         actionDef,
@@ -264,7 +272,9 @@ describe('ADS-P4-05: Streamlined ActionDiscoveryService', () => {
 
       expect(actions).toHaveLength(0);
       expect(mockPrereqService.evaluate).toHaveBeenCalledTimes(1);
-      expect(mockTargetResolutionService.resolveTargets).toHaveBeenCalledTimes(1);
+      expect(mockTargetResolutionService.resolveTargets).toHaveBeenCalledTimes(
+        1
+      );
       expect(mockFormatActionCommandFn).not.toHaveBeenCalled();
     });
   });

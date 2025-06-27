@@ -1,9 +1,13 @@
 /**
- * @file Edge cases tests for parser.js  
+ * @file Edge cases tests for parser.js
  * @description Tests targeting specific uncovered lines to achieve 90%+ coverage
  */
 
-import { parseDslExpression, parseScopeFile, ScopeSyntaxError } from '../../../src/scopeDsl/parser.js';
+import {
+  parseDslExpression,
+  parseScopeFile,
+  ScopeSyntaxError,
+} from '../../../src/scopeDsl/parser.js';
 
 describe('Scope-DSL Parser - Edge Cases for Full Coverage', () => {
   describe('Tokenizer edge cases to hit uncovered lines', () => {
@@ -16,7 +20,9 @@ describe('Scope-DSL Parser - Edge Cases for Full Coverage', () => {
 
     test('should handle escape sequences in strings', () => {
       // Test escape sequence handling in readString
-      const result = parseDslExpression('entities(core:item)[{"==": [{"var": "name"}, "test\\"quote"]}]');
+      const result = parseDslExpression(
+        'entities(core:item)[{"==": [{"var": "name"}, "test\\"quote"]}]'
+      );
       expect(result.logic['=='][1]).toBe('test"quote');
     });
   });
@@ -25,7 +31,9 @@ describe('Scope-DSL Parser - Edge Cases for Full Coverage', () => {
     test('should handle depth limit exceeded - lines 289-291', () => {
       // Target lines 289-291: depth limit check
       expect(() => {
-        parseDslExpression('actor.field1[].field2[].field3[].field4[].field5[]');
+        parseDslExpression(
+          'actor.field1[].field2[].field3[].field4[].field5[]'
+        );
       }).toThrow('Expression depth limit exceeded');
     });
 
@@ -53,39 +61,53 @@ describe('Scope-DSL Parser - Edge Cases for Full Coverage', () => {
 
   describe('JSON value parsing edge cases - line 400', () => {
     test('should handle string values in JSON', () => {
-      const result = parseDslExpression('entities(core:item)[{"==": [{"var": "name"}, "test"]}]');
+      const result = parseDslExpression(
+        'entities(core:item)[{"==": [{"var": "name"}, "test"]}]'
+      );
       expect(result.logic['=='][1]).toBe('test');
     });
 
     test('should handle boolean true in JSON', () => {
-      const result = parseDslExpression('entities(core:item)[{"==": [{"var": "active"}, true]}]');
+      const result = parseDslExpression(
+        'entities(core:item)[{"==": [{"var": "active"}, true]}]'
+      );
       expect(result.logic['=='][1]).toBe(true);
     });
 
     test('should handle boolean false in JSON', () => {
-      const result = parseDslExpression('entities(core:item)[{"==": [{"var": "active"}, false]}]');
+      const result = parseDslExpression(
+        'entities(core:item)[{"==": [{"var": "active"}, false]}]'
+      );
       expect(result.logic['=='][1]).toBe(false);
     });
 
     test('should handle identifier values in JSON - line 400', () => {
-      const result = parseDslExpression('entities(core:item)[{"==": [{"var": "type"}, weapon]}]');
+      const result = parseDslExpression(
+        'entities(core:item)[{"==": [{"var": "type"}, weapon]}]'
+      );
       expect(result.logic['=='][1]).toBe('weapon');
     });
 
     test('should handle JSON arrays', () => {
-      const result = parseDslExpression('entities(core:item)[{"in": [{"var": "type"}, ["weapon", "armor"]]}]');
+      const result = parseDslExpression(
+        'entities(core:item)[{"in": [{"var": "type"}, ["weapon", "armor"]]}]'
+      );
       expect(result.logic.in[1]).toEqual(['weapon', 'armor']);
     });
 
     test('should handle nested JSON objects', () => {
-      const result = parseDslExpression('entities(core:item)[{"==": [{"var": "config"}, {"enabled": true}]}]');
+      const result = parseDslExpression(
+        'entities(core:item)[{"==": [{"var": "config"}, {"enabled": true}]}]'
+      );
       expect(result.logic['=='][1]).toEqual({ enabled: true });
     });
 
     test('should handle invalid JSON value type - line 420', () => {
       // Target line 420: error for invalid JSON value
       expect(() => {
-        parseDslExpression('entities(core:item)[{"==": [{"var": "name"}, (invalid)]}]');
+        parseDslExpression(
+          'entities(core:item)[{"==": [{"var": "name"}, (invalid)]}]'
+        );
       }).toThrow('Expected JSON value');
     });
   });
@@ -93,7 +115,10 @@ describe('Scope-DSL Parser - Edge Cases for Full Coverage', () => {
   describe('Error handling edge cases', () => {
     test('should handle various syntax errors', () => {
       const errorCases = [
-        { input: 'entities()', expectedPattern: 'Expected component identifier' },
+        {
+          input: 'entities()',
+          expectedPattern: 'Expected component identifier',
+        },
         { input: 'actor.', expectedPattern: 'Expected field name' },
         { input: 'invalid_source', expectedPattern: 'Unknown source node' },
       ];
@@ -120,7 +145,9 @@ describe('Scope-DSL Parser - Edge Cases for Full Coverage', () => {
     });
 
     test('should handle complex expressions with filters', () => {
-      const result = parseDslExpression('entities(core:item)[{"==": [{"var": "type"}, "weapon"]}]');
+      const result = parseDslExpression(
+        'entities(core:item)[{"==": [{"var": "type"}, "weapon"]}]'
+      );
       expect(result.type).toBe('Filter');
       expect(result.logic['=='][0]).toEqual({ var: 'type' });
       expect(result.logic['=='][1]).toBe('weapon');
@@ -168,7 +195,10 @@ describe('Scope-DSL Parser - Edge Cases for Full Coverage', () => {
 
     test('should parse scope with complex expression', () => {
       expect(() => {
-        parseScopeFile('weapons := entities(core:item)[{"==": [{"var": "type"}, "weapon"]}]', 'weapons');  
+        parseScopeFile(
+          'weapons := entities(core:item)[{"==": [{"var": "type"}, "weapon"]}]',
+          'weapons'
+        );
       }).toThrow(ScopeSyntaxError);
     });
 
@@ -224,16 +254,20 @@ describe('Scope-DSL Parser - Edge Cases for Full Coverage', () => {
     });
 
     test('should handle single property JSON object', () => {
-      const result = parseDslExpression('entities(core:item)[{"active": true}]');
+      const result = parseDslExpression(
+        'entities(core:item)[{"active": true}]'
+      );
       expect(result.type).toBe('Filter');
       expect(result.logic.active).toBe(true);
     });
 
     test('should handle multiple properties in JSON object', () => {
-      const result = parseDslExpression('entities(core:item)[{"type": "weapon", "level": weapon}]');
+      const result = parseDslExpression(
+        'entities(core:item)[{"type": "weapon", "level": weapon}]'
+      );
       expect(result.type).toBe('Filter');
       expect(result.logic.type).toBe('weapon');
       expect(result.logic.level).toBe('weapon');
     });
   });
-}); 
+});

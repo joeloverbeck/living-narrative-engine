@@ -67,14 +67,14 @@ export function registerCommandAndAction(container) {
 
   // --- Target Resolution Service ---
   // Must be registered before ActionDiscoveryService
-  registrar.singletonFactory(tokens.ITargetResolutionService, c => {
+  registrar.singletonFactory(tokens.ITargetResolutionService, (c) => {
     return new TargetResolutionService({
       scopeRegistry: c.resolve(tokens.IScopeRegistry),
       scopeEngine: c.resolve(tokens.IScopeEngine),
       entityManager: c.resolve(tokens.IEntityManager),
       logger: c.resolve(tokens.ILogger),
       safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
-      jsonLogicEvaluationService: c.resolve(tokens.JsonLogicEvaluationService)
+      jsonLogicEvaluationService: c.resolve(tokens.JsonLogicEvaluationService),
     });
   });
 
@@ -83,7 +83,9 @@ export function registerCommandAndAction(container) {
   registrar.singletonFactory(tokens.TraceContextFactory, () => {
     return () => new TraceContextImpl();
   });
-  logger.debug('Command and Action Registration: Registered TraceContextFactory.');
+  logger.debug(
+    'Command and Action Registration: Registered TraceContextFactory.'
+  );
 
   // --- Action Discovery & Execution ---
   registrar

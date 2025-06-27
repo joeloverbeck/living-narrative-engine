@@ -6,9 +6,7 @@
   "description": "Step back from your current intimate partner, ending the closeness.",
   "scope": "none",
   "required_components": {
-    "actor": [
-      "intimacy:closeness"
-    ]
+    "actor": ["intimacy:closeness"]
   },
   "template": "step back",
   "prerequisites": []

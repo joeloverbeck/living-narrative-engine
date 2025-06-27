@@ -81,7 +81,7 @@ export function createEnvironment(overrides = {}) {
   return {
     ...env.mocks, // Spread all individual mocks (logger, entityManager, etc.)
     mockContainer: env.mockContainer,
-    instance: env.service,       // This is the GameEngine instance
+    instance: env.service, // This is the GameEngine instance
     createInstance: env.createInstance, // This will create new GameEngine instances
     cleanup: env.cleanup,
   };

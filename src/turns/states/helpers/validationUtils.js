@@ -149,7 +149,10 @@ export function validateTurnAction(turnAction, onError) {
     onError('turnAction must be an object.');
     return;
   }
-  if (typeof turnAction.actionDefinitionId !== 'string' || turnAction.actionDefinitionId.trim() === '') {
+  if (
+    typeof turnAction.actionDefinitionId !== 'string' ||
+    turnAction.actionDefinitionId.trim() === ''
+  ) {
     onError('turnAction.actionDefinitionId must be a non-empty string.');
   }
   // Add other critical turnAction property checks here if necessary

@@ -61,7 +61,12 @@ export function storeItemInRegistry(
 
   let dataWithMetadata;
   let finalId = baseItemId;
-  if (isEntityDefinition || isEntityInstance || isScope || category === 'actions') {
+  if (
+    isEntityDefinition ||
+    isEntityInstance ||
+    isScope ||
+    category === 'actions'
+  ) {
     finalId = qualifiedId;
   }
 
@@ -90,11 +95,14 @@ export function storeItemInRegistry(
   const existingItem = registry.get(category, qualifiedId);
   if (existingItem) {
     // Get the mod ID of the existing item
-    const existingModId = existingItem._modId || existingItem.modId || 'unknown';
-    
+    const existingModId =
+      existingItem._modId || existingItem.modId || 'unknown';
+
     // Extract content type from category (remove trailing 's' if present)
-    const contentType = category.endsWith('s') ? category.slice(0, -1) : category;
-    
+    const contentType = category.endsWith('s')
+      ? category.slice(0, -1)
+      : category;
+
     throw new DuplicateContentError(
       contentType,
       qualifiedId,

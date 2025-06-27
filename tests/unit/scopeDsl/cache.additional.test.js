@@ -8,7 +8,6 @@ import ScopeCache, { LRUCache } from '../../../src/scopeDsl/cache.js';
 import { TURN_STARTED_ID } from '../../../src/constants/eventIds.js';
 
 describe('Scope-DSL Cache - Additional Coverage Tests', () => {
-  
   describe('LRUCache edge cases', () => {
     let cache;
 
@@ -41,7 +40,7 @@ describe('Scope-DSL Cache - Additional Coverage Tests', () => {
       cache.set('key1', 'value1');
       cache.set('key2', 'value2');
       cache.set('key3', 'value3');
-      
+
       // Update existing key
       cache.set('key2', 'updated_value2');
       expect(cache.size()).toBe(3);
@@ -52,10 +51,10 @@ describe('Scope-DSL Cache - Additional Coverage Tests', () => {
       cache.set('key1', 'value1');
       cache.set('key2', 'value2');
       cache.set('key3', 'value3');
-      
+
       // Access key1 to make it most recently used
       cache.get('key1');
-      
+
       // Add new item, should evict key2 (least recently used)
       cache.set('key4', 'value4');
       expect(cache.get('key1')).toBe('value1'); // Still in cache
@@ -68,7 +67,7 @@ describe('Scope-DSL Cache - Additional Coverage Tests', () => {
       cache.set('key1', 'value1');
       cache.set('key2', 'value2');
       expect(cache.size()).toBe(2);
-      
+
       cache.clear();
       expect(cache.size()).toBe(0);
       expect(cache.get('key1')).toBeUndefined();
@@ -79,7 +78,7 @@ describe('Scope-DSL Cache - Additional Coverage Tests', () => {
       const smallCache = new LRUCache(1);
       smallCache.set('key1', 'value1');
       smallCache.set('key2', 'value2'); // Should evict key1
-      
+
       expect(smallCache.size()).toBe(1);
       expect(smallCache.get('key1')).toBeUndefined();
       expect(smallCache.get('key2')).toBe('value2');
@@ -88,7 +87,7 @@ describe('Scope-DSL Cache - Additional Coverage Tests', () => {
     test('should handle zero-sized cache', () => {
       const zeroCache = new LRUCache(0);
       zeroCache.set('key1', 'value1');
-      
+
       // Zero-size cache still holds one item due to implementation
       expect(zeroCache.size()).toBe(1);
       expect(zeroCache.get('key1')).toBe('value1');
@@ -111,34 +110,34 @@ describe('Scope-DSL Cache - Additional Coverage Tests', () => {
         get: jest.fn(),
         set: jest.fn(),
         clear: jest.fn(),
-        size: jest.fn().mockReturnValue(0)
+        size: jest.fn().mockReturnValue(0),
       };
-      
+
       mockScopeEngine = {
         resolve: jest.fn(),
-        setMaxDepth: jest.fn()
+        setMaxDepth: jest.fn(),
       };
-      
+
       mockSafeEventDispatcher = {
-        subscribe: jest.fn()
+        subscribe: jest.fn(),
       };
-      
+
       mockLogger = {
         debug: jest.fn(),
-        error: jest.fn()
+        error: jest.fn(),
       };
     });
 
     test('should handle failed event subscription', () => {
       mockSafeEventDispatcher.subscribe.mockReturnValue(null);
-      
+
       const cache = new ScopeCache({
         cache: mockCache,
         scopeEngine: mockScopeEngine,
         safeEventDispatcher: mockSafeEventDispatcher,
-        logger: mockLogger
+        logger: mockLogger,
       });
-      
+
       expect(mockLogger.error).toHaveBeenCalledWith(
         'ScopeCache: Failed to subscribe to TURN_STARTED_ID events'
       );
@@ -150,7 +149,7 @@ describe('Scope-DSL Cache - Additional Coverage Tests', () => {
           cache: null,
           scopeEngine: mockScopeEngine,
           safeEventDispatcher: mockSafeEventDispatcher,
-          logger: mockLogger
+          logger: mockLogger,
         });
       }).toThrow('A cache instance must be provided.');
     });
@@ -161,18 +160,24 @@ describe('Scope-DSL Cache - Additional Coverage Tests', () => {
           cache: mockCache,
           scopeEngine: null,
           safeEventDispatcher: mockSafeEventDispatcher,
-          logger: mockLogger
+          logger: mockLogger,
         });
-      }).toThrow('A ScopeEngine instance with resolve method must be provided.');
-      
+      }).toThrow(
+        'A ScopeEngine instance with resolve method must be provided.'
+      );
+
       expect(() => {
         new ScopeCache({
           cache: mockCache,
-          scopeEngine: { /* missing resolve method */ },
+          scopeEngine: {
+            /* missing resolve method */
+          },
           safeEventDispatcher: mockSafeEventDispatcher,
-          logger: mockLogger
+          logger: mockLogger,
         });
-      }).toThrow('A ScopeEngine instance with resolve method must be provided.');
+      }).toThrow(
+        'A ScopeEngine instance with resolve method must be provided.'
+      );
     });
 
     test('should handle invalid event dispatcher dependency', () => {
@@ -181,16 +186,18 @@ describe('Scope-DSL Cache - Additional Coverage Tests', () => {
           cache: mockCache,
           scopeEngine: mockScopeEngine,
           safeEventDispatcher: null,
-          logger: mockLogger
+          logger: mockLogger,
         });
       }).toThrow('A SafeEventDispatcher instance must be provided.');
-      
+
       expect(() => {
         new ScopeCache({
           cache: mockCache,
           scopeEngine: mockScopeEngine,
-          safeEventDispatcher: { /* missing subscribe method */ },
-          logger: mockLogger
+          safeEventDispatcher: {
+            /* missing subscribe method */
+          },
+          logger: mockLogger,
         });
       }).toThrow('A SafeEventDispatcher instance must be provided.');
     });
@@ -201,16 +208,18 @@ describe('Scope-DSL Cache - Additional Coverage Tests', () => {
           cache: mockCache,
           scopeEngine: mockScopeEngine,
           safeEventDispatcher: mockSafeEventDispatcher,
-          logger: null
+          logger: null,
         });
       }).toThrow('A logger instance must be provided.');
-      
+
       expect(() => {
         new ScopeCache({
           cache: mockCache,
           scopeEngine: mockScopeEngine,
           safeEventDispatcher: mockSafeEventDispatcher,
-          logger: { /* missing debug method */ }
+          logger: {
+            /* missing debug method */
+          },
         });
       }).toThrow('A logger instance must be provided.');
     });
@@ -230,21 +239,21 @@ describe('Scope-DSL Cache - Additional Coverage Tests', () => {
         get: jest.fn(),
         set: jest.fn(),
         clear: jest.fn(),
-        size: jest.fn().mockReturnValue(0)
+        size: jest.fn().mockReturnValue(0),
       };
-      
+
       mockScopeEngine = {
         resolve: jest.fn(),
-        setMaxDepth: jest.fn()
+        setMaxDepth: jest.fn(),
       };
-      
+
       mockSafeEventDispatcher = {
-        subscribe: jest.fn().mockReturnValue(() => {}) // Return unsubscribe function
+        subscribe: jest.fn().mockReturnValue(() => {}), // Return unsubscribe function
       };
-      
+
       mockLogger = {
         debug: jest.fn(),
-        error: jest.fn()
+        error: jest.fn(),
       };
 
       mockActorEntity = { id: 'actor123' };
@@ -254,7 +263,7 @@ describe('Scope-DSL Cache - Additional Coverage Tests', () => {
         cache: mockCache,
         scopeEngine: mockScopeEngine,
         safeEventDispatcher: mockSafeEventDispatcher,
-        logger: mockLogger
+        logger: mockLogger,
       });
     });
 
@@ -263,10 +272,10 @@ describe('Scope-DSL Cache - Additional Coverage Tests', () => {
         type: 'Union',
         left: {
           type: 'Filter',
-          logic: { '==': [{ 'var': 'type' }, 'weapon'] },
-          parent: { type: 'Source', kind: 'entities', param: 'core:item' }
+          logic: { '==': [{ var: 'type' }, 'weapon'] },
+          parent: { type: 'Source', kind: 'entities', param: 'core:item' },
         },
-        right: { type: 'Source', kind: 'actor' }
+        right: { type: 'Source', kind: 'actor' },
       };
 
       mockCache.get.mockReturnValue(undefined);
@@ -296,7 +305,7 @@ describe('Scope-DSL Cache - Additional Coverage Tests', () => {
 
     test('should handle cache hit returning null/undefined values', () => {
       const ast = { type: 'Source', kind: 'actor' };
-      
+
       // Test with null value
       mockCache.get.mockReturnValue(null);
       const result1 = cache.resolve(ast, mockActorEntity, mockRuntimeCtx);
@@ -314,11 +323,13 @@ describe('Scope-DSL Cache - Additional Coverage Tests', () => {
       const largeAst = {
         type: 'Filter',
         logic: {
-          'and': Array(100).fill(0).map((_, i) => ({
-            '==': [{ 'var': `field${i}` }, `value${i}`]
-          }))
+          and: Array(100)
+            .fill(0)
+            .map((_, i) => ({
+              '==': [{ var: `field${i}` }, `value${i}`],
+            })),
         },
-        parent: { type: 'Source', kind: 'entities', param: 'core:item' }
+        parent: { type: 'Source', kind: 'entities', param: 'core:item' },
       };
 
       mockCache.get.mockReturnValue(undefined);
@@ -343,14 +354,14 @@ describe('Scope-DSL Cache - Additional Coverage Tests', () => {
         get: jest.fn(),
         set: jest.fn(),
         clear: jest.fn(),
-        size: jest.fn().mockReturnValue(0)
+        size: jest.fn().mockReturnValue(0),
       };
-      
+
       mockScopeEngine = {
         resolve: jest.fn(),
-        setMaxDepth: jest.fn()
+        setMaxDepth: jest.fn(),
       };
-      
+
       mockSafeEventDispatcher = {
         subscribe: jest.fn().mockImplementation((eventId, handler) => {
           if (eventId === TURN_STARTED_ID) {
@@ -358,27 +369,27 @@ describe('Scope-DSL Cache - Additional Coverage Tests', () => {
             return () => {}; // unsubscribe function
           }
           return null;
-        })
+        }),
       };
-      
+
       mockLogger = {
         debug: jest.fn(),
-        error: jest.fn()
+        error: jest.fn(),
       };
 
       cache = new ScopeCache({
         cache: mockCache,
         scopeEngine: mockScopeEngine,
         safeEventDispatcher: mockSafeEventDispatcher,
-        logger: mockLogger
+        logger: mockLogger,
       });
     });
 
     test('should handle turn started event with payload', () => {
       const mockPayload = { turnNumber: 5, actorId: 'actor123' };
-      
+
       turnEventHandler(mockPayload);
-      
+
       expect(mockCache.clear).toHaveBeenCalled();
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'ScopeCache: Turn started, clearing cache'
@@ -387,7 +398,7 @@ describe('Scope-DSL Cache - Additional Coverage Tests', () => {
 
     test('should handle turn started event with null payload', () => {
       turnEventHandler(null);
-      
+
       expect(mockCache.clear).toHaveBeenCalled();
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'ScopeCache: Turn started, clearing cache'
@@ -408,35 +419,35 @@ describe('Scope-DSL Cache - Additional Coverage Tests', () => {
         get: jest.fn(),
         set: jest.fn(),
         clear: jest.fn(),
-        size: jest.fn().mockReturnValue(0)
+        size: jest.fn().mockReturnValue(0),
       };
-      
+
       mockScopeEngine = {
         resolve: jest.fn(),
-        setMaxDepth: jest.fn()
+        setMaxDepth: jest.fn(),
       };
-      
+
       unsubscribeFn = jest.fn();
       mockSafeEventDispatcher = {
-        subscribe: jest.fn().mockReturnValue(unsubscribeFn)
+        subscribe: jest.fn().mockReturnValue(unsubscribeFn),
       };
-      
+
       mockLogger = {
         debug: jest.fn(),
-        error: jest.fn()
+        error: jest.fn(),
       };
 
       cache = new ScopeCache({
         cache: mockCache,
         scopeEngine: mockScopeEngine,
         safeEventDispatcher: mockSafeEventDispatcher,
-        logger: mockLogger
+        logger: mockLogger,
       });
     });
 
     test('should properly dispose and unsubscribe from events', () => {
       cache.dispose();
-      
+
       expect(unsubscribeFn).toHaveBeenCalled();
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'ScopeCache: Unsubscribed from TURN_STARTED_ID events'
@@ -447,7 +458,7 @@ describe('Scope-DSL Cache - Additional Coverage Tests', () => {
     test('should handle dispose when already disposed', () => {
       cache.dispose();
       cache.dispose(); // Call dispose again
-      
+
       // Should not throw and should not call unsubscribe again
       expect(unsubscribeFn).toHaveBeenCalledTimes(1);
     });
@@ -459,9 +470,9 @@ describe('Scope-DSL Cache - Additional Coverage Tests', () => {
         cache: mockCache,
         scopeEngine: mockScopeEngine,
         safeEventDispatcher: mockSafeEventDispatcher,
-        logger: mockLogger
+        logger: mockLogger,
       });
-      
+
       expect(() => cacheWithFailedSub.dispose()).not.toThrow();
     });
   });
@@ -479,54 +490,54 @@ describe('Scope-DSL Cache - Additional Coverage Tests', () => {
         set: jest.fn(),
         clear: jest.fn(),
         size: jest.fn().mockReturnValue(5),
-        maxSize: 100
+        maxSize: 100,
       };
-      
+
       mockScopeEngine = {
         resolve: jest.fn(),
-        setMaxDepth: jest.fn()
+        setMaxDepth: jest.fn(),
       };
-      
+
       mockSafeEventDispatcher = {
-        subscribe: jest.fn().mockReturnValue(() => {})
+        subscribe: jest.fn().mockReturnValue(() => {}),
       };
-      
+
       mockLogger = {
         debug: jest.fn(),
-        error: jest.fn()
+        error: jest.fn(),
       };
 
       cache = new ScopeCache({
         cache: mockCache,
         scopeEngine: mockScopeEngine,
         safeEventDispatcher: mockSafeEventDispatcher,
-        logger: mockLogger
+        logger: mockLogger,
       });
     });
 
     test('should provide accurate statistics', () => {
       const stats = cache.getStats();
-      
+
       expect(stats).toEqual({
         size: 5,
         maxSize: 100,
-        subscribed: true
+        subscribed: true,
       });
     });
 
     test('should handle cache without maxSize property', () => {
       delete mockCache.maxSize;
-      
+
       const stats = cache.getStats();
-      
+
       expect(stats.maxSize).toBe('unknown');
     });
 
     test('should report unsubscribed state after disposal', () => {
       cache.dispose();
-      
+
       const stats = cache.getStats();
-      
+
       expect(stats.subscribed).toBe(false);
     });
   });
@@ -543,34 +554,34 @@ describe('Scope-DSL Cache - Additional Coverage Tests', () => {
         get: jest.fn(),
         set: jest.fn(),
         clear: jest.fn(),
-        size: jest.fn().mockReturnValue(0)
+        size: jest.fn().mockReturnValue(0),
       };
-      
+
       mockScopeEngine = {
         resolve: jest.fn(),
-        setMaxDepth: jest.fn()
+        setMaxDepth: jest.fn(),
       };
-      
+
       mockSafeEventDispatcher = {
-        subscribe: jest.fn().mockReturnValue(() => {})
+        subscribe: jest.fn().mockReturnValue(() => {}),
       };
-      
+
       mockLogger = {
         debug: jest.fn(),
-        error: jest.fn()
+        error: jest.fn(),
       };
 
       cache = new ScopeCache({
         cache: mockCache,
         scopeEngine: mockScopeEngine,
         safeEventDispatcher: mockSafeEventDispatcher,
-        logger: mockLogger
+        logger: mockLogger,
       });
     });
 
     test('should delegate setMaxDepth to wrapped engine', () => {
       cache.setMaxDepth(10);
-      
+
       expect(mockScopeEngine.setMaxDepth).toHaveBeenCalledWith(10);
     });
 
@@ -578,10 +589,10 @@ describe('Scope-DSL Cache - Additional Coverage Tests', () => {
       cache.setMaxDepth(0);
       cache.setMaxDepth(1);
       cache.setMaxDepth(100);
-      
+
       expect(mockScopeEngine.setMaxDepth).toHaveBeenCalledWith(0);
       expect(mockScopeEngine.setMaxDepth).toHaveBeenCalledWith(1);
       expect(mockScopeEngine.setMaxDepth).toHaveBeenCalledWith(100);
     });
   });
-}); 
+});

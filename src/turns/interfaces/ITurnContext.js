@@ -54,8 +54,6 @@ export class ITurnContext {
     throw new Error("Method 'getLogger()' must be implemented.");
   }
 
-
-
   /**
    * Retrieves the SafeEventDispatcher service.
    *

@@ -193,10 +193,10 @@ describe('BaseManifestItemLoader._storeItemInRegistry', () => {
 
     it('should throw DuplicateContentError if item already exists', () => {
       // Simulate that the item already exists
-      mockRegistry.get.mockReturnValue({ 
+      mockRegistry.get.mockReturnValue({
         _modId: 'existing-mod',
         id: baseItemId,
-        value: 'existing' 
+        value: 'existing',
       });
 
       expect(() => {
@@ -211,10 +211,10 @@ describe('BaseManifestItemLoader._storeItemInRegistry', () => {
 
       // Verify registry.store was NOT called since we threw an error
       expect(mockRegistry.store).not.toHaveBeenCalled();
-      
+
       // Verify no warning was logged
       expect(mockLogger.warn).not.toHaveBeenCalled();
-      
+
       // Debug for "Storing item..." should still be called
       expect(mockLogger.debug).toHaveBeenCalledTimes(1);
       expect(mockLogger.debug).toHaveBeenCalledWith(

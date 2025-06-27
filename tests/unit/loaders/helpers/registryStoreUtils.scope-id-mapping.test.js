@@ -156,28 +156,30 @@ describe('registryStoreUtils - Scope ID Mapping', () => {
         },
       ];
 
-      testCases.forEach(({ category, baseId, data, expectedIdInObject, sourceFile }) => {
-        mockRegistry.store.mockClear();
+      testCases.forEach(
+        ({ category, baseId, data, expectedIdInObject, sourceFile }) => {
+          mockRegistry.store.mockClear();
 
-        storeItemInRegistry(
-          mockLogger,
-          mockRegistry,
-          'TestLoader',
-          category,
-          'core',
-          baseId,
-          data,
-          sourceFile
-        );
+          storeItemInRegistry(
+            mockLogger,
+            mockRegistry,
+            'TestLoader',
+            category,
+            'core',
+            baseId,
+            data,
+            sourceFile
+          );
 
-        expect(mockRegistry.store).toHaveBeenCalledWith(
-          category,
-          `core:${baseId}`,
-          expect.objectContaining({
-            id: expectedIdInObject,
-          })
-        );
-      });
+          expect(mockRegistry.store).toHaveBeenCalledWith(
+            category,
+            `core:${baseId}`,
+            expect.objectContaining({
+              id: expectedIdInObject,
+            })
+          );
+        }
+      );
     });
   });
 

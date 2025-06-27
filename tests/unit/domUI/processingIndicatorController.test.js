@@ -114,18 +114,19 @@ describe('ProcessingIndicatorController', () => {
         entity: {
           id: 'player1',
           components: {
-            'core:player_type': { type: 'human' }
+            'core:player_type': { type: 'human' },
           },
           hasComponent: (id) => id === 'core:player_type',
-          getComponentData: (id) => id === 'core:player_type' ? { type: 'human' } : null
-        }
-      }
+          getComponentData: (id) =>
+            id === 'core:player_type' ? { type: 'human' } : null,
+        },
+      },
     });
 
     // Trigger focus event
     focusHandler({
       type: 'core:speech_input_gained_focus',
-      payload: { timestamp: Date.now() }
+      payload: { timestamp: Date.now() },
     });
     expect(indicator?.classList.contains('visible')).toBe(true);
     expect(indicator?.classList.contains('human')).toBe(true);
@@ -133,7 +134,7 @@ describe('ProcessingIndicatorController', () => {
     // Trigger blur event
     blurHandler({
       type: 'core:speech_input_lost_focus',
-      payload: { timestamp: Date.now() }
+      payload: { timestamp: Date.now() },
     });
     expect(indicator?.classList.contains('visible')).toBe(false);
   });

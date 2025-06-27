@@ -86,11 +86,7 @@ export class ActionValidationContextBuilder extends BaseService {
    */
   #assertValidInputs(actionDefinition, actor) {
     try {
-      validateActionInputs(
-        actionDefinition,
-        actor,
-        this.#logger
-      );
+      validateActionInputs(actionDefinition, actor, this.#logger);
     } catch (err) {
       throw formatValidationError(
         err,

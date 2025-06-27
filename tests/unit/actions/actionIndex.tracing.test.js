@@ -30,9 +30,21 @@ describe('ActionIndex', () => {
 
   // Action definitions for testing
   const actionDef1 = { id: 'action1', name: 'Action One' };
-  const actionDef2 = { id: 'action2', name: 'Action Two', required_components: { actor: ['componentA'] } };
-  const actionDef3 = { id: 'action3', name: 'Action Three', required_components: { actor: ['componentB'] } };
-  const actionDef4 = { id: 'action4', name: 'Action Four', required_components: { actor: ['componentA', 'componentC'] } };
+  const actionDef2 = {
+    id: 'action2',
+    name: 'Action Two',
+    required_components: { actor: ['componentA'] },
+  };
+  const actionDef3 = {
+    id: 'action3',
+    name: 'Action Three',
+    required_components: { actor: ['componentB'] },
+  };
+  const actionDef4 = {
+    id: 'action4',
+    name: 'Action Four',
+    required_components: { actor: ['componentA', 'componentC'] },
+  };
   const allActions = [actionDef1, actionDef2, actionDef3, actionDef4];
 
   beforeEach(() => {
@@ -52,7 +64,9 @@ describe('ActionIndex', () => {
 
     it('should return actions with no requirements if actor has no matching components', () => {
       const actorEntity = { id: 'actor1' };
-      entityManager.getAllComponentTypesForEntity.mockReturnValue(['componentD']);
+      entityManager.getAllComponentTypesForEntity.mockReturnValue([
+        'componentD',
+      ]);
       const candidates = actionIndex.getCandidateActions(actorEntity);
       expect(candidates).toHaveLength(1);
       expect(candidates).toContain(actionDef1);
@@ -60,7 +74,10 @@ describe('ActionIndex', () => {
 
     it('should return a unique set of actions based on actor components', () => {
       const actorEntity = { id: 'actor1' };
-      entityManager.getAllComponentTypesForEntity.mockReturnValue(['componentA', 'componentC']);
+      entityManager.getAllComponentTypesForEntity.mockReturnValue([
+        'componentA',
+        'componentC',
+      ]);
       const candidates = actionIndex.getCandidateActions(actorEntity);
       // Expect action1 (no req), action2 (req A), action4 (req A, C)
       expect(candidates).toHaveLength(3);
@@ -81,7 +98,9 @@ describe('ActionIndex', () => {
       });
 
       it('should not call trace.addLog if trace parameter is null', () => {
-        entityManager.getAllComponentTypesForEntity.mockReturnValue(['componentA']);
+        entityManager.getAllComponentTypesForEntity.mockReturnValue([
+          'componentA',
+        ]);
         actionIndex.getCandidateActions(actorEntity, null);
         expect(trace.addLog).not.toHaveBeenCalled();
       });
@@ -113,7 +132,9 @@ describe('ActionIndex', () => {
       });
 
       it('should log when actions are found for a specific component', () => {
-        entityManager.getAllComponentTypesForEntity.mockReturnValue(['componentA']);
+        entityManager.getAllComponentTypesForEntity.mockReturnValue([
+          'componentA',
+        ]);
 
         actionIndex.getCandidateActions(actorEntity, trace);
 
@@ -126,13 +147,17 @@ describe('ActionIndex', () => {
       });
 
       it('should not log if no actions are found for a component', () => {
-        entityManager.getAllComponentTypesForEntity.mockReturnValue(['componentD']);
+        entityManager.getAllComponentTypesForEntity.mockReturnValue([
+          'componentD',
+        ]);
 
         actionIndex.getCandidateActions(actorEntity, trace);
 
         // Ensure the 'Found X actions' log is not called for componentD
         const calls = trace.addLog.mock.calls;
-        const foundActionLogs = calls.filter(call => call[1].startsWith('Found'));
+        const foundActionLogs = calls.filter((call) =>
+          call[1].startsWith('Found')
+        );
         expect(foundActionLogs).toHaveLength(0);
       });
 
@@ -141,7 +166,7 @@ describe('ActionIndex', () => {
         entityManager.getAllComponentTypesForEntity.mockReturnValue(components);
 
         const candidates = actionIndex.getCandidateActions(actorEntity, trace);
-        const candidateIds = candidates.map(a => a.id);
+        const candidateIds = candidates.map((a) => a.id);
 
         expect(trace.addLog).toHaveBeenCalledWith(
           'success',
@@ -150,7 +175,9 @@ describe('ActionIndex', () => {
           { actionIds: candidateIds }
         );
         // Should contain action1, action2, action4
-        expect(candidateIds).toEqual(expect.arrayContaining(['action1', 'action2', 'action4']));
+        expect(candidateIds).toEqual(
+          expect.arrayContaining(['action1', 'action2', 'action4'])
+        );
         expect(candidates.length).toBe(3);
       });
 

@@ -8,9 +8,9 @@ describe('storeItemInRegistry', () => {
 
   beforeEach(() => {
     logger = { debug: jest.fn(), warn: jest.fn(), error: jest.fn() };
-    registry = { 
+    registry = {
       store: jest.fn().mockReturnValue(false),
-      get: jest.fn().mockReturnValue(undefined)
+      get: jest.fn().mockReturnValue(undefined),
     };
   });
 
@@ -42,18 +42,20 @@ describe('storeItemInRegistry', () => {
 
   it('throws DuplicateContentError when item already exists', () => {
     registry.get.mockReturnValue({ _modId: 'modB', value: 'existing' });
-    
-    expect(() => storeItemInRegistry(
-      logger,
-      registry,
-      'TestLoader',
-      'items',
-      'modA',
-      'item1',
-      {},
-      'file.json'
-    )).toThrow(DuplicateContentError);
-    
+
+    expect(() =>
+      storeItemInRegistry(
+        logger,
+        registry,
+        'TestLoader',
+        'items',
+        'modA',
+        'item1',
+        {},
+        'file.json'
+      )
+    ).toThrow(DuplicateContentError);
+
     expect(registry.store).not.toHaveBeenCalled();
     expect(logger.warn).not.toHaveBeenCalled();
   });

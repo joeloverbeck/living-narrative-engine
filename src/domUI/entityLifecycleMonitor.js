@@ -87,17 +87,33 @@ export class EntityLifecycleMonitor extends RendererBase {
     }
 
     // Create the event list element
-    this.#eventList = this.#domElementFactory?.ul?.('entity-event-list') ?? 
+    this.#eventList =
+      this.#domElementFactory?.ul?.('entity-event-list') ??
       this.documentContext.create('ul');
     this.#eventList.classList.add('entity-event-list');
     this.#container.appendChild(this.#eventList);
 
     // Subscribe to entity lifecycle events
-    this._subscribe('core:entity_created', this.#handleEntityCreated.bind(this));
-    this._subscribe('core:entity_removed', this.#handleEntityRemoved.bind(this));
-    this._subscribe('core:component_added', this.#handleComponentAdded.bind(this));
-    this._subscribe('core:component_removed', this.#handleComponentRemoved.bind(this));
-    this._subscribe('core:display_entity_components', this.#handleDisplayComponents.bind(this));
+    this._subscribe(
+      'core:entity_created',
+      this.#handleEntityCreated.bind(this)
+    );
+    this._subscribe(
+      'core:entity_removed',
+      this.#handleEntityRemoved.bind(this)
+    );
+    this._subscribe(
+      'core:component_added',
+      this.#handleComponentAdded.bind(this)
+    );
+    this._subscribe(
+      'core:component_removed',
+      this.#handleComponentRemoved.bind(this)
+    );
+    this._subscribe(
+      'core:display_entity_components',
+      this.#handleDisplayComponents.bind(this)
+    );
 
     this.logger.debug(`${this._logPrefix} Initialized.`);
   }
@@ -181,39 +197,40 @@ export class EntityLifecycleMonitor extends RendererBase {
     }
 
     // Create the list item
-    const li = this.#domElementFactory?.li?.(className) ?? 
+    const li =
+      this.#domElementFactory?.li?.(className) ??
       this.documentContext.create('li');
     li.classList.add(className, 'entity-event-entry');
-    
+
     // Add timestamp
     const timestamp = new Date().toLocaleTimeString();
     const timeSpan = this.documentContext.create('span');
     timeSpan.classList.add('event-timestamp');
     timeSpan.textContent = `[${timestamp}] `;
-    
+
     // Add message
     const messageSpan = this.documentContext.create('span');
     messageSpan.classList.add('event-message');
     messageSpan.textContent = message;
-    
+
     li.appendChild(timeSpan);
     li.appendChild(messageSpan);
-    
+
     // Calculate animation delay based on pending animations
     const currentEventId = this.#eventCounter++;
     const animationDelay = this.#pendingAnimations.size * 100; // 100ms between events
-    
+
     // Initially hide the element for staggered animation
     li.style.animationDelay = `${animationDelay}ms`;
-    
+
     // Track this animation
     this.#pendingAnimations.add(currentEventId);
-    
+
     // Remove from pending animations after animation completes
     setTimeout(() => {
       this.#pendingAnimations.delete(currentEventId);
     }, animationDelay + 400); // 400ms is the animation duration
-    
+
     // Add to list
     this.#eventList.appendChild(li);
 

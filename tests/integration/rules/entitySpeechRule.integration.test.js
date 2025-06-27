@@ -49,9 +49,7 @@ describe('core_handle_entity_speech rule integration', () => {
   beforeEach(() => {
     const dataRegistry = {
       getAllSystemRules: jest.fn().mockReturnValue([entitySpeechRule]),
-      getConditionDefinition: jest.fn(() =>
-        undefined
-      ),
+      getConditionDefinition: jest.fn(() => undefined),
     };
 
     testEnv = createRuleTestEnvironment({

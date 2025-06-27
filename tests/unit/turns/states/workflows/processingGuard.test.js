@@ -21,7 +21,9 @@ const makeTurnCtx = () => ({
 });
 
 // Mock TurnDirectiveStrategyResolver for this test suite
-jest.mock('../../../../../src/turns/strategies/turnDirectiveStrategyResolver.js');
+jest.mock(
+  '../../../../../src/turns/strategies/turnDirectiveStrategyResolver.js'
+);
 
 describe('ProcessingGuard', () => {
   let mockCommandProcessor;

@@ -25,8 +25,6 @@ class StubEntity {
   }
 }
 
-
-
 describe('Integration – AvailableActionsProvider caching', () => {
   /** @type {import('../../src/interfaces/coreServices.js').ILogger} */
   let logger;

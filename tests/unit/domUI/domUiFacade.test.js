@@ -28,9 +28,9 @@ const mockActionResultRenderer = { dispose: jest.fn() }; // Added mock for actio
 const mockSaveGameUI = { show: jest.fn(), dispose: jest.fn() };
 const mockLoadGameUI = { show: jest.fn(), dispose: jest.fn() };
 const mockLlmSelectionModal = { show: jest.fn(), dispose: jest.fn() };
-const mockEntityLifecycleMonitor = { 
-  clearEvents: jest.fn(), 
-  dispose: jest.fn() 
+const mockEntityLifecycleMonitor = {
+  clearEvents: jest.fn(),
+  dispose: jest.fn(),
 };
 
 describe('DomUiFacade', () => {

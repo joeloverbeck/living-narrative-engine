@@ -4,20 +4,19 @@
  */
 
 import { jest, describe, beforeEach, it, expect } from '@jest/globals';
-import { 
-  parseDslExpression, 
-  parseScopeFile, 
-  ScopeSyntaxError 
+import {
+  parseDslExpression,
+  parseScopeFile,
+  ScopeSyntaxError,
 } from '../../../src/scopeDsl/parser.js';
 
 describe('Scope-DSL Parser - Additional Coverage Tests', () => {
-  
   describe('Tokenizer edge cases', () => {
     test('should handle unterminated strings', () => {
       expect(() => {
         parseDslExpression('entities([{"var": "unterminated string}])');
       }).toThrow(ScopeSyntaxError);
-      
+
       expect(() => {
         parseDslExpression('entities([{"var": "unterminated string}])');
       }).toThrow('Unterminated string');
@@ -49,10 +48,10 @@ describe('Scope-DSL Parser - Additional Coverage Tests', () => {
         '// comment\nactor',
         'actor // comment',
         'actor.field // comment\n.other',
-        'entities(core:item) // comment\n[{"==": [{"var": "type"}, "weapon"]}]'
+        'entities(core:item) // comment\n[{"==": [{"var": "type"}, "weapon"]}]',
       ];
-      
-      expressions.forEach(expr => {
+
+      expressions.forEach((expr) => {
         expect(() => parseDslExpression(expr)).not.toThrow();
       });
     });
@@ -61,7 +60,7 @@ describe('Scope-DSL Parser - Additional Coverage Tests', () => {
       expect(() => {
         parseDslExpression('actor @ location');
       }).toThrow(ScopeSyntaxError);
-      
+
       expect(() => {
         parseDslExpression('actor @ location');
       }).toThrow('Unexpected character');
@@ -74,7 +73,7 @@ describe('Scope-DSL Parser - Additional Coverage Tests', () => {
       expect(() => {
         parseDslExpression(deepExpression);
       }).toThrow(ScopeSyntaxError);
-      
+
       expect(() => {
         parseDslExpression(deepExpression);
       }).toThrow('Expression depth limit exceeded');
@@ -84,7 +83,7 @@ describe('Scope-DSL Parser - Additional Coverage Tests', () => {
       expect(() => {
         parseDslExpression('actor.');
       }).toThrow(ScopeSyntaxError);
-      
+
       expect(() => {
         parseDslExpression('actor.');
       }).toThrow('Expected field name');
@@ -94,7 +93,7 @@ describe('Scope-DSL Parser - Additional Coverage Tests', () => {
       expect(() => {
         parseDslExpression('actor.core:');
       }).toThrow(ScopeSyntaxError);
-      
+
       expect(() => {
         parseDslExpression('actor.core:');
       }).toThrow('Expected identifier after colon');
@@ -104,7 +103,7 @@ describe('Scope-DSL Parser - Additional Coverage Tests', () => {
       expect(() => {
         parseDslExpression('invalidSource');
       }).toThrow(ScopeSyntaxError);
-      
+
       expect(() => {
         parseDslExpression('invalidSource');
       }).toThrow('Unknown source node');
@@ -114,7 +113,7 @@ describe('Scope-DSL Parser - Additional Coverage Tests', () => {
       expect(() => {
         parseDslExpression('entities');
       }).toThrow(ScopeSyntaxError);
-      
+
       expect(() => {
         parseDslExpression('entities');
       }).toThrow('Expected opening parenthesis');
@@ -124,7 +123,7 @@ describe('Scope-DSL Parser - Additional Coverage Tests', () => {
       expect(() => {
         parseDslExpression('entities()');
       }).toThrow(ScopeSyntaxError);
-      
+
       expect(() => {
         parseDslExpression('entities()');
       }).toThrow('Expected component identifier');
@@ -134,7 +133,7 @@ describe('Scope-DSL Parser - Additional Coverage Tests', () => {
       expect(() => {
         parseDslExpression('entities(core:item');
       }).toThrow(ScopeSyntaxError);
-      
+
       expect(() => {
         parseDslExpression('entities(core:item');
       }).toThrow('Expected closing parenthesis');
@@ -142,51 +141,71 @@ describe('Scope-DSL Parser - Additional Coverage Tests', () => {
 
     test('should handle missing opening brace in JSON Logic', () => {
       expect(() => {
-        parseDslExpression('entities(core:item)["==": [{"var": "type"}, "weapon"]]');
+        parseDslExpression(
+          'entities(core:item)["==": [{"var": "type"}, "weapon"]]'
+        );
       }).toThrow(ScopeSyntaxError);
-      
+
       expect(() => {
-        parseDslExpression('entities(core:item)["==": [{"var": "type"}, "weapon"]]');
+        parseDslExpression(
+          'entities(core:item)["==": [{"var": "type"}, "weapon"]]'
+        );
       }).toThrow('Expected opening brace for JSON Logic object');
     });
 
     test('should handle non-string keys in JSON Logic', () => {
       expect(() => {
-        parseDslExpression('entities(core:item)[{123: [{"var": "type"}, "weapon"]}]');
+        parseDslExpression(
+          'entities(core:item)[{123: [{"var": "type"}, "weapon"]}]'
+        );
       }).toThrow(ScopeSyntaxError);
-      
+
       expect(() => {
-        parseDslExpression('entities(core:item)[{123: [{"var": "type"}, "weapon"]}]');
+        parseDslExpression(
+          'entities(core:item)[{123: [{"var": "type"}, "weapon"]}]'
+        );
       }).toThrow('Unexpected character');
     });
 
     test('should handle missing colon after key in JSON Logic', () => {
       expect(() => {
-        parseDslExpression('entities(core:item)[{"==" [{"var": "type"}, "weapon"]}]');
+        parseDslExpression(
+          'entities(core:item)[{"==" [{"var": "type"}, "weapon"]}]'
+        );
       }).toThrow(ScopeSyntaxError);
-      
+
       expect(() => {
-        parseDslExpression('entities(core:item)[{"==" [{"var": "type"}, "weapon"]}]');
+        parseDslExpression(
+          'entities(core:item)[{"==" [{"var": "type"}, "weapon"]}]'
+        );
       }).toThrow('Expected colon after key');
     });
 
     test('should handle missing closing brace in JSON Logic', () => {
       expect(() => {
-        parseDslExpression('entities(core:item)[{"==": [{"var": "type"}, "weapon"]');
+        parseDslExpression(
+          'entities(core:item)[{"==": [{"var": "type"}, "weapon"]'
+        );
       }).toThrow(ScopeSyntaxError);
-      
+
       expect(() => {
-        parseDslExpression('entities(core:item)[{"==": [{"var": "type"}, "weapon"]');
+        parseDslExpression(
+          'entities(core:item)[{"==": [{"var": "type"}, "weapon"]'
+        );
       }).toThrow('Expected closing brace for JSON Logic object');
     });
 
     test('should handle missing closing bracket for filter', () => {
       expect(() => {
-        parseDslExpression('entities(core:item)[{"==": [{"var": "type"}, "weapon"]}');
+        parseDslExpression(
+          'entities(core:item)[{"==": [{"var": "type"}, "weapon"]}'
+        );
       }).toThrow(ScopeSyntaxError);
-      
+
       expect(() => {
-        parseDslExpression('entities(core:item)[{"==": [{"var": "type"}, "weapon"]}');
+        parseDslExpression(
+          'entities(core:item)[{"==": [{"var": "type"}, "weapon"]}'
+        );
       }).toThrow('Expected closing bracket for filter');
     });
 
@@ -194,7 +213,7 @@ describe('Scope-DSL Parser - Additional Coverage Tests', () => {
       expect(() => {
         parseDslExpression('actor extra tokens');
       }).toThrow(ScopeSyntaxError);
-      
+
       expect(() => {
         parseDslExpression('actor extra tokens');
       }).toThrow('Unexpected tokens after expression');
@@ -204,47 +223,69 @@ describe('Scope-DSL Parser - Additional Coverage Tests', () => {
   describe('JSON Logic parsing edge cases', () => {
     test('should handle numeric values in JSON Logic', () => {
       expect(() => {
-        parseDslExpression('entities(core:item)[{"==": [{"var": "level"}, 5]}]');
+        parseDslExpression(
+          'entities(core:item)[{"==": [{"var": "level"}, 5]}]'
+        );
       }).toThrow(ScopeSyntaxError);
     });
 
     test('should handle boolean values in JSON Logic', () => {
-      const result = parseDslExpression('entities(core:item)[{"==": [{"var": "active"}, true]}]');
-      expect(result.logic['==']).toEqual([{'var': 'active'}, true]);
+      const result = parseDslExpression(
+        'entities(core:item)[{"==": [{"var": "active"}, true]}]'
+      );
+      expect(result.logic['==']).toEqual([{ var: 'active' }, true]);
     });
 
     test('should handle null values in JSON Logic', () => {
-      const result = parseDslExpression('entities(core:item)[{"==": [{"var": "parent"}, "null"]}]');
-      expect(result.logic['==']).toEqual([{'var': 'parent'}, 'null']);
+      const result = parseDslExpression(
+        'entities(core:item)[{"==": [{"var": "parent"}, "null"]}]'
+      );
+      expect(result.logic['==']).toEqual([{ var: 'parent' }, 'null']);
     });
 
     test('should handle nested objects in JSON Logic', () => {
       expect(() => {
-        parseDslExpression('entities(core:item)[{"==": [{"var": "config"}, {"enabled": true, "level": 5}]}]');
+        parseDslExpression(
+          'entities(core:item)[{"==": [{"var": "config"}, {"enabled": true, "level": 5}]}]'
+        );
       }).toThrow(ScopeSyntaxError);
     });
 
     test('should handle arrays in JSON Logic', () => {
-      const result = parseDslExpression('entities(core:item)[{"in": [{"var": "type"}, ["weapon", "armor", "consumable"]]}]');
-      expect(result.logic['in']).toEqual([{'var': 'type'}, ['weapon', 'armor', 'consumable']]);
+      const result = parseDslExpression(
+        'entities(core:item)[{"in": [{"var": "type"}, ["weapon", "armor", "consumable"]]}]'
+      );
+      expect(result.logic['in']).toEqual([
+        { var: 'type' },
+        ['weapon', 'armor', 'consumable'],
+      ]);
     });
 
     test('should handle empty arrays in JSON Logic', () => {
-      const result = parseDslExpression('entities(core:item)[{"in": [{"var": "type"}, []]}]');
-      expect(result.logic['in']).toEqual([{'var': 'type'}, []]);
+      const result = parseDslExpression(
+        'entities(core:item)[{"in": [{"var": "type"}, []]}]'
+      );
+      expect(result.logic['in']).toEqual([{ var: 'type' }, []]);
     });
 
     test('should handle multiple key-value pairs in JSON Logic with trailing comma', () => {
-      const result = parseDslExpression('entities(core:item)[{"and": [{"==": [{"var": "type"}, "weapon"]}, {"!=": [{"var": "broken"}, true]},]}]');
+      const result = parseDslExpression(
+        'entities(core:item)[{"and": [{"==": [{"var": "type"}, "weapon"]}, {"!=": [{"var": "broken"}, true]},]}]'
+      );
       expect(result.logic['and']).toEqual([
-        {'==': [{'var': 'type'}, 'weapon']},
-        {'!=': [{'var': 'broken'}, true]}
+        { '==': [{ var: 'type' }, 'weapon'] },
+        { '!=': [{ var: 'broken' }, true] },
       ]);
     });
 
     test('should handle entity references in JSON Logic', () => {
-      const result = parseDslExpression('entities(core:item)[{"==": [{"var": "owner"}, {"entity": "player1"}]}]');
-      expect(result.logic['==']).toEqual([{'var': 'owner'}, {'entity': 'player1'}]);
+      const result = parseDslExpression(
+        'entities(core:item)[{"==": [{"var": "owner"}, {"entity": "player1"}]}]'
+      );
+      expect(result.logic['==']).toEqual([
+        { var: 'owner' },
+        { entity: 'player1' },
+      ]);
     });
   });
 
@@ -295,7 +336,9 @@ describe('Scope-DSL Parser - Additional Coverage Tests', () => {
 
   describe('Complex expression parsing', () => {
     test('should handle deeply nested union expressions', () => {
-      const result = parseDslExpression('actor + location + entities(core:item) + entities(core:npc)');
+      const result = parseDslExpression(
+        'actor + location + entities(core:item) + entities(core:npc)'
+      );
       expect(result.type).toBe('Union');
       expect(result.left.type).toBe('Source');
       expect(result.right.type).toBe('Union');
@@ -304,7 +347,9 @@ describe('Scope-DSL Parser - Additional Coverage Tests', () => {
 
     test('should handle filter on union result', () => {
       expect(() => {
-        parseDslExpression('(actor + entities(core:npc))[{"!=": [{"var": "id"}, "excludeId"]}]');
+        parseDslExpression(
+          '(actor + entities(core:npc))[{"!=": [{"var": "id"}, "excludeId"]}]'
+        );
       }).toThrow(ScopeSyntaxError);
     });
 
@@ -357,7 +402,7 @@ describe('Scope-DSL Parser - Additional Coverage Tests', () => {
       const multiLineExpr = `actor
         .field1
         .invalid syntax here`;
-      
+
       try {
         parseDslExpression(multiLineExpr);
       } catch (error) {
@@ -376,7 +421,7 @@ describe('Scope-DSL Parser - Additional Coverage Tests', () => {
           .field1
           .field2
       `;
-      
+
       // This shouldn't throw, but if it does, position should be tracked correctly
       expect(() => parseDslExpression(expression)).not.toThrow();
     });
@@ -399,4 +444,4 @@ describe('Scope-DSL Parser - Additional Coverage Tests', () => {
       }).toThrow(ScopeSyntaxError);
     });
   });
-}); 
+});

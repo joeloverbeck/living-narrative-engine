@@ -95,7 +95,9 @@ describe('Scope Integration Tests', () => {
     scopeRegistry.initialize({
       'core:followers': { expr: followerDefs.get('core:followers') },
       'core:environment': { expr: environmentDefs.get('core:environment') },
-      'core:clear_directions': { expr: directionDefs.get('core:clear_directions') },
+      'core:clear_directions': {
+        expr: directionDefs.get('core:clear_directions'),
+      },
     });
 
     scopeEngine = new ScopeEngine();
@@ -152,7 +154,7 @@ describe('Scope Integration Tests', () => {
       safeEventDispatcher,
       jsonLogicEvaluationService: jsonLogicEval,
     });
-    
+
     return new ActionDiscoveryService({
       gameDataRepository,
       entityManager,

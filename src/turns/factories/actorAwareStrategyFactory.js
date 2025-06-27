@@ -48,9 +48,20 @@ export class ActorAwareStrategyFactory extends ITurnStrategyFactory {
   constructor({
     providers = null,
     providerResolver = (actor) => {
+      // Check new player_type component first
+      if (actor?.components?.['core:player_type']) {
+        return actor.components['core:player_type'].type;
+      }
+
+      // Check legacy aiType or ai component
       const type = actor?.aiType ?? actor?.components?.ai?.type;
       if (typeof type === 'string') return type.toLowerCase();
-      return actor?.isAi === true ? 'llm' : 'human';
+
+      // Check legacy isAi property
+      if (actor?.isAi === true) return 'llm';
+
+      // Default to human for actors without explicit type
+      return 'human';
     },
     logger,
     choicePipeline,

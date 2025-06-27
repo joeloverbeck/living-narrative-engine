@@ -16,7 +16,6 @@ import { setupService } from '../../utils/serviceInitializerUtils.js';
 /** @typedef {import('../../interfaces/IActionDiscoveryService.js').IActionDiscoveryService} IActionDiscoveryService */
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 
-
 /** @typedef {import('../../turns/dtos/AIGameStateDTO.js').AIAvailableActionDTO} AIAvailableActionDTO */
 
 /**
@@ -44,11 +43,11 @@ export class AvailableActionsProvider extends IAvailableActionsProvider {
    * @param {ILogger} dependencies.logger
    */
   constructor({
-                actionDiscoveryService,
-                actionIndexingService: actionIndexer,
-                entityManager,
-                logger,
-              }) {
+    actionDiscoveryService,
+    actionIndexingService: actionIndexer,
+    entityManager,
+    logger,
+  }) {
     super();
 
     this.#logger = setupService('AvailableActionsProvider', logger, {
@@ -117,8 +116,13 @@ export class AvailableActionsProvider extends IAvailableActionsProvider {
       };
 
       // The method signature is the same, but the payload of actionCtx is different.
-      const { actions: discoveredActions, errors, trace } =
-        await this.#actionDiscoveryService.getValidActions(actor, actionCtx, { trace: true });
+      const {
+        actions: discoveredActions,
+        errors,
+        trace,
+      } = await this.#actionDiscoveryService.getValidActions(actor, actionCtx, {
+        trace: true,
+      });
 
       if (trace && logger.table && logger.groupCollapsed && logger.groupEnd) {
         logger.debug(`[Action Discovery Trace for actor ${actor.id}]`);
@@ -129,9 +133,13 @@ export class AvailableActionsProvider extends IAvailableActionsProvider {
 
       // --- Log any formatting errors that occurred ---
       if (errors && errors.length > 0) {
-        logger.warn(`Encountered ${errors.length} formatting error(s) during action discovery for actor ${actor.id}. These actions will not be available.`);
-        errors.forEach(err => {
-          logger.warn(`  - Action '${err.actionId}' (Target: ${err.targetId || 'N/A'}): ${err.error}`);
+        logger.warn(
+          `Encountered ${errors.length} formatting error(s) during action discovery for actor ${actor.id}. These actions will not be available.`
+        );
+        errors.forEach((err) => {
+          logger.warn(
+            `  - Action '${err.actionId}' (Target: ${err.targetId || 'N/A'}): ${err.error}`
+          );
         });
       }
 

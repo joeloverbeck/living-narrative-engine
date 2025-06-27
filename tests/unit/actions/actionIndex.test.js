@@ -55,27 +55,31 @@ describe('ActionIndex', () => {
           id: 'action1',
           name: 'Attack',
           required_components: {
-            actor: ['core:stats']
-          }
+            actor: ['core:stats'],
+          },
         },
         {
           id: 'action2',
           name: 'Take Item',
           required_components: {
-            actor: ['core:inventory']
-          }
+            actor: ['core:inventory'],
+          },
         },
         {
           id: 'action3',
-          name: 'Wait'
+          name: 'Wait',
           // No required_components
-        }
+        },
       ];
 
       actionIndex.buildIndex(actionDefinitions);
 
-      expect(logger.debug).toHaveBeenCalledWith('Building action index from 3 definitions...');
-      expect(logger.debug).toHaveBeenCalledWith('Action index built. 2 component-to-action maps created.');
+      expect(logger.debug).toHaveBeenCalledWith(
+        'Building action index from 3 definitions...'
+      );
+      expect(logger.debug).toHaveBeenCalledWith(
+        'Action index built. 2 component-to-action maps created.'
+      );
     });
 
     it('should handle actions with multiple required components', () => {
@@ -84,26 +88,34 @@ describe('ActionIndex', () => {
           id: 'action1',
           name: 'Complex Action',
           required_components: {
-            actor: ['core:stats', 'core:inventory', 'core:position']
-          }
-        }
+            actor: ['core:stats', 'core:inventory', 'core:position'],
+          },
+        },
       ];
 
       actionIndex.buildIndex(actionDefinitions);
 
-      expect(logger.debug).toHaveBeenCalledWith('Action index built. 3 component-to-action maps created.');
+      expect(logger.debug).toHaveBeenCalledWith(
+        'Action index built. 3 component-to-action maps created.'
+      );
     });
 
     it('should handle actions without required_components', () => {
       const actionDefinitions = [
         { id: 'action1', name: 'Universal Action' },
         { id: 'action2', name: 'Another Universal', required_components: {} },
-        { id: 'action3', name: 'Empty Actor Array', required_components: { actor: [] } }
+        {
+          id: 'action3',
+          name: 'Empty Actor Array',
+          required_components: { actor: [] },
+        },
       ];
 
       actionIndex.buildIndex(actionDefinitions);
 
-      expect(logger.debug).toHaveBeenCalledWith('Action index built. 0 component-to-action maps created.');
+      expect(logger.debug).toHaveBeenCalledWith(
+        'Action index built. 0 component-to-action maps created.'
+      );
     });
 
     it('should warn and skip when allActionDefinitions is not an array', () => {
@@ -128,7 +140,11 @@ describe('ActionIndex', () => {
         undefined,
         'invalid-string',
         42,
-        { id: 'valid', name: 'Valid Action', required_components: { actor: ['core:stats'] } }
+        {
+          id: 'valid',
+          name: 'Valid Action',
+          required_components: { actor: ['core:stats'] },
+        },
       ];
 
       actionIndex.buildIndex(actionDefinitions);
@@ -136,7 +152,9 @@ describe('ActionIndex', () => {
       expect(logger.debug).toHaveBeenCalledWith(
         expect.stringContaining('Skipping invalid action definition:')
       );
-      expect(logger.debug).toHaveBeenCalledWith('Action index built. 1 component-to-action maps created.');
+      expect(logger.debug).toHaveBeenCalledWith(
+        'Action index built. 1 component-to-action maps created.'
+      );
     });
 
     it('should handle invalid component IDs in required_components.actor', () => {
@@ -145,29 +163,43 @@ describe('ActionIndex', () => {
           id: 'action1',
           name: 'Action with invalid components',
           required_components: {
-            actor: ['valid-component', null, '', '  ', 42, undefined, 'another-valid']
-          }
-        }
+            actor: [
+              'valid-component',
+              null,
+              '',
+              '  ',
+              42,
+              undefined,
+              'another-valid',
+            ],
+          },
+        },
       ];
 
       actionIndex.buildIndex(actionDefinitions);
 
       // Should only create maps for valid component IDs
-      expect(logger.debug).toHaveBeenCalledWith('Action index built. 2 component-to-action maps created.');
+      expect(logger.debug).toHaveBeenCalledWith(
+        'Action index built. 2 component-to-action maps created.'
+      );
     });
 
     it('should clear existing index when building new one', () => {
       // First build
       actionIndex.buildIndex([
-        { id: 'action1', required_components: { actor: ['comp1'] } }
+        { id: 'action1', required_components: { actor: ['comp1'] } },
       ]);
-      expect(logger.debug).toHaveBeenCalledWith('Action index built. 1 component-to-action maps created.');
+      expect(logger.debug).toHaveBeenCalledWith(
+        'Action index built. 1 component-to-action maps created.'
+      );
 
       // Second build should clear first
       actionIndex.buildIndex([
-        { id: 'action2', required_components: { actor: ['comp2'] } }
+        { id: 'action2', required_components: { actor: ['comp2'] } },
       ]);
-      expect(logger.debug).toHaveBeenCalledWith('Action index built. 1 component-to-action maps created.');
+      expect(logger.debug).toHaveBeenCalledWith(
+        'Action index built. 1 component-to-action maps created.'
+      );
     });
 
     it('should handle non-array required_components.actor', () => {
@@ -175,20 +207,22 @@ describe('ActionIndex', () => {
         {
           id: 'action1',
           required_components: {
-            actor: 'not-an-array'
-          }
+            actor: 'not-an-array',
+          },
         },
         {
           id: 'action2',
           required_components: {
-            actor: null
-          }
-        }
+            actor: null,
+          },
+        },
       ];
 
       actionIndex.buildIndex(actionDefinitions);
 
-      expect(logger.debug).toHaveBeenCalledWith('Action index built. 0 component-to-action maps created.');
+      expect(logger.debug).toHaveBeenCalledWith(
+        'Action index built. 0 component-to-action maps created.'
+      );
     });
   });
 
@@ -198,46 +232,51 @@ describe('ActionIndex', () => {
         {
           id: 'attack',
           name: 'Attack',
-          required_components: { actor: ['core:combat'] }
+          required_components: { actor: ['core:combat'] },
         },
         {
           id: 'take',
           name: 'Take',
-          required_components: { actor: ['core:inventory'] }
+          required_components: { actor: ['core:inventory'] },
         },
         {
           id: 'move',
           name: 'Move',
-          required_components: { actor: ['core:position'] }
+          required_components: { actor: ['core:position'] },
         },
         {
           id: 'dual-req',
           name: 'Dual Requirement',
-          required_components: { actor: ['core:combat', 'core:inventory'] }
+          required_components: { actor: ['core:combat', 'core:inventory'] },
         },
         {
           id: 'wait',
-          name: 'Wait'
+          name: 'Wait',
           // No requirements
         },
         {
           id: 'sleep',
-          name: 'Sleep'
+          name: 'Sleep',
           // No requirements
-        }
+        },
       ];
       actionIndex.buildIndex(actionDefinitions);
     });
 
     it('should return candidate actions for entity with matching components', () => {
       const actorEntity = { id: 'player1' };
-      entityManager.getAllComponentTypesForEntity.mockReturnValue(['core:combat', 'core:inventory']);
+      entityManager.getAllComponentTypesForEntity.mockReturnValue([
+        'core:combat',
+        'core:inventory',
+      ]);
 
       const candidates = actionIndex.getCandidateActions(actorEntity);
 
-      expect(entityManager.getAllComponentTypesForEntity).toHaveBeenCalledWith('player1');
+      expect(entityManager.getAllComponentTypesForEntity).toHaveBeenCalledWith(
+        'player1'
+      );
       expect(candidates).toHaveLength(5); // wait, sleep, attack, take, dual-req
-      expect(candidates.map(a => a.id)).toEqual(
+      expect(candidates.map((a) => a.id)).toEqual(
         expect.arrayContaining(['wait', 'sleep', 'attack', 'take', 'dual-req'])
       );
       expect(logger.debug).toHaveBeenCalledWith(
@@ -247,23 +286,30 @@ describe('ActionIndex', () => {
 
     it('should deduplicate actions when actor has multiple components for same action', () => {
       const actorEntity = { id: 'player1' };
-      entityManager.getAllComponentTypesForEntity.mockReturnValue(['core:combat', 'core:inventory']);
+      entityManager.getAllComponentTypesForEntity.mockReturnValue([
+        'core:combat',
+        'core:inventory',
+      ]);
 
       const candidates = actionIndex.getCandidateActions(actorEntity);
 
       // dual-req action requires both components, should only appear once
-      const dualReqActions = candidates.filter(a => a.id === 'dual-req');
+      const dualReqActions = candidates.filter((a) => a.id === 'dual-req');
       expect(dualReqActions).toHaveLength(1);
     });
 
     it('should return only no-requirement actions for entity with no matching components', () => {
       const actorEntity = { id: 'npc1' };
-      entityManager.getAllComponentTypesForEntity.mockReturnValue(['core:dialogue']);
+      entityManager.getAllComponentTypesForEntity.mockReturnValue([
+        'core:dialogue',
+      ]);
 
       const candidates = actionIndex.getCandidateActions(actorEntity);
 
       expect(candidates).toHaveLength(2); // wait, sleep
-      expect(candidates.map(a => a.id)).toEqual(expect.arrayContaining(['wait', 'sleep']));
+      expect(candidates.map((a) => a.id)).toEqual(
+        expect.arrayContaining(['wait', 'sleep'])
+      );
     });
 
     it('should return only no-requirement actions for entity with no components', () => {
@@ -273,21 +319,27 @@ describe('ActionIndex', () => {
       const candidates = actionIndex.getCandidateActions(actorEntity);
 
       expect(candidates).toHaveLength(2); // wait, sleep
-      expect(candidates.map(a => a.id)).toEqual(expect.arrayContaining(['wait', 'sleep']));
+      expect(candidates.map((a) => a.id)).toEqual(
+        expect.arrayContaining(['wait', 'sleep'])
+      );
     });
 
     it('should return empty array when entity is null', () => {
       const candidates = actionIndex.getCandidateActions(null);
 
       expect(candidates).toEqual([]);
-      expect(entityManager.getAllComponentTypesForEntity).not.toHaveBeenCalled();
+      expect(
+        entityManager.getAllComponentTypesForEntity
+      ).not.toHaveBeenCalled();
     });
 
     it('should return empty array when entity is undefined', () => {
       const candidates = actionIndex.getCandidateActions(undefined);
 
       expect(candidates).toEqual([]);
-      expect(entityManager.getAllComponentTypesForEntity).not.toHaveBeenCalled();
+      expect(
+        entityManager.getAllComponentTypesForEntity
+      ).not.toHaveBeenCalled();
     });
 
     it('should return empty array when entity has no id', () => {
@@ -295,21 +347,27 @@ describe('ActionIndex', () => {
       const candidates = actionIndex.getCandidateActions(actorEntity);
 
       expect(candidates).toEqual([]);
-      expect(entityManager.getAllComponentTypesForEntity).not.toHaveBeenCalled();
+      expect(
+        entityManager.getAllComponentTypesForEntity
+      ).not.toHaveBeenCalled();
     });
 
     it('should handle partial component matches', () => {
       const actorEntity = { id: 'partial1' };
-      entityManager.getAllComponentTypesForEntity.mockReturnValue(['core:combat']);
+      entityManager.getAllComponentTypesForEntity.mockReturnValue([
+        'core:combat',
+      ]);
 
       const candidates = actionIndex.getCandidateActions(actorEntity);
 
       // dual-req is included because actor has core:combat (even though it also needs core:inventory)
       // ActionIndex is for pre-filtering - actual validation happens later
       expect(candidates).toHaveLength(4); // wait, sleep, attack, dual-req
-      expect(candidates.map(a => a.id)).toEqual(expect.arrayContaining(['wait', 'sleep', 'attack', 'dual-req']));
-      expect(candidates.map(a => a.id)).not.toContain('take');
-      expect(candidates.map(a => a.id)).not.toContain('move');
+      expect(candidates.map((a) => a.id)).toEqual(
+        expect.arrayContaining(['wait', 'sleep', 'attack', 'dual-req'])
+      );
+      expect(candidates.map((a) => a.id)).not.toContain('take');
+      expect(candidates.map((a) => a.id)).not.toContain('move');
     });
 
     it('should handle entity manager returning null component types', () => {
@@ -326,32 +384,41 @@ describe('ActionIndex', () => {
       const complexActionDefinitions = [
         {
           id: 'basic-action',
-          required_components: { actor: ['basic'] }
+          required_components: { actor: ['basic'] },
         },
         {
           id: 'advanced-action',
-          required_components: { actor: ['basic', 'advanced'] }
+          required_components: { actor: ['basic', 'advanced'] },
         },
         {
           id: 'expert-action',
-          required_components: { actor: ['basic', 'advanced', 'expert'] }
+          required_components: { actor: ['basic', 'advanced', 'expert'] },
         },
         {
           id: 'universal',
-        }
+        },
       ];
 
       const complexIndex = new ActionIndex({ logger, entityManager });
       complexIndex.buildIndex(complexActionDefinitions);
 
       const actorEntity = { id: 'expert-user' };
-      entityManager.getAllComponentTypesForEntity.mockReturnValue(['basic', 'advanced', 'expert']);
+      entityManager.getAllComponentTypesForEntity.mockReturnValue([
+        'basic',
+        'advanced',
+        'expert',
+      ]);
 
       const candidates = complexIndex.getCandidateActions(actorEntity);
 
       expect(candidates).toHaveLength(4); // All actions should be available
-      expect(candidates.map(a => a.id)).toEqual(
-        expect.arrayContaining(['basic-action', 'advanced-action', 'expert-action', 'universal'])
+      expect(candidates.map((a) => a.id)).toEqual(
+        expect.arrayContaining([
+          'basic-action',
+          'advanced-action',
+          'expert-action',
+          'universal',
+        ])
       );
     });
   });
@@ -361,19 +428,25 @@ describe('ActionIndex', () => {
       actionIndex.buildIndex([]);
 
       const actorEntity = { id: 'player1' };
-      entityManager.getAllComponentTypesForEntity.mockReturnValue(['core:combat']);
+      entityManager.getAllComponentTypesForEntity.mockReturnValue([
+        'core:combat',
+      ]);
 
       const candidates = actionIndex.getCandidateActions(actorEntity);
 
       expect(candidates).toEqual([]);
-      expect(logger.debug).toHaveBeenCalledWith('Building action index from 0 definitions...');
-      expect(logger.debug).toHaveBeenCalledWith('Action index built. 0 component-to-action maps created.');
+      expect(logger.debug).toHaveBeenCalledWith(
+        'Building action index from 0 definitions...'
+      );
+      expect(logger.debug).toHaveBeenCalledWith(
+        'Action index built. 0 component-to-action maps created.'
+      );
     });
 
     it('should handle rebuild scenario correctly', () => {
       // Initial build
       actionIndex.buildIndex([
-        { id: 'temp-action', required_components: { actor: ['temp'] } }
+        { id: 'temp-action', required_components: { actor: ['temp'] } },
       ]);
 
       const actorEntity = { id: 'test-actor' };
@@ -385,10 +458,15 @@ describe('ActionIndex', () => {
 
       // Rebuild with different actions
       actionIndex.buildIndex([
-        { id: 'permanent-action', required_components: { actor: ['permanent'] } }
+        {
+          id: 'permanent-action',
+          required_components: { actor: ['permanent'] },
+        },
       ]);
 
-      entityManager.getAllComponentTypesForEntity.mockReturnValue(['permanent']);
+      entityManager.getAllComponentTypesForEntity.mockReturnValue([
+        'permanent',
+      ]);
       candidates = actionIndex.getCandidateActions(actorEntity);
       expect(candidates).toHaveLength(1);
       expect(candidates[0].id).toBe('permanent-action');
@@ -402,8 +480,8 @@ describe('ActionIndex', () => {
           id: `action-${i}`,
           name: `Action ${i}`,
           required_components: {
-            actor: [`component-${i % 10}`] // Cycle through 10 components
-          }
+            actor: [`component-${i % 10}`], // Cycle through 10 components
+          },
         });
       }
 
@@ -411,21 +489,26 @@ describe('ActionIndex', () => {
       for (let i = 0; i < 100; i++) {
         largeActionSet.push({
           id: `universal-${i}`,
-          name: `Universal ${i}`
+          name: `Universal ${i}`,
         });
       }
 
       actionIndex.buildIndex(largeActionSet);
 
       const actorEntity = { id: 'performance-test' };
-      entityManager.getAllComponentTypesForEntity.mockReturnValue(['component-0', 'component-5']);
+      entityManager.getAllComponentTypesForEntity.mockReturnValue([
+        'component-0',
+        'component-5',
+      ]);
 
       const candidates = actionIndex.getCandidateActions(actorEntity);
 
       // Should get universal actions + actions for component-0 + actions for component-5
       // 100 universal + 100 for component-0 + 100 for component-5 = 300
       expect(candidates).toHaveLength(300);
-      expect(logger.debug).toHaveBeenCalledWith('Action index built. 10 component-to-action maps created.');
+      expect(logger.debug).toHaveBeenCalledWith(
+        'Action index built. 10 component-to-action maps created.'
+      );
     });
   });
-}); 
+});

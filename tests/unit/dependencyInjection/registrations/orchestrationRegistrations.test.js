@@ -70,17 +70,17 @@ describe('registerOrchestration', () => {
     container.register(tokens.IEntityManager, () => ({}));
     container.register(tokens.DomUiFacade, () => ({}));
     container.register(tokens.GameLoop, () => mockGameLoop);
-    
+
     // Add ActionIndex and GameDataRepository registrations for InitializationService
     container.register(tokens.ActionIndex, () => ({
       buildIndex: jest.fn(),
-      getCandidateActions: jest.fn().mockReturnValue([])
+      getCandidateActions: jest.fn().mockReturnValue([]),
     }));
     container.register(tokens.IGameDataRepository, () => ({
-      getAllActionDefinitions: jest.fn().mockReturnValue([])
+      getAllActionDefinitions: jest.fn().mockReturnValue([]),
     }));
     container.register(tokens.ISpatialIndexManager, () => ({
-      buildIndex: jest.fn()
+      buildIndex: jest.fn(),
     }));
   });
 
@@ -144,17 +144,17 @@ describe('registerOrchestration', () => {
     badContainer.register(tokens.IEntityManager, () => ({}));
     badContainer.register(tokens.DomUiFacade, () => ({}));
     badContainer.register(tokens.GameLoop, () => mockGameLoop);
-    
+
     // Add ActionIndex and GameDataRepository registrations
     badContainer.register(tokens.ActionIndex, () => ({
       buildIndex: jest.fn(),
-      getCandidateActions: jest.fn().mockReturnValue([])
+      getCandidateActions: jest.fn().mockReturnValue([]),
     }));
     badContainer.register(tokens.IGameDataRepository, () => ({
-      getAllActionDefinitions: jest.fn().mockReturnValue([])
+      getAllActionDefinitions: jest.fn().mockReturnValue([]),
     }));
     badContainer.register(tokens.ISpatialIndexManager, () => ({
-      buildIndex: jest.fn()
+      buildIndex: jest.fn(),
     }));
 
     registerOrchestration(badContainer);
@@ -192,17 +192,17 @@ describe('registerOrchestration', () => {
     badContainer.register(tokens.IEntityManager, () => ({}));
     badContainer.register(tokens.DomUiFacade, () => ({}));
     badContainer.register(tokens.GameLoop, () => undefined);
-    
+
     // Add ActionIndex and GameDataRepository registrations
     badContainer.register(tokens.ActionIndex, () => ({
       buildIndex: jest.fn(),
-      getCandidateActions: jest.fn().mockReturnValue([])
+      getCandidateActions: jest.fn().mockReturnValue([]),
     }));
     badContainer.register(tokens.IGameDataRepository, () => ({
-      getAllActionDefinitions: jest.fn().mockReturnValue([])
+      getAllActionDefinitions: jest.fn().mockReturnValue([]),
     }));
     badContainer.register(tokens.ISpatialIndexManager, () => ({
-      buildIndex: jest.fn()
+      buildIndex: jest.fn(),
     }));
 
     registerOrchestration(badContainer);

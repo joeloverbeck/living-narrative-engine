@@ -136,7 +136,7 @@ describe('ScopeLoader', () => {
       const parsedContent = new Map([
         ['inventory_items', 'actor.inventory.items[]'],
       ]);
-      
+
       expect(() => loader.transformContent(parsedContent, 'core')).toThrow(
         "Scope 'inventory_items' must be namespaced (e.g., 'core:inventory_items'). Only 'none' and 'self' are allowed without namespace."
       );
@@ -146,7 +146,7 @@ describe('ScopeLoader', () => {
       const parsedContent = new Map([
         ['wrong:inventory_items', 'actor.inventory.items[]'],
       ]);
-      
+
       expect(() => loader.transformContent(parsedContent, 'core')).toThrow(
         "Scope 'wrong:inventory_items' is declared in mod 'core' but claims to belong to mod 'wrong'. Scope names must match the mod they're defined in."
       );

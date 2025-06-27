@@ -1,7 +1,5 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
-import {
-  buildActorContext,
-} from '../../../src/actions/validation/contextBuilders.js';
+import { buildActorContext } from '../../../src/actions/validation/contextBuilders.js';
 import { ENTITY as TARGET_TYPE_ENTITY } from '../../../src/constants/actionTargetTypes.js';
 
 // We mock the createComponentAccessor to isolate the context builders' logic.

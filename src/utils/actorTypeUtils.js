@@ -20,12 +20,12 @@ export function determineActorType(actor) {
     // For backward compatibility, map non-human types to 'ai'
     return playerType === 'human' ? 'human' : 'ai';
   }
-  
+
   // Legacy check for core:player component
   if (actor?.components?.['core:player']) {
     return 'human';
   }
-  
+
   // Legacy isAi property check
   return actor && actor.isAi === true ? 'ai' : 'human';
 }
@@ -44,20 +44,20 @@ export function determineSpecificPlayerType(actor) {
   if (actor?.components?.['core:player_type']) {
     return actor.components['core:player_type'].type;
   }
-  
+
   // Check AI type from legacy ai component
   if (actor?.components?.ai?.type) {
     return actor.components.ai.type.toLowerCase();
   }
-  
+
   // Legacy checks
   if (actor?.components?.['core:player']) {
     return 'human';
   }
-  
+
   if (actor?.isAi === true) {
     return 'llm'; // Default AI type
   }
-  
+
   return 'human'; // Default fallback
 }

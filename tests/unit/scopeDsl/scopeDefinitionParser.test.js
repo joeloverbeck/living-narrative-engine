@@ -29,7 +29,9 @@ describe('parseScopeDefinitions', () => {
       const result = parseScopeDefinitions(content, filePath);
 
       expect(result.size).toBe(1);
-      expect(result.get('core:followers')).toBe('actor.core:leading.followers[]');
+      expect(result.get('core:followers')).toBe(
+        'actor.core:leading.followers[]'
+      );
     });
 
     it('should parse multiple single-line scope definitions', () => {
@@ -42,8 +44,12 @@ describe('parseScopeDefinitions', () => {
       const result = parseScopeDefinitions(content, filePath);
 
       expect(result.size).toBe(2);
-      expect(result.get('core:followers')).toBe('actor.core:leading.followers[]');
-      expect(result.get('core:directions')).toBe('location.core:exits[].target');
+      expect(result.get('core:followers')).toBe(
+        'actor.core:leading.followers[]'
+      );
+      expect(result.get('core:directions')).toBe(
+        'location.core:exits[].target'
+      );
     });
 
     it('should ignore comments and empty lines', () => {
@@ -60,8 +66,12 @@ describe('parseScopeDefinitions', () => {
       const result = parseScopeDefinitions(content, filePath);
 
       expect(result.size).toBe(2);
-      expect(result.get('core:followers')).toBe('actor.core:leading.followers[]');
-      expect(result.get('core:directions')).toBe('location.core:exits[].target');
+      expect(result.get('core:followers')).toBe(
+        'actor.core:leading.followers[]'
+      );
+      expect(result.get('core:directions')).toBe(
+        'location.core:exits[].target'
+      );
     });
   });
 
@@ -113,8 +123,12 @@ describe('parseScopeDefinitions', () => {
       const result = parseScopeDefinitions(content, filePath);
 
       expect(result.size).toBe(3);
-      expect(result.get('core:followers')).toBe('actor.core:leading.followers[]');
-      expect(result.get('core:directions')).toBe('location.core:exits[].target');
+      expect(result.get('core:followers')).toBe(
+        'actor.core:leading.followers[]'
+      );
+      expect(result.get('core:directions')).toBe(
+        'location.core:exits[].target'
+      );
 
       const actualEnvironmentExpression = result.get('core:environment');
       expect(actualEnvironmentExpression).toContain('entities(core:position)');

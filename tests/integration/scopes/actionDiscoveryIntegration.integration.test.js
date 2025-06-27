@@ -109,7 +109,9 @@ describe('Scope Integration Tests', () => {
     scopeRegistry.initialize({
       'core:followers': { expr: followerDefs.get('core:followers') },
       'core:environment': { expr: environmentDefs.get('core:environment') },
-      'core:clear_directions': { expr: directionDefs.get('core:clear_directions') },
+      'core:clear_directions': {
+        expr: directionDefs.get('core:clear_directions'),
+      },
       'core:potential_leaders': {
         expr: potentialLeadersDefs.get('core:potential_leaders'),
       },
@@ -123,7 +125,12 @@ describe('Scope Integration Tests', () => {
     registry.store('actions', waitAction.id, waitAction);
     registry.store('conditions', 'core:entity-at-location', {
       id: 'core:entity-at-location',
-      logic: { '==': [{ var: 'entity.components.core:position.locationId' }, { var: 'location.id' }] },
+      logic: {
+        '==': [
+          { var: 'entity.components.core:position.locationId' },
+          { var: 'location.id' },
+        ],
+      },
     });
     registry.store('conditions', 'core:entity-is-not-current-actor', {
       id: 'core:entity-is-not-current-actor',
@@ -135,11 +142,18 @@ describe('Scope Integration Tests', () => {
     });
     registry.store('conditions', 'core:entity-is-following-actor', {
       id: 'core:entity-is-following-actor',
-      logic: { '==': [{ var: 'entity.components.core:following.leaderId' }, { var: 'actor.id' }] },
+      logic: {
+        '==': [
+          { var: 'entity.components.core:following.leaderId' },
+          { var: 'actor.id' },
+        ],
+      },
     });
     registry.store('conditions', 'core:actor-is-not-rooted', {
       id: 'core:actor-is-not-rooted',
-      logic: { '==': [{ var: 'actor.components.core:movement.locked' }, false] },
+      logic: {
+        '==': [{ var: 'actor.components.core:movement.locked' }, false],
+      },
     });
     registry.store('conditions', 'core:exit-is-unblocked', {
       id: 'core:exit-is-unblocked',
@@ -161,7 +175,7 @@ describe('Scope Integration Tests', () => {
     const validatedEventDispatcher = {
       dispatch: () => {},
       subscribe: () => {},
-      unsubscribe: () => {}
+      unsubscribe: () => {},
     };
 
     safeEventDispatcher = new SafeEventDispatcher({

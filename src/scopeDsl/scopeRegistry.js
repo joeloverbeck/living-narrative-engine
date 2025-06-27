@@ -38,7 +38,9 @@ class ScopeRegistry {
 
     // Only allow namespaced scope names (must contain ':')
     if (!name.includes(':')) {
-      throw new Error(`Scope names must be namespaced (e.g., 'core:${name}'), but got: '${name}'. Only 'none' and 'self' are allowed without namespace.`);
+      throw new Error(
+        `Scope names must be namespaced (e.g., 'core:${name}'), but got: '${name}'. Only 'none' and 'self' are allowed without namespace.`
+      );
     }
 
     return this._scopes.get(name) || null;

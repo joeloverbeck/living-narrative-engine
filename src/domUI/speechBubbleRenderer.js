@@ -5,7 +5,10 @@
 
 import { BoundDomRendererBase } from './boundDomRendererBase.js';
 import { DISPLAY_SPEECH_ID } from '../constants/eventIds.js';
-import { PLAYER_COMPONENT_ID, PLAYER_TYPE_COMPONENT_ID } from '../constants/componentIds.js';
+import {
+  PLAYER_COMPONENT_ID,
+  PLAYER_TYPE_COMPONENT_ID,
+} from '../constants/componentIds.js';
 import { buildSpeechMeta } from './helpers/buildSpeechMeta.js';
 import { DEFAULT_SPEAKER_NAME } from './uiDefaults.js';
 
@@ -182,7 +185,9 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
     if (speakerEntity) {
       // Check new player_type component first
       if (speakerEntity.hasComponent(PLAYER_TYPE_COMPONENT_ID)) {
-        const playerTypeData = speakerEntity.getComponentData(PLAYER_TYPE_COMPONENT_ID);
+        const playerTypeData = speakerEntity.getComponentData(
+          PLAYER_TYPE_COMPONENT_ID
+        );
         isPlayer = playerTypeData?.type === 'human';
       } else if (speakerEntity.hasComponent(PLAYER_COMPONENT_ID)) {
         // Fallback to old player component for backward compatibility

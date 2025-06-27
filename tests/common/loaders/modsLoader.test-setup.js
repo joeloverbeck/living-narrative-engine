@@ -81,7 +81,8 @@ export function createTestEnvironment() {
 
   // Adapter class for ModsLoader constructor
   class ModsLoaderAdapter {
-    constructor({ mocks }) { // container is not directly used by ModsLoader constructor
+    constructor({ mocks }) {
+      // container is not directly used by ModsLoader constructor
       return new ModsLoader({
         logger: mocks.mockLogger,
         cache: { clear: jest.fn(), snapshot: jest.fn(), restore: jest.fn() },

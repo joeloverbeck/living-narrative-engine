@@ -7,7 +7,6 @@ import Entity from '../../src/entities/entity.js';
 import { buildEntityDefinition } from '../common/entities/index.js';
 import EntityManagerIntegrationTestBed from '../common/entities/entityManagerIntegrationTestBed.js';
 
-
 describe('EntityManager Integration Tests', () => {
   let entityManager;
   let dataRegistry;
