@@ -1,35 +1,36 @@
--03 Depth Guard Utility
-Goal – Extract stateless depth checking.
+T-04 Cycle Detector Utility
+Goal – Isolate cycle detection logic.
 
 Files
 
-scopeDsl/core/depthGuard.js
+scopeDsl/core/cycleDetector.js
 
-tests/unit/scopeDsl/core/depthGuard.test.js
+tests/core/cycleDetector.test.js
 
-Implementation
+Implementation outline
 
-import ScopeDepthError from '../../errors/scopeDepthError.js';
-export default function createDepthGuard(maxDepth) {
+import ScopeCycleError from '../../errors/scopeCycleError.js';
+
+export default function createCycleDetector() {
+const stack = [];
 return {
-ensure(level) {
-if (level > maxDepth) {
-throw new ScopeDepthError(
-Depth ${level} exceeds ${maxDepth}, level, maxDepth
-);
+enter(key) {
+if (stack.includes(key)) {
+throw new ScopeCycleError(Cycle: ${[...stack, key].join(' -> ')}, [...stack, key]);
 }
-}
+stack.push(key);
+},
+leave() { stack.pop(); }
 };
 }
-
 Tests
 
-ensure does not throw when level ≤ max.
+Enters unique keys fine.
 
-Throws exact error instance when level > max.
+Throws on repeated key in stack.
+
+leave() pops correctly.
 
 Acceptance
 
-Utility has 100 % statement coverage.
-
-No change in public behaviour (engine still uses inline checks for now).
+100 % branch coverage for detector.
