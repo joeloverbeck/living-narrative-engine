@@ -7,6 +7,8 @@
 import { validateDependency } from '../../utils/validationUtils.js';
 import { ensureValidLogger } from '../../utils/loggerUtils.js';
 import { DuplicateEntityError } from '../../errors/duplicateEntityError.js';
+import { SerializedEntityError } from '../../errors/serializedEntityError.js';
+import { InvalidInstanceIdError } from '../../errors/invalidInstanceIdError.js';
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 
@@ -38,7 +40,21 @@ export class ErrorTranslator {
    * @param {Error} err - Original error thrown by the factory.
    * @returns {Error|DuplicateEntityError} Translated error with proper typing
    */
-  translateReconstructionError(err) {
+  translate(err) {
+    if (err instanceof SerializedEntityError) {
+      const msg =
+        'EntityManager.reconstructEntity: serializedEntity data is missing or invalid.';
+      this.#logger.error(msg);
+      return new SerializedEntityError(msg);
+    }
+
+    if (err instanceof InvalidInstanceIdError) {
+      const msg =
+        'EntityManager.reconstructEntity: instanceId is missing or invalid in serialized data.';
+      this.#logger.error(msg);
+      return new InvalidInstanceIdError(err.instanceId, msg);
+    }
+
     if (
       err instanceof Error &&
       err.message.startsWith(
@@ -48,7 +64,7 @@ export class ErrorTranslator {
       const msg =
         'EntityManager.reconstructEntity: serializedEntity data is missing or invalid.';
       this.#logger.error(msg);
-      return new Error(msg);
+      return new SerializedEntityError(msg);
     }
 
     if (
@@ -60,7 +76,7 @@ export class ErrorTranslator {
       const msg =
         'EntityManager.reconstructEntity: instanceId is missing or invalid in serialized data.';
       this.#logger.error(msg);
-      return new Error(msg);
+      return new InvalidInstanceIdError('unknown', msg);
     }
 
     if (
@@ -68,18 +84,12 @@ export class ErrorTranslator {
       err.message.startsWith('EntityFactory.reconstruct: Entity with ID')
     ) {
       const match = err.message.match(
-        /EntityFactory\.reconstruct: (Entity with ID '.*? already exists\. Reconstruction aborted\.)/
+        /Entity with ID '([^']+)' already exists/
       );
       if (match) {
-        const msg = `EntityManager.reconstructEntity: ${match[1]}`;
+        const msg = `EntityManager.reconstructEntity: Entity with ID '${match[1]}' already exists. Reconstruction aborted.`;
         this.#logger.error(msg);
-        const entityMatch = match[1].match(
-          /Entity with ID '([^']+)' already exists/
-        );
-        if (entityMatch) {
-          return new DuplicateEntityError(entityMatch[1], msg);
-        }
-        return new DuplicateEntityError('unknown', msg);
+        return new DuplicateEntityError(match[1], msg);
       }
     }
 
