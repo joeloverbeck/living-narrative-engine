@@ -6,12 +6,8 @@
   "description": "Lean in and softly kiss the target on the cheek.",
   "scope": "intimacy:close_actors",
   "required_components": {
-    "actor": [
-      "intimacy:closeness"
-    ],
-    "target": [
-      "core:actor"
-    ]
+    "actor": ["intimacy:closeness"],
+    "target": ["core:actor"]
   },
   "template": "kiss {target}'s cheek",
   "prerequisites": []

@@ -203,13 +203,21 @@ export function createServiceTestEnvironment({
  *   cleanup: () => void
  * }} Generated environment with the service instance.
  */
-export function buildServiceEnvironment(factoryMap, tokenMap, serviceCtor, overrides = {}, setupMocks) {
-  const { mocks, mockContainer, instance, cleanup, createInstance } = createServiceTestEnvironment({
-    factoryMap,
-    tokenMap,
-    build: (container, localMocks) => new serviceCtor({ container, mocks: localMocks }),
-    overrides,
-    setupMocks,
-  });
+export function buildServiceEnvironment(
+  factoryMap,
+  tokenMap,
+  serviceCtor,
+  overrides = {},
+  setupMocks
+) {
+  const { mocks, mockContainer, instance, cleanup, createInstance } =
+    createServiceTestEnvironment({
+      factoryMap,
+      tokenMap,
+      build: (container, localMocks) =>
+        new serviceCtor({ container, mocks: localMocks }),
+      overrides,
+      setupMocks,
+    });
   return { mocks, mockContainer, service: instance, cleanup, createInstance };
 }

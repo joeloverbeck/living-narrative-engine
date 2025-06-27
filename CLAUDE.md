@@ -9,10 +9,12 @@ Living Narrative Engine is a browser-based platform for creating highly moddable
 ## Architecture
 
 The project consists of two main parts:
+
 - **Main Application** (`/`): Browser-based game engine
 - **LLM Proxy Server** (`/llm-proxy-server`): Node.js microservice for LLM communication
 
 Key architectural patterns:
+
 - **Entity Component System (ECS)** for game objects
 - **Event-driven architecture** with centralized event bus
 - **Dependency injection** using IoC container
@@ -46,6 +48,7 @@ npm run find-condition-refs # Find condition usage
 ```
 
 For LLM proxy server (from `/llm-proxy-server`):
+
 ```bash
 npm install
 npm run dev             # Start proxy server
@@ -55,14 +58,17 @@ npm run test           # Run proxy tests
 ## Critical Configuration
 
 ### game.json
+
 Required file at `./data/game.json` that controls mod loading:
+
 ```json
 {
-  "mods": ["core", "your-mod"]  // Load order matters - later mods override earlier
+  "mods": ["core", "your-mod"] // Load order matters - later mods override earlier
 }
 ```
 
 ### Project Structure
+
 ```
 src/
 ├── actions/           # Action discovery and execution
@@ -85,31 +91,38 @@ tests/
 ## Development Guidelines
 
 ### Coding Patterns
+
 - **Test-Driven Development**: Write tests first for new modules
 - **Lint compliance**: Always run `npm run lint` regarding the modified files after modifications
 - **No production mocking**: Only mock in test files
 - **Check for duplicates**: Search for existing functionality before creating new code
 
 ### Testing Requirements
+
 - Framework: Jest with jsdom
 - Coverage targets: 80% branches, 90% functions/lines
 - Run tests after every complete modification
 - When tests pass without changes after code modifications, write new focused tests
 
 ### Mod System
+
 - Mod IDs are case-insensitive for validation but preserve original casing
 - Each mod requires `mod-manifest.json`
 - UI assets in optional `ui/` folder with `icons.json` and `labels.json`
 
 ### Memory Components
+
 Actors use four distinct memory systems:
+
 - `core:short_term_memory` - Internal monologue (max 10 entries)
 - `core:perception_log` - Event history (max 50 entries)
 - `core:notes` - Persistent thoughts (uncapped, deduped)
 - `core:goals` - Designer-defined objectives (uncapped)
 
 ### Scope DSL
+
 Custom language for entity queries without hardcoded JavaScript:
+
 - Files use `.scope` extension
 - Located in mod directories
 - Max expression depth: 4

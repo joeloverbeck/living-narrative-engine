@@ -18,10 +18,11 @@ export class DuplicateContentError extends Error {
    */
   constructor(contentType, qualifiedId, modId, existingModId, sourceFile) {
     const sourceInfo = sourceFile ? ` from file '${sourceFile}'` : '';
-    const message = `Duplicate ${contentType} identifier '${qualifiedId}' detected. ` +
+    const message =
+      `Duplicate ${contentType} identifier '${qualifiedId}' detected. ` +
       `Mod '${modId}'${sourceInfo} is attempting to override content originally defined by mod '${existingModId}'. ` +
       `Mod overrides are not allowed.`;
-    
+
     super(message);
     this.name = 'DuplicateContentError';
     this.contentType = contentType;
@@ -29,7 +30,7 @@ export class DuplicateContentError extends Error {
     this.modId = modId;
     this.existingModId = existingModId;
     this.sourceFile = sourceFile;
-    
+
     if (Error.captureStackTrace) {
       Error.captureStackTrace(this, DuplicateContentError);
     }

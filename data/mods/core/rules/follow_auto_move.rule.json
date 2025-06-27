@@ -45,7 +45,9 @@
             "type": "IF",
             "comment": "Step 2: If any followers were found, proceed to move them.",
             "parameters": {
-              "condition": { ">": [{ "var": "context.followersToMove.length" }, 0] },
+              "condition": {
+                ">": [{ "var": "context.followersToMove.length" }, 0]
+              },
               "then_actions": [
                 {
                   "type": "QUERY_COMPONENT",
@@ -60,7 +62,9 @@
                   "type": "QUERY_COMPONENT",
                   "comment": "Get the destination location's name for event messages.",
                   "parameters": {
-                    "entity_ref": { "entityId": "{event.payload.currentLocationId}" },
+                    "entity_ref": {
+                      "entityId": "{event.payload.currentLocationId}"
+                    },
                     "component_type": "core:name",
                     "result_variable": "newLocationName"
                   }

@@ -94,26 +94,45 @@ describe('BaseManifestItemLoader._parseIdAndStoreItem', () => {
       logger
     );
 
-    jest.spyOn(loader, '_storeItemInRegistry').mockImplementation(
-      (categoryArg, modIdArg, baseIdArg, dataToStoreArg, sourceFilenameArg) => {
-        const qualifiedIdInternal = `${modIdArg}:${baseIdArg}`;
-        let finalIdInternal = baseIdArg;
-        if (['actions', 'scopes', 'entityDefinitions', 'entityInstances'].includes(categoryArg)) {
-          finalIdInternal = qualifiedIdInternal;
+    jest
+      .spyOn(loader, '_storeItemInRegistry')
+      .mockImplementation(
+        (
+          categoryArg,
+          modIdArg,
+          baseIdArg,
+          dataToStoreArg,
+          sourceFilenameArg
+        ) => {
+          const qualifiedIdInternal = `${modIdArg}:${baseIdArg}`;
+          let finalIdInternal = baseIdArg;
+          if (
+            [
+              'actions',
+              'scopes',
+              'entityDefinitions',
+              'entityInstances',
+            ].includes(categoryArg)
+          ) {
+            finalIdInternal = qualifiedIdInternal;
+          }
+
+          const dataWithMetadataInternal = {
+            ...dataToStoreArg,
+            _modId: modIdArg,
+            _sourceFile: sourceFilenameArg,
+            _fullId: qualifiedIdInternal,
+            id: finalIdInternal,
+          };
+
+          mockRegistry.store(
+            categoryArg,
+            qualifiedIdInternal,
+            dataWithMetadataInternal
+          );
+          return { qualifiedId: qualifiedIdInternal, didOverride: false };
         }
-
-        const dataWithMetadataInternal = {
-          ...dataToStoreArg,
-          _modId: modIdArg,
-          _sourceFile: sourceFilenameArg,
-          _fullId: qualifiedIdInternal,
-          id: finalIdInternal,
-        };
-
-        mockRegistry.store(categoryArg, qualifiedIdInternal, dataWithMetadataInternal);
-        return { qualifiedId: qualifiedIdInternal, didOverride: false };
-      }
-    );
+      );
   });
 
   it('parses ID and stores item, returning result', () => {
@@ -144,7 +163,8 @@ describe('BaseManifestItemLoader._parseIdAndStoreItem', () => {
     expect(mockRegistry.store).toHaveBeenCalledTimes(1);
     expect(loader._storeItemInRegistry).toHaveBeenCalledTimes(1);
 
-    const storeItemInRegistryCallArgs = loader._storeItemInRegistry.mock.calls[0];
+    const storeItemInRegistryCallArgs =
+      loader._storeItemInRegistry.mock.calls[0];
     const dataParamReceivedBySpy = storeItemInRegistryCallArgs[3];
 
     expect(dataParamReceivedBySpy).toBeDefined();

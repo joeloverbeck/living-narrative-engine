@@ -13,7 +13,7 @@ jest.mock('../../../src/scopeDsl/parser.js', () => {
   const originalModule = jest.requireActual('../../../src/scopeDsl/parser.js');
   return {
     ...originalModule,
-    parseDslExpression: jest.fn()
+    parseDslExpression: jest.fn(),
   };
 });
 
@@ -24,22 +24,32 @@ describe('parseScopeDefinitions - Additional Coverage Tests', () => {
     const parserModule = require('../../../src/scopeDsl/parser.js');
     mockParseDslExpression = parserModule.parseDslExpression;
     jest.clearAllMocks();
-    
+
     // Default successful parsing behavior
-    mockParseDslExpression.mockReturnValue({ type: 'scope', expression: 'mocked' });
+    mockParseDslExpression.mockReturnValue({
+      type: 'scope',
+      expression: 'mocked',
+    });
   });
 
   describe('Error handling with parser failures', () => {
     it('should throw ScopeDefinitionError when parser throws ScopeSyntaxError', () => {
       const content = 'core:invalid := invalid.syntax.here';
       const filePath = 'test.scope';
-      
-      const syntaxError = new ScopeSyntaxError('Invalid syntax at position 5', 1, 5, 'invalid.syntax.here\n    ^');
+
+      const syntaxError = new ScopeSyntaxError(
+        'Invalid syntax at position 5',
+        1,
+        5,
+        'invalid.syntax.here\n    ^'
+      );
       mockParseDslExpression.mockImplementation(() => {
         throw syntaxError;
       });
 
-      expect(() => parseScopeDefinitions(content, filePath)).toThrow(ScopeDefinitionError);
+      expect(() => parseScopeDefinitions(content, filePath)).toThrow(
+        ScopeDefinitionError
+      );
       expect(() => parseScopeDefinitions(content, filePath)).toThrow(
         'Invalid DSL expression in test.scope for scope "core:invalid":'
       );
@@ -48,12 +58,14 @@ describe('parseScopeDefinitions - Additional Coverage Tests', () => {
     it('should throw ScopeDefinitionError when parser throws generic Error', () => {
       const content = 'core:broken := some.broken.expression';
       const filePath = 'broken.scope';
-      
+
       mockParseDslExpression.mockImplementation(() => {
         throw new Error('Parser failed unexpectedly');
       });
 
-      expect(() => parseScopeDefinitions(content, filePath)).toThrow(ScopeDefinitionError);
+      expect(() => parseScopeDefinitions(content, filePath)).toThrow(
+        ScopeDefinitionError
+      );
       expect(() => parseScopeDefinitions(content, filePath)).toThrow(
         'Invalid DSL expression in broken.scope for scope "core:broken":'
       );
@@ -62,12 +74,14 @@ describe('parseScopeDefinitions - Additional Coverage Tests', () => {
     it('should handle malformed scope name in error message', () => {
       const content = 'malformed:scope:name := expression';
       const filePath = 'malformed.scope';
-      
+
       mockParseDslExpression.mockImplementation(() => {
         throw new Error('Invalid expression');
       });
 
-      expect(() => parseScopeDefinitions(content, filePath)).toThrow(ScopeDefinitionError);
+      expect(() => parseScopeDefinitions(content, filePath)).toThrow(
+        ScopeDefinitionError
+      );
     });
   });
 
@@ -76,7 +90,9 @@ describe('parseScopeDefinitions - Additional Coverage Tests', () => {
       const content = '   \n\n   \t  \n  ';
       const filePath = 'empty-trimmed.scope';
 
-      expect(() => parseScopeDefinitions(content, filePath)).toThrow(ScopeDefinitionError);
+      expect(() => parseScopeDefinitions(content, filePath)).toThrow(
+        ScopeDefinitionError
+      );
       expect(() => parseScopeDefinitions(content, filePath)).toThrow(
         'Scope file is empty or contains only comments: empty-trimmed.scope'
       );
@@ -90,17 +106,22 @@ describe('parseScopeDefinitions - Additional Coverage Tests', () => {
       `;
       const filePath = 'comments-only.scope';
 
-      expect(() => parseScopeDefinitions(content, filePath)).toThrow(ScopeDefinitionError);
+      expect(() => parseScopeDefinitions(content, filePath)).toThrow(
+        ScopeDefinitionError
+      );
       expect(() => parseScopeDefinitions(content, filePath)).toThrow(
         'Scope file is empty or contains only comments: comments-only.scope'
       );
     });
 
     it('should handle mixed whitespace and comments', () => {
-      const content = '  // comment  \n\t// another comment\n   \n// final comment';
+      const content =
+        '  // comment  \n\t// another comment\n   \n// final comment';
       const filePath = 'mixed-whitespace-comments.scope';
 
-      expect(() => parseScopeDefinitions(content, filePath)).toThrow(ScopeDefinitionError);
+      expect(() => parseScopeDefinitions(content, filePath)).toThrow(
+        ScopeDefinitionError
+      );
       expect(() => parseScopeDefinitions(content, filePath)).toThrow(
         'Scope file is empty or contains only comments: mixed-whitespace-comments.scope'
       );
@@ -110,7 +131,9 @@ describe('parseScopeDefinitions - Additional Coverage Tests', () => {
       const content = 'continuation line without scope start';
       const filePath = 'invalid-continuation.scope';
 
-      expect(() => parseScopeDefinitions(content, filePath)).toThrow(ScopeDefinitionError);
+      expect(() => parseScopeDefinitions(content, filePath)).toThrow(
+        ScopeDefinitionError
+      );
       expect(() => parseScopeDefinitions(content, filePath)).toThrow(
         'Invalid scope definition format in invalid-continuation.scope: "continuation line without scope start". Expected "name := dsl_expression"'
       );
@@ -120,7 +143,9 @@ describe('parseScopeDefinitions - Additional Coverage Tests', () => {
       const content = 'invalid format without colon equals';
       const filePath = 'malformed.scope';
 
-      expect(() => parseScopeDefinitions(content, filePath)).toThrow(ScopeDefinitionError);
+      expect(() => parseScopeDefinitions(content, filePath)).toThrow(
+        ScopeDefinitionError
+      );
       expect(() => parseScopeDefinitions(content, filePath)).toThrow(
         'Invalid scope definition format in malformed.scope: "invalid format without colon equals". Expected "name := dsl_expression"'
       );
@@ -133,12 +158,19 @@ describe('parseScopeDefinitions - Additional Coverage Tests', () => {
       // Mock the parser to throw an error
       mockParseDslExpression.mockImplementation((expr) => {
         if (expr === 'invalid_dsl_syntax_here()') {
-          throw new ScopeSyntaxError('Invalid syntax in DSL expression', 1, 1, expr);
+          throw new ScopeSyntaxError(
+            'Invalid syntax in DSL expression',
+            1,
+            1,
+            expr
+          );
         }
         return { type: 'scope', expression: 'mocked' };
       });
 
-      expect(() => parseScopeDefinitions(content, filePath)).toThrow(ScopeDefinitionError);
+      expect(() => parseScopeDefinitions(content, filePath)).toThrow(
+        ScopeDefinitionError
+      );
     });
 
     it('should handle multiple continuation lines correctly', () => {
@@ -153,7 +185,7 @@ describe('parseScopeDefinitions - Additional Coverage Tests', () => {
       const filePath = 'multi-continuation.scope';
 
       const result = parseScopeDefinitions(content, filePath);
-      
+
       expect(result.size).toBe(1);
       const expression = result.get('core:complex');
       expect(expression).toContain('entities(core:item)');
@@ -171,7 +203,7 @@ describe('parseScopeDefinitions - Additional Coverage Tests', () => {
       const filePath = 'whitespace-continuation.scope';
 
       const result = parseScopeDefinitions(content, filePath);
-      
+
       expect(result.size).toBe(1);
       const expression = result.get('core:spaced');
       expect(expression).toContain('entities(core:item)');
@@ -188,7 +220,7 @@ describe('parseScopeDefinitions - Additional Coverage Tests', () => {
       const filePath = 'precise-spacing.scope';
 
       const result = parseScopeDefinitions(content, filePath);
-      
+
       expect(result.size).toBe(1);
       const expression = result.get('core:precise');
       // Should preserve the structure with spaces where line breaks were
@@ -216,19 +248,27 @@ describe('parseScopeDefinitions - Additional Coverage Tests', () => {
     });
 
     it('should handle long scope names', () => {
-      const content = 'very_long_mod_name:very_long_component_name := entities(core:item)';
+      const content =
+        'very_long_mod_name:very_long_component_name := entities(core:item)';
       const filePath = 'long-names.scope';
 
       const result = parseScopeDefinitions(content, filePath);
-      expect(result.has('very_long_mod_name:very_long_component_name')).toBe(true);
-      expect(result.get('very_long_mod_name:very_long_component_name')).toBe('entities(core:item)');
+      expect(result.has('very_long_mod_name:very_long_component_name')).toBe(
+        true
+      );
+      expect(result.get('very_long_mod_name:very_long_component_name')).toBe(
+        'entities(core:item)'
+      );
     });
 
     it('should handle complex namespace patterns', () => {
-      const content = 'mod123:complex_namespace:item_v2 := entities(mod123:item)';
+      const content =
+        'mod123:complex_namespace:item_v2 := entities(mod123:item)';
       const filePath = 'complex-namespace.scope';
 
-      expect(() => parseScopeDefinitions(content, filePath)).toThrow(ScopeDefinitionError);
+      expect(() => parseScopeDefinitions(content, filePath)).toThrow(
+        ScopeDefinitionError
+      );
     });
   });
 
@@ -238,10 +278,12 @@ describe('parseScopeDefinitions - Additional Coverage Tests', () => {
       const filePath = 'trimmed.scope';
 
       const result = parseScopeDefinitions(content, filePath);
-      
+
       expect(result.size).toBe(1);
       expect(result.get('core:trimmed')).toBe('entities(core:item)');
-      expect(mockParseDslExpression).toHaveBeenCalledWith('entities(core:item)');
+      expect(mockParseDslExpression).toHaveBeenCalledWith(
+        'entities(core:item)'
+      );
     });
 
     it('should handle expressions that are only whitespace after trimming', () => {
@@ -255,7 +297,9 @@ describe('parseScopeDefinitions - Additional Coverage Tests', () => {
         return { type: 'scope', expression: 'mocked' };
       });
 
-      expect(() => parseScopeDefinitions(content, filePath)).toThrow(ScopeDefinitionError);
+      expect(() => parseScopeDefinitions(content, filePath)).toThrow(
+        ScopeDefinitionError
+      );
     });
 
     it('should handle expressions with internal whitespace correctly', () => {
@@ -263,10 +307,12 @@ describe('parseScopeDefinitions - Additional Coverage Tests', () => {
       const filePath = 'internal-spaces.scope';
 
       const result = parseScopeDefinitions(content, filePath);
-      
+
       expect(result.size).toBe(1);
       expect(result.get('core:spaced')).toBe('actor . followers [ ]');
-      expect(mockParseDslExpression).toHaveBeenCalledWith('actor . followers [ ]');
+      expect(mockParseDslExpression).toHaveBeenCalledWith(
+        'actor . followers [ ]'
+      );
     });
   });
 
@@ -275,7 +321,9 @@ describe('parseScopeDefinitions - Additional Coverage Tests', () => {
       const content = '   \t\n\r\n   \t  ';
       const filePath = 'whitespace-only.scope';
 
-      expect(() => parseScopeDefinitions(content, filePath)).toThrow(ScopeDefinitionError);
+      expect(() => parseScopeDefinitions(content, filePath)).toThrow(
+        ScopeDefinitionError
+      );
       expect(() => parseScopeDefinitions(content, filePath)).toThrow(
         'Scope file is empty or contains only comments'
       );
@@ -286,7 +334,7 @@ describe('parseScopeDefinitions - Additional Coverage Tests', () => {
       const filePath = 'mixed-endings.scope';
 
       const result = parseScopeDefinitions(content, filePath);
-      
+
       expect(result.size).toBe(2);
       expect(result.get('core:mixed')).toBe('actor');
       expect(result.get('core:endings')).toBe('location');
@@ -300,7 +348,7 @@ describe('parseScopeDefinitions - Additional Coverage Tests', () => {
       const filePath = 'ending-comment.scope';
 
       const result = parseScopeDefinitions(content, filePath);
-      
+
       expect(result.size).toBe(1);
       expect(result.get('core:test')).toBe('actor');
     });
@@ -329,34 +377,40 @@ describe('parseScopeDefinitions - Additional Coverage Tests', () => {
     it('should handle scope names with quotes in error messages', () => {
       const content = 'core:test"quote := invalid';
       const filePath = 'quote.scope';
-      
+
       mockParseDslExpression.mockImplementation(() => {
         throw new Error('Invalid syntax');
       });
 
-      expect(() => parseScopeDefinitions(content, filePath)).toThrow(ScopeDefinitionError);
+      expect(() => parseScopeDefinitions(content, filePath)).toThrow(
+        ScopeDefinitionError
+      );
     });
 
     it('should handle very long scope names in error messages', () => {
       const longScopeName = 'core:' + 'a'.repeat(200);
       const content = `${longScopeName} := invalid`;
       const filePath = 'long-name.scope';
-      
+
       mockParseDslExpression.mockImplementation(() => {
         throw new Error('Invalid syntax');
       });
 
-      expect(() => parseScopeDefinitions(content, filePath)).toThrow(ScopeDefinitionError);
+      expect(() => parseScopeDefinitions(content, filePath)).toThrow(
+        ScopeDefinitionError
+      );
     });
 
     it('should handle non-standard scope name formats in error reporting', () => {
       const content = 'invalid-format := expression';
       const filePath = 'invalid-format.scope';
-      
-      expect(() => parseScopeDefinitions(content, filePath)).toThrow(ScopeDefinitionError);
+
+      expect(() => parseScopeDefinitions(content, filePath)).toThrow(
+        ScopeDefinitionError
+      );
       expect(() => parseScopeDefinitions(content, filePath)).toThrow(
         'Invalid scope definition format in invalid-format.scope: "invalid-format := expression". Expected "name := dsl_expression"'
       );
     });
   });
-}); 
+});

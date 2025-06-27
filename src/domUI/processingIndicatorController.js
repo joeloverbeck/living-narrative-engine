@@ -238,14 +238,11 @@ export class ProcessingIndicatorController extends BoundDomRendererBase {
       `${this._logPrefix} Subscribed to core:speech_input_lost_focus.`
     );
 
-    this._subscribe(
-      PLAYER_TURN_SUBMITTED_ID,
-      () => {
-        if (this.#isHumanTurn) {
-          this.#hideIndicator('human');
-        }
+    this._subscribe(PLAYER_TURN_SUBMITTED_ID, () => {
+      if (this.#isHumanTurn) {
+        this.#hideIndicator('human');
       }
-    );
+    });
     this.logger.debug(
       `${this._logPrefix} Subscribed to ${PLAYER_TURN_SUBMITTED_ID} for hiding player indicator.`
     );
@@ -266,12 +263,12 @@ export class ProcessingIndicatorController extends BoundDomRendererBase {
       if (playerType === 'goap') return 'ai-goap';
       return 'ai-llm'; // Default to LLM for other AI types
     }
-    
+
     // Fallback to old detection method for backward compatibility
     if (payload?.entityType === 'player') {
       return 'human';
     }
-    
+
     return 'ai-llm'; // Default to AI LLM
   }
 
@@ -285,19 +282,24 @@ export class ProcessingIndicatorController extends BoundDomRendererBase {
     if (this.#indicatorElement) {
       // Remove all type classes first
       this.#indicatorElement.classList.remove('human', 'ai-llm', 'ai-goap');
-      
+
       // Add the appropriate type class
       this.#indicatorElement.classList.add(type);
-      
+
       // Update aria-label based on type
       const ariaLabels = {
-        'human': 'Typing...',
+        human: 'Typing...',
         'ai-llm': 'AI thinking...',
-        'ai-goap': 'AI planning...'
+        'ai-goap': 'AI planning...',
       };
-      this.#indicatorElement.setAttribute('aria-label', ariaLabels[type] || 'Processing...');
-      
-      this.logger.debug(`${this._logPrefix} Showing processing indicator for type: ${type}.`);
+      this.#indicatorElement.setAttribute(
+        'aria-label',
+        ariaLabels[type] || 'Processing...'
+      );
+
+      this.logger.debug(
+        `${this._logPrefix} Showing processing indicator for type: ${type}.`
+      );
       this.#indicatorElement.classList.add('visible');
 
       // Scroll #outputDiv to bottom so indicator is visible if content is long

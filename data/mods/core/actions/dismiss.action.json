@@ -6,12 +6,8 @@
   "description": "Dismisses a follower from your service.",
   "scope": "core:followers",
   "required_components": {
-    "actor": [
-      "core:leading"
-    ],
-    "target": [
-      "core:following"
-    ]
+    "actor": ["core:leading"],
+    "target": ["core:following"]
   },
   "template": "dismiss {target}",
   "prerequisites": []

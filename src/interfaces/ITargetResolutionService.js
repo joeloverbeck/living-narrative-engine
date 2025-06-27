@@ -18,6 +18,8 @@ export class ITargetResolutionService {
    * @returns {Promise<ActionTargetContext[]>} A list of valid target contexts.
    */
   async resolveTargets(scopeName, actorEntity, discoveryContext, trace = null) {
-    throw new Error('ITargetResolutionService.resolveTargets method not implemented.');
+    throw new Error(
+      'ITargetResolutionService.resolveTargets method not implemented.'
+    );
   }
-} 
+}

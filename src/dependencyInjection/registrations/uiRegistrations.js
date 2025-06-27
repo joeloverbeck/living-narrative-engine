@@ -187,7 +187,9 @@ export function registerRenderers(registrar, logger) {
         domElementFactory: c.resolve(tokens.DomElementFactory),
       })
   );
-  logger.debug(`UI Registrations: Registered ${tokens.EntityLifecycleMonitor}.`);
+  logger.debug(
+    `UI Registrations: Registered ${tokens.EntityLifecycleMonitor}.`
+  );
 
   registrar.singletonFactory(
     tokens.SaveGameService,

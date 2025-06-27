@@ -37,7 +37,10 @@ describe('ScopeLoader Integration Tests', () => {
 
     mockSchemaValidator = createMockSchemaValidator();
     mockSchemaValidator.isSchemaLoaded.mockReturnValue(true);
-    mockSchemaValidator.validate.mockReturnValue({ isValid: true, errors: null });
+    mockSchemaValidator.validate.mockReturnValue({
+      isValid: true,
+      errors: null,
+    });
 
     mockDataRegistry = createSimpleMockDataRegistry();
 

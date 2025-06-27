@@ -6,9 +6,7 @@
   "description": "Stops following your current target and becomes independent again.",
   "scope": "none",
   "required_components": {
-    "actor": [
-      "core:following"
-    ]
+    "actor": ["core:following"]
   },
   "template": "stop following",
   "prerequisites": [

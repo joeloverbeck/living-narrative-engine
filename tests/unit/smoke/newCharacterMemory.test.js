@@ -33,9 +33,7 @@ describeEntityManagerSuite(
       });
       bed.setupDefinitions(definition);
 
-      const character = bed.entityManager.createEntityInstance(
-        definition.id
-      );
+      const character = bed.entityManager.createEntityInstance(definition.id);
 
       expect(character).toBeDefined();
       expect(character.hasComponent(SHORT_TERM_MEMORY_COMPONENT_ID)).toBe(true);

@@ -222,6 +222,7 @@ export class EntityManagerTestBed extends FactoryTestBed {
  *   tests. It receives a callback that returns the active {@link EntityManagerTestBed}.
  * @returns {void}
  */
-export const describeEntityManagerSuite = createDescribeTestBedSuite(EntityManagerTestBed);
+export const describeEntityManagerSuite =
+  createDescribeTestBedSuite(EntityManagerTestBed);
 
 export default EntityManagerTestBed;

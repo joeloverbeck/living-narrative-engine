@@ -47,17 +47,20 @@ describe('Schema – core:entity_moved payload', () => {
     ['previousLocationId'],
     ['currentLocationId'],
     ['originalCommand'],
-  ])('should reject a payload with a missing property: %s', (missingProperty) => {
-    const payload = {
-      eventName: 'core:entity_moved',
-      entityId: 'some:entity',
-      previousLocationId: 'some:location',
-      currentLocationId: 'another:location',
-      originalCommand: 'go north',
-    };
-    delete payload[missingProperty];
-    expect(validate(payload)).toBe(false);
-  });
+  ])(
+    'should reject a payload with a missing property: %s',
+    (missingProperty) => {
+      const payload = {
+        eventName: 'core:entity_moved',
+        entityId: 'some:entity',
+        previousLocationId: 'some:location',
+        currentLocationId: 'another:location',
+        originalCommand: 'go north',
+      };
+      delete payload[missingProperty];
+      expect(validate(payload)).toBe(false);
+    }
+  );
 
   test('should reject a payload with an extra property', () => {
     const payload = {

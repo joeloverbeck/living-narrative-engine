@@ -209,11 +209,11 @@ describe('ProcessingCommandState.enterState – error branches', () => {
     };
     mockHandler.getTurnContext.mockReturnValue(mockTurnContext);
 
-    // Ensure mockCommandOutcomeInterpreter, defaultTurnAction, and TurnDirectiveStrategyResolver 
+    // Ensure mockCommandOutcomeInterpreter, defaultTurnAction, and TurnDirectiveStrategyResolver
     // are available from the outer beforeEach scope.
     const customState = new ProcessingCommandState({
-      handler: mockHandler, 
-      commandProcessor: mockCommandProcessor, 
+      handler: mockHandler,
+      commandProcessor: mockCommandProcessor,
       commandOutcomeInterpreter: mockCommandOutcomeInterpreter,
       commandString: 'cmdStr',
       turnAction: null,
@@ -226,7 +226,10 @@ describe('ProcessingCommandState.enterState – error branches', () => {
     const spyEndTurn = mockTurnContext.endTurn;
 
     // Ensure dispatchAction returns a valid structure even if not strictly used by this error path
-    mockCommandProcessor.dispatchAction.mockResolvedValue({ success: true, errorResult: null });
+    mockCommandProcessor.dispatchAction.mockResolvedValue({
+      success: true,
+      errorResult: null,
+    });
 
     await customState.enterState(mockHandler, null);
 
@@ -276,7 +279,10 @@ describe('ProcessingCommandState.enterState – error branches', () => {
     // mockHandler._currentState = stateForNullActionTest; // Set if handler needs it for context
     stateForNullActionTest.finishProcessing(); // Ensure it starts clean if it matters
 
-    mockCommandProcessor.dispatchAction.mockResolvedValue({ success: true, errorResult: null });
+    mockCommandProcessor.dispatchAction.mockResolvedValue({
+      success: true,
+      errorResult: null,
+    });
 
     await stateForNullActionTest.enterState(mockHandler, null); // Call enterState on the local instance
 
@@ -325,7 +331,10 @@ describe('ProcessingCommandState.enterState – error branches', () => {
     });
     stateForInvalidActionTest.finishProcessing(); // Start clean
 
-    mockCommandProcessor.dispatchAction.mockResolvedValue({ success: true, errorResult: null });
+    mockCommandProcessor.dispatchAction.mockResolvedValue({
+      success: true,
+      errorResult: null,
+    });
 
     await stateForInvalidActionTest.enterState(mockHandler, null); // Call enterState on the local instance
 

@@ -16,7 +16,9 @@
   width: 8px;
   height: 8px;
   margin: 0 3px;
-  background-color: var(--secondary-text-color); /* Default, overridden by type classes */
+  background-color: var(
+    --secondary-text-color
+  ); /* Default, overridden by type classes */
   border-radius: 50%;
   opacity: 0.3; /* Start with some opacity for the animation base state */
   animation: processingDotsAnimation 1.4s infinite ease-in-out;
@@ -24,19 +26,19 @@
 
 /* Human player typing indicator - warm orange/amber colors */
 .processing-indicator.human .dot {
-  background-color: #FF8C00; /* DarkOrange */
+  background-color: #ff8c00; /* DarkOrange */
   animation: humanTypingAnimation 0.8s infinite ease-in-out;
 }
 
 /* AI LLM thinking indicator - cool blue/cyan colors */
 .processing-indicator.ai-llm .dot {
-  background-color: #00CED1; /* DarkTurquoise */
+  background-color: #00ced1; /* DarkTurquoise */
   animation: aiThinkingAnimation 1.6s infinite ease-in-out;
 }
 
 /* AI GOAP planning indicator - purple/magenta colors */
 .processing-indicator.ai-goap .dot {
-  background-color: #9370DB; /* MediumPurple */
+  background-color: #9370db; /* MediumPurple */
   animation: aiPlanningAnimation 2s infinite ease-in-out;
 }
 

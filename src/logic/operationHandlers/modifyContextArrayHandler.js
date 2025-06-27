@@ -72,7 +72,7 @@ class ModifyContextArrayHandler {
     }
 
     const { variable_path, mode, value, result_variable } = params;
-    
+
     if (!variable_path || !mode) {
       logger.warn(
         'MODIFY_CONTEXT_ARRAY: Missing required parameters (variable_path, or mode).'
@@ -97,7 +97,7 @@ class ModifyContextArrayHandler {
       variablePath: variable_path,
       mode,
       value,
-      resultVariable: result_variable || null
+      resultVariable: result_variable || null,
     };
   }
 
@@ -170,7 +170,12 @@ class ModifyContextArrayHandler {
     }
 
     // Resolve the array
-    const clonedArray = this.#resolveArray(contextObject, variablePath, mode, log);
+    const clonedArray = this.#resolveArray(
+      contextObject,
+      variablePath,
+      mode,
+      log
+    );
     if (!clonedArray) {
       return;
     }

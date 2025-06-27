@@ -347,11 +347,13 @@ class TurnManager extends ITurnManager {
         this.#currentActor = nextEntity; // Set the new current actor
         const actorId = this.#currentActor.id;
         const isActor = this.#currentActor.hasComponent(ACTOR_COMPONENT_ID);
-        
+
         // Determine entity type using new player_type component
         let entityType = 'ai'; // default
         if (this.#currentActor.hasComponent(PLAYER_TYPE_COMPONENT_ID)) {
-          const playerTypeData = this.#currentActor.getComponentData(PLAYER_TYPE_COMPONENT_ID);
+          const playerTypeData = this.#currentActor.getComponentData(
+            PLAYER_TYPE_COMPONENT_ID
+          );
           entityType = playerTypeData?.type === 'human' ? 'player' : 'ai';
         } else if (this.#currentActor.hasComponent(PLAYER_COMPONENT_ID)) {
           // Fallback to old player component for backward compatibility

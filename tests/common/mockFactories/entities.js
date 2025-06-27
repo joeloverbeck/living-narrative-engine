@@ -169,11 +169,11 @@ export const createMockEntity = (
   { isActor = false, isPlayer = false, playerType = null } = {}
 ) => {
   const components = {};
-  
+
   if (isActor) {
     components[ACTOR_COMPONENT_ID] = {};
   }
-  
+
   if (isPlayer) {
     // Add legacy player component for backward compatibility
     components[PLAYER_COMPONENT_ID] = {};
@@ -183,7 +183,7 @@ export const createMockEntity = (
     // Add player_type component with specified type
     components[PLAYER_TYPE_COMPONENT_ID] = { type: playerType };
   }
-  
+
   return {
     id,
     components,
@@ -221,7 +221,7 @@ export const createMockActor = (
   { isPlayer = false, playerType = null, name = id, components = [] } = {}
 ) => {
   const base = createMockEntity(id, { isActor: true, isPlayer, playerType });
-  
+
   // Merge provided components with base components
   const allComponents = { ...base.components };
   components.forEach((c) => {
@@ -229,10 +229,10 @@ export const createMockActor = (
     const data = c.data ?? {};
     allComponents[componentId] = data;
   });
-  
+
   // Create Map for backward compatibility but also keep object format
   const compMap = new Map(Object.entries(allComponents));
-  
+
   return {
     ...base,
     name,

@@ -55,15 +55,18 @@ describe('InitializationService Integration with AppContainer', () => {
     // Register basic dependencies first (needed by other registrations)
     container.register(tokens.ILogger, () => mockLogger);
     container.register(tokens.IConfiguration, () => ({}));
-    
+
     // Register required dependencies
     registerLoaders(container);
     registerInfrastructure(container);
     registerWorldAndEntity(container);
     registerCommandAndAction(container);
-    
+
     // Override specific services with mocks after registration
-    container.register(tokens.IValidatedEventDispatcher, () => mockValidatedEventDispatcher);
+    container.register(
+      tokens.IValidatedEventDispatcher,
+      () => mockValidatedEventDispatcher
+    );
     container.register(tokens.ModsLoader, () => ({
       loadMods: jest.fn().mockResolvedValue({}),
     }));
@@ -89,7 +92,7 @@ describe('InitializationService Integration with AppContainer', () => {
     }));
     container.register(tokens.IEntityManager, () => ({}));
     container.register(tokens.DomUiFacade, () => ({}));
-    
+
     // Run the registration function that defines the InitializationService factory.
     registerOrchestration(container);
 
@@ -110,15 +113,18 @@ describe('InitializationService Integration with AppContainer', () => {
     // Register basic dependencies first (needed by other registrations)
     container.register(tokens.ILogger, () => mockLogger);
     container.register(tokens.IConfiguration, () => ({}));
-    
+
     // Register required dependencies
     registerLoaders(container);
     registerInfrastructure(container);
     registerWorldAndEntity(container);
     registerCommandAndAction(container);
-    
+
     // Override specific services with mocks after registration
-    container.register(tokens.IValidatedEventDispatcher, () => mockValidatedEventDispatcher);
+    container.register(
+      tokens.IValidatedEventDispatcher,
+      () => mockValidatedEventDispatcher
+    );
     container.register(tokens.ModsLoader, () => ({
       loadMods: jest.fn().mockResolvedValue({}),
     }));
@@ -144,7 +150,7 @@ describe('InitializationService Integration with AppContainer', () => {
     }));
     container.register(tokens.IEntityManager, () => ({}));
     container.register(tokens.DomUiFacade, () => ({}));
-    
+
     // Register the service using the orchestration logic. This will cause some logs.
     registerOrchestration(container);
 

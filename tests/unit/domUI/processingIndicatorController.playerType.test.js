@@ -1,6 +1,16 @@
-import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  jest,
+  beforeEach,
+  afterEach,
+} from '@jest/globals';
 import { JSDOM } from 'jsdom';
-import { ProcessingIndicatorController, DomElementFactory } from '../../../src/domUI';
+import {
+  ProcessingIndicatorController,
+  DomElementFactory,
+} from '../../../src/domUI';
 import {
   TURN_PROCESSING_STARTED,
   TURN_PROCESSING_ENDED,
@@ -71,7 +81,7 @@ describe('ProcessingIndicatorController - Player Type Detection', () => {
   describe('Player type detection from turn_started event', () => {
     it('should correctly identify human player from player_type component', () => {
       const indicator = document.querySelector('#processing-indicator');
-      
+
       // Simulate turn_started event for human player
       const turnStartedHandler = getHandler(TURN_STARTED_ID);
       turnStartedHandler({
@@ -82,22 +92,22 @@ describe('ProcessingIndicatorController - Player Type Detection', () => {
           entity: {
             id: 'player1',
             components: {
-              'core:player_type': { type: 'human' }
-            }
-          }
-        }
+              'core:player_type': { type: 'human' },
+            },
+          },
+        },
       });
 
       // Human turn should not show indicator on TURN_PROCESSING_STARTED
       const processingStartedHandler = getHandler(TURN_PROCESSING_STARTED);
       processingStartedHandler();
-      
+
       expect(indicator?.classList.contains('visible')).toBe(false);
     });
 
     it('should correctly identify LLM AI player from player_type component', () => {
       const indicator = document.querySelector('#processing-indicator');
-      
+
       // Simulate turn_started event for LLM AI
       const turnStartedHandler = getHandler(TURN_STARTED_ID);
       turnStartedHandler({
@@ -108,23 +118,23 @@ describe('ProcessingIndicatorController - Player Type Detection', () => {
           entity: {
             id: 'ai1',
             components: {
-              'core:player_type': { type: 'llm' }
-            }
-          }
-        }
+              'core:player_type': { type: 'llm' },
+            },
+          },
+        },
       });
 
       // AI turn should show indicator on TURN_PROCESSING_STARTED
       const processingStartedHandler = getHandler(TURN_PROCESSING_STARTED);
       processingStartedHandler();
-      
+
       expect(indicator?.classList.contains('visible')).toBe(true);
       expect(indicator?.classList.contains('ai-llm')).toBe(true);
     });
 
     it('should correctly identify GOAP AI player from player_type component', () => {
       const indicator = document.querySelector('#processing-indicator');
-      
+
       // Simulate turn_started event for GOAP AI
       const turnStartedHandler = getHandler(TURN_STARTED_ID);
       turnStartedHandler({
@@ -135,43 +145,43 @@ describe('ProcessingIndicatorController - Player Type Detection', () => {
           entity: {
             id: 'goap1',
             components: {
-              'core:player_type': { type: 'goap' }
-            }
-          }
-        }
+              'core:player_type': { type: 'goap' },
+            },
+          },
+        },
       });
 
       // AI turn should show indicator on TURN_PROCESSING_STARTED
       const processingStartedHandler = getHandler(TURN_PROCESSING_STARTED);
       processingStartedHandler();
-      
+
       expect(indicator?.classList.contains('visible')).toBe(true);
       expect(indicator?.classList.contains('ai-goap')).toBe(true);
     });
 
     it('should fall back to entityType when entity object is missing', () => {
       const indicator = document.querySelector('#processing-indicator');
-      
+
       // Simulate turn_started event without entity object (legacy format)
       const turnStartedHandler = getHandler(TURN_STARTED_ID);
       turnStartedHandler({
         type: TURN_STARTED_ID,
         payload: {
           entityId: 'player1',
-          entityType: 'player'
-        }
+          entityType: 'player',
+        },
       });
 
       // Should treat as human based on entityType
       const processingStartedHandler = getHandler(TURN_PROCESSING_STARTED);
       processingStartedHandler();
-      
+
       expect(indicator?.classList.contains('visible')).toBe(false);
     });
 
     it('should default to ai-llm when no player type info available', () => {
       const indicator = document.querySelector('#processing-indicator');
-      
+
       // Simulate turn_started event for AI without player_type
       const turnStartedHandler = getHandler(TURN_STARTED_ID);
       turnStartedHandler({
@@ -181,15 +191,15 @@ describe('ProcessingIndicatorController - Player Type Detection', () => {
           entityType: 'ai',
           entity: {
             id: 'ai1',
-            components: {}
-          }
-        }
+            components: {},
+          },
+        },
       });
 
       // Should default to ai-llm
       const processingStartedHandler = getHandler(TURN_PROCESSING_STARTED);
       processingStartedHandler();
-      
+
       expect(indicator?.classList.contains('visible')).toBe(true);
       expect(indicator?.classList.contains('ai-llm')).toBe(true);
     });
@@ -198,7 +208,7 @@ describe('ProcessingIndicatorController - Player Type Detection', () => {
   describe('Focus-based indicator for human players', () => {
     it('should show indicator on focus for human players', () => {
       const indicator = document.querySelector('#processing-indicator');
-      
+
       // First set up human turn
       const turnStartedHandler = getHandler(TURN_STARTED_ID);
       turnStartedHandler({
@@ -209,17 +219,17 @@ describe('ProcessingIndicatorController - Player Type Detection', () => {
           entity: {
             id: 'player1',
             components: {
-              'core:player_type': { type: 'human' }
-            }
-          }
-        }
+              'core:player_type': { type: 'human' },
+            },
+          },
+        },
       });
 
       // Simulate focus event
       const focusHandler = getHandler('core:speech_input_gained_focus');
       focusHandler({
         type: 'core:speech_input_gained_focus',
-        payload: { timestamp: Date.now() }
+        payload: { timestamp: Date.now() },
       });
 
       expect(indicator?.classList.contains('visible')).toBe(true);
@@ -228,7 +238,7 @@ describe('ProcessingIndicatorController - Player Type Detection', () => {
 
     it('should not show indicator on focus for AI players', () => {
       const indicator = document.querySelector('#processing-indicator');
-      
+
       // First set up AI turn
       const turnStartedHandler = getHandler(TURN_STARTED_ID);
       turnStartedHandler({
@@ -239,17 +249,17 @@ describe('ProcessingIndicatorController - Player Type Detection', () => {
           entity: {
             id: 'ai1',
             components: {
-              'core:player_type': { type: 'llm' }
-            }
-          }
-        }
+              'core:player_type': { type: 'llm' },
+            },
+          },
+        },
       });
 
       // Simulate focus event - should not show for AI
       const focusHandler = getHandler('core:speech_input_gained_focus');
       focusHandler({
         type: 'core:speech_input_gained_focus',
-        payload: { timestamp: Date.now() }
+        payload: { timestamp: Date.now() },
       });
 
       expect(indicator?.classList.contains('visible')).toBe(false);

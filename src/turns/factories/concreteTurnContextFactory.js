@@ -103,7 +103,7 @@ export class ConcreteTurnContextFactory extends ITurnContextFactory {
     isAwaitingExternalEventProvider,
     onSetAwaitingExternalEventCallback,
   }) {
-    // The `services` object is now created internally from cached dependencies.  
+    // The `services` object is now created internally from cached dependencies.
     const servicesForContext = {
       game: this.#gameWorldAccess,
       turnEndPort: this.#turnEndPort,

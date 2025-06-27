@@ -1,16 +1,10 @@
 /**
  * @file Integration test demonstrating the spatial index synchronization timing bug.
- * @description This test demonstrates that SpatialIndexSynchronizer must be connected 
+ * @description This test demonstrates that SpatialIndexSynchronizer must be connected
  * BEFORE entities are created, otherwise it misses entity creation events.
  */
 
-import {
-  describe,
-  it,
-  beforeEach,
-  expect,
-  jest,
-} from '@jest/globals';
+import { describe, it, beforeEach, expect, jest } from '@jest/globals';
 import { SimpleEntityManager } from '../../common/entities/index.js';
 import SpatialIndexManager from '../../../src/entities/spatialIndexManager.js';
 import { LocationQueryService } from '../../../src/entities/locationQueryService.js';
@@ -72,14 +66,14 @@ describe('Spatial Index Synchronization Timing Bug', () => {
     // Add entity definitions to registry
     const actorDefinition = new EntityDefinition('test:actor', {
       components: {
-        [POSITION_COMPONENT_ID]: {},  // Remove the default locationId: null
+        [POSITION_COMPONENT_ID]: {}, // Remove the default locationId: null
         [ACTOR_COMPONENT_ID]: {},
       },
     });
     const locationDefinition = new EntityDefinition('test:location', {
       components: {},
     });
-    
+
     registry.store('entityDefinitions', 'test:actor', actorDefinition);
     registry.store('entityDefinitions', 'test:location', locationDefinition);
   });
@@ -89,7 +83,7 @@ describe('Spatial Index Synchronization Timing Bug', () => {
     const actorId = 'isekai:hero_instance';
     const targetId = 'isekai:ninja_instance';
     const locationId = 'isekai:adventurers_guild_instance';
-    
+
     const entities = [
       {
         id: actorId,
@@ -108,9 +102,13 @@ describe('Spatial Index Synchronization Timing Bug', () => {
     simpleEntityManager.setEntities(entities);
 
     // This SHOULD work because SimpleEntityManager implements getEntitiesInLocation correctly
-    const entitiesInLocation = simpleEntityManager.getEntitiesInLocation(locationId);
-    console.log('SimpleEntityManager entities found in location:', Array.from(entitiesInLocation));
-    
+    const entitiesInLocation =
+      simpleEntityManager.getEntitiesInLocation(locationId);
+    console.log(
+      'SimpleEntityManager entities found in location:',
+      Array.from(entitiesInLocation)
+    );
+
     expect(entitiesInLocation.size).toBe(2); // Should find both entities
     expect(entitiesInLocation.has(actorId)).toBe(true);
     expect(entitiesInLocation.has(targetId)).toBe(true);
@@ -123,7 +121,7 @@ describe('Spatial Index Synchronization Timing Bug', () => {
       spatialIndexManager,
       logger,
     });
-    
+
     // Create REAL EntityManager
     const entityManager = new EntityManager({
       registry,
@@ -155,7 +153,7 @@ describe('Spatial Index Synchronization Timing Bug', () => {
         [POSITION_COMPONENT_ID]: { locationId },
       },
     });
-    
+
     console.log('Creating target entity...');
     entityManager.createEntityInstance('test:actor', {
       instanceId: targetId,
@@ -163,10 +161,13 @@ describe('Spatial Index Synchronization Timing Bug', () => {
         [POSITION_COMPONENT_ID]: { locationId },
       },
     });
-    
+
     console.log('Total entities created:', entityManager.entities.length);
     for (const entity of entityManager.entities) {
-      console.log(`Entity ${entity.id} has position:`, entity.getComponentData(POSITION_COMPONENT_ID));
+      console.log(
+        `Entity ${entity.id} has position:`,
+        entity.getComponentData(POSITION_COMPONENT_ID)
+      );
     }
 
     // THEN initialize SpatialIndexSynchronizer (this is what happens in system initialization)
@@ -177,12 +178,16 @@ describe('Spatial Index Synchronization Timing Bug', () => {
       logger,
     });
 
-    // The spatial index should be empty because SpatialIndexSynchronizer 
+    // The spatial index should be empty because SpatialIndexSynchronizer
     // was connected AFTER the entity creation events were already fired
-    const entitiesInLocation = realEntityManagerAdapter.getEntitiesInLocation(locationId);
-    console.log('TIMING BUG: entities found in location:', Array.from(entitiesInLocation));
-    
-    // This demonstrates the timing bug: spatial index is empty because 
+    const entitiesInLocation =
+      realEntityManagerAdapter.getEntitiesInLocation(locationId);
+    console.log(
+      'TIMING BUG: entities found in location:',
+      Array.from(entitiesInLocation)
+    );
+
+    // This demonstrates the timing bug: spatial index is empty because
     // SpatialIndexSynchronizer missed the entity creation events
     expect(entitiesInLocation.size).toBe(0);
   });
@@ -194,18 +199,18 @@ describe('Spatial Index Synchronization Timing Bug', () => {
       spatialIndexManager,
       logger,
     });
-    
+
     // Create a SINGLE SafeEventDispatcher instance to be shared
     const sharedEventDispatcher = new SafeEventDispatcher({
-      validatedEventDispatcher: new ValidatedEventDispatcher({ 
-        eventBus, 
+      validatedEventDispatcher: new ValidatedEventDispatcher({
+        eventBus,
         gameDataRepository,
-        schemaValidator, 
-        logger 
+        schemaValidator,
+        logger,
       }),
       logger,
     });
-    
+
     // Create REAL EntityManager
     const entityManager = new EntityManager({
       registry,
@@ -242,7 +247,7 @@ describe('Spatial Index Synchronization Timing Bug', () => {
         [POSITION_COMPONENT_ID]: { locationId },
       },
     });
-    
+
     entityManager.createEntityInstance('test:actor', {
       instanceId: targetId,
       componentOverrides: {
@@ -251,11 +256,12 @@ describe('Spatial Index Synchronization Timing Bug', () => {
     });
 
     // Wait for async event dispatching to complete
-    await new Promise(resolve => setTimeout(resolve, 10));
+    await new Promise((resolve) => setTimeout(resolve, 10));
 
     // With correct timing, the spatial index should be populated
-    const entitiesInLocation = realEntityManagerAdapter.getEntitiesInLocation(locationId);
-    
+    const entitiesInLocation =
+      realEntityManagerAdapter.getEntitiesInLocation(locationId);
+
     // This should work because SpatialIndexSynchronizer was listening from the start
     expect(entitiesInLocation.size).toBe(2);
     expect(entitiesInLocation.has(actorId)).toBe(true);
@@ -269,7 +275,7 @@ describe('Spatial Index Synchronization Timing Bug', () => {
       spatialIndexManager,
       logger,
     });
-    
+
     // Create REAL EntityManager
     const entityManager = new EntityManager({
       registry,
@@ -299,7 +305,7 @@ describe('Spatial Index Synchronization Timing Bug', () => {
         [POSITION_COMPONENT_ID]: { locationId },
       },
     });
-    
+
     entityManager.createEntityInstance('test:actor', {
       instanceId: targetId,
       componentOverrides: {
@@ -308,18 +314,26 @@ describe('Spatial Index Synchronization Timing Bug', () => {
     });
 
     // At this point, spatial index is empty because no synchronizer was listening
-    const entitiesBeforeBuild = realEntityManagerAdapter.getEntitiesInLocation(locationId);
+    const entitiesBeforeBuild =
+      realEntityManagerAdapter.getEntitiesInLocation(locationId);
     expect(entitiesBeforeBuild.size).toBe(0);
 
     // FIX: Build the spatial index from existing entities
-    console.log('About to call buildIndex with entityManager.entities:', entityManager.entities.length || 'not an array');
+    console.log(
+      'About to call buildIndex with entityManager.entities:',
+      entityManager.entities.length || 'not an array'
+    );
     spatialIndexManager.buildIndex(entityManager);
     console.log('buildIndex completed');
 
     // NOW it should work because we built the index from existing entities
-    const entitiesAfterBuild = realEntityManagerAdapter.getEntitiesInLocation(locationId);
-    console.log('AFTER buildIndex(): entities found in location:', Array.from(entitiesAfterBuild));
-    
+    const entitiesAfterBuild =
+      realEntityManagerAdapter.getEntitiesInLocation(locationId);
+    console.log(
+      'AFTER buildIndex(): entities found in location:',
+      Array.from(entitiesAfterBuild)
+    );
+
     expect(entitiesAfterBuild.size).toBe(2);
     expect(entitiesAfterBuild.has(actorId)).toBe(true);
     expect(entitiesAfterBuild.has(targetId)).toBe(true);
@@ -331,4 +345,4 @@ describe('Spatial Index Synchronization Timing Bug', () => {
       logger,
     });
   });
-}); 
+});

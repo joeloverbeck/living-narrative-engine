@@ -50,4 +50,3 @@ export default class EntityManagerIntegrationTestBed extends BaseTestBed {
     await super._afterCleanup();
   }
 }
-

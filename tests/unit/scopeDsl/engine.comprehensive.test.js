@@ -16,7 +16,7 @@ describe('ScopeEngine - Comprehensive Coverage Tests', () => {
 
   beforeEach(() => {
     engine = new ScopeEngine();
-    
+
     mockEntityManager = {
       getEntitiesWithComponent: jest.fn(),
       getEntities: jest.fn(),
@@ -24,11 +24,11 @@ describe('ScopeEngine - Comprehensive Coverage Tests', () => {
       getEntityInstance: jest.fn(),
       getComponentData: jest.fn(),
     };
-    
+
     mockJsonLogicEval = {
       evaluate: jest.fn(),
     };
-    
+
     mockRuntimeCtx = {
       entityManager: mockEntityManager,
       spatialIndexManager: {},
@@ -39,7 +39,7 @@ describe('ScopeEngine - Comprehensive Coverage Tests', () => {
       },
       location: { id: 'loc123' },
     };
-    
+
     actorEntity = {
       id: 'actor123',
       componentTypeIds: ['core:position'],
@@ -55,10 +55,10 @@ describe('ScopeEngine - Comprehensive Coverage Tests', () => {
         ['entity1', { id: 'entity1', components: {} }],
         ['entity2', { id: 'entity2', components: {} }],
       ]);
-      
+
       const ast = parseDslExpression('entities(!core:item)');
       const result = engine.resolve(ast, actorEntity, mockRuntimeCtx);
-      
+
       expect(result).toBeInstanceOf(Set);
     });
 
@@ -71,12 +71,14 @@ describe('ScopeEngine - Comprehensive Coverage Tests', () => {
         { id: '' }, // empty string ID
         { id: 'valid_id' },
       ];
-      
-      mockEntityManager.getEntitiesWithComponent.mockReturnValue(entitiesWithComponent);
-      
+
+      mockEntityManager.getEntitiesWithComponent.mockReturnValue(
+        entitiesWithComponent
+      );
+
       const ast = parseDslExpression('entities(core:item)');
       const result = engine.resolve(ast, actorEntity, mockRuntimeCtx);
-      
+
       // Empty string is still a string, so it's included
       expect(result).toEqual(new Set(['string_id', '', 'valid_id']));
     });
@@ -90,59 +92,63 @@ describe('ScopeEngine - Comprehensive Coverage Tests', () => {
         parent: {
           type: 'Source',
           kind: 'entities',
-          param: 'core:nonExistent'
-        }
+          param: 'core:nonExistent',
+        },
       };
-      
+
       mockEntityManager.getEntitiesWithComponent.mockReturnValue([]);
-      
+
       const result = engine.resolve(ast, actorEntity, mockRuntimeCtx);
-      
+
       expect(result).toEqual(new Set());
     });
 
     test('should handle filter with non-string parent values - line 463', () => {
       // Target line 463: when item is not a string but an object
-      const ast = parseDslExpression('entities(core:item)[{"==": [{"var": "type"}, "weapon"]}]');
-      
+      const ast = parseDslExpression(
+        'entities(core:item)[{"==": [{"var": "type"}, "weapon"]}]'
+      );
+
       mockEntityManager.getEntitiesWithComponent.mockReturnValue([
-        { id: 'entity1' }
+        { id: 'entity1' },
       ]);
-      
+
       const entityInstance = {
         id: 'entity1',
-        type: 'weapon'
+        type: 'weapon',
       };
-      
+
       mockEntityManager.getEntityInstance.mockReturnValue(entityInstance);
-      
+
       mockJsonLogicEval.evaluate.mockImplementation((logic, context) => {
         return context.entity.type === 'weapon';
       });
-      
+
       const result = engine.resolve(ast, actorEntity, mockRuntimeCtx);
-      
+
       expect(result).toEqual(new Set(['entity1']));
     });
 
     test('should handle filter evaluation errors gracefully - lines 468-475', () => {
       // Target lines 468-475: when JSON Logic evaluation throws
-      const ast = parseDslExpression('entities(core:item)[{"==": [{"var": "type"}, "weapon"]}]');
-      
+      const ast = parseDslExpression(
+        'entities(core:item)[{"==": [{"var": "type"}, "weapon"]}]'
+      );
+
       mockEntityManager.getEntitiesWithComponent.mockReturnValue([
-        { id: 'entity1' }
+        { id: 'entity1' },
       ]);
       mockEntityManager.getEntityInstance.mockReturnValue({
         id: 'entity1',
         componentTypeIds: ['core:item'],
-        getComponentData: jest.fn().mockReturnValue({ type: 'weapon' })
+        getComponentData: jest.fn().mockReturnValue({ type: 'weapon' }),
       });
-      
+
       // Make JSON Logic evaluation throw an error
       mockJsonLogicEval.evaluate.mockImplementation(() => {
         throw new Error('JSON Logic evaluation failed');
       });
-      
+
       expect(() => {
         engine.resolve(ast, actorEntity, mockRuntimeCtx);
       }).toThrow('JSON Logic evaluation failed');
@@ -156,24 +162,42 @@ describe('ScopeEngine - Comprehensive Coverage Tests', () => {
         isArray: false,
         parent: {
           type: 'Source',
-          kind: 'actor'
-        }
+          kind: 'actor',
+        },
       };
-      
+
       // Mock resolveNode to create a cycle
       const originalResolveNode = engine.resolveNode;
-      engine.resolveNode = jest.fn((node, actorEntity, runtimeCtx, depth, path, trace) => {
-        if (depth > 0) {
-          // Simulate encountering the same node again by calling with same nodeKey
-          return originalResolveNode.call(engine, cyclicAst, actorEntity, runtimeCtx, depth + 1, [...path, 'Step:circular:'], trace);
+      engine.resolveNode = jest.fn(
+        (node, actorEntity, runtimeCtx, depth, path, trace) => {
+          if (depth > 0) {
+            // Simulate encountering the same node again by calling with same nodeKey
+            return originalResolveNode.call(
+              engine,
+              cyclicAst,
+              actorEntity,
+              runtimeCtx,
+              depth + 1,
+              [...path, 'Step:circular:'],
+              trace
+            );
+          }
+          return originalResolveNode.call(
+            engine,
+            node,
+            actorEntity,
+            runtimeCtx,
+            depth,
+            path,
+            trace
+          );
         }
-        return originalResolveNode.call(engine, node, actorEntity, runtimeCtx, depth, path, trace);
-      });
-      
+      );
+
       expect(() => {
         engine.resolve(cyclicAst, actorEntity, mockRuntimeCtx);
       }).toThrow(ScopeCycleError);
-      
+
       // Restore original method
       engine.resolveNode = originalResolveNode;
     });
@@ -181,19 +205,19 @@ describe('ScopeEngine - Comprehensive Coverage Tests', () => {
     test('should handle array iteration edge cases', () => {
       // Test _addArrayItems with various array values
       const mockResult = new Set();
-      
+
       // Test with valid array
       engine._addArrayItems([1, 2, 3], mockResult);
       expect(mockResult).toEqual(new Set([1, 2, 3]));
-      
+
       mockResult.clear();
-      
+
       // Test with array containing null and undefined
       engine._addArrayItems([1, null, 2, undefined, 3], mockResult);
       expect(mockResult).toEqual(new Set([1, 2, 3]));
-      
+
       mockResult.clear();
-      
+
       // Test with non-array value
       engine._addArrayItems('not an array', mockResult);
       expect(mockResult.size).toBe(0);
@@ -203,48 +227,65 @@ describe('ScopeEngine - Comprehensive Coverage Tests', () => {
       // Test default case in resolveNode switch statement
       const unknownAst = {
         type: 'UnknownType',
-        someProperty: 'someValue'
+        someProperty: 'someValue',
       };
-      
+
       const result = engine.resolve(unknownAst, actorEntity, mockRuntimeCtx);
-      
+
       expect(result).toEqual(new Set());
-      expect(mockRuntimeCtx.logger.error).toHaveBeenCalledWith('Unknown AST node type: UnknownType');
+      expect(mockRuntimeCtx.logger.error).toHaveBeenCalledWith(
+        'Unknown AST node type: UnknownType'
+      );
     });
 
     test('should handle field extraction with various input types', () => {
       // Test _extractFieldValue with different parent value types
-      
+
       // Test with string (entity ID)
       mockEntityManager.getComponentData.mockReturnValue('componentValue');
-      const result1 = engine._extractFieldValue('entity123', 'testField', mockRuntimeCtx);
-      expect(mockEntityManager.getComponentData).toHaveBeenCalledWith('entity123', 'testField');
-      
+      const result1 = engine._extractFieldValue(
+        'entity123',
+        'testField',
+        mockRuntimeCtx
+      );
+      expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(
+        'entity123',
+        'testField'
+      );
+
       // Test with object parent value
       const objValue = { testField: 'testValue' };
-      const result2 = engine._extractFieldValue(objValue, 'testField', mockRuntimeCtx);
+      const result2 = engine._extractFieldValue(
+        objValue,
+        'testField',
+        mockRuntimeCtx
+      );
       expect(result2).toBe('testValue');
-      
+
       // Test with null parent value
-      const result3 = engine._extractFieldValue(null, 'testField', mockRuntimeCtx);
+      const result3 = engine._extractFieldValue(
+        null,
+        'testField',
+        mockRuntimeCtx
+      );
       expect(result3).toBeNull();
     });
 
     test('should handle entities source without hasComponent method - lines 144-145', () => {
       // Target lines 144-145: hasComponent method fallback
       delete mockEntityManager.hasComponent;
-      
+
       const allEntities = [
         { id: 'entity1', components: { 'core:item': {} } },
         { id: 'entity2', components: {} },
         { id: 'entity3' }, // No components property
       ];
-      
+
       mockEntityManager.getEntities = jest.fn().mockReturnValue(allEntities);
-      
+
       const ast = parseDslExpression('entities(!core:item)');
       const result = engine.resolve(ast, actorEntity, mockRuntimeCtx);
-      
+
       // Should include entities without the component
       expect(result).toEqual(new Set(['entity2', 'entity3']));
     });
@@ -254,44 +295,59 @@ describe('ScopeEngine - Comprehensive Coverage Tests', () => {
     test('should handle union operations with empty results', () => {
       const leftResult = new Set();
       const rightResult = new Set(['entity1']);
-      
+
       const unionNode = {
         type: 'Union',
         left: { type: 'Source', kind: 'entities', param: 'core:missing' },
-        right: { type: 'Source', kind: 'actor' }
+        right: { type: 'Source', kind: 'actor' },
       };
-      
+
       // Mock resolveNode to return different results for left and right
       const originalResolveNode = engine.resolveNode;
-      engine.resolveNode = jest.fn((node, actorEntity, runtimeCtx, depth, path, trace) => {
-        if (node.param === 'core:missing') return leftResult;
-        if (node.kind === 'actor') return rightResult;
-        return originalResolveNode.call(engine, node, actorEntity, runtimeCtx, depth, path, trace);
-      });
-      
+      engine.resolveNode = jest.fn(
+        (node, actorEntity, runtimeCtx, depth, path, trace) => {
+          if (node.param === 'core:missing') return leftResult;
+          if (node.kind === 'actor') return rightResult;
+          return originalResolveNode.call(
+            engine,
+            node,
+            actorEntity,
+            runtimeCtx,
+            depth,
+            path,
+            trace
+          );
+        }
+      );
+
       const result = engine.resolve(unionNode, actorEntity, mockRuntimeCtx);
-      
+
       expect(result).toEqual(new Set(['entity1']));
-      
+
       // Restore original method
       engine.resolveNode = originalResolveNode;
     });
 
     test('should handle trace context integration', () => {
       const mockTraceContext = {
-        addLog: jest.fn()
+        addLog: jest.fn(),
       };
-      
+
       const ast = parseDslExpression('location');
-      const result = engine.resolve(ast, actorEntity, mockRuntimeCtx, mockTraceContext);
-      
+      const result = engine.resolve(
+        ast,
+        actorEntity,
+        mockRuntimeCtx,
+        mockTraceContext
+      );
+
       expect(mockTraceContext.addLog).toHaveBeenCalledWith(
         'step',
         'Starting scope resolution.',
         'ScopeEngine',
         { ast }
       );
-      
+
       expect(mockTraceContext.addLog).toHaveBeenCalledWith(
         'success',
         expect.stringContaining('Scope resolution finished'),
@@ -300,4 +356,4 @@ describe('ScopeEngine - Comprehensive Coverage Tests', () => {
       );
     });
   });
-}); 
+});

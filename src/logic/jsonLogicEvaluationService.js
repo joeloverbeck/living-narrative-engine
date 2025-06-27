@@ -118,62 +118,88 @@ class JsonLogicEvaluationService extends BaseService {
     try {
       // Check if this is an 'and' or 'or' operation that we should log in detail
       let rawResult;
-      if (resolvedRule && typeof resolvedRule === 'object' && !Array.isArray(resolvedRule)) {
+      if (
+        resolvedRule &&
+        typeof resolvedRule === 'object' &&
+        !Array.isArray(resolvedRule)
+      ) {
         const [op] = Object.keys(resolvedRule);
         const args = resolvedRule[op];
-        
+
         // Only do detailed logging if we're not in a test environment
-        const isTestEnv = typeof global !== 'undefined' && global.jest || process.env.NODE_ENV === 'test';
-        if ((op === 'and' || op === 'or') && Array.isArray(args) && !isTestEnv) {
-          this.#logger.debug(`Detailed evaluation of ${op.toUpperCase()} operation with ${args.length} conditions:`);
-          
+        const isTestEnv =
+          (typeof global !== 'undefined' && global.jest) ||
+          process.env.NODE_ENV === 'test';
+        if (
+          (op === 'and' || op === 'or') &&
+          Array.isArray(args) &&
+          !isTestEnv
+        ) {
+          this.#logger.debug(
+            `Detailed evaluation of ${op.toUpperCase()} operation with ${args.length} conditions:`
+          );
+
           const individualResults = [];
           let shortCircuitResult = null;
-          
+
           for (let i = 0; i < args.length; i++) {
             const conditionResult = jsonLogic.apply(args[i], context);
             const conditionBoolean = !!conditionResult;
-            const conditionSummary = JSON.stringify(args[i]).substring(0, 100) + 
+            const conditionSummary =
+              JSON.stringify(args[i]).substring(0, 100) +
               (JSON.stringify(args[i]).length > 100 ? '...' : '');
-            
+
             // Log the condition and its result
-            this.#logger.debug(`  Condition ${i + 1}/${args.length}: ${conditionSummary} => ${conditionBoolean}`);
-            
+            this.#logger.debug(
+              `  Condition ${i + 1}/${args.length}: ${conditionSummary} => ${conditionBoolean}`
+            );
+
             // Try to show relevant context values for debugging
             if (context && typeof context === 'object') {
               if (context.entity) {
-                this.#logger.debug(`    Entity: ${context.entity.id}, Location: ${context.entity.components?.['core:position']?.locationId || 'unknown'}`);
+                this.#logger.debug(
+                  `    Entity: ${context.entity.id}, Location: ${context.entity.components?.['core:position']?.locationId || 'unknown'}`
+                );
               }
               if (context.actor) {
-                this.#logger.debug(`    Actor: ${context.actor.id}, Location: ${context.actor.components?.['core:position']?.locationId || 'unknown'}`);
+                this.#logger.debug(
+                  `    Actor: ${context.actor.id}, Location: ${context.actor.components?.['core:position']?.locationId || 'unknown'}`
+                );
               }
               if (context.location) {
                 this.#logger.debug(`    Location: ${context.location.id}`);
               }
             }
-            
+
             individualResults.push(conditionBoolean);
-            
+
             // For 'and', short circuit on first false
             if (op === 'and' && !conditionBoolean) {
-              this.#logger.debug(`  AND operation short-circuited at condition ${i + 1} (false result)`);
+              this.#logger.debug(
+                `  AND operation short-circuited at condition ${i + 1} (false result)`
+              );
               shortCircuitResult = false;
               break;
             }
             // For 'or', short circuit on first true
             if (op === 'or' && conditionBoolean) {
-              this.#logger.debug(`  OR operation short-circuited at condition ${i + 1} (true result)`);
+              this.#logger.debug(
+                `  OR operation short-circuited at condition ${i + 1} (true result)`
+              );
               shortCircuitResult = true;
               break;
             }
           }
-          
+
           // Use the computed result instead of re-evaluating
           if (shortCircuitResult !== null) {
             rawResult = shortCircuitResult;
           } else {
             // All conditions evaluated without short-circuiting
-            rawResult = op === 'and' ? individualResults.every(r => r) : individualResults.some(r => r);
+            rawResult =
+              op === 'and'
+                ? individualResults.every((r) => r)
+                : individualResults.some((r) => r);
           }
         } else {
           // Not an and/or operation, or debug logging disabled - evaluate normally

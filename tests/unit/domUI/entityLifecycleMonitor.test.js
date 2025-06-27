@@ -53,7 +53,7 @@ describe('EntityLifecycleMonitor', () => {
 
     mockLogger = new ConsoleLogger();
     mockVed = new ValidatedEventDispatcher({});
-    
+
     // Track event handlers
     eventHandlers = {};
     mockVed.subscribe.mockImplementation((eventName, handler) => {
@@ -146,11 +146,15 @@ describe('EntityLifecycleMonitor', () => {
         domElementFactory: mockDomElementFactory,
       });
 
-      expect(mockDomElementFactory.ul).toHaveBeenCalledWith('entity-event-list');
+      expect(mockDomElementFactory.ul).toHaveBeenCalledWith(
+        'entity-event-list'
+      );
       expect(containerElement.appendChild).toHaveBeenCalled();
       const appendedElement = containerElement.appendChild.mock.calls[0][0];
       expect(appendedElement.tagName).toBe('UL');
-      expect(appendedElement.classList.contains('entity-event-list')).toBe(true);
+      expect(appendedElement.classList.contains('entity-event-list')).toBe(
+        true
+      );
     });
 
     it('should subscribe to all lifecycle events', () => {
@@ -227,7 +231,9 @@ describe('EntityLifecycleMonitor', () => {
         expect(eventList.children.length).toBe(1);
         const entry = eventList.children[0];
         expect(entry.classList.contains('entity-created')).toBe(true);
-        expect(entry.textContent).toContain('Entity created: entity-123 from def-456');
+        expect(entry.textContent).toContain(
+          'Entity created: entity-123 from def-456'
+        );
       });
 
       it('should handle reconstructed entity', () => {
@@ -258,7 +264,9 @@ describe('EntityLifecycleMonitor', () => {
         }).not.toThrow();
 
         const entry = eventList.children[0];
-        expect(entry.textContent).toContain('Entity created: undefined from undefined');
+        expect(entry.textContent).toContain(
+          'Entity created: undefined from undefined'
+        );
       });
     });
 
@@ -309,7 +317,9 @@ describe('EntityLifecycleMonitor', () => {
 
         const entry = eventList.children[0];
         expect(entry.classList.contains('component-added')).toBe(true);
-        expect(entry.textContent).toContain('Component added: core:position on entity-123');
+        expect(entry.textContent).toContain(
+          'Component added: core:position on entity-123'
+        );
       });
 
       it('should handle component update', () => {
@@ -326,7 +336,9 @@ describe('EntityLifecycleMonitor', () => {
         eventHandlers['core:component_added'](event);
 
         const entry = eventList.children[0];
-        expect(entry.textContent).toContain('Component updated: core:position on entity-123');
+        expect(entry.textContent).toContain(
+          'Component updated: core:position on entity-123'
+        );
       });
 
       it('should handle missing entity gracefully', () => {
@@ -342,7 +354,9 @@ describe('EntityLifecycleMonitor', () => {
         eventHandlers['core:component_added'](event);
 
         const entry = eventList.children[0];
-        expect(entry.textContent).toContain('Component added: core:position on unknown');
+        expect(entry.textContent).toContain(
+          'Component added: core:position on unknown'
+        );
       });
     });
 
@@ -360,7 +374,9 @@ describe('EntityLifecycleMonitor', () => {
 
         const entry = eventList.children[0];
         expect(entry.classList.contains('component-removed')).toBe(true);
-        expect(entry.textContent).toContain('Component removed: core:position from entity-123');
+        expect(entry.textContent).toContain(
+          'Component removed: core:position from entity-123'
+        );
       });
 
       it('should handle missing entity gracefully', () => {
@@ -375,7 +391,9 @@ describe('EntityLifecycleMonitor', () => {
         eventHandlers['core:component_removed'](event);
 
         const entry = eventList.children[0];
-        expect(entry.textContent).toContain('Component removed: core:position from unknown');
+        expect(entry.textContent).toContain(
+          'Component removed: core:position from unknown'
+        );
       });
     });
 
@@ -397,8 +415,12 @@ describe('EntityLifecycleMonitor', () => {
 
         const entry = eventList.children[0];
         expect(entry.classList.contains('display-components')).toBe(true);
-        expect(entry.textContent).toContain('Entity entity-123 has 3 components:');
-        expect(entry.textContent).toContain('core:position, core:name, core:actor');
+        expect(entry.textContent).toContain(
+          'Entity entity-123 has 3 components:'
+        );
+        expect(entry.textContent).toContain(
+          'core:position, core:name, core:actor'
+        );
       });
 
       it('should handle empty components object', () => {
@@ -413,7 +435,9 @@ describe('EntityLifecycleMonitor', () => {
         eventHandlers['core:display_entity_components'](event);
 
         const entry = eventList.children[0];
-        expect(entry.textContent).toContain('Entity entity-123 has 0 components:');
+        expect(entry.textContent).toContain(
+          'Entity entity-123 has 0 components:'
+        );
       });
 
       it('should handle missing payload gracefully', () => {
@@ -425,7 +449,9 @@ describe('EntityLifecycleMonitor', () => {
         eventHandlers['core:display_entity_components'](event);
 
         const entry = eventList.children[0];
-        expect(entry.textContent).toContain('Entity undefined has 0 components:');
+        expect(entry.textContent).toContain(
+          'Entity undefined has 0 components:'
+        );
       });
     });
   });
@@ -463,12 +489,14 @@ describe('EntityLifecycleMonitor', () => {
 
       const timestamp = entry.querySelector('.event-timestamp');
       const message = entry.querySelector('.event-message');
-      
+
       expect(timestamp).toBeTruthy();
       // Match various time formats: [HH:MM:SS], [H:MM:SS AM/PM], etc.
       expect(timestamp.textContent).toMatch(/\[[\d:\s]+(AM|PM)?\]/);
       expect(message).toBeTruthy();
-      expect(message.textContent).toContain('Entity created: entity-123 from def-456');
+      expect(message.textContent).toContain(
+        'Entity created: entity-123 from def-456'
+      );
     });
 
     it('should limit entries to maximum of 50', () => {
@@ -486,7 +514,7 @@ describe('EntityLifecycleMonitor', () => {
       }
 
       expect(eventList.children.length).toBe(50);
-      
+
       // Verify oldest entries were removed
       const firstEntry = eventList.children[0];
       expect(firstEntry.textContent).toContain('entity-10');
@@ -503,7 +531,7 @@ describe('EntityLifecycleMonitor', () => {
             wasReconstructed: false,
           },
         };
-        
+
         if (i === 0) {
           eventHandlers['core:entity_created'](event);
           const firstEntry = eventList.children[0];
@@ -618,7 +646,7 @@ describe('EntityLifecycleMonitor', () => {
 
       // Fast forward to scroll time
       jest.advanceTimersByTime(200);
-      
+
       // Scroll should have been updated
       expect(containerElement.scrollTop).toBe(500); // scrollHeight value
     });
@@ -644,13 +672,15 @@ describe('EntityLifecycleMonitor', () => {
       // Check that animation cleanup timeouts were set for each event
       // Each event sets 2 timeouts: one for animation cleanup and one for scrolling
       const allTimeoutCalls = setTimeout.mock.calls;
-      
+
       // We should have 10 total calls (5 events * 2 timeouts each)
       expect(allTimeoutCalls.length).toBe(10);
-      
+
       // Verify we have appropriate timeout values
-      const timeoutValues = allTimeoutCalls.map(call => call[1]).sort((a, b) => a - b);
-      
+      const timeoutValues = allTimeoutCalls
+        .map((call) => call[1])
+        .sort((a, b) => a - b);
+
       // Should have timeouts at: 200, 300, 400 (animation+scroll), 400, 500, 500, 600, 600, 700, 800
       expect(timeoutValues[0]).toBe(200); // First scroll timeout
       expect(timeoutValues[9]).toBe(800); // Last animation cleanup
@@ -884,7 +914,7 @@ describe('EntityLifecycleMonitor', () => {
       // Verify we kept the newest 50 entries (5-54)
       const firstEntry = eventList.children[0];
       const lastEntry = eventList.children[49];
-      
+
       expect(firstEntry.textContent).toContain('entity-5');
       expect(lastEntry.textContent).toContain('entity-54');
     });

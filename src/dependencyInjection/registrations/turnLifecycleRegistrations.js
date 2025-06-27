@@ -39,11 +39,13 @@ export function registerTurnLifecycle(container) {
     tokens.ITurnOrderService,
     (c) => new TurnOrderService({ logger: c.resolve(tokens.ILogger) })
   );
-  registrar.singletonFactory(tokens.ITurnStateFactory, 
-    (c) => new ConcreteTurnStateFactory({
-      commandProcessor: c.resolve(tokens.ICommandProcessor),
-      commandOutcomeInterpreter: c.resolve(tokens.ICommandOutcomeInterpreter)
-    })
+  registrar.singletonFactory(
+    tokens.ITurnStateFactory,
+    (c) =>
+      new ConcreteTurnStateFactory({
+        commandProcessor: c.resolve(tokens.ICommandProcessor),
+        commandOutcomeInterpreter: c.resolve(tokens.ICommandOutcomeInterpreter),
+      })
   );
 
   // ─────────────────── Turn-context factory ──────────────────
@@ -138,7 +140,9 @@ export function registerTurnLifecycle(container) {
             predicate: (actor) => {
               // Check new player_type component first
               if (actor.hasComponent(PLAYER_TYPE_COMPONENT_ID)) {
-                const playerType = actor.getComponentData(PLAYER_TYPE_COMPONENT_ID);
+                const playerType = actor.getComponentData(
+                  PLAYER_TYPE_COMPONENT_ID
+                );
                 return playerType?.type === 'human';
               }
               // Fallback to old player component for backward compatibility

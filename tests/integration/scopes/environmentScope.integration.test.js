@@ -92,7 +92,12 @@ describe('Scope Integration Tests', () => {
     registry.store('actions', followAction.id, followAction);
     registry.store('conditions', 'core:entity-at-location', {
       id: 'core:entity-at-location',
-      logic: { '==': [{ var: 'entity.components.core:position.locationId' }, { var: 'location.id' }] },
+      logic: {
+        '==': [
+          { var: 'entity.components.core:position.locationId' },
+          { var: 'location.id' },
+        ],
+      },
     });
     registry.store('conditions', 'core:entity-is-not-current-actor', {
       id: 'core:entity-is-not-current-actor',
@@ -104,7 +109,12 @@ describe('Scope Integration Tests', () => {
     });
     registry.store('conditions', 'core:entity-is-following-actor', {
       id: 'core:entity-is-following-actor',
-      logic: { '==': [{ var: 'entity.components.core:following.leaderId' }, { var: 'actor.id' }] },
+      logic: {
+        '==': [
+          { var: 'entity.components.core:following.leaderId' },
+          { var: 'actor.id' },
+        ],
+      },
     });
 
     gameDataRepository = new GameDataRepository(registry, logger);
@@ -120,7 +130,7 @@ describe('Scope Integration Tests', () => {
     const validatedEventDispatcher = {
       dispatch: () => {},
       subscribe: () => {},
-      unsubscribe: () => {}
+      unsubscribe: () => {},
     };
 
     const safeEventDispatcher = new SafeEventDispatcher({
@@ -207,7 +217,10 @@ describe('Scope Integration Tests', () => {
       const roomId = 'room1';
 
       entityManager.setEntities([
-        { id: actorId, components: { [POSITION_COMPONENT_ID]: { locationId: roomId } } },
+        {
+          id: actorId,
+          components: { [POSITION_COMPONENT_ID]: { locationId: roomId } },
+        },
         { id: roomId, components: {} },
       ]);
 
@@ -231,7 +244,10 @@ describe('Scope Integration Tests', () => {
       const room2Id = 'room2';
 
       entityManager.setEntities([
-        { id: actorId, components: { [POSITION_COMPONENT_ID]: { locationId: room1Id } } },
+        {
+          id: actorId,
+          components: { [POSITION_COMPONENT_ID]: { locationId: room1Id } },
+        },
         {
           id: targetId,
           components: {

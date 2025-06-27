@@ -79,8 +79,8 @@ For more details on the project structure and coding standards associated with t
 2. If any tests fail, diagnose the failure, attempt auto-fix via `npm run lint` (root and proxy), then re-run tests.
 3. If tests still fail, create a PR labeled “🚫 tests failing—needs human review” with logs included.
 4. New tests go in different directories inside the tests/ folder. If they're integration tests, they go inside tests/integration/.
-If they're unit tests, they go into tests/unit/. Of course, different subdirectories can be created inside those directories, for appropriate organization.
-Try to reuse the test helpers located in tests/common/ and subdirectories when writing tests.
+   If they're unit tests, they go into tests/unit/. Of course, different subdirectories can be created inside those directories, for appropriate organization.
+   Try to reuse the test helpers located in tests/common/ and subdirectories when writing tests.
 
 ---
 

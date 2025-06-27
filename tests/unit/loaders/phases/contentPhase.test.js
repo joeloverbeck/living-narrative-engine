@@ -65,7 +65,9 @@ describe('ContentPhase', () => {
         ctx.manifests,
         expect.any(Object)
       );
-      expect(mockManager.loadContent.mock.calls[0][2]).not.toBe(originalTotalsRef);
+      expect(mockManager.loadContent.mock.calls[0][2]).not.toBe(
+        originalTotalsRef
+      );
 
       // Acceptance Criterion 1: Totals object reference changes after phase.
       expect(result.totals).not.toBe(originalTotalsRef);
@@ -75,7 +77,9 @@ describe('ContentPhase', () => {
       });
 
       // Original ctx should remain unchanged
-      expect(ctx.totals).toEqual({ actions: { count: 5, overrides: 0, errors: 0 } });
+      expect(ctx.totals).toEqual({
+        actions: { count: 5, overrides: 0, errors: 0 },
+      });
 
       // Verify the result is frozen
       expect(() => {

@@ -208,10 +208,14 @@ class ScopeEngine extends IScopeEngine {
           result = new Set(
             entities.map((e) => e.id).filter((id) => typeof id === 'string')
           );
-          
+
           // Enhanced debugging for component queries
-          runtimeCtx.logger.debug(`entities(${componentId}) source found ${entities.length} entities: [${entities.map(e => e.id).join(', ')}]`);
-          runtimeCtx.logger.debug(`entities(${componentId}) result set: [${Array.from(result).join(', ')}]`);
+          runtimeCtx.logger.debug(
+            `entities(${componentId}) source found ${entities.length} entities: [${entities.map((e) => e.id).join(', ')}]`
+          );
+          runtimeCtx.logger.debug(
+            `entities(${componentId}) result set: [${Array.from(result).join(', ')}]`
+          );
         }
         break;
 
@@ -324,26 +328,30 @@ class ScopeEngine extends IScopeEngine {
   _extractFieldValue(parentValue, fieldName, runtimeCtx) {
     if (typeof parentValue === 'string') {
       // Parent value is an entity ID
-      
+
       // Special handling for 'components' field to build components object
       if (fieldName === 'components') {
         // Try to get the entity instance
-        const entity = runtimeCtx.entityManager.getEntity ? 
-          runtimeCtx.entityManager.getEntity(parentValue) :
-          runtimeCtx.entityManager.getEntityInstance(parentValue);
-          
+        const entity = runtimeCtx.entityManager.getEntity
+          ? runtimeCtx.entityManager.getEntity(parentValue)
+          : runtimeCtx.entityManager.getEntityInstance(parentValue);
+
         if (!entity) return null;
-        
+
         // Check if this is a test entity (SimpleEntityManager) with plain components object
-        if (entity.components && typeof entity.components === 'object' && 
-            !entity.componentTypeIds && !entity.getComponentData) {
+        if (
+          entity.components &&
+          typeof entity.components === 'object' &&
+          !entity.componentTypeIds &&
+          !entity.getComponentData
+        ) {
           return entity.components;
         }
-        
+
         // For production Entity objects, always build the components object
         // This is necessary because the Entity.components property might be a Proxy
         const components = {};
-        
+
         // If entity has componentTypeIds, use that (production Entity)
         if (entity.componentTypeIds && Array.isArray(entity.componentTypeIds)) {
           for (const componentTypeId of entity.componentTypeIds) {
@@ -352,18 +360,26 @@ class ScopeEngine extends IScopeEngine {
               components[componentTypeId] = componentData;
             }
           }
-        } 
+        }
         // Otherwise try to get all components through entityManager
         else {
           // Try to get component data through entity manager
           // This is a fallback for entities that don't expose componentTypeIds
           const commonComponentIds = [
-            'core:name', 'core:position', 'core:actor', 'core:movement',
-            'intimacy:closeness', 'core:perception_log', 'core:short_term_memory'
+            'core:name',
+            'core:position',
+            'core:actor',
+            'core:movement',
+            'intimacy:closeness',
+            'core:perception_log',
+            'core:short_term_memory',
           ];
           for (const componentId of commonComponentIds) {
             try {
-              const data = runtimeCtx.entityManager.getComponentData(parentValue, componentId);
+              const data = runtimeCtx.entityManager.getComponentData(
+                parentValue,
+                componentId
+              );
               if (data) {
                 components[componentId] = data;
               }
@@ -372,10 +388,10 @@ class ScopeEngine extends IScopeEngine {
             }
           }
         }
-        
+
         return components;
       }
-      
+
       // Normal component data access
       return runtimeCtx.entityManager.getComponentData(parentValue, fieldName);
     } else if (parentValue && typeof parentValue === 'object') {
@@ -427,12 +443,9 @@ class ScopeEngine extends IScopeEngine {
 
     const source = 'ScopeEngine.resolveFilter';
     const initialSize = parentResult.size;
-    trace?.addLog(
-      'info',
-      `Applying filter to ${initialSize} items.`,
-      source,
-      { logic: node.logic }
-    );
+    trace?.addLog('info', `Applying filter to ${initialSize} items.`, source, {
+      logic: node.logic,
+    });
 
     if (initialSize === 0) return new Set();
 
@@ -447,15 +460,24 @@ class ScopeEngine extends IScopeEngine {
             actorEntity,
             runtimeCtx
           );
-          runtimeCtx.logger.debug(`Filter test for array element ${arrayElement}: ${passed ? 'PASS' : 'FAIL'}`);
+          runtimeCtx.logger.debug(
+            `Filter test for array element ${arrayElement}: ${passed ? 'PASS' : 'FAIL'}`
+          );
           if (passed) {
             result.add(arrayElement);
           }
         }
       } else {
         // Handle single items (entity IDs or objects)
-        const passed = this._filterSingleItem(item, node.logic, actorEntity, runtimeCtx);
-        runtimeCtx.logger.debug(`Filter test for item ${item}: ${passed ? 'PASS' : 'FAIL'}`);
+        const passed = this._filterSingleItem(
+          item,
+          node.logic,
+          actorEntity,
+          runtimeCtx
+        );
+        runtimeCtx.logger.debug(
+          `Filter test for item ${item}: ${passed ? 'PASS' : 'FAIL'}`
+        );
         if (passed) {
           result.add(item);
         }
@@ -485,15 +507,17 @@ class ScopeEngine extends IScopeEngine {
     if (typeof item === 'string') {
       // Item is an entity ID, get the entity instance
       entity = runtimeCtx.entityManager.getEntityInstance(item);
-      
+
       // Debug logging to see what the entity looks like
       runtimeCtx.logger.debug(`Retrieved entity instance for ${item}:`);
       runtimeCtx.logger.debug(`  - Entity exists: ${!!entity}`);
       runtimeCtx.logger.debug(`  - Entity ID: ${entity?.id}`);
-      runtimeCtx.logger.debug(`  - Entity componentTypeIds: [${entity?.componentTypeIds?.join(', ') || 'none'}]`);
-      
+      runtimeCtx.logger.debug(
+        `  - Entity componentTypeIds: [${entity?.componentTypeIds?.join(', ') || 'none'}]`
+      );
+
       entity = entity || { id: item };
-      
+
       // Create components object for JsonLogic access if entity exists
       if (entity && entity.componentTypeIds) {
         const components = {};
@@ -505,8 +529,12 @@ class ScopeEngine extends IScopeEngine {
         }
         // Add components property to entity for JsonLogic access
         entity.components = components;
-        runtimeCtx.logger.debug(`  - Components object created with keys: [${Object.keys(components).join(', ')}]`);
-        runtimeCtx.logger.debug(`  - Position component: ${JSON.stringify(components['core:position'] || 'missing')}`);
+        runtimeCtx.logger.debug(
+          `  - Components object created with keys: [${Object.keys(components).join(', ')}]`
+        );
+        runtimeCtx.logger.debug(
+          `  - Position component: ${JSON.stringify(components['core:position'] || 'missing')}`
+        );
       }
     } else if (item && typeof item === 'object') {
       // Item is already an object (e.g., exit object from component data)
@@ -517,7 +545,11 @@ class ScopeEngine extends IScopeEngine {
     }
 
     // Ensure actor also has components property for JsonLogic access
-    if (actorEntity && actorEntity.componentTypeIds && !actorEntity.components) {
+    if (
+      actorEntity &&
+      actorEntity.componentTypeIds &&
+      !actorEntity.components
+    ) {
       const actorComponents = {};
       for (const componentTypeId of actorEntity.componentTypeIds) {
         const componentData = actorEntity.getComponentData(componentTypeId);
@@ -535,8 +567,12 @@ class ScopeEngine extends IScopeEngine {
     };
 
     // Debug logging for filter evaluation
-    runtimeCtx.logger.debug(`Evaluating filter for entity ${entity.id}: logic=${JSON.stringify(logic)}`);
-    runtimeCtx.logger.debug(`Filter context: entity.id=${entity.id}, actor.id=${actorEntity.id}, location.id=${context.location.id}`);
+    runtimeCtx.logger.debug(
+      `Evaluating filter for entity ${entity.id}: logic=${JSON.stringify(logic)}`
+    );
+    runtimeCtx.logger.debug(
+      `Filter context: entity.id=${entity.id}, actor.id=${actorEntity.id}, location.id=${context.location.id}`
+    );
 
     // If this throws, it will now halt resolution, which is desired for fail-fast approach
     return runtimeCtx.jsonLogicEval.evaluate(logic, context);
