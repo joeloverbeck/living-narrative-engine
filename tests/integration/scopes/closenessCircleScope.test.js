@@ -16,7 +16,7 @@ describe('Closeness Circle Scope Resolution', () => {
   let logger;
 
   beforeEach(() => {
-    logger = new ConsoleLogger('DEBUG');
+    logger = new ConsoleLogger('ERROR'); // Change to ERROR to reduce noise
     
     // Create entity manager with test entities
     entityManager = new SimpleEntityManager([
