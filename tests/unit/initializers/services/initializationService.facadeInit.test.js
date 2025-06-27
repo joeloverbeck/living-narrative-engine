@@ -44,46 +44,51 @@ describe('InitializationService DomUiFacade handling', () => {
   it('throws when DomUiFacade is missing', () => {
     expect(() => {
       const svc = new InitializationService({
-        logger,
-        validatedEventDispatcher: dispatcher,
-        modsLoader,
-        scopeRegistry,
-        dataRegistry,
-        llmAdapter,
-        llmConfigLoader,
-        systemInitializer,
-        worldInitializer,
-        safeEventDispatcher,
-        entityManager,
-        actionIndex: { buildIndex: jest.fn() },
-        gameDataRepository: {
-          getAllActionDefinitions: jest.fn().mockReturnValue([]),
+        log: { logger },
+        events: { validatedEventDispatcher: dispatcher, safeEventDispatcher },
+        llm: { llmAdapter, llmConfigLoader },
+        persistence: {
+          entityManager,
+          actionIndex: { buildIndex: jest.fn() },
+          gameDataRepository: {
+            getAllActionDefinitions: jest.fn().mockReturnValue([]),
+          },
+          thoughtListener,
+          notesListener,
+          // domUiFacade omitted
         },
-        thoughtListener,
-        notesListener,
-        // domUiFacade: domUiFacade, // Intentionally omitted
+        coreSystems: {
+          modsLoader,
+          scopeRegistry,
+          dataRegistry,
+          systemInitializer,
+          worldInitializer,
+          // spatialIndexManager intentionally missing for this test
+        },
       });
     }).toThrow(SystemInitializationError);
     expect(() => {
       const svc = new InitializationService({
-        logger,
-        validatedEventDispatcher: dispatcher,
-        modsLoader,
-        scopeRegistry,
-        dataRegistry,
-        llmAdapter,
-        llmConfigLoader,
-        systemInitializer,
-        worldInitializer,
-        safeEventDispatcher,
-        entityManager,
-        actionIndex: { buildIndex: jest.fn() },
-        gameDataRepository: {
-          getAllActionDefinitions: jest.fn().mockReturnValue([]),
+        log: { logger },
+        events: { validatedEventDispatcher: dispatcher, safeEventDispatcher },
+        llm: { llmAdapter, llmConfigLoader },
+        persistence: {
+          entityManager,
+          actionIndex: { buildIndex: jest.fn() },
+          gameDataRepository: {
+            getAllActionDefinitions: jest.fn().mockReturnValue([]),
+          },
+          thoughtListener,
+          notesListener,
+          // domUiFacade omitted
         },
-        thoughtListener,
-        notesListener,
-        // domUiFacade: domUiFacade, // Intentionally omitted
+        coreSystems: {
+          modsLoader,
+          scopeRegistry,
+          dataRegistry,
+          systemInitializer,
+          worldInitializer,
+        },
       });
     }).toThrow('InitializationService requires a domUiFacade dependency');
   });

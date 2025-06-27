@@ -56,23 +56,25 @@ beforeEach(() => {
 describe('InitializationService success path', () => {
   it('runs the initialization sequence successfully', async () => {
     const service = new InitializationService({
-      logger,
-      validatedEventDispatcher: dispatcher,
-      modsLoader,
-      scopeRegistry,
-      dataRegistry,
-      llmAdapter,
-      llmConfigLoader,
-      systemInitializer,
-      worldInitializer,
-      safeEventDispatcher,
-      entityManager,
-      domUiFacade,
-      actionIndex,
-      gameDataRepository,
-      thoughtListener,
-      notesListener,
-      spatialIndexManager: { buildIndex: jest.fn() },
+      log: { logger },
+      events: { validatedEventDispatcher: dispatcher, safeEventDispatcher },
+      llm: { llmAdapter, llmConfigLoader },
+      persistence: {
+        entityManager,
+        domUiFacade,
+        actionIndex,
+        gameDataRepository,
+        thoughtListener,
+        notesListener,
+        spatialIndexManager: { buildIndex: jest.fn() },
+      },
+      coreSystems: {
+        modsLoader,
+        scopeRegistry,
+        dataRegistry,
+        systemInitializer,
+        worldInitializer,
+      },
     });
 
     const result = await service.runInitializationSequence(MOCK_WORLD);

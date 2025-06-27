@@ -63,45 +63,42 @@ class InitializationService extends IInitializationService {
   /**
    * Creates a new InitializationService instance.
    *
-   * @param {object} deps
-   * @param {ILogger} deps.logger
-   * @param {IValidatedEventDispatcher} deps.validatedEventDispatcher
-   * @param {IModsLoader} deps.modsLoader
-   * @param {import('../../interfaces/IScopeRegistry.js').IScopeRegistry} dependencies.scopeRegistry - Registry of scopes.
-   * @param {import('../../data/inMemoryDataRegistry.js').DataRegistry} dependencies.dataRegistry - Data registry instance.
-   * @param {import('../../turns/interfaces/ILLMAdapter.js').ILLMAdapter & {init?: Function, isInitialized?: Function, isOperational?: Function}} dependencies.llmAdapter - LLM adapter instance.
-   * @param {LlmConfigLoader} dependencies.llmConfigLoader - Loader for LLM configuration.
-   * @param {SystemInitializer} dependencies.systemInitializer - Initializes tagged systems.
-   * @param {WorldInitializer} dependencies.worldInitializer - Initializes the game world.
-   * @param {ISafeEventDispatcher} dependencies.safeEventDispatcher - Event dispatcher for safe events.
-   * @param {IEntityManager} dependencies.entityManager - Entity manager instance.
-   * @param {import('../../domUI/domUiFacade.js').DomUiFacade} dependencies.domUiFacade - UI facade instance.
-   * @param {ActionIndex} dependencies.actionIndex - Action index for optimized action discovery.
-   * @param {import('../../interfaces/IGameDataRepository.js').IGameDataRepository} dependencies.gameDataRepository - Game data repository instance.
-   * @param {IThoughtListener} deps.thoughtListener
-   * @param {INotesListener} deps.notesListener
-   * @param {ISpatialIndexManager} deps.spatialIndexManager
+   * @param {object} config - Grouped dependencies.
+   * @param {{ logger: ILogger }} config.log - Logging utilities.
+   * @param {{ validatedEventDispatcher: IValidatedEventDispatcher, safeEventDispatcher: ISafeEventDispatcher }} config.events - Event dispatchers.
+   * @param {{ llmAdapter: import('../../turns/interfaces/ILLMAdapter.js').ILLMAdapter & {init?: Function, isInitialized?: Function, isOperational?: Function}, llmConfigLoader: LlmConfigLoader }} config.llm - LLM services.
+   * @param {{
+   *   entityManager: IEntityManager,
+   *   domUiFacade: import('../../domUI/domUiFacade.js').DomUiFacade,
+   *   actionIndex: ActionIndex,
+   *   gameDataRepository: import('../../interfaces/IGameDataRepository.js').IGameDataRepository,
+   *   thoughtListener: IThoughtListener,
+   *   notesListener: INotesListener,
+   *   spatialIndexManager: ISpatialIndexManager,
+   * }} config.persistence - Persistence related services.
+   * @param {{
+   *   modsLoader: IModsLoader,
+   *   scopeRegistry: import('../../interfaces/IScopeRegistry.js').IScopeRegistry,
+   *   dataRegistry: import('../../data/inMemoryDataRegistry.js').DataRegistry,
+   *   systemInitializer: SystemInitializer,
+   *   worldInitializer: WorldInitializer,
+   * }} config.coreSystems - Core engine systems.
    * @description Initializes the complete game system.
    */
-  constructor({
-    logger,
-    validatedEventDispatcher,
-    modsLoader,
-    scopeRegistry,
-    dataRegistry,
-    llmAdapter,
-    llmConfigLoader,
-    systemInitializer,
-    worldInitializer,
-    safeEventDispatcher,
-    entityManager,
-    domUiFacade,
-    actionIndex,
-    gameDataRepository,
-    thoughtListener,
-    notesListener,
-    spatialIndexManager,
-  }) {
+  constructor({ log = {}, events = {}, llm = {}, persistence = {}, coreSystems = {} } = {}) {
+    const { logger } = log;
+    const { validatedEventDispatcher, safeEventDispatcher } = events;
+    const { llmAdapter, llmConfigLoader } = llm;
+    const {
+      entityManager,
+      domUiFacade,
+      actionIndex,
+      gameDataRepository,
+      thoughtListener,
+      notesListener,
+      spatialIndexManager,
+    } = persistence;
+    const { modsLoader, scopeRegistry, dataRegistry, systemInitializer, worldInitializer } = coreSystems;
     super();
 
     assertMethods(

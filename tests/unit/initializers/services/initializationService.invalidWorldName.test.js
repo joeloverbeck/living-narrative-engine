@@ -39,25 +39,27 @@ describe('InitializationService invalid world name handling', () => {
     'returns failure for %p',
     async (bad) => {
       const service = new InitializationService({
-        logger,
-        validatedEventDispatcher: dispatcher,
-        modsLoader,
-        scopeRegistry,
-        dataRegistry,
-        llmAdapter,
-        llmConfigLoader,
-        systemInitializer,
-        worldInitializer,
-        safeEventDispatcher,
-        entityManager,
-        domUiFacade,
-        actionIndex: { buildIndex: jest.fn() },
-        gameDataRepository: {
-          getAllActionDefinitions: jest.fn().mockReturnValue([]),
+        log: { logger },
+        events: { validatedEventDispatcher: dispatcher, safeEventDispatcher },
+        llm: { llmAdapter, llmConfigLoader },
+        persistence: {
+          entityManager,
+          domUiFacade,
+          actionIndex: { buildIndex: jest.fn() },
+          gameDataRepository: {
+            getAllActionDefinitions: jest.fn().mockReturnValue([]),
+          },
+          thoughtListener,
+          notesListener,
+          spatialIndexManager: { buildIndex: jest.fn() },
         },
-        thoughtListener,
-        notesListener,
-        spatialIndexManager: { buildIndex: jest.fn() },
+        coreSystems: {
+          modsLoader,
+          scopeRegistry,
+          dataRegistry,
+          systemInitializer,
+          worldInitializer,
+        },
       });
 
       const result = await service.runInitializationSequence(bad);
