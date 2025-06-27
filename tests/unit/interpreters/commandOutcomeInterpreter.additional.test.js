@@ -97,4 +97,37 @@ describe('CommandOutcomeInterpreter additional branches', () => {
       "CommandOutcomeInterpreter: actor actor-1: result.actionResult.actionId ('undefined') invalid/missing. Using action identifier: 'core:unknown_action'."
     );
   });
+
+  it('dispatches error when turnContext is missing getActor', async () => {
+    const interpreter = new CommandOutcomeInterpreter({ dispatcher, logger });
+    await expect(interpreter.interpret({}, {})).rejects.toThrow(
+      'CommandOutcomeInterpreter: Invalid turnContext provided.'
+    );
+    expect(safeDispatchError).toHaveBeenCalledWith(
+      dispatcher,
+      'CommandOutcomeInterpreter: Invalid turnContext provided.',
+      expect.any(Object)
+    );
+    expect(logger.error).toHaveBeenCalledWith(
+      'CommandOutcomeInterpreter: Invalid turnContext provided.',
+      expect.any(Object)
+    );
+  });
+
+  it('dispatches error when actor is invalid', async () => {
+    const interpreter = new CommandOutcomeInterpreter({ dispatcher, logger });
+    turnContext.getActor.mockReturnValue({});
+    await expect(interpreter.interpret({}, turnContext)).rejects.toThrow(
+      'CommandOutcomeInterpreter: Could not retrieve a valid actor or actor ID from turnContext.'
+    );
+    expect(safeDispatchError).toHaveBeenCalledWith(
+      dispatcher,
+      'CommandOutcomeInterpreter: Could not retrieve a valid actor or actor ID from turnContext.',
+      expect.any(Object)
+    );
+    expect(logger.error).toHaveBeenCalledWith(
+      'CommandOutcomeInterpreter: Could not retrieve a valid actor or actor ID from turnContext.',
+      expect.any(Object)
+    );
+  });
 });
