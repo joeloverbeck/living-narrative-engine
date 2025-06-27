@@ -146,15 +146,15 @@ describe('EntityInstanceData', () => {
       );
     });
 
-    it('should cause hasComponent(id, true) to return false after removal', () => {
+    it('should cause hasComponentOverride(id) to return false after removal', () => {
       // Pre-condition check
-      expect(instance.hasComponent('core:position', true)).toBe(true);
+      expect(instance.hasComponentOverride('core:position')).toBe(true);
 
       // Act
       instance.removeComponentOverride('core:position');
 
       // Assert
-      expect(instance.hasComponent('core:position', true)).toBe(false);
+      expect(instance.hasComponentOverride('core:position')).toBe(false);
     });
 
     it('should not affect hasComponent(id, false) if the component exists on the definition', () => {
@@ -163,14 +163,14 @@ describe('EntityInstanceData', () => {
 
       // Pre-condition checks
       expect(instance.hasComponent('core:health', false)).toBe(true); // From override
-      expect(instance.hasComponent('core:health', true)).toBe(true); // From override
+      expect(instance.hasComponentOverride('core:health')).toBe(true); // From override
 
       // Act
       instance.removeComponentOverride('core:health');
 
       // Assert
       expect(instance.hasComponent('core:health', false)).toBe(true); // Falls back to definition
-      expect(instance.hasComponent('core:health', true)).toBe(false); // Override is gone
+      expect(instance.hasComponentOverride('core:health')).toBe(false); // Override is gone
     });
   });
 });

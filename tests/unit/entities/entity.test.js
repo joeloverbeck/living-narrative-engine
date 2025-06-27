@@ -145,7 +145,7 @@ describe('Entity Class', () => {
       const spy = jest.spyOn(mockInstanceData, 'hasComponent');
       const result = entity.hasComponent(componentTypeId);
 
-      expect(spy).toHaveBeenCalledWith(componentTypeId, false); // Added false as second argument
+      expect(spy).toHaveBeenCalledWith(componentTypeId);
       expect(result).toBe(true);
       spy.mockRestore();
     });
@@ -155,7 +155,7 @@ describe('Entity Class', () => {
       const spy = jest.spyOn(mockInstanceData, 'hasComponent');
       const result = entity.hasComponent(componentTypeId);
 
-      expect(spy).toHaveBeenCalledWith(componentTypeId, false);
+      expect(spy).toHaveBeenCalledWith(componentTypeId);
       expect(result).toBe(true);
       spy.mockRestore();
     });

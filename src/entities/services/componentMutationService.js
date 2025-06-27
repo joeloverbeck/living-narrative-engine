@@ -203,7 +203,7 @@ export class ComponentMutationService {
     }
 
     // Check if the component to be removed exists as an override.
-    if (!entity.hasComponent(componentTypeId, true)) {
+    if (!entity.hasComponentOverride(componentTypeId)) {
       this.#logger.debug(
         `ComponentMutationService.removeComponent: Component '${componentTypeId}' not found as an override on entity '${instanceId}'. Nothing to remove at instance level.`
       );
