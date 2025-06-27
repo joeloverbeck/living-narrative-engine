@@ -28,6 +28,16 @@ export class PrerequisiteEvaluationService extends BaseService {
   #gameDataRepository;
 
   /**
+   * @description Builds the prefix used for logging messages.
+   * @private
+   * @param {string} actionId - Identifier of the action being evaluated.
+   * @returns {string} The standardized log prefix.
+   */
+  #logPrefix(actionId) {
+    return `PrereqEval[${actionId}]`;
+  }
+
+  /**
    * Creates an instance of PrerequisiteEvaluationService.
    *
    * @param {object} dependencies - The required services.
@@ -85,7 +95,8 @@ export class PrerequisiteEvaluationService extends BaseService {
         logic,
         this.#gameDataRepository,
         {
-          debug: (msg) => this.#logger.debug(`PrereqEval[${actionId}]: ${msg}`),
+          debug: (msg) =>
+            this.#logger.debug(`${this.#logPrefix(actionId)}: ${msg}`),
         },
         visited
       );
@@ -115,7 +126,7 @@ export class PrerequisiteEvaluationService extends BaseService {
       !prereqObject.logic
     ) {
       this.#logger.error(
-        `PrereqEval[${actionId}]: ← FAILED (Rule ${ruleNumber}/${totalRules}): Prerequisite item is invalid or missing 'logic' property: ${JSON.stringify(
+        `${this.#logPrefix(actionId)}: ← FAILED (Rule ${ruleNumber}/${totalRules}): Prerequisite item is invalid or missing 'logic' property: ${JSON.stringify(
           prereqObject
         )}`
       );
@@ -148,7 +159,7 @@ export class PrerequisiteEvaluationService extends BaseService {
   _logPrerequisiteResult(pass, prereqObject, ruleNumber, totalRules, actionId) {
     if (!pass) {
       this.#logger.debug(
-        `PrereqEval[${actionId}]: ← FAILED (Rule ${ruleNumber}/${totalRules}): Prerequisite check FAILED. Rule: ${JSON.stringify(
+        `${this.#logPrefix(actionId)}: ← FAILED (Rule ${ruleNumber}/${totalRules}): Prerequisite check FAILED. Rule: ${JSON.stringify(
           prereqObject
         )}`
       );
@@ -159,7 +170,7 @@ export class PrerequisiteEvaluationService extends BaseService {
     }
 
     this.#logger.debug(
-      `PrereqEval[${actionId}]:   - Prerequisite Rule ${ruleNumber}/${totalRules} PASSED.`
+      `${this.#logPrefix(actionId)}:   - Prerequisite Rule ${ruleNumber}/${totalRules} PASSED.`
     );
     return true;
   }
@@ -181,15 +192,15 @@ export class PrerequisiteEvaluationService extends BaseService {
         actor
       );
       this.#logger.debug(
-        `PrereqEval[${actionId}]: Evaluation Context Built Successfully.`
+        `${this.#logPrefix(actionId)}: Evaluation Context Built Successfully.`
       );
       this.#logger.debug(
-        `PrereqEval[${actionId}] Context:`,
+        `${this.#logPrefix(actionId)} Context:`,
         JSON.stringify(evaluationContext, null, 2)
       );
     } catch (buildError) {
       this.#logger.error(
-        `PrereqEval[${actionId}]: ← FAILED (Internal Error: Failed to build evaluation context). Error: ${buildError.message}`,
+        `${this.#logPrefix(actionId)}: ← FAILED (Internal Error: Failed to build evaluation context). Error: ${buildError.message}`,
         {
           actorId: actorId,
           stack: buildError.stack,
@@ -252,7 +263,7 @@ export class PrerequisiteEvaluationService extends BaseService {
       }
 
       this.#logger.debug(
-        `PrereqEval[${actionId}]:   - Evaluating resolved rule ${ruleNumber}: ${JSON.stringify(
+        `${this.#logPrefix(actionId)}:   - Evaluating resolved rule ${ruleNumber}: ${JSON.stringify(
           resolvedLogic
         )}`
       );
@@ -266,7 +277,7 @@ export class PrerequisiteEvaluationService extends BaseService {
         { error: evalError }
       );
       this.#logger.error(
-        `PrereqEval[${actionId}]: ← FAILED (Rule ${ruleNumber}/${totalRules}): Error during rule resolution or evaluation. Rule: ${JSON.stringify(
+        `${this.#logPrefix(actionId)}: ← FAILED (Rule ${ruleNumber}/${totalRules}): Error during rule resolution or evaluation. Rule: ${JSON.stringify(
           prereqObject
         )}`,
         {
@@ -305,7 +316,7 @@ export class PrerequisiteEvaluationService extends BaseService {
    */
   #evaluateRules(prerequisites, evaluationContext, actionId, trace = null) {
     this.#logger.debug(
-      `PrereqEval[${actionId}]: Evaluating ${prerequisites.length} prerequisite rule(s)...`
+      `${this.#logPrefix(actionId)}: Evaluating ${prerequisites.length} prerequisite rule(s)...`
     );
 
     for (const [index, prereqObject] of prerequisites.entries()) {
@@ -326,7 +337,7 @@ export class PrerequisiteEvaluationService extends BaseService {
     }
 
     this.#logger.debug(
-      `PrereqEval[${actionId}]: → PASSED (All ${prerequisites.length} prerequisite rules evaluated successfully).`
+      `${this.#logPrefix(actionId)}: → PASSED (All ${prerequisites.length} prerequisite rules evaluated successfully).`
     );
     return true;
   }
@@ -349,7 +360,7 @@ export class PrerequisiteEvaluationService extends BaseService {
 
     if (!prerequisites || prerequisites.length === 0) {
       this.#logger.debug(
-        `PrereqEval[${actionId}]: → PASSED (No prerequisites to evaluate).`
+        `${this.#logPrefix(actionId)}: → PASSED (No prerequisites to evaluate).`
       );
       return true;
     }

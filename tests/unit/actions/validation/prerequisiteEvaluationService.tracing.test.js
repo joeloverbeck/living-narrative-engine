@@ -34,9 +34,12 @@ describe('PrerequisiteEvaluationService › with Tracing', () => {
     mockActionValidationContextBuilder.buildContext.mockReturnValue(
       mockEvaluationContext
     );
-    mockGameDataRepository.getConditionDefinition.mockImplementation(id => {
+    mockGameDataRepository.getConditionDefinition.mockImplementation((id) => {
       if (id === 'is_strong') {
-        return { id: 'is_strong', logic: { '===': [{ var: 'actor.strength' }, 10] } };
+        return {
+          id: 'is_strong',
+          logic: { '===': [{ var: 'actor.strength' }, 10] },
+        };
       }
       return null;
     });
@@ -51,12 +54,11 @@ describe('PrerequisiteEvaluationService › with Tracing', () => {
 
   it('should evaluate to true if there are no prerequisites', () => {
     // CORRECTED: Removed mockTargetContext
-    const result = service.evaluate(
-      [],
-      mockActionDefinition,
-      mockActor
-    );
+    const result = service.evaluate([], mockActionDefinition, mockActor);
     expect(result).toBe(true);
+    expect(mockLogger.debug).toHaveBeenCalledWith(
+      `PrerequisiteEvaluationService: PrereqEval[${mockActionDefinition.id}]: → PASSED (No prerequisites to evaluate).`
+    );
   });
 
   it('should return false if context building fails', () => {
@@ -103,7 +105,8 @@ describe('PrerequisiteEvaluationService › with Tracing', () => {
 
   describe('with Tracing enabled', () => {
     const sourceEvaluate = 'PrerequisiteEvaluationService.evaluate';
-    const sourceEvaluatePrerequisite = 'PrerequisiteEvaluationService._evaluatePrerequisite';
+    const sourceEvaluatePrerequisite =
+      'PrerequisiteEvaluationService._evaluatePrerequisite';
 
     it('should log the built evaluation context', () => {
       const prerequisites = [{ logic: { '===': [1, 1] } }];
@@ -238,13 +241,13 @@ describe('PrerequisiteEvaluationService › with Tracing', () => {
 
       // Verify that the 'Condition reference resolved' log was NOT called
       const resolvedLogCall = mockTraceContext.addLog.mock.calls.find(
-        call => call[1] === 'Condition reference resolved.'
+        (call) => call[1] === 'Condition reference resolved.'
       );
       expect(resolvedLogCall).toBeUndefined();
     });
 
     it('should log an error if rule evaluation throws an exception', () => {
-      const prerequisites = [{ logic: { 'invalid_op': 1 } }];
+      const prerequisites = [{ logic: { invalid_op: 1 } }];
       const evalError = new Error('Invalid operator');
       mockJsonLogicEvaluationService.evaluate.mockImplementation(() => {
         throw evalError;
