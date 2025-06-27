@@ -305,6 +305,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
   #formatActionsForTargets(actionDef, targetContexts) {
     const validActions = [];
     const errors = [];
+    // Options are identical for all targets; compute once for reuse
     const formatterOptions = {
       logger: this.#logger,
       debug: true,
