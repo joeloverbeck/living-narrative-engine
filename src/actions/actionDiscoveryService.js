@@ -162,7 +162,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
    * It is simpler, with its complex inner logic delegated to helpers.
    *
    * @param {Entity} actorEntity The entity for whom to find actions.
-   * @param {ActionContext} [baseContext={}] The current action context.
+   * @param {ActionContext} [baseContext] The current action context.
    * @param {object} [options] Optional settings.
    * @param {boolean} [options.trace] - If true, generates a detailed trace of the discovery process.
    * @returns {Promise<import('../interfaces/IActionDiscoveryService.js').DiscoveredActionsResult>}
@@ -209,8 +209,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
       } catch (err) {
         errors.push({
           actionId: actionDef.id,
-          targetId:
-            err?.targetId ?? err?.target?.entityId ?? err?.entityId ?? null,
+          targetId: this.#extractTargetId(err),
           error: err,
         });
         this.#logger.error(
@@ -229,6 +228,18 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     );
 
     return { actions, errors, trace };
+  }
+
+  /**
+   * @description Extracts a target entity ID from various error shapes.
+   * @param {Error} error - The error thrown during action processing.
+   * @returns {string|null} The resolved target entity ID or null if not present.
+   * @private
+   */
+  #extractTargetId(error) {
+    return (
+      error?.targetId ?? error?.target?.entityId ?? error?.entityId ?? null
+    );
   }
 
   /**
