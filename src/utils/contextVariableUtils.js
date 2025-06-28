@@ -5,34 +5,23 @@ import { safeDispatchError } from './safeDispatchErrorUtils.js';
 import { resolveSafeDispatcher } from './dispatcherUtils.js';
 import { isNonBlankString } from './textUtils.js';
 import { safeCall } from './safeExecutionUtils.js';
+import {
+  getEvaluationContext,
+  ensureEvaluationContext,
+} from './evaluationContextUtils.js';
 
 /**
- * Validate that the context exists and the variable name is valid.
+ * Validate that the variable name is usable for storage.
  *
  * @param {string} variableName Variable name to validate.
- * @param {import('../logic/defs.js').ExecutionContext} executionContext Execution context.
  * @returns {{valid: boolean, error?: Error, name?: string}} Validation result.
  * @private
  */
-function _validateContextAndName(variableName, executionContext) {
+function _validateVariableName(variableName) {
   if (!isNonBlankString(variableName)) {
     return {
       valid: false,
       error: new Error(`Invalid variableName: "${variableName}"`),
-    };
-  }
-
-  const hasContext =
-    executionContext?.evaluationContext &&
-    typeof executionContext.evaluationContext.context === 'object' &&
-    executionContext.evaluationContext.context !== null;
-
-  if (!hasContext) {
-    return {
-      valid: false,
-      error: new Error(
-        'writeContextVariable: evaluationContext.context is missing; cannot store value'
-      ),
     };
   }
 
@@ -108,10 +97,7 @@ export function writeContextVariable(
   const moduleLogger = getModuleLogger('contextVariableUtils', logger);
   const safeDispatcher =
     dispatcher || resolveSafeDispatcher(executionContext, moduleLogger);
-  const { valid, error, name } = _validateContextAndName(
-    variableName,
-    executionContext
-  );
+  const { valid, error, name } = _validateVariableName(variableName);
 
   if (!valid) {
     if (safeDispatcher) {
@@ -125,8 +111,22 @@ export function writeContextVariable(
     return { success: false, error };
   }
 
+  const contextObject = ensureEvaluationContext(
+    executionContext,
+    safeDispatcher,
+    moduleLogger
+  );
+  if (!contextObject) {
+    return {
+      success: false,
+      error: new Error(
+        'writeContextVariable: evaluationContext.context is missing; cannot store value'
+      ),
+    };
+  }
+
   const { success, error: setError } = setContextValue(
-    executionContext.evaluationContext.context,
+    contextObject,
     name,
     value
   );
@@ -171,7 +171,7 @@ export function tryWriteContextVariable(
   logger
 ) {
   const moduleLogger = getModuleLogger('contextVariableUtils', logger);
-  const validation = _validateContextAndName(variableName, executionContext);
+  const validation = _validateVariableName(variableName);
   if (!validation.valid) {
     const safeDispatcher =
       dispatcher || resolveSafeDispatcher(executionContext, moduleLogger);

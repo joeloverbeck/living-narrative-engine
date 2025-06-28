@@ -1,5 +1,8 @@
 import { describe, test, expect, jest } from '@jest/globals';
-import { ensureEvaluationContext } from '../../../src/utils/evaluationContextUtils.js';
+import {
+  ensureEvaluationContext,
+  getEvaluationContext,
+} from '../../../src/utils/evaluationContextUtils.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
 import { expectNoDispatch } from '../../common/engine/dispatchTestUtils.js';
 
@@ -40,5 +43,23 @@ describe('ensureEvaluationContext', () => {
         ),
       })
     );
+  });
+});
+
+describe('getEvaluationContext', () => {
+  test('returns context when present', () => {
+    const ctx = { evaluationContext: { context: { a: 1 } } };
+
+    const result = getEvaluationContext(ctx);
+
+    expect(result).toBe(ctx.evaluationContext.context);
+  });
+
+  test('returns null when context missing', () => {
+    const ctx = { evaluationContext: {} };
+
+    const result = getEvaluationContext(ctx);
+
+    expect(result).toBeNull();
   });
 });
