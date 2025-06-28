@@ -32,6 +32,7 @@ import { RealScheduler } from '../scheduling/index.js';
 import { safeDispatch } from '../utils/eventHelpers.js';
 import { logStart, logEnd, logError } from '../utils/loggerUtils.js';
 import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
+import { dispatchSystemErrorEvent } from '../utils/systemErrorDispatchUtils.js';
 
 /**
  * @class TurnManager
@@ -651,16 +652,14 @@ class TurnManager extends ITurnManager {
       detailsOrError instanceof Error
         ? detailsOrError.stack
         : new Error().stack;
-    await safeDispatch(
+
+    await dispatchSystemErrorEvent(
       this.#dispatcher,
-      SYSTEM_ERROR_OCCURRED_ID,
+      message,
       {
-        message: message,
-        details: {
-          raw: detailString,
-          stack: stackString,
-          timestamp: new Date().toISOString(),
-        },
+        raw: detailString,
+        stack: stackString,
+        timestamp: new Date().toISOString(),
       },
       this.#logger
     );
