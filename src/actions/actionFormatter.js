@@ -16,6 +16,7 @@ import {
   safeDispatchError,
   dispatchValidationError,
 } from '../utils/safeDispatchErrorUtils.js';
+import { validateDependency } from '../utils/validationUtils.js';
 import { resolveSafeDispatcher } from '../utils/dispatcherUtils.js';
 
 import { targetFormatterMap } from './formatters/targetFormatters.js';
@@ -81,10 +82,18 @@ function checkFormatInputs(
   if (!targetContext) {
     return 'formatActionCommand: Invalid or missing targetContext.';
   }
-  if (!entityManager || typeof entityManager.getEntityInstance !== 'function') {
+  try {
+    validateDependency(entityManager, 'entityManager', console, {
+      requiredMethods: ['getEntityInstance'],
+    });
+  } catch {
     return 'formatActionCommand: Invalid or missing entityManager.';
   }
-  if (typeof displayNameFn !== 'function') {
+  try {
+    validateDependency(displayNameFn, 'displayNameFn', console, {
+      isFunction: true,
+    });
+  } catch {
     return 'formatActionCommand: getEntityDisplayName utility function is not available.';
   }
 
