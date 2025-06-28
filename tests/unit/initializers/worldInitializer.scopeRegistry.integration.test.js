@@ -75,7 +75,7 @@ describe('WorldInitializer - ScopeRegistry Integration', () => {
     });
   });
 
-  describe('initializeScopeRegistry integration', () => {
+  describe('loadAndInitScopes integration', () => {
     it('should successfully initialize ScopeRegistry with scopes from GameDataRepository', async () => {
       const mockScopes = {
         'core:all_characters': 'actor',

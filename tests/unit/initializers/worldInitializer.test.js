@@ -611,7 +611,7 @@ describe('WorldInitializer', () => {
     });
   });
 
-  describe('initializeScopeRegistry', () => {
+  describe('loadAndInitScopes helper', () => {
     it('should call scopeRegistry.initialize with scopes from repository', async () => {
       const mockScopes = { 'core:testScope': 'actor' };
       mockGameDataRepository.get = jest.fn().mockReturnValue(mockScopes);

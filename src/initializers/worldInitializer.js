@@ -18,7 +18,6 @@ import {
   WORLDINIT_ENTITY_INSTANTIATED_ID,
   WORLDINIT_ENTITY_INSTANTIATION_FAILED_ID,
 } from '../constants/eventIds.js';
-import loadAndInitScopes from './services/scopeRegistryUtils.js';
 
 // --- Utility Imports ---
 import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
@@ -60,20 +59,6 @@ class WorldInitializer {
    */
   getWorldContext() {
     return this.#worldContext;
-  }
-
-  /**
-   * Initializes the ScopeRegistry with loaded scopes from the data registry.
-   * This should be called after mods are loaded but before world entities are initialized.
-   *
-   * @returns {Promise<void>}
-   */
-  async initializeScopeRegistry() {
-    await loadAndInitScopes({
-      dataSource: this.#repository.get.bind(this.#repository),
-      scopeRegistry: this.#scopeRegistry,
-      logger: this.#logger,
-    });
   }
 
   /**
