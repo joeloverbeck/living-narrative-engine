@@ -101,8 +101,8 @@ export class PromptSession {
 
     // macrotask – gives callers a full tick to attach handlers
     const defer =
-      typeof setImmediate === 'function'
-        ? setImmediate // Node
+      typeof globalThis.setImmediate === 'function'
+        ? globalThis.setImmediate // Node
         : (fn) => setTimeout(fn); // browser / JSDOM fallback
 
     defer(() => {

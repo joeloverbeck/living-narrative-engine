@@ -19,10 +19,8 @@
 import { createDefaultDeps } from './utils/createDefaultDeps.js';
 import Entity from './entity.js';
 import EntityInstanceData from './entityInstanceData.js';
-import EntityFactory from './factories/entityFactory.js';
 import EntityRepositoryAdapter from './services/entityRepositoryAdapter.js';
 import ComponentMutationService from './services/componentMutationService.js';
-import ErrorTranslator from './services/errorTranslator.js';
 import DefinitionCache from './services/definitionCache.js';
 import EntityLifecycleManager from './services/entityLifecycleManager.js';
 import { createDefaultServices } from './utils/createDefaultServices.js';
@@ -108,14 +106,8 @@ class EntityManager extends IEntityManager {
   /** @type {ComponentMutationService} @private */
   #componentMutationService;
 
-  /** @type {ErrorTranslator} @private */
-  #errorTranslator;
-
   /** @type {DefinitionCache} @private */
   #definitionCache;
-
-  /** @type {EntityFactory} @private */
-  #factory;
 
   /** @type {EntityLifecycleManager} @private */
   #lifecycleManager;
@@ -156,8 +148,6 @@ class EntityManager extends IEntityManager {
    * @param {Function}             [deps.defaultPolicyFactory] - Factory for the default component policy.
    * @param {EntityRepositoryAdapter} [deps.entityRepository] - EntityRepositoryAdapter instance.
    * @param {ComponentMutationService} [deps.componentMutationService] - ComponentMutationService instance.
-   * @param {ErrorTranslator} [deps.errorTranslator] - ErrorTranslator instance.
-   * @param {EntityFactory} [deps.entityFactory] - EntityFactory instance.
    * @param deps.entityLifecycleManager
    * @param {DefinitionCache} [deps.definitionCache] - DefinitionCache instance.
    * @throws {Error} If any dependency is missing or malformed.
@@ -175,8 +165,6 @@ class EntityManager extends IEntityManager {
     defaultPolicyFactory,
     entityRepository,
     componentMutationService,
-    errorTranslator,
-    entityFactory,
     definitionCache,
     entityLifecycleManager,
   } = {}) {
@@ -251,11 +239,6 @@ class EntityManager extends IEntityManager {
       componentMutationService,
       serviceDefaults.componentMutationService
     );
-    this.#errorTranslator = resolveDep(
-      errorTranslator,
-      serviceDefaults.errorTranslator
-    );
-    this.#factory = resolveDep(entityFactory, serviceDefaults.entityFactory);
     this.#definitionCache = resolveDep(
       definitionCache,
       serviceDefaults.definitionCache
