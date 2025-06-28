@@ -20,26 +20,10 @@ import { validateDependency } from '../utils/dependencyUtils.js';
 
 import { targetFormatterMap } from './formatters/targetFormatters.js';
 
-/**
- * @typedef {object} FormatActionOk
- * @property {true} ok - Indicates success.
- * @property {string} value - The formatted command string.
- */
-
-/**
- * @typedef {object} FormatActionError
- * @property {false} ok - Indicates failure.
- * @property {string} error - The reason formatting failed.
- * @property {string} [details] - Additional error details.
- */
-
-/**
- * @typedef {FormatActionOk | FormatActionError} FormatActionCommandResult
- */
-
-/**
- * @typedef {Object.<string, (command: string, context: ActionTargetContext, deps: object) => FormatActionCommandResult>} TargetFormatterMap
- */
+/** @typedef {import('./formatters/formatActionTypedefs.js').FormatActionOk} FormatActionOk */
+/** @typedef {import('./formatters/formatActionTypedefs.js').FormatActionError} FormatActionError */
+/** @typedef {import('./formatters/formatActionTypedefs.js').FormatActionCommandResult} FormatActionCommandResult */
+/** @typedef {import('./formatters/formatActionTypedefs.js').TargetFormatterMap} TargetFormatterMap */
 
 /**
  * @description Builds a standardized formatting error result.

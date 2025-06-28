@@ -13,26 +13,10 @@ import {
   NONE as TARGET_TYPE_NONE,
 } from '../../constants/actionTargetTypes.js';
 
-/**
- * @typedef {object} FormatActionOk
- * @property {true} ok - Indicates success.
- * @property {string} value - The formatted command string.
- */
-
-/**
- * @typedef {object} FormatActionError
- * @property {false} ok - Indicates failure.
- * @property {string} error - The reason formatting failed.
- * @property {string} [details] - Additional error details.
- */
-
-/**
- * @typedef {FormatActionOk | FormatActionError} FormatActionCommandResult
- */
-
-/**
- * @typedef {Object.<string, (command: string, context: ActionTargetContext, deps: object) => FormatActionCommandResult>} TargetFormatterMap
- */
+/** @typedef {import('./formatActionTypedefs.js').FormatActionOk} FormatActionOk */
+/** @typedef {import('./formatActionTypedefs.js').FormatActionError} FormatActionError */
+/** @typedef {import('./formatActionTypedefs.js').FormatActionCommandResult} FormatActionCommandResult */
+/** @typedef {import('./formatActionTypedefs.js').TargetFormatterMap} TargetFormatterMap */
 
 /**
  * @description Replaces the `{target}` placeholder using entity information.
