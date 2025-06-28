@@ -1,13 +1,15 @@
 import { describe, it, expect, jest, afterEach } from '@jest/globals';
+import { displayFatalStartupError } from '../../../src/utils/errorUtils.js';
 import {
   showErrorInElement,
   createTemporaryErrorElement,
   disableInput,
-  displayFatalStartupError,
-} from '../../../src/utils/errorUtils.js';
+} from '../../../src/utils/startupErrorHandler.js';
 
 jest.mock('../../../src/utils/startupErrorHandler.js', () => {
+  const actual = jest.requireActual('../../../src/utils/startupErrorHandler.js');
   return {
+    ...actual,
     StartupErrorHandler: jest.fn().mockImplementation(() => ({
       displayFatalStartupError: jest.fn(() => ({ displayed: true })),
     })),

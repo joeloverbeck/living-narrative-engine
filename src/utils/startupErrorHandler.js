@@ -4,6 +4,62 @@ import { getModuleLogger } from './loggerUtils.js';
 import { safeDispatchError } from './safeDispatchErrorUtils.js';
 
 /**
+ * Displays an error message inside a DOM element.
+ *
+ * @param {HTMLElement | null | undefined} targetEl - Element to display the message in.
+ * @param {string} msg - Message to show.
+ * @param {DomAdapter} dom - DOM adapter instance.
+ * @returns {boolean} True if the message was displayed.
+ */
+export function showErrorInElement(targetEl, msg, dom) {
+  if (!targetEl || !(targetEl instanceof HTMLElement)) {
+    return false;
+  }
+  dom.setTextContent(targetEl, msg);
+  dom.setStyle(targetEl, 'display', 'block');
+  return true;
+}
+
+/**
+ * Creates a temporary error element after the provided base element.
+ *
+ * @param {HTMLElement | null | undefined} baseEl - Element to insert after.
+ * @param {string} msg - Message for the new element.
+ * @param {DomAdapter} dom - DOM adapter instance.
+ * @returns {HTMLElement | null} The created element, or null if not created.
+ */
+export function createTemporaryErrorElement(baseEl, msg, dom) {
+  if (!baseEl || !(baseEl instanceof HTMLElement)) {
+    return null;
+  }
+  const temporaryErrorElement = dom.createElement('div');
+  temporaryErrorElement.id = 'temp-startup-error';
+  dom.setTextContent(temporaryErrorElement, msg);
+  dom.setStyle(temporaryErrorElement, 'color', 'red');
+  dom.setStyle(temporaryErrorElement, 'padding', '10px');
+  dom.setStyle(temporaryErrorElement, 'border', '1px solid red');
+  dom.setStyle(temporaryErrorElement, 'marginTop', '10px');
+  dom.insertAfter(baseEl, temporaryErrorElement);
+  return temporaryErrorElement;
+}
+
+/**
+ * Disables an input element and sets a placeholder.
+ *
+ * @param {HTMLInputElement | null | undefined} el - Input to disable.
+ * @param {string} placeholder - Placeholder text to set.
+ * @returns {boolean} True if the element was updated.
+ */
+export function disableInput(el, placeholder) {
+  if (!el || !(el instanceof HTMLInputElement)) {
+    return false;
+  }
+  el.disabled = true;
+  el.placeholder = placeholder;
+  return true;
+}
+
+/**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
  * @typedef {import('../interfaces/DomAdapter.js').DomAdapter} DomAdapter
  * @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher
@@ -60,12 +116,7 @@ export class StartupErrorHandler {
    * @returns {boolean} True if message displayed.
    */
   showErrorInElement(targetEl, msg) {
-    if (!targetEl || !(targetEl instanceof HTMLElement)) {
-      return false;
-    }
-    this.dom.setTextContent(targetEl, msg);
-    this.dom.setStyle(targetEl, 'display', 'block');
-    return true;
+    return showErrorInElement(targetEl, msg, this.dom);
   }
 
   /**
@@ -76,18 +127,7 @@ export class StartupErrorHandler {
    * @returns {HTMLElement | null} The created element or null.
    */
   createTemporaryErrorElement(baseEl, msg) {
-    if (!baseEl || !(baseEl instanceof HTMLElement)) {
-      return null;
-    }
-    const el = this.dom.createElement('div');
-    el.id = 'temp-startup-error';
-    this.dom.setTextContent(el, msg);
-    this.dom.setStyle(el, 'color', 'red');
-    this.dom.setStyle(el, 'padding', '10px');
-    this.dom.setStyle(el, 'border', '1px solid red');
-    this.dom.setStyle(el, 'marginTop', '10px');
-    this.dom.insertAfter(baseEl, el);
-    return el;
+    return createTemporaryErrorElement(baseEl, msg, this.dom);
   }
 
   /**
@@ -98,12 +138,7 @@ export class StartupErrorHandler {
    * @returns {boolean} True if updated.
    */
   disableInput(el, placeholder) {
-    if (!el || !(el instanceof HTMLInputElement)) {
-      return false;
-    }
-    el.disabled = true;
-    el.placeholder = placeholder;
-    return true;
+    return disableInput(el, placeholder);
   }
 
   /**
