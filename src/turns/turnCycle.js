@@ -29,8 +29,20 @@ export default class TurnCycle {
    * @returns {Promise<import('../entities/entity.js').default | null>} The next entity or null if the queue is empty.
    */
   async nextActor() {
-    if (await this.#service.isEmpty()) return null;
-    return this.#service.getNextEntity();
+    try {
+      if (await this.#service.isEmpty()) {
+        this.#logger.debug('TurnCycle.nextActor(): queue empty');
+        return null;
+      }
+      const entity = this.#service.getNextEntity();
+      this.#logger.debug(
+        `TurnCycle.nextActor(): returning entity ${entity?.id ?? 'unknown'}`
+      );
+      return entity;
+    } catch (error) {
+      this.#logger.error('TurnCycle.nextActor(): failed', error);
+      throw error;
+    }
   }
 
   /**
@@ -40,6 +52,12 @@ export default class TurnCycle {
    * @returns {Promise<void>}
    */
   async clear() {
-    await this.#service.clearCurrentRound();
+    try {
+      await this.#service.clearCurrentRound();
+      this.#logger.debug('TurnCycle.clear(): current round cleared');
+    } catch (error) {
+      this.#logger.error('TurnCycle.clear(): failed', error);
+      throw error;
+    }
   }
 }
