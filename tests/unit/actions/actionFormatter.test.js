@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { formatActionCommand } from '../../../src/actions/actionFormatter.js';
+import { targetFormatterMap } from '../../../src/actions/formatters/targetFormatters.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
 import {
   ENTITY as TARGET_TYPE_ENTITY,
@@ -183,5 +184,62 @@ describe('formatActionCommand', () => {
         { displayNameFn }
       )
     ).toThrow('formatActionCommand: logger is required.');
+  });
+
+  it('throws when called with no options object', () => {
+    const actionDef = { id: 'core:wait', template: 'wait' };
+    const context = { type: TARGET_TYPE_NONE };
+
+    expect(() =>
+      formatActionCommand(actionDef, context, entityManager)
+    ).toThrow('formatActionCommand: logger is required.');
+  });
+
+  it('returns template unchanged and warns for unknown target type', () => {
+    const actionDef = { id: 'core:do', template: 'do it' };
+    const context = { type: 'bogus' };
+
+    const result = formatActionCommand(
+      actionDef,
+      context,
+      entityManager,
+      { logger, safeEventDispatcher: dispatcher },
+      { displayNameFn }
+    );
+
+    expect(result).toEqual({ ok: true, value: 'do it' });
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining('Unknown targetContext type')
+    );
+    expect(dispatcher.dispatch).not.toHaveBeenCalled();
+  });
+
+  it('formatter throwing error yields error result and dispatches event', () => {
+    const actionDef = { id: 'core:inspect', template: 'inspect {target}' };
+    const context = { type: TARGET_TYPE_ENTITY, entityId: 'e1' };
+    const throwingFormatter = () => {
+      throw new Error('boom');
+    };
+    const formatterMap = { ...targetFormatterMap, entity: throwingFormatter };
+
+    const result = formatActionCommand(
+      actionDef,
+      context,
+      entityManager,
+      { logger, safeEventDispatcher: dispatcher },
+      { displayNameFn, formatterMap }
+    );
+
+    expect(result).toEqual({
+      ok: false,
+      error: 'placeholder substitution failed',
+      details: 'boom',
+    });
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
+      SYSTEM_ERROR_OCCURRED_ID,
+      expect.objectContaining({
+        message: expect.stringContaining('placeholder substitution'),
+      })
+    );
   });
 });
