@@ -12,6 +12,7 @@
  * @typedef {import('../../../commands/interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor
  * @typedef {import('../../../commands/interfaces/ICommandOutcomeInterpreter.js').ICommandOutcomeInterpreter} ICommandOutcomeInterpreter
  * @typedef {import('../../interfaces/IDirectiveStrategyResolver.js').IDirectiveStrategyResolver} IDirectiveStrategyResolver
+ * @typedef {import('../../../types/commandResult.js').CommandResult} CommandResult
  */
 
 import {
@@ -83,7 +84,7 @@ export class CommandProcessingWorkflow {
    * @param {ITurnContext} turnCtx - Current turn context.
    * @param {Entity} actor - Actor executing the command.
    * @param {ITurnAction} turnAction - Action to process.
-   * @returns {Promise<{activeTurnCtx: ITurnContext, commandResult: object}|null>} The active context and command result, or `null` on error.
+   * @returns {Promise<{activeTurnCtx: ITurnContext, commandResult: CommandResult}|null>} The active context and command result, or `null` on error.
    */
   async _dispatchAction(turnCtx, actor, turnAction) {
     const logger = turnCtx.getLogger();
@@ -103,8 +104,10 @@ export class CommandProcessingWorkflow {
       `${this._state.getStateName()}: Invoking commandProcessor.dispatchAction() for actor ${actorId}, actionId: ${turnAction.actionDefinitionId}.`
     );
 
-    const { success, commandResult: dispatchCommandResult } =
-      await commandProcessor.dispatchAction(actor, turnAction);
+    const commandResult = await commandProcessor.dispatchAction(
+      actor,
+      turnAction
+    );
 
     if (!this._state.isProcessing) {
       logger.warn(
@@ -134,15 +137,6 @@ export class CommandProcessingWorkflow {
       );
       return null;
     }
-
-    const commandResult = {
-      success: success,
-      turnEnded: !success,
-      originalInput: turnAction.commandString || turnAction.actionDefinitionId,
-      actionResult: { actionId: turnAction.actionDefinitionId },
-      error: success ? undefined : dispatchCommandResult?.error,
-      internalError: success ? undefined : dispatchCommandResult?.internalError,
-    };
 
     logger.debug(
       `${this._state.getStateName()}: Action dispatch completed for actor ${actorId}. Result success: ${commandResult.success}.`

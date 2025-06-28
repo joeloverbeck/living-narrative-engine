@@ -276,7 +276,11 @@ describe('ProcessingCommandState', () => {
 
       mockCommandProcessor.dispatchAction.mockResolvedValue({
         success: true,
-        commandResult: null,
+        turnEnded: false,
+        originalInput: specificCommandString,
+        actionResult: {
+          actionId: specificActionForThisTest.actionDefinitionId,
+        },
       });
       mockCommandOutcomeInterpreter.interpret.mockReturnValue(
         TurnDirective.END_TURN_SUCCESS

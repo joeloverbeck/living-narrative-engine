@@ -36,7 +36,12 @@ describe('CommandProcessor.dispatchAction', () => {
 
     const result = await processor.dispatchAction(actor, turnAction);
 
-    expect(result).toEqual({ success: true, commandResult: null });
+    expect(result).toEqual({
+      success: true,
+      turnEnded: false,
+      originalInput: 'look north',
+      actionResult: { actionId: 'look' },
+    });
     expect(safeEventDispatcher.dispatch).toHaveBeenCalledTimes(1);
     expect(safeEventDispatcher.dispatch).toHaveBeenCalledWith(
       ATTEMPT_ACTION_ID,
@@ -61,7 +66,7 @@ describe('CommandProcessor.dispatchAction', () => {
     const result = await processor.dispatchAction(actor, turnAction);
 
     expect(result.success).toBe(false);
-    expect(result.commandResult.error).toBe(
+    expect(result.error).toBe(
       'Internal error: Malformed action prevented execution.'
     );
     expect(safeDispatchError).toHaveBeenCalledWith(
@@ -77,7 +82,7 @@ describe('CommandProcessor.dispatchAction', () => {
     const result = await processor.dispatchAction(actor, null);
 
     expect(result.success).toBe(false);
-    expect(result.commandResult.error).toBe(
+    expect(result.error).toBe(
       'Internal error: Malformed action prevented execution.'
     );
     expect(safeDispatchError).toHaveBeenCalledWith(
@@ -95,7 +100,7 @@ describe('CommandProcessor.dispatchAction', () => {
     const result = await processor.dispatchAction(actor, turnAction);
 
     expect(result.success).toBe(false);
-    expect(result.commandResult).toEqual(
+    expect(result).toEqual(
       expect.objectContaining({
         success: false,
         turnEnded: true,

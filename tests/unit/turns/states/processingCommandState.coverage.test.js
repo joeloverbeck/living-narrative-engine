@@ -228,7 +228,9 @@ describe('ProcessingCommandState.enterState – error branches', () => {
     // Ensure dispatchAction returns a valid structure even if not strictly used by this error path
     mockCommandProcessor.dispatchAction.mockResolvedValue({
       success: true,
-      commandResult: null,
+      turnEnded: false,
+      originalInput: customState.commandString,
+      actionResult: { actionId: 'testAction' },
     });
 
     await customState.enterState(mockHandler, null);
@@ -281,7 +283,9 @@ describe('ProcessingCommandState.enterState – error branches', () => {
 
     mockCommandProcessor.dispatchAction.mockResolvedValue({
       success: true,
-      commandResult: null,
+      turnEnded: false,
+      originalInput: defaultCommandString,
+      actionResult: { actionId: 'testAction' },
     });
 
     await stateForNullActionTest.enterState(mockHandler, null); // Call enterState on the local instance
@@ -333,7 +337,9 @@ describe('ProcessingCommandState.enterState – error branches', () => {
 
     mockCommandProcessor.dispatchAction.mockResolvedValue({
       success: true,
-      commandResult: null,
+      turnEnded: false,
+      originalInput: badAction.commandString,
+      actionResult: { actionId: badAction.actionDefinitionId },
     });
 
     await stateForInvalidActionTest.enterState(mockHandler, null); // Call enterState on the local instance
@@ -380,7 +386,9 @@ describe('ProcessingCommandState.enterState – error branches', () => {
     };
     mockCommandProcessor.dispatchAction.mockResolvedValue({
       success: true,
-      commandResult: null,
+      turnEnded: false,
+      originalInput: 'speakCmd',
+      actionResult: { actionId: turnActionWithSpeech.actionDefinitionId },
     });
     mockHandler.getTurnContext.mockReturnValue(mockTurnContext);
 
@@ -448,7 +456,9 @@ describe('ProcessingCommandState.enterState – error branches', () => {
     };
     mockCommandProcessor.dispatchAction.mockResolvedValue({
       success: true,
-      commandResult: null,
+      turnEnded: false,
+      originalInput: 'speakCmd',
+      actionResult: { actionId: turnActionWithSpeech.actionDefinitionId },
     });
     mockHandler.getTurnContext.mockReturnValue(mockTurnContext);
 
