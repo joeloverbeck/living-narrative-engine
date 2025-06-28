@@ -4,6 +4,7 @@ import { ActorMismatchError } from '../../../src/errors/actorMismatchError.js';
 import ModDependencyError from '../../../src/errors/modDependencyError.js';
 import ModsLoaderError from '../../../src/errors/modsLoaderError.js';
 import PromptTooLongError from '../../../src/errors/promptTooLongError.js';
+import { ComponentOverrideNotFoundError } from '../../../src/errors/componentOverrideNotFoundError.js';
 import {
   LLMInteractionError,
   ApiKeyError,
@@ -80,5 +81,13 @@ describe('custom error classes', () => {
       expect(e).toBeInstanceOf(LLMInteractionError);
       expect(e.name).toBe(Cls.name);
     }
+  });
+
+  it('ComponentOverrideNotFoundError sets properties', () => {
+    const err = new ComponentOverrideNotFoundError('i1', 'c:t');
+    expect(err.name).toBe('ComponentOverrideNotFoundError');
+    expect(err.instanceId).toBe('i1');
+    expect(err.componentTypeId).toBe('c:t');
+    expect(err.message).toContain("Component 'c:t'");
   });
 });

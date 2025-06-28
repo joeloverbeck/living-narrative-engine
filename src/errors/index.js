@@ -9,3 +9,4 @@ export * from './invalidActorEntityError.js';
 export * from './duplicateContentError.js';
 export * from './unknownAstNodeError.js';
 export * from './repositoryConsistencyError.js';
+export * from './componentOverrideNotFoundError.js';

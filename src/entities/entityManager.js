@@ -428,7 +428,8 @@ class EntityManager extends IEntityManager {
    * @param {string} componentTypeId - The unique ID of the component type to remove.
    * @throws {EntityNotFoundError} If entity not found.
    * @throws {InvalidArgumentError} If parameters are invalid.
-   * @throws {Error} If component override does not exist or removal fails.
+   * @throws {ComponentOverrideNotFoundError} If component override does not exist.
+   * @throws {Error} If removal fails.
    */
   removeComponent(instanceId, componentTypeId) {
     this.#componentMutationService.removeComponent(instanceId, componentTypeId);
