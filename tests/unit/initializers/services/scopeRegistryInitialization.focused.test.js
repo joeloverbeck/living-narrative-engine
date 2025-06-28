@@ -233,6 +233,7 @@ describe('Scope Registry Initialization - Focused Test', () => {
       mockDataRegistry.getAll.mockReturnValue(properlyFormattedScopes);
 
       // Simulate initialization
+      const dateSpy = jest.spyOn(Date, 'now').mockReturnValue(42);
       const scopes = mockDataRegistry.getAll(SCOPES_KEY);
       const scopeMap = {};
       const expectedScope = addMockAst(properlyFormattedScopes[0]);
@@ -245,8 +246,11 @@ describe('Scope Registry Initialization - Focused Test', () => {
               : addMockAst(scope);
         }
       });
-
-      expect(scopeMap['core:potential_leaders']).toEqual(expectedScope);
+      
+      expect(scopeMap['core:potential_leaders']).toEqual(
+        addMockAst(properlyFormattedScopes[0])
+      );
+      dateSpy.mockRestore();
       
       // Check all properties except the volatile timestamp
       const result = scopeMap['core:potential_leaders'];
