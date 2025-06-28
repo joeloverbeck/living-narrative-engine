@@ -5,6 +5,7 @@ import {
   TARGET_DOMAIN_NONE,
 } from '../../../src/constants/targetDomains.js';
 import { ActionTargetContext } from '../../../src/models/actionTargetContext.js';
+import { generateMockAst } from '../../common/scopeDsl/mockAstGenerator.js';
 
 // Reuse simple mocks similar to scope-loading tests
 
@@ -59,9 +60,11 @@ describe('TargetResolutionService - additional branches', () => {
   });
 
   it('handles undefined scope resolution result gracefully', async () => {
+    const expr = 'actor';
     const def = {
       name: 'core:test',
-      expr: 'actor',
+      expr: expr,
+      ast: generateMockAst(expr),
       modId: 'core',
       source: 'file',
     };

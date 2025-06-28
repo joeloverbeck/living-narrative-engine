@@ -18,7 +18,6 @@ import {
 import ScopeRegistry from '../../../src/scopeDsl/scopeRegistry.js';
 import ScopeEngine from '../../../src/scopeDsl/engine.js';
 import { parseScopeDefinitions } from '../../../src/scopeDsl/scopeDefinitionParser.js';
-import { parseDslExpression } from '../../../src/scopeDsl/parser.js';
 import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
 import { GameDataRepository } from '../../../src/data/gameDataRepository.js';
 import InMemoryDataRegistry from '../../../src/data/inMemoryDataRegistry.js';
@@ -212,14 +211,13 @@ describe('Entity Component Access in Scope Filtering Integration', () => {
         'test.scope'
       );
 
-      // Parse the DSL expression string into an AST
-      const simpleExpressionString = simpleSourceDefinitions.get(
+      // Get the scope definition which already includes the AST
+      const simpleSourceDef = simpleSourceDefinitions.get(
         'test:all_positioned'
       );
-      const simpleAst = parseDslExpression(simpleExpressionString);
 
       scopeRegistry.initialize({
-        'test:all_positioned': simpleAst,
+        'test:all_positioned': simpleSourceDef,
       });
 
       const actorEntity = entityManager.getEntityInstance(actorId);
@@ -231,7 +229,7 @@ describe('Entity Component Access in Scope Filtering Integration', () => {
       };
 
       const simpleResult = scopeEngine.resolve(
-        scopeRegistry.getScope('test:all_positioned'),
+        scopeRegistry.getScopeAst('test:all_positioned'),
         actorEntity,
         runtimeCtx
       );
@@ -269,12 +267,11 @@ describe('Entity Component Access in Scope Filtering Integration', () => {
         'test.scope'
       );
 
-      // Parse the DSL expression string into an AST
-      const expressionString = scopeDefinitions.get('test:potential_targets');
-      const ast = parseDslExpression(expressionString);
+      // Get the scope definition which already includes the AST
+      const scopeDef = scopeDefinitions.get('test:potential_targets');
 
       scopeRegistry.initialize({
-        'test:potential_targets': ast,
+        'test:potential_targets': scopeDef,
       });
 
       // Get actor entity for context
@@ -282,7 +279,7 @@ describe('Entity Component Access in Scope Filtering Integration', () => {
       expect(actorEntity.id).toBe(actorId);
 
       const result = scopeEngine.resolve(
-        scopeRegistry.getScope('test:potential_targets'),
+        scopeRegistry.getScopeAst('test:potential_targets'),
         actorEntity,
         runtimeCtx
       );
@@ -340,12 +337,11 @@ describe('Entity Component Access in Scope Filtering Integration', () => {
         'test.scope'
       );
 
-      // Parse the DSL expression string into an AST
-      const expressionString = scopeDefinitions.get('test:non_followers');
-      const ast = parseDslExpression(expressionString);
+      // Get the scope definition which already includes the AST
+      const scopeDef = scopeDefinitions.get('test:non_followers');
 
       scopeRegistry.initialize({
-        'test:non_followers': ast,
+        'test:non_followers': scopeDef,
       });
 
       const actorEntity = entityManager.getEntityInstance(actorId);
@@ -357,7 +353,7 @@ describe('Entity Component Access in Scope Filtering Integration', () => {
       };
 
       const result = scopeEngine.resolve(
-        scopeRegistry.getScope('test:non_followers'),
+        scopeRegistry.getScopeAst('test:non_followers'),
         actorEntity,
         runtimeCtx
       );
@@ -416,12 +412,11 @@ describe('Entity Component Access in Scope Filtering Integration', () => {
         'test.scope'
       );
 
-      // Parse the DSL expression string into an AST
-      const expressionString = scopeDefinitions.get('test:potential_leaders');
-      const ast = parseDslExpression(expressionString);
+      // Get the scope definition which already includes the AST
+      const scopeDef = scopeDefinitions.get('test:potential_leaders');
 
       scopeRegistry.initialize({
-        'test:potential_leaders': ast,
+        'test:potential_leaders': scopeDef,
       });
 
       const actorEntity = entityManager.getEntityInstance(actorId);
@@ -433,7 +428,7 @@ describe('Entity Component Access in Scope Filtering Integration', () => {
       };
 
       const result = scopeEngine.resolve(
-        scopeRegistry.getScope('test:potential_leaders'),
+        scopeRegistry.getScopeAst('test:potential_leaders'),
         actorEntity,
         runtimeCtx
       );
@@ -481,12 +476,11 @@ describe('Entity Component Access in Scope Filtering Integration', () => {
         'test.scope'
       );
 
-      // Parse the DSL expression string into an AST
-      const expressionString = scopeDefinitions.get('test:self_check');
-      const ast = parseDslExpression(expressionString);
+      // Get the scope definition which already includes the AST
+      const scopeDef = scopeDefinitions.get('test:self_check');
 
       scopeRegistry.initialize({
-        'test:self_check': ast,
+        'test:self_check': scopeDef,
       });
 
       const actorEntity = entityManager.getEntityInstance(actorId);
@@ -498,7 +492,7 @@ describe('Entity Component Access in Scope Filtering Integration', () => {
       };
 
       const result = scopeEngine.resolve(
-        scopeRegistry.getScope('test:self_check'),
+        scopeRegistry.getScopeAst('test:self_check'),
         actorEntity,
         runtimeCtx
       );

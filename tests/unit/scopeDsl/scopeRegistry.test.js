@@ -1,6 +1,7 @@
 // tests/scopeDsl/scopeRegistry.spec.js
 
 import ScopeRegistry from '../../../src/scopeDsl/scopeRegistry.js';
+import { addMockAstsToScopes } from '../../common/scopeDsl/mockAstGenerator.js';
 
 describe('ScopeRegistry', () => {
   /** @type {ScopeRegistry} */
@@ -38,10 +39,10 @@ describe('ScopeRegistry', () => {
   describe('initialize', () => {
     it('should load scope definitions from an object into the registry', () => {
       // Act
-      scopeRegistry.initialize({
+      scopeRegistry.initialize(addMockAstsToScopes({
         'core:all_characters': mockScopeDefinitions['core:all_characters'],
         'core:nearby_items': mockScopeDefinitions['core:nearby_items'],
-      });
+      }));
 
       // Assert
       expect(scopeRegistry.getStats().size).toBe(2);
@@ -69,12 +70,12 @@ describe('ScopeRegistry', () => {
       const initialScopes = {
         'initial:scope': { expr: 'entities()' },
       };
-      scopeRegistry.initialize(initialScopes);
+      scopeRegistry.initialize(addMockAstsToScopes(initialScopes));
       expect(scopeRegistry.hasScope('initial:scope')).toBe(true);
 
       // Act: Re-initialize with a new set of scopes
       const newScopes = { 'new:scope': { expr: 'location' } };
-      scopeRegistry.initialize(newScopes);
+      scopeRegistry.initialize(addMockAstsToScopes(newScopes));
 
       // Assert
       expect(scopeRegistry.getStats().size).toBe(1);
@@ -85,7 +86,7 @@ describe('ScopeRegistry', () => {
 
   describe('scope access', () => {
     beforeEach(() => {
-      scopeRegistry.initialize(mockScopeDefinitions);
+      scopeRegistry.initialize(addMockAstsToScopes(mockScopeDefinitions));
     });
 
     it('should get a scope definition by its name', () => {
@@ -93,7 +94,11 @@ describe('ScopeRegistry', () => {
       const scope = scopeRegistry.getScope('core:all_characters');
 
       // Assert
-      expect(scope).toEqual(mockScopeDefinitions['core:all_characters']);
+      expect(scope).toBeDefined();
+      expect(scope.expr).toBe(mockScopeDefinitions['core:all_characters'].expr);
+      expect(scope.description).toBe(mockScopeDefinitions['core:all_characters'].description);
+      expect(scope.ast).toBeDefined();
+      expect(scope.ast._mock).toBe(true);
     });
 
     it('should return null for a non-existent scope name', () => {
@@ -133,9 +138,10 @@ describe('ScopeRegistry', () => {
       // Assert
       expect(scopes).toBeInstanceOf(Map);
       expect(scopes.size).toBe(3);
-      expect(scopes.get('mod:custom_scope')).toEqual(
-        mockScopeDefinitions['mod:custom_scope']
-      );
+      const customScope = scopes.get('mod:custom_scope');
+      expect(customScope.expr).toBe(mockScopeDefinitions['mod:custom_scope'].expr);
+      expect(customScope.description).toBe(mockScopeDefinitions['mod:custom_scope'].description);
+      expect(customScope.ast).toBeDefined();
     });
 
     it('should return a copy of the scopes map, not a reference', () => {
@@ -150,12 +156,13 @@ describe('ScopeRegistry', () => {
 
     it('should require namespaced scope names (no fallback)', () => {
       // Assert: Can find by exact namespaced name
-      expect(scopeRegistry.getScope('core:all_characters')).toEqual(
-        mockScopeDefinitions['core:all_characters']
-      );
-      expect(scopeRegistry.getScope('mod:custom_scope')).toEqual(
-        mockScopeDefinitions['mod:custom_scope']
-      );
+      const allCharsScope = scopeRegistry.getScope('core:all_characters');
+      expect(allCharsScope.expr).toBe(mockScopeDefinitions['core:all_characters'].expr);
+      expect(allCharsScope.ast).toBeDefined();
+      
+      const customScope = scopeRegistry.getScope('mod:custom_scope');
+      expect(customScope.expr).toBe(mockScopeDefinitions['mod:custom_scope'].expr);
+      expect(customScope.ast).toBeDefined();
 
       // Assert: Should throw error for non-namespaced names (no fallback)
       expect(() => scopeRegistry.getScope('all_characters')).toThrow(
@@ -176,10 +183,10 @@ describe('ScopeRegistry', () => {
   describe('statistics', () => {
     it('should provide accurate statistics for an initialized registry', () => {
       // Arrange
-      scopeRegistry.initialize({
+      scopeRegistry.initialize(addMockAstsToScopes({
         'core:test1': { expr: 'actor' },
         'core:test2': { expr: 'location' },
-      });
+      }));
 
       // Act
       const stats = scopeRegistry.getStats();
@@ -208,7 +215,7 @@ describe('ScopeRegistry', () => {
   describe('clear', () => {
     it('should clear all scopes and reset the initialized flag', () => {
       // Arrange
-      scopeRegistry.initialize(mockScopeDefinitions);
+      scopeRegistry.initialize(addMockAstsToScopes(mockScopeDefinitions));
       expect(scopeRegistry.getStats().size).toBe(3);
       expect(scopeRegistry.getStats().initialized).toBe(true);
 

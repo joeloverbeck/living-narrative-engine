@@ -7,6 +7,7 @@
 import ScopeRegistry from '../../../src/scopeDsl/scopeRegistry.js';
 import { parseScopeDefinitions } from '../../../src/scopeDsl/scopeDefinitionParser.js';
 import ScopeLoader from '../../../src/loaders/scopeLoader.js';
+import { addMockAstsToScopes } from '../../common/scopeDsl/mockAstGenerator.js';
 
 describe('Namespaced Scope Requirements', () => {
   describe('ScopeRegistry', () => {
@@ -18,7 +19,7 @@ describe('Namespaced Scope Requirements', () => {
 
     describe('getScope validation', () => {
       beforeEach(() => {
-        scopeRegistry.initialize({
+        scopeRegistry.initialize(addMockAstsToScopes({
           'core:followers': {
             expr: 'actor.core:leading.followers[]',
             modId: 'core',
@@ -27,7 +28,7 @@ describe('Namespaced Scope Requirements', () => {
             expr: 'actor.components.intimacy:closeness.partners[]',
             modId: 'intimacy',
           },
-        });
+        }));
       });
 
       it('should allow special case "none" without namespace', () => {
@@ -78,12 +79,12 @@ describe('Namespaced Scope Requirements', () => {
 
     describe('hasScope method', () => {
       beforeEach(() => {
-        scopeRegistry.initialize({
+        scopeRegistry.initialize(addMockAstsToScopes({
           'core:followers': {
             expr: 'actor.core:leading.followers[]',
             modId: 'core',
           },
-        });
+        }));
       });
 
       it('should return true for existing namespaced scopes', () => {

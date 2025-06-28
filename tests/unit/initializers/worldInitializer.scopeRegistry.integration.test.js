@@ -4,6 +4,7 @@ import { GameDataRepository } from '../../../src/data/gameDataRepository.js';
 import ScopeRegistry from '../../../src/scopeDsl/scopeRegistry.js';
 import { SCOPES_KEY } from '../../../src/constants/dataRegistryKeys.js';
 import loadAndInitScopes from '../../../src/initializers/services/scopeRegistryUtils.js';
+import { addMockAstsToScopes } from '../../common/scopeDsl/mockAstGenerator.js';
 
 describe('WorldInitializer - ScopeRegistry Integration', () => {
   let worldInitializer;
@@ -77,11 +78,11 @@ describe('WorldInitializer - ScopeRegistry Integration', () => {
 
   describe('loadAndInitScopes integration', () => {
     it('should successfully initialize ScopeRegistry with scopes from GameDataRepository', async () => {
-      const mockScopes = {
-        'core:all_characters': 'actor',
-        'core:nearby_items': 'item',
-        'mod:custom_scope': 'entity',
-      };
+      const mockScopes = addMockAstsToScopes({
+        'core:all_characters': { expr: 'actor' },
+        'core:nearby_items': { expr: 'item' },
+        'mod:custom_scope': { expr: 'entity' },
+      });
       mockRegistry.get.mockReturnValue(mockScopes);
 
       await loadAndInitScopes({
@@ -166,7 +167,7 @@ describe('WorldInitializer - ScopeRegistry Integration', () => {
     });
 
     it('should handle ScopeRegistry initialization errors', async () => {
-      const mockScopes = { 'core:test_scope': 'actor' };
+      const mockScopes = addMockAstsToScopes({ 'core:test_scope': { expr: 'actor' } });
       mockRegistry.get.mockReturnValue(mockScopes);
 
       // Mock ScopeRegistry to throw an error

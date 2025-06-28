@@ -1,17 +1,5 @@
-T-13 Filter & Union Resolvers
-Implement remaining node resolvers using gateways.
-
-Files
-
-scopeDsl/nodes/filterResolver.js
-
-scopeDsl/nodes/unionResolver.js
-
-tests.
-
-filterResolver factory params
-
-({ logicEval, entitiesGateway, locationProvider })
-Use evaluator exactly as original engine.
-
-unionResolver simply unions results of left/right using new Set([...a,...b]).
+1. Add a `RuntimeContextBuilder` utility or service under `src/scopeDsl/` that constructs the object currently returned by `#buildRuntimeContext`.
+2. Modify `TargetResolutionService` to depend on the builder via constructor injection and remove method `#buildRuntimeContext`.
+3. Extend `ScopeRegistry` (or a new helper) to store parsed ASTs. During initialization (e.g., when scopes are loaded via `parseScopeDefinitions`), parse expressions once and keep `{ expr, ast }`.
+4. Change `#resolveScopeToIds` to retrieve the pre-parsed AST from the registry rather than calling `parseDslExpression` each time.
+5. Update affected unit tests in `tests/unit/actions/targetResolutionService.*` to account for the injected builder and cached ASTs.
