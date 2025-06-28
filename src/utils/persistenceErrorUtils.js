@@ -4,6 +4,7 @@ import {
   createPersistenceFailure,
   createPersistenceSuccess,
 } from './persistenceResultUtils.js';
+import { safeExecute } from './safeExecutionUtils.js';
 import { PersistenceErrorCodes } from '../persistence/persistenceErrors.js';
 
 /**
@@ -14,16 +15,22 @@ import { PersistenceErrorCodes } from '../persistence/persistenceErrors.js';
  * @returns {Promise<any>} Result of the operation or standardized failure object.
  */
 export async function wrapPersistenceOperation(logger, operation) {
-  try {
-    return await operation();
-  } catch (error) {
-    logger.error('Persistence operation failed:', error);
-    const message = error instanceof Error ? error.message : String(error);
-    return createPersistenceFailure(
-      PersistenceErrorCodes.UNEXPECTED_ERROR,
-      message
-    );
+  const { success, result, error } = await safeExecute(
+    operation,
+    logger,
+    'wrapPersistenceOperation'
+  );
+
+  if (success) {
+    return result;
   }
+
+  logger.error('Persistence operation failed:', error);
+  const message = error instanceof Error ? error.message : String(error);
+  return createPersistenceFailure(
+    PersistenceErrorCodes.UNEXPECTED_ERROR,
+    message
+  );
 }
 
 /**
@@ -44,14 +51,15 @@ export function wrapSyncPersistenceOperation(
   userMessage,
   logContext
 ) {
-  try {
-    const result = opFn();
+  const { success, result, error } = safeExecute(opFn, logger, logContext);
+
+  if (success) {
     return createPersistenceSuccess(result);
-  } catch (error) {
-    logger.error(logContext, error);
-    return {
-      ...createPersistenceFailure(errorCode, userMessage),
-      userFriendlyError: userMessage,
-    };
   }
+
+  logger.error(logContext, error);
+  return {
+    ...createPersistenceFailure(errorCode, userMessage),
+    userFriendlyError: userMessage,
+  };
 }
