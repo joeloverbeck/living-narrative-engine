@@ -12,7 +12,9 @@ import {
 } from '@jest/globals';
 import { SimpleEntityManager } from '../../common/entities/index.js';
 import { ActionDiscoveryService } from '../../../src/actions/actionDiscoveryService.js';
+import { ActionCandidateProcessor } from '../../../src/actions/actionCandidateProcessor.js';
 import { formatActionCommand } from '../../../src/actions/actionFormatter.js';
+import { getEntityDisplayName } from '../../../src/utils/entityUtils.js';
 import { GameDataRepository } from '../../../src/data/gameDataRepository.js';
 import { SafeEventDispatcher } from '../../../src/events/safeEventDispatcher.js';
 import ScopeRegistry from '../../../src/scopeDsl/scopeRegistry.js';
@@ -147,16 +149,20 @@ describe('Scope Integration Tests', () => {
       jsonLogicEvaluationService: jsonLogicEval,
     });
 
-    // FIX: Add the missing dependency to the constructor call
-    actionDiscoveryService = new ActionDiscoveryService({
-      gameDataRepository,
+    // Create the ActionCandidateProcessor
+    const actionCandidateProcessor = new ActionCandidateProcessor({
+      prerequisiteEvaluationService,
+      targetResolutionService,
       entityManager,
-      prerequisiteEvaluationService, // <-- The fix
-      logger,
       formatActionCommandFn: formatActionCommand,
       safeEventDispatcher,
-      targetResolutionService,
-      traceContextFactory: jest.fn(() => ({ addLog: jest.fn(), logs: [] })),
+      getEntityDisplayNameFn: getEntityDisplayName,
+      logger,
+    });
+
+    // FIX: Add the missing dependency to the constructor call
+    actionDiscoveryService = new ActionDiscoveryService({
+      entityManager,
       actionIndex: {
         getCandidateActions: jest
           .fn()
@@ -164,6 +170,9 @@ describe('Scope Integration Tests', () => {
             gameDataRepository.getAllActionDefinitions()
           ),
       },
+      logger,
+      actionCandidateProcessor,
+      traceContextFactory: jest.fn(() => ({ addLog: jest.fn(), logs: [] })),
     });
   });
 

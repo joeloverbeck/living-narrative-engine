@@ -5,6 +5,7 @@
 import { jest, describe, beforeEach, test, expect } from '@jest/globals';
 import { mock, mockReset } from 'jest-mock-extended';
 import { ActionDiscoveryService } from '../../../src/actions/actionDiscoveryService.js';
+import { ActionCandidateProcessor } from '../../../src/actions/actionCandidateProcessor.js';
 import { ActionTargetContext } from '../../../src/models/actionTargetContext.js';
 import {
   TARGET_DOMAIN_NONE,
@@ -52,19 +53,25 @@ describe('ADS-P4-05: Streamlined ActionDiscoveryService', () => {
     mockFormatActionCommandFn.mockClear();
     mockTargetResolutionService.resolveTargets.mockClear();
 
-    // Instantiate the service with mocked dependencies.
-    service = new ActionDiscoveryService({
-      gameDataRepository: mockGameDataRepo,
-      entityManager: mockEntityManager,
+    // Create the ActionCandidateProcessor with mocked dependencies
+    const actionCandidateProcessor = new ActionCandidateProcessor({
       prerequisiteEvaluationService: mockPrereqService,
-      actionIndex: mockActionIndex,
-      logger: mockLogger,
+      targetResolutionService: mockTargetResolutionService,
+      entityManager: mockEntityManager,
       formatActionCommandFn: mockFormatActionCommandFn,
       safeEventDispatcher: mockEventDispatcher,
-      targetResolutionService: mockTargetResolutionService,
+      getEntityDisplayNameFn: mockGetEntityDisplayNameFn,
+      logger: mockLogger,
+    });
+
+    // Instantiate the service with mocked dependencies.
+    service = new ActionDiscoveryService({
+      entityManager: mockEntityManager,
+      actionIndex: mockActionIndex,
+      logger: mockLogger,
+      actionCandidateProcessor,
       traceContextFactory: jest.fn(() => ({ addLog: jest.fn(), logs: [] })),
       getActorLocationFn: mockGetActorLocationFn,
-      getEntityDisplayNameFn: mockGetEntityDisplayNameFn,
     });
 
     // A standard actor for tests

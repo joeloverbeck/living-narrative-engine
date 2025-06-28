@@ -1,12 +1,17 @@
-T-16 Error Classes & Removal of Silent Fails
-Files
+1. Add `src/actions/actionCandidateProcessor.js`.
 
-errors/unknownSourceError.js
+   * Constructor receives:
 
-errors/unknownAstNodeError.js
-
-Refactor resolvers to throw instead of logger.error + return new Set().
-
-Tests
-
-Assert thrown error classes when input invalid.
+     * `prerequisiteEvaluationService`
+     * `targetResolutionService`
+     * `entityManager`
+     * `formatActionCommandFn`
+     * `safeEventDispatcher`
+     * `getEntityDisplayNameFn`
+     * `logger`
+   * Expose `process(actionDef, actorEntity, context, trace)` returning `{actions, errors}|null`.
+   * Move logic from `#processCandidateAction` and `#formatActionsForTargets` into this class.
+   * Include full JSDoc (`@description`, `@param`, `@returns`).
+2. Update `ActionDiscoveryService` (constructor and `getValidActions`) to accept an `actionCandidateProcessor` instance and delegate processing.
+3. Remove now-unneeded private fields and methods (`#processCandidateAction`, `#formatActionsForTargets`).
+4. Update unit tests in `tests/unit/actions` to use the new processor, ensuring existing behaviour remains.

@@ -273,6 +273,7 @@ export const tokens = freeze({
   IActionDiscoveryService: 'IActionDiscoveryService',
   ITargetResolutionService: 'ITargetResolutionService',
   ActionIndex: 'ActionIndex',
+  ActionCandidateProcessor: 'ActionCandidateProcessor',
   IInputHandler: 'IInputHandler',
   GlobalKeyHandler: 'GlobalKeyHandler',
   ITurnOrderService: 'ITurnOrderService',

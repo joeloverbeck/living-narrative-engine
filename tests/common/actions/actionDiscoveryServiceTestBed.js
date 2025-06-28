@@ -4,6 +4,7 @@
 
 import { jest } from '@jest/globals';
 import { ActionDiscoveryService } from '../../../src/actions/actionDiscoveryService.js';
+import { ActionCandidateProcessor } from '../../../src/actions/actionCandidateProcessor.js';
 import {
   createMockLogger,
   createMockEntityManager,
@@ -29,21 +30,31 @@ const ServiceFactoryMixin = createServiceFactoryMixin(
     getActorLocationFn: () => jest.fn(),
     getEntityDisplayNameFn: () => jest.fn(),
   },
-  (mocks, overrides = {}) =>
-    new ActionDiscoveryService({
+  (mocks, overrides = {}) => {
+    // Create the ActionCandidateProcessor with the mocked dependencies
+    const actionCandidateProcessor =
+      overrides.actionCandidateProcessor ??
+      new ActionCandidateProcessor({
+        prerequisiteEvaluationService: mocks.prerequisiteEvaluationService,
+        targetResolutionService: mocks.targetResolutionService,
+        entityManager: mocks.entityManager,
+        formatActionCommandFn: mocks.formatActionCommandFn,
+        safeEventDispatcher: mocks.safeEventDispatcher,
+        getEntityDisplayNameFn: mocks.getEntityDisplayNameFn,
+        logger: mocks.logger,
+      });
+
+    return new ActionDiscoveryService({
       entityManager: mocks.entityManager,
-      prerequisiteEvaluationService: mocks.prerequisiteEvaluationService,
       actionIndex: mocks.actionIndex,
       logger: mocks.logger,
-      formatActionCommandFn: mocks.formatActionCommandFn,
-      safeEventDispatcher: mocks.safeEventDispatcher,
-      targetResolutionService: mocks.targetResolutionService,
+      actionCandidateProcessor,
       traceContextFactory:
         overrides.traceContextFactory ??
         jest.fn(() => ({ addLog: jest.fn(), logs: [] })),
       getActorLocationFn: mocks.getActorLocationFn,
-      getEntityDisplayNameFn: mocks.getEntityDisplayNameFn,
-    }),
+    });
+  },
   'service'
 );
 
