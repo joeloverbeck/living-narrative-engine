@@ -233,6 +233,7 @@ describe('Scope Registry Initialization - Focused Test', () => {
       mockDataRegistry.getAll.mockReturnValue(properlyFormattedScopes);
 
       // Simulate initialization
+      const dateSpy = jest.spyOn(Date, 'now').mockReturnValue(42);
       const scopes = mockDataRegistry.getAll(SCOPES_KEY);
       const scopeMap = {};
       scopes.forEach((scope) => {
@@ -246,6 +247,7 @@ describe('Scope Registry Initialization - Focused Test', () => {
       expect(scopeMap['core:potential_leaders']).toEqual(
         addMockAst(properlyFormattedScopes[0])
       );
+      dateSpy.mockRestore();
 
       // Anti-regression: it should NOT be accessible by base name only
       expect(scopeMap['potential_leaders']).toBeUndefined();
