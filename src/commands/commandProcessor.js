@@ -85,7 +85,12 @@ class CommandProcessor extends ICommandProcessor {
       );
       return {
         success: false,
-        errorResult: this.#createFailureResult(userMsg, internalMsg),
+        errorResult: this.#createFailureResult(
+          userMsg,
+          internalMsg,
+          commandString,
+          undefined
+        ),
       };
     }
 
@@ -132,22 +137,31 @@ class CommandProcessor extends ICommandProcessor {
         this.#logger
       );
 
-      const failureResult = this.#createFailureResult(userMsg, internalMsg);
-      failureResult.originalInput = commandString;
-      failureResult.actionResult = { actionId: actionDefinitionId };
+      const failureResult = this.#createFailureResult(
+        userMsg,
+        internalMsg,
+        commandString,
+        actionDefinitionId
+      );
       return { success: false, errorResult: failureResult };
     }
   }
 
   // --- Private Helper Methods ---
 
-  #createFailureResult(userError, internalError, turnEnded = true) {
+  #createFailureResult(
+    userError,
+    internalError,
+    originalInput,
+    actionId,
+    turnEnded = true
+  ) {
     const result = {
       success: false,
       turnEnded: turnEnded,
       internalError: internalError,
-      originalInput: undefined,
-      actionResult: undefined,
+      originalInput,
+      actionResult: actionId ? { actionId } : undefined,
     };
     if (userError !== undefined) {
       result.error = userError;
