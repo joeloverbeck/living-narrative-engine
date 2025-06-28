@@ -28,15 +28,20 @@ class CommandProcessor extends ICommandProcessor {
   constructor(options) {
     super();
 
-    const { logger, safeEventDispatcher: dispatcher } = options || {};
+    const { logger, safeEventDispatcher } = options || {};
 
     this.#logger = initLogger('CommandProcessor', logger);
 
-    validateDependency(dispatcher, 'safeEventDispatcher', this.#logger, {
-      requiredMethods: ['dispatch'],
-    });
+    validateDependency(
+      safeEventDispatcher,
+      'safeEventDispatcher',
+      this.#logger,
+      {
+        requiredMethods: ['dispatch'],
+      }
+    );
 
-    this.#safeEventDispatcher = dispatcher;
+    this.#safeEventDispatcher = safeEventDispatcher;
 
     this.#logger.debug(
       'CommandProcessor: Instance created and dependencies validated.'
