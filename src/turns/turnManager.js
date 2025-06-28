@@ -30,7 +30,7 @@ import TurnCycle from './turnCycle.js';
 import TurnEventSubscription from './turnEventSubscription.js';
 import { RealScheduler } from '../scheduling/index.js';
 import { safeDispatch } from '../utils/eventHelpers.js';
-import { logStart, logEnd, logError } from '../utils/logHelpers.js';
+import { logStart, logEnd, logError } from '../utils/loggerUtils.js';
 import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
 
 /**
