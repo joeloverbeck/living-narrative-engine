@@ -27,3 +27,4 @@ export {
   validateDependency,
   validateDependencies,
 } from './dependencyUtils.js';
+export { createErrorDetails } from './errorDetails.js';
