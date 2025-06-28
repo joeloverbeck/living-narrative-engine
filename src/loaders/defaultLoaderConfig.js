@@ -56,6 +56,9 @@ export function createContentLoadersConfig(loaderMap) {
  * @param {BaseManifestItemLoaderInterface} deps.scopeLoader - Scope loader.
  * @param {BaseManifestItemLoaderInterface} deps.entityDefinitionLoader - Entity definition loader.
  * @param {BaseManifestItemLoaderInterface} deps.entityInstanceLoader - Entity instance loader.
+ * @param {BaseManifestItemLoaderInterface} deps.anatomyRecipeLoader - Anatomy recipe loader.
+ * @param {BaseManifestItemLoaderInterface} deps.anatomyBlueprintLoader - Anatomy blueprint loader.
+ * @param {BaseManifestItemLoaderInterface} deps.anatomyPartLoader - Anatomy part loader.
  * @returns {LoaderConfigEntry[]} Array describing loader configuration.
  */
 export function createDefaultContentLoadersConfig({
@@ -69,6 +72,9 @@ export function createDefaultContentLoadersConfig({
   scopeLoader,
   entityDefinitionLoader,
   entityInstanceLoader,
+  anatomyRecipeLoader,
+  anatomyBlueprintLoader,
+  anatomyPartLoader,
 }) {
   return createContentLoadersConfig({
     components: componentLoader,
@@ -81,6 +87,9 @@ export function createDefaultContentLoadersConfig({
     scopes: scopeLoader,
     entityDefinitions: entityDefinitionLoader,
     entityInstances: entityInstanceLoader,
+    anatomyRecipes: anatomyRecipeLoader,
+    anatomyBlueprints: anatomyBlueprintLoader,
+    anatomyParts: anatomyPartLoader,
   });
 }
 

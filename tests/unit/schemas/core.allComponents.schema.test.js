@@ -65,6 +65,9 @@ describe('JSON-Schema – core component data contracts', () => {
     'core:short_term_memory': { thoughts: [], maxEntries: 5 },
     'core:speech_patterns': { patterns: ['hello'] },
     'core:exits': [],
+    'anatomy:part': { subType: 'leg' },
+    'anatomy:sockets': { sockets: [{ id: 'ankle', allowedTypes: ['foot'] }] },
+    'anatomy:joint': { parentId: 'entity-123', socketId: 'ankle' },
   };
 
   /** @type {Record<string, unknown>} */
@@ -92,6 +95,9 @@ describe('JSON-Schema – core component data contracts', () => {
     'core:short_term_memory': {},
     'core:speech_patterns': {},
     'core:exits': {},
+    'anatomy:part': {},
+    'anatomy:sockets': {},
+    'anatomy:joint': {},
   };
 
   Object.entries(validators).forEach(([id, validate]) => {

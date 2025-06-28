@@ -1,0 +1,36 @@
+{
+  "$schema": "../../../schemas/event.schema.json",
+  "id": "anatomy:limb_detached",
+  "description": "Dispatched when a body part is detached from its parent anatomy",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "detachedEntityId": {
+        "type": "string",
+        "description": "The entity ID of the detached body part"
+      },
+      "parentEntityId": {
+        "type": "string",
+        "description": "The entity ID of the parent it was detached from"
+      },
+      "socketId": {
+        "type": "string",
+        "description": "The socket ID where the part was attached"
+      },
+      "detachedCount": {
+        "type": "integer",
+        "description": "Total number of entities detached (including sub-parts)"
+      },
+      "reason": {
+        "type": "string",
+        "description": "Reason for detachment (e.g., 'damage', 'amputation', 'manual')"
+      },
+      "timestamp": {
+        "type": "integer",
+        "description": "Unix timestamp when the detachment occurred"
+      }
+    },
+    "required": ["detachedEntityId", "parentEntityId", "socketId", "detachedCount", "reason", "timestamp"],
+    "additionalProperties": false
+  }
+}

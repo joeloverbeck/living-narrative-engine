@@ -1,0 +1,131 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/schemas/anatomy.part.schema.json",
+  "title": "Anatomy Part Definition",
+  "description": "Defines an individual body part entity with its sockets and anatomy metadata",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "format": "uri",
+      "description": "Optional. A URI reference to the schema that this document conforms to"
+    },
+    "id": {
+      "$ref": "./common.schema.json#/definitions/namespacedId",
+      "description": "Unique identifier for this body part definition"
+    },
+    "components": {
+      "type": "array",
+      "description": "Components that define this body part",
+      "items": {
+        "oneOf": [
+          {
+            "$ref": "#/definitions/anatomyPartComponent"
+          },
+          {
+            "$ref": "#/definitions/anatomySocketsComponent"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "$ref": "./common.schema.json#/definitions/namespacedId"
+              }
+            },
+            "required": ["type"],
+            "additionalProperties": true
+          }
+        ]
+      },
+      "minItems": 1
+    },
+    "tags": {
+      "type": "array",
+      "description": "Tag components for categorization and filtering",
+      "items": {
+        "$ref": "./common.schema.json#/definitions/namespacedId"
+      }
+    }
+  },
+  "required": ["id", "components"],
+  "additionalProperties": false,
+  "definitions": {
+    "anatomyPartComponent": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "anatomy:part"
+        },
+        "subType": {
+          "type": "string",
+          "description": "The specific type of body part (e.g., 'leg', 'arm', 'breast')"
+        }
+      },
+      "required": ["type", "subType"],
+      "additionalProperties": false
+    },
+    "anatomySocketsComponent": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "anatomy:sockets"
+        },
+        "sockets": {
+          "type": "array",
+          "description": "Array of socket definitions for this body part",
+          "items": {
+            "$ref": "#/definitions/socketDefinition"
+          }
+        }
+      },
+      "required": ["type", "sockets"],
+      "additionalProperties": false
+    },
+    "socketDefinition": {
+      "type": "object",
+      "description": "Defines a single attachment point on a body part",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for this socket within the parent part"
+        },
+        "orientation": {
+          "type": "string",
+          "enum": ["left", "right", "mid", "upper", "lower", "front", "back"],
+          "description": "Spatial orientation of this socket"
+        },
+        "allowedTypes": {
+          "type": "array",
+          "description": "Whitelist of part types that can attach to this socket",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        },
+        "maxCount": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1,
+          "description": "Maximum number of parts that can attach to this socket"
+        },
+        "jointType": {
+          "type": "string",
+          "enum": ["hinge", "ball", "suture", "fused"],
+          "description": "Type of joint connection for physics/animation"
+        },
+        "breakThreshold": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0,
+          "description": "Damage threshold required to sever this connection"
+        },
+        "nameTpl": {
+          "type": "string",
+          "description": "Template for auto-naming attached parts. Supports {{orientation}}, {{type}}, {{index}}, {{parent.name}}"
+        }
+      },
+      "required": ["id", "allowedTypes"],
+      "additionalProperties": false
+    }
+  }
+}

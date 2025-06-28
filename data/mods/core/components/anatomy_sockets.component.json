@@ -1,0 +1,61 @@
+{
+  "$schema": "../../../schemas/component.schema.json",
+  "id": "anatomy:sockets",
+  "description": "Defines attachment points (sockets) on a body part where other parts can connect",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "sockets": {
+        "type": "array",
+        "description": "List of socket definitions for this body part",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "Unique identifier for this socket within the parent part"
+            },
+            "orientation": {
+              "type": "string",
+              "enum": ["left", "right", "mid", "upper", "lower", "front", "back"],
+              "description": "Spatial orientation of this socket"
+            },
+            "allowedTypes": {
+              "type": "array",
+              "description": "Whitelist of part types that can attach to this socket",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "maxCount": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "description": "Maximum number of parts that can attach to this socket"
+            },
+            "jointType": {
+              "type": "string",
+              "enum": ["hinge", "ball", "suture", "fused"],
+              "description": "Type of joint connection for physics/animation"
+            },
+            "breakThreshold": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "description": "Damage threshold required to sever this connection"
+            },
+            "nameTpl": {
+              "type": "string",
+              "description": "Template for auto-naming attached parts. Supports {{orientation}}, {{type}}, {{index}}, {{parent.name}}"
+            }
+          },
+          "required": ["id", "allowedTypes"],
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": ["sockets"],
+    "additionalProperties": false
+  }
+}

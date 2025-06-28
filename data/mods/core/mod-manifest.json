@@ -37,7 +37,10 @@
       "profile.component.json",
       "secrets.component.json",
       "short_term_memory.component.json",
-      "speech_patterns.component.json"
+      "speech_patterns.component.json",
+      "anatomy_part.component.json",
+      "anatomy_sockets.component.json",
+      "anatomy_joint.component.json"
     ],
     "conditions": [
       "actor-is-following.condition.json",
@@ -92,7 +95,8 @@
       "ui_request_show_load_game.event.json",
       "ui_request_show_save_game.event.json",
       "ui_stopped.event.json",
-      "update_available_actions.event.json"
+      "update_available_actions.event.json",
+      "limb_detached.event.json"
     ],
     "macros": [
       "autoMoveFollower.macro.json",

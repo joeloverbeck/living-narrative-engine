@@ -227,6 +227,9 @@ export const tokens = freeze({
   ModManifestLoader: 'ModManifestLoader',
   ModDependencyValidator: 'ModDependencyValidator',
   ILoadCache: 'ILoadCache',
+  AnatomyRecipeLoader: 'AnatomyRecipeLoader',
+  AnatomyBlueprintLoader: 'AnatomyBlueprintLoader',
+  AnatomyPartLoader: 'AnatomyPartLoader',
 
   // Core Services & Managers (Concrete Implementations - some may be deprecated for interface tokens)
   GameDataRepository: 'GameDataRepository',
@@ -253,6 +256,9 @@ export const tokens = freeze({
   LocationDisplayService: 'LocationDisplayService',
   GameSessionManager: 'GameSessionManager',
   PersistenceCoordinator: 'PersistenceCoordinator',
+  BodyBlueprintFactory: 'BodyBlueprintFactory',
+  GraphIntegrityValidator: 'GraphIntegrityValidator',
+  BodyGraphService: 'BodyGraphService',
 
   // Core Service Interfaces
   ISafeEventDispatcher: 'ISafeEventDispatcher',

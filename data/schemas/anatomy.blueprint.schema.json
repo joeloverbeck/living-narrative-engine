@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/schemas/anatomy.blueprint.schema.json",
+  "title": "Anatomy Blueprint",
+  "description": "Defines the structural graph of how body parts connect via sockets",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "format": "uri",
+      "description": "Optional. A URI reference to the schema that this document conforms to"
+    },
+    "root": {
+      "$ref": "./common.schema.json#/definitions/namespacedId",
+      "description": "The root entity definition ID that serves as the entry point for the anatomy graph"
+    },
+    "attachments": {
+      "type": "array",
+      "description": "Static parent-child relationships in the anatomy graph",
+      "items": {
+        "$ref": "#/definitions/attachment"
+      }
+    }
+  },
+  "required": ["root"],
+  "additionalProperties": false,
+  "definitions": {
+    "attachment": {
+      "type": "object",
+      "description": "Defines a parent-child relationship via a socket",
+      "properties": {
+        "parent": {
+          "$ref": "./common.schema.json#/definitions/namespacedId",
+          "description": "The parent entity definition ID"
+        },
+        "socket": {
+          "type": "string",
+          "description": "The socket ID on the parent where the child attaches"
+        },
+        "child": {
+          "$ref": "./common.schema.json#/definitions/namespacedId",
+          "description": "The child entity definition ID to attach"
+        }
+      },
+      "required": ["parent", "socket", "child"],
+      "additionalProperties": false
+    }
+  }
+}

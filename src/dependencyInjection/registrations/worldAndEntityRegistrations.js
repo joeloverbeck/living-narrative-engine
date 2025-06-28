@@ -29,6 +29,9 @@ import { EntityDisplayDataProvider } from '../../entities/entityDisplayDataProvi
 import { SpatialIndexSynchronizer } from '../../entities/spatialIndexSynchronizer.js';
 import { LocationQueryService } from '../../entities/locationQueryService.js';
 import LocationDisplayService from '../../entities/services/locationDisplayService.js';
+import { BodyBlueprintFactory } from '../../anatomy/bodyBlueprintFactory.js';
+import { GraphIntegrityValidator } from '../../anatomy/graphIntegrityValidator.js';
+import { BodyGraphService } from '../../anatomy/bodyGraphService.js';
 
 /**
  * Registers world, entity, and context-related services.
@@ -159,6 +162,48 @@ export function registerWorldAndEntity(container) {
   logger.debug(
     `World and Entity Registration: Registered ${String(
       tokens.LocationDisplayService
+    )}.`
+  );
+
+  // --- Anatomy Services ---
+  registrar.singletonFactory(tokens.GraphIntegrityValidator, (c) => {
+    return new GraphIntegrityValidator({
+      entityManager: c.resolve(tokens.IEntityManager),
+      logger: c.resolve(tokens.ILogger),
+    });
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.GraphIntegrityValidator
+    )}.`
+  );
+
+  registrar.singletonFactory(tokens.BodyBlueprintFactory, (c) => {
+    return new BodyBlueprintFactory({
+      entityManager: c.resolve(tokens.IEntityManager),
+      dataRegistry: c.resolve(tokens.IDataRegistry),
+      logger: c.resolve(tokens.ILogger),
+      eventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+      idGenerator: c.resolve(tokens.IIdGenerator),
+      validator: c.resolve(tokens.GraphIntegrityValidator),
+    });
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.BodyBlueprintFactory
+    )}.`
+  );
+
+  registrar.singletonFactory(tokens.BodyGraphService, (c) => {
+    return new BodyGraphService({
+      entityManager: c.resolve(tokens.IEntityManager),
+      logger: c.resolve(tokens.ILogger),
+      eventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+    });
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.BodyGraphService
     )}.`
   );
 
