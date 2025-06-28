@@ -60,19 +60,11 @@ export default function createStepResolver({ entitiesGateway }) {
             const entity = entitiesGateway.getEntityInstance(parentValue);
             if (!entity) continue;
 
-            // Check if this is a test entity with plain components object
-            if (
-              entity.components &&
-              typeof entity.components === 'object' &&
-              !entity.componentTypeIds &&
-              !entity.getComponentData
-            ) {
-              result.add(entity.components);
-              continue;
-            }
+            // All entities must expose componentTypeIds to be queryable
+            // This ensures the scopeDSL remains component-agnostic
 
             // For production Entity objects, build the components object
-            const components = {};
+            let components = {};
 
             // If entity has componentTypeIds, use that
             if (
@@ -91,29 +83,18 @@ export default function createStepResolver({ entitiesGateway }) {
                 }
               }
             } else {
-              // Fallback for entities that don't expose componentTypeIds
-              const commonComponentIds = [
-                'core:name',
-                'core:position',
-                'core:actor',
-                'core:movement',
-                'intimacy:closeness',
-                'core:perception_log',
-                'core:short_term_memory',
-              ];
-              for (const componentId of commonComponentIds) {
-                try {
-                  const data = entitiesGateway.getComponentData(
-                    parentValue,
-                    componentId
-                  );
-                  if (data) {
-                    components[componentId] = data;
-                  }
-                } catch (e) {
-                  // Ignore errors for missing components
-                }
+              // If entity doesn't have componentTypeIds, we cannot determine which components it has
+              // This is an error condition - all entities should properly expose their components
+              if (trace) {
+                trace.addLog(
+                  'warn',
+                  `Entity '${parentValue}' does not expose componentTypeIds. Unable to retrieve components.`,
+                  'StepResolver',
+                  { entityId: parentValue }
+                );
               }
+              // Return empty components object rather than guessing
+              components = {};
             }
 
             result.add(components);

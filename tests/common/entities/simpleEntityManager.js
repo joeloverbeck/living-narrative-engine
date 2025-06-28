@@ -55,6 +55,9 @@ export default class SimpleEntityManager {
     return {
       id: entity.id,
       components: entity.components,
+      get componentTypeIds() {
+        return Object.keys(entity.components);
+      },
       getComponentData: (componentType) =>
         entity.components[componentType] ?? null,
     };
@@ -128,6 +131,9 @@ export default class SimpleEntityManager {
       if (Object.prototype.hasOwnProperty.call(ent.components, componentType)) {
         result.push({
           id: ent.id,
+          get componentTypeIds() {
+            return Object.keys(ent.components);
+          },
           getComponentData: (type) => ent.components[type] ?? null,
         });
       }
