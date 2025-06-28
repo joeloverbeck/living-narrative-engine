@@ -17,7 +17,6 @@ import {
   dispatchValidationError,
 } from '../utils/safeDispatchErrorUtils.js';
 import { validateDependency } from '../utils/dependencyUtils.js';
-import { resolveSafeDispatcher } from '../utils/dispatcherUtils.js';
 
 import { targetFormatterMap } from './formatters/targetFormatters.js';
 
@@ -190,8 +189,7 @@ function normalizeDeps(deps, logger) {
     'formatterMap' in depObj ? depObj.formatterMap : targetFormatterMap;
 
   if (typeof deps === 'function' || callerArgs.length > 5) {
-    const warnLogger = logger ?? console;
-    warnLogger.warn(
+    logger.warn(
       'DEPRECATION: formatActionCommand now expects a single dependency object after options.'
     );
     displayNameFn = deps || getEntityDisplayName;
