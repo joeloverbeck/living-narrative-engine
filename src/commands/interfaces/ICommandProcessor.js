@@ -15,7 +15,7 @@ export class ICommandProcessor {
    * @async
    * @param {Entity} actor - The entity performing the action.
    * @param {ITurnAction} turnAction - The pre-resolved action object.
-   * @returns {Promise<{success: boolean, errorResult: CommandResult | null}>} A promise that resolves to an object indicating the outcome.
+   * @returns {Promise<{success: boolean, commandResult: CommandResult | null}>} A promise that resolves to an object indicating the outcome.
    * @throws {Error} May throw on critical, unrecoverable errors.
    */
   async dispatchAction(actor, turnAction) {
