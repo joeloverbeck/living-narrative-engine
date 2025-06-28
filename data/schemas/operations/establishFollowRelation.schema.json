@@ -27,12 +27,12 @@
       "description": "Parameters for the ESTABLISH_FOLLOW_RELATION operation.",
       "properties": {
         "follower_id": {
-          "type": "string",
-          "minLength": 1
+          "$ref": "../common.schema.json#/definitions/entityReference",
+          "description": "Reference to the follower entity."
         },
         "leader_id": {
-          "type": "string",
-          "minLength": 1
+          "$ref": "../common.schema.json#/definitions/entityReference",
+          "description": "Reference to the leader entity."
         }
       },
       "required": ["follower_id", "leader_id"],

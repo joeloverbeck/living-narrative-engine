@@ -27,8 +27,8 @@
       "description": "Parameters for the BREAK_FOLLOW_RELATION operation.",
       "properties": {
         "follower_id": {
-          "type": "string",
-          "minLength": 1
+          "$ref": "../common.schema.json#/definitions/entityReference",
+          "description": "Reference to the follower entity."
         }
       },
       "required": ["follower_id"],

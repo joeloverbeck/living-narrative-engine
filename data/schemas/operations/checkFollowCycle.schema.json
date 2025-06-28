@@ -27,12 +27,12 @@
       "description": "Parameters for the CHECK_FOLLOW_CYCLE operation. Checks if following would create a cycle.",
       "properties": {
         "follower_id": {
-          "type": "string",
-          "minLength": 1
+          "$ref": "../common.schema.json#/definitions/entityReference",
+          "description": "Reference to the follower entity."
         },
         "leader_id": {
-          "type": "string",
-          "minLength": 1
+          "$ref": "../common.schema.json#/definitions/entityReference",
+          "description": "Reference to the leader entity."
         },
         "result_variable": {
           "type": "string",

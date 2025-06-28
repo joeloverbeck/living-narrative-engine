@@ -22,7 +22,10 @@
       "type": "object",
       "description": "Moves followers of a leader to a destination location.",
       "properties": {
-        "leader_id": { "type": "string", "minLength": 1 },
+        "leader_id": {
+          "$ref": "../common.schema.json#/definitions/entityReference",
+          "description": "Reference to the leader entity."
+        },
         "destination_id": { "type": "string", "minLength": 1 }
       },
       "required": ["leader_id", "destination_id"],
