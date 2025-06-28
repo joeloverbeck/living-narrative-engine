@@ -2,7 +2,7 @@
 
 import { PromptError } from '../../errors/promptError.js';
 import { PLAYER_TURN_SUBMITTED_ID } from '../../constants/eventIds.js';
-import { validateDependency } from '../../utils/validationUtils.js';
+import { validateDependency } from '../../utils/dependencyUtils.js';
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../turns/services/actionIndexingService.js').ActionIndexingService} ActionIndexingService */

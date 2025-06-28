@@ -4,9 +4,9 @@
  *   entity instances with proper validation, caching and event dispatching.
  */
 
-import { validateDependency } from '../../utils/validationUtils.js';
+import { validateDependency } from '../../utils/dependencyUtils.js';
 import { ensureValidLogger } from '../../utils/loggerUtils.js';
-import { assertValidId } from '../../utils/parameterGuards.js';
+import { assertValidId } from '../../utils/dependencyUtils.js';
 import {
   validateReconstructEntityParams as validateReconstructEntityParamsUtil,
   validateRemoveEntityInstanceParams as validateRemoveEntityInstanceParamsUtil,

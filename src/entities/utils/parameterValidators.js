@@ -9,7 +9,7 @@
 import {
   assertValidId,
   assertNonBlankString,
-} from '../../utils/parameterGuards.js';
+} from '../../utils/dependencyUtils.js';
 import { isNonBlankString } from '../../utils/textUtils.js';
 import { InvalidArgumentError } from '../../errors/invalidArgumentError.js';
 import { SerializedEntityError } from '../../errors/serializedEntityError.js';

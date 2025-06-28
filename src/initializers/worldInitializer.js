@@ -27,7 +27,7 @@ import {
   assertFunction,
   assertPresent,
   assertMethods,
-} from '../utils/dependencyValidators.js';
+} from '../utils/dependencyUtils.js';
 
 /**
  * Service responsible for instantiating entities defined

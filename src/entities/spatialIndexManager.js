@@ -3,7 +3,7 @@
 import { POSITION_COMPONENT_ID } from '../constants/componentIds.js';
 import { ISpatialIndexManager } from '../interfaces/ISpatialIndexManager.js';
 import { MapManager } from '../utils/mapManagerUtils.js';
-import { assertValidId } from '../utils/parameterGuards.js';
+import { assertValidId } from '../utils/dependencyUtils.js';
 
 /**
  * Manages a spatial index mapping location IDs to the entities present

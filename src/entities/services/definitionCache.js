@@ -4,7 +4,7 @@
  *   data registry and caching them for subsequent access.
  */
 
-import { validateDependency } from '../../utils/validationUtils.js';
+import { validateDependency } from '../../utils/dependencyUtils.js';
 import { ensureValidLogger } from '../../utils/loggerUtils.js';
 import { getDefinition as lookupDefinition } from '../utils/definitionLookup.js';
 

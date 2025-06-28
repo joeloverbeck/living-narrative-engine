@@ -1,6 +1,6 @@
 // src/entities/utils/definitionLookup.js
 
-import { assertValidId } from '../../utils/parameterGuards.js';
+import { assertValidId } from '../../utils/dependencyUtils.js';
 import { DefinitionNotFoundError } from '../../errors/definitionNotFoundError.js';
 
 /**

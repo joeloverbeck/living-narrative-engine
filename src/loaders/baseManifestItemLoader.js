@@ -14,7 +14,7 @@
 import AbstractLoader from './abstractLoader.js';
 import { parseAndValidateId } from '../utils/idUtils.js';
 import { validateAgainstSchema } from '../utils/schemaValidationUtils.js';
-import { validateDependencies } from '../utils/validationUtils.js';
+import { validateDependencies } from '../utils/dependencyUtils.js';
 import { storeItemInRegistry } from './helpers/registryStoreUtils.js';
 import { extractValidFilenames } from './helpers/filenameUtils.js';
 import { summarizeSettledResults } from './helpers/resultsSummary.js';

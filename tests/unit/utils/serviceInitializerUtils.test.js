@@ -17,9 +17,9 @@ import {
   initLogger as baseInitLogger,
   ensureValidLogger,
 } from '../../../src/utils/loggerUtils.js';
-import { validateDependencies } from '../../../src/utils/validationUtils.js';
+import { validateDependencies } from '../../../src/utils/dependencyUtils.js';
 
-jest.mock('../../../src/utils/validationUtils.js', () => ({
+jest.mock('../../../src/utils/dependencyUtils.js', () => ({
   validateDependencies: jest.fn(),
 }));
 

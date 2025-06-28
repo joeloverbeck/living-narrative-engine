@@ -19,4 +19,4 @@ export * from './jsonCleaning.js';
 export * from './jsonRepair.js';
 export * from './evaluationContextUtils.js';
 export * from './eventDispatchUtils.js';
-export * from './dependencyValidators.js';
+export * from './dependencyUtils.js';

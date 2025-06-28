@@ -20,7 +20,7 @@
  * It focuses solely on processing the schemas listed in the configuration's `schemaFiles`.
  */
 import AbstractLoader from './abstractLoader.js';
-import { validateDependencies } from '../utils/validationUtils.js';
+import { validateDependencies } from '../utils/dependencyUtils.js';
 
 class SchemaLoader extends AbstractLoader {
   #config;

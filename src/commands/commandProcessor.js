@@ -4,7 +4,7 @@
 import { ATTEMPT_ACTION_ID } from '../constants/eventIds.js';
 import { ICommandProcessor } from './interfaces/ICommandProcessor.js';
 import { initLogger } from '../utils/index.js';
-import { validateDependency } from '../utils/validationUtils.js';
+import { validateDependency } from '../utils/dependencyUtils.js';
 import { dispatchSystemErrorEvent } from '../utils/systemErrorDispatchUtils.js';
 
 // --- Type Imports ---

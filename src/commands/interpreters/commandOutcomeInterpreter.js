@@ -20,7 +20,7 @@ import TurnDirective from '../../turns/constants/turnDirectives.js';
 import { ICommandOutcomeInterpreter } from '../interfaces/ICommandOutcomeInterpreter.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import { initLogger } from '../../utils/index.js';
-import { validateDependency } from '../../utils/validationUtils.js';
+import { validateDependency } from '../../utils/dependencyUtils.js';
 
 /**
  * @class CommandOutcomeInterpreter
