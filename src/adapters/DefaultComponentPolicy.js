@@ -10,8 +10,8 @@ import {
 /**
  * Determine if a validation result is successful.
  *
- * @param {any} rawResult
- * @returns {boolean}
+ * @param {any} rawResult - Result returned from the validator.
+ * @returns {boolean} True if the validation passed.
  */
 function validationSucceeded(rawResult) {
   if (rawResult === undefined || rawResult === null) return true;
@@ -22,8 +22,8 @@ function validationSucceeded(rawResult) {
 /**
  * Format validation errors for logging.
  *
- * @param {any} rawResult
- * @returns {string}
+ * @param {any} rawResult - Result returned from the validator.
+ * @returns {string} Serialized error message string.
  */
 function formatValidationErrors(rawResult) {
   if (rawResult && typeof rawResult === 'object' && rawResult.errors) {
@@ -41,8 +41,8 @@ class DefaultComponentPolicy extends IDefaultComponentPolicy {
   /**
    * Apply the policy to the given entity.
    *
-   * @param {import('../entities/entity.js').default} entity
-   * @param {{ validator: { validate: Function }, logger: { debug: Function, error: Function } }} deps
+   * @param {import('../entities/entity.js').default} entity - Entity to update.
+   * @param {{ validator: { validate: Function }, logger: { debug: Function, error: Function } }} deps - Supporting services.
    */
   apply(entity, { validator, logger }) {
     if (!entity.hasComponent(ACTOR_COMPONENT_ID)) {

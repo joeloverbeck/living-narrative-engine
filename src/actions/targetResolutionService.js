@@ -18,7 +18,6 @@ import {
 } from '../constants/targetDomains.js';
 import { setupService } from '../utils/serviceInitializerUtils.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/systemEventIds.js';
-import { TRACE_INFO, TRACE_ERROR } from './tracing/traceContext.js';
 
 /**
  * Service for resolving action target scopes.
@@ -36,13 +35,15 @@ export class TargetResolutionService extends ITargetResolutionService {
   #jsonLogicEvalService;
 
   /**
-   * @param {object} deps
-   * @param {ScopeRegistry} deps.scopeRegistry
-   * @param {IScopeEngine} deps.scopeEngine
-   * @param {IEntityManager} deps.entityManager
-   * @param {ILogger} deps.logger
-   * @param {ISafeEventDispatcher} deps.safeEventDispatcher
-   * @param {JsonLogicEvaluationService} deps.jsonLogicEvaluationService
+   * Creates an instance of TargetResolutionService.
+   *
+   * @param {object} deps - Constructor dependencies.
+   * @param {ScopeRegistry} deps.scopeRegistry - Registry for named scopes.
+   * @param {IScopeEngine} deps.scopeEngine - Engine used to resolve scopes.
+   * @param {IEntityManager} deps.entityManager - Entity manager for lookups.
+   * @param {ILogger} deps.logger - Logger instance.
+   * @param {ISafeEventDispatcher} deps.safeEventDispatcher - Dispatches system errors.
+   * @param {JsonLogicEvaluationService} deps.jsonLogicEvaluationService - Service to evaluate JsonLogic.
    */
   constructor({
     scopeRegistry,
@@ -77,7 +78,6 @@ export class TargetResolutionService extends ITargetResolutionService {
    * Resolves a target scope name into actionable target contexts.
    *
    * @override
-   * @description Resolves a target scope name into actionable target contexts.
    * @param {string} scopeName - The name of the scope to resolve.
    * @param {Entity} actorEntity - The entity performing the action.
    * @param {ActionContext} discoveryContext - Context for DSL evaluation.
@@ -122,7 +122,6 @@ export class TargetResolutionService extends ITargetResolutionService {
   /**
    * Resolves a DSL scope definition to a set of entity IDs.
    *
-   * @description Resolves a DSL scope definition to a set of entity IDs.
    * @param {string} scopeName - Name of the scope definition.
    * @param {Entity} actorEntity - The entity initiating the resolution.
    * @param {ActionContext} discoveryContext - Context for evaluating scope rules.
@@ -178,7 +177,8 @@ export class TargetResolutionService extends ITargetResolutionService {
   }
 
   /**
-   * @description Builds the runtime context passed to the scope engine.
+   * Builds the runtime context passed to the scope engine.
+   *
    * @param {Entity} actorEntity The current actor entity.
    * @param {ActionContext} discoveryContext Context for scope resolution.
    * @returns {object} The runtime context for scope evaluation.
@@ -197,7 +197,6 @@ export class TargetResolutionService extends ITargetResolutionService {
   /**
    * Logs a resolution error and dispatches a system error event.
    *
-   * @description Logs a resolution error and dispatches a system error event.
    * @param {string} message - User-friendly error message.
    * @param {object} details - Supplemental diagnostic information.
    * @param {TraceContext|null} trace - Optional trace used for logging.
