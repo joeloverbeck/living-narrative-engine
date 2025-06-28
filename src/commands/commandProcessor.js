@@ -194,6 +194,15 @@ class CommandProcessor extends ICommandProcessor {
     };
   }
 
+  /**
+   * @description Creates a standardized failure {@link CommandResult}.
+   * @param {string} [userError] - User-facing error message.
+   * @param {string} [internalError] - Internal error message for logging.
+   * @param {string} [originalInput] - The command string that was processed.
+   * @param {string} [actionId] - Identifier of the attempted action.
+   * @param {boolean} [turnEnded] - Indicates if the turn should end.
+   * @returns {CommandResult} The failure result object.
+   */
   #createFailureResult(
     userError,
     internalError,
