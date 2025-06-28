@@ -5,11 +5,6 @@
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('./tracing/traceContext.js').TraceContext} TraceContext */
-import {
-  TRACE_DATA,
-  TRACE_INFO,
-  TRACE_SUCCESS,
-} from './tracing/traceContext.js';
 
 export class ActionIndex {
   /** @type {ILogger} */
