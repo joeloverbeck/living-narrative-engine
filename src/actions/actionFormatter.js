@@ -182,11 +182,15 @@ function finalizeCommand(command, logger, debug) {
  */
 function normalizeDeps(deps, logger) {
   const callerArgs = arguments[2] || [];
-  const depObj = deps && typeof deps === 'object' ? deps : {};
+  const injectedDeps = deps && typeof deps === 'object' ? deps : {};
   let displayNameFn =
-    'displayNameFn' in depObj ? depObj.displayNameFn : getEntityDisplayName;
+    'displayNameFn' in injectedDeps
+      ? injectedDeps.displayNameFn
+      : getEntityDisplayName;
   let formatterMap =
-    'formatterMap' in depObj ? depObj.formatterMap : targetFormatterMap;
+    'formatterMap' in injectedDeps
+      ? injectedDeps.formatterMap
+      : targetFormatterMap;
 
   if (typeof deps === 'function' || callerArgs.length > 5) {
     logger.warn(
