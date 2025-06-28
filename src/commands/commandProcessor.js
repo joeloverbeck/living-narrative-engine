@@ -160,11 +160,7 @@ class CommandProcessor extends ICommandProcessor {
     await safeDispatchError(
       this.#safeEventDispatcher,
       userMsg,
-      {
-        raw: internalMsg,
-        timestamp: new Date().toISOString(),
-        stack: new Error().stack,
-      },
+      this.#createErrorDetails(internalMsg),
       this.#logger
     );
     return this.#createFailureResult(
@@ -213,6 +209,20 @@ class CommandProcessor extends ICommandProcessor {
     return result;
   }
 
+  /**
+   * @description Creates standardized error details for safeDispatchError.
+   * @param {string} rawMessage - The raw internal error message.
+   * @param {string} [stackOverride] - Stack trace to attach.
+   * @returns {{raw: string, timestamp: string, stack: string}} Error details object.
+   */
+  #createErrorDetails(rawMessage, stackOverride = new Error().stack) {
+    return {
+      raw: rawMessage,
+      timestamp: new Date().toISOString(),
+      stack: stackOverride,
+    };
+  }
+
   async #dispatchWithErrorHandling(eventName, payload, loggingContextName) {
     this.#logger.debug(
       `CommandProcessor.#dispatchWithErrorHandling: Attempting dispatch: ${loggingContextName} ('${eventName}')`
@@ -253,11 +263,10 @@ class CommandProcessor extends ICommandProcessor {
       await safeDispatchError(
         this.#safeEventDispatcher,
         'System error during event dispatch.',
-        {
-          raw: `Exception in dispatch for ${eventName}`,
-          timestamp: new Date().toISOString(),
-          stack: dispatchError?.stack || new Error().stack,
-        },
+        this.#createErrorDetails(
+          `Exception in dispatch for ${eventName}`,
+          dispatchError?.stack || new Error().stack
+        ),
         this.#logger
       );
       return false;
