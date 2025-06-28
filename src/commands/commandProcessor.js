@@ -93,7 +93,7 @@ class CommandProcessor extends ICommandProcessor {
     );
 
     // --- Payload Construction ---
-    const payload = this.#buildAttemptActionPayload(actor, turnAction);
+    const payload = this.#createAttemptActionPayload(actor, turnAction);
 
     // --- Dispatch ---
     const dispatchSuccess = await dispatchEventWithErrorHandling(
@@ -169,12 +169,12 @@ class CommandProcessor extends ICommandProcessor {
   }
 
   /**
-   * @description Builds the payload for an action attempt dispatch.
+   * @description Creates the payload for an action attempt dispatch.
    * @param {Entity} actor - The entity performing the action.
    * @param {ITurnAction} turnAction - The resolved turn action.
    * @returns {object} The payload for the `ATTEMPT_ACTION_ID` event.
    */
-  #buildAttemptActionPayload(actor, turnAction) {
+  #createAttemptActionPayload(actor, turnAction) {
     const { actionDefinitionId, resolvedParameters, commandString } =
       turnAction;
     return {
