@@ -17,7 +17,6 @@ import {
   dispatchValidationError,
 } from '../utils/safeDispatchErrorUtils.js';
 import { validateDependency } from '../utils/validationUtils.js';
-import { resolveSafeDispatcher } from '../utils/dispatcherUtils.js';
 
 import { targetFormatterMap } from './formatters/targetFormatters.js';
 
@@ -212,12 +211,10 @@ export function formatActionCommand(
     throw new Error('formatActionCommand: logger is required.');
   }
 
-  const dispatcher = safeEventDispatcher || resolveSafeDispatcher(null, logger);
-  if (!dispatcher) {
-    logger.warn(
-      'formatActionCommand: safeEventDispatcher resolution failed; error events may not be dispatched.'
-    );
-  }
+  validateDependency(safeEventDispatcher, 'safeEventDispatcher', logger, {
+    requiredMethods: ['dispatch'],
+  });
+  const dispatcher = safeEventDispatcher;
 
   if (validationMessage) {
     return dispatchValidationError(

@@ -12,7 +12,7 @@ import {
 } from '../constants/componentIds.js';
 import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
 import { ISafeEventDispatcher } from '../interfaces/ISafeEventDispatcher.js';
-import { resolveSafeDispatcher } from '../utils/dispatcherUtils.js';
+import { validateDependency } from '../utils/validationUtils.js';
 
 /**
  * Provides a stateless view of the world context, deriving information directly
@@ -75,13 +75,10 @@ class WorldContext extends IWorldContext {
         'WorldContext requires a valid ILogger instance with info, error, debug and warn methods.'
       );
     }
-    this.#safeEventDispatcher =
-      safeEventDispatcher || resolveSafeDispatcher(null, logger);
-    if (!this.#safeEventDispatcher) {
-      logger.warn(
-        'WorldContext: safeEventDispatcher resolution failed; some errors may not be dispatched.'
-      );
-    }
+    validateDependency(safeEventDispatcher, 'safeEventDispatcher', logger, {
+      requiredMethods: ['dispatch'],
+    });
+    this.#safeEventDispatcher = safeEventDispatcher;
     this.#entityManager = entityManager;
     this.#logger = logger;
     this.#logger.debug(

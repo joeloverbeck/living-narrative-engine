@@ -62,6 +62,7 @@ const createMockDocumentContext = () => {
 const createMockVed = () => ({
   subscribe: jest.fn(() => jest.fn()),
   dispatch: jest.fn(),
+  unsubscribe: jest.fn(),
 });
 
 /**

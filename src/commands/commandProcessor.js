@@ -3,7 +3,6 @@
 // --- Static Imports ---
 import { ATTEMPT_ACTION_ID } from '../constants/eventIds.js';
 import { ICommandProcessor } from './interfaces/ICommandProcessor.js';
-import { resolveSafeDispatcher } from '../utils/dispatcherUtils.js';
 import { initLogger } from '../utils/index.js';
 import { validateDependency } from '../utils/validationUtils.js';
 import { dispatchSystemErrorEvent } from '../utils/systemErrorDispatchUtils.js';
@@ -33,17 +32,11 @@ class CommandProcessor extends ICommandProcessor {
 
     this.#logger = initLogger('CommandProcessor', logger);
 
-    validateDependency(dispatcher, 'ISafeEventDispatcher', this.#logger, {
+    validateDependency(dispatcher, 'safeEventDispatcher', this.#logger, {
       requiredMethods: ['dispatch'],
     });
 
-    this.#safeEventDispatcher =
-      dispatcher || resolveSafeDispatcher(null, this.#logger);
-    if (!this.#safeEventDispatcher) {
-      this.#logger.warn(
-        'CommandProcessor: safeEventDispatcher resolution failed; some events may not be dispatched.'
-      );
-    }
+    this.#safeEventDispatcher = dispatcher;
 
     this.#logger.debug(
       'CommandProcessor: Instance created and dependencies validated.'
