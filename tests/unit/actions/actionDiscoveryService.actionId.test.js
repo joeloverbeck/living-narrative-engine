@@ -18,7 +18,7 @@ describeActionDiscoverySuite(
         dummyActionDef,
       ]);
       bed.mocks.prerequisiteEvaluationService.evaluate.mockReturnValue(true);
-      bed.mocks.targetResolutionService.resolveTargets.mockResolvedValue([
+      bed.mocks.targetResolutionService.resolveTargets.mockReturnValue([
         { type: 'entity', entityId: 'rat123' },
       ]);
       bed.mocks.formatActionCommandFn.mockReturnValue({

@@ -289,7 +289,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     );
 
     // STEP 2: Resolve targets using the dedicated service
-    const targetContexts = await this.#targetResolutionService.resolveTargets(
+    const targetContexts = this.#targetResolutionService.resolveTargets(
       actionDef.scope,
       actorEntity,
       discoveryContext,

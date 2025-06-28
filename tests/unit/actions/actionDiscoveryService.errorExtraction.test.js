@@ -8,7 +8,7 @@ describeActionDiscoverySuite(
   (getBed) => {
     beforeEach(() => {
       const bed = getBed();
-      bed.mocks.targetResolutionService.resolveTargets.mockResolvedValue([
+      bed.mocks.targetResolutionService.resolveTargets.mockReturnValue([
         { type: 'none', entityId: null },
       ]);
       bed.mocks.getActorLocationFn.mockReturnValue('room1');

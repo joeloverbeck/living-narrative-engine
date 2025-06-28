@@ -27,7 +27,7 @@ describeActionDiscoverySuite(
       bed.mocks.actionIndex.getCandidateActions.mockReturnValue(actionDefs);
       bed.mocks.prerequisiteEvaluationService.evaluate.mockReturnValue(true);
       bed.mocks.targetResolutionService.resolveTargets.mockImplementation(
-        async (scope) => {
+        (scope) => {
           if (scope === 'directions') {
             return [
               { type: 'entity', entityId: 'loc-2' },

@@ -41,25 +41,25 @@ describe('TargetResolutionService - additional branches', () => {
     });
   });
 
-  it('returns a no target context when scope is none', async () => {
+  it('returns a no target context when scope is none', () => {
     const actor = { id: 'hero' };
-    const result = await service.resolveTargets(TARGET_DOMAIN_NONE, actor, {});
+    const result = service.resolveTargets(TARGET_DOMAIN_NONE, actor, {});
     expect(result).toEqual([ActionTargetContext.noTarget()]);
     expect(mockScopeRegistry.getScope).not.toHaveBeenCalled();
     expect(mockScopeEngine.resolve).not.toHaveBeenCalled();
     expect(mockSafeDispatcher.dispatch).not.toHaveBeenCalled();
   });
 
-  it('returns the actor as target when scope is self', async () => {
+  it('returns the actor as target when scope is self', () => {
     const actor = { id: 'hero' };
-    const result = await service.resolveTargets(TARGET_DOMAIN_SELF, actor, {});
+    const result = service.resolveTargets(TARGET_DOMAIN_SELF, actor, {});
     expect(result).toEqual([ActionTargetContext.forEntity('hero')]);
     expect(mockScopeRegistry.getScope).not.toHaveBeenCalled();
     expect(mockScopeEngine.resolve).not.toHaveBeenCalled();
     expect(mockSafeDispatcher.dispatch).not.toHaveBeenCalled();
   });
 
-  it('handles undefined scope resolution result gracefully', async () => {
+  it('handles undefined scope resolution result gracefully', () => {
     const expr = 'actor';
     const def = {
       name: 'core:test',
@@ -72,7 +72,7 @@ describe('TargetResolutionService - additional branches', () => {
     mockScopeEngine.resolve.mockReturnValue(undefined);
 
     const actor = { id: 'hero' };
-    const result = await service.resolveTargets('core:test', actor, {});
+    const result = service.resolveTargets('core:test', actor, {});
 
     expect(result).toEqual([]);
     expect(mockScopeEngine.resolve).toHaveBeenCalled();

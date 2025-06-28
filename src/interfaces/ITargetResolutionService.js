@@ -15,9 +15,9 @@ export class ITargetResolutionService {
    * @param {Entity} actorEntity - The entity performing the action.
    * @param {ActionContext} discoveryContext - The dynamic context for the resolution.
    * @param {TraceContext} [trace] - Optional trace context for logging.
-   * @returns {Promise<ActionTargetContext[]>} A list of valid target contexts.
+   * @returns {ActionTargetContext[]} A list of valid target contexts.
    */
-  async resolveTargets(scopeName, actorEntity, discoveryContext, trace = null) {
+  resolveTargets(scopeName, actorEntity, discoveryContext, trace = null) {
     throw new Error(
       'ITargetResolutionService.resolveTargets method not implemented.'
     );

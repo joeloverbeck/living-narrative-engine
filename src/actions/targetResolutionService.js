@@ -82,9 +82,9 @@ export class TargetResolutionService extends ITargetResolutionService {
    * @param {Entity} actorEntity - The entity performing the action.
    * @param {ActionContext} discoveryContext - Context for DSL evaluation.
    * @param {TraceContext|null} [trace] - Optional tracing instance.
-   * @returns {Promise<ActionTargetContext[]>} Resolved target contexts.
+   * @returns {ActionTargetContext[]} Resolved target contexts.
    */
-  async resolveTargets(scopeName, actorEntity, discoveryContext, trace = null) {
+  resolveTargets(scopeName, actorEntity, discoveryContext, trace = null) {
     const source = 'TargetResolutionService.resolveTargets';
     trace?.info(`Resolving scope '${scopeName}'.`, source);
 

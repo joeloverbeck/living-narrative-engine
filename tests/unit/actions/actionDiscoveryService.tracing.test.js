@@ -79,7 +79,7 @@ describeActionDiscoverySuite(
       bed.mocks.actionIndex.getCandidateActions.mockReturnValue([]);
       bed.mocks.prerequisiteEvaluationService.evaluate.mockReturnValue(true);
       bed.mocks.targetResolutionService.resolveTargets.mockImplementation(
-        async (scopeName) => {
+        (scopeName) => {
           if (scopeName === 'someScope') {
             return [
               { type: 'entity', entityId: 'target1' },

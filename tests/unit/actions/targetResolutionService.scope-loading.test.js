@@ -51,7 +51,7 @@ describe('TargetResolutionService - Scope Loading Issue', () => {
   });
 
   describe('core:clear_directions scope resolution', () => {
-    it('should find the core:clear_directions scope when properly loaded', async () => {
+    it('should find the core:clear_directions scope when properly loaded', () => {
       // Mock a properly loaded scope
       const expr =
         'location.core:exits[{ "condition_ref": "core:exit-is-unblocked" }].target';
@@ -71,7 +71,7 @@ describe('TargetResolutionService - Scope Loading Issue', () => {
       const mockActor = { id: 'hero', type: 'character' };
       const mockDiscoveryContext = { currentLocation: { id: 'room1' } };
 
-      const result = await targetResolutionService.resolveTargets(
+      const result = targetResolutionService.resolveTargets(
         'core:clear_directions',
         mockActor,
         mockDiscoveryContext
@@ -84,14 +84,14 @@ describe('TargetResolutionService - Scope Loading Issue', () => {
       expectNoDispatch(mockSafeEventDispatcher.dispatch);
     });
 
-    it('should handle missing scope gracefully and dispatch error event', async () => {
+    it('should handle missing scope gracefully and dispatch error event', () => {
       // Mock missing scope (returns null)
       mockScopeRegistry.getScope.mockReturnValue(null);
 
       const mockActor = { id: 'hero', type: 'character' };
       const mockDiscoveryContext = { currentLocation: { id: 'room1' } };
 
-      const result = await targetResolutionService.resolveTargets(
+      const result = targetResolutionService.resolveTargets(
         'core:clear_directions',
         mockActor,
         mockDiscoveryContext
@@ -114,7 +114,7 @@ describe('TargetResolutionService - Scope Loading Issue', () => {
       );
     });
 
-    it('should handle scope with empty expression gracefully', async () => {
+    it('should handle scope with empty expression gracefully', () => {
       // Mock scope with empty expression
       const mockScopeDefinition = {
         name: 'core:clear_directions',
@@ -128,7 +128,7 @@ describe('TargetResolutionService - Scope Loading Issue', () => {
       const mockActor = { id: 'hero', type: 'character' };
       const mockDiscoveryContext = { currentLocation: { id: 'room1' } };
 
-      const result = await targetResolutionService.resolveTargets(
+      const result = targetResolutionService.resolveTargets(
         'core:clear_directions',
         mockActor,
         mockDiscoveryContext
@@ -140,7 +140,7 @@ describe('TargetResolutionService - Scope Loading Issue', () => {
       );
     });
 
-    it('should handle scope with missing AST gracefully', async () => {
+    it('should handle scope with missing AST gracefully', () => {
       // Mock scope without AST (which is now required)
       const mockScopeDefinition = {
         name: 'core:clear_directions',
@@ -155,7 +155,7 @@ describe('TargetResolutionService - Scope Loading Issue', () => {
       const mockActor = { id: 'hero', type: 'character' };
       const mockDiscoveryContext = { currentLocation: { id: 'room1' } };
 
-      const result = await targetResolutionService.resolveTargets(
+      const result = targetResolutionService.resolveTargets(
         'core:clear_directions',
         mockActor,
         mockDiscoveryContext
