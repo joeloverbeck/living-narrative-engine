@@ -14,6 +14,7 @@ import {
 import { DefinitionNotFoundError } from '../../errors/definitionNotFoundError.js';
 import { InvalidArgumentError } from '../../errors/invalidArgumentError.js';
 import { EntityNotFoundError } from '../../errors/entityNotFoundError.js';
+import { RepositoryConsistencyError } from '../../errors/repositoryConsistencyError.js';
 import {
   ENTITY_CREATED_ID,
   ENTITY_REMOVED_ID,
@@ -278,7 +279,8 @@ export class EntityLifecycleManager {
       this.#logger.error(
         `EntityManager.removeEntityInstance: EntityRepository.remove failed for already retrieved entity '${instanceId}'. This indicates a serious internal inconsistency.`
       );
-      throw new Error(
+      throw new RepositoryConsistencyError(
+        instanceId,
         `Internal error: Failed to remove entity '${instanceId}' from entity repository despite entity being found.`
       );
     }
