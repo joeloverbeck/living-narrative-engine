@@ -3,6 +3,8 @@
  * @description Manages scope definitions loaded from mods
  */
 
+import { parseDslExpression } from './parser.js';
+
 class ScopeRegistry {
   constructor() {
     this._scopes = new Map();
@@ -18,7 +20,15 @@ class ScopeRegistry {
     this._scopes.clear();
 
     for (const [scopeName, scopeDef] of Object.entries(scopeDefinitions)) {
-      this._scopes.set(scopeName, scopeDef);
+      let ast = null;
+      if (
+        scopeDef &&
+        typeof scopeDef.expr === 'string' &&
+        scopeDef.expr.trim()
+      ) {
+        ast = parseDslExpression(scopeDef.expr);
+      }
+      this._scopes.set(scopeName, { ...scopeDef, ast });
     }
 
     this._initialized = true;

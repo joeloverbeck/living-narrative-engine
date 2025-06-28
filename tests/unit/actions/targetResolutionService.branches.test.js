@@ -12,15 +12,14 @@ describe('TargetResolutionService - additional branches', () => {
   let service;
   let mockScopeRegistry;
   let mockScopeEngine;
-  let mockEntityManager;
   let mockLogger;
   let mockSafeDispatcher;
   let mockJsonLogic;
+  let mockRuntimeContextBuilder;
 
   beforeEach(() => {
     mockScopeRegistry = { getScope: jest.fn() };
     mockScopeEngine = { resolve: jest.fn() };
-    mockEntityManager = {};
     mockLogger = {
       error: jest.fn(),
       warn: jest.fn(),
@@ -29,14 +28,15 @@ describe('TargetResolutionService - additional branches', () => {
     };
     mockSafeDispatcher = { dispatch: jest.fn() };
     mockJsonLogic = { evaluate: jest.fn() };
+    mockRuntimeContextBuilder = { build: jest.fn(() => ({})) };
 
     service = new TargetResolutionService({
       scopeRegistry: mockScopeRegistry,
       scopeEngine: mockScopeEngine,
-      entityManager: mockEntityManager,
       logger: mockLogger,
       safeEventDispatcher: mockSafeDispatcher,
       jsonLogicEvaluationService: mockJsonLogic,
+      runtimeContextBuilder: mockRuntimeContextBuilder,
     });
   });
 
@@ -62,6 +62,7 @@ describe('TargetResolutionService - additional branches', () => {
     const def = {
       name: 'core:test',
       expr: 'actor',
+      ast: {},
       modId: 'core',
       source: 'file',
     };

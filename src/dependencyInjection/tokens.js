@@ -340,6 +340,7 @@ export const tokens = freeze({
   // Core Builders
   ActionContextBuilder: 'ActionContextBuilder',
   TurnContextBuilder: 'TurnContextBuilder',
+  RuntimeContextBuilder: 'RuntimeContextBuilder',
 
   // Initialization & Orchestration
   WorldInitializer: 'WorldInitializer',

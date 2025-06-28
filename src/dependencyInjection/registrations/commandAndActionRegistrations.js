@@ -26,6 +26,7 @@ import { TargetResolutionService } from '../../actions/targetResolutionService.j
 import { ActionIndex } from '../../actions/actionIndex.js';
 import { ActionValidationContextBuilder } from '../../actions/validation/actionValidationContextBuilder.js';
 import { PrerequisiteEvaluationService } from '../../actions/validation/prerequisiteEvaluationService.js';
+import RuntimeContextBuilder from '../../scopeDsl/runtimeContextBuilder.js';
 import CommandProcessor from '../../commands/commandProcessor.js';
 import { TraceContext as TraceContextImpl } from '../../actions/tracing/traceContext.js';
 
@@ -65,16 +66,25 @@ export function registerCommandAndAction(container) {
     tokens.IEntityManager,
   ]);
 
+  // --- Runtime Context Builder ---
+  registrar.singletonFactory(tokens.RuntimeContextBuilder, (c) => {
+    return new RuntimeContextBuilder({
+      entityManager: c.resolve(tokens.IEntityManager),
+      jsonLogicEvaluationService: c.resolve(tokens.JsonLogicEvaluationService),
+      logger: c.resolve(tokens.ILogger),
+    });
+  });
+
   // --- Target Resolution Service ---
   // Must be registered before ActionDiscoveryService
   registrar.singletonFactory(tokens.ITargetResolutionService, (c) => {
     return new TargetResolutionService({
       scopeRegistry: c.resolve(tokens.IScopeRegistry),
       scopeEngine: c.resolve(tokens.IScopeEngine),
-      entityManager: c.resolve(tokens.IEntityManager),
       logger: c.resolve(tokens.ILogger),
       safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
       jsonLogicEvaluationService: c.resolve(tokens.JsonLogicEvaluationService),
+      runtimeContextBuilder: c.resolve(tokens.RuntimeContextBuilder),
     });
   });
 

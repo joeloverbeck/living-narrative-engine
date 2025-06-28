@@ -18,6 +18,7 @@ import { GameDataRepository } from '../../../src/data/gameDataRepository.js';
 import { SafeEventDispatcher } from '../../../src/events/safeEventDispatcher.js';
 import ScopeRegistry from '../../../src/scopeDsl/scopeRegistry.js';
 import ScopeEngine from '../../../src/scopeDsl/engine.js';
+import RuntimeContextBuilder from '../../../src/scopeDsl/runtimeContextBuilder.js';
 import { parseScopeDefinitions } from '../../../src/scopeDsl/scopeDefinitionParser.js';
 import {
   LEADING_COMPONENT_ID,
@@ -149,10 +150,14 @@ describe('Scope Integration Tests', () => {
     const targetResolutionService = new TargetResolutionService({
       scopeRegistry,
       scopeEngine,
-      entityManager,
       logger,
       safeEventDispatcher,
       jsonLogicEvaluationService: jsonLogicEval,
+      runtimeContextBuilder: new RuntimeContextBuilder({
+        entityManager,
+        jsonLogicEvaluationService: jsonLogicEval,
+        logger,
+      }),
     });
 
     return new ActionDiscoveryService({

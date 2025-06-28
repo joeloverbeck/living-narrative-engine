@@ -13,15 +13,15 @@ describe('ScopeRegistry', () => {
     scopeRegistry = new ScopeRegistry();
     mockScopeDefinitions = {
       'core:all_characters': {
-        expr: 'entities() | filter(e -> e.hasComponent("c-character-sheet"))',
+        expr: 'actor',
         description: 'All entities with a character sheet.',
       },
       'core:nearby_items': {
-        expr: 'in_location(actor) | filter(e -> e.hasComponent("c-item"))',
+        expr: 'location',
         description: 'All items in the same location as the actor.',
       },
       'mod:custom_scope': {
-        expr: 'location -> entities(Item)',
+        expr: 'actor',
         description: 'A custom scope from a mod.',
       },
     };
@@ -67,7 +67,7 @@ describe('ScopeRegistry', () => {
     it('should clear any existing scopes on re-initialization', () => {
       // Arrange: Initialize with one set of scopes
       const initialScopes = {
-        'initial:scope': { expr: 'entities()' },
+        'initial:scope': { expr: 'actor' },
       };
       scopeRegistry.initialize(initialScopes);
       expect(scopeRegistry.hasScope('initial:scope')).toBe(true);
@@ -93,7 +93,10 @@ describe('ScopeRegistry', () => {
       const scope = scopeRegistry.getScope('core:all_characters');
 
       // Assert
-      expect(scope).toEqual(mockScopeDefinitions['core:all_characters']);
+      expect(scope).toMatchObject({
+        expr: mockScopeDefinitions['core:all_characters'].expr,
+      });
+      expect(scope.ast).toBeDefined();
     });
 
     it('should return null for a non-existent scope name', () => {
@@ -133,9 +136,10 @@ describe('ScopeRegistry', () => {
       // Assert
       expect(scopes).toBeInstanceOf(Map);
       expect(scopes.size).toBe(3);
-      expect(scopes.get('mod:custom_scope')).toEqual(
-        mockScopeDefinitions['mod:custom_scope']
-      );
+      expect(scopes.get('mod:custom_scope')).toMatchObject({
+        expr: mockScopeDefinitions['mod:custom_scope'].expr,
+      });
+      expect(scopes.get('mod:custom_scope').ast).toBeDefined();
     });
 
     it('should return a copy of the scopes map, not a reference', () => {
@@ -150,12 +154,12 @@ describe('ScopeRegistry', () => {
 
     it('should require namespaced scope names (no fallback)', () => {
       // Assert: Can find by exact namespaced name
-      expect(scopeRegistry.getScope('core:all_characters')).toEqual(
-        mockScopeDefinitions['core:all_characters']
-      );
-      expect(scopeRegistry.getScope('mod:custom_scope')).toEqual(
-        mockScopeDefinitions['mod:custom_scope']
-      );
+      expect(scopeRegistry.getScope('core:all_characters')).toMatchObject({
+        expr: mockScopeDefinitions['core:all_characters'].expr,
+      });
+      expect(scopeRegistry.getScope('mod:custom_scope')).toMatchObject({
+        expr: mockScopeDefinitions['mod:custom_scope'].expr,
+      });
 
       // Assert: Should throw error for non-namespaced names (no fallback)
       expect(() => scopeRegistry.getScope('all_characters')).toThrow(

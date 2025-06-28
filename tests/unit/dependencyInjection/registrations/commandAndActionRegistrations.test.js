@@ -26,6 +26,7 @@ import { ActionDiscoveryService } from '../../../../src/actions/actionDiscoveryS
 import { ActionValidationContextBuilder } from '../../../../src/actions/validation/actionValidationContextBuilder.js';
 import { PrerequisiteEvaluationService } from '../../../../src/actions/validation/prerequisiteEvaluationService.js';
 import CommandProcessor from '../../../../src/commands/commandProcessor.js';
+import RuntimeContextBuilder from '../../../../src/scopeDsl/runtimeContextBuilder.js';
 import { expectSingleton } from '../../../common/containerAssertions.js';
 
 describe('registerCommandAndAction', () => {
@@ -131,6 +132,12 @@ describe('registerCommandAndAction', () => {
       {
         token: tokens.ICommandProcessor,
         Class: CommandProcessor,
+        lifecycle: 'singletonFactory',
+        tags: undefined,
+      },
+      {
+        token: tokens.RuntimeContextBuilder,
+        Class: RuntimeContextBuilder,
         lifecycle: 'singletonFactory',
         tags: undefined,
       },

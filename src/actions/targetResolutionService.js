@@ -16,7 +16,7 @@ import {
   TARGET_DOMAIN_SELF,
   TARGET_DOMAIN_NONE,
 } from '../constants/targetDomains.js';
-import { parseDslExpression } from '../scopeDsl/parser.js';
+import RuntimeContextBuilder from '../scopeDsl/runtimeContextBuilder.js';
 import { setupService } from '../utils/serviceInitializerUtils.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/systemEventIds.js';
 import { TRACE_INFO, TRACE_ERROR } from './tracing/traceContext.js';
@@ -31,33 +31,31 @@ import { TRACE_INFO, TRACE_ERROR } from './tracing/traceContext.js';
 export class TargetResolutionService extends ITargetResolutionService {
   #scopeRegistry;
   #scopeEngine;
-  #entityManager;
   #logger;
   #safeEventDispatcher;
-  #jsonLogicEvalService;
+  #runtimeContextBuilder;
 
   /**
    * @param {object} deps
    * @param {ScopeRegistry} deps.scopeRegistry
    * @param {IScopeEngine} deps.scopeEngine
-   * @param {IEntityManager} deps.entityManager
    * @param {ILogger} deps.logger
    * @param {ISafeEventDispatcher} deps.safeEventDispatcher
    * @param {JsonLogicEvaluationService} deps.jsonLogicEvaluationService
+   * @param {RuntimeContextBuilder} [deps.runtimeContextBuilder]
    */
   constructor({
     scopeRegistry,
     scopeEngine,
-    entityManager,
     logger,
     safeEventDispatcher,
     jsonLogicEvaluationService,
+    runtimeContextBuilder,
   }) {
     super();
     this.#logger = setupService('TargetResolutionService', logger, {
       scopeRegistry: { value: scopeRegistry, requiredMethods: ['getScope'] },
       scopeEngine: { value: scopeEngine, requiredMethods: ['resolve'] },
-      entityManager: { value: entityManager },
       safeEventDispatcher: {
         value: safeEventDispatcher,
         requiredMethods: ['dispatch'],
@@ -66,12 +64,20 @@ export class TargetResolutionService extends ITargetResolutionService {
         value: jsonLogicEvaluationService,
         requiredMethods: ['evaluate'],
       },
+      runtimeContextBuilder: {
+        value: runtimeContextBuilder,
+        requiredMethods: ['build'],
+      },
     });
     this.#scopeRegistry = scopeRegistry;
     this.#scopeEngine = scopeEngine;
-    this.#entityManager = entityManager;
     this.#safeEventDispatcher = safeEventDispatcher;
-    this.#jsonLogicEvalService = jsonLogicEvaluationService;
+    this.#runtimeContextBuilder =
+      runtimeContextBuilder ||
+      new RuntimeContextBuilder({
+        jsonLogicEvaluationService,
+        logger,
+      });
   }
 
   /**
@@ -147,9 +153,14 @@ export class TargetResolutionService extends ITargetResolutionService {
     }
 
     try {
-      const ast = parseDslExpression(scopeDefinition.expr);
+      const ast = scopeDefinition.ast;
+      if (!ast) {
+        const errorMessage = `Error resolving scope '${scopeName}': AST not available`;
+        this.#handleResolutionError(errorMessage, { scopeName }, trace, source);
+        return new Set();
+      }
 
-      const runtimeCtx = this.#buildRuntimeContext(
+      const runtimeCtx = this.#runtimeContextBuilder.build(
         actorEntity,
         discoveryContext
       );
@@ -168,23 +179,6 @@ export class TargetResolutionService extends ITargetResolutionService {
       );
       return new Set();
     }
-  }
-
-  /**
-   * @description Builds the runtime context passed to the scope engine.
-   * @param {Entity} actorEntity The current actor entity.
-   * @param {ActionContext} discoveryContext Context for scope resolution.
-   * @returns {object} The runtime context for scope evaluation.
-   * @private
-   */
-  #buildRuntimeContext(actorEntity, discoveryContext) {
-    return {
-      entityManager: this.#entityManager,
-      jsonLogicEval: this.#jsonLogicEvalService,
-      logger: this.#logger,
-      actor: actorEntity,
-      location: discoveryContext.currentLocation,
-    };
   }
 
   /**

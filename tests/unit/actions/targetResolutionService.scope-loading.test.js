@@ -7,10 +7,10 @@ describe('TargetResolutionService - Scope Loading Issue', () => {
   let targetResolutionService;
   let mockScopeRegistry;
   let mockScopeEngine;
-  let mockEntityManager;
   let mockLogger;
   let mockSafeEventDispatcher;
   let mockJsonLogicEvalService;
+  let mockRuntimeContextBuilder;
 
   beforeEach(() => {
     mockScopeRegistry = {
@@ -20,8 +20,6 @@ describe('TargetResolutionService - Scope Loading Issue', () => {
     mockScopeEngine = {
       resolve: jest.fn(),
     };
-
-    mockEntityManager = {};
 
     mockLogger = {
       error: jest.fn(),
@@ -38,14 +36,15 @@ describe('TargetResolutionService - Scope Loading Issue', () => {
     mockJsonLogicEvalService = {
       evaluate: jest.fn(),
     };
+    mockRuntimeContextBuilder = { build: jest.fn(() => ({})) };
 
     targetResolutionService = new TargetResolutionService({
       scopeRegistry: mockScopeRegistry,
       scopeEngine: mockScopeEngine,
-      entityManager: mockEntityManager,
       logger: mockLogger,
       safeEventDispatcher: mockSafeEventDispatcher,
       jsonLogicEvaluationService: mockJsonLogicEvalService,
+      runtimeContextBuilder: mockRuntimeContextBuilder,
     });
   });
 
@@ -55,6 +54,7 @@ describe('TargetResolutionService - Scope Loading Issue', () => {
       const mockScopeDefinition = {
         name: 'core:clear_directions',
         expr: 'location.core:exits[{ "condition_ref": "core:exit-is-unblocked" }].target',
+        ast: {},
         modId: 'core',
         source: 'file',
       };
@@ -115,6 +115,7 @@ describe('TargetResolutionService - Scope Loading Issue', () => {
       const mockScopeDefinition = {
         name: 'core:clear_directions',
         expr: '',
+        ast: null,
         modId: 'core',
         source: 'file',
       };
@@ -141,6 +142,7 @@ describe('TargetResolutionService - Scope Loading Issue', () => {
       const mockScopeDefinition = {
         name: 'core:clear_directions',
         expr: 'invalid.expression[syntax]',
+        ast: null,
         modId: 'core',
         source: 'file',
       };
@@ -160,12 +162,9 @@ describe('TargetResolutionService - Scope Loading Issue', () => {
       expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
         'core:system_error_occurred',
         expect.objectContaining({
-          message: expect.stringContaining(
-            "Error resolving scope 'core:clear_directions'"
-          ),
-          details: expect.objectContaining({
-            error: expect.stringContaining('Unknown source node'),
-          }),
+          message:
+            "Error resolving scope 'core:clear_directions': AST not available",
+          details: { scopeName: 'core:clear_directions' },
         })
       );
     });
