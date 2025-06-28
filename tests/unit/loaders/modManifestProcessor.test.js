@@ -142,4 +142,57 @@ describe('ModManifestProcessor.processManifests', () => {
       'StaticValidator.validate called'
     );
   });
+
+  it('propagates generic errors from version validator without warnings', async () => {
+    const error = new Error('boom');
+    modVersionValidator.mockImplementation(() => {
+      throw error;
+    });
+
+    await expect(processor.processManifests(['modA'], worldName)).rejects.toBe(
+      error
+    );
+
+    expect(logger.warn).not.toHaveBeenCalled();
+    expect(registry.store).not.toHaveBeenCalledWith(
+      'meta',
+      'final_mod_order',
+      expect.anything()
+    );
+  });
+
+  it('loads missing dependency manifests and resolves final order', async () => {
+    manifestMap = new Map([['modA', { id: 'modA', version: '1.0.0' }]]);
+    const secondMap = new Map([['modC', { id: 'modC', version: '1.0.0' }]]);
+    manifestLoader = new DummyManifestLoader(manifestMap);
+    modLoadOrderResolver.resolve.mockReturnValue(['modA', 'modC']);
+    processor = new ModManifestProcessor({
+      modManifestLoader: manifestLoader,
+      logger,
+      registry,
+      validatedEventDispatcher: dispatcher,
+      modDependencyValidator,
+      modVersionValidator,
+      modLoadOrderResolver,
+    });
+    manifestLoader.loadRequestedManifests.mockImplementationOnce(
+      async () => manifestMap
+    );
+    manifestLoader.loadRequestedManifests.mockImplementationOnce(
+      async () => secondMap
+    );
+
+    const result = await processor.processManifests(
+      ['modA', 'modC'],
+      worldName
+    );
+
+    expect(manifestLoader.loadRequestedManifests).toHaveBeenCalledTimes(2);
+    expect(registry.store).toHaveBeenCalledWith('mod_manifests', 'modc', {
+      id: 'modC',
+      version: '1.0.0',
+    });
+    expect(result.finalModOrder).toEqual(['modA', 'modC']);
+    expect(result.loadedManifestsMap.size).toBe(2);
+  });
 });
