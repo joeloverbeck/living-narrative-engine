@@ -499,7 +499,49 @@ describe('SpatialIndexManager', () => {
     });
 
     it('should not add entities with invalid location IDs during build', () => {
-      // ... existing code ...
+      const mockEntityManager = setupMockEntityManagerWithEntities(
+        true,
+        true,
+        true,
+        true
+      );
+      spatialIndexManager.buildIndex(mockEntityManager);
+      expect(spatialIndexManager.locationIndex.size).toBe(2);
+      expect(spatialIndexManager.locationIndex.has('locationA')).toBe(true);
+      expect(spatialIndexManager.locationIndex.has('locationB')).toBe(true);
+      expect(spatialIndexManager.locationIndex.has('   ')).toBe(false);
+      const hasNullKey = Array.from(
+        spatialIndexManager.locationIndex.keys()
+      ).some((key) => key === null);
+      expect(hasNullKey).toBe(false);
+    });
+
+    it('skips entities missing required properties during build', () => {
+      const invalidEntity1 = { id: 'bad1' }; // no getComponentData
+      const invalidEntity2 = {
+        getComponentData: () => ({ locationId: 'locationX' }),
+      }; // no id
+      const validEntity = {
+        id: 'good1',
+        getComponentData: (type) =>
+          type === POSITION_COMPONENT_ID ? { locationId: 'locValid' } : null,
+      };
+      const activeEntities = new Map([
+        [validEntity.id, validEntity],
+        ['bad1', invalidEntity1],
+        ['bad2', invalidEntity2],
+      ]);
+      const entityManager = {
+        get entities() {
+          return activeEntities.values();
+        },
+      };
+      spatialIndexManager.buildIndex(entityManager);
+      expect(spatialIndexManager.locationIndex.size).toBe(1);
+      expect(spatialIndexManager.locationIndex.has('locValid')).toBe(true);
+      expect(
+        spatialIndexManager.locationIndex.get('locValid').has('good1')
+      ).toBe(true);
     });
   });
 
