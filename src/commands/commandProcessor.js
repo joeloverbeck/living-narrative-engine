@@ -9,8 +9,7 @@ import {
   createFailureResult,
   dispatchFailure,
 } from './helpers/commandResultUtils.js';
-import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
-import { createErrorDetails } from '../utils/errorDetails.js';
+import { dispatchWithErrorHandling as dispatchEventWithErrorHandling } from '../utils/eventDispatchHelper.js';
 
 // --- Type Imports ---
 /** @typedef {import('../entities/entity.js').default} Entity */
@@ -97,9 +96,11 @@ class CommandProcessor extends ICommandProcessor {
     const payload = this.#buildAttemptActionPayload(actor, turnAction);
 
     // --- Dispatch ---
-    const dispatchSuccess = await this.#dispatchWithErrorHandling(
+    const dispatchSuccess = await dispatchEventWithErrorHandling(
+      this.#safeEventDispatcher,
       ATTEMPT_ACTION_ID,
       payload,
+      this.#logger,
       `ATTEMPT_ACTION_ID dispatch for pre-resolved action ${actionId}`
     );
 
@@ -183,89 +184,6 @@ class CommandProcessor extends ICommandProcessor {
       targetId: resolvedParameters?.targetId || null,
       originalInput: commandString || actionDefinitionId,
     };
-  }
-
-  /**
-   * @description Logs a successful dispatch.
-   * @param {string} context - Logging context name.
-   * @returns {void}
-   */
-  #logDispatchSuccess(context) {
-    this.#logger.debug(
-      `CommandProcessor.#dispatchWithErrorHandling: Dispatch successful for ${context}.`
-    );
-  }
-
-  /**
-   * @description Logs a failed dispatch when the dispatcher returns `false`.
-   * @param {string} context - Logging context name.
-   * @param {object} payload - Payload that was dispatched.
-   * @returns {void}
-   */
-  #logDispatchFailure(context, payload) {
-    this.#logger.warn(
-      `CommandProcessor.#dispatchWithErrorHandling: SafeEventDispatcher reported failure for ${context} (likely VED validation failure). Payload: ${JSON.stringify(
-        payload
-      )}`
-    );
-  }
-
-  /**
-   * @description Handles exceptions thrown during dispatch and emits a safe error event.
-   * @param {string} eventName - The event name being dispatched.
-   * @param {string} context - Logging context name.
-   * @param {Error} error - The thrown error.
-   * @returns {void}
-   */
-  #handleDispatchException(eventName, context, error) {
-    this.#logger.error(
-      `CommandProcessor.#dispatchWithErrorHandling: CRITICAL - Error during dispatch for ${context}. Error: ${error.message}`,
-      error
-    );
-    safeDispatchError(
-      this.#safeEventDispatcher,
-      'System error during event dispatch.',
-      createErrorDetails(
-        `Exception in dispatch for ${eventName}`,
-        error?.stack || new Error().stack
-      ),
-      this.#logger
-    );
-  }
-
-  async #dispatchWithErrorHandling(eventName, payload, loggingContextName) {
-    this.#logger.debug(
-      `CommandProcessor.#dispatchWithErrorHandling: Attempting dispatch: ${loggingContextName} ('${eventName}')`
-    );
-    try {
-      // The SafeEventDispatcher.dispatch expects (eventName, payload)
-      // The payload here should NOT contain 'eventName' if the schema for 'eventName'
-      // (e.g. ATTEMPT_ACTION_ID) requires 'eventName' within its payload.
-      // If the schema for event 'eventName' *requires* an 'eventName' field inside its payload,
-      // then 'payload' variable must already contain it.
-      // The VED error "must have required property 'eventName'" means the payload passed to VED
-      // was missing it.
-
-      const success = await this.#safeEventDispatcher.dispatch(
-        eventName,
-        payload
-      );
-
-      if (success) {
-        this.#logDispatchSuccess(loggingContextName);
-      } else {
-        // Dispatch returned false, likely due to validation failure.
-        this.#logDispatchFailure(loggingContextName, payload);
-      }
-      return success;
-    } catch (dispatchError) {
-      this.#handleDispatchException(
-        eventName,
-        loggingContextName,
-        dispatchError
-      );
-      return false;
-    }
   }
 }
 
