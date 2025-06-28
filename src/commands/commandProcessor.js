@@ -5,6 +5,7 @@ import { ATTEMPT_ACTION_ID } from '../constants/eventIds.js';
 import { ICommandProcessor } from './interfaces/ICommandProcessor.js';
 import { initLogger } from '../utils/index.js';
 import { validateDependency, assertValidId } from '../utils/dependencyUtils.js';
+import { InvalidArgumentError } from '../errors/invalidArgumentError.js';
 import {
   createFailureResult,
   dispatchFailure,
@@ -70,17 +71,19 @@ class CommandProcessor extends ICommandProcessor {
    * @returns {Promise<CommandResult>} A promise that resolves to the command result.
    */
   async dispatchAction(actor, turnAction) {
-    const validationError = this.#validateActionInputs(actor, turnAction);
-    if (validationError) {
+    try {
+      this.#validateActionInputs(actor, turnAction);
+    } catch (err) {
+      const userMsg = 'Internal error: Malformed action prevented execution.';
       dispatchFailure(
         this.#logger,
         this.#safeEventDispatcher,
-        validationError.userMsg,
-        validationError.internalMsg
+        userMsg,
+        err.message
       );
       return createFailureResult(
-        validationError.userMsg,
-        validationError.internalMsg,
+        userMsg,
+        err.message,
         turnAction?.commandString
       );
     }
@@ -134,7 +137,8 @@ class CommandProcessor extends ICommandProcessor {
    * @description Validates actor and action inputs for dispatchAction.
    * @param {Entity} actor - The entity performing the action.
    * @param {ITurnAction} turnAction - The proposed action object.
-   * @returns {{userMsg: string, internalMsg: string}|null} Error details when invalid, otherwise null.
+   * @throws {InvalidArgumentError} When either input is invalid.
+   * @returns {void}
    */
   #validateActionInputs(actor, turnAction) {
     const actorId = actor?.id;
@@ -144,28 +148,17 @@ class CommandProcessor extends ICommandProcessor {
       'actionDefinitionId' in turnAction;
 
     if (!actorId || !hasActionDefId) {
-      return {
-        userMsg: 'Internal error: Malformed action prevented execution.',
-        internalMsg:
-          'dispatchAction failed: actor must have id and turnAction must include actionDefinitionId.',
-      };
-    }
-
-    try {
-      assertValidId(actorId, 'CommandProcessor.dispatchAction', this.#logger);
-      assertValidId(
-        turnAction.actionDefinitionId,
-        'CommandProcessor.dispatchAction',
-        this.#logger
+      throw new InvalidArgumentError(
+        'actor must have id and turnAction must include actionDefinitionId.'
       );
-    } catch (err) {
-      return {
-        userMsg: 'Internal error: Malformed action prevented execution.',
-        internalMsg: `dispatchAction failed: ${err.message}`,
-      };
     }
 
-    return null;
+    assertValidId(actorId, 'CommandProcessor.dispatchAction', this.#logger);
+    assertValidId(
+      turnAction.actionDefinitionId,
+      'CommandProcessor.dispatchAction',
+      this.#logger
+    );
   }
 
   /**

@@ -96,7 +96,7 @@ describe('CommandProcessor.dispatchAction', () => {
         turnEnded: true,
         error: 'Internal error: Malformed action prevented execution.',
         internalError:
-          "dispatchAction failed: CommandProcessor.dispatchAction: Invalid ID '   '. Expected non-blank string.",
+          "CommandProcessor.dispatchAction: Invalid ID '   '. Expected non-blank string.",
         originalInput: 'look',
       })
     );
@@ -138,7 +138,7 @@ describe('CommandProcessor.dispatchAction', () => {
         turnEnded: true,
         error: 'Internal error: Malformed action prevented execution.',
         internalError:
-          'dispatchAction failed: actor must have id and turnAction must include actionDefinitionId.',
+          'actor must have id and turnAction must include actionDefinitionId.',
       })
     );
     expect(safeDispatchError).toHaveBeenCalledTimes(1);
