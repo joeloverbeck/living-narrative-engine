@@ -8,22 +8,25 @@
   "gameVersion": ">=0.0.1",
   "content": {
     "components": [
-      "components/body.component.json",
-      "components/joint.component.json",
-      "components/part.component.json",
-      "components/sockets.component.json"
+      "body.component.json",
+      "joint.component.json",
+      "part.component.json",
+      "sockets.component.json"
     ],
     "entities": {
       "definitions": [
-        "entities/definitions/humanoid_arm.entity.json",
-        "entities/definitions/humanoid_head.entity.json",
-        "entities/definitions/humanoid_leg.entity.json",
-        "entities/definitions/humanoid_torso.entity.json"
-      ]
+        "humanoid_arm.entity.json",
+        "humanoid_head.entity.json",
+        "humanoid_leg.entity.json",
+        "humanoid_torso.entity.json"
+      ],
+      "instances": []
     },
-    "anatomy": {
-      "blueprints": ["blueprints/humanoid_standard.blueprint.json"],
-      "recipes": ["recipes/humanoid_standard.recipe.json"]
-    }
+    "blueprints": [
+      "humanoid_standard.blueprint.json"
+    ],
+    "recipes": [
+      "humanoid_standard.recipe.json"
+    ]
   }
 }
