@@ -29,7 +29,7 @@ import RoundManager from './roundManager.js';
 import TurnCycle from './turnCycle.js';
 import TurnEventSubscription from './turnEventSubscription.js';
 import { RealScheduler } from '../scheduling/index.js';
-import { safeDispatch } from '../utils/eventHelpers.js';
+import { dispatchWithLogging } from '../utils/eventDispatchUtils.js';
 import { logStart, logEnd, logError } from '../utils/loggerUtils.js';
 import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
 
@@ -390,7 +390,7 @@ class TurnManager extends ITurnManager {
         this.#logger.debug(
           `>>> Starting turn initiation for Entity: ${actorId} (${entityType}) <<<`
         );
-        await safeDispatch(
+        await dispatchWithLogging(
           this.#dispatcher,
           'core:turn_started',
           {
@@ -401,7 +401,7 @@ class TurnManager extends ITurnManager {
           this.#logger
         );
 
-        await safeDispatch(
+        await dispatchWithLogging(
           this.#dispatcher,
           TURN_PROCESSING_STARTED,
           {

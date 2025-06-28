@@ -1,5 +1,6 @@
 import { describe, it, expect, jest } from '@jest/globals';
 import { dispatchWithLogging } from '../../../src/utils/eventDispatchUtils.js';
+import { InvalidDispatcherError } from '../../../src/utils/eventDispatchUtils.js';
 import { createMockLogger } from '../../common/mockFactories/loggerMocks.js';
 import * as loggerUtils from '../../../src/utils/loggerUtils.js';
 
@@ -48,5 +49,22 @@ describe('dispatchWithLogging', () => {
       "Failed dispatching 'evt' event for ID.",
       error
     );
+  });
+
+  it('throws InvalidDispatcherError when dispatcher is invalid and throwOnInvalidDispatcher is true', async () => {
+    const logger = createMockLogger();
+    loggerUtils.ensureValidLogger.mockReturnValue(logger);
+
+    await expect(
+      dispatchWithLogging(
+        null,
+        'evt',
+        {},
+        logger,
+        '',
+        {},
+        { throwOnInvalidDispatcher: true }
+      )
+    ).rejects.toThrow(InvalidDispatcherError);
   });
 });

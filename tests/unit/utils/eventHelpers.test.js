@@ -1,12 +1,13 @@
 import { describe, test, expect, jest } from '@jest/globals';
-import { safeDispatch } from '../../../src/utils/eventHelpers.js';
+import { dispatchWithLogging } from '../../../src/utils/eventDispatchUtils.js';
+import { createMockLogger } from '../../common/mockFactories/loggerMocks.js';
 
-describe('safeDispatch', () => {
+describe('dispatchWithLogging (basic)', () => {
   test('logs error when dispatch rejects and does not throw', async () => {
     const bus = { dispatch: jest.fn().mockRejectedValue(new Error('boom')) };
-    const logger = { error: jest.fn() };
+    const logger = createMockLogger();
     await expect(
-      safeDispatch(bus, 'evt', { foo: 'bar' }, logger)
+      dispatchWithLogging(bus, 'evt', { foo: 'bar' }, logger)
     ).resolves.toBeUndefined();
     expect(logger.error).toHaveBeenCalledTimes(1);
   });

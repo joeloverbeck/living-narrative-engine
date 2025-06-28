@@ -9,22 +9,15 @@
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 
 import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/systemEventIds.js';
-import { ensureValidLogger } from './loggerUtils.js';
+import {
+  dispatchWithLogging,
+  InvalidDispatcherError,
+} from './eventDispatchUtils.js';
 
 /**
  * Error thrown when `safeDispatchError` receives an invalid dispatcher.
  */
-export class InvalidDispatcherError extends Error {
-  /**
-   * @param {string} message - The error message.
-   * @param {object} [details] - Optional diagnostic details.
-   */
-  constructor(message, details = {}) {
-    super(message);
-    this.name = 'InvalidDispatcherError';
-    this.details = details;
-  }
-}
+export { InvalidDispatcherError };
 
 /**
  * Sends a `core:system_error_occurred` event with a consistent payload structure.
@@ -41,18 +34,15 @@ export class InvalidDispatcherError extends Error {
  * safeDispatchError(safeEventDispatcher, 'Invalid action', { id: 'bad-action' });
  */
 export function safeDispatchError(dispatcher, message, details = {}, logger) {
-  const log = ensureValidLogger(logger, 'safeDispatchError');
-  const hasDispatch = dispatcher && typeof dispatcher.dispatch === 'function';
-  if (!hasDispatch) {
-    const errorMsg =
-      "Invalid or missing method 'dispatch' on dependency 'safeDispatchError: dispatcher'.";
-    log.error(errorMsg);
-    throw new InvalidDispatcherError(errorMsg, {
-      functionName: 'safeDispatchError',
-    });
-  }
-
-  dispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, { message, details });
+  return dispatchWithLogging(
+    dispatcher,
+    SYSTEM_ERROR_OCCURRED_ID,
+    { message, details },
+    logger,
+    '',
+    {},
+    { throwOnInvalidDispatcher: true }
+  );
 }
 
 /**
