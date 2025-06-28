@@ -242,12 +242,26 @@ describe('Scope Registry Initialization - Focused Test', () => {
         }
       });
 
-      // Critical assertion: the scope should be accessible by its qualified name
-      expect(scopeMap['core:potential_leaders']).toBeDefined();
+
       expect(scopeMap['core:potential_leaders']).toEqual(
         addMockAst(properlyFormattedScopes[0])
       );
       dateSpy.mockRestore();
+      
+      // Check all properties except the volatile timestamp
+      const result = scopeMap['core:potential_leaders'];
+      const expected = addMockAst(properlyFormattedScopes[0]);
+      
+      expect(result.id).toEqual(expected.id);
+      expect(result.name).toEqual(expected.name);
+      expect(result.expr).toEqual(expected.expr);
+      expect(result.modId).toEqual(expected.modId);
+      expect(result.source).toEqual(expected.source);
+      expect(result.ast.type).toEqual(expected.ast.type);
+      expect(result.ast.kind).toEqual(expected.ast.kind);
+      expect(result.ast.expression).toEqual(expected.ast.expression);
+      expect(result.ast._mock).toEqual(expected.ast._mock);
+      // Don't check _timestamp as it's volatile
 
       // Anti-regression: it should NOT be accessible by base name only
       expect(scopeMap['potential_leaders']).toBeUndefined();
