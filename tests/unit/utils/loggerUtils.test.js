@@ -85,8 +85,12 @@ describe('loggerUtils', () => {
   });
 
   it('initLogger throws when logger is null and not optional', () => {
-    expect(() => initLogger('Svc', null)).toThrow('Missing required dependency: logger.');
-    expect(consoleSpies.error).toHaveBeenCalledWith('Missing required dependency: logger.');
+    expect(() => initLogger('Svc', null)).toThrow(
+      'Missing required dependency: logger.'
+    );
+    expect(consoleSpies.error).toHaveBeenCalledWith(
+      'Missing required dependency: logger.'
+    );
   });
 
   it('initLogger throws when logger missing required methods', () => {

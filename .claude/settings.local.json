@@ -14,7 +14,8 @@
       "Bash(mkdir:*)",
       "Bash(sed:*)",
       "Bash(npx dependency-cruiser:*)",
-      "Bash(npx madge:*)"
+      "Bash(npx madge:*)",
+      "Bash(npx eslint:*)"
     ],
     "deny": []
   }

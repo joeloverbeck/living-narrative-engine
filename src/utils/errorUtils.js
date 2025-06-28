@@ -67,7 +67,6 @@ export function disableInput(el, placeholder) {
   return true;
 }
 
-
 /**
  * Displays a fatal startup error to the user, logs it, and updates UI elements.
  *

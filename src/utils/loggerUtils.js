@@ -125,7 +125,7 @@ export function initLogger(serviceName, logger, { optional = false } = {}) {
       console.error(errorMsg);
       throw new Error(errorMsg);
     }
-    
+
     // Check required methods
     const requiredMethods = ['info', 'warn', 'error', 'debug'];
     for (const method of requiredMethods) {
