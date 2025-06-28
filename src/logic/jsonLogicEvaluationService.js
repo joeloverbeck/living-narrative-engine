@@ -128,8 +128,9 @@ class JsonLogicEvaluationService extends BaseService {
 
         // Only do detailed logging if we're not in a test environment
         const isTestEnv =
-          (typeof global !== 'undefined' && global.jest) ||
-          process.env.NODE_ENV === 'test';
+          (typeof globalThis !== 'undefined' && globalThis.jest) ||
+          (typeof globalThis.process !== 'undefined' &&
+            globalThis.process.env.NODE_ENV === 'test');
         if (
           (op === 'and' || op === 'or') &&
           Array.isArray(args) &&
