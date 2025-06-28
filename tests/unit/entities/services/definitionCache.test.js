@@ -33,5 +33,14 @@ describe('DefinitionCache', () => {
 
     const result = cache.get('missing');
     expect(result).toBeNull();
+    const warnMsgs = logger.warn.mock.calls.map((c) => c[0]).join('\n');
+    expect(warnMsgs).toContain('Entity definition not found');
+  });
+
+  it('logs a warning when given an invalid ID', () => {
+    const result = cache.get('');
+    expect(result).toBeNull();
+    const warnMsgs = logger.warn.mock.calls.map((c) => c[0]).join('\n');
+    expect(warnMsgs).toContain('Invalid ID');
   });
 });

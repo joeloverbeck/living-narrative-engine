@@ -25,6 +25,8 @@ export class DefinitionCache {
   #logger;
 
   /**
+   * Construct a new DefinitionCache with registry and logger.
+   *
    * @param {object} deps - Dependencies
    * @param {IDataRegistry} deps.registry - Data registry for definitions
    * @param {ILogger} deps.logger - Logger instance
@@ -58,7 +60,8 @@ export class DefinitionCache {
       const def = lookupDefinition(definitionId, this.#registry, this.#logger);
       this.#cache.set(definitionId, def);
       return def;
-    } catch {
+    } catch (err) {
+      this.#logger.warn(err.message);
       return null;
     }
   }
