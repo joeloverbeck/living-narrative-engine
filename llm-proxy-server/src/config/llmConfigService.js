@@ -299,7 +299,8 @@ export class LlmConfigService {
    */
   getInitializationErrorDetails() {
     if (!this.#initializationError) return null;
-    const { originalError: _unused, ...safe } = this.#initializationError;
+    const { originalError, ...safe } = this.#initializationError;
+    void originalError; // prevent unused variable lint warning
     return safe;
   }
 
