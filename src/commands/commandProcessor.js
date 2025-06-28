@@ -76,9 +76,9 @@ class CommandProcessor extends ICommandProcessor {
     }
 
     const actorId = actor.id;
-    const { actionDefinitionId, commandString } = turnAction;
+    const { actionDefinitionId: actionId, commandString } = turnAction;
     this.#logger.debug(
-      `CommandProcessor.dispatchAction: Dispatching pre-resolved action '${actionDefinitionId}' for actor ${actorId}.`,
+      `CommandProcessor.dispatchAction: Dispatching pre-resolved action '${actionId}' for actor ${actorId}.`,
       { turnAction }
     );
 
@@ -89,29 +89,29 @@ class CommandProcessor extends ICommandProcessor {
     const dispatchSuccess = await this.#dispatchWithErrorHandling(
       ATTEMPT_ACTION_ID,
       payload,
-      `ATTEMPT_ACTION_ID dispatch for pre-resolved action ${actionDefinitionId}`
+      `ATTEMPT_ACTION_ID dispatch for pre-resolved action ${actionId}`
     );
 
     if (dispatchSuccess) {
       this.#logger.debug(
-        `CommandProcessor.dispatchAction: Successfully dispatched '${actionDefinitionId}' for actor ${actorId}.`
+        `CommandProcessor.dispatchAction: Successfully dispatched '${actionId}' for actor ${actorId}.`
       );
       return {
         success: true,
         turnEnded: false,
-        originalInput: commandString || actionDefinitionId,
-        actionResult: { actionId: actionDefinitionId },
+        originalInput: commandString || actionId,
+        actionResult: { actionId },
       };
     }
 
-    const internalMsg = `CRITICAL: Failed to dispatch pre-resolved ATTEMPT_ACTION_ID for ${actorId}, action "${actionDefinitionId}". Dispatcher reported failure.`;
+    const internalMsg = `CRITICAL: Failed to dispatch pre-resolved ATTEMPT_ACTION_ID for ${actorId}, action "${actionId}". Dispatcher reported failure.`;
     const userMsg = 'Internal error: Failed to initiate action.';
     this.#logger.error(internalMsg, { payload });
     return this.#handleDispatchFailure({
       userMsg,
       internalMsg,
       commandString,
-      actionId: actionDefinitionId,
+      actionId,
     });
   }
 
