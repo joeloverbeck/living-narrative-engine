@@ -16,6 +16,7 @@ import pako from 'pako';
 import { webcrypto } from 'crypto';
 import SaveValidationService from '../../../src/persistence/saveValidationService.js';
 import GameStateSerializer from '../../../src/persistence/gameStateSerializer.js';
+import ChecksumService from '../../../src/persistence/checksumService.js';
 
 beforeAll(() => {
   if (typeof window !== 'undefined') {
@@ -48,7 +49,8 @@ function makeDeps() {
     fileExists: jest.fn(),
     ensureDirectoryExists: jest.fn(),
   };
-  const serializer = new GameStateSerializer({ logger, crypto: webcrypto });
+  const checksumService = new ChecksumService({ logger, crypto: webcrypto });
+  const serializer = new GameStateSerializer({ logger, checksumService });
   const parser = new SaveFileParser({ logger, storageProvider, serializer });
   const saveFileRepository = new SaveFileRepository({
     logger,

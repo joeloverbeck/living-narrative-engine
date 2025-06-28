@@ -3,6 +3,7 @@
 /* eslint-enable jsdoc/check-tag-names */
 import { describe, it, expect, beforeAll, beforeEach } from '@jest/globals';
 import GameStateSerializer from '../../../src/persistence/gameStateSerializer.js';
+import ChecksumService from '../../../src/persistence/checksumService.js';
 import { PersistenceErrorCodes } from '../../../src/persistence/persistenceErrors.js';
 import * as msgpack from '@msgpack/msgpack';
 import pako from 'pako';
@@ -32,7 +33,8 @@ describe('GameStateSerializer', () => {
 
   beforeEach(() => {
     logger = createMockLogger();
-    serializer = new GameStateSerializer({ logger, crypto: webcrypto });
+    const checksumService = new ChecksumService({ logger, crypto: webcrypto });
+    serializer = new GameStateSerializer({ logger, checksumService });
   });
 
   it('decompress/deserialize round-trip succeeds', () => {
