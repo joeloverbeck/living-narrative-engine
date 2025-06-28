@@ -182,14 +182,14 @@ describe('ADS-P4-05: Streamlined ActionDiscoveryService', () => {
         expect.objectContaining({ entityId: 'goblin1' }),
         mockEntityManager,
         expect.anything(),
-        expect.any(Function)
+        { displayNameFn: expect.any(Function) }
       );
       expect(mockFormatActionCommandFn).toHaveBeenCalledWith(
         actionDef,
         expect.objectContaining({ entityId: 'goblin2' }),
         mockEntityManager,
         expect.anything(),
-        expect.any(Function)
+        { displayNameFn: expect.any(Function) }
       );
     });
 
@@ -221,7 +221,7 @@ describe('ADS-P4-05: Streamlined ActionDiscoveryService', () => {
         expect.objectContaining({ entityId: actorEntity.id }),
         mockEntityManager,
         expect.anything(),
-        expect.any(Function)
+        { displayNameFn: expect.any(Function) }
       );
     });
 
@@ -253,7 +253,7 @@ describe('ADS-P4-05: Streamlined ActionDiscoveryService', () => {
         expect.objectContaining({ type: 'none' }),
         mockEntityManager,
         expect.anything(),
-        expect.any(Function)
+        { displayNameFn: expect.any(Function) }
       );
     });
 

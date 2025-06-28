@@ -191,9 +191,10 @@ function finalizeCommand(command, logger, debug) {
  * @param {boolean} [options.debug] - If true, logs additional debug information.
  * @param {ILogger} options.logger - Logger instance used for diagnostic output.
  * @param {ISafeEventDispatcher} options.safeEventDispatcher - Dispatcher used for error events.
- * @param {(entity: Entity, fallback: string, logger?: ILogger) => string} [displayNameFn] -
+ * @param {object} [deps] - Additional dependencies.
+ * @param {(entity: Entity, fallback: string, logger?: ILogger) => string} [deps.displayNameFn] -
  * Function used to resolve entity display names.
- * @param {TargetFormatterMap} [formatterMap] - Map of target types to formatter functions.
+ * @param {TargetFormatterMap} [deps.formatterMap] - Map of target types to formatter functions.
  * @returns {FormatActionCommandResult} Result object containing the formatted command or an error.
  */
 export function formatActionCommand(
@@ -201,9 +202,23 @@ export function formatActionCommand(
   targetContext,
   entityManager,
   options = {},
-  displayNameFn = getEntityDisplayName,
-  formatterMap = targetFormatterMap
+  deps = {}
 ) {
+  // Backwards compatibility for old positional arguments
+  const depObj = deps && typeof deps === 'object' ? deps : {};
+  let displayNameFn =
+    'displayNameFn' in depObj ? depObj.displayNameFn : getEntityDisplayName;
+  let formatterMap =
+    'formatterMap' in depObj ? depObj.formatterMap : targetFormatterMap;
+
+  if (typeof deps === 'function' || arguments.length > 5) {
+    console.warn(
+      'DEPRECATION: formatActionCommand now expects a single dependency object after options.'
+    );
+    displayNameFn = deps || getEntityDisplayName;
+    formatterMap = arguments[5] || targetFormatterMap;
+  }
+
   const { debug = false, logger, safeEventDispatcher } = options;
 
   // --- 1. Input Validation ---
