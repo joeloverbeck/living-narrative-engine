@@ -233,17 +233,26 @@ describe('Scope Registry Initialization - Focused Test', () => {
       mockDataRegistry.getAll.mockReturnValue(properlyFormattedScopes);
 
       // Simulate initialization
+      const dateSpy = jest.spyOn(Date, 'now').mockReturnValue(42);
       const scopes = mockDataRegistry.getAll(SCOPES_KEY);
       const scopeMap = {};
+      const expectedScope = addMockAst(properlyFormattedScopes[0]);
       scopes.forEach((scope) => {
         if (scope.id) {
-          scopeMap[scope.id] = addMockAst(scope);
+          // Reuse the same AST instance for deterministic comparison
+          scopeMap[scope.id] =
+            scope === properlyFormattedScopes[0]
+              ? expectedScope
+              : addMockAst(scope);
         }
       });
 
-      // Critical assertion: the scope should be accessible by its qualified name
-      expect(scopeMap['core:potential_leaders']).toBeDefined();
-
+      
+      expect(scopeMap['core:potential_leaders']).toEqual(
+        addMockAst(properlyFormattedScopes[0])
+      );
+      dateSpy.mockRestore();
+      
       // Check all properties except the volatile timestamp
       const result = scopeMap['core:potential_leaders'];
       const expected = addMockAst(properlyFormattedScopes[0]);
