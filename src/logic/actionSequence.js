@@ -24,10 +24,10 @@ import { resolvePath } from '../utils/objectUtils.js';
 /**
  * Handles IF flow-control nodes.
  *
- * @param {Operation} node
- * @param {ActionExecutionContext} nestedCtx
- * @param {ILogger} logger
- * @param {OperationInterpreter} operationInterpreter
+ * @param {Operation} node - Operation describing the IF logic.
+ * @param {ActionExecutionContext} nestedCtx - Execution context for nested actions.
+ * @param {ILogger} logger - Logger instance for diagnostics.
+ * @param {OperationInterpreter} operationInterpreter - Interpreter used to execute nested operations.
  */
 function handleIf(node, nestedCtx, logger, operationInterpreter) {
   const {
@@ -72,10 +72,10 @@ function handleIf(node, nestedCtx, logger, operationInterpreter) {
 /**
  * Handles FOR_EACH flow-control nodes.
  *
- * @param {Operation} node
- * @param {ActionExecutionContext} nestedCtx
- * @param {ILogger} logger
- * @param {OperationInterpreter} operationInterpreter
+ * @param {Operation} node - Operation describing the FOR_EACH loop.
+ * @param {ActionExecutionContext} nestedCtx - Execution context for the loop.
+ * @param {ILogger} logger - Logger instance for diagnostics.
+ * @param {OperationInterpreter} operationInterpreter - Interpreter for executing the loop body.
  */
 function handleForEach(node, nestedCtx, logger, operationInterpreter) {
   const {
@@ -209,8 +209,10 @@ export function executeActionSequence(
 }
 
 /**
+ * Identity helper for type clarity.
  *
- * @param node
+ * @param {Operation} node - Operation node to cast.
+ * @returns {Operation} The same operation node.
  */
 function nodeToOperation(node) {
   return node;

@@ -212,7 +212,7 @@ class ConsoleLogger {
    * Displays tabular data in the console if the current log level allows DEBUG.
    *
    * @param {any} data - The data to display in a table.
-   * @param {readonly string[] | undefined} [columns] - An array of strings representing the columns to include.
+   * @param {string[] | undefined} [columns] - An array of strings representing the columns to include.
    */
   table(data, columns) {
     if (this.#currentLogLevel <= LogLevel.DEBUG) {
