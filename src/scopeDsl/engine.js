@@ -30,7 +30,6 @@ import { IScopeEngine } from '../interfaces/IScopeEngine.js';
  * @property {string} type - Node type
  * @property {object} [parent] - Parent node
  * @property {string} [field] - Field name for Step nodes
- * @property {boolean} [isArray] - Whether this is an array iteration
  * @property {object} [logic] - JSON Logic object for Filter nodes
  * @property {object} [left] - Left expression for Union nodes
  * @property {object} [right] - Right expression for Union nodes
@@ -133,6 +132,15 @@ class ScopeEngine extends IScopeEngine {
         );
       case 'Union':
         return this.resolveUnion(
+          node,
+          actorEntity,
+          runtimeCtx,
+          depth,
+          nextPath,
+          trace
+        );
+      case 'ArrayIterationStep':
+        return this.resolveArrayIterationStep(
           node,
           actorEntity,
           runtimeCtx,
@@ -263,25 +271,61 @@ class ScopeEngine extends IScopeEngine {
 
     if (parentResult.size === 0) return new Set();
 
-    // Handle the special case for entities()[] pattern
-    if (this._isPassThroughArrayIteration(node)) {
-      return parentResult;
-    }
-
     // Process field access or array iteration
     return this._processFieldAccess(node, parentResult, runtimeCtx);
   }
 
   /**
-   * Checks if this is a pass-through array iteration (entities()[] case)
+   * Resolves an ArrayIterationStep node
    *
-   * @param {AST} node - Step node
-   * @returns {boolean} True if this is a pass-through case
+   * @param {AST} node - ArrayIterationStep node
+   * @param {object} actorEntity - The acting entity instance.
+   * @param {RuntimeContext} runtimeCtx - Runtime context
+   * @param {number} depth - Current depth
+   * @param {Array<string>} path - Path of visited node/edge keys
+   * @param {TraceContext} [trace] - Optional trace context for logging.
+   * @returns {Set<any>} Set of entity IDs or objects
    * @private
    */
-  _isPassThroughArrayIteration(node) {
-    return node.isArray && node.field === null;
+  resolveArrayIterationStep(
+    node,
+    actorEntity,
+    runtimeCtx,
+    depth,
+    path,
+    trace = null
+  ) {
+    const parentResult = this.resolveNode(
+      node.parent,
+      actorEntity,
+      runtimeCtx,
+      depth,
+      path,
+      trace
+    );
+
+    const result = new Set();
+
+    // Flatten arrays from parent result
+    for (const parentValue of parentResult) {
+      if (Array.isArray(parentValue)) {
+        for (const item of parentValue) {
+          if (item !== null && item !== undefined) {
+            result.add(item);
+          }
+        }
+      } else if (node.parent.type === 'Source') {
+        // Pass through for entities()[] case where Source returns entity IDs
+        if (parentValue !== null && parentValue !== undefined) {
+          result.add(parentValue);
+        }
+      }
+      // For other cases (like Step nodes), non-arrays result in empty set
+    }
+
+    return result;
   }
+
 
   /**
    * Processes field access for each item in the parent result set
@@ -306,11 +350,7 @@ class ScopeEngine extends IScopeEngine {
         continue;
       }
 
-      if (node.isArray) {
-        this._addArrayItems(current, result);
-      } else {
-        result.add(current);
-      }
+      result.add(current);
     }
 
     return result;

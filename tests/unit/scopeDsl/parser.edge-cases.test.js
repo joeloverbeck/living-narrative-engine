@@ -155,16 +155,17 @@ describe('Scope-DSL Parser - Edge Cases for Full Coverage', () => {
 
     test('should handle array access', () => {
       const result = parseDslExpression('actor.inventory[]');
-      expect(result.type).toBe('Step');
-      expect(result.field).toBe('inventory');
-      expect(result.isArray).toBe(true);
+      expect(result.type).toBe('ArrayIterationStep');
+      expect(result.parent.type).toBe('Step');
+      expect(result.parent.field).toBe('inventory');
+      expect(result.parent.isArray).toBe(false);
     });
 
     test('should handle field access after array', () => {
       const result = parseDslExpression('actor.inventory[].name');
       expect(result.type).toBe('Step');
       expect(result.field).toBe('name');
-      expect(result.parent.isArray).toBe(true);
+      expect(result.parent.type).toBe('ArrayIterationStep');
     });
   });
 
@@ -212,9 +213,10 @@ describe('Scope-DSL Parser - Edge Cases for Full Coverage', () => {
   describe('Special formatting and whitespace', () => {
     test('should handle expressions with extensive whitespace', () => {
       const result = parseDslExpression('   actor   .   field   [   ]   ');
-      expect(result.type).toBe('Step');
-      expect(result.field).toBe('field');
-      expect(result.isArray).toBe(true);
+      expect(result.type).toBe('ArrayIterationStep');
+      expect(result.parent.type).toBe('Step');
+      expect(result.parent.field).toBe('field');
+      expect(result.parent.isArray).toBe(false);
     });
 
     test('should handle expressions with tabs and newlines', () => {

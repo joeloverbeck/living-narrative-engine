@@ -8,6 +8,7 @@ const {
   parseScopeFile,
   ScopeSyntaxError,
 } = require('../../../src/scopeDsl/parser');
+const ScopeDepthError = require('../../../src/errors/scopeDepthError').default;
 
 describe('Scope-DSL Parser', () => {
   describe('parseDslExpression', () => {
@@ -67,12 +68,15 @@ describe('Scope-DSL Parser', () => {
       test('should parse array iteration', () => {
         const result = parseDslExpression('actor.followers[]');
         expect(result).toEqual({
-          type: 'Step',
-          field: 'followers',
-          isArray: true,
+          type: 'ArrayIterationStep',
           parent: {
-            type: 'Source',
-            kind: 'actor',
+            type: 'Step',
+            field: 'followers',
+            isArray: false,
+            parent: {
+              type: 'Source',
+              kind: 'actor',
+            },
           },
         });
       });
@@ -331,7 +335,7 @@ describe('Scope-DSL Parser', () => {
       test('should enforce depth limit', () => {
         expect(() => {
           parseDslExpression('actor.a.b.c.d.e');
-        }).toThrow(ScopeSyntaxError);
+        }).toThrow(ScopeDepthError);
       });
 
       test('should allow maximum depth', () => {
@@ -361,9 +365,7 @@ describe('Scope-DSL Parser', () => {
       test('should parse array iteration after entities()', () => {
         const result = parseDslExpression('entities(core:item)[]');
         expect(result).toEqual({
-          type: 'Step',
-          field: null,
-          isArray: true,
+          type: 'ArrayIterationStep',
           parent: {
             type: 'Source',
             kind: 'entities',
@@ -381,9 +383,7 @@ describe('Scope-DSL Parser', () => {
             '==': [{ var: 'entity.id' }, 'item1'],
           },
           parent: {
-            type: 'Step',
-            field: null,
-            isArray: true,
+            type: 'ArrayIterationStep',
             parent: {
               type: 'Source',
               kind: 'entities',
@@ -402,9 +402,7 @@ describe('Scope-DSL Parser', () => {
             '==': [{ var: 'entity.id' }, 'item1'],
           },
           parent: {
-            type: 'Step',
-            field: null,
-            isArray: true,
+            type: 'ArrayIterationStep',
             parent: {
               type: 'Source',
               kind: 'entities',

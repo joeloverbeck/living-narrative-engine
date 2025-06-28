@@ -31,7 +31,7 @@ describe('depthGuard', () => {
         fail('Expected ScopeDepthError to be thrown');
       } catch (error) {
         expect(error).toBeInstanceOf(ScopeDepthError);
-        expect(error.message).toBe('Depth 5 exceeds 4');
+        expect(error.message).toBe('Expression depth limit exceeded (max 4)');
         expect(error.depth).toBe(5);
         expect(error.maxDepth).toBe(4);
       }

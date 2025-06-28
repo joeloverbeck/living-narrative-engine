@@ -9,6 +9,7 @@ import {
   parseScopeFile,
   ScopeSyntaxError,
 } from '../../../src/scopeDsl/parser.js';
+import ScopeDepthError from '../../../src/errors/scopeDepthError.js';
 
 describe('Scope-DSL Parser - Additional Coverage Tests', () => {
   describe('Tokenizer edge cases', () => {
@@ -72,7 +73,7 @@ describe('Scope-DSL Parser - Additional Coverage Tests', () => {
       const deepExpression = 'actor.field1.field2.field3.field4.field5';
       expect(() => {
         parseDslExpression(deepExpression);
-      }).toThrow(ScopeSyntaxError);
+      }).toThrow(ScopeDepthError);
 
       expect(() => {
         parseDslExpression(deepExpression);
@@ -328,9 +329,10 @@ describe('Scope-DSL Parser - Additional Coverage Tests', () => {
 
     test('should handle array iteration on complex expressions', () => {
       const result = parseDslExpression('entities(core:container).contents[]');
-      expect(result.type).toBe('Step');
-      expect(result.field).toBe('contents');
-      expect(result.isArray).toBe(true);
+      expect(result.type).toBe('ArrayIterationStep');
+      expect(result.parent.type).toBe('Step');
+      expect(result.parent.field).toBe('contents');
+      expect(result.parent.isArray).toBe(false);
     });
   });
 
@@ -355,12 +357,13 @@ describe('Scope-DSL Parser - Additional Coverage Tests', () => {
 
     test('should handle multiple array iterations', () => {
       const result = parseDslExpression('actor.followers[].inventory[]');
-      expect(result.type).toBe('Step');
-      expect(result.field).toBe('inventory');
-      expect(result.isArray).toBe(true);
+      expect(result.type).toBe('ArrayIterationStep');
       expect(result.parent.type).toBe('Step');
-      expect(result.parent.field).toBe('followers');
-      expect(result.parent.isArray).toBe(true);
+      expect(result.parent.field).toBe('inventory');
+      expect(result.parent.isArray).toBe(false);
+      expect(result.parent.parent.type).toBe('ArrayIterationStep');
+      expect(result.parent.parent.parent.type).toBe('Step');
+      expect(result.parent.parent.parent.field).toBe('followers');
     });
   });
 
