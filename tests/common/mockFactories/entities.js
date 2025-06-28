@@ -187,6 +187,9 @@ export const createMockEntity = (
   return {
     id,
     components,
+    get componentTypeIds() {
+      return Object.keys(components);
+    },
     hasComponent: jest.fn((compId) => {
       if (compId === ACTOR_COMPONENT_ID) return isActor;
       if (compId === PLAYER_COMPONENT_ID) return isPlayer;
@@ -237,6 +240,9 @@ export const createMockActor = (
     ...base,
     name,
     components: allComponents, // Keep as object for direct access
+    get componentTypeIds() {
+      return Object.keys(allComponents);
+    },
     getComponent: jest.fn((compId) => compMap.get(compId)),
     getComponentData: base.getComponentData, // Already defined in base
   };
@@ -255,5 +261,8 @@ export const createMockActor = (
 export const createTestEntity = (instanceId, components = {}) => ({
   id: instanceId,
   components,
+  get componentTypeIds() {
+    return Object.keys(components);
+  },
   getComponentData: (id) => components[id] ?? null,
 });
