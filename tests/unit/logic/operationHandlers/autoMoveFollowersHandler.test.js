@@ -152,4 +152,86 @@ describe('AutoMoveFollowersHandler.execute', () => {
     );
     expect(safeDispatchError).toHaveBeenCalledTimes(1);
   });
+
+  test('dispatches error when destination_id is invalid', () => {
+    handler.execute({ leader_id: 'leader', destination_id: '' }, {});
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
+      SYSTEM_ERROR_OCCURRED_ID,
+      expect.objectContaining({
+        message: expect.stringContaining('destination_id'),
+      })
+    );
+    expect(moveHandler.execute).not.toHaveBeenCalled();
+  });
+
+  test('skips follower if previous location does not match', () => {
+    entityManager.getComponentData.mockImplementation((id, comp) => {
+      if (id === 'leader' && comp === LEADING_COMPONENT_ID)
+        return { followers: ['f1'] };
+      if (id === 'f1' && comp === POSITION_COMPONENT_ID)
+        return { locationId: 'wrongLoc' };
+      return null;
+    });
+
+    const ctx = {
+      logger,
+      event: { payload: { previousLocationId: 'oldLoc' } },
+    };
+
+    handler.execute({ leader_id: 'leader', destination_id: 'dest' }, ctx);
+
+    expect(moveHandler.execute).not.toHaveBeenCalled();
+    expect(dispatcher.dispatch).not.toHaveBeenCalled();
+  });
+
+  test('handles non-promise dispatch results', async () => {
+    entityManager.getComponentData.mockImplementation((id, comp) => {
+      if (id === 'leader' && comp === LEADING_COMPONENT_ID)
+        return { followers: ['f1'] };
+      if (id === 'f1' && comp === POSITION_COMPONENT_ID)
+        return { locationId: 'oldLoc' };
+      return null;
+    });
+
+    dispatcher.dispatch.mockReturnValueOnce(undefined).mockReturnValueOnce(42);
+
+    const ctx = {
+      logger,
+      event: { payload: { previousLocationId: 'oldLoc' } },
+    };
+
+    handler.execute({ leader_id: 'leader', destination_id: 'dest' }, ctx);
+    await new Promise((r) => setTimeout(r, 0));
+
+    expect(safeDispatchError).not.toHaveBeenCalled();
+  });
+
+  test('handles errors thrown by move handler', async () => {
+    entityManager.getComponentData.mockImplementation((id, comp) => {
+      if (id === 'leader' && comp === LEADING_COMPONENT_ID)
+        return { followers: ['f1'] };
+      if (id === 'f1' && comp === POSITION_COMPONENT_ID)
+        return { locationId: 'oldLoc' };
+      return null;
+    });
+
+    moveHandler.execute.mockImplementation(() => {
+      throw new Error('move fail');
+    });
+
+    const ctx = {
+      logger,
+      event: { payload: { previousLocationId: 'oldLoc' } },
+    };
+
+    handler.execute({ leader_id: 'leader', destination_id: 'dest' }, ctx);
+    await new Promise((r) => setTimeout(r, 0));
+
+    expect(safeDispatchError).toHaveBeenCalledWith(
+      dispatcher,
+      'AUTO_MOVE_FOLLOWERS: Error moving follower',
+      expect.objectContaining({ error: 'move fail', followerId: 'f1' }),
+      logger
+    );
+  });
 });
