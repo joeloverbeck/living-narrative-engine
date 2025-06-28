@@ -1,18 +1,40 @@
-T-09 SourceResolver Implementation
-Goal – First concrete node resolver.
+T-10 Step & ArrayIteration Resolvers
+Goal – Replace mutation-based isArray flag.
 
 Files
 
-scopeDsl/nodes/sourceResolver.js
+scopeDsl/nodes/stepResolver.js
 
-tests/nodes/sourceResolver.test.js
+scopeDsl/nodes/arrayIterationResolver.js
 
-Implementation hints
+tests/nodes/step.test.js
 
-Handles actor, location, entities (positive & ! negate).
+Update parser later (ticket T-12).
 
-Requires { entitiesGateway, locationProvider } injected at factory time.
+StepResolver
 
-canResolve checks node.type==='Source'.
+Field access for each ID/object in ctx.walk(node.parent).
 
-Write tests with stub gateways to return deterministic IDs.
+Uses entitiesGateway.getComponentData.
+
+Returns Set of direct field values (no flatten).
+
+ArrayIterationResolver
+
+Handles new node type ArrayIterationStep (to be emitted by parser).
+
+Flattens arrays using helper flattenIntoSet (see T-11).
+
+T-11 Shared Utility: flattenIntoSet & ErrorFactory
+Files
+
+scopeDsl/core/flattenIntoSet.js
+
+scopeDsl/core/errorFactory.js
+
+tests/core/flatten.test.js
+
+tests/core/errorFactory.test.js
+
+flattenIntoSet per plan.
+errorFactory.unknown(kind,value) returns new ScopeDslError.

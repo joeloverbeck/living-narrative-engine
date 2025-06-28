@@ -194,14 +194,6 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
     }
 
     // 2) close the turn
-    try {
-      await ctx.endTurn(error);
-    } catch (e) {
-      getLogger(ctx, this._handler).error(
-        `${this.getStateName()}: failed to end turn after timeout – ${e.message}`,
-        e
-      );
-      this._resetToIdle('timeout-recovery');
-    }
+    await ctx.endTurn(error);
   }
 }
