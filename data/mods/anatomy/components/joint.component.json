@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../schemas/component.schema.json",
+  "$schema": "http://example.com/schemas/component.schema.json",
   "id": "anatomy:joint",
   "description": "Represents a joint connection between a child body part and its parent via a socket",
   "dataSchema": {

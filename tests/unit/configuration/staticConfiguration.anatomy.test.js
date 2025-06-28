@@ -13,23 +13,29 @@ describe('StaticConfiguration - Anatomy System', () => {
   describe('getSchemaFiles()', () => {
     it('should include all anatomy schema files', () => {
       const schemaFiles = config.getSchemaFiles();
-      
+
       // Check that anatomy schemas are included
       expect(schemaFiles).toContain('anatomy.recipe.schema.json');
       expect(schemaFiles).toContain('anatomy.blueprint.schema.json');
       // anatomy.part.schema.json removed - parts are now entity definitions
-      
+
       // Verify they're not duplicated
-      const anatomySchemas = schemaFiles.filter(file => file.startsWith('anatomy.'));
+      const anatomySchemas = schemaFiles.filter((file) =>
+        file.startsWith('anatomy.')
+      );
       expect(anatomySchemas).toHaveLength(2);
     });
 
     it('should maintain proper order with anatomy schemas before operations', () => {
       const schemaFiles = config.getSchemaFiles();
-      
-      const anatomyIndex = schemaFiles.findIndex(f => f.startsWith('anatomy.'));
-      const operationsIndex = schemaFiles.findIndex(f => f.startsWith('operations/'));
-      
+
+      const anatomyIndex = schemaFiles.findIndex((f) =>
+        f.startsWith('anatomy.')
+      );
+      const operationsIndex = schemaFiles.findIndex((f) =>
+        f.startsWith('operations/')
+      );
+
       // Anatomy schemas should come before operations schemas
       expect(anatomyIndex).toBeLessThan(operationsIndex);
     });
@@ -38,26 +44,29 @@ describe('StaticConfiguration - Anatomy System', () => {
   describe('getContentTypeSchemaId()', () => {
     it('should return correct schema IDs for anatomy content types', () => {
       // Test recipe schema ID
-      expect(config.getContentTypeSchemaId('anatomyRecipes'))
-        .toBe('http://example.com/schemas/anatomy.recipe.schema.json');
-      
+      expect(config.getContentTypeSchemaId('anatomyRecipes')).toBe(
+        'http://example.com/schemas/anatomy.recipe.schema.json'
+      );
+
       // Test blueprint schema ID
-      expect(config.getContentTypeSchemaId('anatomyBlueprints'))
-        .toBe('http://example.com/schemas/anatomy.blueprint.schema.json');
-      
+      expect(config.getContentTypeSchemaId('anatomyBlueprints')).toBe(
+        'http://example.com/schemas/anatomy.blueprint.schema.json'
+      );
+
       // Test part schema ID - should be undefined since parts are now entity definitions
-      expect(config.getContentTypeSchemaId('anatomyParts'))
-        .toBeUndefined();
+      expect(config.getContentTypeSchemaId('anatomyParts')).toBeUndefined();
     });
 
     it('should not affect existing content type schema IDs', () => {
       // Verify existing mappings still work
-      expect(config.getContentTypeSchemaId('components'))
-        .toBe('http://example.com/schemas/component.schema.json');
-      
-      expect(config.getContentTypeSchemaId('entityDefinitions'))
-        .toBe('http://example.com/schemas/entity-definition.schema.json');
-      
+      expect(config.getContentTypeSchemaId('components')).toBe(
+        'http://example.com/schemas/component.schema.json'
+      );
+
+      expect(config.getContentTypeSchemaId('entityDefinitions')).toBe(
+        'http://example.com/schemas/entity-definition.schema.json'
+      );
+
       expect(config.getContentTypeSchemaId('scopes')).toBeNull();
     });
 
@@ -69,24 +78,24 @@ describe('StaticConfiguration - Anatomy System', () => {
   describe('Complete anatomy configuration', () => {
     it('should have matching schema files and content type IDs', () => {
       const schemaFiles = config.getSchemaFiles();
-      
+
       // For each anatomy content type, verify both schema file and ID exist
       const anatomyTypes = [
         { key: 'anatomyRecipes', file: 'anatomy.recipe.schema.json' },
-        { key: 'anatomyBlueprints', file: 'anatomy.blueprint.schema.json' }
+        { key: 'anatomyBlueprints', file: 'anatomy.blueprint.schema.json' },
         // anatomyParts removed - they use entity definitions now
       ];
 
       anatomyTypes.forEach(({ key, file }) => {
         // Schema file should be in the list
         expect(schemaFiles).toContain(file);
-        
+
         // Content type should have a schema ID
         const schemaId = config.getContentTypeSchemaId(key);
         expect(schemaId).toBeDefined();
         expect(schemaId).toContain(file);
       });
-      
+
       // Verify anatomyParts doesn't have a schema
       expect(config.getContentTypeSchemaId('anatomyParts')).toBeUndefined();
     });

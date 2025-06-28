@@ -20,8 +20,8 @@ describe('Anatomy Loaders Configuration', () => {
 
     // Mock dependencies
     mockPathResolver = {
-      resolveModContentPath: jest.fn((modId, category, filename) => 
-        `mods/${modId}/${category}/${filename}`
+      resolveModContentPath: jest.fn(
+        (modId, category, filename) => `mods/${modId}/${category}/${filename}`
       ),
     };
 
@@ -57,22 +57,23 @@ describe('Anatomy Loaders Configuration', () => {
   describe('Schema Configuration', () => {
     it('should include anatomy schemas in getSchemaFiles()', () => {
       const schemaFiles = config.getSchemaFiles();
-      
+
       expect(schemaFiles).toContain('anatomy.recipe.schema.json');
       expect(schemaFiles).toContain('anatomy.blueprint.schema.json');
       // anatomy.part.schema.json removed - parts are now entity definitions
     });
 
     it('should return correct schema IDs for anatomy content types', () => {
-      expect(config.getContentTypeSchemaId('anatomyRecipes'))
-        .toBe('http://example.com/schemas/anatomy.recipe.schema.json');
-      
-      expect(config.getContentTypeSchemaId('anatomyBlueprints'))
-        .toBe('http://example.com/schemas/anatomy.blueprint.schema.json');
-      
+      expect(config.getContentTypeSchemaId('anatomyRecipes')).toBe(
+        'http://example.com/schemas/anatomy.recipe.schema.json'
+      );
+
+      expect(config.getContentTypeSchemaId('anatomyBlueprints')).toBe(
+        'http://example.com/schemas/anatomy.blueprint.schema.json'
+      );
+
       // anatomyParts no longer has a schema - they use entity-definition.schema.json
-      expect(config.getContentTypeSchemaId('anatomyParts'))
-        .toBeUndefined();
+      expect(config.getContentTypeSchemaId('anatomyParts')).toBeUndefined();
     });
   });
 
@@ -105,7 +106,9 @@ describe('Anatomy Loaders Configuration', () => {
 
       // Access the private field via reflection for testing
       const primarySchemaId = loader._primarySchemaId;
-      expect(primarySchemaId).toBe('http://example.com/schemas/anatomy.recipe.schema.json');
+      expect(primarySchemaId).toBe(
+        'http://example.com/schemas/anatomy.recipe.schema.json'
+      );
     });
   });
 
@@ -136,7 +139,9 @@ describe('Anatomy Loaders Configuration', () => {
       );
 
       const primarySchemaId = loader._primarySchemaId;
-      expect(primarySchemaId).toBe('http://example.com/schemas/anatomy.blueprint.schema.json');
+      expect(primarySchemaId).toBe(
+        'http://example.com/schemas/anatomy.blueprint.schema.json'
+      );
     });
   });
 
@@ -171,5 +176,4 @@ describe('Anatomy Loaders Configuration', () => {
       expect(primarySchemaId).toBeNull();
     });
   });
-
 });

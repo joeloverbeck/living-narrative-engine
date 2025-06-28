@@ -68,16 +68,15 @@ class PlaytimeTracker extends IPlaytimeTracker {
       );
       // Fallback logger for environments where a full logger isn't available or during initial setup
       this.#logger = {
-         
         info: (message) =>
           console.info(`PlaytimeTracker (fallback): ${message}`),
-         
+
         warn: (message) =>
           console.warn(`PlaytimeTracker (fallback): ${message}`),
-         
+
         error: (message) =>
           console.error(`PlaytimeTracker (fallback): ${message}`),
-         
+
         debug: (message) =>
           console.debug(`PlaytimeTracker (fallback): ${message}`),
       };

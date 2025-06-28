@@ -46,7 +46,9 @@ src/
 ### 1. JSON Schemas
 
 #### anatomy.recipe.schema.json
+
 Defines the structure for recipe files with:
+
 - `recipeId`: Unique identifier
 - `slots`: Map of slot configurations
   - `partType`: Required part type
@@ -61,7 +63,9 @@ Defines the structure for recipe files with:
 - `isMacro`: Flag for macro recipes
 
 #### anatomy.blueprint.schema.json
+
 Defines the structure for blueprint files with:
+
 - `root`: Root entity definition ID
 - `attachments`: Static parent-child relationships
   - `parent`: Parent entity ID
@@ -69,7 +73,9 @@ Defines the structure for blueprint files with:
   - `child`: Child entity ID
 
 #### anatomy.part.schema.json
+
 Defines the structure for part definition files with:
+
 - `id`: Unique part identifier
 - `components`: Array of components
   - `anatomy:part`: Required, with `subType`
@@ -79,33 +85,41 @@ Defines the structure for part definition files with:
 ### 2. Component Definitions
 
 #### anatomy:part
+
 Marks an entity as an anatomy body part:
+
 ```json
 {
   "type": "anatomy:part",
-  "subType": "leg"  // Specific part type
+  "subType": "leg" // Specific part type
 }
 ```
 
 #### anatomy:sockets
+
 Defines attachment points on a body part:
+
 ```json
 {
   "type": "anatomy:sockets",
-  "sockets": [{
-    "id": "ankle",
-    "orientation": "mid",
-    "allowedTypes": ["foot", "paw"],
-    "maxCount": 1,
-    "jointType": "hinge",
-    "breakThreshold": 25,
-    "nameTpl": "{{orientation}} {{type}}"
-  }]
+  "sockets": [
+    {
+      "id": "ankle",
+      "orientation": "mid",
+      "allowedTypes": ["foot", "paw"],
+      "maxCount": 1,
+      "jointType": "hinge",
+      "breakThreshold": 25,
+      "nameTpl": "{{orientation}} {{type}}"
+    }
+  ]
 }
 ```
 
 #### anatomy:joint
+
 Represents a connection between body parts:
+
 ```json
 {
   "type": "anatomy:joint",
@@ -119,12 +133,14 @@ Represents a connection between body parts:
 ### 3. Loader Services
 
 #### AnatomyRecipeLoader
+
 - Extends `BaseManifestItemLoader`
 - Loads `*.recipe.json` files from `anatomy/recipes/`
 - Validates constraint structure
 - Stores in registry under `anatomyRecipes` key
 
 #### AnatomyBlueprintLoader
+
 - Extends `BaseManifestItemLoader`
 - Loads `*.bp.json` files from `anatomy/blueprints/`
 - Generates IDs from filenames
@@ -132,6 +148,7 @@ Represents a connection between body parts:
 - Stores in registry under `anatomyBlueprints` key
 
 #### AnatomyPartLoader
+
 - Extends `BaseManifestItemLoader`
 - Loads `*.part.json` files from `anatomy/parts/`
 - Transforms to standard entity definitions
@@ -141,9 +158,11 @@ Represents a connection between body parts:
 ### 4. Core Services
 
 #### BodyBlueprintFactory
+
 Main factory service that assembles anatomy graphs:
 
 **Algorithm**:
+
 1. Load blueprint and recipe
 2. Create root entity
 3. Process static attachments from blueprint
@@ -158,15 +177,18 @@ Main factory service that assembles anatomy graphs:
 6. Return root ID and all created entities
 
 **Key Methods**:
+
 - `createAnatomyGraph(blueprintId, recipeId, options)`
 - `#findCandidateParts(recipeSlot, allowedTypes)`
 - `#createAndAttachPart(parentId, socketId, partDefinitionId)`
 - `#generatePartName(socket, childEntity, parentId)`
 
 #### GraphIntegrityValidator
+
 Validates assembled anatomy graphs:
 
 **Validation Checks**:
+
 1. Socket occupancy doesn't exceed maxCount
 2. Recipe requires/excludes constraints satisfied
 3. No cycles in the graph
@@ -177,9 +199,11 @@ Validates assembled anatomy graphs:
 **Returns**: `{valid: boolean, errors: string[], warnings: string[]}`
 
 #### BodyGraphService
+
 Runtime management of anatomy graphs:
 
 **Features**:
+
 - Adjacency cache for fast traversal
 - Part detachment with cascade support
 - Path finding between parts
@@ -188,6 +212,7 @@ Runtime management of anatomy graphs:
 - Cache validation
 
 **Key Methods**:
+
 - `buildAdjacencyCache(rootEntityId)`
 - `detachPart(partEntityId, options)`
 - `findPartsByType(rootEntityId, partType)`
@@ -197,7 +222,9 @@ Runtime management of anatomy graphs:
 ### 5. Event System
 
 #### LIMB_DETACHED Event
+
 Dispatched when a body part is detached:
+
 ```json
 {
   "type": "anatomy:limb_detached",
@@ -217,38 +244,49 @@ Dispatched when a body part is detached:
 ### Creating a Humanoid Body
 
 1. Define the recipe (`humanoid_female.recipe.json`):
+
 ```json
 {
   "recipeId": "anatomy:humanoid_female",
   "slots": {
     "torso": {
       "partType": "torso",
-      "count": {"exact": 1}
+      "count": { "exact": 1 }
     },
     "arms": {
       "partType": "arm",
-      "count": {"exact": 2}
+      "count": { "exact": 2 }
     },
     "legs": {
       "partType": "leg",
-      "count": {"exact": 2}
+      "count": { "exact": 2 }
     }
   }
 }
 ```
 
 2. Define the blueprint (`humanoid.bp.json`):
+
 ```json
 {
   "root": "anatomy:torso_human",
   "attachments": [
-    {"parent": "anatomy:torso_human", "socket": "arm_left", "child": "anatomy:arm_human"},
-    {"parent": "anatomy:torso_human", "socket": "arm_right", "child": "anatomy:arm_human"}
+    {
+      "parent": "anatomy:torso_human",
+      "socket": "arm_left",
+      "child": "anatomy:arm_human"
+    },
+    {
+      "parent": "anatomy:torso_human",
+      "socket": "arm_right",
+      "child": "anatomy:arm_human"
+    }
   ]
 }
 ```
 
 3. Create the anatomy:
+
 ```javascript
 const factory = container.resolve(tokens.BodyBlueprintFactory);
 const { rootId, entities } = await factory.createAnatomyGraph(
@@ -268,9 +306,9 @@ if (graphService.shouldDetachFromDamage(armEntityId, 30)) {
   // Detach the arm and all attached parts
   const result = await graphService.detachPart(armEntityId, {
     cascade: true,
-    reason: 'damage'
+    reason: 'damage',
   });
-  
+
   // Result contains detached entity IDs
   console.log(`Detached ${result.detached.length} parts`);
 }
@@ -279,6 +317,7 @@ if (graphService.shouldDetachFromDamage(armEntityId, 30)) {
 ## Error Handling
 
 The system follows fail-fast principles:
+
 - Schema validation errors halt mod loading
 - Runtime assembly errors dispatch `SYSTEM_ERROR_OCCURRED_ID` events
 - Soft constraint violations log warnings
@@ -287,12 +326,14 @@ The system follows fail-fast principles:
 ## Extensibility
 
 ### Future Enhancements
+
 1. **Macro System**: Pre-processor for recipe composition
 2. **Index Numbering**: Support for {{index}} in name templates
 3. **Multi-parent Geometry**: Parts requiring multiple simultaneous sockets
 4. **Vascular/Nerve Systems**: Advanced physiological modeling
 
 ### Integration Points
+
 - Custom operations for anatomy manipulation
 - Action system integration for targeted damage
 - Save/load persistence of anatomy state
@@ -301,19 +342,23 @@ The system follows fail-fast principles:
 ## Testing Strategy
 
 ### Unit Tests
+
 - Loader validation
 - Factory assembly logic
 - Validator rule checking
 - Graph service operations
 
 ### Integration Tests
+
 - Full pipeline from files to entities
 - Multi-mod compatibility
 - Save/load round trips
 - Event dispatching
 
 ### Test Fixtures
+
 Create sample creatures:
+
 - Simple biped
 - Multi-limbed creature
 - Modular robot

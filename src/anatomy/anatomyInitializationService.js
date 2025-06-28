@@ -31,9 +31,11 @@ export class AnatomyInitializationService {
    * @param {AnatomyGenerationService} deps.anatomyGenerationService - Service that handles anatomy generation
    */
   constructor({ eventDispatcher, logger, anatomyGenerationService }) {
-    if (!eventDispatcher) throw new InvalidArgumentError('eventDispatcher is required');
+    if (!eventDispatcher)
+      throw new InvalidArgumentError('eventDispatcher is required');
     if (!logger) throw new InvalidArgumentError('logger is required');
-    if (!anatomyGenerationService) throw new InvalidArgumentError('anatomyGenerationService is required');
+    if (!anatomyGenerationService)
+      throw new InvalidArgumentError('anatomyGenerationService is required');
 
     this.#eventDispatcher = eventDispatcher;
     this.#logger = logger;
@@ -49,18 +51,23 @@ export class AnatomyInitializationService {
       return;
     }
 
-    this.#logger.debug('AnatomyInitializationService: Registering event listeners');
-    
+    this.#logger.debug(
+      'AnatomyInitializationService: Registering event listeners'
+    );
+
     // Listen for entity creation events
-    this.#eventDispatcher.on(ENTITY_CREATED_ID, this.#handleEntityCreated.bind(this));
-    
+    this.#eventDispatcher.on(
+      ENTITY_CREATED_ID,
+      this.#handleEntityCreated.bind(this)
+    );
+
     this.#isInitialized = true;
     this.#logger.info('AnatomyInitializationService: Initialized');
   }
 
   /**
    * Handles entity creation events
-   * 
+   *
    * @param {object} event
    * @param {string} event.instanceId - The entity instance ID
    * @param {string} event.definitionId - The entity definition ID
@@ -75,19 +82,29 @@ export class AnatomyInitializationService {
 
     const { instanceId } = event;
     if (!instanceId) {
-      this.#logger.warn('AnatomyInitializationService: Entity created event missing instanceId');
+      this.#logger.warn(
+        'AnatomyInitializationService: Entity created event missing instanceId'
+      );
       return;
     }
 
     try {
       // Attempt to generate anatomy for the newly created entity
-      const wasGenerated = await this.#anatomyGenerationService.generateAnatomyIfNeeded(instanceId);
-      
+      const wasGenerated =
+        await this.#anatomyGenerationService.generateAnatomyIfNeeded(
+          instanceId
+        );
+
       if (wasGenerated) {
-        this.#logger.info(`AnatomyInitializationService: Generated anatomy for entity '${instanceId}'`);
+        this.#logger.info(
+          `AnatomyInitializationService: Generated anatomy for entity '${instanceId}'`
+        );
       }
     } catch (error) {
-      this.#logger.error(`AnatomyInitializationService: Failed to generate anatomy for entity '${instanceId}'`, { error });
+      this.#logger.error(
+        `AnatomyInitializationService: Failed to generate anatomy for entity '${instanceId}'`,
+        { error }
+      );
       // Don't throw - we don't want to break entity creation if anatomy generation fails
     }
   }
@@ -100,9 +117,14 @@ export class AnatomyInitializationService {
       return;
     }
 
-    this.#logger.debug('AnatomyInitializationService: Removing event listeners');
-    this.#eventDispatcher.off(ENTITY_CREATED_ID, this.#handleEntityCreated.bind(this));
-    
+    this.#logger.debug(
+      'AnatomyInitializationService: Removing event listeners'
+    );
+    this.#eventDispatcher.off(
+      ENTITY_CREATED_ID,
+      this.#handleEntityCreated.bind(this)
+    );
+
     this.#isInitialized = false;
     this.#logger.info('AnatomyInitializationService: Disposed');
   }

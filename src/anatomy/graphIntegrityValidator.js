@@ -31,7 +31,8 @@ export class GraphIntegrityValidator {
    * @param {ILogger} deps.logger
    */
   constructor({ entityManager, logger }) {
-    if (!entityManager) throw new InvalidArgumentError('entityManager is required');
+    if (!entityManager)
+      throw new InvalidArgumentError('entityManager is required');
     if (!logger) throw new InvalidArgumentError('logger is required');
 
     this.#entityManager = entityManager;
@@ -40,7 +41,7 @@ export class GraphIntegrityValidator {
 
   /**
    * Validates an assembled anatomy graph
-   * 
+   *
    * @param {string[]} entityIds - All entity IDs in the graph
    * @param {object} recipe - The recipe used to assemble the graph
    * @param {Map<string, number>} socketOccupancy - Socket usage tracking
@@ -50,14 +51,21 @@ export class GraphIntegrityValidator {
     const errors = [];
     const warnings = [];
 
-    this.#logger.debug(`GraphIntegrityValidator: Validating graph with ${entityIds.length} entities`);
+    this.#logger.debug(
+      `GraphIntegrityValidator: Validating graph with ${entityIds.length} entities`
+    );
 
     try {
       // 1. Validate socket occupancy limits
       this.#validateSocketLimits(entityIds, socketOccupancy, errors);
 
       // 2. Validate recipe constraints
-      await this.#validateRecipeConstraints(entityIds, recipe, errors, warnings);
+      await this.#validateRecipeConstraints(
+        entityIds,
+        recipe,
+        errors,
+        warnings
+      );
 
       // 3. Check for cycles
       this.#validateNoCycles(entityIds, errors);
@@ -70,20 +78,28 @@ export class GraphIntegrityValidator {
 
       // 6. Validate part type compatibility with sockets
       this.#validatePartTypeCompatibility(entityIds, errors);
-
     } catch (error) {
-      this.#logger.error('GraphIntegrityValidator: Unexpected error during validation', { error });
+      this.#logger.error(
+        'GraphIntegrityValidator: Unexpected error during validation',
+        { error }
+      );
       errors.push(`Validation error: ${error.message}`);
     }
 
     const valid = errors.length === 0;
-    
+
     if (!valid) {
-      this.#logger.error(`GraphIntegrityValidator: Validation failed with ${errors.length} errors`);
+      this.#logger.error(
+        `GraphIntegrityValidator: Validation failed with ${errors.length} errors`
+      );
     } else if (warnings.length > 0) {
-      this.#logger.warn(`GraphIntegrityValidator: Validation passed with ${warnings.length} warnings`);
+      this.#logger.warn(
+        `GraphIntegrityValidator: Validation passed with ${warnings.length} warnings`
+      );
     } else {
-      this.#logger.debug('GraphIntegrityValidator: Validation passed without issues');
+      this.#logger.debug(
+        'GraphIntegrityValidator: Validation passed without issues'
+      );
     }
 
     return { valid, errors, warnings };
@@ -100,11 +116,14 @@ export class GraphIntegrityValidator {
   #validateSocketLimits(entityIds, socketOccupancy, errors) {
     for (const [socketKey, occupancy] of socketOccupancy.entries()) {
       const [parentId, socketId] = socketKey.split(':');
-      
+
       // Get socket definition
-      const socketsComponent = this.#entityManager.getComponentData(parentId, 'anatomy:sockets');
-      const socket = socketsComponent?.sockets?.find(s => s.id === socketId);
-      
+      const socketsComponent = this.#entityManager.getComponentData(
+        parentId,
+        'anatomy:sockets'
+      );
+      const socket = socketsComponent?.sockets?.find((s) => s.id === socketId);
+
       if (!socket) {
         errors.push(`Socket '${socketId}' not found on entity '${parentId}'`);
         continue;
@@ -112,7 +131,9 @@ export class GraphIntegrityValidator {
 
       const maxCount = socket.maxCount || 1;
       if (occupancy > maxCount) {
-        errors.push(`Socket '${socketId}' on entity '${parentId}' exceeds maxCount: ${occupancy} > ${maxCount}`);
+        errors.push(
+          `Socket '${socketId}' on entity '${parentId}' exceeds maxCount: ${occupancy} > ${maxCount}`
+        );
       }
     }
   }
@@ -135,9 +156,12 @@ export class GraphIntegrityValidator {
 
     for (const entityId of entityIds) {
       const entity = this.#entityManager.getEntityInstance(entityId);
-      
+
       // Add part type
-      const anatomyPart = this.#entityManager.getComponentData(entityId, 'anatomy:part');
+      const anatomyPart = this.#entityManager.getComponentData(
+        entityId,
+        'anatomy:part'
+      );
       if (anatomyPart?.subType) {
         presentPartTypes.add(anatomyPart.subType);
       }
@@ -152,11 +176,17 @@ export class GraphIntegrityValidator {
     // Check 'requires' constraints
     if (recipe.constraints.requires) {
       for (const group of recipe.constraints.requires) {
-        const present = group.filter(id => presentComponents.has(id) || presentPartTypes.has(id));
-        
+        const present = group.filter(
+          (id) => presentComponents.has(id) || presentPartTypes.has(id)
+        );
+
         if (present.length > 0 && present.length < group.length) {
-          const missing = group.filter(id => !presentComponents.has(id) && !presentPartTypes.has(id));
-          errors.push(`Co-presence constraint violated: have [${present.join(', ')}] but missing [${missing.join(', ')}]`);
+          const missing = group.filter(
+            (id) => !presentComponents.has(id) && !presentPartTypes.has(id)
+          );
+          errors.push(
+            `Co-presence constraint violated: have [${present.join(', ')}] but missing [${missing.join(', ')}]`
+          );
         }
       }
     }
@@ -164,10 +194,14 @@ export class GraphIntegrityValidator {
     // Check 'excludes' constraints
     if (recipe.constraints.excludes) {
       for (const group of recipe.constraints.excludes) {
-        const present = group.filter(id => presentComponents.has(id) || presentPartTypes.has(id));
-        
+        const present = group.filter(
+          (id) => presentComponents.has(id) || presentPartTypes.has(id)
+        );
+
         if (present.length > 1) {
-          errors.push(`Mutual exclusion constraint violated: cannot have both [${present.join(', ')}]`);
+          errors.push(
+            `Mutual exclusion constraint violated: cannot have both [${present.join(', ')}]`
+          );
         }
       }
     }
@@ -175,15 +209,32 @@ export class GraphIntegrityValidator {
     // Check soft count constraints
     if (recipe.slots) {
       for (const [slotKey, slot] of Object.entries(recipe.slots)) {
-        const actualCount = [...presentPartTypes].filter(type => type === slot.partType).length;
-        
+        const actualCount = [...presentPartTypes].filter(
+          (type) => type === slot.partType
+        ).length;
+
         if (slot.count) {
-          if (slot.count.exact !== undefined && actualCount !== slot.count.exact) {
-            warnings.push(`Slot '${slotKey}' wanted exactly ${slot.count.exact} '${slot.partType}' parts but got ${actualCount}`);
-          } else if (slot.count.min !== undefined && actualCount < slot.count.min) {
-            warnings.push(`Slot '${slotKey}' wanted at least ${slot.count.min} '${slot.partType}' parts but got ${actualCount}`);
-          } else if (slot.count.max !== undefined && actualCount > slot.count.max) {
-            warnings.push(`Slot '${slotKey}' wanted at most ${slot.count.max} '${slot.partType}' parts but got ${actualCount}`);
+          if (
+            slot.count.exact !== undefined &&
+            actualCount !== slot.count.exact
+          ) {
+            warnings.push(
+              `Slot '${slotKey}' wanted exactly ${slot.count.exact} '${slot.partType}' parts but got ${actualCount}`
+            );
+          } else if (
+            slot.count.min !== undefined &&
+            actualCount < slot.count.min
+          ) {
+            warnings.push(
+              `Slot '${slotKey}' wanted at least ${slot.count.min} '${slot.partType}' parts but got ${actualCount}`
+            );
+          } else if (
+            slot.count.max !== undefined &&
+            actualCount > slot.count.max
+          ) {
+            warnings.push(
+              `Slot '${slotKey}' wanted at most ${slot.count.max} '${slot.partType}' parts but got ${actualCount}`
+            );
           }
         }
       }
@@ -206,7 +257,7 @@ export class GraphIntegrityValidator {
       recursionStack.add(entityId);
 
       // Find children (entities that have this as parent in their joint)
-      const children = entityIds.filter(id => {
+      const children = entityIds.filter((id) => {
         const joint = this.#entityManager.getComponentData(id, 'anatomy:joint');
         return joint?.parentId === entityId;
       });
@@ -228,7 +279,10 @@ export class GraphIntegrityValidator {
 
     // Check each entity that could be a root (no joint component)
     for (const entityId of entityIds) {
-      const joint = this.#entityManager.getComponentData(entityId, 'anatomy:joint');
+      const joint = this.#entityManager.getComponentData(
+        entityId,
+        'anatomy:joint'
+      );
       if (!joint && !visited.has(entityId)) {
         hasCycle(entityId);
       }
@@ -244,26 +298,40 @@ export class GraphIntegrityValidator {
    */
   #validateJointConsistency(entityIds, errors) {
     for (const entityId of entityIds) {
-      const joint = this.#entityManager.getComponentData(entityId, 'anatomy:joint');
+      const joint = this.#entityManager.getComponentData(
+        entityId,
+        'anatomy:joint'
+      );
       if (!joint) continue;
 
       // Check parent exists
       if (!entityIds.includes(joint.parentId)) {
-        errors.push(`Entity '${entityId}' has joint referencing non-existent parent '${joint.parentId}'`);
+        errors.push(
+          `Entity '${entityId}' has joint referencing non-existent parent '${joint.parentId}'`
+        );
         continue;
       }
 
       // Check socket exists on parent
-      const parentSockets = this.#entityManager.getComponentData(joint.parentId, 'anatomy:sockets');
-      const socket = parentSockets?.sockets?.find(s => s.id === joint.socketId);
-      
+      const parentSockets = this.#entityManager.getComponentData(
+        joint.parentId,
+        'anatomy:sockets'
+      );
+      const socket = parentSockets?.sockets?.find(
+        (s) => s.id === joint.socketId
+      );
+
       if (!socket) {
-        errors.push(`Entity '${entityId}' attached to non-existent socket '${joint.socketId}' on parent '${joint.parentId}'`);
+        errors.push(
+          `Entity '${entityId}' attached to non-existent socket '${joint.socketId}' on parent '${joint.parentId}'`
+        );
       }
 
       // Validate joint type matches socket
       if (socket && joint.jointType !== socket.jointType) {
-        errors.push(`Joint type mismatch: entity '${entityId}' has '${joint.jointType}' but socket specifies '${socket.jointType}'`);
+        errors.push(
+          `Joint type mismatch: entity '${entityId}' has '${joint.jointType}' but socket specifies '${socket.jointType}'`
+        );
       }
     }
   }
@@ -278,11 +346,16 @@ export class GraphIntegrityValidator {
    */
   #validateNoOrphans(entityIds, errors, warnings) {
     const entityIdSet = new Set(entityIds);
-    
+
     for (const entityId of entityIds) {
-      const joint = this.#entityManager.getComponentData(entityId, 'anatomy:joint');
+      const joint = this.#entityManager.getComponentData(
+        entityId,
+        'anatomy:joint'
+      );
       if (joint && !entityIdSet.has(joint.parentId)) {
-        warnings.push(`Entity '${entityId}' is orphaned - parent '${joint.parentId}' not in graph`);
+        warnings.push(
+          `Entity '${entityId}' is orphaned - parent '${joint.parentId}' not in graph`
+        );
       }
     }
   }
@@ -296,24 +369,35 @@ export class GraphIntegrityValidator {
    */
   #validatePartTypeCompatibility(entityIds, errors) {
     for (const entityId of entityIds) {
-      const joint = this.#entityManager.getComponentData(entityId, 'anatomy:joint');
+      const joint = this.#entityManager.getComponentData(
+        entityId,
+        'anatomy:joint'
+      );
       if (!joint) continue;
 
       // Get part type
-      const anatomyPart = this.#entityManager.getComponentData(entityId, 'anatomy:part');
+      const anatomyPart = this.#entityManager.getComponentData(
+        entityId,
+        'anatomy:part'
+      );
       if (!anatomyPart?.subType) continue;
 
       // Get parent socket
-      const parentSockets = this.#entityManager.getComponentData(joint.parentId, 'anatomy:sockets');
-      const socket = parentSockets?.sockets?.find(s => s.id === joint.socketId);
-      
+      const parentSockets = this.#entityManager.getComponentData(
+        joint.parentId,
+        'anatomy:sockets'
+      );
+      const socket = parentSockets?.sockets?.find(
+        (s) => s.id === joint.socketId
+      );
+
       if (!socket) continue;
 
       // Check if part type is allowed
       if (!socket.allowedTypes.includes(anatomyPart.subType)) {
         errors.push(
           `Part type '${anatomyPart.subType}' on entity '${entityId}' not allowed in socket '${joint.socketId}' ` +
-          `(allowed: [${socket.allowedTypes.join(', ')}])`
+            `(allowed: [${socket.allowedTypes.join(', ')}])`
         );
       }
     }

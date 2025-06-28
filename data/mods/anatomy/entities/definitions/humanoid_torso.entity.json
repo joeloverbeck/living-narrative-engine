@@ -1,6 +1,6 @@
 {
   "$schema": "http://example.com/schemas/entity-definition.schema.json",
-  "id": "core:humanoid_torso",
+  "id": "anatomy:humanoid_torso",
   "description": "A humanoid torso that serves as the central body part",
   "components": {
     "anatomy:part": {
@@ -14,7 +14,6 @@
           "allowedTypes": ["head", "neck"],
           "maxCount": 1,
           "jointType": "ball",
-          "breakThreshold": 100,
           "nameTpl": "{{type}}"
         },
         {
@@ -23,7 +22,6 @@
           "allowedTypes": ["arm"],
           "maxCount": 1,
           "jointType": "ball",
-          "breakThreshold": 80,
           "nameTpl": "{{orientation}} {{type}}"
         },
         {
@@ -32,7 +30,6 @@
           "allowedTypes": ["arm"],
           "maxCount": 1,
           "jointType": "ball",
-          "breakThreshold": 80,
           "nameTpl": "{{orientation}} {{type}}"
         },
         {
@@ -41,7 +38,6 @@
           "allowedTypes": ["leg"],
           "maxCount": 1,
           "jointType": "ball",
-          "breakThreshold": 90,
           "nameTpl": "{{orientation}} {{type}}"
         },
         {
@@ -50,7 +46,6 @@
           "allowedTypes": ["leg"],
           "maxCount": 1,
           "jointType": "ball",
-          "breakThreshold": 90,
           "nameTpl": "{{orientation}} {{type}}"
         },
         {
@@ -59,7 +54,6 @@
           "allowedTypes": ["breast"],
           "maxCount": 2,
           "jointType": "fused",
-          "breakThreshold": 0,
           "nameTpl": "{{orientation}} {{type}}"
         }
       ]

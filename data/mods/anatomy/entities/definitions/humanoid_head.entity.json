@@ -1,6 +1,6 @@
 {
   "$schema": "http://example.com/schemas/entity-definition.schema.json",
-  "id": "core:humanoid_head",
+  "id": "anatomy:humanoid_head",
   "description": "A humanoid head",
   "components": {
     "anatomy:part": {
@@ -14,7 +14,6 @@
           "allowedTypes": ["ear"],
           "maxCount": 1,
           "jointType": "fused",
-          "breakThreshold": 30,
           "nameTpl": "{{orientation}} {{type}}"
         },
         {
@@ -23,7 +22,6 @@
           "allowedTypes": ["ear"],
           "maxCount": 1,
           "jointType": "fused",
-          "breakThreshold": 30,
           "nameTpl": "{{orientation}} {{type}}"
         }
       ]

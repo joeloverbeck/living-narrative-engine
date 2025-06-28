@@ -152,7 +152,7 @@ describe('Integration: Entity Definitions and Instances Loader', () => {
 
     // Verify the returned LoadReport
     expect(result).toEqual({
-      finalModOrder: ['core', 'isekai'],
+      finalModOrder: ['core', 'anatomy', 'isekai'],
       totals: expect.any(Object),
       incompatibilities: 0,
     });

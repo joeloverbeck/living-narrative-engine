@@ -1,31 +1,31 @@
 {
   "$schema": "http://example.com/schemas/anatomy.recipe.schema.json",
-  "recipeId": "core:humanoid_standard",
+  "recipeId": "anatomy:humanoid_standard",
   "slots": {
     "torso": {
       "partType": "torso",
-      "preferId": "core:humanoid_torso",
+      "preferId": "anatomy:humanoid_torso",
       "count": {
         "exact": 1
       }
     },
     "head": {
       "partType": "head",
-      "preferId": "core:humanoid_head",
+      "preferId": "anatomy:humanoid_head",
       "count": {
         "exact": 1
       }
     },
     "arms": {
       "partType": "arm",
-      "preferId": "core:humanoid_arm",
+      "preferId": "anatomy:humanoid_arm",
       "count": {
         "exact": 2
       }
     },
     "legs": {
       "partType": "leg",
-      "preferId": "core:humanoid_leg",
+      "preferId": "anatomy:humanoid_leg",
       "count": {
         "exact": 2
       }

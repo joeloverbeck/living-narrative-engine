@@ -30,7 +30,14 @@
         "description": "Unix timestamp when the detachment occurred"
       }
     },
-    "required": ["detachedEntityId", "parentEntityId", "socketId", "detachedCount", "reason", "timestamp"],
+    "required": [
+      "detachedEntityId",
+      "parentEntityId",
+      "socketId",
+      "detachedCount",
+      "reason",
+      "timestamp"
+    ],
     "additionalProperties": false
   }
 }

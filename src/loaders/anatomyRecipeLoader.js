@@ -88,7 +88,7 @@ class AnatomyRecipeLoader extends BaseManifestItemLoader {
     this._logger.debug(
       `AnatomyRecipeLoader [${modId}]: Successfully processed anatomy recipe from ${filename}. Final registry key: ${qualifiedId}, Overwrite: ${didOverride}`
     );
-    
+
     return { qualifiedId, didOverride };
   }
 
@@ -106,7 +106,7 @@ class AnatomyRecipeLoader extends BaseManifestItemLoader {
         `Invalid 'requires' constraint in recipe '${filename}' from mod '${modId}'. Expected array.`
       );
     }
-    
+
     if (constraints.excludes && !Array.isArray(constraints.excludes)) {
       throw new Error(
         `Invalid 'excludes' constraint in recipe '${filename}' from mod '${modId}'. Expected array.`
