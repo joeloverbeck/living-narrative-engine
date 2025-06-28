@@ -128,5 +128,42 @@ describeActionDiscoverySuite(
       });
       expect(result.errors[0].error).toBeInstanceOf(Error);
     });
+
+    it('captures errors thrown during prerequisite evaluation', async () => {
+      const bed = getBed();
+      const badDef = {
+        id: 'bad',
+        commandVerb: 'bad',
+        scope: 'none',
+        prerequisites: [{}],
+      };
+      const okDef = { id: 'ok', commandVerb: 'wait', scope: 'none' };
+
+      bed.mocks.actionIndex.getCandidateActions.mockReturnValue([
+        badDef,
+        okDef,
+      ]);
+      bed.mocks.targetResolutionService.resolveTargets.mockResolvedValue([
+        { type: 'none', entityId: null },
+      ]);
+      bed.mocks.prerequisiteEvaluationService.evaluate.mockImplementation(
+        (_, def) => {
+          if (def.id === 'bad') throw new Error('kaboom');
+          return true;
+        }
+      );
+
+      const result = await bed.service.getValidActions({ id: 'actor' }, {});
+
+      expect(result.actions).toHaveLength(1);
+      expect(result.actions[0].id).toBe('ok');
+      expect(result.errors).toHaveLength(1);
+      expect(result.errors[0]).toMatchObject({
+        actionId: 'bad',
+        targetId: null,
+      });
+      expect(result.errors[0].error).toBeInstanceOf(Error);
+      expect(bed.mocks.logger.error).toHaveBeenCalled();
+    });
   }
 );

@@ -258,7 +258,25 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     trace?.step(`Processing candidate action: '${actionDef.id}'`, source);
 
     // STEP 1: Check actor prerequisites
-    if (!this.#actorMeetsPrerequisites(actionDef, actorEntity, trace)) {
+    let meetsPrereqs;
+    try {
+      meetsPrereqs = this.#actorMeetsPrerequisites(
+        actionDef,
+        actorEntity,
+        trace
+      );
+    } catch (error) {
+      this.#logger.error(
+        `Error checking prerequisites for action '${actionDef.id}'.`,
+        error
+      );
+      return {
+        actions: [],
+        errors: [this.#createDiscoveryError(actionDef.id, null, error)],
+      };
+    }
+
+    if (!meetsPrereqs) {
       trace?.failure(
         `Action '${actionDef.id}' discarded due to failed actor prerequisites.`,
         source
