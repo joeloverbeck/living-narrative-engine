@@ -14,9 +14,6 @@ import {
   initLogger,
   logPreview,
 } from '../../../src/utils/loggerUtils.js';
-import { validateDependency } from '../../../src/utils/validationUtils.js';
-
-jest.mock('../../../src/utils/validationUtils.js');
 
 describe('loggerUtils', () => {
   const valid = {
@@ -83,17 +80,27 @@ describe('loggerUtils', () => {
   });
 
   it('initLogger validates when not optional and returns logger', () => {
-    const spy = validateDependency;
     const logger = initLogger('Svc', valid);
-    expect(spy).toHaveBeenCalledWith(valid, 'logger', console, {
-      requiredMethods: ['info', 'warn', 'error', 'debug'],
-    });
     expect(logger).toBe(valid);
+  });
+
+  it('initLogger throws when logger is null and not optional', () => {
+    expect(() => initLogger('Svc', null)).toThrow('Missing required dependency: logger.');
+    expect(consoleSpies.error).toHaveBeenCalledWith('Missing required dependency: logger.');
+  });
+
+  it('initLogger throws when logger missing required methods', () => {
+    const invalidLogger = { info: jest.fn(), warn: jest.fn() }; // missing error and debug
+    expect(() => initLogger('Svc', invalidLogger)).toThrow(
+      "Invalid or missing method 'error' on dependency 'logger'."
+    );
+    expect(consoleSpies.error).toHaveBeenCalledWith(
+      "Invalid or missing method 'error' on dependency 'logger'."
+    );
   });
 
   it('initLogger skips validation when optional and logger missing', () => {
     const logger = initLogger('Svc', null, { optional: true });
-    expect(validateDependency).not.toHaveBeenCalled();
     logger.error('oops');
     expect(consoleSpies.error).toHaveBeenCalledWith('Svc: ', 'oops');
   });

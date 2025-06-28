@@ -1,145 +1,177 @@
-OperationInterpreter: Resolved full string placeholder {event.payload.timestamp} to: 2025-06-27T21:16:51.195Z
-consoleLogger.js:187 OperationInterpreter: Resolved full string placeholder {event.payload.perceptionType} to: speech_local
-consoleLogger.js:187 OperationInterpreter: Resolved full string placeholder {event.payload.actorId} to: isekai:hero_instance
-consoleLogger.js:187 OperationInterpreter: Resolved full string placeholder {event.payload.targetId} to: null
-consoleLogger.js:187 OperationInterpreter: Resolved full string placeholder {event.payload.involvedEntities} to: []
-consoleLogger.js:187 OperationInterpreter: Resolved full string placeholder {event.payload.actorId} to: isekai:hero_instance
-consoleLogger.js:187 OperationInterpreter: Executing handler for operation type "ADD_PERCEPTION_LOG_ENTRY"…
-entity.js:108 Entity.hasComponent: The checkOverrideOnly flag is deprecated. Use hasComponentOverride(componentTypeId) instead.
-hasComponent @ entity.js:108
-hasComponent @ entityManager.js:511
-hasComponent @ entityManagerAdapter.js:53
-execute @ addPerceptionLogEntryHandler.js:105
-(anonymous) @ interpreterRegistrations.js:59
-execute @ operationInterpreter.js:94
-executeActionSequence @ actionSequence.js:198
-_executeActions @ systemLogicInterpreter.js:269
-#processRule @ systemLogicInterpreter.js:260
-#handleEvent @ systemLogicInterpreter.js:204
-(anonymous) @ eventBus.js:93
-dispatch @ eventBus.js:90
-dispatch @ validatedEventDispatcher.js:165
-dispatch @ safeEventDispatcher.js:92
-execute @ dispatchPerceptibleEventHandler.js:155
-(anonymous) @ interpreterRegistrations.js:59
-execute @ operationInterpreter.js:94
-executeActionSequence @ actionSequence.js:198
-handleIf @ actionSequence.js:64
-executeActionSequence @ actionSequence.js:178
-_executeActions @ systemLogicInterpreter.js:269
-#processRule @ systemLogicInterpreter.js:260
-#handleEvent @ systemLogicInterpreter.js:204
-(anonymous) @ eventBus.js:93
-dispatch @ eventBus.js:90
-dispatch @ validatedEventDispatcher.js:165
-dispatch @ safeEventDispatcher.js:92
-_dispatchSpeech @ processingCommandState.js:251
-_dispatchSpeechIfNeeded @ processingWorkflow.js:242
-run @ processingWorkflow.js:85
-await in run
-enterState @ processingCommandState.js:226
-_transitionToState @ baseTurnHandler.js:234
-await in _transitionToState
-requestProcessingCommandStateTransition @ baseTurnHandler.js:607
-requestProcessingCommandStateTransition @ turnContext.js:253
-run @ actionDecisionWorkflow.js:56
-await in run
-_handleActionDecision @ awaitingActorDecisionState.js:101
-enterState @ awaitingActorDecisionState.js:118
-await in enterState
-_transitionToState @ baseTurnHandler.js:234
-await in _transitionToState
-requestAwaitingInputStateTransition @ baseTurnHandler.js:592
-requestAwaitingInputStateTransition @ turnContext.js:249
-_requestAwaitingInput @ turnIdleState.js:139
-startTurn @ turnIdleState.js:71
-startTurn @ genericTurnHandler.js:134
-startTurn @ actorTurnHandler.js:64
-advanceTurn @ turnManager.js:455
-await in advanceTurn
-advanceTurn @ turnManager.js:345
-await in advanceTurn
-start @ turnManager.js:209
-_finalizeGameStart @ gameSessionManager.js:146
-await in _finalizeGameStart
-finalizeNewGameSuccess @ gameSessionManager.js:167
-_finalizeInitializationSuccess @ gameEngine.js:314
-startNewGame @ gameEngine.js:350
-await in startNewGame
-startGameStage @ engineStages.js:87
-beginGame @ main.js:217
-(anonymous) @ game.html:326
-Promise.then
-(anonymous) @ game.html:323Understand this warning
-consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
-consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
-consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'core:perception_log', componentData: {…}, oldComponentData: {…}}
-consoleLogger.js:187 Successfully added/updated component 'core:perception_log' data on entity 'isekai:hero_instance'.
-entity.js:108 Entity.hasComponent: The checkOverrideOnly flag is deprecated. Use hasComponentOverride(componentTypeId) instead.
-hasComponent @ entity.js:108
-hasComponent @ entityManager.js:511
-hasComponent @ entityManagerAdapter.js:53
-execute @ addPerceptionLogEntryHandler.js:105
-(anonymous) @ interpreterRegistrations.js:59
-execute @ operationInterpreter.js:94
-executeActionSequence @ actionSequence.js:198
-_executeActions @ systemLogicInterpreter.js:269
-#processRule @ systemLogicInterpreter.js:260
-#handleEvent @ systemLogicInterpreter.js:204
-(anonymous) @ eventBus.js:93
-dispatch @ eventBus.js:90
-dispatch @ validatedEventDispatcher.js:165
-dispatch @ safeEventDispatcher.js:92
-execute @ dispatchPerceptibleEventHandler.js:155
-(anonymous) @ interpreterRegistrations.js:59
-execute @ operationInterpreter.js:94
-executeActionSequence @ actionSequence.js:198
-handleIf @ actionSequence.js:64
-executeActionSequence @ actionSequence.js:178
-_executeActions @ systemLogicInterpreter.js:269
-#processRule @ systemLogicInterpreter.js:260
-#handleEvent @ systemLogicInterpreter.js:204
-(anonymous) @ eventBus.js:93
-dispatch @ eventBus.js:90
-dispatch @ validatedEventDispatcher.js:165
-dispatch @ safeEventDispatcher.js:92
-_dispatchSpeech @ processingCommandState.js:251
-_dispatchSpeechIfNeeded @ processingWorkflow.js:242
-run @ processingWorkflow.js:85
-await in run
-enterState @ processingCommandState.js:226
-_transitionToState @ baseTurnHandler.js:234
-await in _transitionToState
-requestProcessingCommandStateTransition @ baseTurnHandler.js:607
-requestProcessingCommandStateTransition @ turnContext.js:253
-run @ actionDecisionWorkflow.js:56
-await in run
-_handleActionDecision @ awaitingActorDecisionState.js:101
-enterState @ awaitingActorDecisionState.js:118
-await in enterState
-_transitionToState @ baseTurnHandler.js:234
-await in _transitionToState
-requestAwaitingInputStateTransition @ baseTurnHandler.js:592
-requestAwaitingInputStateTransition @ turnContext.js:249
-_requestAwaitingInput @ turnIdleState.js:139
-startTurn @ turnIdleState.js:71
-startTurn @ genericTurnHandler.js:134
-startTurn @ actorTurnHandler.js:64
-advanceTurn @ turnManager.js:455
-await in advanceTurn
-advanceTurn @ turnManager.js:345
-await in advanceTurn
-start @ turnManager.js:209
-_finalizeGameStart @ gameSessionManager.js:146
-await in _finalizeGameStart
-finalizeNewGameSuccess @ gameSessionManager.js:167
-_finalizeInitializationSuccess @ gameEngine.js:314
-startNewGame @ gameEngine.js:350
-await in startNewGame
-startGameStage @ engineStages.js:87
-beginGame @ main.js:217
-(anonymous) @ game.html:326
-Promise.then
-(anonymous) @ game.html:323Understand this warning
-consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
-consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
+warn no-circular: src/utils/loggerUtils.js →
+      src/utils/validationUtils.js →
+      src/utils/safeDispatchErrorUtils.js →
+      src/utils/loggerUtils.js
+  warn no-circular: src/utils/errorUtils.js →
+      src/utils/startupErrorHandler.js →
+      src/utils/errorUtils.js
+  warn no-circular: src/turns/strategies/turnDirectiveStrategyResolver.js →
+      src/turns/strategies/repromptStrategy.js →
+      src/turns/states/awaitingActorDecisionState.js →
+      src/turns/handlers/baseTurnHandler.js →
+      src/turns/strategies/turnDirectiveStrategyResolver.js
+  warn no-circular: src/turns/strategies/turnDirectiveStrategyResolver.js →
+      src/turns/handlers/actorTurnHandler.js →
+      src/turns/builders/turnContextBuilder.js →
+      src/turns/context/turnContext.js →
+      src/turns/handlers/baseTurnHandler.js →
+      src/turns/strategies/turnDirectiveStrategyResolver.js
+  warn no-circular: src/turns/strategies/repromptStrategy.js →
+      src/turns/states/awaitingActorDecisionState.js →
+      src/turns/handlers/baseTurnHandler.js →
+      src/turns/interfaces/ITurnStateFactory.js →
+      src/turns/states/processingCommandState.js →
+      src/turns/adapters/turnDirectiveResolverAdapter.js →
+      src/turns/strategies/turnDirectiveStrategyResolver.js →
+      src/turns/strategies/repromptStrategy.js
+  warn no-circular: src/turns/states/workflows/processingWorkflow.js →
+      src/turns/states/helpers/processingExceptionHandler.js →
+      src/turns/states/helpers/contextUtils.js →
+      src/turns/handlers/baseTurnHandler.js →
+      src/turns/interfaces/ITurnStateFactory.js →
+      src/turns/states/workflows/processingWorkflow.js
+  warn no-circular: src/turns/states/workflows/processingWorkflow.js →
+      src/turns/states/helpers/contextUtils.js →
+      src/turns/handlers/baseTurnHandler.js →
+      src/turns/interfaces/ITurnStateFactory.js →
+      src/turns/states/workflows/processingWorkflow.js
+  warn no-circular: src/turns/states/workflows/processingWorkflow.js →
+      src/turns/states/abstractTurnState.js →
+      src/turns/handlers/baseTurnHandler.js →
+      src/turns/interfaces/ITurnStateFactory.js →
+      src/turns/states/workflows/processingWorkflow.js
+  warn no-circular: src/turns/states/processingCommandState.js →
+      src/turns/states/workflows/processingWorkflow.js →
+      src/turns/handlers/baseTurnHandler.js →
+      src/turns/interfaces/ITurnStateFactory.js →
+      src/turns/states/processingCommandState.js
+  warn no-circular: src/turns/states/processingCommandState.js →
+      src/turns/states/helpers/processingExceptionHandler.js →
+      src/turns/states/helpers/contextUtils.js →
+      src/turns/handlers/baseTurnHandler.js →
+      src/turns/interfaces/ITurnStateFactory.js →
+      src/turns/states/processingCommandState.js
+  warn no-circular: src/turns/states/processingCommandState.js →
+      src/turns/states/helpers/contextUtils.js →
+      src/turns/handlers/baseTurnHandler.js →
+      src/turns/interfaces/ITurnStateFactory.js →
+      src/turns/states/processingCommandState.js
+  warn no-circular: src/turns/states/processingCommandState.js →
+      src/turns/states/abstractTurnState.js →
+      src/turns/handlers/baseTurnHandler.js →
+      src/turns/interfaces/ITurnStateFactory.js →
+      src/turns/states/processingCommandState.js
+  warn no-circular: src/turns/states/processingCommandState.js →
+      src/turns/handlers/baseTurnHandler.js →
+      src/turns/interfaces/ITurnStateFactory.js →
+      src/turns/states/processingCommandState.js
+  warn no-circular: src/turns/states/helpers/getServiceFromContext.js →
+      src/turns/states/helpers/processingExceptionHandler.js →
+      src/turns/states/helpers/contextUtils.js →
+      src/turns/handlers/baseTurnHandler.js →
+      src/turns/interfaces/ITurnStateFactory.js →
+      src/turns/states/processingCommandState.js →
+      src/turns/states/helpers/commandProcessingWorkflow.js →
+      src/turns/states/helpers/getServiceFromContext.js
+  warn no-circular: src/turns/states/helpers/commandProcessingWorkflow.js →
+      src/turns/states/helpers/processingExceptionHandler.js →
+      src/turns/states/helpers/contextUtils.js →
+      src/turns/handlers/baseTurnHandler.js →
+      src/turns/interfaces/ITurnStateFactory.js →
+      src/turns/states/processingCommandState.js →
+      src/turns/states/helpers/commandProcessingWorkflow.js
+  warn no-circular: src/turns/states/helpers/commandProcessingWorkflow.js →
+      src/turns/states/helpers/getServiceFromContext.js →
+      src/turns/states/helpers/contextUtils.js →
+      src/turns/handlers/baseTurnHandler.js →
+      src/turns/interfaces/ITurnStateFactory.js →
+      src/turns/states/processingCommandState.js →
+      src/turns/states/helpers/commandProcessingWorkflow.js
+  warn no-circular: src/turns/states/helpers/commandProcessingWorkflow.js →
+      src/turns/states/helpers/contextUtils.js →
+      src/turns/handlers/baseTurnHandler.js →
+      src/turns/interfaces/ITurnStateFactory.js →
+      src/turns/states/processingCommandState.js →
+      src/turns/states/helpers/commandProcessingWorkflow.js
+  warn no-circular: src/turns/states/awaitingActorDecisionState.js →
+      src/turns/states/workflows/actionDecisionWorkflow.js →
+      src/turns/states/awaitingActorDecisionState.js
+  warn no-circular: src/turns/states/awaitingActorDecisionState.js →
+      src/turns/states/helpers/contextUtils.js →
+      src/turns/handlers/baseTurnHandler.js →
+      src/turns/interfaces/ITurnStateFactory.js →
+      src/turns/states/awaitingActorDecisionState.js
+  warn no-circular: src/turns/states/abstractTurnState.js →
+      src/turns/states/helpers/contextUtils.js →
+      src/turns/handlers/baseTurnHandler.js →
+      src/turns/interfaces/ITurnStateFactory.js →
+      src/turns/states/awaitingActorDecisionState.js →
+      src/turns/states/abstractTurnState.js
+  warn no-circular: src/turns/states/abstractTurnState.js →
+      src/turns/handlers/baseTurnHandler.js →
+      src/turns/interfaces/ITurnStateFactory.js →
+      src/turns/states/awaitingActorDecisionState.js →
+      src/turns/states/abstractTurnState.js
+  warn no-circular: src/turns/interfaces/ITurnStateFactory.js →
+      src/turns/states/workflows/processingWorkflow.js →
+      src/turns/handlers/baseTurnHandler.js →
+      src/turns/interfaces/ITurnStateFactory.js
+  warn no-circular: src/turns/interfaces/ITurnStateFactory.js →
+      src/turns/states/workflows/actionDecisionWorkflow.js →
+      src/turns/states/awaitingActorDecisionState.js →
+      src/turns/handlers/baseTurnHandler.js →
+      src/turns/interfaces/ITurnStateFactory.js
+  warn no-circular: src/turns/interfaces/ITurnStateFactory.js →
+      src/turns/states/processingCommandState.js →
+      src/turns/adapters/turnDirectiveResolverAdapter.js →
+      src/turns/strategies/turnDirectiveStrategyResolver.js →
+      src/turns/handlers/actorTurnHandler.js →
+      src/turns/interfaces/ITurnStateFactory.js
+  warn no-circular: src/turns/interfaces/ITurnStateFactory.js →
+      src/turns/states/helpers/processingExceptionHandler.js →
+      src/turns/states/helpers/contextUtils.js →
+      src/turns/handlers/baseTurnHandler.js →
+      src/turns/interfaces/ITurnStateFactory.js
+  warn no-circular: src/turns/handlers/baseTurnHandler.js →
+      src/turns/strategies/turnDirectiveStrategyResolver.js →
+      src/turns/handlers/actorTurnHandler.js →
+      src/turns/builders/turnContextBuilder.js →
+      src/turns/handlers/baseTurnHandler.js
+  warn no-circular: src/turns/handlers/baseTurnHandler.js →
+      src/turns/interfaces/ITurnStateFactory.js →
+      src/turns/states/awaitingActorDecisionState.js →
+      src/turns/handlers/baseTurnHandler.js
+  warn no-circular: src/turns/handlers/actorTurnHandler.js →
+      src/turns/handlers/genericTurnHandler.js →
+      src/turns/builders/turnContextBuilder.js →
+      src/turns/context/turnContext.js →
+      src/turns/handlers/baseTurnHandler.js →
+      src/turns/interfaces/ITurnStateFactory.js →
+      src/turns/states/processingCommandState.js →
+      src/turns/adapters/turnDirectiveResolverAdapter.js →
+      src/turns/strategies/turnDirectiveStrategyResolver.js →
+      src/turns/handlers/actorTurnHandler.js
+  warn no-circular: src/turns/builders/turnContextBuilder.js →
+      src/turns/interfaces/ITurnContextFactory.js →
+      src/turns/handlers/baseTurnHandler.js →
+      src/turns/interfaces/ITurnStateFactory.js →
+      src/turns/states/processingCommandState.js →
+      src/turns/adapters/turnDirectiveResolverAdapter.js →
+      src/turns/strategies/turnDirectiveStrategyResolver.js →
+      src/turns/handlers/actorTurnHandler.js →
+      src/turns/builders/turnContextBuilder.js
+  warn no-circular: src/turns/adapters/turnDirectiveResolverAdapter.js →
+      src/turns/strategies/turnDirectiveStrategyResolver.js →
+      src/turns/handlers/actorTurnHandler.js →
+      src/turns/builders/turnContextBuilder.js →
+      src/turns/context/turnContext.js →
+      src/turns/handlers/baseTurnHandler.js →
+      src/turns/interfaces/ITurnStateFactory.js →
+      src/turns/states/processingCommandState.js →
+      src/turns/adapters/turnDirectiveResolverAdapter.js
+  error not-to-unresolvable: src/turns/states/processingCommandState.js → ../../interfaces/ICommandProcessor.js
+  error not-to-unresolvable: src/turns/states/processingCommandState.js → ../../interfaces/ICommandOutcomeInterpreter.js
+  error not-to-unresolvable: src/turns/states/helpers/commandProcessingWorkflow.js → ../../../../../interfaces/ICommandProcessor.js
+  error not-to-unresolvable: src/turns/states/helpers/commandProcessingWorkflow.js → ../../../../../interfaces/ICommandOutcomeInterpreter.js
+  error not-to-unresolvable: src/turns/factories/concreteTurnStateFactory.js → ../../interfaces/ICommandProcessor.js
+  error not-to-unresolvable: src/turns/factories/concreteTurnStateFactory.js → ../../interfaces/ICommandOutcomeInterpreter.js

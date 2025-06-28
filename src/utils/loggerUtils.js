@@ -7,8 +7,6 @@
  * from the central index.
  */
 
-import { validateDependency } from './validationUtils.js';
-
 /**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
  */
@@ -107,14 +105,12 @@ export function getModuleLogger(moduleName, logger) {
 }
 
 /**
- * Validates a logger using {@link validateDependency} and returns a safe logger instance via
- * {@link ensureValidLogger}. When `optional` is true, missing loggers are allowed and will
- * result in a console-based fallback.
+ * Validates a logger and returns a safe logger instance via {@link ensureValidLogger}.
+ * When `optional` is true, missing loggers are allowed and will result in a console-based fallback.
  *
- * @description Validates a logger using {@link validateDependency} and returns
- * a safe logger instance via {@link ensureValidLogger}. When `optional` is
- * true, missing loggers are allowed and will result in a console-based
- * fallback.
+ * @description Validates a logger and returns a safe logger instance via
+ * {@link ensureValidLogger}. When `optional` is true, missing loggers are
+ * allowed and will result in a console-based fallback.
  * @param {string} serviceName - Name used for fallback prefix and error messages.
  * @param {ILogger | undefined | null} logger - Logger instance to validate.
  * @param {object} [options] - Additional options.
@@ -123,9 +119,22 @@ export function getModuleLogger(moduleName, logger) {
  */
 export function initLogger(serviceName, logger, { optional = false } = {}) {
   if (!optional || logger) {
-    validateDependency(logger, 'logger', console, {
-      requiredMethods: ['info', 'warn', 'error', 'debug'],
-    });
+    // Inline logger validation to avoid circular dependency
+    if (logger === null || logger === undefined) {
+      const errorMsg = 'Missing required dependency: logger.';
+      console.error(errorMsg);
+      throw new Error(errorMsg);
+    }
+    
+    // Check required methods
+    const requiredMethods = ['info', 'warn', 'error', 'debug'];
+    for (const method of requiredMethods) {
+      if (typeof logger[method] !== 'function') {
+        const errorMsg = `Invalid or missing method '${method}' on dependency 'logger'.`;
+        console.error(errorMsg);
+        throw new Error(errorMsg);
+      }
+    }
   }
   return ensureValidLogger(logger, serviceName);
 }

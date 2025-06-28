@@ -216,8 +216,8 @@ export class StartupErrorHandler {
   /**
    * Handles a fatal startup error by logging and updating the UI.
    *
-   * @param {import('./errorUtils.js').FatalErrorUIElements} uiElements - UI refs.
-   * @param {import('./errorUtils.js').FatalErrorDetails} errorDetails - Error info.
+   * @param {import('./errorTypes.js').FatalErrorUIElements} uiElements - UI refs.
+   * @param {import('./errorTypes.js').FatalErrorDetails} errorDetails - Error info.
    * @returns {{displayed: boolean}} Whether the error was shown in the DOM.
    */
   displayFatalStartupError(uiElements, errorDetails) {
