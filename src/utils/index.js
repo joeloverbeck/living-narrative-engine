@@ -18,6 +18,7 @@ export * from './jsonCleaning.js';
 export * from './jsonRepair.js';
 export * from './evaluationContextUtils.js';
 export * from './eventDispatchUtils.js';
+export { dispatchWithErrorHandling } from './eventDispatchHelper.js';
 export {
   assertPresent,
   assertFunction,

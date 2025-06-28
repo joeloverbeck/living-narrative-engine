@@ -54,7 +54,7 @@ describe('CommandProcessor.dispatchAction', () => {
       })
     );
     expect(logger.debug).toHaveBeenCalledWith(
-      'CommandProcessor.#dispatchWithErrorHandling: Dispatch successful for ATTEMPT_ACTION_ID dispatch for pre-resolved action look.'
+      'dispatchWithErrorHandling: Dispatch successful for ATTEMPT_ACTION_ID dispatch for pre-resolved action look.'
     );
   });
 
@@ -176,7 +176,7 @@ describe('CommandProcessor.dispatchAction', () => {
     );
     expect(logger.warn).toHaveBeenCalledWith(
       expect.stringContaining(
-        'CommandProcessor.#dispatchWithErrorHandling: SafeEventDispatcher reported failure for ATTEMPT_ACTION_ID dispatch for pre-resolved action take'
+        'dispatchWithErrorHandling: SafeEventDispatcher reported failure for ATTEMPT_ACTION_ID dispatch for pre-resolved action take'
       )
     );
   });
@@ -236,7 +236,7 @@ describe('CommandProcessor.dispatchAction', () => {
       logger
     );
     expect(logger.error).toHaveBeenCalledWith(
-      'CommandProcessor.#dispatchWithErrorHandling: CRITICAL - Error during dispatch for ATTEMPT_ACTION_ID dispatch for pre-resolved action jump. Error: boom',
+      'dispatchWithErrorHandling: CRITICAL - Error during dispatch for ATTEMPT_ACTION_ID dispatch for pre-resolved action jump. Error: boom',
       expect.any(Error)
     );
   });
