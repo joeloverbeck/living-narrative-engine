@@ -30,7 +30,7 @@ describe('formatActionCommand uncovered branches', () => {
       null,
       entityManager,
       { logger, safeEventDispatcher: dispatcher },
-      displayNameFn
+      { displayNameFn }
     );
     expect(result).toEqual({
       ok: false,
@@ -52,7 +52,7 @@ describe('formatActionCommand uncovered branches', () => {
       context,
       entityManager,
       { logger, safeEventDispatcher: dispatcher },
-      null
+      { displayNameFn: null }
     );
     expect(result).toEqual({
       ok: false,
@@ -80,8 +80,7 @@ describe('formatActionCommand uncovered branches', () => {
       context,
       entityManager,
       { logger, safeEventDispatcher: dispatcher },
-      displayNameFn,
-      customMap
+      { displayNameFn, formatterMap: customMap }
     );
     expect(result).toEqual({ ok: true, value: 'custom' });
   });

@@ -324,7 +324,9 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
         targetCtx,
         this.#entityManager,
         formatterOptions,
-        this.#getEntityDisplayNameFn
+        {
+          displayNameFn: this.#getEntityDisplayNameFn,
+        }
       );
 
       if (formatResult.ok) {
