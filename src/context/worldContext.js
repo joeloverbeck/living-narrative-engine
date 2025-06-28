@@ -61,8 +61,6 @@ class WorldContext extends IWorldContext {
     ) {
       const errorMsg =
         'WorldContext requires a valid EntityManager instance with getEntitiesWithComponent and getEntityInstance methods.';
-      // Log directly to console if logger might not be set up
-      console.error(errorMsg);
       throw new Error(errorMsg);
     }
     if (

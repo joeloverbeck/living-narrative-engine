@@ -23,9 +23,9 @@ export default class NotesService {
   /**
    * Creates a new NotesService.
    *
-   * @param {object} [options] - Configuration options. Currently unused.
+   * @param {object} [_options] - Configuration options. Currently unused.
    */
-  constructor(options = {}) {
+  constructor(_options = {}) {
     // No options needed yet, but keeping for future-proofing.
   }
 
