@@ -182,6 +182,34 @@ function finalizeCommand(command, logger, debug) {
 }
 
 /**
+ * @description Normalizes dependency inputs and handles the deprecated
+ * positional signature.
+ * @param {*} deps - Provided dependency object or legacy displayNameFn.
+ * @param {ILogger} [logger] - Logger used for deprecation warnings.
+ * @returns {{displayNameFn: Function, formatterMap: TargetFormatterMap}}
+ * Resolved dependencies object.
+ */
+function normalizeDeps(deps, logger) {
+  const callerArgs = arguments[2] || [];
+  const depObj = deps && typeof deps === 'object' ? deps : {};
+  let displayNameFn =
+    'displayNameFn' in depObj ? depObj.displayNameFn : getEntityDisplayName;
+  let formatterMap =
+    'formatterMap' in depObj ? depObj.formatterMap : targetFormatterMap;
+
+  if (typeof deps === 'function' || callerArgs.length > 5) {
+    const warnLogger = logger ?? console;
+    warnLogger.warn(
+      'DEPRECATION: formatActionCommand now expects a single dependency object after options.'
+    );
+    displayNameFn = deps || getEntityDisplayName;
+    formatterMap = callerArgs[5] || targetFormatterMap;
+  }
+
+  return { displayNameFn, formatterMap };
+}
+
+/**
  * Formats a validated action and target into a user-facing command string.
  *
  * @param {ActionDefinition} actionDefinition - The validated action's definition. Must not be null/undefined.
@@ -204,22 +232,12 @@ export function formatActionCommand(
   options = {},
   deps = {}
 ) {
-  // Backwards compatibility for old positional arguments
-  const depObj = deps && typeof deps === 'object' ? deps : {};
-  let displayNameFn =
-    'displayNameFn' in depObj ? depObj.displayNameFn : getEntityDisplayName;
-  let formatterMap =
-    'formatterMap' in depObj ? depObj.formatterMap : targetFormatterMap;
-
-  if (typeof deps === 'function' || arguments.length > 5) {
-    console.warn(
-      'DEPRECATION: formatActionCommand now expects a single dependency object after options.'
-    );
-    displayNameFn = deps || getEntityDisplayName;
-    formatterMap = arguments[5] || targetFormatterMap;
-  }
-
   const { debug = false, logger, safeEventDispatcher } = options;
+  const { displayNameFn, formatterMap } = normalizeDeps(
+    deps,
+    logger,
+    arguments
+  );
 
   // --- 1. Input Validation ---
   const validationMessage = checkFormatInputs(
