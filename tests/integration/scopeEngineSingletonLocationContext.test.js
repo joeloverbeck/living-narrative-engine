@@ -98,7 +98,7 @@ describe('Singleton Scope Engine Location Context', () => {
 
     // Set up registry with actions and conditions
     registry = new InMemoryDataRegistry({ logger });
-    
+
     // Register actions
     registry.store('actions', 'core:follow', {
       id: 'core:follow',
@@ -155,7 +155,7 @@ describe('Singleton Scope Engine Location Context', () => {
 
     // Set up services
     const gameDataRepository = new GameDataRepository(registry, logger);
-    
+
     const jsonLogicEval = new JsonLogicEvaluationService({
       logger,
       gameDataRepository,
@@ -222,7 +222,9 @@ describe('Singleton Scope Engine Location Context', () => {
     expect(goActions[0].params.targetId).toBe('town');
 
     // Move hero to town
-    entityManager.addComponent('hero', POSITION_COMPONENT_ID, { locationId: 'town' });
+    entityManager.addComponent('hero', POSITION_COMPONENT_ID, {
+      locationId: 'town',
+    });
 
     // Get actions with new location
     actions = await actionDiscoveryService.getValidActions(heroActor, {
@@ -250,7 +252,9 @@ describe('Singleton Scope Engine Location Context', () => {
     expect(followActions[0].command).toBe('follow Ninja');
 
     // Move hero to town (ninja stays in guild)
-    entityManager.addComponent('hero', POSITION_COMPONENT_ID, { locationId: 'town' });
+    entityManager.addComponent('hero', POSITION_COMPONENT_ID, {
+      locationId: 'town',
+    });
 
     actions = await actionDiscoveryService.getValidActions(heroActor, {
       currentLocation: townLocation,
@@ -260,7 +264,9 @@ describe('Singleton Scope Engine Location Context', () => {
     expect(followActions).toHaveLength(0); // No one to follow in town
 
     // Move ninja to town as well
-    entityManager.addComponent('ninja', POSITION_COMPONENT_ID, { locationId: 'town' });
+    entityManager.addComponent('ninja', POSITION_COMPONENT_ID, {
+      locationId: 'town',
+    });
 
     actions = await actionDiscoveryService.getValidActions(heroActor, {
       currentLocation: townLocation,
@@ -275,9 +281,14 @@ describe('Singleton Scope Engine Location Context', () => {
     const heroActor = entityManager.getEntityInstance('hero');
     const guildLocation = entityManager.getEntityInstance('guild');
     const townLocation = entityManager.getEntityInstance('town');
-    
+
     // Test multiple moves to ensure singleton doesn't cache location
-    const locations = [guildLocation, townLocation, guildLocation, townLocation];
+    const locations = [
+      guildLocation,
+      townLocation,
+      guildLocation,
+      townLocation,
+    ];
     const expectedExits = ['town', 'guild', 'town', 'guild'];
 
     for (let i = 0; i < locations.length; i++) {
@@ -312,7 +323,9 @@ describe('Singleton Scope Engine Location Context', () => {
     expect(ninjaGo[0].params.targetId).toBe('town');
 
     // Move hero to town
-    entityManager.addComponent('hero', POSITION_COMPONENT_ID, { locationId: 'town' });
+    entityManager.addComponent('hero', POSITION_COMPONENT_ID, {
+      locationId: 'town',
+    });
 
     // Check hero's actions (should see guild exit, not town)
     let heroActions = await actionDiscoveryService.getValidActions(heroActor, {
