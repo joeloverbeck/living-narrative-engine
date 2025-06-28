@@ -291,7 +291,8 @@ class EntityFactory {
     const entityInstanceDataObject = new EntityInstanceData(
       actualInstanceId,
       entityDefinition,
-      validatedOverrides
+      validatedOverrides,
+      this.#logger
     );
     // Create Entity with just the instance data
     const entity = new Entity(entityInstanceDataObject);
@@ -371,7 +372,8 @@ class EntityFactory {
     const instanceDataForReconstruction = new EntityInstanceData(
       instanceId, // Corrected: instanceId first
       definitionToUse,
-      validatedComponents
+      validatedComponents,
+      this.#logger
     );
     // Create Entity with just the instance data
     const entity = new Entity(instanceDataForReconstruction);

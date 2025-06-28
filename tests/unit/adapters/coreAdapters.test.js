@@ -66,7 +66,7 @@ describe('DefaultComponentPolicy', () => {
     const def = new EntityDefinition('actor', {
       components: { [ACTOR_COMPONENT_ID]: {} },
     });
-    const data = new EntityInstanceData('e1', def);
+    const data = new EntityInstanceData('e1', def, {}, logger);
     const entity = new Entity(data);
 
     const policy = new DefaultComponentPolicy();
@@ -98,7 +98,7 @@ describe('DefaultComponentPolicy', () => {
         [GOALS_COMPONENT_ID]: { goals: [{ text: 'x' }] },
       },
     });
-    const data = new EntityInstanceData('e2', def);
+    const data = new EntityInstanceData('e2', def, {}, logger);
     const entity = new Entity(data);
 
     const policy = new DefaultComponentPolicy();
@@ -117,7 +117,7 @@ describe('DefaultComponentPolicy', () => {
     const validator = createMockSchemaValidator();
     const logger = createMockLogger();
     const def = new EntityDefinition('basic', { components: {} });
-    const data = new EntityInstanceData('e3', def);
+    const data = new EntityInstanceData('e3', def, {}, logger);
     const entity = new Entity(data);
 
     const policy = new DefaultComponentPolicy();

@@ -7,6 +7,8 @@ import { cloneDeep } from 'lodash';
 import { freeze } from '../utils/cloneUtils.js';
 import EntityDefinition from './entityDefinition.js';
 
+/** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
+
 /**
  * Represents the mutable, runtime data for a unique instance of an entity.
  * It holds a reference to its EntityDefinition and any per-instance component overrides.
@@ -14,6 +16,13 @@ import EntityDefinition from './entityDefinition.js';
  * @module core/entities/entityInstanceData
  */
 class EntityInstanceData {
+  /**
+   * Logger used for warnings and debug output.
+   *
+   * @type {ILogger}
+   * @private
+   */
+  #logger;
   /**
    * The unique runtime identifier for this entity instance (e.g., a UUID).
    *
@@ -47,10 +56,11 @@ class EntityInstanceData {
    * @param {string} instanceId - The unique runtime identifier for this instance.
    * @param {EntityDefinition} definition - The EntityDefinition this instance is based on.
    * @param {Record<string, object>} [initialOverrides] - Optional initial component overrides.
+   * @param {ILogger} [logger] - Logger for warnings and diagnostics.
    * @throws {Error} If instanceId is not a valid string.
    * @throws {Error} If definition is not an instance of EntityDefinition.
    */
-  constructor(instanceId, definition, initialOverrides = {}) {
+  constructor(instanceId, definition, initialOverrides = {}, logger = console) {
     if (typeof instanceId !== 'string' || !instanceId.trim()) {
       throw new Error('EntityInstanceData requires a valid string instanceId.');
     }
@@ -62,6 +72,7 @@ class EntityInstanceData {
 
     this.instanceId = instanceId;
     this.definition = definition;
+    this.#logger = logger;
     // Use cloneDeep for initialOverrides to ensure deep copy and freeze to
     // discourage external mutation.
     this.overrides = freeze(
@@ -163,8 +174,7 @@ class EntityInstanceData {
    */
   hasComponent(componentTypeId, checkOverrideOnly = false) {
     if (arguments.length === 2) {
-      // eslint-disable-next-line no-console
-      console.warn(
+      this.#logger.warn(
         'EntityInstanceData.hasComponent: The checkOverrideOnly flag is deprecated. Use hasComponentOverride(componentTypeId) instead.'
       );
       if (checkOverrideOnly) {

@@ -40,7 +40,8 @@ const createTestEntity = (
   instanceId,
   definitionId,
   defComponents = {},
-  instanceOverrides = {}
+  instanceOverrides = {},
+  logger = console
 ) => {
   const definition = new EntityDefinition(definitionId, {
     description: `Test Definition ${definitionId}`,
@@ -49,7 +50,8 @@ const createTestEntity = (
   const instanceData = new EntityInstanceData(
     instanceId,
     definition,
-    instanceOverrides
+    instanceOverrides,
+    logger
   );
   return new Entity(instanceData);
 };

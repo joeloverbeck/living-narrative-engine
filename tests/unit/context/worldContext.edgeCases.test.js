@@ -40,7 +40,6 @@ import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
 describe('WorldContext Edge Cases', () => {
   let worldContext;
   let logger;
-  let loggerErrorSpy;
   let loggerWarnSpy;
   let dispatcher;
   let originalNodeEnv; // Variable to store original NODE_ENV
@@ -50,7 +49,8 @@ describe('WorldContext Edge Cases', () => {
     instanceId,
     definitionId,
     defComponents = {},
-    instanceOverrides = {}
+    instanceOverrides = {},
+    logger = console
   ) => {
     const definition = new EntityDefinition(definitionId, {
       description: `Test Definition ${definitionId}`,
@@ -59,7 +59,8 @@ describe('WorldContext Edge Cases', () => {
     const instanceData = new EntityInstanceData(
       instanceId,
       definition,
-      instanceOverrides
+      instanceOverrides,
+      logger
     );
     return new Entity(instanceData);
   };
@@ -74,7 +75,6 @@ describe('WorldContext Edge Cases', () => {
 
     logger = new ConsoleLogger(); // Use the actual logger to spy on it
     // Suppress actual console output for errors and warnings during tests
-    loggerErrorSpy = jest.spyOn(logger, 'error').mockImplementation(() => {});
     loggerWarnSpy = jest.spyOn(logger, 'warn').mockImplementation(() => {});
     // Also mock info/debug if necessary to suppress console noise during tests
     jest.spyOn(logger, 'info').mockImplementation(() => {});
