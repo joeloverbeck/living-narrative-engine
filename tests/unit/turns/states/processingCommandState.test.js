@@ -133,38 +133,25 @@ describe('ProcessingCommandState', () => {
     // NEW: Define results from the mocked dispatchAction call
     mockSuccessfulDispatchResult = {
       success: true,
-      commandResult: undefined,
+      turnEnded: false,
+      originalInput: mockTurnAction.commandString,
+      actionResult: { actionId: mockTurnAction.actionDefinitionId },
     };
 
     mockFailedDispatchResult = {
       success: false,
-      commandResult: {
-        error: 'CommandProcFailure',
-        internalError: 'Detailed CommandProcFailure',
-      },
+      turnEnded: true,
+      originalInput: mockTurnAction.commandString,
+      actionResult: { actionId: mockTurnAction.actionDefinitionId },
+      error: 'CommandProcFailure',
+      internalError: 'Detailed CommandProcFailure',
     };
 
     // NEW: Define expected payloads for the outcome interpreter/strategies,
     // which are constructed inside the SUT.
-    expectedInterpreterPayloadSuccess = {
-      success: true,
-      turnEnded: false,
-      originalInput:
-        mockTurnAction.commandString || mockTurnAction.actionDefinitionId,
-      actionResult: { actionId: mockTurnAction.actionDefinitionId },
-      error: undefined,
-      internalError: undefined,
-    };
+    expectedInterpreterPayloadSuccess = { ...mockSuccessfulDispatchResult };
 
-    expectedInterpreterPayloadFailure = {
-      success: false,
-      turnEnded: true,
-      originalInput:
-        mockTurnAction.commandString || mockTurnAction.actionDefinitionId,
-      actionResult: { actionId: mockTurnAction.actionDefinitionId },
-      error: mockFailedDispatchResult.commandResult.error,
-      internalError: mockFailedDispatchResult.commandResult.internalError,
-    };
+    expectedInterpreterPayloadFailure = { ...mockFailedDispatchResult };
 
     mockTurnContext = {
       getLogger: jest.fn().mockReturnValue(mockLogger),
@@ -527,8 +514,6 @@ describe('ProcessingCommandState', () => {
         turnEnded: false,
         originalInput: actionNoCommandString.actionDefinitionId, // Fallback
         actionResult: { actionId: actionNoCommandString.actionDefinitionId },
-        error: undefined,
-        internalError: undefined,
       };
 
       mockCommandOutcomeInterpreter.interpret.mockReturnValue(
@@ -538,7 +523,7 @@ describe('ProcessingCommandState', () => {
         mockEndTurnSuccessStrategy
       );
       mockCommandProcessor.dispatchAction.mockResolvedValue(
-        mockSuccessfulDispatchResult
+        expectedPayloadNoCommandStr
       );
 
       await processingState['_processCommandInternal'](

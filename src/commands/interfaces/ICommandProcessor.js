@@ -3,6 +3,10 @@
  * @see src/commands/interfaces/ICommandProcessor.js
  */
 
+/** @typedef {import('../../entities/entity.js').default} Entity */
+/** @typedef {import('../../turns/interfaces/IActorTurnStrategy.js').ITurnAction} ITurnAction */
+/** @typedef {import('../../types/commandResult.js').CommandResult} CommandResult */
+
 /**
  * @interface ICommandProcessor
  * @classdesc Defines the contract for processing commands from an actor.
@@ -15,7 +19,7 @@ export class ICommandProcessor {
    * @async
    * @param {Entity} actor - The entity performing the action.
    * @param {ITurnAction} turnAction - The pre-resolved action object.
-   * @returns {Promise<{success: boolean, commandResult: CommandResult | null}>} A promise that resolves to an object indicating the outcome.
+   * @returns {Promise<CommandResult>} A promise that resolves to the command result.
    * @throws {Error} May throw on critical, unrecoverable errors.
    */
   async dispatchAction(actor, turnAction) {

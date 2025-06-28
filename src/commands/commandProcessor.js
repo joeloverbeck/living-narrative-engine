@@ -50,7 +50,7 @@ class CommandProcessor extends ICommandProcessor {
    *
    * @param {Entity} actor - The entity performing the action.
    * @param {ITurnAction} turnAction - The pre-resolved action object.
-   * @returns {Promise<{success: boolean, commandResult: CommandResult | null}>} A promise that resolves to an object indicating the outcome.
+   * @returns {Promise<CommandResult>} A promise that resolves to the command result.
    */
   async dispatchAction(actor, turnAction) {
     const actorId = actor?.id;
@@ -75,15 +75,12 @@ class CommandProcessor extends ICommandProcessor {
         },
         this.#logger
       );
-      return {
-        success: false,
-        commandResult: this.#createFailureResult(
-          userMsg,
-          internalMsg,
-          turnAction?.commandString,
-          undefined
-        ),
-      };
+      return this.#createFailureResult(
+        userMsg,
+        internalMsg,
+        turnAction?.commandString,
+        undefined
+      );
     }
 
     const { actionDefinitionId, commandString } = turnAction;
@@ -107,15 +104,12 @@ class CommandProcessor extends ICommandProcessor {
         },
         this.#logger
       );
-      return {
-        success: false,
-        commandResult: this.#createFailureResult(
-          userMsg,
-          internalMsg,
-          commandString,
-          undefined
-        ),
-      };
+      return this.#createFailureResult(
+        userMsg,
+        internalMsg,
+        commandString,
+        undefined
+      );
     }
 
     // --- Payload Construction ---
@@ -132,7 +126,12 @@ class CommandProcessor extends ICommandProcessor {
       this.#logger.debug(
         `CommandProcessor.dispatchAction: Successfully dispatched '${actionDefinitionId}' for actor ${actorId}.`
       );
-      return { success: true, commandResult: null };
+      return {
+        success: true,
+        turnEnded: false,
+        originalInput: commandString || actionDefinitionId,
+        actionResult: { actionId: actionDefinitionId },
+      };
     } else {
       const internalMsg = `CRITICAL: Failed to dispatch pre-resolved ATTEMPT_ACTION_ID for ${actorId}, action "${actionDefinitionId}". Dispatcher reported failure.`;
       const userMsg = 'Internal error: Failed to initiate action.';
@@ -157,7 +156,7 @@ class CommandProcessor extends ICommandProcessor {
         commandString,
         actionDefinitionId
       );
-      return { success: false, commandResult: failureResult };
+      return failureResult;
     }
   }
 
