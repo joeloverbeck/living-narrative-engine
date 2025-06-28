@@ -174,37 +174,6 @@ function finalizeCommand(command, logger, debug) {
 }
 
 /**
- * @description Normalizes dependency inputs and handles the deprecated
- * positional signature.
- * @param {*} deps - Provided dependency object or legacy displayNameFn.
- * @param {ILogger} [logger] - Logger used for deprecation warnings.
- * @returns {{displayNameFn: Function, formatterMap: TargetFormatterMap}}
- * Resolved dependencies object.
- */
-function normalizeDeps(deps, logger) {
-  const callerArgs = arguments[2] || [];
-  const injectedDeps = deps && typeof deps === 'object' ? deps : {};
-  let displayNameFn =
-    'displayNameFn' in injectedDeps
-      ? injectedDeps.displayNameFn
-      : getEntityDisplayName;
-  let formatterMap =
-    'formatterMap' in injectedDeps
-      ? injectedDeps.formatterMap
-      : targetFormatterMap;
-
-  if (typeof deps === 'function' || callerArgs.length > 5) {
-    logger.warn(
-      'DEPRECATION: formatActionCommand now expects a single dependency object after options.'
-    );
-    displayNameFn = deps || getEntityDisplayName;
-    formatterMap = callerArgs[5] || targetFormatterMap;
-  }
-
-  return { displayNameFn, formatterMap };
-}
-
-/**
  * Formats a validated action and target into a user-facing command string.
  *
  * @param {ActionDefinition} actionDefinition - The validated action's definition. Must not be null/undefined.
@@ -225,18 +194,15 @@ export function formatActionCommand(
   targetContext,
   entityManager,
   options = {},
-  deps = {}
+  {
+    displayNameFn = getEntityDisplayName,
+    formatterMap = targetFormatterMap,
+  } = {}
 ) {
   const { debug = false, logger, safeEventDispatcher } = options;
   if (!logger) {
     throw new Error('formatActionCommand: logger is required.');
   }
-
-  const { displayNameFn, formatterMap } = normalizeDeps(
-    deps,
-    logger,
-    arguments
-  );
 
   // --- 1. Input Validation ---
   const validationMessage = checkFormatInputs(
