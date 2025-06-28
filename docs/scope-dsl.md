@@ -66,7 +66,8 @@ max_expression_depth = 4 ;
 ### Array Edges
 
 - **Format**: `identifier[]`
-- **Description**: Navigate to a property that is an array and iterate over its elements.
+- **Description**: Navigate to a property that is an array and iterate over its elements. The engine automatically filters out null and undefined values from the array during iteration.
+- **Behavior**: Non-string entity IDs are automatically filtered out when the array is expected to contain entity references.
 - **Examples**:
   - `items[]` - iterate over each item in the items array.
   - `followers[]` - iterate over each follower in the followers array.
@@ -105,7 +106,7 @@ max_expression_depth = 4 ;
 
 - **Format**: `scope_expression + scope_expression`
 - **Description**: Combine the results from two separate scope expressions into a single set.
-- **Behavior**: Returns the union (unique combination) of the entity sets.
+- **Behavior**: Returns the union (unique combination) of the entity sets. The union operator is right-associative, meaning `a + b + c` is parsed as `a + (b + c)`.
 - **Example**: `actor.core:inventory.items[] + entities(core:item)[...]`
 
 ## 6. White-space & Comment Rules
@@ -113,7 +114,7 @@ max_expression_depth = 4 ;
 ### White-space
 
 - **Spaces**: Ignored between tokens.
-- **Newlines**: Ignored between tokens.
+- **Newlines**: Ignored between tokens (both Unix LF and Windows CRLF line endings are supported).
 - **Tabs**: Treated as spaces.
 
 ### Comments
@@ -130,13 +131,13 @@ max_expression_depth = 4 ;
 
 ### Maximum Depth: 4
 
-- **Definition**: Maximum number of chained property accesses (i.e., uses of `.`) or filters (`[{...}]`) from a source node. **Note**: A bare array iterator (`[]`) does not count towards this limit.
+- **Definition**: Maximum number of chained property accesses (i.e., uses of `.`) or filters (`[{...}]`) from a source node. **Note**: A bare array iterator (`[]`) immediately after a source node does not count towards this limit.
 - **Purpose**: Prevent overly complex expressions, infinite recursion, and performance issues.
 - **Examples**:
   - `actor.core:inventory.items[].components` (depth: 3) ✅
   - `actor.a.b.c.d` (depth: 4) ✅
   - `actor.a.b.c.d.e` (depth: 5) ❌
-  - `entities(core:item)[][][][][].id` (depth: 1) ✅
+  - `entities(core:item)[].id` (depth: 1) ✅ - The `[]` after entities doesn't count
 
 ## 8. Worked Examples
 
@@ -252,13 +253,18 @@ For clarity and reusability, scopes should be defined in `.scope` files within a
 
 ### `.scope` File Format:
 
-The format is `scope_name := dsl_expression`.
+The format is `scope_name := dsl_expression`. Multiple scope definitions can exist in a single file.
+
+**Scope Naming**: When defining scopes, use simple names without mod prefixes. The engine automatically namespaces scopes based on which mod they're loaded from. For example, a scope named `followers` in the `core` mod becomes `core:followers` at runtime.
 
 **Example:** `core/scopes/social.scope`
 
 ```
 // Defines the scope for an actor's followers
 followers := actor.core:leading.followers[]
+
+// Multiple scopes can be defined in one file
+leaders := actor.core:following.leaders[]
 ```
 
 ### Action Definition
@@ -287,7 +293,28 @@ The action then refers to this scope by its name. The engine will automatically 
 }
 ```
 
-## 10. Implementation Notes
+## 10. Data Validation and Type Safety
+
+### Automatic Type Filtering
+
+The scope engine automatically validates and filters data types to ensure type safety:
+
+- **Entity ID Validation**: Only string entity IDs are accepted. Non-string values (numbers, objects, etc.) are automatically filtered out from results.
+- **Null/Undefined Filtering**: When iterating over arrays, null and undefined values are automatically removed from the results.
+- **Missing Data Handling**: Accessing non-existent properties returns empty sets or undefined values that are safely handled by subsequent operations.
+
+### Internal Node Types
+
+The parser creates different node types for different operations:
+
+- **Step**: Created for property access (e.g., `.followers`)
+- **ArrayIterationStep**: Created specifically for array iteration (e.g., `[]`)
+- **Filter**: Created for JSON Logic filter expressions
+- **Union**: Created for union operations
+
+This distinction allows the engine to optimize different types of operations appropriately.
+
+## 11. Implementation Notes
 
 ### Parser Requirements
 
@@ -298,12 +325,13 @@ The action then refers to this scope by its name. The engine will automatically 
 ### Performance Considerations
 
 - The expression depth limit prevents infinite recursion.
-- Caching of parsed expressions and/or resolved scopes is used to improve performance during a single game turn.
+- Caching of parsed expressions and/or resolved scopes is used to improve performance during a single game turn. Scope results are cached per turn, meaning the same scope expression will only be evaluated once per game turn for efficiency.
+- The engine supports trace context for debugging and performance monitoring of scope evaluations.
 
 ### Error Handling
 
 - Invalid Syntax: The parser will throw a `ScopeSyntaxError` with detailed line and column information.
 - **Cycle Detected**: The engine will throw a `ScopeCycleError` if it detects a circular reference in the expression (e.g., `actor.self.self`), preventing infinite loops.
-- Missing components: The engine will handle attempts to access non-existent data gracefully, typically resulting in an empty set for that part of the expression.
+- Missing components or fields: The engine will handle attempts to access non-existent data gracefully. Missing components return empty sets, while missing fields within components return undefined values that are filtered out during array operations. This ensures that scope expressions never throw errors due to missing data.
 - Invalid JSON Logic: Errors within a JSON Logic filter are caught and logged, with the filter evaluating to `false`.
 - Depth Limit Exceeded: The parser will throw an error if an expression is more than 4 levels deep.
