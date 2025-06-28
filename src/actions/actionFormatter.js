@@ -152,7 +152,8 @@ function applyTargetFormatter(command, targetContext, options) {
     safeDispatchError(
       dispatcher,
       `formatActionCommand: Error during placeholder substitution for action ${actionDefinition.id}:`,
-      { error: error.message, stack: error.stack }
+      { error: error.message, stack: error.stack },
+      logger
     );
     return buildFormatError('placeholder substitution failed', error.message);
   }
