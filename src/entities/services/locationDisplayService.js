@@ -200,10 +200,7 @@ export class LocationDisplayService {
     let processedExits = [];
 
     if (exitsComponentData && Array.isArray(exitsComponentData)) {
-      processedExits = this._parseLocationExits(
-        exitsComponentData,
-        locationEntityId
-      );
+      processedExits = this.parseRawExits(exitsComponentData, locationEntityId);
     } else if (exitsComponentData) {
       this.#logger.warn(
         `${this._logPrefix} getLocationDetails: Exits component data for location '${locationEntityId}' is present but not an array.`,
@@ -255,12 +252,12 @@ export class LocationDisplayService {
    * @param {NamespacedId | string} locationEntityId
    * @returns {ProcessedExit[]}
    */
-  _parseLocationExits(exitsComponentData, locationEntityId) {
+  parseRawExits(exitsComponentData, locationEntityId) {
     if (!Array.isArray(exitsComponentData)) {
       return [];
     }
     return exitsComponentData
-      .map((exit) => this.#normalizeExit(exit, locationEntityId))
+      .map((exit) => this.#normalizeExitItem(exit, locationEntityId))
       .filter((exit) => exit !== null);
   }
 
@@ -269,7 +266,7 @@ export class LocationDisplayService {
    * @param {NamespacedId | string} locationEntityId
    * @returns {ProcessedExit | null}
    */
-  #normalizeExit(exit, locationEntityId) {
+  #normalizeExitItem(exit, locationEntityId) {
     if (typeof exit !== 'object' || exit === null) {
       this.#logger.warn(
         `${this._logPrefix} getLocationDetails: Invalid exit item in exits component for location '${locationEntityId}'. Skipping.`,
