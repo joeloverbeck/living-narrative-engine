@@ -91,18 +91,15 @@ describe('WorldInitializer - Initialization Sequence', () => {
       mockEntityManager.createEntityInstance.mockReturnValue(mockEntity);
     });
 
-    it('should NOT call initializeScopeRegistry during initializeWorldEntities', async () => {
+    it('should NOT call loadAndInitScopes during initializeWorldEntities', async () => {
       // Spy on the loadAndInitScopes helper
-      const initializeScopeRegistrySpy = jest.spyOn(
-        scopeRegistryUtils,
-        'default'
-      );
+      const loadAndInitScopesSpy = jest.spyOn(scopeRegistryUtils, 'default');
 
       await worldInitializer.initializeWorldEntities('test:world');
 
       // This is the key assertion: scope registry initialization should NOT be called
       // during initializeWorldEntities because it's handled by InitializationService
-      expect(initializeScopeRegistrySpy).not.toHaveBeenCalled();
+      expect(loadAndInitScopesSpy).not.toHaveBeenCalled();
     });
 
     it('should log that scope registry initialization is handled externally', async () => {
@@ -137,7 +134,7 @@ describe('WorldInitializer - Initialization Sequence', () => {
     });
   });
 
-  describe('initializeScopeRegistry standalone behavior', () => {
+  describe('loadAndInitScopes standalone behavior', () => {
     it('should properly initialize scope registry when called directly', async () => {
       const mockScopes = {
         followers: { expr: 'actor.core:leading.followers[]', modId: 'core' },
@@ -268,10 +265,7 @@ describe('WorldInitializer - Initialization Sequence', () => {
     it('should prevent double initialization of scope registry', async () => {
       // This test ensures we don't accidentally re-introduce the double initialization bug
 
-      const initializeScopeRegistrySpy = jest.spyOn(
-        scopeRegistryUtils,
-        'default'
-      );
+      const loadAndInitScopesSpy = jest.spyOn(scopeRegistryUtils, 'default');
 
       // Call both methods that could potentially initialize scope registry
       await scopeRegistryUtils.default({
@@ -281,20 +275,17 @@ describe('WorldInitializer - Initialization Sequence', () => {
       });
       await worldInitializer.initializeWorldEntities('test:world');
 
-      // initializeScopeRegistry should only be called once (the direct call)
-      expect(initializeScopeRegistrySpy).toHaveBeenCalledTimes(1);
+      // loadAndInitScopes should only be called once (the direct call)
+      expect(loadAndInitScopesSpy).toHaveBeenCalledTimes(1);
     });
 
     it('should maintain separation of concerns between scope and entity initialization', async () => {
-      const initializeScopeRegistrySpy = jest.spyOn(
-        scopeRegistryUtils,
-        'default'
-      );
+      const loadAndInitScopesSpy = jest.spyOn(scopeRegistryUtils, 'default');
 
       // Entity initialization should not trigger scope initialization
       await worldInitializer.initializeWorldEntities('test:world');
 
-      expect(initializeScopeRegistrySpy).not.toHaveBeenCalled();
+      expect(loadAndInitScopesSpy).not.toHaveBeenCalled();
 
       // But scope initialization should still work independently
       await scopeRegistryUtils.default({
@@ -303,7 +294,7 @@ describe('WorldInitializer - Initialization Sequence', () => {
         logger: mockLogger,
       });
 
-      expect(initializeScopeRegistrySpy).toHaveBeenCalledTimes(1);
+      expect(loadAndInitScopesSpy).toHaveBeenCalledTimes(1);
     });
   });
 });
