@@ -243,11 +243,11 @@ describe('Scope Registry Initialization - Focused Test', () => {
 
       // Critical assertion: the scope should be accessible by its qualified name
       expect(scopeMap['core:potential_leaders']).toBeDefined();
-      
+
       // Check all properties except the volatile timestamp
       const result = scopeMap['core:potential_leaders'];
       const expected = addMockAst(properlyFormattedScopes[0]);
-      
+
       expect(result.id).toEqual(expected.id);
       expect(result.name).toEqual(expected.name);
       expect(result.expr).toEqual(expected.expr);

@@ -261,10 +261,12 @@ describe('parseScopeDefinitions - Additional Coverage Tests', () => {
       expect(result.has('very_long_mod_name:very_long_component_name')).toBe(
         true
       );
-      expect(result.get('very_long_mod_name:very_long_component_name').expr).toBe(
-        'entities(core:item)'
-      );
-      expect(result.get('very_long_mod_name:very_long_component_name').ast).toBeDefined();
+      expect(
+        result.get('very_long_mod_name:very_long_component_name').expr
+      ).toBe('entities(core:item)');
+      expect(
+        result.get('very_long_mod_name:very_long_component_name').ast
+      ).toBeDefined();
     });
 
     it('should handle complex namespace patterns', () => {

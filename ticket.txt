@@ -1,5 +1,35 @@
-1. Add a `RuntimeContextBuilder` utility or service under `src/scopeDsl/` that constructs the object currently returned by `#buildRuntimeContext`.
-2. Modify `TargetResolutionService` to depend on the builder via constructor injection and remove method `#buildRuntimeContext`.
-3. Extend `ScopeRegistry` (or a new helper) to store parsed ASTs. During initialization (e.g., when scopes are loaded via `parseScopeDefinitions`), parse expressions once and keep `{ expr, ast }`.
-4. Change `#resolveScopeToIds` to retrieve the pre-parsed AST from the registry rather than calling `parseDslExpression` each time.
-5. Update affected unit tests in `tests/unit/actions/targetResolutionService.*` to account for the injected builder and cached ASTs.
+T-14 CreateScopeEngine Factory
+Connect everything.
+
+Files
+
+scopeDsl/core/createScopeEngine.js
+
+tests/core/createScopeEngine.test.js
+
+Factory signature
+
+import createDepthGuard from './depthGuard.js';
+import createCycleDetector from './cycleDetector.js';
+import createDispatcher from '../nodes/dispatcher.js';
+
+export default function createScopeEngine(resolvers, maxDepth=4){
+const depth = createDepthGuard(maxDepth);
+const cycle = createCycleDetector();
+const dispatch = createDispatcher(resolvers);
+
+function walk(node, ctx, level){
+depth.ensure(level);
+cycle.enter(nodeKey(node)); // implement same key generator
+try { return dispatch.resolve(node, { ...ctx, walk: n => walk(n, ctx, level+1) }); }
+finally { cycle.leave(); }
+}
+
+return {
+resolve(ast, actor, ports){ return walk(ast, { actorEntity:actor, ...ports }, 0); },
+setMaxDepth(n){ depth.maxDepth = n; }
+};
+}
+Tests
+
+Smoke test with real resolvers reproduces old behaviour.

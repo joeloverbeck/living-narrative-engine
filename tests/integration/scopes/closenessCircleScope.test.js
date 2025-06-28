@@ -60,14 +60,16 @@ describe('Closeness Circle Scope Resolution', () => {
 
     // Create scope registry and register the closeness scope
     scopeRegistry = new ScopeRegistry();
-    scopeRegistry.initialize(addMockAstsToScopes({
-      'intimacy:close_actors': {
-        expr: 'actor.components.intimacy:closeness.partners[]',
-        definition:
-          'intimacy:close_actors := actor.components.intimacy:closeness.partners[]',
-        modId: 'intimacy',
-      },
-    }));
+    scopeRegistry.initialize(
+      addMockAstsToScopes({
+        'intimacy:close_actors': {
+          expr: 'actor.components.intimacy:closeness.partners[]',
+          definition:
+            'intimacy:close_actors := actor.components.intimacy:closeness.partners[]',
+          modId: 'intimacy',
+        },
+      })
+    );
 
     // Create scope engine
     scopeEngine = new ScopeEngine({
