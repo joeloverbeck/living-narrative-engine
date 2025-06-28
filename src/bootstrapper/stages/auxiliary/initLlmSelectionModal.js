@@ -2,12 +2,13 @@
 
 import { stageSuccess, stageFailure } from '../../helpers.js';
 import './typedefs.js';
+/** @typedef {import('./typedefs.js').AuxHelperDeps} AuxHelperDeps */
 
 /**
  * Resolves LlmSelectionModal service.
  *
- * @param {AuxHelperDeps} deps
- * @returns {{success: boolean, error?: Error}}
+ * @param {AuxHelperDeps} deps - Contains DI container, logger, and token map.
+ * @returns {{success: boolean, error?: Error}} Result of initialization.
  */
 export function initLlmSelectionModal({ container, logger, tokens }) {
   const stage = 'LlmSelectionModal Init';

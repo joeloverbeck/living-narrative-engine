@@ -110,18 +110,16 @@ export class LoggerConfigLoader {
       : this.#defaultConfigPath;
 
     // Use a safe way to log, as this.#logger could be console or a full ILogger
-    const logInfo = (msg, ...args) =>
-      this.#logger.info
-        ? this.#logger.info(msg, ...args)
-        : console.info(msg, ...args);
     const logError = (msg, ...args) =>
       this.#logger.error
         ? this.#logger.error(msg, ...args)
-        : console.error(msg, ...args);
+        : // eslint-disable-next-line no-console
+          console.error(msg, ...args);
     const logWarn = (msg, ...args) =>
       this.#logger.warn
         ? this.#logger.warn(msg, ...args)
-        : console.warn(msg, ...args);
+        : // eslint-disable-next-line no-console
+          console.warn(msg, ...args);
 
     let parsedResponse;
     try {
