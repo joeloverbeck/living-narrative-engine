@@ -6,6 +6,7 @@ import { ICommandProcessor } from './interfaces/ICommandProcessor.js';
 import { initLogger } from '../utils/index.js';
 import { validateDependency, assertValidId } from '../utils/dependencyUtils.js';
 import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
+import { createErrorDetails } from '../utils/errorDetails.js';
 
 // --- Type Imports ---
 /** @typedef {import('../entities/entity.js').default} Entity */
@@ -165,7 +166,7 @@ class CommandProcessor extends ICommandProcessor {
     safeDispatchError(
       this.#safeEventDispatcher,
       userMsg,
-      this.#createErrorDetails(internalMsg),
+      createErrorDetails(internalMsg),
       this.#logger
     );
     return this.#createFailureResult(
@@ -223,20 +224,6 @@ class CommandProcessor extends ICommandProcessor {
     return result;
   }
 
-  /**
-   * @description Creates standardized error details for safeDispatchError.
-   * @param {string} rawMessage - The raw internal error message.
-   * @param {string} [stackOverride] - Stack trace to attach.
-   * @returns {{raw: string, timestamp: string, stack: string}} Error details object.
-   */
-  #createErrorDetails(rawMessage, stackOverride = new Error().stack) {
-    return {
-      raw: rawMessage,
-      timestamp: new Date().toISOString(),
-      stack: stackOverride,
-    };
-  }
-
   async #dispatchWithErrorHandling(eventName, payload, loggingContextName) {
     this.#logger.debug(
       `CommandProcessor.#dispatchWithErrorHandling: Attempting dispatch: ${loggingContextName} ('${eventName}')`
@@ -277,7 +264,7 @@ class CommandProcessor extends ICommandProcessor {
       safeDispatchError(
         this.#safeEventDispatcher,
         'System error during event dispatch.',
-        this.#createErrorDetails(
+        createErrorDetails(
           `Exception in dispatch for ${eventName}`,
           dispatchError?.stack || new Error().stack
         ),
