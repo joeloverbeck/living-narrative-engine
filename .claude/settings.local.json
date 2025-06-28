@@ -16,7 +16,8 @@
       "Bash(npx dependency-cruiser:*)",
       "Bash(npx madge:*)",
       "Bash(npx eslint:*)",
-      "Bash(mv:*)"
+      "Bash(mv:*)",
+      "Bash(npm run build:*)"
     ],
     "deny": []
   }

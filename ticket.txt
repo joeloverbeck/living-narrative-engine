@@ -1,31 +1,17 @@
-T-12 Parser Upgrade
-Goals
+T-13 Filter & Union Resolvers
+Implement remaining node resolvers using gateways.
 
-Stop mutating nodes; emit distinct ArrayIterationStep objects.
+Files
 
-Depth enforcement via createDepthGuard.
+scopeDsl/nodes/filterResolver.js
 
-Tokenizer injection ready.
+scopeDsl/nodes/unionResolver.js
 
-Files to modify
+tests.
 
-scopeDsl/parser/parser.js
+filterResolver factory params
 
-scopeDsl/parser/tokenizer.js (no functional change but exported)
+({ logicEval, entitiesGateway, locationProvider })
+Use evaluator exactly as original engine.
 
-tests update.
-
-Key Steps
-
-Replace node.isArray=true path with construction:
-
-node = { type:'ArrayIterationStep', parent: node }
-At each edge in parseTerm, call guard.ensure(depth+1).
-
-Constructor: constructor(input, tokenizer = new Tokenizer(input)).
-
-Acceptance
-
-Old characterisation tests still pass.
-
-New tests check immutability (Object.freeze clones cannot be mutated).
+unionResolver simply unions results of left/right using new Set([...a,...b]).
