@@ -180,8 +180,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
       return { actions: [], errors: [], trace: null };
     }
 
-    trace?.addLog(
-      TRACE_INFO,
+    trace?.info(
       `Starting action discovery for actor '${actorEntity.id}'.`,
       'getValidActions',
       { withTrace: shouldTrace }
@@ -228,8 +227,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     this.#logger.debug(
       `Finished action discovery for actor ${actorEntity.id}. Found ${actions.length} actions from ${candidateDefs.length} candidates.`
     );
-    trace?.addLog(
-      TRACE_INFO,
+    trace?.info(
       `Finished discovery. Found ${actions.length} valid actions.`,
       'getValidActions'
     );
@@ -254,23 +252,17 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     trace
   ) {
     const source = 'ActionDiscoveryService.#processCandidateAction';
-    trace?.addLog(
-      TRACE_STEP,
-      `Processing candidate action: '${actionDef.id}'`,
-      source
-    );
+    trace?.step(`Processing candidate action: '${actionDef.id}'`, source);
 
     // STEP 1: Check actor prerequisites
     if (!this.#actorMeetsPrerequisites(actionDef, actorEntity, trace)) {
-      trace?.addLog(
-        TRACE_FAILURE,
+      trace?.failure(
         `Action '${actionDef.id}' discarded due to failed actor prerequisites.`,
         source
       );
       return null;
     }
-    trace?.addLog(
-      TRACE_SUCCESS,
+    trace?.success(
       `Action '${actionDef.id}' passed actor prerequisite check.`,
       source
     );
@@ -289,8 +281,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
       );
       return null;
     }
-    trace?.addLog(
-      TRACE_INFO,
+    trace?.info(
       `Scope for action '${actionDef.id}' resolved to ${targetContexts.length} targets.`,
       source,
       { targets: targetContexts.map((t) => t.entityId) }

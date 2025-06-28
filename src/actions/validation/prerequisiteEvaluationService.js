@@ -232,7 +232,7 @@ export class PrerequisiteEvaluationService extends BaseService {
     const source = 'PrerequisiteEvaluationService._evaluatePrerequisite';
     const originalLogic = prereqObject.logic;
 
-    trace?.addLog(TRACE_INFO, 'Evaluating rule.', source, {
+    trace?.info('Evaluating rule.', source, {
       logic: originalLogic || {},
     });
 
@@ -242,7 +242,7 @@ export class PrerequisiteEvaluationService extends BaseService {
     );
 
     if (JSON.stringify(originalLogic) !== JSON.stringify(resolvedLogic)) {
-      trace?.addLog(TRACE_DATA, 'Condition reference resolved.', source, {
+      trace?.data('Condition reference resolved.', source, {
         resolvedLogic: resolvedLogic || {},
       });
     }
@@ -255,12 +255,13 @@ export class PrerequisiteEvaluationService extends BaseService {
 
     const result = this._executeJsonLogic(resolvedLogic, evaluationContext);
 
-    trace?.addLog(
-      result ? TRACE_SUCCESS : TRACE_FAILURE,
-      `Rule evaluation result: ${result}`,
-      source,
-      { result: Boolean(result) }
-    );
+    result
+      ? trace?.success(`Rule evaluation result: ${result}`, source, {
+          result: Boolean(result),
+        })
+      : trace?.failure(`Rule evaluation result: ${result}`, source, {
+          result: Boolean(result),
+        });
 
     return result;
   }
@@ -306,8 +307,7 @@ export class PrerequisiteEvaluationService extends BaseService {
         trace
       );
     } catch (evalError) {
-      trace?.addLog(
-        TRACE_ERROR,
+      trace?.error(
         `Error during rule evaluation: ${evalError.message}`,
         source,
         { error: evalError }
@@ -404,14 +404,9 @@ export class PrerequisiteEvaluationService extends BaseService {
       return false;
     }
 
-    trace?.addLog(
-      TRACE_DATA,
-      'Built prerequisite evaluation context.',
-      source,
-      {
-        context: evaluationContext || {},
-      }
-    );
+    trace?.data('Built prerequisite evaluation context.', source, {
+      context: evaluationContext || {},
+    });
 
     return this.#evaluateRules(
       prerequisites,

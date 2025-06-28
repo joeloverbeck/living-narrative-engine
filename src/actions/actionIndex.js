@@ -119,19 +119,13 @@ export class ActionIndex {
 
     const actorComponentTypes =
       this.#entityManager.getAllComponentTypesForEntity(actorEntity.id) || [];
-    trace?.addLog(
-      TRACE_DATA,
-      `Actor '${actorEntity.id}' has components.`,
-      source,
-      {
-        components: actorComponentTypes.length > 0 ? actorComponentTypes : [],
-      }
-    );
+    trace?.data(`Actor '${actorEntity.id}' has components.`, source, {
+      components: actorComponentTypes.length > 0 ? actorComponentTypes : [],
+    });
 
     // Use a Set to automatically handle de-duplication.
     const candidateSet = new Set(this.#noActorRequirement);
-    trace?.addLog(
-      TRACE_INFO,
+    trace?.info(
       `Added ${this.#noActorRequirement.length} actions with no actor component requirements.`,
       source
     );
@@ -139,8 +133,7 @@ export class ActionIndex {
     for (const componentType of actorComponentTypes) {
       const actionsForComponent = this.#byActorComponent.get(componentType);
       if (actionsForComponent) {
-        trace?.addLog(
-          TRACE_INFO,
+        trace?.info(
           `Found ${actionsForComponent.length} actions requiring component '${componentType}'.`,
           source
         );
@@ -151,8 +144,7 @@ export class ActionIndex {
     }
 
     const candidates = Array.from(candidateSet);
-    trace?.addLog(
-      TRACE_SUCCESS,
+    trace?.success(
       `Final candidate list contains ${candidates.length} unique actions.`,
       source,
       { actionIds: candidates.map((a) => a.id) }

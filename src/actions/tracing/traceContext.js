@@ -63,4 +63,82 @@ export class TraceContext {
 
     this.logs.push(logEntry);
   }
+
+  /**
+   * Convenience wrapper for logging an informational message.
+   *
+   * @param {string} msg The log message.
+   * @param {string} src The source of the log entry.
+   * @param {object} [data] Optional payload.
+   */
+  info(msg, src, data) {
+    data === undefined
+      ? this.addLog(TRACE_INFO, msg, src)
+      : this.addLog(TRACE_INFO, msg, src, data);
+  }
+
+  /**
+   * Convenience wrapper for logging a success event.
+   *
+   * @param {string} msg The log message.
+   * @param {string} src The source of the log entry.
+   * @param {object} [data] Optional payload.
+   */
+  success(msg, src, data) {
+    data === undefined
+      ? this.addLog(TRACE_SUCCESS, msg, src)
+      : this.addLog(TRACE_SUCCESS, msg, src, data);
+  }
+
+  /**
+   * Convenience wrapper for logging a failure event.
+   *
+   * @param {string} msg The log message.
+   * @param {string} src The source of the log entry.
+   * @param {object} [data] Optional payload.
+   */
+  failure(msg, src, data) {
+    data === undefined
+      ? this.addLog(TRACE_FAILURE, msg, src)
+      : this.addLog(TRACE_FAILURE, msg, src, data);
+  }
+
+  /**
+   * Convenience wrapper for logging a high-level step in a process.
+   *
+   * @param {string} msg The log message.
+   * @param {string} src The source of the log entry.
+   * @param {object} [data] Optional payload.
+   */
+  step(msg, src, data) {
+    data === undefined
+      ? this.addLog(TRACE_STEP, msg, src)
+      : this.addLog(TRACE_STEP, msg, src, data);
+  }
+
+  /**
+   * Convenience wrapper for logging an error event.
+   *
+   * @param {string} msg The log message.
+   * @param {string} src The source of the log entry.
+   * @param {object} [data] Optional payload.
+   */
+  error(msg, src, data) {
+    data === undefined
+      ? this.addLog(TRACE_ERROR, msg, src)
+      : this.addLog(TRACE_ERROR, msg, src, data);
+  }
+
+  /**
+   * Convenience wrapper for logging a data payload.
+   *
+   * @param {string} msg The log message.
+   * @param {string} src The source of the log entry.
+   * @param {object} [data] Optional payload.
+   */
+  data(msg, src, data) {
+    data === undefined
+      ? this.addLog(TRACE_DATA, msg, src)
+      : this.addLog(TRACE_DATA, msg, src, data);
+  }
 }
