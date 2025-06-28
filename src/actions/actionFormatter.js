@@ -62,16 +62,6 @@ function normalizeFormatResult(result) {
 }
 
 /**
- * @description Validates inputs for {@link formatActionCommand}.
- * @param {ActionDefinition} actionDefinition - Validated action definition.
- * @param {ActionTargetContext} targetContext - Validated target context.
- * @param {EntityManager} entityManager - Entity manager for lookups.
- * @param {(entity: Entity, fallback: string, logger?: ILogger) => string} displayNameFn - Utility to resolve entity names.
- * @param {ISafeEventDispatcher} dispatcher - Dispatcher used for error events.
- * @param {ILogger} logger - Logger instance used for validation.
- * @returns {FormatActionError | null} An error result if validation fails, otherwise `null`.
- */
-/**
  * @description Checks required inputs for {@link formatActionCommand}.
  * @param {ActionDefinition} actionDefinition - Action definition to check.
  * @param {ActionTargetContext} targetContext - Target context for formatting.

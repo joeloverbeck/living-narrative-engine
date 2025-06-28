@@ -236,13 +236,17 @@ describe('Scope Registry Initialization - Focused Test', () => {
       const dateSpy = jest.spyOn(Date, 'now').mockReturnValue(42);
       const scopes = mockDataRegistry.getAll(SCOPES_KEY);
       const scopeMap = {};
+      const expectedScope = addMockAst(properlyFormattedScopes[0]);
       scopes.forEach((scope) => {
         if (scope.id) {
-          scopeMap[scope.id] = addMockAst(scope);
+          // Reuse the same AST instance for deterministic comparison
+          scopeMap[scope.id] =
+            scope === properlyFormattedScopes[0]
+              ? expectedScope
+              : addMockAst(scope);
         }
       });
-
-
+      
       expect(scopeMap['core:potential_leaders']).toEqual(
         addMockAst(properlyFormattedScopes[0])
       );
