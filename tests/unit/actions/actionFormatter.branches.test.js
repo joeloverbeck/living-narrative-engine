@@ -100,4 +100,13 @@ describe('formatActionCommand uncovered branches', () => {
       formatActionCommand(actionDef, context, entityManager, { logger })
     ).toThrow('Missing required dependency: safeEventDispatcher.');
   });
+
+  it('throws explicit error when both logger and dispatcher are missing', () => {
+    const actionDef = { id: 'core:wait', template: 'wait' };
+    const context = { type: TARGET_TYPE_NONE };
+
+    expect(() =>
+      formatActionCommand(actionDef, context, entityManager)
+    ).toThrow('formatActionCommand: logger is required.');
+  });
 });

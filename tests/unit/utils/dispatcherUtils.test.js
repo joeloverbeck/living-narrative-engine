@@ -30,6 +30,7 @@ describe('resolveSafeDispatcher', () => {
     };
     const result = resolveSafeDispatcher(execCtx, logger);
     expect(result).toBeNull();
+    expect(logger.warn).toHaveBeenCalled();
   });
 
   test('uses injected dispatcher factory', () => {

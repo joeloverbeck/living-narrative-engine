@@ -330,7 +330,9 @@ describe('SetVariableHandler', () => {
       expect(mockLoggerInstance.debug).toHaveBeenCalledWith(
         'SET_VARIABLE: Setting context variable "message" in evaluationContext.context to value: "Hello World"'
       );
-      expect(mockLoggerInstance.warn).not.toHaveBeenCalled();
+      expect(mockLoggerInstance.warn).toHaveBeenCalledWith(
+        '[contextVariableUtils] resolveSafeDispatcher: validatedEventDispatcher not available.'
+      );
       expect(mockLoggerInstance.error).not.toHaveBeenCalled();
     });
 
