@@ -53,6 +53,9 @@ describe('CommandProcessor.dispatchAction', () => {
         originalInput: 'look north',
       })
     );
+    expect(logger.debug).toHaveBeenCalledWith(
+      'CommandProcessor.#dispatchWithErrorHandling: Dispatch successful for ATTEMPT_ACTION_ID dispatch for pre-resolved action look.'
+    );
   });
 
   it('returns failure when actor is missing an id', async () => {
@@ -171,6 +174,11 @@ describe('CommandProcessor.dispatchAction', () => {
       expect.any(Object),
       logger
     );
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining(
+        'CommandProcessor.#dispatchWithErrorHandling: SafeEventDispatcher reported failure for ATTEMPT_ACTION_ID dispatch for pre-resolved action take'
+      )
+    );
   });
 
   it('constructs expected failure result when dispatcher reports failure', async () => {
@@ -226,6 +234,10 @@ describe('CommandProcessor.dispatchAction', () => {
       'Internal error: Failed to initiate action.',
       expect.any(Object),
       logger
+    );
+    expect(logger.error).toHaveBeenCalledWith(
+      'CommandProcessor.#dispatchWithErrorHandling: CRITICAL - Error during dispatch for ATTEMPT_ACTION_ID dispatch for pre-resolved action jump. Error: boom',
+      expect.any(Error)
     );
   });
 });

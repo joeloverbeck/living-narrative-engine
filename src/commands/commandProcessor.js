@@ -224,6 +224,54 @@ class CommandProcessor extends ICommandProcessor {
     return result;
   }
 
+  /**
+   * @description Logs a successful dispatch.
+   * @param {string} context - Logging context name.
+   * @returns {void}
+   */
+  #logDispatchSuccess(context) {
+    this.#logger.debug(
+      `CommandProcessor.#dispatchWithErrorHandling: Dispatch successful for ${context}.`
+    );
+  }
+
+  /**
+   * @description Logs a failed dispatch when the dispatcher returns `false`.
+   * @param {string} context - Logging context name.
+   * @param {object} payload - Payload that was dispatched.
+   * @returns {void}
+   */
+  #logDispatchFailure(context, payload) {
+    this.#logger.warn(
+      `CommandProcessor.#dispatchWithErrorHandling: SafeEventDispatcher reported failure for ${context} (likely VED validation failure). Payload: ${JSON.stringify(
+        payload
+      )}`
+    );
+  }
+
+  /**
+   * @description Handles exceptions thrown during dispatch and emits a safe error event.
+   * @param {string} eventName - The event name being dispatched.
+   * @param {string} context - Logging context name.
+   * @param {Error} error - The thrown error.
+   * @returns {void}
+   */
+  #handleDispatchException(eventName, context, error) {
+    this.#logger.error(
+      `CommandProcessor.#dispatchWithErrorHandling: CRITICAL - Error during dispatch for ${context}. Error: ${error.message}`,
+      error
+    );
+    safeDispatchError(
+      this.#safeEventDispatcher,
+      'System error during event dispatch.',
+      createErrorDetails(
+        `Exception in dispatch for ${eventName}`,
+        error?.stack || new Error().stack
+      ),
+      this.#logger
+    );
+  }
+
   async #dispatchWithErrorHandling(eventName, payload, loggingContextName) {
     this.#logger.debug(
       `CommandProcessor.#dispatchWithErrorHandling: Attempting dispatch: ${loggingContextName} ('${eventName}')`
@@ -243,32 +291,17 @@ class CommandProcessor extends ICommandProcessor {
       );
 
       if (success) {
-        this.#logger.debug(
-          `CommandProcessor.#dispatchWithErrorHandling: Dispatch successful for ${loggingContextName}.`
-        );
+        this.#logDispatchSuccess(loggingContextName);
       } else {
-        // This 'else' means dispatch returned false, likely because VED returned false.
-        this.#logger.warn(
-          `CommandProcessor.#dispatchWithErrorHandling: SafeEventDispatcher reported failure for ${loggingContextName} (likely VED validation failure). Payload: ${JSON.stringify(
-            payload
-          )}`
-        );
+        // Dispatch returned false, likely due to validation failure.
+        this.#logDispatchFailure(loggingContextName, payload);
       }
       return success;
     } catch (dispatchError) {
-      this.#logger.error(
-        `CommandProcessor.#dispatchWithErrorHandling: CRITICAL - Error during dispatch for ${loggingContextName}. Error: ${dispatchError.message}`,
+      this.#handleDispatchException(
+        eventName,
+        loggingContextName,
         dispatchError
-      );
-      // If dispatch itself throws, it's a more fundamental issue.
-      safeDispatchError(
-        this.#safeEventDispatcher,
-        'System error during event dispatch.',
-        createErrorDetails(
-          `Exception in dispatch for ${eventName}`,
-          dispatchError?.stack || new Error().stack
-        ),
-        this.#logger
       );
       return false;
     }
