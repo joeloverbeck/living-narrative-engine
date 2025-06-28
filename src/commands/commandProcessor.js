@@ -53,64 +53,20 @@ class CommandProcessor extends ICommandProcessor {
    * @returns {Promise<CommandResult>} A promise that resolves to the command result.
    */
   async dispatchAction(actor, turnAction) {
-    const actorId = actor?.id;
-
-    const hasActionDefId =
-      turnAction &&
-      typeof turnAction === 'object' &&
-      'actionDefinitionId' in turnAction;
-
-    if (!actorId || !hasActionDefId) {
-      const internalMsg =
-        'dispatchAction failed: actor must have id and turnAction must include actionDefinitionId.';
-      const userMsg = 'Internal error: Malformed action prevented execution.';
-      this.#logger.error(internalMsg);
-      await safeDispatchError(
-        this.#safeEventDispatcher,
-        userMsg,
-        {
-          raw: internalMsg,
-          timestamp: new Date().toISOString(),
-          stack: new Error().stack,
-        },
-        this.#logger
-      );
-      return this.#createFailureResult(
-        userMsg,
-        internalMsg,
-        turnAction?.commandString,
-        undefined
-      );
+    const validationError = this.#validateActionInputs(actor, turnAction);
+    if (validationError) {
+      return this.#handleDispatchFailure({
+        ...validationError,
+        commandString: turnAction?.commandString,
+      });
     }
 
+    const actorId = actor.id;
     const { actionDefinitionId, commandString } = turnAction;
     this.#logger.debug(
       `CommandProcessor.dispatchAction: Dispatching pre-resolved action '${actionDefinitionId}' for actor ${actorId}.`,
       { turnAction }
     );
-
-    // --- Validation ---
-    if (!actionDefinitionId) {
-      const internalMsg = `dispatchAction failed: ITurnAction for actor ${actorId} is missing actionDefinitionId.`;
-      const userMsg = 'Internal error: Malformed action prevented execution.';
-      this.#logger.error(internalMsg);
-      await safeDispatchError(
-        this.#safeEventDispatcher,
-        userMsg,
-        {
-          raw: internalMsg,
-          timestamp: new Date().toISOString(),
-          stack: new Error().stack,
-        },
-        this.#logger
-      );
-      return this.#createFailureResult(
-        userMsg,
-        internalMsg,
-        commandString,
-        undefined
-      );
-    }
 
     // --- Payload Construction ---
     const payload = this.#buildAttemptActionPayload(actor, turnAction);
@@ -132,35 +88,85 @@ class CommandProcessor extends ICommandProcessor {
         originalInput: commandString || actionDefinitionId,
         actionResult: { actionId: actionDefinitionId },
       };
-    } else {
-      const internalMsg = `CRITICAL: Failed to dispatch pre-resolved ATTEMPT_ACTION_ID for ${actorId}, action "${actionDefinitionId}". Dispatcher reported failure.`;
-      const userMsg = 'Internal error: Failed to initiate action.';
-      this.#logger.error(internalMsg, { payload });
-      // safeDispatchError is called within #dispatchWithErrorHandling on exception, but not on a `false` return.
-      await safeDispatchError(
-        this.#safeEventDispatcher,
-        userMsg,
-        {
-          raw: `VED validation likely failed for pre-resolved action. Payload: ${JSON.stringify(
-            payload
-          )}`,
-          timestamp: new Date().toISOString(),
-          stack: new Error().stack,
-        },
-        this.#logger
-      );
-
-      const failureResult = this.#createFailureResult(
-        userMsg,
-        internalMsg,
-        commandString,
-        actionDefinitionId
-      );
-      return failureResult;
     }
+
+    const internalMsg = `CRITICAL: Failed to dispatch pre-resolved ATTEMPT_ACTION_ID for ${actorId}, action "${actionDefinitionId}". Dispatcher reported failure.`;
+    const userMsg = 'Internal error: Failed to initiate action.';
+    this.#logger.error(internalMsg, { payload });
+    return this.#handleDispatchFailure({
+      userMsg,
+      internalMsg,
+      commandString,
+      actionId: actionDefinitionId,
+    });
   }
 
   // --- Private Helper Methods ---
+
+  /**
+   * @description Validates actor and action inputs for dispatchAction.
+   * @param {Entity} actor - The entity performing the action.
+   * @param {ITurnAction} turnAction - The proposed action object.
+   * @returns {{userMsg: string, internalMsg: string}|null} Error details when invalid, otherwise null.
+   */
+  #validateActionInputs(actor, turnAction) {
+    const actorId = actor?.id;
+    const hasActionDefId =
+      turnAction &&
+      typeof turnAction === 'object' &&
+      'actionDefinitionId' in turnAction;
+
+    if (!actorId || !hasActionDefId) {
+      return {
+        userMsg: 'Internal error: Malformed action prevented execution.',
+        internalMsg:
+          'dispatchAction failed: actor must have id and turnAction must include actionDefinitionId.',
+      };
+    }
+
+    if (!turnAction.actionDefinitionId) {
+      return {
+        userMsg: 'Internal error: Malformed action prevented execution.',
+        internalMsg: `dispatchAction failed: ITurnAction for actor ${actorId} is missing actionDefinitionId.`,
+      };
+    }
+
+    return null;
+  }
+
+  /**
+   * @description Handle a dispatch failure uniformly.
+   * @param {object} opts Failure options.
+   * @param {string} opts.userMsg User-facing error message.
+   * @param {string} opts.internalMsg Detailed internal error message.
+   * @param {string} [opts.commandString] Original command string.
+   * @param {string} [opts.actionId] Action identifier.
+   * @returns {Promise<CommandResult>} Failure result object.
+   */
+  async #handleDispatchFailure({
+    userMsg,
+    internalMsg,
+    commandString,
+    actionId,
+  }) {
+    this.#logger.error(internalMsg);
+    await safeDispatchError(
+      this.#safeEventDispatcher,
+      userMsg,
+      {
+        raw: internalMsg,
+        timestamp: new Date().toISOString(),
+        stack: new Error().stack,
+      },
+      this.#logger
+    );
+    return this.#createFailureResult(
+      userMsg,
+      internalMsg,
+      commandString,
+      actionId
+    );
+  }
 
   /**
    * @description Builds the payload for an action attempt dispatch.
