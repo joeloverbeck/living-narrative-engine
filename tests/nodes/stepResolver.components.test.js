@@ -1,6 +1,9 @@
 import { jest } from '@jest/globals';
 import createStepResolver from '../../src/scopeDsl/nodes/stepResolver.js';
-import { createMockEntity, createTestEntity } from '../common/mockFactories/entities.js';
+import {
+  createMockEntity,
+  createTestEntity,
+} from '../common/mockFactories/entities.js';
 
 describe('StepResolver - components edge access', () => {
   let resolver;
@@ -107,7 +110,7 @@ describe('StepResolver - components edge access', () => {
       const components = [...result][0];
       // Should return empty components object, not the entity's components
       expect(components).toEqual({});
-      
+
       // Should log a warning
       expect(trace.addLog).toHaveBeenCalledWith(
         'warn',
@@ -129,15 +132,17 @@ describe('StepResolver - components edge access', () => {
 
       dispatcher.resolve.mockReturnValue(new Set(['entity1']));
       entitiesGateway.getEntityInstance.mockReturnValue(entityWithoutMethod);
-      
+
       // Mock the gateway's getComponentData
-      entitiesGateway.getComponentData.mockImplementation((entityId, componentId) => {
-        const data = {
-          'core:name': { first: 'Gateway', last: 'Data' },
-          'core:actor': { type: 'player' },
-        };
-        return data[componentId];
-      });
+      entitiesGateway.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          const data = {
+            'core:name': { first: 'Gateway', last: 'Data' },
+            'core:actor': { type: 'player' },
+          };
+          return data[componentId];
+        }
+      );
 
       const result = resolver.resolve(node, ctx);
 
@@ -147,8 +152,14 @@ describe('StepResolver - components edge access', () => {
         'core:name': { first: 'Gateway', last: 'Data' },
         'core:actor': { type: 'player' },
       });
-      expect(entitiesGateway.getComponentData).toHaveBeenCalledWith('entity1', 'core:name');
-      expect(entitiesGateway.getComponentData).toHaveBeenCalledWith('entity1', 'core:actor');
+      expect(entitiesGateway.getComponentData).toHaveBeenCalledWith(
+        'entity1',
+        'core:name'
+      );
+      expect(entitiesGateway.getComponentData).toHaveBeenCalledWith(
+        'entity1',
+        'core:actor'
+      );
     });
 
     it('should handle entity not found in gateway', () => {
@@ -181,10 +192,10 @@ describe('StepResolver - components edge access', () => {
 
       expect(result.size).toBe(2);
       const componentsArray = [...result];
-      
+
       // First entity should have core:actor component
       expect(componentsArray[0]).toHaveProperty('core:actor');
-      
+
       // Second entity should have core:position component
       expect(componentsArray[1]).toEqual({
         'core:position': { location: 'loc1' },
