@@ -2,36 +2,32 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "http://example.com/schemas/operations/getTimestamp.schema.json",
   "title": "GET_TIMESTAMP Operation",
-  "type": "object",
-  "properties": {
-    "type": {
-      "const": "GET_TIMESTAMP"
+  "allOf": [
+    {
+      "$ref": "../operation-base.schema.json"
     },
-    "comment": {
-      "type": "string",
-      "description": "Optional. A human-readable description or note for developers or modders; ignored by the interpreter at runtime."
-    },
-    "condition": {
-      "$ref": "../condition-container.schema.json#",
-      "description": "Optional. If present, this operation only executes if the condition evaluates to true. Can be an inline JSON-Logic rule or a 'condition_ref'."
-    },
-    "parameters": {
-      "$ref": "#/$defs/Parameters"
-    }
-  },
-  "required": ["type", "parameters"],
-  "additionalProperties": false,
-  "$defs": {
-    "Parameters": {
-      "type": "object",
+    {
       "properties": {
-        "result_variable": {
-          "type": "string",
-          "minLength": 1
+        "type": {
+          "const": "GET_TIMESTAMP"
+        },
+        "parameters": {
+          "$ref": "#/$defs/Parameters"
         }
       },
-      "required": ["result_variable"],
-      "additionalProperties": false
+      "$defs": {
+        "Parameters": {
+          "type": "object",
+          "properties": {
+            "result_variable": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": ["result_variable"],
+          "additionalProperties": false
+        }
+      }
     }
-  }
+  ]
 }

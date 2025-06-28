@@ -2,41 +2,37 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "http://example.com/schemas/operations/systemMoveEntity.schema.json",
   "title": "SYSTEM_MOVE_ENTITY Operation",
-  "type": "object",
-  "properties": {
-    "type": {
-      "const": "SYSTEM_MOVE_ENTITY"
+  "allOf": [
+    {
+      "$ref": "../operation-base.schema.json"
     },
-    "comment": {
-      "type": "string",
-      "description": "Optional. A human-readable description or note for developers or modders; ignored by the interpreter at runtime."
-    },
-    "condition": {
-      "$ref": "../condition-container.schema.json#",
-      "description": "Optional. If present, this operation only executes if the condition evaluates to true. Can be an inline JSON-Logic rule or a 'condition_ref'."
-    },
-    "parameters": {
-      "$ref": "#/$defs/Parameters"
-    }
-  },
-  "required": ["type", "parameters"],
-  "additionalProperties": false,
-  "$defs": {
-    "Parameters": {
-      "type": "object",
-      "description": "Parameters for the SYSTEM_MOVE_ENTITY operation, which directly moves an entity to a new location without consuming a turn.",
+    {
       "properties": {
-        "entity_ref": {
-          "$ref": "../common.schema.json#/definitions/entityReference",
-          "description": "Required. The entity to move."
+        "type": {
+          "const": "SYSTEM_MOVE_ENTITY"
         },
-        "target_location_id": {
-          "type": "string",
-          "description": "Required. The namespaced ID of the location to move the entity to. Can be a placeholder string like '{event.payload.currentLocationId}'."
+        "parameters": {
+          "$ref": "#/$defs/Parameters"
         }
       },
-      "required": ["entity_ref", "target_location_id"],
-      "additionalProperties": false
+      "$defs": {
+        "Parameters": {
+          "type": "object",
+          "description": "Parameters for the SYSTEM_MOVE_ENTITY operation, which directly moves an entity to a new location without consuming a turn.",
+          "properties": {
+            "entity_ref": {
+              "$ref": "../common.schema.json#/definitions/entityReference",
+              "description": "Required. The entity to move."
+            },
+            "target_location_id": {
+              "type": "string",
+              "description": "Required. The namespaced ID of the location to move the entity to. Can be a placeholder string like '{event.payload.currentLocationId}'."
+            }
+          },
+          "required": ["entity_ref", "target_location_id"],
+          "additionalProperties": false
+        }
+      }
     }
-  }
+  ]
 }

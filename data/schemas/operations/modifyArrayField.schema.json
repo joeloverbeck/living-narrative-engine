@@ -2,95 +2,91 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "http://example.com/schemas/operations/modifyArrayField.schema.json",
   "title": "MODIFY_ARRAY_FIELD Operation",
-  "type": "object",
-  "properties": {
-    "type": {
-      "const": "MODIFY_ARRAY_FIELD"
+  "allOf": [
+    {
+      "$ref": "../operation-base.schema.json"
     },
-    "comment": {
-      "type": "string",
-      "description": "Optional. A human-readable description or note for developers or modders; ignored by the interpreter at runtime."
-    },
-    "condition": {
-      "$ref": "../condition-container.schema.json#",
-      "description": "Optional. If present, this operation only executes if the condition evaluates to true. Can be an inline JSON-Logic rule or a 'condition_ref'."
-    },
-    "parameters": {
-      "$ref": "#/$defs/Parameters"
-    }
-  },
-  "required": ["type", "parameters"],
-  "additionalProperties": false,
-  "$defs": {
-    "Parameters": {
-      "type": "object",
-      "description": "Parameters for MODIFY_ARRAY_FIELD. Atomically modifies an array within a component.",
+    {
       "properties": {
-        "entity_ref": {
-          "$ref": "../common.schema.json#/definitions/entityReference"
+        "type": {
+          "const": "MODIFY_ARRAY_FIELD"
         },
-        "component_type": {
-          "$ref": "../common.schema.json#/definitions/namespacedId"
-        },
-        "field": {
-          "type": "string",
-          "description": "Required. Dot-separated path to the array field within the component.",
-          "minLength": 1
-        },
-        "mode": {
-          "type": "string",
-          "description": "The operation to perform: 'push' adds a value, 'push_unique' adds a value if it's not already present, 'remove_by_value' removes the first matching value, 'pop' removes the last value.",
-          "enum": ["push", "push_unique", "remove_by_value", "pop"]
-        },
-        "value": {
-          "description": "The value to add or remove. Required for 'push', 'push_unique' and 'remove_by_value'."
-        },
-        "result_variable": {
-          "type": "string",
-          "description": "Optional. For 'pop', stores the removed item. For others, can store the modified array.",
-          "minLength": 1
+        "parameters": {
+          "$ref": "#/$defs/Parameters"
         }
       },
-      "required": ["entity_ref", "component_type", "field", "mode"],
-      "additionalProperties": false,
-      "allOf": [
-        {
-          "if": {
-            "properties": {
-              "mode": {
-                "const": "push"
-              }
+      "$defs": {
+        "Parameters": {
+          "type": "object",
+          "description": "Parameters for MODIFY_ARRAY_FIELD. Atomically modifies an array within a component.",
+          "properties": {
+            "entity_ref": {
+              "$ref": "../common.schema.json#/definitions/entityReference"
+            },
+            "component_type": {
+              "$ref": "../common.schema.json#/definitions/namespacedId"
+            },
+            "field": {
+              "type": "string",
+              "description": "Required. Dot-separated path to the array field within the component.",
+              "minLength": 1
+            },
+            "mode": {
+              "type": "string",
+              "description": "The operation to perform: 'push' adds a value, 'push_unique' adds a value if it's not already present, 'remove_by_value' removes the first matching value, 'pop' removes the last value.",
+              "enum": ["push", "push_unique", "remove_by_value", "pop"]
+            },
+            "value": {
+              "description": "The value to add or remove. Required for 'push', 'push_unique' and 'remove_by_value'."
+            },
+            "result_variable": {
+              "type": "string",
+              "description": "Optional. For 'pop', stores the removed item. For others, can store the modified array.",
+              "minLength": 1
             }
           },
-          "then": {
-            "required": ["value"]
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "mode": {
-                "const": "push_unique"
+          "required": ["entity_ref", "component_type", "field", "mode"],
+          "additionalProperties": false,
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "mode": {
+                    "const": "push"
+                  }
+                }
+              },
+              "then": {
+                "required": ["value"]
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "mode": {
+                    "const": "push_unique"
+                  }
+                }
+              },
+              "then": {
+                "required": ["value"]
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "mode": {
+                    "const": "remove_by_value"
+                  }
+                }
+              },
+              "then": {
+                "required": ["value"]
               }
             }
-          },
-          "then": {
-            "required": ["value"]
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "mode": {
-                "const": "remove_by_value"
-              }
-            }
-          },
-          "then": {
-            "required": ["value"]
-          }
+          ]
         }
-      ]
+      }
     }
-  }
+  ]
 }

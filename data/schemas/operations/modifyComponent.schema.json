@@ -2,49 +2,51 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "http://example.com/schemas/operations/modifyComponent.schema.json",
   "title": "MODIFY_COMPONENT Operation",
-  "type": "object",
-  "properties": {
-    "type": {
-      "const": "MODIFY_COMPONENT"
+  "allOf": [
+    {
+      "$ref": "../operation-base.schema.json"
     },
-    "comment": {
-      "type": "string",
-      "description": "Optional. A human-readable description or note for developers or modders; ignored by the interpreter at runtime."
-    },
-    "condition": {
-      "$ref": "../condition-container.schema.json#",
-      "description": "Optional. If present, this operation only executes if the condition evaluates to true. Can be an inline JSON-Logic rule or a 'condition_ref'."
-    },
-    "parameters": {
-      "$ref": "#/$defs/Parameters"
-    }
-  },
-  "required": ["type", "parameters"],
-  "additionalProperties": false,
-  "$defs": {
-    "Parameters": {
-      "type": "object",
-      "description": "Parameters for the MODIFY_COMPONENT operation. Modifies a specific field within an existing component (mode \"set\" only—use a MATH + SET_VARIABLE combo for arithmetic).",
+    {
       "properties": {
-        "entity_ref": {
-          "$ref": "../common.schema.json#/definitions/entityReference"
+        "type": {
+          "const": "MODIFY_COMPONENT"
         },
-        "component_type": {
-          "$ref": "../common.schema.json#/definitions/namespacedId"
-        },
-        "field": {
-          "type": "string",
-          "minLength": 1
-        },
-        "mode": {
-          "type": "string",
-          "enum": ["set"],
-          "default": "set"
-        },
-        "value": {}
+        "parameters": {
+          "$ref": "#/$defs/Parameters"
+        }
       },
-      "required": ["entity_ref", "component_type", "field", "mode", "value"],
-      "additionalProperties": false
+      "$defs": {
+        "Parameters": {
+          "type": "object",
+          "description": "Parameters for the MODIFY_COMPONENT operation. Modifies a specific field within an existing component (mode \"set\" only—use a MATH + SET_VARIABLE combo for arithmetic).",
+          "properties": {
+            "entity_ref": {
+              "$ref": "../common.schema.json#/definitions/entityReference"
+            },
+            "component_type": {
+              "$ref": "../common.schema.json#/definitions/namespacedId"
+            },
+            "field": {
+              "type": "string",
+              "minLength": 1
+            },
+            "mode": {
+              "type": "string",
+              "enum": ["set"],
+              "default": "set"
+            },
+            "value": {}
+          },
+          "required": [
+            "entity_ref",
+            "component_type",
+            "field",
+            "mode",
+            "value"
+          ],
+          "additionalProperties": false
+        }
+      }
     }
-  }
+  ]
 }

@@ -2,36 +2,42 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "http://example.com/schemas/operations/mergeClosenessCircle.schema.json",
   "title": "MERGE_CLOSENESS_CIRCLE Operation",
-  "type": "object",
-  "properties": {
-    "type": { "const": "MERGE_CLOSENESS_CIRCLE" },
-    "comment": {
-      "type": "string",
-      "description": "Optional developer note; ignored at runtime."
+  "allOf": [
+    {
+      "$ref": "../operation-base.schema.json"
     },
-    "condition": {
-      "$ref": "../condition-container.schema.json#",
-      "description": "Optional. If present, this operation only executes if the condition evaluates to true. Can be an inline JSON-Logic rule or a 'condition_ref'."
-    },
-    "parameters": { "$ref": "#/$defs/Parameters" }
-  },
-  "required": ["type", "parameters"],
-  "additionalProperties": false,
-  "$defs": {
-    "Parameters": {
-      "type": "object",
-      "description": "Parameters for merging two closeness circles and locking movement.",
+    {
       "properties": {
-        "actor_id": { "type": "string", "minLength": 1 },
-        "target_id": { "type": "string", "minLength": 1 },
-        "result_variable": {
-          "type": "string",
-          "minLength": 1,
-          "description": "Optional context variable to store affected entity IDs."
+        "type": {
+          "const": "MERGE_CLOSENESS_CIRCLE"
+        },
+        "parameters": {
+          "$ref": "#/$defs/Parameters"
         }
       },
-      "required": ["actor_id", "target_id"],
-      "additionalProperties": false
+      "$defs": {
+        "Parameters": {
+          "type": "object",
+          "description": "Parameters for merging two closeness circles and locking movement.",
+          "properties": {
+            "actor_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "target_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "result_variable": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Optional context variable to store affected entity IDs."
+            }
+          },
+          "required": ["actor_id", "target_id"],
+          "additionalProperties": false
+        }
+      }
     }
-  }
+  ]
 }

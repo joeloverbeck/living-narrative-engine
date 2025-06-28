@@ -2,43 +2,33 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "http://example.com/schemas/operations/addComponent.schema.json",
   "title": "ADD_COMPONENT Operation",
-  "type": "object",
-  "properties": {
-    "type": {
-      "const": "ADD_COMPONENT"
-    },
-    "comment": {
-      "type": "string",
-      "description": "Optional. A human-readable description or note for developers or modders; ignored by the interpreter at runtime."
-    },
-    "condition": {
-      "$ref": "../condition-container.schema.json#",
-      "description": "Optional. If present, this operation only executes if the condition evaluates to true. Can be an inline JSON-Logic rule or a 'condition_ref'."
-    },
-    "parameters": {
-      "$ref": "#/$defs/Parameters"
-    }
-  },
-  "required": ["type", "parameters"],
-  "additionalProperties": false,
-  "$defs": {
-    "Parameters": {
-      "type": "object",
-      "description": "Parameters for the ADD_COMPONENT operation. Adds a component to an entity, replacing it if it already exists.",
+  "allOf": [
+    { "$ref": "../operation-base.schema.json" },
+    {
       "properties": {
-        "entity_ref": {
-          "$ref": "../common.schema.json#/definitions/entityReference"
-        },
-        "component_type": {
-          "$ref": "../common.schema.json#/definitions/namespacedId"
-        },
-        "value": {
-          "type": "object",
-          "minProperties": 0
-        }
+        "type": { "const": "ADD_COMPONENT" },
+        "parameters": { "$ref": "#/$defs/Parameters" }
       },
-      "required": ["entity_ref", "component_type", "value"],
-      "additionalProperties": false
+      "$defs": {
+        "Parameters": {
+          "type": "object",
+          "description": "Parameters for the ADD_COMPONENT operation. Adds a component to an entity, replacing it if it already exists.",
+          "properties": {
+            "entity_ref": {
+              "$ref": "../common.schema.json#/definitions/entityReference"
+            },
+            "component_type": {
+              "$ref": "../common.schema.json#/definitions/namespacedId"
+            },
+            "value": {
+              "type": "object",
+              "minProperties": 0
+            }
+          },
+          "required": ["entity_ref", "component_type", "value"],
+          "additionalProperties": false
+        }
+      }
     }
-  }
+  ]
 }

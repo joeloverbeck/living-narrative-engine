@@ -7,7 +7,9 @@ import {
 } from '../../../src/utils/startupErrorHandler.js';
 
 jest.mock('../../../src/utils/startupErrorHandler.js', () => {
-  const actual = jest.requireActual('../../../src/utils/startupErrorHandler.js');
+  const actual = jest.requireActual(
+    '../../../src/utils/startupErrorHandler.js'
+  );
   return {
     ...actual,
     StartupErrorHandler: jest.fn().mockImplementation(() => ({

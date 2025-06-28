@@ -2,52 +2,48 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "http://example.com/schemas/operations/dispatchSpeech.schema.json",
   "title": "DISPATCH_SPEECH Operation",
-  "type": "object",
-  "properties": {
-    "type": {
-      "const": "DISPATCH_SPEECH"
+  "allOf": [
+    {
+      "$ref": "../operation-base.schema.json"
     },
-    "comment": {
-      "type": "string",
-      "description": "Optional. A human-readable description or note for developers or modders; ignored by the interpreter at runtime."
-    },
-    "condition": {
-      "$ref": "../condition-container.schema.json#",
-      "description": "Optional. If present, this operation only executes if the condition evaluates to true. Can be an inline JSON-Logic rule or a 'condition_ref'."
-    },
-    "parameters": {
-      "$ref": "#/$defs/Parameters"
-    }
-  },
-  "required": ["type", "parameters"],
-  "additionalProperties": false,
-  "$defs": {
-    "Parameters": {
-      "type": "object",
-      "description": "Parameters for the DISPATCH_SPEECH operation. Emits core:display_speech.",
+    {
       "properties": {
-        "entity_id": {
-          "type": "string",
-          "minLength": 1
+        "type": {
+          "const": "DISPATCH_SPEECH"
         },
-        "speech_content": {
-          "type": "string",
-          "minLength": 1
-        },
-        "thoughts": {
-          "type": "string",
-          "minLength": 1
-        },
-        "notes": {
-          "type": "string",
-          "minLength": 1
-        },
-        "allow_html": {
-          "type": "boolean"
+        "parameters": {
+          "$ref": "#/$defs/Parameters"
         }
       },
-      "required": ["entity_id", "speech_content"],
-      "additionalProperties": false
+      "$defs": {
+        "Parameters": {
+          "type": "object",
+          "description": "Parameters for the DISPATCH_SPEECH operation. Emits core:display_speech.",
+          "properties": {
+            "entity_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "speech_content": {
+              "type": "string",
+              "minLength": 1
+            },
+            "thoughts": {
+              "type": "string",
+              "minLength": 1
+            },
+            "notes": {
+              "type": "string",
+              "minLength": 1
+            },
+            "allow_html": {
+              "type": "boolean"
+            }
+          },
+          "required": ["entity_id", "speech_content"],
+          "additionalProperties": false
+        }
+      }
     }
-  }
+  ]
 }

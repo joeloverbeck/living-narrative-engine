@@ -109,6 +109,7 @@ class StaticConfiguration {
       'goal.schema.json',
       'mod-manifest.schema.json',
       'operation.schema.json',
+      'operation-base.schema.json',
       'rule.schema.json',
       'llm-configs.schema.json',
       'prompt-text.schema.json',

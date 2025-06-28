@@ -2,42 +2,38 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "http://example.com/schemas/operations/log.schema.json",
   "title": "LOG Operation",
-  "type": "object",
-  "properties": {
-    "type": {
-      "const": "LOG"
+  "allOf": [
+    {
+      "$ref": "../operation-base.schema.json"
     },
-    "comment": {
-      "type": "string",
-      "description": "Optional. A human-readable description or note for developers or modders; ignored by the interpreter at runtime."
-    },
-    "condition": {
-      "$ref": "../condition-container.schema.json#",
-      "description": "Optional. If present, this operation only executes if the condition evaluates to true. Can be an inline JSON-Logic rule or a 'condition_ref'."
-    },
-    "parameters": {
-      "$ref": "#/$defs/Parameters"
-    }
-  },
-  "required": ["type", "parameters"],
-  "additionalProperties": false,
-  "$defs": {
-    "Parameters": {
-      "type": "object",
-      "description": "Parameters for the LOG operation, used for debugging.",
+    {
       "properties": {
-        "message": {
-          "type": "string",
-          "minLength": 1
+        "type": {
+          "const": "LOG"
         },
-        "level": {
-          "type": "string",
-          "enum": ["debug", "info", "warn", "error"],
-          "default": "info"
+        "parameters": {
+          "$ref": "#/$defs/Parameters"
         }
       },
-      "required": ["message"],
-      "additionalProperties": false
+      "$defs": {
+        "Parameters": {
+          "type": "object",
+          "description": "Parameters for the LOG operation, used for debugging.",
+          "properties": {
+            "message": {
+              "type": "string",
+              "minLength": 1
+            },
+            "level": {
+              "type": "string",
+              "enum": ["debug", "info", "warn", "error"],
+              "default": "info"
+            }
+          },
+          "required": ["message"],
+          "additionalProperties": false
+        }
+      }
     }
-  }
+  ]
 }

@@ -78,8 +78,16 @@ describe('StepResolver', () => {
 
       expect(result.size).toBe(2);
       const resultArray = [...result];
-      expect(resultArray).toContainEqual({ location: 'location1', x: 10, y: 20 });
-      expect(resultArray).toContainEqual({ location: 'location2', x: 30, y: 40 });
+      expect(resultArray).toContainEqual({
+        location: 'location1',
+        x: 10,
+        y: 20,
+      });
+      expect(resultArray).toContainEqual({
+        location: 'location2',
+        x: 30,
+        y: 40,
+      });
     });
 
     it('should extract field values from objects', () => {

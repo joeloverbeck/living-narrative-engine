@@ -2,82 +2,78 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "http://example.com/schemas/operations/dispatchPerceptibleEvent.schema.json",
   "title": "DISPATCH_PERCEPTIBLE_EVENT Operation",
-  "type": "object",
-  "properties": {
-    "type": {
-      "const": "DISPATCH_PERCEPTIBLE_EVENT"
+  "allOf": [
+    {
+      "$ref": "../operation-base.schema.json"
     },
-    "comment": {
-      "type": "string",
-      "description": "Optional. A human-readable description or note for developers or modders; ignored by the interpreter at runtime."
-    },
-    "condition": {
-      "$ref": "../condition-container.schema.json#",
-      "description": "Optional. If present, this operation only executes if the condition evaluates to true. Can be an inline JSON-Logic rule or a 'condition_ref'."
-    },
-    "parameters": {
-      "$ref": "#/$defs/Parameters"
-    }
-  },
-  "required": ["type", "parameters"],
-  "additionalProperties": false,
-  "$defs": {
-    "Parameters": {
-      "type": "object",
-      "description": "Parameters for the DISPATCH_PERCEPTIBLE_EVENT operation. Builds and dispatches core:perceptible_event.",
+    {
       "properties": {
-        "location_id": {
-          "type": "string"
+        "type": {
+          "const": "DISPATCH_PERCEPTIBLE_EVENT"
         },
-        "description_text": {
-          "type": "string",
-          "minLength": 1
-        },
-        "perception_type": {
-          "type": "string",
-          "enum": [
-            "character_enter",
-            "character_exit",
-            "item_pickup",
-            "item_drop",
-            "item_use",
-            "speech_local",
-            "action_self_general",
-            "action_target_general",
-            "combat_attack",
-            "combat_effect",
-            "state_change_observable"
-          ]
-        },
-        "actor_id": {
-          "type": "string"
-        },
-        "target_id": {
-          "type": ["string", "null"]
-        },
-        "involved_entities": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "default": []
-        },
-        "contextual_data": {
-          "type": "object",
-          "default": {}
-        },
-        "log_entry": {
-          "type": "boolean",
-          "default": false
+        "parameters": {
+          "$ref": "#/$defs/Parameters"
         }
       },
-      "required": [
-        "location_id",
-        "description_text",
-        "perception_type",
-        "actor_id"
-      ],
-      "additionalProperties": false
+      "$defs": {
+        "Parameters": {
+          "type": "object",
+          "description": "Parameters for the DISPATCH_PERCEPTIBLE_EVENT operation. Builds and dispatches core:perceptible_event.",
+          "properties": {
+            "location_id": {
+              "type": "string"
+            },
+            "description_text": {
+              "type": "string",
+              "minLength": 1
+            },
+            "perception_type": {
+              "type": "string",
+              "enum": [
+                "character_enter",
+                "character_exit",
+                "item_pickup",
+                "item_drop",
+                "item_use",
+                "speech_local",
+                "action_self_general",
+                "action_target_general",
+                "combat_attack",
+                "combat_effect",
+                "state_change_observable"
+              ]
+            },
+            "actor_id": {
+              "type": "string"
+            },
+            "target_id": {
+              "type": ["string", "null"]
+            },
+            "involved_entities": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "default": []
+            },
+            "contextual_data": {
+              "type": "object",
+              "default": {}
+            },
+            "log_entry": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          "required": [
+            "location_id",
+            "description_text",
+            "perception_type",
+            "actor_id"
+          ],
+          "additionalProperties": false
+        }
+      }
     }
-  }
+  ]
 }

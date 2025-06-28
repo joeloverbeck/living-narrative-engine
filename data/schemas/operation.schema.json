@@ -16,6 +16,9 @@
         }
       ]
     },
+    "OperationBase": {
+      "$ref": "./operation-base.schema.json"
+    },
     "MacroReference": {
       "type": "object",
       "description": "A reference to a macro. The macro's 'actions' will be expanded in place of this reference at load time.",
