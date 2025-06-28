@@ -3,7 +3,7 @@
 
 import { IApiKeyProvider } from './interfaces/IApiKeyProvider.js';
 import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
-import { resolveSafeDispatcher } from '../utils/dispatcherUtils.js';
+import { validateDependency } from '../utils/validationUtils.js';
 import { initLogger } from '../utils/index.js';
 import { CLOUD_API_TYPES } from './constants/llmConstants.js';
 import { isValidEnvironmentContext } from './environmentContext.js';
@@ -48,13 +48,15 @@ export class ClientApiKeyProvider extends IApiKeyProvider {
     super();
 
     this.#logger = initLogger('ClientApiKeyProvider', logger);
-    this.#dispatcher =
-      safeEventDispatcher || resolveSafeDispatcher(null, this.#logger);
-    if (!this.#dispatcher) {
-      console.warn(
-        'ClientApiKeyProvider: safeEventDispatcher resolution failed; errors may not be reported.'
-      );
-    }
+    validateDependency(
+      safeEventDispatcher,
+      'safeEventDispatcher',
+      this.#logger,
+      {
+        requiredMethods: ['dispatch'],
+      }
+    );
+    this.#dispatcher = safeEventDispatcher;
     this.#logger.debug('ClientApiKeyProvider: Instance created.');
   }
 

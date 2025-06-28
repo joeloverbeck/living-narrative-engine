@@ -75,7 +75,11 @@ describe('WorldContext (Stateless)', () => {
   beforeEach(() => {
     mockEntityManager = createMockEntityManager();
     mockLogger = createMockLogger();
-    mockDispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
+    mockDispatcher = {
+      dispatch: jest.fn().mockResolvedValue(true),
+      subscribe: jest.fn(),
+      unsubscribe: jest.fn(),
+    };
 
     originalNodeEnv = process.env.NODE_ENV;
     process.env.NODE_ENV = 'test';
@@ -140,9 +144,9 @@ describe('WorldContext (Stateless)', () => {
       expect(
         () => new WorldContext(mockEntityManager, {}, mockDispatcher)
       ).toThrow('WorldContext requires a valid ILogger instance');
-      expect(
-        () => new WorldContext(mockEntityManager, mockLogger, null)
-      ).not.toThrow();
+      expect(() =>
+        new WorldContext(mockEntityManager, mockLogger, null)
+      ).toThrow('Missing required dependency: safeEventDispatcher.');
     });
 
     it('should successfully initialize with valid dependencies', () => {

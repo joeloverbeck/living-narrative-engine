@@ -3,7 +3,7 @@
 import { IPlaytimeTracker } from '../interfaces/IPlaytimeTracker.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/eventIds.js';
 import { ISafeEventDispatcher } from '../interfaces/ISafeEventDispatcher.js';
-import { resolveSafeDispatcher } from '../utils/dispatcherUtils.js';
+import { validateDependency } from '../utils/validationUtils.js';
 
 /**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
@@ -80,13 +80,15 @@ class PlaytimeTracker extends IPlaytimeTracker {
       this.#logger = logger;
     }
 
-    this.#safeEventDispatcher =
-      safeEventDispatcher || resolveSafeDispatcher(null, this.#logger);
-    if (!this.#safeEventDispatcher) {
-      console.warn(
-        'PlaytimeTracker: safeEventDispatcher resolution failed; playtime events may not be emitted.'
-      );
-    }
+    validateDependency(
+      safeEventDispatcher,
+      'safeEventDispatcher',
+      this.#logger,
+      {
+        requiredMethods: ['dispatch'],
+      }
+    );
+    this.#safeEventDispatcher = safeEventDispatcher;
 
     this.#logger.debug('PlaytimeTracker: Instance created.');
   }

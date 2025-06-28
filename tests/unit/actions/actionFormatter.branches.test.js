@@ -93,15 +93,11 @@ describe('formatActionCommand uncovered branches', () => {
     );
   });
 
-  it('warns when safeEventDispatcher resolution fails', () => {
+  it('throws when safeEventDispatcher is missing', () => {
     const actionDef = { id: 'core:wait', template: 'wait' };
     const context = { type: TARGET_TYPE_NONE };
-    const result = formatActionCommand(actionDef, context, entityManager, {
-      logger,
-    });
-    expect(result).toEqual({ ok: true, value: 'wait' });
-    expect(logger.warn).toHaveBeenCalledWith(
-      'formatActionCommand: safeEventDispatcher resolution failed; error events may not be dispatched.'
-    );
+    expect(() =>
+      formatActionCommand(actionDef, context, entityManager, { logger })
+    ).toThrow('Missing required dependency: safeEventDispatcher.');
   });
 });
