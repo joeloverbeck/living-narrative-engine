@@ -31,3 +31,8 @@ export const GOALS_COMPONENT_ID = 'core:goals';
 
 export const LEADING_COMPONENT_ID = 'core:leading';
 export const FOLLOWING_COMPONENT_ID = 'core:following';
+
+// Anatomy components
+export const ANATOMY_BODY_COMPONENT_ID = 'anatomy:body';
+export const ANATOMY_PART_COMPONENT_ID = 'anatomy:part';
+export const ANATOMY_SOCKETS_COMPONENT_ID = 'anatomy:sockets';

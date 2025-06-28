@@ -118,7 +118,6 @@ class StaticConfiguration {
       'world.schema.json',
       'anatomy.recipe.schema.json',
       'anatomy.blueprint.schema.json',
-      'anatomy.part.schema.json',
       // Prepend the 'operations/' subdirectory to each operation schema file
       ...OPERATION_SCHEMA_FILES.map((file) => `operations/${file}`),
     ];
@@ -147,7 +146,6 @@ class StaticConfiguration {
       'prompt-text': 'http://example.com/schemas/prompt-text.schema.json',
       anatomyRecipes: 'http://example.com/schemas/anatomy.recipe.schema.json',
       anatomyBlueprints: 'http://example.com/schemas/anatomy.blueprint.schema.json',
-      anatomyParts: 'http://example.com/schemas/anatomy.part.schema.json',
       // Scopes use a custom DSL format (.scope files) and are validated by the scope engine,
       // not by JSON schema validation. Explicitly return null to indicate no schema validation.
       scopes: null,

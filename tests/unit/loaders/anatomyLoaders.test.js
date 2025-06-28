@@ -60,7 +60,7 @@ describe('Anatomy Loaders Configuration', () => {
       
       expect(schemaFiles).toContain('anatomy.recipe.schema.json');
       expect(schemaFiles).toContain('anatomy.blueprint.schema.json');
-      expect(schemaFiles).toContain('anatomy.part.schema.json');
+      // anatomy.part.schema.json removed - parts are now entity definitions
     });
 
     it('should return correct schema IDs for anatomy content types', () => {
@@ -70,8 +70,9 @@ describe('Anatomy Loaders Configuration', () => {
       expect(config.getContentTypeSchemaId('anatomyBlueprints'))
         .toBe('http://example.com/schemas/anatomy.blueprint.schema.json');
       
+      // anatomyParts no longer has a schema - they use entity-definition.schema.json
       expect(config.getContentTypeSchemaId('anatomyParts'))
-        .toBe('http://example.com/schemas/anatomy.part.schema.json');
+        .toBeUndefined();
     });
   });
 
@@ -140,7 +141,7 @@ describe('Anatomy Loaders Configuration', () => {
   });
 
   describe('AnatomyPartLoader', () => {
-    it('should initialize without schema warnings', () => {
+    it('should initialize with schema warning since parts are now entity definitions', () => {
       const loader = new AnatomyPartLoader(
         config,
         mockPathResolver,
@@ -150,12 +151,13 @@ describe('Anatomy Loaders Configuration', () => {
         mockLogger
       );
 
-      expect(mockLogger.warn).not.toHaveBeenCalledWith(
+      // Should warn about missing schema since anatomyParts are now entity definitions
+      expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining('Primary schema ID for content type')
       );
     });
 
-    it('should have correct primary schema ID', () => {
+    it('should not have a primary schema ID', () => {
       const loader = new AnatomyPartLoader(
         config,
         mockPathResolver,
@@ -166,7 +168,7 @@ describe('Anatomy Loaders Configuration', () => {
       );
 
       const primarySchemaId = loader._primarySchemaId;
-      expect(primarySchemaId).toBe('http://example.com/schemas/anatomy.part.schema.json');
+      expect(primarySchemaId).toBeNull();
     });
   });
 

@@ -68,6 +68,8 @@ describe('JSON-Schema – core component data contracts', () => {
     'anatomy:part': { subType: 'leg' },
     'anatomy:sockets': { sockets: [{ id: 'ankle', allowedTypes: ['foot'] }] },
     'anatomy:joint': { parentId: 'entity-123', socketId: 'ankle' },
+    'anatomy:body': { recipeId: 'core:humanoid_standard' },
+    'anatomy:owned_by': { ownerId: 'entity-123' },
   };
 
   /** @type {Record<string, unknown>} */
@@ -98,6 +100,8 @@ describe('JSON-Schema – core component data contracts', () => {
     'anatomy:part': {},
     'anatomy:sockets': {},
     'anatomy:joint': {},
+    'anatomy:body': {},
+    'anatomy:owned_by': {},
   };
 
   Object.entries(validators).forEach(([id, validate]) => {

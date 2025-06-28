@@ -17,11 +17,11 @@ describe('StaticConfiguration - Anatomy System', () => {
       // Check that anatomy schemas are included
       expect(schemaFiles).toContain('anatomy.recipe.schema.json');
       expect(schemaFiles).toContain('anatomy.blueprint.schema.json');
-      expect(schemaFiles).toContain('anatomy.part.schema.json');
+      // anatomy.part.schema.json removed - parts are now entity definitions
       
       // Verify they're not duplicated
       const anatomySchemas = schemaFiles.filter(file => file.startsWith('anatomy.'));
-      expect(anatomySchemas).toHaveLength(3);
+      expect(anatomySchemas).toHaveLength(2);
     });
 
     it('should maintain proper order with anatomy schemas before operations', () => {
@@ -45,9 +45,9 @@ describe('StaticConfiguration - Anatomy System', () => {
       expect(config.getContentTypeSchemaId('anatomyBlueprints'))
         .toBe('http://example.com/schemas/anatomy.blueprint.schema.json');
       
-      // Test part schema ID
+      // Test part schema ID - should be undefined since parts are now entity definitions
       expect(config.getContentTypeSchemaId('anatomyParts'))
-        .toBe('http://example.com/schemas/anatomy.part.schema.json');
+        .toBeUndefined();
     });
 
     it('should not affect existing content type schema IDs', () => {
@@ -73,8 +73,8 @@ describe('StaticConfiguration - Anatomy System', () => {
       // For each anatomy content type, verify both schema file and ID exist
       const anatomyTypes = [
         { key: 'anatomyRecipes', file: 'anatomy.recipe.schema.json' },
-        { key: 'anatomyBlueprints', file: 'anatomy.blueprint.schema.json' },
-        { key: 'anatomyParts', file: 'anatomy.part.schema.json' }
+        { key: 'anatomyBlueprints', file: 'anatomy.blueprint.schema.json' }
+        // anatomyParts removed - they use entity definitions now
       ];
 
       anatomyTypes.forEach(({ key, file }) => {
@@ -86,6 +86,9 @@ describe('StaticConfiguration - Anatomy System', () => {
         expect(schemaId).toBeDefined();
         expect(schemaId).toContain(file);
       });
+      
+      // Verify anatomyParts doesn't have a schema
+      expect(config.getContentTypeSchemaId('anatomyParts')).toBeUndefined();
     });
   });
 });

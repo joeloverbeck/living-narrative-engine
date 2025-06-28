@@ -1,0 +1,74 @@
+{
+  "$schema": "http://example.com/schemas/entity-definition.schema.json",
+  "id": "core:humanoid_torso",
+  "description": "A humanoid torso that serves as the central body part",
+  "components": {
+    "anatomy:part": {
+      "subType": "torso"
+    },
+    "anatomy:sockets": {
+      "sockets": [
+        {
+          "id": "neck",
+          "orientation": "upper",
+          "allowedTypes": ["head", "neck"],
+          "maxCount": 1,
+          "jointType": "ball",
+          "breakThreshold": 100,
+          "nameTpl": "{{type}}"
+        },
+        {
+          "id": "left_shoulder",
+          "orientation": "left",
+          "allowedTypes": ["arm"],
+          "maxCount": 1,
+          "jointType": "ball",
+          "breakThreshold": 80,
+          "nameTpl": "{{orientation}} {{type}}"
+        },
+        {
+          "id": "right_shoulder",
+          "orientation": "right",
+          "allowedTypes": ["arm"],
+          "maxCount": 1,
+          "jointType": "ball",
+          "breakThreshold": 80,
+          "nameTpl": "{{orientation}} {{type}}"
+        },
+        {
+          "id": "left_hip",
+          "orientation": "left",
+          "allowedTypes": ["leg"],
+          "maxCount": 1,
+          "jointType": "ball",
+          "breakThreshold": 90,
+          "nameTpl": "{{orientation}} {{type}}"
+        },
+        {
+          "id": "right_hip",
+          "orientation": "right",
+          "allowedTypes": ["leg"],
+          "maxCount": 1,
+          "jointType": "ball",
+          "breakThreshold": 90,
+          "nameTpl": "{{orientation}} {{type}}"
+        },
+        {
+          "id": "chest",
+          "orientation": "front",
+          "allowedTypes": ["breast"],
+          "maxCount": 2,
+          "jointType": "fused",
+          "breakThreshold": 0,
+          "nameTpl": "{{orientation}} {{type}}"
+        }
+      ]
+    },
+    "core:name": {
+      "name": "torso"
+    },
+    "core:description": {
+      "description": "A muscular torso with broad shoulders and a strong core."
+    }
+  }
+}
