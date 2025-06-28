@@ -13,11 +13,31 @@ class ScopeRegistry {
    * Initialize the registry with scope definitions from the data registry
    *
    * @param {object} scopeDefinitions - Map of scope definitions from the registry
+   * @throws {Error} If any scope definition is missing required properties
    */
   initialize(scopeDefinitions = {}) {
     this._scopes.clear();
 
     for (const [scopeName, scopeDef] of Object.entries(scopeDefinitions)) {
+      // Validate that the scope definition has required properties
+      if (!scopeDef || typeof scopeDef !== 'object') {
+        throw new Error(
+          `Invalid scope definition for '${scopeName}': expected an object but got ${typeof scopeDef}`
+        );
+      }
+      
+      if (!scopeDef.expr || typeof scopeDef.expr !== 'string') {
+        throw new Error(
+          `Invalid scope definition for '${scopeName}': missing or invalid 'expr' property`
+        );
+      }
+      
+      if (!scopeDef.ast || typeof scopeDef.ast !== 'object') {
+        throw new Error(
+          `Invalid scope definition for '${scopeName}': missing or invalid 'ast' property. All scopes must have pre-parsed ASTs.`
+        );
+      }
+      
       this._scopes.set(scopeName, scopeDef);
     }
 
@@ -44,6 +64,17 @@ class ScopeRegistry {
     }
 
     return this._scopes.get(name) || null;
+  }
+
+  /**
+   * Get a pre-parsed AST for a scope definition by name
+   *
+   * @param {string} name - Scope name
+   * @returns {object | null} Pre-parsed AST or null if not found
+   */
+  getScopeAst(name) {
+    const scope = this.getScope(name);
+    return scope?.ast || null;
   }
 
   /**

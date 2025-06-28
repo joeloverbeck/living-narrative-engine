@@ -29,9 +29,9 @@ describe('parseScopeDefinitions', () => {
       const result = parseScopeDefinitions(content, filePath);
 
       expect(result.size).toBe(1);
-      expect(result.get('core:followers')).toBe(
-        'actor.core:leading.followers[]'
-      );
+      const scopeDef = result.get('core:followers');
+      expect(scopeDef.expr).toBe('actor.core:leading.followers[]');
+      expect(scopeDef.ast).toEqual({ type: 'scope', expression: 'mocked' });
     });
 
     it('should parse multiple single-line scope definitions', () => {
@@ -44,12 +44,20 @@ describe('parseScopeDefinitions', () => {
       const result = parseScopeDefinitions(content, filePath);
 
       expect(result.size).toBe(2);
-      expect(result.get('core:followers')).toBe(
+      expect(result.get('core:followers').expr).toBe(
         'actor.core:leading.followers[]'
       );
-      expect(result.get('core:directions')).toBe(
+      expect(result.get('core:followers').ast).toEqual({
+        type: 'scope',
+        expression: 'mocked',
+      });
+      expect(result.get('core:directions').expr).toBe(
         'location.core:exits[].target'
       );
+      expect(result.get('core:directions').ast).toEqual({
+        type: 'scope',
+        expression: 'mocked',
+      });
     });
 
     it('should ignore comments and empty lines', () => {
@@ -66,12 +74,20 @@ describe('parseScopeDefinitions', () => {
       const result = parseScopeDefinitions(content, filePath);
 
       expect(result.size).toBe(2);
-      expect(result.get('core:followers')).toBe(
+      expect(result.get('core:followers').expr).toBe(
         'actor.core:leading.followers[]'
       );
-      expect(result.get('core:directions')).toBe(
+      expect(result.get('core:followers').ast).toEqual({
+        type: 'scope',
+        expression: 'mocked',
+      });
+      expect(result.get('core:directions').expr).toBe(
         'location.core:exits[].target'
       );
+      expect(result.get('core:directions').ast).toEqual({
+        type: 'scope',
+        expression: 'mocked',
+      });
     });
   });
 
@@ -90,15 +106,16 @@ describe('parseScopeDefinitions', () => {
 
       expect(result.size).toBe(1);
       // The actual output will have spaces where line breaks were, which is fine
-      const actualExpression = result.get('core:environment');
-      expect(actualExpression).toContain('entities(core:position)');
-      expect(actualExpression).toContain('{"and": [');
-      expect(actualExpression).toContain(
+      const scopeDef = result.get('core:environment');
+      expect(scopeDef.expr).toContain('entities(core:position)');
+      expect(scopeDef.expr).toContain('{"and": [');
+      expect(scopeDef.expr).toContain(
         '{"==": [{"var": "entity.components.core:position.locationId"}, {"var": "location.id"}]}'
       );
-      expect(actualExpression).toContain(
+      expect(scopeDef.expr).toContain(
         '{"!=": [{"var": "entity.id"}, {"var": "actor.id"}]}'
       );
+      expect(scopeDef.ast).toEqual({ type: 'scope', expression: 'mocked' });
     });
 
     it('should parse mixed single-line and multi-line scope definitions', () => {
@@ -123,16 +140,28 @@ describe('parseScopeDefinitions', () => {
       const result = parseScopeDefinitions(content, filePath);
 
       expect(result.size).toBe(3);
-      expect(result.get('core:followers')).toBe(
+      expect(result.get('core:followers').expr).toBe(
         'actor.core:leading.followers[]'
       );
-      expect(result.get('core:directions')).toBe(
+      expect(result.get('core:followers').ast).toEqual({
+        type: 'scope',
+        expression: 'mocked',
+      });
+      expect(result.get('core:directions').expr).toBe(
         'location.core:exits[].target'
       );
+      expect(result.get('core:directions').ast).toEqual({
+        type: 'scope',
+        expression: 'mocked',
+      });
 
-      const actualEnvironmentExpression = result.get('core:environment');
-      expect(actualEnvironmentExpression).toContain('entities(core:position)');
-      expect(actualEnvironmentExpression).toContain('{"and": [');
+      const environmentDef = result.get('core:environment');
+      expect(environmentDef.expr).toContain('entities(core:position)');
+      expect(environmentDef.expr).toContain('{"and": [');
+      expect(environmentDef.ast).toEqual({
+        type: 'scope',
+        expression: 'mocked',
+      });
     });
 
     it('should handle multi-line scope with comments between lines', () => {
@@ -150,12 +179,13 @@ describe('parseScopeDefinitions', () => {
       const result = parseScopeDefinitions(content, filePath);
 
       expect(result.size).toBe(1);
-      const actualExpression = result.get('core:environment');
-      expect(actualExpression).toContain('entities(core:position)');
-      expect(actualExpression).toContain('{"and": [');
+      const scopeDef = result.get('core:environment');
+      expect(scopeDef.expr).toContain('entities(core:position)');
+      expect(scopeDef.expr).toContain('{"and": [');
       // Comments should be filtered out
-      expect(actualExpression).not.toContain('//');
-      expect(actualExpression).not.toContain('Filter for entities');
+      expect(scopeDef.expr).not.toContain('//');
+      expect(scopeDef.expr).not.toContain('Filter for entities');
+      expect(scopeDef.ast).toEqual({ type: 'scope', expression: 'mocked' });
     });
   });
 
@@ -168,7 +198,7 @@ describe('parseScopeDefinitions', () => {
         ScopeDefinitionError
       );
       expect(() => parseScopeDefinitions(content, filePath)).toThrow(
-        'Scope file is empty or contains only comments'
+        'Scope file is empty or contains only comments:'
       );
     });
 
@@ -183,7 +213,7 @@ describe('parseScopeDefinitions', () => {
         ScopeDefinitionError
       );
       expect(() => parseScopeDefinitions(content, filePath)).toThrow(
-        'Scope file is empty or contains only comments'
+        'Scope file is empty or contains only comments:'
       );
     });
 
@@ -199,7 +229,11 @@ describe('parseScopeDefinitions', () => {
         const result = parseScopeDefinitions(content, filePath);
         // If it doesn't throw, it should return a valid result
         expect(result.size).toBe(1);
-        expect(result.get('core:invalid')).toBe('some.invalid.expression');
+        expect(result.get('core:invalid').expr).toBe('some.invalid.expression');
+        expect(result.get('core:invalid').ast).toEqual({
+          type: 'scope',
+          expression: 'mocked',
+        });
       }).not.toThrow();
     });
 

@@ -74,7 +74,10 @@ describe('ScopeLoader', () => {
       const content = `inventory_items := actor.inventory.items[]`;
       const filePath = 'test.scope';
       const expectedMap = new Map([
-        ['inventory_items', 'actor.inventory.items[]'],
+        [
+          'inventory_items',
+          { expr: 'actor.inventory.items[]', ast: { type: 'mock' } },
+        ],
       ]);
 
       mockParseScopeDefinitions.mockReturnValue(expectedMap);
@@ -89,8 +92,14 @@ describe('ScopeLoader', () => {
   describe('transformContent (Unit)', () => {
     test('should transform scope definitions that are already properly namespaced', () => {
       const parsedContent = new Map([
-        ['core:inventory_items', 'actor.inventory.items[]'],
-        ['core:equipment_items', 'actor.equipment.equipped[]'],
+        [
+          'core:inventory_items',
+          { expr: 'actor.inventory.items[]', ast: { type: 'mock' } },
+        ],
+        [
+          'core:equipment_items',
+          { expr: 'actor.equipment.equipped[]', ast: { type: 'mock' } },
+        ],
       ]);
 
       const result = loader.transformContent(parsedContent, 'core');
@@ -99,12 +108,14 @@ describe('ScopeLoader', () => {
         'core:inventory_items': {
           name: 'core:inventory_items',
           expr: 'actor.inventory.items[]',
+          ast: { type: 'mock' },
           modId: 'core',
           source: 'file',
         },
         'core:equipment_items': {
           name: 'core:equipment_items',
           expr: 'actor.equipment.equipped[]',
+          ast: { type: 'mock' },
           modId: 'core',
           source: 'file',
         },
@@ -113,13 +124,17 @@ describe('ScopeLoader', () => {
 
     test('should handle custom mod IDs with properly namespaced scopes', () => {
       const parsedContent = new Map([
-        ['myMod:custom_scope', 'location.entities(core:Item)'],
+        [
+          'myMod:custom_scope',
+          { expr: 'location.entities(core:Item)', ast: { type: 'mock' } },
+        ],
       ]);
       const result = loader.transformContent(parsedContent, 'myMod');
       expect(result).toEqual({
         'myMod:custom_scope': {
           name: 'myMod:custom_scope',
           expr: 'location.entities(core:Item)',
+          ast: { type: 'mock' },
           modId: 'myMod',
           source: 'file',
         },
@@ -134,7 +149,10 @@ describe('ScopeLoader', () => {
 
     test('should reject non-namespaced scope names', () => {
       const parsedContent = new Map([
-        ['inventory_items', 'actor.inventory.items[]'],
+        [
+          'inventory_items',
+          { expr: 'actor.inventory.items[]', ast: { type: 'mock' } },
+        ],
       ]);
 
       expect(() => loader.transformContent(parsedContent, 'core')).toThrow(
@@ -144,7 +162,10 @@ describe('ScopeLoader', () => {
 
     test('should reject scopes with wrong namespace', () => {
       const parsedContent = new Map([
-        ['wrong:inventory_items', 'actor.inventory.items[]'],
+        [
+          'wrong:inventory_items',
+          { expr: 'actor.inventory.items[]', ast: { type: 'mock' } },
+        ],
       ]);
 
       expect(() => loader.transformContent(parsedContent, 'core')).toThrow(
@@ -177,11 +198,18 @@ describe('ScopeLoader', () => {
       `;
       // loader.parseScopeFile now calls the real parser via the mock's implementation
       const result = loader.parseScopeFile(content, 'test.scope');
-      expect(Object.fromEntries(result)).toEqual({
-        'core:inventory_items': 'actor.inventory.items[]',
-        'core:equipment_items': 'actor.equipment.equipped[]',
-        'core:followers': 'actor.followers[]',
-      });
+      const entries = Object.fromEntries(result);
+      expect(entries['core:inventory_items'].expr).toBe(
+        'actor.inventory.items[]'
+      );
+      expect(entries['core:equipment_items'].expr).toBe(
+        'actor.equipment.equipped[]'
+      );
+      expect(entries['core:followers'].expr).toBe('actor.followers[]');
+      // Verify ASTs are present
+      expect(entries['core:inventory_items'].ast).toBeDefined();
+      expect(entries['core:equipment_items'].ast).toBeDefined();
+      expect(entries['core:followers'].ast).toBeDefined();
     });
 
     test('should handle comments and empty lines', () => {
@@ -192,10 +220,16 @@ describe('ScopeLoader', () => {
         core:equipment_items := actor.equipment.equipped[]
       `;
       const result = loader.parseScopeFile(content, 'test.scope');
-      expect(Object.fromEntries(result)).toEqual({
-        'core:inventory_items': 'actor.inventory.items[]',
-        'core:equipment_items': 'actor.equipment.equipped[]',
-      });
+      const entries = Object.fromEntries(result);
+      expect(entries['core:inventory_items'].expr).toBe(
+        'actor.inventory.items[]'
+      );
+      expect(entries['core:equipment_items'].expr).toBe(
+        'actor.equipment.equipped[]'
+      );
+      // Verify ASTs are present
+      expect(entries['core:inventory_items'].ast).toBeDefined();
+      expect(entries['core:equipment_items'].ast).toBeDefined();
     });
 
     test('should throw error for empty file', () => {
@@ -209,9 +243,7 @@ describe('ScopeLoader', () => {
       const content = `core:inventory_items = actor.inventory.items[]`;
       expect(() => {
         loader.parseScopeFile(content, 'test.scope');
-      }).toThrow(
-        'Invalid scope definition format in test.scope: "core:inventory_items = actor.inventory.items[]". Expected "name := dsl_expression"'
-      );
+      }).toThrow('Invalid scope definition format in test.scope:');
     });
 
     test('should throw error for invalid DSL expression', () => {

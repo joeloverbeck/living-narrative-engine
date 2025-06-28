@@ -8,12 +8,12 @@ import { ScopeDefinitionError } from './errors/scopeDefinitionError.js';
 
 /**
  * Parses the text content of a .scope file into a map of scope names to their
- * DSL expressions. It validates both the `name := expression` format and the
+ * DSL expressions and pre-parsed ASTs. It validates both the `name := expression` format and the
  * syntax of the DSL expression itself.
  *
  * @param {string} content - The raw string content from a .scope file.
  * @param {string} filePath - The original path to the file, used for error reporting.
- * @returns {Map<string, string>} A map where keys are scope names and values are the DSL expression strings.
+ * @returns {Map<string, {expr: string, ast: object}>} A map where keys are scope names and values contain the DSL expression string and its parsed AST.
  * @throws {ScopeDefinitionError} If the file is empty, a line has an invalid format, or the DSL expression is invalid.
  */
 export function parseScopeDefinitions(content, filePath) {
@@ -75,9 +75,13 @@ export function parseScopeDefinitions(content, filePath) {
 
   for (const scope of processedLines) {
     try {
-      // Validate the DSL expression by parsing it.
-      parseDslExpression(scope.expression.trim());
-      scopeDefinitions.set(scope.name, scope.expression.trim());
+      // Validate the DSL expression by parsing it and store the AST.
+      const trimmedExpression = scope.expression.trim();
+      const ast = parseDslExpression(trimmedExpression);
+      scopeDefinitions.set(scope.name, {
+        expr: trimmedExpression,
+        ast: ast,
+      });
     } catch (parseError) {
       // Augment the parser's error with more context.
       throw new ScopeDefinitionError(

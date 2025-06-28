@@ -16,7 +16,6 @@ import {
   TARGET_DOMAIN_SELF,
   TARGET_DOMAIN_NONE,
 } from '../constants/targetDomains.js';
-import { parseDslExpression } from '../scopeDsl/parser.js';
 import { setupService } from '../utils/serviceInitializerUtils.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/systemEventIds.js';
 import { TRACE_INFO, TRACE_ERROR } from './tracing/traceContext.js';
@@ -147,7 +146,15 @@ export class TargetResolutionService extends ITargetResolutionService {
     }
 
     try {
-      const ast = parseDslExpression(scopeDefinition.expr);
+      // All scopes must have pre-parsed ASTs
+      const ast = scopeDefinition.ast;
+      if (!ast) {
+        throw new Error(
+          `Scope definition '${scopeName}' is missing the required AST property. All scopes must have pre-parsed ASTs.`
+        );
+      }
+      
+      trace?.info(`Using pre-parsed AST for scope '${scopeName}'.`, source);
 
       const runtimeCtx = this.#buildRuntimeContext(
         actorEntity,

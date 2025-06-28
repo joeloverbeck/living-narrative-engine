@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import WorldInitializer from '../../../src/initializers/worldInitializer.js';
 import { SCOPES_KEY } from '../../../src/constants/dataRegistryKeys.js';
 import * as scopeRegistryUtils from '../../../src/initializers/services/scopeRegistryUtils.js';
+import { addMockAstsToScopes } from '../../common/scopeDsl/mockAstGenerator.js';
 
 describe('WorldInitializer - Initialization Sequence', () => {
   let worldInitializer;
@@ -136,10 +137,10 @@ describe('WorldInitializer - Initialization Sequence', () => {
 
   describe('loadAndInitScopes standalone behavior', () => {
     it('should properly initialize scope registry when called directly', async () => {
-      const mockScopes = {
+      const mockScopes = addMockAstsToScopes({
         followers: { expr: 'actor.core:leading.followers[]', modId: 'core' },
         environment: { expr: 'entities(core:position)[...]', modId: 'core' },
-      };
+      });
 
       mockGameDataRepository.get.mockReturnValue(mockScopes);
 

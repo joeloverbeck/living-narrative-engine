@@ -84,7 +84,7 @@ export default class ScopeLoader extends BaseManifestItemLoader {
    *
    * @param {string} content - Raw file content
    * @param {string} filePath - Path to the file for error reporting
-   * @returns {Map<string, string>} A map of parsed scope definitions.
+   * @returns {Map<string, {expr: string, ast: object}>} A map of parsed scope definitions with pre-parsed ASTs.
    */
   parseScopeFile(content, filePath) {
     // The complex parsing logic is now gone, replaced by a single call.
@@ -94,7 +94,7 @@ export default class ScopeLoader extends BaseManifestItemLoader {
   /**
    * Transform loaded scope definitions into the format expected by the registry
    *
-   * @param {Map<string, string>} parsedContent - Parsed scope definitions from our utility.
+   * @param {Map<string, {expr: string, ast: object}>} parsedContent - Parsed scope definitions from our utility.
    * @param {string} modId - Mod identifier
    * @returns {object} Transformed scope definitions
    */
@@ -102,7 +102,7 @@ export default class ScopeLoader extends BaseManifestItemLoader {
     const transformed = {};
 
     // Iterate over the Map from the parser utility
-    for (const [scopeName, dslExpression] of parsedContent.entries()) {
+    for (const [scopeName, scopeData] of parsedContent.entries()) {
       // Validate that the scope name is properly namespaced
       if (!scopeName.includes(':')) {
         throw new Error(
@@ -120,7 +120,8 @@ export default class ScopeLoader extends BaseManifestItemLoader {
 
       transformed[scopeName] = {
         name: scopeName,
-        expr: dslExpression,
+        expr: scopeData.expr,
+        ast: scopeData.ast,
         modId: modId,
         source: 'file',
       };

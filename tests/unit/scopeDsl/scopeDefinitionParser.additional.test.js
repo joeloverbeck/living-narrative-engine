@@ -187,11 +187,12 @@ describe('parseScopeDefinitions - Additional Coverage Tests', () => {
       const result = parseScopeDefinitions(content, filePath);
 
       expect(result.size).toBe(1);
-      const expression = result.get('core:complex');
-      expect(expression).toContain('entities(core:item)');
-      expect(expression).toContain('{"and": [');
-      expect(expression).toContain('{"==": [{"var": "type"}, "weapon"]}');
-      expect(expression).toContain('{"!=": [{"var": "broken"}, true]}');
+      const scopeDef = result.get('core:complex');
+      expect(scopeDef.expr).toContain('entities(core:item)');
+      expect(scopeDef.expr).toContain('{"and": [');
+      expect(scopeDef.expr).toContain('{"==": [{"var": "type"}, "weapon"]}');
+      expect(scopeDef.expr).toContain('{"!=": [{"var": "broken"}, true]}');
+      expect(scopeDef.ast).toBeDefined();
     });
 
     it('should handle whitespace-only continuation lines', () => {
@@ -205,9 +206,10 @@ describe('parseScopeDefinitions - Additional Coverage Tests', () => {
       const result = parseScopeDefinitions(content, filePath);
 
       expect(result.size).toBe(1);
-      const expression = result.get('core:spaced');
-      expect(expression).toContain('entities(core:item)');
-      expect(expression).toContain('[{"==": [{"var": "type"}, "weapon"]}]');
+      const scopeDef = result.get('core:spaced');
+      expect(scopeDef.expr).toContain('entities(core:item)');
+      expect(scopeDef.expr).toContain('[{"==": [{"var": "type"}, "weapon"]}]');
+      expect(scopeDef.ast).toBeDefined();
     });
 
     it('should preserve exact spacing in multi-line expressions', () => {
@@ -222,9 +224,10 @@ describe('parseScopeDefinitions - Additional Coverage Tests', () => {
       const result = parseScopeDefinitions(content, filePath);
 
       expect(result.size).toBe(1);
-      const expression = result.get('core:precise');
+      const scopeDef = result.get('core:precise');
       // Should preserve the structure with spaces where line breaks were
-      expect(expression).toMatch(/entities\(core:item\)\[\s+/);
+      expect(scopeDef.expr).toMatch(/entities\(core:item\)\[\s+/);
+      expect(scopeDef.ast).toBeDefined();
     });
   });
 
@@ -235,7 +238,8 @@ describe('parseScopeDefinitions - Additional Coverage Tests', () => {
 
       const result = parseScopeDefinitions(content, filePath);
       expect(result.has('mod123:item')).toBe(true);
-      expect(result.get('mod123:item')).toBe('entities(core:item)');
+      expect(result.get('mod123:item').expr).toBe('entities(core:item)');
+      expect(result.get('mod123:item').ast).toBeDefined();
     });
 
     it('should handle scope names with underscores', () => {
@@ -244,7 +248,8 @@ describe('parseScopeDefinitions - Additional Coverage Tests', () => {
 
       const result = parseScopeDefinitions(content, filePath);
       expect(result.has('test_mod:item_type')).toBe(true);
-      expect(result.get('test_mod:item_type')).toBe('entities(core:item)');
+      expect(result.get('test_mod:item_type').expr).toBe('entities(core:item)');
+      expect(result.get('test_mod:item_type').ast).toBeDefined();
     });
 
     it('should handle long scope names', () => {
@@ -256,9 +261,10 @@ describe('parseScopeDefinitions - Additional Coverage Tests', () => {
       expect(result.has('very_long_mod_name:very_long_component_name')).toBe(
         true
       );
-      expect(result.get('very_long_mod_name:very_long_component_name')).toBe(
+      expect(result.get('very_long_mod_name:very_long_component_name').expr).toBe(
         'entities(core:item)'
       );
+      expect(result.get('very_long_mod_name:very_long_component_name').ast).toBeDefined();
     });
 
     it('should handle complex namespace patterns', () => {
@@ -280,7 +286,8 @@ describe('parseScopeDefinitions - Additional Coverage Tests', () => {
       const result = parseScopeDefinitions(content, filePath);
 
       expect(result.size).toBe(1);
-      expect(result.get('core:trimmed')).toBe('entities(core:item)');
+      expect(result.get('core:trimmed').expr).toBe('entities(core:item)');
+      expect(result.get('core:trimmed').ast).toBeDefined();
       expect(mockParseDslExpression).toHaveBeenCalledWith(
         'entities(core:item)'
       );
@@ -309,7 +316,8 @@ describe('parseScopeDefinitions - Additional Coverage Tests', () => {
       const result = parseScopeDefinitions(content, filePath);
 
       expect(result.size).toBe(1);
-      expect(result.get('core:spaced')).toBe('actor . followers [ ]');
+      expect(result.get('core:spaced').expr).toBe('actor . followers [ ]');
+      expect(result.get('core:spaced').ast).toBeDefined();
       expect(mockParseDslExpression).toHaveBeenCalledWith(
         'actor . followers [ ]'
       );
@@ -325,7 +333,7 @@ describe('parseScopeDefinitions - Additional Coverage Tests', () => {
         ScopeDefinitionError
       );
       expect(() => parseScopeDefinitions(content, filePath)).toThrow(
-        'Scope file is empty or contains only comments'
+        'Scope file is empty or contains only comments:'
       );
     });
 
@@ -336,8 +344,10 @@ describe('parseScopeDefinitions - Additional Coverage Tests', () => {
       const result = parseScopeDefinitions(content, filePath);
 
       expect(result.size).toBe(2);
-      expect(result.get('core:mixed')).toBe('actor');
-      expect(result.get('core:endings')).toBe('location');
+      expect(result.get('core:mixed').expr).toBe('actor');
+      expect(result.get('core:mixed').ast).toBeDefined();
+      expect(result.get('core:endings').expr).toBe('location');
+      expect(result.get('core:endings').ast).toBeDefined();
     });
 
     it('should handle files ending with comments', () => {
@@ -350,7 +360,8 @@ describe('parseScopeDefinitions - Additional Coverage Tests', () => {
       const result = parseScopeDefinitions(content, filePath);
 
       expect(result.size).toBe(1);
-      expect(result.get('core:test')).toBe('actor');
+      expect(result.get('core:test').expr).toBe('actor');
+      expect(result.get('core:test').ast).toBeDefined();
     });
 
     it('should handle empty lines between definitions', () => {

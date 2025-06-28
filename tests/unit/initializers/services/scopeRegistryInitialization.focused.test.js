@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { SCOPES_KEY } from '../../../../src/constants/dataRegistryKeys.js';
+import { addMockAst } from '../../../common/scopeDsl/mockAstGenerator.js';
 
 describe('Scope Registry Initialization - Focused Test', () => {
   let mockLogger;
@@ -65,17 +66,40 @@ describe('Scope Registry Initialization - Focused Test', () => {
       const scopeMap = {};
       scopes.forEach((scope) => {
         if (scope.id) {
-          scopeMap[scope.id] = scope;
+          scopeMap[scope.id] = addMockAst(scope);
         }
       });
       mockScopeRegistry.initialize(scopeMap);
 
       // Verify the scope registry was initialized with the correct mapping
-      expect(mockScopeRegistry.initialize).toHaveBeenCalledWith({
-        'core:potential_leaders': mockScopes[0],
-        'core:clear_directions': mockScopes[1],
-        'core:actors_in_location': mockScopes[2],
-      });
+      expect(mockScopeRegistry.initialize).toHaveBeenCalledWith(
+        expect.objectContaining({
+          'core:potential_leaders': expect.objectContaining({
+            ...mockScopes[0],
+            ast: expect.objectContaining({
+              type: 'Source',
+              kind: 'mock',
+              expression: mockScopes[0].expr,
+            }),
+          }),
+          'core:clear_directions': expect.objectContaining({
+            ...mockScopes[1],
+            ast: expect.objectContaining({
+              type: 'Source',
+              kind: 'mock',
+              expression: mockScopes[1].expr,
+            }),
+          }),
+          'core:actors_in_location': expect.objectContaining({
+            ...mockScopes[2],
+            ast: expect.objectContaining({
+              type: 'Source',
+              kind: 'mock',
+              expression: mockScopes[2].expr,
+            }),
+          }),
+        })
+      );
 
       expect(mockDataRegistry.getAll).toHaveBeenCalledWith(SCOPES_KEY);
     });
@@ -108,16 +132,32 @@ describe('Scope Registry Initialization - Focused Test', () => {
       const scopeMap = {};
       scopes.forEach((scope) => {
         if (scope.id) {
-          scopeMap[scope.id] = scope;
+          scopeMap[scope.id] = addMockAst(scope);
         }
       });
       mockScopeRegistry.initialize(scopeMap);
 
       // With the bug, scope registry would be initialized with base IDs as keys
-      expect(mockScopeRegistry.initialize).toHaveBeenCalledWith({
-        potential_leaders: mockScopesWithBug[0], // Wrong - this causes the bug
-        clear_directions: mockScopesWithBug[1], // Wrong - this causes the bug
-      });
+      expect(mockScopeRegistry.initialize).toHaveBeenCalledWith(
+        expect.objectContaining({
+          potential_leaders: expect.objectContaining({
+            ...mockScopesWithBug[0],
+            ast: expect.objectContaining({
+              type: 'Source',
+              kind: 'mock',
+              expression: mockScopesWithBug[0].expr,
+            }),
+          }), // Wrong - this causes the bug
+          clear_directions: expect.objectContaining({
+            ...mockScopesWithBug[1],
+            ast: expect.objectContaining({
+              type: 'Source',
+              kind: 'mock',
+              expression: mockScopesWithBug[1].expr,
+            }),
+          }), // Wrong - this causes the bug
+        })
+      );
 
       // This demonstrates why TargetResolutionService couldn't find 'core:potential_leaders'
       // It was looking for 'core:potential_leaders' but the map only had 'potential_leaders'
@@ -156,15 +196,24 @@ describe('Scope Registry Initialization - Focused Test', () => {
       const scopeMap = {};
       scopes.forEach((scope) => {
         if (scope.id) {
-          scopeMap[scope.id] = scope;
+          scopeMap[scope.id] = addMockAst(scope);
         }
       });
       mockScopeRegistry.initialize(scopeMap);
 
       // Only the valid scope should be in the map
-      expect(mockScopeRegistry.initialize).toHaveBeenCalledWith({
-        'core:valid_scope': mockScopes[0],
-      });
+      expect(mockScopeRegistry.initialize).toHaveBeenCalledWith(
+        expect.objectContaining({
+          'core:valid_scope': expect.objectContaining({
+            ...mockScopes[0],
+            ast: expect.objectContaining({
+              type: 'Source',
+              kind: 'mock',
+              expression: mockScopes[0].expr,
+            }),
+          }),
+        })
+      );
     });
   });
 
@@ -188,14 +237,14 @@ describe('Scope Registry Initialization - Focused Test', () => {
       const scopeMap = {};
       scopes.forEach((scope) => {
         if (scope.id) {
-          scopeMap[scope.id] = scope;
+          scopeMap[scope.id] = addMockAst(scope);
         }
       });
 
       // Critical assertion: the scope should be accessible by its qualified name
       expect(scopeMap['core:potential_leaders']).toBeDefined();
-      expect(scopeMap['core:potential_leaders']).toBe(
-        properlyFormattedScopes[0]
+      expect(scopeMap['core:potential_leaders']).toEqual(
+        addMockAst(properlyFormattedScopes[0])
       );
 
       // Anti-regression: it should NOT be accessible by base name only
@@ -239,7 +288,7 @@ describe('Scope Registry Initialization - Focused Test', () => {
       const scopeMap = {};
       scopes.forEach((scope) => {
         if (scope.id) {
-          scopeMap[scope.id] = scope;
+          scopeMap[scope.id] = addMockAst(scope);
         }
       });
 

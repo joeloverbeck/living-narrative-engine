@@ -18,18 +18,23 @@ import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/eventIds.js';
  * @param {ILogger} logger - Logger instance for error logging.
  * @returns {Promise<void>}
  */
-export async function dispatchSystemErrorEvent(dispatcher, message, details, logger) {
+export async function dispatchSystemErrorEvent(
+  dispatcher,
+  message,
+  details,
+  logger
+) {
   try {
     await dispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
       message,
-      details
+      details,
     });
   } catch (error) {
     // If we can't dispatch the error event, at least log it
     if (logger && typeof logger.error === 'function') {
       logger.error(`Failed to dispatch system error event: ${message}`, {
         originalDetails: details,
-        dispatchError: error
+        dispatchError: error,
       });
     }
   }

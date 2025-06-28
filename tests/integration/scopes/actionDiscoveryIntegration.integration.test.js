@@ -107,14 +107,12 @@ describe('Scope Integration Tests', () => {
     );
 
     scopeRegistry.initialize({
-      'core:followers': { expr: followerDefs.get('core:followers') },
-      'core:environment': { expr: environmentDefs.get('core:environment') },
-      'core:clear_directions': {
-        expr: directionDefs.get('core:clear_directions'),
-      },
-      'core:potential_leaders': {
-        expr: potentialLeadersDefs.get('core:potential_leaders'),
-      },
+      'core:followers': followerDefs.get('core:followers'),
+      'core:environment': environmentDefs.get('core:environment'),
+      'core:clear_directions': directionDefs.get('core:clear_directions'),
+      'core:potential_leaders': potentialLeadersDefs.get(
+        'core:potential_leaders'
+      ),
     });
 
     scopeEngine = new ScopeEngine();
@@ -240,7 +238,6 @@ describe('Scope Integration Tests', () => {
         actorEntity,
         context
       );
-
       const dismissActions = result.actions.filter(
         (action) => action.id === 'core:dismiss'
       );
@@ -278,7 +275,6 @@ describe('Scope Integration Tests', () => {
         actorEntity,
         context
       );
-
       const followActions = result.actions.filter(
         (action) => action.id === 'core:follow'
       );
@@ -318,7 +314,6 @@ describe('Scope Integration Tests', () => {
         actorEntity,
         context
       );
-
       const goActions = result.actions.filter(
         (action) => action.id === 'core:go'
       );

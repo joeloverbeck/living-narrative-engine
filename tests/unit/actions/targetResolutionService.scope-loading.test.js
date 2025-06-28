@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { TargetResolutionService } from '../../../src/actions/targetResolutionService.js';
 import ScopeRegistry from '../../../src/scopeDsl/scopeRegistry.js';
 import { expectNoDispatch } from '../../common/engine/dispatchTestUtils.js';
+import { generateMockAst } from '../../common/scopeDsl/mockAstGenerator.js';
 
 describe('TargetResolutionService - Scope Loading Issue', () => {
   let targetResolutionService;
@@ -52,9 +53,11 @@ describe('TargetResolutionService - Scope Loading Issue', () => {
   describe('core:clear_directions scope resolution', () => {
     it('should find the core:clear_directions scope when properly loaded', async () => {
       // Mock a properly loaded scope
+      const expr = 'location.core:exits[{ "condition_ref": "core:exit-is-unblocked" }].target';
       const mockScopeDefinition = {
         name: 'core:clear_directions',
-        expr: 'location.core:exits[{ "condition_ref": "core:exit-is-unblocked" }].target',
+        expr: expr,
+        ast: generateMockAst(expr),
         modId: 'core',
         source: 'file',
       };
@@ -136,13 +139,14 @@ describe('TargetResolutionService - Scope Loading Issue', () => {
       );
     });
 
-    it('should handle scope parsing errors gracefully', async () => {
-      // Mock scope with invalid DSL expression
+    it('should handle scope with missing AST gracefully', async () => {
+      // Mock scope without AST (which is now required)
       const mockScopeDefinition = {
         name: 'core:clear_directions',
-        expr: 'invalid.expression[syntax]',
+        expr: 'location.core:exits[].target',
         modId: 'core',
         source: 'file',
+        // Intentionally missing ast property
       };
 
       mockScopeRegistry.getScope.mockReturnValue(mockScopeDefinition);
@@ -164,7 +168,7 @@ describe('TargetResolutionService - Scope Loading Issue', () => {
             "Error resolving scope 'core:clear_directions'"
           ),
           details: expect.objectContaining({
-            error: expect.stringContaining('Unknown source node'),
+            error: expect.stringContaining('missing the required AST property'),
           }),
         })
       );
@@ -176,10 +180,12 @@ describe('TargetResolutionService - Scope Loading Issue', () => {
       const realScopeRegistry = new ScopeRegistry();
 
       // Initialize with the expected scope definition
+      const expr = 'location.core:exits[{ "condition_ref": "core:exit-is-unblocked" }].target';
       realScopeRegistry.initialize({
         'core:clear_directions': {
           name: 'core:clear_directions',
-          expr: 'location.core:exits[{ "condition_ref": "core:exit-is-unblocked" }].target',
+          expr: expr,
+          ast: generateMockAst(expr),
           modId: 'core',
           source: 'file',
         },

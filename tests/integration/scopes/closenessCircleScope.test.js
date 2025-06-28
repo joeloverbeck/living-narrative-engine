@@ -8,6 +8,7 @@ import ScopeRegistry from '../../../src/scopeDsl/scopeRegistry.js';
 import { parseDslExpression } from '../../../src/scopeDsl/parser.js';
 import { SimpleEntityManager } from '../../common/entities/index.js';
 import ConsoleLogger from '../../../src/logging/consoleLogger.js';
+import { addMockAstsToScopes } from '../../common/scopeDsl/mockAstGenerator.js';
 
 describe('Closeness Circle Scope Resolution', () => {
   let scopeEngine;
@@ -59,13 +60,14 @@ describe('Closeness Circle Scope Resolution', () => {
 
     // Create scope registry and register the closeness scope
     scopeRegistry = new ScopeRegistry();
-    scopeRegistry.initialize({
+    scopeRegistry.initialize(addMockAstsToScopes({
       'intimacy:close_actors': {
+        expr: 'actor.components.intimacy:closeness.partners[]',
         definition:
           'intimacy:close_actors := actor.components.intimacy:closeness.partners[]',
         modId: 'intimacy',
       },
-    });
+    }));
 
     // Create scope engine
     scopeEngine = new ScopeEngine({
