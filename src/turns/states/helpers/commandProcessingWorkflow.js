@@ -9,8 +9,8 @@
  * @typedef {import('../../interfaces/ITurnContext.js').ITurnContext} ITurnContext
  * @typedef {import('../../../entities/entity.js').default} Entity
  * @typedef {import('../../interfaces/IActorTurnStrategy.js').ITurnAction} ITurnAction
- * @typedef {import('../../../../../interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor
- * @typedef {import('../../../../../interfaces/ICommandOutcomeInterpreter.js').ICommandOutcomeInterpreter} ICommandOutcomeInterpreter
+ * @typedef {import('../../../commands/interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor
+ * @typedef {import('../../../commands/interfaces/ICommandOutcomeInterpreter.js').ICommandOutcomeInterpreter} ICommandOutcomeInterpreter
  * @typedef {import('../../interfaces/IDirectiveStrategyResolver.js').IDirectiveStrategyResolver} IDirectiveStrategyResolver
  */
 

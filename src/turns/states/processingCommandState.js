@@ -10,8 +10,8 @@
  * @typedef {import('../interfaces/ITurnDirectiveStrategy.js').ITurnDirectiveStrategy} ITurnDirectiveStrategy
  * @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher // For type hint
  * @typedef {import('../interfaces/turnStateContextTypes.js').ProcessingCommandStateContext} ProcessingCommandStateContext
- * @typedef {import('../../interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor
- * @typedef {import('../../interfaces/ICommandOutcomeInterpreter.js').ICommandOutcomeInterpreter} ICommandOutcomeInterpreter
+ * @typedef {import('../../commands/interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor
+ * @typedef {import('../../commands/interfaces/ICommandOutcomeInterpreter.js').ICommandOutcomeInterpreter} ICommandOutcomeInterpreter
  */
 
 import { AbstractTurnState } from './abstractTurnState.js';

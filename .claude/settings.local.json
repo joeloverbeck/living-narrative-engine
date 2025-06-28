@@ -12,7 +12,9 @@
       "Bash(npm run format:*)",
       "Bash(rg:*)",
       "Bash(mkdir:*)",
-      "Bash(sed:*)"
+      "Bash(sed:*)",
+      "Bash(npx dependency-cruiser:*)",
+      "Bash(npx madge:*)"
     ],
     "deny": []
   }

@@ -13,8 +13,8 @@ import TurnDirectiveStrategyResolver from '../strategies/turnDirectiveStrategyRe
  * @typedef {import('../handlers/baseTurnHandler.js').BaseTurnHandler} BaseTurnHandler
  * @typedef {import('../interfaces/IActorTurnStrategy.js').ITurnAction} ITurnAction
  * @typedef {import('../interfaces/ITurnState.js').ITurnState} ITurnState
- * @typedef {import('../../interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor
- * @typedef {import('../../interfaces/ICommandOutcomeInterpreter.js').ICommandOutcomeInterpreter} ICommandOutcomeInterpreter
+ * @typedef {import('../../commands/interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor
+ * @typedef {import('../../commands/interfaces/ICommandOutcomeInterpreter.js').ICommandOutcomeInterpreter} ICommandOutcomeInterpreter
  */
 
 /**
