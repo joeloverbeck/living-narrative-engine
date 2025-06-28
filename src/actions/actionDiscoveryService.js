@@ -9,21 +9,17 @@
 /** @typedef {import('./actionTypes.js').ActionContext} ActionContext */
 /** @typedef {import('../logging/consoleLogger.js').default} ILogger */
 /** @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
-/** @typedef {import('../scopeDsl/scopeRegistry.js').default} ScopeRegistry */
 /** @typedef {import('./actionIndex.js').ActionIndex} ActionIndex */
 /** @typedef {import('./tracing/traceContext.js').TraceContext} TraceContext */
 /** @typedef {import('./actionTypes.js').TraceContextFactory} TraceContextFactory */
 
-import { ActionTargetContext } from '../models/actionTargetContext.js';
+/** @typedef {import('../models/actionTargetContext.js').ActionTargetContext} ActionTargetContext */
+/** @typedef {import('../interfaces/ITargetResolutionService.js').ITargetResolutionService} ITargetResolutionService */
+
 import { IActionDiscoveryService } from '../interfaces/IActionDiscoveryService.js';
-import {
-  TARGET_DOMAIN_SELF,
-  TARGET_DOMAIN_NONE,
-} from '../constants/targetDomains.js';
 import { setupService } from '../utils/serviceInitializerUtils.js';
 import { getActorLocation } from '../utils/actorLocationUtils.js';
 import { getEntityDisplayName } from '../utils/entityUtils.js';
-import { ITargetResolutionService } from '../interfaces/ITargetResolutionService.js';
 import {
   TRACE_INFO,
   TRACE_SUCCESS,
