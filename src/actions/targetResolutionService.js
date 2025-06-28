@@ -133,14 +133,10 @@ export class TargetResolutionService extends ITargetResolutionService {
     try {
       const ast = parseDslExpression(scopeDefinition.expr);
 
-      // The runtimeCtx now uses the service's own injected dependencies
-      const runtimeCtx = {
-        entityManager: this.#entityManager, // Already an injected dependency
-        jsonLogicEval: this.#jsonLogicEvalService, // <-- USE INJECTED SERVICE
-        logger: this.#logger, // Already an injected dependency
-        actor: actorEntity,
-        location: discoveryContext.currentLocation, // This comes from the lean context
-      };
+      const runtimeCtx = this.#buildRuntimeContext(
+        actorEntity,
+        discoveryContext
+      );
       return (
         this.#scopeEngine.resolve(ast, actorEntity, runtimeCtx, trace) ??
         new Set()
@@ -156,6 +152,23 @@ export class TargetResolutionService extends ITargetResolutionService {
       );
       return new Set();
     }
+  }
+
+  /**
+   * @description Builds the runtime context passed to the scope engine.
+   * @param {Entity} actorEntity The current actor entity.
+   * @param {ActionContext} discoveryContext Context for scope resolution.
+   * @returns {object} The runtime context for scope evaluation.
+   * @private
+   */
+  #buildRuntimeContext(actorEntity, discoveryContext) {
+    return {
+      entityManager: this.#entityManager,
+      jsonLogicEval: this.#jsonLogicEvalService,
+      logger: this.#logger,
+      actor: actorEntity,
+      location: discoveryContext.currentLocation,
+    };
   }
 
   /**
