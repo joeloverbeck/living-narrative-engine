@@ -34,10 +34,13 @@ export class AnatomyGenerationService {
    * @param {BodyBlueprintFactory} deps.bodyBlueprintFactory
    */
   constructor({ entityManager, dataRegistry, logger, bodyBlueprintFactory }) {
-    if (!entityManager) throw new InvalidArgumentError('entityManager is required');
-    if (!dataRegistry) throw new InvalidArgumentError('dataRegistry is required');
+    if (!entityManager)
+      throw new InvalidArgumentError('entityManager is required');
+    if (!dataRegistry)
+      throw new InvalidArgumentError('dataRegistry is required');
     if (!logger) throw new InvalidArgumentError('logger is required');
-    if (!bodyBlueprintFactory) throw new InvalidArgumentError('bodyBlueprintFactory is required');
+    if (!bodyBlueprintFactory)
+      throw new InvalidArgumentError('bodyBlueprintFactory is required');
 
     this.#entityManager = entityManager;
     this.#dataRegistry = dataRegistry;
@@ -47,7 +50,7 @@ export class AnatomyGenerationService {
 
   /**
    * Generates anatomy for an entity if it has an anatomy:body component with a recipeId
-   * 
+   *
    * @param {string} entityId - The entity instance ID
    * @returns {Promise<boolean>} True if anatomy was generated, false otherwise
    */
@@ -55,7 +58,9 @@ export class AnatomyGenerationService {
     try {
       const entity = this.#entityManager.getEntityInstance(entityId);
       if (!entity) {
-        this.#logger.warn(`AnatomyGenerationService: Entity '${entityId}' not found`);
+        this.#logger.warn(
+          `AnatomyGenerationService: Entity '${entityId}' not found`
+        );
         return false;
       }
 
@@ -66,22 +71,33 @@ export class AnatomyGenerationService {
 
       const anatomyBodyData = entity.getComponent(ANATOMY_BODY_COMPONENT_ID);
       if (!anatomyBodyData || !anatomyBodyData.recipeId) {
-        this.#logger.warn(`AnatomyGenerationService: Entity '${entityId}' has anatomy:body component but no recipeId`);
+        this.#logger.warn(
+          `AnatomyGenerationService: Entity '${entityId}' has anatomy:body component but no recipeId`
+        );
         return false;
       }
 
       // Check if anatomy already generated
       if (anatomyBodyData.body) {
-        this.#logger.debug(`AnatomyGenerationService: Entity '${entityId}' already has generated anatomy`);
+        this.#logger.debug(
+          `AnatomyGenerationService: Entity '${entityId}' already has generated anatomy`
+        );
         return false;
       }
 
-      this.#logger.info(`AnatomyGenerationService: Generating anatomy for entity '${entityId}' using recipe '${anatomyBodyData.recipeId}'`);
+      this.#logger.info(
+        `AnatomyGenerationService: Generating anatomy for entity '${entityId}' using recipe '${anatomyBodyData.recipeId}'`
+      );
 
       // Get the recipe to determine if a blueprint is needed
-      const recipe = this.#dataRegistry.get('anatomyRecipes', anatomyBodyData.recipeId);
+      const recipe = this.#dataRegistry.get(
+        'anatomyRecipes',
+        anatomyBodyData.recipeId
+      );
       if (!recipe) {
-        throw new ValidationError(`Recipe '${anatomyBodyData.recipeId}' not found`);
+        throw new ValidationError(
+          `Recipe '${anatomyBodyData.recipeId}' not found`
+        );
       }
 
       // For now, we'll use a simple approach where the recipe ID matches a blueprint ID
@@ -111,22 +127,26 @@ export class AnatomyGenerationService {
         body: {
           root: result.rootId,
           parts: parts,
-          allParts: result.entities
-        }
+          allParts: result.entities,
+        },
       });
 
-      this.#logger.info(`AnatomyGenerationService: Successfully generated anatomy for entity '${entityId}' with ${result.entities.length} parts`);
+      this.#logger.info(
+        `AnatomyGenerationService: Successfully generated anatomy for entity '${entityId}' with ${result.entities.length} parts`
+      );
       return true;
-
     } catch (error) {
-      this.#logger.error(`AnatomyGenerationService: Failed to generate anatomy for entity '${entityId}'`, { error });
+      this.#logger.error(
+        `AnatomyGenerationService: Failed to generate anatomy for entity '${entityId}'`,
+        { error }
+      );
       throw error;
     }
   }
 
   /**
    * Generates anatomy for multiple entities
-   * 
+   *
    * @param {string[]} entityIds - Array of entity instance IDs
    * @returns {Promise<{generated: string[], skipped: string[], failed: string[]}>}
    */
@@ -134,7 +154,7 @@ export class AnatomyGenerationService {
     const results = {
       generated: [],
       skipped: [],
-      failed: []
+      failed: [],
     };
 
     for (const entityId of entityIds) {
@@ -146,7 +166,10 @@ export class AnatomyGenerationService {
           results.skipped.push(entityId);
         }
       } catch (error) {
-        this.#logger.error(`AnatomyGenerationService: Failed to process entity '${entityId}'`, { error });
+        this.#logger.error(
+          `AnatomyGenerationService: Failed to process entity '${entityId}'`,
+          { error }
+        );
         results.failed.push(entityId);
       }
     }

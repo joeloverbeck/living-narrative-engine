@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../schemas/component.schema.json",
+  "$schema": "http://example.com/schemas/component.schema.json",
   "id": "anatomy:sockets",
   "description": "Defines attachment points (sockets) on a body part where other parts can connect",
   "dataSchema": {
@@ -17,7 +17,15 @@
             },
             "orientation": {
               "type": "string",
-              "enum": ["left", "right", "mid", "upper", "lower", "front", "back"],
+              "enum": [
+                "left",
+                "right",
+                "mid",
+                "upper",
+                "lower",
+                "front",
+                "back"
+              ],
               "description": "Spatial orientation of this socket"
             },
             "allowedTypes": {
@@ -38,12 +46,6 @@
               "type": "string",
               "enum": ["hinge", "ball", "suture", "fused"],
               "description": "Type of joint connection for physics/animation"
-            },
-            "breakThreshold": {
-              "type": "integer",
-              "minimum": 0,
-              "default": 0,
-              "description": "Damage threshold required to sever this connection"
             },
             "nameTpl": {
               "type": "string",

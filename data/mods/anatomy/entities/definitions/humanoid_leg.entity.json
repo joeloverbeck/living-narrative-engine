@@ -1,6 +1,6 @@
 {
   "$schema": "http://example.com/schemas/entity-definition.schema.json",
-  "id": "core:humanoid_leg",
+  "id": "anatomy:humanoid_leg",
   "description": "A humanoid leg",
   "components": {
     "anatomy:part": {
@@ -14,7 +14,6 @@
           "allowedTypes": ["lower_leg"],
           "maxCount": 1,
           "jointType": "hinge",
-          "breakThreshold": 70,
           "nameTpl": "{{parent.name}} lower leg"
         }
       ]

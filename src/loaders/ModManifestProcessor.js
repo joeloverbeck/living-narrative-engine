@@ -56,6 +56,59 @@ export class ModManifestProcessor {
   }
 
   /**
+   * Recursively discovers and loads all mod dependencies.
+   *
+   * @private
+   * @param {string[]} modIds - Mod IDs to load and check for dependencies
+   * @param {Map<string, ModManifest>} loadedManifests - Already loaded manifests
+   * @param {string} worldName - The name of the world being loaded
+   * @returns {Promise<Map<string, ModManifest>>} All loaded manifests including dependencies
+   */
+  async #loadManifestsWithDependencies(modIds, loadedManifests, worldName) {
+    const toLoad = modIds.filter(
+      (id) => !loadedManifests.has(id.toLowerCase())
+    );
+
+    if (toLoad.length === 0) {
+      return loadedManifests;
+    }
+
+    // Load the requested manifests
+    const newManifests = await this.#modManifestLoader.loadRequestedManifests(
+      toLoad,
+      worldName
+    );
+
+    // Add to loaded manifests
+    for (const [modId, manifest] of newManifests.entries()) {
+      loadedManifests.set(modId.toLowerCase(), manifest);
+    }
+
+    // Collect all dependencies
+    const allDependencies = [];
+    for (const manifest of newManifests.values()) {
+      if (manifest.dependencies && Array.isArray(manifest.dependencies)) {
+        for (const dep of manifest.dependencies) {
+          if (dep.id && !loadedManifests.has(dep.id.toLowerCase())) {
+            allDependencies.push(dep.id);
+          }
+        }
+      }
+    }
+
+    // Recursively load dependencies
+    if (allDependencies.length > 0) {
+      await this.#loadManifestsWithDependencies(
+        allDependencies,
+        loadedManifests,
+        worldName
+      );
+    }
+
+    return loadedManifests;
+  }
+
+  /**
    * Loads, validates, and resolves manifests for the requested mod IDs.
    *
    * @param {string[]} requestedIds - IDs of mods requested by the game config.
@@ -65,30 +118,30 @@ export class ModManifestProcessor {
    * @throws {ModDependencyError|Error} Propagates validation errors.
    */
   async processManifests(requestedIds, worldName) {
-    // First, load the requested mod manifests
-    const loadedManifestsRaw =
-      await this.#modManifestLoader.loadRequestedManifests(
-        requestedIds,
-        worldName
-      );
-
-    const loadedManifestsMap = new Map();
-    const manifestsForValidation = new Map();
-    for (const [modId, manifestObj] of loadedManifestsRaw.entries()) {
-      const lowerCaseModId = modId.toLowerCase();
-      this.#registry.store('mod_manifests', lowerCaseModId, manifestObj);
-      manifestsForValidation.set(lowerCaseModId, manifestObj);
-      loadedManifestsMap.set(lowerCaseModId, manifestObj);
-    }
-    this.#logger.debug(
-      `ModsLoader: Stored ${manifestsForValidation.size} mod manifests in the registry.`
+    // Load all manifests including dependencies recursively
+    const loadedManifestsMap = await this.#loadManifestsWithDependencies(
+      requestedIds,
+      new Map(),
+      worldName
     );
 
-    this.#modDependencyValidator.validate(manifestsForValidation, this.#logger);
+    this.#logger.debug(
+      `ModsLoader: Loaded ${loadedManifestsMap.size} mod manifests (including dependencies).`
+    );
+
+    // Store all manifests in registry
+    for (const [modId, manifestObj] of loadedManifestsMap.entries()) {
+      this.#registry.store('mod_manifests', modId, manifestObj);
+    }
+
+    // Now validate dependencies - all manifests are loaded
+    this.#modDependencyValidator.validate(loadedManifestsMap, this.#logger);
+
+    // Validate version compatibility before resolving order
     let incompatibilityCount = 0;
     try {
       this.#modVersionValidator(
-        manifestsForValidation,
+        loadedManifestsMap,
         this.#logger,
         this.#validatedEventDispatcher
       );
@@ -104,42 +157,14 @@ export class ModManifestProcessor {
       throw e;
     }
 
-    // Resolve the final mod order (this may include dependencies not yet loaded)
+    // Resolve the final mod order
     const finalModOrder = this.#modLoadOrderResolver.resolve(
       requestedIds,
-      manifestsForValidation
+      loadedManifestsMap
     );
     this.#logger.debug(
       `ModsLoader: Final mod order resolved: [${finalModOrder.join(', ')}]`
     );
-
-    // Load any missing dependency manifests
-    const missingMods = finalModOrder.filter(
-      (modId) => !loadedManifestsMap.has(modId.toLowerCase())
-    );
-
-    if (missingMods.length > 0) {
-      this.#logger.debug(
-        `ModsLoader: Loading ${missingMods.length} missing dependency manifests: [${missingMods.join(', ')}]`
-      );
-
-      const missingManifestsRaw =
-        await this.#modManifestLoader.loadRequestedManifests(
-          missingMods,
-          worldName
-        );
-
-      for (const [modId, manifestObj] of missingManifestsRaw.entries()) {
-        const lowerCaseModId = modId.toLowerCase();
-        this.#registry.store('mod_manifests', lowerCaseModId, manifestObj);
-        manifestsForValidation.set(lowerCaseModId, manifestObj);
-        loadedManifestsMap.set(lowerCaseModId, manifestObj);
-      }
-
-      this.#logger.debug(
-        `ModsLoader: Loaded ${missingManifestsRaw.size} additional dependency manifests.`
-      );
-    }
 
     this.#registry.store('meta', 'final_mod_order', finalModOrder);
 

@@ -17,7 +17,8 @@
       "Bash(npx madge:*)",
       "Bash(npx eslint:*)",
       "Bash(mv:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(ls:*)"
     ],
     "deny": []
   }

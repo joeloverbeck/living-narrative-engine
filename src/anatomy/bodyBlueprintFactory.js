@@ -75,11 +75,21 @@ export class BodyBlueprintFactory {
    * @param {IIdGenerator} deps.idGenerator
    * @param {import('./graphIntegrityValidator.js').GraphIntegrityValidator} deps.validator
    */
-  constructor({ entityManager, dataRegistry, logger, eventDispatcher, idGenerator, validator }) {
-    if (!entityManager) throw new InvalidArgumentError('entityManager is required');
-    if (!dataRegistry) throw new InvalidArgumentError('dataRegistry is required');
+  constructor({
+    entityManager,
+    dataRegistry,
+    logger,
+    eventDispatcher,
+    idGenerator,
+    validator,
+  }) {
+    if (!entityManager)
+      throw new InvalidArgumentError('entityManager is required');
+    if (!dataRegistry)
+      throw new InvalidArgumentError('dataRegistry is required');
     if (!logger) throw new InvalidArgumentError('logger is required');
-    if (!eventDispatcher) throw new InvalidArgumentError('eventDispatcher is required');
+    if (!eventDispatcher)
+      throw new InvalidArgumentError('eventDispatcher is required');
     if (!idGenerator) throw new InvalidArgumentError('idGenerator is required');
     if (!validator) throw new InvalidArgumentError('validator is required');
 
@@ -93,7 +103,7 @@ export class BodyBlueprintFactory {
 
   /**
    * Creates an anatomy entity graph from a blueprint and recipe
-   * 
+   *
    * @param {string} blueprintId - Namespaced ID of the blueprint
    * @param {string} recipeId - Namespaced ID of the recipe
    * @param {object} [options]
@@ -103,7 +113,9 @@ export class BodyBlueprintFactory {
    */
   async createAnatomyGraph(blueprintId, recipeId, options = {}) {
     try {
-      this.#logger.debug(`BodyBlueprintFactory: Creating anatomy graph from blueprint '${blueprintId}' and recipe '${recipeId}'`);
+      this.#logger.debug(
+        `BodyBlueprintFactory: Creating anatomy graph from blueprint '${blueprintId}' and recipe '${recipeId}'`
+      );
 
       // Load blueprint and recipe
       const blueprint = this.#loadBlueprint(blueprintId);
@@ -116,16 +128,33 @@ export class BodyBlueprintFactory {
       const rng = this.#createRNG(options.seed);
 
       // Phase 1: Create root entity
-      const rootId = this.#createRootEntity(blueprint.root, recipe, options.ownerId);
+      const rootId = this.#createRootEntity(
+        blueprint.root,
+        recipe,
+        options.ownerId
+      );
       createdEntities.push(rootId);
 
       // Phase 2: Process static attachments from blueprint
       if (blueprint.attachments) {
-        await this.#processStaticAttachments(blueprint.attachments, recipe, createdEntities, socketOccupancy, rng);
+        await this.#processStaticAttachments(
+          blueprint.attachments,
+          recipe,
+          createdEntities,
+          socketOccupancy,
+          rng
+        );
       }
 
       // Phase 3: Fill remaining sockets depth-first
-      await this.#fillSockets(rootId, recipe, createdEntities, partCounts, socketOccupancy, rng);
+      await this.#fillSockets(
+        rootId,
+        recipe,
+        createdEntities,
+        partCounts,
+        socketOccupancy,
+        rng
+      );
 
       // Phase 4: Validate the assembled graph
       const validationResult = await this.#validator.validateGraph(
@@ -137,24 +166,30 @@ export class BodyBlueprintFactory {
       if (!validationResult.valid) {
         // Clean up created entities on validation failure
         await this.#cleanupEntities(createdEntities);
-        throw new ValidationError(`Anatomy graph validation failed: ${validationResult.errors.join(', ')}`);
+        throw new ValidationError(
+          `Anatomy graph validation failed: ${validationResult.errors.join(', ')}`
+        );
       }
 
-      this.#logger.info(`BodyBlueprintFactory: Successfully created anatomy graph with ${createdEntities.length} entities`);
+      this.#logger.info(
+        `BodyBlueprintFactory: Successfully created anatomy graph with ${createdEntities.length} entities`
+      );
 
       return {
         rootId,
-        entities: createdEntities
+        entities: createdEntities,
       };
-
     } catch (error) {
-      this.#logger.error(`BodyBlueprintFactory: Failed to create anatomy graph`, { error });
+      this.#logger.error(
+        `BodyBlueprintFactory: Failed to create anatomy graph`,
+        { error }
+      );
       this.#eventDispatcher.dispatch({
         type: SYSTEM_ERROR_OCCURRED_ID,
         payload: {
           error: error.message,
-          context: 'BodyBlueprintFactory.createAnatomyGraph'
-        }
+          context: 'BodyBlueprintFactory.createAnatomyGraph',
+        },
       });
       throw error;
     }
@@ -170,7 +205,9 @@ export class BodyBlueprintFactory {
   #loadBlueprint(blueprintId) {
     const blueprint = this.#dataRegistry.get('anatomyBlueprints', blueprintId);
     if (!blueprint) {
-      throw new InvalidArgumentError(`Blueprint '${blueprintId}' not found in registry`);
+      throw new InvalidArgumentError(
+        `Blueprint '${blueprintId}' not found in registry`
+      );
     }
     return blueprint;
   }
@@ -185,7 +222,9 @@ export class BodyBlueprintFactory {
   #loadRecipe(recipeId) {
     const recipe = this.#dataRegistry.get('anatomyRecipes', recipeId);
     if (!recipe) {
-      throw new InvalidArgumentError(`Recipe '${recipeId}' not found in registry`);
+      throw new InvalidArgumentError(
+        `Recipe '${recipeId}' not found in registry`
+      );
     }
     return recipe;
   }
@@ -216,11 +255,14 @@ export class BodyBlueprintFactory {
    * @returns {string} The created root entity ID
    */
   #createRootEntity(rootDefinitionId, recipe, ownerId) {
-    const rootEntity = this.#entityManager.createEntityInstance(rootDefinitionId);
-    
+    const rootEntity =
+      this.#entityManager.createEntityInstance(rootDefinitionId);
+
     if (ownerId) {
       // Add ownership component if specified
-      this.#entityManager.addComponent(rootEntity.id, 'anatomy:owned_by', { ownerId });
+      this.#entityManager.addComponent(rootEntity.id, 'anatomy:owned_by', {
+        ownerId,
+      });
     }
 
     return rootEntity.id;
@@ -236,15 +278,23 @@ export class BodyBlueprintFactory {
    * @param rng
    * @private
    */
-  async #processStaticAttachments(attachments, recipe, createdEntities, socketOccupancy, rng) {
+  async #processStaticAttachments(
+    attachments,
+    recipe,
+    createdEntities,
+    socketOccupancy,
+    rng
+  ) {
     for (const attachment of attachments) {
-      const parentEntity = createdEntities.find(id => {
+      const parentEntity = createdEntities.find((id) => {
         const entity = this.#entityManager.getEntityInstance(id);
         return entity.definitionId === attachment.parent;
       });
 
       if (!parentEntity) {
-        this.#logger.warn(`Static attachment parent '${attachment.parent}' not found in created entities`);
+        this.#logger.warn(
+          `Static attachment parent '${attachment.parent}' not found in created entities`
+        );
         continue;
       }
 
@@ -275,16 +325,28 @@ export class BodyBlueprintFactory {
    * @param rng
    * @private
    */
-  async #fillSockets(entityId, recipe, createdEntities, partCounts, socketOccupancy, rng) {
+  async #fillSockets(
+    entityId,
+    recipe,
+    createdEntities,
+    partCounts,
+    socketOccupancy,
+    rng
+  ) {
     const entity = this.#entityManager.getEntityInstance(entityId);
-    const socketsComponent = this.#entityManager.getComponentData(entityId, 'anatomy:sockets');
-    
+    const socketsComponent = this.#entityManager.getComponentData(
+      entityId,
+      'anatomy:sockets'
+    );
+
     if (!socketsComponent || !socketsComponent.sockets) {
       return;
     }
 
     // Process each socket in deterministic order
-    const sockets = [...socketsComponent.sockets].sort((a, b) => a.id.localeCompare(b.id));
+    const sockets = [...socketsComponent.sockets].sort((a, b) =>
+      a.id.localeCompare(b.id)
+    );
 
     for (const socket of sockets) {
       const occupancyKey = `${entityId}:${socket.id}`;
@@ -299,12 +361,18 @@ export class BodyBlueprintFactory {
       // Find matching recipe slot
       const recipeSlot = this.#findMatchingRecipeSlot(socket, recipe);
       if (!recipeSlot) {
-        this.#logger.debug(`No recipe slot matches socket '${socket.id}' with allowed types: ${socket.allowedTypes.join(', ')}`);
+        this.#logger.debug(
+          `No recipe slot matches socket '${socket.id}' with allowed types: ${socket.allowedTypes.join(', ')}`
+        );
         continue;
       }
 
       // Determine how many parts to create
-      const desiredCount = this.#calculateDesiredCount(recipeSlot, partCounts, socket.allowedTypes[0]);
+      const desiredCount = this.#calculateDesiredCount(
+        recipeSlot,
+        partCounts,
+        socket.allowedTypes[0]
+      );
       const availableSlots = maxCount - currentOccupancy;
       const toCreate = Math.min(desiredCount, availableSlots);
 
@@ -324,10 +392,20 @@ export class BodyBlueprintFactory {
           // Update counts
           const partType = this.#getPartType(childId);
           partCounts.set(partType, (partCounts.get(partType) || 0) + 1);
-          socketOccupancy.set(occupancyKey, (socketOccupancy.get(occupancyKey) || 0) + 1);
+          socketOccupancy.set(
+            occupancyKey,
+            (socketOccupancy.get(occupancyKey) || 0) + 1
+          );
 
           // Recursively fill child's sockets
-          await this.#fillSockets(childId, recipe, createdEntities, partCounts, socketOccupancy, rng);
+          await this.#fillSockets(
+            childId,
+            recipe,
+            createdEntities,
+            partCounts,
+            socketOccupancy,
+            rng
+          );
         }
       }
     }
@@ -359,7 +437,7 @@ export class BodyBlueprintFactory {
    */
   #calculateDesiredCount(recipeSlot, partCounts, partType) {
     const currentCount = partCounts.get(partType) || 0;
-    
+
     if (recipeSlot.count) {
       if (recipeSlot.count.exact !== undefined) {
         return Math.max(0, recipeSlot.count.exact - currentCount);
@@ -367,7 +445,7 @@ export class BodyBlueprintFactory {
         return Math.max(0, recipeSlot.count.min - currentCount);
       }
     }
-    
+
     // Default to 1 if no count specified
     return currentCount === 0 ? 1 : 0;
   }
@@ -383,12 +461,24 @@ export class BodyBlueprintFactory {
    * @param rng
    * @private
    */
-  async #createPartForSlot(parentId, socket, recipeSlot, recipe, socketOccupancy, rng) {
+  async #createPartForSlot(
+    parentId,
+    socket,
+    recipeSlot,
+    recipe,
+    socketOccupancy,
+    rng
+  ) {
     // Build candidate list
-    const candidates = await this.#findCandidateParts(recipeSlot, socket.allowedTypes);
-    
+    const candidates = await this.#findCandidateParts(
+      recipeSlot,
+      socket.allowedTypes
+    );
+
     if (candidates.length === 0) {
-      this.#logger.warn(`No candidate parts found for slot with type '${recipeSlot.partType}'`);
+      this.#logger.warn(
+        `No candidate parts found for slot with type '${recipeSlot.partType}'`
+      );
       return null;
     }
 
@@ -403,7 +493,14 @@ export class BodyBlueprintFactory {
     }
 
     // Create and attach the part
-    return this.#createAndAttachPart(parentId, socket.id, selectedPartId, recipe, socketOccupancy, rng);
+    return this.#createAndAttachPart(
+      parentId,
+      socket.id,
+      selectedPartId,
+      recipe,
+      socketOccupancy,
+      rng
+    );
   }
 
   /**
@@ -430,13 +527,17 @@ export class BodyBlueprintFactory {
 
       // Check required tags
       if (recipeSlot.tags && recipeSlot.tags.length > 0) {
-        const hasAllTags = recipeSlot.tags.every(tag => entityDef.components[tag] !== undefined);
+        const hasAllTags = recipeSlot.tags.every(
+          (tag) => entityDef.components[tag] !== undefined
+        );
         if (!hasAllTags) continue;
       }
 
       // Check excluded tags
       if (recipeSlot.notTags && recipeSlot.notTags.length > 0) {
-        const hasExcludedTag = recipeSlot.notTags.some(tag => entityDef.components[tag] !== undefined);
+        const hasExcludedTag = recipeSlot.notTags.some(
+          (tag) => entityDef.components[tag] !== undefined
+        );
         if (hasExcludedTag) continue;
       }
 
@@ -457,38 +558,55 @@ export class BodyBlueprintFactory {
    * @param rng
    * @private
    */
-  async #createAndAttachPart(parentId, socketId, partDefinitionId, recipe, socketOccupancy, rng) {
+  async #createAndAttachPart(
+    parentId,
+    socketId,
+    partDefinitionId,
+    recipe,
+    socketOccupancy,
+    rng
+  ) {
     try {
       // Get socket details from parent
-      const parentSockets = this.#entityManager.getComponentData(parentId, 'anatomy:sockets');
-      const socket = parentSockets?.sockets?.find(s => s.id === socketId);
-      
+      const parentSockets = this.#entityManager.getComponentData(
+        parentId,
+        'anatomy:sockets'
+      );
+      const socket = parentSockets?.sockets?.find((s) => s.id === socketId);
+
       if (!socket) {
-        this.#logger.error(`Socket '${socketId}' not found on parent entity '${parentId}'`);
+        this.#logger.error(
+          `Socket '${socketId}' not found on parent entity '${parentId}'`
+        );
         return null;
       }
 
       // Create the child entity
-      const childEntity = await this.#entityManager.createEntity(partDefinitionId);
+      const childEntity =
+        await this.#entityManager.createEntity(partDefinitionId);
 
       // Add joint component to establish the connection
       await this.#entityManager.addComponent(childEntity.id, 'anatomy:joint', {
         parentId: parentId,
         socketId: socketId,
         jointType: socket.jointType || 'fixed',
-        breakThreshold: socket.breakThreshold || 0
+        breakThreshold: socket.breakThreshold || 0,
       });
 
       // Generate and set name if template provided
       if (socket.nameTpl) {
         const name = this.#generatePartName(socket, childEntity, parentId);
-        await this.#entityManager.addComponent(childEntity.id, 'core:name', { value: name });
+        await this.#entityManager.addComponent(childEntity.id, 'core:name', {
+          value: name,
+        });
       }
 
       return childEntity.id;
-
     } catch (error) {
-      this.#logger.error(`Failed to create and attach part '${partDefinitionId}'`, { error });
+      this.#logger.error(
+        `Failed to create and attach part '${partDefinitionId}'`,
+        { error }
+      );
       return null;
     }
   }
@@ -503,19 +621,24 @@ export class BodyBlueprintFactory {
    */
   #generatePartName(socket, childEntity, parentId) {
     let name = socket.nameTpl;
-    
+
     // Get part info
-    const anatomyPart = this.#entityManager.getComponentData(childEntity.id, 'anatomy:part');
-    const parentName = this.#entityManager.getComponentData(parentId, 'core:name')?.value || 'parent';
-    
+    const anatomyPart = this.#entityManager.getComponentData(
+      childEntity.id,
+      'anatomy:part'
+    );
+    const parentName =
+      this.#entityManager.getComponentData(parentId, 'core:name')?.value ||
+      'parent';
+
     // Replace template tokens
     name = name.replace('{{orientation}}', socket.orientation || '');
     name = name.replace('{{type}}', anatomyPart?.subType || 'part');
     name = name.replace('{{parent.name}}', parentName);
-    
+
     // TODO: Handle {{index}} for multiple parts of same type
     name = name.replace('{{index}}', '');
-    
+
     return name.trim();
   }
 
@@ -526,7 +649,10 @@ export class BodyBlueprintFactory {
    * @private
    */
   #getPartType(entityId) {
-    const anatomyPart = this.#entityManager.getComponentData(entityId, 'anatomy:part');
+    const anatomyPart = this.#entityManager.getComponentData(
+      entityId,
+      'anatomy:part'
+    );
     return anatomyPart?.subType || 'unknown';
   }
 
@@ -537,14 +663,18 @@ export class BodyBlueprintFactory {
    * @private
    */
   async #cleanupEntities(entityIds) {
-    this.#logger.debug(`Cleaning up ${entityIds.length} entities after validation failure`);
-    
+    this.#logger.debug(
+      `Cleaning up ${entityIds.length} entities after validation failure`
+    );
+
     // Remove in reverse order to handle dependencies
     for (let i = entityIds.length - 1; i >= 0; i--) {
       try {
         await this.#entityManager.removeEntity(entityIds[i]);
       } catch (error) {
-        this.#logger.error(`Failed to cleanup entity '${entityIds[i]}'`, { error });
+        this.#logger.error(`Failed to cleanup entity '${entityIds[i]}'`, {
+          error,
+        });
       }
     }
   }

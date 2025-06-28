@@ -1,6 +1,6 @@
 {
   "$schema": "http://example.com/schemas/entity-definition.schema.json",
-  "id": "core:humanoid_arm",
+  "id": "anatomy:humanoid_arm",
   "description": "A humanoid arm",
   "components": {
     "anatomy:part": {
@@ -14,7 +14,6 @@
           "allowedTypes": ["forearm"],
           "maxCount": 1,
           "jointType": "hinge",
-          "breakThreshold": 60,
           "nameTpl": "{{parent.name}} {{type}}"
         }
       ]

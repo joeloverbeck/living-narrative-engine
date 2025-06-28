@@ -164,7 +164,7 @@ describe('Integration: Entity Instances Loader and World Initialization', () => 
     modsLoader = container.resolve(tokens.ModsLoader);
     const result = await modsLoader.loadMods('test-world', [MOD_ID]);
     expect(result).toEqual({
-      finalModOrder: expect.arrayContaining(['core', 'isekai']),
+      finalModOrder: expect.arrayContaining(['core', 'anatomy', 'isekai']),
       totals: expect.any(Object),
       incompatibilities: 0,
     });

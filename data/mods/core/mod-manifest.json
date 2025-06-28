@@ -37,10 +37,7 @@
       "profile.component.json",
       "secrets.component.json",
       "short_term_memory.component.json",
-      "speech_patterns.component.json",
-      "anatomy_part.component.json",
-      "anatomy_sockets.component.json",
-      "anatomy_joint.component.json"
+      "speech_patterns.component.json"
     ],
     "conditions": [
       "actor-is-following.condition.json",
@@ -117,7 +114,10 @@
       "turn_started.rule.json",
       "wait.rule.json"
     ],
-    "ui": ["icons.json", "labels.json"],
+    "ui": [
+      "icons.json",
+      "labels.json"
+    ],
     "scopes": [
       "actors_in_location.scope",
       "clear_directions.scope",

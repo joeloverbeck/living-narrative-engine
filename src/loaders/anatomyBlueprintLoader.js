@@ -62,8 +62,10 @@ class AnatomyBlueprintLoader extends BaseManifestItemLoader {
     }
 
     // Create a synthetic ID from the filename since blueprints don't have explicit IDs
-    const baseId = filename.replace(/\.bp\.json$/i, '').replace(/[^a-zA-Z0-9_-]/g, '_');
-    
+    const baseId = filename
+      .replace(/\.bp\.json$/i, '')
+      .replace(/[^a-zA-Z0-9_-]/g, '_');
+
     // Add the id to the data for storage
     data.id = `${modId}:${baseId}`;
 
@@ -84,7 +86,7 @@ class AnatomyBlueprintLoader extends BaseManifestItemLoader {
     this._logger.debug(
       `AnatomyBlueprintLoader [${modId}]: Successfully processed anatomy blueprint from ${filename}. Final registry key: ${qualifiedId}, Overwrite: ${didOverride}`
     );
-    
+
     return { qualifiedId, didOverride };
   }
 
@@ -98,7 +100,7 @@ class AnatomyBlueprintLoader extends BaseManifestItemLoader {
    */
   _validateAttachments(attachments, modId, filename) {
     const seenPairs = new Set();
-    
+
     for (const attachment of attachments) {
       if (!attachment.parent || !attachment.socket || !attachment.child) {
         throw new Error(

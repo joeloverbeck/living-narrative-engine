@@ -59,9 +59,9 @@ class AnatomyPartLoader extends BaseManifestItemLoader {
     // Anatomy parts are now regular entity definitions and are handled by EntityLoader
     // This loader exists only for backward compatibility
     // Return a dummy result to satisfy the interface
-    return { 
-      qualifiedId: `${modId}:skipped_${filename}`, 
-      didOverride: false 
+    return {
+      qualifiedId: `${modId}:skipped_${filename}`,
+      didOverride: false,
     };
   }
 
@@ -76,7 +76,7 @@ class AnatomyPartLoader extends BaseManifestItemLoader {
   _transformToEntityDefinition(partData, modId, filename) {
     // Convert components array to components object
     const componentsObject = {};
-    
+
     if (partData.components && Array.isArray(partData.components)) {
       for (const component of partData.components) {
         if (!component.type) {
@@ -84,7 +84,7 @@ class AnatomyPartLoader extends BaseManifestItemLoader {
             `Invalid component in anatomy part '${filename}' from mod '${modId}'. Missing 'type' field.`
           );
         }
-        
+
         // Extract the component data (everything except 'type')
         const { type, ...componentData } = component;
         componentsObject[type] = componentData;
@@ -102,7 +102,7 @@ class AnatomyPartLoader extends BaseManifestItemLoader {
     return {
       id: partData.id,
       description: partData.description || `Anatomy part: ${partData.id}`,
-      components: componentsObject
+      components: componentsObject,
     };
   }
 
@@ -146,7 +146,7 @@ class AnatomyPartLoader extends BaseManifestItemLoader {
             `Invalid socket in anatomy part '${filename}' from mod '${modId}'. Socket missing required 'id' field.`
           );
         }
-        
+
         if (socketIds.has(socket.id)) {
           throw new Error(
             `Duplicate socket ID '${socket.id}' in anatomy part '${filename}' from mod '${modId}'.`
@@ -154,7 +154,11 @@ class AnatomyPartLoader extends BaseManifestItemLoader {
         }
         socketIds.add(socket.id);
 
-        if (!socket.allowedTypes || !Array.isArray(socket.allowedTypes) || socket.allowedTypes.length === 0) {
+        if (
+          !socket.allowedTypes ||
+          !Array.isArray(socket.allowedTypes) ||
+          socket.allowedTypes.length === 0
+        ) {
           throw new Error(
             `Invalid socket '${socket.id}' in anatomy part '${filename}' from mod '${modId}'. 'allowedTypes' must be a non-empty array.`
           );
