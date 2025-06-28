@@ -228,7 +228,7 @@ describe('ProcessingCommandState.enterState – error branches', () => {
     // Ensure dispatchAction returns a valid structure even if not strictly used by this error path
     mockCommandProcessor.dispatchAction.mockResolvedValue({
       success: true,
-      errorResult: null,
+      commandResult: null,
     });
 
     await customState.enterState(mockHandler, null);
@@ -281,7 +281,7 @@ describe('ProcessingCommandState.enterState – error branches', () => {
 
     mockCommandProcessor.dispatchAction.mockResolvedValue({
       success: true,
-      errorResult: null,
+      commandResult: null,
     });
 
     await stateForNullActionTest.enterState(mockHandler, null); // Call enterState on the local instance
@@ -333,7 +333,7 @@ describe('ProcessingCommandState.enterState – error branches', () => {
 
     mockCommandProcessor.dispatchAction.mockResolvedValue({
       success: true,
-      errorResult: null,
+      commandResult: null,
     });
 
     await stateForInvalidActionTest.enterState(mockHandler, null); // Call enterState on the local instance
@@ -378,7 +378,10 @@ describe('ProcessingCommandState.enterState – error branches', () => {
         notes: [],
       }),
     };
-    mockCommandProcessor.dispatchAction.mockResolvedValue({ success: true });
+    mockCommandProcessor.dispatchAction.mockResolvedValue({
+      success: true,
+      commandResult: null,
+    });
     mockHandler.getTurnContext.mockReturnValue(mockTurnContext);
 
     // Mock the resolver so it returns a no-op strategy, preventing further execution
@@ -443,7 +446,10 @@ describe('ProcessingCommandState.enterState – error branches', () => {
         notes: ['first note', 'second note'],
       }),
     };
-    mockCommandProcessor.dispatchAction.mockResolvedValue({ success: true });
+    mockCommandProcessor.dispatchAction.mockResolvedValue({
+      success: true,
+      commandResult: null,
+    });
     mockHandler.getTurnContext.mockReturnValue(mockTurnContext);
 
     jest

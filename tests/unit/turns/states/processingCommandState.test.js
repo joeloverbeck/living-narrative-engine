@@ -133,12 +133,12 @@ describe('ProcessingCommandState', () => {
     // NEW: Define results from the mocked dispatchAction call
     mockSuccessfulDispatchResult = {
       success: true,
-      errorResult: undefined,
+      commandResult: undefined,
     };
 
     mockFailedDispatchResult = {
       success: false,
-      errorResult: {
+      commandResult: {
         error: 'CommandProcFailure',
         internalError: 'Detailed CommandProcFailure',
       },
@@ -162,8 +162,8 @@ describe('ProcessingCommandState', () => {
       originalInput:
         mockTurnAction.commandString || mockTurnAction.actionDefinitionId,
       actionResult: { actionId: mockTurnAction.actionDefinitionId },
-      error: mockFailedDispatchResult.errorResult.error,
-      internalError: mockFailedDispatchResult.errorResult.internalError,
+      error: mockFailedDispatchResult.commandResult.error,
+      internalError: mockFailedDispatchResult.commandResult.internalError,
     };
 
     mockTurnContext = {

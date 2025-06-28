@@ -50,7 +50,7 @@ class CommandProcessor extends ICommandProcessor {
    *
    * @param {Entity} actor - The entity performing the action.
    * @param {ITurnAction} turnAction - The pre-resolved action object.
-   * @returns {Promise<{success: boolean, errorResult: CommandResult | null}>} A promise that resolves to an object indicating the outcome.
+   * @returns {Promise<{success: boolean, commandResult: CommandResult | null}>} A promise that resolves to an object indicating the outcome.
    */
   async dispatchAction(actor, turnAction) {
     const { actionDefinitionId, commandString } = turnAction;
@@ -77,7 +77,7 @@ class CommandProcessor extends ICommandProcessor {
       );
       return {
         success: false,
-        errorResult: this.#createFailureResult(
+        commandResult: this.#createFailureResult(
           userMsg,
           internalMsg,
           commandString,
@@ -100,7 +100,7 @@ class CommandProcessor extends ICommandProcessor {
       this.#logger.debug(
         `CommandProcessor.dispatchAction: Successfully dispatched '${actionDefinitionId}' for actor ${actorId}.`
       );
-      return { success: true, errorResult: null };
+      return { success: true, commandResult: null };
     } else {
       const internalMsg = `CRITICAL: Failed to dispatch pre-resolved ATTEMPT_ACTION_ID for ${actorId}, action "${actionDefinitionId}". Dispatcher reported failure.`;
       const userMsg = 'Internal error: Failed to initiate action.';
@@ -125,7 +125,7 @@ class CommandProcessor extends ICommandProcessor {
         commandString,
         actionDefinitionId
       );
-      return { success: false, errorResult: failureResult };
+      return { success: false, commandResult: failureResult };
     }
   }
 

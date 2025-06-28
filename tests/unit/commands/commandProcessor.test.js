@@ -36,7 +36,7 @@ describe('CommandProcessor.dispatchAction', () => {
 
     const result = await processor.dispatchAction(actor, turnAction);
 
-    expect(result).toEqual({ success: true, errorResult: null });
+    expect(result).toEqual({ success: true, commandResult: null });
     expect(safeEventDispatcher.dispatch).toHaveBeenCalledTimes(1);
     expect(safeEventDispatcher.dispatch).toHaveBeenCalledWith(
       ATTEMPT_ACTION_ID,
@@ -57,7 +57,7 @@ describe('CommandProcessor.dispatchAction', () => {
     const result = await processor.dispatchAction(actor, turnAction);
 
     expect(result.success).toBe(false);
-    expect(result.errorResult).toEqual(
+    expect(result.commandResult).toEqual(
       expect.objectContaining({
         success: false,
         turnEnded: true,
