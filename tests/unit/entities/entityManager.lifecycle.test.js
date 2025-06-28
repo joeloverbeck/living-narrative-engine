@@ -21,6 +21,10 @@ import { EntityNotFoundError } from '../../../src/errors/entityNotFoundError.js'
 import { DuplicateEntityError } from '../../../src/errors/duplicateEntityError.js';
 import { SerializedEntityError } from '../../../src/errors/serializedEntityError.js';
 import { InvalidInstanceIdError } from '../../../src/errors/invalidInstanceIdError.js';
+import { RepositoryConsistencyError } from '../../../src/errors/repositoryConsistencyError.js';
+import { createDefaultDeps } from '../../../src/entities/utils/createDefaultDeps.js';
+import { createDefaultServices } from '../../../src/entities/utils/createDefaultServices.js';
+import EntityLifecycleManager from '../../../src/entities/services/entityLifecycleManager.js';
 import {
   expectEntityCreatedDispatch,
   expectEntityRemovedDispatch,
@@ -430,6 +434,60 @@ describeEntityManagerSuite('EntityManager - removeEntityInstance', (getBed) => {
     runInvalidEntityIdTests(getBed, (em, instanceId) =>
       em.removeEntityInstance(instanceId)
     );
+
+    it('should throw a RepositoryConsistencyError if entityRepository fails', () => {
+      const store = new Map();
+      const stubRepo = {
+        add: jest.fn((entity) => {
+          store.set(entity.id, entity);
+        }),
+        get: jest.fn((id) => store.get(id)),
+        has: jest.fn((id) => store.has(id)),
+        remove: jest.fn(() => {
+          throw new Error('Test repository failure');
+        }),
+        clear: jest.fn(),
+        entities: jest.fn(() => store.values()),
+      };
+
+      const { mocks } = getBed();
+      const deps = createDefaultDeps();
+      const services = createDefaultServices({
+        registry: mocks.registry,
+        validator: mocks.validator,
+        logger: mocks.logger,
+        eventDispatcher: mocks.eventDispatcher,
+        idGenerator: deps.idGenerator,
+        cloner: deps.cloner,
+        defaultPolicy: deps.defaultPolicy,
+      });
+
+      getBed().setupTestDefinitions('basic');
+
+      const lifecycleManager = new EntityLifecycleManager({
+        registry: mocks.registry,
+        logger: mocks.logger,
+        eventDispatcher: mocks.eventDispatcher,
+        entityRepository: stubRepo,
+        factory: services.entityFactory,
+        errorTranslator: services.errorTranslator,
+        definitionCache: services.definitionCache,
+      });
+
+      const { PRIMARY } = TestData.InstanceIDs;
+      lifecycleManager.createEntityInstance(TestData.DefinitionIDs.BASIC, {
+        instanceId: PRIMARY,
+      });
+
+      expect(() => lifecycleManager.removeEntityInstance(PRIMARY)).toThrow(
+        RepositoryConsistencyError
+      );
+      expect(mocks.logger.error).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'EntityRepository.remove failed for already retrieved entity'
+        )
+      );
+    });
   });
 });
 
