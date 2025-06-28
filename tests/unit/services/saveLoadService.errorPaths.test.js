@@ -21,14 +21,8 @@ import { createMockSaveValidationService } from '../testUtils.js';
  * @typedef {import('../../../src/persistence/persistenceTypes.js').PersistenceResult<any>} PersistenceResult
  */
 
-jest.mock('@msgpack/msgpack', () => {
-  global.encodeMock = jest.fn();
-  global.decodeMock = jest.fn();
-  return {
-    encode: (...args) => global.encodeMock(...args),
-    decode: (...args) => global.decodeMock(...args),
-  };
-});
+const encodeMock = jest.fn();
+const decodeMock = jest.fn();
 
 beforeAll(() => {
   if (typeof window !== 'undefined') {
@@ -62,7 +56,14 @@ function makeDeps() {
     ensureDirectoryExists: jest.fn(),
   };
   const checksumService = new ChecksumService({ logger, crypto: webcrypto });
-  const serializer = new GameStateSerializer({ logger, checksumService });
+  const serializer = new GameStateSerializer({
+    logger,
+    checksumService,
+    encode: encodeMock,
+    decode: decodeMock,
+    gzip: pako.gzip,
+    ungzip: pako.ungzip,
+  });
   const parser = new SaveFileParser({ logger, storageProvider, serializer });
   const saveFileRepository = new SaveFileRepository({
     logger,
@@ -100,8 +101,8 @@ describe('SaveLoadService error paths', () => {
       gameStateSerializer: serializer,
       saveValidationService,
     });
-    global.encodeMock = jest.fn();
-    global.decodeMock = jest.fn();
+    encodeMock.mockReset();
+    decodeMock.mockReset();
   });
 
   it('logs error when listFiles fails with non-not-found', async () => {
@@ -127,11 +128,11 @@ describe('SaveLoadService error paths', () => {
     const td = new TextDecoder();
     const gameStateString = 'dummy';
 
-    global.encodeMock.mockImplementation((obj) => {
+    encodeMock.mockImplementation((obj) => {
       if (obj && obj.isGameState) return gameStateString;
       return te.encode(JSON.stringify(obj));
     });
-    global.decodeMock.mockImplementation((buf) => JSON.parse(td.decode(buf)));
+    decodeMock.mockImplementation((buf) => JSON.parse(td.decode(buf)));
 
     storageProvider.ensureDirectoryExists.mockResolvedValue();
     let written;
@@ -151,7 +152,7 @@ describe('SaveLoadService error paths', () => {
     expect(result.success).toBe(true);
 
     const decompressed = pako.ungzip(written);
-    const finalObj = global.decodeMock(decompressed);
+    const finalObj = decodeMock(decompressed);
     const hashBuffer = await webcrypto.subtle.digest(
       'SHA-256',
       te.encode(gameStateString)

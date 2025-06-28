@@ -1,6 +1,11 @@
 // src/persistence/createSaveLoadService.js
 
 import GameStateSerializer from './gameStateSerializer.js';
+import {
+  encode as msgpackEncode,
+  decode as msgpackDecode,
+} from '@msgpack/msgpack';
+import pako from 'pako';
 import ChecksumService from './checksumService.js';
 import SaveFileParser from './saveFileParser.js';
 import SaveValidationService from './saveValidationService.js';
@@ -22,7 +27,14 @@ export function createSaveLoadService({
   crypto = globalThis.crypto,
 }) {
   const checksumService = new ChecksumService({ logger, crypto });
-  const serializer = new GameStateSerializer({ logger, checksumService });
+  const serializer = new GameStateSerializer({
+    logger,
+    checksumService,
+    encode: msgpackEncode,
+    decode: msgpackDecode,
+    gzip: pako.gzip,
+    ungzip: pako.ungzip,
+  });
   const parser = new SaveFileParser({
     logger,
     storageProvider,

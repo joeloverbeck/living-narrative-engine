@@ -46,7 +46,14 @@ function makeDeps() {
     ensureDirectoryExists: jest.fn(),
   };
   const checksumService = new ChecksumService({ logger, crypto: webcrypto });
-  const serializer = new GameStateSerializer({ logger, checksumService });
+  const serializer = new GameStateSerializer({
+    logger,
+    checksumService,
+    encode,
+    decode,
+    gzip: pako.gzip,
+    ungzip: pako.ungzip,
+  });
   const parser = new SaveFileParser({ logger, storageProvider, serializer });
   const saveFileRepository = new SaveFileRepository({
     logger,

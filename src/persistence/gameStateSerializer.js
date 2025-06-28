@@ -1,6 +1,9 @@
 // src/persistence/gameStateSerializer.js
 
-import { encode, decode } from '@msgpack/msgpack';
+import {
+  encode as defaultEncode,
+  decode as defaultDecode,
+} from '@msgpack/msgpack';
 import pako from 'pako';
 import { cloneValidatedState } from '../utils/saveStateUtils.js';
 import { BaseService } from '../utils/serviceBase.js';
@@ -26,15 +29,37 @@ class GameStateSerializer extends BaseService {
   /** @type {ChecksumService} */
   #checksumService;
 
+  /** @type {(data: any) => Uint8Array} */
+  #encode;
+
+  /** @type {(data: Uint8Array) => any} */
+  #decode;
+
+  /** @type {(data: Uint8Array) => Uint8Array} */
+  #gzip;
+
+  /** @type {(data: Uint8Array) => Uint8Array} */
+  #ungzip;
+
   /**
    * Creates a new GameStateSerializer.
    *
    * @param {object} dependencies - Constructor dependencies.
    * @param {import('../interfaces/coreServices.js').ILogger} dependencies.logger - Logging service.
-   * @param {Crypto} [dependencies.crypto] - Web Crypto implementation.
-   * @param dependencies.checksumService
+   * @param {ChecksumService} dependencies.checksumService - Checksum helper.
+   * @param {(data: any) => Uint8Array} [dependencies.encode] - MessagePack encoder.
+   * @param {(data: Uint8Array) => any} [dependencies.decode] - MessagePack decoder.
+   * @param {(data: Uint8Array) => Uint8Array} [dependencies.gzip] - Compression function.
+   * @param {(data: Uint8Array) => Uint8Array} [dependencies.ungzip] - Decompression function.
    */
-  constructor({ logger, checksumService }) {
+  constructor({
+    logger,
+    checksumService,
+    encode = defaultEncode,
+    decode = defaultDecode,
+    gzip = pako.gzip,
+    ungzip = pako.ungzip,
+  }) {
     super();
     this.#checksumService = checksumService;
     this.#logger = this._init('GameStateSerializer', logger, {
@@ -43,6 +68,10 @@ class GameStateSerializer extends BaseService {
         requiredMethods: ['generateChecksum'],
       },
     });
+    this.#encode = encode;
+    this.#decode = decode;
+    this.#gzip = gzip;
+    this.#ungzip = ungzip;
   }
 
   /**
@@ -62,7 +91,7 @@ class GameStateSerializer extends BaseService {
    * @returns {Promise<string>} Hexadecimal checksum.
    */
   async calculateGameStateChecksum(gameState) {
-    const encoded = encode(gameState);
+    const encoded = this.#encode(gameState);
     return this.#checksumService.generateChecksum(encoded);
   }
 
@@ -107,13 +136,13 @@ class GameStateSerializer extends BaseService {
    */
   #encodeAndCompress(obj) {
     this.#logger.debug('Serializing full game state object to MessagePack...');
-    const messagePackData = encode(obj);
+    const messagePackData = this.#encode(obj);
     this.#logger.debug(
       `MessagePack Raw Size: ${messagePackData.byteLength} bytes`
     );
 
     this.#logger.debug('Compressing MessagePack data with Gzip...');
-    const compressedData = pako.gzip(messagePackData);
+    const compressedData = this.#gzip(messagePackData);
     this.#logger.debug(`Gzipped Size: ${compressedData.byteLength} bytes`);
 
     return { compressedData, finalSaveObject: obj };
@@ -165,7 +194,7 @@ class GameStateSerializer extends BaseService {
   decompress(data) {
     const result = wrapSyncPersistenceOperation(
       this.#logger,
-      () => pako.ungzip(data),
+      () => this.#ungzip(data),
       PersistenceErrorCodes.DECOMPRESSION_ERROR,
       MSG_DECOMPRESSION_FAILED,
       'Gzip decompression failed:'
@@ -187,7 +216,7 @@ class GameStateSerializer extends BaseService {
   deserialize(buffer) {
     const result = wrapSyncPersistenceOperation(
       this.#logger,
-      () => decode(buffer),
+      () => this.#decode(buffer),
       PersistenceErrorCodes.DESERIALIZATION_ERROR,
       MSG_DESERIALIZATION_FAILED,
       'MessagePack deserialization failed:'

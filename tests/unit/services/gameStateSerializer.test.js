@@ -34,7 +34,14 @@ describe('GameStateSerializer', () => {
   beforeEach(() => {
     logger = createMockLogger();
     const checksumService = new ChecksumService({ logger, crypto: webcrypto });
-    serializer = new GameStateSerializer({ logger, checksumService });
+    serializer = new GameStateSerializer({
+      logger,
+      checksumService,
+      encode: (...a) => msgpack.encode(...a),
+      decode: (...a) => msgpack.decode(...a),
+      gzip: (...a) => pako.gzip(...a),
+      ungzip: (...a) => pako.ungzip(...a),
+    });
   });
 
   it('decompress/deserialize round-trip succeeds', () => {

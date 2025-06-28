@@ -7,6 +7,7 @@ import ChecksumService from '../../../src/persistence/checksumService.js';
 import { PersistenceErrorCodes } from '../../../src/persistence/persistenceErrors.js';
 import { webcrypto } from 'crypto';
 import pako from 'pako';
+import * as msgpack from '@msgpack/msgpack';
 import { createMockLogger } from '../testUtils.js';
 
 beforeAll(() => {
@@ -29,7 +30,14 @@ describe('GameStateSerializer persistence tests', () => {
   beforeEach(() => {
     logger = createMockLogger();
     const checksumService = new ChecksumService({ logger, crypto: webcrypto });
-    serializer = new GameStateSerializer({ logger, checksumService });
+    serializer = new GameStateSerializer({
+      logger,
+      checksumService,
+      encode: (...a) => msgpack.encode(...a),
+      decode: (...a) => msgpack.decode(...a),
+      gzip: (...a) => pako.gzip(...a),
+      ungzip: (...a) => pako.ungzip(...a),
+    });
   });
 
   it('round trips via compressPreparedState/decompress/deserialize', async () => {

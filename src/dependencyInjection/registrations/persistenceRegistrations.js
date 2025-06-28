@@ -33,6 +33,11 @@ import ActiveModsManifestBuilder from '../../persistence/activeModsManifestBuild
 // import ReferenceResolver from '../../initializers/services/referenceResolver.js'; // Removed - service is deprecated
 import createSaveLoadService from '../../persistence/createSaveLoadService.js';
 import GameStateSerializer from '../../persistence/gameStateSerializer.js';
+import {
+  encode as msgpackEncode,
+  decode as msgpackDecode,
+} from '@msgpack/msgpack';
+import pako from 'pako';
 import ChecksumService from '../../persistence/checksumService.js';
 import SaveFileRepository from '../../persistence/saveFileRepository.js';
 import SaveFileParser from '../../persistence/saveFileParser.js';
@@ -64,6 +69,10 @@ export function registerPersistence(container) {
     const serializer = new GameStateSerializer({
       logger,
       checksumService,
+      encode: msgpackEncode,
+      decode: msgpackDecode,
+      gzip: pako.gzip,
+      ungzip: pako.ungzip,
     });
     const parser = new SaveFileParser({
       logger,

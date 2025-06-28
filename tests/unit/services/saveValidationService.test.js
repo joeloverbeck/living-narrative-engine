@@ -2,6 +2,8 @@ import { describe, it, expect, beforeEach, beforeAll } from '@jest/globals';
 import SaveValidationService from '../../../src/persistence/saveValidationService.js';
 import GameStateSerializer from '../../../src/persistence/gameStateSerializer.js';
 import ChecksumService from '../../../src/persistence/checksumService.js';
+import { encode, decode } from '@msgpack/msgpack';
+import pako from 'pako';
 import { PersistenceErrorCodes } from '../../../src/persistence/persistenceErrors.js';
 import { webcrypto } from 'crypto';
 import { createMockLogger } from '../testUtils.js';
@@ -27,7 +29,14 @@ describe('SaveValidationService', () => {
   beforeEach(() => {
     logger = createMockLogger();
     const checksumService = new ChecksumService({ logger, crypto: webcrypto });
-    serializer = new GameStateSerializer({ logger, checksumService });
+    serializer = new GameStateSerializer({
+      logger,
+      checksumService,
+      encode,
+      decode,
+      gzip: pako.gzip,
+      ungzip: pako.ungzip,
+    });
     service = new SaveValidationService({
       logger,
       gameStateSerializer: serializer,

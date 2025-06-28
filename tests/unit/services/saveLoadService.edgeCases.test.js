@@ -9,7 +9,7 @@ import {
 import SaveLoadService from '../../../src/persistence/saveLoadService.js';
 import SaveFileRepository from '../../../src/persistence/saveFileRepository.js';
 import SaveFileParser from '../../../src/persistence/saveFileParser.js';
-import { encode } from '@msgpack/msgpack';
+import { encode, decode } from '@msgpack/msgpack';
 import { PersistenceErrorCodes } from '../../../src/persistence/persistenceErrors.js';
 import { StorageErrorCodes } from '../../../src/storage/storageErrors.js';
 import pako from 'pako';
@@ -50,7 +50,14 @@ function makeDeps() {
     ensureDirectoryExists: jest.fn(),
   };
   const checksumService = new ChecksumService({ logger, crypto: webcrypto });
-  const serializer = new GameStateSerializer({ logger, checksumService });
+  const serializer = new GameStateSerializer({
+    logger,
+    checksumService,
+    encode,
+    decode,
+    gzip: pako.gzip,
+    ungzip: pako.ungzip,
+  });
   const parser = new SaveFileParser({ logger, storageProvider, serializer });
   const saveFileRepository = new SaveFileRepository({
     logger,

@@ -326,7 +326,6 @@ class ScopeEngine extends IScopeEngine {
     return result;
   }
 
-
   /**
    * Processes field access for each item in the parent result set
    *

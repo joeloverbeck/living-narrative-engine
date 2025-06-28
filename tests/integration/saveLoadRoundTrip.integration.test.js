@@ -13,6 +13,8 @@ import SaveFileRepository from '../../src/persistence/saveFileRepository.js';
 import SaveFileParser from '../../src/persistence/saveFileParser.js';
 import GameStateSerializer from '../../src/persistence/gameStateSerializer.js';
 import ChecksumService from '../../src/persistence/checksumService.js';
+import { encode, decode } from '@msgpack/msgpack';
+import pako from 'pako';
 import GamePersistenceService from '../../src/persistence/gamePersistenceService.js';
 import GameStateCaptureService from '../../src/persistence/gameStateCaptureService.js';
 import ManualSaveCoordinator from '../../src/persistence/manualSaveCoordinator.js';
@@ -70,7 +72,14 @@ describe('Persistence round-trip', () => {
     storageProvider = createMemoryStorageProvider();
     const saveValidationService = createMockSaveValidationService();
     const checksumService = new ChecksumService({ logger, crypto: webcrypto });
-    const serializer = new GameStateSerializer({ logger, checksumService });
+    const serializer = new GameStateSerializer({
+      logger,
+      checksumService,
+      encode,
+      decode,
+      gzip: pako.gzip,
+      ungzip: pako.ungzip,
+    });
     const parser = new SaveFileParser({ logger, storageProvider, serializer });
     const saveFileRepository = new SaveFileRepository({
       logger,
