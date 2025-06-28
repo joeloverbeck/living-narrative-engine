@@ -20,7 +20,7 @@
 /** @typedef {import('../types/promptData.js').PromptData} PromptData */
 
 import { IPromptBuilder } from '../interfaces/IPromptBuilder.js';
-import { validateDependency } from '../utils/validationUtils.js';
+import { validateDependency } from '../utils/dependencyUtils.js';
 import { PromptAssembler } from './promptAssembler.js';
 
 const INIT_MSG =

@@ -4,7 +4,7 @@
  */
 
 import { PromptSession } from './promptSession.js';
-import { validateDependency } from '../../utils/validationUtils.js';
+import { validateDependency } from '../../utils/dependencyUtils.js';
 import IPromptCoordinator from '../../interfaces/IPromptCoordinator';
 
 /**

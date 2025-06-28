@@ -12,7 +12,7 @@ import {
 import EngineState from './engineState.js';
 import GameSessionManager from './gameSessionManager.js';
 import PersistenceCoordinator from './persistenceCoordinator.js';
-import { assertNonBlankString } from '../utils/parameterGuards.js';
+import { assertNonBlankString } from '../utils/dependencyUtils.js';
 
 // --- JSDoc Type Imports ---
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */

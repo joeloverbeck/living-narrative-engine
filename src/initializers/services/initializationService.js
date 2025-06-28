@@ -29,14 +29,14 @@ import {
   InitializationError,
 } from '../../errors/InitializationError.js';
 import { buildActionIndex } from './initHelpers.js';
-import { assertNonBlankString } from '../../utils/parameterGuards.js';
+import { assertNonBlankString } from '../../utils/dependencyUtils.js';
 import { InvalidArgumentError } from '../../errors/invalidArgumentError.js';
 import ContentDependencyValidator from './contentDependencyValidator.js';
 import {
   assertFunction,
   assertMethods,
   assertPresent,
-} from '../../utils/dependencyValidators.js';
+} from '../../utils/dependencyUtils.js';
 
 /**
  * Service responsible for orchestrating the entire game initialization sequence.

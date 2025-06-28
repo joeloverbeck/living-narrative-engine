@@ -23,9 +23,9 @@ import { MapManager } from '../../utils/mapManagerUtils.js';
 import {
   assertValidId,
   assertNonBlankString,
-} from '../../utils/parameterGuards.js';
+} from '../../utils/dependencyUtils.js';
 import { injectDefaultComponents } from '../utils/defaultComponentInjector.js';
-import { validateDependency } from '../../utils/validationUtils.js';
+import { validateDependency } from '../../utils/dependencyUtils.js';
 import { ensureValidLogger } from '../../utils/loggerUtils.js';
 import { DefinitionNotFoundError } from '../../errors/definitionNotFoundError.js';
 import { SerializedEntityError } from '../../errors/serializedEntityError.js';

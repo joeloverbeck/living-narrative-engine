@@ -34,9 +34,9 @@ import {
   validateGetEntitiesWithComponentParams as validateGetEntitiesWithComponentParamsUtil,
 } from './utils/parameterValidators.js';
 import EntityQuery from '../query/EntityQuery.js';
-import { assertValidId } from '../utils/parameterGuards.js';
+import { assertValidId } from '../utils/dependencyUtils.js';
 import { IEntityManager } from '../interfaces/IEntityManager.js';
-import { validateDependency } from '../utils/validationUtils.js';
+import { validateDependency } from '../utils/dependencyUtils.js';
 import { ensureValidLogger } from '../utils/loggerUtils.js';
 import { DefinitionNotFoundError } from '../errors/definitionNotFoundError.js';
 import { EntityNotFoundError } from '../errors/entityNotFoundError';

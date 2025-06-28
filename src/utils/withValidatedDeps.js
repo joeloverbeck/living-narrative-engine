@@ -1,4 +1,4 @@
-import { validateDependencies } from './validationUtils.js';
+import { validateDependencies } from './dependencyUtils.js';
 
 /**
  * Higher-order class decorator that validates dependencies during construction.

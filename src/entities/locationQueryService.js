@@ -3,7 +3,7 @@
  * @see src/entities/locationQueryService.js
  */
 
-import { assertValidId } from '../utils/parameterGuards.js';
+import { assertValidId } from '../utils/dependencyUtils.js';
 import { InvalidArgumentError } from '../errors/invalidArgumentError.js';
 
 /**

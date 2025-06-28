@@ -10,10 +10,7 @@
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../events/validatedEventDispatcher.js').default} ValidatedEventDispatcher */ // Corrected path
 import { dispatchWithLogging } from '../utils/eventDispatchUtils.js';
-import {
-  assertFunction,
-  assertPresent,
-} from '../utils/dependencyValidators.js';
+import { assertFunction, assertPresent } from '../utils/dependencyUtils.js';
 
 /**
  * Service responsible for initializing essential systems of the application.

@@ -4,7 +4,7 @@
  * into properly typed domain errors with consistent messaging.
  */
 
-import { validateDependency } from '../../utils/validationUtils.js';
+import { validateDependency } from '../../utils/dependencyUtils.js';
 import { ensureValidLogger } from '../../utils/loggerUtils.js';
 import { DuplicateEntityError } from '../../errors/duplicateEntityError.js';
 import { SerializedEntityError } from '../../errors/serializedEntityError.js';

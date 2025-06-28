@@ -5,7 +5,7 @@ import {
   DESCRIPTION_COMPONENT_ID,
   POSITION_COMPONENT_ID,
 } from '../constants/componentIds.js';
-import { validateDependency } from '../utils/validationUtils.js';
+import { validateDependency } from '../utils/dependencyUtils.js';
 import { ensureValidLogger } from '../utils/loggerUtils.js';
 import { getEntityDisplayName } from '../utils/entityUtils.js';
 import { buildPortraitInfo } from './utils/portraitUtils.js';

@@ -11,7 +11,7 @@ import {
   createPrefixedLogger,
   initLogger as baseInitLogger,
 } from './loggerUtils.js';
-import { validateDependencies } from './validationUtils.js';
+import { validateDependencies } from './dependencyUtils.js';
 
 /**
  * Validate the provided logger and return a prefixed logger instance.

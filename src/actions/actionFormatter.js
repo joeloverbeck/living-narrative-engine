@@ -16,7 +16,7 @@ import {
   safeDispatchError,
   dispatchValidationError,
 } from '../utils/safeDispatchErrorUtils.js';
-import { validateDependency } from '../utils/validationUtils.js';
+import { validateDependency } from '../utils/dependencyUtils.js';
 import { resolveSafeDispatcher } from '../utils/dispatcherUtils.js';
 
 import { targetFormatterMap } from './formatters/targetFormatters.js';

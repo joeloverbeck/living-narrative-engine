@@ -5,7 +5,7 @@
  */
 
 import { MapManager } from '../../utils/mapManagerUtils.js';
-import { validateDependency } from '../../utils/validationUtils.js';
+import { validateDependency } from '../../utils/dependencyUtils.js';
 import { ensureValidLogger } from '../../utils/loggerUtils.js';
 import { EntityNotFoundError } from '../../errors/entityNotFoundError.js';
 import { DuplicateEntityError } from '../../errors/duplicateEntityError.js';

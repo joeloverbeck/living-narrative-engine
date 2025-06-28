@@ -6,7 +6,7 @@ import {
   EXITS_COMPONENT_ID,
   PORTRAIT_COMPONENT_ID,
 } from '../../constants/componentIds.js';
-import { validateDependency } from '../../utils/validationUtils.js';
+import { validateDependency } from '../../utils/dependencyUtils.js';
 import { ensureValidLogger } from '../../utils/loggerUtils.js';
 import { isNonBlankString } from '../../utils/textUtils.js';
 import { getEntityDisplayName } from '../../utils/entityUtils.js';

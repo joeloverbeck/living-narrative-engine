@@ -12,7 +12,7 @@
 /** @typedef {import('../../actions/actionTypes.js').ActionContext} ActionContext */
 
 import { PromptError } from '../../errors/promptError.js';
-import { validateDependency } from '../../utils/validationUtils.js';
+import { validateDependency } from '../../utils/dependencyUtils.js';
 
 /**
  * @typedef {object} ActionContextBuilderDependencies

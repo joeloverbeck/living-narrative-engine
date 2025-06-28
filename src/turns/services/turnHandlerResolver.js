@@ -5,7 +5,7 @@
 import { ITurnHandlerResolver } from '../interfaces/ITurnHandlerResolver.js';
 
 // --- Core Imports ---
-import { validateDependency } from '../../utils/validationUtils.js';
+import { validateDependency } from '../../utils/dependencyUtils.js';
 
 // --- Type Imports for JSDoc ---
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
