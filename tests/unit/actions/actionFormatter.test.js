@@ -137,6 +137,25 @@ describe('formatActionCommand', () => {
     );
   });
 
+  it('warns and returns template when formatter is missing in map', () => {
+    const actionDef = { id: 'core:inspect', template: 'inspect {target}' };
+    const context = { type: TARGET_TYPE_ENTITY, entityId: 'e1' };
+    const customMap = {};
+    const result = formatActionCommand(
+      actionDef,
+      context,
+      entityManager,
+      { logger, safeEventDispatcher: dispatcher },
+      displayNameFn,
+      customMap
+    );
+
+    expect(result).toEqual({ ok: true, value: 'inspect {target}' });
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining('Unknown targetContext type')
+    );
+  });
+
   it('throws if logger is missing', () => {
     const actionDef = { id: 'core:wait', template: 'wait' };
     const context = { type: TARGET_TYPE_NONE };

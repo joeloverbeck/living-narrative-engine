@@ -53,6 +53,15 @@ function buildFormatError(message, details) {
 }
 
 /**
+ * @description Normalizes formatter results to a standard object shape.
+ * @param {string | FormatActionCommandResult} result - Raw formatter result.
+ * @returns {FormatActionCommandResult} Normalized result.
+ */
+function normalizeFormatResult(result) {
+  return typeof result === 'string' ? { ok: true, value: result } : result;
+}
+
+/**
  * @description Validates inputs for {@link formatActionCommand}.
  * @param {ActionDefinition} actionDefinition - Validated action definition.
  * @param {ActionTargetContext} targetContext - Validated target context.
@@ -124,30 +133,30 @@ function applyTargetFormatter(command, targetContext, options) {
     debug,
     dispatcher,
   } = options;
-  try {
-    const formatter = formatterMap[targetContext.type];
-    if (formatter) {
-      let newCommand = formatter(command, targetContext, {
-        actionId: actionDefinition.id,
-        entityManager,
-        displayNameFn,
-        logger,
-        debug,
-      });
-      if (typeof newCommand === 'string') {
-        newCommand = { ok: true, value: newCommand };
-      }
-      if (!newCommand.ok) {
-        return newCommand;
-      }
 
-      return { ok: true, value: newCommand.value };
-    }
-
+  const formatter = formatterMap[targetContext.type];
+  if (!formatter) {
     logger.warn(
       `formatActionCommand: Unknown targetContext type: ${targetContext.type} for action ${actionDefinition.id}. Returning template unmodified.`
     );
     return { ok: true, value: command };
+  }
+
+  try {
+    let newCommand = formatter(command, targetContext, {
+      actionId: actionDefinition.id,
+      entityManager,
+      displayNameFn,
+      logger,
+      debug,
+    });
+
+    newCommand = normalizeFormatResult(newCommand);
+    if (!newCommand.ok) {
+      return newCommand;
+    }
+
+    return { ok: true, value: newCommand.value };
   } catch (error) {
     safeDispatchError(
       dispatcher,
