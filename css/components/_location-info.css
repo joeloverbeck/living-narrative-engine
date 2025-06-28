@@ -56,7 +56,7 @@
   left: 50%;
   transform: translateX(-50%);
   bottom: calc(100% + var(--spacing-xs));
-  min-width: 280px;
+  min-width: 350px;
   max-width: 420px;
   max-height: 55vh;
   overflow-y: auto;
