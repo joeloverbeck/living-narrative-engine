@@ -18,4 +18,12 @@ export * from './jsonCleaning.js';
 export * from './jsonRepair.js';
 export * from './evaluationContextUtils.js';
 export * from './eventDispatchUtils.js';
-export * from './dependencyUtils.js';
+export {
+  assertPresent,
+  assertFunction,
+  assertMethods,
+  assertValidId,
+  assertNonBlankString,
+  validateDependency,
+  validateDependencies,
+} from './dependencyUtils.js';

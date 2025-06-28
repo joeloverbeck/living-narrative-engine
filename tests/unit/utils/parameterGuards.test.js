@@ -6,7 +6,7 @@ import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import {
   assertValidId,
   assertNonBlankString,
-} from '../../../src/utils/parameterGuards.js';
+} from '../../../src/utils/dependencyUtils.js';
 import { InvalidArgumentError } from '../../../src/errors/invalidArgumentError.js';
 
 describe('parameterGuards', () => {

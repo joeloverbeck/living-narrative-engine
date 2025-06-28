@@ -1,7 +1,7 @@
 // src/services/browserStorageProvider.js
 import { IStorageProvider } from '../interfaces/IStorageProvider.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/eventIds.js';
-import { validateDependency } from '../utils/validationUtils.js';
+import { validateDependency } from '../utils/dependencyUtils.js';
 import { StorageErrorCodes } from './storageErrors.js';
 
 /** @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */

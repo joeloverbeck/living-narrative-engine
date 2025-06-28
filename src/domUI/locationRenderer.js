@@ -4,7 +4,7 @@ import { BoundDomRendererBase } from './boundDomRendererBase.js';
 import { DomUtils } from '../utils/domUtils.js';
 import createMessageElement from './helpers/createMessageElement.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/eventIds.js';
-import { validateDependency } from '../utils/validationUtils.js';
+import { validateDependency } from '../utils/dependencyUtils.js';
 import {
   // POSITION_COMPONENT_ID, // No longer directly used for current location logic
   // NAME_COMPONENT_ID, // Handled by EntityDisplayDataProvider

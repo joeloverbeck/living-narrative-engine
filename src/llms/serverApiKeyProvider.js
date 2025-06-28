@@ -8,7 +8,7 @@ import {
   IEnvironmentVariableReader,
 } from '../../llm-proxy-server/src/utils/IServerUtils.js';
 import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
-import { validateDependency } from '../utils/validationUtils.js';
+import { validateDependency } from '../utils/dependencyUtils.js';
 import { initLogger } from '../utils/index.js';
 import { isValidEnvironmentContext } from './environmentContext.js';
 
