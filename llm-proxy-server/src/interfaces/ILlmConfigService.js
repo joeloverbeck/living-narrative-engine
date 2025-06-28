@@ -1,5 +1,10 @@
 // llm-proxy-server/src/interfaces/ILlmConfigService.js
 /**
+ * @typedef {import('../config/llmConfigService.js').LLMConfigurationFileForProxy} LLMConfigurationFileForProxy
+ * @typedef {import('../config/llmConfigService.js').LLMModelConfig} LLMModelConfig
+ * @typedef {import('../config/llmConfigService.js').StandardizedErrorObject} StandardizedErrorObject
+ */
+/**
  * @interface ILlmConfigService
  * @description Defines an interface for working with LLM configuration data.
  */
