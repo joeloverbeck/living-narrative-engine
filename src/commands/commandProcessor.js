@@ -53,8 +53,40 @@ class CommandProcessor extends ICommandProcessor {
    * @returns {Promise<{success: boolean, commandResult: CommandResult | null}>} A promise that resolves to an object indicating the outcome.
    */
   async dispatchAction(actor, turnAction) {
+    const actorId = actor?.id;
+
+    const hasActionDefId =
+      turnAction &&
+      typeof turnAction === 'object' &&
+      'actionDefinitionId' in turnAction;
+
+    if (!actorId || !hasActionDefId) {
+      const internalMsg =
+        'dispatchAction failed: actor must have id and turnAction must include actionDefinitionId.';
+      const userMsg = 'Internal error: Malformed action prevented execution.';
+      this.#logger.error(internalMsg);
+      await safeDispatchError(
+        this.#safeEventDispatcher,
+        userMsg,
+        {
+          raw: internalMsg,
+          timestamp: new Date().toISOString(),
+          stack: new Error().stack,
+        },
+        this.#logger
+      );
+      return {
+        success: false,
+        commandResult: this.#createFailureResult(
+          userMsg,
+          internalMsg,
+          turnAction?.commandString,
+          undefined
+        ),
+      };
+    }
+
     const { actionDefinitionId, commandString } = turnAction;
-    const actorId = actor.id;
     this.#logger.debug(
       `CommandProcessor.dispatchAction: Dispatching pre-resolved action '${actionDefinitionId}' for actor ${actorId}.`,
       { turnAction }

@@ -50,6 +50,44 @@ describe('CommandProcessor.dispatchAction', () => {
     );
   });
 
+  it('returns failure when actor is missing an id', async () => {
+    const actor = {};
+    const turnAction = {
+      actionDefinitionId: 'look',
+      resolvedParameters: {},
+      commandString: 'look',
+    };
+
+    const result = await processor.dispatchAction(actor, turnAction);
+
+    expect(result.success).toBe(false);
+    expect(result.commandResult.error).toBe(
+      'Internal error: Malformed action prevented execution.'
+    );
+    expect(safeDispatchError).toHaveBeenCalledWith(
+      safeEventDispatcher,
+      'Internal error: Malformed action prevented execution.',
+      expect.any(Object),
+      logger
+    );
+  });
+
+  it('returns failure when turnAction is not an object', async () => {
+    const actor = { id: 'actor-invalid' };
+    const result = await processor.dispatchAction(actor, null);
+
+    expect(result.success).toBe(false);
+    expect(result.commandResult.error).toBe(
+      'Internal error: Malformed action prevented execution.'
+    );
+    expect(safeDispatchError).toHaveBeenCalledWith(
+      safeEventDispatcher,
+      'Internal error: Malformed action prevented execution.',
+      expect.any(Object),
+      logger
+    );
+  });
+
   it('AC2: returns failure and dispatches system error when actionDefinitionId is missing', async () => {
     const actor = { id: 'actor2' };
     const turnAction = { resolvedParameters: {}, commandString: 'noop' };
@@ -62,7 +100,8 @@ describe('CommandProcessor.dispatchAction', () => {
         success: false,
         turnEnded: true,
         error: 'Internal error: Malformed action prevented execution.',
-        internalError: expect.stringContaining('missing actionDefinitionId'),
+        internalError:
+          'dispatchAction failed: actor must have id and turnAction must include actionDefinitionId.',
       })
     );
     expect(safeDispatchError).toHaveBeenCalledTimes(1);
