@@ -2,13 +2,6 @@
 
 import { BaseService } from '../../utils/serviceBase.js';
 import { resolveReferences } from './conditionReferenceResolver.js';
-import {
-  TRACE_INFO,
-  TRACE_SUCCESS,
-  TRACE_FAILURE,
-  TRACE_ERROR,
-  TRACE_DATA,
-} from '../tracing/traceContext.js';
 
 /* type-only imports */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
@@ -35,7 +28,8 @@ export class PrerequisiteEvaluationService extends BaseService {
   #gameDataRepository;
 
   /**
-   * @description Builds the prefix used for logging messages.
+   * Builds the prefix used for logging messages.
+   *
    * @private
    * @param {string} actionId - Identifier of the action being evaluated.
    * @returns {string} The standardized log prefix.
@@ -118,7 +112,8 @@ export class PrerequisiteEvaluationService extends BaseService {
   }
 
   /**
-   * @description Validates the prerequisite rule object structure.
+   * Validates the prerequisite rule object structure.
+   *
    * @private
    * @param {object} prereqObject - The prerequisite rule object.
    * @param {number} ruleNumber - The index of the rule being evaluated.
@@ -143,7 +138,8 @@ export class PrerequisiteEvaluationService extends BaseService {
   }
 
   /**
-   * @description Executes a JsonLogic rule using the evaluation service.
+   * Executes a JsonLogic rule using the evaluation service.
+   *
    * @private
    * @param {object} logic - The resolved JsonLogic rule to evaluate.
    * @param {JsonLogicEvaluationContext} context - Evaluation context.
@@ -154,7 +150,8 @@ export class PrerequisiteEvaluationService extends BaseService {
   }
 
   /**
-   * @description Logs the outcome of a prerequisite evaluation.
+   * Logs the outcome of a prerequisite evaluation.
+   *
    * @private
    * @param {boolean} pass - Whether the rule passed.
    * @param {object} prereqObject - The original prerequisite rule.
@@ -183,7 +180,8 @@ export class PrerequisiteEvaluationService extends BaseService {
   }
 
   /**
-   * @description Builds the evaluation context for prerequisite evaluation.
+   * Builds the evaluation context for prerequisite evaluation.
+   *
    * @private
    * @param {ActionDefinition} actionDefinition - The definition of the action being evaluated.
    * @param {Entity} actor - The entity performing the action.
@@ -220,7 +218,8 @@ export class PrerequisiteEvaluationService extends BaseService {
   }
 
   /**
-   * @description Resolves any condition references and evaluates the resulting logic.
+   * Resolves any condition references and evaluates the resulting logic.
+   *
    * @private
    * @param {object} prereqObject - The prerequisite containing a logic rule.
    * @param {string} actionId - Identifier of the action being evaluated.
