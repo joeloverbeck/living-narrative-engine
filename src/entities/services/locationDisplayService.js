@@ -11,7 +11,7 @@ import { ensureValidLogger } from '../../utils/loggerUtils.js';
 import { isNonBlankString } from '../../utils/textUtils.js';
 import { getEntityDisplayName } from '../../utils/entityUtils.js';
 import { buildPortraitInfo } from '../utils/portraitUtils.js';
-import { InvalidEntityIdError } from '../../errors/invalidEntityIdError.js';
+import { withEntity } from '../utils/entityFetchHelpers.js';
 
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 /** @typedef {import('../../interfaces/ILogger.js').ILogger} ILogger */
@@ -79,59 +79,17 @@ export class LocationDisplayService {
   /**
    * @private
    * @param {NamespacedId | string} entityId
-   * @returns {Entity}
-   * @throws {InvalidEntityIdError}
-   */
-  #fetchEntity(entityId) {
-    if (!entityId) {
-      throw new InvalidEntityIdError(entityId);
-    }
-    return this.#entityManager.getEntityInstance(entityId);
-  }
-
-  /**
-   * @private
-   * @param {NamespacedId | string} entityId
-   * @param {*} fallback
-   * @param {(entity: Entity) => *} callback
-   * @param {string} [notFoundMsg]
-   * @returns {*}
-   */
-  #withEntity(entityId, fallback, callback, notFoundMsg) {
-    let entity;
-    try {
-      entity = this.#fetchEntity(entityId);
-    } catch (error) {
-      if (error instanceof InvalidEntityIdError) {
-        this.#logger.warn(
-          `${this._logPrefix} fetchEntity called with null or empty entityId.`
-        );
-        return fallback;
-      }
-      throw error;
-    }
-
-    if (!entity) {
-      if (notFoundMsg) {
-        this.#logger.debug(`${this._logPrefix} ${notFoundMsg}`);
-      }
-      return fallback;
-    }
-
-    return callback(entity);
-  }
-
-  /**
-   * @private
-   * @param {NamespacedId | string} entityId
    * @param {string} [defaultName]
    * @returns {string}
    */
   #getEntityName(entityId, defaultName = 'Unknown Entity') {
-    return this.#withEntity(
+    return withEntity(
+      this.#entityManager,
       entityId,
       defaultName,
       (entity) => getEntityDisplayName(entity, defaultName, this.#logger),
+      this.#logger,
+      this._logPrefix,
       `getEntityName: Entity with ID '${entityId}' not found. Returning default name.`
     );
   }
@@ -143,7 +101,8 @@ export class LocationDisplayService {
    * @returns {string}
    */
   #getEntityDescription(entityId, defaultDescription = '') {
-    return this.#withEntity(
+    return withEntity(
+      this.#entityManager,
       entityId,
       defaultDescription,
       (entity) => {
@@ -162,6 +121,8 @@ export class LocationDisplayService {
         );
         return defaultDescription;
       },
+      this.#logger,
+      this._logPrefix,
       `getEntityDescription: Entity with ID '${entityId}' not found. Returning default description.`
     );
   }
@@ -229,7 +190,8 @@ export class LocationDisplayService {
       return null;
     }
 
-    return this.#withEntity(
+    return withEntity(
+      this.#entityManager,
       locationEntityId,
       null,
       (entity) => {
@@ -243,6 +205,8 @@ export class LocationDisplayService {
         if (!info) return null;
         return { imagePath: info.path, altText: info.altText };
       },
+      this.#logger,
+      this._logPrefix,
       `getLocationPortraitData: Location entity with ID '${locationEntityId}' not found.`
     );
   }
