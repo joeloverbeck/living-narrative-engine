@@ -76,6 +76,62 @@ async function scanScopeDirectoryRecursively(basePath, currentPath = '') {
 }
 
 /**
+ * Recursively scan a directory for blueprint files (.blueprint.json extension), maintaining the relative path structure.
+ *
+ * @param {string} basePath - The base path to scan from
+ * @param {string} currentPath - The current directory being scanned
+ * @returns {Promise<string[]>} Array of file paths relative to basePath
+ */
+async function scanBlueprintDirectoryRecursively(basePath, currentPath = '') {
+  const fullPath = path.join(basePath, currentPath);
+  const entries = await fs.readdir(fullPath, { withFileTypes: true });
+  const files = [];
+
+  for (const entry of entries) {
+    const entryPath = path.join(currentPath, entry.name);
+
+    if (entry.isDirectory()) {
+      // Recursively scan subdirectories
+      const subFiles = await scanBlueprintDirectoryRecursively(basePath, entryPath);
+      files.push(...subFiles);
+    } else if (entry.isFile() && entry.name.endsWith('.blueprint.json')) {
+      // Add the blueprint file with its relative path
+      files.push(entryPath);
+    }
+  }
+
+  return files;
+}
+
+/**
+ * Recursively scan a directory for recipe files (.recipe.json extension), maintaining the relative path structure.
+ *
+ * @param {string} basePath - The base path to scan from
+ * @param {string} currentPath - The current directory being scanned
+ * @returns {Promise<string[]>} Array of file paths relative to basePath
+ */
+async function scanRecipeDirectoryRecursively(basePath, currentPath = '') {
+  const fullPath = path.join(basePath, currentPath);
+  const entries = await fs.readdir(fullPath, { withFileTypes: true });
+  const files = [];
+
+  for (const entry of entries) {
+    const entryPath = path.join(currentPath, entry.name);
+
+    if (entry.isDirectory()) {
+      // Recursively scan subdirectories
+      const subFiles = await scanRecipeDirectoryRecursively(basePath, entryPath);
+      files.push(...subFiles);
+    } else if (entry.isFile() && entry.name.endsWith('.recipe.json')) {
+      // Add the recipe file with its relative path
+      files.push(entryPath);
+    }
+  }
+
+  return files;
+}
+
+/**
  * Main function to run the script logic.
  */
 async function main() {
@@ -138,49 +194,126 @@ async function main() {
             const definitionsPath = path.join(entitiesDirPath, 'definitions');
             const instancesPath = path.join(entitiesDirPath, 'instances');
 
-            // Handle entityDefinitions
-            if (
-              manifest.content.entityDefinitions &&
-              (await fs
-                .stat(definitionsPath)
-                .then(() => true)
-                .catch(() => false))
-            ) {
-              const definitionFiles =
-                await scanDirectoryRecursively(definitionsPath);
-              manifest.content.entityDefinitions = definitionFiles.sort();
+            // Check if manifest uses nested structure (entities.definitions/instances)
+            if (typeof manifest.content.entities === 'object' && !Array.isArray(manifest.content.entities)) {
+              // Handle nested structure
+              if (await fs.stat(definitionsPath).then(() => true).catch(() => false)) {
+                const definitionFiles = await scanDirectoryRecursively(definitionsPath);
+                if (!manifest.content.entities.definitions) {
+                  manifest.content.entities.definitions = [];
+                }
+                manifest.content.entities.definitions = definitionFiles.sort();
+                console.log(
+                  `  - Scanned "entities.definitions": Found ${definitionFiles.length} file(s).`
+                );
+              }
+
+              if (await fs.stat(instancesPath).then(() => true).catch(() => false)) {
+                const instanceFiles = await scanDirectoryRecursively(instancesPath);
+                if (!manifest.content.entities.instances) {
+                  manifest.content.entities.instances = [];
+                }
+                manifest.content.entities.instances = instanceFiles.sort();
+                console.log(
+                  `  - Scanned "entities.instances": Found ${instanceFiles.length} file(s).`
+                );
+              }
+            } else {
+              // Handle flat structure (legacy support for entityDefinitions/entityInstances at top level)
+              // Handle entityDefinitions
+              if (
+                manifest.content.entityDefinitions &&
+                (await fs
+                  .stat(definitionsPath)
+                  .then(() => true)
+                  .catch(() => false))
+              ) {
+                const definitionFiles =
+                  await scanDirectoryRecursively(definitionsPath);
+                manifest.content.entityDefinitions = definitionFiles.sort();
+                console.log(
+                  `  - Scanned "entityDefinitions": Found ${definitionFiles.length} file(s).`
+                );
+              }
+
+              // Handle entityInstances
+              if (
+                manifest.content.entityInstances &&
+                (await fs
+                  .stat(instancesPath)
+                  .then(() => true)
+                  .catch(() => false))
+              ) {
+                const instanceFiles =
+                  await scanDirectoryRecursively(instancesPath);
+                manifest.content.entityInstances = instanceFiles.sort();
+                console.log(
+                  `  - Scanned "entityInstances": Found ${instanceFiles.length} file(s).`
+                );
+              }
+
+              // Keep the entities directory empty since we've mapped its contents
+              manifest.content.entities = [];
               console.log(
-                `  - Scanned "entityDefinitions": Found ${definitionFiles.length} file(s).`
+                `  - Mapped "entities" directory contents to entityDefinitions and entityInstances.`
               );
             }
-
-            // Handle entityInstances
-            if (
-              manifest.content.entityInstances &&
-              (await fs
-                .stat(instancesPath)
-                .then(() => true)
-                .catch(() => false))
-            ) {
-              const instanceFiles =
-                await scanDirectoryRecursively(instancesPath);
-              manifest.content.entityInstances = instanceFiles.sort();
-              console.log(
-                `  - Scanned "entityInstances": Found ${instanceFiles.length} file(s).`
-              );
-            }
-
-            // Keep the entities directory empty since we've mapped its contents
-            manifest.content.entities = [];
-            console.log(
-              `  - Mapped "entities" directory contents to entityDefinitions and entityInstances.`
-            );
           } else if (contentType === 'scopes') {
             // Special handling for "scopes" directory with .scope files
             files = await scanScopeDirectoryRecursively(contentDirPath);
 
             console.log(
               `  - Scanned "${contentType}": Found ${files.length} .scope file(s).`
+            );
+
+            // If files were found in subdirectories, log the structure
+            if (files.length > 0) {
+              const subdirs = new Set();
+              files.forEach((file) => {
+                const dir = path.dirname(file);
+                if (dir !== '.') {
+                  subdirs.add(dir);
+                }
+              });
+              if (subdirs.size > 0) {
+                console.log(
+                  `    Subdirectories found: ${Array.from(subdirs).join(', ')}`
+                );
+              }
+            }
+
+            manifest.content[contentType] = files.sort();
+          } else if (contentType === 'blueprints') {
+            // Special handling for "blueprints" directory with .blueprint.json files
+            files = await scanBlueprintDirectoryRecursively(contentDirPath);
+
+            console.log(
+              `  - Scanned "${contentType}": Found ${files.length} .blueprint.json file(s).`
+            );
+
+            // If files were found in subdirectories, log the structure
+            if (files.length > 0) {
+              const subdirs = new Set();
+              files.forEach((file) => {
+                const dir = path.dirname(file);
+                if (dir !== '.') {
+                  subdirs.add(dir);
+                }
+              });
+              if (subdirs.size > 0) {
+                console.log(
+                  `    Subdirectories found: ${Array.from(subdirs).join(', ')}`
+                );
+              }
+            }
+
+            manifest.content[contentType] = files.sort();
+          } else if (contentType === 'recipes') {
+            // Special handling for "recipes" directory with .recipe.json files
+            files = await scanRecipeDirectoryRecursively(contentDirPath);
+
+            console.log(
+              `  - Scanned "${contentType}": Found ${files.length} .recipe.json file(s).`
             );
 
             // If files were found in subdirectories, log the structure

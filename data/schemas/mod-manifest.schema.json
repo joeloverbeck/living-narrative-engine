@@ -109,21 +109,11 @@
         "worlds": {
           "$ref": "#/definitions/contentFileList"
         },
-        "anatomy": {
-          "description": "Mapping of anatomy content types to lists of JSON files.",
-          "type": "object",
-          "properties": {
-            "recipes": {
-              "$ref": "#/definitions/contentFileList"
-            },
-            "blueprints": {
-              "$ref": "#/definitions/contentFileList"
-            },
-            "parts": {
-              "$ref": "#/definitions/contentFileList"
-            }
-          },
-          "additionalProperties": false
+        "blueprints": {
+          "$ref": "#/definitions/contentFileList"
+        },
+        "recipes": {
+          "$ref": "#/definitions/contentFileList"
         }
       },
       "additionalProperties": false
