@@ -6,6 +6,15 @@ import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/eventIds.js';
  * @typedef {import('../interfaces/ILogger').ILogger} ILogger
  * @typedef {import('../interfaces/IDocumentContext.js').IDocumentContext} IDocumentContext
  * @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher
+ * @typedef {object} DisableInputEvent
+ * @property {string} type - Event identifier
+ * @property {{message?: string}} payload - Optional payload
+ */
+
+/**
+ * @typedef {object} EnableInputEvent
+ * @property {string} type - Event identifier
+ * @property {{placeholder?: string}} payload - Optional payload
  */
 
 /**
@@ -92,8 +101,6 @@ export class InputStateController extends RendererBase {
    * @private
    */
   #subscribeToEvents() {
-    const ved = this.validatedEventDispatcher; // Alias for brevity
-
     // Subscribe to events using helper
     this._subscribe('core:disable_input', this.#handleDisableInput.bind(this));
 

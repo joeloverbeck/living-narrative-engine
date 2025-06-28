@@ -72,8 +72,6 @@ export class TitleRenderer extends RendererBase {
    * @private
    */
   #subscribeToEvents() {
-    const ved = this.validatedEventDispatcher; // Alias for brevity
-
     // Direct title setting
     this._subscribe('core:set_title', this.#handleSetTitle.bind(this));
 

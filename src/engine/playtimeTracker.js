@@ -62,17 +62,22 @@ class PlaytimeTracker extends IPlaytimeTracker {
     super();
 
     if (!logger || typeof logger.info !== 'function') {
+      // eslint-disable-next-line no-console
       console.error(
         'PlaytimeTracker: Logger dependency is missing or invalid. Falling back to console.error.'
       );
       // Fallback logger for environments where a full logger isn't available or during initial setup
       this.#logger = {
+         
         info: (message) =>
           console.info(`PlaytimeTracker (fallback): ${message}`),
+         
         warn: (message) =>
           console.warn(`PlaytimeTracker (fallback): ${message}`),
+         
         error: (message) =>
           console.error(`PlaytimeTracker (fallback): ${message}`),
+         
         debug: (message) =>
           console.debug(`PlaytimeTracker (fallback): ${message}`),
       };
@@ -203,7 +208,7 @@ class PlaytimeTracker extends IPlaytimeTracker {
    * FOR TESTING PURPOSES ONLY.
    * Gets the current accumulated playtime in seconds.
    *
-   * @returns {number}
+   * @returns {number} The accumulated playtime in seconds.
    * @private
    */
   _getAccumulatedPlaytimeSeconds() {
@@ -214,7 +219,7 @@ class PlaytimeTracker extends IPlaytimeTracker {
    * FOR TESTING PURPOSES ONLY.
    * Gets the current session start time.
    *
-   * @returns {number}
+   * @returns {number} The session start timestamp.
    * @private
    */
   _getSessionStartTime() {
