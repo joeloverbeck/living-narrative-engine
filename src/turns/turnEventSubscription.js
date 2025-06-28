@@ -16,6 +16,8 @@ export default class TurnEventSubscription {
   #unsub = null;
 
   /**
+   * Creates a new TurnEventSubscription instance.
+   *
    * @param {import('../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} bus - Event bus.
    * @param {import('../interfaces/coreServices.js').ILogger} logger - Logger for diagnostics.
    * @param {import('../scheduling').IScheduler} scheduler - Scheduler used to invoke callbacks.
@@ -49,6 +51,9 @@ export default class TurnEventSubscription {
   subscribe(cb) {
     if (this.#unsub) return;
     const wrapped = (ev) => {
+      this.#logger.debug(
+        `TurnEventSubscription: received ${TURN_ENDED_ID} event`
+      );
       this.#scheduler.setTimeout(() => cb(ev), 0);
     };
     const unsub = this.#bus.subscribe(TURN_ENDED_ID, wrapped);
@@ -59,6 +64,7 @@ export default class TurnEventSubscription {
       );
     }
     this.#unsub = unsub;
+    this.#logger.debug('TurnEventSubscription: subscribed');
   }
 
   /**
@@ -70,6 +76,7 @@ export default class TurnEventSubscription {
     if (this.#unsub) {
       this.#unsub();
       this.#unsub = null;
+      this.#logger.debug('TurnEventSubscription: unsubscribed');
     }
   }
 }

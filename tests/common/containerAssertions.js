@@ -2,6 +2,8 @@
  * @file Assertion helpers for DI container-related tests.
  */
 
+import { expect } from '@jest/globals';
+
 /**
  * Asserts that resolving `token` from the container yields a singleton instance
  * of the provided class.
