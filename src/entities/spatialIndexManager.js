@@ -66,6 +66,26 @@ class SpatialIndexManager extends MapManager {
   }
 
   /**
+   * @description Determine if an entity has a valid position component
+   *   with a non-empty locationId string.
+   * @private
+   * @param {any} entity - Entity to validate.
+   * @returns {boolean} `true` if the entity should be indexed.
+   */
+  #isValidEntityForIndex(entity) {
+    if (!entity || typeof entity.id === 'undefined') {
+      return false;
+    }
+    if (typeof entity.getComponentData !== 'function') {
+      return false;
+    }
+    const locationId = entity.getComponentData(
+      POSITION_COMPONENT_ID
+    )?.locationId;
+    return typeof locationId === 'string' && locationId.trim().length > 0;
+  }
+
+  /**
    * @override
    */
   onInvalidId(id, operation) {
@@ -208,28 +228,13 @@ class SpatialIndexManager extends MapManager {
       return;
     }
     for (const entity of entityManager.entities) {
-      if (
-        !entity ||
-        typeof entity.id === 'undefined' ||
-        typeof entity.getComponentData !== 'function'
-      ) {
-        // console.warn(`[SpatialIndexManager.buildIndex] Skipping invalid entity object: ${JSON.stringify(entity)}`);
+      if (!this.#isValidEntityForIndex(entity)) {
         continue;
       }
-      const positionComponent = entity.getComponentData(POSITION_COMPONENT_ID);
-      const locationId = positionComponent
-        ? positionComponent.locationId
-        : undefined;
-
-      // Ensure locationId is a valid string before adding
-      if (
-        positionComponent &&
-        locationId &&
-        typeof locationId === 'string' &&
-        locationId.trim()
-      ) {
-        this.addEntity(entity.id, locationId);
-      }
+      const locationId = entity.getComponentData(
+        POSITION_COMPONENT_ID
+      ).locationId;
+      this.addEntity(entity.id, locationId);
     }
   }
 
