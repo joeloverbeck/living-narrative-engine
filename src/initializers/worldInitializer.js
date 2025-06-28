@@ -49,13 +49,11 @@ class WorldInitializer {
   #validatedEventDispatcher;
   /** @type {ILogger} */
   #logger;
-  /** @type {IScopeRegistry} */
-  #scopeRegistry;
 
   /**
    * Exposes the provided world context for potential external use.
    *
-   * @returns {IWorldContext}
+   * @returns {IWorldContext} The current world context
    */
   getWorldContext() {
     return this.#worldContext;
@@ -64,13 +62,13 @@ class WorldInitializer {
   /**
    * Creates an instance of WorldInitializer.
    *
-   * @param {object} dependencies
-   * @param {IEntityManager} dependencies.entityManager
-   * @param {IWorldContext} dependencies.worldContext
-   * @param {IGameDataRepository} dependencies.gameDataRepository
-   * @param {ValidatedEventDispatcher} dependencies.validatedEventDispatcher
-   * @param {ILogger} dependencies.logger
-   * @param {IScopeRegistry} dependencies.scopeRegistry
+   * @param {object} dependencies - Injected dependencies
+   * @param {IEntityManager} dependencies.entityManager - Entity management service
+   * @param {IWorldContext} dependencies.worldContext - World context reference
+   * @param {IGameDataRepository} dependencies.gameDataRepository - Repository for game data
+   * @param {ValidatedEventDispatcher} dependencies.validatedEventDispatcher - Event dispatcher
+   * @param {ILogger} dependencies.logger - Logger instance
+   * @param {IScopeRegistry} dependencies.scopeRegistry - Registry used for scope initialization
    * @throws {Error} If any required dependency is missing or invalid.
    */
   constructor({
@@ -122,7 +120,6 @@ class WorldInitializer {
     this.#repository = gameDataRepository;
     this.#validatedEventDispatcher = validatedEventDispatcher;
     this.#logger = logger;
-    this.#scopeRegistry = scopeRegistry;
 
     this.#logger.debug(
       'WorldInitializer: Instance created. Spatial index management is now handled by SpatialIndexSynchronizer through event listening.'
