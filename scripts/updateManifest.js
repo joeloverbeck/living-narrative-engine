@@ -92,7 +92,10 @@ async function scanBlueprintDirectoryRecursively(basePath, currentPath = '') {
 
     if (entry.isDirectory()) {
       // Recursively scan subdirectories
-      const subFiles = await scanBlueprintDirectoryRecursively(basePath, entryPath);
+      const subFiles = await scanBlueprintDirectoryRecursively(
+        basePath,
+        entryPath
+      );
       files.push(...subFiles);
     } else if (entry.isFile() && entry.name.endsWith('.blueprint.json')) {
       // Add the blueprint file with its relative path
@@ -120,7 +123,10 @@ async function scanRecipeDirectoryRecursively(basePath, currentPath = '') {
 
     if (entry.isDirectory()) {
       // Recursively scan subdirectories
-      const subFiles = await scanRecipeDirectoryRecursively(basePath, entryPath);
+      const subFiles = await scanRecipeDirectoryRecursively(
+        basePath,
+        entryPath
+      );
       files.push(...subFiles);
     } else if (entry.isFile() && entry.name.endsWith('.recipe.json')) {
       // Add the recipe file with its relative path
@@ -195,10 +201,19 @@ async function main() {
             const instancesPath = path.join(entitiesDirPath, 'instances');
 
             // Check if manifest uses nested structure (entities.definitions/instances)
-            if (typeof manifest.content.entities === 'object' && !Array.isArray(manifest.content.entities)) {
+            if (
+              typeof manifest.content.entities === 'object' &&
+              !Array.isArray(manifest.content.entities)
+            ) {
               // Handle nested structure
-              if (await fs.stat(definitionsPath).then(() => true).catch(() => false)) {
-                const definitionFiles = await scanDirectoryRecursively(definitionsPath);
+              if (
+                await fs
+                  .stat(definitionsPath)
+                  .then(() => true)
+                  .catch(() => false)
+              ) {
+                const definitionFiles =
+                  await scanDirectoryRecursively(definitionsPath);
                 if (!manifest.content.entities.definitions) {
                   manifest.content.entities.definitions = [];
                 }
@@ -208,8 +223,14 @@ async function main() {
                 );
               }
 
-              if (await fs.stat(instancesPath).then(() => true).catch(() => false)) {
-                const instanceFiles = await scanDirectoryRecursively(instancesPath);
+              if (
+                await fs
+                  .stat(instancesPath)
+                  .then(() => true)
+                  .catch(() => false)
+              ) {
+                const instanceFiles =
+                  await scanDirectoryRecursively(instancesPath);
                 if (!manifest.content.entities.instances) {
                   manifest.content.entities.instances = [];
                 }

@@ -22,6 +22,7 @@ import { INITIALIZABLE } from '../tags.js';
 
 // --- Service Imports ---
 import { ActionDiscoveryService } from '../../actions/actionDiscoveryService.js';
+import { ActionCandidateProcessor } from '../../actions/actionCandidateProcessor.js';
 import { TargetResolutionService } from '../../actions/targetResolutionService.js';
 import { ActionIndex } from '../../actions/actionIndex.js';
 import { ActionValidationContextBuilder } from '../../actions/validation/actionValidationContextBuilder.js';
@@ -87,23 +88,36 @@ export function registerCommandAndAction(container) {
     'Command and Action Registration: Registered TraceContextFactory.'
   );
 
+  // --- Action Candidate Processor ---
+  // Must be registered before ActionDiscoveryService
+  registrar.singletonFactory(tokens.ActionCandidateProcessor, (c) => {
+    return new ActionCandidateProcessor({
+      prerequisiteEvaluationService: c.resolve(
+        tokens.PrerequisiteEvaluationService
+      ),
+      targetResolutionService: c.resolve(tokens.ITargetResolutionService),
+      entityManager: c.resolve(tokens.IEntityManager),
+      formatActionCommandFn: formatActionCommand,
+      safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+      getEntityDisplayNameFn: getEntityDisplayName,
+      logger: c.resolve(tokens.ILogger),
+    });
+  });
+  logger.debug(
+    'Command and Action Registration: Registered ActionCandidateProcessor.'
+  );
+
   // --- Action Discovery & Execution ---
   registrar
     .tagged(INITIALIZABLE)
     .singletonFactory(tokens.IActionDiscoveryService, (c) => {
       return new ActionDiscoveryService({
         entityManager: c.resolve(tokens.IEntityManager),
-        prerequisiteEvaluationService: c.resolve(
-          tokens.PrerequisiteEvaluationService
-        ),
         actionIndex: c.resolve(tokens.ActionIndex),
         logger: c.resolve(tokens.ILogger),
-        formatActionCommandFn: formatActionCommand,
-        safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
-        targetResolutionService: c.resolve(tokens.ITargetResolutionService),
+        actionCandidateProcessor: c.resolve(tokens.ActionCandidateProcessor),
         traceContextFactory: c.resolve(tokens.TraceContextFactory),
         getActorLocationFn: getActorLocation,
-        getEntityDisplayNameFn: getEntityDisplayName,
       });
     });
   logger.debug(

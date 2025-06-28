@@ -22,11 +22,7 @@
       ],
       "instances": []
     },
-    "blueprints": [
-      "humanoid_standard.blueprint.json"
-    ],
-    "recipes": [
-      "humanoid_standard.recipe.json"
-    ]
+    "blueprints": ["humanoid_standard.blueprint.json"],
+    "recipes": ["humanoid_standard.recipe.json"]
   }
 }

@@ -146,12 +146,12 @@ describeActionDiscoverySuite(
         expect(trace.addLog).toHaveBeenCalledWith(
           TRACE_STEP,
           `Processing candidate action: '${actionDefSimple.id}'`,
-          'ActionDiscoveryService.#processCandidateAction'
+          'ActionCandidateProcessor.process'
         );
         expect(trace.addLog).toHaveBeenCalledWith(
           TRACE_STEP,
           `Processing candidate action: '${actionDefScope.id}'`,
-          'ActionDiscoveryService.#processCandidateAction'
+          'ActionCandidateProcessor.process'
         );
       });
 
@@ -190,7 +190,7 @@ describeActionDiscoverySuite(
         expect(trace.addLog).toHaveBeenCalledWith(
           TRACE_SUCCESS,
           `Action '${actionDefPrereq.id}' passed actor prerequisite check.`,
-          'ActionDiscoveryService.#processCandidateAction'
+          'ActionCandidateProcessor.process'
         );
       });
 
@@ -210,7 +210,7 @@ describeActionDiscoverySuite(
         expect(trace.addLog).toHaveBeenCalledWith(
           TRACE_FAILURE,
           `Action '${actionDefPrereq.id}' discarded due to failed actor prerequisites.`,
-          'ActionDiscoveryService.#processCandidateAction'
+          'ActionCandidateProcessor.process'
         );
         expect(
           bed.mocks.targetResolutionService.resolveTargets
