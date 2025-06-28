@@ -26,6 +26,14 @@ class CommandProcessor extends ICommandProcessor {
   /** @type {ISafeEventDispatcher} */
   #safeEventDispatcher;
 
+  /**
+   * Creates an instance of CommandProcessor.
+   *
+   * @param {object} options - Configuration options for the processor.
+   * @param {ISafeEventDispatcher} options.safeEventDispatcher - Required event dispatcher that must implement `dispatch`.
+   * @param {ILogger} [options.logger] - Optional logger instance.
+   * @throws {Error} If `safeEventDispatcher` is missing or lacks a `dispatch` method.
+   */
   constructor(options) {
     super();
 
