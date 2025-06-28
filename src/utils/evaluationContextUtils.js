@@ -13,6 +13,19 @@ import { ensureValidLogger } from './loggerUtils.js';
 import { safeDispatchError } from './safeDispatchErrorUtils.js';
 
 /**
+ * Retrieve the execution context's evaluation context object when present.
+ *
+ * @description Helper used by other utilities to access
+ * `executionContext.evaluationContext.context` in a consistent way.
+ * @param {ExecutionContext} executionContext - Current execution context.
+ * @returns {object|null} The context object or `null` when unavailable.
+ */
+export function getEvaluationContext(executionContext) {
+  const context = executionContext?.evaluationContext?.context;
+  return context && typeof context === 'object' ? context : null;
+}
+
+/**
  * Ensures that `executionContext.evaluationContext.context` exists and is an object.
  *
  * Logs an error and dispatches a `core:system_error_occurred` event when the
@@ -26,8 +39,8 @@ import { safeDispatchError } from './safeDispatchErrorUtils.js';
 export function ensureEvaluationContext(executionContext, dispatcher, logger) {
   const log = ensureValidLogger(logger, 'ensureEvaluationContext');
 
-  const context = executionContext?.evaluationContext?.context;
-  if (context && typeof context === 'object') {
+  const context = getEvaluationContext(executionContext);
+  if (context) {
     return context;
   }
 
