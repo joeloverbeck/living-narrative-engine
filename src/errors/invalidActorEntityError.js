@@ -10,6 +10,8 @@
  */
 export class InvalidActorEntityError extends Error {
   /**
+   * Creates a new InvalidActorEntityError instance.
+   *
    * @param {string} [message] - Optional custom message.
    */
   constructor(message = 'Invalid actor entity') {

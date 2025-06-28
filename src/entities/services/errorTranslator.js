@@ -22,6 +22,8 @@ export class ErrorTranslator {
   #logger;
 
   /**
+   * Creates a new ErrorTranslator instance.
+   *
    * @param {object} deps - Dependencies
    * @param {ILogger} deps.logger - Logger instance
    */

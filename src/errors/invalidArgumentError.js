@@ -10,6 +10,8 @@
  */
 export class InvalidArgumentError extends Error {
   /**
+   * Creates a new InvalidArgumentError instance.
+   *
    * @param {string} message - The error message describing the invalid argument.
    * @param {string} [parameterName] - The name of the parameter that was invalid.
    * @param {any} [receivedValue] - The actual value that was received.
