@@ -235,17 +235,20 @@ describe('Scope Registry Initialization - Focused Test', () => {
       // Simulate initialization
       const scopes = mockDataRegistry.getAll(SCOPES_KEY);
       const scopeMap = {};
+      const expectedScope = addMockAst(properlyFormattedScopes[0]);
       scopes.forEach((scope) => {
         if (scope.id) {
-          scopeMap[scope.id] = addMockAst(scope);
+          // Reuse the same AST instance for deterministic comparison
+          scopeMap[scope.id] =
+            scope === properlyFormattedScopes[0]
+              ? expectedScope
+              : addMockAst(scope);
         }
       });
 
       // Critical assertion: the scope should be accessible by its qualified name
       expect(scopeMap['core:potential_leaders']).toBeDefined();
-      expect(scopeMap['core:potential_leaders']).toEqual(
-        addMockAst(properlyFormattedScopes[0])
-      );
+      expect(scopeMap['core:potential_leaders']).toEqual(expectedScope);
 
       // Anti-regression: it should NOT be accessible by base name only
       expect(scopeMap['potential_leaders']).toBeUndefined();
