@@ -1,0 +1,134 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/schemas/anatomy.recipe.schema.json",
+  "title": "Anatomy Recipe",
+  "description": "Defines what parts a creature should have (types, tags, counts, preferences, exclusions)",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "format": "uri",
+      "description": "Optional. A URI reference to the schema that this document conforms to"
+    },
+    "recipeId": {
+      "$ref": "./common.schema.json#/definitions/namespacedId",
+      "description": "Unique identifier for this anatomy recipe"
+    },
+    "slots": {
+      "type": "object",
+      "description": "Map of slot keys to slot configurations",
+      "additionalProperties": {
+        "$ref": "#/definitions/slotDefinition"
+      }
+    },
+    "constraints": {
+      "type": "object",
+      "description": "Global constraints for part combinations",
+      "properties": {
+        "requires": {
+          "type": "array",
+          "description": "Co-presence requirements - all parts in a group must be present together",
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "./common.schema.json#/definitions/namespacedId"
+            },
+            "minItems": 2
+          }
+        },
+        "excludes": {
+          "type": "array",
+          "description": "Mutual exclusion constraints - parts in a group cannot coexist",
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "./common.schema.json#/definitions/namespacedId"
+            },
+            "minItems": 2
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "includes": {
+      "type": "array",
+      "description": "Optional macro imports for composition",
+      "items": {
+        "$ref": "./common.schema.json#/definitions/namespacedId"
+      }
+    },
+    "isMacro": {
+      "type": "boolean",
+      "description": "If true, this recipe is a macro for inclusion by other recipes",
+      "default": false
+    }
+  },
+  "required": ["recipeId", "slots"],
+  "additionalProperties": false,
+  "definitions": {
+    "slotDefinition": {
+      "type": "object",
+      "description": "Configuration for a single anatomy slot",
+      "properties": {
+        "partType": {
+          "type": "string",
+          "description": "Required. The type of part this slot expects (e.g., 'breast', 'leg', 'arm')"
+        },
+        "preferId": {
+          "$ref": "./common.schema.json#/definitions/namespacedId",
+          "description": "Optional. Exact entity ID to prefer if available"
+        },
+        "tags": {
+          "type": "array",
+          "description": "Component tags that must be present on matching parts",
+          "items": {
+            "$ref": "./common.schema.json#/definitions/namespacedId"
+          }
+        },
+        "notTags": {
+          "type": "array",
+          "description": "Component tags that must NOT be present on matching parts",
+          "items": {
+            "$ref": "./common.schema.json#/definitions/namespacedId"
+          }
+        },
+        "count": {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "min": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "description": "Minimum number of parts (soft limit, clamped by socket availability)"
+                },
+                "max": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "description": "Maximum number of parts (soft limit, clamped by socket availability)"
+                }
+              },
+              "required": ["min", "max"],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "exact": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "description": "Exact number of parts desired (soft limit, clamped by socket availability)"
+                }
+              },
+              "required": ["exact"],
+              "additionalProperties": false
+            }
+          ],
+          "description": "Desired count of parts for this slot"
+        }
+      },
+      "required": ["partType"],
+      "additionalProperties": false
+    }
+  }
+}

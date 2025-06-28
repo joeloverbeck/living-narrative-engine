@@ -17,6 +17,9 @@ describe('defaultLoaderConfig', () => {
       scopes: stubLoader,
       entityDefinitions: stubLoader,
       entityInstances: stubLoader,
+      anatomyRecipes: stubLoader,
+      anatomyBlueprints: stubLoader,
+      anatomyParts: stubLoader,
     };
     const config = createContentLoadersConfig(loaderMap);
     expect(config).toEqual(
@@ -34,6 +37,13 @@ describe('defaultLoaderConfig', () => {
           contentKey: 'entities.instances',
           diskFolder: 'entities/instances',
           phase: 'instances',
+        }),
+        expect.objectContaining({
+          loader: stubLoader,
+          registryKey: 'anatomyRecipes',
+          contentKey: 'anatomy.recipes',
+          diskFolder: 'anatomy/recipes',
+          phase: 'definitions',
         }),
       ])
     );
@@ -68,6 +78,9 @@ describe('defaultLoaderConfig', () => {
       scopeLoader: stubLoader,
       entityDefinitionLoader: stubLoader,
       entityInstanceLoader: stubLoader,
+      anatomyRecipeLoader: stubLoader,
+      anatomyBlueprintLoader: stubLoader,
+      anatomyPartLoader: stubLoader,
     };
     const config = createDefaultContentLoadersConfig(deps);
     expect(config).toEqual(
@@ -79,6 +92,18 @@ describe('defaultLoaderConfig', () => {
         expect.objectContaining({
           loader: stubLoader,
           registryKey: 'entityInstances',
+        }),
+        expect.objectContaining({
+          loader: stubLoader,
+          registryKey: 'anatomyRecipes',
+        }),
+        expect.objectContaining({
+          loader: stubLoader,
+          registryKey: 'anatomyBlueprints',
+        }),
+        expect.objectContaining({
+          loader: stubLoader,
+          registryKey: 'anatomyParts',
         }),
       ])
     );

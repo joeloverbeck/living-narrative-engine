@@ -61,6 +61,9 @@ import RuleLoader from '../../loaders/ruleLoader.js';
 import SchemaLoader from '../../loaders/schemaLoader.js';
 import ScopeLoader from '../../loaders/scopeLoader.js';
 import WorldLoader from '../../loaders/worldLoader.js';
+import AnatomyRecipeLoader from '../../loaders/anatomyRecipeLoader.js';
+import AnatomyBlueprintLoader from '../../loaders/anatomyBlueprintLoader.js';
+import AnatomyPartLoader from '../../loaders/anatomyPartLoader.js';
 import { SCOPES_KEY } from '../../constants/dataRegistryKeys.js';
 
 // --- Modding Service Imports ---
@@ -165,6 +168,9 @@ export function registerLoaders(container) {
   registerLoader(tokens.EntityInstanceLoader, EntityInstanceLoader);
   registerLoader(tokens.WorldLoader, WorldLoader);
   registerLoader(tokens.GoalLoader, GoalLoader);
+  registerLoader(tokens.AnatomyRecipeLoader, AnatomyRecipeLoader);
+  registerLoader(tokens.AnatomyBlueprintLoader, AnatomyBlueprintLoader);
+  registerLoader(tokens.AnatomyPartLoader, AnatomyPartLoader);
 
   // Register ScopeLoader with TextDataFetcher instead of regular IDataFetcher
   registrar.singletonFactory(
@@ -306,6 +312,28 @@ export function registerLoaders(container) {
             diskFolder: 'goals',
             registryKey: 'goals',
             phase: 'instances',
+          },
+          // Anatomy loaders
+          {
+            loader: c.resolve(tokens.AnatomyRecipeLoader),
+            contentKey: 'anatomy.recipes',
+            diskFolder: 'anatomy/recipes',
+            registryKey: 'anatomyRecipes',
+            phase: 'definitions',
+          },
+          {
+            loader: c.resolve(tokens.AnatomyBlueprintLoader),
+            contentKey: 'anatomy.blueprints',
+            diskFolder: 'anatomy/blueprints',
+            registryKey: 'anatomyBlueprints',
+            phase: 'definitions',
+          },
+          {
+            loader: c.resolve(tokens.AnatomyPartLoader),
+            contentKey: 'anatomy.parts',
+            diskFolder: 'anatomy/parts',
+            registryKey: 'anatomyParts',
+            phase: 'definitions',
           },
         ],
         aggregatorFactory: (counts) => new LoadResultAggregator(counts),

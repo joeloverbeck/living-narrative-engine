@@ -1,0 +1,16 @@
+{
+  "$schema": "../../../schemas/component.schema.json",
+  "id": "anatomy:part",
+  "description": "Marks an entity as an anatomy body part with a specific subtype",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "subType": {
+        "type": "string",
+        "description": "The specific type of body part (e.g., 'leg', 'arm', 'breast', 'head')"
+      }
+    },
+    "required": ["subType"],
+    "additionalProperties": false
+  }
+}
