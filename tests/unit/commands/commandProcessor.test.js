@@ -77,6 +77,35 @@ describe('CommandProcessor.dispatchAction', () => {
     );
   });
 
+  it('returns failure when actor id is invalid', async () => {
+    const actor = { id: '   ' };
+    const turnAction = {
+      actionDefinitionId: 'look',
+      resolvedParameters: {},
+      commandString: 'look',
+    };
+
+    const result = await processor.dispatchAction(actor, turnAction);
+
+    expect(result).toEqual(
+      expect.objectContaining({
+        success: false,
+        turnEnded: true,
+        error: 'Internal error: Malformed action prevented execution.',
+        internalError:
+          "dispatchAction failed: CommandProcessor.dispatchAction: Invalid ID '   '. Expected non-blank string.",
+        originalInput: 'look',
+      })
+    );
+    expect(result.actionResult).toBeUndefined();
+    expect(safeDispatchError).toHaveBeenCalledWith(
+      safeEventDispatcher,
+      'Internal error: Malformed action prevented execution.',
+      expect.any(Object),
+      logger
+    );
+  });
+
   it('returns failure when turnAction is not an object', async () => {
     const actor = { id: 'actor-invalid' };
     const result = await processor.dispatchAction(actor, null);
@@ -142,6 +171,29 @@ describe('CommandProcessor.dispatchAction', () => {
       expect.any(Object),
       logger
     );
+  });
+
+  it('constructs expected failure result when dispatcher reports failure', async () => {
+    safeEventDispatcher.dispatch.mockResolvedValueOnce(false);
+
+    const actor = { id: 'actor3' };
+    const turnAction = {
+      actionDefinitionId: 'take',
+      commandString: 'take',
+      resolvedParameters: {},
+    };
+
+    const result = await processor.dispatchAction(actor, turnAction);
+
+    expect(result).toEqual({
+      success: false,
+      turnEnded: true,
+      internalError:
+        'CRITICAL: Failed to dispatch pre-resolved ATTEMPT_ACTION_ID for actor3, action "take". Dispatcher reported failure.',
+      originalInput: 'take',
+      actionResult: { actionId: 'take' },
+      error: 'Internal error: Failed to initiate action.',
+    });
   });
 
   it('AC4: handles exception thrown by dispatcher', async () => {
