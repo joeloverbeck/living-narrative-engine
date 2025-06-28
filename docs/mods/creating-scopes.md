@@ -163,7 +163,7 @@ entities(core:position)[][{"==": [{"var": "entity.components.core:position.locat
 ### 3. Items in Current Location
 
 ```
-location.entities(core:item)[]
+entities(core:item)[{"==": [{"var": "entity.components.core:position.locationId"}, {"var": "location.id"}]}]
 ```
 
 ### 4. People in Current Location (excluding actor)
