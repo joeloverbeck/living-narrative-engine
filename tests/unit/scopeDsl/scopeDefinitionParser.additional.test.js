@@ -6,11 +6,11 @@
 import { describe, it, expect, jest } from '@jest/globals';
 import { parseScopeDefinitions } from '../../../src/scopeDsl/scopeDefinitionParser.js';
 import { ScopeDefinitionError } from '../../../src/scopeDsl/errors/scopeDefinitionError.js';
-import { ScopeSyntaxError } from '../../../src/scopeDsl/parser.js';
+import { ScopeSyntaxError } from '../../../src/scopeDsl/parser/parser.js';
 
 // Mock the parser.js module
-jest.mock('../../../src/scopeDsl/parser.js', () => {
-  const originalModule = jest.requireActual('../../../src/scopeDsl/parser.js');
+jest.mock('../../../src/scopeDsl/parser/parser.js', () => {
+  const originalModule = jest.requireActual('../../../src/scopeDsl/parser/parser.js');
   return {
     ...originalModule,
     parseDslExpression: jest.fn(),
@@ -21,7 +21,7 @@ describe('parseScopeDefinitions - Additional Coverage Tests', () => {
   let mockParseDslExpression;
 
   beforeEach(() => {
-    const parserModule = require('../../../src/scopeDsl/parser.js');
+    const parserModule = require('../../../src/scopeDsl/parser/parser.js');
     mockParseDslExpression = parserModule.parseDslExpression;
     jest.clearAllMocks();
 

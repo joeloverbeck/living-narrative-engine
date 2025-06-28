@@ -1,6 +1,6 @@
 /**
  * @file Additional comprehensive tests for Scope-DSL Parser
- * @description Tests to improve coverage of src/scopeDsl/parser.js edge cases and error scenarios
+ * @description Tests to improve coverage of src/scopeDsl/parser/parser.js edge cases and error scenarios
  */
 
 import { jest, describe, beforeEach, it, expect } from '@jest/globals';
@@ -8,7 +8,7 @@ import {
   parseDslExpression,
   parseScopeFile,
   ScopeSyntaxError,
-} from '../../../src/scopeDsl/parser.js';
+} from '../../../src/scopeDsl/parser/parser.js';
 import ScopeDepthError from '../../../src/errors/scopeDepthError.js';
 
 describe('Scope-DSL Parser - Additional Coverage Tests', () => {

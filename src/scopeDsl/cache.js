@@ -6,68 +6,6 @@
 import { TURN_STARTED_ID } from '../constants/eventIds.js';
 import { IScopeEngine } from '../interfaces/IScopeEngine.js';
 
-/**
- * LRU Cache implementation for Scope-DSL resolution
- */
-class LRUCache {
-  constructor(maxSize = 256) {
-    this.maxSize = maxSize;
-    this.cache = new Map();
-  }
-
-  /**
-   * Get a value from the cache
-   *
-   * @param {string} key - Cache key
-   * @returns {any} Cached value or undefined if not found
-   */
-  get(key) {
-    if (!this.cache.has(key)) {
-      return undefined;
-    }
-
-    // Move to end (most recently used)
-    const value = this.cache.get(key);
-    this.cache.delete(key);
-    this.cache.set(key, value);
-    return value;
-  }
-
-  /**
-   * Set a value in the cache
-   *
-   * @param {string} key - Cache key
-   * @param {any} value - Value to cache
-   */
-  set(key, value) {
-    if (this.cache.has(key)) {
-      // Update existing entry
-      this.cache.delete(key);
-    } else if (this.cache.size >= this.maxSize) {
-      // Remove least recently used (first entry)
-      const firstKey = this.cache.keys().next().value;
-      this.cache.delete(firstKey);
-    }
-
-    this.cache.set(key, value);
-  }
-
-  /**
-   * Clear all entries from the cache
-   */
-  clear() {
-    this.cache.clear();
-  }
-
-  /**
-   * Get the current size of the cache
-   *
-   * @returns {number} Number of entries in cache
-   */
-  size() {
-    return this.cache.size;
-  }
-}
 
 /**
  * Scope-DSL Cache that provides memoization for scope resolution
@@ -129,10 +67,10 @@ class ScopeCache extends IScopeEngine {
   /**
    * Handle turn started event by clearing the cache
    *
-   * @param {object} payload - Event payload
+   * @param {object} _payload - Event payload (unused)
    * @private
    */
-  _handleTurnStarted(payload) {
+  _handleTurnStarted(_payload) {
     this.logger.debug('ScopeCache: Turn started, clearing cache');
     this.cache.clear();
   }

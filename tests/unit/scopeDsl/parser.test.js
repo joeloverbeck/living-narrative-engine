@@ -7,7 +7,7 @@ const {
   parseDslExpression,
   parseScopeFile,
   ScopeSyntaxError,
-} = require('../../../src/scopeDsl/parser');
+} = require('../../../src/scopeDsl/parser/parser');
 const ScopeDepthError = require('../../../src/errors/scopeDepthError').default;
 
 describe('Scope-DSL Parser', () => {

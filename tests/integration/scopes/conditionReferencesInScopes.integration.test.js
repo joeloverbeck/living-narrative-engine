@@ -5,7 +5,7 @@
 import { GameDataRepository } from '../../../src/data/gameDataRepository.js';
 import InMemoryDataRegistry from '../../../src/data/inMemoryDataRegistry.js';
 import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
-import { parseDslExpression } from '../../../src/scopeDsl/parser.js';
+import { parseDslExpression } from '../../../src/scopeDsl/parser/parser.js';
 import ScopeEngine from '../../../src/scopeDsl/engine.js';
 
 describe('Condition References in Scope DSL Integration Tests', () => {

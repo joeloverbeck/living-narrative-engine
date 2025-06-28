@@ -8,7 +8,7 @@ jest.mock('../../../src/scopeDsl/scopeDefinitionParser.js', () => ({
 
 // Mock the lower-level parser for specific error simulation.
 // FIX: Corrected typo 'parseDslExpression' to 'parseDslExpression'
-jest.mock('../../../src/scopeDsl/parser.js', () => ({
+jest.mock('../../../src/scopeDsl/parser/parser.js', () => ({
   parseDslExpression: jest.fn(),
 }));
 
@@ -22,11 +22,11 @@ describe('ScopeLoader', () => {
 
   // Get the REAL implementation of the lower-level parser.
   const { parseDslExpression: realParseDslExpression } = jest.requireActual(
-    '../../../src/scopeDsl/parser.js'
+    '../../../src/scopeDsl/parser/parser.js'
   );
 
   // Get the MOCKED function. This will be used to control mock behavior.
-  const { parseDslExpression } = require('../../../src/scopeDsl/parser.js');
+  const { parseDslExpression } = require('../../../src/scopeDsl/parser/parser.js');
 
   beforeEach(() => {
     jest.clearAllMocks();

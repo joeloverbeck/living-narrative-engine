@@ -2,6 +2,7 @@
  * @typedef {import('../nodes/nodeResolver.js').NodeResolver} NodeResolver
  * @typedef {import('../core/gateways.js').EntityGateway} EntityGateway
  */
+import { UnknownSourceError } from '../../errors/unknownSourceError.js';
 
 /**
  * @typedef {object} LocationProvider
@@ -82,20 +83,19 @@ export default function createSourceResolver({
             const entities =
               entitiesGateway.getEntitiesWithComponent(componentId);
             result = new Set(
-              entities.map((e) => e.id).filter((id) => typeof id === 'string')
+              (entities || []).map((e) => e.id).filter((id) => typeof id === 'string')
             );
           }
           break;
         }
 
         default:
-          // Unknown source kind, return empty set
-          result = new Set();
+          throw new UnknownSourceError(node.kind);
       }
 
       // Add trace logging if available
       if (trace) {
-        const source = 'SourceResolver';
+        const source = 'ScopeEngine.resolveSource';
         trace.addLog(
           'info',
           `Resolved source '${node.kind}'. Found ${result.size} item(s).`,

@@ -6,8 +6,8 @@
 const createDispatcher =
   require('../../../../src/scopeDsl/nodes/dispatcher').default;
 const {
-  UnknownAstNodeError,
-} = require('../../../../src/errors/unknownAstNodeError');
+  ScopeDslError,
+} = require('../../../../src/scopeDsl/errors/scopeDslError');
 
 describe('Node Dispatcher', () => {
   describe('createDispatcher', () => {
@@ -73,7 +73,7 @@ describe('Node Dispatcher', () => {
       expect(result).toBe(expectedResult);
     });
 
-    test('should throw UnknownAstNodeError when no resolver matches', () => {
+    test('should throw ScopeDslError when no resolver matches', () => {
       // Setup
       const node = { type: 'UnknownType' };
       const ctx = { entityManager: {} };
@@ -86,11 +86,11 @@ describe('Node Dispatcher', () => {
       // Execute & Assert
       expect(() => {
         dispatcher.resolve(node, ctx);
-      }).toThrow(UnknownAstNodeError);
+      }).toThrow(ScopeDslError);
 
       expect(() => {
         dispatcher.resolve(node, ctx);
-      }).toThrow('Unknown AST node type: UnknownType');
+      }).toThrow("Unknown node kind: 'UnknownType'");
 
       expect(fakeResolver1.canResolve).toHaveBeenCalledWith(node);
       expect(fakeResolver2.canResolve).toHaveBeenCalledWith(node);
@@ -108,11 +108,11 @@ describe('Node Dispatcher', () => {
       // Execute & Assert
       expect(() => {
         dispatcher.resolve(node, ctx);
-      }).toThrow(UnknownAstNodeError);
+      }).toThrow(ScopeDslError);
 
       expect(() => {
         dispatcher.resolve(node, ctx);
-      }).toThrow('Unknown AST node type: Source');
+      }).toThrow("Unknown node kind: 'Source'");
     });
 
     test('should stop checking resolvers after finding a match', () => {

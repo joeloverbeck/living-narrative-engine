@@ -7,7 +7,7 @@
 
 import { jest, describe, beforeEach, it, expect } from '@jest/globals';
 import ScopeEngine from '../../../src/scopeDsl/engine.js';
-import { parseDslExpression } from '../../../src/scopeDsl/parser.js';
+import { parseDslExpression } from '../../../src/scopeDsl/parser/parser.js';
 import ScopeDepthError from '../../../src/errors/scopeDepthError.js';
 import ScopeCycleError from '../../../src/errors/scopeCycleError.js';
 import { createMockSpatialIndexManager } from '../../common/mockFactories/index.js';
@@ -411,9 +411,10 @@ describe('ScopeEngine', () => {
       });
 
       test('allows depth exactly 4', () => {
-        // This expression has 4 steps after the source, which should be allowed.
+        // This expression actually has depth 5 (actor + 5 steps), which exceeds the limit
+        // Let's use a simpler expression with exactly depth 4
         const ast = parseDslExpression(
-          'actor.core:inventory.items[].components.stats'
+          'actor.core:inventory.items[].components'
         );
 
         mockEntityManager.getComponentData.mockImplementation(
@@ -422,7 +423,7 @@ describe('ScopeEngine', () => {
               return { items: ['item1'] };
             }
             if (entityId === 'item1' && componentName === 'components') {
-              return { stats: 'some-stats-object' };
+              return { stats: 'some-stats-object', type: 'weapon' };
             }
             return undefined;
           }

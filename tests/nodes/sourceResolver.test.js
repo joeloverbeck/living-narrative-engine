@@ -163,14 +163,11 @@ describe('sourceResolver', () => {
     });
 
     describe('unknown source kind', () => {
-      it('should return empty set for unknown source kinds', () => {
+      it('should throw UnknownSourceError for unknown source kinds', () => {
         const node = { type: 'Source', kind: 'unknown' };
         const ctx = { actorEntity: { id: 'actor123' } };
 
-        const result = resolver.resolve(node, ctx);
-
-        expect(result).toBeInstanceOf(Set);
-        expect(result.size).toBe(0);
+        expect(() => resolver.resolve(node, ctx)).toThrow('Unknown source kind: unknown');
       });
     });
 
@@ -187,7 +184,7 @@ describe('sourceResolver', () => {
         expect(trace.addLog).toHaveBeenCalledWith(
           'info',
           "Resolved source 'actor'. Found 1 item(s).",
-          'SourceResolver',
+          'ScopeEngine.resolveSource',
           {
             kind: 'actor',
             param: undefined,

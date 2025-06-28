@@ -1,4 +1,4 @@
-import { UnknownAstNodeError } from '../../errors/unknownAstNodeError.js';
+import errorFactory from '../core/errorFactory.js';
 
 /**
  * Creates a dispatcher that routes AST nodes to appropriate resolvers
@@ -10,7 +10,7 @@ export default function createDispatcher(resolvers) {
   return {
     resolve(node, ctx) {
       const r = resolvers.find((x) => x.canResolve(node));
-      if (!r) throw new UnknownAstNodeError(node.type);
+      if (!r) throw errorFactory.unknown(node.type, node);
       return r.resolve(node, ctx);
     },
   };

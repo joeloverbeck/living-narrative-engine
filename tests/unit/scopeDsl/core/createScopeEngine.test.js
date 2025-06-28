@@ -6,7 +6,7 @@
 import createScopeEngine from '../../../../src/scopeDsl/core/createScopeEngine.js';
 import ScopeDepthError from '../../../../src/errors/scopeDepthError.js';
 import ScopeCycleError from '../../../../src/errors/scopeCycleError.js';
-import { UnknownAstNodeError } from '../../../../src/errors/unknownAstNodeError.js';
+import { ScopeDslError } from '../../../../src/scopeDsl/errors/scopeDslError.js';
 
 describe('createScopeEngine', () => {
   let mockLogger;
@@ -130,12 +130,12 @@ describe('createScopeEngine', () => {
       );
     });
 
-    it('should throw UnknownAstNodeError for unhandled node types', () => {
+    it('should throw ScopeDslError for unhandled node types', () => {
       const ast = { type: 'UnknownType' };
 
       expect(() =>
         engine.resolve(ast, mockActorEntity, mockRuntimeCtx)
-      ).toThrow(UnknownAstNodeError);
+      ).toThrow(ScopeDslError);
     });
   });
 
