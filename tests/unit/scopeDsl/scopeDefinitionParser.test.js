@@ -8,7 +8,7 @@ import { parseScopeDefinitions } from '../../../src/scopeDsl/scopeDefinitionPars
 import { ScopeDefinitionError } from '../../../src/scopeDsl/errors/scopeDefinitionError.js';
 
 // Mock the parser.js module
-jest.mock('../../../src/scopeDsl/parser.js', () => ({
+jest.mock('../../../src/scopeDsl/parser/parser.js', () => ({
   parseDslExpression: jest.fn(() => {
     // Return a simple AST-like object for successful parsing
     return { type: 'scope', expression: 'mocked' };

@@ -117,7 +117,7 @@ export default function createFilterResolver({
       // Recursively resolve parent node
       const parentResult = dispatcher.resolve(node.parent, ctx);
 
-      const source = 'FilterResolver';
+      const source = 'ScopeEngine.resolveFilter';
       const initialSize = parentResult.size;
 
       if (trace) {

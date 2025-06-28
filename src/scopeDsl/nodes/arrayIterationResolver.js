@@ -4,11 +4,9 @@ import flattenIntoSet from '../core/flattenIntoSet.js';
  * Creates an ArrayIterationStep node resolver for flattening array values.
  * Resolves ArrayIterationStep nodes by flattening arrays from parent results.
  *
- * @param {object} dependencies - Injected dependencies
- * @param {object} dependencies.entitiesGateway - Gateway for entity data access
  * @returns {object} NodeResolver with canResolve and resolve methods
  */
-export default function createArrayIterationResolver({ entitiesGateway }) {
+export default function createArrayIterationResolver() {
   return {
     /**
      * Checks if this resolver can handle the given node.
@@ -36,52 +34,39 @@ export default function createArrayIterationResolver({ entitiesGateway }) {
       if (trace) {
         trace.addLog(
           'info',
-          `Resolving ArrayIterationStep node with field '${node.field}'. Parent result size: ${parentResult.size}`,
+          `Resolving ArrayIterationStep node. Parent result size: ${parentResult.size}`,
           'ArrayIterationResolver',
           {
-            field: node.field,
             parentSize: parentResult.size,
           }
         );
       }
 
-      // Return empty set if parent is empty
-      if (parentResult.size === 0) {
-        return new Set();
-      }
+      const result = new Set();
 
-      const arrayValues = [];
-
-      // Process each parent value to extract field values
+      // Flatten arrays from parent result
       for (const parentValue of parentResult) {
-        if (typeof parentValue === 'string') {
-          // Parent is entity ID - use entitiesGateway
-          const componentData = entitiesGateway.getComponentData(
-            parentValue,
-            node.field
-          );
-          if (componentData !== undefined) {
-            arrayValues.push(componentData);
+        if (Array.isArray(parentValue)) {
+          for (const item of parentValue) {
+            if (item !== null && item !== undefined) {
+              result.add(item);
+            }
           }
-        } else if (parentValue && typeof parentValue === 'object') {
-          // Parent is object - direct property access
-          const fieldValue = parentValue[node.field];
-          if (fieldValue !== undefined) {
-            arrayValues.push(fieldValue);
+        } else if (node.parent.type === 'Source') {
+          // Pass through for entities()[] case where Source returns entity IDs
+          if (parentValue !== null && parentValue !== undefined) {
+            result.add(parentValue);
           }
         }
+        // For other cases (like Step nodes), non-arrays result in empty set
       }
-
-      // Use flattenIntoSet to flatten all arrays
-      const result = flattenIntoSet(arrayValues);
 
       if (trace) {
         trace.addLog(
           'info',
-          `ArrayIterationStep node resolved. Field: '${node.field}', Result size: ${result.size}`,
+          `ArrayIterationStep node resolved. Result size: ${result.size}`,
           'ArrayIterationResolver',
           {
-            field: node.field,
             resultSize: result.size,
           }
         );

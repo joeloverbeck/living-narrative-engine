@@ -2,7 +2,7 @@
  * @file Tests for ArrayIterationStep node type and immutability
  */
 
-import { parseDslExpression } from '../../../src/scopeDsl/parser.js';
+import { parseDslExpression } from '../../../src/scopeDsl/parser/parser.js';
 
 describe('Parser - ArrayIterationStep Node', () => {
   describe('ArrayIterationStep creation', () => {

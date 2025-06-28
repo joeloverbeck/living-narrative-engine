@@ -5,7 +5,7 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import ScopeEngine from '../../../src/scopeDsl/engine.js';
 import ScopeRegistry from '../../../src/scopeDsl/scopeRegistry.js';
-import { parseDslExpression } from '../../../src/scopeDsl/parser.js';
+import { parseDslExpression } from '../../../src/scopeDsl/parser/parser.js';
 import { SimpleEntityManager } from '../../common/entities/index.js';
 import ConsoleLogger from '../../../src/logging/consoleLogger.js';
 import { addMockAstsToScopes } from '../../common/scopeDsl/mockAstGenerator.js';

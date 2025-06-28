@@ -3,7 +3,7 @@
  * @description Provides a common utility to parse the content of .scope files.
  */
 
-import { parseDslExpression } from './parser.js';
+import { parseDslExpression } from './parser/parser.js';
 import { ScopeDefinitionError } from './errors/scopeDefinitionError.js';
 
 /**

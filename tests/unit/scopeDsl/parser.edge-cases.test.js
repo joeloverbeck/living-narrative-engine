@@ -7,7 +7,7 @@ import {
   parseDslExpression,
   parseScopeFile,
   ScopeSyntaxError,
-} from '../../../src/scopeDsl/parser.js';
+} from '../../../src/scopeDsl/parser/parser.js';
 
 describe('Scope-DSL Parser - Edge Cases for Full Coverage', () => {
   describe('Tokenizer edge cases to hit uncovered lines', () => {

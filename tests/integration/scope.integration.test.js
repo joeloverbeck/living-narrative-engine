@@ -18,7 +18,7 @@ jest.mock('../../src/scopeDsl/scopeRegistry.js', () => ({
   },
 }));
 
-jest.mock('../../src/scopeDsl/parser.js', () => ({
+jest.mock('../../src/scopeDsl/parser/parser.js', () => ({
   parseDslExpression: jest.fn(),
 }));
 
@@ -28,7 +28,7 @@ jest.mock('../../src/scopeDsl/engine.js', () => ({
 }));
 
 // Import the mocked modules
-import { parseDslExpression } from '../../src/scopeDsl/parser.js';
+import { parseDslExpression } from '../../src/scopeDsl/parser/parser.js';
 import ScopeEngine from '../../src/scopeDsl/engine.js';
 import { POSITION_COMPONENT_ID } from '../../src/constants/componentIds.js';
 

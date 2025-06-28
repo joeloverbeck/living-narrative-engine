@@ -374,14 +374,14 @@ describe('filterResolver', () => {
         expect(trace.addLog).toHaveBeenCalledWith(
           'info',
           'Applying filter to 2 items.',
-          'FilterResolver',
+          'ScopeEngine.resolveFilter',
           { logic: { test: 'logic' } }
         );
 
         expect(trace.addLog).toHaveBeenCalledWith(
           'info',
           'Filter application complete. 1 of 2 items passed.',
-          'FilterResolver'
+          'ScopeEngine.resolveFilter'
         );
       });
 
