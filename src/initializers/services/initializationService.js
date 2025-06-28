@@ -351,23 +351,38 @@ class InitializationService extends IInitializationService {
 
     const adapter = this.#llmAdapter;
 
-    // Abort if adapter dependency is missing
+    if (!this.#adapterExists(adapter)) return false;
+    if (!this.#adapterHasInit(adapter)) return false;
+
+    const initStatus = this.#isAdapterInitialized(adapter);
+    if (typeof initStatus === 'boolean') {
+      return initStatus;
+    }
+
+    return this.#loadLlmConfigs(adapter);
+  }
+
+  #adapterExists(adapter) {
     if (!adapter) {
       this.#logger.error(
         'InitializationService: No ILLMAdapter provided. Skipping initialization.'
       );
       return false;
     }
+    return true;
+  }
 
-    // Abort if adapter lacks an init method
+  #adapterHasInit(adapter) {
     if (typeof adapter.init !== 'function') {
       this.#logger.error(
         'InitializationService: ILLMAdapter missing required init() method.'
       );
       return false;
     }
+    return true;
+  }
 
-    // Skip if adapter already initialized
+  #isAdapterInitialized(adapter) {
     if (
       typeof adapter.isInitialized === 'function' &&
       adapter.isInitialized()
@@ -391,6 +406,10 @@ class InitializationService extends IInitializationService {
       return true;
     }
 
+    return undefined;
+  }
+
+  async #loadLlmConfigs(adapter) {
     const configLoader = this.#llmConfigLoader;
     if (!configLoader || typeof configLoader.loadConfigs !== 'function') {
       this.#logger.error(
