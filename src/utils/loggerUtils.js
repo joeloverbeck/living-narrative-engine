@@ -90,6 +90,21 @@ export function getPrefixedLogger(logger, prefix) {
 }
 
 /**
+ * Validates the given logger and returns a prefixed wrapper using the provided
+ * prefix. This is a light-weight helper for service initialization where a
+ * simple prefixed logger is sufficient.
+ *
+ * @param {ILogger | undefined | null} logger - Logger instance to validate.
+ * @param {string} prefix - Prefix to prepend to every log message.
+ * @returns {ILogger} Logger instance that prefixes messages with `prefix`.
+ */
+export function setupPrefixedLogger(logger, prefix) {
+  const name = (prefix || '').replace(/[:\s]+$/, '');
+  const validated = initLogger(name, logger);
+  return createPrefixedLogger(validated, prefix || '');
+}
+
+/**
  * Convenience wrapper for creating a logger prefixed with the module name in square brackets.
  * Falls back to the console when the base logger is missing.
  *
