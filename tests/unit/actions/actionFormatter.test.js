@@ -94,7 +94,6 @@ describe('formatActionCommand', () => {
       ok: false,
       error:
         'formatActionCommand: Invalid or missing actionDefinition or template.',
-      details: { actionDefinition: { id: 'bad' } },
     });
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
       SYSTEM_ERROR_OCCURRED_ID,
@@ -116,7 +115,6 @@ describe('formatActionCommand', () => {
     expect(result).toEqual({
       ok: false,
       error: 'formatActionCommand: Invalid or missing entityManager.',
-      details: { entityManager: {} },
     });
   });
 
@@ -151,6 +149,15 @@ describe('formatActionCommand', () => {
         { safeEventDispatcher: dispatcher },
         displayNameFn
       )
+    ).toThrow('formatActionCommand: logger is required.');
+  });
+
+  it('throws when logger and safeEventDispatcher are missing', () => {
+    const actionDef = { id: 'core:wait', template: 'wait' };
+    const context = { type: TARGET_TYPE_NONE };
+
+    expect(() =>
+      formatActionCommand(actionDef, context, entityManager, {}, displayNameFn)
     ).toThrow('formatActionCommand: logger is required.');
   });
 });

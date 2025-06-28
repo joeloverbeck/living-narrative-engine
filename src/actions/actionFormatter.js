@@ -61,38 +61,31 @@ function buildFormatError(message, details) {
  * @param {ILogger} logger - Logger instance used for validation.
  * @returns {FormatActionError | null} An error result if validation fails, otherwise `null`.
  */
-function validateFormatInputs(
+/**
+ * @description Checks required inputs for {@link formatActionCommand}.
+ * @param {ActionDefinition} actionDefinition - Action definition to check.
+ * @param {ActionTargetContext} targetContext - Target context for formatting.
+ * @param {EntityManager} entityManager - Entity manager for lookups.
+ * @param {(entity: Entity, fallback: string, logger?: ILogger) => string} displayNameFn - Utility for entity names.
+ * @returns {string | null} An error message string when invalid, otherwise `null`.
+ */
+function checkFormatInputs(
   actionDefinition,
   targetContext,
   entityManager,
-  displayNameFn,
-  dispatcher,
-  logger
+  displayNameFn
 ) {
-  if (!logger) {
-    throw new Error('formatActionCommand: logger is required.');
-  }
   if (!actionDefinition || !actionDefinition.template) {
-    const msg =
-      'formatActionCommand: Invalid or missing actionDefinition or template.';
-    dispatchValidationError(dispatcher, msg, { actionDefinition }, logger);
-    return buildFormatError(msg, { actionDefinition });
+    return 'formatActionCommand: Invalid or missing actionDefinition or template.';
   }
   if (!targetContext) {
-    const msg = 'formatActionCommand: Invalid or missing targetContext.';
-    dispatchValidationError(dispatcher, msg, { targetContext }, logger);
-    return buildFormatError(msg, { targetContext });
+    return 'formatActionCommand: Invalid or missing targetContext.';
   }
   if (!entityManager || typeof entityManager.getEntityInstance !== 'function') {
-    const msg = 'formatActionCommand: Invalid or missing entityManager.';
-    dispatchValidationError(dispatcher, msg, { entityManager }, logger);
-    return buildFormatError(msg, { entityManager });
+    return 'formatActionCommand: Invalid or missing entityManager.';
   }
   if (typeof displayNameFn !== 'function') {
-    const msg =
-      'formatActionCommand: getEntityDisplayName utility function is not available.';
-    dispatchValidationError(dispatcher, msg, undefined, logger);
-    return buildFormatError(msg);
+    return 'formatActionCommand: getEntityDisplayName utility function is not available.';
   }
 
   return null;
@@ -194,6 +187,22 @@ export function formatActionCommand(
   formatterMap = targetFormatterMap
 ) {
   const { debug = false, logger, safeEventDispatcher } = options;
+
+  // --- 1. Input Validation ---
+  const validationMessage = checkFormatInputs(
+    actionDefinition,
+    targetContext,
+    entityManager,
+    displayNameFn
+  );
+  if (validationMessage && !logger) {
+    throw new Error('formatActionCommand: logger is required.');
+  }
+
+  if (!logger) {
+    throw new Error('formatActionCommand: logger is required.');
+  }
+
   const dispatcher = safeEventDispatcher || resolveSafeDispatcher(null, logger);
   if (!dispatcher) {
     logger.warn(
@@ -201,17 +210,13 @@ export function formatActionCommand(
     );
   }
 
-  // --- 1. Input Validation ---
-  const validationError = validateFormatInputs(
-    actionDefinition,
-    targetContext,
-    entityManager,
-    displayNameFn,
-    dispatcher,
-    logger
-  );
-  if (validationError) {
-    return validationError;
+  if (validationMessage) {
+    return dispatchValidationError(
+      dispatcher,
+      validationMessage,
+      undefined,
+      logger
+    );
   }
 
   let command = actionDefinition.template;
