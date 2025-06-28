@@ -101,27 +101,27 @@ function validateFormatInputs(
 /**
  * @description Applies the appropriate target formatter and handles errors.
  * @param {string} command - The command template string.
- * @param {ActionDefinition} actionDefinition - The action definition.
  * @param {ActionTargetContext} targetContext - Context describing the target.
- * @param {TargetFormatterMap} formatterMap - Map of available formatter functions.
- * @param {EntityManager} entityManager - Entity manager for lookups.
- * @param {(entity: Entity, fallback: string, logger?: ILogger) => string} displayNameFn - Utility to resolve entity names.
- * @param {ILogger} logger - Logger for diagnostic output.
- * @param {boolean} debug - Debug flag.
- * @param {ISafeEventDispatcher} dispatcher - Dispatcher used for error events.
+ * @param {object} options - Bundled options.
+ * @param {ActionDefinition} options.actionDefinition - The action definition.
+ * @param {TargetFormatterMap} options.formatterMap - Map of available formatter functions.
+ * @param {EntityManager} options.entityManager - Entity manager for lookups.
+ * @param {(entity: Entity, fallback: string, logger?: ILogger) => string} options.displayNameFn - Utility to resolve entity names.
+ * @param {ILogger} options.logger - Logger for diagnostic output.
+ * @param {boolean} options.debug - Debug flag.
+ * @param {ISafeEventDispatcher} options.dispatcher - Dispatcher used for error events.
  * @returns {FormatActionCommandResult} The formatting result.
  */
-function applyTargetFormatter(
-  command,
-  actionDefinition,
-  targetContext,
-  formatterMap,
-  entityManager,
-  displayNameFn,
-  logger,
-  debug,
-  dispatcher
-) {
+function applyTargetFormatter(command, targetContext, options) {
+  const {
+    actionDefinition,
+    formatterMap,
+    entityManager,
+    displayNameFn,
+    logger,
+    debug,
+    dispatcher,
+  } = options;
   try {
     const formatter = formatterMap[targetContext.type];
     if (formatter) {
@@ -224,17 +224,15 @@ export function formatActionCommand(
   }
 
   // --- 2. Placeholder Substitution based on Target Type ---
-  const formatResult = applyTargetFormatter(
-    command,
+  const formatResult = applyTargetFormatter(command, targetContext, {
     actionDefinition,
-    targetContext,
     formatterMap,
     entityManager,
     displayNameFn,
     logger,
     debug,
-    dispatcher
-  );
+    dispatcher,
+  });
   if (!formatResult.ok) {
     return formatResult;
   }
