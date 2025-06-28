@@ -146,7 +146,7 @@ describeActionDiscoverySuite(
         expectedGoTargetContext,
         expect.any(Object),
         expect.any(Object),
-        expect.any(Function)
+        { displayNameFn: expect.any(Function) }
       );
     });
   }

@@ -49,7 +49,7 @@ describe('formatActionCommand additional cases', () => {
         logger,
         safeEventDispatcher: dispatcher,
       },
-      displayNameFn
+      { displayNameFn }
     );
 
     expect(result).toEqual({ ok: false, error: expect.any(String) });
@@ -73,7 +73,7 @@ describe('formatActionCommand additional cases', () => {
         logger,
         safeEventDispatcher: dispatcher,
       },
-      displayNameFn
+      { displayNameFn }
     );
 
     expect(logger.warn).toHaveBeenCalledWith(
@@ -96,7 +96,7 @@ describe('formatActionCommand additional cases', () => {
         logger,
         safeEventDispatcher: dispatcher,
       },
-      displayNameFn
+      { displayNameFn }
     );
 
     expect(result.ok).toBe(false);
@@ -122,8 +122,7 @@ describe('formatActionCommand additional cases', () => {
       context,
       entityManager,
       { logger, safeEventDispatcher: dispatcher },
-      displayNameFn,
-      customMap
+      { displayNameFn, formatterMap: customMap }
     );
 
     expect(result).toEqual({ ok: true, value: 'test-value' });

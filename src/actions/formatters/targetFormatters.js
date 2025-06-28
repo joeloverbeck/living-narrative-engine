@@ -116,7 +116,10 @@ export function formatNoneTarget(
  *   entity: myEntityFormatter,
  *   none: formatNoneTarget,
  * };
- * formatActionCommand(def, ctx, manager, { logger }, getEntityDisplayName, customMap);
+ * formatActionCommand(def, ctx, manager, { logger }, {
+ *   displayNameFn: getEntityDisplayName,
+ *   formatterMap: customMap,
+ * });
  * ```
  *
  * @type {TargetFormatterMap}

@@ -37,7 +37,7 @@ describe('formatActionCommand', () => {
         debug: true,
         safeEventDispatcher: dispatcher,
       },
-      displayNameFn
+      { displayNameFn }
     );
 
     expect(result).toEqual({ ok: true, value: 'inspect The Entity' });
@@ -58,7 +58,7 @@ describe('formatActionCommand', () => {
         logger,
         safeEventDispatcher: dispatcher,
       },
-      displayNameFn
+      { displayNameFn }
     );
 
     expect(result).toEqual({ ok: true, value: 'inspect e1' });
@@ -76,7 +76,7 @@ describe('formatActionCommand', () => {
       context,
       entityManager,
       { logger, safeEventDispatcher: dispatcher },
-      displayNameFn
+      { displayNameFn }
     );
 
     expect(result).toEqual({ ok: true, value: 'wait' });
@@ -88,7 +88,7 @@ describe('formatActionCommand', () => {
       { type: TARGET_TYPE_NONE },
       entityManager,
       { logger, safeEventDispatcher: dispatcher },
-      displayNameFn
+      { displayNameFn }
     );
     expect(result).toEqual({
       ok: false,
@@ -110,7 +110,7 @@ describe('formatActionCommand', () => {
       { type: TARGET_TYPE_ENTITY, entityId: 'e1' },
       {},
       { logger, safeEventDispatcher: dispatcher },
-      displayNameFn
+      { displayNameFn }
     );
     expect(result).toEqual({
       ok: false,
@@ -129,7 +129,7 @@ describe('formatActionCommand', () => {
         logger,
         safeEventDispatcher: dispatcher,
       },
-      displayNameFn
+      { displayNameFn }
     );
     expect(result).toEqual({ ok: true, value: 'do it' });
     expect(logger.warn).toHaveBeenCalledWith(
@@ -146,8 +146,7 @@ describe('formatActionCommand', () => {
       context,
       entityManager,
       { logger, safeEventDispatcher: dispatcher },
-      displayNameFn,
-      customMap
+      { displayNameFn, formatterMap: customMap }
     );
 
     expect(result).toEqual({ ok: true, value: 'inspect {target}' });
@@ -166,7 +165,7 @@ describe('formatActionCommand', () => {
         context,
         entityManager,
         { safeEventDispatcher: dispatcher },
-        displayNameFn
+        { displayNameFn }
       )
     ).toThrow('formatActionCommand: logger is required.');
   });
@@ -176,7 +175,13 @@ describe('formatActionCommand', () => {
     const context = { type: TARGET_TYPE_NONE };
 
     expect(() =>
-      formatActionCommand(actionDef, context, entityManager, {}, displayNameFn)
+      formatActionCommand(
+        actionDef,
+        context,
+        entityManager,
+        {},
+        { displayNameFn }
+      )
     ).toThrow('formatActionCommand: logger is required.');
   });
 });
