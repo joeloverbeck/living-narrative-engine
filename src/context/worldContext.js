@@ -12,7 +12,7 @@ import {
 } from '../constants/componentIds.js';
 import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
 import { ISafeEventDispatcher } from '../interfaces/ISafeEventDispatcher.js';
-import { validateDependency } from '../utils/validationUtils.js';
+import { validateDependency } from '../utils/dependencyUtils.js';
 
 /**
  * Provides a stateless view of the world context, deriving information directly

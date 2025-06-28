@@ -1,5 +1,5 @@
 import { describe, it, expect, jest } from '@jest/globals';
-import * as validationUtils from '../../../src/utils/validationUtils.js';
+import * as validationUtils from '../../../src/utils/dependencyUtils.js';
 import { assertValidActionIndex } from '../../../src/utils/actionIndexUtils.js';
 const { validateDependency, validateDependencies } = validationUtils;
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';

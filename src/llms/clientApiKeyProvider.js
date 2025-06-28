@@ -3,7 +3,7 @@
 
 import { IApiKeyProvider } from './interfaces/IApiKeyProvider.js';
 import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
-import { validateDependency } from '../utils/validationUtils.js';
+import { validateDependency } from '../utils/dependencyUtils.js';
 import { initLogger } from '../utils/index.js';
 import { CLOUD_API_TYPES } from './constants/llmConstants.js';
 import { isValidEnvironmentContext } from './environmentContext.js';

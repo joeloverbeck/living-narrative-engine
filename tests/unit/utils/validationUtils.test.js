@@ -8,7 +8,7 @@ import {
   it,
   expect,
 } from '@jest/globals';
-import { validateDependency } from '../../../src/utils/validationUtils.js';
+import { validateDependency } from '../../../src/utils/dependencyUtils.js';
 
 describe('validateDependency', () => {
   let mockLogger;
