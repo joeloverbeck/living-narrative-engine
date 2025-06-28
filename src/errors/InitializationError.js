@@ -10,6 +10,8 @@
  */
 export class InitializationError extends Error {
   /**
+   * Create a new InitializationError.
+   *
    * @param {string} message - Error message.
    * @param {Error} [cause] - Optional underlying cause.
    */
@@ -33,8 +35,10 @@ export class InitializationError extends Error {
  */
 export class WorldInitializationError extends InitializationError {
   /**
-   * @param {string} message
-   * @param {Error} [cause]
+   * Create a new WorldInitializationError.
+   *
+   * @param {string} message - Error message.
+   * @param {Error} [cause] - Optional underlying cause.
    */
   constructor(message, cause) {
     super(message, cause);
@@ -50,8 +54,10 @@ export class WorldInitializationError extends InitializationError {
  */
 export class SystemInitializationError extends InitializationError {
   /**
-   * @param {string} message
-   * @param {Error} [cause]
+   * Create a new SystemInitializationError.
+   *
+   * @param {string} message - Error message.
+   * @param {Error} [cause] - Optional underlying cause.
    */
   constructor(message, cause) {
     super(message, cause);
