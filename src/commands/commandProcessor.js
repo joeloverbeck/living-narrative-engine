@@ -5,6 +5,10 @@ import { ATTEMPT_ACTION_ID } from '../constants/eventIds.js';
 import { ICommandProcessor } from './interfaces/ICommandProcessor.js';
 import { initLogger } from '../utils/index.js';
 import { validateDependency, assertValidId } from '../utils/dependencyUtils.js';
+import {
+  createFailureResult,
+  dispatchFailure,
+} from './helpers/commandResultUtils.js';
 import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
 import { createErrorDetails } from '../utils/errorDetails.js';
 
@@ -69,10 +73,17 @@ class CommandProcessor extends ICommandProcessor {
   async dispatchAction(actor, turnAction) {
     const validationError = this.#validateActionInputs(actor, turnAction);
     if (validationError) {
-      return this.#handleDispatchFailure({
-        ...validationError,
-        commandString: turnAction?.commandString,
-      });
+      dispatchFailure(
+        this.#logger,
+        this.#safeEventDispatcher,
+        validationError.userMsg,
+        validationError.internalMsg
+      );
+      return createFailureResult(
+        validationError.userMsg,
+        validationError.internalMsg,
+        turnAction?.commandString
+      );
     }
 
     const actorId = actor.id;
@@ -107,12 +118,13 @@ class CommandProcessor extends ICommandProcessor {
     const internalMsg = `CRITICAL: Failed to dispatch pre-resolved ATTEMPT_ACTION_ID for ${actorId}, action "${actionId}". Dispatcher reported failure.`;
     const userMsg = 'Internal error: Failed to initiate action.';
     this.#logger.error(internalMsg, { payload });
-    return this.#handleDispatchFailure({
+    dispatchFailure(
+      this.#logger,
+      this.#safeEventDispatcher,
       userMsg,
-      internalMsg,
-      commandString,
-      actionId,
-    });
+      internalMsg
+    );
+    return createFailureResult(userMsg, internalMsg, commandString, actionId);
   }
 
   // --- Private Helper Methods ---
@@ -156,36 +168,6 @@ class CommandProcessor extends ICommandProcessor {
   }
 
   /**
-   * @description Handle a dispatch failure uniformly.
-   * @param {object} opts Failure options.
-   * @param {string} opts.userMsg User-facing error message.
-   * @param {string} opts.internalMsg Detailed internal error message.
-   * @param {string} [opts.commandString] Original command string.
-   * @param {string} [opts.actionId] Action identifier.
-   * @returns {Promise<CommandResult>} Failure result object.
-   */
-  async #handleDispatchFailure({
-    userMsg,
-    internalMsg,
-    commandString,
-    actionId,
-  }) {
-    this.#logger.error(internalMsg);
-    safeDispatchError(
-      this.#safeEventDispatcher,
-      userMsg,
-      createErrorDetails(internalMsg),
-      this.#logger
-    );
-    return this.#createFailureResult(
-      userMsg,
-      internalMsg,
-      commandString,
-      actionId
-    );
-  }
-
-  /**
    * @description Builds the payload for an action attempt dispatch.
    * @param {Entity} actor - The entity performing the action.
    * @param {ITurnAction} turnAction - The resolved turn action.
@@ -201,35 +183,6 @@ class CommandProcessor extends ICommandProcessor {
       targetId: resolvedParameters?.targetId || null,
       originalInput: commandString || actionDefinitionId,
     };
-  }
-
-  /**
-   * @description Creates a standardized failure {@link CommandResult}.
-   * @param {string} [userError] - User-facing error message.
-   * @param {string} [internalError] - Internal error message for logging.
-   * @param {string} [originalInput] - The command string that was processed.
-   * @param {string} [actionId] - Identifier of the attempted action.
-   * @param {boolean} [turnEnded] - Indicates if the turn should end.
-   * @returns {CommandResult} The failure result object.
-   */
-  #createFailureResult(
-    userError,
-    internalError,
-    originalInput,
-    actionId,
-    turnEnded = true
-  ) {
-    const result = {
-      success: false,
-      turnEnded: turnEnded,
-      internalError: internalError,
-      originalInput,
-      actionResult: actionId ? { actionId } : undefined,
-    };
-    if (userError !== undefined) {
-      result.error = userError;
-    }
-    return result;
   }
 
   /**
