@@ -223,6 +223,10 @@ export function formatActionCommand(
   deps = {}
 ) {
   const { debug = false, logger, safeEventDispatcher } = options;
+  if (!logger) {
+    throw new Error('formatActionCommand: logger is required.');
+  }
+
   const { displayNameFn, formatterMap } = normalizeDeps(
     deps,
     logger,
@@ -237,13 +241,6 @@ export function formatActionCommand(
     displayNameFn,
     logger
   );
-  if (validationMessage && !logger) {
-    throw new Error('formatActionCommand: logger is required.');
-  }
-
-  if (!logger) {
-    throw new Error('formatActionCommand: logger is required.');
-  }
 
   validateDependency(safeEventDispatcher, 'safeEventDispatcher', logger, {
     requiredMethods: ['dispatch'],
