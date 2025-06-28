@@ -20,12 +20,6 @@ import { IActionDiscoveryService } from '../interfaces/IActionDiscoveryService.j
 import { setupService } from '../utils/serviceInitializerUtils.js';
 import { getActorLocation } from '../utils/actorLocationUtils.js';
 import { getEntityDisplayName } from '../utils/entityUtils.js';
-import {
-  TRACE_INFO,
-  TRACE_SUCCESS,
-  TRACE_FAILURE,
-  TRACE_STEP,
-} from './tracing/traceContext.js';
 
 // ────────────────────────────────────────────────────────────────────────────────
 /**
@@ -245,7 +239,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
   }
 
   /**
-   * NEW: Processes a single candidate action through the entire pipeline.
+   * Processes a single candidate action through the entire pipeline.
    *
    * @param {import('../data/gameDataRepository.js').ActionDefinition} actionDef
    * @param {Entity} actorEntity
@@ -301,7 +295,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
   }
 
   /**
-   * NEW: Formats an action for a given list of targets.
+   * Formats an action for a given list of targets.
    *
    * @param {import('../data/gameDataRepository.js').ActionDefinition} actionDef
    * @param {ActionTargetContext[]} targetContexts
