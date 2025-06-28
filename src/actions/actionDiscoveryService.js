@@ -162,12 +162,12 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
    * It is simpler, with its complex inner logic delegated to helpers.
    *
    * @param {Entity} actorEntity The entity for whom to find actions.
-   * @param {ActionContext} baseContext The current action context.
+   * @param {ActionContext} [baseContext={}] The current action context.
    * @param {object} [options] Optional settings.
    * @param {boolean} [options.trace] - If true, generates a detailed trace of the discovery process.
    * @returns {Promise<import('../interfaces/IActionDiscoveryService.js').DiscoveredActionsResult>}
    */
-  async getValidActions(actorEntity, baseContext, options = {}) {
+  async getValidActions(actorEntity, baseContext = {}, options = {}) {
     const { trace: shouldTrace = false } = options;
     const trace = shouldTrace ? this.#traceContextFactory() : null;
 
