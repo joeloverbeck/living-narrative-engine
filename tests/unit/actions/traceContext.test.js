@@ -4,6 +4,9 @@ import {
   TRACE_INFO,
   TRACE_ERROR,
   TRACE_SUCCESS,
+  TRACE_FAILURE,
+  TRACE_STEP,
+  TRACE_DATA,
 } from '../../../src/actions/tracing/traceContext.js';
 
 describe('TraceContext', () => {
@@ -43,5 +46,24 @@ describe('TraceContext', () => {
     trace.addLog(TRACE_INFO, 'first', 'src1');
     trace.addLog(TRACE_SUCCESS, 'second', 'src2', { value: 42 });
     expect(trace.logs.map((l) => l.message)).toEqual(['first', 'second']);
+  });
+
+  it('exposes helper methods for each log type', () => {
+    const trace = new TraceContext();
+    trace.info('i', 'src');
+    trace.success('s', 'src');
+    trace.failure('f', 'src');
+    trace.step('p', 'src');
+    trace.error('e', 'src');
+    trace.data('d', 'src');
+
+    expect(trace.logs.map((l) => l.type)).toEqual([
+      TRACE_INFO,
+      TRACE_SUCCESS,
+      TRACE_FAILURE,
+      TRACE_STEP,
+      TRACE_ERROR,
+      TRACE_DATA,
+    ]);
   });
 });

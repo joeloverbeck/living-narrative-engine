@@ -70,11 +70,10 @@ export class TargetResolutionService extends ITargetResolutionService {
   /** @override */
   async resolveTargets(scopeName, actorEntity, discoveryContext, trace = null) {
     const source = 'TargetResolutionService.resolveTargets';
-    trace?.addLog(TRACE_INFO, `Resolving scope '${scopeName}'.`, source);
+    trace?.info(`Resolving scope '${scopeName}'.`, source);
 
     if (scopeName === TARGET_DOMAIN_NONE) {
-      trace?.addLog(
-        TRACE_INFO,
+      trace?.info(
         `Scope is 'none'; returning a single no-target context.`,
         source
       );
@@ -82,8 +81,7 @@ export class TargetResolutionService extends ITargetResolutionService {
     }
 
     if (scopeName === TARGET_DOMAIN_SELF) {
-      trace?.addLog(
-        TRACE_INFO,
+      trace?.info(
         `Scope is 'self'; returning the actor as the target.`,
         source
       );
@@ -97,8 +95,7 @@ export class TargetResolutionService extends ITargetResolutionService {
       trace
     );
 
-    trace?.addLog(
-      TRACE_INFO,
+    trace?.info(
       `DSL scope '${scopeName}' resolved to ${targetIds.size} target(s).`,
       source,
       { targetIds: Array.from(targetIds) }
@@ -120,11 +117,7 @@ export class TargetResolutionService extends ITargetResolutionService {
    */
   #resolveScopeToIds(scopeName, actorEntity, discoveryContext, trace = null) {
     const source = 'TargetResolutionService.#resolveScopeToIds';
-    trace?.addLog(
-      TRACE_INFO,
-      `Resolving scope '${scopeName}' with DSL.`,
-      source
-    );
+    trace?.info(`Resolving scope '${scopeName}' with DSL.`, source);
     const scopeDefinition = this.#scopeRegistry.getScope(scopeName);
 
     if (
@@ -181,7 +174,7 @@ export class TargetResolutionService extends ITargetResolutionService {
     source,
     originalError = null
   ) {
-    trace?.addLog(TRACE_ERROR, message, source, details);
+    trace?.error(message, source, details);
     originalError
       ? this.#logger.error(message, originalError)
       : this.#logger.warn(message);

@@ -20,6 +20,36 @@ const mockGameDataRepository = mock();
 // Mock TraceContext
 const mockTraceContext = {
   addLog: jest.fn(),
+  info(msg, src, data) {
+    data === undefined
+      ? this.addLog(TRACE_INFO, msg, src)
+      : this.addLog(TRACE_INFO, msg, src, data);
+  },
+  success(msg, src, data) {
+    data === undefined
+      ? this.addLog(TRACE_SUCCESS, msg, src)
+      : this.addLog(TRACE_SUCCESS, msg, src, data);
+  },
+  failure(msg, src, data) {
+    data === undefined
+      ? this.addLog(TRACE_FAILURE, msg, src)
+      : this.addLog(TRACE_FAILURE, msg, src, data);
+  },
+  step(msg, src, data) {
+    data === undefined
+      ? this.addLog('step', msg, src)
+      : this.addLog('step', msg, src, data);
+  },
+  error(msg, src, data) {
+    data === undefined
+      ? this.addLog(TRACE_ERROR, msg, src)
+      : this.addLog(TRACE_ERROR, msg, src, data);
+  },
+  data(msg, src, data) {
+    data === undefined
+      ? this.addLog(TRACE_DATA, msg, src)
+      : this.addLog(TRACE_DATA, msg, src, data);
+  },
 };
 
 // Test data

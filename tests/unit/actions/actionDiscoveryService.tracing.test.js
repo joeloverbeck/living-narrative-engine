@@ -8,11 +8,48 @@ import {
   TRACE_FAILURE,
 } from '../../../src/actions/tracing/traceContext.js';
 
-jest.mock('../../../src/actions/tracing/traceContext.js', () => ({
-  TraceContext: jest
-    .fn()
-    .mockImplementation(() => ({ addLog: jest.fn(), logs: [] })),
-}));
+jest.mock('../../../src/actions/tracing/traceContext.js', () => {
+  const actual = jest.requireActual(
+    '../../../src/actions/tracing/traceContext.js'
+  );
+  return {
+    ...actual,
+    TraceContext: jest.fn().mockImplementation(() => ({
+      addLog: jest.fn(),
+      info(msg, src, data) {
+        data === undefined
+          ? this.addLog(actual.TRACE_INFO, msg, src)
+          : this.addLog(actual.TRACE_INFO, msg, src, data);
+      },
+      step(msg, src, data) {
+        data === undefined
+          ? this.addLog(actual.TRACE_STEP, msg, src)
+          : this.addLog(actual.TRACE_STEP, msg, src, data);
+      },
+      success(msg, src, data) {
+        data === undefined
+          ? this.addLog(actual.TRACE_SUCCESS, msg, src)
+          : this.addLog(actual.TRACE_SUCCESS, msg, src, data);
+      },
+      failure(msg, src, data) {
+        data === undefined
+          ? this.addLog(actual.TRACE_FAILURE, msg, src)
+          : this.addLog(actual.TRACE_FAILURE, msg, src, data);
+      },
+      error(msg, src, data) {
+        data === undefined
+          ? this.addLog(actual.TRACE_ERROR, msg, src)
+          : this.addLog(actual.TRACE_ERROR, msg, src, data);
+      },
+      data(msg, src, data) {
+        data === undefined
+          ? this.addLog(actual.TRACE_DATA, msg, src)
+          : this.addLog(actual.TRACE_DATA, msg, src, data);
+      },
+      logs: [],
+    })),
+  };
+});
 
 describeActionDiscoverySuite(
   'ActionDiscoveryService Tracing',

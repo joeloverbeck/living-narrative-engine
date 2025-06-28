@@ -331,6 +331,36 @@ describe('ScopeEngine - Comprehensive Coverage Tests', () => {
     test('should handle trace context integration', () => {
       const mockTraceContext = {
         addLog: jest.fn(),
+        info(msg, src, data) {
+          data === undefined
+            ? this.addLog('info', msg, src)
+            : this.addLog('info', msg, src, data);
+        },
+        success(msg, src, data) {
+          data === undefined
+            ? this.addLog('success', msg, src)
+            : this.addLog('success', msg, src, data);
+        },
+        failure(msg, src, data) {
+          data === undefined
+            ? this.addLog('failure', msg, src)
+            : this.addLog('failure', msg, src, data);
+        },
+        step(msg, src, data) {
+          data === undefined
+            ? this.addLog('step', msg, src)
+            : this.addLog('step', msg, src, data);
+        },
+        error(msg, src, data) {
+          data === undefined
+            ? this.addLog('error', msg, src)
+            : this.addLog('error', msg, src, data);
+        },
+        data(msg, src, data) {
+          data === undefined
+            ? this.addLog('data', msg, src)
+            : this.addLog('data', msg, src, data);
+        },
       };
 
       const ast = parseDslExpression('location');
