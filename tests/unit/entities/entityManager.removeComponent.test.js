@@ -5,6 +5,7 @@ import {
 } from '../../common/entities/index.js';
 import { runInvalidIdPairTests } from '../../common/entities/index.js';
 import { EntityNotFoundError } from '../../../src/errors/entityNotFoundError.js';
+import { ComponentOverrideNotFoundError } from '../../../src/errors/componentOverrideNotFoundError.js';
 import {
   expectComponentRemovedDispatch,
   expectNoDispatch,
@@ -74,9 +75,7 @@ describeEntityManagerSuite('EntityManager - removeComponent', (getBed) => {
       // Act & Assert
       expect(() =>
         entityManager.removeComponent(PRIMARY, NAME_COMPONENT_ID)
-      ).toThrow(
-        "Component 'core:name' not found as an override on entity 'test-instance-01'. Nothing to remove at instance level."
-      );
+      ).toThrow(ComponentOverrideNotFoundError);
       expectNoDispatch(mocks.eventDispatcher.dispatch);
     });
 

@@ -8,6 +8,7 @@ import { validateDependency } from '../../utils/validationUtils.js';
 import { ensureValidLogger } from '../../utils/loggerUtils.js';
 import { EntityNotFoundError } from '../../errors/entityNotFoundError.js';
 import { ValidationError } from '../../errors/validationError.js';
+import { ComponentOverrideNotFoundError } from '../../errors/componentOverrideNotFoundError.js';
 import createValidateAndClone from '../utils/createValidateAndClone.js';
 import {
   validateAddComponentParams as validateAddComponentParamsUtil,
@@ -171,7 +172,8 @@ export class ComponentMutationService {
    * @param {string} componentTypeId - The unique ID of the component type to remove.
    * @throws {EntityNotFoundError} If entity not found.
    * @throws {InvalidArgumentError} If parameters are invalid.
-   * @throws {Error} If component override does not exist or removal fails.
+   * @throws {ComponentOverrideNotFoundError} If component override does not exist.
+   * @throws {Error} If removal fails.
    */
   removeComponent(instanceId, componentTypeId) {
     validateRemoveComponentParamsUtil(
@@ -194,9 +196,7 @@ export class ComponentMutationService {
       this.#logger.debug(
         `ComponentMutationService.removeComponent: Component '${componentTypeId}' not found as an override on entity '${instanceId}'. Nothing to remove at instance level.`
       );
-      throw new Error(
-        `Component '${componentTypeId}' not found as an override on entity '${instanceId}'. Nothing to remove at instance level.`
-      );
+      throw new ComponentOverrideNotFoundError(instanceId, componentTypeId);
     }
 
     // Capture the state of the component *before* it is removed.
