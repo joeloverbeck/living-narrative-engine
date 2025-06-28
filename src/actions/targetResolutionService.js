@@ -100,11 +100,7 @@ export class TargetResolutionService extends ITargetResolutionService {
       source,
       { targetIds: Array.from(targetIds) }
     );
-    const targetContexts = [];
-    for (const targetId of targetIds) {
-      targetContexts.push(ActionTargetContext.forEntity(targetId));
-    }
-    return targetContexts;
+    return Array.from(targetIds, (id) => ActionTargetContext.forEntity(id));
   }
 
   /**
