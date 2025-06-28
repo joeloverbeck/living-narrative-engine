@@ -53,8 +53,7 @@ class CommandProcessor extends ICommandProcessor {
    * @returns {Promise<{success: boolean, errorResult: CommandResult | null}>} A promise that resolves to an object indicating the outcome.
    */
   async dispatchAction(actor, turnAction) {
-    const { actionDefinitionId, resolvedParameters, commandString } =
-      turnAction;
+    const { actionDefinitionId, commandString } = turnAction;
     const actorId = actor.id;
     this.#logger.debug(
       `CommandProcessor.dispatchAction: Dispatching pre-resolved action '${actionDefinitionId}' for actor ${actorId}.`,
@@ -88,17 +87,7 @@ class CommandProcessor extends ICommandProcessor {
     }
 
     // --- Payload Construction ---
-    // The payload for ATTEMPT_ACTION_ID is built directly from the turnAction,
-    // bypassing the need for parsing or target resolution.
-    const payload = {
-      eventName: ATTEMPT_ACTION_ID,
-      actorId: actorId,
-      actionId: actionDefinitionId,
-      targetId: resolvedParameters?.targetId || null,
-      originalInput: commandString || actionDefinitionId,
-      // Note: If other parameters from `resolvedParameters` need to be passed,
-      // the ATTEMPT_ACTION_ID event schema and its handlers must support them.
-    };
+    const payload = this.#buildAttemptActionPayload(actor, turnAction);
 
     // --- Dispatch ---
     const dispatchSuccess = await this.#dispatchWithErrorHandling(
@@ -141,6 +130,24 @@ class CommandProcessor extends ICommandProcessor {
   }
 
   // --- Private Helper Methods ---
+
+  /**
+   * @description Builds the payload for an action attempt dispatch.
+   * @param {Entity} actor - The entity performing the action.
+   * @param {ITurnAction} turnAction - The resolved turn action.
+   * @returns {object} The payload for the `ATTEMPT_ACTION_ID` event.
+   */
+  #buildAttemptActionPayload(actor, turnAction) {
+    const { actionDefinitionId, resolvedParameters, commandString } =
+      turnAction;
+    return {
+      eventName: ATTEMPT_ACTION_ID,
+      actorId: actor.id,
+      actionId: actionDefinitionId,
+      targetId: resolvedParameters?.targetId || null,
+      originalInput: commandString || actionDefinitionId,
+    };
+  }
 
   #createFailureResult(
     userError,
