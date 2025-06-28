@@ -59,7 +59,7 @@ describeActionDiscoverySuite(
       });
 
       bed.mocks.targetResolutionService.resolveTargets.mockImplementation(
-        async (scopeName) => {
+        (scopeName) => {
           if (scopeName === 'core:clear_directions') {
             return [{ type: 'entity', entityId: TOWN_INSTANCE_ID }];
           }

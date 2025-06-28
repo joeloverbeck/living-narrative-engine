@@ -51,7 +51,7 @@ describeActionDiscoverySuite(
       const def = { id: 'bad', commandVerb: 'bad', scope: 'target' };
       bed.mocks.actionIndex.getCandidateActions.mockReturnValue([def]);
       bed.mocks.prerequisiteEvaluationService.evaluate.mockReturnValue(true);
-      bed.mocks.targetResolutionService.resolveTargets.mockResolvedValue([
+      bed.mocks.targetResolutionService.resolveTargets.mockReturnValue([
         { type: 'entity', entityId: 't1' },
       ]);
       bed.mocks.formatActionCommandFn.mockReturnValue({

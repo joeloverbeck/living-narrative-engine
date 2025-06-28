@@ -12,7 +12,7 @@ describeActionDiscoverySuite(
       const bed = getBed();
       bed.mocks.actionIndex.getCandidateActions.mockReturnValue([]);
       bed.mocks.prerequisiteEvaluationService.evaluate.mockReturnValue(true);
-      bed.mocks.targetResolutionService.resolveTargets.mockResolvedValue([]);
+      bed.mocks.targetResolutionService.resolveTargets.mockReturnValue([]);
       bed.mocks.getActorLocationFn.mockReturnValue({
         id: 'room1',
         getComponentData: jest.fn(),

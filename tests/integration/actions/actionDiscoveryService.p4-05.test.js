@@ -133,7 +133,7 @@ describe('ADS-P4-05: Streamlined ActionDiscoveryService', () => {
         scope: 'some_scope',
       };
       mockActionIndex.getCandidateActions.mockReturnValue([actionDef]);
-      mockTargetResolutionService.resolveTargets.mockResolvedValue([
+      mockTargetResolutionService.resolveTargets.mockReturnValue([
         { type: 'entity', entityId: 'target1' },
       ]);
 
@@ -160,7 +160,7 @@ describe('ADS-P4-05: Streamlined ActionDiscoveryService', () => {
       };
       mockActionIndex.getCandidateActions.mockReturnValue([actionDef]);
       mockPrereqService.evaluate.mockReturnValue(true);
-      mockTargetResolutionService.resolveTargets.mockResolvedValue([
+      mockTargetResolutionService.resolveTargets.mockReturnValue([
         { type: 'entity', entityId: 'goblin1' },
         { type: 'entity', entityId: 'goblin2' },
       ]);
@@ -202,7 +202,7 @@ describe('ADS-P4-05: Streamlined ActionDiscoveryService', () => {
       };
       mockActionIndex.getCandidateActions.mockReturnValue([actionDef]);
       mockPrereqService.evaluate.mockReturnValue(true);
-      mockTargetResolutionService.resolveTargets.mockResolvedValue([
+      mockTargetResolutionService.resolveTargets.mockReturnValue([
         { type: 'entity', entityId: actorEntity.id },
       ]);
 
@@ -234,7 +234,7 @@ describe('ADS-P4-05: Streamlined ActionDiscoveryService', () => {
       };
       mockActionIndex.getCandidateActions.mockReturnValue([actionDef]);
       mockPrereqService.evaluate.mockReturnValue(true);
-      mockTargetResolutionService.resolveTargets.mockResolvedValue([
+      mockTargetResolutionService.resolveTargets.mockReturnValue([
         { type: 'none', entityId: null },
       ]);
 
@@ -266,7 +266,7 @@ describe('ADS-P4-05: Streamlined ActionDiscoveryService', () => {
       };
       mockActionIndex.getCandidateActions.mockReturnValue([actionDef]);
       mockPrereqService.evaluate.mockReturnValue(true);
-      mockTargetResolutionService.resolveTargets.mockResolvedValue([]);
+      mockTargetResolutionService.resolveTargets.mockReturnValue([]);
 
       const { actions } = await service.getValidActions(actorEntity, {});
 

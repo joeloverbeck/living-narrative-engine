@@ -33,7 +33,7 @@ describeActionDiscoverySuite(
       bed.mocks.prerequisiteEvaluationService.evaluate.mockReturnValue(true);
 
       bed.mocks.targetResolutionService.resolveTargets.mockImplementation(
-        async (scopeName) => {
+        (scopeName) => {
           if (scopeName === 'none') return [{ type: 'none', entityId: null }];
           if (scopeName === 'self')
             return [{ type: 'entity', entityId: mockActorEntity.id }];

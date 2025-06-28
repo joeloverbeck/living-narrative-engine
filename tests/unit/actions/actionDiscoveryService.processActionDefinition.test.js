@@ -14,7 +14,7 @@ describeActionDiscoverySuite(
         ok: true,
         value: 'doit',
       });
-      bed.mocks.targetResolutionService.resolveTargets.mockResolvedValue([]);
+      bed.mocks.targetResolutionService.resolveTargets.mockReturnValue([]);
       bed.mocks.getActorLocationFn.mockReturnValue({
         id: 'room1',
         getComponentData: jest.fn(),
@@ -31,7 +31,7 @@ describeActionDiscoverySuite(
         okDef,
       ]);
       bed.mocks.targetResolutionService.resolveTargets.mockImplementation(
-        async (scope) => {
+        (scope) => {
           if (scope === 'badScope') return [];
           if (scope === 'none') return [{ type: 'none', entityId: null }];
           return [];
@@ -61,7 +61,7 @@ describeActionDiscoverySuite(
       const def = { id: 'attack', commandVerb: 'attack', scope: 'monster' };
 
       bed.mocks.actionIndex.getCandidateActions.mockReturnValue([def]);
-      bed.mocks.targetResolutionService.resolveTargets.mockResolvedValue([
+      bed.mocks.targetResolutionService.resolveTargets.mockReturnValue([
         { type: 'entity', entityId: 'monster1' },
       ]);
       bed.mocks.formatActionCommandFn.mockReturnValue({
@@ -108,7 +108,7 @@ describeActionDiscoverySuite(
         badDef,
         okDef,
       ]);
-      bed.mocks.targetResolutionService.resolveTargets.mockResolvedValue([
+      bed.mocks.targetResolutionService.resolveTargets.mockReturnValue([
         { type: 'none', entityId: null },
       ]);
       bed.mocks.formatActionCommandFn.mockImplementation((def) => {
@@ -143,7 +143,7 @@ describeActionDiscoverySuite(
         badDef,
         okDef,
       ]);
-      bed.mocks.targetResolutionService.resolveTargets.mockResolvedValue([
+      bed.mocks.targetResolutionService.resolveTargets.mockReturnValue([
         { type: 'none', entityId: null },
       ]);
       bed.mocks.prerequisiteEvaluationService.evaluate.mockImplementation(
