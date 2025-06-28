@@ -1,0 +1,18 @@
+T-09 SourceResolver Implementation
+Goal – First concrete node resolver.
+
+Files
+
+scopeDsl/nodes/sourceResolver.js
+
+tests/nodes/sourceResolver.test.js
+
+Implementation hints
+
+Handles actor, location, entities (positive & ! negate).
+
+Requires { entitiesGateway, locationProvider } injected at factory time.
+
+canResolve checks node.type==='Source'.
+
+Write tests with stub gateways to return deterministic IDs.

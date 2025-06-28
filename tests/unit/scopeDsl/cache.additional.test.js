@@ -99,7 +99,7 @@ describe('Scope-DSL Cache - Additional Coverage Tests', () => {
     test('should use default max size when not specified', () => {
       // npm lru-cache requires explicit max option
       expect(() => new LRUCache()).toThrow();
-      
+
       const cacheWithMax = new LRUCache({ max: 256 });
       expect(cacheWithMax.max).toBe(256);
     });
@@ -495,7 +495,9 @@ describe('Scope-DSL Cache - Additional Coverage Tests', () => {
         get: jest.fn(),
         set: jest.fn(),
         clear: jest.fn(),
-        get size() { return 5; },
+        get size() {
+          return 5;
+        },
         max: 100,
       };
 
