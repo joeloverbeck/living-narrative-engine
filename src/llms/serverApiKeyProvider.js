@@ -8,7 +8,7 @@ import {
   IEnvironmentVariableReader,
 } from '../../llm-proxy-server/src/utils/IServerUtils.js';
 import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
-import { resolveSafeDispatcher } from '../utils/dispatcherUtils.js';
+import { validateDependency } from '../utils/validationUtils.js';
 import { initLogger } from '../utils/index.js';
 import { isValidEnvironmentContext } from './environmentContext.js';
 
@@ -139,13 +139,15 @@ export class ServerApiKeyProvider extends IApiKeyProvider {
   }) {
     super();
     this.#logger = initLogger('ServerApiKeyProvider', logger);
-    this.#dispatcher =
-      safeEventDispatcher || resolveSafeDispatcher(null, this.#logger);
-    if (!this.#dispatcher) {
-      console.warn(
-        'ServerApiKeyProvider: safeEventDispatcher resolution failed; key errors may not be reported.'
-      );
-    }
+    validateDependency(
+      safeEventDispatcher,
+      'safeEventDispatcher',
+      this.#logger,
+      {
+        requiredMethods: ['dispatch'],
+      }
+    );
+    this.#dispatcher = safeEventDispatcher;
     if (!fileSystemReader || typeof fileSystemReader.readFile !== 'function') {
       const errorMsg =
         'ServerApiKeyProvider: Constructor requires a valid fileSystemReader instance that implements IFileSystemReader (must have an async readFile method).';

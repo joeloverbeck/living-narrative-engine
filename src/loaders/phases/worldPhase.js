@@ -7,7 +7,7 @@ import {
   ModsLoaderErrorCode,
 } from '../../errors/modsLoaderPhaseError.js';
 import { logPhaseStart } from '../../utils/logPhaseStart.js';
-import { cloneTotals } from '../../utils/cloneTotals.js';
+import { deepClone } from '../../utils/cloneUtils.js';
 
 /**
  * @typedef {import('../LoadContext.js').LoadContext} LoadContext
@@ -53,7 +53,7 @@ export default class WorldPhase extends LoaderPhase {
     logPhaseStart(this.logger, 'WorldPhase');
     try {
       // Clone totals up-front to avoid mutating prior context
-      const nextTotals = cloneTotals(ctx.totals);
+      const nextTotals = deepClone(ctx.totals);
       const next = { ...ctx, totals: nextTotals };
 
       await this.worldLoader.loadWorlds(

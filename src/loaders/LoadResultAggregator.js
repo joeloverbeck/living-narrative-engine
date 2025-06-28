@@ -5,7 +5,7 @@
  * per mod and across all mods.
  */
 
-import { cloneTotals } from '../utils/cloneTotals.js';
+import { deepClone } from '../utils/cloneUtils.js';
 
 /**
  * Structure to hold aggregated results per content type.
@@ -46,7 +46,7 @@ export class LoadResultAggregator {
    */
   constructor(totalCounts) {
     // Clone the totals object to ensure immutability
-    this.#totalCounts = cloneTotals(totalCounts);
+    this.#totalCounts = deepClone(totalCounts);
   }
 
   /**
@@ -55,7 +55,7 @@ export class LoadResultAggregator {
    * @returns {TotalResultsSummary} A copy of the current total counts.
    */
   getTotalCounts() {
-    return cloneTotals(this.#totalCounts);
+    return deepClone(this.#totalCounts);
   }
 
   /**

@@ -6,7 +6,7 @@ import {
   ModsLoaderErrorCode,
 } from '../../errors/modsLoaderPhaseError.js';
 import { logPhaseStart } from '../../utils/logPhaseStart.js';
-import { cloneTotals } from '../../utils/cloneTotals.js';
+import { deepClone } from '../../utils/cloneUtils.js';
 
 /**
  * @typedef {import('../LoadContext.js').LoadContext} LoadContext
@@ -45,7 +45,7 @@ export default class ContentPhase extends LoaderPhase {
     logPhaseStart(this.logger, 'ContentPhase');
     try {
       // Clone totals up-front so mutations do not affect the previous context
-      const nextTotals = cloneTotals(ctx.totals);
+      const nextTotals = deepClone(ctx.totals);
       const next = { ...ctx, totals: nextTotals };
 
       await this.manager.loadContent(

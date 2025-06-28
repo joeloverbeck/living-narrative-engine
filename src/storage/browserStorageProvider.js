@@ -1,7 +1,7 @@
 // src/services/browserStorageProvider.js
 import { IStorageProvider } from '../interfaces/IStorageProvider.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/eventIds.js';
-import { resolveSafeDispatcher } from '../utils/dispatcherUtils.js';
+import { validateDependency } from '../utils/validationUtils.js';
 import { StorageErrorCodes } from './storageErrors.js';
 
 /** @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
@@ -27,13 +27,15 @@ export class BrowserStorageProvider extends IStorageProvider {
       throw new Error(errorMsg);
     }
     this.#logger = logger;
-    this.#safeEventDispatcher =
-      safeEventDispatcher || resolveSafeDispatcher(null, this.#logger);
-    if (!this.#safeEventDispatcher) {
-      console.warn(
-        'BrowserStorageProvider: safeEventDispatcher resolution failed; some errors may go unreported.'
-      );
-    }
+    validateDependency(
+      safeEventDispatcher,
+      'safeEventDispatcher',
+      this.#logger,
+      {
+        requiredMethods: ['dispatch'],
+      }
+    );
+    this.#safeEventDispatcher = safeEventDispatcher;
     this.#logger.debug(
       'BrowserStorageProvider: Initialized. Will use File System Access API with user prompts.'
     );
