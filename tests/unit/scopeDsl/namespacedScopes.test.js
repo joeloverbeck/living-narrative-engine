@@ -19,16 +19,18 @@ describe('Namespaced Scope Requirements', () => {
 
     describe('getScope validation', () => {
       beforeEach(() => {
-        scopeRegistry.initialize(addMockAstsToScopes({
-          'core:followers': {
-            expr: 'actor.core:leading.followers[]',
-            modId: 'core',
-          },
-          'intimacy:close_actors': {
-            expr: 'actor.components.intimacy:closeness.partners[]',
-            modId: 'intimacy',
-          },
-        }));
+        scopeRegistry.initialize(
+          addMockAstsToScopes({
+            'core:followers': {
+              expr: 'actor.core:leading.followers[]',
+              modId: 'core',
+            },
+            'intimacy:close_actors': {
+              expr: 'actor.components.intimacy:closeness.partners[]',
+              modId: 'intimacy',
+            },
+          })
+        );
       });
 
       it('should allow special case "none" without namespace', () => {
@@ -79,12 +81,14 @@ describe('Namespaced Scope Requirements', () => {
 
     describe('hasScope method', () => {
       beforeEach(() => {
-        scopeRegistry.initialize(addMockAstsToScopes({
-          'core:followers': {
-            expr: 'actor.core:leading.followers[]',
-            modId: 'core',
-          },
-        }));
+        scopeRegistry.initialize(
+          addMockAstsToScopes({
+            'core:followers': {
+              expr: 'actor.core:leading.followers[]',
+              modId: 'core',
+            },
+          })
+        );
       });
 
       it('should return true for existing namespaced scopes', () => {

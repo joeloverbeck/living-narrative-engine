@@ -53,7 +53,8 @@ describe('TargetResolutionService - Scope Loading Issue', () => {
   describe('core:clear_directions scope resolution', () => {
     it('should find the core:clear_directions scope when properly loaded', async () => {
       // Mock a properly loaded scope
-      const expr = 'location.core:exits[{ "condition_ref": "core:exit-is-unblocked" }].target';
+      const expr =
+        'location.core:exits[{ "condition_ref": "core:exit-is-unblocked" }].target';
       const mockScopeDefinition = {
         name: 'core:clear_directions',
         expr: expr,
@@ -180,7 +181,8 @@ describe('TargetResolutionService - Scope Loading Issue', () => {
       const realScopeRegistry = new ScopeRegistry();
 
       // Initialize with the expected scope definition
-      const expr = 'location.core:exits[{ "condition_ref": "core:exit-is-unblocked" }].target';
+      const expr =
+        'location.core:exits[{ "condition_ref": "core:exit-is-unblocked" }].target';
       realScopeRegistry.initialize({
         'core:clear_directions': {
           name: 'core:clear_directions',

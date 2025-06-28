@@ -17,7 +17,7 @@ export function generateMockAst(expr) {
     expression: expr,
     // Add a mock timestamp to make each AST unique if needed
     _mock: true,
-    _timestamp: Date.now()
+    _timestamp: Date.now(),
   };
 }
 
@@ -31,10 +31,10 @@ export function addMockAst(scopeDef) {
   if (!scopeDef.expr) {
     throw new Error('Scope definition must have an expr property');
   }
-  
+
   return {
     ...scopeDef,
-    ast: scopeDef.ast || generateMockAst(scopeDef.expr)
+    ast: scopeDef.ast || generateMockAst(scopeDef.expr),
   };
 }
 

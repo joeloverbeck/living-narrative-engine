@@ -167,7 +167,9 @@ describe('WorldInitializer - ScopeRegistry Integration', () => {
     });
 
     it('should handle ScopeRegistry initialization errors', async () => {
-      const mockScopes = addMockAstsToScopes({ 'core:test_scope': { expr: 'actor' } });
+      const mockScopes = addMockAstsToScopes({
+        'core:test_scope': { expr: 'actor' },
+      });
       mockRegistry.get.mockReturnValue(mockScopes);
 
       // Mock ScopeRegistry to throw an error

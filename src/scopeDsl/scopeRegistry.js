@@ -25,19 +25,19 @@ class ScopeRegistry {
           `Invalid scope definition for '${scopeName}': expected an object but got ${typeof scopeDef}`
         );
       }
-      
+
       if (!scopeDef.expr || typeof scopeDef.expr !== 'string') {
         throw new Error(
           `Invalid scope definition for '${scopeName}': missing or invalid 'expr' property`
         );
       }
-      
+
       if (!scopeDef.ast || typeof scopeDef.ast !== 'object') {
         throw new Error(
           `Invalid scope definition for '${scopeName}': missing or invalid 'ast' property. All scopes must have pre-parsed ASTs.`
         );
       }
-      
+
       this._scopes.set(scopeName, scopeDef);
     }
 

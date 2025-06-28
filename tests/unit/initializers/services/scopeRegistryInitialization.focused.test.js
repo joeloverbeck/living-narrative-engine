@@ -246,6 +246,7 @@ describe('Scope Registry Initialization - Focused Test', () => {
               : addMockAst(scope);
         }
       });
+
       
       expect(scopeMap['core:potential_leaders']).toEqual(
         addMockAst(properlyFormattedScopes[0])
@@ -255,7 +256,7 @@ describe('Scope Registry Initialization - Focused Test', () => {
       // Check all properties except the volatile timestamp
       const result = scopeMap['core:potential_leaders'];
       const expected = addMockAst(properlyFormattedScopes[0]);
-      
+
       expect(result.id).toEqual(expected.id);
       expect(result.name).toEqual(expected.name);
       expect(result.expr).toEqual(expected.expr);

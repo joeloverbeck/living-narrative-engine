@@ -2,13 +2,19 @@ import { describe, it, expect } from '@jest/globals';
 import {
   createPersistenceFailure,
   createPersistenceSuccess,
-  normalizePersistenceFailure
+  normalizePersistenceFailure,
 } from '../../../src/utils/persistenceResultUtils.js';
-import { PersistenceError, PersistenceErrorCodes } from '../../../src/persistence/persistenceErrors.js';
+import {
+  PersistenceError,
+  PersistenceErrorCodes,
+} from '../../../src/persistence/persistenceErrors.js';
 
 describe('persistenceResultUtils', () => {
   it('createPersistenceFailure wraps code and message in PersistenceError', () => {
-    const result = createPersistenceFailure(PersistenceErrorCodes.WRITE_ERROR, 'failed to write');
+    const result = createPersistenceFailure(
+      PersistenceErrorCodes.WRITE_ERROR,
+      'failed to write'
+    );
     expect(result.success).toBe(false);
     expect(result.error).toBeInstanceOf(PersistenceError);
     expect(result.error.code).toBe(PersistenceErrorCodes.WRITE_ERROR);
@@ -22,13 +28,24 @@ describe('persistenceResultUtils', () => {
   });
 
   it('normalizePersistenceFailure returns success unchanged', () => {
-    const result = normalizePersistenceFailure({ success: true, data: 1 }, 'X', 'msg');
+    const result = normalizePersistenceFailure(
+      { success: true, data: 1 },
+      'X',
+      'msg'
+    );
     expect(result).toEqual({ success: true, data: 1 });
   });
 
   it('normalizePersistenceFailure passes through PersistenceError', () => {
-    const error = new PersistenceError(PersistenceErrorCodes.FILE_READ_ERROR, 'oops');
-    const result = normalizePersistenceFailure({ success: false, error }, 'F', 'fallback');
+    const error = new PersistenceError(
+      PersistenceErrorCodes.FILE_READ_ERROR,
+      'oops'
+    );
+    const result = normalizePersistenceFailure(
+      { success: false, error },
+      'F',
+      'fallback'
+    );
     expect(result).toEqual({ success: false, error, data: null });
   });
 

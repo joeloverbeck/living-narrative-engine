@@ -153,7 +153,7 @@ export class TargetResolutionService extends ITargetResolutionService {
           `Scope definition '${scopeName}' is missing the required AST property. All scopes must have pre-parsed ASTs.`
         );
       }
-      
+
       trace?.info(`Using pre-parsed AST for scope '${scopeName}'.`, source);
 
       const runtimeCtx = this.#buildRuntimeContext(

@@ -81,7 +81,9 @@ describe('Scope Integration Tests', () => {
 
     scopeRegistry.initialize({
       'core:environment': environmentDefs.get('core:environment'),
-      'core:potential_leaders': potentialLeadersDefs.get('core:potential_leaders'),
+      'core:potential_leaders': potentialLeadersDefs.get(
+        'core:potential_leaders'
+      ),
     });
 
     scopeEngine = new ScopeEngine();

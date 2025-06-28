@@ -39,10 +39,12 @@ describe('ScopeRegistry', () => {
   describe('initialize', () => {
     it('should load scope definitions from an object into the registry', () => {
       // Act
-      scopeRegistry.initialize(addMockAstsToScopes({
-        'core:all_characters': mockScopeDefinitions['core:all_characters'],
-        'core:nearby_items': mockScopeDefinitions['core:nearby_items'],
-      }));
+      scopeRegistry.initialize(
+        addMockAstsToScopes({
+          'core:all_characters': mockScopeDefinitions['core:all_characters'],
+          'core:nearby_items': mockScopeDefinitions['core:nearby_items'],
+        })
+      );
 
       // Assert
       expect(scopeRegistry.getStats().size).toBe(2);
@@ -96,7 +98,9 @@ describe('ScopeRegistry', () => {
       // Assert
       expect(scope).toBeDefined();
       expect(scope.expr).toBe(mockScopeDefinitions['core:all_characters'].expr);
-      expect(scope.description).toBe(mockScopeDefinitions['core:all_characters'].description);
+      expect(scope.description).toBe(
+        mockScopeDefinitions['core:all_characters'].description
+      );
       expect(scope.ast).toBeDefined();
       expect(scope.ast._mock).toBe(true);
     });
@@ -139,8 +143,12 @@ describe('ScopeRegistry', () => {
       expect(scopes).toBeInstanceOf(Map);
       expect(scopes.size).toBe(3);
       const customScope = scopes.get('mod:custom_scope');
-      expect(customScope.expr).toBe(mockScopeDefinitions['mod:custom_scope'].expr);
-      expect(customScope.description).toBe(mockScopeDefinitions['mod:custom_scope'].description);
+      expect(customScope.expr).toBe(
+        mockScopeDefinitions['mod:custom_scope'].expr
+      );
+      expect(customScope.description).toBe(
+        mockScopeDefinitions['mod:custom_scope'].description
+      );
       expect(customScope.ast).toBeDefined();
     });
 
@@ -157,11 +165,15 @@ describe('ScopeRegistry', () => {
     it('should require namespaced scope names (no fallback)', () => {
       // Assert: Can find by exact namespaced name
       const allCharsScope = scopeRegistry.getScope('core:all_characters');
-      expect(allCharsScope.expr).toBe(mockScopeDefinitions['core:all_characters'].expr);
+      expect(allCharsScope.expr).toBe(
+        mockScopeDefinitions['core:all_characters'].expr
+      );
       expect(allCharsScope.ast).toBeDefined();
-      
+
       const customScope = scopeRegistry.getScope('mod:custom_scope');
-      expect(customScope.expr).toBe(mockScopeDefinitions['mod:custom_scope'].expr);
+      expect(customScope.expr).toBe(
+        mockScopeDefinitions['mod:custom_scope'].expr
+      );
       expect(customScope.ast).toBeDefined();
 
       // Assert: Should throw error for non-namespaced names (no fallback)
@@ -183,10 +195,12 @@ describe('ScopeRegistry', () => {
   describe('statistics', () => {
     it('should provide accurate statistics for an initialized registry', () => {
       // Arrange
-      scopeRegistry.initialize(addMockAstsToScopes({
-        'core:test1': { expr: 'actor' },
-        'core:test2': { expr: 'location' },
-      }));
+      scopeRegistry.initialize(
+        addMockAstsToScopes({
+          'core:test1': { expr: 'actor' },
+          'core:test2': { expr: 'location' },
+        })
+      );
 
       // Act
       const stats = scopeRegistry.getStats();
