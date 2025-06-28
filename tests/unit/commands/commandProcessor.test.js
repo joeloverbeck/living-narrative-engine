@@ -1,9 +1,11 @@
 import { describe, it, beforeEach, expect, jest } from '@jest/globals';
 import CommandProcessor from '../../../src/commands/commandProcessor.js';
-import {
-  ATTEMPT_ACTION_ID,
-  SYSTEM_ERROR_OCCURRED_ID,
-} from '../../../src/constants/eventIds.js';
+import { ATTEMPT_ACTION_ID } from '../../../src/constants/eventIds.js';
+import { dispatchSystemErrorEvent } from '../../../src/utils/systemErrorDispatchUtils.js';
+
+jest.mock('../../../src/utils/systemErrorDispatchUtils.js', () => ({
+  dispatchSystemErrorEvent: jest.fn(),
+}));
 
 const mkLogger = () => ({
   debug: jest.fn(),
@@ -63,12 +65,12 @@ describe('CommandProcessor.dispatchAction', () => {
         internalError: expect.stringContaining('missing actionDefinitionId'),
       })
     );
-    expect(safeEventDispatcher.dispatch).toHaveBeenCalledTimes(1);
-    expect(safeEventDispatcher.dispatch).toHaveBeenCalledWith(
-      SYSTEM_ERROR_OCCURRED_ID,
-      expect.objectContaining({
-        message: 'Internal error: Malformed action prevented execution.',
-      })
+    expect(dispatchSystemErrorEvent).toHaveBeenCalledTimes(1);
+    expect(dispatchSystemErrorEvent).toHaveBeenCalledWith(
+      safeEventDispatcher,
+      'Internal error: Malformed action prevented execution.',
+      expect.any(Object),
+      logger
     );
   });
 
@@ -90,12 +92,11 @@ describe('CommandProcessor.dispatchAction', () => {
       ATTEMPT_ACTION_ID,
       expect.any(Object)
     );
-    expect(safeEventDispatcher.dispatch).toHaveBeenNthCalledWith(
-      2,
-      SYSTEM_ERROR_OCCURRED_ID,
-      expect.objectContaining({
-        message: 'Internal error: Failed to initiate action.',
-      })
+    expect(dispatchSystemErrorEvent).toHaveBeenCalledWith(
+      safeEventDispatcher,
+      'Internal error: Failed to initiate action.',
+      expect.any(Object),
+      logger
     );
   });
 
@@ -118,19 +119,17 @@ describe('CommandProcessor.dispatchAction', () => {
       ATTEMPT_ACTION_ID,
       expect.any(Object)
     );
-    expect(safeEventDispatcher.dispatch).toHaveBeenNthCalledWith(
-      2,
-      SYSTEM_ERROR_OCCURRED_ID,
-      expect.objectContaining({
-        message: 'System error during event dispatch.',
-      })
+    expect(dispatchSystemErrorEvent).toHaveBeenCalledWith(
+      safeEventDispatcher,
+      'System error during event dispatch.',
+      expect.any(Object),
+      logger
     );
-    expect(safeEventDispatcher.dispatch).toHaveBeenNthCalledWith(
-      3,
-      SYSTEM_ERROR_OCCURRED_ID,
-      expect.objectContaining({
-        message: 'Internal error: Failed to initiate action.',
-      })
+    expect(dispatchSystemErrorEvent).toHaveBeenCalledWith(
+      safeEventDispatcher,
+      'Internal error: Failed to initiate action.',
+      expect.any(Object),
+      logger
     );
   });
 });

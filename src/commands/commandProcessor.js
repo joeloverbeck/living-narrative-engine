@@ -1,14 +1,12 @@
 // src/commands/commandProcessor.js
 
 // --- Static Imports ---
-import {
-  ATTEMPT_ACTION_ID,
-  SYSTEM_ERROR_OCCURRED_ID,
-} from '../constants/eventIds.js';
+import { ATTEMPT_ACTION_ID } from '../constants/eventIds.js';
 import { ICommandProcessor } from './interfaces/ICommandProcessor.js';
 import { resolveSafeDispatcher } from '../utils/dispatcherUtils.js';
 import { initLogger } from '../utils/index.js';
 import { validateDependency } from '../utils/validationUtils.js';
+import { dispatchSystemErrorEvent } from '../utils/systemErrorDispatchUtils.js';
 
 // --- Type Imports ---
 /** @typedef {import('../entities/entity.js').default} Entity */
@@ -75,7 +73,16 @@ class CommandProcessor extends ICommandProcessor {
       const internalMsg = `dispatchAction failed: ITurnAction for actor ${actorId} is missing actionDefinitionId.`;
       const userMsg = 'Internal error: Malformed action prevented execution.';
       this.#logger.error(internalMsg);
-      await this.#dispatchSystemError(userMsg, internalMsg);
+      await dispatchSystemErrorEvent(
+        this.#safeEventDispatcher,
+        userMsg,
+        {
+          raw: internalMsg,
+          timestamp: new Date().toISOString(),
+          stack: new Error().stack,
+        },
+        this.#logger
+      );
       return {
         success: false,
         errorResult: this.#createFailureResult(userMsg, internalMsg),
@@ -111,12 +118,18 @@ class CommandProcessor extends ICommandProcessor {
       const internalMsg = `CRITICAL: Failed to dispatch pre-resolved ATTEMPT_ACTION_ID for ${actorId}, action "${actionDefinitionId}". Dispatcher reported failure.`;
       const userMsg = 'Internal error: Failed to initiate action.';
       this.#logger.error(internalMsg, { payload });
-      // #dispatchSystemError is called within #dispatchWithErrorHandling on exception, but not on a `false` return.
-      await this.#dispatchSystemError(
+      // dispatchSystemErrorEvent is called within #dispatchWithErrorHandling on exception, but not on a `false` return.
+      await dispatchSystemErrorEvent(
+        this.#safeEventDispatcher,
         userMsg,
-        `VED validation likely failed for pre-resolved action. Payload: ${JSON.stringify(
-          payload
-        )}`
+        {
+          raw: `VED validation likely failed for pre-resolved action. Payload: ${JSON.stringify(
+            payload
+          )}`,
+          timestamp: new Date().toISOString(),
+          stack: new Error().stack,
+        },
+        this.#logger
       );
 
       const failureResult = this.#createFailureResult(userMsg, internalMsg);
@@ -179,51 +192,17 @@ class CommandProcessor extends ICommandProcessor {
         dispatchError
       );
       // If dispatch itself throws, it's a more fundamental issue.
-      await this.#dispatchSystemError(
+      await dispatchSystemErrorEvent(
+        this.#safeEventDispatcher,
         'System error during event dispatch.',
-        `Exception in dispatch for ${eventName}`,
-        dispatchError
+        {
+          raw: `Exception in dispatch for ${eventName}`,
+          timestamp: new Date().toISOString(),
+          stack: dispatchError?.stack || new Error().stack,
+        },
+        this.#logger
       );
       return false;
-    }
-  }
-
-  async #dispatchSystemError(
-    userMessage,
-    internalDetails,
-    originalError = null
-  ) {
-    const payload = {
-      message: userMessage,
-      details: {
-        raw: internalDetails,
-        timestamp: new Date().toISOString(),
-      },
-    };
-    if (originalError?.stack) {
-      payload.details.stack = originalError.stack;
-    } else {
-      payload.details.stack = new Error().stack;
-    }
-
-    if (originalError) {
-      this.#logger.error(
-        `CommandProcessor System Error: ${internalDetails}. Original Error: ${originalError.message}`,
-        originalError
-      );
-    } else {
-      this.#logger.error(`CommandProcessor System Error: ${internalDetails}`);
-    }
-
-    const dispatchSuccess = await this.#safeEventDispatcher.dispatch(
-      SYSTEM_ERROR_OCCURRED_ID,
-      payload
-    );
-
-    if (!dispatchSuccess) {
-      this.#logger.error(
-        `CommandProcessor: CRITICAL FAILURE - Failed to dispatch SYSTEM_ERROR_OCCURRED_ID event itself. Context: UserMessage='${userMessage}', InternalDetails='${internalDetails}'.`
-      );
     }
   }
 }
