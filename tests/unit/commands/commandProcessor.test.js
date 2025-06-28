@@ -1,10 +1,10 @@
 import { describe, it, beforeEach, expect, jest } from '@jest/globals';
 import CommandProcessor from '../../../src/commands/commandProcessor.js';
 import { ATTEMPT_ACTION_ID } from '../../../src/constants/eventIds.js';
-import { dispatchSystemErrorEvent } from '../../../src/utils/systemErrorDispatchUtils.js';
+import { safeDispatchError } from '../../../src/utils/safeDispatchErrorUtils.js';
 
-jest.mock('../../../src/utils/systemErrorDispatchUtils.js', () => ({
-  dispatchSystemErrorEvent: jest.fn(),
+jest.mock('../../../src/utils/safeDispatchErrorUtils.js', () => ({
+  safeDispatchError: jest.fn(),
 }));
 
 const mkLogger = () => ({
@@ -65,8 +65,8 @@ describe('CommandProcessor.dispatchAction', () => {
         internalError: expect.stringContaining('missing actionDefinitionId'),
       })
     );
-    expect(dispatchSystemErrorEvent).toHaveBeenCalledTimes(1);
-    expect(dispatchSystemErrorEvent).toHaveBeenCalledWith(
+    expect(safeDispatchError).toHaveBeenCalledTimes(1);
+    expect(safeDispatchError).toHaveBeenCalledWith(
       safeEventDispatcher,
       'Internal error: Malformed action prevented execution.',
       expect.any(Object),
@@ -92,7 +92,7 @@ describe('CommandProcessor.dispatchAction', () => {
       ATTEMPT_ACTION_ID,
       expect.any(Object)
     );
-    expect(dispatchSystemErrorEvent).toHaveBeenCalledWith(
+    expect(safeDispatchError).toHaveBeenCalledWith(
       safeEventDispatcher,
       'Internal error: Failed to initiate action.',
       expect.any(Object),
@@ -119,13 +119,13 @@ describe('CommandProcessor.dispatchAction', () => {
       ATTEMPT_ACTION_ID,
       expect.any(Object)
     );
-    expect(dispatchSystemErrorEvent).toHaveBeenCalledWith(
+    expect(safeDispatchError).toHaveBeenCalledWith(
       safeEventDispatcher,
       'System error during event dispatch.',
       expect.any(Object),
       logger
     );
-    expect(dispatchSystemErrorEvent).toHaveBeenCalledWith(
+    expect(safeDispatchError).toHaveBeenCalledWith(
       safeEventDispatcher,
       'Internal error: Failed to initiate action.',
       expect.any(Object),

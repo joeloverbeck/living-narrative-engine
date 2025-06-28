@@ -5,7 +5,7 @@ import { ATTEMPT_ACTION_ID } from '../constants/eventIds.js';
 import { ICommandProcessor } from './interfaces/ICommandProcessor.js';
 import { initLogger } from '../utils/index.js';
 import { validateDependency } from '../utils/dependencyUtils.js';
-import { dispatchSystemErrorEvent } from '../utils/systemErrorDispatchUtils.js';
+import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
 
 // --- Type Imports ---
 /** @typedef {import('../entities/entity.js').default} Entity */
@@ -66,7 +66,7 @@ class CommandProcessor extends ICommandProcessor {
       const internalMsg = `dispatchAction failed: ITurnAction for actor ${actorId} is missing actionDefinitionId.`;
       const userMsg = 'Internal error: Malformed action prevented execution.';
       this.#logger.error(internalMsg);
-      await dispatchSystemErrorEvent(
+      await safeDispatchError(
         this.#safeEventDispatcher,
         userMsg,
         {
@@ -116,8 +116,8 @@ class CommandProcessor extends ICommandProcessor {
       const internalMsg = `CRITICAL: Failed to dispatch pre-resolved ATTEMPT_ACTION_ID for ${actorId}, action "${actionDefinitionId}". Dispatcher reported failure.`;
       const userMsg = 'Internal error: Failed to initiate action.';
       this.#logger.error(internalMsg, { payload });
-      // dispatchSystemErrorEvent is called within #dispatchWithErrorHandling on exception, but not on a `false` return.
-      await dispatchSystemErrorEvent(
+      // safeDispatchError is called within #dispatchWithErrorHandling on exception, but not on a `false` return.
+      await safeDispatchError(
         this.#safeEventDispatcher,
         userMsg,
         {
@@ -199,7 +199,7 @@ class CommandProcessor extends ICommandProcessor {
         dispatchError
       );
       // If dispatch itself throws, it's a more fundamental issue.
-      await dispatchSystemErrorEvent(
+      await safeDispatchError(
         this.#safeEventDispatcher,
         'System error during event dispatch.',
         {
