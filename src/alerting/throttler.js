@@ -15,7 +15,7 @@
  * @typedef {object} ThrottleEntry
  * @property {number} firstTimestamp - The time the first event for this key arrived (ms since epoch).
  * @property {number} suppressedCount - The number of duplicates suppressed.
- * @property {NodeJS.Timeout} timerId - The ID of the setTimeout timer for the summary check.
+ * @property {ReturnType<typeof setTimeout>} timerId - The ID of the setTimeout timer for the summary check.
  * @property {object} originalPayload - The payload of the first event, stored for the summary.
  */
 
