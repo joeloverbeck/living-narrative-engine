@@ -1,40 +1,31 @@
-T-10 Step & ArrayIteration Resolvers
-Goal – Replace mutation-based isArray flag.
+T-12 Parser Upgrade
+Goals
 
-Files
+Stop mutating nodes; emit distinct ArrayIterationStep objects.
 
-scopeDsl/nodes/stepResolver.js
+Depth enforcement via createDepthGuard.
 
-scopeDsl/nodes/arrayIterationResolver.js
+Tokenizer injection ready.
 
-tests/nodes/step.test.js
+Files to modify
 
-Update parser later (ticket T-12).
+scopeDsl/parser/parser.js
 
-StepResolver
+scopeDsl/parser/tokenizer.js (no functional change but exported)
 
-Field access for each ID/object in ctx.walk(node.parent).
+tests update.
 
-Uses entitiesGateway.getComponentData.
+Key Steps
 
-Returns Set of direct field values (no flatten).
+Replace node.isArray=true path with construction:
 
-ArrayIterationResolver
+node = { type:'ArrayIterationStep', parent: node }
+At each edge in parseTerm, call guard.ensure(depth+1).
 
-Handles new node type ArrayIterationStep (to be emitted by parser).
+Constructor: constructor(input, tokenizer = new Tokenizer(input)).
 
-Flattens arrays using helper flattenIntoSet (see T-11).
+Acceptance
 
-T-11 Shared Utility: flattenIntoSet & ErrorFactory
-Files
+Old characterisation tests still pass.
 
-scopeDsl/core/flattenIntoSet.js
-
-scopeDsl/core/errorFactory.js
-
-tests/core/flatten.test.js
-
-tests/core/errorFactory.test.js
-
-flattenIntoSet per plan.
-errorFactory.unknown(kind,value) returns new ScopeDslError.
+New tests check immutability (Object.freeze clones cannot be mutated).

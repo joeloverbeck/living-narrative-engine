@@ -11,7 +11,7 @@ export default function createDepthGuard(maxDepth) {
     ensure(level) {
       if (level > maxDepth) {
         throw new ScopeDepthError(
-          `Depth ${level} exceeds ${maxDepth}`,
+          `Expression depth limit exceeded (max ${maxDepth})`,
           level,
           maxDepth
         );

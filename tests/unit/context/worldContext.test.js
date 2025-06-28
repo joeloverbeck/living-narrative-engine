@@ -144,8 +144,8 @@ describe('WorldContext (Stateless)', () => {
       expect(
         () => new WorldContext(mockEntityManager, {}, mockDispatcher)
       ).toThrow('WorldContext requires a valid ILogger instance');
-      expect(() =>
-        new WorldContext(mockEntityManager, mockLogger, null)
+      expect(
+        () => new WorldContext(mockEntityManager, mockLogger, null)
       ).toThrow('Missing required dependency: safeEventDispatcher.');
     });
 
