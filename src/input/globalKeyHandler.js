@@ -17,6 +17,8 @@ class GlobalKeyHandler {
   #boundListener;
 
   /**
+   * Creates an instance of GlobalKeyHandler.
+   *
    * @param {Document} document - The DOM document to listen on.
    * @param {IValidatedEventDispatcher} validatedEventDispatcher - Dispatcher for UI events.
    */
@@ -55,6 +57,7 @@ class GlobalKeyHandler {
       this.#validatedEventDispatcher
         .dispatch('ui:toggle_inventory', {})
         .catch((err) =>
+          // eslint-disable-next-line no-console
           console.error(
             "GlobalKeyHandler: Failed to dispatch 'ui:toggle_inventory'",
             err
