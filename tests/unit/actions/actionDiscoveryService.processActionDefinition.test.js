@@ -124,6 +124,7 @@ describeActionDiscoverySuite(
       expect(result.errors[0]).toMatchObject({
         actionId: 'bad',
         targetId: null,
+        details: null,
       });
       expect(result.errors[0].error).toBeInstanceOf(Error);
     });
