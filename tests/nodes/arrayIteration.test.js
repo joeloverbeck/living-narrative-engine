@@ -60,7 +60,7 @@ describe('ArrayIterationResolver', () => {
       dispatcher.resolve.mockReturnValue(
         new Set([
           ['item1', 'item2'],
-          ['item3', 'item4', 'item5']
+          ['item3', 'item4', 'item5'],
         ])
       );
 
@@ -80,14 +80,22 @@ describe('ArrayIterationResolver', () => {
 
       dispatcher.resolve.mockReturnValue(
         new Set([
-          [['skill1', 'skill2'], ['skill3', 'skill4']]
+          [
+            ['skill1', 'skill2'],
+            ['skill3', 'skill4'],
+          ],
         ])
       );
 
       const result = resolver.resolve(node, ctx);
 
       // Nested arrays are only flattened one level
-      expect(result).toEqual(new Set([['skill1', 'skill2'], ['skill3', 'skill4']]));
+      expect(result).toEqual(
+        new Set([
+          ['skill1', 'skill2'],
+          ['skill3', 'skill4'],
+        ])
+      );
     });
 
     it('should filter out null and undefined values', () => {
@@ -98,9 +106,7 @@ describe('ArrayIterationResolver', () => {
       const ctx = { dispatcher, trace };
 
       dispatcher.resolve.mockReturnValue(
-        new Set([
-          ['item1', null, 'item2', undefined, 'item3']
-        ])
+        new Set([['item1', null, 'item2', undefined, 'item3']])
       );
 
       const result = resolver.resolve(node, ctx);
@@ -130,7 +136,9 @@ describe('ArrayIterationResolver', () => {
       const ctx = { dispatcher, trace };
 
       // Source returns entity IDs directly
-      dispatcher.resolve.mockReturnValue(new Set(['entity1', 'entity2', 'entity3']));
+      dispatcher.resolve.mockReturnValue(
+        new Set(['entity1', 'entity2', 'entity3'])
+      );
 
       const result = resolver.resolve(node, ctx);
 
@@ -144,7 +152,9 @@ describe('ArrayIterationResolver', () => {
       };
       const ctx = { dispatcher, trace };
 
-      dispatcher.resolve.mockReturnValue(new Set(['not-an-array', 42, { obj: true }]));
+      dispatcher.resolve.mockReturnValue(
+        new Set(['not-an-array', 42, { obj: true }])
+      );
 
       const result = resolver.resolve(node, ctx);
 
