@@ -207,11 +207,13 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
           errors.push(...result.errors);
         }
       } catch (err) {
-        errors.push({
-          actionId: actionDef.id,
-          targetId: this.#extractTargetId(err),
-          error: err,
-        });
+        errors.push(
+          this.#createDiscoveryError(
+            actionDef.id,
+            this.#extractTargetId(err),
+            err
+          )
+        );
         this.#logger.error(
           `Error processing candidate action '${actionDef.id}': ${err.message}`,
           err
@@ -334,17 +336,32 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
           params: { targetId: targetCtx.entityId },
         });
       } else {
-        errors.push({
-          actionId: actionDef.id,
-          targetId: targetCtx.entityId,
-          error: formatResult.error,
-          details: formatResult.details,
-        });
+        errors.push(
+          this.#createDiscoveryError(
+            actionDef.id,
+            targetCtx.entityId,
+            formatResult.error,
+            formatResult.details
+          )
+        );
         this.#logger.warn(
           `Failed to format command for action '${actionDef.id}' with target '${targetCtx.entityId}'.`
         );
       }
     }
     return { actions: validActions, errors };
+  }
+
+  /**
+   * @description Creates a standardized error object for action discovery.
+   * @param {string} actionId - ID of the action that failed.
+   * @param {string|null} targetId - ID of the target entity, if available.
+   * @param {Error} error - The encountered error instance.
+   * @param {any|null} [details] - Optional additional error details.
+   * @returns {{ actionId: string, targetId: string|null, error: Error, details: any|null }}
+   * @private
+   */
+  #createDiscoveryError(actionId, targetId, error, details = null) {
+    return { actionId, targetId, error, details };
   }
 }

@@ -31,6 +31,7 @@ describeActionDiscoverySuite(
       expect(result.errors[0]).toMatchObject({
         actionId: 'bad',
         targetId: 'target-123',
+        details: null,
       });
     });
 
@@ -50,6 +51,7 @@ describeActionDiscoverySuite(
       expect(result.errors[0]).toMatchObject({
         actionId: 'bad',
         targetId: 'target-456',
+        details: null,
       });
     });
   }
