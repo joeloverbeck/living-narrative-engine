@@ -20,6 +20,19 @@ describe('resolveSafeDispatcher', () => {
     expect(result).toBeInstanceOf(SafeEventDispatcher);
   });
 
+  test('logs warning when dispatcher unavailable', () => {
+    const execCtx = { otherProp: true };
+    const logger = {
+      error: jest.fn(),
+      warn: jest.fn(),
+      info: jest.fn(),
+      debug: jest.fn(),
+    };
+    const result = resolveSafeDispatcher(execCtx, logger);
+    expect(result).toBeNull();
+    expect(logger.warn).toHaveBeenCalled();
+  });
+
   test('returns null when creation fails', () => {
     const execCtx = { validatedEventDispatcher: {} }; // missing required methods
     const logger = {
@@ -30,6 +43,7 @@ describe('resolveSafeDispatcher', () => {
     };
     const result = resolveSafeDispatcher(execCtx, logger);
     expect(result).toBeNull();
+    expect(logger.warn).toHaveBeenCalled();
   });
 
   test('uses injected dispatcher factory', () => {

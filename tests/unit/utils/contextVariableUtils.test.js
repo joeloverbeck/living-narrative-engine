@@ -64,6 +64,13 @@ describe('writeContextVariable', () => {
     expect(logger.error).not.toHaveBeenCalled();
   });
 
+  test('throws when logger and dispatcher missing', () => {
+    const ctx = { evaluationContext: { context: {} } };
+    expect(() =>
+      writeContextVariable('x', 1, ctx, undefined, undefined)
+    ).toThrow('writeContextVariable: logger is required.');
+  });
+
   test('invalid names do not mutate context', () => {
     const ctx = { evaluationContext: { context: { foo: 1 } } };
     const dispatcher = { dispatch: jest.fn() };
@@ -76,6 +83,13 @@ describe('writeContextVariable', () => {
 });
 
 describe('tryWriteContextVariable', () => {
+  test('throws when logger and dispatcher missing', () => {
+    const ctx = { evaluationContext: { context: {} } };
+    expect(() =>
+      tryWriteContextVariable('x', 1, ctx, undefined, undefined)
+    ).toThrow('writeContextVariable: logger is required.');
+  });
+
   test('returns error object when evaluation context missing', () => {
     const ctx = { evaluationContext: null };
     const dispatcher = { dispatch: jest.fn() };

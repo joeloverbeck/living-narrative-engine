@@ -97,6 +97,14 @@ export function writeContextVariable(
   const moduleLogger = getModuleLogger('contextVariableUtils', logger);
   const safeDispatcher =
     dispatcher || resolveSafeDispatcher(executionContext, moduleLogger);
+  if (!safeDispatcher) {
+    if (!logger) {
+      throw new Error('writeContextVariable: logger is required.');
+    }
+    moduleLogger.warn(
+      'writeContextVariable: dispatcher unavailable; errors will only be logged.'
+    );
+  }
   const { valid, error, name } = _validateVariableName(variableName);
 
   if (!valid) {

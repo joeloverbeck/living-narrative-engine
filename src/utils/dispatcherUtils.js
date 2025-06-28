@@ -1,6 +1,7 @@
 // src/utils/dispatcherUtils.js
 
 import { SafeEventDispatcher } from '../events/safeEventDispatcher.js';
+import { ensureValidLogger } from './loggerUtils.js';
 
 /**
  * Resolves a usable ISafeEventDispatcher instance.
@@ -24,16 +25,22 @@ export function resolveSafeDispatcher(
   logger,
   dispatcherFactory = (opts) => new SafeEventDispatcher(opts)
 ) {
+  const log = ensureValidLogger(logger, 'resolveSafeDispatcher');
+
   if (executionContext?.validatedEventDispatcher) {
     try {
       return dispatcherFactory({
         validatedEventDispatcher: executionContext.validatedEventDispatcher,
-        logger,
+        logger: log,
       });
-    } catch {
+    } catch (err) {
+      log.warn(
+        `resolveSafeDispatcher: Failed to create dispatcher – ${err.message}`
+      );
       return null;
     }
   }
 
+  log.warn('resolveSafeDispatcher: validatedEventDispatcher not available.');
   return null;
 }
