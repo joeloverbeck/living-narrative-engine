@@ -98,46 +98,34 @@ describe('ScopeEngine - Additional Coverage Tests', () => {
   describe('Error scenarios and edge cases', () => {
     test('should handle unknown AST node type', () => {
       const unknownAst = { type: 'UnknownNodeType', value: 'test' };
-      const result = engine.resolve(unknownAst, actorEntity, mockRuntimeCtx);
 
-      expect(result).toEqual(new Set());
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        'Unknown AST node type: UnknownNodeType'
-      );
+      expect(() => {
+        engine.resolve(unknownAst, actorEntity, mockRuntimeCtx);
+      }).toThrow('Unknown AST node type: UnknownNodeType');
     });
 
     test('should handle unknown source kind', () => {
       const unknownSourceAst = { type: 'Source', kind: 'unknownSource' };
-      const result = engine.resolve(
-        unknownSourceAst,
-        actorEntity,
-        mockRuntimeCtx
-      );
 
-      expect(result).toEqual(new Set());
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        'Unknown source kind: unknownSource'
-      );
+      expect(() => {
+        engine.resolve(unknownSourceAst, actorEntity, mockRuntimeCtx);
+      }).toThrow('Unknown source kind: unknownSource');
     });
 
     test('should handle entities source without component ID', () => {
       const ast = { type: 'Source', kind: 'entities', param: null };
-      const result = engine.resolve(ast, actorEntity, mockRuntimeCtx);
 
-      expect(result).toEqual(new Set());
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        'entities() source node missing component ID'
-      );
+      expect(() => {
+        engine.resolve(ast, actorEntity, mockRuntimeCtx);
+      }).toThrow('entities() source node missing component ID');
     });
 
     test('should handle entities source with empty component ID', () => {
       const ast = { type: 'Source', kind: 'entities', param: '' };
-      const result = engine.resolve(ast, actorEntity, mockRuntimeCtx);
 
-      expect(result).toEqual(new Set());
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        'entities() source node missing component ID'
-      );
+      expect(() => {
+        engine.resolve(ast, actorEntity, mockRuntimeCtx);
+      }).toThrow('entities() source node missing component ID');
     });
 
     test('should handle location source without location in runtime context', () => {

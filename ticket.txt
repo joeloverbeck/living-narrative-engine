@@ -1,35 +1,12 @@
-T-14 CreateScopeEngine Factory
-Connect everything.
-
+T-16 Error Classes & Removal of Silent Fails
 Files
 
-scopeDsl/core/createScopeEngine.js
+errors/unknownSourceError.js
 
-tests/core/createScopeEngine.test.js
+errors/unknownAstNodeError.js
 
-Factory signature
+Refactor resolvers to throw instead of logger.error + return new Set().
 
-import createDepthGuard from './depthGuard.js';
-import createCycleDetector from './cycleDetector.js';
-import createDispatcher from '../nodes/dispatcher.js';
-
-export default function createScopeEngine(resolvers, maxDepth=4){
-const depth = createDepthGuard(maxDepth);
-const cycle = createCycleDetector();
-const dispatch = createDispatcher(resolvers);
-
-function walk(node, ctx, level){
-depth.ensure(level);
-cycle.enter(nodeKey(node)); // implement same key generator
-try { return dispatch.resolve(node, { ...ctx, walk: n => walk(n, ctx, level+1) }); }
-finally { cycle.leave(); }
-}
-
-return {
-resolve(ast, actor, ports){ return walk(ast, { actorEntity:actor, ...ports }, 0); },
-setMaxDepth(n){ depth.maxDepth = n; }
-};
-}
 Tests
 
-Smoke test with real resolvers reproduces old behaviour.
+Assert thrown error classes when input invalid.

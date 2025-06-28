@@ -247,12 +247,11 @@ describe('Scope Registry Initialization - Focused Test', () => {
         }
       });
 
-      
       expect(scopeMap['core:potential_leaders']).toEqual(
         addMockAst(properlyFormattedScopes[0])
       );
       dateSpy.mockRestore();
-      
+
       // Check all properties except the volatile timestamp
       const result = scopeMap['core:potential_leaders'];
       const expected = addMockAst(properlyFormattedScopes[0]);
