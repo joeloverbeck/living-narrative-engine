@@ -67,13 +67,15 @@ function normalizeFormatResult(result) {
  * @param {ActionTargetContext} targetContext - Target context for formatting.
  * @param {EntityManager} entityManager - Entity manager for lookups.
  * @param {(entity: Entity, fallback: string, logger?: ILogger) => string} displayNameFn - Utility for entity names.
+ * @param {ILogger} logger - Logger used for validation.
  * @returns {string | null} An error message string when invalid, otherwise `null`.
  */
 function checkFormatInputs(
   actionDefinition,
   targetContext,
   entityManager,
-  displayNameFn
+  displayNameFn,
+  logger
 ) {
   if (!actionDefinition || !actionDefinition.template) {
     return 'formatActionCommand: Invalid or missing actionDefinition or template.';
@@ -82,14 +84,14 @@ function checkFormatInputs(
     return 'formatActionCommand: Invalid or missing targetContext.';
   }
   try {
-    validateDependency(entityManager, 'entityManager', console, {
+    validateDependency(entityManager, 'entityManager', logger, {
       requiredMethods: ['getEntityInstance'],
     });
   } catch {
     return 'formatActionCommand: Invalid or missing entityManager.';
   }
   try {
-    validateDependency(displayNameFn, 'displayNameFn', console, {
+    validateDependency(displayNameFn, 'displayNameFn', logger, {
       isFunction: true,
     });
   } catch {
@@ -234,7 +236,8 @@ export function formatActionCommand(
     actionDefinition,
     targetContext,
     entityManager,
-    displayNameFn
+    displayNameFn,
+    logger
   );
   if (validationMessage && !logger) {
     throw new Error('formatActionCommand: logger is required.');
