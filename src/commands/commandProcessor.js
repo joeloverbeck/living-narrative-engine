@@ -157,7 +157,7 @@ class CommandProcessor extends ICommandProcessor {
     actionId,
   }) {
     this.#logger.error(internalMsg);
-    await safeDispatchError(
+    safeDispatchError(
       this.#safeEventDispatcher,
       userMsg,
       this.#createErrorDetails(internalMsg),
@@ -260,7 +260,7 @@ class CommandProcessor extends ICommandProcessor {
         dispatchError
       );
       // If dispatch itself throws, it's a more fundamental issue.
-      await safeDispatchError(
+      safeDispatchError(
         this.#safeEventDispatcher,
         'System error during event dispatch.',
         this.#createErrorDetails(
