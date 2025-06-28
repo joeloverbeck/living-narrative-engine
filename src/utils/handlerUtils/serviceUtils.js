@@ -7,10 +7,25 @@
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 
-export {
-  setupService as initHandlerLogger,
-  validateServiceDeps as validateDeps,
-} from '../serviceInitializerUtils.js';
+import { validateServiceDeps } from '../serviceInitializerUtils.js';
+import { setupPrefixedLogger } from '../loggerUtils.js';
+
+/**
+ * Initialize a handler-specific logger and validate its dependencies.
+ *
+ * @param {string} handlerName - Name used for log prefixing and validation.
+ * @param {ILogger | undefined | null} logger - Logger instance to wrap.
+ * @param {Record<string, import('../serviceInitializerUtils.js').DependencySpec>} [deps]
+ *   - Optional dependency specification map.
+ * @returns {ILogger} Prefixed logger instance.
+ */
+export function initHandlerLogger(handlerName, logger, deps) {
+  const prefixed = setupPrefixedLogger(logger, `${handlerName}: `);
+  validateServiceDeps(handlerName, prefixed, deps);
+  return prefixed;
+}
+
+export { validateServiceDeps as validateDeps };
 
 /**
  * @description Retrieve the logger to use during execution. If the

@@ -11,6 +11,7 @@ import {
   createPrefixedLogger,
   getPrefixedLogger,
   getModuleLogger,
+  setupPrefixedLogger,
   initLogger,
   logPreview,
 } from '../../../src/utils/loggerUtils.js';
@@ -77,6 +78,12 @@ describe('loggerUtils', () => {
     const logger = getPrefixedLogger(null, 'GP: ');
     logger.debug('a');
     expect(consoleSpies.debug).toHaveBeenCalledWith('GP: : ', 'GP: a');
+  });
+
+  it('setupPrefixedLogger wraps and prefixes messages', () => {
+    const log = setupPrefixedLogger(valid, 'SP: ');
+    log.info('msg');
+    expect(valid.info).toHaveBeenCalledWith('SP: msg');
   });
 
   it('initLogger validates when not optional and returns logger', () => {

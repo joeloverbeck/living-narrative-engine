@@ -8,15 +8,10 @@ import {
 } from '@jest/globals';
 
 import {
-  initPrefixedLogger,
   validateServiceDeps,
   setupService,
 } from '../../../src/utils/serviceInitializerUtils.js';
-import {
-  createPrefixedLogger,
-  initLogger as baseInitLogger,
-  ensureValidLogger,
-} from '../../../src/utils/loggerUtils.js';
+import { setupPrefixedLogger } from '../../../src/utils/loggerUtils.js';
 import { validateDependencies } from '../../../src/utils/dependencyUtils.js';
 
 jest.mock('../../../src/utils/dependencyUtils.js', () => ({
@@ -24,9 +19,7 @@ jest.mock('../../../src/utils/dependencyUtils.js', () => ({
 }));
 
 jest.mock('../../../src/utils/loggerUtils.js', () => ({
-  createPrefixedLogger: jest.fn(),
-  ensureValidLogger: jest.fn(),
-  initLogger: jest.fn(),
+  setupPrefixedLogger: jest.fn(),
 }));
 
 describe('serviceInitializer utilities', () => {
@@ -39,35 +32,14 @@ describe('serviceInitializer utilities', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    createPrefixedLogger.mockImplementation((logger, prefix) => ({
+    setupPrefixedLogger.mockImplementation((logger, prefix) => ({
       prefix,
       logger,
     }));
-    ensureValidLogger.mockImplementation((l) => l);
-    baseInitLogger.mockImplementation((service, l) => l);
   });
 
   afterEach(() => {
     jest.resetAllMocks();
-  });
-
-  describe('initPrefixedLogger', () => {
-    it('validates and returns a prefixed logger', () => {
-      const logger = initPrefixedLogger('MyService', baseLogger);
-      expect(baseInitLogger).toHaveBeenCalledWith('MyService', baseLogger);
-      expect(createPrefixedLogger).toHaveBeenCalledWith(
-        baseLogger,
-        'MyService: '
-      );
-      expect(logger).toEqual({ prefix: 'MyService: ', logger: baseLogger });
-    });
-
-    it('throws when validation fails', () => {
-      baseInitLogger.mockImplementation(() => {
-        throw new Error('bad');
-      });
-      expect(() => initPrefixedLogger('FailService', null)).toThrow('bad');
-    });
   });
 
   describe('validateServiceDeps', () => {
@@ -129,7 +101,7 @@ describe('serviceInitializer utilities', () => {
         depA: { value: {}, requiredMethods: ['a'] },
       };
       const logger = setupService('Svc', baseLogger, deps);
-      expect(baseInitLogger).toHaveBeenCalledWith('Svc', baseLogger);
+      expect(setupPrefixedLogger).toHaveBeenCalledWith(baseLogger, 'Svc: ');
       expect(validateDependencies).toHaveBeenCalledWith(
         [
           {

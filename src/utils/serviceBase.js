@@ -1,7 +1,5 @@
-import {
-  initPrefixedLogger,
-  validateServiceDeps,
-} from './serviceInitializerUtils.js';
+import { validateServiceDeps } from './serviceInitializerUtils.js';
+import { setupPrefixedLogger } from './loggerUtils.js';
 
 /**
  * @class BaseService
@@ -20,7 +18,7 @@ export class BaseService {
    * @returns {import('../interfaces/coreServices.js').ILogger} The initialized logger.
    */
   _init(serviceName, logger, deps) {
-    const prefixed = initPrefixedLogger(serviceName, logger);
+    const prefixed = setupPrefixedLogger(logger, `${serviceName}: `);
     this._validateDeps(serviceName, prefixed, deps);
     return prefixed;
   }

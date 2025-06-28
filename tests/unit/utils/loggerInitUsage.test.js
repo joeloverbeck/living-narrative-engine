@@ -23,7 +23,7 @@ function setup(
   useHelper = true
 ) {
   jest.resetModules();
-  const initPrefixedLogger = jest.fn(() => mockLogger);
+  const setupPrefixedLogger = jest.fn(() => mockLogger);
   const validateServiceDeps = jest.fn();
   const setupService = jest.fn(() => mockLogger);
   const baseInitLogger = jest.fn(() => mockLogger);
@@ -33,29 +33,33 @@ function setup(
     );
     return {
       ...actual,
-      initPrefixedLogger,
       validateServiceDeps,
       setupService,
     };
   });
   jest.doMock('../../../src/utils/loggerUtils.js', () => {
     const actual = jest.requireActual('../../../src/utils/loggerUtils.js');
-    return { ...actual, initLogger: baseInitLogger };
+    return { ...actual, initLogger: baseInitLogger, setupPrefixedLogger };
   });
 
   const Mod = require(modulePath).default || require(modulePath);
   new Mod(ctorArgs);
   if (useHelper) {
-    if (initPrefixedLogger.mock.calls.length) {
-      expect(initPrefixedLogger).toHaveBeenCalledWith(expectedName, mockLogger);
-      if (ctorArgs.logger) {
-        expect(validateServiceDeps).toHaveBeenCalled();
-      }
-    } else {
+    if (setupService.mock.calls.length) {
       expect(setupService).toHaveBeenCalled();
       const call = setupService.mock.calls[0];
       expect(call[0]).toBe(expectedName);
       expect(call[1]).toBe(mockLogger);
+    } else if (setupPrefixedLogger.mock.calls.length) {
+      expect(setupPrefixedLogger).toHaveBeenCalledWith(
+        mockLogger,
+        `${expectedName}: `
+      );
+      if (ctorArgs.logger) {
+        expect(validateServiceDeps).toHaveBeenCalled();
+      }
+    } else {
+      throw new Error('No logger initialization function was called');
     }
   } else {
     expect(baseInitLogger).toHaveBeenCalledWith(
@@ -95,7 +99,7 @@ describe('initLogger usage in constructors', () => {
 
   it('createJsonLogicContext uses initLogger', () => {
     jest.resetModules();
-    const initPrefixedLogger = jest.fn(() => mockLogger);
+    const setupPrefixedLogger = jest.fn(() => mockLogger);
     const validateServiceDeps = jest.fn();
     const setupService = jest.fn(() => mockLogger);
     jest.doMock('../../../src/utils/serviceInitializerUtils.js', () => {
@@ -104,14 +108,17 @@ describe('initLogger usage in constructors', () => {
       );
       return {
         ...actual,
-        initPrefixedLogger,
         validateServiceDeps,
         setupService,
       };
     });
     jest.doMock('../../../src/utils/loggerUtils.js', () => {
       const actual = jest.requireActual('../../../src/utils/loggerUtils.js');
-      return { ...actual, initLogger: jest.fn(() => mockLogger) };
+      return {
+        ...actual,
+        initLogger: jest.fn(() => mockLogger),
+        setupPrefixedLogger,
+      };
     });
     const {
       createJsonLogicContext,
