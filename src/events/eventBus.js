@@ -8,6 +8,7 @@ class EventBus {
 
   subscribe(eventName, listener) {
     if (typeof eventName !== 'string' || !eventName) {
+      // eslint-disable-next-line no-console
       console.error(
         'EventBus: Invalid event name provided for subscription.',
         eventName
@@ -15,6 +16,7 @@ class EventBus {
       return;
     }
     if (typeof listener !== 'function') {
+      // eslint-disable-next-line no-console
       console.error(
         `EventBus: Invalid listener provided for event "${eventName}". Expected a function.`
       );
@@ -29,6 +31,7 @@ class EventBus {
 
   unsubscribe(eventName, listener) {
     if (typeof eventName !== 'string' || !eventName) {
+      // eslint-disable-next-line no-console
       console.error(
         'EventBus: Invalid event name provided for unsubscription.',
         eventName
@@ -36,6 +39,7 @@ class EventBus {
       return;
     }
     if (typeof listener !== 'function') {
+      // eslint-disable-next-line no-console
       console.error(
         `EventBus: Invalid listener provided for unsubscription from event "${eventName}".`
       );
@@ -44,7 +48,7 @@ class EventBus {
 
     if (this.#listeners.has(eventName)) {
       const eventListeners = this.#listeners.get(eventName);
-      const deleted = eventListeners.delete(listener);
+      eventListeners.delete(listener);
       if (eventListeners.size === 0) {
         this.#listeners.delete(eventName);
       }
@@ -63,6 +67,7 @@ class EventBus {
   async dispatch(eventName, eventPayload = {}) {
     // Renamed second arg for clarity, added default
     if (typeof eventName !== 'string' || !eventName) {
+      // eslint-disable-next-line no-console
       console.error(
         'EventBus: Invalid event name provided for dispatch.',
         eventName
@@ -92,6 +97,7 @@ class EventBus {
             // Pass the constructed event object, not just the payload
             await listener(eventObject);
           } catch (error) {
+            // eslint-disable-next-line no-console
             console.error(
               `EventBus: Error executing listener for event "${eventName}":`,
               error
@@ -111,6 +117,7 @@ class EventBus {
    */
   listenerCount(eventName) {
     if (typeof eventName !== 'string' || !eventName) {
+      // eslint-disable-next-line no-console
       console.error(
         'EventBus: Invalid event name provided for listenerCount.',
         eventName

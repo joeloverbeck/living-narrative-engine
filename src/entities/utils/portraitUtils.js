@@ -6,12 +6,14 @@ import { extractModId } from '../../utils/idUtils.js';
 import { PORTRAIT_COMPONENT_ID } from '../../constants/componentIds.js';
 
 /**
+ * Helper utilities for building entity portrait data.
+ *
  * @module portraitUtils
- * @description Helper utilities for building entity portrait data.
  */
 
 /**
- * @description Constructs the resolved portrait path using the mod ID and image path.
+ * Constructs the resolved portrait path using the mod ID and image path.
+ *
  * @param {string} modId - The identifier of the mod.
  * @param {string} imagePath - Raw image path from the portrait component.
  * @returns {string} The resolved portrait image path.
@@ -21,7 +23,8 @@ export function buildPortraitPath(modId, imagePath) {
 }
 
 /**
- * @description Normalizes alternative text for portrait images.
+ * Normalizes alternative text for portrait images.
+ *
  * @param {string | undefined} rawAltText - Alt text from the portrait component.
  * @returns {string | null} Trimmed alt text or null if not provided.
  */
@@ -30,7 +33,8 @@ export function buildAltText(rawAltText) {
 }
 
 /**
- * @description Builds portrait path and alt text for an entity.
+ * Builds portrait path and alt text for an entity.
+ *
  * @param {import('../entity.js').default} entity - The entity instance to read portrait data from.
  * @param {string} contextMsg - The calling method name for log messages.
  * @param {import('../../interfaces/coreServices.js').ILogger} logger - Logger for diagnostics.
