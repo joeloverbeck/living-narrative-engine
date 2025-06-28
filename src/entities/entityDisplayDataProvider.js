@@ -9,7 +9,7 @@ import { validateDependency } from '../utils/dependencyUtils.js';
 import { ensureValidLogger } from '../utils/loggerUtils.js';
 import { getEntityDisplayName } from '../utils/entityUtils.js';
 import { buildPortraitInfo } from './utils/portraitUtils.js';
-import { InvalidEntityIdError } from '../errors/invalidEntityIdError.js';
+import { withEntity } from './utils/entityFetchHelpers.js';
 
 /**
  * @typedef {import('../interfaces/IEntityManager.js').IEntityManager} IEntityManager
@@ -94,55 +94,6 @@ export class EntityDisplayDataProvider {
   }
 
   /**
-   * @description Fetches an entity instance, logging a warning if the provided
-   * ID is null or empty.
-   * @private
-   * @param {NamespacedId | string} entityId - The ID of the entity to fetch.
-   * @returns {Entity} The fetched entity instance.
-   * @throws {InvalidEntityIdError} If entityId is falsy.
-   */
-  #fetchEntity(entityId) {
-    if (!entityId) {
-      throw new InvalidEntityIdError(entityId);
-    }
-    return this.#entityManager.getEntityInstance(entityId);
-  }
-
-  /**
-   * @description Helper to run logic with a fetched entity if it exists.
-   * @private
-   * @param {NamespacedId | string} entityId - ID of the entity to fetch.
-   * @param {*} fallbackValue - Value to return when entity is missing or ID is invalid.
-   * @param {(entity: Entity) => *} callback - Function executed with the entity when found.
-   * @param {string} [notFoundMsg] - Optional debug message (without prefix) when entity not found.
-   * @returns {*} Result of callback or the fallback value.
-   * Falsy entity IDs trigger {@link InvalidEntityIdError} and result in the fallback value.
-   */
-  #withEntity(entityId, fallbackValue, callback, notFoundMsg) {
-    let entity;
-    try {
-      entity = this.#fetchEntity(entityId);
-    } catch (error) {
-      if (error instanceof InvalidEntityIdError) {
-        this.#logger.warn(
-          `${this._logPrefix} fetchEntity called with null or empty entityId.`
-        );
-        return fallbackValue;
-      }
-      throw error;
-    }
-
-    if (!entity) {
-      if (notFoundMsg) {
-        this.#logger.debug(`${this._logPrefix} ${notFoundMsg}`);
-      }
-      return fallbackValue;
-    }
-
-    return callback(entity);
-  }
-
-  /**
    * Retrieves the display name of an entity.
    * Falls back to entity ID if the name component is missing, then to a default name.
    *
@@ -151,10 +102,13 @@ export class EntityDisplayDataProvider {
    * @returns {string} The entity's display name, its ID, or the default name.
    */
   getEntityName(entityId, defaultName = 'Unknown Entity') {
-    return this.#withEntity(
+    return withEntity(
+      this.#entityManager,
       entityId,
       defaultName,
       (entity) => getEntityDisplayName(entity, defaultName, this.#logger),
+      this.#logger,
+      this._logPrefix,
       `getEntityName: Entity with ID '${entityId}' not found. Returning default name.`
     );
   }
@@ -169,7 +123,8 @@ export class EntityDisplayDataProvider {
    * is missing or lacks a valid PORTRAIT_COMPONENT.
    */
   getEntityPortraitPath(entityId) {
-    return this.#withEntity(
+    return withEntity(
+      this.#entityManager,
       entityId,
       null,
       (entity) => {
@@ -182,6 +137,8 @@ export class EntityDisplayDataProvider {
         );
         return info ? info.path : null;
       },
+      this.#logger,
+      this._logPrefix,
       `getEntityPortraitPath: Entity with ID '${entityId}' not found.`
     );
   }
@@ -194,7 +151,8 @@ export class EntityDisplayDataProvider {
    * @returns {string} The entity's description or the default description.
    */
   getEntityDescription(entityId, defaultDescription = '') {
-    return this.#withEntity(
+    return withEntity(
+      this.#entityManager,
       entityId,
       defaultDescription,
       (entity) => {
@@ -213,6 +171,8 @@ export class EntityDisplayDataProvider {
         );
         return defaultDescription;
       },
+      this.#logger,
+      this._logPrefix,
       `getEntityDescription: Entity with ID '${entityId}' not found. Returning default description.`
     );
   }
@@ -225,7 +185,8 @@ export class EntityDisplayDataProvider {
    * or null if the entity is missing or lacks a valid POSITION_COMPONENT.
    */
   getEntityLocationId(entityId) {
-    return this.#withEntity(
+    return withEntity(
+      this.#entityManager,
       entityId,
       null,
       (entity) => {
@@ -256,6 +217,8 @@ export class EntityDisplayDataProvider {
         );
         return null;
       },
+      this.#logger,
+      this._logPrefix,
       `getEntityLocationId: Entity with ID '${entityId}' not found.`
     );
   }
@@ -270,7 +233,8 @@ export class EntityDisplayDataProvider {
    * or required components are invalid.
    */
   getCharacterDisplayInfo(entityId) {
-    return this.#withEntity(
+    return withEntity(
+      this.#entityManager,
       entityId,
       null,
       (entity) => ({
@@ -279,6 +243,8 @@ export class EntityDisplayDataProvider {
         description: this.getEntityDescription(entityId),
         portraitPath: this.getEntityPortraitPath(entityId),
       }),
+      this.#logger,
+      this._logPrefix,
       `getCharacterDisplayInfo: Entity with ID '${entityId}' not found.`
     );
   }
