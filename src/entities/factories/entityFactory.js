@@ -212,30 +212,17 @@ class EntityFactory {
   }
 
   /**
-   * Create a new entity instance from a definition.
+   * Validates IDs provided to {@link EntityFactory#create}.
    *
-   * @param {string} definitionId - The ID of the entity definition to use.
-   * @param {object} options - Options for entity creation.
-   * @param {Object<string, object>} [options.componentOverrides] - Optional. A map of component data to override or add.
-   * @param {string} [options.instanceId] - Optional. A specific ID for the new instance. If not provided, a UUID will be generated.
-   * @param {IDataRegistry} registry - The data registry to fetch definitions from.
-   * @param {object} repository - The repository to check for ID collisions.
-   * @param {EntityDefinition} [definition] - Optional. The entity definition to use (avoids double registry calls).
-   * @returns {Entity} The newly created entity instance.
-   * @throws {DefinitionNotFoundError} If the definition is not found.
-   * @throws {Error} If component data is invalid, or if an entity with the given instanceId already exists.
+   * @private
+   * @param {string} definitionId - Entity definition ID.
+   * @param {string} [instanceId] - Desired instance ID.
+   * @throws {TypeError|InvalidInstanceIdError}
    */
-  create(
-    definitionId,
-    { componentOverrides = {}, instanceId } = {},
-    registry,
-    repository,
-    definition = null
-  ) {
+  #validateCreateIds(definitionId, instanceId) {
     try {
       assertValidId(definitionId, 'EntityFactory.create', this.#logger);
     } catch (err) {
-      // Legacy compatibility: throw legacy error message for tests
       if (err && err.name === 'InvalidArgumentError') {
         const msg = 'definitionId must be a non-empty string.';
         this.#logger.error(`[EntityFactory] ${msg}`);
@@ -256,6 +243,71 @@ class EntityFactory {
         throw err;
       }
     }
+  }
+
+  /**
+   * Checks for duplicate entity IDs in a repository.
+   *
+   * @private
+   * @param {object} repository - Repository implementing `has`.
+   * @param {string} id - ID to check for duplicates.
+   * @param {string} errorMsg - Error message to log and throw.
+   */
+  #checkDuplicateId(repository, id, errorMsg) {
+    if (repository.has(id)) {
+      this.#logger.error(`[EntityFactory] ${errorMsg}`);
+      throw new Error(errorMsg);
+    }
+  }
+
+  /**
+   * Finalizes entity construction and injects default components.
+   *
+   * @private
+   * @param {EntityDefinition} definition - Entity definition.
+   * @param {string} instanceId - Entity instance ID.
+   * @param {Record<string, object|null>} components - Component data.
+   * @param {string} definitionId - Definition ID for logging context.
+   * @param {string} action - Description string like "created." or "reconstructed.".
+   * @returns {Entity} The constructed entity.
+   */
+  #constructEntity(definition, instanceId, components, definitionId, action) {
+    const data = new EntityInstanceData(
+      instanceId,
+      definition,
+      components,
+      this.#logger
+    );
+    const entity = new Entity(data);
+    injectDefaultComponents(entity, this.#logger, this.#validateAndClone);
+    this.#logger.info(
+      `[EntityFactory] Entity instance '${instanceId}' (def: '${definitionId}') ${action}`
+    );
+    return entity;
+  }
+
+  /**
+   * Create a new entity instance from a definition.
+   *
+   * @param {string} definitionId - The ID of the entity definition to use.
+   * @param {object} options - Options for entity creation.
+   * @param {Object<string, object>} [options.componentOverrides] - Optional. A map of component data to override or add.
+   * @param {string} [options.instanceId] - Optional. A specific ID for the new instance. If not provided, a UUID will be generated.
+   * @param {IDataRegistry} registry - The data registry to fetch definitions from.
+   * @param {object} repository - The repository to check for ID collisions.
+   * @param {EntityDefinition} [definition] - Optional. The entity definition to use (avoids double registry calls).
+   * @returns {Entity} The newly created entity instance.
+   * @throws {DefinitionNotFoundError} If the definition is not found.
+   * @throws {Error} If component data is invalid, or if an entity with the given instanceId already exists.
+   */
+  create(
+    definitionId,
+    { componentOverrides = {}, instanceId } = {},
+    registry,
+    repository,
+    definition = null
+  ) {
+    this.#validateCreateIds(definitionId, instanceId);
 
     const entityDefinition =
       definition || this.#getDefinition(definitionId, registry);
@@ -271,11 +323,11 @@ class EntityFactory {
         : this.#idGenerator();
 
     // Check for duplicate instanceId BEFORE any other operations
-    if (repository.has(actualInstanceId)) {
-      const msg = `Entity with ID '${actualInstanceId}' already exists.`;
-      this.#logger.error(`[EntityFactory] ${msg}`);
-      throw new Error(msg); // Ensure this exact message is thrown
-    }
+    this.#checkDuplicateId(
+      repository,
+      actualInstanceId,
+      `Entity with ID '${actualInstanceId}' already exists.`
+    );
 
     this.#logger.debug(
       `[EntityFactory] Creating entity instance ${actualInstanceId} from definition ${definitionId}.`
@@ -287,23 +339,13 @@ class EntityFactory {
       actualInstanceId
     );
 
-    // Initialise Entity with its definition, a new instance ID, and validated overrides.
-    const entityInstanceDataObject = new EntityInstanceData(
-      actualInstanceId,
+    return this.#constructEntity(
       entityDefinition,
+      actualInstanceId,
       validatedOverrides,
-      this.#logger
+      definitionId,
+      'created.'
     );
-    // Create Entity with just the instance data
-    const entity = new Entity(entityInstanceDataObject);
-
-    // Apply default component policy before returning
-    injectDefaultComponents(entity, this.#logger, this.#validateAndClone);
-
-    this.#logger.info(
-      `[EntityFactory] Entity instance '${actualInstanceId}' (def: '${definitionId}') created.`
-    );
-    return entity;
   }
 
   /**
@@ -338,7 +380,6 @@ class EntityFactory {
     try {
       assertValidId(instanceId, 'EntityFactory.reconstruct', this.#logger);
     } catch (err) {
-      // Legacy compatibility: throw legacy error message for tests
       if (err && err.name === 'InvalidArgumentError') {
         const msg =
           'EntityFactory.reconstruct: instanceId is missing or invalid in serialized data.';
@@ -348,11 +389,11 @@ class EntityFactory {
       throw err;
     }
 
-    if (repository.has(instanceId)) {
-      const msg = `EntityFactory.reconstruct: Entity with ID '${instanceId}' already exists. Reconstruction aborted.`;
-      this.#logger.error(`[EntityFactory] ${msg}`);
-      throw new Error(msg);
-    }
+    this.#checkDuplicateId(
+      repository,
+      instanceId,
+      `EntityFactory.reconstruct: Entity with ID '${instanceId}' already exists. Reconstruction aborted.`
+    );
 
     const definitionToUse = this.#getDefinition(definitionId, registry);
     if (!definitionToUse) {
@@ -369,22 +410,13 @@ class EntityFactory {
     );
 
     // Create the entity
-    const instanceDataForReconstruction = new EntityInstanceData(
-      instanceId, // Corrected: instanceId first
+    return this.#constructEntity(
       definitionToUse,
+      instanceId,
       validatedComponents,
-      this.#logger
+      definitionId,
+      'reconstructed.'
     );
-    // Create Entity with just the instance data
-    const entity = new Entity(instanceDataForReconstruction);
-
-    // Restore: inject default components for actor entities
-    injectDefaultComponents(entity, this.#logger, this.#validateAndClone);
-
-    this.#logger.info(
-      `[EntityFactory] Entity instance '${instanceId}' (def: '${definitionId}') reconstructed.`
-    );
-    return entity;
   }
 }
 
