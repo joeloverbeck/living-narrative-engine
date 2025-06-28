@@ -32,14 +32,6 @@ export class ProcessingIndicatorController extends BoundDomRendererBase {
   #indicatorElement = null;
 
   /**
-   * The speech input element, if handling player input indication.
-   *
-   * @private
-   * @type {HTMLInputElement | null}
-   */
-  #speechInputElement = null;
-
-  /**
    * The DomElementFactory instance.
    *
    * @private
@@ -106,7 +98,6 @@ export class ProcessingIndicatorController extends BoundDomRendererBase {
     this.#initializeIndicatorElement();
 
     if (this.elements.speechInputForPlayerIndicator) {
-      this.#speechInputElement = this.elements.speechInputForPlayerIndicator;
       this.logger.debug(
         `${this._logPrefix} Speech input element for player indicator cached.`
       );
@@ -252,7 +243,7 @@ export class ProcessingIndicatorController extends BoundDomRendererBase {
    * Determines the player type from turn started event payload.
    *
    * @param {any} payload - The turn started event payload
-   * @returns {IndicatorType}
+   * @returns {IndicatorType} Resolved player type
    * @private
    */
   #determinePlayerType(payload) {
@@ -359,7 +350,6 @@ export class ProcessingIndicatorController extends BoundDomRendererBase {
       );
     }
     this.#indicatorElement = null;
-    this.#speechInputElement = null; // Clear reference
 
     this.logger.debug(
       `${this._logPrefix} ProcessingIndicatorController disposed.`
