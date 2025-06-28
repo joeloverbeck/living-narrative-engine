@@ -54,12 +54,12 @@ export default function createStepResolver({ entitiesGateway }) {
       for (const parentValue of parentResult) {
         if (typeof parentValue === 'string') {
           // Parent is entity ID
-          
+
           // Special handling for 'components' field
           if (node.field === 'components') {
             const entity = entitiesGateway.getEntityInstance(parentValue);
             if (!entity) continue;
-            
+
             // Check if this is a test entity with plain components object
             if (
               entity.components &&
@@ -70,15 +70,22 @@ export default function createStepResolver({ entitiesGateway }) {
               result.add(entity.components);
               continue;
             }
-            
+
             // For production Entity objects, build the components object
             const components = {};
-            
+
             // If entity has componentTypeIds, use that
-            if (entity.componentTypeIds && Array.isArray(entity.componentTypeIds)) {
+            if (
+              entity.componentTypeIds &&
+              Array.isArray(entity.componentTypeIds)
+            ) {
               for (const componentTypeId of entity.componentTypeIds) {
-                const componentData = entity.getComponentData?.(componentTypeId) ||
-                  entitiesGateway.getComponentData(parentValue, componentTypeId);
+                const componentData =
+                  entity.getComponentData?.(componentTypeId) ||
+                  entitiesGateway.getComponentData(
+                    parentValue,
+                    componentTypeId
+                  );
                 if (componentData) {
                   components[componentTypeId] = componentData;
                 }
@@ -96,7 +103,10 @@ export default function createStepResolver({ entitiesGateway }) {
               ];
               for (const componentId of commonComponentIds) {
                 try {
-                  const data = entitiesGateway.getComponentData(parentValue, componentId);
+                  const data = entitiesGateway.getComponentData(
+                    parentValue,
+                    componentId
+                  );
                   if (data) {
                     components[componentId] = data;
                   }
@@ -105,7 +115,7 @@ export default function createStepResolver({ entitiesGateway }) {
                 }
               }
             }
-            
+
             result.add(components);
           } else {
             // Normal component data access
@@ -113,6 +123,7 @@ export default function createStepResolver({ entitiesGateway }) {
               parentValue,
               node.field
             );
+
             if (componentData !== undefined) {
               result.add(componentData);
             }

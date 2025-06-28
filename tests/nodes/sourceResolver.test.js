@@ -167,7 +167,9 @@ describe('sourceResolver', () => {
         const node = { type: 'Source', kind: 'unknown' };
         const ctx = { actorEntity: { id: 'actor123' } };
 
-        expect(() => resolver.resolve(node, ctx)).toThrow('Unknown source kind: unknown');
+        expect(() => resolver.resolve(node, ctx)).toThrow(
+          'Unknown source kind: unknown'
+        );
       });
     });
 

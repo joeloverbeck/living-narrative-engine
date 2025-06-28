@@ -159,15 +159,25 @@ describe('ScopeEngine - Comprehensive Coverage Tests', () => {
     test('should handle array iteration edge cases', () => {
       // Test array iteration through the public API
       const ast = parseDslExpression('actor.core:inventory[]');
-      
+
       // Mock actor with inventory array
-      mockEntityManager.getComponentData.mockReturnValue(['item1', 'item2', 'item3']);
-      
+      mockEntityManager.getComponentData.mockReturnValue([
+        'item1',
+        'item2',
+        'item3',
+      ]);
+
       const result = engine.resolve(ast, actorEntity, mockRuntimeCtx);
       expect(result).toEqual(new Set(['item1', 'item2', 'item3']));
 
       // Test with array containing null and undefined
-      mockEntityManager.getComponentData.mockReturnValue(['item1', null, 'item2', undefined, 'item3']);
+      mockEntityManager.getComponentData.mockReturnValue([
+        'item1',
+        null,
+        'item2',
+        undefined,
+        'item3',
+      ]);
       const result2 = engine.resolve(ast, actorEntity, mockRuntimeCtx);
       expect(result2).toEqual(new Set(['item1', 'item2', 'item3']));
 
@@ -191,11 +201,11 @@ describe('ScopeEngine - Comprehensive Coverage Tests', () => {
 
     test('should handle field extraction with various input types', () => {
       // Test field extraction through the public API
-      
+
       // Test with entity field access
       const ast1 = parseDslExpression('actor.core:name');
       mockEntityManager.getComponentData.mockReturnValue('Actor Name');
-      
+
       const result1 = engine.resolve(ast1, actorEntity, mockRuntimeCtx);
       expect(result1).toEqual(new Set(['Actor Name']));
       expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(
@@ -206,7 +216,7 @@ describe('ScopeEngine - Comprehensive Coverage Tests', () => {
       // Test with nested object field access
       const ast2 = parseDslExpression('actor.core:position.x');
       mockEntityManager.getComponentData.mockReturnValue({ x: 10, y: 20 });
-      
+
       const result2 = engine.resolve(ast2, actorEntity, mockRuntimeCtx);
       expect(result2).toEqual(new Set([10]));
 
@@ -241,12 +251,12 @@ describe('ScopeEngine - Comprehensive Coverage Tests', () => {
     test('should handle union operations with empty results', () => {
       // Test union through the public API
       const ast = parseDslExpression('entities(core:missing) + actor');
-      
+
       // Mock empty result for entities with missing component
       mockEntityManager.getEntitiesWithComponent.mockReturnValue([]);
-      
+
       const result = engine.resolve(ast, actorEntity, mockRuntimeCtx);
-      
+
       // Should contain only the actor since entities(core:missing) returns empty
       expect(result).toEqual(new Set(['actor123']));
     });

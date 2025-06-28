@@ -83,7 +83,9 @@ export default function createSourceResolver({
             const entities =
               entitiesGateway.getEntitiesWithComponent(componentId);
             result = new Set(
-              (entities || []).map((e) => e.id).filter((id) => typeof id === 'string')
+              (entities || [])
+                .map((e) => e.id)
+                .filter((id) => typeof id === 'string')
             );
           }
           break;

@@ -26,7 +26,9 @@ describe('ScopeLoader', () => {
   );
 
   // Get the MOCKED function. This will be used to control mock behavior.
-  const { parseDslExpression } = require('../../../src/scopeDsl/parser/parser.js');
+  const {
+    parseDslExpression,
+  } = require('../../../src/scopeDsl/parser/parser.js');
 
   beforeEach(() => {
     jest.clearAllMocks();

@@ -10,7 +10,9 @@ import { ScopeSyntaxError } from '../../../src/scopeDsl/parser/parser.js';
 
 // Mock the parser.js module
 jest.mock('../../../src/scopeDsl/parser/parser.js', () => {
-  const originalModule = jest.requireActual('../../../src/scopeDsl/parser/parser.js');
+  const originalModule = jest.requireActual(
+    '../../../src/scopeDsl/parser/parser.js'
+  );
   return {
     ...originalModule,
     parseDslExpression: jest.fn(),

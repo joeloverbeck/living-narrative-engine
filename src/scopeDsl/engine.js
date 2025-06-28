@@ -73,41 +73,49 @@ class ScopeEngine extends IScopeEngine {
    * @private
    */
   _ensureInitialized(runtimeCtx) {
+    // Always update the current runtime context
+    this._currentRuntimeCtx = runtimeCtx;
+
     if (this.dispatcher) return;
 
     // Create adapters for resolvers to work with runtimeCtx
+    // IMPORTANT: Use arrow function to always get current location from _currentRuntimeCtx
     const locationProvider = {
-      getLocation: () => runtimeCtx.location
+      getLocation: () => this._currentRuntimeCtx?.location,
     };
 
     const entitiesGateway = {
       getEntities: () => {
-        return runtimeCtx.entityManager.getEntities
-          ? runtimeCtx.entityManager.getEntities()
-          : Array.from(runtimeCtx.entityManager.entities.values());
+        const em = this._currentRuntimeCtx?.entityManager;
+        return em?.getEntities
+          ? em.getEntities()
+          : Array.from(em?.entities?.values() || []);
       },
       getEntitiesWithComponent: (cid) => {
-        return runtimeCtx.entityManager.getEntitiesWithComponent(cid);
+        return this._currentRuntimeCtx?.entityManager?.getEntitiesWithComponent(
+          cid
+        );
       },
       hasComponent: (eid, cid) => {
-        return runtimeCtx.entityManager.hasComponent
-          ? runtimeCtx.entityManager.hasComponent(eid, cid)
-          : false;
+        const em = this._currentRuntimeCtx?.entityManager;
+        return em?.hasComponent ? em.hasComponent(eid, cid) : false;
       },
       getComponentData: (eid, cid) => {
-        return runtimeCtx.entityManager.getComponentData(eid, cid);
+        return this._currentRuntimeCtx?.entityManager?.getComponentData(
+          eid,
+          cid
+        );
       },
       getEntityInstance: (eid) => {
-        return runtimeCtx.entityManager.getEntity
-          ? runtimeCtx.entityManager.getEntity(eid)
-          : runtimeCtx.entityManager.getEntityInstance(eid);
-      }
+        const em = this._currentRuntimeCtx?.entityManager;
+        return em?.getEntity ? em.getEntity(eid) : em?.getEntityInstance(eid);
+      },
     };
 
     const logicEval = {
       evaluate: (logic, context) => {
-        return runtimeCtx.jsonLogicEval.evaluate(logic, context);
-      }
+        return this._currentRuntimeCtx?.jsonLogicEval?.evaluate(logic, context);
+      },
     };
 
     // Create resolvers
@@ -116,7 +124,7 @@ class ScopeEngine extends IScopeEngine {
       createStepResolver({ entitiesGateway }),
       createFilterResolver({ logicEval, entitiesGateway, locationProvider }),
       createUnionResolver(),
-      createArrayIterationResolver()
+      createArrayIterationResolver(),
     ];
 
     this.dispatcher = createDispatcher(resolvers);
@@ -148,11 +156,12 @@ class ScopeEngine extends IScopeEngine {
       runtimeCtx,
       trace,
       dispatcher: {
-        resolve: (node, innerCtx) => this._resolveWithDepthAndCycleChecking(node, innerCtx)
+        resolve: (node, innerCtx) =>
+          this._resolveWithDepthAndCycleChecking(node, innerCtx),
       },
       depth: 0,
       cycleDetector: this.cycleDetector,
-      depthGuard: this.depthGuard
+      depthGuard: this.depthGuard,
     };
 
     const result = this._resolveWithDepthAndCycleChecking(ast, ctx);
@@ -181,23 +190,23 @@ class ScopeEngine extends IScopeEngine {
 
     // Generate key for cycle detection
     const nodeKey = `${node.type}:${node.field || ''}:${node.param || ''}`;
-    
+
     // Enter cycle detection
     ctx.cycleDetector.enter(nodeKey);
-    
+
     try {
       // Create new context with incremented depth and wrapped dispatcher
-      const newCtx = { 
-        ...ctx, 
+      const newCtx = {
+        ...ctx,
         depth: ctx.depth + 1,
         dispatcher: {
           resolve: (innerNode, innerCtx) => {
             // Use the context passed by the resolver, which already has the correct depth
             return this._resolveWithDepthAndCycleChecking(innerNode, innerCtx);
-          }
-        }
+          },
+        },
       };
-      
+
       // Use dispatcher to resolve
       return this.dispatcher.resolve(node, newCtx);
     } finally {

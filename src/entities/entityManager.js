@@ -378,6 +378,7 @@ class EntityManager extends IEntityManager {
       );
       return undefined;
     }
+
     return entity;
   }
 

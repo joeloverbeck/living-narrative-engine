@@ -6,7 +6,6 @@
 import { TURN_STARTED_ID } from '../constants/eventIds.js';
 import { IScopeEngine } from '../interfaces/IScopeEngine.js';
 
-
 /**
  * Scope-DSL Cache that provides memoization for scope resolution
  * Acts as a caching wrapper around ScopeEngine with automatic cache invalidation
@@ -76,17 +75,23 @@ class ScopeCache extends IScopeEngine {
   }
 
   /**
-   * Generate a cache key from actorId and AST
+   * Generate a cache key from actorId, location, and AST
    *
    * @param {string} actorId - Actor ID
    * @param {object} ast - The parsed AST
+   * @param {object} runtimeCtx - Runtime context containing location
    * @returns {string} Cache key
    * @private
    */
-  _generateKey(actorId, ast) {
+  _generateKey(actorId, ast, runtimeCtx) {
     // Create a stable key from the AST structure
     const astKey = JSON.stringify(ast);
-    return `${actorId}:${astKey}`;
+
+    // Extract location ID from runtime context if available
+    const locationId = runtimeCtx?.location?.id || 'no-location';
+
+    // Include location in cache key to ensure cache invalidation on location change
+    return `${actorId}:${locationId}:${astKey}`;
   }
 
   /**
@@ -99,7 +104,7 @@ class ScopeCache extends IScopeEngine {
    * @returns {Set<string>} Set of entity IDs
    */
   resolve(ast, actorEntity, runtimeCtx) {
-    const key = this._generateKey(actorEntity.id, ast);
+    const key = this._generateKey(actorEntity.id, ast, runtimeCtx);
 
     // Check cache first
     const cached = this.cache.get(key);
