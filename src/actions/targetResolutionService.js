@@ -21,6 +21,13 @@ import { setupService } from '../utils/serviceInitializerUtils.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/systemEventIds.js';
 import { TRACE_INFO, TRACE_ERROR } from './tracing/traceContext.js';
 
+/**
+ * Service for resolving action target scopes.
+ *
+ * @class TargetResolutionService
+ * @augments ITargetResolutionService
+ * @description Resolves target scopes to concrete entity identifiers using DSL expressions.
+ */
 export class TargetResolutionService extends ITargetResolutionService {
   #scopeRegistry;
   #scopeEngine;
@@ -67,7 +74,17 @@ export class TargetResolutionService extends ITargetResolutionService {
     this.#jsonLogicEvalService = jsonLogicEvaluationService;
   }
 
-  /** @override */
+  /**
+   * Resolves a target scope name into actionable target contexts.
+   *
+   * @override
+   * @description Resolves a target scope name into actionable target contexts.
+   * @param {string} scopeName - The name of the scope to resolve.
+   * @param {Entity} actorEntity - The entity performing the action.
+   * @param {ActionContext} discoveryContext - Context for DSL evaluation.
+   * @param {TraceContext|null} [trace] - Optional tracing instance.
+   * @returns {Promise<ActionTargetContext[]>} Resolved target contexts.
+   */
   async resolveTargets(scopeName, actorEntity, discoveryContext, trace = null) {
     const source = 'TargetResolutionService.resolveTargets';
     trace?.info(`Resolving scope '${scopeName}'.`, source);
@@ -104,12 +121,15 @@ export class TargetResolutionService extends ITargetResolutionService {
   }
 
   /**
-   * This entire method is moved from ActionDiscoveryService.
+   * Resolves a DSL scope definition to a set of entity IDs.
    *
-   * @param scopeName
-   * @param actorEntity
-   * @param discoveryContext
-   * @param trace
+   * @description Resolves a DSL scope definition to a set of entity IDs.
+   * @param {string} scopeName - Name of the scope definition.
+   * @param {Entity} actorEntity - The entity initiating the resolution.
+   * @param {ActionContext} discoveryContext - Context for evaluating scope rules.
+   * @param {TraceContext|null} [trace] - Optional tracing instance.
+   * @returns {Set<string>} The set of resolved entity IDs.
+   * @private
    */
   #resolveScopeToIds(scopeName, actorEntity, discoveryContext, trace = null) {
     const source = 'TargetResolutionService.#resolveScopeToIds';
@@ -168,13 +188,16 @@ export class TargetResolutionService extends ITargetResolutionService {
   }
 
   /**
-   * Centralizes the logging and event dispatching for resolution failures.
+   * Logs a resolution error and dispatches a system error event.
    *
-   * @param message
-   * @param details
-   * @param trace
-   * @param source
-   * @param originalError
+   * @description Logs a resolution error and dispatches a system error event.
+   * @param {string} message - User-friendly error message.
+   * @param {object} details - Supplemental diagnostic information.
+   * @param {TraceContext|null} trace - Optional trace used for logging.
+   * @param {string} source - Originating service or method name.
+   * @param {Error|null} [originalError] - The original error instance, if any.
+   * @returns {void}
+   * @private
    */
   #handleResolutionError(
     message,
