@@ -8,12 +8,13 @@ const mockLogger = {
 };
 
 /**
+ * Helper to instantiate a module and assert logger initialization behavior.
  *
- * @param modulePath
- * @param ctorArgs
- * @param expectedName
- * @param expectOptional
- * @param useHelper
+ * @param {string} modulePath Path to the module to require.
+ * @param {object} ctorArgs Arguments passed to the module constructor.
+ * @param {string} expectedName Expected name used when initializing the logger.
+ * @param {boolean} [expectOptional] Whether optional dependencies are expected.
+ * @param {boolean} [useHelper] Whether the helper should check the setupService helper.
  */
 function setup(
   modulePath,
@@ -74,6 +75,7 @@ function setup(
 
 describe('initLogger usage in constructors', () => {
   it('OperationInterpreter uses initLogger', () => {
+    expect.hasAssertions();
     setup(
       '../../../src/logic/operationInterpreter.js',
       { logger: mockLogger, operationRegistry: { getHandler: jest.fn() } },
@@ -82,6 +84,7 @@ describe('initLogger usage in constructors', () => {
   });
 
   it('OperationRegistry uses setupService', () => {
+    expect.hasAssertions();
     setup(
       '../../../src/logic/operationRegistry.js',
       { logger: mockLogger },
@@ -90,6 +93,7 @@ describe('initLogger usage in constructors', () => {
   });
 
   it('JsonLogicEvaluationService uses initLogger', () => {
+    expect.hasAssertions();
     setup(
       '../../../src/logic/jsonLogicEvaluationService.js',
       { logger: mockLogger },
@@ -98,6 +102,7 @@ describe('initLogger usage in constructors', () => {
   });
 
   it('createJsonLogicContext uses initLogger', () => {
+    expect.hasAssertions();
     jest.resetModules();
     const setupPrefixedLogger = jest.fn(() => mockLogger);
     const validateServiceDeps = jest.fn();
@@ -143,6 +148,7 @@ describe('initLogger usage in constructors', () => {
   });
 
   it('AddComponentHandler uses initHandlerLogger', () => {
+    expect.hasAssertions();
     jest.resetModules();
     const initHandlerLogger = jest.fn(() => mockLogger);
     jest.doMock('../../../src/utils/handlerUtils/serviceUtils.js', () => {
