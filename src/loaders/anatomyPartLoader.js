@@ -39,6 +39,8 @@ class AnatomyPartLoader extends BaseManifestItemLoader {
 
   /**
    * Processes a single fetched anatomy part file's data.
+   * Note: Anatomy parts are now regular entity definitions and are loaded by EntityLoader.
+   * This loader exists only for backward compatibility and will skip processing.
    *
    * @override
    * @protected
@@ -51,47 +53,16 @@ class AnatomyPartLoader extends BaseManifestItemLoader {
    */
   async _processFetchedItem(modId, filename, resolvedPath, data, registryKey) {
     this._logger.debug(
-      `AnatomyPartLoader [${modId}]: Processing fetched item: ${filename} (Type: ${registryKey})`
+      `AnatomyPartLoader [${modId}]: Skipping ${filename} - anatomy parts are now loaded as entity definitions`
     );
 
-    // Validate the id field
-    const { baseId } = parseAndValidateId(
-      data,
-      'id',
-      modId,
-      filename,
-      this._logger
-    );
-
-    // Transform the part definition into a standard entity definition
-    const entityDefinition = this._transformToEntityDefinition(data, modId, filename);
-
-    // Validate anatomy components
-    this._validateAnatomyComponents(entityDefinition.components, modId, filename);
-
-    // Store as an entity definition
-    const { qualifiedId, didOverride } = await processAndStoreItem(this, {
-      data: entityDefinition,
-      idProp: 'id',
-      category: 'entityDefinitions',
-      modId,
-      filename,
-    });
-
-    // Also store reference in anatomyParts registry for quick lookup
-    await processAndStoreItem(this, {
-      data: { id: entityDefinition.id, isAnatomyPart: true },
-      idProp: 'id', 
-      category: 'anatomyParts',
-      modId,
-      filename,
-    });
-
-    this._logger.debug(
-      `AnatomyPartLoader [${modId}]: Successfully processed anatomy part from ${filename}. Final registry key: ${qualifiedId}, Overwrite: ${didOverride}`
-    );
-    
-    return { qualifiedId, didOverride };
+    // Anatomy parts are now regular entity definitions and are handled by EntityLoader
+    // This loader exists only for backward compatibility
+    // Return a dummy result to satisfy the interface
+    return { 
+      qualifiedId: `${modId}:skipped_${filename}`, 
+      didOverride: false 
+    };
   }
 
   /**

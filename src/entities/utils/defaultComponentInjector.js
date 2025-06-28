@@ -5,6 +5,7 @@ import {
   SHORT_TERM_MEMORY_COMPONENT_ID,
   NOTES_COMPONENT_ID,
   GOALS_COMPONENT_ID,
+  ANATOMY_BODY_COMPONENT_ID,
 } from '../../constants/componentIds.js';
 
 /**

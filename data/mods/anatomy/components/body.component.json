@@ -1,0 +1,41 @@
+{
+  "$schema": "http://example.com/schemas/component.schema.json",
+  "id": "anatomy:body",
+  "description": "Links an entity to an anatomy recipe and stores the generated body structure",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "recipeId": {
+        "type": "string",
+        "description": "The namespaced ID of the anatomy recipe to use for body generation",
+        "pattern": "^[a-zA-Z][a-zA-Z0-9_]*:[a-zA-Z][a-zA-Z0-9_]*$"
+      },
+      "body": {
+        "type": ["object", "null"],
+        "description": "The generated anatomy structure, null until body is built",
+        "properties": {
+          "root": {
+            "type": "string",
+            "description": "Entity instance ID of the root body part"
+          },
+          "parts": {
+            "type": "object",
+            "description": "Map of part identifiers to entity instance IDs for easy access",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "graph": {
+            "type": "object",
+            "description": "The body part connection graph",
+            "additionalProperties": true
+          }
+        },
+        "required": ["root", "parts"],
+        "additionalProperties": false
+      }
+    },
+    "required": ["recipeId"],
+    "additionalProperties": false
+  }
+}

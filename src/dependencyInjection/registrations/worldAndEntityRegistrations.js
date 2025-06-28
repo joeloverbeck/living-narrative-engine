@@ -32,6 +32,8 @@ import LocationDisplayService from '../../entities/services/locationDisplayServi
 import { BodyBlueprintFactory } from '../../anatomy/bodyBlueprintFactory.js';
 import { GraphIntegrityValidator } from '../../anatomy/graphIntegrityValidator.js';
 import { BodyGraphService } from '../../anatomy/bodyGraphService.js';
+import { AnatomyGenerationService } from '../../anatomy/anatomyGenerationService.js';
+import { AnatomyInitializationService } from '../../anatomy/anatomyInitializationService.js';
 
 /**
  * Registers world, entity, and context-related services.
@@ -204,6 +206,35 @@ export function registerWorldAndEntity(container) {
   logger.debug(
     `World and Entity Registration: Registered ${String(
       tokens.BodyGraphService
+    )}.`
+  );
+
+  registrar.singletonFactory(tokens.AnatomyGenerationService, (c) => {
+    return new AnatomyGenerationService({
+      entityManager: c.resolve(tokens.IEntityManager),
+      dataRegistry: c.resolve(tokens.IDataRegistry),
+      logger: c.resolve(tokens.ILogger),
+      bodyBlueprintFactory: c.resolve(tokens.BodyBlueprintFactory),
+    });
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.AnatomyGenerationService
+    )}.`
+  );
+
+  registrar
+    .tagged(INITIALIZABLE)
+    .singletonFactory(tokens.AnatomyInitializationService, (c) => {
+      return new AnatomyInitializationService({
+        eventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+        logger: c.resolve(tokens.ILogger),
+        anatomyGenerationService: c.resolve(tokens.AnatomyGenerationService),
+      });
+    });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.AnatomyInitializationService
     )}.`
   );
 

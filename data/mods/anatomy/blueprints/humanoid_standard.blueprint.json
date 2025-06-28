@@ -1,0 +1,5 @@
+{
+  "$schema": "http://example.com/schemas/anatomy.blueprint.schema.json",
+  "root": "core:humanoid_torso",
+  "attachments": []
+}

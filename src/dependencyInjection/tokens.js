@@ -259,6 +259,8 @@ export const tokens = freeze({
   BodyBlueprintFactory: 'BodyBlueprintFactory',
   GraphIntegrityValidator: 'GraphIntegrityValidator',
   BodyGraphService: 'BodyGraphService',
+  AnatomyGenerationService: 'AnatomyGenerationService',
+  AnatomyInitializationService: 'AnatomyInitializationService',
 
   // Core Service Interfaces
   ISafeEventDispatcher: 'ISafeEventDispatcher',

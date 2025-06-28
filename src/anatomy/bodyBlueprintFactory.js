@@ -116,7 +116,7 @@ export class BodyBlueprintFactory {
       const rng = this.#createRNG(options.seed);
 
       // Phase 1: Create root entity
-      const rootId = await this.#createRootEntity(blueprint.root, recipe, options.ownerId);
+      const rootId = this.#createRootEntity(blueprint.root, recipe, options.ownerId);
       createdEntities.push(rootId);
 
       // Phase 2: Process static attachments from blueprint
@@ -213,14 +213,14 @@ export class BodyBlueprintFactory {
    * @param {AnatomyRecipe} recipe - The recipe being used
    * @param {string} [ownerId] - Optional owner entity ID
    * @private
-   * @returns {Promise<string>} The created root entity ID
+   * @returns {string} The created root entity ID
    */
-  async #createRootEntity(rootDefinitionId, recipe, ownerId) {
-    const rootEntity = await this.#entityManager.createEntity(rootDefinitionId);
+  #createRootEntity(rootDefinitionId, recipe, ownerId) {
+    const rootEntity = this.#entityManager.createEntityInstance(rootDefinitionId);
     
     if (ownerId) {
       // Add ownership component if specified
-      await this.#entityManager.addComponent(rootEntity.id, 'anatomy:owned_by', { ownerId });
+      this.#entityManager.addComponent(rootEntity.id, 'anatomy:owned_by', { ownerId });
     }
 
     return rootEntity.id;

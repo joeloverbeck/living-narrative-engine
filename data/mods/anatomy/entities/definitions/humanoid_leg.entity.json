@@ -1,0 +1,29 @@
+{
+  "$schema": "http://example.com/schemas/entity-definition.schema.json",
+  "id": "core:humanoid_leg",
+  "description": "A humanoid leg",
+  "components": {
+    "anatomy:part": {
+      "subType": "leg"
+    },
+    "anatomy:sockets": {
+      "sockets": [
+        {
+          "id": "knee",
+          "orientation": "lower",
+          "allowedTypes": ["lower_leg"],
+          "maxCount": 1,
+          "jointType": "hinge",
+          "breakThreshold": 70,
+          "nameTpl": "{{parent.name}} lower leg"
+        }
+      ]
+    },
+    "core:name": {
+      "name": "leg"
+    },
+    "core:description": {
+      "description": "A powerful thigh with strong quadriceps."
+    }
+  }
+}

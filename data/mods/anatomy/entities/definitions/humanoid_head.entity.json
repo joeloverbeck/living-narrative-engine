@@ -1,0 +1,38 @@
+{
+  "$schema": "http://example.com/schemas/entity-definition.schema.json",
+  "id": "core:humanoid_head",
+  "description": "A humanoid head",
+  "components": {
+    "anatomy:part": {
+      "subType": "head"
+    },
+    "anatomy:sockets": {
+      "sockets": [
+        {
+          "id": "left_ear",
+          "orientation": "left",
+          "allowedTypes": ["ear"],
+          "maxCount": 1,
+          "jointType": "fused",
+          "breakThreshold": 30,
+          "nameTpl": "{{orientation}} {{type}}"
+        },
+        {
+          "id": "right_ear",
+          "orientation": "right",
+          "allowedTypes": ["ear"],
+          "maxCount": 1,
+          "jointType": "fused",
+          "breakThreshold": 30,
+          "nameTpl": "{{orientation}} {{type}}"
+        }
+      ]
+    },
+    "core:name": {
+      "name": "head"
+    },
+    "core:description": {
+      "description": "A well-proportioned head with sharp features."
+    }
+  }
+}
