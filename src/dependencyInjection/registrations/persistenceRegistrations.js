@@ -33,6 +33,7 @@ import ActiveModsManifestBuilder from '../../persistence/activeModsManifestBuild
 // import ReferenceResolver from '../../initializers/services/referenceResolver.js'; // Removed - service is deprecated
 import createSaveLoadService from '../../persistence/createSaveLoadService.js';
 import GameStateSerializer from '../../persistence/gameStateSerializer.js';
+import ChecksumService from '../../persistence/checksumService.js';
 import SaveFileRepository from '../../persistence/saveFileRepository.js';
 import SaveFileParser from '../../persistence/saveFileParser.js';
 import { BrowserStorageProvider } from '../../storage/browserStorageProvider.js';
@@ -59,8 +60,10 @@ export function registerPersistence(container) {
   registrar.singletonFactory(tokens.ISaveFileRepository, (c) => {
     const logger = c.resolve(tokens.ILogger);
     const storageProvider = c.resolve(tokens.IStorageProvider);
+    const checksumService = new ChecksumService({ logger });
     const serializer = new GameStateSerializer({
       logger,
+      checksumService,
     });
     const parser = new SaveFileParser({
       logger,

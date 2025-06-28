@@ -4,15 +4,13 @@ import { encode, decode } from '@msgpack/msgpack';
 import pako from 'pako';
 import { cloneValidatedState } from '../utils/saveStateUtils.js';
 import { BaseService } from '../utils/serviceBase.js';
-import {
-  PersistenceError,
-  PersistenceErrorCodes,
-} from './persistenceErrors.js';
+import { PersistenceErrorCodes } from './persistenceErrors.js';
 import {
   MSG_DECOMPRESSION_FAILED,
   MSG_DESERIALIZATION_FAILED,
 } from './persistenceMessages.js';
 import { wrapSyncPersistenceOperation } from '../utils/persistenceErrorUtils.js';
+import ChecksumService from './checksumService.js';
 
 /**
  * @class GameStateSerializer
@@ -25,8 +23,8 @@ class GameStateSerializer extends BaseService {
   /** @type {import('../interfaces/coreServices.js').ILogger} */
   #logger;
 
-  /** @type {Crypto} */
-  #crypto;
+  /** @type {ChecksumService} */
+  #checksumService;
 
   /**
    * Creates a new GameStateSerializer.
@@ -34,59 +32,17 @@ class GameStateSerializer extends BaseService {
    * @param {object} dependencies - Constructor dependencies.
    * @param {import('../interfaces/coreServices.js').ILogger} dependencies.logger - Logging service.
    * @param {Crypto} [dependencies.crypto] - Web Crypto implementation.
+   * @param dependencies.checksumService
    */
-  constructor({ logger, crypto = globalThis.crypto }) {
+  constructor({ logger, checksumService }) {
     super();
-    this.#logger = this._init('GameStateSerializer', logger);
-    this.#crypto = crypto;
-  }
-
-  /**
-   * Converts an ArrayBuffer to a hexadecimal string.
-   *
-   * @param {ArrayBuffer} buffer - The buffer to convert.
-   * @returns {string} Hexadecimal representation.
-   * @private
-   */
-  #arrayBufferToHex(buffer) {
-    return Array.from(new Uint8Array(buffer))
-      .map((b) => b.toString(16).padStart(2, '0'))
-      .join('');
-  }
-
-  /**
-   * Generates an SHA256 checksum for the given data using Web Crypto API.
-   *
-   * @param {any} data - Data to hash.
-   * @returns {Promise<string>} Hexadecimal checksum.
-   * @private
-   */
-  async #generateChecksum(data) {
-    let dataToHash;
-    if (data instanceof Uint8Array) {
-      dataToHash = data;
-    } else {
-      const stringToHash =
-        typeof data === 'string' ? data : JSON.stringify(data);
-      dataToHash = new TextEncoder().encode(stringToHash);
-    }
-
-    try {
-      const hashBuffer = await this.#crypto.subtle.digest(
-        'SHA-256',
-        dataToHash
-      );
-      return this.#arrayBufferToHex(hashBuffer);
-    } catch (error) {
-      this.#logger.error(
-        'Error generating checksum using Web Crypto API:',
-        error
-      );
-      throw new PersistenceError(
-        PersistenceErrorCodes.CHECKSUM_GENERATION_FAILED,
-        `Checksum generation failed: ${error.message}`
-      );
-    }
+    this.#checksumService = checksumService;
+    this.#logger = this._init('GameStateSerializer', logger, {
+      checksumService: {
+        value: checksumService,
+        requiredMethods: ['generateChecksum'],
+      },
+    });
   }
 
   /**
@@ -96,7 +52,7 @@ class GameStateSerializer extends BaseService {
    * @returns {Promise<string>} Hexadecimal checksum.
    */
   async generateChecksum(data) {
-    return this.#generateChecksum(data);
+    return this.#checksumService.generateChecksum(data);
   }
 
   /**
@@ -107,7 +63,7 @@ class GameStateSerializer extends BaseService {
    */
   async calculateGameStateChecksum(gameState) {
     const encoded = encode(gameState);
-    return this.#generateChecksum(encoded);
+    return this.#checksumService.generateChecksum(encoded);
   }
 
   /**

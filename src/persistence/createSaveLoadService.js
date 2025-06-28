@@ -1,6 +1,7 @@
 // src/persistence/createSaveLoadService.js
 
 import GameStateSerializer from './gameStateSerializer.js';
+import ChecksumService from './checksumService.js';
 import SaveFileParser from './saveFileParser.js';
 import SaveValidationService from './saveValidationService.js';
 import SaveFileRepository from './saveFileRepository.js';
@@ -20,7 +21,8 @@ export function createSaveLoadService({
   storageProvider,
   crypto = globalThis.crypto,
 }) {
-  const serializer = new GameStateSerializer({ logger, crypto });
+  const checksumService = new ChecksumService({ logger, crypto });
+  const serializer = new GameStateSerializer({ logger, checksumService });
   const parser = new SaveFileParser({
     logger,
     storageProvider,

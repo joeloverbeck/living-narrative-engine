@@ -6,6 +6,7 @@ import SaveLoadService from '../../../src/persistence/saveLoadService.js';
 import SaveFileRepository from '../../../src/persistence/saveFileRepository.js';
 import SaveFileParser from '../../../src/persistence/saveFileParser.js';
 import GameStateSerializer from '../../../src/persistence/gameStateSerializer.js';
+import ChecksumService from '../../../src/persistence/checksumService.js';
 import { encode, decode } from '@msgpack/msgpack';
 import { PersistenceErrorCodes } from '../../../src/persistence/persistenceErrors.js';
 import { StorageErrorCodes } from '../../../src/storage/storageErrors.js';
@@ -44,7 +45,8 @@ function makeDeps() {
     fileExists: jest.fn(),
     ensureDirectoryExists: jest.fn(),
   };
-  const serializer = new GameStateSerializer({ logger, crypto: webcrypto });
+  const checksumService = new ChecksumService({ logger, crypto: webcrypto });
+  const serializer = new GameStateSerializer({ logger, checksumService });
   const parser = new SaveFileParser({ logger, storageProvider, serializer });
   const saveFileRepository = new SaveFileRepository({
     logger,
