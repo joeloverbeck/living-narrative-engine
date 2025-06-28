@@ -14,7 +14,7 @@ export default function createScopeEngine(resolversOrConfig, maxDepth = 4) {
   // 1. Ticket API: createScopeEngine(resolvers, maxDepth)
   // 2. Test API: createScopeEngine({ resolvers, logger, maxDepth })
   let resolvers, logger;
-  
+
   if (Array.isArray(resolversOrConfig)) {
     // Ticket API: createScopeEngine(resolvers, maxDepth)
     resolvers = resolversOrConfig;
@@ -23,11 +23,11 @@ export default function createScopeEngine(resolversOrConfig, maxDepth = 4) {
     // Test API: createScopeEngine({ resolvers, logger, maxDepth })
     const config = resolversOrConfig || {};
     ({ resolvers, logger, maxDepth = 4 } = config);
-    
+
     if (!logger) {
       throw new Error('Logger is required for createScopeEngine');
     }
-    
+
     if (!resolvers || !Array.isArray(resolvers) || resolvers.length === 0) {
       throw new Error('Resolvers array is required and must not be empty');
     }
@@ -56,9 +56,9 @@ export default function createScopeEngine(resolversOrConfig, maxDepth = 4) {
     depth.ensure(level);
     cycle.enter(nodeKey(node));
     try {
-      return dispatch.resolve(node, { 
-        ...ctx, 
-        walk: (n) => walk(n, ctx, level + 1)
+      return dispatch.resolve(node, {
+        ...ctx,
+        walk: (n) => walk(n, ctx, level + 1),
       });
     } finally {
       cycle.leave();
@@ -69,15 +69,19 @@ export default function createScopeEngine(resolversOrConfig, maxDepth = 4) {
     resolve(ast, actor, ports, trace = null) {
       const source = 'ScopeEngine';
       trace?.addLog('step', 'Starting scope resolution.', source, { ast });
-      
-      const result = walk(ast, { 
-        actorEntity: actor, 
-        runtimeCtx: ports,
-        depth: 0,
-        trace,
-        ...ports 
-      }, 0);
-      
+
+      const result = walk(
+        ast,
+        {
+          actorEntity: actor,
+          runtimeCtx: ports,
+          depth: 0,
+          trace,
+          ...ports,
+        },
+        0
+      );
+
       const finalTargets = Array.from(result);
       trace?.addLog(
         'success',
@@ -85,7 +89,7 @@ export default function createScopeEngine(resolversOrConfig, maxDepth = 4) {
         source,
         { targets: finalTargets }
       );
-      
+
       return result;
     },
     setMaxDepth(n) {

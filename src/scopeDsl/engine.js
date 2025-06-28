@@ -7,6 +7,8 @@
 
 import ScopeDepthError from '../errors/scopeDepthError.js';
 import ScopeCycleError from '../errors/scopeCycleError.js';
+import { UnknownAstNodeError } from '../errors/unknownAstNodeError.js';
+import { UnknownSourceError } from '../errors/unknownSourceError.js';
 import { IScopeEngine } from '../interfaces/IScopeEngine.js';
 
 /**
@@ -149,8 +151,7 @@ class ScopeEngine extends IScopeEngine {
           trace
         );
       default:
-        runtimeCtx.logger.error(`Unknown AST node type: ${node.type}`);
-        return new Set();
+        throw new UnknownAstNodeError(node.type);
     }
   }
 
@@ -181,11 +182,7 @@ class ScopeEngine extends IScopeEngine {
       case 'entities':
         const componentId = node.param;
         if (!componentId) {
-          runtimeCtx.logger.error(
-            'entities() source node missing component ID'
-          );
-          result = new Set();
-          break;
+          throw new Error('entities() source node missing component ID');
         }
 
         if (componentId.startsWith('!')) {
@@ -228,8 +225,7 @@ class ScopeEngine extends IScopeEngine {
         break;
 
       default:
-        runtimeCtx.logger.error(`Unknown source kind: ${node.kind}`);
-        result = new Set();
+        throw new UnknownSourceError(node.kind);
     }
 
     const source = 'ScopeEngine.resolveSource';

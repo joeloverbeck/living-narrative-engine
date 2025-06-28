@@ -77,7 +77,7 @@ describe('createScopeEngine', () => {
 
     it('should accept custom max depth', () => {
       const engine = createScopeEngine(mockResolvers, 6);
-      
+
       // Test that deep nesting up to 6 works
       const deepAST = createDeepAST(6);
       expect(() => {

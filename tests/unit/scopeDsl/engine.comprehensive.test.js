@@ -230,12 +230,9 @@ describe('ScopeEngine - Comprehensive Coverage Tests', () => {
         someProperty: 'someValue',
       };
 
-      const result = engine.resolve(unknownAst, actorEntity, mockRuntimeCtx);
-
-      expect(result).toEqual(new Set());
-      expect(mockRuntimeCtx.logger.error).toHaveBeenCalledWith(
-        'Unknown AST node type: UnknownType'
-      );
+      expect(() => {
+        engine.resolve(unknownAst, actorEntity, mockRuntimeCtx);
+      }).toThrow('Unknown AST node type: UnknownType');
     });
 
     test('should handle field extraction with various input types', () => {
