@@ -4,7 +4,7 @@
 import { ATTEMPT_ACTION_ID } from '../constants/eventIds.js';
 import { ICommandProcessor } from './interfaces/ICommandProcessor.js';
 import { initLogger } from '../utils/index.js';
-import { validateDependency } from '../utils/dependencyUtils.js';
+import { validateDependency, assertValidId } from '../utils/dependencyUtils.js';
 import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
 
 // --- Type Imports ---
@@ -124,10 +124,17 @@ class CommandProcessor extends ICommandProcessor {
       };
     }
 
-    if (!turnAction.actionDefinitionId) {
+    try {
+      assertValidId(actorId, 'CommandProcessor.dispatchAction', this.#logger);
+      assertValidId(
+        turnAction.actionDefinitionId,
+        'CommandProcessor.dispatchAction',
+        this.#logger
+      );
+    } catch (err) {
       return {
         userMsg: 'Internal error: Malformed action prevented execution.',
-        internalMsg: `dispatchAction failed: ITurnAction for actor ${actorId} is missing actionDefinitionId.`,
+        internalMsg: `dispatchAction failed: ${err.message}`,
       };
     }
 
