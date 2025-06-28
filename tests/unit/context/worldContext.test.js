@@ -13,10 +13,7 @@ import WorldContext from '../../../src/context/worldContext.js';
 import Entity from '../../../src/entities/entity.js';
 import EntityDefinition from '../../../src/entities/entityDefinition.js';
 import EntityInstanceData from '../../../src/entities/entityInstanceData.js';
-import {
-  POSITION_COMPONENT_ID,
-  CURRENT_ACTOR_COMPONENT_ID,
-} from '../../../src/constants/componentIds.js';
+import { POSITION_COMPONENT_ID } from '../../../src/constants/componentIds.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
 
 const createMockEntityManager = () => ({
@@ -38,7 +35,8 @@ const createTestEntity = (
   instanceId,
   definitionId,
   defComponents = {},
-  instanceOverrides = {}
+  instanceOverrides = {},
+  logger = console
 ) => {
   const definition = new EntityDefinition(definitionId, {
     description: `Test Definition ${definitionId}`,
@@ -47,7 +45,8 @@ const createTestEntity = (
   const instanceData = new EntityInstanceData(
     instanceId,
     definition,
-    instanceOverrides
+    instanceOverrides,
+    logger
   );
   return new Entity(instanceData);
 };

@@ -32,7 +32,8 @@ describe('Entity Class', () => {
     mockInstanceData = new EntityInstanceData(
       testInstanceId,
       mockDefinition,
-      {}
+      {},
+      console
     );
 
     entity = new Entity(mockInstanceData);
@@ -107,9 +108,14 @@ describe('Entity Class', () => {
           'core:health': { current: 100, max: 100 },
         },
       });
-      const instanceData = new EntityInstanceData('test-id', def, {
-        'core:health': { current: 50 }, // Override only current
-      });
+      const instanceData = new EntityInstanceData(
+        'test-id',
+        def,
+        {
+          'core:health': { current: 50 }, // Override only current
+        },
+        console
+      );
       const entity = new Entity(instanceData);
 
       const healthData = entity.getComponentData('core:health');
@@ -247,7 +253,8 @@ describe('Entity Class', () => {
         {
           'core:health': { current: 50 }, // Override only current health
           'custom:inventory': { items: ['potion'] },
-        }
+        },
+        console
       );
       const entity = new Entity(instanceData);
 
@@ -285,7 +292,8 @@ describe('Entity Class', () => {
         {
           'core:health': { current: 75 }, // Override only current health
           'custom:stamina': { value: 30 },
-        }
+        },
+        console
       );
       const entity = new Entity(instanceData);
 
@@ -313,8 +321,6 @@ describe('Entity Class', () => {
   describe('toString', () => {
     it('should return a string representation of the entity including its ID, DefID and component types', () => {
       mockInstanceData.setComponentOverride('custom:mana', { current: 10 });
-      const expectedString = `Entity[${testInstanceId} (Def: ${testDefinitionId})] Components: core:name, core:health, custom:mana`;
-      // Order might vary, so check parts or use a regex/matcher
       const str = entity.toString();
       expect(str).toContain(
         `Entity[${testInstanceId} (Def: ${testDefinitionId})]`
@@ -326,7 +332,12 @@ describe('Entity Class', () => {
 
     it('should display "None" if no components are present', () => {
       const emptyDef = new EntityDefinition('empty:def', { components: {} });
-      const emptyInstanceData = new EntityInstanceData('emptyInst', emptyDef);
+      const emptyInstanceData = new EntityInstanceData(
+        'emptyInst',
+        emptyDef,
+        {},
+        console
+      );
       const emptyEntity = new Entity(emptyInstanceData);
 
       const expectedString =

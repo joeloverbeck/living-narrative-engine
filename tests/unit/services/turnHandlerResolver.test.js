@@ -26,7 +26,8 @@ const createTestEntity = (
   instanceId,
   definitionId,
   defComponents = {},
-  instanceOverrides = {}
+  instanceOverrides = {},
+  logger = console
 ) => {
   const definition = new EntityDefinition(definitionId, {
     components: defComponents,
@@ -34,7 +35,8 @@ const createTestEntity = (
   const instanceData = new EntityInstanceData(
     instanceId,
     definition,
-    instanceOverrides
+    instanceOverrides,
+    logger
   );
   return new Entity(instanceData);
 };

@@ -24,7 +24,7 @@ describe('DefaultComponentPolicy error handling', () => {
     const def = new EntityDefinition('actor', {
       components: { [ACTOR_COMPONENT_ID]: {} },
     });
-    const data = new EntityInstanceData('e1', def);
+    const data = new EntityInstanceData('e1', def, {}, logger);
     const entity = new Entity(data);
 
     const policy = new DefaultComponentPolicy();
@@ -53,7 +53,7 @@ describe('DefaultComponentPolicy error handling', () => {
     const def = new EntityDefinition('actor', {
       components: { [ACTOR_COMPONENT_ID]: {} },
     });
-    const data = new EntityInstanceData('e2', def);
+    const data = new EntityInstanceData('e2', def, {}, logger);
     const entity = new Entity(data);
 
     const policy = new DefaultComponentPolicy();

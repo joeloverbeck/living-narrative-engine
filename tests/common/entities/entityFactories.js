@@ -25,6 +25,7 @@ export function createEntityDefinition(
  * @param {string} [params.definitionId] - Definition identifier.
  * @param {Record<string, any>} [params.baseComponents] - Components on the definition.
  * @param {Record<string, any>} [params.overrides] - Component overrides for the instance.
+ * @param {object} [params.logger] - Logger for EntityInstanceData.
  * @returns {Entity} Newly created entity instance.
  */
 export function createEntityInstance({
@@ -32,11 +33,17 @@ export function createEntityInstance({
   definitionId = 'test:def',
   baseComponents = {},
   overrides = {},
+  logger = console,
 }) {
   const defId = definitionId.includes(':')
     ? definitionId
     : `test:${definitionId}`;
   const definition = createEntityDefinition(defId, baseComponents);
-  const data = new EntityInstanceData(instanceId, definition, overrides);
+  const data = new EntityInstanceData(
+    instanceId,
+    definition,
+    overrides,
+    logger
+  );
   return new Entity(data);
 }

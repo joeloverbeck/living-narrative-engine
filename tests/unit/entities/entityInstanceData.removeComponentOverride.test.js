@@ -28,7 +28,12 @@ describe('EntityInstanceData', () => {
   describe('constructor', () => {
     it('should initialize correctly with a definition and no overrides', () => {
       // Act
-      const instance = new EntityInstanceData('instance-1', baseDefinition);
+      const instance = new EntityInstanceData(
+        'instance-1',
+        baseDefinition,
+        {},
+        console
+      );
 
       // Assert
       expect(instance.instanceId).toBe('instance-1');
@@ -46,7 +51,8 @@ describe('EntityInstanceData', () => {
       const instance = new EntityInstanceData(
         'instance-1',
         baseDefinition,
-        initialOverrides
+        initialOverrides,
+        console
       );
 
       // Assert
@@ -66,10 +72,15 @@ describe('EntityInstanceData', () => {
 
     beforeEach(() => {
       // Arrange: Create an instance with a mix of overrides for each test.
-      instance = new EntityInstanceData('instance-1', baseDefinition, {
-        ...positionComponent,
-        ...inventoryComponent,
-      });
+      instance = new EntityInstanceData(
+        'instance-1',
+        baseDefinition,
+        {
+          ...positionComponent,
+          ...inventoryComponent,
+        },
+        console
+      );
     });
 
     it('should remove an existing component override and return true', () => {
