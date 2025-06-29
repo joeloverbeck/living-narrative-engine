@@ -399,4 +399,54 @@ describe('QueryEntitiesHandler', () => {
       );
     });
   });
+
+  describe('Helper Behavior', () => {
+    test('unknown filter types are ignored with a warning', () => {
+      const params = {
+        result_variable: 'unknown_filter',
+        filters: [{ mysterious_filter: 'value' }],
+      };
+
+      handler.execute(params, mockExecutionContext);
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        "QUERY_ENTITIES: Encountered unknown filter type 'mysterious_filter'. Skipping."
+      );
+      const result =
+        mockExecutionContext.evaluationContext.context.unknown_filter;
+      expect(result.length).toBe(5);
+    });
+
+    test('subsequent filters are skipped once the candidate set is empty', () => {
+      mockEntityManager.getEntitiesInLocation.mockReturnValue(new Set());
+      const params = {
+        result_variable: 'empty_after_first',
+        filters: [
+          { by_location: 'nowhere' },
+          { with_component: 'core:monster' },
+        ],
+      };
+
+      handler.execute(params, mockExecutionContext);
+
+      expect(mockEntityManager.hasComponent).not.toHaveBeenCalled();
+      const result =
+        mockExecutionContext.evaluationContext.context.empty_after_first;
+      expect(result).toEqual([]);
+    });
+
+    test('limit values below zero are ignored', () => {
+      mockEntityManager.hasComponent.mockReturnValue(true);
+      const params = {
+        result_variable: 'no_limit',
+        filters: [{ with_component: 'core:any' }],
+        limit: -5,
+      };
+
+      handler.execute(params, mockExecutionContext);
+
+      const result = mockExecutionContext.evaluationContext.context.no_limit;
+      expect(result.length).toBe(5);
+    });
+  });
 });
