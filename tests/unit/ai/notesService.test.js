@@ -34,6 +34,7 @@ describe('NotesService', () => {
     const result = notesService.addNotes(component, newNotes);
 
     expect(result.wasModified).toBe(true);
+    expect(result.component).toBe(component); // same reference returned
     expect(result.component.notes).toHaveLength(1);
     expect(result.component.notes[0]).toEqual({
       text: 'First note',
@@ -66,6 +67,7 @@ describe('NotesService', () => {
     const result = notesService.addNotes(component, newNotes);
 
     expect(result.wasModified).toBe(false);
+    expect(result.component).toBe(component); // reference should not change
     expect(result.component.notes).toHaveLength(1);
   });
 
@@ -80,6 +82,7 @@ describe('NotesService', () => {
     const result = notesService.addNotes(component, newNotes);
 
     expect(result.wasModified).toBe(true);
+    expect(result.component).toBe(component); // same reference returned
     expect(result.component.notes).toHaveLength(2);
     expect(result.component.notes.map((n) => n.text)).toEqual([
       'Alpha',
@@ -96,6 +99,7 @@ describe('NotesService', () => {
     const result = notesService.addNotes(component, newNotes);
 
     expect(result.wasModified).toBe(false);
+    expect(result.component).toBe(component); // object reused
   });
 
   test('normalizeNoteText strips punctuation without affecting regular characters', () => {

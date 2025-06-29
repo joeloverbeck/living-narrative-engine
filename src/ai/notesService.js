@@ -32,7 +32,7 @@ export default class NotesService {
   /**
    * Adds new notes to a notes component data object, skipping duplicates.
    *
-   * @param {object} notesComp - The notes component data to update.
+   * @param {object} notesComp - The notes component data to update. This object is mutated in place.
    * @param {Array<{text: string, timestamp: string}>} notesComp.notes - The list of existing notes.
    * @param {string[]} newNotesText - An array of new note strings to add.
    * @param {Date} [now] - The current date/time; defaults to new Date().
