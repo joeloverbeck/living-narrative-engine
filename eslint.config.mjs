@@ -4,6 +4,7 @@ import globals from 'globals';
 import js from '@eslint/js';
 import pluginJest from 'eslint-plugin-jest';
 import pluginJsdoc from 'eslint-plugin-jsdoc';
+import babelParser from '@babel/eslint-parser';
 import eslintConfigPrettier from 'eslint-config-prettier';
 // Potentially add: import pluginImport from 'eslint-plugin-import'; // We'll discuss this later
 
@@ -59,6 +60,18 @@ export default [
       // 'jsdoc/require-returns-description': 'warn',
       // 'jsdoc/check-tag-names': ['warn', { definedTags: ['see', 'link', 'example', 'throws'] }],
       // 'jsdoc/require-jsdoc': ['warn', { /* ... your detailed dependencyInjection ... */ }]
+    },
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      parser: babelParser,
+      parserOptions: {
+        ecmaVersion: 'latest',
+        sourceType: 'module',
+        ecmaFeatures: {
+          importAssertions: true,
+        },
+      },
     },
   },
 

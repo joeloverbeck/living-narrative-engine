@@ -3,9 +3,10 @@
 
 import semver from 'semver';
 import { freeze } from '../utils/cloneUtils.js';
+import pkg from '../../package.json' assert { type: 'json' };
 
-// NOTE: Keep this string in sync with package.json "version".
-const versionFromPackage = '0.0.1';
+// Load the version from package.json
+const versionFromPackage = pkg.version;
 
 // Validate the version on startup (when this module is first imported)
 if (!semver.valid(versionFromPackage)) {
