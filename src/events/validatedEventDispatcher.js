@@ -1,4 +1,4 @@
-// src/services/validatedEventDispatcher.js
+// src/events/validatedEventDispatcher.js
 
 /**
  * @file Defines the ValidatedEventDispatcher service.
