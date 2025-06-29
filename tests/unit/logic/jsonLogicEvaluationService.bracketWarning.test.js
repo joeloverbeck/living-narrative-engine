@@ -5,6 +5,7 @@
  */
 import { describe, expect, test, jest, beforeEach } from '@jest/globals';
 import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
+import * as logicUtils from '../../../src/utils/jsonLogicUtils.js';
 
 /** @typedef {import('../../../src/interfaces/coreServices.js').ILogger} ILogger */
 
@@ -21,16 +22,26 @@ describe('JsonLogicEvaluationService bracket notation warning', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.spyOn(logicUtils, 'warnOnBracketPaths');
     service = new JsonLogicEvaluationService({
       logger: mockLogger,
       gameDataRepository: { getConditionDefinition: () => null },
     });
   });
 
+  afterEach(() => {
+    logicUtils.warnOnBracketPaths.mockRestore();
+  });
+
   test('returns false and logs warning for bracket notation component access', () => {
     const rule = { var: "actor.components.['bad:component']" };
     const result = service.evaluate(rule, { actor: { components: {} } });
     expect(result).toBe(false);
+    expect(logicUtils.warnOnBracketPaths).toHaveBeenCalledTimes(1);
+    expect(logicUtils.warnOnBracketPaths).toHaveBeenCalledWith(
+      rule,
+      expect.objectContaining({ warn: expect.any(Function) })
+    );
     expect(mockLogger.warn).toHaveBeenCalledTimes(1);
     expect(mockLogger.warn).toHaveBeenCalledWith(
       expect.stringContaining("actor.components.['bad:component']")
