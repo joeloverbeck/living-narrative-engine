@@ -1,5 +1,5 @@
 import { describe, it, beforeEach, expect, jest } from '@jest/globals';
-import { formatActionCommand } from '../../../src/actions/actionFormatter.js';
+import ActionCommandFormatter from '../../../src/actions/actionFormatter.js';
 import { targetFormatterMap } from '../../../src/actions/formatters/targetFormatters.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
 import {
@@ -14,18 +14,20 @@ describe('formatActionCommand uncovered branches', () => {
   let logger;
   let dispatcher;
   let displayNameFn;
+  let formatter;
 
   beforeEach(() => {
     entityManager = { getEntityInstance: jest.fn() };
     logger = createMockLogger();
     dispatcher = { dispatch: jest.fn() };
     displayNameFn = jest.fn();
+    formatter = new ActionCommandFormatter();
     jest.clearAllMocks();
   });
 
   it('returns validation error when targetContext is missing', () => {
     const actionDef = { id: 'core:inspect', template: 'inspect {target}' };
-    const result = formatActionCommand(
+    const result = formatter.format(
       actionDef,
       null,
       entityManager,
@@ -47,7 +49,7 @@ describe('formatActionCommand uncovered branches', () => {
   it('returns validation error when displayNameFn is not a function', () => {
     const actionDef = { id: 'core:inspect', template: 'inspect {target}' };
     const context = { type: TARGET_TYPE_ENTITY, entityId: 'e1' };
-    const result = formatActionCommand(
+    const result = formatter.format(
       actionDef,
       context,
       entityManager,
@@ -75,7 +77,7 @@ describe('formatActionCommand uncovered branches', () => {
       ...targetFormatterMap,
       entity: jest.fn(() => 'custom'),
     };
-    const result = formatActionCommand(
+    const result = formatter.format(
       actionDef,
       context,
       entityManager,
@@ -87,7 +89,7 @@ describe('formatActionCommand uncovered branches', () => {
 
   it('throws when logger is missing and inputs are invalid', () => {
     const actionDef = { id: 'core:test', template: 'test {target}' };
-    expect(() => formatActionCommand(actionDef, null, entityManager)).toThrow(
+    expect(() => formatter.format(actionDef, null, entityManager)).toThrow(
       'formatActionCommand: logger is required.'
     );
   });
@@ -96,7 +98,7 @@ describe('formatActionCommand uncovered branches', () => {
     const actionDef = { id: 'core:wait', template: 'wait' };
     const context = { type: TARGET_TYPE_NONE };
     expect(() =>
-      formatActionCommand(actionDef, context, entityManager, { logger })
+      formatter.format(actionDef, context, entityManager, { logger })
     ).toThrow('Missing required dependency: safeEventDispatcher.');
   });
 });

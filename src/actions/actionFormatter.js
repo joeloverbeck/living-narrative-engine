@@ -12,6 +12,7 @@
 
 // --- Dependency Imports ---
 import { getEntityDisplayName } from '../utils/entityUtils.js';
+import { IActionCommandFormatter } from '../interfaces/IActionCommandFormatter.js';
 import {
   safeDispatchError,
   dispatchValidationError,
@@ -187,7 +188,7 @@ function finalizeCommand(command, logger, debug) {
  * @param {TargetFormatterMap} [deps.formatterMap] - Map of target types to formatter functions.
  * @returns {FormatActionCommandResult} Result object containing the formatted command or an error.
  */
-export function formatActionCommand(
+function formatActionCommand(
   actionDefinition,
   targetContext,
   entityManager,
@@ -252,4 +253,32 @@ export function formatActionCommand(
 
   // --- 3. Return Formatted String ---
   return finalizeCommand(command, logger, debug);
+}
+
+/**
+ * Default implementation of {@link IActionCommandFormatter}.
+ *
+ * @class ActionCommandFormatter
+ * @description Formats action commands using the standard logic.
+ * @augments IActionCommandFormatter
+ */
+export default class ActionCommandFormatter extends IActionCommandFormatter {
+  /**
+   * @inheritdoc
+   */
+  format(
+    actionDefinition,
+    targetContext,
+    entityManager,
+    options = {},
+    deps = {}
+  ) {
+    return formatActionCommand(
+      actionDefinition,
+      targetContext,
+      entityManager,
+      options,
+      deps
+    );
+  }
 }

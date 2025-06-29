@@ -19,7 +19,7 @@ describeActionDiscoverySuite(
       const bed = getBed();
       const def = { id: 'bad', commandVerb: 'bad', scope: 'none' };
       bed.mocks.actionIndex.getCandidateActions.mockReturnValue([def]);
-      bed.mocks.formatActionCommandFn.mockImplementation(() => {
+      bed.mocks.actionCommandFormatter.format.mockImplementation(() => {
         const err = new Error('boom');
         err.target = { entityId: 'target-123' };
         throw err;
@@ -39,7 +39,7 @@ describeActionDiscoverySuite(
       const bed = getBed();
       const def = { id: 'bad', commandVerb: 'bad', scope: 'none' };
       bed.mocks.actionIndex.getCandidateActions.mockReturnValue([def]);
-      bed.mocks.formatActionCommandFn.mockImplementation(() => {
+      bed.mocks.actionCommandFormatter.format.mockImplementation(() => {
         const err = new Error('boom');
         err.entityId = 'target-456';
         throw err;

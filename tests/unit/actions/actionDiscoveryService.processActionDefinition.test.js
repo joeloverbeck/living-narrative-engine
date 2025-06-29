@@ -10,7 +10,7 @@ describeActionDiscoverySuite(
     beforeEach(() => {
       const bed = getBed();
       bed.mocks.prerequisiteEvaluationService.evaluate.mockReturnValue(true);
-      bed.mocks.formatActionCommandFn.mockReturnValue({
+      bed.mocks.actionCommandFormatter.format.mockReturnValue({
         ok: true,
         value: 'doit',
       });
@@ -64,7 +64,7 @@ describeActionDiscoverySuite(
       bed.mocks.targetResolutionService.resolveTargets.mockReturnValue([
         { type: 'entity', entityId: 'monster1' },
       ]);
-      bed.mocks.formatActionCommandFn.mockReturnValue({
+      bed.mocks.actionCommandFormatter.format.mockReturnValue({
         ok: true,
         value: 'attack monster1',
       });
@@ -111,7 +111,7 @@ describeActionDiscoverySuite(
       bed.mocks.targetResolutionService.resolveTargets.mockReturnValue([
         { type: 'none', entityId: null },
       ]);
-      bed.mocks.formatActionCommandFn.mockImplementation((def) => {
+      bed.mocks.actionCommandFormatter.format.mockImplementation((def) => {
         if (def.id === 'bad') throw new Error('boom');
         return { ok: true, value: def.commandVerb };
       });

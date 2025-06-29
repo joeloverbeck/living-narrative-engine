@@ -8,7 +8,7 @@ import { describe, it, beforeEach, expect, jest } from '@jest/globals';
 import { SimpleEntityManager } from '../common/entities/index.js';
 import { ActionDiscoveryService } from '../../src/actions/actionDiscoveryService.js';
 import { ActionCandidateProcessor } from '../../src/actions/actionCandidateProcessor.js';
-import { formatActionCommand } from '../../src/actions/actionFormatter.js';
+import ActionCommandFormatter from '../../src/actions/actionFormatter.js';
 import { getEntityDisplayName } from '../../src/utils/entityUtils.js';
 import { SafeEventDispatcher } from '../../src/events/safeEventDispatcher.js';
 import ScopeRegistry from '../../src/scopeDsl/scopeRegistry.js';
@@ -201,7 +201,7 @@ describe('Singleton Scope Engine Location Context', () => {
       prerequisiteEvaluationService,
       targetResolutionService,
       entityManager,
-      formatActionCommandFn: formatActionCommand,
+      actionCommandFormatter: new ActionCommandFormatter(),
       safeEventDispatcher,
       getEntityDisplayNameFn: getEntityDisplayName,
       logger,

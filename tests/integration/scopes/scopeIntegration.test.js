@@ -14,7 +14,7 @@ import {
 import { SimpleEntityManager } from '../../common/entities/index.js';
 import { ActionDiscoveryService } from '../../../src/actions/actionDiscoveryService.js';
 import { ActionCandidateProcessor } from '../../../src/actions/actionCandidateProcessor.js';
-import { formatActionCommand } from '../../../src/actions/actionFormatter.js';
+import ActionCommandFormatter from '../../../src/actions/actionFormatter.js';
 import { getEntityDisplayName } from '../../../src/utils/entityUtils.js';
 import { GameDataRepository } from '../../../src/data/gameDataRepository.js';
 import { SafeEventDispatcher } from '../../../src/events/safeEventDispatcher.js';
@@ -160,7 +160,7 @@ describe('Scope Integration Tests', () => {
       prerequisiteEvaluationService,
       targetResolutionService,
       entityManager,
-      formatActionCommandFn: formatActionCommand,
+      actionCommandFormatter: new ActionCommandFormatter(),
       safeEventDispatcher,
       getEntityDisplayNameFn: getEntityDisplayName,
       logger,

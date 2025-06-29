@@ -40,7 +40,7 @@ describeActionDiscoverySuite(
           return [];
         }
       );
-      bed.mocks.formatActionCommandFn.mockImplementation((def, ctx) => {
+      bed.mocks.actionCommandFormatter.format.mockImplementation((def, ctx) => {
         return ctx.entityId
           ? { ok: true, value: `${def.commandVerb} ${ctx.entityId}` }
           : { ok: true, value: def.commandVerb };

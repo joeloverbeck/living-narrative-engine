@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { formatActionCommand } from '../../../src/actions/actionFormatter.js';
+import ActionCommandFormatter from '../../../src/actions/actionFormatter.js';
 import { targetFormatterMap } from '../../../src/actions/formatters/targetFormatters.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
 import {
@@ -13,12 +13,14 @@ describe('formatActionCommand', () => {
   let logger;
   let dispatcher;
   let displayNameFn;
+  let formatter;
 
   beforeEach(() => {
     entityManager = { getEntityInstance: jest.fn() };
     logger = createMockLogger();
     dispatcher = { dispatch: jest.fn() };
     displayNameFn = jest.fn();
+    formatter = new ActionCommandFormatter();
     jest.clearAllMocks();
   });
 
@@ -29,7 +31,7 @@ describe('formatActionCommand', () => {
     entityManager.getEntityInstance.mockReturnValue(mockEntity);
     displayNameFn.mockReturnValue('The Entity');
 
-    const result = formatActionCommand(
+    const result = formatter.format(
       actionDef,
       context,
       entityManager,
@@ -51,7 +53,7 @@ describe('formatActionCommand', () => {
     const context = { type: TARGET_TYPE_ENTITY, entityId: 'e1' };
     entityManager.getEntityInstance.mockReturnValue(null);
 
-    const result = formatActionCommand(
+    const result = formatter.format(
       actionDef,
       context,
       entityManager,
@@ -72,7 +74,7 @@ describe('formatActionCommand', () => {
     const actionDef = { id: 'core:wait', template: 'wait' };
     const context = { type: TARGET_TYPE_NONE };
 
-    const result = formatActionCommand(
+    const result = formatter.format(
       actionDef,
       context,
       entityManager,
@@ -84,7 +86,7 @@ describe('formatActionCommand', () => {
   });
 
   it('returns error for missing action template', () => {
-    const result = formatActionCommand(
+    const result = formatter.format(
       { id: 'bad' },
       { type: TARGET_TYPE_NONE },
       entityManager,
@@ -106,7 +108,7 @@ describe('formatActionCommand', () => {
   });
 
   it('returns error when entityManager is invalid', () => {
-    const result = formatActionCommand(
+    const result = formatter.format(
       { id: 'core:use', template: 'use {target}' },
       { type: TARGET_TYPE_ENTITY, entityId: 'e1' },
       {},
@@ -122,7 +124,7 @@ describe('formatActionCommand', () => {
   it('warns on unknown target type', () => {
     const actionDef = { id: 'core:do', template: 'do it' };
     const context = { type: 'mystery' };
-    const result = formatActionCommand(
+    const result = formatter.format(
       actionDef,
       context,
       entityManager,
@@ -142,7 +144,7 @@ describe('formatActionCommand', () => {
     const actionDef = { id: 'core:inspect', template: 'inspect {target}' };
     const context = { type: TARGET_TYPE_ENTITY, entityId: 'e1' };
     const customMap = {};
-    const result = formatActionCommand(
+    const result = formatter.format(
       actionDef,
       context,
       entityManager,
@@ -161,7 +163,7 @@ describe('formatActionCommand', () => {
     const context = { type: TARGET_TYPE_NONE };
 
     expect(() =>
-      formatActionCommand(
+      formatter.format(
         actionDef,
         context,
         entityManager,
@@ -176,13 +178,7 @@ describe('formatActionCommand', () => {
     const context = { type: TARGET_TYPE_NONE };
 
     expect(() =>
-      formatActionCommand(
-        actionDef,
-        context,
-        entityManager,
-        {},
-        { displayNameFn }
-      )
+      formatter.format(actionDef, context, entityManager, {}, { displayNameFn })
     ).toThrow('formatActionCommand: logger is required.');
   });
 
@@ -190,16 +186,16 @@ describe('formatActionCommand', () => {
     const actionDef = { id: 'core:wait', template: 'wait' };
     const context = { type: TARGET_TYPE_NONE };
 
-    expect(() =>
-      formatActionCommand(actionDef, context, entityManager)
-    ).toThrow('formatActionCommand: logger is required.');
+    expect(() => formatter.format(actionDef, context, entityManager)).toThrow(
+      'formatActionCommand: logger is required.'
+    );
   });
 
   it('returns template unchanged and warns for unknown target type', () => {
     const actionDef = { id: 'core:do', template: 'do it' };
     const context = { type: 'bogus' };
 
-    const result = formatActionCommand(
+    const result = formatter.format(
       actionDef,
       context,
       entityManager,
@@ -222,7 +218,7 @@ describe('formatActionCommand', () => {
     };
     const formatterMap = { ...targetFormatterMap, entity: throwingFormatter };
 
-    const result = formatActionCommand(
+    const result = formatter.format(
       actionDef,
       context,
       entityManager,

@@ -92,7 +92,7 @@ describeActionDiscoverySuite(
           return [];
         }
       );
-      bed.mocks.formatActionCommandFn.mockReturnValue({
+      bed.mocks.actionCommandFormatter.format.mockReturnValue({
         ok: true,
         value: 'do action',
       });

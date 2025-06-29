@@ -1,5 +1,5 @@
 import { describe, it, beforeEach, expect, jest } from '@jest/globals';
-import { formatActionCommand } from '../../../src/actions/actionFormatter.js';
+import ActionCommandFormatter from '../../../src/actions/actionFormatter.js';
 import { targetFormatterMap } from '../../../src/actions/formatters/targetFormatters.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
 import {
@@ -19,12 +19,14 @@ describe('formatActionCommand additional cases', () => {
   let logger;
   let dispatcher;
   let displayNameFn;
+  let formatter;
 
   beforeEach(() => {
     entityManager = { getEntityInstance: jest.fn() };
     logger = createMockLogger();
     dispatcher = { dispatch: jest.fn() };
     displayNameFn = jest.fn();
+    formatter = new ActionCommandFormatter();
     jest.clearAllMocks();
   });
 
@@ -41,7 +43,7 @@ describe('formatActionCommand additional cases', () => {
     const actionDef = { id: 'core:use', template: 'use {target}' };
     const context = { type: TARGET_TYPE_ENTITY };
 
-    const result = formatActionCommand(
+    const result = formatter.format(
       actionDef,
       context,
       entityManager,
@@ -65,7 +67,7 @@ describe('formatActionCommand additional cases', () => {
     };
     const context = { type: TARGET_TYPE_NONE };
 
-    formatActionCommand(
+    formatter.format(
       actionDef,
       context,
       entityManager,
@@ -88,7 +90,7 @@ describe('formatActionCommand additional cases', () => {
       throw new Error('boom');
     });
 
-    const result = formatActionCommand(
+    const result = formatter.format(
       actionDef,
       context,
       entityManager,
@@ -117,7 +119,7 @@ describe('formatActionCommand additional cases', () => {
       entity: jest.fn(() => ({ ok: true, value: 'test-value' })),
     };
 
-    const result = formatActionCommand(
+    const result = formatter.format(
       actionDef,
       context,
       entityManager,

@@ -21,7 +21,7 @@ describeActionDiscoverySuite(
       bed.mocks.targetResolutionService.resolveTargets.mockReturnValue([
         { type: 'entity', entityId: 'rat123' },
       ]);
-      bed.mocks.formatActionCommandFn.mockReturnValue({
+      bed.mocks.actionCommandFormatter.format.mockReturnValue({
         ok: true,
         value: 'attack rat123',
       });

@@ -58,7 +58,7 @@ describe('ADS-P4-05: Streamlined ActionDiscoveryService', () => {
       prerequisiteEvaluationService: mockPrereqService,
       targetResolutionService: mockTargetResolutionService,
       entityManager: mockEntityManager,
-      formatActionCommandFn: mockFormatActionCommandFn,
+      actionCommandFormatter: { format: mockFormatActionCommandFn },
       safeEventDispatcher: mockEventDispatcher,
       getEntityDisplayNameFn: mockGetEntityDisplayNameFn,
       logger: mockLogger,

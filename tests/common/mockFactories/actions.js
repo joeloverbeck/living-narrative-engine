@@ -39,4 +39,12 @@ export const createMockTargetResolutionService = () =>
  * @description Returns a jest.fn used to format action commands in tests.
  * @returns {jest.Mock} Mock formatting function
  */
-export const createMockFormatActionCommandFn = () => jest.fn();
+
+/**
+ * Creates a mock action command formatter implementing a `format` method.
+ *
+ * @returns {{ format: jest.Mock }} Mock formatter instance
+ */
+export const createMockActionCommandFormatter = () => ({
+  format: jest.fn(),
+});

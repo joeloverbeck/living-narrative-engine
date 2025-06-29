@@ -5,7 +5,7 @@ describeActionCandidateProcessorSuite('ActionCandidateProcessor', (getBed) => {
   beforeEach(() => {
     const bed = getBed();
     bed.mocks.prerequisiteEvaluationService.evaluate.mockReturnValue(true);
-    bed.mocks.formatActionCommandFn.mockReturnValue({
+    bed.mocks.actionCommandFormatter.format.mockReturnValue({
       ok: true,
       value: 'doit',
     });
@@ -40,10 +40,12 @@ describeActionCandidateProcessorSuite('ActionCandidateProcessor', (getBed) => {
         { type: 'entity', entityId: 'enemy1' },
         { type: 'entity', entityId: 'enemy2' },
       ]);
-      bed.mocks.formatActionCommandFn.mockImplementation((def, target) => ({
-        ok: true,
-        value: `${def.commandVerb} ${target.entityId}`,
-      }));
+      bed.mocks.actionCommandFormatter.format.mockImplementation(
+        (def, target) => ({
+          ok: true,
+          value: `${def.commandVerb} ${target.entityId}`,
+        })
+      );
 
       const result = bed.service.process(actionDef, actorEntity, context);
 
@@ -127,16 +129,18 @@ describeActionCandidateProcessorSuite('ActionCandidateProcessor', (getBed) => {
         { type: 'entity', entityId: 'target1' },
         { type: 'entity', entityId: 'target2' },
       ]);
-      bed.mocks.formatActionCommandFn.mockImplementation((def, target) => {
-        if (target.entityId === 'target1') {
-          return { ok: true, value: 'test target1' };
+      bed.mocks.actionCommandFormatter.format.mockImplementation(
+        (def, target) => {
+          if (target.entityId === 'target1') {
+            return { ok: true, value: 'test target1' };
+          }
+          return {
+            ok: false,
+            error: 'Format failed',
+            details: { targetId: target.entityId },
+          };
         }
-        return {
-          ok: false,
-          error: 'Format failed',
-          details: { targetId: target.entityId },
-        };
-      });
+      );
 
       const result = bed.service.process(actionDef, actorEntity, context);
 
