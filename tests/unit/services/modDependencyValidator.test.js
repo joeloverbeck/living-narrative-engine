@@ -233,6 +233,29 @@ describe('ModDependencyValidator', () => {
     expect(mockLogger.info).not.toHaveBeenCalled();
   });
 
+  it('5c. uses injected semver library', () => {
+    const modB = { id: 'ModB', version: '1.0.0' };
+    const modA = {
+      id: 'ModA',
+      version: '1.0.0',
+      dependencies: [{ id: 'ModB', version: '^1.0.0' }],
+    };
+    const manifests = createManifestMap([modA, modB]);
+
+    const fakeSemver = {
+      valid: jest.fn(() => true),
+      satisfies: jest.fn(() => false),
+    };
+
+    expect(() =>
+      ModDependencyValidator.validate(manifests, mockLogger, {
+        semverLib: fakeSemver,
+      })
+    ).toThrow(/requires dependency 'ModB' version '\^1.0.0'/);
+    expect(fakeSemver.valid).toHaveBeenCalledWith('1.0.0');
+    expect(fakeSemver.satisfies).toHaveBeenCalledWith('1.0.0', '^1.0.0');
+  });
+
   it('6. Conflict declared by A only', () => {
     const modB = { id: 'ModB', version: '1.0.0' };
     const modA = { id: 'ModA', version: '1.0.0', conflicts: ['ModB'] };
