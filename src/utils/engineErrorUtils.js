@@ -1,4 +1,9 @@
-// src/engine/engineErrorUtils.js
+// src/utils/engineErrorUtils.js
+/**
+ * @module engineErrorUtils
+ * @description Utilities for dispatching failure UI events and standardizing
+ * engine errors.
+ */
 import { ENGINE_OPERATION_FAILED_UI } from '../constants/eventIds.js';
 
 /**
