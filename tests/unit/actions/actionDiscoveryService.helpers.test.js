@@ -14,9 +14,9 @@ describe('ActionDiscoveryService helper methods', () => {
   const setupBed = (bed) => {
     bed.mocks.actionIndex.getCandidateActions.mockReturnValue(defs);
     bed.mocks.prerequisiteEvaluationService.evaluate.mockReturnValue(true);
-    bed.mocks.targetResolutionService.resolveTargets.mockReturnValue([
-      { type: 'none', entityId: null },
-    ]);
+    bed.mocks.targetResolutionService.resolveTargets.mockReturnValue({
+      targets: [{ type: 'none', entityId: null }],
+    });
     bed.mocks.actionCommandFormatter.format.mockReturnValue({
       ok: true,
       value: 'cmd',

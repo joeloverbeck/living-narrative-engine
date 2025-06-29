@@ -61,12 +61,14 @@ describeActionDiscoverySuite(
       bed.mocks.targetResolutionService.resolveTargets.mockImplementation(
         (scopeName) => {
           if (scopeName === 'core:clear_directions') {
-            return [{ type: 'entity', entityId: TOWN_INSTANCE_ID }];
+            return {
+              targets: [{ type: 'entity', entityId: TOWN_INSTANCE_ID }],
+            };
           }
           if (scopeName === 'none') {
-            return [{ type: 'none', entityId: null }];
+            return { targets: [{ type: 'none', entityId: null }] };
           }
-          return [];
+          return { targets: [] };
         }
       );
 

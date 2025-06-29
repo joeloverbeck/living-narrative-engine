@@ -38,7 +38,7 @@ describeActionDiscoverySuite(
         (scope, entity, ctx) => {
           // invoke getActor to ensure the arrow function is executed
           expect(ctx.getActor()).toBe(actor);
-          return [{ type: 'none', entityId: null }];
+          return { targets: [{ type: 'none', entityId: null }] };
         }
       );
       bed.mocks.actionCommandFormatter.format.mockReturnValue({
@@ -56,9 +56,9 @@ describeActionDiscoverySuite(
       const def = { id: 'bad', commandVerb: 'bad', scope: 'target' };
       bed.mocks.actionIndex.getCandidateActions.mockReturnValue([def]);
       bed.mocks.prerequisiteEvaluationService.evaluate.mockReturnValue(true);
-      bed.mocks.targetResolutionService.resolveTargets.mockReturnValue([
-        { type: 'entity', entityId: 't1' },
-      ]);
+      bed.mocks.targetResolutionService.resolveTargets.mockReturnValue({
+        targets: [{ type: 'entity', entityId: 't1' }],
+      });
       bed.mocks.actionCommandFormatter.format.mockReturnValue({
         ok: false,
         error: new Error('nope'),

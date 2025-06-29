@@ -34,10 +34,13 @@ describeActionDiscoverySuite(
 
       bed.mocks.targetResolutionService.resolveTargets.mockImplementation(
         (scopeName) => {
-          if (scopeName === 'none') return [{ type: 'none', entityId: null }];
+          if (scopeName === 'none')
+            return { targets: [{ type: 'none', entityId: null }] };
           if (scopeName === 'self')
-            return [{ type: 'entity', entityId: mockActorEntity.id }];
-          return [];
+            return {
+              targets: [{ type: 'entity', entityId: mockActorEntity.id }],
+            };
+          return { targets: [] };
         }
       );
 

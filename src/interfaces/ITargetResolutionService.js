@@ -1,4 +1,5 @@
 /** @typedef {import('../models/actionTargetContext.js').ActionTargetContext} ActionTargetContext */
+/** @typedef {import('../actions/resolutionResult.js').ResolutionResult} ResolutionResult */
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../actions/actionTypes.js').ActionContext} ActionContext */
 /** @typedef {import('../actions/tracing/traceContext.js').TraceContext} TraceContext */
@@ -15,7 +16,7 @@ export class ITargetResolutionService {
    * @param {Entity} actorEntity - The entity performing the action.
    * @param {ActionContext} discoveryContext - The dynamic context for the resolution.
    * @param {TraceContext} [trace] - Optional trace context for logging.
-   * @returns {ActionTargetContext[]} A list of valid target contexts.
+   * @returns {ResolutionResult} The target contexts and optional error.
    */
   resolveTargets(scopeName, actorEntity, discoveryContext, trace = null) {
     throw new Error(

@@ -1,8 +1,6 @@
 import { beforeEach, expect, it, jest } from '@jest/globals';
 import { describeActionDiscoverySuite } from '../../common/actions/actionDiscoveryServiceTestBed.js';
-import { safeDispatchError } from '../../../src/utils/safeDispatchErrorUtils.js';
 
-jest.mock('../../../src/utils/safeDispatchErrorUtils.js');
 
 describeActionDiscoverySuite(
   'ActionDiscoveryService - getValidActions',
@@ -14,7 +12,9 @@ describeActionDiscoverySuite(
         ok: true,
         value: 'doit',
       });
-      bed.mocks.targetResolutionService.resolveTargets.mockReturnValue([]);
+      bed.mocks.targetResolutionService.resolveTargets.mockReturnValue({
+        targets: [],
+      });
       bed.mocks.getActorLocationFn.mockReturnValue({
         id: 'room1',
         getComponentData: jest.fn(),
@@ -32,9 +32,10 @@ describeActionDiscoverySuite(
       ]);
       bed.mocks.targetResolutionService.resolveTargets.mockImplementation(
         (scope) => {
-          if (scope === 'badScope') return [];
-          if (scope === 'none') return [{ type: 'none', entityId: null }];
-          return [];
+          if (scope === 'badScope') return { targets: [] };
+          if (scope === 'none')
+            return { targets: [{ type: 'none', entityId: null }] };
+          return { targets: [] };
         }
       );
 
@@ -61,9 +62,9 @@ describeActionDiscoverySuite(
       const def = { id: 'attack', commandVerb: 'attack', scope: 'monster' };
 
       bed.mocks.actionIndex.getCandidateActions.mockReturnValue([def]);
-      bed.mocks.targetResolutionService.resolveTargets.mockReturnValue([
-        { type: 'entity', entityId: 'monster1' },
-      ]);
+      bed.mocks.targetResolutionService.resolveTargets.mockReturnValue({
+        targets: [{ type: 'entity', entityId: 'monster1' }],
+      });
       bed.mocks.actionCommandFormatter.format.mockReturnValue({
         ok: true,
         value: 'attack monster1',
@@ -108,9 +109,9 @@ describeActionDiscoverySuite(
         badDef,
         okDef,
       ]);
-      bed.mocks.targetResolutionService.resolveTargets.mockReturnValue([
-        { type: 'none', entityId: null },
-      ]);
+      bed.mocks.targetResolutionService.resolveTargets.mockReturnValue({
+        targets: [{ type: 'none', entityId: null }],
+      });
       bed.mocks.actionCommandFormatter.format.mockImplementation((def) => {
         if (def.id === 'bad') throw new Error('boom');
         return { ok: true, value: def.commandVerb };
@@ -143,9 +144,9 @@ describeActionDiscoverySuite(
         badDef,
         okDef,
       ]);
-      bed.mocks.targetResolutionService.resolveTargets.mockReturnValue([
-        { type: 'none', entityId: null },
-      ]);
+      bed.mocks.targetResolutionService.resolveTargets.mockReturnValue({
+        targets: [{ type: 'none', entityId: null }],
+      });
       bed.mocks.prerequisiteEvaluationService.evaluate.mockImplementation(
         (_, def) => {
           if (def.id === 'bad') throw new Error('kaboom');

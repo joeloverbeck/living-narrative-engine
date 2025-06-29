@@ -29,15 +29,17 @@ describeActionDiscoverySuite(
       bed.mocks.targetResolutionService.resolveTargets.mockImplementation(
         (scope) => {
           if (scope === 'directions') {
-            return [
-              { type: 'entity', entityId: 'loc-2' },
-              { type: 'entity', entityId: 'loc-3' },
-            ];
+            return {
+              targets: [
+                { type: 'entity', entityId: 'loc-2' },
+                { type: 'entity', entityId: 'loc-3' },
+              ],
+            };
           }
           if (scope === 'none') {
-            return [{ type: 'none', entityId: null }];
+            return { targets: [{ type: 'none', entityId: null }] };
           }
-          return [];
+          return { targets: [] };
         }
       );
       bed.mocks.actionCommandFormatter.format.mockImplementation((def, ctx) => {
