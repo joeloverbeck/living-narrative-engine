@@ -69,20 +69,40 @@ describe('GameDataRepository additional coverage', () => {
     expect(logger.warn).toHaveBeenCalledTimes(3);
   });
 
+  it('handles invalid world and condition IDs', () => {
+    expect(repo.getWorld(null)).toBeNull();
+    expect(logger.warn).toHaveBeenCalledWith(
+      'GameDataRepository: getWorld called with invalid ID: null'
+    );
+
+    expect(repo.getConditionDefinition('')).toBeNull();
+    expect(logger.warn).toHaveBeenCalledWith(
+      'GameDataRepository: getConditionDefinition called with invalid ID: '
+    );
+
+    expect(logger.warn).toHaveBeenCalledTimes(2);
+  });
+
   it('returns definitions from registry when IDs are valid', () => {
     registry.getEntityDefinition.mockReturnValue({ id: 'e2' });
     registry.getEventDefinition.mockReturnValue({ id: 'ev2' });
     registry.getComponentDefinition.mockReturnValue({ id: 'c2' });
+    registry.getWorldDefinition.mockReturnValue({ id: 'w2' });
+    registry.getConditionDefinition.mockReturnValue({ id: 'cond2' });
 
     expect(repo.getEntityDefinition('e2')).toEqual({ id: 'e2' });
     expect(repo.getEventDefinition('ev2')).toEqual({ id: 'ev2' });
     expect(repo.getComponentDefinition('c2')).toEqual({ id: 'c2' });
+    expect(repo.getWorld('w2')).toEqual({ id: 'w2' });
+    expect(repo.getConditionDefinition('cond2')).toEqual({ id: 'cond2' });
   });
 
   it('retrieves all definition collections from the registry', () => {
+    expect(repo.getAllWorlds()).toEqual([{ id: 'w1' }]);
     expect(repo.getAllEntityDefinitions()).toEqual([{ id: 'e1' }]);
     expect(repo.getAllEventDefinitions()).toEqual([{ id: 'ev1' }]);
     expect(repo.getAllComponentDefinitions()).toEqual([{ id: 'c1' }]);
+    expect(repo.getAllConditionDefinitions()).toEqual([{ id: 'cond1' }]);
   });
 
   // --- NEW TESTS for entity instances ---
