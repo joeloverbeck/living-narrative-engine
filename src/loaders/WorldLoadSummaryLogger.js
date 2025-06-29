@@ -15,6 +15,7 @@
  * @returns {TotalsSummary} Grand totals.
  */
 export function computeTotalsSummary(totals) {
+  /** @type {TotalsSummary} */
   const summary = { count: 0, overrides: 0, errors: 0 };
   for (const counts of Object.values(totals)) {
     summary.count += counts.count;
