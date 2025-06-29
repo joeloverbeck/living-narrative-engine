@@ -11,10 +11,7 @@
 import { ITurnDirectiveStrategy } from '../interfaces/ITurnDirectiveStrategy.js';
 import TurnDirective from '../constants/turnDirectives.js';
 import { TURN_ENDED_ID } from '../../constants/eventIds.js';
-import {
-  assertDirective,
-  requireContextActor,
-} from '../../utils/strategyHelpers.js';
+import { assertDirective, requireContextActor } from './strategyHelpers.js';
 
 export default class WaitForTurnEndEventStrategy extends ITurnDirectiveStrategy {
   /**
