@@ -408,8 +408,13 @@ describe('Scope Integration Tests', () => {
   describe('error handling', () => {
     it('should handle missing actingEntity gracefully', async () => {
       actionDiscoveryService = createActionDiscoveryService();
-      const result = await actionDiscoveryService.getValidActions(null, {});
-      expect(result.actions).toEqual([]);
+      const resultNull = await actionDiscoveryService.getValidActions(null, {});
+      const resultMissing = await actionDiscoveryService.getValidActions(
+        {},
+        {}
+      );
+      expect(resultNull.actions).toEqual([]);
+      expect(resultMissing.actions).toEqual([]);
     });
   });
 });
