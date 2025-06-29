@@ -320,7 +320,12 @@ export function registerPromptingEngine(registrar, logger) {
  */
 export function registerAIGameStateProviders(registrar, logger) {
   registrar.single(tokens.IEntitySummaryProvider, EntitySummaryProvider);
-  registrar.single(tokens.IActorDataExtractor, ActorDataExtractor);
+  registrar.singletonFactory(tokens.IActorDataExtractor, (c) => {
+    return new ActorDataExtractor({
+      anatomyDescriptionService: c.resolve(tokens.AnatomyDescriptionService),
+      entityFinder: c.resolve(tokens.IEntityManager),
+    });
+  });
   registrar.single(tokens.IActorStateProvider, ActorStateProvider);
   registrar.single(tokens.IPerceptionLogProvider, PerceptionLogProvider);
   registrar.singletonFactory(

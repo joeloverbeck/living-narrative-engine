@@ -1,7 +1,11 @@
 // src/bootstrapper/stages/uiStages.js
 /* eslint-disable no-console */
 
-import { setupButtonListener, stageSuccess, stageFailure } from '../../utils/bootstrapperHelpers.js';
+import {
+  setupButtonListener,
+  stageSuccess,
+  stageFailure,
+} from '../../utils/bootstrapperHelpers.js';
 
 // eslint-disable-next-line no-unused-vars
 import { tokens } from '../../dependencyInjection/tokens.js';

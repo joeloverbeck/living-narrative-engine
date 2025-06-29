@@ -11,6 +11,7 @@ import {
   SECRETS_COMPONENT_ID,
   FEARS_COMPONENT_ID, // <<< Added import
   SPEECH_PATTERNS_COMPONENT_ID,
+  ANATOMY_BODY_COMPONENT_ID,
 } from '../../constants/componentIds.js';
 import { ensureTerminalPunctuation } from '../../utils/textUtils.js';
 // --- TICKET AIPF-REFACTOR-009 START: Import and Use Standardized Fallback Strings ---
@@ -35,7 +36,11 @@ import { IActorDataExtractor } from '../../interfaces/IActorDataExtractor';
  * to populate the ActorPromptDataDTO.
  */
 class ActorDataExtractor extends IActorDataExtractor {
-  // Removed constructor comment about injecting punctuationUtil, as we're importing directly.
+  constructor({ anatomyDescriptionService, entityFinder }) {
+    super();
+    this.anatomyDescriptionService = anatomyDescriptionService;
+    this.entityFinder = entityFinder;
+  }
 
   /**
    * Extracts and transforms actor-specific data from the actorState object
@@ -44,9 +49,10 @@ class ActorDataExtractor extends IActorDataExtractor {
    * @override
    * @param {object} actorState - The gameState.actorState object, which is a
    * map of component IDs to component data.
+   * @param {string} [actorId] - Optional actor entity ID for anatomy lookups
    * @returns {ActorPromptDataDTO} The populated DTO.
    */
-  extractPromptData(actorState) {
+  extractPromptData(actorState, actorId = null) {
     /** @type {Partial<ActorPromptDataDTO>} */
     const promptData = {};
 
@@ -62,16 +68,34 @@ class ActorDataExtractor extends IActorDataExtractor {
     // --- TICKET AIPF-REFACTOR-009 END ---
 
     // Description
-    const descComponent = actorState[DESCRIPTION_COMPONENT_ID];
-    // First, determine the base description (either from component or default)
-    const baseDescription =
-      descComponent &&
-      descComponent.text &&
-      String(descComponent.text).trim() !== ''
-        ? String(descComponent.text) // Do not trim here, ensureTerminalPunctuation will handle it
-        : // --- TICKET AIPF-REFACTOR-009: Use imported constant (raw version) ---
-          DEFAULT_FALLBACK_DESCRIPTION_RAW;
-    // --- TICKET AIPF-REFACTOR-009 END ---
+    let baseDescription = DEFAULT_FALLBACK_DESCRIPTION_RAW;
+
+    // First, check if we have an anatomy-based description
+    if (actorId && this.anatomyDescriptionService && this.entityFinder) {
+      const actorEntity = this.entityFinder.getEntity(actorId);
+      if (actorEntity && actorEntity.components[ANATOMY_BODY_COMPONENT_ID]) {
+        // Try to get or generate anatomy description
+        const anatomyDescription =
+          this.anatomyDescriptionService.getOrGenerateBodyDescription(
+            actorEntity
+          );
+        if (anatomyDescription) {
+          baseDescription = anatomyDescription;
+        }
+      }
+    }
+
+    // Fall back to core:description if no anatomy description
+    if (baseDescription === DEFAULT_FALLBACK_DESCRIPTION_RAW) {
+      const descComponent = actorState[DESCRIPTION_COMPONENT_ID];
+      if (
+        descComponent &&
+        descComponent.text &&
+        String(descComponent.text).trim() !== ''
+      ) {
+        baseDescription = String(descComponent.text); // Do not trim here, ensureTerminalPunctuation will handle it
+      }
+    }
 
     // Now, ensure the baseDescription has terminal punctuation.
     // ensureTerminalPunctuation handles trimming. If baseDescription was DEFAULT_FALLBACK_DESCRIPTION_RAW,

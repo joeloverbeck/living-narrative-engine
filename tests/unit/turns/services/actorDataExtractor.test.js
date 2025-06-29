@@ -21,9 +21,20 @@ const DEFAULT_DESCRIPTION = 'No description available.'; // Already ends with a 
 describe('ActorDataExtractor', () => {
   /** @type {ActorDataExtractor} */
   let extractor;
+  let mockAnatomyDescriptionService;
+  let mockEntityFinder;
 
   beforeEach(() => {
-    extractor = new ActorDataExtractor();
+    mockAnatomyDescriptionService = {
+      getOrGenerateBodyDescription: jest.fn(),
+    };
+    mockEntityFinder = {
+      getEntity: jest.fn(),
+    };
+    extractor = new ActorDataExtractor({
+      anatomyDescriptionService: mockAnatomyDescriptionService,
+      entityFinder: mockEntityFinder,
+    });
   });
 
   describe('extractPromptData', () => {

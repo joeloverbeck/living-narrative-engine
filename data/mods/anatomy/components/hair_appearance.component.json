@@ -7,7 +7,18 @@
       "color": {
         "type": "string",
         "description": "The color of the hair",
-        "enum": ["blonde", "brunette", "brown", "black", "raven-black", "red", "auburn", "gray", "white", "silver"]
+        "enum": [
+          "blonde",
+          "brunette",
+          "brown",
+          "black",
+          "raven-black",
+          "red",
+          "auburn",
+          "gray",
+          "white",
+          "silver"
+        ]
       },
       "length": {
         "type": "string",
@@ -18,7 +29,15 @@
       "style": {
         "type": "string",
         "description": "The style of the hair",
-        "enum": ["straight", "wavy", "curly", "kinky", "braided", "ponytail", "bun"],
+        "enum": [
+          "straight",
+          "wavy",
+          "curly",
+          "kinky",
+          "braided",
+          "ponytail",
+          "bun"
+        ],
         "default": "straight"
       }
     },

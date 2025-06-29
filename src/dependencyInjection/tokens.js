@@ -263,6 +263,10 @@ export const tokens = freeze({
   BodyGraphService: 'BodyGraphService',
   AnatomyGenerationService: 'AnatomyGenerationService',
   AnatomyInitializationService: 'AnatomyInitializationService',
+  DescriptorFormatter: 'DescriptorFormatter',
+  BodyPartDescriptionBuilder: 'BodyPartDescriptionBuilder',
+  BodyDescriptionComposer: 'BodyDescriptionComposer',
+  AnatomyDescriptionService: 'AnatomyDescriptionService',
 
   // Core Service Interfaces
   ISafeEventDispatcher: 'ISafeEventDispatcher',

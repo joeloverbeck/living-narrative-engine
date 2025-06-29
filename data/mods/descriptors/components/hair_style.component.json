@@ -7,7 +7,17 @@
       "style": {
         "type": "string",
         "description": "The hair style",
-        "enum": ["straight", "wavy", "curly", "kinky", "braided", "ponytail", "bun", "dreadlocks", "mohawk"],
+        "enum": [
+          "straight",
+          "wavy",
+          "curly",
+          "kinky",
+          "braided",
+          "ponytail",
+          "bun",
+          "dreadlocks",
+          "mohawk"
+        ],
         "default": "straight"
       }
     },

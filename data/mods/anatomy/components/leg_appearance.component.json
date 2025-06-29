@@ -13,7 +13,15 @@
       "descriptor": {
         "type": "string",
         "description": "Additional descriptor for the legs",
-        "enum": ["skinny", "slim", "toned", "athletic", "shapely", "thick", "muscular"],
+        "enum": [
+          "skinny",
+          "slim",
+          "toned",
+          "athletic",
+          "shapely",
+          "thick",
+          "muscular"
+        ],
         "default": "toned"
       }
     },

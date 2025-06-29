@@ -1,8 +1,5 @@
 // src/entities/utils/componentHelpers.js
-import {
-  readComponent,
-  writeComponent,
-} from './componentAccessUtils.js';
+import { readComponent, writeComponent } from './componentAccessUtils.js';
 
 /**
  * Fetch component data from an entity or pseudo-entity.

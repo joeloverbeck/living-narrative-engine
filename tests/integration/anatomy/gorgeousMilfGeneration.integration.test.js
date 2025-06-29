@@ -123,7 +123,6 @@ describe('Gorgeous MILF Anatomy Generation Integration Test', () => {
     testBed.loadRecipes({
       'anatomy:gorgeous_milf': gorgeousMilfRecipe,
     });
-
   });
 
   afterEach(async () => {
@@ -132,7 +131,9 @@ describe('Gorgeous MILF Anatomy Generation Integration Test', () => {
 
   it('should generate complete anatomy for Jacqueline Rouxel with all specified features', async () => {
     // Create Jacqueline entity
-    const jacquelineEntity = entityManager.createEntityInstance('anatomy:jacqueline_rouxel');
+    const jacquelineEntity = entityManager.createEntityInstance(
+      'anatomy:jacqueline_rouxel'
+    );
     expect(jacquelineEntity).toBeDefined();
     expect(jacquelineEntity.id).toBeDefined();
 
@@ -165,7 +166,10 @@ describe('Gorgeous MILF Anatomy Generation Integration Test', () => {
       return generatedBody.body.allParts.filter((partId) => {
         const partEntity = entityManager.getEntityInstance(partId);
         if (!partEntity) return false;
-        const anatomyPart = entityManager.getComponentData(partId, 'anatomy:part');
+        const anatomyPart = entityManager.getComponentData(
+          partId,
+          'anatomy:part'
+        );
         return anatomyPart && anatomyPart.subType === partType;
       });
     };
@@ -186,7 +190,7 @@ describe('Gorgeous MILF Anatomy Generation Integration Test', () => {
       expect(eyeColor.color).toBe('cobalt');
       expect(eyeShape).toBeDefined();
       expect(eyeShape.shape).toBe('almond');
-      
+
       // Verify it's the cobalt eye entity
       const eyeEntity = entityManager.getEntityInstance(eyeId);
       expect(eyeEntity.definitionId).toBe('anatomy:human_eye_cobalt');
@@ -211,8 +215,14 @@ describe('Gorgeous MILF Anatomy Generation Integration Test', () => {
     expect(breasts.length).toBe(2); // Should have exactly 2 breasts
 
     for (const breastId of breasts) {
-      const breastSize = getPartComponent(breastId, 'descriptors:size_specific');
-      const breastWeight = getPartComponent(breastId, 'descriptors:weight_feel');
+      const breastSize = getPartComponent(
+        breastId,
+        'descriptors:size_specific'
+      );
+      const breastWeight = getPartComponent(
+        breastId,
+        'descriptors:weight_feel'
+      );
       const breastFirmness = getPartComponent(breastId, 'descriptors:firmness');
       expect(breastSize).toBeDefined();
       expect(breastSize.size).toBe('D-cup');
@@ -243,7 +253,7 @@ describe('Gorgeous MILF Anatomy Generation Integration Test', () => {
       expect(joint).toBeDefined();
       expect(joint.parentId).toBeDefined();
       expect(joint.socketId).toBeDefined();
-      
+
       // Verify parent exists in the anatomy
       expect(generatedBody.body.allParts).toContain(joint.parentId);
     }
@@ -277,16 +287,25 @@ describe('Gorgeous MILF Anatomy Generation Integration Test', () => {
 
   it('recipe should properly reference all created part types', () => {
     // Get the recipe from the registry
-    const recipe = testBed.registry.get('anatomyRecipes', 'anatomy:gorgeous_milf');
+    const recipe = testBed.registry.get(
+      'anatomyRecipes',
+      'anatomy:gorgeous_milf'
+    );
     expect(recipe).toBeDefined();
     expect(recipe.blueprintId).toBe('anatomy:humanoid_standard');
 
     // Verify all slot specifications
     expect(recipe.slots.head.childSlots).toBeDefined();
-    expect(recipe.slots.head.childSlots.left_eye.preferId).toBe('anatomy:human_eye_cobalt');
-    expect(recipe.slots.head.childSlots.right_eye.preferId).toBe('anatomy:human_eye_cobalt');
-    expect(recipe.slots.head.childSlots.scalp.preferId).toBe('anatomy:human_hair_raven');
-    
+    expect(recipe.slots.head.childSlots.left_eye.preferId).toBe(
+      'anatomy:human_eye_cobalt'
+    );
+    expect(recipe.slots.head.childSlots.right_eye.preferId).toBe(
+      'anatomy:human_eye_cobalt'
+    );
+    expect(recipe.slots.head.childSlots.scalp.preferId).toBe(
+      'anatomy:human_hair_raven'
+    );
+
     expect(recipe.slots.legs.preferId).toBe('anatomy:human_leg_shapely');
     expect(recipe.slots.breasts.preferId).toBe('anatomy:human_breast_d_cup');
 

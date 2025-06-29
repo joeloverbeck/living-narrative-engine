@@ -102,7 +102,20 @@ describe('AIGameStateProvider', () => {
     turnContext.game = { worldId: 'test-world', someOtherData: 'data' };
 
     const actorStateProvider = new ActorStateProvider();
-    const actorDataExtractor = new ActorDataExtractor();
+    
+    // Create mock dependencies for ActorDataExtractor
+    const mockAnatomyDescriptionService = {
+      getOrGenerateBodyDescription: jest.fn(),
+    };
+    const mockEntityFinder = {
+      getEntity: jest.fn(),
+    };
+    
+    const actorDataExtractor = new ActorDataExtractor({
+      anatomyDescriptionService: mockAnatomyDescriptionService,
+      entityFinder: mockEntityFinder,
+    });
+    
     const perceptionLogProvider = new PerceptionLogProvider();
     const entitySummaryProvider = new EntitySummaryProvider();
     const safeEventDispatcher = { dispatch: jest.fn() };

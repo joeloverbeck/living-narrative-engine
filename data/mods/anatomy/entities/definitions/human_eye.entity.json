@@ -14,9 +14,6 @@
     },
     "core:name": {
       "name": "eye"
-    },
-    "core:description": {
-      "description": "A human eye."
     }
   }
 }

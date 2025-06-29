@@ -7,7 +7,18 @@
       "color": {
         "type": "string",
         "description": "The basic color",
-        "enum": ["red", "blue", "green", "yellow", "orange", "purple", "brown", "black", "white", "gray"],
+        "enum": [
+          "red",
+          "blue",
+          "green",
+          "yellow",
+          "orange",
+          "purple",
+          "brown",
+          "black",
+          "white",
+          "gray"
+        ],
         "default": "brown"
       }
     },

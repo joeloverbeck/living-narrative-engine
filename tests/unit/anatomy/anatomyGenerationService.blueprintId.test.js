@@ -12,6 +12,7 @@ describe('AnatomyGenerationService - Blueprint ID Support', () => {
   let mockDataRegistry;
   let mockLogger;
   let mockBodyBlueprintFactory;
+  let mockAnatomyDescriptionService;
 
   beforeEach(() => {
     mockEntityManager = {
@@ -36,11 +37,16 @@ describe('AnatomyGenerationService - Blueprint ID Support', () => {
       createAnatomyGraph: jest.fn(),
     };
 
+    mockAnatomyDescriptionService = {
+      generateAllDescriptions: jest.fn(),
+    };
+
     service = new AnatomyGenerationService({
       entityManager: mockEntityManager,
       dataRegistry: mockDataRegistry,
       logger: mockLogger,
       bodyBlueprintFactory: mockBodyBlueprintFactory,
+      anatomyDescriptionService: mockAnatomyDescriptionService,
     });
   });
 
@@ -81,7 +87,7 @@ describe('AnatomyGenerationService - Blueprint ID Support', () => {
         getComponentData: jest.fn().mockReturnValue(null),
       };
     });
-    
+
     mockDataRegistry.get.mockImplementation((registry, id) => {
       if (registry === 'anatomyRecipes' && id === recipeId) {
         return mockRecipe;

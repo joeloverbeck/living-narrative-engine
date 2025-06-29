@@ -1,6 +1,9 @@
 // src/bootstrapper/stages/auxiliary/initLlmSelectionModal.js
 
-import { stageSuccess, stageFailure } from '../../../utils/bootstrapperHelpers.js';
+import {
+  stageSuccess,
+  stageFailure,
+} from '../../../utils/bootstrapperHelpers.js';
 import './typedefs.js';
 /** @typedef {import('./typedefs.js').AuxHelperDeps} AuxHelperDeps */
 
