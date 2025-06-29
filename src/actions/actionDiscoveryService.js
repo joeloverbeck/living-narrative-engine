@@ -122,10 +122,20 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
       { withTrace: shouldTrace }
     );
 
-    const candidateDefs = this.#actionIndex.getCandidateActions(
-      actorEntity,
-      trace
-    );
+    let candidateDefs = [];
+    try {
+      candidateDefs = this.#actionIndex.getCandidateActions(actorEntity, trace);
+    } catch (err) {
+      this.#logger.error(
+        `Error retrieving candidate actions: ${err.message}`,
+        err
+      );
+      return {
+        actions: [],
+        errors: [new Error('Candidate retrieval failed')],
+        trace,
+      };
+    }
     const actions = [];
     const errors = [];
     const discoveryContext = this.#prepareDiscoveryContext(
