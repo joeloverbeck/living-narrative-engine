@@ -102,6 +102,59 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
   }
 
   /**
+   * Retrieves candidate action definitions for the given actor.
+   *
+   * @param {Entity} actorEntity - The actor entity.
+   * @param {TraceContext|null} trace - Optional trace context.
+   * @returns {import('../interfaces/IGameDataRepository.js').ActionDefinition[]} Candidate action definitions.
+   * @throws {Error} Propagates any retrieval errors.
+   * @private
+   */
+  #fetchCandidateActions(actorEntity, trace) {
+    try {
+      return this.#actionIndex.getCandidateActions(actorEntity, trace);
+    } catch (err) {
+      this.#logger.error(
+        `Error retrieving candidate actions: ${err.message}`,
+        err
+      );
+      throw err;
+    }
+  }
+
+  /**
+   * Processes a single candidate action definition.
+   *
+   * @param {import('../interfaces/IGameDataRepository.js').ActionDefinition} actionDef - The action definition.
+   * @param {Entity} actorEntity - The actor performing the action.
+   * @param {ActionContext} discoveryContext - The populated discovery context.
+   * @param {TraceContext|null} trace - Optional trace context.
+   * @returns {Promise<{actions: any[], errors: any[]}>} Result of processing.
+   * @private
+   */
+  async #processCandidate(actionDef, actorEntity, discoveryContext, trace) {
+    try {
+      const result = await this.#actionCandidateProcessor.process(
+        actionDef,
+        actorEntity,
+        discoveryContext,
+        trace
+      );
+
+      return result ?? { actions: [], errors: [] };
+    } catch (err) {
+      this.#logger.error(
+        `Error processing candidate action '${actionDef.id}': ${err.message}`,
+        err
+      );
+      return {
+        actions: [],
+        errors: [createDiscoveryError(actionDef.id, extractTargetId(err), err)],
+      };
+    }
+  }
+
+  /**
    * The main public method is now a high-level orchestrator.
    * It is simpler, with its complex inner logic delegated to helpers.
    *
@@ -128,12 +181,8 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
 
     let candidateDefs = [];
     try {
-      candidateDefs = this.#actionIndex.getCandidateActions(actorEntity, trace);
+      candidateDefs = this.#fetchCandidateActions(actorEntity, trace);
     } catch (err) {
-      this.#logger.error(
-        `Error retrieving candidate actions: ${err.message}`,
-        err
-      );
       return {
         actions: [],
         errors: [createDiscoveryError('candidateRetrieval', null, err)],
@@ -148,27 +197,14 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     );
 
     for (const actionDef of candidateDefs) {
-      try {
-        const result = await this.#actionCandidateProcessor.process(
-          actionDef,
-          actorEntity,
-          discoveryContext,
-          trace
-        );
-
-        if (result) {
-          actions.push(...result.actions);
-          errors.push(...result.errors);
-        }
-      } catch (err) {
-        errors.push(
-          createDiscoveryError(actionDef.id, extractTargetId(err), err)
-        );
-        this.#logger.error(
-          `Error processing candidate action '${actionDef.id}': ${err.message}`,
-          err
-        );
-      }
+      const { actions: a, errors: e } = await this.#processCandidate(
+        actionDef,
+        actorEntity,
+        discoveryContext,
+        trace
+      );
+      actions.push(...a);
+      errors.push(...e);
     }
 
     this.#logger.debug(
