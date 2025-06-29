@@ -31,12 +31,15 @@ describe('ShortTermMemoryService.addThought – core logic', () => {
 
     const mem = { entityId: 'actor:42', thoughts: [], maxEntries: 2 };
 
-    const result = service.addThought(mem, 'First Thought', fixedNow);
+    const {
+      mem: result,
+      wasAdded,
+      entry,
+    } = service.addThought(mem, 'First Thought', fixedNow);
 
     expect(result).toBe(mem); // same object, mutated in-place
+    expect(wasAdded).toBe(true);
     expect(result.thoughts).toHaveLength(1);
-
-    const [entry] = result.thoughts;
     expect(entry.text).toBe('First Thought');
     expect(entry.timestamp).toBe('2025-06-03T10:00:00.000Z');
     expect(ISO_REGEX.test(entry.timestamp)).toBe(true);
@@ -51,12 +54,13 @@ describe('ShortTermMemoryService.addThought – core logic', () => {
       maxEntries: 10,
     };
 
-    const result = service.addThought(
+    const { mem: result, wasAdded } = service.addThought(
       mem,
       '   HeLLo WoRLd   ',
       new Date('2025-06-03T09:05:00.000Z')
     );
 
+    expect(wasAdded).toBe(false);
     expect(result.thoughts).toHaveLength(1); // still only the original entry
     expect(result.thoughts[0].text).toBe('hello world'); // unchanged
   });
@@ -116,7 +120,14 @@ describe('ShortTermMemoryService – ThoughtAdded domain event', () => {
   });
 
   test('emits ThoughtAdded once for a unique thought', () => {
-    service.addThought(mem, 'Hello World', fixedDate);
+    const { wasAdded, entry } = service.addThought(
+      mem,
+      'Hello World',
+      fixedDate
+    );
+    if (wasAdded) {
+      service.emitThoughtAdded(mem.entityId, 'Hello World', entry.timestamp);
+    }
 
     expect(dispatchSpy).toHaveBeenCalledTimes(1);
     expect(dispatchSpy).toHaveBeenCalledWith('ThoughtAdded', {
@@ -127,14 +138,28 @@ describe('ShortTermMemoryService – ThoughtAdded domain event', () => {
   });
 
   test('does NOT emit ThoughtAdded for a duplicate thought', () => {
-    service.addThought(mem, 'Hello World', fixedDate); // first time
+    const first = service.addThought(mem, 'Hello World', fixedDate);
+    if (first.wasAdded) {
+      service.emitThoughtAdded(
+        mem.entityId,
+        'Hello World',
+        first.entry.timestamp
+      );
+    }
 
     dispatchSpy.mockClear(); // reset call count
-    service.addThought(
+    const second = service.addThought(
       mem,
       '  hello WORLD  ',
       new Date('2025-06-03T10:01:00.000Z')
     );
+    if (second.wasAdded) {
+      service.emitThoughtAdded(
+        mem.entityId,
+        '  hello WORLD  ',
+        second.entry.timestamp
+      );
+    }
 
     expect(dispatchSpy).not.toHaveBeenCalled();
   });

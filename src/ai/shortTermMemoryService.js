@@ -39,21 +39,22 @@ export default class ShortTermMemoryService {
 
     // 1. Normalise input ----------------------------------------------------
     const trimmed = String(newText).trim();
-    if (trimmed.length === 0) return mem; // ignore empty / whitespace-only
+    if (trimmed.length === 0) return { mem, wasAdded: false };
     const lowered = trimmed.toLowerCase();
 
     // 2. Duplicate check ----------------------------------------------------
     for (const { text } of mem.thoughts ?? []) {
       if (typeof text !== 'string') continue;
-      if (text.trim().toLowerCase() === lowered) return mem;
+      if (text.trim().toLowerCase() === lowered)
+        return { mem, wasAdded: false };
     }
 
     // 3. Append new thought -------------------------------------------------
     if (!Array.isArray(mem.thoughts)) mem.thoughts = [];
 
     const newEntry = {
-      text: newText, // preserve original casing & spacing
-      timestamp: now.toISOString(), // ISO-8601 with ms
+      text: newText,
+      timestamp: now.toISOString(),
     };
 
     mem.thoughts.push(newEntry);
@@ -65,22 +66,28 @@ export default class ShortTermMemoryService {
         : this.defaultMaxEntries;
 
     while (mem.thoughts.length > max) {
-      mem.thoughts.shift(); // drop oldest
+      mem.thoughts.shift();
     }
 
-    // 5. Emit domain event --------------------------------------------------
+    return { mem, wasAdded: true, entry: newEntry };
+  }
+
+  /**
+   * @description Emits a `ThoughtAdded` event using the configured dispatcher.
+   * @param {string | null} entityId - ID of the owner entity.
+   * @param {string} text - Thought text.
+   * @param {string} timestamp - ISO timestamp of the thought.
+   */
+  emitThoughtAdded(entityId, text, timestamp) {
     if (
       this.eventDispatcher &&
       typeof this.eventDispatcher.dispatch === 'function'
     ) {
-      // Fire-and-forget so addThought() stays synchronous.
       this.eventDispatcher.dispatch('ThoughtAdded', {
-        entityId: mem.entityId ?? null,
-        text: newText,
-        timestamp: newEntry.timestamp,
+        entityId,
+        text,
+        timestamp,
       });
     }
-
-    return mem;
   }
 }

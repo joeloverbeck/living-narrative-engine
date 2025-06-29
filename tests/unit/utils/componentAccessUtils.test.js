@@ -3,6 +3,8 @@ import {
   getComponentFromEntity,
   getComponentFromManager,
   resolveEntityInstance,
+  readComponent,
+  writeComponent,
 } from '../../../src/utils/componentAccessUtils.js';
 import { createMockLogger } from '../testUtils.js';
 
@@ -172,5 +174,34 @@ describe('resolveEntityInstance', () => {
     expect(logger.debug).toHaveBeenCalledWith(
       '[componentAccessUtils] resolveEntityInstance: provided value is not a valid entity.'
     );
+  });
+});
+
+describe('readComponent and writeComponent', () => {
+  it('reads via getComponentData when available', () => {
+    const ent = { getComponentData: jest.fn().mockReturnValue({ a: 1 }) };
+    expect(readComponent(ent, 'foo')).toEqual({ a: 1 });
+  });
+
+  it('reads from components bag when no getter', () => {
+    const ent = { components: { bar: 2 } };
+    expect(readComponent(ent, 'bar')).toBe(2);
+  });
+
+  it('writes via addComponent when available', () => {
+    const ent = { addComponent: jest.fn(), components: {} };
+    const data = { x: 3 };
+    expect(writeComponent(ent, 'foo', data)).toBe(true);
+    expect(ent.addComponent).toHaveBeenCalledWith('foo', data);
+  });
+
+  it('writes to components bag when no addComponent', () => {
+    const ent = { components: {} };
+    expect(writeComponent(ent, 'bar', 5)).toBe(true);
+    expect(ent.components.bar).toBe(5);
+  });
+
+  it('returns false for invalid entity', () => {
+    expect(writeComponent(null, 'x', {})).toBe(false);
   });
 });
