@@ -61,6 +61,7 @@ describe('JsonLogicEvaluationService uncovered branches', () => {
     global.jest = undefined; // simulate non-test env
     process.env.NODE_ENV = 'production';
 
+    const applySpy = jest.spyOn(jsonLogic, 'apply');
     const rule = { and: [true, false, true] };
     const result = service.evaluate(rule, {
       entity: {
@@ -78,6 +79,9 @@ describe('JsonLogicEvaluationService uncovered branches', () => {
     expect(logger.debug).toHaveBeenCalledWith(
       expect.stringContaining('AND operation short-circuited at condition 2')
     );
+
+    expect(applySpy).toHaveBeenCalledTimes(2);
+    applySpy.mockRestore();
 
     global.jest = origJest;
     process.env.NODE_ENV = origEnv;
