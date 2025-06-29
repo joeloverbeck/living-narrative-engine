@@ -157,9 +157,8 @@ class CommandOutcomeInterpreter extends ICommandOutcomeInterpreter {
 
     this.#validateResult(result, actorId);
 
-    // result.turnEnded from CP is true if CP failed, false if CP succeeded.
     const cpFailureEndsTurn =
-      typeof result.turnEnded === 'boolean' ? result.turnEnded : true; // Default to true for safety on failure
+      typeof result.turnEnded === 'boolean' ? result.turnEnded : true; // Default true for safety
 
     this.#logger.debug(
       `CommandOutcomeInterpreter: Interpreting for ${actorId}. CP_Success=${result.success}, CP_TurnEndedOnFail=${cpFailureEndsTurn}, Input="${originalInput}"`
@@ -176,8 +175,11 @@ class CommandOutcomeInterpreter extends ICommandOutcomeInterpreter {
     } else {
       // CommandProcessor detected failure
 
-      // Any failure detected by CommandProcessor ends the turn.
-      const directive = TurnDirective.END_TURN_FAILURE;
+      const shouldEnd =
+        typeof result.turnEnded === 'boolean' ? result.turnEnded : true;
+      const directive = shouldEnd
+        ? TurnDirective.END_TURN_FAILURE
+        : TurnDirective.RE_PROMPT;
       this.#logger.debug(
         `Actor ${actorId}: CommandProcessor failure for action '${processedActionId}'. Directive: ${directive}.`
       );
