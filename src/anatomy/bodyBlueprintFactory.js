@@ -7,6 +7,7 @@
 import { InvalidArgumentError } from '../errors/invalidArgumentError.js';
 import { ValidationError } from '../errors/validationError.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/systemEventIds.js';
+import { safeDispatchEvent } from '../utils/safeDispatchEvent.js';
 
 /** @typedef {import('../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 /** @typedef {import('../interfaces/coreServices.js').IDataRegistry} IDataRegistry */
@@ -381,10 +382,30 @@ export class BodyBlueprintFactory {
         );
 
         if (!childDefinitionId) {
-          this.#logger.warn(
-            `No part found matching requirements for socket '${attachment.socket}'`
+          const errorContext = {
+            parentDefinitionId: attachment.parent,
+            socketId: attachment.socket,
+            requirements: attachment.requirements,
+            recipeId: recipe.recipeId,
+          };
+
+          const errorMessage =
+            `No part found matching requirements for static attachment. ` +
+            `Parent: '${attachment.parent}', Socket: '${attachment.socket}', ` +
+            `Recipe: '${recipe.recipeId}'. Requirements: ${JSON.stringify(attachment.requirements)}`;
+
+          await safeDispatchEvent(
+            this.#eventDispatcher,
+            SYSTEM_ERROR_OCCURRED_ID,
+            {
+              error: errorMessage,
+              context: 'BodyBlueprintFactory.processStaticAttachments',
+              details: errorContext,
+            },
+            this.#logger
           );
-          continue;
+
+          throw new ValidationError(errorMessage);
         }
       } else {
         this.#logger.warn(
@@ -472,6 +493,51 @@ export class BodyBlueprintFactory {
     }
 
     if (candidates.length === 0) {
+      const errorContext = {
+        socketId,
+        requirements: {
+          partType: requirements.partType,
+          entityId: requirements.entityId,
+          components: requirements.components || [],
+        },
+        checkedDefinitions: allEntityDefs.filter(
+          (def) => def.components?.['anatomy:part']
+        ).length,
+        suggestion:
+          `Create an entity definition with 'anatomy:part' component` +
+          (requirements.partType
+            ? ` where subType='${requirements.partType}'`
+            : '') +
+          (requirements.components?.length > 0
+            ? ` and components: [${requirements.components.join(', ')}]`
+            : ''),
+      };
+
+      const errorMessage =
+        `No entity definitions found matching requirements for socket '${socketId}'. ` +
+        (requirements.partType
+          ? `Need part type: '${requirements.partType}'. `
+          : '') +
+        (requirements.entityId
+          ? `Preferred entity: '${requirements.entityId}'. `
+          : '') +
+        (requirements.components?.length > 0
+          ? `Required components: [${requirements.components.join(', ')}]. `
+          : '') +
+        `Checked ${errorContext.checkedDefinitions} anatomy part definitions.`;
+
+      // Dispatch system error event
+      await safeDispatchEvent(
+        this.#eventDispatcher,
+        SYSTEM_ERROR_OCCURRED_ID,
+        {
+          error: errorMessage,
+          context: 'BodyBlueprintFactory.selectPartByRequirements',
+          details: errorContext,
+        },
+        this.#logger
+      );
+
       return null;
     }
 
@@ -839,17 +905,46 @@ export class BodyBlueprintFactory {
     socketOccupancy,
     rng
   ) {
-    // Build candidate list
-    const candidates = await this.#findCandidateParts(
-      recipeSlot,
-      socket.allowedTypes
-    );
+    let candidates;
 
-    if (candidates.length === 0) {
-      this.#logger.warn(
-        `No candidate parts found for slot with type '${recipeSlot.partType}'`
+    try {
+      // Build candidate list
+      candidates = await this.#findCandidateParts(
+        recipeSlot,
+        socket.allowedTypes
       );
-      return null;
+
+      // Note: findCandidateParts now throws if no candidates found,
+      // so we don't need to check for empty array here
+    } catch (error) {
+      // Enhance error with parent/socket context
+      const parentEntity = this.#entityManager.getEntityInstance(parentId);
+      const enhancedContext = {
+        parentEntityId: parentId,
+        parentDefinitionId: parentEntity?.definitionId,
+        socketId: socket.id,
+        socketAllowedTypes: socket.allowedTypes,
+        recipeId: recipe.recipeId,
+        error: error.message,
+      };
+
+      const enhancedMessage =
+        `Failed to find parts for socket '${socket.id}' on parent '${parentEntity?.definitionId || parentId}'. ` +
+        `Recipe: '${recipe.recipeId}'. ${error.message}`;
+
+      // Re-dispatch with enhanced context
+      await safeDispatchEvent(
+        this.#eventDispatcher,
+        SYSTEM_ERROR_OCCURRED_ID,
+        {
+          error: enhancedMessage,
+          context: 'BodyBlueprintFactory.createPartForSlot',
+          details: enhancedContext,
+        },
+        this.#logger
+      );
+
+      throw new ValidationError(enhancedMessage);
     }
 
     // Select part (prefer preferId if available)
@@ -917,6 +1012,51 @@ export class BodyBlueprintFactory {
       }
 
       candidates.push(entityDef.id);
+    }
+
+    // If no candidates found, this is a critical error that needs immediate attention
+    if (candidates.length === 0) {
+      const errorContext = {
+        partType: recipeSlot.partType,
+        allowedTypes: allowedTypes,
+        requirements: {
+          tags: recipeSlot.tags || [],
+          notTags: recipeSlot.notTags || [],
+          properties: recipeSlot.properties || {},
+          preferId: recipeSlot.preferId || null,
+        },
+        checkedDefinitions: allEntityDefs.length,
+        suggestion: `Create an entity definition with 'anatomy:part' component where subType is one of: [${allowedTypes.join(', ')}]`,
+      };
+
+      const errorMessage =
+        `No entity definitions found matching anatomy requirements. ` +
+        `Need part type '${recipeSlot.partType}' with allowed types: [${allowedTypes.join(', ')}]. ` +
+        (recipeSlot.tags?.length > 0
+          ? `Required tags: [${recipeSlot.tags.join(', ')}]. `
+          : '') +
+        (recipeSlot.notTags?.length > 0
+          ? `Excluded tags: [${recipeSlot.notTags.join(', ')}]. `
+          : '') +
+        (recipeSlot.properties
+          ? `Required properties: ${JSON.stringify(recipeSlot.properties)}. `
+          : '') +
+        `Checked ${allEntityDefs.length} entity definitions.`;
+
+      // Dispatch system error event
+      await safeDispatchEvent(
+        this.#eventDispatcher,
+        SYSTEM_ERROR_OCCURRED_ID,
+        {
+          error: errorMessage,
+          context: 'BodyBlueprintFactory.findCandidateParts',
+          details: errorContext,
+        },
+        this.#logger
+      );
+
+      // Throw error for caller to handle
+      throw new ValidationError(errorMessage);
     }
 
     return candidates;
