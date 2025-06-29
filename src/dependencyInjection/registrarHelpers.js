@@ -179,6 +179,24 @@ export class Registrar {
 }
 
 /**
+ * Register a dependency using a registrar method while logging the action.
+ *
+ * @param {Registrar} registrar - The registrar instance.
+ * @param {import('../interfaces/coreServices.js').ILogger} logger - Logger for debug output.
+ * @param {keyof Registrar} method - Registrar method name to invoke.
+ * @param {DiToken} token - The DI token to register under.
+ * @param {...any} args - Additional arguments forwarded to the registrar method.
+ * @returns {void}
+ */
+export function registerWithLog(registrar, logger, method, token, ...args) {
+  if (typeof registrar[method] !== 'function') {
+    throw new Error(`Unknown registrar method: ${String(method)}`);
+  }
+  registrar[method](token, ...args);
+  logger.debug(`UI Registrations: Registered ${String(token)}.`);
+}
+
+/**
  * Resolve an optional dependency from the DI container.
  *
  * @description Returns `null` if the token is not registered.

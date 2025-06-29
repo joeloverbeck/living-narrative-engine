@@ -21,6 +21,11 @@ jest.mock('../../../../src/dependencyInjection/registrarHelpers.js', () => {
         singletonFactory: mockSingletonFactory,
       };
     }),
+    registerWithLog: jest
+      .fn()
+      .mockImplementation((registrar, _logger, method, token, ...args) => {
+        registrar[method](token, ...args);
+      }),
   };
 });
 
