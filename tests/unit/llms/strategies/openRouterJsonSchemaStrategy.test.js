@@ -258,6 +258,29 @@ describe('OpenRouterJsonSchemaStrategy', () => {
         const result = await strategy.execute(params);
         expect(result).toBe(JSON.stringify(expectedOutputJsonObject));
       });
+
+      it('should call _extractJsonOutput during execute', async () => {
+        const response = {
+          choices: [{ message: { content: expectedOutputJsonString } }],
+        };
+        mockHttpClient.request.mockResolvedValueOnce(response);
+        const extractionSpy = jest
+          .spyOn(strategy, '_extractJsonOutput')
+          .mockResolvedValue(expectedOutputJsonString);
+        const params = {
+          gameSummary: mockGameSummary,
+          llmConfig: { ...baseLlmConfig },
+          apiKey: mockApiKey,
+          environmentContext: mockEnvironmentContext,
+        };
+        const result = await strategy.execute(params);
+        expect(result).toBe(expectedOutputJsonString);
+        expect(extractionSpy).toHaveBeenCalledWith(
+          response,
+          params.llmConfig,
+          expect.any(Object)
+        );
+      });
     });
 
     describe('Successful Execution - Proxied API Call (Client-side)', () => {

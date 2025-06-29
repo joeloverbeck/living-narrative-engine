@@ -54,7 +54,12 @@ describe('CommandOutcomeInterpreter additional branches', () => {
     expect(safeDispatchError).toHaveBeenCalledWith(
       dispatcher,
       expect.stringContaining('Invalid CommandResult'),
-      expect.any(Object)
+      {
+        raw: 'Actor actor-1, Received Result: {}',
+        timestamp: expect.any(String),
+        stack: expect.any(String),
+        receivedResult: {},
+      }
     );
   });
 
@@ -106,7 +111,12 @@ describe('CommandOutcomeInterpreter additional branches', () => {
     expect(safeDispatchError).toHaveBeenCalledWith(
       dispatcher,
       'CommandOutcomeInterpreter: Invalid turnContext provided.',
-      expect.any(Object)
+      {
+        raw: 'turnContext was object. Expected ITurnContext object.',
+        timestamp: expect.any(String),
+        stack: expect.any(String),
+        receivedContextType: 'object',
+      }
     );
     expect(logger.error).toHaveBeenCalledWith(
       'CommandOutcomeInterpreter: Invalid turnContext provided.',
@@ -123,7 +133,12 @@ describe('CommandOutcomeInterpreter additional branches', () => {
     expect(safeDispatchError).toHaveBeenCalledWith(
       dispatcher,
       'CommandOutcomeInterpreter: Could not retrieve a valid actor or actor ID from turnContext.',
-      expect.any(Object)
+      {
+        raw: 'Actor object in context was {}.',
+        timestamp: expect.any(String),
+        stack: expect.any(String),
+        actorInContext: {},
+      }
     );
     expect(logger.error).toHaveBeenCalledWith(
       'CommandOutcomeInterpreter: Could not retrieve a valid actor or actor ID from turnContext.',

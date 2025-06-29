@@ -31,6 +31,24 @@ export class GameDataRepository extends IGameDataRepository {
   #logger;
 
   /**
+   * Helper for retrieving a definition from the registry with
+   * common ID validation and warning behaviour.
+   *
+   * @private
+   * @param {string} id Identifier to look up
+   * @param {string} registryFnName Name of the registry function to call
+   * @param {string} warnMessage Message to log when the id is invalid
+   * @returns {any | null} Definition returned by the registry or null
+   */
+  #getDef(id, registryFnName, warnMessage) {
+    if (typeof id !== 'string' || !id.trim()) {
+      this.#logger.warn(`GameDataRepository: ${warnMessage} ${id}`);
+      return null;
+    }
+    return this.#registry[registryFnName](id) ?? null;
+  }
+
+  /**
    * @param {IDataRegistry} registry
    * @param {ILogger} logger
    */
@@ -97,13 +115,11 @@ export class GameDataRepository extends IGameDataRepository {
    * @returns {WorldDefinition | null}
    */
   getWorld(id) {
-    if (typeof id !== 'string' || !id.trim()) {
-      this.#logger.warn(
-        `GameDataRepository: getWorld called with invalid ID: ${id}`
-      );
-      return null;
-    }
-    return this.#registry.getWorldDefinition(id) ?? null;
+    return this.#getDef(
+      id,
+      'getWorldDefinition',
+      'getWorld called with invalid ID:'
+    );
   }
 
   /** @returns {WorldDefinition[]} */
@@ -133,14 +149,11 @@ export class GameDataRepository extends IGameDataRepository {
    * @returns {ActionDefinition | null}
    */
   getActionDefinition(id) {
-    if (typeof id !== 'string' || !id.trim()) {
-      this.#logger.warn(
-        `GameDataRepository: getActionDefinition called with invalid ID: ${id}`
-      );
-      return null;
-    }
-    const definition = this.#registry.getActionDefinition(id);
-    return definition ?? null;
+    return this.#getDef(
+      id,
+      'getActionDefinition',
+      'getActionDefinition called with invalid ID:'
+    );
   }
 
   // ────────────────────────────────────────────────────────────────────────────
@@ -152,14 +165,11 @@ export class GameDataRepository extends IGameDataRepository {
    * @returns {EntityDefinition | null}
    */
   getEntityDefinition(id) {
-    if (typeof id !== 'string' || !id.trim()) {
-      this.#logger.warn(
-        `GameDataRepository: getEntityDefinition called with invalid ID: ${id}`
-      );
-      return null;
-    }
-    const definition = this.#registry.getEntityDefinition(id);
-    return definition ?? null;
+    return this.#getDef(
+      id,
+      'getEntityDefinition',
+      'getEntityDefinition called with invalid ID:'
+    );
   }
 
   /** @returns {EntityDefinition[]} */
@@ -177,14 +187,11 @@ export class GameDataRepository extends IGameDataRepository {
    * ID is invalid or no definition exists.
    */
   getEntityInstanceDefinition(id) {
-    if (typeof id !== 'string' || !id.trim()) {
-      this.#logger.warn(
-        `GameDataRepository: getEntityInstanceDefinition called with invalid ID: ${id}`
-      );
-      return null;
-    }
-    const definition = this.#registry.getEntityInstanceDefinition(id);
-    return definition ?? null;
+    return this.#getDef(
+      id,
+      'getEntityInstanceDefinition',
+      'getEntityInstanceDefinition called with invalid ID:'
+    );
   }
 
   /** @returns {EntityInstance[]} */
@@ -201,14 +208,11 @@ export class GameDataRepository extends IGameDataRepository {
    * @returns {EventDefinition | null}
    */
   getEventDefinition(id) {
-    if (typeof id !== 'string' || !id.trim()) {
-      this.#logger.warn(
-        `GameDataRepository: getEventDefinition called with invalid ID: ${id}`
-      );
-      return null;
-    }
-    const definition = this.#registry.getEventDefinition(id);
-    return definition ?? null;
+    return this.#getDef(
+      id,
+      'getEventDefinition',
+      'getEventDefinition called with invalid ID:'
+    );
   }
 
   /** @returns {EventDefinition[]} */
@@ -225,14 +229,11 @@ export class GameDataRepository extends IGameDataRepository {
    * @returns {ComponentDefinition | null}
    */
   getComponentDefinition(id) {
-    if (typeof id !== 'string' || !id.trim()) {
-      this.#logger.warn(
-        `GameDataRepository: getComponentDefinition called with invalid ID: ${id}`
-      );
-      return null;
-    }
-    const definition = this.#registry.getComponentDefinition(id);
-    return definition ?? null;
+    return this.#getDef(
+      id,
+      'getComponentDefinition',
+      'getComponentDefinition called with invalid ID:'
+    );
   }
 
   /** @returns {ComponentDefinition[]} */
@@ -249,14 +250,11 @@ export class GameDataRepository extends IGameDataRepository {
    * @returns {ConditionDefinition | null}
    */
   getConditionDefinition(id) {
-    if (typeof id !== 'string' || !id.trim()) {
-      this.#logger.warn(
-        `GameDataRepository: getConditionDefinition called with invalid ID: ${id}`
-      );
-      return null;
-    }
-    const definition = this.#registry.getConditionDefinition(id);
-    return definition ?? null;
+    return this.#getDef(
+      id,
+      'getConditionDefinition',
+      'getConditionDefinition called with invalid ID:'
+    );
   }
 
   /** @returns {ConditionDefinition[]} */
@@ -273,14 +271,11 @@ export class GameDataRepository extends IGameDataRepository {
    * @returns {GoalDefinition | null}
    */
   getGoalDefinition(id) {
-    if (typeof id !== 'string' || !id.trim()) {
-      this.#logger.warn(
-        `GameDataRepository: getGoalDefinition called with invalid ID: ${id}`
-      );
-      return null;
-    }
-    const definition = this.#registry.getGoalDefinition(id);
-    return definition ?? null;
+    return this.#getDef(
+      id,
+      'getGoalDefinition',
+      'getGoalDefinition called with invalid ID:'
+    );
   }
 
   /** @returns {GoalDefinition[]} */

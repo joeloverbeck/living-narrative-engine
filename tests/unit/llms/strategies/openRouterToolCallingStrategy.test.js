@@ -112,4 +112,34 @@ describe('OpenRouterToolCallingStrategy', () => {
       expect.objectContaining({ llmId: llmConfig.configId })
     );
   });
+
+  it('execute invokes _extractJsonOutput', async () => {
+    const execConfig = {
+      configId: 'exec',
+      apiType: 'openrouter',
+      endpointUrl: 'https://openrouter.ai/api',
+      modelIdentifier: 'model-x',
+      defaultParameters: {},
+      providerSpecificHeaders: {},
+      jsonOutputStrategy: { toolName: 'tool_exec' },
+    };
+    const response = { choices: [{ message: { tool_calls: [] } }] };
+    mockHttpClient.request.mockResolvedValueOnce(response);
+    const extractionSpy = jest
+      .spyOn(strategy, '_extractJsonOutput')
+      .mockResolvedValue('{}');
+    const params = {
+      gameSummary: 'summary',
+      llmConfig: execConfig,
+      apiKey: 'key',
+      environmentContext: { isClient: jest.fn().mockReturnValue(false) },
+    };
+    const result = await strategy.execute(params);
+    expect(result).toBe('{}');
+    expect(extractionSpy).toHaveBeenCalledWith(
+      response,
+      execConfig,
+      expect.any(Object)
+    );
+  });
 });
