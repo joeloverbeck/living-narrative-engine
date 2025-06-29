@@ -89,7 +89,7 @@ export class AnatomyGenerationService {
         `AnatomyGenerationService: Generating anatomy for entity '${entityId}' using recipe '${anatomyBodyData.recipeId}'`
       );
 
-      // Get the recipe to determine if a blueprint is needed
+      // Get the recipe to determine which blueprint to use
       const recipe = this.#dataRegistry.get(
         'anatomyRecipes',
         anatomyBodyData.recipeId
@@ -100,9 +100,13 @@ export class AnatomyGenerationService {
         );
       }
 
-      // For now, we'll use a simple approach where the recipe ID matches a blueprint ID
-      // In the future, this could be more sophisticated
-      const blueprintId = anatomyBodyData.recipeId; // Assume blueprint has same ID as recipe
+      // Get the blueprint ID from the recipe
+      const blueprintId = recipe.blueprintId;
+      if (!blueprintId) {
+        throw new ValidationError(
+          `Recipe '${anatomyBodyData.recipeId}' does not specify a blueprintId`
+        );
+      }
 
       // Generate the anatomy graph
       const result = await this.#bodyBlueprintFactory.createAnatomyGraph(

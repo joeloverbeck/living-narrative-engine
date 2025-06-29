@@ -1,17 +1,4 @@
-1. Add `src/actions/actionCandidateProcessor.js`.
-
-   * Constructor receives:
-
-     * `prerequisiteEvaluationService`
-     * `targetResolutionService`
-     * `entityManager`
-     * `formatActionCommandFn`
-     * `safeEventDispatcher`
-     * `getEntityDisplayNameFn`
-     * `logger`
-   * Expose `process(actionDef, actorEntity, context, trace)` returning `{actions, errors}|null`.
-   * Move logic from `#processCandidateAction` and `#formatActionsForTargets` into this class.
-   * Include full JSDoc (`@description`, `@param`, `@returns`).
-2. Update `ActionDiscoveryService` (constructor and `getValidActions`) to accept an `actionCandidateProcessor` instance and delegate processing.
-3. Remove now-unneeded private fields and methods (`#processCandidateAction`, `#formatActionsForTargets`).
-4. Update unit tests in `tests/unit/actions` to use the new processor, ensuring existing behaviour remains.
+1. In `src/entities/services/entityLifecycleManager.js`, ensure methods `#validateCreateEntityParams` and `#getDefinitionForCreate` remain.
+2. Remove identical implementations from `src/entities/entityManager.js`.
+3. Adjust any references in `EntityManager` to call the lifecycle manager instead.
+4. Run lint/tests.
