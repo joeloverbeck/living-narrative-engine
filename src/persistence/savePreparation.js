@@ -2,7 +2,7 @@
 
 import { cloneValidatedState } from '../utils/saveStateUtils.js';
 import { createPersistenceSuccess } from '../utils/persistenceResultUtils.js';
-import { wrapPersistenceOperation } from '../utils/persistenceErrorUtils.js';
+import { executePersistenceOp } from '../utils/persistenceErrorUtils.js';
 
 /**
  * Deep clones and augments the provided game state for saving.
@@ -47,11 +47,14 @@ export async function prepareState(
     return { success: false, error: cloneResult.error };
   }
 
-  return wrapPersistenceOperation(logger, async () => {
-    const { compressedData } = await serializer.compressPreparedState(
-      cloneResult.data
-    );
-    return { success: true, data: compressedData };
+  return executePersistenceOp({
+    asyncOperation: async () => {
+      const { compressedData } = await serializer.compressPreparedState(
+        cloneResult.data
+      );
+      return { success: true, data: compressedData };
+    },
+    logger,
   });
 }
 

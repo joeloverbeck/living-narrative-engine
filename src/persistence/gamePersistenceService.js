@@ -25,7 +25,7 @@ import {
   createPersistenceSuccess,
   normalizePersistenceFailure,
 } from '../utils/persistenceResultUtils.js';
-import { wrapPersistenceOperation } from '../utils/persistenceErrorUtils.js';
+import { executePersistenceOp } from '../utils/persistenceErrorUtils.js';
 /** @typedef {import('./gameStateRestorer.js').default} GameStateRestorer */
 
 /**
@@ -155,25 +155,28 @@ class GamePersistenceService extends BaseService {
       return canSaveResult;
     }
 
-    return wrapPersistenceOperation(this.#logger, async () => {
-      this.#logger.debug(
-        `GamePersistenceService.saveGame: Delegating to ManualSaveCoordinator for "${saveName}".`
-      );
-      const result = await this.#manualSaveCoordinator.saveGame(
-        saveName,
-        activeWorldName
-      );
-
-      if (result.success) {
+    return executePersistenceOp({
+      asyncOperation: async () => {
         this.#logger.debug(
-          `GamePersistenceService.saveGame: Manual save successful: ${result.message || `Save "${saveName}" completed.`}`
+          `GamePersistenceService.saveGame: Delegating to ManualSaveCoordinator for "${saveName}".`
         );
-      } else {
-        this.#logger.error(
-          `GamePersistenceService.saveGame: Manual save failed: ${result.error || 'Unknown error from SaveLoadService.'}`
+        const result = await this.#manualSaveCoordinator.saveGame(
+          saveName,
+          activeWorldName
         );
-      }
-      return result;
+
+        if (result.success) {
+          this.#logger.debug(
+            `GamePersistenceService.saveGame: Manual save successful: ${result.message || `Save "${saveName}" completed.`}`
+          );
+        } else {
+          this.#logger.error(
+            `GamePersistenceService.saveGame: Manual save failed: ${result.error || 'Unknown error from SaveLoadService.'}`
+          );
+        }
+        return result;
+      },
+      logger: this.#logger,
     });
   }
 
@@ -195,9 +198,12 @@ class GamePersistenceService extends BaseService {
       };
     }
 
-    const loadResult = await wrapPersistenceOperation(this.#logger, async () =>
-      this.#saveLoadService.loadGameData(saveIdentifier)
-    );
+    const loadResult = await executePersistenceOp({
+      asyncOperation: async () =>
+        this.#saveLoadService.loadGameData(saveIdentifier),
+      logger: this.#logger,
+      context: 'GamePersistenceService.loadAndRestoreGame',
+    });
 
     if (!loadResult?.success || !loadResult?.data) {
       const reason = loadResult?.error || 'Load failed or no data returned.';
