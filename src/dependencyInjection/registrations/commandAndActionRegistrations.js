@@ -76,6 +76,7 @@ export function registerCommandAndAction(container) {
       logger: c.resolve(tokens.ILogger),
       safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
       jsonLogicEvaluationService: c.resolve(tokens.JsonLogicEvaluationService),
+      dslParser: c.resolve(tokens.DslParser),
     });
   });
 

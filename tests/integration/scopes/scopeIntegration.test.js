@@ -32,6 +32,7 @@ import path from 'path';
 import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
 import InMemoryDataRegistry from '../../../src/data/inMemoryDataRegistry.js';
 import { TargetResolutionService } from '../../../src/actions/targetResolutionService.js';
+import DefaultDslParser from '../../../src/scopeDsl/parser/defaultDslParser.js';
 
 jest.unmock('../../../src/scopeDsl/scopeRegistry.js');
 
@@ -153,6 +154,7 @@ describe('Scope Integration Tests', () => {
       logger,
       safeEventDispatcher,
       jsonLogicEvaluationService: jsonLogicEval,
+      dslParser: new DefaultDslParser(),
     });
 
     // Create the ActionCandidateProcessor

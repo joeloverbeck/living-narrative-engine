@@ -20,6 +20,7 @@ import { SafeEventDispatcher } from '../../../src/events/safeEventDispatcher.js'
 import ScopeRegistry from '../../../src/scopeDsl/scopeRegistry.js';
 import ScopeEngine from '../../../src/scopeDsl/engine.js';
 import { parseScopeDefinitions } from '../../../src/scopeDsl/scopeDefinitionParser.js';
+import DefaultDslParser from '../../../src/scopeDsl/parser/defaultDslParser.js';
 import {
   POSITION_COMPONENT_ID,
   NAME_COMPONENT_ID,
@@ -147,6 +148,7 @@ describe('Scope Integration Tests', () => {
       logger,
       safeEventDispatcher,
       jsonLogicEvaluationService: jsonLogicEval,
+      dslParser: new DefaultDslParser(),
     });
 
     // Create the ActionCandidateProcessor

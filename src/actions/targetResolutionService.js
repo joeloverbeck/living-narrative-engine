@@ -10,6 +10,7 @@
 /** @typedef {import('./tracing/traceContext.js').TraceContext} TraceContext */
 /** @typedef {import('../logic/jsonLogicEvaluationService.js').default} JsonLogicEvaluationService */
 /** @typedef {import('../types/runtimeContext.js').RuntimeContext} RuntimeContext */
+/** @typedef {import('../scopeDsl/IDslParser.js').IDslParser} IDslParser */
 
 import { ITargetResolutionService } from '../interfaces/ITargetResolutionService.js';
 import { ActionTargetContext } from '../models/actionTargetContext.js';
@@ -34,6 +35,7 @@ export class TargetResolutionService extends ITargetResolutionService {
   #logger;
   #safeEventDispatcher;
   #jsonLogicEvalService;
+  #dslParser;
 
   /**
    * Creates an instance of TargetResolutionService.
@@ -45,6 +47,7 @@ export class TargetResolutionService extends ITargetResolutionService {
    * @param {ILogger} deps.logger - Logger instance.
    * @param {ISafeEventDispatcher} deps.safeEventDispatcher - Dispatches system errors.
    * @param {JsonLogicEvaluationService} deps.jsonLogicEvaluationService - Service to evaluate JsonLogic.
+   * @param {IDslParser} deps.dslParser - Parser used for Scope-DSL expressions.
    */
   constructor({
     scopeRegistry,
@@ -53,6 +56,7 @@ export class TargetResolutionService extends ITargetResolutionService {
     logger,
     safeEventDispatcher,
     jsonLogicEvaluationService,
+    dslParser,
   }) {
     super();
     this.#logger = setupService('TargetResolutionService', logger, {
@@ -67,12 +71,14 @@ export class TargetResolutionService extends ITargetResolutionService {
         value: jsonLogicEvaluationService,
         requiredMethods: ['evaluate'],
       },
+      dslParser: { value: dslParser, requiredMethods: ['parse'] },
     });
     this.#scopeRegistry = scopeRegistry;
     this.#scopeEngine = scopeEngine;
     this.#entityManager = entityManager;
     this.#safeEventDispatcher = safeEventDispatcher;
     this.#jsonLogicEvalService = jsonLogicEvaluationService;
+    this.#dslParser = dslParser;
   }
 
   /**
@@ -146,15 +152,16 @@ export class TargetResolutionService extends ITargetResolutionService {
     }
 
     try {
-      // All scopes must have pre-parsed ASTs
-      const ast = scopeDefinition.ast;
+      let ast = scopeDefinition.ast;
       if (!ast) {
-        throw new Error(
-          `Scope definition '${scopeName}' is missing the required AST property. All scopes must have pre-parsed ASTs.`
+        trace?.info(
+          `Parsing expression for scope '${scopeName}' on demand.`,
+          source
         );
+        ast = this.#dslParser.parse(scopeDefinition.expr);
+      } else {
+        trace?.info(`Using pre-parsed AST for scope '${scopeName}'.`, source);
       }
-
-      trace?.info(`Using pre-parsed AST for scope '${scopeName}'.`, source);
 
       const runtimeCtx = this.#buildRuntimeContext(
         actorEntity,

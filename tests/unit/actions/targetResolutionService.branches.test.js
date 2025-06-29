@@ -30,6 +30,7 @@ describe('TargetResolutionService - additional branches', () => {
     };
     mockSafeDispatcher = { dispatch: jest.fn() };
     mockJsonLogic = { evaluate: jest.fn() };
+    const mockDslParser = { parse: jest.fn(() => generateMockAst('')) };
 
     service = new TargetResolutionService({
       scopeRegistry: mockScopeRegistry,
@@ -38,6 +39,7 @@ describe('TargetResolutionService - additional branches', () => {
       logger: mockLogger,
       safeEventDispatcher: mockSafeDispatcher,
       jsonLogicEvaluationService: mockJsonLogic,
+      dslParser: mockDslParser,
     });
   });
 
