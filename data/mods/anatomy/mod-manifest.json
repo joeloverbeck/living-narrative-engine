@@ -9,12 +9,16 @@
   "content": {
     "components": [
       "body.component.json",
+      "eye_appearance.component.json",
       "joint.component.json",
       "part.component.json",
       "sockets.component.json"
     ],
     "entities": {
       "definitions": [
+        "human_eye.entity.json",
+        "human_eye_blue.entity.json",
+        "human_eye_brown.entity.json",
         "humanoid_arm.entity.json",
         "humanoid_head.entity.json",
         "humanoid_leg.entity.json",
@@ -22,7 +26,15 @@
       ],
       "instances": []
     },
-    "blueprints": ["humanoid_standard.blueprint.json"],
-    "recipes": ["humanoid_standard.recipe.json"]
+    "blueprints": [
+      "humanoid_custom_eyes.blueprint.json",
+      "humanoid_monstrous.blueprint.json",
+      "humanoid_standard.blueprint.json"
+    ],
+    "recipes": [
+      "humanoid_blue_eyes.recipe.json",
+      "humanoid_monstrous_tall.recipe.json",
+      "humanoid_standard.recipe.json"
+    ]
   }
 }

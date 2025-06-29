@@ -1,0 +1,59 @@
+{
+  "$schema": "http://example.com/schemas/anatomy.recipe.schema.json",
+  "recipeId": "anatomy:humanoid_blue_eyes",
+  "blueprintId": "anatomy:humanoid_standard",
+  "slots": {
+    "torso": {
+      "partType": "torso",
+      "preferId": "anatomy:humanoid_torso",
+      "count": {
+        "exact": 1
+      }
+    },
+    "head": {
+      "partType": "head",
+      "preferId": "anatomy:humanoid_head",
+      "count": {
+        "exact": 1
+      },
+      "childSlots": {
+        "left_eye": {
+          "partType": "eye",
+          "properties": {
+            "anatomy:eye_appearance": {
+              "color": "blue"
+            }
+          },
+          "count": {
+            "exact": 1
+          }
+        },
+        "right_eye": {
+          "partType": "eye",
+          "properties": {
+            "anatomy:eye_appearance": {
+              "color": "blue"
+            }
+          },
+          "count": {
+            "exact": 1
+          }
+        }
+      }
+    },
+    "arms": {
+      "partType": "arm",
+      "preferId": "anatomy:humanoid_arm",
+      "count": {
+        "exact": 2
+      }
+    },
+    "legs": {
+      "partType": "leg",
+      "preferId": "anatomy:humanoid_leg",
+      "count": {
+        "exact": 2
+      }
+    }
+  }
+}

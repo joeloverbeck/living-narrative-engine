@@ -402,6 +402,19 @@ export class BodyBlueprintFactory {
 
       if (childId) {
         createdEntities.push(childId);
+
+        // Process childSlots if specified in the attachment
+        if (attachment.childSlots) {
+          await this.#processChildSlots(
+            childId,
+            attachment.childSlots,
+            recipe,
+            createdEntities,
+            new Map(), // partCounts not tracked for static attachments
+            socketOccupancy,
+            rng
+          );
+        }
       }
     }
   }
@@ -513,8 +526,38 @@ export class BodyBlueprintFactory {
         );
         if (hasExcludedTag) return false;
       }
+
+      // Check property requirements
+      if (recipeSlot.properties) {
+        if (!this.#matchesPropertyRequirements(entityDef, recipeSlot.properties)) {
+          return false;
+        }
+      }
     }
 
+    return true;
+  }
+
+  /**
+   * Checks if an entity definition's components match property requirements
+   *
+   * @param entityDef
+   * @param propertyRequirements
+   * @private
+   * @returns {boolean}
+   */
+  #matchesPropertyRequirements(entityDef, propertyRequirements) {
+    for (const [componentId, requiredProps] of Object.entries(propertyRequirements)) {
+      const component = entityDef.components[componentId];
+      if (!component) return false;
+
+      // Check each required property
+      for (const [propKey, propValue] of Object.entries(requiredProps)) {
+        if (component[propKey] !== propValue) {
+          return false;
+        }
+      }
+    }
     return true;
   }
 
@@ -610,6 +653,115 @@ export class BodyBlueprintFactory {
             socketOccupancy,
             rng
           );
+
+          // Process childSlots if specified in the recipe slot
+          if (recipeSlot.childSlots) {
+            await this.#processChildSlots(
+              childId,
+              recipeSlot.childSlots,
+              recipe,
+              createdEntities,
+              partCounts,
+              socketOccupancy,
+              rng
+            );
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Processes child slot specifications for a created part
+   *
+   * @param parentId
+   * @param childSlots
+   * @param recipe
+   * @param createdEntities
+   * @param partCounts
+   * @param socketOccupancy
+   * @param rng
+   * @private
+   */
+  async #processChildSlots(
+    parentId,
+    childSlots,
+    recipe,
+    createdEntities,
+    partCounts,
+    socketOccupancy,
+    rng
+  ) {
+    const parentEntity = this.#entityManager.getEntityInstance(parentId);
+    const socketsComponent = this.#entityManager.getComponentData(
+      parentId,
+      'anatomy:sockets'
+    );
+
+    if (!socketsComponent || !socketsComponent.sockets) {
+      return;
+    }
+
+    // Process each specified child slot
+    for (const [socketId, slotSpec] of Object.entries(childSlots)) {
+      const socket = socketsComponent.sockets.find((s) => s.id === socketId);
+      if (!socket) {
+        this.#logger.warn(
+          `Socket '${socketId}' not found on entity '${parentId}'`
+        );
+        continue;
+      }
+
+      const occupancyKey = `${parentId}:${socketId}`;
+      const currentOccupancy = socketOccupancy.get(occupancyKey) || 0;
+      const maxCount = socket.maxCount || 1;
+
+      if (currentOccupancy >= maxCount) {
+        continue;
+      }
+
+      // Determine how many parts to create
+      const desiredCount = this.#calculateDesiredCount(
+        slotSpec,
+        partCounts,
+        slotSpec.partType
+      );
+      const availableSlots = maxCount - currentOccupancy;
+      const toCreate = Math.min(desiredCount, availableSlots);
+
+      // Create parts for this socket
+      for (let i = 0; i < toCreate; i++) {
+        const childId = await this.#createPartForSlot(
+          parentId,
+          socket,
+          slotSpec,
+          recipe,
+          socketOccupancy,
+          rng
+        );
+
+        if (childId) {
+          createdEntities.push(childId);
+          // Update counts
+          const partType = this.#getPartType(childId);
+          partCounts.set(partType, (partCounts.get(partType) || 0) + 1);
+          socketOccupancy.set(
+            occupancyKey,
+            (socketOccupancy.get(occupancyKey) || 0) + 1
+          );
+
+          // Recursively process child slots of this new part
+          if (slotSpec.childSlots) {
+            await this.#processChildSlots(
+              childId,
+              slotSpec.childSlots,
+              recipe,
+              createdEntities,
+              partCounts,
+              socketOccupancy,
+              rng
+            );
+          }
         }
       }
     }
@@ -743,6 +895,13 @@ export class BodyBlueprintFactory {
           (tag) => entityDef.components[tag] !== undefined
         );
         if (hasExcludedTag) continue;
+      }
+
+      // Check property requirements
+      if (recipeSlot.properties) {
+        if (!this.#matchesPropertyRequirements(entityDef, recipeSlot.properties)) {
+          continue;
+        }
       }
 
       candidates.push(partId);
