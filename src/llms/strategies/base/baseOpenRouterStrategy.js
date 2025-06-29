@@ -96,7 +96,7 @@ export class BaseOpenRouterStrategy extends BaseChatLLMStrategy {
   }
 
   /**
-   * Validates parameters passed to {@link execute} and returns the LLM id.
+   * Validates parameters passed to {@link BaseOpenRouterStrategy#execute} and returns the LLM id.
    *
    * @private
    * @param {LLMStrategyExecuteParams} params - The execution parameters.
@@ -264,6 +264,115 @@ export class BaseOpenRouterStrategy extends BaseChatLLMStrategy {
   }
 
   /**
+   * Sends the HTTP request to the provider.
+   *
+   * @private
+   * @async
+   * @param {string} targetUrl - The endpoint URL.
+   * @param {object} finalPayload - Payload to send.
+   * @param {object} headers - Request headers.
+   * @param {string} llmId - Identifier of the LLM for logging.
+   * @returns {Promise<any>} The raw response data.
+   */
+  async #sendRequest(targetUrl, finalPayload, headers, llmId) {
+    this.logger.debug(
+      `${this.constructor.name} (${llmId}): Making API call to '${targetUrl}'. Payload length: ${JSON.stringify(finalPayload)?.length}`,
+      { llmId }
+    );
+    this.logger.debug(
+      `${this.constructor.name} (${llmId}): Final prompt to be sent to '${targetUrl}':`,
+      {
+        llmId,
+        payload: JSON.stringify(finalPayload, null, 2),
+      }
+    );
+
+    const responseData = await this.#httpClient.request(targetUrl, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(finalPayload),
+    });
+
+    logPreview(
+      this.logger,
+      `${this.constructor.name} (${llmId}): Raw API response received. Preview: `,
+      JSON.stringify(responseData),
+      250
+    );
+
+    return responseData;
+  }
+
+  /**
+   * Extracts JSON using the subclass implementation.
+   *
+   * @private
+   * @async
+   * @param {any} responseData - The raw provider response.
+   * @param {LLMModelConfig} llmConfig - The LLM configuration.
+   * @param {object} providerPayload - The original provider payload.
+   * @returns {Promise<string|null>} Extracted JSON string or null.
+   */
+  async #extractJson(responseData, llmConfig, providerPayload) {
+    return this._extractJsonOutput(responseData, llmConfig, providerPayload);
+  }
+
+  /**
+   * Logs and wraps unexpected errors.
+   *
+   * @private
+   * @param {Error} error - The thrown error.
+   * @param {string} llmId - Identifier of the LLM for logging.
+   * @param {string} targetUrl - The endpoint URL.
+   * @param {object} providerRequestPayload - Payload used for the request.
+   * @throws {LLMStrategyError|Error} Mapped error for the caller.
+   */
+  #logAndWrapError(error, llmId, targetUrl, providerRequestPayload) {
+    if (
+      error instanceof ConfigurationError ||
+      error instanceof LLMStrategyError
+    ) {
+      throw error;
+    }
+
+    const isHttpClientError =
+      error.name === 'HttpClientError' ||
+      (Object.prototype.hasOwnProperty.call(error, 'status') &&
+        Object.prototype.hasOwnProperty.call(error, 'response') &&
+        Object.prototype.hasOwnProperty.call(error, 'url'));
+
+    if (isHttpClientError) {
+      this.logger.error(
+        `${this.constructor.name} (${llmId}): HttpClientError occurred during API call to '${targetUrl}'. Status: ${error.status || 'N/A'}. Message: ${error.message}`,
+        {
+          llmId,
+          originalErrorName: error.name,
+          originalErrorMessage: error.message,
+          status: error.status,
+          responseBody: error.response,
+          url: targetUrl,
+        }
+      );
+      throw error;
+    }
+
+    const errMsg = `${this.constructor.name} (${llmId}): An unexpected error occurred during API call or response processing for endpoint '${targetUrl}'. Original message: ${error.message}`;
+    this.logger.error(errMsg, {
+      llmId,
+      originalErrorName: error.name,
+      originalErrorMessage: error.message,
+      requestUrl: targetUrl,
+      payloadPreview:
+        JSON.stringify(providerRequestPayload)?.substring(0, 200) + '...',
+    });
+    throw new LLMStrategyError(errMsg, llmId, error, {
+      requestUrl: targetUrl,
+      payloadPreview:
+        JSON.stringify(providerRequestPayload)?.substring(0, 200) + '...',
+    });
+  }
+
+  /**
    * Handles the HTTP request/response cycle and JSON extraction.
    *
    * @private
@@ -287,32 +396,14 @@ export class BaseOpenRouterStrategy extends BaseChatLLMStrategy {
   ) {
     let responseData;
     try {
-      this.logger.debug(
-        `${this.constructor.name} (${llmId}): Making API call to '${targetUrl}'. Payload length: ${JSON.stringify(finalPayload)?.length}`,
-        { llmId }
-      );
-      this.logger.debug(
-        `${this.constructor.name} (${llmId}): Final prompt to be sent to '${targetUrl}':`,
-        {
-          llmId,
-          payload: JSON.stringify(finalPayload, null, 2),
-        }
+      responseData = await this.#sendRequest(
+        targetUrl,
+        finalPayload,
+        headers,
+        llmId
       );
 
-      responseData = await this.#httpClient.request(targetUrl, {
-        method: 'POST',
-        headers: headers,
-        body: JSON.stringify(finalPayload),
-      });
-
-      logPreview(
-        this.logger,
-        `${this.constructor.name} (${llmId}): Raw API response received. Preview: `,
-        JSON.stringify(responseData),
-        250
-      );
-
-      const extractedJsonString = await this._extractJsonOutput(
+      const extractedJsonString = await this.#extractJson(
         responseData,
         llmConfig,
         providerRequestPayload
@@ -340,50 +431,7 @@ export class BaseOpenRouterStrategy extends BaseChatLLMStrategy {
         responsePreview: JSON.stringify(responseData)?.substring(0, 500),
       });
     } catch (error) {
-      if (
-        error instanceof ConfigurationError ||
-        error instanceof LLMStrategyError
-      ) {
-        throw error;
-      }
-
-      const isHttpClientError =
-        error.name === 'HttpClientError' ||
-        (Object.prototype.hasOwnProperty.call(error, 'status') &&
-          Object.prototype.hasOwnProperty.call(error, 'response') &&
-          Object.prototype.hasOwnProperty.call(error, 'url'));
-
-      let finalError;
-      if (isHttpClientError) {
-        this.logger.error(
-          `${this.constructor.name} (${llmId}): HttpClientError occurred during API call to '${targetUrl}'. Status: ${error.status || 'N/A'}. Message: ${error.message}`,
-          {
-            llmId,
-            originalErrorName: error.name,
-            originalErrorMessage: error.message,
-            status: error.status,
-            responseBody: error.response,
-            url: targetUrl,
-          }
-        );
-        finalError = error;
-      } else {
-        const errMsg = `${this.constructor.name} (${llmId}): An unexpected error occurred during API call or response processing for endpoint '${targetUrl}'. Original message: ${error.message}`;
-        this.logger.error(errMsg, {
-          llmId,
-          originalErrorName: error.name,
-          originalErrorMessage: error.message,
-          requestUrl: targetUrl,
-          payloadPreview:
-            JSON.stringify(providerRequestPayload)?.substring(0, 200) + '...',
-        });
-        finalError = new LLMStrategyError(errMsg, llmId, error, {
-          requestUrl: targetUrl,
-          payloadPreview:
-            JSON.stringify(providerRequestPayload)?.substring(0, 200) + '...',
-        });
-      }
-      throw finalError;
+      this.#logAndWrapError(error, llmId, targetUrl, providerRequestPayload);
     }
   }
 
