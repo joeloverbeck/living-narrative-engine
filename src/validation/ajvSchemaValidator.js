@@ -55,6 +55,65 @@ class AjvSchemaValidator {
   }
 
   /**
+   * Validates inputs for {@link addSchema} and normalizes the schema ID.
+   *
+   * @protected
+   * @param {object} schemaData - Schema object to add.
+   * @param {string} schemaId - Candidate schema identifier.
+   * @returns {string} Normalized schema ID to register.
+   * @throws {Error} When the schema data or ID is invalid.
+   */
+  _validateAddSchemaInput(schemaData, schemaId) {
+    if (
+      !schemaData ||
+      typeof schemaData !== 'object' ||
+      Object.keys(schemaData).length === 0
+    ) {
+      const errMsg = `Invalid or empty schemaData provided for ID '${schemaId}'.`;
+      this.#logger.error(`AjvSchemaValidator.addSchema: ${errMsg}`);
+      throw new Error(`AjvSchemaValidator: ${errMsg}`);
+    }
+
+    try {
+      return this.#requireValidSchemaId(schemaId);
+    } catch (error) {
+      this.#logger.error(`AjvSchemaValidator.addSchema: ${error.message}`);
+      throw error;
+    }
+  }
+
+  /**
+   * Validates an array of schemas for {@link addSchemas}.
+   *
+   * @protected
+   * @param {object[]} schemasArray - Array of schema objects with `$id` fields.
+   * @returns {void}
+   * @throws {Error} If the input array or any schema entry is invalid.
+   */
+  _validateBatchInput(schemasArray) {
+    if (!Array.isArray(schemasArray) || schemasArray.length === 0) {
+      const errMsg = 'addSchemas called with empty or non-array input.';
+      this.#logger.error(`AjvSchemaValidator.addSchemas: ${errMsg}`);
+      throw new Error(`AjvSchemaValidator: ${errMsg}`);
+    }
+
+    for (const schema of schemasArray) {
+      if (!schema || typeof schema !== 'object') {
+        const errMsg = 'All schemas must be objects with a valid $id.';
+        this.#logger.error(`AjvSchemaValidator.addSchemas: ${errMsg}`);
+        throw new Error(`AjvSchemaValidator: ${errMsg}`);
+      }
+      try {
+        this.#requireValidSchemaId(schema.$id);
+      } catch (error) {
+        const errMsg = 'All schemas must be objects with a valid $id.';
+        this.#logger.error(`AjvSchemaValidator.addSchemas: ${errMsg}`);
+        throw new Error(`AjvSchemaValidator: ${errMsg}`);
+      }
+    }
+  }
+
+  /**
    * @param {object} [params]
    * @param {import('../interfaces/coreServices.js').ILogger} params.logger
    * @param {import('ajv').default} [params.ajvInstance]
@@ -122,20 +181,10 @@ class AjvSchemaValidator {
       return Promise.reject(error);
     }
 
-    if (
-      !schemaData ||
-      typeof schemaData !== 'object' ||
-      Object.keys(schemaData).length === 0
-    ) {
-      const errMsg = `Invalid or empty schemaData provided for ID '${schemaId}'.`;
-      this.#logger.error(`AjvSchemaValidator.addSchema: ${errMsg}`);
-      return Promise.reject(new Error(`AjvSchemaValidator: ${errMsg}`));
-    }
     let keyToRegister;
     try {
-      keyToRegister = this.#requireValidSchemaId(schemaId);
+      keyToRegister = this._validateAddSchemaInput(schemaData, schemaId);
     } catch (error) {
-      this.#logger.error(`AjvSchemaValidator.addSchema: ${error.message}`);
       return Promise.reject(error);
     }
 
@@ -463,7 +512,7 @@ class AjvSchemaValidator {
       }
 
       // Try to compile the schema to check for $ref resolution issues
-      const compiledSchema = this.#ajv.compile(schema.schema);
+      this.#ajv.compile(schema.schema);
       return true;
     } catch (error) {
       this.#logger.error(
@@ -515,25 +564,10 @@ class AjvSchemaValidator {
       );
       return Promise.reject(error);
     }
-    if (!Array.isArray(schemasArray) || schemasArray.length === 0) {
-      const errMsg = 'addSchemas called with empty or non-array input.';
-      this.#logger.error(`AjvSchemaValidator.addSchemas: ${errMsg}`);
-      return Promise.reject(new Error(`AjvSchemaValidator: ${errMsg}`));
-    }
-    // Validate all schemas have $id
-    for (const schema of schemasArray) {
-      if (!schema || typeof schema !== 'object') {
-        const errMsg = 'All schemas must be objects with a valid $id.';
-        this.#logger.error(`AjvSchemaValidator.addSchemas: ${errMsg}`);
-        return Promise.reject(new Error(`AjvSchemaValidator: ${errMsg}`));
-      }
-      try {
-        this.#requireValidSchemaId(schema.$id);
-      } catch (error) {
-        const errMsg = 'All schemas must be objects with a valid $id.';
-        this.#logger.error(`AjvSchemaValidator.addSchemas: ${errMsg}`);
-        return Promise.reject(new Error(`AjvSchemaValidator: ${errMsg}`));
-      }
+    try {
+      this._validateBatchInput(schemasArray);
+    } catch (error) {
+      return Promise.reject(error);
     }
     try {
       this.#ajv.addSchema(schemasArray);
