@@ -1,4 +1,5 @@
 import InitializationService from '../../../../src/initializers/services/initializationService.js';
+import LlmAdapterInitializer from '../../../../src/initializers/services/llmAdapterInitializer.js';
 import { SystemInitializationError } from '../../../../src/errors/InitializationError.js';
 import { describe, it, expect, beforeEach } from '@jest/globals';
 
@@ -20,6 +21,7 @@ let thoughtListener;
 let notesListener;
 let spatialIndexManager;
 let contentDependencyValidator;
+let llmAdapterInitializer;
 
 beforeEach(() => {
   logger = { error: jest.fn(), debug: jest.fn() };
@@ -42,6 +44,7 @@ beforeEach(() => {
   contentDependencyValidator = {
     validate: jest.fn().mockResolvedValue(undefined),
   };
+  llmAdapterInitializer = new LlmAdapterInitializer();
 });
 
 describe('InitializationService constructor', () => {
@@ -68,6 +71,7 @@ describe('InitializationService constructor', () => {
             systemInitializer,
             worldInitializer,
             contentDependencyValidator,
+            llmAdapterInitializer,
           },
         })
     ).not.toThrow();
@@ -94,6 +98,7 @@ describe('InitializationService constructor', () => {
           systemInitializer,
           worldInitializer,
           contentDependencyValidator,
+          llmAdapterInitializer,
         },
       });
     expect(create).toThrow(SystemInitializationError);
@@ -122,6 +127,7 @@ describe('InitializationService constructor', () => {
           systemInitializer,
           worldInitializer,
           contentDependencyValidator,
+          llmAdapterInitializer,
         },
       });
     expect(createVD).toThrow(SystemInitializationError);
