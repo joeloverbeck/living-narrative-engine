@@ -4,6 +4,7 @@
  */
 
 import { AbstractDecisionProvider } from './abstractDecisionProvider.js';
+import { validateDependency } from '../../utils/dependencyUtils.js';
 
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 
@@ -15,6 +16,16 @@ import { AbstractDecisionProvider } from './abstractDecisionProvider.js';
  *  provided delegate function.
  */
 export class DelegatingDecisionProvider extends AbstractDecisionProvider {
+  /**
+   * @type {(actor: import('../../entities/entity.js').default,
+   *  context: import('../interfaces/ITurnContext.js').ITurnContext,
+   *  actions: import('../dtos/actionComposite.js').ActionComposite[],
+   *  abortSignal?: AbortSignal
+   * ) => Promise<{ index: number, speech?: string|null, thoughts?: string|null, notes?: string[]|null }>}
+   * @private
+   */
+  #delegate;
+
   /**
    * @param {object} deps - Constructor dependencies
    * @param {(actor: import('../../entities/entity.js').default,
@@ -28,12 +39,8 @@ export class DelegatingDecisionProvider extends AbstractDecisionProvider {
    */
   constructor({ delegate, logger, safeEventDispatcher }) {
     super({ logger, safeEventDispatcher });
-    if (typeof delegate !== 'function') {
-      throw new Error(
-        'DelegatingDecisionProvider requires a delegate function'
-      );
-    }
-    this._delegate = delegate;
+    validateDependency(delegate, 'delegate', logger, { isFunction: true });
+    this.#delegate = delegate;
   }
 
   /**
@@ -41,7 +48,7 @@ export class DelegatingDecisionProvider extends AbstractDecisionProvider {
    * @override
    */
   async choose(actor, context, actions, abortSignal) {
-    return this._delegate(actor, context, actions, abortSignal);
+    return this.#delegate(actor, context, actions, abortSignal);
   }
 }
 
