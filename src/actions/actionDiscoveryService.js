@@ -132,29 +132,25 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
    * @returns {Promise<{actions: any[], errors: any[]}>} Result of processing.
    * @private
    */
-  #processCandidate(actionDef, actorEntity, discoveryContext, trace) {
-    return Promise.resolve()
-      .then(() =>
-        this.#actionCandidateProcessor.process(
-          actionDef,
-          actorEntity,
-          discoveryContext,
-          trace
-        )
-      )
-      .then((result) => result ?? { actions: [], errors: [] })
-      .catch((err) => {
-        this.#logger.error(
-          `Error processing candidate action '${actionDef.id}': ${err.message}`,
-          err
-        );
-        return {
-          actions: [],
-          errors: [
-            createDiscoveryError(actionDef.id, extractTargetId(err), err),
-          ],
-        };
-      });
+  async #processCandidate(actionDef, actorEntity, discoveryContext, trace) {
+    try {
+      const result = await this.#actionCandidateProcessor.process(
+        actionDef,
+        actorEntity,
+        discoveryContext,
+        trace
+      );
+      return result ?? { actions: [], errors: [] };
+    } catch (err) {
+      this.#logger.error(
+        `Error processing candidate action '${actionDef.id}': ${err.message}`,
+        err
+      );
+      return {
+        actions: [],
+        errors: [createDiscoveryError(actionDef.id, extractTargetId(err), err)],
+      };
+    }
   }
 
   /**
