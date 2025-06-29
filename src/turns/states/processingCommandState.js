@@ -172,6 +172,7 @@ export class ProcessingCommandState extends AbstractTurnState {
    * @param {ITurnAction} deps.turnAction - Structured turn action.
    * @param {Function} deps.directiveResolver - Resolver for turn directives.
    * @param {(state: ProcessingCommandState, commandString: string|null, action: ITurnAction|null, setAction: (a: ITurnAction|null) => void, handler: ProcessingExceptionHandler) => ProcessingWorkflow} deps.processingWorkflowFactory - Factory for ProcessingWorkflow.
+   * @param {(config: object) => CommandProcessingWorkflow} deps.commandProcessingWorkflowFactory - Factory for CommandProcessingWorkflow.
    * @returns {void}
    */
   _initializeComponents({
@@ -181,6 +182,7 @@ export class ProcessingCommandState extends AbstractTurnState {
     turnAction,
     directiveResolver,
     processingWorkflowFactory,
+    commandProcessingWorkflowFactory,
   }) {
     this.#commandProcessor = commandProcessor;
     this._commandOutcomeInterpreter = commandOutcomeInterpreter;
@@ -194,7 +196,7 @@ export class ProcessingCommandState extends AbstractTurnState {
 
     this._processingWorkflowFactory = processingWorkflowFactory;
 
-    this._processingWorkflow = new CommandProcessingWorkflow({
+    this._processingWorkflow = commandProcessingWorkflowFactory({
       state: this,
       exceptionHandler: this._exceptionHandler,
       commandProcessor: this.#commandProcessor,
@@ -212,6 +214,7 @@ export class ProcessingCommandState extends AbstractTurnState {
    * @param {ITurnAction} deps.turnAction The structured turn action.
    * @param {Function} deps.directiveResolver Resolver for turn directives.
    * @param {(state: ProcessingCommandState, commandString: string|null, action: ITurnAction|null, setAction: (a: ITurnAction|null) => void, handler: ProcessingExceptionHandler) => ProcessingWorkflow} [deps.processingWorkflowFactory] Factory for ProcessingWorkflow.
+   * @param {(config: object) => CommandProcessingWorkflow} [deps.commandProcessingWorkflowFactory] Factory for CommandProcessingWorkflow.
    */
   constructor({
     handler,
@@ -228,6 +231,8 @@ export class ProcessingCommandState extends AbstractTurnState {
       exceptionHandler
     ) =>
       new ProcessingWorkflow(state, cmd, action, setAction, exceptionHandler),
+    commandProcessingWorkflowFactory = (config) =>
+      new CommandProcessingWorkflow(config),
   }) {
     super(handler);
     const deps = {
@@ -237,6 +242,7 @@ export class ProcessingCommandState extends AbstractTurnState {
       turnAction,
       directiveResolver,
       processingWorkflowFactory,
+      commandProcessingWorkflowFactory,
     };
 
     this._validateDependencies(deps);

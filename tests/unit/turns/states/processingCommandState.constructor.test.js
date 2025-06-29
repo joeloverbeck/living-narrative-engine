@@ -30,4 +30,26 @@ describe('ProcessingCommandState constructor', () => {
     validateSpy.mockRestore();
     initSpy.mockRestore();
   });
+
+  test('uses provided commandProcessingWorkflowFactory', () => {
+    const deps = {
+      handler: { getLogger: () => ({ debug: jest.fn() }) },
+      commandProcessor: {},
+      commandOutcomeInterpreter: {},
+      commandString: 'cmd',
+      turnAction: { actionDefinitionId: 'id', commandString: 'cmd' },
+      directiveResolver: TurnDirectiveStrategyResolver,
+    };
+
+    const mockWorkflow = {};
+    const cpwFactory = jest.fn(() => mockWorkflow);
+
+    const state = new ProcessingCommandState({
+      ...deps,
+      commandProcessingWorkflowFactory: cpwFactory,
+    });
+
+    expect(cpwFactory).toHaveBeenCalled();
+    expect(state._processingWorkflow).toBe(mockWorkflow);
+  });
 });

@@ -91,7 +91,8 @@ export class ConcreteTurnStateFactory extends ITurnStateFactory {
     commandString,
     turnAction,
     directiveResolver,
-    processingWorkflowFactory
+    processingWorkflowFactory,
+    commandProcessingWorkflowFactory
   ) {
     return new ProcessingCommandState({
       handler,
@@ -101,6 +102,7 @@ export class ConcreteTurnStateFactory extends ITurnStateFactory {
       turnAction,
       directiveResolver,
       processingWorkflowFactory,
+      commandProcessingWorkflowFactory,
     });
   }
 
