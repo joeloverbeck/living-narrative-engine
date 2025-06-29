@@ -182,7 +182,9 @@ describe('AIPromptContentProvider', () => {
             perceptionLogFormatter: mockPerceptionLogFormatterInstance,
             gameStateValidationService: mockGameStateValidationServiceInstance,
           })
-      ).toThrow('AIPromptContentProvider: Logger is required.');
+      ).toThrow(
+        'Missing required dependency: AIPromptContentProvider: logger.'
+      );
     });
 
     test('should throw error if PromptStaticContentService is not provided', () => {
@@ -196,7 +198,7 @@ describe('AIPromptContentProvider', () => {
             gameStateValidationService: mockGameStateValidationServiceInstance,
           })
       ).toThrow(
-        'AIPromptContentProvider: PromptStaticContentService is required.'
+        'Missing required dependency: AIPromptContentProvider: promptStaticContentService.'
       );
     });
 
@@ -210,7 +212,9 @@ describe('AIPromptContentProvider', () => {
             perceptionLogFormatter: null,
             gameStateValidationService: mockGameStateValidationServiceInstance,
           })
-      ).toThrow('AIPromptContentProvider: PerceptionLogFormatter is required.');
+      ).toThrow(
+        'Missing required dependency: AIPromptContentProvider: perceptionLogFormatter.'
+      );
     });
 
     test('should throw error if GameStateValidationServiceForPrompting is not provided', () => {
@@ -224,7 +228,7 @@ describe('AIPromptContentProvider', () => {
             gameStateValidationService: null,
           })
       ).toThrow(
-        'AIPromptContentProvider: GameStateValidationServiceForPrompting is required.'
+        'Missing required dependency: AIPromptContentProvider: gameStateValidationService.'
       );
     });
   });
