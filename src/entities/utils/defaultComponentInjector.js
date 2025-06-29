@@ -17,7 +17,7 @@ import {
  * caller via the provided helper function.
  * @param {import('../entity.js').default} entity - The entity instance to modify.
  * @param {import('../../interfaces/coreServices.js').ILogger} logger - Logger used for debug and error output.
- * @param {function(string, object, string): object} validateAndClone - Function that validates component data and returns a cloned payload.
+ * @param {function(string, object, string): object} validateAndClone - Function that validates component data and returns a cloned payload. The third argument is an error context message.
  */
 export function injectDefaultComponents(entity, logger, validateAndClone) {
   if (entity.hasComponent(ACTOR_COMPONENT_ID)) {
