@@ -1,5 +1,5 @@
 // src/entities/utils/componentHelpers.js
-import { readComponent, writeComponent } from './componentAccessUtils.js';
+import { getComponent, setComponent } from '../entities/entityAccessService.js';
 
 /**
  * Fetch component data from an entity or pseudo-entity.
@@ -10,7 +10,7 @@ import { readComponent, writeComponent } from './componentAccessUtils.js';
  * @returns {any | null} The component data or `null` when absent.
  */
 export function fetchComponent(entity, componentId) {
-  return readComponent(entity, componentId);
+  return getComponent(entity, componentId);
 }
 
 /**
@@ -23,7 +23,7 @@ export function fetchComponent(entity, componentId) {
  * @returns {boolean} `true` if the component was written, otherwise `false`.
  */
 export function applyComponent(entity, componentId, data) {
-  return writeComponent(entity, componentId, data);
+  return setComponent(entity, componentId, data);
 }
 
 export default {

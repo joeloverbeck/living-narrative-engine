@@ -11,7 +11,10 @@ describe('displayHelpers', () => {
   let logger;
 
   beforeEach(() => {
-    entityManager = { getEntityInstance: jest.fn() };
+    entityManager = {
+      getEntityInstance: jest.fn(),
+      getComponentData: jest.fn(),
+    };
     logger = { debug: jest.fn(), warn: jest.fn() };
   });
 

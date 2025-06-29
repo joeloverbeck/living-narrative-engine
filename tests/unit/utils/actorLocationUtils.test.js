@@ -24,17 +24,23 @@ describe('getActorLocation', () => {
   });
 
   it('returns entity instance when locationId resolves to entity', () => {
+    const actor = createMockEntity('actor1');
     const locEntity = createMockEntity('loc1');
     mockEntityManager.getComponentData.mockReturnValue({ locationId: 'loc1' });
-    mockEntityManager.getEntityInstance.mockReturnValue(locEntity);
+    mockEntityManager.getEntityInstance.mockImplementation((id) =>
+      id === 'loc1' ? locEntity : actor
+    );
 
     const result = getActorLocation('actor1', mockEntityManager);
     expect(result).toBe(locEntity);
   });
 
   it('returns locationId string when entity lookup fails', () => {
+    const actor = createMockEntity('actor1');
     mockEntityManager.getComponentData.mockReturnValue({ locationId: 'loc1' });
-    mockEntityManager.getEntityInstance.mockReturnValue(undefined);
+    mockEntityManager.getEntityInstance.mockImplementation((id) =>
+      id === 'actor1' ? actor : undefined
+    );
 
     const result = getActorLocation('actor1', mockEntityManager);
     expect(result).toBe('loc1');

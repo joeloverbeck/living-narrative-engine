@@ -16,6 +16,7 @@ describe('LocationDisplayService', () => {
   beforeEach(() => {
     mockEntityManager = {
       getEntityInstance: jest.fn(),
+      getComponentData: jest.fn(),
     };
     mockLogger = {
       debug: jest.fn(),

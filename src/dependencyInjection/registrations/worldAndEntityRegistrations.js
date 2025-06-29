@@ -28,6 +28,11 @@ import * as closenessCircleService from '../../logic/services/closenessCircleSer
 import { EntityDisplayDataProvider } from '../../entities/entityDisplayDataProvider.js';
 import { SpatialIndexSynchronizer } from '../../entities/spatialIndexSynchronizer.js';
 import { LocationQueryService } from '../../entities/locationQueryService.js';
+import {
+  resolveEntity,
+  getComponent,
+  setComponent,
+} from '../../entities/entityAccessService.js';
 import LocationDisplayService from '../../entities/services/locationDisplayService.js';
 import { BodyBlueprintFactory } from '../../anatomy/bodyBlueprintFactory.js';
 import { GraphIntegrityValidator } from '../../anatomy/graphIntegrityValidator.js';
@@ -157,6 +162,30 @@ export function registerWorldAndEntity(container) {
   logger.debug(
     `World and Entity Registration: Registered ${String(
       tokens.LocationQueryService
+    )}.`
+  );
+
+  registrar.singletonFactory(tokens.EntityAccessService, (c) => {
+    return {
+      resolveEntity: (entityOrId) =>
+        resolveEntity(entityOrId, c.resolve(tokens.IEntityManager), c.resolve(tokens.ILogger)),
+      getComponent: (entityOrId, componentId, options = {}) =>
+        getComponent(entityOrId, componentId, {
+          entityManager: c.resolve(tokens.IEntityManager),
+          logger: c.resolve(tokens.ILogger),
+          ...options,
+        }),
+      setComponent: (entityOrId, componentId, data, options = {}) =>
+        setComponent(entityOrId, componentId, data, {
+          entityManager: c.resolve(tokens.IEntityManager),
+          logger: c.resolve(tokens.ILogger),
+          ...options,
+        }),
+    };
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.EntityAccessService
     )}.`
   );
 
