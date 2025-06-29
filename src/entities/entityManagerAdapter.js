@@ -107,14 +107,10 @@ export class EntityManagerAdapter extends IEntityManager {
 
   /**
    * Clears all active entities via the wrapped EntityManager.
-   * This method is not part of {@link IEntityManager} but required by
-   * subsystems like GameStateRestorer.
+   * This method is required by subsystems like GameStateRestorer.
    */
   clearAll() {
-    if (typeof this.#entityManager.clearAll === 'function') {
-      return this.#entityManager.clearAll();
-    }
-    return undefined;
+    return this.#entityManager.clearAll();
   }
 }
 

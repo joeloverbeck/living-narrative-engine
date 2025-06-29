@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import GameStateRestorer from '../../../src/persistence/gameStateRestorer.js';
 import { DefinitionNotFoundError } from '../../../src/errors/definitionNotFoundError.js';
+import { EntityManagerAdapter } from '../../../src/entities/entityManagerAdapter.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/systemEventIds.js';
 
 const makeLogger = () => ({
@@ -16,17 +17,21 @@ const makeLogger = () => ({
 function makeRestorer() {
   const logger = makeLogger();
   const entityManager = { clearAll: jest.fn(), reconstructEntity: jest.fn() };
+  const adapter = new EntityManagerAdapter({
+    entityManager,
+    locationQueryService: { getEntitiesInLocation: jest.fn() },
+  });
   const playtimeTracker = { setAccumulatedPlaytime: jest.fn() };
   const restorer = new GameStateRestorer({
     logger,
-    entityManager,
+    entityManager: adapter,
     playtimeTracker,
   });
-  return { restorer, logger, entityManager, playtimeTracker };
+  return { restorer, logger, entityManager, adapter, playtimeTracker };
 }
 
 describe('GameStateRestorer.restoreGameState', () => {
-  /** @type {{restorer: GameStateRestorer, logger: any, entityManager: any, playtimeTracker: any}} */
+  /** @type {{restorer: GameStateRestorer, logger: any, entityManager: any, adapter: EntityManagerAdapter, playtimeTracker: any}} */
   let ctx;
 
   beforeEach(() => {
@@ -59,7 +64,7 @@ describe('GameStateRestorer.restoreGameState', () => {
       ...ctx,
       restorer: new GameStateRestorer({
         logger: ctx.logger,
-        entityManager: ctx.entityManager,
+        entityManager: ctx.adapter,
         playtimeTracker: ctx.playtimeTracker,
         safeEventDispatcher: dispatcher,
       }),
