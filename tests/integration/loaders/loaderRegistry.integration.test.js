@@ -159,7 +159,7 @@ describe('Integration: Loaders, Registry State, and Overrides (REFACTOR-8.6)', (
     mockFetcher = createMockDataFetcher();
     mockValidator = createMockSchemaValidator();
     mockLogger = createMockLogger();
-    dataRegistry = new InMemoryDataRegistry(mockLogger);
+    dataRegistry = new InMemoryDataRegistry({ logger: mockLogger });
     jest.clearAllMocks();
     jest.spyOn(dataRegistry, 'store');
     jest.spyOn(dataRegistry, 'get');

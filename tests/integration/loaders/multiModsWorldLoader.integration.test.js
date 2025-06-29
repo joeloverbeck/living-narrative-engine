@@ -28,7 +28,7 @@ function buildEnv(pathToResponse) {
   const fetcher = createMockDataFetcher({ pathToResponse });
   const schemaValidator = createMockSchemaValidator();
   schemaValidator.isSchemaLoaded.mockReturnValue(true);
-  const registry = new InMemoryDataRegistry(logger);
+  const registry = new InMemoryDataRegistry({ logger });
   const defLoader = new EntityDefinitionLoader(
     config,
     resolver,

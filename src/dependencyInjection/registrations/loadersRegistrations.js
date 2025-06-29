@@ -119,7 +119,7 @@ export function registerLoaders(container) {
   );
   registrar.singletonFactory(
     tokens.IDataRegistry,
-    () => new InMemoryDataRegistry()
+    () => new InMemoryDataRegistry({ logger })
   );
   registrar.singletonFactory(
     tokens.IDataFetcher,
