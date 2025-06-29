@@ -189,6 +189,7 @@ export class ContentLoadManager {
   #mergeTotals(mainTotals, updatedTotals) {
     for (const [registryKey, counts] of Object.entries(updatedTotals)) {
       if (!mainTotals[registryKey]) {
+        /** @type {import('./LoadResultAggregator.js').ContentTypeCounts} */
         mainTotals[registryKey] = { count: 0, overrides: 0, errors: 0 };
       }
       mainTotals[registryKey].count = counts.count;
