@@ -24,7 +24,7 @@ describe('AjvSchemaValidator error paths', () => {
     const AjvSchemaValidator =
       require('../../../src/validation/ajvSchemaValidator.js').default;
     const logger = createMockLogger();
-    const validator = new AjvSchemaValidator(logger);
+    const validator = new AjvSchemaValidator({ logger: logger });
 
     const schema = { $id: 'test://schemas/err', type: 'object' };
     await expect(validator.addSchema(schema, schema.$id)).rejects.toThrow(
@@ -55,7 +55,7 @@ describe('AjvSchemaValidator error paths', () => {
     const AjvSchemaValidator =
       require('../../../src/validation/ajvSchemaValidator.js').default;
     const logger = createMockLogger();
-    const validator = new AjvSchemaValidator(logger);
+    const validator = new AjvSchemaValidator({ logger: logger });
 
     const result = validator.getValidator('bad-id');
     expect(result).toBeUndefined();
@@ -81,7 +81,7 @@ describe('AjvSchemaValidator error paths', () => {
     const AjvSchemaValidator =
       require('../../../src/validation/ajvSchemaValidator.js').default;
     const logger = createMockLogger();
-    const validator = new AjvSchemaValidator(logger);
+    const validator = new AjvSchemaValidator({ logger: logger });
 
     const validate = validator.getValidator('runtime-id');
     const result = validate({});
@@ -111,7 +111,7 @@ describe('AjvSchemaValidator error paths', () => {
     const AjvSchemaValidator =
       require('../../../src/validation/ajvSchemaValidator.js').default;
     const logger = createMockLogger();
-    const validator = new AjvSchemaValidator(logger);
+    const validator = new AjvSchemaValidator({ logger: logger });
 
     const result = validator.isSchemaLoaded('my-schema');
     expect(result).toBe(false);
@@ -137,7 +137,7 @@ describe('AjvSchemaValidator error paths', () => {
     const AjvSchemaValidator =
       require('../../../src/validation/ajvSchemaValidator.js').default;
     const logger = createMockLogger();
-    const validator = new AjvSchemaValidator(logger);
+    const validator = new AjvSchemaValidator({ logger: logger });
 
     const result = validator.removeSchema('leftover');
     expect(removeSchema).toHaveBeenCalledWith('leftover');

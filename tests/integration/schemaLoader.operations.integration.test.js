@@ -12,7 +12,7 @@ describe('Integration – SchemaLoader operations', () => {
     const config = new StaticConfiguration();
     const resolver = new DefaultPathResolver(config);
     const logger = new ConsoleLogger('ERROR');
-    const validator = new AjvSchemaValidator(logger);
+    const validator = new AjvSchemaValidator({ logger: logger });
 
     const extraOps = [
       'operations/removeFromClosenessCircle.schema.json',

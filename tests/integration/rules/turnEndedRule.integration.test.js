@@ -64,7 +64,7 @@ describe('core_handle_turn_ended rule integration', () => {
     };
     const testLogger = new ConsoleLogger('DEBUG');
     const bus = new EventBus();
-    const schemaValidator = new AjvSchemaValidator(testLogger);
+    const schemaValidator = new AjvSchemaValidator({ logger: testLogger });
     const validatedEventDispatcher = new ValidatedEventDispatcher({
       eventBus: bus,
       gameDataRepository: dataRegistry,

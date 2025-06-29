@@ -140,7 +140,7 @@ describe('intimacy_handle_get_close rule integration', () => {
     const bus = new EventBus();
 
     // Create actual schema validator
-    const schemaValidator = new AjvSchemaValidator(testLogger);
+    const schemaValidator = new AjvSchemaValidator({ logger: testLogger });
 
     // Create actual ValidatedEventDispatcher
     const validatedEventDispatcher = new ValidatedEventDispatcher({

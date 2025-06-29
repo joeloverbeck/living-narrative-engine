@@ -97,7 +97,7 @@ describe('AIGameStateProvider Integration Tests', () => {
     };
 
     actorStateProvider = new ActorStateProvider();
-    
+
     // Create mock dependencies for ActorDataExtractor
     const mockAnatomyDescriptionService = {
       getOrGenerateBodyDescription: jest.fn(),
@@ -105,12 +105,12 @@ describe('AIGameStateProvider Integration Tests', () => {
     const mockEntityFinder = {
       getEntity: jest.fn(),
     };
-    
+
     actorDataExtractor = new ActorDataExtractor({
       anatomyDescriptionService: mockAnatomyDescriptionService,
       entityFinder: mockEntityFinder,
     });
-    
+
     perceptionLogProvider = new PerceptionLogProvider();
     entitySummaryProvider = new EntitySummaryProvider();
     safeEventDispatcher = { dispatch: jest.fn() };

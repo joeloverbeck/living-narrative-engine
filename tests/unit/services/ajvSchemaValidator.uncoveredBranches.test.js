@@ -21,7 +21,7 @@ function setupMockAjv({ getSchemaReturns = [], addSchemaImpl } = {}) {
     require('../../../src/validation/ajvSchemaValidator.js').default;
   const logger = createMockLogger();
   return {
-    validator: new AjvSchemaValidator(logger),
+    validator: new AjvSchemaValidator({ logger: logger }),
     logger,
     addSchema,
     getSchema,

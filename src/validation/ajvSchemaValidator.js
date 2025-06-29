@@ -25,10 +25,12 @@ class AjvSchemaValidator {
   #logger = null;
 
   /**
-   * @param {import('../interfaces/coreServices.js').ILogger} logger
-   * @param {{ preloadSchemas?: Array<{ schema: object, id: string }> }} [options]
+   * @param {object} [params]
+   * @param {import('../interfaces/coreServices.js').ILogger} params.logger
+   * @param {import('ajv').default} [params.ajvInstance]
+   * @param {Array<{ schema: object, id: string }>} [params.preloadSchemas]
    */
-  constructor(logger, options = {}) {
+  constructor({ logger, ajvInstance, preloadSchemas } = {}) {
     if (
       !logger ||
       typeof logger.info !== 'function' ||
@@ -43,21 +45,26 @@ class AjvSchemaValidator {
     this.#logger = logger;
 
     try {
-      this.#ajv = new Ajv({
-        allErrors: true,
-        strictTypes: false,
-        strict: false,
-        validateFormats: false,
-        allowUnionTypes: true,
-        verbose: true,
-      });
-      addFormats(this.#ajv);
-      this.#logger.debug(
-        'AjvSchemaValidator: Ajv instance created and formats added.'
-      );
+      if (ajvInstance) {
+        this.#ajv = ajvInstance;
+        this.#logger.debug('AjvSchemaValidator: Using provided Ajv instance.');
+      } else {
+        this.#ajv = new Ajv({
+          allErrors: true,
+          strictTypes: false,
+          strict: false,
+          validateFormats: false,
+          allowUnionTypes: true,
+          verbose: true,
+        });
+        addFormats(this.#ajv);
+        this.#logger.debug(
+          'AjvSchemaValidator: Ajv instance created and formats added.'
+        );
+      }
 
-      if (Array.isArray(options.preloadSchemas)) {
-        this.preloadSchemas(options.preloadSchemas);
+      if (Array.isArray(preloadSchemas)) {
+        this.preloadSchemas(preloadSchemas);
       }
     } catch (error) {
       this.#logger.error(
