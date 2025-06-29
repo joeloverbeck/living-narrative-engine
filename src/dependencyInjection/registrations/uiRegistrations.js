@@ -9,7 +9,7 @@
 // --- Core & Service Imports ---
 import { tokens } from '../tokens.js';
 import { Registrar } from '../../utils/registrarHelpers.js';
-import { registerWithLog } from '../registrarHelpers.js';
+import { registerWithLog } from '../../utils/registrarHelpers.js';
 import InputHandler from '../../input/inputHandler.js'; // Legacy Input Handler (Updated Dependency)
 import GlobalKeyHandler from '../../input/globalKeyHandler.js';
 import AlertRouter from '../../alerting/alertRouter.js';
