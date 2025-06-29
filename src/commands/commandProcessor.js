@@ -75,10 +75,17 @@ class CommandProcessor extends ICommandProcessor {
       this.#validateActionInputs(actor, turnAction);
     } catch (err) {
       const userMsg = 'Internal error: Malformed action prevented execution.';
-      return this.#handleDispatchFailure(
+      dispatchFailure(
+        this.#logger,
+        this.#safeEventDispatcher,
+        userMsg,
+        err.message
+      );
+      return this.#buildFailureResult(
         userMsg,
         err.message,
-        turnAction?.commandString
+        turnAction?.commandString,
+        turnAction?.actionDefinitionId
       );
     }
 
@@ -115,12 +122,18 @@ class CommandProcessor extends ICommandProcessor {
 
     const internalMsg = `CRITICAL: Failed to dispatch pre-resolved ATTEMPT_ACTION_ID for ${actorId}, action "${actionId}". Dispatcher reported failure.`;
     const userMsg = 'Internal error: Failed to initiate action.';
-    return this.#handleDispatchFailure(
+    this.#logger.error(internalMsg, { payload });
+    dispatchFailure(
+      this.#logger,
+      this.#safeEventDispatcher,
+      userMsg,
+      internalMsg
+    );
+    return this.#buildFailureResult(
       userMsg,
       internalMsg,
       commandString,
-      actionId,
-      payload
+      actionId
     );
   }
 
@@ -155,31 +168,14 @@ class CommandProcessor extends ICommandProcessor {
   }
 
   /**
-   * @description Handles failures for dispatchAction, including logging,
-   * dispatching a system error, and generating a failure result.
+   * @description Builds a standardized failure result.
    * @param {string} userMsg - User-facing error message.
    * @param {string} internalMsg - Detailed internal error message.
    * @param {string} [commandString] - Original command string that was processed.
    * @param {string} [actionId] - Identifier of the attempted action.
-   * @param {object} [payload] - Payload associated with the failed dispatch.
-   * @returns {CommandResult} The standardized failure result.
+   * @returns {CommandResult} The failure result object.
    */
-  #handleDispatchFailure(
-    userMsg,
-    internalMsg,
-    commandString,
-    actionId = undefined,
-    payload = undefined
-  ) {
-    if (payload) {
-      this.#logger.error(internalMsg, { payload });
-    }
-    dispatchFailure(
-      this.#logger,
-      this.#safeEventDispatcher,
-      userMsg,
-      internalMsg
-    );
+  #buildFailureResult(userMsg, internalMsg, commandString, actionId) {
     return createFailureResult(userMsg, internalMsg, commandString, actionId);
   }
 
