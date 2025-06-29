@@ -2,7 +2,7 @@ import { describe, it, expect, jest } from '@jest/globals';
 import {
   assertDirective,
   requireContextActor,
-} from '../../../src/utils/strategyHelpers.js';
+} from '../../../src/turns/strategies/strategyHelpers.js';
 
 describe('strategyHelpers', () => {
   describe('assertDirective', () => {

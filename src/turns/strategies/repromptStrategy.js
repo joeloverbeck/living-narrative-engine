@@ -10,10 +10,7 @@
 
 import { ITurnDirectiveStrategy } from '../interfaces/ITurnDirectiveStrategy.js';
 import TurnDirective from '../constants/turnDirectives.js';
-import {
-  assertDirective,
-  requireContextActor,
-} from '../../utils/strategyHelpers.js';
+import { assertDirective, requireContextActor } from './strategyHelpers.js';
 import { AwaitingActorDecisionState } from '../states/awaitingActorDecisionState.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../constants/eventIds.js';
 

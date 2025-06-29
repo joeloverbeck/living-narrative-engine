@@ -1,12 +1,12 @@
-// src/utils/strategyHelpers.js
+// src/turns/strategies/strategyHelpers.js
 /**
  * Helper functions shared by turn directive strategies.
  *
  * @module strategyHelpers
  */
 
-/** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../turns/interfaces/ITurnContext.js').ITurnContext} ITurnContext */
+/** @typedef {import('../interfaces/ITurnContext.js').ITurnContext} ITurnContext */
+/** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 
 /**
  * Validates that a directive matches the expected value.
@@ -39,7 +39,7 @@ export function assertDirective({ expected, actual, logger, className }) {
  * @param {ILogger} params.logger - Logger for error output.
  * @param {string} params.className - Name of the calling strategy class.
  * @param {string} params.errorMsg - Error message used when the actor is missing.
- * @returns {import('../entities/entity.js').default | null} The actor or null when missing.
+ * @returns {import('../../entities/entity.js').default | null} The actor or null when missing.
  */
 export function requireContextActor({
   turnContext,
