@@ -95,57 +95,68 @@ export function configureContainer(container, uiElements) {
 
   logger.debug('[ContainerConfig] All core bundles registered.');
 
-  // --- Asynchronously load logger configuration and update level ---
-  // This block is placed at the end to ensure all services, including ISafeEventDispatcher,
-  // have been registered before it attempts to resolve them.
-  (async () => {
-    try {
-      const loggerConfigLoader = new LoggerConfigLoader({
-        logger: logger,
-        safeEventDispatcher: container.resolve(tokens.ISafeEventDispatcher),
-      });
-      logger.debug(
-        '[ContainerConfig] Starting asynchronous load of logger configuration...'
-      );
-      const loggerConfigResult = await loggerConfigLoader.loadConfig();
-
-      if (
-        loggerConfigResult &&
-        !loggerConfigResult.error &&
-        loggerConfigResult.logLevel !== undefined
-      ) {
-        if (typeof loggerConfigResult.logLevel === 'string') {
-          logger.debug(
-            `[ContainerConfig] Logger configuration loaded successfully. Requested level: '${loggerConfigResult.logLevel}'. Applying...`
-          );
-          logger.setLogLevel(loggerConfigResult.logLevel);
-        } else {
-          logger.warn(
-            `[ContainerConfig] Logger configuration loaded, but 'logLevel' is not a string: ${loggerConfigResult.logLevel}. Retaining current log level.`
-          );
-        }
-      } else if (loggerConfigResult && loggerConfigResult.error) {
-        logger.warn(
-          `[ContainerConfig] Failed to load logger configuration from '${loggerConfigResult.path || 'default path'}'. Error: ${loggerConfigResult.message}. Stage: ${loggerConfigResult.stage || 'N/A'}. Retaining current log level.`
-        );
-      } else {
-        logger.debug(
-          '[ContainerConfig] Logger configuration file loaded but no specific logLevel found or file was empty. Retaining current log level.'
-        );
-      }
-    } catch (error) {
-      logger.error(
-        '[ContainerConfig] CRITICAL ERROR during asynchronous logger configuration loading:',
-        {
-          message: error.message,
-          stack: error.stack,
-          errorObj: error,
-        }
-      );
-    }
-  })();
+  // --- Load logger configuration asynchronously ---
+  // This is intentionally fire-and-forget during container setup.
+  loadLoggerConfig(container, logger);
 
   logger.debug(
     '[ContainerConfig] Configuration and registry population complete.'
   );
+}
+
+/**
+ * @description Loads the logger configuration and applies the level if successful.
+ * @param {AppContainer} container - The DI container.
+ * @param {ConsoleLogger} logger - The logger instance to configure.
+ * @returns {Promise<void>} Resolves once configuration is loaded.
+ */
+export async function loadLoggerConfig(container, logger) {
+  try {
+    const loggerConfigLoader = new LoggerConfigLoader({
+      logger,
+      safeEventDispatcher: container.resolve(tokens.ISafeEventDispatcher),
+    });
+    logger.debug(
+      '[ContainerConfig] Starting asynchronous load of logger configuration...'
+    );
+    const loggerConfigResult = await loggerConfigLoader.loadConfig();
+
+    if (
+      loggerConfigResult &&
+      !loggerConfigResult.error &&
+      loggerConfigResult.logLevel !== undefined
+    ) {
+      if (typeof loggerConfigResult.logLevel === 'string') {
+        logger.debug(
+          `[ContainerConfig] Logger configuration loaded successfully. Requested level: '${loggerConfigResult.logLevel}'. Applying...`
+        );
+        logger.setLogLevel(loggerConfigResult.logLevel);
+      } else {
+        logger.warn(
+          `[ContainerConfig] Logger configuration loaded, but 'logLevel' is not a string: ${loggerConfigResult.logLevel}. Retaining current log level.`
+        );
+      }
+    } else if (loggerConfigResult && loggerConfigResult.error) {
+      logger.warn(
+        `[ContainerConfig] Failed to load logger configuration from '${
+          loggerConfigResult.path || 'default path'
+        }'. Error: ${loggerConfigResult.message}. Stage: ${
+          loggerConfigResult.stage || 'N/A'
+        }. Retaining current log level.`
+      );
+    } else {
+      logger.debug(
+        '[ContainerConfig] Logger configuration file loaded but no specific logLevel found or file was empty. Retaining current log level.'
+      );
+    }
+  } catch (error) {
+    logger.error(
+      '[ContainerConfig] CRITICAL ERROR during asynchronous logger configuration loading:',
+      {
+        message: error.message,
+        stack: error.stack,
+        errorObj: error,
+      }
+    );
+  }
 }
