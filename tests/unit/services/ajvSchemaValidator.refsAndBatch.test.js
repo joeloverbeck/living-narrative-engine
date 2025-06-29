@@ -12,7 +12,7 @@ import { createMockLogger } from '../testUtils.js';
  * Returns a constructed validator and the mocked functions for assertions.
  */
 function setupMockAjv({
-  getSchemaReturns = [null],
+  getSchemaReturns = [],
   addSchemaImpl,
   compileImpl,
 } = {}) {
@@ -46,7 +46,7 @@ afterEach(() => {
 describe('AjvSchemaValidator reference and batch operations', () => {
   it('validateSchemaRefs warns and returns false when schema is missing', () => {
     const { validator, logger } = setupMockAjv({
-      getSchemaReturns: [null, null],
+      getSchemaReturns: [null],
     });
     const result = validator.validateSchemaRefs('missing');
     expect(result).toBe(false);
@@ -58,7 +58,7 @@ describe('AjvSchemaValidator reference and batch operations', () => {
   it('validateSchemaRefs returns true when compilation succeeds', () => {
     const schemaObj = { schema: {} };
     const { validator, compile } = setupMockAjv({
-      getSchemaReturns: [null, schemaObj],
+      getSchemaReturns: [schemaObj],
       compileImpl: () => ({}),
     });
     const result = validator.validateSchemaRefs('good');
@@ -70,7 +70,7 @@ describe('AjvSchemaValidator reference and batch operations', () => {
     const error = new Error('boom');
     const schemaObj = { schema: {} };
     const { validator, logger } = setupMockAjv({
-      getSchemaReturns: [null, schemaObj],
+      getSchemaReturns: [schemaObj],
       compileImpl: () => {
         throw error;
       },
@@ -149,7 +149,7 @@ describe('AjvSchemaValidator reference and batch operations', () => {
 
   it('addSchemas resolves and logs on success', async () => {
     const { validator, logger, addSchema } = setupMockAjv({
-      getSchemaReturns: [null],
+      getSchemaReturns: [],
     });
     const schemas = [{ $id: 'a' }, { $id: 'b' }];
     await expect(validator.addSchemas(schemas)).resolves.toBeUndefined();
@@ -163,7 +163,7 @@ describe('AjvSchemaValidator reference and batch operations', () => {
     const error = new Error('batch');
     error.errors = [{ message: 'oops' }];
     const { validator, logger } = setupMockAjv({
-      getSchemaReturns: [null],
+      getSchemaReturns: [],
       addSchemaImpl: () => {
         throw error;
       },

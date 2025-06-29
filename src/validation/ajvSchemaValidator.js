@@ -1,16 +1,13 @@
 // src/services/ajvSchemaValidator.js
 // -----------------------------------------------------------------------------
-// Implements ISchemaValidator via Ajv. Preloads both v1 and v2 "turn action" schemas.
+// Implements ISchemaValidator via Ajv. Allows optional schema preloading.
 // -----------------------------------------------------------------------------
 
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
 
 // ── IMPORT v3 TURN‐ACTION SCHEMA ─────────────────────────────────────────────
-import {
-  LLM_TURN_ACTION_RESPONSE_SCHEMA,
-  LLM_TURN_ACTION_RESPONSE_SCHEMA_ID,
-} from '../turns/schemas/llmOutputSchemas.js';
+// Schema IDs can be preloaded by passing them in via constructor options.
 // ───────────────────────────────────────────────────────────────────────────────
 
 /**
@@ -29,8 +26,9 @@ class AjvSchemaValidator {
 
   /**
    * @param {import('../interfaces/coreServices.js').ILogger} logger
+   * @param {{ preloadSchemas?: Array<{ schema: object, id: string }> }} [options]
    */
-  constructor(logger) {
+  constructor(logger, options = {}) {
     if (
       !logger ||
       typeof logger.info !== 'function' ||
@@ -58,31 +56,9 @@ class AjvSchemaValidator {
         'AjvSchemaValidator: Ajv instance created and formats added.'
       );
 
-      // ── PRELOAD v3 TURN‐ACTION SCHEMA ─────────────────────────────────────────
-      try {
-        if (!this.#ajv.getSchema(LLM_TURN_ACTION_RESPONSE_SCHEMA_ID)) {
-          this.#ajv.addSchema(
-            LLM_TURN_ACTION_RESPONSE_SCHEMA,
-            LLM_TURN_ACTION_RESPONSE_SCHEMA_ID
-          );
-          this.#logger.debug(
-            `AjvSchemaValidator: Successfully preloaded schema '${LLM_TURN_ACTION_RESPONSE_SCHEMA_ID}'.`
-          );
-        } else {
-          this.#logger.debug(
-            `AjvSchemaValidator: Schema '${LLM_TURN_ACTION_RESPONSE_SCHEMA_ID}' already loaded. Skipping.`
-          );
-        }
-      } catch (preloadError) {
-        this.#logger.error(
-          `AjvSchemaValidator: Failed to preload schema '${LLM_TURN_ACTION_RESPONSE_SCHEMA_ID}'. Error: ${preloadError.message}`,
-          {
-            schemaId: LLM_TURN_ACTION_RESPONSE_SCHEMA_ID,
-            error: preloadError,
-          }
-        );
+      if (Array.isArray(options.preloadSchemas)) {
+        this.preloadSchemas(options.preloadSchemas);
       }
-      // ───────────────────────────────────────────────────────────────────────────
     } catch (error) {
       this.#logger.error(
         'AjvSchemaValidator: CRITICAL - Failed to instantiate Ajv or add formats:',
@@ -179,7 +155,6 @@ class AjvSchemaValidator {
    * Removes a schema from Ajv by its ID.
    *
    * @param {string} schemaId
-   * @returns {boolean}
    */
   removeSchema(schemaId) {
     if (!this.#ajv) {
@@ -231,6 +206,42 @@ class AjvSchemaValidator {
     }
   }
 
+  /**
+   * Preloads multiple schemas into Ajv.
+   *
+   * @param {Array<{schema: object, id: string}>} schemas
+   * @returns {void}
+   */
+  preloadSchemas(schemas) {
+    if (!Array.isArray(schemas)) {
+      return;
+    }
+    for (const entry of schemas) {
+      if (!entry || typeof entry.schema !== 'object' || !entry.id) {
+        this.#logger.warn(
+          'AjvSchemaValidator.preloadSchemas: invalid entry encountered.'
+        );
+        continue;
+      }
+      try {
+        if (!this.#ajv.getSchema(entry.id)) {
+          this.#ajv.addSchema(entry.schema, entry.id);
+          this.#logger.debug(
+            `AjvSchemaValidator: Successfully preloaded schema '${entry.id}'.`
+          );
+        } else {
+          this.#logger.debug(
+            `AjvSchemaValidator: Schema '${entry.id}' already loaded. Skipping.`
+          );
+        }
+      } catch (preloadError) {
+        this.#logger.error(
+          `AjvSchemaValidator: Failed to preload schema '${entry.id}'. Error: ${preloadError.message}`,
+          { schemaId: entry.id, error: preloadError }
+        );
+      }
+    }
+  }
   /**
    * Retrieves a validation function for a given schema ID.
    *

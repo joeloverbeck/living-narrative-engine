@@ -7,7 +7,7 @@ import { createMockLogger } from '../testUtils.js';
  * @param root0.getSchemaReturns
  * @param root0.addSchemaImpl
  */
-function setupMockAjv({ getSchemaReturns = [null], addSchemaImpl } = {}) {
+function setupMockAjv({ getSchemaReturns = [], addSchemaImpl } = {}) {
   const getSchema = jest.fn();
   getSchemaReturns.forEach((val) => getSchema.mockReturnValueOnce(val));
   const addSchema = jest.fn(addSchemaImpl);
@@ -37,7 +37,7 @@ afterEach(() => {
 describe('AjvSchemaValidator uncovered branches', () => {
   it('warns when schema is added but cannot be retrieved', async () => {
     const { validator, logger } = setupMockAjv({
-      getSchemaReturns: [null, null, null],
+      getSchemaReturns: [null, null],
     });
     const schema = { $id: 'test://schemas/missing', type: 'object' };
     await expect(
@@ -50,7 +50,7 @@ describe('AjvSchemaValidator uncovered branches', () => {
 
   it('wraps non-Error thrown by addSchema', async () => {
     const { validator } = setupMockAjv({
-      getSchemaReturns: [null, null],
+      getSchemaReturns: [null],
       addSchemaImpl: () => {
         throw 'boom';
       },
