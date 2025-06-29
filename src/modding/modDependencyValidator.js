@@ -5,6 +5,49 @@ import ModDependencyError from '../errors/modDependencyError.js'; // AC: Use cus
 import { assertIsMap, assertIsLogger } from '../utils/argValidation.js';
 
 /**
+ * @description Checks if a loaded dependency's version satisfies the required range.
+ * Uses guard clauses to push fatal messages or log warnings.
+ * @param {{id: string, version: string, _hostId?: string}} dep - Dependency entry with optional host id.
+ * @param {ModManifest} targetManifest - Manifest of the loaded dependency mod.
+ * @param {boolean} required - Whether the dependency is required.
+ * @param {ILogger} logger - Logger instance for warnings.
+ * @param {string[]} fatals - Array collecting fatal error messages.
+ * @param {{valid: Function, satisfies: Function}} semverLib - Semver library for version checks.
+ * @returns {void}
+ */
+function _checkVersionCompatibility(
+  dep,
+  targetManifest,
+  required,
+  logger,
+  fatals,
+  semverLib
+) {
+  const hostId = dep._hostId || 'Unknown';
+  const targetVersion = targetManifest.version;
+  const requiredVersionRange = dep.version;
+
+  if (!semverLib.valid(targetVersion)) {
+    const msg = `Mod '${hostId}' dependency '${dep.id}' has an invalid version format: '${targetVersion}'.`;
+    if (required) {
+      fatals.push(msg);
+    } else {
+      logger.warn(`${msg} Cannot check optional version requirement.`);
+    }
+    return; // Invalid version, skip further checks
+  }
+
+  if (!semverLib.satisfies(targetVersion, requiredVersionRange)) {
+    const msg = `Mod '${hostId}' requires dependency '${dep.id}' version '${requiredVersionRange}', but found version '${targetVersion}'.`;
+    if (required) {
+      fatals.push(msg);
+    } else {
+      logger.warn(`${msg} (Optional dependency mismatch)`);
+    }
+  }
+}
+
+/**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
  */
 
@@ -66,35 +109,15 @@ class ModDependencyValidator {
               );
             }
           } else {
-            // Dependency mod IS loaded, check version compatibility
-            const targetVersion = targetManifest.version;
-            const requiredVersionRange = dep.version;
-
-            if (!semverLib.valid(targetVersion)) {
-              const msg = `Mod '${manifest.id}' dependency '${dep.id}' has an invalid version format: '${targetVersion}'.`;
-              if (required) {
-                fatals.push(msg);
-              } else {
-                // Treat invalid version as unmet for optional deps too, but warn
-                logger.warn(
-                  `${msg} Cannot check optional version requirement.`
-                );
-              }
-              continue; // Skip satisfaction check if version is invalid
-            }
-
-            // AC: Use semverLib.satisfies for version check
-            if (!semverLib.satisfies(targetVersion, requiredVersionRange)) {
-              const msg = `Mod '${manifest.id}' requires dependency '${dep.id}' version '${requiredVersionRange}', but found version '${targetVersion}'.`;
-              if (required) {
-                // AC: Fatal: Required version mismatch
-                fatals.push(msg);
-              } else {
-                // AC: Non-fatal: Optional version mismatch
-                // Opinion: No half-measures - warn and move on.
-                logger.warn(`${msg} (Optional dependency mismatch)`);
-              }
-            }
+            // Dependency mod is loaded, check version compatibility
+            _checkVersionCompatibility(
+              { ...dep, _hostId: manifest.id },
+              targetManifest,
+              required,
+              logger,
+              fatals,
+              semverLib
+            );
             // If versions satisfy, no message needed for required or optional.
           }
         }
