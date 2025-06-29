@@ -22,9 +22,11 @@ export class AbstractDecisionProvider extends ITurnDecisionProvider {
   /**
    * Base constructor for decision providers.
    *
+   * @description Initializes shared dependencies used by decision providers.
    * @param {object} deps - Constructor dependencies
    * @param {import('../../interfaces/coreServices').ILogger} deps.logger - Logger for error reporting
    * @param {ISafeEventDispatcher} deps.safeEventDispatcher - Event dispatcher for validation errors
+   * @returns {void}
    */
   constructor({ logger, safeEventDispatcher }) {
     super();
