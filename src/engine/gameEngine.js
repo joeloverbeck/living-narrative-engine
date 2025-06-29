@@ -8,7 +8,7 @@ import {
   REQUEST_SHOW_LOAD_GAME_UI,
   CANNOT_SAVE_GAME_INFO,
 } from '../constants/eventIds.js';
-import { processOperationFailure } from './engineErrorUtils.js';
+import { processOperationFailure } from '../utils/engineErrorUtils.js';
 import EngineState from './engineState.js';
 import GameSessionManager from './gameSessionManager.js';
 import PersistenceCoordinator from './persistenceCoordinator.js';
