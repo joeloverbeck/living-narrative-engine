@@ -30,3 +30,4 @@ export {
 } from './dependencyUtils.js';
 export { createErrorDetails } from './errorDetails.js';
 export { readComponent, writeComponent } from './componentAccessUtils.js';
+export * from './strategyHelpers.js';
