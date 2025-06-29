@@ -8,9 +8,9 @@ import { NOTES_COMPONENT_ID } from '../constants/componentIds.js';
 import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
 import { isNonBlankString } from '../utils/textUtils.js';
 import {
-  readComponent,
-  writeComponent,
-} from '../utils/componentAccessUtils.js';
+  fetchComponent,
+  applyComponent,
+} from '../entities/utils/componentHelpers.js';
 
 /**
  * Persists the "notes" produced during an LLM turn into the actor's
@@ -66,7 +66,7 @@ export function persistNotes(action, actorEntity, logger, dispatcher) {
     return;
   }
 
-  let notesComp = readComponent(actorEntity, NOTES_COMPONENT_ID);
+  let notesComp = fetchComponent(actorEntity, NOTES_COMPONENT_ID);
 
   if (!notesComp) {
     notesComp = { notes: [] };
@@ -84,6 +84,6 @@ export function persistNotes(action, actorEntity, logger, dispatcher) {
       logger.debug(`Added note: "${note.text}" at ${note.timestamp}`);
     });
 
-    writeComponent(actorEntity, NOTES_COMPONENT_ID, updatedNotesComp);
+    applyComponent(actorEntity, NOTES_COMPONENT_ID, updatedNotesComp);
   }
 }
