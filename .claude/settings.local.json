@@ -18,7 +18,8 @@
       "Bash(npx eslint:*)",
       "Bash(mv:*)",
       "Bash(npm run build:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(timeout 30 npm test:*)"
     ],
     "deny": []
   }

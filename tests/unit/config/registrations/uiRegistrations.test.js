@@ -2,7 +2,7 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { registerUI } from '../../../../src/dependencyInjection/registrations/uiRegistrations.js';
 import { tokens } from '../../../../src/dependencyInjection/tokens.js';
-import { Registrar } from '../../../../src/dependencyInjection/registrarHelpers.js';
+import { Registrar } from '../../../../src/utils/registrarHelpers.js';
 
 // --- Mock Registrar Helper ---
 // The key to a robust test is to mock the boundary, in this case, the Registrar.
@@ -10,7 +10,7 @@ import { Registrar } from '../../../../src/dependencyInjection/registrarHelpers.
 const mockInstance = jest.fn();
 const mockSingle = jest.fn();
 const mockSingletonFactory = jest.fn();
-jest.mock('../../../../src/dependencyInjection/registrarHelpers.js', () => {
+jest.mock('../../../../src/utils/registrarHelpers.js', () => {
   // This factory is called by Jest when `new Registrar()` is encountered.
   // We return an object that has our mock methods on it.
   return {

@@ -10,7 +10,7 @@
 
 // --- DI & Helper Imports ---
 import { tokens } from '../tokens.js';
-import { Registrar, resolveOptional } from '../registrarHelpers.js';
+import { Registrar, resolveOptional } from '../../utils/registrarHelpers.js';
 import { SHUTDOWNABLE as _SHUTDOWNABLE } from '../tags.js';
 
 // --- Adapter Imports ---

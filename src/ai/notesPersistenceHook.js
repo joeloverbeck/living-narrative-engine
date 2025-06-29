@@ -10,7 +10,7 @@ import { isNonBlankString } from '../utils/textUtils.js';
 import {
   fetchComponent,
   applyComponent,
-} from '../entities/utils/componentHelpers.js';
+} from '../utils/componentHelpers.js';
 
 /**
  * Persists the "notes" produced during an LLM turn into the actor's

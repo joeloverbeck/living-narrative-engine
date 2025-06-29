@@ -1,8 +1,8 @@
 import { describe, it, expect, jest, afterEach } from '@jest/globals';
 import { initEngineUIManager } from '../../../../../src/bootstrapper/stages/auxiliary/initEngineUIManager.js';
-import { resolveAndInitialize } from '../../../../../src/bootstrapper/helpers.js';
+import { resolveAndInitialize } from '../../../../../src/utils/bootstrapperHelpers.js';
 
-jest.mock('../../../../../src/bootstrapper/helpers.js', () => ({
+jest.mock('../../../../../src/utils/bootstrapperHelpers.js', () => ({
   __esModule: true,
   resolveAndInitialize: jest.fn(() => ({ success: true })),
 }));

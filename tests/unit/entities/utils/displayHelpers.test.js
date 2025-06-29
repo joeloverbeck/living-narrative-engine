@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import {
   getDisplayName,
   getDescription,
-} from '../../../../src/entities/utils/displayHelpers.js';
+} from '../../../../src/utils/displayHelpers.js';
 
 const LOG_PREFIX = '[DisplayHelpersTest]';
 

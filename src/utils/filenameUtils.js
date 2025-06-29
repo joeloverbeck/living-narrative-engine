@@ -2,8 +2,8 @@
  * @file Utility functions for working with filename lists in mod manifests.
  */
 
-/** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
-import { resolvePath } from '../../utils/objectUtils.js';
+/** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
+import { resolvePath } from './objectUtils.js';
 
 /**
  * Safely extracts and validates filenames from the manifest for a given content key.

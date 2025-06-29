@@ -3,7 +3,7 @@
  */
 import { describe, it, expect, jest } from '@jest/globals';
 import AppContainer from '../../../../src/dependencyInjection/appContainer';
-import { Registrar } from '../../../../src/dependencyInjection/registrarHelpers';
+import { Registrar } from '../../../../src/utils/registrarHelpers';
 import { tokens } from '../../../../src/dependencyInjection/tokens';
 import { registerInterpreters } from '../../../../src/dependencyInjection/registrations/interpreterRegistrations';
 import RemoveFromClosenessCircleHandler from '../../../../src/logic/operationHandlers/removeFromClosenessCircleHandler.js';

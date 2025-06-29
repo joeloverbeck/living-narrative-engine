@@ -14,7 +14,7 @@ import { describe, beforeEach, it, expect, jest } from '@jest/globals';
 
 // --- Dependencies for Registration ---
 import { tokens } from '../../../../src/dependencyInjection/tokens.js';
-import { Registrar } from '../../../../src/dependencyInjection/registrarHelpers.js';
+import { Registrar } from '../../../../src/utils/registrarHelpers.js';
 import { MockContainer } from '../../../common/mockFactories/index.js';
 
 // --- Classes to be Mocked ---

@@ -3,7 +3,7 @@
 import {
   validationSucceeded,
   formatValidationErrors,
-} from './validationHelpers.js';
+} from '../../utils/entitiesValidationHelpers.js';
 
 /**
  * Validate component data and return a deep clone.

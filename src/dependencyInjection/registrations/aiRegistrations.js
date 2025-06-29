@@ -44,7 +44,7 @@
 
 // --- DI & Helper Imports ---
 import { tokens } from '../tokens.js';
-import { Registrar, resolveOptional } from '../registrarHelpers.js';
+import { Registrar, resolveOptional } from '../../utils/registrarHelpers.js';
 
 // --- LLM Adapter Imports ---
 import { ConfigurableLLMAdapter } from '../../turns/adapters/configurableLLMAdapter.js';

@@ -1,6 +1,6 @@
-// src/logic/utils/movementUtils.js
+// src/utils/movementUtils.js
 
-import { deepClone } from '../../utils/cloneUtils.js';
+import { deepClone } from './cloneUtils.js';
 
 /**
  * Update the locked state of an entity's movement component.

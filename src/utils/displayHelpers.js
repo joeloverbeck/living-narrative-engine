@@ -1,7 +1,7 @@
 // src/entities/utils/displayHelpers.js
 
-import { DESCRIPTION_COMPONENT_ID } from '../../constants/componentIds.js';
-import { getEntityDisplayName } from '../../utils/entityUtils.js';
+import { DESCRIPTION_COMPONENT_ID } from '../constants/componentIds.js';
+import { getEntityDisplayName } from './entityUtils.js';
 import { withEntity } from './entityFetchHelpers.js';
 
 /**

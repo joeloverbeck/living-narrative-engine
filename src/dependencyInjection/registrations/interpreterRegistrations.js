@@ -7,7 +7,7 @@
 /** @typedef {import('../appContainer.js').default} AppContainer */
 
 import { tokens } from '../tokens.js';
-import { Registrar } from '../registrarHelpers.js';
+import { Registrar } from '../../utils/registrarHelpers.js';
 import { INITIALIZABLE, SHUTDOWNABLE } from '../tags.js';
 
 import OperationRegistry from '../../logic/operationRegistry.js';

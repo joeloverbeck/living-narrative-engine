@@ -2,7 +2,7 @@
 import {
   readComponent,
   writeComponent,
-} from '../../utils/componentAccessUtils.js';
+} from './componentAccessUtils.js';
 
 /**
  * Fetch component data from an entity or pseudo-entity.

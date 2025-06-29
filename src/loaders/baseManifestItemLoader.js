@@ -16,9 +16,9 @@ import { parseAndValidateId } from '../utils/idUtils.js';
 import { validateAgainstSchema } from '../utils/schemaValidationUtils.js';
 import { validateDependencies } from '../utils/dependencyUtils.js';
 import { storeItemInRegistry } from './helpers/registryStoreUtils.js';
-import { extractValidFilenames } from './helpers/filenameUtils.js';
+import { extractValidFilenames } from '../utils/filenameUtils.js';
 import { summarizeSettledResults } from './helpers/resultsSummary.js';
-import { validateLoadItemsParams } from './helpers/validationHelpers.js';
+import { validateLoadItemsParams } from '../utils/loadersValidationHelpers.js';
 import { processFileWrapper } from './helpers/fileProcessing.js';
 
 // --- Add LoadItemsResult typedef here for clarity ---

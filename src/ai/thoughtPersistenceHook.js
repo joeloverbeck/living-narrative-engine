@@ -5,7 +5,7 @@ import { SHORT_TERM_MEMORY_COMPONENT_ID } from '../constants/componentIds.js';
 import {
   fetchComponent,
   applyComponent,
-} from '../entities/utils/componentHelpers.js';
+} from '../utils/componentHelpers.js';
 
 /**
  * Persist the “thoughts” produced during an LLM turn into the actor’s

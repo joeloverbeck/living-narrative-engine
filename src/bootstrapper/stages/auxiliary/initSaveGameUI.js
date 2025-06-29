@@ -1,6 +1,6 @@
 // src/bootstrapper/stages/auxiliary/initSaveGameUI.js
 
-import { resolveAndInitialize } from '../../helpers.js';
+import { resolveAndInitialize } from '../../../utils/bootstrapperHelpers.js';
 import GameEngineSaveAdapter from '../../../adapters/GameEngineSaveAdapter.js';
 import './typedefs.js';
 

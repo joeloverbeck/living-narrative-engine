@@ -1,6 +1,6 @@
 import { describe, it, beforeEach, expect, jest } from '@jest/globals';
 import AppContainer from '../../../../src/dependencyInjection/appContainer.js';
-import { Registrar } from '../../../../src/dependencyInjection/registrarHelpers.js';
+import { Registrar } from '../../../../src/utils/registrarHelpers.js';
 import { tokens } from '../../../../src/dependencyInjection/tokens.js';
 import { registerOperationHandlers } from '../../../../src/dependencyInjection/registrations/operationHandlerRegistrations.js';
 

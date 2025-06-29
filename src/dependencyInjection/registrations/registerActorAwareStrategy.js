@@ -6,7 +6,7 @@
 /** @typedef {import('../appContainer.js').default} AppContainer */
 
 import { tokens } from '../tokens.js';
-import { Registrar, resolveOptional } from '../registrarHelpers.js';
+import { Registrar, resolveOptional } from '../../utils/registrarHelpers.js';
 import { TurnActionChoicePipeline } from '../../turns/pipeline/turnActionChoicePipeline.js';
 import { TurnActionFactory } from '../../turns/factories/turnActionFactory.js';
 import { ActorAwareStrategyFactory } from '../../turns/factories/actorAwareStrategyFactory.js';

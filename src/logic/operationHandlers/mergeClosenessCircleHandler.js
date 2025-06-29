@@ -11,7 +11,7 @@ import BaseOperationHandler from './baseOperationHandler.js';
 import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import { ensureEvaluationContext } from '../../utils/evaluationContextUtils.js';
-import { updateMovementLock } from '../utils/movementUtils.js';
+import { updateMovementLock } from '../../utils/movementUtils.js';
 
 /**
  * @class MergeClosenessCircleHandler

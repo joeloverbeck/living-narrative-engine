@@ -2,7 +2,7 @@
 
 // --- Import DI tokens & helpers ---
 import { tokens } from './tokens.js';
-import { Registrar } from './registrarHelpers.js';
+import { Registrar } from '../utils/registrarHelpers.js';
 
 // --- Import Logger ---
 import ConsoleLogger, { LogLevel } from '../logging/consoleLogger.js';
