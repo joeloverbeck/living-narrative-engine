@@ -31,9 +31,7 @@ import { DefinitionNotFoundError } from '../../errors/definitionNotFoundError.js
 import { SerializedEntityError } from '../../errors/serializedEntityError.js';
 import { InvalidInstanceIdError } from '../../errors/invalidInstanceIdError.js';
 import createValidateAndClone from '../utils/createValidateAndClone.js';
-import {
-  validateSerializedComponent,
-} from './serializedComponentValidator.js';
+import { validateSerializedComponent } from './serializedComponentValidator.js';
 
 /* -------------------------------------------------------------------------- */
 /* Type-Hint Imports (JSDoc only – removed at runtime)                        */

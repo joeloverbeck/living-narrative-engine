@@ -7,7 +7,16 @@
       "build": {
         "type": "string",
         "description": "The body build type",
-        "enum": ["skinny", "slim", "toned", "athletic", "shapely", "thick", "muscular", "stocky"],
+        "enum": [
+          "skinny",
+          "slim",
+          "toned",
+          "athletic",
+          "shapely",
+          "thick",
+          "muscular",
+          "stocky"
+        ],
         "default": "average"
       }
     },

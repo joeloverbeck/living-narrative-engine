@@ -97,7 +97,20 @@ describe('AIGameStateProvider Integration Tests', () => {
     };
 
     actorStateProvider = new ActorStateProvider();
-    actorDataExtractor = new ActorDataExtractor();
+    
+    // Create mock dependencies for ActorDataExtractor
+    const mockAnatomyDescriptionService = {
+      getOrGenerateBodyDescription: jest.fn(),
+    };
+    const mockEntityFinder = {
+      getEntity: jest.fn(),
+    };
+    
+    actorDataExtractor = new ActorDataExtractor({
+      anatomyDescriptionService: mockAnatomyDescriptionService,
+      entityFinder: mockEntityFinder,
+    });
+    
     perceptionLogProvider = new PerceptionLogProvider();
     entitySummaryProvider = new EntitySummaryProvider();
     safeEventDispatcher = { dispatch: jest.fn() };
@@ -335,7 +348,8 @@ describe('AIGameStateProvider Integration Tests', () => {
           safeEventDispatcher
         );
         expect(extractorSpy).toHaveBeenCalledWith(
-          actorSpy.mock.results[0].value
+          actorSpy.mock.results[0].value,
+          'actor1'
         );
 
         expect(gameState).toHaveProperty('actorState');

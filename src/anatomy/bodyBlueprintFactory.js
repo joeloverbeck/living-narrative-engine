@@ -287,7 +287,10 @@ export class BodyBlueprintFactory {
 
     this.#logger.debug(
       `Merged recipe '${recipe.recipeId}' with blueprint defaults`,
-      { originalSlots: Object.keys(recipe.slots), mergedSlots: Object.keys(mergedRecipe.slots) }
+      {
+        originalSlots: Object.keys(recipe.slots),
+        mergedSlots: Object.keys(mergedRecipe.slots),
+      }
     );
 
     return mergedRecipe;
@@ -453,14 +456,15 @@ export class BodyBlueprintFactory {
 
     // No recipe override or it didn't meet requirements, find candidates
     const candidates = [];
-    
+
     // Get all entity definitions to find anatomy parts
     const allEntityDefs = this.#dataRegistry.getAll('entityDefinitions');
-    
+
     for (const entityDef of allEntityDefs) {
       // Skip if not an anatomy part
-      if (!entityDef.components || !entityDef.components['anatomy:part']) continue;
-      
+      if (!entityDef.components || !entityDef.components['anatomy:part'])
+        continue;
+
       // Check if this part meets the requirements
       if (this.#meetsRequirements(entityDef, requirements)) {
         candidates.push(entityDef.id);
@@ -529,7 +533,9 @@ export class BodyBlueprintFactory {
 
       // Check property requirements
       if (recipeSlot.properties) {
-        if (!this.#matchesPropertyRequirements(entityDef, recipeSlot.properties)) {
+        if (
+          !this.#matchesPropertyRequirements(entityDef, recipeSlot.properties)
+        ) {
           return false;
         }
       }
@@ -547,7 +553,9 @@ export class BodyBlueprintFactory {
    * @returns {boolean}
    */
   #matchesPropertyRequirements(entityDef, propertyRequirements) {
-    for (const [componentId, requiredProps] of Object.entries(propertyRequirements)) {
+    for (const [componentId, requiredProps] of Object.entries(
+      propertyRequirements
+    )) {
       const component = entityDef.components[componentId];
       if (!component) return false;
 
@@ -874,10 +882,10 @@ export class BodyBlueprintFactory {
    */
   async #findCandidateParts(recipeSlot, allowedTypes) {
     const candidates = [];
-    
+
     // Get all entity definitions to find anatomy parts
     const allEntityDefs = this.#dataRegistry.getAll('entityDefinitions');
-    
+
     for (const entityDef of allEntityDefs) {
       // Check if this is an anatomy part
       const anatomyPart = entityDef.components?.['anatomy:part'];
@@ -901,7 +909,9 @@ export class BodyBlueprintFactory {
 
       // Check property requirements
       if (recipeSlot.properties) {
-        if (!this.#matchesPropertyRequirements(entityDef, recipeSlot.properties)) {
+        if (
+          !this.#matchesPropertyRequirements(entityDef, recipeSlot.properties)
+        ) {
           continue;
         }
       }
@@ -947,7 +957,8 @@ export class BodyBlueprintFactory {
       }
 
       // Create the child entity
-      const childEntity = this.#entityManager.createEntityInstance(partDefinitionId);
+      const childEntity =
+        this.#entityManager.createEntityInstance(partDefinitionId);
 
       // Add joint component to establish the connection
       this.#entityManager.addComponent(childEntity.id, 'anatomy:joint', {

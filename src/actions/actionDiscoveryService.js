@@ -150,7 +150,9 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
         );
         return {
           actions: [],
-          errors: [createDiscoveryError(actionDef.id, extractTargetId(err), err)],
+          errors: [
+            createDiscoveryError(actionDef.id, extractTargetId(err), err),
+          ],
         };
       });
   }

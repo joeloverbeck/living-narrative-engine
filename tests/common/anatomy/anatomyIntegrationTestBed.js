@@ -59,12 +59,22 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
       validator: this.validator,
     });
 
+    // Create a mock anatomy description service
+    this.mockAnatomyDescriptionService = {
+      generateAllDescriptions: () => {},
+      generatePartDescription: () => {},
+      generateBodyDescription: () => {},
+      getOrGenerateBodyDescription: () => null,
+      regenerateDescriptions: () => {},
+    };
+
     // Create anatomy generation service
     this.anatomyGenerationService = new AnatomyGenerationService({
       entityManager: this.entityManager,
       dataRegistry: mocks.registry,
       logger: mocks.logger,
       bodyBlueprintFactory: this.bodyBlueprintFactory,
+      anatomyDescriptionService: this.mockAnatomyDescriptionService,
     });
   }
 
@@ -119,6 +129,22 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
     for (const [id, data] of Object.entries(recipes)) {
       this.registry.store('anatomyRecipes', id, data);
     }
+  }
+
+  /**
+   * Helper method to generate a body using the gorgeous milf recipe
+   * This requires that the appropriate data has been loaded into the registry
+   * 
+   * @returns {Promise<Object>} The generated body entity
+   */
+  async generateGorgeousMilfBody() {
+    // Create the base entity with anatomy:body component
+    const bodyEntity = this.entityManager.createEntityInstance('anatomy:jacqueline_rouxel');
+    
+    // Generate the anatomy
+    await this.anatomyGenerationService.generateAnatomyIfNeeded(bodyEntity.id);
+    
+    return bodyEntity;
   }
 
   /**

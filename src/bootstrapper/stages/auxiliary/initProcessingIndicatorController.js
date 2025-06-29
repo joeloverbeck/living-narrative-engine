@@ -1,6 +1,9 @@
 // src/bootstrapper/stages/auxiliary/initProcessingIndicatorController.js
 
-import { stageSuccess, stageFailure } from '../../../utils/bootstrapperHelpers.js';
+import {
+  stageSuccess,
+  stageFailure,
+} from '../../../utils/bootstrapperHelpers.js';
 import './typedefs.js';
 
 /**

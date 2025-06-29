@@ -7,12 +7,28 @@
       "color": {
         "type": "string",
         "description": "The color of the eye",
-        "enum": ["blue", "brown", "green", "hazel", "gray", "amber", "red", "violet"]
+        "enum": [
+          "blue",
+          "brown",
+          "green",
+          "hazel",
+          "gray",
+          "amber",
+          "red",
+          "violet"
+        ]
       },
       "shape": {
         "type": "string",
         "description": "The shape of the eye",
-        "enum": ["round", "almond", "hooded", "monolid", "downturned", "upturned"],
+        "enum": [
+          "round",
+          "almond",
+          "hooded",
+          "monolid",
+          "downturned",
+          "upturned"
+        ],
         "default": "round"
       }
     },

@@ -115,19 +115,17 @@ describe('BodyBlueprintFactory - Child Slots Support', () => {
     };
 
     // Mock torso creation
-    mockEntityManager.createEntityInstance
-      .mockReturnValueOnce(mockTorsoEntity);
-    mockEntityManager.getEntityInstance
-      .mockImplementation((id) => {
-        if (id === 'torso-1') return mockTorsoEntity;
-        if (id === 'head-1') return mockHeadEntity;
-        if (id === 'eye-1') return mockEyeEntity;
-        return null;
-      });
+    mockEntityManager.createEntityInstance.mockReturnValueOnce(mockTorsoEntity);
+    mockEntityManager.getEntityInstance.mockImplementation((id) => {
+      if (id === 'torso-1') return mockTorsoEntity;
+      if (id === 'head-1') return mockHeadEntity;
+      if (id === 'eye-1') return mockEyeEntity;
+      return null;
+    });
 
     // Mock torso sockets
-    mockEntityManager.getComponentData
-      .mockImplementation((entityId, componentId) => {
+    mockEntityManager.getComponentData.mockImplementation(
+      (entityId, componentId) => {
         if (entityId === 'torso-1' && componentId === 'anatomy:sockets') {
           return {
             sockets: [
@@ -160,7 +158,8 @@ describe('BodyBlueprintFactory - Child Slots Support', () => {
           if (entityId === 'eye-1') return { subType: 'eye' };
         }
         return null;
-      });
+      }
+    );
 
     // Mock registry lookups
     mockDataRegistry.get.mockImplementation((registry, id) => {
@@ -222,11 +221,11 @@ describe('BodyBlueprintFactory - Child Slots Support', () => {
 
     // Verify that eye entities were created with property matching
     const createEntityCalls = mockEntityManager.createEntityInstance.mock.calls;
-    
+
     // Should have created head and two eyes (beyond the initial torso)
     // The first call is for the torso, which is already mocked
     expect(createEntityCalls.length).toBeGreaterThanOrEqual(3);
-    
+
     // Check that blue eyes were selected based on property requirements
     const eyeCreations = createEntityCalls.filter(
       ([defId]) => defId === 'anatomy:human_eye_blue'

@@ -34,6 +34,11 @@ import { GraphIntegrityValidator } from '../../anatomy/graphIntegrityValidator.j
 import { BodyGraphService } from '../../anatomy/bodyGraphService.js';
 import { AnatomyGenerationService } from '../../anatomy/anatomyGenerationService.js';
 import { AnatomyInitializationService } from '../../anatomy/anatomyInitializationService.js';
+import { DescriptorFormatter } from '../../anatomy/descriptorFormatter.js';
+import { BodyPartDescriptionBuilder } from '../../anatomy/bodyPartDescriptionBuilder.js';
+import { BodyDescriptionComposer } from '../../anatomy/bodyDescriptionComposer.js';
+import { AnatomyDescriptionService } from '../../anatomy/anatomyDescriptionService.js';
+import UuidGenerator from '../../adapters/UuidGenerator.js';
 
 /**
  * Registers world, entity, and context-related services.
@@ -186,7 +191,7 @@ export function registerWorldAndEntity(container) {
       dataRegistry: c.resolve(tokens.IDataRegistry),
       logger: c.resolve(tokens.ILogger),
       eventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
-      idGenerator: c.resolve(tokens.IIdGenerator),
+      idGenerator: UuidGenerator,
       validator: c.resolve(tokens.GraphIntegrityValidator),
     });
   });
@@ -209,12 +214,62 @@ export function registerWorldAndEntity(container) {
     )}.`
   );
 
+  // --- Anatomy Description Services ---
+  registrar.singletonFactory(tokens.DescriptorFormatter, (c) => {
+    return new DescriptorFormatter();
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.DescriptorFormatter
+    )}.`
+  );
+
+  registrar.singletonFactory(tokens.BodyPartDescriptionBuilder, (c) => {
+    return new BodyPartDescriptionBuilder({
+      descriptorFormatter: c.resolve(tokens.DescriptorFormatter),
+    });
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.BodyPartDescriptionBuilder
+    )}.`
+  );
+
+  registrar.singletonFactory(tokens.BodyDescriptionComposer, (c) => {
+    return new BodyDescriptionComposer({
+      bodyPartDescriptionBuilder: c.resolve(tokens.BodyPartDescriptionBuilder),
+      bodyGraphService: c.resolve(tokens.BodyGraphService),
+      entityFinder: c.resolve(tokens.IEntityManager),
+    });
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.BodyDescriptionComposer
+    )}.`
+  );
+
+  registrar.singletonFactory(tokens.AnatomyDescriptionService, (c) => {
+    return new AnatomyDescriptionService({
+      bodyPartDescriptionBuilder: c.resolve(tokens.BodyPartDescriptionBuilder),
+      bodyDescriptionComposer: c.resolve(tokens.BodyDescriptionComposer),
+      bodyGraphService: c.resolve(tokens.BodyGraphService),
+      entityFinder: c.resolve(tokens.IEntityManager),
+      componentManager: c.resolve(tokens.IEntityManager),
+    });
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.AnatomyDescriptionService
+    )}.`
+  );
+
   registrar.singletonFactory(tokens.AnatomyGenerationService, (c) => {
     return new AnatomyGenerationService({
       entityManager: c.resolve(tokens.IEntityManager),
       dataRegistry: c.resolve(tokens.IDataRegistry),
       logger: c.resolve(tokens.ILogger),
       bodyBlueprintFactory: c.resolve(tokens.BodyBlueprintFactory),
+      anatomyDescriptionService: c.resolve(tokens.AnatomyDescriptionService),
     });
   });
   logger.debug(

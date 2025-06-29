@@ -12,6 +12,7 @@ import { ValidationError } from '../errors/validationError.js';
 /** @typedef {import('../interfaces/coreServices.js').IDataRegistry} IDataRegistry */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('./bodyBlueprintFactory.js').BodyBlueprintFactory} BodyBlueprintFactory */
+/** @typedef {import('./anatomyDescriptionService.js').AnatomyDescriptionService} AnatomyDescriptionService */
 
 /**
  * Service that handles anatomy generation for entities
@@ -25,6 +26,8 @@ export class AnatomyGenerationService {
   #logger;
   /** @type {BodyBlueprintFactory} */
   #bodyBlueprintFactory;
+  /** @type {AnatomyDescriptionService} */
+  #anatomyDescriptionService;
 
   /**
    * @param {object} deps
@@ -32,8 +35,15 @@ export class AnatomyGenerationService {
    * @param {IDataRegistry} deps.dataRegistry
    * @param {ILogger} deps.logger
    * @param {BodyBlueprintFactory} deps.bodyBlueprintFactory
+   * @param {AnatomyDescriptionService} deps.anatomyDescriptionService
    */
-  constructor({ entityManager, dataRegistry, logger, bodyBlueprintFactory }) {
+  constructor({
+    entityManager,
+    dataRegistry,
+    logger,
+    bodyBlueprintFactory,
+    anatomyDescriptionService,
+  }) {
     if (!entityManager)
       throw new InvalidArgumentError('entityManager is required');
     if (!dataRegistry)
@@ -41,11 +51,14 @@ export class AnatomyGenerationService {
     if (!logger) throw new InvalidArgumentError('logger is required');
     if (!bodyBlueprintFactory)
       throw new InvalidArgumentError('bodyBlueprintFactory is required');
+    if (!anatomyDescriptionService)
+      throw new InvalidArgumentError('anatomyDescriptionService is required');
 
     this.#entityManager = entityManager;
     this.#dataRegistry = dataRegistry;
     this.#logger = logger;
     this.#bodyBlueprintFactory = bodyBlueprintFactory;
+    this.#anatomyDescriptionService = anatomyDescriptionService;
   }
 
   /**
@@ -69,7 +82,9 @@ export class AnatomyGenerationService {
         return false;
       }
 
-      const anatomyBodyData = entity.getComponentData(ANATOMY_BODY_COMPONENT_ID);
+      const anatomyBodyData = entity.getComponentData(
+        ANATOMY_BODY_COMPONENT_ID
+      );
       if (!anatomyBodyData || !anatomyBodyData.recipeId) {
         this.#logger.warn(
           `AnatomyGenerationService: Entity '${entityId}' has anatomy:body component but no recipeId`
@@ -137,6 +152,23 @@ export class AnatomyGenerationService {
           allParts: result.entities,
         },
       });
+
+      // Generate descriptions for all body parts and the body itself
+      const bodyEntity = this.#entityManager.getEntityInstance(entityId);
+      if (bodyEntity) {
+        try {
+          this.#anatomyDescriptionService.generateAllDescriptions(bodyEntity);
+          this.#logger.info(
+            `AnatomyGenerationService: Generated descriptions for entity '${entityId}'`
+          );
+        } catch (descError) {
+          this.#logger.error(
+            `AnatomyGenerationService: Failed to generate descriptions for entity '${entityId}'`,
+            { error: descError }
+          );
+          // Don't fail the entire anatomy generation if descriptions fail
+        }
+      }
 
       this.#logger.info(
         `AnatomyGenerationService: Successfully generated anatomy for entity '${entityId}' with ${result.entities.length} parts`

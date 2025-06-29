@@ -38,9 +38,7 @@
         "humanoid_leg.entity.json",
         "humanoid_torso.entity.json"
       ],
-      "instances": [
-        "jacqueline_rouxel.entity.json"
-      ]
+      "instances": ["jacqueline_rouxel.entity.json"]
     },
     "blueprints": [
       "humanoid_custom_eyes.blueprint.json",
