@@ -8,7 +8,8 @@
 
 // --- Core & Service Imports ---
 import { tokens } from '../tokens.js';
-import { Registrar, registerWithLog } from '../../utils/registrarHelpers.js';
+import { Registrar } from '../../utils/registrarHelpers.js';
+import { registerWithLog } from '../registrarHelpers.js';
 import InputHandler from '../../input/inputHandler.js'; // Legacy Input Handler (Updated Dependency)
 import GlobalKeyHandler from '../../input/globalKeyHandler.js';
 import AlertRouter from '../../alerting/alertRouter.js';
@@ -68,54 +69,65 @@ export function registerDomElements(
   { outputDiv, inputElement, titleElement, document: doc },
   logger
 ) {
-  registerWithLog(registrar, logger, 'instance', tokens.WindowDocument, doc);
-  registerWithLog(registrar, logger, 'instance', tokens.outputDiv, outputDiv);
   registerWithLog(
     registrar,
-    logger,
-    'instance',
+    tokens.WindowDocument,
+    doc,
+    { lifecycle: 'singleton', isInstance: true },
+    logger
+  );
+  registerWithLog(
+    registrar,
+    tokens.outputDiv,
+    outputDiv,
+    { lifecycle: 'singleton', isInstance: true },
+    logger
+  );
+  registerWithLog(
+    registrar,
     tokens.inputElement,
-    inputElement
+    inputElement,
+    { lifecycle: 'singleton', isInstance: true },
+    logger
   );
   registerWithLog(
     registrar,
-    logger,
-    'instance',
     tokens.titleElement,
-    titleElement
+    titleElement,
+    { lifecycle: 'singleton', isInstance: true },
+    logger
   );
 
   registerWithLog(
     registrar,
-    logger,
-    'singletonFactory',
     tokens.IDocumentContext,
-    (c) => new DocumentContext(c.resolve(tokens.WindowDocument))
+    (c) => new DocumentContext(c.resolve(tokens.WindowDocument)),
+    { lifecycle: 'singletonFactory' },
+    logger
   );
 
   registerWithLog(
     registrar,
-    logger,
-    'singletonFactory',
     tokens.DomElementFactory,
-    (c) => new DomElementFactory(c.resolve(tokens.IDocumentContext))
+    (c) => new DomElementFactory(c.resolve(tokens.IDocumentContext)),
+    { lifecycle: 'singletonFactory' },
+    logger
   );
 
   registerWithLog(
     registrar,
-    logger,
-    'singletonFactory',
     tokens.IUserPrompt,
-    () => new WindowUserPrompt()
+    () => new WindowUserPrompt(),
+    { lifecycle: 'singletonFactory' },
+    logger
   );
 
   registerWithLog(
     registrar,
-    logger,
-    'single',
     tokens.AlertRouter,
     AlertRouter,
-    [tokens.ISafeEventDispatcher]
+    { lifecycle: 'singleton', dependencies: [tokens.ISafeEventDispatcher] },
+    logger
   );
 }
 
@@ -128,24 +140,24 @@ export function registerDomElements(
 export function registerRenderers(registrar, logger) {
   registerWithLog(
     registrar,
-    logger,
-    'single',
     tokens.SpeechBubbleRenderer,
     SpeechBubbleRenderer,
-    [
-      tokens.ILogger,
-      tokens.IDocumentContext,
-      tokens.IValidatedEventDispatcher,
-      tokens.IEntityManager,
-      tokens.DomElementFactory,
-      tokens.EntityDisplayDataProvider,
-    ]
+    {
+      lifecycle: 'singleton',
+      dependencies: [
+        tokens.ILogger,
+        tokens.IDocumentContext,
+        tokens.IValidatedEventDispatcher,
+        tokens.IEntityManager,
+        tokens.DomElementFactory,
+        tokens.EntityDisplayDataProvider,
+      ],
+    },
+    logger
   );
 
   registerWithLog(
     registrar,
-    logger,
-    'singletonFactory',
     tokens.TitleRenderer,
     (c) =>
       new TitleRenderer({
@@ -153,13 +165,13 @@ export function registerRenderers(registrar, logger) {
         documentContext: c.resolve(tokens.IDocumentContext),
         safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
         titleElement: c.resolve(tokens.titleElement),
-      })
+      }),
+    { lifecycle: 'singletonFactory' },
+    logger
   );
 
   registerWithLog(
     registrar,
-    logger,
-    'singletonFactory',
     tokens.LocationRenderer,
     (c) => {
       const docContext = c.resolve(tokens.IDocumentContext);
@@ -180,13 +192,13 @@ export function registerRenderers(registrar, logger) {
         dataRegistry: c.resolve(tokens.IDataRegistry),
         containerElement: locationContainer,
       });
-    }
+    },
+    { lifecycle: 'singletonFactory' },
+    logger
   );
 
   registerWithLog(
     registrar,
-    logger,
-    'singletonFactory',
     tokens.ActionButtonsRenderer,
     (c) =>
       new ActionButtonsRenderer({
@@ -196,13 +208,13 @@ export function registerRenderers(registrar, logger) {
         domElementFactory: c.resolve(tokens.DomElementFactory),
         actionButtonsContainerSelector: '#action-buttons',
         sendButtonSelector: '#player-confirm-turn-button',
-      })
+      }),
+    { lifecycle: 'singletonFactory' },
+    logger
   );
 
   registerWithLog(
     registrar,
-    logger,
-    'singletonFactory',
     tokens.PerceptionLogRenderer,
     (c) =>
       new PerceptionLogRenderer({
@@ -211,13 +223,13 @@ export function registerRenderers(registrar, logger) {
         validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
         domElementFactory: c.resolve(tokens.DomElementFactory),
         entityManager: c.resolve(tokens.IEntityManager),
-      })
+      }),
+    { lifecycle: 'singletonFactory' },
+    logger
   );
 
   registerWithLog(
     registrar,
-    logger,
-    'singletonFactory',
     tokens.EntityLifecycleMonitor,
     (c) =>
       new EntityLifecycleMonitor({
@@ -225,25 +237,25 @@ export function registerRenderers(registrar, logger) {
         documentContext: c.resolve(tokens.IDocumentContext),
         validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
         domElementFactory: c.resolve(tokens.DomElementFactory),
-      })
+      }),
+    { lifecycle: 'singletonFactory' },
+    logger
   );
 
   registerWithLog(
     registrar,
-    logger,
-    'singletonFactory',
     tokens.SaveGameService,
     (c) =>
       new SaveGameService({
         logger: c.resolve(tokens.ILogger),
         userPrompt: c.resolve(tokens.IUserPrompt),
-      })
+      }),
+    { lifecycle: 'singletonFactory' },
+    logger
   );
 
   registerWithLog(
     registrar,
-    logger,
-    'singletonFactory',
     tokens.SaveGameUI,
     (c) =>
       new SaveGameUI({
@@ -253,13 +265,13 @@ export function registerRenderers(registrar, logger) {
         saveLoadService: c.resolve(tokens.ISaveLoadService),
         validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
         saveGameService: c.resolve(tokens.SaveGameService),
-      })
+      }),
+    { lifecycle: 'singletonFactory' },
+    logger
   );
 
   registerWithLog(
     registrar,
-    logger,
-    'singletonFactory',
     tokens.LoadGameUI,
     (c) =>
       new LoadGameUI({
@@ -269,13 +281,13 @@ export function registerRenderers(registrar, logger) {
         saveLoadService: c.resolve(tokens.ISaveLoadService),
         validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
         userPrompt: c.resolve(tokens.IUserPrompt),
-      })
+      }),
+    { lifecycle: 'singletonFactory' },
+    logger
   );
 
   registerWithLog(
     registrar,
-    logger,
-    'singletonFactory',
     tokens.LlmSelectionModal,
     (c) =>
       new LlmSelectionModal({
@@ -284,13 +296,13 @@ export function registerRenderers(registrar, logger) {
         domElementFactory: c.resolve(tokens.DomElementFactory),
         llmAdapter: c.resolve(tokens.LLMAdapter),
         validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
-      })
+      }),
+    { lifecycle: 'singletonFactory' },
+    logger
   );
 
   registerWithLog(
     registrar,
-    logger,
-    'singletonFactory',
     tokens.CurrentTurnActorRenderer,
     (c) =>
       new CurrentTurnActorRenderer({
@@ -299,13 +311,13 @@ export function registerRenderers(registrar, logger) {
         validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
         entityManager: c.resolve(tokens.IEntityManager),
         entityDisplayDataProvider: c.resolve(tokens.EntityDisplayDataProvider),
-      })
+      }),
+    { lifecycle: 'singletonFactory' },
+    logger
   );
 
   registerWithLog(
     registrar,
-    logger,
-    'singletonFactory',
     tokens.ChatAlertRenderer,
     (c) =>
       new ChatAlertRenderer({
@@ -314,13 +326,13 @@ export function registerRenderers(registrar, logger) {
         safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
         domElementFactory: c.resolve(tokens.DomElementFactory),
         alertRouter: c.resolve(tokens.AlertRouter),
-      })
+      }),
+    { lifecycle: 'singletonFactory' },
+    logger
   );
 
   registerWithLog(
     registrar,
-    logger,
-    'singletonFactory',
     tokens.ActionResultRenderer,
     (c) =>
       new ActionResultRenderer({
@@ -328,7 +340,9 @@ export function registerRenderers(registrar, logger) {
         documentContext: c.resolve(tokens.IDocumentContext),
         safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
         domElementFactory: c.resolve(tokens.DomElementFactory),
-      })
+      }),
+    { lifecycle: 'singletonFactory' },
+    logger
   );
 }
 
@@ -341,8 +355,6 @@ export function registerRenderers(registrar, logger) {
 export function registerControllers(registrar, logger) {
   registerWithLog(
     registrar,
-    logger,
-    'singletonFactory',
     tokens.InputStateController,
     (c) =>
       new InputStateController({
@@ -350,25 +362,25 @@ export function registerControllers(registrar, logger) {
         documentContext: c.resolve(tokens.IDocumentContext),
         safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
         inputElement: c.resolve(tokens.inputElement),
-      })
+      }),
+    { lifecycle: 'singletonFactory' },
+    logger
   );
 
   registerWithLog(
     registrar,
-    logger,
-    'singletonFactory',
     tokens.GlobalKeyHandler,
     (c) =>
       new GlobalKeyHandler(
         c.resolve(tokens.WindowDocument),
         c.resolve(tokens.IValidatedEventDispatcher)
-      )
+      ),
+    { lifecycle: 'singletonFactory' },
+    logger
   );
 
   registerWithLog(
     registrar,
-    logger,
-    'singletonFactory',
     tokens.ProcessingIndicatorController,
     (c) =>
       new ProcessingIndicatorController({
@@ -376,7 +388,9 @@ export function registerControllers(registrar, logger) {
         documentContext: c.resolve(tokens.IDocumentContext),
         safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
         domElementFactory: c.resolve(tokens.DomElementFactory),
-      })
+      }),
+    { lifecycle: 'singletonFactory' },
+    logger
   );
 }
 
@@ -389,36 +403,38 @@ export function registerControllers(registrar, logger) {
 export function registerFacadeAndManager(registrar, logger) {
   registerWithLog(
     registrar,
-    logger,
-    'single',
     tokens.DomUiFacade,
     DomUiFacade,
-    [
-      tokens.ActionButtonsRenderer,
-      tokens.ActionResultRenderer,
-      tokens.LocationRenderer,
-      tokens.TitleRenderer,
-      tokens.InputStateController,
-      tokens.SpeechBubbleRenderer,
-      tokens.PerceptionLogRenderer,
-      tokens.SaveGameUI,
-      tokens.LoadGameUI,
-      tokens.LlmSelectionModal,
-      tokens.EntityLifecycleMonitor,
-    ]
+    {
+      lifecycle: 'singleton',
+      dependencies: [
+        tokens.ActionButtonsRenderer,
+        tokens.ActionResultRenderer,
+        tokens.LocationRenderer,
+        tokens.TitleRenderer,
+        tokens.InputStateController,
+        tokens.SpeechBubbleRenderer,
+        tokens.PerceptionLogRenderer,
+        tokens.SaveGameUI,
+        tokens.LoadGameUI,
+        tokens.LlmSelectionModal,
+        tokens.EntityLifecycleMonitor,
+      ],
+    },
+    logger
   );
 
   registerWithLog(
     registrar,
-    logger,
-    'singletonFactory',
     tokens.EngineUIManager,
     (c) =>
       new EngineUIManager({
         eventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
         domUiFacade: c.resolve(tokens.DomUiFacade),
         logger: c.resolve(tokens.ILogger),
-      })
+      }),
+    { lifecycle: 'singletonFactory' },
+    logger
   );
 }
 
