@@ -78,10 +78,13 @@ describe('ADS-P4-05: Streamlined ActionDiscoveryService', () => {
     actorEntity = { id: 'player', name: 'Player' };
 
     // Default mock behaviors for successful formatting
-    mockFormatActionCommandFn.mockImplementation((actionDef, targetCtx) => ({
-      ok: true,
-      value: `${actionDef.commandVerb} ${targetCtx.entityId || ''}`.trim(),
-    }));
+    mockFormatActionCommandFn.mockImplementation(
+      (actionDef, targetContext) => ({
+        ok: true,
+        value:
+          `${actionDef.commandVerb} ${targetContext.entityId || ''}`.trim(),
+      })
+    );
   });
 
   describe('Actor-State Prerequisite Check', () => {
