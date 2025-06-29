@@ -27,10 +27,12 @@ class ModDependencyValidator {
    *
    * @param {Map<string, ModManifest>} manifests - Map of mod manifests, keyed by **lower-cased** mod ID.
    * @param {ILogger} logger - Logger instance for warnings.
+   * @param {object} [options] - Optional validation options.
+   * @param {{valid: Function, satisfies: Function}} [options.semverLib=semver] - Library used for semver checks.
    * @returns {void} - Returns nothing, but throws ModDependencyError on fatal issues.
    * @throws {ModDependencyError} If fatal validation errors occur (missing required, version mismatch, conflict).
    */
-  static validate(manifests, logger) {
+  static validate(manifests, logger, { semverLib = semver } = {}) {
     const fatals = []; // AC: Collect fatal messages
 
     if (!(manifests instanceof Map)) {
@@ -72,7 +74,7 @@ class ModDependencyValidator {
             const targetVersion = targetManifest.version;
             const requiredVersionRange = dep.version;
 
-            if (!semver.valid(targetVersion)) {
+            if (!semverLib.valid(targetVersion)) {
               const msg = `Mod '${manifest.id}' dependency '${dep.id}' has an invalid version format: '${targetVersion}'.`;
               if (required) {
                 fatals.push(msg);
@@ -85,8 +87,8 @@ class ModDependencyValidator {
               continue; // Skip satisfaction check if version is invalid
             }
 
-            // AC: Use semver.satisfies for version check
-            if (!semver.satisfies(targetVersion, requiredVersionRange)) {
+            // AC: Use semverLib.satisfies for version check
+            if (!semverLib.satisfies(targetVersion, requiredVersionRange)) {
               const msg = `Mod '${manifest.id}' requires dependency '${dep.id}' version '${requiredVersionRange}', but found version '${targetVersion}'.`;
               if (required) {
                 // AC: Fatal: Required version mismatch
