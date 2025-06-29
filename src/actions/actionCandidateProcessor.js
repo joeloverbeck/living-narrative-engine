@@ -5,7 +5,7 @@
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('./validation/prerequisiteEvaluationService.js').PrerequisiteEvaluationService} PrerequisiteEvaluationService */
-/** @typedef {import('./actionFormatter.js').formatActionCommand} formatActionCommandFn */
+/** @typedef {import('../interfaces/IActionCommandFormatter.js').IActionCommandFormatter} IActionCommandFormatter */
 /** @typedef {import('./actionTypes.js').ActionContext} ActionContext */
 /** @typedef {import('../logging/consoleLogger.js').default} ILogger */
 /** @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
@@ -29,7 +29,7 @@ export class ActionCandidateProcessor {
   #prerequisiteEvaluationService;
   #targetResolutionService;
   #entityManager;
-  #formatActionCommandFn;
+  #commandFormatter;
   #safeEventDispatcher;
   #getEntityDisplayNameFn;
   #logger;
@@ -41,7 +41,7 @@ export class ActionCandidateProcessor {
    * @param {PrerequisiteEvaluationService} deps.prerequisiteEvaluationService - Service for evaluating action prerequisites.
    * @param {ITargetResolutionService} deps.targetResolutionService - Service for resolving action targets.
    * @param {EntityManager} deps.entityManager - Manager for entity operations.
-   * @param {formatActionCommandFn} deps.formatActionCommandFn - Function to format action commands.
+   * @param {IActionCommandFormatter} deps.actionCommandFormatter - Service used to format action commands.
    * @param {ISafeEventDispatcher} deps.safeEventDispatcher - Event dispatcher for error handling.
    * @param {Function} deps.getEntityDisplayNameFn - Function to get entity display names.
    * @param {ILogger} deps.logger - Logger instance for diagnostic output.
@@ -50,7 +50,7 @@ export class ActionCandidateProcessor {
     prerequisiteEvaluationService,
     targetResolutionService,
     entityManager,
-    formatActionCommandFn,
+    actionCommandFormatter,
     safeEventDispatcher,
     getEntityDisplayNameFn,
     logger,
@@ -58,7 +58,7 @@ export class ActionCandidateProcessor {
     this.#prerequisiteEvaluationService = prerequisiteEvaluationService;
     this.#targetResolutionService = targetResolutionService;
     this.#entityManager = entityManager;
-    this.#formatActionCommandFn = formatActionCommandFn;
+    this.#commandFormatter = actionCommandFormatter;
     this.#safeEventDispatcher = safeEventDispatcher;
     this.#getEntityDisplayNameFn = getEntityDisplayNameFn;
     this.#logger = logger;
@@ -173,7 +173,7 @@ export class ActionCandidateProcessor {
     };
 
     for (const targetCtx of targetContexts) {
-      const formatResult = this.#formatActionCommandFn(
+      const formatResult = this.#commandFormatter.format(
         actionDef,
         targetCtx,
         this.#entityManager,

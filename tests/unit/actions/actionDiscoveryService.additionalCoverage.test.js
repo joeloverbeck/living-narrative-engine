@@ -36,7 +36,7 @@ describeActionDiscoverySuite(
           return [{ type: 'none', entityId: null }];
         }
       );
-      bed.mocks.formatActionCommandFn.mockReturnValue({
+      bed.mocks.actionCommandFormatter.format.mockReturnValue({
         ok: true,
         value: 'wait',
       });
@@ -54,7 +54,7 @@ describeActionDiscoverySuite(
       bed.mocks.targetResolutionService.resolveTargets.mockReturnValue([
         { type: 'entity', entityId: 't1' },
       ]);
-      bed.mocks.formatActionCommandFn.mockReturnValue({
+      bed.mocks.actionCommandFormatter.format.mockReturnValue({
         ok: false,
         error: new Error('nope'),
         details: { reason: 'bad' },

@@ -73,12 +73,14 @@ describeActionDiscoverySuite(
       // FIX: Default prerequisite checks to pass for this test
       bed.mocks.prerequisiteEvaluationService.evaluate.mockReturnValue(true);
 
-      bed.mocks.formatActionCommandFn.mockImplementation((actionDef) => {
-        if (actionDef.id === 'core:wait') return { ok: true, value: 'wait' };
-        if (actionDef.id === 'core:go')
-          return { ok: true, value: 'go to The Town' };
-        return { ok: false, error: 'invalid' };
-      });
+      bed.mocks.actionCommandFormatter.format.mockImplementation(
+        (actionDef) => {
+          if (actionDef.id === 'core:wait') return { ok: true, value: 'wait' };
+          if (actionDef.id === 'core:go')
+            return { ok: true, value: 'go to The Town' };
+          return { ok: false, error: 'invalid' };
+        }
+      );
 
       bed.mocks.actionIndex.getCandidateActions.mockReturnValue([
         coreWaitActionDefinition,
@@ -141,7 +143,7 @@ describeActionDiscoverySuite(
         null
       );
 
-      expect(bed.mocks.formatActionCommandFn).toHaveBeenCalledWith(
+      expect(bed.mocks.actionCommandFormatter.format).toHaveBeenCalledWith(
         coreGoActionDefinition,
         expectedGoTargetContext,
         expect.any(Object),

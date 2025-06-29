@@ -31,7 +31,7 @@ import CommandProcessor from '../../commands/commandProcessor.js';
 import { TraceContext as TraceContextImpl } from '../../actions/tracing/traceContext.js';
 
 // --- Helper Function Imports ---
-import { formatActionCommand } from '../../actions/actionFormatter.js';
+import ActionCommandFormatter from '../../actions/actionFormatter.js';
 import { getActorLocation } from '../../utils/actorLocationUtils.js';
 import { getEntityDisplayName } from '../../utils/entityUtils.js';
 
@@ -97,7 +97,7 @@ export function registerCommandAndAction(container) {
       ),
       targetResolutionService: c.resolve(tokens.ITargetResolutionService),
       entityManager: c.resolve(tokens.IEntityManager),
-      formatActionCommandFn: formatActionCommand,
+      actionCommandFormatter: new ActionCommandFormatter(),
       safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
       getEntityDisplayNameFn: getEntityDisplayName,
       logger: c.resolve(tokens.ILogger),

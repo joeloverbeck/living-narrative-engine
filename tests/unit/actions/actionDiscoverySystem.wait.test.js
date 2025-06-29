@@ -41,12 +41,14 @@ describeActionDiscoverySuite(
         }
       );
 
-      bed.mocks.formatActionCommandFn.mockImplementation((actionDef) => {
-        if (actionDef.id === 'core:wait') {
-          return { ok: true, value: 'wait' };
+      bed.mocks.actionCommandFormatter.format.mockImplementation(
+        (actionDef) => {
+          if (actionDef.id === 'core:wait') {
+            return { ok: true, value: 'wait' };
+          }
+          return { ok: false, error: 'invalid' };
         }
-        return { ok: false, error: 'invalid' };
-      });
+      );
 
       bed.mocks.actionIndex.getCandidateActions.mockReturnValue([
         coreWaitActionDefinition,
@@ -77,7 +79,7 @@ describeActionDiscoverySuite(
       expect(
         bed.mocks.prerequisiteEvaluationService.evaluate
       ).not.toHaveBeenCalled();
-      expect(bed.mocks.formatActionCommandFn).toHaveBeenCalledTimes(1);
+      expect(bed.mocks.actionCommandFormatter.format).toHaveBeenCalledTimes(1);
     });
 
     it('should return an empty array if core:wait action prerequisites fail', async () => {
@@ -95,7 +97,7 @@ describeActionDiscoverySuite(
 
       // FIX: Now that `evaluate` is called and returns false, the actions array should be empty.
       expect(result.actions).toEqual([]);
-      expect(bed.mocks.formatActionCommandFn).not.toHaveBeenCalled();
+      expect(bed.mocks.actionCommandFormatter.format).not.toHaveBeenCalled();
       expect(
         bed.mocks.prerequisiteEvaluationService.evaluate
       ).toHaveBeenCalledTimes(1);
@@ -111,7 +113,7 @@ describeActionDiscoverySuite(
       expect(
         bed.mocks.prerequisiteEvaluationService.evaluate
       ).not.toHaveBeenCalled();
-      expect(bed.mocks.formatActionCommandFn).not.toHaveBeenCalled();
+      expect(bed.mocks.actionCommandFormatter.format).not.toHaveBeenCalled();
     });
 
     it('should return structured info for core:wait even if other invalid actions are present', async () => {
@@ -139,7 +141,7 @@ describeActionDiscoverySuite(
       expect(
         bed.mocks.prerequisiteEvaluationService.evaluate
       ).toHaveBeenCalledTimes(1);
-      expect(bed.mocks.formatActionCommandFn).toHaveBeenCalledTimes(1);
+      expect(bed.mocks.actionCommandFormatter.format).toHaveBeenCalledTimes(1);
     });
   }
 );

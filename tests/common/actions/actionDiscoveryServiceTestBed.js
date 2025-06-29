@@ -12,7 +12,7 @@ import {
   createMockActionIndex,
   createMockTargetResolutionService,
   createMockSafeEventDispatcher,
-  createMockFormatActionCommandFn,
+  createMockActionCommandFormatter,
 } from '../mockFactories';
 import { createServiceFactoryMixin } from '../serviceFactoryTestBedMixin.js';
 import { createTestBedHelpers } from '../createTestBedHelpers.js';
@@ -26,7 +26,7 @@ const ServiceFactoryMixin = createServiceFactoryMixin(
     actionIndex: createMockActionIndex,
     targetResolutionService: createMockTargetResolutionService,
     safeEventDispatcher: createMockSafeEventDispatcher,
-    formatActionCommandFn: createMockFormatActionCommandFn,
+    actionCommandFormatter: createMockActionCommandFormatter,
     getActorLocationFn: () => jest.fn(),
     getEntityDisplayNameFn: () => jest.fn(),
   },
@@ -38,7 +38,7 @@ const ServiceFactoryMixin = createServiceFactoryMixin(
         prerequisiteEvaluationService: mocks.prerequisiteEvaluationService,
         targetResolutionService: mocks.targetResolutionService,
         entityManager: mocks.entityManager,
-        formatActionCommandFn: mocks.formatActionCommandFn,
+        actionCommandFormatter: mocks.actionCommandFormatter,
         safeEventDispatcher: mocks.safeEventDispatcher,
         getEntityDisplayNameFn: mocks.getEntityDisplayNameFn,
         logger: mocks.logger,
