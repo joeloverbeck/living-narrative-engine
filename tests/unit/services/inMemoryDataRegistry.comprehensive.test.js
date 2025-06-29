@@ -1,6 +1,7 @@
 // src/tests/services/inMemoryDataRegistry.comprehensive.test.js
 
 import InMemoryDataRegistry from '../../../src/data/inMemoryDataRegistry.js';
+import DataRegistryError from '../../../src/errors/dataRegistryError.js';
 import {
   afterEach,
   beforeEach,
@@ -96,16 +97,24 @@ describe('InMemoryDataRegistry', () => {
       expect(console.error).toHaveBeenCalledTimes(4);
       // Check that no data was actually stored for these invalid types
       expect(() => registry.getAll('')).toThrow(
-        'InMemoryDataRegistry.getAll: type parameter must be a non-empty string'
+        new DataRegistryError(
+          'InMemoryDataRegistry.getAll: type parameter must be a non-empty string'
+        )
       );
       expect(() => registry.getAll(' ')).toThrow(
-        'InMemoryDataRegistry.getAll: type parameter must be a non-empty string'
+        new DataRegistryError(
+          'InMemoryDataRegistry.getAll: type parameter must be a non-empty string'
+        )
       );
       expect(() => registry.getAll(null)).toThrow(
-        'InMemoryDataRegistry.getAll: type parameter must be a non-empty string'
+        new DataRegistryError(
+          'InMemoryDataRegistry.getAll: type parameter must be a non-empty string'
+        )
       );
       expect(() => registry.getAll(undefined)).toThrow(
-        'InMemoryDataRegistry.getAll: type parameter must be a non-empty string'
+        new DataRegistryError(
+          'InMemoryDataRegistry.getAll: type parameter must be a non-empty string'
+        )
       );
     });
 
@@ -118,16 +127,24 @@ describe('InMemoryDataRegistry', () => {
 
       expect(console.error).toHaveBeenCalledTimes(4);
       expect(() => registry.get('validType', '')).toThrow(
-        'InMemoryDataRegistry.get: id parameter must be a non-empty string'
+        new DataRegistryError(
+          'InMemoryDataRegistry.get: id parameter must be a non-empty string'
+        )
       );
       expect(() => registry.get('validType', ' ')).toThrow(
-        'InMemoryDataRegistry.get: id parameter must be a non-empty string'
+        new DataRegistryError(
+          'InMemoryDataRegistry.get: id parameter must be a non-empty string'
+        )
       );
       expect(() => registry.get('validType', null)).toThrow(
-        'InMemoryDataRegistry.get: id parameter must be a non-empty string'
+        new DataRegistryError(
+          'InMemoryDataRegistry.get: id parameter must be a non-empty string'
+        )
       );
       expect(() => registry.get('validType', undefined)).toThrow(
-        'InMemoryDataRegistry.get: id parameter must be a non-empty string'
+        new DataRegistryError(
+          'InMemoryDataRegistry.get: id parameter must be a non-empty string'
+        )
       );
       expect(registry.getAll('validType')).toEqual([]); // Type might exist but no data stored under invalid IDs
     });
