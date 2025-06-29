@@ -2,6 +2,7 @@ import { describe, test, expect, jest, beforeEach } from '@jest/globals';
 import { ProcessingCommandState } from '../../../../src/turns/states/processingCommandState.js';
 import { ProcessingWorkflow } from '../../../../src/turns/states/workflows/processingWorkflow.js';
 import TurnDirectiveStrategyResolver from '../../../../src/turns/strategies/turnDirectiveStrategyResolver.js';
+import * as dispatchSpeechEventModule from '../../../../src/turns/states/helpers/dispatchSpeechEvent.js';
 
 const mockLogger = { debug: jest.fn(), warn: jest.fn(), error: jest.fn() };
 const mockHandler = {
@@ -111,8 +112,16 @@ describe('ProcessingCommandState helpers', () => {
     const actor = { id: 'a1' };
     const dispatcher = { dispatch: jest.fn().mockResolvedValue(undefined) };
     const ctx = makeCtx(actor, { getSafeEventDispatcher: () => dispatcher });
+    const helperSpy = jest.spyOn(
+      dispatchSpeechEventModule,
+      'dispatchSpeechEvent'
+    );
     await state._dispatchSpeech(ctx, actor, { speech: 'hi' });
+    expect(helperSpy).toHaveBeenCalledWith(ctx, mockHandler, 'a1', {
+      speechContent: 'hi',
+    });
     expect(dispatcher.dispatch).toHaveBeenCalled();
+    helperSpy.mockRestore();
   });
 
   test('_dispatchSpeech warns when dispatcher missing', async () => {
