@@ -1,10 +1,17 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import EventBus from '../../../src/events/eventBus.js';
 
+const createLogger = () => ({
+  error: jest.fn(),
+  warn: jest.fn(),
+  info: jest.fn(),
+  debug: jest.fn(),
+});
+
 describe('EventBus', () => {
   let bus;
   beforeEach(() => {
-    bus = new EventBus();
+    bus = new EventBus({ logger: createLogger() });
   });
 
   it('subscribes and dispatches events to specific listeners', async () => {

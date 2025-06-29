@@ -62,6 +62,7 @@ describe('interpreterRegistrations', () => {
       );
       registrar.instance(tokens.OperationRegistry, mockOperationRegistry);
       registrar.instance(tokens.EventBus, mockEventBus);
+      registrar.instance(tokens.IEventBus, mockEventBus);
       registrar.instance(tokens.IDataRegistry, mockDataRegistry);
 
       // Act

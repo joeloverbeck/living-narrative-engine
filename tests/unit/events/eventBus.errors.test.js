@@ -10,10 +10,15 @@ import EventBus from '../../../src/events/eventBus.js';
 
 describe('EventBus error handling', () => {
   let bus;
-  let errorSpy;
+  let logger;
   beforeEach(() => {
-    bus = new EventBus();
-    errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    logger = {
+      error: jest.fn(),
+      warn: jest.fn(),
+      info: jest.fn(),
+      debug: jest.fn(),
+    };
+    bus = new EventBus({ logger });
   });
   afterEach(() => {
     jest.restoreAllMocks();
@@ -22,18 +27,18 @@ describe('EventBus error handling', () => {
   it('logs for invalid subscribe arguments', () => {
     bus.subscribe('', () => {});
     bus.subscribe('test', null);
-    expect(errorSpy).toHaveBeenCalledTimes(2);
+    expect(logger.error).toHaveBeenCalledTimes(2);
   });
 
   it('logs for invalid unsubscribe arguments', () => {
     bus.unsubscribe('', () => {});
     bus.unsubscribe('a', null);
-    expect(errorSpy).toHaveBeenCalledTimes(2);
+    expect(logger.error).toHaveBeenCalledTimes(2);
   });
 
   it('logs for invalid dispatch name', async () => {
     await bus.dispatch('');
-    expect(errorSpy).toHaveBeenCalledTimes(1);
+    expect(logger.error).toHaveBeenCalledTimes(1);
   });
 
   it('handles listener errors gracefully', async () => {
@@ -41,7 +46,7 @@ describe('EventBus error handling', () => {
       throw new Error('oops');
     });
     await bus.dispatch('x');
-    expect(errorSpy).toHaveBeenCalledWith(
+    expect(logger.error).toHaveBeenCalledWith(
       expect.stringContaining('EventBus: Error executing listener'),
       expect.any(Error)
     );
@@ -49,7 +54,7 @@ describe('EventBus error handling', () => {
 
   it('listenerCount logs and returns 0 for invalid name', () => {
     const count = bus.listenerCount('');
-    expect(errorSpy).toHaveBeenCalledTimes(1);
+    expect(logger.error).toHaveBeenCalledTimes(1);
     expect(count).toBe(0);
   });
 });

@@ -7,7 +7,7 @@
  * as a facade for subscribing and unsubscribing via the EventBus.
  */
 
-/** @typedef {import('./eventBus.js').default} EventBus */
+/** @typedef {import('../interfaces/IEventBus.js').IEventBus} IEventBus */
 /** @typedef {import('./eventBus.js').EventListener} EventListener */ // Added for type hinting
 /** @typedef {import('../data/gameDataRepository.js').GameDataRepository} GameDataRepository */
 /** @typedef {import('../data/gameDataRepository.js').EventDefinition} EventDefinition */
@@ -24,6 +24,7 @@ import { IValidatedEventDispatcher } from '../interfaces/IValidatedEventDispatch
  * Ensures that events are structurally correct before being sent, when possible.
  */
 class ValidatedEventDispatcher extends IValidatedEventDispatcher {
+  /** @type {IEventBus} */
   #eventBus;
   #gameDataRepository;
   #schemaValidator;
@@ -33,7 +34,7 @@ class ValidatedEventDispatcher extends IValidatedEventDispatcher {
    * Creates an instance of ValidatedEventDispatcher.
    *
    * @param {object} dependencies
-   * @param {EventBus} dependencies.eventBus - The main event bus for dispatching and subscriptions.
+   * @param {IEventBus} dependencies.eventBus - The main event bus for dispatching and subscriptions.
    * @param {GameDataRepository} dependencies.gameDataRepository - Repository to access event definitions.
    * @param {ISchemaValidator} dependencies.schemaValidator - Service to validate payloads against JSON schemas.
    * @param {ILogger} dependencies.logger - Service for logging messages.
