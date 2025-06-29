@@ -12,10 +12,15 @@
  * @implements {IDataRegistry}
  */
 class InMemoryDataRegistry {
+  #logger;
   /**
    * Initializes the internal storage structures.
+   *
+   * @description Creates a new in-memory data registry.
+   * @param {object} [options]
+   * @param {object} [options.logger] Logger implementation
    */
-  constructor() {
+  constructor({ logger = console } = {}) {
     /**
      * @private
      * @type {Map<string, Map<string, object>>}
@@ -27,6 +32,12 @@ class InMemoryDataRegistry {
      * @type {Map<string, Map<string, string>>}
      */
     this.contentOrigins = new Map();
+
+    /**
+     * @type {object}
+     * @private
+     */
+    this.#logger = logger;
   }
 
   /**
@@ -37,19 +48,19 @@ class InMemoryDataRegistry {
    */
   store(type, id, data) {
     if (typeof type !== 'string' || type.trim() === '') {
-      console.error(
+      this.#logger.error(
         'InMemoryDataRegistry.store: Invalid or empty type provided.'
       );
       return false;
     }
     if (typeof id !== 'string' || id.trim() === '') {
-      console.error(
+      this.#logger.error(
         `InMemoryDataRegistry.store: Invalid or empty id provided for type '${type}'.`
       );
       return false;
     }
     if (typeof data !== 'object' || data === null) {
-      console.error(
+      this.#logger.error(
         `InMemoryDataRegistry.store: Invalid data provided for type '${type}', id '${id}'. Must be an object.`
       );
       return false;
@@ -245,7 +256,7 @@ class InMemoryDataRegistry {
     const locationId = playerDef?.components?.['core:position']?.locationId;
 
     if (typeof locationId !== 'string' || !locationId.trim()) {
-      console.warn(
+      this.#logger.warn(
         `Starting player '${playerId}' has no valid locationId in core:position component.`
       );
       return null;
