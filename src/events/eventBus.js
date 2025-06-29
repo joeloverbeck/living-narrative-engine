@@ -6,20 +6,43 @@
 class EventBus {
   #listeners = new Map(); // Stores eventName -> Set<listenerFn>
 
-  subscribe(eventName, listener) {
-    if (typeof eventName !== 'string' || !eventName) {
+  /**
+   * Validates that an event name is a non-empty string.
+   *
+   * @param {string} name - The event name to validate.
+   * @returns {boolean} True if the name is valid, false otherwise.
+   */
+  #validateEventName(name) {
+    if (typeof name !== 'string' || !name) {
       // eslint-disable-next-line no-console
-      console.error(
-        'EventBus: Invalid event name provided for subscription.',
-        eventName
-      );
-      return;
+      console.error('EventBus: Invalid event name provided.', name);
+      return false;
     }
+    return true;
+  }
+
+  /**
+   * Validates that the listener is a function.
+   *
+   * @param {*} listener - The listener to validate.
+   * @returns {boolean} True if the listener is valid, false otherwise.
+   */
+  #validateListener(listener) {
     if (typeof listener !== 'function') {
       // eslint-disable-next-line no-console
       console.error(
-        `EventBus: Invalid listener provided for event "${eventName}". Expected a function.`
+        'EventBus: Invalid listener provided. Expected a function.'
       );
+      return false;
+    }
+    return true;
+  }
+
+  subscribe(eventName, listener) {
+    if (
+      !this.#validateEventName(eventName) ||
+      !this.#validateListener(listener)
+    ) {
       return;
     }
 
@@ -30,19 +53,10 @@ class EventBus {
   }
 
   unsubscribe(eventName, listener) {
-    if (typeof eventName !== 'string' || !eventName) {
-      // eslint-disable-next-line no-console
-      console.error(
-        'EventBus: Invalid event name provided for unsubscription.',
-        eventName
-      );
-      return;
-    }
-    if (typeof listener !== 'function') {
-      // eslint-disable-next-line no-console
-      console.error(
-        `EventBus: Invalid listener provided for unsubscription from event "${eventName}".`
-      );
+    if (
+      !this.#validateEventName(eventName) ||
+      !this.#validateListener(listener)
+    ) {
       return;
     }
 
@@ -66,12 +80,7 @@ class EventBus {
    */
   async dispatch(eventName, eventPayload = {}) {
     // Renamed second arg for clarity, added default
-    if (typeof eventName !== 'string' || !eventName) {
-      // eslint-disable-next-line no-console
-      console.error(
-        'EventBus: Invalid event name provided for dispatch.',
-        eventName
-      );
+    if (!this.#validateEventName(eventName)) {
       return;
     }
 
@@ -116,12 +125,7 @@ class EventBus {
    * @returns {number} The number of listeners for the given event name. Returns 0 if the event has no listeners or the event name is invalid.
    */
   listenerCount(eventName) {
-    if (typeof eventName !== 'string' || !eventName) {
-      // eslint-disable-next-line no-console
-      console.error(
-        'EventBus: Invalid event name provided for listenerCount.',
-        eventName
-      );
+    if (!this.#validateEventName(eventName)) {
       return 0;
     }
 
