@@ -227,7 +227,7 @@ class EntityManager extends IEntityManager {
       defaultPolicyFactory,
     });
 
-    const resolveDep = (dep, defaultDep) => {
+    const resolveOptionalDependency = (dep, defaultDep) => {
       if (dep === undefined || dep === null) return defaultDep;
       if (typeof defaultDep !== 'function' && typeof dep === 'function') {
         return dep();
@@ -235,9 +235,12 @@ class EntityManager extends IEntityManager {
       return dep;
     };
 
-    idGenerator = resolveDep(idGenerator, defaults.idGenerator);
-    cloner = resolveDep(cloner, defaults.cloner);
-    defaultPolicy = resolveDep(defaultPolicy, defaults.defaultPolicy);
+    idGenerator = resolveOptionalDependency(idGenerator, defaults.idGenerator);
+    cloner = resolveOptionalDependency(cloner, defaults.cloner);
+    defaultPolicy = resolveOptionalDependency(
+      defaultPolicy,
+      defaults.defaultPolicy
+    );
 
     /* ---------- dependency checks ---------- */
     validateDependency(logger, 'ILogger', console, {
@@ -299,7 +302,7 @@ class EntityManager extends IEntityManager {
       defaultPolicy: this.#defaultPolicy,
     });
 
-    const resolveDep = (dep, defaultDep) => {
+    const resolveOptionalDependency = (dep, defaultDep) => {
       if (dep === undefined || dep === null) return defaultDep;
       if (typeof defaultDep !== 'function' && typeof dep === 'function') {
         return dep();
@@ -307,19 +310,19 @@ class EntityManager extends IEntityManager {
       return dep;
     };
 
-    this.#entityRepository = resolveDep(
+    this.#entityRepository = resolveOptionalDependency(
       entityRepository,
       serviceDefaults.entityRepository
     );
-    this.#componentMutationService = resolveDep(
+    this.#componentMutationService = resolveOptionalDependency(
       componentMutationService,
       serviceDefaults.componentMutationService
     );
-    this.#definitionCache = resolveDep(
+    this.#definitionCache = resolveOptionalDependency(
       definitionCache,
       serviceDefaults.definitionCache
     );
-    this.#lifecycleManager = resolveDep(
+    this.#lifecycleManager = resolveOptionalDependency(
       entityLifecycleManager,
       serviceDefaults.entityLifecycleManager
     );
