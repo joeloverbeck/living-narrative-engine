@@ -251,6 +251,12 @@ export class ProcessingWorkflow {
    * @returns {Promise<void>} Resolves when processing completes.
    */
   async _executeAction(turnCtx, actor, turnAction) {
+    if (
+      !(await this._validateExecutionPreconditions(turnCtx, actor, turnAction))
+    ) {
+      return;
+    }
+
     try {
       await this._state._processCommandInternal(
         turnCtx,
@@ -259,22 +265,78 @@ export class ProcessingWorkflow {
         this._exceptionHandler
       );
     } catch (error) {
-      const currentTurnCtxForCatch = this._state._getTurnContext() ?? turnCtx;
-      const errorLogger =
-        currentTurnCtxForCatch?.getLogger?.() ??
-        getLogger(turnCtx, this._state._handler);
-      errorLogger.error(
-        `${this._state.getStateName()}: Uncaught error from _processCommandInternal scope. Error: ${error.message}`,
-        error
-      );
-      const actorIdForHandler =
-        currentTurnCtxForCatch?.getActor?.()?.id ?? actor.id;
-      await this._exceptionHandler.handle(
-        currentTurnCtxForCatch || turnCtx,
-        error,
-        actorIdForHandler
-      );
+      await this._handleProcessError(turnCtx, actor, error);
     }
+  }
+
+  /**
+   * @description Validates the required parameters for executing an action.
+   * @private
+   * @param {import('../../interfaces/ITurnContext.js').ITurnContext|null} turnCtx - Context.
+   * @param {import('../../../entities/entity.js').default|null} actor - Actor.
+   * @param {import('../../interfaces/IActorTurnStrategy.js').ITurnAction|null} turnAction - Action to process.
+   * @returns {Promise<boolean>} True if all parameters are valid, otherwise false.
+   */
+  async _validateExecutionPreconditions(turnCtx, actor, turnAction) {
+    const logger = getLogger(turnCtx, this._state._handler);
+
+    if (!turnCtx) {
+      logger.error(`${this._state.getStateName()}: Invalid turn context.`);
+      await this._exceptionHandler.handle(
+        turnCtx,
+        new Error('Invalid context'),
+        actor?.id ?? 'N/A'
+      );
+      return false;
+    }
+
+    if (!actor) {
+      logger.error(`${this._state.getStateName()}: Invalid actor.`);
+      await this._exceptionHandler.handle(
+        turnCtx,
+        new Error('Invalid actor'),
+        turnCtx.getActor?.()?.id ?? 'N/A'
+      );
+      return false;
+    }
+
+    if (!turnAction) {
+      logger.error(`${this._state.getStateName()}: Invalid turnAction.`);
+      await this._exceptionHandler.handle(
+        turnCtx,
+        new Error('Invalid action'),
+        actor.id
+      );
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * @description Handles errors that occur during internal command processing.
+   * @private
+   * @param {import('../../interfaces/ITurnContext.js').ITurnContext} turnCtx - Context in use when the error occurred.
+   * @param {import('../../../entities/entity.js').default} actor - Actor executing the command.
+   * @param {Error} error - Error thrown by internal processing.
+   * @returns {Promise<void>} Resolves when handling completes.
+   */
+  async _handleProcessError(turnCtx, actor, error) {
+    const currentTurnCtxForCatch = this._state._getTurnContext() ?? turnCtx;
+    const errorLogger =
+      currentTurnCtxForCatch?.getLogger?.() ??
+      getLogger(turnCtx, this._state._handler);
+    errorLogger.error(
+      `${this._state.getStateName()}: Uncaught error from _processCommandInternal scope. Error: ${error.message}`,
+      error
+    );
+    const actorIdForHandler =
+      currentTurnCtxForCatch?.getActor?.()?.id ?? actor.id;
+    await this._exceptionHandler.handle(
+      currentTurnCtxForCatch || turnCtx,
+      error,
+      actorIdForHandler
+    );
   }
 }
 
