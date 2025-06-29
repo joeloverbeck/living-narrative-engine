@@ -63,11 +63,32 @@ describe('CommandOutcomeInterpreter additional branches', () => {
     );
   });
 
-  it('returns END_TURN_FAILURE when command fails', async () => {
+  it('returns RE_PROMPT when command fails but turnEnded is false', async () => {
     const interpreter = new CommandOutcomeInterpreter({ dispatcher, logger });
     const result = {
       success: false,
       turnEnded: false,
+      actionResult: { actionId: 'fail:action' },
+    };
+    const directive = await interpreter.interpret(result, turnContext);
+    expect(directive).toBe(TurnDirective.RE_PROMPT);
+  });
+
+  it('returns END_TURN_FAILURE when command fails and turnEnded is true', async () => {
+    const interpreter = new CommandOutcomeInterpreter({ dispatcher, logger });
+    const result = {
+      success: false,
+      turnEnded: true,
+      actionResult: { actionId: 'fail:action' },
+    };
+    const directive = await interpreter.interpret(result, turnContext);
+    expect(directive).toBe(TurnDirective.END_TURN_FAILURE);
+  });
+
+  it('defaults to END_TURN_FAILURE when turnEnded is missing', async () => {
+    const interpreter = new CommandOutcomeInterpreter({ dispatcher, logger });
+    const result = {
+      success: false,
       actionResult: { actionId: 'fail:action' },
     };
     const directive = await interpreter.interpret(result, turnContext);
