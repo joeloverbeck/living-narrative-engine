@@ -8,7 +8,9 @@ import {
   jest,
   test,
 } from '@jest/globals';
-import NotesService from '../../../src/ai/notesService.js';
+import NotesService, {
+  normalizeNoteText,
+} from '../../../src/ai/notesService.js';
 
 describe('NotesService', () => {
   let notesService;
@@ -94,6 +96,12 @@ describe('NotesService', () => {
     const result = notesService.addNotes(component, newNotes);
 
     expect(result.wasModified).toBe(false);
+  });
+
+  test('normalizeNoteText strips punctuation without affecting regular characters', () => {
+    const input = " Hello, world! It's great. ";
+    const normalized = normalizeNoteText(input);
+    expect(normalized).toBe('hello world its great');
   });
 
   test('should throw a TypeError for a malformed component', () => {

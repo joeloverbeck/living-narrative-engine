@@ -7,11 +7,11 @@
  * @param {string} text - The original note text.
  * @returns {string} The normalized text.
  */
-function normalizeNoteText(text) {
+export function normalizeNoteText(text) {
   return text
     .trim()
     .toLowerCase()
-    .replace(/[^\w\s]|/g, '')
+    .replace(/[^\w\s]/g, '')
     .replace(/\s+/g, ' ');
 }
 
