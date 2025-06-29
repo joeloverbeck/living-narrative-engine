@@ -10,6 +10,10 @@
 
 import { ITurnDirectiveStrategy } from '../interfaces/ITurnDirectiveStrategy.js';
 import TurnDirective from '../constants/turnDirectives.js';
+import {
+  assertDirective,
+  requireContextActor,
+} from '../../utils/strategyHelpers.js';
 
 export default class EndTurnFailureStrategy extends ITurnDirectiveStrategy {
   /** @override */
@@ -22,23 +26,26 @@ export default class EndTurnFailureStrategy extends ITurnDirectiveStrategy {
     const className = this.constructor.name;
     const logger = turnContext.getLogger();
 
-    if (directive !== TurnDirective.END_TURN_FAILURE) {
-      const errorMsg = `${className}: Wrong directive (${directive}). Expected END_TURN_FAILURE.`;
-      logger.error(errorMsg);
-      // As per PRD and other strategies, throwing an error here allows the calling state to handle it,
-      // potentially by ending the turn with this error.
-      throw new Error(errorMsg);
-    }
+    assertDirective({
+      expected: TurnDirective.END_TURN_FAILURE,
+      actual: directive,
+      logger,
+      className,
+    });
 
-    const contextActor = turnContext.getActor();
+    const missingActorMsg = `${className}: No actor found in ITurnContext for END_TURN_FAILURE. Critical issue.`;
+    const contextActor = requireContextActor({
+      turnContext,
+      logger,
+      className,
+      errorMsg: missingActorMsg,
+    });
 
     if (!contextActor) {
-      const msg = `${className}: No actor found in ITurnContext for END_TURN_FAILURE. Critical issue.`;
       logger.error(
-        msg + ' Ending turn with a generic error indicating missing actor.'
+        missingActorMsg +
+          ' Ending turn with a generic error indicating missing actor.'
       );
-      // End the turn with an error reflecting the missing actor in the context.
-      turnContext.endTurn(new Error(msg));
       return;
     }
 
