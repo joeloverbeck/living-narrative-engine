@@ -2,6 +2,10 @@
 
 import ShortTermMemoryService from './shortTermMemoryService.js';
 import { SHORT_TERM_MEMORY_COMPONENT_ID } from '../constants/componentIds.js';
+import {
+  readComponent,
+  writeComponent,
+} from '../utils/componentAccessUtils.js';
 
 /**
  * Persist the “thoughts” produced during an LLM turn into the actor’s
@@ -27,10 +31,7 @@ export function persistThoughts(action, actorEntity, logger) {
   const thoughtText = String(rawThoughts).trim();
 
   /* ── 2. Retrieve STM component via the public API ───────────────────── */
-  const hasGetter = typeof actorEntity?.getComponentData === 'function';
-  let memoryComp = hasGetter
-    ? actorEntity.getComponentData(SHORT_TERM_MEMORY_COMPONENT_ID)
-    : actorEntity?.components?.[SHORT_TERM_MEMORY_COMPONENT_ID];
+  const memoryComp = readComponent(actorEntity, SHORT_TERM_MEMORY_COMPONENT_ID);
 
   if (!memoryComp) {
     logger.warn('STM-002 Missing component');
@@ -39,16 +40,14 @@ export function persistThoughts(action, actorEntity, logger) {
 
   /* ── 3. Mutate in place using the service ───────────────────────────── */
   const stmService = new ShortTermMemoryService();
-  const updatedMem = stmService.addThought(memoryComp, thoughtText, new Date());
+  const { mem: updatedMem } = stmService.addThought(
+    memoryComp,
+    thoughtText,
+    new Date()
+  );
 
   /* ── 4. Push the mutation back to the entity ────────────────────────── */
-  if (typeof actorEntity?.addComponent === 'function') {
-    // Ensures validation & internal bookkeeping
-    actorEntity.addComponent(SHORT_TERM_MEMORY_COMPONENT_ID, updatedMem);
-  } else if (actorEntity?.components) {
-    // Plain-object pseudo-entity – just re-assign
-    actorEntity.components[SHORT_TERM_MEMORY_COMPONENT_ID] = updatedMem;
-  }
+  writeComponent(actorEntity, SHORT_TERM_MEMORY_COMPONENT_ID, updatedMem);
 }
 
 // Convenience default export
