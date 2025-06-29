@@ -63,6 +63,7 @@ import { GameStateValidationServiceForPrompting } from '../../validation/gameSta
 import { HttpConfigurationProvider } from '../../configuration/httpConfigurationProvider.js';
 import { LLMConfigService } from '../../llms/llmConfigService.js';
 import { LlmConfigLoader } from '../../llms/services/llmConfigLoader.js';
+import { LlmConfigCache } from '../../llms/services/LlmConfigCache.js';
 import { PlaceholderResolver } from '../../utils/placeholderResolverUtils.js';
 import { StandardElementAssembler } from '../../prompting/assembling/standardElementAssembler.js';
 import {
@@ -136,6 +137,9 @@ export function registerLlmInfrastructure(registrar, logger) {
     `AI Systems Registration: Registered ${tokens.LlmConfigLoader}.`
   );
 
+  registrar.singletonFactory(tokens.LlmConfigCache, () => new LlmConfigCache());
+  logger.debug(`AI Systems Registration: Registered ${tokens.LlmConfigCache}.`);
+
   registrar.singletonFactory(tokens.LLMAdapter, (c) => {
     logger.debug('AI Systems Registration: Starting LLM Adapter setup...');
     const environmentContext = new EnvironmentContext({
@@ -207,7 +211,8 @@ export function registerPromptingEngine(registrar, logger) {
   registrar.singletonFactory(tokens.LLMConfigService, (c) => {
     return new LLMConfigService({
       logger: c.resolve(tokens.ILogger),
-      configurationProvider: c.resolve(tokens.IConfigurationProvider),
+      loader: c.resolve(tokens.LlmConfigLoader),
+      cache: c.resolve(tokens.LlmConfigCache),
       configSourceIdentifier: './config/llm-configs.json',
     });
   });

@@ -71,6 +71,7 @@ import { freeze } from '../utils';
  * @property {DiToken} GameConfigLoader - Token for loading the main game configuration file.
  * @property {DiToken} PromptTextLoader - Token for loading the core prompt text used by the AI system.
  * @property {DiToken} LlmConfigLoader - Token for loading LLM prompt configurations.
+ * @property {DiToken} LlmConfigCache - Token for caching LLM configurations.
  * @property {DiToken} ModManifestLoader - Token for loading mod manifests.
  * @property {DiToken} ModDependencyValidator - Token for the mod dependency validator service.
  * @property {DiToken} ILoadCache - Token for the load cache service.
@@ -226,6 +227,7 @@ export const tokens = freeze({
   GameConfigLoader: 'GameConfigLoader',
   PromptTextLoader: 'PromptTextLoader',
   LlmConfigLoader: 'LlmConfigLoader',
+  LlmConfigCache: 'LlmConfigCache',
   ModManifestLoader: 'ModManifestLoader',
   ModDependencyValidator: 'ModDependencyValidator',
   ILoadCache: 'ILoadCache',

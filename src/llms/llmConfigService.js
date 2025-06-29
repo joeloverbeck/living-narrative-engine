@@ -6,11 +6,11 @@
  */
 
 /**
- * @typedef {import('../interfaces/IConfigurationProvider.js').IConfigurationProvider} IConfigurationProvider
+ * @typedef {import('./services/llmConfigLoader.js').LlmConfigLoader} LlmConfigLoader
  */
 
 /**
- * @typedef {import('../interfaces/IConfigurationProvider.js').RootLLMConfigsFile} RootLLMConfigsFile
+ * @typedef {import('./services/LlmConfigCache.js').LlmConfigCache} LlmConfigCache
  */
 
 /**
@@ -41,17 +41,24 @@
 
 /**
  * @class LLMConfigService
- * @description Manages the lifecycle of LLM configurations, including fetching, parsing,
- * validating, caching, and selection. It uses an IConfigurationProvider to abstract
- * the data source.
+ * @description Manages LLM configuration retrieval and selection. Configuration
+ * data is loaded through a {@link LlmConfigLoader} instance and cached via
+ * {@link LlmConfigCache}.
  */
 export class LLMConfigService {
   /**
    * @private
-   * @type {IConfigurationProvider}
-   * @description The provider instance for fetching configuration data.
+   * @type {LlmConfigLoader}
+   * @description Loader used to fetch and validate configuration data.
    */
-  #configurationProvider;
+  #loader;
+
+  /**
+   * @private
+   * @type {LlmConfigCache}
+   * @description Cache instance for storing configurations.
+   */
+  #cache;
 
   /**
    * @private
@@ -59,13 +66,6 @@ export class LLMConfigService {
    * @description Logger instance.
    */
   #logger;
-
-  /**
-   * @private
-   * @type {Map<string, LLMConfig>}
-   * @description Internal cache for storing loaded LLM configurations, keyed by configId.
-   */
-  #llmConfigsCache = new Map();
 
   /**
    * @private
@@ -85,23 +85,22 @@ export class LLMConfigService {
    * Creates an instance of LLMConfigService.
    *
    * @param {object} options - The options for the LLMConfigService.
-   * @param {IConfigurationProvider} options.configurationProvider - The configuration provider instance.
+   * @param {LlmConfigLoader} options.loader - Loader used to fetch configurations.
+   * @param {LlmConfigCache} options.cache - Cache instance for storing configurations.
    * @param {ILogger} options.logger - An ILogger instance for logging.
    * @param {string} [options.configSourceIdentifier] - Optional identifier for the configuration source.
    * @param {LLMConfig[]} [options.initialConfigs] - Optional array of LLM configurations to preload.
    */
   constructor(options) {
-    if (!options || !options.configurationProvider || !options.logger) {
-      // For robust error handling, especially in a library/service context,
-      // it's good to throw an error if critical dependencies are missing.
+    if (!options || !options.loader || !options.cache || !options.logger) {
       const errorMsg =
-        'LLMConfigService: configurationProvider and logger are required options.';
-      // Attempt to use logger if available even in error, or console.error as fallback
+        'LLMConfigService: loader, cache and logger are required options.';
       const logger = options && options.logger ? options.logger : console;
       logger.error(errorMsg);
       throw new Error(errorMsg);
     }
-    this.#configurationProvider = options.configurationProvider;
+    this.#loader = options.loader;
+    this.#cache = options.cache;
     this.#logger = options.logger;
     this.#configSourceIdentifier = options.configSourceIdentifier;
 
@@ -116,10 +115,10 @@ export class LLMConfigService {
           `LLMConfigService: Processing ${options.initialConfigs.length} initial configurations.`
         );
         this.addOrUpdateConfigs(options.initialConfigs, true); // Pass true to indicate these are initial
-        if (this.#llmConfigsCache.size > 0) {
+        if (this.#cache.getCache().size > 0) {
           this.#configsLoadedOrAttempted = true; // Mark as attempted if initial configs were successfully loaded
           this.#logger.debug(
-            `LLMConfigService: Successfully loaded ${this.#llmConfigsCache.size} initial configurations into cache.`
+            `LLMConfigService: Successfully loaded ${this.#cache.getCache().size} initial configurations into cache.`
           );
         } else {
           this.#logger.warn(
@@ -246,12 +245,12 @@ export class LLMConfigService {
 
     for (const config of configs) {
       if (this.#isValidConfig(config)) {
-        if (this.#llmConfigsCache.has(config.configId)) {
+        if (this.#cache.getCache().has(config.configId)) {
           updatedCount++;
         } else {
           addedCount++;
         }
-        this.#llmConfigsCache.set(config.configId, { ...config }); // Store a copy
+        this.#cache.addOrUpdateConfigs([config]);
         this.#logger.debug(
           `LLMConfigService.addOrUpdateConfigs: Successfully added/updated config: ${config.configId}`
         );
@@ -283,7 +282,7 @@ export class LLMConfigService {
       (addedCount > 0 || updatedCount > 0) &&
       !this.#configsLoadedOrAttempted
     ) {
-      if (this.#llmConfigsCache.size > 0) {
+      if (this.#cache.getCache().size > 0) {
         this.#logger.debug(
           'LLMConfigService.addOrUpdateConfigs: Configurations added programmatically. Marking cache as "loaded/attempted" to potentially bypass source loading if not explicitly reset.'
         );
@@ -313,87 +312,32 @@ export class LLMConfigService {
     this.#logger.debug(
       `LLMConfigService: Attempting to load configurations from source: ${this.#configSourceIdentifier}`
     );
-    let rawData;
 
     try {
-      rawData = await this.#configurationProvider.fetchData(
+      const result = await this.#loader.loadConfigs(
         this.#configSourceIdentifier
       );
-
-      if (
-        !rawData ||
-        typeof rawData !== 'object' ||
-        typeof rawData.configs !== 'object' ||
-        rawData.configs === null
-      ) {
-        this.#logger.error(
-          'LLMConfigService.#loadAndCacheConfigurationsFromSource: Fetched data is not in the expected RootLLMConfigsFile format or "configs" map is missing/invalid.',
-          {
-            source: this.#configSourceIdentifier,
-            receivedData: rawData,
-          }
-        );
-        this.#llmConfigsCache.clear();
-        throw new Error(
-          'Invalid configuration data structure received from provider.'
-        );
-      }
-
-      const configsObjectMap = rawData.configs;
-      this.#llmConfigsCache.clear();
-
-      let loadedCount = 0;
-      let invalidCount = 0;
-
-      for (const configKey in configsObjectMap) {
-        if (Object.prototype.hasOwnProperty.call(configsObjectMap, configKey)) {
-          const config = configsObjectMap[configKey];
-          if (this.#isValidConfig(config)) {
-            if (config.configId !== configKey) {
-              this.#logger.warn(
-                `LLMConfigService.#loadAndCacheConfigurationsFromSource: Config object's internal configId ("${config.configId}") does not match its key in the 'configs' map ("${configKey}") from source. Using internal configId.`,
-                {
-                  source: this.#configSourceIdentifier,
-                  key: configKey,
-                  configIdProperty: config.configId,
-                }
-              );
-            }
-            this.#llmConfigsCache.set(config.configId, { ...config });
-            loadedCount++;
-          } else {
-            invalidCount++;
-            this.#logger.warn(
-              `LLMConfigService.#loadAndCacheConfigurationsFromSource: Skipping invalid or incomplete configuration object during source load.`,
-              {
-                source: this.#configSourceIdentifier,
-                configKey,
-                configData: config,
-              }
-            );
-          }
-        }
-      }
-
-      if (loadedCount > 0) {
+      if (result && !result.error) {
+        const configsArray = Object.values(result.configs || {});
+        this.#cache.resetCache();
+        this.#cache.addOrUpdateConfigs(configsArray);
         this.#logger.debug(
-          `LLMConfigService.#loadAndCacheConfigurationsFromSource: Successfully loaded and cached ${loadedCount} configurations from ${this.#configSourceIdentifier}. ${invalidCount} invalid configs skipped.`
+          `LLMConfigService.#loadAndCacheConfigurationsFromSource: Successfully loaded and cached ${configsArray.length} configurations from ${this.#configSourceIdentifier}.`
         );
       } else {
-        this.#logger.warn(
-          `LLMConfigService.#loadAndCacheConfigurationsFromSource: No valid configurations found or loaded from the "configs" map in ${this.#configSourceIdentifier}. ${invalidCount} invalid configs skipped. Cache is empty.`
+        this.#cache.resetCache();
+        this.#logger.error(
+          `LLMConfigService.#loadAndCacheConfigurationsFromSource: ${result?.message || 'Unknown error loading configurations.'}`,
+          { details: result }
         );
       }
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
+      const message = error instanceof Error ? error.message : String(error);
       this.#logger.error(
-        `LLMConfigService.#loadAndCacheConfigurationsFromSource: Error loading or parsing configurations from ${this.#configSourceIdentifier}. Detail: ${errorMessage}`,
-        {
-          error, // include the original error object for more context if logger supports it
-        }
+        `LLMConfigService.#loadAndCacheConfigurationsFromSource: Error loading configurations from ${this.#configSourceIdentifier}. Detail: ${message}`,
+        { error }
       );
-      this.#llmConfigsCache.clear();
+      this.#cache.resetCache();
     } finally {
       this.#configsLoadedOrAttempted = true;
       this.#logger.debug(
@@ -415,14 +359,14 @@ export class LLMConfigService {
     this.#logger.debug(
       'LLMConfigService.#ensureConfigsLoaded: Check triggered.'
     );
-    if (this.#configsLoadedOrAttempted && this.#llmConfigsCache.size > 0) {
+    if (this.#configsLoadedOrAttempted && this.#cache.getCache().size > 0) {
       this.#logger.debug(
         'LLMConfigService.#ensureConfigsLoaded: Configurations previously loaded and cache is populated. Skipping load.'
       );
       return;
     }
 
-    if (this.#configsLoadedOrAttempted && this.#llmConfigsCache.size === 0) {
+    if (this.#configsLoadedOrAttempted && this.#cache.getCache().size === 0) {
       if (this.#configSourceIdentifier) {
         this.#logger.debug(
           'LLMConfigService.#ensureConfigsLoaded: Load previously attempted from source, but cache is empty (e.g., load failed or source had no valid data). Not re-attempting automatically.'
@@ -444,7 +388,7 @@ export class LLMConfigService {
           `LLMConfigService.#ensureConfigsLoaded: Source identifier "${this.#configSourceIdentifier}" is present. Attempting load.`
         );
         await this.#loadAndCacheConfigurationsFromSource();
-      } else if (this.#llmConfigsCache.size === 0) {
+      } else if (this.#cache.getCache().size === 0) {
         this.#logger.warn(
           'LLMConfigService.#ensureConfigsLoaded: No configSourceIdentifier set and no initial configurations were loaded. Cache is empty. Marking as loaded/attempted.'
         );
@@ -492,7 +436,7 @@ export class LLMConfigService {
       `LLMConfigService.getConfig: Searching for configuration with identifier: "${llmId}"`
     );
 
-    if (this.#llmConfigsCache.size === 0) {
+    if (this.#cache.getCache().size === 0) {
       this.#logger.warn(
         `LLMConfigService.getConfig: Cache is empty. Cannot find configuration for "${llmId}".`
       );
@@ -500,8 +444,8 @@ export class LLMConfigService {
     }
 
     // 1. Direct match by configId
-    if (this.#llmConfigsCache.has(llmId)) {
-      const config = this.#llmConfigsCache.get(llmId);
+    if (this.#cache.getCache().has(llmId)) {
+      const config = this.#cache.getConfig(llmId);
       this.#logger.debug(
         `LLMConfigService.getConfig: Found configuration by direct configId match for "${llmId}". ConfigId: "${config.configId}".`
       );
@@ -516,7 +460,7 @@ export class LLMConfigService {
     let bestWildcardMatchConfig = undefined;
     let longestWildcardPrefixLength = -1;
 
-    for (const config of this.#llmConfigsCache.values()) {
+    for (const config of this.#cache.getCache().values()) {
       // Check for exact modelIdentifier match
       if (config.modelIdentifier === llmId) {
         if (!exactModelMatchConfig) {
@@ -581,7 +525,7 @@ export class LLMConfigService {
    * @returns {void}
    */
   resetCache() {
-    this.#llmConfigsCache.clear();
+    this.#cache.resetCache();
     this.#configsLoadedOrAttempted = false;
     this.#logger.debug(
       'LLMConfigService: Cache cleared and loaded state reset. Configurations will be reloaded from source on next request if source is configured.'
@@ -599,7 +543,7 @@ export class LLMConfigService {
    * @returns {Map<string, LLMConfig>} The internal map of LLM configurations.
    */
   getLlmConfigsCacheForTest() {
-    return this.#llmConfigsCache;
+    return this.#cache.getCache();
   }
 
   /**
