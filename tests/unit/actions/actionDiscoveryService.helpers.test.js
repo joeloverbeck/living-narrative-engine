@@ -60,4 +60,41 @@ describe('ActionDiscoveryService helper methods', () => {
     expect(result.errors[0].actionId).toBe('b');
     await bed.cleanup();
   });
+
+  it('defaults to empty arrays when processor returns null', async () => {
+    const actionCandidateProcessor = {
+      process: jest.fn(() => null),
+    };
+    const bed = createActionDiscoveryBed({ actionCandidateProcessor });
+    setupBed(bed);
+    bed.mocks.actionIndex.getCandidateActions.mockReturnValue([defs[0]]);
+
+    const result = await bed.service.getValidActions(actor, {});
+
+    expect(result.actions).toHaveLength(0);
+    expect(result.errors).toHaveLength(0);
+    await bed.cleanup();
+  });
+
+  it('captures errors thrown by the processor', async () => {
+    const actionCandidateProcessor = {
+      process: jest.fn(() => {
+        throw new Error('boom');
+      }),
+    };
+    const bed = createActionDiscoveryBed({ actionCandidateProcessor });
+    setupBed(bed);
+    bed.mocks.actionIndex.getCandidateActions.mockReturnValue([defs[0]]);
+
+    const result = await bed.service.getValidActions(actor, {});
+
+    expect(result.actions).toHaveLength(0);
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors[0]).toMatchObject({
+      actionId: defs[0].id,
+      targetId: null,
+      error: expect.any(Error),
+    });
+    await bed.cleanup();
+  });
 });
