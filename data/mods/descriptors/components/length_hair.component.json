@@ -1,0 +1,17 @@
+{
+  "$schema": "http://example.com/schemas/component.schema.json",
+  "description": "Hair-specific length descriptors",
+  "data": {
+    "type": "object",
+    "properties": {
+      "length": {
+        "type": "string",
+        "description": "The hair length",
+        "enum": ["bald", "buzz", "short", "medium", "long", "very-long"],
+        "default": "medium"
+      }
+    },
+    "required": ["length"],
+    "additionalProperties": false
+  }
+}

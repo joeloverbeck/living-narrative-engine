@@ -16,6 +16,21 @@ import legAppearanceComponent from '../../../data/mods/anatomy/components/leg_ap
 import partComponent from '../../../data/mods/anatomy/components/part.component.json';
 import socketsComponent from '../../../data/mods/anatomy/components/sockets.component.json';
 
+// Import descriptor components
+import sizeCategoryComponent from '../../../data/mods/descriptors/components/size_category.component.json';
+import sizeSpecificComponent from '../../../data/mods/descriptors/components/size_specific.component.json';
+import firmnessComponent from '../../../data/mods/descriptors/components/firmness.component.json';
+import weightFeelComponent from '../../../data/mods/descriptors/components/weight_feel.component.json';
+import textureComponent from '../../../data/mods/descriptors/components/texture.component.json';
+import shapeGeneralComponent from '../../../data/mods/descriptors/components/shape_general.component.json';
+import shapeEyeComponent from '../../../data/mods/descriptors/components/shape_eye.component.json';
+import buildComponent from '../../../data/mods/descriptors/components/build.component.json';
+import lengthCategoryComponent from '../../../data/mods/descriptors/components/length_category.component.json';
+import lengthHairComponent from '../../../data/mods/descriptors/components/length_hair.component.json';
+import colorBasicComponent from '../../../data/mods/descriptors/components/color_basic.component.json';
+import colorExtendedComponent from '../../../data/mods/descriptors/components/color_extended.component.json';
+import hairStyleComponent from '../../../data/mods/descriptors/components/hair_style.component.json';
+
 import humanBreastDCup from '../../../data/mods/anatomy/entities/definitions/human_breast_d_cup.entity.json';
 import humanEye from '../../../data/mods/anatomy/entities/definitions/human_eye.entity.json';
 import humanEyeBlue from '../../../data/mods/anatomy/entities/definitions/human_eye_blue.entity.json';
@@ -51,6 +66,23 @@ describe('Gorgeous MILF Anatomy Generation Integration Test', () => {
     testBed.loadComponents({
       'core:name': nameComponent,
       'core:description': descriptionComponent,
+    });
+
+    // Load descriptor components
+    testBed.loadComponents({
+      'descriptors:size_category': sizeCategoryComponent,
+      'descriptors:size_specific': sizeSpecificComponent,
+      'descriptors:firmness': firmnessComponent,
+      'descriptors:weight_feel': weightFeelComponent,
+      'descriptors:texture': textureComponent,
+      'descriptors:shape_general': shapeGeneralComponent,
+      'descriptors:shape_eye': shapeEyeComponent,
+      'descriptors:build': buildComponent,
+      'descriptors:length_category': lengthCategoryComponent,
+      'descriptors:length_hair': lengthHairComponent,
+      'descriptors:color_basic': colorBasicComponent,
+      'descriptors:color_extended': colorExtendedComponent,
+      'descriptors:hair_style': hairStyleComponent,
     });
 
     // Load anatomy components
@@ -148,9 +180,12 @@ describe('Gorgeous MILF Anatomy Generation Integration Test', () => {
     expect(eyes.length).toBe(2); // Should have exactly 2 eyes
 
     for (const eyeId of eyes) {
-      const eyeAppearance = getPartComponent(eyeId, 'anatomy:eye_appearance');
-      expect(eyeAppearance).toBeDefined();
-      expect(eyeAppearance.color).toBe('blue'); // Cobalt blue maps to "blue" in the enum
+      const eyeColor = getPartComponent(eyeId, 'descriptors:color_extended');
+      const eyeShape = getPartComponent(eyeId, 'descriptors:shape_eye');
+      expect(eyeColor).toBeDefined();
+      expect(eyeColor.color).toBe('cobalt');
+      expect(eyeShape).toBeDefined();
+      expect(eyeShape.shape).toBe('almond');
       
       // Verify it's the cobalt eye entity
       const eyeEntity = entityManager.getEntityInstance(eyeId);
@@ -161,20 +196,30 @@ describe('Gorgeous MILF Anatomy Generation Integration Test', () => {
     const hair = findPartsByType('hair');
     expect(hair.length).toBe(1); // Should have exactly 1 hair
 
-    const hairAppearance = getPartComponent(hair[0], 'anatomy:hair_appearance');
-    expect(hairAppearance).toBeDefined();
-    expect(hairAppearance.color).toBe('raven-black');
-    expect(hairAppearance.length).toBe('long');
+    const hairColor = getPartComponent(hair[0], 'descriptors:color_extended');
+    const hairLength = getPartComponent(hair[0], 'descriptors:length_hair');
+    const hairStyle = getPartComponent(hair[0], 'descriptors:hair_style');
+    expect(hairColor).toBeDefined();
+    expect(hairColor.color).toBe('raven-black');
+    expect(hairLength).toBeDefined();
+    expect(hairLength.length).toBe('long');
+    expect(hairStyle).toBeDefined();
+    expect(hairStyle.style).toBe('straight');
 
     // Test 3: Verify D-cup meaty breasts
     const breasts = findPartsByType('breast');
     expect(breasts.length).toBe(2); // Should have exactly 2 breasts
 
     for (const breastId of breasts) {
-      const breastAppearance = getPartComponent(breastId, 'anatomy:breast_appearance');
-      expect(breastAppearance).toBeDefined();
-      expect(breastAppearance.size).toBe('D-cup');
-      expect(breastAppearance.descriptor).toBe('meaty');
+      const breastSize = getPartComponent(breastId, 'descriptors:size_specific');
+      const breastWeight = getPartComponent(breastId, 'descriptors:weight_feel');
+      const breastFirmness = getPartComponent(breastId, 'descriptors:firmness');
+      expect(breastSize).toBeDefined();
+      expect(breastSize.size).toBe('D-cup');
+      expect(breastWeight).toBeDefined();
+      expect(breastWeight.weight).toBe('meaty');
+      expect(breastFirmness).toBeDefined();
+      expect(breastFirmness.firmness).toBe('firm');
     }
 
     // Test 4: Verify long shapely legs
@@ -182,10 +227,12 @@ describe('Gorgeous MILF Anatomy Generation Integration Test', () => {
     expect(legs.length).toBe(2); // Should have exactly 2 legs
 
     for (const legId of legs) {
-      const legAppearance = getPartComponent(legId, 'anatomy:leg_appearance');
-      expect(legAppearance).toBeDefined();
-      expect(legAppearance.length).toBe('long');
-      expect(legAppearance.descriptor).toBe('shapely');
+      const legLength = getPartComponent(legId, 'descriptors:length_category');
+      const legBuild = getPartComponent(legId, 'descriptors:build');
+      expect(legLength).toBeDefined();
+      expect(legLength.length).toBe('long');
+      expect(legBuild).toBeDefined();
+      expect(legBuild.build).toBe('shapely');
     }
 
     // Test 5: Verify all parts are properly connected
@@ -245,16 +292,23 @@ describe('Gorgeous MILF Anatomy Generation Integration Test', () => {
 
     // Verify property requirements
     expect(recipe.slots.legs.properties).toMatchObject({
-      'anatomy:leg_appearance': {
+      'descriptors:length_category': {
         length: 'long',
-        descriptor: 'shapely',
+      },
+      'descriptors:build': {
+        build: 'shapely',
       },
     });
 
     expect(recipe.slots.breasts.properties).toMatchObject({
-      'anatomy:breast_appearance': {
+      'descriptors:size_specific': {
         size: 'D-cup',
-        descriptor: 'meaty',
+      },
+      'descriptors:weight_feel': {
+        weight: 'meaty',
+      },
+      'descriptors:firmness': {
+        firmness: 'firm',
       },
     });
   });

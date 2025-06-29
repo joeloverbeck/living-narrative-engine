@@ -1,0 +1,17 @@
+{
+  "$schema": "http://example.com/schemas/component.schema.json",
+  "description": "General size categories applicable to various objects and features",
+  "data": {
+    "type": "object",
+    "properties": {
+      "size": {
+        "type": "string",
+        "description": "The general size category",
+        "enum": ["tiny", "small", "medium", "large", "huge", "massive"],
+        "default": "medium"
+      }
+    },
+    "required": ["size"],
+    "additionalProperties": false
+  }
+}

@@ -6,8 +6,10 @@
     "anatomy:part": {
       "subType": "eye"
     },
-    "anatomy:eye_appearance": {
-      "color": "blue",
+    "descriptors:color_extended": {
+      "color": "cobalt"
+    },
+    "descriptors:shape_eye": {
       "shape": "almond"
     },
     "core:name": {

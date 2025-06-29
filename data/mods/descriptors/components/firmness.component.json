@@ -1,0 +1,17 @@
+{
+  "$schema": "http://example.com/schemas/component.schema.json",
+  "description": "Describes the firmness or rigidity of an object or body part",
+  "data": {
+    "type": "object",
+    "properties": {
+      "firmness": {
+        "type": "string",
+        "description": "The firmness level",
+        "enum": ["soft", "pliant", "firm", "hard", "rigid"],
+        "default": "firm"
+      }
+    },
+    "required": ["firmness"],
+    "additionalProperties": false
+  }
+}

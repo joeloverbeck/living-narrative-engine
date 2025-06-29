@@ -5,6 +5,12 @@
   "name": "Anatomy System",
   "description": "Provides entity anatomy system with body parts, blueprints, and recipes for humanoid characters.",
   "author": "joeloverbeck",
+  "dependencies": [
+    {
+      "id": "descriptors",
+      "version": "^1.0.0"
+    }
+  ],
   "gameVersion": ">=0.0.1",
   "content": {
     "components": [
@@ -24,6 +30,7 @@
         "human_eye_blue.entity.json",
         "human_eye_brown.entity.json",
         "human_eye_cobalt.entity.json",
+        "human_female.entity.json",
         "human_hair_raven.entity.json",
         "human_leg_shapely.entity.json",
         "humanoid_arm.entity.json",

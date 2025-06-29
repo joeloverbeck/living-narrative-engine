@@ -6,9 +6,13 @@
     "anatomy:part": {
       "subType": "hair"
     },
-    "anatomy:hair_appearance": {
-      "color": "raven-black",
-      "length": "long",
+    "descriptors:color_extended": {
+      "color": "raven-black"
+    },
+    "descriptors:length_hair": {
+      "length": "long"
+    },
+    "descriptors:hair_style": {
       "style": "straight"
     },
     "core:name": {

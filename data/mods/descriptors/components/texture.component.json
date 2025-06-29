@@ -1,0 +1,17 @@
+{
+  "$schema": "http://example.com/schemas/component.schema.json",
+  "description": "Describes the surface texture of an object",
+  "data": {
+    "type": "object",
+    "properties": {
+      "texture": {
+        "type": "string",
+        "description": "The surface texture",
+        "enum": ["smooth", "rough", "silky", "coarse", "bumpy", "velvety"],
+        "default": "smooth"
+      }
+    },
+    "required": ["texture"],
+    "additionalProperties": false
+  }
+}

@@ -20,8 +20,11 @@
         "left_eye": {
           "partType": "eye",
           "properties": {
-            "anatomy:eye_appearance": {
+            "descriptors:color_extended": {
               "color": "blue"
+            },
+            "descriptors:shape_eye": {
+              "shape": "round"
             }
           },
           "count": {
@@ -31,8 +34,11 @@
         "right_eye": {
           "partType": "eye",
           "properties": {
-            "anatomy:eye_appearance": {
+            "descriptors:color_extended": {
               "color": "blue"
+            },
+            "descriptors:shape_eye": {
+              "shape": "round"
             }
           },
           "count": {

@@ -1,0 +1,17 @@
+{
+  "$schema": "http://example.com/schemas/component.schema.json",
+  "description": "Describes the perceived weight or density of an object",
+  "data": {
+    "type": "object",
+    "properties": {
+      "weight": {
+        "type": "string",
+        "description": "The perceived weight",
+        "enum": ["light", "moderate", "heavy", "meaty", "full", "hollow"],
+        "default": "moderate"
+      }
+    },
+    "required": ["weight"],
+    "additionalProperties": false
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "$schema": "http://example.com/schemas/component.schema.json",
+  "description": "General length categories applicable to various features",
+  "data": {
+    "type": "object",
+    "properties": {
+      "length": {
+        "type": "string",
+        "description": "The length category",
+        "enum": ["very-short", "short", "average", "long", "very-long"],
+        "default": "average"
+      }
+    },
+    "required": ["length"],
+    "additionalProperties": false
+  }
+}

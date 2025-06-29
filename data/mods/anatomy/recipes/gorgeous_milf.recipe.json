@@ -21,8 +21,11 @@
           "partType": "eye",
           "preferId": "anatomy:human_eye_cobalt",
           "properties": {
-            "anatomy:eye_appearance": {
-              "color": "blue"
+            "descriptors:color_extended": {
+              "color": "cobalt"
+            },
+            "descriptors:shape_eye": {
+              "shape": "almond"
             }
           },
           "count": {
@@ -33,8 +36,11 @@
           "partType": "eye",
           "preferId": "anatomy:human_eye_cobalt",
           "properties": {
-            "anatomy:eye_appearance": {
-              "color": "blue"
+            "descriptors:color_extended": {
+              "color": "cobalt"
+            },
+            "descriptors:shape_eye": {
+              "shape": "almond"
             }
           },
           "count": {
@@ -45,9 +51,14 @@
           "partType": "hair",
           "preferId": "anatomy:human_hair_raven",
           "properties": {
-            "anatomy:hair_appearance": {
-              "color": "raven-black",
+            "descriptors:color_extended": {
+              "color": "raven-black"
+            },
+            "descriptors:length_hair": {
               "length": "long"
+            },
+            "descriptors:hair_style": {
+              "style": "straight"
             }
           },
           "count": {
@@ -67,9 +78,11 @@
       "partType": "leg",
       "preferId": "anatomy:human_leg_shapely",
       "properties": {
-        "anatomy:leg_appearance": {
-          "length": "long",
-          "descriptor": "shapely"
+        "descriptors:length_category": {
+          "length": "long"
+        },
+        "descriptors:build": {
+          "build": "shapely"
         }
       },
       "count": {
@@ -80,9 +93,14 @@
       "partType": "breast",
       "preferId": "anatomy:human_breast_d_cup",
       "properties": {
-        "anatomy:breast_appearance": {
-          "size": "D-cup",
-          "descriptor": "meaty"
+        "descriptors:size_specific": {
+          "size": "D-cup"
+        },
+        "descriptors:weight_feel": {
+          "weight": "meaty"
+        },
+        "descriptors:firmness": {
+          "firmness": "firm"
         }
       },
       "count": {

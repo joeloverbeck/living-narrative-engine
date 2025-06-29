@@ -1,0 +1,15 @@
+{
+  "$schema": "http://example.com/schemas/component.schema.json",
+  "description": "Context-specific size descriptors (e.g., cup sizes for anatomy)",
+  "data": {
+    "type": "object",
+    "properties": {
+      "size": {
+        "type": "string",
+        "description": "The specific size descriptor"
+      }
+    },
+    "required": ["size"],
+    "additionalProperties": false
+  }
+}

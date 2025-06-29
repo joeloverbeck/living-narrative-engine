@@ -19,7 +19,8 @@
       "Bash(mv:*)",
       "Bash(npm run build:*)",
       "Bash(ls:*)",
-      "Bash(timeout 30 npm test:*)"
+      "Bash(timeout 30 npm test:*)",
+      "Bash(npm run update-manifest:*)"
     ],
     "deny": []
   }

@@ -1,0 +1,26 @@
+{
+  "$schema": "http://example.com/schemas/mod-manifest.schema.json",
+  "id": "descriptors",
+  "name": "Descriptors",
+  "version": "1.0.0",
+  "description": "Provides general-purpose descriptor components for physical properties, sizes, shapes, colors, and styles that can be reused across different game systems",
+  "author": "Living Narrative Engine",
+  "dependencies": [],
+  "content": {
+    "components": [
+      "build.component.json",
+      "color_basic.component.json",
+      "color_extended.component.json",
+      "firmness.component.json",
+      "hair_style.component.json",
+      "length_category.component.json",
+      "length_hair.component.json",
+      "shape_eye.component.json",
+      "shape_general.component.json",
+      "size_category.component.json",
+      "size_specific.component.json",
+      "texture.component.json",
+      "weight_feel.component.json"
+    ]
+  }
+}
