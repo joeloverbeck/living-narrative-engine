@@ -4,6 +4,7 @@ import {
   requireContextActor,
   getLoggerAndClass,
   buildWrongDirectiveMessage,
+  resolveTurnEndError,
 } from '../../../src/turns/strategies/strategyHelpers.js';
 
 describe('strategyHelpers', () => {
@@ -103,6 +104,28 @@ describe('strategyHelpers', () => {
       const msg = buildWrongDirectiveMessage('MyClass', 'BAD', 'GOOD');
       expect(msg).toBe(
         'MyClass: Received wrong directive (BAD). Expected GOOD.'
+      );
+    });
+  });
+
+  describe('resolveTurnEndError', () => {
+    it('returns error from command result when instance of Error', () => {
+      const error = new Error('boom');
+      const result = resolveTurnEndError({ error }, 'a1', 'DIR');
+      expect(result).toBe(error);
+    });
+
+    it('wraps non-error value from command result', () => {
+      const result = resolveTurnEndError({ error: 'oops' }, 'a1', 'DIR');
+      expect(result).toBeInstanceOf(Error);
+      expect(result.message).toBe('oops');
+    });
+
+    it('creates default message when no error provided', () => {
+      const result = resolveTurnEndError({}, 'actor42', 'END_TURN');
+      expect(result).toBeInstanceOf(Error);
+      expect(result.message).toBe(
+        "Turn for actor actor42 ended by directive 'END_TURN' (failure)."
       );
     });
   });

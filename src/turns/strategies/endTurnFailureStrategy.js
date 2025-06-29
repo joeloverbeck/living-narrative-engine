@@ -14,6 +14,7 @@ import {
   assertDirective,
   requireContextActor,
   getLoggerAndClass,
+  resolveTurnEndError,
 } from './strategyHelpers.js';
 
 export default class EndTurnFailureStrategy extends ITurnDirectiveStrategy {
@@ -52,21 +53,11 @@ export default class EndTurnFailureStrategy extends ITurnDirectiveStrategy {
     // The original check `if (!contextActor || contextActor.id !== actor.id)` is simplified
     // as the explicit `actor` parameter is removed. The primary concern is now whether `contextActor` exists.
 
-    let turnEndError;
-    if (cmdProcResult?.error instanceof Error) {
-      turnEndError = cmdProcResult.error;
-    } else if (
-      cmdProcResult?.error !== undefined &&
-      cmdProcResult?.error !== null
-    ) {
-      // If cmdProcResult.error is present but not an Error instance, wrap it in an Error.
-      turnEndError = new Error(String(cmdProcResult.error));
-    } else {
-      // Default error message if cmdProcResult.error is missing or not an Error instance.
-      turnEndError = new Error(
-        `Turn for actor ${contextActor.id} ended by directive '${directive}' (failure).`
-      );
-    }
+    const turnEndError = resolveTurnEndError(
+      cmdProcResult,
+      contextActor.id,
+      directive
+    );
 
     logger.info(
       `${className}: Executing END_TURN_FAILURE for actor ${contextActor.id}. Error: ${turnEndError.message}`
