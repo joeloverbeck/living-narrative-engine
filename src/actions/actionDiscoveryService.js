@@ -166,6 +166,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
   async getValidActions(actorEntity, baseContext = {}, options = {}) {
     const { trace: shouldTrace = false } = options;
     const trace = shouldTrace ? this.#traceContextFactory() : null;
+    const SOURCE = 'getValidActions';
 
     if (!actorEntity || typeof actorEntity.id !== 'string') {
       this.#logger.error('getValidActions called with invalid actor entity.');
@@ -174,7 +175,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
 
     trace?.info(
       `Starting action discovery for actor '${actorEntity.id}'.`,
-      'getValidActions',
+      SOURCE,
       { withTrace: shouldTrace }
     );
 
@@ -210,7 +211,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     );
     trace?.info(
       `Finished discovery. Found ${actions.length} valid actions.`,
-      'getValidActions'
+      SOURCE
     );
 
     return { actions, errors, trace };
