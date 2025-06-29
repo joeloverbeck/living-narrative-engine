@@ -1,6 +1,6 @@
 // src/loaders/anatomyRecipeLoader.js
 
-import { BaseManifestItemLoader } from './baseManifestItemLoader.js';
+import { SimpleItemLoader } from './simpleItemLoader.js';
 import { processAndStoreItem } from './helpers/processAndStoreItem.js';
 import { parseAndValidateId } from '../utils/idUtils.js';
 
@@ -17,7 +17,7 @@ import { parseAndValidateId } from '../utils/idUtils.js';
  *
  * @augments BaseManifestItemLoader
  */
-class AnatomyRecipeLoader extends BaseManifestItemLoader {
+class AnatomyRecipeLoader extends SimpleItemLoader {
   constructor(
     config,
     pathResolver,

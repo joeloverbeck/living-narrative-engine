@@ -4,8 +4,7 @@
  */
 
 // --- Base Class Import ---
-import { BaseManifestItemLoader } from './baseManifestItemLoader.js';
-import { processAndStoreItem } from './helpers/processAndStoreItem.js';
+import { SimpleItemLoader } from './simpleItemLoader.js';
 
 /** @typedef {import('../interfaces/coreServices.js').IConfiguration} IConfiguration */
 /** @typedef {import('../interfaces/coreServices.js').IPathResolver} IPathResolver */
@@ -19,7 +18,7 @@ import { processAndStoreItem } from './helpers/processAndStoreItem.js';
  *
  * @augments BaseManifestItemLoader
  */
-class ActionLoader extends BaseManifestItemLoader {
+class ActionLoader extends SimpleItemLoader {
   /**
    * @param {IConfiguration} config - Configuration service instance.
    * @param {IPathResolver} pathResolver - Path resolution service instance.
@@ -45,38 +44,6 @@ class ActionLoader extends BaseManifestItemLoader {
       dataRegistry,
       logger
     );
-  }
-
-  /**
-   * Processes a single fetched action file's data and stores it in the registry.
-   * Delegates ID parsing and storage to {@link processAndStoreItem}.
-   *
-   * @override
-   * @protected
-   * @param {string} modId
-   * @param {string} filename
-   * @param {string} resolvedPath
-   * @param {any} data
-   * @param {string} registryKey
-   * @returns {Promise<{qualifiedId: string, didOverride: boolean}>}
-   */
-  async _processFetchedItem(modId, filename, resolvedPath, data, registryKey) {
-    this._logger.debug(
-      `ActionLoader [${modId}]: Processing fetched item: ${filename} (Type: ${registryKey})`
-    );
-
-    const { qualifiedId, didOverride } = await processAndStoreItem(this, {
-      data,
-      idProp: 'id',
-      category: 'actions',
-      modId,
-      filename,
-    });
-
-    this._logger.debug(
-      `ActionLoader [${modId}]: Successfully processed action from ${filename}. Returning final registry key: ${qualifiedId}, Overwrite: ${didOverride}`
-    );
-    return { qualifiedId, didOverride };
   }
 }
 

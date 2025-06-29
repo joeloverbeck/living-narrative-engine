@@ -13,8 +13,7 @@
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 
 // --- Base Class and Helper Import ---
-import { BaseManifestItemLoader } from './baseManifestItemLoader.js';
-import { processAndStoreItem } from './helpers/processAndStoreItem.js';
+import { SimpleItemLoader } from './simpleItemLoader.js';
 
 /**
  * Loads reusable condition definitions from mods.
@@ -24,7 +23,7 @@ import { processAndStoreItem } from './helpers/processAndStoreItem.js';
  * @class ConditionLoader
  * @augments BaseManifestItemLoader
  */
-class ConditionLoader extends BaseManifestItemLoader {
+class ConditionLoader extends SimpleItemLoader {
   /**
    * Creates an instance of ConditionLoader.
    * Passes dependencies and the specific contentType 'conditions' to the base class constructor.
@@ -53,39 +52,6 @@ class ConditionLoader extends BaseManifestItemLoader {
       dataRegistry,
       logger
     );
-  }
-
-  /**
-   * Processes a single fetched condition file's data.
-   *
-   * @override
-   * @protected
-   * @param {string} modId
-   * @param {string} filename
-   * @param {string} resolvedPath
-   * @param {any} data
-   * @param {string} registryKey - The content type registry key ('conditions').
-   * @returns {Promise<{qualifiedId: string, didOverride: boolean}>}
-   */
-  async _processFetchedItem(modId, filename, resolvedPath, data, registryKey) {
-    this._logger.debug(
-      `ConditionLoader [${modId}]: Processing item: ${filename} (Type: ${registryKey})`
-    );
-
-    // Delegate all processing to the generic helper function.
-    // It will use the 'id' property for the ID and store it in the 'conditions' category.
-    const { qualifiedId, didOverride } = await processAndStoreItem(this, {
-      data,
-      idProp: 'id',
-      category: 'conditions',
-      modId,
-      filename,
-    });
-
-    this._logger.debug(
-      `ConditionLoader [${modId}]: Successfully processed condition from ${filename}. Returning final registry key: ${qualifiedId}, Overwrite: ${didOverride}`
-    );
-    return { qualifiedId, didOverride };
   }
 }
 

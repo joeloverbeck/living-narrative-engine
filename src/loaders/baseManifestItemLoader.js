@@ -20,6 +20,7 @@ import { extractValidFilenames } from '../utils/filenameUtils.js';
 import { summarizeSettledResults } from './helpers/resultsSummary.js';
 import { validateLoadItemsParams } from './helpers/validationHelpers.js';
 import { processFileWrapper } from './helpers/fileProcessing.js';
+import { validateNonEmptyString } from '../utils/stringValidation.js';
 
 // --- Add LoadItemsResult typedef here for clarity ---
 /**
@@ -143,12 +144,15 @@ export class BaseManifestItemLoader extends AbstractLoader {
     );
     super(logger);
 
-    if (typeof contentType !== 'string' || contentType.trim() === '') {
+    const trimmedContentType = validateNonEmptyString(
+      'contentType',
+      contentType
+    );
+    if (trimmedContentType === null) {
       const errorMsg = `BaseManifestItemLoader requires a non-empty string for 'contentType'. Received: ${contentType}`;
       this._logger.error(errorMsg);
       throw new TypeError(errorMsg);
     }
-    const trimmedContentType = contentType.trim();
 
     // --- Store Dependencies ---
     this._config = config;

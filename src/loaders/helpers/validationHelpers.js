@@ -3,6 +3,7 @@
  */
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
+import { validateNonEmptyString } from '../../utils/stringValidation.js';
 
 /**
  * Validates parameters for {@link BaseManifestItemLoader.loadItemsForMod}.
@@ -27,12 +28,12 @@ export function validateLoadItemsParams(
   diskFolder,
   registryKey
 ) {
-  if (typeof modId !== 'string' || modId.trim() === '') {
+  const trimmedModId = validateNonEmptyString('modId', modId);
+  if (trimmedModId === null) {
     const msg = `${className}: Programming Error - Invalid 'modId' provided for loading content. Must be a non-empty string. Received: ${modId}`;
     logger.error(msg);
     throw new TypeError(msg);
   }
-  const trimmedModId = modId.trim();
 
   if (!modManifest || typeof modManifest !== 'object') {
     const msg = `${className}: Programming Error - Invalid 'modManifest' provided for loading content for mod '${trimmedModId}'. Must be a non-null object. Received: ${modManifest}`;
@@ -40,26 +41,26 @@ export function validateLoadItemsParams(
     throw new TypeError(msg);
   }
 
-  if (typeof contentKey !== 'string' || contentKey.trim() === '') {
+  const trimmedContentKey = validateNonEmptyString('contentKey', contentKey);
+  if (trimmedContentKey === null) {
     const msg = `${className}: Programming Error - Invalid 'contentKey' provided for loading ${registryKey} for mod '${trimmedModId}'. Must be a non-empty string. Received: ${contentKey}`;
     logger.error(msg);
     throw new TypeError(msg);
   }
-  const trimmedContentKey = contentKey.trim();
 
-  if (typeof diskFolder !== 'string' || diskFolder.trim() === '') {
+  const trimmedDiskFolder = validateNonEmptyString('diskFolder', diskFolder);
+  if (trimmedDiskFolder === null) {
     const msg = `${className}: Programming Error - Invalid 'diskFolder' provided for loading ${registryKey} for mod '${trimmedModId}'. Must be a non-empty string. Received: ${diskFolder}`;
     logger.error(msg);
     throw new TypeError(msg);
   }
-  const trimmedDiskFolder = diskFolder.trim();
 
-  if (typeof registryKey !== 'string' || registryKey.trim() === '') {
+  const trimmedRegistryKey = validateNonEmptyString('registryKey', registryKey);
+  if (trimmedRegistryKey === null) {
     const msg = `${className}: Programming Error - Invalid 'registryKey' provided for loading content for mod '${trimmedModId}'. Must be a non-empty string. Received: ${registryKey}`;
     logger.error(msg);
     throw new TypeError(msg);
   }
-  const trimmedRegistryKey = registryKey.trim();
 
   return {
     modId: trimmedModId,

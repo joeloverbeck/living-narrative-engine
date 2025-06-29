@@ -9,18 +9,16 @@ import { Registrar } from '../../../../src/utils/registrarHelpers.js';
 // We create mock functions for each of its methods that we expect `registerUI` to call.
 const mockRegister = jest.fn();
 jest.mock('../../../../src/utils/registrarHelpers.js', () => {
+  const registerWithLog = jest.fn((registrar, token, factory, options) => {
+    registrar.register(token, factory, options);
+  });
   return {
     Registrar: jest.fn().mockImplementation(() => {
       return { register: mockRegister, singletonFactory: jest.fn() };
     }),
+    registerWithLog,
   };
 });
-
-jest.mock('../../../../src/dependencyInjection/registrarHelpers.js', () => ({
-  registerWithLog: jest.fn((registrar, token, factory, options) => {
-    registrar.register(token, factory, options);
-  }),
-}));
 
 describe('registerUI', () => {
   let mockContainer;
