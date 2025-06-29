@@ -168,7 +168,11 @@ export function registerWorldAndEntity(container) {
   registrar.singletonFactory(tokens.EntityAccessService, (c) => {
     return {
       resolveEntity: (entityOrId) =>
-        resolveEntity(entityOrId, c.resolve(tokens.IEntityManager), c.resolve(tokens.ILogger)),
+        resolveEntity(
+          entityOrId,
+          c.resolve(tokens.IEntityManager),
+          c.resolve(tokens.ILogger)
+        ),
       getComponent: (entityOrId, componentId, options = {}) =>
         getComponent(entityOrId, componentId, {
           entityManager: c.resolve(tokens.IEntityManager),
@@ -247,9 +251,11 @@ export function registerWorldAndEntity(container) {
   // --- Anatomy Description Services ---
   registrar.singletonFactory(tokens.AnatomyFormattingService, (c) => {
     // Get mod load order from game config
-    const gameConfig = c.resolve(tokens.IDataRegistry).get('gameConfig', 'game');
+    const gameConfig = c
+      .resolve(tokens.IDataRegistry)
+      .get('gameConfig', 'game');
     const modLoadOrder = gameConfig?.mods || [];
-    
+
     return new AnatomyFormattingService({
       dataRegistry: c.resolve(tokens.IDataRegistry),
       logger: c.resolve(tokens.ILogger),

@@ -1,5 +1,8 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
-import { BodyGraphService, LIMB_DETACHED_EVENT_ID } from '../../../src/anatomy/bodyGraphService.js';
+import {
+  BodyGraphService,
+  LIMB_DETACHED_EVENT_ID,
+} from '../../../src/anatomy/bodyGraphService.js';
 import { InvalidArgumentError } from '../../../src/errors/invalidArgumentError.js';
 
 describe('BodyGraphService', () => {
@@ -38,18 +41,33 @@ describe('BodyGraphService', () => {
 
   describe('constructor', () => {
     it('should throw error if entityManager is not provided', () => {
-      expect(() => new BodyGraphService({ logger: mockLogger, eventDispatcher: mockEventDispatcher }))
-        .toThrow(InvalidArgumentError);
+      expect(
+        () =>
+          new BodyGraphService({
+            logger: mockLogger,
+            eventDispatcher: mockEventDispatcher,
+          })
+      ).toThrow(InvalidArgumentError);
     });
 
     it('should throw error if logger is not provided', () => {
-      expect(() => new BodyGraphService({ entityManager: mockEntityManager, eventDispatcher: mockEventDispatcher }))
-        .toThrow(InvalidArgumentError);
+      expect(
+        () =>
+          new BodyGraphService({
+            entityManager: mockEntityManager,
+            eventDispatcher: mockEventDispatcher,
+          })
+      ).toThrow(InvalidArgumentError);
     });
 
     it('should throw error if eventDispatcher is not provided', () => {
-      expect(() => new BodyGraphService({ entityManager: mockEntityManager, logger: mockLogger }))
-        .toThrow(InvalidArgumentError);
+      expect(
+        () =>
+          new BodyGraphService({
+            entityManager: mockEntityManager,
+            logger: mockLogger,
+          })
+      ).toThrow(InvalidArgumentError);
     });
   });
 
@@ -67,20 +85,28 @@ describe('BodyGraphService', () => {
         throw new Error(`Entity ${id} not found`);
       });
 
-      mockEntityManager.getComponentData.mockImplementation((id, componentId) => {
-        if (componentId === 'anatomy:part') {
-          if (id === 'torso-1') return { subType: 'torso' };
-          if (id === 'head-1') return { subType: 'head' };
-          if (id === 'arm-1') return { subType: 'arm' };
+      mockEntityManager.getComponentData.mockImplementation(
+        (id, componentId) => {
+          if (componentId === 'anatomy:part') {
+            if (id === 'torso-1') return { subType: 'torso' };
+            if (id === 'head-1') return { subType: 'head' };
+            if (id === 'arm-1') return { subType: 'arm' };
+          }
+          if (componentId === 'anatomy:joint') {
+            if (id === 'head-1')
+              return { parentId: 'torso-1', socketId: 'neck' };
+            if (id === 'arm-1')
+              return { parentId: 'torso-1', socketId: 'shoulder' };
+          }
+          return null;
         }
-        if (componentId === 'anatomy:joint') {
-          if (id === 'head-1') return { parentId: 'torso-1', socketId: 'neck' };
-          if (id === 'arm-1') return { parentId: 'torso-1', socketId: 'shoulder' };
-        }
-        return null;
-      });
+      );
 
-      mockEntityManager.getAllEntities.mockReturnValue([torsoEntity, headEntity, armEntity]);
+      mockEntityManager.getAllEntities.mockReturnValue([
+        torsoEntity,
+        headEntity,
+        armEntity,
+      ]);
 
       // Act
       service.buildAdjacencyCache('torso-1');
@@ -117,14 +143,18 @@ describe('BodyGraphService', () => {
         throw new Error(`Entity ${id} not found`);
       });
 
-      mockEntityManager.getComponentData.mockImplementation((id, componentId) => {
-        if (componentId === 'anatomy:joint') {
-          // Create a cycle
-          if (id === 'entity-1') return { parentId: 'entity-2', socketId: 'socket1' };
-          if (id === 'entity-2') return { parentId: 'entity-1', socketId: 'socket2' };
+      mockEntityManager.getComponentData.mockImplementation(
+        (id, componentId) => {
+          if (componentId === 'anatomy:joint') {
+            // Create a cycle
+            if (id === 'entity-1')
+              return { parentId: 'entity-2', socketId: 'socket1' };
+            if (id === 'entity-2')
+              return { parentId: 'entity-1', socketId: 'socket2' };
+          }
+          return null;
         }
-        return null;
-      });
+      );
 
       mockEntityManager.getAllEntities.mockReturnValue([entity1, entity2]);
 
@@ -162,20 +192,28 @@ describe('BodyGraphService', () => {
         throw new Error(`Entity ${id} not found`);
       });
 
-      mockEntityManager.getComponentData.mockImplementation((id, componentId) => {
-        if (componentId === 'anatomy:part') {
-          if (id === 'torso-1') return { subType: 'torso' };
-          if (id === 'arm-1') return { subType: 'arm' };
-          if (id === 'hand-1') return { subType: 'hand' };
+      mockEntityManager.getComponentData.mockImplementation(
+        (id, componentId) => {
+          if (componentId === 'anatomy:part') {
+            if (id === 'torso-1') return { subType: 'torso' };
+            if (id === 'arm-1') return { subType: 'arm' };
+            if (id === 'hand-1') return { subType: 'hand' };
+          }
+          if (componentId === 'anatomy:joint') {
+            if (id === 'arm-1')
+              return { parentId: 'torso-1', socketId: 'shoulder' };
+            if (id === 'hand-1')
+              return { parentId: 'arm-1', socketId: 'wrist' };
+          }
+          return null;
         }
-        if (componentId === 'anatomy:joint') {
-          if (id === 'arm-1') return { parentId: 'torso-1', socketId: 'shoulder' };
-          if (id === 'hand-1') return { parentId: 'arm-1', socketId: 'wrist' };
-        }
-        return null;
-      });
+      );
 
-      mockEntityManager.getAllEntities.mockReturnValue([torsoEntity, armEntity, handEntity]);
+      mockEntityManager.getAllEntities.mockReturnValue([
+        torsoEntity,
+        armEntity,
+        handEntity,
+      ]);
 
       // Build the cache
       service.buildAdjacencyCache('torso-1');
@@ -183,7 +221,10 @@ describe('BodyGraphService', () => {
 
     it('should detach a part with cascade', async () => {
       // Act
-      const result = await service.detachPart('arm-1', { cascade: true, reason: 'damage' });
+      const result = await service.detachPart('arm-1', {
+        cascade: true,
+        reason: 'damage',
+      });
 
       // Assert
       expect(result).toEqual({
@@ -192,7 +233,10 @@ describe('BodyGraphService', () => {
         socketId: 'shoulder',
       });
 
-      expect(mockEntityManager.removeComponent).toHaveBeenCalledWith('arm-1', 'anatomy:joint');
+      expect(mockEntityManager.removeComponent).toHaveBeenCalledWith(
+        'arm-1',
+        'anatomy:joint'
+      );
 
       expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith({
         type: LIMB_DETACHED_EVENT_ID,
@@ -226,14 +270,18 @@ describe('BodyGraphService', () => {
     });
 
     it('should throw error if part has no joint component', async () => {
-      mockEntityManager.getComponentData.mockImplementation((id, componentId) => {
-        if (componentId === 'anatomy:joint' && id === 'torso-1') {
-          return null; // Torso has no joint
+      mockEntityManager.getComponentData.mockImplementation(
+        (id, componentId) => {
+          if (componentId === 'anatomy:joint' && id === 'torso-1') {
+            return null; // Torso has no joint
+          }
+          return null;
         }
-        return null;
-      });
+      );
 
-      await expect(service.detachPart('torso-1')).rejects.toThrow(InvalidArgumentError);
+      await expect(service.detachPart('torso-1')).rejects.toThrow(
+        InvalidArgumentError
+      );
     });
 
     it('should use default reason if not provided', async () => {
@@ -261,25 +309,31 @@ describe('BodyGraphService', () => {
       ];
 
       mockEntityManager.getEntityInstance.mockImplementation((id) => {
-        const entity = entities.find(e => e.id === id);
+        const entity = entities.find((e) => e.id === id);
         if (entity) return entity;
         throw new Error(`Entity ${id} not found`);
       });
 
-      mockEntityManager.getComponentData.mockImplementation((id, componentId) => {
-        if (componentId === 'anatomy:part') {
-          if (id === 'torso-1') return { subType: 'torso' };
-          if (id.startsWith('arm-')) return { subType: 'arm' };
-          if (id.startsWith('hand-')) return { subType: 'hand' };
+      mockEntityManager.getComponentData.mockImplementation(
+        (id, componentId) => {
+          if (componentId === 'anatomy:part') {
+            if (id === 'torso-1') return { subType: 'torso' };
+            if (id.startsWith('arm-')) return { subType: 'arm' };
+            if (id.startsWith('hand-')) return { subType: 'hand' };
+          }
+          if (componentId === 'anatomy:joint') {
+            if (id === 'arm-1')
+              return { parentId: 'torso-1', socketId: 'left_shoulder' };
+            if (id === 'arm-2')
+              return { parentId: 'torso-1', socketId: 'right_shoulder' };
+            if (id === 'hand-1')
+              return { parentId: 'arm-1', socketId: 'left_wrist' };
+            if (id === 'hand-2')
+              return { parentId: 'arm-2', socketId: 'right_wrist' };
+          }
+          return null;
         }
-        if (componentId === 'anatomy:joint') {
-          if (id === 'arm-1') return { parentId: 'torso-1', socketId: 'left_shoulder' };
-          if (id === 'arm-2') return { parentId: 'torso-1', socketId: 'right_shoulder' };
-          if (id === 'hand-1') return { parentId: 'arm-1', socketId: 'left_wrist' };
-          if (id === 'hand-2') return { parentId: 'arm-2', socketId: 'right_wrist' };
-        }
-        return null;
-      });
+      );
 
       mockEntityManager.getAllEntities.mockReturnValue(entities);
       service.buildAdjacencyCache('torso-1');
@@ -303,7 +357,7 @@ describe('BodyGraphService', () => {
     it('should handle missing nodes in cache', () => {
       // Clear cache to simulate missing nodes
       service.buildAdjacencyCache('invalid-root');
-      
+
       const result = service.findPartsByType('torso-1', 'arm');
       expect(result).toEqual([]);
     });
@@ -311,25 +365,25 @@ describe('BodyGraphService', () => {
 
   describe('getAnatomyRoot', () => {
     beforeEach(() => {
-      const entities = [
-        { id: 'torso-1' },
-        { id: 'arm-1' },
-        { id: 'hand-1' },
-      ];
+      const entities = [{ id: 'torso-1' }, { id: 'arm-1' }, { id: 'hand-1' }];
 
       mockEntityManager.getEntityInstance.mockImplementation((id) => {
-        const entity = entities.find(e => e.id === id);
+        const entity = entities.find((e) => e.id === id);
         if (entity) return entity;
         throw new Error(`Entity ${id} not found`);
       });
 
-      mockEntityManager.getComponentData.mockImplementation((id, componentId) => {
-        if (componentId === 'anatomy:joint') {
-          if (id === 'arm-1') return { parentId: 'torso-1', socketId: 'shoulder' };
-          if (id === 'hand-1') return { parentId: 'arm-1', socketId: 'wrist' };
+      mockEntityManager.getComponentData.mockImplementation(
+        (id, componentId) => {
+          if (componentId === 'anatomy:joint') {
+            if (id === 'arm-1')
+              return { parentId: 'torso-1', socketId: 'shoulder' };
+            if (id === 'hand-1')
+              return { parentId: 'arm-1', socketId: 'wrist' };
+          }
+          return null;
         }
-        return null;
-      });
+      );
 
       mockEntityManager.getAllEntities.mockReturnValue(entities);
       service.buildAdjacencyCache('torso-1');
@@ -350,13 +404,17 @@ describe('BodyGraphService', () => {
       });
 
       // Create a cycle
-      mockEntityManager.getComponentData.mockImplementation((id, componentId) => {
-        if (componentId === 'anatomy:joint') {
-          if (id === 'arm-1') return { parentId: 'hand-1', socketId: 'shoulder' };
-          if (id === 'hand-1') return { parentId: 'arm-1', socketId: 'wrist' };
+      mockEntityManager.getComponentData.mockImplementation(
+        (id, componentId) => {
+          if (componentId === 'anatomy:joint') {
+            if (id === 'arm-1')
+              return { parentId: 'hand-1', socketId: 'shoulder' };
+            if (id === 'hand-1')
+              return { parentId: 'arm-1', socketId: 'wrist' };
+          }
+          return null;
         }
-        return null;
-      });
+      );
 
       const result = newService.getAnatomyRoot('arm-1');
       expect(result).toBeNull();
@@ -435,25 +493,31 @@ describe('BodyGraphService', () => {
       ];
 
       mockEntityManager.getEntityInstance.mockImplementation((id) => {
-        const entity = entities.find(e => e.id === id);
+        const entity = entities.find((e) => e.id === id);
         if (entity) return entity;
         throw new Error(`Entity ${id} not found`);
       });
 
-      mockEntityManager.getComponentData.mockImplementation((id, componentId) => {
-        if (componentId === 'anatomy:part') {
-          if (id === 'torso-1') return { subType: 'torso' };
-          if (id.includes('arm')) return { subType: 'arm' };
-          if (id.includes('hand')) return { subType: 'hand' };
+      mockEntityManager.getComponentData.mockImplementation(
+        (id, componentId) => {
+          if (componentId === 'anatomy:part') {
+            if (id === 'torso-1') return { subType: 'torso' };
+            if (id.includes('arm')) return { subType: 'arm' };
+            if (id.includes('hand')) return { subType: 'hand' };
+          }
+          if (componentId === 'anatomy:joint') {
+            if (id === 'left-arm-1')
+              return { parentId: 'torso-1', socketId: 'left_shoulder' };
+            if (id === 'left-hand-1')
+              return { parentId: 'left-arm-1', socketId: 'left_wrist' };
+            if (id === 'right-arm-1')
+              return { parentId: 'torso-1', socketId: 'right_shoulder' };
+            if (id === 'right-hand-1')
+              return { parentId: 'right-arm-1', socketId: 'right_wrist' };
+          }
+          return null;
         }
-        if (componentId === 'anatomy:joint') {
-          if (id === 'left-arm-1') return { parentId: 'torso-1', socketId: 'left_shoulder' };
-          if (id === 'left-hand-1') return { parentId: 'left-arm-1', socketId: 'left_wrist' };
-          if (id === 'right-arm-1') return { parentId: 'torso-1', socketId: 'right_shoulder' };
-          if (id === 'right-hand-1') return { parentId: 'right-arm-1', socketId: 'right_wrist' };
-        }
-        return null;
-      });
+      );
 
       mockEntityManager.getAllEntities.mockReturnValue(entities);
       service.buildAdjacencyCache('torso-1');
@@ -461,7 +525,13 @@ describe('BodyGraphService', () => {
 
     it('should find path between parts', () => {
       const path = service.getPath('left-hand-1', 'right-hand-1');
-      expect(path).toEqual(['left-hand-1', 'left-arm-1', 'torso-1', 'right-arm-1', 'right-hand-1']);
+      expect(path).toEqual([
+        'left-hand-1',
+        'left-arm-1',
+        'torso-1',
+        'right-arm-1',
+        'right-hand-1',
+      ]);
     });
 
     it('should return single element array for same entity', () => {
@@ -471,13 +541,15 @@ describe('BodyGraphService', () => {
 
     it('should return null if no path exists', () => {
       // Create a disconnected part
-      mockEntityManager.getComponentData.mockImplementation((id, componentId) => {
-        if (componentId === 'anatomy:joint') {
-          // No joints, all parts disconnected
+      mockEntityManager.getComponentData.mockImplementation(
+        (id, componentId) => {
+          if (componentId === 'anatomy:joint') {
+            // No joints, all parts disconnected
+            return null;
+          }
           return null;
         }
-        return null;
-      });
+      );
       service.buildAdjacencyCache('torso-1');
 
       const path = service.getPath('left-hand-1', 'right-hand-1');
@@ -492,23 +564,23 @@ describe('BodyGraphService', () => {
 
   describe('validateCache', () => {
     beforeEach(() => {
-      const entities = [
-        { id: 'torso-1' },
-        { id: 'arm-1' },
-      ];
+      const entities = [{ id: 'torso-1' }, { id: 'arm-1' }];
 
       mockEntityManager.getEntityInstance.mockImplementation((id) => {
-        const entity = entities.find(e => e.id === id);
+        const entity = entities.find((e) => e.id === id);
         if (entity) return entity;
         throw new Error(`Entity ${id} not found`);
       });
 
-      mockEntityManager.getComponentData.mockImplementation((id, componentId) => {
-        if (componentId === 'anatomy:joint') {
-          if (id === 'arm-1') return { parentId: 'torso-1', socketId: 'shoulder' };
+      mockEntityManager.getComponentData.mockImplementation(
+        (id, componentId) => {
+          if (componentId === 'anatomy:joint') {
+            if (id === 'arm-1')
+              return { parentId: 'torso-1', socketId: 'shoulder' };
+          }
+          return null;
         }
-        return null;
-      });
+      );
 
       mockEntityManager.getAllEntities.mockReturnValue(entities);
       service.buildAdjacencyCache('torso-1');
@@ -532,25 +604,31 @@ describe('BodyGraphService', () => {
     });
 
     it('should detect missing joint components', () => {
-      mockEntityManager.getComponentData.mockImplementation((id, componentId) => {
-        if (componentId === 'anatomy:joint' && id === 'arm-1') {
-          return null; // No joint but cache says it has parent
+      mockEntityManager.getComponentData.mockImplementation(
+        (id, componentId) => {
+          if (componentId === 'anatomy:joint' && id === 'arm-1') {
+            return null; // No joint but cache says it has parent
+          }
+          return null;
         }
-        return null;
-      });
+      );
 
       const result = service.validateCache();
       expect(result.valid).toBe(false);
-      expect(result.issues).toContain("Entity 'arm-1' in cache has parent but no joint component");
+      expect(result.issues).toContain(
+        "Entity 'arm-1' in cache has parent but no joint component"
+      );
     });
 
     it('should detect parent mismatches', () => {
-      mockEntityManager.getComponentData.mockImplementation((id, componentId) => {
-        if (componentId === 'anatomy:joint' && id === 'arm-1') {
-          return { parentId: 'different-parent', socketId: 'shoulder' };
+      mockEntityManager.getComponentData.mockImplementation(
+        (id, componentId) => {
+          if (componentId === 'anatomy:joint' && id === 'arm-1') {
+            return { parentId: 'different-parent', socketId: 'shoulder' };
+          }
+          return null;
         }
-        return null;
-      });
+      );
 
       const result = service.validateCache();
       expect(result.valid).toBe(false);
@@ -562,37 +640,42 @@ describe('BodyGraphService', () => {
     it('should detect missing children in cache', () => {
       // Manually corrupt the cache by adding a non-existent child
       service.buildAdjacencyCache('torso-1');
-      
+
       // Get the cache and add a fake child
       mockEntityManager.getAllEntities.mockReturnValue([{ id: 'torso-1' }]);
       mockEntityManager.getComponentData.mockImplementation(() => null);
       service.buildAdjacencyCache('torso-1');
-      
+
       // Now manually inject a bad child reference
       const torsoEntity = { id: 'torso-1' };
       const fakeChildEntity = { id: 'fake-child' };
-      
+
       mockEntityManager.getEntityInstance.mockImplementation((id) => {
         if (id === 'torso-1') return torsoEntity;
         throw new Error(`Entity ${id} not found`);
       });
-      
-      mockEntityManager.getComponentData.mockImplementation((id, componentId) => {
-        if (componentId === 'anatomy:part' && id === 'torso-1') {
-          return { subType: 'torso' };
+
+      mockEntityManager.getComponentData.mockImplementation(
+        (id, componentId) => {
+          if (componentId === 'anatomy:part' && id === 'torso-1') {
+            return { subType: 'torso' };
+          }
+          if (componentId === 'anatomy:joint' && id === 'fake-child') {
+            return { parentId: 'torso-1', socketId: 'fake-socket' };
+          }
+          return null;
         }
-        if (componentId === 'anatomy:joint' && id === 'fake-child') {
-          return { parentId: 'torso-1', socketId: 'fake-socket' };
-        }
-        return null;
-      });
-      
-      mockEntityManager.getAllEntities.mockReturnValue([torsoEntity, fakeChildEntity]);
+      );
+
+      mockEntityManager.getAllEntities.mockReturnValue([
+        torsoEntity,
+        fakeChildEntity,
+      ]);
       service.buildAdjacencyCache('torso-1');
 
       // Now remove the fake child from entities but it should still be in cache
       mockEntityManager.getAllEntities.mockReturnValue([torsoEntity]);
-      
+
       const result = service.validateCache();
       expect(result.valid).toBe(false);
     });
@@ -601,32 +684,32 @@ describe('BodyGraphService', () => {
   describe('getAllParts', () => {
     it('should return all entity IDs in the anatomy graph', () => {
       // Setup anatomy
-      const entities = [
-        { id: 'torso-1' },
-        { id: 'arm-1' },
-        { id: 'hand-1' },
-      ];
+      const entities = [{ id: 'torso-1' }, { id: 'arm-1' }, { id: 'hand-1' }];
 
       mockEntityManager.getEntityInstance.mockImplementation((id) => {
-        const entity = entities.find(e => e.id === id);
+        const entity = entities.find((e) => e.id === id);
         if (entity) return entity;
         throw new Error(`Entity ${id} not found`);
       });
 
-      mockEntityManager.getComponentData.mockImplementation((id, componentId) => {
-        if (componentId === 'anatomy:joint') {
-          if (id === 'arm-1') return { parentId: 'torso-1', socketId: 'shoulder' };
-          if (id === 'hand-1') return { parentId: 'arm-1', socketId: 'wrist' };
+      mockEntityManager.getComponentData.mockImplementation(
+        (id, componentId) => {
+          if (componentId === 'anatomy:joint') {
+            if (id === 'arm-1')
+              return { parentId: 'torso-1', socketId: 'shoulder' };
+            if (id === 'hand-1')
+              return { parentId: 'arm-1', socketId: 'wrist' };
+          }
+          return null;
         }
-        return null;
-      });
+      );
 
       mockEntityManager.getAllEntities.mockReturnValue(entities);
       service.buildAdjacencyCache('torso-1');
 
       // Test private method indirectly through findPartsByType with empty type
       const allParts = service.findPartsByType('torso-1', 'nonexistent');
-      
+
       // Since no parts match 'nonexistent', we should get empty array
       expect(allParts).toEqual([]);
     });

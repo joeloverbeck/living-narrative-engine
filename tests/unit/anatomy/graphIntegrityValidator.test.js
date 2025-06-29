@@ -100,27 +100,20 @@ describe('GraphIntegrityValidator', () => {
     });
 
     it('should log when validation passes with warnings', async () => {
-      const recipe = {
-        slots: {
-          arm: {
-            partType: 'arm',
-            count: { exact: 2 },
-          },
-        },
-      };
-
+      // Test with multiple roots which generates warnings
       mockEntityManager.getEntityInstance.mockReturnValue({});
-      mockEntityManager.getComponentData.mockReturnValue(null);
+      mockEntityManager.getComponentData.mockReturnValue(null); // No joints means roots
       mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([]);
 
       const result = await validator.validateGraph(
-        ['entity-1'],
-        recipe,
+        ['entity-1', 'entity-2'],
+        {},
         new Map()
       );
 
       expect(result.valid).toBe(true);
       expect(result.warnings).toHaveLength(1);
+      expect(result.warnings[0]).toContain('Multiple root entities found');
       expect(mockLogger.warn).toHaveBeenCalledWith(
         'GraphIntegrityValidator: Validation passed with 1 warnings'
       );
@@ -270,12 +263,22 @@ describe('GraphIntegrityValidator', () => {
     it('should validate requires constraints - failure', async () => {
       const recipe = {
         constraints: {
-          requires: [['tag-1', 'tag-2']],
+          requires: [
+            {
+              components: ['tag-1', 'tag-2'],
+              partTypes: ['special']
+            }
+          ],
         },
       };
 
       mockEntityManager.getEntityInstance.mockReturnValue({});
-      mockEntityManager.getComponentData.mockReturnValue(null);
+      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
+        if (componentId === 'anatomy:part') {
+          return { subType: 'special' };
+        }
+        return null;
+      });
       mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
         'tag-1', // Only has tag-1, missing tag-2
       ]);
@@ -288,7 +291,7 @@ describe('GraphIntegrityValidator', () => {
 
       expect(result.valid).toBe(false);
       expect(result.errors).toContain(
-        'Co-presence constraint violated: have [tag-1] but missing [tag-2]'
+        'Required constraint group not fully satisfied'
       );
     });
 
@@ -317,7 +320,11 @@ describe('GraphIntegrityValidator', () => {
     it('should validate excludes constraints - failure', async () => {
       const recipe = {
         constraints: {
-          excludes: [['tag-1', 'tag-2']],
+          excludes: [
+            {
+              components: ['tag-1', 'tag-2']
+            }
+          ],
         },
       };
 
@@ -336,7 +343,7 @@ describe('GraphIntegrityValidator', () => {
 
       expect(result.valid).toBe(false);
       expect(result.errors).toContain(
-        'Mutual exclusion constraint violated: cannot have both [tag-1, tag-2]'
+        'Exclusion constraint violated'
       );
     });
 
@@ -368,11 +375,11 @@ describe('GraphIntegrityValidator', () => {
       expect(result.valid).toBe(true);
     });
 
-    it('should warn about exact count mismatch', async () => {
+    it('should error about exact count mismatch', async () => {
       const recipe = {
         slots: {
           arm: {
-            partType: 'arm',
+            type: 'arm',
             count: { exact: 2 },
           },
         },
@@ -395,17 +402,17 @@ describe('GraphIntegrityValidator', () => {
         new Map()
       );
 
-      expect(result.valid).toBe(true);
-      expect(result.warnings).toContain(
-        "Slot 'arm' wanted exactly 2 'arm' parts but got 1"
+      expect(result.valid).toBe(false);
+      expect(result.errors).toContain(
+        "Expected 2 parts of type 'arm' but found 1"
       );
     });
 
-    it('should warn about min count not met', async () => {
+    it('should error about min count not met', async () => {
       const recipe = {
         slots: {
           arm: {
-            partType: 'arm',
+            type: 'arm',
             count: { min: 2 },
           },
         },
@@ -428,18 +435,17 @@ describe('GraphIntegrityValidator', () => {
         new Map()
       );
 
-      expect(result.valid).toBe(true);
-      expect(result.warnings).toContain(
-        "Slot 'arm' wanted at least 2 'arm' parts but got 1"
+      expect(result.valid).toBe(false);
+      expect(result.errors).toContain(
+        "Expected at least 2 parts of type 'arm' but found 1"
       );
     });
 
-    it('should warn about max count exceeded', async () => {
+    it('should error about max count exceeded', async () => {
       const recipe = {
-        constraints: {}, // Need constraints object to not return early
         slots: {
           arm: {
-            partType: 'arm',
+            type: 'arm',
             count: { max: 1 },
           },
         },
@@ -462,9 +468,9 @@ describe('GraphIntegrityValidator', () => {
         new Map()
       );
 
-      expect(result.valid).toBe(true);
-      expect(result.warnings).toContain(
-        "Slot 'arm' wanted at most 1 'arm' parts but got 2"
+      expect(result.valid).toBe(false);
+      expect(result.errors).toContain(
+        "Expected at most 1 parts of type 'arm' but found 2"
       );
     });
   });
@@ -560,7 +566,7 @@ describe('GraphIntegrityValidator', () => {
       );
 
       expect(result.valid).toBe(false);
-      expect(result.errors.some((e) => e.includes('Cycle detected:'))).toBe(
+      expect(result.errors.some((e) => e.includes('Cycle detected in anatomy graph'))).toBe(
         true
       );
     });
@@ -756,7 +762,7 @@ describe('GraphIntegrityValidator', () => {
       expect(result.warnings).toEqual([]);
     });
 
-    it('should warn for orphaned parts', async () => {
+    it('should error for orphaned parts', async () => {
       mockEntityManager.getComponentData.mockImplementation(
         (entityId, componentId) => {
           if (entityId === 'orphan-1' && componentId === 'anatomy:joint') {
@@ -768,8 +774,9 @@ describe('GraphIntegrityValidator', () => {
 
       const result = await validator.validateGraph(['orphan-1'], {}, new Map());
 
-      expect(result.warnings).toContain(
-        "Entity 'orphan-1' is orphaned - parent 'missing-parent' not in graph"
+      expect(result.valid).toBe(false);
+      expect(result.errors).toContain(
+        "Orphaned part 'orphan-1' has parent 'missing-parent' not in graph"
       );
     });
   });
@@ -828,7 +835,7 @@ describe('GraphIntegrityValidator', () => {
 
       expect(result.valid).toBe(false);
       expect(result.errors).toContain(
-        "Part type 'leg' on entity 'leg-1' not allowed in socket 'shoulder' (allowed: [arm, wing])"
+        "Part type 'leg' not allowed in socket 'shoulder' on entity 'torso-1'"
       );
     });
 

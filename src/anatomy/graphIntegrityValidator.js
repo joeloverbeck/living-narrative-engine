@@ -129,7 +129,7 @@ export class GraphIntegrityValidator {
         continue;
       }
 
-      const maxCount = socket.maxCount || 1;
+      const maxCount = socket.maxCount !== undefined ? socket.maxCount : 1;
       if (occupancy > maxCount) {
         errors.push(
           `Socket '${socketId}' on entity '${parentId}' exceeds maxCount: ${occupancy} > ${maxCount}`
@@ -171,7 +171,8 @@ export class GraphIntegrityValidator {
       }
 
       // Add all components (for tag checking)
-      const componentTypes = this.#entityManager.getAllComponentTypesForEntity(entityId);
+      const componentTypes =
+        this.#entityManager.getAllComponentTypesForEntity(entityId);
       if (componentTypes) {
         for (const componentId of componentTypes) {
           presentComponents.add(componentId);
@@ -181,64 +182,77 @@ export class GraphIntegrityValidator {
 
     // Check 'requires' constraints
     if (recipe.constraints?.requires) {
-      for (const group of recipe.constraints.requires) {
-        const present = group.filter(
-          (id) => presentComponents.has(id) || presentPartTypes.has(id)
-        );
-
-        if (present.length > 0 && present.length < group.length) {
-          const missing = group.filter(
-            (id) => !presentComponents.has(id) && !presentPartTypes.has(id)
-          );
-          errors.push(
-            `Co-presence constraint violated: have [${present.join(', ')}] but missing [${missing.join(', ')}]`
-          );
+      for (const constraint of recipe.constraints.requires) {
+        // Handle nested format with components and partTypes
+        const requiredComponents = constraint.components || [];
+        const requiredPartTypes = constraint.partTypes || [];
+        
+        // Check if any required part types are present
+        const presentPartTypesFromConstraint = requiredPartTypes.filter(pt => presentPartTypes.has(pt));
+        const hasRequiredPartType = presentPartTypesFromConstraint.length > 0;
+        
+        // If we have the required part type, check for required components
+        if (hasRequiredPartType && requiredComponents.length > 0) {
+          const missingComponents = requiredComponents.filter(c => !presentComponents.has(c));
+          if (missingComponents.length > 0) {
+            errors.push(`Required constraint group not fully satisfied`);
+          }
         }
       }
     }
 
     // Check 'excludes' constraints
     if (recipe.constraints?.excludes) {
-      for (const group of recipe.constraints.excludes) {
-        const present = group.filter(
-          (id) => presentComponents.has(id) || presentPartTypes.has(id)
-        );
+      for (const constraint of recipe.constraints.excludes) {
+        // Handle nested format with components array
+        const excludedComponents = constraint.components || constraint;
+        const presentExcluded = Array.isArray(excludedComponents) 
+          ? excludedComponents.filter(c => presentComponents.has(c))
+          : [];
 
-        if (present.length > 1) {
-          errors.push(
-            `Mutual exclusion constraint violated: cannot have both [${present.join(', ')}]`
-          );
+        if (presentExcluded.length > 1) {
+          errors.push(`Exclusion constraint violated`);
         }
       }
     }
 
-    // Check soft count constraints
+    // Check slot count constraints
     if (recipe.slots) {
       for (const [slotKey, slot] of Object.entries(recipe.slots)) {
-        const actualCount = partTypeCounts.get(slot.partType) || 0;
+        const partType = slot.type || slot.partType;
+        const actualCount = partTypeCounts.get(partType) || 0;
 
-        if (slot.count) {
-          if (
-            slot.count.exact !== undefined &&
-            actualCount !== slot.count.exact
-          ) {
-            warnings.push(
-              `Slot '${slotKey}' wanted exactly ${slot.count.exact} '${slot.partType}' parts but got ${actualCount}`
-            );
-          } else if (
-            slot.count.min !== undefined &&
-            actualCount < slot.count.min
-          ) {
-            warnings.push(
-              `Slot '${slotKey}' wanted at least ${slot.count.min} '${slot.partType}' parts but got ${actualCount}`
-            );
-          } else if (
-            slot.count.max !== undefined &&
-            actualCount > slot.count.max
-          ) {
-            warnings.push(
-              `Slot '${slotKey}' wanted at most ${slot.count.max} '${slot.partType}' parts but got ${actualCount}`
-            );
+        if (slot.count !== undefined) {
+          // Handle both number and object formats
+          if (typeof slot.count === 'number') {
+            if (actualCount !== slot.count) {
+              errors.push(
+                `Expected ${slot.count} parts of type '${partType}' but found ${actualCount}`
+              );
+            }
+          } else if (typeof slot.count === 'object') {
+            if (
+              slot.count.exact !== undefined &&
+              actualCount !== slot.count.exact
+            ) {
+              errors.push(
+                `Expected ${slot.count.exact} parts of type '${partType}' but found ${actualCount}`
+              );
+            } else if (
+              slot.count.min !== undefined &&
+              actualCount < slot.count.min
+            ) {
+              errors.push(
+                `Expected at least ${slot.count.min} parts of type '${partType}' but found ${actualCount}`
+              );
+            } else if (
+              slot.count.max !== undefined &&
+              actualCount > slot.count.max
+            ) {
+              errors.push(
+                `Expected at most ${slot.count.max} parts of type '${partType}' but found ${actualCount}`
+              );
+            }
           }
         }
       }
@@ -272,7 +286,7 @@ export class GraphIntegrityValidator {
             return true;
           }
         } else if (recursionStack.has(childId)) {
-          errors.push(`Cycle detected: ${entityId} -> ${childId}`);
+          errors.push(`Cycle detected in anatomy graph`);
           return true;
         }
       }
@@ -291,7 +305,7 @@ export class GraphIntegrityValidator {
         hasCycle(entityId);
       }
     }
-    
+
     // Also check any unvisited entities (important for detecting cycles with no roots)
     for (const entityId of entityIds) {
       if (!visited.has(entityId)) {
@@ -314,6 +328,12 @@ export class GraphIntegrityValidator {
         'anatomy:joint'
       );
       if (!joint) continue;
+
+      // Check for incomplete joint data
+      if (!joint.parentId || !joint.socketId) {
+        errors.push(`Entity '${entityId}' has incomplete joint data`);
+        continue;
+      }
 
       // Check parent exists
       if (!entityIds.includes(joint.parentId)) {
@@ -357,6 +377,7 @@ export class GraphIntegrityValidator {
    */
   #validateNoOrphans(entityIds, errors, warnings) {
     const entityIdSet = new Set(entityIds);
+    const rootEntities = [];
 
     for (const entityId of entityIds) {
       const joint = this.#entityManager.getComponentData(
@@ -364,10 +385,20 @@ export class GraphIntegrityValidator {
         'anatomy:joint'
       );
       if (joint && !entityIdSet.has(joint.parentId)) {
-        warnings.push(
-          `Entity '${entityId}' is orphaned - parent '${joint.parentId}' not in graph`
+        errors.push(
+          `Orphaned part '${entityId}' has parent '${joint.parentId}' not in graph`
         );
       }
+      
+      // Track root entities (no joint component)
+      if (!joint) {
+        rootEntities.push(entityId);
+      }
+    }
+    
+    // Check for multiple roots
+    if (rootEntities.length > 1) {
+      warnings.push(`Multiple root entities found: ${rootEntities.join(', ')}`);
     }
   }
 
@@ -404,11 +435,10 @@ export class GraphIntegrityValidator {
 
       if (!socket) continue;
 
-      // Check if part type is allowed
-      if (!socket.allowedTypes.includes(anatomyPart.subType)) {
+      // Check if part type is allowed (handle wildcard '*')
+      if (!socket.allowedTypes.includes('*') && !socket.allowedTypes.includes(anatomyPart.subType)) {
         errors.push(
-          `Part type '${anatomyPart.subType}' on entity '${entityId}' not allowed in socket '${joint.socketId}' ` +
-            `(allowed: [${socket.allowedTypes.join(', ')}])`
+          `Part type '${anatomyPart.subType}' not allowed in socket '${joint.socketId}' on entity '${joint.parentId}'`
         );
       }
     }

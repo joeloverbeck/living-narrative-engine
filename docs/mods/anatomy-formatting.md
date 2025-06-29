@@ -65,9 +65,7 @@ Add your formatting files to your mod's manifest:
 {
   "id": "your-mod",
   "content": {
-    "anatomyFormatting": [
-      "anatomy-formatting/your-rules.json"
-    ]
+    "anatomyFormatting": ["anatomy-formatting/your-rules.json"]
   }
 }
 ```
@@ -75,6 +73,7 @@ Add your formatting files to your mod's manifest:
 ## Configuration Options
 
 ### descriptionOrder
+
 Array of body part types in the order they should appear in descriptions.
 
 ```json
@@ -89,6 +88,7 @@ Array of body part types in the order they should appear in descriptions.
 ```
 
 ### groupedParts
+
 Body parts that should be described together (e.g., "a pair of blue eyes" instead of listing each eye separately).
 
 ```json
@@ -96,6 +96,7 @@ Body parts that should be described together (e.g., "a pair of blue eyes" instea
 ```
 
 ### pairedParts
+
 Parts that use "a pair of" when there are exactly two matching parts.
 
 ```json
@@ -103,6 +104,7 @@ Parts that use "a pair of" when there are exactly two matching parts.
 ```
 
 ### irregularPlurals
+
 Custom plural forms for body parts.
 
 ```json
@@ -114,6 +116,7 @@ Custom plural forms for body parts.
 ```
 
 ### noArticleParts
+
 Parts that don't use articles (a/an) in descriptions.
 
 ```json
@@ -121,6 +124,7 @@ Parts that don't use articles (a/an) in descriptions.
 ```
 
 ### descriptorOrder
+
 Order in which descriptor components appear in descriptions.
 
 ```json
@@ -133,6 +137,7 @@ Order in which descriptor components appear in descriptions.
 ```
 
 ### commaSeparatedDescriptors
+
 Descriptor types that use commas for separation instead of hyphens.
 
 ```json
@@ -144,6 +149,7 @@ Descriptor types that use commas for separation instead of hyphens.
 ```
 
 ### descriptorValueKeys
+
 Keys to search for when extracting values from descriptor components.
 
 ```json
@@ -187,48 +193,31 @@ Here's a complete example for alien creatures:
   "id": "alien_species",
   "descriptionOrder": [
     "build",
-    "carapace",      // Alien-specific parts first
+    "carapace", // Alien-specific parts first
     "tentacle",
     "eyestalk",
     "pseudopod",
     "core",
-    "hair",          // Then standard parts
+    "hair", // Then standard parts
     "eye",
     "face"
   ],
-  "groupedParts": [
-    "tentacle",
-    "eyestalk",
-    "pseudopod"
-  ],
-  "pairedParts": [
-    "eyestalk",
-    "pseudopod"
-  ],
+  "groupedParts": ["tentacle", "eyestalk", "pseudopod"],
+  "pairedParts": ["eyestalk", "pseudopod"],
   "irregularPlurals": {
     "pseudopod": "pseudopodia",
     "nucleus": "nuclei",
     "antenna": "antennae"
   },
-  "noArticleParts": [
-    "carapace",
-    "core",
-    "ectoplasm"
-  ],
+  "noArticleParts": ["carapace", "core", "ectoplasm"],
   "descriptorOrder": [
-    "descriptors:alien_type",        // Custom descriptor first
+    "descriptors:alien_type", // Custom descriptor first
     "descriptors:bio_luminescence",
     "descriptors:size_category",
     "descriptors:color_basic"
   ],
-  "commaSeparatedDescriptors": [
-    "descriptors:bio_luminescence"
-  ],
-  "descriptorValueKeys": [
-    "value",
-    "luminescence",
-    "alienType"
-  ]
+  "commaSeparatedDescriptors": ["descriptors:bio_luminescence"],
+  "descriptorValueKeys": ["value", "luminescence", "alienType"]
 }
 ```
 
