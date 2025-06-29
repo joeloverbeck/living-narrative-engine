@@ -4,6 +4,7 @@ import engineVersionSatisfies from '../engine/engineVersionSatisfies.js';
 import ModDependencyError from '../errors/modDependencyError.js';
 import { ENGINE_VERSION } from '../engine/engineVersion.js'; // Import the actual engine version
 import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
+import { assertIsMap, assertIsLogger } from '../utils/argValidation.js';
 
 /**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
@@ -33,18 +34,8 @@ export default function validateModEngineVersions(
 ) {
   const fatals = []; // Stores incompatibility messages
 
-  if (!(manifests instanceof Map)) {
-    // Basic type check for the input map
-    throw new Error(
-      'validateModEngineVersions: Input `manifests` must be a Map.'
-    );
-  }
-  if (!logger || typeof logger.error !== 'function') {
-    // Basic type check for the logger
-    throw new Error(
-      'validateModEngineVersions: Input `logger` must be a valid ILogger instance.'
-    );
-  }
+  assertIsMap(manifests, 'validateModEngineVersions: Input `manifests`');
+  assertIsLogger(logger, 'validateModEngineVersions: Input `logger`');
   if (
     !safeEventDispatcher ||
     typeof safeEventDispatcher.dispatch !== 'function'
