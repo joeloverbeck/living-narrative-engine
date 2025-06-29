@@ -15,14 +15,14 @@ export class IActionCommandFormatter {
    * Formats an action command string given an action definition and target context.
    *
    * @param {ActionDefinition} actionDef - The action definition.
-   * @param {ActionTargetContext} targetCtx - The target context describing the action target.
+   * @param {ActionTargetContext} targetContext - The target context describing the action target.
    * @param {EntityManager} entityManager - The entity manager for lookups.
    * @param {object} options - Formatting options (e.g., logger, debug flags).
    * @param {object} extra - Additional dependencies such as formatter map or display name helpers.
    * @returns {FormatActionCommandResult} Result object containing the formatted command or error info.
    * @throws {Error} If the method is not implemented.
    */
-  format(actionDef, targetCtx, entityManager, options, extra) {
+  format(actionDef, targetContext, entityManager, options, extra) {
     throw new Error('IActionCommandFormatter.format method not implemented.');
   }
 }

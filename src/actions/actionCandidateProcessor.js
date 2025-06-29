@@ -172,10 +172,10 @@ export class ActionCandidateProcessor {
       safeEventDispatcher: this.#safeEventDispatcher,
     };
 
-    for (const targetCtx of targetContexts) {
+    for (const targetContext of targetContexts) {
       const formatResult = this.#commandFormatter.format(
         actionDef,
-        targetCtx,
+        targetContext,
         this.#entityManager,
         formatterOptions,
         {
@@ -189,19 +189,19 @@ export class ActionCandidateProcessor {
           name: actionDef.name || actionDef.commandVerb,
           command: formatResult.value,
           description: actionDef.description || '',
-          params: { targetId: targetCtx.entityId },
+          params: { targetId: targetContext.entityId },
         });
       } else {
         errors.push(
           this.#createDiscoveryError(
             actionDef.id,
-            targetCtx.entityId,
+            targetContext.entityId,
             formatResult.error,
             formatResult.details
           )
         );
         this.#logger.warn(
-          `Failed to format command for action '${actionDef.id}' with target '${targetCtx.entityId}'.`
+          `Failed to format command for action '${actionDef.id}' with target '${targetContext.entityId}'.`
         );
       }
     }
