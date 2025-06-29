@@ -29,6 +29,7 @@ import {
   InitializationError,
 } from '../../errors/InitializationError.js';
 import { buildActionIndex } from '../../utils/initHelpers.js';
+import { setupPersistenceListeners } from './initHelpers.js';
 import { assertNonBlankString } from '../../utils/dependencyUtils.js';
 import { InvalidArgumentError } from '../../errors/invalidArgumentError.js';
 import ContentDependencyValidator from './contentDependencyValidator.js';
@@ -287,7 +288,22 @@ class InitializationService extends IInitializationService {
       }
       await this.#initSystems();
       await this.#initWorld(worldName);
-      this.#setupPersistenceListeners();
+      setupPersistenceListeners(
+        this.#safeEventDispatcher,
+        [
+          {
+            eventId: ACTION_DECIDED_ID,
+            handler: this.#thoughtListener.handleEvent.bind(
+              this.#thoughtListener
+            ),
+          },
+          {
+            eventId: ACTION_DECIDED_ID,
+            handler: this.#notesListener.handleEvent.bind(this.#notesListener),
+          },
+        ],
+        this.#logger
+      );
 
       this.#logger.debug(
         'Ensuring DomUiFacade is instantiated so UI components are ready...'
@@ -379,19 +395,6 @@ class InitializationService extends IInitializationService {
     this.#logger.debug(
       'InitializationService: Initial world entities instantiated and spatial index built.'
     );
-  }
-
-  #setupPersistenceListeners() {
-    const dispatcher = this.#safeEventDispatcher;
-    dispatcher.subscribe(
-      ACTION_DECIDED_ID,
-      this.#thoughtListener.handleEvent.bind(this.#thoughtListener)
-    );
-    dispatcher.subscribe(
-      ACTION_DECIDED_ID,
-      this.#notesListener.handleEvent.bind(this.#notesListener)
-    );
-    this.#logger.debug('Registered AI persistence listeners.');
   }
 
   async #reportFatalError(error, worldName) {
