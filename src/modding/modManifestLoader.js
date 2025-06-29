@@ -119,18 +119,14 @@ class ModManifestLoader {
   /* ----------------------------------------------------------------------- */
 
   /**
-   * Fetches, validates (against mod-manifest.schema.json), and registers
-   * every manifest listed in `requestedModIds`.
-   *
-   * @param  {string[]} requestedModIds
-   * @returns {Promise<Map<string,object>>}
-   * @throws {Error} if any manifest cannot be fetched, validated, or stored.
+   * @description Validate the list of requested mod IDs.
+   * @param {string[]} requestedModIds The raw mod IDs provided by the caller.
+   * @returns {string[]} Trimmed and deduplicated mod IDs.
+   * @throws {TypeError|Error} When the input is invalid or contains duplicates.
    */
-  async loadRequestedManifests(requestedModIds) {
+  _validateRequestIds(requestedModIds) {
     const fn = 'ModManifestLoader.loadRequestedManifests';
-    const schemaId = this.#configuration.getContentTypeSchemaId('mod-manifest');
 
-    /* ── 1. basic request-array sanity ─────────────────────────────── */
     if (!Array.isArray(requestedModIds)) {
       const msg = `${fn}: expected an array of mod-IDs.`;
       this.#logger.error(ERR.INVALID_REQUEST_ARRAY, msg, {});
@@ -155,23 +151,54 @@ class ModManifestLoader {
       trimmedIds.push(id);
     }
 
-    /* ── 2. pull the compiled validator once ───────────────────────── */
+    return trimmedIds;
+  }
+
+  /**
+   * @description Retrieve the schema validator function for a manifest.
+   * @param {string} schemaId The schema identifier.
+   * @returns {function(object): ValidationResult} The validator function.
+   * @throws {Error} When no validator is available.
+   */
+  _getManifestValidator(schemaId) {
+    const fn = 'ModManifestLoader.loadRequestedManifests';
     const validatorFn = this.#schemaValidator.getValidator(schemaId);
     if (typeof validatorFn !== 'function') {
       const msg = `${fn}: no validator available for '${schemaId}'.`;
       this.#logger.error(ERR.NO_VALIDATOR, msg, { schemaId });
       throw new Error(msg);
     }
+    return validatorFn;
+  }
 
-    /* ── 3. parallel fetch of *all* manifests ──────────────────────── */
+  /**
+   * @description Fetch all manifests for the provided IDs in parallel.
+   * @param {string[]} trimmedIds Validated mod IDs.
+   * @returns {Promise<{fetchJobs: Array, settled: PromiseSettledResult<any>[]}>}
+   *   Fetch job descriptors and their settled promises.
+   */
+  async _fetchManifests(trimmedIds) {
     const fetchJobs = trimmedIds.map((modId) => {
       const path = this.#pathResolver.resolveModManifestPath(modId);
       return { modId, path, job: this.#dataFetcher.fetch(path) };
     });
     const settled = await Promise.allSettled(fetchJobs.map((f) => f.job));
+    return { fetchJobs, settled };
+  }
 
-    /* ── 4. validation & id-consistency (sequential, abort on error) ─ */
-    const validated = []; // {modId, data, path}
+  /**
+   * @description Validate fetched manifests and ensure ID consistency.
+   * @param {{modId:string,path:string}[]} fetchJobs The fetch job descriptors.
+   * @param {PromiseSettledResult<any>[]} settled Results from Promise.allSettled.
+   * @param {function(object): ValidationResult} validatorFn Schema validator.
+   * @returns {{modId:string,data:object,path:string}[]} Array of validated items.
+   * @throws {Error} When fetching, validation, or ID checks fail.
+   */
+  _validateAndCheckIds(fetchJobs, settled, validatorFn) {
+    const fn = 'ModManifestLoader.loadRequestedManifests';
+    const schemaId = this.#configuration.getContentTypeSchemaId('mod-manifest');
+
+    const validated = [];
     for (let i = 0; i < fetchJobs.length; i++) {
       const { modId, path } = fetchJobs[i];
       const result = settled[i];
@@ -188,7 +215,6 @@ class ModManifestLoader {
 
       const manifestObj = result.value;
 
-      /* ── 4a. schema validation ⤵ ─────────────────────────────── */
       const vRes = validatorFn(manifestObj);
       if (!vRes.isValid) {
         const pretty = JSON.stringify(vRes.errors ?? [], null, 2);
@@ -203,7 +229,6 @@ class ModManifestLoader {
       }
       this.#logger.debug(`${fn}: manifest for '${modId}' schema-validated OK.`);
 
-      /* ── 4b. ID ↔ directory consistency check ────────────────── */
       const declaredId = manifestObj?.id?.trim?.();
       if (!declaredId) {
         const msg = `${fn}: manifest '${path}' is missing an 'id' field.`;
@@ -222,7 +247,17 @@ class ModManifestLoader {
       validated.push({ modId, data: manifestObj, path });
     }
 
-    /* ── 5. store each validated manifest ─────────────────────────── */
+    return validated;
+  }
+
+  /**
+   * @description Store validated manifests in the data registry.
+   * @param {{modId:string,data:object,path:string}[]} validated Validated items.
+   * @returns {Map<string, object>} Map of stored manifests keyed by ID.
+   * @throws {Error} When storing fails.
+   */
+  _storeValidatedManifests(validated) {
+    const fn = 'ModManifestLoader.loadRequestedManifests';
     const stored = new Map();
     for (const { modId, data, path } of validated) {
       try {
@@ -235,6 +270,39 @@ class ModManifestLoader {
         throw new Error(`${msg} – ${e.message}`);
       }
     }
+    return stored;
+  }
+
+  /**
+   * Fetches, validates (against mod-manifest.schema.json), and registers
+   * every manifest listed in `requestedModIds`.
+   *
+   * @param  {string[]} requestedModIds
+   * @returns {Promise<Map<string,object>>}
+   * @throws {Error} if any manifest cannot be fetched, validated, or stored.
+   */
+  async loadRequestedManifests(requestedModIds) {
+    const fn = 'ModManifestLoader.loadRequestedManifests';
+    const schemaId = this.#configuration.getContentTypeSchemaId('mod-manifest');
+
+    /* ── 1. basic request-array sanity ─────────────────────────────── */
+    const trimmedIds = this._validateRequestIds(requestedModIds);
+
+    /* ── 2. pull the compiled validator once ───────────────────────── */
+    const validatorFn = this._getManifestValidator(schemaId);
+
+    /* ── 3. parallel fetch of *all* manifests ──────────────────────── */
+    const { fetchJobs, settled } = await this._fetchManifests(trimmedIds);
+
+    /* ── 4. validation & id-consistency (sequential, abort on error) ─ */
+    const validated = this._validateAndCheckIds(
+      fetchJobs,
+      settled,
+      validatorFn
+    );
+
+    /* ── 5. store each validated manifest ─────────────────────────── */
+    const stored = this._storeValidatedManifests(validated);
 
     /* ── 6. summary ───────────────────────────────────────────────── */
     this.#lastLoadedManifests = stored;
