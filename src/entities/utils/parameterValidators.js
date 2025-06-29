@@ -27,7 +27,12 @@ import { InvalidInstanceIdError } from '../../errors/invalidInstanceIdError.js';
  * @returns {void}
  * @private
  */
-function _assertIds(context, instanceId, componentTypeId, logger) {
+export function assertInstanceAndComponentIds(
+  context,
+  instanceId,
+  componentTypeId,
+  logger
+) {
   validateInstanceAndComponent(instanceId, componentTypeId, logger, context);
 }
 
@@ -48,7 +53,7 @@ export function validateAddComponentParams(
   logger,
   context = 'EntityManager.addComponent'
 ) {
-  _assertIds(context, instanceId, componentTypeId, logger);
+  assertInstanceAndComponentIds(context, instanceId, componentTypeId, logger);
 
   if (componentData === null) {
     const errorMsg = `${context}: componentData cannot be null for ${componentTypeId} on ${instanceId}`;
@@ -86,7 +91,7 @@ export function validateRemoveComponentParams(
   logger,
   context = 'EntityManager.removeComponent'
 ) {
-  _assertIds(context, instanceId, componentTypeId, logger);
+  assertInstanceAndComponentIds(context, instanceId, componentTypeId, logger);
 }
 
 /**
@@ -146,7 +151,7 @@ export function validateGetComponentDataParams(
   componentTypeId,
   logger
 ) {
-  _assertIds(
+  assertInstanceAndComponentIds(
     'EntityManager.getComponentData',
     instanceId,
     componentTypeId,
@@ -167,7 +172,12 @@ export function validateHasComponentParams(
   componentTypeId,
   logger
 ) {
-  _assertIds('EntityManager.hasComponent', instanceId, componentTypeId, logger);
+  assertInstanceAndComponentIds(
+    'EntityManager.hasComponent',
+    instanceId,
+    componentTypeId,
+    logger
+  );
 }
 
 /**
@@ -183,7 +193,7 @@ export function validateHasComponentOverrideParams(
   componentTypeId,
   logger
 ) {
-  _assertIds(
+  assertInstanceAndComponentIds(
     'EntityManager.hasComponentOverride',
     instanceId,
     componentTypeId,

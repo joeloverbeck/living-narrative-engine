@@ -31,6 +31,9 @@ import { DefinitionNotFoundError } from '../../errors/definitionNotFoundError.js
 import { SerializedEntityError } from '../../errors/serializedEntityError.js';
 import { InvalidInstanceIdError } from '../../errors/invalidInstanceIdError.js';
 import createValidateAndClone from '../utils/createValidateAndClone.js';
+import {
+  validateSerializedComponent,
+} from './serializedComponentValidator.js';
 
 /* -------------------------------------------------------------------------- */
 /* Type-Hint Imports (JSDoc only – removed at runtime)                        */
@@ -180,29 +183,14 @@ class EntityFactory {
     );
     if (components && typeof components === 'object') {
       for (const [typeId, data] of Object.entries(components)) {
-        this.#logger.debug(
-          `[EntityFactory] [RECONSTRUCT_ENTITY_LOG] Validating component '${typeId}' for entity '${instanceId}'. Data: ${JSON.stringify(
-            data
-          )}`
+        validatedComponents[typeId] = validateSerializedComponent(
+          typeId,
+          data,
+          this.#validator,
+          this.#logger,
+          instanceId,
+          definitionId
         );
-        if (data === null) {
-          validatedComponents[typeId] = null;
-        } else {
-          const validationResult = this.#validator.validate(
-            typeId,
-            data,
-            `Reconstruction component ${typeId} for entity ${instanceId} (definition ${definitionId})`
-          );
-          if (validationResult.isValid) {
-            validatedComponents[typeId] = JSON.parse(JSON.stringify(data));
-          } else {
-            const errorMsg = `Reconstruction component ${typeId} for entity ${instanceId} (definition ${definitionId}) Errors: ${JSON.stringify(
-              validationResult.errors
-            )}`;
-            this.#logger.error(`[EntityFactory] ${errorMsg}`);
-            throw new Error(errorMsg);
-          }
-        }
       }
     }
     this.#logger.debug(
