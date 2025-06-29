@@ -8,12 +8,13 @@ import {
   beforeEach,
   afterEach,
 } from '@jest/globals';
-import { LLMConfigService } from '../../../src/llms/llmConfigService.js'; // Adjust path as needed
-import { createMockLogger } from '../testUtils.js'; // Adjust path as needed
+import { LLMConfigService } from '../../../src/llms/llmConfigService.js';
+import { LlmConfigCache } from '../../../src/llms/services/LlmConfigCache.js';
+import { createMockLogger } from '../testUtils.js';
 
-// Mock IConfigurationProvider
-const mockConfigurationProvider = {
-  fetchData: jest.fn(),
+// Mock LlmConfigLoader
+const mockConfigLoader = {
+  loadConfigs: jest.fn(),
 };
 
 // Sample valid LLMConfig objects for testing
@@ -46,11 +47,12 @@ const sampleLongerWildcardConfig = {
 describe('LLMConfigService', () => {
   let mockLogger;
   let service;
+  let cache;
 
   beforeEach(() => {
     mockLogger = createMockLogger();
-    // Reset mocks for fetchData before each test
-    mockConfigurationProvider.fetchData.mockReset();
+    cache = new LlmConfigCache({ logger: mockLogger });
+    mockConfigLoader.loadConfigs.mockReset();
   });
 
   afterEach(() => {
@@ -58,15 +60,16 @@ describe('LLMConfigService', () => {
   });
 
   describe('Constructor', () => {
-    it('should throw an error if configurationProvider is missing', () => {
+    it('should throw an error if configLoader is missing', () => {
       expect(
         () =>
           new LLMConfigService({
             logger: mockLogger,
-            configurationProvider: undefined,
+            cache,
+            configLoader: undefined,
           })
       ).toThrow(
-        'LLMConfigService: configurationProvider and logger are required options.'
+        'LLMConfigService: configLoader, cache and logger are required options.'
       );
     });
 
@@ -74,11 +77,12 @@ describe('LLMConfigService', () => {
       expect(
         () =>
           new LLMConfigService({
-            configurationProvider: mockConfigurationProvider,
+            configLoader: mockConfigLoader,
+            cache,
             logger: undefined,
           })
       ).toThrow(
-        'LLMConfigService: configurationProvider and logger are required options.'
+        'LLMConfigService: configLoader, cache and logger are required options.'
       );
     });
 
@@ -86,7 +90,8 @@ describe('LLMConfigService', () => {
       const sourceId = 'path/to/configs.json';
       service = new LLMConfigService({
         logger: mockLogger,
-        configurationProvider: mockConfigurationProvider,
+        configLoader: mockConfigLoader,
+        cache,
         configSourceIdentifier: sourceId,
       });
       expect(service).toBeInstanceOf(LLMConfigService);
@@ -101,7 +106,8 @@ describe('LLMConfigService', () => {
       const initialConfigs = [{ ...sampleConfig1 }];
       service = new LLMConfigService({
         logger: mockLogger,
-        configurationProvider: mockConfigurationProvider,
+        configLoader: mockConfigLoader,
+        cache,
         initialConfigs,
       });
       expect(service.getLlmConfigsCacheForTest().size).toBe(1);
@@ -119,7 +125,8 @@ describe('LLMConfigService', () => {
     it('should handle empty initialConfigs array', () => {
       service = new LLMConfigService({
         logger: mockLogger,
-        configurationProvider: mockConfigurationProvider,
+        configLoader: mockConfigLoader,
+        cache,
         initialConfigs: [],
       });
       expect(service.getLlmConfigsCacheForTest().size).toBe(0);
@@ -132,7 +139,8 @@ describe('LLMConfigService', () => {
     it('should warn if initialConfigs is not an array', () => {
       service = new LLMConfigService({
         logger: mockLogger,
-        configurationProvider: mockConfigurationProvider,
+        configLoader: mockConfigLoader,
+        cache,
         // @ts-ignore
         initialConfigs: 'not-an-array',
       });
@@ -147,7 +155,8 @@ describe('LLMConfigService', () => {
       const initialConfigs = [{ ...sampleConfig1 }, invalidConfig];
       service = new LLMConfigService({
         logger: mockLogger,
-        configurationProvider: mockConfigurationProvider,
+        configLoader: mockConfigLoader,
+        cache,
         initialConfigs,
       });
       expect(service.getLlmConfigsCacheForTest().size).toBe(1);
@@ -164,7 +173,8 @@ describe('LLMConfigService', () => {
     it('should log if no source identifier and no initial configs loaded', () => {
       service = new LLMConfigService({
         logger: mockLogger,
-        configurationProvider: mockConfigurationProvider,
+        configLoader: mockConfigLoader,
+        cache,
       });
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining(
@@ -178,7 +188,8 @@ describe('LLMConfigService', () => {
     beforeEach(() => {
       service = new LLMConfigService({
         logger: mockLogger,
-        configurationProvider: mockConfigurationProvider,
+        configLoader: mockConfigLoader,
+        cache,
       });
     });
 
@@ -194,11 +205,12 @@ describe('LLMConfigService', () => {
       expect(service.getLlmConfigsCacheForTest().size).toBe(0);
       service.addOrUpdateConfigs([{ ...baseValidConfig, configId: null }]);
       expect(service.getLlmConfigsCacheForTest().size).toBe(0);
-      const { configId, ...rest } = baseValidConfig;
+      const { configId: _configId, ...rest } = baseValidConfig;
+      void _configId;
       service.addOrUpdateConfigs([rest]);
       expect(service.getLlmConfigsCacheForTest().size).toBe(0);
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        'LLMConfigService.#isValidConfig: Missing or empty configId.',
+        'LlmConfigCache.#isValidConfig: Missing or empty configId.',
         expect.any(Object)
       );
     });
@@ -207,7 +219,7 @@ describe('LLMConfigService', () => {
       service.addOrUpdateConfigs([{ ...baseValidConfig, modelIdentifier: '' }]);
       expect(service.getLlmConfigsCacheForTest().size).toBe(0);
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        'LLMConfigService.#isValidConfig: Missing or empty modelIdentifier.',
+        'LlmConfigCache.#isValidConfig: Missing or empty modelIdentifier.',
         expect.any(Object)
       );
     });
@@ -219,7 +231,7 @@ describe('LLMConfigService', () => {
       ]);
       expect(service.getLlmConfigsCacheForTest().size).toBe(0);
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        'LLMConfigService.#isValidConfig: promptElements is not an array.',
+        'LlmConfigCache.#isValidConfig: promptElements is not an array.',
         expect.any(Object)
       );
     });
@@ -229,7 +241,7 @@ describe('LLMConfigService', () => {
       ]);
       expect(service.getLlmConfigsCacheForTest().size).toBe(0);
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        'LLMConfigService.#isValidConfig: One or more promptElements are invalid (not an object or missing key).',
+        'LlmConfigCache.#isValidConfig: One or more promptElements are invalid (not an object or missing key).',
         expect.any(Object)
       );
     });
@@ -241,7 +253,7 @@ describe('LLMConfigService', () => {
       ]);
       expect(service.getLlmConfigsCacheForTest().size).toBe(0);
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        'LLMConfigService.#isValidConfig: promptAssemblyOrder is not an array.',
+        'LlmConfigCache.#isValidConfig: promptAssemblyOrder is not an array.',
         expect.any(Object)
       );
     });
@@ -252,7 +264,7 @@ describe('LLMConfigService', () => {
       ]);
       expect(service.getLlmConfigsCacheForTest().size).toBe(0);
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        'LLMConfigService.#isValidConfig: One or more keys in promptAssemblyOrder are not strings.',
+        'LlmConfigCache.#isValidConfig: One or more keys in promptAssemblyOrder are not strings.',
         expect.any(Object)
       );
     });
@@ -262,7 +274,8 @@ describe('LLMConfigService', () => {
     beforeEach(() => {
       service = new LLMConfigService({
         logger: mockLogger,
-        configurationProvider: mockConfigurationProvider,
+        configLoader: mockConfigLoader,
+        cache,
       });
     });
 
@@ -343,7 +356,8 @@ describe('LLMConfigService', () => {
     it('should load and cache configurations from provider if sourceId is set and cache is empty', async () => {
       service = new LLMConfigService({
         logger: mockLogger,
-        configurationProvider: mockConfigurationProvider,
+        configLoader: mockConfigLoader,
+        cache,
         configSourceIdentifier: sourceId,
       });
       const fetchedData = {
@@ -353,13 +367,11 @@ describe('LLMConfigService', () => {
           [sampleConfig2.configId]: { ...sampleConfig2 },
         },
       };
-      mockConfigurationProvider.fetchData.mockResolvedValue(fetchedData);
+      mockConfigLoader.loadConfigs.mockResolvedValue(fetchedData);
 
       await service.getConfig(sampleConfig1.configId); // Triggers load
 
-      expect(mockConfigurationProvider.fetchData).toHaveBeenCalledWith(
-        sourceId
-      );
+      expect(mockConfigLoader.loadConfigs).toHaveBeenCalledWith(sourceId);
       expect(service.getLlmConfigsCacheForTest().size).toBe(2);
       expect(
         service.getLlmConfigsCacheForTest().get(sampleConfig1.configId)
@@ -375,10 +387,11 @@ describe('LLMConfigService', () => {
     it('should not load from source if configSourceIdentifier is not set', async () => {
       service = new LLMConfigService({
         logger: mockLogger,
-        configurationProvider: mockConfigurationProvider,
+        configLoader: mockConfigLoader,
+        cache,
       });
       await service.getConfig('any_id');
-      expect(mockConfigurationProvider.fetchData).not.toHaveBeenCalled();
+      expect(mockConfigLoader.loadConfigs).not.toHaveBeenCalled();
       expect(service.getLlmConfigsCacheForTest().size).toBe(0);
       expect(service.getConfigsLoadedOrAttemptedFlagForTest()).toBe(true); // Marked as attempted
       expect(mockLogger.warn).toHaveBeenCalledWith(
@@ -388,20 +401,19 @@ describe('LLMConfigService', () => {
       );
     });
 
-    it('should handle errors from configurationProvider.fetchData', async () => {
+    it('should handle errors from configLoader.loadConfigs', async () => {
       service = new LLMConfigService({
         logger: mockLogger,
-        configurationProvider: mockConfigurationProvider,
+        configLoader: mockConfigLoader,
+        cache,
         configSourceIdentifier: sourceId,
       });
       const fetchError = new Error('Fetch failed');
-      mockConfigurationProvider.fetchData.mockRejectedValue(fetchError);
+      mockConfigLoader.loadConfigs.mockRejectedValue(fetchError);
 
       await service.getConfig('any_id');
 
-      expect(mockConfigurationProvider.fetchData).toHaveBeenCalledWith(
-        sourceId
-      );
+      expect(mockConfigLoader.loadConfigs).toHaveBeenCalledWith(sourceId);
       expect(service.getLlmConfigsCacheForTest().size).toBe(0);
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining(
@@ -415,11 +427,12 @@ describe('LLMConfigService', () => {
     it('should handle invalid data structure from provider (e.g. missing "configs" map)', async () => {
       service = new LLMConfigService({
         logger: mockLogger,
-        configurationProvider: mockConfigurationProvider,
+        configLoader: mockConfigLoader,
+        cache,
         configSourceIdentifier: sourceId,
       });
       const invalidFetchedData = { defaultConfigId: 'test' }; // Missing 'configs'
-      mockConfigurationProvider.fetchData.mockResolvedValue(invalidFetchedData);
+      mockConfigLoader.loadConfigs.mockResolvedValue(invalidFetchedData);
 
       await service.getConfig('any_id');
       expect(service.getLlmConfigsCacheForTest().size).toBe(0);
@@ -435,7 +448,8 @@ describe('LLMConfigService', () => {
     it('should skip invalid configs within fetched data and log them', async () => {
       service = new LLMConfigService({
         logger: mockLogger,
-        configurationProvider: mockConfigurationProvider,
+        configLoader: mockConfigLoader,
+        cache,
         configSourceIdentifier: sourceId,
       });
       const invalidConfigInSource = { modelIdentifier: 'bad' };
@@ -446,7 +460,7 @@ describe('LLMConfigService', () => {
           invalidKey: invalidConfigInSource,
         },
       };
-      mockConfigurationProvider.fetchData.mockResolvedValue(fetchedData);
+      mockConfigLoader.loadConfigs.mockResolvedValue(fetchedData);
 
       await service.getConfig(sampleConfig1.configId);
       expect(service.getLlmConfigsCacheForTest().size).toBe(1);
@@ -466,7 +480,8 @@ describe('LLMConfigService', () => {
     it('should warn if configId in fetched object does not match its key in the map', async () => {
       service = new LLMConfigService({
         logger: mockLogger,
-        configurationProvider: mockConfigurationProvider,
+        configLoader: mockConfigLoader,
+        cache,
         configSourceIdentifier: sourceId,
       });
       const mismatchedConfig = {
@@ -477,7 +492,7 @@ describe('LLMConfigService', () => {
         defaultConfigId: 'key_in_map',
         configs: { key_in_map: mismatchedConfig },
       };
-      mockConfigurationProvider.fetchData.mockResolvedValue(fetchedData);
+      mockConfigLoader.loadConfigs.mockResolvedValue(fetchedData);
 
       await service.getConfig('actual_id_is_different');
       expect(
@@ -494,35 +509,37 @@ describe('LLMConfigService', () => {
     it('should not reload from source if configs already loaded and cache populated', async () => {
       service = new LLMConfigService({
         logger: mockLogger,
-        configurationProvider: mockConfigurationProvider,
+        configLoader: mockConfigLoader,
+        cache,
         configSourceIdentifier: sourceId,
         initialConfigs: [{ ...sampleConfig1 }],
       });
       expect(service.getConfigsLoadedOrAttemptedFlagForTest()).toBe(true); // from initialConfigs
-      mockConfigurationProvider.fetchData.mockClear(); // Clear calls from potential constructor load if any
+      mockConfigLoader.loadConfigs.mockClear(); // Clear calls from potential constructor load if any
 
       await service.getConfig(sampleConfig1.configId);
-      expect(mockConfigurationProvider.fetchData).not.toHaveBeenCalled();
+      expect(mockConfigLoader.loadConfigs).not.toHaveBeenCalled();
     });
 
     it('should not reload from source if load was attempted from source and failed (cache empty)', async () => {
       service = new LLMConfigService({
         logger: mockLogger,
-        configurationProvider: mockConfigurationProvider,
+        configLoader: mockConfigLoader,
+        cache,
         configSourceIdentifier: sourceId,
       });
-      mockConfigurationProvider.fetchData.mockRejectedValueOnce(
+      mockConfigLoader.loadConfigs.mockRejectedValueOnce(
         new Error('First fail')
       );
       await service.getConfig('any_id'); // First attempt, fails
-      expect(mockConfigurationProvider.fetchData).toHaveBeenCalledTimes(1);
+      expect(mockConfigLoader.loadConfigs).toHaveBeenCalledTimes(1);
       expect(service.getConfigsLoadedOrAttemptedFlagForTest()).toBe(true);
       expect(service.getLlmConfigsCacheForTest().size).toBe(0);
 
       // Second attempt
       await service.getConfig('another_id');
-      // Should not call fetchData again because #configsLoadedOrAttempted is true and cache is empty (implying previous failure)
-      expect(mockConfigurationProvider.fetchData).toHaveBeenCalledTimes(1); // Still 1
+      // Should not call loadConfigs again because #configsLoadedOrAttempted is true and cache is empty (implying previous failure)
+      expect(mockConfigLoader.loadConfigs).toHaveBeenCalledTimes(1); // Still 1
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining(
           'Load previously attempted from source, but cache is empty'
@@ -535,7 +552,8 @@ describe('LLMConfigService', () => {
     it('should return undefined and log error if llmId is not a non-empty string', async () => {
       service = new LLMConfigService({
         logger: mockLogger,
-        configurationProvider: mockConfigurationProvider,
+        configLoader: mockConfigLoader,
+        cache,
       });
       expect(await service.getConfig('')).toBeUndefined();
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -554,10 +572,11 @@ describe('LLMConfigService', () => {
     it('should return undefined if cache is empty and no source can provide configs', async () => {
       service = new LLMConfigService({
         logger: mockLogger,
-        configurationProvider: mockConfigurationProvider,
+        configLoader: mockConfigLoader,
+        cache,
       });
       // No initial configs, no source ID, or source load fails and leaves cache empty
-      mockConfigurationProvider.fetchData.mockResolvedValue({ configs: {} }); // Ensure ensureConfigsLoaded runs but finds nothing
+      mockConfigLoader.loadConfigs.mockResolvedValue({ configs: {} }); // Ensure ensureConfigsLoaded runs but finds nothing
       expect(await service.getConfig('non_existent_id')).toBeUndefined();
       expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining(
@@ -569,7 +588,8 @@ describe('LLMConfigService', () => {
     it('should return dependencyInjection by direct configId match', async () => {
       service = new LLMConfigService({
         logger: mockLogger,
-        configurationProvider: mockConfigurationProvider,
+        configLoader: mockConfigLoader,
+        cache,
         initialConfigs: [{ ...sampleConfig1 }],
       });
       const config = await service.getConfig(sampleConfig1.configId);
@@ -584,7 +604,8 @@ describe('LLMConfigService', () => {
     it('should return a copy of the dependencyInjection, not the cached instance', async () => {
       service = new LLMConfigService({
         logger: mockLogger,
-        configurationProvider: mockConfigurationProvider,
+        configLoader: mockConfigLoader,
+        cache,
         initialConfigs: [{ ...sampleConfig1 }],
       });
       const config = await service.getConfig(sampleConfig1.configId);
@@ -599,7 +620,8 @@ describe('LLMConfigService', () => {
     it('should return dependencyInjection by exact modelIdentifier match if configId fails', async () => {
       service = new LLMConfigService({
         logger: mockLogger,
-        configurationProvider: mockConfigurationProvider,
+        configLoader: mockConfigLoader,
+        cache,
         initialConfigs: [{ ...sampleConfig1 }],
       });
       const config = await service.getConfig(sampleConfig1.modelIdentifier);
@@ -619,7 +641,8 @@ describe('LLMConfigService', () => {
       ];
       service = new LLMConfigService({
         logger: mockLogger,
-        configurationProvider: mockConfigurationProvider,
+        configLoader: mockConfigLoader,
+        cache,
         initialConfigs,
       });
 
@@ -656,7 +679,8 @@ describe('LLMConfigService', () => {
       };
       service = new LLMConfigService({
         logger: mockLogger,
-        configurationProvider: mockConfigurationProvider,
+        configLoader: mockConfigLoader,
+        cache,
         initialConfigs: [{ ...sampleConfig1 }, conflictingConfig],
       });
 
@@ -678,7 +702,8 @@ describe('LLMConfigService', () => {
       };
       service = new LLMConfigService({
         logger: mockLogger,
-        configurationProvider: mockConfigurationProvider,
+        configLoader: mockConfigLoader,
+        cache,
         initialConfigs: [{ ...sampleWildcardConfig }, exactMatchConfig],
       });
 
@@ -694,7 +719,8 @@ describe('LLMConfigService', () => {
     it('should return undefined if no match is found after all checks', async () => {
       service = new LLMConfigService({
         logger: mockLogger,
-        configurationProvider: mockConfigurationProvider,
+        configLoader: mockConfigLoader,
+        cache,
         initialConfigs: [{ ...sampleConfig1 }],
       });
       const config = await service.getConfig('non_existent_identifier_123');
@@ -712,7 +738,8 @@ describe('LLMConfigService', () => {
     it('should clear the cache and reset configsLoadedOrAttempted flag', async () => {
       service = new LLMConfigService({
         logger: mockLogger,
-        configurationProvider: mockConfigurationProvider,
+        configLoader: mockConfigLoader,
+        cache,
         initialConfigs: [{ ...sampleConfig1 }],
         configSourceIdentifier: sourceId,
       });
@@ -731,24 +758,23 @@ describe('LLMConfigService', () => {
     it('should force a reload from source on next getConfig call if source is configured', async () => {
       service = new LLMConfigService({
         logger: mockLogger,
-        configurationProvider: mockConfigurationProvider,
+        configLoader: mockConfigLoader,
+        cache,
         initialConfigs: [{ ...sampleConfig1 }], // Load initially
         configSourceIdentifier: sourceId,
       });
       await service.getConfig(sampleConfig1.configId); // ensures initial load if not from constructor
-      mockConfigurationProvider.fetchData.mockClear(); // Clear any calls from initial load
+      mockConfigLoader.loadConfigs.mockClear(); // Clear any calls from initial load
 
       service.resetCache();
 
       const fetchedData = {
         configs: { [sampleConfig2.configId]: { ...sampleConfig2 } },
       };
-      mockConfigurationProvider.fetchData.mockResolvedValue(fetchedData);
+      mockConfigLoader.loadConfigs.mockResolvedValue(fetchedData);
 
       const newConfig = await service.getConfig(sampleConfig2.configId);
-      expect(mockConfigurationProvider.fetchData).toHaveBeenCalledWith(
-        sourceId
-      );
+      expect(mockConfigLoader.loadConfigs).toHaveBeenCalledWith(sourceId);
       expect(newConfig).toEqual(sampleConfig2);
       expect(service.getLlmConfigsCacheForTest().size).toBe(1);
     });
@@ -759,19 +785,21 @@ describe('LLMConfigService', () => {
       const initialConfigs = [{ ...sampleConfig1 }];
       service = new LLMConfigService({
         logger: mockLogger,
-        configurationProvider: mockConfigurationProvider,
+        configLoader: mockConfigLoader,
+        cache,
         initialConfigs,
       });
-      const cache = service.getLlmConfigsCacheForTest();
-      expect(cache).toBeInstanceOf(Map);
-      expect(cache.size).toBe(1);
-      expect(cache.get(sampleConfig1.configId)).toEqual(sampleConfig1);
+      const cacheMap = service.getLlmConfigsCacheForTest();
+      expect(cacheMap).toBeInstanceOf(Map);
+      expect(cacheMap.size).toBe(1);
+      expect(cacheMap.get(sampleConfig1.configId)).toEqual(sampleConfig1);
     });
 
     it('getConfigsLoadedOrAttemptedFlagForTest should return the internal flag state', () => {
       service = new LLMConfigService({
         logger: mockLogger,
-        configurationProvider: mockConfigurationProvider,
+        configLoader: mockConfigLoader,
+        cache,
       });
       expect(service.getConfigsLoadedOrAttemptedFlagForTest()).toBe(false);
       service.addOrUpdateConfigs([{ ...sampleConfig1 }]); // This will set the flag to true
