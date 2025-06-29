@@ -11,7 +11,11 @@
 import { ITurnDirectiveStrategy } from '../interfaces/ITurnDirectiveStrategy.js';
 import TurnDirective from '../constants/turnDirectives.js';
 import { TURN_ENDED_ID } from '../../constants/eventIds.js';
-import { assertDirective, requireContextActor } from './strategyHelpers.js';
+import {
+  assertDirective,
+  requireContextActor,
+  getLoggerAndClass,
+} from './strategyHelpers.js';
 
 export default class WaitForTurnEndEventStrategy extends ITurnDirectiveStrategy {
   /**
@@ -34,8 +38,7 @@ export default class WaitForTurnEndEventStrategy extends ITurnDirectiveStrategy 
     /** @type {TurnDirectiveEnum}     */ directive,
     /** @type {CommandResult}    */ cmdProcResult // eslint-disable-line no-unused-vars
   ) {
-    const className = this.constructor.name;
-    const logger = turnContext.getLogger();
+    const { logger, className } = getLoggerAndClass(this, turnContext);
 
     assertDirective({
       expected: TurnDirective.WAIT_FOR_EVENT,
