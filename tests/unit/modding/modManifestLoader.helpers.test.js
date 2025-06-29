@@ -1,7 +1,11 @@
 import { jest, describe, beforeEach, test, expect } from '@jest/globals';
 import ModManifestLoader from '../../../src/modding/modManifestLoader.js';
 
-/** Helper to build loader with basic mocks */
+/**
+ * Helper to build loader with basic mocks.
+ *
+ * @returns {{loader: ModManifestLoader, deps: object}} Loader and dependencies.
+ */
 const buildLoader = () => {
   const deps = {
     configuration: { getContentTypeSchemaId: jest.fn(() => 'schema') },
@@ -56,5 +60,20 @@ describe('ModManifestLoader helper methods', () => {
     expect(() => loader._getManifestValidator('schema')).toThrow(
       "no validator available for 'schema'"
     );
+  });
+
+  test('_fetchManifests fetches manifests using resolver and fetcher', async () => {
+    deps.pathResolver.resolveModManifestPath.mockImplementation(
+      (id) => `mods/${id}/manifest.json`
+    );
+    deps.dataFetcher.fetch
+      .mockResolvedValueOnce({ id: 'a' })
+      .mockResolvedValueOnce({ id: 'b' });
+    const { fetchJobs, settled } = await loader._fetchManifests(['a', 'b']);
+    expect(fetchJobs.map((j) => j.path)).toEqual([
+      'mods/a/manifest.json',
+      'mods/b/manifest.json',
+    ]);
+    expect(settled.every((s) => s.status === 'fulfilled')).toBe(true);
   });
 });
