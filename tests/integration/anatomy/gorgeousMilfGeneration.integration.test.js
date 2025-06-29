@@ -38,7 +38,7 @@ import humanLegShapely from '../../../data/mods/anatomy/entities/definitions/hum
 import humanoidArm from '../../../data/mods/anatomy/entities/definitions/humanoid_arm.entity.json';
 import humanoidHead from '../../../data/mods/anatomy/entities/definitions/humanoid_head.entity.json';
 import humanoidLeg from '../../../data/mods/anatomy/entities/definitions/humanoid_leg.entity.json';
-import humanoidTorso from '../../../data/mods/anatomy/entities/definitions/humanoid_torso.entity.json';
+import humanFemaleTorso from '../../../data/mods/anatomy/entities/definitions/human_female_torso.entity.json';
 import jacquelineRouxel from '../../../data/mods/anatomy/entities/instances/jacqueline_rouxel.entity.json';
 
 import humanoidStandardBlueprint from '../../../data/mods/anatomy/blueprints/humanoid_standard.blueprint.json';
@@ -102,7 +102,7 @@ describe('Gorgeous MILF Anatomy Generation Integration Test', () => {
       'anatomy:humanoid_arm': humanoidArm,
       'anatomy:humanoid_head': humanoidHead,
       'anatomy:humanoid_leg': humanoidLeg,
-      'anatomy:humanoid_torso': humanoidTorso,
+      'anatomy:human_female_torso': humanFemaleTorso,
       'anatomy:jacqueline_rouxel': jacquelineRouxel,
     });
 
