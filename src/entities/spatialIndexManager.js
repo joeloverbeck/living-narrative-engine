@@ -3,7 +3,7 @@
 import { POSITION_COMPONENT_ID } from '../constants/componentIds.js';
 import { ISpatialIndexManager } from '../interfaces/ISpatialIndexManager.js';
 import { MapManager } from '../utils/mapManagerUtils.js';
-import { assertValidId } from '../utils/dependencyUtils.js';
+import { isValidId } from './utils/idValidation.js';
 
 /**
  * Manages a spatial index mapping location IDs to the entities present
@@ -29,40 +29,6 @@ class SpatialIndexManager extends MapManager {
      */
     this.locationIndex = this.items; // Inherits `items` from MapManager
     this.logger.info('SpatialIndexManager initialized.');
-  }
-
-  /**
-   * @description Validate an ID using assertValidId.
-   * @private
-   * @param {any} id - ID to validate.
-   * @param {string} context - Context for error messages.
-   * @returns {boolean} `true` if valid, otherwise `false`.
-   */
-  #isValidId(id, context) {
-    try {
-      assertValidId(id, context, this.logger);
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
-  /**
-   * @description Validate an entity ID.
-   * @param {any} id - ID to validate.
-   * @returns {boolean} `true` if valid, otherwise `false`.
-   */
-  #isValidEntityId(id) {
-    return this.#isValidId(id, 'SpatialIndexManager.#isValidEntityId');
-  }
-
-  /**
-   * @description Validate a location ID.
-   * @param {any} id - Location ID to validate.
-   * @returns {boolean} `true` if valid, otherwise `false`.
-   */
-  #isValidLocationId(id) {
-    return this.#isValidId(id, 'SpatialIndexManager.#isValidLocationId');
   }
 
   /**
@@ -103,14 +69,14 @@ class SpatialIndexManager extends MapManager {
    * @param {string | null | undefined} locationId - The location ID where the entity is present. Should be a valid string to be indexed.
    */
   addEntity(entityId, locationId) {
-    if (!this.#isValidEntityId(entityId)) {
+    if (!isValidId(entityId, 'SpatialIndexManager.addEntity', this.logger)) {
       this.logger.warn(
         `SpatialIndexManager.addEntity: Invalid entityId (${entityId}). Skipping.`
       );
       return;
     }
 
-    if (!this.#isValidLocationId(locationId)) {
+    if (!isValidId(locationId, 'SpatialIndexManager.addEntity', this.logger)) {
       return;
     }
 
@@ -132,14 +98,16 @@ class SpatialIndexManager extends MapManager {
    * @param {string | null | undefined} locationId - The location ID from which to remove the entity. Should typically be the entity's last valid location.
    */
   removeEntity(entityId, locationId) {
-    if (!this.#isValidEntityId(entityId)) {
+    if (!isValidId(entityId, 'SpatialIndexManager.removeEntity', this.logger)) {
       this.logger.warn(
         `SpatialIndexManager.removeEntity: Invalid entityId (${entityId}). Skipping.`
       );
       return;
     }
 
-    if (!this.#isValidLocationId(locationId)) {
+    if (
+      !isValidId(locationId, 'SpatialIndexManager.removeEntity', this.logger)
+    ) {
       return;
     }
 
@@ -161,17 +129,31 @@ class SpatialIndexManager extends MapManager {
    * @param {string | null | undefined} newLocationId - The new location ID (can be null/undefined).
    */
   updateEntityLocation(entityId, oldLocationId, newLocationId) {
-    if (!this.#isValidEntityId(entityId)) {
+    if (
+      !isValidId(
+        entityId,
+        'SpatialIndexManager.updateEntityLocation',
+        this.logger
+      )
+    ) {
       this.logger.warn(
         'SpatialIndexManager.updateEntityLocation: Invalid entityId. Skipping.'
       );
       return;
     }
 
-    const effectiveOldLocationId = this.#isValidLocationId(oldLocationId)
+    const effectiveOldLocationId = isValidId(
+      oldLocationId,
+      'SpatialIndexManager.updateEntityLocation',
+      this.logger
+    )
       ? oldLocationId.trim()
       : null;
-    const effectiveNewLocationId = this.#isValidLocationId(newLocationId)
+    const effectiveNewLocationId = isValidId(
+      newLocationId,
+      'SpatialIndexManager.updateEntityLocation',
+      this.logger
+    )
       ? newLocationId.trim()
       : null;
 
@@ -196,7 +178,13 @@ class SpatialIndexManager extends MapManager {
    * @returns {Set<string>} A *copy* of the Set of entity IDs in the location, or an empty Set if the location is not indexed, empty, or the provided locationId is invalid/null.
    */
   getEntitiesInLocation(locationId) {
-    if (!this.#isValidLocationId(locationId)) {
+    if (
+      !isValidId(
+        locationId,
+        'SpatialIndexManager.getEntitiesInLocation',
+        this.logger
+      )
+    ) {
       return new Set();
     }
 
