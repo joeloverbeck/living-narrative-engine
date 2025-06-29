@@ -1,6 +1,7 @@
 // src/entities/utils/entityFetchHelpers.js
 
 import { InvalidEntityIdError } from '../errors/invalidEntityIdError.js';
+import { resolveEntity } from '../entities/entityAccessService.js';
 
 /**
  * @module entityFetchHelpers
@@ -19,7 +20,7 @@ export function fetchEntity(entityManager, entityId) {
   if (!entityId) {
     throw new InvalidEntityIdError(entityId);
   }
-  return entityManager.getEntityInstance(entityId);
+  return resolveEntity(entityId, entityManager);
 }
 
 /**
