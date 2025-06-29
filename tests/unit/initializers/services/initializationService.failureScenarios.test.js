@@ -1,4 +1,5 @@
 import InitializationService from '../../../../src/initializers/services/initializationService.js';
+import LlmAdapterInitializer from '../../../../src/initializers/services/llmAdapterInitializer.js';
 import { WorldInitializationError } from '../../../../src/errors/InitializationError.js';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
@@ -18,6 +19,7 @@ let entityManager;
 let domUiFacade;
 let thoughtListener;
 let notesListener;
+let llmAdapterInitializer;
 
 beforeEach(() => {
   logger = { error: jest.fn(), debug: jest.fn() };
@@ -40,6 +42,7 @@ beforeEach(() => {
   domUiFacade = {};
   thoughtListener = { handleEvent: jest.fn() };
   notesListener = { handleEvent: jest.fn() };
+  llmAdapterInitializer = new LlmAdapterInitializer();
 });
 
 describe('InitializationService failure scenarios', () => {
@@ -61,6 +64,7 @@ describe('InitializationService failure scenarios', () => {
         contentDependencyValidator: {
           validate: jest.fn().mockResolvedValue(undefined),
         },
+        llmAdapterInitializer,
       },
       llm: {
         llmAdapter: { init: jest.fn() },

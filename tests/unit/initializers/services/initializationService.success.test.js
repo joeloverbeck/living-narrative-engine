@@ -1,4 +1,5 @@
 import InitializationService from '../../../../src/initializers/services/initializationService.js';
+import LlmAdapterInitializer from '../../../../src/initializers/services/llmAdapterInitializer.js';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
 const MOCK_WORLD = 'testWorld';
@@ -20,6 +21,7 @@ let gameDataRepository;
 let thoughtListener;
 let notesListener;
 let contentDependencyValidator;
+let llmAdapterInitializer;
 
 beforeEach(() => {
   logger = { error: jest.fn(), debug: jest.fn(), warn: jest.fn() };
@@ -55,6 +57,7 @@ beforeEach(() => {
   contentDependencyValidator = {
     validate: jest.fn().mockResolvedValue(undefined),
   };
+  llmAdapterInitializer = new LlmAdapterInitializer();
 });
 
 describe('InitializationService success path', () => {
@@ -79,6 +82,7 @@ describe('InitializationService success path', () => {
         systemInitializer,
         worldInitializer,
         contentDependencyValidator,
+        llmAdapterInitializer,
       },
     });
 
