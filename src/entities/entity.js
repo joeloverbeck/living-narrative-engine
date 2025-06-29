@@ -98,21 +98,10 @@ class Entity {
    * considering both its definition and instance overrides.
    *
    * @param {string} componentTypeId - The unique string identifier for the component type.
-   * @param {boolean} [checkOverrideOnly] - DEPRECATED. If true, only checks
-   * instance overrides.
    * @returns {boolean} True if the entity has data for this component type, false otherwise.
    */
-  hasComponent(componentTypeId, checkOverrideOnly = false) {
-    if (arguments.length === 2) {
-      // eslint-disable-next-line no-console
-      console.warn(
-        'Entity.hasComponent: The checkOverrideOnly flag is deprecated. Use hasComponentOverride(componentTypeId) instead.'
-      );
-      if (checkOverrideOnly) {
-        return this.hasComponentOverride(componentTypeId);
-      }
-    }
-    return this.#data.hasComponent(componentTypeId); // Use #data
+  hasComponent(componentTypeId) {
+    return this.#data.hasComponent(componentTypeId);
   }
 
   /**
