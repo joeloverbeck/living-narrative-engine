@@ -3,6 +3,7 @@
  */
 
 import { DelegatingDecisionProvider } from './delegatingDecisionProvider.js';
+import { validateDependency } from '../../utils/dependencyUtils.js';
 
 /** @typedef {import('./delegatingDecisionProvider.js').DecisionDelegate} DecisionDelegate */
 
@@ -16,6 +17,11 @@ import { DelegatingDecisionProvider } from './delegatingDecisionProvider.js';
  */
 export class LLMDecisionProvider extends DelegatingDecisionProvider {
   /**
+   * @type {import('../../turns/ports/ILLMChooser').ILLMChooser}
+   * @private
+   */
+  #llmChooser;
+  /**
    * Creates a new LLMDecisionProvider.
    *
    * @param {{
@@ -27,8 +33,11 @@ export class LLMDecisionProvider extends DelegatingDecisionProvider {
    * @returns {void}
    */
   constructor({ llmChooser, logger, safeEventDispatcher }) {
+    validateDependency(llmChooser, 'llmChooser', logger, {
+      requiredMethods: ['choose'],
+    });
     const delegate = (actor, context, actions, abortSignal) =>
-      llmChooser.choose({
+      this.#llmChooser.choose({
         actor,
         context,
         actions,
@@ -36,7 +45,6 @@ export class LLMDecisionProvider extends DelegatingDecisionProvider {
       });
 
     super({ delegate, logger, safeEventDispatcher });
-    /** @protected @type {import('../../turns/ports/ILLMChooser').ILLMChooser} */
-    this.llmChooser = llmChooser;
+    this.#llmChooser = llmChooser;
   }
 }

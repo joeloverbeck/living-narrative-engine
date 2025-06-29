@@ -9,6 +9,7 @@ import { AbstractTurnState } from './abstractTurnState.js';
 import { ACTION_DECIDED_ID } from '../../constants/eventIds.js';
 import { determineActorType } from '../../utils/actorTypeUtils.js';
 import { getLogger, getSafeEventDispatcher } from './helpers/contextUtils.js';
+import { safeDispatchEvent } from '../../utils/safeDispatchEvent.js';
 import { ActionDecisionWorkflow } from './workflows/actionDecisionWorkflow.js';
 import { destroyCleanupStrategy } from './helpers/destroyCleanupStrategy.js';
 
@@ -243,21 +244,7 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
 
     const dispatcher = getSafeEventDispatcher(turnContext, this._handler);
     const logger = turnContext.getLogger();
-    if (dispatcher) {
-      try {
-        await dispatcher.dispatch(ACTION_DECIDED_ID, payload);
-        logger.debug(`Dispatched ${ACTION_DECIDED_ID} for actor ${actor.id}`);
-      } catch (e) {
-        logger.error(
-          `Failed to dispatch ${ACTION_DECIDED_ID} event for actor ${actor.id}`,
-          e
-        );
-      }
-    } else {
-      logger.error(
-        `${this.getStateName()}: No SafeEventDispatcher available to dispatch ${ACTION_DECIDED_ID} for actor ${actor.id}.`
-      );
-    }
+    await safeDispatchEvent(dispatcher, ACTION_DECIDED_ID, payload, logger);
   }
 
   /* --------------------------------------------------------------------- */

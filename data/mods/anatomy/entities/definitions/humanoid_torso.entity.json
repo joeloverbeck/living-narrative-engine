@@ -11,10 +11,7 @@
         {
           "id": "neck",
           "orientation": "upper",
-          "allowedTypes": [
-            "head",
-            "neck"
-          ],
+          "allowedTypes": ["head", "neck"],
           "maxCount": 1,
           "jointType": "ball",
           "nameTpl": "{{type}}"
@@ -22,9 +19,7 @@
         {
           "id": "left_shoulder",
           "orientation": "left",
-          "allowedTypes": [
-            "arm"
-          ],
+          "allowedTypes": ["arm"],
           "maxCount": 1,
           "jointType": "ball",
           "nameTpl": "{{orientation}} {{type}}"
@@ -32,9 +27,7 @@
         {
           "id": "right_shoulder",
           "orientation": "right",
-          "allowedTypes": [
-            "arm"
-          ],
+          "allowedTypes": ["arm"],
           "maxCount": 1,
           "jointType": "ball",
           "nameTpl": "{{orientation}} {{type}}"
@@ -42,9 +35,7 @@
         {
           "id": "left_hip",
           "orientation": "left",
-          "allowedTypes": [
-            "leg"
-          ],
+          "allowedTypes": ["leg"],
           "maxCount": 1,
           "jointType": "ball",
           "nameTpl": "{{orientation}} {{type}}"
@@ -52,9 +43,7 @@
         {
           "id": "right_hip",
           "orientation": "right",
-          "allowedTypes": [
-            "leg"
-          ],
+          "allowedTypes": ["leg"],
           "maxCount": 1,
           "jointType": "ball",
           "nameTpl": "{{orientation}} {{type}}"
@@ -62,9 +51,7 @@
         {
           "id": "chest",
           "orientation": "front",
-          "allowedTypes": [
-            "breast"
-          ],
+          "allowedTypes": ["breast"],
           "maxCount": 2,
           "jointType": "fused",
           "nameTpl": "{{orientation}} {{type}}"

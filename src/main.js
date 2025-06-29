@@ -217,7 +217,7 @@ export async function beginGame(showLoadUI = false) {
     const startResult = await startGameStage(gameEngine, ACTIVE_WORLD, logger);
     if (!startResult.success) throw startResult.error;
     if (showLoadUI && typeof gameEngine.showLoadGameUI === 'function') {
-      gameEngine.showLoadGameUI();
+      await gameEngine.showLoadGameUI();
     }
   } catch (error) {
     displayFatalStartupError(

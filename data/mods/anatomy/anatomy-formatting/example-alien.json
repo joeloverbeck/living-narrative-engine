@@ -5,7 +5,7 @@
     "build",
     "carapace",
     "tentacle",
-    "eyestalk", 
+    "eyestalk",
     "pseudopod",
     "core",
     "hair",
@@ -57,11 +57,7 @@
     "pseudopod": "pseudopodia",
     "nucleus": "nuclei"
   },
-  "noArticleParts": [
-    "hair",
-    "carapace",
-    "core"
-  ],
+  "noArticleParts": ["hair", "carapace", "core"],
   "descriptorOrder": [
     "descriptors:alien_type",
     "descriptors:bio_luminescence",

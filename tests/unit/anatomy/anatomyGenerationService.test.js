@@ -50,48 +50,63 @@ describe('AnatomyGenerationService', () => {
 
   describe('constructor', () => {
     it('should throw error if entityManager is not provided', () => {
-      expect(() => new AnatomyGenerationService({
-        dataRegistry: mockDataRegistry,
-        logger: mockLogger,
-        bodyBlueprintFactory: mockBodyBlueprintFactory,
-        anatomyDescriptionService: mockAnatomyDescriptionService,
-      })).toThrow(InvalidArgumentError);
+      expect(
+        () =>
+          new AnatomyGenerationService({
+            dataRegistry: mockDataRegistry,
+            logger: mockLogger,
+            bodyBlueprintFactory: mockBodyBlueprintFactory,
+            anatomyDescriptionService: mockAnatomyDescriptionService,
+          })
+      ).toThrow(InvalidArgumentError);
     });
 
     it('should throw error if dataRegistry is not provided', () => {
-      expect(() => new AnatomyGenerationService({
-        entityManager: mockEntityManager,
-        logger: mockLogger,
-        bodyBlueprintFactory: mockBodyBlueprintFactory,
-        anatomyDescriptionService: mockAnatomyDescriptionService,
-      })).toThrow(InvalidArgumentError);
+      expect(
+        () =>
+          new AnatomyGenerationService({
+            entityManager: mockEntityManager,
+            logger: mockLogger,
+            bodyBlueprintFactory: mockBodyBlueprintFactory,
+            anatomyDescriptionService: mockAnatomyDescriptionService,
+          })
+      ).toThrow(InvalidArgumentError);
     });
 
     it('should throw error if logger is not provided', () => {
-      expect(() => new AnatomyGenerationService({
-        entityManager: mockEntityManager,
-        dataRegistry: mockDataRegistry,
-        bodyBlueprintFactory: mockBodyBlueprintFactory,
-        anatomyDescriptionService: mockAnatomyDescriptionService,
-      })).toThrow(InvalidArgumentError);
+      expect(
+        () =>
+          new AnatomyGenerationService({
+            entityManager: mockEntityManager,
+            dataRegistry: mockDataRegistry,
+            bodyBlueprintFactory: mockBodyBlueprintFactory,
+            anatomyDescriptionService: mockAnatomyDescriptionService,
+          })
+      ).toThrow(InvalidArgumentError);
     });
 
     it('should throw error if bodyBlueprintFactory is not provided', () => {
-      expect(() => new AnatomyGenerationService({
-        entityManager: mockEntityManager,
-        dataRegistry: mockDataRegistry,
-        logger: mockLogger,
-        anatomyDescriptionService: mockAnatomyDescriptionService,
-      })).toThrow(InvalidArgumentError);
+      expect(
+        () =>
+          new AnatomyGenerationService({
+            entityManager: mockEntityManager,
+            dataRegistry: mockDataRegistry,
+            logger: mockLogger,
+            anatomyDescriptionService: mockAnatomyDescriptionService,
+          })
+      ).toThrow(InvalidArgumentError);
     });
 
     it('should throw error if anatomyDescriptionService is not provided', () => {
-      expect(() => new AnatomyGenerationService({
-        entityManager: mockEntityManager,
-        dataRegistry: mockDataRegistry,
-        logger: mockLogger,
-        bodyBlueprintFactory: mockBodyBlueprintFactory,
-      })).toThrow(InvalidArgumentError);
+      expect(
+        () =>
+          new AnatomyGenerationService({
+            entityManager: mockEntityManager,
+            dataRegistry: mockDataRegistry,
+            logger: mockLogger,
+            bodyBlueprintFactory: mockBodyBlueprintFactory,
+          })
+      ).toThrow(InvalidArgumentError);
     });
   });
 
@@ -116,7 +131,9 @@ describe('AnatomyGenerationService', () => {
       const result = await service.generateAnatomyIfNeeded('entity-1');
 
       expect(result).toBe(false);
-      expect(mockEntity.hasComponent).toHaveBeenCalledWith(ANATOMY_BODY_COMPONENT_ID);
+      expect(mockEntity.hasComponent).toHaveBeenCalledWith(
+        ANATOMY_BODY_COMPONENT_ID
+      );
     });
 
     it('should return false if anatomy:body has no recipeId', async () => {
@@ -162,8 +179,9 @@ describe('AnatomyGenerationService', () => {
       mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
       mockDataRegistry.get.mockReturnValue(null);
 
-      await expect(service.generateAnatomyIfNeeded('entity-1'))
-        .rejects.toThrow(ValidationError);
+      await expect(service.generateAnatomyIfNeeded('entity-1')).rejects.toThrow(
+        ValidationError
+      );
     });
 
     it('should throw error if recipe has no blueprintId', async () => {
@@ -178,8 +196,9 @@ describe('AnatomyGenerationService', () => {
         // Recipe without blueprintId
       });
 
-      await expect(service.generateAnatomyIfNeeded('entity-1'))
-        .rejects.toThrow("Recipe 'test-recipe' does not specify a blueprintId");
+      await expect(service.generateAnatomyIfNeeded('entity-1')).rejects.toThrow(
+        "Recipe 'test-recipe' does not specify a blueprintId"
+      );
     });
 
     it('should successfully generate anatomy', async () => {
@@ -190,7 +209,7 @@ describe('AnatomyGenerationService', () => {
         }),
       };
       mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
-      
+
       mockDataRegistry.get.mockReturnValue({
         blueprintId: 'test-blueprint',
       });
@@ -199,7 +218,9 @@ describe('AnatomyGenerationService', () => {
         rootId: 'root-1',
         entities: ['root-1', 'part-1', 'part-2'],
       };
-      mockBodyBlueprintFactory.createAnatomyGraph.mockResolvedValue(mockGraphResult);
+      mockBodyBlueprintFactory.createAnatomyGraph.mockResolvedValue(
+        mockGraphResult
+      );
 
       // Mock part entities without names
       mockEntityManager.getEntityInstance.mockImplementation((id) => {
@@ -229,7 +250,9 @@ describe('AnatomyGenerationService', () => {
           },
         })
       );
-      expect(mockAnatomyDescriptionService.generateAllDescriptions).toHaveBeenCalledWith(mockEntity);
+      expect(
+        mockAnatomyDescriptionService.generateAllDescriptions
+      ).toHaveBeenCalledWith(mockEntity);
     });
 
     it('should handle part entities with names', async () => {
@@ -239,7 +262,7 @@ describe('AnatomyGenerationService', () => {
           recipeId: 'test-recipe',
         }),
       };
-      
+
       mockDataRegistry.get.mockReturnValue({
         blueprintId: 'test-blueprint',
       });
@@ -248,7 +271,9 @@ describe('AnatomyGenerationService', () => {
         rootId: 'root-1',
         entities: ['root-1', 'arm-1', 'arm-2'],
       };
-      mockBodyBlueprintFactory.createAnatomyGraph.mockResolvedValue(mockGraphResult);
+      mockBodyBlueprintFactory.createAnatomyGraph.mockResolvedValue(
+        mockGraphResult
+      );
 
       // Mock part entities with names
       mockEntityManager.getEntityInstance.mockImplementation((id) => {
@@ -297,7 +322,7 @@ describe('AnatomyGenerationService', () => {
         }),
       };
       mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
-      
+
       mockDataRegistry.get.mockReturnValue({
         blueprintId: 'test-blueprint',
       });
@@ -306,12 +331,16 @@ describe('AnatomyGenerationService', () => {
         rootId: 'root-1',
         entities: ['root-1'],
       };
-      mockBodyBlueprintFactory.createAnatomyGraph.mockResolvedValue(mockGraphResult);
+      mockBodyBlueprintFactory.createAnatomyGraph.mockResolvedValue(
+        mockGraphResult
+      );
 
       // Make description generation fail
-      mockAnatomyDescriptionService.generateAllDescriptions.mockImplementation(() => {
-        throw new Error('Description generation failed');
-      });
+      mockAnatomyDescriptionService.generateAllDescriptions.mockImplementation(
+        () => {
+          throw new Error('Description generation failed');
+        }
+      );
 
       const result = await service.generateAnatomyIfNeeded('entity-1');
 
@@ -329,7 +358,7 @@ describe('AnatomyGenerationService', () => {
           recipeId: 'test-recipe',
         }),
       };
-      
+
       mockDataRegistry.get.mockReturnValue({
         blueprintId: 'test-blueprint',
       });
@@ -338,7 +367,9 @@ describe('AnatomyGenerationService', () => {
         rootId: 'root-1',
         entities: ['root-1'],
       };
-      mockBodyBlueprintFactory.createAnatomyGraph.mockResolvedValue(mockGraphResult);
+      mockBodyBlueprintFactory.createAnatomyGraph.mockResolvedValue(
+        mockGraphResult
+      );
 
       // Return entity initially, then null during description generation
       mockEntityManager.getEntityInstance
@@ -349,7 +380,9 @@ describe('AnatomyGenerationService', () => {
       const result = await service.generateAnatomyIfNeeded('entity-1');
 
       expect(result).toBe(true);
-      expect(mockAnatomyDescriptionService.generateAllDescriptions).not.toHaveBeenCalled();
+      expect(
+        mockAnatomyDescriptionService.generateAllDescriptions
+      ).not.toHaveBeenCalled();
     });
 
     it('should handle null name data for parts', async () => {
@@ -359,7 +392,7 @@ describe('AnatomyGenerationService', () => {
           recipeId: 'test-recipe',
         }),
       };
-      
+
       mockDataRegistry.get.mockReturnValue({
         blueprintId: 'test-blueprint',
       });
@@ -368,7 +401,9 @@ describe('AnatomyGenerationService', () => {
         rootId: 'root-1',
         entities: ['root-1', 'part-1'],
       };
-      mockBodyBlueprintFactory.createAnatomyGraph.mockResolvedValue(mockGraphResult);
+      mockBodyBlueprintFactory.createAnatomyGraph.mockResolvedValue(
+        mockGraphResult
+      );
 
       // Mock part entity with name component but null data
       mockEntityManager.getEntityInstance.mockImplementation((id) => {
@@ -405,7 +440,7 @@ describe('AnatomyGenerationService', () => {
           recipeId: 'test-recipe',
         }),
       };
-      
+
       mockDataRegistry.get.mockReturnValue({
         blueprintId: 'test-blueprint',
       });
@@ -414,7 +449,9 @@ describe('AnatomyGenerationService', () => {
         rootId: 'root-1',
         entities: ['root-1', 'part-1'],
       };
-      mockBodyBlueprintFactory.createAnatomyGraph.mockResolvedValue(mockGraphResult);
+      mockBodyBlueprintFactory.createAnatomyGraph.mockResolvedValue(
+        mockGraphResult
+      );
 
       // Mock part entity with empty name
       mockEntityManager.getEntityInstance.mockImplementation((id) => {
@@ -452,7 +489,7 @@ describe('AnatomyGenerationService', () => {
         }),
       };
       mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
-      
+
       mockDataRegistry.get.mockReturnValue({
         blueprintId: 'test-blueprint',
       });
@@ -460,8 +497,9 @@ describe('AnatomyGenerationService', () => {
       const error = new Error('Blueprint creation failed');
       mockBodyBlueprintFactory.createAnatomyGraph.mockRejectedValue(error);
 
-      await expect(service.generateAnatomyIfNeeded('entity-1'))
-        .rejects.toThrow('Blueprint creation failed');
+      await expect(service.generateAnatomyIfNeeded('entity-1')).rejects.toThrow(
+        'Blueprint creation failed'
+      );
 
       expect(mockLogger.error).toHaveBeenCalledWith(
         "AnatomyGenerationService: Failed to generate anatomy for entity 'entity-1'",
@@ -510,7 +548,11 @@ describe('AnatomyGenerationService', () => {
         entities: ['root-1'],
       });
 
-      const result = await service.generateAnatomyForEntities(['entity-1', 'entity-2', 'entity-3']);
+      const result = await service.generateAnatomyForEntities([
+        'entity-1',
+        'entity-2',
+        'entity-3',
+      ]);
 
       expect(result).toEqual({
         generated: ['entity-1'],
@@ -586,7 +628,10 @@ describe('AnatomyGenerationService', () => {
         entities: ['root-1'],
       });
 
-      const result = await service.generateAnatomyForEntities(['entity-1', 'entity-2']);
+      const result = await service.generateAnatomyForEntities([
+        'entity-1',
+        'entity-2',
+      ]);
 
       expect(result).toEqual({
         generated: ['entity-2'],

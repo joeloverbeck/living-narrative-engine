@@ -44,24 +44,33 @@ describe('AnatomyInitializationService', () => {
     });
 
     it('should throw error if eventDispatcher is not provided', () => {
-      expect(() => new AnatomyInitializationService({ 
-        logger: mockLogger, 
-        anatomyGenerationService: mockAnatomyGenerationService 
-      })).toThrow(InvalidArgumentError);
+      expect(
+        () =>
+          new AnatomyInitializationService({
+            logger: mockLogger,
+            anatomyGenerationService: mockAnatomyGenerationService,
+          })
+      ).toThrow(InvalidArgumentError);
     });
 
     it('should throw error if logger is not provided', () => {
-      expect(() => new AnatomyInitializationService({ 
-        eventDispatcher: mockEventDispatcher, 
-        anatomyGenerationService: mockAnatomyGenerationService 
-      })).toThrow(InvalidArgumentError);
+      expect(
+        () =>
+          new AnatomyInitializationService({
+            eventDispatcher: mockEventDispatcher,
+            anatomyGenerationService: mockAnatomyGenerationService,
+          })
+      ).toThrow(InvalidArgumentError);
     });
 
     it('should throw error if anatomyGenerationService is not provided', () => {
-      expect(() => new AnatomyInitializationService({ 
-        eventDispatcher: mockEventDispatcher, 
-        logger: mockLogger 
-      })).toThrow(InvalidArgumentError);
+      expect(
+        () =>
+          new AnatomyInitializationService({
+            eventDispatcher: mockEventDispatcher,
+            logger: mockLogger,
+          })
+      ).toThrow(InvalidArgumentError);
     });
   });
 
@@ -83,7 +92,7 @@ describe('AnatomyInitializationService', () => {
 
     it('should warn and return early if already initialized', () => {
       service.initialize();
-      
+
       // Clear previous calls
       mockLogger.warn.mockClear();
       mockEventDispatcher.on.mockClear();
@@ -99,7 +108,7 @@ describe('AnatomyInitializationService', () => {
 
     it('should bind event handler correctly', () => {
       service.initialize();
-      
+
       expect(boundHandlerRef).toBeDefined();
       expect(typeof boundHandlerRef).toBe('function');
     });
@@ -119,11 +128,15 @@ describe('AnatomyInitializationService', () => {
 
       await boundHandlerRef(event);
 
-      expect(mockAnatomyGenerationService.generateAnatomyIfNeeded).not.toHaveBeenCalled();
+      expect(
+        mockAnatomyGenerationService.generateAnatomyIfNeeded
+      ).not.toHaveBeenCalled();
     });
 
     it('should generate anatomy for new entities', async () => {
-      mockAnatomyGenerationService.generateAnatomyIfNeeded.mockResolvedValue(true);
+      mockAnatomyGenerationService.generateAnatomyIfNeeded.mockResolvedValue(
+        true
+      );
 
       const event = {
         instanceId: 'entity-1',
@@ -133,14 +146,18 @@ describe('AnatomyInitializationService', () => {
 
       await boundHandlerRef(event);
 
-      expect(mockAnatomyGenerationService.generateAnatomyIfNeeded).toHaveBeenCalledWith('entity-1');
+      expect(
+        mockAnatomyGenerationService.generateAnatomyIfNeeded
+      ).toHaveBeenCalledWith('entity-1');
       expect(mockLogger.info).toHaveBeenCalledWith(
         "AnatomyInitializationService: Generated anatomy for entity 'entity-1'"
       );
     });
 
     it('should not log if anatomy was not generated', async () => {
-      mockAnatomyGenerationService.generateAnatomyIfNeeded.mockResolvedValue(false);
+      mockAnatomyGenerationService.generateAnatomyIfNeeded.mockResolvedValue(
+        false
+      );
 
       const event = {
         instanceId: 'entity-1',
@@ -150,7 +167,9 @@ describe('AnatomyInitializationService', () => {
 
       await boundHandlerRef(event);
 
-      expect(mockAnatomyGenerationService.generateAnatomyIfNeeded).toHaveBeenCalledWith('entity-1');
+      expect(
+        mockAnatomyGenerationService.generateAnatomyIfNeeded
+      ).toHaveBeenCalledWith('entity-1');
       expect(mockLogger.info).not.toHaveBeenCalledWith(
         expect.stringContaining('Generated anatomy')
       );
@@ -167,12 +186,16 @@ describe('AnatomyInitializationService', () => {
       expect(mockLogger.warn).toHaveBeenCalledWith(
         'AnatomyInitializationService: Entity created event missing instanceId'
       );
-      expect(mockAnatomyGenerationService.generateAnatomyIfNeeded).not.toHaveBeenCalled();
+      expect(
+        mockAnatomyGenerationService.generateAnatomyIfNeeded
+      ).not.toHaveBeenCalled();
     });
 
     it('should handle errors gracefully', async () => {
       const error = new Error('Generation failed');
-      mockAnatomyGenerationService.generateAnatomyIfNeeded.mockRejectedValue(error);
+      mockAnatomyGenerationService.generateAnatomyIfNeeded.mockRejectedValue(
+        error
+      );
 
       const event = {
         instanceId: 'entity-1',
@@ -317,9 +340,13 @@ describe('AnatomyInitializationService', () => {
         definitionId: 'def-1',
         wasReconstructed: false,
       };
-      mockAnatomyGenerationService.generateAnatomyIfNeeded.mockResolvedValue(true);
+      mockAnatomyGenerationService.generateAnatomyIfNeeded.mockResolvedValue(
+        true
+      );
       await boundHandlerRef(event);
-      expect(mockAnatomyGenerationService.generateAnatomyIfNeeded).toHaveBeenCalled();
+      expect(
+        mockAnatomyGenerationService.generateAnatomyIfNeeded
+      ).toHaveBeenCalled();
 
       // Dispose
       service.dispose();

@@ -12,11 +12,11 @@ describeInitializedEngineSuite(
   'GameEngine',
   (context) => {
     describe('showSaveGameUI', () => {
-      it('should dispatch REQUEST_SHOW_SAVE_GAME_UI if saving is allowed and log intent', () => {
+      it('should dispatch REQUEST_SHOW_SAVE_GAME_UI if saving is allowed and log intent', async () => {
         context.bed
           .getGamePersistenceService()
           .isSavingAllowed.mockReturnValue(true);
-        context.engine.showSaveGameUI(); // Method is now sync
+        await context.engine.showSaveGameUI();
 
         expect(context.bed.getLogger().debug).toHaveBeenCalledWith(
           'GameEngine.showSaveGameUI: Dispatching request to show Save Game UI.'
@@ -29,11 +29,11 @@ describeInitializedEngineSuite(
         );
       });
 
-      it('should dispatch CANNOT_SAVE_GAME_INFO if saving is not allowed and log reason', () => {
+      it('should dispatch CANNOT_SAVE_GAME_INFO if saving is not allowed and log reason', async () => {
         context.bed
           .getGamePersistenceService()
           .isSavingAllowed.mockReturnValue(false);
-        context.engine.showSaveGameUI(); // Method is now sync
+        await context.engine.showSaveGameUI();
 
         expect(context.bed.getLogger().warn).toHaveBeenCalledWith(
           'GameEngine.showSaveGameUI: Saving is not currently allowed.'
@@ -51,8 +51,8 @@ describeInitializedEngineSuite(
 
       generateServiceUnavailableTests(
         [[tokens.GamePersistenceService, GAME_PERSISTENCE_SAVE_UI_UNAVAILABLE]],
-        (bed, engine) => {
-          engine.showSaveGameUI();
+        async (bed, engine) => {
+          await engine.showSaveGameUI();
           // eslint-disable-next-line jest/no-standalone-expect
           expect(
             bed.getGamePersistenceService().isSavingAllowed

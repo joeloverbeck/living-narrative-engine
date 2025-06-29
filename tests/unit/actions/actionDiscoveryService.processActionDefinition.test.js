@@ -1,7 +1,6 @@
 import { beforeEach, expect, it, jest } from '@jest/globals';
 import { describeActionDiscoverySuite } from '../../common/actions/actionDiscoveryServiceTestBed.js';
 
-
 describeActionDiscoverySuite(
   'ActionDiscoveryService - getValidActions',
   (getBed) => {

@@ -45,7 +45,9 @@ describe('BodyBlueprintFactory', () => {
     };
 
     mockValidator = {
-      validateGraph: jest.fn().mockResolvedValue({ valid: true, errors: [], warnings: [] }),
+      validateGraph: jest
+        .fn()
+        .mockResolvedValue({ valid: true, errors: [], warnings: [] }),
     };
 
     // Create factory instance
@@ -61,63 +63,81 @@ describe('BodyBlueprintFactory', () => {
 
   describe('constructor', () => {
     it('should throw error if entityManager is not provided', () => {
-      expect(() => new BodyBlueprintFactory({
-        dataRegistry: mockDataRegistry,
-        logger: mockLogger,
-        eventDispatcher: mockEventDispatcher,
-        idGenerator: mockIdGenerator,
-        validator: mockValidator,
-      })).toThrow(InvalidArgumentError);
+      expect(
+        () =>
+          new BodyBlueprintFactory({
+            dataRegistry: mockDataRegistry,
+            logger: mockLogger,
+            eventDispatcher: mockEventDispatcher,
+            idGenerator: mockIdGenerator,
+            validator: mockValidator,
+          })
+      ).toThrow(InvalidArgumentError);
     });
 
     it('should throw error if dataRegistry is not provided', () => {
-      expect(() => new BodyBlueprintFactory({
-        entityManager: mockEntityManager,
-        logger: mockLogger,
-        eventDispatcher: mockEventDispatcher,
-        idGenerator: mockIdGenerator,
-        validator: mockValidator,
-      })).toThrow(InvalidArgumentError);
+      expect(
+        () =>
+          new BodyBlueprintFactory({
+            entityManager: mockEntityManager,
+            logger: mockLogger,
+            eventDispatcher: mockEventDispatcher,
+            idGenerator: mockIdGenerator,
+            validator: mockValidator,
+          })
+      ).toThrow(InvalidArgumentError);
     });
 
     it('should throw error if logger is not provided', () => {
-      expect(() => new BodyBlueprintFactory({
-        entityManager: mockEntityManager,
-        dataRegistry: mockDataRegistry,
-        eventDispatcher: mockEventDispatcher,
-        idGenerator: mockIdGenerator,
-        validator: mockValidator,
-      })).toThrow(InvalidArgumentError);
+      expect(
+        () =>
+          new BodyBlueprintFactory({
+            entityManager: mockEntityManager,
+            dataRegistry: mockDataRegistry,
+            eventDispatcher: mockEventDispatcher,
+            idGenerator: mockIdGenerator,
+            validator: mockValidator,
+          })
+      ).toThrow(InvalidArgumentError);
     });
 
     it('should throw error if eventDispatcher is not provided', () => {
-      expect(() => new BodyBlueprintFactory({
-        entityManager: mockEntityManager,
-        dataRegistry: mockDataRegistry,
-        logger: mockLogger,
-        idGenerator: mockIdGenerator,
-        validator: mockValidator,
-      })).toThrow(InvalidArgumentError);
+      expect(
+        () =>
+          new BodyBlueprintFactory({
+            entityManager: mockEntityManager,
+            dataRegistry: mockDataRegistry,
+            logger: mockLogger,
+            idGenerator: mockIdGenerator,
+            validator: mockValidator,
+          })
+      ).toThrow(InvalidArgumentError);
     });
 
     it('should throw error if idGenerator is not provided', () => {
-      expect(() => new BodyBlueprintFactory({
-        entityManager: mockEntityManager,
-        dataRegistry: mockDataRegistry,
-        logger: mockLogger,
-        eventDispatcher: mockEventDispatcher,
-        validator: mockValidator,
-      })).toThrow(InvalidArgumentError);
+      expect(
+        () =>
+          new BodyBlueprintFactory({
+            entityManager: mockEntityManager,
+            dataRegistry: mockDataRegistry,
+            logger: mockLogger,
+            eventDispatcher: mockEventDispatcher,
+            validator: mockValidator,
+          })
+      ).toThrow(InvalidArgumentError);
     });
 
     it('should throw error if validator is not provided', () => {
-      expect(() => new BodyBlueprintFactory({
-        entityManager: mockEntityManager,
-        dataRegistry: mockDataRegistry,
-        logger: mockLogger,
-        eventDispatcher: mockEventDispatcher,
-        idGenerator: mockIdGenerator,
-      })).toThrow(InvalidArgumentError);
+      expect(
+        () =>
+          new BodyBlueprintFactory({
+            entityManager: mockEntityManager,
+            dataRegistry: mockDataRegistry,
+            logger: mockLogger,
+            eventDispatcher: mockEventDispatcher,
+            idGenerator: mockIdGenerator,
+          })
+      ).toThrow(InvalidArgumentError);
     });
   });
 
@@ -135,8 +155,10 @@ describe('BodyBlueprintFactory', () => {
       };
 
       mockDataRegistry.get.mockImplementation((registry, id) => {
-        if (registry === 'anatomyBlueprints' && id === 'test-blueprint') return blueprint;
-        if (registry === 'anatomyRecipes' && id === 'test-recipe') return recipe;
+        if (registry === 'anatomyBlueprints' && id === 'test-blueprint')
+          return blueprint;
+        if (registry === 'anatomyRecipes' && id === 'test-recipe')
+          return recipe;
         return null;
       });
 
@@ -144,7 +166,10 @@ describe('BodyBlueprintFactory', () => {
       mockEntityManager.createEntityInstance.mockReturnValue(mockRootEntity);
 
       // Act
-      const result = await factory.createAnatomyGraph('test-blueprint', 'test-recipe');
+      const result = await factory.createAnatomyGraph(
+        'test-blueprint',
+        'test-recipe'
+      );
 
       // Assert
       expect(result).toEqual({
@@ -152,15 +177,16 @@ describe('BodyBlueprintFactory', () => {
         entities: ['root-1'],
       });
       expect(mockLogger.info).toHaveBeenCalledWith(
-        "BodyBlueprintFactory: Successfully created anatomy graph with 1 entities"
+        'BodyBlueprintFactory: Successfully created anatomy graph with 1 entities'
       );
     });
 
     it('should throw error if blueprint not found', async () => {
       mockDataRegistry.get.mockReturnValue(null);
 
-      await expect(factory.createAnatomyGraph('missing-blueprint', 'test-recipe'))
-        .rejects.toThrow(InvalidArgumentError);
+      await expect(
+        factory.createAnatomyGraph('missing-blueprint', 'test-recipe')
+      ).rejects.toThrow(InvalidArgumentError);
     });
 
     it('should throw error if recipe not found', async () => {
@@ -170,17 +196,24 @@ describe('BodyBlueprintFactory', () => {
         return null;
       });
 
-      await expect(factory.createAnatomyGraph('test-blueprint', 'missing-recipe'))
-        .rejects.toThrow(InvalidArgumentError);
+      await expect(
+        factory.createAnatomyGraph('test-blueprint', 'missing-recipe')
+      ).rejects.toThrow(InvalidArgumentError);
     });
 
     it('should handle validation errors', async () => {
       const blueprint = { root: 'anatomy:torso' };
-      const recipe = { recipeId: 'test-recipe', blueprintId: 'test-blueprint', slots: {} };
+      const recipe = {
+        recipeId: 'test-recipe',
+        blueprintId: 'test-blueprint',
+        slots: {},
+      };
 
       mockDataRegistry.get.mockImplementation((registry, id) => {
-        if (registry === 'anatomyBlueprints' && id === 'test-blueprint') return blueprint;
-        if (registry === 'anatomyRecipes' && id === 'test-recipe') return recipe;
+        if (registry === 'anatomyBlueprints' && id === 'test-blueprint')
+          return blueprint;
+        if (registry === 'anatomyRecipes' && id === 'test-recipe')
+          return recipe;
         return null;
       });
 
@@ -191,17 +224,26 @@ describe('BodyBlueprintFactory', () => {
         warnings: [],
       });
 
-      await expect(factory.createAnatomyGraph('test-blueprint', 'test-recipe'))
-        .rejects.toThrow('Anatomy graph validation failed: Test validation error');
+      await expect(
+        factory.createAnatomyGraph('test-blueprint', 'test-recipe')
+      ).rejects.toThrow(
+        'Anatomy graph validation failed: Test validation error'
+      );
     });
 
     it('should handle validation warnings', async () => {
       const blueprint = { root: 'anatomy:torso' };
-      const recipe = { recipeId: 'test-recipe', blueprintId: 'test-blueprint', slots: {} };
+      const recipe = {
+        recipeId: 'test-recipe',
+        blueprintId: 'test-blueprint',
+        slots: {},
+      };
 
       mockDataRegistry.get.mockImplementation((registry, id) => {
-        if (registry === 'anatomyBlueprints' && id === 'test-blueprint') return blueprint;
-        if (registry === 'anatomyRecipes' && id === 'test-recipe') return recipe;
+        if (registry === 'anatomyBlueprints' && id === 'test-blueprint')
+          return blueprint;
+        if (registry === 'anatomyRecipes' && id === 'test-recipe')
+          return recipe;
         return null;
       });
 
@@ -212,7 +254,10 @@ describe('BodyBlueprintFactory', () => {
         warnings: ['Test warning'],
       });
 
-      const result = await factory.createAnatomyGraph('test-blueprint', 'test-recipe');
+      const result = await factory.createAnatomyGraph(
+        'test-blueprint',
+        'test-recipe'
+      );
 
       expect(result.rootId).toBe('root-1');
       // Warnings are not logged by the factory, just returned by validator
@@ -220,11 +265,17 @@ describe('BodyBlueprintFactory', () => {
 
     it('should handle entity creation errors and cleanup', async () => {
       const blueprint = { root: 'anatomy:torso' };
-      const recipe = { recipeId: 'test-recipe', blueprintId: 'test-blueprint', slots: {} };
+      const recipe = {
+        recipeId: 'test-recipe',
+        blueprintId: 'test-blueprint',
+        slots: {},
+      };
 
       mockDataRegistry.get.mockImplementation((registry, id) => {
-        if (registry === 'anatomyBlueprints' && id === 'test-blueprint') return blueprint;
-        if (registry === 'anatomyRecipes' && id === 'test-recipe') return recipe;
+        if (registry === 'anatomyBlueprints' && id === 'test-blueprint')
+          return blueprint;
+        if (registry === 'anatomyRecipes' && id === 'test-recipe')
+          return recipe;
         return null;
       });
 
@@ -233,8 +284,9 @@ describe('BodyBlueprintFactory', () => {
         throw error;
       });
 
-      await expect(factory.createAnatomyGraph('test-blueprint', 'test-recipe'))
-        .rejects.toThrow('Entity creation failed');
+      await expect(
+        factory.createAnatomyGraph('test-blueprint', 'test-recipe')
+      ).rejects.toThrow('Entity creation failed');
 
       expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith({
         type: SYSTEM_ERROR_OCCURRED_ID,
@@ -259,14 +311,16 @@ describe('BodyBlueprintFactory', () => {
       };
 
       mockDataRegistry.get.mockImplementation((registry, id) => {
-        if (registry === 'anatomyBlueprints' && id === 'test-blueprint') return blueprint;
-        if (registry === 'anatomyRecipes' && id === 'test-recipe') return recipe;
+        if (registry === 'anatomyBlueprints' && id === 'test-blueprint')
+          return blueprint;
+        if (registry === 'anatomyRecipes' && id === 'test-recipe')
+          return recipe;
         return null;
       });
 
       const mockTorsoEntity = { id: 'torso-1', definitionId: 'anatomy:torso' };
       const mockHeadEntity = { id: 'head-1', definitionId: 'anatomy:head' };
-      
+
       mockEntityManager.createEntityInstance
         .mockReturnValueOnce(mockTorsoEntity)
         .mockReturnValueOnce(mockHeadEntity);
@@ -277,19 +331,24 @@ describe('BodyBlueprintFactory', () => {
         return null;
       });
 
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (entityId === 'torso-1' && componentId === 'anatomy:sockets') {
-          return {
-            sockets: [{ id: 'neck', allowedTypes: ['head'], maxCount: 1 }],
-          };
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (entityId === 'torso-1' && componentId === 'anatomy:sockets') {
+            return {
+              sockets: [{ id: 'neck', allowedTypes: ['head'], maxCount: 1 }],
+            };
+          }
+          if (componentId === 'anatomy:part') {
+            if (entityId === 'head-1') return { subType: 'head' };
+          }
+          return null;
         }
-        if (componentId === 'anatomy:part') {
-          if (entityId === 'head-1') return { subType: 'head' };
-        }
-        return null;
-      });
+      );
 
-      const result = await factory.createAnatomyGraph('test-blueprint', 'test-recipe');
+      const result = await factory.createAnatomyGraph(
+        'test-blueprint',
+        'test-recipe'
+      );
 
       expect(result.entities).toContain('torso-1');
       expect(result.entities).toContain('head-1');
@@ -320,8 +379,10 @@ describe('BodyBlueprintFactory', () => {
       };
 
       mockDataRegistry.get.mockImplementation((registry, id) => {
-        if (registry === 'anatomyBlueprints' && id === 'test-blueprint') return blueprint;
-        if (registry === 'anatomyRecipes' && id === 'test-recipe') return recipe;
+        if (registry === 'anatomyBlueprints' && id === 'test-blueprint')
+          return blueprint;
+        if (registry === 'anatomyRecipes' && id === 'test-recipe')
+          return recipe;
         if (registry === 'entityDefinitions' && id === 'anatomy:human_arm') {
           return {
             components: {
@@ -349,7 +410,7 @@ describe('BodyBlueprintFactory', () => {
       const mockTorsoEntity = { id: 'torso-1', definitionId: 'anatomy:torso' };
       const mockArmEntity1 = { id: 'arm-1', definitionId: 'anatomy:human_arm' };
       const mockArmEntity2 = { id: 'arm-2', definitionId: 'anatomy:human_arm' };
-      
+
       mockEntityManager.createEntityInstance
         .mockReturnValueOnce(mockTorsoEntity)
         .mockReturnValueOnce(mockArmEntity1)
@@ -362,22 +423,27 @@ describe('BodyBlueprintFactory', () => {
         return null;
       });
 
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (entityId === 'torso-1' && componentId === 'anatomy:sockets') {
-          return {
-            sockets: [
-              { id: 'left_shoulder', allowedTypes: ['arm'], maxCount: 1 },
-              { id: 'right_shoulder', allowedTypes: ['arm'], maxCount: 1 },
-            ],
-          };
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (entityId === 'torso-1' && componentId === 'anatomy:sockets') {
+            return {
+              sockets: [
+                { id: 'left_shoulder', allowedTypes: ['arm'], maxCount: 1 },
+                { id: 'right_shoulder', allowedTypes: ['arm'], maxCount: 1 },
+              ],
+            };
+          }
+          if (componentId === 'anatomy:part') {
+            if (entityId.startsWith('arm-')) return { subType: 'arm' };
+          }
+          return null;
         }
-        if (componentId === 'anatomy:part') {
-          if (entityId.startsWith('arm-')) return { subType: 'arm' };
-        }
-        return null;
-      });
+      );
 
-      const result = await factory.createAnatomyGraph('test-blueprint', 'test-recipe');
+      const result = await factory.createAnatomyGraph(
+        'test-blueprint',
+        'test-recipe'
+      );
 
       expect(result.entities).toHaveLength(3); // torso + 2 arms
       expect(result.entities).toContain('arm-1');
@@ -402,8 +468,10 @@ describe('BodyBlueprintFactory', () => {
       };
 
       mockDataRegistry.get.mockImplementation((registry, id) => {
-        if (registry === 'anatomyBlueprints' && id === 'test-blueprint') return blueprint;
-        if (registry === 'anatomyRecipes' && id === 'test-recipe') return recipe;
+        if (registry === 'anatomyBlueprints' && id === 'test-blueprint')
+          return blueprint;
+        if (registry === 'anatomyRecipes' && id === 'test-recipe')
+          return recipe;
         if (registry === 'entityDefinitions' && id === 'anatomy:special_head') {
           return {
             components: {
@@ -417,19 +485,24 @@ describe('BodyBlueprintFactory', () => {
       // Need getAll for finding candidate parts
       mockDataRegistry.getAll.mockImplementation((registry) => {
         if (registry === 'entityDefinitions') {
-          return [{
-            id: 'anatomy:special_head',
-            components: {
-              'anatomy:part': { subType: 'head' },
+          return [
+            {
+              id: 'anatomy:special_head',
+              components: {
+                'anatomy:part': { subType: 'head' },
+              },
             },
-          }];
+          ];
         }
         return [];
       });
 
       const mockTorsoEntity = { id: 'torso-1', definitionId: 'anatomy:torso' };
-      const mockHeadEntity = { id: 'head-1', definitionId: 'anatomy:special_head' };
-      
+      const mockHeadEntity = {
+        id: 'head-1',
+        definitionId: 'anatomy:special_head',
+      };
+
       mockEntityManager.createEntityInstance
         .mockReturnValueOnce(mockTorsoEntity)
         .mockReturnValueOnce(mockHeadEntity);
@@ -440,21 +513,28 @@ describe('BodyBlueprintFactory', () => {
         return null;
       });
 
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (entityId === 'torso-1' && componentId === 'anatomy:sockets') {
-          return {
-            sockets: [{ id: 'neck', allowedTypes: ['head'], maxCount: 1 }],
-          };
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (entityId === 'torso-1' && componentId === 'anatomy:sockets') {
+            return {
+              sockets: [{ id: 'neck', allowedTypes: ['head'], maxCount: 1 }],
+            };
+          }
+          if (componentId === 'anatomy:part' && entityId === 'head-1') {
+            return { subType: 'head' };
+          }
+          return null;
         }
-        if (componentId === 'anatomy:part' && entityId === 'head-1') {
-          return { subType: 'head' };
-        }
-        return null;
-      });
+      );
 
-      const result = await factory.createAnatomyGraph('test-blueprint', 'test-recipe');
+      const result = await factory.createAnatomyGraph(
+        'test-blueprint',
+        'test-recipe'
+      );
 
-      expect(mockEntityManager.createEntityInstance).toHaveBeenCalledWith('anatomy:special_head');
+      expect(mockEntityManager.createEntityInstance).toHaveBeenCalledWith(
+        'anatomy:special_head'
+      );
       expect(result.entities).toContain('head-1');
     });
 
@@ -476,8 +556,10 @@ describe('BodyBlueprintFactory', () => {
       };
 
       mockDataRegistry.get.mockImplementation((registry, id) => {
-        if (registry === 'anatomyBlueprints' && id === 'test-blueprint') return blueprint;
-        if (registry === 'anatomyRecipes' && id === 'test-recipe') return recipe;
+        if (registry === 'anatomyBlueprints' && id === 'test-blueprint')
+          return blueprint;
+        if (registry === 'anatomyRecipes' && id === 'test-recipe')
+          return recipe;
         if (registry === 'entityDefinitions' && id === 'anatomy:eye_blue') {
           return {
             components: {
@@ -513,7 +595,7 @@ describe('BodyBlueprintFactory', () => {
 
       const mockTorsoEntity = { id: 'torso-1', definitionId: 'anatomy:torso' };
       const mockEyeEntity = { id: 'eye-1', definitionId: 'anatomy:eye_blue' };
-      
+
       mockEntityManager.createEntityInstance
         .mockReturnValueOnce(mockTorsoEntity)
         .mockReturnValueOnce(mockEyeEntity);
@@ -524,21 +606,31 @@ describe('BodyBlueprintFactory', () => {
         return null;
       });
 
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (entityId === 'torso-1' && componentId === 'anatomy:sockets') {
-          return {
-            sockets: [{ id: 'eye_socket', allowedTypes: ['eye'], maxCount: 1 }],
-          };
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (entityId === 'torso-1' && componentId === 'anatomy:sockets') {
+            return {
+              sockets: [
+                { id: 'eye_socket', allowedTypes: ['eye'], maxCount: 1 },
+              ],
+            };
+          }
+          if (componentId === 'anatomy:part' && entityId === 'eye-1') {
+            return { subType: 'eye' };
+          }
+          return null;
         }
-        if (componentId === 'anatomy:part' && entityId === 'eye-1') {
-          return { subType: 'eye' };
-        }
-        return null;
-      });
+      );
 
-      const result = await factory.createAnatomyGraph('test-blueprint', 'test-recipe');
+      const result = await factory.createAnatomyGraph(
+        'test-blueprint',
+        'test-recipe'
+      );
 
-      expect(mockEntityManager.createEntityInstance).toHaveBeenNthCalledWith(2, 'anatomy:eye_blue');
+      expect(mockEntityManager.createEntityInstance).toHaveBeenNthCalledWith(
+        2,
+        'anatomy:eye_blue'
+      );
       expect(result.entities).toContain('eye-1');
     });
 
@@ -560,8 +652,10 @@ describe('BodyBlueprintFactory', () => {
       };
 
       mockDataRegistry.get.mockImplementation((registry, id) => {
-        if (registry === 'anatomyBlueprints' && id === 'test-blueprint') return blueprint;
-        if (registry === 'anatomyRecipes' && id === 'test-recipe') return recipe;
+        if (registry === 'anatomyBlueprints' && id === 'test-blueprint')
+          return blueprint;
+        if (registry === 'anatomyRecipes' && id === 'test-recipe')
+          return recipe;
         if (registry === 'entityDefinitions' && id === 'anatomy:eye_healthy') {
           return {
             components: {
@@ -594,8 +688,11 @@ describe('BodyBlueprintFactory', () => {
       });
 
       const mockTorsoEntity = { id: 'torso-1', definitionId: 'anatomy:torso' };
-      const mockEyeEntity = { id: 'eye-1', definitionId: 'anatomy:eye_healthy' };
-      
+      const mockEyeEntity = {
+        id: 'eye-1',
+        definitionId: 'anatomy:eye_healthy',
+      };
+
       mockEntityManager.createEntityInstance
         .mockReturnValueOnce(mockTorsoEntity)
         .mockReturnValueOnce(mockEyeEntity);
@@ -606,21 +703,31 @@ describe('BodyBlueprintFactory', () => {
         return null;
       });
 
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (entityId === 'torso-1' && componentId === 'anatomy:sockets') {
-          return {
-            sockets: [{ id: 'eye_socket', allowedTypes: ['eye'], maxCount: 1 }],
-          };
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (entityId === 'torso-1' && componentId === 'anatomy:sockets') {
+            return {
+              sockets: [
+                { id: 'eye_socket', allowedTypes: ['eye'], maxCount: 1 },
+              ],
+            };
+          }
+          if (componentId === 'anatomy:part' && entityId === 'eye-1') {
+            return { subType: 'eye' };
+          }
+          return null;
         }
-        if (componentId === 'anatomy:part' && entityId === 'eye-1') {
-          return { subType: 'eye' };
-        }
-        return null;
-      });
+      );
 
-      const result = await factory.createAnatomyGraph('test-blueprint', 'test-recipe');
+      const result = await factory.createAnatomyGraph(
+        'test-blueprint',
+        'test-recipe'
+      );
 
-      expect(mockEntityManager.createEntityInstance).toHaveBeenNthCalledWith(2, 'anatomy:eye_healthy');
+      expect(mockEntityManager.createEntityInstance).toHaveBeenNthCalledWith(
+        2,
+        'anatomy:eye_healthy'
+      );
       expect(result.entities).toContain('eye-1');
     });
 
@@ -641,8 +748,10 @@ describe('BodyBlueprintFactory', () => {
       };
 
       mockDataRegistry.get.mockImplementation((registry, id) => {
-        if (registry === 'anatomyBlueprints' && id === 'test-blueprint') return blueprint;
-        if (registry === 'anatomyRecipes' && id === 'test-recipe') return recipe;
+        if (registry === 'anatomyBlueprints' && id === 'test-blueprint')
+          return blueprint;
+        if (registry === 'anatomyRecipes' && id === 'test-recipe')
+          return recipe;
         return null;
       });
 
@@ -655,19 +764,26 @@ describe('BodyBlueprintFactory', () => {
 
       const mockTorsoEntity = { id: 'torso-1', definitionId: 'anatomy:torso' };
       mockEntityManager.createEntityInstance.mockReturnValue(mockTorsoEntity);
-      
+
       // Mock entity and sockets so it tries to fill the wing slot
       mockEntityManager.getEntityInstance.mockReturnValue(mockTorsoEntity);
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (entityId === 'torso-1' && componentId === 'anatomy:sockets') {
-          return {
-            sockets: [{ id: 'wing_socket', allowedTypes: ['wing'], maxCount: 2 }],
-          };
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (entityId === 'torso-1' && componentId === 'anatomy:sockets') {
+            return {
+              sockets: [
+                { id: 'wing_socket', allowedTypes: ['wing'], maxCount: 2 },
+              ],
+            };
+          }
+          return null;
         }
-        return null;
-      });
+      );
 
-      const result = await factory.createAnatomyGraph('test-blueprint', 'test-recipe');
+      const result = await factory.createAnatomyGraph(
+        'test-blueprint',
+        'test-recipe'
+      );
 
       expect(mockLogger.warn).toHaveBeenCalledWith(
         "No candidate parts found for slot with type 'wing'"
@@ -687,15 +803,17 @@ describe('BodyBlueprintFactory', () => {
       };
 
       mockDataRegistry.get.mockImplementation((registry, id) => {
-        if (registry === 'anatomyBlueprints' && id === 'test-blueprint') return blueprint;
-        if (registry === 'anatomyRecipes' && id === 'test-recipe') return recipe;
+        if (registry === 'anatomyBlueprints' && id === 'test-blueprint')
+          return blueprint;
+        if (registry === 'anatomyRecipes' && id === 'test-recipe')
+          return recipe;
         return null;
       });
 
       const mockTorsoEntity = { id: 'torso-1', definitionId: 'anatomy:torso' };
       mockEntityManager.createEntityInstance.mockReturnValue(mockTorsoEntity);
       mockEntityManager.getEntityInstance.mockReturnValue(mockTorsoEntity);
-      
+
       // Make validation fail
       mockValidator.validateGraph.mockResolvedValue({
         valid: false,
@@ -703,8 +821,11 @@ describe('BodyBlueprintFactory', () => {
         warnings: [],
       });
 
-      await expect(factory.createAnatomyGraph('test-blueprint', 'test-recipe'))
-        .rejects.toThrow('Anatomy graph validation failed: Test validation error');
+      await expect(
+        factory.createAnatomyGraph('test-blueprint', 'test-recipe')
+      ).rejects.toThrow(
+        'Anatomy graph validation failed: Test validation error'
+      );
 
       // Should attempt to clean up the created torso
       expect(mockEntityManager.removeEntity).toHaveBeenCalledWith('torso-1');
@@ -727,8 +848,10 @@ describe('BodyBlueprintFactory', () => {
       };
 
       mockDataRegistry.get.mockImplementation((registry, id) => {
-        if (registry === 'anatomyBlueprints' && id === 'test-blueprint') return blueprint;
-        if (registry === 'anatomyRecipes' && id === 'test-recipe') return recipe;
+        if (registry === 'anatomyBlueprints' && id === 'test-blueprint')
+          return blueprint;
+        if (registry === 'anatomyRecipes' && id === 'test-recipe')
+          return recipe;
         if (registry === 'entityDefinitions' && id === 'anatomy:arm') {
           return {
             components: {
@@ -757,14 +880,19 @@ describe('BodyBlueprintFactory', () => {
       mockEntityManager.createEntityInstance.mockReturnValue(mockTorsoEntity);
       mockEntityManager.getEntityInstance.mockReturnValue(mockTorsoEntity);
 
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (entityId === 'torso-1' && componentId === 'anatomy:sockets') {
-          return null; // No sockets component
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (entityId === 'torso-1' && componentId === 'anatomy:sockets') {
+            return null; // No sockets component
+          }
+          return null;
         }
-        return null;
-      });
+      );
 
-      const result = await factory.createAnatomyGraph('test-blueprint', 'test-recipe');
+      const result = await factory.createAnatomyGraph(
+        'test-blueprint',
+        'test-recipe'
+      );
 
       // No warning is logged when there are no sockets - it just silently skips
       expect(result.entities).toEqual(['torso-1']);
@@ -782,15 +910,21 @@ describe('BodyBlueprintFactory', () => {
       };
 
       mockDataRegistry.get.mockImplementation((registry, id) => {
-        if (registry === 'anatomyBlueprints' && id === 'test-blueprint') return blueprint;
-        if (registry === 'anatomyRecipes' && id === 'test-recipe') return recipe;
+        if (registry === 'anatomyBlueprints' && id === 'test-blueprint')
+          return blueprint;
+        if (registry === 'anatomyRecipes' && id === 'test-recipe')
+          return recipe;
         return null;
       });
 
       const mockTorsoEntity = { id: 'torso-1', definitionId: 'anatomy:torso' };
       mockEntityManager.createEntityInstance.mockReturnValue(mockTorsoEntity);
 
-      const result = await factory.createAnatomyGraph('test-blueprint', 'test-recipe', { seed: 12345 });
+      const result = await factory.createAnatomyGraph(
+        'test-blueprint',
+        'test-recipe',
+        { seed: 12345 }
+      );
 
       expect(result.rootId).toBe('torso-1');
       // The seed should be used internally for consistent random selection

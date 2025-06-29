@@ -41,14 +41,10 @@
       "instances": ["jacqueline_rouxel.entity.json"]
     },
     "blueprints": [
-      "humanoid_custom_eyes.blueprint.json",
-      "humanoid_monstrous.blueprint.json",
       "humanoid_standard.blueprint.json"
     ],
     "recipes": [
       "gorgeous_milf.recipe.json",
-      "humanoid_blue_eyes.recipe.json",
-      "humanoid_monstrous_tall.recipe.json",
       "humanoid_standard.recipe.json"
     ],
     "anatomyFormatting": [

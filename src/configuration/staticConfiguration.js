@@ -148,7 +148,8 @@ class StaticConfiguration {
       anatomyRecipes: 'http://example.com/schemas/anatomy.recipe.schema.json',
       anatomyBlueprints:
         'http://example.com/schemas/anatomy.blueprint.schema.json',
-      anatomyFormatting: 'http://example.com/schemas/anatomy-formatting.schema.json',
+      anatomyFormatting:
+        'http://example.com/schemas/anatomy-formatting.schema.json',
       // Scopes use a custom DSL format (.scope files) and are validated by the scope engine,
       // not by JSON schema validation. Explicitly return null to indicate no schema validation.
       scopes: null,

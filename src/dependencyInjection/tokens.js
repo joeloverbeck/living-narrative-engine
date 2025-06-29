@@ -159,6 +159,7 @@ import { freeze } from '../utils';
  * @property {DiToken} IConfigurationProvider - Token for the LLM configuration provider interface.
  * @property {DiToken} LLMConfigService - Token for the LLM configuration management service.
  * @property {DiToken} PlaceholderResolver - Token for the placeholder resolution utility.
+ * @property {DiToken} ExecutionPlaceholderResolver - Token for the execution-context placeholder resolver.
  * @property {DiToken} StandardElementAssembler - Token for the standard prompt element assembler.
  * @property {DiToken} PerceptionLogAssembler - Token for the perception log element assembler.
  * // ***** ADDITIONS FOR PROMPTBUILDER REFACTORING END *****
@@ -333,6 +334,7 @@ export const tokens = freeze({
   IConfigurationProvider: 'IConfigurationProvider',
   LLMConfigService: 'LLMConfigService',
   PlaceholderResolver: 'PlaceholderResolver',
+  ExecutionPlaceholderResolver: 'ExecutionPlaceholderResolver',
   StandardElementAssembler: 'StandardElementAssembler',
   PerceptionLogAssembler: 'PerceptionLogAssembler',
   ThoughtsSectionAssembler: 'ThoughtsSectionAssembler',

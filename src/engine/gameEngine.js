@@ -427,7 +427,15 @@ class GameEngine {
     }
   }
 
-  showSaveGameUI() {
+  /**
+   * Requests that the UI present the Save Game screen.
+   *
+   * @description Dispatches either {@link REQUEST_SHOW_SAVE_GAME_UI} or
+   * {@link CANNOT_SAVE_GAME_INFO} based on the persistence service state.
+   * @async
+   * @returns {Promise<void>} Resolves when dispatching completes.
+   */
+  async showSaveGameUI() {
     const persistenceService = this._ensurePersistenceServiceAvailable(
       'GameEngine.showSaveGameUI: GamePersistenceService is unavailable. Cannot show Save Game UI.'
     );
@@ -439,16 +447,24 @@ class GameEngine {
       this.#logger.debug(
         'GameEngine.showSaveGameUI: Dispatching request to show Save Game UI.'
       );
-      this.#safeEventDispatcher.dispatch(REQUEST_SHOW_SAVE_GAME_UI, {});
+      await this.#safeEventDispatcher.dispatch(REQUEST_SHOW_SAVE_GAME_UI, {});
     } else {
       this.#logger.warn(
         'GameEngine.showSaveGameUI: Saving is not currently allowed.'
       );
-      this.#safeEventDispatcher.dispatch(CANNOT_SAVE_GAME_INFO);
+      await this.#safeEventDispatcher.dispatch(CANNOT_SAVE_GAME_INFO);
     }
   }
 
-  showLoadGameUI() {
+  /**
+   * Requests that the UI present the Load Game screen.
+   *
+   * @description Dispatches {@link REQUEST_SHOW_LOAD_GAME_UI} when the
+   * persistence service is available.
+   * @async
+   * @returns {Promise<void>} Resolves when dispatching completes.
+   */
+  async showLoadGameUI() {
     if (
       !this._ensurePersistenceServiceAvailable(
         'GameEngine.showLoadGameUI: GamePersistenceService is unavailable. Cannot show Load Game UI.'
@@ -459,7 +475,7 @@ class GameEngine {
     this.#logger.debug(
       'GameEngine.showLoadGameUI: Dispatching request to show Load Game UI.'
     );
-    this.#safeEventDispatcher.dispatch(REQUEST_SHOW_LOAD_GAME_UI, {});
+    await this.#safeEventDispatcher.dispatch(REQUEST_SHOW_LOAD_GAME_UI, {});
   }
 
   getEngineStatus() {

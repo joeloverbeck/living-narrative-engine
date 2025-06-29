@@ -34,7 +34,7 @@ export class AnatomyFormattingService {
     this.dataRegistry = dataRegistry;
     this.logger = logger;
     this.modLoadOrder = modLoadOrder || [];
-    
+
     // Cache for merged configuration
     this._mergedConfig = null;
     this._configInitialized = false;
@@ -48,11 +48,13 @@ export class AnatomyFormattingService {
       return;
     }
 
-    this.logger.debug('AnatomyFormattingService: Initializing formatting configuration');
-    
+    this.logger.debug(
+      'AnatomyFormattingService: Initializing formatting configuration'
+    );
+
     // Get all anatomy formatting configurations from registry
     const allConfigs = this.dataRegistry.getAll('anatomyFormatting') || {};
-    
+
     // Start with empty base configuration
     let mergedConfig = {
       descriptionOrder: [],
@@ -62,7 +64,7 @@ export class AnatomyFormattingService {
       noArticleParts: [],
       descriptorOrder: [],
       commaSeparatedDescriptors: [],
-      descriptorValueKeys: []
+      descriptorValueKeys: [],
     };
 
     // Process configs in mod load order
@@ -79,10 +81,10 @@ export class AnatomyFormattingService {
 
     this._mergedConfig = mergedConfig;
     this._configInitialized = true;
-    
+
     this.logger.debug('AnatomyFormattingService: Configuration initialized', {
       descriptionOrderCount: mergedConfig.descriptionOrder.length,
-      descriptorOrderCount: mergedConfig.descriptorOrder.length
+      descriptorOrderCount: mergedConfig.descriptorOrder.length,
     });
   }
 
@@ -105,7 +107,7 @@ export class AnatomyFormattingService {
       'noArticleParts',
       'descriptorOrder',
       'commaSeparatedDescriptors',
-      'descriptorValueKeys'
+      'descriptorValueKeys',
     ];
 
     for (const field of arrayFields) {
@@ -133,7 +135,7 @@ export class AnatomyFormattingService {
         // Deep merge
         merged.irregularPlurals = {
           ...merged.irregularPlurals,
-          ...overlay.irregularPlurals
+          ...overlay.irregularPlurals,
         };
       }
     }
@@ -219,7 +221,9 @@ export class AnatomyFormattingService {
    */
   _ensureInitialized() {
     if (!this._configInitialized) {
-      throw new Error('AnatomyFormattingService not initialized. Call initialize() first.');
+      throw new Error(
+        'AnatomyFormattingService not initialized. Call initialize() first.'
+      );
     }
   }
 }
