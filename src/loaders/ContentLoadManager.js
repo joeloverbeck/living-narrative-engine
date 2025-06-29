@@ -5,10 +5,10 @@
  * using configured content loaders.
  */
 
-import LoadResultAggregator from './LoadResultAggregator.js';
 import ModProcessor from './ModProcessor.js';
 
 /** @typedef {import('./LoadResultAggregator.js').TotalResultsSummary} TotalResultsSummary */
+/** @typedef {import('./LoadResultAggregator.js').default} LoadResultAggregator */
 
 /** @typedef {import('../events/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
@@ -25,11 +25,13 @@ export class ContentLoadManager {
   #modProcessor;
 
   /**
+   * Creates a new ContentLoadManager.
+   *
    * @param {object} deps - Constructor dependencies.
    * @param {ILogger} deps.logger - Logging service.
    * @param {ValidatedEventDispatcher} deps.validatedEventDispatcher - Event dispatcher.
    * @param {Array<LoaderConfigEntry>} deps.contentLoadersConfig - Loader configuration.
-   * @param {(counts: TotalResultsSummary) => LoadResultAggregator} [deps.aggregatorFactory] -
+   * @param {(counts: TotalResultsSummary) => LoadResultAggregator} deps.aggregatorFactory -
    *   Factory for creating {@link LoadResultAggregator} instances.
    * @param {() => number} [deps.timer] -
    *   Optional function returning a high resolution timestamp.
@@ -38,9 +40,12 @@ export class ContentLoadManager {
     logger,
     validatedEventDispatcher,
     contentLoadersConfig,
-    aggregatorFactory = (counts) => new LoadResultAggregator(counts),
+    aggregatorFactory,
     timer = () => performance.now(),
   }) {
+    if (typeof aggregatorFactory !== 'function') {
+      throw new Error('aggregatorFactory must be provided');
+    }
     this.#logger = logger;
     this.#contentLoadersConfig = contentLoadersConfig;
     this.#modProcessor = new ModProcessor({

@@ -5,10 +5,19 @@
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 
 /**
+ * Summary counts for content loading totals.
+ *
+ * @typedef {object} TotalsSummary
+ * @property {number} count - Number of items processed.
+ * @property {number} overrides - Number of items that replaced existing ones.
+ * @property {number} errors - Number of failed items.
+ */
+
+/**
  * Aggregates results from Promise.allSettled and logs a summary.
  *
  * @param {ILogger} logger - Logger for output.
- * @param {PromiseSettledResult<{qualifiedId:string,didOverride:boolean}>[]} settledResults - Results from processing.
+ * @param {globalThis.PromiseSettledResult<{qualifiedId:string,didOverride:boolean}>[]} settledResults - Results from processing.
  * @param {string[]} filenames - Original filenames corresponding to the results.
  * @param {string} modId - Owning mod ID for context.
  * @param {string} contentKey - Content key for logging purposes.
