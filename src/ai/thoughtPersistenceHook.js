@@ -3,9 +3,9 @@
 import ShortTermMemoryService from './shortTermMemoryService.js';
 import { SHORT_TERM_MEMORY_COMPONENT_ID } from '../constants/componentIds.js';
 import {
-  readComponent,
-  writeComponent,
-} from '../utils/componentAccessUtils.js';
+  fetchComponent,
+  applyComponent,
+} from '../entities/utils/componentHelpers.js';
 
 /**
  * Persist the “thoughts” produced during an LLM turn into the actor’s
@@ -31,7 +31,10 @@ export function persistThoughts(action, actorEntity, logger) {
   const thoughtText = String(rawThoughts).trim();
 
   /* ── 2. Retrieve STM component via the public API ───────────────────── */
-  const memoryComp = readComponent(actorEntity, SHORT_TERM_MEMORY_COMPONENT_ID);
+  const memoryComp = fetchComponent(
+    actorEntity,
+    SHORT_TERM_MEMORY_COMPONENT_ID
+  );
 
   if (!memoryComp) {
     logger.warn('STM-002 Missing component');
@@ -47,7 +50,7 @@ export function persistThoughts(action, actorEntity, logger) {
   );
 
   /* ── 4. Push the mutation back to the entity ────────────────────────── */
-  writeComponent(actorEntity, SHORT_TERM_MEMORY_COMPONENT_ID, updatedMem);
+  applyComponent(actorEntity, SHORT_TERM_MEMORY_COMPONENT_ID, updatedMem);
 }
 
 // Convenience default export

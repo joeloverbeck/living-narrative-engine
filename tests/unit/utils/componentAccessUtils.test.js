@@ -6,6 +6,10 @@ import {
   readComponent,
   writeComponent,
 } from '../../../src/utils/componentAccessUtils.js';
+import {
+  fetchComponent,
+  applyComponent,
+} from '../../../src/entities/utils/componentHelpers.js';
 import { createMockLogger } from '../testUtils.js';
 
 class MockEntity {
@@ -203,5 +207,19 @@ describe('readComponent and writeComponent', () => {
 
   it('returns false for invalid entity', () => {
     expect(writeComponent(null, 'x', {})).toBe(false);
+  });
+});
+
+describe('fetchComponent and applyComponent', () => {
+  it('delegates fetch to readComponent', () => {
+    const ent = { getComponentData: jest.fn().mockReturnValue({ a: 1 }) };
+    expect(fetchComponent(ent, 'foo')).toEqual({ a: 1 });
+  });
+
+  it('delegates apply to writeComponent', () => {
+    const ent = { addComponent: jest.fn(), components: {} };
+    const data = { x: 2 };
+    expect(applyComponent(ent, 'foo', data)).toBe(true);
+    expect(ent.addComponent).toHaveBeenCalledWith('foo', data);
   });
 });
