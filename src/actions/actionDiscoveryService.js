@@ -111,8 +111,8 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     const { trace: shouldTrace = false } = options;
     const trace = shouldTrace ? this.#traceContextFactory() : null;
 
-    if (!actorEntity) {
-      this.#logger.debug('Actor entity is null; returning empty result.');
+    if (!actorEntity || typeof actorEntity.id !== 'string') {
+      this.#logger.error('getValidActions called with invalid actor entity.');
       return { actions: [], errors: [], trace: null };
     }
 

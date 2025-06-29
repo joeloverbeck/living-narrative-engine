@@ -1,4 +1,4 @@
-import { beforeEach, expect, it, jest } from '@jest/globals';
+import { beforeEach, expect, it } from '@jest/globals';
 import { describeActionDiscoverySuite } from '../../common/actions/actionDiscoveryServiceTestBed.js';
 
 // Additional coverage tests for ActionDiscoveryService
@@ -11,14 +11,19 @@ describeActionDiscoverySuite(
       bed.mocks.getActorLocationFn.mockReturnValue('room1');
     });
 
-    it('returns empty result when actor entity is null', async () => {
+    it('returns empty result when actor entity is null or missing id', async () => {
       const bed = getBed();
 
-      const result = await bed.service.getValidActions(null, {});
+      const resultNull = await bed.service.getValidActions(null, {});
+      const resultMissing = await bed.service.getValidActions({}, {});
 
-      expect(result).toEqual({ actions: [], errors: [], trace: null });
-      expect(bed.mocks.logger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('Actor entity is null; returning empty result.')
+      expect(resultNull).toEqual({ actions: [], errors: [], trace: null });
+      expect(resultMissing).toEqual({ actions: [], errors: [], trace: null });
+      expect(bed.mocks.logger.error).toHaveBeenCalledTimes(2);
+      expect(bed.mocks.logger.error).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'getValidActions called with invalid actor entity.'
+        )
       );
     });
 
