@@ -44,7 +44,6 @@ export default class SaveGameService {
    *
    * @param {SlotDisplayData | null} selectedSlotData - Currently selected slot.
    * @param {string} saveName - Proposed save name.
-   * @param {GameEngine | null} gameEngine - Game engine instance.
    * @returns {string | null} Error message if validation fails, otherwise null.
    */
   validatePreconditions(selectedSlotData, saveName) {
