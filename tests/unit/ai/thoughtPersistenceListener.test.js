@@ -41,6 +41,7 @@ describe('ThoughtPersistenceListener', () => {
       { thoughts: 'hi' },
       actorEntity,
       logger,
+      undefined,
       listener.stmService,
       expect.any(Date)
     );
