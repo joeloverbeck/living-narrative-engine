@@ -4,6 +4,8 @@
 
 import { DelegatingDecisionProvider } from './delegatingDecisionProvider.js';
 
+/** @typedef {import('./delegatingDecisionProvider.js').DecisionDelegate} DecisionDelegate */
+
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 
 /**
@@ -21,6 +23,8 @@ export class LLMDecisionProvider extends DelegatingDecisionProvider {
    *  logger: import('../../interfaces/coreServices').ILogger,
    *  safeEventDispatcher: ISafeEventDispatcher
    * }} deps - Constructor dependencies
+   * @see DecisionDelegate
+   * @returns {void}
    */
   constructor({ llmChooser, logger, safeEventDispatcher }) {
     const delegate = (actor, context, actions, abortSignal) =>
