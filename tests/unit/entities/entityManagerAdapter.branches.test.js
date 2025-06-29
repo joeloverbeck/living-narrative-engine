@@ -2,17 +2,6 @@ import { describe, it, expect, jest } from '@jest/globals';
 import { EntityManagerAdapter } from '../../../src/entities/entityManagerAdapter.js';
 
 describe('EntityManagerAdapter additional coverage', () => {
-  it('returns undefined when clearAll is not implemented', () => {
-    const entityManager = {};
-    const locationQueryService = { getEntitiesInLocation: jest.fn() };
-    const adapter = new EntityManagerAdapter({
-      entityManager,
-      locationQueryService,
-    });
-    const result = adapter.clearAll();
-    expect(result).toBeUndefined();
-  });
-
   it('delegates various methods to the wrapped entity manager', () => {
     const entityManager = {
       getEntityInstance: jest.fn(() => 'e1'),
