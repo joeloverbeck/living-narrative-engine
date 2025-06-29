@@ -4,6 +4,7 @@
 
 import { ITurnDecisionProvider } from '../interfaces/ITurnDecisionProvider.js';
 import { assertValidActionIndex } from '../../utils/actionIndexUtils.js';
+import { validateDependency } from '../../utils/dependencyUtils.js';
 
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 
@@ -15,6 +16,9 @@ import { assertValidActionIndex } from '../../utils/actionIndexUtils.js';
  * Provides shared logic for decision providers that select an action index.
  */
 export class AbstractDecisionProvider extends ITurnDecisionProvider {
+  /** @type {import('../../interfaces/coreServices').ILogger} */ #logger;
+  /** @type {ISafeEventDispatcher} */ #safeEventDispatcher;
+
   /**
    * Base constructor for decision providers.
    *
@@ -24,10 +28,20 @@ export class AbstractDecisionProvider extends ITurnDecisionProvider {
    */
   constructor({ logger, safeEventDispatcher }) {
     super();
-    /** @protected */
-    this.logger = logger;
-    /** @protected @type {ISafeEventDispatcher} */
-    this.safeEventDispatcher = safeEventDispatcher;
+    validateDependency(logger, 'logger', console, {
+      requiredMethods: ['error', 'debug'],
+    });
+    this.#logger = logger;
+
+    validateDependency(
+      safeEventDispatcher,
+      'safeEventDispatcher',
+      this.#logger,
+      {
+        requiredMethods: ['dispatch'],
+      }
+    );
+    this.#safeEventDispatcher = safeEventDispatcher;
   }
 
   /**
@@ -67,8 +81,8 @@ export class AbstractDecisionProvider extends ITurnDecisionProvider {
       actions.length,
       this.constructor.name,
       actor.id,
-      this.safeEventDispatcher,
-      this.logger,
+      this.#safeEventDispatcher,
+      this.#logger,
       { result: { index, speech, thoughts, notes } }
     );
 
