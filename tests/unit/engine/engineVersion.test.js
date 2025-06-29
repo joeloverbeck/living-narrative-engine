@@ -9,7 +9,7 @@ import { ENGINE_VERSION } from '../../../src/engine/engineVersion.js';
 // Import package.json directly to compare against its version
 // Ensure your Jest setup can handle JSON imports with import assertions.
 // If not, you might need to use require() or fs.readFileSync + JSON.parse.
-import pkg from '../../../package.json';
+import pkg from '../../../package.json' assert { type: 'json' };
 
 describe('ENGINE_VERSION constant', () => {
   it('should strictly equal the version specified in package.json', () => {
