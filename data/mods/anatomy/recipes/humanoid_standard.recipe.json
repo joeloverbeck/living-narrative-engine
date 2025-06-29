@@ -5,7 +5,7 @@
   "slots": {
     "torso": {
       "partType": "torso",
-      "preferId": "anatomy:humanoid_torso",
+      "preferId": "anatomy:human_female_torso",
       "count": {
         "exact": 1
       }

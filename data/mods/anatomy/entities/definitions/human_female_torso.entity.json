@@ -1,7 +1,7 @@
 {
   "$schema": "http://example.com/schemas/entity-definition.schema.json",
-  "id": "anatomy:humanoid_torso",
-  "description": "A humanoid torso that serves as the central body part",
+  "id": "anatomy:human_female_torso",
+  "description": "A human female torso with female-specific anatomy",
   "components": {
     "anatomy:part": {
       "subType": "torso"
@@ -55,6 +55,30 @@
           "maxCount": 2,
           "jointType": "fused",
           "nameTpl": "{{orientation}} {{type}}"
+        },
+        {
+          "id": "pubic_hair",
+          "orientation": "lower-front",
+          "allowedTypes": ["hair"],
+          "maxCount": 1,
+          "jointType": "fused",
+          "nameTpl": "pubic {{type}}"
+        },
+        {
+          "id": "vagina",
+          "orientation": "lower-front",
+          "allowedTypes": ["genital"],
+          "maxCount": 1,
+          "jointType": "fused",
+          "nameTpl": "{{type}}"
+        },
+        {
+          "id": "ass",
+          "orientation": "rear",
+          "allowedTypes": ["ass_cheek"],
+          "maxCount": 2,
+          "jointType": "fused",
+          "nameTpl": "{{type}}"
         }
       ]
     },

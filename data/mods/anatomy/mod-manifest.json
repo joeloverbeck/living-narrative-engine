@@ -32,7 +32,7 @@
         "humanoid_arm.entity.json",
         "humanoid_head.entity.json",
         "humanoid_leg.entity.json",
-        "humanoid_torso.entity.json"
+        "human_female_torso.entity.json"
       ],
       "instances": ["jacqueline_rouxel.entity.json"]
     },
