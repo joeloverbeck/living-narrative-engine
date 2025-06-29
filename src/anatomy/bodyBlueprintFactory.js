@@ -121,6 +121,12 @@ export class BodyBlueprintFactory {
       const blueprint = this.#loadBlueprint(blueprintId);
       const recipe = this.#loadRecipe(recipeId);
 
+      // Merge blueprint defaults with recipe overrides
+      const mergedRecipe = this.#mergeRecipeWithBlueprintDefaults(
+        recipe,
+        blueprint
+      );
+
       // Initialize tracking structures
       const createdEntities = [];
       const partCounts = new Map(); // Track counts per part type
@@ -130,7 +136,7 @@ export class BodyBlueprintFactory {
       // Phase 1: Create root entity
       const rootId = this.#createRootEntity(
         blueprint.root,
-        recipe,
+        mergedRecipe,
         options.ownerId
       );
       createdEntities.push(rootId);
@@ -139,7 +145,7 @@ export class BodyBlueprintFactory {
       if (blueprint.attachments) {
         await this.#processStaticAttachments(
           blueprint.attachments,
-          recipe,
+          mergedRecipe,
           createdEntities,
           socketOccupancy,
           rng
@@ -149,7 +155,7 @@ export class BodyBlueprintFactory {
       // Phase 3: Fill remaining sockets depth-first
       await this.#fillSockets(
         rootId,
-        recipe,
+        mergedRecipe,
         createdEntities,
         partCounts,
         socketOccupancy,
@@ -159,7 +165,7 @@ export class BodyBlueprintFactory {
       // Phase 4: Validate the assembled graph
       const validationResult = await this.#validator.validateGraph(
         createdEntities,
-        recipe,
+        mergedRecipe,
         socketOccupancy
       );
 
@@ -227,6 +233,64 @@ export class BodyBlueprintFactory {
       );
     }
     return recipe;
+  }
+
+  /**
+   * Merges recipe with blueprint's default slots
+   *
+   * @param {AnatomyRecipe} recipe - The recipe to merge
+   * @param {AnatomyBlueprint} blueprint - The blueprint with defaults
+   * @private
+   * @returns {AnatomyRecipe} The merged recipe
+   */
+  #mergeRecipeWithBlueprintDefaults(recipe, blueprint) {
+    // If blueprint has no default slots, return recipe as-is
+    if (!blueprint.defaultSlots) {
+      return recipe;
+    }
+
+    // Create a deep copy of the recipe to avoid modifying the original
+    const mergedRecipe = JSON.parse(JSON.stringify(recipe));
+
+    // Merge blueprint defaults with recipe slots
+    for (const [slotKey, defaultSlot] of Object.entries(
+      blueprint.defaultSlots
+    )) {
+      if (!mergedRecipe.slots[slotKey]) {
+        // Recipe doesn't define this slot, use blueprint default
+        mergedRecipe.slots[slotKey] = defaultSlot;
+      } else {
+        // Recipe defines this slot, but we can still merge some defaults
+        const recipeSlot = mergedRecipe.slots[slotKey];
+
+        // If recipe doesn't specify count, use blueprint default
+        if (!recipeSlot.count && defaultSlot.count) {
+          recipeSlot.count = defaultSlot.count;
+        }
+
+        // If recipe doesn't specify tags, use blueprint default
+        if (!recipeSlot.tags && defaultSlot.tags) {
+          recipeSlot.tags = defaultSlot.tags;
+        }
+
+        // If recipe doesn't specify notTags, use blueprint default
+        if (!recipeSlot.notTags && defaultSlot.notTags) {
+          recipeSlot.notTags = defaultSlot.notTags;
+        }
+
+        // If recipe doesn't specify preferId, use blueprint default
+        if (!recipeSlot.preferId && defaultSlot.preferId) {
+          recipeSlot.preferId = defaultSlot.preferId;
+        }
+      }
+    }
+
+    this.#logger.debug(
+      `Merged recipe '${recipe.recipeId}' with blueprint defaults`,
+      { originalSlots: Object.keys(recipe.slots), mergedSlots: Object.keys(mergedRecipe.slots) }
+    );
+
+    return mergedRecipe;
   }
 
   /**
@@ -298,11 +362,39 @@ export class BodyBlueprintFactory {
         continue;
       }
 
+      let childDefinitionId;
+
+      // Handle old format (direct child reference)
+      if (attachment.child) {
+        childDefinitionId = attachment.child;
+      }
+      // Handle new format (component-based requirements)
+      else if (attachment.requirements) {
+        childDefinitionId = await this.#selectPartByRequirements(
+          attachment.requirements,
+          attachment.socket,
+          recipe,
+          rng
+        );
+
+        if (!childDefinitionId) {
+          this.#logger.warn(
+            `No part found matching requirements for socket '${attachment.socket}'`
+          );
+          continue;
+        }
+      } else {
+        this.#logger.warn(
+          `Attachment for socket '${attachment.socket}' has neither child nor requirements`
+        );
+        continue;
+      }
+
       // Create child entity and attach
       const childId = await this.#createAndAttachPart(
         parentEntity,
         attachment.socket,
-        attachment.child,
+        childDefinitionId,
         recipe,
         socketOccupancy,
         rng
@@ -312,6 +404,118 @@ export class BodyBlueprintFactory {
         createdEntities.push(childId);
       }
     }
+  }
+
+  /**
+   * Selects a part definition based on requirements
+   *
+   * @param requirements
+   * @param socketId
+   * @param recipe
+   * @param rng
+   * @private
+   * @returns {Promise<string|null>} The selected part definition ID or null
+   */
+  async #selectPartByRequirements(requirements, socketId, recipe, rng) {
+    // First check if there's a recipe override for this socket
+    // Find recipe slot that matches this socket type
+    for (const [slotKey, slot] of Object.entries(recipe.slots)) {
+      if (slot.partType === requirements.partType) {
+        // Recipe has a preference for this part type
+        if (slot.preferId) {
+          // Verify the preferred part meets the requirements
+          const entityDef = this.#dataRegistry.get(
+            'entityDefinitions',
+            slot.preferId
+          );
+          if (
+            entityDef &&
+            this.#meetsRequirements(entityDef, requirements, slot)
+          ) {
+            return slot.preferId;
+          }
+        }
+      }
+    }
+
+    // No recipe override or it didn't meet requirements, find candidates
+    const candidates = [];
+    const allParts = this.#dataRegistry.getAll('anatomyParts');
+
+    for (const [partId, partRef] of Object.entries(allParts)) {
+      if (!partRef.isAnatomyPart) continue;
+
+      const entityDef = this.#dataRegistry.get('entityDefinitions', partId);
+      if (!entityDef) continue;
+
+      // Check if this part meets the requirements
+      if (this.#meetsRequirements(entityDef, requirements)) {
+        candidates.push(partId);
+      }
+    }
+
+    if (candidates.length === 0) {
+      return null;
+    }
+
+    // Prefer specific entity ID if provided
+    if (requirements.entityId && candidates.includes(requirements.entityId)) {
+      return requirements.entityId;
+    }
+
+    // Random selection from candidates
+    const index = Math.floor(rng() * candidates.length);
+    return candidates[index];
+  }
+
+  /**
+   * Checks if an entity definition meets the given requirements
+   *
+   * @param entityDef
+   * @param requirements
+   * @param recipeSlot
+   * @private
+   * @returns {boolean}
+   */
+  #meetsRequirements(entityDef, requirements, recipeSlot = null) {
+    // Check part type if specified
+    if (requirements.partType) {
+      const anatomyPart = entityDef.components['anatomy:part'];
+      if (!anatomyPart || anatomyPart.subType !== requirements.partType) {
+        return false;
+      }
+    }
+
+    // Check required components
+    if (requirements.components && requirements.components.length > 0) {
+      const hasAllComponents = requirements.components.every(
+        (comp) => entityDef.components[comp] !== undefined
+      );
+      if (!hasAllComponents) {
+        return false;
+      }
+    }
+
+    // If recipe slot provided, check its additional constraints
+    if (recipeSlot) {
+      // Check recipe tags
+      if (recipeSlot.tags && recipeSlot.tags.length > 0) {
+        const hasAllTags = recipeSlot.tags.every(
+          (tag) => entityDef.components[tag] !== undefined
+        );
+        if (!hasAllTags) return false;
+      }
+
+      // Check excluded tags
+      if (recipeSlot.notTags && recipeSlot.notTags.length > 0) {
+        const hasExcludedTag = recipeSlot.notTags.some(
+          (tag) => entityDef.components[tag] !== undefined
+        );
+        if (hasExcludedTag) return false;
+      }
+    }
+
+    return true;
   }
 
   /**

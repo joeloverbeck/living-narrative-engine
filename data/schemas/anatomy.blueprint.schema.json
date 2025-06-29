@@ -20,6 +20,13 @@
       "items": {
         "$ref": "#/definitions/attachment"
       }
+    },
+    "defaultSlots": {
+      "type": "object",
+      "description": "Default slot configurations that can be overridden by recipes",
+      "additionalProperties": {
+        "$ref": "../anatomy.recipe.schema.json#/definitions/slotDefinition"
+      }
     }
   },
   "required": ["root"],
@@ -39,10 +46,46 @@
         },
         "child": {
           "$ref": "./common.schema.json#/definitions/namespacedId",
-          "description": "The child entity definition ID to attach"
+          "description": "The child entity definition ID to attach (use with requirements for more flexibility)"
+        },
+        "requirements": {
+          "type": "object",
+          "description": "Flexible requirements for selecting a child entity",
+          "properties": {
+            "entityId": {
+              "$ref": "./common.schema.json#/definitions/namespacedId",
+              "description": "Specific entity definition ID to prefer"
+            },
+            "components": {
+              "type": "array",
+              "description": "Required components that the child entity must have",
+              "items": {
+                "$ref": "./common.schema.json#/definitions/namespacedId"
+              }
+            },
+            "partType": {
+              "type": "string",
+              "description": "The part type that the child must be (e.g., 'head', 'arm')"
+            }
+          },
+          "additionalProperties": false
         }
       },
-      "required": ["parent", "socket", "child"],
+      "required": ["parent", "socket"],
+      "oneOf": [
+        {
+          "required": ["child"],
+          "not": {
+            "required": ["requirements"]
+          }
+        },
+        {
+          "required": ["requirements"],
+          "not": {
+            "required": ["child"]
+          }
+        }
+      ],
       "additionalProperties": false
     }
   }

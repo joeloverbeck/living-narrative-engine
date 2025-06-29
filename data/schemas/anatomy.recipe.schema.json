@@ -14,6 +14,10 @@
       "$ref": "./common.schema.json#/definitions/namespacedId",
       "description": "Unique identifier for this anatomy recipe"
     },
+    "blueprintId": {
+      "$ref": "./common.schema.json#/definitions/namespacedId",
+      "description": "The blueprint this recipe is based on"
+    },
     "slots": {
       "type": "object",
       "description": "Map of slot keys to slot configurations",
@@ -63,7 +67,7 @@
       "default": false
     }
   },
-  "required": ["recipeId", "slots"],
+  "required": ["recipeId", "blueprintId", "slots"],
   "additionalProperties": false,
   "definitions": {
     "slotDefinition": {

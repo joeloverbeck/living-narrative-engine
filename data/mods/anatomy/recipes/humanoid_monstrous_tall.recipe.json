@@ -1,0 +1,21 @@
+{
+  "$schema": "http://example.com/schemas/anatomy.recipe.schema.json",
+  "recipeId": "anatomy:humanoid_monstrous_tall",
+  "blueprintId": "anatomy:humanoid_monstrous",
+  "slots": {
+    "torso": {
+      "partType": "torso",
+      "preferId": "anatomy:humanoid_torso",
+      "count": {
+        "exact": 1
+      }
+    },
+    "legs": {
+      "partType": "leg",
+      "tags": ["anatomy:long", "anatomy:thick"],
+      "count": {
+        "exact": 2
+      }
+    }
+  }
+}

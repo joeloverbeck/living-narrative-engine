@@ -1,0 +1,30 @@
+{
+  "$schema": "http://example.com/schemas/anatomy.blueprint.schema.json",
+  "root": "anatomy:humanoid_torso",
+  "attachments": [
+    {
+      "parent": "anatomy:humanoid_torso",
+      "socket": "neck",
+      "requirements": {
+        "partType": "head",
+        "components": ["anatomy:monstrous"]
+      }
+    }
+  ],
+  "defaultSlots": {
+    "arms": {
+      "partType": "arm",
+      "tags": ["anatomy:muscular"],
+      "count": {
+        "exact": 2
+      }
+    },
+    "legs": {
+      "partType": "leg",
+      "tags": ["anatomy:thick"],
+      "count": {
+        "exact": 2
+      }
+    }
+  }
+}
