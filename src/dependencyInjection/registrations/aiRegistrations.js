@@ -35,6 +35,7 @@
 /** @typedef {import('../../interfaces/IConfigurationProvider.js').IConfigurationProvider} IConfigurationProvider */
 /** @typedef {import('../../llms/llmConfigService.js').LLMConfigService} LLMConfigService_Concrete */
 /** @typedef {import('../../utils/placeholderResolverUtils.js').PlaceholderResolver} PlaceholderResolver_Concrete */
+/** @typedef {import('../../utils/executionPlaceholderResolver.js').ExecutionPlaceholderResolver} ExecutionPlaceholderResolver_Concrete */
 /** @typedef {import('../../prompting/assembling/standardElementAssembler.js').StandardElementAssembler} StandardElementAssembler_Concrete */
 /** @typedef {import('../../prompting/assembling/perceptionLogAssembler.js').PerceptionLogAssembler} PerceptionLogAssembler_Concrete */
 /** @typedef {import('../../prompting/assembling/thoughtsSectionAssembler.js').default} ThoughtsSectionAssembler_Concrete */
@@ -64,6 +65,7 @@ import { HttpConfigurationProvider } from '../../configuration/httpConfiguration
 import { LLMConfigService } from '../../llms/llmConfigService.js';
 import { LlmConfigLoader } from '../../llms/services/llmConfigLoader.js';
 import { PlaceholderResolver } from '../../utils/placeholderResolverUtils.js';
+import { ExecutionPlaceholderResolver } from '../../utils/executionPlaceholderResolver.js';
 import { StandardElementAssembler } from '../../prompting/assembling/standardElementAssembler.js';
 import {
   PERCEPTION_LOG_WRAPPER_KEY,
@@ -215,6 +217,10 @@ export function registerPromptingEngine(registrar, logger) {
   registrar.singletonFactory(
     tokens.PlaceholderResolver,
     (c) => new PlaceholderResolver(c.resolve(tokens.ILogger))
+  );
+  registrar.singletonFactory(
+    tokens.ExecutionPlaceholderResolver,
+    (c) => new ExecutionPlaceholderResolver(c.resolve(tokens.ILogger))
   );
   registrar.singletonFactory(
     tokens.StandardElementAssembler,

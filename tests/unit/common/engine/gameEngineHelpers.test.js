@@ -125,8 +125,8 @@ describe('runUnavailableServiceTest', () => {
       [tokens.GamePersistenceService, GAME_PERSISTENCE_LOAD_UI_UNAVAILABLE],
     ];
 
-    const testCases = runUnavailableServiceTest(cases, (bed, engine) => {
-      engine.showLoadGameUI();
+    const testCases = runUnavailableServiceTest(cases, async (bed, engine) => {
+      await engine.showLoadGameUI();
       return [bed.getLogger().error, bed.getSafeEventDispatcher().dispatch];
     });
 

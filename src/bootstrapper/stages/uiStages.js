@@ -94,9 +94,9 @@ export async function setupMenuButtonListenersStage(
     setupButtonListener(
       documentRef,
       'open-save-game-button',
-      () => {
+      async () => {
         logger.debug(`${stageName}: "Open Save Game UI" button clicked.`);
-        gameEngine.showSaveGameUI();
+        await gameEngine.showSaveGameUI();
       },
       logger,
       stageName
@@ -105,9 +105,9 @@ export async function setupMenuButtonListenersStage(
     setupButtonListener(
       documentRef,
       'open-load-game-button',
-      () => {
+      async () => {
         logger.debug(`${stageName}: "Open Load Game UI" button clicked.`);
-        gameEngine.showLoadGameUI();
+        await gameEngine.showLoadGameUI();
       },
       logger,
       stageName

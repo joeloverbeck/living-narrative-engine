@@ -10,7 +10,11 @@
 
 import { ITurnDirectiveStrategy } from '../interfaces/ITurnDirectiveStrategy.js';
 import TurnDirective from '../constants/turnDirectives.js';
-import { assertDirective, requireContextActor } from './strategyHelpers.js';
+import {
+  assertDirective,
+  requireContextActor,
+  getLoggerAndClass,
+} from './strategyHelpers.js';
 
 export default class EndTurnFailureStrategy extends ITurnDirectiveStrategy {
   /** @override */
@@ -20,8 +24,7 @@ export default class EndTurnFailureStrategy extends ITurnDirectiveStrategy {
     /** @type {TurnDirectiveEnum}     */ directive,
     /** @type {CommandResult}    */ cmdProcResult
   ) {
-    const className = this.constructor.name;
-    const logger = turnContext.getLogger();
+    const { logger, className } = getLoggerAndClass(this, turnContext);
 
     assertDirective({
       expected: TurnDirective.END_TURN_FAILURE,

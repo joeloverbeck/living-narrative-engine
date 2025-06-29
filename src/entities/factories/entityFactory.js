@@ -173,24 +173,31 @@ class EntityFactory {
    * @returns {Record<string, object|null>} Validated components.
    */
   #validateSerializedComponents(components, instanceId, definitionId) {
-    const validatedComponents = {};
     this.#logger.debug(
       `[EntityFactory] [RECONSTRUCT_ENTITY_LOG] About to validate components for entity '${instanceId}'. Components to process: ${JSON.stringify(
         components
       )}`
     );
-    if (components && typeof components === 'object') {
-      for (const [typeId, data] of Object.entries(components)) {
-        validatedComponents[typeId] = validateSerializedComponent(
-          typeId,
-          data,
-          this.#validator,
-          this.#logger,
-          instanceId,
-          definitionId
-        );
-      }
+
+    if (!components || typeof components !== 'object') {
+      this.#logger.debug(
+        `[EntityFactory] [RECONSTRUCT_ENTITY_LOG] No components to validate for entity '${instanceId}'.`
+      );
+      return {};
     }
+
+    const validatedComponents = {};
+    for (const [typeId, data] of Object.entries(components)) {
+      validatedComponents[typeId] = validateSerializedComponent(
+        typeId,
+        data,
+        this.#validator,
+        this.#logger,
+        instanceId,
+        definitionId
+      );
+    }
+
     this.#logger.debug(
       `[EntityFactory] [RECONSTRUCT_ENTITY_LOG] All components validated for entity '${instanceId}'.`
     );

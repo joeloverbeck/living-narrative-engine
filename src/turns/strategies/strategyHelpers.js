@@ -9,6 +9,34 @@
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 
 /**
+ * Retrieves the logger from the turnContext and the class name from the
+ * provided instance.
+ *
+ * @param {object} instance - The strategy instance (`this`).
+ * @param {ITurnContext} turnContext - Context providing `getLogger`.
+ * @returns {{ logger: ILogger, className: string }} Object containing logger
+ *          and class name.
+ */
+export function getLoggerAndClass(instance, turnContext) {
+  return {
+    logger: turnContext.getLogger(),
+    className: instance.constructor.name,
+  };
+}
+
+/**
+ * Builds a standardized error message when the wrong directive is supplied.
+ *
+ * @param {string} className - Name of the strategy class.
+ * @param {*} actual - The directive provided.
+ * @param {*} expected - The directive expected.
+ * @returns {string} The formatted error message.
+ */
+export function buildWrongDirectiveMessage(className, actual, expected) {
+  return `${className}: Received wrong directive (${actual}). Expected ${expected}.`;
+}
+
+/**
  * Validates that a directive matches the expected value.
  * Throws an error and logs when the directive is unexpected.
  *
@@ -22,7 +50,7 @@
  */
 export function assertDirective({ expected, actual, logger, className }) {
   if (actual !== expected) {
-    const msg = `${className}: Received wrong directive (${actual}). Expected ${expected}.`;
+    const msg = buildWrongDirectiveMessage(className, actual, expected);
     if (logger && typeof logger.error === 'function') {
       logger.error(msg);
     }

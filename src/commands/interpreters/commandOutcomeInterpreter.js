@@ -130,17 +130,17 @@ class CommandOutcomeInterpreter extends ICommandOutcomeInterpreter {
    * @private
    */
   #resolveActionId(result, turnContext) {
-    let processedActionId = result.actionResult?.actionId;
-    if (typeof processedActionId !== 'string' || !processedActionId.trim()) {
+    let actionIdForLogs = result.actionResult?.actionId;
+    if (typeof actionIdForLogs !== 'string' || !actionIdForLogs.trim()) {
       const actorId = turnContext.getActor().id;
       const chosenAction = turnContext.getChosenAction();
-      processedActionId =
+      actionIdForLogs =
         chosenAction?.actionDefinitionId || 'core:unknown_action';
       this.#logger.debug(
-        `CommandOutcomeInterpreter: actor ${actorId}: result.actionResult.actionId ('${result.actionResult?.actionId}') invalid/missing. Using action identifier: '${processedActionId}'.`
+        `CommandOutcomeInterpreter: actor ${actorId}: result.actionResult.actionId ('${result.actionResult?.actionId}') invalid/missing. Using action identifier: '${actionIdForLogs}'.`
       );
     }
-    return processedActionId;
+    return actionIdForLogs;
   }
 
   /**
@@ -157,19 +157,19 @@ class CommandOutcomeInterpreter extends ICommandOutcomeInterpreter {
 
     this.#validateResult(result, actorId);
 
-    const cpFailureEndsTurn =
+    const shouldEndTurn =
       typeof result.turnEnded === 'boolean' ? result.turnEnded : true; // Default true for safety
 
     this.#logger.debug(
-      `CommandOutcomeInterpreter: Interpreting for ${actorId}. CP_Success=${result.success}, CP_TurnEndedOnFail=${cpFailureEndsTurn}, Input="${originalInput}"`
+      `CommandOutcomeInterpreter: Interpreting for ${actorId}. CP_Success=${result.success}, CP_TurnEndedOnFail=${shouldEndTurn}, Input="${originalInput}"`
     );
 
-    const processedActionId = this.#resolveActionId(result, turnContext);
+    const actionIdForLogs = this.#resolveActionId(result, turnContext);
 
     if (result.success) {
       const directive = TurnDirective.WAIT_FOR_EVENT;
       this.#logger.debug(
-        `Actor ${actorId}: CommandProcessor success for action '${processedActionId}'. Directive: ${directive}.`
+        `Actor ${actorId}: CommandProcessor success for action '${actionIdForLogs}'. Directive: ${directive}.`
       );
       return directive;
     } else {
@@ -181,7 +181,7 @@ class CommandOutcomeInterpreter extends ICommandOutcomeInterpreter {
         ? TurnDirective.END_TURN_FAILURE
         : TurnDirective.RE_PROMPT;
       this.#logger.debug(
-        `Actor ${actorId}: CommandProcessor failure for action '${processedActionId}'. Directive: ${directive}.`
+        `Actor ${actorId}: CommandProcessor failure for action '${actionIdForLogs}'. Directive: ${directive}.`
       );
 
       return directive;

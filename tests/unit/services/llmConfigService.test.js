@@ -9,6 +9,7 @@ import {
   afterEach,
 } from '@jest/globals';
 import { LLMConfigService } from '../../../src/llms/llmConfigService.js'; // Adjust path as needed
+import { LlmConfigCache } from '../../../src/llms/services/LlmConfigCache.js';
 import { createMockLogger } from '../testUtils.js'; // Adjust path as needed
 
 // Mock IConfigurationProvider
@@ -62,6 +63,7 @@ describe('LLMConfigService', () => {
       expect(
         () =>
           new LLMConfigService({
+            llmConfigCache: new LlmConfigCache(),
             logger: mockLogger,
             configurationProvider: undefined,
           })
@@ -74,6 +76,7 @@ describe('LLMConfigService', () => {
       expect(
         () =>
           new LLMConfigService({
+            llmConfigCache: new LlmConfigCache(),
             configurationProvider: mockConfigurationProvider,
             logger: undefined,
           })
@@ -85,6 +88,7 @@ describe('LLMConfigService', () => {
     it('should initialize with a configSourceIdentifier', () => {
       const sourceId = 'path/to/configs.json';
       service = new LLMConfigService({
+        llmConfigCache: new LlmConfigCache(),
         logger: mockLogger,
         configurationProvider: mockConfigurationProvider,
         configSourceIdentifier: sourceId,
@@ -100,6 +104,7 @@ describe('LLMConfigService', () => {
     it('should initialize with valid initialConfigs and mark configsLoadedOrAttempted as true', () => {
       const initialConfigs = [{ ...sampleConfig1 }];
       service = new LLMConfigService({
+        llmConfigCache: new LlmConfigCache(),
         logger: mockLogger,
         configurationProvider: mockConfigurationProvider,
         initialConfigs,
@@ -118,6 +123,7 @@ describe('LLMConfigService', () => {
 
     it('should handle empty initialConfigs array', () => {
       service = new LLMConfigService({
+        llmConfigCache: new LlmConfigCache(),
         logger: mockLogger,
         configurationProvider: mockConfigurationProvider,
         initialConfigs: [],
@@ -131,6 +137,7 @@ describe('LLMConfigService', () => {
 
     it('should warn if initialConfigs is not an array', () => {
       service = new LLMConfigService({
+        llmConfigCache: new LlmConfigCache(),
         logger: mockLogger,
         configurationProvider: mockConfigurationProvider,
         // @ts-ignore
@@ -146,6 +153,7 @@ describe('LLMConfigService', () => {
       const invalidConfig = { modelIdentifier: 'bad' }; // missing configId, promptElements, etc.
       const initialConfigs = [{ ...sampleConfig1 }, invalidConfig];
       service = new LLMConfigService({
+        llmConfigCache: new LlmConfigCache(),
         logger: mockLogger,
         configurationProvider: mockConfigurationProvider,
         initialConfigs,
@@ -163,6 +171,7 @@ describe('LLMConfigService', () => {
 
     it('should log if no source identifier and no initial configs loaded', () => {
       service = new LLMConfigService({
+        llmConfigCache: new LlmConfigCache(),
         logger: mockLogger,
         configurationProvider: mockConfigurationProvider,
       });
@@ -177,6 +186,7 @@ describe('LLMConfigService', () => {
   describe('#isValidConfig (indirectly tested via addOrUpdateConfigs and loading)', () => {
     beforeEach(() => {
       service = new LLMConfigService({
+        llmConfigCache: new LlmConfigCache(),
         logger: mockLogger,
         configurationProvider: mockConfigurationProvider,
       });
@@ -194,7 +204,8 @@ describe('LLMConfigService', () => {
       expect(service.getLlmConfigsCacheForTest().size).toBe(0);
       service.addOrUpdateConfigs([{ ...baseValidConfig, configId: null }]);
       expect(service.getLlmConfigsCacheForTest().size).toBe(0);
-      const { configId, ...rest } = baseValidConfig;
+      const { configId: _removed, ...rest } = baseValidConfig;
+      void _removed;
       service.addOrUpdateConfigs([rest]);
       expect(service.getLlmConfigsCacheForTest().size).toBe(0);
       expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -261,6 +272,7 @@ describe('LLMConfigService', () => {
   describe('addOrUpdateConfigs', () => {
     beforeEach(() => {
       service = new LLMConfigService({
+        llmConfigCache: new LlmConfigCache(),
         logger: mockLogger,
         configurationProvider: mockConfigurationProvider,
       });
@@ -342,6 +354,7 @@ describe('LLMConfigService', () => {
 
     it('should load and cache configurations from provider if sourceId is set and cache is empty', async () => {
       service = new LLMConfigService({
+        llmConfigCache: new LlmConfigCache(),
         logger: mockLogger,
         configurationProvider: mockConfigurationProvider,
         configSourceIdentifier: sourceId,
@@ -374,6 +387,7 @@ describe('LLMConfigService', () => {
 
     it('should not load from source if configSourceIdentifier is not set', async () => {
       service = new LLMConfigService({
+        llmConfigCache: new LlmConfigCache(),
         logger: mockLogger,
         configurationProvider: mockConfigurationProvider,
       });
@@ -390,6 +404,7 @@ describe('LLMConfigService', () => {
 
     it('should handle errors from configurationProvider.fetchData', async () => {
       service = new LLMConfigService({
+        llmConfigCache: new LlmConfigCache(),
         logger: mockLogger,
         configurationProvider: mockConfigurationProvider,
         configSourceIdentifier: sourceId,
@@ -414,6 +429,7 @@ describe('LLMConfigService', () => {
 
     it('should handle invalid data structure from provider (e.g. missing "configs" map)', async () => {
       service = new LLMConfigService({
+        llmConfigCache: new LlmConfigCache(),
         logger: mockLogger,
         configurationProvider: mockConfigurationProvider,
         configSourceIdentifier: sourceId,
@@ -434,6 +450,7 @@ describe('LLMConfigService', () => {
 
     it('should skip invalid configs within fetched data and log them', async () => {
       service = new LLMConfigService({
+        llmConfigCache: new LlmConfigCache(),
         logger: mockLogger,
         configurationProvider: mockConfigurationProvider,
         configSourceIdentifier: sourceId,
@@ -465,6 +482,7 @@ describe('LLMConfigService', () => {
 
     it('should warn if configId in fetched object does not match its key in the map', async () => {
       service = new LLMConfigService({
+        llmConfigCache: new LlmConfigCache(),
         logger: mockLogger,
         configurationProvider: mockConfigurationProvider,
         configSourceIdentifier: sourceId,
@@ -493,6 +511,7 @@ describe('LLMConfigService', () => {
 
     it('should not reload from source if configs already loaded and cache populated', async () => {
       service = new LLMConfigService({
+        llmConfigCache: new LlmConfigCache(),
         logger: mockLogger,
         configurationProvider: mockConfigurationProvider,
         configSourceIdentifier: sourceId,
@@ -507,6 +526,7 @@ describe('LLMConfigService', () => {
 
     it('should not reload from source if load was attempted from source and failed (cache empty)', async () => {
       service = new LLMConfigService({
+        llmConfigCache: new LlmConfigCache(),
         logger: mockLogger,
         configurationProvider: mockConfigurationProvider,
         configSourceIdentifier: sourceId,
@@ -534,6 +554,7 @@ describe('LLMConfigService', () => {
   describe('getConfig', () => {
     it('should return undefined and log error if llmId is not a non-empty string', async () => {
       service = new LLMConfigService({
+        llmConfigCache: new LlmConfigCache(),
         logger: mockLogger,
         configurationProvider: mockConfigurationProvider,
       });
@@ -553,6 +574,7 @@ describe('LLMConfigService', () => {
 
     it('should return undefined if cache is empty and no source can provide configs', async () => {
       service = new LLMConfigService({
+        llmConfigCache: new LlmConfigCache(),
         logger: mockLogger,
         configurationProvider: mockConfigurationProvider,
       });
@@ -568,6 +590,7 @@ describe('LLMConfigService', () => {
 
     it('should return dependencyInjection by direct configId match', async () => {
       service = new LLMConfigService({
+        llmConfigCache: new LlmConfigCache(),
         logger: mockLogger,
         configurationProvider: mockConfigurationProvider,
         initialConfigs: [{ ...sampleConfig1 }],
@@ -583,6 +606,7 @@ describe('LLMConfigService', () => {
 
     it('should return a copy of the dependencyInjection, not the cached instance', async () => {
       service = new LLMConfigService({
+        llmConfigCache: new LlmConfigCache(),
         logger: mockLogger,
         configurationProvider: mockConfigurationProvider,
         initialConfigs: [{ ...sampleConfig1 }],
@@ -598,6 +622,7 @@ describe('LLMConfigService', () => {
 
     it('should return dependencyInjection by exact modelIdentifier match if configId fails', async () => {
       service = new LLMConfigService({
+        llmConfigCache: new LlmConfigCache(),
         logger: mockLogger,
         configurationProvider: mockConfigurationProvider,
         initialConfigs: [{ ...sampleConfig1 }],
@@ -618,6 +643,7 @@ describe('LLMConfigService', () => {
         { ...sampleConfig1 },
       ];
       service = new LLMConfigService({
+        llmConfigCache: new LlmConfigCache(),
         logger: mockLogger,
         configurationProvider: mockConfigurationProvider,
         initialConfigs,
@@ -655,6 +681,7 @@ describe('LLMConfigService', () => {
         promptAssemblyOrder: ['k'],
       };
       service = new LLMConfigService({
+        llmConfigCache: new LlmConfigCache(),
         logger: mockLogger,
         configurationProvider: mockConfigurationProvider,
         initialConfigs: [{ ...sampleConfig1 }, conflictingConfig],
@@ -677,6 +704,7 @@ describe('LLMConfigService', () => {
         promptAssemblyOrder: ['k'],
       };
       service = new LLMConfigService({
+        llmConfigCache: new LlmConfigCache(),
         logger: mockLogger,
         configurationProvider: mockConfigurationProvider,
         initialConfigs: [{ ...sampleWildcardConfig }, exactMatchConfig],
@@ -693,6 +721,7 @@ describe('LLMConfigService', () => {
 
     it('should return undefined if no match is found after all checks', async () => {
       service = new LLMConfigService({
+        llmConfigCache: new LlmConfigCache(),
         logger: mockLogger,
         configurationProvider: mockConfigurationProvider,
         initialConfigs: [{ ...sampleConfig1 }],
@@ -711,6 +740,7 @@ describe('LLMConfigService', () => {
     const sourceId = 'test-source-for-reset';
     it('should clear the cache and reset configsLoadedOrAttempted flag', async () => {
       service = new LLMConfigService({
+        llmConfigCache: new LlmConfigCache(),
         logger: mockLogger,
         configurationProvider: mockConfigurationProvider,
         initialConfigs: [{ ...sampleConfig1 }],
@@ -730,6 +760,7 @@ describe('LLMConfigService', () => {
 
     it('should force a reload from source on next getConfig call if source is configured', async () => {
       service = new LLMConfigService({
+        llmConfigCache: new LlmConfigCache(),
         logger: mockLogger,
         configurationProvider: mockConfigurationProvider,
         initialConfigs: [{ ...sampleConfig1 }], // Load initially
@@ -758,6 +789,7 @@ describe('LLMConfigService', () => {
     it('getLlmConfigsCacheForTest should return the internal cache', () => {
       const initialConfigs = [{ ...sampleConfig1 }];
       service = new LLMConfigService({
+        llmConfigCache: new LlmConfigCache(),
         logger: mockLogger,
         configurationProvider: mockConfigurationProvider,
         initialConfigs,
@@ -770,6 +802,7 @@ describe('LLMConfigService', () => {
 
     it('getConfigsLoadedOrAttemptedFlagForTest should return the internal flag state', () => {
       service = new LLMConfigService({
+        llmConfigCache: new LlmConfigCache(),
         logger: mockLogger,
         configurationProvider: mockConfigurationProvider,
       });
