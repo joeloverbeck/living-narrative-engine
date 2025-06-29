@@ -1,6 +1,8 @@
 import { describe, test, expect, jest } from '@jest/globals';
 import { ProcessingCommandState } from '../../../../src/turns/states/processingCommandState.js';
-import TurnDirectiveStrategyResolver from '../../../../src/turns/strategies/turnDirectiveStrategyResolver.js';
+import TurnDirectiveStrategyResolver, {
+  DEFAULT_STRATEGY_MAP,
+} from '../../../../src/turns/strategies/turnDirectiveStrategyResolver.js';
 
 describe('ProcessingCommandState _setTurnAction usage', () => {
   test('action updates occur via _setTurnAction', async () => {
@@ -36,7 +38,9 @@ describe('ProcessingCommandState _setTurnAction usage', () => {
       commandOutcomeInterpreter,
       commandString: initialAction.commandString,
       turnAction: initialAction,
-      directiveResolver: TurnDirectiveStrategyResolver.default,
+      directiveResolver: new TurnDirectiveStrategyResolver(
+        DEFAULT_STRATEGY_MAP
+      ),
       processingWorkflowFactory,
     });
 

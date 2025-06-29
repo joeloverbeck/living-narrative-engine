@@ -9,6 +9,16 @@ import { validateDependency } from '../../utils/dependencyUtils.js';
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 
 /**
+ * @typedef {(
+ *  actor: import('../../entities/entity.js').default,
+ *  context: import('../interfaces/ITurnContext.js').ITurnContext,
+ *  actions: import('../dtos/actionComposite.js').ActionComposite[],
+ *  abortSignal?: AbortSignal
+ * ) => Promise<{ index: number, speech?: string|null, thoughts?: string|null, notes?: string[]|null }>} DecisionDelegate
+ * Callback used by decision providers to select an action.
+ */
+
+/**
  * @class DelegatingDecisionProvider
  * @augments AbstractDecisionProvider
  * @description
@@ -17,25 +27,18 @@ import { validateDependency } from '../../utils/dependencyUtils.js';
  */
 export class DelegatingDecisionProvider extends AbstractDecisionProvider {
   /**
-   * @type {(actor: import('../../entities/entity.js').default,
-   *  context: import('../interfaces/ITurnContext.js').ITurnContext,
-   *  actions: import('../dtos/actionComposite.js').ActionComposite[],
-   *  abortSignal?: AbortSignal
-   * ) => Promise<{ index: number, speech?: string|null, thoughts?: string|null, notes?: string[]|null }>}
+   * @type {DecisionDelegate}
    * @private
    */
   #delegate;
 
   /**
    * @param {object} deps - Constructor dependencies
-   * @param {(actor: import('../../entities/entity.js').default,
-   *  context: import('../interfaces/ITurnContext.js').ITurnContext,
-   *  actions: import('../dtos/actionComposite.js').ActionComposite[],
-   *  abortSignal?: AbortSignal
-   * ) => Promise<{ index: number, speech?: string|null, thoughts?: string|null, notes?: string[]|null }>} deps.delegate
+   * @param {DecisionDelegate} deps.delegate -
    *        Delegate function performing the actual choice logic.
    * @param {import('../../interfaces/coreServices').ILogger} deps.logger - Logger for error reporting
    * @param {ISafeEventDispatcher} deps.safeEventDispatcher - Event dispatcher for validation errors
+   * @returns {void}
    */
   constructor({ delegate, logger, safeEventDispatcher }) {
     super({ logger, safeEventDispatcher });

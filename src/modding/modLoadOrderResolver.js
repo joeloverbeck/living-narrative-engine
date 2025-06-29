@@ -6,6 +6,7 @@
 
 import ModDependencyError from '../errors/modDependencyError.js';
 import { CORE_MOD_ID } from '../constants/core';
+import { assertIsLogger, assertIsMap } from '../utils/argValidation.js';
 
 /*─────────────────────────────────────────────────────────────────────────*/
 /* Private Helper Functions                                                */
@@ -172,11 +173,11 @@ export default class ModLoadOrderResolver {
    * @param {ILogger} logger The application's logger instance.
    */
   constructor(logger) {
-    if (!logger || typeof logger.debug !== 'function') {
-      throw new Error(
-        'ModLoadOrderResolver: constructor requires a valid logger instance.'
-      );
-    }
+    assertIsLogger(
+      logger,
+      'logger',
+      'ModLoadOrderResolver: constructor requires a valid logger instance.'
+    );
     this._logger = logger;
   }
 
@@ -200,10 +201,7 @@ export default class ModLoadOrderResolver {
       throw new Error(
         'ModLoadOrderResolver.resolve: `requestedIds` must be an array.'
       );
-    if (!(manifestsMap instanceof Map))
-      throw new Error(
-        'ModLoadOrderResolver.resolve: `manifestsMap` must be a Map.'
-      );
+    assertIsMap(manifestsMap, 'ModLoadOrderResolver.resolve: `manifestsMap`');
 
     /* 1 – Build graph */
     const { nodes, edges } = buildDependencyGraph(requestedIds, manifestsMap);

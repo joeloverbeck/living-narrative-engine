@@ -2,6 +2,7 @@
 
 import semver from 'semver'; // AC: Use semver@^7
 import ModDependencyError from '../errors/modDependencyError.js'; // AC: Use custom Error type
+import { assertIsMap, assertIsLogger } from '../utils/argValidation.js';
 
 /**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
@@ -28,23 +29,18 @@ class ModDependencyValidator {
    * @param {Map<string, ModManifest>} manifests - Map of mod manifests, keyed by **lower-cased** mod ID.
    * @param {ILogger} logger - Logger instance for warnings.
    * @param {object} [options] - Optional validation options.
-   * @param {{valid: Function, satisfies: Function}} [options.semverLib=semver] - Library used for semver checks.
+   * @param {{valid: Function, satisfies: Function}} [options.semverLib] - Library used for semver checks.
    * @returns {void} - Returns nothing, but throws ModDependencyError on fatal issues.
    * @throws {ModDependencyError} If fatal validation errors occur (missing required, version mismatch, conflict).
    */
   static validate(manifests, logger, { semverLib = semver } = {}) {
     const fatals = []; // AC: Collect fatal messages
 
-    if (!(manifests instanceof Map)) {
-      throw new Error(
-        'ModDependencyValidator.validate: Input `manifests` must be a Map.'
-      );
-    }
-    if (!logger || typeof logger.warn !== 'function') {
-      throw new Error(
-        'ModDependencyValidator.validate: Input `logger` must be a valid ILogger instance.'
-      );
-    }
+    assertIsMap(
+      manifests,
+      'ModDependencyValidator.validate: Input `manifests`'
+    );
+    assertIsLogger(logger, 'ModDependencyValidator.validate: Input `logger`');
 
     // Iterate through each mod that is loaded
     for (const [modIdLower, manifest] of manifests.entries()) {

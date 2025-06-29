@@ -83,7 +83,8 @@ describe('TargetResolutionService - Scope Loading Issue', () => {
       expect(mockScopeRegistry.getScope).toHaveBeenCalledWith(
         'core:clear_directions'
       );
-      expect(result).toHaveLength(2);
+      expect(result.targets).toHaveLength(2);
+      expect(result.error).toBeUndefined();
       expectNoDispatch(mockSafeEventDispatcher.dispatch);
     });
 
@@ -103,7 +104,8 @@ describe('TargetResolutionService - Scope Loading Issue', () => {
       expect(mockScopeRegistry.getScope).toHaveBeenCalledWith(
         'core:clear_directions'
       );
-      expect(result).toHaveLength(0);
+      expect(result.targets).toHaveLength(0);
+      expect(result.error).toBeInstanceOf(Error);
       expect(mockLogger.warn).toHaveBeenCalledWith(
         "TargetResolutionService: Missing scope definition: Scope 'core:clear_directions' not found or has no expression in registry."
       );
@@ -137,7 +139,8 @@ describe('TargetResolutionService - Scope Loading Issue', () => {
         mockDiscoveryContext
       );
 
-      expect(result).toHaveLength(0);
+      expect(result.targets).toHaveLength(0);
+      expect(result.error).toBeInstanceOf(Error);
       expect(mockLogger.warn).toHaveBeenCalledWith(
         "TargetResolutionService: Missing scope definition: Scope 'core:clear_directions' not found or has no expression in registry."
       );
@@ -164,7 +167,8 @@ describe('TargetResolutionService - Scope Loading Issue', () => {
         mockDiscoveryContext
       );
 
-      expect(result).toHaveLength(0);
+      expect(result.targets).toHaveLength(0);
+      expect(result.error).toBeUndefined();
       expect(mockSafeEventDispatcher.dispatch).not.toHaveBeenCalled();
       expect(mockDslParser.parse).toHaveBeenCalledWith(
         'location.core:exits[].target'

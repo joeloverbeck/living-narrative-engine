@@ -1,6 +1,8 @@
 import { describe, test, expect, jest } from '@jest/globals';
 import { ProcessingCommandState } from '../../../../src/turns/states/processingCommandState.js';
-import TurnDirectiveStrategyResolver from '../../../../src/turns/strategies/turnDirectiveStrategyResolver.js';
+import TurnDirectiveStrategyResolver, {
+  DEFAULT_STRATEGY_MAP,
+} from '../../../../src/turns/strategies/turnDirectiveStrategyResolver.js';
 
 describe('ProcessingCommandState constructor', () => {
   test('invokes validation and initialization helpers', () => {
@@ -10,7 +12,9 @@ describe('ProcessingCommandState constructor', () => {
       commandOutcomeInterpreter: {},
       commandString: 'cmd',
       turnAction: { actionDefinitionId: 'id', commandString: 'cmd' },
-      directiveResolver: TurnDirectiveStrategyResolver,
+      directiveResolver: new TurnDirectiveStrategyResolver(
+        DEFAULT_STRATEGY_MAP
+      ),
     };
 
     const validateSpy = jest.spyOn(
@@ -38,7 +42,9 @@ describe('ProcessingCommandState constructor', () => {
       commandOutcomeInterpreter: {},
       commandString: 'cmd',
       turnAction: { actionDefinitionId: 'id', commandString: 'cmd' },
-      directiveResolver: TurnDirectiveStrategyResolver,
+      directiveResolver: new TurnDirectiveStrategyResolver(
+        DEFAULT_STRATEGY_MAP
+      ),
     };
 
     const mockWorkflow = {};

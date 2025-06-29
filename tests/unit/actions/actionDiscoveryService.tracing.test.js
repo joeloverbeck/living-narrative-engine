@@ -81,15 +81,18 @@ describeActionDiscoverySuite(
       bed.mocks.targetResolutionService.resolveTargets.mockImplementation(
         (scopeName) => {
           if (scopeName === 'someScope') {
-            return [
-              { type: 'entity', entityId: 'target1' },
-              { type: 'entity', entityId: 'target2' },
-            ];
+            return {
+              targets: [
+                { type: 'entity', entityId: 'target1' },
+                { type: 'entity', entityId: 'target2' },
+              ],
+            };
           }
-          if (scopeName === 'none') return [{ type: 'none', entityId: null }];
+          if (scopeName === 'none')
+            return { targets: [{ type: 'none', entityId: null }] };
           if (scopeName === 'self')
-            return [{ type: 'entity', entityId: actorEntity.id }];
-          return [];
+            return { targets: [{ type: 'entity', entityId: actorEntity.id }] };
+          return { targets: [] };
         }
       );
       bed.mocks.actionCommandFormatter.format.mockReturnValue({

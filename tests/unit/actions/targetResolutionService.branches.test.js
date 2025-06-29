@@ -46,7 +46,10 @@ describe('TargetResolutionService - additional branches', () => {
   it('returns a no target context when scope is none', () => {
     const actor = { id: 'hero' };
     const result = service.resolveTargets(TARGET_DOMAIN_NONE, actor, {});
-    expect(result).toEqual([ActionTargetContext.noTarget()]);
+    expect(result).toEqual({
+      targets: [ActionTargetContext.noTarget()],
+      error: undefined,
+    });
     expect(mockScopeRegistry.getScope).not.toHaveBeenCalled();
     expect(mockScopeEngine.resolve).not.toHaveBeenCalled();
     expect(mockSafeDispatcher.dispatch).not.toHaveBeenCalled();
@@ -55,7 +58,10 @@ describe('TargetResolutionService - additional branches', () => {
   it('returns the actor as target when scope is self', () => {
     const actor = { id: 'hero' };
     const result = service.resolveTargets(TARGET_DOMAIN_SELF, actor, {});
-    expect(result).toEqual([ActionTargetContext.forEntity('hero')]);
+    expect(result).toEqual({
+      targets: [ActionTargetContext.forEntity('hero')],
+      error: undefined,
+    });
     expect(mockScopeRegistry.getScope).not.toHaveBeenCalled();
     expect(mockScopeEngine.resolve).not.toHaveBeenCalled();
     expect(mockSafeDispatcher.dispatch).not.toHaveBeenCalled();
@@ -76,7 +82,7 @@ describe('TargetResolutionService - additional branches', () => {
     const actor = { id: 'hero' };
     const result = service.resolveTargets('core:test', actor, {});
 
-    expect(result).toEqual([]);
+    expect(result).toEqual({ targets: [], error: undefined });
     expect(mockScopeEngine.resolve).toHaveBeenCalled();
     expect(mockSafeDispatcher.dispatch).not.toHaveBeenCalled();
   });

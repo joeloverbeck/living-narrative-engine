@@ -6,7 +6,6 @@ import { jest, describe, beforeEach, test, expect } from '@jest/globals';
 import { mock, mockReset } from 'jest-mock-extended';
 import { ActionDiscoveryService } from '../../../src/actions/actionDiscoveryService.js';
 import { ActionCandidateProcessor } from '../../../src/actions/actionCandidateProcessor.js';
-import { ActionTargetContext } from '../../../src/models/actionTargetContext.js';
 import {
   TARGET_DOMAIN_NONE,
   TARGET_DOMAIN_SELF,
@@ -31,7 +30,6 @@ const mockLogger = {
 const mockFormatActionCommandFn = jest.fn();
 
 // Other dependencies that are required by the constructor but may not be used in every test
-const mockGameDataRepo = mock();
 const mockEventDispatcher = mock();
 const mockGetActorLocationFn = jest.fn();
 const mockGetEntityDisplayNameFn = jest.fn();
@@ -143,9 +141,9 @@ describe('ADS-P4-05: Streamlined ActionDiscoveryService', () => {
         scope: 'some_scope',
       };
       mockActionIndex.getCandidateActions.mockReturnValue([actionDef]);
-      mockTargetResolutionService.resolveTargets.mockReturnValue([
-        { type: 'entity', entityId: 'target1' },
-      ]);
+      mockTargetResolutionService.resolveTargets.mockReturnValue({
+        targets: [{ type: 'entity', entityId: 'target1' }],
+      });
 
       const { actions } = await service.getValidActions(actorEntity, {});
 
@@ -170,10 +168,12 @@ describe('ADS-P4-05: Streamlined ActionDiscoveryService', () => {
       };
       mockActionIndex.getCandidateActions.mockReturnValue([actionDef]);
       mockPrereqService.evaluate.mockReturnValue(true);
-      mockTargetResolutionService.resolveTargets.mockReturnValue([
-        { type: 'entity', entityId: 'goblin1' },
-        { type: 'entity', entityId: 'goblin2' },
-      ]);
+      mockTargetResolutionService.resolveTargets.mockReturnValue({
+        targets: [
+          { type: 'entity', entityId: 'goblin1' },
+          { type: 'entity', entityId: 'goblin2' },
+        ],
+      });
 
       const { actions } = await service.getValidActions(actorEntity, {});
 
@@ -212,9 +212,9 @@ describe('ADS-P4-05: Streamlined ActionDiscoveryService', () => {
       };
       mockActionIndex.getCandidateActions.mockReturnValue([actionDef]);
       mockPrereqService.evaluate.mockReturnValue(true);
-      mockTargetResolutionService.resolveTargets.mockReturnValue([
-        { type: 'entity', entityId: actorEntity.id },
-      ]);
+      mockTargetResolutionService.resolveTargets.mockReturnValue({
+        targets: [{ type: 'entity', entityId: actorEntity.id }],
+      });
 
       const { actions } = await service.getValidActions(actorEntity, {});
 
@@ -244,9 +244,9 @@ describe('ADS-P4-05: Streamlined ActionDiscoveryService', () => {
       };
       mockActionIndex.getCandidateActions.mockReturnValue([actionDef]);
       mockPrereqService.evaluate.mockReturnValue(true);
-      mockTargetResolutionService.resolveTargets.mockReturnValue([
-        { type: 'none', entityId: null },
-      ]);
+      mockTargetResolutionService.resolveTargets.mockReturnValue({
+        targets: [{ type: 'none', entityId: null }],
+      });
 
       const { actions } = await service.getValidActions(actorEntity, {});
 
@@ -276,7 +276,9 @@ describe('ADS-P4-05: Streamlined ActionDiscoveryService', () => {
       };
       mockActionIndex.getCandidateActions.mockReturnValue([actionDef]);
       mockPrereqService.evaluate.mockReturnValue(true);
-      mockTargetResolutionService.resolveTargets.mockReturnValue([]);
+      mockTargetResolutionService.resolveTargets.mockReturnValue({
+        targets: [],
+      });
 
       const { actions } = await service.getValidActions(actorEntity, {});
 

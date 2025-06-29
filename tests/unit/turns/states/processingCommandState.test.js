@@ -14,7 +14,9 @@ import {
 } from '@jest/globals';
 import { ProcessingCommandState } from '../../../../src/turns/states/processingCommandState.js';
 import { TurnIdleState } from '../../../../src/turns/states/turnIdleState.js';
-import TurnDirectiveStrategyResolver from '../../../../src/turns/strategies/turnDirectiveStrategyResolver.js';
+import TurnDirectiveStrategyResolver, {
+  DEFAULT_STRATEGY_MAP,
+} from '../../../../src/turns/strategies/turnDirectiveStrategyResolver.js';
 import TurnDirective from '../../../../src/turns/constants/turnDirectives.js';
 import { AwaitingActorDecisionState } from '../../../../src/turns/states/awaitingActorDecisionState.js';
 import { AwaitingExternalTurnEndState } from '../../../../src/turns/states/awaitingExternalTurnEndState.js';
