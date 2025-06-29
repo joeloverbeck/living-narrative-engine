@@ -13,6 +13,7 @@ export * from './objectUtils.js';
 export * from './cloneUtils.js';
 export * from './placeholderPatterns.js';
 export * from './placeholderPathResolver.js';
+export { ExecutionPlaceholderResolver } from './executionPlaceholderResolver.js';
 export { StructureResolver } from './structureResolver.js';
 export * from './jsonCleaning.js';
 export * from './jsonRepair.js';

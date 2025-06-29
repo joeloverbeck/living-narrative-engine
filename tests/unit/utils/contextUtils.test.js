@@ -11,14 +11,12 @@ import {
   resolveEntityNameFallback,
   resolvePlaceholders,
 } from '../../../src/utils/contextUtils.js';
-import { PlaceholderResolver } from '../../../src/utils/placeholderResolverUtils.js';
-import { buildResolutionSources } from '../../../src/utils/placeholderSources.js';
+import { ExecutionPlaceholderResolver } from '../../../src/utils/executionPlaceholderResolver.js';
 import { getEntityDisplayName } from '../../../src/utils/entityUtils.js';
 import { NAME_COMPONENT_ID } from '../../../src/constants/componentIds.js';
 
 // Mock dependencies
-jest.mock('../../../src/utils/placeholderResolverUtils.js');
-jest.mock('../../../src/utils/placeholderSources.js');
+jest.mock('../../../src/utils/executionPlaceholderResolver.js');
 jest.mock('../../../src/utils/entityUtils.js');
 
 const mockLogger = {
@@ -179,34 +177,23 @@ describe('contextUtils.js', () => {
     });
   });
 
-  // --- Suite for Unit Tests (mocking PlaceholderResolver) ---
+  // --- Suite for Unit Tests (mocking ExecutionPlaceholderResolver) ---
   describe('resolvePlaceholders (Unit Tests)', () => {
     let mockResolverInstance;
-    let mockBuildResolutionSources;
 
     beforeEach(() => {
       // This setup is specific to the unit tests for resolvePlaceholders
       mockResolverInstance = {
-        resolveStructure: jest.fn((input) => input), // Default to returning original input
+        resolveFromContext: jest.fn((input) => input),
       };
-      PlaceholderResolver.mockImplementation(() => mockResolverInstance);
-
-      mockBuildResolutionSources = jest.fn().mockReturnValue({
-        sources: [{ a: 1 }],
-        fallback: { b: 2 },
-      });
-      buildResolutionSources.mockImplementation(mockBuildResolutionSources);
+      ExecutionPlaceholderResolver.mockImplementation(
+        () => mockResolverInstance
+      );
     });
 
-    test('should instantiate PlaceholderResolver with the provided logger', () => {
+    test('should instantiate ExecutionPlaceholderResolver with the provided logger', () => {
       resolvePlaceholders({}, {}, mockLogger);
-      expect(PlaceholderResolver).toHaveBeenCalledWith(mockLogger);
-    });
-
-    test('should call buildResolutionSources with the execution context', () => {
-      const executionContext = { actor: { id: 'actor-1' } };
-      resolvePlaceholders({}, executionContext, mockLogger);
-      expect(mockBuildResolutionSources).toHaveBeenCalledWith(executionContext);
+      expect(ExecutionPlaceholderResolver).toHaveBeenCalledWith(mockLogger);
     });
 
     test('should call resolveStructure with the correct arguments', () => {
@@ -216,18 +203,19 @@ describe('contextUtils.js', () => {
 
       resolvePlaceholders(input, executionContext, mockLogger, '', skipKeys);
 
-      expect(mockResolverInstance.resolveStructure).toHaveBeenCalledTimes(1);
-      expect(mockResolverInstance.resolveStructure).toHaveBeenCalledWith(
+      expect(mockResolverInstance.resolveFromContext).toHaveBeenCalledTimes(1);
+      expect(mockResolverInstance.resolveFromContext).toHaveBeenCalledWith(
         input,
-        [{ a: 1 }],
-        { b: 2 },
-        skipKeys
+        executionContext,
+        { skipKeys }
       );
     });
 
-    test('should return the result from resolver.resolveStructure', () => {
+    test('should return the result from resolver.resolveFromContext', () => {
       const resolvedStructure = { message: 'Hello World' };
-      mockResolverInstance.resolveStructure.mockReturnValue(resolvedStructure);
+      mockResolverInstance.resolveFromContext.mockReturnValue(
+        resolvedStructure
+      );
 
       const result = resolvePlaceholders({}, {}, mockLogger);
 
