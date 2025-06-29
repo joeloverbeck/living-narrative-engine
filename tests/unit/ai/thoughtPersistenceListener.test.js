@@ -40,7 +40,9 @@ describe('ThoughtPersistenceListener', () => {
     expect(persistThoughts).toHaveBeenCalledWith(
       { thoughts: 'hi' },
       actorEntity,
-      logger
+      logger,
+      listener.stmService,
+      expect.any(Date)
     );
   });
 

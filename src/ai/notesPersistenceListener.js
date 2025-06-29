@@ -1,6 +1,7 @@
 // src/ai/notesPersistenceListener.js
 
 import { persistNotes } from './notesPersistenceHook.js';
+import NotesService from './notesService.js';
 
 /** @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 
@@ -16,15 +17,25 @@ export class NotesPersistenceListener {
    * @param {{
    *   logger: import('../interfaces/coreServices.js').ILogger,
    *   entityManager: import('../interfaces/IEntityManager.js').IEntityManager,
-   *   dispatcher: ISafeEventDispatcher
+   *   dispatcher: ISafeEventDispatcher,
+   *   notesService?: NotesService,
+   *   now?: () => Date
    * }} deps
    *   Dependencies for the listener.
    */
-  constructor({ logger, entityManager, dispatcher }) {
+  constructor({
+    logger,
+    entityManager,
+    dispatcher,
+    notesService = new NotesService(),
+    now = () => new Date(),
+  }) {
     this.logger = logger;
     this.entityManager = entityManager;
     /** @type {ISafeEventDispatcher} */
     this.dispatcher = dispatcher;
+    this.notesService = notesService;
+    this.now = now;
   }
 
   /**
@@ -58,7 +69,9 @@ export class NotesPersistenceListener {
         { notes: extractedData.notes },
         actorEntity,
         this.logger,
-        this.dispatcher
+        this.dispatcher,
+        this.notesService,
+        this.now()
       );
     } else {
       this.logger.warn(

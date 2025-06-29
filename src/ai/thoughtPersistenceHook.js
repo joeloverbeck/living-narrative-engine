@@ -2,10 +2,7 @@
 
 import ShortTermMemoryService from './shortTermMemoryService.js';
 import { SHORT_TERM_MEMORY_COMPONENT_ID } from '../constants/componentIds.js';
-import {
-  fetchComponent,
-  applyComponent,
-} from '../utils/componentHelpers.js';
+import { fetchComponent, applyComponent } from '../utils/componentHelpers.js';
 
 /**
  * Persist the “thoughts” produced during an LLM turn into the actor’s
@@ -16,8 +13,16 @@ import {
  * @param {object} action       – The structured action returned by the LLM.
  * @param {object} actorEntity  – Entity instance (or test double) that generated the action.
  * @param {object} logger       – Application-wide logger (expects .warn()).
+ * @param {ShortTermMemoryService} [stmService] – Optional STM service instance.
+ * @param {Date} [now] – Date provider for timestamping.
  */
-export function persistThoughts(action, actorEntity, logger) {
+export function persistThoughts(
+  action,
+  actorEntity,
+  logger,
+  stmService = new ShortTermMemoryService(),
+  now = new Date()
+) {
   /* ── 1. Validate thoughts ───────────────────────────────────────────── */
   const rawThoughts = action?.thoughts;
   if (
@@ -42,11 +47,10 @@ export function persistThoughts(action, actorEntity, logger) {
   }
 
   /* ── 3. Mutate in place using the service ───────────────────────────── */
-  const stmService = new ShortTermMemoryService();
   const { mem: updatedMem } = stmService.addThought(
     memoryComp,
     thoughtText,
-    new Date()
+    now
   );
 
   /* ── 4. Push the mutation back to the entity ────────────────────────── */
