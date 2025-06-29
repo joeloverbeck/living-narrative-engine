@@ -1,6 +1,5 @@
 // src/utils/contextUtils.js
-import { PlaceholderResolver } from './placeholderResolverUtils.js';
-import { buildResolutionSources } from './placeholderSources.js';
+import { ExecutionPlaceholderResolver } from './executionPlaceholderResolver.js';
 import { getEntityDisplayName } from './entityUtils.js';
 import { resolveEntityNameFallback } from './entityNameFallbackUtils.js';
 
@@ -36,8 +35,6 @@ export function resolvePlaceholders(
   currentPath = '',
   skipKeys = []
 ) {
-  const resolver = new PlaceholderResolver(logger);
-  const { sources, fallback } = buildResolutionSources(executionContext);
-
-  return resolver.resolveStructure(input, sources, fallback, skipKeys);
+  const resolver = new ExecutionPlaceholderResolver(logger);
+  return resolver.resolveFromContext(input, executionContext, { skipKeys });
 }
