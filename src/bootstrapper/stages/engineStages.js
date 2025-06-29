@@ -5,7 +5,7 @@
 /** @typedef {import('../../engine/gameEngine.js').default} GameEngineInstance */
 /** @typedef {import('../../engine/gameEngine.js').default} GameEngine */
 /** @typedef {import('../../dependencyInjection/appContainer.js').default} AppContainer */
-import { stageSuccess, stageFailure } from '../helpers.js';
+import { stageSuccess, stageFailure } from '../../utils/bootstrapperHelpers.js';
 
 /**
  * Bootstrap Stage: Initializes the GameEngine.

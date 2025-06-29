@@ -13,7 +13,7 @@ import {
   registerAITurnPipeline,
   registerAITurnHandler,
 } from '../../../../src/dependencyInjection/registrations/aiRegistrations.js';
-import { Registrar } from '../../../../src/dependencyInjection/registrarHelpers.js';
+import { Registrar } from '../../../../src/utils/registrarHelpers.js';
 
 // --- Dependencies for Mocking & Testing ---
 import AppContainer from '../../../../src/dependencyInjection/appContainer.js';

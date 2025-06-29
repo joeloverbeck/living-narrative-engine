@@ -1,10 +1,10 @@
-// src/bootstrapper/helpers.js
+// src/utils/bootstrapperHelpers.js
 
 /**
  * @file Utility helpers used during application bootstrap stages.
  */
 
-import StageError from './StageError.js';
+import StageError from '../bootstrapper/StageError.js';
 import {
   stageSuccess as baseStageSuccess,
   stageFailure as baseStageFailure,

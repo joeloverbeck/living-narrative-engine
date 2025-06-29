@@ -2,7 +2,7 @@
  * @file Provides registration for operation handler singletons.
  */
 
-/** @typedef {import('../registrarHelpers.js').Registrar} Registrar */
+/** @typedef {import('../../utils/registrarHelpers.js').Registrar} Registrar */
 
 import { tokens } from '../tokens.js';
 import DispatchEventHandler from '../../logic/operationHandlers/dispatchEventHandler.js';

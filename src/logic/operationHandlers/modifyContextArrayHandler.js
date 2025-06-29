@@ -15,8 +15,8 @@ import { ensureEvaluationContext } from '../../utils/evaluationContextUtils.js';
 import {
   advancedArrayModify,
   ARRAY_MODIFICATION_MODES,
-} from '../utils/arrayModifyUtils.js';
-import { setByPath } from '../utils/objectPathUtils.js';
+} from '../../utils/arrayModifyUtils.js';
+import { setByPath } from '../../utils/objectPathUtils.js';
 
 /**
  * @class ModifyContextArrayHandler

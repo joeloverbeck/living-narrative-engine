@@ -1,6 +1,6 @@
 // src/entities/utils/entityFetchHelpers.js
 
-import { InvalidEntityIdError } from '../../errors/invalidEntityIdError.js';
+import { InvalidEntityIdError } from '../errors/invalidEntityIdError.js';
 
 /**
  * @module entityFetchHelpers

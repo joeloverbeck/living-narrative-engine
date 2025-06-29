@@ -11,7 +11,7 @@ import ModDependencyValidator from '../../modding/modDependencyValidator.js';
 import validateModEngineVersions from '../../modding/modVersionValidator.js';
 import * as ModLoadOrderResolver from '../../modding/modLoadOrderResolver.js';
 import { tokens } from '../tokens.js';
-import { Registrar } from '../registrarHelpers.js';
+import { Registrar } from '../../utils/registrarHelpers.js';
 import { ActionIndexingService } from '../../turns/services/actionIndexingService';
 import ScopeRegistry from '../../scopeDsl/scopeRegistry.js';
 import ScopeEngine from '../../scopeDsl/engine.js';

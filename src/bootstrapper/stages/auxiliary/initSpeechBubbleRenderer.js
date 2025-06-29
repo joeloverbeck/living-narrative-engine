@@ -1,6 +1,6 @@
 // src/bootstrapper/stages/auxiliary/initSpeechBubbleRenderer.js
 
-import { stageSuccess, stageFailure } from '../../helpers.js';
+import { stageSuccess, stageFailure } from '../../../utils/bootstrapperHelpers.js';
 import './typedefs.js';
 
 /**

@@ -9,7 +9,7 @@ import {
 import {
   fetchComponent,
   applyComponent,
-} from '../../../src/entities/utils/componentHelpers.js';
+} from '../../../src/utils/componentHelpers.js';
 import { createMockLogger } from '../testUtils.js';
 
 class MockEntity {

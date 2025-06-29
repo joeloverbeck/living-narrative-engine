@@ -1,5 +1,5 @@
 import { describe, test, expect, jest, beforeEach } from '@jest/globals';
-import { reportMissingActorId } from '../../../../../src/turns/states/helpers/errorReportingUtils.js';
+import { reportMissingActorId } from '../../../../../src/utils/errorReportingUtils.js';
 import { safeDispatchError } from '../../../../../src/utils/safeDispatchErrorUtils.js';
 
 jest.mock('../../../../../src/utils/safeDispatchErrorUtils.js');

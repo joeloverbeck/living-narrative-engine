@@ -1,6 +1,6 @@
 // src/bootstrapper/stages/auxiliary/initLoadGameUI.js
 
-import { resolveAndInitialize } from '../../helpers.js';
+import { resolveAndInitialize } from '../../../utils/bootstrapperHelpers.js';
 import GameEngineLoadAdapter from '../../../adapters/GameEngineLoadAdapter.js';
 import './typedefs.js';
 

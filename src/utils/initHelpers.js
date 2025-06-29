@@ -1,4 +1,4 @@
-// src/initializers/services/initHelpers.js
+// src/utils/initHelpers.js
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../actions/actionIndex.js').ActionIndex} ActionIndex */

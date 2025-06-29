@@ -86,7 +86,7 @@ import LoadResultAggregator from '../../loaders/LoadResultAggregator.js';
 
 // --- DI & Helper Imports ---
 import { tokens } from '../tokens.js';
-import { Registrar } from '../registrarHelpers.js';
+import { Registrar } from '../../utils/registrarHelpers.js';
 import { makeRegistryCache } from '../../loaders/registryCacheAdapter.js';
 import { BaseManifestItemLoader } from '../../loaders/baseManifestItemLoader.js';
 

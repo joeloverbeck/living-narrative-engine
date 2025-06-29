@@ -17,7 +17,7 @@ import { NotesPersistenceListener } from '../../ai/notesPersistenceListener.js';
 
 // --- DI & Helper Imports ---
 import { tokens } from '../tokens.js';
-import { Registrar } from '../registrarHelpers.js'; // Adjusted path
+import { Registrar } from '../../utils/registrarHelpers.js'; // Adjusted path
 
 /**
  * Registers the InitializationService and ShutdownService.

@@ -28,7 +28,7 @@ import {
   WorldInitializationError,
   InitializationError,
 } from '../../errors/InitializationError.js';
-import { buildActionIndex } from './initHelpers.js';
+import { buildActionIndex } from '../../utils/initHelpers.js';
 import { assertNonBlankString } from '../../utils/dependencyUtils.js';
 import { InvalidArgumentError } from '../../errors/invalidArgumentError.js';
 import ContentDependencyValidator from './contentDependencyValidator.js';

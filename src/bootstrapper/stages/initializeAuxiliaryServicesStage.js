@@ -1,6 +1,6 @@
 // src/bootstrapper/stages/initializeAuxiliaryServicesStage.js
 
-import { stageSuccess, stageFailure } from '../helpers.js';
+import { stageSuccess, stageFailure } from '../../utils/bootstrapperHelpers.js';
 import {
   initEngineUIManager,
   initSaveGameUI,

@@ -2,7 +2,7 @@
 // --- FILE START ---
 
 import { tokens } from '../tokens.js';
-import { Registrar } from '../registrarHelpers.js';
+import { Registrar } from '../../utils/registrarHelpers.js';
 import WorldInitializer from '../../initializers/worldInitializer.js';
 import SystemInitializer from '../../initializers/systemInitializer.js';
 // Import the necessary tag constant (Task 2: Verified, already present)

@@ -16,7 +16,7 @@
 
 // --- DI & Helper Imports ---
 import { tokens } from '../tokens.js';
-import { Registrar } from '../registrarHelpers.js';
+import { Registrar } from '../../utils/registrarHelpers.js';
 import { INITIALIZABLE } from '../tags.js';
 
 // --- Service Imports ---

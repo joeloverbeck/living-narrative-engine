@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { extractValidFilenames } from '../../../../src/loaders/helpers/filenameUtils.js';
+import { extractValidFilenames } from '../../../../src/utils/filenameUtils.js';
 
 describe('extractValidFilenames', () => {
   let logger;

@@ -8,8 +8,8 @@ import { validateDependency } from '../../utils/dependencyUtils.js';
 import { ensureValidLogger } from '../../utils/loggerUtils.js';
 import { isNonBlankString } from '../../utils/textUtils.js';
 import { buildPortraitInfo } from '../utils/portraitUtils.js';
-import { withEntity } from '../utils/entityFetchHelpers.js';
-import { getDisplayName, getDescription } from '../utils/displayHelpers.js';
+import { withEntity } from '../../utils/entityFetchHelpers.js';
+import { getDisplayName, getDescription } from '../../utils/displayHelpers.js';
 import { LocationNotFoundError } from '../../errors/locationNotFoundError.js';
 
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */

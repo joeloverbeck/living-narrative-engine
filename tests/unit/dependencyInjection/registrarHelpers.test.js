@@ -2,7 +2,7 @@ import { describe, it, beforeEach, expect, jest } from '@jest/globals';
 import {
   Registrar,
   resolveOptional,
-} from '../../../src/dependencyInjection/registrarHelpers.js';
+} from '../../../src/utils/registrarHelpers.js';
 
 /** @type {import('../../../src/dependencyInjection/appContainer.js').default} */
 let mockContainer;
