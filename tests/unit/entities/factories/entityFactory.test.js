@@ -622,6 +622,21 @@ describe('EntityFactory', () => {
       expect(entity.id).toBe('test-id');
     });
 
+    it('should handle non-object components property', () => {
+      const serializedEntity = {
+        instanceId: 'test-id',
+        definitionId: 'test-def:basic',
+        components: 'invalid',
+      };
+
+      const entity = factory.reconstruct(serializedEntity, mocks.registry, {
+        has: () => false,
+      });
+
+      expect(entity).toBeInstanceOf(Entity);
+      expect(entity.id).toBe('test-id');
+    });
+
     it('should reconstruct entity without core:position when missing', () => {
       const noPosDef = new EntityDefinition('test-def:nopos', {
         description: 'Entity without position',
