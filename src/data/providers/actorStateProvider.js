@@ -42,15 +42,18 @@ export class ActorStateProvider extends IActorStateProvider {
       actorState.components[compId] = deepClone(compData);
     }
 
-    const surface = (compId, fallback = '') => {
-      const txt = actorState.components[compId]?.text;
-      actorState[compId] = isNonBlankString(txt)
-        ? { text: txt.trim() }
+    const extractSurfaceText = (compId, fallback = '') => {
+      const text = actorState.components[compId]?.text;
+      actorState[compId] = isNonBlankString(text)
+        ? { text: text.trim() }
         : { text: fallback };
     };
 
-    surface(NAME_COMPONENT_ID, DEFAULT_FALLBACK_CHARACTER_NAME);
-    surface(DESCRIPTION_COMPONENT_ID, DEFAULT_FALLBACK_DESCRIPTION_RAW);
+    extractSurfaceText(NAME_COMPONENT_ID, DEFAULT_FALLBACK_CHARACTER_NAME);
+    extractSurfaceText(
+      DESCRIPTION_COMPONENT_ID,
+      DEFAULT_FALLBACK_DESCRIPTION_RAW
+    );
 
     [
       PERSONALITY_COMPONENT_ID,
@@ -60,9 +63,9 @@ export class ActorStateProvider extends IActorStateProvider {
       SECRETS_COMPONENT_ID,
       FEARS_COMPONENT_ID,
     ].forEach((id) => {
-      const txt = actorState.components[id]?.text;
-      if (isNonBlankString(txt)) {
-        actorState[id] = { text: txt.trim() };
+      const text = actorState.components[id]?.text;
+      if (isNonBlankString(text)) {
+        actorState[id] = { text: text.trim() };
       }
     });
 
