@@ -3,8 +3,21 @@
 /**
  * A simple Event Bus for decoupled communication between systems using a publish/subscribe pattern.
  */
-class EventBus {
+import { IEventBus } from '../interfaces/IEventBus.js';
+
+/** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
+
+class EventBus extends IEventBus {
   #listeners = new Map(); // Stores eventName -> Set<listenerFn>
+  #logger;
+
+  /**
+   * @param {{ logger?: ILogger }} [deps]
+   */
+  constructor({ logger = console } = {}) {
+    super();
+    this.#logger = logger;
+  }
 
   /**
    * Validates that an event name is a non-empty string.
@@ -14,8 +27,7 @@ class EventBus {
    */
   #validateEventName(name) {
     if (typeof name !== 'string' || !name) {
-      // eslint-disable-next-line no-console
-      console.error('EventBus: Invalid event name provided.', name);
+      this.#logger.error('EventBus: Invalid event name provided.', name);
       return false;
     }
     return true;
@@ -29,8 +41,7 @@ class EventBus {
    */
   #validateListener(listener) {
     if (typeof listener !== 'function') {
-      // eslint-disable-next-line no-console
-      console.error(
+      this.#logger.error(
         'EventBus: Invalid listener provided. Expected a function.'
       );
       return false;
@@ -50,6 +61,10 @@ class EventBus {
       this.#listeners.set(eventName, new Set());
     }
     this.#listeners.get(eventName).add(listener);
+
+    return () => {
+      this.unsubscribe(eventName, listener);
+    };
   }
 
   unsubscribe(eventName, listener) {
@@ -106,8 +121,7 @@ class EventBus {
             // Pass the constructed event object, not just the payload
             await listener(eventObject);
           } catch (error) {
-            // eslint-disable-next-line no-console
-            console.error(
+            this.#logger.error(
               `EventBus: Error executing listener for event "${eventName}":`,
               error
             );

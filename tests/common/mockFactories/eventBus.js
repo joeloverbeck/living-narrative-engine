@@ -5,7 +5,7 @@ import { jest } from '@jest/globals';
  *
  * @param {object} [options] - Configuration options
  * @param {boolean} [options.captureEvents] - Whether to capture dispatched events
- * @returns {object} Mock event bus with subscribe, unsubscribe, dispatch methods
+ * @returns {object} Mock event bus with subscribe, unsubscribe, dispatch, listenerCount methods
  */
 export function createEventBus({ captureEvents = false } = {}) {
   const handlers = {};
@@ -38,6 +38,7 @@ export function createEventBus({ captureEvents = false } = {}) {
     unsubscribe: jest.fn((eventType, handler) => {
       handlers[eventType]?.delete(handler);
     }),
+    listenerCount: jest.fn((eventType) => handlers[eventType]?.size || 0),
     _triggerEvent(eventType, payload) {
       (handlers[eventType] || new Set()).forEach((h) => h(payload));
     },

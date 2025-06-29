@@ -64,9 +64,15 @@ export function registerInfrastructure(container) {
     `Infrastructure Registration: Registered ${String(tokens.ActionIndexingService)}.`
   );
 
-  registrar.single(tokens.EventBus, EventBus);
+  const eventBusInstance = new EventBus({ logger: log });
+  registrar.instance(tokens.EventBus, eventBusInstance);
+  container.register(tokens.IEventBus, () => eventBusInstance, {
+    lifecycle: 'singleton',
+  });
   log.debug(
-    `Infrastructure Registration: Registered ${String(tokens.EventBus)}.`
+    `Infrastructure Registration: Registered ${String(tokens.EventBus)} and ${String(
+      tokens.IEventBus
+    )}.`
   );
 
   container.register(

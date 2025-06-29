@@ -18,7 +18,7 @@ import { isEmptyCondition } from '../utils/jsonLogicUtils.js';
  * ------------------------------------------------------------------------- */
 /** @typedef {import('../interfaces/coreServices.js').ILogger}               ILogger */
 /** @typedef {import('../interfaces/coreServices.js').IDataRegistry}         IDataRegistry */
-/** @typedef {import('../events/eventBus.js').default}                       EventBus */
+/** @typedef {import('../interfaces/IEventBus.js').IEventBus}                IEventBus */
 /** @typedef {import('./jsonLogicEvaluationService.js').default}            JsonLogicEvaluationService */
 /** @typedef {import('../entities/entityManager.js').default}               EntityManager */
 /** @typedef {import('./operationInterpreter.js').default}                  OperationInterpreter */
@@ -31,7 +31,7 @@ import { isEmptyCondition } from '../utils/jsonLogicUtils.js';
  * ------------------------------------------------------------------------- */
 class SystemLogicInterpreter extends BaseService {
   /** @type {ILogger} */ #logger;
-  /** @type {EventBus} */ #eventBus;
+  /** @type {IEventBus} */ #eventBus;
   /** @type {IDataRegistry} */ #dataRegistry;
   /** @type {JsonLogicEvaluationService} */ #jsonLogic;
   /** @type {EntityManager} */ #entityManager;

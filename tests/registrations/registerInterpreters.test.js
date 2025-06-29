@@ -19,10 +19,12 @@ describe('registerInterpreters', () => {
       error: jest.fn(),
     };
     container.register(tokens.ILogger, logger);
-    container.register(tokens.EventBus, {
+    const bus = {
       subscribe: jest.fn(),
       unsubscribe: jest.fn(),
-    });
+    };
+    container.register(tokens.EventBus, bus);
+    container.register(tokens.IEventBus, bus);
     container.register(tokens.IDataRegistry, {
       getAllSystemRules: jest.fn().mockReturnValue([]),
     });

@@ -4,7 +4,7 @@
 /** @typedef {import('../interfaces/IGameDataRepository.js').IGameDataRepository} IGameDataRepository */
 /** @typedef {import('../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 /** @typedef {import('../entities/entity.js').default} Entity */
-/** @typedef {import('../events/eventBus.js').default} EventBus */ // Assuming EventBus might be an interface or a concrete type used directly
+/** @typedef {import('../interfaces/IEventBus.js').IEventBus} IEventBus */
 /** @typedef {import('../constants/eventIds.js').ATTEMPT_ACTION_ID} ATTEMPT_ACTION_ID */
 // --- REMOVED Import for ActionTargetContext as it's no longer used here ---
 /** @typedef {import('../interfaces/IGameDataRepository.js').ActionDefinition} ActionDefinition */
