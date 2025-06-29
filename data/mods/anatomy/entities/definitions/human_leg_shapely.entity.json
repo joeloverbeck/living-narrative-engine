@@ -6,9 +6,11 @@
     "anatomy:part": {
       "subType": "leg"
     },
-    "anatomy:leg_appearance": {
-      "length": "long",
-      "descriptor": "shapely"
+    "descriptors:length_category": {
+      "length": "long"
+    },
+    "descriptors:build": {
+      "build": "shapely"
     },
     "core:name": {
       "name": "leg"

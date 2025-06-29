@@ -6,9 +6,14 @@
     "anatomy:part": {
       "subType": "breast"
     },
-    "anatomy:breast_appearance": {
-      "size": "D-cup",
-      "descriptor": "meaty"
+    "descriptors:size_specific": {
+      "size": "D-cup"
+    },
+    "descriptors:weight_feel": {
+      "weight": "meaty"
+    },
+    "descriptors:firmness": {
+      "firmness": "firm"
     },
     "core:name": {
       "name": "breast"
