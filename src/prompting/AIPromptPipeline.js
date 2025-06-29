@@ -2,6 +2,7 @@
 // --- FILE START ---
 
 import { IAIPromptPipeline } from './interfaces/IAIPromptPipeline.js';
+import { validateDependencies } from '../utils/dependencyUtils.js';
 
 /** @typedef {import('../turns/interfaces/ILLMAdapter.js').ILLMAdapter} ILLMAdapter */
 /** @typedef {import('../turns/interfaces/IAIGameStateProvider.js').IAIGameStateProvider} IAIGameStateProvider */
@@ -37,41 +38,36 @@ export class AIPromptPipeline extends IAIPromptPipeline {
   }) {
     super();
 
-    if (
-      !llmAdapter ||
-      typeof llmAdapter.getAIDecision !== 'function' ||
-      typeof llmAdapter.getCurrentActiveLlmId !== 'function'
-    ) {
-      throw new Error(
-        'AIPromptPipeline: Constructor requires a valid ILLMAdapter.'
-      );
-    }
-    if (
-      !gameStateProvider ||
-      typeof gameStateProvider.buildGameState !== 'function'
-    ) {
-      throw new Error(
-        'AIPromptPipeline: Constructor requires a valid IAIGameStateProvider.'
-      );
-    }
-    if (
-      !promptContentProvider ||
-      typeof promptContentProvider.getPromptData !== 'function'
-    ) {
-      throw new Error(
-        'AIPromptPipeline: Constructor requires a valid IAIPromptContentProvider instance with a getPromptData method.'
-      );
-    }
-    if (!promptBuilder || typeof promptBuilder.build !== 'function') {
-      throw new Error(
-        'AIPromptPipeline: Constructor requires a valid IPromptBuilder instance with a build method.'
-      );
-    }
-    if (!logger || typeof logger.info !== 'function') {
-      throw new Error(
-        'AIPromptPipeline: Constructor requires a valid ILogger instance.'
-      );
-    }
+    validateDependencies(
+      [
+        {
+          dependency: llmAdapter,
+          name: 'AIPromptPipeline: llmAdapter',
+          methods: ['getAIDecision', 'getCurrentActiveLlmId'],
+        },
+        {
+          dependency: gameStateProvider,
+          name: 'AIPromptPipeline: gameStateProvider',
+          methods: ['buildGameState'],
+        },
+        {
+          dependency: promptContentProvider,
+          name: 'AIPromptPipeline: promptContentProvider',
+          methods: ['getPromptData'],
+        },
+        {
+          dependency: promptBuilder,
+          name: 'AIPromptPipeline: promptBuilder',
+          methods: ['build'],
+        },
+        {
+          dependency: logger,
+          name: 'AIPromptPipeline: logger',
+          methods: ['info'],
+        },
+      ],
+      logger
+    );
 
     this.#llmAdapter = llmAdapter;
     this.#gameStateProvider = gameStateProvider;

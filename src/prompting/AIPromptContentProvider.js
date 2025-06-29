@@ -28,6 +28,7 @@ import {
   ERROR_FALLBACK_CRITICAL_GAME_STATE_MISSING,
 } from '../constants/textDefaults.js';
 import { SHORT_TERM_MEMORY_COMPONENT_ID } from '../constants/componentIds.js';
+import { validateDependencies } from '../utils/dependencyUtils.js';
 
 /**
  * @class AIPromptContentProvider
@@ -59,20 +60,36 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
     gameStateValidationService,
   }) {
     super();
-    if (!logger)
-      throw new Error('AIPromptContentProvider: Logger is required.');
-    if (!promptStaticContentService)
-      throw new Error(
-        'AIPromptContentProvider: PromptStaticContentService is required.'
-      );
-    if (!perceptionLogFormatter)
-      throw new Error(
-        'AIPromptContentProvider: PerceptionLogFormatter is required.'
-      );
-    if (!gameStateValidationService)
-      throw new Error(
-        'AIPromptContentProvider: GameStateValidationServiceForPrompting is required.'
-      );
+    validateDependencies(
+      [
+        {
+          dependency: logger,
+          name: 'AIPromptContentProvider: logger',
+          methods: ['info', 'warn', 'error', 'debug'],
+        },
+        {
+          dependency: promptStaticContentService,
+          name: 'AIPromptContentProvider: promptStaticContentService',
+          methods: [
+            'getCoreTaskDescriptionText',
+            'getCharacterPortrayalGuidelines',
+            'getNc21ContentPolicyText',
+            'getFinalLlmInstructionText',
+          ],
+        },
+        {
+          dependency: perceptionLogFormatter,
+          name: 'AIPromptContentProvider: perceptionLogFormatter',
+          methods: ['format'],
+        },
+        {
+          dependency: gameStateValidationService,
+          name: 'AIPromptContentProvider: gameStateValidationService',
+          methods: ['validate'],
+        },
+      ],
+      logger
+    );
 
     this.#logger = logger;
     this.#promptStaticContentService = promptStaticContentService;
