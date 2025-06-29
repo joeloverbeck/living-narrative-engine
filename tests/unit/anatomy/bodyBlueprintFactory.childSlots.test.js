@@ -79,7 +79,7 @@ describe('BodyBlueprintFactory - Child Slots Support', () => {
             left_eye: {
               partType: 'eye',
               properties: {
-                'anatomy:eye_appearance': {
+                'descriptors:color_extended': {
                   color: 'blue',
                 },
               },
@@ -88,7 +88,7 @@ describe('BodyBlueprintFactory - Child Slots Support', () => {
             right_eye: {
               partType: 'eye',
               properties: {
-                'anatomy:eye_appearance': {
+                'descriptors:color_extended': {
                   color: 'blue',
                 },
               },
@@ -181,7 +181,8 @@ describe('BodyBlueprintFactory - Child Slots Support', () => {
           return {
             components: {
               'anatomy:part': { subType: 'eye' },
-              'anatomy:eye_appearance': { color: 'blue' },
+              'descriptors:color_extended': { color: 'blue' },
+              'descriptors:shape_eye': { shape: 'round' },
             },
           };
         }
@@ -203,7 +204,8 @@ describe('BodyBlueprintFactory - Child Slots Support', () => {
             id: 'anatomy:human_eye_blue',
             components: {
               'anatomy:part': { subType: 'eye' },
-              'anatomy:eye_appearance': { color: 'blue' },
+              'descriptors:color_extended': { color: 'blue' },
+              'descriptors:shape_eye': { shape: 'round' },
             },
           },
         ];

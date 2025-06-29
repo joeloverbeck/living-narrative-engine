@@ -15,11 +15,7 @@
   "content": {
     "components": [
       "body.component.json",
-      "breast_appearance.component.json",
-      "eye_appearance.component.json",
-      "hair_appearance.component.json",
       "joint.component.json",
-      "leg_appearance.component.json",
       "part.component.json",
       "sockets.component.json"
     ],

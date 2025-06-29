@@ -8,11 +8,7 @@ import { ANATOMY_BODY_COMPONENT_ID } from '../../../src/constants/componentIds.j
 
 // Import anatomy mod data directly
 import bodyComponent from '../../../data/mods/anatomy/components/body.component.json';
-import breastAppearanceComponent from '../../../data/mods/anatomy/components/breast_appearance.component.json';
-import eyeAppearanceComponent from '../../../data/mods/anatomy/components/eye_appearance.component.json';
-import hairAppearanceComponent from '../../../data/mods/anatomy/components/hair_appearance.component.json';
 import jointComponent from '../../../data/mods/anatomy/components/joint.component.json';
-import legAppearanceComponent from '../../../data/mods/anatomy/components/leg_appearance.component.json';
 import partComponent from '../../../data/mods/anatomy/components/part.component.json';
 import socketsComponent from '../../../data/mods/anatomy/components/sockets.component.json';
 
@@ -88,11 +84,7 @@ describe('Gorgeous MILF Anatomy Generation Integration Test', () => {
     // Load anatomy components
     testBed.loadComponents({
       'anatomy:body': bodyComponent,
-      'anatomy:breast_appearance': breastAppearanceComponent,
-      'anatomy:eye_appearance': eyeAppearanceComponent,
-      'anatomy:hair_appearance': hairAppearanceComponent,
       'anatomy:joint': jointComponent,
-      'anatomy:leg_appearance': legAppearanceComponent,
       'anatomy:part': partComponent,
       'anatomy:sockets': socketsComponent,
     });
