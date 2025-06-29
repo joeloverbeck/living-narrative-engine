@@ -409,6 +409,7 @@ class AjvSchemaValidator {
 
   /**
    * Gets a list of all loaded schema IDs for debugging purposes.
+   * Uses Ajv's internal schema map to determine which schemas are registered.
    *
    * @returns {string[]}
    */
@@ -418,23 +419,8 @@ class AjvSchemaValidator {
     }
 
     try {
-      // This is a bit of a hack since Ajv doesn't expose a direct method to get all schema IDs
-      // We'll try to get schemas we know should be loaded
-      const knownSchemaIds = [
-        'http://example.com/schemas/common.schema.json',
-        'http://example.com/schemas/world.schema.json',
-        'http://example.com/schemas/entity-instance.schema.json',
-        'http://example.com/schemas/entity-definition.schema.json',
-        'http://example.com/schemas/action.schema.json',
-        'http://example.com/schemas/component.schema.json',
-        'http://example.com/schemas/condition.schema.json',
-        'http://example.com/schemas/event.schema.json',
-        'http://example.com/schemas/rule.schema.json',
-        'http://example.com/schemas/game.schema.json',
-        'http://example.com/schemas/mod-manifest.schema.json',
-      ];
-
-      return knownSchemaIds.filter((id) => this.isSchemaLoaded(id));
+      const schemaMap = this.#ajv.schemas || {};
+      return Object.keys(schemaMap);
     } catch (error) {
       this.#logger.error(
         'AjvSchemaValidator: Error getting loaded schema IDs',

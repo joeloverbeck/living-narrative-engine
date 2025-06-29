@@ -15,6 +15,8 @@ function setupMockAjv({
   getSchemaReturns = [],
   addSchemaImpl,
   compileImpl,
+  schemaMap = {},
+  schemaGetter,
 } = {}) {
   const getSchema = jest.fn();
   getSchemaReturns.forEach((val) => getSchema.mockReturnValueOnce(val));
@@ -22,7 +24,13 @@ function setupMockAjv({
   const compile = jest.fn(compileImpl);
   const removeSchema = jest.fn();
   jest.doMock('ajv', () =>
-    jest.fn(() => ({ addSchema, getSchema, removeSchema, compile }))
+    jest.fn(() => {
+      const instance = { addSchema, getSchema, removeSchema, compile };
+      Object.defineProperty(instance, 'schemas', {
+        get: schemaGetter || (() => schemaMap),
+      });
+      return instance;
+    })
   );
   jest.doMock('ajv-formats', () => jest.fn());
   const AjvSchemaValidator =
@@ -83,29 +91,18 @@ describe('AjvSchemaValidator reference and batch operations', () => {
     );
   });
 
-  it('getLoadedSchemaIds filters by loaded status', () => {
-    jest.dontMock('ajv');
-    jest.dontMock('ajv-formats');
-    const AjvSchemaValidator =
-      require('../../../src/validation/ajvSchemaValidator.js').default;
-    const logger = createMockLogger();
-    const validator = new AjvSchemaValidator(logger);
-    jest
-      .spyOn(validator, 'isSchemaLoaded')
-      .mockImplementation((id) => id.includes('world.schema.json'));
+  it('getLoadedSchemaIds returns keys from Ajv schema map', () => {
+    const { validator } = setupMockAjv({ schemaMap: { a: {}, b: {} } });
     const result = validator.getLoadedSchemaIds();
-    expect(result).toEqual(['http://example.com/schemas/world.schema.json']);
+    expect(result).toEqual(['a', 'b']);
   });
 
   it('getLoadedSchemaIds logs and returns empty array on error', () => {
-    jest.dontMock('ajv');
-    jest.dontMock('ajv-formats');
-    const AjvSchemaValidator =
-      require('../../../src/validation/ajvSchemaValidator.js').default;
-    const logger = createMockLogger();
-    const validator = new AjvSchemaValidator(logger);
-    jest.spyOn(validator, 'isSchemaLoaded').mockImplementation(() => {
-      throw new Error('fail');
+    const error = new Error('fail');
+    const { validator, logger } = setupMockAjv({
+      schemaGetter: () => {
+        throw error;
+      },
     });
     const result = validator.getLoadedSchemaIds();
     expect(result).toEqual([]);
