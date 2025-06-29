@@ -100,7 +100,7 @@ describe('CommandProcessor.dispatchAction', () => {
         originalInput: 'look',
       })
     );
-    expect(result.actionResult).toBeUndefined();
+    expect(result.actionResult).toEqual({ actionId: 'look' });
     expect(safeDispatchError).toHaveBeenCalledWith(
       safeEventDispatcher,
       'Internal error: Malformed action prevented execution.',
@@ -148,6 +148,26 @@ describe('CommandProcessor.dispatchAction', () => {
       expect.any(Object),
       logger
     );
+  });
+
+  it('returns identical CommandResult structures for missing and invalid actor ids', async () => {
+    const resultMissing = await processor.dispatchAction(
+      {},
+      {
+        actionDefinitionId: 'look',
+        resolvedParameters: {},
+        commandString: 'look',
+      }
+    );
+    const resultInvalid = await processor.dispatchAction(
+      { id: '   ' },
+      {
+        actionDefinitionId: 'look',
+        resolvedParameters: {},
+        commandString: 'look',
+      }
+    );
+    expect(Object.keys(resultMissing)).toEqual(Object.keys(resultInvalid));
   });
 
   it('AC3: returns failure when dispatcher reports failure', async () => {
