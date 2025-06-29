@@ -25,6 +25,25 @@ import { IActorDataExtractor } from '../../interfaces/IActorDataExtractor';
 // ActorPromptDataDTO is defined in AIGameStateDTO.js as per the provided context
 /** @typedef {import('../dtos/AIGameStateDTO.js').ActorPromptDataDTO} ActorPromptDataDTO */
 
+/**
+ * Retrieve and trim the text from a component if available.
+ *
+ * @description Helper to get trimmed text for a specific component ID.
+ * @param {object} actorState - Map of component IDs to data objects.
+ * @param {string} componentId - The component ID whose text should be returned.
+ * @returns {string|undefined} Trimmed text or undefined when absent or blank.
+ */
+function getTrimmedComponentText(actorState, componentId) {
+  const component = actorState[componentId];
+  if (component && typeof component.text === 'string') {
+    const trimmed = component.text.trim();
+    if (trimmed !== '') {
+      return trimmed;
+    }
+  }
+  return undefined;
+}
+
 // --- TICKET AIPF-REFACTOR-009: Removed local default constants ---
 // const DEFAULT_NAME = "Unnamed Character";
 // const DEFAULT_DESCRIPTION = "No description available.";
@@ -57,14 +76,8 @@ class ActorDataExtractor extends IActorDataExtractor {
     const promptData = {};
 
     // Name
-    const nameComponent = actorState[NAME_COMPONENT_ID];
-    promptData.name =
-      nameComponent &&
-      nameComponent.text &&
-      String(nameComponent.text).trim() !== ''
-        ? String(nameComponent.text).trim()
-        : // --- TICKET AIPF-REFACTOR-009: Use imported constant ---
-          DEFAULT_FALLBACK_CHARACTER_NAME;
+    const nameText = getTrimmedComponentText(actorState, NAME_COMPONENT_ID);
+    promptData.name = nameText ?? DEFAULT_FALLBACK_CHARACTER_NAME;
     // --- TICKET AIPF-REFACTOR-009 END ---
 
     // Description
@@ -87,13 +100,12 @@ class ActorDataExtractor extends IActorDataExtractor {
 
     // Fall back to core:description if no anatomy description
     if (baseDescription === DEFAULT_FALLBACK_DESCRIPTION_RAW) {
-      const descComponent = actorState[DESCRIPTION_COMPONENT_ID];
-      if (
-        descComponent &&
-        descComponent.text &&
-        String(descComponent.text).trim() !== ''
-      ) {
-        baseDescription = String(descComponent.text); // Do not trim here, ensureTerminalPunctuation will handle it
+      const descText = getTrimmedComponentText(
+        actorState,
+        DESCRIPTION_COMPONENT_ID
+      );
+      if (descText) {
+        baseDescription = descText;
       }
     }
 
@@ -116,14 +128,10 @@ class ActorDataExtractor extends IActorDataExtractor {
     ];
 
     for (const attr of optionalTextAttributes) {
-      const component = actorState[attr.componentId];
-      if (
-        component &&
-        typeof component.text === 'string' &&
-        component.text.trim() !== ''
-      ) {
+      const trimmed = getTrimmedComponentText(actorState, attr.componentId);
+      if (trimmed) {
         // For these fields, we are only trimming, not adding terminal punctuation by default.
-        promptData[attr.key] = component.text.trim();
+        promptData[attr.key] = trimmed;
       }
     }
 
