@@ -4,6 +4,7 @@ import { IPlaytimeTracker } from '../interfaces/IPlaytimeTracker.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/eventIds.js';
 import { ISafeEventDispatcher } from '../interfaces/ISafeEventDispatcher.js';
 import { validateDependency } from '../utils/dependencyUtils.js';
+import { ensureValidLogger } from '../utils/loggerUtils.js';
 
 /**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
@@ -61,28 +62,7 @@ class PlaytimeTracker extends IPlaytimeTracker {
   constructor({ logger, safeEventDispatcher }) {
     super();
 
-    if (!logger || typeof logger.info !== 'function') {
-      // eslint-disable-next-line no-console
-      console.error(
-        'PlaytimeTracker: Logger dependency is missing or invalid. Falling back to console.error.'
-      );
-      // Fallback logger for environments where a full logger isn't available or during initial setup
-      this.#logger = {
-        info: (message) =>
-          console.info(`PlaytimeTracker (fallback): ${message}`),
-
-        warn: (message) =>
-          console.warn(`PlaytimeTracker (fallback): ${message}`),
-
-        error: (message) =>
-          console.error(`PlaytimeTracker (fallback): ${message}`),
-
-        debug: (message) =>
-          console.debug(`PlaytimeTracker (fallback): ${message}`),
-      };
-    } else {
-      this.#logger = logger;
-    }
+    this.#logger = ensureValidLogger(logger, 'PlaytimeTracker');
 
     validateDependency(
       safeEventDispatcher,
