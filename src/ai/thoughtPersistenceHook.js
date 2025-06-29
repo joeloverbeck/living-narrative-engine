@@ -8,6 +8,8 @@
 import ShortTermMemoryService from './shortTermMemoryService.js';
 import { SHORT_TERM_MEMORY_COMPONENT_ID } from '../constants/componentIds.js';
 import { fetchComponent, applyComponent } from '../utils/componentHelpers.js';
+import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
+import { isNonBlankString } from '../utils/textUtils.js';
 
 /**
  * Persist the “thoughts” produced during an LLM turn into the actor’s
@@ -18,6 +20,8 @@ import { fetchComponent, applyComponent } from '../utils/componentHelpers.js';
  * @param {object} action       – The structured action returned by the LLM.
  * @param {object} actorEntity  – Entity instance (or test double) that generated the action.
  * @param {object} logger       – Application-wide logger (expects .warn()).
+ * @param {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} [dispatcher]
+ *   – Optional dispatcher for error events.
  * @param {ShortTermMemoryService} [stmService] – Optional STM service instance.
  * @param {Date} [now] – Date provider for timestamping.
  */
@@ -25,17 +29,21 @@ export function persistThoughts(
   action,
   actorEntity,
   logger,
+  dispatcher,
   stmService = new ShortTermMemoryService(),
   now = new Date()
 ) {
   /* ── 1. Validate thoughts ───────────────────────────────────────────── */
   const rawThoughts = action?.thoughts;
-  if (
-    rawThoughts === null ||
-    rawThoughts === undefined ||
-    String(rawThoughts).trim() === ''
-  ) {
+  if (!isNonBlankString(rawThoughts)) {
     logger.warn('STM-001 Missing thoughts');
+    if (dispatcher) {
+      safeDispatchError(
+        dispatcher,
+        "ThoughtPersistenceHook: 'thoughts' field is missing or blank; skipping persist",
+        { actorId: actorEntity?.id ?? 'UNKNOWN_ACTOR' }
+      );
+    }
     return;
   }
   const thoughtText = String(rawThoughts).trim();

@@ -2,6 +2,7 @@
 
 import { persistThoughts } from './thoughtPersistenceHook.js';
 import ShortTermMemoryService from './shortTermMemoryService.js';
+/** @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 
 /**
  * @class
@@ -23,11 +24,14 @@ export class ThoughtPersistenceListener {
   constructor({
     logger,
     entityManager,
+    dispatcher,
     stmService = new ShortTermMemoryService(),
     now = () => new Date(),
   }) {
     this.logger = logger;
     this.entityManager = entityManager;
+    /** @type {ISafeEventDispatcher | undefined} */
+    this.dispatcher = dispatcher;
     this.stmService = stmService;
     this.now = now;
   }
@@ -57,6 +61,7 @@ export class ThoughtPersistenceListener {
         { thoughts: extractedData.thoughts },
         actorEntity,
         this.logger,
+        this.dispatcher,
         this.stmService,
         this.now()
       );

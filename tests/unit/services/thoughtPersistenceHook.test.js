@@ -2,31 +2,50 @@
 
 import { persistThoughts } from '../../../src/ai/thoughtPersistenceHook.js';
 import ShortTermMemoryService from '../../../src/ai/shortTermMemoryService.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/systemEventIds.js';
 import { describe, test, expect, jest } from '@jest/globals';
 
 describe('ThoughtPersistenceHook.processTurnAction', () => {
   test('logs STM-001 and returns early when thoughts field is absent', () => {
     const mockedLogger = { warn: jest.fn() };
     const fakeActor = {}; // actorEntity not used in this case
+    const dispatcher = { dispatch: jest.fn() };
 
     expect(() => {
-      persistThoughts({}, fakeActor, mockedLogger);
+      persistThoughts({}, fakeActor, mockedLogger, dispatcher);
     }).not.toThrow();
 
     expect(mockedLogger.warn).toHaveBeenCalledTimes(1);
     expect(mockedLogger.warn).toHaveBeenCalledWith('STM-001 Missing thoughts');
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
+      SYSTEM_ERROR_OCCURRED_ID,
+      expect.objectContaining({
+        message:
+          "ThoughtPersistenceHook: 'thoughts' field is missing or blank; skipping persist",
+        details: { actorId: 'UNKNOWN_ACTOR' },
+      })
+    );
   });
 
   test('logs STM-001 and returns early when thoughts field is empty or whitespace', () => {
     const mockedLogger = { warn: jest.fn() };
     const fakeActor = {};
+    const dispatcher = { dispatch: jest.fn() };
 
     expect(() => {
-      persistThoughts({ thoughts: '   ' }, fakeActor, mockedLogger);
+      persistThoughts({ thoughts: '   ' }, fakeActor, mockedLogger, dispatcher);
     }).not.toThrow();
 
     expect(mockedLogger.warn).toHaveBeenCalledTimes(1);
     expect(mockedLogger.warn).toHaveBeenCalledWith('STM-001 Missing thoughts');
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
+      SYSTEM_ERROR_OCCURRED_ID,
+      expect.objectContaining({
+        message:
+          "ThoughtPersistenceHook: 'thoughts' field is missing or blank; skipping persist",
+        details: { actorId: 'UNKNOWN_ACTOR' },
+      })
+    );
   });
 
   test('logs STM-002 and returns early when memory component is absent', () => {
@@ -34,7 +53,12 @@ describe('ThoughtPersistenceHook.processTurnAction', () => {
     const fakeActor = { components: {} };
 
     expect(() => {
-      persistThoughts({ thoughts: 'Anything' }, fakeActor, mockedLogger);
+      persistThoughts(
+        { thoughts: 'Anything' },
+        fakeActor,
+        mockedLogger,
+        undefined
+      );
     }).not.toThrow();
 
     expect(mockedLogger.warn).toHaveBeenCalledTimes(1);
@@ -53,7 +77,12 @@ describe('ThoughtPersistenceHook.processTurnAction', () => {
     const mockedLogger = { warn: jest.fn() };
 
     expect(() => {
-      persistThoughts({ thoughts: 'Test Thought' }, fakeActor, mockedLogger);
+      persistThoughts(
+        { thoughts: 'Test Thought' },
+        fakeActor,
+        mockedLogger,
+        undefined
+      );
     }).not.toThrow();
 
     const mem = fakeActor.components['core:short_term_memory'];
@@ -79,7 +108,12 @@ describe('ThoughtPersistenceHook.processTurnAction', () => {
 
     // Call with a duplicate in different case and with trailing space
     expect(() => {
-      persistThoughts({ thoughts: 'Duplicate ' }, fakeActor, mockedLogger);
+      persistThoughts(
+        { thoughts: 'Duplicate ' },
+        fakeActor,
+        mockedLogger,
+        undefined
+      );
     }).not.toThrow();
 
     const mem = fakeActor.components['core:short_term_memory'];
@@ -91,7 +125,6 @@ describe('ThoughtPersistenceHook.processTurnAction', () => {
 
   test('respects maxEntries by trimming oldest thoughts when limit exceeded', () => {
     // Use the real ShortTermMemoryService to test trimming behavior
-    const realService = new ShortTermMemoryService();
     const initialThoughts = [];
     const fakeActor = {
       components: {
@@ -104,11 +137,11 @@ describe('ThoughtPersistenceHook.processTurnAction', () => {
     const mockedLogger = { warn: jest.fn() };
 
     // First thought
-    persistThoughts({ thoughts: 'First' }, fakeActor, mockedLogger);
+    persistThoughts({ thoughts: 'First' }, fakeActor, mockedLogger, undefined);
     // Second thought
-    persistThoughts({ thoughts: 'Second' }, fakeActor, mockedLogger);
+    persistThoughts({ thoughts: 'Second' }, fakeActor, mockedLogger, undefined);
     // Third thought—should trim the first
-    persistThoughts({ thoughts: 'Third' }, fakeActor, mockedLogger);
+    persistThoughts({ thoughts: 'Third' }, fakeActor, mockedLogger, undefined);
 
     const mem = fakeActor.components['core:short_term_memory'];
     expect(mem.thoughts.length).toBe(2);
@@ -132,7 +165,12 @@ describe('ThoughtPersistenceHook.processTurnAction', () => {
     };
     const mockedLogger = { warn: jest.fn() };
 
-    persistThoughts({ thoughts: 'Inspect' }, fakeActor, mockedLogger);
+    persistThoughts(
+      { thoughts: 'Inspect' },
+      fakeActor,
+      mockedLogger,
+      undefined
+    );
 
     expect(addThoughtSpy).toHaveBeenCalledTimes(1);
 
@@ -155,6 +193,7 @@ describe('ThoughtPersistenceHook.processTurnAction', () => {
       { thoughts: 'Hi' },
       fakeActor,
       mockedLogger,
+      undefined,
       stmService,
       fakeNow
     );
