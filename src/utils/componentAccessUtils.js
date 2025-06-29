@@ -11,7 +11,7 @@ import {
   isValidEntity,
 } from './entityValidationUtils.js';
 import { isNonBlankString } from './textUtils.js';
-import { safeCall } from './safeExecutionUtils.js';
+import { safeExecute } from './safeExecutionUtils.js';
 
 /** @typedef {import('../entities/entity.js').default} Entity */
 
@@ -35,7 +35,7 @@ export function getComponentFromEntity(entity, componentId, logger) {
     return null;
   }
 
-  const { success, result, error } = safeCall(() =>
+  const { success, result, error } = safeExecute(() =>
     entity.getComponentData(componentId)
   );
   if (success) {
@@ -85,7 +85,7 @@ export function getComponentFromManager(
     return null;
   }
 
-  const { success, result, error } = safeCall(() =>
+  const { success, result, error } = safeExecute(() =>
     entityManager.getComponentData(entityId, componentId)
   );
   if (success) {
