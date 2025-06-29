@@ -9,7 +9,7 @@ import {
   MSG_DECOMPRESSION_FAILED,
   MSG_DESERIALIZATION_FAILED,
 } from './persistenceMessages.js';
-import { wrapSyncPersistenceOperation } from '../utils/persistenceErrorUtils.js';
+import { executePersistenceOp } from '../utils/persistenceErrorUtils.js';
 import ChecksumService from './checksumService.js';
 
 /**
@@ -163,13 +163,13 @@ class GameStateSerializer extends BaseService {
    * @returns {import('./persistenceTypes.js').PersistenceResult<Uint8Array>} Outcome of decompression.
    */
   decompress(data) {
-    const result = wrapSyncPersistenceOperation(
-      this.#logger,
-      () => pako.ungzip(data),
-      PersistenceErrorCodes.DECOMPRESSION_ERROR,
-      MSG_DECOMPRESSION_FAILED,
-      'Gzip decompression failed:'
-    );
+    const result = executePersistenceOp({
+      syncOperation: () => pako.ungzip(data),
+      logger: this.#logger,
+      errorCode: PersistenceErrorCodes.DECOMPRESSION_ERROR,
+      userMessage: MSG_DECOMPRESSION_FAILED,
+      context: 'Gzip decompression failed:',
+    });
     if (result.success) {
       this.#logger.debug(
         `Decompressed data size: ${result.data.byteLength} bytes`
@@ -185,13 +185,13 @@ class GameStateSerializer extends BaseService {
    * @returns {import('./persistenceTypes.js').PersistenceResult<object>} Outcome of deserialization.
    */
   deserialize(buffer) {
-    const result = wrapSyncPersistenceOperation(
-      this.#logger,
-      () => decode(buffer),
-      PersistenceErrorCodes.DESERIALIZATION_ERROR,
-      MSG_DESERIALIZATION_FAILED,
-      'MessagePack deserialization failed:'
-    );
+    const result = executePersistenceOp({
+      syncOperation: () => decode(buffer),
+      logger: this.#logger,
+      errorCode: PersistenceErrorCodes.DESERIALIZATION_ERROR,
+      userMessage: MSG_DESERIALIZATION_FAILED,
+      context: 'MessagePack deserialization failed:',
+    });
     if (result.success) {
       this.#logger.debug('Successfully deserialized MessagePack');
     }
