@@ -9,6 +9,17 @@
  */
 export class IGameStateValidationServiceForPrompting {
   /**
+   * Performs a pure validation of the given game state DTO.
+   *
+   * @param {AIGameStateDTO | null | undefined} gameStateDto - The game state DTO to validate.
+   * @returns {{isValid: boolean, errorContent: string | null}} Result of validation.
+   * @throws {Error} If the method is not implemented.
+   */
+  check(gameStateDto) {
+    throw new Error("Method 'check()' must be implemented.");
+  }
+
+  /**
    * Validates if the provided AIGameStateDTO contains the critical information
    * necessary for generating prompt data.
    *
