@@ -10,6 +10,7 @@ import { isNonBlankString } from '../../utils/textUtils.js';
 import { buildPortraitInfo } from '../utils/portraitUtils.js';
 import { withEntity } from '../utils/entityFetchHelpers.js';
 import { getDisplayName, getDescription } from '../utils/displayHelpers.js';
+import { LocationNotFoundError } from '../../errors/locationNotFoundError.js';
 
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 /** @typedef {import('../../interfaces/ILogger.js').ILogger} ILogger */
@@ -110,14 +111,15 @@ export class LocationDisplayService {
    * Retrieves detailed display information for a location entity.
    *
    * @param {NamespacedId | string} locationEntityId
-   * @returns {{ name: string, description: string, exits: Array<ProcessedExit> } | null}
+   * @returns {{ name: string, description: string, exits: Array<ProcessedExit> }}
+   * @throws {LocationNotFoundError} When the ID is invalid or the entity cannot be found.
    */
   getLocationDetails(locationEntityId) {
     if (!locationEntityId) {
       this.#logger.warn(
         `${this._logPrefix} getLocationDetails called with null or empty locationEntityId.`
       );
-      return null;
+      throw new LocationNotFoundError(locationEntityId);
     }
 
     const locationEntity =
@@ -126,7 +128,7 @@ export class LocationDisplayService {
       this.#logger.debug(
         `${this._logPrefix} getLocationDetails: Location entity with ID '${locationEntityId}' not found.`
       );
-      return null;
+      throw new LocationNotFoundError(locationEntityId);
     }
 
     const name = this.#getEntityName(locationEntityId, 'Unnamed Location');
