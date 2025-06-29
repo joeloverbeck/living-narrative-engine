@@ -16,13 +16,19 @@ import {
   getLoggerAndClass,
 } from './strategyHelpers.js';
 
+/**
+ * @class EndTurnSuccessStrategy
+ * @description Handles the END_TURN_SUCCESS directive by ending the turn
+ * successfully via ITurnContext.
+ */
+
 export default class EndTurnSuccessStrategy extends ITurnDirectiveStrategy {
   /** @override */
   async execute(
     /** @type {ITurnContext} */ turnContext,
     // actor parameter removed based on Ticket 2 outcome
     /** @type {TurnDirectiveEnum}     */ directive,
-    /** @type {CommandResult}    */ cmdProcResult // eslint-disable-line no-unused-vars
+    /** @type {CommandResult}    */ commandResult // eslint-disable-line no-unused-vars
   ) {
     const { logger, className } = getLoggerAndClass(this, turnContext);
 

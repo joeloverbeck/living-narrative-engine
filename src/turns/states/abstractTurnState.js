@@ -249,7 +249,7 @@ export class AbstractTurnState extends ITurnState {
   }
 
   /** @override */
-  async processCommandResult(handler, actor, cmdProcResult, commandString) {
+  async processCommandResult(handler, actor, commandResult, commandString) {
     const turnCtx = this._getTurnContext(); // Actor should come from turnCtx
     const logger = getLogger(turnCtx, handler);
     const contextActor = turnCtx?.getActor();
@@ -264,7 +264,7 @@ export class AbstractTurnState extends ITurnState {
   }
 
   /** @override */
-  async handleDirective(handler, actor, directive, cmdProcResult) {
+  async handleDirective(handler, actor, directive, commandResult) {
     const turnCtx = this._getTurnContext(); // Actor should come from turnCtx
     const logger = getLogger(turnCtx, handler);
     const contextActor = turnCtx?.getActor();

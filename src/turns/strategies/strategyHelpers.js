@@ -90,18 +90,18 @@ export function requireContextActor({
 /**
  * Determines the appropriate Error object when ending a turn due to failure.
  *
- * @param {import('../../types/commandResult.js').CommandResult} cmdProcResult -
+ * @param {import('../../types/commandResult.js').CommandResult} commandResult -
  *        Result produced by command processing.
  * @param {string} actorId - ID of the actor whose turn is ending.
  * @param {string} directive - Directive triggering the turn end.
  * @returns {Error} The error instance describing the failure.
  */
-export function resolveTurnEndError(cmdProcResult, actorId, directive) {
-  if (cmdProcResult?.error instanceof Error) {
-    return cmdProcResult.error;
+export function resolveTurnEndError(commandResult, actorId, directive) {
+  if (commandResult?.error instanceof Error) {
+    return commandResult.error;
   }
-  if (cmdProcResult?.error !== undefined && cmdProcResult?.error !== null) {
-    return new Error(String(cmdProcResult.error));
+  if (commandResult?.error !== undefined && commandResult?.error !== null) {
+    return new Error(String(commandResult.error));
   }
   return new Error(
     `Turn for actor ${actorId} ended by directive '${directive}' (failure).`

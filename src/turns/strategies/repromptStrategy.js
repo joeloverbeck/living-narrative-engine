@@ -19,8 +19,10 @@ import { AwaitingActorDecisionState } from '../states/awaitingActorDecisionState
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../constants/eventIds.js';
 
 /**
- * Handles TurnDirective.RE_PROMPT by requesting a transition to AwaitingActorDecisionState.
- * Relies solely on ITurnContext to obtain the actor and other necessary services.
+ * @class RepromptStrategy
+ * @description Handles TurnDirective.RE_PROMPT by requesting a transition to
+ * AwaitingActorDecisionState. Relies solely on ITurnContext to obtain the actor
+ * and other necessary services.
  */
 export default class RepromptStrategy extends ITurnDirectiveStrategy {
   /**
@@ -31,14 +33,14 @@ export default class RepromptStrategy extends ITurnDirectiveStrategy {
    * @async
    * @param {ITurnContext} turnContext - The context for the current turn.
    * @param {TurnDirectiveEnum} directive - The directive that triggered this strategy.
-   * @param {CommandResult} [cmdProcResult] - Optional result from command processing.
+   * @param {CommandResult} [commandResult] - Optional result from command processing.
    * @returns {Promise<void>} Resolves when the strategy execution is complete.
    * @throws {Error} If the directive is not RE_PROMPT or if a critical error occurs.
    */
   async execute(
     /** @type {ITurnContext}  */ turnContext,
     /** @type {TurnDirectiveEnum}     */ directive,
-    /** @type {CommandResult}    */ cmdProcResult // eslint-disable-line no-unused-vars
+    /** @type {CommandResult}    */ commandResult // eslint-disable-line no-unused-vars
   ) {
     const { logger, className } = getLoggerAndClass(this, turnContext);
     const safeEventDispatcher = turnContext.getSafeEventDispatcher();
