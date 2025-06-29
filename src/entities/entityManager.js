@@ -170,11 +170,63 @@ class EntityManager extends IEntityManager {
   } = {}) {
     super();
 
+    this.#resolveDeps({
+      registry,
+      validator,
+      logger,
+      dispatcher,
+      idGenerator,
+      idGeneratorFactory,
+      cloner,
+      clonerFactory,
+      defaultPolicy,
+      defaultPolicyFactory,
+    });
+
+    this.#initServices({
+      entityRepository,
+      componentMutationService,
+      definitionCache,
+      entityLifecycleManager,
+    });
+
+    this.#logger.debug('EntityManager initialised.');
+  }
+
+  /**
+   * Resolve and validate core dependencies, assigning them to instance fields.
+   *
+   * @param {object} options - Dependency overrides and factories.
+   * @param options.registry
+   * @param options.validator
+   * @param options.logger
+   * @param options.dispatcher
+   * @param options.idGenerator
+   * @param options.idGeneratorFactory
+   * @param options.cloner
+   * @param options.clonerFactory
+   * @param options.defaultPolicy
+   * @param options.defaultPolicyFactory
+   * @private
+   */
+  #resolveDeps({
+    registry,
+    validator,
+    logger,
+    dispatcher,
+    idGenerator,
+    idGeneratorFactory,
+    cloner,
+    clonerFactory,
+    defaultPolicy,
+    defaultPolicyFactory,
+  }) {
     const defaults = createDefaultDeps({
       idGeneratorFactory,
       clonerFactory,
       defaultPolicyFactory,
     });
+
     const resolveDep = (dep, defaultDep) => {
       if (dep === undefined || dep === null) return defaultDep;
       if (typeof defaultDep !== 'function' && typeof dep === 'function') {
@@ -215,12 +267,28 @@ class EntityManager extends IEntityManager {
 
     this.#registry = registry;
     this.#validator = validator;
-    this.#logger = ensureValidLogger(logger, 'EntityManager');
     this.#eventDispatcher = dispatcher;
     this.#idGenerator = idGenerator;
     this.#cloner = cloner;
     this.#defaultPolicy = defaultPolicy;
+  }
 
+  /**
+   * Initialize service instances, applying overrides when provided.
+   *
+   * @param {object} overrides - Optional service overrides.
+   * @param overrides.entityRepository
+   * @param overrides.componentMutationService
+   * @param overrides.definitionCache
+   * @param overrides.entityLifecycleManager
+   * @private
+   */
+  #initServices({
+    entityRepository,
+    componentMutationService,
+    definitionCache,
+    entityLifecycleManager,
+  }) {
     const serviceDefaults = createDefaultServices({
       registry: this.#registry,
       validator: this.#validator,
@@ -230,6 +298,14 @@ class EntityManager extends IEntityManager {
       cloner: this.#cloner,
       defaultPolicy: this.#defaultPolicy,
     });
+
+    const resolveDep = (dep, defaultDep) => {
+      if (dep === undefined || dep === null) return defaultDep;
+      if (typeof defaultDep !== 'function' && typeof dep === 'function') {
+        return dep();
+      }
+      return dep;
+    };
 
     this.#entityRepository = resolveDep(
       entityRepository,
@@ -247,8 +323,6 @@ class EntityManager extends IEntityManager {
       entityLifecycleManager,
       serviceDefaults.entityLifecycleManager
     );
-
-    this.#logger.debug('EntityManager initialised.');
   }
 
   /**
