@@ -22,7 +22,8 @@ import { ProcessingExceptionHandler } from './helpers/processingExceptionHandler
 import { buildSpeechPayload } from './helpers/buildSpeechPayload.js';
 import { ProcessingGuard } from './helpers/processingGuard.js';
 import { finishProcessing } from './helpers/processingErrorUtils.js';
-import { getLogger, getSafeEventDispatcher } from './helpers/contextUtils.js';
+import { getLogger } from './helpers/contextUtils.js';
+import { dispatchSpeechEvent } from './helpers/dispatchSpeechEvent.js';
 import turnDirectiveResolverAdapter from '../adapters/turnDirectiveResolverAdapter.js';
 import { ITurnDirectiveResolver } from '../interfaces/ITurnDirectiveResolver.js';
 import {
@@ -127,6 +128,82 @@ export class ProcessingCommandState extends AbstractTurnState {
   }
 
   /**
+   * Validates constructor dependencies.
+   *
+   * @private
+   * @param {object} deps - Constructor dependencies.
+   * @param {ICommandProcessor} deps.commandProcessor - Service to dispatch commands.
+   * @param {ICommandOutcomeInterpreter} deps.commandOutcomeInterpreter - Service to interpret command results.
+   * @param {string} deps.commandString - Raw command string.
+   * @param {ITurnAction} deps.turnAction - Structured turn action.
+   * @param {Function} deps.directiveResolver - Resolver for turn directives.
+   * @returns {void}
+   */
+  _validateDependencies({
+    commandProcessor,
+    commandOutcomeInterpreter,
+    commandString,
+    turnAction,
+    directiveResolver,
+  }) {
+    if (!commandProcessor) {
+      this._throwConstructionError('commandProcessor is required');
+    }
+    if (!commandOutcomeInterpreter) {
+      this._throwConstructionError('commandOutcomeInterpreter is required');
+    }
+    validateCommandString(commandString, (msg) =>
+      this._throwConstructionError(msg)
+    );
+    validateTurnAction(turnAction, (msg) => this._throwConstructionError(msg));
+    if (!directiveResolver) {
+      this._throwConstructionError('directiveResolver is required');
+    }
+  }
+
+  /**
+   * Initializes state components after validation.
+   *
+   * @private
+   * @param {object} deps - Constructor dependencies.
+   * @param {ICommandProcessor} deps.commandProcessor - Service to dispatch commands.
+   * @param {ICommandOutcomeInterpreter} deps.commandOutcomeInterpreter - Service to interpret command results.
+   * @param {string} deps.commandString - Raw command string.
+   * @param {ITurnAction} deps.turnAction - Structured turn action.
+   * @param {Function} deps.directiveResolver - Resolver for turn directives.
+   * @param {(state: ProcessingCommandState, commandString: string|null, action: ITurnAction|null, setAction: (a: ITurnAction|null) => void, handler: ProcessingExceptionHandler) => ProcessingWorkflow} deps.processingWorkflowFactory - Factory for ProcessingWorkflow.
+   * @returns {void}
+   */
+  _initializeComponents({
+    commandProcessor,
+    commandOutcomeInterpreter,
+    commandString,
+    turnAction,
+    directiveResolver,
+    processingWorkflowFactory,
+  }) {
+    this.#commandProcessor = commandProcessor;
+    this._commandOutcomeInterpreter = commandOutcomeInterpreter;
+    this.#commandStringForLog = commandString;
+    this._setTurnAction(turnAction);
+    this._directiveResolver = directiveResolver;
+
+    this._processingGuard = new ProcessingGuard(this);
+    this._exceptionHandler = new ProcessingExceptionHandler(this);
+    finishProcessing(this);
+
+    this._processingWorkflowFactory = processingWorkflowFactory;
+
+    this._processingWorkflow = new CommandProcessingWorkflow({
+      state: this,
+      exceptionHandler: this._exceptionHandler,
+      commandProcessor: this.#commandProcessor,
+      commandOutcomeInterpreter: this._commandOutcomeInterpreter,
+      directiveStrategyResolver: this._directiveResolver,
+    });
+  }
+
+  /**
    * @param {object} deps Dependencies for the state.
    * @param {ITurnStateHost} deps.handler The turn state host (typically an ActorTurnHandler).
    * @param {ICommandProcessor} deps.commandProcessor Service to dispatch commands.
@@ -153,43 +230,17 @@ export class ProcessingCommandState extends AbstractTurnState {
       new ProcessingWorkflow(state, cmd, action, setAction, exceptionHandler),
   }) {
     super(handler);
+    const deps = {
+      commandProcessor,
+      commandOutcomeInterpreter,
+      commandString,
+      turnAction,
+      directiveResolver,
+      processingWorkflowFactory,
+    };
 
-    // Validate essential dependencies
-    if (!commandProcessor) {
-      this._throwConstructionError('commandProcessor is required');
-    }
-    if (!commandOutcomeInterpreter) {
-      this._throwConstructionError('commandOutcomeInterpreter is required');
-    }
-    validateCommandString(commandString, (msg) =>
-      this._throwConstructionError(msg)
-    );
-    validateTurnAction(turnAction, (msg) => this._throwConstructionError(msg));
-    if (!directiveResolver) {
-      this._throwConstructionError('directiveResolver is required');
-    }
-
-    this.#commandProcessor = commandProcessor;
-    this._commandOutcomeInterpreter = commandOutcomeInterpreter;
-    this.#commandStringForLog = commandString;
-    this._setTurnAction(turnAction);
-    this._directiveResolver = directiveResolver;
-
-    this._processingGuard = new ProcessingGuard(this);
-    this._exceptionHandler = new ProcessingExceptionHandler(this);
-    finishProcessing(this);
-
-    this._processingWorkflowFactory = processingWorkflowFactory;
-
-    // Workflow is instantiated here, pass arguments as a single object
-    this._processingWorkflow = new CommandProcessingWorkflow({
-      state: this,
-      exceptionHandler: this._exceptionHandler,
-      commandProcessor: this.#commandProcessor,
-      commandOutcomeInterpreter: this._commandOutcomeInterpreter,
-      directiveStrategyResolver: this._directiveResolver,
-    });
-
+    this._validateDependencies(deps);
+    this._initializeComponents(deps);
     this._logConstruction();
   }
 
@@ -245,15 +296,11 @@ export class ProcessingCommandState extends AbstractTurnState {
       );
 
       try {
-        const eventDispatcher = getSafeEventDispatcher(turnCtx, this._handler);
-        if (eventDispatcher) {
-          const payload = { entityId: actorId, ...payloadBase };
-          await eventDispatcher.dispatch(ENTITY_SPOKE_ID, payload);
-          logger.debug(
-            `${this.getStateName()}: Attempted dispatch of ${ENTITY_SPOKE_ID} for actor ${actorId} via TurnContext's SafeEventDispatcher.`,
-            { payload }
-          );
-        }
+        await dispatchSpeechEvent(turnCtx, this._handler, actorId, payloadBase);
+        logger.debug(
+          `${this.getStateName()}: Attempted dispatch of ${ENTITY_SPOKE_ID} for actor ${actorId} via TurnContext's SafeEventDispatcher.`,
+          { payload: { entityId: actorId, ...payloadBase } }
+        );
       } catch (eventDispatchError) {
         logger.error(
           `${this.getStateName()}: Unexpected error when trying to use dispatch for ${ENTITY_SPOKE_ID} for actor ${actorId}: ${eventDispatchError.message}`,
