@@ -4,47 +4,44 @@ import { ANATOMY_BODY_COMPONENT_ID } from '../constants/componentIds.js';
  * Service for composing full body descriptions from all body parts
  */
 export class BodyDescriptionComposer {
-  constructor({ bodyPartDescriptionBuilder, bodyGraphService, entityFinder }) {
+  constructor({ bodyPartDescriptionBuilder, bodyGraphService, entityFinder, anatomyFormattingService } = {}) {
     this.bodyPartDescriptionBuilder = bodyPartDescriptionBuilder;
     this.bodyGraphService = bodyGraphService;
     this.entityFinder = entityFinder;
+    this.anatomyFormattingService = anatomyFormattingService;
+    
+    // Default values for backward compatibility
+    this._defaultDescriptionOrder = [
+      'build',
+      'hair',
+      'eye',
+      'face',
+      'ear',
+      'nose',
+      'mouth',
+      'neck',
+      'breast',
+      'torso',
+      'arm',
+      'hand',
+      'leg',
+      'foot',
+      'tail',
+      'wing',
+    ];
+    
+    this._defaultGroupedParts = new Set([
+      'eye',
+      'ear',
+      'arm',
+      'leg',
+      'hand',
+      'foot',
+      'breast',
+      'wing',
+    ]);
   }
 
-  /**
-   * Part types in the order they should appear in descriptions
-   */
-  static DESCRIPTION_ORDER = [
-    'build', // Overall build first
-    'hair', // Head features
-    'eye',
-    'face',
-    'ear',
-    'nose',
-    'mouth',
-    'neck', // Torso
-    'breast',
-    'torso',
-    'arm', // Limbs
-    'hand',
-    'leg',
-    'foot',
-    'tail', // Special appendages
-    'wing',
-  ];
-
-  /**
-   * Part types that should be grouped together in description
-   */
-  static GROUPED_PARTS = new Set([
-    'eye',
-    'ear',
-    'arm',
-    'leg',
-    'hand',
-    'foot',
-    'breast',
-    'wing',
-  ]);
 
   /**
    * Compose a full body description from all body parts
@@ -70,34 +67,73 @@ export class BodyDescriptionComposer {
     // Group parts by subtype
     const partsByType = this.groupPartsByType(allParts);
 
-    // Build description sections
+    // Build description sections following configured order
     const sections = [];
+    const descriptionOrder = this.anatomyFormattingService?.getDescriptionOrder
+      ? this.anatomyFormattingService.getDescriptionOrder()
+      : this._defaultDescriptionOrder;
+    const processedTypes = new Set();
 
-    // Add overall build if available
-    const buildDescription = this.extractBuildDescription(bodyEntity);
-    if (buildDescription) {
-      sections.push(buildDescription);
+    // Process parts in configured order
+    for (const partType of descriptionOrder) {
+      if (processedTypes.has(partType)) {
+        continue;
+      }
+
+      // Handle overall build separately
+      if (partType === 'build') {
+        const buildDescription = this.extractBuildDescription(bodyEntity);
+        if (buildDescription) {
+          sections.push(buildDescription);
+        }
+        processedTypes.add(partType);
+        continue;
+      }
+
+      // Check if this is a grouped part type
+      const groupedParts = this.anatomyFormattingService?.getGroupedParts
+        ? this.anatomyFormattingService.getGroupedParts()
+        : this._defaultGroupedParts;
+      if (groupedParts.has(partType) && partsByType.has(partType)) {
+        // Handle grouped parts (will be processed later in context)
+        continue;
+      }
+
+      // Skip parts that are handled in section methods
+      const sectionHandledParts = ['hair', 'eye', 'ear', 'nose', 'mouth', 'face', 'neck', 'breast', 'torso', 'arm', 'hand', 'leg', 'foot', 'tail', 'wing'];
+      if (sectionHandledParts.includes(partType)) {
+        continue;
+      }
+      
+      // Process individual part types not handled by sections
+      if (partsByType.has(partType)) {
+        const partDescription = this.composeSinglePartDescription(partType, partsByType);
+        if (partDescription) {
+          sections.push(partDescription);
+        }
+        processedTypes.add(partType);
+      }
     }
 
-    // Add head features
+    // Add head features section (handles grouped face parts)
     const headDescription = this.composeHeadDescription(partsByType);
     if (headDescription) {
       sections.push(headDescription);
     }
 
-    // Add torso features
+    // Add torso features section  
     const torsoDescription = this.composeTorsoDescription(partsByType);
     if (torsoDescription) {
       sections.push(torsoDescription);
     }
 
-    // Add limb features
+    // Add limb features section
     const limbDescription = this.composeLimbDescription(partsByType);
     if (limbDescription) {
       sections.push(limbDescription);
     }
 
-    // Add special features
+    // Add special features section
     const specialDescription = this.composeSpecialDescription(partsByType);
     if (specialDescription) {
       sections.push(specialDescription);
@@ -133,6 +169,33 @@ export class BodyDescriptionComposer {
     }
 
     return partsByType;
+  }
+
+  /**
+   * Compose description for a single part type
+   * @param {string} partType
+   * @param {Map<string, Array<Object>>} partsByType
+   * @returns {string}
+   */
+  composeSinglePartDescription(partType, partsByType) {
+    const parts = partsByType.get(partType);
+    if (!parts || parts.length === 0) {
+      return '';
+    }
+
+    const groupedParts = this.anatomyFormattingService?.getGroupedParts
+      ? this.anatomyFormattingService.getGroupedParts()
+      : this._defaultGroupedParts;
+    if (groupedParts.has(partType)) {
+      // Use multiple description for grouped parts
+      return this.bodyPartDescriptionBuilder.buildMultipleDescription(
+        parts,
+        partType
+      );
+    } else {
+      // Use single description for non-grouped parts
+      return this.bodyPartDescriptionBuilder.buildDescription(parts[0]);
+    }
   }
 
   /**
