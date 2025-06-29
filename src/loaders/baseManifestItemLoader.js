@@ -18,6 +18,8 @@ import { validateDependencies } from '../utils/dependencyUtils.js';
 import { storeItemInRegistry } from './helpers/registryStoreUtils.js';
 import { extractValidFilenames } from './helpers/filenameUtils.js';
 import { summarizeSettledResults } from './helpers/resultsSummary.js';
+import { validateLoadItemsParams } from './helpers/validationHelpers.js';
+import { processFileWrapper } from './helpers/fileProcessing.js';
 
 // --- Add LoadItemsResult typedef here for clarity ---
 /**
@@ -305,57 +307,7 @@ export class BaseManifestItemLoader extends AbstractLoader {
    * @throws {Error} Re-throws the caught error after logging to allow `Promise.allSettled` to detect failure.
    */
   async _processFileWrapper(modId, filename, diskFolder, registryKey) {
-    // <<< MODIFIED RETURN TYPE
-    let resolvedPath = null;
-    try {
-      // 1. Resolve Path
-      resolvedPath = this._pathResolver.resolveModContentPath(
-        modId,
-        diskFolder,
-        filename
-      );
-      this._logger.debug(
-        `[${modId}] Resolved path for ${filename}: ${resolvedPath}`
-      );
-
-      // 2. Fetch Data
-      const data = await this._dataFetcher.fetch(resolvedPath);
-      this._logger.debug(`[${modId}] Fetched data from ${resolvedPath}`);
-
-      // 3. Primary Schema Validation
-      this._validatePrimarySchema(data, filename, modId, resolvedPath);
-
-      // 4. Subclass Processing
-      // Pass original filename, resolved path, and registryKey for context
-      // _processFetchedItem now returns { qualifiedId, didOverride }
-      const result = await this._processFetchedItem(
-        modId,
-        filename,
-        resolvedPath,
-        data,
-        registryKey
-      );
-      this._logger.debug(
-        `[${modId}] Successfully processed ${filename}. Result: ID=${result.qualifiedId}, Overwrite=${result.didOverride}`
-      );
-
-      // Return the object received from _processFetchedItem
-      return result; // <<< MODIFIED RETURNED VALUE
-    } catch (error) {
-      // 5. Central Error Logging
-      this._logger.error(
-        `Error processing file:`, // Consistent error message prefix
-        {
-          modId,
-          filename,
-          path: resolvedPath ?? 'Path not resolved', // Include resolved path if available
-          registryKey,
-          error: error?.message || String(error), // Get error message safely
-        },
-        error // Pass the original error object for full stack trace logging
-      );
-      throw error; // Re-throw the error so Promise.allSettled can see it failed
-    }
+    return processFileWrapper(this, modId, filename, diskFolder, registryKey);
   }
 
   /**
@@ -510,37 +462,20 @@ export class BaseManifestItemLoader extends AbstractLoader {
     diskFolder,
     registryKey
   ) {
-    // <<< MODIFIED: Updated JSDoc Guidance and Return Type
-    // Validate inputs first (programming error check)
-    if (typeof modId !== 'string' || modId.trim() === '') {
-      const errorMsg = `${this.constructor.name}: Programming Error - Invalid 'modId' provided for loading content. Must be a non-empty string. Received: ${modId}`;
-      this._logger.error(errorMsg);
-      throw new TypeError(errorMsg);
-    }
-    const trimmedModId = modId.trim();
-    if (!modManifest || typeof modManifest !== 'object') {
-      const errorMsg = `${this.constructor.name}: Programming Error - Invalid 'modManifest' provided for loading content for mod '${trimmedModId}'. Must be a non-null object. Received: ${modManifest}`;
-      this._logger.error(errorMsg);
-      throw new TypeError(errorMsg);
-    }
-    if (typeof contentKey !== 'string' || contentKey.trim() === '') {
-      const errorMsg = `${this.constructor.name}: Programming Error - Invalid 'contentKey' provided for loading ${registryKey} for mod '${trimmedModId}'. Must be a non-empty string. Received: ${contentKey}`;
-      this._logger.error(errorMsg);
-      throw new TypeError(errorMsg);
-    }
-    const trimmedContentKey = contentKey.trim();
-    if (typeof diskFolder !== 'string' || diskFolder.trim() === '') {
-      const errorMsg = `${this.constructor.name}: Programming Error - Invalid 'diskFolder' provided for loading ${registryKey} for mod '${trimmedModId}'. Must be a non-empty string. Received: ${diskFolder}`;
-      this._logger.error(errorMsg);
-      throw new TypeError(errorMsg);
-    }
-    const trimmedDiskFolder = diskFolder.trim();
-    if (typeof registryKey !== 'string' || registryKey.trim() === '') {
-      const errorMsg = `${this.constructor.name}: Programming Error - Invalid 'registryKey' provided for loading content for mod '${trimmedModId}'. Must be a non-empty string. Received: ${registryKey}`;
-      this._logger.error(errorMsg);
-      throw new TypeError(errorMsg);
-    }
-    const trimmedRegistryKey = registryKey.trim();
+    const {
+      modId: trimmedModId,
+      contentKey: trimmedContentKey,
+      diskFolder: trimmedDiskFolder,
+      registryKey: trimmedRegistryKey,
+    } = validateLoadItemsParams(
+      this._logger,
+      this.constructor.name,
+      modId,
+      modManifest,
+      contentKey,
+      diskFolder,
+      registryKey
+    );
 
     this._logger.info(
       `${this.constructor.name}: Loading ${trimmedRegistryKey} definitions for mod '${trimmedModId}'.`
