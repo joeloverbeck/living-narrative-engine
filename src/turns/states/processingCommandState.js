@@ -227,10 +227,9 @@ export class ProcessingCommandState extends AbstractTurnState {
     commandOutcomeInterpreter,
     commandString,
     turnAction,
-    directiveResolver =
-      typeof TurnDirectiveStrategyResolver === 'function'
-        ? new TurnDirectiveStrategyResolver(DEFAULT_STRATEGY_MAP)
-        : TurnDirectiveStrategyResolver,
+    directiveResolver = typeof TurnDirectiveStrategyResolver === 'function'
+      ? new TurnDirectiveStrategyResolver(DEFAULT_STRATEGY_MAP)
+      : TurnDirectiveStrategyResolver,
     processingWorkflowFactory = (
       state,
       cmd,

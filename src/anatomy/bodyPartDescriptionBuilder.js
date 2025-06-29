@@ -7,7 +7,7 @@ export class BodyPartDescriptionBuilder {
   constructor({ descriptorFormatter, anatomyFormattingService } = {}) {
     this.descriptorFormatter = descriptorFormatter;
     this.anatomyFormattingService = anatomyFormattingService;
-    
+
     // Default values for backward compatibility
     this._defaultPairedParts = new Set([
       'eye',
@@ -19,15 +19,14 @@ export class BodyPartDescriptionBuilder {
       'breast',
       'wing',
     ]);
-    
+
     this._defaultIrregularPlurals = {
       foot: 'feet',
       tooth: 'teeth',
     };
-    
+
     this._defaultNoArticleParts = new Set(['hair']);
   }
-
 
   /**
    * Build a description for a single body part
@@ -105,7 +104,7 @@ export class BodyPartDescriptionBuilder {
     const descriptorPart = formattedDescriptors
       ? `${formattedDescriptors} `
       : '';
-    
+
     const noArticleParts = this.anatomyFormattingService?.getNoArticleParts
       ? this.anatomyFormattingService.getNoArticleParts()
       : this._defaultNoArticleParts;

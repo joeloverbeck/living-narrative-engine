@@ -29,23 +29,12 @@
     "breast",
     "wing"
   ],
-  "pairedParts": [
-    "eye",
-    "ear",
-    "arm",
-    "leg",
-    "hand",
-    "foot",
-    "breast",
-    "wing"
-  ],
+  "pairedParts": ["eye", "ear", "arm", "leg", "hand", "foot", "breast", "wing"],
   "irregularPlurals": {
     "foot": "feet",
     "tooth": "teeth"
   },
-  "noArticleParts": [
-    "hair"
-  ],
+  "noArticleParts": ["hair"],
   "descriptorOrder": [
     "descriptors:length_category",
     "descriptors:length_hair",

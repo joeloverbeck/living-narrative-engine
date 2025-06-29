@@ -4,7 +4,7 @@
 export class DescriptorFormatter {
   constructor(params = {}) {
     this.anatomyFormattingService = params.anatomyFormattingService;
-    
+
     // Default values for backward compatibility when no service is provided
     this._defaultDescriptorOrder = [
       'descriptors:length_category',
@@ -21,13 +21,13 @@ export class DescriptorFormatter {
       'descriptors:firmness',
       'descriptors:build',
     ];
-    
+
     this._defaultCommaSeparated = new Set([
       'descriptors:shape_eye',
       'descriptors:size_specific',
       'descriptors:weight_feel',
     ]);
-    
+
     this._defaultDescriptorValueKeys = [
       'value',
       'color',
@@ -53,10 +53,10 @@ export class DescriptorFormatter {
     }
 
     // Sort descriptors by the defined order
-    const descriptorOrder = this.anatomyFormattingService?.getDescriptorOrder 
+    const descriptorOrder = this.anatomyFormattingService?.getDescriptorOrder
       ? this.anatomyFormattingService.getDescriptorOrder()
       : this._defaultDescriptorOrder;
-    
+
     const sortedDescriptors = descriptors.sort((a, b) => {
       const indexA = descriptorOrder.indexOf(a.componentId);
       const indexB = descriptorOrder.indexOf(b.componentId);
@@ -84,15 +84,13 @@ export class DescriptorFormatter {
    */
   formatSingleDescriptor(descriptor) {
     const { componentId, value } = descriptor;
-    const commaSeparated = this.anatomyFormattingService?.getCommaSeparatedDescriptors
+    const commaSeparated = this.anatomyFormattingService
+      ?.getCommaSeparatedDescriptors
       ? this.anatomyFormattingService.getCommaSeparatedDescriptors()
       : this._defaultCommaSeparated;
 
     // Handle multi-word values that should stay hyphenated
-    if (
-      value.includes('-') &&
-      !commaSeparated.has(componentId)
-    ) {
+    if (value.includes('-') && !commaSeparated.has(componentId)) {
       return value;
     }
 

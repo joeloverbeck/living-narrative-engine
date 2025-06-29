@@ -51,8 +51,6 @@
       "humanoid_monstrous_tall.recipe.json",
       "humanoid_standard.recipe.json"
     ],
-    "anatomyFormatting": [
-      "anatomy-formatting/default.json"
-    ]
+    "anatomyFormatting": ["anatomy-formatting/default.json"]
   }
 }

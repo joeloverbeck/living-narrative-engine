@@ -31,13 +31,15 @@ describe('GraphIntegrityValidator', () => {
 
   describe('constructor', () => {
     it('should throw error if entityManager is not provided', () => {
-      expect(() => new GraphIntegrityValidator({ logger: mockLogger }))
-        .toThrow(InvalidArgumentError);
+      expect(() => new GraphIntegrityValidator({ logger: mockLogger })).toThrow(
+        InvalidArgumentError
+      );
     });
 
     it('should throw error if logger is not provided', () => {
-      expect(() => new GraphIntegrityValidator({ entityManager: mockEntityManager }))
-        .toThrow(InvalidArgumentError);
+      expect(
+        () => new GraphIntegrityValidator({ entityManager: mockEntityManager })
+      ).toThrow(InvalidArgumentError);
     });
   });
 
@@ -74,16 +76,22 @@ describe('GraphIntegrityValidator', () => {
     it('should log when validation fails with errors', async () => {
       // Setup to trigger socket limit error
       const socketOccupancy = new Map([['parent-1:socket-1', 3]]);
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (entityId === 'parent-1' && componentId === 'anatomy:sockets') {
-          return {
-            sockets: [{ id: 'socket-1', maxCount: 2 }],
-          };
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (entityId === 'parent-1' && componentId === 'anatomy:sockets') {
+            return {
+              sockets: [{ id: 'socket-1', maxCount: 2 }],
+            };
+          }
+          return null;
         }
-        return null;
-      });
+      );
 
-      const result = await validator.validateGraph(['parent-1'], {}, socketOccupancy);
+      const result = await validator.validateGraph(
+        ['parent-1'],
+        {},
+        socketOccupancy
+      );
 
       expect(result.valid).toBe(false);
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -92,23 +100,20 @@ describe('GraphIntegrityValidator', () => {
     });
 
     it('should log when validation passes with warnings', async () => {
-      const recipe = {
-        slots: {
-          arm: {
-            partType: 'arm',
-            count: { exact: 2 },
-          },
-        },
-      };
-
+      // Test with multiple roots which generates warnings
       mockEntityManager.getEntityInstance.mockReturnValue({});
-      mockEntityManager.getComponentData.mockReturnValue(null);
+      mockEntityManager.getComponentData.mockReturnValue(null); // No joints means roots
       mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([]);
 
-      const result = await validator.validateGraph(['entity-1'], recipe, new Map());
+      const result = await validator.validateGraph(
+        ['entity-1', 'entity-2'],
+        {},
+        new Map()
+      );
 
       expect(result.valid).toBe(true);
       expect(result.warnings).toHaveLength(1);
+      expect(result.warnings[0]).toContain('Multiple root entities found');
       expect(mockLogger.warn).toHaveBeenCalledWith(
         'GraphIntegrityValidator: Validation passed with 1 warnings'
       );
@@ -118,17 +123,23 @@ describe('GraphIntegrityValidator', () => {
   describe('validateSocketLimits', () => {
     it('should validate socket occupancy within limits', async () => {
       const socketOccupancy = new Map([['parent-1:socket-1', 1]]);
-      
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (entityId === 'parent-1' && componentId === 'anatomy:sockets') {
-          return {
-            sockets: [{ id: 'socket-1', maxCount: 2 }],
-          };
-        }
-        return null;
-      });
 
-      const result = await validator.validateGraph(['parent-1'], {}, socketOccupancy);
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (entityId === 'parent-1' && componentId === 'anatomy:sockets') {
+            return {
+              sockets: [{ id: 'socket-1', maxCount: 2 }],
+            };
+          }
+          return null;
+        }
+      );
+
+      const result = await validator.validateGraph(
+        ['parent-1'],
+        {},
+        socketOccupancy
+      );
 
       expect(result.valid).toBe(true);
       expect(result.errors).toEqual([]);
@@ -136,17 +147,23 @@ describe('GraphIntegrityValidator', () => {
 
     it('should error when socket occupancy exceeds maxCount', async () => {
       const socketOccupancy = new Map([['parent-1:socket-1', 3]]);
-      
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (entityId === 'parent-1' && componentId === 'anatomy:sockets') {
-          return {
-            sockets: [{ id: 'socket-1', maxCount: 2 }],
-          };
-        }
-        return null;
-      });
 
-      const result = await validator.validateGraph(['parent-1'], {}, socketOccupancy);
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (entityId === 'parent-1' && componentId === 'anatomy:sockets') {
+            return {
+              sockets: [{ id: 'socket-1', maxCount: 2 }],
+            };
+          }
+          return null;
+        }
+      );
+
+      const result = await validator.validateGraph(
+        ['parent-1'],
+        {},
+        socketOccupancy
+      );
 
       expect(result.valid).toBe(false);
       expect(result.errors).toContain(
@@ -156,17 +173,23 @@ describe('GraphIntegrityValidator', () => {
 
     it('should error when socket not found', async () => {
       const socketOccupancy = new Map([['parent-1:missing-socket', 1]]);
-      
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (entityId === 'parent-1' && componentId === 'anatomy:sockets') {
-          return {
-            sockets: [{ id: 'other-socket', maxCount: 1 }],
-          };
-        }
-        return null;
-      });
 
-      const result = await validator.validateGraph(['parent-1'], {}, socketOccupancy);
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (entityId === 'parent-1' && componentId === 'anatomy:sockets') {
+            return {
+              sockets: [{ id: 'other-socket', maxCount: 1 }],
+            };
+          }
+          return null;
+        }
+      );
+
+      const result = await validator.validateGraph(
+        ['parent-1'],
+        {},
+        socketOccupancy
+      );
 
       expect(result.valid).toBe(false);
       expect(result.errors).toContain(
@@ -176,17 +199,23 @@ describe('GraphIntegrityValidator', () => {
 
     it('should use default maxCount of 1 when not specified', async () => {
       const socketOccupancy = new Map([['parent-1:socket-1', 2]]);
-      
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (entityId === 'parent-1' && componentId === 'anatomy:sockets') {
-          return {
-            sockets: [{ id: 'socket-1' }], // No maxCount specified
-          };
-        }
-        return null;
-      });
 
-      const result = await validator.validateGraph(['parent-1'], {}, socketOccupancy);
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (entityId === 'parent-1' && componentId === 'anatomy:sockets') {
+            return {
+              sockets: [{ id: 'socket-1' }], // No maxCount specified
+            };
+          }
+          return null;
+        }
+      );
+
+      const result = await validator.validateGraph(
+        ['parent-1'],
+        {},
+        socketOccupancy
+      );
 
       expect(result.valid).toBe(false);
       expect(result.errors).toContain(
@@ -199,7 +228,11 @@ describe('GraphIntegrityValidator', () => {
     it('should skip validation if recipe has no constraints', async () => {
       const recipe = {}; // No constraints
 
-      const result = await validator.validateGraph(['entity-1'], recipe, new Map());
+      const result = await validator.validateGraph(
+        ['entity-1'],
+        recipe,
+        new Map()
+      );
 
       expect(result.valid).toBe(true);
     });
@@ -218,7 +251,11 @@ describe('GraphIntegrityValidator', () => {
         'tag-2',
       ]);
 
-      const result = await validator.validateGraph(['entity-1'], recipe, new Map());
+      const result = await validator.validateGraph(
+        ['entity-1'],
+        recipe,
+        new Map()
+      );
 
       expect(result.valid).toBe(true);
     });
@@ -226,21 +263,35 @@ describe('GraphIntegrityValidator', () => {
     it('should validate requires constraints - failure', async () => {
       const recipe = {
         constraints: {
-          requires: [['tag-1', 'tag-2']],
+          requires: [
+            {
+              components: ['tag-1', 'tag-2'],
+              partTypes: ['special']
+            }
+          ],
         },
       };
 
       mockEntityManager.getEntityInstance.mockReturnValue({});
-      mockEntityManager.getComponentData.mockReturnValue(null);
+      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
+        if (componentId === 'anatomy:part') {
+          return { subType: 'special' };
+        }
+        return null;
+      });
       mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
         'tag-1', // Only has tag-1, missing tag-2
       ]);
 
-      const result = await validator.validateGraph(['entity-1'], recipe, new Map());
+      const result = await validator.validateGraph(
+        ['entity-1'],
+        recipe,
+        new Map()
+      );
 
       expect(result.valid).toBe(false);
       expect(result.errors).toContain(
-        "Co-presence constraint violated: have [tag-1] but missing [tag-2]"
+        'Required constraint group not fully satisfied'
       );
     });
 
@@ -257,7 +308,11 @@ describe('GraphIntegrityValidator', () => {
         'tag-1', // Only has one of the excluded tags
       ]);
 
-      const result = await validator.validateGraph(['entity-1'], recipe, new Map());
+      const result = await validator.validateGraph(
+        ['entity-1'],
+        recipe,
+        new Map()
+      );
 
       expect(result.valid).toBe(true);
     });
@@ -265,7 +320,11 @@ describe('GraphIntegrityValidator', () => {
     it('should validate excludes constraints - failure', async () => {
       const recipe = {
         constraints: {
-          excludes: [['tag-1', 'tag-2']],
+          excludes: [
+            {
+              components: ['tag-1', 'tag-2']
+            }
+          ],
         },
       };
 
@@ -276,11 +335,15 @@ describe('GraphIntegrityValidator', () => {
         'tag-2', // Has both excluded tags
       ]);
 
-      const result = await validator.validateGraph(['entity-1'], recipe, new Map());
+      const result = await validator.validateGraph(
+        ['entity-1'],
+        recipe,
+        new Map()
+      );
 
       expect(result.valid).toBe(false);
       expect(result.errors).toContain(
-        "Mutual exclusion constraint violated: cannot have both [tag-1, tag-2]"
+        'Exclusion constraint violated'
       );
     });
 
@@ -292,99 +355,122 @@ describe('GraphIntegrityValidator', () => {
       };
 
       mockEntityManager.getEntityInstance.mockReturnValue({});
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId === 'anatomy:part') {
-          if (entityId === 'entity-1') return { subType: 'arm' };
-          if (entityId === 'entity-2') return { subType: 'hand' };
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (componentId === 'anatomy:part') {
+            if (entityId === 'entity-1') return { subType: 'arm' };
+            if (entityId === 'entity-2') return { subType: 'hand' };
+          }
+          return null;
         }
-        return null;
-      });
+      );
       mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([]);
 
-      const result = await validator.validateGraph(['entity-1', 'entity-2'], recipe, new Map());
+      const result = await validator.validateGraph(
+        ['entity-1', 'entity-2'],
+        recipe,
+        new Map()
+      );
 
       expect(result.valid).toBe(true);
     });
 
-    it('should warn about exact count mismatch', async () => {
+    it('should error about exact count mismatch', async () => {
       const recipe = {
         slots: {
           arm: {
-            partType: 'arm',
+            type: 'arm',
             count: { exact: 2 },
           },
         },
       };
 
       mockEntityManager.getEntityInstance.mockReturnValue({});
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId === 'anatomy:part' && entityId === 'entity-1') {
-          return { subType: 'arm' };
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (componentId === 'anatomy:part' && entityId === 'entity-1') {
+            return { subType: 'arm' };
+          }
+          return null;
         }
-        return null;
-      });
+      );
       mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([]);
 
-      const result = await validator.validateGraph(['entity-1'], recipe, new Map());
+      const result = await validator.validateGraph(
+        ['entity-1'],
+        recipe,
+        new Map()
+      );
 
-      expect(result.valid).toBe(true);
-      expect(result.warnings).toContain(
-        "Slot 'arm' wanted exactly 2 'arm' parts but got 1"
+      expect(result.valid).toBe(false);
+      expect(result.errors).toContain(
+        "Expected 2 parts of type 'arm' but found 1"
       );
     });
 
-    it('should warn about min count not met', async () => {
+    it('should error about min count not met', async () => {
       const recipe = {
         slots: {
           arm: {
-            partType: 'arm',
+            type: 'arm',
             count: { min: 2 },
           },
         },
       };
 
       mockEntityManager.getEntityInstance.mockReturnValue({});
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId === 'anatomy:part' && entityId === 'entity-1') {
-          return { subType: 'arm' };
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (componentId === 'anatomy:part' && entityId === 'entity-1') {
+            return { subType: 'arm' };
+          }
+          return null;
         }
-        return null;
-      });
+      );
       mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([]);
 
-      const result = await validator.validateGraph(['entity-1'], recipe, new Map());
+      const result = await validator.validateGraph(
+        ['entity-1'],
+        recipe,
+        new Map()
+      );
 
-      expect(result.valid).toBe(true);
-      expect(result.warnings).toContain(
-        "Slot 'arm' wanted at least 2 'arm' parts but got 1"
+      expect(result.valid).toBe(false);
+      expect(result.errors).toContain(
+        "Expected at least 2 parts of type 'arm' but found 1"
       );
     });
 
-    it('should warn about max count exceeded', async () => {
+    it('should error about max count exceeded', async () => {
       const recipe = {
-        constraints: {}, // Need constraints object to not return early
         slots: {
           arm: {
-            partType: 'arm',
+            type: 'arm',
             count: { max: 1 },
           },
         },
       };
 
       mockEntityManager.getEntityInstance.mockReturnValue({});
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId === 'anatomy:part') {
-          return { subType: 'arm' };
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (componentId === 'anatomy:part') {
+            return { subType: 'arm' };
+          }
+          return null;
         }
-        return null;
-      });
+      );
       mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([]);
 
-      const result = await validator.validateGraph(['entity-1', 'entity-2'], recipe, new Map());
+      const result = await validator.validateGraph(
+        ['entity-1', 'entity-2'],
+        recipe,
+        new Map()
+      );
 
-      expect(result.valid).toBe(true);
-      expect(result.warnings).toContain(
-        "Slot 'arm' wanted at most 1 'arm' parts but got 2"
+      expect(result.valid).toBe(false);
+      expect(result.errors).toContain(
+        "Expected at most 1 parts of type 'arm' but found 2"
       );
     });
   });
@@ -392,113 +478,202 @@ describe('GraphIntegrityValidator', () => {
   describe('validateNoCycles', () => {
     it('should pass for acyclic graph', async () => {
       mockEntityManager.getEntityInstance.mockReturnValue({});
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId === 'anatomy:joint') {
-          if (entityId === 'child-1') return { parentId: 'parent-1', socketId: 'socket-1', jointType: 'fixed' };
-          if (entityId === 'child-2') return { parentId: 'parent-1', socketId: 'socket-2', jointType: 'fixed' };
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (componentId === 'anatomy:joint') {
+            if (entityId === 'child-1')
+              return {
+                parentId: 'parent-1',
+                socketId: 'socket-1',
+                jointType: 'fixed',
+              };
+            if (entityId === 'child-2')
+              return {
+                parentId: 'parent-1',
+                socketId: 'socket-2',
+                jointType: 'fixed',
+              };
+          }
+          if (componentId === 'anatomy:sockets' && entityId === 'parent-1') {
+            return {
+              sockets: [
+                { id: 'socket-1', allowedTypes: ['child'], jointType: 'fixed' },
+                { id: 'socket-2', allowedTypes: ['child'], jointType: 'fixed' },
+              ],
+            };
+          }
+          if (componentId === 'anatomy:part') {
+            return { subType: 'child' };
+          }
+          return null;
         }
-        if (componentId === 'anatomy:sockets' && entityId === 'parent-1') {
-          return {
-            sockets: [
-              { id: 'socket-1', allowedTypes: ['child'], jointType: 'fixed' },
-              { id: 'socket-2', allowedTypes: ['child'], jointType: 'fixed' },
-            ],
-          };
-        }
-        if (componentId === 'anatomy:part') {
-          return { subType: 'child' };
-        }
-        return null;
-      });
+      );
 
-      const result = await validator.validateGraph(['parent-1', 'child-1', 'child-2'], {}, new Map());
+      const result = await validator.validateGraph(
+        ['parent-1', 'child-1', 'child-2'],
+        {},
+        new Map()
+      );
 
       expect(result.valid).toBe(true);
     });
 
     it('should detect direct cycle', async () => {
       mockEntityManager.getEntityInstance.mockReturnValue({});
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId === 'anatomy:joint') {
-          if (entityId === 'entity-1') return { parentId: 'entity-2', socketId: 'socket-1', jointType: 'fixed' };
-          if (entityId === 'entity-2') return { parentId: 'entity-1', socketId: 'socket-2', jointType: 'fixed' };
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (componentId === 'anatomy:joint') {
+            if (entityId === 'entity-1')
+              return {
+                parentId: 'entity-2',
+                socketId: 'socket-1',
+                jointType: 'fixed',
+              };
+            if (entityId === 'entity-2')
+              return {
+                parentId: 'entity-1',
+                socketId: 'socket-2',
+                jointType: 'fixed',
+              };
+          }
+          if (componentId === 'anatomy:sockets') {
+            return {
+              sockets: [
+                {
+                  id: 'socket-1',
+                  allowedTypes: ['entity'],
+                  jointType: 'fixed',
+                },
+                {
+                  id: 'socket-2',
+                  allowedTypes: ['entity'],
+                  jointType: 'fixed',
+                },
+              ],
+            };
+          }
+          if (componentId === 'anatomy:part') {
+            return { subType: 'entity' };
+          }
+          return null;
         }
-        if (componentId === 'anatomy:sockets') {
-          return {
-            sockets: [
-              { id: 'socket-1', allowedTypes: ['entity'], jointType: 'fixed' },
-              { id: 'socket-2', allowedTypes: ['entity'], jointType: 'fixed' },
-            ],
-          };
-        }
-        if (componentId === 'anatomy:part') {
-          return { subType: 'entity' };
-        }
-        return null;
-      });
+      );
 
-      const result = await validator.validateGraph(['entity-1', 'entity-2'], {}, new Map());
+      const result = await validator.validateGraph(
+        ['entity-1', 'entity-2'],
+        {},
+        new Map()
+      );
 
       expect(result.valid).toBe(false);
-      expect(result.errors.some(e => e.includes('Cycle detected:'))).toBe(true);
+      expect(result.errors.some((e) => e.includes('Cycle detected in anatomy graph'))).toBe(
+        true
+      );
     });
 
     it('should detect indirect cycle', async () => {
       mockEntityManager.getEntityInstance.mockReturnValue({});
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId === 'anatomy:joint') {
-          if (entityId === 'entity-1') return { parentId: 'entity-3', socketId: 'socket-1', jointType: 'fixed' };
-          if (entityId === 'entity-2') return { parentId: 'entity-1', socketId: 'socket-2', jointType: 'fixed' };
-          if (entityId === 'entity-3') return { parentId: 'entity-2', socketId: 'socket-3', jointType: 'fixed' };
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (componentId === 'anatomy:joint') {
+            if (entityId === 'entity-1')
+              return {
+                parentId: 'entity-3',
+                socketId: 'socket-1',
+                jointType: 'fixed',
+              };
+            if (entityId === 'entity-2')
+              return {
+                parentId: 'entity-1',
+                socketId: 'socket-2',
+                jointType: 'fixed',
+              };
+            if (entityId === 'entity-3')
+              return {
+                parentId: 'entity-2',
+                socketId: 'socket-3',
+                jointType: 'fixed',
+              };
+          }
+          if (componentId === 'anatomy:sockets') {
+            return {
+              sockets: [
+                {
+                  id: 'socket-1',
+                  allowedTypes: ['entity'],
+                  jointType: 'fixed',
+                },
+                {
+                  id: 'socket-2',
+                  allowedTypes: ['entity'],
+                  jointType: 'fixed',
+                },
+                {
+                  id: 'socket-3',
+                  allowedTypes: ['entity'],
+                  jointType: 'fixed',
+                },
+              ],
+            };
+          }
+          if (componentId === 'anatomy:part') {
+            return { subType: 'entity' };
+          }
+          return null;
         }
-        if (componentId === 'anatomy:sockets') {
-          return {
-            sockets: [
-              { id: 'socket-1', allowedTypes: ['entity'], jointType: 'fixed' },
-              { id: 'socket-2', allowedTypes: ['entity'], jointType: 'fixed' },
-              { id: 'socket-3', allowedTypes: ['entity'], jointType: 'fixed' },
-            ],
-          };
-        }
-        if (componentId === 'anatomy:part') {
-          return { subType: 'entity' };
-        }
-        return null;
-      });
+      );
 
-      const result = await validator.validateGraph(['entity-1', 'entity-2', 'entity-3'], {}, new Map());
+      const result = await validator.validateGraph(
+        ['entity-1', 'entity-2', 'entity-3'],
+        {},
+        new Map()
+      );
 
       expect(result.valid).toBe(false);
-      expect(result.errors.some(e => e.includes('Cycle detected'))).toBe(true);
+      expect(result.errors.some((e) => e.includes('Cycle detected'))).toBe(
+        true
+      );
     });
   });
 
   describe('validateJointConsistency', () => {
     it('should pass for valid joints', async () => {
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (entityId === 'child-1' && componentId === 'anatomy:joint') {
-          return { parentId: 'parent-1', socketId: 'socket-1', jointType: 'ball' };
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (entityId === 'child-1' && componentId === 'anatomy:joint') {
+            return {
+              parentId: 'parent-1',
+              socketId: 'socket-1',
+              jointType: 'ball',
+            };
+          }
+          if (entityId === 'parent-1' && componentId === 'anatomy:sockets') {
+            return {
+              sockets: [{ id: 'socket-1', jointType: 'ball' }],
+            };
+          }
+          return null;
         }
-        if (entityId === 'parent-1' && componentId === 'anatomy:sockets') {
-          return {
-            sockets: [{ id: 'socket-1', jointType: 'ball' }],
-          };
-        }
-        return null;
-      });
+      );
 
-      const result = await validator.validateGraph(['parent-1', 'child-1'], {}, new Map());
+      const result = await validator.validateGraph(
+        ['parent-1', 'child-1'],
+        {},
+        new Map()
+      );
 
       expect(result.valid).toBe(true);
     });
 
     it('should error for non-existent parent', async () => {
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (entityId === 'child-1' && componentId === 'anatomy:joint') {
-          return { parentId: 'missing-parent', socketId: 'socket-1' };
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (entityId === 'child-1' && componentId === 'anatomy:joint') {
+            return { parentId: 'missing-parent', socketId: 'socket-1' };
+          }
+          return null;
         }
-        return null;
-      });
+      );
 
       const result = await validator.validateGraph(['child-1'], {}, new Map());
 
@@ -509,19 +684,25 @@ describe('GraphIntegrityValidator', () => {
     });
 
     it('should error for non-existent socket', async () => {
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (entityId === 'child-1' && componentId === 'anatomy:joint') {
-          return { parentId: 'parent-1', socketId: 'missing-socket' };
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (entityId === 'child-1' && componentId === 'anatomy:joint') {
+            return { parentId: 'parent-1', socketId: 'missing-socket' };
+          }
+          if (entityId === 'parent-1' && componentId === 'anatomy:sockets') {
+            return {
+              sockets: [{ id: 'other-socket' }],
+            };
+          }
+          return null;
         }
-        if (entityId === 'parent-1' && componentId === 'anatomy:sockets') {
-          return {
-            sockets: [{ id: 'other-socket' }],
-          };
-        }
-        return null;
-      });
+      );
 
-      const result = await validator.validateGraph(['parent-1', 'child-1'], {}, new Map());
+      const result = await validator.validateGraph(
+        ['parent-1', 'child-1'],
+        {},
+        new Map()
+      );
 
       expect(result.valid).toBe(false);
       expect(result.errors).toContain(
@@ -530,19 +711,29 @@ describe('GraphIntegrityValidator', () => {
     });
 
     it('should error for joint type mismatch', async () => {
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (entityId === 'child-1' && componentId === 'anatomy:joint') {
-          return { parentId: 'parent-1', socketId: 'socket-1', jointType: 'hinge' };
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (entityId === 'child-1' && componentId === 'anatomy:joint') {
+            return {
+              parentId: 'parent-1',
+              socketId: 'socket-1',
+              jointType: 'hinge',
+            };
+          }
+          if (entityId === 'parent-1' && componentId === 'anatomy:sockets') {
+            return {
+              sockets: [{ id: 'socket-1', jointType: 'ball' }],
+            };
+          }
+          return null;
         }
-        if (entityId === 'parent-1' && componentId === 'anatomy:sockets') {
-          return {
-            sockets: [{ id: 'socket-1', jointType: 'ball' }],
-          };
-        }
-        return null;
-      });
+      );
 
-      const result = await validator.validateGraph(['parent-1', 'child-1'], {}, new Map());
+      const result = await validator.validateGraph(
+        ['parent-1', 'child-1'],
+        {},
+        new Map()
+      );
 
       expect(result.valid).toBe(false);
       expect(result.errors).toContain(
@@ -553,146 +744,130 @@ describe('GraphIntegrityValidator', () => {
 
   describe('validateNoOrphans', () => {
     it('should not warn for connected parts', async () => {
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (entityId === 'child-1' && componentId === 'anatomy:joint') {
-          return { parentId: 'parent-1', socketId: 'socket-1' };
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (entityId === 'child-1' && componentId === 'anatomy:joint') {
+            return { parentId: 'parent-1', socketId: 'socket-1' };
+          }
+          return null;
         }
-        return null;
-      });
+      );
 
-      const result = await validator.validateGraph(['parent-1', 'child-1'], {}, new Map());
+      const result = await validator.validateGraph(
+        ['parent-1', 'child-1'],
+        {},
+        new Map()
+      );
 
       expect(result.warnings).toEqual([]);
     });
 
-    it('should warn for orphaned parts', async () => {
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (entityId === 'orphan-1' && componentId === 'anatomy:joint') {
-          return { parentId: 'missing-parent', socketId: 'socket-1' };
+    it('should error for orphaned parts', async () => {
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (entityId === 'orphan-1' && componentId === 'anatomy:joint') {
+            return { parentId: 'missing-parent', socketId: 'socket-1' };
+          }
+          return null;
         }
-        return null;
-      });
+      );
 
       const result = await validator.validateGraph(['orphan-1'], {}, new Map());
 
-      expect(result.warnings).toContain(
-        "Entity 'orphan-1' is orphaned - parent 'missing-parent' not in graph"
+      expect(result.valid).toBe(false);
+      expect(result.errors).toContain(
+        "Orphaned part 'orphan-1' has parent 'missing-parent' not in graph"
       );
     });
   });
 
   describe('validatePartTypeCompatibility', () => {
     it('should pass for compatible part types', async () => {
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (entityId === 'arm-1' && componentId === 'anatomy:joint') {
-          return { parentId: 'torso-1', socketId: 'shoulder' };
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (entityId === 'arm-1' && componentId === 'anatomy:joint') {
+            return { parentId: 'torso-1', socketId: 'shoulder' };
+          }
+          if (entityId === 'arm-1' && componentId === 'anatomy:part') {
+            return { subType: 'arm' };
+          }
+          if (entityId === 'torso-1' && componentId === 'anatomy:sockets') {
+            return {
+              sockets: [{ id: 'shoulder', allowedTypes: ['arm', 'wing'] }],
+            };
+          }
+          return null;
         }
-        if (entityId === 'arm-1' && componentId === 'anatomy:part') {
-          return { subType: 'arm' };
-        }
-        if (entityId === 'torso-1' && componentId === 'anatomy:sockets') {
-          return {
-            sockets: [{ id: 'shoulder', allowedTypes: ['arm', 'wing'] }],
-          };
-        }
-        return null;
-      });
+      );
 
-      const result = await validator.validateGraph(['torso-1', 'arm-1'], {}, new Map());
+      const result = await validator.validateGraph(
+        ['torso-1', 'arm-1'],
+        {},
+        new Map()
+      );
 
       expect(result.valid).toBe(true);
     });
 
     it('should error for incompatible part types', async () => {
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (entityId === 'leg-1' && componentId === 'anatomy:joint') {
-          return { parentId: 'torso-1', socketId: 'shoulder' };
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (entityId === 'leg-1' && componentId === 'anatomy:joint') {
+            return { parentId: 'torso-1', socketId: 'shoulder' };
+          }
+          if (entityId === 'leg-1' && componentId === 'anatomy:part') {
+            return { subType: 'leg' };
+          }
+          if (entityId === 'torso-1' && componentId === 'anatomy:sockets') {
+            return {
+              sockets: [{ id: 'shoulder', allowedTypes: ['arm', 'wing'] }],
+            };
+          }
+          return null;
         }
-        if (entityId === 'leg-1' && componentId === 'anatomy:part') {
-          return { subType: 'leg' };
-        }
-        if (entityId === 'torso-1' && componentId === 'anatomy:sockets') {
-          return {
-            sockets: [{ id: 'shoulder', allowedTypes: ['arm', 'wing'] }],
-          };
-        }
-        return null;
-      });
+      );
 
-      const result = await validator.validateGraph(['torso-1', 'leg-1'], {}, new Map());
+      const result = await validator.validateGraph(
+        ['torso-1', 'leg-1'],
+        {},
+        new Map()
+      );
 
       expect(result.valid).toBe(false);
       expect(result.errors).toContain(
-        "Part type 'leg' on entity 'leg-1' not allowed in socket 'shoulder' (allowed: [arm, wing])"
+        "Part type 'leg' not allowed in socket 'shoulder' on entity 'torso-1'"
       );
     });
 
     it('should skip validation for missing data', async () => {
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (entityId === 'part-1' && componentId === 'anatomy:joint') {
-          return { parentId: 'parent-1', socketId: 'socket-1', jointType: 'fixed' };
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (entityId === 'part-1' && componentId === 'anatomy:joint') {
+            return {
+              parentId: 'parent-1',
+              socketId: 'socket-1',
+              jointType: 'fixed',
+            };
+          }
+          if (entityId === 'parent-1' && componentId === 'anatomy:sockets') {
+            return {
+              sockets: [
+                { id: 'socket-1', allowedTypes: ['any'], jointType: 'fixed' },
+              ],
+            };
+          }
+          // No anatomy:part component
+          return null;
         }
-        if (entityId === 'parent-1' && componentId === 'anatomy:sockets') {
-          return {
-            sockets: [{ id: 'socket-1', allowedTypes: ['any'], jointType: 'fixed' }],
-          };
-        }
-        // No anatomy:part component
-        return null;
-      });
+      );
 
-      const result = await validator.validateGraph(['parent-1', 'part-1'], {}, new Map());
+      const result = await validator.validateGraph(
+        ['parent-1', 'part-1'],
+        {},
+        new Map()
+      );
 
       expect(result.valid).toBe(true); // Should not error on missing data
     });
-  });
-});
-=======
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { GraphIntegrityValidator } from '../../../src/anatomy/graphIntegrityValidator.js';
-
-describe('GraphIntegrityValidator', () => {
-  let em;
-  let logger;
-  let validator;
-
-  beforeEach(() => {
-    em = {
-      getComponentData: jest.fn(),
-      getEntityInstance: jest.fn(),
-      getComponentsForEntity: jest.fn(() => ({})),
-    };
-    logger = { debug: jest.fn(), error: jest.fn(), warn: jest.fn() };
-    validator = new GraphIntegrityValidator({ entityManager: em, logger });
-  });
-
-  it('detects socket count violations', async () => {
-    em.getComponentData.mockImplementation((id, comp) => {
-      if (comp === 'anatomy:sockets') {
-        return { sockets: [{ id: 's1', maxCount: 1 }] };
-      }
-      return null;
-    });
-    const result = await validator.validateGraph(
-      ['e1'],
-      {},
-      new Map([['e1:s1', 2]])
-    );
-    expect(result.valid).toBe(false);
-    expect(result.errors[0]).toContain('exceeds maxCount');
-  });
-
-  it('warns for orphaned parts', async () => {
-    em.getComponentData.mockImplementation((id, comp) => {
-      if (comp === 'anatomy:joint') {
-        return { parentId: 'missing', socketId: 's1', jointType: 'ball' };
-      }
-      if (comp === 'anatomy:sockets') {
-        return { sockets: [] };
-      }
-      return null;
-    });
-    const result = await validator.validateGraph(['child'], {}, new Map());
-    expect(result.warnings[0]).toContain('orphaned');
   });
 });

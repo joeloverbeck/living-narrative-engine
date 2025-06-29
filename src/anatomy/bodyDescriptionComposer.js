@@ -4,12 +4,17 @@ import { ANATOMY_BODY_COMPONENT_ID } from '../constants/componentIds.js';
  * Service for composing full body descriptions from all body parts
  */
 export class BodyDescriptionComposer {
-  constructor({ bodyPartDescriptionBuilder, bodyGraphService, entityFinder, anatomyFormattingService } = {}) {
+  constructor({
+    bodyPartDescriptionBuilder,
+    bodyGraphService,
+    entityFinder,
+    anatomyFormattingService,
+  } = {}) {
     this.bodyPartDescriptionBuilder = bodyPartDescriptionBuilder;
     this.bodyGraphService = bodyGraphService;
     this.entityFinder = entityFinder;
     this.anatomyFormattingService = anatomyFormattingService;
-    
+
     // Default values for backward compatibility
     this._defaultDescriptionOrder = [
       'build',
@@ -29,7 +34,7 @@ export class BodyDescriptionComposer {
       'tail',
       'wing',
     ];
-    
+
     this._defaultGroupedParts = new Set([
       'eye',
       'ear',
@@ -41,7 +46,6 @@ export class BodyDescriptionComposer {
       'wing',
     ]);
   }
-
 
   /**
    * Compose a full body description from all body parts
@@ -100,14 +104,33 @@ export class BodyDescriptionComposer {
       }
 
       // Skip parts that are handled in section methods
-      const sectionHandledParts = ['hair', 'eye', 'ear', 'nose', 'mouth', 'face', 'neck', 'breast', 'torso', 'arm', 'hand', 'leg', 'foot', 'tail', 'wing'];
+      const sectionHandledParts = [
+        'hair',
+        'eye',
+        'ear',
+        'nose',
+        'mouth',
+        'face',
+        'neck',
+        'breast',
+        'torso',
+        'arm',
+        'hand',
+        'leg',
+        'foot',
+        'tail',
+        'wing',
+      ];
       if (sectionHandledParts.includes(partType)) {
         continue;
       }
-      
+
       // Process individual part types not handled by sections
       if (partsByType.has(partType)) {
-        const partDescription = this.composeSinglePartDescription(partType, partsByType);
+        const partDescription = this.composeSinglePartDescription(
+          partType,
+          partsByType
+        );
         if (partDescription) {
           sections.push(partDescription);
         }
@@ -121,7 +144,7 @@ export class BodyDescriptionComposer {
       sections.push(headDescription);
     }
 
-    // Add torso features section  
+    // Add torso features section
     const torsoDescription = this.composeTorsoDescription(partsByType);
     if (torsoDescription) {
       sections.push(torsoDescription);

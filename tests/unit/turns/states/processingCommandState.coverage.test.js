@@ -399,12 +399,12 @@ describe('ProcessingCommandState.enterState – error branches', () => {
     mockHandler.getTurnContext.mockReturnValue(mockTurnContext);
 
     // Mock the resolver so it returns a no-op strategy, preventing further execution
-    const resolverSpeech = new TurnDirectiveStrategyResolver(DEFAULT_STRATEGY_MAP);
-    jest
-      .spyOn(resolverSpeech, 'resolveStrategy')
-      .mockReturnValue({
-        execute: jest.fn().mockResolvedValue(undefined),
-      });
+    const resolverSpeech = new TurnDirectiveStrategyResolver(
+      DEFAULT_STRATEGY_MAP
+    );
+    jest.spyOn(resolverSpeech, 'resolveStrategy').mockReturnValue({
+      execute: jest.fn().mockResolvedValue(undefined),
+    });
 
     // Re-create state so it picks up the overridden resolver
     const stateWithSpeech = new ProcessingCommandState({
@@ -469,12 +469,12 @@ describe('ProcessingCommandState.enterState – error branches', () => {
     });
     mockHandler.getTurnContext.mockReturnValue(mockTurnContext);
 
-    const notesResolver = new TurnDirectiveStrategyResolver(DEFAULT_STRATEGY_MAP);
-    jest
-      .spyOn(notesResolver, 'resolveStrategy')
-      .mockReturnValue({
-        execute: jest.fn().mockResolvedValue(undefined),
-      });
+    const notesResolver = new TurnDirectiveStrategyResolver(
+      DEFAULT_STRATEGY_MAP
+    );
+    jest.spyOn(notesResolver, 'resolveStrategy').mockReturnValue({
+      execute: jest.fn().mockResolvedValue(undefined),
+    });
 
     const stateWithNotes = new ProcessingCommandState({
       handler: mockHandler,
