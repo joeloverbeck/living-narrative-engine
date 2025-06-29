@@ -36,7 +36,7 @@ describe('interpreterRegistrations', () => {
       registrar.instance(tokens.ILogger, mockLogger);
       registrar.instance(tokens.IEntityManager, mockEntityManager);
       registrar.instance(
-        tokens.SystemMoveEntityHandler,
+        tokens.IMoveEntityHandler,
         mockSystemMoveEntityHandler
       );
       registrar.instance(tokens.ISafeEventDispatcher, mockSafeEventDispatcher);
