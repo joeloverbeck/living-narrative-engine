@@ -9,6 +9,22 @@
     "anatomy:sockets": {
       "sockets": [
         {
+          "id": "left_eye",
+          "orientation": "left",
+          "allowedTypes": ["eye"],
+          "maxCount": 1,
+          "jointType": "fused",
+          "nameTpl": "{{orientation}} {{type}}"
+        },
+        {
+          "id": "right_eye",
+          "orientation": "right",
+          "allowedTypes": ["eye"],
+          "maxCount": 1,
+          "jointType": "fused",
+          "nameTpl": "{{orientation}} {{type}}"
+        },
+        {
           "id": "left_ear",
           "orientation": "left",
           "allowedTypes": ["ear"],

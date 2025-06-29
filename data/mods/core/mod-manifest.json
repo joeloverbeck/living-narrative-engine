@@ -28,6 +28,7 @@
       "movement.component.json",
       "name.component.json",
       "notes.component.json",
+      "owned_by.component.json",
       "perception_log.component.json",
       "personality.component.json",
       "player.component.json",
@@ -75,6 +76,7 @@
       "entity_moved.event.json",
       "entity_removed.event.json",
       "entity_spoke.event.json",
+      "limb_detached.event.json",
       "perceptible_event.event.json",
       "player_turn_prompt.event.json",
       "player_turn_submitted.event.json",
@@ -92,8 +94,7 @@
       "ui_request_show_load_game.event.json",
       "ui_request_show_save_game.event.json",
       "ui_stopped.event.json",
-      "update_available_actions.event.json",
-      "limb_detached.event.json"
+      "update_available_actions.event.json"
     ],
     "macros": [
       "autoMoveFollower.macro.json",
@@ -114,7 +115,10 @@
       "turn_started.rule.json",
       "wait.rule.json"
     ],
-    "ui": ["icons.json", "labels.json"],
+    "ui": [
+      "icons.json",
+      "labels.json"
+    ],
     "scopes": [
       "actors_in_location.scope",
       "clear_directions.scope",

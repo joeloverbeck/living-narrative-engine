@@ -1,0 +1,22 @@
+{
+  "$schema": "http://example.com/schemas/component.schema.json",
+  "description": "Appearance properties for eyes",
+  "data": {
+    "type": "object",
+    "properties": {
+      "color": {
+        "type": "string",
+        "description": "The color of the eye",
+        "enum": ["blue", "brown", "green", "hazel", "gray", "amber", "red", "violet"]
+      },
+      "shape": {
+        "type": "string",
+        "description": "The shape of the eye",
+        "enum": ["round", "almond", "hooded", "monolid", "downturned", "upturned"],
+        "default": "round"
+      }
+    },
+    "required": ["color"],
+    "additionalProperties": false
+  }
+}

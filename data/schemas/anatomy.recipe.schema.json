@@ -129,6 +129,18 @@
             }
           ],
           "description": "Desired count of parts for this slot"
+        },
+        "properties": {
+          "type": "object",
+          "description": "Required property values for components on matching parts",
+          "additionalProperties": true
+        },
+        "childSlots": {
+          "type": "object",
+          "description": "Slot specifications for sockets on the selected part",
+          "additionalProperties": {
+            "$ref": "#/definitions/slotDefinition"
+          }
         }
       },
       "required": ["partType"],

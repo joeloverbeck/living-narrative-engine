@@ -1,0 +1,20 @@
+{
+  "$schema": "http://example.com/schemas/entity-definition.schema.json",
+  "id": "anatomy:human_eye_blue",
+  "description": "A human eye with blue iris",
+  "components": {
+    "anatomy:part": {
+      "subType": "eye"
+    },
+    "anatomy:eye_appearance": {
+      "color": "blue",
+      "shape": "round"
+    },
+    "core:name": {
+      "name": "eye"
+    },
+    "core:description": {
+      "description": "A bright blue eye that seems to reflect the sky."
+    }
+  }
+}

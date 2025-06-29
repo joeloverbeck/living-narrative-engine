@@ -69,6 +69,13 @@
             }
           },
           "additionalProperties": false
+        },
+        "childSlots": {
+          "type": "object",
+          "description": "Slot specifications for sockets on the attached part",
+          "additionalProperties": {
+            "$ref": "../anatomy.recipe.schema.json#/definitions/slotDefinition"
+          }
         }
       },
       "required": ["parent", "socket"],

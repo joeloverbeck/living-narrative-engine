@@ -1,0 +1,20 @@
+{
+  "$schema": "http://example.com/schemas/entity-definition.schema.json",
+  "id": "anatomy:human_eye",
+  "description": "A generic human eye",
+  "components": {
+    "anatomy:part": {
+      "subType": "eye"
+    },
+    "anatomy:eye_appearance": {
+      "color": "brown",
+      "shape": "round"
+    },
+    "core:name": {
+      "name": "eye"
+    },
+    "core:description": {
+      "description": "A human eye."
+    }
+  }
+}
