@@ -18,6 +18,8 @@ import {
   createDiscoveryError,
   extractTargetId,
 } from './utils/discoveryErrorUtils.js';
+import { InvalidActorEntityError } from '../errors/invalidActorEntityError.js';
+import { isNonBlankString } from '../utils/textUtils.js';
 
 // ────────────────────────────────────────────────────────────────────────────────
 /**
@@ -168,9 +170,21 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     const trace = shouldTrace ? this.#traceContextFactory() : null;
     const SOURCE = 'getValidActions';
 
-    if (!actorEntity || typeof actorEntity.id !== 'string') {
-      this.#logger.error('getValidActions called with invalid actor entity.');
-      return { actions: [], errors: [], trace: null };
+    if (!actorEntity || !isNonBlankString(actorEntity.id)) {
+      const message =
+        'ActionDiscoveryService.getValidActions: actorEntity parameter must be an object with a non-empty id';
+      this.#logger.error(message, { actorEntity });
+      throw new InvalidActorEntityError(message);
+    }
+
+    if (
+      baseContext !== undefined &&
+      (typeof baseContext !== 'object' || baseContext === null)
+    ) {
+      const message =
+        'ActionDiscoveryService.getValidActions: baseContext must be an object when provided';
+      this.#logger.error(message, { baseContext });
+      throw new Error(message);
     }
 
     trace?.info(

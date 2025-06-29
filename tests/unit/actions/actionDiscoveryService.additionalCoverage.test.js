@@ -1,5 +1,6 @@
 import { beforeEach, expect, it } from '@jest/globals';
 import { describeActionDiscoverySuite } from '../../common/actions/actionDiscoveryServiceTestBed.js';
+import { InvalidActorEntityError } from '../../../src/errors/invalidActorEntityError.js';
 
 // Additional coverage tests for ActionDiscoveryService
 
@@ -11,20 +12,20 @@ describeActionDiscoverySuite(
       bed.mocks.getActorLocationFn.mockReturnValue('room1');
     });
 
-    it('returns empty result when actor entity is null or missing id', async () => {
+    it('throws InvalidActorEntityError when actor entity is null or missing id', async () => {
       const bed = getBed();
 
-      const resultNull = await bed.service.getValidActions(null, {});
-      const resultMissing = await bed.service.getValidActions({}, {});
-
-      expect(resultNull).toEqual({ actions: [], errors: [], trace: null });
-      expect(resultMissing).toEqual({ actions: [], errors: [], trace: null });
-      expect(bed.mocks.logger.error).toHaveBeenCalledTimes(2);
-      expect(bed.mocks.logger.error).toHaveBeenCalledWith(
-        expect.stringContaining(
-          'getValidActions called with invalid actor entity.'
+      await expect(bed.service.getValidActions(null, {})).rejects.toThrow(
+        new InvalidActorEntityError(
+          'ActionDiscoveryService.getValidActions: actorEntity parameter must be an object with a non-empty id'
         )
       );
+      await expect(bed.service.getValidActions({}, {})).rejects.toThrow(
+        new InvalidActorEntityError(
+          'ActionDiscoveryService.getValidActions: actorEntity parameter must be an object with a non-empty id'
+        )
+      );
+      expect(bed.mocks.logger.error).toHaveBeenCalledTimes(2);
     });
 
     it('provides a discovery context with getActor helper', async () => {

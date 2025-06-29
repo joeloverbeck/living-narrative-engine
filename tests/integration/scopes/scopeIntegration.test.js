@@ -408,15 +408,18 @@ describe('Scope Integration Tests', () => {
   });
 
   describe('error handling', () => {
-    it('should handle missing actingEntity gracefully', async () => {
+    it('should throw InvalidActorEntityError for missing actingEntity', async () => {
       actionDiscoveryService = createActionDiscoveryService();
-      const resultNull = await actionDiscoveryService.getValidActions(null, {});
-      const resultMissing = await actionDiscoveryService.getValidActions(
-        {},
-        {}
+      await expect(
+        actionDiscoveryService.getValidActions(null, {})
+      ).rejects.toThrow(
+        'ActionDiscoveryService.getValidActions: actorEntity parameter must be an object with a non-empty id'
       );
-      expect(resultNull.actions).toEqual([]);
-      expect(resultMissing.actions).toEqual([]);
+      await expect(
+        actionDiscoveryService.getValidActions({}, {})
+      ).rejects.toThrow(
+        'ActionDiscoveryService.getValidActions: actorEntity parameter must be an object with a non-empty id'
+      );
     });
   });
 });
