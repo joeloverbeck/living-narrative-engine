@@ -8,8 +8,8 @@ import { GAME_PERSISTENCE_LOAD_UI_UNAVAILABLE } from '../../common/engine/unavai
 
 describeEngineSuite('GameEngine', (context) => {
   describe('showLoadGameUI', () => {
-    it('should dispatch REQUEST_SHOW_LOAD_GAME_UI and log intent if persistence service is available', () => {
-      context.engine.showLoadGameUI(); // Method is now sync
+    it('should dispatch REQUEST_SHOW_LOAD_GAME_UI and log intent if persistence service is available', async () => {
+      await context.engine.showLoadGameUI();
 
       expect(context.bed.getLogger().debug).toHaveBeenCalledWith(
         'GameEngine.showLoadGameUI: Dispatching request to show Load Game UI.'
@@ -21,8 +21,8 @@ describeEngineSuite('GameEngine', (context) => {
 
     generateServiceUnavailableTests(
       [[tokens.GamePersistenceService, GAME_PERSISTENCE_LOAD_UI_UNAVAILABLE]],
-      (bed, engine) => {
-        engine.showLoadGameUI();
+      async (bed, engine) => {
+        await engine.showLoadGameUI();
         return [bed.getLogger().error, bed.getSafeEventDispatcher().dispatch];
       },
       {}
