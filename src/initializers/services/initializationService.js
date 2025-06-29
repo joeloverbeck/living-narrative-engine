@@ -32,7 +32,6 @@ import { buildActionIndex } from '../../utils/initHelpers.js';
 import { setupPersistenceListeners } from './initHelpers.js';
 import { assertNonBlankString } from '../../utils/dependencyUtils.js';
 import { InvalidArgumentError } from '../../errors/invalidArgumentError.js';
-import ContentDependencyValidator from './contentDependencyValidator.js';
 import LlmAdapterInitializer from './llmAdapterInitializer.js';
 import {
   assertFunction,
@@ -88,7 +87,7 @@ class InitializationService extends IInitializationService {
    *   dataRegistry: import('../../data/inMemoryDataRegistry.js').DataRegistry,
    *   systemInitializer: SystemInitializer,
    *   worldInitializer: WorldInitializer,
-   *   contentDependencyValidator: import('./contentDependencyValidator.js').default,
+   *   contentDependencyValidator: import('./contentDependencyValidator.js').default, // Required validator instance
    *   llmAdapterInitializer: LlmAdapterInitializer,
    * }} config.coreSystems - Core engine systems.
    * @description Initializes the complete game system.
@@ -118,10 +117,7 @@ class InitializationService extends IInitializationService {
       dataRegistry,
       systemInitializer,
       worldInitializer,
-      contentDependencyValidator = new ContentDependencyValidator({
-        gameDataRepository,
-        logger,
-      }),
+      contentDependencyValidator,
       llmAdapterInitializer = new LlmAdapterInitializer(),
     } = coreSystems;
     super();
