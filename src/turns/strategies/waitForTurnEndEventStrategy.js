@@ -11,6 +11,7 @@
 import { ITurnDirectiveStrategy } from '../interfaces/ITurnDirectiveStrategy.js';
 import TurnDirective from '../constants/turnDirectives.js';
 import { TURN_ENDED_ID } from '../../constants/eventIds.js';
+import { assertDirective, requireContextActor } from './strategyHelpers.js';
 
 export default class WaitForTurnEndEventStrategy extends ITurnDirectiveStrategy {
   /**
@@ -36,23 +37,21 @@ export default class WaitForTurnEndEventStrategy extends ITurnDirectiveStrategy 
     const className = this.constructor.name;
     const logger = turnContext.getLogger();
 
-    if (directive !== TurnDirective.WAIT_FOR_EVENT) {
-      const errorMsg = `${className}: Received wrong directive (${directive}). Expected WAIT_FOR_EVENT.`;
-      logger.error(errorMsg);
-      // As per standard practice in other strategies, throw an error to let the calling state handle it.
-      // This might involve ending the turn with this error.
-      throw new Error(errorMsg);
-    }
+    assertDirective({
+      expected: TurnDirective.WAIT_FOR_EVENT,
+      actual: directive,
+      logger,
+      className,
+    });
 
-    const contextActor = turnContext.getActor();
-
-    if (!contextActor) {
-      const criticalErrorMsg = `${className}: No actor found in ITurnContext. Cannot transition to AwaitingExternalTurnEndState without an actor.`;
-      logger.error(criticalErrorMsg);
-      // As per ticket: log this critical error and end the turn via turnContext.endTurn(new Error(...))
-      await turnContext.endTurn(new Error(criticalErrorMsg));
-      return;
-    }
+    const contextActor = requireContextActor({
+      turnContext,
+      logger,
+      className,
+      errorMsg:
+        'No actor found in ITurnContext. Cannot transition to AwaitingExternalTurnEndState without an actor.',
+    });
+    if (!contextActor) return;
 
     // The previous check `if (!contextActor || contextActor.id !== actor.id)` is no longer applicable
     // as the explicit `actor` parameter has been removed. The primary concern is now the existence of `contextActor`.

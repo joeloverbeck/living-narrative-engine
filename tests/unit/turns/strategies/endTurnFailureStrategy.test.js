@@ -44,10 +44,10 @@ describe('EndTurnFailureStrategy', () => {
       await expect(
         strategy.execute(mockTurnContext, directive, cmdProcResult)
       ).rejects.toThrow(
-        'EndTurnFailureStrategy: Wrong directive (END_TURN_SUCCESS). Expected END_TURN_FAILURE.'
+        'EndTurnFailureStrategy: Received wrong directive (END_TURN_SUCCESS). Expected END_TURN_FAILURE.'
       );
       expect(mockLogger.error).toHaveBeenCalledWith(
-        'EndTurnFailureStrategy: Wrong directive (END_TURN_SUCCESS). Expected END_TURN_FAILURE.'
+        'EndTurnFailureStrategy: Received wrong directive (END_TURN_SUCCESS). Expected END_TURN_FAILURE.'
       );
       expect(mockTurnContext.endTurn).not.toHaveBeenCalled();
     });
@@ -61,10 +61,7 @@ describe('EndTurnFailureStrategy', () => {
 
       await strategy.execute(mockTurnContext, directive, cmdProcResult);
 
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        expectedErrorMsg +
-          ' Ending turn with a generic error indicating missing actor.'
-      );
+      expect(mockLogger.error).toHaveBeenCalledWith(expectedErrorMsg);
       expect(mockTurnContext.endTurn).toHaveBeenCalledTimes(1);
       expect(mockTurnContext.endTurn).toHaveBeenCalledWith(expect.any(Error));
       expect(mockTurnContext.endTurn.mock.calls[0][0].message).toBe(

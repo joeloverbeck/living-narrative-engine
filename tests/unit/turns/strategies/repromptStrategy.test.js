@@ -113,7 +113,7 @@ describe('RepromptStrategy', () => {
     await expect(
       strategy.execute(mockTurnContext, directive, cmdProcResult)
     ).rejects.toThrow(
-      'RepromptStrategy: Received non-RE_PROMPT directive (END_TURN_SUCCESS). Aborting.'
+      'RepromptStrategy: Received wrong directive (END_TURN_SUCCESS). Expected RE_PROMPT.'
     );
 
     expect(mockTurnContext.getLogger).toHaveBeenCalledTimes(1);
@@ -122,7 +122,7 @@ describe('RepromptStrategy', () => {
       SYSTEM_ERROR_OCCURRED_ID,
       {
         message:
-          'RepromptStrategy: Received non-RE_PROMPT directive (END_TURN_SUCCESS). Aborting.',
+          'RepromptStrategy: Received wrong directive (END_TURN_SUCCESS). Expected RE_PROMPT.',
         details: { directive },
       }
     );
