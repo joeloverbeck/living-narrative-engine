@@ -10,6 +10,10 @@
       "format": "uri",
       "description": "Optional. A URI reference to the schema that this document conforms to"
     },
+    "id": {
+      "$ref": "./common.schema.json#/definitions/namespacedId",
+      "description": "Unique identifier for this anatomy blueprint in namespaced format (e.g., 'anatomy:humanoid_standard')"
+    },
     "root": {
       "$ref": "./common.schema.json#/definitions/namespacedId",
       "description": "The root entity definition ID that serves as the entry point for the anatomy graph"
@@ -29,7 +33,7 @@
       }
     }
   },
-  "required": ["root"],
+  "required": ["id", "root"],
   "additionalProperties": false,
   "definitions": {
     "attachment": {
