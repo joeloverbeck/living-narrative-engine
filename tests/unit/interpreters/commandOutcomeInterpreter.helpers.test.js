@@ -35,7 +35,12 @@ describe('CommandOutcomeInterpreter helper logic via interpret', () => {
     expect(safeDispatchError).toHaveBeenCalledWith(
       dispatcher,
       'CommandOutcomeInterpreter: Invalid turnContext provided.',
-      expect.any(Object)
+      {
+        raw: 'turnContext was object. Expected ITurnContext object.',
+        timestamp: expect.any(String),
+        stack: expect.any(String),
+        receivedContextType: 'object',
+      }
     );
   });
 
@@ -47,7 +52,12 @@ describe('CommandOutcomeInterpreter helper logic via interpret', () => {
     expect(safeDispatchError).toHaveBeenCalledWith(
       dispatcher,
       expect.stringContaining('Invalid CommandResult'),
-      expect.any(Object)
+      {
+        raw: 'Actor actor-1, Received Result: {}',
+        timestamp: expect.any(String),
+        stack: expect.any(String),
+        receivedResult: {},
+      }
     );
   });
 

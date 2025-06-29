@@ -20,6 +20,7 @@ import TurnDirective from '../../turns/constants/turnDirectives.js';
 import { ICommandOutcomeInterpreter } from '../interfaces/ICommandOutcomeInterpreter.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import { initLogger } from '../../utils/index.js';
+import { createErrorDetails } from '../../utils/errorDetails.js';
 import { validateDependency } from '../../utils/dependencyUtils.js';
 
 /**
@@ -73,9 +74,11 @@ class CommandOutcomeInterpreter extends ICommandOutcomeInterpreter {
     if (!turnContext || typeof turnContext.getActor !== 'function') {
       const errorMsg = `CommandOutcomeInterpreter: Invalid turnContext provided.`;
       const details = {
-        raw: `turnContext was ${turnContext === null ? 'null' : typeof turnContext}. Expected ITurnContext object.`,
-        stack: new Error().stack,
-        timestamp: new Date().toISOString(),
+        ...createErrorDetails(
+          `turnContext was ${
+            turnContext === null ? 'null' : typeof turnContext
+          }. Expected ITurnContext object.`
+        ),
         receivedContextType: typeof turnContext,
       };
       this.#reportInvalidInput(errorMsg, details);
@@ -85,9 +88,9 @@ class CommandOutcomeInterpreter extends ICommandOutcomeInterpreter {
     if (!actor || !actor.id) {
       const errorMsg = `CommandOutcomeInterpreter: Could not retrieve a valid actor or actor ID from turnContext.`;
       const details = {
-        raw: `Actor object in context was ${JSON.stringify(actor)}.`,
-        stack: new Error().stack,
-        timestamp: new Date().toISOString(),
+        ...createErrorDetails(
+          `Actor object in context was ${JSON.stringify(actor)}.`
+        ),
         actorInContext: actor,
       };
       this.#reportInvalidInput(errorMsg, details);
@@ -109,9 +112,9 @@ class CommandOutcomeInterpreter extends ICommandOutcomeInterpreter {
     if (!result || typeof result.success !== 'boolean') {
       const baseErrorMsg = `CommandOutcomeInterpreter: Invalid CommandResult - 'success' boolean is missing. Actor: ${actorId}.`;
       const details = {
-        raw: `Actor ${actorId}, Received Result: ${JSON.stringify(result)}`,
-        stack: new Error().stack,
-        timestamp: new Date().toISOString(),
+        ...createErrorDetails(
+          `Actor ${actorId}, Received Result: ${JSON.stringify(result)}`
+        ),
         receivedResult: result,
       };
       this.#reportInvalidInput(baseErrorMsg, details);
