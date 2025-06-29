@@ -78,7 +78,7 @@ class GameSessionManager {
    * @param {any} [payload] - Payload for the dispatched event.
    * @returns {Promise<void>} Resolves when preparation completes.
    */
-  async _prepareEngineForOperation(uiEventId, payload) {
+  async #prepareEngineForOperation(uiEventId, payload) {
     if (this.#state.isInitialized || this.#state.isGameLoopRunning) {
       await this.#stopFn();
     }
@@ -105,7 +105,7 @@ class GameSessionManager {
         'GameSessionManager.prepareForNewGameSession: Engine already initialized. Stopping existing game before starting new.'
       );
     }
-    await this._prepareEngineForOperation(null);
+    await this.#prepareEngineForOperation(null);
 
     this.#state.activeWorld = worldName;
     this.#logger.debug(
@@ -120,7 +120,7 @@ class GameSessionManager {
    * @param {string} worldName - Name of the world being started.
    * @returns {Promise<void>} Resolves when setup is complete.
    */
-  async _finalizeGameStart(worldName) {
+  async #finalizeGameStart(worldName) {
     this.#startEngineFn(worldName);
 
     if (this.#playtimeTracker) {
@@ -164,7 +164,7 @@ class GameSessionManager {
     this.#logger.debug(
       `GameSessionManager.finalizeNewGameSuccess: Initialization successful for world "${worldName}". Finalizing new game setup.`
     );
-    await this._finalizeGameStart(worldName);
+    await this.#finalizeGameStart(worldName);
     this.#logger.debug(
       `GameSessionManager.finalizeNewGameSuccess: New game started and ready (World: ${this.#state.activeWorld}).`
     );
@@ -183,7 +183,7 @@ class GameSessionManager {
 
     const shortSaveName = saveIdentifier.split(/[/\\]/).pop() || saveIdentifier;
 
-    await this._prepareEngineForOperation(ENGINE_OPERATION_IN_PROGRESS_UI, {
+    await this.#prepareEngineForOperation(ENGINE_OPERATION_IN_PROGRESS_UI, {
       titleMessage: `Loading ${shortSaveName}...`,
       inputDisabledMessage: `Loading game from ${shortSaveName}...`,
     });
@@ -204,7 +204,7 @@ class GameSessionManager {
 
     this.#state.activeWorld =
       loadedSaveData.metadata?.gameTitle || 'Restored Game';
-    await this._finalizeGameStart(this.#state.activeWorld);
+    await this.#finalizeGameStart(this.#state.activeWorld);
     this.#logger.debug(
       `GameSessionManager.finalizeLoadSuccess: Game loaded from "${saveIdentifier}" (World: ${this.#state.activeWorld}) and resumed.`
     );
