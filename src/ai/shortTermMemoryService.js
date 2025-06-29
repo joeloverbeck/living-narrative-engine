@@ -22,7 +22,7 @@ export default class ShortTermMemoryService {
   /**
    * Add a thought if it isn’t already present.
    *
-   * @param {object} mem The memory object to update.
+   * @param {object} mem The memory object to update. This object is mutated in place.
    * @param {Array<{text:string,timestamp:string}>} mem.thoughts The list of existing thought entries.
    * @param {number} mem.maxEntries The maximum number of entries allowed in the memory.
    * @param {string} mem.entityId The identifier for the entity owning this memory.

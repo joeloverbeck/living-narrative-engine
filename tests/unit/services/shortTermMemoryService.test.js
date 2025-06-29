@@ -60,6 +60,7 @@ describe('ShortTermMemoryService.addThought – core logic', () => {
       new Date('2025-06-03T09:05:00.000Z')
     );
 
+    expect(result).toBe(mem); // reference should be unchanged
     expect(wasAdded).toBe(false);
     expect(result.thoughts).toHaveLength(1); // still only the original entry
     expect(result.thoughts[0].text).toBe('hello world'); // unchanged
