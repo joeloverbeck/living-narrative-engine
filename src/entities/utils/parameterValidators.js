@@ -10,6 +10,7 @@ import {
   assertValidId,
   assertNonBlankString,
 } from '../../utils/dependencyUtils.js';
+import { validateInstanceAndComponent } from './idValidation.js';
 import { isNonBlankString } from '../../utils/textUtils.js';
 import { InvalidArgumentError } from '../../errors/invalidArgumentError.js';
 import { SerializedEntityError } from '../../errors/serializedEntityError.js';
@@ -27,13 +28,7 @@ import { InvalidInstanceIdError } from '../../errors/invalidInstanceIdError.js';
  * @private
  */
 function _assertIds(context, instanceId, componentTypeId, logger) {
-  try {
-    assertValidId(instanceId, context, logger);
-    assertNonBlankString(componentTypeId, 'componentTypeId', context, logger);
-  } catch (err) {
-    logger.error(err);
-    throw new InvalidArgumentError(`Invalid ID: ${err.message}`);
-  }
+  validateInstanceAndComponent(instanceId, componentTypeId, logger, context);
 }
 
 /**
