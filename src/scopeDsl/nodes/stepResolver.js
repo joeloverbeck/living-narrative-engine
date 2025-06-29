@@ -10,6 +10,7 @@ export default function createStepResolver({ entitiesGateway }) {
   /**
    * Builds a components object for the given entity ID.
    *
+   * @description Retrieves all component data for the specified entity.
    * @param {string} entityId - ID of the entity to inspect.
    * @param {object} [trace] - Optional trace logger.
    * @returns {object|null} Components keyed by type or null if entity missing.
@@ -45,6 +46,7 @@ export default function createStepResolver({ entitiesGateway }) {
   /**
    * Retrieves a single component value from an entity.
    *
+   * @description Returns the data for the specified component type.
    * @param {string} entityId - Target entity ID.
    * @param {string} field - Component type ID to fetch.
    * @returns {any} The component data or undefined.
@@ -56,6 +58,7 @@ export default function createStepResolver({ entitiesGateway }) {
   /**
    * Extracts a property value from an object.
    *
+   * @description Reads the given field directly from the object.
    * @param {object} obj - Source object.
    * @param {string} field - Property to read.
    * @returns {any} Property value or undefined.
