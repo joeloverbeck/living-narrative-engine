@@ -22,6 +22,7 @@ import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import { initLogger } from '../../utils/index.js';
 import { createErrorDetails } from '../../utils/errorDetails.js';
 import { validateDependency } from '../../utils/dependencyUtils.js';
+import { InvalidArgumentError } from '../../errors/invalidArgumentError.js';
 
 /**
  * @class CommandOutcomeInterpreter
@@ -53,13 +54,13 @@ class CommandOutcomeInterpreter extends ICommandOutcomeInterpreter {
    * @param {string} message - Human readable error message.
    * @param {object} [details] - Structured diagnostic details.
    * @returns {never} Throws an error; does not return.
-   * @throws {Error} Always throws with the provided message.
+   * @throws {InvalidArgumentError} Always throws with the provided message.
    * @private
    */
   #reportInvalidInput(message, details) {
     safeDispatchError(this.#dispatcher, message, details);
     this.#logger.error(message, details);
-    throw new Error(message);
+    throw new InvalidArgumentError(message);
   }
 
   /**

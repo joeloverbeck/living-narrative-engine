@@ -8,6 +8,7 @@ import CommandOutcomeInterpreter from '../../../src/commands/interpreters/comman
 import TurnDirective from '../../../src/turns/constants/turnDirectives.js';
 import { beforeEach, describe, expect, it } from '@jest/globals';
 import { safeDispatchError } from '../../../src/utils/safeDispatchErrorUtils.js';
+import { InvalidArgumentError } from '../../../src/errors/invalidArgumentError.js';
 
 let logger;
 let dispatcher;
@@ -49,7 +50,9 @@ describe('CommandOutcomeInterpreter additional branches', () => {
   it('dispatches error when result lacks success flag', async () => {
     const interpreter = new CommandOutcomeInterpreter({ dispatcher, logger });
     await expect(interpreter.interpret({}, turnContext)).rejects.toThrow(
-      "CommandOutcomeInterpreter: Invalid CommandResult - 'success' boolean is missing. Actor: actor-1."
+      new InvalidArgumentError(
+        "CommandOutcomeInterpreter: Invalid CommandResult - 'success' boolean is missing. Actor: actor-1."
+      )
     );
     expect(safeDispatchError).toHaveBeenCalledWith(
       dispatcher,
@@ -127,7 +130,9 @@ describe('CommandOutcomeInterpreter additional branches', () => {
   it('dispatches error when turnContext is missing getActor', async () => {
     const interpreter = new CommandOutcomeInterpreter({ dispatcher, logger });
     await expect(interpreter.interpret({}, {})).rejects.toThrow(
-      'CommandOutcomeInterpreter: Invalid turnContext provided.'
+      new InvalidArgumentError(
+        'CommandOutcomeInterpreter: Invalid turnContext provided.'
+      )
     );
     expect(safeDispatchError).toHaveBeenCalledWith(
       dispatcher,
@@ -149,7 +154,9 @@ describe('CommandOutcomeInterpreter additional branches', () => {
     const interpreter = new CommandOutcomeInterpreter({ dispatcher, logger });
     turnContext.getActor.mockReturnValue({});
     await expect(interpreter.interpret({}, turnContext)).rejects.toThrow(
-      'CommandOutcomeInterpreter: Could not retrieve a valid actor or actor ID from turnContext.'
+      new InvalidArgumentError(
+        'CommandOutcomeInterpreter: Could not retrieve a valid actor or actor ID from turnContext.'
+      )
     );
     expect(safeDispatchError).toHaveBeenCalledWith(
       dispatcher,
