@@ -134,6 +134,175 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
   }
 
   /**
+   * Builds DOM elements for a speech entry and returns related info.
+   *
+   * @private
+   * @param {DisplaySpeechPayload} payload - The speech data.
+   * @returns {{speechEntryDiv: HTMLElement, speechBubbleDiv: HTMLElement, speakerName: string, portraitPath: string, isPlayer: boolean}|null}
+   * Returns element references and speaker details or null if creation fails.
+   */
+  #createSpeechElements(payload) {
+    const { entityId } = payload;
+
+    const speakerName = this.#entityDisplayDataProvider.getEntityName(
+      entityId,
+      DEFAULT_SPEAKER_NAME
+    );
+    const portraitPath =
+      this.#entityDisplayDataProvider.getEntityPortraitPath(entityId);
+
+    const speechEntryDiv = this.domElementFactory.create('div', {
+      cls: 'speech-entry',
+    });
+    const speechBubbleDiv = this.domElementFactory.create('div', {
+      cls: 'speech-bubble',
+    });
+
+    if (!speechEntryDiv || !speechBubbleDiv) {
+      this.logger.error(
+        `${this._logPrefix} Failed to create speech entry or bubble div.`
+      );
+      return null;
+    }
+
+    let isPlayer = false;
+    const speakerEntity = this.#entityManager.getEntityInstance(entityId);
+    if (speakerEntity) {
+      if (speakerEntity.hasComponent(PLAYER_TYPE_COMPONENT_ID)) {
+        const playerTypeData = speakerEntity.getComponentData(
+          PLAYER_TYPE_COMPONENT_ID
+        );
+        isPlayer = playerTypeData?.type === 'human';
+      } else if (speakerEntity.hasComponent(PLAYER_COMPONENT_ID)) {
+        isPlayer = true;
+      }
+    } else {
+      this.logger.debug(
+        `${this._logPrefix} Speaker entity with ID '${entityId}' not found for player check.`
+      );
+    }
+
+    if (isPlayer) {
+      speechEntryDiv.classList.add('player-speech');
+    }
+
+    const speakerIntroSpan = this.domElementFactory.span(
+      'speech-speaker-intro'
+    );
+    if (speakerIntroSpan) {
+      speakerIntroSpan.textContent = `${speakerName} says: `;
+      speechBubbleDiv.appendChild(speakerIntroSpan);
+    }
+
+    return {
+      speechEntryDiv,
+      speechBubbleDiv,
+      speakerName,
+      portraitPath,
+      isPlayer,
+    };
+  }
+
+  /**
+   * Appends the quoted speech text to the provided container.
+   *
+   * @private
+   * @param {HTMLElement} container - The speech bubble element.
+   * @param {string} text - Speech content.
+   * @param {boolean} allowHtml - Whether HTML is allowed in speech text.
+   * @returns {void}
+   */
+  #appendQuotedSpeech(container, text, allowHtml) {
+    const quotedSpeechSpan = this.domElementFactory.span('speech-quoted-text');
+    if (!quotedSpeechSpan) return;
+
+    if (text && typeof text === 'string') {
+      const parts = text.split(/(\*.*?\*)/g).filter((part) => part.length > 0);
+      quotedSpeechSpan.appendChild(
+        this.documentContext.document.createTextNode('"')
+      );
+      parts.forEach((part) => {
+        if (part.startsWith('*') && part.endsWith('*')) {
+          const actionSpan = this.domElementFactory.span('speech-action-text');
+          if (actionSpan) {
+            actionSpan.textContent = part;
+            quotedSpeechSpan.appendChild(actionSpan);
+          }
+        } else if (allowHtml) {
+          const tempSpan = this.domElementFactory.span();
+          if (tempSpan) {
+            tempSpan.innerHTML = part;
+            while (tempSpan.firstChild) {
+              quotedSpeechSpan.appendChild(tempSpan.firstChild);
+            }
+          }
+        } else {
+          quotedSpeechSpan.appendChild(
+            this.documentContext.document.createTextNode(part)
+          );
+        }
+      });
+      quotedSpeechSpan.appendChild(
+        this.documentContext.document.createTextNode('"')
+      );
+    } else if (allowHtml) {
+      quotedSpeechSpan.innerHTML = `"${text || ''}"`;
+    } else {
+      quotedSpeechSpan.textContent = `"${text || ''}"`;
+    }
+
+    container.appendChild(quotedSpeechSpan);
+  }
+
+  /**
+   * Adds a portrait image if available and handles scroll events.
+   *
+   * @private
+   * @param {HTMLElement} container - The speech entry element.
+   * @param {string|null} portraitPath - Path to the portrait image.
+   * @param {string} speakerName - Name of the speaker for alt text.
+   * @returns {boolean} True if a portrait image was appended.
+   */
+  #addPortrait(container, portraitPath, speakerName) {
+    let hasPortrait = false;
+    if (portraitPath) {
+      const portraitImg = this.domElementFactory.img(
+        portraitPath,
+        `Portrait of ${speakerName}`,
+        'speech-portrait'
+      );
+      if (portraitImg) {
+        hasPortrait = true;
+        this._addDomListener(portraitImg, 'load', () => this.scrollToBottom(), {
+          once: true,
+        });
+        this._addDomListener(
+          portraitImg,
+          'error',
+          () => {
+            this.logger.warn(
+              `${this._logPrefix} Portrait image failed to load for ${speakerName}. Scrolling anyway.`
+            );
+            this.scrollToBottom();
+          },
+          { once: true }
+        );
+        container.appendChild(portraitImg);
+        container.classList.add('has-portrait');
+      } else {
+        this.logger.warn(
+          `${this._logPrefix} Failed to create portraitImg element.`
+        );
+        container.classList.add('no-portrait');
+      }
+    } else {
+      container.classList.add('no-portrait');
+    }
+
+    return hasPortrait;
+  }
+
+  /**
    * Renders the speech bubble for a given entity and content.
    *
    * @param {DisplaySpeechPayload} payload - The speech data.
@@ -158,104 +327,18 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
       notes,
     } = payload;
 
-    const speakerName = this.#entityDisplayDataProvider.getEntityName(
-      entityId,
-      DEFAULT_SPEAKER_NAME
-    );
-    const portraitPath =
-      this.#entityDisplayDataProvider.getEntityPortraitPath(entityId);
+    const elementInfo = this.#createSpeechElements(payload);
+    if (!elementInfo) return;
 
-    const speechEntryDiv = this.domElementFactory.create('div', {
-      cls: 'speech-entry',
-    });
-    const speechBubbleDiv = this.domElementFactory.create('div', {
-      cls: 'speech-bubble',
-    });
+    const {
+      speechEntryDiv,
+      speechBubbleDiv,
+      speakerName,
+      portraitPath,
+      isPlayer,
+    } = elementInfo;
 
-    if (!speechEntryDiv || !speechBubbleDiv) {
-      this.logger.error(
-        `${this._logPrefix} Failed to create speech entry or bubble div.`
-      );
-      return;
-    }
-
-    // Determine if the speaker is a human player
-    let isPlayer = false;
-    const speakerEntity = this.#entityManager.getEntityInstance(entityId);
-    if (speakerEntity) {
-      // Check new player_type component first
-      if (speakerEntity.hasComponent(PLAYER_TYPE_COMPONENT_ID)) {
-        const playerTypeData = speakerEntity.getComponentData(
-          PLAYER_TYPE_COMPONENT_ID
-        );
-        isPlayer = playerTypeData?.type === 'human';
-      } else if (speakerEntity.hasComponent(PLAYER_COMPONENT_ID)) {
-        // Fallback to old player component for backward compatibility
-        isPlayer = true;
-      }
-    } else {
-      this.logger.debug(
-        `${this._logPrefix} Speaker entity with ID '${entityId}' not found for player check.`
-      );
-    }
-
-    if (isPlayer) {
-      speechEntryDiv.classList.add('player-speech');
-    }
-
-    const speakerIntroSpan = this.domElementFactory.span(
-      'speech-speaker-intro'
-    );
-    if (speakerIntroSpan) {
-      speakerIntroSpan.textContent = `${speakerName} says: `;
-      speechBubbleDiv.appendChild(speakerIntroSpan);
-    }
-
-    const quotedSpeechSpan = this.domElementFactory.span('speech-quoted-text');
-    if (quotedSpeechSpan) {
-      if (speechContent && typeof speechContent === 'string') {
-        const parts = speechContent
-          .split(/(\*.*?\*)/g)
-          .filter((part) => part.length > 0);
-        quotedSpeechSpan.appendChild(
-          this.documentContext.document.createTextNode('"')
-        );
-        parts.forEach((part) => {
-          if (part.startsWith('*') && part.endsWith('*')) {
-            const actionSpan =
-              this.domElementFactory.span('speech-action-text');
-            if (actionSpan) {
-              actionSpan.textContent = part;
-              quotedSpeechSpan.appendChild(actionSpan);
-            }
-          } else {
-            if (allowHtml) {
-              const tempSpan = this.domElementFactory.span();
-              if (tempSpan) {
-                tempSpan.innerHTML = part;
-                while (tempSpan.firstChild) {
-                  quotedSpeechSpan.appendChild(tempSpan.firstChild);
-                }
-              }
-            } else {
-              quotedSpeechSpan.appendChild(
-                this.documentContext.document.createTextNode(part)
-              );
-            }
-          }
-        });
-        quotedSpeechSpan.appendChild(
-          this.documentContext.document.createTextNode('"')
-        );
-      } else {
-        if (allowHtml) {
-          quotedSpeechSpan.innerHTML = `"${speechContent || ''}"`;
-        } else {
-          quotedSpeechSpan.textContent = `"${speechContent || ''}"`;
-        }
-      }
-      speechBubbleDiv.appendChild(quotedSpeechSpan);
-    }
+    this.#appendQuotedSpeech(speechBubbleDiv, speechContent, allowHtml);
 
     const speechMetaFragment = buildSpeechMeta(
       this.documentContext.document,
@@ -270,50 +353,15 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
       speechBubbleDiv.appendChild(speechMetaFragment);
     }
 
-    let hasPortrait = false;
-    if (portraitPath) {
-      const portraitImg = this.domElementFactory.img(
-        portraitPath,
-        `Portrait of ${speakerName}`,
-        'speech-portrait'
-      );
-      if (portraitImg) {
-        hasPortrait = true;
-
-        // Wait for the image to load before scrolling to ensure the scroll height is correct.
-        // Use a one-time listener for this.
-        this._addDomListener(portraitImg, 'load', () => this.scrollToBottom(), {
-          once: true,
-        });
-        this._addDomListener(
-          portraitImg,
-          'error',
-          () => {
-            this.logger.warn(
-              `${this._logPrefix} Portrait image failed to load for ${speakerName}. Scrolling anyway.`
-            );
-            this.scrollToBottom();
-          },
-          { once: true }
-        );
-
-        speechEntryDiv.appendChild(portraitImg);
-        speechEntryDiv.classList.add('has-portrait');
-      } else {
-        this.logger.warn(
-          `${this._logPrefix} Failed to create portraitImg element.`
-        );
-        speechEntryDiv.classList.add('no-portrait'); // Fallback class
-      }
-    } else {
-      speechEntryDiv.classList.add('no-portrait');
-    }
+    const hasPortrait = this.#addPortrait(
+      speechEntryDiv,
+      portraitPath,
+      speakerName
+    );
 
     speechEntryDiv.appendChild(speechBubbleDiv);
     this.effectiveSpeechContainer.appendChild(speechEntryDiv);
 
-    // If there's no portrait, the layout is stable, so we can scroll immediately.
-    // If there is a portrait, the 'onload' or 'onerror' handler will trigger the scroll.
     if (!hasPortrait) {
       this.scrollToBottom();
     }
