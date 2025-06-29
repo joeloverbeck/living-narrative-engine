@@ -54,20 +54,17 @@ class AnatomyBlueprintLoader extends BaseManifestItemLoader {
       `AnatomyBlueprintLoader [${modId}]: Processing fetched item: ${filename} (Type: ${registryKey})`
     );
 
-    // Validate the root field
+    // Validate required fields
+    if (!data.id) {
+      throw new Error(
+        `Invalid blueprint in '${filename}' from mod '${modId}'. Missing required 'id' field.`
+      );
+    }
     if (!data.root) {
       throw new Error(
         `Invalid blueprint in '${filename}' from mod '${modId}'. Missing required 'root' field.`
       );
     }
-
-    // Create a synthetic ID from the filename since blueprints don't have explicit IDs
-    const baseId = filename
-      .replace(/\.bp\.json$/i, '')
-      .replace(/[^a-zA-Z0-9_-]/g, '_');
-
-    // Add the id to the data for storage
-    data.id = `${modId}:${baseId}`;
 
     // Validate attachment references if present
     if (data.attachments && Array.isArray(data.attachments)) {

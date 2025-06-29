@@ -1,5 +1,6 @@
 {
   "$schema": "http://example.com/schemas/anatomy.blueprint.schema.json",
+  "id": "anatomy:humanoid_standard",
   "root": "anatomy:human_female_torso",
   "attachments": []
 }

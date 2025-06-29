@@ -1,7 +1,7 @@
 {
   "$schema": "http://example.com/schemas/entity-definition.schema.json",
-  "id": "anatomy:human_female_torso",
-  "description": "A human female torso with female-specific anatomy",
+  "id": "anatomy:human_male_torso",
+  "description": "A human male torso with male-specific anatomy",
   "components": {
     "anatomy:part": {
       "subType": "torso"
@@ -65,10 +65,18 @@
           "nameTpl": "pubic {{type}}"
         },
         {
-          "id": "vagina",
+          "id": "penis",
           "orientation": "lower-front",
           "allowedTypes": ["genital"],
           "maxCount": 1,
+          "jointType": "fused",
+          "nameTpl": "{{type}}"
+        },
+        {
+          "id": "testicles",
+          "orientation": "lower-front",
+          "allowedTypes": ["genital"],
+          "maxCount": 2,
           "jointType": "fused",
           "nameTpl": "{{type}}"
         },
