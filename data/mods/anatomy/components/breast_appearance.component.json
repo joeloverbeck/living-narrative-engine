@@ -1,0 +1,22 @@
+{
+  "$schema": "http://example.com/schemas/component.schema.json",
+  "description": "Appearance properties for breasts",
+  "data": {
+    "type": "object",
+    "properties": {
+      "size": {
+        "type": "string",
+        "description": "The cup size of the breasts",
+        "enum": ["A-cup", "B-cup", "C-cup", "D-cup", "DD-cup", "E-cup", "F-cup"]
+      },
+      "descriptor": {
+        "type": "string",
+        "description": "Additional descriptor for the breasts",
+        "enum": ["perky", "firm", "soft", "meaty", "full", "heavy"],
+        "default": "firm"
+      }
+    },
+    "required": ["size"],
+    "additionalProperties": false
+  }
+}

@@ -190,30 +190,42 @@ describe('BodyBlueprintFactory - Child Slots Support', () => {
       return null;
     });
 
-    // Mock anatomy parts registry
+    // Mock getAll for entity definitions (used to find anatomy parts)
     mockDataRegistry.getAll.mockImplementation((registry) => {
-      if (registry === 'anatomyParts') {
-        return {
-          'anatomy:test_head': { isAnatomyPart: true },
-          'anatomy:human_eye_blue': { isAnatomyPart: true },
-        };
+      if (registry === 'entityDefinitions') {
+        return [
+          {
+            id: 'anatomy:test_head',
+            components: {
+              'anatomy:part': { subType: 'head' },
+            },
+          },
+          {
+            id: 'anatomy:human_eye_blue',
+            components: {
+              'anatomy:part': { subType: 'eye' },
+              'anatomy:eye_appearance': { color: 'blue' },
+            },
+          },
+        ];
       }
-      return {};
+      return [];
     });
 
     // Mock entity creation
-    mockEntityManager.createEntity
-      .mockResolvedValueOnce(mockHeadEntity)
-      .mockResolvedValueOnce(mockEyeEntity)
-      .mockResolvedValueOnce(mockEyeEntity);
+    mockEntityManager.createEntityInstance
+      .mockReturnValueOnce(mockHeadEntity)
+      .mockReturnValueOnce(mockEyeEntity)
+      .mockReturnValueOnce(mockEyeEntity);
 
     const result = await factory.createAnatomyGraph(blueprintId, recipeId);
 
     // Verify that eye entities were created with property matching
-    const createEntityCalls = mockEntityManager.createEntity.mock.calls;
+    const createEntityCalls = mockEntityManager.createEntityInstance.mock.calls;
     
-    // Should have created head and two eyes
-    expect(createEntityCalls.length).toBeGreaterThanOrEqual(2);
+    // Should have created head and two eyes (beyond the initial torso)
+    // The first call is for the torso, which is already mocked
+    expect(createEntityCalls.length).toBeGreaterThanOrEqual(3);
     
     // Check that blue eyes were selected based on property requirements
     const eyeCreations = createEntityCalls.filter(

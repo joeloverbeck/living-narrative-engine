@@ -69,7 +69,7 @@ export class AnatomyGenerationService {
         return false;
       }
 
-      const anatomyBodyData = entity.getComponent(ANATOMY_BODY_COMPONENT_ID);
+      const anatomyBodyData = entity.getComponentData(ANATOMY_BODY_COMPONENT_ID);
       if (!anatomyBodyData || !anatomyBodyData.recipeId) {
         this.#logger.warn(
           `AnatomyGenerationService: Entity '${entityId}' has anatomy:body component but no recipeId`
@@ -120,13 +120,16 @@ export class AnatomyGenerationService {
       for (const partEntityId of result.entities) {
         const partEntity = this.#entityManager.getEntityInstance(partEntityId);
         if (partEntity && partEntity.hasComponent('core:name')) {
-          const name = partEntity.getComponent('core:name').name;
-          parts[name] = partEntityId;
+          const nameData = partEntity.getComponentData('core:name');
+          const name = nameData ? nameData.name : null;
+          if (name) {
+            parts[name] = partEntityId;
+          }
         }
       }
 
       // Update the anatomy:body component with the generated structure
-      this.#entityManager.updateComponent(entityId, ANATOMY_BODY_COMPONENT_ID, {
+      this.#entityManager.addComponent(entityId, ANATOMY_BODY_COMPONENT_ID, {
         ...anatomyBodyData,
         body: {
           root: result.rootId,

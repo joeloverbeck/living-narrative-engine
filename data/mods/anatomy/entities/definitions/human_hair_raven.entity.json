@@ -1,0 +1,21 @@
+{
+  "$schema": "http://example.com/schemas/entity-definition.schema.json",
+  "id": "anatomy:human_hair_raven",
+  "description": "Long raven-black hair",
+  "components": {
+    "anatomy:part": {
+      "subType": "hair"
+    },
+    "anatomy:hair_appearance": {
+      "color": "raven-black",
+      "length": "long",
+      "style": "straight"
+    },
+    "core:name": {
+      "name": "hair"
+    },
+    "core:description": {
+      "description": "Lustrous raven-black hair that flows down past the shoulders."
+    }
+  }
+}

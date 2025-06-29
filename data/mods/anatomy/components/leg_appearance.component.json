@@ -1,0 +1,22 @@
+{
+  "$schema": "http://example.com/schemas/component.schema.json",
+  "description": "Appearance properties for legs",
+  "data": {
+    "type": "object",
+    "properties": {
+      "length": {
+        "type": "string",
+        "description": "The length descriptor of the legs",
+        "enum": ["short", "average", "long", "very-long"],
+        "default": "average"
+      },
+      "descriptor": {
+        "type": "string",
+        "description": "Additional descriptor for the legs",
+        "enum": ["skinny", "slim", "toned", "athletic", "shapely", "thick", "muscular"],
+        "default": "toned"
+      }
+    },
+    "additionalProperties": false
+  }
+}
