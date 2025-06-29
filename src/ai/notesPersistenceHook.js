@@ -7,10 +7,7 @@ import NotesService from './notesService.js';
 import { NOTES_COMPONENT_ID } from '../constants/componentIds.js';
 import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
 import { isNonBlankString } from '../utils/textUtils.js';
-import {
-  fetchComponent,
-  applyComponent,
-} from '../utils/componentHelpers.js';
+import { fetchComponent, applyComponent } from '../utils/componentHelpers.js';
 
 /**
  * Persists the "notes" produced during an LLM turn into the actor's
@@ -20,8 +17,15 @@ import {
  * @param {object} actorEntity - Entity instance (or test double) that generated the action.
  * @param {import('../interfaces/coreServices.js').ILogger} logger - Application-wide logger.
  * @param {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} dispatcher - Safe dispatcher for error events.
+ * @param {NotesService} [notesService] - Service used to persist notes.
  */
-export function persistNotes(action, actorEntity, logger, dispatcher) {
+export function persistNotes(
+  action,
+  actorEntity,
+  logger,
+  dispatcher,
+  /** @type {NotesService} */ notesService = new NotesService()
+) {
   // Gracefully do nothing if the 'notes' key is entirely absent.
   if (!action || !Object.prototype.hasOwnProperty.call(action, 'notes')) {
     return;
@@ -72,7 +76,6 @@ export function persistNotes(action, actorEntity, logger, dispatcher) {
     notesComp = { notes: [] };
   }
 
-  const notesService = new NotesService();
   const {
     wasModified,
     component: updatedNotesComp,
