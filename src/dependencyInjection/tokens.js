@@ -232,6 +232,7 @@ export const tokens = freeze({
   AnatomyRecipeLoader: 'AnatomyRecipeLoader',
   AnatomyBlueprintLoader: 'AnatomyBlueprintLoader',
   AnatomyPartLoader: 'AnatomyPartLoader',
+  AnatomyFormattingLoader: 'AnatomyFormattingLoader',
 
   // Core Services & Managers (Concrete Implementations - some may be deprecated for interface tokens)
   GameDataRepository: 'GameDataRepository',
@@ -267,6 +268,7 @@ export const tokens = freeze({
   BodyPartDescriptionBuilder: 'BodyPartDescriptionBuilder',
   BodyDescriptionComposer: 'BodyDescriptionComposer',
   AnatomyDescriptionService: 'AnatomyDescriptionService',
+  AnatomyFormattingService: 'AnatomyFormattingService',
 
   // Core Service Interfaces
   ISafeEventDispatcher: 'ISafeEventDispatcher',

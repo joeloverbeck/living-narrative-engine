@@ -114,6 +114,9 @@
         },
         "recipes": {
           "$ref": "#/definitions/contentFileList"
+        },
+        "anatomyFormatting": {
+          "$ref": "#/definitions/contentFileList"
         }
       },
       "additionalProperties": false

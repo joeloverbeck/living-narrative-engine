@@ -1,0 +1,103 @@
+{
+  "$schema": "../../../schemas/anatomy-formatting.schema.json",
+  "id": "alien_species",
+  "descriptionOrder": [
+    "build",
+    "carapace",
+    "tentacle",
+    "eyestalk", 
+    "pseudopod",
+    "core",
+    "hair",
+    "eye",
+    "face",
+    "ear",
+    "nose",
+    "mouth",
+    "neck",
+    "breast",
+    "torso",
+    "arm",
+    "hand",
+    "leg",
+    "foot",
+    "tail",
+    "wing"
+  ],
+  "groupedParts": [
+    "eye",
+    "ear",
+    "arm",
+    "leg",
+    "hand",
+    "foot",
+    "breast",
+    "wing",
+    "tentacle",
+    "eyestalk",
+    "pseudopod"
+  ],
+  "pairedParts": [
+    "eye",
+    "ear",
+    "arm",
+    "leg",
+    "hand",
+    "foot",
+    "breast",
+    "wing",
+    "eyestalk",
+    "pseudopod"
+  ],
+  "irregularPlurals": {
+    "foot": "feet",
+    "tooth": "teeth",
+    "tentacle": "tentacles",
+    "eyestalk": "eyestalks",
+    "pseudopod": "pseudopodia",
+    "nucleus": "nuclei"
+  },
+  "noArticleParts": [
+    "hair",
+    "carapace",
+    "core"
+  ],
+  "descriptorOrder": [
+    "descriptors:alien_type",
+    "descriptors:bio_luminescence",
+    "descriptors:length_category",
+    "descriptors:length_hair",
+    "descriptors:size_category",
+    "descriptors:size_specific",
+    "descriptors:weight_feel",
+    "descriptors:color_basic",
+    "descriptors:color_extended",
+    "descriptors:shape_general",
+    "descriptors:shape_eye",
+    "descriptors:hair_style",
+    "descriptors:texture",
+    "descriptors:firmness",
+    "descriptors:build"
+  ],
+  "commaSeparatedDescriptors": [
+    "descriptors:shape_eye",
+    "descriptors:size_specific",
+    "descriptors:weight_feel",
+    "descriptors:bio_luminescence"
+  ],
+  "descriptorValueKeys": [
+    "value",
+    "color",
+    "size",
+    "shape",
+    "length",
+    "style",
+    "texture",
+    "firmness",
+    "build",
+    "weight",
+    "luminescence",
+    "alienType"
+  ],
+  "_comment": "This example shows how a mod can define custom anatomy formatting for alien species"
+}

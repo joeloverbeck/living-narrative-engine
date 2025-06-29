@@ -4,36 +4,30 @@ import { DescriptorFormatter } from './descriptorFormatter.js';
  * Service for building descriptions of individual body parts from their components
  */
 export class BodyPartDescriptionBuilder {
-  constructor({ descriptorFormatter }) {
+  constructor({ descriptorFormatter, anatomyFormattingService } = {}) {
     this.descriptorFormatter = descriptorFormatter;
+    this.anatomyFormattingService = anatomyFormattingService;
+    
+    // Default values for backward compatibility
+    this._defaultPairedParts = new Set([
+      'eye',
+      'ear',
+      'arm',
+      'leg',
+      'hand',
+      'foot',
+      'breast',
+      'wing',
+    ]);
+    
+    this._defaultIrregularPlurals = {
+      foot: 'feet',
+      tooth: 'teeth',
+    };
+    
+    this._defaultNoArticleParts = new Set(['hair']);
   }
 
-  /**
-   * Parts that should use "a pair of" when there are two
-   */
-  static PAIRED_PARTS = new Set([
-    'eye',
-    'ear',
-    'arm',
-    'leg',
-    'hand',
-    'foot',
-    'breast',
-    'wing',
-  ]);
-
-  /**
-   * Parts that have irregular plurals
-   */
-  static IRREGULAR_PLURALS = {
-    foot: 'feet',
-    tooth: 'teeth',
-  };
-
-  /**
-   * Parts that should not have an article
-   */
-  static NO_ARTICLE_PARTS = new Set(['hair']);
 
   /**
    * Build a description for a single body part
@@ -84,8 +78,11 @@ export class BodyPartDescriptionBuilder {
     });
 
     const allSame = allDescriptors.every((desc) => desc === allDescriptors[0]);
+    const pairedParts = this.anatomyFormattingService?.getPairedParts
+      ? this.anatomyFormattingService.getPairedParts()
+      : this._defaultPairedParts;
 
-    if (allSame && BodyPartDescriptionBuilder.PAIRED_PARTS.has(subType)) {
+    if (allSame && pairedParts.has(subType)) {
       // Use "a pair of" for matching paired parts
       const formattedDescriptors = allDescriptors[0];
       return this.constructPairedDescription(subType, formattedDescriptors);
@@ -108,8 +105,11 @@ export class BodyPartDescriptionBuilder {
     const descriptorPart = formattedDescriptors
       ? `${formattedDescriptors} `
       : '';
-
-    if (BodyPartDescriptionBuilder.NO_ARTICLE_PARTS.has(subType)) {
+    
+    const noArticleParts = this.anatomyFormattingService?.getNoArticleParts
+      ? this.anatomyFormattingService.getNoArticleParts()
+      : this._defaultNoArticleParts;
+    if (noArticleParts.has(subType)) {
       // No article for parts like "hair"
       return `${descriptorPart}${subType}`;
     }
@@ -138,7 +138,10 @@ export class BodyPartDescriptionBuilder {
    * @returns {string}
    */
   getArticle(subType, descriptors) {
-    if (BodyPartDescriptionBuilder.NO_ARTICLE_PARTS.has(subType)) {
+    const noArticleParts = this.anatomyFormattingService?.getNoArticleParts
+      ? this.anatomyFormattingService.getNoArticleParts()
+      : this._defaultNoArticleParts;
+    if (noArticleParts.has(subType)) {
       return '';
     }
 
@@ -160,8 +163,11 @@ export class BodyPartDescriptionBuilder {
    * @returns {string}
    */
   getPlural(subType) {
-    if (BodyPartDescriptionBuilder.IRREGULAR_PLURALS[subType]) {
-      return BodyPartDescriptionBuilder.IRREGULAR_PLURALS[subType];
+    const irregularPlurals = this.anatomyFormattingService?.getIrregularPlurals
+      ? this.anatomyFormattingService.getIrregularPlurals()
+      : this._defaultIrregularPlurals;
+    if (irregularPlurals[subType]) {
+      return irregularPlurals[subType];
     }
 
     // Standard pluralization rules

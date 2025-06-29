@@ -38,6 +38,7 @@ import { DescriptorFormatter } from '../../anatomy/descriptorFormatter.js';
 import { BodyPartDescriptionBuilder } from '../../anatomy/bodyPartDescriptionBuilder.js';
 import { BodyDescriptionComposer } from '../../anatomy/bodyDescriptionComposer.js';
 import { AnatomyDescriptionService } from '../../anatomy/anatomyDescriptionService.js';
+import { AnatomyFormattingService } from '../../services/anatomyFormattingService.js';
 import UuidGenerator from '../../adapters/UuidGenerator.js';
 
 /**
@@ -215,8 +216,29 @@ export function registerWorldAndEntity(container) {
   );
 
   // --- Anatomy Description Services ---
+  registrar.singletonFactory(tokens.AnatomyFormattingService, (c) => {
+    // Get mod load order from game config
+    const gameConfig = c.resolve(tokens.IDataRegistry).get('gameConfig', 'game');
+    const modLoadOrder = gameConfig?.mods || [];
+    
+    return new AnatomyFormattingService({
+      dataRegistry: c.resolve(tokens.IDataRegistry),
+      logger: c.resolve(tokens.ILogger),
+      modLoadOrder: modLoadOrder,
+    });
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.AnatomyFormattingService
+    )}.`
+  );
+
   registrar.singletonFactory(tokens.DescriptorFormatter, (c) => {
-    return new DescriptorFormatter();
+    const anatomyFormattingService = c.resolve(tokens.AnatomyFormattingService);
+    anatomyFormattingService.initialize(); // Initialize before use
+    return new DescriptorFormatter({
+      anatomyFormattingService: anatomyFormattingService,
+    });
   });
   logger.debug(
     `World and Entity Registration: Registered ${String(
@@ -227,6 +249,7 @@ export function registerWorldAndEntity(container) {
   registrar.singletonFactory(tokens.BodyPartDescriptionBuilder, (c) => {
     return new BodyPartDescriptionBuilder({
       descriptorFormatter: c.resolve(tokens.DescriptorFormatter),
+      anatomyFormattingService: c.resolve(tokens.AnatomyFormattingService),
     });
   });
   logger.debug(
@@ -240,6 +263,7 @@ export function registerWorldAndEntity(container) {
       bodyPartDescriptionBuilder: c.resolve(tokens.BodyPartDescriptionBuilder),
       bodyGraphService: c.resolve(tokens.BodyGraphService),
       entityFinder: c.resolve(tokens.IEntityManager),
+      anatomyFormattingService: c.resolve(tokens.AnatomyFormattingService),
     });
   });
   logger.debug(

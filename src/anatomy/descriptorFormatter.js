@@ -2,33 +2,45 @@
  * Service for formatting descriptor component values into readable text
  */
 export class DescriptorFormatter {
-  /**
-   * Orders in which descriptors should appear in descriptions
-   */
-  static DESCRIPTOR_ORDER = [
-    'descriptors:length_category',
-    'descriptors:length_hair',
-    'descriptors:size_category',
-    'descriptors:size_specific',
-    'descriptors:weight_feel',
-    'descriptors:color_basic',
-    'descriptors:color_extended',
-    'descriptors:shape_general',
-    'descriptors:shape_eye',
-    'descriptors:hair_style',
-    'descriptors:texture',
-    'descriptors:firmness',
-    'descriptors:build',
-  ];
-
-  /**
-   * Descriptor types that should use commas instead of hyphens
-   */
-  static COMMA_SEPARATED = new Set([
-    'descriptors:shape_eye',
-    'descriptors:size_specific',
-    'descriptors:weight_feel',
-  ]);
+  constructor(params = {}) {
+    this.anatomyFormattingService = params.anatomyFormattingService;
+    
+    // Default values for backward compatibility when no service is provided
+    this._defaultDescriptorOrder = [
+      'descriptors:length_category',
+      'descriptors:length_hair',
+      'descriptors:size_category',
+      'descriptors:size_specific',
+      'descriptors:weight_feel',
+      'descriptors:color_basic',
+      'descriptors:color_extended',
+      'descriptors:shape_general',
+      'descriptors:shape_eye',
+      'descriptors:hair_style',
+      'descriptors:texture',
+      'descriptors:firmness',
+      'descriptors:build',
+    ];
+    
+    this._defaultCommaSeparated = new Set([
+      'descriptors:shape_eye',
+      'descriptors:size_specific',
+      'descriptors:weight_feel',
+    ]);
+    
+    this._defaultDescriptorValueKeys = [
+      'value',
+      'color',
+      'size',
+      'shape',
+      'length',
+      'style',
+      'texture',
+      'firmness',
+      'build',
+      'weight',
+    ];
+  }
 
   /**
    * Format multiple descriptor values into a readable string
@@ -41,19 +53,17 @@ export class DescriptorFormatter {
     }
 
     // Sort descriptors by the defined order
+    const descriptorOrder = this.anatomyFormattingService?.getDescriptorOrder 
+      ? this.anatomyFormattingService.getDescriptorOrder()
+      : this._defaultDescriptorOrder;
+    
     const sortedDescriptors = descriptors.sort((a, b) => {
-      const indexA = DescriptorFormatter.DESCRIPTOR_ORDER.indexOf(
-        a.componentId
-      );
-      const indexB = DescriptorFormatter.DESCRIPTOR_ORDER.indexOf(
-        b.componentId
-      );
+      const indexA = descriptorOrder.indexOf(a.componentId);
+      const indexB = descriptorOrder.indexOf(b.componentId);
 
       // If not in the order list, put at the end
-      const orderA =
-        indexA === -1 ? DescriptorFormatter.DESCRIPTOR_ORDER.length : indexA;
-      const orderB =
-        indexB === -1 ? DescriptorFormatter.DESCRIPTOR_ORDER.length : indexB;
+      const orderA = indexA === -1 ? descriptorOrder.length : indexA;
+      const orderB = indexB === -1 ? descriptorOrder.length : indexB;
 
       return orderA - orderB;
     });
@@ -74,11 +84,14 @@ export class DescriptorFormatter {
    */
   formatSingleDescriptor(descriptor) {
     const { componentId, value } = descriptor;
+    const commaSeparated = this.anatomyFormattingService?.getCommaSeparatedDescriptors
+      ? this.anatomyFormattingService.getCommaSeparatedDescriptors()
+      : this._defaultCommaSeparated;
 
     // Handle multi-word values that should stay hyphenated
     if (
       value.includes('-') &&
-      !DescriptorFormatter.COMMA_SEPARATED.has(componentId)
+      !commaSeparated.has(componentId)
     ) {
       return value;
     }
@@ -136,19 +149,10 @@ export class DescriptorFormatter {
    * @returns {string|null}
    */
   extractDescriptorValue(componentId, componentData) {
-    // Common patterns for descriptor values
-    const possibleKeys = [
-      'value',
-      'color',
-      'size',
-      'shape',
-      'length',
-      'style',
-      'texture',
-      'firmness',
-      'build',
-      'weight',
-    ];
+    // Get configured patterns for descriptor values
+    const possibleKeys = this.anatomyFormattingService?.getDescriptorValueKeys
+      ? this.anatomyFormattingService.getDescriptorValueKeys()
+      : this._defaultDescriptorValueKeys;
 
     for (const key of possibleKeys) {
       if (componentData[key]) {
