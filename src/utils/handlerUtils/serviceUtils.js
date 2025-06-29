@@ -7,8 +7,10 @@
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 
-import { validateServiceDeps } from '../serviceInitializerUtils.js';
-import { setupPrefixedLogger } from '../loggerUtils.js';
+import {
+  initializeServiceLogger,
+  validateServiceDeps,
+} from '../serviceInitializerUtils.js';
 
 /**
  * Initialize a handler-specific logger and validate its dependencies.
@@ -20,9 +22,7 @@ import { setupPrefixedLogger } from '../loggerUtils.js';
  * @returns {ILogger} Prefixed logger instance.
  */
 export function initHandlerLogger(handlerName, logger, deps) {
-  const prefixed = setupPrefixedLogger(logger, `${handlerName}: `);
-  validateServiceDeps(handlerName, prefixed, deps);
-  return prefixed;
+  return initializeServiceLogger(handlerName, logger, deps);
 }
 
 export { validateServiceDeps as validateDeps };
