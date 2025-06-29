@@ -7,6 +7,63 @@
  * @returns {object} NodeResolver with canResolve and resolve methods
  */
 export default function createStepResolver({ entitiesGateway }) {
+  /**
+   * Builds a components object for the given entity ID.
+   *
+   * @param {string} entityId - ID of the entity to inspect.
+   * @param {object} [trace] - Optional trace logger.
+   * @returns {object|null} Components keyed by type or null if entity missing.
+   */
+  function getComponentsForEntity(entityId, trace) {
+    const entity = entitiesGateway.getEntityInstance(entityId);
+    if (!entity) return null;
+
+    if (!entity.componentTypeIds || !Array.isArray(entity.componentTypeIds)) {
+      if (trace) {
+        trace.addLog(
+          'warn',
+          `Entity '${entityId}' does not expose componentTypeIds. Unable to retrieve components.`,
+          'StepResolver',
+          { entityId }
+        );
+      }
+      return {};
+    }
+
+    const components = {};
+    for (const componentTypeId of entity.componentTypeIds) {
+      const data =
+        entity.getComponentData?.(componentTypeId) ||
+        entitiesGateway.getComponentData(entityId, componentTypeId);
+      if (data) {
+        components[componentTypeId] = data;
+      }
+    }
+    return components;
+  }
+
+  /**
+   * Retrieves a single component value from an entity.
+   *
+   * @param {string} entityId - Target entity ID.
+   * @param {string} field - Component type ID to fetch.
+   * @returns {any} The component data or undefined.
+   */
+  function extractFieldFromEntity(entityId, field) {
+    return entitiesGateway.getComponentData(entityId, field);
+  }
+
+  /**
+   * Extracts a property value from an object.
+   *
+   * @param {object} obj - Source object.
+   * @param {string} field - Property to read.
+   * @returns {any} Property value or undefined.
+   */
+  function extractFieldFromObject(obj, field) {
+    return obj[field];
+  }
+
   return {
     /**
      * Checks if this resolver can handle the given node.
@@ -50,71 +107,18 @@ export default function createStepResolver({ entitiesGateway }) {
 
       const result = new Set();
 
-      // Process each parent value
       for (const parentValue of parentResult) {
         if (typeof parentValue === 'string') {
-          // Parent is entity ID
-
-          // Special handling for 'components' field
           if (node.field === 'components') {
-            const entity = entitiesGateway.getEntityInstance(parentValue);
-            if (!entity) continue;
-
-            // All entities must expose componentTypeIds to be queryable
-            // This ensures the scopeDSL remains component-agnostic
-
-            // For production Entity objects, build the components object
-            let components = {};
-
-            // If entity has componentTypeIds, use that
-            if (
-              entity.componentTypeIds &&
-              Array.isArray(entity.componentTypeIds)
-            ) {
-              for (const componentTypeId of entity.componentTypeIds) {
-                const componentData =
-                  entity.getComponentData?.(componentTypeId) ||
-                  entitiesGateway.getComponentData(
-                    parentValue,
-                    componentTypeId
-                  );
-                if (componentData) {
-                  components[componentTypeId] = componentData;
-                }
-              }
-            } else {
-              // If entity doesn't have componentTypeIds, we cannot determine which components it has
-              // This is an error condition - all entities should properly expose their components
-              if (trace) {
-                trace.addLog(
-                  'warn',
-                  `Entity '${parentValue}' does not expose componentTypeIds. Unable to retrieve components.`,
-                  'StepResolver',
-                  { entityId: parentValue }
-                );
-              }
-              // Return empty components object rather than guessing
-              components = {};
-            }
-
-            result.add(components);
+            const comps = getComponentsForEntity(parentValue, trace);
+            if (comps) result.add(comps);
           } else {
-            // Normal component data access
-            const componentData = entitiesGateway.getComponentData(
-              parentValue,
-              node.field
-            );
-
-            if (componentData !== undefined) {
-              result.add(componentData);
-            }
+            const val = extractFieldFromEntity(parentValue, node.field);
+            if (val !== undefined) result.add(val);
           }
         } else if (parentValue && typeof parentValue === 'object') {
-          // Parent is object - direct property access
-          const fieldValue = parentValue[node.field];
-          if (fieldValue !== undefined) {
-            result.add(fieldValue);
-          }
+          const val = extractFieldFromObject(parentValue, node.field);
+          if (val !== undefined) result.add(val);
         }
       }
 
