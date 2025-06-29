@@ -10,7 +10,7 @@ import {
   assertValidId,
   assertNonBlankString,
 } from '../../utils/dependencyUtils.js';
-import { validateInstanceAndComponent } from './idValidation.js';
+import { validateInstanceAndComponent } from '../../utils/idValidation.js';
 import { isNonBlankString } from '../../utils/textUtils.js';
 import { InvalidArgumentError } from '../../errors/invalidArgumentError.js';
 import { SerializedEntityError } from '../../errors/serializedEntityError.js';

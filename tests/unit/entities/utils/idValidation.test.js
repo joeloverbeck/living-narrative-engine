@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import {
   isValidId,
   validateInstanceAndComponent,
-} from '../../../../src/entities/utils/idValidation.js';
+} from '../../../../src/utils/idValidation.js';
 import { InvalidArgumentError } from '../../../../src/errors/invalidArgumentError.js';
 
 describe('idValidation utilities', () => {
