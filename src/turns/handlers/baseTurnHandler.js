@@ -14,7 +14,9 @@
  */
 
 import { ITurnStateHost } from '../interfaces/ITurnStateHost.js';
-import TurnDirectiveStrategyResolver from '../strategies/turnDirectiveStrategyResolver.js';
+import TurnDirectiveStrategyResolver, {
+  DEFAULT_STRATEGY_MAP,
+} from '../strategies/turnDirectiveStrategyResolver.js';
 
 /**
  * @abstract
@@ -609,7 +611,7 @@ export class BaseTurnHandler {
         this,
         commandString,
         turnAction,
-        TurnDirectiveStrategyResolver
+        new TurnDirectiveStrategyResolver(DEFAULT_STRATEGY_MAP)
       )
     );
   }

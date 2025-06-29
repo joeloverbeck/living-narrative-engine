@@ -1,7 +1,9 @@
 import { describe, test, expect, jest, beforeEach } from '@jest/globals';
 import { ProcessingCommandState } from '../../../../src/turns/states/processingCommandState.js';
 import { ProcessingWorkflow } from '../../../../src/turns/states/workflows/processingWorkflow.js';
-import TurnDirectiveStrategyResolver from '../../../../src/turns/strategies/turnDirectiveStrategyResolver.js';
+import TurnDirectiveStrategyResolver, {
+  DEFAULT_STRATEGY_MAP,
+} from '../../../../src/turns/strategies/turnDirectiveStrategyResolver.js';
 import * as dispatchSpeechEventModule from '../../../../src/turns/states/helpers/dispatchSpeechEvent.js';
 
 const mockLogger = { debug: jest.fn(), warn: jest.fn(), error: jest.fn() };
@@ -49,13 +51,14 @@ describe('ProcessingCommandState helpers', () => {
       commandString: defaultCommandString,
     };
 
+    const resolver = new TurnDirectiveStrategyResolver(DEFAULT_STRATEGY_MAP);
     state = new ProcessingCommandState({
       handler: mockHandler,
       commandProcessor: mockCommandProcessor,
       commandOutcomeInterpreter: mockCommandOutcomeInterpreter,
       commandString: defaultCommandString,
       turnAction: defaultTurnAction,
-      directiveResolver: TurnDirectiveStrategyResolver,
+      directiveResolver: resolver,
     });
     workflow = new ProcessingWorkflow(state, null, null, () => {});
   });
@@ -93,13 +96,14 @@ describe('ProcessingCommandState helpers', () => {
       actionDefinitionId: 'specificAct',
       commandString: 'specific command',
     };
+    const resolver = new TurnDirectiveStrategyResolver(DEFAULT_STRATEGY_MAP);
     state = new ProcessingCommandState({
       handler: mockHandler,
       commandProcessor: mockCommandProcessor,
       commandOutcomeInterpreter: mockCommandOutcomeInterpreter,
       commandString: specificAction.commandString,
       turnAction: specificAction,
-      directiveResolver: TurnDirectiveStrategyResolver,
+      directiveResolver: resolver,
     });
     workflow = new ProcessingWorkflow(state, null, specificAction, () => {});
     const ctx = makeCtx(actor);
