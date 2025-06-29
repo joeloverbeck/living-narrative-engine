@@ -1,8 +1,14 @@
 import { describe, test, expect, jest, beforeEach } from '@jest/globals';
 import { AwaitingActorDecisionState } from '../../../../src/turns/states/awaitingActorDecisionState.js';
 import { ACTION_DECIDED_ID } from '../../../../src/constants/eventIds.js';
+import * as safeDispatchEventModule from '../../../../src/utils/safeDispatchEvent.js';
 
-const logger = { debug: jest.fn(), warn: jest.fn(), error: jest.fn() };
+const logger = {
+  debug: jest.fn(),
+  info: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+};
 const makeCtx = (opts = {}) => ({
   getLogger: () => logger,
   getActor: jest.fn(() => opts.actor),
@@ -60,18 +66,38 @@ describe('AwaitingActorDecisionState helpers', () => {
     const ctx = makeCtx({ actor });
     ctx.getSafeEventDispatcher = () => dispatcher;
 
+    const spy = jest.spyOn(safeDispatchEventModule, 'safeDispatchEvent');
+
     await state._emitActionDecided(ctx, actor, { foo: 'bar' });
 
+    expect(spy).toHaveBeenCalledWith(
+      dispatcher,
+      ACTION_DECIDED_ID,
+      {
+        actorId: 'a1',
+        actorType: 'ai',
+        extractedData: { foo: 'bar', thoughts: '', notes: [] },
+      },
+      logger
+    );
+
     expect(dispatcher.dispatch).toHaveBeenCalledTimes(1);
-    const [evtId, payload] = dispatcher.dispatch.mock.calls[0];
-    expect(evtId).toBe(ACTION_DECIDED_ID);
-    const expectedPayload = {
-      actorId: 'a1',
-      actorType: 'ai',
-      extractedData: { foo: 'bar', thoughts: '', notes: [] },
-    };
-    expect(payload).toEqual(expectedPayload);
-    expect(Object.keys(payload)).toEqual(Object.keys(expectedPayload));
+    spy.mockRestore();
+  });
+
+  test('_emitActionDecided logs error when dispatch fails', async () => {
+    const actor = { id: 'a1', isAi: true };
+    const dispatchErr = new Error('bad');
+    const dispatcher = { dispatch: jest.fn().mockRejectedValue(dispatchErr) };
+    const ctx = makeCtx({ actor });
+    ctx.getSafeEventDispatcher = () => dispatcher;
+
+    await state._emitActionDecided(ctx, actor, { speech: 'hi' });
+
+    expect(logger.error).toHaveBeenCalledWith(
+      `Failed to dispatch ${ACTION_DECIDED_ID}`,
+      dispatchErr
+    );
   });
 
   test('constructor uses provided workflow factory in enterState', async () => {
