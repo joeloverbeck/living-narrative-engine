@@ -17,6 +17,8 @@ describe('AnatomyGenerationService - Blueprint ID Support', () => {
     mockEntityManager = {
       getEntityInstance: jest.fn(),
       updateComponent: jest.fn(),
+      getComponentData: jest.fn(),
+      addComponent: jest.fn(),
     };
 
     mockDataRegistry = {
@@ -50,7 +52,7 @@ describe('AnatomyGenerationService - Blueprint ID Support', () => {
     const mockEntity = {
       id: entityId,
       hasComponent: jest.fn().mockReturnValue(true),
-      getComponent: jest.fn().mockReturnValue({
+      getComponentData: jest.fn().mockReturnValue({
         recipeId: recipeId,
         body: null,
       }),
@@ -67,7 +69,19 @@ describe('AnatomyGenerationService - Blueprint ID Support', () => {
       entities: ['root-entity', 'head-entity', 'arm1', 'arm2'],
     };
 
-    mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
+    // Mock main entity and part entities
+    mockEntityManager.getEntityInstance.mockImplementation((id) => {
+      if (id === entityId) {
+        return mockEntity;
+      }
+      // Mock part entities from the graph result
+      return {
+        id: id,
+        hasComponent: jest.fn().mockReturnValue(false), // Parts don't have names in this test
+        getComponentData: jest.fn().mockReturnValue(null),
+      };
+    });
+    
     mockDataRegistry.get.mockImplementation((registry, id) => {
       if (registry === 'anatomyRecipes' && id === recipeId) {
         return mockRecipe;
@@ -95,7 +109,7 @@ describe('AnatomyGenerationService - Blueprint ID Support', () => {
     const mockEntity = {
       id: entityId,
       hasComponent: jest.fn().mockReturnValue(true),
-      getComponent: jest.fn().mockReturnValue({
+      getComponentData: jest.fn().mockReturnValue({
         recipeId: recipeId,
         body: null,
       }),

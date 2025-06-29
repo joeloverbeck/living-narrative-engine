@@ -1,0 +1,28 @@
+{
+  "$schema": "http://example.com/schemas/component.schema.json",
+  "description": "Appearance properties for hair",
+  "data": {
+    "type": "object",
+    "properties": {
+      "color": {
+        "type": "string",
+        "description": "The color of the hair",
+        "enum": ["blonde", "brunette", "brown", "black", "raven-black", "red", "auburn", "gray", "white", "silver"]
+      },
+      "length": {
+        "type": "string",
+        "description": "The length of the hair",
+        "enum": ["bald", "buzz", "short", "medium", "long", "very-long"],
+        "default": "medium"
+      },
+      "style": {
+        "type": "string",
+        "description": "The style of the hair",
+        "enum": ["straight", "wavy", "curly", "kinky", "braided", "ponytail", "bun"],
+        "default": "straight"
+      }
+    },
+    "required": ["color", "length"],
+    "additionalProperties": false
+  }
+}

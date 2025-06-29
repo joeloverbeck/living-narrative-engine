@@ -1,0 +1,10 @@
+{
+  "components": {
+    "core:name": {
+      "name": "Human Female"
+    },
+    "anatomy:body": {
+      "recipeId": "anatomy:gorgeous_milf"
+    }
+  }
+}

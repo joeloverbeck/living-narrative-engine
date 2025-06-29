@@ -1,0 +1,19 @@
+{
+  "$schema": "http://example.com/schemas/entity-definition.schema.json",
+  "id": "anatomy:jacqueline_rouxel",
+  "description": "Jacqueline Rouxel - A gorgeous woman",
+  "components": {
+    "core:name": {
+      "name": "Jacqueline Rouxel"
+    },
+    "core:description": {
+      "description": "A stunning woman with striking features and an alluring presence."
+    },
+    "anatomy:body": {
+      "recipeId": "anatomy:gorgeous_milf"
+    },
+    "core:location": {
+      "locationInstanceId": "default-location"
+    }
+  }
+}

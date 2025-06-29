@@ -453,17 +453,17 @@ export class BodyBlueprintFactory {
 
     // No recipe override or it didn't meet requirements, find candidates
     const candidates = [];
-    const allParts = this.#dataRegistry.getAll('anatomyParts');
-
-    for (const [partId, partRef] of Object.entries(allParts)) {
-      if (!partRef.isAnatomyPart) continue;
-
-      const entityDef = this.#dataRegistry.get('entityDefinitions', partId);
-      if (!entityDef) continue;
-
+    
+    // Get all entity definitions to find anatomy parts
+    const allEntityDefs = this.#dataRegistry.getAll('entityDefinitions');
+    
+    for (const entityDef of allEntityDefs) {
+      // Skip if not an anatomy part
+      if (!entityDef.components || !entityDef.components['anatomy:part']) continue;
+      
       // Check if this part meets the requirements
       if (this.#meetsRequirements(entityDef, requirements)) {
-        candidates.push(partId);
+        candidates.push(entityDef.id);
       }
     }
 
@@ -643,7 +643,9 @@ export class BodyBlueprintFactory {
             occupancyKey,
             (socketOccupancy.get(occupancyKey) || 0) + 1
           );
+        }
 
+        if (childId) {
           // Recursively fill child's sockets
           await this.#fillSockets(
             childId,
@@ -721,11 +723,15 @@ export class BodyBlueprintFactory {
       }
 
       // Determine how many parts to create
-      const desiredCount = this.#calculateDesiredCount(
-        slotSpec,
-        partCounts,
-        slotSpec.partType
-      );
+      // For childSlots, we ignore global part counts and just use the slot specification
+      let desiredCount = 1; // Default
+      if (slotSpec.count) {
+        if (slotSpec.count.exact !== undefined) {
+          desiredCount = slotSpec.count.exact;
+        } else if (slotSpec.count.min !== undefined) {
+          desiredCount = slotSpec.count.min;
+        }
+      }
       const availableSlots = maxCount - currentOccupancy;
       const toCreate = Math.min(desiredCount, availableSlots);
 
@@ -868,17 +874,13 @@ export class BodyBlueprintFactory {
    */
   async #findCandidateParts(recipeSlot, allowedTypes) {
     const candidates = [];
-    const allParts = this.#dataRegistry.getAll('anatomyParts');
-
-    for (const [partId, partRef] of Object.entries(allParts)) {
-      if (!partRef.isAnatomyPart) continue;
-
-      // Load the entity definition
-      const entityDef = this.#dataRegistry.get('entityDefinitions', partId);
-      if (!entityDef) continue;
-
-      // Check if part type matches
-      const anatomyPart = entityDef.components['anatomy:part'];
+    
+    // Get all entity definitions to find anatomy parts
+    const allEntityDefs = this.#dataRegistry.getAll('entityDefinitions');
+    
+    for (const entityDef of allEntityDefs) {
+      // Check if this is an anatomy part
+      const anatomyPart = entityDef.components?.['anatomy:part'];
       if (!anatomyPart || !allowedTypes.includes(anatomyPart.subType)) continue;
 
       // Check required tags
@@ -904,7 +906,7 @@ export class BodyBlueprintFactory {
         }
       }
 
-      candidates.push(partId);
+      candidates.push(entityDef.id);
     }
 
     return candidates;
@@ -945,11 +947,10 @@ export class BodyBlueprintFactory {
       }
 
       // Create the child entity
-      const childEntity =
-        await this.#entityManager.createEntity(partDefinitionId);
+      const childEntity = this.#entityManager.createEntityInstance(partDefinitionId);
 
       // Add joint component to establish the connection
-      await this.#entityManager.addComponent(childEntity.id, 'anatomy:joint', {
+      this.#entityManager.addComponent(childEntity.id, 'anatomy:joint', {
         parentId: parentId,
         socketId: socketId,
         jointType: socket.jointType || 'fixed',
@@ -959,8 +960,8 @@ export class BodyBlueprintFactory {
       // Generate and set name if template provided
       if (socket.nameTpl) {
         const name = this.#generatePartName(socket, childEntity, parentId);
-        await this.#entityManager.addComponent(childEntity.id, 'core:name', {
-          value: name,
+        this.#entityManager.addComponent(childEntity.id, 'core:name', {
+          name: name,
         });
       }
 

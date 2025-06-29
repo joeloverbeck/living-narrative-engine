@@ -1,0 +1,93 @@
+{
+  "$schema": "http://example.com/schemas/anatomy.recipe.schema.json",
+  "recipeId": "anatomy:gorgeous_milf",
+  "blueprintId": "anatomy:humanoid_standard",
+  "slots": {
+    "torso": {
+      "partType": "torso",
+      "preferId": "anatomy:humanoid_torso",
+      "count": {
+        "exact": 1
+      }
+    },
+    "head": {
+      "partType": "head",
+      "preferId": "anatomy:humanoid_head",
+      "count": {
+        "exact": 1
+      },
+      "childSlots": {
+        "left_eye": {
+          "partType": "eye",
+          "preferId": "anatomy:human_eye_cobalt",
+          "properties": {
+            "anatomy:eye_appearance": {
+              "color": "blue"
+            }
+          },
+          "count": {
+            "exact": 1
+          }
+        },
+        "right_eye": {
+          "partType": "eye",
+          "preferId": "anatomy:human_eye_cobalt",
+          "properties": {
+            "anatomy:eye_appearance": {
+              "color": "blue"
+            }
+          },
+          "count": {
+            "exact": 1
+          }
+        },
+        "scalp": {
+          "partType": "hair",
+          "preferId": "anatomy:human_hair_raven",
+          "properties": {
+            "anatomy:hair_appearance": {
+              "color": "raven-black",
+              "length": "long"
+            }
+          },
+          "count": {
+            "exact": 1
+          }
+        }
+      }
+    },
+    "arms": {
+      "partType": "arm",
+      "preferId": "anatomy:humanoid_arm",
+      "count": {
+        "exact": 2
+      }
+    },
+    "legs": {
+      "partType": "leg",
+      "preferId": "anatomy:human_leg_shapely",
+      "properties": {
+        "anatomy:leg_appearance": {
+          "length": "long",
+          "descriptor": "shapely"
+        }
+      },
+      "count": {
+        "exact": 2
+      }
+    },
+    "breasts": {
+      "partType": "breast",
+      "preferId": "anatomy:human_breast_d_cup",
+      "properties": {
+        "anatomy:breast_appearance": {
+          "size": "D-cup",
+          "descriptor": "meaty"
+        }
+      },
+      "count": {
+        "exact": 2
+      }
+    }
+  }
+}

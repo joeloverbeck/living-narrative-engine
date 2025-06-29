@@ -39,6 +39,14 @@
           "maxCount": 1,
           "jointType": "fused",
           "nameTpl": "{{orientation}} {{type}}"
+        },
+        {
+          "id": "scalp",
+          "orientation": "top",
+          "allowedTypes": ["hair"],
+          "maxCount": 1,
+          "jointType": "fused",
+          "nameTpl": "{{type}}"
         }
       ]
     },

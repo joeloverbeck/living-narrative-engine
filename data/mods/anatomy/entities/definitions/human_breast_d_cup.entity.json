@@ -1,0 +1,20 @@
+{
+  "$schema": "http://example.com/schemas/entity-definition.schema.json",
+  "id": "anatomy:human_breast_d_cup",
+  "description": "A D-cup breast with meaty fullness",
+  "components": {
+    "anatomy:part": {
+      "subType": "breast"
+    },
+    "anatomy:breast_appearance": {
+      "size": "D-cup",
+      "descriptor": "meaty"
+    },
+    "core:name": {
+      "name": "breast"
+    },
+    "core:description": {
+      "description": "A full, meaty D-cup breast with natural weight and presence."
+    }
+  }
+}

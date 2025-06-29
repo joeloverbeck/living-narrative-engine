@@ -1,0 +1,20 @@
+{
+  "$schema": "http://example.com/schemas/entity-definition.schema.json",
+  "id": "anatomy:human_leg_shapely",
+  "description": "A long, shapely leg",
+  "components": {
+    "anatomy:part": {
+      "subType": "leg"
+    },
+    "anatomy:leg_appearance": {
+      "length": "long",
+      "descriptor": "shapely"
+    },
+    "core:name": {
+      "name": "leg"
+    },
+    "core:description": {
+      "description": "A long, shapely leg with elegant curves and toned muscles."
+    }
+  }
+}

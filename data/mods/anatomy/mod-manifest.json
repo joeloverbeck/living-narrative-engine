@@ -9,22 +9,31 @@
   "content": {
     "components": [
       "body.component.json",
+      "breast_appearance.component.json",
       "eye_appearance.component.json",
+      "hair_appearance.component.json",
       "joint.component.json",
+      "leg_appearance.component.json",
       "part.component.json",
       "sockets.component.json"
     ],
     "entities": {
       "definitions": [
+        "human_breast_d_cup.entity.json",
         "human_eye.entity.json",
         "human_eye_blue.entity.json",
         "human_eye_brown.entity.json",
+        "human_eye_cobalt.entity.json",
+        "human_hair_raven.entity.json",
+        "human_leg_shapely.entity.json",
         "humanoid_arm.entity.json",
         "humanoid_head.entity.json",
         "humanoid_leg.entity.json",
         "humanoid_torso.entity.json"
       ],
-      "instances": []
+      "instances": [
+        "jacqueline_rouxel.entity.json"
+      ]
     },
     "blueprints": [
       "humanoid_custom_eyes.blueprint.json",
@@ -32,6 +41,7 @@
       "humanoid_standard.blueprint.json"
     ],
     "recipes": [
+      "gorgeous_milf.recipe.json",
       "humanoid_blue_eyes.recipe.json",
       "humanoid_monstrous_tall.recipe.json",
       "humanoid_standard.recipe.json"
