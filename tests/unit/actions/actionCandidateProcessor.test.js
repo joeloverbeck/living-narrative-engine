@@ -1,4 +1,4 @@
-import { beforeEach, expect, it, jest, describe } from '@jest/globals';
+import { beforeEach, expect, it, describe } from '@jest/globals';
 import { describeActionCandidateProcessorSuite } from '../../common/actions/actionCandidateProcessorTestBed.js';
 
 describeActionCandidateProcessorSuite('ActionCandidateProcessor', (getBed) => {
@@ -9,7 +9,9 @@ describeActionCandidateProcessorSuite('ActionCandidateProcessor', (getBed) => {
       ok: true,
       value: 'doit',
     });
-    bed.mocks.targetResolutionService.resolveTargets.mockReturnValue([]);
+    bed.mocks.targetResolutionService.resolveTargets.mockReturnValue({
+      targets: [],
+    });
   });
 
   describe('process', () => {
@@ -36,10 +38,12 @@ describeActionCandidateProcessorSuite('ActionCandidateProcessor', (getBed) => {
       const actorEntity = { id: 'actor' };
       const context = {};
 
-      bed.mocks.targetResolutionService.resolveTargets.mockReturnValue([
-        { type: 'entity', entityId: 'enemy1' },
-        { type: 'entity', entityId: 'enemy2' },
-      ]);
+      bed.mocks.targetResolutionService.resolveTargets.mockReturnValue({
+        targets: [
+          { type: 'entity', entityId: 'enemy1' },
+          { type: 'entity', entityId: 'enemy2' },
+        ],
+      });
       bed.mocks.actionCommandFormatter.format.mockImplementation(
         (def, target) => ({
           ok: true,
@@ -125,10 +129,12 @@ describeActionCandidateProcessorSuite('ActionCandidateProcessor', (getBed) => {
       const actorEntity = { id: 'actor' };
       const context = {};
 
-      bed.mocks.targetResolutionService.resolveTargets.mockReturnValue([
-        { type: 'entity', entityId: 'target1' },
-        { type: 'entity', entityId: 'target2' },
-      ]);
+      bed.mocks.targetResolutionService.resolveTargets.mockReturnValue({
+        targets: [
+          { type: 'entity', entityId: 'target1' },
+          { type: 'entity', entityId: 'target2' },
+        ],
+      });
       bed.mocks.actionCommandFormatter.format.mockImplementation(
         (def, target) => {
           if (target.entityId === 'target1') {

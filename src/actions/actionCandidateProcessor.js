@@ -112,12 +112,24 @@ export class ActionCandidateProcessor {
     );
 
     // STEP 2: Resolve targets using the dedicated service
-    const targetContexts = this.#targetResolutionService.resolveTargets(
-      actionDef.scope,
-      actorEntity,
-      context,
-      trace
-    );
+    const { targets: targetContexts, error: resolutionError } =
+      this.#targetResolutionService.resolveTargets(
+        actionDef.scope,
+        actorEntity,
+        context,
+        trace
+      );
+
+    if (resolutionError) {
+      this.#logger.error(
+        `Error resolving scope for action '${actionDef.id}': ${resolutionError.message}`,
+        resolutionError
+      );
+      return {
+        actions: [],
+        errors: [createDiscoveryError(actionDef.id, null, resolutionError)],
+      };
+    }
 
     if (targetContexts.length === 0) {
       this.#logger.debug(

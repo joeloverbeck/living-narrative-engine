@@ -89,7 +89,7 @@ export class TargetResolutionService extends ITargetResolutionService {
    * @param {Entity} actorEntity - The entity performing the action.
    * @param {ActionContext} discoveryContext - Context for DSL evaluation.
    * @param {TraceContext|null} [trace] - Optional tracing instance.
-   * @returns {ActionTargetContext[]} Resolved target contexts.
+   * @returns {import('./resolutionResult.js').ResolutionResult} Resolved targets and optional error.
    */
   resolveTargets(scopeName, actorEntity, discoveryContext, trace = null) {
     const source = 'TargetResolutionService.resolveTargets';
@@ -100,7 +100,7 @@ export class TargetResolutionService extends ITargetResolutionService {
         `Scope is 'none'; returning a single no-target context.`,
         source
       );
-      return [ActionTargetContext.noTarget()];
+      return { targets: [ActionTargetContext.noTarget()] };
     }
 
     if (scopeName === TARGET_DOMAIN_SELF) {
@@ -108,10 +108,10 @@ export class TargetResolutionService extends ITargetResolutionService {
         `Scope is 'self'; returning the actor as the target.`,
         source
       );
-      return [ActionTargetContext.forEntity(actorEntity.id)];
+      return { targets: [ActionTargetContext.forEntity(actorEntity.id)] };
     }
 
-    const targetIds = this.#resolveScopeToIds(
+    const { ids: targetIds, error } = this.#resolveScopeToIds(
       scopeName,
       actorEntity,
       discoveryContext,
@@ -123,7 +123,10 @@ export class TargetResolutionService extends ITargetResolutionService {
       source,
       { targetIds: Array.from(targetIds) }
     );
-    return Array.from(targetIds, (id) => ActionTargetContext.forEntity(id));
+    return {
+      targets: Array.from(targetIds, (id) => ActionTargetContext.forEntity(id)),
+      error,
+    };
   }
 
   /**
@@ -148,7 +151,7 @@ export class TargetResolutionService extends ITargetResolutionService {
     ) {
       const errorMessage = `Missing scope definition: Scope '${scopeName}' not found or has no expression in registry.`;
       this.#handleResolutionError(errorMessage, { scopeName }, trace, source);
-      return new Set();
+      return { ids: new Set(), error: new Error(errorMessage) };
     }
 
     try {
@@ -167,10 +170,11 @@ export class TargetResolutionService extends ITargetResolutionService {
         actorEntity,
         discoveryContext
       );
-      return (
-        this.#scopeEngine.resolve(ast, actorEntity, runtimeCtx, trace) ??
-        new Set()
-      );
+      return {
+        ids:
+          this.#scopeEngine.resolve(ast, actorEntity, runtimeCtx, trace) ??
+          new Set(),
+      };
     } catch (error) {
       const errorMessage = `Error resolving scope '${scopeName}': ${error.message}`;
       this.#handleResolutionError(
@@ -180,7 +184,7 @@ export class TargetResolutionService extends ITargetResolutionService {
         source,
         error
       );
-      return new Set();
+      return { ids: new Set(), error };
     }
   }
 
