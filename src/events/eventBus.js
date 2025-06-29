@@ -26,11 +26,11 @@ class EventBus extends IEventBus {
    * @returns {boolean} True if the name is valid, false otherwise.
    */
   #validateEventName(name) {
-    if (typeof name !== 'string' || !name) {
+    const isValid = typeof name === 'string' && name.length > 0;
+    if (!isValid) {
       this.#logger.error('EventBus: Invalid event name provided.', name);
-      return false;
     }
-    return true;
+    return isValid;
   }
 
   /**
@@ -40,13 +40,13 @@ class EventBus extends IEventBus {
    * @returns {boolean} True if the listener is valid, false otherwise.
    */
   #validateListener(listener) {
-    if (typeof listener !== 'function') {
+    const isValid = typeof listener === 'function';
+    if (!isValid) {
       this.#logger.error(
         'EventBus: Invalid listener provided. Expected a function.'
       );
-      return false;
     }
-    return true;
+    return isValid;
   }
 
   subscribe(eventName, listener) {
