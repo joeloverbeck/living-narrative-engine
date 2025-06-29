@@ -52,7 +52,9 @@ describe('AjvSchemaValidator initialization edge cases', () => {
     const logger = createMockLogger();
     const AjvSchemaValidator =
       require('../../../src/validation/ajvSchemaValidator.js').default;
-    new AjvSchemaValidator(logger);
+    new AjvSchemaValidator(logger, {
+      preloadSchemas: [{ schema: {}, id: 'test' }],
+    });
     expect(addSchema).not.toHaveBeenCalled();
     expect(logger.debug).toHaveBeenCalledWith(
       expect.stringContaining('already loaded. Skipping.')
@@ -71,7 +73,9 @@ describe('AjvSchemaValidator initialization edge cases', () => {
     const logger = createMockLogger();
     const AjvSchemaValidator =
       require('../../../src/validation/ajvSchemaValidator.js').default;
-    new AjvSchemaValidator(logger);
+    new AjvSchemaValidator(logger, {
+      preloadSchemas: [{ schema: {}, id: 'test' }],
+    });
     expect(logger.error).toHaveBeenCalledWith(
       expect.stringContaining('Failed to preload schema'),
       expect.objectContaining({

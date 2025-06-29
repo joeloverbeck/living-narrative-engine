@@ -63,10 +63,7 @@ describe('AjvSchemaValidator edge branch tests', () => {
 
   it('logs and returns false if removeSchema throws', () => {
     const removeError = new Error('remove fail');
-    const getSchema = jest
-      .fn()
-      .mockReturnValueOnce(null) // constructor preload check
-      .mockReturnValueOnce({});
+    const getSchema = jest.fn().mockReturnValueOnce({});
     const removeSchema = jest.fn(() => {
       throw removeError;
     });

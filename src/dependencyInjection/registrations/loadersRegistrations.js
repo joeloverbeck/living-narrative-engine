@@ -42,6 +42,10 @@ import AjvSchemaValidator from '../../validation/ajvSchemaValidator.js';
 import InMemoryDataRegistry from '../../data/inMemoryDataRegistry.js';
 import WorkspaceDataFetcher from '../../data/workspaceDataFetcher.js';
 import TextDataFetcher from '../../data/textDataFetcher.js';
+import {
+  LLM_TURN_ACTION_RESPONSE_SCHEMA,
+  LLM_TURN_ACTION_RESPONSE_SCHEMA_ID,
+} from '../../turns/schemas/llmOutputSchemas.js';
 
 // --- Loader Imports ---
 import ActionLoader from '../../loaders/actionLoader.js';
@@ -115,7 +119,15 @@ export function registerLoaders(container) {
   );
   registrar.singletonFactory(
     tokens.ISchemaValidator,
-    (c) => new AjvSchemaValidator(c.resolve(tokens.ILogger))
+    (c) =>
+      new AjvSchemaValidator(c.resolve(tokens.ILogger), {
+        preloadSchemas: [
+          {
+            schema: LLM_TURN_ACTION_RESPONSE_SCHEMA,
+            id: LLM_TURN_ACTION_RESPONSE_SCHEMA_ID,
+          },
+        ],
+      })
   );
   registrar.singletonFactory(
     tokens.IDataRegistry,

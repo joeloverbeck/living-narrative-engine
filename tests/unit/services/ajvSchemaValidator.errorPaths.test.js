@@ -127,7 +127,6 @@ describe('AjvSchemaValidator error paths', () => {
   it('logs error when schema persists after removeSchema', () => {
     const getSchema = jest
       .fn()
-      .mockReturnValueOnce({}) // constructor preload check
       .mockReturnValueOnce({}) // existence check
       .mockReturnValueOnce({}); // still present after removal
     const removeSchema = jest.fn();
