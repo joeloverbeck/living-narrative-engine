@@ -27,6 +27,7 @@ function setup(
   const setupPrefixedLogger = jest.fn(() => mockLogger);
   const validateServiceDeps = jest.fn();
   const setupService = jest.fn(() => mockLogger);
+  const initializeServiceLogger = jest.fn(() => mockLogger);
   const baseInitLogger = jest.fn(() => mockLogger);
   jest.doMock('../../../src/utils/serviceInitializerUtils.js', () => {
     const actual = jest.requireActual(
@@ -36,6 +37,7 @@ function setup(
       ...actual,
       validateServiceDeps,
       setupService,
+      initializeServiceLogger,
     };
   });
   jest.doMock('../../../src/utils/loggerUtils.js', () => {
@@ -46,7 +48,12 @@ function setup(
   const Mod = require(modulePath).default || require(modulePath);
   new Mod(ctorArgs);
   if (useHelper) {
-    if (setupService.mock.calls.length) {
+    if (initializeServiceLogger.mock.calls.length) {
+      expect(initializeServiceLogger).toHaveBeenCalled();
+      const call = initializeServiceLogger.mock.calls[0];
+      expect(call[0]).toBe(expectedName);
+      expect(call[1]).toBe(mockLogger);
+    } else if (setupService.mock.calls.length) {
       expect(setupService).toHaveBeenCalled();
       const call = setupService.mock.calls[0];
       expect(call[0]).toBe(expectedName);
