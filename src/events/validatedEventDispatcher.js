@@ -67,19 +67,14 @@ class ValidatedEventDispatcher extends IValidatedEventDispatcher {
   }
 
   /**
-   * Validates the event payload against its definition schema (if available and loaded)
-   * and dispatches the event via the EventBus if validation passes or is skipped.
-   * Logs detailed information, including warnings if validation is skipped due to
-   * missing definitions or schemas, unless suppressed by options.
+   * Validates the payload for an event if a schema is available.
    *
-   * @param {string} eventName - The namespaced ID of the event to dispatch.
-   * @param {object} payload - The data payload for the event.
-   * @param {object} [options] - Optional settings.
-   * @param {boolean} [options.allowSchemaNotFound] - If true, suppresses warnings when dispatching occurs specifically because an event definition or its associated payload schema was not found or not yet loaded.
-   * @returns {Promise<boolean>} A promise resolving to `true` if the event was successfully dispatched, and `false` otherwise.
+   * @param {string} eventName - Event identifier.
+   * @param {object} payload - Event payload.
+   * @param {boolean} allowSchemaNotFound - If true, suppress warnings when schema is missing.
+   * @returns {{ shouldDispatch: boolean, validationAttempted: boolean, validationPassed: boolean }}
    */
-  async dispatch(eventName, payload, options = {}) {
-    const { allowSchemaNotFound = false } = options;
+  #validatePayload(eventName, payload, allowSchemaNotFound) {
     let shouldDispatch = true;
     let validationAttempted = false;
     let validationPassed = true;
@@ -155,35 +150,65 @@ class ValidatedEventDispatcher extends IValidatedEventDispatcher {
       validationPassed = false;
     }
 
-    if (shouldDispatch) {
-      try {
-        this.#logger.debug(
-          `VED: Dispatching event '${eventName}' via EventBus...`,
-          payload
-        );
-        // Use the internal EventBus instance to dispatch
-        await this.#eventBus.dispatch(eventName, payload);
-        this.#logger.debug(`VED: Event '${eventName}' dispatch successful.`);
-        return true;
-      } catch (dispatchError) {
-        this.#logger.error(
-          `VED: Error occurred during EventBus.dispatch for event '${eventName}':`,
-          dispatchError
-        );
-        return false;
-      }
-    } else {
-      if (validationAttempted && !validationPassed) {
-        this.#logger.debug(
-          `VED: Dispatch skipped for '${eventName}' due to validation failure (see error above).`
-        );
-      } else {
-        this.#logger.debug(
-          `VED: Dispatch explicitly skipped for event '${eventName}'.`
-        );
-      }
+    return { shouldDispatch, validationAttempted, validationPassed };
+  }
+
+  /**
+   * Emits an event through the EventBus and handles errors.
+   *
+   * @param {string} eventName - Name of the event to emit.
+   * @param {object} payload - Event payload.
+   * @returns {Promise<boolean>} Resolves `true` on success, `false` on failure.
+   */
+  async #emitEvent(eventName, payload) {
+    try {
+      this.#logger.debug(
+        `VED: Dispatching event '${eventName}' via EventBus...`,
+        payload
+      );
+      await this.#eventBus.dispatch(eventName, payload);
+      this.#logger.debug(`VED: Event '${eventName}' dispatch successful.`);
+      return true;
+    } catch (dispatchError) {
+      this.#logger.error(
+        `VED: Error occurred during EventBus.dispatch for event '${eventName}':`,
+        dispatchError
+      );
       return false;
     }
+  }
+
+  /**
+   * Validates the event payload against its definition schema (if available and loaded)
+   * and dispatches the event via the EventBus if validation passes or is skipped.
+   * Logs detailed information, including warnings if validation is skipped due to
+   * missing definitions or schemas, unless suppressed by options.
+   *
+   * @param {string} eventName - The namespaced ID of the event to dispatch.
+   * @param {object} payload - The data payload for the event.
+   * @param {object} [options] - Optional settings.
+   * @param {boolean} [options.allowSchemaNotFound] - If true, suppresses warnings when dispatching occurs specifically because an event definition or its associated payload schema was not found or not yet loaded.
+   * @returns {Promise<boolean>} A promise resolving to `true` if the event was successfully dispatched, and `false` otherwise.
+   */
+  async dispatch(eventName, payload, options = {}) {
+    const { allowSchemaNotFound = false } = options;
+    const { shouldDispatch, validationAttempted, validationPassed } =
+      this.#validatePayload(eventName, payload, allowSchemaNotFound);
+
+    if (shouldDispatch) {
+      return this.#emitEvent(eventName, payload);
+    }
+
+    if (validationAttempted && !validationPassed) {
+      this.#logger.debug(
+        `VED: Dispatch skipped for '${eventName}' due to validation failure (see error above).`
+      );
+    } else {
+      this.#logger.debug(
+        `VED: Dispatch explicitly skipped for event '${eventName}'.`
+      );
+    }
+    return false;
   }
 
   /**
