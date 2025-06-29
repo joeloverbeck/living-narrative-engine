@@ -24,18 +24,7 @@ export class ScopeSyntaxError extends Error {
   }
 }
 
-/**
- * Generates a code snippet with a pointer for error messages.
- *
- * @param {string} input - The full source code string.
- * @param {number} line - The line number (1-based).
- * @param {number} column - The column number (1-based).
- * @returns {string} The formatted code snippet.
- */
-function generateErrorSnippet(input, line, column) {
-  const lineContent = input.split('\n')[line - 1] || '';
-  return `${lineContent}\n${' '.repeat(column - 1)}^`;
-}
+import { generateErrorSnippet } from './errorSnippet.js';
 
 export class Tokenizer {
   /** @param {string} input */
