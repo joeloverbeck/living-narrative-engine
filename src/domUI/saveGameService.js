@@ -95,8 +95,7 @@ export default class SaveGameService {
    *
    * @param {SlotDisplayData} selectedSlotData - Slot being saved into.
    * @param {string} saveName - Name to use when saving.
-   * @param {GameEngine} gameEngine - Game engine instance.
-   * @param saveService
+   * @param {ISaveService} saveService - Service responsible for persisting the game.
    * @returns {Promise<{result: any, returnedIdentifier: string | null}>}
    *   Result from the engine and identifier, if provided.
    */
@@ -120,8 +119,7 @@ export default class SaveGameService {
    *
    * @param {SlotDisplayData} selectedSlotData - Slot being saved into.
    * @param {string} saveName - Name to use when saving.
-   * @param {GameEngine} gameEngine - Game engine instance.
-   * @param saveService
+   * @param {ISaveService} saveService - Service responsible for persisting the game.
    * @returns {Promise<{success: boolean, message: string, returnedIdentifier: string | null}>}
    *   Operation outcome details.
    */
