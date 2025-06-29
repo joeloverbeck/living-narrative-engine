@@ -1,6 +1,6 @@
 // src/loaders/macroLoader.js
 
-import { BaseManifestItemLoader } from './baseManifestItemLoader.js';
+import { SimpleItemLoader } from './simpleItemLoader.js';
 import { processAndStoreItem } from './helpers/processAndStoreItem.js';
 
 /**
@@ -19,7 +19,7 @@ import { processAndStoreItem } from './helpers/processAndStoreItem.js';
  * @class MacroLoader
  * @augments BaseManifestItemLoader
  */
-class MacroLoader extends BaseManifestItemLoader {
+class MacroLoader extends SimpleItemLoader {
   /**
    * Creates an instance of MacroLoader.
    *
