@@ -15,6 +15,9 @@
 /** @typedef {import('../data/gameDataRepository.js').ActionDefinition} ActionDefinition */
 /** @typedef {import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo} DiscoveredActionInfo */
 
+// Dependency imports
+import { createDiscoveryError } from './utils/discoveryErrorUtils.js';
+
 /**
  * @typedef {object} ProcessResult
  * @property {DiscoveredActionInfo[]} actions - Valid discovered actions
@@ -92,7 +95,7 @@ export class ActionCandidateProcessor {
       );
       return {
         actions: [],
-        errors: [this.#createDiscoveryError(actionDef.id, null, error)],
+        errors: [createDiscoveryError(actionDef.id, null, error)],
       };
     }
 
@@ -193,7 +196,7 @@ export class ActionCandidateProcessor {
         });
       } else {
         errors.push(
-          this.#createDiscoveryError(
+          createDiscoveryError(
             actionDef.id,
             targetContext.entityId,
             formatResult.error,
@@ -206,19 +209,5 @@ export class ActionCandidateProcessor {
       }
     }
     return { actions: validActions, errors };
-  }
-
-  /**
-   * Creates a standardized error object for action discovery.
-   *
-   * @param {string} actionId - ID of the action that failed.
-   * @param {string|null} targetId - ID of the target entity, if available.
-   * @param {Error|string} error - The encountered error instance or message.
-   * @param {any|null} [details] - Optional additional error details.
-   * @returns {{ actionId: string, targetId: string|null, error: Error|string, details: any|null }} The standardized error object.
-   * @private
-   */
-  #createDiscoveryError(actionId, targetId, error, details = null) {
-    return { actionId, targetId, error, details };
   }
 }
