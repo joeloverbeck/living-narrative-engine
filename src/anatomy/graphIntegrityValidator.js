@@ -148,11 +148,10 @@ export class GraphIntegrityValidator {
    * @private
    */
   async #validateRecipeConstraints(entityIds, recipe, errors, warnings) {
-    if (!recipe.constraints) return;
-
     // Build a set of all part types in the graph
     const presentPartTypes = new Set();
     const presentComponents = new Set();
+    const partTypeCounts = new Map(); // Track counts of each part type
 
     for (const entityId of entityIds) {
       const entity = this.#entityManager.getEntityInstance(entityId);
@@ -164,17 +163,24 @@ export class GraphIntegrityValidator {
       );
       if (anatomyPart?.subType) {
         presentPartTypes.add(anatomyPart.subType);
+        // Count occurrences of each part type
+        partTypeCounts.set(
+          anatomyPart.subType,
+          (partTypeCounts.get(anatomyPart.subType) || 0) + 1
+        );
       }
 
       // Add all components (for tag checking)
-      const components = this.#entityManager.getComponentsForEntity(entityId);
-      for (const componentId of Object.keys(components)) {
-        presentComponents.add(componentId);
+      const componentTypes = this.#entityManager.getAllComponentTypesForEntity(entityId);
+      if (componentTypes) {
+        for (const componentId of componentTypes) {
+          presentComponents.add(componentId);
+        }
       }
     }
 
     // Check 'requires' constraints
-    if (recipe.constraints.requires) {
+    if (recipe.constraints?.requires) {
       for (const group of recipe.constraints.requires) {
         const present = group.filter(
           (id) => presentComponents.has(id) || presentPartTypes.has(id)
@@ -192,7 +198,7 @@ export class GraphIntegrityValidator {
     }
 
     // Check 'excludes' constraints
-    if (recipe.constraints.excludes) {
+    if (recipe.constraints?.excludes) {
       for (const group of recipe.constraints.excludes) {
         const present = group.filter(
           (id) => presentComponents.has(id) || presentPartTypes.has(id)
@@ -209,9 +215,7 @@ export class GraphIntegrityValidator {
     // Check soft count constraints
     if (recipe.slots) {
       for (const [slotKey, slot] of Object.entries(recipe.slots)) {
-        const actualCount = [...presentPartTypes].filter(
-          (type) => type === slot.partType
-        ).length;
+        const actualCount = partTypeCounts.get(slot.partType) || 0;
 
         if (slot.count) {
           if (
@@ -284,6 +288,13 @@ export class GraphIntegrityValidator {
         'anatomy:joint'
       );
       if (!joint && !visited.has(entityId)) {
+        hasCycle(entityId);
+      }
+    }
+    
+    // Also check any unvisited entities (important for detecting cycles with no roots)
+    for (const entityId of entityIds) {
+      if (!visited.has(entityId)) {
         hasCycle(entityId);
       }
     }

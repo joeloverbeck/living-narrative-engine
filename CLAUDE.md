@@ -101,6 +101,7 @@ tests/
 
 - Framework: Jest with jsdom
 - Coverage targets: 80% branches, 90% functions/lines
+- If in the process of creating or fixing tests, if you detect a bug in the SUT, fix the bug. *Don't* correct the test code to adapt to a bug in the SUT. The tests should only cover non-buggy production code.
 - Run tests after every complete modification
 - When tests pass without changes after code modifications, write new focused tests
 
