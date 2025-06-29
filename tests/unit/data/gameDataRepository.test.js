@@ -59,8 +59,6 @@ describe('GameDataRepository', () => {
 
   test('constructor validates logger and registry', () => {
     expect(() => new GameDataRepository(registry, {})).toThrow();
-    // Re-create a valid registry for the second check
-    const validRegistry = createRegistry();
     expect(() => new GameDataRepository({}, logger)).toThrow();
   });
 
@@ -121,6 +119,57 @@ describe('GameDataRepository', () => {
     expect(logger.warn).toHaveBeenCalledWith(
       'GameDataRepository: listContentByMod not supported by registry'
     );
+  });
+
+  describe('invalid id handling', () => {
+    const invalidIds = [null, undefined, '', '   '];
+    const cases = [
+      ['getWorld', 'getWorldDefinition', 'getWorld called with invalid ID:'],
+      [
+        'getEntityDefinition',
+        'getEntityDefinition',
+        'getEntityDefinition called with invalid ID:',
+      ],
+      [
+        'getEventDefinition',
+        'getEventDefinition',
+        'getEventDefinition called with invalid ID:',
+      ],
+      [
+        'getComponentDefinition',
+        'getComponentDefinition',
+        'getComponentDefinition called with invalid ID:',
+      ],
+      [
+        'getConditionDefinition',
+        'getConditionDefinition',
+        'getConditionDefinition called with invalid ID:',
+      ],
+      [
+        'getGoalDefinition',
+        'getGoalDefinition',
+        'getGoalDefinition called with invalid ID:',
+      ],
+      [
+        'getEntityInstanceDefinition',
+        'getEntityInstanceDefinition',
+        'getEntityInstanceDefinition called with invalid ID:',
+      ],
+    ];
+
+    cases.forEach(([method, registryMethod, warn]) => {
+      invalidIds.forEach((id) => {
+        test(`${method} warns and returns null for invalid id ${id}`, () => {
+          const result = repo[method](id);
+          expect(result).toBeNull();
+          expect(logger.warn).toHaveBeenCalledWith(
+            `GameDataRepository: ${warn} ${id}`
+          );
+          expect(registry[registryMethod]).not.toHaveBeenCalled();
+          jest.clearAllMocks();
+        });
+      });
+    });
   });
 
   describe('get', () => {
