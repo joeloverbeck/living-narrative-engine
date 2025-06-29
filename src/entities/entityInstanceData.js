@@ -5,6 +5,8 @@
 
 import { cloneDeep } from 'lodash';
 import { freeze } from '../utils/cloneUtils.js';
+import { validateDependency } from '../utils/dependencyUtils.js';
+import { ensureValidLogger } from '../utils/loggerUtils.js';
 import EntityDefinition from './entityDefinition.js';
 
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
@@ -56,7 +58,7 @@ class EntityInstanceData {
    * @param {string} instanceId - The unique runtime identifier for this instance.
    * @param {EntityDefinition} definition - The EntityDefinition this instance is based on.
    * @param {Record<string, object>} [initialOverrides] - Optional initial component overrides.
-   * @param {ILogger} [logger] - Logger for warnings and diagnostics.
+   * @param {ILogger} [logger] - Logger conforming to {@link ILogger} for warnings and diagnostics.
    * @throws {Error} If instanceId is not a valid string.
    * @throws {Error} If definition is not an instance of EntityDefinition.
    */
@@ -72,7 +74,10 @@ class EntityInstanceData {
 
     this.instanceId = instanceId;
     this.definition = definition;
-    this.#logger = logger;
+    validateDependency(logger, 'ILogger', console, {
+      requiredMethods: ['info', 'warn', 'error', 'debug'],
+    });
+    this.#logger = ensureValidLogger(logger, 'EntityInstanceData');
     // Use cloneDeep for initialOverrides to ensure deep copy and freeze to
     // discourage external mutation.
     this.overrides = freeze(
