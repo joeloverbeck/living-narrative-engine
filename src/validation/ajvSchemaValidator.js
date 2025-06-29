@@ -25,6 +25,36 @@ class AjvSchemaValidator {
   #logger = null;
 
   /**
+   * Ensures the Ajv instance is initialized.
+   *
+   * @private
+   * @throws {Error} If Ajv is not available.
+   * @returns {void}
+   */
+  #ensureAjv() {
+    if (!this.#ajv) {
+      throw new Error('AjvSchemaValidator: Ajv instance not available.');
+    }
+  }
+
+  /**
+   * Validates and normalizes a schema ID.
+   *
+   * @private
+   * @param {string} id - Candidate schema identifier.
+   * @returns {string} Normalized schema ID.
+   * @throws {Error} If the ID is missing or invalid.
+   */
+  #requireValidSchemaId(id) {
+    if (!id || typeof id !== 'string' || id.trim() === '') {
+      throw new Error(
+        'AjvSchemaValidator: Invalid or empty schemaId provided. Expected a non-empty string.'
+      );
+    }
+    return id.trim();
+  }
+
+  /**
    * @param {object} [params]
    * @param {import('../interfaces/coreServices.js').ILogger} params.logger
    * @param {import('ajv').default} [params.ajvInstance]
@@ -83,14 +113,15 @@ class AjvSchemaValidator {
    * @returns {Promise<void>}
    */
   async addSchema(schemaData, schemaId) {
-    if (!this.#ajv) {
+    try {
+      this.#ensureAjv();
+    } catch (error) {
       this.#logger.error(
         'AjvSchemaValidator.addSchema: Ajv instance not available.'
       );
-      return Promise.reject(
-        new Error('AjvSchemaValidator: Ajv instance not available.')
-      );
+      return Promise.reject(error);
     }
+
     if (
       !schemaData ||
       typeof schemaData !== 'object' ||
@@ -100,14 +131,13 @@ class AjvSchemaValidator {
       this.#logger.error(`AjvSchemaValidator.addSchema: ${errMsg}`);
       return Promise.reject(new Error(`AjvSchemaValidator: ${errMsg}`));
     }
-    if (!schemaId || typeof schemaId !== 'string' || schemaId.trim() === '') {
-      const errMsg =
-        'Invalid or empty schemaId provided. Expected a non-empty string.';
-      this.#logger.error(`AjvSchemaValidator.addSchema: ${errMsg}`);
-      return Promise.reject(new Error(`AjvSchemaValidator: ${errMsg}`));
+    let keyToRegister;
+    try {
+      keyToRegister = this.#requireValidSchemaId(schemaId);
+    } catch (error) {
+      this.#logger.error(`AjvSchemaValidator.addSchema: ${error.message}`);
+      return Promise.reject(error);
     }
-
-    const keyToRegister = schemaId.trim();
 
     try {
       if (this.#ajv.getSchema(keyToRegister)) {
@@ -164,20 +194,24 @@ class AjvSchemaValidator {
    * @param {string} schemaId
    */
   removeSchema(schemaId) {
-    if (!this.#ajv) {
+    try {
+      this.#ensureAjv();
+    } catch (error) {
       this.#logger.error(
         'AjvSchemaValidator.removeSchema: Ajv instance not available. Cannot remove schema.'
       );
-      throw new Error('AjvSchemaValidator: Ajv instance not available.');
+      throw error;
     }
-    if (!schemaId || typeof schemaId !== 'string' || schemaId.trim() === '') {
+
+    let idToUse;
+    try {
+      idToUse = this.#requireValidSchemaId(schemaId);
+    } catch (error) {
       this.#logger.warn(
         `AjvSchemaValidator: removeSchema called with invalid schemaId: '${schemaId}'`
       );
       return false;
     }
-
-    const idToUse = schemaId.trim();
 
     try {
       if (!this.#ajv.getSchema(idToUse)) {
@@ -256,13 +290,18 @@ class AjvSchemaValidator {
    * @returns {((data: any) => ValidationResult) | undefined}
    */
   getValidator(schemaId) {
-    if (!this.#ajv) {
+    try {
+      this.#ensureAjv();
+    } catch (error) {
       this.#logger.warn(
         'AjvSchemaValidator: getValidator called but Ajv instance not available.'
       );
       return undefined;
     }
-    if (!schemaId || typeof schemaId !== 'string') {
+
+    try {
+      this.#requireValidSchemaId(schemaId);
+    } catch (error) {
       this.#logger.warn(
         `AjvSchemaValidator: getValidator called with invalid schemaId: ${schemaId}`
       );
@@ -326,10 +365,10 @@ class AjvSchemaValidator {
    * @returns {boolean}
    */
   isSchemaLoaded(schemaId) {
-    if (!this.#ajv) {
-      return false;
-    }
-    if (!schemaId || typeof schemaId !== 'string') {
+    try {
+      this.#ensureAjv();
+      this.#requireValidSchemaId(schemaId);
+    } catch (error) {
       return false;
     }
 
@@ -356,6 +395,27 @@ class AjvSchemaValidator {
    * @returns {ValidationResult}
    */
   validate(schemaId, data) {
+    try {
+      this.#ensureAjv();
+      this.#requireValidSchemaId(schemaId);
+    } catch (error) {
+      this.#logger.warn(
+        `AjvSchemaValidator: validate called for schemaId '${schemaId}', but no validator function was found.`
+      );
+      return {
+        isValid: false,
+        errors: [
+          {
+            instancePath: '',
+            schemaPath: '',
+            keyword: 'schemaNotFound',
+            params: { schemaId: schemaId },
+            message: `Schema with id '${schemaId}' not found, is invalid, or validator could not be retrieved.`,
+          },
+        ],
+      };
+    }
+
     const validatorFunction = this.getValidator(schemaId);
 
     if (!validatorFunction) {
@@ -386,7 +446,10 @@ class AjvSchemaValidator {
    * @returns {boolean}
    */
   validateSchemaRefs(schemaId) {
-    if (!this.#ajv) {
+    try {
+      this.#ensureAjv();
+      this.#requireValidSchemaId(schemaId);
+    } catch (error) {
       return false;
     }
 
@@ -444,13 +507,13 @@ class AjvSchemaValidator {
    * @returns {Promise<void>}
    */
   async addSchemas(schemasArray) {
-    if (!this.#ajv) {
+    try {
+      this.#ensureAjv();
+    } catch (error) {
       this.#logger.error(
         'AjvSchemaValidator.addSchemas: Ajv instance not available.'
       );
-      return Promise.reject(
-        new Error('AjvSchemaValidator: Ajv instance not available.')
-      );
+      return Promise.reject(error);
     }
     if (!Array.isArray(schemasArray) || schemasArray.length === 0) {
       const errMsg = 'addSchemas called with empty or non-array input.';
@@ -459,7 +522,14 @@ class AjvSchemaValidator {
     }
     // Validate all schemas have $id
     for (const schema of schemasArray) {
-      if (!schema || typeof schema !== 'object' || !schema.$id) {
+      if (!schema || typeof schema !== 'object') {
+        const errMsg = 'All schemas must be objects with a valid $id.';
+        this.#logger.error(`AjvSchemaValidator.addSchemas: ${errMsg}`);
+        return Promise.reject(new Error(`AjvSchemaValidator: ${errMsg}`));
+      }
+      try {
+        this.#requireValidSchemaId(schema.$id);
+      } catch (error) {
         const errMsg = 'All schemas must be objects with a valid $id.';
         this.#logger.error(`AjvSchemaValidator.addSchemas: ${errMsg}`);
         return Promise.reject(new Error(`AjvSchemaValidator: ${errMsg}`));

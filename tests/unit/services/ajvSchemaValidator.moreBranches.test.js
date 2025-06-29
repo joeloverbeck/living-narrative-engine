@@ -84,4 +84,18 @@ describe('AjvSchemaValidator edge branch tests', () => {
       expect.objectContaining({ schemaId: 'some-id', error: removeError })
     );
   });
+
+  it('validate returns schemaNotFound result for invalid schemaId', () => {
+    const result = validator.validate(null, {});
+    expect(result.isValid).toBe(false);
+    expect(result.errors[0].keyword).toBe('schemaNotFound');
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining('validate called for schemaId')
+    );
+  });
+
+  it('validateSchemaRefs returns false for invalid schemaId', () => {
+    const result = validator.validateSchemaRefs('');
+    expect(result).toBe(false);
+  });
 });
