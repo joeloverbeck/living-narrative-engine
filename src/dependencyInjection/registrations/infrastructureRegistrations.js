@@ -17,6 +17,7 @@ import ScopeRegistry from '../../scopeDsl/scopeRegistry.js';
 import ScopeEngine from '../../scopeDsl/engine.js';
 import { LRUCache } from 'lru-cache';
 import ScopeCache from '../../scopeDsl/cache.js';
+import DefaultDslParser from '../../scopeDsl/parser/defaultDslParser.js';
 
 /**
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
@@ -132,6 +133,12 @@ export function registerInfrastructure(container) {
   registrar.single(tokens.ScopeEngine, ScopeEngine);
   log.debug(
     `Infrastructure Registration: Registered ${String(tokens.ScopeEngine)}.`
+  );
+
+  // DSL Parser
+  registrar.single(tokens.DslParser, DefaultDslParser);
+  log.debug(
+    `Infrastructure Registration: Registered ${String(tokens.DslParser)}.`
   );
 
   // Scope DSL Cache (wraps ScopeEngine with caching)

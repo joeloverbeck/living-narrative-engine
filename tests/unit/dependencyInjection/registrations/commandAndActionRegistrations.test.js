@@ -43,6 +43,7 @@ describe('registerCommandAndAction', () => {
   const mockSafeEventDispatcher = mockDeep();
   const mockScopeRegistry = mockDeep();
   const mockScopeEngine = mockDeep();
+  const mockDslParser = { parse: jest.fn() };
 
   beforeEach(() => {
     container = new AppContainer();
@@ -73,6 +74,7 @@ describe('registerCommandAndAction', () => {
     );
     container.register(tokens.IScopeRegistry, () => mockScopeRegistry);
     container.register(tokens.IScopeEngine, () => mockScopeEngine);
+    container.register(tokens.DslParser, () => mockDslParser);
   });
 
   afterEach(() => {

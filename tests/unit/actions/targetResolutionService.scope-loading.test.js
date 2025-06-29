@@ -12,6 +12,7 @@ describe('TargetResolutionService - Scope Loading Issue', () => {
   let mockLogger;
   let mockSafeEventDispatcher;
   let mockJsonLogicEvalService;
+  let mockDslParser;
 
   beforeEach(() => {
     mockScopeRegistry = {
@@ -39,6 +40,7 @@ describe('TargetResolutionService - Scope Loading Issue', () => {
     mockJsonLogicEvalService = {
       evaluate: jest.fn(),
     };
+    mockDslParser = { parse: jest.fn((expr) => generateMockAst(expr)) };
 
     targetResolutionService = new TargetResolutionService({
       scopeRegistry: mockScopeRegistry,
@@ -47,6 +49,7 @@ describe('TargetResolutionService - Scope Loading Issue', () => {
       logger: mockLogger,
       safeEventDispatcher: mockSafeEventDispatcher,
       jsonLogicEvaluationService: mockJsonLogicEvalService,
+      dslParser: mockDslParser,
     });
   });
 
@@ -162,16 +165,9 @@ describe('TargetResolutionService - Scope Loading Issue', () => {
       );
 
       expect(result).toHaveLength(0);
-      expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
-        'core:system_error_occurred',
-        expect.objectContaining({
-          message: expect.stringContaining(
-            "Error resolving scope 'core:clear_directions'"
-          ),
-          details: expect.objectContaining({
-            error: expect.stringContaining('missing the required AST property'),
-          }),
-        })
+      expect(mockSafeEventDispatcher.dispatch).not.toHaveBeenCalled();
+      expect(mockDslParser.parse).toHaveBeenCalledWith(
+        'location.core:exits[].target'
       );
     });
   });
