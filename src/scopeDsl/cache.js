@@ -6,6 +6,8 @@
 import { TURN_STARTED_ID } from '../constants/eventIds.js';
 import { IScopeEngine } from '../interfaces/IScopeEngine.js';
 
+/** @typedef {import('../types/runtimeContext.js').RuntimeContext} RuntimeContext */
+
 /**
  * Scope-DSL Cache that provides memoization for scope resolution
  * Acts as a caching wrapper around ScopeEngine with automatic cache invalidation
@@ -79,7 +81,7 @@ class ScopeCache extends IScopeEngine {
    *
    * @param {string} actorId - Actor ID
    * @param {object} ast - The parsed AST
-   * @param {object} runtimeCtx - Runtime context containing location
+   * @param {RuntimeContext} runtimeCtx - Runtime context containing location
    * @returns {string} Cache key
    * @private
    */
@@ -100,7 +102,7 @@ class ScopeCache extends IScopeEngine {
    *
    * @param {object} ast - The parsed AST
    * @param {object} actorEntity - The acting entity instance
-   * @param {object} runtimeCtx - Runtime context with services
+   * @param {RuntimeContext} runtimeCtx - Runtime context with services
    * @returns {Set<string>} Set of entity IDs
    */
   resolve(ast, actorEntity, runtimeCtx) {

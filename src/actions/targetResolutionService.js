@@ -9,6 +9,7 @@
 /** @typedef {import('../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 /** @typedef {import('./tracing/traceContext.js').TraceContext} TraceContext */
 /** @typedef {import('../logic/jsonLogicEvaluationService.js').default} JsonLogicEvaluationService */
+/** @typedef {import('../types/runtimeContext.js').RuntimeContext} RuntimeContext */
 
 import { ITargetResolutionService } from '../interfaces/ITargetResolutionService.js';
 import { ActionTargetContext } from '../models/actionTargetContext.js';
@@ -181,7 +182,7 @@ export class TargetResolutionService extends ITargetResolutionService {
    *
    * @param {Entity} actorEntity The current actor entity.
    * @param {ActionContext} discoveryContext Context for scope resolution.
-   * @returns {object} The runtime context for scope evaluation.
+   * @returns {RuntimeContext} The runtime context for scope evaluation.
    * @private
    */
   #buildRuntimeContext(actorEntity, discoveryContext) {
