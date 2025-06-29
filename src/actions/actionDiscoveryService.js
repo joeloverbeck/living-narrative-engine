@@ -136,7 +136,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
       );
       return {
         actions: [],
-        errors: [new Error('Candidate retrieval failed')],
+        errors: [createDiscoveryError('candidateRetrieval', null, err)],
         trace,
       };
     }
