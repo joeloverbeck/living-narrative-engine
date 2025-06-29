@@ -54,7 +54,6 @@ class ScopeEngine extends IScopeEngine {
   constructor() {
     super(); // Call parent constructor
     this.maxDepth = 4;
-    this.dispatcher = null;
     this.depthGuard = null;
     this.cycleDetector = null;
   }
@@ -73,48 +72,37 @@ class ScopeEngine extends IScopeEngine {
    * @private
    */
   _ensureInitialized(runtimeCtx) {
-    // Always update the current runtime context
-    this._currentRuntimeCtx = runtimeCtx;
-
-    if (this.dispatcher) return;
-
     // Create adapters for resolvers to work with runtimeCtx
-    // IMPORTANT: Use arrow function to always get current location from _currentRuntimeCtx
     const locationProvider = {
-      getLocation: () => this._currentRuntimeCtx?.location,
+      getLocation: () => runtimeCtx?.location,
     };
 
     const entitiesGateway = {
       getEntities: () => {
-        const em = this._currentRuntimeCtx?.entityManager;
+        const em = runtimeCtx?.entityManager;
         return em?.getEntities
           ? em.getEntities()
           : Array.from(em?.entities?.values() || []);
       },
       getEntitiesWithComponent: (cid) => {
-        return this._currentRuntimeCtx?.entityManager?.getEntitiesWithComponent(
-          cid
-        );
+        return runtimeCtx?.entityManager?.getEntitiesWithComponent(cid);
       },
       hasComponent: (eid, cid) => {
-        const em = this._currentRuntimeCtx?.entityManager;
+        const em = runtimeCtx?.entityManager;
         return em?.hasComponent ? em.hasComponent(eid, cid) : false;
       },
       getComponentData: (eid, cid) => {
-        return this._currentRuntimeCtx?.entityManager?.getComponentData(
-          eid,
-          cid
-        );
+        return runtimeCtx?.entityManager?.getComponentData(eid, cid);
       },
       getEntityInstance: (eid) => {
-        const em = this._currentRuntimeCtx?.entityManager;
+        const em = runtimeCtx?.entityManager;
         return em?.getEntity ? em.getEntity(eid) : em?.getEntityInstance(eid);
       },
     };
 
     const logicEval = {
       evaluate: (logic, context) => {
-        return this._currentRuntimeCtx?.jsonLogicEval?.evaluate(logic, context);
+        return runtimeCtx?.jsonLogicEval?.evaluate(logic, context);
       },
     };
 
@@ -127,9 +115,15 @@ class ScopeEngine extends IScopeEngine {
       createArrayIterationResolver(),
     ];
 
-    this.dispatcher = createDispatcher(resolvers);
-    this.depthGuard = createDepthGuard(this.maxDepth);
-    this.cycleDetector = createCycleDetector();
+    const dispatcher = createDispatcher(resolvers);
+    if (!this.depthGuard) {
+      this.depthGuard = createDepthGuard(this.maxDepth);
+    }
+    if (!this.cycleDetector) {
+      this.cycleDetector = createCycleDetector();
+    }
+
+    return dispatcher;
   }
 
   /**
@@ -148,7 +142,7 @@ class ScopeEngine extends IScopeEngine {
     trace?.addLog('step', 'Starting scope resolution.', source, { ast });
 
     // Ensure engine is initialized with resolvers
-    this._ensureInitialized(runtimeCtx);
+    const dispatcher = this._ensureInitialized(runtimeCtx);
 
     // Create resolution context for resolvers with wrapped dispatcher
     const ctx = {
@@ -157,14 +151,14 @@ class ScopeEngine extends IScopeEngine {
       trace,
       dispatcher: {
         resolve: (node, innerCtx) =>
-          this._resolveWithDepthAndCycleChecking(node, innerCtx),
+          this._resolveWithDepthAndCycleChecking(node, innerCtx, dispatcher),
       },
       depth: 0,
       cycleDetector: this.cycleDetector,
       depthGuard: this.depthGuard,
     };
 
-    const result = this._resolveWithDepthAndCycleChecking(ast, ctx);
+    const result = this._resolveWithDepthAndCycleChecking(ast, ctx, dispatcher);
 
     const finalTargets = Array.from(result);
     trace?.addLog(
@@ -184,7 +178,7 @@ class ScopeEngine extends IScopeEngine {
    * @returns {Set} Set of resolved values
    * @private
    */
-  _resolveWithDepthAndCycleChecking(node, ctx) {
+  _resolveWithDepthAndCycleChecking(node, ctx, dispatcher) {
     // Check depth
     ctx.depthGuard.ensure(ctx.depth);
 
@@ -202,13 +196,17 @@ class ScopeEngine extends IScopeEngine {
         dispatcher: {
           resolve: (innerNode, innerCtx) => {
             // Use the context passed by the resolver, which already has the correct depth
-            return this._resolveWithDepthAndCycleChecking(innerNode, innerCtx);
+            return this._resolveWithDepthAndCycleChecking(
+              innerNode,
+              innerCtx,
+              dispatcher
+            );
           },
         },
       };
 
       // Use dispatcher to resolve
-      return this.dispatcher.resolve(node, newCtx);
+      return dispatcher.resolve(node, newCtx);
     } finally {
       // Always leave cycle detection
       ctx.cycleDetector.leave();
