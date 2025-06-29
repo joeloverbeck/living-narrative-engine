@@ -182,4 +182,17 @@ describe('ProcessingCommandState helpers', () => {
       workflow._exceptionHandler
     );
   });
+
+  test('_executeAction delegates errors to exception handler', async () => {
+    const actor = { id: 'a1' };
+    const ctx = makeCtx(actor);
+    const action = { actionDefinitionId: 'act' };
+    const err = new Error('boom');
+    jest.spyOn(state, '_processCommandInternal').mockRejectedValue(err);
+    const handlerSpy = jest.spyOn(workflow._exceptionHandler, 'handle');
+
+    await workflow._executeAction(ctx, actor, action);
+
+    expect(handlerSpy).toHaveBeenCalledWith(ctx, err, actor.id);
+  });
 });
