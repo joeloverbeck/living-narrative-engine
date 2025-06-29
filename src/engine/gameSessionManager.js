@@ -107,7 +107,7 @@ class GameSessionManager {
     }
     await this.#prepareEngineForOperation(null);
 
-    this.#state.activeWorld = worldName;
+    this.#state.setActiveWorld(worldName);
     this.#logger.debug(
       `GameSessionManager: Preparing new game session for world "${worldName}"...`
     );
@@ -202,8 +202,9 @@ class GameSessionManager {
       `GameSessionManager.finalizeLoadSuccess: Game state restored successfully from ${saveIdentifier}. Finalizing load setup.`
     );
 
-    this.#state.activeWorld =
-      loadedSaveData.metadata?.gameTitle || 'Restored Game';
+    this.#state.setActiveWorld(
+      loadedSaveData.metadata?.gameTitle || 'Restored Game'
+    );
     await this.#finalizeGameStart(this.#state.activeWorld);
     this.#logger.debug(
       `GameSessionManager.finalizeLoadSuccess: Game loaded from "${saveIdentifier}" (World: ${this.#state.activeWorld}) and resumed.`
