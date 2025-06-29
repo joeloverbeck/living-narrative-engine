@@ -4,9 +4,15 @@ import { ProcessingWorkflow } from '../../../../src/turns/states/workflows/proce
 import TurnDirectiveStrategyResolver, {
   DEFAULT_STRATEGY_MAP,
 } from '../../../../src/turns/strategies/turnDirectiveStrategyResolver.js';
-import * as dispatchSpeechEventModule from '../../../../src/turns/states/helpers/dispatchSpeechEvent.js';
+import * as safeDispatchEventModule from '../../../../src/utils/safeDispatchEvent.js';
+import { ENTITY_SPOKE_ID } from '../../../../src/constants/eventIds.js';
 
-const mockLogger = { debug: jest.fn(), warn: jest.fn(), error: jest.fn() };
+const mockLogger = {
+  debug: jest.fn(),
+  info: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+};
 const mockHandler = {
   getTurnContext: jest.fn(),
   _resetTurnStateAndResources: jest.fn(),
@@ -116,14 +122,14 @@ describe('ProcessingCommandState helpers', () => {
     const actor = { id: 'a1' };
     const dispatcher = { dispatch: jest.fn().mockResolvedValue(undefined) };
     const ctx = makeCtx(actor, { getSafeEventDispatcher: () => dispatcher });
-    const helperSpy = jest.spyOn(
-      dispatchSpeechEventModule,
-      'dispatchSpeechEvent'
-    );
+    const helperSpy = jest.spyOn(safeDispatchEventModule, 'safeDispatchEvent');
     await state._dispatchSpeech(ctx, actor, { speech: 'hi' });
-    expect(helperSpy).toHaveBeenCalledWith(ctx, mockHandler, 'a1', {
-      speechContent: 'hi',
-    });
+    expect(helperSpy).toHaveBeenCalledWith(
+      dispatcher,
+      ENTITY_SPOKE_ID,
+      { entityId: 'a1', speechContent: 'hi' },
+      mockLogger
+    );
     expect(dispatcher.dispatch).toHaveBeenCalled();
     helperSpy.mockRestore();
   });
@@ -134,6 +140,20 @@ describe('ProcessingCommandState helpers', () => {
     await state._dispatchSpeech(ctx, actor, { speech: 'hi' });
     expect(mockLogger.warn).toHaveBeenCalledWith(
       expect.stringContaining('SafeEventDispatcher unavailable')
+    );
+  });
+
+  test('_dispatchSpeech logs error when dispatch fails', async () => {
+    const actor = { id: 'a1' };
+    const dispatchErr = new Error('bad');
+    const dispatcher = { dispatch: jest.fn().mockRejectedValue(dispatchErr) };
+    const ctx = makeCtx(actor, { getSafeEventDispatcher: () => dispatcher });
+
+    await state._dispatchSpeech(ctx, actor, { speech: 'hi' });
+
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      `Failed to dispatch ${ENTITY_SPOKE_ID}`,
+      dispatchErr
     );
   });
 
