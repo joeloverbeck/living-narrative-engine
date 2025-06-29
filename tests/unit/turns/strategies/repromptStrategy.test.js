@@ -118,7 +118,9 @@ describe('RepromptStrategy', () => {
 
     expect(mockTurnContext.getLogger).toHaveBeenCalledTimes(1);
     expect(mockTurnContext.getSafeEventDispatcher).toHaveBeenCalledTimes(1);
-    expect(mockTurnContext._safeEventDispatcher.dispatch).not.toHaveBeenCalled();
+    expect(
+      mockTurnContext._safeEventDispatcher.dispatch
+    ).not.toHaveBeenCalled();
     expect(mockTurnContext.requestTransition).not.toHaveBeenCalled();
     expect(mockTurnContext.endTurn).not.toHaveBeenCalled();
   });

@@ -8,6 +8,8 @@ import { createMockLogger } from '../testUtils.js';
  * @param {Array<any>} [options.getSchemaReturns] - Values returned by the mocked getSchema in order.
  * @param {Function} [options.addSchemaImpl] - Implementation for addSchema.
  * @param {Function} [options.compileImpl] - Implementation for compile.
+ * @param options.schemaMap
+ * @param options.schemaGetter
  * @returns {{validator: any, logger: ReturnType<typeof createMockLogger>, addSchema: jest.Mock, getSchema: jest.Mock, compile: jest.Mock}}
  * Returns a constructed validator and the mocked functions for assertions.
  */
@@ -37,7 +39,7 @@ function setupMockAjv({
     require('../../../src/validation/ajvSchemaValidator.js').default;
   const logger = createMockLogger();
   return {
-    validator: new AjvSchemaValidator(logger),
+    validator: new AjvSchemaValidator({ logger: logger }),
     logger,
     addSchema,
     getSchema,
@@ -118,7 +120,7 @@ describe('AjvSchemaValidator reference and batch operations', () => {
     const AjvSchemaValidator =
       require('../../../src/validation/ajvSchemaValidator.js').default;
     const logger = createMockLogger();
-    const validator = new AjvSchemaValidator(logger);
+    const validator = new AjvSchemaValidator({ logger: logger });
     await expect(validator.addSchemas(null)).rejects.toThrow(
       'addSchemas called with empty or non-array input.'
     );
@@ -135,7 +137,7 @@ describe('AjvSchemaValidator reference and batch operations', () => {
     const AjvSchemaValidator =
       require('../../../src/validation/ajvSchemaValidator.js').default;
     const logger = createMockLogger();
-    const validator = new AjvSchemaValidator(logger);
+    const validator = new AjvSchemaValidator({ logger: logger });
     await expect(validator.addSchemas([{}])).rejects.toThrow(
       'All schemas must be objects with a valid $id.'
     );

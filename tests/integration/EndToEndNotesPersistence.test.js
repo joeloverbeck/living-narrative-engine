@@ -176,7 +176,8 @@ describe('End-to-End Notes Persistence Flow', () => {
       conditionEvaluator: ConditionEvaluator,
     });
 
-    schemaValidator = new AjvSchemaValidator(logger, {
+    schemaValidator = new AjvSchemaValidator({
+      logger: logger,
       preloadSchemas: [
         {
           schema: LLM_TURN_ACTION_RESPONSE_SCHEMA,

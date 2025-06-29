@@ -120,7 +120,8 @@ export function registerLoaders(container) {
   registrar.singletonFactory(
     tokens.ISchemaValidator,
     (c) =>
-      new AjvSchemaValidator(c.resolve(tokens.ILogger), {
+      new AjvSchemaValidator({
+        logger: c.resolve(tokens.ILogger),
         preloadSchemas: [
           {
             schema: LLM_TURN_ACTION_RESPONSE_SCHEMA,

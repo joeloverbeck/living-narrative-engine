@@ -30,7 +30,8 @@ describe('Body Description Generation Integration', () => {
         },
       };
 
-      const description = bodyPartDescriptionBuilder.buildDescription(breastEntity);
+      const description =
+        bodyPartDescriptionBuilder.buildDescription(breastEntity);
       expect(description).toBe('a D-cup, meaty, and firm breast');
     });
 
@@ -49,7 +50,8 @@ describe('Body Description Generation Integration', () => {
         },
       };
 
-      const description = bodyPartDescriptionBuilder.buildDescription(eyeEntity);
+      const description =
+        bodyPartDescriptionBuilder.buildDescription(eyeEntity);
       expect(description).toBe('a cobalt, almond eye');
     });
 
@@ -69,7 +71,8 @@ describe('Body Description Generation Integration', () => {
         },
       };
 
-      const description = bodyPartDescriptionBuilder.buildDescription(hairEntity);
+      const description =
+        bodyPartDescriptionBuilder.buildDescription(hairEntity);
       expect(description).toBe('long, raven-black, and straight hair');
     });
 

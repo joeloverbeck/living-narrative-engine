@@ -123,7 +123,7 @@ describe('Integration: Entity Instances Loader and World Initialization', () => 
       tokens.IDataFetcher,
       createMockDataFetcher({ fromDisk: true })
     );
-    const schemaValidator = new AjvSchemaValidator(logger);
+    const schemaValidator = new AjvSchemaValidator({ logger: logger });
     await schemaValidator.addSchema(
       commonSchema,
       'http://example.com/schemas/common.schema.json'
@@ -376,7 +376,7 @@ describe('Integration: EntityInstance componentOverrides are respected during wo
       createMockDataFetcher({ fromDisk: true })
     );
 
-    const schemaValidator = new AjvSchemaValidator(localLogger);
+    const schemaValidator = new AjvSchemaValidator({ logger: localLogger });
     // Add all necessary schemas (ensure these paths are correct relative to this file or adjust)
     await schemaValidator.addSchema(
       commonSchema,

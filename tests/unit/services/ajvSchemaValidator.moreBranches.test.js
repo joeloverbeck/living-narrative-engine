@@ -18,7 +18,7 @@ const sampleSchema = {
  */
 function createValidator() {
   const logger = createMockLogger();
-  const validator = new AjvSchemaValidator(logger);
+  const validator = new AjvSchemaValidator({ logger: logger });
   return { validator, logger };
 }
 
@@ -75,7 +75,7 @@ describe('AjvSchemaValidator edge branch tests', () => {
     const AjvSchemaValidatorReloaded =
       require('../../../src/validation/ajvSchemaValidator.js').default;
     const logger2 = createMockLogger();
-    const freshValidator = new AjvSchemaValidatorReloaded(logger2);
+    const freshValidator = new AjvSchemaValidatorReloaded({ logger: logger2 });
 
     const result = freshValidator.removeSchema('some-id');
     expect(result).toBe(false);

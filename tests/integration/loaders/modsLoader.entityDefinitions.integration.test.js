@@ -100,7 +100,7 @@ describe('Integration: Entity Definitions and Instances Loader', () => {
       createMockDataFetcher({ fromDisk: true })
     );
     // Register and load AjvSchemaValidator with schemas
-    const schemaValidator = new AjvSchemaValidator(logger);
+    const schemaValidator = new AjvSchemaValidator({ logger: logger });
     await schemaValidator.addSchema(
       commonSchema,
       'http://example.com/schemas/common.schema.json'
