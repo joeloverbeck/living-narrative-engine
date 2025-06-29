@@ -731,7 +731,7 @@ describe('BodyBlueprintFactory', () => {
       expect(result.entities).toContain('eye-1');
     });
 
-    it('should warn when no parts match slot criteria', async () => {
+    it('should throw error and dispatch event when no parts match slot criteria', async () => {
       const blueprint = {
         root: 'anatomy:torso',
         attachments: [],
@@ -780,15 +780,19 @@ describe('BodyBlueprintFactory', () => {
         }
       );
 
-      const result = await factory.createAnatomyGraph(
-        'test-blueprint',
-        'test-recipe'
+      await expect(
+        factory.createAnatomyGraph('test-blueprint', 'test-recipe')
+      ).rejects.toThrow(
+        "Failed to find parts for socket 'wing_socket' on parent 'anatomy:torso'"
       );
 
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        "No candidate parts found for slot with type 'wing'"
+      // Verify event was dispatched
+      expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
+        'core:system_error_occurred',
+        expect.objectContaining({
+          context: 'BodyBlueprintFactory.createPartForSlot',
+        })
       );
-      expect(result.entities).toEqual(['torso-1']);
     });
 
     it('should handle entity cleanup on validation error', async () => {
