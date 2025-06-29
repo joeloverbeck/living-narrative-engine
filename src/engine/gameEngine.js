@@ -3,12 +3,12 @@
 import { tokens } from '../dependencyInjection/tokens.js';
 import {
   ENGINE_INITIALIZING_UI,
-  ENGINE_OPERATION_FAILED_UI,
   ENGINE_STOPPED_UI,
   REQUEST_SHOW_SAVE_GAME_UI,
   REQUEST_SHOW_LOAD_GAME_UI,
   CANNOT_SAVE_GAME_INFO,
 } from '../constants/eventIds.js';
+import { processOperationFailure } from './engineErrorUtils.js';
 import EngineState from './engineState.js';
 import GameSessionManager from './gameSessionManager.js';
 import PersistenceCoordinator from './persistenceCoordinator.js';
@@ -204,41 +204,13 @@ class GameEngine {
   }
 
   /**
-   * Resets engine state and dispatches a failure UI event.
-   *
-   * @private
-   * @param {string} errorMessage - Failure message to display.
-   * @param {string} title - Title for the failure UI event.
-   * @returns {Promise<void>} Resolves when completed.
-   */
-  async _dispatchFailureAndReset(errorMessage, title) {
-    this.#logger.debug(
-      'GameEngine._dispatchFailureAndReset: Dispatching UI event for operation failed.'
-    );
-    if (this.#safeEventDispatcher) {
-      await this.#safeEventDispatcher.dispatch(ENGINE_OPERATION_FAILED_UI, {
-        errorMessage,
-        errorTitle: title,
-      });
-    } else {
-      this.#logger.error(
-        'GameEngine._dispatchFailureAndReset: ISafeEventDispatcher not available, cannot dispatch UI failure event.'
-      );
-    }
-
-    this.#resetEngineState();
-  }
-
-  /**
-   * Logs a failure, dispatches UI, and optionally returns a standardized result.
-   *
    * @private
    * @param {string} contextMessage - Context for the log entry.
    * @param {unknown} error - Error or message to process.
    * @param {string} title - Title for the failure UI event.
    * @param {string} userPrefix - Prefix for the user-facing error message.
    * @param {boolean} [returnResult] - Whether to return a failure object.
-   * @returns {Promise<void | {success: false, error: string, data: null}>} Resolves when complete or returns the failure result.
+   * @returns {Promise<void | {success: false, error: string, data: null}>}
    */
   async _processOperationFailure(
     contextMessage,
@@ -247,22 +219,16 @@ class GameEngine {
     userPrefix,
     returnResult = false
   ) {
-    const normalizedError =
-      error instanceof Error ? error : new Error(String(error));
-
-    this.#logger.error(
-      `GameEngine.${contextMessage}: ${normalizedError.message}`,
-      normalizedError
+    return processOperationFailure(
+      this.#logger,
+      this.#safeEventDispatcher,
+      contextMessage,
+      error,
+      title,
+      userPrefix,
+      this.#resetEngineState.bind(this),
+      returnResult
     );
-
-    await this._dispatchFailureAndReset(
-      `${userPrefix}: ${normalizedError.message}`,
-      title
-    );
-
-    if (returnResult) {
-      return { success: false, error: normalizedError.message, data: null };
-    }
   }
 
   async _handleNewGameFailure(error, worldName) {
