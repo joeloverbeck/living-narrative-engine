@@ -192,7 +192,7 @@ export class TurnIdleState extends AbstractTurnState {
   }
 
   /** @override */
-  async processCommandResult(handler, actor, cmdProcResult, commandString) {
+  async processCommandResult(handler, actor, commandResult, commandString) {
     const actorIdForLog = actor?.id ?? UNKNOWN_ENTITY_ID;
     this._warnNoActiveTurn(
       'processCommandResult called (for ',
@@ -201,16 +201,16 @@ export class TurnIdleState extends AbstractTurnState {
     return super.processCommandResult(
       handler,
       actor,
-      cmdProcResult,
+      commandResult,
       commandString
     );
   }
 
   /** @override */
-  async handleDirective(handler, actor, directive, cmdProcResult) {
+  async handleDirective(handler, actor, directive, commandResult) {
     const actorIdForLog = actor?.id ?? UNKNOWN_ENTITY_ID;
     this._warnNoActiveTurn('handleDirective called (for ', `${actorIdForLog})`);
-    return super.handleDirective(handler, actor, directive, cmdProcResult);
+    return super.handleDirective(handler, actor, directive, commandResult);
   }
 
   /** @override */

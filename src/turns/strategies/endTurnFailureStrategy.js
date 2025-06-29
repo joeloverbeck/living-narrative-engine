@@ -17,13 +17,19 @@ import {
   resolveTurnEndError,
 } from './strategyHelpers.js';
 
+/**
+ * @class EndTurnFailureStrategy
+ * @description Handles the END_TURN_FAILURE directive by ending the turn with
+ * an error via ITurnContext.
+ */
+
 export default class EndTurnFailureStrategy extends ITurnDirectiveStrategy {
   /** @override */
   async execute(
     /** @type {ITurnContext} */ turnContext,
     // actor parameter removed as per outcome of Ticket 2
     /** @type {TurnDirectiveEnum}     */ directive,
-    /** @type {CommandResult}    */ cmdProcResult
+    /** @type {CommandResult}    */ commandResult
   ) {
     const { logger, className } = getLoggerAndClass(this, turnContext);
 
@@ -54,7 +60,7 @@ export default class EndTurnFailureStrategy extends ITurnDirectiveStrategy {
     // as the explicit `actor` parameter is removed. The primary concern is now whether `contextActor` exists.
 
     const turnEndError = resolveTurnEndError(
-      cmdProcResult,
+      commandResult,
       contextActor.id,
       directive
     );
