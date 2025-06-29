@@ -11,6 +11,7 @@ import EntityDefinitionLoader from '../../../src/loaders/entityDefinitionLoader.
 import EntityInstanceLoader from '../../../src/loaders/entityInstanceLoader.js';
 import WorldLoader from '../../../src/loaders/worldLoader.js';
 import ContentLoadManager from '../../../src/loaders/ContentLoadManager.js';
+import LoadResultAggregator from '../../../src/loaders/LoadResultAggregator.js';
 import { createContentLoadersConfig } from '../../../src/loaders/defaultLoaderConfig.js';
 
 /**
@@ -62,6 +63,7 @@ function buildEnv(pathToResponse) {
     logger,
     validatedEventDispatcher: dispatcher,
     contentLoadersConfig,
+    aggregatorFactory: (counts) => new LoadResultAggregator(counts),
   });
   return { logger, registry, manager, worldLoader };
 }

@@ -6,12 +6,13 @@
 
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('./LoadResultAggregator.js').TotalResultsSummary} TotalResultsSummary */
+/** @typedef {import('./helpers/resultsSummary.js').TotalsSummary} TotalsSummary */
 
 /**
  * Computes summed totals across all registry keys.
  *
  * @param {TotalResultsSummary} totals - Map of content type totals.
- * @returns {{count: number, overrides: number, errors: number}} Grand totals.
+ * @returns {TotalsSummary} Grand totals.
  */
 export function computeTotalsSummary(totals) {
   const summary = { count: 0, overrides: 0, errors: 0 };
