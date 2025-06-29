@@ -81,6 +81,7 @@ export const coreTokens = freeze({
   AnatomyFormattingService: 'AnatomyFormattingService',
   ISafeEventDispatcher: 'ISafeEventDispatcher',
   IValidatedEventDispatcher: 'IValidatedEventDispatcher',
+  EventDispatchService: 'EventDispatchService',
   IScopeRegistry: 'IScopeRegistry',
   IScopeEngine: 'IScopeEngine',
   IActionExecutor: 'IActionExecutor',

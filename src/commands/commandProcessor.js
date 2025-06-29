@@ -10,7 +10,7 @@ import {
   createFailureResult,
   dispatchFailure,
 } from './helpers/commandResultUtils.js';
-import { dispatchWithErrorHandling as dispatchEventWithErrorHandling } from '../utils/eventDispatchHelper.js';
+import { eventDispatchService } from '../utils/eventDispatchService.js';
 
 // --- Type Imports ---
 /** @typedef {import('../entities/entity.js').default} Entity */
@@ -93,7 +93,7 @@ class CommandProcessor extends ICommandProcessor {
     const payload = this.#createAttemptActionPayload(actor, turnAction);
 
     // --- Dispatch ---
-    const dispatchSuccess = await dispatchEventWithErrorHandling(
+    const dispatchSuccess = await eventDispatchService.dispatchWithErrorHandling(
       this.#safeEventDispatcher,
       ATTEMPT_ACTION_ID,
       payload,

@@ -9,7 +9,7 @@
 // Type imports for JSDoc
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../events/validatedEventDispatcher.js').default} ValidatedEventDispatcher */ // Corrected path
-import { dispatchWithLogging } from '../utils/eventDispatchUtils.js';
+import { eventDispatchService } from '../utils/eventDispatchService.js';
 import { assertFunction, assertPresent } from '../utils/dependencyUtils.js';
 
 /**
@@ -146,7 +146,7 @@ class SystemInitializer {
           error: initError?.message || 'Unknown error',
           stack: initError?.stack,
         };
-        dispatchWithLogging(
+        eventDispatchService.dispatchWithLogging(
           this.#validatedEventDispatcher,
           'system:initialization_failed',
           failurePayload,

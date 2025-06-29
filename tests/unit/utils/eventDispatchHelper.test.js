@@ -1,5 +1,5 @@
 import { describe, it, expect, jest } from '@jest/globals';
-import { dispatchWithErrorHandling } from '../../../src/utils/eventDispatchHelper.js';
+import { EventDispatchService } from '../../../src/utils/eventDispatchService.js';
 import { createMockLogger } from '../../common/mockFactories/loggerMocks.js';
 import * as loggerUtils from '../../../src/utils/loggerUtils.js';
 import { safeDispatchError } from '../../../src/utils/safeDispatchErrorUtils.js';
@@ -9,13 +9,15 @@ jest.mock('../../../src/utils/safeDispatchErrorUtils.js', () => ({
   safeDispatchError: jest.fn(),
 }));
 
+const service = new EventDispatchService();
+
 describe('dispatchWithErrorHandling', () => {
   it('logs success when dispatcher resolves true', async () => {
     const dispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
     const logger = createMockLogger();
     loggerUtils.ensureValidLogger.mockReturnValue(logger);
 
-    const result = await dispatchWithErrorHandling(
+    const result = await service.dispatchWithErrorHandling(
       dispatcher,
       'evt',
       { foo: 1 },
@@ -47,7 +49,7 @@ describe('dispatchWithErrorHandling', () => {
     const logger = createMockLogger();
     loggerUtils.ensureValidLogger.mockReturnValue(logger);
 
-    const result = await dispatchWithErrorHandling(
+    const result = await service.dispatchWithErrorHandling(
       dispatcher,
       'evt',
       { bar: 2 },
@@ -70,7 +72,7 @@ describe('dispatchWithErrorHandling', () => {
     const logger = createMockLogger();
     loggerUtils.ensureValidLogger.mockReturnValue(logger);
 
-    const result = await dispatchWithErrorHandling(
+    const result = await service.dispatchWithErrorHandling(
       dispatcher,
       'evt',
       { baz: 3 },

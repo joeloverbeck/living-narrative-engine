@@ -23,7 +23,7 @@ import { buildSpeechPayload } from './helpers/buildSpeechPayload.js';
 import { ProcessingGuard } from './helpers/processingGuard.js';
 import { finishProcessing } from './helpers/processingErrorUtils.js';
 import { getLogger, getSafeEventDispatcher } from './helpers/contextUtils.js';
-import { safeDispatchEvent } from '../../utils/safeDispatchEvent.js';
+import { eventDispatchService } from '../../utils/eventDispatchService.js';
 import TurnDirectiveStrategyResolver, {
   DEFAULT_STRATEGY_MAP,
 } from '../strategies/turnDirectiveStrategyResolver.js';
@@ -309,7 +309,7 @@ export class ProcessingCommandState extends AbstractTurnState {
       );
 
       const dispatcher = getSafeEventDispatcher(turnCtx, this._handler);
-      await safeDispatchEvent(
+      await eventDispatchService.safeDispatchEvent(
         dispatcher,
         ENTITY_SPOKE_ID,
         { entityId: actorId, ...payloadBase },

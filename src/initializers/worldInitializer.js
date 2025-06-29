@@ -21,7 +21,7 @@ import {
 
 // --- Utility Imports ---
 import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
-import { dispatchWithLogging } from '../utils/eventDispatchUtils.js';
+import { eventDispatchService } from '../utils/eventDispatchService.js';
 import { WorldInitializationError } from '../errors/InitializationError.js';
 import {
   assertFunction,
@@ -256,7 +256,7 @@ class WorldInitializer {
       this.#logger.error(
         `WorldInitializer (Pass 1): Failed to instantiate entity from definition: ${definitionId} for instance: ${instanceId}. createEntityInstance returned null/undefined or threw an error.`
       );
-      await dispatchWithLogging(
+      await eventDispatchService.dispatchWithLogging(
         this.#validatedEventDispatcher,
         WORLDINIT_ENTITY_INSTANTIATION_FAILED_ID,
         {
@@ -277,7 +277,7 @@ class WorldInitializer {
       `WorldInitializer (Pass 1): Successfully instantiated entity ${instance.id} (from definition: ${instance.definitionId})`
     );
 
-    await dispatchWithLogging(
+    await eventDispatchService.dispatchWithLogging(
       this.#validatedEventDispatcher,
       WORLDINIT_ENTITY_INSTANTIATED_ID,
       {

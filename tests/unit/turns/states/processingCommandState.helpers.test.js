@@ -4,7 +4,7 @@ import { ProcessingWorkflow } from '../../../../src/turns/states/workflows/proce
 import TurnDirectiveStrategyResolver, {
   DEFAULT_STRATEGY_MAP,
 } from '../../../../src/turns/strategies/turnDirectiveStrategyResolver.js';
-import * as safeDispatchEventModule from '../../../../src/utils/safeDispatchEvent.js';
+import { eventDispatchService } from '../../../../src/utils/eventDispatchService.js';
 import { ENTITY_SPOKE_ID } from '../../../../src/constants/eventIds.js';
 
 const mockLogger = {
@@ -122,7 +122,7 @@ describe('ProcessingCommandState helpers', () => {
     const actor = { id: 'a1' };
     const dispatcher = { dispatch: jest.fn().mockResolvedValue(undefined) };
     const ctx = makeCtx(actor, { getSafeEventDispatcher: () => dispatcher });
-    const helperSpy = jest.spyOn(safeDispatchEventModule, 'safeDispatchEvent');
+    const helperSpy = jest.spyOn(eventDispatchService, 'safeDispatchEvent');
     await state._dispatchSpeech(ctx, actor, { speech: 'hi' });
     expect(helperSpy).toHaveBeenCalledWith(
       dispatcher,

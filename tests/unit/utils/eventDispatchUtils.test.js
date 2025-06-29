@@ -1,9 +1,10 @@
 import { describe, it, expect, jest } from '@jest/globals';
-import { dispatchWithLogging } from '../../../src/utils/eventDispatchUtils.js';
+import { EventDispatchService } from '../../../src/utils/eventDispatchService.js';
 import { createMockLogger } from '../../common/mockFactories/loggerMocks.js';
 import * as loggerUtils from '../../../src/utils/loggerUtils.js';
 
 jest.mock('../../../src/utils/loggerUtils.js');
+const service = new EventDispatchService();
 
 describe('dispatchWithLogging', () => {
   it('logs debug message on successful dispatch without identifier', async () => {
@@ -11,7 +12,7 @@ describe('dispatchWithLogging', () => {
     const logger = createMockLogger();
     loggerUtils.ensureValidLogger.mockReturnValue(logger);
 
-    await dispatchWithLogging(dispatcher, 'evt', { foo: 1 }, logger);
+    await service.dispatchWithLogging(dispatcher, 'evt', { foo: 1 }, logger);
 
     expect(loggerUtils.ensureValidLogger).toHaveBeenCalledWith(
       logger,
@@ -29,7 +30,7 @@ describe('dispatchWithLogging', () => {
     loggerUtils.ensureValidLogger.mockReturnValue(logger);
     const options = { opt: true };
 
-    await dispatchWithLogging(
+    await service.dispatchWithLogging(
       dispatcher,
       'evt',
       { bar: 2 },

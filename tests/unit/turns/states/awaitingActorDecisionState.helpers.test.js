@@ -1,7 +1,7 @@
 import { describe, test, expect, jest, beforeEach } from '@jest/globals';
 import { AwaitingActorDecisionState } from '../../../../src/turns/states/awaitingActorDecisionState.js';
 import { ACTION_DECIDED_ID } from '../../../../src/constants/eventIds.js';
-import * as safeDispatchEventModule from '../../../../src/utils/safeDispatchEvent.js';
+import { eventDispatchService } from '../../../../src/utils/eventDispatchService.js';
 
 const logger = {
   debug: jest.fn(),
@@ -66,7 +66,7 @@ describe('AwaitingActorDecisionState helpers', () => {
     const ctx = makeCtx({ actor });
     ctx.getSafeEventDispatcher = () => dispatcher;
 
-    const spy = jest.spyOn(safeDispatchEventModule, 'safeDispatchEvent');
+    const spy = jest.spyOn(eventDispatchService, 'safeDispatchEvent');
 
     await state._emitActionDecided(ctx, actor, { foo: 'bar' });
 

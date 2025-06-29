@@ -5,7 +5,7 @@ import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 // Adjust path as needed
 import SystemInitializer from '../../../src/initializers/systemInitializer.js';
 import { INITIALIZABLE } from '../../../src/dependencyInjection/tags.js'; // Corrected import path for tags
-import * as eventDispatchUtils from '../../../src/utils/eventDispatchUtils.js';
+import { eventDispatchService } from '../../../src/utils/eventDispatchService.js';
 
 // --- Type Imports for Mocks ---
 /** @typedef {import('../../src/interfaces/coreServices.js').ILogger} ILogger */
@@ -45,7 +45,7 @@ describe('SystemInitializer (Tag-Based)', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    jest.spyOn(eventDispatchUtils, 'dispatchWithLogging');
+    jest.spyOn(eventDispatchService, 'dispatchWithLogging');
 
     // Mock ILogger
     mockLogger = {
@@ -344,7 +344,7 @@ describe('SystemInitializer (Tag-Based)', () => {
         ),
         initError
       );
-      expect(eventDispatchUtils.dispatchWithLogging).toHaveBeenCalledWith(
+      expect(eventDispatchService.dispatchWithLogging).toHaveBeenCalledWith(
         mockValidatedEventDispatcher,
         'system:initialization_failed',
         {
@@ -519,7 +519,7 @@ describe('SystemInitializer (Tag-Based)', () => {
 
       await systemInitializer.initializeAll();
 
-      expect(eventDispatchUtils.dispatchWithLogging).toHaveBeenCalledWith(
+      expect(eventDispatchService.dispatchWithLogging).toHaveBeenCalledWith(
         mockValidatedEventDispatcher,
         'system:initialization_failed',
         {

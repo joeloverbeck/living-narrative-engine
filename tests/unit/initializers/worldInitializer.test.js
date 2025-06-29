@@ -12,7 +12,7 @@ import { SCOPES_KEY } from '../../../src/constants/dataRegistryKeys.js';
 import loadAndInitScopes from '../../../src/initializers/services/scopeRegistryUtils.js';
 import { WorldInitializationError } from '../../../src/errors/InitializationError.js';
 import { safeDispatchError } from '../../../src/utils/safeDispatchErrorUtils.js';
-import * as eventDispatchUtils from '../../../src/utils/eventDispatchUtils.js';
+import { eventDispatchService } from '../../../src/utils/eventDispatchService.js';
 
 jest.mock('../../../src/utils/safeDispatchErrorUtils.js', () => ({
   safeDispatchError: jest.fn(),
@@ -76,7 +76,7 @@ describe('WorldInitializer', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    jest.spyOn(eventDispatchUtils, 'dispatchWithLogging');
+    jest.spyOn(eventDispatchService, 'dispatchWithLogging');
 
     mockEntityManager = {
       createEntityInstance: jest.fn(),
@@ -227,7 +227,7 @@ describe('WorldInitializer', () => {
         )
       );
 
-      expect(eventDispatchUtils.dispatchWithLogging).toHaveBeenCalledWith(
+      expect(eventDispatchService.dispatchWithLogging).toHaveBeenCalledWith(
         mockValidatedEventDispatcher,
         WORLDINIT_ENTITY_INSTANTIATED_ID,
         expect.objectContaining({ instanceId: 'test:hero_instance' }),
@@ -266,7 +266,7 @@ describe('WorldInitializer', () => {
       expect(mockLogger.error).toHaveBeenCalledWith(
         'WorldInitializer (Pass 1): Failed to instantiate entity from definition: test:broken for instance: test:broken_instance. createEntityInstance returned null/undefined or threw an error.'
       );
-      expect(eventDispatchUtils.dispatchWithLogging).toHaveBeenCalledWith(
+      expect(eventDispatchService.dispatchWithLogging).toHaveBeenCalledWith(
         mockValidatedEventDispatcher,
         WORLDINIT_ENTITY_INSTANTIATION_FAILED_ID,
         expect.objectContaining({ instanceId: 'test:broken_instance' }),
@@ -600,7 +600,7 @@ describe('WorldInitializer', () => {
         ),
         expect.any(Error)
       );
-      expect(eventDispatchUtils.dispatchWithLogging).toHaveBeenCalledWith(
+      expect(eventDispatchService.dispatchWithLogging).toHaveBeenCalledWith(
         mockValidatedEventDispatcher,
         WORLDINIT_ENTITY_INSTANTIATED_ID,
         expect.any(Object),
