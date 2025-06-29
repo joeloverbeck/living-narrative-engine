@@ -47,7 +47,9 @@ describe('NotesPersistenceListener', () => {
       { notes: ['note'] },
       actorEntity,
       logger,
-      dispatcher
+      dispatcher,
+      listener.notesService,
+      expect.any(Date)
     );
   });
 

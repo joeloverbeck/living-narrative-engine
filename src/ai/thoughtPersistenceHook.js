@@ -18,13 +18,15 @@ import { fetchComponent, applyComponent } from '../utils/componentHelpers.js';
  * @param {object} action       – The structured action returned by the LLM.
  * @param {object} actorEntity  – Entity instance (or test double) that generated the action.
  * @param {object} logger       – Application-wide logger (expects .warn()).
- * @param {ShortTermMemoryService} [stmService] – Service used to manage short-term memory.
+ * @param {ShortTermMemoryService} [stmService] – Optional STM service instance.
+ * @param {Date} [now] – Date provider for timestamping.
  */
 export function persistThoughts(
   action,
   actorEntity,
   logger,
-  /** @type {ShortTermMemoryService} */ stmService = new ShortTermMemoryService()
+  stmService = new ShortTermMemoryService(),
+  now = new Date()
 ) {
   /* ── 1. Validate thoughts ───────────────────────────────────────────── */
   const rawThoughts = action?.thoughts;
@@ -53,7 +55,7 @@ export function persistThoughts(
   const { mem: updatedMem } = stmService.addThought(
     memoryComp,
     thoughtText,
-    new Date()
+    now
   );
 
   /* ── 4. Push the mutation back to the entity ────────────────────────── */

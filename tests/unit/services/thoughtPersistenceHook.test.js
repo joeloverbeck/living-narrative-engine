@@ -143,4 +143,22 @@ describe('ThoughtPersistenceHook.processTurnAction', () => {
 
     addThoughtSpy.mockRestore();
   });
+
+  test('allows injecting service and now provider', () => {
+    const fakeMem = { thoughts: [], maxEntries: 2 };
+    const fakeActor = { components: { 'core:short_term_memory': fakeMem } };
+    const mockedLogger = { warn: jest.fn() };
+    const stmService = { addThought: jest.fn(() => ({ mem: fakeMem })) };
+    const fakeNow = new Date('2027-01-01T00:00:00Z');
+
+    persistThoughts(
+      { thoughts: 'Hi' },
+      fakeActor,
+      mockedLogger,
+      stmService,
+      fakeNow
+    );
+
+    expect(stmService.addThought).toHaveBeenCalledWith(fakeMem, 'Hi', fakeNow);
+  });
 });
