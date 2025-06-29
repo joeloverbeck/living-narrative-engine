@@ -7,6 +7,7 @@
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../jsonLogicEvaluationService.js').default} JsonLogicEvaluationService */
 /** @typedef {import('../defs.js').ExecutionContext} ExecutionContext */
+/** @typedef {import('../defs.js').OperationHandler} OperationHandler */
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
@@ -96,31 +97,7 @@ class QueryEntitiesHandler extends BaseOperationHandler {
       `QUERY_ENTITIES: Starting with ${candidateIds.size} total active entities.`
     );
 
-    for (const filter of filters) {
-      if (candidateIds.size === 0) {
-        logger.debug(
-          'QUERY_ENTITIES: Candidate set is empty, skipping remaining filters.'
-        );
-        break;
-      }
-
-      if (!filter || typeof filter !== 'object') {
-        logger.warn('QUERY_ENTITIES: Invalid filter object. Skipping.');
-        continue;
-      }
-
-      const filterType = Object.keys(filter)[0];
-      const filterValue = filter[filterType];
-
-      const methodName = FILTER_MAP[filterType];
-      if (methodName && typeof this[methodName] === 'function') {
-        candidateIds = this[methodName](candidateIds, filterValue, logger);
-      } else {
-        logger.warn(
-          `QUERY_ENTITIES: Encountered unknown filter type '${filterType}'. Skipping.`
-        );
-      }
-    }
+    candidateIds = this.#applyFilters(candidateIds, filters, logger);
 
     let finalIds = Array.from(candidateIds);
     if (typeof limit === 'number') {
@@ -131,28 +108,7 @@ class QueryEntitiesHandler extends BaseOperationHandler {
       );
     }
 
-    if (!ensureEvaluationContext(executionContext, this.#dispatcher, logger)) {
-      return;
-    }
-
-    const res = tryWriteContextVariable(
-      resultVariable,
-      finalIds,
-      executionContext,
-      this.#dispatcher,
-      logger
-    );
-    if (res.success) {
-      logger.debug(
-        `QUERY_ENTITIES: Stored ${finalIds.length} entity IDs in context variable "${resultVariable}".`
-      );
-    } else {
-      safeDispatchError(
-        this.#dispatcher,
-        'QUERY_ENTITIES: Cannot store result. `executionContext.evaluationContext.context` is not available.',
-        { resultVariable }
-      );
-    }
+    this.#storeResult(resultVariable, finalIds, executionContext, logger);
   }
 
   /**
@@ -193,6 +149,79 @@ class QueryEntitiesHandler extends BaseOperationHandler {
       limit: safeLimit,
       logger,
     };
+  }
+
+  /**
+   * Apply all provided filters to the candidate set in order.
+   *
+   * @param {Set<string>} candidates - Current candidate entity ids.
+   * @param {object[]} filters - Array of filter descriptors.
+   * @param {ILogger} logger - Logger for debug/warn output.
+   * @returns {Set<string>} Filtered candidate ids.
+   * @private
+   */
+  #applyFilters(candidates, filters, logger) {
+    let result = candidates;
+    for (const filter of filters) {
+      if (result.size === 0) {
+        logger.debug(
+          'QUERY_ENTITIES: Candidate set is empty, skipping remaining filters.'
+        );
+        break;
+      }
+      if (!filter || typeof filter !== 'object') {
+        logger.warn('QUERY_ENTITIES: Invalid filter object. Skipping.');
+        continue;
+      }
+
+      const filterType = Object.keys(filter)[0];
+      const filterValue = filter[filterType];
+
+      const methodName = FILTER_MAP[filterType];
+      if (methodName && typeof this[methodName] === 'function') {
+        result = this[methodName](result, filterValue, logger);
+      } else {
+        logger.warn(
+          `QUERY_ENTITIES: Encountered unknown filter type '${filterType}'. Skipping.`
+        );
+      }
+    }
+    return result;
+  }
+
+  /**
+   * Store the query result in the execution context.
+   *
+   * @param {string} resultVariable - Name of the context variable to store in.
+   * @param {string[]} finalIds - Array of entity ids to store.
+   * @param {ExecutionContext} executionContext - Current execution context.
+   * @param {ILogger} logger - Logger for debug output.
+   * @returns {void}
+   * @private
+   */
+  #storeResult(resultVariable, finalIds, executionContext, logger) {
+    if (!ensureEvaluationContext(executionContext, this.#dispatcher, logger)) {
+      return;
+    }
+
+    const res = tryWriteContextVariable(
+      resultVariable,
+      finalIds,
+      executionContext,
+      this.#dispatcher,
+      logger
+    );
+    if (res.success) {
+      logger.debug(
+        `QUERY_ENTITIES: Stored ${finalIds.length} entity IDs in context variable "${resultVariable}".`
+      );
+    } else {
+      safeDispatchError(
+        this.#dispatcher,
+        'QUERY_ENTITIES: Cannot store result. `executionContext.evaluationContext.context` is not available.',
+        { resultVariable }
+      );
+    }
   }
 
   /**
