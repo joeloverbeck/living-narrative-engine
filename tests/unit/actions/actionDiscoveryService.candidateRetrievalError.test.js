@@ -24,8 +24,13 @@ describeActionDiscoverySuite(
 
       expect(actions).toEqual([]);
       expect(errors).toHaveLength(1);
-      expect(errors[0]).toBeInstanceOf(Error);
-      expect(errors[0].message).toBe('Candidate retrieval failed');
+      expect(errors[0]).toEqual({
+        actionId: 'candidateRetrieval',
+        targetId: null,
+        error: expect.any(Error),
+        details: null,
+      });
+      expect(errors[0].error.message).toBe('boom');
       expect(trace).toBeNull();
       expect(bed.mocks.logger.error).toHaveBeenCalledWith(
         expect.stringContaining('Error retrieving candidate actions'),
