@@ -69,7 +69,7 @@ class PersistenceCoordinator {
    * @param {string} saveName - Name of the save being created.
    * @returns {Promise<void>} Resolves when the event is dispatched.
    */
-  async _dispatchSavingUI(saveName) {
+  async #dispatchSavingUI(saveName) {
     this.#logger.debug(
       `GameEngine.triggerManualSave: Dispatching ENGINE_OPERATION_IN_PROGRESS_UI for save: "${saveName}".`
     );
@@ -86,7 +86,7 @@ class PersistenceCoordinator {
    * @param {string} saveName - Save name.
    * @returns {Promise<SaveResult & {saveName: string}>} Result from the persistence service.
    */
-  async _performSave(saveName) {
+  async #performSave(saveName) {
     try {
       const result = await this.#persistenceService.saveGame(
         saveName,
@@ -116,7 +116,7 @@ class PersistenceCoordinator {
    * @param {SaveResult & {saveName: string}} saveResult - Result of the save operation.
    * @returns {Promise<void>} Resolves when UI updates have been dispatched.
    */
-  async _dispatchSaveResult(saveResult) {
+  async #dispatchSaveResult(saveResult) {
     const { saveName } = saveResult;
     if (saveResult.success) {
       this.#logger.debug(
@@ -175,11 +175,11 @@ class PersistenceCoordinator {
       return { success: false, error: errorMsg };
     }
 
-    await this._dispatchSavingUI(saveName);
+    await this.#dispatchSavingUI(saveName);
 
-    const saveResultWithName = await this._performSave(saveName);
+    const saveResultWithName = await this.#performSave(saveName);
 
-    await this._dispatchSaveResult(saveResultWithName);
+    await this.#dispatchSaveResult(saveResultWithName);
 
     const { saveName: _ignored, ...result } = saveResultWithName;
     return result;
@@ -191,7 +191,7 @@ class PersistenceCoordinator {
    * @param {string} saveIdentifier - Identifier of the save to load.
    * @returns {Promise<import('../interfaces/IGamePersistenceService.js').LoadAndRestoreResult>} Outcome of the load.
    */
-  async _executeLoadAndRestore(saveIdentifier) {
+  async #executeLoadAndRestore(saveIdentifier) {
     this.#logger.debug(
       `GameEngine._executeLoadAndRestore: Calling IGamePersistenceService.loadAndRestoreGame for "${saveIdentifier}"...`
     );
@@ -225,7 +225,7 @@ class PersistenceCoordinator {
 
     try {
       await this.#sessionManager.prepareForLoadGameSession(saveIdentifier);
-      const restoreOutcome = await this._executeLoadAndRestore(saveIdentifier);
+      const restoreOutcome = await this.#executeLoadAndRestore(saveIdentifier);
 
       if (restoreOutcome.success && restoreOutcome.data) {
         const loadedSaveData = /** @type {SaveGameStructure} */ (
