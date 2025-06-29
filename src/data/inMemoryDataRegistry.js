@@ -6,6 +6,7 @@
 
 /** @typedef {import('../interfaces/coreServices.js').IDataRegistry} IDataRegistry */
 
+import DataRegistryError from '../errors/dataRegistryError.js';
 /**
  * Implements the IDataRegistry interface using in-memory Maps for data storage.
  *
@@ -89,12 +90,12 @@ class InMemoryDataRegistry {
    */
   get(type, id) {
     if (typeof type !== 'string' || type.trim() === '') {
-      throw new Error(
+      throw new DataRegistryError(
         'InMemoryDataRegistry.get: type parameter must be a non-empty string'
       );
     }
     if (typeof id !== 'string' || id.trim() === '') {
-      throw new Error(
+      throw new DataRegistryError(
         'InMemoryDataRegistry.get: id parameter must be a non-empty string'
       );
     }
@@ -109,7 +110,7 @@ class InMemoryDataRegistry {
    */
   getAll(type) {
     if (typeof type !== 'string' || type.trim() === '') {
-      throw new Error(
+      throw new DataRegistryError(
         'InMemoryDataRegistry.getAll: type parameter must be a non-empty string'
       );
     }
@@ -198,12 +199,12 @@ class InMemoryDataRegistry {
    */
   getContentSource(type, id) {
     if (typeof type !== 'string' || type.trim() === '') {
-      throw new Error(
+      throw new DataRegistryError(
         'InMemoryDataRegistry.getContentSource: type parameter must be a non-empty string'
       );
     }
     if (typeof id !== 'string' || id.trim() === '') {
-      throw new Error(
+      throw new DataRegistryError(
         'InMemoryDataRegistry.getContentSource: id parameter must be a non-empty string'
       );
     }
