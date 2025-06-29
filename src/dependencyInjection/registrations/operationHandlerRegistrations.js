@@ -157,6 +157,11 @@ export function registerOperationHandlers(registrar) {
         }),
     ],
     [
+      tokens.IMoveEntityHandler,
+      SystemMoveEntityHandler,
+      (c) => c.resolve(tokens.SystemMoveEntityHandler),
+    ],
+    [
       tokens.GetTimestampHandler,
       GetTimestampHandler,
       (c, Handler) => new Handler({ logger: c.resolve(tokens.ILogger) }),
@@ -296,7 +301,7 @@ export function registerOperationHandlers(registrar) {
         new Handler({
           logger: c.resolve(tokens.ILogger),
           entityManager: c.resolve(tokens.IEntityManager),
-          systemMoveEntityHandler: c.resolve(tokens.SystemMoveEntityHandler),
+          moveEntityHandler: c.resolve(tokens.IMoveEntityHandler),
           safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
         }),
     ],

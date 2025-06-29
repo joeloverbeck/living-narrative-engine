@@ -37,6 +37,7 @@ describe('registerOperationHandlers', () => {
       tokens.SetVariableHandler,
       tokens.EndTurnHandler,
       tokens.SystemMoveEntityHandler,
+      tokens.IMoveEntityHandler,
       tokens.GetTimestampHandler,
       tokens.GetNameHandler,
       tokens.RebuildLeaderListCacheHandler,

@@ -128,6 +128,7 @@ export const coreTokens = freeze({
   SetVariableHandler: 'SetVariableHandler',
   EndTurnHandler: 'EndTurnHandler',
   SystemMoveEntityHandler: 'SystemMoveEntityHandler',
+  IMoveEntityHandler: 'IMoveEntityHandler',
   GetTimestampHandler: 'GetTimestampHandler',
   GetNameHandler: 'GetNameHandler',
   RebuildLeaderListCacheHandler: 'RebuildLeaderListCacheHandler',
