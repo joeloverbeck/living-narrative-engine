@@ -14,6 +14,10 @@
 import { IActionDiscoveryService } from '../interfaces/IActionDiscoveryService.js';
 import { setupService } from '../utils/serviceInitializerUtils.js';
 import { getActorLocation } from '../utils/actorLocationUtils.js';
+import {
+  createDiscoveryError,
+  extractTargetId,
+} from './utils/discoveryErrorUtils.js';
 
 // ────────────────────────────────────────────────────────────────────────────────
 /**
@@ -157,12 +161,9 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
           errors.push(...result.errors);
         }
       } catch (err) {
-        errors.push({
-          actionId: actionDef.id,
-          targetId: this.#extractTargetId(err),
-          error: err,
-          details: null,
-        });
+        errors.push(
+          createDiscoveryError(actionDef.id, extractTargetId(err), err)
+        );
         this.#logger.error(
           `Error processing candidate action '${actionDef.id}': ${err.message}`,
           err
@@ -179,18 +180,5 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     );
 
     return { actions, errors, trace };
-  }
-
-  /**
-   * Extracts a target entity ID from various error shapes.
-   *
-   * @param {Error} error - The error thrown during action processing.
-   * @returns {string|null} The resolved target entity ID or null if not present.
-   * @private
-   */
-  #extractTargetId(error) {
-    return (
-      error?.targetId ?? error?.target?.entityId ?? error?.entityId ?? null
-    );
   }
 }
