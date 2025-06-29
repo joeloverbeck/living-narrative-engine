@@ -13,25 +13,25 @@ import {
  * component payloads with consistent error handling.
  * @param {string} componentTypeId - Component type ID.
  * @param {object} data - Raw component data to validate and clone.
- * @param {import('../../interfaces/coreServices.js').IValidator} validator - Schema validator.
+ * @param {import('../../interfaces/coreServices.js').ISchemaValidator} schemaValidator - Schema validator.
  * @param {import('../../interfaces/coreServices.js').ILogger} logger - Logger for reporting validation errors.
- * @param {string} contextMsg - Context information for error messages.
- * @param {function(object): object} cloner - Function used to deep clone the data.
+ * @param {string} errorContext - Context information for error messages.
+ * @param {function(object): object} clonerFn - Function used to deep clone the data.
  * @returns {object} The validated (and cloned) data.
  */
 export function validateAndClone(
   componentTypeId,
   data,
-  validator,
+  schemaValidator,
   logger,
-  contextMsg,
-  cloner
+  errorContext,
+  clonerFn
 ) {
-  const clone = cloner(data);
-  const result = validator.validate(componentTypeId, clone);
+  const clone = clonerFn(data);
+  const result = schemaValidator.validate(componentTypeId, clone);
   if (!validationSucceeded(result)) {
     const details = formatValidationErrors(result);
-    const msg = `${contextMsg} Errors:\n${details}`;
+    const msg = `${errorContext} Errors:\n${details}`;
     logger.error(msg);
     throw new Error(msg);
   }
