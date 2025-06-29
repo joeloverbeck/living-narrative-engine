@@ -179,21 +179,38 @@ export class Registrar {
 }
 
 /**
- * Register a dependency using a registrar method while logging the action.
+ * Register a dependency with logging support. Supports two call signatures:
+ *
+ * 1. `(registrar, token, valueOrFactory, options, logger)`
+ *    - Uses {@link Registrar#register}.
+ * 2. `(registrar, logger, method, token, ...args)`
+ *    - Invokes a specific registrar method.
  *
  * @param {Registrar} registrar - The registrar instance.
- * @param {import('../interfaces/coreServices.js').ILogger} logger - Logger for debug output.
- * @param {keyof Registrar} method - Registrar method name to invoke.
- * @param {DiToken} token - The DI token to register under.
- * @param {...any} args - Additional arguments forwarded to the registrar method.
+ * @param {...any} params - Parameters according to one of the supported signatures.
  * @returns {void}
  */
-export function registerWithLog(registrar, logger, method, token, ...args) {
-  if (typeof registrar[method] !== 'function') {
-    throw new Error(`Unknown registrar method: ${String(method)}`);
+export function registerWithLog(registrar, ...params) {
+  if (
+    params[0] &&
+    typeof params[0].debug === 'function' &&
+    typeof params[1] === 'string'
+  ) {
+    // Signature: (registrar, logger, method, token, ...args)
+    const [logger, method, token, ...rest] = params;
+    if (typeof registrar[method] !== 'function') {
+      throw new Error(`Unknown registrar method: ${String(method)}`);
+    }
+    registrar[method](token, ...rest);
+    logger.debug(`UI Registrations: Registered ${String(token)}.`);
+  } else {
+    // Signature: (registrar, token, factoryOrValueOrClass, options, logger)
+    const [token, value, options, logger] = params;
+    registrar.register(token, value, options);
+    if (logger && typeof logger.debug === 'function') {
+      logger.debug(`UI Registrations: Registered ${String(token)}.`);
+    }
   }
-  registrar[method](token, ...args);
-  logger.debug(`UI Registrations: Registered ${String(token)}.`);
 }
 
 /**

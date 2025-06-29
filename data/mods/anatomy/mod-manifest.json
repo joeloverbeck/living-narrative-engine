@@ -42,8 +42,7 @@
     "blueprints": ["humanoid_standard.blueprint.json"],
     "recipes": ["gorgeous_milf.recipe.json", "humanoid_standard.recipe.json"],
     "anatomyFormatting": [
-      "anatomy-formatting/default.json",
-      "anatomy-formatting/example-alien.json"
+      "anatomy-formatting/default.json"
     ]
   }
 }
