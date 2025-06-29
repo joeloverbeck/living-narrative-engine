@@ -19,6 +19,7 @@ import { renderPortraitElements } from './location/renderPortraitElements.js';
 import { renderLocationLists } from './location/renderLocationLists.js';
 import { renderCharacterListItem } from './location/renderCharacterListItem.js';
 import { LocationDataService } from './location/locationDataService.js';
+import { LocationNotFoundError } from '../errors/locationNotFoundError.js';
 
 /**
  * @typedef {import('../interfaces/ILogger').ILogger} ILogger
@@ -205,8 +206,9 @@ export class LocationRenderer extends BoundDomRendererBase {
 
     const currentActorEntityId = event.payload.entityId;
 
+    let currentLocationInstanceId;
     try {
-      const currentLocationInstanceId =
+      currentLocationInstanceId =
         this.locationDataService.resolveLocationInstanceId(
           currentActorEntityId
         );
@@ -220,16 +222,6 @@ export class LocationRenderer extends BoundDomRendererBase {
       const locationDetails = this.entityDisplayDataProvider.getLocationDetails(
         currentLocationInstanceId
       );
-
-      if (!locationDetails) {
-        this.safeEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
-          message: `${this._logPrefix} Location details for ID '${currentLocationInstanceId}' not found.`,
-        });
-        this.#clearAllDisplaysOnErrorWithMessage(
-          `Location data for '${currentLocationInstanceId}' missing.`
-        );
-        return;
-      }
 
       const portraitData =
         this.entityDisplayDataProvider.getLocationPortraitData(
@@ -250,6 +242,15 @@ export class LocationRenderer extends BoundDomRendererBase {
 
       this.render(displayPayload);
     } catch (error) {
+      if (error instanceof LocationNotFoundError) {
+        this.safeEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
+          message: `${this._logPrefix} Location details for ID '${currentLocationInstanceId}' not found.`,
+        });
+        this.#clearAllDisplaysOnErrorWithMessage(
+          `Location data for '${currentLocationInstanceId}' missing.`
+        );
+        return;
+      }
       this.safeEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
         message: `${this._logPrefix} Error processing '${event.type}' for entity '${currentActorEntityId}': ${error.message}`,
         details: { stack: error.stack },

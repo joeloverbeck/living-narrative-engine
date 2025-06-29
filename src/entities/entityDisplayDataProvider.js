@@ -9,6 +9,7 @@ import { ensureValidLogger } from '../utils/loggerUtils.js';
 import { buildPortraitInfo } from './utils/portraitUtils.js';
 import { withEntity } from './utils/entityFetchHelpers.js';
 import { getDisplayName, getDescription } from './utils/displayHelpers.js';
+import { LocationNotFoundError } from '../errors/locationNotFoundError.js';
 
 /**
  * @typedef {import('../interfaces/IEntityManager.js').IEntityManager} IEntityManager
@@ -233,7 +234,8 @@ export class EntityDisplayDataProvider {
    * Retrieves detailed display information for a location entity.
    *
    * @param {NamespacedId | string} locationEntityId - The instance ID of the location entity.
-   * @returns {{ name: string, description: string, exits: Array<import('./services/locationDisplayService.js').ProcessedExit> } | null}
+   * @returns {{ name: string, description: string, exits: Array<import('./services/locationDisplayService.js').ProcessedExit> }}
+   * @throws {LocationNotFoundError} When the ID is invalid or the entity cannot be found.
    */
   getLocationDetails(locationEntityId) {
     return this.#locationDisplayService.getLocationDetails(locationEntityId);

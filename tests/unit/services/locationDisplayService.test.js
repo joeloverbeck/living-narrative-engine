@@ -5,6 +5,7 @@ import {
   DESCRIPTION_COMPONENT_ID,
   EXITS_COMPONENT_ID,
 } from '../../../src/constants/componentIds.js';
+import { LocationNotFoundError } from '../../../src/errors/locationNotFoundError.js';
 
 describe('LocationDisplayService', () => {
   let mockEntityManager;
@@ -95,9 +96,11 @@ describe('LocationDisplayService', () => {
       );
     });
 
-    it('should return null if location entity not found', () => {
+    it('should throw LocationNotFoundError if location entity not found', () => {
       mockEntityManager.getEntityInstance.mockReturnValue(null);
-      expect(service.getLocationDetails('missing')).toBeNull();
+      expect(() => service.getLocationDetails('missing')).toThrow(
+        LocationNotFoundError
+      );
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining("Location entity with ID 'missing' not found.")
       );
@@ -122,8 +125,10 @@ describe('LocationDisplayService', () => {
       );
     });
 
-    it('should return null if locationEntityId is null or empty', () => {
-      expect(service.getLocationDetails(null)).toBeNull();
+    it('should throw LocationNotFoundError if locationEntityId is null or empty', () => {
+      expect(() => service.getLocationDetails(null)).toThrow(
+        LocationNotFoundError
+      );
       expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining('called with null or empty locationEntityId')
       );
