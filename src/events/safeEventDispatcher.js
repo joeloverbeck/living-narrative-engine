@@ -26,7 +26,7 @@ export class SafeEventDispatcher extends ISafeEventDispatcher {
    * @private
    * @type {IValidatedEventDispatcher}
    */
-  #ved;
+  #validatedDispatcher;
 
   /**
    * @private
@@ -38,7 +38,7 @@ export class SafeEventDispatcher extends ISafeEventDispatcher {
    * Creates an instance of SafeEventDispatcher.
    *
    * @param {object} dependencies - The required dependencies.
-   * @param {IValidatedEventDispatcher} dependencies.validatedEventDispatcher - The underlying VED to use.
+   * @param {IValidatedEventDispatcher} dependencies.validatedEventDispatcher - The underlying validated dispatcher to use.
    * @param {ILogger} dependencies.logger - The logger instance for reporting errors.
    * @throws {Error} If required dependencies or their methods are missing.
    */
@@ -68,7 +68,7 @@ export class SafeEventDispatcher extends ISafeEventDispatcher {
       throw new Error(errMsg);
     }
 
-    this.#ved = validatedEventDispatcher;
+    this.#validatedDispatcher = validatedEventDispatcher;
     this.#logger.debug('SafeEventDispatcher: Instance created successfully.');
   }
 
@@ -89,7 +89,7 @@ export class SafeEventDispatcher extends ISafeEventDispatcher {
     // Added options parameter
     try {
       // Pass the options object to dispatch
-      const dispatchResult = await this.#ved.dispatch(
+      const dispatchResult = await this.#validatedDispatcher.dispatch(
         eventName,
         payload,
         options
@@ -133,7 +133,10 @@ export class SafeEventDispatcher extends ISafeEventDispatcher {
    */
   subscribe(eventName, listener) {
     try {
-      const unsubscribeFn = this.#ved.subscribe(eventName, listener);
+      const unsubscribeFn = this.#validatedDispatcher.subscribe(
+        eventName,
+        listener
+      );
       if (typeof unsubscribeFn === 'function') {
         this.#logger.debug(
           `SafeEventDispatcher: Successfully subscribed to event '${eventName}'.`
@@ -166,7 +169,7 @@ export class SafeEventDispatcher extends ISafeEventDispatcher {
    */
   unsubscribe(eventName, listener) {
     try {
-      this.#ved.unsubscribe(eventName, listener);
+      this.#validatedDispatcher.unsubscribe(eventName, listener);
       this.#logger.debug(
         `SafeEventDispatcher: Successfully unsubscribed from event '${eventName}' (direct call).`
       );
