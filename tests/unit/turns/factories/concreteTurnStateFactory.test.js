@@ -14,7 +14,9 @@ import { TurnEndingState } from '../../../../src/turns/states/turnEndingState.js
 import { AwaitingActorDecisionState } from '../../../../src/turns/states/awaitingActorDecisionState.js';
 import { ProcessingCommandState } from '../../../../src/turns/states/processingCommandState.js';
 import { AwaitingExternalTurnEndState } from '../../../../src/turns/states/awaitingExternalTurnEndState.js';
-import TurnDirectiveStrategyResolver from '../../../../src/turns/strategies/turnDirectiveStrategyResolver.js';
+import TurnDirectiveStrategyResolver, {
+  DEFAULT_STRATEGY_MAP,
+} from '../../../../src/turns/strategies/turnDirectiveStrategyResolver.js';
 
 // --- Mocks ---
 const mockCommandProcessor = {
@@ -149,11 +151,12 @@ describe('ConcreteTurnStateFactory', () => {
       };
 
       // Action: Call the factory method.
+      const resolver = new TurnDirectiveStrategyResolver(DEFAULT_STRATEGY_MAP);
       const state = factory.createProcessingCommandState(
         mockHandler,
         commandString,
         turnAction,
-        TurnDirectiveStrategyResolver
+        resolver
       );
 
       // Assert: Verify the created instance is of the correct class.

@@ -2,7 +2,9 @@ import { describe, test, expect, jest } from '@jest/globals';
 import { ProcessingCommandState } from '../../../../../src/turns/states/processingCommandState.js';
 import { ProcessingGuard } from '../../../../../src/turns/states/helpers/processingGuard.js';
 import { ProcessingExceptionHandler } from '../../../../../src/turns/states/helpers/processingExceptionHandler.js';
-import TurnDirectiveStrategyResolver from '../../../../../src/turns/strategies/turnDirectiveStrategyResolver.js';
+import TurnDirectiveStrategyResolver, {
+  DEFAULT_STRATEGY_MAP,
+} from '../../../../../src/turns/strategies/turnDirectiveStrategyResolver.js';
 
 const mockLogger = { debug: jest.fn(), warn: jest.fn(), error: jest.fn() };
 const makeHandler = () => ({
@@ -64,13 +66,14 @@ describe('ProcessingGuard', () => {
   test('finish via handleProcessingException clears flag when processing interrupted', async () => {
     const handler = makeHandler();
     const ctx = makeTurnCtx();
+    const resolver = new TurnDirectiveStrategyResolver(DEFAULT_STRATEGY_MAP);
     const state = new ProcessingCommandState({
       handler,
       commandProcessor: mockCommandProcessor,
       commandOutcomeInterpreter: mockCommandOutcomeInterpreter,
       commandString: defaultCommandString,
       turnAction: defaultTurnAction,
-      directiveResolver: TurnDirectiveStrategyResolver,
+      directiveResolver: resolver,
     });
     state.startProcessing();
     const exceptionHandler = new ProcessingExceptionHandler(state);
@@ -79,13 +82,14 @@ describe('ProcessingGuard', () => {
   });
 
   test('private processing flag cannot be modified externally', () => {
+    const resolver = new TurnDirectiveStrategyResolver(DEFAULT_STRATEGY_MAP);
     const state = new ProcessingCommandState({
       handler: makeHandler(),
       commandProcessor: mockCommandProcessor,
       commandOutcomeInterpreter: mockCommandOutcomeInterpreter,
       commandString: defaultCommandString,
       turnAction: defaultTurnAction,
-      directiveResolver: TurnDirectiveStrategyResolver,
+      directiveResolver: resolver,
     });
     expect('_isProcessing' in state).toBe(false);
     state.startProcessing();

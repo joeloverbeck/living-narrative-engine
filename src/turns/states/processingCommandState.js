@@ -24,7 +24,9 @@ import { ProcessingGuard } from './helpers/processingGuard.js';
 import { finishProcessing } from './helpers/processingErrorUtils.js';
 import { getLogger } from './helpers/contextUtils.js';
 import { dispatchSpeechEvent } from './helpers/dispatchSpeechEvent.js';
-import turnDirectiveResolverAdapter from '../adapters/turnDirectiveResolverAdapter.js';
+import TurnDirectiveStrategyResolver, {
+  DEFAULT_STRATEGY_MAP,
+} from '../strategies/turnDirectiveStrategyResolver.js';
 import { ITurnDirectiveResolver } from '../interfaces/ITurnDirectiveResolver.js';
 import {
   validateTurnAction,
@@ -40,7 +42,10 @@ export class ProcessingCommandState extends AbstractTurnState {
   #isProcessing = false;
   _processingGuard;
   /** @type {ITurnDirectiveResolver} */
-  _directiveResolver = turnDirectiveResolverAdapter;
+  _directiveResolver =
+    typeof TurnDirectiveStrategyResolver === 'function'
+      ? new TurnDirectiveStrategyResolver(DEFAULT_STRATEGY_MAP)
+      : TurnDirectiveStrategyResolver;
   _exceptionHandler;
   #turnActionToProcess = null;
   #commandStringForLog = null;
@@ -222,7 +227,10 @@ export class ProcessingCommandState extends AbstractTurnState {
     commandOutcomeInterpreter,
     commandString,
     turnAction,
-    directiveResolver = turnDirectiveResolverAdapter,
+    directiveResolver =
+      typeof TurnDirectiveStrategyResolver === 'function'
+        ? new TurnDirectiveStrategyResolver(DEFAULT_STRATEGY_MAP)
+        : TurnDirectiveStrategyResolver,
     processingWorkflowFactory = (
       state,
       cmd,

@@ -1,6 +1,8 @@
 import { describe, test, expect, jest, beforeEach } from '@jest/globals';
 import { ProcessingCommandState } from '../../../../src/turns/states/processingCommandState.js';
-import TurnDirectiveStrategyResolver from '../../../../src/turns/strategies/turnDirectiveStrategyResolver.js';
+import TurnDirectiveStrategyResolver, {
+  DEFAULT_STRATEGY_MAP,
+} from '../../../../src/turns/strategies/turnDirectiveStrategyResolver.js';
 
 const makeLogger = () => ({
   debug: jest.fn(),
@@ -50,7 +52,9 @@ describe('ProcessingCommandState._ensureContext', () => {
       commandOutcomeInterpreter: commandOutcomeInterpreter,
       commandString: commandString,
       turnAction: turnAction,
-      directiveResolver: TurnDirectiveStrategyResolver,
+      directiveResolver: new TurnDirectiveStrategyResolver(
+        DEFAULT_STRATEGY_MAP
+      ),
     });
   });
 

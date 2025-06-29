@@ -10,7 +10,9 @@ import {
 } from '@jest/globals';
 import { ProcessingCommandState } from '../../../../src/turns/states/processingCommandState.js';
 import { TurnIdleState } from '../../../../src/turns/states/turnIdleState.js';
-import TurnDirectiveStrategyResolver from '../../../../src/turns/strategies/turnDirectiveStrategyResolver.js';
+import TurnDirectiveStrategyResolver, {
+  DEFAULT_STRATEGY_MAP,
+} from '../../../../src/turns/strategies/turnDirectiveStrategyResolver.js';
 import TurnDirective from '../../../../src/turns/constants/turnDirectives.js';
 import { ProcessingGuard } from '../../../../src/turns/states/helpers/processingGuard.js';
 import { ProcessingExceptionHandler } from '../../../../src/turns/states/helpers/processingExceptionHandler.js';
