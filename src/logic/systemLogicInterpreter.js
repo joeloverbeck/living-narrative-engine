@@ -110,8 +110,12 @@ class SystemLogicInterpreter extends BaseService {
   }
 
   shutdown() {
-    if (this.#boundEventHandler)
-      this.#eventBus.unsubscribe('*', this.#boundEventHandler);
+    if (this.#boundEventHandler) {
+      const removed = this.#eventBus.unsubscribe('*', this.#boundEventHandler);
+      this.#logger.debug(
+        `SystemLogicInterpreter: removed '*' subscription: ${removed}.`
+      );
+    }
 
     this.#ruleCache.clear();
     this.#boundEventHandler = null;

@@ -241,24 +241,14 @@ class ValidatedEventDispatcher extends IValidatedEventDispatcher {
    *
    * @param {string} eventName - The name of the event to subscribe to.
    * @param {EventListener} listener - The function to call when the event is dispatched.
-   * @returns {() => void} A function that, when called, unsubscribes the listener.
+   * @returns {(() => boolean) | null} An unsubscribe function on success, or `null` on failure.
    */
   subscribe(eventName, listener) {
     this.#logger.debug(
       `VED: Delegating subscription for event "${eventName}" to EventBus.`
     );
     // Delegate subscription to the internal EventBus instance
-    this.#eventBus.subscribe(eventName, listener);
-
-    // --- FIX ---
-    // You MUST return a function that calls unsubscribe, fulfilling the interface contract.
-    return () => {
-      this.#logger.debug(
-        `VED: Executing unsubscribe callback for "${eventName}". Delegating to EventBus.`
-      );
-      this.#eventBus.unsubscribe(eventName, listener);
-    };
-    // --- END FIX ---
+    return this.#eventBus.subscribe(eventName, listener);
   }
 
   /**
@@ -267,14 +257,14 @@ class ValidatedEventDispatcher extends IValidatedEventDispatcher {
    *
    * @param {string} eventName - The name of the event to unsubscribe from.
    * @param {EventListener} listener - The listener function to remove.
-   * @returns {void}
+   * @returns {boolean} `true` if a listener was removed, otherwise `false`.
    */
   unsubscribe(eventName, listener) {
     this.#logger.debug(
       `VED: Delegating unsubscription for event "${eventName}" to EventBus.`
     );
     // Delegate directly to the internal EventBus instance
-    this.#eventBus.unsubscribe(eventName, listener);
+    return this.#eventBus.unsubscribe(eventName, listener);
   }
 }
 

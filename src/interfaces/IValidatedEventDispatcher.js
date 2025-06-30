@@ -36,7 +36,7 @@ export class IValidatedEventDispatcher {
    * @function subscribe
    * @param {string} eventName - The name of the event to subscribe to.
    * @param {EventListener} listener - The function to call when the event is dispatched.
-   * @returns {UnsubscribeFn} A function that, when called, unregisters the provided listener.
+   * @returns {UnsubscribeFn | null} A function that unsubscribes the listener, or `null` on failure.
    */
   subscribe(eventName, listener) {
     throw new Error(
@@ -51,7 +51,7 @@ export class IValidatedEventDispatcher {
    * @function unsubscribe
    * @param {string} eventName - The name of the event to unsubscribe from.
    * @param {EventListener} listener - The listener function to remove.
-   * @returns {void}
+   * @returns {boolean} `true` if a listener was removed, otherwise `false`.
    */
   unsubscribe(eventName, listener) {
     throw new Error(

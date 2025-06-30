@@ -166,7 +166,7 @@ export class SafeEventDispatcher extends ISafeEventDispatcher {
       return unsubscribeFn;
     }
 
-    if (unsubscribeFn === undefined) {
+    if (unsubscribeFn === undefined || unsubscribeFn === null) {
       return null;
     }
 
@@ -196,9 +196,11 @@ export class SafeEventDispatcher extends ISafeEventDispatcher {
       return;
     }
 
-    this.#logger.debug(
-      `SafeEventDispatcher: Successfully unsubscribed from event '${eventName}' (direct call).`
-    );
+    if (result) {
+      this.#logger.debug(
+        `SafeEventDispatcher: Successfully unsubscribed from event '${eventName}' (direct call).`
+      );
+    }
   }
 }
 

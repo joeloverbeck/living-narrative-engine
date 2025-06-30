@@ -49,12 +49,19 @@ class EventBus extends IEventBus {
     return isValid;
   }
 
+  /**
+   * Subscribes a listener to a specific event.
+   *
+   * @param {string} eventName - The name of the event to subscribe to.
+   * @param {EventListener} listener - Function to invoke when the event is dispatched.
+   * @returns {(() => boolean) | null} An unsubscribe function on success, or `null` on failure.
+   */
   subscribe(eventName, listener) {
     if (
       !this.#validateEventName(eventName) ||
       !this.#validateListener(listener)
     ) {
-      return;
+      return null;
     }
 
     if (!this.#listeners.has(eventName)) {
@@ -62,26 +69,33 @@ class EventBus extends IEventBus {
     }
     this.#listeners.get(eventName).add(listener);
 
-    return () => {
-      this.unsubscribe(eventName, listener);
-    };
+    return () => this.unsubscribe(eventName, listener);
   }
 
+  /**
+   * Unsubscribes a listener from a specific event.
+   *
+   * @param {string} eventName - The event identifier.
+   * @param {EventListener} listener - The previously subscribed listener.
+   * @returns {boolean} `true` if a listener was removed, otherwise `false`.
+   */
   unsubscribe(eventName, listener) {
     if (
       !this.#validateEventName(eventName) ||
       !this.#validateListener(listener)
     ) {
-      return;
+      return false;
     }
 
     if (this.#listeners.has(eventName)) {
       const eventListeners = this.#listeners.get(eventName);
-      eventListeners.delete(listener);
+      const deleted = eventListeners.delete(listener);
       if (eventListeners.size === 0) {
         this.#listeners.delete(eventName);
       }
+      return deleted;
     }
+    return false;
   }
 
   /**
