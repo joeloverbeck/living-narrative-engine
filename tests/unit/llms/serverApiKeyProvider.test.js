@@ -4,6 +4,7 @@
 import { jest, describe, beforeEach, test, expect } from '@jest/globals';
 import { ServerApiKeyProvider } from '../../../src/llms/serverApiKeyProvider.js';
 import * as EnvironmentModule from '../../../src/llms/environmentContext.js';
+import * as LlmUtils from '../../../src/llms/utils/llmUtils.js';
 const { EnvironmentContext } = EnvironmentModule;
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
 // Import the actual interfaces to ensure mocks align if needed, though not strictly used for type in JS tests
@@ -191,7 +192,7 @@ describe('ServerApiKeyProvider', () => {
     });
 
     test('should return null and log if environmentContext is invalid', async () => {
-      const spy = jest.spyOn(EnvironmentModule, 'isValidEnvironmentContext');
+      const spy = jest.spyOn(LlmUtils, 'validateEnvironmentContext');
       const key = await provider.getKey(llmConfig, null);
       expect(key).toBeNull();
       expect(dispatcher.dispatch).toHaveBeenCalledWith(
@@ -201,7 +202,11 @@ describe('ServerApiKeyProvider', () => {
             'ServerApiKeyProvider.getKey (test-llm): Invalid environmentContext provided.',
         })
       );
-      expect(spy).toHaveBeenCalledWith(null);
+      expect(spy).toHaveBeenCalledWith(
+        null,
+        'ServerApiKeyProvider.getKey (test-llm)',
+        dispatcher
+      );
       spy.mockRestore();
     });
 
