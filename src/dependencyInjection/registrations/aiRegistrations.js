@@ -347,6 +347,7 @@ export function registerAIGameStateProviders(registrar, logger) {
         actionIndexingService: c.resolve(tokens.IActionIndexer),
         entityManager: c.resolve(tokens.IEntityManager),
         logger: c.resolve(tokens.ILogger),
+        serviceSetup: c.resolve(tokens.ServiceSetup),
       })
   );
   registrar.singletonFactory(tokens.ILocationSummaryProvider, (c) => {

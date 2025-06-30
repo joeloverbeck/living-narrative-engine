@@ -12,7 +12,7 @@
 /** @typedef {import('./actionCandidateProcessor.js').ActionCandidateProcessor} ActionCandidateProcessor */
 
 import { IActionDiscoveryService } from '../interfaces/IActionDiscoveryService.js';
-import { setupService } from '../utils/serviceInitializerUtils.js';
+import { ServiceSetup } from '../utils/serviceInitializerUtils.js';
 import { getActorLocation } from '../utils/actorLocationUtils.js';
 import {
   createDiscoveryError,
@@ -45,6 +45,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
    * @param {ActionCandidateProcessor} deps.actionCandidateProcessor - Processor for candidate actions.
    * @param {TraceContextFactory} deps.traceContextFactory - Factory for creating trace contexts.
    * @param {Function} deps.getActorLocationFn - Function to get actor location.
+   * @param deps.serviceSetup
    */
   constructor({
     entityManager,
@@ -52,10 +53,12 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     logger,
     actionCandidateProcessor,
     traceContextFactory,
+    serviceSetup,
     getActorLocationFn = getActorLocation,
   }) {
     super();
-    this.#logger = setupService('ActionDiscoveryService', logger, {
+    const setup = serviceSetup ?? new ServiceSetup();
+    this.#logger = setup.setupService('ActionDiscoveryService', logger, {
       entityManager: {
         value: entityManager,
       },

@@ -18,6 +18,7 @@ import ScopeEngine from '../../scopeDsl/engine.js';
 import { LRUCache } from 'lru-cache';
 import ScopeCache from '../../scopeDsl/cache.js';
 import DefaultDslParser from '../../scopeDsl/parser/defaultDslParser.js';
+import { ServiceSetup } from '../../utils/serviceInitializerUtils.js';
 
 /**
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
@@ -51,6 +52,12 @@ export function registerInfrastructure(container) {
   const log = container.resolve(tokens.ILogger);
 
   log.debug('Infrastructure Registration: starting…');
+
+  // Register ServiceSetup as a reusable utility
+  registrar.instance(tokens.ServiceSetup, new ServiceSetup());
+  log.debug(
+    `Infrastructure Registration: Registered ${String(tokens.ServiceSetup)}.`
+  );
 
   // ─── Shared ActionIndexingService ─────────────────────────────
   registrar.singletonFactory(

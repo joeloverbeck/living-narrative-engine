@@ -15,19 +15,8 @@ import { AvailableActionsProvider } from '../../../../src/data/providers/availab
 import { POSITION_COMPONENT_ID } from '../../../../src/constants/componentIds.js';
 import { MAX_AVAILABLE_ACTIONS_PER_TURN } from '../../../../src/constants/core.js';
 // We import these to have handles to the mocked functions.
-import {
-  setupService,
-  validateServiceDeps,
-} from '../../../../src/utils/serviceInitializerUtils.js';
 
 // --- Mock Implementations ---
-
-// FIX: We mock the entire module. This replaces both `setupService` and
-// `validateServiceDeps` with fresh Jest mocks (`jest.fn()`) for every test.
-jest.mock('../../../../src/utils/serviceInitializerUtils.js', () => ({
-  setupService: jest.fn(),
-  validateServiceDeps: jest.fn(),
-}));
 
 const mockLogger = () => ({
   info: jest.fn(),
@@ -72,15 +61,16 @@ describe('AvailableActionsProvider', () => {
   let entityManager;
   let actionDiscoveryService;
   let actionIndexer;
+  let serviceSetup;
 
   beforeEach(() => {
-    // FIX: Define the behavior of our mocked setupService. We tell it that when
-    // it's called, it should in turn call our *other* mock (validateServiceDeps)
-    // and then return the logger, just like the real implementation.
-    setupService.mockImplementation((serviceName, logger, deps) => {
-      validateServiceDeps(serviceName, logger, deps);
-      return logger;
-    });
+    serviceSetup = {
+      setupService: jest.fn((serviceName, logger, deps) => {
+        serviceSetup.validateDeps(serviceName, logger, deps);
+        return logger;
+      }),
+      validateDeps: jest.fn(),
+    };
 
     // 1. Arrange: Instantiate all mocks
     logger = mockLogger();
@@ -99,6 +89,7 @@ describe('AvailableActionsProvider', () => {
       actionIndexingService: actionIndexer,
       entityManager,
       logger,
+      serviceSetup,
     });
 
     // 3. Arrange: Set default behaviors for other mocks
@@ -112,19 +103,16 @@ describe('AvailableActionsProvider', () => {
 
   afterEach(() => {
     jest.restoreAllMocks();
-    // Clear mock history between tests
-    setupService.mockClear();
-    validateServiceDeps.mockClear();
+    serviceSetup.setupService.mockClear();
+    serviceSetup.validateDeps.mockClear();
   });
 
   describe('constructor', () => {
     test('should validate its dependencies upon initialization', () => {
-      // Assert: Now that our mocked setupService calls validateServiceDeps,
-      // this test will pass.
-      expect(validateServiceDeps).toHaveBeenCalledTimes(1);
-      expect(validateServiceDeps).toHaveBeenCalledWith(
+      expect(serviceSetup.validateDeps).toHaveBeenCalledTimes(1);
+      expect(serviceSetup.validateDeps).toHaveBeenCalledWith(
         'AvailableActionsProvider',
-        logger, // The logger is passed through by our mock implementation
+        logger,
         expect.objectContaining({
           actionDiscoveryService: expect.any(Object),
           actionIndexer: expect.any(Object),
