@@ -32,7 +32,6 @@ import humanEye from '../../../data/mods/anatomy/entities/definitions/human_eye.
 import humanEyeBlue from '../../../data/mods/anatomy/entities/definitions/human_eye_blue.entity.json';
 import humanEyeBrown from '../../../data/mods/anatomy/entities/definitions/human_eye_brown.entity.json';
 import humanEyeCobalt from '../../../data/mods/anatomy/entities/definitions/human_eye_cobalt.entity.json';
-import humanFemale from '../../../data/mods/anatomy/entities/definitions/human_female.entity.json';
 import humanHairRaven from '../../../data/mods/anatomy/entities/definitions/human_hair_raven.entity.json';
 import humanLegShapely from '../../../data/mods/anatomy/entities/definitions/human_leg_shapely.entity.json';
 import humanoidArm from '../../../data/mods/anatomy/entities/definitions/humanoid_arm.entity.json';
@@ -47,6 +46,20 @@ import gorgeousMilfRecipe from '../../../data/mods/anatomy/recipes/gorgeous_milf
 // Import core components needed for anatomy
 import nameComponent from '../../../data/mods/core/components/name.component.json';
 import descriptionComponent from '../../../data/mods/core/components/description.component.json';
+
+// Define human female entity inline (example entity for testing)
+const humanFemale = {
+  "$schema": "http://example.com/schemas/entity-definition.schema.json",
+  "id": "anatomy:human_female",
+  "components": {
+    "core:name": {
+      "text": "Human Female"
+    },
+    "anatomy:body": {
+      "recipeId": "anatomy:gorgeous_milf"
+    }
+  }
+};
 
 describe('Gorgeous MILF Anatomy Generation Integration Test', () => {
   let testBed;
