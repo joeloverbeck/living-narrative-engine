@@ -82,6 +82,19 @@ export class ServiceSetup {
 
 // -- Legacy function exports maintained for backwards compatibility -----------
 
+const _defaultServiceSetup = new ServiceSetup();
+
+/**
+ * Create a prefixed logger for a service or handler.
+ *
+ * @param {string} serviceName - Name used for log prefixing.
+ * @param {import('../interfaces/coreServices.js').ILogger} logger - Base logger.
+ * @returns {import('../interfaces/coreServices.js').ILogger} Prefixed logger.
+ */
+export function setupServiceLogger(serviceName, logger) {
+  return _defaultServiceSetup.createLogger(serviceName, logger);
+}
+
 /**
  * Validates a set of service dependencies using `validateDependency`.
  *
@@ -90,7 +103,6 @@ export class ServiceSetup {
  * @param {Record<string, DependencySpec>} deps - Dependency map.
  * @returns {void}
  */
-const _defaultServiceSetup = new ServiceSetup();
 
 /**
  *
@@ -101,6 +113,16 @@ const _defaultServiceSetup = new ServiceSetup();
 export function validateServiceDeps(serviceName, logger, deps) {
   _defaultServiceSetup.validateDeps(serviceName, logger, deps);
 }
+
+/**
+ * Alias for {@link validateServiceDeps} kept for backward compatibility.
+ *
+ * @param {string} serviceName - Name used in validation messages.
+ * @param {import('../interfaces/coreServices.js').ILogger} logger - Logger instance.
+ * @param {Record<string, DependencySpec>} deps - Dependency map.
+ * @returns {void}
+ */
+export const validateServiceDependencies = validateServiceDeps;
 
 /**
  * Initialize a service logger and validate dependencies.
@@ -118,6 +140,18 @@ export function validateServiceDeps(serviceName, logger, deps) {
  */
 export function setupService(serviceName, logger, deps) {
   return _defaultServiceSetup.setupService(serviceName, logger, deps);
+}
+
+/**
+ * Alias for {@link setupService} used by operation handlers.
+ *
+ * @param {string} handlerName - Handler name for logging.
+ * @param {import('../interfaces/coreServices.js').ILogger} logger - Logger instance.
+ * @param {Record<string, DependencySpec>} [deps] - Optional dependencies.
+ * @returns {import('../interfaces/coreServices.js').ILogger} Prefixed logger.
+ */
+export function initHandlerLogger(handlerName, logger, deps) {
+  return _defaultServiceSetup.setupService(handlerName, logger, deps);
 }
 
 /**
