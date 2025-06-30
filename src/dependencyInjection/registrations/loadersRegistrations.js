@@ -329,14 +329,14 @@ export function registerLoaders(container) {
           // Anatomy loaders
           {
             loader: c.resolve(tokens.AnatomyRecipeLoader),
-            contentKey: 'anatomy.recipes',
+            contentKey: 'recipes',
             diskFolder: 'anatomy/recipes',
             registryKey: 'anatomyRecipes',
             phase: 'definitions',
           },
           {
             loader: c.resolve(tokens.AnatomyBlueprintLoader),
-            contentKey: 'anatomy.blueprints',
+            contentKey: 'blueprints',
             diskFolder: 'anatomy/blueprints',
             registryKey: 'anatomyBlueprints',
             phase: 'definitions',
