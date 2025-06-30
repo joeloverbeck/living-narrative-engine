@@ -173,15 +173,12 @@ export class ServerApiKeyProvider extends IApiKeyProvider {
   async getKey(llmConfig, environmentContext) {
     const llmId = llmConfig?.id || 'UnknownLLM';
 
-    if (
-      !validateEnvironmentContext(
-        environmentContext,
-        `ServerApiKeyProvider.getKey (${llmId})`,
-        this.#dispatcher
-      )
-    ) {
-      return null;
-    }
+    validateEnvironmentContext(
+      environmentContext,
+      `ServerApiKeyProvider.getKey (${llmId})`,
+      this.#dispatcher,
+      this.#logger
+    );
 
     if (!environmentContext.isServer()) {
       this.#logger.warn(

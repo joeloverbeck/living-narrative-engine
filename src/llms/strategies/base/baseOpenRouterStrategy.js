@@ -4,7 +4,7 @@ import { BaseChatLLMStrategy } from './baseChatLLMStrategy.js';
 import { ConfigurationError } from '../../../errors/configurationError';
 import { LLMStrategyError } from '../../errors/LLMStrategyError.js';
 import { logPreview } from '../../../utils/index.js';
-import { getLlmId } from '../../utils/llmUtils.js';
+import { getLlmId, validateEnvironmentContext } from '../../utils/llmUtils.js';
 // Assuming HttpClientError might be a specific type, if not, general Error is caught.
 // For actual HttpClientError type, it would be imported from its definition:
 // import { HttpClientError } from '../../retryHttpClient.js'; // Example path
@@ -120,6 +120,13 @@ export class BaseOpenRouterStrategy extends BaseChatLLMStrategy {
       this.logger.error(errorMsg, { llmId });
       throw new ConfigurationError(errorMsg, { llmId });
     }
+
+    validateEnvironmentContext(
+      environmentContext,
+      `${this.constructor.name} (${llmId})`,
+      null,
+      this.logger
+    );
 
     this.logger.debug(
       `${this.constructor.name}.execute called for LLM ID: ${llmId}.`

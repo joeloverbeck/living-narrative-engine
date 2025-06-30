@@ -75,15 +75,12 @@ export class ClientApiKeyProvider extends IApiKeyProvider {
   async getKey(llmConfig, environmentContext) {
     const llmId = getLlmId(llmConfig); // For logging context
 
-    if (
-      !validateEnvironmentContext(
-        environmentContext,
-        `ClientApiKeyProvider.getKey (${llmId})`,
-        this.#dispatcher
-      )
-    ) {
-      return null;
-    }
+    validateEnvironmentContext(
+      environmentContext,
+      `ClientApiKeyProvider.getKey (${llmId})`,
+      this.#dispatcher,
+      this.#logger
+    );
 
     if (!environmentContext.isClient()) {
       this.#logger.warn(
