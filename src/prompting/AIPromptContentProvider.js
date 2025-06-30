@@ -148,6 +148,26 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
   }
 
   /**
+   * @private
+   * @description Extracts and sanitizes timestamped entries from a component.
+   * @param {object} component - Component containing the entries array.
+   * @param {string} key - Key of the array within the component.
+   * @returns {Array<{text:string,timestamp:string}>} Sanitized array of entries.
+   */
+  _extractTimestampedEntries(component, key) {
+    const arr = Array.isArray(component?.[key]) ? component[key] : [];
+    return arr
+      .filter(
+        (e) =>
+          typeof e.text === 'string' &&
+          e.text.trim().length > 0 &&
+          typeof e.timestamp === 'string' &&
+          e.timestamp.trim().length > 0
+      )
+      .map((e) => ({ text: e.text, timestamp: e.timestamp }));
+  }
+
+  /**
    * Validates if the provided AIGameStateDTO contains the critical information.
    *
    * @param {AIGameStateDTO | null | undefined} gameStateDto - The game state DTO to validate.
@@ -232,30 +252,10 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
       : [];
 
     const notesComp = componentsMap['core:notes'];
-    const notesArray = Array.isArray(notesComp?.notes)
-      ? notesComp.notes
-          .filter(
-            (n) =>
-              typeof n.text === 'string' &&
-              n.text.trim().length > 0 &&
-              typeof n.timestamp === 'string' &&
-              n.timestamp.trim().length > 0
-          )
-          .map((n) => ({ text: n.text, timestamp: n.timestamp }))
-      : [];
+    const notesArray = this._extractTimestampedEntries(notesComp, 'notes');
 
     const goalsComp = componentsMap['core:goals'];
-    const goalsArray = Array.isArray(goalsComp?.goals)
-      ? goalsComp.goals
-          .filter(
-            (g) =>
-              typeof g.text === 'string' &&
-              g.text.trim().length > 0 &&
-              typeof g.timestamp === 'string' &&
-              g.timestamp.trim().length > 0
-          )
-          .map((g) => ({ text: g.text, timestamp: g.timestamp }))
-      : [];
+    const goalsArray = this._extractTimestampedEntries(goalsComp, 'goals');
 
     this.#logger.debug(
       `AIPromptContentProvider.getPromptData: goalsArray contains ${goalsArray.length} entries.`

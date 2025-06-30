@@ -82,6 +82,32 @@ describe('AIPromptContentProvider helper methods', () => {
     expect(res.goalsArray).toEqual([{ text: 'g1', timestamp: 't3' }]);
   });
 
+  test('_extractTimestampedEntries returns [] when property missing or not array', () => {
+    const result = provider._extractTimestampedEntries({}, 'notes');
+    expect(result).toEqual([]);
+    const result2 = provider._extractTimestampedEntries(
+      { notes: 'bad' },
+      'notes'
+    );
+    expect(result2).toEqual([]);
+  });
+
+  test('_extractTimestampedEntries filters malformed entries', () => {
+    const comp = {
+      notes: [
+        { text: 'valid', timestamp: 't1' },
+        { text: '', timestamp: 't2' },
+        { text: 'no timestamp' },
+        { text: 'also valid', timestamp: 't3' },
+      ],
+    };
+    const res = provider._extractTimestampedEntries(comp, 'notes');
+    expect(res).toEqual([
+      { text: 'valid', timestamp: 't1' },
+      { text: 'also valid', timestamp: 't3' },
+    ]);
+  });
+
   test('_buildPromptData merges base values and arrays', () => {
     const base = { a: 1 };
     const pd = provider._buildPromptData(
