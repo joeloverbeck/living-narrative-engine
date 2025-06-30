@@ -70,19 +70,24 @@ export class AnatomyInitializationService {
   /**
    * Handles entity creation events
    *
-   * @param {object} event
-   * @param {string} event.instanceId - The entity instance ID
-   * @param {string} event.definitionId - The entity definition ID
-   * @param {boolean} event.wasReconstructed - Whether this was a reconstruction
+   * @param {object} event - The event object from EventBus
+   * @param {string} event.type - The event type
+   * @param {object} event.payload - The event payload
+   * @param {string} event.payload.instanceId - The entity instance ID
+   * @param {string} event.payload.definitionId - The entity definition ID
+   * @param {boolean} event.payload.wasReconstructed - Whether this was a reconstruction
    * @private
    */
   async #handleEntityCreated(event) {
+    // Extract payload from the event object
+    const payload = event.payload || event;
+    
     // Skip reconstructed entities as they should already have their anatomy
-    if (event.wasReconstructed) {
+    if (payload.wasReconstructed) {
       return;
     }
 
-    const { instanceId } = event;
+    const { instanceId } = payload;
     if (!instanceId) {
       this.#logger.warn(
         'AnatomyInitializationService: Entity created event missing instanceId'
