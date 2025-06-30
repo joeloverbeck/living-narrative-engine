@@ -19,110 +19,13 @@
  */
 
 import { evaluateConditionWithLogging } from './jsonLogicEvaluationService.js';
-import { resolvePath } from '../utils/objectUtils.js';
+import { handleIf } from './flowHandlers/ifHandler.js';
+import { handleForEach } from './flowHandlers/forEachHandler.js';
 
-/**
- * Handles IF flow-control nodes.
- *
- * @param {Operation} node - Operation describing the IF logic.
- * @param {ActionExecutionContext} nestedCtx - Execution context for nested actions.
- * @param {ILogger} logger - Logger instance for diagnostics.
- * @param {OperationInterpreter} operationInterpreter - Interpreter used to execute nested operations.
- */
-function handleIf(node, nestedCtx, logger, operationInterpreter) {
-  const {
-    condition,
-    then_actions: thenActs = [],
-    else_actions: elseActs = [],
-  } = node.parameters || {};
-
-  const { scopeLabel = 'IF', jsonLogic, ...baseCtx } = nestedCtx;
-  const { result, errored } = evaluateConditionWithLogging(
-    jsonLogic,
-    condition,
-    baseCtx.evaluationContext,
-    logger,
-    scopeLabel
-  );
-
-  if (errored) {
-    return;
-  }
-
-  if (result) {
-    logger.debug(`[handleIf] then_actions length: ${thenActs.length}`);
-    logger.debug(
-      `[handleIf] then_actions: ${JSON.stringify(thenActs, null, 2)}`
-    );
-  } else {
-    logger.debug(`[handleIf] else_actions length: ${elseActs.length}`);
-    logger.debug(
-      `[handleIf] else_actions: ${JSON.stringify(elseActs, null, 2)}`
-    );
-  }
-
-  executeActionSequence(
-    result ? thenActs : elseActs,
-    { ...baseCtx, scopeLabel, jsonLogic },
-    logger,
-    operationInterpreter
-  );
-}
-
-/**
- * Handles FOR_EACH flow-control nodes.
- *
- * @param {Operation} node - Operation describing the FOR_EACH loop.
- * @param {ActionExecutionContext} nestedCtx - Execution context for the loop.
- * @param {ILogger} logger - Logger instance for diagnostics.
- * @param {OperationInterpreter} operationInterpreter - Interpreter for executing the loop body.
- */
-function handleForEach(node, nestedCtx, logger, operationInterpreter) {
-  const {
-    collection: path,
-    item_variable: varName,
-    actions,
-  } = node.parameters || {};
-
-  const { scopeLabel, jsonLogic, ...baseCtx } = nestedCtx;
-
-  if (
-    !path?.trim() ||
-    !varName?.trim() ||
-    !Array.isArray(actions) ||
-    actions.length === 0
-  ) {
-    logger.warn(`${scopeLabel}: invalid parameters.`);
-    return;
-  }
-  const collection = resolvePath(baseCtx.evaluationContext, path.trim());
-  if (!Array.isArray(collection)) {
-    logger.warn(`${scopeLabel}: '${path}' did not resolve to an array.`);
-    return;
-  }
-
-  const store = baseCtx.evaluationContext.context;
-  const hadPrior = Object.prototype.hasOwnProperty.call(store, varName);
-  const saved = store[varName];
-
-  try {
-    for (let i = 0; i < collection.length; i++) {
-      store[varName] = collection[i];
-      executeActionSequence(
-        actions,
-        {
-          ...baseCtx,
-          scopeLabel: `${scopeLabel} > Item ${i + 1}/${collection.length}`,
-          jsonLogic,
-        },
-        logger,
-        operationInterpreter
-      );
-    }
-  } finally {
-    hadPrior ? (store[varName] = saved) : delete store[varName];
-  }
-}
+const FLOW_HANDLERS = {
+  IF: handleIf,
+  FOR_EACH: handleForEach,
+};
 
 /**
  * Executes a sequence of operations.
@@ -174,26 +77,19 @@ export function executeActionSequence(
 
     try {
       logger.debug(`${tag} About to execute operation of type: ${opType}`);
-      if (opType === 'IF') {
-        handleIf(
-          nodeToOperation(op),
-          { ...baseCtx, scopeLabel: `${scopeLabel} IF#${opIndex}`, jsonLogic },
-          logger,
-          operationInterpreter
-        );
-        logger.debug(`${tag} Finished executing IF operation.`);
-      } else if (opType === 'FOR_EACH') {
-        handleForEach(
+      const flowHandler = FLOW_HANDLERS[opType];
+      if (flowHandler) {
+        flowHandler(
           nodeToOperation(op),
           {
             ...baseCtx,
-            scopeLabel: `${scopeLabel} FOR_EACH#${opIndex}`,
+            scopeLabel: `${scopeLabel} ${opType}#${opIndex}`,
             jsonLogic,
           },
           logger,
           operationInterpreter
         );
-        logger.debug(`${tag} Finished executing FOR_EACH operation.`);
+        logger.debug(`${tag} Finished executing ${opType} operation.`);
       } else {
         operationInterpreter.execute(op, baseCtx);
         logger.debug(`${tag} Finished executing operation of type: ${opType}`);
