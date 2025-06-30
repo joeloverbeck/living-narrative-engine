@@ -7,6 +7,7 @@ import { ILLMStrategy } from './interfaces/ILLMStrategy.js'; // Assuming ILLMStr
 import { ConfigurationError } from '../errors/configurationError';
 import { LLMStrategyFactoryError } from './errors/LLMStrategyFactoryError.js';
 import { initLogger } from '../utils/index.js';
+import { getLlmId } from './utils/llmUtils.js';
 
 // Import concrete strategy implementations
 import strategyRegistry from './strategies/strategyRegistry.js';
@@ -175,7 +176,7 @@ export class LLMStrategyFactory {
       });
     }
 
-    const llmId = llmConfig.configId || 'UnknownLLM';
+    const llmId = getLlmId(llmConfig);
     const apiType = llmConfig.apiType.trim().toLowerCase();
     const configuredMethod = llmConfig.jsonOutputStrategy?.method
       ?.trim()

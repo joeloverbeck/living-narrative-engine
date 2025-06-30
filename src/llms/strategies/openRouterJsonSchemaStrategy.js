@@ -4,6 +4,7 @@ import { BaseOpenRouterStrategy } from './base/baseOpenRouterStrategy.js';
 import { LLMStrategyError } from '../errors/LLMStrategyError.js';
 import { OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA } from '../constants/llmConstants.js'; // Still potentially used for tool_calls fallback logic's expected name
 import { isNonBlankString } from '../../utils/textUtils.js';
+import { getLlmId } from '../utils/llmUtils.js';
 
 /**
  * @typedef {import('../services/llmConfigLoader.js').LLMModelConfig} LLMModelConfig
@@ -47,7 +48,7 @@ export class OpenRouterJsonSchemaStrategy extends BaseOpenRouterStrategy {
    * @throws {LLMStrategyError} if jsonSchema is missing or invalid in llmConfig.
    */
   _buildProviderRequestPayloadAdditions(baseMessagesPayload, llmConfig) {
-    const llmId = llmConfig?.configId || 'UnknownLLM';
+    const llmId = getLlmId(llmConfig);
 
     const configuredJsonSchema = llmConfig.jsonOutputStrategy?.jsonSchema;
 
@@ -103,7 +104,7 @@ export class OpenRouterJsonSchemaStrategy extends BaseOpenRouterStrategy {
    * @throws {LLMStrategyError} If JSON content cannot be extracted.
    */
   async _extractJsonOutput(responseData, llmConfig, providerRequestPayload) {
-    const llmId = llmConfig?.configId || 'UnknownLLM';
+    const llmId = getLlmId(llmConfig);
     let extractedJsonString = null;
     const message = responseData?.choices?.[0]?.message;
 

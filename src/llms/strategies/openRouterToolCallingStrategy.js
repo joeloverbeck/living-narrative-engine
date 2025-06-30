@@ -6,6 +6,7 @@ import {
   OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA, // Still needed for the parameters schema
   OPENROUTER_DEFAULT_TOOL_DESCRIPTION, // Can still be used for description
 } from '../constants/llmConstants.js';
+import { getLlmId } from '../utils/llmUtils.js';
 
 /**
  * @typedef {import('../interfaces/IHttpClient.js').IHttpClient} IHttpClient
@@ -44,7 +45,7 @@ export class OpenRouterToolCallingStrategy extends BaseOpenRouterStrategy {
    * @throws {LLMStrategyError} If tool schema configuration is invalid.
    */
   _buildProviderRequestPayloadAdditions(baseMessagesPayload, llmConfig) {
-    const llmId = llmConfig?.configId || 'UnknownLLM';
+    const llmId = getLlmId(llmConfig);
 
     const configuredToolName = llmConfig.jsonOutputStrategy?.toolName;
 
@@ -122,7 +123,7 @@ export class OpenRouterToolCallingStrategy extends BaseOpenRouterStrategy {
    * @throws {LLMStrategyError} If JSON content cannot be extracted or validated.
    */
   async _extractJsonOutput(responseData, llmConfig, _providerRequestPayload) {
-    const llmId = llmConfig?.configId || 'UnknownLLM';
+    const llmId = getLlmId(llmConfig);
     const message = responseData?.choices?.[0]?.message;
 
     const expectedToolName = llmConfig.jsonOutputStrategy?.toolName;
