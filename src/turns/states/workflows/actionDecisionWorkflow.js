@@ -3,8 +3,14 @@
  * @description Workflow logic for AwaitingActorDecisionState handling action decisions.
  */
 
+/**
+ * @class ActionDecisionWorkflow
+ * @description Executes the action decision workflow for an AwaitingActorDecisionState instance.
+ */
 export class ActionDecisionWorkflow {
   /**
+   * Constructs an instance of ActionDecisionWorkflow.
+   *
    * @param {import('../awaitingActorDecisionState.js').AwaitingActorDecisionState} state - Owning state instance.
    * @param {import('../../interfaces/turnStateContextTypes.js').AwaitingActorDecisionStateContext} turnContext - Context for the turn.
    * @param {import('../../../entities/entity.js').default} actor - Actor making the decision.
@@ -45,7 +51,7 @@ export class ActionDecisionWorkflow {
         extractedData
       );
 
-      const cmdStr =
+      const commandToExecute =
         action.commandString && action.commandString.trim().length > 0
           ? action.commandString
           : action.actionDefinitionId;
@@ -54,7 +60,7 @@ export class ActionDecisionWorkflow {
         `${this._state.getStateName()}: Requesting transition to ProcessingCommandState for actor ${this._actor.id}.`
       );
       await this._turnContext.requestProcessingCommandStateTransition(
-        cmdStr,
+        commandToExecute,
         action
       );
     } catch (error) {
