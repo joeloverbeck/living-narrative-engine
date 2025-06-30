@@ -107,10 +107,9 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
    * @param {Array<*>} items - Array of items to format.
    * @param {function(*): string} itemFormatter - Function to convert each item to a string.
    * @param {string} emptyMessage - Message to show if items is empty.
-   * @param {ILogger} logger - Logger instance for debugging.
    * @returns {string} Formatted section string.
    */
-  _formatListSegment(title, items, itemFormatter, emptyMessage, logger) {
+  _formatListSegment(title, items, itemFormatter, emptyMessage) {
     const cleanedTitle = title.replace(/[:\n]*$/, '');
     const lines = [cleanedTitle + ':'];
 
@@ -118,12 +117,12 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
       items.forEach((item) => {
         lines.push(itemFormatter(item));
       });
-      logger.debug(
+      this.#logger.debug(
         `AIPromptContentProvider: Formatted ${items.length} items for section "${cleanedTitle}".`
       );
     } else {
       lines.push(emptyMessage);
-      logger.debug(
+      this.#logger.debug(
         `AIPromptContentProvider: Section "${cleanedTitle}" is empty, using empty message.`
       );
     }
@@ -155,8 +154,8 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
    * @returns {Array<{text:string,timestamp:string}>} Sanitized array of entries.
    */
   _extractTimestampedEntries(component, key) {
-    const arr = Array.isArray(component?.[key]) ? component[key] : [];
-    return arr
+    const entries = Array.isArray(component?.[key]) ? component[key] : [];
+    return entries
       .filter(
         (e) =>
           typeof e.text === 'string' &&
@@ -328,21 +327,13 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
     try {
       const baseValues = {
         taskDefinitionContent: this.getTaskDefinitionContent(),
-        characterPersonaContent: this.getCharacterPersonaContent(
-          gameStateDto,
-          this.#logger
-        ),
+        characterPersonaContent: this.getCharacterPersonaContent(gameStateDto),
         portrayalGuidelinesContent:
           this.getCharacterPortrayalGuidelinesContent(characterName),
         contentPolicyContent: this.getContentPolicyContent(),
-        worldContextContent: this.getWorldContextContent(
-          gameStateDto,
-          this.#logger
-        ),
-        availableActionsInfoContent: this.getAvailableActionsInfoContent(
-          gameStateDto,
-          this.#logger
-        ),
+        worldContextContent: this.getWorldContextContent(gameStateDto),
+        availableActionsInfoContent:
+          this.getAvailableActionsInfoContent(gameStateDto),
         userInputContent: currentUserInput,
         finalInstructionsContent: this.getFinalInstructionsContent(),
         perceptionLogArray: perceptionLogArray,
@@ -374,10 +365,9 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
 
   /**
    * @param {AIGameStateDTO} gameState - The game state DTO.
-   * @param {ILogger} [_logger] - Optional logger instance.
    * @returns {string} Formatted character persona content.
    */
-  getCharacterPersonaContent(gameState, _logger) {
+  getCharacterPersonaContent(gameState) {
     this.#logger.debug(
       'AIPromptContentProvider: Formatting character persona content.'
     );
@@ -444,10 +434,9 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
 
   /**
    * @param {AIGameStateDTO} gameState - The game state DTO.
-   * @param {ILogger} [_logger] - Optional logger instance.
    * @returns {string} Formatted world context content.
    */
-  getWorldContextContent(gameState, _logger) {
+  getWorldContextContent(gameState) {
     this.#logger.debug(
       'AIPromptContentProvider: Formatting world context content.'
     );
@@ -480,8 +469,7 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
             exit.targetLocationId ||
             DEFAULT_FALLBACK_LOCATION_NAME
           }.`,
-        PROMPT_FALLBACK_NO_EXITS,
-        this.#logger
+        PROMPT_FALLBACK_NO_EXITS
       )
     );
     segments.push(
@@ -495,8 +483,7 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
           descriptionText = ensureTerminalPunctuation(descriptionText);
           return `- ${namePart} - Description: ${descriptionText}`;
         },
-        PROMPT_FALLBACK_ALONE_IN_LOCATION,
-        this.#logger
+        PROMPT_FALLBACK_ALONE_IN_LOCATION
       )
     );
     return segments.join('\n\n');
@@ -504,10 +491,9 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
 
   /**
    * @param {AIGameStateDTO} gameState - The game state DTO.
-   * @param {ILogger} [_logger] - Optional logger instance.
    * @returns {string} Formatted available actions content.
    */
-  getAvailableActionsInfoContent(gameState, _logger) {
+  getAvailableActionsInfoContent(gameState) {
     this.#logger.debug(
       'AIPromptContentProvider: Formatting available actions info content.'
     );
@@ -537,8 +523,7 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
         // The critical change: Add the index clearly at the start of the line.
         return `[Index: ${action.index}] Command: "${commandStr}". Description: ${description}`;
       },
-      noActionsMessage,
-      this.#logger
+      noActionsMessage
     );
   }
 

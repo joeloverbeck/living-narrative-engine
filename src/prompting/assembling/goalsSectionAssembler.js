@@ -27,8 +27,8 @@ export class GoalsSectionAssembler extends IPromptElementAssembler {
       return '';
     }
 
-    const arr = promptData?.goalsArray;
-    if (!Array.isArray(arr) || arr.length === 0) {
+    const goals = promptData?.goalsArray;
+    if (!Array.isArray(goals) || goals.length === 0) {
       return '';
     }
 
@@ -42,13 +42,13 @@ export class GoalsSectionAssembler extends IPromptElementAssembler {
       const ms = new Date(ts).getTime();
       return Number.isFinite(ms) ? ms : Number.POSITIVE_INFINITY;
     };
-    const sorted = arr
+    const sortedGoals = goals
       .slice()
       .sort((a, b) => safeMs(a.timestamp) - safeMs(b.timestamp));
 
-    const goalLines = sorted
-      .filter((g) => g?.text)
-      .map((g) => `- ${String(g.text)}`)
+    const goalLines = sortedGoals
+      .filter((goal) => goal?.text)
+      .map((goal) => `- ${String(goal.text)}`)
       .join('\n');
 
     if (!goalLines) {

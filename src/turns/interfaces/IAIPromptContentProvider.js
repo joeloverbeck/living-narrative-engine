@@ -63,11 +63,10 @@ export class IAIPromptContentProvider {
    * Generates the character definition content.
    *
    * @param {AIGameStateDTO} gameStateDto - The game state DTO.
-   * @param {ILogger} [logger] - Optional logger instance.
    * @returns {string} The formatted character segment.
    * @throws {Error} If the method is not implemented.
    */
-  getCharacterPersonaContent(gameStateDto, logger) {
+  getCharacterPersonaContent(gameStateDto) {
     throw new Error(
       "Method 'getCharacterPersonaContent()' must be implemented."
     );
@@ -77,11 +76,10 @@ export class IAIPromptContentProvider {
    * Generates the world context content (location, exits, other characters).
    *
    * @param {AIGameStateDTO} gameStateDto - The game state DTO.
-   * @param {ILogger} [logger] - Optional logger instance.
    * @returns {string} The formatted world context segment.
    * @throws {Error} If the method is not implemented.
    */
-  getWorldContextContent(gameStateDto, logger) {
+  getWorldContextContent(gameStateDto) {
     throw new Error("Method 'getWorldContextContent()' must be implemented.");
   }
 
@@ -89,11 +87,10 @@ export class IAIPromptContentProvider {
    * Generates the available actions content.
    *
    * @param {AIGameStateDTO} gameStateDto - The game state DTO.
-   * @param {ILogger} [logger] - Optional logger instance.
    * @returns {string} The formatted actions segment.
    * @throws {Error} If the method is not implemented.
    */
-  getAvailableActionsInfoContent(gameStateDto, logger) {
+  getAvailableActionsInfoContent(gameStateDto) {
     throw new Error(
       "Method 'getAvailableActionsInfoContent()' must be implemented."
     );

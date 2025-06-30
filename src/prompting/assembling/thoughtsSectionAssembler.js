@@ -27,8 +27,8 @@ export class ThoughtsSectionAssembler extends IPromptElementAssembler {
       return '';
     }
 
-    const arr = promptData?.thoughtsArray;
-    if (!Array.isArray(arr) || arr.length === 0) {
+    const thoughts = promptData?.thoughtsArray;
+    if (!Array.isArray(thoughts) || thoughts.length === 0) {
       return '';
     }
 
@@ -38,9 +38,11 @@ export class ThoughtsSectionAssembler extends IPromptElementAssembler {
       promptData
     );
 
-    const thoughtLines = arr
-      .filter((t) => t !== null && t !== undefined && t !== '')
-      .map((t) => `- ${String(t)}`)
+    const thoughtLines = thoughts
+      .filter(
+        (thought) => thought !== null && thought !== undefined && thought !== ''
+      )
+      .map((thought) => `- ${String(thought)}`)
       .join('\n');
 
     if (!thoughtLines) {
