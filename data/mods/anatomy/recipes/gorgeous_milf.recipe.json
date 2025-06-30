@@ -1,7 +1,7 @@
 {
   "$schema": "http://example.com/schemas/anatomy.recipe.schema.json",
   "recipeId": "anatomy:gorgeous_milf",
-  "blueprintId": "anatomy:humanoid_standard",
+  "blueprintId": "anatomy:human_female",
   "slots": {
     "torso": {
       "partType": "torso",

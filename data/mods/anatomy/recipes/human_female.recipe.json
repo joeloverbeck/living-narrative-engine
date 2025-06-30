@@ -1,0 +1,35 @@
+{
+  "$schema": "http://example.com/schemas/anatomy.recipe.schema.json",
+  "recipeId": "anatomy:human_female",
+  "blueprintId": "anatomy:human_female",
+  "slots": {
+    "torso": {
+      "partType": "torso",
+      "preferId": "anatomy:human_female_torso",
+      "count": {
+        "exact": 1
+      }
+    },
+    "head": {
+      "partType": "head",
+      "preferId": "anatomy:humanoid_head",
+      "count": {
+        "exact": 1
+      }
+    },
+    "arms": {
+      "partType": "arm",
+      "preferId": "anatomy:humanoid_arm",
+      "count": {
+        "exact": 2
+      }
+    },
+    "legs": {
+      "partType": "leg",
+      "preferId": "anatomy:humanoid_leg",
+      "count": {
+        "exact": 2
+      }
+    }
+  }
+}

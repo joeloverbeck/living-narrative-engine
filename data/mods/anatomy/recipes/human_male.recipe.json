@@ -1,11 +1,11 @@
 {
   "$schema": "http://example.com/schemas/anatomy.recipe.schema.json",
-  "recipeId": "anatomy:humanoid_standard",
-  "blueprintId": "anatomy:humanoid_standard",
+  "recipeId": "anatomy:human_male",
+  "blueprintId": "anatomy:human_male",
   "slots": {
     "torso": {
       "partType": "torso",
-      "preferId": "anatomy:human_female_torso",
+      "preferId": "anatomy:human_male_torso",
       "count": {
         "exact": 1
       }

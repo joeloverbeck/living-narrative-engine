@@ -68,7 +68,7 @@ describe('JSON-Schema – core component data contracts', () => {
     'anatomy:part': { subType: 'leg' },
     'anatomy:sockets': { sockets: [{ id: 'ankle', allowedTypes: ['foot'] }] },
     'anatomy:joint': { parentId: 'entity-123', socketId: 'ankle' },
-    'anatomy:body': { recipeId: 'core:humanoid_standard' },
+    'anatomy:body': { recipeId: 'anatomy:human_female' },
     'core:owned_by': { ownerId: 'entity-123' },
   };
 

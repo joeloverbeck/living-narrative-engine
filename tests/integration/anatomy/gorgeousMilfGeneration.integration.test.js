@@ -40,7 +40,7 @@ import humanoidLeg from '../../../data/mods/anatomy/entities/definitions/humanoi
 import humanFemaleTorso from '../../../data/mods/anatomy/entities/definitions/human_female_torso.entity.json';
 import jacquelineRouxel from '../../../data/mods/anatomy/entities/instances/jacqueline_rouxel.entity.json';
 
-import humanoidStandardBlueprint from '../../../data/mods/anatomy/blueprints/humanoid_standard.blueprint.json';
+import humanFemaleBlueprint from '../../../data/mods/anatomy/blueprints/human_female.blueprint.json';
 import gorgeousMilfRecipe from '../../../data/mods/anatomy/recipes/gorgeous_milf.recipe.json';
 
 // Import core components needed for anatomy
@@ -121,7 +121,7 @@ describe('Gorgeous MILF Anatomy Generation Integration Test', () => {
 
     // Load blueprints
     testBed.loadBlueprints({
-      'anatomy:humanoid_standard': humanoidStandardBlueprint,
+      'anatomy:human_female': humanFemaleBlueprint,
     });
 
     // Load recipes
@@ -297,7 +297,7 @@ describe('Gorgeous MILF Anatomy Generation Integration Test', () => {
       'anatomy:gorgeous_milf'
     );
     expect(recipe).toBeDefined();
-    expect(recipe.blueprintId).toBe('anatomy:humanoid_standard');
+    expect(recipe.blueprintId).toBe('anatomy:human_female');
 
     // Verify all slot specifications
     expect(recipe.slots.head.childSlots).toBeDefined();
