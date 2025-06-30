@@ -11,7 +11,9 @@
         {
           "id": "left_eye",
           "orientation": "left",
-          "allowedTypes": ["eye"],
+          "allowedTypes": [
+            "eye"
+          ],
           "maxCount": 1,
           "jointType": "fused",
           "nameTpl": "{{orientation}} {{type}}"
@@ -19,7 +21,9 @@
         {
           "id": "right_eye",
           "orientation": "right",
-          "allowedTypes": ["eye"],
+          "allowedTypes": [
+            "eye"
+          ],
           "maxCount": 1,
           "jointType": "fused",
           "nameTpl": "{{orientation}} {{type}}"
@@ -27,7 +31,9 @@
         {
           "id": "left_ear",
           "orientation": "left",
-          "allowedTypes": ["ear"],
+          "allowedTypes": [
+            "ear"
+          ],
           "maxCount": 1,
           "jointType": "fused",
           "nameTpl": "{{orientation}} {{type}}"
@@ -35,15 +41,18 @@
         {
           "id": "right_ear",
           "orientation": "right",
-          "allowedTypes": ["ear"],
+          "allowedTypes": [
+            "ear"
+          ],
           "maxCount": 1,
           "jointType": "fused",
           "nameTpl": "{{orientation}} {{type}}"
         },
         {
           "id": "scalp",
-          "orientation": "top",
-          "allowedTypes": ["hair"],
+          "allowedTypes": [
+            "hair"
+          ],
           "maxCount": 1,
           "jointType": "fused",
           "nameTpl": "{{type}}"
