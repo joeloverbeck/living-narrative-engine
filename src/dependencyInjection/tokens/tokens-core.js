@@ -12,6 +12,7 @@ import { freeze } from '../../utils';
  */
 export const coreTokens = freeze({
   ILogger: 'ILogger',
+  ServiceSetup: 'ServiceSetup',
   EventBus: 'EventBus',
   IEventBus: 'IEventBus',
   IDataFetcher: 'IDataFetcher',

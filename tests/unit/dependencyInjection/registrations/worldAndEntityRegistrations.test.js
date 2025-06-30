@@ -23,6 +23,7 @@ import WorldContext from '../../../../src/context/worldContext.js';
 import JsonLogicEvaluationService from '../../../../src/logic/jsonLogicEvaluationService.js';
 import { EntityDisplayDataProvider } from '../../../../src/entities/entityDisplayDataProvider.js';
 import { expectSingleton } from '../../../common/containerAssertions.js';
+import { ServiceSetup } from '../../../../src/utils/serviceInitializerUtils.js';
 // EntityManager is now registered by the SUT, so we might not need to import its class here unless for instanceof checks on IEntityManager resolution.
 // import EntityManager from '../../../src/entities/entityManager.js';
 
@@ -61,6 +62,7 @@ describe('registerWorldAndEntity', () => {
     container.register(tokens.IGameDataRepository, () => ({
       getConditionDefinition: jest.fn(), // For JsonLogicEvaluationService
     }));
+    container.register(tokens.ServiceSetup, () => new ServiceSetup());
   });
 
   afterEach(() => {
@@ -104,7 +106,7 @@ describe('registerWorldAndEntity', () => {
       token: tokens.JsonLogicEvaluationService,
       Class: JsonLogicEvaluationService,
       lifecycle: 'singleton', // Assuming it's a direct class registration with deps
-      deps: [tokens.ILogger, tokens.IGameDataRepository],
+      deps: [tokens.ILogger, tokens.IGameDataRepository, tokens.ServiceSetup],
     },
     {
       token: tokens.EntityDisplayDataProvider,

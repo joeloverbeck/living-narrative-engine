@@ -101,7 +101,7 @@ export function registerWorldAndEntity(container) {
   registrar.single(
     tokens.JsonLogicEvaluationService,
     JsonLogicEvaluationService,
-    [tokens.ILogger, tokens.IGameDataRepository]
+    [tokens.ILogger, tokens.IGameDataRepository, tokens.ServiceSetup]
   );
   logger.debug(
     `World and Entity Registration: Registered ${String(

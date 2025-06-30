@@ -11,6 +11,78 @@ import { setupPrefixedLogger } from './loggerUtils.js';
 import { validateDependencies } from './dependencyUtils.js';
 
 /**
+ * @class ServiceSetup
+ * @description Helper class for initializing services and handlers. Provides
+ *   methods to create prefixed loggers, validate dependencies and resolve
+ *   execution loggers.
+ */
+export class ServiceSetup {
+  /**
+   * Create a prefixed logger for a service or handler.
+   *
+   * @param {string} serviceName - Name used for log prefixing.
+   * @param {import('../interfaces/coreServices.js').ILogger | undefined | null} logger
+   *   - Logger instance to wrap.
+   * @returns {import('../interfaces/coreServices.js').ILogger} Prefixed logger instance.
+   */
+  createLogger(serviceName, logger) {
+    return setupPrefixedLogger(logger, `${serviceName}: `);
+  }
+
+  /**
+   * Validate a map of service dependencies.
+   *
+   * @param {string} serviceName - Name used in validation messages.
+   * @param {import('../interfaces/coreServices.js').ILogger} logger - Logger for validation output.
+   * @param {Record<string, DependencySpec>} [deps] - Map of dependency specs.
+   * @returns {void}
+   */
+  validateDeps(serviceName, logger, deps) {
+    if (!deps) return;
+
+    const checks = [];
+    for (const [depName, spec] of Object.entries(deps)) {
+      if (!spec) continue;
+      checks.push({
+        dependency: spec.value,
+        name: `${serviceName}: ${depName}`,
+        methods: spec.requiredMethods,
+        isFunction: spec.isFunction,
+      });
+    }
+
+    validateDependencies(checks, logger);
+  }
+
+  /**
+   * Initialize a prefixed logger and validate dependencies in one step.
+   *
+   * @param {string} serviceName - Name used for prefixing and validation.
+   * @param {import('../interfaces/coreServices.js').ILogger} logger - Logger instance.
+   * @param {Record<string, DependencySpec>} [deps] - Dependency map for validation.
+   * @returns {import('../interfaces/coreServices.js').ILogger} Prefixed logger.
+   */
+  setupService(serviceName, logger, deps) {
+    const prefixed = this.createLogger(serviceName, logger);
+    this.validateDeps(serviceName, prefixed, deps);
+    return prefixed;
+  }
+
+  /**
+   * Resolve the logger to use for execution.
+   *
+   * @param {import('../interfaces/coreServices.js').ILogger} defaultLogger - Default logger.
+   * @param {import('../logic/defs.js').ExecutionContext} [executionContext] - Optional context.
+   * @returns {import('../interfaces/coreServices.js').ILogger} Logger for execution.
+   */
+  resolveExecutionLogger(defaultLogger, executionContext) {
+    return executionContext?.logger ?? defaultLogger;
+  }
+}
+
+// -- Legacy function exports maintained for backwards compatibility -----------
+
+/**
  * Validates a set of service dependencies using `validateDependency`.
  *
  * @param {string} serviceName - Name used in validation error messages.
@@ -18,22 +90,16 @@ import { validateDependencies } from './dependencyUtils.js';
  * @param {Record<string, DependencySpec>} deps - Dependency map.
  * @returns {void}
  */
+const _defaultServiceSetup = new ServiceSetup();
+
+/**
+ *
+ * @param serviceName
+ * @param logger
+ * @param deps
+ */
 export function validateServiceDeps(serviceName, logger, deps) {
-  if (!deps) return;
-
-  const checks = [];
-
-  for (const [depName, spec] of Object.entries(deps)) {
-    if (!spec) continue;
-    checks.push({
-      dependency: spec.value,
-      name: `${serviceName}: ${depName}`,
-      methods: spec.requiredMethods,
-      isFunction: spec.isFunction,
-    });
-  }
-
-  validateDependencies(checks, logger);
+  _defaultServiceSetup.validateDeps(serviceName, logger, deps);
 }
 
 /**
@@ -51,9 +117,7 @@ export function validateServiceDeps(serviceName, logger, deps) {
  *   prefixed logger instance.
  */
 export function setupService(serviceName, logger, deps) {
-  const prefixedLogger = setupPrefixedLogger(logger, `${serviceName}: `);
-  validateServiceDeps(serviceName, prefixedLogger, deps);
-  return prefixedLogger;
+  return _defaultServiceSetup.setupService(serviceName, logger, deps);
 }
 
 /**
@@ -67,7 +131,19 @@ export function setupService(serviceName, logger, deps) {
  * @returns {import('../interfaces/coreServices.js').ILogger} Prefixed logger.
  */
 export function initializeServiceLogger(serviceName, logger, deps) {
-  return setupService(serviceName, logger, deps);
+  return _defaultServiceSetup.setupService(serviceName, logger, deps);
+}
+
+/**
+ *
+ * @param defaultLogger
+ * @param executionContext
+ */
+export function resolveExecutionLogger(defaultLogger, executionContext) {
+  return _defaultServiceSetup.resolveExecutionLogger(
+    defaultLogger,
+    executionContext
+  );
 }
 
 // --- FILE END ---

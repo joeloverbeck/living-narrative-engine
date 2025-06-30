@@ -1,6 +1,6 @@
 // src/logic/jsonLogicEvaluationService.js
 import jsonLogic from 'json-logic-js';
-import { validateServiceDeps } from '../utils/serviceInitializerUtils.js';
+import { ServiceSetup } from '../utils/serviceInitializerUtils.js';
 import { BaseService } from '../utils/serviceBase.js';
 import { warnOnBracketPaths } from '../utils/jsonLogicUtils.js';
 import { resolveConditionRefs } from '../utils/conditionRefResolver.js';
@@ -28,11 +28,13 @@ class JsonLogicEvaluationService extends BaseService {
    * @param {object} [dependencies] - The injected services.
    * @param {ILogger} dependencies.logger - Logging service.
    * @param {IGameDataRepository} [dependencies.gameDataRepository] - Repository for accessing condition definitions. Optional for tests.
+   * @param dependencies.serviceSetup
    * @throws {Error} If required dependencies are missing or invalid.
    */
-  constructor({ logger, gameDataRepository } = {}) {
+  constructor({ logger, gameDataRepository, serviceSetup } = {}) {
     super();
-    this.#logger = this._init('JsonLogicEvaluationService', logger);
+    const setup = serviceSetup ?? new ServiceSetup();
+    this.#logger = setup.setupService('JsonLogicEvaluationService', logger);
 
     if (!gameDataRepository) {
       this.#logger.warn(
@@ -40,7 +42,7 @@ class JsonLogicEvaluationService extends BaseService {
       );
       this.#gameDataRepository = { getConditionDefinition: () => null };
     } else {
-      validateServiceDeps('JsonLogicEvaluationService', this.#logger, {
+      setup.validateDeps('JsonLogicEvaluationService', this.#logger, {
         gameDataRepository: {
           value: gameDataRepository,
           requiredMethods: ['getConditionDefinition'],

@@ -6,7 +6,7 @@
 import { IAvailableActionsProvider } from '../../interfaces/IAvailableActionsProvider.js';
 import { POSITION_COMPONENT_ID } from '../../constants/componentIds.js';
 import { MAX_AVAILABLE_ACTIONS_PER_TURN } from '../../constants/core.js';
-import { setupService } from '../../utils/serviceInitializerUtils.js';
+import { ServiceSetup } from '../../utils/serviceInitializerUtils.js';
 
 /** @typedef {import('../../entities/entity.js').default} Entity */
 /** @typedef {import('../../turns/interfaces/ITurnContext.js').ITurnContext} ITurnContext */
@@ -41,16 +41,19 @@ export class AvailableActionsProvider extends IAvailableActionsProvider {
    * @param {IActionIndexer} dependencies.actionIndexingService
    * @param {IEntityManager} dependencies.entityManager
    * @param {ILogger} dependencies.logger
+   * @param dependencies.serviceSetup
    */
   constructor({
     actionDiscoveryService,
     actionIndexingService: actionIndexer,
     entityManager,
     logger,
+    serviceSetup,
   }) {
     super();
+    const setup = serviceSetup ?? new ServiceSetup();
 
-    this.#logger = setupService('AvailableActionsProvider', logger, {
+    this.#logger = setup.setupService('AvailableActionsProvider', logger, {
       actionDiscoveryService: {
         value: actionDiscoveryService,
         requiredMethods: ['getValidActions'],

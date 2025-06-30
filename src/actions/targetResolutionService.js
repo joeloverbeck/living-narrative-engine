@@ -18,7 +18,7 @@ import {
   TARGET_DOMAIN_SELF,
   TARGET_DOMAIN_NONE,
 } from '../constants/targetDomains.js';
-import { setupService } from '../utils/serviceInitializerUtils.js';
+import { ServiceSetup } from '../utils/serviceInitializerUtils.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/systemEventIds.js';
 
 /**
@@ -48,18 +48,21 @@ export class TargetResolutionService extends ITargetResolutionService {
    * @param {ISafeEventDispatcher} deps.safeEventDispatcher - Dispatches system errors.
    * @param {JsonLogicEvaluationService} deps.jsonLogicEvaluationService - Service to evaluate JsonLogic.
    * @param {IDslParser} deps.dslParser - Parser used for Scope-DSL expressions.
+   * @param deps.serviceSetup
    */
   constructor({
     scopeRegistry,
     scopeEngine,
     entityManager,
     logger,
+    serviceSetup,
     safeEventDispatcher,
     jsonLogicEvaluationService,
     dslParser,
   }) {
     super();
-    this.#logger = setupService('TargetResolutionService', logger, {
+    const setup = serviceSetup ?? new ServiceSetup();
+    this.#logger = setup.setupService('TargetResolutionService', logger, {
       scopeRegistry: { value: scopeRegistry, requiredMethods: ['getScope'] },
       scopeEngine: { value: scopeEngine, requiredMethods: ['resolve'] },
       entityManager: { value: entityManager },
