@@ -9,7 +9,7 @@ describe('createLruCache', () => {
     cache.set('c', 3);
     cache.set('d', 4); // Should evict 'a'
 
-    expect(cache.get('a')).toBeNull();
+    expect(cache.get('a')).toBeUndefined();
     expect(cache.get('b')).toBe(2);
     expect(cache.get('c')).toBe(3);
     expect(cache.get('d')).toBe(4);
@@ -30,7 +30,7 @@ describe('createLruCache', () => {
     cache.set('d', 4);
 
     expect(cache.get('a')).toBe(1); // Still present
-    expect(cache.get('b')).toBeNull(); // Evicted
+    expect(cache.get('b')).toBeUndefined(); // Evicted
     expect(cache.get('c')).toBe(3);
     expect(cache.get('d')).toBe(4);
   });
