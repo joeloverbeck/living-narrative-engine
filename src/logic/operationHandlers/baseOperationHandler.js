@@ -10,9 +10,9 @@
 
 import {
   initHandlerLogger,
-  validateDeps,
+  validateServiceDeps,
   resolveExecutionLogger,
-} from '../../utils/handlerUtils/serviceUtils.js';
+} from '../../utils/serviceInitializerUtils.js';
 
 /**
  * @class BaseOperationHandler
@@ -38,8 +38,8 @@ class BaseOperationHandler {
       throw new Error('BaseOperationHandler requires a non-empty name.');
     }
     const logger = deps?.logger?.value ?? deps?.logger;
-    this.#logger = initHandlerLogger(name, logger);
-    validateDeps(name, this.#logger, deps);
+    this.#logger = initHandlerLogger(name, logger, deps);
+    validateServiceDeps(name, this.#logger, deps);
     this.#deps = {};
     for (const [key, spec] of Object.entries(deps || {})) {
       this.#deps[key] = spec?.value ?? spec;

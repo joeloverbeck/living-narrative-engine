@@ -167,9 +167,9 @@ describe('initLogger usage in constructors', () => {
     expect.hasAssertions();
     jest.resetModules();
     const initHandlerLogger = jest.fn(() => mockLogger);
-    jest.doMock('../../../src/utils/handlerUtils/serviceUtils.js', () => {
+    jest.doMock('../../../src/utils/serviceInitializerUtils.js', () => {
       const actual = jest.requireActual(
-        '../../../src/utils/handlerUtils/serviceUtils.js'
+        '../../../src/utils/serviceInitializerUtils.js'
       );
       return { ...actual, initHandlerLogger };
     });
@@ -182,8 +182,9 @@ describe('initLogger usage in constructors', () => {
     });
     expect(initHandlerLogger).toHaveBeenCalledWith(
       'AddComponentHandler',
-      mockLogger
+      mockLogger,
+      expect.any(Object)
     );
-    jest.dontMock('../../../src/utils/handlerUtils/serviceUtils.js');
+    jest.dontMock('../../../src/utils/serviceInitializerUtils.js');
   });
 });

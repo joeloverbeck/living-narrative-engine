@@ -10,7 +10,7 @@ import {
 import {
   setupServiceLogger,
   validateServiceDependencies,
-} from '../../../src/initializers/serviceInitHelper.js';
+} from '../../../src/utils/serviceInitializerUtils.js';
 import { setupPrefixedLogger } from '../../../src/utils/loggerUtils.js';
 import { validateDependencies } from '../../../src/utils/dependencyUtils.js';
 
@@ -22,7 +22,7 @@ jest.mock('../../../src/utils/loggerUtils.js', () => ({
   setupPrefixedLogger: jest.fn(),
 }));
 
-describe('serviceInitHelper', () => {
+describe('serviceInitializerUtils helper functions', () => {
   const baseLogger = {
     debug: jest.fn(),
     error: jest.fn(),
