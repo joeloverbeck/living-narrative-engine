@@ -99,7 +99,7 @@ export function executeActionSequence(
         `${tag} CRITICAL error during execution of Operation ${opType}`,
         err
       );
-      break;
+      throw err;
     }
   }
 }
