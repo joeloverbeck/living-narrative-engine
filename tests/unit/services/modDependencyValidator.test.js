@@ -244,6 +244,7 @@ describe('ModDependencyValidator', () => {
 
     const fakeSemver = {
       valid: jest.fn(() => true),
+      validRange: jest.fn(() => true),
       satisfies: jest.fn(() => false),
     };
 
@@ -253,6 +254,7 @@ describe('ModDependencyValidator', () => {
       })
     ).toThrow(/requires dependency 'ModB' version '\^1.0.0'/);
     expect(fakeSemver.valid).toHaveBeenCalledWith('1.0.0');
+    expect(fakeSemver.validRange).toHaveBeenCalledWith('^1.0.0');
     expect(fakeSemver.satisfies).toHaveBeenCalledWith('1.0.0', '^1.0.0');
   });
 
