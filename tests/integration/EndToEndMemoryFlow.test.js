@@ -10,6 +10,7 @@ import { PlaceholderResolver } from '../../src/utils/placeholderResolverUtils.js
 import { PromptStaticContentService } from '../../src/prompting/promptStaticContentService.js';
 import AjvSchemaValidator from '../../src/validation/ajvSchemaValidator.js';
 import { LLMResponseProcessor } from '../../src/turns/services/LLMResponseProcessor.js';
+import { LlmJsonService } from '../../src/llms/llmJsonService.js';
 import { SHORT_TERM_MEMORY_COMPONENT_ID } from '../../src/constants/componentIds.js';
 import {
   LLM_TURN_ACTION_RESPONSE_SCHEMA,
@@ -144,6 +145,7 @@ describe('End-to-End Short-Term Memory Flow', () => {
       schemaValidator,
       logger,
       safeEventDispatcher,
+      llmJsonService: new LlmJsonService(),
     });
   });
 

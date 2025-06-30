@@ -7,6 +7,7 @@ import { LLMResponseProcessor } from '../../../../src/turns/services/LLMResponse
 import { beforeEach, describe, expect, jest, test } from '@jest/globals';
 import { LLMProcessingError } from '../../../../src/turns/services/LLMResponseProcessor.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../../src/constants/eventIds.js';
+import { LlmJsonService } from '../../../../src/llms/llmJsonService.js';
 
 describe('LLMResponseProcessor – Handling of disallowed properties', () => {
   let mockLogger;
@@ -41,6 +42,7 @@ describe('LLMResponseProcessor – Handling of disallowed properties', () => {
       schemaValidator: mockSchemaValidator,
       logger: mockLogger,
       safeEventDispatcher,
+      llmJsonService: new LlmJsonService(),
     });
   });
 

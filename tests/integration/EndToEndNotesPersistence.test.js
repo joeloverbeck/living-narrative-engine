@@ -10,6 +10,7 @@ import { PlaceholderResolver } from '../../src/utils/placeholderResolverUtils.js
 import { PromptStaticContentService } from '../../src/prompting/promptStaticContentService.js';
 import AjvSchemaValidator from '../../src/validation/ajvSchemaValidator.js';
 import { LLMResponseProcessor } from '../../src/turns/services/LLMResponseProcessor.js';
+import { LlmJsonService } from '../../src/llms/llmJsonService.js';
 import {
   LLM_TURN_ACTION_RESPONSE_SCHEMA,
   LLM_TURN_ACTION_RESPONSE_SCHEMA_ID,
@@ -190,6 +191,7 @@ describe('End-to-End Notes Persistence Flow', () => {
       schemaValidator,
       logger,
       safeEventDispatcher,
+      llmJsonService: new LlmJsonService(),
     });
   });
 

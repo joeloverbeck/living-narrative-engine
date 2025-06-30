@@ -2,7 +2,7 @@
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../interfaces/coreServices.js').ISchemaValidator} ISchemaValidator */
 import { ILLMResponseProcessor } from '../interfaces/ILLMResponseProcessor.js';
-import { parseAndRepairJson } from '../../utils/llmUtils.js';
+import { LlmJsonService } from '../../llms/llmJsonService.js';
 import { LLM_TURN_ACTION_RESPONSE_SCHEMA_ID } from '../schemas/llmOutputSchemas.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 
@@ -31,11 +31,23 @@ export class LLMResponseProcessor extends ILLMResponseProcessor {
   #logger;
   /** @type {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} */
   #safeEventDispatcher;
+  /** @type {LlmJsonService} */
+  #llmJsonService;
 
   /**
-   * @param {{ schemaValidator: ISchemaValidator, logger: ILogger, safeEventDispatcher: import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher }} options
+   * @param {{
+   *   schemaValidator: ISchemaValidator,
+   *   logger: ILogger,
+   *   safeEventDispatcher: import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher,
+   *   llmJsonService: LlmJsonService,
+   * }} options
    */
-  constructor({ schemaValidator, logger, safeEventDispatcher }) {
+  constructor({
+    schemaValidator,
+    logger,
+    safeEventDispatcher,
+    llmJsonService,
+  }) {
     super();
     if (
       !schemaValidator ||
@@ -55,10 +67,17 @@ export class LLMResponseProcessor extends ILLMResponseProcessor {
         'LLMResponseProcessor requires a valid ISafeEventDispatcher'
       );
     }
+    if (
+      !llmJsonService ||
+      typeof llmJsonService.parseAndRepair !== 'function'
+    ) {
+      throw new Error('LLMResponseProcessor requires a valid LlmJsonService');
+    }
 
     this.#schemaValidator = schemaValidator;
     this.#logger = logger;
     this.#safeEventDispatcher = safeEventDispatcher;
+    this.#llmJsonService = llmJsonService;
 
     // Ensure the required schema is loaded
     if (
@@ -85,7 +104,9 @@ export class LLMResponseProcessor extends ILLMResponseProcessor {
     }
 
     try {
-      return await parseAndRepairJson(llmJsonResponse, this.#logger);
+      return await this.#llmJsonService.parseAndRepair(llmJsonResponse, {
+        logger: this.#logger,
+      });
     } catch (err) {
       const errorMsg = `LLMResponseProcessor: JSON could not be parsed for actor ${actorId}: ${err.message}`;
       safeDispatchError(

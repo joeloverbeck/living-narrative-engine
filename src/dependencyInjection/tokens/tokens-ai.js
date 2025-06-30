@@ -54,4 +54,5 @@ export const aiTokens = freeze({
   ILocationSummaryProvider: 'ILocationSummaryProvider',
   IActorDataExtractor: 'IActorDataExtractor',
   ILLMDecisionProvider: 'ILLMDecisionProvider',
+  LlmJsonService: 'LlmJsonService',
 });
