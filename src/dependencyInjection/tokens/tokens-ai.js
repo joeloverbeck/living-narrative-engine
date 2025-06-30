@@ -33,7 +33,7 @@ export const aiTokens = freeze({
   LLMResponseProcessor: 'LLMResponseProcessor',
   ActionIndexingService: 'ActionIndexingService',
   IConfigurationProvider: 'IConfigurationProvider',
-  LLMConfigService: 'LLMConfigService',
+  LlmConfigManager: 'LlmConfigManager',
   PlaceholderResolver: 'PlaceholderResolver',
   ExecutionPlaceholderResolver: 'ExecutionPlaceholderResolver',
   StandardElementAssembler: 'StandardElementAssembler',
