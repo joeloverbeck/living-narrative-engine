@@ -25,14 +25,18 @@ describe('EventBus error handling', () => {
   });
 
   it('logs for invalid subscribe arguments', () => {
-    bus.subscribe('', () => {});
-    bus.subscribe('test', null);
+    const r1 = bus.subscribe('', () => {});
+    const r2 = bus.subscribe('test', null);
+    expect(r1).toBeNull();
+    expect(r2).toBeNull();
     expect(logger.error).toHaveBeenCalledTimes(2);
   });
 
   it('logs for invalid unsubscribe arguments', () => {
-    bus.unsubscribe('', () => {});
-    bus.unsubscribe('a', null);
+    const u1 = bus.unsubscribe('', () => {});
+    const u2 = bus.unsubscribe('a', null);
+    expect(u1).toBe(false);
+    expect(u2).toBe(false);
     expect(logger.error).toHaveBeenCalledTimes(2);
   });
 

@@ -28,7 +28,7 @@ export class IEventBus {
    *
    * @param {string} eventName - The name of the event to subscribe to.
    * @param {EventListener} listener - Function invoked when the event is dispatched.
-   * @returns {() => void} Function that unsubscribes the listener when called.
+   * @returns {(() => boolean) | null} Function that unsubscribes the listener when called, or `null` on failure.
    */
   subscribe(eventName, listener) {
     throw new Error('IEventBus.subscribe method not implemented.');
@@ -39,7 +39,7 @@ export class IEventBus {
    *
    * @param {string} eventName - The event identifier.
    * @param {EventListener} listener - The previously subscribed listener.
-   * @returns {void}
+   * @returns {boolean} `true` if a listener was removed, otherwise `false`.
    */
   unsubscribe(eventName, listener) {
     throw new Error('IEventBus.unsubscribe method not implemented.');
