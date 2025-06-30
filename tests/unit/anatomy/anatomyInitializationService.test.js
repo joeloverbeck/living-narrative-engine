@@ -9,14 +9,17 @@ describe('AnatomyInitializationService', () => {
   let mockLogger;
   let mockAnatomyGenerationService;
   let boundHandlerRef;
+  let mockUnsubscribeFn;
 
   beforeEach(() => {
     // Create mocks
+    mockUnsubscribeFn = jest.fn();
     mockEventDispatcher = {
-      on: jest.fn((eventId, handler) => {
+      subscribe: jest.fn((eventId, handler) => {
         boundHandlerRef = handler;
+        return mockUnsubscribeFn;
       }),
-      off: jest.fn(),
+      unsubscribe: jest.fn(),
     };
 
     mockLogger = {
@@ -81,7 +84,7 @@ describe('AnatomyInitializationService', () => {
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'AnatomyInitializationService: Registering event listeners'
       );
-      expect(mockEventDispatcher.on).toHaveBeenCalledWith(
+      expect(mockEventDispatcher.subscribe).toHaveBeenCalledWith(
         ENTITY_CREATED_ID,
         expect.any(Function)
       );
@@ -95,7 +98,7 @@ describe('AnatomyInitializationService', () => {
 
       // Clear previous calls
       mockLogger.warn.mockClear();
-      mockEventDispatcher.on.mockClear();
+      mockEventDispatcher.subscribe.mockClear();
 
       // Initialize again
       service.initialize();
@@ -103,7 +106,7 @@ describe('AnatomyInitializationService', () => {
       expect(mockLogger.warn).toHaveBeenCalledWith(
         'AnatomyInitializationService: Already initialized'
       );
-      expect(mockEventDispatcher.on).not.toHaveBeenCalled();
+      expect(mockEventDispatcher.subscribe).not.toHaveBeenCalled();
     });
 
     it('should bind event handler correctly', () => {
@@ -258,17 +261,13 @@ describe('AnatomyInitializationService', () => {
   describe('dispose', () => {
     it('should remove event listener when initialized', () => {
       service.initialize();
-      const handler = boundHandlerRef;
 
       service.dispose();
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'AnatomyInitializationService: Removing event listeners'
       );
-      expect(mockEventDispatcher.off).toHaveBeenCalledWith(
-        ENTITY_CREATED_ID,
-        expect.any(Function)
-      );
+      expect(mockUnsubscribeFn).toHaveBeenCalled();
       expect(mockLogger.info).toHaveBeenCalledWith(
         'AnatomyInitializationService: Disposed'
       );
@@ -277,7 +276,7 @@ describe('AnatomyInitializationService', () => {
     it('should do nothing if not initialized', () => {
       service.dispose();
 
-      expect(mockEventDispatcher.off).not.toHaveBeenCalled();
+      expect(mockUnsubscribeFn).not.toHaveBeenCalled();
       expect(mockLogger.debug).not.toHaveBeenCalledWith(
         'AnatomyInitializationService: Removing event listeners'
       );
@@ -288,13 +287,13 @@ describe('AnatomyInitializationService', () => {
       service.dispose();
 
       // Clear mocks
-      mockEventDispatcher.on.mockClear();
+      mockEventDispatcher.subscribe.mockClear();
       mockLogger.info.mockClear();
 
       // Should be able to initialize again
       service.initialize();
 
-      expect(mockEventDispatcher.on).toHaveBeenCalledWith(
+      expect(mockEventDispatcher.subscribe).toHaveBeenCalledWith(
         ENTITY_CREATED_ID,
         expect.any(Function)
       );
@@ -308,31 +307,41 @@ describe('AnatomyInitializationService', () => {
       service.dispose();
 
       // Clear mocks
-      mockEventDispatcher.off.mockClear();
+      mockUnsubscribeFn.mockClear();
       mockLogger.info.mockClear();
 
       // Second dispose should do nothing
       service.dispose();
 
-      expect(mockEventDispatcher.off).not.toHaveBeenCalled();
+      expect(mockUnsubscribeFn).not.toHaveBeenCalled();
     });
   });
 
   describe('integration scenarios', () => {
     it('should handle rapid initialization and disposal', () => {
+      // First cycle - create a new unsubscribe function for this cycle
+      const firstUnsubscribe = jest.fn();
+      mockEventDispatcher.subscribe.mockReturnValueOnce(firstUnsubscribe);
+      
       service.initialize();
       service.dispose();
+      
+      // Second cycle - create another new unsubscribe function
+      const secondUnsubscribe = jest.fn();
+      mockEventDispatcher.subscribe.mockReturnValueOnce(secondUnsubscribe);
+      
       service.initialize();
       service.dispose();
 
-      expect(mockEventDispatcher.on).toHaveBeenCalledTimes(2);
-      expect(mockEventDispatcher.off).toHaveBeenCalledTimes(2);
+      expect(mockEventDispatcher.subscribe).toHaveBeenCalledTimes(2);
+      expect(firstUnsubscribe).toHaveBeenCalled();
+      expect(secondUnsubscribe).toHaveBeenCalled();
     });
 
     it('should maintain correct state through lifecycle', async () => {
       // Initialize
       service.initialize();
-      expect(mockEventDispatcher.on).toHaveBeenCalled();
+      expect(mockEventDispatcher.subscribe).toHaveBeenCalled();
 
       // Handle an event
       const event = {
@@ -350,18 +359,14 @@ describe('AnatomyInitializationService', () => {
 
       // Dispose
       service.dispose();
-      expect(mockEventDispatcher.off).toHaveBeenCalled();
+      expect(mockUnsubscribeFn).toHaveBeenCalled();
 
       // Clear mocks
       mockAnatomyGenerationService.generateAnatomyIfNeeded.mockClear();
 
-      // Try to handle event after disposal (should not work as handler is removed)
-      // This would only work if the event dispatcher actually removed the handler
-      // In our test, we're just verifying the off method was called
-      expect(mockEventDispatcher.off).toHaveBeenCalledWith(
-        ENTITY_CREATED_ID,
-        expect.any(Function)
-      );
+      // After disposal, the unsubscribe function should have been called
+      // which would remove the handler from the event dispatcher
+      expect(mockUnsubscribeFn).toHaveBeenCalled();
     });
   });
 });
