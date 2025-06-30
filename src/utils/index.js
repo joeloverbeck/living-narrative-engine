@@ -34,3 +34,4 @@ export { validateNonEmptyString } from './stringValidation.js';
 export { createErrorDetails } from './errorDetails.js';
 export { readComponent, writeComponent } from './componentAccessUtils.js';
 export * from '../turns/strategies/strategyHelpers.js';
+export * from './operationValidationUtils.js';
