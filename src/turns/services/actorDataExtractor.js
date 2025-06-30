@@ -72,6 +72,9 @@ class ActorDataExtractor extends IActorDataExtractor {
    * @returns {ActorPromptDataDTO} The populated DTO.
    */
   extractPromptData(actorState, actorId = null) {
+    if (actorState === null || typeof actorState !== 'object') {
+      throw new TypeError('actorState must be an object');
+    }
     /** @type {Partial<ActorPromptDataDTO>} */
     const promptData = {};
 

@@ -353,6 +353,18 @@ describe('ActorDataExtractor', () => {
       result = extractor.extractPromptData(actorState);
       expect(result.speechPatterns).toBeUndefined();
     });
+
+    test('throws TypeError when actorState is null', () => {
+      expect(() => extractor.extractPromptData(null)).toThrow(
+        new TypeError('actorState must be an object')
+      );
+    });
+
+    test('throws TypeError when actorState is a primitive', () => {
+      expect(() => extractor.extractPromptData(42)).toThrow(
+        new TypeError('actorState must be an object')
+      );
+    });
   });
 });
 
