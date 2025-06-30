@@ -1,351 +1,4 @@
-[descriptors] Fetched data from ./data/mods/descriptors/components/length_hair.component.json
-consoleLogger.js:187 ComponentLoader [descriptors]: Validating 'length_hair.component.json' against primary schema 'http://example.com/schemas/component.schema.json'.
-consoleLogger.js:187 ComponentLoader [descriptors]: Processing fetched item: length_hair.component.json (Type: components)
-consoleLogger.js:187 AjvSchemaValidator: Successfully added schema 'descriptors:length_hair'.
-consoleLogger.js:187 AjvSchemaValidator: Schema 'descriptors:length_hair' verified as retrievable.
-consoleLogger.js:187 ComponentLoader [descriptors]: Registered dataSchema for component ID 'descriptors:length_hair' from file 'length_hair.component.json'.
-consoleLogger.js:187 ComponentLoader [descriptors]: Storing item in registry. Category: 'components', Qualified ID: 'descriptors:length_hair', Base ID: 'length_hair', Filename: 'length_hair.component.json'
-consoleLogger.js:187 ComponentLoader [descriptors]: Item 'descriptors:length_hair' (Base: 'length_hair') stored successfully in category 'components'.
-consoleLogger.js:187 ComponentLoader [descriptors]: Successfully processed component definition from length_hair.component.json. Returning final registry key: descriptors:length_hair, Overwrite: false
-consoleLogger.js:187 [descriptors] Successfully processed length_hair.component.json. Result: ID=descriptors:length_hair, Overwrite=false
-consoleLogger.js:187 [descriptors] Fetched data from ./data/mods/descriptors/components/shape_eye.component.json
-consoleLogger.js:187 ComponentLoader [descriptors]: Validating 'shape_eye.component.json' against primary schema 'http://example.com/schemas/component.schema.json'.
-consoleLogger.js:187 ComponentLoader [descriptors]: Processing fetched item: shape_eye.component.json (Type: components)
-consoleLogger.js:187 AjvSchemaValidator: Successfully added schema 'descriptors:shape_eye'.
-consoleLogger.js:187 AjvSchemaValidator: Schema 'descriptors:shape_eye' verified as retrievable.
-consoleLogger.js:187 ComponentLoader [descriptors]: Registered dataSchema for component ID 'descriptors:shape_eye' from file 'shape_eye.component.json'.
-consoleLogger.js:187 ComponentLoader [descriptors]: Storing item in registry. Category: 'components', Qualified ID: 'descriptors:shape_eye', Base ID: 'shape_eye', Filename: 'shape_eye.component.json'
-consoleLogger.js:187 ComponentLoader [descriptors]: Item 'descriptors:shape_eye' (Base: 'shape_eye') stored successfully in category 'components'.
-consoleLogger.js:187 ComponentLoader [descriptors]: Successfully processed component definition from shape_eye.component.json. Returning final registry key: descriptors:shape_eye, Overwrite: false
-consoleLogger.js:187 [descriptors] Successfully processed shape_eye.component.json. Result: ID=descriptors:shape_eye, Overwrite=false
-consoleLogger.js:187 [descriptors] Fetched data from ./data/mods/descriptors/components/shape_general.component.json
-consoleLogger.js:187 ComponentLoader [descriptors]: Validating 'shape_general.component.json' against primary schema 'http://example.com/schemas/component.schema.json'.
-consoleLogger.js:187 ComponentLoader [descriptors]: Processing fetched item: shape_general.component.json (Type: components)
-consoleLogger.js:187 AjvSchemaValidator: Successfully added schema 'descriptors:shape_general'.
-consoleLogger.js:187 AjvSchemaValidator: Schema 'descriptors:shape_general' verified as retrievable.
-consoleLogger.js:187 ComponentLoader [descriptors]: Registered dataSchema for component ID 'descriptors:shape_general' from file 'shape_general.component.json'.
-consoleLogger.js:187 ComponentLoader [descriptors]: Storing item in registry. Category: 'components', Qualified ID: 'descriptors:shape_general', Base ID: 'shape_general', Filename: 'shape_general.component.json'
-consoleLogger.js:187 ComponentLoader [descriptors]: Item 'descriptors:shape_general' (Base: 'shape_general') stored successfully in category 'components'.
-consoleLogger.js:187 ComponentLoader [descriptors]: Successfully processed component definition from shape_general.component.json. Returning final registry key: descriptors:shape_general, Overwrite: false
-consoleLogger.js:187 [descriptors] Successfully processed shape_general.component.json. Result: ID=descriptors:shape_general, Overwrite=false
-consoleLogger.js:187 [descriptors] Fetched data from ./data/mods/descriptors/components/size_category.component.json
-consoleLogger.js:187 ComponentLoader [descriptors]: Validating 'size_category.component.json' against primary schema 'http://example.com/schemas/component.schema.json'.
-consoleLogger.js:187 ComponentLoader [descriptors]: Processing fetched item: size_category.component.json (Type: components)
-consoleLogger.js:187 AjvSchemaValidator: Successfully added schema 'descriptors:size_category'.
-consoleLogger.js:187 AjvSchemaValidator: Schema 'descriptors:size_category' verified as retrievable.
-consoleLogger.js:187 ComponentLoader [descriptors]: Registered dataSchema for component ID 'descriptors:size_category' from file 'size_category.component.json'.
-consoleLogger.js:187 ComponentLoader [descriptors]: Storing item in registry. Category: 'components', Qualified ID: 'descriptors:size_category', Base ID: 'size_category', Filename: 'size_category.component.json'
-consoleLogger.js:187 ComponentLoader [descriptors]: Item 'descriptors:size_category' (Base: 'size_category') stored successfully in category 'components'.
-consoleLogger.js:187 ComponentLoader [descriptors]: Successfully processed component definition from size_category.component.json. Returning final registry key: descriptors:size_category, Overwrite: false
-consoleLogger.js:187 [descriptors] Successfully processed size_category.component.json. Result: ID=descriptors:size_category, Overwrite=false
-consoleLogger.js:187 [descriptors] Fetched data from ./data/mods/descriptors/components/size_specific.component.json
-consoleLogger.js:187 ComponentLoader [descriptors]: Validating 'size_specific.component.json' against primary schema 'http://example.com/schemas/component.schema.json'.
-consoleLogger.js:187 ComponentLoader [descriptors]: Processing fetched item: size_specific.component.json (Type: components)
-consoleLogger.js:187 AjvSchemaValidator: Successfully added schema 'descriptors:size_specific'.
-consoleLogger.js:187 AjvSchemaValidator: Schema 'descriptors:size_specific' verified as retrievable.
-consoleLogger.js:187 ComponentLoader [descriptors]: Registered dataSchema for component ID 'descriptors:size_specific' from file 'size_specific.component.json'.
-consoleLogger.js:187 ComponentLoader [descriptors]: Storing item in registry. Category: 'components', Qualified ID: 'descriptors:size_specific', Base ID: 'size_specific', Filename: 'size_specific.component.json'
-consoleLogger.js:187 ComponentLoader [descriptors]: Item 'descriptors:size_specific' (Base: 'size_specific') stored successfully in category 'components'.
-consoleLogger.js:187 ComponentLoader [descriptors]: Successfully processed component definition from size_specific.component.json. Returning final registry key: descriptors:size_specific, Overwrite: false
-consoleLogger.js:187 [descriptors] Successfully processed size_specific.component.json. Result: ID=descriptors:size_specific, Overwrite=false
-consoleLogger.js:187 [descriptors] Fetched data from ./data/mods/descriptors/components/texture.component.json
-consoleLogger.js:187 ComponentLoader [descriptors]: Validating 'texture.component.json' against primary schema 'http://example.com/schemas/component.schema.json'.
-consoleLogger.js:187 ComponentLoader [descriptors]: Processing fetched item: texture.component.json (Type: components)
-consoleLogger.js:187 AjvSchemaValidator: Successfully added schema 'descriptors:texture'.
-consoleLogger.js:187 AjvSchemaValidator: Schema 'descriptors:texture' verified as retrievable.
-consoleLogger.js:187 ComponentLoader [descriptors]: Registered dataSchema for component ID 'descriptors:texture' from file 'texture.component.json'.
-consoleLogger.js:187 ComponentLoader [descriptors]: Storing item in registry. Category: 'components', Qualified ID: 'descriptors:texture', Base ID: 'texture', Filename: 'texture.component.json'
-consoleLogger.js:187 ComponentLoader [descriptors]: Item 'descriptors:texture' (Base: 'texture') stored successfully in category 'components'.
-consoleLogger.js:187 ComponentLoader [descriptors]: Successfully processed component definition from texture.component.json. Returning final registry key: descriptors:texture, Overwrite: false
-consoleLogger.js:187 [descriptors] Successfully processed texture.component.json. Result: ID=descriptors:texture, Overwrite=false
-consoleLogger.js:187 [descriptors] Fetched data from ./data/mods/descriptors/components/weight_feel.component.json
-consoleLogger.js:187 ComponentLoader [descriptors]: Validating 'weight_feel.component.json' against primary schema 'http://example.com/schemas/component.schema.json'.
-consoleLogger.js:187 ComponentLoader [descriptors]: Processing fetched item: weight_feel.component.json (Type: components)
-consoleLogger.js:187 AjvSchemaValidator: Successfully added schema 'descriptors:weight_feel'.
-consoleLogger.js:187 AjvSchemaValidator: Schema 'descriptors:weight_feel' verified as retrievable.
-consoleLogger.js:187 ComponentLoader [descriptors]: Registered dataSchema for component ID 'descriptors:weight_feel' from file 'weight_feel.component.json'.
-consoleLogger.js:187 ComponentLoader [descriptors]: Storing item in registry. Category: 'components', Qualified ID: 'descriptors:weight_feel', Base ID: 'weight_feel', Filename: 'weight_feel.component.json'
-consoleLogger.js:187 ComponentLoader [descriptors]: Item 'descriptors:weight_feel' (Base: 'weight_feel') stored successfully in category 'components'.
-consoleLogger.js:187 ComponentLoader [descriptors]: Successfully processed component definition from weight_feel.component.json. Returning final registry key: descriptors:weight_feel, Overwrite: false
-consoleLogger.js:187 [descriptors] Successfully processed weight_feel.component.json. Result: ID=descriptors:weight_feel, Overwrite=false
-consoleLogger.js:151 Mod [descriptors] - Processed 13/13 components items.
-consoleLogger.js:187 ModsLoader [descriptors, definitions]: Skipping content type 'conditions' (key: 'conditions') as it's not defined or empty in the manifest.
-consoleLogger.js:187 ModsLoader [descriptors, definitions]: Skipping content type 'entity_definitions' (key: 'entities.definitions') as it's not defined or empty in the manifest.
-consoleLogger.js:187 ModsLoader [descriptors, definitions]: Skipping content type 'events' (key: 'events') as it's not defined or empty in the manifest.
-consoleLogger.js:187 ModsLoader [descriptors, definitions]: Skipping content type 'macros' (key: 'macros') as it's not defined or empty in the manifest.
-consoleLogger.js:187 ModsLoader [descriptors, definitions]: Skipping content type 'rules' (key: 'rules') as it's not defined or empty in the manifest.
-consoleLogger.js:187 ModsLoader [descriptors, definitions]: Skipping content type 'scopes' (key: 'scopes') as it's not defined or empty in the manifest.
-consoleLogger.js:187 ModsLoader [descriptors, definitions]: Skipping content type 'anatomyRecipes' (key: 'anatomy.recipes') as it's not defined or empty in the manifest.
-consoleLogger.js:187 ModsLoader [descriptors, definitions]: Skipping content type 'anatomyBlueprints' (key: 'anatomy.blueprints') as it's not defined or empty in the manifest.
-consoleLogger.js:187 ModsLoader [descriptors, definitions]: Skipping content type 'anatomyFormatting' (key: 'anatomyFormatting') as it's not defined or empty in the manifest.
-consoleLogger.js:187 ModsLoader [descriptors, definitions]: Content loading loop took 18.00 ms.
-consoleLogger.js:187 Mod 'descriptors' phase 'definitions' loaded in 18.00ms: components(13) -> Overrides(0), Errors(0)
-consoleLogger.js:187 --- Finished loading content for mod: descriptors, phase: definitions ---
-consoleLogger.js:187 ContentLoadManager: Looking up manifest for modId 'anatomy' (lowercase: 'anatomy'), found: true
-consoleLogger.js:187 ContentLoadManager: Processing mod anatomy, manifest found: true
-consoleLogger.js:187 --- Loading content for mod: anatomy, phase: definitions ---
-consoleLogger.js:187 ModsLoader [anatomy, definitions]: Manifest retrieved successfully. Processing content types...
-consoleLogger.js:187 ModsLoader [anatomy, definitions]: Skipping content type 'actions' (key: 'actions') as it's not defined or empty in the manifest.
-consoleLogger.js:187 ModsLoader [anatomy, definitions]: Processing components content with 4 files...
-consoleLogger.js:187 ModsLoader [anatomy, definitions]: Found content for 'components'. Invoking loader 'ComponentLoader'.
-consoleLogger.js:151 ComponentLoader: Loading components definitions for mod 'anatomy'.
-consoleLogger.js:187 Found 4 potential components files to process for mod anatomy.
-consoleLogger.js:187 [anatomy] Resolved path for body.component.json: ./data/mods/anatomy/components/body.component.json
-consoleLogger.js:187 [anatomy] Resolved path for joint.component.json: ./data/mods/anatomy/components/joint.component.json
-consoleLogger.js:187 [anatomy] Resolved path for part.component.json: ./data/mods/anatomy/components/part.component.json
-consoleLogger.js:187 [anatomy] Resolved path for sockets.component.json: ./data/mods/anatomy/components/sockets.component.json
-consoleLogger.js:187 [anatomy] Fetched data from ./data/mods/anatomy/components/body.component.json
-consoleLogger.js:187 ComponentLoader [anatomy]: Validating 'body.component.json' against primary schema 'http://example.com/schemas/component.schema.json'.
-consoleLogger.js:187 ComponentLoader [anatomy]: Processing fetched item: body.component.json (Type: components)
-consoleLogger.js:187 AjvSchemaValidator: Successfully added schema 'anatomy:body'.
-consoleLogger.js:187 AjvSchemaValidator: Schema 'anatomy:body' verified as retrievable.
-consoleLogger.js:187 ComponentLoader [anatomy]: Registered dataSchema for component ID 'anatomy:body' from file 'body.component.json'.
-consoleLogger.js:187 ComponentLoader [anatomy]: Storing item in registry. Category: 'components', Qualified ID: 'anatomy:body', Base ID: 'body', Filename: 'body.component.json'
-consoleLogger.js:187 ComponentLoader [anatomy]: Item 'anatomy:body' (Base: 'body') stored successfully in category 'components'.
-consoleLogger.js:187 ComponentLoader [anatomy]: Successfully processed component definition from body.component.json. Returning final registry key: anatomy:body, Overwrite: false
-consoleLogger.js:187 [anatomy] Successfully processed body.component.json. Result: ID=anatomy:body, Overwrite=false
-consoleLogger.js:187 [anatomy] Fetched data from ./data/mods/anatomy/components/joint.component.json
-consoleLogger.js:187 ComponentLoader [anatomy]: Validating 'joint.component.json' against primary schema 'http://example.com/schemas/component.schema.json'.
-consoleLogger.js:187 ComponentLoader [anatomy]: Processing fetched item: joint.component.json (Type: components)
-consoleLogger.js:187 AjvSchemaValidator: Successfully added schema 'anatomy:joint'.
-consoleLogger.js:187 AjvSchemaValidator: Schema 'anatomy:joint' verified as retrievable.
-consoleLogger.js:187 ComponentLoader [anatomy]: Registered dataSchema for component ID 'anatomy:joint' from file 'joint.component.json'.
-consoleLogger.js:187 ComponentLoader [anatomy]: Storing item in registry. Category: 'components', Qualified ID: 'anatomy:joint', Base ID: 'joint', Filename: 'joint.component.json'
-consoleLogger.js:187 ComponentLoader [anatomy]: Item 'anatomy:joint' (Base: 'joint') stored successfully in category 'components'.
-consoleLogger.js:187 ComponentLoader [anatomy]: Successfully processed component definition from joint.component.json. Returning final registry key: anatomy:joint, Overwrite: false
-consoleLogger.js:187 [anatomy] Successfully processed joint.component.json. Result: ID=anatomy:joint, Overwrite=false
-consoleLogger.js:187 [anatomy] Fetched data from ./data/mods/anatomy/components/part.component.json
-consoleLogger.js:187 ComponentLoader [anatomy]: Validating 'part.component.json' against primary schema 'http://example.com/schemas/component.schema.json'.
-consoleLogger.js:187 ComponentLoader [anatomy]: Processing fetched item: part.component.json (Type: components)
-consoleLogger.js:187 AjvSchemaValidator: Successfully added schema 'anatomy:part'.
-consoleLogger.js:187 AjvSchemaValidator: Schema 'anatomy:part' verified as retrievable.
-consoleLogger.js:187 ComponentLoader [anatomy]: Registered dataSchema for component ID 'anatomy:part' from file 'part.component.json'.
-consoleLogger.js:187 ComponentLoader [anatomy]: Storing item in registry. Category: 'components', Qualified ID: 'anatomy:part', Base ID: 'part', Filename: 'part.component.json'
-consoleLogger.js:187 ComponentLoader [anatomy]: Item 'anatomy:part' (Base: 'part') stored successfully in category 'components'.
-consoleLogger.js:187 ComponentLoader [anatomy]: Successfully processed component definition from part.component.json. Returning final registry key: anatomy:part, Overwrite: false
-consoleLogger.js:187 [anatomy] Successfully processed part.component.json. Result: ID=anatomy:part, Overwrite=false
-consoleLogger.js:187 [anatomy] Fetched data from ./data/mods/anatomy/components/sockets.component.json
-consoleLogger.js:187 ComponentLoader [anatomy]: Validating 'sockets.component.json' against primary schema 'http://example.com/schemas/component.schema.json'.
-consoleLogger.js:187 ComponentLoader [anatomy]: Processing fetched item: sockets.component.json (Type: components)
-consoleLogger.js:187 AjvSchemaValidator: Successfully added schema 'anatomy:sockets'.
-consoleLogger.js:187 AjvSchemaValidator: Schema 'anatomy:sockets' verified as retrievable.
-consoleLogger.js:187 ComponentLoader [anatomy]: Registered dataSchema for component ID 'anatomy:sockets' from file 'sockets.component.json'.
-consoleLogger.js:187 ComponentLoader [anatomy]: Storing item in registry. Category: 'components', Qualified ID: 'anatomy:sockets', Base ID: 'sockets', Filename: 'sockets.component.json'
-consoleLogger.js:187 ComponentLoader [anatomy]: Item 'anatomy:sockets' (Base: 'sockets') stored successfully in category 'components'.
-consoleLogger.js:187 ComponentLoader [anatomy]: Successfully processed component definition from sockets.component.json. Returning final registry key: anatomy:sockets, Overwrite: false
-consoleLogger.js:187 [anatomy] Successfully processed sockets.component.json. Result: ID=anatomy:sockets, Overwrite=false
-consoleLogger.js:151 Mod [anatomy] - Processed 4/4 components items.
-consoleLogger.js:187 ModsLoader [anatomy, definitions]: Skipping content type 'conditions' (key: 'conditions') as it's not defined or empty in the manifest.
-consoleLogger.js:187 ModsLoader [anatomy, definitions]: Processing entities.definitions content with 14 files...
-consoleLogger.js:187 ModsLoader [anatomy, definitions]: Found content for 'entities.definitions'. Invoking loader 'EntityDefinitionLoader'.
-consoleLogger.js:151 EntityDefinitionLoader: Loading entity_definitions definitions for mod 'anatomy'.
-consoleLogger.js:187 Found 14 potential entities.definitions files to process for mod anatomy.
-consoleLogger.js:187 [anatomy] Resolved path for human_breast_d_cup.entity.json: ./data/mods/anatomy/entities/definitions/human_breast_d_cup.entity.json
-consoleLogger.js:187 [anatomy] Resolved path for human_breast_g_cup.entity.json: ./data/mods/anatomy/entities/definitions/human_breast_g_cup.entity.json
-consoleLogger.js:187 [anatomy] Resolved path for human_eye.entity.json: ./data/mods/anatomy/entities/definitions/human_eye.entity.json
-consoleLogger.js:187 [anatomy] Resolved path for human_eye_blue.entity.json: ./data/mods/anatomy/entities/definitions/human_eye_blue.entity.json
-consoleLogger.js:187 [anatomy] Resolved path for human_eye_brown.entity.json: ./data/mods/anatomy/entities/definitions/human_eye_brown.entity.json
-consoleLogger.js:187 [anatomy] Resolved path for human_eye_cobalt.entity.json: ./data/mods/anatomy/entities/definitions/human_eye_cobalt.entity.json
-consoleLogger.js:187 [anatomy] Resolved path for human_female_torso.entity.json: ./data/mods/anatomy/entities/definitions/human_female_torso.entity.json
-consoleLogger.js:187 [anatomy] Resolved path for human_hair_blonde.entity.json: ./data/mods/anatomy/entities/definitions/human_hair_blonde.entity.json
-consoleLogger.js:187 [anatomy] Resolved path for human_hair_raven.entity.json: ./data/mods/anatomy/entities/definitions/human_hair_raven.entity.json
-consoleLogger.js:187 [anatomy] Resolved path for human_leg_shapely.entity.json: ./data/mods/anatomy/entities/definitions/human_leg_shapely.entity.json
-consoleLogger.js:187 [anatomy] Resolved path for human_male_torso.entity.json: ./data/mods/anatomy/entities/definitions/human_male_torso.entity.json
-consoleLogger.js:187 [anatomy] Resolved path for humanoid_arm.entity.json: ./data/mods/anatomy/entities/definitions/humanoid_arm.entity.json
-consoleLogger.js:187 [anatomy] Resolved path for humanoid_head.entity.json: ./data/mods/anatomy/entities/definitions/humanoid_head.entity.json
-consoleLogger.js:187 [anatomy] Resolved path for humanoid_leg.entity.json: ./data/mods/anatomy/entities/definitions/humanoid_leg.entity.json
-consoleLogger.js:187 [anatomy] Fetched data from ./data/mods/anatomy/entities/definitions/human_breast_d_cup.entity.json
-consoleLogger.js:187 EntityDefinitionLoader [anatomy]: Validating 'human_breast_d_cup.entity.json' against primary schema 'http://example.com/schemas/entity-definition.schema.json'.
-consoleLogger.js:187 EntityLoader [anatomy]: Processing fetched item (post-primary validation): human_breast_d_cup.entity.json (Original Type: entity_definitions)
-consoleLogger.js:187 EntityLoader [anatomy]: Extracted full ID 'anatomy:human_breast_d_cup' and derived base ID 'human_breast_d_cup' from human_breast_d_cup.entity.json.
-consoleLogger.js:187 EntityLoader [anatomy]: Validating 5 components for entity 'anatomy:human_breast_d_cup' from human_breast_d_cup.entity.json...
-consoleLogger.js:187    - Component 'anatomy:part' in entity 'anatomy:human_breast_d_cup' passed runtime validation.
-consoleLogger.js:187    - Component 'descriptors:size_specific' in entity 'anatomy:human_breast_d_cup' passed runtime validation.
-consoleLogger.js:187    - Component 'descriptors:weight_feel' in entity 'anatomy:human_breast_d_cup' passed runtime validation.
-consoleLogger.js:187    - Component 'descriptors:firmness' in entity 'anatomy:human_breast_d_cup' passed runtime validation.
-consoleLogger.js:187    - Component 'core:name' in entity 'anatomy:human_breast_d_cup' passed runtime validation.
-consoleLogger.js:187 EntityLoader [anatomy]: All runtime component validations passed for entity 'anatomy:human_breast_d_cup' from human_breast_d_cup.entity.json.
-consoleLogger.js:187 EntityLoader [anatomy]: Created EntityDefinition instance for 'anatomy:human_breast_d_cup' from human_breast_d_cup.entity.json. Delegating storage to base helper.
-consoleLogger.js:187 EntityDefinitionLoader [anatomy]: Storing item in registry. Category: 'entityDefinitions', Qualified ID: 'anatomy:human_breast_d_cup', Base ID: 'human_breast_d_cup', Filename: 'human_breast_d_cup.entity.json'
-consoleLogger.js:187 EntityDefinitionLoader [anatomy]: Item 'anatomy:human_breast_d_cup' (Base: 'human_breast_d_cup') stored successfully in category 'entityDefinitions'.
-consoleLogger.js:187 EntityLoader [anatomy]: Successfully processed entity_definitions file 'human_breast_d_cup.entity.json'. Returning final registry key: anatomy:human_breast_d_cup, Overwrite: false
-consoleLogger.js:187 [anatomy] Successfully processed human_breast_d_cup.entity.json. Result: ID=anatomy:human_breast_d_cup, Overwrite=false
-consoleLogger.js:187 [anatomy] Fetched data from ./data/mods/anatomy/entities/definitions/human_breast_g_cup.entity.json
-consoleLogger.js:187 EntityDefinitionLoader [anatomy]: Validating 'human_breast_g_cup.entity.json' against primary schema 'http://example.com/schemas/entity-definition.schema.json'.
-consoleLogger.js:187 EntityLoader [anatomy]: Processing fetched item (post-primary validation): human_breast_g_cup.entity.json (Original Type: entity_definitions)
-consoleLogger.js:187 EntityLoader [anatomy]: Extracted full ID 'anatomy:human_breast_g_cup' and derived base ID 'human_breast_g_cup' from human_breast_g_cup.entity.json.
-consoleLogger.js:187 EntityLoader [anatomy]: Validating 5 components for entity 'anatomy:human_breast_g_cup' from human_breast_g_cup.entity.json...
-consoleLogger.js:187    - Component 'anatomy:part' in entity 'anatomy:human_breast_g_cup' passed runtime validation.
-consoleLogger.js:187    - Component 'descriptors:size_specific' in entity 'anatomy:human_breast_g_cup' passed runtime validation.
-consoleLogger.js:187    - Component 'descriptors:weight_feel' in entity 'anatomy:human_breast_g_cup' passed runtime validation.
-consoleLogger.js:187    - Component 'descriptors:firmness' in entity 'anatomy:human_breast_g_cup' passed runtime validation.
-consoleLogger.js:187    - Component 'core:name' in entity 'anatomy:human_breast_g_cup' passed runtime validation.
-consoleLogger.js:187 EntityLoader [anatomy]: All runtime component validations passed for entity 'anatomy:human_breast_g_cup' from human_breast_g_cup.entity.json.
-consoleLogger.js:187 EntityLoader [anatomy]: Created EntityDefinition instance for 'anatomy:human_breast_g_cup' from human_breast_g_cup.entity.json. Delegating storage to base helper.
-consoleLogger.js:187 EntityDefinitionLoader [anatomy]: Storing item in registry. Category: 'entityDefinitions', Qualified ID: 'anatomy:human_breast_g_cup', Base ID: 'human_breast_g_cup', Filename: 'human_breast_g_cup.entity.json'
-consoleLogger.js:187 EntityDefinitionLoader [anatomy]: Item 'anatomy:human_breast_g_cup' (Base: 'human_breast_g_cup') stored successfully in category 'entityDefinitions'.
-consoleLogger.js:187 EntityLoader [anatomy]: Successfully processed entity_definitions file 'human_breast_g_cup.entity.json'. Returning final registry key: anatomy:human_breast_g_cup, Overwrite: false
-consoleLogger.js:187 [anatomy] Successfully processed human_breast_g_cup.entity.json. Result: ID=anatomy:human_breast_g_cup, Overwrite=false
-consoleLogger.js:187 [anatomy] Fetched data from ./data/mods/anatomy/entities/definitions/human_eye.entity.json
-consoleLogger.js:187 EntityDefinitionLoader [anatomy]: Validating 'human_eye.entity.json' against primary schema 'http://example.com/schemas/entity-definition.schema.json'.
-consoleLogger.js:187 EntityLoader [anatomy]: Processing fetched item (post-primary validation): human_eye.entity.json (Original Type: entity_definitions)
-consoleLogger.js:187 EntityLoader [anatomy]: Extracted full ID 'anatomy:human_eye' and derived base ID 'human_eye' from human_eye.entity.json.
-consoleLogger.js:187 EntityLoader [anatomy]: Validating 4 components for entity 'anatomy:human_eye' from human_eye.entity.json...
-consoleLogger.js:187    - Component 'anatomy:part' in entity 'anatomy:human_eye' passed runtime validation.
-consoleLogger.js:187    - Component 'descriptors:color_extended' in entity 'anatomy:human_eye' passed runtime validation.
-consoleLogger.js:187    - Component 'descriptors:shape_eye' in entity 'anatomy:human_eye' passed runtime validation.
-consoleLogger.js:187    - Component 'core:name' in entity 'anatomy:human_eye' passed runtime validation.
-consoleLogger.js:187 EntityLoader [anatomy]: All runtime component validations passed for entity 'anatomy:human_eye' from human_eye.entity.json.
-consoleLogger.js:187 EntityLoader [anatomy]: Created EntityDefinition instance for 'anatomy:human_eye' from human_eye.entity.json. Delegating storage to base helper.
-consoleLogger.js:187 EntityDefinitionLoader [anatomy]: Storing item in registry. Category: 'entityDefinitions', Qualified ID: 'anatomy:human_eye', Base ID: 'human_eye', Filename: 'human_eye.entity.json'
-consoleLogger.js:187 EntityDefinitionLoader [anatomy]: Item 'anatomy:human_eye' (Base: 'human_eye') stored successfully in category 'entityDefinitions'.
-consoleLogger.js:187 EntityLoader [anatomy]: Successfully processed entity_definitions file 'human_eye.entity.json'. Returning final registry key: anatomy:human_eye, Overwrite: false
-consoleLogger.js:187 [anatomy] Successfully processed human_eye.entity.json. Result: ID=anatomy:human_eye, Overwrite=false
-consoleLogger.js:187 [anatomy] Fetched data from ./data/mods/anatomy/entities/definitions/human_eye_blue.entity.json
-consoleLogger.js:187 EntityDefinitionLoader [anatomy]: Validating 'human_eye_blue.entity.json' against primary schema 'http://example.com/schemas/entity-definition.schema.json'.
-consoleLogger.js:187 EntityLoader [anatomy]: Processing fetched item (post-primary validation): human_eye_blue.entity.json (Original Type: entity_definitions)
-consoleLogger.js:187 EntityLoader [anatomy]: Extracted full ID 'anatomy:human_eye_blue' and derived base ID 'human_eye_blue' from human_eye_blue.entity.json.
-consoleLogger.js:187 EntityLoader [anatomy]: Validating 4 components for entity 'anatomy:human_eye_blue' from human_eye_blue.entity.json...
-consoleLogger.js:187    - Component 'anatomy:part' in entity 'anatomy:human_eye_blue' passed runtime validation.
-consoleLogger.js:187    - Component 'descriptors:color_extended' in entity 'anatomy:human_eye_blue' passed runtime validation.
-consoleLogger.js:187    - Component 'descriptors:shape_eye' in entity 'anatomy:human_eye_blue' passed runtime validation.
-consoleLogger.js:187    - Component 'core:name' in entity 'anatomy:human_eye_blue' passed runtime validation.
-consoleLogger.js:187 EntityLoader [anatomy]: All runtime component validations passed for entity 'anatomy:human_eye_blue' from human_eye_blue.entity.json.
-consoleLogger.js:187 EntityLoader [anatomy]: Created EntityDefinition instance for 'anatomy:human_eye_blue' from human_eye_blue.entity.json. Delegating storage to base helper.
-consoleLogger.js:187 EntityDefinitionLoader [anatomy]: Storing item in registry. Category: 'entityDefinitions', Qualified ID: 'anatomy:human_eye_blue', Base ID: 'human_eye_blue', Filename: 'human_eye_blue.entity.json'
-consoleLogger.js:187 EntityDefinitionLoader [anatomy]: Item 'anatomy:human_eye_blue' (Base: 'human_eye_blue') stored successfully in category 'entityDefinitions'.
-consoleLogger.js:187 EntityLoader [anatomy]: Successfully processed entity_definitions file 'human_eye_blue.entity.json'. Returning final registry key: anatomy:human_eye_blue, Overwrite: false
-consoleLogger.js:187 [anatomy] Successfully processed human_eye_blue.entity.json. Result: ID=anatomy:human_eye_blue, Overwrite=false
-consoleLogger.js:187 [anatomy] Fetched data from ./data/mods/anatomy/entities/definitions/human_eye_brown.entity.json
-consoleLogger.js:187 EntityDefinitionLoader [anatomy]: Validating 'human_eye_brown.entity.json' against primary schema 'http://example.com/schemas/entity-definition.schema.json'.
-consoleLogger.js:187 EntityLoader [anatomy]: Processing fetched item (post-primary validation): human_eye_brown.entity.json (Original Type: entity_definitions)
-consoleLogger.js:187 EntityLoader [anatomy]: Extracted full ID 'anatomy:human_eye_brown' and derived base ID 'human_eye_brown' from human_eye_brown.entity.json.
-consoleLogger.js:187 EntityLoader [anatomy]: Validating 4 components for entity 'anatomy:human_eye_brown' from human_eye_brown.entity.json...
-consoleLogger.js:187    - Component 'anatomy:part' in entity 'anatomy:human_eye_brown' passed runtime validation.
-consoleLogger.js:187    - Component 'descriptors:color_extended' in entity 'anatomy:human_eye_brown' passed runtime validation.
-consoleLogger.js:187    - Component 'descriptors:shape_eye' in entity 'anatomy:human_eye_brown' passed runtime validation.
-consoleLogger.js:187    - Component 'core:name' in entity 'anatomy:human_eye_brown' passed runtime validation.
-consoleLogger.js:187 EntityLoader [anatomy]: All runtime component validations passed for entity 'anatomy:human_eye_brown' from human_eye_brown.entity.json.
-consoleLogger.js:187 EntityLoader [anatomy]: Created EntityDefinition instance for 'anatomy:human_eye_brown' from human_eye_brown.entity.json. Delegating storage to base helper.
-consoleLogger.js:187 EntityDefinitionLoader [anatomy]: Storing item in registry. Category: 'entityDefinitions', Qualified ID: 'anatomy:human_eye_brown', Base ID: 'human_eye_brown', Filename: 'human_eye_brown.entity.json'
-consoleLogger.js:187 EntityDefinitionLoader [anatomy]: Item 'anatomy:human_eye_brown' (Base: 'human_eye_brown') stored successfully in category 'entityDefinitions'.
-consoleLogger.js:187 EntityLoader [anatomy]: Successfully processed entity_definitions file 'human_eye_brown.entity.json'. Returning final registry key: anatomy:human_eye_brown, Overwrite: false
-consoleLogger.js:187 [anatomy] Successfully processed human_eye_brown.entity.json. Result: ID=anatomy:human_eye_brown, Overwrite=false
-consoleLogger.js:187 [anatomy] Fetched data from ./data/mods/anatomy/entities/definitions/human_eye_cobalt.entity.json
-consoleLogger.js:187 EntityDefinitionLoader [anatomy]: Validating 'human_eye_cobalt.entity.json' against primary schema 'http://example.com/schemas/entity-definition.schema.json'.
-consoleLogger.js:187 EntityLoader [anatomy]: Processing fetched item (post-primary validation): human_eye_cobalt.entity.json (Original Type: entity_definitions)
-consoleLogger.js:187 EntityLoader [anatomy]: Extracted full ID 'anatomy:human_eye_cobalt' and derived base ID 'human_eye_cobalt' from human_eye_cobalt.entity.json.
-consoleLogger.js:187 EntityLoader [anatomy]: Validating 4 components for entity 'anatomy:human_eye_cobalt' from human_eye_cobalt.entity.json...
-consoleLogger.js:187    - Component 'anatomy:part' in entity 'anatomy:human_eye_cobalt' passed runtime validation.
-consoleLogger.js:187    - Component 'descriptors:color_extended' in entity 'anatomy:human_eye_cobalt' passed runtime validation.
-consoleLogger.js:187    - Component 'descriptors:shape_eye' in entity 'anatomy:human_eye_cobalt' passed runtime validation.
-consoleLogger.js:187    - Component 'core:name' in entity 'anatomy:human_eye_cobalt' passed runtime validation.
-consoleLogger.js:187 EntityLoader [anatomy]: All runtime component validations passed for entity 'anatomy:human_eye_cobalt' from human_eye_cobalt.entity.json.
-consoleLogger.js:187 EntityLoader [anatomy]: Created EntityDefinition instance for 'anatomy:human_eye_cobalt' from human_eye_cobalt.entity.json. Delegating storage to base helper.
-consoleLogger.js:187 EntityDefinitionLoader [anatomy]: Storing item in registry. Category: 'entityDefinitions', Qualified ID: 'anatomy:human_eye_cobalt', Base ID: 'human_eye_cobalt', Filename: 'human_eye_cobalt.entity.json'
-consoleLogger.js:187 EntityDefinitionLoader [anatomy]: Item 'anatomy:human_eye_cobalt' (Base: 'human_eye_cobalt') stored successfully in category 'entityDefinitions'.
-consoleLogger.js:187 EntityLoader [anatomy]: Successfully processed entity_definitions file 'human_eye_cobalt.entity.json'. Returning final registry key: anatomy:human_eye_cobalt, Overwrite: false
-consoleLogger.js:187 [anatomy] Successfully processed human_eye_cobalt.entity.json. Result: ID=anatomy:human_eye_cobalt, Overwrite=false
-consoleLogger.js:187 [anatomy] Fetched data from ./data/mods/anatomy/entities/definitions/human_female_torso.entity.json
-consoleLogger.js:187 EntityDefinitionLoader [anatomy]: Validating 'human_female_torso.entity.json' against primary schema 'http://example.com/schemas/entity-definition.schema.json'.
-consoleLogger.js:187 EntityLoader [anatomy]: Processing fetched item (post-primary validation): human_female_torso.entity.json (Original Type: entity_definitions)
-consoleLogger.js:187 EntityLoader [anatomy]: Extracted full ID 'anatomy:human_female_torso' and derived base ID 'human_female_torso' from human_female_torso.entity.json.
-consoleLogger.js:187 EntityLoader [anatomy]: Validating 3 components for entity 'anatomy:human_female_torso' from human_female_torso.entity.json...
-consoleLogger.js:187    - Component 'anatomy:part' in entity 'anatomy:human_female_torso' passed runtime validation.
-consoleLogger.js:187    - Component 'anatomy:sockets' in entity 'anatomy:human_female_torso' passed runtime validation.
-consoleLogger.js:187    - Component 'core:name' in entity 'anatomy:human_female_torso' passed runtime validation.
-consoleLogger.js:187 EntityLoader [anatomy]: All runtime component validations passed for entity 'anatomy:human_female_torso' from human_female_torso.entity.json.
-consoleLogger.js:187 EntityLoader [anatomy]: Created EntityDefinition instance for 'anatomy:human_female_torso' from human_female_torso.entity.json. Delegating storage to base helper.
-consoleLogger.js:187 EntityDefinitionLoader [anatomy]: Storing item in registry. Category: 'entityDefinitions', Qualified ID: 'anatomy:human_female_torso', Base ID: 'human_female_torso', Filename: 'human_female_torso.entity.json'
-consoleLogger.js:187 EntityDefinitionLoader [anatomy]: Item 'anatomy:human_female_torso' (Base: 'human_female_torso') stored successfully in category 'entityDefinitions'.
-consoleLogger.js:187 EntityLoader [anatomy]: Successfully processed entity_definitions file 'human_female_torso.entity.json'. Returning final registry key: anatomy:human_female_torso, Overwrite: false
-consoleLogger.js:187 [anatomy] Successfully processed human_female_torso.entity.json. Result: ID=anatomy:human_female_torso, Overwrite=false
-consoleLogger.js:187 [anatomy] Fetched data from ./data/mods/anatomy/entities/definitions/human_hair_blonde.entity.json
-consoleLogger.js:187 EntityDefinitionLoader [anatomy]: Validating 'human_hair_blonde.entity.json' against primary schema 'http://example.com/schemas/entity-definition.schema.json'.
-consoleLogger.js:187 EntityLoader [anatomy]: Processing fetched item (post-primary validation): human_hair_blonde.entity.json (Original Type: entity_definitions)
-consoleLogger.js:187 EntityLoader [anatomy]: Extracted full ID 'anatomy:human_hair_blonde' and derived base ID 'human_hair_blonde' from human_hair_blonde.entity.json.
-consoleLogger.js:187 EntityLoader [anatomy]: Validating 5 components for entity 'anatomy:human_hair_blonde' from human_hair_blonde.entity.json...
-consoleLogger.js:187    - Component 'anatomy:part' in entity 'anatomy:human_hair_blonde' passed runtime validation.
-consoleLogger.js:187    - Component 'descriptors:color_extended' in entity 'anatomy:human_hair_blonde' passed runtime validation.
-consoleLogger.js:187    - Component 'descriptors:length_hair' in entity 'anatomy:human_hair_blonde' passed runtime validation.
-consoleLogger.js:187    - Component 'descriptors:hair_style' in entity 'anatomy:human_hair_blonde' passed runtime validation.
-consoleLogger.js:187    - Component 'core:name' in entity 'anatomy:human_hair_blonde' passed runtime validation.
-consoleLogger.js:187 EntityLoader [anatomy]: All runtime component validations passed for entity 'anatomy:human_hair_blonde' from human_hair_blonde.entity.json.
-consoleLogger.js:187 EntityLoader [anatomy]: Created EntityDefinition instance for 'anatomy:human_hair_blonde' from human_hair_blonde.entity.json. Delegating storage to base helper.
-consoleLogger.js:187 EntityDefinitionLoader [anatomy]: Storing item in registry. Category: 'entityDefinitions', Qualified ID: 'anatomy:human_hair_blonde', Base ID: 'human_hair_blonde', Filename: 'human_hair_blonde.entity.json'
-consoleLogger.js:187 EntityDefinitionLoader [anatomy]: Item 'anatomy:human_hair_blonde' (Base: 'human_hair_blonde') stored successfully in category 'entityDefinitions'.
-consoleLogger.js:187 EntityLoader [anatomy]: Successfully processed entity_definitions file 'human_hair_blonde.entity.json'. Returning final registry key: anatomy:human_hair_blonde, Overwrite: false
-consoleLogger.js:187 [anatomy] Successfully processed human_hair_blonde.entity.json. Result: ID=anatomy:human_hair_blonde, Overwrite=false
-consoleLogger.js:187 [anatomy] Fetched data from ./data/mods/anatomy/entities/definitions/human_leg_shapely.entity.json
-consoleLogger.js:187 EntityDefinitionLoader [anatomy]: Validating 'human_leg_shapely.entity.json' against primary schema 'http://example.com/schemas/entity-definition.schema.json'.
-consoleLogger.js:187 EntityLoader [anatomy]: Processing fetched item (post-primary validation): human_leg_shapely.entity.json (Original Type: entity_definitions)
-consoleLogger.js:187 EntityLoader [anatomy]: Extracted full ID 'anatomy:human_leg_shapely' and derived base ID 'human_leg_shapely' from human_leg_shapely.entity.json.
-consoleLogger.js:187 EntityLoader [anatomy]: Validating 4 components for entity 'anatomy:human_leg_shapely' from human_leg_shapely.entity.json...
-consoleLogger.js:187    - Component 'anatomy:part' in entity 'anatomy:human_leg_shapely' passed runtime validation.
-consoleLogger.js:187    - Component 'descriptors:length_category' in entity 'anatomy:human_leg_shapely' passed runtime validation.
-consoleLogger.js:187    - Component 'descriptors:build' in entity 'anatomy:human_leg_shapely' passed runtime validation.
-consoleLogger.js:187    - Component 'core:name' in entity 'anatomy:human_leg_shapely' passed runtime validation.
-consoleLogger.js:187 EntityLoader [anatomy]: All runtime component validations passed for entity 'anatomy:human_leg_shapely' from human_leg_shapely.entity.json.
-consoleLogger.js:187 EntityLoader [anatomy]: Created EntityDefinition instance for 'anatomy:human_leg_shapely' from human_leg_shapely.entity.json. Delegating storage to base helper.
-consoleLogger.js:187 EntityDefinitionLoader [anatomy]: Storing item in registry. Category: 'entityDefinitions', Qualified ID: 'anatomy:human_leg_shapely', Base ID: 'human_leg_shapely', Filename: 'human_leg_shapely.entity.json'
-consoleLogger.js:187 EntityDefinitionLoader [anatomy]: Item 'anatomy:human_leg_shapely' (Base: 'human_leg_shapely') stored successfully in category 'entityDefinitions'.
-consoleLogger.js:187 EntityLoader [anatomy]: Successfully processed entity_definitions file 'human_leg_shapely.entity.json'. Returning final registry key: anatomy:human_leg_shapely, Overwrite: false
-consoleLogger.js:187 [anatomy] Successfully processed human_leg_shapely.entity.json. Result: ID=anatomy:human_leg_shapely, Overwrite=false
-consoleLogger.js:187 [anatomy] Fetched data from ./data/mods/anatomy/entities/definitions/human_male_torso.entity.json
-consoleLogger.js:187 EntityDefinitionLoader [anatomy]: Validating 'human_male_torso.entity.json' against primary schema 'http://example.com/schemas/entity-definition.schema.json'.
-consoleLogger.js:187 EntityLoader [anatomy]: Processing fetched item (post-primary validation): human_male_torso.entity.json (Original Type: entity_definitions)
-consoleLogger.js:187 EntityLoader [anatomy]: Extracted full ID 'anatomy:human_male_torso' and derived base ID 'human_male_torso' from human_male_torso.entity.json.
-consoleLogger.js:187 EntityLoader [anatomy]: Validating 3 components for entity 'anatomy:human_male_torso' from human_male_torso.entity.json...
-consoleLogger.js:187    - Component 'anatomy:part' in entity 'anatomy:human_male_torso' passed runtime validation.
-consoleLogger.js:187    - Component 'anatomy:sockets' in entity 'anatomy:human_male_torso' passed runtime validation.
-consoleLogger.js:187    - Component 'core:name' in entity 'anatomy:human_male_torso' passed runtime validation.
-consoleLogger.js:187 EntityLoader [anatomy]: All runtime component validations passed for entity 'anatomy:human_male_torso' from human_male_torso.entity.json.
-consoleLogger.js:187 EntityLoader [anatomy]: Created EntityDefinition instance for 'anatomy:human_male_torso' from human_male_torso.entity.json. Delegating storage to base helper.
-consoleLogger.js:187 EntityDefinitionLoader [anatomy]: Storing item in registry. Category: 'entityDefinitions', Qualified ID: 'anatomy:human_male_torso', Base ID: 'human_male_torso', Filename: 'human_male_torso.entity.json'
-consoleLogger.js:187 EntityDefinitionLoader [anatomy]: Item 'anatomy:human_male_torso' (Base: 'human_male_torso') stored successfully in category 'entityDefinitions'.
-consoleLogger.js:187 EntityLoader [anatomy]: Successfully processed entity_definitions file 'human_male_torso.entity.json'. Returning final registry key: anatomy:human_male_torso, Overwrite: false
-consoleLogger.js:187 [anatomy] Successfully processed human_male_torso.entity.json. Result: ID=anatomy:human_male_torso, Overwrite=false
-consoleLogger.js:187 [anatomy] Fetched data from ./data/mods/anatomy/entities/definitions/human_hair_raven.entity.json
-consoleLogger.js:187 EntityDefinitionLoader [anatomy]: Validating 'human_hair_raven.entity.json' against primary schema 'http://example.com/schemas/entity-definition.schema.json'.
-consoleLogger.js:187 EntityLoader [anatomy]: Processing fetched item (post-primary validation): human_hair_raven.entity.json (Original Type: entity_definitions)
-consoleLogger.js:187 EntityLoader [anatomy]: Extracted full ID 'anatomy:human_hair_raven' and derived base ID 'human_hair_raven' from human_hair_raven.entity.json.
-consoleLogger.js:187 EntityLoader [anatomy]: Validating 5 components for entity 'anatomy:human_hair_raven' from human_hair_raven.entity.json...
-consoleLogger.js:187    - Component 'anatomy:part' in entity 'anatomy:human_hair_raven' passed runtime validation.
-consoleLogger.js:187    - Component 'descriptors:color_extended' in entity 'anatomy:human_hair_raven' passed runtime validation.
-consoleLogger.js:187    - Component 'descriptors:length_hair' in entity 'anatomy:human_hair_raven' passed runtime validation.
-consoleLogger.js:187    - Component 'descriptors:hair_style' in entity 'anatomy:human_hair_raven' passed runtime validation.
-consoleLogger.js:187    - Component 'core:name' in entity 'anatomy:human_hair_raven' passed runtime validation.
-consoleLogger.js:187 EntityLoader [anatomy]: All runtime component validations passed for entity 'anatomy:human_hair_raven' from human_hair_raven.entity.json.
-consoleLogger.js:187 EntityLoader [anatomy]: Created EntityDefinition instance for 'anatomy:human_hair_raven' from human_hair_raven.entity.json. Delegating storage to base helper.
-consoleLogger.js:187 EntityDefinitionLoader [anatomy]: Storing item in registry. Category: 'entityDefinitions', Qualified ID: 'anatomy:human_hair_raven', Base ID: 'human_hair_raven', Filename: 'human_hair_raven.entity.json'
-consoleLogger.js:187 EntityDefinitionLoader [anatomy]: Item 'anatomy:human_hair_raven' (Base: 'human_hair_raven') stored successfully in category 'entityDefinitions'.
-consoleLogger.js:187 EntityLoader [anatomy]: Successfully processed entity_definitions file 'human_hair_raven.entity.json'. Returning final registry key: anatomy:human_hair_raven, Overwrite: false
-consoleLogger.js:187 [anatomy] Successfully processed human_hair_raven.entity.json. Result: ID=anatomy:human_hair_raven, Overwrite=false
-consoleLogger.js:187 [anatomy] Fetched data from ./data/mods/anatomy/entities/definitions/humanoid_arm.entity.json
-consoleLogger.js:187 EntityDefinitionLoader [anatomy]: Validating 'humanoid_arm.entity.json' against primary schema 'http://example.com/schemas/entity-definition.schema.json'.
-consoleLogger.js:187 EntityLoader [anatomy]: Processing fetched item (post-primary validation): humanoid_arm.entity.json (Original Type: entity_definitions)
-consoleLogger.js:187 EntityLoader [anatomy]: Extracted full ID 'anatomy:humanoid_arm' and derived base ID 'humanoid_arm' from humanoid_arm.entity.json.
-consoleLogger.js:187 EntityLoader [anatomy]: Validating 3 components for entity 'anatomy:humanoid_arm' from humanoid_arm.entity.json...
-consoleLogger.js:187    - Component 'anatomy:part' in entity 'anatomy:humanoid_arm' passed runtime validation.
-consoleLogger.js:187    - Component 'anatomy:sockets' in entity 'anatomy:humanoid_arm' passed runtime validation.
-consoleLogger.js:187    - Component 'core:name' in entity 'anatomy:humanoid_arm' passed runtime validation.
-consoleLogger.js:187 EntityLoader [anatomy]: All runtime component validations passed for entity 'anatomy:humanoid_arm' from humanoid_arm.entity.json.
-consoleLogger.js:187 EntityLoader [anatomy]: Created EntityDefinition instance for 'anatomy:humanoid_arm' from humanoid_arm.entity.json. Delegating storage to base helper.
-consoleLogger.js:187 EntityDefinitionLoader [anatomy]: Storing item in registry. Category: 'entityDefinitions', Qualified ID: 'anatomy:humanoid_arm', Base ID: 'humanoid_arm', Filename: 'humanoid_arm.entity.json'
-consoleLogger.js:187 EntityDefinitionLoader [anatomy]: Item 'anatomy:humanoid_arm' (Base: 'humanoid_arm') stored successfully in category 'entityDefinitions'.
-consoleLogger.js:187 EntityLoader [anatomy]: Successfully processed entity_definitions file 'humanoid_arm.entity.json'. Returning final registry key: anatomy:humanoid_arm, Overwrite: false
-consoleLogger.js:187 [anatomy] Successfully processed humanoid_arm.entity.json. Result: ID=anatomy:humanoid_arm, Overwrite=false
-consoleLogger.js:187 [anatomy] Fetched data from ./data/mods/anatomy/entities/definitions/humanoid_head.entity.json
-consoleLogger.js:187 EntityDefinitionLoader [anatomy]: Validating 'humanoid_head.entity.json' against primary schema 'http://example.com/schemas/entity-definition.schema.json'.
-consoleLogger.js:187 EntityLoader [anatomy]: Processing fetched item (post-primary validation): humanoid_head.entity.json (Original Type: entity_definitions)
-consoleLogger.js:187 EntityLoader [anatomy]: Extracted full ID 'anatomy:humanoid_head' and derived base ID 'humanoid_head' from humanoid_head.entity.json.
-consoleLogger.js:187 EntityLoader [anatomy]: Validating 3 components for entity 'anatomy:humanoid_head' from humanoid_head.entity.json...
-consoleLogger.js:187    - Component 'anatomy:part' in entity 'anatomy:humanoid_head' passed runtime validation.
-consoleLogger.js:187    - Component 'anatomy:sockets' in entity 'anatomy:humanoid_head' passed runtime validation.
-consoleLogger.js:187    - Component 'core:name' in entity 'anatomy:humanoid_head' passed runtime validation.
-consoleLogger.js:187 EntityLoader [anatomy]: All runtime component validations passed for entity 'anatomy:humanoid_head' from humanoid_head.entity.json.
-consoleLogger.js:187 EntityLoader [anatomy]: Created EntityDefinition instance for 'anatomy:humanoid_head' from humanoid_head.entity.json. Delegating storage to base helper.
-consoleLogger.js:187 EntityDefinitionLoader [anatomy]: Storing item in registry. Category: 'entityDefinitions', Qualified ID: 'anatomy:humanoid_head', Base ID: 'humanoid_head', Filename: 'humanoid_head.entity.json'
+EntityDefinitionLoader [anatomy]: Storing item in registry. Category: 'entityDefinitions', Qualified ID: 'anatomy:humanoid_head', Base ID: 'humanoid_head', Filename: 'humanoid_head.entity.json'
 consoleLogger.js:187 EntityDefinitionLoader [anatomy]: Item 'anatomy:humanoid_head' (Base: 'humanoid_head') stored successfully in category 'entityDefinitions'.
 consoleLogger.js:187 EntityLoader [anatomy]: Successfully processed entity_definitions file 'humanoid_head.entity.json'. Returning final registry key: anatomy:humanoid_head, Overwrite: false
 consoleLogger.js:187 [anatomy] Successfully processed humanoid_head.entity.json. Result: ID=anatomy:humanoid_head, Overwrite=false
@@ -368,8 +21,816 @@ consoleLogger.js:187 ModsLoader [anatomy, definitions]: Skipping content type 'e
 consoleLogger.js:187 ModsLoader [anatomy, definitions]: Skipping content type 'macros' (key: 'macros') as it's not defined or empty in the manifest.
 consoleLogger.js:187 ModsLoader [anatomy, definitions]: Skipping content type 'rules' (key: 'rules') as it's not defined or empty in the manifest.
 consoleLogger.js:187 ModsLoader [anatomy, definitions]: Skipping content type 'scopes' (key: 'scopes') as it's not defined or empty in the manifest.
-consoleLogger.js:187 ModsLoader [anatomy, definitions]: Skipping content type 'anatomyRecipes' (key: 'anatomy.recipes') as it's not defined or empty in the manifest.
-consoleLogger.js:187 ModsLoader [anatomy, definitions]: Skipping content type 'anatomyBlueprints' (key: 'anatomy.blueprints') as it's not defined or empty in the manifest.
+consoleLogger.js:187 ModsLoader [anatomy, definitions]: Processing recipes content with 3 files...
+consoleLogger.js:187 ModsLoader [anatomy, definitions]: Found content for 'recipes'. Invoking loader 'AnatomyRecipeLoader'.
+consoleLogger.js:151 AnatomyRecipeLoader: Loading anatomyRecipes definitions for mod 'anatomy'.
+consoleLogger.js:187 Found 3 potential recipes files to process for mod anatomy.
+consoleLogger.js:187 [anatomy] Resolved path for gorgeous_milf.recipe.json: ./data/mods/anatomy/anatomy/recipes/gorgeous_milf.recipe.json
+consoleLogger.js:187 [anatomy] Resolved path for human_female.recipe.json: ./data/mods/anatomy/anatomy/recipes/human_female.recipe.json
+consoleLogger.js:187 [anatomy] Resolved path for human_male.recipe.json: ./data/mods/anatomy/anatomy/recipes/human_male.recipe.json
+workspaceDataFetcher.js:42 
+            
+            
+           GET http://127.0.0.1:8080/data/mods/anatomy/anatomy/recipes/gorgeous_milf.recipe.json 404 (Not Found)
+fetch @ workspaceDataFetcher.js:42
+fetchContent @ baseManifestItemLoader.js:376
+_processFileWrapper @ baseManifestItemLoader.js:320
+(anonymous) @ baseManifestItemLoader.js:507
+_loadItemsInternal @ baseManifestItemLoader.js:506
+loadItemsForMod @ baseManifestItemLoader.js:641
+#runLoadersForMod @ ModProcessor.js:164
+await in #runLoadersForMod
+processMod @ ModProcessor.js:80
+await in processMod
+#executeModProcessing @ ContentLoadManager.js:219
+processMod @ ContentLoadManager.js:209
+loadContentForPhase @ ContentLoadManager.js:171
+await in loadContentForPhase
+loadContent @ ContentLoadManager.js:81
+execute @ contentPhase.js:51
+run @ ModsLoadSession.js:19
+await in run
+loadMods @ modsLoader.js:85
+#loadMods @ initializationService.js:341
+runInitializationSequence @ initializationService.js:272
+#executeInitializationSequence @ gameEngine.js:197
+await in #executeInitializationSequence
+#initializeNewGame @ gameEngine.js:269
+await in #initializeNewGame
+startNewGame @ gameEngine.js:313
+startGameStage @ engineStages.js:87
+beginGame @ main.js:217
+(anonymous) @ game.html:326
+Promise.then
+(anonymous) @ game.html:323Understand this error
+workspaceDataFetcher.js:71 WorkspaceDataFetcher: Error fetching or parsing ./data/mods/anatomy/anatomy/recipes/gorgeous_milf.recipe.json: Error: HTTP error! status: 404 (Not Found) fetching ./data/mods/anatomy/anatomy/recipes/gorgeous_milf.recipe.json. Response body: 
+    at WorkspaceDataFetcher.fetch (workspaceDataFetcher.js:55:15)
+    at async AnatomyRecipeLoader.fetchContent (baseManifestItemLoader.js:376:20)
+    at async AnatomyRecipeLoader._processFileWrapper (baseManifestItemLoader.js:320:18)
+    at async Promise.allSettled (index 0)
+    at async AnatomyRecipeLoader._loadItemsInternal (baseManifestItemLoader.js:510:28)
+    at async #runLoadersForMod (ModProcessor.js:164:15)
+    at async ModProcessor.processMod (ModProcessor.js:80:52)
+    at async ContentLoadManager.loadContentForPhase (ContentLoadManager.js:171:24)
+    at async ContentLoadManager.loadContent (ContentLoadManager.js:81:7)
+    at async ContentPhase.execute (contentPhase.js:51:33)
+fetch @ workspaceDataFetcher.js:71
+await in fetch
+fetchContent @ baseManifestItemLoader.js:376
+_processFileWrapper @ baseManifestItemLoader.js:320
+(anonymous) @ baseManifestItemLoader.js:507
+_loadItemsInternal @ baseManifestItemLoader.js:506
+loadItemsForMod @ baseManifestItemLoader.js:641
+#runLoadersForMod @ ModProcessor.js:164
+await in #runLoadersForMod
+processMod @ ModProcessor.js:80
+await in processMod
+#executeModProcessing @ ContentLoadManager.js:219
+processMod @ ContentLoadManager.js:209
+loadContentForPhase @ ContentLoadManager.js:171
+await in loadContentForPhase
+loadContent @ ContentLoadManager.js:81
+execute @ contentPhase.js:51
+run @ ModsLoadSession.js:19
+await in run
+loadMods @ modsLoader.js:85
+#loadMods @ initializationService.js:341
+runInitializationSequence @ initializationService.js:272
+#executeInitializationSequence @ gameEngine.js:197
+await in #executeInitializationSequence
+#initializeNewGame @ gameEngine.js:269
+await in #initializeNewGame
+startNewGame @ gameEngine.js:313
+startGameStage @ engineStages.js:87
+beginGame @ main.js:217
+(anonymous) @ game.html:326
+Promise.then
+(anonymous) @ game.html:323Understand this error
+consoleLogger.js:175 Error processing file: {modId: 'anatomy', filename: 'gorgeous_milf.recipe.json', path: './data/mods/anatomy/anatomy/recipes/gorgeous_milf.recipe.json', registryKey: 'anatomyRecipes', error: 'HTTP error! status: 404 (Not Found) fetching ./dat…ecipes/gorgeous_milf.recipe.json. Response body: '} Error: HTTP error! status: 404 (Not Found) fetching ./data/mods/anatomy/anatomy/recipes/gorgeous_milf.recipe.json. Response body: 
+    at WorkspaceDataFetcher.fetch (workspaceDataFetcher.js:55:15)
+    at async AnatomyRecipeLoader.fetchContent (baseManifestItemLoader.js:376:20)
+    at async AnatomyRecipeLoader._processFileWrapper (baseManifestItemLoader.js:320:18)
+    at async Promise.allSettled (index 0)
+    at async AnatomyRecipeLoader._loadItemsInternal (baseManifestItemLoader.js:510:28)
+    at async #runLoadersForMod (ModProcessor.js:164:15)
+    at async ModProcessor.processMod (ModProcessor.js:80:52)
+    at async ContentLoadManager.loadContentForPhase (ContentLoadManager.js:171:24)
+    at async ContentLoadManager.loadContent (ContentLoadManager.js:81:7)
+    at async ContentPhase.execute (contentPhase.js:51:33)
+error @ consoleLogger.js:175
+fetchContent @ baseManifestItemLoader.js:380
+await in fetchContent
+_processFileWrapper @ baseManifestItemLoader.js:320
+(anonymous) @ baseManifestItemLoader.js:507
+_loadItemsInternal @ baseManifestItemLoader.js:506
+loadItemsForMod @ baseManifestItemLoader.js:641
+#runLoadersForMod @ ModProcessor.js:164
+await in #runLoadersForMod
+processMod @ ModProcessor.js:80
+await in processMod
+#executeModProcessing @ ContentLoadManager.js:219
+processMod @ ContentLoadManager.js:209
+loadContentForPhase @ ContentLoadManager.js:171
+await in loadContentForPhase
+loadContent @ ContentLoadManager.js:81
+execute @ contentPhase.js:51
+run @ ModsLoadSession.js:19
+await in run
+loadMods @ modsLoader.js:85
+#loadMods @ initializationService.js:341
+runInitializationSequence @ initializationService.js:272
+#executeInitializationSequence @ gameEngine.js:197
+await in #executeInitializationSequence
+#initializeNewGame @ gameEngine.js:269
+await in #initializeNewGame
+startNewGame @ gameEngine.js:313
+startGameStage @ engineStages.js:87
+beginGame @ main.js:217
+(anonymous) @ game.html:326
+Promise.then
+(anonymous) @ game.html:323Understand this error
+workspaceDataFetcher.js:42 
+            
+            
+           GET http://127.0.0.1:8080/data/mods/anatomy/anatomy/recipes/human_female.recipe.json 404 (Not Found)
+fetch @ workspaceDataFetcher.js:42
+fetchContent @ baseManifestItemLoader.js:376
+_processFileWrapper @ baseManifestItemLoader.js:320
+(anonymous) @ baseManifestItemLoader.js:507
+_loadItemsInternal @ baseManifestItemLoader.js:506
+loadItemsForMod @ baseManifestItemLoader.js:641
+#runLoadersForMod @ ModProcessor.js:164
+await in #runLoadersForMod
+processMod @ ModProcessor.js:80
+await in processMod
+#executeModProcessing @ ContentLoadManager.js:219
+processMod @ ContentLoadManager.js:209
+loadContentForPhase @ ContentLoadManager.js:171
+await in loadContentForPhase
+loadContent @ ContentLoadManager.js:81
+execute @ contentPhase.js:51
+run @ ModsLoadSession.js:19
+await in run
+loadMods @ modsLoader.js:85
+#loadMods @ initializationService.js:341
+runInitializationSequence @ initializationService.js:272
+#executeInitializationSequence @ gameEngine.js:197
+await in #executeInitializationSequence
+#initializeNewGame @ gameEngine.js:269
+await in #initializeNewGame
+startNewGame @ gameEngine.js:313
+startGameStage @ engineStages.js:87
+beginGame @ main.js:217
+(anonymous) @ game.html:326
+Promise.then
+(anonymous) @ game.html:323Understand this error
+workspaceDataFetcher.js:71 WorkspaceDataFetcher: Error fetching or parsing ./data/mods/anatomy/anatomy/recipes/human_female.recipe.json: Error: HTTP error! status: 404 (Not Found) fetching ./data/mods/anatomy/anatomy/recipes/human_female.recipe.json. Response body: 
+    at WorkspaceDataFetcher.fetch (workspaceDataFetcher.js:55:15)
+    at async AnatomyRecipeLoader.fetchContent (baseManifestItemLoader.js:376:20)
+    at async AnatomyRecipeLoader._processFileWrapper (baseManifestItemLoader.js:320:18)
+    at async Promise.allSettled (index 1)
+    at async AnatomyRecipeLoader._loadItemsInternal (baseManifestItemLoader.js:510:28)
+    at async #runLoadersForMod (ModProcessor.js:164:15)
+    at async ModProcessor.processMod (ModProcessor.js:80:52)
+    at async ContentLoadManager.loadContentForPhase (ContentLoadManager.js:171:24)
+    at async ContentLoadManager.loadContent (ContentLoadManager.js:81:7)
+    at async ContentPhase.execute (contentPhase.js:51:33)
+fetch @ workspaceDataFetcher.js:71
+await in fetch
+fetchContent @ baseManifestItemLoader.js:376
+_processFileWrapper @ baseManifestItemLoader.js:320
+(anonymous) @ baseManifestItemLoader.js:507
+_loadItemsInternal @ baseManifestItemLoader.js:506
+loadItemsForMod @ baseManifestItemLoader.js:641
+#runLoadersForMod @ ModProcessor.js:164
+await in #runLoadersForMod
+processMod @ ModProcessor.js:80
+await in processMod
+#executeModProcessing @ ContentLoadManager.js:219
+processMod @ ContentLoadManager.js:209
+loadContentForPhase @ ContentLoadManager.js:171
+await in loadContentForPhase
+loadContent @ ContentLoadManager.js:81
+execute @ contentPhase.js:51
+run @ ModsLoadSession.js:19
+await in run
+loadMods @ modsLoader.js:85
+#loadMods @ initializationService.js:341
+runInitializationSequence @ initializationService.js:272
+#executeInitializationSequence @ gameEngine.js:197
+await in #executeInitializationSequence
+#initializeNewGame @ gameEngine.js:269
+await in #initializeNewGame
+startNewGame @ gameEngine.js:313
+startGameStage @ engineStages.js:87
+beginGame @ main.js:217
+(anonymous) @ game.html:326
+Promise.then
+(anonymous) @ game.html:323Understand this error
+consoleLogger.js:175 Error processing file: {modId: 'anatomy', filename: 'human_female.recipe.json', path: './data/mods/anatomy/anatomy/recipes/human_female.recipe.json', registryKey: 'anatomyRecipes', error: 'HTTP error! status: 404 (Not Found) fetching ./dat…recipes/human_female.recipe.json. Response body: '} Error: HTTP error! status: 404 (Not Found) fetching ./data/mods/anatomy/anatomy/recipes/human_female.recipe.json. Response body: 
+    at WorkspaceDataFetcher.fetch (workspaceDataFetcher.js:55:15)
+    at async AnatomyRecipeLoader.fetchContent (baseManifestItemLoader.js:376:20)
+    at async AnatomyRecipeLoader._processFileWrapper (baseManifestItemLoader.js:320:18)
+    at async Promise.allSettled (index 1)
+    at async AnatomyRecipeLoader._loadItemsInternal (baseManifestItemLoader.js:510:28)
+    at async #runLoadersForMod (ModProcessor.js:164:15)
+    at async ModProcessor.processMod (ModProcessor.js:80:52)
+    at async ContentLoadManager.loadContentForPhase (ContentLoadManager.js:171:24)
+    at async ContentLoadManager.loadContent (ContentLoadManager.js:81:7)
+    at async ContentPhase.execute (contentPhase.js:51:33)
+error @ consoleLogger.js:175
+fetchContent @ baseManifestItemLoader.js:380
+await in fetchContent
+_processFileWrapper @ baseManifestItemLoader.js:320
+(anonymous) @ baseManifestItemLoader.js:507
+_loadItemsInternal @ baseManifestItemLoader.js:506
+loadItemsForMod @ baseManifestItemLoader.js:641
+#runLoadersForMod @ ModProcessor.js:164
+await in #runLoadersForMod
+processMod @ ModProcessor.js:80
+await in processMod
+#executeModProcessing @ ContentLoadManager.js:219
+processMod @ ContentLoadManager.js:209
+loadContentForPhase @ ContentLoadManager.js:171
+await in loadContentForPhase
+loadContent @ ContentLoadManager.js:81
+execute @ contentPhase.js:51
+run @ ModsLoadSession.js:19
+await in run
+loadMods @ modsLoader.js:85
+#loadMods @ initializationService.js:341
+runInitializationSequence @ initializationService.js:272
+#executeInitializationSequence @ gameEngine.js:197
+await in #executeInitializationSequence
+#initializeNewGame @ gameEngine.js:269
+await in #initializeNewGame
+startNewGame @ gameEngine.js:313
+startGameStage @ engineStages.js:87
+beginGame @ main.js:217
+(anonymous) @ game.html:326
+Promise.then
+(anonymous) @ game.html:323Understand this error
+workspaceDataFetcher.js:42 
+            
+            
+           GET http://127.0.0.1:8080/data/mods/anatomy/anatomy/recipes/human_male.recipe.json 404 (Not Found)
+fetch @ workspaceDataFetcher.js:42
+fetchContent @ baseManifestItemLoader.js:376
+_processFileWrapper @ baseManifestItemLoader.js:320
+(anonymous) @ baseManifestItemLoader.js:507
+_loadItemsInternal @ baseManifestItemLoader.js:506
+loadItemsForMod @ baseManifestItemLoader.js:641
+#runLoadersForMod @ ModProcessor.js:164
+await in #runLoadersForMod
+processMod @ ModProcessor.js:80
+await in processMod
+#executeModProcessing @ ContentLoadManager.js:219
+processMod @ ContentLoadManager.js:209
+loadContentForPhase @ ContentLoadManager.js:171
+await in loadContentForPhase
+loadContent @ ContentLoadManager.js:81
+execute @ contentPhase.js:51
+run @ ModsLoadSession.js:19
+await in run
+loadMods @ modsLoader.js:85
+#loadMods @ initializationService.js:341
+runInitializationSequence @ initializationService.js:272
+#executeInitializationSequence @ gameEngine.js:197
+await in #executeInitializationSequence
+#initializeNewGame @ gameEngine.js:269
+await in #initializeNewGame
+startNewGame @ gameEngine.js:313
+startGameStage @ engineStages.js:87
+beginGame @ main.js:217
+(anonymous) @ game.html:326
+Promise.then
+(anonymous) @ game.html:323Understand this error
+workspaceDataFetcher.js:71 WorkspaceDataFetcher: Error fetching or parsing ./data/mods/anatomy/anatomy/recipes/human_male.recipe.json: Error: HTTP error! status: 404 (Not Found) fetching ./data/mods/anatomy/anatomy/recipes/human_male.recipe.json. Response body: 
+    at WorkspaceDataFetcher.fetch (workspaceDataFetcher.js:55:15)
+    at async AnatomyRecipeLoader.fetchContent (baseManifestItemLoader.js:376:20)
+    at async AnatomyRecipeLoader._processFileWrapper (baseManifestItemLoader.js:320:18)
+    at async Promise.allSettled (index 2)
+    at async AnatomyRecipeLoader._loadItemsInternal (baseManifestItemLoader.js:510:28)
+    at async #runLoadersForMod (ModProcessor.js:164:15)
+    at async ModProcessor.processMod (ModProcessor.js:80:52)
+    at async ContentLoadManager.loadContentForPhase (ContentLoadManager.js:171:24)
+    at async ContentLoadManager.loadContent (ContentLoadManager.js:81:7)
+    at async ContentPhase.execute (contentPhase.js:51:33)
+fetch @ workspaceDataFetcher.js:71
+await in fetch
+fetchContent @ baseManifestItemLoader.js:376
+_processFileWrapper @ baseManifestItemLoader.js:320
+(anonymous) @ baseManifestItemLoader.js:507
+_loadItemsInternal @ baseManifestItemLoader.js:506
+loadItemsForMod @ baseManifestItemLoader.js:641
+#runLoadersForMod @ ModProcessor.js:164
+await in #runLoadersForMod
+processMod @ ModProcessor.js:80
+await in processMod
+#executeModProcessing @ ContentLoadManager.js:219
+processMod @ ContentLoadManager.js:209
+loadContentForPhase @ ContentLoadManager.js:171
+await in loadContentForPhase
+loadContent @ ContentLoadManager.js:81
+execute @ contentPhase.js:51
+run @ ModsLoadSession.js:19
+await in run
+loadMods @ modsLoader.js:85
+#loadMods @ initializationService.js:341
+runInitializationSequence @ initializationService.js:272
+#executeInitializationSequence @ gameEngine.js:197
+await in #executeInitializationSequence
+#initializeNewGame @ gameEngine.js:269
+await in #initializeNewGame
+startNewGame @ gameEngine.js:313
+startGameStage @ engineStages.js:87
+beginGame @ main.js:217
+(anonymous) @ game.html:326
+Promise.then
+(anonymous) @ game.html:323Understand this error
+consoleLogger.js:175 Error processing file: {modId: 'anatomy', filename: 'human_male.recipe.json', path: './data/mods/anatomy/anatomy/recipes/human_male.recipe.json', registryKey: 'anatomyRecipes', error: 'HTTP error! status: 404 (Not Found) fetching ./dat…y/recipes/human_male.recipe.json. Response body: '} Error: HTTP error! status: 404 (Not Found) fetching ./data/mods/anatomy/anatomy/recipes/human_male.recipe.json. Response body: 
+    at WorkspaceDataFetcher.fetch (workspaceDataFetcher.js:55:15)
+    at async AnatomyRecipeLoader.fetchContent (baseManifestItemLoader.js:376:20)
+    at async AnatomyRecipeLoader._processFileWrapper (baseManifestItemLoader.js:320:18)
+    at async Promise.allSettled (index 2)
+    at async AnatomyRecipeLoader._loadItemsInternal (baseManifestItemLoader.js:510:28)
+    at async #runLoadersForMod (ModProcessor.js:164:15)
+    at async ModProcessor.processMod (ModProcessor.js:80:52)
+    at async ContentLoadManager.loadContentForPhase (ContentLoadManager.js:171:24)
+    at async ContentLoadManager.loadContent (ContentLoadManager.js:81:7)
+    at async ContentPhase.execute (contentPhase.js:51:33)
+error @ consoleLogger.js:175
+fetchContent @ baseManifestItemLoader.js:380
+await in fetchContent
+_processFileWrapper @ baseManifestItemLoader.js:320
+(anonymous) @ baseManifestItemLoader.js:507
+_loadItemsInternal @ baseManifestItemLoader.js:506
+loadItemsForMod @ baseManifestItemLoader.js:641
+#runLoadersForMod @ ModProcessor.js:164
+await in #runLoadersForMod
+processMod @ ModProcessor.js:80
+await in processMod
+#executeModProcessing @ ContentLoadManager.js:219
+processMod @ ContentLoadManager.js:209
+loadContentForPhase @ ContentLoadManager.js:171
+await in loadContentForPhase
+loadContent @ ContentLoadManager.js:81
+execute @ contentPhase.js:51
+run @ ModsLoadSession.js:19
+await in run
+loadMods @ modsLoader.js:85
+#loadMods @ initializationService.js:341
+runInitializationSequence @ initializationService.js:272
+#executeInitializationSequence @ gameEngine.js:197
+await in #executeInitializationSequence
+#initializeNewGame @ gameEngine.js:269
+await in #initializeNewGame
+startNewGame @ gameEngine.js:313
+startGameStage @ engineStages.js:87
+beginGame @ main.js:217
+(anonymous) @ game.html:326
+Promise.then
+(anonymous) @ game.html:323Understand this error
+consoleLogger.js:187 [anatomy] Failure recorded for gorgeous_milf.recipe.json in batch processing. Reason logged previously.
+consoleLogger.js:187 [anatomy] Failure recorded for human_female.recipe.json in batch processing. Reason logged previously.
+consoleLogger.js:187 [anatomy] Failure recorded for human_male.recipe.json in batch processing. Reason logged previously.
+consoleLogger.js:151 Mod [anatomy] - Processed 0/3 recipes items. (3 failed)
+consoleLogger.js:175 ModsLoader [anatomy, definitions]: anatomyRecipes file 'gorgeous_milf.recipe.json' failed: HTTP error! status: 404 (Not Found) fetching ./data/mods/anatomy/anatomy/recipes/gorgeous_milf.recipe.json. Response body:  {modId: 'anatomy', registryKey: 'anatomyRecipes', phase: 'definitions', file: 'gorgeous_milf.recipe.json', error: 'HTTP error! status: 404 (Not Found) fetching ./dat…ecipes/gorgeous_milf.recipe.json. Response body: '} Error: HTTP error! status: 404 (Not Found) fetching ./data/mods/anatomy/anatomy/recipes/gorgeous_milf.recipe.json. Response body: 
+    at WorkspaceDataFetcher.fetch (workspaceDataFetcher.js:55:15)
+    at async AnatomyRecipeLoader.fetchContent (baseManifestItemLoader.js:376:20)
+    at async AnatomyRecipeLoader._processFileWrapper (baseManifestItemLoader.js:320:18)
+    at async Promise.allSettled (index 0)
+    at async AnatomyRecipeLoader._loadItemsInternal (baseManifestItemLoader.js:510:28)
+    at async #runLoadersForMod (ModProcessor.js:164:15)
+    at async ModProcessor.processMod (ModProcessor.js:80:52)
+    at async ContentLoadManager.loadContentForPhase (ContentLoadManager.js:171:24)
+    at async ContentLoadManager.loadContent (ContentLoadManager.js:81:7)
+    at async ContentPhase.execute (contentPhase.js:51:33)
+error @ consoleLogger.js:175
+#runLoadersForMod @ ModProcessor.js:177
+await in #runLoadersForMod
+processMod @ ModProcessor.js:80
+await in processMod
+#executeModProcessing @ ContentLoadManager.js:219
+processMod @ ContentLoadManager.js:209
+loadContentForPhase @ ContentLoadManager.js:171
+await in loadContentForPhase
+loadContent @ ContentLoadManager.js:81
+execute @ contentPhase.js:51
+run @ ModsLoadSession.js:19
+await in run
+loadMods @ modsLoader.js:85
+#loadMods @ initializationService.js:341
+runInitializationSequence @ initializationService.js:272
+#executeInitializationSequence @ gameEngine.js:197
+await in #executeInitializationSequence
+#initializeNewGame @ gameEngine.js:269
+await in #initializeNewGame
+startNewGame @ gameEngine.js:313
+startGameStage @ engineStages.js:87
+beginGame @ main.js:217
+(anonymous) @ game.html:326
+Promise.then
+(anonymous) @ game.html:323Understand this error
+consoleLogger.js:175 ModsLoader [anatomy, definitions]: anatomyRecipes file 'human_female.recipe.json' failed: HTTP error! status: 404 (Not Found) fetching ./data/mods/anatomy/anatomy/recipes/human_female.recipe.json. Response body:  {modId: 'anatomy', registryKey: 'anatomyRecipes', phase: 'definitions', file: 'human_female.recipe.json', error: 'HTTP error! status: 404 (Not Found) fetching ./dat…recipes/human_female.recipe.json. Response body: '} Error: HTTP error! status: 404 (Not Found) fetching ./data/mods/anatomy/anatomy/recipes/human_female.recipe.json. Response body: 
+    at WorkspaceDataFetcher.fetch (workspaceDataFetcher.js:55:15)
+    at async AnatomyRecipeLoader.fetchContent (baseManifestItemLoader.js:376:20)
+    at async AnatomyRecipeLoader._processFileWrapper (baseManifestItemLoader.js:320:18)
+    at async Promise.allSettled (index 1)
+    at async AnatomyRecipeLoader._loadItemsInternal (baseManifestItemLoader.js:510:28)
+    at async #runLoadersForMod (ModProcessor.js:164:15)
+    at async ModProcessor.processMod (ModProcessor.js:80:52)
+    at async ContentLoadManager.loadContentForPhase (ContentLoadManager.js:171:24)
+    at async ContentLoadManager.loadContent (ContentLoadManager.js:81:7)
+    at async ContentPhase.execute (contentPhase.js:51:33)
+error @ consoleLogger.js:175
+#runLoadersForMod @ ModProcessor.js:177
+await in #runLoadersForMod
+processMod @ ModProcessor.js:80
+await in processMod
+#executeModProcessing @ ContentLoadManager.js:219
+processMod @ ContentLoadManager.js:209
+loadContentForPhase @ ContentLoadManager.js:171
+await in loadContentForPhase
+loadContent @ ContentLoadManager.js:81
+execute @ contentPhase.js:51
+run @ ModsLoadSession.js:19
+await in run
+loadMods @ modsLoader.js:85
+#loadMods @ initializationService.js:341
+runInitializationSequence @ initializationService.js:272
+#executeInitializationSequence @ gameEngine.js:197
+await in #executeInitializationSequence
+#initializeNewGame @ gameEngine.js:269
+await in #initializeNewGame
+startNewGame @ gameEngine.js:313
+startGameStage @ engineStages.js:87
+beginGame @ main.js:217
+(anonymous) @ game.html:326
+Promise.then
+(anonymous) @ game.html:323Understand this error
+consoleLogger.js:175 ModsLoader [anatomy, definitions]: anatomyRecipes file 'human_male.recipe.json' failed: HTTP error! status: 404 (Not Found) fetching ./data/mods/anatomy/anatomy/recipes/human_male.recipe.json. Response body:  {modId: 'anatomy', registryKey: 'anatomyRecipes', phase: 'definitions', file: 'human_male.recipe.json', error: 'HTTP error! status: 404 (Not Found) fetching ./dat…y/recipes/human_male.recipe.json. Response body: '} Error: HTTP error! status: 404 (Not Found) fetching ./data/mods/anatomy/anatomy/recipes/human_male.recipe.json. Response body: 
+    at WorkspaceDataFetcher.fetch (workspaceDataFetcher.js:55:15)
+    at async AnatomyRecipeLoader.fetchContent (baseManifestItemLoader.js:376:20)
+    at async AnatomyRecipeLoader._processFileWrapper (baseManifestItemLoader.js:320:18)
+    at async Promise.allSettled (index 2)
+    at async AnatomyRecipeLoader._loadItemsInternal (baseManifestItemLoader.js:510:28)
+    at async #runLoadersForMod (ModProcessor.js:164:15)
+    at async ModProcessor.processMod (ModProcessor.js:80:52)
+    at async ContentLoadManager.loadContentForPhase (ContentLoadManager.js:171:24)
+    at async ContentLoadManager.loadContent (ContentLoadManager.js:81:7)
+    at async ContentPhase.execute (contentPhase.js:51:33)
+error @ consoleLogger.js:175
+#runLoadersForMod @ ModProcessor.js:177
+await in #runLoadersForMod
+processMod @ ModProcessor.js:80
+await in processMod
+#executeModProcessing @ ContentLoadManager.js:219
+processMod @ ContentLoadManager.js:209
+loadContentForPhase @ ContentLoadManager.js:171
+await in loadContentForPhase
+loadContent @ ContentLoadManager.js:81
+execute @ contentPhase.js:51
+run @ ModsLoadSession.js:19
+await in run
+loadMods @ modsLoader.js:85
+#loadMods @ initializationService.js:341
+runInitializationSequence @ initializationService.js:272
+#executeInitializationSequence @ gameEngine.js:197
+await in #executeInitializationSequence
+#initializeNewGame @ gameEngine.js:269
+await in #initializeNewGame
+startNewGame @ gameEngine.js:313
+startGameStage @ engineStages.js:87
+beginGame @ main.js:217
+(anonymous) @ game.html:326
+Promise.then
+(anonymous) @ game.html:323Understand this error
+consoleLogger.js:187 ModsLoader [anatomy, definitions]: Processing blueprints content with 2 files...
+consoleLogger.js:187 ModsLoader [anatomy, definitions]: Found content for 'blueprints'. Invoking loader 'AnatomyBlueprintLoader'.
+consoleLogger.js:151 AnatomyBlueprintLoader: Loading anatomyBlueprints definitions for mod 'anatomy'.
+consoleLogger.js:187 Found 2 potential blueprints files to process for mod anatomy.
+consoleLogger.js:187 [anatomy] Resolved path for human_female.blueprint.json: ./data/mods/anatomy/anatomy/blueprints/human_female.blueprint.json
+consoleLogger.js:187 [anatomy] Resolved path for human_male.blueprint.json: ./data/mods/anatomy/anatomy/blueprints/human_male.blueprint.json
+workspaceDataFetcher.js:42 
+            
+            
+           GET http://127.0.0.1:8080/data/mods/anatomy/anatomy/blueprints/human_female.blueprint.json 404 (Not Found)
+fetch @ workspaceDataFetcher.js:42
+fetchContent @ baseManifestItemLoader.js:376
+_processFileWrapper @ baseManifestItemLoader.js:320
+(anonymous) @ baseManifestItemLoader.js:507
+_loadItemsInternal @ baseManifestItemLoader.js:506
+loadItemsForMod @ baseManifestItemLoader.js:641
+#runLoadersForMod @ ModProcessor.js:164
+await in #runLoadersForMod
+processMod @ ModProcessor.js:80
+await in processMod
+#executeModProcessing @ ContentLoadManager.js:219
+processMod @ ContentLoadManager.js:209
+loadContentForPhase @ ContentLoadManager.js:171
+await in loadContentForPhase
+loadContent @ ContentLoadManager.js:81
+execute @ contentPhase.js:51
+run @ ModsLoadSession.js:19
+await in run
+loadMods @ modsLoader.js:85
+#loadMods @ initializationService.js:341
+runInitializationSequence @ initializationService.js:272
+#executeInitializationSequence @ gameEngine.js:197
+await in #executeInitializationSequence
+#initializeNewGame @ gameEngine.js:269
+await in #initializeNewGame
+startNewGame @ gameEngine.js:313
+startGameStage @ engineStages.js:87
+beginGame @ main.js:217
+(anonymous) @ game.html:326
+Promise.then
+(anonymous) @ game.html:323Understand this error
+workspaceDataFetcher.js:71 WorkspaceDataFetcher: Error fetching or parsing ./data/mods/anatomy/anatomy/blueprints/human_female.blueprint.json: Error: HTTP error! status: 404 (Not Found) fetching ./data/mods/anatomy/anatomy/blueprints/human_female.blueprint.json. Response body: 
+    at WorkspaceDataFetcher.fetch (workspaceDataFetcher.js:55:15)
+    at async AnatomyBlueprintLoader.fetchContent (baseManifestItemLoader.js:376:20)
+    at async AnatomyBlueprintLoader._processFileWrapper (baseManifestItemLoader.js:320:18)
+    at async Promise.allSettled (index 0)
+    at async AnatomyBlueprintLoader._loadItemsInternal (baseManifestItemLoader.js:510:28)
+    at async #runLoadersForMod (ModProcessor.js:164:15)
+    at async ModProcessor.processMod (ModProcessor.js:80:52)
+    at async ContentLoadManager.loadContentForPhase (ContentLoadManager.js:171:24)
+    at async ContentLoadManager.loadContent (ContentLoadManager.js:81:7)
+    at async ContentPhase.execute (contentPhase.js:51:33)
+fetch @ workspaceDataFetcher.js:71
+await in fetch
+fetchContent @ baseManifestItemLoader.js:376
+_processFileWrapper @ baseManifestItemLoader.js:320
+(anonymous) @ baseManifestItemLoader.js:507
+_loadItemsInternal @ baseManifestItemLoader.js:506
+loadItemsForMod @ baseManifestItemLoader.js:641
+#runLoadersForMod @ ModProcessor.js:164
+await in #runLoadersForMod
+processMod @ ModProcessor.js:80
+await in processMod
+#executeModProcessing @ ContentLoadManager.js:219
+processMod @ ContentLoadManager.js:209
+loadContentForPhase @ ContentLoadManager.js:171
+await in loadContentForPhase
+loadContent @ ContentLoadManager.js:81
+execute @ contentPhase.js:51
+run @ ModsLoadSession.js:19
+await in run
+loadMods @ modsLoader.js:85
+#loadMods @ initializationService.js:341
+runInitializationSequence @ initializationService.js:272
+#executeInitializationSequence @ gameEngine.js:197
+await in #executeInitializationSequence
+#initializeNewGame @ gameEngine.js:269
+await in #initializeNewGame
+startNewGame @ gameEngine.js:313
+startGameStage @ engineStages.js:87
+beginGame @ main.js:217
+(anonymous) @ game.html:326
+Promise.then
+(anonymous) @ game.html:323Understand this error
+consoleLogger.js:175 Error processing file: {modId: 'anatomy', filename: 'human_female.blueprint.json', path: './data/mods/anatomy/anatomy/blueprints/human_female.blueprint.json', registryKey: 'anatomyBlueprints', error: 'HTTP error! status: 404 (Not Found) fetching ./dat…ints/human_female.blueprint.json. Response body: '} Error: HTTP error! status: 404 (Not Found) fetching ./data/mods/anatomy/anatomy/blueprints/human_female.blueprint.json. Response body: 
+    at WorkspaceDataFetcher.fetch (workspaceDataFetcher.js:55:15)
+    at async AnatomyBlueprintLoader.fetchContent (baseManifestItemLoader.js:376:20)
+    at async AnatomyBlueprintLoader._processFileWrapper (baseManifestItemLoader.js:320:18)
+    at async Promise.allSettled (index 0)
+    at async AnatomyBlueprintLoader._loadItemsInternal (baseManifestItemLoader.js:510:28)
+    at async #runLoadersForMod (ModProcessor.js:164:15)
+    at async ModProcessor.processMod (ModProcessor.js:80:52)
+    at async ContentLoadManager.loadContentForPhase (ContentLoadManager.js:171:24)
+    at async ContentLoadManager.loadContent (ContentLoadManager.js:81:7)
+    at async ContentPhase.execute (contentPhase.js:51:33)
+error @ consoleLogger.js:175
+fetchContent @ baseManifestItemLoader.js:380
+await in fetchContent
+_processFileWrapper @ baseManifestItemLoader.js:320
+(anonymous) @ baseManifestItemLoader.js:507
+_loadItemsInternal @ baseManifestItemLoader.js:506
+loadItemsForMod @ baseManifestItemLoader.js:641
+#runLoadersForMod @ ModProcessor.js:164
+await in #runLoadersForMod
+processMod @ ModProcessor.js:80
+await in processMod
+#executeModProcessing @ ContentLoadManager.js:219
+processMod @ ContentLoadManager.js:209
+loadContentForPhase @ ContentLoadManager.js:171
+await in loadContentForPhase
+loadContent @ ContentLoadManager.js:81
+execute @ contentPhase.js:51
+run @ ModsLoadSession.js:19
+await in run
+loadMods @ modsLoader.js:85
+#loadMods @ initializationService.js:341
+runInitializationSequence @ initializationService.js:272
+#executeInitializationSequence @ gameEngine.js:197
+await in #executeInitializationSequence
+#initializeNewGame @ gameEngine.js:269
+await in #initializeNewGame
+startNewGame @ gameEngine.js:313
+startGameStage @ engineStages.js:87
+beginGame @ main.js:217
+(anonymous) @ game.html:326
+Promise.then
+(anonymous) @ game.html:323Understand this error
+workspaceDataFetcher.js:42 
+            
+            
+           GET http://127.0.0.1:8080/data/mods/anatomy/anatomy/blueprints/human_male.blueprint.json 404 (Not Found)
+fetch @ workspaceDataFetcher.js:42
+fetchContent @ baseManifestItemLoader.js:376
+_processFileWrapper @ baseManifestItemLoader.js:320
+(anonymous) @ baseManifestItemLoader.js:507
+_loadItemsInternal @ baseManifestItemLoader.js:506
+loadItemsForMod @ baseManifestItemLoader.js:641
+#runLoadersForMod @ ModProcessor.js:164
+await in #runLoadersForMod
+processMod @ ModProcessor.js:80
+await in processMod
+#executeModProcessing @ ContentLoadManager.js:219
+processMod @ ContentLoadManager.js:209
+loadContentForPhase @ ContentLoadManager.js:171
+await in loadContentForPhase
+loadContent @ ContentLoadManager.js:81
+execute @ contentPhase.js:51
+run @ ModsLoadSession.js:19
+await in run
+loadMods @ modsLoader.js:85
+#loadMods @ initializationService.js:341
+runInitializationSequence @ initializationService.js:272
+#executeInitializationSequence @ gameEngine.js:197
+await in #executeInitializationSequence
+#initializeNewGame @ gameEngine.js:269
+await in #initializeNewGame
+startNewGame @ gameEngine.js:313
+startGameStage @ engineStages.js:87
+beginGame @ main.js:217
+(anonymous) @ game.html:326
+Promise.then
+(anonymous) @ game.html:323Understand this error
+workspaceDataFetcher.js:71 WorkspaceDataFetcher: Error fetching or parsing ./data/mods/anatomy/anatomy/blueprints/human_male.blueprint.json: Error: HTTP error! status: 404 (Not Found) fetching ./data/mods/anatomy/anatomy/blueprints/human_male.blueprint.json. Response body: 
+    at WorkspaceDataFetcher.fetch (workspaceDataFetcher.js:55:15)
+    at async AnatomyBlueprintLoader.fetchContent (baseManifestItemLoader.js:376:20)
+    at async AnatomyBlueprintLoader._processFileWrapper (baseManifestItemLoader.js:320:18)
+    at async Promise.allSettled (index 1)
+    at async AnatomyBlueprintLoader._loadItemsInternal (baseManifestItemLoader.js:510:28)
+    at async #runLoadersForMod (ModProcessor.js:164:15)
+    at async ModProcessor.processMod (ModProcessor.js:80:52)
+    at async ContentLoadManager.loadContentForPhase (ContentLoadManager.js:171:24)
+    at async ContentLoadManager.loadContent (ContentLoadManager.js:81:7)
+    at async ContentPhase.execute (contentPhase.js:51:33)
+fetch @ workspaceDataFetcher.js:71
+await in fetch
+fetchContent @ baseManifestItemLoader.js:376
+_processFileWrapper @ baseManifestItemLoader.js:320
+(anonymous) @ baseManifestItemLoader.js:507
+_loadItemsInternal @ baseManifestItemLoader.js:506
+loadItemsForMod @ baseManifestItemLoader.js:641
+#runLoadersForMod @ ModProcessor.js:164
+await in #runLoadersForMod
+processMod @ ModProcessor.js:80
+await in processMod
+#executeModProcessing @ ContentLoadManager.js:219
+processMod @ ContentLoadManager.js:209
+loadContentForPhase @ ContentLoadManager.js:171
+await in loadContentForPhase
+loadContent @ ContentLoadManager.js:81
+execute @ contentPhase.js:51
+run @ ModsLoadSession.js:19
+await in run
+loadMods @ modsLoader.js:85
+#loadMods @ initializationService.js:341
+runInitializationSequence @ initializationService.js:272
+#executeInitializationSequence @ gameEngine.js:197
+await in #executeInitializationSequence
+#initializeNewGame @ gameEngine.js:269
+await in #initializeNewGame
+startNewGame @ gameEngine.js:313
+startGameStage @ engineStages.js:87
+beginGame @ main.js:217
+(anonymous) @ game.html:326
+Promise.then
+(anonymous) @ game.html:323Understand this error
+consoleLogger.js:175 Error processing file: {modId: 'anatomy', filename: 'human_male.blueprint.json', path: './data/mods/anatomy/anatomy/blueprints/human_male.blueprint.json', registryKey: 'anatomyBlueprints', error: 'HTTP error! status: 404 (Not Found) fetching ./dat…prints/human_male.blueprint.json. Response body: '} Error: HTTP error! status: 404 (Not Found) fetching ./data/mods/anatomy/anatomy/blueprints/human_male.blueprint.json. Response body: 
+    at WorkspaceDataFetcher.fetch (workspaceDataFetcher.js:55:15)
+    at async AnatomyBlueprintLoader.fetchContent (baseManifestItemLoader.js:376:20)
+    at async AnatomyBlueprintLoader._processFileWrapper (baseManifestItemLoader.js:320:18)
+    at async Promise.allSettled (index 1)
+    at async AnatomyBlueprintLoader._loadItemsInternal (baseManifestItemLoader.js:510:28)
+    at async #runLoadersForMod (ModProcessor.js:164:15)
+    at async ModProcessor.processMod (ModProcessor.js:80:52)
+    at async ContentLoadManager.loadContentForPhase (ContentLoadManager.js:171:24)
+    at async ContentLoadManager.loadContent (ContentLoadManager.js:81:7)
+    at async ContentPhase.execute (contentPhase.js:51:33)
+error @ consoleLogger.js:175
+fetchContent @ baseManifestItemLoader.js:380
+await in fetchContent
+_processFileWrapper @ baseManifestItemLoader.js:320
+(anonymous) @ baseManifestItemLoader.js:507
+_loadItemsInternal @ baseManifestItemLoader.js:506
+loadItemsForMod @ baseManifestItemLoader.js:641
+#runLoadersForMod @ ModProcessor.js:164
+await in #runLoadersForMod
+processMod @ ModProcessor.js:80
+await in processMod
+#executeModProcessing @ ContentLoadManager.js:219
+processMod @ ContentLoadManager.js:209
+loadContentForPhase @ ContentLoadManager.js:171
+await in loadContentForPhase
+loadContent @ ContentLoadManager.js:81
+execute @ contentPhase.js:51
+run @ ModsLoadSession.js:19
+await in run
+loadMods @ modsLoader.js:85
+#loadMods @ initializationService.js:341
+runInitializationSequence @ initializationService.js:272
+#executeInitializationSequence @ gameEngine.js:197
+await in #executeInitializationSequence
+#initializeNewGame @ gameEngine.js:269
+await in #initializeNewGame
+startNewGame @ gameEngine.js:313
+startGameStage @ engineStages.js:87
+beginGame @ main.js:217
+(anonymous) @ game.html:326
+Promise.then
+(anonymous) @ game.html:323Understand this error
+consoleLogger.js:187 [anatomy] Failure recorded for human_female.blueprint.json in batch processing. Reason logged previously.
+consoleLogger.js:187 [anatomy] Failure recorded for human_male.blueprint.json in batch processing. Reason logged previously.
+consoleLogger.js:151 Mod [anatomy] - Processed 0/2 blueprints items. (2 failed)
+consoleLogger.js:175 ModsLoader [anatomy, definitions]: anatomyBlueprints file 'human_female.blueprint.json' failed: HTTP error! status: 404 (Not Found) fetching ./data/mods/anatomy/anatomy/blueprints/human_female.blueprint.json. Response body:  {modId: 'anatomy', registryKey: 'anatomyBlueprints', phase: 'definitions', file: 'human_female.blueprint.json', error: 'HTTP error! status: 404 (Not Found) fetching ./dat…ints/human_female.blueprint.json. Response body: '} Error: HTTP error! status: 404 (Not Found) fetching ./data/mods/anatomy/anatomy/blueprints/human_female.blueprint.json. Response body: 
+    at WorkspaceDataFetcher.fetch (workspaceDataFetcher.js:55:15)
+    at async AnatomyBlueprintLoader.fetchContent (baseManifestItemLoader.js:376:20)
+    at async AnatomyBlueprintLoader._processFileWrapper (baseManifestItemLoader.js:320:18)
+    at async Promise.allSettled (index 0)
+    at async AnatomyBlueprintLoader._loadItemsInternal (baseManifestItemLoader.js:510:28)
+    at async #runLoadersForMod (ModProcessor.js:164:15)
+    at async ModProcessor.processMod (ModProcessor.js:80:52)
+    at async ContentLoadManager.loadContentForPhase (ContentLoadManager.js:171:24)
+    at async ContentLoadManager.loadContent (ContentLoadManager.js:81:7)
+    at async ContentPhase.execute (contentPhase.js:51:33)
+error @ consoleLogger.js:175
+#runLoadersForMod @ ModProcessor.js:177
+await in #runLoadersForMod
+processMod @ ModProcessor.js:80
+await in processMod
+#executeModProcessing @ ContentLoadManager.js:219
+processMod @ ContentLoadManager.js:209
+loadContentForPhase @ ContentLoadManager.js:171
+await in loadContentForPhase
+loadContent @ ContentLoadManager.js:81
+execute @ contentPhase.js:51
+run @ ModsLoadSession.js:19
+await in run
+loadMods @ modsLoader.js:85
+#loadMods @ initializationService.js:341
+runInitializationSequence @ initializationService.js:272
+#executeInitializationSequence @ gameEngine.js:197
+await in #executeInitializationSequence
+#initializeNewGame @ gameEngine.js:269
+await in #initializeNewGame
+startNewGame @ gameEngine.js:313
+startGameStage @ engineStages.js:87
+beginGame @ main.js:217
+(anonymous) @ game.html:326
+Promise.then
+(anonymous) @ game.html:323Understand this error
+consoleLogger.js:175 ModsLoader [anatomy, definitions]: anatomyBlueprints file 'human_male.blueprint.json' failed: HTTP error! status: 404 (Not Found) fetching ./data/mods/anatomy/anatomy/blueprints/human_male.blueprint.json. Response body:  {modId: 'anatomy', registryKey: 'anatomyBlueprints', phase: 'definitions', file: 'human_male.blueprint.json', error: 'HTTP error! status: 404 (Not Found) fetching ./dat…prints/human_male.blueprint.json. Response body: '} Error: HTTP error! status: 404 (Not Found) fetching ./data/mods/anatomy/anatomy/blueprints/human_male.blueprint.json. Response body: 
+    at WorkspaceDataFetcher.fetch (workspaceDataFetcher.js:55:15)
+    at async AnatomyBlueprintLoader.fetchContent (baseManifestItemLoader.js:376:20)
+    at async AnatomyBlueprintLoader._processFileWrapper (baseManifestItemLoader.js:320:18)
+    at async Promise.allSettled (index 1)
+    at async AnatomyBlueprintLoader._loadItemsInternal (baseManifestItemLoader.js:510:28)
+    at async #runLoadersForMod (ModProcessor.js:164:15)
+    at async ModProcessor.processMod (ModProcessor.js:80:52)
+    at async ContentLoadManager.loadContentForPhase (ContentLoadManager.js:171:24)
+    at async ContentLoadManager.loadContent (ContentLoadManager.js:81:7)
+    at async ContentPhase.execute (contentPhase.js:51:33)
+error @ consoleLogger.js:175
+#runLoadersForMod @ ModProcessor.js:177
+await in #runLoadersForMod
+processMod @ ModProcessor.js:80
+await in processMod
+#executeModProcessing @ ContentLoadManager.js:219
+processMod @ ContentLoadManager.js:209
+loadContentForPhase @ ContentLoadManager.js:171
+await in loadContentForPhase
+loadContent @ ContentLoadManager.js:81
+execute @ contentPhase.js:51
+run @ ModsLoadSession.js:19
+await in run
+loadMods @ modsLoader.js:85
+#loadMods @ initializationService.js:341
+runInitializationSequence @ initializationService.js:272
+#executeInitializationSequence @ gameEngine.js:197
+await in #executeInitializationSequence
+#initializeNewGame @ gameEngine.js:269
+await in #initializeNewGame
+startNewGame @ gameEngine.js:313
+startGameStage @ engineStages.js:87
+beginGame @ main.js:217
+(anonymous) @ game.html:326
+Promise.then
+(anonymous) @ game.html:323Understand this error
 consoleLogger.js:187 ModsLoader [anatomy, definitions]: Processing anatomyFormatting content with 1 files...
 consoleLogger.js:187 ModsLoader [anatomy, definitions]: Found content for 'anatomyFormatting'. Invoking loader 'AnatomyFormattingLoader'.
 consoleLogger.js:151 AnatomyFormattingLoader: Loading anatomyFormatting definitions for mod 'anatomy'.
@@ -383,8 +844,8 @@ consoleLogger.js:187 AnatomyFormattingLoader [anatomy]: Item 'anatomy:default' (
 consoleLogger.js:187 AnatomyFormattingLoader [anatomy]: Successfully processed anatomy formatting from default.json. Registry key: anatomy:default, Overwrite: false
 consoleLogger.js:187 [anatomy] Successfully processed default.json. Result: ID=anatomy:default, Overwrite=false
 consoleLogger.js:151 Mod [anatomy] - Processed 1/1 anatomyFormatting items.
-consoleLogger.js:187 ModsLoader [anatomy, definitions]: Content loading loop took 30.00 ms.
-consoleLogger.js:187 Mod 'anatomy' phase 'definitions' loaded in 30.00ms: anatomyFormatting(1), components(4), entity_definitions(14) -> Overrides(0), Errors(0)
+consoleLogger.js:187 ModsLoader [anatomy, definitions]: Content loading loop took 39.50 ms.
+consoleLogger.js:187 Mod 'anatomy' phase 'definitions' loaded in 39.50ms: anatomyBlueprints(0 E:2), anatomyFormatting(1), anatomyRecipes(0 E:3), components(4), entity_definitions(14) -> Overrides(0), Errors(5)
 consoleLogger.js:187 --- Finished loading content for mod: anatomy, phase: definitions ---
 consoleLogger.js:187 ContentLoadManager: Looking up manifest for modId 'isekai' (lowercase: 'isekai'), found: true
 consoleLogger.js:187 ContentLoadManager: Processing mod isekai, manifest found: true
@@ -525,8 +986,8 @@ consoleLogger.js:187 ModsLoader [isekai, definitions]: Skipping content type 'ev
 consoleLogger.js:187 ModsLoader [isekai, definitions]: Skipping content type 'macros' (key: 'macros') as it's not defined or empty in the manifest.
 consoleLogger.js:187 ModsLoader [isekai, definitions]: Skipping content type 'rules' (key: 'rules') as it's not defined or empty in the manifest.
 consoleLogger.js:187 ModsLoader [isekai, definitions]: Skipping content type 'scopes' (key: 'scopes') as it's not defined or empty in the manifest.
-consoleLogger.js:187 ModsLoader [isekai, definitions]: Skipping content type 'anatomyRecipes' (key: 'anatomy.recipes') as it's not defined or empty in the manifest.
-consoleLogger.js:187 ModsLoader [isekai, definitions]: Skipping content type 'anatomyBlueprints' (key: 'anatomy.blueprints') as it's not defined or empty in the manifest.
+consoleLogger.js:187 ModsLoader [isekai, definitions]: Skipping content type 'anatomyRecipes' (key: 'recipes') as it's not defined or empty in the manifest.
+consoleLogger.js:187 ModsLoader [isekai, definitions]: Skipping content type 'anatomyBlueprints' (key: 'blueprints') as it's not defined or empty in the manifest.
 consoleLogger.js:187 ModsLoader [isekai, definitions]: Skipping content type 'anatomyFormatting' (key: 'anatomyFormatting') as it's not defined or empty in the manifest.
 consoleLogger.js:187 ModsLoader [isekai, definitions]: Content loading loop took 11.70 ms.
 consoleLogger.js:187 Mod 'isekai' phase 'definitions' loaded in 11.70ms: entity_definitions(6) -> Overrides(0), Errors(0)
@@ -557,8 +1018,8 @@ consoleLogger.js:187 --- Loading content for mod: descriptors, phase: instances 
 consoleLogger.js:187 ModsLoader [descriptors, instances]: Manifest retrieved successfully. Processing content types...
 consoleLogger.js:187 ModsLoader [descriptors, instances]: Skipping content type 'entityInstances' (key: 'entities.instances') as it's not defined or empty in the manifest.
 consoleLogger.js:187 ModsLoader [descriptors, instances]: Skipping content type 'goals' (key: 'goals') as it's not defined or empty in the manifest.
-consoleLogger.js:187 ModsLoader [descriptors, instances]: Content loading loop took 0.10 ms.
-consoleLogger.js:187 Mod 'descriptors' phase 'instances' loaded in 0.10ms: No items processed in this phase-> Overrides(0), Errors(0)
+consoleLogger.js:187 ModsLoader [descriptors, instances]: Content loading loop took 0.00 ms.
+consoleLogger.js:187 Mod 'descriptors' phase 'instances' loaded in 0.00ms: No items processed in this phase-> Overrides(0), Errors(0)
 consoleLogger.js:187 --- Finished loading content for mod: descriptors, phase: instances ---
 consoleLogger.js:187 ContentLoadManager: Looking up manifest for modId 'anatomy' (lowercase: 'anatomy'), found: true
 consoleLogger.js:187 ContentLoadManager: Processing mod anatomy, manifest found: true
@@ -566,8 +1027,8 @@ consoleLogger.js:187 --- Loading content for mod: anatomy, phase: instances ---
 consoleLogger.js:187 ModsLoader [anatomy, instances]: Manifest retrieved successfully. Processing content types...
 consoleLogger.js:187 ModsLoader [anatomy, instances]: Skipping content type 'entityInstances' (key: 'entities.instances') as it's not defined or empty in the manifest.
 consoleLogger.js:187 ModsLoader [anatomy, instances]: Skipping content type 'goals' (key: 'goals') as it's not defined or empty in the manifest.
-consoleLogger.js:187 ModsLoader [anatomy, instances]: Content loading loop took 0.00 ms.
-consoleLogger.js:187 Mod 'anatomy' phase 'instances' loaded in 0.00ms: No items processed in this phase-> Overrides(0), Errors(0)
+consoleLogger.js:187 ModsLoader [anatomy, instances]: Content loading loop took 0.10 ms.
+consoleLogger.js:187 Mod 'anatomy' phase 'instances' loaded in 0.10ms: No items processed in this phase-> Overrides(0), Errors(0)
 consoleLogger.js:187 --- Finished loading content for mod: anatomy, phase: instances ---
 consoleLogger.js:187 ContentLoadManager: Looking up manifest for modId 'isekai' (lowercase: 'isekai'), found: true
 consoleLogger.js:187 ContentLoadManager: Processing mod isekai, manifest found: true
@@ -637,8 +1098,8 @@ consoleLogger.js:187 EntityInstanceLoader [isekai]: Successfully processed insta
 consoleLogger.js:187 [isekai] Successfully processed town.location.json. Result: ID=isekai:town_instance, Overwrite=false
 consoleLogger.js:151 Mod [isekai] - Processed 6/6 entities.instances items.
 consoleLogger.js:187 ModsLoader [isekai, instances]: Skipping content type 'goals' (key: 'goals') as it's not defined or empty in the manifest.
-consoleLogger.js:187 ModsLoader [isekai, instances]: Content loading loop took 9.20 ms.
-consoleLogger.js:187 Mod 'isekai' phase 'instances' loaded in 9.20ms: entityInstances(6) -> Overrides(0), Errors(0)
+consoleLogger.js:187 ModsLoader [isekai, instances]: Content loading loop took 8.60 ms.
+consoleLogger.js:187 Mod 'isekai' phase 'instances' loaded in 8.60ms: entityInstances(6) -> Overrides(0), Errors(0)
 consoleLogger.js:187 --- Finished loading content for mod: isekai, phase: instances ---
 consoleLogger.js:187 ModsLoader: Completed content loading loop for phase: instances.
 consoleLogger.js:187 ModsLoader: Completed both content loading phases.
@@ -663,7 +1124,9 @@ consoleLogger.js:151   • Requested Mods (raw): [core, intimacy, isekai]
 consoleLogger.js:151   • Final Load Order     : [core, intimacy, descriptors, anatomy, isekai]
 consoleLogger.js:151   • Content Loading Summary (Totals):
 consoleLogger.js:151      - actions             : 10 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - anatomyBlueprints   : 0 loaded, 0 overrides, 2 errors
 consoleLogger.js:151      - anatomyFormatting   : 1 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - anatomyRecipes      : 0 loaded, 0 overrides, 3 errors
 consoleLogger.js:151      - components          : 42 loaded, 0 overrides, 0 errors
 consoleLogger.js:151      - conditions          : 19 loaded, 0 overrides, 0 errors
 consoleLogger.js:151      - entityInstances     : 6 loaded, 0 overrides, 0 errors
@@ -674,12 +1137,12 @@ consoleLogger.js:151      - rules               : 16 loaded, 0 overrides, 0 erro
 consoleLogger.js:151      - scopes              : 6 loaded, 0 overrides, 0 errors
 consoleLogger.js:151      - worlds              : 1 loaded, 0 overrides, 0 errors
 consoleLogger.js:151      - ----------------------------------------------
-consoleLogger.js:151      - TOTAL               : C:160, O:0, E:0
+consoleLogger.js:151      - TOTAL               : C:160, O:0, E:5
 consoleLogger.js:151 ———————————————————————————————————————————
 consoleLogger.js:187 Phase summary done
 consoleLogger.js:151 ModsLoader: Load sequence for world 'isekai:world' completed successfully.
 consoleLogger.js:151 ModsLoader: Load sequence for world 'isekai:world' completed successfully.
-consoleLogger.js:187 InitializationService: World data loaded successfully for world: isekai:world. Load report: {"finalModOrder":["core","intimacy","descriptors","anatomy","isekai"],"totals":{"actions":{"count":10,"overrides":0,"errors":0},"components":{"count":42,"overrides":0,"errors":0},"conditions":{"count":19,"overrides":0,"errors":0},"events":{"count":35,"overrides":0,"errors":0},"macros":{"count":4,"overrides":0,"errors":0},"rules":{"count":16,"overrides":0,"errors":0},"scopes":{"count":6,"overrides":0,"errors":0},"entity_definitions":{"count":20,"overrides":0,"errors":0},"anatomyFormatting":{"count":1,"overrides":0,"errors":0},"entityInstances":{"count":6,"overrides":0,"errors":0},"worlds":{"count":1,"overrides":0,"errors":0,"instances":4,"resolvedDefinitions":4,"unresolvedDefinitions":0}},"incompatibilities":0}
+consoleLogger.js:187 InitializationService: World data loaded successfully for world: isekai:world. Load report: {"finalModOrder":["core","intimacy","descriptors","anatomy","isekai"],"totals":{"actions":{"count":10,"overrides":0,"errors":0},"components":{"count":42,"overrides":0,"errors":0},"conditions":{"count":19,"overrides":0,"errors":0},"events":{"count":35,"overrides":0,"errors":0},"macros":{"count":4,"overrides":0,"errors":0},"rules":{"count":16,"overrides":0,"errors":0},"scopes":{"count":6,"overrides":0,"errors":0},"entity_definitions":{"count":20,"overrides":0,"errors":0},"anatomyRecipes":{"count":0,"overrides":0,"errors":3},"anatomyBlueprints":{"count":0,"overrides":0,"errors":2},"anatomyFormatting":{"count":1,"overrides":0,"errors":0},"entityInstances":{"count":6,"overrides":0,"errors":0},"worlds":{"count":1,"overrides":0,"errors":0,"instances":4,"resolvedDefinitions":4,"unresolvedDefinitions":0}},"incompatibilities":0}
 consoleLogger.js:187 ContentDependencyValidator: Validating content dependencies...
 consoleLogger.js:187 ContentDependencyValidator: Content dependency validation complete.
 consoleLogger.js:187 Initializing ScopeRegistry...
@@ -780,9 +1243,9 @@ consoleLogger.js:187 SystemLogicInterpreter: Cached rule 'turn_ended'
 consoleLogger.js:187 SystemLogicInterpreter: Cached rule 'turn_started'
 consoleLogger.js:187 SystemLogicInterpreter: Cached rule 'handle_wait'
 consoleLogger.js:187 SystemLogicInterpreter: Cached rule 'handle_adjust_clothing'
-consoleLogger.js:187 SystemLogicInterpreter: Cached rule 'intimacy_handle_get_close'
 consoleLogger.js:187 SystemLogicInterpreter: Cached rule 'handle_kiss_cheek'
 consoleLogger.js:187 SystemLogicInterpreter: Cached rule 'intimacy_handle_step_back'
+consoleLogger.js:187 SystemLogicInterpreter: Cached rule 'intimacy_handle_get_close'
 consoleLogger.js:187 SystemLogicInterpreter: Cached rule 'handle_thumb_wipe_cheek'
 consoleLogger.js:187 SystemLogicInterpreter: Finished caching rules. 7 event types have associated rules.
 consoleLogger.js:187 SystemLogicInterpreter: SystemLogicInterpreter: initialized & subscribed to '*'.
@@ -933,20 +1396,3 @@ consoleLogger.js:187 VED: Event 'worldinit:entity_instantiated' dispatch success
 consoleLogger.js:187 VED: Event 'core:entity_created' dispatch successful.
 consoleLogger.js:187 Dispatched 'worldinit:entity_instantiated' for entity isekai:hero_instance.
 consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:entity_created'.
-consoleLogger.js:187 WorldInitializer (Pass 1): Attempting to create entity instance 'isekai:ninja_instance' from definition 'isekai:ninja' with overrides: {core:position: {…}}
-consoleLogger.js:187 EntityManager.createEntityInstance: Creating entity instance 'isekai:ninja_instance' from definition 'isekai:ninja' with overrides: {core:position: {…}}
-consoleLogger.js:187 [EntityFactory] Creating entity instance isekai:ninja_instance from definition isekai:ninja.
-consoleLogger.js:187 Injecting STM for isekai:ninja_instance (def: isekai:ninja)
-consoleLogger.js:187 Injecting Notes for isekai:ninja_instance (def: isekai:ninja)
-consoleLogger.js:187 Injecting Goals for isekai:ninja_instance (def: isekai:ninja)
-consoleLogger.js:151 [EntityFactory] Entity instance 'isekai:ninja_instance' (def: 'isekai:ninja') created.
-consoleLogger.js:187 EntityManager.createEntityInstance: Factory created entity with ID 'isekai:ninja_instance' and definitionId 'isekai:ninja'
-consoleLogger.js:187 Entity 'isekai:ninja_instance' added to repository.
-consoleLogger.js:187 Tracked entity isekai:ninja_instance
-consoleLogger.js:187 VED: Validating payload for event 'core:entity_created' against schema 'core:entity_created#payload'...
-consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:entity_created'.
-consoleLogger.js:187 VED: Dispatching event 'core:entity_created' via EventBus... {instanceId: 'isekai:ninja_instance', definitionId: 'isekai:ninja', wasReconstructed: false, entity: Entity}
-consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Received payload with entity: Entity {#data: EntityInstanceData}
-consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity type: object
-consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity constructor: Entity
-consoleLogger.js:187 SpatialSync: Added isekai:ninja_instance to index at isekai:adventurers_guild_instance

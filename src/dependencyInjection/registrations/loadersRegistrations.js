@@ -93,6 +93,7 @@ import { tokens } from '../tokens.js';
 import { Registrar } from '../../utils/registrarHelpers.js';
 import { makeRegistryCache } from '../../loaders/registryCacheAdapter.js';
 import { BaseManifestItemLoader } from '../../loaders/baseManifestItemLoader.js';
+import { createDefaultContentLoadersConfig } from '../../loaders/defaultLoaderConfig.js';
 
 /**
  * Registers core data infrastructure services, data loaders, and the phase-based mod loading system.
@@ -253,102 +254,21 @@ export function registerLoaders(container) {
       new ContentLoadManager({
         logger: c.resolve(tokens.ILogger),
         validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
-        contentLoadersConfig: [
-          // Definition phase loaders
-          {
-            loader: c.resolve(tokens.ActionLoader),
-            contentKey: 'actions',
-            diskFolder: 'actions',
-            registryKey: 'actions',
-            phase: 'definitions',
-          },
-          {
-            loader: c.resolve(tokens.ComponentLoader),
-            contentKey: 'components',
-            diskFolder: 'components',
-            registryKey: 'components',
-            phase: 'definitions',
-          },
-          {
-            loader: c.resolve(tokens.ConditionLoader),
-            contentKey: 'conditions',
-            diskFolder: 'conditions',
-            registryKey: 'conditions',
-            phase: 'definitions',
-          },
-          {
-            loader: c.resolve(tokens.EntityLoader),
-            contentKey: 'entities.definitions',
-            diskFolder: 'entities/definitions',
-            registryKey: 'entity_definitions',
-            phase: 'definitions',
-          },
-          {
-            loader: c.resolve(tokens.EventLoader),
-            contentKey: 'events',
-            diskFolder: 'events',
-            registryKey: 'events',
-            phase: 'definitions',
-          },
-          {
-            loader: c.resolve(tokens.MacroLoader),
-            contentKey: 'macros',
-            diskFolder: 'macros',
-            registryKey: 'macros',
-            phase: 'definitions',
-          },
-          {
-            loader: c.resolve(tokens.RuleLoader),
-            contentKey: 'rules',
-            diskFolder: 'rules',
-            registryKey: 'rules',
-            phase: 'definitions',
-          },
-          {
-            loader: c.resolve(tokens.ScopeLoader),
-            contentKey: 'scopes',
-            diskFolder: 'scopes',
-            registryKey: SCOPES_KEY,
-            phase: 'definitions',
-          },
-          // Instance phase loaders
-          {
-            loader: c.resolve(tokens.EntityInstanceLoader),
-            contentKey: 'entities.instances',
-            diskFolder: 'entities/instances',
-            registryKey: 'entityInstances',
-            phase: 'instances',
-          },
-          {
-            loader: c.resolve(tokens.GoalLoader),
-            contentKey: 'goals',
-            diskFolder: 'goals',
-            registryKey: 'goals',
-            phase: 'instances',
-          },
-          // Anatomy loaders
-          {
-            loader: c.resolve(tokens.AnatomyRecipeLoader),
-            contentKey: 'recipes',
-            diskFolder: 'anatomy/recipes',
-            registryKey: 'anatomyRecipes',
-            phase: 'definitions',
-          },
-          {
-            loader: c.resolve(tokens.AnatomyBlueprintLoader),
-            contentKey: 'blueprints',
-            diskFolder: 'anatomy/blueprints',
-            registryKey: 'anatomyBlueprints',
-            phase: 'definitions',
-          },
-          {
-            loader: c.resolve(tokens.AnatomyFormattingLoader),
-            contentKey: 'anatomyFormatting',
-            diskFolder: 'anatomy-formatting',
-            registryKey: 'anatomyFormatting',
-            phase: 'definitions',
-          },
-        ],
+        contentLoadersConfig: createDefaultContentLoadersConfig({
+          componentLoader: c.resolve(tokens.ComponentLoader),
+          eventLoader: c.resolve(tokens.EventLoader),
+          conditionLoader: c.resolve(tokens.ConditionLoader),
+          macroLoader: c.resolve(tokens.MacroLoader),
+          actionLoader: c.resolve(tokens.ActionLoader),
+          ruleLoader: c.resolve(tokens.RuleLoader),
+          goalLoader: c.resolve(tokens.GoalLoader),
+          scopeLoader: c.resolve(tokens.ScopeLoader),
+          entityDefinitionLoader: c.resolve(tokens.EntityLoader),
+          entityInstanceLoader: c.resolve(tokens.EntityInstanceLoader),
+          anatomyRecipeLoader: c.resolve(tokens.AnatomyRecipeLoader),
+          anatomyBlueprintLoader: c.resolve(tokens.AnatomyBlueprintLoader),
+          anatomyFormattingLoader: c.resolve(tokens.AnatomyFormattingLoader),
+        }),
         aggregatorFactory: (counts) => new LoadResultAggregator(counts),
       })
   );

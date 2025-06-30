@@ -74,15 +74,21 @@ export const meta = {
   },
   anatomyRecipes: {
     contentKey: 'recipes',
-    diskFolder: 'anatomy/recipes',
+    diskFolder: 'recipes',
     phase: 'definitions',
     registryKey: 'anatomyRecipes',
   },
   anatomyBlueprints: {
     contentKey: 'blueprints',
-    diskFolder: 'anatomy/blueprints',
+    diskFolder: 'blueprints',
     phase: 'definitions',
     registryKey: 'anatomyBlueprints',
+  },
+  anatomyFormatting: {
+    contentKey: 'anatomyFormatting',
+    diskFolder: 'anatomy-formatting',
+    phase: 'definitions',
+    registryKey: 'anatomyFormatting',
   },
 };
 
