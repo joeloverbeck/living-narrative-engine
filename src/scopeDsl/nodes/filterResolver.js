@@ -36,48 +36,39 @@ export default function createFilterResolver({
     let entity;
 
     if (typeof item === 'string') {
-      // Item is an entity ID, get the entity instance
       entity = entitiesGateway.getEntityInstance(item);
-
       if (!entity) {
-        // If entity not found, create minimal entity object
         entity = { id: item };
-      } else if (entity.componentTypeIds) {
-        // Build components object for JsonLogic access
-        const components = buildComponents(item, entity, entitiesGateway);
-        entity.components = components;
       }
     } else if (item && typeof item === 'object') {
-      // Item is already an object (e.g., exit object from component data)
       entity = item;
     } else {
-      // Invalid item
       return null;
     }
 
-    // Ensure actor also has components property for JsonLogic access
-    let actorWithComponents = actorEntity;
+    if (entity && entity.componentTypeIds && !entity.components) {
+      entity.components = buildComponents(entity.id, entity, entitiesGateway);
+    } else {
+      // no-op
+    }
+
+    let actor = actorEntity;
     if (
       actorEntity &&
       actorEntity.componentTypeIds &&
       !actorEntity.components
     ) {
-      const actorComponents = buildComponents(
+      const comps = buildComponents(
         actorEntity.id,
         actorEntity,
         entitiesGateway
       );
-      actorWithComponents = { ...actorEntity, components: actorComponents };
+      actor = { ...actorEntity, components: comps };
     }
 
-    // Get current location
     const location = locationProvider.getLocation();
 
-    return {
-      entity,
-      actor: actorWithComponents,
-      location,
-    };
+    return { entity, actor, location };
   }
 
   return {

@@ -8,6 +8,11 @@
  */
 import { buildComponents } from '../core/entityComponentUtils.js';
 
+/**
+ *
+ * @param root0
+ * @param root0.entitiesGateway
+ */
 export default function createStepResolver({ entitiesGateway }) {
   /**
    * Builds a components object for the given entity ID.
@@ -60,6 +65,33 @@ export default function createStepResolver({ entitiesGateway }) {
     return obj[field];
   }
 
+  /**
+   * Processes a parent value that is an entity ID.
+   *
+   * @param {string} entityId - ID of the entity to inspect.
+   * @param {string} field - Field name requested.
+   * @param {object} [trace] - Optional trace logger.
+   * @returns {any} Extracted value or undefined/null.
+   */
+  function processEntityParentValue(entityId, field, trace) {
+    if (field === 'components') {
+      return getComponentsForEntity(entityId, trace);
+    }
+
+    return extractFieldFromEntity(entityId, field);
+  }
+
+  /**
+   * Processes a parent value that is a plain object.
+   *
+   * @param {object} obj - Object containing the field.
+   * @param {string} field - Field name to extract.
+   * @returns {any} Extracted value or undefined.
+   */
+  function processObjectParentValue(obj, field) {
+    return extractFieldFromObject(obj, field);
+  }
+
   return {
     /**
      * Checks if this resolver can handle the given node.
@@ -105,15 +137,14 @@ export default function createStepResolver({ entitiesGateway }) {
 
       for (const parentValue of parentResult) {
         if (typeof parentValue === 'string') {
+          const val = processEntityParentValue(parentValue, node.field, trace);
           if (node.field === 'components') {
-            const comps = getComponentsForEntity(parentValue, trace);
-            if (comps) result.add(comps);
-          } else {
-            const val = extractFieldFromEntity(parentValue, node.field);
-            if (val !== undefined) result.add(val);
+            if (val) result.add(val);
+          } else if (val !== undefined) {
+            result.add(val);
           }
         } else if (parentValue && typeof parentValue === 'object') {
-          const val = extractFieldFromObject(parentValue, node.field);
+          const val = processObjectParentValue(parentValue, node.field);
           if (val !== undefined) result.add(val);
         }
       }
