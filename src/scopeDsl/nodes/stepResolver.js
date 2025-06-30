@@ -6,6 +6,8 @@
  * @param {object} dependencies.entitiesGateway - Gateway for entity data access
  * @returns {object} NodeResolver with canResolve and resolve methods
  */
+import { buildComponents } from '../core/entityComponentUtils.js';
+
 export default function createStepResolver({ entitiesGateway }) {
   /**
    * Builds a components object for the given entity ID.
@@ -31,16 +33,7 @@ export default function createStepResolver({ entitiesGateway }) {
       return {};
     }
 
-    const components = {};
-    for (const componentTypeId of entity.componentTypeIds) {
-      const data =
-        entity.getComponentData?.(componentTypeId) ||
-        entitiesGateway.getComponentData(entityId, componentTypeId);
-      if (data) {
-        components[componentTypeId] = data;
-      }
-    }
-    return components;
+    return buildComponents(entityId, entity, entitiesGateway);
   }
 
   /**
