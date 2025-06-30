@@ -161,3 +161,6 @@ class ModDependencyValidator {
 }
 
 export default ModDependencyValidator;
+
+// Named export for testing isolated version checks
+export { _checkVersionCompatibility };
