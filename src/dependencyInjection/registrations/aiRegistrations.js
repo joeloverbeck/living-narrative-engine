@@ -65,6 +65,7 @@ import { GameStateValidationServiceForPrompting } from '../../validation/gameSta
 import { HttpConfigurationProvider } from '../../configuration/httpConfigurationProvider.js';
 import { LlmConfigManager } from '../../llms/llmConfigManager.js';
 import { LlmConfigLoader } from '../../llms/services/llmConfigLoader.js';
+import { LlmJsonService } from '../../llms/llmJsonService.js';
 import { PlaceholderResolver } from '../../utils/placeholderResolverUtils.js';
 import { ExecutionPlaceholderResolver } from '../../utils/executionPlaceholderResolver.js';
 import { StandardElementAssembler } from '../../prompting/assembling/standardElementAssembler.js';
@@ -390,6 +391,7 @@ export function registerAITurnPipeline(registrar, logger) {
       ),
     });
   });
+  registrar.singletonFactory(tokens.LlmJsonService, () => new LlmJsonService());
   registrar.singletonFactory(
     tokens.ILLMResponseProcessor,
     (c) =>
@@ -397,6 +399,7 @@ export function registerAITurnPipeline(registrar, logger) {
         schemaValidator: c.resolve(tokens.ISchemaValidator),
         logger: c.resolve(tokens.ILogger),
         safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+        llmJsonService: c.resolve(tokens.LlmJsonService),
       })
   );
   registrar.singletonFactory(

@@ -1,11 +1,11 @@
 // tests/utils/llmUtils.parseAndRepairJson.test.js
 // --- FILE START ---
 
+import { LlmJsonService } from '../../../src/llms/llmJsonService.js';
 import {
-  parseAndRepairJson,
   JsonProcessingError,
   cleanLLMJsonOutput,
-} from '../../../src/utils/llmUtils.js'; // Adjust path as needed
+} from '../../../src/utils/llmUtils.js';
 import { beforeEach, describe, expect, jest, test } from '@jest/globals'; // Ensure 'jest' is imported
 
 // 1. Instruct Jest to automatically mock the '@toolsycc/json-repair' module.
@@ -17,9 +17,10 @@ jest.mock('@toolsycc/json-repair');
 //    The alias `mockRepairJson` is used in the tests as per your existing structure.
 import { repairJson as mockRepairJson } from '@toolsycc/json-repair';
 
-describe('parseAndRepairJson', () => {
+describe('LlmJsonService.parseAndRepair', () => {
   let mockLogger;
   let mockDispatcher;
+  let service;
 
   beforeEach(() => {
     // Reset the auto-mocked function before each test.
@@ -33,13 +34,17 @@ describe('parseAndRepairJson', () => {
       error: jest.fn(),
     };
     mockDispatcher = { dispatch: jest.fn() };
+    service = new LlmJsonService();
   });
 
   // Test for invalid input types
   describe('Invalid Input Handling', () => {
     test('should throw TypeError for null input and dispatch error if dispatcher provided', async () => {
       await expect(
-        parseAndRepairJson(null, mockLogger, mockDispatcher)
+        service.parseAndRepair(null, {
+          logger: mockLogger,
+          dispatcher: mockDispatcher,
+        })
       ).rejects.toThrow(TypeError("Input 'jsonString' must be a string."));
       expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
         expect.any(String),
@@ -53,7 +58,10 @@ describe('parseAndRepairJson', () => {
 
     test('should throw TypeError for undefined input and dispatch error if dispatcher provided', async () => {
       await expect(
-        parseAndRepairJson(undefined, mockLogger, mockDispatcher)
+        service.parseAndRepair(undefined, {
+          logger: mockLogger,
+          dispatcher: mockDispatcher,
+        })
       ).rejects.toThrow(TypeError("Input 'jsonString' must be a string."));
       expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
         expect.any(String),
@@ -67,7 +75,10 @@ describe('parseAndRepairJson', () => {
 
     test('should throw JsonProcessingError for empty string input after cleaning and dispatch error if dispatcher provided', async () => {
       await expect(
-        parseAndRepairJson('', mockLogger, mockDispatcher)
+        service.parseAndRepair('', {
+          logger: mockLogger,
+          dispatcher: mockDispatcher,
+        })
       ).rejects.toThrow(
         new JsonProcessingError(
           'Cleaned JSON string is null or empty, cannot parse.',
@@ -90,7 +101,10 @@ describe('parseAndRepairJson', () => {
 
     test('should throw JsonProcessingError for whitespace-only string input after cleaning and dispatch error if dispatcher provided', async () => {
       await expect(
-        parseAndRepairJson('   ', mockLogger, mockDispatcher)
+        service.parseAndRepair('   ', {
+          logger: mockLogger,
+          dispatcher: mockDispatcher,
+        })
       ).rejects.toThrow(
         new JsonProcessingError(
           'Cleaned JSON string is null or empty, cannot parse.',
@@ -118,7 +132,9 @@ describe('parseAndRepairJson', () => {
       const validJsonString = '{"key": "value", "number": 123}';
       const expectedObject = { key: 'value', number: 123 };
 
-      const result = await parseAndRepairJson(validJsonString, mockLogger);
+      const result = await service.parseAndRepair(validJsonString, {
+        logger: mockLogger,
+      });
 
       expect(result).toEqual(expectedObject);
       expect(mockRepairJson).not.toHaveBeenCalled();
@@ -134,7 +150,9 @@ describe('parseAndRepairJson', () => {
       const rawJsonString = 'Here is the JSON: ```json\n{"key": "valid"}\n```';
       const expectedObject = { key: 'valid' };
 
-      const result = await parseAndRepairJson(rawJsonString, mockLogger);
+      const result = await service.parseAndRepair(rawJsonString, {
+        logger: mockLogger,
+      });
       expect(result).toEqual(expectedObject);
       expect(mockRepairJson).not.toHaveBeenCalled();
       expect(mockLogger.debug).toHaveBeenCalled();
@@ -151,7 +169,9 @@ describe('parseAndRepairJson', () => {
 
       mockRepairJson.mockReturnValue(repairedJsonString);
 
-      const result = await parseAndRepairJson(repairableJsonString, mockLogger);
+      const result = await service.parseAndRepair(repairableJsonString, {
+        logger: mockLogger,
+      });
 
       expect(result).toEqual(expectedObject);
       expect(mockRepairJson).toHaveBeenCalledWith(cleanedRepairableString);
@@ -170,7 +190,9 @@ describe('parseAndRepairJson', () => {
 
       mockRepairJson.mockReturnValue(repairedJsonString);
 
-      const result = await parseAndRepairJson(repairableJsonString, mockLogger);
+      const result = await service.parseAndRepair(repairableJsonString, {
+        logger: mockLogger,
+      });
       expect(result).toEqual(expectedObject);
       expect(mockRepairJson).toHaveBeenCalledWith(cleanedRepairableString);
       expect(mockLogger.warn).toHaveBeenCalled();
@@ -184,7 +206,9 @@ describe('parseAndRepairJson', () => {
 
       mockRepairJson.mockReturnValue(repairedJsonString);
 
-      const result = await parseAndRepairJson(repairableJsonString, mockLogger);
+      const result = await service.parseAndRepair(repairableJsonString, {
+        logger: mockLogger,
+      });
       expect(result).toEqual(expectedObject);
       expect(mockRepairJson).toHaveBeenCalledWith(cleanedRepairableString);
       expect(mockLogger.warn).toHaveBeenCalled();
@@ -203,7 +227,7 @@ describe('parseAndRepairJson', () => {
       mockRepairJson.mockReturnValue(stringAfterRepairAttempt);
 
       await expect(
-        parseAndRepairJson(unrepairableJsonString, mockLogger)
+        service.parseAndRepair(unrepairableJsonString, { logger: mockLogger })
       ).rejects.toThrow(JsonProcessingError);
 
       expect(mockRepairJson).toHaveBeenCalledWith(cleanedUnrepairableString);
@@ -228,7 +252,7 @@ describe('parseAndRepairJson', () => {
       });
 
       await expect(
-        parseAndRepairJson(problematicJsonString, mockLogger)
+        service.parseAndRepair(problematicJsonString, { logger: mockLogger })
       ).rejects.toThrow(JsonProcessingError);
 
       expect(mockRepairJson).toHaveBeenCalledWith(cleanedProblematicString);
@@ -241,7 +265,7 @@ describe('parseAndRepairJson', () => {
       );
 
       await expect(
-        parseAndRepairJson(problematicJsonString, mockLogger)
+        service.parseAndRepair(problematicJsonString, { logger: mockLogger })
       ).rejects.toMatchObject({
         originalError: repairError,
         stage: 'final_parse_after_repair',
@@ -253,7 +277,7 @@ describe('parseAndRepairJson', () => {
   describe('Logger Interactions', () => {
     test('should not call logger methods (except error for invalid type) if no logger is provided and JSON is valid', async () => {
       const validJsonString = '{"status": "ok"}';
-      const result = await parseAndRepairJson(validJsonString);
+      const result = await service.parseAndRepair(validJsonString);
       expect(result).toEqual({ status: 'ok' });
     });
 
@@ -261,14 +285,14 @@ describe('parseAndRepairJson', () => {
       const repairableJsonString = '{"key": "value",}';
       const repairedJsonString = '{"key": "value"}';
       mockRepairJson.mockReturnValue(repairedJsonString);
-      await parseAndRepairJson(repairableJsonString);
+      await service.parseAndRepair(repairableJsonString);
       expect(mockRepairJson).toHaveBeenCalled();
     });
 
     test('should call logger.warn when initial parse fails', async () => {
       const repairableJson = '{"foo": "bar",}';
       mockRepairJson.mockReturnValue('{"foo": "bar"}');
-      await parseAndRepairJson(repairableJson, mockLogger);
+      await service.parseAndRepair(repairableJson, { logger: mockLogger });
       expect(mockLogger.warn).toHaveBeenCalledTimes(1);
       expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining('Initial JSON.parse failed'),
@@ -279,14 +303,14 @@ describe('parseAndRepairJson', () => {
     test('should call logger.info when repair and subsequent parse succeed', async () => {
       const repairableJson = '{"baz": "qux",}';
       mockRepairJson.mockReturnValue('{"baz": "qux"}');
-      await parseAndRepairJson(repairableJson, mockLogger);
+      await service.parseAndRepair(repairableJson, { logger: mockLogger });
     });
 
     test('should call logger.error when repair attempt fails to produce valid JSON', async () => {
       const unrepairableJson = '{"error": true,,';
       mockRepairJson.mockReturnValue('{"error": true,,');
       await expect(
-        parseAndRepairJson(unrepairableJson, mockLogger)
+        service.parseAndRepair(unrepairableJson, { logger: mockLogger })
       ).rejects.toThrow(JsonProcessingError);
       expect(mockLogger.error).toHaveBeenCalledTimes(1);
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -303,7 +327,9 @@ describe('parseAndRepairJson', () => {
       const rawString = '  ```json\n{"key":"value_after_cleaning"}```  ';
       const expectedObject = { key: 'value_after_cleaning' };
 
-      const result = await parseAndRepairJson(rawString, mockLogger);
+      const result = await service.parseAndRepair(rawString, {
+        logger: mockLogger,
+      });
       expect(result).toEqual(expectedObject);
       expect(mockRepairJson).not.toHaveBeenCalled();
       expect(mockLogger.debug).toHaveBeenCalledWith(

@@ -10,6 +10,7 @@ import {
 } from '../../src/turns/services/LLMResponseProcessor.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../src/constants/eventIds.js';
 import { expectNoDispatch } from '../common/engine/dispatchTestUtils.js';
+import { LlmJsonService } from '../../src/llms/llmJsonService.js';
 
 // Mocked logger for capturing logs
 const makeLogger = () => ({
@@ -44,6 +45,7 @@ describe('LLMResponseProcessor', () => {
       schemaValidator,
       logger,
       safeEventDispatcher,
+      llmJsonService: new LlmJsonService(),
     });
     const llmJsonResponse = JSON.stringify({
       chosenIndex: 4,
@@ -78,6 +80,7 @@ describe('LLMResponseProcessor', () => {
       schemaValidator,
       logger,
       safeEventDispatcher,
+      llmJsonService: new LlmJsonService(),
     });
     const llmJsonResponse = JSON.stringify({
       chosenIndex: 7,
@@ -106,6 +109,7 @@ describe('LLMResponseProcessor', () => {
       schemaValidator,
       logger,
       safeEventDispatcher,
+      llmJsonService: new LlmJsonService(),
     });
     const invalidJson = JSON.stringify({
       speech: 'Invalid structure',
@@ -137,6 +141,7 @@ describe('LLMResponseProcessor', () => {
       schemaValidator,
       logger,
       safeEventDispatcher,
+      llmJsonService: new LlmJsonService(),
     });
     const nonJson = 'Not JSON';
 
@@ -168,6 +173,7 @@ describe('LLMResponseProcessor', () => {
       schemaValidator,
       logger,
       safeEventDispatcher,
+      llmJsonService: new LlmJsonService(),
     });
     const llmJsonResponse = JSON.stringify({
       chosenIndex: 3,
