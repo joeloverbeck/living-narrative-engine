@@ -311,7 +311,159 @@ export class BaseManifestItemLoader extends AbstractLoader {
    * @throws {Error} Re-throws the caught error after logging to allow `Promise.allSettled` to detect failure.
    */
   async _processFileWrapper(modId, filename, diskFolder, registryKey) {
-    return processFileWrapper(this, modId, filename, diskFolder, registryKey);
+    const path = this.resolveContentPath(
+      modId,
+      diskFolder,
+      filename,
+      registryKey
+    );
+    const data = await this.fetchContent(path, modId, filename, registryKey);
+    this.validatePrimarySchema(data, filename, modId, path, registryKey);
+    return this.runSubclassProcessing(modId, filename, path, data, registryKey);
+  }
+
+  /**
+   * Resolves the full filesystem path for a content file and logs errors.
+   *
+   * @protected
+   * @param {string} modId - Mod ID.
+   * @param {string} diskFolder - Folder on disk for this content type.
+   * @param {string} filename - Filename from the manifest.
+   * @param {string} registryKey - Registry category key for context in error logs.
+   * @returns {string} Resolved path.
+   * @throws {Error} Propagates any resolution errors.
+   */
+  resolveContentPath(modId, diskFolder, filename, registryKey) {
+    try {
+      const resolved = this._pathResolver.resolveModContentPath(
+        modId,
+        diskFolder,
+        filename
+      );
+      this._logger.debug(
+        `[${modId}] Resolved path for ${filename}: ${resolved}`
+      );
+      return resolved;
+    } catch (error) {
+      this._logger.error(
+        'Error processing file:',
+        {
+          modId,
+          filename,
+          path: 'Path not resolved',
+          registryKey,
+          error: error?.message || String(error),
+        },
+        error
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Fetches content from disk and logs any errors.
+   *
+   * @protected
+   * @param {string} path - Resolved filesystem path.
+   * @param {string} modId - Mod ID for logging.
+   * @param {string} filename - Original filename for context.
+   * @param {string} registryKey - Registry category key.
+   * @returns {Promise<any>} Parsed file data.
+   * @throws {Error} Propagates any fetch errors.
+   */
+  async fetchContent(path, modId, filename, registryKey) {
+    try {
+      const data = await this._dataFetcher.fetch(path);
+      this._logger.debug(`[${modId}] Fetched data from ${path}`);
+      return data;
+    } catch (error) {
+      this._logger.error(
+        'Error processing file:',
+        {
+          modId,
+          filename,
+          path,
+          registryKey,
+          error: error?.message || String(error),
+        },
+        error
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Validates fetched content against the primary schema and logs failures.
+   *
+   * @protected
+   * @param {any} data - Parsed file data.
+   * @param {string} filename - Source filename.
+   * @param {string} modId - Owning mod ID.
+   * @param {string} path - Resolved file path.
+   * @param {string} registryKey - Registry category key.
+   * @returns {void}
+   * @throws {Error} Propagates validation errors.
+   */
+  validatePrimarySchema(data, filename, modId, path, registryKey) {
+    try {
+      this._validatePrimarySchema(data, filename, modId, path);
+    } catch (error) {
+      this._logger.error(
+        'Error processing file:',
+        {
+          modId,
+          filename,
+          path,
+          registryKey,
+          error: error?.message || String(error),
+        },
+        error
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Delegates processing of validated content to the subclass implementation.
+   * Logs success and handles any subclass errors.
+   *
+   * @protected
+   * @async
+   * @param {string} modId - Owning mod ID.
+   * @param {string} filename - Original filename.
+   * @param {string} path - Resolved file path.
+   * @param {any} data - Parsed file data.
+   * @param {string} registryKey - Registry category key.
+   * @returns {Promise<{qualifiedId:string,didOverride:boolean}>} Processing result.
+   * @throws {Error} Propagates subclass errors.
+   */
+  async runSubclassProcessing(modId, filename, path, data, registryKey) {
+    try {
+      const result = await this._processFetchedItem(
+        modId,
+        filename,
+        path,
+        data,
+        registryKey
+      );
+      this._logger.debug(
+        `[${modId}] Successfully processed ${filename}. Result: ID=${result.qualifiedId}, Overwrite=${result.didOverride}`
+      );
+      return result;
+    } catch (error) {
+      this._logger.error(
+        'Error processing file:',
+        {
+          modId,
+          filename,
+          path,
+          registryKey,
+          error: error?.message || String(error),
+        },
+        error
+      );
+      throw error;
+    }
   }
 
   /**

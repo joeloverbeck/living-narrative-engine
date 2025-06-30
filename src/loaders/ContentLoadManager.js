@@ -199,6 +199,25 @@ export class ContentLoadManager {
   }
 
   async processMod(modId, manifest, totalCounts, phaseLoaders, phase) {
+    if (!manifest) {
+      return this.#modProcessor.processMod(
+        modId,
+        null,
+        totalCounts,
+        phaseLoaders,
+        phase
+      );
+    }
+    return this.#executeModProcessing(
+      modId,
+      manifest,
+      totalCounts,
+      phaseLoaders,
+      phase
+    );
+  }
+
+  #executeModProcessing(modId, manifest, totalCounts, phaseLoaders, phase) {
     return this.#modProcessor.processMod(
       modId,
       manifest,
