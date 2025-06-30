@@ -207,15 +207,15 @@ export default class ModLoadOrderResolver {
     const { nodes, edges } = buildDependencyGraph(requestedIds, manifestsMap);
 
     /* 2 – Tie-breaker priorities derived from original request */
-    const reqIndex = new Map();
+    const requestOrderIndex = new Map();
     requestedIds.forEach((id, i) => {
       const lc = String(id).toLowerCase();
-      if (!reqIndex.has(lc)) reqIndex.set(lc, i);
+      if (!requestOrderIndex.has(lc)) requestOrderIndex.set(lc, i);
     });
     const priorityOf = (id) =>
       id.toLowerCase() === CORE_MOD_ID
         ? -1
-        : (reqIndex.get(id.toLowerCase()) ?? Number.MAX_SAFE_INTEGER);
+        : (requestOrderIndex.get(id.toLowerCase()) ?? Number.MAX_SAFE_INTEGER);
 
     /* 3 – Compute in-degrees */
     const inDeg = new Map();
