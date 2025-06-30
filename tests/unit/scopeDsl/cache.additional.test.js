@@ -295,18 +295,21 @@ describe('Scope-DSL Cache - Additional Coverage Tests', () => {
       );
     });
 
-    test('should handle AST with circular references in JSON.stringify', () => {
+    test('should handle AST with circular references', () => {
       const ast = { type: 'Source', kind: 'actor' };
-      // Create circular reference
       ast.self = ast;
 
       mockCache.get.mockReturnValue(undefined);
       mockScopeEngine.resolve.mockReturnValue(new Set(['result']));
 
-      // JSON.stringify with circular reference throws an error, which is expected behavior
       expect(() => {
         cache.resolve(ast, mockActorEntity, mockRuntimeCtx);
-      }).toThrow('Converting circular structure to JSON');
+      }).not.toThrow();
+
+      expect(mockCache.set).toHaveBeenCalledWith(
+        expect.stringContaining('actor123:'),
+        new Set(['result'])
+      );
     });
 
     test('should handle cache hit returning null/undefined values', () => {

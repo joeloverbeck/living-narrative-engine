@@ -5,6 +5,7 @@
 
 import { TURN_STARTED_ID } from '../constants/eventIds.js';
 import { IScopeEngine } from '../interfaces/IScopeEngine.js';
+import { safeStringify } from '../utils/index.js';
 
 /** @typedef {import('../types/runtimeContext.js').RuntimeContext} RuntimeContext */
 
@@ -87,7 +88,7 @@ class ScopeCache extends IScopeEngine {
    */
   _generateKey(actorId, ast, runtimeCtx) {
     // Create a stable key from the AST structure
-    const astKey = JSON.stringify(ast);
+    const astKey = safeStringify(ast);
 
     // Extract location ID from runtime context if available
     const locationId = runtimeCtx?.location?.id || 'no-location';
