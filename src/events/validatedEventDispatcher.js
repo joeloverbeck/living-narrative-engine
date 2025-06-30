@@ -76,62 +76,13 @@ class ValidatedEventDispatcher extends IValidatedEventDispatcher {
    * @returns {{ shouldDispatch: boolean, validationAttempted: boolean, validationPassed: boolean }}
    */
   #validatePayload(eventName, payload, allowSchemaNotFound) {
-    let shouldDispatch = true;
     let validationAttempted = false;
-    let validationPassed = true;
 
     try {
       const eventDefinition =
         this.#gameDataRepository.getEventDefinition(eventName);
 
-      if (eventDefinition) {
-        if (eventDefinition.payloadSchema) {
-          validationAttempted = true;
-          const schemaId = `${eventName}#payload`;
-          if (this.#schemaValidator.isSchemaLoaded(schemaId)) {
-            this.#logger.debug(
-              `VED: Validating payload for event '${eventName}' against schema '${schemaId}'...`
-            );
-            const validationResult = this.#schemaValidator.validate(
-              schemaId,
-              payload
-            );
-            if (!validationResult.isValid) {
-              validationPassed = false;
-              const errorDetails =
-                validationResult.errors
-                  ?.map((e) => `[${e.instancePath || 'root'}]: ${e.message}`)
-                  .join('; ') || 'No details available';
-              this.#logger.error(
-                `VED: Payload validation FAILED for event '${eventName}'. Dispatch SKIPPED. Errors: ${errorDetails}`,
-                {
-                  payload,
-                  errors: validationResult.errors,
-                }
-              );
-              shouldDispatch = false;
-            } else {
-              this.#logger.debug(
-                `VED: Payload validation SUCCEEDED for event '${eventName}'.`
-              );
-            }
-          } else {
-            if (!allowSchemaNotFound) {
-              this.#logger.warn(
-                `VED: Payload schema '${schemaId}' not found/loaded for event '${eventName}'. Skipping validation and proceeding with dispatch.`
-              );
-            } else {
-              this.#logger.debug(
-                `VED: Payload schema '${schemaId}' not found/loaded for event '${eventName}'. Skipping validation as allowed by options.`
-              );
-            }
-          }
-        } else {
-          this.#logger.debug(
-            `VED: Event definition '${eventName}' found, but no 'payloadSchema' defined. Skipping validation and proceeding with dispatch.`
-          );
-        }
-      } else {
+      if (!eventDefinition) {
         if (!allowSchemaNotFound) {
           this.#logger.warn(
             `VED: EventDefinition not found for '${eventName}'. Cannot validate payload. Proceeding with dispatch.`
@@ -141,17 +92,88 @@ class ValidatedEventDispatcher extends IValidatedEventDispatcher {
             `VED: EventDefinition not found for '${eventName}'. Skipping validation as allowed by options.`
           );
         }
+        return {
+          shouldDispatch: true,
+          validationAttempted,
+          validationPassed: true,
+        };
       }
+
+      if (!eventDefinition.payloadSchema) {
+        this.#logger.debug(
+          `VED: Event definition '${eventName}' found, but no 'payloadSchema' defined. Skipping validation and proceeding with dispatch.`
+        );
+        return {
+          shouldDispatch: true,
+          validationAttempted,
+          validationPassed: true,
+        };
+      }
+
+      validationAttempted = true;
+      const schemaId = `${eventName}#payload`;
+      if (!this.#schemaValidator.isSchemaLoaded(schemaId)) {
+        if (!allowSchemaNotFound) {
+          this.#logger.warn(
+            `VED: Payload schema '${schemaId}' not found/loaded for event '${eventName}'. Skipping validation and proceeding with dispatch.`
+          );
+        } else {
+          this.#logger.debug(
+            `VED: Payload schema '${schemaId}' not found/loaded for event '${eventName}'. Skipping validation as allowed by options.`
+          );
+        }
+        return {
+          shouldDispatch: true,
+          validationAttempted,
+          validationPassed: true,
+        };
+      }
+
+      this.#logger.debug(
+        `VED: Validating payload for event '${eventName}' against schema '${schemaId}'...`
+      );
+      const validationResult = this.#schemaValidator.validate(
+        schemaId,
+        payload
+      );
+      if (!validationResult.isValid) {
+        const errorDetails =
+          validationResult.errors
+            ?.map((e) => `[${e.instancePath || 'root'}]: ${e.message}`)
+            .join('; ') || 'No details available';
+        this.#logger.error(
+          `VED: Payload validation FAILED for event '${eventName}'. Dispatch SKIPPED. Errors: ${errorDetails}`,
+          {
+            payload,
+            errors: validationResult.errors,
+          }
+        );
+        return {
+          shouldDispatch: false,
+          validationAttempted,
+          validationPassed: false,
+        };
+      }
+
+      this.#logger.debug(
+        `VED: Payload validation SUCCEEDED for event '${eventName}'.`
+      );
+      return {
+        shouldDispatch: true,
+        validationAttempted,
+        validationPassed: true,
+      };
     } catch (validationProcessError) {
       this.#logger.error(
         `VED: Unexpected error during payload validation process for event '${eventName}'. Dispatch will be skipped.`,
         validationProcessError
       );
-      shouldDispatch = false;
-      validationPassed = false;
+      return {
+        shouldDispatch: false,
+        validationAttempted: true,
+        validationPassed: false,
+      };
     }
-
-    return { shouldDispatch, validationAttempted, validationPassed };
   }
 
   /**
