@@ -440,6 +440,31 @@ describe('AwaitingExternalTurnEndState', () => {
     });
   });
 
+  // --- Internal State Reset ---
+  describe('Internal State Reset', () => {
+    beforeEach(async () => {
+      await state.enterState(mockHandler, null);
+    });
+
+    test('exitState resets internal fields', async () => {
+      await state.exitState(mockHandler, null);
+      expect(state.getInternalStateForTest()).toEqual({
+        timeoutId: null,
+        unsubscribeFn: undefined,
+        awaitingActionId: 'unknown-action',
+      });
+    });
+
+    test('destroy resets internal fields', async () => {
+      await state.destroy(mockHandler);
+      expect(state.getInternalStateForTest()).toEqual({
+        timeoutId: null,
+        unsubscribeFn: undefined,
+        awaitingActionId: 'unknown-action',
+      });
+    });
+  });
+
   // --- Ignored Actions ---
   describe('Ignored Actions', () => {
     test('handleSubmittedCommand should be a no-op', async () => {
