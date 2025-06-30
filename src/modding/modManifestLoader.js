@@ -14,6 +14,8 @@
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../interfaces/coreServices.js').ValidationResult} ValidationResult */
 
+import { freezeMap } from '../utils/cloneUtils.js';
+
 // --- MODLOADER-005 E: Error Code Constants ---
 /**
  * Standardized error codes for ModManifestLoader logging.
@@ -42,6 +44,7 @@ class ModManifestLoader {
   #schemaValidator;
   #dataRegistry;
   #logger;
+  /** @type {ReadonlyMap<string, object> | null} */
   #lastLoadedManifests = null;
 
   constructor(
@@ -303,9 +306,10 @@ class ModManifestLoader {
 
     /* ── 5. store each validated manifest ─────────────────────────── */
     const stored = this._storeValidatedManifests(validated);
+    const frozenStored = freezeMap(stored);
 
     /* ── 6. summary ───────────────────────────────────────────────── */
-    this.#lastLoadedManifests = stored;
+    this.#lastLoadedManifests = frozenStored;
     this.#logger.debug(
       `${fn}: finished – fetched ${
         settled.filter((s) => s.status === 'fulfilled').length
@@ -313,7 +317,7 @@ class ModManifestLoader {
         trimmedIds.length
       }, validated ${validated.length}, stored ${stored.size}.`
     );
-    return stored;
+    return frozenStored;
   }
 
   /* ---------------- placeholders / future work (unchanged) ------------ */
