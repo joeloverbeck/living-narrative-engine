@@ -178,23 +178,18 @@ class AjvSchemaValidator {
       this.#logger.error(
         'AjvSchemaValidator.addSchema: Ajv instance not available.'
       );
-      return Promise.reject(error);
+      throw error;
     }
 
-    let keyToRegister;
-    try {
-      keyToRegister = this._validateAddSchemaInput(schemaData, schemaId);
-    } catch (error) {
-      return Promise.reject(error);
+    const keyToRegister = this._validateAddSchemaInput(schemaData, schemaId);
+
+    if (this.#ajv.getSchema(keyToRegister)) {
+      const errorMsg = `AjvSchemaValidator: Schema with ID '${keyToRegister}' already exists. Ajv does not overwrite. Use removeSchema first if replacement is intended.`;
+      this.#logger.error(errorMsg);
+      throw new Error(errorMsg);
     }
 
     try {
-      if (this.#ajv.getSchema(keyToRegister)) {
-        const errorMsg = `AjvSchemaValidator: Schema with ID '${keyToRegister}' already exists. Ajv does not overwrite. Use removeSchema first if replacement is intended.`;
-        this.#logger.error(errorMsg);
-        throw new Error(errorMsg);
-      }
-
       this.#ajv.addSchema(schemaData, keyToRegister);
       this.#logger.debug(
         `AjvSchemaValidator: Successfully added schema '${keyToRegister}'.`
@@ -211,8 +206,6 @@ class AjvSchemaValidator {
           `AjvSchemaValidator: Schema '${keyToRegister}' verified as retrievable.`
         );
       }
-
-      return Promise.resolve();
     } catch (error) {
       this.#logger.error(
         `AjvSchemaValidator: Error adding schema with ID '${keyToRegister}': ${error.message}`,
@@ -227,14 +220,14 @@ class AjvSchemaValidator {
           JSON.stringify(error.errors, null, 2)
         );
       }
-      const rejectionError =
-        error instanceof Error
-          ? error
-          : new Error(
-              `Failed to add schema '${keyToRegister}': ${String(error)}`
-            );
-      return Promise.reject(rejectionError);
+      throw error instanceof Error
+        ? error
+        : new Error(
+            `Failed to add schema '${keyToRegister}': ${String(error)}`
+          );
     }
+
+    return Promise.resolve();
   }
 
   /**
@@ -562,19 +555,16 @@ class AjvSchemaValidator {
       this.#logger.error(
         'AjvSchemaValidator.addSchemas: Ajv instance not available.'
       );
-      return Promise.reject(error);
+      throw error;
     }
-    try {
-      this._validateBatchInput(schemasArray);
-    } catch (error) {
-      return Promise.reject(error);
-    }
+
+    this._validateBatchInput(schemasArray);
+
     try {
       this.#ajv.addSchema(schemasArray);
       this.#logger.debug(
         `AjvSchemaValidator: Successfully added ${schemasArray.length} schemas in batch.`
       );
-      return Promise.resolve();
     } catch (error) {
       this.#logger.error(
         `AjvSchemaValidator: Error adding schemas in batch: ${error.message}`,
@@ -586,12 +576,12 @@ class AjvSchemaValidator {
           JSON.stringify(error.errors, null, 2)
         );
       }
-      const rejectionError =
-        error instanceof Error
-          ? error
-          : new Error(`Failed to add schemas in batch: ${String(error)}`);
-      return Promise.reject(rejectionError);
+      throw error instanceof Error
+        ? error
+        : new Error(`Failed to add schemas in batch: ${String(error)}`);
     }
+
+    return Promise.resolve();
   }
 }
 
