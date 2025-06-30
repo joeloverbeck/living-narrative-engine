@@ -11,3 +11,5 @@ export * from './unknownAstNodeError.js';
 export * from './repositoryConsistencyError.js';
 export * from './componentOverrideNotFoundError.js';
 export * from './locationNotFoundError.js';
+export * from './missingEntityInstanceError.js';
+export * from './missingInstanceIdError.js';

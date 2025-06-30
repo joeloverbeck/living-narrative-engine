@@ -17,6 +17,8 @@
 import AbstractLoader from './abstractLoader.js';
 import { validateAgainstSchema } from '../utils/schemaValidationUtils.js';
 import ModsLoaderError from '../errors/modsLoaderError.js';
+import MissingEntityInstanceError from '../errors/missingEntityInstanceError.js';
+import MissingInstanceIdError from '../errors/missingInstanceIdError.js';
 import { parseAndValidateId } from '../utils/idUtils.js';
 
 const WORLDS_REGISTRY_KEY = 'worlds';
@@ -373,7 +375,7 @@ export class WorldLoader extends AbstractLoader {
    * @param {string} modId - The ID of the mod owning the world file.
    * @param {string} filename - The filename for logging context.
    * @returns {{resolved: number, unresolved: number, instanceCount: number}} Counts of definitions and instances.
-   * @throws {ModsLoaderError} If any instance has a missing or unresolvable definitionId.
+   * @throws {MissingInstanceIdError|MissingEntityInstanceError} If any instance data is invalid.
    */
   #validateWorldInstances(worldData, modId, filename) {
     let resolved = 0;
@@ -383,11 +385,7 @@ export class WorldLoader extends AbstractLoader {
       const { instanceId } = instance;
       if (!instanceId) {
         unresolved++;
-        throw new ModsLoaderError(
-          `Instance in world file '${filename}' is missing an 'instanceId'.`,
-          'missing_instance_id_in_world',
-          { modId, filename, instance }
-        );
+        throw new MissingInstanceIdError(filename);
       }
 
       const entityInstanceDef = this._dataRegistry.get(
@@ -397,11 +395,7 @@ export class WorldLoader extends AbstractLoader {
 
       if (!entityInstanceDef) {
         unresolved++;
-        throw new ModsLoaderError(
-          `Unknown entity instanceId '${instanceId}' referenced in world '${filename}'.`,
-          'missing_entity_instance',
-          { modId, filename, instanceId }
-        );
+        throw new MissingEntityInstanceError(instanceId, filename);
       }
       resolved++;
     }

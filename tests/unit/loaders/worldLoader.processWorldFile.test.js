@@ -1,5 +1,7 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import WorldLoader from '../../../src/loaders/worldLoader.js';
+import MissingEntityInstanceError from '../../../src/errors/missingEntityInstanceError.js';
+import MissingInstanceIdError from '../../../src/errors/missingInstanceIdError.js';
 import {
   createMockPathResolver,
   createMockDataFetcher,
@@ -124,5 +126,52 @@ describe('WorldLoader._processWorldFile', () => {
       resolvedDefinitions: 0,
       unresolvedDefinitions: 0,
     });
+  });
+
+  it('logs error for instances without id', async () => {
+    const totals = {
+      filesProcessed: 0,
+      filesFailed: 0,
+      instances: 0,
+      overrides: 0,
+      resolvedDefinitions: 0,
+      unresolvedDefinitions: 0,
+    };
+    const worldData = { id: 'w:1', instances: [{}] };
+    fetcher.fetch.mockResolvedValue(worldData);
+    await loader._processWorldFile('modA', 'world.json', 'schemaId', totals);
+    expect(logger.error).toHaveBeenCalledWith(
+      "WorldLoader [modA]: Failed to process world file 'world.json'. Path: '/mods/modA/worlds/world.json'. Error: Instance in world file 'world.json' is missing an 'instanceId'.",
+      {
+        modId: 'modA',
+        filename: 'world.json',
+        error: expect.any(MissingInstanceIdError),
+      }
+    );
+    expect(totals.filesFailed).toBe(1);
+  });
+
+  it('logs error for unknown instance', async () => {
+    const totals = {
+      filesProcessed: 0,
+      filesFailed: 0,
+      instances: 0,
+      overrides: 0,
+      resolvedDefinitions: 0,
+      unresolvedDefinitions: 0,
+    };
+    const worldData = { id: 'w:1', instances: [{ instanceId: 'x:y' }] };
+    fetcher.fetch.mockResolvedValue(worldData);
+    registry.get.mockReturnValue(undefined);
+    await loader._processWorldFile('modA', 'world.json', 'schemaId', totals);
+    expect(logger.error).toHaveBeenCalledWith(
+      "WorldLoader [modA]: Failed to process world file 'world.json'. Path: '/mods/modA/worlds/world.json'. Error: Unknown entity instanceId 'x:y' referenced in world 'world.json'.",
+      {
+        modId: 'modA',
+        filename: 'world.json',
+        error: expect.any(MissingEntityInstanceError),
+      }
+    );
+    expect(totals.filesFailed).toBe(1);
   });
 });
