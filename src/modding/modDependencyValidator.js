@@ -12,7 +12,7 @@ import { assertIsMap, assertIsLogger } from '../utils/argValidation.js';
  * @param {boolean} required - Whether the dependency is required.
  * @param {ILogger} logger - Logger instance for warnings.
  * @param {string[]} fatals - Array collecting fatal error messages.
- * @param {{valid: Function, satisfies: Function}} semverLib - Semver library for version checks.
+ * @param {{valid: Function, satisfies: Function, validRange: Function}} semverLib - Semver library for version checks.
  * @returns {void}
  */
 function _checkVersionCompatibility(
@@ -35,6 +35,16 @@ function _checkVersionCompatibility(
       logger.warn(`${msg} Cannot check optional version requirement.`);
     }
     return; // Invalid version, skip further checks
+  }
+
+  if (!semverLib.validRange(requiredVersionRange)) {
+    const msg = `Mod '${hostId}' dependency '${dep.id}' has an invalid version range: '${requiredVersionRange}'.`;
+    if (required) {
+      fatals.push(msg);
+    } else {
+      logger.warn(`${msg} Cannot check optional version requirement.`);
+    }
+    return; // Invalid range, skip further checks
   }
 
   if (!semverLib.satisfies(targetVersion, requiredVersionRange)) {
@@ -72,7 +82,7 @@ class ModDependencyValidator {
    * @param {Map<string, ModManifest>} manifests - Map of mod manifests, keyed by **lower-cased** mod ID.
    * @param {ILogger} logger - Logger instance for warnings.
    * @param {object} [options] - Optional validation options.
-   * @param {{valid: Function, satisfies: Function}} [options.semverLib] - Library used for semver checks.
+   * @param {{valid: Function, satisfies: Function, validRange: Function}} [options.semverLib] - Library used for semver checks.
    * @returns {void} - Returns nothing, but throws ModDependencyError on fatal issues.
    * @throws {ModDependencyError} If fatal validation errors occur (missing required, version mismatch, conflict).
    */
