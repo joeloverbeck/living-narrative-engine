@@ -4,6 +4,7 @@ import { BaseChatLLMStrategy } from './baseChatLLMStrategy.js';
 import { ConfigurationError } from '../../../errors/configurationError';
 import { LLMStrategyError } from '../../errors/LLMStrategyError.js';
 import { logPreview } from '../../../utils/index.js';
+import { getLlmId } from '../../utils/llmUtils.js';
 // Assuming HttpClientError might be a specific type, if not, general Error is caught.
 // For actual HttpClientError type, it would be imported from its definition:
 // import { HttpClientError } from '../../retryHttpClient.js'; // Example path
@@ -69,7 +70,7 @@ export class BaseOpenRouterStrategy extends BaseChatLLMStrategy {
    */
   _buildProviderRequestPayloadAdditions(baseMessagesPayload, llmConfig) {
     const errorMessage = `${this.constructor.name}._buildProviderRequestPayloadAdditions: Method not implemented. Subclasses must override this method.`;
-    const llmId = llmConfig?.configId || 'UnknownLLM';
+    const llmId = getLlmId(llmConfig);
     this.logger.error(errorMessage, { llmId });
     throw new Error(errorMessage); // Or potentially an LLMStrategyError
   }
@@ -90,7 +91,7 @@ export class BaseOpenRouterStrategy extends BaseChatLLMStrategy {
    */
   async _extractJsonOutput(responseData, llmConfig, _providerRequestPayload) {
     const errorMessage = `${this.constructor.name}._extractJsonOutput: Method not implemented. Subclasses must override this method.`;
-    const llmId = llmConfig?.configId || 'UnknownLLM';
+    const llmId = getLlmId(llmConfig);
     this.logger.error(errorMessage, { llmId });
     throw new Error(errorMessage); // Or potentially an LLMStrategyError
   }
@@ -112,7 +113,7 @@ export class BaseOpenRouterStrategy extends BaseChatLLMStrategy {
       });
     }
 
-    const llmId = llmConfig.configId || 'UnknownLLM';
+    const llmId = getLlmId(llmConfig);
 
     if (!environmentContext) {
       const errorMsg = `${this.constructor.name} (${llmId}): Missing environmentContext. Cannot proceed.`;
