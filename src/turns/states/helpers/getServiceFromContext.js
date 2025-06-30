@@ -57,16 +57,14 @@ export function validateContextForService(turnCtx, contextMethod) {
  * @param {ProcessingExceptionHandler} [exceptionHandler] - Optional handler to use.
  * @returns {Promise<void>} Resolves when reporting completes.
  */
-export async function reportServiceLookupFailure(
+export async function logServiceLookupFailure(
   state,
   turnCtx,
   contextMethod,
   serviceLabel,
   actorIdForLog,
   errorMsg,
-  error,
-  invokeHandler = false,
-  exceptionHandler = state._exceptionHandler
+  error
 ) {
   const logger = getLogger(turnCtx, state._handler);
   const dispatcher = getSafeEventDispatcher(turnCtx, state._handler);
@@ -97,13 +95,74 @@ export async function reportServiceLookupFailure(
       logger
     );
   }
+}
 
+/**
+ *
+ * @param state
+ * @param turnCtx
+ * @param actorIdForLog
+ * @param errorMsg
+ * @param invokeHandler
+ * @param exceptionHandler
+ */
+export async function handleServiceLookupFailure(
+  state,
+  turnCtx,
+  actorIdForLog,
+  errorMsg,
+  invokeHandler = false,
+  exceptionHandler = state._exceptionHandler
+) {
   if (invokeHandler) {
     const handler = exceptionHandler || new ProcessingExceptionHandler(state);
     await handler.handle(turnCtx, new Error(errorMsg), actorIdForLog);
   } else if (state.isProcessing) {
     finishProcessing(state);
   }
+}
+
+/**
+ *
+ * @param state
+ * @param turnCtx
+ * @param contextMethod
+ * @param serviceLabel
+ * @param actorIdForLog
+ * @param errorMsg
+ * @param error
+ * @param invokeHandler
+ * @param exceptionHandler
+ */
+export async function reportServiceLookupFailure(
+  state,
+  turnCtx,
+  contextMethod,
+  serviceLabel,
+  actorIdForLog,
+  errorMsg,
+  error,
+  invokeHandler = false,
+  exceptionHandler = state._exceptionHandler
+) {
+  await logServiceLookupFailure(
+    state,
+    turnCtx,
+    contextMethod,
+    serviceLabel,
+    actorIdForLog,
+    errorMsg,
+    error
+  );
+
+  await handleServiceLookupFailure(
+    state,
+    turnCtx,
+    actorIdForLog,
+    errorMsg,
+    invokeHandler,
+    exceptionHandler
+  );
 }
 
 /**
@@ -128,7 +187,7 @@ export async function getServiceFromContext(
 ) {
   if (!validateContextForService(turnCtx, contextMethod)) {
     const errorMsg = `${state.getStateName()}: Invalid turnCtx in _getServiceFromContext for ${serviceLabel}, actor ${actorIdForLog}.`;
-    await reportServiceLookupFailure(
+    await logServiceLookupFailure(
       state,
       turnCtx,
       contextMethod,
@@ -136,6 +195,8 @@ export async function getServiceFromContext(
       actorIdForLog,
       errorMsg
     );
+
+    await handleServiceLookupFailure(state, turnCtx, actorIdForLog, errorMsg);
     throw new ServiceLookupError(errorMsg);
   }
 
@@ -154,14 +215,21 @@ export async function getServiceFromContext(
     const lookupError = new ServiceLookupError(errorMsg, {
       cause: serviceError,
     });
-    await reportServiceLookupFailure(
+    await logServiceLookupFailure(
       state,
       turnCtx,
       contextMethod,
       serviceLabel,
       actorIdForLog,
       errorMsg,
-      lookupError,
+      lookupError
+    );
+
+    await handleServiceLookupFailure(
+      state,
+      turnCtx,
+      actorIdForLog,
+      errorMsg,
       true,
       exceptionHandler
     );
