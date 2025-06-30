@@ -2,6 +2,7 @@
 // --- CORRECTED FILE START ---
 import { jest, describe, beforeEach, test, expect } from '@jest/globals';
 import { LLMStrategyFactory } from '../../../src/llms/LLMStrategyFactory.js';
+import strategyRegistry from '../../../src/llms/strategies/strategyRegistry.js';
 import { ConfigurationError } from '../../../src/errors/configurationError';
 import { LLMStrategyFactoryError } from '../../../src/llms/errors/LLMStrategyFactoryError.js';
 import { LOGGER_INFO_METHOD_ERROR } from '../../common/constants.js';
@@ -75,7 +76,11 @@ describe('LLMStrategyFactory', () => {
     OpenRouterJsonSchemaStrategy.mockClear();
     OpenRouterToolCallingStrategy.mockClear();
 
-    factory = new LLMStrategyFactory({ httpClient, logger });
+    factory = new LLMStrategyFactory({
+      httpClient,
+      logger,
+      strategyMap: strategyRegistry,
+    });
   });
 
   describe('Constructor', () => {
@@ -88,19 +93,35 @@ describe('LLMStrategyFactory', () => {
 
     test('should throw error if logger is invalid or missing', () => {
       expect(
-        () => new LLMStrategyFactory({ httpClient, logger: null })
+        () =>
+          new LLMStrategyFactory({
+            httpClient,
+            logger: null,
+            strategyMap: strategyRegistry,
+          })
       ).toThrow('Missing required dependency: logger.');
       expect(
-        () => new LLMStrategyFactory({ httpClient, logger: undefined })
+        () =>
+          new LLMStrategyFactory({
+            httpClient,
+            logger: undefined,
+            strategyMap: strategyRegistry,
+          })
       ).toThrow('Missing required dependency: logger.');
-      expect(() => new LLMStrategyFactory({ httpClient, logger: {} })).toThrow(
-        LOGGER_INFO_METHOD_ERROR
-      );
+      expect(
+        () =>
+          new LLMStrategyFactory({
+            httpClient,
+            logger: {},
+            strategyMap: strategyRegistry,
+          })
+      ).toThrow(LOGGER_INFO_METHOD_ERROR);
       expect(
         () =>
           new LLMStrategyFactory({
             httpClient,
             logger: { info: 'not a function' },
+            strategyMap: strategyRegistry,
           })
       ).toThrow(LOGGER_INFO_METHOD_ERROR);
     });
@@ -119,6 +140,7 @@ describe('LLMStrategyFactory', () => {
             new LLMStrategyFactory({
               httpClient: /** @type {any} */ (invalidClient),
               logger: tempLogger,
+              strategyMap: strategyRegistry,
             })
         ).toThrow(
           'LLMStrategyFactory: Constructor requires a valid httpClient instance conforming to IHttpClient (must have a request method).'

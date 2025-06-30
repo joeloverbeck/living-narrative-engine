@@ -9,23 +9,12 @@ import { LLMStrategyFactoryError } from './errors/LLMStrategyFactoryError.js';
 import { initLogger } from '../utils/index.js';
 
 // Import concrete strategy implementations
-import { OpenRouterJsonSchemaStrategy } from './strategies/openRouterJsonSchemaStrategy.js';
-import { OpenRouterToolCallingStrategy } from './strategies/openRouterToolCallingStrategy.js';
+import strategyRegistry from './strategies/strategyRegistry.js';
 // DefaultPromptEngineeringStrategy import removed
 
 /**
  * @typedef {import('./services/llmConfigLoader.js').LLMModelConfig} LLMModelConfigType
  */
-
-const strategyMappings = {
-  openrouter: {
-    openrouter_json_schema: OpenRouterJsonSchemaStrategy,
-    openrouter_tool_calling: OpenRouterToolCallingStrategy,
-  },
-  // Other API types and their specific strategies would be added here.
-};
-
-const KNOWN_API_TYPES_FOR_FACTORY = Object.keys(strategyMappings);
 
 /**
  * @class LLMStrategyFactory
@@ -46,14 +35,27 @@ export class LLMStrategyFactory {
   #logger;
 
   /**
+   * @private
+   * @type {Record<string, Record<string, Function>>}
+   */
+  #strategyMap;
+
+  /**
+   * @private
+   * @type {string[]}
+   */
+  #knownApiTypes;
+
+  /**
    * Creates an instance of LLMStrategyFactory.
    *
    * @param {object} dependencies - The dependencies for this factory.
    * @param {IHttpClient} dependencies.httpClient - An instance conforming to IHttpClient.
    * @param {ILogger} dependencies.logger - An instance conforming to ILogger.
+   * @param dependencies.strategyMap
    * @throws {Error} If httpClient or logger dependencies are invalid.
    */
-  constructor({ httpClient, logger }) {
+  constructor({ httpClient, logger, strategyMap = strategyRegistry }) {
     this.#logger = initLogger('LLMStrategyFactory', logger);
 
     if (!httpClient || typeof httpClient.request !== 'function') {
@@ -63,6 +65,8 @@ export class LLMStrategyFactory {
       throw new Error(errorMsg);
     }
     this.#httpClient = httpClient;
+    this.#strategyMap = strategyMap;
+    this.#knownApiTypes = Object.keys(strategyMap);
 
     this.#logger.debug(
       'LLMStrategyFactory: Instance created and dependencies stored.'
@@ -101,28 +105,28 @@ export class LLMStrategyFactory {
         // llmId is part of the message string as per test expectations for some errors
       };
 
-      if (!KNOWN_API_TYPES_FOR_FACTORY.includes(apiType)) {
+      if (!this.#knownApiTypes.includes(apiType)) {
         // Case 1: apiType itself is unknown/unsupported.
         // Adjusted to match test's expected error message string format.
-        errorMessage = `Unsupported apiType: '${apiType}' (LLM ID: '${llmId}'). No strategy can be determined. Supported API types for specialized strategies are: ${KNOWN_API_TYPES_FOR_FACTORY.join(', ')}.`;
+        errorMessage = `Unsupported apiType: '${apiType}' (LLM ID: '${llmId}'). No strategy can be determined. Supported API types for specialized strategies are: ${this.#knownApiTypes.join(', ')}.`;
         // The llmId is included in the message string itself for these tests.
       } else {
         // Case 2: apiType is known, but the configuredMethod is not valid for it.
         const knownMethodsForCurrentApi =
-          Object.keys(strategyMappings[apiType] || {}).join(', ') || 'none';
-        const availableMethodsForLog = KNOWN_API_TYPES_FOR_FACTORY.map(
-          (type) => {
-            return `${type}: [${Object.keys(strategyMappings[type] || {}).join(', ') || 'none'}]`;
-          }
-        ).join('; ');
+          Object.keys(this.#strategyMap[apiType] || {}).join(', ') || 'none';
+        const availableMethodsForLog = this.#knownApiTypes
+          .map((type) => {
+            return `${type}: [${Object.keys(this.#strategyMap[type] || {}).join(', ') || 'none'}]`;
+          })
+          .join('; ');
         errorMessage = `Unrecognized jsonOutputStrategy.method: '${configuredMethod}' for apiType '${apiType}' (LLM ID: '${llmId}'). Supported methods for this apiType are: [${knownMethodsForCurrentApi}]. Full list of supported API types and methods: ${availableMethodsForLog || 'None configured'}.`;
         // For more detailed internal logging, we can add more to the context here if desired,
         // but the test error log context for "unsupported apiType" is simpler.
         // Let's add llmId to the context explicitly for consistency in our internal logging.
         errorLogContext.llmId = llmId; // Ensure llmId (derived from configId) is in the log context
-        errorLogContext.availableApiTypes = KNOWN_API_TYPES_FOR_FACTORY;
-        errorLogContext.availableMethodsForApiType = strategyMappings[apiType]
-          ? Object.keys(strategyMappings[apiType])
+        errorLogContext.availableApiTypes = this.#knownApiTypes;
+        errorLogContext.availableMethodsForApiType = this.#strategyMap[apiType]
+          ? Object.keys(this.#strategyMap[apiType])
           : 'N/A';
       }
 
@@ -211,7 +215,7 @@ export class LLMStrategyFactory {
    * @returns {Function | undefined} The matching strategy class, if any.
    */
   #resolveStrategy(apiType, method) {
-    const apiTypeStrategies = strategyMappings[apiType];
+    const apiTypeStrategies = this.#strategyMap[apiType];
     return apiTypeStrategies ? apiTypeStrategies[method] : undefined;
   }
 }
