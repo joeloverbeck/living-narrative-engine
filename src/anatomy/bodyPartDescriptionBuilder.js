@@ -30,7 +30,8 @@ export class BodyPartDescriptionBuilder {
 
   /**
    * Build a description for a single body part
-   * @param {Object} entity - The body part entity
+   *
+   * @param {object} entity - The body part entity
    * @returns {string} The generated description
    */
   buildDescription(entity) {
@@ -55,7 +56,8 @@ export class BodyPartDescriptionBuilder {
 
   /**
    * Build descriptions for multiple body parts of the same type
-   * @param {Array<Object>} entities - Array of body part entities
+   *
+   * @param {Array<object>} entities - Array of body part entities
    * @param {string} subType - The part subtype
    * @returns {string} The generated description
    */
@@ -95,6 +97,7 @@ export class BodyPartDescriptionBuilder {
 
   /**
    * Construct a description string from subtype and descriptors
+   *
    * @param {string} subType
    * @param {string} formattedDescriptors
    * @returns {string}
@@ -118,6 +121,7 @@ export class BodyPartDescriptionBuilder {
 
   /**
    * Construct a paired description (e.g., "a pair of blue eyes")
+   *
    * @param {string} subType
    * @param {string} formattedDescriptors
    * @returns {string}
@@ -132,6 +136,7 @@ export class BodyPartDescriptionBuilder {
 
   /**
    * Get the appropriate article for a description
+   *
    * @param {string} subType
    * @param {string} descriptors
    * @returns {string}
@@ -158,6 +163,7 @@ export class BodyPartDescriptionBuilder {
 
   /**
    * Get the plural form of a body part
+   *
    * @param {string} subType
    * @returns {string}
    */

@@ -238,3 +238,11 @@ export function getAppConfigService(logger) {
   }
   return instance;
 }
+
+/**
+ * Resets the singleton instance. This is primarily for testing purposes.
+ * @returns {void}
+ */
+export function resetAppConfigServiceInstance() {
+  instance = null;
+}

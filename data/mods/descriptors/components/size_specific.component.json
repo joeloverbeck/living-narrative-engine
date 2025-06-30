@@ -1,7 +1,8 @@
 {
   "$schema": "http://example.com/schemas/component.schema.json",
+  "id": "descriptors:size_specific",
   "description": "Context-specific size descriptors (e.g., cup sizes for anatomy)",
-  "data": {
+  "dataSchema": {
     "type": "object",
     "properties": {
       "size": {

@@ -14,6 +14,7 @@ import { aiTokens } from './tokens/tokens-ai.js';
 
 /**
  * All DI tokens used throughout the application.
+ *
  * @type {Readonly<Record<string, DiToken>>}
  */
 export const tokens = freeze({

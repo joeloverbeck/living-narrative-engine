@@ -49,7 +49,8 @@ export class BodyDescriptionComposer {
 
   /**
    * Compose a full body description from all body parts
-   * @param {Object} bodyEntity - The entity with anatomy:body component
+   *
+   * @param {object} bodyEntity - The entity with anatomy:body component
    * @returns {string} The composed description
    */
   composeDescription(bodyEntity) {
@@ -168,8 +169,9 @@ export class BodyDescriptionComposer {
 
   /**
    * Group body parts by their subtype
+   *
    * @param {Array<string>} partIds
-   * @returns {Map<string, Array<Object>>}
+   * @returns {Map<string, Array<object>>}
    */
   groupPartsByType(partIds) {
     const partsByType = new Map();
@@ -196,8 +198,9 @@ export class BodyDescriptionComposer {
 
   /**
    * Compose description for a single part type
+   *
    * @param {string} partType
-   * @param {Map<string, Array<Object>>} partsByType
+   * @param {Map<string, Array<object>>} partsByType
    * @returns {string}
    */
   composeSinglePartDescription(partType, partsByType) {
@@ -223,7 +226,8 @@ export class BodyDescriptionComposer {
 
   /**
    * Extract overall build description from body entity
-   * @param {Object} bodyEntity
+   *
+   * @param {object} bodyEntity
    * @returns {string}
    */
   extractBuildDescription(bodyEntity) {
@@ -237,7 +241,8 @@ export class BodyDescriptionComposer {
 
   /**
    * Compose description of head features
-   * @param {Map<string, Array<Object>>} partsByType
+   *
+   * @param {Map<string, Array<object>>} partsByType
    * @returns {string}
    */
   composeHeadDescription(partsByType) {
@@ -277,7 +282,8 @@ export class BodyDescriptionComposer {
 
   /**
    * Compose face feature descriptions
-   * @param {Map<string, Array<Object>>} partsByType
+   *
+   * @param {Map<string, Array<object>>} partsByType
    * @returns {string}
    */
   composeFaceFeatures(partsByType) {
@@ -309,7 +315,8 @@ export class BodyDescriptionComposer {
 
   /**
    * Compose description of torso features
-   * @param {Map<string, Array<Object>>} partsByType
+   *
+   * @param {Map<string, Array<object>>} partsByType
    * @returns {string}
    */
   composeTorsoDescription(partsByType) {
@@ -343,7 +350,8 @@ export class BodyDescriptionComposer {
 
   /**
    * Compose description of limbs
-   * @param {Map<string, Array<Object>>} partsByType
+   *
+   * @param {Map<string, Array<object>>} partsByType
    * @returns {string}
    */
   composeLimbDescription(partsByType) {
@@ -378,7 +386,8 @@ export class BodyDescriptionComposer {
 
   /**
    * Compose description for appendages (arms/legs with hands/feet)
-   * @param {Map<string, Array<Object>>} partsByType
+   *
+   * @param {Map<string, Array<object>>} partsByType
    * @param {string} mainType - 'arm' or 'leg'
    * @param {string} endType - 'hand' or 'foot'
    * @returns {string}
@@ -419,7 +428,8 @@ export class BodyDescriptionComposer {
 
   /**
    * Compose description of special features (wings, tail, etc.)
-   * @param {Map<string, Array<Object>>} partsByType
+   *
+   * @param {Map<string, Array<object>>} partsByType
    * @returns {string}
    */
   composeSpecialDescription(partsByType) {

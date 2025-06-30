@@ -1,7 +1,8 @@
 {
   "$schema": "http://example.com/schemas/component.schema.json",
+  "id": "descriptors:build",
   "description": "Body build descriptors for physique and muscle tone",
-  "data": {
+  "dataSchema": {
     "type": "object",
     "properties": {
       "build": {

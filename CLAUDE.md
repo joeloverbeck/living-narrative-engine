@@ -97,6 +97,13 @@ tests/
 - **No production mocking**: Only mock in test files
 - **Check for duplicates**: Search for existing functionality before creating new code
 
+### Working on new feature or modifying an existing one
+
+- Understand the problem described
+- Ask clarifying questions if necessary
+- Search the codebase for relevant files
+- Think harder about how to break the issue down into a series of small, manageable tasks
+
 ### Testing Requirements
 
 - Framework: Jest with jsdom

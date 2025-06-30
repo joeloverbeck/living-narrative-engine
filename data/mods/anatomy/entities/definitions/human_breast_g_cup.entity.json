@@ -13,10 +13,10 @@
       "weight": "meaty"
     },
     "descriptors:firmness": {
-      "firmness": "full"
+      "firmness": "firm"
     },
     "core:name": {
-      "name": "breast"
+      "text": "breast"
     }
   }
 }

@@ -4,7 +4,7 @@
   "description": "Jacqueline Rouxel - A gorgeous woman",
   "components": {
     "core:name": {
-      "name": "Jacqueline Rouxel"
+      "text": "Jacqueline Rouxel"
     },
     "core:description": {
       "description": "A stunning woman with striking features and an alluring presence."

@@ -24,7 +24,8 @@ export class AnatomyDescriptionService {
 
   /**
    * Generate descriptions for all parts of a body and the body itself
-   * @param {Object} bodyEntity - The entity with anatomy:body component
+   *
+   * @param {object} bodyEntity - The entity with anatomy:body component
    */
   generateAllDescriptions(bodyEntity) {
     if (!bodyEntity || !bodyEntity.components[ANATOMY_BODY_COMPONENT_ID]) {
@@ -48,6 +49,7 @@ export class AnatomyDescriptionService {
 
   /**
    * Generate description for a single body part
+   *
    * @param {string} partId - The entity ID of the body part
    */
   generatePartDescription(partId) {
@@ -69,7 +71,8 @@ export class AnatomyDescriptionService {
 
   /**
    * Generate the full body description
-   * @param {Object} bodyEntity - The entity with anatomy:body component
+   *
+   * @param {object} bodyEntity - The entity with anatomy:body component
    */
   generateBodyDescription(bodyEntity) {
     const description =
@@ -84,7 +87,8 @@ export class AnatomyDescriptionService {
 
   /**
    * Get or generate body description for an entity
-   * @param {Object} entity - The entity to get description for
+   *
+   * @param {object} entity - The entity to get description for
    * @returns {string|null} The description text or null
    */
   getOrGenerateBodyDescription(entity) {
@@ -122,6 +126,7 @@ export class AnatomyDescriptionService {
 
   /**
    * Update the description component for an entity
+   *
    * @param {string} entityId - The entity to update
    * @param {string} description - The new description text
    */
@@ -151,7 +156,8 @@ export class AnatomyDescriptionService {
 
   /**
    * Check if the current description is up to date
-   * @param {Object} entity - The entity to check
+   *
+   * @param {object} entity - The entity to check
    * @returns {boolean}
    */
   isDescriptionCurrent(entity) {
@@ -162,6 +168,7 @@ export class AnatomyDescriptionService {
 
   /**
    * Regenerate descriptions for all body parts of an entity
+   *
    * @param {string} entityId - The entity ID
    */
   regenerateDescriptions(entityId) {
