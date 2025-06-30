@@ -3,8 +3,11 @@
  * @description Manages scope definitions loaded from mods
  */
 
-class ScopeRegistry {
+import IScopeRegistry from '../interfaces/IScopeRegistry.js';
+
+class ScopeRegistry extends IScopeRegistry {
   constructor() {
+    super();
     this._scopes = new Map();
     this._initialized = false;
   }
