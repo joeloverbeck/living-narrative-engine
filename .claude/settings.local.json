@@ -21,7 +21,8 @@
       "Bash(ls:*)",
       "Bash(timeout 30 npm test:*)",
       "Bash(npm run update-manifest:*)",
-      "Bash(npx prettier:*)"
+      "Bash(npx prettier:*)",
+      "Bash(touch:*)"
     ],
     "deny": []
   }
