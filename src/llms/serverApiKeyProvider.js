@@ -10,7 +10,7 @@ import {
 import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
 import { validateDependency } from '../utils/dependencyUtils.js';
 import { initLogger } from '../utils/index.js';
-import { isValidEnvironmentContext } from './environmentContext.js';
+import { validateEnvironmentContext } from './utils/llmUtils.js';
 
 /**
  * @typedef {import('./environmentContext.js').EnvironmentContext} EnvironmentContext
@@ -173,12 +173,13 @@ export class ServerApiKeyProvider extends IApiKeyProvider {
   async getKey(llmConfig, environmentContext) {
     const llmId = llmConfig?.id || 'UnknownLLM';
 
-    if (!isValidEnvironmentContext(environmentContext)) {
-      safeDispatchError(
-        this.#dispatcher,
-        `ServerApiKeyProvider.getKey (${llmId}): Invalid environmentContext provided.`,
-        { providedValue: environmentContext }
-      );
+    if (
+      !validateEnvironmentContext(
+        environmentContext,
+        `ServerApiKeyProvider.getKey (${llmId})`,
+        this.#dispatcher
+      )
+    ) {
       return null;
     }
 
