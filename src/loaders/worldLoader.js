@@ -415,6 +415,20 @@ export class WorldLoader extends AbstractLoader {
 
     return { resolved, unresolved, instanceCount: worldData.instances.length };
   }
+
+  /**
+   * Exposes {@link WorldLoader.#validateWorldInstances} for tests.
+   *
+   * @public
+   * @param {object} worldData - Parsed world data.
+   * @param {string} modId - Mod ID for context.
+   * @param {string} filename - Source filename.
+   * @returns {{resolved:number,unresolved:number,instanceCount:number}}
+   *   Result of internal validation.
+   */
+  forTest_validateWorldInstances(worldData, modId, filename) {
+    return this.#validateWorldInstances(worldData, modId, filename);
+  }
 }
 
 export default WorldLoader;
