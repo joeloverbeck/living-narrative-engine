@@ -6,7 +6,7 @@
  */
 
 /**
- * @typedef {Object} AnatomyFormattingConfig
+ * @typedef {object} AnatomyFormattingConfig
  * @property {string} id - Unique identifier for this formatting configuration
  * @property {string[]} [descriptionOrder] - Order in which body part types appear in descriptions
  * @property {string[]} [groupedParts] - Body part types that should be grouped together
@@ -16,7 +16,7 @@
  * @property {string[]} [descriptorOrder] - Order in which descriptor types appear
  * @property {string[]} [commaSeparatedDescriptors] - Descriptor types using commas instead of hyphens
  * @property {string[]} [descriptorValueKeys] - Keys to search for when extracting descriptor values
- * @property {Object} [mergeStrategy] - Optional merge strategy configuration
+ * @property {object} [mergeStrategy] - Optional merge strategy configuration
  */
 
 /**
@@ -25,7 +25,7 @@
  */
 export class AnatomyFormattingService {
   /**
-   * @param {Object} params
+   * @param {object} params
    * @param {IDataRegistry} params.dataRegistry - Data registry service
    * @param {ILogger} params.logger - Logging service
    * @param {string[]} params.modLoadOrder - Array of mod IDs in load order
@@ -90,6 +90,7 @@ export class AnatomyFormattingService {
 
   /**
    * Merge two anatomy formatting configurations
+   *
    * @private
    * @param {AnatomyFormattingConfig} base - Base configuration
    * @param {AnatomyFormattingConfig} overlay - Configuration to merge on top
@@ -145,6 +146,7 @@ export class AnatomyFormattingService {
 
   /**
    * Get the configured description order for body parts
+   *
    * @returns {string[]} Array of body part types in order
    */
   getDescriptionOrder() {
@@ -154,6 +156,7 @@ export class AnatomyFormattingService {
 
   /**
    * Get the set of body parts that should be grouped together
+   *
    * @returns {Set<string>} Set of grouped part types
    */
   getGroupedParts() {
@@ -163,6 +166,7 @@ export class AnatomyFormattingService {
 
   /**
    * Get the set of body parts that use "a pair of"
+   *
    * @returns {Set<string>} Set of paired part types
    */
   getPairedParts() {
@@ -172,6 +176,7 @@ export class AnatomyFormattingService {
 
   /**
    * Get irregular plural mappings
+   *
    * @returns {Object.<string, string>} Mapping of singular to plural forms
    */
   getIrregularPlurals() {
@@ -181,6 +186,7 @@ export class AnatomyFormattingService {
 
   /**
    * Get the set of body parts that don't use articles
+   *
    * @returns {Set<string>} Set of no-article part types
    */
   getNoArticleParts() {
@@ -190,6 +196,7 @@ export class AnatomyFormattingService {
 
   /**
    * Get the configured descriptor order
+   *
    * @returns {string[]} Array of descriptor types in order
    */
   getDescriptorOrder() {
@@ -199,6 +206,7 @@ export class AnatomyFormattingService {
 
   /**
    * Get the set of descriptors that use comma separation
+   *
    * @returns {Set<string>} Set of comma-separated descriptor types
    */
   getCommaSeparatedDescriptors() {
@@ -208,6 +216,7 @@ export class AnatomyFormattingService {
 
   /**
    * Get the list of keys to search for descriptor values
+   *
    * @returns {string[]} Array of possible descriptor value keys
    */
   getDescriptorValueKeys() {
@@ -217,6 +226,7 @@ export class AnatomyFormattingService {
 
   /**
    * Ensure the service has been initialized
+   *
    * @private
    */
   _ensureInitialized() {

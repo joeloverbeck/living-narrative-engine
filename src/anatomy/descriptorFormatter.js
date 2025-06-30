@@ -44,6 +44,7 @@ export class DescriptorFormatter {
 
   /**
    * Format multiple descriptor values into a readable string
+   *
    * @param {Array<{componentId: string, value: string}>} descriptors - Array of descriptor objects
    * @returns {string} Formatted descriptor string
    */
@@ -79,6 +80,7 @@ export class DescriptorFormatter {
 
   /**
    * Format a single descriptor value
+   *
    * @param {{componentId: string, value: string}} descriptor
    * @returns {string}
    */
@@ -105,6 +107,7 @@ export class DescriptorFormatter {
 
   /**
    * Join descriptor values with appropriate punctuation
+   *
    * @param {string[]} values
    * @returns {string}
    */
@@ -121,7 +124,8 @@ export class DescriptorFormatter {
 
   /**
    * Extract descriptor values from an entity's components
-   * @param {Object} components - Entity components object
+   *
+   * @param {object} components - Entity components object
    * @returns {Array<{componentId: string, value: string}>}
    */
   extractDescriptors(components) {
@@ -142,8 +146,9 @@ export class DescriptorFormatter {
 
   /**
    * Extract the value from a descriptor component
+   *
    * @param {string} componentId
-   * @param {Object} componentData
+   * @param {object} componentData
    * @returns {string|null}
    */
   extractDescriptorValue(componentId, componentData) {

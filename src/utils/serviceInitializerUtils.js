@@ -56,4 +56,18 @@ export function setupService(serviceName, logger, deps) {
   return prefixedLogger;
 }
 
+/**
+ * Initialize and return a service logger.
+ *
+ * @description Thin wrapper around {@link setupService} for shared
+ *   initialization logic across services and handlers.
+ * @param {string} serviceName - Name used for log prefixing.
+ * @param {import('../interfaces/coreServices.js').ILogger} logger - Base logger.
+ * @param {Record<string, DependencySpec>} [deps] - Optional dependencies.
+ * @returns {import('../interfaces/coreServices.js').ILogger} Prefixed logger.
+ */
+export function initializeServiceLogger(serviceName, logger, deps) {
+  return setupService(serviceName, logger, deps);
+}
+
 // --- FILE END ---

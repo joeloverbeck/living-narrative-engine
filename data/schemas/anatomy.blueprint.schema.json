@@ -29,7 +29,7 @@
       "type": "object",
       "description": "Default slot configurations that can be overridden by recipes",
       "additionalProperties": {
-        "$ref": "../anatomy.recipe.schema.json#/definitions/slotDefinition"
+        "$ref": "./anatomy.recipe.schema.json#/definitions/slotDefinition"
       }
     }
   },
@@ -78,7 +78,7 @@
           "type": "object",
           "description": "Slot specifications for sockets on the attached part",
           "additionalProperties": {
-            "$ref": "../anatomy.recipe.schema.json#/definitions/slotDefinition"
+            "$ref": "./anatomy.recipe.schema.json#/definitions/slotDefinition"
           }
         }
       },

@@ -9,7 +9,7 @@ import {
   createPersistenceFailure,
   createPersistenceSuccess,
 } from './persistenceResultUtils.js';
-import { wrapPersistenceOperation } from './persistenceErrorUtils.js';
+import { executePersistenceOp } from './persistenceErrorUtils.js';
 
 /**
  * Reads a file using a storage provider.
@@ -23,34 +23,40 @@ import { wrapPersistenceOperation } from './persistenceErrorUtils.js';
  *   File contents or error information.
  */
 export async function readSaveFile(storageProvider, logger, filePath) {
-  return wrapPersistenceOperation(logger, async () => {
-    let fileContent;
-    try {
-      fileContent = await storageProvider.readFile(filePath);
-    } catch (error) {
-      const userMsg = MSG_FILE_READ_ERROR;
-      logger.error(`Error reading file ${filePath}:`, error);
-      const details = error?.code || error?.message;
-      const errMsg = details ? `${userMsg} (${details})` : userMsg;
-      return {
-        ...createPersistenceFailure(
-          PersistenceErrorCodes.FILE_READ_ERROR,
-          errMsg
-        ),
-        userFriendlyError: userMsg,
-      };
-    }
+  return executePersistenceOp({
+    asyncOperation: async () => {
+      let fileContent;
+      try {
+        fileContent = await storageProvider.readFile(filePath);
+      } catch (error) {
+        const userMsg = MSG_FILE_READ_ERROR;
+        logger.error(`Error reading file ${filePath}:`, error);
+        const details = error?.code || error?.message;
+        const errMsg = details ? `${userMsg} (${details})` : userMsg;
+        return {
+          ...createPersistenceFailure(
+            PersistenceErrorCodes.FILE_READ_ERROR,
+            errMsg
+          ),
+          userFriendlyError: userMsg,
+        };
+      }
 
-    if (!fileContent || fileContent.byteLength === 0) {
-      const userMsg = MSG_EMPTY_FILE;
-      logger.warn(`File is empty or could not be read: ${filePath}.`);
-      return {
-        ...createPersistenceFailure(PersistenceErrorCodes.EMPTY_FILE, userMsg),
-        userFriendlyError: userMsg,
-      };
-    }
+      if (!fileContent || fileContent.byteLength === 0) {
+        const userMsg = MSG_EMPTY_FILE;
+        logger.warn(`File is empty or could not be read: ${filePath}.`);
+        return {
+          ...createPersistenceFailure(
+            PersistenceErrorCodes.EMPTY_FILE,
+            userMsg
+          ),
+          userFriendlyError: userMsg,
+        };
+      }
 
-    return createPersistenceSuccess(fileContent);
+      return createPersistenceSuccess(fileContent);
+    },
+    logger,
   });
 }
 
@@ -85,11 +91,14 @@ export async function readAndDeserialize(
   logger,
   filePath
 ) {
-  return wrapPersistenceOperation(logger, async () => {
-    logger.debug(`Attempting to read and deserialize file: ${filePath}`);
-    const readRes = await readSaveFile(storageProvider, logger, filePath);
-    if (!readRes.success) return readRes;
+  return executePersistenceOp({
+    asyncOperation: async () => {
+      logger.debug(`Attempting to read and deserialize file: ${filePath}`);
+      const readRes = await readSaveFile(storageProvider, logger, filePath);
+      if (!readRes.success) return readRes;
 
-    return deserializeAndDecompress(serializer, logger, readRes.data);
+      return deserializeAndDecompress(serializer, logger, readRes.data);
+    },
+    logger,
   });
 }

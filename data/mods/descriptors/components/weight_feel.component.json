@@ -1,7 +1,8 @@
 {
   "$schema": "http://example.com/schemas/component.schema.json",
+  "id": "descriptors:weight_feel",
   "description": "Describes the perceived weight or density of an object",
-  "data": {
+  "dataSchema": {
     "type": "object",
     "properties": {
       "weight": {

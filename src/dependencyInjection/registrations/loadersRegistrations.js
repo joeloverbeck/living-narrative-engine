@@ -67,7 +67,6 @@ import ScopeLoader from '../../loaders/scopeLoader.js';
 import WorldLoader from '../../loaders/worldLoader.js';
 import AnatomyRecipeLoader from '../../loaders/anatomyRecipeLoader.js';
 import AnatomyBlueprintLoader from '../../loaders/anatomyBlueprintLoader.js';
-import AnatomyPartLoader from '../../loaders/anatomyPartLoader.js';
 import AnatomyFormattingLoader from '../../loaders/anatomyFormattingLoader.js';
 import { SCOPES_KEY } from '../../constants/dataRegistryKeys.js';
 
@@ -184,7 +183,6 @@ export function registerLoaders(container) {
   registerLoader(tokens.GoalLoader, GoalLoader);
   registerLoader(tokens.AnatomyRecipeLoader, AnatomyRecipeLoader);
   registerLoader(tokens.AnatomyBlueprintLoader, AnatomyBlueprintLoader);
-  registerLoader(tokens.AnatomyPartLoader, AnatomyPartLoader);
   registerLoader(tokens.AnatomyFormattingLoader, AnatomyFormattingLoader);
 
   // Register ScopeLoader with TextDataFetcher instead of regular IDataFetcher
@@ -341,13 +339,6 @@ export function registerLoaders(container) {
             contentKey: 'anatomy.blueprints',
             diskFolder: 'anatomy/blueprints',
             registryKey: 'anatomyBlueprints',
-            phase: 'definitions',
-          },
-          {
-            loader: c.resolve(tokens.AnatomyPartLoader),
-            contentKey: 'anatomy.parts',
-            diskFolder: 'anatomy/parts',
-            registryKey: 'anatomyParts',
             phase: 'definitions',
           },
           {

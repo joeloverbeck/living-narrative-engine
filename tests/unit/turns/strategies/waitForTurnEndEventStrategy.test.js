@@ -79,9 +79,9 @@ describe('WaitForTurnEndEventStrategy', () => {
 
   test('should correctly execute WAIT_FOR_EVENT directive and request transition', async () => {
     const directive = TurnDirective.WAIT_FOR_EVENT;
-    const cmdProcResult = {};
+    const commandResult = {};
 
-    await strategy.execute(mockTurnContext, directive, cmdProcResult);
+    await strategy.execute(mockTurnContext, directive, commandResult);
 
     expect(mockTurnContext.getLogger).toHaveBeenCalledTimes(1);
     expect(mockTurnContext.getActor).toHaveBeenCalledTimes(1);
@@ -97,10 +97,10 @@ describe('WaitForTurnEndEventStrategy', () => {
 
   test('should throw error and log if wrong directive is provided', async () => {
     const directive = TurnDirective.RE_PROMPT; // Incorrect directive
-    const cmdProcResult = {};
+    const commandResult = {};
 
     await expect(
-      strategy.execute(mockTurnContext, directive, cmdProcResult)
+      strategy.execute(mockTurnContext, directive, commandResult)
     ).rejects.toThrow(
       'WaitForTurnEndEventStrategy: Received wrong directive (RE_PROMPT). Expected WAIT_FOR_EVENT.'
     );
@@ -120,11 +120,11 @@ describe('WaitForTurnEndEventStrategy', () => {
     mockTurnContext = new MockTurnContext(null, mockLogger); // No actor in context
 
     const directive = TurnDirective.WAIT_FOR_EVENT;
-    const cmdProcResult = {};
+    const commandResult = {};
     const expectedErrorMsg =
       'WaitForTurnEndEventStrategy: No actor found in ITurnContext. Cannot transition to AwaitingExternalTurnEndState without an actor.';
 
-    await strategy.execute(mockTurnContext, directive, cmdProcResult);
+    await strategy.execute(mockTurnContext, directive, commandResult);
 
     expect(mockTurnContext.getLogger).toHaveBeenCalledTimes(1);
     expect(mockTurnContext.getActor).toHaveBeenCalledTimes(1);
@@ -147,10 +147,10 @@ describe('WaitForTurnEndEventStrategy', () => {
     );
 
     const directive = TurnDirective.WAIT_FOR_EVENT;
-    const cmdProcResult = {};
+    const commandResult = {};
     const expectedOverallErrorMsg = `WaitForTurnEndEventStrategy: Failed to request transition to AwaitingExternalTurnEndState for actor ${mockActor.id}. Error: ${transitionErrorMessage}`;
 
-    await strategy.execute(mockTurnContext, directive, cmdProcResult);
+    await strategy.execute(mockTurnContext, directive, commandResult);
 
     expect(mockTurnContext.getLogger).toHaveBeenCalledTimes(1);
     expect(mockTurnContext.getActor).toHaveBeenCalledTimes(1);

@@ -1,7 +1,8 @@
 {
   "$schema": "http://example.com/schemas/component.schema.json",
+  "id": "descriptors:length_category",
   "description": "General length categories applicable to various features",
-  "data": {
+  "dataSchema": {
     "type": "object",
     "properties": {
       "length": {

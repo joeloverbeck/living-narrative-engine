@@ -39,10 +39,10 @@ describe('EndTurnFailureStrategy', () => {
   describe('execute', () => {
     it('should throw an error if the directive is not END_TURN_FAILURE', async () => {
       const directive = TurnDirective.END_TURN_SUCCESS; // Incorrect directive
-      const cmdProcResult = { success: false, error: null };
+      const commandResult = { success: false, error: null };
 
       await expect(
-        strategy.execute(mockTurnContext, directive, cmdProcResult)
+        strategy.execute(mockTurnContext, directive, commandResult)
       ).rejects.toThrow(
         'EndTurnFailureStrategy: Received wrong directive (END_TURN_SUCCESS). Expected END_TURN_FAILURE.'
       );
@@ -55,11 +55,11 @@ describe('EndTurnFailureStrategy', () => {
     it('should call turnContext.endTurn with an error if contextActor is null', async () => {
       mockTurnContext.getActor.mockReturnValue(null); // Simulate no actor in context
       const directive = TurnDirective.END_TURN_FAILURE;
-      const cmdProcResult = { success: false, error: 'Some minor issue.' };
+      const commandResult = { success: false, error: 'Some minor issue.' };
       const expectedErrorMsg =
         'EndTurnFailureStrategy: No actor found in ITurnContext for END_TURN_FAILURE. Critical issue.';
 
-      await strategy.execute(mockTurnContext, directive, cmdProcResult);
+      await strategy.execute(mockTurnContext, directive, commandResult);
 
       expect(mockLogger.error).toHaveBeenCalledWith(expectedErrorMsg);
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -74,14 +74,14 @@ describe('EndTurnFailureStrategy', () => {
       );
     });
 
-    it('should use cmdProcResult.error if it is an Error instance', async () => {
+    it('should use commandResult.error if it is an Error instance', async () => {
       const directive = TurnDirective.END_TURN_FAILURE;
       const specificError = new Error(
         'Command processing failed specifically!'
       );
-      const cmdProcResult = { success: false, error: specificError };
+      const commandResult = { success: false, error: specificError };
 
-      await strategy.execute(mockTurnContext, directive, cmdProcResult);
+      await strategy.execute(mockTurnContext, directive, commandResult);
 
       expect(mockLogger.info).toHaveBeenCalledWith(
         `EndTurnFailureStrategy: Executing END_TURN_FAILURE for actor ${mockActor.id}. Error: ${specificError.message}`
@@ -89,12 +89,12 @@ describe('EndTurnFailureStrategy', () => {
       expect(mockTurnContext.endTurn).toHaveBeenCalledWith(specificError);
     });
 
-    it('should wrap cmdProcResult.error in a new Error if it is a string', async () => {
+    it('should wrap commandResult.error in a new Error if it is a string', async () => {
       const directive = TurnDirective.END_TURN_FAILURE;
       const errorString = 'A simple error message from command processor.';
-      const cmdProcResult = { success: false, error: errorString };
+      const commandResult = { success: false, error: errorString };
 
-      await strategy.execute(mockTurnContext, directive, cmdProcResult);
+      await strategy.execute(mockTurnContext, directive, commandResult);
 
       expect(mockLogger.info).toHaveBeenCalledWith(
         `EndTurnFailureStrategy: Executing END_TURN_FAILURE for actor ${mockActor.id}. Error: ${errorString}`
@@ -106,13 +106,13 @@ describe('EndTurnFailureStrategy', () => {
       );
     });
 
-    it('should wrap cmdProcResult.error in a new Error if it is a non-Error, non-string, non-null value', async () => {
+    it('should wrap commandResult.error in a new Error if it is a non-Error, non-string, non-null value', async () => {
       const directive = TurnDirective.END_TURN_FAILURE;
       const errorObject = { code: 500, detail: 'Internal server issue' };
-      const cmdProcResult = { success: false, error: errorObject };
+      const commandResult = { success: false, error: errorObject };
       const expectedWrappedErrorMessage = String(errorObject); // How Node's new Error(obj) stringifies it
 
-      await strategy.execute(mockTurnContext, directive, cmdProcResult);
+      await strategy.execute(mockTurnContext, directive, commandResult);
 
       expect(mockLogger.info).toHaveBeenCalledWith(
         `EndTurnFailureStrategy: Executing END_TURN_FAILURE for actor ${mockActor.id}. Error: ${expectedWrappedErrorMessage}`
@@ -124,12 +124,12 @@ describe('EndTurnFailureStrategy', () => {
       );
     });
 
-    it('should create a default error if cmdProcResult.error is null', async () => {
+    it('should create a default error if commandResult.error is null', async () => {
       const directive = TurnDirective.END_TURN_FAILURE;
-      const cmdProcResult = { success: false, error: null }; // Explicitly null
+      const commandResult = { success: false, error: null }; // Explicitly null
       const expectedDefaultErrorMessage = `Turn for actor ${mockActor.id} ended by directive '${directive}' (failure).`;
 
-      await strategy.execute(mockTurnContext, directive, cmdProcResult);
+      await strategy.execute(mockTurnContext, directive, commandResult);
 
       expect(mockLogger.info).toHaveBeenCalledWith(
         `EndTurnFailureStrategy: Executing END_TURN_FAILURE for actor ${mockActor.id}. Error: ${expectedDefaultErrorMessage}`
@@ -141,12 +141,12 @@ describe('EndTurnFailureStrategy', () => {
       );
     });
 
-    it('should create a default error if cmdProcResult.error is undefined', async () => {
+    it('should create a default error if commandResult.error is undefined', async () => {
       const directive = TurnDirective.END_TURN_FAILURE;
-      const cmdProcResult = { success: false }; // Error property is undefined
+      const commandResult = { success: false }; // Error property is undefined
       const expectedDefaultErrorMessage = `Turn for actor ${mockActor.id} ended by directive '${directive}' (failure).`;
 
-      await strategy.execute(mockTurnContext, directive, cmdProcResult);
+      await strategy.execute(mockTurnContext, directive, commandResult);
 
       expect(mockLogger.info).toHaveBeenCalledWith(
         `EndTurnFailureStrategy: Executing END_TURN_FAILURE for actor ${mockActor.id}. Error: ${expectedDefaultErrorMessage}`
@@ -158,12 +158,12 @@ describe('EndTurnFailureStrategy', () => {
       );
     });
 
-    it('should create a default error if cmdProcResult itself is null', async () => {
+    it('should create a default error if commandResult itself is null', async () => {
       const directive = TurnDirective.END_TURN_FAILURE;
-      const cmdProcResult = null; // cmdProcResult is null
+      const commandResult = null; // commandResult is null
       const expectedDefaultErrorMessage = `Turn for actor ${mockActor.id} ended by directive '${directive}' (failure).`;
 
-      await strategy.execute(mockTurnContext, directive, cmdProcResult);
+      await strategy.execute(mockTurnContext, directive, commandResult);
 
       expect(mockLogger.info).toHaveBeenCalledWith(
         `EndTurnFailureStrategy: Executing END_TURN_FAILURE for actor ${mockActor.id}. Error: ${expectedDefaultErrorMessage}`
@@ -178,9 +178,9 @@ describe('EndTurnFailureStrategy', () => {
     it('should log correctly and call endTurn when execution is successful', async () => {
       const directive = TurnDirective.END_TURN_FAILURE;
       const specificError = new Error('A specific failure occurred.');
-      const cmdProcResult = { success: false, error: specificError };
+      const commandResult = { success: false, error: specificError };
 
-      await strategy.execute(mockTurnContext, directive, cmdProcResult);
+      await strategy.execute(mockTurnContext, directive, commandResult);
 
       expect(mockTurnContext.getLogger).toHaveBeenCalled();
       expect(mockTurnContext.getActor).toHaveBeenCalled();

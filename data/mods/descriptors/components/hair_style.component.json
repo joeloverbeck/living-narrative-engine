@@ -1,7 +1,8 @@
 {
   "$schema": "http://example.com/schemas/component.schema.json",
+  "id": "descriptors:hair_style",
   "description": "Hair style descriptors",
-  "data": {
+  "dataSchema": {
     "type": "object",
     "properties": {
       "style": {

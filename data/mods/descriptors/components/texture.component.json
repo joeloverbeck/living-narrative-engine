@@ -1,7 +1,8 @@
 {
   "$schema": "http://example.com/schemas/component.schema.json",
+  "id": "descriptors:texture",
   "description": "Describes the surface texture of an object",
-  "data": {
+  "dataSchema": {
     "type": "object",
     "properties": {
       "texture": {

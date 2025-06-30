@@ -1,7 +1,8 @@
 {
   "$schema": "http://example.com/schemas/component.schema.json",
+  "id": "descriptors:color_basic",
   "description": "Basic color descriptors",
-  "data": {
+  "dataSchema": {
     "type": "object",
     "properties": {
       "color": {

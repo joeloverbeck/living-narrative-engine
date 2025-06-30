@@ -8,7 +8,7 @@ import SaveFileParser from './saveFileParser.js';
 import { PersistenceErrorCodes } from './persistenceErrors.js';
 import { StorageErrorCodes } from '../storage/storageErrors.js';
 import { createPersistenceFailure } from '../utils/persistenceResultUtils.js';
-import { wrapPersistenceOperation } from '../utils/persistenceErrorUtils.js';
+import { executePersistenceOp } from '../utils/persistenceErrorUtils.js';
 import { BaseService } from '../utils/serviceBase.js';
 
 // Precompile manual save file regex once for reuse
@@ -97,26 +97,29 @@ export default class SaveFileRepository extends BaseService {
    * @returns {Promise<import('./persistenceTypes.js').PersistenceResult<null>>} Result of the write operation.
    */
   async writeSaveFile(filePath, data) {
-    return wrapPersistenceOperation(this.#logger, async () => {
-      const writeResult = await this.#storageProvider.writeFileAtomically(
-        filePath,
-        data
-      );
-      if (writeResult.success) {
-        return { success: true };
-      }
+    return executePersistenceOp({
+      asyncOperation: async () => {
+        const writeResult = await this.#storageProvider.writeFileAtomically(
+          filePath,
+          data
+        );
+        if (writeResult.success) {
+          return { success: true };
+        }
 
-      this.#logger.error(
-        `Failed to write manual save to ${filePath}: ${writeResult.error}`
-      );
-      let userError = `Failed to save game: ${writeResult.error}`;
-      if (writeResult.code === StorageErrorCodes.DISK_FULL) {
-        userError = 'Failed to save game: Not enough disk space.';
-      }
-      return createPersistenceFailure(
-        PersistenceErrorCodes.WRITE_ERROR,
-        userError
-      );
+        this.#logger.error(
+          `Failed to write manual save to ${filePath}: ${writeResult.error}`
+        );
+        let userError = `Failed to save game: ${writeResult.error}`;
+        if (writeResult.code === StorageErrorCodes.DISK_FULL) {
+          userError = 'Failed to save game: Not enough disk space.';
+        }
+        return createPersistenceFailure(
+          PersistenceErrorCodes.WRITE_ERROR,
+          userError
+        );
+      },
+      logger: this.#logger,
     });
   }
 
@@ -190,34 +193,37 @@ export default class SaveFileRepository extends BaseService {
    * @returns {Promise<import('./persistenceTypes.js').PersistenceResult<null>>} Result of deletion.
    */
   async deleteSaveFile(filePath) {
-    return wrapPersistenceOperation(this.#logger, async () => {
-      const exists = await this.#storageProvider.fileExists(filePath);
-      if (!exists) {
-        const msg = `Save file "${filePath}" not found for deletion.`;
-        const userMsg = 'Cannot delete: Save file not found.';
-        this.#logger.warn(msg);
-        return createPersistenceFailure(
-          PersistenceErrorCodes.DELETE_FILE_NOT_FOUND,
-          userMsg
+    return executePersistenceOp({
+      asyncOperation: async () => {
+        const exists = await this.#storageProvider.fileExists(filePath);
+        if (!exists) {
+          const msg = `Save file "${filePath}" not found for deletion.`;
+          const userMsg = 'Cannot delete: Save file not found.';
+          this.#logger.warn(msg);
+          return createPersistenceFailure(
+            PersistenceErrorCodes.DELETE_FILE_NOT_FOUND,
+            userMsg
+          );
+        }
+
+        const deleteResult = await this.#storageProvider.deleteFile(filePath);
+        if (deleteResult.success) {
+          this.#logger.debug(`Manual save "${filePath}" deleted successfully.`);
+          return deleteResult;
+        }
+
+        this.#logger.error(
+          `Failed to delete manual save "${filePath}": ${deleteResult.error}`
         );
-      }
-
-      const deleteResult = await this.#storageProvider.deleteFile(filePath);
-      if (deleteResult.success) {
-        this.#logger.debug(`Manual save "${filePath}" deleted successfully.`);
-        return deleteResult;
-      }
-
-      this.#logger.error(
-        `Failed to delete manual save "${filePath}": ${deleteResult.error}`
-      );
-      let code = PersistenceErrorCodes.DELETE_FAILED;
-      let userMsg = deleteResult.error || 'Unknown delete error';
-      if (deleteResult.code === StorageErrorCodes.FILE_NOT_FOUND) {
-        code = PersistenceErrorCodes.DELETE_FILE_NOT_FOUND;
-        userMsg = 'Cannot delete: Save file not found.';
-      }
-      return createPersistenceFailure(code, userMsg);
+        let code = PersistenceErrorCodes.DELETE_FAILED;
+        let userMsg = deleteResult.error || 'Unknown delete error';
+        if (deleteResult.code === StorageErrorCodes.FILE_NOT_FOUND) {
+          code = PersistenceErrorCodes.DELETE_FILE_NOT_FOUND;
+          userMsg = 'Cannot delete: Save file not found.';
+        }
+        return createPersistenceFailure(code, userMsg);
+      },
+      logger: this.#logger,
     });
   }
 }

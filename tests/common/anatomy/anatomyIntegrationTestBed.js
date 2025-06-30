@@ -135,7 +135,7 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
    * Helper method to generate a body using the gorgeous milf recipe
    * This requires that the appropriate data has been loaded into the registry
    *
-   * @returns {Promise<Object>} The generated body entity
+   * @returns {Promise<object>} The generated body entity
    */
   async generateGorgeousMilfBody() {
     // Create the base entity with anatomy:body component

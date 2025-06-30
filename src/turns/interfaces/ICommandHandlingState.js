@@ -25,11 +25,11 @@ export class ICommandHandlingState {
    *
    * @param {import('./ITurnStateHost.js').ITurnStateHost} handler
    * @param {import('../../entities/entity.js').default} actor
-   * @param {import('../../types/commandResult.js').CommandResult} cmdProcResult
+   * @param {import('../../types/commandResult.js').CommandResult} commandResult
    * @param {string} commandString
    * @returns {Promise<void>}
    */
-  async processCommandResult(handler, actor, cmdProcResult, commandString) {
+  async processCommandResult(handler, actor, commandResult, commandString) {
     throw new Error(
       'ICommandHandlingState.processCommandResult must be implemented.'
     );
@@ -41,10 +41,10 @@ export class ICommandHandlingState {
    * @param {import('./ITurnStateHost.js').ITurnStateHost} handler
    * @param {import('../../entities/entity.js').default} actor
    * @param {import('../constants/turnDirectives.js').default} directive
-   * @param {import('../../types/commandResult.js').CommandResult} [cmdProcResult]
+   * @param {import('../../types/commandResult.js').CommandResult} [commandResult]
    * @returns {Promise<void>}
    */
-  async handleDirective(handler, actor, directive, cmdProcResult) {
+  async handleDirective(handler, actor, directive, commandResult) {
     throw new Error(
       'ICommandHandlingState.handleDirective must be implemented.'
     );

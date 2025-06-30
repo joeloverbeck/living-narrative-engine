@@ -29,15 +29,15 @@ export class ITurnDirectiveStrategy {
    * logger, services, and methods like `endTurn()` or `requestTransition()`.
    * @param {TurnDirectiveEnum} directive
    * The directive that selected this strategy.
-   * @param {CommandResult} [cmdProcResult]
+   * @param {CommandResult} [commandResult]
    * Optional: the command-processing result that produced the directive.
    * @returns {Promise<void>} Resolved when the strategy’s work is complete.
    * @throws {Error} If the strategy cannot complete successfully, or if `turnContext.getActor()` returns null/undefined
    * when an actor is expected for the strategy's operation.
    */
-  async execute(turnContext, directive, cmdProcResult) {
+  async execute(turnContext, directive, commandResult) {
     throw new Error(
-      'ITurnDirectiveStrategy.execute(turnContext, directive, cmdProcResult) ' +
+      'ITurnDirectiveStrategy.execute(turnContext, directive, commandResult) ' +
         'must be implemented by concrete strategy classes.'
     );
   }

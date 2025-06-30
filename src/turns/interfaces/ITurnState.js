@@ -101,11 +101,11 @@ export class ITurnState {
    * @async
    * @param {ITurnStateHost} handler         - The host instance.
    * @param {Entity}         actor           - The actor from the current context.
-   * @param {CommandResult}  cmdProcResult   - Processor result.
+   * @param {CommandResult}  commandResult   - Processor result.
    * @param {string}         commandString   - Original command.
    * @returns {Promise<void>}
    */
-  async processCommandResult(handler, actor, cmdProcResult, commandString) {
+  async processCommandResult(handler, actor, commandResult, commandString) {
     throw new Error(
       'ITurnState.processCommandResult must be implemented or is not applicable.'
     );
@@ -118,10 +118,10 @@ export class ITurnState {
    * @param {ITurnStateHost}  handler        - The host instance.
    * @param {Entity}          actor          - The actor.
    * @param {TurnDirectiveEnum} directive    - Directive to handle.
-   * @param {CommandResult}   [cmdProcResult] - Original command result.
+   * @param {CommandResult}   [commandResult] - Original command result.
    * @returns {Promise<void>}
    */
-  async handleDirective(handler, actor, directive, cmdProcResult) {
+  async handleDirective(handler, actor, directive, commandResult) {
     throw new Error(
       'ITurnState.handleDirective must be implemented or is not applicable.'
     );
