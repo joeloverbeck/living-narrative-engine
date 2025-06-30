@@ -4,6 +4,8 @@
  * @typedef {import('../core/gateways.js').EntityGateway} EntityGateway
  */
 
+import { buildComponents } from '../core/entityComponentUtils.js';
+
 /**
  * @typedef {object} LocationProvider
  * @property {() => {id: string} | null} getLocation - Function to get the current location
@@ -42,15 +44,7 @@ export default function createFilterResolver({
         entity = { id: item };
       } else if (entity.componentTypeIds) {
         // Build components object for JsonLogic access
-        const components = {};
-        for (const componentTypeId of entity.componentTypeIds) {
-          const componentData =
-            entity.getComponentData?.(componentTypeId) ||
-            entitiesGateway.getComponentData(item, componentTypeId);
-          if (componentData) {
-            components[componentTypeId] = componentData;
-          }
-        }
+        const components = buildComponents(item, entity, entitiesGateway);
         entity.components = components;
       }
     } else if (item && typeof item === 'object') {
@@ -68,15 +62,11 @@ export default function createFilterResolver({
       actorEntity.componentTypeIds &&
       !actorEntity.components
     ) {
-      const actorComponents = {};
-      for (const componentTypeId of actorEntity.componentTypeIds) {
-        const componentData =
-          actorEntity.getComponentData?.(componentTypeId) ||
-          entitiesGateway.getComponentData(actorEntity.id, componentTypeId);
-        if (componentData) {
-          actorComponents[componentTypeId] = componentData;
-        }
-      }
+      const actorComponents = buildComponents(
+        actorEntity.id,
+        actorEntity,
+        entitiesGateway
+      );
       actorWithComponents = { ...actorEntity, components: actorComponents };
     }
 
