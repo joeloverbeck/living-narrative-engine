@@ -19,6 +19,17 @@ import {
   WORLDINIT_ENTITY_INSTANTIATION_FAILED_ID,
 } from '../constants/eventIds.js';
 
+/**
+ * @description Default result object used when no world instances are processed.
+ * @type {{entities: Entity[], instantiatedCount: number, failedCount: number, totalProcessed: number}}
+ */
+const EMPTY_RESULT = {
+  entities: [],
+  instantiatedCount: 0,
+  failedCount: 0,
+  totalProcessed: 0,
+};
+
 // --- Utility Imports ---
 import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
 import { dispatchWithLogging } from '../utils/eventDispatchUtils.js';
@@ -130,7 +141,7 @@ class WorldInitializer {
    * Loads world data and validates the presence of an instances array.
    *
    * @param {string} worldName - The world identifier.
-   * @returns {Promise<{instances: object[], earlyResult?: {entities: Entity[], instantiatedCount: number, failedCount: number, totalProcessed: number}}>} Object containing instances and optional early result.
+   * @returns {Promise<{instances: object[], earlyResult?: typeof EMPTY_RESULT}>} Object containing instances and optional early result.
    * @private
    */
   async #loadWorldData(worldName) {
@@ -156,12 +167,7 @@ class WorldInitializer {
       );
       return {
         instances: [],
-        earlyResult: {
-          entities: [],
-          instantiatedCount: 0,
-          failedCount: 0,
-          totalProcessed: 0,
-        },
+        earlyResult: EMPTY_RESULT,
       };
     }
 
@@ -338,8 +344,8 @@ class WorldInitializer {
    * Logs the final instantiation summary and returns it.
    *
    * @param {string} worldName - Name of the world being initialized.
-   * @param {{entities: Entity[], instantiatedCount: number, failedCount: number, totalProcessed: number}} result - Summary object.
-   * @returns {{entities: Entity[], instantiatedCount: number, failedCount: number, totalProcessed: number}} The same summary object.
+   * @param {typeof EMPTY_RESULT} result - Summary object.
+   * @returns {typeof EMPTY_RESULT} The same summary object.
    * @private
    */
   #dispatchInstantiationSummary(worldName, result) {
@@ -398,7 +404,7 @@ class WorldInitializer {
    * Dispatches 'worldinit:entity_instantiated' or 'worldinit:entity_instantiation_failed' events.
    *
    * @param {string} worldName - The name of the world to instantiate entities from.
-   * @returns {Promise<{entities: Entity[], instantiatedCount: number, failedCount: number, totalProcessed: number}>} An object containing the list of instantiated entities and counts.
+   * @returns {Promise<typeof EMPTY_RESULT>} An object containing the list of instantiated entities and counts.
    * @private
    */
   async #instantiateEntitiesFromWorld(worldName) {
@@ -449,7 +455,7 @@ class WorldInitializer {
    * Dispatches finer-grained 'worldinit:entity_instantiated' and 'worldinit:entity_instantiation_failed' events.
    *
    * @param {string} worldName - The name of the world to initialize entities for.
-   * @returns {Promise<{entities: Entity[], instantiatedCount: number, failedCount: number, totalProcessed: number}>} Resolves with an object containing instantiated entities and counts.
+   * @returns {Promise<typeof EMPTY_RESULT>} Resolves with an object containing instantiated entities and counts.
    * @throws {Error} If a critical error occurs during initialization that should stop the process (e.g., world not found).
    */
   async initializeWorldEntities(worldName) {
