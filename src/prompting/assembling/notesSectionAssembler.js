@@ -39,7 +39,7 @@ export class NotesSectionAssembler extends IPromptElementAssembler {
         (a, b) =>
           new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
       )
-      .map((n) => `- ${n.text}`)
+      .map((note) => `- ${note.text}`)
       .join('\n');
 
     return `${resolvedPrefix}\n${bodyLines}\n${resolvedSuffix}`;

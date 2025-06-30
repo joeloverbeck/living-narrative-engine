@@ -58,8 +58,8 @@ export class PerceptionLogAssembler extends IPromptElementAssembler {
     );
 
     // Check for empty or missing log array
-    const arr = promptData.perceptionLogArray;
-    if (!Array.isArray(arr) || arr.length === 0) {
+    const logEntries = promptData.perceptionLogArray;
+    if (!Array.isArray(logEntries) || logEntries.length === 0) {
       this.#logger.debug(
         `Perception log array for '${elementConfig.key}' missing or empty`
       );
@@ -80,7 +80,7 @@ export class PerceptionLogAssembler extends IPromptElementAssembler {
 
     // Assemble each entry
     let assembledEntries = '';
-    for (const entry of arr) {
+    for (const entry of logEntries) {
       if (!entry || typeof entry !== 'object') {
         this.#logger.warn('Invalid perception log entry encountered', {
           entry,
