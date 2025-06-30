@@ -11,6 +11,10 @@
 
 import BaseOperationHandler from './baseOperationHandler.js';
 import { resolveEntityId } from '../../utils/entityRefUtils.js';
+import {
+  validateEntityRef as utilValidateEntityRef,
+  validateComponentType as utilValidateComponentType,
+} from '../../utils/operationValidationUtils.js';
 
 /**
  * @typedef {object} EntityRefObject
@@ -39,12 +43,12 @@ class ComponentOperationHandler extends BaseOperationHandler {
    * Validate a component type string.
    *
    * @param {*} type - Raw component type.
+   * @param {ILogger} [log] - Logger used for warnings.
+   * @param {string} [operationName] - Optional operation name prefix for logging.
    * @returns {string|null} Trimmed component type or null if invalid.
    */
-  validateComponentType(type) {
-    if (typeof type !== 'string') return null;
-    const trimmed = type.trim();
-    return trimmed ? trimmed : null;
+  validateComponentType(type, log = this.logger, operationName) {
+    return utilValidateComponentType(type, log, operationName);
   }
 
   /**
@@ -57,19 +61,13 @@ class ComponentOperationHandler extends BaseOperationHandler {
    * @returns {string|null} The resolved ID or null when invalid.
    */
   validateEntityRef(entityRef, log, operationName, executionContext) {
-    const prefix = operationName ? `${operationName}: ` : '';
-    if (!entityRef) {
-      log.warn(`${prefix}"entity_ref" parameter is required.`);
-      return null;
-    }
-    const resolved = this.resolveEntity(entityRef, executionContext);
-    if (!resolved) {
-      log.warn(`${prefix}Could not resolve entity id from entity_ref.`, {
-        entity_ref: entityRef,
-      });
-      return null;
-    }
-    return resolved;
+    return utilValidateEntityRef(
+      entityRef,
+      executionContext,
+      log,
+      undefined,
+      operationName
+    );
   }
 
   /**
@@ -81,15 +79,7 @@ class ComponentOperationHandler extends BaseOperationHandler {
    * @returns {string|null} Trimmed component type or null if invalid.
    */
   requireComponentType(type, log, operationName) {
-    const prefix = operationName ? `${operationName}: ` : '';
-    const trimmed = this.validateComponentType(type);
-    if (!trimmed) {
-      log.warn(
-        `${prefix}Invalid or missing "component_type" parameter (must be non-empty string).`
-      );
-      return null;
-    }
-    return trimmed;
+    return utilValidateComponentType(type, log, operationName);
   }
 
   /**
