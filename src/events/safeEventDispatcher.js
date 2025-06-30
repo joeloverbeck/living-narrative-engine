@@ -73,6 +73,39 @@ export class SafeEventDispatcher extends ISafeEventDispatcher {
   }
 
   /**
+   * Executes the provided function while capturing and logging any thrown
+   * errors using a consistent format.
+   *
+   * @private
+   * @param {string} description - Description of the operation being executed.
+   * @param {Function} fn - The function to execute. May return a promise.
+   * @param {object} [context] - Additional context to include in error logs.
+   * @returns {Promise<*>} The return value of `fn`, or `undefined` if an error
+   * occurs.
+   */
+  #executeSafely(description, fn, context = {}) {
+    try {
+      const result = fn();
+      if (result && typeof result.then === 'function') {
+        return result.catch((error) => {
+          this.#logger.error(
+            `SafeEventDispatcher: Exception caught while ${description}. Error: ${error.message}`,
+            { ...context, error }
+          );
+          return undefined;
+        });
+      }
+      return result;
+    } catch (error) {
+      this.#logger.error(
+        `SafeEventDispatcher: Exception caught while ${description}. Error: ${error.message}`,
+        { ...context, error }
+      );
+      return undefined;
+    }
+  }
+
+  /**
    * Safely dispatches an event using the underlying IValidatedEventDispatcher.
    * Logs errors internally if the dispatch fails (returns false or throws) but
    * guarantees this method itself will not throw an exception.
@@ -86,39 +119,28 @@ export class SafeEventDispatcher extends ISafeEventDispatcher {
    * (due to validation failure, dispatch error, or exception).
    */
   async dispatch(eventName, payload, options = {}) {
-    // Added options parameter
-    try {
-      // Pass the options object to dispatch
-      const dispatchResult = await this.#validatedDispatcher.dispatch(
-        eventName,
-        payload,
-        options
-      );
+    const dispatchResult = await this.#executeSafely(
+      `dispatching event '${eventName}'`,
+      () => this.#validatedDispatcher.dispatch(eventName, payload, options),
+      { payload, options }
+    );
 
-      if (dispatchResult === true) {
-        this.#logger.debug(
-          `SafeEventDispatcher: Successfully dispatched event '${eventName}'.`
-        );
-        return true;
-      } else {
-        // The VED itself will log reasons for returning false (e.g., validation failure)
-        // This log is specifically for if VED.dispatch returns false without throwing
-        this.#logger.warn(
-          `SafeEventDispatcher: Underlying VED failed to dispatch event '${eventName}' (returned false). See VED logs for details. Payload: ${JSON.stringify(payload)}`
-        );
-        return false;
-      }
-    } catch (error) {
-      this.#logger.error(
-        `SafeEventDispatcher: Exception caught while dispatching event '${eventName}'. Error: ${error.message}`,
-        {
-          payload,
-          error,
-          options,
-        }
+    if (dispatchResult === true) {
+      this.#logger.debug(
+        `SafeEventDispatcher: Successfully dispatched event '${eventName}'.`
       );
-      return false;
+      return true;
     }
+
+    if (dispatchResult === false) {
+      this.#logger.warn(
+        `SafeEventDispatcher: Underlying VED failed to dispatch event '${eventName}' (returned false). See VED logs for details. Payload: ${JSON.stringify(
+          payload
+        )}`
+      );
+    }
+
+    return false;
   }
 
   /**
@@ -132,29 +154,26 @@ export class SafeEventDispatcher extends ISafeEventDispatcher {
    * @returns {UnsubscribeFn | null} An unsubscribe function if successful, or null on failure.
    */
   subscribe(eventName, listener) {
-    try {
-      const unsubscribeFn = this.#validatedDispatcher.subscribe(
-        eventName,
-        listener
+    const unsubscribeFn = this.#executeSafely(
+      `subscribing to event '${eventName}'`,
+      () => this.#validatedDispatcher.subscribe(eventName, listener)
+    );
+
+    if (typeof unsubscribeFn === 'function') {
+      this.#logger.debug(
+        `SafeEventDispatcher: Successfully subscribed to event '${eventName}'.`
       );
-      if (typeof unsubscribeFn === 'function') {
-        this.#logger.debug(
-          `SafeEventDispatcher: Successfully subscribed to event '${eventName}'.`
-        );
-        return unsubscribeFn;
-      } else {
-        this.#logger.error(
-          `SafeEventDispatcher: Underlying VED.subscribe for '${eventName}' did not return a valid unsubscribe function.`
-        );
-        return null;
-      }
-    } catch (error) {
-      this.#logger.error(
-        `SafeEventDispatcher: Exception caught while subscribing to event '${eventName}'. Error: ${error.message}`,
-        { error }
-      );
+      return unsubscribeFn;
+    }
+
+    if (unsubscribeFn === undefined) {
       return null;
     }
+
+    this.#logger.error(
+      `SafeEventDispatcher: Underlying VED.subscribe for '${eventName}' did not return a valid unsubscribe function.`
+    );
+    return null;
   }
 
   /**
@@ -168,17 +187,18 @@ export class SafeEventDispatcher extends ISafeEventDispatcher {
    * @returns {void}
    */
   unsubscribe(eventName, listener) {
-    try {
-      this.#validatedDispatcher.unsubscribe(eventName, listener);
-      this.#logger.debug(
-        `SafeEventDispatcher: Successfully unsubscribed from event '${eventName}' (direct call).`
-      );
-    } catch (error) {
-      this.#logger.error(
-        `SafeEventDispatcher: Exception caught while unsubscribing (direct call) from event '${eventName}'. Error: ${error.message}`,
-        { error }
-      );
+    const result = this.#executeSafely(
+      `unsubscribing (direct call) from event '${eventName}'`,
+      () => this.#validatedDispatcher.unsubscribe(eventName, listener)
+    );
+
+    if (result === undefined) {
+      return;
     }
+
+    this.#logger.debug(
+      `SafeEventDispatcher: Successfully unsubscribed from event '${eventName}' (direct call).`
+    );
   }
 }
 
