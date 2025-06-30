@@ -1,6 +1,6 @@
 /**
  * @file Test suite to validate that descriptor component definition files adhere to the component schema.
- * 
+ *
  * This test suite was created to ensure all descriptor components follow the correct schema
  * after fixing validation errors where components were missing 'id' and using 'data' instead of 'dataSchema'.
  */
@@ -37,7 +37,7 @@ const descriptorComponentFiles = fs
  *
  * This suite validates that all descriptor component definition files
  * conform to the primary component schema (`component.schema.json`).
- * 
+ *
  * It specifically tests:
  * 1. All required properties are present (id, description, dataSchema)
  * 2. The id follows the correct format (descriptors:{component_name})
@@ -97,7 +97,7 @@ describe('Descriptor Components - Schema Validation', () => {
         expect(componentDefinition).toHaveProperty('id');
         expect(componentDefinition).toHaveProperty('description');
         expect(componentDefinition).toHaveProperty('dataSchema');
-        
+
         // Ensure 'data' property is NOT present (was the old incorrect property name)
         expect(componentDefinition).not.toHaveProperty('data');
       }
@@ -109,11 +109,11 @@ describe('Descriptor Components - Schema Validation', () => {
       '✓ %s – should have valid dataSchema structure',
       (filename, componentDefinition) => {
         const { dataSchema } = componentDefinition;
-        
+
         // dataSchema should be an object
         expect(typeof dataSchema).toBe('object');
         expect(dataSchema).not.toBeNull();
-        
+
         // For descriptor components, dataSchema typically defines a type and properties
         // Check if type is present and valid when defined
         expect(
@@ -133,7 +133,7 @@ describe('Descriptor Components - Schema Validation', () => {
         description: 'Test component',
         dataSchema: { type: 'object' },
       };
-      
+
       expect(validate(invalidComponent)).toBe(false);
       expect(validate.errors).toEqual(
         expect.arrayContaining([
@@ -151,7 +151,7 @@ describe('Descriptor Components - Schema Validation', () => {
         description: 'Test component',
         data: { type: 'object' }, // Wrong property name
       };
-      
+
       expect(validate(invalidComponent)).toBe(false);
       expect(validate.errors).toEqual(
         expect.arrayContaining([
@@ -170,7 +170,7 @@ describe('Descriptor Components - Schema Validation', () => {
         dataSchema: { type: 'object' },
         data: { type: 'object' }, // Additional property not allowed
       };
-      
+
       expect(validate(invalidComponent)).toBe(false);
       expect(validate.errors).toEqual(
         expect.arrayContaining([

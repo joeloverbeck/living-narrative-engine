@@ -56,11 +56,12 @@ export default class WorldPhase extends LoaderPhase {
       const nextTotals = deepClone(ctx.totals);
       const next = { ...ctx, totals: nextTotals };
 
-      await this.worldLoader.loadWorlds(
+      const updatedTotals = await this.worldLoader.loadWorlds(
         next.finalModOrder,
         next.manifests,
         next.totals
       );
+      next.totals = updatedTotals;
 
       // Return frozen context (no modifications except totals)
       return Object.freeze(next);

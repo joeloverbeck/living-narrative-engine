@@ -6,6 +6,7 @@
  */
 
 import ModProcessor from './ModProcessor.js';
+import { deepClone } from '../utils/cloneUtils.js';
 
 /** @typedef {import('./LoadResultAggregator.js').TotalResultsSummary} TotalResultsSummary */
 /** @typedef {import('./LoadResultAggregator.js').default} LoadResultAggregator */
@@ -61,29 +62,36 @@ export class ContentLoadManager {
    *
    * @param {string[]} finalModOrder - Resolved load order of mods.
    * @param {Map<string, ModManifest>} manifests - Map of manifests keyed by ID.
-   * @param {TotalResultsSummary} totalCounts - Object to accumulate totals across mods.
-   * @returns {Promise<Record<string, 'success' | 'skipped' | 'failed'>>} Map of modIds to overall load status.
+   * @param {TotalResultsSummary} totalCounts - Totals from previous operations. This object is not mutated.
+   * @returns {Promise<{results: Record<string, 'success' | 'skipped' | 'failed'>, updatedTotals: TotalResultsSummary}>}
+   *   Map of modIds to overall load status and the updated totals object.
    */
   async loadContent(finalModOrder, manifests, totalCounts) {
     this.#logger.debug(
       'ModsLoader: Beginning content loading in two phases: definitions, then instances.'
     );
 
+    let runningTotals = deepClone(totalCounts);
+
     // Phase 1: Definitions
-    const definitionResults = await this.loadContentForPhase(
-      finalModOrder,
-      manifests,
-      totalCounts,
-      'definitions'
-    );
+    const { results: definitionResults, updatedTotals: afterDefs } =
+      await this.loadContentForPhase(
+        finalModOrder,
+        manifests,
+        runningTotals,
+        'definitions'
+      );
+    runningTotals = afterDefs;
 
     // Phase 2: Instances
-    const instanceResults = await this.loadContentForPhase(
-      finalModOrder,
-      manifests,
-      totalCounts,
-      'instances'
-    );
+    const { results: instanceResults, updatedTotals: afterInst } =
+      await this.loadContentForPhase(
+        finalModOrder,
+        manifests,
+        runningTotals,
+        'instances'
+      );
+    runningTotals = afterInst;
 
     // Combine results: if a mod failed in either phase, it's marked as failed.
     // Skipped in one phase but success in another could be success, or based on specific logic.
@@ -104,7 +112,7 @@ export class ContentLoadManager {
       }
     }
     this.#logger.debug('ModsLoader: Completed both content loading phases.');
-    return combinedResults;
+    return { results: combinedResults, updatedTotals: runningTotals };
   }
 
   /**
@@ -112,9 +120,10 @@ export class ContentLoadManager {
    *
    * @param {string[]} finalModOrder - Resolved load order of mods.
    * @param {Map<string, ModManifest>} manifests - Map of manifests keyed by ID.
-   * @param {TotalResultsSummary} totalCounts - Object to accumulate totals across mods.
+   * @param {TotalResultsSummary} totalCounts - Totals from previous operations. This object is not mutated.
    * @param {'definitions' | 'instances'} phase - The loading phase.
-   * @returns {Promise<Record<string, 'success' | 'skipped' | 'failed'>>} Map of modIds to load status for this phase.
+   * @returns {Promise<{results: Record<string, 'success' | 'skipped' | 'failed'>, updatedTotals: TotalResultsSummary}>}
+   *   Map of modIds to load status for this phase and the updated totals object.
    */
   async loadContentForPhase(finalModOrder, manifests, totalCounts, phase) {
     this.#logger.debug(
@@ -135,7 +144,7 @@ export class ContentLoadManager {
       for (const modId of finalModOrder) {
         results[modId] = 'skipped';
       }
-      return results;
+      return { results, updatedTotals: totalCounts };
     }
 
     for (const modId of finalModOrder) {
@@ -160,7 +169,7 @@ export class ContentLoadManager {
         results[modId] = result.status;
 
         // Merge the updated totals back into the main totals object
-        this.#mergeTotals(totalCounts, result.updatedTotals);
+        totalCounts = this.#mergeTotals(totalCounts, result.updatedTotals);
       } catch (error) {
         this.#logger.error(
           `ContentLoadManager: Error during processMod for ${modId}, phase ${phase}. Marking as failed and continuing with other mods in this phase.`,
@@ -175,27 +184,27 @@ export class ContentLoadManager {
     this.#logger.debug(
       `ModsLoader: Completed content loading loop for phase: ${phase}.`
     );
-    return results;
+    return { results, updatedTotals: totalCounts };
   }
 
   /**
    * Merges updated totals from an aggregator back into the main totals object.
    *
    * @private
-   * @param {TotalResultsSummary} mainTotals - The main totals object to update.
-   * @param {TotalResultsSummary} updatedTotals - The updated totals from an aggregator.
-   * @returns {void}
+   * @param {TotalResultsSummary} mainTotals - The existing totals object.
+   * @param {TotalResultsSummary} updatedTotals - Totals returned from a processor.
+   * @returns {TotalResultsSummary} New totals object combining the two inputs.
    */
   #mergeTotals(mainTotals, updatedTotals) {
+    const merged = { ...mainTotals };
     for (const [registryKey, counts] of Object.entries(updatedTotals)) {
-      if (!mainTotals[registryKey]) {
-        /** @type {import('./LoadResultAggregator.js').ContentTypeCounts} */
-        mainTotals[registryKey] = { count: 0, overrides: 0, errors: 0 };
-      }
-      mainTotals[registryKey].count = counts.count;
-      mainTotals[registryKey].overrides = counts.overrides;
-      mainTotals[registryKey].errors = counts.errors;
+      merged[registryKey] = {
+        count: counts.count ?? 0,
+        overrides: counts.overrides ?? 0,
+        errors: counts.errors ?? 0,
+      };
     }
+    return merged;
   }
 
   async processMod(modId, manifest, totalCounts, phaseLoaders, phase) {

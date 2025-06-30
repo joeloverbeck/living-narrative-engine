@@ -119,7 +119,11 @@ describe('WorldLoader Schema Validation', () => {
       );
 
       // Assert
-      return expect(loadPromise).resolves.toBeUndefined();
+      return expect(loadPromise).resolves.toEqual(
+        expect.objectContaining({
+          worlds: expect.objectContaining({ errors: 1 }),
+        })
+      );
     });
   });
 
@@ -159,7 +163,11 @@ describe('WorldLoader Schema Validation', () => {
       mockDataRegistry.get.mockReturnValue({ id: 'test:definition' });
 
       // Act
-      await worldLoader.loadWorlds(finalModOrder, manifests, totalCounts);
+      const updated = await worldLoader.loadWorlds(
+        finalModOrder,
+        manifests,
+        totalCounts
+      );
 
       // Assert
       expect(mockDataFetcher.fetch).toHaveBeenCalledWith(
@@ -174,6 +182,7 @@ describe('WorldLoader Schema Validation', () => {
         'test:world',
         mockWorldData
       );
+      expect(updated.worlds.count).toBe(1);
     });
 
     it('should validate world file against correct schema ID', async () => {
@@ -201,7 +210,11 @@ describe('WorldLoader Schema Validation', () => {
       mockSchemaValidator.validate.mockReturnValue({ valid: true });
 
       // Act
-      await worldLoader.loadWorlds(finalModOrder, manifests, totalCounts);
+      const updated = await worldLoader.loadWorlds(
+        finalModOrder,
+        manifests,
+        totalCounts
+      );
 
       // Assert
       expect(mockSchemaValidator.validate).toHaveBeenCalledWith(
@@ -239,7 +252,11 @@ describe('WorldLoader Schema Validation', () => {
       });
 
       // Act
-      await worldLoader.loadWorlds(finalModOrder, manifests, totalCounts);
+      const updated = await worldLoader.loadWorlds(
+        finalModOrder,
+        manifests,
+        totalCounts
+      );
 
       // Assert
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -285,10 +302,14 @@ describe('WorldLoader Schema Validation', () => {
       mockDataRegistry.get.mockReturnValue({ id: 'test:definition' });
 
       // Act
-      await worldLoader.loadWorlds(finalModOrder, manifests, totalCounts);
+      const updated = await worldLoader.loadWorlds(
+        finalModOrder,
+        manifests,
+        totalCounts
+      );
 
       // Assert
-      expect(totalCounts.worlds).toEqual({
+      expect(updated.worlds).toEqual({
         count: 1,
         overrides: 0,
         errors: 0,
@@ -296,6 +317,7 @@ describe('WorldLoader Schema Validation', () => {
         resolvedDefinitions: 1,
         unresolvedDefinitions: 0,
       });
+      expect(totalCounts).toEqual({});
     });
   });
 });
