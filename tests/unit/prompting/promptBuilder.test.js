@@ -223,6 +223,6 @@ describe('PromptBuilder (orchestrator-only)', () => {
           assemblerRegistry,
           conditionEvaluator,
         })
-    ).toThrow(/LLMConfigService/);
+    ).toThrow(/LlmConfigManager/);
   });
 });

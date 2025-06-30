@@ -28,7 +28,7 @@ import { PromptStaticContentService } from '../../../../src/prompting/promptStat
 import { PerceptionLogFormatter } from '../../../../src/formatting/perceptionLogFormatter.js';
 import { GameStateValidationServiceForPrompting } from '../../../../src/validation/gameStateValidationServiceForPrompting.js';
 import { HttpConfigurationProvider } from '../../../../src/configuration/httpConfigurationProvider.js';
-import { LLMConfigService } from '../../../../src/llms/llmConfigService.js';
+import { LlmConfigManager } from '../../../../src/llms/llmConfigManager.js';
 import { PlaceholderResolver } from '../../../../src/utils/placeholderResolverUtils.js';
 import { StandardElementAssembler } from '../../../../src/prompting/assembling/standardElementAssembler.js';
 import { PerceptionLogAssembler } from '../../../../src/prompting/assembling/perceptionLogAssembler.js';
@@ -193,7 +193,7 @@ describe('AI registration helpers', () => {
         token: tokens.IConfigurationProvider,
         Class: HttpConfigurationProvider,
       },
-      { token: tokens.LLMConfigService, Class: LLMConfigService },
+      { token: tokens.LlmConfigManager, Class: LlmConfigManager },
       { token: tokens.PlaceholderResolver, Class: PlaceholderResolver },
       {
         token: tokens.StandardElementAssembler,

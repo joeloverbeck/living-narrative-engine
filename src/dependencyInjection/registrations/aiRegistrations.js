@@ -33,7 +33,7 @@
 /** @typedef {import('../../interfaces/IPerceptionLogFormatter.js').IPerceptionLogFormatter} IPerceptionLogFormatter */
 /** @typedef {import('../../interfaces/IGameStateValidationServiceForPrompting.js').IGameStateValidationServiceForPrompting} IGameStateValidationServiceForPrompting */
 /** @typedef {import('../../interfaces/IConfigurationProvider.js').IConfigurationProvider} IConfigurationProvider */
-/** @typedef {import('../../llms/llmConfigService.js').LLMConfigService} LLMConfigService_Concrete */
+/** @typedef {import('../../llms/llmConfigManager.js').LlmConfigManager} LlmConfigManager_Concrete */
 /** @typedef {import('../../utils/placeholderResolverUtils.js').PlaceholderResolver} PlaceholderResolver_Concrete */
 /** @typedef {import('../../utils/executionPlaceholderResolver.js').ExecutionPlaceholderResolver} ExecutionPlaceholderResolver_Concrete */
 /** @typedef {import('../../prompting/assembling/standardElementAssembler.js').StandardElementAssembler} StandardElementAssembler_Concrete */
@@ -63,7 +63,7 @@ import { PromptStaticContentService } from '../../prompting/promptStaticContentS
 import { PerceptionLogFormatter } from '../../formatting/perceptionLogFormatter.js';
 import { GameStateValidationServiceForPrompting } from '../../validation/gameStateValidationServiceForPrompting.js';
 import { HttpConfigurationProvider } from '../../configuration/httpConfigurationProvider.js';
-import { LLMConfigService } from '../../llms/llmConfigService.js';
+import { LlmConfigManager } from '../../llms/llmConfigManager.js';
 import { LlmConfigLoader } from '../../llms/services/llmConfigLoader.js';
 import { PlaceholderResolver } from '../../utils/placeholderResolverUtils.js';
 import { ExecutionPlaceholderResolver } from '../../utils/executionPlaceholderResolver.js';
@@ -211,8 +211,8 @@ export function registerPromptingEngine(registrar, logger) {
       })
   );
 
-  registrar.singletonFactory(tokens.LLMConfigService, (c) => {
-    return new LLMConfigService({
+  registrar.singletonFactory(tokens.LlmConfigManager, (c) => {
+    return new LlmConfigManager({
       logger: c.resolve(tokens.ILogger),
       configurationProvider: c.resolve(tokens.IConfigurationProvider),
       configSourceIdentifier: './config/llm-configs.json',
@@ -311,7 +311,7 @@ export function registerPromptingEngine(registrar, logger) {
   registrar.singletonFactory(tokens.IPromptBuilder, (c) => {
     return new PromptBuilder({
       logger: c.resolve(tokens.ILogger),
-      llmConfigService: c.resolve(tokens.LLMConfigService),
+      llmConfigService: c.resolve(tokens.LlmConfigManager),
       placeholderResolver: c.resolve(tokens.PlaceholderResolver),
       assemblerRegistry: c.resolve(tokens.AssemblerRegistry),
       conditionEvaluator: ConditionEvaluator,
