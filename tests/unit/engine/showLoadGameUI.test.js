@@ -19,6 +19,24 @@ describeEngineSuite('GameEngine', (context) => {
       );
     });
 
+    it('should log warning if dispatcher reports failure', async () => {
+      context.bed
+        .getSafeEventDispatcher()
+        .dispatch.mockResolvedValueOnce(false);
+
+      await context.engine.showLoadGameUI();
+
+      expect(context.bed.getLogger().debug).toHaveBeenCalledWith(
+        'GameEngine.showLoadGameUI: Dispatching request to show Load Game UI.'
+      );
+      expect(context.bed.getLogger().warn).toHaveBeenCalledWith(
+        'GameEngine.showLoadGameUI: SafeEventDispatcher reported failure when dispatching Load Game UI request.'
+      );
+      expectShowLoadGameUIDispatch(
+        context.bed.getSafeEventDispatcher().dispatch
+      );
+    });
+
     generateServiceUnavailableTests(
       [[tokens.GamePersistenceService, GAME_PERSISTENCE_LOAD_UI_UNAVAILABLE]],
       async (bed, engine) => {
