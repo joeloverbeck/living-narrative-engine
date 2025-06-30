@@ -108,7 +108,7 @@ class QueryComponentHandler extends ComponentOperationHandler {
       );
       return null;
     }
-    const trimmedResultVariable = result_variable.trim();
+    const sanitizedVariableName = result_variable.trim();
 
     if (
       typeof entity_ref === 'string' &&
@@ -125,7 +125,7 @@ class QueryComponentHandler extends ComponentOperationHandler {
       entityId,
       componentType: trimmedComponentType,
       resultVar: result_variable,
-      trimmedResultVar: trimmedResultVariable,
+      trimmedResultVar: sanitizedVariableName,
       missingValue: missing_value,
     };
   }
