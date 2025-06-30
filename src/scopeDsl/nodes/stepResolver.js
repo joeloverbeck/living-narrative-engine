@@ -8,6 +8,11 @@
  */
 import { buildComponents } from '../core/entityComponentUtils.js';
 
+/**
+ *
+ * @param root0
+ * @param root0.entitiesGateway
+ */
 export default function createStepResolver({ entitiesGateway }) {
   /**
    * Builds a components object for the given entity ID.

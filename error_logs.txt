@@ -1,0 +1,41 @@
+SystemLogicInterpreter: SystemLogicInterpreter: created
+consoleLogger.js:187 PromptTextLoader: Initialized.
+consoleLogger.js:187 PromptStaticContentService initialized.
+consoleLogger.js:187 SystemInitializer: Found 6 systems tagged with 'initializableSystem'.
+consoleLogger.js:187 SystemInitializer: Proceeding to initialize 6 resolved systems sequentially...
+consoleLogger.js:187 SystemInitializer: System 'SpatialIndexSynchronizer' has no initialize() method, skipping.
+consoleLogger.js:187 SystemInitializer: Initializing system: AnatomyInitializationService...
+consoleLogger.js:187 AnatomyInitializationService: Registering event listeners
+consoleLogger.js:175 SystemInitializer: Error initializing system 'AnatomyInitializationService'. Continuing. Error: this[#eventDispatcher].on is not a function TypeError: this[#eventDispatcher].on is not a function
+    at AnatomyInitializationService.initialize (anatomyInitializationService.js:59:27)
+    at #initializeSingleSystem (systemInitializer.js:133:22)
+    at SystemInitializer.initializeAll (systemInitializer.js:191:18)
+    at async #initSystems (initializationService.js:368:5)
+    at async InitializationService.runInitializationSequence (initializationService.js:285:7)
+    at async #executeInitializationSequence (gameEngine.js:197:7)
+    at async GameEngine.startNewGame (gameEngine.js:313:26)
+    at async startGameStage (engineStages.js:87:5)
+    at async beginGame (main.js:217:25)
+error @ consoleLogger.js:175
+#initializeSingleSystem @ systemInitializer.js:138
+initializeAll @ systemInitializer.js:191
+await in initializeAll
+#initSystems @ initializationService.js:368
+runInitializationSequence @ initializationService.js:285
+await in runInitializationSequence
+#executeInitializationSequence @ gameEngine.js:197
+await in #executeInitializationSequence
+#initializeNewGame @ gameEngine.js:269
+await in #initializeNewGame
+startNewGame @ gameEngine.js:313
+startGameStage @ engineStages.js:87
+beginGame @ main.js:217
+(anonymous) @ game.html:326
+Promise.then
+(anonymous) @ game.html:323Understand this error
+consoleLogger.js:187 VED: EventDefinition not found for 'system:initialization_failed'. Skipping validation as allowed by options.
+consoleLogger.js:187 VED: Dispatching event 'system:initialization_failed' via EventBus... {systemName: 'AnatomyInitializationService', error: 'this[#eventDispatcher].on is not a function', stack: 'TypeError: this[#eventDispatcher].on is not a func…inGame (http://127.0.0.1:8080/bundle.js:79991:27)'}
+consoleLogger.js:187 VED: Event 'system:initialization_failed' dispatch successful.
+consoleLogger.js:187 SystemInitializer: System 'ActionDiscoveryService' has no initialize() method, skipping.
+consoleLogger.js:187 SystemInitializer: Initializing system: SystemLogicInterpreter...
+consoleLogger.js:187 SystemLogicInterpreter: Cached rule 'handle_dismiss'

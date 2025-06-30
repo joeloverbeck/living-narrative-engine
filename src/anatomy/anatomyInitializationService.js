@@ -23,6 +23,8 @@ export class AnatomyInitializationService {
   #anatomyGenerationService;
   /** @type {boolean} */
   #isInitialized = false;
+  /** @type {(() => void) | null} */
+  #unsubscribeEntityCreated = null;
 
   /**
    * @param {object} deps
@@ -56,7 +58,7 @@ export class AnatomyInitializationService {
     );
 
     // Listen for entity creation events
-    this.#eventDispatcher.on(
+    this.#unsubscribeEntityCreated = this.#eventDispatcher.subscribe(
       ENTITY_CREATED_ID,
       this.#handleEntityCreated.bind(this)
     );
@@ -120,10 +122,11 @@ export class AnatomyInitializationService {
     this.#logger.debug(
       'AnatomyInitializationService: Removing event listeners'
     );
-    this.#eventDispatcher.off(
-      ENTITY_CREATED_ID,
-      this.#handleEntityCreated.bind(this)
-    );
+    
+    if (this.#unsubscribeEntityCreated) {
+      this.#unsubscribeEntityCreated();
+      this.#unsubscribeEntityCreated = null;
+    }
 
     this.#isInitialized = false;
     this.#logger.info('AnatomyInitializationService: Disposed');
