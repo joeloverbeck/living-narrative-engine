@@ -59,4 +59,25 @@ describe('PromptStaticContentService', () => {
       'PromptStaticContentService: Service not initialized.'
     );
   });
+
+  it('only loads once when initialize is called concurrently', async () => {
+    const pending = {};
+    pending.promise = new Promise((resolve) => {
+      pending.resolve = () => resolve(promptData);
+    });
+    const loader = { loadPromptText: jest.fn(() => pending.promise) };
+    const concurrentService = new PromptStaticContentService({
+      logger: mockLogger,
+      promptTextLoader: loader,
+    });
+
+    const p1 = concurrentService.initialize();
+    const p2 = concurrentService.initialize();
+
+    expect(loader.loadPromptText).toHaveBeenCalledTimes(1);
+    pending.resolve();
+    await Promise.all([p1, p2]);
+
+    expect(loader.loadPromptText).toHaveBeenCalledTimes(1);
+  });
 });
