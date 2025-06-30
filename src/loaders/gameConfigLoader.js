@@ -15,6 +15,8 @@ import { CORE_MOD_ID } from '../constants/core';
 import AbstractLoader from './abstractLoader.js';
 import { formatAjvErrors } from '../utils/ajvUtils.js';
 import { validateAgainstSchema } from '../utils/schemaValidationUtils.js';
+import { ValidationError } from '../errors/validationError.js';
+import { FetchError } from '../errors/fetchError.js';
 
 /**
  * Service responsible for locating, fetching, validating, and parsing the game configuration file (e.g., game.json).
@@ -98,8 +100,9 @@ class GameConfigLoader extends AbstractLoader {
         `FATAL: Game configuration file '${filename}' not found or could not be fetched at ${path}. Details: ${fetchError.message}`,
         fetchError
       );
-      throw new Error(
-        `Failed to fetch game configuration '${filename}' from ${path}: ${fetchError.message}`
+      throw new FetchError(
+        `Failed to fetch game configuration '${filename}' from ${path}: ${fetchError.message}`,
+        path
       );
     }
   }
@@ -119,7 +122,7 @@ class GameConfigLoader extends AbstractLoader {
       this.#logger.error(
         "FATAL: Schema ID for 'game' configuration type not found in IConfiguration."
       );
-      throw new Error(
+      throw new ValidationError(
         'Schema ID for \u2018game\u2019 configuration type not configured.'
       );
     }
@@ -155,7 +158,7 @@ class GameConfigLoader extends AbstractLoader {
       this.#logger.error(
         `FATAL: Validated game config '${filename}' is missing the required 'mods' array property or has incorrect type. Path: ${path}.`
       );
-      throw new Error(
+      throw new ValidationError(
         `Validated game config '${filename}' is missing the required 'mods' array.`
       );
     }
@@ -163,7 +166,7 @@ class GameConfigLoader extends AbstractLoader {
       this.#logger.error(
         `FATAL: Validated game config '${filename}' 'mods' array contains non-string elements. Path: ${path}.`
       );
-      throw new Error(
+      throw new ValidationError(
         `Validated game config '${filename}' 'mods' array contains non-string elements.`
       );
     }

@@ -3,6 +3,7 @@
 import { SimpleItemLoader } from './simpleItemLoader.js';
 import { processAndStoreItem } from './helpers/processAndStoreItem.js';
 import { parseAndValidateId } from '../utils/idUtils.js';
+import { ValidationError } from '../errors/validationError.js';
 
 /** @typedef {import('../interfaces/coreServices.js').IConfiguration} IConfiguration */
 /** @typedef {import('../interfaces/coreServices.js').IPathResolver} IPathResolver */
@@ -102,13 +103,13 @@ class AnatomyRecipeLoader extends SimpleItemLoader {
    */
   _validateConstraints(constraints, modId, filename) {
     if (constraints.requires && !Array.isArray(constraints.requires)) {
-      throw new Error(
+      throw new ValidationError(
         `Invalid 'requires' constraint in recipe '${filename}' from mod '${modId}'. Expected array.`
       );
     }
 
     if (constraints.excludes && !Array.isArray(constraints.excludes)) {
-      throw new Error(
+      throw new ValidationError(
         `Invalid 'excludes' constraint in recipe '${filename}' from mod '${modId}'. Expected array.`
       );
     }
@@ -117,7 +118,7 @@ class AnatomyRecipeLoader extends SimpleItemLoader {
     if (constraints.requires) {
       for (const group of constraints.requires) {
         if (!Array.isArray(group) || group.length < 2) {
-          throw new Error(
+          throw new ValidationError(
             `Invalid 'requires' group in recipe '${filename}' from mod '${modId}'. Each group must have at least 2 items.`
           );
         }
@@ -127,7 +128,7 @@ class AnatomyRecipeLoader extends SimpleItemLoader {
     if (constraints.excludes) {
       for (const group of constraints.excludes) {
         if (!Array.isArray(group) || group.length < 2) {
-          throw new Error(
+          throw new ValidationError(
             `Invalid 'excludes' group in recipe '${filename}' from mod '${modId}'. Each group must have at least 2 items.`
           );
         }

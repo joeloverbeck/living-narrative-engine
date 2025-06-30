@@ -13,3 +13,5 @@ export * from './componentOverrideNotFoundError.js';
 export * from './locationNotFoundError.js';
 export * from './missingEntityInstanceError.js';
 export * from './missingInstanceIdError.js';
+export * from './validationError.js';
+export * from './fetchError.js';

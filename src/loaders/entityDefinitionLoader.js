@@ -10,6 +10,7 @@ import { BaseManifestItemLoader } from './baseManifestItemLoader.js';
 import { processAndStoreItem } from './helpers/processAndStoreItem.js';
 import { parseAndValidateId } from '../utils/idUtils.js';
 import EntityDefinition from '../entities/entityDefinition.js';
+import { ValidationError } from '../errors/validationError.js';
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../interfaces/coreServices.js').IConfiguration} IConfiguration */
@@ -142,7 +143,7 @@ class EntityDefinitionLoader extends BaseManifestItemLoader {
         entityId,
         failedComponentIds,
       });
-      throw new Error(comprehensiveMessage);
+      throw new ValidationError(comprehensiveMessage);
     }
     this._logger.debug(
       `EntityLoader [${modId}]: All runtime component validations passed for entity '${entityId}' from ${filename}.`
