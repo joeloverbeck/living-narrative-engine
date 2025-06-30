@@ -4,6 +4,8 @@
 /** @typedef {import('../../events/safeEventDispatcher.js').default} ISafeEventDispatcher */
 
 /**
+ * Register persistence-related event listeners on a SafeEventDispatcher.
+ *
  * @description Registers event listeners with a SafeEventDispatcher for
  *   persistence-related events.
  * @param {ISafeEventDispatcher} dispatcher - Dispatcher used to subscribe.
