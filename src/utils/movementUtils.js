@@ -8,7 +8,7 @@ import { deepClone } from './cloneUtils.js';
  * @param {import('../../entities/entityManager.js').default} entityManager - Entity manager.
  * @param {string} entityId - ID of the entity to update.
  * @param {boolean} locked - Whether movement should be locked.
- * @returns {void}
+ * @returns {object} Updated movement component.
  */
 export function updateMovementLock(entityManager, entityId, locked) {
   const existing = entityManager.getComponentData(entityId, 'core:movement');
@@ -19,4 +19,5 @@ export function updateMovementLock(entityManager, entityId, locked) {
     : {};
   move.locked = locked;
   entityManager.addComponent(entityId, 'core:movement', move);
+  return move;
 }
