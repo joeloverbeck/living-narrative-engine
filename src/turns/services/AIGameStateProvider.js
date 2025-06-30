@@ -72,15 +72,10 @@ export class AIGameStateProvider extends IAIGameStateProvider {
       actorState,
       actor.id
     );
-    const perceptionLog = await this.#perceptionLogProvider.get(
-      actor,
-      logger,
-      this.#safeEventDispatcher
-    );
-    const locationSummary = await this.#locationSummaryProvider.build(
-      actor,
-      logger
-    );
+    const [perceptionLog, locationSummary] = await Promise.all([
+      this.#perceptionLogProvider.get(actor, logger, this.#safeEventDispatcher),
+      this.#locationSummaryProvider.build(actor, logger),
+    ]);
 
     /** @type {AIGameStateDTO} */
     const gameState = {
