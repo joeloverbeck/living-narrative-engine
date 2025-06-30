@@ -100,11 +100,11 @@ export class AIPromptPipeline extends IAIPromptPipeline {
       this.#logger
     );
 
-    // Augment the DTO with the definitive list of actions passed as a parameter
-    gameStateDto.availableActions = availableActions;
+    // Construct a new DTO that includes the definitive list of actions
+    const promptDto = { ...gameStateDto, availableActions };
 
     const promptData = await this.#promptContentProvider.getPromptData(
-      gameStateDto,
+      promptDto,
       this.#logger
     );
     const finalPromptString = await this.#promptBuilder.build(
