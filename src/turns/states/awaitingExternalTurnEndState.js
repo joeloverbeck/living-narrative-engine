@@ -59,15 +59,18 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
    * Creates an instance of AwaitingExternalTurnEndState.
    *
    * @param {BaseTurnHandler} handler - The handler managing the turn state.
-   * @param {number} [timeoutMs] - Timeout duration for waiting.
-   * @param {Function} [setTimeoutFn] - Optional custom setTimeout.
-   * @param {Function} [clearTimeoutFn] - Optional custom clearTimeout.
+   * @param {object} [options] - Optional configuration overrides.
+   * @param {number} [options.timeoutMs=TIMEOUT_MS] - Timeout duration for waiting.
+   * @param {Function} [options.setTimeoutFn=setTimeout] - Optional custom setTimeout.
+   * @param {Function} [options.clearTimeoutFn=clearTimeout] - Optional custom clearTimeout.
    */
   constructor(
     handler,
-    timeoutMs = TIMEOUT_MS,
-    setTimeoutFn = setTimeout,
-    clearTimeoutFn = clearTimeout
+    {
+      timeoutMs = TIMEOUT_MS,
+      setTimeoutFn = setTimeout,
+      clearTimeoutFn = clearTimeout,
+    } = {}
   ) {
     super(handler);
     this.#timeoutMs = timeoutMs;
