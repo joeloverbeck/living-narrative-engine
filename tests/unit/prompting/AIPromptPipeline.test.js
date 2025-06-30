@@ -1,10 +1,7 @@
 /* eslint-env node */
 import { test, expect } from '@jest/globals';
 import { AIPromptPipeline } from '../../../src/prompting/AIPromptPipeline.js';
-import {
-  createAIPromptPipelineBed,
-  describeAIPromptPipelineSuite,
-} from '../../common/prompting/promptPipelineTestBed.js';
+import { describeAIPromptPipelineSuite } from '../../common/prompting/promptPipelineTestBed.js';
 import {
   AIPromptPipelineDependencySpec,
   expectSuccessfulGeneration,
@@ -54,5 +51,17 @@ describeAIPromptPipelineSuite('AIPromptPipeline', (getBed) => {
     },
   ])('generatePrompt rejects when %s', async ({ mutate, error }) => {
     await expectGenerationFailure(bed, mutate, error);
+  });
+
+  test('generatePrompt does not mutate gameStateDto returned by provider', async () => {
+    const actor = bed.defaultActor;
+    const context = bed.defaultContext;
+    const actions = bed.defaultActions;
+
+    const gameState = { state: true };
+    bed.setupMockSuccess({ gameState });
+    await bed.generate(actor, context, actions);
+
+    expect(gameState).toEqual({ state: true });
   });
 });
