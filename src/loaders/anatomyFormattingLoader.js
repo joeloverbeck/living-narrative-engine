@@ -2,6 +2,7 @@
 
 import { BaseManifestItemLoader } from './baseManifestItemLoader.js';
 import { parseAndValidateId } from '../utils/idUtils.js';
+import { ValidationError } from '../errors/validationError.js';
 
 /** @typedef {import('../interfaces/coreServices.js').IConfiguration} IConfiguration */
 /** @typedef {import('../interfaces/coreServices.js').IPathResolver} IPathResolver */
@@ -76,7 +77,7 @@ class AnatomyFormattingLoader extends BaseManifestItemLoader {
 
     for (const field of arrayFields) {
       if (data[field] !== undefined && !Array.isArray(data[field])) {
-        throw new Error(
+        throw new ValidationError(
           `Invalid '${field}' for anatomy formatting '${baseId}' in '${filename}'. Expected array, received ${typeof data[
             field
           ]}.`
@@ -91,7 +92,7 @@ class AnatomyFormattingLoader extends BaseManifestItemLoader {
         data.irregularPlurals === null ||
         Array.isArray(data.irregularPlurals))
     ) {
-      throw new Error(
+      throw new ValidationError(
         `Invalid 'irregularPlurals' for anatomy formatting '${baseId}' in '${filename}'. Expected object, received ${
           data.irregularPlurals === null ? 'null' : typeof data.irregularPlurals
         }.`

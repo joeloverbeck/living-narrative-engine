@@ -7,6 +7,7 @@
 import { BaseManifestItemLoader } from './baseManifestItemLoader.js';
 import { parseAndValidateId } from '../utils/idUtils.js';
 import { formatAjvErrors } from '../utils/ajvUtils.js';
+import { ValidationError } from '../errors/validationError.js';
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../interfaces/coreServices.js').IConfiguration} IConfiguration */
@@ -115,7 +116,7 @@ export class EntityInstanceLoader extends BaseManifestItemLoader {
         .map((failure) => failure.componentId)
         .join(', ');
       const comprehensiveMessage = `Component override validation failed for instance '${instanceId}' in file '${filename}' (mod: ${modId}). Invalid components: [${failedComponentIds}]. See previous error logs for details.`;
-      throw new Error(comprehensiveMessage);
+      throw new ValidationError(comprehensiveMessage);
     }
   }
 

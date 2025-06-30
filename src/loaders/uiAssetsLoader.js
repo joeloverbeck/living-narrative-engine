@@ -236,6 +236,11 @@ class UiAssetsLoader extends AbstractLoader {
         overrides += loaderResult.overrides;
         errors += loaderResult.errors;
         if (Array.isArray(loaderResult.failures)) {
+          for (const failure of loaderResult.failures) {
+            this._logger.warn(
+              `UiAssetsLoader [${modId}]: ${failure.file} failed due to ${failure.reason}`
+            );
+          }
           failures.push(...loaderResult.failures);
         }
       } catch (e) {

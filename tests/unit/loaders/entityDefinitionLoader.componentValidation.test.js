@@ -2,7 +2,14 @@
  * @file Unit tests for entity definition loader component validation
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import EntityDefinitionLoader from '../../../src/loaders/entityDefinitionLoader.js';
 import AjvSchemaValidator from '../../../src/validation/ajvSchemaValidator.js';
 import InMemoryDataRegistry from '../../../src/data/inMemoryDataRegistry.js';
@@ -25,24 +32,25 @@ describe('EntityDefinitionLoader Component Validation', () => {
       info: jest.fn(),
       warn: jest.fn(),
       error: jest.fn(),
-      debug: jest.fn()
+      debug: jest.fn(),
     };
     schemaValidator = new AjvSchemaValidator({ logger: mockLogger });
     dataRegistry = new InMemoryDataRegistry(mockLogger);
-    
+
     // Register component schemas
     schemaValidator.preloadSchemas([
       { schema: socketsComponentSchema.dataSchema, id: 'anatomy:sockets' },
       { schema: partComponentSchema.dataSchema, id: 'anatomy:part' },
-      { schema: nameComponentSchema.dataSchema, id: 'core:name' }
+      { schema: nameComponentSchema.dataSchema, id: 'core:name' },
     ]);
-    
+
     // Mock configuration
     mockConfig = {
       get: (key) => {
         const config = {
-          'schemas.entityDefinitions': 'http://example.com/schemas/entity-definition.schema.json',
-          'registryKeys.entityDefinitions': 'entity_definitions'
+          'schemas.entityDefinitions':
+            'http://example.com/schemas/entity-definition.schema.json',
+          'registryKeys.entityDefinitions': 'entity_definitions',
         };
         return config[key];
       },
@@ -52,39 +60,45 @@ describe('EntityDefinitionLoader Component Validation', () => {
           return 'http://example.com/schemas/entity-definition.schema.json';
         }
         return null;
-      }
+      },
     };
 
     // Mock path resolver
     mockPathResolver = {
       resolveModPath: (modId, relativePath) => `./${relativePath}`,
-      resolveModContentPath: (modId, contentType, filename) => `./data/mods/${modId}/${contentType}/${filename}`
+      resolveModContentPath: (modId, contentType, filename) =>
+        `./data/mods/${modId}/${contentType}/${filename}`,
     };
 
     // Mock data fetcher
     mockDataFetcher = {
       fetchData: jest.fn(),
-      fetch: jest.fn()
+      fetch: jest.fn(),
     };
 
     // Register entity definition schema
     const entityDefinitionSchema = {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "$id": "http://example.com/schemas/entity-definition.schema.json",
-      "type": "object",
-      "properties": {
-        "$schema": { "type": "string" },
-        "id": { "type": "string", "pattern": "^[a-zA-Z][a-zA-Z0-9_]*:[a-zA-Z][a-zA-Z0-9_]*$" },
-        "description": { "type": "string" },
-        "components": { "type": "object", "minProperties": 1 }
+      $schema: 'http://json-schema.org/draft-07/schema#',
+      $id: 'http://example.com/schemas/entity-definition.schema.json',
+      type: 'object',
+      properties: {
+        $schema: { type: 'string' },
+        id: {
+          type: 'string',
+          pattern: '^[a-zA-Z][a-zA-Z0-9_]*:[a-zA-Z][a-zA-Z0-9_]*$',
+        },
+        description: { type: 'string' },
+        components: { type: 'object', minProperties: 1 },
       },
-      "required": ["id", "components"],
-      "additionalProperties": false
+      required: ['id', 'components'],
+      additionalProperties: false,
     };
-    schemaValidator.preloadSchemas([{ 
-      schema: entityDefinitionSchema, 
-      id: 'http://example.com/schemas/entity-definition.schema.json' 
-    }]);
+    schemaValidator.preloadSchemas([
+      {
+        schema: entityDefinitionSchema,
+        id: 'http://example.com/schemas/entity-definition.schema.json',
+      },
+    ]);
 
     loader = new EntityDefinitionLoader(
       mockConfig,
@@ -102,212 +116,223 @@ describe('EntityDefinitionLoader Component Validation', () => {
 
   it('should successfully load entity with socket without orientation', async () => {
     const entityData = {
-      "$schema": "http://example.com/schemas/entity-definition.schema.json",
-      "id": "anatomy:test_torso",
-      "components": {
-        "anatomy:part": {
-          "subType": "torso"
+      $schema: 'http://example.com/schemas/entity-definition.schema.json',
+      id: 'anatomy:test_torso',
+      components: {
+        'anatomy:part': {
+          subType: 'torso',
         },
-        "anatomy:sockets": {
-          "sockets": [
+        'anatomy:sockets': {
+          sockets: [
             {
-              "id": "special_socket",
-              "allowedTypes": ["special_part"],
-              "jointType": "fused",
-              "nameTpl": "{{type}}"
-            }
-          ]
+              id: 'special_socket',
+              allowedTypes: ['special_part'],
+              jointType: 'fused',
+              nameTpl: '{{type}}',
+            },
+          ],
         },
-        "core:name": {
-          "text": "Test Torso"
-        }
-      }
+        'core:name': {
+          text: 'Test Torso',
+        },
+      },
     };
 
     mockDataFetcher.fetch.mockResolvedValue(entityData);
 
     const manifest = {
       content: {
-        entities: ['test_torso.entity.json']
-      }
+        entities: ['test_torso.entity.json'],
+      },
     };
 
     const results = await loader.loadItemsForMod(
-      'anatomy', 
+      'anatomy',
       manifest,
       'entities', // contentKey
       'entities/definitions', // diskFolder
       'entityDefinitions' // registryKey
     );
-    
+
     expect(results.count).toBe(1);
     expect(results.errors).toBe(0);
     expect(results.overrides).toBe(0);
-    
+
     // Verify entity was stored in registry
-    const storedEntity = dataRegistry.get('entityDefinitions', 'anatomy:test_torso');
+    const storedEntity = dataRegistry.get(
+      'entityDefinitions',
+      'anatomy:test_torso'
+    );
     expect(storedEntity).toBeDefined();
     expect(storedEntity.id).toBe('anatomy:test_torso');
   });
 
   it('should fail to load entity with invalid orientation in socket', async () => {
     const entityData = {
-      "$schema": "http://example.com/schemas/entity-definition.schema.json",
-      "id": "anatomy:invalid_torso",
-      "components": {
-        "anatomy:part": {
-          "subType": "torso"
+      $schema: 'http://example.com/schemas/entity-definition.schema.json',
+      id: 'anatomy:invalid_torso',
+      components: {
+        'anatomy:part': {
+          subType: 'torso',
         },
-        "anatomy:sockets": {
-          "sockets": [
+        'anatomy:sockets': {
+          sockets: [
             {
-              "id": "invalid_socket",
-              "orientation": "lower-front", // Invalid compound orientation
-              "allowedTypes": ["special_part"],
-              "jointType": "fused"
-            }
-          ]
+              id: 'invalid_socket',
+              orientation: 'lower-front', // Invalid compound orientation
+              allowedTypes: ['special_part'],
+              jointType: 'fused',
+            },
+          ],
         },
-        "core:name": {
-          "text": "Invalid Torso"
-        }
-      }
+        'core:name': {
+          text: 'Invalid Torso',
+        },
+      },
     };
 
     mockDataFetcher.fetch.mockResolvedValue(entityData);
 
     const manifest = {
       content: {
-        entities: ['invalid_torso.entity.json']
-      }
+        entities: ['invalid_torso.entity.json'],
+      },
     };
 
     const results = await loader.loadItemsForMod(
-      'anatomy', 
+      'anatomy',
       manifest,
       'entities', // contentKey
       'entities/definitions', // diskFolder
       'entityDefinitions' // registryKey
     );
-    
+
     expect(results.count).toBe(0);
     expect(results.errors).toBe(1);
     expect(results.failures).toBeDefined();
-    expect(results.failures[0].error.message).toContain('Runtime component validation failed');
-    
+    expect(results.failures[0].error.message).toContain(
+      'Runtime component validation failed'
+    );
+
     // Verify entity was NOT stored in registry due to validation failure
-    const storedEntity = dataRegistry.get('entityDefinitions', 'anatomy:invalid_torso');
+    const storedEntity = dataRegistry.get(
+      'entityDefinitions',
+      'anatomy:invalid_torso'
+    );
     expect(storedEntity).toBeUndefined();
   });
 
   it('should successfully load entity with valid orientation in socket', async () => {
     const entityData = {
-      "$schema": "http://example.com/schemas/entity-definition.schema.json",
-      "id": "anatomy:valid_torso",
-      "components": {
-        "anatomy:part": {
-          "subType": "torso"
+      $schema: 'http://example.com/schemas/entity-definition.schema.json',
+      id: 'anatomy:valid_torso',
+      components: {
+        'anatomy:part': {
+          subType: 'torso',
         },
-        "anatomy:sockets": {
-          "sockets": [
+        'anatomy:sockets': {
+          sockets: [
             {
-              "id": "left_shoulder",
-              "orientation": "left",
-              "allowedTypes": ["arm"],
-              "maxCount": 1,
-              "jointType": "ball",
-              "nameTpl": "{{orientation}} {{type}}"
+              id: 'left_shoulder',
+              orientation: 'left',
+              allowedTypes: ['arm'],
+              maxCount: 1,
+              jointType: 'ball',
+              nameTpl: '{{orientation}} {{type}}',
             },
             {
-              "id": "neck",
-              "orientation": "upper",
-              "allowedTypes": ["head", "neck"],
-              "maxCount": 1
-            }
-          ]
+              id: 'neck',
+              orientation: 'upper',
+              allowedTypes: ['head', 'neck'],
+              maxCount: 1,
+            },
+          ],
         },
-        "core:name": {
-          "text": "Valid Torso"
-        }
-      }
+        'core:name': {
+          text: 'Valid Torso',
+        },
+      },
     };
 
     mockDataFetcher.fetch.mockResolvedValue(entityData);
 
     const manifest = {
       content: {
-        entities: ['valid_torso.entity.json']
-      }
+        entities: ['valid_torso.entity.json'],
+      },
     };
 
     const results = await loader.loadItemsForMod(
-      'anatomy', 
+      'anatomy',
       manifest,
       'entities', // contentKey
       'entities/definitions', // diskFolder
       'entityDefinitions' // registryKey
     );
-    
+
     expect(results.count).toBe(1);
     expect(results.errors).toBe(0);
     expect(results.overrides).toBe(0);
-    
+
     // Verify entity was stored in registry
-    const storedEntity = dataRegistry.get('entityDefinitions', 'anatomy:valid_torso');
+    const storedEntity = dataRegistry.get(
+      'entityDefinitions',
+      'anatomy:valid_torso'
+    );
     expect(storedEntity).toBeDefined();
     expect(storedEntity.id).toBe('anatomy:valid_torso');
   });
 
   it('should handle mixed socket orientations correctly', async () => {
     const entityData = {
-      "$schema": "http://example.com/schemas/entity-definition.schema.json",
-      "id": "anatomy:mixed_torso",
-      "components": {
-        "anatomy:part": {
-          "subType": "torso"
+      $schema: 'http://example.com/schemas/entity-definition.schema.json',
+      id: 'anatomy:mixed_torso',
+      components: {
+        'anatomy:part': {
+          subType: 'torso',
         },
-        "anatomy:sockets": {
-          "sockets": [
+        'anatomy:sockets': {
+          sockets: [
             {
-              "id": "left_arm",
-              "orientation": "left",
-              "allowedTypes": ["arm"]
+              id: 'left_arm',
+              orientation: 'left',
+              allowedTypes: ['arm'],
             },
             {
-              "id": "right_arm",
-              "orientation": "right", 
-              "allowedTypes": ["arm"]
+              id: 'right_arm',
+              orientation: 'right',
+              allowedTypes: ['arm'],
             },
             {
-              "id": "special_port",
-              "allowedTypes": ["device"],
-              "jointType": "fused"
+              id: 'special_port',
+              allowedTypes: ['device'],
+              jointType: 'fused',
               // No orientation - should be valid
-            }
-          ]
+            },
+          ],
         },
-        "core:name": {
-          "text": "Mixed Torso"
-        }
-      }
+        'core:name': {
+          text: 'Mixed Torso',
+        },
+      },
     };
 
     mockDataFetcher.fetch.mockResolvedValue(entityData);
 
     const manifest = {
       content: {
-        entities: ['mixed_torso.entity.json']
-      }
+        entities: ['mixed_torso.entity.json'],
+      },
     };
 
     const results = await loader.loadItemsForMod(
-      'anatomy', 
+      'anatomy',
       manifest,
       'entities', // contentKey
       'entities/definitions', // diskFolder
       'entityDefinitions' // registryKey
     );
-    
+
     expect(results.count).toBe(1);
     expect(results.errors).toBe(0);
     expect(results.overrides).toBe(0);
@@ -315,34 +340,36 @@ describe('EntityDefinitionLoader Component Validation', () => {
 
   it('should fail when entity is missing required id field', async () => {
     const entityData = {
-      "$schema": "http://example.com/schemas/entity-definition.schema.json",
+      $schema: 'http://example.com/schemas/entity-definition.schema.json',
       // Missing required 'id' field
-      "components": {
-        "core:name": {
-          "text": "No ID Entity"
-        }
-      }
+      components: {
+        'core:name': {
+          text: 'No ID Entity',
+        },
+      },
     };
 
     mockDataFetcher.fetch.mockResolvedValue(entityData);
 
     const manifest = {
       content: {
-        entities: ['no_id.entity.json']
-      }
+        entities: ['no_id.entity.json'],
+      },
     };
 
     const results = await loader.loadItemsForMod(
-      'anatomy', 
+      'anatomy',
       manifest,
       'entities', // contentKey
       'entities/definitions', // diskFolder
       'entityDefinitions' // registryKey
     );
-    
+
     expect(results.count).toBe(0);
     expect(results.errors).toBe(1);
     expect(results.failures).toBeDefined();
-    expect(results.failures[0].error.message).toContain("must have required property 'id'");
+    expect(results.failures[0].error.message).toContain(
+      "must have required property 'id'"
+    );
   });
 });

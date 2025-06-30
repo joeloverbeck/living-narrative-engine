@@ -10,6 +10,7 @@
 /** @typedef {import('../interfaces/coreServices.js').ISchemaValidator} ISchemaValidator */
 /** @typedef {import('../interfaces/coreServices.js').IDataRegistry} IDataRegistry */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
+import { ValidationError } from '../errors/validationError.js';
 
 import AbstractLoader from './abstractLoader.js';
 
@@ -97,7 +98,7 @@ class PromptTextLoader extends AbstractLoader {
         `PromptTextLoader: Validation failed for ${filePath} using schema '${schemaId}'.`,
         { errors: validationResult.errors }
       );
-      throw new Error('Prompt text validation failed.');
+      throw new ValidationError('Prompt text validation failed.');
     }
 
     this.#dataRegistry.store('prompt_text', 'core', data);

@@ -15,8 +15,9 @@ describe('EntityInstanceLoader', () => {
   let mockSchemaValidator;
   let dataRegistry;
   let mockLogger;
-  
-  const PRIMARY_SCHEMA_ID = 'http://example.com/schemas/entity-instance.schema.json';
+
+  const PRIMARY_SCHEMA_ID =
+    'http://example.com/schemas/entity-instance.schema.json';
 
   beforeEach(() => {
     // Create a real data registry for testing
@@ -37,8 +38,8 @@ describe('EntityInstanceLoader', () => {
     // Configure mocks
     mockConfig.getContentTypeSchemaId
       .calledWith('entityInstances')
-      .mockReturnValue(PRIMARY_SCHEMA_ID);  // Return full schema ID
-    
+      .mockReturnValue(PRIMARY_SCHEMA_ID); // Return full schema ID
+
     mockConfig.get.mockImplementation((key) => {
       if (key === 'schemas.entityInstances.primaryId') {
         return PRIMARY_SCHEMA_ID;
@@ -47,15 +48,16 @@ describe('EntityInstanceLoader', () => {
         return false;
       }
       if (key === 'validation.skipIfSchemaNotLoaded') {
-        return false;  // Don't skip validation
+        return false; // Don't skip validation
       }
       return null;
     });
 
     mockConfig.getModsBasePath.mockReturnValue('./data/mods');
 
-    mockPathResolver.resolveModContentPath.mockImplementation((modId, diskFolder, filename) => 
-      `./data/mods/${modId}/${diskFolder}/${filename}`
+    mockPathResolver.resolveModContentPath.mockImplementation(
+      (modId, diskFolder, filename) =>
+        `./data/mods/${modId}/${diskFolder}/${filename}`
     );
 
     // Create the loader instance
@@ -80,12 +82,12 @@ describe('EntityInstanceLoader', () => {
       };
 
       mockDataFetcher.fetch.mockResolvedValue(invalidInstance);
-      
+
       // Mock schema validation
       mockSchemaValidator.isSchemaLoaded
         .calledWith(PRIMARY_SCHEMA_ID)
         .mockReturnValue(true);
-      
+
       mockSchemaValidator.validate
         .calledWith(PRIMARY_SCHEMA_ID, invalidInstance)
         .mockReturnValue({
@@ -111,9 +113,9 @@ describe('EntityInstanceLoader', () => {
       };
 
       const result = await loader.loadItemsForMod(
-        manifest.id, 
-        manifest, 
-        'entities.instances', 
+        manifest.id,
+        manifest,
+        'entities.instances',
         'entities/instances',
         'entityInstances'
       );
@@ -122,14 +124,18 @@ describe('EntityInstanceLoader', () => {
       expect(result.failures).toHaveLength(1);
       expect(result.failures[0]).toHaveProperty('error');
       // The error comes from schema validation, not parseAndValidateId
-      expect(result.failures[0].error.message).toContain("must have required property 'instanceId'");
-      expect(dataRegistry.get('entityInstances', 'test:invalid_instance')).toBeUndefined();
+      expect(result.failures[0].error.message).toContain(
+        "must have required property 'instanceId'"
+      );
+      expect(
+        dataRegistry.get('entityInstances', 'test:invalid_instance')
+      ).toBeUndefined();
     });
 
     it('should reject entity instance with missing definitionId', async () => {
       const invalidInstance = {
         $schema: 'http://example.com/schemas/entity-instance.schema.json',
-        instanceId: 'test-mod:my_instance',  // Properly namespaced
+        instanceId: 'test-mod:my_instance', // Properly namespaced
         // Missing definitionId
         componentOverrides: {
           'core:name': { text: 'Test Instance' },
@@ -137,12 +143,12 @@ describe('EntityInstanceLoader', () => {
       };
 
       mockDataFetcher.fetch.mockResolvedValue(invalidInstance);
-      
+
       // Mock schema validation to fail for missing definitionId
       mockSchemaValidator.isSchemaLoaded
         .calledWith(PRIMARY_SCHEMA_ID)
         .mockReturnValue(true);
-      
+
       // When validation fails, it returns false and errors
       mockSchemaValidator.validate
         .calledWith(PRIMARY_SCHEMA_ID, invalidInstance)
@@ -169,9 +175,9 @@ describe('EntityInstanceLoader', () => {
       };
 
       const result = await loader.loadItemsForMod(
-        manifest.id, 
-        manifest, 
-        'entities.instances', 
+        manifest.id,
+        manifest,
+        'entities.instances',
         'entities/instances',
         'entityInstances'
       );
@@ -180,7 +186,9 @@ describe('EntityInstanceLoader', () => {
       expect(result.failures).toHaveLength(1);
       expect(result.failures[0]).toHaveProperty('error');
       // The actual error message contains the full validation error details
-      expect(result.failures[0].error.message).toContain("must have required property 'definitionId'");
+      expect(result.failures[0].error.message).toContain(
+        "must have required property 'definitionId'"
+      );
     });
 
     it('should reject entity instance with invalid additional properties', async () => {
@@ -189,18 +197,19 @@ describe('EntityInstanceLoader', () => {
         instanceId: 'test:my_instance',
         definitionId: 'test:some_entity',
         id: 'should-not-be-here', // This is not allowed in instances
-        components: { // Should be componentOverrides
+        components: {
+          // Should be componentOverrides
           'core:name': { text: 'Test' },
         },
       };
 
       mockDataFetcher.fetch.mockResolvedValue(invalidInstance);
-      
+
       // Mock schema validation
       mockSchemaValidator.isSchemaLoaded
         .calledWith(PRIMARY_SCHEMA_ID)
         .mockReturnValue(true);
-      
+
       // When validation fails, it returns false and errors
       mockSchemaValidator.validate
         .calledWith(PRIMARY_SCHEMA_ID, invalidInstance)
@@ -234,9 +243,9 @@ describe('EntityInstanceLoader', () => {
       };
 
       const result = await loader.loadItemsForMod(
-        manifest.id, 
-        manifest, 
-        'entities.instances', 
+        manifest.id,
+        manifest,
+        'entities.instances',
         'entities/instances',
         'entityInstances'
       );
@@ -245,13 +254,15 @@ describe('EntityInstanceLoader', () => {
       expect(result.failures).toHaveLength(1);
       expect(result.failures[0]).toHaveProperty('error');
       // The actual error message contains validation details
-      expect(result.failures[0].error.message).toContain('must NOT have additional properties');
+      expect(result.failures[0].error.message).toContain(
+        'must NOT have additional properties'
+      );
     });
 
     it('should accept valid entity instance', async () => {
       const validInstance = {
         $schema: 'http://example.com/schemas/entity-instance.schema.json',
-        instanceId: 'test-mod:my_character',  // Properly namespaced
+        instanceId: 'test-mod:my_character', // Properly namespaced
         definitionId: 'test:character_template',
         componentOverrides: {
           'core:name': { text: 'My Character' },
@@ -260,12 +271,12 @@ describe('EntityInstanceLoader', () => {
       };
 
       mockDataFetcher.fetch.mockResolvedValue(validInstance);
-      
+
       // Mock schema validation
       mockSchemaValidator.isSchemaLoaded
         .calledWith(PRIMARY_SCHEMA_ID)
         .mockReturnValue(true);
-      
+
       mockSchemaValidator.validate
         .calledWith(PRIMARY_SCHEMA_ID, validInstance)
         .mockReturnValue({ isValid: true, errors: null });
@@ -280,16 +291,18 @@ describe('EntityInstanceLoader', () => {
       };
 
       const result = await loader.loadItemsForMod(
-        manifest.id, 
-        manifest, 
-        'entities.instances', 
+        manifest.id,
+        manifest,
+        'entities.instances',
         'entities/instances',
         'entityInstances'
       );
 
       expect(result.errors).toBe(0);
       expect(result.count).toBe(1);
-      expect(dataRegistry.get('entityInstances', 'test-mod:my_character')).toBeDefined();
+      expect(
+        dataRegistry.get('entityInstances', 'test-mod:my_character')
+      ).toBeDefined();
     });
   });
 
@@ -307,12 +320,12 @@ describe('EntityInstanceLoader', () => {
       };
 
       mockDataFetcher.fetch.mockResolvedValue(entityDefinition);
-      
+
       // Mock schema validation
       mockSchemaValidator.isSchemaLoaded
         .calledWith(PRIMARY_SCHEMA_ID)
         .mockReturnValue(true);
-      
+
       mockSchemaValidator.validate
         .calledWith(PRIMARY_SCHEMA_ID, entityDefinition)
         .mockReturnValue({
@@ -359,9 +372,9 @@ describe('EntityInstanceLoader', () => {
       };
 
       const result = await loader.loadItemsForMod(
-        manifest.id, 
-        manifest, 
-        'entities.instances', 
+        manifest.id,
+        manifest,
+        'entities.instances',
         'entities/instances',
         'entityInstances'
       );
@@ -371,8 +384,10 @@ describe('EntityInstanceLoader', () => {
       expect(result.failures[0]).toHaveProperty('error');
       const errorMessage = result.failures[0].error.message;
       // The error message should mention the missing required fields and additional properties
-      expect(errorMessage).toMatch(/instanceId|definitionId|additional properties/);
-      
+      expect(errorMessage).toMatch(
+        /instanceId|definitionId|additional properties/
+      );
+
       // Verify it logs helpful information
       expect(mockLogger.error).toHaveBeenCalled();
     });
@@ -390,9 +405,9 @@ describe('EntityInstanceLoader', () => {
       };
 
       const result = await loader.loadItemsForMod(
-        manifest.id, 
-        manifest, 
-        'entities.instances', 
+        manifest.id,
+        manifest,
+        'entities.instances',
         'entities/instances',
         'entityInstances'
       );
@@ -405,7 +420,7 @@ describe('EntityInstanceLoader', () => {
     it('should continue processing other files when one fails', async () => {
       const validInstance = {
         $schema: 'http://example.com/schemas/entity-instance.schema.json',
-        instanceId: 'test-mod:valid_instance',  // Properly namespaced
+        instanceId: 'test-mod:valid_instance', // Properly namespaced
         definitionId: 'test:some_entity',
       };
 
@@ -423,22 +438,24 @@ describe('EntityInstanceLoader', () => {
       mockSchemaValidator.isSchemaLoaded
         .calledWith(PRIMARY_SCHEMA_ID)
         .mockReturnValue(true);
-      
+
       // First call for invalid instance - validation passes (schema check)
       // but parseAndValidateId will fail due to missing instanceId
       mockSchemaValidator.validate
         .calledWith(PRIMARY_SCHEMA_ID, invalidInstance)
         .mockReturnValue({
           isValid: false,
-          errors: [{ 
-            message: "must have required property 'instanceId'",
-            instancePath: '',
-            schemaPath: '#/required',
-            keyword: 'required',
-            params: { missingProperty: 'instanceId' }
-          }],
+          errors: [
+            {
+              message: "must have required property 'instanceId'",
+              instancePath: '',
+              schemaPath: '#/required',
+              keyword: 'required',
+              params: { missingProperty: 'instanceId' },
+            },
+          ],
         });
-      
+
       // Second call for valid instance
       mockSchemaValidator.validate
         .calledWith(PRIMARY_SCHEMA_ID, validInstance)
@@ -454,16 +471,18 @@ describe('EntityInstanceLoader', () => {
       };
 
       const result = await loader.loadItemsForMod(
-        manifest.id, 
-        manifest, 
-        'entities.instances', 
+        manifest.id,
+        manifest,
+        'entities.instances',
         'entities/instances',
         'entityInstances'
       );
 
       expect(result.errors).toBe(1);
       expect(result.count).toBe(1);
-      expect(dataRegistry.get('entityInstances', 'test-mod:valid_instance')).toBeDefined();
+      expect(
+        dataRegistry.get('entityInstances', 'test-mod:valid_instance')
+      ).toBeDefined();
     });
   });
 });
