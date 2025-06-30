@@ -1,4 +1,5 @@
 import { MAX_AVAILABLE_ACTIONS_PER_TURN } from '../../constants/core.js';
+import { ActionIndexingError } from './errors/actionIndexingError.js';
 
 /**
  * Remove duplicate actions by id and params.
@@ -165,7 +166,11 @@ export class ActionIndexingService {
    */
   getIndexedList(actorId) {
     const list = this.#actorCache.get(actorId);
-    if (!list) throw new Error(`No indexed action list for actor "${actorId}"`);
+    if (!list)
+      throw new ActionIndexingError(
+        `No indexed action list for actor "${actorId}"`,
+        actorId
+      );
     return list.slice(); // shallow copy to protect internal state
   }
 
@@ -177,11 +182,17 @@ export class ActionIndexingService {
    */
   resolve(actorId, chosenIndex) {
     const list = this.#actorCache.get(actorId);
-    if (!list) throw new Error(`No actions indexed for actor "${actorId}"`);
+    if (!list)
+      throw new ActionIndexingError(
+        `No actions indexed for actor "${actorId}"`,
+        actorId
+      );
     const composite = list.find((c) => c.index === chosenIndex);
     if (!composite) {
-      throw new Error(
-        `No action found at index ${chosenIndex} for actor "${actorId}"`
+      throw new ActionIndexingError(
+        `No action found at index ${chosenIndex} for actor "${actorId}"`,
+        actorId,
+        chosenIndex
       );
     }
     return composite;
