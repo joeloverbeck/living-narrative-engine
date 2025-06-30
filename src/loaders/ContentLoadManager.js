@@ -8,6 +8,7 @@
 import ModProcessor from './ModProcessor.js';
 import { deepClone } from '../utils/cloneUtils.js';
 import { ContentLoadStatus } from './types.js';
+import { mergeTotals } from './helpers/mergeTotals.js';
 
 /** @typedef {import('./LoadResultAggregator.js').TotalResultsSummary} TotalResultsSummary */
 /** @typedef {import('./LoadResultAggregator.js').default} LoadResultAggregator */
@@ -177,7 +178,7 @@ export class ContentLoadManager {
         results[modId] = result.status;
 
         // Merge the updated totals back into the main totals object
-        totalCounts = this.#mergeTotals(totalCounts, result.updatedTotals);
+        totalCounts = mergeTotals(totalCounts, result.updatedTotals);
       } catch (error) {
         this.#logger.error(
           `ContentLoadManager: Error during processMod for ${modId}, phase ${phase}. Marking as failed and continuing with other mods in this phase.`,
@@ -193,26 +194,6 @@ export class ContentLoadManager {
       `ModsLoader: Completed content loading loop for phase: ${phase}.`
     );
     return { results, updatedTotals: totalCounts };
-  }
-
-  /**
-   * Merges updated totals from an aggregator back into the main totals object.
-   *
-   * @private
-   * @param {TotalResultsSummary} mainTotals - The existing totals object.
-   * @param {TotalResultsSummary} updatedTotals - Totals returned from a processor.
-   * @returns {TotalResultsSummary} New totals object combining the two inputs.
-   */
-  #mergeTotals(mainTotals, updatedTotals) {
-    const merged = { ...mainTotals };
-    for (const [registryKey, counts] of Object.entries(updatedTotals)) {
-      merged[registryKey] = {
-        count: counts.count ?? 0,
-        overrides: counts.overrides ?? 0,
-        errors: counts.errors ?? 0,
-      };
-    }
-    return merged;
   }
 
   async processMod(modId, manifest, totalCounts, phaseLoaders, phase) {
