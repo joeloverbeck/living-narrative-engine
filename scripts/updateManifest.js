@@ -8,7 +8,8 @@
 // and handles nested directories like entities/definitions and entities/instances.
 //
 // Usage:
-// node scripts/updateManifest.js <mod_name>
+// node scripts/updateManifest.js <mod_name>  // Update specific mod
+// node scripts/updateManifest.js             // Update all mods
 
 const fs = require('fs/promises');
 const path = require('path');
@@ -18,6 +19,11 @@ const MODS_BASE_PATH = path.join('data', 'mods');
 const MANIFEST_FILENAME = 'mod-manifest.json';
 // List of directories to ignore when auto-discovering content folders.
 const IGNORE_DIRS = new Set(['.git', '.idea', 'node_modules']);
+
+// Map folder names to manifest keys for special cases
+const FOLDER_TO_KEY_MAP = {
+  'anatomy-formatting': 'anatomyFormatting'
+};
 
 /**
  * Recursively scan a directory for JSON files, maintaining the relative path structure.
@@ -138,12 +144,39 @@ async function scanRecipeDirectoryRecursively(basePath, currentPath = '') {
 }
 
 /**
- * Main function to run the script logic.
+ * Get all mod names from the mods directory
+ * @returns {Promise<string[]>} Array of mod directory names
  */
-async function main() {
-  // 1. Get the mod name from command-line arguments, default to "core".
-  const modName = process.argv[2] || 'core';
+async function getAllModNames() {
+  try {
+    const entries = await fs.readdir(MODS_BASE_PATH, { withFileTypes: true });
+    const modNames = [];
+    
+    for (const entry of entries) {
+      if (entry.isDirectory() && !IGNORE_DIRS.has(entry.name)) {
+        // Check if the directory has a mod-manifest.json file
+        const manifestPath = path.join(MODS_BASE_PATH, entry.name, MANIFEST_FILENAME);
+        try {
+          await fs.access(manifestPath);
+          modNames.push(entry.name);
+        } catch {
+          // Skip directories without manifest files
+        }
+      }
+    }
+    
+    return modNames.sort();
+  } catch (error) {
+    console.error('Error reading mods directory:', error);
+    return [];
+  }
+}
 
+/**
+ * Update the manifest for a specific mod
+ * @param {string} modName - The name of the mod to update
+ */
+async function updateModManifest(modName) {
   console.log(`Starting manifest update for mod: "${modName}"`);
 
   const modPath = path.join(MODS_BASE_PATH, modName);
@@ -167,14 +200,17 @@ async function main() {
     for (const dirent of modDirEntries) {
       // Check if it's a directory and not in the ignore list.
       if (dirent.isDirectory() && !IGNORE_DIRS.has(dirent.name)) {
+        // Use the mapped key if available, otherwise use the folder name
+        const manifestKey = FOLDER_TO_KEY_MAP[dirent.name] || dirent.name;
+        
         // If this directory is not already a key in manifest.content, add it!
         if (
-          !Object.prototype.hasOwnProperty.call(manifest.content, dirent.name)
+          !Object.prototype.hasOwnProperty.call(manifest.content, manifestKey)
         ) {
           console.log(
-            `  - Discovered new content directory: "${dirent.name}". Adding to manifest.`
+            `  - Discovered new content directory: "${dirent.name}" (key: "${manifestKey}"). Adding to manifest.`
           );
-          manifest.content[dirent.name] = []; // Initialize with an empty array.
+          manifest.content[manifestKey] = []; // Initialize with an empty array.
         }
       }
     }
@@ -185,7 +221,9 @@ async function main() {
 
     // 3. Scan each content directory and update the manifest object.
     for (const contentType of contentTypes) {
-      const contentDirPath = path.join(modPath, contentType);
+      // Special case: anatomyFormatting maps to anatomy-formatting folder
+      const folderName = contentType === 'anatomyFormatting' ? 'anatomy-formatting' : contentType;
+      const contentDirPath = path.join(modPath, folderName);
       let files = [];
 
       try {
@@ -354,6 +392,15 @@ async function main() {
             }
 
             manifest.content[contentType] = files.sort();
+          } else if (contentType === 'anatomyFormatting') {
+            // Handle anatomy-formatting directory (path already mapped above)
+            files = await scanDirectoryRecursively(contentDirPath);
+            
+            console.log(
+              `  - Scanned "anatomyFormatting" (folder: anatomy-formatting): Found ${files.length} file(s).`
+            );
+            
+            manifest.content[contentType] = files.sort();
           } else {
             // Use recursive scanning to handle nested directories
             files = await scanDirectoryRecursively(contentDirPath);
@@ -400,6 +447,7 @@ async function main() {
 
     console.log('\n✅ Manifest update complete!');
     console.log(`Successfully updated: ${manifestPath}`);
+    return true; // Success
   } catch (error) {
     if (error.code === 'ENOENT') {
       console.error(`\nError: Could not find mod directory or manifest file.`);
@@ -411,7 +459,63 @@ async function main() {
       console.error('\nAn unexpected error occurred:');
       console.error(error);
     }
-    process.exit(1);
+    return false; // Failure
+  }
+}
+
+/**
+ * Main function to run the script logic.
+ */
+async function main() {
+  const modName = process.argv[2]; // No default value
+  
+  if (modName) {
+    // Update single mod
+    const success = await updateModManifest(modName);
+    if (!success) {
+      process.exit(1);
+    }
+  } else {
+    // Update all mods
+    console.log('No mod name provided. Updating all mod manifests...\n');
+    
+    const modNames = await getAllModNames();
+    if (modNames.length === 0) {
+      console.error('No mods found in the mods directory.');
+      process.exit(1);
+    }
+    
+    console.log(`Found ${modNames.length} mod(s): ${modNames.join(', ')}\n`);
+    
+    let successCount = 0;
+    let failureCount = 0;
+    
+    for (const mod of modNames) {
+      console.log(`\n${'='.repeat(50)}`);
+      console.log(`Processing mod: ${mod}`);
+      console.log(`${'='.repeat(50)}\n`);
+      
+      const success = await updateModManifest(mod);
+      if (success) {
+        successCount++;
+      } else {
+        failureCount++;
+      }
+    }
+    
+    // Summary
+    console.log(`\n${'='.repeat(50)}`);
+    console.log('SUMMARY');
+    console.log(`${'='.repeat(50)}`);
+    console.log(`✅ Successfully updated: ${successCount} mod(s)`);
+    if (failureCount > 0) {
+      console.log(`❌ Failed to update: ${failureCount} mod(s)`);
+    }
+    console.log(`Total mods processed: ${modNames.length}`);
+    
+    if (failureCount > 0) {
+      process.exit(1);
+    }
   }
 }
 
