@@ -38,8 +38,6 @@ import humanoidArm from '../../../data/mods/anatomy/entities/definitions/humanoi
 import humanoidHead from '../../../data/mods/anatomy/entities/definitions/humanoid_head.entity.json';
 import humanoidLeg from '../../../data/mods/anatomy/entities/definitions/humanoid_leg.entity.json';
 import humanFemaleTorso from '../../../data/mods/anatomy/entities/definitions/human_female_torso.entity.json';
-import jacquelineRouxel from '../../../data/mods/anatomy/entities/instances/jacqueline_rouxel.entity.json';
-
 import humanFemaleBlueprint from '../../../data/mods/anatomy/blueprints/human_female.blueprint.json';
 import gorgeousMilfRecipe from '../../../data/mods/anatomy/recipes/gorgeous_milf.recipe.json';
 
@@ -57,6 +55,27 @@ const humanFemale = {
     },
     "anatomy:body": {
       "recipeId": "anatomy:gorgeous_milf"
+    }
+  }
+};
+
+// Define Jacqueline Rouxel entity inline (test-only entity)
+const jacquelineRouxel = {
+  "$schema": "http://example.com/schemas/entity-definition.schema.json",
+  "id": "anatomy:jacqueline_rouxel",
+  "description": "Jacqueline Rouxel - A gorgeous woman",
+  "components": {
+    "core:name": {
+      "text": "Jacqueline Rouxel"
+    },
+    "core:description": {
+      "description": "A stunning woman with striking features and an alluring presence."
+    },
+    "anatomy:body": {
+      "recipeId": "anatomy:gorgeous_milf"
+    },
+    "core:location": {
+      "locationInstanceId": "default-location"
     }
   }
 };

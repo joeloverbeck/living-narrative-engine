@@ -145,6 +145,7 @@ async function scanRecipeDirectoryRecursively(basePath, currentPath = '') {
 
 /**
  * Get all mod names from the mods directory
+ *
  * @returns {Promise<string[]>} Array of mod directory names
  */
 async function getAllModNames() {
@@ -174,6 +175,7 @@ async function getAllModNames() {
 
 /**
  * Update the manifest for a specific mod
+ *
  * @param {string} modName - The name of the mod to update
  */
 async function updateModManifest(modName) {
