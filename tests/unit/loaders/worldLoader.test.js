@@ -69,22 +69,22 @@ describe('WorldLoader.loadWorlds', () => {
       registry,
       logger
     );
-    await loader.loadWorlds(['modA'], new Map(), counts);
+    const updated = await loader.loadWorlds(['modA'], new Map(), counts);
     expect(logger.error).toHaveBeenCalledWith(
       "WorldLoader: Schema ID for content type 'world' not found in configuration. Cannot process world files."
     );
     expect(registry.store).not.toHaveBeenCalled();
-    // The expected behavior in this error case has been updated to provide a full summary object.
-    expect(counts.worlds).toEqual(expect.objectContaining({ errors: 1 }));
+    expect(updated.worlds).toEqual(expect.objectContaining({ errors: 1 }));
+    expect(counts).toEqual({});
   });
 
   it('warns when manifest missing', async () => {
     const counts = {};
-    await loader.loadWorlds(['modA'], new Map(), counts);
+    const updated = await loader.loadWorlds(['modA'], new Map(), counts);
     expect(logger.warn).toHaveBeenCalledWith(
       'WorldLoader [modA]: Manifest not found. Skipping world file search.'
     );
-    expect(counts.worlds).toEqual({
+    expect(updated.worlds).toEqual({
       count: 0,
       overrides: 0,
       errors: 0,
@@ -92,16 +92,17 @@ describe('WorldLoader.loadWorlds', () => {
       resolvedDefinitions: 0,
       unresolvedDefinitions: 0,
     });
+    expect(counts).toEqual({});
   });
 
   it('skips when manifest has no world files', async () => {
     const manifests = new Map([['moda', { content: { worlds: [] } }]]);
     const counts = {};
-    await loader.loadWorlds(['modA'], manifests, counts);
+    const updated = await loader.loadWorlds(['modA'], manifests, counts);
     expect(logger.debug).toHaveBeenCalledWith(
       'WorldLoader [modA]: No world files listed in manifest. Skipping.'
     );
-    expect(counts.worlds).toEqual({
+    expect(updated.worlds).toEqual({
       count: 0,
       overrides: 0,
       errors: 0,
@@ -109,6 +110,7 @@ describe('WorldLoader.loadWorlds', () => {
       resolvedDefinitions: 0,
       unresolvedDefinitions: 0,
     });
+    expect(counts).toEqual({});
   });
 
   it('aggregates instances from world files', async () => {
@@ -125,7 +127,7 @@ describe('WorldLoader.loadWorlds', () => {
     registry.get.mockReturnValue({ id: 'some-definition' });
 
     const counts = {};
-    await loader.loadWorlds(['modA'], manifests, counts);
+    const updated = await loader.loadWorlds(['modA'], manifests, counts);
     expect(resolver.resolveModContentPath).toHaveBeenCalledWith(
       'modA',
       'worlds',
@@ -137,7 +139,7 @@ describe('WorldLoader.loadWorlds', () => {
       'test:world',
       mockWorldData
     );
-    expect(counts.worlds).toEqual({
+    expect(updated.worlds).toEqual({
       count: 1,
       overrides: 0,
       errors: 0,
@@ -145,6 +147,7 @@ describe('WorldLoader.loadWorlds', () => {
       resolvedDefinitions: 2,
       unresolvedDefinitions: 0,
     });
+    expect(counts).toEqual({});
   });
 
   it('records failures when fetch throws', async () => {
@@ -157,12 +160,12 @@ describe('WorldLoader.loadWorlds', () => {
     const fetchError = new Error('fail');
     fetcher.fetch.mockRejectedValue(fetchError);
     const counts = {};
-    await loader.loadWorlds(['modA'], manifests, counts);
+    const updated = await loader.loadWorlds(['modA'], manifests, counts);
     expect(logger.error).toHaveBeenCalledWith(
       "WorldLoader [modA]: Failed to process world file 'bad.json'. Path: '/mods/modA/worlds/bad.json'. Error: fail",
       { modId: 'modA', filename: 'bad.json', error: fetchError }
     );
-    expect(counts.worlds).toEqual({
+    expect(updated.worlds).toEqual({
       count: 0,
       overrides: 0,
       errors: 1,
@@ -170,5 +173,6 @@ describe('WorldLoader.loadWorlds', () => {
       resolvedDefinitions: 0,
       unresolvedDefinitions: 0,
     });
+    expect(counts).toEqual({});
   });
 });

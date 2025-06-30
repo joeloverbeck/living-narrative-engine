@@ -101,11 +101,16 @@ describe('ContentLoadManager.loadContent', () => {
     ]);
     /** @type {TotalResultsSummary} */ const totals = {};
 
-    const results = await manager.loadContent(finalModOrder, manifests, totals);
+    const { results, updatedTotals } = await manager.loadContent(
+      finalModOrder,
+      manifests,
+      totals
+    );
 
     expect(results).toEqual({ modA: 'success', modB: 'failed' });
-    expect(totals.items.count).toBe(1); // Only loaderA succeeded
-    expect(totals.items.errors).toBe(1); // Only loaderB failed
+    expect(updatedTotals.items.count).toBe(1); // Only loaderA succeeded
+    expect(updatedTotals.items.errors).toBe(1); // Only loaderB failed
+    expect(totals).toEqual({});
 
     // Check that dispatcher was called for loaderB's failure
     expect(dispatcher.dispatch).toHaveBeenCalledWith(

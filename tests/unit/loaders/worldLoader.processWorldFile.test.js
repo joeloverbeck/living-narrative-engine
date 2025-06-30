@@ -77,7 +77,12 @@ describe('WorldLoader._processWorldFile', () => {
     fetcher.fetch.mockResolvedValue(mockWorldData);
     registry.get.mockReturnValue({ id: 'def' });
 
-    await loader._processWorldFile('modA', 'world1.json', 'schemaId', totals);
+    const updated = await loader._processWorldFile(
+      'modA',
+      'world1.json',
+      'schemaId',
+      totals
+    );
 
     expect(resolver.resolveModContentPath).toHaveBeenCalledWith(
       'modA',
@@ -90,7 +95,7 @@ describe('WorldLoader._processWorldFile', () => {
       'test:world',
       mockWorldData
     );
-    expect(totals).toEqual({
+    expect(updated).toEqual({
       filesProcessed: 1,
       filesFailed: 0,
       instances: 2,
@@ -112,13 +117,18 @@ describe('WorldLoader._processWorldFile', () => {
     const fetchError = new Error('fail');
     fetcher.fetch.mockRejectedValue(fetchError);
 
-    await loader._processWorldFile('modA', 'bad.json', 'schemaId', totals);
+    const updated = await loader._processWorldFile(
+      'modA',
+      'bad.json',
+      'schemaId',
+      totals
+    );
 
     expect(logger.error).toHaveBeenCalledWith(
       "WorldLoader [modA]: Failed to process world file 'bad.json'. Path: '/mods/modA/worlds/bad.json'. Error: fail",
       { modId: 'modA', filename: 'bad.json', error: fetchError }
     );
-    expect(totals).toEqual({
+    expect(updated).toEqual({
       filesProcessed: 0,
       filesFailed: 1,
       instances: 0,
@@ -139,7 +149,12 @@ describe('WorldLoader._processWorldFile', () => {
     };
     const worldData = { id: 'w:1', instances: [{}] };
     fetcher.fetch.mockResolvedValue(worldData);
-    await loader._processWorldFile('modA', 'world.json', 'schemaId', totals);
+    const updated = await loader._processWorldFile(
+      'modA',
+      'world.json',
+      'schemaId',
+      totals
+    );
     expect(logger.error).toHaveBeenCalledWith(
       "WorldLoader [modA]: Failed to process world file 'world.json'. Path: '/mods/modA/worlds/world.json'. Error: Instance in world file 'world.json' is missing an 'instanceId'.",
       {
@@ -148,7 +163,7 @@ describe('WorldLoader._processWorldFile', () => {
         error: expect.any(MissingInstanceIdError),
       }
     );
-    expect(totals.filesFailed).toBe(1);
+    expect(updated.filesFailed).toBe(1);
   });
 
   it('logs error for unknown instance', async () => {
@@ -163,7 +178,12 @@ describe('WorldLoader._processWorldFile', () => {
     const worldData = { id: 'w:1', instances: [{ instanceId: 'x:y' }] };
     fetcher.fetch.mockResolvedValue(worldData);
     registry.get.mockReturnValue(undefined);
-    await loader._processWorldFile('modA', 'world.json', 'schemaId', totals);
+    const updated = await loader._processWorldFile(
+      'modA',
+      'world.json',
+      'schemaId',
+      totals
+    );
     expect(logger.error).toHaveBeenCalledWith(
       "WorldLoader [modA]: Failed to process world file 'world.json'. Path: '/mods/modA/worlds/world.json'. Error: Unknown entity instanceId 'x:y' referenced in world 'world.json'.",
       {
@@ -172,6 +192,6 @@ describe('WorldLoader._processWorldFile', () => {
         error: expect.any(MissingEntityInstanceError),
       }
     );
-    expect(totals.filesFailed).toBe(1);
+    expect(updated.filesFailed).toBe(1);
   });
 });

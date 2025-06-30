@@ -99,14 +99,14 @@ export class WorldLoader extends AbstractLoader {
    *
    * @param {string[]} finalModOrder - The resolved load order of mods.
    * @param {Map<string, ModManifest>} manifests - A map of all loaded mod manifests.
-   * @param {TotalResultsSummary} totalCounts - The aggregator for load results to be updated.
-   * @returns {Promise<void>} A promise that resolves when all world files have been processed.
+   * @param {TotalResultsSummary} totalCounts - Previous totals object. This object is not mutated.
+   * @returns {Promise<TotalResultsSummary>} Updated totals after processing worlds.
    * @throws {ModsLoaderError} If an instance references an unknown entity definition that is configured to halt the process.
    */
   async loadWorlds(finalModOrder, manifests, totalCounts) {
     this._logger.info('--- Starting World File Loading Phase ---');
 
-    const totals = {
+    let totals = {
       filesProcessed: 0,
       filesFailed: 0,
       instances: 0,
@@ -121,15 +121,17 @@ export class WorldLoader extends AbstractLoader {
       this._logger.error(
         "WorldLoader: Schema ID for content type 'world' not found in configuration. Cannot process world files."
       );
-      totalCounts.worlds = {
-        count: 0,
-        overrides: 0,
-        errors: finalModOrder.length,
-        instances: 0,
-        resolvedDefinitions: 0,
-        unresolvedDefinitions: 0,
+      return {
+        ...totalCounts,
+        worlds: {
+          count: 0,
+          overrides: 0,
+          errors: finalModOrder.length,
+          instances: 0,
+          resolvedDefinitions: 0,
+          unresolvedDefinitions: 0,
+        },
       };
-      return;
     }
 
     for (const modId of finalModOrder) {
@@ -149,19 +151,26 @@ export class WorldLoader extends AbstractLoader {
         continue;
       }
 
-      const filePromises = worldFiles.map((filename) =>
-        this._processWorldFile(modId, filename, worldSchemaId, totals)
-      );
-      await Promise.all(filePromises);
+      for (const filename of worldFiles) {
+        totals = await this._processWorldFile(
+          modId,
+          filename,
+          worldSchemaId,
+          totals
+        );
+      }
     }
 
-    totalCounts.worlds = {
-      count: totals.filesProcessed,
-      overrides: totals.overrides,
-      errors: totals.filesFailed,
-      instances: totals.instances,
-      resolvedDefinitions: totals.resolvedDefinitions,
-      unresolvedDefinitions: totals.unresolvedDefinitions,
+    const updatedTotals = {
+      ...totalCounts,
+      worlds: {
+        count: totals.filesProcessed,
+        overrides: totals.overrides,
+        errors: totals.filesFailed,
+        instances: totals.instances,
+        resolvedDefinitions: totals.resolvedDefinitions,
+        unresolvedDefinitions: totals.unresolvedDefinitions,
+      },
     };
 
     this._logger.info('--- World File Loading Phase Complete ---');
@@ -174,6 +183,7 @@ export class WorldLoader extends AbstractLoader {
         `WorldLoader: Successfully processed and registered ${totals.filesProcessed} worlds, containing ${totals.instances} entity instances. All ${totals.resolvedDefinitions} definition references were resolved.`
       );
     }
+    return updatedTotals;
   }
 
   /**
@@ -184,8 +194,8 @@ export class WorldLoader extends AbstractLoader {
    * @param {string} modId - The owning mod ID.
    * @param {string} filename - World filename.
    * @param {string} worldSchemaId - Schema ID to validate against.
-   * @param {object} totals - Totals object to update.
-   * @returns {Promise<void>} Resolves when processing completes.
+   * @param {object} totals - Running totals object.
+   * @returns {Promise<object>} Updated totals object.
    */
   async _processWorldFile(modId, filename, worldSchemaId, totals) {
     let resolvedPath = '';
@@ -215,7 +225,7 @@ export class WorldLoader extends AbstractLoader {
         worldData
       );
 
-      this.#updateTotals(totals, {
+      totals = this.#updateTotals(totals, {
         success: true,
         override: didOverride,
         instanceCount: Array.isArray(worldData.instances)
@@ -225,7 +235,7 @@ export class WorldLoader extends AbstractLoader {
         unresolved: validation.unresolved,
       });
     } catch (error) {
-      this.#updateTotals(totals, { success: false });
+      totals = this.#updateTotals(totals, { success: false });
       this._logger.error(
         `WorldLoader [${modId}]: Failed to process world file '${filename}'. Path: '${resolvedPath || 'unresolved'}'. Error: ${error.message}`,
         { modId, filename, error }
@@ -239,6 +249,7 @@ export class WorldLoader extends AbstractLoader {
         throw error;
       }
     }
+    return totals;
   }
 
   /**
@@ -339,9 +350,9 @@ export class WorldLoader extends AbstractLoader {
    * Updates running totals during world loading.
    *
    * @private
-   * @param {object} totals - Totals object to mutate.
+   * @param {object} totals - Current totals object.
    * @param {{success:boolean, override?:boolean, instanceCount?:number, resolved?:number, unresolved?:number}} info - Update info.
-   * @returns {void}
+   * @returns {object} New totals object.
    */
   #updateTotals(
     totals,
@@ -353,17 +364,19 @@ export class WorldLoader extends AbstractLoader {
       unresolved = 0,
     }
   ) {
+    const next = { ...totals };
     if (success) {
-      totals.filesProcessed += 1;
-      totals.instances += instanceCount;
+      next.filesProcessed += 1;
+      next.instances += instanceCount;
       if (override) {
-        totals.overrides += 1;
+        next.overrides += 1;
       }
     } else {
-      totals.filesFailed += 1;
+      next.filesFailed += 1;
     }
-    totals.resolvedDefinitions += resolved;
-    totals.unresolvedDefinitions += unresolved;
+    next.resolvedDefinitions += resolved;
+    next.unresolvedDefinitions += unresolved;
+    return next;
   }
 
   /**

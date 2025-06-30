@@ -48,11 +48,12 @@ export default class ContentPhase extends LoaderPhase {
       const nextTotals = deepClone(ctx.totals);
       const next = { ...ctx, totals: nextTotals };
 
-      await this.manager.loadContent(
+      const { updatedTotals } = await this.manager.loadContent(
         next.finalModOrder,
         next.manifests,
         next.totals
       );
+      next.totals = updatedTotals;
 
       return Object.freeze(next);
     } catch (e) {

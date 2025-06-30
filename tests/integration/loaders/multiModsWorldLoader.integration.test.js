@@ -141,8 +141,16 @@ describe('Multi-mod content loading and world validation', () => {
 
   it('aggregates definitions, instances, and worlds from all mods', async () => {
     const totals = {};
-    await env.manager.loadContent(finalOrder, manifests, totals);
-    await env.worldLoader.loadWorlds(finalOrder, manifests, totals);
+    const { updatedTotals: afterContent } = await env.manager.loadContent(
+      finalOrder,
+      manifests,
+      totals
+    );
+    const updatedTotals = await env.worldLoader.loadWorlds(
+      finalOrder,
+      manifests,
+      afterContent
+    );
 
     expect(env.registry.getAll('entityDefinitions').length).toBe(2);
     expect(env.registry.getAll('entityInstances').length).toBe(2);
@@ -179,13 +187,21 @@ describe('Multi-mod content loading and world validation', () => {
     ]);
 
     const totals = {};
-    await env.manager.loadContent(finalOrder, manifests, totals);
+    const { updatedTotals: afterContent } = await env.manager.loadContent(
+      finalOrder,
+      manifests,
+      totals
+    );
 
     // The duplicate instance should cause an error (not a warning)
-    expect(totals.entityInstances?.errors).toBe(1);
+    expect(afterContent.entityInstances?.errors).toBe(1);
 
-    await env.worldLoader.loadWorlds(finalOrder, manifests, totals);
-    expect(totals.worlds.errors).toBe(1);
+    const updatedTotals = await env.worldLoader.loadWorlds(
+      finalOrder,
+      manifests,
+      afterContent
+    );
+    expect(updatedTotals.worlds.errors).toBe(1);
   });
 
   it('handles large numbers of files', async () => {
