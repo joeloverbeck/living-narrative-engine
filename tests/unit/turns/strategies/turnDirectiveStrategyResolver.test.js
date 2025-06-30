@@ -11,6 +11,7 @@ import {
 import TurnDirectiveStrategyResolver, {
   DEFAULT_STRATEGY_MAP,
 } from '../../../../src/turns/strategies/turnDirectiveStrategyResolver.js';
+import { resetResolver } from '../../../common/turns/resolverTestHelpers.js';
 import TurnDirective from '../../../../src/turns/constants/turnDirectives.js';
 import RepromptStrategy from '../../../../src/turns/strategies/repromptStrategy.js';
 import EndTurnSuccessStrategy from '../../../../src/turns/strategies/endTurnSuccessStrategy.js';
@@ -34,7 +35,7 @@ describe('TurnDirectiveStrategyResolver', () => {
   afterEach(() => {
     consoleWarnSpy.mockRestore();
     process.env.NODE_ENV = originalNodeEnv;
-    resolver.clearCache();
+    resetResolver(resolver);
   });
 
   test('returns correct singleton strategies for known directives', () => {
