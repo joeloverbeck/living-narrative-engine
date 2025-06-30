@@ -4,6 +4,7 @@ import { jest, describe, beforeEach, expect, test } from '@jest/globals';
 import { HumanDecisionProvider } from '../../../../src/turns/providers/humanDecisionProvider.js';
 import { ITurnDecisionProvider } from '../../../../src/turns/interfaces/ITurnDecisionProvider.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../../src/constants/eventIds.js';
+import * as actionIndexUtils from '../../../../src/utils/actionIndexUtils.js';
 import { expectNoDispatch } from '../../../common/engine/dispatchTestUtils.js';
 
 // Mock dependencies
@@ -161,5 +162,62 @@ describe('HumanDecisionProvider', () => {
       decisionProvider.decide(mockActor, mockContext, mockActions)
     ).rejects.toThrow('Prompt failed!');
     expectNoDispatch(mockDispatcher.dispatch);
+  });
+
+  test('decide forwards prompt result and validates index', async () => {
+    const spy = jest.spyOn(actionIndexUtils, 'assertValidActionIndex');
+    mockPromptCoordinator.prompt.mockResolvedValue({
+      chosenIndex: 2,
+      speech: 'hello',
+      thoughts: null,
+      notes: null,
+    });
+
+    const result = await decisionProvider.decide(
+      mockActor,
+      mockContext,
+      mockActions,
+      mockAbortSignal
+    );
+
+    expect(mockPromptCoordinator.prompt).toHaveBeenCalledWith(mockActor, {
+      indexedComposites: mockActions,
+      cancellationSignal: mockAbortSignal,
+    });
+    expect(result).toMatchObject({ chosenIndex: 2, speech: 'hello' });
+    expect(spy).toHaveBeenCalledWith(
+      2,
+      mockActions.length,
+      'HumanDecisionProvider',
+      mockActor.id,
+      mockDispatcher,
+      mockLogger,
+      { result: { index: 2, speech: 'hello', thoughts: null, notes: null } }
+    );
+  });
+
+  test('invalid index triggers assertValidActionIndex', async () => {
+    const spy = jest.spyOn(actionIndexUtils, 'assertValidActionIndex');
+    mockPromptCoordinator.prompt.mockResolvedValue({
+      chosenIndex: 5,
+      speech: 'hello',
+      thoughts: null,
+      notes: null,
+    });
+
+    await expect(
+      decisionProvider.decide(mockActor, mockContext, mockActions)
+    ).rejects.toThrow(
+      'Player chose an index that does not exist for this turn.'
+    );
+    expect(spy).toHaveBeenCalledWith(
+      5,
+      mockActions.length,
+      'HumanDecisionProvider',
+      mockActor.id,
+      mockDispatcher,
+      mockLogger,
+      { result: { index: 5, speech: 'hello', thoughts: null, notes: null } }
+    );
   });
 });
