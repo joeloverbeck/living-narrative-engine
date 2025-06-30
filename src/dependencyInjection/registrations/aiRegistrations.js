@@ -53,6 +53,7 @@ import { EnvironmentContext } from '../../llms/environmentContext.js';
 import { ClientApiKeyProvider } from '../../llms/clientApiKeyProvider.js';
 import { RetryHttpClient } from '../../llms/retryHttpClient.js';
 import { LLMStrategyFactory } from '../../llms/LLMStrategyFactory.js';
+import strategyRegistry from '../../llms/strategies/strategyRegistry.js';
 
 // --- AI Turn Handler Import ---
 import ActorTurnHandler from '../../turns/handlers/actorTurnHandler.js';
@@ -151,7 +152,11 @@ export function registerLlmInfrastructure(registrar, logger) {
       safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
     });
     const httpClient = c.resolve(tokens.IHttpClient);
-    const llmStrategyFactory = new LLMStrategyFactory({ httpClient, logger });
+    const llmStrategyFactory = new LLMStrategyFactory({
+      httpClient,
+      logger,
+      strategyMap: strategyRegistry,
+    });
 
     const adapterInstance = new ConfigurableLLMAdapter({
       logger: c.resolve(tokens.ILogger),
