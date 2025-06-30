@@ -261,7 +261,15 @@ class SystemLogicInterpreter extends BaseService {
     }
 
     if (Array.isArray(rule.actions) && rule.actions.length) {
-      this._executeActions(rule.actions, nestedCtx, `Rule '${rule.rule_id}'`);
+      try {
+        this._executeActions(rule.actions, nestedCtx, `Rule '${rule.rule_id}'`);
+      } catch (err) {
+        this.#logger.error(
+          `[Rule ${rule.rule_id}] Error during action sequence:`,
+          err
+        );
+        throw err;
+      }
     }
   }
 
