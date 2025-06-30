@@ -225,6 +225,25 @@ class QueryEntitiesHandler extends BaseOperationHandler {
   }
 
   /**
+   * Apply a filtering function and log candidate reduction.
+   *
+   * @param {Set<string>} candidates - Current candidate entity ids.
+   * @param {(set:Set<string>) => Set<string>} filterFn - Filtering callback.
+   * @param {string} label - Label describing the filter for logging.
+   * @param {ILogger} logger - Logger for debug output.
+   * @returns {Set<string>} Resulting candidate ids after filtering.
+   * @private
+   */
+  #filterAndLog(candidates, filterFn, label, logger) {
+    const originalSize = candidates.size;
+    const result = filterFn(candidates);
+    logger.debug(
+      `QUERY_ENTITIES: Applied '${label}'. Candidates reduced from ${originalSize} to ${result.size}.`
+    );
+    return result;
+  }
+
+  /**
    * Apply a location-based filter.
    *
    * @param {Set<string>} candidates - Current candidate entity ids.
@@ -242,15 +261,12 @@ class QueryEntitiesHandler extends BaseOperationHandler {
     }
 
     const idsInLocation = this.#entityManager.getEntitiesInLocation(locationId);
-    const originalSize = candidates.size;
-    const result = new Set(
-      [...candidates].filter((id) => idsInLocation.has(id))
+    return this.#filterAndLog(
+      candidates,
+      (set) => new Set([...set].filter((id) => idsInLocation.has(id))),
+      `by_location: ${locationId}`,
+      logger
     );
-
-    logger.debug(
-      `QUERY_ENTITIES: Applied 'by_location: ${locationId}'. Candidates reduced from ${originalSize} to ${result.size}.`
-    );
-    return result;
   }
 
   /**
@@ -270,17 +286,20 @@ class QueryEntitiesHandler extends BaseOperationHandler {
       return candidates;
     }
 
-    const originalSize = candidates.size;
-    const result = new Set();
-    for (const id of candidates) {
-      if (this.#entityManager.hasComponent(id, componentType)) {
-        result.add(id);
-      }
-    }
-    logger.debug(
-      `QUERY_ENTITIES: Applied 'with_component: ${componentType}'. Candidates reduced from ${originalSize} to ${result.size}.`
+    return this.#filterAndLog(
+      candidates,
+      (set) => {
+        const result = new Set();
+        for (const id of set) {
+          if (this.#entityManager.hasComponent(id, componentType)) {
+            result.add(id);
+          }
+        }
+        return result;
+      },
+      `with_component: ${componentType}`,
+      logger
     );
-    return result;
   }
 
   /**
@@ -307,22 +326,28 @@ class QueryEntitiesHandler extends BaseOperationHandler {
       return candidates;
     }
 
-    const originalSize = candidates.size;
-    const result = new Set();
-    for (const id of candidates) {
-      const compData = this.#entityManager.getComponentData(id, component_type);
-      if (compData !== undefined) {
-        const match = this.#jsonLogicEvaluationService.evaluate(
-          condition,
-          compData
-        );
-        if (match) result.add(id);
-      }
-    }
-    logger.debug(
-      `QUERY_ENTITIES: Applied 'with_component_data: ${component_type}'. Candidates reduced from ${originalSize} to ${result.size}.`
+    return this.#filterAndLog(
+      candidates,
+      (set) => {
+        const result = new Set();
+        for (const id of set) {
+          const compData = this.#entityManager.getComponentData(
+            id,
+            component_type
+          );
+          if (compData !== undefined) {
+            const match = this.#jsonLogicEvaluationService.evaluate(
+              condition,
+              compData
+            );
+            if (match) result.add(id);
+          }
+        }
+        return result;
+      },
+      `with_component_data: ${component_type}`,
+      logger
     );
-    return result;
   }
 }
 
