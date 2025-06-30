@@ -127,7 +127,7 @@ describe('EntityDefinitionLoader - Component Validation', () => {
 
       // Mock schema loaded check
       mockSchemaValidator.isSchemaLoaded.mockReturnValue(true);
-      
+
       // Mock schema validation to pass for valid values
       mockSchemaValidator.validate.mockImplementation((schemaId) => {
         if (schemaId === 'descriptors:firmness') {
@@ -170,7 +170,7 @@ describe('EntityDefinitionLoader - Component Validation', () => {
 
       // Mock schema loaded check
       mockSchemaValidator.isSchemaLoaded.mockReturnValue(true);
-      
+
       // Mock schema validation
       mockSchemaValidator.validate.mockImplementation((schemaId) => {
         if (schemaId === 'descriptors:firmness') {
@@ -237,7 +237,7 @@ describe('EntityDefinitionLoader - Component Validation', () => {
 
         // Mock schema loaded check
         mockSchemaValidator.isSchemaLoaded.mockReturnValue(true);
-        
+
         // Mock schema validation to pass for all valid values
         mockSchemaValidator.validate.mockImplementation((schemaId) => {
           if (schemaId === 'descriptors:firmness') {
@@ -285,7 +285,7 @@ describe('EntityDefinitionLoader - Component Validation', () => {
 
       // Mock schema loaded check
       mockSchemaValidator.isSchemaLoaded.mockReturnValue(true);
-      
+
       mockSchemaValidator.validate.mockImplementation((schemaId) => {
         if (schemaId === 'descriptors:firmness') {
           return {
@@ -331,7 +331,7 @@ describe('EntityDefinitionLoader - Component Validation', () => {
 
       // Mock schema loaded check
       mockSchemaValidator.isSchemaLoaded.mockReturnValue(true);
-      
+
       mockSchemaValidator.validate.mockImplementation((schemaId) => {
         if (schemaId === 'descriptors:firmness') {
           return {
@@ -391,7 +391,7 @@ describe('EntityDefinitionLoader - Component Validation', () => {
       mockSchemaValidator.isSchemaLoaded.mockImplementation((schemaId) => {
         return schemaId !== 'unknown:component';
       });
-      
+
       // Mock registry to return undefined for unknown component
       mockDataRegistry.tryGetData.mockImplementation((registryPath) => {
         if (registryPath === 'components.unknown:component') {
@@ -413,8 +413,12 @@ describe('EntityDefinitionLoader - Component Validation', () => {
 
       // Check that the warning was called for the unknown component
       const warnCalls = mockLogger.warn.mock.calls;
-      const hasExpectedWarning = warnCalls.some(call => 
-        call[0] && call[0].includes('Skipping validation for component \'unknown:component\'')
+      const hasExpectedWarning = warnCalls.some(
+        (call) =>
+          call[0] &&
+          call[0].includes(
+            "Skipping validation for component 'unknown:component'"
+          )
       );
       expect(hasExpectedWarning).toBe(true);
     });

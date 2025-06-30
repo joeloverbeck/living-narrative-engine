@@ -21,7 +21,7 @@ import {
 
 // --- Utility Imports ---
 import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
-import { dispatchWithLogging } from '../utils/eventDispatchUtils.js';
+import EventDispatchService from '../events/eventDispatchService.js';
 import { WorldInitializationError } from '../errors/InitializationError.js';
 import {
   assertFunction,
@@ -49,6 +49,8 @@ class WorldInitializer {
   #validatedEventDispatcher;
   /** @type {ILogger} */
   #logger;
+  /** @type {EventDispatchService} */
+  #eventDispatchService;
 
   /**
    * Exposes the provided world context for potential external use.
@@ -69,6 +71,7 @@ class WorldInitializer {
    * @param {ValidatedEventDispatcher} dependencies.validatedEventDispatcher - Event dispatcher
    * @param {ILogger} dependencies.logger - Logger instance
    * @param {IScopeRegistry} dependencies.scopeRegistry - Registry used for scope initialization
+   * @param {EventDispatchService} [dependencies.eventDispatchService] - Optional shared dispatch service
    * @throws {Error} If any required dependency is missing or invalid.
    */
   constructor({
@@ -78,6 +81,7 @@ class WorldInitializer {
     validatedEventDispatcher,
     logger,
     scopeRegistry,
+    eventDispatchService,
   }) {
     assertFunction(
       entityManager,
@@ -120,6 +124,8 @@ class WorldInitializer {
     this.#repository = gameDataRepository;
     this.#validatedEventDispatcher = validatedEventDispatcher;
     this.#logger = logger;
+    this.#eventDispatchService =
+      eventDispatchService ?? new EventDispatchService();
 
     this.#logger.debug(
       'WorldInitializer: Instance created. Spatial index management is now handled by SpatialIndexSynchronizer through event listening.'
@@ -256,7 +262,7 @@ class WorldInitializer {
       this.#logger.error(
         `WorldInitializer (Pass 1): Failed to instantiate entity from definition: ${definitionId} for instance: ${instanceId}. createEntityInstance returned null/undefined or threw an error.`
       );
-      await dispatchWithLogging(
+      await this.#eventDispatchService.dispatch(
         this.#validatedEventDispatcher,
         WORLDINIT_ENTITY_INSTANTIATION_FAILED_ID,
         {
@@ -266,9 +272,11 @@ class WorldInitializer {
           error: `Failed to create entity instance. EntityManager returned null/undefined or threw an error.`,
           reason: 'Initial World Load',
         },
-        this.#logger,
-        `instance ${instanceId}`,
-        { allowSchemaNotFound: true }
+        {
+          logger: this.#logger,
+          context: `instance ${instanceId}`,
+          eventOptions: { allowSchemaNotFound: true },
+        }
       );
       return { entity: null, success: false };
     }
@@ -277,7 +285,7 @@ class WorldInitializer {
       `WorldInitializer (Pass 1): Successfully instantiated entity ${instance.id} (from definition: ${instance.definitionId})`
     );
 
-    await dispatchWithLogging(
+    await this.#eventDispatchService.dispatch(
       this.#validatedEventDispatcher,
       WORLDINIT_ENTITY_INSTANTIATED_ID,
       {
@@ -287,9 +295,11 @@ class WorldInitializer {
         worldName: worldName,
         reason: 'Initial World Load',
       },
-      this.#logger,
-      `entity ${instance.id}`,
-      { allowSchemaNotFound: true }
+      {
+        logger: this.#logger,
+        context: `entity ${instance.id}`,
+        eventOptions: { allowSchemaNotFound: true },
+      }
     );
 
     return { entity: instance, success: true };

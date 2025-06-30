@@ -29,6 +29,7 @@
 
 import { SHUTDOWNABLE } from '../../dependencyInjection/tags.js';
 import { tokens } from '../../dependencyInjection/tokens.js'; // <<< ADDED for resolving TurnManager
+import EventDispatchService from '../../events/eventDispatchService.js';
 
 /**
  * Service responsible for orchestrating the orderly shutdown of the game engine and its components.
@@ -40,6 +41,8 @@ class ShutdownService {
   #container;
   #logger;
   #validatedEventDispatcher;
+  /** @type {EventDispatchService} */
+  #eventDispatchService;
   // REMOVED: GameLoop dependency
   // /** @private @type {GameLoop | null} */
   // #gameLoop = null;
@@ -51,9 +54,15 @@ class ShutdownService {
    * @param {AppContainer} dependencies.container - The application's dependency container.
    * @param {ILogger} dependencies.logger - The logging service.
    * @param {ValidatedEventDispatcher} dependencies.validatedEventDispatcher - The validated event dispatcher.
+   * @param {EventDispatchService} [dependencies.eventDispatchService] - Optional event dispatch service.
    * @throws {Error} If any required dependency (container, logger, validatedEventDispatcher) is missing or invalid.
    */
-  constructor({ container, logger, validatedEventDispatcher }) {
+  constructor({
+    container,
+    logger,
+    validatedEventDispatcher,
+    eventDispatchService,
+  }) {
     // --- Dependency Validation ---
     if (!container) {
       const errorMsg =
@@ -95,6 +104,8 @@ class ShutdownService {
     this.#container = container;
     this.#logger = logger;
     this.#validatedEventDispatcher = validatedEventDispatcher;
+    this.#eventDispatchService =
+      eventDispatchService ?? new EventDispatchService();
 
     this.#logger.debug(
       'ShutdownService: Instance created successfully with dependencies.'
@@ -269,14 +280,16 @@ class ShutdownService {
    * @private
    */
   async #dispatchWithLogging(eventId, payload) {
-    try {
-      await this.#validatedEventDispatcher.dispatch(eventId, payload, {
-        allowSchemaNotFound: true,
-      });
-      this.#logger.debug(`Dispatched '${eventId}' event.`, payload);
-    } catch (e) {
-      this.#logger.error(`Failed to dispatch '${eventId}' event`, e);
-    }
+    await this.#eventDispatchService.dispatch(
+      this.#validatedEventDispatcher,
+      eventId,
+      payload,
+      {
+        logger: this.#logger,
+        eventOptions: { allowSchemaNotFound: true },
+        context: '',
+      }
+    );
   }
 }
 

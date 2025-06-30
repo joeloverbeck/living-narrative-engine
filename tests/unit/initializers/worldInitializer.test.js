@@ -12,7 +12,7 @@ import { SCOPES_KEY } from '../../../src/constants/dataRegistryKeys.js';
 import loadAndInitScopes from '../../../src/initializers/services/scopeRegistryUtils.js';
 import { WorldInitializationError } from '../../../src/errors/InitializationError.js';
 import { safeDispatchError } from '../../../src/utils/safeDispatchErrorUtils.js';
-import * as eventDispatchUtils from '../../../src/utils/eventDispatchUtils.js';
+import EventDispatchService from '../../../src/events/eventDispatchService.js';
 
 jest.mock('../../../src/utils/safeDispatchErrorUtils.js', () => ({
   safeDispatchError: jest.fn(),
@@ -25,6 +25,7 @@ describe('WorldInitializer', () => {
   let mockValidatedEventDispatcher;
   let mockLogger;
   let mockScopeRegistry;
+  let mockEventDispatchService;
   let worldInitializer;
 
   const createMockEntityInstance = (
@@ -76,7 +77,7 @@ describe('WorldInitializer', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    jest.spyOn(eventDispatchUtils, 'dispatchWithLogging');
+    mockEventDispatchService = { dispatch: jest.fn().mockResolvedValue(true) };
 
     mockEntityManager = {
       createEntityInstance: jest.fn(),
@@ -112,6 +113,7 @@ describe('WorldInitializer', () => {
       validatedEventDispatcher: mockValidatedEventDispatcher,
       logger: mockLogger,
       scopeRegistry: mockScopeRegistry,
+      eventDispatchService: mockEventDispatchService,
     });
 
     mockGameDataRepository.getComponentDefinition.mockImplementation(
@@ -227,13 +229,15 @@ describe('WorldInitializer', () => {
         )
       );
 
-      expect(eventDispatchUtils.dispatchWithLogging).toHaveBeenCalledWith(
+      expect(mockEventDispatchService.dispatch).toHaveBeenCalledWith(
         mockValidatedEventDispatcher,
         WORLDINIT_ENTITY_INSTANTIATED_ID,
         expect.objectContaining({ instanceId: 'test:hero_instance' }),
-        mockLogger,
-        'entity test:hero_instance',
-        { allowSchemaNotFound: true }
+        {
+          logger: mockLogger,
+          context: 'entity test:hero_instance',
+          eventOptions: { allowSchemaNotFound: true },
+        }
       );
       // Pass 2 reference resolution has been removed as it's no longer needed
       // with data-driven entity instances
@@ -266,13 +270,15 @@ describe('WorldInitializer', () => {
       expect(mockLogger.error).toHaveBeenCalledWith(
         'WorldInitializer (Pass 1): Failed to instantiate entity from definition: test:broken for instance: test:broken_instance. createEntityInstance returned null/undefined or threw an error.'
       );
-      expect(eventDispatchUtils.dispatchWithLogging).toHaveBeenCalledWith(
+      expect(mockEventDispatchService.dispatch).toHaveBeenCalledWith(
         mockValidatedEventDispatcher,
         WORLDINIT_ENTITY_INSTANTIATION_FAILED_ID,
         expect.objectContaining({ instanceId: 'test:broken_instance' }),
-        mockLogger,
-        'instance test:broken_instance',
-        { allowSchemaNotFound: true }
+        {
+          logger: mockLogger,
+          context: 'instance test:broken_instance',
+          eventOptions: { allowSchemaNotFound: true },
+        }
       );
       // Pass 2 reference resolution has been removed, so no related logs expected
     });
@@ -600,13 +606,15 @@ describe('WorldInitializer', () => {
         ),
         expect.any(Error)
       );
-      expect(eventDispatchUtils.dispatchWithLogging).toHaveBeenCalledWith(
+      expect(mockEventDispatchService.dispatch).toHaveBeenCalledWith(
         mockValidatedEventDispatcher,
         WORLDINIT_ENTITY_INSTANTIATED_ID,
         expect.any(Object),
-        mockLogger,
-        'entity test:eventTest_instance',
-        { allowSchemaNotFound: true }
+        {
+          logger: mockLogger,
+          context: 'entity test:eventTest_instance',
+          eventOptions: { allowSchemaNotFound: true },
+        }
       );
     });
   });

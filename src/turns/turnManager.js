@@ -29,7 +29,7 @@ import RoundManager from './roundManager.js';
 import TurnCycle from './turnCycle.js';
 import TurnEventSubscription from './turnEventSubscription.js';
 import { RealScheduler } from '../scheduling/index.js';
-import { safeDispatch } from '../utils/eventHelpers.js';
+import EventDispatchService from '../events/eventDispatchService.js';
 import { logStart, logEnd, logError } from '../utils/loggerUtils.js';
 import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
 
@@ -68,6 +68,8 @@ class TurnManager extends ITurnManager {
   #currentHandler = null;
   /** @type {import('./turnEventSubscription.js').default} */
   #eventSubscription;
+  /** @type {EventDispatchService} */
+  #eventDispatchService;
 
   /**
    * Creates an instance of TurnManager.
@@ -93,6 +95,7 @@ class TurnManager extends ITurnManager {
       turnHandlerResolver,
       roundManager,
       scheduler = new RealScheduler(),
+      eventDispatchService,
     } = options || {};
     const className = this.constructor.name;
 
@@ -164,6 +167,8 @@ class TurnManager extends ITurnManager {
       logger,
       scheduler
     );
+    this.#eventDispatchService =
+      eventDispatchService ?? new EventDispatchService();
 
     // --- State Initialization (reset flags) ---
     this.#isRunning = false;
@@ -390,25 +395,25 @@ class TurnManager extends ITurnManager {
         this.#logger.debug(
           `>>> Starting turn initiation for Entity: ${actorId} (${entityType}) <<<`
         );
-        await safeDispatch(
+        await this.#eventDispatchService.dispatch(
           this.#dispatcher,
           'core:turn_started',
           {
             entityId: actorId,
             entityType: entityType,
-            entity: this.#currentActor, // Include full entity for component access
+            entity: this.#currentActor,
           },
-          this.#logger
+          { logger: this.#logger }
         );
 
-        await safeDispatch(
+        await this.#eventDispatchService.dispatch(
           this.#dispatcher,
           TURN_PROCESSING_STARTED,
           {
             entityId: actorId,
             actorType: entityType,
           },
-          this.#logger
+          { logger: this.#logger }
         );
 
         this.#logger.debug(`Resolving turn handler for entity ${actorId}...`);

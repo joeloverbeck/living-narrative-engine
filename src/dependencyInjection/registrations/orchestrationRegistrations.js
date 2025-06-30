@@ -124,6 +124,7 @@ export function registerOrchestration(container) {
     const shutdownLogger = c.resolve(tokens.ILogger);
     const shutdownDispatcher = c.resolve(tokens.IValidatedEventDispatcher); // <<< CHECK THIS ONE TOO! It should also use 'I'
     const shutdownGameLoop = c.resolve(tokens.GameLoop);
+    const eventDispatchService = c.resolve(tokens.EventDispatchService);
 
     // Validate resolved dependencies
     if (!shutdownLogger)
@@ -147,6 +148,7 @@ export function registerOrchestration(container) {
       logger: shutdownLogger,
       validatedEventDispatcher: shutdownDispatcher,
       gameLoop: shutdownGameLoop, // GameLoop is resolved here
+      eventDispatchService,
     });
   });
   logger.debug(

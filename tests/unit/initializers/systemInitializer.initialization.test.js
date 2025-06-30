@@ -5,7 +5,7 @@ import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 // Adjust path as needed
 import SystemInitializer from '../../../src/initializers/systemInitializer.js';
 import { INITIALIZABLE } from '../../../src/dependencyInjection/tags.js'; // Corrected import path for tags
-import * as eventDispatchUtils from '../../../src/utils/eventDispatchUtils.js';
+import EventDispatchService from '../../../src/events/eventDispatchService.js';
 
 // --- Type Imports for Mocks ---
 /** @typedef {import('../../src/interfaces/coreServices.js').ILogger} ILogger */
@@ -20,6 +20,7 @@ describe('SystemInitializer (Tag-Based)', () => {
   let mockLogger;
   /** @type {jest.Mocked<ValidatedEventDispatcher>} */
   let mockValidatedEventDispatcher;
+  let mockEventDispatchService;
   /** @type {SystemInitializer} */
   let systemInitializer; // Instance for initializeAll tests, created in beforeEach
   /** @type {string} */
@@ -45,7 +46,7 @@ describe('SystemInitializer (Tag-Based)', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    jest.spyOn(eventDispatchUtils, 'dispatchWithLogging');
+    mockEventDispatchService = { dispatch: jest.fn().mockResolvedValue(true) };
 
     // Mock ILogger
     mockLogger = {
@@ -108,6 +109,7 @@ describe('SystemInitializer (Tag-Based)', () => {
       logger: mockLogger,
       validatedEventDispatcher: mockValidatedEventDispatcher,
       initializationTag: testInitializationTag,
+      eventDispatchService: mockEventDispatchService,
     });
   });
 
@@ -344,7 +346,7 @@ describe('SystemInitializer (Tag-Based)', () => {
         ),
         initError
       );
-      expect(eventDispatchUtils.dispatchWithLogging).toHaveBeenCalledWith(
+      expect(mockEventDispatchService.dispatch).toHaveBeenCalledWith(
         mockValidatedEventDispatcher,
         'system:initialization_failed',
         {
@@ -352,9 +354,11 @@ describe('SystemInitializer (Tag-Based)', () => {
           error: initError.message,
           stack: initError.stack,
         },
-        mockLogger,
-        'SystemFailInit',
-        { allowSchemaNotFound: true }
+        {
+          logger: mockLogger,
+          context: 'SystemFailInit',
+          eventOptions: { allowSchemaNotFound: true },
+        }
       );
 
       // dispatch still uses the dispatcher under the hood
@@ -519,7 +523,7 @@ describe('SystemInitializer (Tag-Based)', () => {
 
       await systemInitializer.initializeAll();
 
-      expect(eventDispatchUtils.dispatchWithLogging).toHaveBeenCalledWith(
+      expect(mockEventDispatchService.dispatch).toHaveBeenCalledWith(
         mockValidatedEventDispatcher,
         'system:initialization_failed',
         {
@@ -527,9 +531,11 @@ describe('SystemInitializer (Tag-Based)', () => {
           error: initError.message,
           stack: initError.stack,
         },
-        mockLogger,
-        'SystemFailInit',
-        { allowSchemaNotFound: true }
+        {
+          logger: mockLogger,
+          context: 'SystemFailInit',
+          eventOptions: { allowSchemaNotFound: true },
+        }
       );
 
       expect(mockLogger.error).toHaveBeenCalledWith(

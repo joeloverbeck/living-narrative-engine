@@ -26,6 +26,7 @@ export function registerInitializers(container) {
       validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
       logger: c.resolve(tokens.ILogger),
       scopeRegistry: c.resolve(tokens.IScopeRegistry),
+      eventDispatchService: c.resolve(tokens.EventDispatchService),
     };
     return new WorldInitializer(dependencies);
   });
@@ -41,6 +42,7 @@ export function registerInitializers(container) {
       logger: c.resolve(tokens.ILogger),
       validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
       initializationTag: INITIALIZABLE[0], // Pass the tag string
+      eventDispatchService: c.resolve(tokens.EventDispatchService),
     };
     return new SystemInitializer(dependencies);
   });

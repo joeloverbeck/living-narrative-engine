@@ -9,7 +9,7 @@
 // Type imports for JSDoc
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../events/validatedEventDispatcher.js').default} ValidatedEventDispatcher */ // Corrected path
-import { dispatchWithLogging } from '../utils/eventDispatchUtils.js';
+import EventDispatchService from '../events/eventDispatchService.js';
 import { assertFunction, assertPresent } from '../utils/dependencyUtils.js';
 
 /**
@@ -25,6 +25,8 @@ class SystemInitializer {
   #initializationTag;
   /** @type {ValidatedEventDispatcher} */
   #validatedEventDispatcher;
+  /** @type {EventDispatchService} */
+  #eventDispatchService;
 
   /**
    * Creates an instance of SystemInitializer.
@@ -34,6 +36,7 @@ class SystemInitializer {
    * @param {ValidatedEventDispatcher} dependencies.validatedEventDispatcher - Service for dispatching validated events.
    * @param {string} dependencies.initializationTag - The tag used to identify systems for initialization.
    * @param dependencies.resolver
+   * @param dependencies.eventDispatchService
    * @throws {Error} If resolver, logger, initializationTag, or validatedEventDispatcher is invalid or missing.
    */
   constructor({
@@ -41,6 +44,7 @@ class SystemInitializer {
     logger,
     validatedEventDispatcher,
     initializationTag,
+    eventDispatchService,
   }) {
     assertFunction(
       resolver,
@@ -66,6 +70,8 @@ class SystemInitializer {
     this.#logger = logger;
     this.#initializationTag = initializationTag;
     this.#validatedEventDispatcher = validatedEventDispatcher;
+    this.#eventDispatchService =
+      eventDispatchService ?? new EventDispatchService();
 
     this.#logger.debug(
       `SystemInitializer instance created. Tag: '${this.#initializationTag}'.`
@@ -146,13 +152,15 @@ class SystemInitializer {
           error: initError?.message || 'Unknown error',
           stack: initError?.stack,
         };
-        dispatchWithLogging(
+        this.#eventDispatchService.dispatch(
           this.#validatedEventDispatcher,
           'system:initialization_failed',
           failurePayload,
-          this.#logger,
-          systemName,
-          { allowSchemaNotFound: true }
+          {
+            logger: this.#logger,
+            context: systemName,
+            eventOptions: { allowSchemaNotFound: true },
+          }
         );
       }
     } else {

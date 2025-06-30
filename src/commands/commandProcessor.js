@@ -10,7 +10,8 @@ import {
   createFailureResult,
   dispatchFailure,
 } from './helpers/commandResultUtils.js';
-import { dispatchWithErrorHandling as dispatchEventWithErrorHandling } from '../utils/eventDispatchHelper.js';
+import { createErrorDetails } from '../utils/errorDetails.js';
+import EventDispatchService from '../events/eventDispatchService.js';
 
 // --- Type Imports ---
 /** @typedef {import('../entities/entity.js').default} Entity */
@@ -29,6 +30,8 @@ class CommandProcessor extends ICommandProcessor {
   #logger;
   /** @type {ISafeEventDispatcher} */
   #safeEventDispatcher;
+  /** @type {EventDispatchService} */
+  #eventDispatchService;
 
   /**
    * Creates an instance of CommandProcessor.
@@ -41,7 +44,7 @@ class CommandProcessor extends ICommandProcessor {
   constructor(options) {
     super();
 
-    const { logger, safeEventDispatcher } = options || {};
+    const { logger, safeEventDispatcher, eventDispatchService } = options || {};
 
     this.#logger = initLogger('CommandProcessor', logger);
 
@@ -55,6 +58,8 @@ class CommandProcessor extends ICommandProcessor {
     );
 
     this.#safeEventDispatcher = safeEventDispatcher;
+    this.#eventDispatchService =
+      eventDispatchService ?? new EventDispatchService();
 
     this.#logger.debug(
       'CommandProcessor: Instance created and dependencies validated.'
@@ -93,12 +98,18 @@ class CommandProcessor extends ICommandProcessor {
     const payload = this.#createAttemptActionPayload(actor, turnAction);
 
     // --- Dispatch ---
-    const dispatchSuccess = await dispatchEventWithErrorHandling(
+    const dispatchSuccess = await this.#eventDispatchService.dispatch(
       this.#safeEventDispatcher,
       ATTEMPT_ACTION_ID,
       payload,
-      this.#logger,
-      `ATTEMPT_ACTION_ID dispatch for pre-resolved action ${actionId}`
+      {
+        logger: this.#logger,
+        context: `ATTEMPT_ACTION_ID dispatch for pre-resolved action ${actionId}`,
+        errorDetails: createErrorDetails(
+          `Exception in dispatch for ${ATTEMPT_ACTION_ID}`,
+          undefined
+        ),
+      }
     );
 
     if (dispatchSuccess) {

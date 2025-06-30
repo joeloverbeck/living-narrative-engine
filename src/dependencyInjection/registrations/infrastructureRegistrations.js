@@ -7,6 +7,7 @@ import SpatialIndexManager from '../../entities/spatialIndexManager.js';
 import { GameDataRepository } from '../../data/gameDataRepository.js'; // Concrete class
 import ValidatedEventDispatcher from '../../events/validatedEventDispatcher.js'; // Concrete Class Import
 import { SafeEventDispatcher } from '../../events/safeEventDispatcher.js';
+import EventDispatchService from '../../events/eventDispatchService.js';
 import ModDependencyValidator from '../../modding/modDependencyValidator.js';
 import validateModEngineVersions from '../../modding/modVersionValidator.js';
 import * as ModLoadOrderResolver from '../../modding/modLoadOrderResolver.js';
@@ -127,6 +128,15 @@ export function registerInfrastructure(container) {
   );
   log.debug(
     `Infrastructure Registration: Registered ${String(tokens.ISafeEventDispatcher)}.`
+  );
+
+  // --- EventDispatchService ---
+  registrar.singletonFactory(
+    tokens.EventDispatchService,
+    () => new EventDispatchService()
+  );
+  log.debug(
+    `Infrastructure Registration: Registered ${String(tokens.EventDispatchService)}.`
   );
 
   // Scope DSL Engine

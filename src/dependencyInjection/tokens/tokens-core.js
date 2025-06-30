@@ -161,5 +161,6 @@ export const coreTokens = freeze({
   ScopeEngine: 'ScopeEngine',
   ScopeCache: 'ScopeCache',
   DslParser: 'DslParser',
+  EventDispatchService: 'EventDispatchService',
   TraceContextFactory: 'TraceContextFactory',
 });
