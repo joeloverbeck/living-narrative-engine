@@ -10,7 +10,7 @@
       "text": "Joel Overberus"
     },
     "anatomy:body": {
-      "recipeId": "anatomy:humanoid_standard"
+      "recipeId": "anatomy:human_male"
     },
     "core:portrait": {
       "imagePath": "portraits/hero.png",

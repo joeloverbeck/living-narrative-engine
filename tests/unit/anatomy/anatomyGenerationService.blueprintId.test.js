@@ -52,7 +52,7 @@ describe('AnatomyGenerationService - Blueprint ID Support', () => {
 
   test('should use blueprintId from recipe when generating anatomy', async () => {
     const entityId = 'test-entity';
-    const recipeId = 'anatomy:humanoid_standard';
+    const recipeId = 'anatomy:human_female';
     const blueprintId = 'anatomy:humanoid_base';
 
     const mockEntity = {
