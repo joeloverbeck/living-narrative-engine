@@ -9,7 +9,7 @@ export default function createLruCache(max = 256) {
    * @param k
    */
   function get(k) {
-    if (!map.has(k)) return null;
+    if (!map.has(k)) return undefined;
     const v = map.get(k);
     map.delete(k);
     map.set(k, v);

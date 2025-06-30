@@ -5,6 +5,7 @@
 
 import { jest, describe, beforeEach, it, expect } from '@jest/globals';
 import { LRUCache } from 'lru-cache';
+import createLruCache from '../../../src/scopeDsl/cache/lruCache.js';
 import ScopeCache from '../../../src/scopeDsl/cache.js';
 import { TURN_STARTED_ID } from '../../../src/constants/eventIds.js';
 
@@ -102,6 +103,13 @@ describe('Scope-DSL Cache - Additional Coverage Tests', () => {
 
       const cacheWithMax = new LRUCache({ max: 256 });
       expect(cacheWithMax.max).toBe(256);
+    });
+  });
+
+  describe('custom createLruCache behavior', () => {
+    test('returns undefined on cache miss', () => {
+      const cache = createLruCache(2);
+      expect(cache.get('missing')).toBeUndefined();
     });
   });
 
