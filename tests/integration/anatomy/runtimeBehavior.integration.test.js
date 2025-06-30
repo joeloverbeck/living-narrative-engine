@@ -422,9 +422,9 @@ describe('Anatomy Runtime Behavior Integration', () => {
 
   describe('Event-Driven Behaviors', () => {
     it('should auto-generate anatomy on entity creation', async () => {
-      // Add on/off methods to the event dispatcher mock with proper handler storage
+      // Add subscribe method to the event dispatcher mock with proper handler storage
       const eventHandlers = {};
-      testBed.eventDispatcher.on = jest.fn((eventType, handler) => {
+      testBed.eventDispatcher.subscribe = jest.fn((eventType, handler) => {
         if (!eventHandlers[eventType]) {
           eventHandlers[eventType] = [];
         }
@@ -437,7 +437,6 @@ describe('Anatomy Runtime Behavior Integration', () => {
           }
         };
       });
-      testBed.eventDispatcher.off = jest.fn();
       
       // Override dispatch to call registered handlers
       const originalDispatch = testBed.eventDispatcher.dispatch;
@@ -526,9 +525,9 @@ describe('Anatomy Runtime Behavior Integration', () => {
     });
 
     it('should not regenerate anatomy for reconstructed entities', async () => {
-      // Add on/off methods to the event dispatcher mock with proper handler storage
+      // Add subscribe method to the event dispatcher mock with proper handler storage
       const eventHandlers = {};
-      testBed.eventDispatcher.on = jest.fn((eventType, handler) => {
+      testBed.eventDispatcher.subscribe = jest.fn((eventType, handler) => {
         if (!eventHandlers[eventType]) {
           eventHandlers[eventType] = [];
         }
@@ -540,7 +539,6 @@ describe('Anatomy Runtime Behavior Integration', () => {
           }
         };
       });
-      testBed.eventDispatcher.off = jest.fn();
       
       // Override dispatch to call registered handlers
       const originalDispatch = testBed.eventDispatcher.dispatch;

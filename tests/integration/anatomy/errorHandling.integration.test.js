@@ -394,9 +394,8 @@ describe('Anatomy Error Handling Integration', () => {
 
   describe('Entity Creation Failures', () => {
     it('should handle anatomy initialization service errors gracefully', async () => {
-      // Add on/off methods to the event dispatcher mock
-      testBed.eventDispatcher.on = jest.fn(() => () => {});
-      testBed.eventDispatcher.off = jest.fn();
+      // Add subscribe method to the event dispatcher mock
+      testBed.eventDispatcher.subscribe = jest.fn(() => jest.fn());
 
       const anatomyInitService = new AnatomyInitializationService({
         eventDispatcher: testBed.eventDispatcher,
