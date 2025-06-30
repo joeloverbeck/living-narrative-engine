@@ -16,6 +16,7 @@ export class PromptStaticContentService extends IPromptStaticContentService {
   /** @type {PromptTextLoader} */ #promptTextLoader;
   /** @type {object|null} */ #promptData = null;
   /** @type {boolean} */ #initialized = false;
+  /** @type {Promise<void>|null} */ #initializing = null;
 
   /**
    * @param {object} dependencies
@@ -48,9 +49,14 @@ export class PromptStaticContentService extends IPromptStaticContentService {
    */
   async initialize() {
     if (this.#initialized) return;
-
-    this.#promptData = await this.#promptTextLoader.loadPromptText();
-    this.#initialized = true;
+    if (!this.#initializing) {
+      this.#initializing = (async () => {
+        this.#promptData = await this.#promptTextLoader.loadPromptText();
+        this.#initialized = true;
+        this.#initializing = null;
+      })();
+    }
+    await this.#initializing;
   }
 
   /** @private */
