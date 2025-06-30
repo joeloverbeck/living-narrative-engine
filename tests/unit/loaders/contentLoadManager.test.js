@@ -1,6 +1,7 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import ContentLoadManager from '../../../src/loaders/ContentLoadManager.js';
 import LoadResultAggregator from '../../../src/loaders/LoadResultAggregator.js';
+import { ContentLoadStatus } from '../../../src/loaders/types.js';
 
 /** @typedef {import('../../../src/loaders/LoadResultAggregator.js').TotalResultsSummary} TotalResultsSummary */
 
@@ -107,7 +108,10 @@ describe('ContentLoadManager.loadContent', () => {
       totals
     );
 
-    expect(results).toEqual({ modA: 'success', modB: 'failed' });
+    expect(results).toEqual({
+      modA: ContentLoadStatus.SUCCESS,
+      modB: ContentLoadStatus.FAILED,
+    });
     expect(updatedTotals.items.count).toBe(1); // Only loaderA succeeded
     expect(updatedTotals.items.errors).toBe(1); // Only loaderB failed
     expect(totals).toEqual({});

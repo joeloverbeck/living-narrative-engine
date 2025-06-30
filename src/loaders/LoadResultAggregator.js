@@ -39,7 +39,7 @@ export class LoadResultAggregator {
   /** @type {TotalResultsSummary} */
   #totalCounts;
   /** @type {ModResultsSummary} */
-  modResults = {};
+  #modResults = {};
 
   /**
    * @param {TotalResultsSummary} totalCounts - Object storing totals across all mods.
@@ -59,6 +59,15 @@ export class LoadResultAggregator {
   }
 
   /**
+   * Retrieves a copy of the per-mod results accumulated so far.
+   *
+   * @returns {ModResultsSummary} A deep clone of the current mod results.
+   */
+  getModResults() {
+    return deepClone(this.#modResults);
+  }
+
+  /**
    * Aggregates a loader result into the per-mod and total summaries.
    *
    * @param {LoadItemsResult|null|undefined} result - Loader result to aggregate.
@@ -75,7 +84,7 @@ export class LoadResultAggregator {
           }
         : { count: 0, overrides: 0, errors: 0 };
 
-    this.modResults[registryKey] = res;
+    this.#modResults[registryKey] = res;
 
     if (!this.#totalCounts[registryKey]) {
       this.#totalCounts[registryKey] = { count: 0, overrides: 0, errors: 0 };
@@ -92,10 +101,10 @@ export class LoadResultAggregator {
    * @returns {void}
    */
   recordFailure(registryKey) {
-    if (!this.modResults[registryKey]) {
-      this.modResults[registryKey] = { count: 0, overrides: 0, errors: 0 };
+    if (!this.#modResults[registryKey]) {
+      this.#modResults[registryKey] = { count: 0, overrides: 0, errors: 0 };
     }
-    this.modResults[registryKey].errors += 1;
+    this.#modResults[registryKey].errors += 1;
 
     if (!this.#totalCounts[registryKey]) {
       this.#totalCounts[registryKey] = { count: 0, overrides: 0, errors: 0 };

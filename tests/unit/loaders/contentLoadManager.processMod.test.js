@@ -1,6 +1,7 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import ContentLoadManager from '../../../src/loaders/ContentLoadManager.js';
 import LoadResultAggregator from '../../../src/loaders/LoadResultAggregator.js';
+import { ContentLoadStatus } from '../../../src/loaders/types.js';
 import { expectNoDispatch } from '../../common/engine/dispatchTestUtils.js';
 
 /** @typedef {import('../../../src/loaders/LoadResultAggregator.js').TotalResultsSummary} TotalResultsSummary */
@@ -63,7 +64,7 @@ describe('ContentLoadManager.processMod', () => {
       phase
     );
 
-    expect(result.status).toBe('skipped');
+    expect(result.status).toBe(ContentLoadStatus.SKIPPED);
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
       'initialization:world_loader:mod_load_failed',
       expect.objectContaining({ modId: 'testMod' }),
@@ -101,7 +102,7 @@ describe('ContentLoadManager.processMod', () => {
       phase
     );
 
-    expect(result.status).toBe('failed');
+    expect(result.status).toBe(ContentLoadStatus.FAILED);
     expect(result.updatedTotals.items.errors).toBe(1);
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
       'initialization:world_loader:content_load_failed',
@@ -150,7 +151,7 @@ describe('ContentLoadManager.processMod', () => {
       phase
     );
 
-    expect(result.status).toBe('success');
+    expect(result.status).toBe(ContentLoadStatus.SUCCESS);
     expect(result.updatedTotals.items.count).toBe(1);
     expectNoDispatch(dispatcher.dispatch);
   });

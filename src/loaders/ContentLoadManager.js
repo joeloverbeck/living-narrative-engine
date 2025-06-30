@@ -7,9 +7,11 @@
 
 import ModProcessor from './ModProcessor.js';
 import { deepClone } from '../utils/cloneUtils.js';
+import { ContentLoadStatus } from './types.js';
 
 /** @typedef {import('./LoadResultAggregator.js').TotalResultsSummary} TotalResultsSummary */
 /** @typedef {import('./LoadResultAggregator.js').default} LoadResultAggregator */
+/** @typedef {import('./types.js').LoadPhaseResult} LoadPhaseResult */
 
 /** @typedef {import('../events/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
@@ -63,8 +65,8 @@ export class ContentLoadManager {
    * @param {string[]} finalModOrder - Resolved load order of mods.
    * @param {Map<string, ModManifest>} manifests - Map of manifests keyed by ID.
    * @param {TotalResultsSummary} totalCounts - Totals from previous operations. This object is not mutated.
-   * @returns {Promise<{results: Record<string, 'success' | 'skipped' | 'failed'>, updatedTotals: TotalResultsSummary}>}
-   *   Map of modIds to overall load status and the updated totals object.
+   * @returns {Promise<LoadPhaseResult>} Map of modIds to overall load status and
+   *   the updated totals object.
    */
   async loadContent(finalModOrder, manifests, totalCounts) {
     this.#logger.debug(
@@ -99,16 +101,22 @@ export class ContentLoadManager {
     // A mod might not have content for all phases.
     const combinedResults = {};
     for (const modId of finalModOrder) {
-      const defStatus = definitionResults[modId] || 'skipped'; // if not present, assume skipped for that phase
-      const instStatus = instanceResults[modId] || 'skipped';
+      const defStatus = definitionResults[modId] || ContentLoadStatus.SKIPPED; // if not present, assume skipped for that phase
+      const instStatus = instanceResults[modId] || ContentLoadStatus.SKIPPED;
 
-      if (defStatus === 'failed' || instStatus === 'failed') {
-        combinedResults[modId] = 'failed';
-      } else if (defStatus === 'success' || instStatus === 'success') {
+      if (
+        defStatus === ContentLoadStatus.FAILED ||
+        instStatus === ContentLoadStatus.FAILED
+      ) {
+        combinedResults[modId] = ContentLoadStatus.FAILED;
+      } else if (
+        defStatus === ContentLoadStatus.SUCCESS ||
+        instStatus === ContentLoadStatus.SUCCESS
+      ) {
         // If it succeeded in at least one phase it had content for, and didn't fail in another
-        combinedResults[modId] = 'success';
+        combinedResults[modId] = ContentLoadStatus.SUCCESS;
       } else {
-        combinedResults[modId] = 'skipped'; // Skipped in all relevant phases
+        combinedResults[modId] = ContentLoadStatus.SKIPPED; // Skipped in all relevant phases
       }
     }
     this.#logger.debug('ModsLoader: Completed both content loading phases.');
@@ -122,15 +130,15 @@ export class ContentLoadManager {
    * @param {Map<string, ModManifest>} manifests - Map of manifests keyed by ID.
    * @param {TotalResultsSummary} totalCounts - Totals from previous operations. This object is not mutated.
    * @param {'definitions' | 'instances'} phase - The loading phase.
-   * @returns {Promise<{results: Record<string, 'success' | 'skipped' | 'failed'>, updatedTotals: TotalResultsSummary}>}
-   *   Map of modIds to load status for this phase and the updated totals object.
+   * @returns {Promise<LoadPhaseResult>} Map of modIds to load status for this
+   *   phase and the updated totals object.
    */
   async loadContentForPhase(finalModOrder, manifests, totalCounts, phase) {
     this.#logger.debug(
       `ModsLoader: Beginning content loading for phase: ${phase}...`
     );
 
-    /** @type {Record<string, 'success' | 'skipped' | 'failed'>} */
+    /** @type {Record<string, ContentLoadStatus>} */
     const results = {};
     const phaseLoaders = this.#contentLoadersConfig.filter(
       (loaderCfg) => loaderCfg.phase === phase
@@ -142,7 +150,7 @@ export class ContentLoadManager {
       );
       // Fill results with 'skipped' for all mods if no loaders for this phase
       for (const modId of finalModOrder) {
-        results[modId] = 'skipped';
+        results[modId] = ContentLoadStatus.SKIPPED;
       }
       return { results, updatedTotals: totalCounts };
     }
@@ -176,7 +184,7 @@ export class ContentLoadManager {
           { modId, phase, error: error?.message },
           error
         );
-        results[modId] = 'failed'; // Record it as failed for this phase
+        results[modId] = ContentLoadStatus.FAILED; // Record it as failed for this phase
         // DO NOT re-throw; continue processing other mods in this phase.
       }
     }

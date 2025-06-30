@@ -13,7 +13,7 @@ describe('LoadResultAggregator utility', () => {
   it('aggregate updates mod and total counts', () => {
     aggregator.aggregate({ count: 2, overrides: 1, errors: 0 }, 'actions');
 
-    expect(aggregator.modResults).toEqual({
+    expect(aggregator.getModResults()).toEqual({
       actions: { count: 2, overrides: 1, errors: 0 },
     });
 
@@ -29,7 +29,7 @@ describe('LoadResultAggregator utility', () => {
   it('aggregate handles invalid results', () => {
     aggregator.aggregate(null, 'rules');
 
-    expect(aggregator.modResults).toEqual({
+    expect(aggregator.getModResults()).toEqual({
       rules: { count: 0, overrides: 0, errors: 0 },
     });
 
@@ -43,11 +43,11 @@ describe('LoadResultAggregator utility', () => {
   });
 
   it('recordFailure increments error counts', () => {
-    aggregator.modResults = { events: { count: 5, overrides: 0, errors: 0 } };
+    aggregator.aggregate({ count: 5, overrides: 0, errors: 0 }, 'events');
     aggregator.recordFailure('events');
     aggregator.recordFailure('events');
 
-    expect(aggregator.modResults.events.errors).toBe(2);
+    expect(aggregator.getModResults().events.errors).toBe(2);
 
     // Original totals object should remain unchanged (immutable behavior)
     expect(initialTotals).toEqual({});
