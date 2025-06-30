@@ -29,6 +29,27 @@ describeInitializedEngineSuite(
         );
       });
 
+      it('should log warning if dispatcher reports failure', async () => {
+        context.bed
+          .getGamePersistenceService()
+          .isSavingAllowed.mockReturnValue(true);
+        context.bed
+          .getSafeEventDispatcher()
+          .dispatch.mockResolvedValueOnce(false);
+
+        await context.engine.showSaveGameUI();
+
+        expect(context.bed.getLogger().debug).toHaveBeenCalledWith(
+          'GameEngine.showSaveGameUI: Dispatching request to show Save Game UI.'
+        );
+        expect(context.bed.getLogger().warn).toHaveBeenCalledWith(
+          'GameEngine.showSaveGameUI: SafeEventDispatcher reported failure when dispatching Save Game UI request.'
+        );
+        expectShowSaveGameUIDispatch(
+          context.bed.getSafeEventDispatcher().dispatch
+        );
+      });
+
       it('should dispatch CANNOT_SAVE_GAME_INFO if saving is not allowed and log reason', async () => {
         context.bed
           .getGamePersistenceService()
