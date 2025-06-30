@@ -137,6 +137,9 @@ describe('QueryEntitiesHandler', () => {
         expect.arrayContaining(['ent_goblin_1', 'ent_chest'])
       );
       expect(result.length).toBe(2);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        `QUERY_ENTITIES: Applied 'by_location: ${locationId}'. Candidates reduced from 5 to 2.`
+      );
     });
 
     test('should filter entities by component presence using "with_component"', () => {
@@ -172,6 +175,9 @@ describe('QueryEntitiesHandler', () => {
         expect.arrayContaining(['ent_goblin_1', 'ent_goblin_2'])
       );
       expect(result.length).toBe(2);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        `QUERY_ENTITIES: Applied 'with_component: ${componentType}'. Candidates reduced from 5 to 2.`
+      );
     });
 
     test('should filter by component data where jsonLogic evaluation is true using "with_component_data"', () => {
@@ -208,6 +214,9 @@ describe('QueryEntitiesHandler', () => {
       const result =
         mockExecutionContext.evaluationContext.context.injured_entities;
       expect(result).toEqual(['ent_goblin_1']);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        `QUERY_ENTITIES: Applied 'with_component_data: ${componentType}'. Candidates reduced from 5 to 1.`
+      );
     });
 
     test('should exclude entities where jsonLogic evaluation is false using "with_component_data"', () => {
@@ -233,6 +242,9 @@ describe('QueryEntitiesHandler', () => {
       const result =
         mockExecutionContext.evaluationContext.context.super_healthy_entities;
       expect(result).toEqual([]);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        `QUERY_ENTITIES: Applied 'with_component_data: ${componentType}'. Candidates reduced from 5 to 0.`
+      );
     });
   });
 
