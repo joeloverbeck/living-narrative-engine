@@ -132,7 +132,13 @@ describe('OpenRouterToolCallingStrategy', () => {
       gameSummary: 'summary',
       llmConfig: execConfig,
       apiKey: 'key',
-      environmentContext: { isClient: jest.fn().mockReturnValue(false) },
+      environmentContext: {
+        isClient: jest.fn().mockReturnValue(false),
+        isServer: jest.fn().mockReturnValue(true),
+        getExecutionEnvironment: jest.fn().mockReturnValue('server'),
+        getProjectRootPath: jest.fn().mockReturnValue('/root'),
+        getProxyServerUrl: jest.fn(),
+      },
     };
     const result = await strategy.execute(params);
     expect(result).toBe('{}');
