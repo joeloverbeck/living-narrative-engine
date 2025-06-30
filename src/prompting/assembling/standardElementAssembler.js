@@ -3,6 +3,7 @@ import { IPromptElementAssembler } from '../../interfaces/IPromptElementAssemble
 import { snakeToCamel } from '../../utils/textUtils.js';
 import { resolveWrapper } from '../../utils/wrapperUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
+import { validateAssemblerParams } from './assemblerValidation.js';
 
 /**
  * @class StandardElementAssembler
@@ -29,13 +30,14 @@ export class StandardElementAssembler extends IPromptElementAssembler {
 
   /** @inheritdoc */
   assemble(elementConfig, promptData, placeholderResolver) {
-    // Parameter validation
-    const paramsProvided = {
-      elementConfigProvided: !!elementConfig,
-      promptDataProvider: !!promptData,
-      placeholderResolverProvided: !!placeholderResolver,
-    };
-    if (!elementConfig || !promptData || !placeholderResolver) {
+    const { valid, paramsProvided } = validateAssemblerParams({
+      elementConfig,
+      promptData,
+      placeholderResolver,
+      logger: this.#logger,
+      functionName: 'StandardElementAssembler.assemble',
+    });
+    if (!valid) {
       safeDispatchError(
         this.#safeEventDispatcher,
         'StandardElementAssembler.assemble: Missing required parameters (elementConfig, promptData, or placeholderResolver).',

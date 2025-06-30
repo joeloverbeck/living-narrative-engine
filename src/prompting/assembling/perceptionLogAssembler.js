@@ -2,6 +2,7 @@
 
 import { IPromptElementAssembler } from '../../interfaces/IPromptElementAssembler.js';
 import { resolveWrapper } from '../../utils/wrapperUtils.js';
+import { validateAssemblerParams } from './assemblerValidation.js';
 
 export const PERCEPTION_LOG_ENTRY_KEY = 'perception_log_entry';
 export const PERCEPTION_LOG_WRAPPER_KEY = 'perception_log_wrapper';
@@ -36,23 +37,16 @@ export class PerceptionLogAssembler extends IPromptElementAssembler {
     placeholderResolver,
     allPromptElementsMap
   ) {
-    // Parameter validation
-    const paramsProvided = {
-      elementConfigProvided: !!elementConfig,
-      promptDataProvider: !!promptData,
-      placeholderResolverProvided: !!placeholderResolver,
-      allPromptElementsMapProvided: !!allPromptElementsMap,
-    };
-    if (
-      !elementConfig ||
-      !promptData ||
-      !placeholderResolver ||
-      !allPromptElementsMap
-    ) {
-      this.#logger.error(
-        'PerceptionLogAssembler.assemble: Missing required parameters.',
-        paramsProvided
-      );
+    const { valid } = validateAssemblerParams({
+      elementConfig,
+      promptData,
+      placeholderResolver,
+      allPromptElementsMap,
+      logger: this.#logger,
+      functionName: 'PerceptionLogAssembler.assemble',
+      requireAllPromptElementsMap: true,
+    });
+    if (!valid) {
       return '';
     }
 

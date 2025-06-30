@@ -1,6 +1,7 @@
 // src/services/promptElementAssemblers/thoughtsSectionAssembler.js
 import { IPromptElementAssembler } from '../../interfaces/IPromptElementAssembler.js';
 import { resolveWrapper } from '../../utils/wrapperUtils.js';
+import { validateAssemblerParams } from './assemblerValidation.js';
 
 export const THOUGHTS_WRAPPER_KEY = 'thoughts_wrapper';
 
@@ -16,6 +17,16 @@ export class ThoughtsSectionAssembler extends IPromptElementAssembler {
 
   /** @inheritdoc */
   assemble(elementCfg, promptData, placeholderResolver) {
+    const { valid } = validateAssemblerParams({
+      elementConfig: elementCfg,
+      promptData,
+      placeholderResolver,
+      functionName: 'ThoughtsSectionAssembler.assemble',
+    });
+    if (!valid) {
+      return '';
+    }
+
     const arr = promptData?.thoughtsArray;
     if (!Array.isArray(arr) || arr.length === 0) {
       return '';
