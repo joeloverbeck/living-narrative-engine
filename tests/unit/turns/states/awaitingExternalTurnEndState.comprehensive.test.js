@@ -138,12 +138,11 @@ describe('AwaitingExternalTurnEndState', () => {
     mockUnsubscribeFn = jest.fn();
     mockEventDispatcher.subscribe.mockImplementation(() => mockUnsubscribeFn);
 
-    state = new AwaitingExternalTurnEndState(
-      mockHandler,
-      TIMEOUT_MS,
-      global.setTimeout,
-      global.clearTimeout
-    );
+    state = new AwaitingExternalTurnEndState(mockHandler, {
+      timeoutMs: TIMEOUT_MS,
+      setTimeoutFn: global.setTimeout,
+      clearTimeoutFn: global.clearTimeout,
+    });
   });
 
   afterEach(() => {
