@@ -1,4 +1,5 @@
 import { ActionIndexingService } from '../../../../src/turns/services/actionIndexingService.js';
+import { ActionIndexingError } from '../../../../src/turns/services/errors/actionIndexingError.js';
 import { MAX_AVAILABLE_ACTIONS_PER_TURN } from '../../../../src/constants/core.js';
 import { describe, beforeEach, it, expect, jest } from '@jest/globals';
 
@@ -166,9 +167,7 @@ describe('ActionIndexingService', () => {
   });
 
   it('throws if getIndexedList called before indexActions', () => {
-    expect(() => service.getIndexedList('actorX')).toThrow(
-      'No indexed action list for actor "actorX"'
-    );
+    expect(() => service.getIndexedList('actorX')).toThrow(ActionIndexingError);
   });
 
   it('getIndexedList returns a copy and protects internal state', () => {
@@ -184,17 +183,13 @@ describe('ActionIndexingService', () => {
   });
 
   it('resolve throws if called before indexActions', () => {
-    expect(() => service.resolve('actorZ', 1)).toThrow(
-      'No actions indexed for actor "actorZ"'
-    );
+    expect(() => service.resolve('actorZ', 1)).toThrow(ActionIndexingError);
   });
 
   it('resolve throws if index out of range', () => {
     service.indexActions('actorZ', [
       { id: 'x', params: {}, command: 'cmd', description: 'desc' },
     ]);
-    expect(() => service.resolve('actorZ', 2)).toThrow(
-      'No action found at index 2 for actor "actorZ"'
-    );
+    expect(() => service.resolve('actorZ', 2)).toThrow(ActionIndexingError);
   });
 });
