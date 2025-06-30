@@ -35,6 +35,38 @@ export class OpenRouterToolCallingStrategy extends BaseOpenRouterStrategy {
   }
 
   /**
+   * Validates that the provided tool call matches the expected structure.
+   *
+   * @param {object} toolCall - The tool call returned by the LLM.
+   * @param {string} expectedName - The expected tool name.
+   * @returns {string|null} Null if valid or an error message describing the failure.
+   */
+  validateToolCall(toolCall, expectedName) {
+    if (toolCall.type !== 'function') {
+      return `Expected toolCall.type to be "function", got "${toolCall.type}".`;
+    }
+    if (!toolCall.function) {
+      return 'toolCall.function is missing.';
+    }
+    if (toolCall.function.name !== expectedName) {
+      return `Expected toolCall.function.name to be "${expectedName}", got "${toolCall.function.name}".`;
+    }
+    if (
+      toolCall.function.arguments === undefined ||
+      toolCall.function.arguments === null
+    ) {
+      return 'toolCall.function.arguments is missing or null.';
+    }
+    if (typeof toolCall.function.arguments !== 'string') {
+      return `Expected toolCall.function.arguments to be a string, got ${typeof toolCall.function.arguments}.`;
+    }
+    if (toolCall.function.arguments.trim() === '') {
+      return 'toolCall.function.arguments was an empty string.';
+    }
+    return null;
+  }
+
+  /**
    * Constructs the provider-specific part of the request payload for Tool Calling mode.
    *
    * @override
@@ -159,24 +191,7 @@ export class OpenRouterToolCallingStrategy extends BaseOpenRouterStrategy {
     ) {
       const toolCall = message.tool_calls[0];
 
-      let reason = '';
-      if (toolCall.type !== 'function') {
-        reason = `Expected toolCall.type to be "function", got "${toolCall.type}".`;
-      } else if (!toolCall.function) {
-        reason = 'toolCall.function is missing.';
-      } else if (toolCall.function.name !== expectedToolName) {
-        // Compare with dynamically expected tool name
-        reason = `Expected toolCall.function.name to be "${expectedToolName}", got "${toolCall.function.name}".`;
-      } else if (
-        toolCall.function.arguments === undefined ||
-        toolCall.function.arguments === null
-      ) {
-        reason = 'toolCall.function.arguments is missing or null.';
-      } else if (typeof toolCall.function.arguments !== 'string') {
-        reason = `Expected toolCall.function.arguments to be a string, got ${typeof toolCall.function.arguments}.`;
-      } else if (toolCall.function.arguments.trim() === '') {
-        reason = 'toolCall.function.arguments was an empty string.';
-      }
+      const reason = this.validateToolCall(toolCall, expectedToolName);
 
       if (reason) {
         const errorMsg = `${this.constructor.name} (${llmId}): Failed to extract JSON from tool_calls. ${reason}`;
