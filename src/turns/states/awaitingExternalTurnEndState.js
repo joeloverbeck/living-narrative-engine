@@ -136,11 +136,13 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
   //─────────────────────────────────────────────────────────────────────────────
   async exitState(handler, next) {
     this.#clearGuards(this._getTurnContext());
+    this.#resetInternalState();
     await super.exitState(handler, next);
   }
 
   async destroy(handler) {
     this.#clearGuards(this._getTurnContext());
+    this.#resetInternalState();
     await super.destroy(handler);
   }
 
@@ -166,6 +168,33 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
         );
       }
     }
+    this.#resetInternalState();
+  }
+
+  /**
+   * Resets mutable internal fields to a neutral state.
+   *
+   * @private
+   * @returns {void}
+   */
+  #resetInternalState() {
+    this.#timeoutId = null;
+    this.#unsubscribeFn = undefined;
+    this.#awaitingActionId = 'unknown-action';
+  }
+
+  /**
+   * Returns key internal values for unit tests.
+   *
+   * @public
+   * @returns {{timeoutId: any, unsubscribeFn: Function|undefined, awaitingActionId: string}}
+   */
+  getInternalStateForTest() {
+    return {
+      timeoutId: this.#timeoutId,
+      unsubscribeFn: this.#unsubscribeFn,
+      awaitingActionId: this.#awaitingActionId,
+    };
   }
 
   async #onTimeout() {
