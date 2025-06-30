@@ -235,15 +235,16 @@ export class ModProcessor {
   }
 
   #buildSummaryMessage(modId, phase, durationMs, aggregator) {
-    const totalModOverrides = Object.values(aggregator.modResults).reduce(
+    const modResults = aggregator.getModResults();
+    const totalModOverrides = Object.values(modResults).reduce(
       (sum, res) => sum + (res.overrides || 0),
       0
     );
-    const totalModErrors = Object.values(aggregator.modResults).reduce(
+    const totalModErrors = Object.values(modResults).reduce(
       (sum, res) => sum + (res.errors || 0),
       0
     );
-    const typeCountsString = Object.entries(aggregator.modResults)
+    const typeCountsString = Object.entries(modResults)
       .filter(([, result]) => result.count > 0 || result.errors > 0)
       .map(
         ([t, result]) =>
