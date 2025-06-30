@@ -36,10 +36,19 @@
         "humanoid_head.entity.json",
         "humanoid_leg.entity.json"
       ],
-      "instances": ["jacqueline_rouxel.entity.json"]
+      "instances": [
+        "jacqueline_rouxel.entity.json"
+      ]
     },
-    "blueprints": ["human_female.blueprint.json", "human_male.blueprint.json"],
-    "recipes": ["gorgeous_milf.recipe.json", "human_female.recipe.json", "human_male.recipe.json"],
+    "blueprints": [
+      "human_female.blueprint.json",
+      "human_male.blueprint.json"
+    ],
+    "recipes": [
+      "gorgeous_milf.recipe.json",
+      "human_female.recipe.json",
+      "human_male.recipe.json"
+    ],
     "anatomyFormatting": [
       "default.json",
       "example-alien.json"
