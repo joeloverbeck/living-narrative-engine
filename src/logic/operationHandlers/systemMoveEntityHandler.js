@@ -53,7 +53,7 @@ class SystemMoveEntityHandler extends BaseOperationHandler {
    * @param {ILogger} logger - Logger for diagnostic output.
    * @returns {string|null} Previous location ID if moved, otherwise null.
    */
-  #moveEntity(entityId, targetId, logger) {
+  #updatePositionAndReturnPrevious(entityId, targetId, logger) {
     const positionComponent = this.#entityManager.getComponentData(
       entityId,
       'core:position'
@@ -161,7 +161,11 @@ class SystemMoveEntityHandler extends BaseOperationHandler {
 
     let fromLocationId = null;
     try {
-      fromLocationId = this.#moveEntity(entityId, target_location_id, log);
+      fromLocationId = this.#updatePositionAndReturnPrevious(
+        entityId,
+        target_location_id,
+        log
+      );
       if (fromLocationId) {
         await this.#emitMovedEvent(
           entityId,
