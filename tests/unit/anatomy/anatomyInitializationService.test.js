@@ -122,39 +122,121 @@ describe('AnatomyInitializationService', () => {
       service.initialize();
     });
 
-    it('should skip reconstructed entities', async () => {
-      const event = {
-        instanceId: 'entity-1',
-        definitionId: 'def-1',
-        wasReconstructed: true,
-      };
+    describe('EventBus wrapped format (event.payload)', () => {
+      it('should handle event with nested payload structure', async () => {
+        mockAnatomyGenerationService.generateAnatomyIfNeeded.mockResolvedValue(true);
 
-      await boundHandlerRef(event);
+        const event = {
+          type: 'core:entity_created',
+          payload: {
+            instanceId: 'entity-1',
+            definitionId: 'def-1',
+            wasReconstructed: false,
+            entity: { id: 'entity-1' }
+          }
+        };
 
-      expect(
-        mockAnatomyGenerationService.generateAnatomyIfNeeded
-      ).not.toHaveBeenCalled();
+        await boundHandlerRef(event);
+
+        expect(mockAnatomyGenerationService.generateAnatomyIfNeeded).toHaveBeenCalledWith('entity-1');
+        expect(mockLogger.info).toHaveBeenCalledWith(
+          "AnatomyInitializationService: Generated anatomy for entity 'entity-1'"
+        );
+      });
+
+      it('should skip reconstructed entities with nested payload', async () => {
+        const event = {
+          type: 'core:entity_created',
+          payload: {
+            instanceId: 'entity-1',
+            definitionId: 'def-1',
+            wasReconstructed: true,
+            entity: { id: 'entity-1' }
+          }
+        };
+
+        await boundHandlerRef(event);
+
+        expect(mockAnatomyGenerationService.generateAnatomyIfNeeded).not.toHaveBeenCalled();
+      });
+
+      it('should warn when instanceId is missing in nested payload', async () => {
+        const event = {
+          type: 'core:entity_created',
+          payload: {
+            definitionId: 'def-1',
+            wasReconstructed: false,
+            entity: { id: 'entity-1' }
+          }
+        };
+
+        await boundHandlerRef(event);
+
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          'AnatomyInitializationService: Entity created event missing instanceId'
+        );
+        expect(mockAnatomyGenerationService.generateAnatomyIfNeeded).not.toHaveBeenCalled();
+      });
+
+      it('should handle errors gracefully with nested payload', async () => {
+        const error = new Error('Generation failed');
+        mockAnatomyGenerationService.generateAnatomyIfNeeded.mockRejectedValue(error);
+
+        const event = {
+          type: 'core:entity_created',
+          payload: {
+            instanceId: 'entity-1',
+            definitionId: 'def-1',
+            wasReconstructed: false,
+            entity: { id: 'entity-1' }
+          }
+        };
+
+        // Should not throw
+        await expect(boundHandlerRef(event)).resolves.toBeUndefined();
+
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          "AnatomyInitializationService: Failed to generate anatomy for entity 'entity-1'",
+          { error }
+        );
+      });
     });
 
-    it('should generate anatomy for new entities', async () => {
-      mockAnatomyGenerationService.generateAnatomyIfNeeded.mockResolvedValue(
-        true
-      );
+    describe('Direct format (legacy/backwards compatibility)', () => {
+      it('should skip reconstructed entities', async () => {
+        const event = {
+          instanceId: 'entity-1',
+          definitionId: 'def-1',
+          wasReconstructed: true,
+        };
 
-      const event = {
-        instanceId: 'entity-1',
-        definitionId: 'def-1',
-        wasReconstructed: false,
-      };
+        await boundHandlerRef(event);
 
-      await boundHandlerRef(event);
+        expect(
+          mockAnatomyGenerationService.generateAnatomyIfNeeded
+        ).not.toHaveBeenCalled();
+      });
 
-      expect(
-        mockAnatomyGenerationService.generateAnatomyIfNeeded
-      ).toHaveBeenCalledWith('entity-1');
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        "AnatomyInitializationService: Generated anatomy for entity 'entity-1'"
-      );
+      it('should generate anatomy for new entities', async () => {
+        mockAnatomyGenerationService.generateAnatomyIfNeeded.mockResolvedValue(
+          true
+        );
+
+        const event = {
+          instanceId: 'entity-1',
+          definitionId: 'def-1',
+          wasReconstructed: false,
+        };
+
+        await boundHandlerRef(event);
+
+        expect(
+          mockAnatomyGenerationService.generateAnatomyIfNeeded
+        ).toHaveBeenCalledWith('entity-1');
+        expect(mockLogger.info).toHaveBeenCalledWith(
+          "AnatomyInitializationService: Generated anatomy for entity 'entity-1'"
+        );
+      });
     });
 
     it('should not log if anatomy was not generated', async () => {

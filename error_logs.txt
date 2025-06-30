@@ -1,27 +1,40 @@
-SystemLogicInterpreter: SystemLogicInterpreter: created
-consoleLogger.js:187 PromptTextLoader: Initialized.
-consoleLogger.js:187 PromptStaticContentService initialized.
-consoleLogger.js:187 SystemInitializer: Found 6 systems tagged with 'initializableSystem'.
-consoleLogger.js:187 SystemInitializer: Proceeding to initialize 6 resolved systems sequentially...
-consoleLogger.js:187 SystemInitializer: System 'SpatialIndexSynchronizer' has no initialize() method, skipping.
-consoleLogger.js:187 SystemInitializer: Initializing system: AnatomyInitializationService...
-consoleLogger.js:187 AnatomyInitializationService: Registering event listeners
-consoleLogger.js:175 SystemInitializer: Error initializing system 'AnatomyInitializationService'. Continuing. Error: this[#eventDispatcher].on is not a function TypeError: this[#eventDispatcher].on is not a function
-    at AnatomyInitializationService.initialize (anatomyInitializationService.js:59:27)
-    at #initializeSingleSystem (systemInitializer.js:133:22)
-    at SystemInitializer.initializeAll (systemInitializer.js:191:18)
-    at async #initSystems (initializationService.js:368:5)
-    at async InitializationService.runInitializationSequence (initializationService.js:285:7)
-    at async #executeInitializationSequence (gameEngine.js:197:7)
-    at async GameEngine.startNewGame (gameEngine.js:313:26)
-    at async startGameStage (engineStages.js:87:5)
-    at async beginGame (main.js:217:25)
-error @ consoleLogger.js:175
-#initializeSingleSystem @ systemInitializer.js:138
-initializeAll @ systemInitializer.js:191
-await in initializeAll
-#initSystems @ initializationService.js:368
-runInitializationSequence @ initializationService.js:285
+WorldInitializer (Pass 1): Instantiating entities from world: isekai:world...
+consoleLogger.js:187 WorldInitializer (Pass 1): Found 4 instances in world 'isekai:world'.
+consoleLogger.js:187 WorldInitializer (Pass 1): Attempting to create entity instance 'isekai:adventurers_guild_instance' from definition 'isekai:adventurers_guild' with overrides: undefined
+consoleLogger.js:187 EntityManager.createEntityInstance: Creating entity instance 'isekai:adventurers_guild_instance' from definition 'isekai:adventurers_guild' with overrides: undefined
+consoleLogger.js:187 [EntityFactory] Creating entity instance isekai:adventurers_guild_instance from definition isekai:adventurers_guild.
+consoleLogger.js:151 [EntityFactory] Entity instance 'isekai:adventurers_guild_instance' (def: 'isekai:adventurers_guild') created.
+consoleLogger.js:187 EntityManager.createEntityInstance: Factory created entity with ID 'isekai:adventurers_guild_instance' and definitionId 'isekai:adventurers_guild'
+consoleLogger.js:187 Entity 'isekai:adventurers_guild_instance' added to repository.
+consoleLogger.js:187 Tracked entity isekai:adventurers_guild_instance
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_created' against schema 'core:entity_created#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:entity_created'.
+consoleLogger.js:187 VED: Dispatching event 'core:entity_created' via EventBus... {instanceId: 'isekai:adventurers_guild_instance', definitionId: 'isekai:adventurers_guild', wasReconstructed: false, entity: Entity}
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Received payload with entity: Entity {#data: EntityInstanceData}
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity type: object
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity constructor: Entity
+consoleLogger.js:163 AnatomyInitializationService: Entity created event missing instanceId
+warn @ consoleLogger.js:163
+#handleEntityCreated @ anatomyInitializationService.js:87
+(anonymous) @ eventBus.js:136
+dispatch @ eventBus.js:133
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+#dispatchEntityCreated @ entityLifecycleManager.js:177
+createEntityInstance @ entityLifecycleManager.js:214
+createEntityInstance @ entityManager.js:361
+createEntityInstance @ entityManagerAdapter.js:38
+#createInstance @ worldInitializer.js:235
+#instantiateInstance @ worldInitializer.js:330
+#processInstance @ worldInitializer.js:389
+#instantiateEntitiesFromWorld @ worldInitializer.js:431
+await in #instantiateEntitiesFromWorld
+initializeWorldEntities @ worldInitializer.js:477
+#initWorld @ initializationService.js:377
+runInitializationSequence @ initializationService.js:286
 await in runInitializationSequence
 #executeInitializationSequence @ gameEngine.js:197
 await in #executeInitializationSequence
@@ -32,10 +45,178 @@ startGameStage @ engineStages.js:87
 beginGame @ main.js:217
 (anonymous) @ game.html:326
 Promise.then
-(anonymous) @ game.html:323Understand this error
-consoleLogger.js:187 VED: EventDefinition not found for 'system:initialization_failed'. Skipping validation as allowed by options.
-consoleLogger.js:187 VED: Dispatching event 'system:initialization_failed' via EventBus... {systemName: 'AnatomyInitializationService', error: 'this[#eventDispatcher].on is not a function', stack: 'TypeError: this[#eventDispatcher].on is not a func…inGame (http://127.0.0.1:8080/bundle.js:79991:27)'}
-consoleLogger.js:187 VED: Event 'system:initialization_failed' dispatch successful.
-consoleLogger.js:187 SystemInitializer: System 'ActionDiscoveryService' has no initialize() method, skipping.
-consoleLogger.js:187 SystemInitializer: Initializing system: SystemLogicInterpreter...
-consoleLogger.js:187 SystemLogicInterpreter: Cached rule 'handle_dismiss'
+(anonymous) @ game.html:323Understand this warning
+consoleLogger.js:187 WorldInitializer (Pass 1): Successfully instantiated entity isekai:adventurers_guild_instance (from definition: isekai:adventurers_guild)
+consoleLogger.js:187 VED: EventDefinition not found for 'worldinit:entity_instantiated'. Skipping validation as allowed by options.
+consoleLogger.js:187 VED: Dispatching event 'worldinit:entity_instantiated' via EventBus... {entityId: 'isekai:adventurers_guild_instance', instanceId: undefined, definitionId: 'isekai:adventurers_guild', worldName: 'isekai:world', reason: 'Initial World Load'}
+consoleLogger.js:187 VED: Event 'core:entity_created' dispatch successful.
+consoleLogger.js:187 VED: Event 'worldinit:entity_instantiated' dispatch successful.
+consoleLogger.js:187 Dispatched 'worldinit:entity_instantiated' for entity isekai:adventurers_guild_instance.
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:entity_created'.
+consoleLogger.js:187 WorldInitializer (Pass 1): Attempting to create entity instance 'isekai:town_instance' from definition 'isekai:town' with overrides: undefined
+consoleLogger.js:187 EntityManager.createEntityInstance: Creating entity instance 'isekai:town_instance' from definition 'isekai:town' with overrides: undefined
+consoleLogger.js:187 [EntityFactory] Creating entity instance isekai:town_instance from definition isekai:town.
+consoleLogger.js:151 [EntityFactory] Entity instance 'isekai:town_instance' (def: 'isekai:town') created.
+consoleLogger.js:187 EntityManager.createEntityInstance: Factory created entity with ID 'isekai:town_instance' and definitionId 'isekai:town'
+consoleLogger.js:187 Entity 'isekai:town_instance' added to repository.
+consoleLogger.js:187 Tracked entity isekai:town_instance
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_created' against schema 'core:entity_created#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:entity_created'.
+consoleLogger.js:187 VED: Dispatching event 'core:entity_created' via EventBus... {instanceId: 'isekai:town_instance', definitionId: 'isekai:town', wasReconstructed: false, entity: Entity}
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Received payload with entity: Entity {#data: EntityInstanceData}
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity type: object
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity constructor: Entity
+consoleLogger.js:163 AnatomyInitializationService: Entity created event missing instanceId
+warn @ consoleLogger.js:163
+#handleEntityCreated @ anatomyInitializationService.js:87
+(anonymous) @ eventBus.js:136
+dispatch @ eventBus.js:133
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+#dispatchEntityCreated @ entityLifecycleManager.js:177
+createEntityInstance @ entityLifecycleManager.js:214
+createEntityInstance @ entityManager.js:361
+createEntityInstance @ entityManagerAdapter.js:38
+#createInstance @ worldInitializer.js:235
+#instantiateInstance @ worldInitializer.js:330
+#processInstance @ worldInitializer.js:389
+#instantiateEntitiesFromWorld @ worldInitializer.js:431
+await in #instantiateEntitiesFromWorld
+initializeWorldEntities @ worldInitializer.js:477
+#initWorld @ initializationService.js:377
+runInitializationSequence @ initializationService.js:286
+await in runInitializationSequence
+#executeInitializationSequence @ gameEngine.js:197
+await in #executeInitializationSequence
+#initializeNewGame @ gameEngine.js:269
+await in #initializeNewGame
+startNewGame @ gameEngine.js:313
+startGameStage @ engineStages.js:87
+beginGame @ main.js:217
+(anonymous) @ game.html:326
+Promise.then
+(anonymous) @ game.html:323Understand this warning
+consoleLogger.js:187 WorldInitializer (Pass 1): Successfully instantiated entity isekai:town_instance (from definition: isekai:town)
+consoleLogger.js:187 VED: EventDefinition not found for 'worldinit:entity_instantiated'. Skipping validation as allowed by options.
+consoleLogger.js:187 VED: Dispatching event 'worldinit:entity_instantiated' via EventBus... {entityId: 'isekai:town_instance', instanceId: undefined, definitionId: 'isekai:town', worldName: 'isekai:world', reason: 'Initial World Load'}
+consoleLogger.js:187 VED: Event 'core:entity_created' dispatch successful.
+consoleLogger.js:187 VED: Event 'worldinit:entity_instantiated' dispatch successful.
+consoleLogger.js:187 Dispatched 'worldinit:entity_instantiated' for entity isekai:town_instance.
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:entity_created'.
+consoleLogger.js:187 WorldInitializer (Pass 1): Attempting to create entity instance 'isekai:hero_instance' from definition 'isekai:hero' with overrides: {core:position: {…}}
+consoleLogger.js:187 EntityManager.createEntityInstance: Creating entity instance 'isekai:hero_instance' from definition 'isekai:hero' with overrides: {core:position: {…}}
+consoleLogger.js:187 [EntityFactory] Creating entity instance isekai:hero_instance from definition isekai:hero.
+consoleLogger.js:187 Injecting STM for isekai:hero_instance (def: isekai:hero)
+consoleLogger.js:187 Injecting Notes for isekai:hero_instance (def: isekai:hero)
+consoleLogger.js:187 Injecting Goals for isekai:hero_instance (def: isekai:hero)
+consoleLogger.js:151 [EntityFactory] Entity instance 'isekai:hero_instance' (def: 'isekai:hero') created.
+consoleLogger.js:187 EntityManager.createEntityInstance: Factory created entity with ID 'isekai:hero_instance' and definitionId 'isekai:hero'
+consoleLogger.js:187 Entity 'isekai:hero_instance' added to repository.
+consoleLogger.js:187 Tracked entity isekai:hero_instance
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_created' against schema 'core:entity_created#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:entity_created'.
+consoleLogger.js:187 VED: Dispatching event 'core:entity_created' via EventBus... {instanceId: 'isekai:hero_instance', definitionId: 'isekai:hero', wasReconstructed: false, entity: Entity}
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Received payload with entity: Entity {#data: EntityInstanceData}
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity type: object
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity constructor: Entity
+consoleLogger.js:187 SpatialSync: Added isekai:hero_instance to index at isekai:adventurers_guild_instance
+consoleLogger.js:163 AnatomyInitializationService: Entity created event missing instanceId
+warn @ consoleLogger.js:163
+#handleEntityCreated @ anatomyInitializationService.js:87
+(anonymous) @ eventBus.js:136
+dispatch @ eventBus.js:133
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+#dispatchEntityCreated @ entityLifecycleManager.js:177
+createEntityInstance @ entityLifecycleManager.js:214
+createEntityInstance @ entityManager.js:361
+createEntityInstance @ entityManagerAdapter.js:38
+#createInstance @ worldInitializer.js:235
+#instantiateInstance @ worldInitializer.js:330
+#processInstance @ worldInitializer.js:389
+#instantiateEntitiesFromWorld @ worldInitializer.js:431
+await in #instantiateEntitiesFromWorld
+initializeWorldEntities @ worldInitializer.js:477
+#initWorld @ initializationService.js:377
+runInitializationSequence @ initializationService.js:286
+await in runInitializationSequence
+#executeInitializationSequence @ gameEngine.js:197
+await in #executeInitializationSequence
+#initializeNewGame @ gameEngine.js:269
+await in #initializeNewGame
+startNewGame @ gameEngine.js:313
+startGameStage @ engineStages.js:87
+beginGame @ main.js:217
+(anonymous) @ game.html:326
+Promise.then
+(anonymous) @ game.html:323Understand this warning
+consoleLogger.js:187 WorldInitializer (Pass 1): Successfully instantiated entity isekai:hero_instance (from definition: isekai:hero)
+consoleLogger.js:187 VED: EventDefinition not found for 'worldinit:entity_instantiated'. Skipping validation as allowed by options.
+consoleLogger.js:187 VED: Dispatching event 'worldinit:entity_instantiated' via EventBus... {entityId: 'isekai:hero_instance', instanceId: undefined, definitionId: 'isekai:hero', worldName: 'isekai:world', reason: 'Initial World Load'}
+consoleLogger.js:187 VED: Event 'core:entity_created' dispatch successful.
+consoleLogger.js:187 VED: Event 'worldinit:entity_instantiated' dispatch successful.
+consoleLogger.js:187 Dispatched 'worldinit:entity_instantiated' for entity isekai:hero_instance.
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:entity_created'.
+consoleLogger.js:187 WorldInitializer (Pass 1): Attempting to create entity instance 'isekai:ninja_instance' from definition 'isekai:ninja' with overrides: {core:position: {…}}
+consoleLogger.js:187 EntityManager.createEntityInstance: Creating entity instance 'isekai:ninja_instance' from definition 'isekai:ninja' with overrides: {core:position: {…}}
+consoleLogger.js:187 [EntityFactory] Creating entity instance isekai:ninja_instance from definition isekai:ninja.
+consoleLogger.js:187 Injecting STM for isekai:ninja_instance (def: isekai:ninja)
+consoleLogger.js:187 Injecting Notes for isekai:ninja_instance (def: isekai:ninja)
+consoleLogger.js:187 Injecting Goals for isekai:ninja_instance (def: isekai:ninja)
+consoleLogger.js:151 [EntityFactory] Entity instance 'isekai:ninja_instance' (def: 'isekai:ninja') created.
+consoleLogger.js:187 EntityManager.createEntityInstance: Factory created entity with ID 'isekai:ninja_instance' and definitionId 'isekai:ninja'
+consoleLogger.js:187 Entity 'isekai:ninja_instance' added to repository.
+consoleLogger.js:187 Tracked entity isekai:ninja_instance
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_created' against schema 'core:entity_created#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:entity_created'.
+consoleLogger.js:187 VED: Dispatching event 'core:entity_created' via EventBus... {instanceId: 'isekai:ninja_instance', definitionId: 'isekai:ninja', wasReconstructed: false, entity: Entity}
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Received payload with entity: Entity {#data: EntityInstanceData}
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity type: object
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity constructor: Entity
+consoleLogger.js:187 SpatialSync: Added isekai:ninja_instance to index at isekai:adventurers_guild_instance
+consoleLogger.js:163 AnatomyInitializationService: Entity created event missing instanceId
+warn @ consoleLogger.js:163
+#handleEntityCreated @ anatomyInitializationService.js:87
+(anonymous) @ eventBus.js:136
+dispatch @ eventBus.js:133
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+#dispatchEntityCreated @ entityLifecycleManager.js:177
+createEntityInstance @ entityLifecycleManager.js:214
+createEntityInstance @ entityManager.js:361
+createEntityInstance @ entityManagerAdapter.js:38
+#createInstance @ worldInitializer.js:235
+#instantiateInstance @ worldInitializer.js:330
+#processInstance @ worldInitializer.js:389
+#instantiateEntitiesFromWorld @ worldInitializer.js:431
+await in #instantiateEntitiesFromWorld
+initializeWorldEntities @ worldInitializer.js:477
+#initWorld @ initializationService.js:377
+runInitializationSequence @ initializationService.js:286
+await in runInitializationSequence
+#executeInitializationSequence @ gameEngine.js:197
+await in #executeInitializationSequence
+#initializeNewGame @ gameEngine.js:269
+await in #initializeNewGame
+startNewGame @ gameEngine.js:313
+startGameStage @ engineStages.js:87
+beginGame @ main.js:217
+(anonymous) @ game.html:326
+Promise.then
+(anonymous) @ game.html:323Understand this warning
+consoleLogger.js:187 WorldInitializer (Pass 1): Successfully instantiated entity isekai:ninja_instance (from definition: isekai:ninja)
+consoleLogger.js:187 VED: EventDefinition not found for 'worldinit:entity_instantiated'. Skipping validation as allowed by options.
+consoleLogger.js:187 VED: Dispatching event 'worldinit:entity_instantiated' via EventBus... {entityId: 'isekai:ninja_instance', instanceId: undefined, definitionId: 'isekai:ninja', worldName: 'isekai:world', reason: 'Initial World Load'}
+consoleLogger.js:187 VED: Event 'core:entity_created' dispatch successful.
+consoleLogger.js:187 VED: Event 'worldinit:entity_instantiated' dispatch successful.
+consoleLogger.js:187 Dispatched 'worldinit:entity_instantiated' for entity isekai:ninja_instance.
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:entity_created'.
