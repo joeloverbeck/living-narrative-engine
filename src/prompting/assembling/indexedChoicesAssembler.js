@@ -1,6 +1,7 @@
 // src/prompting/assembling/indexedChoicesAssembler.js
 import { IPromptElementAssembler } from '../../interfaces/IPromptElementAssembler.js';
 import { resolveWrapper } from '../../utils/wrapperUtils.js';
+import { validateAssemblerParams } from './assemblerValidation.js';
 
 export const INDEXED_CHOICES_KEY = 'indexed_choices';
 
@@ -19,6 +20,17 @@ export class IndexedChoicesAssembler extends IPromptElementAssembler {
 
   /** @inheritdoc */
   assemble(elementConfig, promptData, placeholderResolver) {
+    const { valid } = validateAssemblerParams({
+      elementConfig,
+      promptData,
+      placeholderResolver,
+      logger: this.#logger,
+      functionName: 'IndexedChoicesAssembler.assemble',
+    });
+    if (!valid) {
+      return '';
+    }
+
     const { indexedChoicesArray } = promptData;
     if (
       !Array.isArray(indexedChoicesArray) ||

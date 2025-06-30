@@ -1,6 +1,7 @@
 // src/prompting/goalsSectionAssembler.js
 import { IPromptElementAssembler } from '../../interfaces/IPromptElementAssembler.js';
 import { resolveWrapper } from '../../utils/wrapperUtils.js';
+import { validateAssemblerParams } from './assemblerValidation.js';
 
 export const GOALS_WRAPPER_KEY = 'goals_wrapper';
 
@@ -16,6 +17,16 @@ export class GoalsSectionAssembler extends IPromptElementAssembler {
 
   /** @inheritdoc */
   assemble(elementCfg, promptData, placeholderResolver) {
+    const { valid } = validateAssemblerParams({
+      elementConfig: elementCfg,
+      promptData,
+      placeholderResolver,
+      functionName: 'GoalsSectionAssembler.assemble',
+    });
+    if (!valid) {
+      return '';
+    }
+
     const arr = promptData?.goalsArray;
     if (!Array.isArray(arr) || arr.length === 0) {
       return '';
