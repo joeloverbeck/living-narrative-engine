@@ -22,8 +22,8 @@ import { ProcessingExceptionHandler } from './helpers/processingExceptionHandler
 import { buildSpeechPayload } from './helpers/buildSpeechPayload.js';
 import { ProcessingGuard } from './helpers/processingGuard.js';
 import { finishProcessing } from './helpers/processingErrorUtils.js';
-import { getLogger, getSafeEventDispatcher } from './helpers/contextUtils.js';
-import { safeDispatchEvent } from '../../utils/safeDispatchEvent.js';
+import { getLogger } from './helpers/contextUtils.js';
+import { dispatchSpeechEvent } from './helpers/dispatchSpeechEvent.js';
 import TurnDirectiveStrategyResolver, {
   DEFAULT_STRATEGY_MAP,
 } from '../strategies/turnDirectiveStrategyResolver.js';
@@ -307,14 +307,7 @@ export class ProcessingCommandState extends AbstractTurnState {
       logger.debug(
         `${this.getStateName()}: Actor ${actorId} spoke: "${payloadBase.speechContent}". Dispatching ${ENTITY_SPOKE_ID}.`
       );
-
-      const dispatcher = getSafeEventDispatcher(turnCtx, this._handler);
-      await safeDispatchEvent(
-        dispatcher,
-        ENTITY_SPOKE_ID,
-        { entityId: actorId, ...payloadBase },
-        logger
-      );
+      await dispatchSpeechEvent(turnCtx, this._handler, actorId, payloadBase);
     } else if (speechRaw !== null && speechRaw !== undefined) {
       logger.debug(
         `${this.getStateName()}: Actor ${actorId} had a non-string or empty speech field in decisionMeta. No ${ENTITY_SPOKE_ID} event dispatched. (Type: ${typeof speechRaw}, Value: "${String(speechRaw)}")`
