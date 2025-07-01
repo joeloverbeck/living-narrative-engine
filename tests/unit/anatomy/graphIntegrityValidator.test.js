@@ -266,19 +266,21 @@ describe('GraphIntegrityValidator', () => {
           requires: [
             {
               components: ['tag-1', 'tag-2'],
-              partTypes: ['special']
-            }
+              partTypes: ['special'],
+            },
           ],
         },
       };
 
       mockEntityManager.getEntityInstance.mockReturnValue({});
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId === 'anatomy:part') {
-          return { subType: 'special' };
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (componentId === 'anatomy:part') {
+            return { subType: 'special' };
+          }
+          return null;
         }
-        return null;
-      });
+      );
       mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
         'tag-1', // Only has tag-1, missing tag-2
       ]);
@@ -322,8 +324,8 @@ describe('GraphIntegrityValidator', () => {
         constraints: {
           excludes: [
             {
-              components: ['tag-1', 'tag-2']
-            }
+              components: ['tag-1', 'tag-2'],
+            },
           ],
         },
       };
@@ -342,9 +344,7 @@ describe('GraphIntegrityValidator', () => {
       );
 
       expect(result.valid).toBe(false);
-      expect(result.errors).toContain(
-        'Exclusion constraint violated'
-      );
+      expect(result.errors).toContain('Exclusion constraint violated');
     });
 
     it('should validate part type constraints with anatomy:part', async () => {
@@ -566,9 +566,9 @@ describe('GraphIntegrityValidator', () => {
       );
 
       expect(result.valid).toBe(false);
-      expect(result.errors.some((e) => e.includes('Cycle detected in anatomy graph'))).toBe(
-        true
-      );
+      expect(
+        result.errors.some((e) => e.includes('Cycle detected in anatomy graph'))
+      ).toBe(true);
     });
 
     it('should detect indirect cycle', async () => {
@@ -709,7 +709,6 @@ describe('GraphIntegrityValidator', () => {
         "Entity 'child-1' attached to non-existent socket 'missing-socket' on parent 'parent-1'"
       );
     });
-
   });
 
   describe('validateNoOrphans', () => {
@@ -821,9 +820,7 @@ describe('GraphIntegrityValidator', () => {
           }
           if (entityId === 'parent-1' && componentId === 'anatomy:sockets') {
             return {
-              sockets: [
-                { id: 'socket-1', allowedTypes: ['any'] },
-              ],
+              sockets: [{ id: 'socket-1', allowedTypes: ['any'] }],
             };
           }
           // No anatomy:part component

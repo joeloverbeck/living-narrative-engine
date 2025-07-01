@@ -153,26 +153,30 @@ describe('Anatomy Runtime Behavior Integration', () => {
       // Track events - mock the dispatch method
       const dispatchedEvents = [];
       const originalDispatch = testBed.eventDispatcher.dispatch;
-      testBed.eventDispatcher.dispatch = jest.fn(async (eventTypeOrData, payload) => {
-        // Handle both dispatch(eventType, payload) and dispatch({type, payload}) formats
-        if (typeof eventTypeOrData === 'object') {
-          dispatchedEvents.push(eventTypeOrData);
-        } else {
-          dispatchedEvents.push({ type: eventTypeOrData, payload });
+      testBed.eventDispatcher.dispatch = jest.fn(
+        async (eventTypeOrData, payload) => {
+          // Handle both dispatch(eventType, payload) and dispatch({type, payload}) formats
+          if (typeof eventTypeOrData === 'object') {
+            dispatchedEvents.push(eventTypeOrData);
+          } else {
+            dispatchedEvents.push({ type: eventTypeOrData, payload });
+          }
+          return Promise.resolve();
         }
-        return Promise.resolve();
-      });
+      );
 
       await bodyGraphService.detachPart(arm.id);
 
       // Check that at least one event was dispatched
       expect(testBed.eventDispatcher.dispatch).toHaveBeenCalled();
       expect(dispatchedEvents.length).toBeGreaterThan(0);
-      
+
       // Find the LIMB_DETACHED event (there might be other events like component_removed)
-      const limbDetachedEvent = dispatchedEvents.find(event => event.type === LIMB_DETACHED_EVENT_ID);
+      const limbDetachedEvent = dispatchedEvents.find(
+        (event) => event.type === LIMB_DETACHED_EVENT_ID
+      );
       expect(limbDetachedEvent).toBeDefined();
-      
+
       expect(limbDetachedEvent).toMatchObject({
         type: LIMB_DETACHED_EVENT_ID,
         payload: expect.objectContaining({
@@ -182,8 +186,6 @@ describe('Anatomy Runtime Behavior Integration', () => {
         }),
       });
     });
-
-
   });
 
   describe('Graph Traversal', () => {
@@ -321,11 +323,11 @@ describe('Anatomy Runtime Behavior Integration', () => {
       const heads = bodyGraphService.findPartsByType(torso.id, 'head');
 
       const allParts = [...torsos, ...arms, ...hands, ...heads];
-      
+
       // More lenient check - at least we should find the torso
       expect(allParts.length).toBeGreaterThanOrEqual(1);
       expect(torsos).toContain(torso.id);
-      
+
       // If we found the other parts, check them
       if (arms.length > 0) {
         expect(arms).toContain(arm.id);
@@ -367,7 +369,7 @@ describe('Anatomy Runtime Behavior Integration', () => {
       const torsos = bodyGraphService.findPartsByType(torso.id, 'torso');
       const arms = bodyGraphService.findPartsByType(torso.id, 'arm');
       expect(torsos).toHaveLength(1);
-      
+
       // Check if the arm was found
       if (arms.length > 0) {
         expect(arms).toContain(newArm.id);
@@ -392,21 +394,35 @@ describe('Anatomy Runtime Behavior Integration', () => {
           }
         };
       });
-      
+
       // Override dispatch to call registered handlers
       const originalDispatch = testBed.eventDispatcher.dispatch;
-      testBed.eventDispatcher.dispatch = jest.fn(async (eventTypeOrData, payload) => {
-        // Handle both dispatch(eventType, payload) and dispatch({type, payload}) formats
-        const eventType = typeof eventTypeOrData === 'string' ? eventTypeOrData : eventTypeOrData.type;
-        const eventPayload = typeof eventTypeOrData === 'string' ? payload : eventTypeOrData.payload;
-        
-        if (eventHandlers[eventType]) {
-          for (const handler of eventHandlers[eventType]) {
-            await handler(eventPayload || eventTypeOrData);
+      testBed.eventDispatcher.dispatch = jest.fn(
+        async (eventTypeOrData, payload) => {
+          // Handle both dispatch(eventType, payload) and dispatch({type, payload}) formats
+          const eventType =
+            typeof eventTypeOrData === 'string'
+              ? eventTypeOrData
+              : eventTypeOrData.type;
+          const eventPayload =
+            typeof eventTypeOrData === 'string'
+              ? payload
+              : eventTypeOrData.payload;
+
+          if (eventHandlers[eventType]) {
+            for (const handler of eventHandlers[eventType]) {
+              await handler(eventPayload || eventTypeOrData);
+            }
           }
+          return originalDispatch
+            ? originalDispatch.call(
+                testBed.eventDispatcher,
+                eventTypeOrData,
+                payload
+              )
+            : Promise.resolve();
         }
-        return originalDispatch ? originalDispatch.call(testBed.eventDispatcher, eventTypeOrData, payload) : Promise.resolve();
-      });
+      );
 
       // Set up anatomy initialization service
       const anatomyInitService = new AnatomyInitializationService({
@@ -494,20 +510,34 @@ describe('Anatomy Runtime Behavior Integration', () => {
           }
         };
       });
-      
+
       // Override dispatch to call registered handlers
       const originalDispatch = testBed.eventDispatcher.dispatch;
-      testBed.eventDispatcher.dispatch = jest.fn(async (eventTypeOrData, payload) => {
-        const eventType = typeof eventTypeOrData === 'string' ? eventTypeOrData : eventTypeOrData.type;
-        const eventPayload = typeof eventTypeOrData === 'string' ? payload : eventTypeOrData.payload;
-        
-        if (eventHandlers[eventType]) {
-          for (const handler of eventHandlers[eventType]) {
-            await handler(eventPayload || eventTypeOrData);
+      testBed.eventDispatcher.dispatch = jest.fn(
+        async (eventTypeOrData, payload) => {
+          const eventType =
+            typeof eventTypeOrData === 'string'
+              ? eventTypeOrData
+              : eventTypeOrData.type;
+          const eventPayload =
+            typeof eventTypeOrData === 'string'
+              ? payload
+              : eventTypeOrData.payload;
+
+          if (eventHandlers[eventType]) {
+            for (const handler of eventHandlers[eventType]) {
+              await handler(eventPayload || eventTypeOrData);
+            }
           }
+          return originalDispatch
+            ? originalDispatch.call(
+                testBed.eventDispatcher,
+                eventTypeOrData,
+                payload
+              )
+            : Promise.resolve();
         }
-        return originalDispatch ? originalDispatch.call(testBed.eventDispatcher, eventTypeOrData, payload) : Promise.resolve();
-      });
+      );
 
       const anatomyInitService = new AnatomyInitializationService({
         eventDispatcher: testBed.eventDispatcher,

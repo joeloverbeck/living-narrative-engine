@@ -57,7 +57,9 @@ describe('AnatomyDescriptionService - EntityFinder method calls', () => {
       };
 
       mockEntityFinder.getEntityInstance.mockReturnValue(mockEntity);
-      mockBodyPartDescriptionBuilder.buildDescription.mockReturnValue('Test description');
+      mockBodyPartDescriptionBuilder.buildDescription.mockReturnValue(
+        'Test description'
+      );
 
       service.generatePartDescription(partId);
 
@@ -72,9 +74,11 @@ describe('AnatomyDescriptionService - EntityFinder method calls', () => {
 
       // Should not throw
       expect(() => service.generatePartDescription(partId)).not.toThrow();
-      
+
       expect(mockEntityFinder.getEntityInstance).toHaveBeenCalledWith(partId);
-      expect(mockBodyPartDescriptionBuilder.buildDescription).not.toHaveBeenCalled();
+      expect(
+        mockBodyPartDescriptionBuilder.buildDescription
+      ).not.toHaveBeenCalled();
     });
   });
 
@@ -101,8 +105,10 @@ describe('AnatomyDescriptionService - EntityFinder method calls', () => {
       mockEntityFinder.getEntityInstance.mockReturnValue(null);
 
       // Should not throw
-      expect(() => service.updateDescription(entityId, description)).not.toThrow();
-      
+      expect(() =>
+        service.updateDescription(entityId, description)
+      ).not.toThrow();
+
       expect(mockEntityFinder.getEntityInstance).toHaveBeenCalledWith(entityId);
       expect(mockComponentManager.addComponent).not.toHaveBeenCalled();
       expect(mockComponentManager.updateComponent).not.toHaveBeenCalled();
@@ -127,8 +133,12 @@ describe('AnatomyDescriptionService - EntityFinder method calls', () => {
 
       expect(mockEntityFinder.getEntityInstance).toHaveBeenCalledWith(entityId);
       // getEntityInstance is called multiple times: once for initial check, then for each part and body description
-      expect(mockEntityFinder.getEntityInstance.mock.calls.length).toBeGreaterThan(0);
-      expect(mockEntityFinder.getEntityInstance.mock.calls[0][0]).toBe(entityId);
+      expect(
+        mockEntityFinder.getEntityInstance.mock.calls.length
+      ).toBeGreaterThan(0);
+      expect(mockEntityFinder.getEntityInstance.mock.calls[0][0]).toBe(
+        entityId
+      );
     });
 
     it('should handle entity without anatomy:body component', () => {
@@ -142,7 +152,7 @@ describe('AnatomyDescriptionService - EntityFinder method calls', () => {
 
       // Should not throw
       expect(() => service.regenerateDescriptions(entityId)).not.toThrow();
-      
+
       expect(mockEntityFinder.getEntityInstance).toHaveBeenCalledWith(entityId);
       expect(mockBodyGraphService.getAllParts).not.toHaveBeenCalled();
     });
@@ -167,11 +177,15 @@ describe('AnatomyDescriptionService - EntityFinder method calls', () => {
         componentManager: mockComponentManager,
       });
 
-      mockBodyPartDescriptionBuilder.buildDescription.mockReturnValue('Torso description');
+      mockBodyPartDescriptionBuilder.buildDescription.mockReturnValue(
+        'Torso description'
+      );
 
       serviceWithIEntityManager.generatePartDescription('test-id');
 
-      expect(mockIEntityManager.getEntityInstance).toHaveBeenCalledWith('test-id');
+      expect(mockIEntityManager.getEntityInstance).toHaveBeenCalledWith(
+        'test-id'
+      );
       // getEntityInstance is called twice - once in generatePartDescription and once in updateDescription
       expect(mockIEntityManager.getEntityInstance).toHaveBeenCalledTimes(2);
     });

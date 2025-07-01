@@ -19,8 +19,10 @@ describe('Anatomy Recipe Loading Integration', () => {
         'recipes',
         'human_male.recipe.json'
       );
-      
-      expect(recipePath).toBe('./data/mods/anatomy/recipes/human_male.recipe.json');
+
+      expect(recipePath).toBe(
+        './data/mods/anatomy/recipes/human_male.recipe.json'
+      );
       expect(recipePath).not.toContain('anatomy/anatomy');
     });
 
@@ -30,8 +32,10 @@ describe('Anatomy Recipe Loading Integration', () => {
         'blueprints',
         'human_female.blueprint.json'
       );
-      
-      expect(blueprintPath).toBe('./data/mods/anatomy/blueprints/human_female.blueprint.json');
+
+      expect(blueprintPath).toBe(
+        './data/mods/anatomy/blueprints/human_female.blueprint.json'
+      );
       expect(blueprintPath).not.toContain('anatomy/anatomy');
     });
 
@@ -39,11 +43,15 @@ describe('Anatomy Recipe Loading Integration', () => {
       const recipeFiles = [
         'human_male.recipe.json',
         'human_female.recipe.json',
-        'gorgeous_milf.recipe.json'
+        'gorgeous_milf.recipe.json',
       ];
 
-      recipeFiles.forEach(filename => {
-        const path = pathResolver.resolveModContentPath('anatomy', 'recipes', filename);
+      recipeFiles.forEach((filename) => {
+        const path = pathResolver.resolveModContentPath(
+          'anatomy',
+          'recipes',
+          filename
+        );
         expect(path).toBe(`./data/mods/anatomy/recipes/${filename}`);
         expect(path).not.toContain('anatomy/anatomy');
       });
@@ -52,11 +60,15 @@ describe('Anatomy Recipe Loading Integration', () => {
     it('should handle all anatomy blueprint files from manifest', () => {
       const blueprintFiles = [
         'human_male.blueprint.json',
-        'human_female.blueprint.json'
+        'human_female.blueprint.json',
       ];
 
-      blueprintFiles.forEach(filename => {
-        const path = pathResolver.resolveModContentPath('anatomy', 'blueprints', filename);
+      blueprintFiles.forEach((filename) => {
+        const path = pathResolver.resolveModContentPath(
+          'anatomy',
+          'blueprints',
+          filename
+        );
         expect(path).toBe(`./data/mods/anatomy/blueprints/${filename}`);
         expect(path).not.toContain('anatomy/anatomy');
       });
@@ -66,10 +78,10 @@ describe('Anatomy Recipe Loading Integration', () => {
   describe('Loader Meta Configuration', () => {
     it('should have correct diskFolder values in loader metadata', async () => {
       const { meta } = await import('../../../src/loaders/loaderMeta.js');
-      
+
       expect(meta.anatomyRecipes.diskFolder).toBe('recipes');
       expect(meta.anatomyRecipes.diskFolder).not.toBe('anatomy/recipes');
-      
+
       expect(meta.anatomyBlueprints.diskFolder).toBe('blueprints');
       expect(meta.anatomyBlueprints.diskFolder).not.toBe('anatomy/blueprints');
     });

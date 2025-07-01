@@ -59,9 +59,9 @@ export class BodyPartDescriptionBuilder {
         'descriptors:size_category',
         'descriptors:size_specific',
         'descriptors:texture',
-        'descriptors:weight_feel'
+        'descriptors:weight_feel',
       ];
-      
+
       for (const compType of componentTypes) {
         try {
           const data = entity.getComponentData(compType);
@@ -73,21 +73,22 @@ export class BodyPartDescriptionBuilder {
         }
       }
     }
-    
+
     if (!components) {
       return '';
     }
 
-    const anatomyPart = components['anatomy:part'] || 
-      (entity.getComponentData ? entity.getComponentData('anatomy:part') : null);
+    const anatomyPart =
+      components['anatomy:part'] ||
+      (entity.getComponentData
+        ? entity.getComponentData('anatomy:part')
+        : null);
     if (!anatomyPart || !anatomyPart.subType) {
       return '';
     }
 
     const subType = anatomyPart.subType;
-    const descriptors = this.descriptorFormatter.extractDescriptors(
-      components
-    );
+    const descriptors = this.descriptorFormatter.extractDescriptors(components);
     const formattedDescriptors =
       this.descriptorFormatter.formatDescriptors(descriptors);
 
@@ -135,9 +136,9 @@ export class BodyPartDescriptionBuilder {
           'descriptors:size_category',
           'descriptors:size_specific',
           'descriptors:texture',
-          'descriptors:weight_feel'
+          'descriptors:weight_feel',
         ];
-        
+
         for (const compType of componentTypes) {
           try {
             const data = entity.getComponentData(compType);

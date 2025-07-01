@@ -433,7 +433,6 @@ describe('BodyGraphService', () => {
     });
   });
 
-
   describe('getPath', () => {
     beforeEach(() => {
       // Setup a more complex anatomy graph

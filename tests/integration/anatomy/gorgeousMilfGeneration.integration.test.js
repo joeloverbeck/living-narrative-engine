@@ -53,37 +53,38 @@ import descriptionComponent from '../../../data/mods/core/components/description
 
 // Define human female entity inline (example entity for testing)
 const humanFemale = {
-  "$schema": "http://example.com/schemas/entity-definition.schema.json",
-  "id": "anatomy:human_female",
-  "components": {
-    "core:name": {
-      "text": "Human Female"
+  $schema: 'http://example.com/schemas/entity-definition.schema.json',
+  id: 'anatomy:human_female',
+  components: {
+    'core:name': {
+      text: 'Human Female',
     },
-    "anatomy:body": {
-      "recipeId": "anatomy:gorgeous_milf"
-    }
-  }
+    'anatomy:body': {
+      recipeId: 'anatomy:gorgeous_milf',
+    },
+  },
 };
 
 // Define Jacqueline Rouxel entity inline (test-only entity)
 const jacquelineRouxel = {
-  "$schema": "http://example.com/schemas/entity-definition.schema.json",
-  "id": "anatomy:jacqueline_rouxel",
-  "description": "Jacqueline Rouxel - A gorgeous woman",
-  "components": {
-    "core:name": {
-      "text": "Jacqueline Rouxel"
+  $schema: 'http://example.com/schemas/entity-definition.schema.json',
+  id: 'anatomy:jacqueline_rouxel',
+  description: 'Jacqueline Rouxel - A gorgeous woman',
+  components: {
+    'core:name': {
+      text: 'Jacqueline Rouxel',
     },
-    "core:description": {
-      "description": "A stunning woman with striking features and an alluring presence."
+    'core:description': {
+      description:
+        'A stunning woman with striking features and an alluring presence.',
     },
-    "anatomy:body": {
-      "recipeId": "anatomy:gorgeous_milf"
+    'anatomy:body': {
+      recipeId: 'anatomy:gorgeous_milf',
     },
-    "core:location": {
-      "locationInstanceId": "default-location"
-    }
-  }
+    'core:location': {
+      locationInstanceId: 'default-location',
+    },
+  },
 };
 
 describe('Gorgeous MILF Anatomy Generation Integration Test', () => {
@@ -209,9 +210,13 @@ describe('Gorgeous MILF Anatomy Generation Integration Test', () => {
         result.push(currentId);
 
         // Find all children (entities with joints pointing to this entity)
-        const entitiesWithJoints = entityManager.getEntitiesWithComponent('anatomy:joint');
+        const entitiesWithJoints =
+          entityManager.getEntitiesWithComponent('anatomy:joint');
         for (const entity of entitiesWithJoints) {
-          const joint = entityManager.getComponentData(entity.id, 'anatomy:joint');
+          const joint = entityManager.getComponentData(
+            entity.id,
+            'anatomy:joint'
+          );
           if (joint && joint.parentId === currentId) {
             stack.push(entity.id);
           }
@@ -271,8 +276,14 @@ describe('Gorgeous MILF Anatomy Generation Integration Test', () => {
     });
     expect(scalpHair.length).toBe(1); // Should have exactly 1 scalp hair
 
-    const hairColor = getPartComponent(scalpHair[0], 'descriptors:color_extended');
-    const hairLength = getPartComponent(scalpHair[0], 'descriptors:length_hair');
+    const hairColor = getPartComponent(
+      scalpHair[0],
+      'descriptors:color_extended'
+    );
+    const hairLength = getPartComponent(
+      scalpHair[0],
+      'descriptors:length_hair'
+    );
     const hairStyle = getPartComponent(scalpHair[0], 'descriptors:hair_style');
     expect(hairColor).toBeDefined();
     expect(hairColor.color).toBe('raven-black');
@@ -369,8 +380,12 @@ describe('Gorgeous MILF Anatomy Generation Integration Test', () => {
 
     expect(recipe.slots.left_leg.preferId).toBe('anatomy:human_leg_shapely');
     expect(recipe.slots.right_leg.preferId).toBe('anatomy:human_leg_shapely');
-    expect(recipe.slots.left_breast.preferId).toBe('anatomy:human_breast_d_cup');
-    expect(recipe.slots.right_breast.preferId).toBe('anatomy:human_breast_d_cup');
+    expect(recipe.slots.left_breast.preferId).toBe(
+      'anatomy:human_breast_d_cup'
+    );
+    expect(recipe.slots.right_breast.preferId).toBe(
+      'anatomy:human_breast_d_cup'
+    );
 
     // Verify property requirements
     expect(recipe.slots.left_leg.properties).toMatchObject({

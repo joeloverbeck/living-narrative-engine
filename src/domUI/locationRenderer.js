@@ -5,13 +5,12 @@ import { DomUtils } from '../utils/domUtils.js';
 import createMessageElement from './helpers/createMessageElement.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/eventIds.js';
 import { validateDependency } from '../utils/dependencyUtils.js';
-import {
-  // POSITION_COMPONENT_ID, // No longer directly used for current location logic
-  // NAME_COMPONENT_ID, // Handled by EntityDisplayDataProvider
-  // DESCRIPTION_COMPONENT_ID, // Handled by EntityDisplayDataProvider
-  // EXITS_COMPONENT_ID, // Handled by EntityDisplayDataProvider
-  // PORTRAIT_COMPONENT_ID might be implicitly used by EntityDisplayDataProvider
-} from '../constants/componentIds.js';
+import {} from // POSITION_COMPONENT_ID, // No longer directly used for current location logic
+// NAME_COMPONENT_ID, // Handled by EntityDisplayDataProvider
+// DESCRIPTION_COMPONENT_ID, // Handled by EntityDisplayDataProvider
+// EXITS_COMPONENT_ID, // Handled by EntityDisplayDataProvider
+// PORTRAIT_COMPONENT_ID might be implicitly used by EntityDisplayDataProvider
+'../constants/componentIds.js';
 
 import { buildLocationDisplayPayload } from './location/buildLocationDisplayPayload.js';
 import { renderPortraitElements } from './location/renderPortraitElements.js';

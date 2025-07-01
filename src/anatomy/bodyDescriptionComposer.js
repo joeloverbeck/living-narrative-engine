@@ -58,7 +58,9 @@ export class BodyDescriptionComposer {
       return '';
     }
 
-    const bodyComponent = bodyEntity.getComponentData(ANATOMY_BODY_COMPONENT_ID);
+    const bodyComponent = bodyEntity.getComponentData(
+      ANATOMY_BODY_COMPONENT_ID
+    );
     if (!bodyComponent || !bodyComponent.body || !bodyComponent.body.root) {
       return '';
     }
@@ -186,7 +188,7 @@ export class BodyDescriptionComposer {
       if (!entity || typeof entity.hasComponent !== 'function') {
         continue;
       }
-      
+
       if (!entity.hasComponent('anatomy:part')) {
         continue;
       }
@@ -249,7 +251,7 @@ export class BodyDescriptionComposer {
     if (!bodyEntity || typeof bodyEntity.getComponentData !== 'function') {
       return '';
     }
-    
+
     const buildComponent = bodyEntity.getComponentData('descriptors:build');
     if (!buildComponent || !buildComponent.build) {
       return '';

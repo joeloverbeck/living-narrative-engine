@@ -14,11 +14,11 @@ describe('Anatomy Loader Path Resolution', () => {
     mockPathResolver = {
       resolveModContentPath: jest.fn(),
     };
-    
+
     mockDataFetcher = {
       fetch: jest.fn(),
     };
-    
+
     mockSchemaValidator = {
       validateAgainstSchema: jest.fn().mockReturnValue({
         isValid: true,
@@ -28,26 +28,28 @@ describe('Anatomy Loader Path Resolution', () => {
       getValidator: jest.fn().mockReturnValue(() => true),
       isSchemaLoaded: jest.fn().mockReturnValue(true),
     };
-    
+
     mockDataRegistry = {
       set: jest.fn().mockReturnValue(true),
       store: jest.fn().mockReturnValue(true),
       get: jest.fn(),
     };
-    
+
     mockLogger = {
       debug: jest.fn(),
       info: jest.fn(),
       warn: jest.fn(),
       error: jest.fn(),
     };
-    
+
     mockConfig = {
       getConfigForLoader: jest.fn().mockReturnValue({
         primarySchemaId: 'anatomy.recipe.schema.json',
       }),
       getModsBasePath: jest.fn().mockReturnValue('mods'),
-      getContentTypeSchemaId: jest.fn().mockReturnValue('anatomy.recipe.schema.json'),
+      getContentTypeSchemaId: jest
+        .fn()
+        .mockReturnValue('anatomy.recipe.schema.json'),
     };
   });
 
@@ -201,7 +203,10 @@ describe('Anatomy Loader Path Resolution', () => {
         id: 'anatomy',
         version: '1.0.0',
         content: {
-          blueprints: ['human_male.blueprint.json', 'human_female.blueprint.json'],
+          blueprints: [
+            'human_male.blueprint.json',
+            'human_female.blueprint.json',
+          ],
         },
       };
 

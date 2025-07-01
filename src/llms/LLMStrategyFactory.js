@@ -35,8 +35,10 @@ export class LLMStrategyFactory {
     strategyResolver,
   }) {
     this.#logger = initLogger('LLMStrategyFactory', logger);
-    this.#configValidator = configValidator || new LLMConfigValidator(this.#logger);
-    this.#strategyResolver = strategyResolver || new LLMStrategyResolver(strategyMap);
+    this.#configValidator =
+      configValidator || new LLMConfigValidator(this.#logger);
+    this.#strategyResolver =
+      strategyResolver || new LLMStrategyResolver(strategyMap);
 
     if (!httpClient || typeof httpClient.request !== 'function') {
       const errorMsg =
@@ -48,7 +50,9 @@ export class LLMStrategyFactory {
     this.#strategyMap = strategyMap;
     this.#knownApiTypes = Object.keys(strategyMap);
 
-    this.#logger.debug('LLMStrategyFactory: Instance created and dependencies stored.');
+    this.#logger.debug(
+      'LLMStrategyFactory: Instance created and dependencies stored.'
+    );
   }
 
   /**
@@ -59,17 +63,21 @@ export class LLMStrategyFactory {
    * @throws {ConfigurationError | LLMStrategyFactoryError}
    */
   getStrategy(llmConfig) {
-    const { llmId, apiType, configuredMethod } = this.#configValidator.validate(llmConfig);
+    const { llmId, apiType, configuredMethod } =
+      this.#configValidator.validate(llmConfig);
 
     this.#logger.debug(
       `LLMStrategyFactory: Determining strategy for LLM ID: '${llmId}', apiType: '${apiType}'.`,
       {
         configuredJsonMethod: configuredMethod || 'NOT SET',
         fullConfigJsonStrategy: llmConfig.jsonOutputStrategy,
-      },
+      }
     );
 
-    let StrategyClass = this.#strategyResolver.resolveStrategy(apiType, configuredMethod);
+    let StrategyClass = this.#strategyResolver.resolveStrategy(
+      apiType,
+      configuredMethod
+    );
 
     if (!StrategyClass) {
       let errorMessage;
@@ -84,7 +92,10 @@ export class LLMStrategyFactory {
         const knownMethodsForCurrentApi =
           Object.keys(this.#strategyMap[apiType] || {}).join(', ') || 'none';
         const availableMethodsForLog = this.#knownApiTypes
-          .map((type) => `${type}: [${Object.keys(this.#strategyMap[type] || {}).join(', ') || 'none'}]`)
+          .map(
+            (type) =>
+              `${type}: [${Object.keys(this.#strategyMap[type] || {}).join(', ') || 'none'}]`
+          )
           .join('; ');
         errorMessage = `Unrecognized jsonOutputStrategy.method: '${configuredMethod}' for apiType '${apiType}' (LLM ID: '${llmId}'). Supported methods for this apiType are: [${knownMethodsForCurrentApi}]. Full list of supported API types and methods: ${availableMethodsForLog || 'None configured'}.`;
         errorLogContext.llmId = llmId;
@@ -94,7 +105,10 @@ export class LLMStrategyFactory {
           : 'N/A';
       }
 
-      this.#logger.error(`LLMStrategyFactory: ${errorMessage}`, errorLogContext);
+      this.#logger.error(
+        `LLMStrategyFactory: ${errorMessage}`,
+        errorLogContext
+      );
       throw new LLMStrategyFactoryError(errorMessage, {
         apiType: apiType,
         jsonOutputMethod: configuredMethod,
@@ -102,10 +116,12 @@ export class LLMStrategyFactory {
     }
 
     this.#logger.debug(
-      `LLMStrategyFactory: Selected strategy '${StrategyClass.name}' for LLM ID '${llmId}'. Details: apiType='${apiType}', effectiveMethod='${configuredMethod}', configuredMethod='${configuredMethod}'.`,
+      `LLMStrategyFactory: Selected strategy '${StrategyClass.name}' for LLM ID '${llmId}'. Details: apiType='${apiType}', effectiveMethod='${configuredMethod}', configuredMethod='${configuredMethod}'.`
     );
 
-    return new StrategyClass({ httpClient: this.#httpClient, logger: this.#logger });
+    return new StrategyClass({
+      httpClient: this.#httpClient,
+      logger: this.#logger,
+    });
   }
 }
-

@@ -14,7 +14,7 @@ describe('Anatomy Path Resolver Integration', () => {
       getGameConfigFilename: jest.fn().mockReturnValue('game.json'),
       getModManifestFilename: jest.fn().mockReturnValue('mod-manifest.json'),
     };
-    
+
     pathResolver = new DefaultPathResolver(mockConfig);
   });
 
@@ -25,7 +25,7 @@ describe('Anatomy Path Resolver Integration', () => {
         'recipes',
         'human_male.recipe.json'
       );
-      
+
       expect(result).toBe('./data/mods/anatomy/recipes/human_male.recipe.json');
     });
 
@@ -35,8 +35,10 @@ describe('Anatomy Path Resolver Integration', () => {
         'blueprints',
         'human_female.blueprint.json'
       );
-      
-      expect(result).toBe('./data/mods/anatomy/blueprints/human_female.blueprint.json');
+
+      expect(result).toBe(
+        './data/mods/anatomy/blueprints/human_female.blueprint.json'
+      );
     });
 
     it('should NOT create duplicate anatomy folders', () => {
@@ -45,18 +47,22 @@ describe('Anatomy Path Resolver Integration', () => {
         'recipes',
         'gorgeous_milf.recipe.json'
       );
-      
+
       expect(recipePath).not.toContain('anatomy/anatomy');
-      expect(recipePath).toBe('./data/mods/anatomy/recipes/gorgeous_milf.recipe.json');
-      
+      expect(recipePath).toBe(
+        './data/mods/anatomy/recipes/gorgeous_milf.recipe.json'
+      );
+
       const blueprintPath = pathResolver.resolveModContentPath(
         'anatomy',
         'blueprints',
         'human_male.blueprint.json'
       );
-      
+
       expect(blueprintPath).not.toContain('anatomy/anatomy');
-      expect(blueprintPath).toBe('./data/mods/anatomy/blueprints/human_male.blueprint.json');
+      expect(blueprintPath).toBe(
+        './data/mods/anatomy/blueprints/human_male.blueprint.json'
+      );
     });
 
     it('should handle nested paths like entities correctly', () => {
@@ -65,8 +71,10 @@ describe('Anatomy Path Resolver Integration', () => {
         'entities/definitions',
         'human_eye.entity.json'
       );
-      
-      expect(result).toBe('./data/mods/anatomy/entities/definitions/human_eye.entity.json');
+
+      expect(result).toBe(
+        './data/mods/anatomy/entities/definitions/human_eye.entity.json'
+      );
     });
 
     it('should work correctly with different mod IDs', () => {
@@ -75,8 +83,10 @@ describe('Anatomy Path Resolver Integration', () => {
         'recipes',
         'alien.recipe.json'
       );
-      
-      expect(result).toBe('./data/mods/custom-anatomy-mod/recipes/alien.recipe.json');
+
+      expect(result).toBe(
+        './data/mods/custom-anatomy-mod/recipes/alien.recipe.json'
+      );
     });
   });
 
@@ -84,15 +94,15 @@ describe('Anatomy Path Resolver Integration', () => {
     it('should handle leading/trailing slashes correctly', () => {
       mockConfig.getBaseDataPath.mockReturnValue('./data/');
       mockConfig.getModsBasePath.mockReturnValue('/mods/');
-      
+
       const newPathResolver = new DefaultPathResolver(mockConfig);
-      
+
       const result = newPathResolver.resolveModContentPath(
         'anatomy',
         'recipes',
         'test.recipe.json'
       );
-      
+
       expect(result).not.toContain('//');
       expect(result).toBe('./data/mods/anatomy/recipes/test.recipe.json');
     });
@@ -101,11 +111,11 @@ describe('Anatomy Path Resolver Integration', () => {
       expect(() => {
         pathResolver.resolveModContentPath('', 'recipes', 'test.json');
       }).toThrow('Invalid or empty modId');
-      
+
       expect(() => {
         pathResolver.resolveModContentPath('anatomy', '', 'test.json');
       }).toThrow('Invalid or empty registryKey');
-      
+
       expect(() => {
         pathResolver.resolveModContentPath('anatomy', 'recipes', '');
       }).toThrow('Invalid or empty filename');

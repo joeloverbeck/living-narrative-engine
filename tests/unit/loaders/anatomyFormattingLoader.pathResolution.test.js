@@ -21,7 +21,7 @@ describe('AnatomyFormattingLoader - Path Resolution', () => {
 
   beforeEach(() => {
     config = new StaticConfiguration();
-    
+
     mockLogger = {
       debug: jest.fn(),
       info: jest.fn(),
@@ -66,15 +66,18 @@ describe('AnatomyFormattingLoader - Path Resolution', () => {
       const modManifest = {
         id: TEST_MOD_ID,
         content: {
-          [TEST_CONTENT_KEY]: [filename]
-        }
+          [TEST_CONTENT_KEY]: [filename],
+        },
       };
-      const expectedPath = './data/mods/anatomy/anatomy-formatting/default.json';
-      
-      mockPathResolver.resolveModContentPath.mockImplementation((mod, category, file) => {
-        // This should combine the base path with category and filename correctly
-        return `./data/mods/${mod}/${category}/${file}`;
-      });
+      const expectedPath =
+        './data/mods/anatomy/anatomy-formatting/default.json';
+
+      mockPathResolver.resolveModContentPath.mockImplementation(
+        (mod, category, file) => {
+          // This should combine the base path with category and filename correctly
+          return `./data/mods/${mod}/${category}/${file}`;
+        }
+      );
 
       mockDataFetcher.fetch.mockResolvedValue({
         id: 'test-formatting',
@@ -111,13 +114,15 @@ describe('AnatomyFormattingLoader - Path Resolution', () => {
       const modManifest = {
         id: TEST_MOD_ID,
         content: {
-          [TEST_CONTENT_KEY]: filenames
-        }
+          [TEST_CONTENT_KEY]: filenames,
+        },
       };
-      
-      mockPathResolver.resolveModContentPath.mockImplementation((mod, category, file) => {
-        return `./data/mods/${mod}/${category}/${file}`;
-      });
+
+      mockPathResolver.resolveModContentPath.mockImplementation(
+        (mod, category, file) => {
+          return `./data/mods/${mod}/${category}/${file}`;
+        }
+      );
 
       mockDataFetcher.fetch.mockImplementation((path) => {
         const filename = path.split('/').pop();
@@ -145,13 +150,19 @@ describe('AnatomyFormattingLoader - Path Resolution', () => {
 
       // Assert
       expect(mockPathResolver.resolveModContentPath).toHaveBeenCalledTimes(2);
-      expect(mockPathResolver.resolveModContentPath).toHaveBeenNthCalledWith(1,
-        TEST_MOD_ID, TEST_DISK_FOLDER, 'default.json'
+      expect(mockPathResolver.resolveModContentPath).toHaveBeenNthCalledWith(
+        1,
+        TEST_MOD_ID,
+        TEST_DISK_FOLDER,
+        'default.json'
       );
-      expect(mockPathResolver.resolveModContentPath).toHaveBeenNthCalledWith(2,
-        TEST_MOD_ID, TEST_DISK_FOLDER, 'example-alien.json'
+      expect(mockPathResolver.resolveModContentPath).toHaveBeenNthCalledWith(
+        2,
+        TEST_MOD_ID,
+        TEST_DISK_FOLDER,
+        'example-alien.json'
       );
-      
+
       expect(mockDataFetcher.fetch).toHaveBeenCalledWith(
         './data/mods/anatomy/anatomy-formatting/default.json'
       );
@@ -166,11 +177,12 @@ describe('AnatomyFormattingLoader - Path Resolution', () => {
       const modManifest = {
         id: TEST_MOD_ID,
         content: {
-          [TEST_CONTENT_KEY]: [filename]
-        }
+          [TEST_CONTENT_KEY]: [filename],
+        },
       };
-      const resolvedPath = './data/mods/anatomy/anatomy-formatting/default.json';
-      
+      const resolvedPath =
+        './data/mods/anatomy/anatomy-formatting/default.json';
+
       mockPathResolver.resolveModContentPath.mockReturnValue(resolvedPath);
       mockDataFetcher.fetch.mockResolvedValue({
         id: 'test-formatting',
@@ -194,9 +206,9 @@ describe('AnatomyFormattingLoader - Path Resolution', () => {
 
       // Assert
       // Check that the logger was called with the correct resolved path (debug level)
-      const debugCalls = mockLogger.debug.mock.calls.map(call => call[0]);
-      const pathLogCall = debugCalls.find(msg => 
-        msg.includes('Resolved path') && msg.includes(filename)
+      const debugCalls = mockLogger.debug.mock.calls.map((call) => call[0]);
+      const pathLogCall = debugCalls.find(
+        (msg) => msg.includes('Resolved path') && msg.includes(filename)
       );
       expect(pathLogCall).toContain(resolvedPath);
     });
@@ -209,14 +221,17 @@ describe('AnatomyFormattingLoader - Path Resolution', () => {
       const modManifest = {
         id: TEST_MOD_ID,
         content: {
-          [TEST_CONTENT_KEY]: [filename]
-        }
+          [TEST_CONTENT_KEY]: [filename],
+        },
       };
-      const resolvedPath = './data/mods/anatomy/anatomy-formatting/nonexistent.json';
-      
+      const resolvedPath =
+        './data/mods/anatomy/anatomy-formatting/nonexistent.json';
+
       mockPathResolver.resolveModContentPath.mockReturnValue(resolvedPath);
       mockDataFetcher.fetch.mockRejectedValue(
-        new Error(`HTTP error! status: 404 (Not Found) fetching ${resolvedPath}`)
+        new Error(
+          `HTTP error! status: 404 (Not Found) fetching ${resolvedPath}`
+        )
       );
 
       // Act
@@ -233,18 +248,20 @@ describe('AnatomyFormattingLoader - Path Resolution', () => {
         count: 0,
         overrides: 0,
         errors: 1,
-        failures: [{
-          file: filename,
-          error: expect.objectContaining({
-            message: `HTTP error! status: 404 (Not Found) fetching ${resolvedPath}`
-          })
-        }]
+        failures: [
+          {
+            file: filename,
+            error: expect.objectContaining({
+              message: `HTTP error! status: 404 (Not Found) fetching ${resolvedPath}`,
+            }),
+          },
+        ],
       });
 
       // Verify error was logged
-      const errorCalls = mockLogger.error.mock.calls.map(call => call[0]);
-      const pathErrorCall = errorCalls.find(msg => 
-        msg.includes('Error processing file') || msg.includes('404')
+      const errorCalls = mockLogger.error.mock.calls.map((call) => call[0]);
+      const pathErrorCall = errorCalls.find(
+        (msg) => msg.includes('Error processing file') || msg.includes('404')
       );
       expect(pathErrorCall).toBeTruthy();
     });
@@ -254,25 +271,27 @@ describe('AnatomyFormattingLoader - Path Resolution', () => {
     it('should not create duplicated paths when manifest contains subdirectory in filename', async () => {
       // This test ensures that the bug where 'anatomy-formatting/anatomy-formatting/default.json'
       // was created does not happen again
-      
+
       // Arrange
       const problematicFilename = 'anatomy-formatting/default.json'; // This was the problematic case
       const modManifest = {
         id: TEST_MOD_ID,
         content: {
-          [TEST_CONTENT_KEY]: [problematicFilename]
-        }
+          [TEST_CONTENT_KEY]: [problematicFilename],
+        },
       };
-      
+
       // The path resolver should handle this correctly
-      mockPathResolver.resolveModContentPath.mockImplementation((mod, category, file) => {
-        // This simulates what should happen - the path resolver should detect
-        // that the file already contains the category folder
-        if (file.startsWith(category + '/')) {
-          return `./data/mods/${mod}/${file}`;
+      mockPathResolver.resolveModContentPath.mockImplementation(
+        (mod, category, file) => {
+          // This simulates what should happen - the path resolver should detect
+          // that the file already contains the category folder
+          if (file.startsWith(category + '/')) {
+            return `./data/mods/${mod}/${file}`;
+          }
+          return `./data/mods/${mod}/${category}/${file}`;
         }
-        return `./data/mods/${mod}/${category}/${file}`;
-      });
+      );
 
       mockDataFetcher.fetch.mockResolvedValue({
         id: 'default',
@@ -298,7 +317,7 @@ describe('AnatomyFormattingLoader - Path Resolution', () => {
       expect(mockDataFetcher.fetch).not.toHaveBeenCalledWith(
         './data/mods/anatomy/anatomy-formatting/anatomy-formatting/default.json'
       );
-      
+
       // Should call with the correct path
       expect(mockDataFetcher.fetch).toHaveBeenCalledWith(
         './data/mods/anatomy/anatomy-formatting/default.json'
@@ -307,19 +326,21 @@ describe('AnatomyFormattingLoader - Path Resolution', () => {
 
     it('should work correctly after fix with simple filenames in manifest', async () => {
       // This test verifies that the fixed manifest format works correctly
-      
+
       // Arrange - Using the fixed format with just filenames
       const filenames = ['default.json', 'example-alien.json'];
       const modManifest = {
         id: TEST_MOD_ID,
         content: {
-          [TEST_CONTENT_KEY]: filenames // Fixed format - no subdirectory in filenames
-        }
+          [TEST_CONTENT_KEY]: filenames, // Fixed format - no subdirectory in filenames
+        },
       };
-      
-      mockPathResolver.resolveModContentPath.mockImplementation((mod, category, file) => {
-        return `./data/mods/${mod}/${category}/${file}`;
-      });
+
+      mockPathResolver.resolveModContentPath.mockImplementation(
+        (mod, category, file) => {
+          return `./data/mods/${mod}/${category}/${file}`;
+        }
+      );
 
       mockDataFetcher.fetch.mockImplementation((path) => {
         const filename = path.split('/').pop();
@@ -348,7 +369,7 @@ describe('AnatomyFormattingLoader - Path Resolution', () => {
       // Assert
       expect(result.count).toBe(2);
       expect(result.errors).toBe(0);
-      
+
       // Verify correct paths were used
       expect(mockDataFetcher.fetch).toHaveBeenCalledWith(
         './data/mods/anatomy/anatomy-formatting/default.json'

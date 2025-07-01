@@ -95,7 +95,7 @@ describe('Anatomy Error Handling Integration', () => {
       // Should throw ValidationError for non-existent recipe
       await expect(
         anatomyGenerationService.generateAnatomyIfNeeded(bodyEntity.id)
-      ).rejects.toThrow('Recipe \'non-existent-recipe\' not found');
+      ).rejects.toThrow("Recipe 'non-existent-recipe' not found");
 
       // Should not have anatomy after failed generation
       const bodyComponent = testBed.entityManager.getComponentData(
@@ -133,7 +133,9 @@ describe('Anatomy Error Handling Integration', () => {
       // Should throw ValidationError for missing blueprintId
       await expect(
         anatomyGenerationService.generateAnatomyIfNeeded(bodyEntity.id)
-      ).rejects.toThrow('Recipe \'test:malformed_recipe\' does not specify a blueprintId');
+      ).rejects.toThrow(
+        "Recipe 'test:malformed_recipe' does not specify a blueprintId"
+      );
     });
 
     it('should handle recipe with invalid slot definitions', async () => {
@@ -217,7 +219,7 @@ describe('Anatomy Error Handling Integration', () => {
       // Should throw error for non-existent blueprint
       await expect(
         anatomyGenerationService.generateAnatomyIfNeeded(bodyEntity.id)
-      ).rejects.toThrow('Blueprint \'non-existent-blueprint\' not found');
+      ).rejects.toThrow("Blueprint 'non-existent-blueprint' not found");
     });
 
     it('should handle blueprint with invalid attachment specifications', async () => {
@@ -466,7 +468,9 @@ describe('Anatomy Error Handling Integration', () => {
           components: {
             [ANATOMY_PART_COMPONENT_ID]: { subType: 'torso' },
             [ANATOMY_SOCKETS_COMPONENT_ID]: {
-              sockets: [{ id: 'arm_socket', allowedTypes: ['arm'], maxCount: 2 }],
+              sockets: [
+                { id: 'arm_socket', allowedTypes: ['arm'], maxCount: 2 },
+              ],
             },
           },
         },
@@ -486,7 +490,7 @@ describe('Anatomy Error Handling Integration', () => {
       // First attempt should fail with error
       await expect(
         anatomyGenerationService.generateAnatomyIfNeeded(bodyEntity.id)
-      ).rejects.toThrow('Recipe \'non-existent-initially\' not found');
+      ).rejects.toThrow("Recipe 'non-existent-initially' not found");
 
       // Now add the missing recipe
       testBed.loadBlueprints({
@@ -512,9 +516,8 @@ describe('Anatomy Error Handling Integration', () => {
       });
 
       // Second attempt should succeed
-      const wasGenerated = await anatomyGenerationService.generateAnatomyIfNeeded(
-        bodyEntity.id
-      );
+      const wasGenerated =
+        await anatomyGenerationService.generateAnatomyIfNeeded(bodyEntity.id);
       expect(wasGenerated).toBe(true);
 
       // Should have anatomy now
@@ -606,7 +609,9 @@ describe('Anatomy Error Handling Integration', () => {
           components: {
             [ANATOMY_PART_COMPONENT_ID]: { subType: 'torso' },
             [ANATOMY_SOCKETS_COMPONENT_ID]: {
-              sockets: [{ id: 'arm_socket', allowedTypes: ['arm'], maxCount: 2 }],
+              sockets: [
+                { id: 'arm_socket', allowedTypes: ['arm'], maxCount: 2 },
+              ],
             },
           },
         },
@@ -638,15 +643,17 @@ describe('Anatomy Error Handling Integration', () => {
       // Or all succeed (if they don't check for existing anatomy atomically)
       const fulfilled = results.filter((r) => r.status === 'fulfilled');
       const rejected = results.filter((r) => r.status === 'rejected');
-      
+
       // At least some should complete without throwing
       expect(fulfilled.length).toBeGreaterThan(0);
-      
+
       // If any succeeded with true, that's good
       const successCount = fulfilled.filter((r) => r.value === true).length;
       // If any returned false (already generated), that's also expected
-      const alreadyGeneratedCount = fulfilled.filter((r) => r.value === false).length;
-      
+      const alreadyGeneratedCount = fulfilled.filter(
+        (r) => r.value === false
+      ).length;
+
       // The important thing is the anatomy was generated
       const bodyComponent = testBed.entityManager.getComponentData(
         bodyEntity.id,
@@ -792,7 +799,9 @@ describe('Anatomy Error Handling Integration', () => {
       // Should either succeed or throw error for deep structures
       let result;
       try {
-        result = await anatomyGenerationService.generateAnatomyIfNeeded(bodyEntity.id);
+        result = await anatomyGenerationService.generateAnatomyIfNeeded(
+          bodyEntity.id
+        );
         expect(typeof result).toBe('boolean');
       } catch (error) {
         // It's ok if it throws an error for deep nesting
