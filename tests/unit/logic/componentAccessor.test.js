@@ -90,4 +90,21 @@ describe('createComponentAccessor', () => {
     expect('health' in accessor).toBe(true);
     expect(mockManager.hasComponent).toHaveBeenCalledWith(ENTITY_ID, 'health');
   });
+
+  test('wraps error when getComponentData throws', () => {
+    const err = new Error('bad');
+    mockManager.getComponentData.mockImplementation(() => {
+      throw err;
+    });
+    const accessor = createComponentAccessor(
+      ENTITY_ID,
+      mockManager,
+      mockLogger
+    );
+
+    const result = accessor.health;
+    expect(result).toEqual({ error: expect.any(Object) });
+    expect(result.error.originalError).toBe(err);
+    expect(mockLogger.error).toHaveBeenCalledTimes(1);
+  });
 });
