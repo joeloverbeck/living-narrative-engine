@@ -131,4 +131,31 @@ describe('AIPromptContentProvider helper methods', () => {
     }));
     expect(() => provider._validateOrThrow({}, logger)).toThrow('bad');
   });
+
+  test('_formatOptionalAttribute returns formatted string or null', () => {
+    expect(provider._formatOptionalAttribute('Label', ' value ')).toBe(
+      'Label: value'
+    );
+    expect(provider._formatOptionalAttribute('Label', '   ')).toBeNull();
+    expect(provider._formatOptionalAttribute('Label', null)).toBeNull();
+  });
+
+  test('_formatListSegment handles arrays and empty cases', () => {
+    const items = ['a', 'b'];
+    const result = provider._formatListSegment(
+      'Things',
+      items,
+      (i) => `- ${i}`,
+      'none'
+    );
+    expect(result).toBe('Things:\n- a\n- b');
+
+    const emptyResult = provider._formatListSegment(
+      'Empty',
+      [],
+      (i) => `- ${i}`,
+      'none'
+    );
+    expect(emptyResult).toBe('Empty:\nnone');
+  });
 });
