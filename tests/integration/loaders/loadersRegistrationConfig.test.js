@@ -26,6 +26,12 @@ describe('Loaders Registration Configuration', () => {
       dispatch: jest.fn().mockResolvedValue(undefined),
     };
     container.register(tokens.IValidatedEventDispatcher, mockEventDispatcher);
+
+    // Register mock safe event dispatcher
+    const mockSafeEventDispatcher = {
+      dispatch: jest.fn(),
+    };
+    container.register(tokens.ISafeEventDispatcher, mockSafeEventDispatcher);
   });
 
   it('should configure anatomy loaders with correct diskFolder values', () => {

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll } from '@jest/globals';
+import { describe, it, expect, beforeAll, jest } from '@jest/globals';
 import fs from 'fs';
 import path from 'path';
 import InMemoryDataRegistry from '../../../src/data/inMemoryDataRegistry.js';
@@ -92,6 +92,8 @@ describe('Integration: Entity Definitions and Instances Loader', () => {
       tokens.IValidatedEventDispatcher,
       createMockValidatedEventDispatcherForIntegration()
     );
+    // Register mock safe event dispatcher
+    container.register(tokens.ISafeEventDispatcher, { dispatch: jest.fn() });
     // Register all loaders and phases
     registerLoaders(container);
     // Register mock data fetcher AFTER loader registration to overwrite

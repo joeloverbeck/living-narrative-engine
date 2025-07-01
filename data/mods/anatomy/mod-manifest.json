@@ -21,6 +21,7 @@
     ],
     "entities": {
       "definitions": [
+        "human_breast.entity.json",
         "human_breast_d_cup.entity.json",
         "human_breast_g_cup.entity.json",
         "human_eye.entity.json",
@@ -28,13 +29,20 @@
         "human_eye_brown.entity.json",
         "human_eye_cobalt.entity.json",
         "human_female_torso.entity.json",
+        "human_hair.entity.json",
         "human_hair_blonde.entity.json",
         "human_hair_raven.entity.json",
         "human_leg_shapely.entity.json",
         "human_male_torso.entity.json",
+        "human_penis.entity.json",
+        "human_testicle.entity.json",
+        "human_vagina.entity.json",
         "humanoid_arm.entity.json",
+        "humanoid_ear.entity.json",
         "humanoid_head.entity.json",
-        "humanoid_leg.entity.json"
+        "humanoid_leg.entity.json",
+        "humanoid_mouth.entity.json",
+        "humanoid_nose.entity.json"
       ],
       "instances": []
     },

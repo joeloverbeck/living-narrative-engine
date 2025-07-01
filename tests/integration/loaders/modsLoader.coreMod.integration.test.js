@@ -138,6 +138,10 @@ describe('Integration: ModsLoader can load the core mod (real files)', () => {
       validatedEventDispatcherStub
     );
 
+    // Register a minimal ISafeEventDispatcher stub
+    const safeEventDispatcherStub = { dispatch: jest.fn() };
+    container.register(tokens.ISafeEventDispatcher, safeEventDispatcherStub);
+
     // Register Node-compatible data fetcher
     // const nodeDataFetcher = new NodeDataFetcher();
     // container.register(tokens.IDataFetcher, nodeDataFetcher);
