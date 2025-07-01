@@ -46,10 +46,10 @@ import createArrayIterationResolver from './nodes/arrayIterationResolver.js';
  */
 class ScopeEngine extends IScopeEngine {
   constructor() {
-    super(); // Call parent constructor
+    super();
     this.maxDepth = 4;
-    this.depthGuard = null;
-    this.cycleDetector = null;
+    this.depthGuard = createDepthGuard(this.maxDepth);
+    this.cycleDetector = createCycleDetector();
   }
 
   setMaxDepth(n) {
@@ -60,64 +60,99 @@ class ScopeEngine extends IScopeEngine {
   }
 
   /**
-   * Initialize the engine with resolvers
-   * This method must be called before using resolve()
+   * Creates a provider that returns the current location.
    *
    * @private
+   * @param {RuntimeContext} runtimeCtx - Runtime context with location info.
+   * @returns {{getLocation: function(): {id:string}|null}} Location provider.
    */
-  _ensureInitialized(runtimeCtx) {
-    // Create adapters for resolvers to work with runtimeCtx
-    const locationProvider = {
+  _createLocationProvider(runtimeCtx) {
+    return {
       getLocation: () => runtimeCtx?.location,
     };
+  }
 
-    const entitiesGateway = {
+  /**
+   * Creates a gateway for entity operations used by resolvers.
+   *
+   * @private
+   * @param {RuntimeContext} runtimeCtx - Runtime context containing entity manager.
+   * @returns {object} Gateway with helper methods for entities.
+   */
+  _createEntitiesGateway(runtimeCtx) {
+    return {
       getEntities: () => {
         const em = runtimeCtx?.entityManager;
         return em?.getEntities
           ? em.getEntities()
           : Array.from(em?.entities?.values() || []);
       },
-      getEntitiesWithComponent: (cid) => {
-        return runtimeCtx?.entityManager?.getEntitiesWithComponent(cid);
-      },
+      getEntitiesWithComponent: (cid) =>
+        runtimeCtx?.entityManager?.getEntitiesWithComponent(cid),
       hasComponent: (eid, cid) => {
         const em = runtimeCtx?.entityManager;
         return em?.hasComponent ? em.hasComponent(eid, cid) : false;
       },
-      getComponentData: (eid, cid) => {
-        return runtimeCtx?.entityManager?.getComponentData(eid, cid);
-      },
+      getComponentData: (eid, cid) =>
+        runtimeCtx?.entityManager?.getComponentData(eid, cid),
       getEntityInstance: (eid) => {
         const em = runtimeCtx?.entityManager;
         return em?.getEntity ? em.getEntity(eid) : em?.getEntityInstance(eid);
       },
     };
+  }
 
-    const logicEval = {
-      evaluate: (logic, context) => {
-        return runtimeCtx?.jsonLogicEval?.evaluate(logic, context);
-      },
+  /**
+   * Creates an adapter for evaluating JSON logic expressions.
+   *
+   * @private
+   * @param {RuntimeContext} runtimeCtx - Runtime context with logic evaluator.
+   * @returns {{evaluate: function(object, object): any}} Logic evaluator.
+   */
+  _createLogicEvaluator(runtimeCtx) {
+    return {
+      evaluate: (logic, context) =>
+        runtimeCtx?.jsonLogicEval?.evaluate(logic, context),
     };
+  }
 
-    // Create resolvers
-    const resolvers = [
+  /**
+   * Constructs the list of node resolvers.
+   *
+   * @private
+   * @param {object} deps - Resolver dependencies.
+   * @param {object} deps.locationProvider - Location provider.
+   * @param {object} deps.entitiesGateway - Entities gateway.
+   * @param {object} deps.logicEval - Logic evaluator.
+   * @returns {Array<object>} Array of resolver objects.
+   */
+  _createResolvers({ locationProvider, entitiesGateway, logicEval }) {
+    return [
       createSourceResolver({ entitiesGateway, locationProvider }),
       createStepResolver({ entitiesGateway }),
       createFilterResolver({ logicEval, entitiesGateway, locationProvider }),
       createUnionResolver(),
       createArrayIterationResolver(),
     ];
+  }
 
-    const dispatcher = createDispatcher(resolvers);
-    if (!this.depthGuard) {
-      this.depthGuard = createDepthGuard(this.maxDepth);
-    }
-    if (!this.cycleDetector) {
-      this.cycleDetector = createCycleDetector();
-    }
-
-    return dispatcher;
+  /**
+   * Ensures the dispatcher is created and ready for resolution.
+   *
+   * @private
+   * @param {RuntimeContext} runtimeCtx - Runtime context providing dependencies.
+   * @returns {object} Dispatcher used to resolve nodes.
+   */
+  _ensureInitialized(runtimeCtx) {
+    const locationProvider = this._createLocationProvider(runtimeCtx);
+    const entitiesGateway = this._createEntitiesGateway(runtimeCtx);
+    const logicEval = this._createLogicEvaluator(runtimeCtx);
+    const resolvers = this._createResolvers({
+      locationProvider,
+      entitiesGateway,
+      logicEval,
+    });
+    return createDispatcher(resolvers);
   }
 
   /**
