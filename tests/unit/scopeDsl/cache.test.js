@@ -4,6 +4,7 @@
  */
 
 import { LRUCache } from 'lru-cache';
+import createLruCache from '../../../src/scopeDsl/cache/lruCache.js';
 import ScopeCache from '../../../src/scopeDsl/cache.js';
 import { TURN_STARTED_ID } from '../../../src/constants/eventIds.js';
 
@@ -330,6 +331,24 @@ describe('ScopeCache', () => {
       expect(stats).toEqual({
         size: 0,
         maxSize: 128,
+        subscribed: true,
+      });
+    });
+
+    test('returns maxSize for custom LRU cache implementation', () => {
+      const lruCache = createLruCache(64);
+      const scopeCache = new ScopeCache({
+        cache: lruCache,
+        scopeEngine: mockScopeEngine,
+        safeEventDispatcher: mockSafeEventDispatcher,
+        logger: mockLogger,
+      });
+
+      const stats = scopeCache.getStats();
+
+      expect(stats).toEqual({
+        size: 0,
+        maxSize: 64,
         subscribed: true,
       });
     });
