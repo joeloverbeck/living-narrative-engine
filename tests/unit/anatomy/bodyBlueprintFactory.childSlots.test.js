@@ -3,7 +3,6 @@
  */
 
 import { BodyBlueprintFactory } from '../../../src/anatomy/bodyBlueprintFactory.js';
-import { InvalidArgumentError } from '../../../src/errors/invalidArgumentError.js';
 
 describe('BodyBlueprintFactory - Child Slots Support', () => {
   let factory;
@@ -64,37 +63,54 @@ describe('BodyBlueprintFactory - Child Slots Support', () => {
 
     const mockBlueprint = {
       root: 'anatomy:test_torso',
-      attachments: [],
+      slots: {
+        head_slot: {
+          parent: null,
+          socket: 'neck',
+          requirements: {
+            partType: 'head'
+          }
+        },
+        left_eye_slot: {
+          parent: 'head_slot',
+          socket: 'left_eye',
+          requirements: {
+            partType: 'eye'
+          }
+        },
+        right_eye_slot: {
+          parent: 'head_slot',
+          socket: 'right_eye',
+          requirements: {
+            partType: 'eye'
+          }
+        }
+      }
     };
 
     const mockRecipe = {
       recipeId: recipeId,
       blueprintId: blueprintId,
       slots: {
-        head: {
+        head_slot: {
           partType: 'head',
-          preferId: 'anatomy:test_head',
-          count: { exact: 1 },
-          childSlots: {
-            left_eye: {
-              partType: 'eye',
-              properties: {
-                'descriptors:color_extended': {
-                  color: 'blue',
-                },
-              },
-              count: { exact: 1 },
+          preferId: 'anatomy:test_head'
+        },
+        left_eye_slot: {
+          partType: 'eye',
+          properties: {
+            'descriptors:color_extended': {
+              color: 'blue',
             },
-            right_eye: {
-              partType: 'eye',
-              properties: {
-                'descriptors:color_extended': {
-                  color: 'blue',
-                },
-              },
-              count: { exact: 1 },
+          }
+        },
+        right_eye_slot: {
+          partType: 'eye',
+          properties: {
+            'descriptors:color_extended': {
+              color: 'blue',
             },
-          },
+          }
         },
       },
     };

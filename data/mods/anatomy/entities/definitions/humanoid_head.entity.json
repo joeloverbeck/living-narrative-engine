@@ -15,7 +15,6 @@
             "eye"
           ],
           "maxCount": 1,
-          "jointType": "fused",
           "nameTpl": "{{orientation}} {{type}}"
         },
         {
@@ -25,7 +24,6 @@
             "eye"
           ],
           "maxCount": 1,
-          "jointType": "fused",
           "nameTpl": "{{orientation}} {{type}}"
         },
         {
@@ -35,7 +33,6 @@
             "ear"
           ],
           "maxCount": 1,
-          "jointType": "fused",
           "nameTpl": "{{orientation}} {{type}}"
         },
         {
@@ -45,7 +42,6 @@
             "ear"
           ],
           "maxCount": 1,
-          "jointType": "fused",
           "nameTpl": "{{orientation}} {{type}}"
         },
         {
@@ -54,7 +50,6 @@
             "hair"
           ],
           "maxCount": 1,
-          "jointType": "fused",
           "nameTpl": "{{type}}"
         },
         {
@@ -63,7 +58,6 @@
             "nose"
           ],
           "maxCount": 1,
-          "jointType": "fused",
           "nameTpl": "{{type}}"
         },
         {
@@ -72,7 +66,6 @@
             "mouth"
           ],
           "maxCount": 1,
-          "jointType": "fused",
           "nameTpl": "{{type}}"
         }
       ]

@@ -710,36 +710,6 @@ describe('GraphIntegrityValidator', () => {
       );
     });
 
-    it('should error for joint type mismatch', async () => {
-      mockEntityManager.getComponentData.mockImplementation(
-        (entityId, componentId) => {
-          if (entityId === 'child-1' && componentId === 'anatomy:joint') {
-            return {
-              parentId: 'parent-1',
-              socketId: 'socket-1',
-              jointType: 'hinge',
-            };
-          }
-          if (entityId === 'parent-1' && componentId === 'anatomy:sockets') {
-            return {
-              sockets: [{ id: 'socket-1', jointType: 'ball' }],
-            };
-          }
-          return null;
-        }
-      );
-
-      const result = await validator.validateGraph(
-        ['parent-1', 'child-1'],
-        {},
-        new Map()
-      );
-
-      expect(result.valid).toBe(false);
-      expect(result.errors).toContain(
-        "Joint type mismatch: entity 'child-1' has 'hinge' but socket specifies 'ball'"
-      );
-    });
   });
 
   describe('validateNoOrphans', () => {
@@ -852,7 +822,7 @@ describe('GraphIntegrityValidator', () => {
           if (entityId === 'parent-1' && componentId === 'anatomy:sockets') {
             return {
               sockets: [
-                { id: 'socket-1', allowedTypes: ['any'], jointType: 'fixed' },
+                { id: 'socket-1', allowedTypes: ['any'] },
               ],
             };
           }

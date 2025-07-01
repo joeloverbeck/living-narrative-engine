@@ -13,7 +13,6 @@
           "orientation": "lower",
           "allowedTypes": ["lower_leg"],
           "maxCount": 1,
-          "jointType": "hinge",
           "nameTpl": "{{parent.name}} lower leg"
         }
       ]

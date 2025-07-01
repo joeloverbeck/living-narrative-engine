@@ -358,12 +358,6 @@ export class GraphIntegrityValidator {
         );
       }
 
-      // Validate joint type matches socket
-      if (socket && joint.jointType !== socket.jointType) {
-        errors.push(
-          `Joint type mismatch: entity '${entityId}' has '${joint.jointType}' but socket specifies '${socket.jointType}'`
-        );
-      }
     }
   }
 

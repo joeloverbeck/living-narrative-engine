@@ -309,25 +309,6 @@ export class BodyGraphService {
     return null;
   }
 
-  /**
-   * Checks if a part can be detached based on damage threshold
-   *
-   * @param {string} partEntityId - The entity ID to check
-   * @param {number} damageAmount - The amount of damage to apply
-   * @returns {boolean} True if the part should detach
-   */
-  shouldDetachFromDamage(partEntityId, damageAmount) {
-    const joint = this.#entityManager.getComponentData(
-      partEntityId,
-      'anatomy:joint'
-    );
-    if (!joint) return false;
-
-    const threshold = joint.breakThreshold || 0;
-    if (threshold === 0) return false; // 0 means unbreakable
-
-    return damageAmount >= threshold;
-  }
 
   /**
    * Gets a path from one body part to another

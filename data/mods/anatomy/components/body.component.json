@@ -24,11 +24,6 @@
             "additionalProperties": {
               "type": "string"
             }
-          },
-          "graph": {
-            "type": "object",
-            "description": "The body part connection graph",
-            "additionalProperties": true
           }
         },
         "required": ["root", "parts"],

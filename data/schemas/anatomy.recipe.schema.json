@@ -53,18 +53,6 @@
         }
       },
       "additionalProperties": false
-    },
-    "includes": {
-      "type": "array",
-      "description": "Optional macro imports for composition",
-      "items": {
-        "$ref": "./common.schema.json#/definitions/namespacedId"
-      }
-    },
-    "isMacro": {
-      "type": "boolean",
-      "description": "If true, this recipe is a macro for inclusion by other recipes",
-      "default": false
     }
   },
   "required": ["recipeId", "blueprintId", "slots"],

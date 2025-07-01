@@ -13,7 +13,6 @@
           "orientation": "upper",
           "allowedTypes": ["head", "neck"],
           "maxCount": 1,
-          "jointType": "ball",
           "nameTpl": "{{type}}"
         },
         {
@@ -21,7 +20,6 @@
           "orientation": "left",
           "allowedTypes": ["arm"],
           "maxCount": 1,
-          "jointType": "ball",
           "nameTpl": "{{orientation}} {{type}}"
         },
         {
@@ -29,7 +27,6 @@
           "orientation": "right",
           "allowedTypes": ["arm"],
           "maxCount": 1,
-          "jointType": "ball",
           "nameTpl": "{{orientation}} {{type}}"
         },
         {
@@ -37,7 +34,6 @@
           "orientation": "left",
           "allowedTypes": ["leg"],
           "maxCount": 1,
-          "jointType": "ball",
           "nameTpl": "{{orientation}} {{type}}"
         },
         {
@@ -45,7 +41,6 @@
           "orientation": "right",
           "allowedTypes": ["leg"],
           "maxCount": 1,
-          "jointType": "ball",
           "nameTpl": "{{orientation}} {{type}}"
         },
         {
@@ -53,35 +48,30 @@
           "orientation": "front",
           "allowedTypes": ["breast"],
           "maxCount": 2,
-          "jointType": "fused",
           "nameTpl": "{{orientation}} {{type}}"
         },
         {
           "id": "pubic_hair",
           "allowedTypes": ["hair"],
           "maxCount": 1,
-          "jointType": "fused",
           "nameTpl": "pubic {{type}}"
         },
         {
           "id": "vagina",
           "allowedTypes": ["genital"],
           "maxCount": 1,
-          "jointType": "fused",
           "nameTpl": "{{type}}"
         },
         {
           "id": "asshole",
           "allowedTypes": ["genital"],
           "maxCount": 1,
-          "jointType": "fused",
           "nameTpl": "{{type}}"
         },
         {
           "id": "ass",
           "allowedTypes": ["ass_cheek"],
           "maxCount": 2,
-          "jointType": "fused",
           "nameTpl": "{{type}}"
         }
       ]

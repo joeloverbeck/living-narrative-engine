@@ -12,17 +12,6 @@
       "socketId": {
         "type": "string",
         "description": "ID of the socket on the parent where this part is attached"
-      },
-      "jointType": {
-        "type": "string",
-        "enum": ["hinge", "ball", "suture", "fused"],
-        "description": "Type of joint connection inherited from the socket definition"
-      },
-      "breakThreshold": {
-        "type": "integer",
-        "minimum": 0,
-        "default": 0,
-        "description": "Damage threshold required to sever this connection"
       }
     },
     "required": ["parentId", "socketId"],

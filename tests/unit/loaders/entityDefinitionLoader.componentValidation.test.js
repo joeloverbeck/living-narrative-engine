@@ -127,7 +127,6 @@ describe('EntityDefinitionLoader Component Validation', () => {
             {
               id: 'special_socket',
               allowedTypes: ['special_part'],
-              jointType: 'fused',
               nameTpl: '{{type}}',
             },
           ],
@@ -181,7 +180,6 @@ describe('EntityDefinitionLoader Component Validation', () => {
               id: 'invalid_socket',
               orientation: 'lower-front', // Invalid compound orientation
               allowedTypes: ['special_part'],
-              jointType: 'fused',
             },
           ],
         },
@@ -237,7 +235,6 @@ describe('EntityDefinitionLoader Component Validation', () => {
               orientation: 'left',
               allowedTypes: ['arm'],
               maxCount: 1,
-              jointType: 'ball',
               nameTpl: '{{orientation}} {{type}}',
             },
             {
@@ -306,7 +303,6 @@ describe('EntityDefinitionLoader Component Validation', () => {
             {
               id: 'special_port',
               allowedTypes: ['device'],
-              jointType: 'fused',
               // No orientation - should be valid
             },
           ],

@@ -53,6 +53,7 @@ export class LLMStrategyFactory {
 
   /**
    * Creates and returns the appropriate concrete ILLMStrategy instance.
+   *
    * @param {LLMModelConfigType} llmConfig
    * @returns {ILLMStrategy}
    * @throws {ConfigurationError | LLMStrategyFactoryError}

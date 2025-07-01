@@ -45,8 +45,6 @@ import { safeDispatchEvent } from '../utils/safeDispatchEvent.js';
  * @property {string[]} allowedTypes
  * @property {number} [maxCount]
  * @property {string} [orientation]
- * @property {string} [jointType]
- * @property {number} [breakThreshold]
  * @property {string} [nameTpl]
  */
 
@@ -148,29 +146,6 @@ export class BodyBlueprintFactory {
           blueprint,
           mergedRecipe,
           rootId,
-          createdEntities,
-          partCounts,
-          socketOccupancy,
-          rng
-        );
-      } else {
-        // Fallback to old system if no slots defined
-        // Phase 2a: Process static attachments from blueprint
-        if (blueprint.attachments) {
-          await this.#processStaticAttachments(
-            blueprint.attachments,
-            mergedRecipe,
-            createdEntities,
-            socketOccupancy,
-            rng
-          );
-        }
-
-        // Phase 2b: Fill remaining sockets depth-first
-        await this.#fillSockets(
-          rootId,
-          blueprint,
-          mergedRecipe,
           createdEntities,
           partCounts,
           socketOccupancy,
@@ -683,112 +658,6 @@ export class BodyBlueprintFactory {
     return candidates;
   }
 
-  /**
-   * Processes static attachments defined in the blueprint
-   *
-   * @param attachments
-   * @param recipe
-   * @param createdEntities
-   * @param socketOccupancy
-   * @param rng
-   * @private
-   */
-  async #processStaticAttachments(
-    attachments,
-    recipe,
-    createdEntities,
-    socketOccupancy,
-    rng
-  ) {
-    for (const attachment of attachments) {
-      const parentEntity = createdEntities.find((id) => {
-        const entity = this.#entityManager.getEntityInstance(id);
-        return entity.definitionId === attachment.parent;
-      });
-
-      if (!parentEntity) {
-        this.#logger.warn(
-          `Static attachment parent '${attachment.parent}' not found in created entities`
-        );
-        continue;
-      }
-
-      let childDefinitionId;
-
-      // Handle old format (direct child reference)
-      if (attachment.child) {
-        childDefinitionId = attachment.child;
-      }
-      // Handle new format (component-based requirements)
-      else if (attachment.requirements) {
-        childDefinitionId = await this.#selectPartByRequirements(
-          attachment.requirements,
-          attachment.socket,
-          recipe,
-          rng
-        );
-
-        if (!childDefinitionId) {
-          const errorContext = {
-            parentDefinitionId: attachment.parent,
-            socketId: attachment.socket,
-            requirements: attachment.requirements,
-            recipeId: recipe.recipeId,
-          };
-
-          const errorMessage =
-            `No part found matching requirements for static attachment. ` +
-            `Parent: '${attachment.parent}', Socket: '${attachment.socket}', ` +
-            `Recipe: '${recipe.recipeId}'. Requirements: ${JSON.stringify(attachment.requirements)}`;
-
-          await safeDispatchEvent(
-            this.#eventDispatcher,
-            SYSTEM_ERROR_OCCURRED_ID,
-            {
-              error: errorMessage,
-              context: 'BodyBlueprintFactory.processStaticAttachments',
-              details: errorContext,
-            },
-            this.#logger
-          );
-
-          throw new ValidationError(errorMessage);
-        }
-      } else {
-        this.#logger.warn(
-          `Attachment for socket '${attachment.socket}' has neither child nor requirements`
-        );
-        continue;
-      }
-
-      // Create child entity and attach
-      const childId = await this.#createAndAttachPart(
-        parentEntity,
-        attachment.socket,
-        childDefinitionId,
-        recipe,
-        socketOccupancy,
-        rng
-      );
-
-      if (childId) {
-        createdEntities.push(childId);
-
-        // Process childSlots if specified in the attachment
-        if (attachment.childSlots) {
-          await this.#processChildSlots(
-            childId,
-            attachment.childSlots,
-            recipe,
-            createdEntities,
-            new Map(), // partCounts not tracked for static attachments
-            socketOccupancy,
-            rng
-          );
-        }
-      }
-    }
-  }
 
   /**
    * Selects a part definition based on requirements
@@ -982,142 +851,6 @@ export class BodyBlueprintFactory {
     return true;
   }
 
-  /**
-   * Fills remaining sockets using depth-first traversal
-   *
-   * @param entityId
-   * @param blueprint
-   * @param recipe
-   * @param createdEntities
-   * @param partCounts
-   * @param socketOccupancy
-   * @param rng
-   * @private
-   */
-  async #fillSockets(
-    entityId,
-    blueprint,
-    recipe,
-    createdEntities,
-    partCounts,
-    socketOccupancy,
-    rng
-  ) {
-    const entity = this.#entityManager.getEntityInstance(entityId);
-    const socketsComponent = this.#entityManager.getComponentData(
-      entityId,
-      'anatomy:sockets'
-    );
-
-    if (!socketsComponent || !socketsComponent.sockets) {
-      return;
-    }
-
-    // Process each socket in deterministic order
-    const sockets = [...socketsComponent.sockets].sort((a, b) =>
-      a.id.localeCompare(b.id)
-    );
-
-    for (const socket of sockets) {
-      const occupancyKey = `${entityId}:${socket.id}`;
-      const currentOccupancy = socketOccupancy.get(occupancyKey) || 0;
-      const maxCount = socket.maxCount || 1;
-
-      // Skip if socket is full
-      if (currentOccupancy >= maxCount) {
-        continue;
-      }
-
-      // Find matching recipe slot
-      const recipeSlot = this.#findMatchingRecipeSlot(socket, recipe);
-      if (!recipeSlot) {
-        // In the new blueprint system, all required sockets should have slots defined
-        if (blueprint.slots) {
-          const errorMessage = `No blueprint slot defined for socket '${socket.id}' with allowed types: ${socket.allowedTypes.join(', ')}`;
-          await safeDispatchEvent(
-            this.#eventDispatcher,
-            SYSTEM_ERROR_OCCURRED_ID,
-            {
-              error: errorMessage,
-              context: 'BodyBlueprintFactory.fillSockets',
-              details: {
-                socketId: socket.id,
-                allowedTypes: socket.allowedTypes,
-                entityId: entityId,
-                blueprintId: blueprint.id,
-                recipeId: recipe.recipeId
-              }
-            },
-            this.#logger
-          );
-          throw new ValidationError(errorMessage);
-        }
-        // Legacy behavior for old blueprints
-        this.#logger.debug(
-          `No recipe slot matches socket '${socket.id}' with allowed types: ${socket.allowedTypes.join(', ')}`
-        );
-        continue;
-      }
-
-      // Determine how many parts to create
-      const desiredCount = this.#calculateDesiredCount(
-        recipeSlot,
-        partCounts,
-        socket.allowedTypes[0]
-      );
-      const availableSlots = maxCount - currentOccupancy;
-      const toCreate = Math.min(desiredCount, availableSlots);
-
-      // Create parts for this socket
-      for (let i = 0; i < toCreate; i++) {
-        const childId = await this.#createPartForSlot(
-          entityId,
-          socket,
-          recipeSlot,
-          recipe,
-          socketOccupancy,
-          rng
-        );
-
-        if (childId) {
-          createdEntities.push(childId);
-          // Update counts
-          const partType = this.#getPartType(childId);
-          partCounts.set(partType, (partCounts.get(partType) || 0) + 1);
-          socketOccupancy.set(
-            occupancyKey,
-            (socketOccupancy.get(occupancyKey) || 0) + 1
-          );
-        }
-
-        if (childId) {
-          // Recursively fill child's sockets
-          await this.#fillSockets(
-            childId,
-            blueprint,
-            recipe,
-            createdEntities,
-            partCounts,
-            socketOccupancy,
-            rng
-          );
-
-          // Process childSlots if specified in the recipe slot
-          if (recipeSlot.childSlots) {
-            await this.#processChildSlots(
-              childId,
-              recipeSlot.childSlots,
-              recipe,
-              createdEntities,
-              partCounts,
-              socketOccupancy,
-              rng
-            );
-          }
-        }
-      }
-    }
-  }
 
   /**
    * Processes child slot specifications for a created part
@@ -1476,8 +1209,6 @@ export class BodyBlueprintFactory {
       this.#entityManager.addComponent(childEntity.id, 'anatomy:joint', {
         parentId: parentId,
         socketId: socketId,
-        jointType: socket.jointType || 'fixed',
-        breakThreshold: socket.breakThreshold || 0,
       });
 
       // Generate and set name if template provided

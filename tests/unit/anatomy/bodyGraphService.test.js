@@ -433,53 +433,6 @@ describe('BodyGraphService', () => {
     });
   });
 
-  describe('shouldDetachFromDamage', () => {
-    it('should return true if damage exceeds threshold', () => {
-      mockEntityManager.getComponentData.mockReturnValue({
-        parentId: 'torso-1',
-        socketId: 'shoulder',
-        breakThreshold: 50,
-      });
-
-      expect(service.shouldDetachFromDamage('arm-1', 60)).toBe(true);
-    });
-
-    it('should return false if damage is below threshold', () => {
-      mockEntityManager.getComponentData.mockReturnValue({
-        parentId: 'torso-1',
-        socketId: 'shoulder',
-        breakThreshold: 50,
-      });
-
-      expect(service.shouldDetachFromDamage('arm-1', 30)).toBe(false);
-    });
-
-    it('should return false if threshold is 0 (unbreakable)', () => {
-      mockEntityManager.getComponentData.mockReturnValue({
-        parentId: 'torso-1',
-        socketId: 'shoulder',
-        breakThreshold: 0,
-      });
-
-      expect(service.shouldDetachFromDamage('arm-1', 1000)).toBe(false);
-    });
-
-    it('should return false if no joint component', () => {
-      mockEntityManager.getComponentData.mockReturnValue(null);
-
-      expect(service.shouldDetachFromDamage('arm-1', 50)).toBe(false);
-    });
-
-    it('should handle missing breakThreshold property', () => {
-      mockEntityManager.getComponentData.mockReturnValue({
-        parentId: 'torso-1',
-        socketId: 'shoulder',
-        // No breakThreshold
-      });
-
-      expect(service.shouldDetachFromDamage('arm-1', 50)).toBe(false);
-    });
-  });
 
   describe('getPath', () => {
     beforeEach(() => {

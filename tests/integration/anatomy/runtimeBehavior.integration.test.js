@@ -183,52 +183,7 @@ describe('Anatomy Runtime Behavior Integration', () => {
       });
     });
 
-    it('should handle damage-based detachment', () => {
-      const torso =
-        testBed.entityManager.createEntityInstance('test:simple_torso');
-      const arm = testBed.entityManager.createEntityInstance(
-        'test:detachable_arm'
-      );
 
-      // Add joint with break threshold
-      testBed.entityManager.addComponent(arm.id, 'anatomy:joint', {
-        parentId: torso.id,
-        socketId: 'left_arm_socket',
-        jointType: 'ball',
-        breakThreshold: 50,
-      });
-
-      bodyGraphService.buildAdjacencyCache(torso.id);
-
-      // Test below threshold
-      expect(bodyGraphService.shouldDetachFromDamage(arm.id, 30)).toBe(false);
-
-      // Test at threshold
-      expect(bodyGraphService.shouldDetachFromDamage(arm.id, 50)).toBe(true);
-
-      // Test above threshold
-      expect(bodyGraphService.shouldDetachFromDamage(arm.id, 100)).toBe(true);
-    });
-
-    it('should handle unbreakable joints (breakThreshold = 0)', () => {
-      const torso =
-        testBed.entityManager.createEntityInstance('test:simple_torso');
-      const head =
-        testBed.entityManager.createEntityInstance('test:simple_head');
-
-      testBed.entityManager.addComponent(head.id, 'anatomy:joint', {
-        parentId: torso.id,
-        socketId: 'head_socket',
-        jointType: 'fixed',
-        breakThreshold: 0, // Unbreakable
-      });
-
-      bodyGraphService.buildAdjacencyCache(torso.id);
-
-      expect(bodyGraphService.shouldDetachFromDamage(head.id, 9999)).toBe(
-        false
-      );
-    });
   });
 
   describe('Graph Traversal', () => {

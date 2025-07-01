@@ -32,7 +32,6 @@ describe('Sockets Component Validation', () => {
           orientation: 'left',
           allowedTypes: ['arm'],
           maxCount: 1,
-          jointType: 'ball',
           nameTpl: '{{orientation}} {{type}}'
         }
       ]
@@ -50,7 +49,6 @@ describe('Sockets Component Validation', () => {
           id: 'pubic_hair',
           allowedTypes: ['hair'],
           maxCount: 1,
-          jointType: 'fused',
           nameTpl: 'pubic {{type}}'
         }
       ]
@@ -95,8 +93,7 @@ describe('Sockets Component Validation', () => {
         },
         {
           id: 'special_socket',
-          allowedTypes: ['special'],
-          jointType: 'fused'
+          allowedTypes: ['special']
         }
       ]
     };
@@ -150,7 +147,6 @@ describe('Sockets Component Validation', () => {
           orientation: 'front',
           allowedTypes: ['test_type'],
           maxCount: 2,
-          jointType: 'hinge',
           nameTpl: '{{parent.name}} - {{orientation}} {{type}} #{{index}}'
         }
       ]
@@ -161,21 +157,21 @@ describe('Sockets Component Validation', () => {
     expect(result.errors).toBeNull();
   });
 
-  it('should reject invalid jointType values', () => {
-    const invalidJointType = {
+  it('should reject additional properties not in schema', () => {
+    const invalidAdditionalProp = {
       sockets: [
         {
           id: 'test_socket',
           allowedTypes: ['test'],
-          jointType: 'invalid-joint' // Not in enum
+          invalidProp: 'not-allowed' // Additional property
         }
       ]
     };
 
-    const result = validator.validate(socketsSchemaId, invalidJointType);
+    const result = validator.validate(socketsSchemaId, invalidAdditionalProp);
     expect(result.isValid).toBe(false);
     expect(result.errors).toBeDefined();
-    expect(result.errors[0].message).toContain('must be equal to one of the allowed values');
+    expect(result.errors[0].message).toContain('must NOT have additional properties');
   });
 
   it('should handle empty allowedTypes array', () => {
