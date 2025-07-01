@@ -26,6 +26,32 @@ class ScopeCache extends IScopeEngine {
   constructor({ cache, scopeEngine, safeEventDispatcher, logger }) {
     super(); // Call parent constructor
 
+    this._validateDependencies({
+      cache,
+      scopeEngine,
+      safeEventDispatcher,
+      logger,
+    });
+
+    this.cache = cache;
+    this.scopeEngine = scopeEngine;
+    this.logger = logger;
+    this.unsubscribeFn = null;
+
+    this._subscribeToTurnStarted(safeEventDispatcher);
+  }
+
+  /**
+   * Validate constructor dependencies
+   *
+   * @param {object} deps - Dependencies to validate
+   * @param {object} deps.cache - Cache instance
+   * @param {import('../scopeDsl/engine.js').default} deps.scopeEngine - ScopeEngine instance
+   * @param {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} deps.safeEventDispatcher - Event dispatcher
+   * @param {import('../interfaces/coreServices.js').ILogger} deps.logger - Logger instance
+   * @private
+   */
+  _validateDependencies({ cache, scopeEngine, safeEventDispatcher, logger }) {
     if (!cache) {
       throw new Error('A cache instance must be provided.');
     }
@@ -43,17 +69,28 @@ class ScopeCache extends IScopeEngine {
     if (!logger || typeof logger.debug !== 'function') {
       throw new Error('A logger instance must be provided.');
     }
+  }
 
-    this.cache = cache;
-    this.scopeEngine = scopeEngine;
-    this.logger = logger;
-    this.unsubscribeFn = null;
-
-    // Subscribe to turn started events to automatically clear cache
-    this.unsubscribeFn = safeEventDispatcher.subscribe(
-      TURN_STARTED_ID,
-      this._handleTurnStarted.bind(this)
-    );
+  /**
+   * Subscribe to TURN_STARTED_ID events
+   *
+   * @param {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} dispatcher
+   *  Event dispatcher
+   * @private
+   */
+  _subscribeToTurnStarted(dispatcher) {
+    try {
+      this.unsubscribeFn = dispatcher.subscribe(
+        TURN_STARTED_ID,
+        this._handleTurnStarted.bind(this)
+      );
+    } catch (err) {
+      this.logger.error(
+        'ScopeCache: Failed to subscribe to TURN_STARTED_ID events'
+      );
+      this.unsubscribeFn = null;
+      return;
+    }
 
     if (this.unsubscribeFn) {
       this.logger.debug(
