@@ -6,7 +6,7 @@
  * @param {object} dependencies.entitiesGateway - Gateway for entity data access
  * @returns {object} NodeResolver with canResolve and resolve methods
  */
-import { buildComponents } from '../core/entityComponentUtils.js';
+import { getOrBuildComponents } from '../core/entityHelpers.js';
 
 /**
  *
@@ -14,33 +14,6 @@ import { buildComponents } from '../core/entityComponentUtils.js';
  * @param root0.entitiesGateway
  */
 export default function createStepResolver({ entitiesGateway }) {
-  /**
-   * Builds a components object for the given entity ID.
-   *
-   * @description Retrieves all component data for the specified entity.
-   * @param {string} entityId - ID of the entity to inspect.
-   * @param {object} [trace] - Optional trace logger.
-   * @returns {object|null} Components keyed by type or null if entity missing.
-   */
-  function getComponentsForEntity(entityId, trace) {
-    const entity = entitiesGateway.getEntityInstance(entityId);
-    if (!entity) return null;
-
-    if (!entity.componentTypeIds || !Array.isArray(entity.componentTypeIds)) {
-      if (trace) {
-        trace.addLog(
-          'warn',
-          `Entity '${entityId}' does not expose componentTypeIds. Unable to retrieve components.`,
-          'StepResolver',
-          { entityId }
-        );
-      }
-      return {};
-    }
-
-    return buildComponents(entityId, entity, entitiesGateway);
-  }
-
   /**
    * Retrieves a single component value from an entity.
    *
@@ -75,7 +48,7 @@ export default function createStepResolver({ entitiesGateway }) {
    */
   function processEntityParentValue(entityId, field, trace) {
     if (field === 'components') {
-      return getComponentsForEntity(entityId, trace);
+      return getOrBuildComponents(entityId, null, entitiesGateway, trace);
     }
 
     return extractFieldFromEntity(entityId, field);
