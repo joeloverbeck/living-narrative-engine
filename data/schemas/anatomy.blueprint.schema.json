@@ -31,11 +31,73 @@
       "additionalProperties": {
         "$ref": "./anatomy.recipe.schema.json#/definitions/slotDefinition"
       }
+    },
+    "slots": {
+      "type": "object",
+      "description": "Complete structural definition of body part slots and their requirements",
+      "additionalProperties": {
+        "$ref": "#/definitions/blueprintSlot"
+      }
     }
   },
   "required": ["id", "root"],
   "additionalProperties": false,
   "definitions": {
+    "blueprintSlot": {
+      "type": "object",
+      "description": "Defines a slot in the anatomy blueprint with its requirements",
+      "properties": {
+        "parent": {
+          "type": "string",
+          "description": "The slot key of the parent part, or null for slots on the root"
+        },
+        "socket": {
+          "type": "string",
+          "description": "The socket ID on the parent where this part attaches"
+        },
+        "requirements": {
+          "$ref": "#/definitions/partRequirements"
+        },
+        "optional": {
+          "type": "boolean",
+          "description": "Whether this slot must be filled (default: false)",
+          "default": false
+        }
+      },
+      "required": ["socket", "requirements"],
+      "additionalProperties": false
+    },
+    "partRequirements": {
+      "type": "object",
+      "description": "Requirements for selecting a body part",
+      "properties": {
+        "partType": {
+          "type": "string",
+          "description": "The required part type (e.g., 'head', 'arm', 'eye')"
+        },
+        "components": {
+          "type": "array",
+          "description": "Required components that the part must have",
+          "items": {
+            "$ref": "./common.schema.json#/definitions/namespacedId"
+          }
+        },
+        "properties": {
+          "type": "object",
+          "description": "Required component property values",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "entityId": {
+          "$ref": "./common.schema.json#/definitions/namespacedId",
+          "description": "Specific entity definition ID (overrides other requirements)"
+        }
+      },
+      "required": ["partType"],
+      "additionalProperties": false
+    },
     "attachment": {
       "type": "object",
       "description": "Defines a parent-child relationship via a socket",

@@ -56,6 +56,24 @@
           "maxCount": 1,
           "jointType": "fused",
           "nameTpl": "{{type}}"
+        },
+        {
+          "id": "nose",
+          "allowedTypes": [
+            "nose"
+          ],
+          "maxCount": 1,
+          "jointType": "fused",
+          "nameTpl": "{{type}}"
+        },
+        {
+          "id": "mouth",
+          "allowedTypes": [
+            "mouth"
+          ],
+          "maxCount": 1,
+          "jointType": "fused",
+          "nameTpl": "{{type}}"
         }
       ]
     },

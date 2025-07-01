@@ -178,14 +178,29 @@ export class BodyDescriptionComposer {
 
     for (const partId of partIds) {
       const entity = this.entityFinder.getEntityInstance(partId);
-      if (!entity || !entity.hasComponent('anatomy:part')) {
+      if (!entity) {
         continue;
       }
 
-      const subType = entity.getComponentData('anatomy:part').subType;
-      if (!subType) {
+      // Check if entity has the required methods
+      if (!entity || typeof entity.hasComponent !== 'function') {
         continue;
       }
+      
+      if (!entity.hasComponent('anatomy:part')) {
+        continue;
+      }
+
+      if (typeof entity.getComponentData !== 'function') {
+        continue;
+      }
+
+      const anatomyPart = entity.getComponentData('anatomy:part');
+      if (!anatomyPart || !anatomyPart.subType) {
+        continue;
+      }
+
+      const subType = anatomyPart.subType;
 
       if (!partsByType.has(subType)) {
         partsByType.set(subType, []);
@@ -231,6 +246,10 @@ export class BodyDescriptionComposer {
    * @returns {string}
    */
   extractBuildDescription(bodyEntity) {
+    if (!bodyEntity || typeof bodyEntity.getComponentData !== 'function') {
+      return '';
+    }
+    
     const buildComponent = bodyEntity.getComponentData('descriptors:build');
     if (!buildComponent || !buildComponent.build) {
       return '';

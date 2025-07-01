@@ -131,6 +131,11 @@ export class DescriptorFormatter {
   extractDescriptors(components) {
     const descriptors = [];
 
+    // Handle null/undefined components gracefully
+    if (!components || typeof components !== 'object') {
+      return descriptors;
+    }
+
     for (const [componentId, componentData] of Object.entries(components)) {
       if (componentId.startsWith('descriptors:') && componentData) {
         // Extract the value based on the descriptor type
