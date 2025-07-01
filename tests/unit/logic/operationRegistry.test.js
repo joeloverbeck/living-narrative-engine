@@ -40,24 +40,27 @@ describe('OperationRegistry', () => {
   describe('register()', () => {
     test('registers handler and logs debug', () => {
       const registry = new OperationRegistry({ logger: mockLogger });
-      registry.register('TEST', dummyHandler);
+      const result = registry.register('TEST', dummyHandler);
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'OperationRegistry: OperationRegistry: Registered handler for operation type "TEST".'
       );
       expect(registry.getHandler('TEST')).toBe(dummyHandler);
+      expect(result).toBe(true);
     });
 
     test('warns when overwriting existing handler', () => {
       const registry = new OperationRegistry({ logger: mockLogger });
-      registry.register('TEST', dummyHandler);
+      const first = registry.register('TEST', dummyHandler);
       mockLogger.debug.mockClear();
-      registry.register('TEST', dummyHandler);
+      const second = registry.register('TEST', dummyHandler);
       expect(mockLogger.warn).toHaveBeenCalledWith(
         'OperationRegistry: OperationRegistry: Overwriting existing handler for operation type "TEST".'
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'OperationRegistry: OperationRegistry: Registered handler for operation type "TEST".'
       );
+      expect(first).toBe(true);
+      expect(second).toBe(false);
     });
 
     test('throws and logs error for invalid type', () => {
