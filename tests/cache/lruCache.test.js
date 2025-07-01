@@ -50,4 +50,10 @@ describe('createLruCache', () => {
     cache.clear();
     expect(cache.size).toBe(0);
   });
+
+  test('exposes configured max size', () => {
+    const cache = createLruCache(4);
+
+    expect(cache.max).toBe(4);
+  });
 });
