@@ -1,1328 +1,138 @@
-EntityDefinitionLoader [anatomy]: Storing item in registry. Category: 'entityDefinitions', Qualified ID: 'anatomy:humanoid_head', Base ID: 'humanoid_head', Filename: 'humanoid_head.entity.json'
-consoleLogger.js:187 EntityDefinitionLoader [anatomy]: Item 'anatomy:humanoid_head' (Base: 'humanoid_head') stored successfully in category 'entityDefinitions'.
-consoleLogger.js:187 EntityLoader [anatomy]: Successfully processed entity_definitions file 'humanoid_head.entity.json'. Returning final registry key: anatomy:humanoid_head, Overwrite: false
-consoleLogger.js:187 [anatomy] Successfully processed humanoid_head.entity.json. Result: ID=anatomy:humanoid_head, Overwrite=false
-consoleLogger.js:187 [anatomy] Fetched data from ./data/mods/anatomy/entities/definitions/humanoid_leg.entity.json
-consoleLogger.js:187 EntityDefinitionLoader [anatomy]: Validating 'humanoid_leg.entity.json' against primary schema 'http://example.com/schemas/entity-definition.schema.json'.
-consoleLogger.js:187 EntityLoader [anatomy]: Processing fetched item (post-primary validation): humanoid_leg.entity.json (Original Type: entity_definitions)
-consoleLogger.js:187 EntityLoader [anatomy]: Extracted full ID 'anatomy:humanoid_leg' and derived base ID 'humanoid_leg' from humanoid_leg.entity.json.
-consoleLogger.js:187 EntityLoader [anatomy]: Validating 3 components for entity 'anatomy:humanoid_leg' from humanoid_leg.entity.json...
-consoleLogger.js:187    - Component 'anatomy:part' in entity 'anatomy:humanoid_leg' passed runtime validation.
-consoleLogger.js:187    - Component 'anatomy:sockets' in entity 'anatomy:humanoid_leg' passed runtime validation.
-consoleLogger.js:187    - Component 'core:name' in entity 'anatomy:humanoid_leg' passed runtime validation.
-consoleLogger.js:187 EntityLoader [anatomy]: All runtime component validations passed for entity 'anatomy:humanoid_leg' from humanoid_leg.entity.json.
-consoleLogger.js:187 EntityLoader [anatomy]: Created EntityDefinition instance for 'anatomy:humanoid_leg' from humanoid_leg.entity.json. Delegating storage to base helper.
-consoleLogger.js:187 EntityDefinitionLoader [anatomy]: Storing item in registry. Category: 'entityDefinitions', Qualified ID: 'anatomy:humanoid_leg', Base ID: 'humanoid_leg', Filename: 'humanoid_leg.entity.json'
-consoleLogger.js:187 EntityDefinitionLoader [anatomy]: Item 'anatomy:humanoid_leg' (Base: 'humanoid_leg') stored successfully in category 'entityDefinitions'.
-consoleLogger.js:187 EntityLoader [anatomy]: Successfully processed entity_definitions file 'humanoid_leg.entity.json'. Returning final registry key: anatomy:humanoid_leg, Overwrite: false
-consoleLogger.js:187 [anatomy] Successfully processed humanoid_leg.entity.json. Result: ID=anatomy:humanoid_leg, Overwrite=false
-consoleLogger.js:151 Mod [anatomy] - Processed 14/14 entities.definitions items.
-consoleLogger.js:187 ModsLoader [anatomy, definitions]: Skipping content type 'events' (key: 'events') as it's not defined or empty in the manifest.
-consoleLogger.js:187 ModsLoader [anatomy, definitions]: Skipping content type 'macros' (key: 'macros') as it's not defined or empty in the manifest.
-consoleLogger.js:187 ModsLoader [anatomy, definitions]: Skipping content type 'rules' (key: 'rules') as it's not defined or empty in the manifest.
-consoleLogger.js:187 ModsLoader [anatomy, definitions]: Skipping content type 'scopes' (key: 'scopes') as it's not defined or empty in the manifest.
-consoleLogger.js:187 ModsLoader [anatomy, definitions]: Processing recipes content with 3 files...
-consoleLogger.js:187 ModsLoader [anatomy, definitions]: Found content for 'recipes'. Invoking loader 'AnatomyRecipeLoader'.
-consoleLogger.js:151 AnatomyRecipeLoader: Loading anatomyRecipes definitions for mod 'anatomy'.
-consoleLogger.js:187 Found 3 potential recipes files to process for mod anatomy.
-consoleLogger.js:187 [anatomy] Resolved path for gorgeous_milf.recipe.json: ./data/mods/anatomy/anatomy/recipes/gorgeous_milf.recipe.json
-consoleLogger.js:187 [anatomy] Resolved path for human_female.recipe.json: ./data/mods/anatomy/anatomy/recipes/human_female.recipe.json
-consoleLogger.js:187 [anatomy] Resolved path for human_male.recipe.json: ./data/mods/anatomy/anatomy/recipes/human_male.recipe.json
-workspaceDataFetcher.js:42 
-            
-            
-           GET http://127.0.0.1:8080/data/mods/anatomy/anatomy/recipes/gorgeous_milf.recipe.json 404 (Not Found)
-fetch @ workspaceDataFetcher.js:42
-fetchContent @ baseManifestItemLoader.js:376
-_processFileWrapper @ baseManifestItemLoader.js:320
-(anonymous) @ baseManifestItemLoader.js:507
-_loadItemsInternal @ baseManifestItemLoader.js:506
-loadItemsForMod @ baseManifestItemLoader.js:641
-#runLoadersForMod @ ModProcessor.js:164
-await in #runLoadersForMod
-processMod @ ModProcessor.js:80
-await in processMod
-#executeModProcessing @ ContentLoadManager.js:219
-processMod @ ContentLoadManager.js:209
-loadContentForPhase @ ContentLoadManager.js:171
-await in loadContentForPhase
-loadContent @ ContentLoadManager.js:81
-execute @ contentPhase.js:51
-run @ ModsLoadSession.js:19
-await in run
-loadMods @ modsLoader.js:85
-#loadMods @ initializationService.js:341
-runInitializationSequence @ initializationService.js:272
-#executeInitializationSequence @ gameEngine.js:197
-await in #executeInitializationSequence
-#initializeNewGame @ gameEngine.js:269
-await in #initializeNewGame
-startNewGame @ gameEngine.js:313
-startGameStage @ engineStages.js:87
-beginGame @ main.js:217
-(anonymous) @ game.html:326
-Promise.then
-(anonymous) @ game.html:323Understand this error
-workspaceDataFetcher.js:71 WorkspaceDataFetcher: Error fetching or parsing ./data/mods/anatomy/anatomy/recipes/gorgeous_milf.recipe.json: Error: HTTP error! status: 404 (Not Found) fetching ./data/mods/anatomy/anatomy/recipes/gorgeous_milf.recipe.json. Response body: 
-    at WorkspaceDataFetcher.fetch (workspaceDataFetcher.js:55:15)
-    at async AnatomyRecipeLoader.fetchContent (baseManifestItemLoader.js:376:20)
-    at async AnatomyRecipeLoader._processFileWrapper (baseManifestItemLoader.js:320:18)
-    at async Promise.allSettled (index 0)
-    at async AnatomyRecipeLoader._loadItemsInternal (baseManifestItemLoader.js:510:28)
-    at async #runLoadersForMod (ModProcessor.js:164:15)
-    at async ModProcessor.processMod (ModProcessor.js:80:52)
-    at async ContentLoadManager.loadContentForPhase (ContentLoadManager.js:171:24)
-    at async ContentLoadManager.loadContent (ContentLoadManager.js:81:7)
-    at async ContentPhase.execute (contentPhase.js:51:33)
-fetch @ workspaceDataFetcher.js:71
-await in fetch
-fetchContent @ baseManifestItemLoader.js:376
-_processFileWrapper @ baseManifestItemLoader.js:320
-(anonymous) @ baseManifestItemLoader.js:507
-_loadItemsInternal @ baseManifestItemLoader.js:506
-loadItemsForMod @ baseManifestItemLoader.js:641
-#runLoadersForMod @ ModProcessor.js:164
-await in #runLoadersForMod
-processMod @ ModProcessor.js:80
-await in processMod
-#executeModProcessing @ ContentLoadManager.js:219
-processMod @ ContentLoadManager.js:209
-loadContentForPhase @ ContentLoadManager.js:171
-await in loadContentForPhase
-loadContent @ ContentLoadManager.js:81
-execute @ contentPhase.js:51
-run @ ModsLoadSession.js:19
-await in run
-loadMods @ modsLoader.js:85
-#loadMods @ initializationService.js:341
-runInitializationSequence @ initializationService.js:272
-#executeInitializationSequence @ gameEngine.js:197
-await in #executeInitializationSequence
-#initializeNewGame @ gameEngine.js:269
-await in #initializeNewGame
-startNewGame @ gameEngine.js:313
-startGameStage @ engineStages.js:87
-beginGame @ main.js:217
-(anonymous) @ game.html:326
-Promise.then
-(anonymous) @ game.html:323Understand this error
-consoleLogger.js:175 Error processing file: {modId: 'anatomy', filename: 'gorgeous_milf.recipe.json', path: './data/mods/anatomy/anatomy/recipes/gorgeous_milf.recipe.json', registryKey: 'anatomyRecipes', error: 'HTTP error! status: 404 (Not Found) fetching ./dat…ecipes/gorgeous_milf.recipe.json. Response body: '} Error: HTTP error! status: 404 (Not Found) fetching ./data/mods/anatomy/anatomy/recipes/gorgeous_milf.recipe.json. Response body: 
-    at WorkspaceDataFetcher.fetch (workspaceDataFetcher.js:55:15)
-    at async AnatomyRecipeLoader.fetchContent (baseManifestItemLoader.js:376:20)
-    at async AnatomyRecipeLoader._processFileWrapper (baseManifestItemLoader.js:320:18)
-    at async Promise.allSettled (index 0)
-    at async AnatomyRecipeLoader._loadItemsInternal (baseManifestItemLoader.js:510:28)
-    at async #runLoadersForMod (ModProcessor.js:164:15)
-    at async ModProcessor.processMod (ModProcessor.js:80:52)
-    at async ContentLoadManager.loadContentForPhase (ContentLoadManager.js:171:24)
-    at async ContentLoadManager.loadContent (ContentLoadManager.js:81:7)
-    at async ContentPhase.execute (contentPhase.js:51:33)
-error @ consoleLogger.js:175
-fetchContent @ baseManifestItemLoader.js:380
-await in fetchContent
-_processFileWrapper @ baseManifestItemLoader.js:320
-(anonymous) @ baseManifestItemLoader.js:507
-_loadItemsInternal @ baseManifestItemLoader.js:506
-loadItemsForMod @ baseManifestItemLoader.js:641
-#runLoadersForMod @ ModProcessor.js:164
-await in #runLoadersForMod
-processMod @ ModProcessor.js:80
-await in processMod
-#executeModProcessing @ ContentLoadManager.js:219
-processMod @ ContentLoadManager.js:209
-loadContentForPhase @ ContentLoadManager.js:171
-await in loadContentForPhase
-loadContent @ ContentLoadManager.js:81
-execute @ contentPhase.js:51
-run @ ModsLoadSession.js:19
-await in run
-loadMods @ modsLoader.js:85
-#loadMods @ initializationService.js:341
-runInitializationSequence @ initializationService.js:272
-#executeInitializationSequence @ gameEngine.js:197
-await in #executeInitializationSequence
-#initializeNewGame @ gameEngine.js:269
-await in #initializeNewGame
-startNewGame @ gameEngine.js:313
-startGameStage @ engineStages.js:87
-beginGame @ main.js:217
-(anonymous) @ game.html:326
-Promise.then
-(anonymous) @ game.html:323Understand this error
-workspaceDataFetcher.js:42 
-            
-            
-           GET http://127.0.0.1:8080/data/mods/anatomy/anatomy/recipes/human_female.recipe.json 404 (Not Found)
-fetch @ workspaceDataFetcher.js:42
-fetchContent @ baseManifestItemLoader.js:376
-_processFileWrapper @ baseManifestItemLoader.js:320
-(anonymous) @ baseManifestItemLoader.js:507
-_loadItemsInternal @ baseManifestItemLoader.js:506
-loadItemsForMod @ baseManifestItemLoader.js:641
-#runLoadersForMod @ ModProcessor.js:164
-await in #runLoadersForMod
-processMod @ ModProcessor.js:80
-await in processMod
-#executeModProcessing @ ContentLoadManager.js:219
-processMod @ ContentLoadManager.js:209
-loadContentForPhase @ ContentLoadManager.js:171
-await in loadContentForPhase
-loadContent @ ContentLoadManager.js:81
-execute @ contentPhase.js:51
-run @ ModsLoadSession.js:19
-await in run
-loadMods @ modsLoader.js:85
-#loadMods @ initializationService.js:341
-runInitializationSequence @ initializationService.js:272
-#executeInitializationSequence @ gameEngine.js:197
-await in #executeInitializationSequence
-#initializeNewGame @ gameEngine.js:269
-await in #initializeNewGame
-startNewGame @ gameEngine.js:313
-startGameStage @ engineStages.js:87
-beginGame @ main.js:217
-(anonymous) @ game.html:326
-Promise.then
-(anonymous) @ game.html:323Understand this error
-workspaceDataFetcher.js:71 WorkspaceDataFetcher: Error fetching or parsing ./data/mods/anatomy/anatomy/recipes/human_female.recipe.json: Error: HTTP error! status: 404 (Not Found) fetching ./data/mods/anatomy/anatomy/recipes/human_female.recipe.json. Response body: 
-    at WorkspaceDataFetcher.fetch (workspaceDataFetcher.js:55:15)
-    at async AnatomyRecipeLoader.fetchContent (baseManifestItemLoader.js:376:20)
-    at async AnatomyRecipeLoader._processFileWrapper (baseManifestItemLoader.js:320:18)
-    at async Promise.allSettled (index 1)
-    at async AnatomyRecipeLoader._loadItemsInternal (baseManifestItemLoader.js:510:28)
-    at async #runLoadersForMod (ModProcessor.js:164:15)
-    at async ModProcessor.processMod (ModProcessor.js:80:52)
-    at async ContentLoadManager.loadContentForPhase (ContentLoadManager.js:171:24)
-    at async ContentLoadManager.loadContent (ContentLoadManager.js:81:7)
-    at async ContentPhase.execute (contentPhase.js:51:33)
-fetch @ workspaceDataFetcher.js:71
-await in fetch
-fetchContent @ baseManifestItemLoader.js:376
-_processFileWrapper @ baseManifestItemLoader.js:320
-(anonymous) @ baseManifestItemLoader.js:507
-_loadItemsInternal @ baseManifestItemLoader.js:506
-loadItemsForMod @ baseManifestItemLoader.js:641
-#runLoadersForMod @ ModProcessor.js:164
-await in #runLoadersForMod
-processMod @ ModProcessor.js:80
-await in processMod
-#executeModProcessing @ ContentLoadManager.js:219
-processMod @ ContentLoadManager.js:209
-loadContentForPhase @ ContentLoadManager.js:171
-await in loadContentForPhase
-loadContent @ ContentLoadManager.js:81
-execute @ contentPhase.js:51
-run @ ModsLoadSession.js:19
-await in run
-loadMods @ modsLoader.js:85
-#loadMods @ initializationService.js:341
-runInitializationSequence @ initializationService.js:272
-#executeInitializationSequence @ gameEngine.js:197
-await in #executeInitializationSequence
-#initializeNewGame @ gameEngine.js:269
-await in #initializeNewGame
-startNewGame @ gameEngine.js:313
-startGameStage @ engineStages.js:87
-beginGame @ main.js:217
-(anonymous) @ game.html:326
-Promise.then
-(anonymous) @ game.html:323Understand this error
-consoleLogger.js:175 Error processing file: {modId: 'anatomy', filename: 'human_female.recipe.json', path: './data/mods/anatomy/anatomy/recipes/human_female.recipe.json', registryKey: 'anatomyRecipes', error: 'HTTP error! status: 404 (Not Found) fetching ./dat…recipes/human_female.recipe.json. Response body: '} Error: HTTP error! status: 404 (Not Found) fetching ./data/mods/anatomy/anatomy/recipes/human_female.recipe.json. Response body: 
-    at WorkspaceDataFetcher.fetch (workspaceDataFetcher.js:55:15)
-    at async AnatomyRecipeLoader.fetchContent (baseManifestItemLoader.js:376:20)
-    at async AnatomyRecipeLoader._processFileWrapper (baseManifestItemLoader.js:320:18)
-    at async Promise.allSettled (index 1)
-    at async AnatomyRecipeLoader._loadItemsInternal (baseManifestItemLoader.js:510:28)
-    at async #runLoadersForMod (ModProcessor.js:164:15)
-    at async ModProcessor.processMod (ModProcessor.js:80:52)
-    at async ContentLoadManager.loadContentForPhase (ContentLoadManager.js:171:24)
-    at async ContentLoadManager.loadContent (ContentLoadManager.js:81:7)
-    at async ContentPhase.execute (contentPhase.js:51:33)
-error @ consoleLogger.js:175
-fetchContent @ baseManifestItemLoader.js:380
-await in fetchContent
-_processFileWrapper @ baseManifestItemLoader.js:320
-(anonymous) @ baseManifestItemLoader.js:507
-_loadItemsInternal @ baseManifestItemLoader.js:506
-loadItemsForMod @ baseManifestItemLoader.js:641
-#runLoadersForMod @ ModProcessor.js:164
-await in #runLoadersForMod
-processMod @ ModProcessor.js:80
-await in processMod
-#executeModProcessing @ ContentLoadManager.js:219
-processMod @ ContentLoadManager.js:209
-loadContentForPhase @ ContentLoadManager.js:171
-await in loadContentForPhase
-loadContent @ ContentLoadManager.js:81
-execute @ contentPhase.js:51
-run @ ModsLoadSession.js:19
-await in run
-loadMods @ modsLoader.js:85
-#loadMods @ initializationService.js:341
-runInitializationSequence @ initializationService.js:272
-#executeInitializationSequence @ gameEngine.js:197
-await in #executeInitializationSequence
-#initializeNewGame @ gameEngine.js:269
-await in #initializeNewGame
-startNewGame @ gameEngine.js:313
-startGameStage @ engineStages.js:87
-beginGame @ main.js:217
-(anonymous) @ game.html:326
-Promise.then
-(anonymous) @ game.html:323Understand this error
-workspaceDataFetcher.js:42 
-            
-            
-           GET http://127.0.0.1:8080/data/mods/anatomy/anatomy/recipes/human_male.recipe.json 404 (Not Found)
-fetch @ workspaceDataFetcher.js:42
-fetchContent @ baseManifestItemLoader.js:376
-_processFileWrapper @ baseManifestItemLoader.js:320
-(anonymous) @ baseManifestItemLoader.js:507
-_loadItemsInternal @ baseManifestItemLoader.js:506
-loadItemsForMod @ baseManifestItemLoader.js:641
-#runLoadersForMod @ ModProcessor.js:164
-await in #runLoadersForMod
-processMod @ ModProcessor.js:80
-await in processMod
-#executeModProcessing @ ContentLoadManager.js:219
-processMod @ ContentLoadManager.js:209
-loadContentForPhase @ ContentLoadManager.js:171
-await in loadContentForPhase
-loadContent @ ContentLoadManager.js:81
-execute @ contentPhase.js:51
-run @ ModsLoadSession.js:19
-await in run
-loadMods @ modsLoader.js:85
-#loadMods @ initializationService.js:341
-runInitializationSequence @ initializationService.js:272
-#executeInitializationSequence @ gameEngine.js:197
-await in #executeInitializationSequence
-#initializeNewGame @ gameEngine.js:269
-await in #initializeNewGame
-startNewGame @ gameEngine.js:313
-startGameStage @ engineStages.js:87
-beginGame @ main.js:217
-(anonymous) @ game.html:326
-Promise.then
-(anonymous) @ game.html:323Understand this error
-workspaceDataFetcher.js:71 WorkspaceDataFetcher: Error fetching or parsing ./data/mods/anatomy/anatomy/recipes/human_male.recipe.json: Error: HTTP error! status: 404 (Not Found) fetching ./data/mods/anatomy/anatomy/recipes/human_male.recipe.json. Response body: 
-    at WorkspaceDataFetcher.fetch (workspaceDataFetcher.js:55:15)
-    at async AnatomyRecipeLoader.fetchContent (baseManifestItemLoader.js:376:20)
-    at async AnatomyRecipeLoader._processFileWrapper (baseManifestItemLoader.js:320:18)
-    at async Promise.allSettled (index 2)
-    at async AnatomyRecipeLoader._loadItemsInternal (baseManifestItemLoader.js:510:28)
-    at async #runLoadersForMod (ModProcessor.js:164:15)
-    at async ModProcessor.processMod (ModProcessor.js:80:52)
-    at async ContentLoadManager.loadContentForPhase (ContentLoadManager.js:171:24)
-    at async ContentLoadManager.loadContent (ContentLoadManager.js:81:7)
-    at async ContentPhase.execute (contentPhase.js:51:33)
-fetch @ workspaceDataFetcher.js:71
-await in fetch
-fetchContent @ baseManifestItemLoader.js:376
-_processFileWrapper @ baseManifestItemLoader.js:320
-(anonymous) @ baseManifestItemLoader.js:507
-_loadItemsInternal @ baseManifestItemLoader.js:506
-loadItemsForMod @ baseManifestItemLoader.js:641
-#runLoadersForMod @ ModProcessor.js:164
-await in #runLoadersForMod
-processMod @ ModProcessor.js:80
-await in processMod
-#executeModProcessing @ ContentLoadManager.js:219
-processMod @ ContentLoadManager.js:209
-loadContentForPhase @ ContentLoadManager.js:171
-await in loadContentForPhase
-loadContent @ ContentLoadManager.js:81
-execute @ contentPhase.js:51
-run @ ModsLoadSession.js:19
-await in run
-loadMods @ modsLoader.js:85
-#loadMods @ initializationService.js:341
-runInitializationSequence @ initializationService.js:272
-#executeInitializationSequence @ gameEngine.js:197
-await in #executeInitializationSequence
-#initializeNewGame @ gameEngine.js:269
-await in #initializeNewGame
-startNewGame @ gameEngine.js:313
-startGameStage @ engineStages.js:87
-beginGame @ main.js:217
-(anonymous) @ game.html:326
-Promise.then
-(anonymous) @ game.html:323Understand this error
-consoleLogger.js:175 Error processing file: {modId: 'anatomy', filename: 'human_male.recipe.json', path: './data/mods/anatomy/anatomy/recipes/human_male.recipe.json', registryKey: 'anatomyRecipes', error: 'HTTP error! status: 404 (Not Found) fetching ./dat…y/recipes/human_male.recipe.json. Response body: '} Error: HTTP error! status: 404 (Not Found) fetching ./data/mods/anatomy/anatomy/recipes/human_male.recipe.json. Response body: 
-    at WorkspaceDataFetcher.fetch (workspaceDataFetcher.js:55:15)
-    at async AnatomyRecipeLoader.fetchContent (baseManifestItemLoader.js:376:20)
-    at async AnatomyRecipeLoader._processFileWrapper (baseManifestItemLoader.js:320:18)
-    at async Promise.allSettled (index 2)
-    at async AnatomyRecipeLoader._loadItemsInternal (baseManifestItemLoader.js:510:28)
-    at async #runLoadersForMod (ModProcessor.js:164:15)
-    at async ModProcessor.processMod (ModProcessor.js:80:52)
-    at async ContentLoadManager.loadContentForPhase (ContentLoadManager.js:171:24)
-    at async ContentLoadManager.loadContent (ContentLoadManager.js:81:7)
-    at async ContentPhase.execute (contentPhase.js:51:33)
-error @ consoleLogger.js:175
-fetchContent @ baseManifestItemLoader.js:380
-await in fetchContent
-_processFileWrapper @ baseManifestItemLoader.js:320
-(anonymous) @ baseManifestItemLoader.js:507
-_loadItemsInternal @ baseManifestItemLoader.js:506
-loadItemsForMod @ baseManifestItemLoader.js:641
-#runLoadersForMod @ ModProcessor.js:164
-await in #runLoadersForMod
-processMod @ ModProcessor.js:80
-await in processMod
-#executeModProcessing @ ContentLoadManager.js:219
-processMod @ ContentLoadManager.js:209
-loadContentForPhase @ ContentLoadManager.js:171
-await in loadContentForPhase
-loadContent @ ContentLoadManager.js:81
-execute @ contentPhase.js:51
-run @ ModsLoadSession.js:19
-await in run
-loadMods @ modsLoader.js:85
-#loadMods @ initializationService.js:341
-runInitializationSequence @ initializationService.js:272
-#executeInitializationSequence @ gameEngine.js:197
-await in #executeInitializationSequence
-#initializeNewGame @ gameEngine.js:269
-await in #initializeNewGame
-startNewGame @ gameEngine.js:313
-startGameStage @ engineStages.js:87
-beginGame @ main.js:217
-(anonymous) @ game.html:326
-Promise.then
-(anonymous) @ game.html:323Understand this error
-consoleLogger.js:187 [anatomy] Failure recorded for gorgeous_milf.recipe.json in batch processing. Reason logged previously.
-consoleLogger.js:187 [anatomy] Failure recorded for human_female.recipe.json in batch processing. Reason logged previously.
-consoleLogger.js:187 [anatomy] Failure recorded for human_male.recipe.json in batch processing. Reason logged previously.
-consoleLogger.js:151 Mod [anatomy] - Processed 0/3 recipes items. (3 failed)
-consoleLogger.js:175 ModsLoader [anatomy, definitions]: anatomyRecipes file 'gorgeous_milf.recipe.json' failed: HTTP error! status: 404 (Not Found) fetching ./data/mods/anatomy/anatomy/recipes/gorgeous_milf.recipe.json. Response body:  {modId: 'anatomy', registryKey: 'anatomyRecipes', phase: 'definitions', file: 'gorgeous_milf.recipe.json', error: 'HTTP error! status: 404 (Not Found) fetching ./dat…ecipes/gorgeous_milf.recipe.json. Response body: '} Error: HTTP error! status: 404 (Not Found) fetching ./data/mods/anatomy/anatomy/recipes/gorgeous_milf.recipe.json. Response body: 
-    at WorkspaceDataFetcher.fetch (workspaceDataFetcher.js:55:15)
-    at async AnatomyRecipeLoader.fetchContent (baseManifestItemLoader.js:376:20)
-    at async AnatomyRecipeLoader._processFileWrapper (baseManifestItemLoader.js:320:18)
-    at async Promise.allSettled (index 0)
-    at async AnatomyRecipeLoader._loadItemsInternal (baseManifestItemLoader.js:510:28)
-    at async #runLoadersForMod (ModProcessor.js:164:15)
-    at async ModProcessor.processMod (ModProcessor.js:80:52)
-    at async ContentLoadManager.loadContentForPhase (ContentLoadManager.js:171:24)
-    at async ContentLoadManager.loadContent (ContentLoadManager.js:81:7)
-    at async ContentPhase.execute (contentPhase.js:51:33)
-error @ consoleLogger.js:175
-#runLoadersForMod @ ModProcessor.js:177
-await in #runLoadersForMod
-processMod @ ModProcessor.js:80
-await in processMod
-#executeModProcessing @ ContentLoadManager.js:219
-processMod @ ContentLoadManager.js:209
-loadContentForPhase @ ContentLoadManager.js:171
-await in loadContentForPhase
-loadContent @ ContentLoadManager.js:81
-execute @ contentPhase.js:51
-run @ ModsLoadSession.js:19
-await in run
-loadMods @ modsLoader.js:85
-#loadMods @ initializationService.js:341
-runInitializationSequence @ initializationService.js:272
-#executeInitializationSequence @ gameEngine.js:197
-await in #executeInitializationSequence
-#initializeNewGame @ gameEngine.js:269
-await in #initializeNewGame
-startNewGame @ gameEngine.js:313
-startGameStage @ engineStages.js:87
-beginGame @ main.js:217
-(anonymous) @ game.html:326
-Promise.then
-(anonymous) @ game.html:323Understand this error
-consoleLogger.js:175 ModsLoader [anatomy, definitions]: anatomyRecipes file 'human_female.recipe.json' failed: HTTP error! status: 404 (Not Found) fetching ./data/mods/anatomy/anatomy/recipes/human_female.recipe.json. Response body:  {modId: 'anatomy', registryKey: 'anatomyRecipes', phase: 'definitions', file: 'human_female.recipe.json', error: 'HTTP error! status: 404 (Not Found) fetching ./dat…recipes/human_female.recipe.json. Response body: '} Error: HTTP error! status: 404 (Not Found) fetching ./data/mods/anatomy/anatomy/recipes/human_female.recipe.json. Response body: 
-    at WorkspaceDataFetcher.fetch (workspaceDataFetcher.js:55:15)
-    at async AnatomyRecipeLoader.fetchContent (baseManifestItemLoader.js:376:20)
-    at async AnatomyRecipeLoader._processFileWrapper (baseManifestItemLoader.js:320:18)
-    at async Promise.allSettled (index 1)
-    at async AnatomyRecipeLoader._loadItemsInternal (baseManifestItemLoader.js:510:28)
-    at async #runLoadersForMod (ModProcessor.js:164:15)
-    at async ModProcessor.processMod (ModProcessor.js:80:52)
-    at async ContentLoadManager.loadContentForPhase (ContentLoadManager.js:171:24)
-    at async ContentLoadManager.loadContent (ContentLoadManager.js:81:7)
-    at async ContentPhase.execute (contentPhase.js:51:33)
-error @ consoleLogger.js:175
-#runLoadersForMod @ ModProcessor.js:177
-await in #runLoadersForMod
-processMod @ ModProcessor.js:80
-await in processMod
-#executeModProcessing @ ContentLoadManager.js:219
-processMod @ ContentLoadManager.js:209
-loadContentForPhase @ ContentLoadManager.js:171
-await in loadContentForPhase
-loadContent @ ContentLoadManager.js:81
-execute @ contentPhase.js:51
-run @ ModsLoadSession.js:19
-await in run
-loadMods @ modsLoader.js:85
-#loadMods @ initializationService.js:341
-runInitializationSequence @ initializationService.js:272
-#executeInitializationSequence @ gameEngine.js:197
-await in #executeInitializationSequence
-#initializeNewGame @ gameEngine.js:269
-await in #initializeNewGame
-startNewGame @ gameEngine.js:313
-startGameStage @ engineStages.js:87
-beginGame @ main.js:217
-(anonymous) @ game.html:326
-Promise.then
-(anonymous) @ game.html:323Understand this error
-consoleLogger.js:175 ModsLoader [anatomy, definitions]: anatomyRecipes file 'human_male.recipe.json' failed: HTTP error! status: 404 (Not Found) fetching ./data/mods/anatomy/anatomy/recipes/human_male.recipe.json. Response body:  {modId: 'anatomy', registryKey: 'anatomyRecipes', phase: 'definitions', file: 'human_male.recipe.json', error: 'HTTP error! status: 404 (Not Found) fetching ./dat…y/recipes/human_male.recipe.json. Response body: '} Error: HTTP error! status: 404 (Not Found) fetching ./data/mods/anatomy/anatomy/recipes/human_male.recipe.json. Response body: 
-    at WorkspaceDataFetcher.fetch (workspaceDataFetcher.js:55:15)
-    at async AnatomyRecipeLoader.fetchContent (baseManifestItemLoader.js:376:20)
-    at async AnatomyRecipeLoader._processFileWrapper (baseManifestItemLoader.js:320:18)
-    at async Promise.allSettled (index 2)
-    at async AnatomyRecipeLoader._loadItemsInternal (baseManifestItemLoader.js:510:28)
-    at async #runLoadersForMod (ModProcessor.js:164:15)
-    at async ModProcessor.processMod (ModProcessor.js:80:52)
-    at async ContentLoadManager.loadContentForPhase (ContentLoadManager.js:171:24)
-    at async ContentLoadManager.loadContent (ContentLoadManager.js:81:7)
-    at async ContentPhase.execute (contentPhase.js:51:33)
-error @ consoleLogger.js:175
-#runLoadersForMod @ ModProcessor.js:177
-await in #runLoadersForMod
-processMod @ ModProcessor.js:80
-await in processMod
-#executeModProcessing @ ContentLoadManager.js:219
-processMod @ ContentLoadManager.js:209
-loadContentForPhase @ ContentLoadManager.js:171
-await in loadContentForPhase
-loadContent @ ContentLoadManager.js:81
-execute @ contentPhase.js:51
-run @ ModsLoadSession.js:19
-await in run
-loadMods @ modsLoader.js:85
-#loadMods @ initializationService.js:341
-runInitializationSequence @ initializationService.js:272
-#executeInitializationSequence @ gameEngine.js:197
-await in #executeInitializationSequence
-#initializeNewGame @ gameEngine.js:269
-await in #initializeNewGame
-startNewGame @ gameEngine.js:313
-startGameStage @ engineStages.js:87
-beginGame @ main.js:217
-(anonymous) @ game.html:326
-Promise.then
-(anonymous) @ game.html:323Understand this error
-consoleLogger.js:187 ModsLoader [anatomy, definitions]: Processing blueprints content with 2 files...
-consoleLogger.js:187 ModsLoader [anatomy, definitions]: Found content for 'blueprints'. Invoking loader 'AnatomyBlueprintLoader'.
-consoleLogger.js:151 AnatomyBlueprintLoader: Loading anatomyBlueprints definitions for mod 'anatomy'.
-consoleLogger.js:187 Found 2 potential blueprints files to process for mod anatomy.
-consoleLogger.js:187 [anatomy] Resolved path for human_female.blueprint.json: ./data/mods/anatomy/anatomy/blueprints/human_female.blueprint.json
-consoleLogger.js:187 [anatomy] Resolved path for human_male.blueprint.json: ./data/mods/anatomy/anatomy/blueprints/human_male.blueprint.json
-workspaceDataFetcher.js:42 
-            
-            
-           GET http://127.0.0.1:8080/data/mods/anatomy/anatomy/blueprints/human_female.blueprint.json 404 (Not Found)
-fetch @ workspaceDataFetcher.js:42
-fetchContent @ baseManifestItemLoader.js:376
-_processFileWrapper @ baseManifestItemLoader.js:320
-(anonymous) @ baseManifestItemLoader.js:507
-_loadItemsInternal @ baseManifestItemLoader.js:506
-loadItemsForMod @ baseManifestItemLoader.js:641
-#runLoadersForMod @ ModProcessor.js:164
-await in #runLoadersForMod
-processMod @ ModProcessor.js:80
-await in processMod
-#executeModProcessing @ ContentLoadManager.js:219
-processMod @ ContentLoadManager.js:209
-loadContentForPhase @ ContentLoadManager.js:171
-await in loadContentForPhase
-loadContent @ ContentLoadManager.js:81
-execute @ contentPhase.js:51
-run @ ModsLoadSession.js:19
-await in run
-loadMods @ modsLoader.js:85
-#loadMods @ initializationService.js:341
-runInitializationSequence @ initializationService.js:272
-#executeInitializationSequence @ gameEngine.js:197
-await in #executeInitializationSequence
-#initializeNewGame @ gameEngine.js:269
-await in #initializeNewGame
-startNewGame @ gameEngine.js:313
-startGameStage @ engineStages.js:87
-beginGame @ main.js:217
-(anonymous) @ game.html:326
-Promise.then
-(anonymous) @ game.html:323Understand this error
-workspaceDataFetcher.js:71 WorkspaceDataFetcher: Error fetching or parsing ./data/mods/anatomy/anatomy/blueprints/human_female.blueprint.json: Error: HTTP error! status: 404 (Not Found) fetching ./data/mods/anatomy/anatomy/blueprints/human_female.blueprint.json. Response body: 
-    at WorkspaceDataFetcher.fetch (workspaceDataFetcher.js:55:15)
-    at async AnatomyBlueprintLoader.fetchContent (baseManifestItemLoader.js:376:20)
-    at async AnatomyBlueprintLoader._processFileWrapper (baseManifestItemLoader.js:320:18)
-    at async Promise.allSettled (index 0)
-    at async AnatomyBlueprintLoader._loadItemsInternal (baseManifestItemLoader.js:510:28)
-    at async #runLoadersForMod (ModProcessor.js:164:15)
-    at async ModProcessor.processMod (ModProcessor.js:80:52)
-    at async ContentLoadManager.loadContentForPhase (ContentLoadManager.js:171:24)
-    at async ContentLoadManager.loadContent (ContentLoadManager.js:81:7)
-    at async ContentPhase.execute (contentPhase.js:51:33)
-fetch @ workspaceDataFetcher.js:71
-await in fetch
-fetchContent @ baseManifestItemLoader.js:376
-_processFileWrapper @ baseManifestItemLoader.js:320
-(anonymous) @ baseManifestItemLoader.js:507
-_loadItemsInternal @ baseManifestItemLoader.js:506
-loadItemsForMod @ baseManifestItemLoader.js:641
-#runLoadersForMod @ ModProcessor.js:164
-await in #runLoadersForMod
-processMod @ ModProcessor.js:80
-await in processMod
-#executeModProcessing @ ContentLoadManager.js:219
-processMod @ ContentLoadManager.js:209
-loadContentForPhase @ ContentLoadManager.js:171
-await in loadContentForPhase
-loadContent @ ContentLoadManager.js:81
-execute @ contentPhase.js:51
-run @ ModsLoadSession.js:19
-await in run
-loadMods @ modsLoader.js:85
-#loadMods @ initializationService.js:341
-runInitializationSequence @ initializationService.js:272
-#executeInitializationSequence @ gameEngine.js:197
-await in #executeInitializationSequence
-#initializeNewGame @ gameEngine.js:269
-await in #initializeNewGame
-startNewGame @ gameEngine.js:313
-startGameStage @ engineStages.js:87
-beginGame @ main.js:217
-(anonymous) @ game.html:326
-Promise.then
-(anonymous) @ game.html:323Understand this error
-consoleLogger.js:175 Error processing file: {modId: 'anatomy', filename: 'human_female.blueprint.json', path: './data/mods/anatomy/anatomy/blueprints/human_female.blueprint.json', registryKey: 'anatomyBlueprints', error: 'HTTP error! status: 404 (Not Found) fetching ./dat…ints/human_female.blueprint.json. Response body: '} Error: HTTP error! status: 404 (Not Found) fetching ./data/mods/anatomy/anatomy/blueprints/human_female.blueprint.json. Response body: 
-    at WorkspaceDataFetcher.fetch (workspaceDataFetcher.js:55:15)
-    at async AnatomyBlueprintLoader.fetchContent (baseManifestItemLoader.js:376:20)
-    at async AnatomyBlueprintLoader._processFileWrapper (baseManifestItemLoader.js:320:18)
-    at async Promise.allSettled (index 0)
-    at async AnatomyBlueprintLoader._loadItemsInternal (baseManifestItemLoader.js:510:28)
-    at async #runLoadersForMod (ModProcessor.js:164:15)
-    at async ModProcessor.processMod (ModProcessor.js:80:52)
-    at async ContentLoadManager.loadContentForPhase (ContentLoadManager.js:171:24)
-    at async ContentLoadManager.loadContent (ContentLoadManager.js:81:7)
-    at async ContentPhase.execute (contentPhase.js:51:33)
-error @ consoleLogger.js:175
-fetchContent @ baseManifestItemLoader.js:380
-await in fetchContent
-_processFileWrapper @ baseManifestItemLoader.js:320
-(anonymous) @ baseManifestItemLoader.js:507
-_loadItemsInternal @ baseManifestItemLoader.js:506
-loadItemsForMod @ baseManifestItemLoader.js:641
-#runLoadersForMod @ ModProcessor.js:164
-await in #runLoadersForMod
-processMod @ ModProcessor.js:80
-await in processMod
-#executeModProcessing @ ContentLoadManager.js:219
-processMod @ ContentLoadManager.js:209
-loadContentForPhase @ ContentLoadManager.js:171
-await in loadContentForPhase
-loadContent @ ContentLoadManager.js:81
-execute @ contentPhase.js:51
-run @ ModsLoadSession.js:19
-await in run
-loadMods @ modsLoader.js:85
-#loadMods @ initializationService.js:341
-runInitializationSequence @ initializationService.js:272
-#executeInitializationSequence @ gameEngine.js:197
-await in #executeInitializationSequence
-#initializeNewGame @ gameEngine.js:269
-await in #initializeNewGame
-startNewGame @ gameEngine.js:313
-startGameStage @ engineStages.js:87
-beginGame @ main.js:217
-(anonymous) @ game.html:326
-Promise.then
-(anonymous) @ game.html:323Understand this error
-workspaceDataFetcher.js:42 
-            
-            
-           GET http://127.0.0.1:8080/data/mods/anatomy/anatomy/blueprints/human_male.blueprint.json 404 (Not Found)
-fetch @ workspaceDataFetcher.js:42
-fetchContent @ baseManifestItemLoader.js:376
-_processFileWrapper @ baseManifestItemLoader.js:320
-(anonymous) @ baseManifestItemLoader.js:507
-_loadItemsInternal @ baseManifestItemLoader.js:506
-loadItemsForMod @ baseManifestItemLoader.js:641
-#runLoadersForMod @ ModProcessor.js:164
-await in #runLoadersForMod
-processMod @ ModProcessor.js:80
-await in processMod
-#executeModProcessing @ ContentLoadManager.js:219
-processMod @ ContentLoadManager.js:209
-loadContentForPhase @ ContentLoadManager.js:171
-await in loadContentForPhase
-loadContent @ ContentLoadManager.js:81
-execute @ contentPhase.js:51
-run @ ModsLoadSession.js:19
-await in run
-loadMods @ modsLoader.js:85
-#loadMods @ initializationService.js:341
-runInitializationSequence @ initializationService.js:272
-#executeInitializationSequence @ gameEngine.js:197
-await in #executeInitializationSequence
-#initializeNewGame @ gameEngine.js:269
-await in #initializeNewGame
-startNewGame @ gameEngine.js:313
-startGameStage @ engineStages.js:87
-beginGame @ main.js:217
-(anonymous) @ game.html:326
-Promise.then
-(anonymous) @ game.html:323Understand this error
-workspaceDataFetcher.js:71 WorkspaceDataFetcher: Error fetching or parsing ./data/mods/anatomy/anatomy/blueprints/human_male.blueprint.json: Error: HTTP error! status: 404 (Not Found) fetching ./data/mods/anatomy/anatomy/blueprints/human_male.blueprint.json. Response body: 
-    at WorkspaceDataFetcher.fetch (workspaceDataFetcher.js:55:15)
-    at async AnatomyBlueprintLoader.fetchContent (baseManifestItemLoader.js:376:20)
-    at async AnatomyBlueprintLoader._processFileWrapper (baseManifestItemLoader.js:320:18)
-    at async Promise.allSettled (index 1)
-    at async AnatomyBlueprintLoader._loadItemsInternal (baseManifestItemLoader.js:510:28)
-    at async #runLoadersForMod (ModProcessor.js:164:15)
-    at async ModProcessor.processMod (ModProcessor.js:80:52)
-    at async ContentLoadManager.loadContentForPhase (ContentLoadManager.js:171:24)
-    at async ContentLoadManager.loadContent (ContentLoadManager.js:81:7)
-    at async ContentPhase.execute (contentPhase.js:51:33)
-fetch @ workspaceDataFetcher.js:71
-await in fetch
-fetchContent @ baseManifestItemLoader.js:376
-_processFileWrapper @ baseManifestItemLoader.js:320
-(anonymous) @ baseManifestItemLoader.js:507
-_loadItemsInternal @ baseManifestItemLoader.js:506
-loadItemsForMod @ baseManifestItemLoader.js:641
-#runLoadersForMod @ ModProcessor.js:164
-await in #runLoadersForMod
-processMod @ ModProcessor.js:80
-await in processMod
-#executeModProcessing @ ContentLoadManager.js:219
-processMod @ ContentLoadManager.js:209
-loadContentForPhase @ ContentLoadManager.js:171
-await in loadContentForPhase
-loadContent @ ContentLoadManager.js:81
-execute @ contentPhase.js:51
-run @ ModsLoadSession.js:19
-await in run
-loadMods @ modsLoader.js:85
-#loadMods @ initializationService.js:341
-runInitializationSequence @ initializationService.js:272
-#executeInitializationSequence @ gameEngine.js:197
-await in #executeInitializationSequence
-#initializeNewGame @ gameEngine.js:269
-await in #initializeNewGame
-startNewGame @ gameEngine.js:313
-startGameStage @ engineStages.js:87
-beginGame @ main.js:217
-(anonymous) @ game.html:326
-Promise.then
-(anonymous) @ game.html:323Understand this error
-consoleLogger.js:175 Error processing file: {modId: 'anatomy', filename: 'human_male.blueprint.json', path: './data/mods/anatomy/anatomy/blueprints/human_male.blueprint.json', registryKey: 'anatomyBlueprints', error: 'HTTP error! status: 404 (Not Found) fetching ./dat…prints/human_male.blueprint.json. Response body: '} Error: HTTP error! status: 404 (Not Found) fetching ./data/mods/anatomy/anatomy/blueprints/human_male.blueprint.json. Response body: 
-    at WorkspaceDataFetcher.fetch (workspaceDataFetcher.js:55:15)
-    at async AnatomyBlueprintLoader.fetchContent (baseManifestItemLoader.js:376:20)
-    at async AnatomyBlueprintLoader._processFileWrapper (baseManifestItemLoader.js:320:18)
-    at async Promise.allSettled (index 1)
-    at async AnatomyBlueprintLoader._loadItemsInternal (baseManifestItemLoader.js:510:28)
-    at async #runLoadersForMod (ModProcessor.js:164:15)
-    at async ModProcessor.processMod (ModProcessor.js:80:52)
-    at async ContentLoadManager.loadContentForPhase (ContentLoadManager.js:171:24)
-    at async ContentLoadManager.loadContent (ContentLoadManager.js:81:7)
-    at async ContentPhase.execute (contentPhase.js:51:33)
-error @ consoleLogger.js:175
-fetchContent @ baseManifestItemLoader.js:380
-await in fetchContent
-_processFileWrapper @ baseManifestItemLoader.js:320
-(anonymous) @ baseManifestItemLoader.js:507
-_loadItemsInternal @ baseManifestItemLoader.js:506
-loadItemsForMod @ baseManifestItemLoader.js:641
-#runLoadersForMod @ ModProcessor.js:164
-await in #runLoadersForMod
-processMod @ ModProcessor.js:80
-await in processMod
-#executeModProcessing @ ContentLoadManager.js:219
-processMod @ ContentLoadManager.js:209
-loadContentForPhase @ ContentLoadManager.js:171
-await in loadContentForPhase
-loadContent @ ContentLoadManager.js:81
-execute @ contentPhase.js:51
-run @ ModsLoadSession.js:19
-await in run
-loadMods @ modsLoader.js:85
-#loadMods @ initializationService.js:341
-runInitializationSequence @ initializationService.js:272
-#executeInitializationSequence @ gameEngine.js:197
-await in #executeInitializationSequence
-#initializeNewGame @ gameEngine.js:269
-await in #initializeNewGame
-startNewGame @ gameEngine.js:313
-startGameStage @ engineStages.js:87
-beginGame @ main.js:217
-(anonymous) @ game.html:326
-Promise.then
-(anonymous) @ game.html:323Understand this error
-consoleLogger.js:187 [anatomy] Failure recorded for human_female.blueprint.json in batch processing. Reason logged previously.
-consoleLogger.js:187 [anatomy] Failure recorded for human_male.blueprint.json in batch processing. Reason logged previously.
-consoleLogger.js:151 Mod [anatomy] - Processed 0/2 blueprints items. (2 failed)
-consoleLogger.js:175 ModsLoader [anatomy, definitions]: anatomyBlueprints file 'human_female.blueprint.json' failed: HTTP error! status: 404 (Not Found) fetching ./data/mods/anatomy/anatomy/blueprints/human_female.blueprint.json. Response body:  {modId: 'anatomy', registryKey: 'anatomyBlueprints', phase: 'definitions', file: 'human_female.blueprint.json', error: 'HTTP error! status: 404 (Not Found) fetching ./dat…ints/human_female.blueprint.json. Response body: '} Error: HTTP error! status: 404 (Not Found) fetching ./data/mods/anatomy/anatomy/blueprints/human_female.blueprint.json. Response body: 
-    at WorkspaceDataFetcher.fetch (workspaceDataFetcher.js:55:15)
-    at async AnatomyBlueprintLoader.fetchContent (baseManifestItemLoader.js:376:20)
-    at async AnatomyBlueprintLoader._processFileWrapper (baseManifestItemLoader.js:320:18)
-    at async Promise.allSettled (index 0)
-    at async AnatomyBlueprintLoader._loadItemsInternal (baseManifestItemLoader.js:510:28)
-    at async #runLoadersForMod (ModProcessor.js:164:15)
-    at async ModProcessor.processMod (ModProcessor.js:80:52)
-    at async ContentLoadManager.loadContentForPhase (ContentLoadManager.js:171:24)
-    at async ContentLoadManager.loadContent (ContentLoadManager.js:81:7)
-    at async ContentPhase.execute (contentPhase.js:51:33)
-error @ consoleLogger.js:175
-#runLoadersForMod @ ModProcessor.js:177
-await in #runLoadersForMod
-processMod @ ModProcessor.js:80
-await in processMod
-#executeModProcessing @ ContentLoadManager.js:219
-processMod @ ContentLoadManager.js:209
-loadContentForPhase @ ContentLoadManager.js:171
-await in loadContentForPhase
-loadContent @ ContentLoadManager.js:81
-execute @ contentPhase.js:51
-run @ ModsLoadSession.js:19
-await in run
-loadMods @ modsLoader.js:85
-#loadMods @ initializationService.js:341
-runInitializationSequence @ initializationService.js:272
-#executeInitializationSequence @ gameEngine.js:197
-await in #executeInitializationSequence
-#initializeNewGame @ gameEngine.js:269
-await in #initializeNewGame
-startNewGame @ gameEngine.js:313
-startGameStage @ engineStages.js:87
-beginGame @ main.js:217
-(anonymous) @ game.html:326
-Promise.then
-(anonymous) @ game.html:323Understand this error
-consoleLogger.js:175 ModsLoader [anatomy, definitions]: anatomyBlueprints file 'human_male.blueprint.json' failed: HTTP error! status: 404 (Not Found) fetching ./data/mods/anatomy/anatomy/blueprints/human_male.blueprint.json. Response body:  {modId: 'anatomy', registryKey: 'anatomyBlueprints', phase: 'definitions', file: 'human_male.blueprint.json', error: 'HTTP error! status: 404 (Not Found) fetching ./dat…prints/human_male.blueprint.json. Response body: '} Error: HTTP error! status: 404 (Not Found) fetching ./data/mods/anatomy/anatomy/blueprints/human_male.blueprint.json. Response body: 
-    at WorkspaceDataFetcher.fetch (workspaceDataFetcher.js:55:15)
-    at async AnatomyBlueprintLoader.fetchContent (baseManifestItemLoader.js:376:20)
-    at async AnatomyBlueprintLoader._processFileWrapper (baseManifestItemLoader.js:320:18)
-    at async Promise.allSettled (index 1)
-    at async AnatomyBlueprintLoader._loadItemsInternal (baseManifestItemLoader.js:510:28)
-    at async #runLoadersForMod (ModProcessor.js:164:15)
-    at async ModProcessor.processMod (ModProcessor.js:80:52)
-    at async ContentLoadManager.loadContentForPhase (ContentLoadManager.js:171:24)
-    at async ContentLoadManager.loadContent (ContentLoadManager.js:81:7)
-    at async ContentPhase.execute (contentPhase.js:51:33)
-error @ consoleLogger.js:175
-#runLoadersForMod @ ModProcessor.js:177
-await in #runLoadersForMod
-processMod @ ModProcessor.js:80
-await in processMod
-#executeModProcessing @ ContentLoadManager.js:219
-processMod @ ContentLoadManager.js:209
-loadContentForPhase @ ContentLoadManager.js:171
-await in loadContentForPhase
-loadContent @ ContentLoadManager.js:81
-execute @ contentPhase.js:51
-run @ ModsLoadSession.js:19
-await in run
-loadMods @ modsLoader.js:85
-#loadMods @ initializationService.js:341
-runInitializationSequence @ initializationService.js:272
-#executeInitializationSequence @ gameEngine.js:197
-await in #executeInitializationSequence
-#initializeNewGame @ gameEngine.js:269
-await in #initializeNewGame
-startNewGame @ gameEngine.js:313
-startGameStage @ engineStages.js:87
-beginGame @ main.js:217
-(anonymous) @ game.html:326
-Promise.then
-(anonymous) @ game.html:323Understand this error
-consoleLogger.js:187 ModsLoader [anatomy, definitions]: Processing anatomyFormatting content with 1 files...
-consoleLogger.js:187 ModsLoader [anatomy, definitions]: Found content for 'anatomyFormatting'. Invoking loader 'AnatomyFormattingLoader'.
-consoleLogger.js:151 AnatomyFormattingLoader: Loading anatomyFormatting definitions for mod 'anatomy'.
-consoleLogger.js:187 Found 1 potential anatomyFormatting files to process for mod anatomy.
-consoleLogger.js:187 [anatomy] Resolved path for default.json: ./data/mods/anatomy/anatomy-formatting/default.json
-consoleLogger.js:187 [anatomy] Fetched data from ./data/mods/anatomy/anatomy-formatting/default.json
-consoleLogger.js:187 AnatomyFormattingLoader [anatomy]: Validating 'default.json' against primary schema 'http://example.com/schemas/anatomy-formatting.schema.json'.
-consoleLogger.js:187 AnatomyFormattingLoader [anatomy]: Processing fetched item: default.json
-consoleLogger.js:187 AnatomyFormattingLoader [anatomy]: Storing item in registry. Category: 'anatomyFormatting', Qualified ID: 'anatomy:default', Base ID: 'default', Filename: 'default.json'
-consoleLogger.js:187 AnatomyFormattingLoader [anatomy]: Item 'anatomy:default' (Base: 'default') stored successfully in category 'anatomyFormatting'.
-consoleLogger.js:187 AnatomyFormattingLoader [anatomy]: Successfully processed anatomy formatting from default.json. Registry key: anatomy:default, Overwrite: false
-consoleLogger.js:187 [anatomy] Successfully processed default.json. Result: ID=anatomy:default, Overwrite=false
-consoleLogger.js:151 Mod [anatomy] - Processed 1/1 anatomyFormatting items.
-consoleLogger.js:187 ModsLoader [anatomy, definitions]: Content loading loop took 39.50 ms.
-consoleLogger.js:187 Mod 'anatomy' phase 'definitions' loaded in 39.50ms: anatomyBlueprints(0 E:2), anatomyFormatting(1), anatomyRecipes(0 E:3), components(4), entity_definitions(14) -> Overrides(0), Errors(5)
-consoleLogger.js:187 --- Finished loading content for mod: anatomy, phase: definitions ---
-consoleLogger.js:187 ContentLoadManager: Looking up manifest for modId 'isekai' (lowercase: 'isekai'), found: true
-consoleLogger.js:187 ContentLoadManager: Processing mod isekai, manifest found: true
-consoleLogger.js:187 --- Loading content for mod: isekai, phase: definitions ---
-consoleLogger.js:187 ModsLoader [isekai, definitions]: Manifest retrieved successfully. Processing content types...
-consoleLogger.js:187 ModsLoader [isekai, definitions]: Skipping content type 'actions' (key: 'actions') as it's not defined or empty in the manifest.
-consoleLogger.js:187 ModsLoader [isekai, definitions]: Skipping content type 'components' (key: 'components') as it's not defined or empty in the manifest.
-consoleLogger.js:187 ModsLoader [isekai, definitions]: Skipping content type 'conditions' (key: 'conditions') as it's not defined or empty in the manifest.
-consoleLogger.js:187 ModsLoader [isekai, definitions]: Processing entities.definitions content with 6 files...
-consoleLogger.js:187 ModsLoader [isekai, definitions]: Found content for 'entities.definitions'. Invoking loader 'EntityDefinitionLoader'.
-consoleLogger.js:151 EntityDefinitionLoader: Loading entity_definitions definitions for mod 'isekai'.
-consoleLogger.js:187 Found 6 potential entities.definitions files to process for mod isekai.
-consoleLogger.js:187 [isekai] Resolved path for adventurers_guild.location.json: ./data/mods/isekai/entities/definitions/adventurers_guild.location.json
-consoleLogger.js:187 [isekai] Resolved path for hero.character.json: ./data/mods/isekai/entities/definitions/hero.character.json
-consoleLogger.js:187 [isekai] Resolved path for ninja.character.json: ./data/mods/isekai/entities/definitions/ninja.character.json
-consoleLogger.js:187 [isekai] Resolved path for receptionist.character.json: ./data/mods/isekai/entities/definitions/receptionist.character.json
-consoleLogger.js:187 [isekai] Resolved path for sidekick.character.json: ./data/mods/isekai/entities/definitions/sidekick.character.json
-consoleLogger.js:187 [isekai] Resolved path for town.location.json: ./data/mods/isekai/entities/definitions/town.location.json
-consoleLogger.js:187 [isekai] Fetched data from ./data/mods/isekai/entities/definitions/adventurers_guild.location.json
-consoleLogger.js:187 EntityDefinitionLoader [isekai]: Validating 'adventurers_guild.location.json' against primary schema 'http://example.com/schemas/entity-definition.schema.json'.
-consoleLogger.js:187 EntityLoader [isekai]: Processing fetched item (post-primary validation): adventurers_guild.location.json (Original Type: entity_definitions)
-consoleLogger.js:187 EntityLoader [isekai]: Extracted full ID 'isekai:adventurers_guild' and derived base ID 'adventurers_guild' from adventurers_guild.location.json.
-consoleLogger.js:187 EntityLoader [isekai]: Validating 4 components for entity 'isekai:adventurers_guild' from adventurers_guild.location.json...
-consoleLogger.js:187    - Component 'core:name' in entity 'isekai:adventurers_guild' passed runtime validation.
-consoleLogger.js:187    - Component 'core:description' in entity 'isekai:adventurers_guild' passed runtime validation.
-consoleLogger.js:187    - Component 'core:portrait' in entity 'isekai:adventurers_guild' passed runtime validation.
-consoleLogger.js:187    - Component 'core:exits' in entity 'isekai:adventurers_guild' passed runtime validation.
-consoleLogger.js:187 EntityLoader [isekai]: All runtime component validations passed for entity 'isekai:adventurers_guild' from adventurers_guild.location.json.
-consoleLogger.js:187 EntityLoader [isekai]: Created EntityDefinition instance for 'isekai:adventurers_guild' from adventurers_guild.location.json. Delegating storage to base helper.
-consoleLogger.js:187 EntityDefinitionLoader [isekai]: Storing item in registry. Category: 'entityDefinitions', Qualified ID: 'isekai:adventurers_guild', Base ID: 'adventurers_guild', Filename: 'adventurers_guild.location.json'
-consoleLogger.js:187 EntityDefinitionLoader [isekai]: Item 'isekai:adventurers_guild' (Base: 'adventurers_guild') stored successfully in category 'entityDefinitions'.
-consoleLogger.js:187 EntityLoader [isekai]: Successfully processed entity_definitions file 'adventurers_guild.location.json'. Returning final registry key: isekai:adventurers_guild, Overwrite: false
-consoleLogger.js:187 [isekai] Successfully processed adventurers_guild.location.json. Result: ID=isekai:adventurers_guild, Overwrite=false
-consoleLogger.js:187 [isekai] Fetched data from ./data/mods/isekai/entities/definitions/hero.character.json
-consoleLogger.js:187 EntityDefinitionLoader [isekai]: Validating 'hero.character.json' against primary schema 'http://example.com/schemas/entity-definition.schema.json'.
-consoleLogger.js:187 EntityLoader [isekai]: Processing fetched item (post-primary validation): hero.character.json (Original Type: entity_definitions)
-consoleLogger.js:187 EntityLoader [isekai]: Extracted full ID 'isekai:hero' and derived base ID 'hero' from hero.character.json.
-consoleLogger.js:187 EntityLoader [isekai]: Validating 7 components for entity 'isekai:hero' from hero.character.json...
-consoleLogger.js:187    - Component 'core:actor' in entity 'isekai:hero' passed runtime validation.
-consoleLogger.js:187    - Component 'core:player_type' in entity 'isekai:hero' passed runtime validation.
-consoleLogger.js:187    - Component 'core:name' in entity 'isekai:hero' passed runtime validation.
-consoleLogger.js:187    - Component 'anatomy:body' in entity 'isekai:hero' passed runtime validation.
-consoleLogger.js:187    - Component 'core:portrait' in entity 'isekai:hero' passed runtime validation.
-consoleLogger.js:187    - Component 'core:perception_log' in entity 'isekai:hero' passed runtime validation.
-consoleLogger.js:187    - Component 'core:movement' in entity 'isekai:hero' passed runtime validation.
-consoleLogger.js:187 EntityLoader [isekai]: All runtime component validations passed for entity 'isekai:hero' from hero.character.json.
-consoleLogger.js:187 EntityLoader [isekai]: Created EntityDefinition instance for 'isekai:hero' from hero.character.json. Delegating storage to base helper.
-consoleLogger.js:187 EntityDefinitionLoader [isekai]: Storing item in registry. Category: 'entityDefinitions', Qualified ID: 'isekai:hero', Base ID: 'hero', Filename: 'hero.character.json'
-consoleLogger.js:187 EntityDefinitionLoader [isekai]: Item 'isekai:hero' (Base: 'hero') stored successfully in category 'entityDefinitions'.
-consoleLogger.js:187 EntityLoader [isekai]: Successfully processed entity_definitions file 'hero.character.json'. Returning final registry key: isekai:hero, Overwrite: false
-consoleLogger.js:187 [isekai] Successfully processed hero.character.json. Result: ID=isekai:hero, Overwrite=false
-consoleLogger.js:187 [isekai] Fetched data from ./data/mods/isekai/entities/definitions/ninja.character.json
-consoleLogger.js:187 EntityDefinitionLoader [isekai]: Validating 'ninja.character.json' against primary schema 'http://example.com/schemas/entity-definition.schema.json'.
-consoleLogger.js:187 EntityLoader [isekai]: Processing fetched item (post-primary validation): ninja.character.json (Original Type: entity_definitions)
-consoleLogger.js:187 EntityLoader [isekai]: Extracted full ID 'isekai:ninja' and derived base ID 'ninja' from ninja.character.json.
-consoleLogger.js:187 EntityLoader [isekai]: Validating 6 components for entity 'isekai:ninja' from ninja.character.json...
-consoleLogger.js:187    - Component 'core:actor' in entity 'isekai:ninja' passed runtime validation.
-consoleLogger.js:187    - Component 'core:player_type' in entity 'isekai:ninja' passed runtime validation.
-consoleLogger.js:187    - Component 'core:name' in entity 'isekai:ninja' passed runtime validation.
-consoleLogger.js:187    - Component 'core:description' in entity 'isekai:ninja' passed runtime validation.
-consoleLogger.js:187    - Component 'core:perception_log' in entity 'isekai:ninja' passed runtime validation.
-consoleLogger.js:187    - Component 'core:movement' in entity 'isekai:ninja' passed runtime validation.
-consoleLogger.js:187 EntityLoader [isekai]: All runtime component validations passed for entity 'isekai:ninja' from ninja.character.json.
-consoleLogger.js:187 EntityLoader [isekai]: Created EntityDefinition instance for 'isekai:ninja' from ninja.character.json. Delegating storage to base helper.
-consoleLogger.js:187 EntityDefinitionLoader [isekai]: Storing item in registry. Category: 'entityDefinitions', Qualified ID: 'isekai:ninja', Base ID: 'ninja', Filename: 'ninja.character.json'
-consoleLogger.js:187 EntityDefinitionLoader [isekai]: Item 'isekai:ninja' (Base: 'ninja') stored successfully in category 'entityDefinitions'.
-consoleLogger.js:187 EntityLoader [isekai]: Successfully processed entity_definitions file 'ninja.character.json'. Returning final registry key: isekai:ninja, Overwrite: false
-consoleLogger.js:187 [isekai] Successfully processed ninja.character.json. Result: ID=isekai:ninja, Overwrite=false
-consoleLogger.js:187 [isekai] Fetched data from ./data/mods/isekai/entities/definitions/receptionist.character.json
-consoleLogger.js:187 EntityDefinitionLoader [isekai]: Validating 'receptionist.character.json' against primary schema 'http://example.com/schemas/entity-definition.schema.json'.
-consoleLogger.js:187 EntityLoader [isekai]: Processing fetched item (post-primary validation): receptionist.character.json (Original Type: entity_definitions)
-consoleLogger.js:187 EntityLoader [isekai]: Extracted full ID 'isekai:receptionist' and derived base ID 'receptionist' from receptionist.character.json.
-consoleLogger.js:187 EntityLoader [isekai]: Validating 15 components for entity 'isekai:receptionist' from receptionist.character.json...
-consoleLogger.js:187    - Component 'core:actor' in entity 'isekai:receptionist' passed runtime validation.
-consoleLogger.js:187    - Component 'core:player_type' in entity 'isekai:receptionist' passed runtime validation.
-consoleLogger.js:187    - Component 'core:name' in entity 'isekai:receptionist' passed runtime validation.
-consoleLogger.js:187    - Component 'core:description' in entity 'isekai:receptionist' passed runtime validation.
-consoleLogger.js:187    - Component 'core:portrait' in entity 'isekai:receptionist' passed runtime validation.
-consoleLogger.js:187    - Component 'core:perception_log' in entity 'isekai:receptionist' passed runtime validation.
-consoleLogger.js:187    - Component 'core:short_term_memory' in entity 'isekai:receptionist' passed runtime validation.
-consoleLogger.js:187    - Component 'core:likes' in entity 'isekai:receptionist' passed runtime validation.
-consoleLogger.js:187    - Component 'core:dislikes' in entity 'isekai:receptionist' passed runtime validation.
-consoleLogger.js:187    - Component 'core:personality' in entity 'isekai:receptionist' passed runtime validation.
-consoleLogger.js:187    - Component 'core:fears' in entity 'isekai:receptionist' passed runtime validation.
-consoleLogger.js:187    - Component 'core:profile' in entity 'isekai:receptionist' passed runtime validation.
-consoleLogger.js:187    - Component 'core:secrets' in entity 'isekai:receptionist' passed runtime validation.
-consoleLogger.js:187    - Component 'core:speech_patterns' in entity 'isekai:receptionist' passed runtime validation.
-consoleLogger.js:187    - Component 'core:movement' in entity 'isekai:receptionist' passed runtime validation.
-consoleLogger.js:187 EntityLoader [isekai]: All runtime component validations passed for entity 'isekai:receptionist' from receptionist.character.json.
-consoleLogger.js:187 EntityLoader [isekai]: Created EntityDefinition instance for 'isekai:receptionist' from receptionist.character.json. Delegating storage to base helper.
-consoleLogger.js:187 EntityDefinitionLoader [isekai]: Storing item in registry. Category: 'entityDefinitions', Qualified ID: 'isekai:receptionist', Base ID: 'receptionist', Filename: 'receptionist.character.json'
-consoleLogger.js:187 EntityDefinitionLoader [isekai]: Item 'isekai:receptionist' (Base: 'receptionist') stored successfully in category 'entityDefinitions'.
-consoleLogger.js:187 EntityLoader [isekai]: Successfully processed entity_definitions file 'receptionist.character.json'. Returning final registry key: isekai:receptionist, Overwrite: false
-consoleLogger.js:187 [isekai] Successfully processed receptionist.character.json. Result: ID=isekai:receptionist, Overwrite=false
-consoleLogger.js:187 [isekai] Fetched data from ./data/mods/isekai/entities/definitions/sidekick.character.json
-consoleLogger.js:187 EntityDefinitionLoader [isekai]: Validating 'sidekick.character.json' against primary schema 'http://example.com/schemas/entity-definition.schema.json'.
-consoleLogger.js:187 EntityLoader [isekai]: Processing fetched item (post-primary validation): sidekick.character.json (Original Type: entity_definitions)
-consoleLogger.js:187 EntityLoader [isekai]: Extracted full ID 'isekai:sidekick' and derived base ID 'sidekick' from sidekick.character.json.
-consoleLogger.js:187 EntityLoader [isekai]: Validating 16 components for entity 'isekai:sidekick' from sidekick.character.json...
-consoleLogger.js:187    - Component 'core:actor' in entity 'isekai:sidekick' passed runtime validation.
-consoleLogger.js:187    - Component 'core:player_type' in entity 'isekai:sidekick' passed runtime validation.
-consoleLogger.js:187    - Component 'core:name' in entity 'isekai:sidekick' passed runtime validation.
-consoleLogger.js:187    - Component 'core:description' in entity 'isekai:sidekick' passed runtime validation.
-consoleLogger.js:187    - Component 'core:portrait' in entity 'isekai:sidekick' passed runtime validation.
-consoleLogger.js:187    - Component 'core:perception_log' in entity 'isekai:sidekick' passed runtime validation.
-consoleLogger.js:187    - Component 'core:dislikes' in entity 'isekai:sidekick' passed runtime validation.
-consoleLogger.js:187    - Component 'core:likes' in entity 'isekai:sidekick' passed runtime validation.
-consoleLogger.js:187    - Component 'core:fears' in entity 'isekai:sidekick' passed runtime validation.
-consoleLogger.js:187    - Component 'core:personality' in entity 'isekai:sidekick' passed runtime validation.
-consoleLogger.js:187    - Component 'core:profile' in entity 'isekai:sidekick' passed runtime validation.
-consoleLogger.js:187    - Component 'core:secrets' in entity 'isekai:sidekick' passed runtime validation.
-consoleLogger.js:187    - Component 'core:speech_patterns' in entity 'isekai:sidekick' passed runtime validation.
-consoleLogger.js:187    - Component 'core:notes' in entity 'isekai:sidekick' passed runtime validation.
-consoleLogger.js:187    - Component 'core:goals' in entity 'isekai:sidekick' passed runtime validation.
-consoleLogger.js:187    - Component 'core:movement' in entity 'isekai:sidekick' passed runtime validation.
-consoleLogger.js:187 EntityLoader [isekai]: All runtime component validations passed for entity 'isekai:sidekick' from sidekick.character.json.
-consoleLogger.js:187 EntityLoader [isekai]: Created EntityDefinition instance for 'isekai:sidekick' from sidekick.character.json. Delegating storage to base helper.
-consoleLogger.js:187 EntityDefinitionLoader [isekai]: Storing item in registry. Category: 'entityDefinitions', Qualified ID: 'isekai:sidekick', Base ID: 'sidekick', Filename: 'sidekick.character.json'
-consoleLogger.js:187 EntityDefinitionLoader [isekai]: Item 'isekai:sidekick' (Base: 'sidekick') stored successfully in category 'entityDefinitions'.
-consoleLogger.js:187 EntityLoader [isekai]: Successfully processed entity_definitions file 'sidekick.character.json'. Returning final registry key: isekai:sidekick, Overwrite: false
-consoleLogger.js:187 [isekai] Successfully processed sidekick.character.json. Result: ID=isekai:sidekick, Overwrite=false
-consoleLogger.js:187 [isekai] Fetched data from ./data/mods/isekai/entities/definitions/town.location.json
-consoleLogger.js:187 EntityDefinitionLoader [isekai]: Validating 'town.location.json' against primary schema 'http://example.com/schemas/entity-definition.schema.json'.
-consoleLogger.js:187 EntityLoader [isekai]: Processing fetched item (post-primary validation): town.location.json (Original Type: entity_definitions)
-consoleLogger.js:187 EntityLoader [isekai]: Extracted full ID 'isekai:town' and derived base ID 'town' from town.location.json.
-consoleLogger.js:187 EntityLoader [isekai]: Validating 3 components for entity 'isekai:town' from town.location.json...
-consoleLogger.js:187    - Component 'core:name' in entity 'isekai:town' passed runtime validation.
-consoleLogger.js:187    - Component 'core:description' in entity 'isekai:town' passed runtime validation.
-consoleLogger.js:187    - Component 'core:exits' in entity 'isekai:town' passed runtime validation.
-consoleLogger.js:187 EntityLoader [isekai]: All runtime component validations passed for entity 'isekai:town' from town.location.json.
-consoleLogger.js:187 EntityLoader [isekai]: Created EntityDefinition instance for 'isekai:town' from town.location.json. Delegating storage to base helper.
-consoleLogger.js:187 EntityDefinitionLoader [isekai]: Storing item in registry. Category: 'entityDefinitions', Qualified ID: 'isekai:town', Base ID: 'town', Filename: 'town.location.json'
-consoleLogger.js:187 EntityDefinitionLoader [isekai]: Item 'isekai:town' (Base: 'town') stored successfully in category 'entityDefinitions'.
-consoleLogger.js:187 EntityLoader [isekai]: Successfully processed entity_definitions file 'town.location.json'. Returning final registry key: isekai:town, Overwrite: false
-consoleLogger.js:187 [isekai] Successfully processed town.location.json. Result: ID=isekai:town, Overwrite=false
-consoleLogger.js:151 Mod [isekai] - Processed 6/6 entities.definitions items.
-consoleLogger.js:187 ModsLoader [isekai, definitions]: Skipping content type 'events' (key: 'events') as it's not defined or empty in the manifest.
-consoleLogger.js:187 ModsLoader [isekai, definitions]: Skipping content type 'macros' (key: 'macros') as it's not defined or empty in the manifest.
-consoleLogger.js:187 ModsLoader [isekai, definitions]: Skipping content type 'rules' (key: 'rules') as it's not defined or empty in the manifest.
-consoleLogger.js:187 ModsLoader [isekai, definitions]: Skipping content type 'scopes' (key: 'scopes') as it's not defined or empty in the manifest.
-consoleLogger.js:187 ModsLoader [isekai, definitions]: Skipping content type 'anatomyRecipes' (key: 'recipes') as it's not defined or empty in the manifest.
-consoleLogger.js:187 ModsLoader [isekai, definitions]: Skipping content type 'anatomyBlueprints' (key: 'blueprints') as it's not defined or empty in the manifest.
-consoleLogger.js:187 ModsLoader [isekai, definitions]: Skipping content type 'anatomyFormatting' (key: 'anatomyFormatting') as it's not defined or empty in the manifest.
-consoleLogger.js:187 ModsLoader [isekai, definitions]: Content loading loop took 11.70 ms.
-consoleLogger.js:187 Mod 'isekai' phase 'definitions' loaded in 11.70ms: entity_definitions(6) -> Overrides(0), Errors(0)
-consoleLogger.js:187 --- Finished loading content for mod: isekai, phase: definitions ---
-consoleLogger.js:187 ModsLoader: Completed content loading loop for phase: definitions.
-consoleLogger.js:187 ModsLoader: Beginning content loading for phase: instances...
-consoleLogger.js:187 ContentLoadManager: Looking up manifest for modId 'core' (lowercase: 'core'), found: true
-consoleLogger.js:187 ContentLoadManager: Processing mod core, manifest found: true
-consoleLogger.js:187 --- Loading content for mod: core, phase: instances ---
-consoleLogger.js:187 ModsLoader [core, instances]: Manifest retrieved successfully. Processing content types...
-consoleLogger.js:187 ModsLoader [core, instances]: Skipping content type 'entityInstances' (key: 'entities.instances') as it's not defined or empty in the manifest.
-consoleLogger.js:187 ModsLoader [core, instances]: Skipping content type 'goals' (key: 'goals') as it's not defined or empty in the manifest.
-consoleLogger.js:187 ModsLoader [core, instances]: Content loading loop took 0.10 ms.
-consoleLogger.js:187 Mod 'core' phase 'instances' loaded in 0.10ms: No items processed in this phase-> Overrides(0), Errors(0)
-consoleLogger.js:187 --- Finished loading content for mod: core, phase: instances ---
-consoleLogger.js:187 ContentLoadManager: Looking up manifest for modId 'intimacy' (lowercase: 'intimacy'), found: true
-consoleLogger.js:187 ContentLoadManager: Processing mod intimacy, manifest found: true
-consoleLogger.js:187 --- Loading content for mod: intimacy, phase: instances ---
-consoleLogger.js:187 ModsLoader [intimacy, instances]: Manifest retrieved successfully. Processing content types...
-consoleLogger.js:187 ModsLoader [intimacy, instances]: Skipping content type 'entityInstances' (key: 'entities.instances') as it's not defined or empty in the manifest.
-consoleLogger.js:187 ModsLoader [intimacy, instances]: Skipping content type 'goals' (key: 'goals') as it's not defined or empty in the manifest.
-consoleLogger.js:187 ModsLoader [intimacy, instances]: Content loading loop took 0.00 ms.
-consoleLogger.js:187 Mod 'intimacy' phase 'instances' loaded in 0.00ms: No items processed in this phase-> Overrides(0), Errors(0)
-consoleLogger.js:187 --- Finished loading content for mod: intimacy, phase: instances ---
-consoleLogger.js:187 ContentLoadManager: Looking up manifest for modId 'descriptors' (lowercase: 'descriptors'), found: true
-consoleLogger.js:187 ContentLoadManager: Processing mod descriptors, manifest found: true
-consoleLogger.js:187 --- Loading content for mod: descriptors, phase: instances ---
-consoleLogger.js:187 ModsLoader [descriptors, instances]: Manifest retrieved successfully. Processing content types...
-consoleLogger.js:187 ModsLoader [descriptors, instances]: Skipping content type 'entityInstances' (key: 'entities.instances') as it's not defined or empty in the manifest.
-consoleLogger.js:187 ModsLoader [descriptors, instances]: Skipping content type 'goals' (key: 'goals') as it's not defined or empty in the manifest.
-consoleLogger.js:187 ModsLoader [descriptors, instances]: Content loading loop took 0.00 ms.
-consoleLogger.js:187 Mod 'descriptors' phase 'instances' loaded in 0.00ms: No items processed in this phase-> Overrides(0), Errors(0)
-consoleLogger.js:187 --- Finished loading content for mod: descriptors, phase: instances ---
-consoleLogger.js:187 ContentLoadManager: Looking up manifest for modId 'anatomy' (lowercase: 'anatomy'), found: true
-consoleLogger.js:187 ContentLoadManager: Processing mod anatomy, manifest found: true
-consoleLogger.js:187 --- Loading content for mod: anatomy, phase: instances ---
-consoleLogger.js:187 ModsLoader [anatomy, instances]: Manifest retrieved successfully. Processing content types...
-consoleLogger.js:187 ModsLoader [anatomy, instances]: Skipping content type 'entityInstances' (key: 'entities.instances') as it's not defined or empty in the manifest.
-consoleLogger.js:187 ModsLoader [anatomy, instances]: Skipping content type 'goals' (key: 'goals') as it's not defined or empty in the manifest.
-consoleLogger.js:187 ModsLoader [anatomy, instances]: Content loading loop took 0.10 ms.
-consoleLogger.js:187 Mod 'anatomy' phase 'instances' loaded in 0.10ms: No items processed in this phase-> Overrides(0), Errors(0)
-consoleLogger.js:187 --- Finished loading content for mod: anatomy, phase: instances ---
-consoleLogger.js:187 ContentLoadManager: Looking up manifest for modId 'isekai' (lowercase: 'isekai'), found: true
-consoleLogger.js:187 ContentLoadManager: Processing mod isekai, manifest found: true
-consoleLogger.js:187 --- Loading content for mod: isekai, phase: instances ---
-consoleLogger.js:187 ModsLoader [isekai, instances]: Manifest retrieved successfully. Processing content types...
-consoleLogger.js:187 ModsLoader [isekai, instances]: Processing entities.instances content with 6 files...
-consoleLogger.js:187 ModsLoader [isekai, instances]: Found content for 'entities.instances'. Invoking loader 'EntityInstanceLoader'.
-consoleLogger.js:151 EntityInstanceLoader: Loading entityInstances definitions for mod 'isekai'.
-consoleLogger.js:187 Found 6 potential entities.instances files to process for mod isekai.
-consoleLogger.js:187 [isekai] Resolved path for adventurers_guild.location.json: ./data/mods/isekai/entities/instances/adventurers_guild.location.json
-consoleLogger.js:187 [isekai] Resolved path for hero.character.json: ./data/mods/isekai/entities/instances/hero.character.json
-consoleLogger.js:187 [isekai] Resolved path for ninja.character.json: ./data/mods/isekai/entities/instances/ninja.character.json
-consoleLogger.js:187 [isekai] Resolved path for receptionist.character.json: ./data/mods/isekai/entities/instances/receptionist.character.json
-consoleLogger.js:187 [isekai] Resolved path for sidekick.character.json: ./data/mods/isekai/entities/instances/sidekick.character.json
-consoleLogger.js:187 [isekai] Resolved path for town.location.json: ./data/mods/isekai/entities/instances/town.location.json
-consoleLogger.js:187 [isekai] Fetched data from ./data/mods/isekai/entities/instances/adventurers_guild.location.json
-consoleLogger.js:187 EntityInstanceLoader [isekai]: Validating 'adventurers_guild.location.json' against primary schema 'http://example.com/schemas/entity-instance.schema.json'.
-consoleLogger.js:187 EntityInstanceLoader [isekai]: Processing fetched item: adventurers_guild.location.json
-consoleLogger.js:187 EntityInstanceLoader [isekai]: Instance 'isekai:adventurers_guild_instance' in adventurers_guild.location.json has no component overrides. Skipping secondary validation.
-consoleLogger.js:187 EntityInstanceLoader [isekai]: Storing item in registry. Category: 'entityInstances', Qualified ID: 'isekai:adventurers_guild_instance', Base ID: 'adventurers_guild_instance', Filename: 'adventurers_guild.location.json'
-consoleLogger.js:187 EntityInstanceLoader [isekai]: Item 'isekai:adventurers_guild_instance' (Base: 'adventurers_guild_instance') stored successfully in category 'entityInstances'.
-consoleLogger.js:187 EntityInstanceLoader [isekai]: Successfully processed instance file 'adventurers_guild.location.json'. Final ID: isekai:adventurers_guild_instance, Overwrite: false
-consoleLogger.js:187 [isekai] Successfully processed adventurers_guild.location.json. Result: ID=isekai:adventurers_guild_instance, Overwrite=false
-consoleLogger.js:187 [isekai] Fetched data from ./data/mods/isekai/entities/instances/hero.character.json
-consoleLogger.js:187 EntityInstanceLoader [isekai]: Validating 'hero.character.json' against primary schema 'http://example.com/schemas/entity-instance.schema.json'.
-consoleLogger.js:187 EntityInstanceLoader [isekai]: Processing fetched item: hero.character.json
-consoleLogger.js:187 EntityInstanceLoader [isekai]: Validating 1 component overrides for instance 'isekai:hero_instance' from hero.character.json...
-consoleLogger.js:187    - Component override 'core:position' in instance 'isekai:hero_instance' passed schema validation.
-consoleLogger.js:187 EntityInstanceLoader [isekai]: Storing item in registry. Category: 'entityInstances', Qualified ID: 'isekai:hero_instance', Base ID: 'hero_instance', Filename: 'hero.character.json'
-consoleLogger.js:187 EntityInstanceLoader [isekai]: Item 'isekai:hero_instance' (Base: 'hero_instance') stored successfully in category 'entityInstances'.
-consoleLogger.js:187 EntityInstanceLoader [isekai]: Successfully processed instance file 'hero.character.json'. Final ID: isekai:hero_instance, Overwrite: false
-consoleLogger.js:187 [isekai] Successfully processed hero.character.json. Result: ID=isekai:hero_instance, Overwrite=false
-consoleLogger.js:187 [isekai] Fetched data from ./data/mods/isekai/entities/instances/ninja.character.json
-consoleLogger.js:187 EntityInstanceLoader [isekai]: Validating 'ninja.character.json' against primary schema 'http://example.com/schemas/entity-instance.schema.json'.
-consoleLogger.js:187 EntityInstanceLoader [isekai]: Processing fetched item: ninja.character.json
-consoleLogger.js:187 EntityInstanceLoader [isekai]: Validating 1 component overrides for instance 'isekai:ninja_instance' from ninja.character.json...
-consoleLogger.js:187    - Component override 'core:position' in instance 'isekai:ninja_instance' passed schema validation.
-consoleLogger.js:187 EntityInstanceLoader [isekai]: Storing item in registry. Category: 'entityInstances', Qualified ID: 'isekai:ninja_instance', Base ID: 'ninja_instance', Filename: 'ninja.character.json'
-consoleLogger.js:187 EntityInstanceLoader [isekai]: Item 'isekai:ninja_instance' (Base: 'ninja_instance') stored successfully in category 'entityInstances'.
-consoleLogger.js:187 EntityInstanceLoader [isekai]: Successfully processed instance file 'ninja.character.json'. Final ID: isekai:ninja_instance, Overwrite: false
-consoleLogger.js:187 [isekai] Successfully processed ninja.character.json. Result: ID=isekai:ninja_instance, Overwrite=false
-consoleLogger.js:187 [isekai] Fetched data from ./data/mods/isekai/entities/instances/receptionist.character.json
-consoleLogger.js:187 EntityInstanceLoader [isekai]: Validating 'receptionist.character.json' against primary schema 'http://example.com/schemas/entity-instance.schema.json'.
-consoleLogger.js:187 EntityInstanceLoader [isekai]: Processing fetched item: receptionist.character.json
-consoleLogger.js:187 EntityInstanceLoader [isekai]: Validating 1 component overrides for instance 'isekai:receptionist_instance' from receptionist.character.json...
-consoleLogger.js:187    - Component override 'core:position' in instance 'isekai:receptionist_instance' passed schema validation.
-consoleLogger.js:187 EntityInstanceLoader [isekai]: Storing item in registry. Category: 'entityInstances', Qualified ID: 'isekai:receptionist_instance', Base ID: 'receptionist_instance', Filename: 'receptionist.character.json'
-consoleLogger.js:187 EntityInstanceLoader [isekai]: Item 'isekai:receptionist_instance' (Base: 'receptionist_instance') stored successfully in category 'entityInstances'.
-consoleLogger.js:187 EntityInstanceLoader [isekai]: Successfully processed instance file 'receptionist.character.json'. Final ID: isekai:receptionist_instance, Overwrite: false
-consoleLogger.js:187 [isekai] Successfully processed receptionist.character.json. Result: ID=isekai:receptionist_instance, Overwrite=false
-consoleLogger.js:187 [isekai] Fetched data from ./data/mods/isekai/entities/instances/sidekick.character.json
-consoleLogger.js:187 EntityInstanceLoader [isekai]: Validating 'sidekick.character.json' against primary schema 'http://example.com/schemas/entity-instance.schema.json'.
-consoleLogger.js:187 EntityInstanceLoader [isekai]: Processing fetched item: sidekick.character.json
-consoleLogger.js:187 EntityInstanceLoader [isekai]: Validating 1 component overrides for instance 'isekai:sidekick_instance' from sidekick.character.json...
-consoleLogger.js:187    - Component override 'core:position' in instance 'isekai:sidekick_instance' passed schema validation.
-consoleLogger.js:187 EntityInstanceLoader [isekai]: Storing item in registry. Category: 'entityInstances', Qualified ID: 'isekai:sidekick_instance', Base ID: 'sidekick_instance', Filename: 'sidekick.character.json'
-consoleLogger.js:187 EntityInstanceLoader [isekai]: Item 'isekai:sidekick_instance' (Base: 'sidekick_instance') stored successfully in category 'entityInstances'.
-consoleLogger.js:187 EntityInstanceLoader [isekai]: Successfully processed instance file 'sidekick.character.json'. Final ID: isekai:sidekick_instance, Overwrite: false
-consoleLogger.js:187 [isekai] Successfully processed sidekick.character.json. Result: ID=isekai:sidekick_instance, Overwrite=false
-consoleLogger.js:187 [isekai] Fetched data from ./data/mods/isekai/entities/instances/town.location.json
-consoleLogger.js:187 EntityInstanceLoader [isekai]: Validating 'town.location.json' against primary schema 'http://example.com/schemas/entity-instance.schema.json'.
-consoleLogger.js:187 EntityInstanceLoader [isekai]: Processing fetched item: town.location.json
-consoleLogger.js:187 EntityInstanceLoader [isekai]: Instance 'isekai:town_instance' in town.location.json has no component overrides. Skipping secondary validation.
-consoleLogger.js:187 EntityInstanceLoader [isekai]: Storing item in registry. Category: 'entityInstances', Qualified ID: 'isekai:town_instance', Base ID: 'town_instance', Filename: 'town.location.json'
-consoleLogger.js:187 EntityInstanceLoader [isekai]: Item 'isekai:town_instance' (Base: 'town_instance') stored successfully in category 'entityInstances'.
-consoleLogger.js:187 EntityInstanceLoader [isekai]: Successfully processed instance file 'town.location.json'. Final ID: isekai:town_instance, Overwrite: false
-consoleLogger.js:187 [isekai] Successfully processed town.location.json. Result: ID=isekai:town_instance, Overwrite=false
-consoleLogger.js:151 Mod [isekai] - Processed 6/6 entities.instances items.
-consoleLogger.js:187 ModsLoader [isekai, instances]: Skipping content type 'goals' (key: 'goals') as it's not defined or empty in the manifest.
-consoleLogger.js:187 ModsLoader [isekai, instances]: Content loading loop took 8.60 ms.
-consoleLogger.js:187 Mod 'isekai' phase 'instances' loaded in 8.60ms: entityInstances(6) -> Overrides(0), Errors(0)
-consoleLogger.js:187 --- Finished loading content for mod: isekai, phase: instances ---
-consoleLogger.js:187 ModsLoader: Completed content loading loop for phase: instances.
-consoleLogger.js:187 ModsLoader: Completed both content loading phases.
-consoleLogger.js:187 Phase content done
-consoleLogger.js:187 Phase world start
-consoleLogger.js:151 — WorldPhase starting —
-consoleLogger.js:151 --- Starting World File Loading Phase ---
-consoleLogger.js:187 WorldLoader [core]: No world files listed in manifest. Skipping.
-consoleLogger.js:187 WorldLoader [intimacy]: No world files listed in manifest. Skipping.
-consoleLogger.js:187 WorldLoader [descriptors]: No world files listed in manifest. Skipping.
-consoleLogger.js:187 WorldLoader [anatomy]: No world files listed in manifest. Skipping.
-consoleLogger.js:187 WorldLoader [isekai]: Processing world file 'isekai.world.json'.
-consoleLogger.js:187 WorldLoader [isekai]: Successfully validated 4 instances from 'isekai.world.json'.
-consoleLogger.js:187 WorldLoader: Registered world 'isekai:world' from file 'isekai.world.json'. {qualifiedWorldId: 'isekai:world', filename: 'isekai.world.json', modId: 'isekai'}
-consoleLogger.js:151 --- World File Loading Phase Complete ---
-consoleLogger.js:151 WorldLoader: Successfully processed and registered 1 worlds, containing 4 entity instances. All 4 definition references were resolved.
-consoleLogger.js:187 Phase world done
-consoleLogger.js:187 Phase summary start
-consoleLogger.js:151 — SummaryPhase starting —
-consoleLogger.js:151 — ModsLoader Load Summary (World: 'isekai:world') —
-consoleLogger.js:151   • Requested Mods (raw): [core, intimacy, isekai]
-consoleLogger.js:151   • Final Load Order     : [core, intimacy, descriptors, anatomy, isekai]
-consoleLogger.js:151   • Content Loading Summary (Totals):
-consoleLogger.js:151      - actions             : 10 loaded, 0 overrides, 0 errors
-consoleLogger.js:151      - anatomyBlueprints   : 0 loaded, 0 overrides, 2 errors
-consoleLogger.js:151      - anatomyFormatting   : 1 loaded, 0 overrides, 0 errors
-consoleLogger.js:151      - anatomyRecipes      : 0 loaded, 0 overrides, 3 errors
-consoleLogger.js:151      - components          : 42 loaded, 0 overrides, 0 errors
-consoleLogger.js:151      - conditions          : 19 loaded, 0 overrides, 0 errors
-consoleLogger.js:151      - entityInstances     : 6 loaded, 0 overrides, 0 errors
-consoleLogger.js:151      - entity_definitions  : 20 loaded, 0 overrides, 0 errors
-consoleLogger.js:151      - events              : 35 loaded, 0 overrides, 0 errors
-consoleLogger.js:151      - macros              : 4 loaded, 0 overrides, 0 errors
-consoleLogger.js:151      - rules               : 16 loaded, 0 overrides, 0 errors
-consoleLogger.js:151      - scopes              : 6 loaded, 0 overrides, 0 errors
-consoleLogger.js:151      - worlds              : 1 loaded, 0 overrides, 0 errors
-consoleLogger.js:151      - ----------------------------------------------
-consoleLogger.js:151      - TOTAL               : C:160, O:0, E:5
-consoleLogger.js:151 ———————————————————————————————————————————
-consoleLogger.js:187 Phase summary done
-consoleLogger.js:151 ModsLoader: Load sequence for world 'isekai:world' completed successfully.
-consoleLogger.js:151 ModsLoader: Load sequence for world 'isekai:world' completed successfully.
-consoleLogger.js:187 InitializationService: World data loaded successfully for world: isekai:world. Load report: {"finalModOrder":["core","intimacy","descriptors","anatomy","isekai"],"totals":{"actions":{"count":10,"overrides":0,"errors":0},"components":{"count":42,"overrides":0,"errors":0},"conditions":{"count":19,"overrides":0,"errors":0},"events":{"count":35,"overrides":0,"errors":0},"macros":{"count":4,"overrides":0,"errors":0},"rules":{"count":16,"overrides":0,"errors":0},"scopes":{"count":6,"overrides":0,"errors":0},"entity_definitions":{"count":20,"overrides":0,"errors":0},"anatomyRecipes":{"count":0,"overrides":0,"errors":3},"anatomyBlueprints":{"count":0,"overrides":0,"errors":2},"anatomyFormatting":{"count":1,"overrides":0,"errors":0},"entityInstances":{"count":6,"overrides":0,"errors":0},"worlds":{"count":1,"overrides":0,"errors":0,"instances":4,"resolvedDefinitions":4,"unresolvedDefinitions":0}},"incompatibilities":0}
-consoleLogger.js:187 ContentDependencyValidator: Validating content dependencies...
-consoleLogger.js:187 ContentDependencyValidator: Content dependency validation complete.
-consoleLogger.js:187 Initializing ScopeRegistry...
-consoleLogger.js:187 ScopeRegistry initialized with 6 scopes.
-consoleLogger.js:187 LlmAdapterInitializer: Attempting to initialize ConfigurableLLMAdapter...
-consoleLogger.js:187 InitializationService: LlmConfigLoader resolved from container for adapter initialization.
-consoleLogger.js:187 ConfigurableLLMAdapter: Actual asynchronous initialization started with LlmConfigLoader.
-consoleLogger.js:187 LlmConfigLoader: Attempting to load LLM Prompt configurations from: config/llm-configs.json
-consoleLogger.js:187 [fetchWithRetry] fetchWithRetry: Initiating request sequence for config/llm-configs.json with maxRetries=3, baseDelayMs=500, maxDelayMs=5000.
-consoleLogger.js:187 [fetchWithRetry] Attempt 1/3 - Fetching GET config/llm-configs.json
-consoleLogger.js:187 [fetchWithRetry] fetchWithRetry: Attempt 1/3 for config/llm-configs.json - Request successful (status 200). Parsing JSON response.
-consoleLogger.js:187 [fetchWithRetry] fetchWithRetry: Successfully fetched and parsed JSON from config/llm-configs.json after 1 attempt(s).
-consoleLogger.js:187 LlmConfigLoader: Successfully fetched and parsed LLM Prompt configurations from config/llm-configs.json.
-consoleLogger.js:187 LlmConfigLoader: Validating against schema ID: http://example.com/schemas/llm-configs.schema.json
-consoleLogger.js:187 LlmConfigLoader: LLM Prompt configuration file from config/llm-configs.json passed schema validation.
-consoleLogger.js:187 LlmConfigLoader: Performing semantic validation for config/llm-configs.json.
-consoleLogger.js:187 LlmConfigLoader: Semantic validation passed for config/llm-configs.json.
-consoleLogger.js:187 LlmConfigLoader: LLM Prompt configurations from config/llm-configs.json processed successfully.
-consoleLogger.js:187 ConfigurableLLMAdapter: LLM configurations loaded successfully. {numberOfConfigs: 4, defaultConfigId: 'openrouter-claude-sonnet-4-toolcalling'}
-consoleLogger.js:187 ConfigurableLLMAdapter: LLM configuration 'openrouter-claude-sonnet-4-toolcalling' (Claude Sonnet 4 (OpenRouter - Tool Calling)) set as active by defaultConfigId from file.
-consoleLogger.js:187 ConfigurableLLMAdapter: Initialization attempt complete and adapter is operational.
-consoleLogger.js:187 InitializationService: ConfigurableLLMAdapter initialized successfully and is operational.
-consoleLogger.js:187 Initializing tagged systems...
-consoleLogger.js:187 SystemInitializer: Starting initialization for systems tagged with 'initializableSystem'...
-consoleLogger.js:187 SystemInitializer: Querying resolver for tag 'initializableSystem'...
-consoleLogger.js:187 VED: Delegating subscription for event "core:entity_created" to EventBus.
-consoleLogger.js:187 SafeEventDispatcher: Successfully subscribed to event 'core:entity_created'.
-consoleLogger.js:187 VED: Delegating subscription for event "core:entity_removed" to EventBus.
-consoleLogger.js:187 SafeEventDispatcher: Successfully subscribed to event 'core:entity_removed'.
-consoleLogger.js:187 VED: Delegating subscription for event "core:component_added" to EventBus.
-consoleLogger.js:187 SafeEventDispatcher: Successfully subscribed to event 'core:component_added'.
-consoleLogger.js:187 VED: Delegating subscription for event "core:component_removed" to EventBus.
-consoleLogger.js:187 SafeEventDispatcher: Successfully subscribed to event 'core:component_removed'.
-consoleLogger.js:187 SpatialIndexSynchronizer initialized and listening for events.
-consoleLogger.js:187 AnatomyFormattingService: Initializing formatting configuration
-consoleLogger.js:187 AnatomyFormattingService: Configuration initialized {descriptionOrderCount: 0, descriptorOrderCount: 0}
-consoleLogger.js:187 JsonLogicEvaluationService: Custom JSON Logic operation "not" added successfully.
-consoleLogger.js:187 JsonLogicEvaluationService: JsonLogicEvaluationService initialized.
-consoleLogger.js:187 PrerequisiteEvaluationService: PrerequisiteEvaluationService initialised (with ActionValidationContextBuilder and GameDataRepository).
-consoleLogger.js:187 VED: Delegating subscription for event "core:turn_started" to EventBus.
-consoleLogger.js:187 SafeEventDispatcher: Successfully subscribed to event 'core:turn_started'.
-consoleLogger.js:187 ScopeCache: Successfully subscribed to TURN_STARTED_ID events
-consoleLogger.js:187 ActionDiscoveryService: ActionDiscoveryService initialised with streamlined logic.
-consoleLogger.js:151 OperationRegistry: OperationRegistry initialized.
-consoleLogger.js:187 OperationRegistry: OperationRegistry: Registered handler for operation type "DISPATCH_EVENT".
-consoleLogger.js:187 OperationRegistry: OperationRegistry: Registered handler for operation type "DISPATCH_PERCEPTIBLE_EVENT".
-consoleLogger.js:187 OperationRegistry: OperationRegistry: Registered handler for operation type "DISPATCH_SPEECH".
-consoleLogger.js:187 OperationRegistry: OperationRegistry: Registered handler for operation type "LOG".
-consoleLogger.js:187 OperationRegistry: OperationRegistry: Registered handler for operation type "MODIFY_COMPONENT".
-consoleLogger.js:187 OperationRegistry: OperationRegistry: Registered handler for operation type "ADD_COMPONENT".
-consoleLogger.js:187 OperationRegistry: OperationRegistry: Registered handler for operation type "REMOVE_COMPONENT".
-consoleLogger.js:187 OperationRegistry: OperationRegistry: Registered handler for operation type "QUERY_COMPONENT".
-consoleLogger.js:187 OperationRegistry: OperationRegistry: Registered handler for operation type "QUERY_COMPONENTS".
-consoleLogger.js:187 OperationRegistry: OperationRegistry: Registered handler for operation type "QUERY_ENTITIES".
-consoleLogger.js:187 OperationRegistry: OperationRegistry: Registered handler for operation type "SET_VARIABLE".
-consoleLogger.js:187 OperationRegistry: OperationRegistry: Registered handler for operation type "END_TURN".
-consoleLogger.js:187 OperationRegistry: OperationRegistry: Registered handler for operation type "SYSTEM_MOVE_ENTITY".
-consoleLogger.js:187 OperationRegistry: OperationRegistry: Registered handler for operation type "GET_TIMESTAMP".
-consoleLogger.js:187 OperationRegistry: OperationRegistry: Registered handler for operation type "GET_NAME".
-consoleLogger.js:187 OperationRegistry: OperationRegistry: Registered handler for operation type "RESOLVE_DIRECTION".
-consoleLogger.js:187 OperationRegistry: OperationRegistry: Registered handler for operation type "REBUILD_LEADER_LIST_CACHE".
-consoleLogger.js:187 OperationRegistry: OperationRegistry: Registered handler for operation type "CHECK_FOLLOW_CYCLE".
-consoleLogger.js:187 OperationRegistry: OperationRegistry: Registered handler for operation type "ESTABLISH_FOLLOW_RELATION".
-consoleLogger.js:187 OperationRegistry: OperationRegistry: Registered handler for operation type "BREAK_FOLLOW_RELATION".
-consoleLogger.js:187 OperationRegistry: OperationRegistry: Registered handler for operation type "ADD_PERCEPTION_LOG_ENTRY".
-consoleLogger.js:187 OperationRegistry: OperationRegistry: Registered handler for operation type "HAS_COMPONENT".
-consoleLogger.js:187 OperationRegistry: OperationRegistry: Registered handler for operation type "MODIFY_ARRAY_FIELD".
-consoleLogger.js:187 OperationRegistry: OperationRegistry: Registered handler for operation type "MODIFY_CONTEXT_ARRAY".
-consoleLogger.js:187 OperationRegistry: OperationRegistry: Registered handler for operation type "IF_CO_LOCATED".
-consoleLogger.js:187 OperationRegistry: OperationRegistry: Registered handler for operation type "AUTO_MOVE_FOLLOWERS".
-consoleLogger.js:187 OperationRegistry: OperationRegistry: Registered handler for operation type "MERGE_CLOSENESS_CIRCLE".
-consoleLogger.js:187 OperationRegistry: OperationRegistry: Registered handler for operation type "MATH".
-consoleLogger.js:187 OperationRegistry: OperationRegistry: Registered handler for operation type "REMOVE_FROM_CLOSENESS_CIRCLE".
-consoleLogger.js:187 OperationInterpreter: OperationInterpreter Initialized (using OperationRegistry).
-consoleLogger.js:187 SystemLogicInterpreter: SystemLogicInterpreter: created
-consoleLogger.js:187 PromptTextLoader: Initialized.
-consoleLogger.js:187 PromptStaticContentService initialized.
-consoleLogger.js:187 SystemInitializer: Found 6 systems tagged with 'initializableSystem'.
-consoleLogger.js:187 SystemInitializer: Proceeding to initialize 6 resolved systems sequentially...
-consoleLogger.js:187 SystemInitializer: System 'SpatialIndexSynchronizer' has no initialize() method, skipping.
-consoleLogger.js:187 SystemInitializer: Initializing system: AnatomyInitializationService...
-consoleLogger.js:187 AnatomyInitializationService: Registering event listeners
-consoleLogger.js:187 VED: Delegating subscription for event "core:entity_created" to EventBus.
-consoleLogger.js:187 SafeEventDispatcher: Successfully subscribed to event 'core:entity_created'.
-consoleLogger.js:151 AnatomyInitializationService: Initialized
-consoleLogger.js:187 SystemInitializer: System AnatomyInitializationService initialized successfully.
-consoleLogger.js:187 SystemInitializer: System 'ActionDiscoveryService' has no initialize() method, skipping.
-consoleLogger.js:187 SystemInitializer: Initializing system: SystemLogicInterpreter...
-consoleLogger.js:187 SystemLogicInterpreter: Cached rule 'handle_dismiss'
-consoleLogger.js:187 SystemLogicInterpreter: Cached rule 'entity_speech'
-consoleLogger.js:187 SystemLogicInterpreter: Cached rule 'core_handle_follow'
-consoleLogger.js:187 SystemLogicInterpreter: Cached rule 'core_follow_auto_move'
-consoleLogger.js:187 SystemLogicInterpreter: Cached rule 'handle_go_action'
-consoleLogger.js:187 SystemLogicInterpreter: Cached rule 'log_perceptible_events'
-consoleLogger.js:187 SystemLogicInterpreter: Cached rule 'enable_input_on_player_turn'
-consoleLogger.js:187 SystemLogicInterpreter: Cached rule 'handle_stop_following'
-consoleLogger.js:187 SystemLogicInterpreter: Cached rule 'turn_ended'
-consoleLogger.js:187 SystemLogicInterpreter: Cached rule 'turn_started'
-consoleLogger.js:187 SystemLogicInterpreter: Cached rule 'handle_wait'
-consoleLogger.js:187 SystemLogicInterpreter: Cached rule 'handle_adjust_clothing'
-consoleLogger.js:187 SystemLogicInterpreter: Cached rule 'handle_kiss_cheek'
-consoleLogger.js:187 SystemLogicInterpreter: Cached rule 'intimacy_handle_step_back'
-consoleLogger.js:187 SystemLogicInterpreter: Cached rule 'intimacy_handle_get_close'
-consoleLogger.js:187 SystemLogicInterpreter: Cached rule 'handle_thumb_wipe_cheek'
-consoleLogger.js:187 SystemLogicInterpreter: Finished caching rules. 7 event types have associated rules.
-consoleLogger.js:187 SystemLogicInterpreter: SystemLogicInterpreter: initialized & subscribed to '*'.
-consoleLogger.js:187 SystemInitializer: System SystemLogicInterpreter initialized successfully.
-consoleLogger.js:187 SystemInitializer: Initializing system: PromptStaticContentService...
-consoleLogger.js:187 PromptTextLoader: Loading prompt text from ./data/prompts/corePromptText.json.
-consoleLogger.js:187 PromptTextLoader: Stored prompt text under type ‘prompt_text’ with id ‘core’.
-consoleLogger.js:187 SystemInitializer: System PromptStaticContentService initialized successfully.
-consoleLogger.js:187 SystemInitializer: System 'TurnManager' has no initialize() method, skipping.
-consoleLogger.js:187 SystemInitializer: Initialization loop for tagged systems completed.
-consoleLogger.js:187 InitializationService: Tagged system initialization complete.
-consoleLogger.js:187 Initializing world entities...
-consoleLogger.js:187 WorldInitializer: Starting world entity initialization process for world: isekai:world...
-consoleLogger.js:187 WorldInitializer (Pass 1): Instantiating entities from world: isekai:world...
-consoleLogger.js:187 WorldInitializer (Pass 1): Found 4 instances in world 'isekai:world'.
-consoleLogger.js:187 WorldInitializer (Pass 1): Attempting to create entity instance 'isekai:adventurers_guild_instance' from definition 'isekai:adventurers_guild' with overrides: undefined
-consoleLogger.js:187 EntityManager.createEntityInstance: Creating entity instance 'isekai:adventurers_guild_instance' from definition 'isekai:adventurers_guild' with overrides: undefined
-consoleLogger.js:187 [EntityFactory] Creating entity instance isekai:adventurers_guild_instance from definition isekai:adventurers_guild.
-consoleLogger.js:151 [EntityFactory] Entity instance 'isekai:adventurers_guild_instance' (def: 'isekai:adventurers_guild') created.
-consoleLogger.js:187 EntityManager.createEntityInstance: Factory created entity with ID 'isekai:adventurers_guild_instance' and definitionId 'isekai:adventurers_guild'
-consoleLogger.js:187 Entity 'isekai:adventurers_guild_instance' added to repository.
-consoleLogger.js:187 Tracked entity isekai:adventurers_guild_instance
+VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'anatomy:joint', componentData: {…}, oldComponentData: undefined}
+consoleLogger.js:187 Successfully added/updated component 'anatomy:joint' data on entity '1a266846-7f4b-4a21-b4e8-3586e6352658'.
+consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
+consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'core:name', componentData: {…}, oldComponentData: {…}}
+consoleLogger.js:187 Successfully added/updated component 'core:name' data on entity '1a266846-7f4b-4a21-b4e8-3586e6352658'.
+consoleLogger.js:187 WorldInitializer (Pass 1): Attempting to create entity instance 'isekai:ninja_instance' from definition 'isekai:ninja' with overrides: {core:position: {…}}
+consoleLogger.js:187 EntityManager.createEntityInstance: Creating entity instance 'isekai:ninja_instance' from definition 'isekai:ninja' with overrides: {core:position: {…}}
+consoleLogger.js:187 [EntityFactory] Creating entity instance isekai:ninja_instance from definition isekai:ninja.
+consoleLogger.js:187 Injecting STM for isekai:ninja_instance (def: isekai:ninja)
+consoleLogger.js:187 Injecting Notes for isekai:ninja_instance (def: isekai:ninja)
+consoleLogger.js:187 Injecting Goals for isekai:ninja_instance (def: isekai:ninja)
+consoleLogger.js:151 [EntityFactory] Entity instance 'isekai:ninja_instance' (def: 'isekai:ninja') created.
+consoleLogger.js:187 EntityManager.createEntityInstance: Factory created entity with ID 'isekai:ninja_instance' and definitionId 'isekai:ninja'
+consoleLogger.js:187 Entity 'isekai:ninja_instance' added to repository.
+consoleLogger.js:187 Tracked entity isekai:ninja_instance
 consoleLogger.js:187 VED: Validating payload for event 'core:entity_created' against schema 'core:entity_created#payload'...
 consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:entity_created'.
-consoleLogger.js:187 VED: Dispatching event 'core:entity_created' via EventBus... {instanceId: 'isekai:adventurers_guild_instance', definitionId: 'isekai:adventurers_guild', wasReconstructed: false, entity: Entity}
+consoleLogger.js:187 VED: Dispatching event 'core:entity_created' via EventBus... {instanceId: 'isekai:ninja_instance', definitionId: 'isekai:ninja', wasReconstructed: false, entity: Entity}
 consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Received payload with entity: Entity {#data: EntityInstanceData}
 consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity type: object
 consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity constructor: Entity
-consoleLogger.js:187 WorldInitializer (Pass 1): Successfully instantiated entity isekai:adventurers_guild_instance (from definition: isekai:adventurers_guild)
+consoleLogger.js:187 SpatialSync: Added isekai:ninja_instance to index at isekai:adventurers_guild_instance
+consoleLogger.js:187 WorldInitializer (Pass 1): Successfully instantiated entity isekai:ninja_instance (from definition: isekai:ninja)
 consoleLogger.js:187 VED: EventDefinition not found for 'worldinit:entity_instantiated'. Skipping validation as allowed by options.
-consoleLogger.js:187 VED: Dispatching event 'worldinit:entity_instantiated' via EventBus... {entityId: 'isekai:adventurers_guild_instance', instanceId: undefined, definitionId: 'isekai:adventurers_guild', worldName: 'isekai:world', reason: 'Initial World Load'}
+consoleLogger.js:187 VED: Dispatching event 'worldinit:entity_instantiated' via EventBus... {entityId: 'isekai:ninja_instance', instanceId: undefined, definitionId: 'isekai:ninja', worldName: 'isekai:world', reason: 'Initial World Load'}
+2consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:component_added'.
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:entity_created'.
+consoleLogger.js:187 No recipe slot matches socket 'left_ear' with allowed types: ear
+consoleLogger.js:187 No recipe slot matches socket 'left_eye' with allowed types: eye
+consoleLogger.js:187 No recipe slot matches socket 'right_ear' with allowed types: ear
+consoleLogger.js:187 No recipe slot matches socket 'right_eye' with allowed types: eye
+consoleLogger.js:187 No recipe slot matches socket 'scalp' with allowed types: hair
+2consoleLogger.js:187 VED: Event 'core:component_added' dispatch successful.
+consoleLogger.js:187 No recipe slot matches socket 'penis' with allowed types: genital
+consoleLogger.js:187 No recipe slot matches socket 'pubic_hair' with allowed types: hair
 consoleLogger.js:187 VED: Event 'worldinit:entity_instantiated' dispatch successful.
 consoleLogger.js:187 VED: Event 'core:entity_created' dispatch successful.
-consoleLogger.js:187 Dispatched 'worldinit:entity_instantiated' for entity isekai:adventurers_guild_instance.
-consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:entity_created'.
-consoleLogger.js:187 WorldInitializer (Pass 1): Attempting to create entity instance 'isekai:town_instance' from definition 'isekai:town' with overrides: undefined
-consoleLogger.js:187 EntityManager.createEntityInstance: Creating entity instance 'isekai:town_instance' from definition 'isekai:town' with overrides: undefined
-consoleLogger.js:187 [EntityFactory] Creating entity instance isekai:town_instance from definition isekai:town.
-consoleLogger.js:151 [EntityFactory] Entity instance 'isekai:town_instance' (def: 'isekai:town') created.
-consoleLogger.js:187 EntityManager.createEntityInstance: Factory created entity with ID 'isekai:town_instance' and definitionId 'isekai:town'
-consoleLogger.js:187 Entity 'isekai:town_instance' added to repository.
-consoleLogger.js:187 Tracked entity isekai:town_instance
+consoleLogger.js:187 EntityManager.createEntityInstance: Creating entity instance 'auto-generated' from definition 'anatomy:humanoid_leg' with overrides: undefined
+consoleLogger.js:187 [EntityFactory] Creating entity instance cacfb18c-5dd9-4acb-a15b-b320de7145a3 from definition anatomy:humanoid_leg.
+consoleLogger.js:151 [EntityFactory] Entity instance 'cacfb18c-5dd9-4acb-a15b-b320de7145a3' (def: 'anatomy:humanoid_leg') created.
+consoleLogger.js:187 EntityManager.createEntityInstance: Factory created entity with ID 'cacfb18c-5dd9-4acb-a15b-b320de7145a3' and definitionId 'anatomy:humanoid_leg'
+consoleLogger.js:187 Entity 'cacfb18c-5dd9-4acb-a15b-b320de7145a3' added to repository.
+consoleLogger.js:187 Tracked entity cacfb18c-5dd9-4acb-a15b-b320de7145a3
 consoleLogger.js:187 VED: Validating payload for event 'core:entity_created' against schema 'core:entity_created#payload'...
 consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:entity_created'.
-consoleLogger.js:187 VED: Dispatching event 'core:entity_created' via EventBus... {instanceId: 'isekai:town_instance', definitionId: 'isekai:town', wasReconstructed: false, entity: Entity}
+consoleLogger.js:187 VED: Dispatching event 'core:entity_created' via EventBus... {instanceId: 'cacfb18c-5dd9-4acb-a15b-b320de7145a3', definitionId: 'anatomy:humanoid_leg', wasReconstructed: false, entity: Entity}
 consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Received payload with entity: Entity {#data: EntityInstanceData}
 consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity type: object
 consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity constructor: Entity
-consoleLogger.js:187 WorldInitializer (Pass 1): Successfully instantiated entity isekai:town_instance (from definition: isekai:town)
-consoleLogger.js:187 VED: EventDefinition not found for 'worldinit:entity_instantiated'. Skipping validation as allowed by options.
-consoleLogger.js:187 VED: Dispatching event 'worldinit:entity_instantiated' via EventBus... {entityId: 'isekai:town_instance', instanceId: undefined, definitionId: 'isekai:town', worldName: 'isekai:world', reason: 'Initial World Load'}
-consoleLogger.js:187 VED: Event 'worldinit:entity_instantiated' dispatch successful.
+consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
+consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'anatomy:joint', componentData: {…}, oldComponentData: undefined}
+consoleLogger.js:187 Successfully added/updated component 'anatomy:joint' data on entity 'cacfb18c-5dd9-4acb-a15b-b320de7145a3'.
+consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
+consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'core:name', componentData: {…}, oldComponentData: {…}}
+consoleLogger.js:187 Successfully added/updated component 'core:name' data on entity 'cacfb18c-5dd9-4acb-a15b-b320de7145a3'.
 consoleLogger.js:187 VED: Event 'core:entity_created' dispatch successful.
-consoleLogger.js:187 Dispatched 'worldinit:entity_instantiated' for entity isekai:town_instance.
+consoleLogger.js:187 Dispatched 'worldinit:entity_instantiated' for entity isekai:ninja_instance.
+2consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:component_added'.
 consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:entity_created'.
-consoleLogger.js:187 WorldInitializer (Pass 1): Attempting to create entity instance 'isekai:hero_instance' from definition 'isekai:hero' with overrides: {core:position: {…}}
-consoleLogger.js:187 EntityManager.createEntityInstance: Creating entity instance 'isekai:hero_instance' from definition 'isekai:hero' with overrides: {core:position: {…}}
-consoleLogger.js:187 [EntityFactory] Creating entity instance isekai:hero_instance from definition isekai:hero.
-consoleLogger.js:187 Injecting STM for isekai:hero_instance (def: isekai:hero)
-consoleLogger.js:187 Injecting Notes for isekai:hero_instance (def: isekai:hero)
-consoleLogger.js:187 Injecting Goals for isekai:hero_instance (def: isekai:hero)
-consoleLogger.js:151 [EntityFactory] Entity instance 'isekai:hero_instance' (def: 'isekai:hero') created.
-consoleLogger.js:187 EntityManager.createEntityInstance: Factory created entity with ID 'isekai:hero_instance' and definitionId 'isekai:hero'
-consoleLogger.js:187 Entity 'isekai:hero_instance' added to repository.
-consoleLogger.js:187 Tracked entity isekai:hero_instance
+consoleLogger.js:187 No recipe slot matches socket 'knee' with allowed types: lower_leg
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:entity_created'.
+2consoleLogger.js:187 VED: Event 'core:component_added' dispatch successful.
+consoleLogger.js:187 VED: Event 'core:entity_created' dispatch successful.
+consoleLogger.js:187 EntityManager.createEntityInstance: Creating entity instance 'auto-generated' from definition 'anatomy:humanoid_arm' with overrides: undefined
+consoleLogger.js:187 [EntityFactory] Creating entity instance a714144c-c88a-48c4-a745-ca57821d5621 from definition anatomy:humanoid_arm.
+consoleLogger.js:151 [EntityFactory] Entity instance 'a714144c-c88a-48c4-a745-ca57821d5621' (def: 'anatomy:humanoid_arm') created.
+consoleLogger.js:187 EntityManager.createEntityInstance: Factory created entity with ID 'a714144c-c88a-48c4-a745-ca57821d5621' and definitionId 'anatomy:humanoid_arm'
+consoleLogger.js:187 Entity 'a714144c-c88a-48c4-a745-ca57821d5621' added to repository.
+consoleLogger.js:187 Tracked entity a714144c-c88a-48c4-a745-ca57821d5621
 consoleLogger.js:187 VED: Validating payload for event 'core:entity_created' against schema 'core:entity_created#payload'...
 consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:entity_created'.
-consoleLogger.js:187 VED: Dispatching event 'core:entity_created' via EventBus... {instanceId: 'isekai:hero_instance', definitionId: 'isekai:hero', wasReconstructed: false, entity: Entity}
+consoleLogger.js:187 VED: Dispatching event 'core:entity_created' via EventBus... {instanceId: 'a714144c-c88a-48c4-a745-ca57821d5621', definitionId: 'anatomy:humanoid_arm', wasReconstructed: false, entity: Entity}
 consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Received payload with entity: Entity {#data: EntityInstanceData}
 consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity type: object
 consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity constructor: Entity
-consoleLogger.js:187 SpatialSync: Added isekai:hero_instance to index at isekai:adventurers_guild_instance
-consoleLogger.js:151 AnatomyGenerationService: Generating anatomy for entity 'isekai:hero_instance' using recipe 'anatomy:human_male'
-consoleLogger.js:175 AnatomyGenerationService: Failed to generate anatomy for entity 'isekai:hero_instance' {error: ValidationError: Recipe 'anatomy:human_male' not found
-    at AnatomyGenerationService.generateAnat…}
+consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
+consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'anatomy:joint', componentData: {…}, oldComponentData: undefined}
+consoleLogger.js:187 Successfully added/updated component 'anatomy:joint' data on entity 'a714144c-c88a-48c4-a745-ca57821d5621'.
+consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
+consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'core:name', componentData: {…}, oldComponentData: {…}}
+consoleLogger.js:187 Successfully added/updated component 'core:name' data on entity 'a714144c-c88a-48c4-a745-ca57821d5621'.
+2consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:component_added'.
+consoleLogger.js:187 WorldInitializer (Pass 1): Completed. Instantiated 4 entities, 0 failures out of 4 total instances for world 'isekai:world'.
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:entity_created'.
+consoleLogger.js:187 No recipe slot matches socket 'elbow' with allowed types: forearm
+consoleLogger.js:187 WorldInitializer: World entity initialization complete for world: isekai:world. Instantiated: 4, Failed: 0, Total Processed: 4. Spatial index management is handled by SpatialIndexSynchronizer.
+2consoleLogger.js:187 VED: Event 'core:component_added' dispatch successful.
+consoleLogger.js:187 No recipe slot matches socket 'testicles' with allowed types: genital
+consoleLogger.js:187 Building spatial index from existing entities...
+consoleLogger.js:151 SpatialIndexManager: Index cleared.
+consoleLogger.js:187 Spatial index built successfully.
+consoleLogger.js:187 InitializationService: Initial world entities instantiated and spatial index built.
+consoleLogger.js:187 VED: Event 'core:entity_created' dispatch successful.
+consoleLogger.js:187 GraphIntegrityValidator: Validating graph with 6 entities
+consoleLogger.js:187 VED: Delegating subscription for event "core:action_decided" to EventBus.
+consoleLogger.js:187 SafeEventDispatcher: Successfully subscribed to event 'core:action_decided'.
+consoleLogger.js:187 VED: Delegating subscription for event "core:action_decided" to EventBus.
+consoleLogger.js:187 SafeEventDispatcher: Successfully subscribed to event 'core:action_decided'.
+consoleLogger.js:187 Registered AI persistence listeners.
+consoleLogger.js:187 Ensuring DomUiFacade is instantiated so UI components are ready...
+consoleLogger.js:187 Building ActionIndex with loaded action definitions...
+consoleLogger.js:187 Building action index from 10 definitions...
+consoleLogger.js:187 Action index built. 3 component-to-action maps created.
+consoleLogger.js:187 ActionIndex built with 10 action definitions.
+consoleLogger.js:187 InitializationService: Initialization sequence for world 'isekai:world' completed successfully (GameLoop resolution removed).
+consoleLogger.js:187 GraphIntegrityValidator: Validation passed without issues
+consoleLogger.js:187 GameEngine._executeInitializationSequence: Initialization sequence completed for "isekai:world". Success: true
+2consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:component_added'.
+consoleLogger.js:151 BodyBlueprintFactory: Successfully created anatomy graph with 6 entities
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:entity_created'.
+consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
+consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'anatomy:body', componentData: {…}, oldComponentData: {…}}
+consoleLogger.js:187 Successfully added/updated component 'anatomy:body' data on entity 'isekai:hero_instance'.
+6consoleLogger.js:187 EntityManager.getEntitiesWithComponent: Found 5 entities with component 'anatomy:joint'.
+consoleLogger.js:175 AnatomyGenerationService: Failed to generate descriptions for entity 'isekai:hero_instance' {error: TypeError: Cannot read properties of undefined (reading 'anatomy:body')
+    at BodyDescriptionCompo…}error: TypeError: Cannot read properties of undefined (reading 'anatomy:body')
+    at BodyDescriptionComposer.composeDescription (http://127.0.0.1:8080/bundle.js:43048:48)
+    at AnatomyDescriptionService.generateBodyDescription (http://127.0.0.1:8080/bundle.js:43421:56)
+    at AnatomyDescriptionService.generateAllDescriptions (http://127.0.0.1:8080/bundle.js:43397:12)
+    at AnatomyGenerationService.generateAnatomyIfNeeded (http://127.0.0.1:8080/bundle.js:42573:45)
+    at async #handleEntityCreated (http://127.0.0.1:8080/bundle.js:42698:30)
+    at async http://127.0.0.1:8080/bundle.js:24239:15
+    at async Promise.all (index 2)
+    at async EventBus.dispatch (http://127.0.0.1:8080/bundle.js:24236:9)
+    at async #emitEvent (http://127.0.0.1:8080/bundle.js:25213:9)
+    at async SafeEventDispatcher.dispatch (http://127.0.0.1:8080/bundle.js:25413:30)[[Prototype]]: Object
 error @ consoleLogger.js:175
-generateAnatomyIfNeeded @ anatomyGenerationService.js:178
+generateAnatomyIfNeeded @ anatomyGenerationService.js:164
+await in generateAnatomyIfNeeded
 #handleEntityCreated @ anatomyInitializationService.js:101
 (anonymous) @ eventBus.js:136
 dispatch @ eventBus.js:133
@@ -1354,45 +164,13 @@ beginGame @ main.js:217
 (anonymous) @ game.html:326
 Promise.then
 (anonymous) @ game.html:323Understand this error
-consoleLogger.js:187 WorldInitializer (Pass 1): Successfully instantiated entity isekai:hero_instance (from definition: isekai:hero)
-consoleLogger.js:187 VED: EventDefinition not found for 'worldinit:entity_instantiated'. Skipping validation as allowed by options.
-consoleLogger.js:187 VED: Dispatching event 'worldinit:entity_instantiated' via EventBus... {entityId: 'isekai:hero_instance', instanceId: undefined, definitionId: 'isekai:hero', worldName: 'isekai:world', reason: 'Initial World Load'}
-consoleLogger.js:175 AnatomyInitializationService: Failed to generate anatomy for entity 'isekai:hero_instance' {error: ValidationError: Recipe 'anatomy:human_male' not found
-    at AnatomyGenerationService.generateAnat…}
-error @ consoleLogger.js:175
-#handleEntityCreated @ anatomyInitializationService.js:111
-await in #handleEntityCreated
-(anonymous) @ eventBus.js:136
-dispatch @ eventBus.js:133
-#emitEvent @ validatedEventDispatcher.js:192
-dispatch @ validatedEventDispatcher.js:222
-dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
-#executeSafely @ safeEventDispatcher.js:88
-dispatch @ safeEventDispatcher.js:122
-#dispatchEntityCreated @ entityLifecycleManager.js:177
-createEntityInstance @ entityLifecycleManager.js:214
-createEntityInstance @ entityManager.js:361
-createEntityInstance @ entityManagerAdapter.js:38
-#createInstance @ worldInitializer.js:235
-#instantiateInstance @ worldInitializer.js:330
-#processInstance @ worldInitializer.js:389
-#instantiateEntitiesFromWorld @ worldInitializer.js:431
-await in #instantiateEntitiesFromWorld
-initializeWorldEntities @ worldInitializer.js:477
-#initWorld @ initializationService.js:377
-runInitializationSequence @ initializationService.js:286
-await in runInitializationSequence
-#executeInitializationSequence @ gameEngine.js:197
-await in #executeInitializationSequence
-#initializeNewGame @ gameEngine.js:269
-await in #initializeNewGame
-startNewGame @ gameEngine.js:313
-startGameStage @ engineStages.js:87
-beginGame @ main.js:217
-(anonymous) @ game.html:326
-Promise.then
-(anonymous) @ game.html:323Understand this error
-consoleLogger.js:187 VED: Event 'worldinit:entity_instantiated' dispatch successful.
-consoleLogger.js:187 VED: Event 'core:entity_created' dispatch successful.
-consoleLogger.js:187 Dispatched 'worldinit:entity_instantiated' for entity isekai:hero_instance.
-consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:entity_created'.
+consoleLogger.js:151 AnatomyGenerationService: Successfully generated anatomy for entity 'isekai:hero_instance' with 6 parts
+consoleLogger.js:187 GameSessionManager.finalizeNewGameSuccess: Initialization successful for world "isekai:world". Finalizing new game setup.
+consoleLogger.js:187 PlaytimeTracker: Session started at 1751371015608
+consoleLogger.js:187 GameSessionManager._finalizeGameStart: Dispatching UI event for game ready.
+consoleLogger.js:187 VED: Validating payload for event 'core:ui_ready' against schema 'core:ui_ready#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:ui_ready'.
+consoleLogger.js:187 VED: Dispatching event 'core:ui_ready' via EventBus... {activeWorld: 'isekai:world', message: 'Enter command...'}
+consoleLogger.js:187 EngineUIManager: Received core:ui_ready {activeWorld: 'isekai:world', message: 'Enter command...'}
+consoleLogger.js:187 [TitleRenderer] Title set to: "isekai:world"
+consoleLogger.js:187 [InputStateController] Input enabled.

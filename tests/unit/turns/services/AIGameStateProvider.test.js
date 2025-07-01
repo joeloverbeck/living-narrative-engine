@@ -103,7 +103,7 @@ describe('AIGameStateProvider Integration Tests', () => {
       getOrGenerateBodyDescription: jest.fn(),
     };
     const mockEntityFinder = {
-      getEntity: jest.fn(),
+      getEntityInstance: jest.fn(),
     };
 
     actorDataExtractor = new ActorDataExtractor({

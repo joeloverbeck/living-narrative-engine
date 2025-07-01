@@ -54,17 +54,17 @@ export class BodyDescriptionComposer {
    * @returns {string} The composed description
    */
   composeDescription(bodyEntity) {
-    if (!bodyEntity || !bodyEntity.components[ANATOMY_BODY_COMPONENT_ID]) {
+    if (!bodyEntity || !bodyEntity.hasComponent(ANATOMY_BODY_COMPONENT_ID)) {
       return '';
     }
 
-    const bodyComponent = bodyEntity.components[ANATOMY_BODY_COMPONENT_ID];
-    if (!bodyComponent.rootPartId) {
+    const bodyComponent = bodyEntity.getComponentData(ANATOMY_BODY_COMPONENT_ID);
+    if (!bodyComponent || !bodyComponent.body || !bodyComponent.body.root) {
       return '';
     }
 
     // Get all body parts
-    const allParts = this.bodyGraphService.getAllParts(bodyComponent);
+    const allParts = this.bodyGraphService.getAllParts(bodyComponent.body);
     if (!allParts || allParts.length === 0) {
       return '';
     }
@@ -177,12 +177,12 @@ export class BodyDescriptionComposer {
     const partsByType = new Map();
 
     for (const partId of partIds) {
-      const entity = this.entityFinder.getEntity(partId);
-      if (!entity || !entity.components['anatomy:part']) {
+      const entity = this.entityFinder.getEntityInstance(partId);
+      if (!entity || !entity.hasComponent('anatomy:part')) {
         continue;
       }
 
-      const subType = entity.components['anatomy:part'].subType;
+      const subType = entity.getComponentData('anatomy:part').subType;
       if (!subType) {
         continue;
       }
@@ -231,7 +231,7 @@ export class BodyDescriptionComposer {
    * @returns {string}
    */
   extractBuildDescription(bodyEntity) {
-    const buildComponent = bodyEntity.components['descriptors:build'];
+    const buildComponent = bodyEntity.getComponentData('descriptors:build');
     if (!buildComponent || !buildComponent.build) {
       return '';
     }

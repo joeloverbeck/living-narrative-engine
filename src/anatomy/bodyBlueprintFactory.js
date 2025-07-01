@@ -191,12 +191,9 @@ export class BodyBlueprintFactory {
         `BodyBlueprintFactory: Failed to create anatomy graph`,
         { error }
       );
-      this.#eventDispatcher.dispatch({
-        type: SYSTEM_ERROR_OCCURRED_ID,
-        payload: {
-          error: error.message,
-          context: 'BodyBlueprintFactory.createAnatomyGraph',
-        },
+      this.#eventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
+        error: error.message,
+        context: 'BodyBlueprintFactory.createAnatomyGraph',
       });
       throw error;
     }
@@ -328,7 +325,7 @@ export class BodyBlueprintFactory {
 
     if (ownerId) {
       // Add ownership component if specified
-      this.#entityManager.addComponent(rootEntity.id, 'anatomy:owned_by', {
+      this.#entityManager.addComponent(rootEntity.id, 'core:owned_by', {
         ownerId,
       });
     }
@@ -1112,7 +1109,7 @@ export class BodyBlueprintFactory {
       if (socket.nameTpl) {
         const name = this.#generatePartName(socket, childEntity, parentId);
         this.#entityManager.addComponent(childEntity.id, 'core:name', {
-          name: name,
+          text: name,
         });
       }
 

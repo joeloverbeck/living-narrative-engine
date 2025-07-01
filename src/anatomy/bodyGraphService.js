@@ -412,6 +412,110 @@ export class BodyGraphService {
   }
 
   /**
+   * Gets all parts from a body component by traversing the anatomy graph
+   *
+   * @param {object} bodyComponent - The anatomy:body component data
+   * @returns {string[]} Array of all entity IDs in the anatomy
+   */
+  getAllParts(bodyComponent) {
+    if (!bodyComponent || !bodyComponent.root) {
+      return [];
+    }
+
+    const result = [];
+    const visited = new Set();
+    const stack = [bodyComponent.root];
+
+    while (stack.length > 0) {
+      const currentId = stack.pop();
+      if (visited.has(currentId)) continue;
+
+      visited.add(currentId);
+      result.push(currentId);
+
+      // Try to get from adjacency cache first
+      const node = this.#adjacencyCache.get(currentId);
+      if (node && node.children) {
+        stack.push(...node.children);
+      } else {
+        // Fallback to direct entity manager lookup - find entities with anatomy:joint
+        const entitiesWithJoints = this.#entityManager.getEntitiesWithComponent('anatomy:joint');
+        for (const entity of entitiesWithJoints) {
+          const joint = this.#entityManager.getComponentData(
+            entity.id,
+            'anatomy:joint'
+          );
+          if (joint && joint.parentId === currentId) {
+            stack.push(entity.id);
+          }
+        }
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Checks if any part in the body has a specific component
+   *
+   * @param {object} bodyComponent - The anatomy:body component data
+   * @param {string} componentId - The component ID to check for
+   * @returns {boolean} True if any part has the component
+   */
+  hasPartWithComponent(bodyComponent, componentId) {
+    const allParts = this.getAllParts(bodyComponent);
+    
+    for (const partId of allParts) {
+      const componentData = this.#entityManager.getComponentData(partId, componentId);
+      if (componentData !== null) {
+        return true;
+      }
+    }
+    
+    return false;
+  }
+
+  /**
+   * Checks if any part in the body has a component with a specific property value
+   *
+   * @param {object} bodyComponent - The anatomy:body component data
+   * @param {string} componentId - The component ID to check
+   * @param {string} propertyPath - The property path (e.g., "locked" or "stats.locked")
+   * @param {*} expectedValue - The expected value to match
+   * @returns {{found: boolean, partId?: string}} Result with found status and optional part ID
+   */
+  hasPartWithComponentValue(bodyComponent, componentId, propertyPath, expectedValue) {
+    const allParts = this.getAllParts(bodyComponent);
+    
+    for (const partId of allParts) {
+      const componentData = this.#entityManager.getComponentData(partId, componentId);
+      if (componentData !== null) {
+        // Navigate the property path
+        const value = this.#getNestedProperty(componentData, propertyPath);
+        if (value === expectedValue) {
+          return { found: true, partId };
+        }
+      }
+    }
+    
+    return { found: false };
+  }
+
+  /**
+   * Helper method to get nested property value from an object
+   *
+   * @param {object} obj - The object to search in
+   * @param {string} path - The property path (e.g., "stats.locked")
+   * @returns {*} The property value or undefined
+   * @private
+   */
+  #getNestedProperty(obj, path) {
+    return path.split('.').reduce((current, key) => {
+      return current && current[key] !== undefined ? current[key] : undefined;
+    }, obj);
+  }
+
+  /**
    * Validates the integrity of the cached graph
    *
    * @returns {{valid: boolean, issues: string[]}}

@@ -29,7 +29,7 @@ describe('ActorDataExtractor', () => {
       getOrGenerateBodyDescription: jest.fn(),
     };
     mockEntityFinder = {
-      getEntity: jest.fn(),
+      getEntityInstance: jest.fn(),
     };
     extractor = new ActorDataExtractor({
       anatomyDescriptionService: mockAnatomyDescriptionService,

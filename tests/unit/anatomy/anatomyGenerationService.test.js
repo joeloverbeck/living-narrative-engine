@@ -246,7 +246,6 @@ describe('AnatomyGenerationService', () => {
           body: {
             root: 'root-1',
             parts: {},
-            allParts: ['root-1', 'part-1', 'part-2'],
           },
         })
       );
@@ -308,7 +307,6 @@ describe('AnatomyGenerationService', () => {
               left_arm: 'arm-1',
               right_arm: 'arm-2',
             },
-            allParts: ['root-1', 'arm-1', 'arm-2'],
           },
         })
       );
@@ -427,7 +425,6 @@ describe('AnatomyGenerationService', () => {
           body: {
             root: 'root-1',
             parts: {}, // No parts added due to null name data
-            allParts: ['root-1', 'part-1'],
           },
         })
       );
@@ -475,7 +472,6 @@ describe('AnatomyGenerationService', () => {
           body: {
             root: 'root-1',
             parts: {}, // No parts added due to empty name
-            allParts: ['root-1', 'part-1'],
           },
         })
       );

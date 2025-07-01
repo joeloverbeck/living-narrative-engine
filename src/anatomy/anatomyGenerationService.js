@@ -149,7 +149,6 @@ export class AnatomyGenerationService {
         body: {
           root: result.rootId,
           parts: parts,
-          allParts: result.entities,
         },
       });
 
