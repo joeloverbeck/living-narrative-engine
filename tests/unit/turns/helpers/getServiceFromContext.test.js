@@ -1,6 +1,6 @@
 import { describe, test, expect, jest, beforeEach } from '@jest/globals';
 import {
-  getServiceFromContext,
+  ServiceLookupHelper,
   ServiceLookupError,
 } from '../../../../src/turns/states/helpers/getServiceFromContext.js';
 import { safeDispatchError } from '../../../../src/utils/safeDispatchErrorUtils.js';
@@ -36,12 +36,14 @@ describe('getServiceFromContext', () => {
   let logger;
   let dispatcher;
   let state;
+  let helper;
 
   beforeEach(() => {
     jest.clearAllMocks();
     logger = { error: jest.fn(), warn: jest.fn(), debug: jest.fn() };
     dispatcher = { dispatch: jest.fn() };
     state = createState(logger, dispatcher);
+    helper = new ServiceLookupHelper(state);
   });
 
   test('returns service when context provides it', async () => {
@@ -51,8 +53,7 @@ describe('getServiceFromContext', () => {
       getCommandProcessor: jest.fn(() => service),
     };
 
-    const result = await getServiceFromContext(
-      state,
+    const result = await helper.getServiceFromContext(
       turnCtx,
       'getCommandProcessor',
       'ICommandProcessor',
@@ -73,8 +74,7 @@ describe('getServiceFromContext', () => {
     };
 
     await expect(
-      getServiceFromContext(
-        state,
+      helper.getServiceFromContext(
         turnCtx,
         'getCommandProcessor',
         'ICommandProcessor',

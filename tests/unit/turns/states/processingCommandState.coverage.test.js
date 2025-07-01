@@ -18,8 +18,8 @@ import TurnDirectiveStrategyResolver, {
   DEFAULT_STRATEGY_MAP,
 } from '../../../../src/turns/strategies/turnDirectiveStrategyResolver.js';
 import {
+  ServiceLookupHelper,
   ServiceLookupError,
-  getServiceFromContext,
 } from '../../../../src/turns/states/helpers/getServiceFromContext.js';
 
 class MockActor {
@@ -41,6 +41,7 @@ const mockLogger = {
 
 let mockHandler;
 let processingState;
+let lookupHelper;
 let consoleErrorSpy;
 let consoleWarnSpy;
 let mockCommandProcessor;
@@ -101,6 +102,7 @@ beforeEach(() => {
     directiveResolver: resolver,
   });
   mockHandler._currentState = processingState;
+  lookupHelper = new ServiceLookupHelper(processingState);
 
   consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
   consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
@@ -504,8 +506,7 @@ describe('ProcessingCommandState._getServiceFromContext – error branches', () 
   test('should throw ServiceLookupError and clear _isProcessing when turnCtx is null', async () => {
     processingState.startProcessing();
     await expect(
-      getServiceFromContext(
-        processingState,
+      lookupHelper.getServiceFromContext(
         null,
         'getCommandProcessor',
         'ICommandProcessor',
@@ -530,8 +531,7 @@ describe('ProcessingCommandState._getServiceFromContext – error branches', () 
     const dummyCtx = {};
 
     await expect(
-      getServiceFromContext(
-        processingState,
+      lookupHelper.getServiceFromContext(
         dummyCtx,
         'getCommandProcessor',
         'ICommandProcessor',
@@ -562,8 +562,7 @@ describe('ProcessingCommandState._getServiceFromContext – error branches', () 
     mockHandler.getTurnContext.mockReturnValue(mockTurnContext);
 
     await expect(
-      getServiceFromContext(
-        processingState,
+      lookupHelper.getServiceFromContext(
         mockTurnContext,
         'getCommandProcessor',
         'ICommandProcessor',
@@ -599,8 +598,7 @@ describe('ProcessingCommandState._getServiceFromContext – error branches', () 
     mockHandler.getTurnContext.mockReturnValue(mockTurnContext);
 
     await expect(
-      getServiceFromContext(
-        processingState,
+      lookupHelper.getServiceFromContext(
         mockTurnContext,
         'getCommandProcessor',
         'ICommandProcessor',

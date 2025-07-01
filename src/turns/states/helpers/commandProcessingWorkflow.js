@@ -15,10 +15,7 @@
  * @typedef {import('../../../types/commandResult.js').CommandResult} CommandResult
  */
 
-import {
-  getServiceFromContext,
-  ServiceLookupError,
-} from './getServiceFromContext.js';
+import { ServiceLookupError } from './getServiceFromContext.js';
 import { ProcessingExceptionHandler } from './processingExceptionHandler.js';
 import { finishProcessing } from './processingErrorUtils.js';
 import { getLogger } from './contextUtils.js';
