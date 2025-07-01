@@ -37,6 +37,7 @@ describe('ProcessingWorkflow.run', () => {
       getStateName: () => 'ProcessingCommandState',
       _getTurnContext: jest.fn(() => ctx),
       _ensureContext: jest.fn(async () => ctx),
+      _logStateTransition: jest.fn(),
       _dispatchSpeech: jest.fn().mockResolvedValue(undefined),
       _processCommandInternal: jest.fn(async () => {
         state.finishProcessing();
