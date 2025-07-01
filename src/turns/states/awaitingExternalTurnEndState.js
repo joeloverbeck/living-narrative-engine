@@ -13,6 +13,7 @@ import { AbstractTurnState } from './abstractTurnState.js';
 
 import { TURN_ENDED_ID } from '../../constants/eventIds.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
+import { createTimeoutError } from '../../utils/timeoutUtils.js';
 import { getLogger, getSafeEventDispatcher } from './helpers/contextUtils.js';
 
 /** @typedef {import('../handlers/baseTurnHandler.js').BaseTurnHandler} BaseTurnHandler */
@@ -29,22 +30,7 @@ const IS_DEV = (process?.env?.NODE_ENV ?? 'production') !== 'production';
 const TIMEOUT_MS = IS_DEV ? 3_000 : 30_000;
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
-/**
- * Builds the timeout error message and `Error` object.
- *
- * @param {string} actorId - ID of the actor awaiting the turn end.
- * @param {string} actionId - The action definition id.
- * @param {number} timeoutMs - Timeout duration in milliseconds.
- * @returns {{message: string, error: Error}}
- */
-function createTimeoutError(actorId, actionId, timeoutMs = TIMEOUT_MS) {
-  const message =
-    `No rule ended the turn for actor ${actorId} after action ` +
-    `'${actionId}'. The engine timed out after ${timeoutMs} ms.`;
-  const error = new Error(message);
-  error.code = 'TURN_END_TIMEOUT';
-  return { message, error };
-}
+// Timeout utilities moved to src/utils/timeoutUtils.js
 
 // ─── AwaitingExternalTurnEndState ──────────────────────────────────────────────
 export class AwaitingExternalTurnEndState extends AbstractTurnState {
