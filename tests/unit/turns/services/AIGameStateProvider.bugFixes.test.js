@@ -108,7 +108,7 @@ describe('AIGameStateProvider', () => {
       getOrGenerateBodyDescription: jest.fn(),
     };
     const mockEntityFinder = {
-      getEntity: jest.fn(),
+      getEntityInstance: jest.fn(),
     };
 
     const actorDataExtractor = new ActorDataExtractor({

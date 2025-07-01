@@ -288,13 +288,13 @@ describe('BodyBlueprintFactory', () => {
         factory.createAnatomyGraph('test-blueprint', 'test-recipe')
       ).rejects.toThrow('Entity creation failed');
 
-      expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith({
-        type: SYSTEM_ERROR_OCCURRED_ID,
-        payload: {
+      expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
+        SYSTEM_ERROR_OCCURRED_ID,
+        {
           error: error.message,
           context: 'BodyBlueprintFactory.createAnatomyGraph',
-        },
-      });
+        }
+      );
     });
 
     it('should process static attachments', async () => {
@@ -932,6 +932,99 @@ describe('BodyBlueprintFactory', () => {
 
       expect(result.rootId).toBe('torso-1');
       // The seed should be used internally for consistent random selection
+    });
+
+    it('should add core:owned_by component when ownerId is provided', async () => {
+      const blueprint = { root: 'anatomy:torso' };
+      const recipe = {
+        recipeId: 'test-recipe',
+        blueprintId: 'test-blueprint',
+        slots: {},
+      };
+
+      mockDataRegistry.get.mockImplementation((registry, id) => {
+        if (registry === 'anatomyBlueprints' && id === 'test-blueprint')
+          return blueprint;
+        if (registry === 'anatomyRecipes' && id === 'test-recipe')
+          return recipe;
+        return null;
+      });
+
+      const mockTorsoEntity = { id: 'torso-1', definitionId: 'anatomy:torso' };
+      mockEntityManager.createEntityInstance.mockReturnValue(mockTorsoEntity);
+
+      const ownerId = 'player-123';
+      await factory.createAnatomyGraph('test-blueprint', 'test-recipe', {
+        ownerId,
+      });
+
+      expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
+        'torso-1',
+        'core:owned_by',
+        { ownerId }
+      );
+    });
+
+    it('should not add ownership component when ownerId is not provided', async () => {
+      const blueprint = { root: 'anatomy:torso' };
+      const recipe = {
+        recipeId: 'test-recipe',
+        blueprintId: 'test-blueprint',
+        slots: {},
+      };
+
+      mockDataRegistry.get.mockImplementation((registry, id) => {
+        if (registry === 'anatomyBlueprints' && id === 'test-blueprint')
+          return blueprint;
+        if (registry === 'anatomyRecipes' && id === 'test-recipe')
+          return recipe;
+        return null;
+      });
+
+      const mockTorsoEntity = { id: 'torso-1', definitionId: 'anatomy:torso' };
+      mockEntityManager.createEntityInstance.mockReturnValue(mockTorsoEntity);
+
+      await factory.createAnatomyGraph('test-blueprint', 'test-recipe');
+
+      const addComponentCalls = mockEntityManager.addComponent.mock.calls;
+      const ownershipCalls = addComponentCalls.filter(
+        ([, componentId]) => componentId === 'core:owned_by'
+      );
+      expect(ownershipCalls).toHaveLength(0);
+    });
+
+    it('should dispatch error event correctly on failure', async () => {
+      const blueprint = { root: 'anatomy:torso' };
+      const recipe = {
+        recipeId: 'test-recipe',
+        blueprintId: 'test-blueprint',
+        slots: {},
+      };
+
+      mockDataRegistry.get.mockImplementation((registry, id) => {
+        if (registry === 'anatomyBlueprints' && id === 'test-blueprint')
+          return blueprint;
+        if (registry === 'anatomyRecipes' && id === 'test-recipe')
+          return recipe;
+        return null;
+      });
+
+      const testError = new Error('Test error during creation');
+      mockEntityManager.createEntityInstance.mockImplementation(() => {
+        throw testError;
+      });
+
+      await expect(
+        factory.createAnatomyGraph('test-blueprint', 'test-recipe')
+      ).rejects.toThrow('Test error during creation');
+
+      expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
+        SYSTEM_ERROR_OCCURRED_ID,
+        {
+          error: 'Test error during creation',
+          context: 'BodyBlueprintFactory.createAnatomyGraph',
+        }
+      );
     });
   });
 });

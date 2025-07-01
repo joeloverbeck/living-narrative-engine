@@ -3,7 +3,6 @@ import { DescriptorFormatter } from '../../../src/anatomy/descriptorFormatter.js
 import { BodyPartDescriptionBuilder } from '../../../src/anatomy/bodyPartDescriptionBuilder.js';
 import { BodyDescriptionComposer } from '../../../src/anatomy/bodyDescriptionComposer.js';
 import { AnatomyDescriptionService } from '../../../src/anatomy/anatomyDescriptionService.js';
-import { BodyGraphService } from '../../../src/anatomy/bodyGraphService.js';
 import {
   ANATOMY_BODY_COMPONENT_ID,
   ANATOMY_PART_COMPONENT_ID,
@@ -120,13 +119,18 @@ describe('Body Description Generation Integration', () => {
         id: 'minimal-body',
         components: {
           [ANATOMY_BODY_COMPONENT_ID]: {
-            rootPartId: 'torso',
+            recipeId: 'test:minimal',
             body: {
               root: 'torso',
               parts: { torso: 'torso' },
-              allParts: ['torso'],
             },
           },
+        },
+        hasComponent: (componentId) => {
+          return componentId === ANATOMY_BODY_COMPONENT_ID;
+        },
+        getComponentData: (componentId) => {
+          return minimalBody.components[componentId];
         },
       };
 
@@ -135,11 +139,17 @@ describe('Body Description Generation Integration', () => {
         components: {
           [ANATOMY_PART_COMPONENT_ID]: { subType: 'torso' },
         },
+        hasComponent: (componentId) => {
+          return componentId === ANATOMY_PART_COMPONENT_ID;
+        },
+        getComponentData: (componentId) => {
+          return minimalTorso.components[componentId];
+        },
       };
 
       // Mock entity finder to return our minimal entities
       const mockEntityFinder = {
-        getEntity: (id) => {
+        getEntityInstance: (id) => {
           if (id === 'minimal-body') return minimalBody;
           if (id === 'torso') return minimalTorso;
           return null;
@@ -147,7 +157,7 @@ describe('Body Description Generation Integration', () => {
       };
 
       const mockBodyGraphService = {
-        getAllParts: () => ['torso'],
+        getAllParts: (bodyComponent) => [bodyComponent.root],
       };
 
       const composer = new BodyDescriptionComposer({
@@ -170,9 +180,19 @@ describe('Body Description Generation Integration', () => {
         id: 'body-1',
         components: {
           [ANATOMY_BODY_COMPONENT_ID]: {
-            rootPartId: 'torso-1',
+            recipeId: 'test:athletic',
+            body: {
+              root: 'torso-1',
+              parts: {},
+            },
           },
           'descriptors:build': { build: 'athletic' },
+        },
+        hasComponent: (componentId) => {
+          return Object.prototype.hasOwnProperty.call(bodyEntity.components, componentId);
+        },
+        getComponentData: (componentId) => {
+          return bodyEntity.components[componentId];
         },
       };
 
@@ -182,6 +202,12 @@ describe('Body Description Generation Integration', () => {
           components: {
             [ANATOMY_PART_COMPONENT_ID]: { subType: 'torso' },
           },
+          hasComponent: (componentId) => {
+            return Object.prototype.hasOwnProperty.call(parts['torso-1'].components, componentId);
+          },
+          getComponentData: (componentId) => {
+            return parts['torso-1'].components[componentId];
+          },
         },
         'hair-1': {
           id: 'hair-1',
@@ -190,12 +216,24 @@ describe('Body Description Generation Integration', () => {
             'descriptors:color_extended': { color: 'blonde' },
             'descriptors:length_hair': { length: 'short' },
           },
+          hasComponent: (componentId) => {
+            return Object.prototype.hasOwnProperty.call(parts['hair-1'].components, componentId);
+          },
+          getComponentData: (componentId) => {
+            return parts['hair-1'].components[componentId];
+          },
         },
         'eye-1': {
           id: 'eye-1',
           components: {
             [ANATOMY_PART_COMPONENT_ID]: { subType: 'eye' },
             'descriptors:color_extended': { color: 'blue' },
+          },
+          hasComponent: (componentId) => {
+            return Object.prototype.hasOwnProperty.call(parts['eye-1'].components, componentId);
+          },
+          getComponentData: (componentId) => {
+            return parts['eye-1'].components[componentId];
           },
         },
         'eye-2': {
@@ -204,11 +242,17 @@ describe('Body Description Generation Integration', () => {
             [ANATOMY_PART_COMPONENT_ID]: { subType: 'eye' },
             'descriptors:color_extended': { color: 'blue' },
           },
+          hasComponent: (componentId) => {
+            return Object.prototype.hasOwnProperty.call(parts['eye-2'].components, componentId);
+          },
+          getComponentData: (componentId) => {
+            return parts['eye-2'].components[componentId];
+          },
         },
       };
 
       const mockEntityFinder = {
-        getEntity: (id) => parts[id] || bodyEntity,
+        getEntityInstance: (id) => parts[id] || bodyEntity,
       };
 
       const mockBodyGraphService = {
@@ -256,8 +300,18 @@ describe('Body Description Generation Integration', () => {
         id: 'body-1',
         components: {
           [ANATOMY_BODY_COMPONENT_ID]: {
-            rootPartId: 'torso-1',
+            recipeId: 'test:simple',
+            body: {
+              root: 'torso-1',
+              parts: {},
+            },
           },
+        },
+        hasComponent: (componentId) => {
+          return componentId === ANATOMY_BODY_COMPONENT_ID;
+        },
+        getComponentData: (componentId) => {
+          return bodyEntity.components[componentId];
         },
       };
 
@@ -268,11 +322,17 @@ describe('Body Description Generation Integration', () => {
           components: {
             [ANATOMY_PART_COMPONENT_ID]: { subType: 'torso' },
           },
+          hasComponent: (componentId) => {
+            return componentId === ANATOMY_PART_COMPONENT_ID;
+          },
+          getComponentData: (componentId) => {
+            return parts['torso-1'].components[componentId];
+          },
         },
       };
 
       const mockEntityFinder = {
-        getEntity: (id) => parts[id],
+        getEntityInstance: (id) => parts[id],
       };
 
       const mockBodyGraphService = {

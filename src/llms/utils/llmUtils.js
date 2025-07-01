@@ -30,7 +30,7 @@ export function getLlmId(config) {
  * @param {EnvironmentContext|any} ctx - The context object to validate.
  * @param {string} contextMsg - Prefix for the error message.
  * @param {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} [dispatcher] - Dispatcher for error events.
- * @param {import('../../interfaces/coreServices.js').ILogger} [logger=console] - Logger used when dispatcher is absent.
+ * @param {import('../../interfaces/coreServices.js').ILogger} [logger] - Logger used when dispatcher is absent.
  * @returns {boolean} True if the context is valid.
  * @throws {InvalidEnvironmentContextError} When the context is invalid.
  */

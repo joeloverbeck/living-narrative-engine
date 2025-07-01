@@ -14,6 +14,15 @@ describe('AnatomyDescriptionService', () => {
   let mockEntityFinder;
   let mockComponentManager;
 
+  // Helper function to create mock entities with the correct interface
+  const createMockEntity = (id, components) => {
+    return {
+      id,
+      hasComponent: jest.fn((componentId) => !!components[componentId]),
+      getComponentData: jest.fn((componentId) => components[componentId]),
+    };
+  };
+
   beforeEach(() => {
     // Create mocks
     mockBodyPartDescriptionBuilder = {
@@ -29,7 +38,7 @@ describe('AnatomyDescriptionService', () => {
     };
 
     mockEntityFinder = {
-      getEntity: jest.fn(),
+      getEntityInstance: jest.fn(),
     };
 
     mockComponentManager = {
@@ -50,46 +59,33 @@ describe('AnatomyDescriptionService', () => {
   describe('generateAllDescriptions', () => {
     it('should generate descriptions for all body parts and the body itself', () => {
       // Arrange
-      const bodyEntity = {
-        id: 'body-1',
-        components: {
-          [ANATOMY_BODY_COMPONENT_ID]: {
-            rootPartId: 'torso-1',
+      const bodyEntity = createMockEntity('body-1', {
+        [ANATOMY_BODY_COMPONENT_ID]: {
+          body: {
+            root: 'torso-1',
           },
         },
-      };
+      });
 
       const partIds = ['torso-1', 'head-1', 'arm-1', 'arm-2'];
       mockBodyGraphService.getAllParts.mockReturnValue(partIds);
 
       const mockParts = {
-        'torso-1': {
-          id: 'torso-1',
-          components: {
-            [ANATOMY_PART_COMPONENT_ID]: { subType: 'torso' },
-          },
-        },
-        'head-1': {
-          id: 'head-1',
-          components: {
-            [ANATOMY_PART_COMPONENT_ID]: { subType: 'head' },
-          },
-        },
-        'arm-1': {
-          id: 'arm-1',
-          components: {
-            [ANATOMY_PART_COMPONENT_ID]: { subType: 'arm' },
-          },
-        },
-        'arm-2': {
-          id: 'arm-2',
-          components: {
-            [ANATOMY_PART_COMPONENT_ID]: { subType: 'arm' },
-          },
-        },
+        'torso-1': createMockEntity('torso-1', {
+          [ANATOMY_PART_COMPONENT_ID]: { subType: 'torso' },
+        }),
+        'head-1': createMockEntity('head-1', {
+          [ANATOMY_PART_COMPONENT_ID]: { subType: 'head' },
+        }),
+        'arm-1': createMockEntity('arm-1', {
+          [ANATOMY_PART_COMPONENT_ID]: { subType: 'arm' },
+        }),
+        'arm-2': createMockEntity('arm-2', {
+          [ANATOMY_PART_COMPONENT_ID]: { subType: 'arm' },
+        }),
       };
 
-      mockEntityFinder.getEntity.mockImplementation(
+      mockEntityFinder.getEntityInstance.mockImplementation(
         (id) => mockParts[id] || bodyEntity
       );
       mockBodyPartDescriptionBuilder.buildDescription.mockReturnValue(
@@ -104,8 +100,11 @@ describe('AnatomyDescriptionService', () => {
 
       // Assert
       expect(mockBodyGraphService.getAllParts).toHaveBeenCalledWith({
-        rootPartId: 'torso-1',
+        root: 'torso-1',
       });
+      expect(bodyEntity.getComponentData).toHaveBeenCalledWith(
+        ANATOMY_BODY_COMPONENT_ID
+      );
 
       // Verify descriptions were generated for each part
       expect(
@@ -122,26 +121,20 @@ describe('AnatomyDescriptionService', () => {
     });
 
     it('should throw error if entity has no anatomy:body component', () => {
-      const invalidEntity = {
-        id: 'invalid-1',
-        components: {},
-      };
+      const invalidEntity = createMockEntity('invalid-1', {});
 
       expect(() => service.generateAllDescriptions(invalidEntity)).toThrow(
         'Entity must have an anatomy:body component'
       );
     });
 
-    it('should throw error if body component has no rootPartId', () => {
-      const invalidEntity = {
-        id: 'body-1',
-        components: {
-          [ANATOMY_BODY_COMPONENT_ID]: {},
-        },
-      };
+    it('should throw error if body component has no body.root property', () => {
+      const invalidEntity = createMockEntity('body-1', {
+        [ANATOMY_BODY_COMPONENT_ID]: {},
+      });
 
       expect(() => service.generateAllDescriptions(invalidEntity)).toThrow(
-        'Body component must have a rootPartId'
+        'Body component must have a body.root property'
       );
     });
   });
@@ -149,15 +142,12 @@ describe('AnatomyDescriptionService', () => {
   describe('generatePartDescription', () => {
     it('should generate and store description for a body part', () => {
       // Arrange
-      const partEntity = {
-        id: 'arm-1',
-        components: {
-          [ANATOMY_PART_COMPONENT_ID]: { subType: 'arm' },
-          'descriptors:length_category': { length: 'long' },
-        },
-      };
+      const partEntity = createMockEntity('arm-1', {
+        [ANATOMY_PART_COMPONENT_ID]: { subType: 'arm' },
+        'descriptors:length_category': { length: 'long' },
+      });
 
-      mockEntityFinder.getEntity.mockReturnValue(partEntity);
+      mockEntityFinder.getEntityInstance.mockReturnValue(partEntity);
       mockBodyPartDescriptionBuilder.buildDescription.mockReturnValue(
         'a long arm'
       );
@@ -177,12 +167,9 @@ describe('AnatomyDescriptionService', () => {
     });
 
     it('should not generate description for non-anatomy parts', () => {
-      const nonPartEntity = {
-        id: 'item-1',
-        components: {},
-      };
+      const nonPartEntity = createMockEntity('item-1', {});
 
-      mockEntityFinder.getEntity.mockReturnValue(nonPartEntity);
+      mockEntityFinder.getEntityInstance.mockReturnValue(nonPartEntity);
 
       service.generatePartDescription('item-1');
 
@@ -195,14 +182,11 @@ describe('AnatomyDescriptionService', () => {
 
   describe('updateDescription', () => {
     it('should update existing description component', () => {
-      const entity = {
-        id: 'entity-1',
-        components: {
-          [DESCRIPTION_COMPONENT_ID]: { text: 'old description' },
-        },
-      };
+      const entity = createMockEntity('entity-1', {
+        [DESCRIPTION_COMPONENT_ID]: { text: 'old description' },
+      });
 
-      mockEntityFinder.getEntity.mockReturnValue(entity);
+      mockEntityFinder.getEntityInstance.mockReturnValue(entity);
 
       service.updateDescription('entity-1', 'new description');
 
@@ -214,12 +198,9 @@ describe('AnatomyDescriptionService', () => {
     });
 
     it('should add description component if not exists', () => {
-      const entity = {
-        id: 'entity-1',
-        components: {},
-      };
+      const entity = createMockEntity('entity-1', {});
 
-      mockEntityFinder.getEntity.mockReturnValue(entity);
+      mockEntityFinder.getEntityInstance.mockReturnValue(entity);
 
       service.updateDescription('entity-1', 'new description');
 
@@ -238,32 +219,29 @@ describe('AnatomyDescriptionService', () => {
     });
 
     it('should return existing description for non-anatomy entity', () => {
-      const entity = {
-        id: 'npc-1',
-        components: {
-          [DESCRIPTION_COMPONENT_ID]: { text: 'A regular NPC' },
-        },
-      };
+      const entity = createMockEntity('npc-1', {
+        [DESCRIPTION_COMPONENT_ID]: { text: 'A regular NPC' },
+      });
 
       const result = service.getOrGenerateBodyDescription(entity);
       expect(result).toBe('A regular NPC');
     });
 
     it('should generate description for anatomy entity without description', () => {
-      const bodyEntity = {
-        id: 'body-1',
-        components: {
-          [ANATOMY_BODY_COMPONENT_ID]: {
-            rootPartId: 'torso-1',
+      const bodyEntity = createMockEntity('body-1', {
+        [ANATOMY_BODY_COMPONENT_ID]: {
+          body: {
+            root: 'torso-1',
           },
         },
-      };
+      });
 
       mockBodyGraphService.getAllParts.mockReturnValue(['torso-1']);
-      mockEntityFinder.getEntity.mockReturnValue({
-        id: 'torso-1',
-        components: { [ANATOMY_PART_COMPONENT_ID]: { subType: 'torso' } },
-      });
+      mockEntityFinder.getEntityInstance.mockReturnValue(
+        createMockEntity('torso-1', {
+          [ANATOMY_PART_COMPONENT_ID]: { subType: 'torso' },
+        })
+      );
       mockBodyDescriptionComposer.composeDescription.mockReturnValue(
         'Generated body description'
       );

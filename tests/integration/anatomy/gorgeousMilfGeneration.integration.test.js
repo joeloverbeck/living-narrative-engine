@@ -182,12 +182,38 @@ describe('Gorgeous MILF Anatomy Generation Integration Test', () => {
     );
     expect(generatedBody.body).toBeDefined();
     expect(generatedBody.body.root).toBeDefined();
-    expect(generatedBody.body.allParts).toBeInstanceOf(Array);
-    expect(generatedBody.body.allParts.length).toBeGreaterThan(0);
+
+    // Helper function to get all parts by traversing the anatomy graph
+    const getAllParts = (rootId) => {
+      const result = [];
+      const visited = new Set();
+      const stack = [rootId];
+
+      while (stack.length > 0) {
+        const currentId = stack.pop();
+        if (visited.has(currentId)) continue;
+
+        visited.add(currentId);
+        result.push(currentId);
+
+        // Find all children (entities with joints pointing to this entity)
+        const entitiesWithJoints = entityManager.getEntitiesWithComponent('anatomy:joint');
+        for (const entity of entitiesWithJoints) {
+          const joint = entityManager.getComponentData(entity.id, 'anatomy:joint');
+          if (joint && joint.parentId === currentId) {
+            stack.push(entity.id);
+          }
+        }
+      }
+      return result;
+    };
+
+    const allParts = getAllParts(generatedBody.body.root);
+    expect(allParts.length).toBeGreaterThan(0);
 
     // Helper function to find parts by type
     const findPartsByType = (partType) => {
-      return generatedBody.body.allParts.filter((partId) => {
+      return allParts.filter((partId) => {
         const partEntity = entityManager.getEntityInstance(partId);
         if (!partEntity) return false;
         const anatomyPart = entityManager.getComponentData(
@@ -270,7 +296,7 @@ describe('Gorgeous MILF Anatomy Generation Integration Test', () => {
     }
 
     // Test 5: Verify all parts are properly connected
-    for (const partId of generatedBody.body.allParts) {
+    for (const partId of allParts) {
       if (partId === generatedBody.body.root) continue; // Root doesn't have a joint
 
       const joint = getPartComponent(partId, 'anatomy:joint');
@@ -279,7 +305,7 @@ describe('Gorgeous MILF Anatomy Generation Integration Test', () => {
       expect(joint.socketId).toBeDefined();
 
       // Verify parent exists in the anatomy
-      expect(generatedBody.body.allParts).toContain(joint.parentId);
+      expect(allParts).toContain(joint.parentId);
     }
 
     // Test 6: Verify the head has all expected child parts
@@ -288,7 +314,7 @@ describe('Gorgeous MILF Anatomy Generation Integration Test', () => {
     const headId = heads[0];
 
     // Get all parts attached to the head
-    const headChildren = generatedBody.body.allParts.filter((partId) => {
+    const headChildren = allParts.filter((partId) => {
       const joint = getPartComponent(partId, 'anatomy:joint');
       return joint && joint.parentId === headId;
     });

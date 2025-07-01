@@ -28,17 +28,17 @@ export class AnatomyDescriptionService {
    * @param {object} bodyEntity - The entity with anatomy:body component
    */
   generateAllDescriptions(bodyEntity) {
-    if (!bodyEntity || !bodyEntity.components[ANATOMY_BODY_COMPONENT_ID]) {
+    if (!bodyEntity || !bodyEntity.hasComponent(ANATOMY_BODY_COMPONENT_ID)) {
       throw new Error('Entity must have an anatomy:body component');
     }
 
-    const bodyComponent = bodyEntity.components[ANATOMY_BODY_COMPONENT_ID];
-    if (!bodyComponent.rootPartId) {
-      throw new Error('Body component must have a rootPartId');
+    const bodyComponent = bodyEntity.getComponentData(ANATOMY_BODY_COMPONENT_ID);
+    if (!bodyComponent.body || !bodyComponent.body.root) {
+      throw new Error('Body component must have a body.root property');
     }
 
     // Generate descriptions for all body parts
-    const allPartIds = this.bodyGraphService.getAllParts(bodyComponent);
+    const allPartIds = this.bodyGraphService.getAllParts(bodyComponent.body);
     for (const partId of allPartIds) {
       this.generatePartDescription(partId);
     }
@@ -53,8 +53,8 @@ export class AnatomyDescriptionService {
    * @param {string} partId - The entity ID of the body part
    */
   generatePartDescription(partId) {
-    const entity = this.entityFinder.getEntity(partId);
-    if (!entity || !entity.components[ANATOMY_PART_COMPONENT_ID]) {
+    const entity = this.entityFinder.getEntityInstance(partId);
+    if (!entity || !entity.hasComponent(ANATOMY_PART_COMPONENT_ID)) {
       return;
     }
 
@@ -97,14 +97,14 @@ export class AnatomyDescriptionService {
     }
 
     // Check if entity has anatomy:body component
-    if (!entity.components[ANATOMY_BODY_COMPONENT_ID]) {
+    if (!entity.hasComponent(ANATOMY_BODY_COMPONENT_ID)) {
       // Not an anatomy entity, return existing description if any
-      const descComponent = entity.components[DESCRIPTION_COMPONENT_ID];
+      const descComponent = entity.getComponentData(DESCRIPTION_COMPONENT_ID);
       return descComponent ? descComponent.text : null;
     }
 
     // Check if description already exists and is current
-    const existingDesc = entity.components[DESCRIPTION_COMPONENT_ID];
+    const existingDesc = entity.getComponentData(DESCRIPTION_COMPONENT_ID);
     if (
       existingDesc &&
       existingDesc.text &&
@@ -131,13 +131,13 @@ export class AnatomyDescriptionService {
    * @param {string} description - The new description text
    */
   updateDescription(entityId, description) {
-    const entity = this.entityFinder.getEntity(entityId);
+    const entity = this.entityFinder.getEntityInstance(entityId);
     if (!entity) {
       return;
     }
 
     // Check if description component exists
-    if (entity.components[DESCRIPTION_COMPONENT_ID]) {
+    if (entity.hasComponent(DESCRIPTION_COMPONENT_ID)) {
       // Update existing component
       this.componentManager.updateComponent(
         entityId,
@@ -172,8 +172,8 @@ export class AnatomyDescriptionService {
    * @param {string} entityId - The entity ID
    */
   regenerateDescriptions(entityId) {
-    const entity = this.entityFinder.getEntity(entityId);
-    if (!entity || !entity.components[ANATOMY_BODY_COMPONENT_ID]) {
+    const entity = this.entityFinder.getEntityInstance(entityId);
+    if (!entity || !entity.hasComponent(ANATOMY_BODY_COMPONENT_ID)) {
       return;
     }
 
