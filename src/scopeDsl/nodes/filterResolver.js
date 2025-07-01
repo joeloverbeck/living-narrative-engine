@@ -4,7 +4,7 @@
  * @typedef {import('../core/gateways.js').EntityGateway} EntityGateway
  */
 
-import { buildComponents } from '../core/entityComponentUtils.js';
+import { createEvaluationContext } from '../core/entityHelpers.js';
 
 /**
  * @typedef {object} LocationProvider
@@ -25,52 +25,6 @@ export default function createFilterResolver({
   entitiesGateway,
   locationProvider,
 }) {
-  /**
-   * Creates an evaluation context for a single item
-   *
-   * @param {*} item - Item to filter (entity ID, object, etc.)
-   * @param {object} actorEntity - The acting entity
-   * @returns {object} Evaluation context for JSON Logic
-   */
-  function createEvaluationContext(item, actorEntity) {
-    let entity;
-
-    if (typeof item === 'string') {
-      entity = entitiesGateway.getEntityInstance(item);
-      if (!entity) {
-        entity = { id: item };
-      }
-    } else if (item && typeof item === 'object') {
-      entity = item;
-    } else {
-      return null;
-    }
-
-    if (entity && entity.componentTypeIds && !entity.components) {
-      entity.components = buildComponents(entity.id, entity, entitiesGateway);
-    } else {
-      // no-op
-    }
-
-    let actor = actorEntity;
-    if (
-      actorEntity &&
-      actorEntity.componentTypeIds &&
-      !actorEntity.components
-    ) {
-      const comps = buildComponents(
-        actorEntity.id,
-        actorEntity,
-        entitiesGateway
-      );
-      actor = { ...actorEntity, components: comps };
-    }
-
-    const location = locationProvider.getLocation();
-
-    return { entity, actor, location };
-  }
-
   return {
     /**
      * Determines if this resolver can handle the given node
@@ -120,14 +74,26 @@ export default function createFilterResolver({
         // If the item is an array, iterate over its elements for filtering
         if (Array.isArray(item)) {
           for (const arrayElement of item) {
-            const evalCtx = createEvaluationContext(arrayElement, actorEntity);
+            const evalCtx = createEvaluationContext(
+              arrayElement,
+              actorEntity,
+              entitiesGateway,
+              locationProvider,
+              trace
+            );
             if (evalCtx && logicEval.evaluate(node.logic, evalCtx)) {
               result.add(arrayElement);
             }
           }
         } else {
           // Handle single items (entity IDs or objects)
-          const evalCtx = createEvaluationContext(item, actorEntity);
+          const evalCtx = createEvaluationContext(
+            item,
+            actorEntity,
+            entitiesGateway,
+            locationProvider,
+            trace
+          );
           if (evalCtx && logicEval.evaluate(node.logic, evalCtx)) {
             result.add(item);
           }
