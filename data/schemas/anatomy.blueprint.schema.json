@@ -18,13 +18,6 @@
       "$ref": "./common.schema.json#/definitions/namespacedId",
       "description": "The root entity definition ID that serves as the entry point for the anatomy graph"
     },
-    "attachments": {
-      "type": "array",
-      "description": "Static parent-child relationships in the anatomy graph",
-      "items": {
-        "$ref": "#/definitions/attachment"
-      }
-    },
     "defaultSlots": {
       "type": "object",
       "description": "Default slot configurations that can be overridden by recipes",
@@ -96,69 +89,6 @@
         }
       },
       "required": ["partType"],
-      "additionalProperties": false
-    },
-    "attachment": {
-      "type": "object",
-      "description": "Defines a parent-child relationship via a socket",
-      "properties": {
-        "parent": {
-          "$ref": "./common.schema.json#/definitions/namespacedId",
-          "description": "The parent entity definition ID"
-        },
-        "socket": {
-          "type": "string",
-          "description": "The socket ID on the parent where the child attaches"
-        },
-        "child": {
-          "$ref": "./common.schema.json#/definitions/namespacedId",
-          "description": "The child entity definition ID to attach (use with requirements for more flexibility)"
-        },
-        "requirements": {
-          "type": "object",
-          "description": "Flexible requirements for selecting a child entity",
-          "properties": {
-            "entityId": {
-              "$ref": "./common.schema.json#/definitions/namespacedId",
-              "description": "Specific entity definition ID to prefer"
-            },
-            "components": {
-              "type": "array",
-              "description": "Required components that the child entity must have",
-              "items": {
-                "$ref": "./common.schema.json#/definitions/namespacedId"
-              }
-            },
-            "partType": {
-              "type": "string",
-              "description": "The part type that the child must be (e.g., 'head', 'arm')"
-            }
-          },
-          "additionalProperties": false
-        },
-        "childSlots": {
-          "type": "object",
-          "description": "Slot specifications for sockets on the attached part",
-          "additionalProperties": {
-            "$ref": "./anatomy.recipe.schema.json#/definitions/slotDefinition"
-          }
-        }
-      },
-      "required": ["parent", "socket"],
-      "oneOf": [
-        {
-          "required": ["child"],
-          "not": {
-            "required": ["requirements"]
-          }
-        },
-        {
-          "required": ["requirements"],
-          "not": {
-            "required": ["child"]
-          }
-        }
-      ],
       "additionalProperties": false
     }
   }

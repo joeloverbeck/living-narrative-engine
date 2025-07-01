@@ -138,19 +138,27 @@ describe('Schema Reference Validation', () => {
       const sampleBlueprint = {
         id: 'anatomy:test_blueprint',
         root: 'anatomy:torso',
-        attachments: [
-          {
-            parent: 'anatomy:torso',
+        slots: {
+          head_slot: {
             socket: 'head_socket',
-            child: 'anatomy:head',
+            requirements: {
+              partType: 'head'
+            }
           },
-        ],
+          arm_slot_left: {
+            socket: 'left_arm_socket',
+            requirements: {
+              partType: 'arm'
+            },
+            optional: true
+          }
+        },
         defaultSlots: {
           arm_slots: {
             partType: 'arm',
-            count: { min: 1, max: 2 },
-          },
-        },
+            count: { min: 1, max: 2 }
+          }
+        }
       };
 
       // Get the validator function for the schema

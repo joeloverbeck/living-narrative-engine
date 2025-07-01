@@ -15,7 +15,6 @@
             "neck"
           ],
           "maxCount": 1,
-          "jointType": "ball",
           "nameTpl": "{{type}}"
         },
         {
@@ -25,7 +24,6 @@
             "arm"
           ],
           "maxCount": 1,
-          "jointType": "ball",
           "nameTpl": "{{orientation}} {{type}}"
         },
         {
@@ -35,7 +33,6 @@
             "arm"
           ],
           "maxCount": 1,
-          "jointType": "ball",
           "nameTpl": "{{orientation}} {{type}}"
         },
         {
@@ -45,7 +42,6 @@
             "leg"
           ],
           "maxCount": 1,
-          "jointType": "ball",
           "nameTpl": "{{orientation}} {{type}}"
         },
         {
@@ -55,7 +51,6 @@
             "leg"
           ],
           "maxCount": 1,
-          "jointType": "ball",
           "nameTpl": "{{orientation}} {{type}}"
         },
         {
@@ -65,7 +60,6 @@
             "breast"
           ],
           "maxCount": 2,
-          "jointType": "fused",
           "nameTpl": "{{orientation}} {{type}}"
         },
         {
@@ -74,7 +68,6 @@
             "hair"
           ],
           "maxCount": 1,
-          "jointType": "fused",
           "nameTpl": "pubic {{type}}"
         },
         {
@@ -83,7 +76,6 @@
             "genital"
           ],
           "maxCount": 1,
-          "jointType": "fused",
           "nameTpl": "{{type}}"
         },
         {
@@ -92,7 +84,6 @@
             "genital"
           ],
           "maxCount": 2,
-          "jointType": "fused",
           "nameTpl": "{{type}}"
         },
         {
@@ -101,7 +92,6 @@
             "genital"
           ],
           "maxCount": 1,
-          "jointType": "fused",
           "nameTpl": "{{type}}"
         },
         {
@@ -110,7 +100,6 @@
             "ass_cheek"
           ],
           "maxCount": 2,
-          "jointType": "fused",
           "nameTpl": "{{type}}"
         }
       ]

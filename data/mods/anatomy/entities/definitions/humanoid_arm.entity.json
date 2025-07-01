@@ -13,7 +13,6 @@
           "orientation": "lower",
           "allowedTypes": ["forearm"],
           "maxCount": 1,
-          "jointType": "hinge",
           "nameTpl": "{{parent.name}} {{type}}"
         }
       ]

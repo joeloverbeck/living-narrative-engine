@@ -85,23 +85,6 @@
         "minLength": 1
       },
       "uniqueItems": true
-    },
-    "mergeStrategy": {
-      "type": "object",
-      "description": "Optional merge strategy configuration for when multiple mods define formatting",
-      "properties": {
-        "replaceArrays": {
-          "type": "boolean",
-          "description": "If true, arrays are replaced entirely instead of merged",
-          "default": false
-        },
-        "replaceObjects": {
-          "type": "boolean",
-          "description": "If true, objects are replaced entirely instead of merged",
-          "default": false
-        }
-      },
-      "additionalProperties": false
     }
   },
   "required": ["id"]
