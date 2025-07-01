@@ -1,0 +1,19 @@
+{
+  "$schema": "http://example.com/schemas/entity-definition.schema.json",
+  "id": "anatomy:humanoid_nose",
+  "description": "A humanoid nose",
+  "components": {
+    "anatomy:part": {
+      "subType": "nose"
+    },
+    "descriptors:shape_general": {
+      "shape": "straight"
+    },
+    "descriptors:size_category": {
+      "size": "medium"
+    },
+    "core:name": {
+      "text": "nose"
+    }
+  }
+}

@@ -5,76 +5,60 @@
   "slots": {
     "torso": {
       "partType": "torso",
-      "preferId": "anatomy:human_female_torso",
-      "count": {
-        "exact": 1
-      }
+      "preferId": "anatomy:human_female_torso"
     },
     "head": {
       "partType": "head",
-      "preferId": "anatomy:humanoid_head",
-      "count": {
-        "exact": 1
-      },
-      "childSlots": {
-        "left_eye": {
-          "partType": "eye",
-          "preferId": "anatomy:human_eye_cobalt",
-          "properties": {
-            "descriptors:color_extended": {
-              "color": "cobalt"
-            },
-            "descriptors:shape_eye": {
-              "shape": "almond"
-            }
-          },
-          "count": {
-            "exact": 1
-          }
+      "preferId": "anatomy:humanoid_head"
+    },
+    "left_eye": {
+      "partType": "eye",
+      "preferId": "anatomy:human_eye_cobalt",
+      "properties": {
+        "descriptors:color_extended": {
+          "color": "cobalt"
         },
-        "right_eye": {
-          "partType": "eye",
-          "preferId": "anatomy:human_eye_cobalt",
-          "properties": {
-            "descriptors:color_extended": {
-              "color": "cobalt"
-            },
-            "descriptors:shape_eye": {
-              "shape": "almond"
-            }
-          },
-          "count": {
-            "exact": 1
-          }
-        },
-        "scalp": {
-          "partType": "hair",
-          "preferId": "anatomy:human_hair_raven",
-          "properties": {
-            "descriptors:color_extended": {
-              "color": "raven-black"
-            },
-            "descriptors:length_hair": {
-              "length": "long"
-            },
-            "descriptors:hair_style": {
-              "style": "straight"
-            }
-          },
-          "count": {
-            "exact": 1
-          }
+        "descriptors:shape_eye": {
+          "shape": "almond"
         }
       }
     },
-    "arms": {
-      "partType": "arm",
-      "preferId": "anatomy:humanoid_arm",
-      "count": {
-        "exact": 2
+    "right_eye": {
+      "partType": "eye",
+      "preferId": "anatomy:human_eye_cobalt",
+      "properties": {
+        "descriptors:color_extended": {
+          "color": "cobalt"
+        },
+        "descriptors:shape_eye": {
+          "shape": "almond"
+        }
       }
     },
-    "legs": {
+    "hair": {
+      "partType": "hair",
+      "preferId": "anatomy:human_hair_raven",
+      "properties": {
+        "descriptors:color_extended": {
+          "color": "raven-black"
+        },
+        "descriptors:length_hair": {
+          "length": "long"
+        },
+        "descriptors:hair_style": {
+          "style": "straight"
+        }
+      }
+    },
+    "left_arm": {
+      "partType": "arm",
+      "preferId": "anatomy:humanoid_arm"
+    },
+    "right_arm": {
+      "partType": "arm",
+      "preferId": "anatomy:humanoid_arm"
+    },
+    "left_leg": {
       "partType": "leg",
       "preferId": "anatomy:human_leg_shapely",
       "properties": {
@@ -84,12 +68,21 @@
         "descriptors:build": {
           "build": "shapely"
         }
-      },
-      "count": {
-        "exact": 2
       }
     },
-    "breasts": {
+    "right_leg": {
+      "partType": "leg",
+      "preferId": "anatomy:human_leg_shapely",
+      "properties": {
+        "descriptors:length_category": {
+          "length": "long"
+        },
+        "descriptors:build": {
+          "build": "shapely"
+        }
+      }
+    },
+    "left_breast": {
       "partType": "breast",
       "preferId": "anatomy:human_breast_d_cup",
       "properties": {
@@ -102,9 +95,21 @@
         "descriptors:firmness": {
           "firmness": "firm"
         }
-      },
-      "count": {
-        "exact": 2
+      }
+    },
+    "right_breast": {
+      "partType": "breast",
+      "preferId": "anatomy:human_breast_d_cup",
+      "properties": {
+        "descriptors:size_specific": {
+          "size": "D-cup"
+        },
+        "descriptors:weight_feel": {
+          "weight": "meaty"
+        },
+        "descriptors:firmness": {
+          "firmness": "firm"
+        }
       }
     }
   }

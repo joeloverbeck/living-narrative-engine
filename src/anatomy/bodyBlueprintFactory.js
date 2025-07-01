@@ -142,26 +142,41 @@ export class BodyBlueprintFactory {
       );
       createdEntities.push(rootId);
 
-      // Phase 2: Process static attachments from blueprint
-      if (blueprint.attachments) {
-        await this.#processStaticAttachments(
-          blueprint.attachments,
+      // Phase 2: Process blueprint slots if defined
+      if (blueprint.slots) {
+        await this.#processBlueprintSlots(
+          blueprint,
+          mergedRecipe,
+          rootId,
+          createdEntities,
+          partCounts,
+          socketOccupancy,
+          rng
+        );
+      } else {
+        // Fallback to old system if no slots defined
+        // Phase 2a: Process static attachments from blueprint
+        if (blueprint.attachments) {
+          await this.#processStaticAttachments(
+            blueprint.attachments,
+            mergedRecipe,
+            createdEntities,
+            socketOccupancy,
+            rng
+          );
+        }
+
+        // Phase 2b: Fill remaining sockets depth-first
+        await this.#fillSockets(
+          rootId,
+          blueprint,
           mergedRecipe,
           createdEntities,
+          partCounts,
           socketOccupancy,
           rng
         );
       }
-
-      // Phase 3: Fill remaining sockets depth-first
-      await this.#fillSockets(
-        rootId,
-        mergedRecipe,
-        createdEntities,
-        partCounts,
-        socketOccupancy,
-        rng
-      );
 
       // Phase 4: Validate the assembled graph
       const validationResult = await this.#validator.validateGraph(
@@ -331,6 +346,341 @@ export class BodyBlueprintFactory {
     }
 
     return rootEntity.id;
+  }
+
+  /**
+   * Processes blueprint slots to create the anatomy structure
+   *
+   * @param {AnatomyBlueprint} blueprint - The blueprint with slots
+   * @param {AnatomyRecipe} recipe - The recipe with overrides
+   * @param {string} rootId - The root entity ID
+   * @param {string[]} createdEntities - Array to track created entities
+   * @param {Map} partCounts - Map to track part counts
+   * @param {Map} socketOccupancy - Map to track socket usage
+   * @param {Function} rng - Random number generator
+   * @private
+   */
+  async #processBlueprintSlots(
+    blueprint,
+    recipe,
+    rootId,
+    createdEntities,
+    partCounts,
+    socketOccupancy,
+    rng
+  ) {
+    // Track entities by slot key for parent references
+    const slotToEntity = new Map();
+    slotToEntity.set(null, rootId); // Root has no parent slot
+
+    // Process slots in order (parents before children)
+    const sortedSlots = this.#sortSlotsByDependency(blueprint.slots);
+
+    for (const [slotKey, slot] of sortedSlots) {
+      try {
+        // Determine parent entity
+        const parentSlotKey = slot.parent || null;
+        const parentEntityId = slotToEntity.get(parentSlotKey);
+        
+        if (!parentEntityId) {
+          throw new ValidationError(
+            `Parent slot '${slot.parent}' not found for slot '${slotKey}'`
+          );
+        }
+
+        // Check if socket exists on parent
+        const parentSockets = this.#entityManager.getComponentData(
+          parentEntityId,
+          'anatomy:sockets'
+        );
+        const socket = parentSockets?.sockets?.find(s => s.id === slot.socket);
+        
+        if (!socket) {
+          const parentEntity = this.#entityManager.getEntityInstance(parentEntityId);
+          throw new ValidationError(
+            `Socket '${slot.socket}' not found on parent entity '${parentEntity?.definitionId || parentEntityId}'`
+          );
+        }
+
+        // Check socket occupancy
+        const occupancyKey = `${parentEntityId}:${slot.socket}`;
+        const currentOccupancy = socketOccupancy.get(occupancyKey) || 0;
+        const maxCount = socket.maxCount || 1;
+        
+        if (currentOccupancy >= maxCount) {
+          if (!slot.optional) {
+            throw new ValidationError(
+              `Required socket '${slot.socket}' is already full on parent '${parentEntityId}'`
+            );
+          }
+          continue;
+        }
+
+        // Merge blueprint requirements with recipe overrides
+        const mergedRequirements = this.#mergeSlotRequirements(
+          slot.requirements,
+          recipe.slots?.[slotKey]
+        );
+
+        // Find matching part
+        const partEntityDef = await this.#findPartByRequirements(
+          mergedRequirements,
+          socket,
+          slotKey,
+          slot.optional,
+          rng
+        );
+
+        if (!partEntityDef && slot.optional) {
+          continue; // Skip optional slots if no part found
+        }
+
+        if (!partEntityDef) {
+          throw new ValidationError(
+            `No part found for required slot '${slotKey}' with requirements: ${JSON.stringify(mergedRequirements)}`
+          );
+        }
+
+        // Create and attach the part
+        const childId = await this.#createAndAttachPart(
+          parentEntityId,
+          slot.socket,
+          partEntityDef,
+          recipe,
+          socketOccupancy,
+          rng
+        );
+
+        if (childId) {
+          createdEntities.push(childId);
+          slotToEntity.set(slotKey, childId);
+          
+          // Update counts
+          const partType = this.#getPartType(childId);
+          partCounts.set(partType, (partCounts.get(partType) || 0) + 1);
+          socketOccupancy.set(occupancyKey, currentOccupancy + 1);
+        }
+      } catch (error) {
+        const errorContext = {
+          slotKey,
+          slot,
+          blueprintId: blueprint.id,
+          recipeId: recipe.recipeId,
+        };
+
+        const errorMessage = 
+          `Failed to process blueprint slot '${slotKey}': ${error.message}`;
+
+        await safeDispatchEvent(
+          this.#eventDispatcher,
+          SYSTEM_ERROR_OCCURRED_ID,
+          {
+            error: errorMessage,
+            context: 'BodyBlueprintFactory.processBlueprintSlots',
+            details: errorContext,
+          },
+          this.#logger
+        );
+
+        throw new ValidationError(errorMessage);
+      }
+    }
+  }
+
+  /**
+   * Sorts slots by dependency order (parents before children)
+   *
+   * @param {object} slots - The slots object from blueprint
+   * @returns {Array<[string, object]>} Sorted array of [key, slot] pairs
+   * @private
+   */
+  #sortSlotsByDependency(slots) {
+    const sorted = [];
+    const visited = new Set();
+    const visiting = new Set();
+
+    const visit = (key, slot) => {
+      if (visited.has(key)) return;
+      if (visiting.has(key)) {
+        throw new ValidationError(`Circular dependency detected in blueprint slots involving '${key}'`);
+      }
+
+      visiting.add(key);
+
+      // Visit parent first if it exists
+      if (slot.parent && slots[slot.parent]) {
+        visit(slot.parent, slots[slot.parent]);
+      }
+
+      visiting.delete(key);
+      visited.add(key);
+      sorted.push([key, slot]);
+    };
+
+    // Process all slots
+    for (const [key, slot] of Object.entries(slots)) {
+      visit(key, slot);
+    }
+
+    return sorted;
+  }
+
+  /**
+   * Merges blueprint slot requirements with recipe overrides
+   *
+   * @param {object} blueprintReqs - Requirements from blueprint
+   * @param {object} recipeSlot - Recipe slot overrides
+   * @returns {object} Merged requirements
+   * @private
+   */
+  #mergeSlotRequirements(blueprintReqs, recipeSlot) {
+    if (!recipeSlot) return blueprintReqs;
+
+    const merged = { ...blueprintReqs };
+
+    // Recipe can override entityId
+    if (recipeSlot.preferId) {
+      merged.entityId = recipeSlot.preferId;
+    }
+
+    // Recipe can add additional required components
+    if (recipeSlot.tags) {
+      merged.components = [
+        ...(merged.components || []),
+        ...recipeSlot.tags
+      ];
+    }
+
+    // Recipe can add property requirements
+    if (recipeSlot.properties) {
+      merged.properties = {
+        ...(merged.properties || {}),
+        ...recipeSlot.properties
+      };
+    }
+
+    return merged;
+  }
+
+  /**
+   * Finds a part entity definition by requirements
+   *
+   * @param {object} requirements - The requirements to match
+   * @param {object} socket - The socket being filled
+   * @param {string} slotKey - The slot key for error context
+   * @param {boolean} optional - Whether the slot is optional
+   * @param {Function} rng - Random number generator
+   * @returns {Promise<string|null>} The entity definition ID or null
+   * @private
+   */
+  async #findPartByRequirements(requirements, socket, slotKey, optional, rng) {
+    // If specific entity ID is required, validate and return it
+    if (requirements.entityId) {
+      const entityDef = this.#dataRegistry.get('entityDefinitions', requirements.entityId);
+      if (!entityDef) {
+        if (!optional) {
+          throw new ValidationError(
+            `Required entity '${requirements.entityId}' not found for slot '${slotKey}'`
+          );
+        }
+        return null;
+      }
+
+      // Validate it matches other requirements
+      if (!this.#matchesRequirements(entityDef, requirements, socket.allowedTypes)) {
+        if (!optional) {
+          throw new ValidationError(
+            `Entity '${requirements.entityId}' does not match requirements for slot '${slotKey}'`
+          );
+        }
+        return null;
+      }
+
+      return requirements.entityId;
+    }
+
+    // Find candidates by requirements
+    const candidates = this.#findCandidatesByRequirements(
+      requirements,
+      socket.allowedTypes
+    );
+
+    if (candidates.length === 0) {
+      return null;
+    }
+
+    // Random selection from candidates using provided RNG
+    const index = Math.floor(rng() * candidates.length);
+    return candidates[index];
+  }
+
+  /**
+   * Checks if an entity definition matches requirements
+   *
+   * @param {object} entityDef - The entity definition
+   * @param {object} requirements - The requirements to check
+   * @param {string[]} allowedTypes - Allowed part types from socket
+   * @returns {boolean}
+   * @private
+   */
+  #matchesRequirements(entityDef, requirements, allowedTypes) {
+    // Check part type
+    const anatomyPart = entityDef.components?.['anatomy:part'];
+    if (!anatomyPart) return false;
+
+    if (requirements.partType && anatomyPart.subType !== requirements.partType) {
+      return false;
+    }
+
+    if (!allowedTypes.includes(anatomyPart.subType)) {
+      return false;
+    }
+
+    // Check required components
+    if (requirements.components) {
+      for (const comp of requirements.components) {
+        if (!entityDef.components[comp]) {
+          return false;
+        }
+      }
+    }
+
+    // Check property requirements
+    if (requirements.properties) {
+      for (const [compId, props] of Object.entries(requirements.properties)) {
+        const component = entityDef.components[compId];
+        if (!component) return false;
+
+        for (const [key, value] of Object.entries(props)) {
+          if (component[key] !== value) {
+            return false;
+          }
+        }
+      }
+    }
+
+    return true;
+  }
+
+  /**
+   * Finds all candidate parts matching requirements
+   *
+   * @param {object} requirements - The requirements
+   * @param {string[]} allowedTypes - Allowed part types
+   * @returns {string[]} Array of entity definition IDs
+   * @private
+   */
+  #findCandidatesByRequirements(requirements, allowedTypes) {
+    const candidates = [];
+    const allEntityDefs = this.#dataRegistry.getAll('entityDefinitions');
+
+    for (const entityDef of allEntityDefs) {
+      if (this.#matchesRequirements(entityDef, requirements, allowedTypes)) {
+        candidates.push(entityDef.id);
+      }
+    }
+
+    return candidates;
   }
 
   /**
@@ -636,6 +986,7 @@ export class BodyBlueprintFactory {
    * Fills remaining sockets using depth-first traversal
    *
    * @param entityId
+   * @param blueprint
    * @param recipe
    * @param createdEntities
    * @param partCounts
@@ -645,6 +996,7 @@ export class BodyBlueprintFactory {
    */
   async #fillSockets(
     entityId,
+    blueprint,
     recipe,
     createdEntities,
     partCounts,
@@ -679,6 +1031,28 @@ export class BodyBlueprintFactory {
       // Find matching recipe slot
       const recipeSlot = this.#findMatchingRecipeSlot(socket, recipe);
       if (!recipeSlot) {
+        // In the new blueprint system, all required sockets should have slots defined
+        if (blueprint.slots) {
+          const errorMessage = `No blueprint slot defined for socket '${socket.id}' with allowed types: ${socket.allowedTypes.join(', ')}`;
+          await safeDispatchEvent(
+            this.#eventDispatcher,
+            SYSTEM_ERROR_OCCURRED_ID,
+            {
+              error: errorMessage,
+              context: 'BodyBlueprintFactory.fillSockets',
+              details: {
+                socketId: socket.id,
+                allowedTypes: socket.allowedTypes,
+                entityId: entityId,
+                blueprintId: blueprint.id,
+                recipeId: recipe.recipeId
+              }
+            },
+            this.#logger
+          );
+          throw new ValidationError(errorMessage);
+        }
+        // Legacy behavior for old blueprints
         this.#logger.debug(
           `No recipe slot matches socket '${socket.id}' with allowed types: ${socket.allowedTypes.join(', ')}`
         );
@@ -720,6 +1094,7 @@ export class BodyBlueprintFactory {
           // Recursively fill child's sockets
           await this.#fillSockets(
             childId,
+            blueprint,
             recipe,
             createdEntities,
             partCounts,

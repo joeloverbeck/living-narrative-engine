@@ -35,18 +35,58 @@ export class BodyPartDescriptionBuilder {
    * @returns {string} The generated description
    */
   buildDescription(entity) {
-    if (!entity || !entity.components) {
+    if (!entity) {
       return '';
     }
 
-    const anatomyPart = entity.components['anatomy:part'];
+    // Handle both direct components property and getComponentData method
+    let components = entity.components;
+    if (!components && entity.getComponentData) {
+      // Build components object from getComponentData calls
+      components = {};
+      // Get all possible component types that might be present
+      const componentTypes = [
+        'anatomy:part',
+        'descriptors:build',
+        'descriptors:color_basic',
+        'descriptors:color_extended',
+        'descriptors:firmness',
+        'descriptors:hair_style',
+        'descriptors:length_category',
+        'descriptors:length_hair',
+        'descriptors:shape_eye',
+        'descriptors:shape_general',
+        'descriptors:size_category',
+        'descriptors:size_specific',
+        'descriptors:texture',
+        'descriptors:weight_feel'
+      ];
+      
+      for (const compType of componentTypes) {
+        try {
+          const data = entity.getComponentData(compType);
+          if (data) {
+            components[compType] = data;
+          }
+        } catch (e) {
+          // Component doesn't exist on entity
+        }
+      }
+    }
+    
+    if (!components) {
+      return '';
+    }
+
+    const anatomyPart = components['anatomy:part'] || 
+      (entity.getComponentData ? entity.getComponentData('anatomy:part') : null);
     if (!anatomyPart || !anatomyPart.subType) {
       return '';
     }
 
     const subType = anatomyPart.subType;
     const descriptors = this.descriptorFormatter.extractDescriptors(
-      entity.components
+      components
     );
     const formattedDescriptors =
       this.descriptorFormatter.formatDescriptors(descriptors);
@@ -72,8 +112,45 @@ export class BodyPartDescriptionBuilder {
 
     // Check if all parts have the same descriptors
     const allDescriptors = entities.map((entity) => {
+      if (!entity) {
+        return '';
+      }
+      // Handle both direct components property and getComponentData method
+      let components = entity.components;
+      if (!components && entity.getComponentData) {
+        // Build components object from getComponentData calls
+        components = {};
+        // Get all possible component types that might be present
+        const componentTypes = [
+          'anatomy:part',
+          'descriptors:build',
+          'descriptors:color_basic',
+          'descriptors:color_extended',
+          'descriptors:firmness',
+          'descriptors:hair_style',
+          'descriptors:length_category',
+          'descriptors:length_hair',
+          'descriptors:shape_eye',
+          'descriptors:shape_general',
+          'descriptors:size_category',
+          'descriptors:size_specific',
+          'descriptors:texture',
+          'descriptors:weight_feel'
+        ];
+        
+        for (const compType of componentTypes) {
+          try {
+            const data = entity.getComponentData(compType);
+            if (data) {
+              components[compType] = data;
+            }
+          } catch (e) {
+            // Component doesn't exist on entity
+          }
+        }
+      }
       const descriptors = this.descriptorFormatter.extractDescriptors(
-        entity.components
+        components || {}
       );
       return this.descriptorFormatter.formatDescriptors(descriptors);
     });

@@ -1,0 +1,19 @@
+{
+  "$schema": "http://example.com/schemas/entity-definition.schema.json",
+  "id": "anatomy:humanoid_mouth",
+  "description": "A humanoid mouth",
+  "components": {
+    "anatomy:part": {
+      "subType": "mouth"
+    },
+    "descriptors:shape_general": {
+      "shape": "full"
+    },
+    "descriptors:size_category": {
+      "size": "medium"
+    },
+    "core:name": {
+      "text": "mouth"
+    }
+  }
+}

@@ -37,6 +37,12 @@ import humanLegShapely from '../../../data/mods/anatomy/entities/definitions/hum
 import humanoidArm from '../../../data/mods/anatomy/entities/definitions/humanoid_arm.entity.json';
 import humanoidHead from '../../../data/mods/anatomy/entities/definitions/humanoid_head.entity.json';
 import humanoidLeg from '../../../data/mods/anatomy/entities/definitions/humanoid_leg.entity.json';
+import humanoidEar from '../../../data/mods/anatomy/entities/definitions/humanoid_ear.entity.json';
+import humanoidNose from '../../../data/mods/anatomy/entities/definitions/humanoid_nose.entity.json';
+import humanoidMouth from '../../../data/mods/anatomy/entities/definitions/humanoid_mouth.entity.json';
+import humanVagina from '../../../data/mods/anatomy/entities/definitions/human_vagina.entity.json';
+import humanBreast from '../../../data/mods/anatomy/entities/definitions/human_breast.entity.json';
+import humanHair from '../../../data/mods/anatomy/entities/definitions/human_hair.entity.json';
 import humanFemaleTorso from '../../../data/mods/anatomy/entities/definitions/human_female_torso.entity.json';
 import humanFemaleBlueprint from '../../../data/mods/anatomy/blueprints/human_female.blueprint.json';
 import gorgeousMilfRecipe from '../../../data/mods/anatomy/recipes/gorgeous_milf.recipe.json';
@@ -134,6 +140,12 @@ describe('Gorgeous MILF Anatomy Generation Integration Test', () => {
       'anatomy:humanoid_arm': humanoidArm,
       'anatomy:humanoid_head': humanoidHead,
       'anatomy:humanoid_leg': humanoidLeg,
+      'anatomy:humanoid_ear': humanoidEar,
+      'anatomy:humanoid_nose': humanoidNose,
+      'anatomy:humanoid_mouth': humanoidMouth,
+      'anatomy:human_vagina': humanVagina,
+      'anatomy:human_breast': humanBreast,
+      'anatomy:human_hair': humanHair,
       'anatomy:human_female_torso': humanFemaleTorso,
       'anatomy:jacqueline_rouxel': jacquelineRouxel,
     });
@@ -247,12 +259,21 @@ describe('Gorgeous MILF Anatomy Generation Integration Test', () => {
     }
 
     // Test 2: Verify long raven-black hair
-    const hair = findPartsByType('hair');
-    expect(hair.length).toBe(1); // Should have exactly 1 hair
+    const heads = findPartsByType('head');
+    expect(heads.length).toBe(1);
+    const headId = heads[0];
 
-    const hairColor = getPartComponent(hair[0], 'descriptors:color_extended');
-    const hairLength = getPartComponent(hair[0], 'descriptors:length_hair');
-    const hairStyle = getPartComponent(hair[0], 'descriptors:hair_style');
+    const hair = findPartsByType('hair');
+    // Filter for scalp hair only (attached to head)
+    const scalpHair = hair.filter((hairId) => {
+      const joint = getPartComponent(hairId, 'anatomy:joint');
+      return joint && joint.parentId === headId;
+    });
+    expect(scalpHair.length).toBe(1); // Should have exactly 1 scalp hair
+
+    const hairColor = getPartComponent(scalpHair[0], 'descriptors:color_extended');
+    const hairLength = getPartComponent(scalpHair[0], 'descriptors:length_hair');
+    const hairStyle = getPartComponent(scalpHair[0], 'descriptors:hair_style');
     expect(hairColor).toBeDefined();
     expect(hairColor.color).toBe('raven-black');
     expect(hairLength).toBeDefined();
@@ -309,9 +330,6 @@ describe('Gorgeous MILF Anatomy Generation Integration Test', () => {
     }
 
     // Test 6: Verify the head has all expected child parts
-    const heads = findPartsByType('head');
-    expect(heads.length).toBe(1);
-    const headId = heads[0];
 
     // Get all parts attached to the head
     const headChildren = allParts.filter((partId) => {
@@ -332,7 +350,7 @@ describe('Gorgeous MILF Anatomy Generation Integration Test', () => {
     }
 
     expect(childTypes.eye).toBe(2);
-    expect(childTypes.hair).toBe(1);
+    expect(childTypes.hair).toBe(1); // scalp hair
   });
 
   it('recipe should properly reference all created part types', () => {
@@ -345,22 +363,17 @@ describe('Gorgeous MILF Anatomy Generation Integration Test', () => {
     expect(recipe.blueprintId).toBe('anatomy:human_female');
 
     // Verify all slot specifications
-    expect(recipe.slots.head.childSlots).toBeDefined();
-    expect(recipe.slots.head.childSlots.left_eye.preferId).toBe(
-      'anatomy:human_eye_cobalt'
-    );
-    expect(recipe.slots.head.childSlots.right_eye.preferId).toBe(
-      'anatomy:human_eye_cobalt'
-    );
-    expect(recipe.slots.head.childSlots.scalp.preferId).toBe(
-      'anatomy:human_hair_raven'
-    );
+    expect(recipe.slots.left_eye.preferId).toBe('anatomy:human_eye_cobalt');
+    expect(recipe.slots.right_eye.preferId).toBe('anatomy:human_eye_cobalt');
+    expect(recipe.slots.hair.preferId).toBe('anatomy:human_hair_raven');
 
-    expect(recipe.slots.legs.preferId).toBe('anatomy:human_leg_shapely');
-    expect(recipe.slots.breasts.preferId).toBe('anatomy:human_breast_d_cup');
+    expect(recipe.slots.left_leg.preferId).toBe('anatomy:human_leg_shapely');
+    expect(recipe.slots.right_leg.preferId).toBe('anatomy:human_leg_shapely');
+    expect(recipe.slots.left_breast.preferId).toBe('anatomy:human_breast_d_cup');
+    expect(recipe.slots.right_breast.preferId).toBe('anatomy:human_breast_d_cup');
 
     // Verify property requirements
-    expect(recipe.slots.legs.properties).toMatchObject({
+    expect(recipe.slots.left_leg.properties).toMatchObject({
       'descriptors:length_category': {
         length: 'long',
       },
@@ -369,7 +382,7 @@ describe('Gorgeous MILF Anatomy Generation Integration Test', () => {
       },
     });
 
-    expect(recipe.slots.breasts.properties).toMatchObject({
+    expect(recipe.slots.left_breast.properties).toMatchObject({
       'descriptors:size_specific': {
         size: 'D-cup',
       },

@@ -2,5 +2,127 @@
   "$schema": "http://example.com/schemas/anatomy.blueprint.schema.json",
   "id": "anatomy:human_male",
   "root": "anatomy:human_male_torso",
+  "slots": {
+    "head": {
+      "socket": "neck",
+      "requirements": {
+        "partType": "head",
+        "components": ["anatomy:part"]
+      }
+    },
+    "left_arm": {
+      "socket": "left_shoulder",
+      "requirements": {
+        "partType": "arm",
+        "components": ["anatomy:part"]
+      }
+    },
+    "right_arm": {
+      "socket": "right_shoulder",
+      "requirements": {
+        "partType": "arm",
+        "components": ["anatomy:part"]
+      }
+    },
+    "left_leg": {
+      "socket": "left_hip",
+      "requirements": {
+        "partType": "leg",
+        "components": ["anatomy:part"]
+      }
+    },
+    "right_leg": {
+      "socket": "right_hip",
+      "requirements": {
+        "partType": "leg",
+        "components": ["anatomy:part"]
+      }
+    },
+    "left_eye": {
+      "parent": "head",
+      "socket": "left_eye",
+      "requirements": {
+        "partType": "eye",
+        "components": ["anatomy:part"]
+      }
+    },
+    "right_eye": {
+      "parent": "head",
+      "socket": "right_eye",
+      "requirements": {
+        "partType": "eye",
+        "components": ["anatomy:part"]
+      }
+    },
+    "left_ear": {
+      "parent": "head",
+      "socket": "left_ear",
+      "requirements": {
+        "partType": "ear",
+        "components": ["anatomy:part"]
+      }
+    },
+    "right_ear": {
+      "parent": "head",
+      "socket": "right_ear",
+      "requirements": {
+        "partType": "ear",
+        "components": ["anatomy:part"]
+      }
+    },
+    "nose": {
+      "parent": "head",
+      "socket": "nose",
+      "requirements": {
+        "partType": "nose",
+        "components": ["anatomy:part"]
+      }
+    },
+    "mouth": {
+      "parent": "head",
+      "socket": "mouth",
+      "requirements": {
+        "partType": "mouth",
+        "components": ["anatomy:part"]
+      }
+    },
+    "hair": {
+      "parent": "head",
+      "socket": "scalp",
+      "requirements": {
+        "partType": "hair",
+        "components": ["anatomy:part"]
+      }
+    },
+    "pubic_hair": {
+      "socket": "pubic_hair",
+      "requirements": {
+        "partType": "hair",
+        "components": ["anatomy:part"]
+      },
+      "optional": true
+    },
+    "penis": {
+      "socket": "penis",
+      "requirements": {
+        "partType": "genital",
+        "components": ["anatomy:part"]
+      }
+    },
+    "left_testicle": {
+      "socket": "testicles",
+      "requirements": {
+        "partType": "genital",
+        "components": ["anatomy:part"]
+      }
+    },
+    "right_testicle": {
+      "socket": "testicles",
+      "requirements": {
+        "partType": "genital",
+        "components": ["anatomy:part"]
+      }
+    }
+  },
   "attachments": []
 }

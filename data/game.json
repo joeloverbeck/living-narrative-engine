@@ -1,5 +1,7 @@
 {
   "mods": [
-    "core", "isekai"
+    "core",
+    "intimacy",
+    "isekai"
   ]
 }

@@ -1,0 +1,22 @@
+{
+  "$schema": "http://example.com/schemas/entity-definition.schema.json",
+  "id": "anatomy:human_breast",
+  "description": "A human breast",
+  "components": {
+    "anatomy:part": {
+      "subType": "breast"
+    },
+    "descriptors:size_specific": {
+      "size": "B-cup"
+    },
+    "descriptors:firmness": {
+      "firmness": "soft"
+    },
+    "descriptors:shape_general": {
+      "shape": "round"
+    },
+    "core:name": {
+      "text": "breast"
+    }
+  }
+}
