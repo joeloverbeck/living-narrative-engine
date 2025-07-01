@@ -178,7 +178,20 @@ export function registerLoaders(container) {
   registerLoader(tokens.ActionLoader, ActionLoader);
   registerLoader(tokens.EventLoader, EventLoader);
   registerLoader(tokens.MacroLoader, MacroLoader);
-  registerLoader(tokens.EntityLoader, EntityDefinitionLoader);
+  // EntityDefinitionLoader needs a custom registration to include SafeEventDispatcher
+  registrar.singletonFactory(
+    tokens.EntityLoader,
+    (c) =>
+      new EntityDefinitionLoader(
+        c.resolve(tokens.IConfiguration),
+        c.resolve(tokens.IPathResolver),
+        c.resolve(tokens.IDataFetcher),
+        c.resolve(tokens.ISchemaValidator),
+        c.resolve(tokens.IDataRegistry),
+        c.resolve(tokens.ILogger),
+        c.resolve(tokens.ISafeEventDispatcher)
+      )
+  );
   registerLoader(tokens.EntityInstanceLoader, EntityInstanceLoader);
   registerLoader(tokens.WorldLoader, WorldLoader);
   registerLoader(tokens.GoalLoader, GoalLoader);

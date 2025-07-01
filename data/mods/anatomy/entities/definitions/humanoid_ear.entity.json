@@ -7,7 +7,7 @@
       "subType": "ear"
     },
     "descriptors:shape_general": {
-      "shape": "rounded"
+      "shape": "round"
     },
     "descriptors:size_category": {
       "size": "medium"

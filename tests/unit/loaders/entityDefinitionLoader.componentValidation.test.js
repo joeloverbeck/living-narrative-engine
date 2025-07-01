@@ -25,6 +25,7 @@ describe('EntityDefinitionLoader Component Validation', () => {
   let mockConfig;
   let mockPathResolver;
   let mockDataFetcher;
+  let mockSafeEventDispatcher;
 
   beforeEach(() => {
     // Create a mock logger that adheres to the ILogger interface
@@ -76,6 +77,11 @@ describe('EntityDefinitionLoader Component Validation', () => {
       fetch: jest.fn(),
     };
 
+    // Mock safe event dispatcher
+    mockSafeEventDispatcher = {
+      dispatch: jest.fn(),
+    };
+
     // Register entity definition schema
     const entityDefinitionSchema = {
       $schema: 'http://json-schema.org/draft-07/schema#',
@@ -106,7 +112,8 @@ describe('EntityDefinitionLoader Component Validation', () => {
       mockDataFetcher,
       schemaValidator,
       dataRegistry,
-      mockLogger
+      mockLogger,
+      mockSafeEventDispatcher
     );
   });
 

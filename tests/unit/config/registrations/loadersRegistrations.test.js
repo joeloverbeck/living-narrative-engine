@@ -140,6 +140,10 @@ const mockDataRegistry = {
   // Add other methods if necessary
 };
 
+const mockSafeEventDispatcher = {
+  dispatch: jest.fn(),
+};
+
 // --- Mock Custom DI Container ---
 describe('registerLoaders (with Mock DI Container)', () => {
   /** @type {MockContainer} */
@@ -154,6 +158,15 @@ describe('registerLoaders (with Mock DI Container)', () => {
     mockContainer.register(tokens.ILogger, mockLogger, {
       lifecycle: 'singleton',
     }); // Register with original options
+
+    // Register the safe event dispatcher mock
+    mockContainer.register(
+      tokens.ISafeEventDispatcher,
+      mockSafeEventDispatcher,
+      {
+        lifecycle: 'singleton',
+      }
+    );
 
     // Clear mocks for dependencies that might be called during registration
     Object.values(mockPathResolver).forEach(
@@ -231,9 +244,9 @@ describe('registerLoaders (with Mock DI Container)', () => {
     ];
     const expectedRegistrationCount = expectedTokens.length; // Includes ProxyUrl
 
-    // Expect 1 (ILogger from beforeEach) + all from registerLoaders
+    // Expect 2 (ILogger + ISafeEventDispatcher from beforeEach) + all from registerLoaders
     expect(mockContainer.register).toHaveBeenCalledTimes(
-      expectedRegistrationCount + 1
+      expectedRegistrationCount + 2
     );
 
     // Check that each expected token was registered with a factory
@@ -250,10 +263,20 @@ describe('registerLoaders (with Mock DI Container)', () => {
       );
     });
 
-    // Check the ILogger registration from beforeEach separately
+    // Check the ILogger and ISafeEventDispatcher registrations from beforeEach separately
     expect(mockContainer.register.mock.calls[0][0]).toBe(tokens.ILogger);
     expect(mockContainer.register.mock.calls[0][1]).toBe(mockLogger);
     expect(mockContainer.register.mock.calls[0][2]).toEqual({
+      lifecycle: 'singleton',
+    });
+
+    expect(mockContainer.register.mock.calls[1][0]).toBe(
+      tokens.ISafeEventDispatcher
+    );
+    expect(mockContainer.register.mock.calls[1][1]).toBe(
+      mockSafeEventDispatcher
+    );
+    expect(mockContainer.register.mock.calls[1][2]).toEqual({
       lifecycle: 'singleton',
     });
 
@@ -318,6 +341,7 @@ describe('registerLoaders (with Mock DI Container)', () => {
     expect(resolvedTokens).toContain(tokens.ISchemaValidator);
     expect(resolvedTokens).toContain(tokens.IDataRegistry);
     expect(resolvedTokens).toContain(tokens.ILogger);
+    expect(resolvedTokens).toContain(tokens.ISafeEventDispatcher);
 
     // Check EntityDefinitionLoader itself was resolved twice
     expect(
