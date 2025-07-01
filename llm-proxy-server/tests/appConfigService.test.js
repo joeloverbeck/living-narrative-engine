@@ -20,7 +20,9 @@ beforeEach(async () => {
   jest.resetModules();
   process.env = { ...ORIGINAL_ENV }; // reset env for each test
   // Reset the singleton instance to ensure test isolation
-  const { resetAppConfigServiceInstance } = await import('../src/config/appConfig.js');
+  const { resetAppConfigServiceInstance } = await import(
+    '../src/config/appConfig.js'
+  );
   resetAppConfigServiceInstance();
 });
 

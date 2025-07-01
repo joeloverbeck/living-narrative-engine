@@ -142,23 +142,23 @@ describe('Schema Reference Validation', () => {
           head_slot: {
             socket: 'head_socket',
             requirements: {
-              partType: 'head'
-            }
+              partType: 'head',
+            },
           },
           arm_slot_left: {
             socket: 'left_arm_socket',
             requirements: {
-              partType: 'arm'
+              partType: 'arm',
             },
-            optional: true
-          }
+            optional: true,
+          },
         },
         defaultSlots: {
           arm_slots: {
             partType: 'arm',
-            count: { min: 1, max: 2 }
-          }
-        }
+            count: { min: 1, max: 2 },
+          },
+        },
       };
 
       // Get the validator function for the schema

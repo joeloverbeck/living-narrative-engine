@@ -93,7 +93,10 @@ describe('ISafeEventDispatcher Interface Compliance', () => {
       mockDispatcher.unsubscribe = jest.fn();
       const handler = () => {};
       mockDispatcher.unsubscribe('event-name', handler);
-      expect(mockDispatcher.unsubscribe).toHaveBeenCalledWith('event-name', handler);
+      expect(mockDispatcher.unsubscribe).toHaveBeenCalledWith(
+        'event-name',
+        handler
+      );
     });
   });
 
@@ -110,16 +113,22 @@ describe('ISafeEventDispatcher Interface Compliance', () => {
         initialize() {
           // Subscribe to events and store unsubscribe functions
           this.#unsubscribeFns.push(
-            this.#eventDispatcher.subscribe('event1', this.handleEvent1.bind(this))
+            this.#eventDispatcher.subscribe(
+              'event1',
+              this.handleEvent1.bind(this)
+            )
           );
           this.#unsubscribeFns.push(
-            this.#eventDispatcher.subscribe('event2', this.handleEvent2.bind(this))
+            this.#eventDispatcher.subscribe(
+              'event2',
+              this.handleEvent2.bind(this)
+            )
           );
         }
 
         dispose() {
           // Call all unsubscribe functions
-          this.#unsubscribeFns.forEach(fn => fn && fn());
+          this.#unsubscribeFns.forEach((fn) => fn && fn());
           this.#unsubscribeFns = [];
         }
 
@@ -131,7 +140,8 @@ describe('ISafeEventDispatcher Interface Compliance', () => {
       const mockUnsubscribe1 = jest.fn();
       const mockUnsubscribe2 = jest.fn();
       const mockDispatcher = {
-        subscribe: jest.fn()
+        subscribe: jest
+          .fn()
           .mockReturnValueOnce(mockUnsubscribe1)
           .mockReturnValueOnce(mockUnsubscribe2),
       };
@@ -177,20 +187,25 @@ describe('ISafeEventDispatcher Interface Compliance', () => {
 
       // Test dispatch
       mockDispatcher.dispatch('test-event', { data: 'test' });
-      expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
-        'test-event',
-        { data: 'test' }
-      );
+      expect(mockDispatcher.dispatch).toHaveBeenCalledWith('test-event', {
+        data: 'test',
+      });
 
       // Test subscribe
       const handler = () => {};
       const unsubscribe = mockDispatcher.subscribe('test-event', handler);
-      expect(mockDispatcher.subscribe).toHaveBeenCalledWith('test-event', handler);
+      expect(mockDispatcher.subscribe).toHaveBeenCalledWith(
+        'test-event',
+        handler
+      );
       expect(typeof unsubscribe).toBe('function');
 
       // Test unsubscribe
       mockDispatcher.unsubscribe('test-event', handler);
-      expect(mockDispatcher.unsubscribe).toHaveBeenCalledWith('test-event', handler);
+      expect(mockDispatcher.unsubscribe).toHaveBeenCalledWith(
+        'test-event',
+        handler
+      );
     });
   });
 
@@ -200,10 +215,10 @@ describe('ISafeEventDispatcher Interface Compliance', () => {
       const oldPattern = () => {
         const dispatcher = { on: jest.fn(), off: jest.fn() };
         const handler = () => {};
-        
+
         // Subscribe
         dispatcher.on('event', handler);
-        
+
         // Unsubscribe
         dispatcher.off('event', handler);
       };
@@ -212,10 +227,10 @@ describe('ISafeEventDispatcher Interface Compliance', () => {
       const newPattern = () => {
         const dispatcher = { subscribe: jest.fn().mockReturnValue(jest.fn()) };
         const handler = () => {};
-        
+
         // Subscribe and store unsubscribe function
         const unsubscribe = dispatcher.subscribe('event', handler);
-        
+
         // Unsubscribe by calling the returned function
         unsubscribe();
       };

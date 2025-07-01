@@ -60,9 +60,10 @@ describe('Anatomy Recipe Loading and Generation', () => {
         graph: {},
       });
 
-      const result = await anatomyGenerationService.generateAnatomyIfNeeded(
-        'test-entity-id'
-      );
+      const result =
+        await anatomyGenerationService.generateAnatomyIfNeeded(
+          'test-entity-id'
+        );
 
       expect(result).toBe(true);
       expect(mockDataRegistry.get).toHaveBeenCalledWith(
@@ -124,11 +125,11 @@ describe('Anatomy Recipe Loading and Generation', () => {
       // the correct content key. The actual configuration is now in
       // loadersRegistrations.js where contentKey is set to 'recipes'
       // instead of 'anatomy.recipes'
-      
+
       // We can verify the loader exists
       expect(AnatomyRecipeLoader).toBeDefined();
       expect(AnatomyRecipeLoader.name).toBe('AnatomyRecipeLoader');
-      
+
       // The actual content key configuration is tested through integration
       // tests when the full mod loading process runs
     });
@@ -156,7 +157,9 @@ describe('Anatomy Recipe Loading and Generation', () => {
       }
 
       expect(error).toBeInstanceOf(ValidationError);
-      expect(error.message).toBe("Recipe 'anatomy:nonexistent_recipe' not found");
+      expect(error.message).toBe(
+        "Recipe 'anatomy:nonexistent_recipe' not found"
+      );
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining('Failed to generate anatomy'),
         expect.objectContaining({

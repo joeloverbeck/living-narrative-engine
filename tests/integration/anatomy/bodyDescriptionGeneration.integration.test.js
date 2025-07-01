@@ -189,7 +189,10 @@ describe('Body Description Generation Integration', () => {
           'descriptors:build': { build: 'athletic' },
         },
         hasComponent: (componentId) => {
-          return Object.prototype.hasOwnProperty.call(bodyEntity.components, componentId);
+          return Object.prototype.hasOwnProperty.call(
+            bodyEntity.components,
+            componentId
+          );
         },
         getComponentData: (componentId) => {
           return bodyEntity.components[componentId];
@@ -203,7 +206,10 @@ describe('Body Description Generation Integration', () => {
             [ANATOMY_PART_COMPONENT_ID]: { subType: 'torso' },
           },
           hasComponent: (componentId) => {
-            return Object.prototype.hasOwnProperty.call(parts['torso-1'].components, componentId);
+            return Object.prototype.hasOwnProperty.call(
+              parts['torso-1'].components,
+              componentId
+            );
           },
           getComponentData: (componentId) => {
             return parts['torso-1'].components[componentId];
@@ -217,7 +223,10 @@ describe('Body Description Generation Integration', () => {
             'descriptors:length_hair': { length: 'short' },
           },
           hasComponent: (componentId) => {
-            return Object.prototype.hasOwnProperty.call(parts['hair-1'].components, componentId);
+            return Object.prototype.hasOwnProperty.call(
+              parts['hair-1'].components,
+              componentId
+            );
           },
           getComponentData: (componentId) => {
             return parts['hair-1'].components[componentId];
@@ -230,7 +239,10 @@ describe('Body Description Generation Integration', () => {
             'descriptors:color_extended': { color: 'blue' },
           },
           hasComponent: (componentId) => {
-            return Object.prototype.hasOwnProperty.call(parts['eye-1'].components, componentId);
+            return Object.prototype.hasOwnProperty.call(
+              parts['eye-1'].components,
+              componentId
+            );
           },
           getComponentData: (componentId) => {
             return parts['eye-1'].components[componentId];
@@ -243,7 +255,10 @@ describe('Body Description Generation Integration', () => {
             'descriptors:color_extended': { color: 'blue' },
           },
           hasComponent: (componentId) => {
-            return Object.prototype.hasOwnProperty.call(parts['eye-2'].components, componentId);
+            return Object.prototype.hasOwnProperty.call(
+              parts['eye-2'].components,
+              componentId
+            );
           },
           getComponentData: (componentId) => {
             return parts['eye-2'].components[componentId];

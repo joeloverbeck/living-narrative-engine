@@ -32,7 +32,9 @@ export class AnatomyDescriptionService {
       throw new Error('Entity must have an anatomy:body component');
     }
 
-    const bodyComponent = bodyEntity.getComponentData(ANATOMY_BODY_COMPONENT_ID);
+    const bodyComponent = bodyEntity.getComponentData(
+      ANATOMY_BODY_COMPONENT_ID
+    );
     if (!bodyComponent.body || !bodyComponent.body.root) {
       throw new Error('Body component must have a body.root property');
     }

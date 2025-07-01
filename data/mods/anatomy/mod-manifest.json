@@ -38,17 +38,12 @@
       ],
       "instances": []
     },
-    "blueprints": [
-      "human_female.blueprint.json",
-      "human_male.blueprint.json"
-    ],
+    "blueprints": ["human_female.blueprint.json", "human_male.blueprint.json"],
     "recipes": [
       "gorgeous_milf.recipe.json",
       "human_female.recipe.json",
       "human_male.recipe.json"
     ],
-    "anatomyFormatting": [
-      "default.json"
-    ]
+    "anatomyFormatting": ["default.json"]
   }
 }

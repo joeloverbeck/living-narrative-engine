@@ -7,45 +7,35 @@
       "socket": "neck",
       "requirements": {
         "partType": "head",
-        "components": [
-          "anatomy:part"
-        ]
+        "components": ["anatomy:part"]
       }
     },
     "left_arm": {
       "socket": "left_shoulder",
       "requirements": {
         "partType": "arm",
-        "components": [
-          "anatomy:part"
-        ]
+        "components": ["anatomy:part"]
       }
     },
     "right_arm": {
       "socket": "right_shoulder",
       "requirements": {
         "partType": "arm",
-        "components": [
-          "anatomy:part"
-        ]
+        "components": ["anatomy:part"]
       }
     },
     "left_leg": {
       "socket": "left_hip",
       "requirements": {
         "partType": "leg",
-        "components": [
-          "anatomy:part"
-        ]
+        "components": ["anatomy:part"]
       }
     },
     "right_leg": {
       "socket": "right_hip",
       "requirements": {
         "partType": "leg",
-        "components": [
-          "anatomy:part"
-        ]
+        "components": ["anatomy:part"]
       }
     },
     "left_eye": {
@@ -53,9 +43,7 @@
       "socket": "left_eye",
       "requirements": {
         "partType": "eye",
-        "components": [
-          "anatomy:part"
-        ]
+        "components": ["anatomy:part"]
       }
     },
     "right_eye": {
@@ -63,9 +51,7 @@
       "socket": "right_eye",
       "requirements": {
         "partType": "eye",
-        "components": [
-          "anatomy:part"
-        ]
+        "components": ["anatomy:part"]
       }
     },
     "left_ear": {
@@ -73,9 +59,7 @@
       "socket": "left_ear",
       "requirements": {
         "partType": "ear",
-        "components": [
-          "anatomy:part"
-        ]
+        "components": ["anatomy:part"]
       }
     },
     "right_ear": {
@@ -83,9 +67,7 @@
       "socket": "right_ear",
       "requirements": {
         "partType": "ear",
-        "components": [
-          "anatomy:part"
-        ]
+        "components": ["anatomy:part"]
       }
     },
     "nose": {
@@ -93,9 +75,7 @@
       "socket": "nose",
       "requirements": {
         "partType": "nose",
-        "components": [
-          "anatomy:part"
-        ]
+        "components": ["anatomy:part"]
       }
     },
     "mouth": {
@@ -103,9 +83,7 @@
       "socket": "mouth",
       "requirements": {
         "partType": "mouth",
-        "components": [
-          "anatomy:part"
-        ]
+        "components": ["anatomy:part"]
       }
     },
     "hair": {
@@ -113,18 +91,14 @@
       "socket": "scalp",
       "requirements": {
         "partType": "hair",
-        "components": [
-          "anatomy:part"
-        ]
+        "components": ["anatomy:part"]
       }
     },
     "pubic_hair": {
       "socket": "pubic_hair",
       "requirements": {
         "partType": "hair",
-        "components": [
-          "anatomy:part"
-        ]
+        "components": ["anatomy:part"]
       },
       "optional": true
     },
@@ -132,27 +106,21 @@
       "socket": "chest",
       "requirements": {
         "partType": "breast",
-        "components": [
-          "anatomy:part"
-        ]
+        "components": ["anatomy:part"]
       }
     },
     "right_breast": {
       "socket": "chest",
       "requirements": {
         "partType": "breast",
-        "components": [
-          "anatomy:part"
-        ]
+        "components": ["anatomy:part"]
       }
     },
     "vagina": {
       "socket": "vagina",
       "requirements": {
         "partType": "genital",
-        "components": [
-          "anatomy:part"
-        ]
+        "components": ["anatomy:part"]
       }
     }
   }

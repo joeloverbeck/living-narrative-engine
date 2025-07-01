@@ -186,14 +186,18 @@ export class GraphIntegrityValidator {
         // Handle nested format with components and partTypes
         const requiredComponents = constraint.components || [];
         const requiredPartTypes = constraint.partTypes || [];
-        
+
         // Check if any required part types are present
-        const presentPartTypesFromConstraint = requiredPartTypes.filter(pt => presentPartTypes.has(pt));
+        const presentPartTypesFromConstraint = requiredPartTypes.filter((pt) =>
+          presentPartTypes.has(pt)
+        );
         const hasRequiredPartType = presentPartTypesFromConstraint.length > 0;
-        
+
         // If we have the required part type, check for required components
         if (hasRequiredPartType && requiredComponents.length > 0) {
-          const missingComponents = requiredComponents.filter(c => !presentComponents.has(c));
+          const missingComponents = requiredComponents.filter(
+            (c) => !presentComponents.has(c)
+          );
           if (missingComponents.length > 0) {
             errors.push(`Required constraint group not fully satisfied`);
           }
@@ -206,8 +210,8 @@ export class GraphIntegrityValidator {
       for (const constraint of recipe.constraints.excludes) {
         // Handle nested format with components array
         const excludedComponents = constraint.components || constraint;
-        const presentExcluded = Array.isArray(excludedComponents) 
-          ? excludedComponents.filter(c => presentComponents.has(c))
+        const presentExcluded = Array.isArray(excludedComponents)
+          ? excludedComponents.filter((c) => presentComponents.has(c))
           : [];
 
         if (presentExcluded.length > 1) {
@@ -357,7 +361,6 @@ export class GraphIntegrityValidator {
           `Entity '${entityId}' attached to non-existent socket '${joint.socketId}' on parent '${joint.parentId}'`
         );
       }
-
     }
   }
 
@@ -383,13 +386,13 @@ export class GraphIntegrityValidator {
           `Orphaned part '${entityId}' has parent '${joint.parentId}' not in graph`
         );
       }
-      
+
       // Track root entities (no joint component)
       if (!joint) {
         rootEntities.push(entityId);
       }
     }
-    
+
     // Check for multiple roots
     if (rootEntities.length > 1) {
       warnings.push(`Multiple root entities found: ${rootEntities.join(', ')}`);
@@ -430,7 +433,10 @@ export class GraphIntegrityValidator {
       if (!socket) continue;
 
       // Check if part type is allowed (handle wildcard '*')
-      if (!socket.allowedTypes.includes('*') && !socket.allowedTypes.includes(anatomyPart.subType)) {
+      if (
+        !socket.allowedTypes.includes('*') &&
+        !socket.allowedTypes.includes(anatomyPart.subType)
+      ) {
         errors.push(
           `Part type '${anatomyPart.subType}' not allowed in socket '${joint.socketId}' on entity '${joint.parentId}'`
         );

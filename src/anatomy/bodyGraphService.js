@@ -309,7 +309,6 @@ export class BodyGraphService {
     return null;
   }
 
-
   /**
    * Gets a path from one body part to another
    *
@@ -420,7 +419,8 @@ export class BodyGraphService {
         stack.push(...node.children);
       } else {
         // Fallback to direct entity manager lookup - find entities with anatomy:joint
-        const entitiesWithJoints = this.#entityManager.getEntitiesWithComponent('anatomy:joint');
+        const entitiesWithJoints =
+          this.#entityManager.getEntitiesWithComponent('anatomy:joint');
         for (const entity of entitiesWithJoints) {
           const joint = this.#entityManager.getComponentData(
             entity.id,
@@ -445,14 +445,17 @@ export class BodyGraphService {
    */
   hasPartWithComponent(bodyComponent, componentId) {
     const allParts = this.getAllParts(bodyComponent);
-    
+
     for (const partId of allParts) {
-      const componentData = this.#entityManager.getComponentData(partId, componentId);
+      const componentData = this.#entityManager.getComponentData(
+        partId,
+        componentId
+      );
       if (componentData !== null) {
         return true;
       }
     }
-    
+
     return false;
   }
 
@@ -465,11 +468,19 @@ export class BodyGraphService {
    * @param {*} expectedValue - The expected value to match
    * @returns {{found: boolean, partId?: string}} Result with found status and optional part ID
    */
-  hasPartWithComponentValue(bodyComponent, componentId, propertyPath, expectedValue) {
+  hasPartWithComponentValue(
+    bodyComponent,
+    componentId,
+    propertyPath,
+    expectedValue
+  ) {
     const allParts = this.getAllParts(bodyComponent);
-    
+
     for (const partId of allParts) {
-      const componentData = this.#entityManager.getComponentData(partId, componentId);
+      const componentData = this.#entityManager.getComponentData(
+        partId,
+        componentId
+      );
       if (componentData !== null) {
         // Navigate the property path
         const value = this.#getNestedProperty(componentData, propertyPath);
@@ -478,7 +489,7 @@ export class BodyGraphService {
         }
       }
     }
-    
+
     return { found: false };
   }
 

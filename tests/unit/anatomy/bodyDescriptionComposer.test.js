@@ -12,7 +12,7 @@ describe('BodyDescriptionComposer', () => {
   // Helper function to create mock entities with proper interface
   const createMockPartEntity = (subType) => ({
     hasComponent: jest.fn().mockReturnValue(true),
-    getComponentData: jest.fn().mockReturnValue({ subType })
+    getComponentData: jest.fn().mockReturnValue({ subType }),
   });
 
   beforeEach(() => {
@@ -53,7 +53,7 @@ describe('BodyDescriptionComposer', () => {
     it('should return empty string for entity without anatomy:body component', () => {
       const entity = {
         hasComponent: jest.fn().mockReturnValue(false),
-        getComponentData: jest.fn()
+        getComponentData: jest.fn(),
       };
       const result = composer.composeDescription(entity);
       expect(result).toBe('');
@@ -62,7 +62,7 @@ describe('BodyDescriptionComposer', () => {
     it('should return empty string for entity without body.root', () => {
       const entity = {
         hasComponent: jest.fn().mockReturnValue(true),
-        getComponentData: jest.fn().mockReturnValue({})
+        getComponentData: jest.fn().mockReturnValue({}),
       };
       const result = composer.composeDescription(entity);
       expect(result).toBe('');
@@ -71,7 +71,9 @@ describe('BodyDescriptionComposer', () => {
     it('should return empty string when no parts found', () => {
       const entity = {
         hasComponent: jest.fn().mockReturnValue(true),
-        getComponentData: jest.fn().mockReturnValue({ body: { root: 'root-1' } })
+        getComponentData: jest
+          .fn()
+          .mockReturnValue({ body: { root: 'root-1' } }),
       };
       mockBodyGraphService.getAllParts.mockReturnValue([]);
 
@@ -90,7 +92,7 @@ describe('BodyDescriptionComposer', () => {
             return { build: 'slender' };
           }
           return null;
-        })
+        }),
       };
 
       const partIds = [
@@ -108,9 +110,9 @@ describe('BodyDescriptionComposer', () => {
       mockEntityFinder.getEntityInstance.mockImplementation((id) => {
         const mockEntity = (subType) => ({
           hasComponent: jest.fn().mockReturnValue(true),
-          getComponentData: jest.fn().mockReturnValue({ subType })
+          getComponentData: jest.fn().mockReturnValue({ subType }),
         });
-        
+
         const entities = {
           'torso-1': mockEntity('torso'),
           'head-1': mockEntity('head'),
@@ -118,7 +120,7 @@ describe('BodyDescriptionComposer', () => {
           'eye-1': mockEntity('eye'),
           'eye-2': mockEntity('eye'),
           'arm-1': mockEntity('arm'),
-          'arm-2': mockEntity('arm')
+          'arm-2': mockEntity('arm'),
         };
         return entities[id];
       });
@@ -179,16 +181,16 @@ describe('BodyDescriptionComposer', () => {
             return { body: { root: 'torso-1' } };
           }
           return null;
-        })
+        }),
       };
 
       mockBodyGraphService.getAllParts.mockReturnValue(['torso-1', 'eye-1']);
       mockEntityFinder.getEntityInstance.mockImplementation((id) => {
         const mockEntity = (subType) => ({
           hasComponent: jest.fn().mockReturnValue(true),
-          getComponentData: jest.fn().mockReturnValue({ subType })
+          getComponentData: jest.fn().mockReturnValue({ subType }),
         });
-        
+
         if (id === 'torso-1') return mockEntity('torso');
         if (id === 'eye-1') return mockEntity('eye');
         return null;
@@ -215,7 +217,7 @@ describe('BodyDescriptionComposer', () => {
             return { body: { root: 'torso-1' } };
           }
           return null;
-        })
+        }),
       };
 
       mockBodyGraphService.getAllParts.mockReturnValue([
@@ -226,13 +228,13 @@ describe('BodyDescriptionComposer', () => {
         if (id === 'torso-1') {
           return {
             hasComponent: jest.fn().mockReturnValue(true),
-            getComponentData: jest.fn().mockReturnValue({ subType: 'torso' })
+            getComponentData: jest.fn().mockReturnValue({ subType: 'torso' }),
           };
         }
         if (id === 'invalid-1') {
           return {
             hasComponent: jest.fn().mockReturnValue(true),
-            getComponentData: jest.fn().mockReturnValue({}) // No subType
+            getComponentData: jest.fn().mockReturnValue({}), // No subType
           };
         }
         return null;
@@ -260,13 +262,13 @@ describe('BodyDescriptionComposer', () => {
       mockEntityFinder.getEntityInstance.mockImplementation((id) => {
         const mockEntity = (subType) => ({
           hasComponent: jest.fn().mockReturnValue(true),
-          getComponentData: jest.fn().mockReturnValue({ subType })
+          getComponentData: jest.fn().mockReturnValue({ subType }),
         });
-        
+
         const entities = {
           'arm-1': mockEntity('arm'),
           'arm-2': mockEntity('arm'),
-          'leg-1': mockEntity('leg')
+          'leg-1': mockEntity('leg'),
         };
         return entities[id];
       });
@@ -285,7 +287,7 @@ describe('BodyDescriptionComposer', () => {
         if (id === 'valid-1')
           return {
             hasComponent: jest.fn().mockReturnValue(true),
-            getComponentData: jest.fn().mockReturnValue({ subType: 'arm' })
+            getComponentData: jest.fn().mockReturnValue({ subType: 'arm' }),
           };
         return null;
       });
@@ -303,12 +305,12 @@ describe('BodyDescriptionComposer', () => {
         if (id === 'valid-1')
           return {
             hasComponent: jest.fn().mockReturnValue(true),
-            getComponentData: jest.fn().mockReturnValue({ subType: 'arm' })
+            getComponentData: jest.fn().mockReturnValue({ subType: 'arm' }),
           };
         if (id === 'no-anatomy-1')
           return {
             hasComponent: jest.fn().mockReturnValue(false),
-            getComponentData: jest.fn()
+            getComponentData: jest.fn(),
           };
         return null;
       });
@@ -326,12 +328,12 @@ describe('BodyDescriptionComposer', () => {
         if (id === 'valid-1')
           return {
             hasComponent: jest.fn().mockReturnValue(true),
-            getComponentData: jest.fn().mockReturnValue({ subType: 'arm' })
+            getComponentData: jest.fn().mockReturnValue({ subType: 'arm' }),
           };
         if (id === 'no-subtype-1')
           return {
             hasComponent: jest.fn().mockReturnValue(true),
-            getComponentData: jest.fn().mockReturnValue({})
+            getComponentData: jest.fn().mockReturnValue({}),
           };
         return null;
       });
@@ -357,11 +359,11 @@ describe('BodyDescriptionComposer', () => {
       const parts = [
         {
           hasComponent: jest.fn().mockReturnValue(true),
-          getComponentData: jest.fn().mockReturnValue({ subType: 'eye' })
+          getComponentData: jest.fn().mockReturnValue({ subType: 'eye' }),
         },
         {
           hasComponent: jest.fn().mockReturnValue(true),
-          getComponentData: jest.fn().mockReturnValue({ subType: 'eye' })
+          getComponentData: jest.fn().mockReturnValue({ subType: 'eye' }),
         },
       ];
       const partsByType = new Map([['eye', parts]]);
@@ -384,7 +386,7 @@ describe('BodyDescriptionComposer', () => {
     it('should use single description for non-grouped parts', () => {
       const part = {
         hasComponent: jest.fn().mockReturnValue(true),
-        getComponentData: jest.fn().mockReturnValue({ subType: 'nose' })
+        getComponentData: jest.fn().mockReturnValue({ subType: 'nose' }),
       };
       const partsByType = new Map([['nose', [part]]]);
 
@@ -408,7 +410,7 @@ describe('BodyDescriptionComposer', () => {
     it('should extract build description', () => {
       const entity = {
         hasComponent: jest.fn().mockReturnValue(true),
-        getComponentData: jest.fn().mockReturnValue({ build: 'athletic' })
+        getComponentData: jest.fn().mockReturnValue({ build: 'athletic' }),
       };
 
       const result = composer.extractBuildDescription(entity);
@@ -418,7 +420,7 @@ describe('BodyDescriptionComposer', () => {
     it('should return empty string without build component', () => {
       const entity = {
         hasComponent: jest.fn().mockReturnValue(false),
-        getComponentData: jest.fn().mockReturnValue(null)
+        getComponentData: jest.fn().mockReturnValue(null),
       };
       const result = composer.extractBuildDescription(entity);
       expect(result).toBe('');
@@ -427,7 +429,7 @@ describe('BodyDescriptionComposer', () => {
     it('should return empty string with empty build value', () => {
       const entity = {
         hasComponent: jest.fn().mockReturnValue(true),
-        getComponentData: jest.fn().mockReturnValue({ build: '' })
+        getComponentData: jest.fn().mockReturnValue({ build: '' }),
       };
 
       const result = composer.extractBuildDescription(entity);
@@ -474,9 +476,7 @@ describe('BodyDescriptionComposer', () => {
     });
 
     it('should handle missing hair', () => {
-      const partsByType = new Map([
-        ['eye', [createMockPartEntity('eye')]],
-      ]);
+      const partsByType = new Map([['eye', [createMockPartEntity('eye')]]]);
 
       mockBodyPartDescriptionBuilder.buildMultipleDescription.mockReturnValue(
         'dark eyes'
@@ -488,9 +488,7 @@ describe('BodyDescriptionComposer', () => {
     });
 
     it('should handle missing eyes', () => {
-      const partsByType = new Map([
-        ['hair', [createMockPartEntity('hair')]],
-      ]);
+      const partsByType = new Map([['hair', [createMockPartEntity('hair')]]]);
 
       mockBodyPartDescriptionBuilder.buildDescription.mockReturnValue(
         'red hair'
@@ -565,7 +563,10 @@ describe('BodyDescriptionComposer', () => {
   describe('composeTorsoDescription', () => {
     it('should describe breasts when present', () => {
       const partsByType = new Map([
-        ['breast', [createMockPartEntity('breast'), createMockPartEntity('breast')]],
+        [
+          'breast',
+          [createMockPartEntity('breast'), createMockPartEntity('breast')],
+        ],
       ]);
 
       mockBodyPartDescriptionBuilder.buildMultipleDescription.mockReturnValue(
@@ -578,9 +579,7 @@ describe('BodyDescriptionComposer', () => {
     });
 
     it('should describe torso when no breasts', () => {
-      const partsByType = new Map([
-        ['torso', [createMockPartEntity('torso')]],
-      ]);
+      const partsByType = new Map([['torso', [createMockPartEntity('torso')]]]);
 
       mockBodyPartDescriptionBuilder.buildDescription.mockReturnValue(
         'a lean torso'
@@ -593,7 +592,10 @@ describe('BodyDescriptionComposer', () => {
 
     it('should not describe torso when breasts are present', () => {
       const partsByType = new Map([
-        ['breast', [createMockPartEntity('breast'), createMockPartEntity('breast')]],
+        [
+          'breast',
+          [createMockPartEntity('breast'), createMockPartEntity('breast')],
+        ],
         ['torso', [createMockPartEntity('torso')]],
       ]);
 
@@ -696,9 +698,7 @@ describe('BodyDescriptionComposer', () => {
     });
 
     it('should handle only main parts', () => {
-      const partsByType = new Map([
-        ['arm', [createMockPartEntity('arm')]],
-      ]);
+      const partsByType = new Map([['arm', [createMockPartEntity('arm')]]]);
 
       mockBodyPartDescriptionBuilder.buildMultipleDescription.mockReturnValue(
         'arms'
@@ -714,9 +714,7 @@ describe('BodyDescriptionComposer', () => {
     });
 
     it('should handle only end parts', () => {
-      const partsByType = new Map([
-        ['hand', [createMockPartEntity('hand')]],
-      ]);
+      const partsByType = new Map([['hand', [createMockPartEntity('hand')]]]);
 
       mockBodyPartDescriptionBuilder.buildMultipleDescription.mockReturnValue(
         'hands'
@@ -784,9 +782,7 @@ describe('BodyDescriptionComposer', () => {
     });
 
     it('should handle single special feature', () => {
-      const partsByType = new Map([
-        ['tail', [createMockPartEntity('tail')]],
-      ]);
+      const partsByType = new Map([['tail', [createMockPartEntity('tail')]]]);
 
       mockBodyPartDescriptionBuilder.buildMultipleDescription.mockReturnValue(
         'a bushy tail'

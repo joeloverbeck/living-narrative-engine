@@ -216,7 +216,6 @@ describe('Anatomy Validation Integration', () => {
   });
 
   describe('Recipe Constraint Validation', () => {
-
     it('should pass when all requires constraints are met', async () => {
       const part = testBed.entityManager.createEntityInstance(
         'test:constrained_part'
@@ -242,7 +241,6 @@ describe('Anatomy Validation Integration', () => {
       expect(result.valid).toBe(true);
       expect(result.errors).toHaveLength(0);
     });
-
 
     it('should pass when excludes constraints are satisfied', async () => {
       const partA = testBed.entityManager.createEntityInstance(
@@ -274,17 +272,11 @@ describe('Anatomy Validation Integration', () => {
       expect(result.valid).toBe(true);
       expect(result.errors).toHaveLength(0);
     });
-
   });
 
-  describe('Graph Integrity Validation', () => {
-
-
-
-  });
+  describe('Graph Integrity Validation', () => {});
 
   describe('Part Type Compatibility', () => {
-
     it('should handle wildcard allowedTypes', async () => {
       // Create entity with wildcard socket
       testBed.loadEntityDefinitions({
@@ -392,7 +384,11 @@ describe('Anatomy Validation Integration', () => {
             [ANATOMY_PART_COMPONENT_ID]: { subType: 'nestable' },
             [ANATOMY_SOCKETS_COMPONENT_ID]: {
               sockets: [
-                { id: 'nested_socket', allowedTypes: ['nestable'], maxCount: 1 }
+                {
+                  id: 'nested_socket',
+                  allowedTypes: ['nestable'],
+                  maxCount: 1,
+                },
               ],
             },
           },

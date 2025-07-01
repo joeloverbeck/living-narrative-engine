@@ -68,24 +68,24 @@ describe('BodyBlueprintFactory - Child Slots Support', () => {
           parent: null,
           socket: 'neck',
           requirements: {
-            partType: 'head'
-          }
+            partType: 'head',
+          },
         },
         left_eye_slot: {
           parent: 'head_slot',
           socket: 'left_eye',
           requirements: {
-            partType: 'eye'
-          }
+            partType: 'eye',
+          },
         },
         right_eye_slot: {
           parent: 'head_slot',
           socket: 'right_eye',
           requirements: {
-            partType: 'eye'
-          }
-        }
-      }
+            partType: 'eye',
+          },
+        },
+      },
     };
 
     const mockRecipe = {
@@ -94,7 +94,7 @@ describe('BodyBlueprintFactory - Child Slots Support', () => {
       slots: {
         head_slot: {
           partType: 'head',
-          preferId: 'anatomy:test_head'
+          preferId: 'anatomy:test_head',
         },
         left_eye_slot: {
           partType: 'eye',
@@ -102,7 +102,7 @@ describe('BodyBlueprintFactory - Child Slots Support', () => {
             'descriptors:color_extended': {
               color: 'blue',
             },
-          }
+          },
         },
         right_eye_slot: {
           partType: 'eye',
@@ -110,7 +110,7 @@ describe('BodyBlueprintFactory - Child Slots Support', () => {
             'descriptors:color_extended': {
               color: 'blue',
             },
-          }
+          },
         },
       },
     };

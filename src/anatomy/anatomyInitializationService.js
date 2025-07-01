@@ -81,7 +81,7 @@ export class AnatomyInitializationService {
   async #handleEntityCreated(event) {
     // Extract payload from the event object
     const payload = event.payload || event;
-    
+
     // Skip reconstructed entities as they should already have their anatomy
     if (payload.wasReconstructed) {
       return;
@@ -127,7 +127,7 @@ export class AnatomyInitializationService {
     this.#logger.debug(
       'AnatomyInitializationService: Removing event listeners'
     );
-    
+
     if (this.#unsubscribeEntityCreated) {
       this.#unsubscribeEntityCreated();
       this.#unsubscribeEntityCreated = null;

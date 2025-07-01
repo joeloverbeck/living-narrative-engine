@@ -9,14 +9,20 @@ describe('Anatomy Description Generation - Edge Cases', () => {
 
   beforeEach(() => {
     mockAnatomyFormattingService = {
-      getDescriptorOrder: jest.fn().mockReturnValue([
-        'descriptors:color_basic',
-        'descriptors:size_category',
-        'descriptors:shape_general',
-      ]),
+      getDescriptorOrder: jest
+        .fn()
+        .mockReturnValue([
+          'descriptors:color_basic',
+          'descriptors:size_category',
+          'descriptors:shape_general',
+        ]),
       getCommaSeparatedDescriptors: jest.fn().mockReturnValue(new Set()),
-      getDescriptorValueKeys: jest.fn().mockReturnValue(['value', 'color', 'size']),
-      getPairedParts: jest.fn().mockReturnValue(new Set(['eye', 'ear', 'arm', 'leg'])),
+      getDescriptorValueKeys: jest
+        .fn()
+        .mockReturnValue(['value', 'color', 'size']),
+      getPairedParts: jest
+        .fn()
+        .mockReturnValue(new Set(['eye', 'ear', 'arm', 'leg'])),
       getIrregularPlurals: jest.fn().mockReturnValue({ foot: 'feet' }),
       getNoArticleParts: jest.fn().mockReturnValue(new Set(['hair'])),
     };
@@ -61,8 +67,14 @@ describe('Anatomy Description Generation - Edge Cases', () => {
 
       const result = descriptorFormatter.extractDescriptors(components);
       expect(result).toHaveLength(2);
-      expect(result).toContainEqual({ componentId: 'descriptors:color_basic', value: 'blue' });
-      expect(result).toContainEqual({ componentId: 'descriptors:size_category', value: 'large' });
+      expect(result).toContainEqual({
+        componentId: 'descriptors:color_basic',
+        value: 'blue',
+      });
+      expect(result).toContainEqual({
+        componentId: 'descriptors:size_category',
+        value: 'large',
+      });
     });
 
     it('should skip descriptors with null componentData', () => {
@@ -73,7 +85,10 @@ describe('Anatomy Description Generation - Edge Cases', () => {
 
       const result = descriptorFormatter.extractDescriptors(components);
       expect(result).toHaveLength(1);
-      expect(result[0]).toEqual({ componentId: 'descriptors:color_basic', value: 'blue' });
+      expect(result[0]).toEqual({
+        componentId: 'descriptors:color_basic',
+        value: 'blue',
+      });
     });
   });
 
@@ -147,12 +162,18 @@ describe('Anatomy Description Generation - Edge Cases', () => {
 
   describe('BodyPartDescriptionBuilder.buildMultipleDescription', () => {
     it('should handle null entities array', () => {
-      const result = bodyPartDescriptionBuilder.buildMultipleDescription(null, 'eye');
+      const result = bodyPartDescriptionBuilder.buildMultipleDescription(
+        null,
+        'eye'
+      );
       expect(result).toBe('');
     });
 
     it('should handle empty entities array', () => {
-      const result = bodyPartDescriptionBuilder.buildMultipleDescription([], 'eye');
+      const result = bodyPartDescriptionBuilder.buildMultipleDescription(
+        [],
+        'eye'
+      );
       expect(result).toBe('');
     });
 
@@ -163,7 +184,10 @@ describe('Anatomy Description Generation - Edge Cases', () => {
           'descriptors:color_basic': { value: 'green' },
         },
       };
-      const result = bodyPartDescriptionBuilder.buildMultipleDescription([entity], 'eye');
+      const result = bodyPartDescriptionBuilder.buildMultipleDescription(
+        [entity],
+        'eye'
+      );
       expect(result).toBe('a green eye');
     });
 
@@ -195,7 +219,10 @@ describe('Anatomy Description Generation - Edge Cases', () => {
           'descriptors:color_basic': { value: 'blue' },
         },
       };
-      const result = bodyPartDescriptionBuilder.buildMultipleDescription([entity1, entity2], 'eye');
+      const result = bodyPartDescriptionBuilder.buildMultipleDescription(
+        [entity1, entity2],
+        'eye'
+      );
       expect(result).toBe('a pair of blue eyes');
     });
 
@@ -212,7 +239,10 @@ describe('Anatomy Description Generation - Edge Cases', () => {
           'descriptors:color_basic': { value: 'green' },
         },
       };
-      const result = bodyPartDescriptionBuilder.buildMultipleDescription([entity1, entity2], 'eye');
+      const result = bodyPartDescriptionBuilder.buildMultipleDescription(
+        [entity1, entity2],
+        'eye'
+      );
       expect(result).toBe('a blue eye and a green eye');
     });
 
@@ -225,7 +255,10 @@ describe('Anatomy Description Generation - Edge Cases', () => {
           'anatomy:part': { subType: 'arm' },
         },
       };
-      const result = bodyPartDescriptionBuilder.buildMultipleDescription([entity1, entity2], 'arm');
+      const result = bodyPartDescriptionBuilder.buildMultipleDescription(
+        [entity1, entity2],
+        'arm'
+      );
       expect(result).toContain('arm');
     });
   });
@@ -261,7 +294,11 @@ describe('Anatomy Description Generation - Edge Cases', () => {
       };
 
       // Mock getAllParts to return entity IDs
-      mockBodyGraphService.getAllParts.mockReturnValue(['entity1', 'entity2', 'entity3']);
+      mockBodyGraphService.getAllParts.mockReturnValue([
+        'entity1',
+        'entity2',
+        'entity3',
+      ]);
 
       // Mock entity finder to return entities with various states
       mockEntityFinder.getEntityInstance.mockImplementation((id) => {

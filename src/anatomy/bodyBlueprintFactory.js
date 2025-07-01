@@ -356,7 +356,7 @@ export class BodyBlueprintFactory {
         // Determine parent entity
         const parentSlotKey = slot.parent || null;
         const parentEntityId = slotToEntity.get(parentSlotKey);
-        
+
         if (!parentEntityId) {
           throw new ValidationError(
             `Parent slot '${slot.parent}' not found for slot '${slotKey}'`
@@ -368,10 +368,13 @@ export class BodyBlueprintFactory {
           parentEntityId,
           'anatomy:sockets'
         );
-        const socket = parentSockets?.sockets?.find(s => s.id === slot.socket);
-        
+        const socket = parentSockets?.sockets?.find(
+          (s) => s.id === slot.socket
+        );
+
         if (!socket) {
-          const parentEntity = this.#entityManager.getEntityInstance(parentEntityId);
+          const parentEntity =
+            this.#entityManager.getEntityInstance(parentEntityId);
           throw new ValidationError(
             `Socket '${slot.socket}' not found on parent entity '${parentEntity?.definitionId || parentEntityId}'`
           );
@@ -381,7 +384,7 @@ export class BodyBlueprintFactory {
         const occupancyKey = `${parentEntityId}:${slot.socket}`;
         const currentOccupancy = socketOccupancy.get(occupancyKey) || 0;
         const maxCount = socket.maxCount || 1;
-        
+
         if (currentOccupancy >= maxCount) {
           if (!slot.optional) {
             throw new ValidationError(
@@ -429,7 +432,7 @@ export class BodyBlueprintFactory {
         if (childId) {
           createdEntities.push(childId);
           slotToEntity.set(slotKey, childId);
-          
+
           // Update counts
           const partType = this.#getPartType(childId);
           partCounts.set(partType, (partCounts.get(partType) || 0) + 1);
@@ -443,8 +446,7 @@ export class BodyBlueprintFactory {
           recipeId: recipe.recipeId,
         };
 
-        const errorMessage = 
-          `Failed to process blueprint slot '${slotKey}': ${error.message}`;
+        const errorMessage = `Failed to process blueprint slot '${slotKey}': ${error.message}`;
 
         await safeDispatchEvent(
           this.#eventDispatcher,
@@ -477,7 +479,9 @@ export class BodyBlueprintFactory {
     const visit = (key, slot) => {
       if (visited.has(key)) return;
       if (visiting.has(key)) {
-        throw new ValidationError(`Circular dependency detected in blueprint slots involving '${key}'`);
+        throw new ValidationError(
+          `Circular dependency detected in blueprint slots involving '${key}'`
+        );
       }
 
       visiting.add(key);
@@ -520,17 +524,14 @@ export class BodyBlueprintFactory {
 
     // Recipe can add additional required components
     if (recipeSlot.tags) {
-      merged.components = [
-        ...(merged.components || []),
-        ...recipeSlot.tags
-      ];
+      merged.components = [...(merged.components || []), ...recipeSlot.tags];
     }
 
     // Recipe can add property requirements
     if (recipeSlot.properties) {
       merged.properties = {
         ...(merged.properties || {}),
-        ...recipeSlot.properties
+        ...recipeSlot.properties,
       };
     }
 
@@ -551,7 +552,10 @@ export class BodyBlueprintFactory {
   async #findPartByRequirements(requirements, socket, slotKey, optional, rng) {
     // If specific entity ID is required, validate and return it
     if (requirements.entityId) {
-      const entityDef = this.#dataRegistry.get('entityDefinitions', requirements.entityId);
+      const entityDef = this.#dataRegistry.get(
+        'entityDefinitions',
+        requirements.entityId
+      );
       if (!entityDef) {
         if (!optional) {
           throw new ValidationError(
@@ -562,7 +566,9 @@ export class BodyBlueprintFactory {
       }
 
       // Validate it matches other requirements
-      if (!this.#matchesRequirements(entityDef, requirements, socket.allowedTypes)) {
+      if (
+        !this.#matchesRequirements(entityDef, requirements, socket.allowedTypes)
+      ) {
         if (!optional) {
           throw new ValidationError(
             `Entity '${requirements.entityId}' does not match requirements for slot '${slotKey}'`
@@ -603,7 +609,10 @@ export class BodyBlueprintFactory {
     const anatomyPart = entityDef.components?.['anatomy:part'];
     if (!anatomyPart) return false;
 
-    if (requirements.partType && anatomyPart.subType !== requirements.partType) {
+    if (
+      requirements.partType &&
+      anatomyPart.subType !== requirements.partType
+    ) {
       return false;
     }
 
@@ -657,7 +666,6 @@ export class BodyBlueprintFactory {
 
     return candidates;
   }
-
 
   /**
    * Selects a part definition based on requirements
@@ -850,7 +858,6 @@ export class BodyBlueprintFactory {
     }
     return true;
   }
-
 
   /**
    * Processes child slot specifications for a created part

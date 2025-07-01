@@ -124,7 +124,9 @@ describe('AnatomyInitializationService', () => {
 
     describe('EventBus wrapped format (event.payload)', () => {
       it('should handle event with nested payload structure', async () => {
-        mockAnatomyGenerationService.generateAnatomyIfNeeded.mockResolvedValue(true);
+        mockAnatomyGenerationService.generateAnatomyIfNeeded.mockResolvedValue(
+          true
+        );
 
         const event = {
           type: 'core:entity_created',
@@ -132,13 +134,15 @@ describe('AnatomyInitializationService', () => {
             instanceId: 'entity-1',
             definitionId: 'def-1',
             wasReconstructed: false,
-            entity: { id: 'entity-1' }
-          }
+            entity: { id: 'entity-1' },
+          },
         };
 
         await boundHandlerRef(event);
 
-        expect(mockAnatomyGenerationService.generateAnatomyIfNeeded).toHaveBeenCalledWith('entity-1');
+        expect(
+          mockAnatomyGenerationService.generateAnatomyIfNeeded
+        ).toHaveBeenCalledWith('entity-1');
         expect(mockLogger.info).toHaveBeenCalledWith(
           "AnatomyInitializationService: Generated anatomy for entity 'entity-1'"
         );
@@ -151,13 +155,15 @@ describe('AnatomyInitializationService', () => {
             instanceId: 'entity-1',
             definitionId: 'def-1',
             wasReconstructed: true,
-            entity: { id: 'entity-1' }
-          }
+            entity: { id: 'entity-1' },
+          },
         };
 
         await boundHandlerRef(event);
 
-        expect(mockAnatomyGenerationService.generateAnatomyIfNeeded).not.toHaveBeenCalled();
+        expect(
+          mockAnatomyGenerationService.generateAnatomyIfNeeded
+        ).not.toHaveBeenCalled();
       });
 
       it('should warn when instanceId is missing in nested payload', async () => {
@@ -166,8 +172,8 @@ describe('AnatomyInitializationService', () => {
           payload: {
             definitionId: 'def-1',
             wasReconstructed: false,
-            entity: { id: 'entity-1' }
-          }
+            entity: { id: 'entity-1' },
+          },
         };
 
         await boundHandlerRef(event);
@@ -175,12 +181,16 @@ describe('AnatomyInitializationService', () => {
         expect(mockLogger.warn).toHaveBeenCalledWith(
           'AnatomyInitializationService: Entity created event missing instanceId'
         );
-        expect(mockAnatomyGenerationService.generateAnatomyIfNeeded).not.toHaveBeenCalled();
+        expect(
+          mockAnatomyGenerationService.generateAnatomyIfNeeded
+        ).not.toHaveBeenCalled();
       });
 
       it('should handle errors gracefully with nested payload', async () => {
         const error = new Error('Generation failed');
-        mockAnatomyGenerationService.generateAnatomyIfNeeded.mockRejectedValue(error);
+        mockAnatomyGenerationService.generateAnatomyIfNeeded.mockRejectedValue(
+          error
+        );
 
         const event = {
           type: 'core:entity_created',
@@ -188,8 +198,8 @@ describe('AnatomyInitializationService', () => {
             instanceId: 'entity-1',
             definitionId: 'def-1',
             wasReconstructed: false,
-            entity: { id: 'entity-1' }
-          }
+            entity: { id: 'entity-1' },
+          },
         };
 
         // Should not throw
@@ -404,14 +414,14 @@ describe('AnatomyInitializationService', () => {
       // First cycle - create a new unsubscribe function for this cycle
       const firstUnsubscribe = jest.fn();
       mockEventDispatcher.subscribe.mockReturnValueOnce(firstUnsubscribe);
-      
+
       service.initialize();
       service.dispose();
-      
+
       // Second cycle - create another new unsubscribe function
       const secondUnsubscribe = jest.fn();
       mockEventDispatcher.subscribe.mockReturnValueOnce(secondUnsubscribe);
-      
+
       service.initialize();
       service.dispose();
 

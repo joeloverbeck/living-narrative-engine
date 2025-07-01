@@ -55,18 +55,24 @@ describe('BodyDescriptionComposer Entity Interface Fix', () => {
       // Mock entity lookup
       mockEntityFinder.getEntityInstance.mockReturnValue({
         hasComponent: jest.fn().mockReturnValue(true),
-        getComponentData: jest.fn().mockReturnValue({ subType: 'torso' })
+        getComponentData: jest.fn().mockReturnValue({ subType: 'torso' }),
       });
 
-      mockBodyPartDescriptionBuilder.buildDescription.mockReturnValue('a torso');
+      mockBodyPartDescriptionBuilder.buildDescription.mockReturnValue(
+        'a torso'
+      );
 
       // Call the method
       const result = composer.composeDescription(mockEntity);
 
       // Verify Entity interface methods were called
-      expect(mockEntity.hasComponent).toHaveBeenCalledWith(ANATOMY_BODY_COMPONENT_ID);
-      expect(mockEntity.getComponentData).toHaveBeenCalledWith(ANATOMY_BODY_COMPONENT_ID);
-      
+      expect(mockEntity.hasComponent).toHaveBeenCalledWith(
+        ANATOMY_BODY_COMPONENT_ID
+      );
+      expect(mockEntity.getComponentData).toHaveBeenCalledWith(
+        ANATOMY_BODY_COMPONENT_ID
+      );
+
       // Should not throw the error from the console log
       expect(result).toBeTruthy();
     });
@@ -81,7 +87,9 @@ describe('BodyDescriptionComposer Entity Interface Fix', () => {
       const result = composer.composeDescription(mockEntity);
 
       expect(result).toBe('');
-      expect(mockEntity.hasComponent).toHaveBeenCalledWith(ANATOMY_BODY_COMPONENT_ID);
+      expect(mockEntity.hasComponent).toHaveBeenCalledWith(
+        ANATOMY_BODY_COMPONENT_ID
+      );
       expect(mockEntity.getComponentData).not.toHaveBeenCalled();
     });
 
@@ -105,13 +113,15 @@ describe('BodyDescriptionComposer Entity Interface Fix', () => {
       mockBodyGraphService.getAllParts.mockReturnValue(['torso-1']);
       mockEntityFinder.getEntityInstance.mockReturnValue({
         hasComponent: jest.fn().mockReturnValue(true),
-        getComponentData: jest.fn().mockReturnValue({ subType: 'torso' })
+        getComponentData: jest.fn().mockReturnValue({ subType: 'torso' }),
       });
 
       const result = composer.composeDescription(mockEntity);
 
       expect(result).toContain('A athletic figure');
-      expect(mockEntity.getComponentData).toHaveBeenCalledWith('descriptors:build');
+      expect(mockEntity.getComponentData).toHaveBeenCalledWith(
+        'descriptors:build'
+      );
     });
 
     it('should handle parts using Entity interface in groupPartsByType', () => {
@@ -119,7 +129,7 @@ describe('BodyDescriptionComposer Entity Interface Fix', () => {
         id: 'test-entity',
         hasComponent: jest.fn().mockReturnValue(true),
         getComponentData: jest.fn().mockReturnValue({
-          body: { root: 'torso-1' }
+          body: { root: 'torso-1' },
         }),
       };
 
@@ -129,13 +139,13 @@ describe('BodyDescriptionComposer Entity Interface Fix', () => {
       const mockPart1 = {
         id: 'part-1',
         hasComponent: jest.fn().mockReturnValue(true),
-        getComponentData: jest.fn().mockReturnValue({ subType: 'arm' })
+        getComponentData: jest.fn().mockReturnValue({ subType: 'arm' }),
       };
 
       const mockPart2 = {
         id: 'part-2',
         hasComponent: jest.fn().mockReturnValue(false),
-        getComponentData: jest.fn()
+        getComponentData: jest.fn(),
       };
 
       mockEntityFinder.getEntityInstance.mockImplementation((id) => {
@@ -144,7 +154,9 @@ describe('BodyDescriptionComposer Entity Interface Fix', () => {
         return null;
       });
 
-      mockBodyPartDescriptionBuilder.buildMultipleDescription.mockReturnValue('arms');
+      mockBodyPartDescriptionBuilder.buildMultipleDescription.mockReturnValue(
+        'arms'
+      );
 
       const result = composer.composeDescription(mockEntity);
 
@@ -165,16 +177,16 @@ describe('BodyDescriptionComposer Entity Interface Fix', () => {
         // Simulate an entity that might not have all expected methods
         hasComponent: jest.fn().mockReturnValue(true),
         getComponentData: jest.fn().mockReturnValue({
-          body: { root: 'torso-1' }
-        })
+          body: { root: 'torso-1' },
+        }),
       };
 
       mockBodyGraphService.getAllParts.mockReturnValue(['torso-1']);
-      
+
       // Return entity with proper interface
       mockEntityFinder.getEntityInstance.mockReturnValue({
         hasComponent: jest.fn().mockReturnValue(true),
-        getComponentData: jest.fn().mockReturnValue({ subType: 'torso' })
+        getComponentData: jest.fn().mockReturnValue({ subType: 'torso' }),
       });
 
       // This should not throw
@@ -196,7 +208,7 @@ describe('BodyDescriptionComposer Entity Interface Fix', () => {
     it('should handle entity with null component data', () => {
       const mockEntity = {
         hasComponent: jest.fn().mockReturnValue(true),
-        getComponentData: jest.fn().mockReturnValue(null)
+        getComponentData: jest.fn().mockReturnValue(null),
       };
 
       const result = composer.composeDescription(mockEntity);
@@ -214,31 +226,33 @@ describe('BodyDescriptionComposer Entity Interface Fix', () => {
             return { body: { root: 'torso-1' } };
           }
           return null;
-        })
+        }),
       };
 
       mockBodyGraphService.getAllParts.mockReturnValue(['torso-1', 'head-1']);
 
       const createMockPartEntity = (subType) => ({
         hasComponent: jest.fn().mockReturnValue(true),
-        getComponentData: jest.fn().mockReturnValue({ subType })
+        getComponentData: jest.fn().mockReturnValue({ subType }),
       });
 
       mockEntityFinder.getEntityInstance.mockImplementation((id) => {
         const entities = {
           'torso-1': createMockPartEntity('torso'),
-          'head-1': createMockPartEntity('head')
+          'head-1': createMockPartEntity('head'),
         };
         return entities[id];
       });
 
-      mockBodyPartDescriptionBuilder.buildDescription.mockImplementation((entity) => {
-        const componentData = entity.getComponentData('anatomy:part');
-        const subType = componentData?.subType;
-        if (subType === 'torso') return 'a muscular torso';
-        if (subType === 'head') return 'a noble head';
-        return '';
-      });
+      mockBodyPartDescriptionBuilder.buildDescription.mockImplementation(
+        (entity) => {
+          const componentData = entity.getComponentData('anatomy:part');
+          const subType = componentData?.subType;
+          if (subType === 'torso') return 'a muscular torso';
+          if (subType === 'head') return 'a noble head';
+          return '';
+        }
+      );
 
       const result = composer.composeDescription(mockEntity);
 

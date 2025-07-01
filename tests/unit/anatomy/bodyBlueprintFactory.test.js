@@ -304,10 +304,10 @@ describe('BodyBlueprintFactory', () => {
             parent: null,
             socket: 'neck',
             requirements: {
-              partType: 'head'
-            }
-          }
-        }
+              partType: 'head',
+            },
+          },
+        },
       };
       const recipe = {
         recipeId: 'test-recipe',
@@ -347,12 +347,11 @@ describe('BodyBlueprintFactory', () => {
       const mockTorsoEntity = { id: 'torso-1', definitionId: 'anatomy:torso' };
       const mockHeadEntity = { id: 'head-1', definitionId: 'anatomy:head' };
 
-      mockEntityManager.createEntityInstance
-        .mockImplementation((defId) => {
-          if (defId === 'anatomy:torso') return mockTorsoEntity;
-          if (defId === 'anatomy:head') return mockHeadEntity;
-          return null;
-        });
+      mockEntityManager.createEntityInstance.mockImplementation((defId) => {
+        if (defId === 'anatomy:torso') return mockTorsoEntity;
+        if (defId === 'anatomy:head') return mockHeadEntity;
+        return null;
+      });
 
       mockEntityManager.getEntityInstance.mockImplementation((id) => {
         if (id === 'torso-1') return mockTorsoEntity;
@@ -399,17 +398,17 @@ describe('BodyBlueprintFactory', () => {
             parent: null,
             socket: 'left_arm_socket',
             requirements: {
-              partType: 'arm'
-            }
+              partType: 'arm',
+            },
           },
           right_arm: {
             parent: null,
             socket: 'right_arm_socket',
             requirements: {
-              partType: 'arm'
-            }
-          }
-        }
+              partType: 'arm',
+            },
+          },
+        },
       };
       const recipe = {
         recipeId: 'test-recipe',
@@ -502,10 +501,10 @@ describe('BodyBlueprintFactory', () => {
             parent: null,
             socket: 'neck',
             requirements: {
-              partType: 'head'
-            }
-          }
-        }
+              partType: 'head',
+            },
+          },
+        },
       };
       const recipe = {
         recipeId: 'test-recipe',
@@ -513,7 +512,7 @@ describe('BodyBlueprintFactory', () => {
         slots: {
           head_slot: {
             partType: 'head',
-            preferId: 'anatomy:special_head'
+            preferId: 'anatomy:special_head',
           },
         },
       };
@@ -597,10 +596,10 @@ describe('BodyBlueprintFactory', () => {
             parent: null,
             socket: 'eye_socket',
             requirements: {
-              partType: 'eye'
-            }
-          }
-        }
+              partType: 'eye',
+            },
+          },
+        },
       };
       const recipe = {
         recipeId: 'test-recipe',
@@ -608,7 +607,7 @@ describe('BodyBlueprintFactory', () => {
         slots: {
           eye_slots: {
             partType: 'eye',
-            tags: ['tag:blue']
+            tags: ['tag:blue'],
           },
         },
       };
@@ -700,10 +699,10 @@ describe('BodyBlueprintFactory', () => {
             parent: null,
             socket: 'eye_socket',
             requirements: {
-              partType: 'eye'
-            }
-          }
-        }
+              partType: 'eye',
+            },
+          },
+        },
       };
       const recipe = {
         recipeId: 'test-recipe',
@@ -711,7 +710,7 @@ describe('BodyBlueprintFactory', () => {
         slots: {
           eye_slot: {
             partType: 'eye',
-            notTags: ['tag:damaged']
+            notTags: ['tag:damaged'],
           },
         },
       };
@@ -758,13 +757,13 @@ describe('BodyBlueprintFactory', () => {
         definitionId: 'anatomy:eye_healthy',
       };
 
-      mockEntityManager.createEntityInstance
-        .mockImplementation((defId) => {
-          if (defId === 'anatomy:torso') return mockTorsoEntity;
-          if (defId === 'anatomy:eye_healthy') return mockEyeEntity;
-          if (defId === 'anatomy:eye_damaged') return { id: 'eye-damaged-1', definitionId: 'anatomy:eye_damaged' };
-          return null;
-        });
+      mockEntityManager.createEntityInstance.mockImplementation((defId) => {
+        if (defId === 'anatomy:torso') return mockTorsoEntity;
+        if (defId === 'anatomy:eye_healthy') return mockEyeEntity;
+        if (defId === 'anatomy:eye_damaged')
+          return { id: 'eye-damaged-1', definitionId: 'anatomy:eye_damaged' };
+        return null;
+      });
 
       mockEntityManager.getEntityInstance.mockImplementation((id) => {
         if (id === 'torso-1') return mockTorsoEntity;
@@ -807,10 +806,10 @@ describe('BodyBlueprintFactory', () => {
             parent: null,
             socket: 'wing_socket',
             requirements: {
-              partType: 'wing'
-            }
-          }
-        }
+              partType: 'wing',
+            },
+          },
+        },
       };
       const recipe = {
         recipeId: 'test-recipe',
@@ -853,9 +852,7 @@ describe('BodyBlueprintFactory', () => {
 
       await expect(
         factory.createAnatomyGraph('test-blueprint', 'test-recipe')
-      ).rejects.toThrow(
-        "No part found for required slot 'wing_slot'"
-      );
+      ).rejects.toThrow("No part found for required slot 'wing_slot'");
 
       // Verify event was dispatched
       expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
@@ -869,7 +866,7 @@ describe('BodyBlueprintFactory', () => {
     it('should handle entity cleanup on validation error', async () => {
       const blueprint = {
         root: 'anatomy:torso',
-        slots: {}
+        slots: {},
       };
       const recipe = {
         recipeId: 'test-recipe',
@@ -914,10 +911,10 @@ describe('BodyBlueprintFactory', () => {
             parent: null,
             socket: 'arm_socket',
             requirements: {
-              partType: 'arm'
-            }
-          }
-        }
+              partType: 'arm',
+            },
+          },
+        },
       };
       const recipe = {
         recipeId: 'test-recipe',
@@ -977,7 +974,7 @@ describe('BodyBlueprintFactory', () => {
     it('should use seeded random number generator when seed provided', async () => {
       const blueprint = {
         root: 'anatomy:torso',
-        slots: {}
+        slots: {},
       };
       const recipe = {
         recipeId: 'test-recipe',
