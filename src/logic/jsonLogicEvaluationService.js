@@ -121,13 +121,21 @@ class JsonLogicEvaluationService extends BaseService {
 
       if (context && typeof context === 'object') {
         if (context.entity) {
+          const comp = context.entity.components?.['core:position'];
+          if (comp && comp.error) {
+            this.#logger.error('Error retrieving entity position', comp.error);
+          }
           this.#logger.debug(
-            `    Entity: ${context.entity.id}, Location: ${context.entity.components?.['core:position']?.locationId || 'unknown'}`
+            `    Entity: ${context.entity.id}, Location: ${comp && !comp.error ? comp.locationId : 'unknown'}`
           );
         }
         if (context.actor) {
+          const comp = context.actor.components?.['core:position'];
+          if (comp && comp.error) {
+            this.#logger.error('Error retrieving actor position', comp.error);
+          }
           this.#logger.debug(
-            `    Actor: ${context.actor.id}, Location: ${context.actor.components?.['core:position']?.locationId || 'unknown'}`
+            `    Actor: ${context.actor.id}, Location: ${comp && !comp.error ? comp.locationId : 'unknown'}`
           );
         }
         if (context.location) {

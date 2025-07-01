@@ -25,11 +25,13 @@
  * `components` resolve to null if the component is not present on the entity,
  * ensuring predictable behavior with the JSON Logic `var` operator.
  * @property {string | number} id - The unique identifier of the entity, retrieved from the Entity instance.
- * @property {Object<string, object|null>} components - A map-like structure providing access to the entity's
- * component data. Keys are Component Type IDs (e.g., "Health", "Position").
- * Accessing a key (e.g., `actor.components.Health`) dynamically retrieves the
- * raw component data object using `EntityManager.getComponentData(entityId, componentTypeId)`.
- * It yields the data object if the entity has that component, or null otherwise.
+ * @property {Object<string, object | null | {error: import('./componentAccessor.js').ComponentAccessorError}>} components -
+ * A map-like structure providing access to the entity's component data. Keys are
+ * Component Type IDs (e.g., "Health", "Position"). Accessing a key (e.g.,
+ * `actor.components.Health`) dynamically retrieves the raw component data object
+ * using `EntityManager.getComponentData(entityId, componentTypeId)`. If the
+ * lookup throws, the value is an object with an `error` property containing the
+ * {@link ComponentAccessorError}.
  */
 
 /**
