@@ -9,13 +9,13 @@ describe('sourceResolver', () => {
   beforeEach(() => {
     // Create stub gateways with deterministic data
     entitiesGateway = {
-      getEntities: () => [
+      getEntities: jest.fn(() => [
         { id: 'entity1' },
         { id: 'entity2' },
         { id: 'entity3' },
         { id: 'entity4' },
-      ],
-      getEntitiesWithComponent: (componentId) => {
+      ]),
+      getEntitiesWithComponent: jest.fn((componentId) => {
         // Deterministic component assignments
         if (componentId === 'core:name') {
           return [{ id: 'entity1' }, { id: 'entity2' }];
@@ -24,8 +24,8 @@ describe('sourceResolver', () => {
           return [{ id: 'entity1' }, { id: 'entity3' }];
         }
         return [];
-      },
-      hasComponent: (entityId, componentId) => {
+      }),
+      hasComponent: jest.fn((entityId, componentId) => {
         // Deterministic component checks
         const componentMap = {
           entity1: ['core:name', 'core:position'],
@@ -34,7 +34,7 @@ describe('sourceResolver', () => {
           entity4: [],
         };
         return componentMap[entityId]?.includes(componentId) || false;
-      },
+      }),
       getComponentData: () => null,
       getEntityInstance: () => null,
     };
@@ -130,6 +130,10 @@ describe('sourceResolver', () => {
         expect(result.size).toBe(2);
         expect(result.has('entity3')).toBe(true);
         expect(result.has('entity4')).toBe(true);
+        // verify internal calls for negated path
+        expect(entitiesGateway.getEntities).toHaveBeenCalled();
+        const entityCount = entitiesGateway.getEntities().length;
+        expect(entitiesGateway.hasComponent).toHaveBeenCalledTimes(entityCount);
       });
 
       it('should return empty set when no component param is provided', () => {

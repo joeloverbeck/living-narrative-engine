@@ -21,6 +21,23 @@ export default function createSourceResolver({
   entitiesGateway,
   locationProvider,
 }) {
+  /**
+   * Collects entity IDs lacking the specified component.
+   *
+   * @description Iterates all entities and filters out those with the component.
+   * @param {string} componentName - Component identifier without '!'.
+   * @returns {Set<string>} IDs of entities without the component.
+   */
+  function collectEntitiesWithoutComponent(componentName) {
+    const resultSet = new Set();
+    const allEntities = entitiesGateway.getEntities();
+    for (const entity of allEntities) {
+      if (!entitiesGateway.hasComponent(entity.id, componentName)) {
+        resultSet.add(entity.id);
+      }
+    }
+    return resultSet;
+  }
   return {
     /**
      * Determines if this resolver can handle the given node
@@ -69,15 +86,7 @@ export default function createSourceResolver({
           if (componentId.startsWith('!')) {
             // Negated component - entities WITHOUT the component
             const componentName = componentId.slice(1);
-            const resultSet = new Set();
-            const allEntities = entitiesGateway.getEntities();
-
-            for (const entity of allEntities) {
-              if (!entitiesGateway.hasComponent(entity.id, componentName)) {
-                resultSet.add(entity.id);
-              }
-            }
-            result = resultSet;
+            result = collectEntitiesWithoutComponent(componentName);
           } else {
             // Positive component - entities WITH the component
             const entities =

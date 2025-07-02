@@ -39,14 +39,15 @@ export default function createStepResolver({ entitiesGateway }) {
   }
 
   /**
-   * Processes a parent value that is an entity ID.
+   * Resolves a value from a parent entity.
    *
+   * @description Retrieves the requested component or components object.
    * @param {string} entityId - ID of the entity to inspect.
    * @param {string} field - Field name requested.
    * @param {object} [trace] - Optional trace logger.
-   * @returns {any} Extracted value or undefined/null.
+   * @returns {any} Extracted value or undefined.
    */
-  function processEntityParentValue(entityId, field, trace) {
+  function resolveEntityParentValue(entityId, field, trace) {
     if (field === 'components') {
       return getOrBuildComponents(entityId, null, entitiesGateway, trace);
     }
@@ -55,14 +56,29 @@ export default function createStepResolver({ entitiesGateway }) {
   }
 
   /**
-   * Processes a parent value that is a plain object.
+   * Resolves a value from a parent object.
    *
+   * @description Reads the given property directly from the object.
    * @param {object} obj - Object containing the field.
    * @param {string} field - Field name to extract.
    * @returns {any} Extracted value or undefined.
    */
-  function processObjectParentValue(obj, field) {
+  function resolveObjectParentValue(obj, field) {
     return extractFieldFromObject(obj, field);
+  }
+
+  /**
+   * Adds a trace log entry for step resolution.
+   *
+   * @description Writes an informational trace if tracing is enabled.
+   * @param {object} trace - Trace logger.
+   * @param {string} message - Message to log.
+   * @param {object} data - Additional log data.
+   */
+  function logStepResolution(trace, message, data) {
+    if (trace) {
+      trace.addLog('info', message, 'StepResolver', data);
+    }
   }
 
   return {
@@ -89,17 +105,14 @@ export default function createStepResolver({ entitiesGateway }) {
       // Use dispatcher to resolve parent node
       const parentResult = ctx.dispatcher.resolve(node.parent, ctx);
 
-      if (trace) {
-        trace.addLog(
-          'info',
-          `Resolving Step node with field '${node.field}'. Parent result size: ${parentResult.size}`,
-          'StepResolver',
-          {
-            field: node.field,
-            parentSize: parentResult.size,
-          }
-        );
-      }
+      logStepResolution(
+        trace,
+        `Resolving Step node with field '${node.field}'. Parent result size: ${parentResult.size}`,
+        {
+          field: node.field,
+          parentSize: parentResult.size,
+        }
+      );
 
       // Return empty set if parent is empty
       if (parentResult.size === 0) {
@@ -110,29 +123,26 @@ export default function createStepResolver({ entitiesGateway }) {
 
       for (const parentValue of parentResult) {
         if (typeof parentValue === 'string') {
-          const val = processEntityParentValue(parentValue, node.field, trace);
+          const val = resolveEntityParentValue(parentValue, node.field, trace);
           if (node.field === 'components') {
             if (val) result.add(val);
           } else if (val !== undefined) {
             result.add(val);
           }
         } else if (parentValue && typeof parentValue === 'object') {
-          const val = processObjectParentValue(parentValue, node.field);
+          const val = resolveObjectParentValue(parentValue, node.field);
           if (val !== undefined) result.add(val);
         }
       }
 
-      if (trace) {
-        trace.addLog(
-          'info',
-          `Step node resolved. Field: '${node.field}', Result size: ${result.size}`,
-          'StepResolver',
-          {
-            field: node.field,
-            resultSize: result.size,
-          }
-        );
-      }
+      logStepResolution(
+        trace,
+        `Step node resolved. Field: '${node.field}', Result size: ${result.size}`,
+        {
+          field: node.field,
+          resultSize: result.size,
+        }
+      );
 
       return result;
     },
