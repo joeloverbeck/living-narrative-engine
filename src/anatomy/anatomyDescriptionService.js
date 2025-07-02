@@ -3,6 +3,7 @@ import {
   ANATOMY_PART_COMPONENT_ID,
   DESCRIPTION_COMPONENT_ID,
 } from '../constants/componentIds.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/eventIds.js';
 
 /**
  * Service for generating and managing descriptions for anatomy parts and bodies
@@ -14,12 +15,14 @@ export class AnatomyDescriptionService {
     bodyGraphService,
     entityFinder,
     componentManager,
+    eventDispatchService,
   }) {
     this.bodyPartDescriptionBuilder = bodyPartDescriptionBuilder;
     this.bodyDescriptionComposer = bodyDescriptionComposer;
     this.bodyGraphService = bodyGraphService;
     this.entityFinder = entityFinder;
     this.componentManager = componentManager;
+    this.eventDispatchService = eventDispatchService;
   }
 
   /**
@@ -79,6 +82,22 @@ export class AnatomyDescriptionService {
   generateBodyDescription(bodyEntity) {
     const description =
       this.bodyDescriptionComposer.composeDescription(bodyEntity);
+    
+    // Check if description is empty and dispatch error if so
+    if (!description || description.trim() === '') {
+      const entityName = bodyEntity.getComponentData('core:name');
+      const nameText = entityName ? entityName.text : bodyEntity.id;
+      
+      if (this.eventDispatchService) {
+        this.eventDispatchService.safeDispatchEvent(SYSTEM_ERROR_OCCURRED_ID, {
+          message: `Failed to generate body description for entity "${nameText}": Description is empty`,
+          details: {
+            raw: `Entity ID: ${bodyEntity.id}, Recipe ID: ${bodyEntity.getComponentData(ANATOMY_BODY_COMPONENT_ID)?.recipeId || 'unknown'}`,
+            timestamp: new Date().toISOString()
+          }
+        });
+      }
+    }
     
     // Always update or create the core:description component, even if empty
     this.updateDescription(bodyEntity.id, description);

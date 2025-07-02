@@ -325,6 +325,7 @@ export function registerWorldAndEntity(container) {
       bodyGraphService: c.resolve(tokens.BodyGraphService),
       entityFinder: c.resolve(tokens.IEntityManager),
       componentManager: c.resolve(tokens.IEntityManager),
+      eventDispatchService: c.resolve(tokens.EventDispatchService),
     });
   });
   logger.debug(
