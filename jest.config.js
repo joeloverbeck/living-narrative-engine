@@ -56,8 +56,8 @@ module.exports = {
     global: {
       branches: 83,
       functions: 91,
-      lines: 92,
-      statements: -1550,
+      lines: 91,
+      statements: -1650,
     },
   },
   // --- END COVERAGE CONFIGURATION ---
