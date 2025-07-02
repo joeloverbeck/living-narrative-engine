@@ -1,0 +1,46 @@
+│ │ Analysis of the Timing Issue                                                                 │ │
+│ │                                                                                              │ │
+│ │ Based on my investigation, I've identified the exact timing issue in the anatomy description │ │
+│ │  generation:                                                                                 │ │
+│ │                                                                                              │ │
+│ │ The Problem                                                                                  │ │
+│ │                                                                                              │ │
+│ │ 1. Order of Operations in AnatomyDescriptionService.generateAllDescriptions():               │ │
+│ │   - Lines 46-49: It generates descriptions for all body parts                                │ │
+│ │   - Line 52: It then generates the body description                                          │ │
+│ │ 2. The Critical Issue:                                                                       │ │
+│ │   - When generatePartDescription() is called (line 48), it uses updateDescription() (line    │ │
+│ │ 74)                                                                                          │ │
+│ │   - updateDescription() calls componentManager.addComponent() (line 158)                     │ │
+│ │   - This adds/updates the component on the entity instance                                   │ │
+│ │ 3. The Timing Problem:                                                                       │ │
+│ │   - The bodyDescriptionComposer.composeDescription() is called immediately after all part    │ │
+│ │ descriptions are generated                                                                   │ │
+│ │   - It reads the descriptions from the parts using part.getComponentData('core:description') │ │
+│ │  (line 178 in bodyDescriptionComposer.js)                                                    │ │
+│ │   - However, the component updates might not be immediately visible due to how the entity    │ │
+│ │ system works                                                                                 │ │
+│ │                                                                                              │ │
+│ │ The Root Cause                                                                               │ │
+│ │                                                                                              │ │
+│ │ The issue appears to be that when body parts get their descriptions updated via              │ │
+│ │ componentManager.addComponent(), these updates are happening on the entity instances, but    │ │
+│ │ the bodyDescriptionComposer might be reading from a different view of the data or the        │ │
+│ │ updates aren't immediately reflected.                                                        │ │
+│ │                                                                                              │ │
+│ │ Proposed Solution                                                                            │ │
+│ │                                                                                              │ │
+│ │ To fix this timing issue, we need to ensure that:                                            │ │
+│ │                                                                                              │ │
+│ │ 1. Force a refresh of entity data after updating part descriptions but before composing the  │ │
+│ │ body description                                                                             │ │
+│ │ 2. Or pass the generated descriptions directly to the composer instead of relying on reading │ │
+│ │  them back from entities                                                                     │ │
+│ │ 3. Or add a small delay or ensure synchronous updates are fully committed before composition │ │
+│ │                                                                                              │ │
+│ │ The most reliable fix would be to modify AnatomyDescriptionService.generateAllDescriptions() │ │
+│ │  to:                                                                                         │ │
+│ │ - Collect all generated part descriptions in memory                                          │ │
+│ │ - Pass them directly to the body description composer                                        │ │
+│ │ - Or ensure the entity finder returns fresh data after updates                               │ │
+│ │                                                                    
