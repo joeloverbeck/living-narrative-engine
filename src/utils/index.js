@@ -36,3 +36,4 @@ export { readComponent, writeComponent } from './componentAccessUtils.js';
 export * from '../turns/strategies/strategyHelpers.js';
 export * from './operationValidationUtils.js';
 export { safeStringify } from './safeStringify.js';
+export { warnNoActiveTurn } from './warnUtils.js';
