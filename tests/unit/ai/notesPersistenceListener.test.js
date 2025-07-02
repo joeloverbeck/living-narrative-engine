@@ -49,7 +49,8 @@ describe('NotesPersistenceListener', () => {
       logger,
       dispatcher,
       listener.notesService,
-      expect.any(Date)
+      expect.any(Date),
+      listener.componentAccessService
     );
   });
 

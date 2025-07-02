@@ -33,6 +33,7 @@ import {
   getComponent,
   setComponent,
 } from '../../entities/entityAccessService.js';
+import ComponentAccessService from '../../entities/componentAccessService.js';
 import LocationDisplayService from '../../entities/services/locationDisplayService.js';
 import { BodyBlueprintFactory } from '../../anatomy/bodyBlueprintFactory.js';
 import { GraphIntegrityValidator } from '../../anatomy/graphIntegrityValidator.js';
@@ -190,6 +191,15 @@ export function registerWorldAndEntity(container) {
   logger.debug(
     `World and Entity Registration: Registered ${String(
       tokens.EntityAccessService
+    )}.`
+  );
+
+  registrar.singletonFactory(tokens.ComponentAccessService, () => {
+    return new ComponentAccessService();
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.ComponentAccessService
     )}.`
   );
 
