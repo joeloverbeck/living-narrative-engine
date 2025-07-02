@@ -1,40 +1,397 @@
-[19:42:56] Component updated: core:name on hair{
-  "text": "hair"
+Error
+Error
+Failed to generate body description for entity "Joel Overberus": Description is empty
+
+Developer details
+{
+  "raw": "Entity ID: isekai:hero_instance, Recipe ID: anatomy:human_male",
+  "timestamp": "2025-07-02T18:37:37.360Z"
 }
-[19:42:56] Entity created: hair from anatomy:human_hair
-[19:42:56] Component added: anatomy:joint on hair
-[19:42:56] Component updated: core:name on pubic hair
-[19:42:56] Entity created: penis from anatomy:human_penis
-[19:42:56] Component added: anatomy:joint on penis
-[19:42:56] Component updated: core:name on penis
-[19:42:56] Entity created: testicle from anatomy:human_testicle
-[19:42:56] Component added: anatomy:joint on testicle
-[19:42:56] Component updated: core:name on left testicle
-[19:42:56] Entity created: testicle from anatomy:human_testicle
-[19:42:56] Component added: anatomy:joint on testicle
-[19:42:56] Component updated: core:name on right testicle
-[19:42:56] Entity created: hand from anatomy:human_hand
-[19:42:56] Component added: anatomy:joint on hand
-[19:42:56] Component updated: core:name on parent hand
-[19:42:56] Entity created: hand from anatomy:human_hand
-[19:42:56] Component added: anatomy:joint on hand
-[19:42:56] Component updated: core:name on parent hand
-[19:42:56] Entity created: asshole from anatomy:human_asshole
-[19:42:56] Component added: anatomy:joint on asshole
-[19:42:56] Component updated: core:name on asshole
-[19:42:56] Component updated: anatomy:body on Joel Overberus (isekai:hero_instance)
-[19:42:56] Component added: core:description on right testicle
-[19:42:56] Component added: core:description on left testicle
-[19:42:56] Component added: core:description on penis
-[19:42:56] Component added: core:description on pubic hair
-[19:42:56] Component added: core:description on parent hand
-[19:42:56] Component added: core:description on parent hand
-[19:42:56] Component added: core:description on hair
-[19:42:56] Component added: core:description on mouth
-[19:42:56] Component added: core:description on nose
-[19:42:56] Component added: core:description on right ear
-[19:42:56] Component added: core:description on left ear
-[19:42:56] Component added: core:description on right eye
-[19:42:56] Component added: core:description on left eye
-[19:42:56] Component added: core:description on Joel Overberus (isekai:hero_instance)
-[19:42:56] Component added: core:current_actor on Joel Overberus (isekai:hero_instance)
+
+----
+
+SpatialIndexSynchronizer.onEntityAdded: Received payload with entity: Entity {#data: EntityInstanceData}
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity type: object
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity constructor: Entity
+consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
+consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'anatomy:joint', componentData: {…}, oldComponentData: undefined}
+consoleLogger.js:187 Successfully added/updated component 'anatomy:joint' data on entity '6ba7cea0-7880-4c95-8e96-13f2d7a6d7d8'.
+consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
+consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'core:name', componentData: {…}, oldComponentData: {…}}
+consoleLogger.js:187 Successfully added/updated component 'core:name' data on entity '6ba7cea0-7880-4c95-8e96-13f2d7a6d7d8'.
+2consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:component_added'.
+consoleLogger.js:187 VED: Event 'core:entity_created' dispatch successful.
+consoleLogger.js:187 VED: Event 'worldinit:entity_instantiated' dispatch successful.
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:entity_created'.
+2consoleLogger.js:187 VED: Event 'core:component_added' dispatch successful.
+consoleLogger.js:187 EntityManager.createEntityInstance: Creating entity instance 'auto-generated' from definition 'anatomy:humanoid_nose' with overrides: undefined
+consoleLogger.js:187 [EntityFactory] Creating entity instance 1c133f88-3c75-4f07-8863-274b76ece9fb from definition anatomy:humanoid_nose.
+consoleLogger.js:151 [EntityFactory] Entity instance '1c133f88-3c75-4f07-8863-274b76ece9fb' (def: 'anatomy:humanoid_nose') created.
+consoleLogger.js:187 EntityManager.createEntityInstance: Factory created entity with ID '1c133f88-3c75-4f07-8863-274b76ece9fb' and definitionId 'anatomy:humanoid_nose'
+consoleLogger.js:187 Entity '1c133f88-3c75-4f07-8863-274b76ece9fb' added to repository.
+consoleLogger.js:187 Tracked entity 1c133f88-3c75-4f07-8863-274b76ece9fb
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_created' against schema 'core:entity_created#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:entity_created'.
+consoleLogger.js:187 VED: Dispatching event 'core:entity_created' via EventBus... {instanceId: '1c133f88-3c75-4f07-8863-274b76ece9fb', definitionId: 'anatomy:humanoid_nose', wasReconstructed: false, entity: Entity}
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Received payload with entity: Entity {#data: EntityInstanceData}
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity type: object
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity constructor: Entity
+consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
+consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'anatomy:joint', componentData: {…}, oldComponentData: undefined}
+consoleLogger.js:187 Successfully added/updated component 'anatomy:joint' data on entity '1c133f88-3c75-4f07-8863-274b76ece9fb'.
+consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
+consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'core:name', componentData: {…}, oldComponentData: {…}}
+consoleLogger.js:187 Successfully added/updated component 'core:name' data on entity '1c133f88-3c75-4f07-8863-274b76ece9fb'.
+consoleLogger.js:187 VED: Event 'core:entity_created' dispatch successful.
+2consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:component_added'.
+consoleLogger.js:187 VED: Event 'core:entity_created' dispatch successful.
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:entity_created'.
+2consoleLogger.js:187 VED: Event 'core:component_added' dispatch successful.
+consoleLogger.js:187 EntityManager.createEntityInstance: Creating entity instance 'auto-generated' from definition 'anatomy:humanoid_mouth' with overrides: undefined
+consoleLogger.js:187 [EntityFactory] Creating entity instance 784d3fd1-bff2-45de-8fb5-939c2a9b2e7f from definition anatomy:humanoid_mouth.
+consoleLogger.js:151 [EntityFactory] Entity instance '784d3fd1-bff2-45de-8fb5-939c2a9b2e7f' (def: 'anatomy:humanoid_mouth') created.
+consoleLogger.js:187 EntityManager.createEntityInstance: Factory created entity with ID '784d3fd1-bff2-45de-8fb5-939c2a9b2e7f' and definitionId 'anatomy:humanoid_mouth'
+consoleLogger.js:187 Entity '784d3fd1-bff2-45de-8fb5-939c2a9b2e7f' added to repository.
+consoleLogger.js:187 Tracked entity 784d3fd1-bff2-45de-8fb5-939c2a9b2e7f
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_created' against schema 'core:entity_created#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:entity_created'.
+consoleLogger.js:187 VED: Dispatching event 'core:entity_created' via EventBus... {instanceId: '784d3fd1-bff2-45de-8fb5-939c2a9b2e7f', definitionId: 'anatomy:humanoid_mouth', wasReconstructed: false, entity: Entity}
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Received payload with entity: Entity {#data: EntityInstanceData}
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity type: object
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity constructor: Entity
+consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
+consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'anatomy:joint', componentData: {…}, oldComponentData: undefined}
+consoleLogger.js:187 Successfully added/updated component 'anatomy:joint' data on entity '784d3fd1-bff2-45de-8fb5-939c2a9b2e7f'.
+consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
+consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'core:name', componentData: {…}, oldComponentData: {…}}
+consoleLogger.js:187 Successfully added/updated component 'core:name' data on entity '784d3fd1-bff2-45de-8fb5-939c2a9b2e7f'.
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'worldinit:entity_instantiated'.
+2consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:component_added'.
+consoleLogger.js:187 VED: Event 'core:entity_created' dispatch successful.
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:entity_created'.
+consoleLogger.js:187 Dispatched 'worldinit:entity_instantiated' for entity isekai:ninja_instance.
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:entity_created'.
+2consoleLogger.js:187 VED: Event 'core:component_added' dispatch successful.
+consoleLogger.js:187 EntityManager.createEntityInstance: Creating entity instance 'auto-generated' from definition 'anatomy:human_hair_blonde' with overrides: undefined
+consoleLogger.js:187 [EntityFactory] Creating entity instance 0f547310-4e22-497b-b9c5-d5c903c72977 from definition anatomy:human_hair_blonde.
+consoleLogger.js:151 [EntityFactory] Entity instance '0f547310-4e22-497b-b9c5-d5c903c72977' (def: 'anatomy:human_hair_blonde') created.
+consoleLogger.js:187 EntityManager.createEntityInstance: Factory created entity with ID '0f547310-4e22-497b-b9c5-d5c903c72977' and definitionId 'anatomy:human_hair_blonde'
+consoleLogger.js:187 Entity '0f547310-4e22-497b-b9c5-d5c903c72977' added to repository.
+consoleLogger.js:187 Tracked entity 0f547310-4e22-497b-b9c5-d5c903c72977
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_created' against schema 'core:entity_created#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:entity_created'.
+consoleLogger.js:187 VED: Dispatching event 'core:entity_created' via EventBus... {instanceId: '0f547310-4e22-497b-b9c5-d5c903c72977', definitionId: 'anatomy:human_hair_blonde', wasReconstructed: false, entity: Entity}
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Received payload with entity: Entity {#data: EntityInstanceData}
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity type: object
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity constructor: Entity
+consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
+consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'anatomy:joint', componentData: {…}, oldComponentData: undefined}
+consoleLogger.js:187 Successfully added/updated component 'anatomy:joint' data on entity '0f547310-4e22-497b-b9c5-d5c903c72977'.
+consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
+consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'core:name', componentData: {…}, oldComponentData: {…}}
+consoleLogger.js:187 Successfully added/updated component 'core:name' data on entity '0f547310-4e22-497b-b9c5-d5c903c72977'.
+2consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:component_added'.
+consoleLogger.js:187 VED: Event 'core:entity_created' dispatch successful.
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:entity_created'.
+2consoleLogger.js:187 VED: Event 'core:component_added' dispatch successful.
+consoleLogger.js:187 EntityManager.createEntityInstance: Creating entity instance 'auto-generated' from definition 'anatomy:human_hair' with overrides: undefined
+consoleLogger.js:187 [EntityFactory] Creating entity instance 95f9abf5-b131-4043-934f-8b94c87ee59f from definition anatomy:human_hair.
+consoleLogger.js:151 [EntityFactory] Entity instance '95f9abf5-b131-4043-934f-8b94c87ee59f' (def: 'anatomy:human_hair') created.
+consoleLogger.js:187 EntityManager.createEntityInstance: Factory created entity with ID '95f9abf5-b131-4043-934f-8b94c87ee59f' and definitionId 'anatomy:human_hair'
+consoleLogger.js:187 Entity '95f9abf5-b131-4043-934f-8b94c87ee59f' added to repository.
+consoleLogger.js:187 Tracked entity 95f9abf5-b131-4043-934f-8b94c87ee59f
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_created' against schema 'core:entity_created#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:entity_created'.
+consoleLogger.js:187 VED: Dispatching event 'core:entity_created' via EventBus... {instanceId: '95f9abf5-b131-4043-934f-8b94c87ee59f', definitionId: 'anatomy:human_hair', wasReconstructed: false, entity: Entity}
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Received payload with entity: Entity {#data: EntityInstanceData}
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity type: object
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity constructor: Entity
+consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
+consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'anatomy:joint', componentData: {…}, oldComponentData: undefined}
+consoleLogger.js:187 Successfully added/updated component 'anatomy:joint' data on entity '95f9abf5-b131-4043-934f-8b94c87ee59f'.
+consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
+consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'core:name', componentData: {…}, oldComponentData: {…}}
+consoleLogger.js:187 Successfully added/updated component 'core:name' data on entity '95f9abf5-b131-4043-934f-8b94c87ee59f'.
+2consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:component_added'.
+consoleLogger.js:187 VED: Event 'core:entity_created' dispatch successful.
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:entity_created'.
+2consoleLogger.js:187 VED: Event 'core:component_added' dispatch successful.
+consoleLogger.js:187 EntityManager.createEntityInstance: Creating entity instance 'auto-generated' from definition 'anatomy:human_penis' with overrides: undefined
+consoleLogger.js:187 [EntityFactory] Creating entity instance 5989c686-9c92-4aa2-910f-ad20abb9b64e from definition anatomy:human_penis.
+consoleLogger.js:151 [EntityFactory] Entity instance '5989c686-9c92-4aa2-910f-ad20abb9b64e' (def: 'anatomy:human_penis') created.
+consoleLogger.js:187 EntityManager.createEntityInstance: Factory created entity with ID '5989c686-9c92-4aa2-910f-ad20abb9b64e' and definitionId 'anatomy:human_penis'
+consoleLogger.js:187 Entity '5989c686-9c92-4aa2-910f-ad20abb9b64e' added to repository.
+consoleLogger.js:187 Tracked entity 5989c686-9c92-4aa2-910f-ad20abb9b64e
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_created' against schema 'core:entity_created#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:entity_created'.
+consoleLogger.js:187 VED: Dispatching event 'core:entity_created' via EventBus... {instanceId: '5989c686-9c92-4aa2-910f-ad20abb9b64e', definitionId: 'anatomy:human_penis', wasReconstructed: false, entity: Entity}
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Received payload with entity: Entity {#data: EntityInstanceData}
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity type: object
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity constructor: Entity
+consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
+consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'anatomy:joint', componentData: {…}, oldComponentData: undefined}
+consoleLogger.js:187 Successfully added/updated component 'anatomy:joint' data on entity '5989c686-9c92-4aa2-910f-ad20abb9b64e'.
+consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
+consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'core:name', componentData: {…}, oldComponentData: {…}}
+consoleLogger.js:187 Successfully added/updated component 'core:name' data on entity '5989c686-9c92-4aa2-910f-ad20abb9b64e'.
+2consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:component_added'.
+consoleLogger.js:187 VED: Event 'core:entity_created' dispatch successful.
+consoleLogger.js:187 WorldInitializer (Pass 1): Completed. Instantiated 4 entities, 0 failures out of 4 total instances for world 'isekai:world'.
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:entity_created'.
+2consoleLogger.js:187 VED: Event 'core:component_added' dispatch successful.
+consoleLogger.js:187 EntityManager.createEntityInstance: Creating entity instance 'auto-generated' from definition 'anatomy:human_testicle' with overrides: undefined
+consoleLogger.js:187 [EntityFactory] Creating entity instance 91182c7f-79f1-4c37-a3c2-a6dc70a37ef2 from definition anatomy:human_testicle.
+consoleLogger.js:151 [EntityFactory] Entity instance '91182c7f-79f1-4c37-a3c2-a6dc70a37ef2' (def: 'anatomy:human_testicle') created.
+consoleLogger.js:187 EntityManager.createEntityInstance: Factory created entity with ID '91182c7f-79f1-4c37-a3c2-a6dc70a37ef2' and definitionId 'anatomy:human_testicle'
+consoleLogger.js:187 Entity '91182c7f-79f1-4c37-a3c2-a6dc70a37ef2' added to repository.
+consoleLogger.js:187 Tracked entity 91182c7f-79f1-4c37-a3c2-a6dc70a37ef2
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_created' against schema 'core:entity_created#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:entity_created'.
+consoleLogger.js:187 VED: Dispatching event 'core:entity_created' via EventBus... {instanceId: '91182c7f-79f1-4c37-a3c2-a6dc70a37ef2', definitionId: 'anatomy:human_testicle', wasReconstructed: false, entity: Entity}
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Received payload with entity: Entity {#data: EntityInstanceData}
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity type: object
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity constructor: Entity
+consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
+consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'anatomy:joint', componentData: {…}, oldComponentData: undefined}
+consoleLogger.js:187 Successfully added/updated component 'anatomy:joint' data on entity '91182c7f-79f1-4c37-a3c2-a6dc70a37ef2'.
+consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
+consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'core:name', componentData: {…}, oldComponentData: {…}}
+consoleLogger.js:187 Successfully added/updated component 'core:name' data on entity '91182c7f-79f1-4c37-a3c2-a6dc70a37ef2'.
+consoleLogger.js:187 WorldInitializer: World entity initialization complete for world: isekai:world. Instantiated: 4, Failed: 0, Total Processed: 4. Spatial index management is handled by SpatialIndexSynchronizer.
+2consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:component_added'.
+consoleLogger.js:187 VED: Event 'core:entity_created' dispatch successful.
+consoleLogger.js:187 Building spatial index from existing entities...
+consoleLogger.js:151 SpatialIndexManager: Index cleared.
+consoleLogger.js:187 Spatial index built successfully.
+consoleLogger.js:187 InitializationService: Initial world entities instantiated and spatial index built.
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:entity_created'.
+2consoleLogger.js:187 VED: Event 'core:component_added' dispatch successful.
+consoleLogger.js:187 EntityManager.createEntityInstance: Creating entity instance 'auto-generated' from definition 'anatomy:human_testicle' with overrides: undefined
+consoleLogger.js:187 [EntityFactory] Creating entity instance 140062f4-10ce-4fe0-8d5e-cda579defbe3 from definition anatomy:human_testicle.
+consoleLogger.js:151 [EntityFactory] Entity instance '140062f4-10ce-4fe0-8d5e-cda579defbe3' (def: 'anatomy:human_testicle') created.
+consoleLogger.js:187 EntityManager.createEntityInstance: Factory created entity with ID '140062f4-10ce-4fe0-8d5e-cda579defbe3' and definitionId 'anatomy:human_testicle'
+consoleLogger.js:187 Entity '140062f4-10ce-4fe0-8d5e-cda579defbe3' added to repository.
+consoleLogger.js:187 Tracked entity 140062f4-10ce-4fe0-8d5e-cda579defbe3
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_created' against schema 'core:entity_created#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:entity_created'.
+consoleLogger.js:187 VED: Dispatching event 'core:entity_created' via EventBus... {instanceId: '140062f4-10ce-4fe0-8d5e-cda579defbe3', definitionId: 'anatomy:human_testicle', wasReconstructed: false, entity: Entity}
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Received payload with entity: Entity {#data: EntityInstanceData}
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity type: object
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity constructor: Entity
+consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
+consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'anatomy:joint', componentData: {…}, oldComponentData: undefined}
+consoleLogger.js:187 Successfully added/updated component 'anatomy:joint' data on entity '140062f4-10ce-4fe0-8d5e-cda579defbe3'.
+consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
+consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'core:name', componentData: {…}, oldComponentData: {…}}
+consoleLogger.js:187 Successfully added/updated component 'core:name' data on entity '140062f4-10ce-4fe0-8d5e-cda579defbe3'.
+consoleLogger.js:187 VED: Delegating subscription for event "core:action_decided" to EventBus.
+consoleLogger.js:187 SafeEventDispatcher: Successfully subscribed to event 'core:action_decided'.
+consoleLogger.js:187 VED: Delegating subscription for event "core:action_decided" to EventBus.
+consoleLogger.js:187 SafeEventDispatcher: Successfully subscribed to event 'core:action_decided'.
+consoleLogger.js:187 Registered AI persistence listeners.
+consoleLogger.js:187 Ensuring DomUiFacade is instantiated so UI components are ready...
+consoleLogger.js:187 Building ActionIndex with loaded action definitions...
+consoleLogger.js:187 Building action index from 10 definitions...
+consoleLogger.js:187 Action index built. 3 component-to-action maps created.
+consoleLogger.js:187 ActionIndex built with 10 action definitions.
+consoleLogger.js:187 InitializationService: Initialization sequence for world 'isekai:world' completed successfully (GameLoop resolution removed).
+2consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:component_added'.
+consoleLogger.js:187 VED: Event 'core:entity_created' dispatch successful.
+consoleLogger.js:187 GameEngine._executeInitializationSequence: Initialization sequence completed for "isekai:world". Success: true
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:entity_created'.
+2consoleLogger.js:187 VED: Event 'core:component_added' dispatch successful.
+consoleLogger.js:187 EntityManager.createEntityInstance: Creating entity instance 'auto-generated' from definition 'anatomy:human_hand' with overrides: undefined
+consoleLogger.js:187 [EntityFactory] Creating entity instance 5cdfa52a-b02e-4f61-bd5b-1db047778124 from definition anatomy:human_hand.
+consoleLogger.js:151 [EntityFactory] Entity instance '5cdfa52a-b02e-4f61-bd5b-1db047778124' (def: 'anatomy:human_hand') created.
+consoleLogger.js:187 EntityManager.createEntityInstance: Factory created entity with ID '5cdfa52a-b02e-4f61-bd5b-1db047778124' and definitionId 'anatomy:human_hand'
+consoleLogger.js:187 Entity '5cdfa52a-b02e-4f61-bd5b-1db047778124' added to repository.
+consoleLogger.js:187 Tracked entity 5cdfa52a-b02e-4f61-bd5b-1db047778124
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_created' against schema 'core:entity_created#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:entity_created'.
+consoleLogger.js:187 VED: Dispatching event 'core:entity_created' via EventBus... {instanceId: '5cdfa52a-b02e-4f61-bd5b-1db047778124', definitionId: 'anatomy:human_hand', wasReconstructed: false, entity: Entity}
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Received payload with entity: Entity {#data: EntityInstanceData}
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity type: object
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity constructor: Entity
+consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
+consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'anatomy:joint', componentData: {…}, oldComponentData: undefined}
+consoleLogger.js:187 Successfully added/updated component 'anatomy:joint' data on entity '5cdfa52a-b02e-4f61-bd5b-1db047778124'.
+consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
+consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'core:name', componentData: {…}, oldComponentData: {…}}
+consoleLogger.js:187 Successfully added/updated component 'core:name' data on entity '5cdfa52a-b02e-4f61-bd5b-1db047778124'.
+2consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:component_added'.
+consoleLogger.js:187 VED: Event 'core:entity_created' dispatch successful.
+consoleLogger.js:187 GameSessionManager.finalizeNewGameSuccess: Initialization successful for world "isekai:world". Finalizing new game setup.
+consoleLogger.js:187 PlaytimeTracker: Session started at 1751481457346
+consoleLogger.js:187 GameSessionManager._finalizeGameStart: Dispatching UI event for game ready.
+consoleLogger.js:187 VED: Validating payload for event 'core:ui_ready' against schema 'core:ui_ready#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:ui_ready'.
+consoleLogger.js:187 VED: Dispatching event 'core:ui_ready' via EventBus... {activeWorld: 'isekai:world', message: 'Enter command...'}
+consoleLogger.js:187 EngineUIManager: Received core:ui_ready {activeWorld: 'isekai:world', message: 'Enter command...'}
+consoleLogger.js:187 [TitleRenderer] Title set to: "isekai:world"
+consoleLogger.js:187 [InputStateController] Input enabled.
+consoleLogger.js:187 [InputStateController] Input placeholder set to: "Enter command..."
+consoleLogger.js:187 EngineUIManager: Handled core:ui_ready. UI set to ready state. Active world: isekai:world.
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:entity_created'.
+2consoleLogger.js:187 VED: Event 'core:component_added' dispatch successful.
+consoleLogger.js:187 EntityManager.createEntityInstance: Creating entity instance 'auto-generated' from definition 'anatomy:human_hand' with overrides: undefined
+consoleLogger.js:187 [EntityFactory] Creating entity instance 18cb624a-aedb-4139-bd22-d9a4b1fe7fca from definition anatomy:human_hand.
+consoleLogger.js:151 [EntityFactory] Entity instance '18cb624a-aedb-4139-bd22-d9a4b1fe7fca' (def: 'anatomy:human_hand') created.
+consoleLogger.js:187 EntityManager.createEntityInstance: Factory created entity with ID '18cb624a-aedb-4139-bd22-d9a4b1fe7fca' and definitionId 'anatomy:human_hand'
+consoleLogger.js:187 Entity '18cb624a-aedb-4139-bd22-d9a4b1fe7fca' added to repository.
+consoleLogger.js:187 Tracked entity 18cb624a-aedb-4139-bd22-d9a4b1fe7fca
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_created' against schema 'core:entity_created#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:entity_created'.
+consoleLogger.js:187 VED: Dispatching event 'core:entity_created' via EventBus... {instanceId: '18cb624a-aedb-4139-bd22-d9a4b1fe7fca', definitionId: 'anatomy:human_hand', wasReconstructed: false, entity: Entity}
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Received payload with entity: Entity {#data: EntityInstanceData}
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity type: object
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity constructor: Entity
+consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
+consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'anatomy:joint', componentData: {…}, oldComponentData: undefined}
+consoleLogger.js:187 Successfully added/updated component 'anatomy:joint' data on entity '18cb624a-aedb-4139-bd22-d9a4b1fe7fca'.
+consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
+consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'core:name', componentData: {…}, oldComponentData: {…}}
+consoleLogger.js:187 Successfully added/updated component 'core:name' data on entity '18cb624a-aedb-4139-bd22-d9a4b1fe7fca'.
+2consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:component_added'.
+consoleLogger.js:187 VED: Event 'core:entity_created' dispatch successful.
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:entity_created'.
+2consoleLogger.js:187 VED: Event 'core:component_added' dispatch successful.
+consoleLogger.js:187 EntityManager.createEntityInstance: Creating entity instance 'auto-generated' from definition 'anatomy:human_asshole' with overrides: undefined
+consoleLogger.js:187 [EntityFactory] Creating entity instance 7aa6a169-abd4-42d9-9da1-9dee050ebf4b from definition anatomy:human_asshole.
+consoleLogger.js:151 [EntityFactory] Entity instance '7aa6a169-abd4-42d9-9da1-9dee050ebf4b' (def: 'anatomy:human_asshole') created.
+consoleLogger.js:187 EntityManager.createEntityInstance: Factory created entity with ID '7aa6a169-abd4-42d9-9da1-9dee050ebf4b' and definitionId 'anatomy:human_asshole'
+consoleLogger.js:187 Entity '7aa6a169-abd4-42d9-9da1-9dee050ebf4b' added to repository.
+consoleLogger.js:187 Tracked entity 7aa6a169-abd4-42d9-9da1-9dee050ebf4b
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_created' against schema 'core:entity_created#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:entity_created'.
+consoleLogger.js:187 VED: Dispatching event 'core:entity_created' via EventBus... {instanceId: '7aa6a169-abd4-42d9-9da1-9dee050ebf4b', definitionId: 'anatomy:human_asshole', wasReconstructed: false, entity: Entity}
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Received payload with entity: Entity {#data: EntityInstanceData}
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity type: object
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity constructor: Entity
+consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
+consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'anatomy:joint', componentData: {…}, oldComponentData: undefined}
+consoleLogger.js:187 Successfully added/updated component 'anatomy:joint' data on entity '7aa6a169-abd4-42d9-9da1-9dee050ebf4b'.
+consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
+consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'core:name', componentData: {…}, oldComponentData: {…}}
+consoleLogger.js:187 Successfully added/updated component 'core:name' data on entity '7aa6a169-abd4-42d9-9da1-9dee050ebf4b'.
+2consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:component_added'.
+consoleLogger.js:187 VED: Event 'core:entity_created' dispatch successful.
+consoleLogger.js:187 VED: Event 'core:ui_ready' dispatch successful.
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:entity_created'.
+2consoleLogger.js:187 VED: Event 'core:component_added' dispatch successful.
+consoleLogger.js:187 GraphIntegrityValidator: Validating graph with 20 entities
+2consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:component_added'.
+consoleLogger.js:187 VED: Event 'core:entity_created' dispatch successful.
+consoleLogger.js:187 GraphIntegrityValidator: Validation passed without issues
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:entity_created'.
+2consoleLogger.js:187 VED: Event 'core:component_added' dispatch successful.
+consoleLogger.js:151 BodyBlueprintFactory: Successfully created anatomy graph with 20 entities
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:ui_ready'.
+2consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:component_added'.
+consoleLogger.js:187 VED: Event 'core:entity_created' dispatch successful.
+consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
+consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'anatomy:body', componentData: {…}, oldComponentData: {…}}
+consoleLogger.js:187 Successfully added/updated component 'anatomy:body' data on entity 'isekai:hero_instance'.
+consoleLogger.js:187 AnatomyGenerationService: Building adjacency cache for entity 'isekai:hero_instance'
+consoleLogger.js:187 BodyGraphService: Building adjacency cache for anatomy rooted at '8104d4e3-9465-4543-8825-5d25832a1161'
+consoleLogger.js:187 EntityManager.getEntitiesWithComponent: Found 19 entities with component 'anatomy:joint'.
+consoleLogger.js:187 EntityManager.getEntitiesWithComponent: Found 19 entities with component 'anatomy:joint'.
+7consoleLogger.js:187 EntityManager.getEntitiesWithComponent: Found 19 entities with component 'anatomy:joint'.
+consoleLogger.js:187 EntityManager.getEntitiesWithComponent: Found 19 entities with component 'anatomy:joint'.
+consoleLogger.js:187 EntityManager.getEntitiesWithComponent: Found 19 entities with component 'anatomy:joint'.
+consoleLogger.js:187 EntityManager.getEntitiesWithComponent: Found 19 entities with component 'anatomy:joint'.
+consoleLogger.js:187 EntityManager.getEntitiesWithComponent: Found 19 entities with component 'anatomy:joint'.
+7consoleLogger.js:187 EntityManager.getEntitiesWithComponent: Found 19 entities with component 'anatomy:joint'.
+consoleLogger.js:151 BodyGraphService: Built adjacency cache with 20 nodes
+consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
+consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'core:description', componentData: {…}, oldComponentData: undefined}
+consoleLogger.js:187 Successfully added/updated component 'core:description' data on entity '140062f4-10ce-4fe0-8d5e-cda579defbe3'.
+consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
+consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'core:description', componentData: {…}, oldComponentData: undefined}
+consoleLogger.js:187 Successfully added/updated component 'core:description' data on entity '91182c7f-79f1-4c37-a3c2-a6dc70a37ef2'.
+consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
+consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'core:description', componentData: {…}, oldComponentData: undefined}
+consoleLogger.js:187 Successfully added/updated component 'core:description' data on entity '5989c686-9c92-4aa2-910f-ad20abb9b64e'.
+consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
+consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'core:description', componentData: {…}, oldComponentData: undefined}
+consoleLogger.js:187 Successfully added/updated component 'core:description' data on entity '95f9abf5-b131-4043-934f-8b94c87ee59f'.
+consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
+consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'core:description', componentData: {…}, oldComponentData: undefined}
+consoleLogger.js:187 Successfully added/updated component 'core:description' data on entity '88841d8a-90fd-4b19-8f56-88ef630743a2'.
+consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
+consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'core:description', componentData: {…}, oldComponentData: undefined}
+consoleLogger.js:187 Successfully added/updated component 'core:description' data on entity '18cb624a-aedb-4139-bd22-d9a4b1fe7fca'.
+consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
+consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'core:description', componentData: {…}, oldComponentData: undefined}
+consoleLogger.js:187 Successfully added/updated component 'core:description' data on entity '5cdfa52a-b02e-4f61-bd5b-1db047778124'.
+consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
+consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'core:description', componentData: {…}, oldComponentData: undefined}
+consoleLogger.js:187 Successfully added/updated component 'core:description' data on entity '0f547310-4e22-497b-b9c5-d5c903c72977'.
+consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
+consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'core:description', componentData: {…}, oldComponentData: undefined}
+consoleLogger.js:187 Successfully added/updated component 'core:description' data on entity '784d3fd1-bff2-45de-8fb5-939c2a9b2e7f'.
+consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
+consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'core:description', componentData: {…}, oldComponentData: undefined}
+consoleLogger.js:187 Successfully added/updated component 'core:description' data on entity '1c133f88-3c75-4f07-8863-274b76ece9fb'.
+consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
+consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'core:description', componentData: {…}, oldComponentData: undefined}
+consoleLogger.js:187 Successfully added/updated component 'core:description' data on entity '6ba7cea0-7880-4c95-8e96-13f2d7a6d7d8'.
+consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
+consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'core:description', componentData: {…}, oldComponentData: undefined}
+consoleLogger.js:187 Successfully added/updated component 'core:description' data on entity '11b2338f-9d3c-4f98-9048-bbd063c506be'.
+consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
+consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'core:description', componentData: {…}, oldComponentData: undefined}
+consoleLogger.js:187 Successfully added/updated component 'core:description' data on entity '73dfed5e-830b-4060-a2f9-bfbb6147dd49'.
+consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
+consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'core:description', componentData: {…}, oldComponentData: undefined}
+consoleLogger.js:187 Successfully added/updated component 'core:description' data on entity '58625461-ffe9-4514-9ba4-a76e32b98f30'.
+consoleLogger.js:187 VED: Validating payload for event 'core:system_error_occurred' against schema 'core:system_error_occurred#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:system_error_occurred'.
+consoleLogger.js:187 VED: Dispatching event 'core:system_error_occurred' via EventBus... {message: 'Failed to generate body description for entity "Joel Overberus": Description is empty', details: {…}}
+consoleLogger.js:187 VED: Validating payload for event 'core:display_error' against schema 'core:display_error#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:display_error'.
+consoleLogger.js:187 VED: Dispatching event 'core:display_error' via EventBus... {message: 'Failed to generate body description for entity "Joel Overberus": Description is empty', details: {…}}
+consoleLogger.js:187 [TitleRenderer] Title set to: "System Error"
+consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
+consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'core:description', componentData: {…}, oldComponentData: undefined}
+consoleLogger.js:187 Successfully added/updated component 'core:description' data on entity 'isekai:hero_instance'.
+consoleLogger.js:151 AnatomyGenerationService: Generated descriptions for entity 'isekai:hero_instance'
+consoleLogger.js:151 AnatomyGenerationService: Successfully generated anatomy for entity 'isekai:hero_instance' with 20 parts
+consoleLogger.js:187 GameSessionManager._finalizeGameStart: Starting TurnManager...
