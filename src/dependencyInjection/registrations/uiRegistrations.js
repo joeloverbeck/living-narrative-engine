@@ -237,6 +237,7 @@ export function registerRenderers(registrar, logger) {
         documentContext: c.resolve(tokens.IDocumentContext),
         validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
         domElementFactory: c.resolve(tokens.DomElementFactory),
+        entityManager: c.resolve(tokens.IEntityManager),
       }),
     { lifecycle: 'singletonFactory' },
     logger

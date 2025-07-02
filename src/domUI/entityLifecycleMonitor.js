@@ -1,12 +1,14 @@
 // src/domUI/entityLifecycleMonitor.js
 
 import { RendererBase } from './rendererBase.js';
+import { NAME_COMPONENT_ID } from '../constants/componentIds.js';
 
 /**
  * @typedef {import('../interfaces/ILogger').ILogger} ILogger
  * @typedef {import('../interfaces/IDocumentContext.js').IDocumentContext} IDocumentContext
  * @typedef {import('../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher
  * @typedef {import('./domElementFactory.js').default} DomElementFactory
+ * @typedef {import('../interfaces/IEntityManager.js').IEntityManager} IEntityManager
  */
 
 /**
@@ -48,6 +50,12 @@ export class EntityLifecycleMonitor extends RendererBase {
 
   /**
    * @private
+   * @type {IEntityManager}
+   */
+  #entityManager;
+
+  /**
+   * @private
    * @type {number}
    */
   #eventCounter = 0;
@@ -66,16 +74,19 @@ export class EntityLifecycleMonitor extends RendererBase {
    * @param {IDocumentContext} dependencies.documentContext - The document context abstraction.
    * @param {IValidatedEventDispatcher} dependencies.validatedEventDispatcher - The validated event dispatcher.
    * @param {DomElementFactory} dependencies.domElementFactory - The DOM element factory.
+   * @param {IEntityManager} dependencies.entityManager - The entity manager.
    */
   constructor({
     logger,
     documentContext,
     validatedEventDispatcher,
     domElementFactory,
+    entityManager,
   }) {
     super({ logger, documentContext, validatedEventDispatcher });
 
     this.#domElementFactory = domElementFactory;
+    this.#entityManager = entityManager;
 
     // Find or create the container element
     this.#container = this.documentContext.query('#entity-lifecycle-monitor');
@@ -119,6 +130,42 @@ export class EntityLifecycleMonitor extends RendererBase {
   }
 
   /**
+   * Formats entity display name based on requirements:
+   * - If entity has core:name and ID is not UUID: "Name (entityId)"
+   * - If entity has core:name and ID is UUID: "Name"
+   * - If no core:name and ID is UUID: just the UUID
+   * - If no core:name and ID is not UUID: just the entity ID
+   *
+   * @private
+   * @param {string} entityId - The entity ID to format
+   * @returns {string} The formatted display name
+   */
+  #formatEntityDisplayName(entityId) {
+    if (!entityId) {
+      return 'unknown';
+    }
+
+    // UUID v4 pattern
+    const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    const isUuid = uuidPattern.test(entityId);
+
+    // Try to get the entity and its name
+    const entity = this.#entityManager?.getEntityInstance?.(entityId);
+    if (entity && entity.hasComponent(NAME_COMPONENT_ID)) {
+      const nameData = entity.getComponentData(NAME_COMPONENT_ID);
+      const name = nameData?.text;
+      
+      if (name) {
+        // If ID is UUID, show only name; otherwise show "Name (id)"
+        return isUuid ? name : `${name} (${entityId})`;
+      }
+    }
+
+    // No name component or entity not found - just return the ID
+    return entityId;
+  }
+
+  /**
    * Handles entity creation events.
    *
    * @private
@@ -127,7 +174,8 @@ export class EntityLifecycleMonitor extends RendererBase {
   #handleEntityCreated(event) {
     const { instanceId, definitionId, wasReconstructed } = event.payload || {};
     const reconstructedText = wasReconstructed ? ' (reconstructed)' : '';
-    const message = `Entity created: ${instanceId} from ${definitionId}${reconstructedText}`;
+    const formattedId = this.#formatEntityDisplayName(instanceId);
+    const message = `Entity created: ${formattedId} from ${definitionId}${reconstructedText}`;
     this.#addEventEntry(message, 'entity-created');
   }
 
@@ -139,7 +187,8 @@ export class EntityLifecycleMonitor extends RendererBase {
    */
   #handleEntityRemoved(event) {
     const { instanceId } = event.payload || {};
-    const message = `Entity removed: ${instanceId}`;
+    const formattedId = this.#formatEntityDisplayName(instanceId);
+    const message = `Entity removed: ${formattedId}`;
     this.#addEventEntry(message, 'entity-removed');
   }
 
@@ -153,8 +202,13 @@ export class EntityLifecycleMonitor extends RendererBase {
     const { entity, componentTypeId, oldComponentData } = event.payload || {};
     const entityId = entity?.id || 'unknown';
     const updateType = oldComponentData !== undefined ? 'updated' : 'added';
-    const message = `Component ${updateType}: ${componentTypeId} on ${entityId}`;
-    this.#addEventEntry(message, 'component-added');
+    const formattedId = this.#formatEntityDisplayName(entityId);
+    const message = `Component ${updateType}: ${componentTypeId} on ${formattedId}`;
+    
+    // Get the actual component data
+    const componentData = entity?.getComponentData?.(componentTypeId);
+    
+    this.#addEventEntry(message, 'component-added', componentData);
   }
 
   /**
@@ -166,8 +220,9 @@ export class EntityLifecycleMonitor extends RendererBase {
   #handleComponentRemoved(event) {
     const { entity, componentTypeId } = event.payload || {};
     const entityId = entity?.id || 'unknown';
-    const message = `Component removed: ${componentTypeId} from ${entityId}`;
-    this.#addEventEntry(message, 'component-removed');
+    const formattedId = this.#formatEntityDisplayName(entityId);
+    const message = `Component removed: ${componentTypeId} from ${formattedId}`;
+    this.#addEventEntry(message, 'component-removed', null);
   }
 
   /**
@@ -180,8 +235,27 @@ export class EntityLifecycleMonitor extends RendererBase {
     const { entityId, components } = event.payload || {};
     const componentCount = Object.keys(components || {}).length;
     const componentList = Object.keys(components || {}).join(', ');
-    const message = `Entity ${entityId} has ${componentCount} components: ${componentList}`;
+    const formattedId = this.#formatEntityDisplayName(entityId);
+    const message = `Entity ${formattedId} has ${componentCount} components: ${componentList}`;
     this.#addEventEntry(message, 'display-components');
+  }
+
+  /**
+   * Creates a tooltip element for displaying component data.
+   *
+   * @private
+   * @param {object} componentData - The component data to display.
+   * @returns {HTMLElement} The tooltip element.
+   */
+  #createComponentTooltip(componentData) {
+    const tooltip = this.documentContext.create('div');
+    tooltip.classList.add('component-data-tooltip');
+    
+    // Format the JSON with proper indentation
+    const formattedData = JSON.stringify(componentData, null, 2);
+    tooltip.textContent = formattedData;
+    
+    return tooltip;
   }
 
   /**
@@ -190,8 +264,9 @@ export class EntityLifecycleMonitor extends RendererBase {
    * @private
    * @param {string} message - The message to display.
    * @param {string} className - The CSS class for styling the entry.
+   * @param {object} [componentData] - Optional component data to display in tooltip.
    */
-  #addEventEntry(message, className) {
+  #addEventEntry(message, className, componentData = null) {
     if (!this.#eventList) {
       return;
     }
@@ -215,6 +290,14 @@ export class EntityLifecycleMonitor extends RendererBase {
 
     li.appendChild(timeSpan);
     li.appendChild(messageSpan);
+    
+    // Add tooltip for component events if data is available
+    if (componentData && (className === 'component-added' || className === 'component-removed')) {
+      const tooltip = this.#createComponentTooltip(componentData);
+      li.appendChild(tooltip);
+      li.classList.add('has-tooltip');
+      li.style.position = 'relative';
+    }
 
     // Calculate animation delay based on pending animations
     const currentEventId = this.#eventCounter++;
