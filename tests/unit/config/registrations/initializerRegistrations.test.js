@@ -79,9 +79,13 @@ describe('registerInitializers', () => {
     mockContainer.register(tokens.IScopeRegistry, mockScopeRegistry, {
       lifecycle: 'singleton',
     });
-    mockContainer.register(tokens.EventDispatchService, mockEventDispatchService, {
-      lifecycle: 'singleton',
-    });
+    mockContainer.register(
+      tokens.EventDispatchService,
+      mockEventDispatchService,
+      {
+        lifecycle: 'singleton',
+      }
+    );
 
     Object.values(mockLogger).forEach((fn) => fn.mockClear?.());
     if (WorldInitializer.mockClear) WorldInitializer.mockClear();

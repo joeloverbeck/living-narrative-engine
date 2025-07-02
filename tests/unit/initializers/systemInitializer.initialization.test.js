@@ -372,7 +372,6 @@ describe('SystemInitializer (Tag-Based)', () => {
         { allowSchemaNotFound: true }
       );
 
-
       // Good2
       expect(mockSystemGood2.initialize).toHaveBeenCalledTimes(1);
 
@@ -389,7 +388,9 @@ describe('SystemInitializer (Tag-Based)', () => {
       // Verify overall counts
       expect(mockLogger.error).toHaveBeenCalledTimes(1); // Only from mockSystemFailInit
       expect(mockLogger.warn).toHaveBeenCalledTimes(1); // Only from mockSystemNull
-      expect(mockEventDispatchService.dispatchWithLogging).toHaveBeenCalledTimes(1);
+      expect(
+        mockEventDispatchService.dispatchWithLogging
+      ).toHaveBeenCalledTimes(1);
     });
 
     it('[Empty Result] should handle container returning an empty array for the tag gracefully', async () => {
@@ -455,7 +456,9 @@ describe('SystemInitializer (Tag-Based)', () => {
       );
 
       // Complete event should NOT be called
-      expect(mockEventDispatchService.dispatchWithLogging).not.toHaveBeenCalled();
+      expect(
+        mockEventDispatchService.dispatchWithLogging
+      ).not.toHaveBeenCalled();
 
       // Should not proceed to initialize
       expect(mockLogger.info).not.toHaveBeenCalledWith(
@@ -496,7 +499,9 @@ describe('SystemInitializer (Tag-Based)', () => {
       );
 
       // Check event dispatches
-      expect(mockEventDispatchService.dispatchWithLogging).toHaveBeenCalledTimes(1);
+      expect(
+        mockEventDispatchService.dispatchWithLogging
+      ).toHaveBeenCalledTimes(1);
 
       // Should only have the one error from mockSystemFailInit
       expect(mockLogger.error).toHaveBeenCalledTimes(1);

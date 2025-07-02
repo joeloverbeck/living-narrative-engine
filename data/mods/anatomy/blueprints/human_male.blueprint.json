@@ -105,21 +105,44 @@
     "penis": {
       "socket": "penis",
       "requirements": {
-        "partType": "genital",
+        "partType": "penis",
         "components": ["anatomy:part"]
       }
     },
     "left_testicle": {
-      "socket": "testicles",
+      "socket": "left_testicle",
       "requirements": {
-        "partType": "genital",
+        "partType": "testicle",
         "components": ["anatomy:part"]
       }
     },
     "right_testicle": {
-      "socket": "testicles",
+      "socket": "right_testicle",
       "requirements": {
-        "partType": "genital",
+        "partType": "testicle",
+        "components": ["anatomy:part"]
+      }
+    },
+    "left_hand": {
+      "parent": "left_arm",
+      "socket": "wrist",
+      "requirements": {
+        "partType": "hand",
+        "components": ["anatomy:part"]
+      }
+    },
+    "right_hand": {
+      "parent": "right_arm",
+      "socket": "wrist",
+      "requirements": {
+        "partType": "hand",
+        "components": ["anatomy:part"]
+      }
+    },
+    "asshole": {
+      "socket": "asshole",
+      "requirements": {
+        "partType": "asshole",
         "components": ["anatomy:part"]
       }
     }

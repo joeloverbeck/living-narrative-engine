@@ -13,15 +13,25 @@ import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/systemEventIds.js';
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 /** @typedef {import('../utils/eventDispatchService.js').EventDispatchService} EventDispatchService */
-/** @typedef {import('../ports/IIdGenerator.js').IIdGenerator} IIdGenerator */
 
 /**
  * @typedef {object} AnatomyRecipe
  * @property {string} recipeId
  * @property {Object<string, SlotDefinition>} slots
+ * @property {Array<PatternDefinition>} [patterns]
  * @property {object} [constraints]
  * @property {Array<Array<string>>} [constraints.requires]
  * @property {Array<Array<string>>} [constraints.excludes]
+ */
+
+/**
+ * @typedef {object} PatternDefinition
+ * @property {string[]} matches
+ * @property {string} partType
+ * @property {string} [preferId]
+ * @property {string[]} [tags]
+ * @property {string[]} [notTags]
+ * @property {Object<string, object>} [properties]
  */
 
 /**
@@ -36,14 +46,13 @@ import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/systemEventIds.js';
 /**
  * @typedef {object} AnatomyBlueprint
  * @property {string} root
- * @property {Array<{parent: string, socket: string, child: string}>} [attachments]
+ * @property {object} slots
  */
 
 /**
  * @typedef {object} Socket
  * @property {string} id
  * @property {string[]} allowedTypes
- * @property {number} [maxCount]
  * @property {string} [orientation]
  * @property {string} [nameTpl]
  */
@@ -62,8 +71,6 @@ export class BodyBlueprintFactory {
   #eventDispatcher;
   /** @type {EventDispatchService} */
   #eventDispatchService;
-  /** @type {IIdGenerator} */
-  #idGenerator;
   /** @type {import('./graphIntegrityValidator.js').GraphIntegrityValidator} */
   #validator;
 
@@ -74,7 +81,6 @@ export class BodyBlueprintFactory {
    * @param {ILogger} deps.logger
    * @param {ISafeEventDispatcher} deps.eventDispatcher
    * @param {EventDispatchService} deps.eventDispatchService
-   * @param {IIdGenerator} deps.idGenerator
    * @param {import('./graphIntegrityValidator.js').GraphIntegrityValidator} deps.validator
    */
   constructor({
@@ -83,7 +89,6 @@ export class BodyBlueprintFactory {
     logger,
     eventDispatcher,
     eventDispatchService,
-    idGenerator,
     validator,
   }) {
     if (!entityManager)
@@ -95,7 +100,6 @@ export class BodyBlueprintFactory {
       throw new InvalidArgumentError('eventDispatcher is required');
     if (!eventDispatchService)
       throw new InvalidArgumentError('eventDispatchService is required');
-    if (!idGenerator) throw new InvalidArgumentError('idGenerator is required');
     if (!validator) throw new InvalidArgumentError('validator is required');
 
     this.#entityManager = entityManager;
@@ -103,7 +107,6 @@ export class BodyBlueprintFactory {
     this.#logger = logger;
     this.#eventDispatcher = eventDispatcher;
     this.#eventDispatchService = eventDispatchService;
-    this.#idGenerator = idGenerator;
     this.#validator = validator;
   }
 
@@ -127,22 +130,19 @@ export class BodyBlueprintFactory {
       const blueprint = this.#loadBlueprint(blueprintId);
       const recipe = this.#loadRecipe(recipeId);
 
-      // Merge blueprint defaults with recipe overrides
-      const mergedRecipe = this.#mergeRecipeWithBlueprintDefaults(
-        recipe,
-        blueprint
-      );
+      // Expand patterns into slots
+      const expandedRecipe = this.#expandPatternsIntoSlots(recipe);
 
       // Initialize tracking structures
       const createdEntities = [];
       const partCounts = new Map(); // Track counts per part type
-      const socketOccupancy = new Map(); // Track socket usage
+      const socketOccupancy = new Set(); // Track occupied sockets
       const rng = this.#createRNG(options.seed);
 
       // Phase 1: Create root entity
       const rootId = this.#createRootEntity(
         blueprint.root,
-        mergedRecipe,
+        expandedRecipe,
         options.ownerId
       );
       createdEntities.push(rootId);
@@ -151,7 +151,7 @@ export class BodyBlueprintFactory {
       if (blueprint.slots) {
         await this.#processBlueprintSlots(
           blueprint,
-          mergedRecipe,
+          expandedRecipe,
           rootId,
           createdEntities,
           partCounts,
@@ -163,7 +163,7 @@ export class BodyBlueprintFactory {
       // Phase 4: Validate the assembled graph
       const validationResult = await this.#validator.validateGraph(
         createdEntities,
-        mergedRecipe,
+        expandedRecipe,
         socketOccupancy
       );
 
@@ -231,65 +231,41 @@ export class BodyBlueprintFactory {
   }
 
   /**
-   * Merges recipe with blueprint's default slots
+   * Expands pattern definitions into individual slot definitions
    *
-   * @param {AnatomyRecipe} recipe - The recipe to merge
-   * @param {AnatomyBlueprint} blueprint - The blueprint with defaults
+   * @param {AnatomyRecipe} recipe - The recipe with patterns
    * @private
-   * @returns {AnatomyRecipe} The merged recipe
+   * @returns {AnatomyRecipe} Recipe with expanded slots
    */
-  #mergeRecipeWithBlueprintDefaults(recipe, blueprint) {
-    // If blueprint has no default slots, return recipe as-is
-    if (!blueprint.defaultSlots) {
+  #expandPatternsIntoSlots(recipe) {
+    // If no patterns, return as-is
+    if (!recipe.patterns || recipe.patterns.length === 0) {
       return recipe;
     }
 
-    // Create a deep copy of the recipe to avoid modifying the original
-    const mergedRecipe = JSON.parse(JSON.stringify(recipe));
+    // Create a deep copy to avoid modifying the original
+    const expandedRecipe = JSON.parse(JSON.stringify(recipe));
 
-    // Merge blueprint defaults with recipe slots
-    for (const [slotKey, defaultSlot] of Object.entries(
-      blueprint.defaultSlots
-    )) {
-      if (!mergedRecipe.slots[slotKey]) {
-        // Recipe doesn't define this slot, use blueprint default
-        mergedRecipe.slots[slotKey] = defaultSlot;
-      } else {
-        // Recipe defines this slot, but we can still merge some defaults
-        const recipeSlot = mergedRecipe.slots[slotKey];
-
-        // If recipe doesn't specify count, use blueprint default
-        if (!recipeSlot.count && defaultSlot.count) {
-          recipeSlot.count = defaultSlot.count;
-        }
-
-        // If recipe doesn't specify tags, use blueprint default
-        if (!recipeSlot.tags && defaultSlot.tags) {
-          recipeSlot.tags = defaultSlot.tags;
-        }
-
-        // If recipe doesn't specify notTags, use blueprint default
-        if (!recipeSlot.notTags && defaultSlot.notTags) {
-          recipeSlot.notTags = defaultSlot.notTags;
-        }
-
-        // If recipe doesn't specify preferId, use blueprint default
-        if (!recipeSlot.preferId && defaultSlot.preferId) {
-          recipeSlot.preferId = defaultSlot.preferId;
+    // Process each pattern
+    for (const pattern of recipe.patterns) {
+      // For each slot key that matches this pattern
+      for (const slotKey of pattern.matches) {
+        // Only apply pattern if slot not already explicitly defined
+        if (!expandedRecipe.slots[slotKey]) {
+          expandedRecipe.slots[slotKey] = {
+            partType: pattern.partType,
+            preferId: pattern.preferId,
+            tags: pattern.tags,
+            notTags: pattern.notTags,
+            properties: pattern.properties,
+          };
         }
       }
     }
 
-    this.#logger.debug(
-      `Merged recipe '${recipe.recipeId}' with blueprint defaults`,
-      {
-        originalSlots: Object.keys(recipe.slots),
-        mergedSlots: Object.keys(mergedRecipe.slots),
-      }
-    );
-
-    return mergedRecipe;
+    return expandedRecipe;
   }
+
 
   /**
    * Creates a seeded random number generator
@@ -317,8 +293,32 @@ export class BodyBlueprintFactory {
    * @returns {string} The created root entity ID
    */
   #createRootEntity(rootDefinitionId, recipe, ownerId) {
+    // Check if recipe has a torso override
+    let actualRootDefinitionId = rootDefinitionId;
+    if (recipe.slots?.torso?.preferId) {
+      // Validate that the overridden torso is a valid torso part
+      const overrideDef = this.#dataRegistry.get('entityDefinitions', recipe.slots.torso.preferId);
+      if (overrideDef) {
+        const anatomyPart = overrideDef.components?.['anatomy:part'];
+        if (anatomyPart && anatomyPart.subType === 'torso') {
+          actualRootDefinitionId = recipe.slots.torso.preferId;
+          this.#logger.debug(
+            `Using recipe torso override: '${actualRootDefinitionId}' instead of blueprint default: '${rootDefinitionId}'`
+          );
+        } else {
+          this.#logger.warn(
+            `Recipe torso override '${recipe.slots.torso.preferId}' is not a valid torso part, using blueprint default`
+          );
+        }
+      } else {
+        this.#logger.warn(
+          `Recipe torso override '${recipe.slots.torso.preferId}' not found in registry, using blueprint default`
+        );
+      }
+    }
+
     const rootEntity =
-      this.#entityManager.createEntityInstance(rootDefinitionId);
+      this.#entityManager.createEntityInstance(actualRootDefinitionId);
 
     if (ownerId) {
       // Add ownership component if specified
@@ -387,15 +387,14 @@ export class BodyBlueprintFactory {
           );
         }
 
-        // Check socket occupancy
+        // Check socket occupancy (each socket can only have 1 part)
         const occupancyKey = `${parentEntityId}:${slot.socket}`;
-        const currentOccupancy = socketOccupancy.get(occupancyKey) || 0;
-        const maxCount = socket.maxCount || 1;
+        const isOccupied = socketOccupancy.has(occupancyKey);
 
-        if (currentOccupancy >= maxCount) {
+        if (isOccupied) {
           if (!slot.optional) {
             throw new ValidationError(
-              `Required socket '${slot.socket}' is already full on parent '${parentEntityId}'`
+              `Required socket '${slot.socket}' is already occupied on parent '${parentEntityId}'`
             );
           }
           continue;
@@ -443,7 +442,7 @@ export class BodyBlueprintFactory {
           // Update counts
           const partType = this.#getPartType(childId);
           partCounts.set(partType, (partCounts.get(partType) || 0) + 1);
-          socketOccupancy.set(occupancyKey, currentOccupancy + 1);
+          socketOccupancy.add(occupancyKey);
         }
       } catch (error) {
         const errorContext = {
@@ -458,9 +457,11 @@ export class BodyBlueprintFactory {
         await this.#eventDispatchService.safeDispatchEvent(
           SYSTEM_ERROR_OCCURRED_ID,
           {
-            error: errorMessage,
-            context: 'BodyBlueprintFactory.processBlueprintSlots',
-            details: errorContext,
+            message: errorMessage,
+            details: {
+              ...errorContext,
+              context: 'BodyBlueprintFactory.processBlueprintSlots',
+            },
           }
         );
 
@@ -522,11 +523,6 @@ export class BodyBlueprintFactory {
 
     const merged = { ...blueprintReqs };
 
-    // Recipe can override entityId
-    if (recipeSlot.preferId) {
-      merged.entityId = recipeSlot.preferId;
-    }
-
     // Recipe can add additional required components
     if (recipeSlot.tags) {
       merged.components = [...(merged.components || []), ...recipeSlot.tags];
@@ -555,36 +551,6 @@ export class BodyBlueprintFactory {
    * @private
    */
   async #findPartByRequirements(requirements, socket, slotKey, optional, rng) {
-    // If specific entity ID is required, validate and return it
-    if (requirements.entityId) {
-      const entityDef = this.#dataRegistry.get(
-        'entityDefinitions',
-        requirements.entityId
-      );
-      if (!entityDef) {
-        if (!optional) {
-          throw new ValidationError(
-            `Required entity '${requirements.entityId}' not found for slot '${slotKey}'`
-          );
-        }
-        return null;
-      }
-
-      // Validate it matches other requirements
-      if (
-        !this.#matchesRequirements(entityDef, requirements, socket.allowedTypes)
-      ) {
-        if (!optional) {
-          throw new ValidationError(
-            `Entity '${requirements.entityId}' does not match requirements for slot '${slotKey}'`
-          );
-        }
-        return null;
-      }
-
-      return requirements.entityId;
-    }
-
     // Find candidates by requirements
     const candidates = this.#findCandidatesByRequirements(
       requirements,
@@ -726,7 +692,6 @@ export class BodyBlueprintFactory {
         socketId,
         requirements: {
           partType: requirements.partType,
-          entityId: requirements.entityId,
           components: requirements.components || [],
         },
         checkedDefinitions: allEntityDefs.filter(
@@ -747,9 +712,6 @@ export class BodyBlueprintFactory {
         (requirements.partType
           ? `Need part type: '${requirements.partType}'. `
           : '') +
-        (requirements.entityId
-          ? `Preferred entity: '${requirements.entityId}'. `
-          : '') +
         (requirements.components?.length > 0
           ? `Required components: [${requirements.components.join(', ')}]. `
           : '') +
@@ -759,18 +721,15 @@ export class BodyBlueprintFactory {
       await this.#eventDispatchService.safeDispatchEvent(
         SYSTEM_ERROR_OCCURRED_ID,
         {
-          error: errorMessage,
-          context: 'BodyBlueprintFactory.selectPartByRequirements',
-          details: errorContext,
+          message: errorMessage,
+          details: {
+            ...errorContext,
+            context: 'BodyBlueprintFactory.selectPartByRequirements',
+          },
         }
       );
 
       return null;
-    }
-
-    // Prefer specific entity ID if provided
-    if (requirements.entityId && candidates.includes(requirements.entityId)) {
-      return requirements.entityId;
     }
 
     // Random selection from candidates
@@ -862,105 +821,6 @@ export class BodyBlueprintFactory {
     return true;
   }
 
-  /**
-   * Processes child slot specifications for a created part
-   *
-   * @param parentId
-   * @param childSlots
-   * @param recipe
-   * @param createdEntities
-   * @param partCounts
-   * @param socketOccupancy
-   * @param rng
-   * @private
-   */
-  async #processChildSlots(
-    parentId,
-    childSlots,
-    recipe,
-    createdEntities,
-    partCounts,
-    socketOccupancy,
-    rng
-  ) {
-    const parentEntity = this.#entityManager.getEntityInstance(parentId);
-    const socketsComponent = this.#entityManager.getComponentData(
-      parentId,
-      'anatomy:sockets'
-    );
-
-    if (!socketsComponent || !socketsComponent.sockets) {
-      return;
-    }
-
-    // Process each specified child slot
-    for (const [socketId, slotSpec] of Object.entries(childSlots)) {
-      const socket = socketsComponent.sockets.find((s) => s.id === socketId);
-      if (!socket) {
-        this.#logger.warn(
-          `Socket '${socketId}' not found on entity '${parentId}'`
-        );
-        continue;
-      }
-
-      const occupancyKey = `${parentId}:${socketId}`;
-      const currentOccupancy = socketOccupancy.get(occupancyKey) || 0;
-      const maxCount = socket.maxCount || 1;
-
-      if (currentOccupancy >= maxCount) {
-        continue;
-      }
-
-      // Determine how many parts to create
-      // For childSlots, we ignore global part counts and just use the slot specification
-      let desiredCount = 1; // Default
-      if (slotSpec.count) {
-        if (slotSpec.count.exact !== undefined) {
-          desiredCount = slotSpec.count.exact;
-        } else if (slotSpec.count.min !== undefined) {
-          desiredCount = slotSpec.count.min;
-        }
-      }
-      const availableSlots = maxCount - currentOccupancy;
-      const toCreate = Math.min(desiredCount, availableSlots);
-
-      // Create parts for this socket
-      for (let i = 0; i < toCreate; i++) {
-        const childId = await this.#createPartForSlot(
-          parentId,
-          socket,
-          slotSpec,
-          recipe,
-          socketOccupancy,
-          rng
-        );
-
-        if (childId) {
-          createdEntities.push(childId);
-          // Update counts
-          const partType = this.#getPartType(childId);
-          partCounts.set(partType, (partCounts.get(partType) || 0) + 1);
-          socketOccupancy.set(
-            occupancyKey,
-            (socketOccupancy.get(occupancyKey) || 0) + 1
-          );
-
-          // Recursively process child slots of this new part
-          if (slotSpec.childSlots) {
-            await this.#processChildSlots(
-              childId,
-              slotSpec.childSlots,
-              recipe,
-              createdEntities,
-              partCounts,
-              socketOccupancy,
-              rng
-            );
-          }
-        }
-      }
-    }
-  }
 
   /**
    * Finds a recipe slot that matches the socket's allowed types
@@ -978,28 +838,6 @@ export class BodyBlueprintFactory {
     return null;
   }
 
-  /**
-   * Calculates how many parts to create based on recipe slot configuration
-   *
-   * @param recipeSlot
-   * @param partCounts
-   * @param partType
-   * @private
-   */
-  #calculateDesiredCount(recipeSlot, partCounts, partType) {
-    const currentCount = partCounts.get(partType) || 0;
-
-    if (recipeSlot.count) {
-      if (recipeSlot.count.exact !== undefined) {
-        return Math.max(0, recipeSlot.count.exact - currentCount);
-      } else if (recipeSlot.count.min !== undefined) {
-        return Math.max(0, recipeSlot.count.min - currentCount);
-      }
-    }
-
-    // Default to 1 if no count specified
-    return currentCount === 0 ? 1 : 0;
-  }
 
   /**
    * Creates a part for a specific slot configuration
@@ -1182,15 +1020,18 @@ export class BodyBlueprintFactory {
    * @param recipe
    * @param socketOccupancy
    * @param rng
+   * @param _recipe
+   * @param _socketOccupancy
+   * @param _rng
    * @private
    */
   async #createAndAttachPart(
     parentId,
     socketId,
     partDefinitionId,
-    recipe,
-    socketOccupancy,
-    rng
+    _recipe,
+    _socketOccupancy,
+    _rng
   ) {
     try {
       // Get socket details from parent

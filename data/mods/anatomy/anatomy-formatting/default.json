@@ -16,10 +16,12 @@
     "hand",
     "leg",
     "foot",
+    "penis",
+    "testicle",
     "tail",
     "wing"
   ],
-  "pairedParts": ["eye", "ear", "arm", "leg", "hand", "foot", "breast", "wing"],
+  "pairedParts": ["eye", "ear", "arm", "leg", "hand", "foot", "breast", "wing", "testicle"],
   "irregularPlurals": {
     "foot": "feet",
     "tooth": "teeth"

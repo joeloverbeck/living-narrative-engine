@@ -12,7 +12,6 @@
           "id": "knee",
           "orientation": "lower",
           "allowedTypes": ["lower_leg"],
-          "maxCount": 1,
           "nameTpl": "{{parent.name}} lower leg"
         }
       ]

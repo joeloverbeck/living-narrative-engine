@@ -95,12 +95,12 @@ describe('Schema Reference Validation', () => {
     it('should validate that anatomy.blueprint.schema.json references use correct relative paths', () => {
       const schemaContent = JSON.stringify(anatomyBlueprintSchema);
 
-      // Check that we're using ./ instead of ../
+      // Check that we're using ./ instead of ../ for common schema references
       expect(schemaContent).toContain(
-        '"./anatomy.recipe.schema.json#/definitions/slotDefinition"'
+        '"./common.schema.json#/definitions/namespacedId"'
       );
       expect(schemaContent).not.toContain(
-        '"../anatomy.recipe.schema.json#/definitions/slotDefinition"'
+        '"../common.schema.json#/definitions/namespacedId"'
       );
     });
 
@@ -153,12 +153,6 @@ describe('Schema Reference Validation', () => {
             optional: true,
           },
         },
-        defaultSlots: {
-          arm_slots: {
-            partType: 'arm',
-            count: { min: 1, max: 2 },
-          },
-        },
       };
 
       // Get the validator function for the schema
@@ -183,12 +177,17 @@ describe('Schema Reference Validation', () => {
         const distSchema = JSON.parse(fs.readFileSync(distSchemaPath, 'utf8'));
         const distContent = JSON.stringify(distSchema);
 
-        // Check that dist version also uses correct relative paths
+        // Check that dist version has internal blueprint definitions
         expect(distContent).toContain(
-          '"./anatomy.recipe.schema.json#/definitions/slotDefinition"'
+          '"blueprintSlot"'
         );
-        expect(distContent).not.toContain(
-          '"../anatomy.recipe.schema.json#/definitions/slotDefinition"'
+        expect(distContent).toContain(
+          '"partRequirements"'
+        );
+        
+        // Ensure it uses correct relative paths for common schema
+        expect(distContent).toContain(
+          '"./common.schema.json#/definitions/namespacedId"'
         );
       } catch (error) {
         // If dist doesn't exist yet, that's okay - this test will help catch issues after build

@@ -25,6 +25,13 @@
         "$ref": "#/definitions/slotDefinition"
       }
     },
+    "patterns": {
+      "type": "array",
+      "description": "Pattern-based slot configurations that can match multiple slots",
+      "items": {
+        "$ref": "#/definitions/patternDefinition"
+      }
+    },
     "constraints": {
       "type": "object",
       "description": "Global constraints for part combinations",
@@ -33,22 +40,48 @@
           "type": "array",
           "description": "Co-presence requirements - all parts in a group must be present together",
           "items": {
-            "type": "array",
-            "items": {
-              "$ref": "./common.schema.json#/definitions/namespacedId"
+            "type": "object",
+            "properties": {
+              "components": {
+                "type": "array",
+                "description": "Component tags that must be present together",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "partTypes": {
+                "type": "array",
+                "description": "Part types that must be present together",
+                "items": {
+                  "type": "string"
+                }
+              }
             },
-            "minItems": 2
+            "additionalProperties": false
           }
         },
         "excludes": {
           "type": "array",
           "description": "Mutual exclusion constraints - parts in a group cannot coexist",
           "items": {
-            "type": "array",
-            "items": {
-              "$ref": "./common.schema.json#/definitions/namespacedId"
+            "type": "object",
+            "properties": {
+              "components": {
+                "type": "array",
+                "description": "Component tags that cannot coexist",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "partTypes": {
+                "type": "array",
+                "description": "Part types that cannot coexist",
+                "items": {
+                  "type": "string"
+                }
+              }
             },
-            "minItems": 2
+            "additionalProperties": false
           }
         }
       },
@@ -84,54 +117,56 @@
             "$ref": "./common.schema.json#/definitions/namespacedId"
           }
         },
-        "count": {
-          "oneOf": [
-            {
-              "type": "object",
-              "properties": {
-                "min": {
-                  "type": "integer",
-                  "minimum": 0,
-                  "description": "Minimum number of parts (soft limit, clamped by socket availability)"
-                },
-                "max": {
-                  "type": "integer",
-                  "minimum": 0,
-                  "description": "Maximum number of parts (soft limit, clamped by socket availability)"
-                }
-              },
-              "required": ["min", "max"],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "exact": {
-                  "type": "integer",
-                  "minimum": 0,
-                  "description": "Exact number of parts desired (soft limit, clamped by socket availability)"
-                }
-              },
-              "required": ["exact"],
-              "additionalProperties": false
-            }
-          ],
-          "description": "Desired count of parts for this slot"
+        "properties": {
+          "type": "object",
+          "description": "Required property values for components on matching parts",
+          "additionalProperties": true
+        }
+      },
+      "required": ["partType"],
+      "additionalProperties": false
+    },
+    "patternDefinition": {
+      "type": "object",
+      "description": "Pattern-based slot configuration that can match multiple slots",
+      "properties": {
+        "matches": {
+          "type": "array",
+          "description": "List of slot keys this pattern applies to",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        },
+        "partType": {
+          "type": "string",
+          "description": "Required. The type of part these slots expect"
+        },
+        "preferId": {
+          "$ref": "./common.schema.json#/definitions/namespacedId",
+          "description": "Optional. Exact entity ID to prefer if available"
+        },
+        "tags": {
+          "type": "array",
+          "description": "Component tags that must be present on matching parts",
+          "items": {
+            "$ref": "./common.schema.json#/definitions/namespacedId"
+          }
+        },
+        "notTags": {
+          "type": "array",
+          "description": "Component tags that must NOT be present on matching parts",
+          "items": {
+            "$ref": "./common.schema.json#/definitions/namespacedId"
+          }
         },
         "properties": {
           "type": "object",
           "description": "Required property values for components on matching parts",
           "additionalProperties": true
-        },
-        "childSlots": {
-          "type": "object",
-          "description": "Slot specifications for sockets on the selected part",
-          "additionalProperties": {
-            "$ref": "#/definitions/slotDefinition"
-          }
         }
       },
-      "required": ["partType"],
+      "required": ["matches", "partType"],
       "additionalProperties": false
     }
   }

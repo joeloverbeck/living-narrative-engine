@@ -9,10 +9,9 @@
     "anatomy:sockets": {
       "sockets": [
         {
-          "id": "elbow",
+          "id": "wrist",
           "orientation": "lower",
-          "allowedTypes": ["forearm"],
-          "maxCount": 1,
+          "allowedTypes": ["hand"],
           "nameTpl": "{{parent.name}} {{type}}"
         }
       ]

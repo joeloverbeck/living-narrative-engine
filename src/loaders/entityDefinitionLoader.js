@@ -127,12 +127,14 @@ class EntityDefinitionLoader extends BaseManifestItemLoader {
         this.#safeEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
           message: `EntityLoader [${modId}]: Runtime validation failed for component '${componentId}' in entity '${entityId}' (file: ${filename})`,
           details: {
-            modId,
-            filename,
-            entityId,
-            componentId,
-            errors: componentValidationResult.errors,
-            raw: errorDetails,
+            raw: JSON.stringify({
+              modId,
+              filename,
+              entityId,
+              componentId,
+              errors: componentValidationResult.errors,
+              validationDetails: errorDetails,
+            }),
           },
         });
         validationFailures.push({
@@ -155,10 +157,12 @@ class EntityDefinitionLoader extends BaseManifestItemLoader {
       this.#safeEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
         message: comprehensiveMessage,
         details: {
-          modId,
-          filename,
-          entityId,
-          failedComponentIds,
+          raw: JSON.stringify({
+            modId,
+            filename,
+            entityId,
+            failedComponentIds,
+          }),
         },
       });
       throw new ValidationError(comprehensiveMessage);
