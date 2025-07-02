@@ -21,6 +21,7 @@
     ],
     "entities": {
       "definitions": [
+        "human_asshole.entity.json",
         "human_breast.entity.json",
         "human_breast_d_cup.entity.json",
         "human_breast_g_cup.entity.json",
@@ -32,6 +33,7 @@
         "human_hair.entity.json",
         "human_hair_blonde.entity.json",
         "human_hair_raven.entity.json",
+        "human_hand.entity.json",
         "human_leg_shapely.entity.json",
         "human_male_torso.entity.json",
         "human_penis.entity.json",
@@ -46,12 +48,17 @@
       ],
       "instances": []
     },
-    "blueprints": ["human_female.blueprint.json", "human_male.blueprint.json"],
+    "blueprints": [
+      "human_female.blueprint.json",
+      "human_male.blueprint.json"
+    ],
     "recipes": [
       "gorgeous_milf.recipe.json",
       "human_female.recipe.json",
       "human_male.recipe.json"
     ],
-    "anatomyFormatting": ["default.json"]
+    "anatomyFormatting": [
+      "default.json"
+    ]
   }
 }

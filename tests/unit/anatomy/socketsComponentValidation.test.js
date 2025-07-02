@@ -33,7 +33,6 @@ describe('Sockets Component Validation', () => {
           id: 'left_shoulder',
           orientation: 'left',
           allowedTypes: ['arm'],
-          maxCount: 1,
           nameTpl: '{{orientation}} {{type}}',
         },
       ],
@@ -50,7 +49,6 @@ describe('Sockets Component Validation', () => {
         {
           id: 'pubic_hair',
           allowedTypes: ['hair'],
-          maxCount: 1,
           nameTpl: 'pubic {{type}}',
         },
       ],
@@ -71,7 +69,6 @@ describe('Sockets Component Validation', () => {
           id: 'test_socket',
           orientation: 'lower-front', // Invalid compound orientation
           allowedTypes: ['test'],
-          maxCount: 1,
         },
       ],
     };
@@ -163,7 +160,6 @@ describe('Sockets Component Validation', () => {
           id: 'complete_socket',
           orientation: 'front',
           allowedTypes: ['test_type'],
-          maxCount: 2,
           nameTpl: '{{parent.name}} - {{orientation}} {{type}} #{{index}}',
         },
       ],
@@ -209,22 +205,5 @@ describe('Sockets Component Validation', () => {
     expect(result.errors[0].message).toContain(
       'must NOT have fewer than 1 items'
     );
-  });
-
-  it('should reject maxCount less than 1', () => {
-    const invalidMaxCount = {
-      sockets: [
-        {
-          id: 'test_socket',
-          allowedTypes: ['test'],
-          maxCount: 0, // Should be minimum 1
-        },
-      ],
-    };
-
-    const result = validator.validate(socketsSchemaId, invalidMaxCount);
-    expect(result.isValid).toBe(false);
-    expect(result.errors).toBeDefined();
-    expect(result.errors[0].message).toContain('must be >= 1');
   });
 });

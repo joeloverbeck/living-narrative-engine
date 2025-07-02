@@ -48,7 +48,9 @@ describe('EventDispatchService', () => {
 
     it('should throw error if logger is missing', () => {
       expect(() => {
-        new EventDispatchService({ safeEventDispatcher: mockSafeEventDispatcher });
+        new EventDispatchService({
+          safeEventDispatcher: mockSafeEventDispatcher,
+        });
       }).toThrow('EventDispatchService: logger is required');
     });
   });
@@ -69,7 +71,9 @@ describe('EventDispatchService', () => {
         payload,
         {}
       );
-      expect(mockLogger.debug).toHaveBeenCalledWith(`Dispatched '${eventName}'.`);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        `Dispatched '${eventName}'.`
+      );
       expect(mockLogger.error).not.toHaveBeenCalled();
     });
 
@@ -225,10 +229,9 @@ describe('EventDispatchService', () => {
         eventId,
         payload
       );
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        `Dispatched ${eventId}`,
-        { payload }
-      );
+      expect(mockLogger.debug).toHaveBeenCalledWith(`Dispatched ${eventId}`, {
+        payload,
+      });
     });
 
     it('should log error when dispatch fails', async () => {
@@ -247,6 +250,5 @@ describe('EventDispatchService', () => {
         error
       );
     });
-
   });
 });

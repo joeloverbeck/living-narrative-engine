@@ -45,7 +45,7 @@ describe('GraphIntegrityValidator', () => {
 
   describe('validateGraph', () => {
     it('should return valid result for empty graph', async () => {
-      const result = await validator.validateGraph([], {}, new Map());
+      const result = await validator.validateGraph([], {}, new Set());
 
       expect(result).toEqual({
         valid: true,
@@ -63,7 +63,7 @@ describe('GraphIntegrityValidator', () => {
         throw error;
       });
 
-      const result = await validator.validateGraph(['entity-1'], {}, new Map());
+      const result = await validator.validateGraph(['entity-1'], {}, new Set());
 
       expect(result.valid).toBe(false);
       expect(result.errors).toContain('Validation error: Unexpected error');
@@ -74,13 +74,13 @@ describe('GraphIntegrityValidator', () => {
     });
 
     it('should log when validation fails with errors', async () => {
-      // Setup to trigger socket limit error
-      const socketOccupancy = new Map([['parent-1:socket-1', 3]]);
+      // Setup to trigger missing socket error
+      const socketOccupancy = new Set(['parent-1:nonexistent-socket']);
       mockEntityManager.getComponentData.mockImplementation(
         (entityId, componentId) => {
           if (entityId === 'parent-1' && componentId === 'anatomy:sockets') {
             return {
-              sockets: [{ id: 'socket-1', maxCount: 2 }],
+              sockets: [{ id: 'socket-1' }],
             };
           }
           return null;
@@ -108,7 +108,7 @@ describe('GraphIntegrityValidator', () => {
       const result = await validator.validateGraph(
         ['entity-1', 'entity-2'],
         {},
-        new Map()
+        new Set()
       );
 
       expect(result.valid).toBe(true);
@@ -121,14 +121,14 @@ describe('GraphIntegrityValidator', () => {
   });
 
   describe('validateSocketLimits', () => {
-    it('should validate socket occupancy within limits', async () => {
-      const socketOccupancy = new Map([['parent-1:socket-1', 1]]);
+    it('should validate socket occupancy exists', async () => {
+      const socketOccupancy = new Set(['parent-1:socket-1']);
 
       mockEntityManager.getComponentData.mockImplementation(
         (entityId, componentId) => {
           if (entityId === 'parent-1' && componentId === 'anatomy:sockets') {
             return {
-              sockets: [{ id: 'socket-1', maxCount: 2 }],
+              sockets: [{ id: 'socket-1' }],
             };
           }
           return null;
@@ -145,40 +145,14 @@ describe('GraphIntegrityValidator', () => {
       expect(result.errors).toEqual([]);
     });
 
-    it('should error when socket occupancy exceeds maxCount', async () => {
-      const socketOccupancy = new Map([['parent-1:socket-1', 3]]);
-
-      mockEntityManager.getComponentData.mockImplementation(
-        (entityId, componentId) => {
-          if (entityId === 'parent-1' && componentId === 'anatomy:sockets') {
-            return {
-              sockets: [{ id: 'socket-1', maxCount: 2 }],
-            };
-          }
-          return null;
-        }
-      );
-
-      const result = await validator.validateGraph(
-        ['parent-1'],
-        {},
-        socketOccupancy
-      );
-
-      expect(result.valid).toBe(false);
-      expect(result.errors).toContain(
-        "Socket 'socket-1' on entity 'parent-1' exceeds maxCount: 3 > 2"
-      );
-    });
-
     it('should error when socket not found', async () => {
-      const socketOccupancy = new Map([['parent-1:missing-socket', 1]]);
+      const socketOccupancy = new Set(['parent-1:missing-socket']);
 
       mockEntityManager.getComponentData.mockImplementation(
         (entityId, componentId) => {
           if (entityId === 'parent-1' && componentId === 'anatomy:sockets') {
             return {
-              sockets: [{ id: 'other-socket', maxCount: 1 }],
+              sockets: [{ id: 'other-socket' }],
             };
           }
           return null;
@@ -196,32 +170,6 @@ describe('GraphIntegrityValidator', () => {
         "Socket 'missing-socket' not found on entity 'parent-1'"
       );
     });
-
-    it('should use default maxCount of 1 when not specified', async () => {
-      const socketOccupancy = new Map([['parent-1:socket-1', 2]]);
-
-      mockEntityManager.getComponentData.mockImplementation(
-        (entityId, componentId) => {
-          if (entityId === 'parent-1' && componentId === 'anatomy:sockets') {
-            return {
-              sockets: [{ id: 'socket-1' }], // No maxCount specified
-            };
-          }
-          return null;
-        }
-      );
-
-      const result = await validator.validateGraph(
-        ['parent-1'],
-        {},
-        socketOccupancy
-      );
-
-      expect(result.valid).toBe(false);
-      expect(result.errors).toContain(
-        "Socket 'socket-1' on entity 'parent-1' exceeds maxCount: 2 > 1"
-      );
-    });
   });
 
   describe('validateRecipeConstraints', () => {
@@ -231,7 +179,7 @@ describe('GraphIntegrityValidator', () => {
       const result = await validator.validateGraph(
         ['entity-1'],
         recipe,
-        new Map()
+        new Set()
       );
 
       expect(result.valid).toBe(true);
@@ -254,7 +202,7 @@ describe('GraphIntegrityValidator', () => {
       const result = await validator.validateGraph(
         ['entity-1'],
         recipe,
-        new Map()
+        new Set()
       );
 
       expect(result.valid).toBe(true);
@@ -288,7 +236,7 @@ describe('GraphIntegrityValidator', () => {
       const result = await validator.validateGraph(
         ['entity-1'],
         recipe,
-        new Map()
+        new Set()
       );
 
       expect(result.valid).toBe(false);
@@ -313,7 +261,7 @@ describe('GraphIntegrityValidator', () => {
       const result = await validator.validateGraph(
         ['entity-1'],
         recipe,
-        new Map()
+        new Set()
       );
 
       expect(result.valid).toBe(true);
@@ -340,7 +288,7 @@ describe('GraphIntegrityValidator', () => {
       const result = await validator.validateGraph(
         ['entity-1'],
         recipe,
-        new Map()
+        new Set()
       );
 
       expect(result.valid).toBe(false);
@@ -369,7 +317,7 @@ describe('GraphIntegrityValidator', () => {
       const result = await validator.validateGraph(
         ['entity-1', 'entity-2'],
         recipe,
-        new Map()
+        new Set()
       );
 
       expect(result.valid).toBe(true);
@@ -399,7 +347,7 @@ describe('GraphIntegrityValidator', () => {
       const result = await validator.validateGraph(
         ['entity-1'],
         recipe,
-        new Map()
+        new Set()
       );
 
       expect(result.valid).toBe(false);
@@ -432,7 +380,7 @@ describe('GraphIntegrityValidator', () => {
       const result = await validator.validateGraph(
         ['entity-1'],
         recipe,
-        new Map()
+        new Set()
       );
 
       expect(result.valid).toBe(false);
@@ -465,7 +413,7 @@ describe('GraphIntegrityValidator', () => {
       const result = await validator.validateGraph(
         ['entity-1', 'entity-2'],
         recipe,
-        new Map()
+        new Set()
       );
 
       expect(result.valid).toBe(false);
@@ -512,7 +460,7 @@ describe('GraphIntegrityValidator', () => {
       const result = await validator.validateGraph(
         ['parent-1', 'child-1', 'child-2'],
         {},
-        new Map()
+        new Set()
       );
 
       expect(result.valid).toBe(true);
@@ -562,7 +510,7 @@ describe('GraphIntegrityValidator', () => {
       const result = await validator.validateGraph(
         ['entity-1', 'entity-2'],
         {},
-        new Map()
+        new Set()
       );
 
       expect(result.valid).toBe(false);
@@ -626,7 +574,7 @@ describe('GraphIntegrityValidator', () => {
       const result = await validator.validateGraph(
         ['entity-1', 'entity-2', 'entity-3'],
         {},
-        new Map()
+        new Set()
       );
 
       expect(result.valid).toBe(false);
@@ -659,7 +607,7 @@ describe('GraphIntegrityValidator', () => {
       const result = await validator.validateGraph(
         ['parent-1', 'child-1'],
         {},
-        new Map()
+        new Set()
       );
 
       expect(result.valid).toBe(true);
@@ -675,7 +623,7 @@ describe('GraphIntegrityValidator', () => {
         }
       );
 
-      const result = await validator.validateGraph(['child-1'], {}, new Map());
+      const result = await validator.validateGraph(['child-1'], {}, new Set());
 
       expect(result.valid).toBe(false);
       expect(result.errors).toContain(
@@ -701,7 +649,7 @@ describe('GraphIntegrityValidator', () => {
       const result = await validator.validateGraph(
         ['parent-1', 'child-1'],
         {},
-        new Map()
+        new Set()
       );
 
       expect(result.valid).toBe(false);
@@ -725,7 +673,7 @@ describe('GraphIntegrityValidator', () => {
       const result = await validator.validateGraph(
         ['parent-1', 'child-1'],
         {},
-        new Map()
+        new Set()
       );
 
       expect(result.warnings).toEqual([]);
@@ -741,7 +689,7 @@ describe('GraphIntegrityValidator', () => {
         }
       );
 
-      const result = await validator.validateGraph(['orphan-1'], {}, new Map());
+      const result = await validator.validateGraph(['orphan-1'], {}, new Set());
 
       expect(result.valid).toBe(false);
       expect(result.errors).toContain(
@@ -772,7 +720,7 @@ describe('GraphIntegrityValidator', () => {
       const result = await validator.validateGraph(
         ['torso-1', 'arm-1'],
         {},
-        new Map()
+        new Set()
       );
 
       expect(result.valid).toBe(true);
@@ -799,7 +747,7 @@ describe('GraphIntegrityValidator', () => {
       const result = await validator.validateGraph(
         ['torso-1', 'leg-1'],
         {},
-        new Map()
+        new Set()
       );
 
       expect(result.valid).toBe(false);
@@ -831,7 +779,7 @@ describe('GraphIntegrityValidator', () => {
       const result = await validator.validateGraph(
         ['parent-1', 'part-1'],
         {},
-        new Map()
+        new Set()
       );
 
       expect(result.valid).toBe(true); // Should not error on missing data

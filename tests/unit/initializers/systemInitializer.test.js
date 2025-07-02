@@ -443,7 +443,9 @@ describe('SystemInitializer (Tag-Based Refactor)', () => {
 
       // Verify Event Dispatching (Added)
       // FIX: Updated expected count based on actual events dispatched
-      expect(mockEventDispatchService.dispatchWithLogging).toHaveBeenCalledTimes(1);
+      expect(
+        mockEventDispatchService.dispatchWithLogging
+      ).toHaveBeenCalledTimes(1);
 
       // Check specific event calls
       expect(mockEventDispatchService.dispatchWithLogging).toHaveBeenCalledWith(
@@ -480,7 +482,9 @@ describe('SystemInitializer (Tag-Based Refactor)', () => {
       expect(mockLogger.warn).not.toHaveBeenCalled();
 
       // Verify Event Dispatching (Added)
-      expect(mockEventDispatchService.dispatchWithLogging).toHaveBeenCalledTimes(0);
+      expect(
+        mockEventDispatchService.dispatchWithLogging
+      ).toHaveBeenCalledTimes(0);
     });
 
     it('[Non-Array Result Scenario] should handle resolver returning non-array gracefully and dispatch events', async () => {
@@ -508,7 +512,9 @@ describe('SystemInitializer (Tag-Based Refactor)', () => {
       expect(mockLogger.warn).toHaveBeenCalledTimes(1); // Only the non-array warning
 
       // Verify Event Dispatching (Added)
-      expect(mockEventDispatchService.dispatchWithLogging).toHaveBeenCalledTimes(0);
+      expect(
+        mockEventDispatchService.dispatchWithLogging
+      ).toHaveBeenCalledTimes(0);
     });
 
     it('[Resolver Error Scenario] should log the resolution error, dispatch failed event, and re-throw', async () => {
@@ -546,7 +552,9 @@ describe('SystemInitializer (Tag-Based Refactor)', () => {
       expect(mockSystemGood1.initialize).not.toHaveBeenCalled();
 
       // Verify Event Dispatching (Added)
-      expect(mockEventDispatchService.dispatchWithLogging).toHaveBeenCalledTimes(0);
+      expect(
+        mockEventDispatchService.dispatchWithLogging
+      ).toHaveBeenCalledTimes(0);
     });
 
     it('[Individual Init Error Scenario] should log specific init error, dispatch events, and continue with others', async () => {
@@ -589,7 +597,9 @@ describe('SystemInitializer (Tag-Based Refactor)', () => {
       expect(mockLogger.error).toHaveBeenCalledTimes(1);
 
       // Verify Event Dispatching (Added)
-      expect(mockEventDispatchService.dispatchWithLogging).toHaveBeenCalledTimes(1);
+      expect(
+        mockEventDispatchService.dispatchWithLogging
+      ).toHaveBeenCalledTimes(1);
       expect(mockEventDispatchService.dispatchWithLogging).toHaveBeenCalledWith(
         'system:initialization_failed',
         {

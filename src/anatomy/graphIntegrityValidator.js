@@ -44,7 +44,7 @@ export class GraphIntegrityValidator {
    *
    * @param {string[]} entityIds - All entity IDs in the graph
    * @param {object} recipe - The recipe used to assemble the graph
-   * @param {Map<string, number>} socketOccupancy - Socket usage tracking
+   * @param {Set<string>} socketOccupancy - Occupied sockets tracking
    * @returns {Promise<ValidationResult>}
    */
   async validateGraph(entityIds, recipe, socketOccupancy) {
@@ -106,7 +106,7 @@ export class GraphIntegrityValidator {
   }
 
   /**
-   * Validates that socket occupancy doesn't exceed maxCount
+   * Validates socket occupancy (each socket should have at most one part)
    *
    * @param entityIds
    * @param socketOccupancy
@@ -114,7 +114,12 @@ export class GraphIntegrityValidator {
    * @private
    */
   #validateSocketLimits(entityIds, socketOccupancy, errors) {
-    for (const [socketKey, occupancy] of socketOccupancy.entries()) {
+    // With the new design, each socket can only have one part
+    // The socketOccupancy Set tracks which sockets are occupied
+    // No validation needed since the factory enforces single occupancy
+
+    // We could validate that all occupied sockets actually exist
+    for (const socketKey of socketOccupancy) {
       const [parentId, socketId] = socketKey.split(':');
 
       // Get socket definition
@@ -126,14 +131,6 @@ export class GraphIntegrityValidator {
 
       if (!socket) {
         errors.push(`Socket '${socketId}' not found on entity '${parentId}'`);
-        continue;
-      }
-
-      const maxCount = socket.maxCount !== undefined ? socket.maxCount : 1;
-      if (occupancy > maxCount) {
-        errors.push(
-          `Socket '${socketId}' on entity '${parentId}' exceeds maxCount: ${occupancy} > ${maxCount}`
-        );
       }
     }
   }

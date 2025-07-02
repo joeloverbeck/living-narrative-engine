@@ -61,13 +61,9 @@ describe('Anatomy Validation Integration', () => {
           [ANATOMY_PART_COMPONENT_ID]: { subType: 'torso' },
           [ANATOMY_SOCKETS_COMPONENT_ID]: {
             sockets: [
-              { id: 'arm_socket', allowedTypes: ['arm'], maxCount: 2 },
-              { id: 'head_socket', allowedTypes: ['head'], maxCount: 1 },
-              {
-                id: 'limited_socket',
-                allowedTypes: ['accessory'],
-                maxCount: 0,
-              },
+              { id: 'left_arm_socket', allowedTypes: ['arm'] },
+              { id: 'right_arm_socket', allowedTypes: ['arm'] },
+              { id: 'head_socket', allowedTypes: ['head'] },
             ],
           },
         },
@@ -119,25 +115,27 @@ describe('Anatomy Validation Integration', () => {
   });
 
   describe('Socket Limit Validation', () => {
-    it('should validate socket maxCount limits', async () => {
+    it('should validate socket occupancy', async () => {
       const torso = testBed.entityManager.createEntityInstance(
         'test:multi_socket_torso'
       );
       const arm1 = testBed.entityManager.createEntityInstance('test:typed_arm');
       const arm2 = testBed.entityManager.createEntityInstance('test:typed_arm');
-      const arm3 = testBed.entityManager.createEntityInstance('test:typed_arm');
 
-      // Connect two arms (within limit)
+      // Connect arms to different sockets
       testBed.entityManager.addComponent(arm1.id, ANATOMY_JOINT_COMPONENT_ID, {
         parentId: torso.id,
-        socketId: 'arm_socket',
+        socketId: 'left_arm_socket',
       });
       testBed.entityManager.addComponent(arm2.id, ANATOMY_JOINT_COMPONENT_ID, {
         parentId: torso.id,
-        socketId: 'arm_socket',
+        socketId: 'right_arm_socket',
       });
 
-      const socketOccupancy = new Map([[`${torso.id}:arm_socket`, 2]]);
+      const socketOccupancy = new Set([
+        `${torso.id}:left_arm_socket`,
+        `${torso.id}:right_arm_socket`,
+      ]);
 
       const result = await validator.validateGraph(
         [torso.id, arm1.id, arm2.id],
@@ -149,13 +147,13 @@ describe('Anatomy Validation Integration', () => {
       expect(result.errors).toHaveLength(0);
     });
 
-    it('should fail when socket maxCount is exceeded', async () => {
+    it('should fail when socket not found', async () => {
       const torso = testBed.entityManager.createEntityInstance(
         'test:multi_socket_torso'
       );
 
-      const socketOccupancy = new Map([
-        [`${torso.id}:arm_socket`, 3], // Exceeds maxCount of 2
+      const socketOccupancy = new Set([
+        `${torso.id}:nonexistent_socket`, // Socket doesn't exist
       ]);
 
       const result = await validator.validateGraph(
@@ -166,32 +164,7 @@ describe('Anatomy Validation Integration', () => {
 
       expect(result.valid).toBe(false);
       expect(result.errors).toContain(
-        "Socket 'arm_socket' on entity '" +
-          torso.id +
-          "' exceeds maxCount: 3 > 2"
-      );
-    });
-
-    it('should handle socket with maxCount = 0', async () => {
-      const torso = testBed.entityManager.createEntityInstance(
-        'test:multi_socket_torso'
-      );
-
-      const socketOccupancy = new Map([
-        [`${torso.id}:limited_socket`, 1], // Should not allow any
-      ]);
-
-      const result = await validator.validateGraph(
-        [torso.id],
-        {},
-        socketOccupancy
-      );
-
-      expect(result.valid).toBe(false);
-      expect(result.errors).toContain(
-        "Socket 'limited_socket' on entity '" +
-          torso.id +
-          "' exceeds maxCount: 1 > 0"
+        "Socket 'nonexistent_socket' not found on entity '" + torso.id + "'"
       );
     });
 
@@ -200,7 +173,7 @@ describe('Anatomy Validation Integration', () => {
         'test:multi_socket_torso'
       );
 
-      const socketOccupancy = new Map([[`${torso.id}:non_existent_socket`, 1]]);
+      const socketOccupancy = new Set([`${torso.id}:non_existent_socket`]);
 
       const result = await validator.validateGraph(
         [torso.id],
@@ -235,7 +208,7 @@ describe('Anatomy Validation Integration', () => {
       const result = await validator.validateGraph(
         [part.id],
         recipe,
-        new Map()
+        new Set()
       );
 
       expect(result.valid).toBe(true);
@@ -266,7 +239,7 @@ describe('Anatomy Validation Integration', () => {
       const result = await validator.validateGraph(
         [partA.id, regularPart.id],
         recipe,
-        new Map()
+        new Set()
       );
 
       expect(result.valid).toBe(true);
@@ -285,9 +258,7 @@ describe('Anatomy Validation Integration', () => {
           components: {
             [ANATOMY_PART_COMPONENT_ID]: { subType: 'torso' },
             [ANATOMY_SOCKETS_COMPONENT_ID]: {
-              sockets: [
-                { id: 'universal_socket', allowedTypes: ['*'], maxCount: 5 },
-              ],
+              sockets: [{ id: 'universal_socket', allowedTypes: ['*'] }],
             },
           },
         },
@@ -310,7 +281,7 @@ describe('Anatomy Validation Integration', () => {
         socketId: 'universal_socket',
       });
 
-      const socketOccupancy = new Map([[`${torso.id}:universal_socket`, 2]]);
+      const socketOccupancy = new Set([`${torso.id}:universal_socket`]);
 
       const result = await validator.validateGraph(
         [torso.id, arm.id, leg.id],
@@ -336,18 +307,19 @@ describe('Anatomy Validation Integration', () => {
         'test:wrong_type_part'
       );
 
-      // Exceed socket limit
+      // Connect arms to sockets
       testBed.entityManager.addComponent(arm1.id, ANATOMY_JOINT_COMPONENT_ID, {
         parentId: torso.id,
-        socketId: 'arm_socket',
+        socketId: 'left_arm_socket',
       });
       testBed.entityManager.addComponent(arm2.id, ANATOMY_JOINT_COMPONENT_ID, {
         parentId: torso.id,
-        socketId: 'arm_socket',
+        socketId: 'right_arm_socket',
       });
+      // Try to connect third arm to non-existent socket
       testBed.entityManager.addComponent(arm3.id, ANATOMY_JOINT_COMPONENT_ID, {
         parentId: torso.id,
-        socketId: 'arm_socket',
+        socketId: 'third_arm_socket', // This socket doesn't exist
       });
 
       // Wrong part type
@@ -360,9 +332,11 @@ describe('Anatomy Validation Integration', () => {
         }
       );
 
-      const socketOccupancy = new Map([
-        [`${torso.id}:arm_socket`, 3], // Exceeds limit
-        [`${torso.id}:head_socket`, 1],
+      const socketOccupancy = new Set([
+        `${torso.id}:left_arm_socket`,
+        `${torso.id}:right_arm_socket`,
+        `${torso.id}:third_arm_socket`, // Non-existent socket
+        `${torso.id}:head_socket`,
       ]);
 
       const result = await validator.validateGraph(
@@ -387,7 +361,6 @@ describe('Anatomy Validation Integration', () => {
                 {
                   id: 'nested_socket',
                   allowedTypes: ['nestable'],
-                  maxCount: 1,
                 },
               ],
             },
@@ -415,7 +388,7 @@ describe('Anatomy Validation Integration', () => {
       }
 
       const entityIds = parts.map((p) => p.id);
-      const result = await validator.validateGraph(entityIds, {}, new Map());
+      const result = await validator.validateGraph(entityIds, {}, new Set());
 
       // Deep nesting should be valid
       expect(result.valid).toBe(true);
@@ -423,7 +396,7 @@ describe('Anatomy Validation Integration', () => {
     });
 
     it('should handle empty anatomy graph', async () => {
-      const result = await validator.validateGraph([], {}, new Map());
+      const result = await validator.validateGraph([], {}, new Set());
 
       expect(result.valid).toBe(true);
       expect(result.errors).toHaveLength(0);

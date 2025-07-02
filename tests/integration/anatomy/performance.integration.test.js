@@ -57,10 +57,10 @@ describe('Anatomy Performance Integration', () => {
           'anatomy:part': { subType: 'torso' },
           'anatomy:sockets': {
             sockets: [
-              { id: 'socket_1', allowedTypes: ['limb'], maxCount: 5 },
-              { id: 'socket_2', allowedTypes: ['limb'], maxCount: 5 },
-              { id: 'socket_3', allowedTypes: ['limb'], maxCount: 5 },
-              { id: 'socket_4', allowedTypes: ['limb'], maxCount: 5 },
+              { id: 'socket_1', allowedTypes: ['limb'] },
+              { id: 'socket_2', allowedTypes: ['limb'] },
+              { id: 'socket_3', allowedTypes: ['limb'] },
+              { id: 'socket_4', allowedTypes: ['limb'] },
             ],
           },
         },
@@ -167,11 +167,10 @@ describe('Anatomy Performance Integration', () => {
         });
       }
 
-      // Create socket occupancy map
-      const socketOccupancy = new Map();
+      // Create socket occupancy set
+      const socketOccupancy = new Set();
       for (let i = 1; i <= 4; i++) {
-        const count = Math.ceil(10 / 4);
-        socketOccupancy.set(`${torso.id}:socket_${i}`, count);
+        socketOccupancy.add(`${torso.id}:socket_${i}`);
       }
 
       const recipe = {
@@ -222,7 +221,7 @@ describe('Anatomy Performance Integration', () => {
       const result = await validator.validateGraph(
         entityIds,
         recipe,
-        new Map()
+        new Set()
       );
 
       const endTime = Date.now();

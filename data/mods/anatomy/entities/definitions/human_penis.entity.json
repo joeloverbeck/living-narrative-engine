@@ -4,7 +4,7 @@
   "description": "A human male genital organ",
   "components": {
     "anatomy:part": {
-      "subType": "genital"
+      "subType": "penis"
     },
     "descriptors:size_category": {
       "size": "medium"

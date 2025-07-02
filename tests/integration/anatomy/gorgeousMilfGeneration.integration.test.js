@@ -44,6 +44,8 @@ import humanVagina from '../../../data/mods/anatomy/entities/definitions/human_v
 import humanBreast from '../../../data/mods/anatomy/entities/definitions/human_breast.entity.json';
 import humanHair from '../../../data/mods/anatomy/entities/definitions/human_hair.entity.json';
 import humanFemaleTorso from '../../../data/mods/anatomy/entities/definitions/human_female_torso.entity.json';
+import humanHand from '../../../data/mods/anatomy/entities/definitions/human_hand.entity.json';
+import humanAsshole from '../../../data/mods/anatomy/entities/definitions/human_asshole.entity.json';
 import humanFemaleBlueprint from '../../../data/mods/anatomy/blueprints/human_female.blueprint.json';
 import gorgeousMilfRecipe from '../../../data/mods/anatomy/recipes/gorgeous_milf.recipe.json';
 
@@ -148,6 +150,8 @@ describe('Gorgeous MILF Anatomy Generation Integration Test', () => {
       'anatomy:human_breast': humanBreast,
       'anatomy:human_hair': humanHair,
       'anatomy:human_female_torso': humanFemaleTorso,
+      'anatomy:human_hand': humanHand,
+      'anatomy:human_asshole': humanAsshole,
       'anatomy:jacqueline_rouxel': jacquelineRouxel,
     });
 
@@ -311,7 +315,7 @@ describe('Gorgeous MILF Anatomy Generation Integration Test', () => {
       expect(breastWeight).toBeDefined();
       expect(breastWeight.weight).toBe('meaty');
       expect(breastFirmness).toBeDefined();
-      expect(breastFirmness.firmness).toBe('firm');
+      expect(breastFirmness.firmness).toBe('soft');
     }
 
     // Test 4: Verify long shapely legs
@@ -373,22 +377,29 @@ describe('Gorgeous MILF Anatomy Generation Integration Test', () => {
     expect(recipe).toBeDefined();
     expect(recipe.blueprintId).toBe('anatomy:human_female');
 
-    // Verify all slot specifications
-    expect(recipe.slots.left_eye.preferId).toBe('anatomy:human_eye_cobalt');
-    expect(recipe.slots.right_eye.preferId).toBe('anatomy:human_eye_cobalt');
+    // Verify slot specifications that aren't patterns
     expect(recipe.slots.hair.preferId).toBe('anatomy:human_hair_raven');
 
-    expect(recipe.slots.left_leg.preferId).toBe('anatomy:human_leg_shapely');
-    expect(recipe.slots.right_leg.preferId).toBe('anatomy:human_leg_shapely');
-    expect(recipe.slots.left_breast.preferId).toBe(
-      'anatomy:human_breast_d_cup'
-    );
-    expect(recipe.slots.right_breast.preferId).toBe(
-      'anatomy:human_breast_d_cup'
-    );
+    // Verify pattern specifications
+    expect(recipe.patterns).toBeDefined();
+    expect(recipe.patterns.length).toBeGreaterThan(0);
 
-    // Verify property requirements
-    expect(recipe.slots.left_leg.properties).toMatchObject({
+    // Find eye pattern
+    const eyePattern = recipe.patterns.find((p) =>
+      p.matches.includes('left_eye')
+    );
+    expect(eyePattern).toBeDefined();
+    expect(eyePattern.preferId).toBe('anatomy:human_eye_cobalt');
+    expect(eyePattern.matches).toContain('left_eye');
+    expect(eyePattern.matches).toContain('right_eye');
+
+    // Find leg pattern
+    const legPattern = recipe.patterns.find((p) =>
+      p.matches.includes('left_leg')
+    );
+    expect(legPattern).toBeDefined();
+    expect(legPattern.preferId).toBe('anatomy:human_leg_shapely');
+    expect(legPattern.properties).toMatchObject({
       'descriptors:length_category': {
         length: 'long',
       },
@@ -397,7 +408,13 @@ describe('Gorgeous MILF Anatomy Generation Integration Test', () => {
       },
     });
 
-    expect(recipe.slots.left_breast.properties).toMatchObject({
+    // Find breast pattern
+    const breastPattern = recipe.patterns.find((p) =>
+      p.matches.includes('left_breast')
+    );
+    expect(breastPattern).toBeDefined();
+    expect(breastPattern.preferId).toBe('anatomy:human_breast_d_cup');
+    expect(breastPattern.properties).toMatchObject({
       'descriptors:size_specific': {
         size: 'D-cup',
       },
@@ -405,7 +422,7 @@ describe('Gorgeous MILF Anatomy Generation Integration Test', () => {
         weight: 'meaty',
       },
       'descriptors:firmness': {
-        firmness: 'firm',
+        firmness: 'soft',
       },
     });
   });

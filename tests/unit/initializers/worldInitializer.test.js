@@ -597,12 +597,13 @@ describe('WorldInitializer', () => {
       mockEntityManager.createEntityInstance.mockReturnValueOnce(mockInstance1);
 
       // Should not throw even if dispatchWithLogging fails
-      const result = await worldInitializer.initializeWorldEntities('test:world');
+      const result =
+        await worldInitializer.initializeWorldEntities('test:world');
 
       // The entity should still be instantiated successfully
       expect(result.instantiatedCount).toBe(1);
       expect(result.failedCount).toBe(0);
-      
+
       expect(mockEventDispatchService.dispatchWithLogging).toHaveBeenCalledWith(
         WORLDINIT_ENTITY_INSTANTIATED_ID,
         expect.any(Object),

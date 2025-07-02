@@ -28,7 +28,11 @@ describe('CommandProcessor.dispatchAction', () => {
       dispatchWithLogging: jest.fn().mockResolvedValue(undefined),
       safeDispatchEvent: jest.fn().mockResolvedValue(undefined),
     };
-    processor = new CommandProcessor({ logger, safeEventDispatcher, eventDispatchService });
+    processor = new CommandProcessor({
+      logger,
+      safeEventDispatcher,
+      eventDispatchService,
+    });
     jest.clearAllMocks();
   });
 
@@ -48,7 +52,9 @@ describe('CommandProcessor.dispatchAction', () => {
       originalInput: 'look north',
       actionResult: { actionId: 'look' },
     });
-    expect(eventDispatchService.dispatchWithErrorHandling).toHaveBeenCalledTimes(1);
+    expect(
+      eventDispatchService.dispatchWithErrorHandling
+    ).toHaveBeenCalledTimes(1);
     expect(eventDispatchService.dispatchWithErrorHandling).toHaveBeenCalledWith(
       ATTEMPT_ACTION_ID,
       expect.objectContaining({
@@ -61,7 +67,7 @@ describe('CommandProcessor.dispatchAction', () => {
       'ATTEMPT_ACTION_ID dispatch for pre-resolved action look'
     );
     expect(logger.debug).toHaveBeenCalledWith(
-      'CommandProcessor.dispatchAction: Successfully dispatched \'look\' for actor actor1.'
+      "CommandProcessor.dispatchAction: Successfully dispatched 'look' for actor actor1."
     );
   });
 
@@ -190,7 +196,9 @@ describe('CommandProcessor.dispatchAction', () => {
     const result = await processor.dispatchAction(actor, turnAction);
 
     expect(result.success).toBe(false);
-    expect(eventDispatchService.dispatchWithErrorHandling).toHaveBeenNthCalledWith(
+    expect(
+      eventDispatchService.dispatchWithErrorHandling
+    ).toHaveBeenNthCalledWith(
       1,
       ATTEMPT_ACTION_ID,
       expect.any(Object),
@@ -231,16 +239,18 @@ describe('CommandProcessor.dispatchAction', () => {
   it('AC4: handles exception thrown by dispatcher', async () => {
     // Mock the safeEventDispatcher to throw an error internally
     // This will be caught by dispatchWithErrorHandling and it will return false
-    eventDispatchService.dispatchWithErrorHandling.mockImplementationOnce(async () => {
-      // Simulate what happens inside dispatchWithErrorHandling when dispatch throws
-      await safeDispatchError(
-        safeEventDispatcher,
-        'System error during event dispatch.',
-        {},
-        logger
-      );
-      return false;
-    });
+    eventDispatchService.dispatchWithErrorHandling.mockImplementationOnce(
+      async () => {
+        // Simulate what happens inside dispatchWithErrorHandling when dispatch throws
+        await safeDispatchError(
+          safeEventDispatcher,
+          'System error during event dispatch.',
+          {},
+          logger
+        );
+        return false;
+      }
+    );
 
     const actor = { id: 'actor4' };
     const turnAction = {
@@ -252,7 +262,9 @@ describe('CommandProcessor.dispatchAction', () => {
     const result = await processor.dispatchAction(actor, turnAction);
 
     expect(result.success).toBe(false);
-    expect(eventDispatchService.dispatchWithErrorHandling).toHaveBeenNthCalledWith(
+    expect(
+      eventDispatchService.dispatchWithErrorHandling
+    ).toHaveBeenNthCalledWith(
       1,
       ATTEMPT_ACTION_ID,
       expect.any(Object),
@@ -279,7 +291,11 @@ describe('CommandProcessor.dispatchAction payload specifics', () => {
       dispatchWithLogging: jest.fn().mockResolvedValue(undefined),
       safeDispatchEvent: jest.fn().mockResolvedValue(undefined),
     };
-    processor = new CommandProcessor({ logger, safeEventDispatcher, eventDispatchService });
+    processor = new CommandProcessor({
+      logger,
+      safeEventDispatcher,
+      eventDispatchService,
+    });
     jest.clearAllMocks();
   });
 
@@ -293,7 +309,9 @@ describe('CommandProcessor.dispatchAction payload specifics', () => {
 
     await processor.dispatchAction(actor, turnAction);
 
-    expect(eventDispatchService.dispatchWithErrorHandling).toHaveBeenCalledTimes(1);
+    expect(
+      eventDispatchService.dispatchWithErrorHandling
+    ).toHaveBeenCalledTimes(1);
     expect(eventDispatchService.dispatchWithErrorHandling).toHaveBeenCalledWith(
       ATTEMPT_ACTION_ID,
       expect.objectContaining({
@@ -307,7 +325,8 @@ describe('CommandProcessor.dispatchAction payload specifics', () => {
     );
 
     // Specifically check that 'direction' is not in the payload
-    const dispatchedPayload = eventDispatchService.dispatchWithErrorHandling.mock.calls[0][1];
+    const dispatchedPayload =
+      eventDispatchService.dispatchWithErrorHandling.mock.calls[0][1];
     expect(dispatchedPayload).not.toHaveProperty('direction');
   });
 });

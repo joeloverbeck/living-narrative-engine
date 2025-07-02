@@ -12,67 +12,70 @@
           "id": "neck",
           "orientation": "upper",
           "allowedTypes": ["head", "neck"],
-          "maxCount": 1,
           "nameTpl": "{{type}}"
         },
         {
           "id": "left_shoulder",
           "orientation": "left",
           "allowedTypes": ["arm"],
-          "maxCount": 1,
           "nameTpl": "{{orientation}} {{type}}"
         },
         {
           "id": "right_shoulder",
           "orientation": "right",
           "allowedTypes": ["arm"],
-          "maxCount": 1,
           "nameTpl": "{{orientation}} {{type}}"
         },
         {
           "id": "left_hip",
           "orientation": "left",
           "allowedTypes": ["leg"],
-          "maxCount": 1,
           "nameTpl": "{{orientation}} {{type}}"
         },
         {
           "id": "right_hip",
           "orientation": "right",
           "allowedTypes": ["leg"],
-          "maxCount": 1,
           "nameTpl": "{{orientation}} {{type}}"
         },
         {
-          "id": "chest",
-          "orientation": "front",
+          "id": "left_chest",
+          "orientation": "left",
           "allowedTypes": ["breast"],
-          "maxCount": 2,
+          "nameTpl": "{{orientation}} {{type}}"
+        },
+        {
+          "id": "right_chest",
+          "orientation": "right",
+          "allowedTypes": ["breast"],
           "nameTpl": "{{orientation}} {{type}}"
         },
         {
           "id": "pubic_hair",
           "allowedTypes": ["hair"],
-          "maxCount": 1,
           "nameTpl": "pubic {{type}}"
         },
         {
           "id": "vagina",
-          "allowedTypes": ["genital"],
-          "maxCount": 1,
+          "allowedTypes": ["vagina"],
           "nameTpl": "{{type}}"
         },
         {
           "id": "asshole",
-          "allowedTypes": ["genital"],
-          "maxCount": 1,
+          "allowedTypes": ["asshole"],
           "nameTpl": "{{type}}"
         },
         {
-          "id": "ass",
+          "id": "left_ass",
+          "orientation": "left",
           "allowedTypes": ["ass_cheek"],
-          "maxCount": 2,
-          "nameTpl": "{{type}}"
+          "nameTpl": "{{orientation}} {{type}}"
+        },
+        {
+          "id": "right_ass",
+          "orientation": "right",
+          "allowedTypes": ["ass_cheek"],
+          "nameTpl": "{{orientation}} {{type}}"
         }
       ]
     },

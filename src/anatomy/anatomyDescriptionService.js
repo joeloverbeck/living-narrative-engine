@@ -138,31 +138,19 @@ export class AnatomyDescriptionService {
       return;
     }
 
-    // Check if description component exists
-    if (entity.hasComponent(DESCRIPTION_COMPONENT_ID)) {
-      // Update existing component
-      this.componentManager.updateComponent(
-        entityId,
-        DESCRIPTION_COMPONENT_ID,
-        {
-          text: description,
-        }
-      );
-    } else {
-      // Add new component
-      this.componentManager.addComponent(entityId, DESCRIPTION_COMPONENT_ID, {
-        text: description,
-      });
-    }
+    // EntityManager's addComponent handles both adding and updating
+    this.componentManager.addComponent(entityId, DESCRIPTION_COMPONENT_ID, {
+      text: description,
+    });
   }
 
   /**
    * Check if the current description is up to date
    *
-   * @param {object} entity - The entity to check
-   * @returns {boolean}
+   * @param {object} _entity - The entity to check (unused for now)
+   * @returns {boolean} Always returns false to force regeneration
    */
-  isDescriptionCurrent(entity) {
+  isDescriptionCurrent(_entity) {
     // For now, we'll always regenerate to ensure accuracy
     // In the future, we could add timestamp tracking or checksums
     return false;

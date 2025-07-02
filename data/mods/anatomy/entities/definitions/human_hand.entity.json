@@ -1,19 +1,19 @@
 {
   "$schema": "http://example.com/schemas/entity-definition.schema.json",
-  "id": "anatomy:human_testicle",
-  "description": "A human male reproductive gland",
+  "id": "anatomy:human_hand",
+  "description": "A human hand",
   "components": {
     "anatomy:part": {
-      "subType": "testicle"
+      "subType": "hand"
     },
     "descriptors:size_category": {
-      "size": "small"
+      "size": "medium"
     },
     "descriptors:shape_general": {
-      "shape": "oval"
+      "shape": "square"
     },
     "core:name": {
-      "text": "testicle"
+      "text": "hand"
     }
   }
 }

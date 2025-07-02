@@ -103,14 +103,14 @@
       "optional": true
     },
     "left_breast": {
-      "socket": "chest",
+      "socket": "left_chest",
       "requirements": {
         "partType": "breast",
         "components": ["anatomy:part"]
       }
     },
     "right_breast": {
-      "socket": "chest",
+      "socket": "right_chest",
       "requirements": {
         "partType": "breast",
         "components": ["anatomy:part"]
@@ -119,7 +119,30 @@
     "vagina": {
       "socket": "vagina",
       "requirements": {
-        "partType": "genital",
+        "partType": "vagina",
+        "components": ["anatomy:part"]
+      }
+    },
+    "left_hand": {
+      "parent": "left_arm",
+      "socket": "wrist",
+      "requirements": {
+        "partType": "hand",
+        "components": ["anatomy:part"]
+      }
+    },
+    "right_hand": {
+      "parent": "right_arm",
+      "socket": "wrist",
+      "requirements": {
+        "partType": "hand",
+        "components": ["anatomy:part"]
+      }
+    },
+    "asshole": {
+      "socket": "asshole",
+      "requirements": {
+        "partType": "asshole",
         "components": ["anatomy:part"]
       }
     }

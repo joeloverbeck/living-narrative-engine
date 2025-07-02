@@ -106,11 +106,12 @@ class CommandProcessor extends ICommandProcessor {
     const payload = this.#createAttemptActionPayload(actor, turnAction);
 
     // --- Dispatch ---
-    const dispatchSuccess = await this.#eventDispatchService.dispatchWithErrorHandling(
-      ATTEMPT_ACTION_ID,
-      payload,
-      `ATTEMPT_ACTION_ID dispatch for pre-resolved action ${actionId}`
-    );
+    const dispatchSuccess =
+      await this.#eventDispatchService.dispatchWithErrorHandling(
+        ATTEMPT_ACTION_ID,
+        payload,
+        `ATTEMPT_ACTION_ID dispatch for pre-resolved action ${actionId}`
+      );
 
     if (dispatchSuccess) {
       this.#logger.debug(

@@ -190,7 +190,7 @@ describe('AnatomyDescriptionService', () => {
 
       service.updateDescription('entity-1', 'new description');
 
-      expect(mockComponentManager.updateComponent).toHaveBeenCalledWith(
+      expect(mockComponentManager.addComponent).toHaveBeenCalledWith(
         'entity-1',
         DESCRIPTION_COMPONENT_ID,
         { text: 'new description' }

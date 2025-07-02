@@ -78,7 +78,10 @@ describe('registerCommandAndAction', () => {
     container.register(tokens.IScopeEngine, () => mockScopeEngine);
     container.register(tokens.DslParser, () => mockDslParser);
     container.register(tokens.ServiceSetup, () => new ServiceSetup());
-    container.register(tokens.EventDispatchService, () => mockEventDispatchService);
+    container.register(
+      tokens.EventDispatchService,
+      () => mockEventDispatchService
+    );
   });
 
   afterEach(() => {

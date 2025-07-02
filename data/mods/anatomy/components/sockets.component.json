@@ -36,12 +36,6 @@
               },
               "minItems": 1
             },
-            "maxCount": {
-              "type": "integer",
-              "minimum": 1,
-              "default": 1,
-              "description": "Maximum number of parts that can attach to this socket"
-            },
             "nameTpl": {
               "type": "string",
               "description": "Template for auto-naming attached parts. Supports {{orientation}}, {{type}}, {{index}}, {{parent.name}}"

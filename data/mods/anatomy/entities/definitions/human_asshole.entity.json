@@ -1,13 +1,13 @@
 {
   "$schema": "http://example.com/schemas/entity-definition.schema.json",
-  "id": "anatomy:human_vagina",
-  "description": "A human female genital organ",
+  "id": "anatomy:human_asshole",
+  "description": "A human anal opening",
   "components": {
     "anatomy:part": {
-      "subType": "vagina"
+      "subType": "asshole"
     },
     "core:name": {
-      "text": "vagina"
+      "text": "asshole"
     }
   }
 }

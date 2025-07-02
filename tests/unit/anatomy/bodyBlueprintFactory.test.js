@@ -10,7 +10,6 @@ describe('BodyBlueprintFactory', () => {
   let mockLogger;
   let mockEventDispatcher;
   let mockEventDispatchService;
-  let mockIdGenerator;
   let mockValidator;
 
   beforeEach(() => {
@@ -40,10 +39,6 @@ describe('BodyBlueprintFactory', () => {
       dispatch: jest.fn().mockResolvedValue(undefined),
     };
 
-    mockIdGenerator = {
-      generateId: jest.fn().mockImplementation(() => 'generated-id'),
-    };
-
     mockValidator = {
       validateGraph: jest
         .fn()
@@ -63,7 +58,6 @@ describe('BodyBlueprintFactory', () => {
       logger: mockLogger,
       eventDispatcher: mockEventDispatcher,
       eventDispatchService: mockEventDispatchService,
-      idGenerator: mockIdGenerator,
       validator: mockValidator,
     });
   });
@@ -77,8 +71,7 @@ describe('BodyBlueprintFactory', () => {
             logger: mockLogger,
             eventDispatcher: mockEventDispatcher,
             eventDispatchService: mockEventDispatchService,
-            idGenerator: mockIdGenerator,
-            validator: mockValidator,
+                  validator: mockValidator,
           })
       ).toThrow(InvalidArgumentError);
     });
@@ -91,8 +84,7 @@ describe('BodyBlueprintFactory', () => {
             logger: mockLogger,
             eventDispatcher: mockEventDispatcher,
             eventDispatchService: mockEventDispatchService,
-            idGenerator: mockIdGenerator,
-            validator: mockValidator,
+                  validator: mockValidator,
           })
       ).toThrow(InvalidArgumentError);
     });
@@ -105,8 +97,7 @@ describe('BodyBlueprintFactory', () => {
             dataRegistry: mockDataRegistry,
             eventDispatcher: mockEventDispatcher,
             eventDispatchService: mockEventDispatchService,
-            idGenerator: mockIdGenerator,
-            validator: mockValidator,
+                  validator: mockValidator,
           })
       ).toThrow(InvalidArgumentError);
     });
@@ -119,22 +110,7 @@ describe('BodyBlueprintFactory', () => {
             dataRegistry: mockDataRegistry,
             logger: mockLogger,
             eventDispatchService: mockEventDispatchService,
-            idGenerator: mockIdGenerator,
-            validator: mockValidator,
-          })
-      ).toThrow(InvalidArgumentError);
-    });
-
-    it('should throw error if idGenerator is not provided', () => {
-      expect(
-        () =>
-          new BodyBlueprintFactory({
-            entityManager: mockEntityManager,
-            dataRegistry: mockDataRegistry,
-            logger: mockLogger,
-            eventDispatcher: mockEventDispatcher,
-            eventDispatchService: mockEventDispatchService,
-            validator: mockValidator,
+                  validator: mockValidator,
           })
       ).toThrow(InvalidArgumentError);
     });
@@ -148,8 +124,7 @@ describe('BodyBlueprintFactory', () => {
             logger: mockLogger,
             eventDispatcher: mockEventDispatcher,
             eventDispatchService: mockEventDispatchService,
-            idGenerator: mockIdGenerator,
-          })
+                })
       ).toThrow(InvalidArgumentError);
     });
 
@@ -161,8 +136,7 @@ describe('BodyBlueprintFactory', () => {
             dataRegistry: mockDataRegistry,
             logger: mockLogger,
             eventDispatcher: mockEventDispatcher,
-            idGenerator: mockIdGenerator,
-            validator: mockValidator,
+                  validator: mockValidator,
           })
       ).toThrow(InvalidArgumentError);
     });
@@ -887,10 +861,15 @@ describe('BodyBlueprintFactory', () => {
       expect(mockEventDispatchService.safeDispatchEvent).toHaveBeenCalledWith(
         'core:system_error_occurred',
         expect.objectContaining({
-          context: 'BodyBlueprintFactory.processBlueprintSlots',
+          message: expect.stringContaining("Failed to process blueprint slot 'wing_slot'"),
+          details: expect.objectContaining({
+            context: 'BodyBlueprintFactory.processBlueprintSlots',
+            slotKey: 'wing_slot',
+            recipeId: 'test-recipe'
+          })
         })
       );
-      
+
       // And then eventDispatcher.dispatch is called in the catch block of createAnatomyGraph
       expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
         'core:system_error_occurred',
