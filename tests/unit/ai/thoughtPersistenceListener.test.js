@@ -21,7 +21,10 @@ describe('ThoughtPersistenceListener', () => {
       debug: jest.fn(),
     };
     entityManager = { getEntityInstance: jest.fn() };
-    listener = new ThoughtPersistenceListener({ logger, entityManager });
+    listener = new ThoughtPersistenceListener({
+      logger,
+      entityManager,
+    });
     persistThoughts.mockClear();
   });
 
@@ -43,7 +46,8 @@ describe('ThoughtPersistenceListener', () => {
       logger,
       undefined,
       listener.stmService,
-      expect.any(Date)
+      expect.any(Date),
+      listener.componentAccessService
     );
   });
 

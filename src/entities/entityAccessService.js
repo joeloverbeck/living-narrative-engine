@@ -7,10 +7,9 @@ import { getPrefixedLogger, ensureValidLogger } from '../utils/loggerUtils.js';
 import { isValidEntity } from '../utils/entityValidationUtils.js';
 import { isNonBlankString } from '../utils/textUtils.js';
 import { safeExecute } from '../utils/safeExecutionUtils.js';
-import {
-  readComponent,
-  writeComponent,
-} from '../utils/componentAccessUtils.js';
+import ComponentAccessService from './componentAccessService.js';
+
+const defaultComponentAccess = new ComponentAccessService();
 
 /** @typedef {import('./entity.js').default} Entity */
 /** @typedef {import('../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
@@ -119,7 +118,7 @@ export function getComponent(
   }
 
   // Fallback for plain objects used as pseudo-entities
-  return readComponent(entityOrId, componentId);
+  return defaultComponentAccess.fetchComponent(entityOrId, componentId);
 }
 
 /**
@@ -181,7 +180,7 @@ export function setComponent(
   }
 
   // Fallback for plain objects used as pseudo-entities
-  return writeComponent(entityOrId, componentId, data);
+  return defaultComponentAccess.applyComponent(entityOrId, componentId, data);
 }
 
 export default {

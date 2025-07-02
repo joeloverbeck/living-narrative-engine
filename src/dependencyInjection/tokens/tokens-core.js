@@ -66,6 +66,7 @@ export const coreTokens = freeze({
   ClosenessCircleService: 'ClosenessCircleService',
   LocationQueryService: 'LocationQueryService',
   EntityAccessService: 'EntityAccessService',
+  ComponentAccessService: 'ComponentAccessService',
   LocationDisplayService: 'LocationDisplayService',
   GameSessionManager: 'GameSessionManager',
   PersistenceCoordinator: 'PersistenceCoordinator',

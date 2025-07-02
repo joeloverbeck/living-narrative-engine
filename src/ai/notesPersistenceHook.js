@@ -7,7 +7,7 @@ import NotesService from './notesService.js';
 import { NOTES_COMPONENT_ID } from '../constants/componentIds.js';
 import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
 import { isNonBlankString } from '../utils/textUtils.js';
-import { fetchComponent, applyComponent } from '../utils/componentHelpers.js';
+import ComponentAccessService from '../entities/componentAccessService.js';
 
 /**
  * Persists the "notes" produced during an LLM turn into the actor's
@@ -19,6 +19,7 @@ import { fetchComponent, applyComponent } from '../utils/componentHelpers.js';
  * @param {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} dispatcher - Safe dispatcher for error events.
  * @param {NotesService} [notesService] - Optional notes service instance.
  * @param {Date} [now] - Date provider for timestamping notes.
+ * @param componentAccess
  */
 export function persistNotes(
   action,
@@ -26,7 +27,8 @@ export function persistNotes(
   logger,
   dispatcher,
   notesService = new NotesService(),
-  now = new Date()
+  now = new Date(),
+  componentAccess = new ComponentAccessService()
 ) {
   // Gracefully do nothing if the 'notes' key is entirely absent.
   if (!action || !Object.prototype.hasOwnProperty.call(action, 'notes')) {
@@ -72,7 +74,10 @@ export function persistNotes(
     return;
   }
 
-  let notesComp = fetchComponent(actorEntity, NOTES_COMPONENT_ID);
+  let notesComp = componentAccess.fetchComponent(
+    actorEntity,
+    NOTES_COMPONENT_ID
+  );
 
   if (!notesComp) {
     notesComp = { notes: [] };
@@ -89,6 +94,10 @@ export function persistNotes(
       logger.debug(`Added note: "${note.text}" at ${note.timestamp}`);
     });
 
-    applyComponent(actorEntity, NOTES_COMPONENT_ID, updatedNotesComp);
+    componentAccess.applyComponent(
+      actorEntity,
+      NOTES_COMPONENT_ID,
+      updatedNotesComp
+    );
   }
 }

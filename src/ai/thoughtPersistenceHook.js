@@ -7,7 +7,7 @@
 
 import ShortTermMemoryService from './shortTermMemoryService.js';
 import { SHORT_TERM_MEMORY_COMPONENT_ID } from '../constants/componentIds.js';
-import { fetchComponent, applyComponent } from '../utils/componentHelpers.js';
+import ComponentAccessService from '../entities/componentAccessService.js';
 import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
 import { isNonBlankString } from '../utils/textUtils.js';
 
@@ -24,6 +24,7 @@ import { isNonBlankString } from '../utils/textUtils.js';
  *   – Optional dispatcher for error events.
  * @param {ShortTermMemoryService} [stmService] – Optional STM service instance.
  * @param {Date} [now] – Date provider for timestamping.
+ * @param componentAccess
  */
 export function persistThoughts(
   action,
@@ -31,7 +32,8 @@ export function persistThoughts(
   logger,
   dispatcher,
   stmService = new ShortTermMemoryService(),
-  now = new Date()
+  now = new Date(),
+  componentAccess = new ComponentAccessService()
 ) {
   /* ── 1. Validate thoughts ───────────────────────────────────────────── */
   const rawThoughts = action?.thoughts;
@@ -49,7 +51,7 @@ export function persistThoughts(
   const thoughtText = String(rawThoughts).trim();
 
   /* ── 2. Retrieve STM component via the public API ───────────────────── */
-  const memoryComp = fetchComponent(
+  const memoryComp = componentAccess.fetchComponent(
     actorEntity,
     SHORT_TERM_MEMORY_COMPONENT_ID
   );
@@ -67,5 +69,9 @@ export function persistThoughts(
   );
 
   /* ── 4. Push the mutation back to the entity ────────────────────────── */
-  applyComponent(actorEntity, SHORT_TERM_MEMORY_COMPONENT_ID, updatedMem);
+  componentAccess.applyComponent(
+    actorEntity,
+    SHORT_TERM_MEMORY_COMPONENT_ID,
+    updatedMem
+  );
 }

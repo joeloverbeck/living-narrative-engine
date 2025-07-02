@@ -2,6 +2,7 @@
 
 import { persistNotes } from './notesPersistenceHook.js';
 import NotesService from './notesService.js';
+import ComponentAccessService from '../entities/componentAccessService.js';
 
 /** @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 
@@ -29,6 +30,7 @@ export class NotesPersistenceListener {
     dispatcher,
     notesService = new NotesService(),
     now = () => new Date(),
+    componentAccessService = new ComponentAccessService(),
   }) {
     this.logger = logger;
     this.entityManager = entityManager;
@@ -36,6 +38,7 @@ export class NotesPersistenceListener {
     this.dispatcher = dispatcher;
     this.notesService = notesService;
     this.now = now;
+    this.componentAccessService = componentAccessService;
   }
 
   /**
@@ -71,7 +74,8 @@ export class NotesPersistenceListener {
         this.logger,
         this.dispatcher,
         this.notesService,
-        this.now()
+        this.now(),
+        this.componentAccessService
       );
     } else {
       this.logger.warn(

@@ -15,6 +15,7 @@ import ShutdownService from '../../shutdown/services/shutdownService.js'; // Adj
 import { ThoughtPersistenceListener } from '../../ai/thoughtPersistenceListener.js';
 import { NotesPersistenceListener } from '../../ai/notesPersistenceListener.js';
 import ContentDependencyValidator from '../../initializers/services/contentDependencyValidator.js';
+import ComponentAccessService from '../../entities/componentAccessService.js';
 
 // --- DI & Helper Imports ---
 import { tokens } from '../tokens.js';
@@ -31,6 +32,15 @@ export function registerOrchestration(container) {
   /** @type {ILogger} */
   const logger = container.resolve(tokens.ILogger); // Assumes ILogger is already registered
   logger.debug('Orchestration Registration: Starting...');
+
+  if (!container.isRegistered(tokens.ComponentAccessService)) {
+    registrar.single(tokens.ComponentAccessService, ComponentAccessService);
+    logger.debug(
+      `Orchestration Registration: Registered ${String(
+        tokens.ComponentAccessService
+      )} (default).`
+    );
+  }
 
   // --- Initialization Service ---
   // Singleton lifecycle is appropriate as it manages a global process.
@@ -73,14 +83,17 @@ export function registerOrchestration(container) {
       throw new Error(
         `InitializationService Factory: Failed to resolve dependency: ${tokens.WorldInitializer}`
       );
+    const componentAccessService = c.resolve(tokens.ComponentAccessService);
     const thoughtListener = new ThoughtPersistenceListener({
       logger: initLogger,
       entityManager,
+      componentAccessService,
     });
     const notesListener = new NotesPersistenceListener({
       logger: initLogger,
       entityManager,
       dispatcher: safeEventDispatcher,
+      componentAccessService,
     });
     const spatialIndexManager = c.resolve(tokens.ISpatialIndexManager);
     const contentDependencyValidator = new ContentDependencyValidator({
