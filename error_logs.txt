@@ -1,19 +1,19 @@
-[16:57:32] Entity created: 124f4655-28f1-4a88-a1d5-bdb6059fb1a6 from anatomy:human_asshole
-[16:57:32] Component added: anatomy:joint on 124f4655-28f1-4a88-a1d5-bdb6059fb1a6
-[16:57:32] Component updated: core:name on 124f4655-28f1-4a88-a1d5-bdb6059fb1a6
-[16:57:32] Component updated: anatomy:body on isekai:hero_instance
-[16:57:32] Component added: core:description on afe8617f-c59c-4152-9c4d-934b126ca85a
-[16:57:32] Component added: core:description on 3d17d50e-aed9-4ca2-9b20-d41806f0df6a
-[16:57:32] Component added: core:description on 0049ae76-f38e-4f80-9249-bc8885289cf2
-[16:57:32] Component added: core:description on 9408c35b-0e55-45f9-aa97-59b24dcf4f85
-[16:57:32] Component added: core:description on d9208916-9a23-4502-929e-e198623785e2
-[16:57:32] Component added: core:description on 64b58a9d-48ac-4cac-9925-413ff9aaaabf
-[16:57:32] Component added: core:description on a0ded23e-ba6b-4c7f-a351-ef072f8760cf
-[16:57:32] Component added: core:description on 5462ea10-a2bd-47b2-b84f-62ae42a2dff0
-[16:57:32] Component added: core:description on c754f079-a0fe-4c9e-a277-b052a75422ed
-[16:57:32] Component added: core:description on 50fb0d5d-550d-4e3b-ac89-6de262fb27e3
-[16:57:32] Component added: core:description on ef45e8ff-f866-4566-ac55-3074b65a4086
-[16:57:32] Component added: core:description on c92c7dc5-35a6-4c40-aa05-e0426b165363
-[16:57:32] Component added: core:description on 9c6ad44f-eb34-40c0-bf9f-1c5f5e1bf09f
-[16:57:32] Component added: core:description on 2f0eba17-95f8-4011-b9bf-21d24fd8aa8f
-[16:57:32] Component added: core:current_actor on isekai:hero_instance
+[17:29:54] Component added: core:description on right testicle
+[17:29:54] Component added: core:description on left testicle
+[17:29:54] Component added: core:description on penis
+[17:29:54] Component added: core:description on pubic hair
+[17:29:54] Component added: core:description on right leg
+[17:29:54] Component added: core:description on left leg
+[17:29:54] Component added: core:description on parent hand
+[17:29:54] Component added: core:description on parent hand
+[17:29:54] Component added: core:description on hair
+[17:29:54] Component added: core:description on mouth
+[17:29:54] Component added: core:description on nose
+[17:29:54] Component added: core:description on right ear
+[17:29:54] Component added: core:description on left ear
+[17:29:54] Component added: core:description on right eye
+[17:29:54] Component added: core:description on left eye
+[17:29:54] Component added: core:description on Joel Overberus (isekai:hero_instance)
+[17:29:54] Component added: core:current_actor on Joel Overberus (isekai:hero_instance)
+[17:30:57] Component updated: core:perception_log on Joel Overberus (isekai:hero_instance)
+[17:30:57] Component updated: core:perception_log on Ninja Ninjason (isekai:ninja_instance)

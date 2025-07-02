@@ -265,7 +265,7 @@ describe('EntityLifecycleMonitor', () => {
 
         const entry = eventList.children[0];
         expect(entry.textContent).toContain(
-          'Entity created: undefined from undefined'
+          'Entity created: unknown from undefined'
         );
       });
     });
@@ -298,7 +298,7 @@ describe('EntityLifecycleMonitor', () => {
         }).not.toThrow();
 
         const entry = eventList.children[0];
-        expect(entry.textContent).toContain('Entity removed: undefined');
+        expect(entry.textContent).toContain('Entity removed: unknown');
       });
     });
 
@@ -450,7 +450,7 @@ describe('EntityLifecycleMonitor', () => {
 
         const entry = eventList.children[0];
         expect(entry.textContent).toContain(
-          'Entity undefined has 0 components:'
+          'Entity unknown has 0 components:'
         );
       });
     });
