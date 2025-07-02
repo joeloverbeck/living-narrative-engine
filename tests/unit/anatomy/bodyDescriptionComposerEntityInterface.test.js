@@ -59,7 +59,11 @@ describe('BodyDescriptionComposer Entity Interface Fix', () => {
       });
 
       mockBodyPartDescriptionBuilder.buildDescription.mockReturnValue(
-        'a torso'
+        'muscular'
+      );
+
+      mockBodyPartDescriptionBuilder.buildMultipleDescription.mockReturnValue(
+        'muscular'
       );
 
       // Call the method
@@ -75,6 +79,7 @@ describe('BodyDescriptionComposer Entity Interface Fix', () => {
 
       // Should not throw the error from the console log
       expect(result).toBeTruthy();
+      expect(result).toContain('Torso: muscular');
     });
 
     it('should handle entity without anatomy:body component using interface methods', () => {
@@ -118,7 +123,7 @@ describe('BodyDescriptionComposer Entity Interface Fix', () => {
 
       const result = composer.composeDescription(mockEntity);
 
-      expect(result).toContain('A athletic figure');
+      expect(result).toContain('Build: athletic');
       expect(mockEntity.getComponentData).toHaveBeenCalledWith(
         'descriptors:build'
       );
@@ -248,15 +253,26 @@ describe('BodyDescriptionComposer Entity Interface Fix', () => {
         (entity) => {
           const componentData = entity.getComponentData('anatomy:part');
           const subType = componentData?.subType;
-          if (subType === 'torso') return 'a muscular torso';
-          if (subType === 'head') return 'a noble head';
+          if (subType === 'torso') return 'muscular';
+          if (subType === 'head') return 'noble';
+          return '';
+        }
+      );
+
+      mockBodyPartDescriptionBuilder.buildMultipleDescription.mockImplementation(
+        (entities, subType) => {
+          // Return first entity's descriptors for simplicity
+          if (entities.length > 0) {
+            return mockBodyPartDescriptionBuilder.buildDescription(entities[0]);
+          }
           return '';
         }
       );
 
       const result = composer.composeDescription(mockEntity);
 
-      expect(result).toContain('The body has a muscular torso');
+      expect(result).toBeTruthy();
+      expect(result).toContain('Torso: muscular');
     });
   });
 });

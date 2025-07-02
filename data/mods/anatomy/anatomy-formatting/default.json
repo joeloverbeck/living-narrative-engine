@@ -19,22 +19,11 @@
     "tail",
     "wing"
   ],
-  "groupedParts": [
-    "eye",
-    "ear",
-    "arm",
-    "leg",
-    "hand",
-    "foot",
-    "breast",
-    "wing"
-  ],
   "pairedParts": ["eye", "ear", "arm", "leg", "hand", "foot", "breast", "wing"],
   "irregularPlurals": {
     "foot": "feet",
     "tooth": "teeth"
   },
-  "noArticleParts": ["hair"],
   "descriptorOrder": [
     "descriptors:length_category",
     "descriptors:length_hair",
@@ -49,11 +38,6 @@
     "descriptors:texture",
     "descriptors:firmness",
     "descriptors:build"
-  ],
-  "commaSeparatedDescriptors": [
-    "descriptors:shape_eye",
-    "descriptors:size_specific",
-    "descriptors:weight_feel"
   ],
   "descriptorValueKeys": [
     "value",

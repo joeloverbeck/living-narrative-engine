@@ -113,13 +113,8 @@ export class DescriptorFormatter {
    */
   joinDescriptors(values) {
     if (values.length === 0) return '';
-    if (values.length === 1) return values[0];
-    if (values.length === 2) return `${values[0]}, ${values[1]}`;
-
-    // For 3+ values, use commas with 'and' before the last
-    const allButLast = values.slice(0, -1).join(', ');
-    const last = values[values.length - 1];
-    return `${allButLast}, and ${last}`;
+    // Simply join all values with commas
+    return values.join(', ');
   }
 
   /**

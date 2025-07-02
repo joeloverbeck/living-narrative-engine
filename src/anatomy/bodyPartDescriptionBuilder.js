@@ -24,15 +24,13 @@ export class BodyPartDescriptionBuilder {
       foot: 'feet',
       tooth: 'teeth',
     };
-
-    this._defaultNoArticleParts = new Set(['hair']);
   }
 
   /**
    * Build a description for a single body part
    *
    * @param {object} entity - The body part entity
-   * @returns {string} The generated description
+   * @returns {string} The generated description (just descriptors)
    */
   buildDescription(entity) {
     if (!entity) {
@@ -87,12 +85,12 @@ export class BodyPartDescriptionBuilder {
       return '';
     }
 
-    const subType = anatomyPart.subType;
     const descriptors = this.descriptorFormatter.extractDescriptors(components);
     const formattedDescriptors =
       this.descriptorFormatter.formatDescriptors(descriptors);
 
-    return this.constructDescription(subType, formattedDescriptors);
+    // Return just the descriptors, no articles or part names
+    return formattedDescriptors;
   }
 
   /**
@@ -156,91 +154,24 @@ export class BodyPartDescriptionBuilder {
       return this.descriptorFormatter.formatDescriptors(descriptors);
     });
 
+    // For paired parts, check if all descriptors are the same
     const allSame = allDescriptors.every((desc) => desc === allDescriptors[0]);
     const pairedParts = this.anatomyFormattingService?.getPairedParts
       ? this.anatomyFormattingService.getPairedParts()
       : this._defaultPairedParts;
 
     if (allSame && pairedParts.has(subType)) {
-      // Use "a pair of" for matching paired parts
-      const formattedDescriptors = allDescriptors[0];
-      return this.constructPairedDescription(subType, formattedDescriptors);
+      // Return same descriptors for paired parts
+      return allDescriptors[0];
     } else {
-      // List each part separately
-      return entities
-        .map((entity) => this.buildDescription(entity))
-        .join(' and ');
+      // Return array of different descriptors (will be handled by composer)
+      return allDescriptors.filter((desc) => desc !== '');
     }
-  }
-
-  /**
-   * Construct a description string from subtype and descriptors
-   *
-   * @param {string} subType
-   * @param {string} formattedDescriptors
-   * @returns {string}
-   */
-  constructDescription(subType, formattedDescriptors) {
-    const article = this.getArticle(subType, formattedDescriptors);
-    const descriptorPart = formattedDescriptors
-      ? `${formattedDescriptors} `
-      : '';
-
-    const noArticleParts = this.anatomyFormattingService?.getNoArticleParts
-      ? this.anatomyFormattingService.getNoArticleParts()
-      : this._defaultNoArticleParts;
-    if (noArticleParts.has(subType)) {
-      // No article for parts like "hair"
-      return `${descriptorPart}${subType}`;
-    }
-
-    return `${article} ${descriptorPart}${subType}`;
-  }
-
-  /**
-   * Construct a paired description (e.g., "a pair of blue eyes")
-   *
-   * @param {string} subType
-   * @param {string} formattedDescriptors
-   * @returns {string}
-   */
-  constructPairedDescription(subType, formattedDescriptors) {
-    const plural = this.getPlural(subType);
-    const descriptorPart = formattedDescriptors
-      ? `${formattedDescriptors} `
-      : '';
-    return `a pair of ${descriptorPart}${plural}`;
-  }
-
-  /**
-   * Get the appropriate article for a description
-   *
-   * @param {string} subType
-   * @param {string} descriptors
-   * @returns {string}
-   */
-  getArticle(subType, descriptors) {
-    const noArticleParts = this.anatomyFormattingService?.getNoArticleParts
-      ? this.anatomyFormattingService.getNoArticleParts()
-      : this._defaultNoArticleParts;
-    if (noArticleParts.has(subType)) {
-      return '';
-    }
-
-    // Check if descriptors start with a vowel sound
-    const firstWord = descriptors ? descriptors.split(/[\s,]/)[0] : subType;
-    const vowelStart = /^[aeiou]/i.test(firstWord);
-
-    // Special cases for certain descriptor values
-    if (firstWord === 'honest' || firstWord === 'hour') {
-      return 'an';
-    }
-
-    return vowelStart ? 'an' : 'a';
   }
 
   /**
    * Get the plural form of a body part
+   * Still needed for the composer to handle plural forms
    *
    * @param {string} subType
    * @returns {string}
