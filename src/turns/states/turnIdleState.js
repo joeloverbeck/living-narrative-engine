@@ -18,6 +18,7 @@ import {
   assertValidActor,
   validateActorInContext,
 } from './helpers/validationUtils.js';
+import { warnNoActiveTurn } from '../../utils/warnUtils.js';
 
 /**
  * @class TurnIdleState
@@ -97,7 +98,7 @@ export class TurnIdleState extends AbstractTurnState {
   _validateTurnContext(handler, turnCtx, actorIdForLog, logger) {
     try {
       validateActorInContext(turnCtx, null, this.getStateName());
-    } catch (err) {
+    } catch {
       const errorMsg = `${this.getStateName()}: ITurnContext is missing or invalid. Expected concrete handler to set it up. Actor: ${actorIdForLog}.`;
       logger.error(errorMsg);
       handler.resetStateAndResources(`missing-context-${this.getStateName()}`);
@@ -151,30 +152,12 @@ export class TurnIdleState extends AbstractTurnState {
     }
   }
 
-  /**
-   * @description Logs a standardized warning when no active turn is present.
-   * @param {string} methodName - Name of the calling method.
-   * @param {string} actorId - ID of the actor involved.
-   * @returns {void}
-   */
-  _warnNoActiveTurn(methodName, actorId) {
-    const turnCtx = this._getTurnContext();
-    const logger = getLogger(turnCtx, this._handler);
-
-    const needsIdleNote =
-      methodName.startsWith('Command') ||
-      methodName.startsWith('handleTurnEndedEvent');
-
-    const message = `${this.getStateName()}: ${methodName}${actorId} but no turn is active${
-      needsIdleNote ? ' (handler is Idle).' : '.'
-    }`;
-    logger.warn(message);
-  }
-
   /** @override */
   async handleSubmittedCommand(handler, commandString, actorEntity) {
     const actorIdForLog = actorEntity?.id ?? UNKNOWN_ENTITY_ID;
-    this._warnNoActiveTurn(
+    warnNoActiveTurn(
+      getLogger(this._getTurnContext(), this._handler),
+      this.getStateName(),
       `Command ('${commandString}') submitted by `,
       actorIdForLog
     );
@@ -184,7 +167,9 @@ export class TurnIdleState extends AbstractTurnState {
   /** @override */
   async handleTurnEndedEvent(handler, payload) {
     const payloadActorId = payload?.entityId ?? UNKNOWN_ENTITY_ID;
-    this._warnNoActiveTurn(
+    warnNoActiveTurn(
+      getLogger(this._getTurnContext(), this._handler),
+      this.getStateName(),
       'handleTurnEndedEvent called (for ',
       `${payloadActorId})`
     );
@@ -194,7 +179,9 @@ export class TurnIdleState extends AbstractTurnState {
   /** @override */
   async processCommandResult(handler, actor, commandResult, commandString) {
     const actorIdForLog = actor?.id ?? UNKNOWN_ENTITY_ID;
-    this._warnNoActiveTurn(
+    warnNoActiveTurn(
+      getLogger(this._getTurnContext(), this._handler),
+      this.getStateName(),
       'processCommandResult called (for ',
       `${actorIdForLog})`
     );
@@ -209,7 +196,12 @@ export class TurnIdleState extends AbstractTurnState {
   /** @override */
   async handleDirective(handler, actor, directive, commandResult) {
     const actorIdForLog = actor?.id ?? UNKNOWN_ENTITY_ID;
-    this._warnNoActiveTurn('handleDirective called (for ', `${actorIdForLog})`);
+    warnNoActiveTurn(
+      getLogger(this._getTurnContext(), this._handler),
+      this.getStateName(),
+      'handleDirective called (for ',
+      `${actorIdForLog})`
+    );
     return super.handleDirective(handler, actor, directive, commandResult);
   }
 

@@ -138,15 +138,17 @@ describe('TurnIdleState “idle passthrough” methods', () => {
     idle = new TurnIdleState(handler);
   });
 
-  const expectWarnAndThrow = async (fn, msgRegex) => {
+  const expectWarnAndThrow = async (fn, expected) => {
     await expect(fn).rejects.toThrow(); // AbstractTurnState throws
-    expect(logger.warn).toHaveBeenCalledWith(expect.stringMatching(msgRegex));
+    expect(logger.warn).toHaveBeenCalledWith(expected);
   };
 
   it('handleSubmittedCommand warns & delegates', async () => {
+    const expected =
+      "TurnIdleState: Command ('look') submitted by actor-1 but no turn is active (handler is Idle).";
     await expectWarnAndThrow(
       () => idle.handleSubmittedCommand(handler, 'look', actor),
-      /no turn is active/i
+      expected
     );
   });
 
@@ -154,7 +156,7 @@ describe('TurnIdleState “idle passthrough” methods', () => {
     const payload = { entityId: actor.id };
     await idle.handleTurnEndedEvent(handler, payload);
     expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringMatching(/no turn is active/i)
+      'TurnIdleState: handleTurnEndedEvent called (for actor-1) but no turn is active (handler is Idle).'
     );
   });
 
@@ -162,14 +164,14 @@ describe('TurnIdleState “idle passthrough” methods', () => {
     await expectWarnAndThrow(
       () =>
         idle.processCommandResult(handler, actor, { success: true }, 'look'),
-      /no turn is active/i
+      'TurnIdleState: processCommandResult called (for actor-1) but no turn is active.'
     );
   });
 
   it('handleDirective warns & delegates', async () => {
     await expectWarnAndThrow(
       () => idle.handleDirective(handler, actor, 'ANY_DIRECTIVE', {}),
-      /no turn is active/i
+      'TurnIdleState: handleDirective called (for actor-1) but no turn is active.'
     );
   });
 });
