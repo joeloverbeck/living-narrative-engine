@@ -13,6 +13,7 @@ describe('AnatomyDescriptionService', () => {
   let mockBodyGraphService;
   let mockEntityFinder;
   let mockComponentManager;
+  let mockEventDispatchService;
 
   // Helper function to create mock entities with the correct interface
   const createMockEntity = (id, components) => {
@@ -46,6 +47,10 @@ describe('AnatomyDescriptionService', () => {
       updateComponent: jest.fn(),
     };
 
+    mockEventDispatchService = {
+      safeDispatchEvent: jest.fn(),
+    };
+
     // Create service instance
     service = new AnatomyDescriptionService({
       bodyPartDescriptionBuilder: mockBodyPartDescriptionBuilder,
@@ -53,6 +58,7 @@ describe('AnatomyDescriptionService', () => {
       bodyGraphService: mockBodyGraphService,
       entityFinder: mockEntityFinder,
       componentManager: mockComponentManager,
+      eventDispatchService: mockEventDispatchService,
     });
   });
 
@@ -291,6 +297,100 @@ describe('AnatomyDescriptionService', () => {
       ).toHaveBeenCalledWith(bodyEntity);
       expect(mockComponentManager.addComponent).toHaveBeenCalled();
       expect(result).toBe('Generated body description');
+    });
+  });
+
+  describe('generateBodyDescription', () => {
+    it('should dispatch error event when description is empty', () => {
+      // Arrange
+      const bodyEntity = createMockEntity('body-1', {
+        [ANATOMY_BODY_COMPONENT_ID]: {
+          recipeId: 'anatomy:human_male',
+          body: { root: 'torso-1' },
+        },
+        'core:name': { text: 'Joel Overberus' },
+      });
+
+      // Mock composer to return empty string
+      mockBodyDescriptionComposer.composeDescription.mockReturnValue('');
+      // Mock entityFinder to return the entity when updateDescription is called
+      mockEntityFinder.getEntityInstance.mockReturnValue(bodyEntity);
+
+      // Act
+      service.generateBodyDescription(bodyEntity);
+
+      // Assert
+      expect(mockEventDispatchService.safeDispatchEvent).toHaveBeenCalledWith(
+        'core:system_error_occurred',
+        expect.objectContaining({
+          message: 'Failed to generate body description for entity "Joel Overberus": Description is empty',
+          details: expect.objectContaining({
+            raw: 'Entity ID: body-1, Recipe ID: anatomy:human_male',
+            timestamp: expect.any(String),
+          }),
+        })
+      );
+
+      // Also verify that updateDescription was still called with empty string
+      expect(mockComponentManager.addComponent).toHaveBeenCalledWith(
+        'body-1',
+        DESCRIPTION_COMPONENT_ID,
+        { text: '' }
+      );
+    });
+
+    it('should not dispatch error when description is not empty', () => {
+      // Arrange
+      const bodyEntity = createMockEntity('body-1', {
+        [ANATOMY_BODY_COMPONENT_ID]: {
+          body: { root: 'torso-1' },
+        },
+      });
+
+      // Mock composer to return valid description
+      mockBodyDescriptionComposer.composeDescription.mockReturnValue('Valid description');
+      // Mock entityFinder to return the entity when updateDescription is called
+      mockEntityFinder.getEntityInstance.mockReturnValue(bodyEntity);
+
+      // Act
+      service.generateBodyDescription(bodyEntity);
+
+      // Assert
+      expect(mockEventDispatchService.safeDispatchEvent).not.toHaveBeenCalled();
+      expect(mockComponentManager.addComponent).toHaveBeenCalledWith(
+        'body-1',
+        DESCRIPTION_COMPONENT_ID,
+        { text: 'Valid description' }
+      );
+    });
+
+    it('should handle missing eventDispatchService gracefully', () => {
+      // Create service without eventDispatchService
+      const serviceWithoutDispatcher = new AnatomyDescriptionService({
+        bodyPartDescriptionBuilder: mockBodyPartDescriptionBuilder,
+        bodyDescriptionComposer: mockBodyDescriptionComposer,
+        bodyGraphService: mockBodyGraphService,
+        entityFinder: mockEntityFinder,
+        componentManager: mockComponentManager,
+        eventDispatchService: null,
+      });
+
+      const bodyEntity = createMockEntity('body-1', {
+        [ANATOMY_BODY_COMPONENT_ID]: {
+          body: { root: 'torso-1' },
+        },
+      });
+
+      mockBodyDescriptionComposer.composeDescription.mockReturnValue('');
+      // Mock entityFinder to return the entity when updateDescription is called
+      mockEntityFinder.getEntityInstance.mockReturnValue(bodyEntity);
+
+      // Should not throw error
+      expect(() => {
+        serviceWithoutDispatcher.generateBodyDescription(bodyEntity);
+      }).not.toThrow();
+
+      expect(mockComponentManager.addComponent).toHaveBeenCalled();
     });
   });
 });

@@ -1,6 +1,9 @@
 import { describe, it, expect, afterEach, jest } from '@jest/globals';
 import { createMockLogger } from '../testUtils.js';
 
+/**
+ *
+ */
 function setupWithCustomAjv() {
   jest.dontMock('ajv');
   jest.dontMock('ajv-formats');
