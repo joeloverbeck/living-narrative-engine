@@ -4,6 +4,7 @@ import InMemoryDataRegistry from '../../../src/data/inMemoryDataRegistry.js';
 import { AnatomyGenerationService } from '../../../src/anatomy/anatomyGenerationService.js';
 import { BodyBlueprintFactory } from '../../../src/anatomy/bodyBlueprintFactory.js';
 import { GraphIntegrityValidator } from '../../../src/anatomy/graphIntegrityValidator.js';
+import { BodyGraphService } from '../../../src/anatomy/bodyGraphService.js';
 import {
   createMockLogger,
   createMockSafeEventDispatcher,
@@ -62,6 +63,13 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
       validator: this.validator,
     });
 
+    // Create body graph service
+    this.bodyGraphService = new BodyGraphService({
+      entityManager: this.entityManager,
+      logger: mocks.logger,
+      eventDispatcher: mocks.eventDispatcher,
+    });
+
     // Create a mock anatomy description service
     this.mockAnatomyDescriptionService = {
       generateAllDescriptions: () => {},
@@ -78,6 +86,7 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
       logger: mocks.logger,
       bodyBlueprintFactory: this.bodyBlueprintFactory,
       anatomyDescriptionService: this.mockAnatomyDescriptionService,
+      bodyGraphService: this.bodyGraphService,
     });
   }
 

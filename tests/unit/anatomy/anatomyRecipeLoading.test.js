@@ -9,6 +9,7 @@ describe('Anatomy Recipe Loading and Generation', () => {
   let mockBodyBlueprintFactory;
   let mockLogger;
   let mockAnatomyDescriptionService;
+  let mockBodyGraphService;
   let anatomyGenerationService;
 
   beforeEach(() => {
@@ -30,6 +31,9 @@ describe('Anatomy Recipe Loading and Generation', () => {
     mockAnatomyDescriptionService = {
       generateDescription: jest.fn(),
     };
+    mockBodyGraphService = {
+      buildAdjacencyCache: jest.fn(),
+    };
 
     anatomyGenerationService = new AnatomyGenerationService({
       dataRegistry: mockDataRegistry,
@@ -37,6 +41,7 @@ describe('Anatomy Recipe Loading and Generation', () => {
       bodyBlueprintFactory: mockBodyBlueprintFactory,
       logger: mockLogger,
       anatomyDescriptionService: mockAnatomyDescriptionService,
+      bodyGraphService: mockBodyGraphService,
     });
   });
 

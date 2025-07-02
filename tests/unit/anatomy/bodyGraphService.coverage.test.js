@@ -18,7 +18,6 @@ const createEntityManager = (entities) => ({
   getComponentData: jest.fn(
     (id, comp) => entities[id]?.components[comp] ?? null
   ),
-  getAllEntities: jest.fn(() => Object.values(entities)),
   getEntitiesWithComponent: jest.fn((comp) =>
     Object.values(entities).filter((e) => e.components[comp])
   ),

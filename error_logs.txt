@@ -1,19 +1,40 @@
-[17:29:54] Component added: core:description on right testicle
-[17:29:54] Component added: core:description on left testicle
-[17:29:54] Component added: core:description on penis
-[17:29:54] Component added: core:description on pubic hair
-[17:29:54] Component added: core:description on right leg
-[17:29:54] Component added: core:description on left leg
-[17:29:54] Component added: core:description on parent hand
-[17:29:54] Component added: core:description on parent hand
-[17:29:54] Component added: core:description on hair
-[17:29:54] Component added: core:description on mouth
-[17:29:54] Component added: core:description on nose
-[17:29:54] Component added: core:description on right ear
-[17:29:54] Component added: core:description on left ear
-[17:29:54] Component added: core:description on right eye
-[17:29:54] Component added: core:description on left eye
-[17:29:54] Component added: core:description on Joel Overberus (isekai:hero_instance)
-[17:29:54] Component added: core:current_actor on Joel Overberus (isekai:hero_instance)
-[17:30:57] Component updated: core:perception_log on Joel Overberus (isekai:hero_instance)
-[17:30:57] Component updated: core:perception_log on Ninja Ninjason (isekai:ninja_instance)
+[19:42:56] Component updated: core:name on hair{
+  "text": "hair"
+}
+[19:42:56] Entity created: hair from anatomy:human_hair
+[19:42:56] Component added: anatomy:joint on hair
+[19:42:56] Component updated: core:name on pubic hair
+[19:42:56] Entity created: penis from anatomy:human_penis
+[19:42:56] Component added: anatomy:joint on penis
+[19:42:56] Component updated: core:name on penis
+[19:42:56] Entity created: testicle from anatomy:human_testicle
+[19:42:56] Component added: anatomy:joint on testicle
+[19:42:56] Component updated: core:name on left testicle
+[19:42:56] Entity created: testicle from anatomy:human_testicle
+[19:42:56] Component added: anatomy:joint on testicle
+[19:42:56] Component updated: core:name on right testicle
+[19:42:56] Entity created: hand from anatomy:human_hand
+[19:42:56] Component added: anatomy:joint on hand
+[19:42:56] Component updated: core:name on parent hand
+[19:42:56] Entity created: hand from anatomy:human_hand
+[19:42:56] Component added: anatomy:joint on hand
+[19:42:56] Component updated: core:name on parent hand
+[19:42:56] Entity created: asshole from anatomy:human_asshole
+[19:42:56] Component added: anatomy:joint on asshole
+[19:42:56] Component updated: core:name on asshole
+[19:42:56] Component updated: anatomy:body on Joel Overberus (isekai:hero_instance)
+[19:42:56] Component added: core:description on right testicle
+[19:42:56] Component added: core:description on left testicle
+[19:42:56] Component added: core:description on penis
+[19:42:56] Component added: core:description on pubic hair
+[19:42:56] Component added: core:description on parent hand
+[19:42:56] Component added: core:description on parent hand
+[19:42:56] Component added: core:description on hair
+[19:42:56] Component added: core:description on mouth
+[19:42:56] Component added: core:description on nose
+[19:42:56] Component added: core:description on right ear
+[19:42:56] Component added: core:description on left ear
+[19:42:56] Component added: core:description on right eye
+[19:42:56] Component added: core:description on left eye
+[19:42:56] Component added: core:description on Joel Overberus (isekai:hero_instance)
+[19:42:56] Component added: core:current_actor on Joel Overberus (isekai:hero_instance)

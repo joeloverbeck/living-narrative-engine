@@ -306,7 +306,15 @@ describe('Anatomy Description Generation - Edge Cases', () => {
           return {
             id: 'entity1',
             hasComponent: jest.fn().mockReturnValue(true),
-            getComponentData: jest.fn().mockReturnValue({ subType: 'eye' }),
+            getComponentData: jest.fn().mockImplementation((componentId) => {
+              if (componentId === 'anatomy:part') {
+                return { subType: 'eye' };
+              }
+              if (componentId === 'core:description') {
+                return { text: 'blue' };
+              }
+              return null;
+            }),
             components: {
               'anatomy:part': { subType: 'eye' },
               'descriptors:color_basic': { value: 'blue' },

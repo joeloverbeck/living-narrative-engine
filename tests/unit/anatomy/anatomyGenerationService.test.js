@@ -11,6 +11,7 @@ describe('AnatomyGenerationService', () => {
   let mockLogger;
   let mockBodyBlueprintFactory;
   let mockAnatomyDescriptionService;
+  let mockBodyGraphService;
 
   beforeEach(() => {
     // Create mocks
@@ -38,6 +39,10 @@ describe('AnatomyGenerationService', () => {
       generateAllDescriptions: jest.fn(),
     };
 
+    mockBodyGraphService = {
+      buildAdjacencyCache: jest.fn(),
+    };
+
     // Create service instance
     service = new AnatomyGenerationService({
       entityManager: mockEntityManager,
@@ -45,6 +50,7 @@ describe('AnatomyGenerationService', () => {
       logger: mockLogger,
       bodyBlueprintFactory: mockBodyBlueprintFactory,
       anatomyDescriptionService: mockAnatomyDescriptionService,
+      bodyGraphService: mockBodyGraphService,
     });
   });
 
@@ -57,6 +63,7 @@ describe('AnatomyGenerationService', () => {
             logger: mockLogger,
             bodyBlueprintFactory: mockBodyBlueprintFactory,
             anatomyDescriptionService: mockAnatomyDescriptionService,
+            bodyGraphService: mockBodyGraphService,
           })
       ).toThrow(InvalidArgumentError);
     });
@@ -69,6 +76,7 @@ describe('AnatomyGenerationService', () => {
             logger: mockLogger,
             bodyBlueprintFactory: mockBodyBlueprintFactory,
             anatomyDescriptionService: mockAnatomyDescriptionService,
+            bodyGraphService: mockBodyGraphService,
           })
       ).toThrow(InvalidArgumentError);
     });
@@ -81,6 +89,7 @@ describe('AnatomyGenerationService', () => {
             dataRegistry: mockDataRegistry,
             bodyBlueprintFactory: mockBodyBlueprintFactory,
             anatomyDescriptionService: mockAnatomyDescriptionService,
+            bodyGraphService: mockBodyGraphService,
           })
       ).toThrow(InvalidArgumentError);
     });
@@ -93,6 +102,7 @@ describe('AnatomyGenerationService', () => {
             dataRegistry: mockDataRegistry,
             logger: mockLogger,
             anatomyDescriptionService: mockAnatomyDescriptionService,
+            bodyGraphService: mockBodyGraphService,
           })
       ).toThrow(InvalidArgumentError);
     });
@@ -105,6 +115,20 @@ describe('AnatomyGenerationService', () => {
             dataRegistry: mockDataRegistry,
             logger: mockLogger,
             bodyBlueprintFactory: mockBodyBlueprintFactory,
+            bodyGraphService: mockBodyGraphService,
+          })
+      ).toThrow(InvalidArgumentError);
+    });
+
+    it('should throw error if bodyGraphService is not provided', () => {
+      expect(
+        () =>
+          new AnatomyGenerationService({
+            entityManager: mockEntityManager,
+            dataRegistry: mockDataRegistry,
+            logger: mockLogger,
+            bodyBlueprintFactory: mockBodyBlueprintFactory,
+            anatomyDescriptionService: mockAnatomyDescriptionService,
           })
       ).toThrow(InvalidArgumentError);
     });
@@ -249,6 +273,10 @@ describe('AnatomyGenerationService', () => {
           },
         })
       );
+      // Verify adjacency cache is built before descriptions
+      expect(mockBodyGraphService.buildAdjacencyCache).toHaveBeenCalledWith(
+        'root-1'
+      );
       expect(
         mockAnatomyDescriptionService.generateAllDescriptions
       ).toHaveBeenCalledWith(mockEntity);
@@ -381,6 +409,42 @@ describe('AnatomyGenerationService', () => {
       expect(
         mockAnatomyDescriptionService.generateAllDescriptions
       ).not.toHaveBeenCalled();
+    });
+
+    it('should build adjacency cache before generating descriptions', async () => {
+      const mockEntity = {
+        hasComponent: jest.fn().mockReturnValue(true),
+        getComponentData: jest.fn().mockReturnValue({
+          recipeId: 'test-recipe',
+        }),
+      };
+      mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
+
+      mockDataRegistry.get.mockReturnValue({
+        blueprintId: 'test-blueprint',
+      });
+
+      const mockGraphResult = {
+        rootId: 'root-1',
+        entities: ['root-1'],
+      };
+      mockBodyBlueprintFactory.createAnatomyGraph.mockResolvedValue(
+        mockGraphResult
+      );
+
+      const callOrder = [];
+      mockBodyGraphService.buildAdjacencyCache.mockImplementation(() => {
+        callOrder.push('buildAdjacencyCache');
+      });
+      mockAnatomyDescriptionService.generateAllDescriptions.mockImplementation(() => {
+        callOrder.push('generateAllDescriptions');
+      });
+
+      await service.generateAnatomyIfNeeded('entity-1');
+
+      // Verify the order of calls
+      expect(callOrder).toEqual(['buildAdjacencyCache', 'generateAllDescriptions']);
+      expect(mockBodyGraphService.buildAdjacencyCache).toHaveBeenCalledWith('root-1');
     });
 
     it('should handle null name data for parts', async () => {
