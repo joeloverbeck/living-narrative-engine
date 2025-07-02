@@ -178,3 +178,16 @@ export const createMockScopeEngine = (overrides = {}) => ({
   setMaxDepth: jest.fn(),
   ...overrides,
 });
+
+/**
+ * Creates a mock EventDispatchService.
+ *
+ * @param {object} [overrides] - Optional overrides for mock methods.
+ * @returns {object} Mock event dispatch service
+ */
+export const createMockEventDispatchService = (overrides = {}) => ({
+  dispatchWithLogging: jest.fn().mockResolvedValue(undefined),
+  dispatchWithErrorHandling: jest.fn().mockResolvedValue(true),
+  safeDispatchEvent: jest.fn().mockResolvedValue(undefined),
+  ...overrides,
+});

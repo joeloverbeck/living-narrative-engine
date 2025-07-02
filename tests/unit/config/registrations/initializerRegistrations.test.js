@@ -43,6 +43,7 @@ const mockGameDataRepository = { name: 'MockGameDataRepository' };
 const mockValidatedEventDispatcher = { name: 'MockValidatedEventDispatcher' };
 const mockSpatialIndexManager = { name: 'MockSpatialIndexManager' };
 const mockScopeRegistry = { name: 'MockScopeRegistry' };
+const mockEventDispatchService = { name: 'MockEventDispatchService' };
 
 describe('registerInitializers', () => {
   /** @type {MockContainer} */
@@ -76,6 +77,9 @@ describe('registerInitializers', () => {
       { lifecycle: 'singleton' }
     );
     mockContainer.register(tokens.IScopeRegistry, mockScopeRegistry, {
+      lifecycle: 'singleton',
+    });
+    mockContainer.register(tokens.EventDispatchService, mockEventDispatchService, {
       lifecycle: 'singleton',
     });
 
@@ -115,6 +119,7 @@ describe('registerInitializers', () => {
       worldContext: mockWorldContext,
       gameDataRepository: mockGameDataRepository,
       validatedEventDispatcher: mockValidatedEventDispatcher,
+      eventDispatchService: mockEventDispatchService,
       logger: mockLogger,
       scopeRegistry: mockScopeRegistry,
       // spatialIndexManager dependency removed - now handled by SpatialIndexSynchronizer
@@ -134,6 +139,7 @@ describe('registerInitializers', () => {
       resolver: mockContainer,
       logger: mockLogger,
       validatedEventDispatcher: mockValidatedEventDispatcher,
+      eventDispatchService: mockEventDispatchService,
       initializationTag: INITIALIZABLE[0],
     });
   });
@@ -152,6 +158,7 @@ describe('registerInitializers', () => {
     expect(resolveSpy).toHaveBeenCalledWith(tokens.IWorldContext);
     expect(resolveSpy).toHaveBeenCalledWith(tokens.IGameDataRepository);
     expect(resolveSpy).toHaveBeenCalledWith(tokens.IValidatedEventDispatcher);
+    expect(resolveSpy).toHaveBeenCalledWith(tokens.EventDispatchService);
     expect(resolveSpy).toHaveBeenCalledWith(tokens.IScopeRegistry);
     // spatialIndexManager dependency removed - no longer resolved
     resolveSpy.mockRestore();

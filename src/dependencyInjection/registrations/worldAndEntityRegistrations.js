@@ -225,6 +225,7 @@ export function registerWorldAndEntity(container) {
       dataRegistry: c.resolve(tokens.IDataRegistry),
       logger: c.resolve(tokens.ILogger),
       eventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+      eventDispatchService: c.resolve(tokens.EventDispatchService),
       idGenerator: UuidGenerator,
       validator: c.resolve(tokens.GraphIntegrityValidator),
     });

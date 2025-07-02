@@ -8,6 +8,7 @@ import {
   createMockLogger,
   createMockSafeEventDispatcher,
   createMockSchemaValidator,
+  createMockEventDispatchService,
 } from '../mockFactories/index.js';
 import UuidGenerator from '../../../src/adapters/UuidGenerator.js';
 import BaseTestBed from '../baseTestBed.js';
@@ -28,6 +29,7 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
       logger: createMockLogger(),
       registry: new InMemoryDataRegistry(),
       eventDispatcher: createMockSafeEventDispatcher(),
+      eventDispatchService: createMockEventDispatchService(),
       validator: createMockSchemaValidator(),
       idGenerator: UuidGenerator,
     };
@@ -55,6 +57,7 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
       dataRegistry: mocks.registry,
       logger: mocks.logger,
       eventDispatcher: mocks.eventDispatcher,
+      eventDispatchService: mocks.eventDispatchService,
       idGenerator: mocks.idGenerator,
       validator: this.validator,
     });

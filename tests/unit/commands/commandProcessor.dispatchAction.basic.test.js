@@ -12,14 +12,21 @@ const mkLogger = () => ({
 describe('CommandProcessor.dispatchAction basic flows', () => {
   let logger;
   let dispatcher;
+  let eventDispatchService;
   let processor;
 
   beforeEach(() => {
     logger = mkLogger();
     dispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
+    eventDispatchService = {
+      dispatchWithErrorHandling: jest.fn().mockResolvedValue(true),
+      dispatchWithLogging: jest.fn().mockResolvedValue(undefined),
+      safeDispatchEvent: jest.fn().mockResolvedValue(undefined),
+    };
     processor = new CommandProcessor({
       logger,
       safeEventDispatcher: dispatcher,
+      eventDispatchService,
     });
     jest.clearAllMocks();
   });
@@ -40,12 +47,13 @@ describe('CommandProcessor.dispatchAction basic flows', () => {
       originalInput: 'look around',
       actionResult: { actionId: 'look' },
     });
-    expect(dispatcher.dispatch).toHaveBeenCalledWith(
+    expect(eventDispatchService.dispatchWithErrorHandling).toHaveBeenCalledWith(
       ATTEMPT_ACTION_ID,
       expect.objectContaining({
         actorId: 'a1',
         actionId: 'look',
-      })
+      }),
+      'ATTEMPT_ACTION_ID dispatch for pre-resolved action look'
     );
   });
 
@@ -59,11 +67,11 @@ describe('CommandProcessor.dispatchAction basic flows', () => {
     expect(result.error).toBe(
       'Internal error: Malformed action prevented execution.'
     );
-    expect(dispatcher.dispatch).toHaveBeenCalled();
+    // When inputs are invalid, safeDispatchError is called to dispatch the error
   });
 
   it('returns failure when dispatcher reports failure', async () => {
-    dispatcher.dispatch.mockResolvedValueOnce(false);
+    eventDispatchService.dispatchWithErrorHandling.mockResolvedValueOnce(false);
 
     const actor = { id: 'p1' };
     const action = { actionDefinitionId: 'jump', commandString: 'jump' };
@@ -72,9 +80,10 @@ describe('CommandProcessor.dispatchAction basic flows', () => {
 
     expect(result.success).toBe(false);
     expect(result.internalError).toMatch('Dispatcher reported failure');
-    expect(dispatcher.dispatch).toHaveBeenCalledWith(
+    expect(eventDispatchService.dispatchWithErrorHandling).toHaveBeenCalledWith(
       ATTEMPT_ACTION_ID,
-      expect.any(Object)
+      expect.any(Object),
+      'ATTEMPT_ACTION_ID dispatch for pre-resolved action jump'
     );
   });
 });

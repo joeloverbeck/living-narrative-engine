@@ -222,11 +222,18 @@ describe('Integration: Entity Instances Loader and World Initialization', () => 
     const mockWorldContext = {};
     const mockScopeRegistry = new ScopeRegistry({ logger: testLogger });
 
+    const mockEventDispatchService = {
+      dispatchWithLogging: jest.fn().mockResolvedValue(undefined),
+      safeDispatchEvent: jest.fn().mockResolvedValue(undefined),
+      dispatchWithErrorHandling: jest.fn().mockResolvedValue(true),
+    };
+
     const worldInitializer = new WorldInitializer({
       entityManager,
       worldContext: mockWorldContext,
       gameDataRepository: mockRepository,
       validatedEventDispatcher: mockValidatedEventDispatcher,
+      eventDispatchService: mockEventDispatchService,
       logger: testLogger,
       scopeRegistry: mockScopeRegistry,
     });
@@ -288,11 +295,18 @@ describe('Integration: Entity Instances Loader and World Initialization', () => 
     const mockWorldContext = {};
     const mockScopeRegistry = new ScopeRegistry({ logger: testLogger });
 
+    const mockEventDispatchService = {
+      dispatchWithLogging: jest.fn().mockResolvedValue(undefined),
+      safeDispatchEvent: jest.fn().mockResolvedValue(undefined),
+      dispatchWithErrorHandling: jest.fn().mockResolvedValue(true),
+    };
+
     const worldInitializer = new WorldInitializer({
       entityManager,
       worldContext: mockWorldContext,
       gameDataRepository: mockRepository,
       validatedEventDispatcher: localMockValidatedEventDispatcher,
+      eventDispatchService: mockEventDispatchService,
       logger: testLogger,
       scopeRegistry: mockScopeRegistry,
     });
@@ -494,11 +508,18 @@ describe('Integration: EntityInstance componentOverrides are respected during wo
     const mockWorldContext = {};
     const mockScopeRegistry = new ScopeRegistry({ logger: testLogger }); // Or localLogger
 
+    const mockEventDispatchService = {
+      dispatchWithLogging: jest.fn().mockResolvedValue(undefined),
+      safeDispatchEvent: jest.fn().mockResolvedValue(undefined),
+      dispatchWithErrorHandling: jest.fn().mockResolvedValue(true),
+    };
+
     const worldInitializer = new WorldInitializer({
       entityManager,
       worldContext: mockWorldContext,
       gameDataRepository: mockRepository,
       validatedEventDispatcher: currentTestDispatcher,
+      eventDispatchService: mockEventDispatchService,
       logger: testLogger, // Or localLogger
       scopeRegistry: mockScopeRegistry,
     });

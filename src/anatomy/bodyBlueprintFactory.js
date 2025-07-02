@@ -7,12 +7,12 @@
 import { InvalidArgumentError } from '../errors/invalidArgumentError.js';
 import { ValidationError } from '../errors/validationError.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/systemEventIds.js';
-import { safeDispatchEvent } from '../utils/safeDispatchEvent.js';
 
 /** @typedef {import('../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 /** @typedef {import('../interfaces/coreServices.js').IDataRegistry} IDataRegistry */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
+/** @typedef {import('../utils/eventDispatchService.js').EventDispatchService} EventDispatchService */
 /** @typedef {import('../ports/IIdGenerator.js').IIdGenerator} IIdGenerator */
 
 /**
@@ -60,6 +60,8 @@ export class BodyBlueprintFactory {
   #logger;
   /** @type {ISafeEventDispatcher} */
   #eventDispatcher;
+  /** @type {EventDispatchService} */
+  #eventDispatchService;
   /** @type {IIdGenerator} */
   #idGenerator;
   /** @type {import('./graphIntegrityValidator.js').GraphIntegrityValidator} */
@@ -71,6 +73,7 @@ export class BodyBlueprintFactory {
    * @param {IDataRegistry} deps.dataRegistry
    * @param {ILogger} deps.logger
    * @param {ISafeEventDispatcher} deps.eventDispatcher
+   * @param {EventDispatchService} deps.eventDispatchService
    * @param {IIdGenerator} deps.idGenerator
    * @param {import('./graphIntegrityValidator.js').GraphIntegrityValidator} deps.validator
    */
@@ -79,6 +82,7 @@ export class BodyBlueprintFactory {
     dataRegistry,
     logger,
     eventDispatcher,
+    eventDispatchService,
     idGenerator,
     validator,
   }) {
@@ -89,6 +93,8 @@ export class BodyBlueprintFactory {
     if (!logger) throw new InvalidArgumentError('logger is required');
     if (!eventDispatcher)
       throw new InvalidArgumentError('eventDispatcher is required');
+    if (!eventDispatchService)
+      throw new InvalidArgumentError('eventDispatchService is required');
     if (!idGenerator) throw new InvalidArgumentError('idGenerator is required');
     if (!validator) throw new InvalidArgumentError('validator is required');
 
@@ -96,6 +102,7 @@ export class BodyBlueprintFactory {
     this.#dataRegistry = dataRegistry;
     this.#logger = logger;
     this.#eventDispatcher = eventDispatcher;
+    this.#eventDispatchService = eventDispatchService;
     this.#idGenerator = idGenerator;
     this.#validator = validator;
   }
@@ -448,15 +455,13 @@ export class BodyBlueprintFactory {
 
         const errorMessage = `Failed to process blueprint slot '${slotKey}': ${error.message}`;
 
-        await safeDispatchEvent(
-          this.#eventDispatcher,
+        await this.#eventDispatchService.safeDispatchEvent(
           SYSTEM_ERROR_OCCURRED_ID,
           {
             error: errorMessage,
             context: 'BodyBlueprintFactory.processBlueprintSlots',
             details: errorContext,
-          },
-          this.#logger
+          }
         );
 
         throw new ValidationError(errorMessage);
@@ -751,15 +756,13 @@ export class BodyBlueprintFactory {
         `Checked ${errorContext.checkedDefinitions} anatomy part definitions.`;
 
       // Dispatch system error event
-      await safeDispatchEvent(
-        this.#eventDispatcher,
+      await this.#eventDispatchService.safeDispatchEvent(
         SYSTEM_ERROR_OCCURRED_ID,
         {
           error: errorMessage,
           context: 'BodyBlueprintFactory.selectPartByRequirements',
           details: errorContext,
-        },
-        this.#logger
+        }
       );
 
       return null;
@@ -1045,15 +1048,13 @@ export class BodyBlueprintFactory {
         `Recipe: '${recipe.recipeId}'. ${error.message}`;
 
       // Re-dispatch with enhanced context
-      await safeDispatchEvent(
-        this.#eventDispatcher,
+      await this.#eventDispatchService.safeDispatchEvent(
         SYSTEM_ERROR_OCCURRED_ID,
         {
           error: enhancedMessage,
           context: 'BodyBlueprintFactory.createPartForSlot',
           details: enhancedContext,
-        },
-        this.#logger
+        }
       );
 
       throw new ValidationError(enhancedMessage);
@@ -1156,15 +1157,13 @@ export class BodyBlueprintFactory {
         `Checked ${allEntityDefs.length} entity definitions.`;
 
       // Dispatch system error event
-      await safeDispatchEvent(
-        this.#eventDispatcher,
+      await this.#eventDispatchService.safeDispatchEvent(
         SYSTEM_ERROR_OCCURRED_ID,
         {
           error: errorMessage,
           context: 'BodyBlueprintFactory.findCandidateParts',
           details: errorContext,
-        },
-        this.#logger
+        }
       );
 
       // Throw error for caller to handle
