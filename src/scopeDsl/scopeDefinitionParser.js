@@ -7,17 +7,16 @@ import { parseDslExpression } from './parser/parser.js';
 import { ScopeDefinitionError } from './errors/scopeDefinitionError.js';
 
 /**
- * Parses the text content of a .scope file into a map of scope names to their
- * DSL expressions and pre-parsed ASTs. It validates both the `name := expression` format and the
- * syntax of the DSL expression itself.
+ * Split a `.scope` file into meaningful lines.
  *
- * @param {string} content - The raw string content from a .scope file.
- * @param {string} filePath - The original path to the file, used for error reporting.
- * @returns {Map<string, {expr: string, ast: object}>} A map where keys are scope names and values contain the DSL expression string and its parsed AST.
- * @throws {ScopeDefinitionError} If the file is empty, a line has an invalid format, or the DSL expression is invalid.
+ * @description Removes comments and empty lines from the provided content and
+ * returns the remaining trimmed lines.
+ * @param {string} content - Raw file content.
+ * @param {string} filePath - Path for error reporting.
+ * @returns {string[]} Array of non-empty, non-comment lines.
+ * @throws {ScopeDefinitionError} When no valid lines remain.
  */
-export function parseScopeDefinitions(content, filePath) {
-  // First, split into lines and filter out comments
+function _splitLines(content, filePath) {
   const rawLines = content
     .split('\n')
     .map((line) => line.trim())
@@ -30,29 +29,38 @@ export function parseScopeDefinitions(content, filePath) {
     );
   }
 
-  // Process lines to handle multi-line scope definitions
-  const processedLines = [];
+  return rawLines;
+}
+
+/**
+ * Concatenate multi-line scope definitions.
+ *
+ * @description Creates scope objects from raw lines, handling continuation
+ * lines and reporting malformed input.
+ * @param {string[]} rawLines - Lines returned from {@link _splitLines}.
+ * @param {string} filePath - Path for error reporting.
+ * @returns {{name:string, expression:string, line:string}[]} Array of scope
+ * objects.
+ * @throws {ScopeDefinitionError} When a line is not part of a valid scope
+ * definition.
+ */
+function _assembleScopes(rawLines, filePath) {
+  const scopes = [];
   let currentScope = null;
 
   for (const line of rawLines) {
-    // Check if this line starts a new scope definition
     const scopeMatch = line.match(/^(\w+:\w+)\s*:=\s*(.*)$/);
-
     if (scopeMatch) {
-      // If we were building a previous scope, finalize it
       if (currentScope) {
-        processedLines.push(currentScope);
+        scopes.push(currentScope);
       }
-
-      // Start a new scope definition
       const [, scopeName, expressionStart] = scopeMatch;
       currentScope = {
         name: scopeName,
         expression: expressionStart,
-        line: line, // Keep original line for error reporting
+        line,
       };
     } else {
-      // This is a continuation line
       if (!currentScope) {
         throw new ScopeDefinitionError(
           'Invalid line format. Expected "name := dsl_expression".',
@@ -60,35 +68,58 @@ export function parseScopeDefinitions(content, filePath) {
           line
         );
       }
-
-      // Append to the current scope's expression
       currentScope.expression += ' ' + line;
     }
   }
 
-  // Don't forget the last scope if there is one
   if (currentScope) {
-    processedLines.push(currentScope);
+    scopes.push(currentScope);
   }
 
-  const scopeDefinitions = new Map();
+  return scopes;
+}
 
-  for (const scope of processedLines) {
-    try {
-      // Validate the DSL expression by parsing it and store the AST.
-      const trimmedExpression = scope.expression.trim();
-      const ast = parseDslExpression(trimmedExpression);
-      scopeDefinitions.set(scope.name, {
-        expr: trimmedExpression,
-        ast: ast,
-      });
-    } catch (parseError) {
-      // Augment the parser's error with more context.
-      throw new ScopeDefinitionError(
-        `Invalid DSL expression for scope "${scope.name}": ${parseError.message}`,
-        filePath
-      );
-    }
+/**
+ * Parse a single scope definition.
+ *
+ * @description Validates the DSL expression for a scope and returns the
+ * resulting AST alongside the expression.
+ * @param {{name:string, expression:string}} scope - Scope to parse.
+ * @param {string} filePath - Path for error reporting.
+ * @returns {{expr:string, ast:object}} Parsed scope data.
+ * @throws {ScopeDefinitionError} When the DSL expression is invalid.
+ */
+function _parseScope(scope, filePath) {
+  try {
+    const trimmedExpression = scope.expression.trim();
+    const ast = parseDslExpression(trimmedExpression);
+    return { expr: trimmedExpression, ast };
+  } catch (parseError) {
+    throw new ScopeDefinitionError(
+      `Invalid DSL expression for scope "${scope.name}": ${parseError.message}`,
+      filePath
+    );
+  }
+}
+
+/**
+ * Parses the text content of a .scope file into a map of scope names to their
+ * DSL expressions and pre-parsed ASTs. It validates both the `name := expression` format and the
+ * syntax of the DSL expression itself.
+ *
+ * @param {string} content - The raw string content from a .scope file.
+ * @param {string} filePath - The original path to the file, used for error reporting.
+ * @returns {Map<string, {expr: string, ast: object}>} A map where keys are scope names and values contain the DSL expression string and its parsed AST.
+ * @throws {ScopeDefinitionError} If the file is empty, a line has an invalid format, or the DSL expression is invalid.
+ */
+export function parseScopeDefinitions(content, filePath) {
+  const rawLines = _splitLines(content, filePath);
+  const scopes = _assembleScopes(rawLines, filePath);
+
+  const scopeDefinitions = new Map();
+  for (const scope of scopes) {
+    const parsed = _parseScope(scope, filePath);
+    scopeDefinitions.set(scope.name, parsed);
   }
 
   return scopeDefinitions;
