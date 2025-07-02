@@ -267,11 +267,16 @@ export function registerWorldAndEntity(container) {
       .get('gameConfig', 'game');
     const modLoadOrder = gameConfig?.mods || [];
 
-    return new AnatomyFormattingService({
+    const anatomyFormattingService = new AnatomyFormattingService({
       dataRegistry: c.resolve(tokens.IDataRegistry),
       logger: c.resolve(tokens.ILogger),
       modLoadOrder: modLoadOrder,
     });
+    
+    // Initialize the service to load formatting configurations
+    anatomyFormattingService.initialize();
+    
+    return anatomyFormattingService;
   });
   logger.debug(
     `World and Entity Registration: Registered ${String(
@@ -280,10 +285,8 @@ export function registerWorldAndEntity(container) {
   );
 
   registrar.singletonFactory(tokens.DescriptorFormatter, (c) => {
-    const anatomyFormattingService = c.resolve(tokens.AnatomyFormattingService);
-    anatomyFormattingService.initialize(); // Initialize before use
     return new DescriptorFormatter({
-      anatomyFormattingService: anatomyFormattingService,
+      anatomyFormattingService: c.resolve(tokens.AnatomyFormattingService),
     });
   });
   logger.debug(
