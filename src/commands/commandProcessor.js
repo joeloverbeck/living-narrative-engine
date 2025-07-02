@@ -10,7 +10,6 @@ import {
   createFailureResult,
   dispatchFailure,
 } from './helpers/commandResultUtils.js';
-import { dispatchWithErrorHandling as dispatchEventWithErrorHandling } from '../utils/eventDispatchHelper.js';
 
 // --- Type Imports ---
 /** @typedef {import('../entities/entity.js').default} Entity */
@@ -18,6 +17,7 @@ import { dispatchWithErrorHandling as dispatchEventWithErrorHandling } from '../
 /** @typedef {import('../turns/interfaces/IActorTurnStrategy.js').ITurnAction} ITurnAction */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
+/** @typedef {import('../utils/eventDispatchService.js').EventDispatchService} EventDispatchService */
 /** @typedef {import('../types/commandResult.js').CommandResult} CommandResult */
 
 /**
@@ -29,19 +29,22 @@ class CommandProcessor extends ICommandProcessor {
   #logger;
   /** @type {ISafeEventDispatcher} */
   #safeEventDispatcher;
+  /** @type {EventDispatchService} */
+  #eventDispatchService;
 
   /**
    * Creates an instance of CommandProcessor.
    *
    * @param {object} options - Configuration options for the processor.
    * @param {ISafeEventDispatcher} options.safeEventDispatcher - Required event dispatcher that must implement `dispatch`.
+   * @param {EventDispatchService} options.eventDispatchService - Required event dispatch service.
    * @param {ILogger} [options.logger] - Optional logger instance.
-   * @throws {Error} If `safeEventDispatcher` is missing or lacks a `dispatch` method.
+   * @throws {Error} If required dependencies are missing or lack required methods.
    */
   constructor(options) {
     super();
 
-    const { logger, safeEventDispatcher } = options || {};
+    const { logger, safeEventDispatcher, eventDispatchService } = options || {};
 
     this.#logger = initLogger('CommandProcessor', logger);
 
@@ -54,7 +57,17 @@ class CommandProcessor extends ICommandProcessor {
       }
     );
 
+    validateDependency(
+      eventDispatchService,
+      'eventDispatchService',
+      this.#logger,
+      {
+        requiredMethods: ['dispatchWithErrorHandling'],
+      }
+    );
+
     this.#safeEventDispatcher = safeEventDispatcher;
+    this.#eventDispatchService = eventDispatchService;
 
     this.#logger.debug(
       'CommandProcessor: Instance created and dependencies validated.'
@@ -93,11 +106,9 @@ class CommandProcessor extends ICommandProcessor {
     const payload = this.#createAttemptActionPayload(actor, turnAction);
 
     // --- Dispatch ---
-    const dispatchSuccess = await dispatchEventWithErrorHandling(
-      this.#safeEventDispatcher,
+    const dispatchSuccess = await this.#eventDispatchService.dispatchWithErrorHandling(
       ATTEMPT_ACTION_ID,
       payload,
-      this.#logger,
       `ATTEMPT_ACTION_ID dispatch for pre-resolved action ${actionId}`
     );
 

@@ -18,9 +18,7 @@ export { StructureResolver } from './structureResolver.js';
 export * from './jsonCleaning.js';
 export * from './jsonRepair.js';
 export * from './evaluationContextUtils.js';
-export * from './eventDispatchUtils.js';
-export { dispatchWithErrorHandling } from './eventDispatchHelper.js';
-export { safeDispatchEvent } from './safeDispatchEvent.js';
+export { EventDispatchService } from './eventDispatchService.js';
 export {
   assertPresent,
   assertFunction,

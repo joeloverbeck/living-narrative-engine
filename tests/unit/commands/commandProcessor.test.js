@@ -17,12 +17,18 @@ const mkLogger = () => ({
 describe('CommandProcessor.dispatchAction', () => {
   let logger;
   let safeEventDispatcher;
+  let eventDispatchService;
   let processor;
 
   beforeEach(() => {
     logger = mkLogger();
     safeEventDispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
-    processor = new CommandProcessor({ logger, safeEventDispatcher });
+    eventDispatchService = {
+      dispatchWithErrorHandling: jest.fn().mockResolvedValue(true),
+      dispatchWithLogging: jest.fn().mockResolvedValue(undefined),
+      safeDispatchEvent: jest.fn().mockResolvedValue(undefined),
+    };
+    processor = new CommandProcessor({ logger, safeEventDispatcher, eventDispatchService });
     jest.clearAllMocks();
   });
 
@@ -42,8 +48,8 @@ describe('CommandProcessor.dispatchAction', () => {
       originalInput: 'look north',
       actionResult: { actionId: 'look' },
     });
-    expect(safeEventDispatcher.dispatch).toHaveBeenCalledTimes(1);
-    expect(safeEventDispatcher.dispatch).toHaveBeenCalledWith(
+    expect(eventDispatchService.dispatchWithErrorHandling).toHaveBeenCalledTimes(1);
+    expect(eventDispatchService.dispatchWithErrorHandling).toHaveBeenCalledWith(
       ATTEMPT_ACTION_ID,
       expect.objectContaining({
         eventName: ATTEMPT_ACTION_ID,
@@ -51,10 +57,11 @@ describe('CommandProcessor.dispatchAction', () => {
         actionId: 'look',
         targetId: 't1',
         originalInput: 'look north',
-      })
+      }),
+      'ATTEMPT_ACTION_ID dispatch for pre-resolved action look'
     );
     expect(logger.debug).toHaveBeenCalledWith(
-      'dispatchWithErrorHandling: Dispatch successful for ATTEMPT_ACTION_ID dispatch for pre-resolved action look.'
+      'CommandProcessor.dispatchAction: Successfully dispatched \'look\' for actor actor1.'
     );
   });
 
@@ -171,7 +178,7 @@ describe('CommandProcessor.dispatchAction', () => {
   });
 
   it('AC3: returns failure when dispatcher reports failure', async () => {
-    safeEventDispatcher.dispatch.mockResolvedValueOnce(false);
+    eventDispatchService.dispatchWithErrorHandling.mockResolvedValueOnce(false);
 
     const actor = { id: 'actor3' };
     const turnAction = {
@@ -183,10 +190,11 @@ describe('CommandProcessor.dispatchAction', () => {
     const result = await processor.dispatchAction(actor, turnAction);
 
     expect(result.success).toBe(false);
-    expect(safeEventDispatcher.dispatch).toHaveBeenNthCalledWith(
+    expect(eventDispatchService.dispatchWithErrorHandling).toHaveBeenNthCalledWith(
       1,
       ATTEMPT_ACTION_ID,
-      expect.any(Object)
+      expect.any(Object),
+      'ATTEMPT_ACTION_ID dispatch for pre-resolved action take'
     );
     expect(safeDispatchError).toHaveBeenCalledWith(
       safeEventDispatcher,
@@ -194,15 +202,11 @@ describe('CommandProcessor.dispatchAction', () => {
       expect.any(Object),
       logger
     );
-    expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining(
-        'dispatchWithErrorHandling: SafeEventDispatcher reported failure for ATTEMPT_ACTION_ID dispatch for pre-resolved action take'
-      )
-    );
+    // The warning is now logged inside EventDispatchService, not directly by CommandProcessor
   });
 
   it('constructs expected failure result when dispatcher reports failure', async () => {
-    safeEventDispatcher.dispatch.mockResolvedValueOnce(false);
+    eventDispatchService.dispatchWithErrorHandling.mockResolvedValueOnce(false);
 
     const actor = { id: 'actor3' };
     const turnAction = {
@@ -225,8 +229,18 @@ describe('CommandProcessor.dispatchAction', () => {
   });
 
   it('AC4: handles exception thrown by dispatcher', async () => {
-    safeEventDispatcher.dispatch.mockRejectedValueOnce(new Error('boom'));
-    safeEventDispatcher.dispatch.mockResolvedValue(true);
+    // Mock the safeEventDispatcher to throw an error internally
+    // This will be caught by dispatchWithErrorHandling and it will return false
+    eventDispatchService.dispatchWithErrorHandling.mockImplementationOnce(async () => {
+      // Simulate what happens inside dispatchWithErrorHandling when dispatch throws
+      await safeDispatchError(
+        safeEventDispatcher,
+        'System error during event dispatch.',
+        {},
+        logger
+      );
+      return false;
+    });
 
     const actor = { id: 'actor4' };
     const turnAction = {
@@ -238,39 +252,34 @@ describe('CommandProcessor.dispatchAction', () => {
     const result = await processor.dispatchAction(actor, turnAction);
 
     expect(result.success).toBe(false);
-    expect(safeEventDispatcher.dispatch).toHaveBeenNthCalledWith(
+    expect(eventDispatchService.dispatchWithErrorHandling).toHaveBeenNthCalledWith(
       1,
       ATTEMPT_ACTION_ID,
-      expect.any(Object)
-    );
-    expect(safeDispatchError).toHaveBeenCalledWith(
-      safeEventDispatcher,
-      'System error during event dispatch.',
       expect.any(Object),
-      logger
+      'ATTEMPT_ACTION_ID dispatch for pre-resolved action jump'
     );
-    expect(safeDispatchError).toHaveBeenCalledWith(
-      safeEventDispatcher,
-      'Internal error: Failed to initiate action.',
-      expect.any(Object),
-      logger
-    );
-    expect(logger.error).toHaveBeenCalledWith(
-      'dispatchWithErrorHandling: CRITICAL - Error during dispatch for ATTEMPT_ACTION_ID dispatch for pre-resolved action jump. Error: boom',
-      expect.any(Error)
-    );
+    // safeDispatchError should be called twice:
+    // 1. From within dispatchWithErrorHandling when it catches the error
+    // 2. From CommandProcessor when dispatchWithErrorHandling returns false
+    expect(safeDispatchError).toHaveBeenCalledTimes(2);
   });
 });
 
 describe('CommandProcessor.dispatchAction payload specifics', () => {
   let logger;
   let safeEventDispatcher;
+  let eventDispatchService;
   let processor;
 
   beforeEach(() => {
     logger = mkLogger();
     safeEventDispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
-    processor = new CommandProcessor({ logger, safeEventDispatcher });
+    eventDispatchService = {
+      dispatchWithErrorHandling: jest.fn().mockResolvedValue(true),
+      dispatchWithLogging: jest.fn().mockResolvedValue(undefined),
+      safeDispatchEvent: jest.fn().mockResolvedValue(undefined),
+    };
+    processor = new CommandProcessor({ logger, safeEventDispatcher, eventDispatchService });
     jest.clearAllMocks();
   });
 
@@ -284,8 +293,8 @@ describe('CommandProcessor.dispatchAction payload specifics', () => {
 
     await processor.dispatchAction(actor, turnAction);
 
-    expect(safeEventDispatcher.dispatch).toHaveBeenCalledTimes(1);
-    expect(safeEventDispatcher.dispatch).toHaveBeenCalledWith(
+    expect(eventDispatchService.dispatchWithErrorHandling).toHaveBeenCalledTimes(1);
+    expect(eventDispatchService.dispatchWithErrorHandling).toHaveBeenCalledWith(
       ATTEMPT_ACTION_ID,
       expect.objectContaining({
         eventName: ATTEMPT_ACTION_ID,
@@ -293,11 +302,12 @@ describe('CommandProcessor.dispatchAction payload specifics', () => {
         actionId: 'testAction',
         targetId: 'target1',
         originalInput: 'testAction target1',
-      })
+      }),
+      'ATTEMPT_ACTION_ID dispatch for pre-resolved action testAction'
     );
 
     // Specifically check that 'direction' is not in the payload
-    const dispatchedPayload = safeEventDispatcher.dispatch.mock.calls[0][1];
+    const dispatchedPayload = eventDispatchService.dispatchWithErrorHandling.mock.calls[0][1];
     expect(dispatchedPayload).not.toHaveProperty('direction');
   });
 });

@@ -10,6 +10,7 @@ describe('BodyBlueprintFactory - Child Slots Support', () => {
   let mockDataRegistry;
   let mockLogger;
   let mockEventDispatcher;
+  let mockEventDispatchService;
   let mockIdGenerator;
   let mockValidator;
 
@@ -39,6 +40,12 @@ describe('BodyBlueprintFactory - Child Slots Support', () => {
       dispatch: jest.fn(),
     };
 
+    mockEventDispatchService = {
+      safeDispatchEvent: jest.fn().mockResolvedValue(undefined),
+      dispatchWithLogging: jest.fn().mockResolvedValue(undefined),
+      dispatchWithErrorHandling: jest.fn().mockResolvedValue(true),
+    };
+
     mockIdGenerator = {
       generateId: jest.fn().mockImplementation(() => 'generated-id'),
     };
@@ -52,6 +59,7 @@ describe('BodyBlueprintFactory - Child Slots Support', () => {
       dataRegistry: mockDataRegistry,
       logger: mockLogger,
       eventDispatcher: mockEventDispatcher,
+      eventDispatchService: mockEventDispatchService,
       idGenerator: mockIdGenerator,
       validator: mockValidator,
     });

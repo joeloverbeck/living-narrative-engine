@@ -79,6 +79,7 @@ export const coreTokens = freeze({
   BodyDescriptionComposer: 'BodyDescriptionComposer',
   AnatomyDescriptionService: 'AnatomyDescriptionService',
   AnatomyFormattingService: 'AnatomyFormattingService',
+  EventDispatchService: 'EventDispatchService',
   ISafeEventDispatcher: 'ISafeEventDispatcher',
   IValidatedEventDispatcher: 'IValidatedEventDispatcher',
   IScopeRegistry: 'IScopeRegistry',

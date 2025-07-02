@@ -9,6 +9,7 @@ describe('BodyBlueprintFactory', () => {
   let mockDataRegistry;
   let mockLogger;
   let mockEventDispatcher;
+  let mockEventDispatchService;
   let mockIdGenerator;
   let mockValidator;
 
@@ -49,12 +50,19 @@ describe('BodyBlueprintFactory', () => {
         .mockResolvedValue({ valid: true, errors: [], warnings: [] }),
     };
 
+    mockEventDispatchService = {
+      dispatchWithLogging: jest.fn().mockResolvedValue(undefined),
+      dispatchWithErrorHandling: jest.fn().mockResolvedValue(true),
+      safeDispatchEvent: jest.fn().mockResolvedValue(undefined),
+    };
+
     // Create factory instance
     factory = new BodyBlueprintFactory({
       entityManager: mockEntityManager,
       dataRegistry: mockDataRegistry,
       logger: mockLogger,
       eventDispatcher: mockEventDispatcher,
+      eventDispatchService: mockEventDispatchService,
       idGenerator: mockIdGenerator,
       validator: mockValidator,
     });
@@ -68,6 +76,7 @@ describe('BodyBlueprintFactory', () => {
             dataRegistry: mockDataRegistry,
             logger: mockLogger,
             eventDispatcher: mockEventDispatcher,
+            eventDispatchService: mockEventDispatchService,
             idGenerator: mockIdGenerator,
             validator: mockValidator,
           })
@@ -81,6 +90,7 @@ describe('BodyBlueprintFactory', () => {
             entityManager: mockEntityManager,
             logger: mockLogger,
             eventDispatcher: mockEventDispatcher,
+            eventDispatchService: mockEventDispatchService,
             idGenerator: mockIdGenerator,
             validator: mockValidator,
           })
@@ -94,6 +104,7 @@ describe('BodyBlueprintFactory', () => {
             entityManager: mockEntityManager,
             dataRegistry: mockDataRegistry,
             eventDispatcher: mockEventDispatcher,
+            eventDispatchService: mockEventDispatchService,
             idGenerator: mockIdGenerator,
             validator: mockValidator,
           })
@@ -107,6 +118,7 @@ describe('BodyBlueprintFactory', () => {
             entityManager: mockEntityManager,
             dataRegistry: mockDataRegistry,
             logger: mockLogger,
+            eventDispatchService: mockEventDispatchService,
             idGenerator: mockIdGenerator,
             validator: mockValidator,
           })
@@ -121,6 +133,7 @@ describe('BodyBlueprintFactory', () => {
             dataRegistry: mockDataRegistry,
             logger: mockLogger,
             eventDispatcher: mockEventDispatcher,
+            eventDispatchService: mockEventDispatchService,
             validator: mockValidator,
           })
       ).toThrow(InvalidArgumentError);
@@ -134,7 +147,22 @@ describe('BodyBlueprintFactory', () => {
             dataRegistry: mockDataRegistry,
             logger: mockLogger,
             eventDispatcher: mockEventDispatcher,
+            eventDispatchService: mockEventDispatchService,
             idGenerator: mockIdGenerator,
+          })
+      ).toThrow(InvalidArgumentError);
+    });
+
+    it('should throw error if eventDispatchService is not provided', () => {
+      expect(
+        () =>
+          new BodyBlueprintFactory({
+            entityManager: mockEntityManager,
+            dataRegistry: mockDataRegistry,
+            logger: mockLogger,
+            eventDispatcher: mockEventDispatcher,
+            idGenerator: mockIdGenerator,
+            validator: mockValidator,
           })
       ).toThrow(InvalidArgumentError);
     });
@@ -854,11 +882,20 @@ describe('BodyBlueprintFactory', () => {
         factory.createAnatomyGraph('test-blueprint', 'test-recipe')
       ).rejects.toThrow("No part found for required slot 'wing_slot'");
 
-      // Verify event was dispatched
-      expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
+      // Verify events were dispatched
+      // The eventDispatchService.safeDispatchEvent is called in processBlueprintSlots
+      expect(mockEventDispatchService.safeDispatchEvent).toHaveBeenCalledWith(
         'core:system_error_occurred',
         expect.objectContaining({
           context: 'BodyBlueprintFactory.processBlueprintSlots',
+        })
+      );
+      
+      // And then eventDispatcher.dispatch is called in the catch block of createAnatomyGraph
+      expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
+        'core:system_error_occurred',
+        expect.objectContaining({
+          context: 'BodyBlueprintFactory.createAnatomyGraph',
         })
       );
     });

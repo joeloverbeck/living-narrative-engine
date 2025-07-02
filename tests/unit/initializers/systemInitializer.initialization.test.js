@@ -5,7 +5,6 @@ import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 // Adjust path as needed
 import SystemInitializer from '../../../src/initializers/systemInitializer.js';
 import { INITIALIZABLE } from '../../../src/dependencyInjection/tags.js'; // Corrected import path for tags
-import * as eventDispatchUtils from '../../../src/utils/eventDispatchUtils.js';
 
 // --- Type Imports for Mocks ---
 /** @typedef {import('../../src/interfaces/coreServices.js').ILogger} ILogger */
@@ -20,6 +19,7 @@ describe('SystemInitializer (Tag-Based)', () => {
   let mockLogger;
   /** @type {jest.Mocked<ValidatedEventDispatcher>} */
   let mockValidatedEventDispatcher;
+  let mockEventDispatchService;
   /** @type {SystemInitializer} */
   let systemInitializer; // Instance for initializeAll tests, created in beforeEach
   /** @type {string} */
@@ -45,7 +45,6 @@ describe('SystemInitializer (Tag-Based)', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    jest.spyOn(eventDispatchUtils, 'dispatchWithLogging');
 
     // Mock ILogger
     mockLogger = {
@@ -65,6 +64,13 @@ describe('SystemInitializer (Tag-Based)', () => {
     mockValidatedEventDispatcher = {
       dispatch: jest.fn().mockResolvedValue(undefined), // Mock the required method
       // Add other methods if needed
+    };
+
+    // Mock EventDispatchService
+    mockEventDispatchService = {
+      dispatchWithLogging: jest.fn().mockResolvedValue(undefined),
+      safeDispatchEvent: jest.fn().mockResolvedValue(undefined),
+      dispatchWithErrorHandling: jest.fn().mockResolvedValue(true),
     };
 
     // Create Mock System Instances
@@ -107,6 +113,7 @@ describe('SystemInitializer (Tag-Based)', () => {
       resolver: mockResolver,
       logger: mockLogger,
       validatedEventDispatcher: mockValidatedEventDispatcher,
+      eventDispatchService: mockEventDispatchService,
       initializationTag: testInitializationTag,
     });
   });
@@ -130,6 +137,7 @@ describe('SystemInitializer (Tag-Based)', () => {
           resolver: null, // Test case: null resolver
           logger: mockLogger,
           validatedEventDispatcher: mockValidatedEventDispatcher,
+          eventDispatchService: mockEventDispatchService,
           initializationTag: testInitializationTag,
         });
       // Assert the correct error message
@@ -150,6 +158,7 @@ describe('SystemInitializer (Tag-Based)', () => {
           resolver: tempResolver,
           logger: null, // Test case: null logger
           validatedEventDispatcher: mockValidatedEventDispatcher,
+          eventDispatchService: mockEventDispatchService,
           initializationTag: testInitializationTag,
         });
       expect(action).toThrow(expectedLoggerErrorMsg);
@@ -168,6 +177,7 @@ describe('SystemInitializer (Tag-Based)', () => {
           resolver: mockResolver,
           logger: mockLogger,
           validatedEventDispatcher: null, // Test case: null dispatcher
+          eventDispatchService: mockEventDispatchService,
           initializationTag: testInitializationTag,
         });
       expect(action).toThrow(expectedDispatcherErrorMsg);
@@ -183,6 +193,7 @@ describe('SystemInitializer (Tag-Based)', () => {
           resolver: /** @type {any} */ (invalidResolver), // Test case: invalid resolver shape
           logger: mockLogger,
           validatedEventDispatcher: mockValidatedEventDispatcher,
+          eventDispatchService: mockEventDispatchService,
           initializationTag: testInitializationTag,
         });
       // Assert the correct error message
@@ -200,6 +211,7 @@ describe('SystemInitializer (Tag-Based)', () => {
           logger: mockLogger,
           // Cast to 'any' only to satisfy the compiler for the test setup
           validatedEventDispatcher: /** @type {any} */ (invalidDispatcher), // Test case: invalid dispatcher shape
+          eventDispatchService: mockEventDispatchService,
           initializationTag: testInitializationTag,
         });
       // Assert the correct error message
@@ -217,6 +229,7 @@ describe('SystemInitializer (Tag-Based)', () => {
           resolver: mockResolver,
           logger: mockLogger,
           validatedEventDispatcher: mockValidatedEventDispatcher,
+          eventDispatchService: mockEventDispatchService,
           initializationTag: null, // Test case: null tag
         });
       expect(action).toThrow(expectedTagErrorMsg);
@@ -230,6 +243,7 @@ describe('SystemInitializer (Tag-Based)', () => {
           resolver: mockResolver,
           logger: mockLogger,
           validatedEventDispatcher: mockValidatedEventDispatcher,
+          eventDispatchService: mockEventDispatchService,
           initializationTag: undefined, // Test case: undefined tag
         });
       expect(action).toThrow(expectedTagErrorMsg);
@@ -243,6 +257,7 @@ describe('SystemInitializer (Tag-Based)', () => {
           resolver: mockResolver,
           logger: mockLogger,
           validatedEventDispatcher: mockValidatedEventDispatcher,
+          eventDispatchService: mockEventDispatchService,
           initializationTag: /** @type {any} */ (123), // Test case: non-string tag
         });
       expect(action).toThrow(expectedTagErrorMsg);
@@ -256,6 +271,7 @@ describe('SystemInitializer (Tag-Based)', () => {
           resolver: mockResolver,
           logger: mockLogger,
           validatedEventDispatcher: mockValidatedEventDispatcher,
+          eventDispatchService: mockEventDispatchService,
           initializationTag: '', // Test case: empty string tag
         });
       expect(action).toThrow(expectedTagErrorMsg);
@@ -269,6 +285,7 @@ describe('SystemInitializer (Tag-Based)', () => {
           resolver: mockResolver,
           logger: mockLogger,
           validatedEventDispatcher: mockValidatedEventDispatcher,
+          eventDispatchService: mockEventDispatchService,
           initializationTag: '   ', // Test case: whitespace tag
         });
       expect(action).toThrow(expectedTagErrorMsg);
@@ -344,29 +361,17 @@ describe('SystemInitializer (Tag-Based)', () => {
         ),
         initError
       );
-      expect(eventDispatchUtils.dispatchWithLogging).toHaveBeenCalledWith(
-        mockValidatedEventDispatcher,
+      expect(mockEventDispatchService.dispatchWithLogging).toHaveBeenCalledWith(
         'system:initialization_failed',
         {
           systemName: 'SystemFailInit',
           error: initError.message,
           stack: initError.stack,
         },
-        mockLogger,
         'SystemFailInit',
         { allowSchemaNotFound: true }
       );
 
-      // dispatch still uses the dispatcher under the hood
-      expect(mockValidatedEventDispatcher.dispatch).toHaveBeenCalledWith(
-        'system:initialization_failed',
-        {
-          systemName: 'SystemFailInit',
-          error: initError.message,
-          stack: initError.stack,
-        },
-        { allowSchemaNotFound: true }
-      );
 
       // Good2
       expect(mockSystemGood2.initialize).toHaveBeenCalledTimes(1);
@@ -384,7 +389,7 @@ describe('SystemInitializer (Tag-Based)', () => {
       // Verify overall counts
       expect(mockLogger.error).toHaveBeenCalledTimes(1); // Only from mockSystemFailInit
       expect(mockLogger.warn).toHaveBeenCalledTimes(1); // Only from mockSystemNull
-      expect(mockValidatedEventDispatcher.dispatch).toHaveBeenCalledTimes(1);
+      expect(mockEventDispatchService.dispatchWithLogging).toHaveBeenCalledTimes(1);
     });
 
     it('[Empty Result] should handle container returning an empty array for the tag gracefully', async () => {
@@ -450,12 +455,7 @@ describe('SystemInitializer (Tag-Based)', () => {
       );
 
       // Complete event should NOT be called
-      expect(mockValidatedEventDispatcher.dispatch).not.toHaveBeenCalledWith(
-        'initialization:system_initializer:completed',
-        expect.anything(),
-        expect.anything()
-      );
-      expect(mockValidatedEventDispatcher.dispatch).toHaveBeenCalledTimes(0); // start, failed
+      expect(mockEventDispatchService.dispatchWithLogging).not.toHaveBeenCalled();
 
       // Should not proceed to initialize
       expect(mockLogger.info).not.toHaveBeenCalledWith(
@@ -496,16 +496,7 @@ describe('SystemInitializer (Tag-Based)', () => {
       );
 
       // Check event dispatches
-      expect(mockValidatedEventDispatcher.dispatch).toHaveBeenCalledWith(
-        'system:initialization_failed',
-        {
-          systemName: 'SystemFailInit',
-          error: initError.message,
-          stack: initError.stack,
-        },
-        { allowSchemaNotFound: true }
-      );
-      expect(mockValidatedEventDispatcher.dispatch).toHaveBeenCalledTimes(1);
+      expect(mockEventDispatchService.dispatchWithLogging).toHaveBeenCalledTimes(1);
 
       // Should only have the one error from mockSystemFailInit
       expect(mockLogger.error).toHaveBeenCalledTimes(1);
@@ -519,25 +510,18 @@ describe('SystemInitializer (Tag-Based)', () => {
 
       await systemInitializer.initializeAll();
 
-      expect(eventDispatchUtils.dispatchWithLogging).toHaveBeenCalledWith(
-        mockValidatedEventDispatcher,
+      expect(mockEventDispatchService.dispatchWithLogging).toHaveBeenCalledWith(
         'system:initialization_failed',
         {
           systemName: 'SystemFailInit',
           error: initError.message,
           stack: initError.stack,
         },
-        mockLogger,
         'SystemFailInit',
         { allowSchemaNotFound: true }
       );
 
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining(
-          "Failed dispatching 'system:initialization_failed' event for SystemFailInit"
-        ),
-        dispatchErr
-      );
+      // Since dispatchWithLogging is mocked, we don't expect the error to be logged
     });
   });
 });

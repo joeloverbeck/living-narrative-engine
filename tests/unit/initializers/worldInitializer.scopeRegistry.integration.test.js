@@ -15,6 +15,7 @@ describe('WorldInitializer - ScopeRegistry Integration', () => {
   let mockEntityManager;
   let mockWorldContext;
   let mockValidatedEventDispatcher;
+  let mockEventDispatchService;
 
   beforeEach(() => {
     // Create mock dependencies
@@ -61,6 +62,12 @@ describe('WorldInitializer - ScopeRegistry Integration', () => {
       dispatch: jest.fn().mockResolvedValue(undefined),
     };
 
+    mockEventDispatchService = {
+      dispatchWithLogging: jest.fn().mockResolvedValue(undefined),
+      safeDispatchEvent: jest.fn().mockResolvedValue(undefined),
+      dispatchWithErrorHandling: jest.fn().mockResolvedValue(true),
+    };
+
     // Create real GameDataRepository and ScopeRegistry instances
     gameDataRepository = new GameDataRepository(mockRegistry, mockLogger);
     scopeRegistry = new ScopeRegistry();
@@ -71,6 +78,7 @@ describe('WorldInitializer - ScopeRegistry Integration', () => {
       worldContext: mockWorldContext,
       gameDataRepository,
       validatedEventDispatcher: mockValidatedEventDispatcher,
+      eventDispatchService: mockEventDispatchService,
       logger: mockLogger,
       scopeRegistry,
     });

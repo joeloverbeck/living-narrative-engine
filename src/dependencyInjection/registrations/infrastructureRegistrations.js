@@ -19,6 +19,7 @@ import { LRUCache } from 'lru-cache';
 import ScopeCache from '../../scopeDsl/cache.js';
 import DefaultDslParser from '../../scopeDsl/parser/defaultDslParser.js';
 import { ServiceSetup } from '../../utils/serviceInitializerUtils.js';
+import { EventDispatchService } from '../../utils/eventDispatchService.js';
 
 /**
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
@@ -134,6 +135,21 @@ export function registerInfrastructure(container) {
   );
   log.debug(
     `Infrastructure Registration: Registered ${String(tokens.ISafeEventDispatcher)}.`
+  );
+
+  // Event Dispatch Service
+  registrar.singletonFactory(
+    tokens.EventDispatchService,
+    (c) =>
+      new EventDispatchService({
+        safeEventDispatcher: /** @type {ISafeEventDispatcher} */ (
+          c.resolve(tokens.ISafeEventDispatcher)
+        ),
+        logger: /** @type {ILogger} */ (c.resolve(tokens.ILogger)),
+      })
+  );
+  log.debug(
+    `Infrastructure Registration: Registered ${String(tokens.EventDispatchService)}.`
   );
 
   // Scope DSL Engine

@@ -152,6 +152,7 @@ export function registerCommandAndAction(container) {
     return new CommandProcessor({
       logger: c.resolve(tokens.ILogger),
       safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+      eventDispatchService: c.resolve(tokens.EventDispatchService),
     });
   });
   logger.debug(
