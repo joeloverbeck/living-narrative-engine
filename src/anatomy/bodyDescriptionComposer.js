@@ -172,9 +172,11 @@ export class BodyDescriptionComposer {
       ? this.anatomyFormattingService.getPairedParts()
       : this._defaultGroupedParts;
 
-    // Get descriptions from core:description component of each part
+    // Get descriptions from core:description component
     const descriptions = parts.map(part => {
-      if (part && typeof part.getComponentData === 'function') {
+      if (!part) return '';
+      
+      if (typeof part.getComponentData === 'function') {
         const descComponent = part.getComponentData('core:description');
         return descComponent ? descComponent.text : '';
       }
