@@ -204,6 +204,7 @@ describe('Body Description Generation Integration', () => {
           id: 'torso-1',
           components: {
             [ANATOMY_PART_COMPONENT_ID]: { subType: 'torso' },
+            'core:description': { text: 'muscular' },
           },
           hasComponent: (componentId) => {
             return Object.prototype.hasOwnProperty.call(
@@ -221,6 +222,7 @@ describe('Body Description Generation Integration', () => {
             [ANATOMY_PART_COMPONENT_ID]: { subType: 'hair' },
             'descriptors:color_extended': { color: 'blonde' },
             'descriptors:length_hair': { length: 'short' },
+            'core:description': { text: 'short, blonde' },
           },
           hasComponent: (componentId) => {
             return Object.prototype.hasOwnProperty.call(
@@ -237,6 +239,7 @@ describe('Body Description Generation Integration', () => {
           components: {
             [ANATOMY_PART_COMPONENT_ID]: { subType: 'eye' },
             'descriptors:color_extended': { color: 'blue' },
+            'core:description': { text: 'blue' },
           },
           hasComponent: (componentId) => {
             return Object.prototype.hasOwnProperty.call(
@@ -253,6 +256,7 @@ describe('Body Description Generation Integration', () => {
           components: {
             [ANATOMY_PART_COMPONENT_ID]: { subType: 'eye' },
             'descriptors:color_extended': { color: 'blue' },
+            'core:description': { text: 'blue' },
           },
           hasComponent: (componentId) => {
             return Object.prototype.hasOwnProperty.call(

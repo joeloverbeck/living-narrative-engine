@@ -172,36 +172,66 @@ export class BodyDescriptionComposer {
       ? this.anatomyFormattingService.getPairedParts()
       : this._defaultGroupedParts;
 
-    // Get descriptors for all parts
-    const descriptors =
-      this.bodyPartDescriptionBuilder.buildMultipleDescription(parts, partType);
+    // Get descriptions from core:description component of each part
+    const descriptions = parts.map(part => {
+      if (part && typeof part.getComponentData === 'function') {
+        const descComponent = part.getComponentData('core:description');
+        return descComponent ? descComponent.text : '';
+      }
+      return '';
+    }).filter(desc => desc); // Remove empty descriptions
 
-    if (!descriptors) {
+    if (descriptions.length === 0) {
       return '';
     }
 
-    // Check if we have multiple different descriptors (array returned from buildMultipleDescription)
-    if (Array.isArray(descriptors)) {
-      // Different descriptors for paired parts
-      if (pairedParts.has(partType) && descriptors.length === 2) {
-        // Handle left/right paired parts
-        const lines = [];
-        if (descriptors[0]) lines.push(`Left ${partType}: ${descriptors[0]}`);
-        if (descriptors[1]) lines.push(`Right ${partType}: ${descriptors[1]}`);
-        return lines.join('\n');
+    // Check if all descriptions are the same
+    const allSame = descriptions.every(desc => desc === descriptions[0]);
+
+    // Handle different cases
+    if (descriptions.length === 1) {
+      // Single part
+      const label = this.getPartLabel(partType, 1);
+      return `${label}: ${descriptions[0]}`;
+    } else if (pairedParts.has(partType) && descriptions.length === 2) {
+      // Paired parts (e.g., eyes, ears, hands)
+      if (allSame) {
+        // Same description for both parts
+        const label = this.getPartLabel(partType, 2);
+        return `${label}: ${descriptions[0]}`;
       } else {
-        // Multiple parts with different descriptors
-        return descriptors
-          .map(
-            (desc, index) =>
-              `${this.capitalize(partType)} ${index + 1}: ${desc}`
-          )
-          .join('\n');
+        // Different descriptions for left/right
+        const lines = [];
+        const names = parts.map(part => {
+          const nameComp = part.getComponentData('core:name');
+          return nameComp ? nameComp.text.toLowerCase() : '';
+        });
+        
+        // Try to determine left/right based on name
+        for (let i = 0; i < descriptions.length && i < 2; i++) {
+          const name = names[i] || '';
+          if (name.includes('left')) {
+            lines.push(`Left ${partType}: ${descriptions[i]}`);
+          } else if (name.includes('right')) {
+            lines.push(`Right ${partType}: ${descriptions[i]}`);
+          } else {
+            // Fallback if no left/right in name
+            lines.push(`${this.capitalize(partType)} ${i + 1}: ${descriptions[i]}`);
+          }
+        }
+        return lines.join('\n');
       }
     } else {
-      // Same descriptors for all parts or single part
-      const label = this.getPartLabel(partType, parts.length);
-      return `${label}: ${descriptors}`;
+      // Multiple parts with potentially different descriptions
+      if (allSame) {
+        const label = this.getPartLabel(partType, descriptions.length);
+        return `${label}: ${descriptions[0]}`;
+      } else {
+        // Multiple different descriptions
+        return descriptions
+          .map((desc, index) => `${this.capitalize(partType)} ${index + 1}: ${desc}`)
+          .join('\n');
+      }
     }
   }
 

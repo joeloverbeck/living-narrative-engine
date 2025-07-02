@@ -16,7 +16,7 @@ describe('BodyGraphService', () => {
     mockEntityManager = {
       getEntityInstance: jest.fn(),
       getComponentData: jest.fn(),
-      getAllEntities: jest.fn(),
+      getEntitiesWithComponent: jest.fn(),
       removeComponent: jest.fn(),
     };
 
@@ -102,8 +102,7 @@ describe('BodyGraphService', () => {
         }
       );
 
-      mockEntityManager.getAllEntities.mockReturnValue([
-        torsoEntity,
+      mockEntityManager.getEntitiesWithComponent.mockReturnValue([
         headEntity,
         armEntity,
       ]);
@@ -124,7 +123,7 @@ describe('BodyGraphService', () => {
       const entity = { id: 'entity-1' };
       mockEntityManager.getEntityInstance.mockReturnValue(entity);
       mockEntityManager.getComponentData.mockReturnValue(null);
-      mockEntityManager.getAllEntities.mockReturnValue([entity]);
+      mockEntityManager.getEntitiesWithComponent.mockReturnValue([]);
 
       service.buildAdjacencyCache('entity-1');
 
@@ -156,7 +155,7 @@ describe('BodyGraphService', () => {
         }
       );
 
-      mockEntityManager.getAllEntities.mockReturnValue([entity1, entity2]);
+      mockEntityManager.getEntitiesWithComponent.mockReturnValue([entity1, entity2]);
 
       service.buildAdjacencyCache('entity-1');
 
@@ -209,8 +208,7 @@ describe('BodyGraphService', () => {
         }
       );
 
-      mockEntityManager.getAllEntities.mockReturnValue([
-        torsoEntity,
+      mockEntityManager.getEntitiesWithComponent.mockReturnValue([
         armEntity,
         handEntity,
       ]);
@@ -335,7 +333,12 @@ describe('BodyGraphService', () => {
         }
       );
 
-      mockEntityManager.getAllEntities.mockReturnValue(entities);
+      mockEntityManager.getEntitiesWithComponent.mockReturnValue([
+        entities[1], // arm-1
+        entities[2], // arm-2
+        entities[3], // hand-1
+        entities[4], // hand-2
+      ]);
       service.buildAdjacencyCache('torso-1');
     });
 
@@ -385,7 +388,10 @@ describe('BodyGraphService', () => {
         }
       );
 
-      mockEntityManager.getAllEntities.mockReturnValue(entities);
+      mockEntityManager.getEntitiesWithComponent.mockReturnValue([
+        entities[1], // arm-1
+        entities[2], // hand-1
+      ]);
       service.buildAdjacencyCache('torso-1');
     });
 
@@ -471,7 +477,12 @@ describe('BodyGraphService', () => {
         }
       );
 
-      mockEntityManager.getAllEntities.mockReturnValue(entities);
+      mockEntityManager.getEntitiesWithComponent.mockReturnValue([
+        entities[1], // left-arm-1
+        entities[2], // left-hand-1
+        entities[3], // right-arm-1
+        entities[4], // right-hand-1
+      ]);
       service.buildAdjacencyCache('torso-1');
     });
 
@@ -534,7 +545,9 @@ describe('BodyGraphService', () => {
         }
       );
 
-      mockEntityManager.getAllEntities.mockReturnValue(entities);
+      mockEntityManager.getEntitiesWithComponent.mockReturnValue([
+        entities[1], // arm-1
+      ]);
       service.buildAdjacencyCache('torso-1');
     });
 
@@ -594,7 +607,7 @@ describe('BodyGraphService', () => {
       service.buildAdjacencyCache('torso-1');
 
       // Get the cache and add a fake child
-      mockEntityManager.getAllEntities.mockReturnValue([{ id: 'torso-1' }]);
+      mockEntityManager.getEntitiesWithComponent.mockReturnValue([]);
       mockEntityManager.getComponentData.mockImplementation(() => null);
       service.buildAdjacencyCache('torso-1');
 
@@ -619,14 +632,13 @@ describe('BodyGraphService', () => {
         }
       );
 
-      mockEntityManager.getAllEntities.mockReturnValue([
-        torsoEntity,
+      mockEntityManager.getEntitiesWithComponent.mockReturnValue([
         fakeChildEntity,
       ]);
       service.buildAdjacencyCache('torso-1');
 
       // Now remove the fake child from entities but it should still be in cache
-      mockEntityManager.getAllEntities.mockReturnValue([torsoEntity]);
+      mockEntityManager.getEntitiesWithComponent.mockReturnValue([]);
 
       const result = service.validateCache();
       expect(result.valid).toBe(false);
@@ -656,7 +668,10 @@ describe('BodyGraphService', () => {
         }
       );
 
-      mockEntityManager.getAllEntities.mockReturnValue(entities);
+      mockEntityManager.getEntitiesWithComponent.mockReturnValue([
+        entities[1], // arm-1
+        entities[2], // hand-1
+      ]);
       service.buildAdjacencyCache('torso-1');
 
       // Test private method indirectly through findPartsByType with empty type

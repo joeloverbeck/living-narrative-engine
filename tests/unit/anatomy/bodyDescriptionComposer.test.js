@@ -109,19 +109,35 @@ describe('BodyDescriptionComposer', () => {
 
       // Mock entity lookups
       mockEntityFinder.getEntityInstance.mockImplementation((id) => {
-        const mockEntity = (subType) => ({
+        const mockEntity = (subType, description = '') => ({
           hasComponent: jest.fn().mockReturnValue(true),
-          getComponentData: jest.fn().mockReturnValue({ subType }),
+          getComponentData: jest.fn().mockImplementation((componentId) => {
+            if (componentId === 'anatomy:part') {
+              return { subType };
+            }
+            if (componentId === 'core:description' && description) {
+              return { text: description };
+            }
+            if (componentId === 'core:name') {
+              // Return names for paired parts
+              if (id === 'eye-1') return { text: 'left eye' };
+              if (id === 'eye-2') return { text: 'right eye' };
+              if (id === 'arm-1') return { text: 'left arm' };
+              if (id === 'arm-2') return { text: 'right arm' };
+              return { text: subType };
+            }
+            return null;
+          }),
         });
 
         const entities = {
-          'torso-1': mockEntity('torso'),
+          'torso-1': mockEntity('torso', 'a muscular torso'),
           'head-1': mockEntity('head'),
-          'hair-1': mockEntity('hair'),
-          'eye-1': mockEntity('eye'),
-          'eye-2': mockEntity('eye'),
-          'arm-1': mockEntity('arm'),
-          'arm-2': mockEntity('arm'),
+          'hair-1': mockEntity('hair', 'long black hair'),
+          'eye-1': mockEntity('eye', 'piercing blue eyes'),
+          'eye-2': mockEntity('eye', 'piercing blue eyes'),
+          'arm-1': mockEntity('arm', 'strong arms'),
+          'arm-2': mockEntity('arm', 'strong arms'),
         };
         return entities[id];
       });
@@ -171,11 +187,12 @@ describe('BodyDescriptionComposer', () => {
       const result = composer.composeDescription(bodyEntity);
 
       expect(result).toContain('Build: slender');
-      // Hair and torso return empty from buildMultipleDescription, so they are not included
+      expect(result).toContain('Hair: long black hair');
       expect(result).toContain('Eyes: piercing blue eyes');
+      expect(result).toContain('Torso: a muscular torso');
       expect(result).toContain('Arms: strong arms');
       // Ensure the structure is correct
-      expect(result.split('\n')).toHaveLength(3); // Build, Eyes, Arms
+      expect(result.split('\n')).toHaveLength(5); // Build, Hair, Eyes, Torso, Arms
     });
 
     it('should use default values when anatomyFormattingService not provided', () => {
@@ -198,13 +215,21 @@ describe('BodyDescriptionComposer', () => {
 
       mockBodyGraphService.getAllParts.mockReturnValue(['torso-1', 'eye-1']);
       mockEntityFinder.getEntityInstance.mockImplementation((id) => {
-        const mockEntity = (subType) => ({
+        const mockEntity = (subType, description) => ({
           hasComponent: jest.fn().mockReturnValue(true),
-          getComponentData: jest.fn().mockReturnValue({ subType }),
+          getComponentData: jest.fn().mockImplementation((componentId) => {
+            if (componentId === 'anatomy:part') {
+              return { subType };
+            }
+            if (componentId === 'core:description' && description) {
+              return { text: description };
+            }
+            return null;
+          }),
         });
 
-        if (id === 'torso-1') return mockEntity('torso');
-        if (id === 'eye-1') return mockEntity('eye');
+        if (id === 'torso-1') return mockEntity('torso', 'a torso');
+        if (id === 'eye-1') return mockEntity('eye', 'an eye');
         return null;
       });
 
@@ -247,7 +272,15 @@ describe('BodyDescriptionComposer', () => {
         if (id === 'torso-1') {
           return {
             hasComponent: jest.fn().mockReturnValue(true),
-            getComponentData: jest.fn().mockReturnValue({ subType: 'torso' }),
+            getComponentData: jest.fn().mockImplementation((componentId) => {
+              if (componentId === 'anatomy:part') {
+                return { subType: 'torso' };
+              }
+              if (componentId === 'core:description') {
+                return { text: 'a torso' };
+              }
+              return null;
+            }),
           };
         }
         if (id === 'invalid-1') {

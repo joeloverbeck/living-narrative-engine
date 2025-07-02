@@ -48,9 +48,6 @@ describe('BodyGraphService additional methods', () => {
     ];
 
     entityManager = new SimpleEntityManager(entities);
-    // BodyGraphService expects this helper
-    entityManager.getAllEntities = () =>
-      Array.from(entityManager.entities.values());
     logger = createMockLogger();
     dispatcher = createMockSafeEventDispatcher();
     service = new BodyGraphService({

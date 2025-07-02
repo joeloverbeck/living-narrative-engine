@@ -13,6 +13,7 @@ import { ValidationError } from '../errors/validationError.js';
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('./bodyBlueprintFactory.js').BodyBlueprintFactory} BodyBlueprintFactory */
 /** @typedef {import('./anatomyDescriptionService.js').AnatomyDescriptionService} AnatomyDescriptionService */
+/** @typedef {import('./bodyGraphService.js').BodyGraphService} BodyGraphService */
 
 /**
  * Service that handles anatomy generation for entities
@@ -28,6 +29,8 @@ export class AnatomyGenerationService {
   #bodyBlueprintFactory;
   /** @type {AnatomyDescriptionService} */
   #anatomyDescriptionService;
+  /** @type {BodyGraphService} */
+  #bodyGraphService;
 
   /**
    * @param {object} deps
@@ -36,6 +39,7 @@ export class AnatomyGenerationService {
    * @param {ILogger} deps.logger
    * @param {BodyBlueprintFactory} deps.bodyBlueprintFactory
    * @param {AnatomyDescriptionService} deps.anatomyDescriptionService
+   * @param {BodyGraphService} deps.bodyGraphService
    */
   constructor({
     entityManager,
@@ -43,6 +47,7 @@ export class AnatomyGenerationService {
     logger,
     bodyBlueprintFactory,
     anatomyDescriptionService,
+    bodyGraphService,
   }) {
     if (!entityManager)
       throw new InvalidArgumentError('entityManager is required');
@@ -53,12 +58,15 @@ export class AnatomyGenerationService {
       throw new InvalidArgumentError('bodyBlueprintFactory is required');
     if (!anatomyDescriptionService)
       throw new InvalidArgumentError('anatomyDescriptionService is required');
+    if (!bodyGraphService)
+      throw new InvalidArgumentError('bodyGraphService is required');
 
     this.#entityManager = entityManager;
     this.#dataRegistry = dataRegistry;
     this.#logger = logger;
     this.#bodyBlueprintFactory = bodyBlueprintFactory;
     this.#anatomyDescriptionService = anatomyDescriptionService;
+    this.#bodyGraphService = bodyGraphService;
   }
 
   /**
@@ -151,6 +159,12 @@ export class AnatomyGenerationService {
           parts: parts,
         },
       });
+
+      // Build the adjacency cache for efficient graph traversal
+      this.#logger.debug(
+        `AnatomyGenerationService: Building adjacency cache for entity '${entityId}'`
+      );
+      this.#bodyGraphService.buildAdjacencyCache(result.rootId);
 
       // Generate descriptions for all body parts and the body itself
       const bodyEntity = this.#entityManager.getEntityInstance(entityId);

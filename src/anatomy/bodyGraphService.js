@@ -110,9 +110,9 @@ export class BodyGraphService {
       this.#adjacencyCache.set(entityId, node);
 
       // Find all children (entities with joints pointing to this entity)
-      const allEntities = this.#entityManager.getAllEntities();
+      const entitiesWithJoints = this.#entityManager.getEntitiesWithComponent('anatomy:joint');
 
-      for (const childEntity of allEntities) {
+      for (const childEntity of entitiesWithJoints) {
         const joint = this.#entityManager.getComponentData(
           childEntity.id,
           'anatomy:joint'

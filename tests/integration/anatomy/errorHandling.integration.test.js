@@ -27,6 +27,7 @@ describe('Anatomy Error Handling Integration', () => {
       logger: testBed.logger,
       bodyBlueprintFactory: testBed.bodyBlueprintFactory,
       anatomyDescriptionService: testBed.mockAnatomyDescriptionService,
+      bodyGraphService: testBed.bodyGraphService,
     });
 
     bodyBlueprintFactory = testBed.bodyBlueprintFactory;

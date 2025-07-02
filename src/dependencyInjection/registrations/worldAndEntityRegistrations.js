@@ -341,6 +341,7 @@ export function registerWorldAndEntity(container) {
       logger: c.resolve(tokens.ILogger),
       bodyBlueprintFactory: c.resolve(tokens.BodyBlueprintFactory),
       anatomyDescriptionService: c.resolve(tokens.AnatomyDescriptionService),
+      bodyGraphService: c.resolve(tokens.BodyGraphService),
     });
   });
   logger.debug(

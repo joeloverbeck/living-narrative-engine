@@ -8,6 +8,7 @@ describe('AnatomyGenerationService early return cases', () => {
   let logger;
   let factory;
   let descService;
+  let graphService;
 
   beforeEach(() => {
     em = {
@@ -23,12 +24,14 @@ describe('AnatomyGenerationService early return cases', () => {
     };
     factory = { createAnatomyGraph: jest.fn() };
     descService = { generateAllDescriptions: jest.fn() };
+    graphService = { buildAdjacencyCache: jest.fn() };
     service = new AnatomyGenerationService({
       entityManager: em,
       dataRegistry: registry,
       logger,
       bodyBlueprintFactory: factory,
       anatomyDescriptionService: descService,
+      bodyGraphService: graphService,
     });
   });
 
