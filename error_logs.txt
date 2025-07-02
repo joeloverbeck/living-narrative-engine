@@ -1,42 +1,19 @@
-EngineUIManager: Received core:ui_ready Object
-consoleLogger.js:187 [TitleRenderer] Title set to: "isekai:world"
-consoleLogger.js:187 [InputStateController] Input enabled.
-consoleLogger.js:187 [InputStateController] Input placeholder set to: "Enter command..."
-consoleLogger.js:187 EngineUIManager: Handled core:ui_ready. UI set to ready state. Active world: isekai:world.
-consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:entity_created'.
-2consoleLogger.js:187 VED: Event 'core:component_added' dispatch successful.
-consoleLogger.js:163 SafeEventDispatcher: Underlying VED failed to dispatch event 'core:system_error_occurred' (returned false). See VED logs for details. Payload: {"error":"Failed to process blueprint slot 'left_hand': No part found for required slot 'left_hand' with requirements: {\"partType\":\"hand\",\"components\":[\"anatomy:part\"]}","context":"BodyBlueprintFactory.processBlueprintSlots","details":{"slotKey":"left_hand","slot":{"parent":"left_arm","socket":"wrist","requirements":{"partType":"hand","components":["anatomy:part"]}},"blueprintId":"human_male","recipeId":"anatomy:human_male"}}
-warn @ consoleLogger.js:163Understand this warning
-2consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:component_added'.
-consoleLogger.js:187 VED: Event 'core:entity_created' dispatch successful.
-consoleLogger.js:187 Dispatched core:system_error_occurred Object
-consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:entity_created'.
-2consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:component_added'.
-consoleLogger.js:175 BodyBlueprintFactory: Failed to create anatomy graph Objecterror: ValidationError: Failed to process blueprint slot 'left_hand': No part found for required slot 'left_hand' with requirements: {"partType":"hand","components":["anatomy:part"]}
-    at #processBlueprintSlots (http://127.0.0.1:8080/bundle.js:41344:17)
-    at async BodyBlueprintFactory.createAnatomyGraph (http://127.0.0.1:8080/bundle.js:41094:11)
-    at async AnatomyGenerationService.generateAnatomyIfNeeded (http://127.0.0.1:8080/bundle.js:42690:24)
-    at async #handleEntityCreated (http://127.0.0.1:8080/bundle.js:42841:30)
-    at async http://127.0.0.1:8080/bundle.js:24336:15
-    at async Promise.all (index 2)
-    at async EventBus.dispatch (http://127.0.0.1:8080/bundle.js:24333:9)
-    at async #emitEvent (http://127.0.0.1:8080/bundle.js:25310:9)
-    at async SafeEventDispatcher.dispatch (http://127.0.0.1:8080/bundle.js:25510:30)[[Prototype]]: Object
-error @ consoleLogger.js:175Understand this error
-consoleLogger.js:187 VED: Validating payload for event 'core:system_error_occurred' against schema 'core:system_error_occurred#payload'...
-consoleLogger.js:175 VED: Payload validation FAILED for event 'core:system_error_occurred'. Dispatch SKIPPED. Errors: [root]: must have required property 'message'; [root]: must NOT have additional properties; [root]: must NOT have additional properties Object
-error @ consoleLogger.js:175Understand this error
-consoleLogger.js:187 VED: Dispatch skipped for 'core:system_error_occurred' due to validation failure (see error above).
-consoleLogger.js:187 VED: Event 'core:ui_ready' dispatch successful.
-consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:entity_created'.
-consoleLogger.js:175 AnatomyGenerationService: Failed to generate anatomy for entity 'isekai:hero_instance' Object
-error @ consoleLogger.js:175Understand this error
-consoleLogger.js:163 SafeEventDispatcher: Underlying VED failed to dispatch event 'core:system_error_occurred' (returned false). See VED logs for details. Payload: {"error":"Failed to process blueprint slot 'left_hand': No part found for required slot 'left_hand' with requirements: {\"partType\":\"hand\",\"components\":[\"anatomy:part\"]}","context":"BodyBlueprintFactory.createAnatomyGraph"}
-warn @ consoleLogger.js:163Understand this warning
-consoleLogger.js:175 AnatomyInitializationService: Failed to generate anatomy for entity 'isekai:hero_instance' Object
-error @ consoleLogger.js:175Understand this error
-consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:ui_ready'.
-consoleLogger.js:187 GameSessionManager._finalizeGameStart: Starting TurnManager...
-consoleLogger.js:187 ▶️  Turn Manager started.
-consoleLogger.js:187 VED: Delegating subscription for event "core:turn_ended" to EventBus.
-consoleLogger.js:187 TurnEventSubscription: subscribed
+[16:57:32] Entity created: 124f4655-28f1-4a88-a1d5-bdb6059fb1a6 from anatomy:human_asshole
+[16:57:32] Component added: anatomy:joint on 124f4655-28f1-4a88-a1d5-bdb6059fb1a6
+[16:57:32] Component updated: core:name on 124f4655-28f1-4a88-a1d5-bdb6059fb1a6
+[16:57:32] Component updated: anatomy:body on isekai:hero_instance
+[16:57:32] Component added: core:description on afe8617f-c59c-4152-9c4d-934b126ca85a
+[16:57:32] Component added: core:description on 3d17d50e-aed9-4ca2-9b20-d41806f0df6a
+[16:57:32] Component added: core:description on 0049ae76-f38e-4f80-9249-bc8885289cf2
+[16:57:32] Component added: core:description on 9408c35b-0e55-45f9-aa97-59b24dcf4f85
+[16:57:32] Component added: core:description on d9208916-9a23-4502-929e-e198623785e2
+[16:57:32] Component added: core:description on 64b58a9d-48ac-4cac-9925-413ff9aaaabf
+[16:57:32] Component added: core:description on a0ded23e-ba6b-4c7f-a351-ef072f8760cf
+[16:57:32] Component added: core:description on 5462ea10-a2bd-47b2-b84f-62ae42a2dff0
+[16:57:32] Component added: core:description on c754f079-a0fe-4c9e-a277-b052a75422ed
+[16:57:32] Component added: core:description on 50fb0d5d-550d-4e3b-ac89-6de262fb27e3
+[16:57:32] Component added: core:description on ef45e8ff-f866-4566-ac55-3074b65a4086
+[16:57:32] Component added: core:description on c92c7dc5-35a6-4c40-aa05-e0426b165363
+[16:57:32] Component added: core:description on 9c6ad44f-eb34-40c0-bf9f-1c5f5e1bf09f
+[16:57:32] Component added: core:description on 2f0eba17-95f8-4011-b9bf-21d24fd8aa8f
+[16:57:32] Component added: core:current_actor on isekai:hero_instance

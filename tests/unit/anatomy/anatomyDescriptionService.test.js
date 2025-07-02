@@ -120,6 +120,44 @@ describe('AnatomyDescriptionService', () => {
       ).toHaveBeenCalledWith(bodyEntity);
     });
 
+    it('should create description component even when body description is empty', () => {
+      // Arrange
+      const bodyEntity = createMockEntity('body-1', {
+        [ANATOMY_BODY_COMPONENT_ID]: {
+          body: {
+            root: 'torso-1',
+          },
+        },
+      });
+
+      const partIds = ['torso-1'];
+      mockBodyGraphService.getAllParts.mockReturnValue(partIds);
+
+      mockEntityFinder.getEntityInstance.mockReturnValue(
+        createMockEntity('torso-1', {
+          [ANATOMY_PART_COMPONENT_ID]: { subType: 'torso' },
+        })
+      );
+      mockBodyPartDescriptionBuilder.buildDescription.mockReturnValue('');
+      mockBodyDescriptionComposer.composeDescription.mockReturnValue('');
+
+      // Act
+      service.generateAllDescriptions(bodyEntity);
+
+      // Assert
+      // Verify body description was composed even though it's empty
+      expect(
+        mockBodyDescriptionComposer.composeDescription
+      ).toHaveBeenCalledWith(bodyEntity);
+      
+      // Verify the empty description was still added to the entity
+      expect(mockComponentManager.addComponent).toHaveBeenCalledWith(
+        'body-1',
+        DESCRIPTION_COMPONENT_ID,
+        { text: '' }
+      );
+    });
+
     it('should throw error if entity has no anatomy:body component', () => {
       const invalidEntity = createMockEntity('invalid-1', {});
 

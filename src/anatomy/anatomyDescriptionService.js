@@ -79,11 +79,8 @@ export class AnatomyDescriptionService {
   generateBodyDescription(bodyEntity) {
     const description =
       this.bodyDescriptionComposer.composeDescription(bodyEntity);
-    if (!description) {
-      return;
-    }
-
-    // Update or create the core:description component
+    
+    // Always update or create the core:description component, even if empty
     this.updateDescription(bodyEntity.id, description);
   }
 
