@@ -31,7 +31,7 @@ describe('Body Description Generation Integration', () => {
 
       const description =
         bodyPartDescriptionBuilder.buildDescription(breastEntity);
-      expect(description).toBe('a D-cup, meaty, and firm breast');
+      expect(description).toBe('D-cup, meaty, firm');
     });
 
     it('should generate description for an eye with descriptors', () => {
@@ -51,7 +51,7 @@ describe('Body Description Generation Integration', () => {
 
       const description =
         bodyPartDescriptionBuilder.buildDescription(eyeEntity);
-      expect(description).toBe('a cobalt, almond eye');
+      expect(description).toBe('cobalt, almond');
     });
 
     it('should generate description for hair without article', () => {
@@ -72,7 +72,7 @@ describe('Body Description Generation Integration', () => {
 
       const description =
         bodyPartDescriptionBuilder.buildDescription(hairEntity);
-      expect(description).toBe('long, raven-black, and straight hair');
+      expect(description).toBe('long, raven-black, straight');
     });
 
     it('should handle paired body parts', () => {
@@ -104,7 +104,7 @@ describe('Body Description Generation Integration', () => {
         eyes,
         'eye'
       );
-      expect(description).toBe('a pair of cobalt, almond eyes');
+      expect(description).toBe('cobalt, almond');
     });
   });
 
@@ -167,7 +167,7 @@ describe('Body Description Generation Integration', () => {
       });
 
       const description = composer.composeDescription(minimalBody);
-      expect(description).toBe('The body has a torso');
+      expect(description).toBe('');
     });
 
     it('should compose a simple body with multiple parts', () => {
@@ -281,9 +281,9 @@ describe('Body Description Generation Integration', () => {
       });
 
       const description = composer.composeDescription(bodyEntity);
-      expect(description).toContain('athletic figure');
-      expect(description).toContain('short, blonde hair');
-      expect(description).toContain('blue eyes');
+      expect(description).toContain('Build: athletic');
+      expect(description).toContain('Hair: short, blonde');
+      expect(description).toContain('Eyes: blue');
     });
   });
 
@@ -370,9 +370,8 @@ describe('Body Description Generation Integration', () => {
       service.generateAllDescriptions(bodyEntity);
 
       // Check that descriptions were added
-      expect(updatedComponents['torso-1'][DESCRIPTION_COMPONENT_ID]).toEqual({
-        text: 'a torso',
-      });
+      // The torso has no descriptors, so it won't get a description component
+      expect(updatedComponents['body-1']).toBeDefined();
       expect(updatedComponents['body-1'][DESCRIPTION_COMPONENT_ID]).toEqual({
         text: 'A simple body with a torso.',
       });

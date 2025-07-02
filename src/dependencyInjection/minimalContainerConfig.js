@@ -29,13 +29,13 @@ import { registerRuntime } from './registrations/runtimeRegistrations.js';
 /**
  * Configures a minimal dependency injection container for tools that don't need
  * the full game UI stack (like the anatomy visualizer).
- * 
+ *
  * This configuration includes:
  * - Core services (logger, loaders, registry, etc.)
  * - Entity and world services (needed for anatomy)
  * - Event system
  * - Initializers
- * 
+ *
  * It excludes:
  * - UI registrations (which expect game-specific DOM elements)
  * - Turn lifecycle (not needed for visualization tools)
@@ -76,9 +76,7 @@ export function configureMinimalContainer(container) {
   // --- Load logger configuration asynchronously ---
   loadLoggerConfig(container, logger);
 
-  logger.debug(
-    '[MinimalContainerConfig] Minimal configuration complete.'
-  );
+  logger.debug('[MinimalContainerConfig] Minimal configuration complete.');
 }
 
 /**

@@ -24,18 +24,9 @@
       },
       "uniqueItems": true
     },
-    "groupedParts": {
-      "type": "array",
-      "description": "Body part types that should be grouped together in descriptions",
-      "items": {
-        "type": "string",
-        "minLength": 1
-      },
-      "uniqueItems": true
-    },
     "pairedParts": {
       "type": "array",
-      "description": "Body part types that use 'a pair of' when there are two",
+      "description": "Body part types that are paired (like eyes, arms, etc.) and should be grouped when they have the same descriptors",
       "items": {
         "type": "string",
         "minLength": 1
@@ -50,27 +41,9 @@
         "minLength": 1
       }
     },
-    "noArticleParts": {
-      "type": "array",
-      "description": "Body part types that should not have articles (a/an) in descriptions",
-      "items": {
-        "type": "string",
-        "minLength": 1
-      },
-      "uniqueItems": true
-    },
     "descriptorOrder": {
       "type": "array",
       "description": "Order in which descriptor component types appear in descriptions",
-      "items": {
-        "type": "string",
-        "pattern": "^descriptors:[a-zA-Z0-9_]+$"
-      },
-      "uniqueItems": true
-    },
-    "commaSeparatedDescriptors": {
-      "type": "array",
-      "description": "Descriptor types that use commas instead of hyphens for separation",
       "items": {
         "type": "string",
         "pattern": "^descriptors:[a-zA-Z0-9_]+$"

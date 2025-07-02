@@ -143,7 +143,7 @@ describe('Anatomy Description Generation - Edge Cases', () => {
         },
       };
       const result = bodyPartDescriptionBuilder.buildDescription(entity);
-      expect(result).toBe('a blue eye');
+      expect(result).toBe('blue');
     });
 
     it('should handle entity with getComponentData method', () => {
@@ -156,7 +156,7 @@ describe('Anatomy Description Generation - Edge Cases', () => {
         }),
       };
       const result = bodyPartDescriptionBuilder.buildDescription(entity);
-      expect(result).toBe('an arm');
+      expect(result).toBe('');
     });
   });
 
@@ -188,7 +188,7 @@ describe('Anatomy Description Generation - Edge Cases', () => {
         [entity],
         'eye'
       );
-      expect(result).toBe('a green eye');
+      expect(result).toBe('green');
     });
 
     it('should handle array with null entities', () => {
@@ -203,7 +203,7 @@ describe('Anatomy Description Generation - Edge Cases', () => {
         'eye'
       );
       // Should still process valid entities
-      expect(result).toContain('blue eye');
+      expect(result).toContain('blue');
     });
 
     it('should create paired description for matching paired parts', () => {
@@ -223,7 +223,7 @@ describe('Anatomy Description Generation - Edge Cases', () => {
         [entity1, entity2],
         'eye'
       );
-      expect(result).toBe('a pair of blue eyes');
+      expect(result).toBe('blue');
     });
 
     it('should list separately for non-matching paired parts', () => {
@@ -243,7 +243,7 @@ describe('Anatomy Description Generation - Edge Cases', () => {
         [entity1, entity2],
         'eye'
       );
-      expect(result).toBe('a blue eye and a green eye');
+      expect(result).toEqual(['blue', 'green']);
     });
 
     it('should handle entities with getComponentData method', () => {
@@ -259,7 +259,7 @@ describe('Anatomy Description Generation - Edge Cases', () => {
         [entity1, entity2],
         'arm'
       );
-      expect(result).toContain('arm');
+      expect(result).toBe('');
     });
   });
 
@@ -332,7 +332,7 @@ describe('Anatomy Description Generation - Edge Cases', () => {
       // Should not throw error
       const result = bodyDescriptionComposer.composeDescription(bodyEntity);
       expect(result).toBeDefined();
-      expect(result).toContain('blue eye');
+      expect(result).toContain('Eye: blue');
     });
 
     it('should handle completely invalid body entity', () => {

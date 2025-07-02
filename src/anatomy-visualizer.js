@@ -22,7 +22,7 @@ async function initialize() {
   try {
     // Create and configure the DI container
     container = new AppContainer();
-    
+
     // Use minimal configuration that doesn't require game UI elements
     configureMinimalContainer(container);
 
