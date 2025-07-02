@@ -7,7 +7,9 @@ import { AwaitingExternalTurnEndState } from '../states/awaitingExternalTurnEndS
 import { ProcessingCommandState } from '../states/processingCommandState.js';
 import { TurnEndingState } from '../states/turnEndingState.js';
 import { TurnIdleState } from '../states/turnIdleState.js';
-import TurnDirectiveStrategyResolver from '../strategies/turnDirectiveStrategyResolver.js';
+import TurnDirectiveStrategyResolver, {
+  DEFAULT_STRATEGY_MAP,
+} from '../strategies/turnDirectiveStrategyResolver.js';
 
 /**
  * @typedef {import('../handlers/baseTurnHandler.js').BaseTurnHandler} BaseTurnHandler
@@ -91,7 +93,8 @@ export class ConcreteTurnStateFactory extends ITurnStateFactory {
     commandString,
     turnAction,
     directiveResolver,
-    processingWorkflowFactory
+    processingWorkflowFactory,
+    commandProcessingWorkflowFactory
   ) {
     return new ProcessingCommandState({
       handler,
@@ -101,6 +104,7 @@ export class ConcreteTurnStateFactory extends ITurnStateFactory {
       turnAction,
       directiveResolver,
       processingWorkflowFactory,
+      commandProcessingWorkflowFactory,
     });
   }
 

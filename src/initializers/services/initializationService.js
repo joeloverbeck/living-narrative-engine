@@ -28,10 +28,11 @@ import {
   WorldInitializationError,
   InitializationError,
 } from '../../errors/InitializationError.js';
-import { buildActionIndex } from './initHelpers.js';
+import { buildActionIndex } from '../../utils/initHelpers.js';
+import { setupPersistenceListeners } from './initHelpers.js';
 import { assertNonBlankString } from '../../utils/dependencyUtils.js';
 import { InvalidArgumentError } from '../../errors/invalidArgumentError.js';
-import ContentDependencyValidator from './contentDependencyValidator.js';
+import LlmAdapterInitializer from './llmAdapterInitializer.js';
 import {
   assertFunction,
   assertMethods,
@@ -62,6 +63,7 @@ class InitializationService extends IInitializationService {
   #notesListener;
   #spatialIndexManager;
   #contentDependencyValidator;
+  #llmAdapterInitializer;
 
   /**
    * Creates a new InitializationService instance.
@@ -85,7 +87,8 @@ class InitializationService extends IInitializationService {
    *   dataRegistry: import('../../data/inMemoryDataRegistry.js').DataRegistry,
    *   systemInitializer: SystemInitializer,
    *   worldInitializer: WorldInitializer,
-   *   contentDependencyValidator: import('./contentDependencyValidator.js').default,
+   *   contentDependencyValidator: import('./contentDependencyValidator.js').default, // Required validator instance
+   *   llmAdapterInitializer: LlmAdapterInitializer,
    * }} config.coreSystems - Core engine systems.
    * @description Initializes the complete game system.
    */
@@ -114,10 +117,8 @@ class InitializationService extends IInitializationService {
       dataRegistry,
       systemInitializer,
       worldInitializer,
-      contentDependencyValidator = new ContentDependencyValidator({
-        gameDataRepository,
-        logger,
-      }),
+      contentDependencyValidator,
+      llmAdapterInitializer = new LlmAdapterInitializer(),
     } = coreSystems;
     super();
 
@@ -220,6 +221,12 @@ class InitializationService extends IInitializationService {
       "InitializationService: Missing or invalid required dependency 'contentDependencyValidator'.",
       SystemInitializationError
     );
+    assertFunction(
+      llmAdapterInitializer,
+      'initialize',
+      "InitializationService: Missing or invalid required dependency 'llmAdapterInitializer'.",
+      SystemInitializationError
+    );
     this.#validatedEventDispatcher = validatedEventDispatcher;
     this.#modsLoader = modsLoader;
     this.#scopeRegistry = scopeRegistry;
@@ -237,6 +244,7 @@ class InitializationService extends IInitializationService {
     this.#notesListener = notesListener;
     this.#spatialIndexManager = spatialIndexManager;
     this.#contentDependencyValidator = contentDependencyValidator;
+    this.#llmAdapterInitializer = llmAdapterInitializer;
 
     this.#logger.debug(
       'InitializationService: Instance created successfully with dependencies.'
@@ -264,7 +272,11 @@ class InitializationService extends IInitializationService {
       await this.#loadMods(worldName);
       await this.#contentDependencyValidator.validate(worldName);
       await this.#initializeScopeRegistry();
-      const llmReady = await this.#initLlmAdapter();
+      const llmReady = await this.#llmAdapterInitializer.initialize(
+        this.#llmAdapter,
+        this.#llmConfigLoader,
+        this.#logger
+      );
       if (llmReady === false) {
         throw new SystemInitializationError(
           'LLM adapter initialization failed.'
@@ -272,7 +284,22 @@ class InitializationService extends IInitializationService {
       }
       await this.#initSystems();
       await this.#initWorld(worldName);
-      this.#setupPersistenceListeners();
+      setupPersistenceListeners(
+        this.#safeEventDispatcher,
+        [
+          {
+            eventId: ACTION_DECIDED_ID,
+            handler: this.#thoughtListener.handleEvent.bind(
+              this.#thoughtListener
+            ),
+          },
+          {
+            eventId: ACTION_DECIDED_ID,
+            handler: this.#notesListener.handleEvent.bind(this.#notesListener),
+          },
+        ],
+        this.#logger
+      );
 
       this.#logger.debug(
         'Ensuring DomUiFacade is instantiated so UI components are ready...'
@@ -336,126 +363,6 @@ class InitializationService extends IInitializationService {
     });
   }
 
-  /**
-   * Attempts to initialize the configured LLM adapter.
-   *
-   * @private
-   * @async
-   * @returns {Promise<boolean>} `true` if the adapter is initialized and
-   *   operational, otherwise `false`.
-   */
-  async #initLlmAdapter() {
-    this.#logger.debug(
-      'InitializationService: Attempting to initialize ConfigurableLLMAdapter...'
-    );
-
-    const adapter = this.#llmAdapter;
-
-    if (!this.#adapterExists(adapter)) return false;
-    if (!this.#adapterHasInit(adapter)) return false;
-
-    const initStatus = this.#isAdapterInitialized(adapter);
-    if (typeof initStatus === 'boolean') {
-      return initStatus;
-    }
-
-    return this.#loadLlmConfigs(adapter);
-  }
-
-  #adapterExists(adapter) {
-    if (!adapter) {
-      this.#logger.error(
-        'InitializationService: No ILLMAdapter provided. Skipping initialization.'
-      );
-      return false;
-    }
-    return true;
-  }
-
-  #adapterHasInit(adapter) {
-    if (typeof adapter.init !== 'function') {
-      this.#logger.error(
-        'InitializationService: ILLMAdapter missing required init() method.'
-      );
-      return false;
-    }
-    return true;
-  }
-
-  #isAdapterInitialized(adapter) {
-    if (
-      typeof adapter.isInitialized === 'function' &&
-      adapter.isInitialized()
-    ) {
-      if (typeof adapter.isOperational === 'function') {
-        if (!adapter.isOperational()) {
-          this.#logger.warn(
-            'InitializationService: ConfigurableLLMAdapter already initialized but not operational.'
-          );
-          return false;
-        }
-        this.#logger.debug(
-          'InitializationService: ConfigurableLLMAdapter already initialized. Skipping.'
-        );
-        return true;
-      }
-
-      this.#logger.debug(
-        'InitializationService: ConfigurableLLMAdapter already initialized (no operational check available).'
-      );
-      return true;
-    }
-
-    return undefined;
-  }
-
-  async #loadLlmConfigs(adapter) {
-    const configLoader = this.#llmConfigLoader;
-    if (!configLoader || typeof configLoader.loadConfigs !== 'function') {
-      this.#logger.error(
-        'InitializationService: LlmConfigLoader missing or invalid. Cannot initialize adapter.'
-      );
-      return false;
-    }
-
-    this.#logger.debug(
-      'InitializationService: LlmConfigLoader resolved from container for adapter initialization.'
-    );
-
-    try {
-      await adapter.init({ llmConfigLoader: configLoader });
-
-      if (typeof adapter.isOperational === 'function') {
-        if (adapter.isOperational()) {
-          this.#logger.debug(
-            'InitializationService: ConfigurableLLMAdapter initialized successfully and is operational.'
-          );
-          return true;
-        }
-
-        this.#logger.warn(
-          'InitializationService: ConfigurableLLMAdapter.init() completed but the adapter is not operational. Check adapter-specific logs (e.g., LlmConfigLoader errors).'
-        );
-        return false;
-      }
-
-      this.#logger.debug(
-        'InitializationService: ConfigurableLLMAdapter initialized (no operational check available).'
-      );
-      return true;
-    } catch (adapterInitError) {
-      this.#logger.error(
-        `InitializationService: CRITICAL error during ConfigurableLLMAdapter.init(): ${adapterInitError.message}`,
-        {
-          errorName: adapterInitError.name,
-          errorStack: adapterInitError.stack,
-          errorObj: adapterInitError,
-        }
-      );
-      return false;
-    }
-  }
-
   async #initSystems() {
     this.#logger.debug('Initializing tagged systems...');
     await this.#systemInitializer.initializeAll();
@@ -484,19 +391,6 @@ class InitializationService extends IInitializationService {
     this.#logger.debug(
       'InitializationService: Initial world entities instantiated and spatial index built.'
     );
-  }
-
-  #setupPersistenceListeners() {
-    const dispatcher = this.#safeEventDispatcher;
-    dispatcher.subscribe(
-      ACTION_DECIDED_ID,
-      this.#thoughtListener.handleEvent.bind(this.#thoughtListener)
-    );
-    dispatcher.subscribe(
-      ACTION_DECIDED_ID,
-      this.#notesListener.handleEvent.bind(this.#notesListener)
-    );
-    this.#logger.debug('Registered AI persistence listeners.');
   }
 
   async #reportFatalError(error, worldName) {

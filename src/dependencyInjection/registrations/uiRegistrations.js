@@ -8,7 +8,8 @@
 
 // --- Core & Service Imports ---
 import { tokens } from '../tokens.js';
-import { Registrar } from '../registrarHelpers.js';
+import { Registrar } from '../../utils/registrarHelpers.js';
+import { registerWithLog } from '../../utils/registrarHelpers.js';
 import InputHandler from '../../input/inputHandler.js'; // Legacy Input Handler (Updated Dependency)
 import GlobalKeyHandler from '../../input/globalKeyHandler.js';
 import AlertRouter from '../../alerting/alertRouter.js';
@@ -68,34 +69,66 @@ export function registerDomElements(
   { outputDiv, inputElement, titleElement, document: doc },
   logger
 ) {
-  registrar.instance(tokens.WindowDocument, doc);
-  logger.debug('UI Registrations: Registered window.document instance.');
-  registrar.instance(tokens.outputDiv, outputDiv);
-  logger.debug('UI Registrations: Registered outputDiv instance.');
-  registrar.instance(tokens.inputElement, inputElement);
-  logger.debug('UI Registrations: Registered inputElement instance.');
-  registrar.instance(tokens.titleElement, titleElement);
-  logger.debug('UI Registrations: Registered titleElement instance.');
+  registerWithLog(
+    registrar,
+    tokens.WindowDocument,
+    doc,
+    { lifecycle: 'singleton', isInstance: true },
+    logger
+  );
+  registerWithLog(
+    registrar,
+    tokens.outputDiv,
+    outputDiv,
+    { lifecycle: 'singleton', isInstance: true },
+    logger
+  );
+  registerWithLog(
+    registrar,
+    tokens.inputElement,
+    inputElement,
+    { lifecycle: 'singleton', isInstance: true },
+    logger
+  );
+  registerWithLog(
+    registrar,
+    tokens.titleElement,
+    titleElement,
+    { lifecycle: 'singleton', isInstance: true },
+    logger
+  );
 
-  registrar.singletonFactory(
+  registerWithLog(
+    registrar,
     tokens.IDocumentContext,
-    (c) => new DocumentContext(c.resolve(tokens.WindowDocument))
+    (c) => new DocumentContext(c.resolve(tokens.WindowDocument)),
+    { lifecycle: 'singletonFactory' },
+    logger
   );
-  logger.debug(`UI Registrations: Registered ${tokens.IDocumentContext}.`);
 
-  registrar.singletonFactory(
+  registerWithLog(
+    registrar,
     tokens.DomElementFactory,
-    (c) => new DomElementFactory(c.resolve(tokens.IDocumentContext))
+    (c) => new DomElementFactory(c.resolve(tokens.IDocumentContext)),
+    { lifecycle: 'singletonFactory' },
+    logger
   );
-  logger.debug(`UI Registrations: Registered ${tokens.DomElementFactory}.`);
 
-  registrar.singletonFactory(tokens.IUserPrompt, () => new WindowUserPrompt());
-  logger.debug(`UI Registrations: Registered ${tokens.IUserPrompt}.`);
+  registerWithLog(
+    registrar,
+    tokens.IUserPrompt,
+    () => new WindowUserPrompt(),
+    { lifecycle: 'singletonFactory' },
+    logger
+  );
 
-  registrar.single(tokens.AlertRouter, AlertRouter, [
-    tokens.ISafeEventDispatcher,
-  ]);
-  logger.debug(`UI Registrations: Registered ${tokens.AlertRouter}.`);
+  registerWithLog(
+    registrar,
+    tokens.AlertRouter,
+    AlertRouter,
+    { lifecycle: 'singleton', dependencies: [tokens.ISafeEventDispatcher] },
+    logger
+  );
 }
 
 /**
@@ -105,17 +138,26 @@ export function registerDomElements(
  * @returns {void}
  */
 export function registerRenderers(registrar, logger) {
-  registrar.single(tokens.SpeechBubbleRenderer, SpeechBubbleRenderer, [
-    tokens.ILogger,
-    tokens.IDocumentContext,
-    tokens.IValidatedEventDispatcher,
-    tokens.IEntityManager,
-    tokens.DomElementFactory,
-    tokens.EntityDisplayDataProvider,
-  ]);
-  logger.debug(`UI Registrations: Registered ${tokens.SpeechBubbleRenderer}.`);
+  registerWithLog(
+    registrar,
+    tokens.SpeechBubbleRenderer,
+    SpeechBubbleRenderer,
+    {
+      lifecycle: 'singleton',
+      dependencies: [
+        tokens.ILogger,
+        tokens.IDocumentContext,
+        tokens.IValidatedEventDispatcher,
+        tokens.IEntityManager,
+        tokens.DomElementFactory,
+        tokens.EntityDisplayDataProvider,
+      ],
+    },
+    logger
+  );
 
-  registrar.singletonFactory(
+  registerWithLog(
+    registrar,
     tokens.TitleRenderer,
     (c) =>
       new TitleRenderer({
@@ -123,35 +165,40 @@ export function registerRenderers(registrar, logger) {
         documentContext: c.resolve(tokens.IDocumentContext),
         safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
         titleElement: c.resolve(tokens.titleElement),
-      })
-  );
-  logger.debug(`UI Registrations: Registered ${tokens.TitleRenderer}.`);
-
-  registrar.singletonFactory(tokens.LocationRenderer, (c) => {
-    const docContext = c.resolve(tokens.IDocumentContext);
-    const resolvedLogger = c.resolve(tokens.ILogger);
-    const locationContainer = docContext.query('#location-info-container');
-    if (!locationContainer) {
-      resolvedLogger.warn(
-        `UI Registrations: Could not find '#location-info-container' element for LocationRenderer. Location details may not render.`
-      );
-    }
-    return new LocationRenderer({
-      logger: resolvedLogger,
-      documentContext: docContext,
-      safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
-      domElementFactory: c.resolve(tokens.DomElementFactory),
-      entityManager: c.resolve(tokens.IEntityManager),
-      entityDisplayDataProvider: c.resolve(tokens.EntityDisplayDataProvider),
-      dataRegistry: c.resolve(tokens.IDataRegistry),
-      containerElement: locationContainer,
-    });
-  });
-  logger.debug(
-    `UI Registrations: Registered ${tokens.LocationRenderer} with IEntityManager, IDataRegistry, and EntityDisplayDataProvider.`
+      }),
+    { lifecycle: 'singletonFactory' },
+    logger
   );
 
-  registrar.singletonFactory(
+  registerWithLog(
+    registrar,
+    tokens.LocationRenderer,
+    (c) => {
+      const docContext = c.resolve(tokens.IDocumentContext);
+      const resolvedLogger = c.resolve(tokens.ILogger);
+      const locationContainer = docContext.query('#location-info-container');
+      if (!locationContainer) {
+        resolvedLogger.warn(
+          `UI Registrations: Could not find '#location-info-container' element for LocationRenderer. Location details may not render.`
+        );
+      }
+      return new LocationRenderer({
+        logger: resolvedLogger,
+        documentContext: docContext,
+        safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+        domElementFactory: c.resolve(tokens.DomElementFactory),
+        entityManager: c.resolve(tokens.IEntityManager),
+        entityDisplayDataProvider: c.resolve(tokens.EntityDisplayDataProvider),
+        dataRegistry: c.resolve(tokens.IDataRegistry),
+        containerElement: locationContainer,
+      });
+    },
+    { lifecycle: 'singletonFactory' },
+    logger
+  );
+
+  registerWithLog(
+    registrar,
     tokens.ActionButtonsRenderer,
     (c) =>
       new ActionButtonsRenderer({
@@ -161,11 +208,13 @@ export function registerRenderers(registrar, logger) {
         domElementFactory: c.resolve(tokens.DomElementFactory),
         actionButtonsContainerSelector: '#action-buttons',
         sendButtonSelector: '#player-confirm-turn-button',
-      })
+      }),
+    { lifecycle: 'singletonFactory' },
+    logger
   );
-  logger.debug(`UI Registrations: Registered ${tokens.ActionButtonsRenderer}.`);
 
-  registrar.singletonFactory(
+  registerWithLog(
+    registrar,
     tokens.PerceptionLogRenderer,
     (c) =>
       new PerceptionLogRenderer({
@@ -174,11 +223,13 @@ export function registerRenderers(registrar, logger) {
         validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
         domElementFactory: c.resolve(tokens.DomElementFactory),
         entityManager: c.resolve(tokens.IEntityManager),
-      })
+      }),
+    { lifecycle: 'singletonFactory' },
+    logger
   );
-  logger.debug(`UI Registrations: Registered ${tokens.PerceptionLogRenderer}.`);
 
-  registrar.singletonFactory(
+  registerWithLog(
+    registrar,
     tokens.EntityLifecycleMonitor,
     (c) =>
       new EntityLifecycleMonitor({
@@ -186,23 +237,25 @@ export function registerRenderers(registrar, logger) {
         documentContext: c.resolve(tokens.IDocumentContext),
         validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
         domElementFactory: c.resolve(tokens.DomElementFactory),
-      })
-  );
-  logger.debug(
-    `UI Registrations: Registered ${tokens.EntityLifecycleMonitor}.`
+      }),
+    { lifecycle: 'singletonFactory' },
+    logger
   );
 
-  registrar.singletonFactory(
+  registerWithLog(
+    registrar,
     tokens.SaveGameService,
     (c) =>
       new SaveGameService({
         logger: c.resolve(tokens.ILogger),
         userPrompt: c.resolve(tokens.IUserPrompt),
-      })
+      }),
+    { lifecycle: 'singletonFactory' },
+    logger
   );
-  logger.debug(`UI Registrations: Registered ${tokens.SaveGameService}.`);
 
-  registrar.singletonFactory(
+  registerWithLog(
+    registrar,
     tokens.SaveGameUI,
     (c) =>
       new SaveGameUI({
@@ -212,11 +265,13 @@ export function registerRenderers(registrar, logger) {
         saveLoadService: c.resolve(tokens.ISaveLoadService),
         validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
         saveGameService: c.resolve(tokens.SaveGameService),
-      })
+      }),
+    { lifecycle: 'singletonFactory' },
+    logger
   );
-  logger.debug(`UI Registrations: Registered ${tokens.SaveGameUI}.`);
 
-  registrar.singletonFactory(
+  registerWithLog(
+    registrar,
     tokens.LoadGameUI,
     (c) =>
       new LoadGameUI({
@@ -226,11 +281,13 @@ export function registerRenderers(registrar, logger) {
         saveLoadService: c.resolve(tokens.ISaveLoadService),
         validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
         userPrompt: c.resolve(tokens.IUserPrompt),
-      })
+      }),
+    { lifecycle: 'singletonFactory' },
+    logger
   );
-  logger.debug(`UI Registrations: Registered ${tokens.LoadGameUI}.`);
 
-  registrar.singletonFactory(
+  registerWithLog(
+    registrar,
     tokens.LlmSelectionModal,
     (c) =>
       new LlmSelectionModal({
@@ -239,11 +296,13 @@ export function registerRenderers(registrar, logger) {
         domElementFactory: c.resolve(tokens.DomElementFactory),
         llmAdapter: c.resolve(tokens.LLMAdapter),
         validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
-      })
+      }),
+    { lifecycle: 'singletonFactory' },
+    logger
   );
-  logger.debug(`UI Registrations: Registered ${tokens.LlmSelectionModal}.`);
 
-  registrar.singletonFactory(
+  registerWithLog(
+    registrar,
     tokens.CurrentTurnActorRenderer,
     (c) =>
       new CurrentTurnActorRenderer({
@@ -252,13 +311,13 @@ export function registerRenderers(registrar, logger) {
         validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
         entityManager: c.resolve(tokens.IEntityManager),
         entityDisplayDataProvider: c.resolve(tokens.EntityDisplayDataProvider),
-      })
-  );
-  logger.debug(
-    `UI Registrations: Registered ${tokens.CurrentTurnActorRenderer}.`
+      }),
+    { lifecycle: 'singletonFactory' },
+    logger
   );
 
-  registrar.singletonFactory(
+  registerWithLog(
+    registrar,
     tokens.ChatAlertRenderer,
     (c) =>
       new ChatAlertRenderer({
@@ -267,11 +326,13 @@ export function registerRenderers(registrar, logger) {
         safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
         domElementFactory: c.resolve(tokens.DomElementFactory),
         alertRouter: c.resolve(tokens.AlertRouter),
-      })
+      }),
+    { lifecycle: 'singletonFactory' },
+    logger
   );
-  logger.debug(`UI Registrations: Registered ${tokens.ChatAlertRenderer}.`);
 
-  registrar.singletonFactory(
+  registerWithLog(
+    registrar,
     tokens.ActionResultRenderer,
     (c) =>
       new ActionResultRenderer({
@@ -279,9 +340,10 @@ export function registerRenderers(registrar, logger) {
         documentContext: c.resolve(tokens.IDocumentContext),
         safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
         domElementFactory: c.resolve(tokens.DomElementFactory),
-      })
+      }),
+    { lifecycle: 'singletonFactory' },
+    logger
   );
-  logger.debug(`UI Registrations: Registered ${tokens.ActionResultRenderer}.`);
 }
 
 /**
@@ -291,7 +353,8 @@ export function registerRenderers(registrar, logger) {
  * @returns {void}
  */
 export function registerControllers(registrar, logger) {
-  registrar.singletonFactory(
+  registerWithLog(
+    registrar,
     tokens.InputStateController,
     (c) =>
       new InputStateController({
@@ -299,21 +362,25 @@ export function registerControllers(registrar, logger) {
         documentContext: c.resolve(tokens.IDocumentContext),
         safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
         inputElement: c.resolve(tokens.inputElement),
-      })
+      }),
+    { lifecycle: 'singletonFactory' },
+    logger
   );
-  logger.debug(`UI Registrations: Registered ${tokens.InputStateController}.`);
 
-  registrar.singletonFactory(
+  registerWithLog(
+    registrar,
     tokens.GlobalKeyHandler,
     (c) =>
       new GlobalKeyHandler(
         c.resolve(tokens.WindowDocument),
         c.resolve(tokens.IValidatedEventDispatcher)
-      )
+      ),
+    { lifecycle: 'singletonFactory' },
+    logger
   );
-  logger.debug(`UI Registrations: Registered ${tokens.GlobalKeyHandler}.`);
 
-  registrar.singletonFactory(
+  registerWithLog(
+    registrar,
     tokens.ProcessingIndicatorController,
     (c) =>
       new ProcessingIndicatorController({
@@ -321,10 +388,9 @@ export function registerControllers(registrar, logger) {
         documentContext: c.resolve(tokens.IDocumentContext),
         safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
         domElementFactory: c.resolve(tokens.DomElementFactory),
-      })
-  );
-  logger.debug(
-    `UI Registrations: Registered ${tokens.ProcessingIndicatorController}.`
+      }),
+    { lifecycle: 'singletonFactory' },
+    logger
   );
 }
 
@@ -335,33 +401,41 @@ export function registerControllers(registrar, logger) {
  * @returns {void}
  */
 export function registerFacadeAndManager(registrar, logger) {
-  registrar.single(tokens.DomUiFacade, DomUiFacade, [
-    tokens.ActionButtonsRenderer,
-    tokens.ActionResultRenderer,
-    tokens.LocationRenderer,
-    tokens.TitleRenderer,
-    tokens.InputStateController,
-    tokens.SpeechBubbleRenderer,
-    tokens.PerceptionLogRenderer,
-    tokens.SaveGameUI,
-    tokens.LoadGameUI,
-    tokens.LlmSelectionModal,
-    tokens.EntityLifecycleMonitor,
-  ]);
-  logger.debug(
-    `UI Registrations: Registered ${tokens.DomUiFacade} under its own token.`
+  registerWithLog(
+    registrar,
+    tokens.DomUiFacade,
+    DomUiFacade,
+    {
+      lifecycle: 'singleton',
+      dependencies: [
+        tokens.ActionButtonsRenderer,
+        tokens.ActionResultRenderer,
+        tokens.LocationRenderer,
+        tokens.TitleRenderer,
+        tokens.InputStateController,
+        tokens.SpeechBubbleRenderer,
+        tokens.PerceptionLogRenderer,
+        tokens.SaveGameUI,
+        tokens.LoadGameUI,
+        tokens.LlmSelectionModal,
+        tokens.EntityLifecycleMonitor,
+      ],
+    },
+    logger
   );
 
-  registrar.singletonFactory(
+  registerWithLog(
+    registrar,
     tokens.EngineUIManager,
     (c) =>
       new EngineUIManager({
         eventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
         domUiFacade: c.resolve(tokens.DomUiFacade),
         logger: c.resolve(tokens.ILogger),
-      })
+      }),
+    { lifecycle: 'singletonFactory' },
+    logger
   );
-  logger.debug(`UI Registrations: Registered ${tokens.EngineUIManager}.`);
 }
 
 /**

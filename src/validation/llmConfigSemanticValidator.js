@@ -20,6 +20,45 @@
  */
 
 /**
+ * Enum-like constants for semantic validation error types.
+ *
+ * @type {Readonly<Record<string, string>>}
+ */
+export const SemanticErrorTypes = Object.freeze({
+  INVALID_CONFIGS_STRUCTURE: 'SEMANTIC_VALIDATION_INVALID_CONFIGS_STRUCTURE',
+  INVALID_CONFIG_OBJECT: 'SEMANTIC_VALIDATION_INVALID_CONFIG_OBJECT',
+  MISSING_PROMPT_ELEMENTS_FOR_ASSEMBLY:
+    'SEMANTIC_VALIDATION_MISSING_PROMPT_ELEMENTS_FOR_ASSEMBLY',
+  INVALID_ASSEMBLY_KEY_TYPE: 'SEMANTIC_VALIDATION_INVALID_ASSEMBLY_KEY_TYPE',
+  MISSING_ASSEMBLY_KEY: 'SEMANTIC_VALIDATION_MISSING_ASSEMBLY_KEY',
+});
+
+/**
+ * Pushes a formatted semantic error onto the provided array.
+ *
+ * @param {SemanticValidationError[]} errors - Error array to mutate.
+ * @param {object} params
+ * @param {string} params.configId
+ * @param {string} params.message
+ * @param {string} params.path
+ * @param {string} params.type - One of {@link SemanticErrorTypes}.
+ * @param {object} [params.extras]
+ * @returns {void}
+ */
+export function addSemanticError(
+  errors,
+  { configId, message, path, type, extras = {} }
+) {
+  errors.push({
+    configId,
+    message,
+    path,
+    errorType: type,
+    ...extras,
+  });
+}
+
+/**
  * Performs semantic validations on the LLM configurations map.
  * The primary check ensures that all string keys listed in any `promptAssemblyOrder`
  * array correspond to actual `key` values defined in the `promptElements` array
@@ -36,11 +75,11 @@ export function performSemanticValidations(configsMap) {
     configsMap === null ||
     Array.isArray(configsMap)
   ) {
-    errors.push({
-      configId: 'N/A - Root "configs" property', // Standardized ID for this specific error
+    addSemanticError(errors, {
+      configId: 'N/A - Root "configs" property',
       message: 'The "configs" property is not a valid object map as expected.',
-      path: '(root).configs', // Indicates the error is with the 'configs' map itself
-      errorType: 'SEMANTIC_VALIDATION_INVALID_CONFIGS_STRUCTURE',
+      path: '(root).configs',
+      type: SemanticErrorTypes.INVALID_CONFIGS_STRUCTURE,
     });
     return errors;
   }
@@ -50,11 +89,11 @@ export function performSemanticValidations(configsMap) {
       const config = configsMap[configId];
 
       if (typeof config !== 'object' || config === null) {
-        errors.push({
+        addSemanticError(errors, {
           configId: configId,
           message: `The configuration for ID '${configId}' is not a valid object.`,
-          path: `(config object root)`, // Path relative to this configId
-          errorType: 'SEMANTIC_VALIDATION_INVALID_CONFIG_OBJECT',
+          path: `(config object root)`,
+          type: SemanticErrorTypes.INVALID_CONFIG_OBJECT,
         });
         continue; // Skip this malformed dependencyInjection object
       }
@@ -73,11 +112,11 @@ export function performSemanticValidations(configsMap) {
       // Check if promptElements is missing when promptAssemblyOrder is present (and vice-versa if needed)
       // This could be a schema concern, but semantic validation can also catch it.
       if (config.promptAssemblyOrder && !config.promptElements) {
-        errors.push({
+        addSemanticError(errors, {
           configId: configId,
           message: `In config '${configId}', 'promptElements' array is missing or not an array, but 'promptAssemblyOrder' is defined.`,
-          path: `promptElements`, // Path relative to dependencyInjection object
-          errorType: 'SEMANTIC_VALIDATION_MISSING_PROMPT_ELEMENTS_FOR_ASSEMBLY',
+          path: `promptElements`,
+          type: SemanticErrorTypes.MISSING_PROMPT_ELEMENTS_FOR_ASSEMBLY,
         });
         // Depending on desired strictness, you might 'continue' here
       }
@@ -93,26 +132,30 @@ export function performSemanticValidations(configsMap) {
 
       promptAssemblyOrder.forEach((keyRef, index) => {
         if (typeof keyRef !== 'string') {
-          errors.push({
+          addSemanticError(errors, {
             configId: configId,
-            problematic_key_ref: JSON.stringify(keyRef),
-            index_in_assembly_order: index,
-            promptAssemblyOrder: [...promptAssemblyOrder],
-            available_prompt_element_keys: Array.from(promptElementKeys),
             message: `In config '${configId}', an item at index ${index} of 'promptAssemblyOrder' is not a string. Found: ${JSON.stringify(keyRef)}.`,
             path: `promptAssemblyOrder[${index}]`,
-            errorType: 'SEMANTIC_VALIDATION_INVALID_ASSEMBLY_KEY_TYPE',
+            type: SemanticErrorTypes.INVALID_ASSEMBLY_KEY_TYPE,
+            extras: {
+              problematic_key_ref: JSON.stringify(keyRef),
+              index_in_assembly_order: index,
+              promptAssemblyOrder: [...promptAssemblyOrder],
+              available_prompt_element_keys: Array.from(promptElementKeys),
+            },
           });
         } else if (!promptElementKeys.has(keyRef)) {
-          errors.push({
+          addSemanticError(errors, {
             configId: configId,
-            problematic_key_ref: keyRef,
-            index_in_assembly_order: index,
-            promptAssemblyOrder: [...promptAssemblyOrder],
-            available_prompt_element_keys: Array.from(promptElementKeys),
             message: `In config '${configId}', the key '${keyRef}' at index ${index} of 'promptAssemblyOrder' was not found in its 'promptElements' keys. Available keys: [${Array.from(promptElementKeys).join(', ')}].`,
             path: `promptAssemblyOrder[${index}]`,
-            errorType: 'SEMANTIC_VALIDATION_MISSING_ASSEMBLY_KEY',
+            type: SemanticErrorTypes.MISSING_ASSEMBLY_KEY,
+            extras: {
+              problematic_key_ref: keyRef,
+              index_in_assembly_order: index,
+              promptAssemblyOrder: [...promptAssemblyOrder],
+              available_prompt_element_keys: Array.from(promptElementKeys),
+            },
           });
         }
       });

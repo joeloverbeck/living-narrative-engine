@@ -90,6 +90,9 @@ describe('registerInterpreters', () => {
     mockContainer.register(tokens.EventBus, mockEventBus, {
       lifecycle: 'singleton',
     });
+    mockContainer.register(tokens.IEventBus, mockEventBus, {
+      lifecycle: 'singleton',
+    });
     mockContainer.register(tokens.IDataRegistry, mockDataRegistry, {
       lifecycle: 'singleton',
     });

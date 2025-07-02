@@ -8,6 +8,7 @@ import { beforeEach, describe, expect, jest, test } from '@jest/globals';
 import { LLMProcessingError } from '../../../../src/turns/services/LLMResponseProcessor.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../../src/constants/eventIds.js';
 import { expectNoDispatch } from '../../../common/engine/dispatchTestUtils.js';
+import { LlmJsonService } from '../../../../src/llms/llmJsonService.js';
 
 // --- Mocks & Helpers ---
 
@@ -40,6 +41,7 @@ describe('LLMResponseProcessor - notes data extraction', () => {
       schemaValidator: schemaValidatorMock,
       logger: loggerMock,
       safeEventDispatcher,
+      llmJsonService: new LlmJsonService(),
     });
   });
 

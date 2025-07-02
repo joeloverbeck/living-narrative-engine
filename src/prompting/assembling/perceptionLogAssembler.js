@@ -2,6 +2,7 @@
 
 import { IPromptElementAssembler } from '../../interfaces/IPromptElementAssembler.js';
 import { resolveWrapper } from '../../utils/wrapperUtils.js';
+import { validateAssemblerParams } from './assemblerValidation.js';
 
 export const PERCEPTION_LOG_ENTRY_KEY = 'perception_log_entry';
 export const PERCEPTION_LOG_WRAPPER_KEY = 'perception_log_wrapper';
@@ -36,23 +37,16 @@ export class PerceptionLogAssembler extends IPromptElementAssembler {
     placeholderResolver,
     allPromptElementsMap
   ) {
-    // Parameter validation
-    const paramsProvided = {
-      elementConfigProvided: !!elementConfig,
-      promptDataProvider: !!promptData,
-      placeholderResolverProvided: !!placeholderResolver,
-      allPromptElementsMapProvided: !!allPromptElementsMap,
-    };
-    if (
-      !elementConfig ||
-      !promptData ||
-      !placeholderResolver ||
-      !allPromptElementsMap
-    ) {
-      this.#logger.error(
-        'PerceptionLogAssembler.assemble: Missing required parameters.',
-        paramsProvided
-      );
+    const { valid } = validateAssemblerParams({
+      elementConfig,
+      promptData,
+      placeholderResolver,
+      allPromptElementsMap,
+      logger: this.#logger,
+      functionName: 'PerceptionLogAssembler.assemble',
+      requireAllPromptElementsMap: true,
+    });
+    if (!valid) {
       return '';
     }
 
@@ -64,8 +58,8 @@ export class PerceptionLogAssembler extends IPromptElementAssembler {
     );
 
     // Check for empty or missing log array
-    const arr = promptData.perceptionLogArray;
-    if (!Array.isArray(arr) || arr.length === 0) {
+    const logEntries = promptData.perceptionLogArray;
+    if (!Array.isArray(logEntries) || logEntries.length === 0) {
       this.#logger.debug(
         `Perception log array for '${elementConfig.key}' missing or empty`
       );
@@ -86,7 +80,7 @@ export class PerceptionLogAssembler extends IPromptElementAssembler {
 
     // Assemble each entry
     let assembledEntries = '';
-    for (const entry of arr) {
+    for (const entry of logEntries) {
       if (!entry || typeof entry !== 'object') {
         this.#logger.warn('Invalid perception log entry encountered', {
           entry,

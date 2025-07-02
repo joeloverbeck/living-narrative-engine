@@ -6,16 +6,22 @@
 
 /** @typedef {import('../interfaces/coreServices.js').IDataRegistry} IDataRegistry */
 
+import DataRegistryError from '../errors/dataRegistryError.js';
 /**
  * Implements the IDataRegistry interface using in-memory Maps for data storage.
  *
  * @implements {IDataRegistry}
  */
 class InMemoryDataRegistry {
+  #logger;
   /**
    * Initializes the internal storage structures.
+   *
+   * @description Creates a new in-memory data registry.
+   * @param {object} [options]
+   * @param {object} [options.logger] Logger implementation
    */
-  constructor() {
+  constructor({ logger = console } = {}) {
     /**
      * @private
      * @type {Map<string, Map<string, object>>}
@@ -27,6 +33,12 @@ class InMemoryDataRegistry {
      * @type {Map<string, Map<string, string>>}
      */
     this.contentOrigins = new Map();
+
+    /**
+     * @type {object}
+     * @private
+     */
+    this.#logger = logger;
   }
 
   /**
@@ -37,19 +49,19 @@ class InMemoryDataRegistry {
    */
   store(type, id, data) {
     if (typeof type !== 'string' || type.trim() === '') {
-      console.error(
+      this.#logger.error(
         'InMemoryDataRegistry.store: Invalid or empty type provided.'
       );
       return false;
     }
     if (typeof id !== 'string' || id.trim() === '') {
-      console.error(
+      this.#logger.error(
         `InMemoryDataRegistry.store: Invalid or empty id provided for type '${type}'.`
       );
       return false;
     }
     if (typeof data !== 'object' || data === null) {
-      console.error(
+      this.#logger.error(
         `InMemoryDataRegistry.store: Invalid data provided for type '${type}', id '${id}'. Must be an object.`
       );
       return false;
@@ -78,12 +90,12 @@ class InMemoryDataRegistry {
    */
   get(type, id) {
     if (typeof type !== 'string' || type.trim() === '') {
-      throw new Error(
+      throw new DataRegistryError(
         'InMemoryDataRegistry.get: type parameter must be a non-empty string'
       );
     }
     if (typeof id !== 'string' || id.trim() === '') {
-      throw new Error(
+      throw new DataRegistryError(
         'InMemoryDataRegistry.get: id parameter must be a non-empty string'
       );
     }
@@ -98,7 +110,7 @@ class InMemoryDataRegistry {
    */
   getAll(type) {
     if (typeof type !== 'string' || type.trim() === '') {
-      throw new Error(
+      throw new DataRegistryError(
         'InMemoryDataRegistry.getAll: type parameter must be a non-empty string'
       );
     }
@@ -187,12 +199,12 @@ class InMemoryDataRegistry {
    */
   getContentSource(type, id) {
     if (typeof type !== 'string' || type.trim() === '') {
-      throw new Error(
+      throw new DataRegistryError(
         'InMemoryDataRegistry.getContentSource: type parameter must be a non-empty string'
       );
     }
     if (typeof id !== 'string' || id.trim() === '') {
-      throw new Error(
+      throw new DataRegistryError(
         'InMemoryDataRegistry.getContentSource: id parameter must be a non-empty string'
       );
     }
@@ -245,7 +257,7 @@ class InMemoryDataRegistry {
     const locationId = playerDef?.components?.['core:position']?.locationId;
 
     if (typeof locationId !== 'string' || !locationId.trim()) {
-      console.warn(
+      this.#logger.warn(
         `Starting player '${playerId}' has no valid locationId in core:position component.`
       );
       return null;

@@ -115,7 +115,7 @@ describe('StepResolver - components edge access', () => {
       expect(trace.addLog).toHaveBeenCalledWith(
         'warn',
         "Entity 'entity1' does not expose componentTypeIds. Unable to retrieve components.",
-        'StepResolver',
+        'EntityHelpers',
         { entityId: 'entity1' }
       );
     });

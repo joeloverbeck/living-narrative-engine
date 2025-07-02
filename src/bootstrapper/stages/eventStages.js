@@ -5,7 +5,7 @@ import {
   attachBeforeUnload,
   stageSuccess,
   stageFailure,
-} from '../helpers.js';
+} from '../../utils/bootstrapperHelpers.js';
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../engine/gameEngine.js').default} GameEngineInstance */

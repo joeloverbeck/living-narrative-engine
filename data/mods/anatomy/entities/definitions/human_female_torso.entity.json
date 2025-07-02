@@ -1,0 +1,83 @@
+{
+  "$schema": "http://example.com/schemas/entity-definition.schema.json",
+  "id": "anatomy:human_female_torso",
+  "description": "A human female torso with female-specific anatomy",
+  "components": {
+    "anatomy:part": {
+      "subType": "torso"
+    },
+    "anatomy:sockets": {
+      "sockets": [
+        {
+          "id": "neck",
+          "orientation": "upper",
+          "allowedTypes": ["head", "neck"],
+          "maxCount": 1,
+          "nameTpl": "{{type}}"
+        },
+        {
+          "id": "left_shoulder",
+          "orientation": "left",
+          "allowedTypes": ["arm"],
+          "maxCount": 1,
+          "nameTpl": "{{orientation}} {{type}}"
+        },
+        {
+          "id": "right_shoulder",
+          "orientation": "right",
+          "allowedTypes": ["arm"],
+          "maxCount": 1,
+          "nameTpl": "{{orientation}} {{type}}"
+        },
+        {
+          "id": "left_hip",
+          "orientation": "left",
+          "allowedTypes": ["leg"],
+          "maxCount": 1,
+          "nameTpl": "{{orientation}} {{type}}"
+        },
+        {
+          "id": "right_hip",
+          "orientation": "right",
+          "allowedTypes": ["leg"],
+          "maxCount": 1,
+          "nameTpl": "{{orientation}} {{type}}"
+        },
+        {
+          "id": "chest",
+          "orientation": "front",
+          "allowedTypes": ["breast"],
+          "maxCount": 2,
+          "nameTpl": "{{orientation}} {{type}}"
+        },
+        {
+          "id": "pubic_hair",
+          "allowedTypes": ["hair"],
+          "maxCount": 1,
+          "nameTpl": "pubic {{type}}"
+        },
+        {
+          "id": "vagina",
+          "allowedTypes": ["genital"],
+          "maxCount": 1,
+          "nameTpl": "{{type}}"
+        },
+        {
+          "id": "asshole",
+          "allowedTypes": ["genital"],
+          "maxCount": 1,
+          "nameTpl": "{{type}}"
+        },
+        {
+          "id": "ass",
+          "allowedTypes": ["ass_cheek"],
+          "maxCount": 2,
+          "nameTpl": "{{type}}"
+        }
+      ]
+    },
+    "core:name": {
+      "text": "torso"
+    }
+  }
+}

@@ -11,6 +11,7 @@ import EntityDefinitionLoader from '../../../src/loaders/entityDefinitionLoader.
 import EntityInstanceLoader from '../../../src/loaders/entityInstanceLoader.js';
 import WorldLoader from '../../../src/loaders/worldLoader.js';
 import ContentLoadManager from '../../../src/loaders/ContentLoadManager.js';
+import LoadResultAggregator from '../../../src/loaders/LoadResultAggregator.js';
 import { createContentLoadersConfig } from '../../../src/loaders/defaultLoaderConfig.js';
 
 /**
@@ -28,7 +29,7 @@ function buildEnv(pathToResponse) {
   const fetcher = createMockDataFetcher({ pathToResponse });
   const schemaValidator = createMockSchemaValidator();
   schemaValidator.isSchemaLoaded.mockReturnValue(true);
-  const registry = new InMemoryDataRegistry(logger);
+  const registry = new InMemoryDataRegistry({ logger });
   const defLoader = new EntityDefinitionLoader(
     config,
     resolver,
@@ -62,6 +63,7 @@ function buildEnv(pathToResponse) {
     logger,
     validatedEventDispatcher: dispatcher,
     contentLoadersConfig,
+    aggregatorFactory: (counts) => new LoadResultAggregator(counts),
   });
   return { logger, registry, manager, worldLoader };
 }
@@ -139,8 +141,16 @@ describe('Multi-mod content loading and world validation', () => {
 
   it('aggregates definitions, instances, and worlds from all mods', async () => {
     const totals = {};
-    await env.manager.loadContent(finalOrder, manifests, totals);
-    await env.worldLoader.loadWorlds(finalOrder, manifests, totals);
+    const { updatedTotals: afterContent } = await env.manager.loadContent(
+      finalOrder,
+      manifests,
+      totals
+    );
+    const updatedTotals = await env.worldLoader.loadWorlds(
+      finalOrder,
+      manifests,
+      afterContent
+    );
 
     expect(env.registry.getAll('entityDefinitions').length).toBe(2);
     expect(env.registry.getAll('entityInstances').length).toBe(2);
@@ -177,13 +187,21 @@ describe('Multi-mod content loading and world validation', () => {
     ]);
 
     const totals = {};
-    await env.manager.loadContent(finalOrder, manifests, totals);
+    const { updatedTotals: afterContent } = await env.manager.loadContent(
+      finalOrder,
+      manifests,
+      totals
+    );
 
     // The duplicate instance should cause an error (not a warning)
-    expect(totals.entityInstances?.errors).toBe(1);
+    expect(afterContent.entityInstances?.errors).toBe(1);
 
-    await env.worldLoader.loadWorlds(finalOrder, manifests, totals);
-    expect(totals.worlds.errors).toBe(1);
+    const updatedTotals = await env.worldLoader.loadWorlds(
+      finalOrder,
+      manifests,
+      afterContent
+    );
+    expect(updatedTotals.worlds.errors).toBe(1);
   });
 
   it('handles large numbers of files', async () => {

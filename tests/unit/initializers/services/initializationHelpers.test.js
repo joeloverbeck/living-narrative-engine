@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { buildActionIndex } from '../../../../src/initializers/services/initHelpers.js';
+import { buildActionIndex } from '../../../../src/utils/initHelpers.js';
 
 describe('InitializationService helper functions', () => {
   describe('buildActionIndex', () => {

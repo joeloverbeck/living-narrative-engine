@@ -11,6 +11,7 @@ import {
   SECRETS_COMPONENT_ID,
   FEARS_COMPONENT_ID, // <<< Added import
   SPEECH_PATTERNS_COMPONENT_ID,
+  ANATOMY_BODY_COMPONENT_ID,
 } from '../../constants/componentIds.js';
 import { ensureTerminalPunctuation } from '../../utils/textUtils.js';
 // --- TICKET AIPF-REFACTOR-009 START: Import and Use Standardized Fallback Strings ---
@@ -24,6 +25,25 @@ import { IActorDataExtractor } from '../../interfaces/IActorDataExtractor';
 // ActorPromptDataDTO is defined in AIGameStateDTO.js as per the provided context
 /** @typedef {import('../dtos/AIGameStateDTO.js').ActorPromptDataDTO} ActorPromptDataDTO */
 
+/**
+ * Retrieve and trim the text from a component if available.
+ *
+ * @description Helper to get trimmed text for a specific component ID.
+ * @param {object} actorState - Map of component IDs to data objects.
+ * @param {string} componentId - The component ID whose text should be returned.
+ * @returns {string|undefined} Trimmed text or undefined when absent or blank.
+ */
+function getTrimmedComponentText(actorState, componentId) {
+  const component = actorState[componentId];
+  if (component && typeof component.text === 'string') {
+    const trimmed = component.text.trim();
+    if (trimmed !== '') {
+      return trimmed;
+    }
+  }
+  return undefined;
+}
+
 // --- TICKET AIPF-REFACTOR-009: Removed local default constants ---
 // const DEFAULT_NAME = "Unnamed Character";
 // const DEFAULT_DESCRIPTION = "No description available.";
@@ -35,7 +55,11 @@ import { IActorDataExtractor } from '../../interfaces/IActorDataExtractor';
  * to populate the ActorPromptDataDTO.
  */
 class ActorDataExtractor extends IActorDataExtractor {
-  // Removed constructor comment about injecting punctuationUtil, as we're importing directly.
+  constructor({ anatomyDescriptionService, entityFinder }) {
+    super();
+    this.anatomyDescriptionService = anatomyDescriptionService;
+    this.entityFinder = entityFinder;
+  }
 
   /**
    * Extracts and transforms actor-specific data from the actorState object
@@ -44,34 +68,49 @@ class ActorDataExtractor extends IActorDataExtractor {
    * @override
    * @param {object} actorState - The gameState.actorState object, which is a
    * map of component IDs to component data.
+   * @param {string} [actorId] - Optional actor entity ID for anatomy lookups
    * @returns {ActorPromptDataDTO} The populated DTO.
    */
-  extractPromptData(actorState) {
+  extractPromptData(actorState, actorId = null) {
+    if (actorState === null || typeof actorState !== 'object') {
+      throw new TypeError('actorState must be an object');
+    }
     /** @type {Partial<ActorPromptDataDTO>} */
     const promptData = {};
 
     // Name
-    const nameComponent = actorState[NAME_COMPONENT_ID];
-    promptData.name =
-      nameComponent &&
-      nameComponent.text &&
-      String(nameComponent.text).trim() !== ''
-        ? String(nameComponent.text).trim()
-        : // --- TICKET AIPF-REFACTOR-009: Use imported constant ---
-          DEFAULT_FALLBACK_CHARACTER_NAME;
+    const nameText = getTrimmedComponentText(actorState, NAME_COMPONENT_ID);
+    promptData.name = nameText ?? DEFAULT_FALLBACK_CHARACTER_NAME;
     // --- TICKET AIPF-REFACTOR-009 END ---
 
     // Description
-    const descComponent = actorState[DESCRIPTION_COMPONENT_ID];
-    // First, determine the base description (either from component or default)
-    const baseDescription =
-      descComponent &&
-      descComponent.text &&
-      String(descComponent.text).trim() !== ''
-        ? String(descComponent.text) // Do not trim here, ensureTerminalPunctuation will handle it
-        : // --- TICKET AIPF-REFACTOR-009: Use imported constant (raw version) ---
-          DEFAULT_FALLBACK_DESCRIPTION_RAW;
-    // --- TICKET AIPF-REFACTOR-009 END ---
+    let baseDescription = DEFAULT_FALLBACK_DESCRIPTION_RAW;
+
+    // First, check if we have an anatomy-based description
+    if (actorId && this.anatomyDescriptionService && this.entityFinder) {
+      const actorEntity = this.entityFinder.getEntityInstance(actorId);
+      if (actorEntity && actorEntity.components[ANATOMY_BODY_COMPONENT_ID]) {
+        // Try to get or generate anatomy description
+        const anatomyDescription =
+          this.anatomyDescriptionService.getOrGenerateBodyDescription(
+            actorEntity
+          );
+        if (anatomyDescription) {
+          baseDescription = anatomyDescription;
+        }
+      }
+    }
+
+    // Fall back to core:description if no anatomy description
+    if (baseDescription === DEFAULT_FALLBACK_DESCRIPTION_RAW) {
+      const descText = getTrimmedComponentText(
+        actorState,
+        DESCRIPTION_COMPONENT_ID
+      );
+      if (descText) {
+        baseDescription = descText;
+      }
+    }
 
     // Now, ensure the baseDescription has terminal punctuation.
     // ensureTerminalPunctuation handles trimming. If baseDescription was DEFAULT_FALLBACK_DESCRIPTION_RAW,
@@ -92,14 +131,10 @@ class ActorDataExtractor extends IActorDataExtractor {
     ];
 
     for (const attr of optionalTextAttributes) {
-      const component = actorState[attr.componentId];
-      if (
-        component &&
-        typeof component.text === 'string' &&
-        component.text.trim() !== ''
-      ) {
+      const trimmed = getTrimmedComponentText(actorState, attr.componentId);
+      if (trimmed) {
         // For these fields, we are only trimming, not adding terminal punctuation by default.
-        promptData[attr.key] = component.text.trim();
+        promptData[attr.key] = trimmed;
       }
     }
 

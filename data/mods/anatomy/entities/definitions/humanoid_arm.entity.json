@@ -1,0 +1,24 @@
+{
+  "$schema": "http://example.com/schemas/entity-definition.schema.json",
+  "id": "anatomy:humanoid_arm",
+  "description": "A humanoid arm",
+  "components": {
+    "anatomy:part": {
+      "subType": "arm"
+    },
+    "anatomy:sockets": {
+      "sockets": [
+        {
+          "id": "elbow",
+          "orientation": "lower",
+          "allowedTypes": ["forearm"],
+          "maxCount": 1,
+          "nameTpl": "{{parent.name}} {{type}}"
+        }
+      ]
+    },
+    "core:name": {
+      "text": "arm"
+    }
+  }
+}

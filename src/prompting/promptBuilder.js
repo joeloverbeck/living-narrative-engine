@@ -12,7 +12,7 @@
 /* eslint-env es2022 */
 
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../llms/llmConfigService.js').LLMConfigService} LLMConfigService */
+/** @typedef {import('../llms/llmConfigManager.js').LlmConfigManager} LlmConfigManager */
 /** @typedef {import('../utils/placeholderResolverUtils.js').PlaceholderResolver} PlaceholderResolver */
 /** @typedef {import('../interfaces/IPromptBuilder.js').IPromptBuilder} IPromptBuilder */
 /** @typedef {import('../prompting/assemblerRegistry.js').AssemblerRegistry} AssemblerRegistry */
@@ -24,7 +24,7 @@ import { validateDependency } from '../utils/dependencyUtils.js';
 import { PromptAssembler } from './promptAssembler.js';
 
 const INIT_MSG =
-  'PromptBuilder (orchestrator‑only) initialised with LLMConfigService, PlaceholderResolver, AssemblerRegistry and ConditionEvaluator.';
+  'PromptBuilder (orchestrator‑only) initialised with LlmConfigManager, PlaceholderResolver, AssemblerRegistry and ConditionEvaluator.';
 
 /**
  * @class PromptBuilder
@@ -32,7 +32,7 @@ const INIT_MSG =
  */
 export class PromptBuilder extends IPromptBuilder {
   /** @type {ILogger} */ #logger;
-  /** @type {LLMConfigService} */ #llmConfigService;
+  /** @type {LlmConfigManager} */ #llmConfigService;
   /** @type {PlaceholderResolver} */ #placeholderResolver;
   /** @type {AssemblerRegistry} */ #assemblerRegistry;
   /** @type {{ isElementConditionMet: Function }} */ #conditionEvaluator;
@@ -42,7 +42,7 @@ export class PromptBuilder extends IPromptBuilder {
    *
    * @param {object} dependencies
    * @param {ILogger} [dependencies.logger]
-   * @param {LLMConfigService} dependencies.llmConfigService
+   * @param {LlmConfigManager} dependencies.llmConfigService
    * @param {PlaceholderResolver} dependencies.placeholderResolver
    * @param {AssemblerRegistry} dependencies.assemblerRegistry
    * @param {{ isElementConditionMet: Function }} dependencies.conditionEvaluator
@@ -61,7 +61,7 @@ export class PromptBuilder extends IPromptBuilder {
     // ──────────────────────────────────────────────────────────────────────────
     // Dependency validation – fail fast & loud
     // ──────────────────────────────────────────────────────────────────────────
-    validateDependency(llmConfigService, 'LLMConfigService', this.#logger, {
+    validateDependency(llmConfigService, 'LlmConfigManager', this.#logger, {
       requiredMethods: ['getConfig'],
     });
     this.#llmConfigService = llmConfigService;

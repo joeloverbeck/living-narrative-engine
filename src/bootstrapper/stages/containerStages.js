@@ -3,7 +3,7 @@
 
 // eslint-disable-next-line no-unused-vars
 import { tokens } from '../../dependencyInjection/tokens.js';
-import { stageSuccess, stageFailure } from '../helpers.js';
+import { stageSuccess, stageFailure } from '../../utils/bootstrapperHelpers.js';
 
 /**
  * @typedef {import('../UIBootstrapper.js').EssentialUIElements} EssentialUIElements

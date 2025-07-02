@@ -4,7 +4,9 @@
 import { jest, describe, beforeEach, test, expect } from '@jest/globals';
 import { ServerApiKeyProvider } from '../../../src/llms/serverApiKeyProvider.js';
 import * as EnvironmentModule from '../../../src/llms/environmentContext.js';
+import * as LlmUtils from '../../../src/llms/utils/llmUtils.js';
 const { EnvironmentContext } = EnvironmentModule;
+import { InvalidEnvironmentContextError } from '../../../src/errors/invalidEnvironmentContextError.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
 // Import the actual interfaces to ensure mocks align if needed, though not strictly used for type in JS tests
 // import { IFileSystemReader, IEnvironmentVariableReader } from '../../src/llms/interfaces/IServerUtils.js';
@@ -190,18 +192,17 @@ describe('ServerApiKeyProvider', () => {
       expect(fileSystemReader.readFile).not.toHaveBeenCalled();
     });
 
-    test('should return null and log if environmentContext is invalid', async () => {
-      const spy = jest.spyOn(EnvironmentModule, 'isValidEnvironmentContext');
-      const key = await provider.getKey(llmConfig, null);
-      expect(key).toBeNull();
-      expect(dispatcher.dispatch).toHaveBeenCalledWith(
-        SYSTEM_ERROR_OCCURRED_ID,
-        expect.objectContaining({
-          message:
-            'ServerApiKeyProvider.getKey (test-llm): Invalid environmentContext provided.',
-        })
+    test('should throw InvalidEnvironmentContextError if environmentContext is invalid', async () => {
+      const spy = jest.spyOn(LlmUtils, 'validateEnvironmentContext');
+      await expect(provider.getKey(llmConfig, null)).rejects.toThrow(
+        InvalidEnvironmentContextError
       );
-      expect(spy).toHaveBeenCalledWith(null);
+      expect(spy).toHaveBeenCalledWith(
+        null,
+        'ServerApiKeyProvider.getKey (test-llm)',
+        dispatcher,
+        logger
+      );
       spy.mockRestore();
     });
 

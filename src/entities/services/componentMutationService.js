@@ -90,6 +90,96 @@ export class ComponentMutationService {
   }
 
   /**
+   * Fetch the target entity or throw if not found.
+   *
+   * @private
+   * @param {string} instanceId
+   * @param {string} componentTypeId
+   * @returns {Entity}
+   */
+  #fetchEntity(instanceId, componentTypeId) {
+    const entity = this.#entityRepository.get(instanceId);
+    if (!entity) {
+      this.#logger.error(
+        `ComponentMutationService.addComponent: Entity not found with ID: ${instanceId}`,
+        { instanceId, componentTypeId }
+      );
+      throw new EntityNotFoundError(instanceId);
+    }
+    return entity;
+  }
+
+  /**
+   * Validate and clone component data when provided.
+   *
+   * @private
+   * @param {string} componentTypeId
+   * @param {object} componentData
+   * @param {string} instanceId
+   * @returns {object|undefined}
+   */
+  #validateComponentData(componentTypeId, componentData, instanceId) {
+    if (componentData === undefined) return undefined;
+    try {
+      return this.#validateAndClone(
+        componentTypeId,
+        componentData,
+        `addComponent ${componentTypeId} to entity ${instanceId}`
+      );
+    } catch (error) {
+      throw new ValidationError(
+        error.message,
+        componentTypeId,
+        error.validationErrors
+      );
+    }
+  }
+
+  /**
+   * Apply the component update to the entity, throwing if it fails.
+   *
+   * @private
+   * @param {Entity} entity
+   * @param {string} componentTypeId
+   * @param {object|undefined} data
+   * @param {string} instanceId
+   */
+  #applyComponentUpdate(entity, componentTypeId, data, instanceId) {
+    const updateSucceeded = entity.addComponent(componentTypeId, data);
+    if (!updateSucceeded) {
+      this.#logger.warn(
+        `ComponentMutationService.addComponent: entity.addComponent returned false for '${componentTypeId}' on entity '${instanceId}'. This may indicate an internal issue.`
+      );
+      throw new Error(
+        `Failed to add component '${componentTypeId}' to entity '${instanceId}'. Internal entity update failed.`
+      );
+    }
+  }
+
+  /**
+   * Emit COMPONENT_ADDED after a successful mutation.
+   *
+   * @private
+   * @param {Entity} entity
+   * @param {string} componentTypeId
+   * @param {object|undefined} validatedData
+   * @param {object|undefined} oldComponentData
+   */
+  #emitComponentAdded(
+    entity,
+    componentTypeId,
+    validatedData,
+    oldComponentData
+  ) {
+    this.#eventDispatcher.dispatch(COMPONENT_ADDED_ID, {
+      entity,
+      componentTypeId,
+      componentData: validatedData,
+      oldComponentData,
+    });
+  }
+
+  /**
    * Adds or updates a component on an existing entity instance.
    *
    * @param {string} instanceId - The ID of the entity instance.
@@ -108,55 +198,26 @@ export class ComponentMutationService {
       'ComponentMutationService.addComponent'
     );
 
-    const entity = this.#entityRepository.get(instanceId);
-    if (!entity) {
-      this.#logger.error(
-        `ComponentMutationService.addComponent: Entity not found with ID: ${instanceId}`,
-        { instanceId, componentTypeId }
-      );
-      throw new EntityNotFoundError(instanceId);
-    }
-
-    // Capture the state of the component *before* the change.
+    const entity = this.#fetchEntity(instanceId, componentTypeId);
     const oldComponentData = entity.getComponentData(componentTypeId);
+    const validatedData = this.#validateComponentData(
+      componentTypeId,
+      componentData,
+      instanceId
+    );
 
-    let validatedData;
-    if (componentData === undefined) {
-      validatedData = undefined;
-    } else {
-      try {
-        validatedData = this.#validateAndClone(
-          componentTypeId,
-          componentData,
-          `addComponent ${componentTypeId} to entity ${instanceId}`
-        );
-      } catch (error) {
-        // Convert generic validation errors to ValidationError
-        throw new ValidationError(
-          error.message,
-          componentTypeId,
-          error.validationErrors
-        );
-      }
-    }
-
-    const updateSucceeded = entity.addComponent(componentTypeId, validatedData);
-
-    if (!updateSucceeded) {
-      this.#logger.warn(
-        `ComponentMutationService.addComponent: entity.addComponent returned false for '${componentTypeId}' on entity '${instanceId}'. This may indicate an internal issue.`
-      );
-      throw new Error(
-        `Failed to add component '${componentTypeId}' to entity '${instanceId}'. Internal entity update failed.`
-      );
-    }
-
-    this.#eventDispatcher.dispatch(COMPONENT_ADDED_ID, {
+    this.#applyComponentUpdate(
       entity,
       componentTypeId,
-      componentData: validatedData,
-      oldComponentData, // Include old data in the event
-    });
+      validatedData,
+      instanceId
+    );
+    this.#emitComponentAdded(
+      entity,
+      componentTypeId,
+      validatedData,
+      oldComponentData
+    );
 
     this.#logger.debug(
       `Successfully added/updated component '${componentTypeId}' data on entity '${instanceId}'.`

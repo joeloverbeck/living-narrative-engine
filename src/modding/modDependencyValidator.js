@@ -2,6 +2,60 @@
 
 import semver from 'semver'; // AC: Use semver@^7
 import ModDependencyError from '../errors/modDependencyError.js'; // AC: Use custom Error type
+import { assertIsMap, assertIsLogger } from '../utils/argValidation.js';
+
+/**
+ * @description Checks if a loaded dependency's version satisfies the required range.
+ * Uses guard clauses to push fatal messages or log warnings.
+ * @param {{id: string, version: string, _hostId?: string}} dep - Dependency entry with optional host id.
+ * @param {ModManifest} targetManifest - Manifest of the loaded dependency mod.
+ * @param {boolean} required - Whether the dependency is required.
+ * @param {ILogger} logger - Logger instance for warnings.
+ * @param {string[]} fatals - Array collecting fatal error messages.
+ * @param {{valid: Function, satisfies: Function, validRange: Function}} semverLib - Semver library for version checks.
+ * @returns {void}
+ */
+function _checkVersionCompatibility(
+  dep,
+  targetManifest,
+  required,
+  logger,
+  fatals,
+  semverLib
+) {
+  const hostId = dep._hostId || 'Unknown';
+  const targetVersion = targetManifest.version;
+  const requiredVersionRange = dep.version;
+
+  if (!semverLib.valid(targetVersion)) {
+    const msg = `Mod '${hostId}' dependency '${dep.id}' has an invalid version format: '${targetVersion}'.`;
+    if (required) {
+      fatals.push(msg);
+    } else {
+      logger.warn(`${msg} Cannot check optional version requirement.`);
+    }
+    return; // Invalid version, skip further checks
+  }
+
+  if (!semverLib.validRange(requiredVersionRange)) {
+    const msg = `Mod '${hostId}' dependency '${dep.id}' has an invalid version range: '${requiredVersionRange}'.`;
+    if (required) {
+      fatals.push(msg);
+    } else {
+      logger.warn(`${msg} Cannot check optional version requirement.`);
+    }
+    return; // Invalid range, skip further checks
+  }
+
+  if (!semverLib.satisfies(targetVersion, requiredVersionRange)) {
+    const msg = `Mod '${hostId}' requires dependency '${dep.id}' version '${requiredVersionRange}', but found version '${targetVersion}'.`;
+    if (required) {
+      fatals.push(msg);
+    } else {
+      logger.warn(`${msg} (Optional dependency mismatch)`);
+    }
+  }
+}
 
 /**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
@@ -27,22 +81,19 @@ class ModDependencyValidator {
    *
    * @param {Map<string, ModManifest>} manifests - Map of mod manifests, keyed by **lower-cased** mod ID.
    * @param {ILogger} logger - Logger instance for warnings.
+   * @param {object} [options] - Optional validation options.
+   * @param {{valid: Function, satisfies: Function, validRange: Function}} [options.semverLib] - Library used for semver checks.
    * @returns {void} - Returns nothing, but throws ModDependencyError on fatal issues.
    * @throws {ModDependencyError} If fatal validation errors occur (missing required, version mismatch, conflict).
    */
-  static validate(manifests, logger) {
+  static validate(manifests, logger, { semverLib = semver } = {}) {
     const fatals = []; // AC: Collect fatal messages
 
-    if (!(manifests instanceof Map)) {
-      throw new Error(
-        'ModDependencyValidator.validate: Input `manifests` must be a Map.'
-      );
-    }
-    if (!logger || typeof logger.warn !== 'function') {
-      throw new Error(
-        'ModDependencyValidator.validate: Input `logger` must be a valid ILogger instance.'
-      );
-    }
+    assertIsMap(
+      manifests,
+      'ModDependencyValidator.validate: Input `manifests`'
+    );
+    assertIsLogger(logger, 'ModDependencyValidator.validate: Input `logger`');
 
     // Iterate through each mod that is loaded
     for (const [modIdLower, manifest] of manifests.entries()) {
@@ -68,35 +119,15 @@ class ModDependencyValidator {
               );
             }
           } else {
-            // Dependency mod IS loaded, check version compatibility
-            const targetVersion = targetManifest.version;
-            const requiredVersionRange = dep.version;
-
-            if (!semver.valid(targetVersion)) {
-              const msg = `Mod '${manifest.id}' dependency '${dep.id}' has an invalid version format: '${targetVersion}'.`;
-              if (required) {
-                fatals.push(msg);
-              } else {
-                // Treat invalid version as unmet for optional deps too, but warn
-                logger.warn(
-                  `${msg} Cannot check optional version requirement.`
-                );
-              }
-              continue; // Skip satisfaction check if version is invalid
-            }
-
-            // AC: Use semver.satisfies for version check
-            if (!semver.satisfies(targetVersion, requiredVersionRange)) {
-              const msg = `Mod '${manifest.id}' requires dependency '${dep.id}' version '${requiredVersionRange}', but found version '${targetVersion}'.`;
-              if (required) {
-                // AC: Fatal: Required version mismatch
-                fatals.push(msg);
-              } else {
-                // AC: Non-fatal: Optional version mismatch
-                // Opinion: No half-measures - warn and move on.
-                logger.warn(`${msg} (Optional dependency mismatch)`);
-              }
-            }
+            // Dependency mod is loaded, check version compatibility
+            _checkVersionCompatibility(
+              { ...dep, _hostId: manifest.id },
+              targetManifest,
+              required,
+              logger,
+              fatals,
+              semverLib
+            );
             // If versions satisfy, no message needed for required or optional.
           }
         }
@@ -130,3 +161,6 @@ class ModDependencyValidator {
 }
 
 export default ModDependencyValidator;
+
+// Named export for testing isolated version checks
+export { _checkVersionCompatibility };

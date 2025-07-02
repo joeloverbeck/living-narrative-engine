@@ -20,6 +20,7 @@ import AppContainer from '../../../../src/dependencyInjection/appContainer.js';
 import { tokens } from '../../../../src/dependencyInjection/tokens.js';
 import { registerCommandAndAction } from '../../../../src/dependencyInjection/registrations/commandAndActionRegistrations.js';
 import { INITIALIZABLE } from '../../../../src/dependencyInjection/tags.js';
+import { ServiceSetup } from '../../../../src/utils/serviceInitializerUtils.js';
 
 // --- Concrete Class Imports for `instanceof` checks ---
 import { ActionDiscoveryService } from '../../../../src/actions/actionDiscoveryService.js';
@@ -43,6 +44,8 @@ describe('registerCommandAndAction', () => {
   const mockSafeEventDispatcher = mockDeep();
   const mockScopeRegistry = mockDeep();
   const mockScopeEngine = mockDeep();
+  const mockDslParser = { parse: jest.fn() };
+  const mockEventDispatchService = mockDeep();
 
   beforeEach(() => {
     container = new AppContainer();
@@ -73,6 +76,9 @@ describe('registerCommandAndAction', () => {
     );
     container.register(tokens.IScopeRegistry, () => mockScopeRegistry);
     container.register(tokens.IScopeEngine, () => mockScopeEngine);
+    container.register(tokens.DslParser, () => mockDslParser);
+    container.register(tokens.ServiceSetup, () => new ServiceSetup());
+    container.register(tokens.EventDispatchService, () => mockEventDispatchService);
   });
 
   afterEach(() => {

@@ -117,16 +117,14 @@ describe('EntityInstanceData', () => {
       expect(instance.overrides).toEqual(originalOverrides);
     });
 
-    it('should handle cases where the overrides object is null or not an object', () => {
-      // Arrange
-      instance.overrides = null;
-
-      // Act
-      const result = instance.removeComponentOverride('core:position');
-
-      // Assert
-      expect(result).toBe(false);
-      expect(instance.overrides).toEqual({}); // Should be reset to a safe empty object
+    it('should prevent direct mutation of overrides', () => {
+      const original = instance.overrides;
+      // verify frozen
+      expect(Object.isFrozen(original)).toBe(true);
+      expect(() => {
+        instance.overrides = {};
+      }).toThrow(TypeError);
+      expect(instance.overrides).toBe(original);
     });
 
     it('should cause getComponentData to fall back to the definition after removal', () => {

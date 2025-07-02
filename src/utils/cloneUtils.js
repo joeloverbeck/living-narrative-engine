@@ -106,4 +106,37 @@ export function deepFreeze(object) {
   return object;
 }
 
+/**
+ * Creates a read-only wrapper around a Map and deeply freezes its values.
+ *
+ * @description The returned Map behaves like the original but will throw a
+ *   {@link TypeError} if mutating methods like `set`, `delete`, or `clear` are
+ *   called. Each stored value is deep-frozen to prevent external mutation.
+ * @template K
+ * @template V
+ * @param {Map<K, V>} map - The Map to freeze.
+ * @returns {ReadonlyMap<K, V>} A proxy that prevents mutation.
+ */
+export function freezeMap(map) {
+  for (const value of map.values()) {
+    if (value && typeof value === 'object') {
+      deepFreeze(value);
+    }
+  }
+
+  Object.freeze(map);
+
+  return new Proxy(map, {
+    get(target, prop, receiver) {
+      if (['set', 'delete', 'clear'].includes(prop)) {
+        return () => {
+          throw new TypeError('Cannot modify frozen map');
+        };
+      }
+      const result = Reflect.get(target, prop, receiver);
+      return typeof result === 'function' ? result.bind(target) : result;
+    },
+  });
+}
+
 // Add other clone-related utilities here in the future if needed.

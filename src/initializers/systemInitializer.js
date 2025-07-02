@@ -9,7 +9,7 @@
 // Type imports for JSDoc
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../events/validatedEventDispatcher.js').default} ValidatedEventDispatcher */ // Corrected path
-import { dispatchWithLogging } from '../utils/eventDispatchUtils.js';
+/** @typedef {import('../utils/eventDispatchService.js').EventDispatchService} EventDispatchService */
 import { assertFunction, assertPresent } from '../utils/dependencyUtils.js';
 
 /**
@@ -25,6 +25,8 @@ class SystemInitializer {
   #initializationTag;
   /** @type {ValidatedEventDispatcher} */
   #validatedEventDispatcher;
+  /** @type {EventDispatchService} */
+  #eventDispatchService;
 
   /**
    * Creates an instance of SystemInitializer.
@@ -32,14 +34,16 @@ class SystemInitializer {
    * @param {object} dependencies
    * @param {ILogger} dependencies.logger - The logging service instance.
    * @param {ValidatedEventDispatcher} dependencies.validatedEventDispatcher - Service for dispatching validated events.
+   * @param {EventDispatchService} dependencies.eventDispatchService - Service for event dispatching with logging.
    * @param {string} dependencies.initializationTag - The tag used to identify systems for initialization.
    * @param dependencies.resolver
-   * @throws {Error} If resolver, logger, initializationTag, or validatedEventDispatcher is invalid or missing.
+   * @throws {Error} If resolver, logger, initializationTag, validatedEventDispatcher, or eventDispatchService is invalid or missing.
    */
   constructor({
     resolver,
     logger,
     validatedEventDispatcher,
+    eventDispatchService,
     initializationTag,
   }) {
     assertFunction(
@@ -52,6 +56,11 @@ class SystemInitializer {
       validatedEventDispatcher,
       'dispatch',
       'SystemInitializer requires a valid ValidatedEventDispatcher.'
+    );
+    assertFunction(
+      eventDispatchService,
+      'dispatchWithLogging',
+      'SystemInitializer requires a valid EventDispatchService.'
     );
     if (
       !initializationTag ||
@@ -66,6 +75,7 @@ class SystemInitializer {
     this.#logger = logger;
     this.#initializationTag = initializationTag;
     this.#validatedEventDispatcher = validatedEventDispatcher;
+    this.#eventDispatchService = eventDispatchService;
 
     this.#logger.debug(
       `SystemInitializer instance created. Tag: '${this.#initializationTag}'.`
@@ -146,11 +156,9 @@ class SystemInitializer {
           error: initError?.message || 'Unknown error',
           stack: initError?.stack,
         };
-        dispatchWithLogging(
-          this.#validatedEventDispatcher,
+        this.#eventDispatchService.dispatchWithLogging(
           'system:initialization_failed',
           failurePayload,
-          this.#logger,
           systemName,
           { allowSchemaNotFound: true }
         );

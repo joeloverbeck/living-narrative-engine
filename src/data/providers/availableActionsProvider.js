@@ -6,7 +6,7 @@
 import { IAvailableActionsProvider } from '../../interfaces/IAvailableActionsProvider.js';
 import { POSITION_COMPONENT_ID } from '../../constants/componentIds.js';
 import { MAX_AVAILABLE_ACTIONS_PER_TURN } from '../../constants/core.js';
-import { setupService } from '../../utils/serviceInitializerUtils.js';
+import { ServiceSetup } from '../../utils/serviceInitializerUtils.js';
 
 /** @typedef {import('../../entities/entity.js').default} Entity */
 /** @typedef {import('../../turns/interfaces/ITurnContext.js').ITurnContext} ITurnContext */
@@ -41,16 +41,19 @@ export class AvailableActionsProvider extends IAvailableActionsProvider {
    * @param {IActionIndexer} dependencies.actionIndexingService
    * @param {IEntityManager} dependencies.entityManager
    * @param {ILogger} dependencies.logger
+   * @param dependencies.serviceSetup
    */
   constructor({
     actionDiscoveryService,
     actionIndexingService: actionIndexer,
     entityManager,
     logger,
+    serviceSetup,
   }) {
     super();
+    const setup = serviceSetup ?? new ServiceSetup();
 
-    this.#logger = setupService('AvailableActionsProvider', logger, {
+    this.#logger = setup.setupService('AvailableActionsProvider', logger, {
       actionDiscoveryService: {
         value: actionDiscoveryService,
         requiredMethods: ['getValidActions'],
@@ -69,6 +72,60 @@ export class AvailableActionsProvider extends IAvailableActionsProvider {
     this.#logger.debug(
       'AvailableActionsProvider initialized and dependencies validated.'
     );
+  }
+
+  /**
+   * Fetch the current location entity for an actor, if available.
+   *
+   * @private
+   * @param {Entity} actor - Actor whose location should be resolved.
+   * @returns {Promise<Entity|null>} Location entity or `null` when unavailable.
+   */
+  async #getLocationEntity(actor) {
+    const positionComponent = actor.getComponentData(POSITION_COMPONENT_ID);
+    const locationId = positionComponent?.locationId;
+    return locationId
+      ? this.#entityManager.getEntityInstance(locationId)
+      : null;
+  }
+
+  /**
+   * Write a detailed discovery trace to the logger if supported.
+   *
+   * @private
+   * @param {string} actorId - Identifier of the actor.
+   * @param {object} trace - Trace output from discovery service.
+   * @param {ILogger} logger - Logger used for output.
+   * @returns {void}
+   */
+  #logDiscoveryTrace(actorId, trace, logger) {
+    if (trace && logger.table && logger.groupCollapsed && logger.groupEnd) {
+      logger.debug(`[Action Discovery Trace for actor ${actorId}]`);
+      logger.groupCollapsed(`Action Discovery Trace for ${actorId}`);
+      logger.table(trace.logs);
+      logger.groupEnd();
+    }
+  }
+
+  /**
+   * Warn when the available actions list is capped by the configured maximum.
+   *
+   * @private
+   * @param {number} requestedCount - Number of actions discovered.
+   * @param {number} cappedCount - Number of actions returned after capping.
+   * @param {string} actorId - Actor identifier.
+   * @param {ILogger} logger - Logger used for warnings.
+   * @returns {void}
+   */
+  #handleOverflow(requestedCount, cappedCount, actorId, logger) {
+    if (
+      requestedCount > MAX_AVAILABLE_ACTIONS_PER_TURN &&
+      cappedCount === MAX_AVAILABLE_ACTIONS_PER_TURN
+    ) {
+      logger.warn(
+        `[Overflow] actor=${actorId} requested=${requestedCount} capped=${cappedCount}`
+      );
+    }
   }
 
   /**
@@ -101,13 +158,7 @@ export class AvailableActionsProvider extends IAvailableActionsProvider {
     logger.debug(`[Cache Miss] Discovering actions for actor ${actor.id}`);
 
     try {
-      const positionComponent = actor.getComponentData(POSITION_COMPONENT_ID);
-      const locationId = positionComponent?.locationId;
-      let locationEntity = null;
-      if (locationId) {
-        locationEntity =
-          await this.#entityManager.getEntityInstance(locationId);
-      }
+      const locationEntity = await this.#getLocationEntity(actor);
 
       // Assembling the context is now much simpler and no longer leaks dependencies.
       const actionCtx = {
@@ -124,12 +175,7 @@ export class AvailableActionsProvider extends IAvailableActionsProvider {
         trace: true,
       });
 
-      if (trace && logger.table && logger.groupCollapsed && logger.groupEnd) {
-        logger.debug(`[Action Discovery Trace for actor ${actor.id}]`);
-        logger.groupCollapsed(`Action Discovery Trace for ${actor.id}`);
-        logger.table(trace.logs);
-        logger.groupEnd();
-      }
+      this.#logDiscoveryTrace(actor.id, trace, logger);
 
       // --- Log any formatting errors that occurred ---
       if (errors && errors.length > 0) {
@@ -152,14 +198,7 @@ export class AvailableActionsProvider extends IAvailableActionsProvider {
       const requestedCount = discoveredActions.length;
       const cappedCount = indexedActions.length;
 
-      if (
-        requestedCount > MAX_AVAILABLE_ACTIONS_PER_TURN &&
-        cappedCount === MAX_AVAILABLE_ACTIONS_PER_TURN
-      ) {
-        logger.warn(
-          `[Overflow] actor=${actor.id} requested=${requestedCount} capped=${cappedCount}`
-        );
-      }
+      this.#handleOverflow(requestedCount, cappedCount, actor.id, logger);
 
       this.#cachedActions.set(cacheKey, indexedActions);
 

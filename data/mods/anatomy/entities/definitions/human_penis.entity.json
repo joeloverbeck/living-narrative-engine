@@ -1,0 +1,16 @@
+{
+  "$schema": "http://example.com/schemas/entity-definition.schema.json",
+  "id": "anatomy:human_penis",
+  "description": "A human male genital organ",
+  "components": {
+    "anatomy:part": {
+      "subType": "genital"
+    },
+    "descriptors:size_category": {
+      "size": "medium"
+    },
+    "core:name": {
+      "text": "penis"
+    }
+  }
+}

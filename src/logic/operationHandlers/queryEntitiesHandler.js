@@ -7,6 +7,7 @@
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../jsonLogicEvaluationService.js').default} JsonLogicEvaluationService */
 /** @typedef {import('../defs.js').ExecutionContext} ExecutionContext */
+/** @typedef {import('../defs.js').OperationHandler} OperationHandler */
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
@@ -96,31 +97,7 @@ class QueryEntitiesHandler extends BaseOperationHandler {
       `QUERY_ENTITIES: Starting with ${candidateIds.size} total active entities.`
     );
 
-    for (const filter of filters) {
-      if (candidateIds.size === 0) {
-        logger.debug(
-          'QUERY_ENTITIES: Candidate set is empty, skipping remaining filters.'
-        );
-        break;
-      }
-
-      if (!filter || typeof filter !== 'object') {
-        logger.warn('QUERY_ENTITIES: Invalid filter object. Skipping.');
-        continue;
-      }
-
-      const filterType = Object.keys(filter)[0];
-      const filterValue = filter[filterType];
-
-      const methodName = FILTER_MAP[filterType];
-      if (methodName && typeof this[methodName] === 'function') {
-        candidateIds = this[methodName](candidateIds, filterValue, logger);
-      } else {
-        logger.warn(
-          `QUERY_ENTITIES: Encountered unknown filter type '${filterType}'. Skipping.`
-        );
-      }
-    }
+    candidateIds = this.#applyFilters(candidateIds, filters, logger);
 
     let finalIds = Array.from(candidateIds);
     if (typeof limit === 'number') {
@@ -131,28 +108,7 @@ class QueryEntitiesHandler extends BaseOperationHandler {
       );
     }
 
-    if (!ensureEvaluationContext(executionContext, this.#dispatcher, logger)) {
-      return;
-    }
-
-    const res = tryWriteContextVariable(
-      resultVariable,
-      finalIds,
-      executionContext,
-      this.#dispatcher,
-      logger
-    );
-    if (res.success) {
-      logger.debug(
-        `QUERY_ENTITIES: Stored ${finalIds.length} entity IDs in context variable "${resultVariable}".`
-      );
-    } else {
-      safeDispatchError(
-        this.#dispatcher,
-        'QUERY_ENTITIES: Cannot store result. `executionContext.evaluationContext.context` is not available.',
-        { resultVariable }
-      );
-    }
+    this.#storeResult(resultVariable, finalIds, executionContext, logger);
   }
 
   /**
@@ -196,6 +152,98 @@ class QueryEntitiesHandler extends BaseOperationHandler {
   }
 
   /**
+   * Apply all provided filters to the candidate set in order.
+   *
+   * @param {Set<string>} candidates - Current candidate entity ids.
+   * @param {object[]} filters - Array of filter descriptors.
+   * @param {ILogger} logger - Logger for debug/warn output.
+   * @returns {Set<string>} Filtered candidate ids.
+   * @private
+   */
+  #applyFilters(candidates, filters, logger) {
+    let result = candidates;
+    for (const filter of filters) {
+      if (result.size === 0) {
+        logger.debug(
+          'QUERY_ENTITIES: Candidate set is empty, skipping remaining filters.'
+        );
+        break;
+      }
+      if (!filter || typeof filter !== 'object') {
+        logger.warn('QUERY_ENTITIES: Invalid filter object. Skipping.');
+        continue;
+      }
+
+      const filterType = Object.keys(filter)[0];
+      const filterValue = filter[filterType];
+
+      const methodName = FILTER_MAP[filterType];
+      if (methodName && typeof this[methodName] === 'function') {
+        result = this[methodName](result, filterValue, logger);
+      } else {
+        logger.warn(
+          `QUERY_ENTITIES: Encountered unknown filter type '${filterType}'. Skipping.`
+        );
+      }
+    }
+    return result;
+  }
+
+  /**
+   * Store the query result in the execution context.
+   *
+   * @param {string} resultVariable - Name of the context variable to store in.
+   * @param {string[]} finalIds - Array of entity ids to store.
+   * @param {ExecutionContext} executionContext - Current execution context.
+   * @param {ILogger} logger - Logger for debug output.
+   * @returns {void}
+   * @private
+   */
+  #storeResult(resultVariable, finalIds, executionContext, logger) {
+    if (!ensureEvaluationContext(executionContext, this.#dispatcher, logger)) {
+      return;
+    }
+
+    const res = tryWriteContextVariable(
+      resultVariable,
+      finalIds,
+      executionContext,
+      this.#dispatcher,
+      logger
+    );
+    if (res.success) {
+      logger.debug(
+        `QUERY_ENTITIES: Stored ${finalIds.length} entity IDs in context variable "${resultVariable}".`
+      );
+    } else {
+      safeDispatchError(
+        this.#dispatcher,
+        'QUERY_ENTITIES: Cannot store result. `executionContext.evaluationContext.context` is not available.',
+        { resultVariable }
+      );
+    }
+  }
+
+  /**
+   * Apply a filtering function and log candidate reduction.
+   *
+   * @param {Set<string>} candidates - Current candidate entity ids.
+   * @param {(set:Set<string>) => Set<string>} filterFn - Filtering callback.
+   * @param {string} label - Label describing the filter for logging.
+   * @param {ILogger} logger - Logger for debug output.
+   * @returns {Set<string>} Resulting candidate ids after filtering.
+   * @private
+   */
+  #filterAndLog(candidates, filterFn, label, logger) {
+    const originalSize = candidates.size;
+    const result = filterFn(candidates);
+    logger.debug(
+      `QUERY_ENTITIES: Applied '${label}'. Candidates reduced from ${originalSize} to ${result.size}.`
+    );
+    return result;
+  }
+
+  /**
    * Apply a location-based filter.
    *
    * @param {Set<string>} candidates - Current candidate entity ids.
@@ -213,15 +261,12 @@ class QueryEntitiesHandler extends BaseOperationHandler {
     }
 
     const idsInLocation = this.#entityManager.getEntitiesInLocation(locationId);
-    const originalSize = candidates.size;
-    const result = new Set(
-      [...candidates].filter((id) => idsInLocation.has(id))
+    return this.#filterAndLog(
+      candidates,
+      (set) => new Set([...set].filter((id) => idsInLocation.has(id))),
+      `by_location: ${locationId}`,
+      logger
     );
-
-    logger.debug(
-      `QUERY_ENTITIES: Applied 'by_location: ${locationId}'. Candidates reduced from ${originalSize} to ${result.size}.`
-    );
-    return result;
   }
 
   /**
@@ -241,17 +286,20 @@ class QueryEntitiesHandler extends BaseOperationHandler {
       return candidates;
     }
 
-    const originalSize = candidates.size;
-    const result = new Set();
-    for (const id of candidates) {
-      if (this.#entityManager.hasComponent(id, componentType)) {
-        result.add(id);
-      }
-    }
-    logger.debug(
-      `QUERY_ENTITIES: Applied 'with_component: ${componentType}'. Candidates reduced from ${originalSize} to ${result.size}.`
+    return this.#filterAndLog(
+      candidates,
+      (set) => {
+        const result = new Set();
+        for (const id of set) {
+          if (this.#entityManager.hasComponent(id, componentType)) {
+            result.add(id);
+          }
+        }
+        return result;
+      },
+      `with_component: ${componentType}`,
+      logger
     );
-    return result;
   }
 
   /**
@@ -278,22 +326,28 @@ class QueryEntitiesHandler extends BaseOperationHandler {
       return candidates;
     }
 
-    const originalSize = candidates.size;
-    const result = new Set();
-    for (const id of candidates) {
-      const compData = this.#entityManager.getComponentData(id, component_type);
-      if (compData !== undefined) {
-        const match = this.#jsonLogicEvaluationService.evaluate(
-          condition,
-          compData
-        );
-        if (match) result.add(id);
-      }
-    }
-    logger.debug(
-      `QUERY_ENTITIES: Applied 'with_component_data: ${component_type}'. Candidates reduced from ${originalSize} to ${result.size}.`
+    return this.#filterAndLog(
+      candidates,
+      (set) => {
+        const result = new Set();
+        for (const id of set) {
+          const compData = this.#entityManager.getComponentData(
+            id,
+            component_type
+          );
+          if (compData !== undefined) {
+            const match = this.#jsonLogicEvaluationService.evaluate(
+              condition,
+              compData
+            );
+            if (match) result.add(id);
+          }
+        }
+        return result;
+      },
+      `with_component_data: ${component_type}`,
+      logger
     );
-    return result;
   }
 }
 

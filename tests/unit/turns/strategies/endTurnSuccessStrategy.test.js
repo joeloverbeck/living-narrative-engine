@@ -78,9 +78,9 @@ describe('EndTurnSuccessStrategy', () => {
 
   test('should correctly execute END_TURN_SUCCESS directive', async () => {
     const directive = TurnDirective.END_TURN_SUCCESS;
-    const cmdProcResult = {}; // Not used by this strategy on success
+    const commandResult = {}; // Not used by this strategy on success
 
-    await strategy.execute(mockTurnContext, directive, cmdProcResult);
+    await strategy.execute(mockTurnContext, directive, commandResult);
 
     expect(mockTurnContext.getLogger).toHaveBeenCalledTimes(1);
     expect(mockTurnContext.getActor).toHaveBeenCalledTimes(1);
@@ -93,10 +93,10 @@ describe('EndTurnSuccessStrategy', () => {
 
   test('should throw error and log if wrong directive is provided', async () => {
     const directive = TurnDirective.RE_PROMPT; // Incorrect directive
-    const cmdProcResult = {};
+    const commandResult = {};
 
     await expect(
-      strategy.execute(mockTurnContext, directive, cmdProcResult)
+      strategy.execute(mockTurnContext, directive, commandResult)
     ).rejects.toThrow(
       'EndTurnSuccessStrategy: Received wrong directive (RE_PROMPT). Expected END_TURN_SUCCESS.'
     );
@@ -113,9 +113,9 @@ describe('EndTurnSuccessStrategy', () => {
     mockTurnContext = new MockTurnContext(null, mockLogger); // No actor in context
 
     const directive = TurnDirective.END_TURN_SUCCESS;
-    const cmdProcResult = {};
+    const commandResult = {};
 
-    await strategy.execute(mockTurnContext, directive, cmdProcResult);
+    await strategy.execute(mockTurnContext, directive, commandResult);
 
     expect(mockTurnContext.getLogger).toHaveBeenCalledTimes(1);
     expect(mockTurnContext.getActor).toHaveBeenCalledTimes(1);

@@ -24,6 +24,7 @@
 
 import { Tokenizer, ScopeSyntaxError } from './tokenizer.js';
 import createDepthGuard from '../core/depthGuard.js';
+import { generateErrorSnippet } from './errorSnippet.js';
 
 //────────────────────────────────────────────────────────────────────────────
 // Type annotations (JSDoc – kept succinct for readability)
@@ -46,10 +47,6 @@ export { ScopeSyntaxError };
  * @param {number} column - The column number (1-based).
  * @returns {string} The formatted code snippet.
  */
-function generateErrorSnippet(input, line, column) {
-  const lineContent = input.split('\n')[line - 1] || '';
-  return `${lineContent}\n${' '.repeat(column - 1)}^`;
-}
 
 //────────────────────────────────────────────────────────────────────────────
 // PARSER

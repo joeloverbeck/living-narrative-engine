@@ -11,12 +11,15 @@ import ModDependencyValidator from '../../modding/modDependencyValidator.js';
 import validateModEngineVersions from '../../modding/modVersionValidator.js';
 import * as ModLoadOrderResolver from '../../modding/modLoadOrderResolver.js';
 import { tokens } from '../tokens.js';
-import { Registrar } from '../registrarHelpers.js';
+import { Registrar } from '../../utils/registrarHelpers.js';
 import { ActionIndexingService } from '../../turns/services/actionIndexingService';
 import ScopeRegistry from '../../scopeDsl/scopeRegistry.js';
 import ScopeEngine from '../../scopeDsl/engine.js';
 import { LRUCache } from 'lru-cache';
 import ScopeCache from '../../scopeDsl/cache.js';
+import DefaultDslParser from '../../scopeDsl/parser/defaultDslParser.js';
+import { ServiceSetup } from '../../utils/serviceInitializerUtils.js';
+import { EventDispatchService } from '../../utils/eventDispatchService.js';
 
 /**
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
@@ -51,6 +54,12 @@ export function registerInfrastructure(container) {
 
   log.debug('Infrastructure Registration: starting…');
 
+  // Register ServiceSetup as a reusable utility
+  registrar.instance(tokens.ServiceSetup, new ServiceSetup());
+  log.debug(
+    `Infrastructure Registration: Registered ${String(tokens.ServiceSetup)}.`
+  );
+
   // ─── Shared ActionIndexingService ─────────────────────────────
   registrar.singletonFactory(
     tokens.ActionIndexingService,
@@ -64,9 +73,15 @@ export function registerInfrastructure(container) {
     `Infrastructure Registration: Registered ${String(tokens.ActionIndexingService)}.`
   );
 
-  registrar.single(tokens.EventBus, EventBus);
+  const eventBusInstance = new EventBus({ logger: log });
+  registrar.instance(tokens.EventBus, eventBusInstance);
+  container.register(tokens.IEventBus, () => eventBusInstance, {
+    lifecycle: 'singleton',
+  });
   log.debug(
-    `Infrastructure Registration: Registered ${String(tokens.EventBus)}.`
+    `Infrastructure Registration: Registered ${String(tokens.EventBus)} and ${String(
+      tokens.IEventBus
+    )}.`
   );
 
   container.register(
@@ -122,10 +137,31 @@ export function registerInfrastructure(container) {
     `Infrastructure Registration: Registered ${String(tokens.ISafeEventDispatcher)}.`
   );
 
+  // Event Dispatch Service
+  registrar.singletonFactory(
+    tokens.EventDispatchService,
+    (c) =>
+      new EventDispatchService({
+        safeEventDispatcher: /** @type {ISafeEventDispatcher} */ (
+          c.resolve(tokens.ISafeEventDispatcher)
+        ),
+        logger: /** @type {ILogger} */ (c.resolve(tokens.ILogger)),
+      })
+  );
+  log.debug(
+    `Infrastructure Registration: Registered ${String(tokens.EventDispatchService)}.`
+  );
+
   // Scope DSL Engine
   registrar.single(tokens.ScopeEngine, ScopeEngine);
   log.debug(
     `Infrastructure Registration: Registered ${String(tokens.ScopeEngine)}.`
+  );
+
+  // DSL Parser
+  registrar.single(tokens.DslParser, DefaultDslParser);
+  log.debug(
+    `Infrastructure Registration: Registered ${String(tokens.DslParser)}.`
   );
 
   // Scope DSL Cache (wraps ScopeEngine with caching)

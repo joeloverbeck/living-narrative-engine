@@ -1,0 +1,16 @@
+{
+  "$schema": "http://example.com/schemas/component.schema.json",
+  "id": "core:owned_by",
+  "description": "Indicates that this entity is owned by another entity",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "ownerId": {
+        "type": "string",
+        "description": "The entity instance ID that owns this entity"
+      }
+    },
+    "required": ["ownerId"],
+    "additionalProperties": false
+  }
+}

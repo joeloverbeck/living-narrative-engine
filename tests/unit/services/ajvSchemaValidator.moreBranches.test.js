@@ -18,7 +18,7 @@ const sampleSchema = {
  */
 function createValidator() {
   const logger = createMockLogger();
-  const validator = new AjvSchemaValidator(logger);
+  const validator = new AjvSchemaValidator({ logger: logger });
   return { validator, logger };
 }
 
@@ -63,10 +63,7 @@ describe('AjvSchemaValidator edge branch tests', () => {
 
   it('logs and returns false if removeSchema throws', () => {
     const removeError = new Error('remove fail');
-    const getSchema = jest
-      .fn()
-      .mockReturnValueOnce(null) // constructor preload check
-      .mockReturnValueOnce({});
+    const getSchema = jest.fn().mockReturnValueOnce({});
     const removeSchema = jest.fn(() => {
       throw removeError;
     });
@@ -78,7 +75,7 @@ describe('AjvSchemaValidator edge branch tests', () => {
     const AjvSchemaValidatorReloaded =
       require('../../../src/validation/ajvSchemaValidator.js').default;
     const logger2 = createMockLogger();
-    const freshValidator = new AjvSchemaValidatorReloaded(logger2);
+    const freshValidator = new AjvSchemaValidatorReloaded({ logger: logger2 });
 
     const result = freshValidator.removeSchema('some-id');
     expect(result).toBe(false);
@@ -86,5 +83,19 @@ describe('AjvSchemaValidator edge branch tests', () => {
       expect.stringContaining('Error removing schema'),
       expect.objectContaining({ schemaId: 'some-id', error: removeError })
     );
+  });
+
+  it('validate returns schemaNotFound result for invalid schemaId', () => {
+    const result = validator.validate(null, {});
+    expect(result.isValid).toBe(false);
+    expect(result.errors[0].keyword).toBe('schemaNotFound');
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining('validate called for schemaId')
+    );
+  });
+
+  it('validateSchemaRefs returns false for invalid schemaId', () => {
+    const result = validator.validateSchemaRefs('');
+    expect(result).toBe(false);
   });
 });

@@ -14,7 +14,7 @@ import {
   createStageError,
   stageSuccess,
   stageFailure,
-} from '../../../src/bootstrapper/helpers.js';
+} from '../../../src/utils/bootstrapperHelpers.js';
 import StageError from '../../../src/bootstrapper/StageError.js';
 
 /**

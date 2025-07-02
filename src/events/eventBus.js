@@ -3,56 +3,99 @@
 /**
  * A simple Event Bus for decoupled communication between systems using a publish/subscribe pattern.
  */
-class EventBus {
-  #listeners = new Map(); // Stores eventName -> Set<listenerFn>
+import { IEventBus } from '../interfaces/IEventBus.js';
 
-  subscribe(eventName, listener) {
-    if (typeof eventName !== 'string' || !eventName) {
-      // eslint-disable-next-line no-console
-      console.error(
-        'EventBus: Invalid event name provided for subscription.',
-        eventName
-      );
-      return;
+/** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
+
+class EventBus extends IEventBus {
+  #listeners = new Map(); // Stores eventName -> Set<listenerFn>
+  #logger;
+
+  /**
+   * @param {{ logger?: ILogger }} [deps]
+   */
+  constructor({ logger = console } = {}) {
+    super();
+    this.#logger = logger;
+  }
+
+  /**
+   * Validates that an event name is a non-empty string.
+   *
+   * @param {string} name - The event name to validate.
+   * @returns {boolean} True if the name is valid, false otherwise.
+   */
+  #validateEventName(name) {
+    const isValid = typeof name === 'string' && name.length > 0;
+    if (!isValid) {
+      this.#logger.error('EventBus: Invalid event name provided.', name);
     }
-    if (typeof listener !== 'function') {
-      // eslint-disable-next-line no-console
-      console.error(
-        `EventBus: Invalid listener provided for event "${eventName}". Expected a function.`
+    return isValid;
+  }
+
+  /**
+   * Validates that the listener is a function.
+   *
+   * @param {*} listener - The listener to validate.
+   * @returns {boolean} True if the listener is valid, false otherwise.
+   */
+  #validateListener(listener) {
+    const isValid = typeof listener === 'function';
+    if (!isValid) {
+      this.#logger.error(
+        'EventBus: Invalid listener provided. Expected a function.'
       );
-      return;
+    }
+    return isValid;
+  }
+
+  /**
+   * Subscribes a listener to a specific event.
+   *
+   * @param {string} eventName - The name of the event to subscribe to.
+   * @param {EventListener} listener - Function to invoke when the event is dispatched.
+   * @returns {(() => boolean) | null} An unsubscribe function on success, or `null` on failure.
+   */
+  subscribe(eventName, listener) {
+    if (
+      !this.#validateEventName(eventName) ||
+      !this.#validateListener(listener)
+    ) {
+      return null;
     }
 
     if (!this.#listeners.has(eventName)) {
       this.#listeners.set(eventName, new Set());
     }
     this.#listeners.get(eventName).add(listener);
+
+    return () => this.unsubscribe(eventName, listener);
   }
 
+  /**
+   * Unsubscribes a listener from a specific event.
+   *
+   * @param {string} eventName - The event identifier.
+   * @param {EventListener} listener - The previously subscribed listener.
+   * @returns {boolean} `true` if a listener was removed, otherwise `false`.
+   */
   unsubscribe(eventName, listener) {
-    if (typeof eventName !== 'string' || !eventName) {
-      // eslint-disable-next-line no-console
-      console.error(
-        'EventBus: Invalid event name provided for unsubscription.',
-        eventName
-      );
-      return;
-    }
-    if (typeof listener !== 'function') {
-      // eslint-disable-next-line no-console
-      console.error(
-        `EventBus: Invalid listener provided for unsubscription from event "${eventName}".`
-      );
-      return;
+    if (
+      !this.#validateEventName(eventName) ||
+      !this.#validateListener(listener)
+    ) {
+      return false;
     }
 
     if (this.#listeners.has(eventName)) {
       const eventListeners = this.#listeners.get(eventName);
-      eventListeners.delete(listener);
+      const deleted = eventListeners.delete(listener);
       if (eventListeners.size === 0) {
         this.#listeners.delete(eventName);
       }
+      return deleted;
     }
+    return false;
   }
 
   /**
@@ -66,12 +109,7 @@ class EventBus {
    */
   async dispatch(eventName, eventPayload = {}) {
     // Renamed second arg for clarity, added default
-    if (typeof eventName !== 'string' || !eventName) {
-      // eslint-disable-next-line no-console
-      console.error(
-        'EventBus: Invalid event name provided for dispatch.',
-        eventName
-      );
+    if (!this.#validateEventName(eventName)) {
       return;
     }
 
@@ -97,8 +135,7 @@ class EventBus {
             // Pass the constructed event object, not just the payload
             await listener(eventObject);
           } catch (error) {
-            // eslint-disable-next-line no-console
-            console.error(
+            this.#logger.error(
               `EventBus: Error executing listener for event "${eventName}":`,
               error
             );
@@ -116,12 +153,7 @@ class EventBus {
    * @returns {number} The number of listeners for the given event name. Returns 0 if the event has no listeners or the event name is invalid.
    */
   listenerCount(eventName) {
-    if (typeof eventName !== 'string' || !eventName) {
-      // eslint-disable-next-line no-console
-      console.error(
-        'EventBus: Invalid event name provided for listenerCount.',
-        eventName
-      );
+    if (!this.#validateEventName(eventName)) {
       return 0;
     }
 

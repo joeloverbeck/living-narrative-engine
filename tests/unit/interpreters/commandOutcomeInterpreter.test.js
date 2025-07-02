@@ -4,6 +4,7 @@ import CommandOutcomeInterpreter from '../../../src/commands/interpreters/comman
 import TurnDirective from '../../../src/turns/constants/turnDirectives.js';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { expectNoDispatch } from '../../common/engine/dispatchTestUtils.js';
+import { InvalidArgumentError } from '../../../src/errors/invalidArgumentError.js';
 
 // Mocks
 const mockLogger = {
@@ -42,36 +43,48 @@ describe('CommandOutcomeInterpreter', () => {
     it('should throw if turnContext is invalid or actor cannot be retrieved from turnContext', async () => {
       // Test for null turnContext
       await expect(interpreter.interpret({}, null)).rejects.toThrow(
-        'CommandOutcomeInterpreter: Invalid turnContext provided.'
+        new InvalidArgumentError(
+          'CommandOutcomeInterpreter: Invalid turnContext provided.'
+        )
       );
 
       // Test for turnContext without getActor method
       await expect(interpreter.interpret({}, {})).rejects.toThrow(
-        'CommandOutcomeInterpreter: Invalid turnContext provided.'
+        new InvalidArgumentError(
+          'CommandOutcomeInterpreter: Invalid turnContext provided.'
+        )
       );
 
       // Test for turnContext.getActor() returning null
       mockTurnContext.getActor.mockReturnValue(null);
       await expect(interpreter.interpret({}, mockTurnContext)).rejects.toThrow(
-        'CommandOutcomeInterpreter: Could not retrieve a valid actor or actor ID from turnContext.'
+        new InvalidArgumentError(
+          'CommandOutcomeInterpreter: Could not retrieve a valid actor or actor ID from turnContext.'
+        )
       );
 
       // Test for turnContext.getActor() returning an actor without an id
       mockTurnContext.getActor.mockReturnValue({});
       await expect(interpreter.interpret({}, mockTurnContext)).rejects.toThrow(
-        'CommandOutcomeInterpreter: Could not retrieve a valid actor or actor ID from turnContext.'
+        new InvalidArgumentError(
+          'CommandOutcomeInterpreter: Could not retrieve a valid actor or actor ID from turnContext.'
+        )
       );
 
       // Test for turnContext.getActor() returning an actor with a null id
       mockTurnContext.getActor.mockReturnValue({ id: null });
       await expect(interpreter.interpret({}, mockTurnContext)).rejects.toThrow(
-        'CommandOutcomeInterpreter: Could not retrieve a valid actor or actor ID from turnContext.'
+        new InvalidArgumentError(
+          'CommandOutcomeInterpreter: Could not retrieve a valid actor or actor ID from turnContext.'
+        )
       );
 
       // Test for turnContext.getActor() returning an actor with an empty string id
       mockTurnContext.getActor.mockReturnValue({ id: '' });
       await expect(interpreter.interpret({}, mockTurnContext)).rejects.toThrow(
-        'CommandOutcomeInterpreter: Could not retrieve a valid actor or actor ID from turnContext.'
+        new InvalidArgumentError(
+          'CommandOutcomeInterpreter: Could not retrieve a valid actor or actor ID from turnContext.'
+        )
       );
     });
   });

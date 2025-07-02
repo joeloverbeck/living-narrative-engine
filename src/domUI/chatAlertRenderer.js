@@ -358,38 +358,39 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
   }
 
   /**
-   * Handles the 'core:display_warning' event.
+   * Shared logic for handling warning and error alert events.
    *
    * @private
-   * @param {IEvent<DisplayWarningPayload>} event The event object containing the warning details.
+   * @param {'warning' | 'error'} type The type of alert to process.
+   * @param {IEvent<DisplayWarningPayload | DisplayErrorPayload>} event The event object containing alert details.
    */
-  #handleWarning(event) {
+  #handleAlert(type, event) {
     const { message, details } = event.payload;
 
-    // --- MODIFICATION START ---
-    // Use the utility to get a potential message, but don't use its devDetails.
     const { displayMessage: messageFromDetails } = getUserFriendlyMessage(
       details,
       message
     );
 
-    // Prioritize the specific message from the event payload if it exists.
     const displayMessage = message || messageFromDetails;
-
-    // ALWAYS use the local, more detailed extractor for this component's rendering needs.
     const developerDetails = this.#extractDeveloperDetails(details);
-    // --- MODIFICATION END ---
 
     if (!this.#hasPanel) {
-      const consoleMessage = `[UI WARNING] ${displayMessage}${
+      const consoleMessage = `[UI ${type.toUpperCase()}] ${displayMessage}${
         developerDetails ? ` | Details: ${developerDetails}` : ''
       }`;
-      this.logger.warn(consoleMessage);
+      if (type === 'warning') {
+        this.logger.warn(consoleMessage);
+      } else {
+        this.logger.error(consoleMessage);
+      }
       return;
     }
 
     const key = generateKey(displayMessage, details);
-    const shouldRender = this.#warningThrottler.allow(key, {
+    const throttler =
+      type === 'warning' ? this.#warningThrottler : this.#errorThrottler;
+    const shouldRender = throttler.allow(key, {
       message: displayMessage,
       details: details,
     });
@@ -399,10 +400,20 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
     }
 
     this.#createAndAppendBubble({
-      type: 'warning',
-      displayMessage: displayMessage,
-      developerDetails: developerDetails,
+      type,
+      displayMessage,
+      developerDetails,
     });
+  }
+
+  /**
+   * Handles the 'core:display_warning' event.
+   *
+   * @private
+   * @param {IEvent<DisplayWarningPayload>} event The event object containing the warning details.
+   */
+  #handleWarning(event) {
+    this.#handleAlert('warning', event);
   }
 
   /**
@@ -412,44 +423,6 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
    * @param {IEvent<DisplayErrorPayload>} event The event object containing the error details.
    */
   #handleError(event) {
-    const { message, details } = event.payload;
-
-    // --- MODIFICATION START ---
-    // Use the utility to get a potential message, but don't use its devDetails.
-    const { displayMessage: messageFromDetails } = getUserFriendlyMessage(
-      details,
-      message
-    );
-
-    // Prioritize the specific message from the event payload if it exists.
-    const displayMessage = message || messageFromDetails;
-
-    // ALWAYS use the local, more detailed extractor for this component's rendering needs.
-    const developerDetails = this.#extractDeveloperDetails(details);
-    // --- MODIFICATION END ---
-
-    if (!this.#hasPanel) {
-      const consoleMessage = `[UI ERROR] ${displayMessage}${
-        developerDetails ? ` | Details: ${developerDetails}` : ''
-      }`;
-      this.logger.error(consoleMessage);
-      return;
-    }
-
-    const key = generateKey(displayMessage, details);
-    const shouldRender = this.#errorThrottler.allow(key, {
-      message: displayMessage,
-      details: details,
-    });
-
-    if (!shouldRender) {
-      return;
-    }
-
-    this.#createAndAppendBubble({
-      type: 'error',
-      displayMessage: displayMessage,
-      developerDetails: developerDetails,
-    });
+    this.#handleAlert('error', event);
   }
 }

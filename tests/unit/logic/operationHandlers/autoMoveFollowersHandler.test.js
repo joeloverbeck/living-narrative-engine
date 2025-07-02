@@ -39,7 +39,7 @@ beforeEach(() => {
   handler = new AutoMoveFollowersHandler({
     logger,
     entityManager,
-    systemMoveEntityHandler: moveHandler,
+    moveEntityHandler: moveHandler,
     safeEventDispatcher: dispatcher,
   });
 });

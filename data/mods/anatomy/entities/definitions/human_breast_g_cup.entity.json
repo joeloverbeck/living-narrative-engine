@@ -1,0 +1,22 @@
+{
+  "$schema": "http://example.com/schemas/entity-definition.schema.json",
+  "id": "anatomy:human_breast_g_cup",
+  "description": "A G-cup breast with impressive fullness",
+  "components": {
+    "anatomy:part": {
+      "subType": "breast"
+    },
+    "descriptors:size_specific": {
+      "size": "G-cup"
+    },
+    "descriptors:weight_feel": {
+      "weight": "meaty"
+    },
+    "descriptors:firmness": {
+      "firmness": "firm"
+    },
+    "core:name": {
+      "text": "breast"
+    }
+  }
+}

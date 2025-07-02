@@ -1,0 +1,22 @@
+{
+  "$schema": "http://example.com/schemas/entity-definition.schema.json",
+  "id": "anatomy:human_breast_d_cup",
+  "description": "A D-cup breast with meaty fullness",
+  "components": {
+    "anatomy:part": {
+      "subType": "breast"
+    },
+    "descriptors:size_specific": {
+      "size": "D-cup"
+    },
+    "descriptors:weight_feel": {
+      "weight": "meaty"
+    },
+    "descriptors:firmness": {
+      "firmness": "firm"
+    },
+    "core:name": {
+      "text": "breast"
+    }
+  }
+}

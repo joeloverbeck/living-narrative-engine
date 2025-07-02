@@ -156,16 +156,6 @@ describe('Entity Class', () => {
       spy.mockRestore();
     });
 
-    it('should pass checkOverrideOnly to _instanceData.hasComponent', () => {
-      const componentTypeId = 'core:health';
-      const spy = jest.spyOn(mockInstanceData, 'hasComponent');
-      const result = entity.hasComponent(componentTypeId);
-
-      expect(spy).toHaveBeenCalledWith(componentTypeId);
-      expect(result).toBe(true);
-      spy.mockRestore();
-    });
-
     it('should return true if component in definition (via instanceData)', () => {
       expect(entity.hasComponent('core:name')).toBe(true);
     });

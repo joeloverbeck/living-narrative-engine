@@ -42,6 +42,10 @@ import AjvSchemaValidator from '../../validation/ajvSchemaValidator.js';
 import InMemoryDataRegistry from '../../data/inMemoryDataRegistry.js';
 import WorkspaceDataFetcher from '../../data/workspaceDataFetcher.js';
 import TextDataFetcher from '../../data/textDataFetcher.js';
+import {
+  LLM_TURN_ACTION_RESPONSE_SCHEMA,
+  LLM_TURN_ACTION_RESPONSE_SCHEMA_ID,
+} from '../../turns/schemas/llmOutputSchemas.js';
 
 // --- Loader Imports ---
 import ActionLoader from '../../loaders/actionLoader.js';
@@ -61,6 +65,9 @@ import RuleLoader from '../../loaders/ruleLoader.js';
 import SchemaLoader from '../../loaders/schemaLoader.js';
 import ScopeLoader from '../../loaders/scopeLoader.js';
 import WorldLoader from '../../loaders/worldLoader.js';
+import AnatomyRecipeLoader from '../../loaders/anatomyRecipeLoader.js';
+import AnatomyBlueprintLoader from '../../loaders/anatomyBlueprintLoader.js';
+import AnatomyFormattingLoader from '../../loaders/anatomyFormattingLoader.js';
 import { SCOPES_KEY } from '../../constants/dataRegistryKeys.js';
 
 // --- Modding Service Imports ---
@@ -83,9 +90,10 @@ import LoadResultAggregator from '../../loaders/LoadResultAggregator.js';
 
 // --- DI & Helper Imports ---
 import { tokens } from '../tokens.js';
-import { Registrar } from '../registrarHelpers.js';
+import { Registrar } from '../../utils/registrarHelpers.js';
 import { makeRegistryCache } from '../../loaders/registryCacheAdapter.js';
 import { BaseManifestItemLoader } from '../../loaders/baseManifestItemLoader.js';
+import { createDefaultContentLoadersConfig } from '../../loaders/defaultLoaderConfig.js';
 
 /**
  * Registers core data infrastructure services, data loaders, and the phase-based mod loading system.
@@ -112,11 +120,20 @@ export function registerLoaders(container) {
   );
   registrar.singletonFactory(
     tokens.ISchemaValidator,
-    (c) => new AjvSchemaValidator(c.resolve(tokens.ILogger))
+    (c) =>
+      new AjvSchemaValidator({
+        logger: c.resolve(tokens.ILogger),
+        preloadSchemas: [
+          {
+            schema: LLM_TURN_ACTION_RESPONSE_SCHEMA,
+            id: LLM_TURN_ACTION_RESPONSE_SCHEMA_ID,
+          },
+        ],
+      })
   );
   registrar.singletonFactory(
     tokens.IDataRegistry,
-    () => new InMemoryDataRegistry()
+    () => new InMemoryDataRegistry({ logger })
   );
   registrar.singletonFactory(
     tokens.IDataFetcher,
@@ -161,10 +178,26 @@ export function registerLoaders(container) {
   registerLoader(tokens.ActionLoader, ActionLoader);
   registerLoader(tokens.EventLoader, EventLoader);
   registerLoader(tokens.MacroLoader, MacroLoader);
-  registerLoader(tokens.EntityLoader, EntityDefinitionLoader);
+  // EntityDefinitionLoader needs a custom registration to include SafeEventDispatcher
+  registrar.singletonFactory(
+    tokens.EntityLoader,
+    (c) =>
+      new EntityDefinitionLoader(
+        c.resolve(tokens.IConfiguration),
+        c.resolve(tokens.IPathResolver),
+        c.resolve(tokens.IDataFetcher),
+        c.resolve(tokens.ISchemaValidator),
+        c.resolve(tokens.IDataRegistry),
+        c.resolve(tokens.ILogger),
+        c.resolve(tokens.ISafeEventDispatcher)
+      )
+  );
   registerLoader(tokens.EntityInstanceLoader, EntityInstanceLoader);
   registerLoader(tokens.WorldLoader, WorldLoader);
   registerLoader(tokens.GoalLoader, GoalLoader);
+  registerLoader(tokens.AnatomyRecipeLoader, AnatomyRecipeLoader);
+  registerLoader(tokens.AnatomyBlueprintLoader, AnatomyBlueprintLoader);
+  registerLoader(tokens.AnatomyFormattingLoader, AnatomyFormattingLoader);
 
   // Register ScopeLoader with TextDataFetcher instead of regular IDataFetcher
   registrar.singletonFactory(
@@ -234,80 +267,21 @@ export function registerLoaders(container) {
       new ContentLoadManager({
         logger: c.resolve(tokens.ILogger),
         validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
-        contentLoadersConfig: [
-          // Definition phase loaders
-          {
-            loader: c.resolve(tokens.ActionLoader),
-            contentKey: 'actions',
-            diskFolder: 'actions',
-            registryKey: 'actions',
-            phase: 'definitions',
-          },
-          {
-            loader: c.resolve(tokens.ComponentLoader),
-            contentKey: 'components',
-            diskFolder: 'components',
-            registryKey: 'components',
-            phase: 'definitions',
-          },
-          {
-            loader: c.resolve(tokens.ConditionLoader),
-            contentKey: 'conditions',
-            diskFolder: 'conditions',
-            registryKey: 'conditions',
-            phase: 'definitions',
-          },
-          {
-            loader: c.resolve(tokens.EntityLoader),
-            contentKey: 'entities.definitions',
-            diskFolder: 'entities/definitions',
-            registryKey: 'entity_definitions',
-            phase: 'definitions',
-          },
-          {
-            loader: c.resolve(tokens.EventLoader),
-            contentKey: 'events',
-            diskFolder: 'events',
-            registryKey: 'events',
-            phase: 'definitions',
-          },
-          {
-            loader: c.resolve(tokens.MacroLoader),
-            contentKey: 'macros',
-            diskFolder: 'macros',
-            registryKey: 'macros',
-            phase: 'definitions',
-          },
-          {
-            loader: c.resolve(tokens.RuleLoader),
-            contentKey: 'rules',
-            diskFolder: 'rules',
-            registryKey: 'rules',
-            phase: 'definitions',
-          },
-          {
-            loader: c.resolve(tokens.ScopeLoader),
-            contentKey: 'scopes',
-            diskFolder: 'scopes',
-            registryKey: SCOPES_KEY,
-            phase: 'definitions',
-          },
-          // Instance phase loaders
-          {
-            loader: c.resolve(tokens.EntityInstanceLoader),
-            contentKey: 'entities.instances',
-            diskFolder: 'entities/instances',
-            registryKey: 'entityInstances',
-            phase: 'instances',
-          },
-          {
-            loader: c.resolve(tokens.GoalLoader),
-            contentKey: 'goals',
-            diskFolder: 'goals',
-            registryKey: 'goals',
-            phase: 'instances',
-          },
-        ],
+        contentLoadersConfig: createDefaultContentLoadersConfig({
+          componentLoader: c.resolve(tokens.ComponentLoader),
+          eventLoader: c.resolve(tokens.EventLoader),
+          conditionLoader: c.resolve(tokens.ConditionLoader),
+          macroLoader: c.resolve(tokens.MacroLoader),
+          actionLoader: c.resolve(tokens.ActionLoader),
+          ruleLoader: c.resolve(tokens.RuleLoader),
+          goalLoader: c.resolve(tokens.GoalLoader),
+          scopeLoader: c.resolve(tokens.ScopeLoader),
+          entityDefinitionLoader: c.resolve(tokens.EntityLoader),
+          entityInstanceLoader: c.resolve(tokens.EntityInstanceLoader),
+          anatomyRecipeLoader: c.resolve(tokens.AnatomyRecipeLoader),
+          anatomyBlueprintLoader: c.resolve(tokens.AnatomyBlueprintLoader),
+          anatomyFormattingLoader: c.resolve(tokens.AnatomyFormattingLoader),
+        }),
         aggregatorFactory: (counts) => new LoadResultAggregator(counts),
       })
   );

@@ -1,0 +1,20 @@
+{
+  "$schema": "http://example.com/schemas/component.schema.json",
+  "id": "anatomy:joint",
+  "description": "Represents a joint connection between a child body part and its parent via a socket",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "parentId": {
+        "type": "string",
+        "description": "Runtime instance ID of the parent body part entity"
+      },
+      "socketId": {
+        "type": "string",
+        "description": "ID of the socket on the parent where this part is attached"
+      }
+    },
+    "required": ["parentId", "socketId"],
+    "additionalProperties": false
+  }
+}

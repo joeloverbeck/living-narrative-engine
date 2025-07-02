@@ -7,13 +7,54 @@
  * @class EngineState
  */
 class EngineState {
+  /** @type {boolean} */
+  #isInitialized;
+  /** @type {boolean} */
+  #isGameLoopRunning;
+  /** @type {string | null} */
+  #activeWorld;
+
   constructor() {
-    /** @type {boolean} */
-    this.isInitialized = false;
-    /** @type {boolean} */
-    this.isGameLoopRunning = false;
-    /** @type {string | null} */
-    this.activeWorld = null;
+    this.#isInitialized = false;
+    this.#isGameLoopRunning = false;
+    this.#activeWorld = null;
+  }
+
+  /**
+   * Indicates whether the engine has been initialized.
+   *
+   * @returns {boolean} Initialization status.
+   */
+  get isInitialized() {
+    return this.#isInitialized;
+  }
+
+  /**
+   * Indicates whether the game loop is currently running.
+   *
+   * @returns {boolean} Loop running status.
+   */
+  get isGameLoopRunning() {
+    return this.#isGameLoopRunning;
+  }
+
+  /**
+   * Returns the name of the currently active world, if any.
+   *
+   * @returns {string | null} Active world name or {@code null}.
+   */
+  get activeWorld() {
+    return this.#activeWorld;
+  }
+
+  /**
+   * Updates the active world name without changing initialization state.
+   *
+   * @param {string} worldName - Name of the world to set active.
+   * @returns {void}
+   */
+  setActiveWorld(worldName) {
+    this.#activeWorld = worldName;
   }
 
   /**
@@ -23,9 +64,9 @@ class EngineState {
    * @returns {void}
    */
   setStarted(worldName) {
-    this.isInitialized = true;
-    this.isGameLoopRunning = true;
-    this.activeWorld = worldName;
+    this.#isInitialized = true;
+    this.#isGameLoopRunning = true;
+    this.setActiveWorld(worldName);
   }
 
   /**
@@ -34,9 +75,9 @@ class EngineState {
    * @returns {void}
    */
   reset() {
-    this.isInitialized = false;
-    this.isGameLoopRunning = false;
-    this.activeWorld = null;
+    this.#isInitialized = false;
+    this.#isGameLoopRunning = false;
+    this.#activeWorld = null;
   }
 }
 

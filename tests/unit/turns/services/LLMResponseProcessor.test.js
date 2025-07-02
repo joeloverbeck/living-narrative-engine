@@ -5,6 +5,7 @@
 
 import { LLMResponseProcessor } from '../../../../src/turns/services/LLMResponseProcessor.js';
 import { LLM_TURN_ACTION_RESPONSE_SCHEMA_ID } from '../../../../src/turns/schemas/llmOutputSchemas.js';
+import { LlmJsonService } from '../../../../src/llms/llmJsonService.js';
 import { jest, describe, beforeEach, test, expect } from '@jest/globals';
 import { LLMProcessingError } from '../../../../src/turns/services/LLMResponseProcessor.js';
 
@@ -34,10 +35,12 @@ describe('LLMResponseProcessor', () => {
     logger = mockLogger();
     schemaValidatorMock = mockSchemaValidator();
     safeEventDispatcher = { dispatch: jest.fn() };
+    const llmJsonService = new LlmJsonService();
     processor = new LLMResponseProcessor({
       schemaValidator: schemaValidatorMock,
       logger,
       safeEventDispatcher,
+      llmJsonService,
     });
   });
 
@@ -57,6 +60,7 @@ describe('LLMResponseProcessor', () => {
           new LLMResponseProcessor({
             logger: aLogger,
             safeEventDispatcher: dispatcher,
+            llmJsonService: new LlmJsonService(),
           })
       ).toThrow('LLMResponseProcessor needs a valid ISchemaValidator');
 
@@ -67,6 +71,7 @@ describe('LLMResponseProcessor', () => {
             schemaValidator: { validate: () => {} },
             logger: aLogger,
             safeEventDispatcher: dispatcher,
+            llmJsonService: new LlmJsonService(),
           })
       ).toThrow('LLMResponseProcessor needs a valid ISchemaValidator');
 
@@ -76,6 +81,7 @@ describe('LLMResponseProcessor', () => {
           new LLMResponseProcessor({
             schemaValidator: schemaValidatorMock,
             safeEventDispatcher: dispatcher,
+            llmJsonService: new LlmJsonService(),
           })
       ).toThrow('LLMResponseProcessor needs a valid ILogger');
 
@@ -85,8 +91,19 @@ describe('LLMResponseProcessor', () => {
           new LLMResponseProcessor({
             schemaValidator: schemaValidatorMock,
             logger: aLogger,
+            llmJsonService: new LlmJsonService(),
           })
       ).toThrow('LLMResponseProcessor requires a valid ISafeEventDispatcher');
+
+      // Test with missing llmJsonService
+      expect(
+        () =>
+          new LLMResponseProcessor({
+            schemaValidator: schemaValidatorMock,
+            logger: aLogger,
+            safeEventDispatcher: dispatcher,
+          })
+      ).toThrow('LLMResponseProcessor requires a valid LlmJsonService');
     });
   });
 

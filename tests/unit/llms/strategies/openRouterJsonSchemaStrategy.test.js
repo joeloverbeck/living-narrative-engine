@@ -4,6 +4,7 @@
 import { OpenRouterJsonSchemaStrategy } from '../../../../src/llms/strategies/openRouterJsonSchemaStrategy.js';
 import { LLMStrategyError } from '../../../../src/llms/errors/LLMStrategyError.js';
 import { ConfigurationError } from '../../../../src/errors/configurationError';
+import { InvalidEnvironmentContextError } from '../../../../src/errors/invalidEnvironmentContextError.js';
 import { OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA } from '../../../../src/llms/constants/llmConstants.js';
 import { BaseChatLLMStrategy } from '../../../../src/llms/strategies/base/baseChatLLMStrategy.js';
 import {
@@ -73,6 +74,9 @@ describe('OpenRouterJsonSchemaStrategy', () => {
     };
     mockEnvironmentContext = {
       isClient: jest.fn().mockReturnValue(false),
+      isServer: jest.fn().mockReturnValue(true),
+      getExecutionEnvironment: jest.fn().mockReturnValue('server'),
+      getProjectRootPath: jest.fn().mockReturnValue('/project/root'),
       getProxyServerUrl: jest
         .fn()
         .mockReturnValue('http://localhost:3001/proxy'),
@@ -143,6 +147,19 @@ describe('OpenRouterJsonSchemaStrategy', () => {
             `OpenRouterJsonSchemaStrategy (${baseLlmConfig.configId}): Missing environmentContext. Cannot proceed.`,
             { llmId: baseLlmConfig.configId }
           )
+        );
+      });
+
+      it('should throw InvalidEnvironmentContextError if environmentContext is invalid', async () => {
+        const params = {
+          gameSummary: mockGameSummary,
+          llmConfig: { ...baseLlmConfig },
+          apiKey: mockApiKey,
+          environmentContext: { isClient: jest.fn() },
+        };
+
+        await expect(strategy.execute(params)).rejects.toThrow(
+          InvalidEnvironmentContextError
         );
       });
 
@@ -257,6 +274,29 @@ describe('OpenRouterJsonSchemaStrategy', () => {
         };
         const result = await strategy.execute(params);
         expect(result).toBe(JSON.stringify(expectedOutputJsonObject));
+      });
+
+      it('should call _extractJsonOutput during execute', async () => {
+        const response = {
+          choices: [{ message: { content: expectedOutputJsonString } }],
+        };
+        mockHttpClient.request.mockResolvedValueOnce(response);
+        const extractionSpy = jest
+          .spyOn(strategy, '_extractJsonOutput')
+          .mockResolvedValue(expectedOutputJsonString);
+        const params = {
+          gameSummary: mockGameSummary,
+          llmConfig: { ...baseLlmConfig },
+          apiKey: mockApiKey,
+          environmentContext: mockEnvironmentContext,
+        };
+        const result = await strategy.execute(params);
+        expect(result).toBe(expectedOutputJsonString);
+        expect(extractionSpy).toHaveBeenCalledWith(
+          response,
+          params.llmConfig,
+          expect.any(Object)
+        );
       });
     });
 

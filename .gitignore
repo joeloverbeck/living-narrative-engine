@@ -187,3 +187,11 @@ node_modules/
 # JetBrains IDE metadata
 .idea/
 Implementation Plan.pdf
+
+# Ignore private environment file
+llm-proxy-server/.env
+
+# Ignore private mods.
+# Adapt this pattern to how you name your private mod folders.
+# For example, if they start with "p-", use "p-*".
+data/mods/p-*

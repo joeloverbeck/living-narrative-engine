@@ -1,0 +1,35 @@
+{
+  "$schema": "http://example.com/schemas/component.schema.json",
+  "id": "descriptors:color_extended",
+  "description": "Extended color descriptors including shades and special colors",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "color": {
+        "type": "string",
+        "description": "The extended color descriptor",
+        "enum": [
+          "blonde",
+          "brunette",
+          "brown",
+          "black",
+          "raven-black",
+          "red",
+          "auburn",
+          "gray",
+          "white",
+          "silver",
+          "blue",
+          "cobalt",
+          "green",
+          "hazel",
+          "amber",
+          "violet"
+        ],
+        "default": "brown"
+      }
+    },
+    "required": ["color"],
+    "additionalProperties": false
+  }
+}

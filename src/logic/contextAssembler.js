@@ -10,7 +10,7 @@
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../models/actionTargetContext.js').ActionTargetContext} ActionTargetContext */
 
-import { setupService } from '../utils/serviceInitializerUtils.js';
+import { ServiceSetup } from '../utils/serviceInitializerUtils.js';
 import { REQUIRED_ENTITY_MANAGER_METHODS } from '../constants/entityManager.js';
 import { createComponentAccessor } from './componentAccessor.js';
 
@@ -95,6 +95,7 @@ export function populateParticipant(
  * @param {EntityId} targetId - The ID of the entity considered the 'target' for this event, if applicable.
  * @param {EntityManager} entityManager - The EntityManager instance for retrieving entity data.
  * @param {ILogger} logger - Logger instance for diagnostics.
+ * @param serviceSetup
  * @returns {JsonLogicEvaluationContext} The assembled data context object.
  * @throws {Error} If required arguments like event, entityManager, or logger are missing.
  */
@@ -103,7 +104,8 @@ export function createJsonLogicContext(
   actorId,
   targetId,
   entityManager,
-  logger
+  logger,
+  serviceSetup
 ) {
   // --- Argument Validation ---
   if (!event || typeof event !== 'object' || typeof event.type !== 'string') {
@@ -111,7 +113,8 @@ export function createJsonLogicContext(
       "createJsonLogicContext: Missing or invalid 'event' object."
     );
   }
-  const effectiveLogger = setupService('createJsonLogicContext', logger, {
+  const setup = serviceSetup ?? new ServiceSetup();
+  const effectiveLogger = setup.setupService('createJsonLogicContext', logger, {
     entityManager: {
       value: entityManager,
       requiredMethods: REQUIRED_ENTITY_MANAGER_METHODS,
@@ -168,6 +171,7 @@ export function createJsonLogicContext(
  * @param {GameEvent} event - Event triggering rule evaluation.
  * @param {EntityId} actorId - Optional actor entity ID.
  * @param {EntityId} targetId - Optional target entity ID.
+ * @param serviceSetup
  * @param {EntityManager} entityManager - Entity manager for lookups.
  * @param {ILogger} logger - Logger instance.
  * @returns {{event: GameEvent, actor: JsonLogicEntityContext|null, target: JsonLogicEntityContext|null, logger: ILogger, evaluationContext: JsonLogicEvaluationContext}}
@@ -178,14 +182,16 @@ export function createNestedExecutionContext(
   actorId,
   targetId,
   entityManager,
-  logger
+  logger,
+  serviceSetup
 ) {
   const ctx = createJsonLogicContext(
     event,
     actorId,
     targetId,
     entityManager,
-    logger
+    logger,
+    serviceSetup
   );
 
   return {

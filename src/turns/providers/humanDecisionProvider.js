@@ -4,6 +4,9 @@
  */
 
 import { DelegatingDecisionProvider } from './delegatingDecisionProvider.js';
+import { validateDependency } from '../../utils/dependencyUtils.js';
+
+/** @typedef {import('./delegatingDecisionProvider.js').DecisionDelegate} DecisionDelegate */
 
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 
@@ -15,6 +18,8 @@ import { DelegatingDecisionProvider } from './delegatingDecisionProvider.js';
  * index and any associated metadata (speech, thoughts).
  */
 export class HumanDecisionProvider extends DelegatingDecisionProvider {
+  /** @type {import('../../interfaces/IPromptCoordinator').IPromptCoordinator} */
+  #promptCoordinator;
   /**
    * Creates a new HumanDecisionProvider.
    *
@@ -22,10 +27,15 @@ export class HumanDecisionProvider extends DelegatingDecisionProvider {
    * @param {import('../../interfaces/IPromptCoordinator').IPromptCoordinator} deps.promptCoordinator - Coordinator used to prompt the player
    * @param {import('../../interfaces/coreServices').ILogger} deps.logger - Logger for debug output
    * @param {ISafeEventDispatcher} deps.safeEventDispatcher - Event dispatcher for error reporting
+   * @see DecisionDelegate
+   * @returns {void}
    */
   constructor({ promptCoordinator, logger, safeEventDispatcher }) {
+    validateDependency(promptCoordinator, 'promptCoordinator', logger, {
+      requiredMethods: ['prompt'],
+    });
     const delegate = async (actor, _context, actions, abortSignal) => {
-      const res = await promptCoordinator.prompt(actor, {
+      const res = await this.#promptCoordinator.prompt(actor, {
         indexedComposites: actions,
         cancellationSignal: abortSignal,
       });
@@ -35,6 +45,6 @@ export class HumanDecisionProvider extends DelegatingDecisionProvider {
     };
 
     super({ delegate, logger, safeEventDispatcher });
-    this.promptCoordinator = promptCoordinator;
+    this.#promptCoordinator = promptCoordinator;
   }
 }

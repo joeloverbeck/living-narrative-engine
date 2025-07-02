@@ -36,7 +36,7 @@ export function buildAltText(rawAltText) {
  * Builds portrait path and alt text for an entity.
  *
  * @param {import('../entity.js').default} entity - The entity instance to read portrait data from.
- * @param {string} contextMsg - The calling method name for log messages.
+ * @param {string} methodName - The calling method name for log messages.
  * @param {import('../../interfaces/coreServices.js').ILogger} logger - Logger for diagnostics.
  * @param {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} safeEventDispatcher - Dispatcher for error events.
  * @param {string} logPrefix - Prefix for log messages.
@@ -44,12 +44,12 @@ export function buildAltText(rawAltText) {
  */
 export function buildPortraitInfo(
   entity,
-  contextMsg,
+  methodName,
   logger,
   safeEventDispatcher,
   logPrefix
 ) {
-  const isLocation = contextMsg === 'getLocationPortraitData';
+  const isLocation = methodName === 'getLocationPortraitData';
   const label = isLocation ? 'Location entity' : 'Entity';
   const successSubject = isLocation
     ? `location '${entity.id}'`
@@ -62,14 +62,14 @@ export function buildPortraitInfo(
     !portraitComponent.imagePath.trim()
   ) {
     logger.debug(
-      `${logPrefix} ${contextMsg}: ${label} '${entity.id}' has no valid PORTRAIT_COMPONENT_ID data or imagePath.`
+      `${logPrefix} ${methodName}: ${label} '${entity.id}' has no valid PORTRAIT_COMPONENT_ID data or imagePath.`
     );
     return null;
   }
 
   if (typeof entity.definitionId !== 'string' || !entity.definitionId) {
     logger.warn(
-      `${logPrefix} ${contextMsg}: Invalid or missing definitionId. Expected string, got:`,
+      `${logPrefix} ${methodName}: Invalid or missing definitionId. Expected string, got:`,
       entity.definitionId
     );
     return null;
@@ -98,7 +98,7 @@ export function buildPortraitInfo(
   const altText = buildAltText(portraitComponent.altText);
 
   logger.debug(
-    `${logPrefix} ${contextMsg}: Constructed portrait path for ${successSubject}: ${fullPath}`
+    `${logPrefix} ${methodName}: Constructed portrait path for ${successSubject}: ${fullPath}`
   );
 
   return { path: fullPath, altText };

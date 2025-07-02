@@ -118,12 +118,14 @@ describe('Integration: Entity Instances Loader and World Initialization', () => 
       tokens.IValidatedEventDispatcher,
       validatedEventDispatcher
     );
+    // Register mock safe event dispatcher
+    container.register(tokens.ISafeEventDispatcher, { dispatch: jest.fn() });
     registerLoaders(container);
     container.register(
       tokens.IDataFetcher,
       createMockDataFetcher({ fromDisk: true })
     );
-    const schemaValidator = new AjvSchemaValidator(logger);
+    const schemaValidator = new AjvSchemaValidator({ logger: logger });
     await schemaValidator.addSchema(
       commonSchema,
       'http://example.com/schemas/common.schema.json'
@@ -164,7 +166,7 @@ describe('Integration: Entity Instances Loader and World Initialization', () => 
     modsLoader = container.resolve(tokens.ModsLoader);
     const result = await modsLoader.loadMods('test-world', [MOD_ID]);
     expect(result).toEqual({
-      finalModOrder: expect.arrayContaining(['core', 'isekai']),
+      finalModOrder: expect.arrayContaining(['core', 'anatomy', 'isekai']),
       totals: expect.any(Object),
       incompatibilities: 0,
     });
@@ -220,11 +222,18 @@ describe('Integration: Entity Instances Loader and World Initialization', () => 
     const mockWorldContext = {};
     const mockScopeRegistry = new ScopeRegistry({ logger: testLogger });
 
+    const mockEventDispatchService = {
+      dispatchWithLogging: jest.fn().mockResolvedValue(undefined),
+      safeDispatchEvent: jest.fn().mockResolvedValue(undefined),
+      dispatchWithErrorHandling: jest.fn().mockResolvedValue(true),
+    };
+
     const worldInitializer = new WorldInitializer({
       entityManager,
       worldContext: mockWorldContext,
       gameDataRepository: mockRepository,
       validatedEventDispatcher: mockValidatedEventDispatcher,
+      eventDispatchService: mockEventDispatchService,
       logger: testLogger,
       scopeRegistry: mockScopeRegistry,
     });
@@ -286,11 +295,18 @@ describe('Integration: Entity Instances Loader and World Initialization', () => 
     const mockWorldContext = {};
     const mockScopeRegistry = new ScopeRegistry({ logger: testLogger });
 
+    const mockEventDispatchService = {
+      dispatchWithLogging: jest.fn().mockResolvedValue(undefined),
+      safeDispatchEvent: jest.fn().mockResolvedValue(undefined),
+      dispatchWithErrorHandling: jest.fn().mockResolvedValue(true),
+    };
+
     const worldInitializer = new WorldInitializer({
       entityManager,
       worldContext: mockWorldContext,
       gameDataRepository: mockRepository,
       validatedEventDispatcher: localMockValidatedEventDispatcher,
+      eventDispatchService: mockEventDispatchService,
       logger: testLogger,
       scopeRegistry: mockScopeRegistry,
     });
@@ -370,13 +386,18 @@ describe('Integration: EntityInstance componentOverrides are respected during wo
       localMockValidatedEventDispatcher
     );
 
+    // Register mock safe event dispatcher
+    localContainer.register(tokens.ISafeEventDispatcher, {
+      dispatch: jest.fn(),
+    });
+
     registerLoaders(localContainer); // Registers ManifestPhase, ContentPhase, etc.
     localContainer.register(
       tokens.IDataFetcher,
       createMockDataFetcher({ fromDisk: true })
     );
 
-    const schemaValidator = new AjvSchemaValidator(localLogger);
+    const schemaValidator = new AjvSchemaValidator({ logger: localLogger });
     // Add all necessary schemas (ensure these paths are correct relative to this file or adjust)
     await schemaValidator.addSchema(
       commonSchema,
@@ -487,11 +508,18 @@ describe('Integration: EntityInstance componentOverrides are respected during wo
     const mockWorldContext = {};
     const mockScopeRegistry = new ScopeRegistry({ logger: testLogger }); // Or localLogger
 
+    const mockEventDispatchService = {
+      dispatchWithLogging: jest.fn().mockResolvedValue(undefined),
+      safeDispatchEvent: jest.fn().mockResolvedValue(undefined),
+      dispatchWithErrorHandling: jest.fn().mockResolvedValue(true),
+    };
+
     const worldInitializer = new WorldInitializer({
       entityManager,
       worldContext: mockWorldContext,
       gameDataRepository: mockRepository,
       validatedEventDispatcher: currentTestDispatcher,
+      eventDispatchService: mockEventDispatchService,
       logger: testLogger, // Or localLogger
       scopeRegistry: mockScopeRegistry,
     });

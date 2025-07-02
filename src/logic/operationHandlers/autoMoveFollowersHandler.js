@@ -14,9 +14,9 @@ import {
   LEADING_COMPONENT_ID,
 } from '../../constants/componentIds.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
-import SystemMoveEntityHandler from './systemMoveEntityHandler.js';
 import BaseOperationHandler from './baseOperationHandler.js';
 import { assertParamsObject } from '../../utils/handlerUtils/indexUtils.js';
+/** @typedef {import('../../interfaces/IMoveEntityHandler.js').IMoveEntityHandler} IMoveEntityHandler */
 
 /**
  * @implements {OperationHandler}
@@ -24,19 +24,19 @@ import { assertParamsObject } from '../../utils/handlerUtils/indexUtils.js';
 class AutoMoveFollowersHandler extends BaseOperationHandler {
   /** @type {EntityManager} */ #entityManager;
   /** @type {ISafeEventDispatcher} */ #dispatcher;
-  /** @type {SystemMoveEntityHandler} */ #moveHandler;
+  /** @type {IMoveEntityHandler} */ #moveHandler;
 
   /**
    * @param {object} deps
    * @param {ILogger} deps.logger
    * @param {EntityManager} deps.entityManager
-   * @param {SystemMoveEntityHandler} deps.systemMoveEntityHandler
+   * @param {IMoveEntityHandler} deps.moveEntityHandler
    * @param {ISafeEventDispatcher} deps.safeEventDispatcher
    */
   constructor({
     logger,
     entityManager,
-    systemMoveEntityHandler,
+    moveEntityHandler,
     safeEventDispatcher,
   }) {
     super('AutoMoveFollowersHandler', {
@@ -45,8 +45,8 @@ class AutoMoveFollowersHandler extends BaseOperationHandler {
         value: entityManager,
         requiredMethods: ['getEntitiesWithComponent', 'getComponentData'],
       },
-      systemMoveEntityHandler: {
-        value: systemMoveEntityHandler,
+      moveEntityHandler: {
+        value: moveEntityHandler,
         requiredMethods: ['execute'],
       },
       safeEventDispatcher: {
@@ -56,7 +56,7 @@ class AutoMoveFollowersHandler extends BaseOperationHandler {
     });
 
     this.#entityManager = entityManager;
-    this.#moveHandler = systemMoveEntityHandler;
+    this.#moveHandler = moveEntityHandler;
     this.#dispatcher = safeEventDispatcher;
   }
 

@@ -44,7 +44,6 @@ export default class SaveGameService {
    *
    * @param {SlotDisplayData | null} selectedSlotData - Currently selected slot.
    * @param {string} saveName - Proposed save name.
-   * @param {GameEngine | null} gameEngine - Game engine instance.
    * @returns {string | null} Error message if validation fails, otherwise null.
    */
   validatePreconditions(selectedSlotData, saveName) {
@@ -96,8 +95,7 @@ export default class SaveGameService {
    *
    * @param {SlotDisplayData} selectedSlotData - Slot being saved into.
    * @param {string} saveName - Name to use when saving.
-   * @param {GameEngine} gameEngine - Game engine instance.
-   * @param saveService
+   * @param {ISaveService} saveService - Service responsible for persisting the game.
    * @returns {Promise<{result: any, returnedIdentifier: string | null}>}
    *   Result from the engine and identifier, if provided.
    */
@@ -121,8 +119,7 @@ export default class SaveGameService {
    *
    * @param {SlotDisplayData} selectedSlotData - Slot being saved into.
    * @param {string} saveName - Name to use when saving.
-   * @param {GameEngine} gameEngine - Game engine instance.
-   * @param saveService
+   * @param {ISaveService} saveService - Service responsible for persisting the game.
    * @returns {Promise<{success: boolean, message: string, returnedIdentifier: string | null}>}
    *   Operation outcome details.
    */

@@ -1,0 +1,25 @@
+{
+  "$schema": "http://example.com/schemas/component.schema.json",
+  "id": "descriptors:shape_eye",
+  "description": "Eye-specific shape descriptors",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "shape": {
+        "type": "string",
+        "description": "The shape of the eye",
+        "enum": [
+          "round",
+          "almond",
+          "hooded",
+          "monolid",
+          "downturned",
+          "upturned"
+        ],
+        "default": "round"
+      }
+    },
+    "required": ["shape"],
+    "additionalProperties": false
+  }
+}

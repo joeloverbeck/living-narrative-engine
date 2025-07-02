@@ -4,14 +4,17 @@
  */
 /* eslint-enable jsdoc/check-tag-names */
 import { describe, test, expect } from '@jest/globals';
-import { performSemanticValidations } from '../../../src/validation/llmConfigSemanticValidator.js';
+import {
+  performSemanticValidations,
+  SemanticErrorTypes,
+} from '../../../src/validation/llmConfigSemanticValidator.js';
 
 describe('performSemanticValidations', () => {
   test('returns error when configs map is not an object', () => {
     const result = performSemanticValidations(null);
     expect(result).toHaveLength(1);
     expect(result[0]).toMatchObject({
-      errorType: 'SEMANTIC_VALIDATION_INVALID_CONFIGS_STRUCTURE',
+      errorType: SemanticErrorTypes.INVALID_CONFIGS_STRUCTURE,
       path: '(root).configs',
     });
   });
@@ -21,7 +24,7 @@ describe('performSemanticValidations', () => {
     expect(result).toHaveLength(1);
     expect(result[0]).toMatchObject({
       configId: 'bad',
-      errorType: 'SEMANTIC_VALIDATION_INVALID_CONFIG_OBJECT',
+      errorType: SemanticErrorTypes.INVALID_CONFIG_OBJECT,
     });
   });
 
@@ -34,7 +37,7 @@ describe('performSemanticValidations', () => {
       expect.arrayContaining([
         expect.objectContaining({
           configId: 'cfg',
-          errorType: 'SEMANTIC_VALIDATION_MISSING_PROMPT_ELEMENTS_FOR_ASSEMBLY',
+          errorType: SemanticErrorTypes.MISSING_PROMPT_ELEMENTS_FOR_ASSEMBLY,
           path: 'promptElements',
         }),
       ])
@@ -51,7 +54,7 @@ describe('performSemanticValidations', () => {
     expect(result).toHaveLength(1);
     expect(result[0]).toMatchObject({
       configId: 'cfg',
-      errorType: 'SEMANTIC_VALIDATION_INVALID_ASSEMBLY_KEY_TYPE',
+      errorType: SemanticErrorTypes.INVALID_ASSEMBLY_KEY_TYPE,
       path: 'promptAssemblyOrder[0]',
     });
   });
@@ -66,7 +69,7 @@ describe('performSemanticValidations', () => {
     expect(result).toHaveLength(1);
     expect(result[0]).toMatchObject({
       configId: 'cfg',
-      errorType: 'SEMANTIC_VALIDATION_MISSING_ASSEMBLY_KEY',
+      errorType: SemanticErrorTypes.MISSING_ASSEMBLY_KEY,
       path: 'promptAssemblyOrder[0]',
     });
   });
@@ -113,7 +116,7 @@ describe('performSemanticValidations', () => {
     expect(result).toHaveLength(1);
     expect(result[0]).toMatchObject({
       configId: 'cfg',
-      errorType: 'SEMANTIC_VALIDATION_MISSING_ASSEMBLY_KEY',
+      errorType: SemanticErrorTypes.MISSING_ASSEMBLY_KEY,
     });
   });
 });

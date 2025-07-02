@@ -1,6 +1,6 @@
 // src/logic/jsonLogicEvaluationService.js
 import jsonLogic from 'json-logic-js';
-import { validateServiceDeps } from '../utils/serviceInitializerUtils.js';
+import { ServiceSetup } from '../utils/serviceInitializerUtils.js';
 import { BaseService } from '../utils/serviceBase.js';
 import { warnOnBracketPaths } from '../utils/jsonLogicUtils.js';
 import { resolveConditionRefs } from '../utils/conditionRefResolver.js';
@@ -28,11 +28,13 @@ class JsonLogicEvaluationService extends BaseService {
    * @param {object} [dependencies] - The injected services.
    * @param {ILogger} dependencies.logger - Logging service.
    * @param {IGameDataRepository} [dependencies.gameDataRepository] - Repository for accessing condition definitions. Optional for tests.
+   * @param dependencies.serviceSetup
    * @throws {Error} If required dependencies are missing or invalid.
    */
-  constructor({ logger, gameDataRepository } = {}) {
+  constructor({ logger, gameDataRepository, serviceSetup } = {}) {
     super();
-    this.#logger = this._init('JsonLogicEvaluationService', logger);
+    const setup = serviceSetup ?? new ServiceSetup();
+    this.#logger = setup.setupService('JsonLogicEvaluationService', logger);
 
     if (!gameDataRepository) {
       this.#logger.warn(
@@ -40,7 +42,7 @@ class JsonLogicEvaluationService extends BaseService {
       );
       this.#gameDataRepository = { getConditionDefinition: () => null };
     } else {
-      validateServiceDeps('JsonLogicEvaluationService', this.#logger, {
+      setup.validateDeps('JsonLogicEvaluationService', this.#logger, {
         gameDataRepository: {
           value: gameDataRepository,
           requiredMethods: ['getConditionDefinition'],
@@ -79,6 +81,90 @@ class JsonLogicEvaluationService extends BaseService {
   }
 
   /**
+   * Resolves a rule and warns about bracket notation paths.
+   *
+   * @private
+   * @param {object} rule - Rule to resolve.
+   * @returns {object} Resolved rule or fallback.
+   */
+  #prepareRule(rule) {
+    const resolved = this.#resolveRule(rule);
+    warnOnBracketPaths(resolved, this.#logger);
+    return resolved;
+  }
+
+  /**
+   * Evaluate a logical group (and/or) with short-circuiting and logging.
+   *
+   * @private
+   * @param {string} op - "and" or "or".
+   * @param {Array<any>} args - Array of conditions.
+   * @param {JsonLogicEvaluationContext} context - Evaluation context.
+   * @returns {boolean} Result of the logical group.
+   */
+  #evaluateLogicalGroup(op, args, context) {
+    this.#logger.debug(
+      `Detailed evaluation of ${op.toUpperCase()} operation with ${args.length} conditions:`
+    );
+
+    const individualResults = [];
+    for (let i = 0; i < args.length; i++) {
+      const conditionResult = jsonLogic.apply(args[i], context);
+      const conditionBoolean = !!conditionResult;
+      const conditionSummary =
+        JSON.stringify(args[i]).substring(0, 100) +
+        (JSON.stringify(args[i]).length > 100 ? '...' : '');
+
+      this.#logger.debug(
+        `  Condition ${i + 1}/${args.length}: ${conditionSummary} => ${conditionBoolean}`
+      );
+
+      if (context && typeof context === 'object') {
+        if (context.entity) {
+          const comp = context.entity.components?.['core:position'];
+          if (comp && comp.error) {
+            this.#logger.error('Error retrieving entity position', comp.error);
+          }
+          this.#logger.debug(
+            `    Entity: ${context.entity.id}, Location: ${comp && !comp.error ? comp.locationId : 'unknown'}`
+          );
+        }
+        if (context.actor) {
+          const comp = context.actor.components?.['core:position'];
+          if (comp && comp.error) {
+            this.#logger.error('Error retrieving actor position', comp.error);
+          }
+          this.#logger.debug(
+            `    Actor: ${context.actor.id}, Location: ${comp && !comp.error ? comp.locationId : 'unknown'}`
+          );
+        }
+        if (context.location) {
+          this.#logger.debug(`    Location: ${context.location.id}`);
+        }
+      }
+
+      individualResults.push(conditionBoolean);
+
+      if (op === 'and' && !conditionBoolean) {
+        this.#logger.debug(
+          `  AND operation short-circuited at condition ${i + 1} (false result)`
+        );
+        return false;
+      }
+      if (op === 'or' && conditionBoolean) {
+        this.#logger.debug(
+          `  OR operation short-circuited at condition ${i + 1} (true result)`
+        );
+        return true;
+      }
+    }
+
+    return op === 'and'
+      ? individualResults.every((r) => r)
+      : individualResults.some((r) => r);
+  }
+
+  /**
    * Evaluates a JSON Logic rule against a given data context using json-logic-js,
    * returning a strict boolean based on the truthiness of the result.
    *
@@ -87,7 +173,7 @@ class JsonLogicEvaluationService extends BaseService {
    * @returns {boolean} - The boolean result. Returns false on error.
    */
   evaluate(rule, context) {
-    const resolvedRule = this.#resolveRule(rule);
+    const resolvedRule = this.#prepareRule(rule);
 
     if (
       resolvedRule &&
@@ -106,8 +192,6 @@ class JsonLogicEvaluationService extends BaseService {
       }
     }
 
-    warnOnBracketPaths(resolvedRule, this.#logger);
-
     const ruleSummary =
       JSON.stringify(resolvedRule).substring(0, 150) +
       (JSON.stringify(resolvedRule).length > 150 ? '...' : '');
@@ -116,7 +200,6 @@ class JsonLogicEvaluationService extends BaseService {
     );
 
     try {
-      // Check if this is an 'and' or 'or' operation that we should log in detail
       let rawResult;
       if (
         resolvedRule &&
@@ -126,7 +209,6 @@ class JsonLogicEvaluationService extends BaseService {
         const [op] = Object.keys(resolvedRule);
         const args = resolvedRule[op];
 
-        // Only do detailed logging if we're not in a test environment
         const isTestEnv =
           (typeof globalThis !== 'undefined' && globalThis.jest) ||
           (typeof globalThis.process !== 'undefined' &&
@@ -136,78 +218,11 @@ class JsonLogicEvaluationService extends BaseService {
           Array.isArray(args) &&
           !isTestEnv
         ) {
-          this.#logger.debug(
-            `Detailed evaluation of ${op.toUpperCase()} operation with ${args.length} conditions:`
-          );
-
-          const individualResults = [];
-          let shortCircuitResult = null;
-
-          for (let i = 0; i < args.length; i++) {
-            const conditionResult = jsonLogic.apply(args[i], context);
-            const conditionBoolean = !!conditionResult;
-            const conditionSummary =
-              JSON.stringify(args[i]).substring(0, 100) +
-              (JSON.stringify(args[i]).length > 100 ? '...' : '');
-
-            // Log the condition and its result
-            this.#logger.debug(
-              `  Condition ${i + 1}/${args.length}: ${conditionSummary} => ${conditionBoolean}`
-            );
-
-            // Try to show relevant context values for debugging
-            if (context && typeof context === 'object') {
-              if (context.entity) {
-                this.#logger.debug(
-                  `    Entity: ${context.entity.id}, Location: ${context.entity.components?.['core:position']?.locationId || 'unknown'}`
-                );
-              }
-              if (context.actor) {
-                this.#logger.debug(
-                  `    Actor: ${context.actor.id}, Location: ${context.actor.components?.['core:position']?.locationId || 'unknown'}`
-                );
-              }
-              if (context.location) {
-                this.#logger.debug(`    Location: ${context.location.id}`);
-              }
-            }
-
-            individualResults.push(conditionBoolean);
-
-            // For 'and', short circuit on first false
-            if (op === 'and' && !conditionBoolean) {
-              this.#logger.debug(
-                `  AND operation short-circuited at condition ${i + 1} (false result)`
-              );
-              shortCircuitResult = false;
-              break;
-            }
-            // For 'or', short circuit on first true
-            if (op === 'or' && conditionBoolean) {
-              this.#logger.debug(
-                `  OR operation short-circuited at condition ${i + 1} (true result)`
-              );
-              shortCircuitResult = true;
-              break;
-            }
-          }
-
-          // Use the computed result instead of re-evaluating
-          if (shortCircuitResult !== null) {
-            rawResult = shortCircuitResult;
-          } else {
-            // All conditions evaluated without short-circuiting
-            rawResult =
-              op === 'and'
-                ? individualResults.every((r) => r)
-                : individualResults.some((r) => r);
-          }
+          rawResult = this.#evaluateLogicalGroup(op, args, context);
         } else {
-          // Not an and/or operation, or debug logging disabled - evaluate normally
           rawResult = jsonLogic.apply(resolvedRule, context);
         }
       } else {
-        // Not a complex object, evaluate normally
         rawResult = jsonLogic.apply(resolvedRule, context);
       }
 

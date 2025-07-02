@@ -1,0 +1,19 @@
+{
+  "$schema": "http://example.com/schemas/entity-definition.schema.json",
+  "id": "anatomy:human_eye_cobalt",
+  "description": "A human eye with striking cobalt blue iris",
+  "components": {
+    "anatomy:part": {
+      "subType": "eye"
+    },
+    "descriptors:color_extended": {
+      "color": "cobalt"
+    },
+    "descriptors:shape_eye": {
+      "shape": "almond"
+    },
+    "core:name": {
+      "text": "eye"
+    }
+  }
+}

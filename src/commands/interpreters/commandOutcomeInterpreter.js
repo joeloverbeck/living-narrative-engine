@@ -20,7 +20,9 @@ import TurnDirective from '../../turns/constants/turnDirectives.js';
 import { ICommandOutcomeInterpreter } from '../interfaces/ICommandOutcomeInterpreter.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import { initLogger } from '../../utils/index.js';
+import { createErrorDetails } from '../../utils/errorDetails.js';
 import { validateDependency } from '../../utils/dependencyUtils.js';
+import { InvalidArgumentError } from '../../errors/invalidArgumentError.js';
 
 /**
  * @class CommandOutcomeInterpreter
@@ -52,13 +54,13 @@ class CommandOutcomeInterpreter extends ICommandOutcomeInterpreter {
    * @param {string} message - Human readable error message.
    * @param {object} [details] - Structured diagnostic details.
    * @returns {never} Throws an error; does not return.
-   * @throws {Error} Always throws with the provided message.
+   * @throws {InvalidArgumentError} Always throws with the provided message.
    * @private
    */
   #reportInvalidInput(message, details) {
     safeDispatchError(this.#dispatcher, message, details);
     this.#logger.error(message, details);
-    throw new Error(message);
+    throw new InvalidArgumentError(message);
   }
 
   /**
@@ -73,9 +75,11 @@ class CommandOutcomeInterpreter extends ICommandOutcomeInterpreter {
     if (!turnContext || typeof turnContext.getActor !== 'function') {
       const errorMsg = `CommandOutcomeInterpreter: Invalid turnContext provided.`;
       const details = {
-        raw: `turnContext was ${turnContext === null ? 'null' : typeof turnContext}. Expected ITurnContext object.`,
-        stack: new Error().stack,
-        timestamp: new Date().toISOString(),
+        ...createErrorDetails(
+          `turnContext was ${
+            turnContext === null ? 'null' : typeof turnContext
+          }. Expected ITurnContext object.`
+        ),
         receivedContextType: typeof turnContext,
       };
       this.#reportInvalidInput(errorMsg, details);
@@ -85,9 +89,9 @@ class CommandOutcomeInterpreter extends ICommandOutcomeInterpreter {
     if (!actor || !actor.id) {
       const errorMsg = `CommandOutcomeInterpreter: Could not retrieve a valid actor or actor ID from turnContext.`;
       const details = {
-        raw: `Actor object in context was ${JSON.stringify(actor)}.`,
-        stack: new Error().stack,
-        timestamp: new Date().toISOString(),
+        ...createErrorDetails(
+          `Actor object in context was ${JSON.stringify(actor)}.`
+        ),
         actorInContext: actor,
       };
       this.#reportInvalidInput(errorMsg, details);
@@ -109,9 +113,9 @@ class CommandOutcomeInterpreter extends ICommandOutcomeInterpreter {
     if (!result || typeof result.success !== 'boolean') {
       const baseErrorMsg = `CommandOutcomeInterpreter: Invalid CommandResult - 'success' boolean is missing. Actor: ${actorId}.`;
       const details = {
-        raw: `Actor ${actorId}, Received Result: ${JSON.stringify(result)}`,
-        stack: new Error().stack,
-        timestamp: new Date().toISOString(),
+        ...createErrorDetails(
+          `Actor ${actorId}, Received Result: ${JSON.stringify(result)}`
+        ),
         receivedResult: result,
       };
       this.#reportInvalidInput(baseErrorMsg, details);
@@ -127,17 +131,17 @@ class CommandOutcomeInterpreter extends ICommandOutcomeInterpreter {
    * @private
    */
   #resolveActionId(result, turnContext) {
-    let processedActionId = result.actionResult?.actionId;
-    if (typeof processedActionId !== 'string' || !processedActionId.trim()) {
+    let actionIdForLogs = result.actionResult?.actionId;
+    if (typeof actionIdForLogs !== 'string' || !actionIdForLogs.trim()) {
       const actorId = turnContext.getActor().id;
       const chosenAction = turnContext.getChosenAction();
-      processedActionId =
+      actionIdForLogs =
         chosenAction?.actionDefinitionId || 'core:unknown_action';
       this.#logger.debug(
-        `CommandOutcomeInterpreter: actor ${actorId}: result.actionResult.actionId ('${result.actionResult?.actionId}') invalid/missing. Using action identifier: '${processedActionId}'.`
+        `CommandOutcomeInterpreter: actor ${actorId}: result.actionResult.actionId ('${result.actionResult?.actionId}') invalid/missing. Using action identifier: '${actionIdForLogs}'.`
       );
     }
-    return processedActionId;
+    return actionIdForLogs;
   }
 
   /**
@@ -154,29 +158,31 @@ class CommandOutcomeInterpreter extends ICommandOutcomeInterpreter {
 
     this.#validateResult(result, actorId);
 
-    // result.turnEnded from CP is true if CP failed, false if CP succeeded.
-    const cpFailureEndsTurn =
-      typeof result.turnEnded === 'boolean' ? result.turnEnded : true; // Default to true for safety on failure
+    const shouldEndTurn =
+      typeof result.turnEnded === 'boolean' ? result.turnEnded : true; // Default true for safety
 
     this.#logger.debug(
-      `CommandOutcomeInterpreter: Interpreting for ${actorId}. CP_Success=${result.success}, CP_TurnEndedOnFail=${cpFailureEndsTurn}, Input="${originalInput}"`
+      `CommandOutcomeInterpreter: Interpreting for ${actorId}. CP_Success=${result.success}, CP_TurnEndedOnFail=${shouldEndTurn}, Input="${originalInput}"`
     );
 
-    const processedActionId = this.#resolveActionId(result, turnContext);
+    const actionIdForLogs = this.#resolveActionId(result, turnContext);
 
     if (result.success) {
       const directive = TurnDirective.WAIT_FOR_EVENT;
       this.#logger.debug(
-        `Actor ${actorId}: CommandProcessor success for action '${processedActionId}'. Directive: ${directive}.`
+        `Actor ${actorId}: CommandProcessor success for action '${actionIdForLogs}'. Directive: ${directive}.`
       );
       return directive;
     } else {
       // CommandProcessor detected failure
 
-      // Any failure detected by CommandProcessor ends the turn.
-      const directive = TurnDirective.END_TURN_FAILURE;
+      const shouldEnd =
+        typeof result.turnEnded === 'boolean' ? result.turnEnded : true;
+      const directive = shouldEnd
+        ? TurnDirective.END_TURN_FAILURE
+        : TurnDirective.RE_PROMPT;
       this.#logger.debug(
-        `Actor ${actorId}: CommandProcessor failure for action '${processedActionId}'. Directive: ${directive}.`
+        `Actor ${actorId}: CommandProcessor failure for action '${actionIdForLogs}'. Directive: ${directive}.`
       );
 
       return directive;

@@ -1,12 +1,12 @@
-T-16 Error Classes & Removal of Silent Fails
-Files
+Issue 3: Multiple event-dispatch helpers performing similar tasks
 
-errors/unknownSourceError.js
+eventDispatchUtils.dispatchWithLogging, eventDispatchHelper.dispatchWithErrorHandling, and safeDispatchEvent contain overlapping functionality for dispatching events with logging and error handling.
+1. Create `src/utils/eventDispatchService.js` exporting a class `EventDispatchService` with methods:
 
-errors/unknownAstNodeError.js
-
-Refactor resolvers to throw instead of logger.error + return new Set().
-
-Tests
-
-Assert thrown error classes when input invalid.
+   * `dispatchWithLogging(...)` (from current `eventDispatchUtils`)
+   * `dispatchWithErrorHandling(...)` (merge logic from `eventDispatchHelper`)
+   * `safeDispatchEvent(...)` (from `safeDispatchEvent.js`)
+2. Register this class in the DI container under a new token (e.g., `tokens.EventDispatchService`) in `src/dependencyInjection/tokens.js` and registration modules.
+3. Replace existing imports of the three standalone functions with the service instance throughout the codebase (e.g., in `initializers/*`, `turns/*`, and `commands/commandProcessor.js`).
+4. Remove the now-redundant modules (`eventDispatchUtils.js`, `eventDispatchHelper.js`, `safeDispatchEvent.js`) after ensuring all references are migrated.
+5. Update related unit tests to instantiate and mock `EventDispatchService` instead of individual helpers.

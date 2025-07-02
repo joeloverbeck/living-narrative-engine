@@ -5,8 +5,14 @@
  * using configured content loaders.
  */
 
-import LoadResultAggregator from './LoadResultAggregator.js';
-import { resolvePath } from '../utils/objectUtils.js';
+import ModProcessor from './ModProcessor.js';
+import { deepClone } from '../utils/cloneUtils.js';
+import { ContentLoadStatus } from './types.js';
+import { mergeTotals } from './helpers/mergeTotals.js';
+
+/** @typedef {import('./LoadResultAggregator.js').TotalResultsSummary} TotalResultsSummary */
+/** @typedef {import('./LoadResultAggregator.js').default} LoadResultAggregator */
+/** @typedef {import('./types.js').LoadPhaseResult} LoadPhaseResult */
 
 /** @typedef {import('../events/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
@@ -19,17 +25,17 @@ import { resolvePath } from '../utils/objectUtils.js';
  */
 export class ContentLoadManager {
   #logger;
-  #validatedEventDispatcher;
   #contentLoadersConfig;
-  #aggregatorFactory;
-  #timer;
+  #modProcessor;
 
   /**
+   * Creates a new ContentLoadManager.
+   *
    * @param {object} deps - Constructor dependencies.
    * @param {ILogger} deps.logger - Logging service.
    * @param {ValidatedEventDispatcher} deps.validatedEventDispatcher - Event dispatcher.
    * @param {Array<LoaderConfigEntry>} deps.contentLoadersConfig - Loader configuration.
-   * @param {(counts: TotalResultsSummary) => LoadResultAggregator} [deps.aggregatorFactory] -
+   * @param {(counts: TotalResultsSummary) => LoadResultAggregator} deps.aggregatorFactory -
    *   Factory for creating {@link LoadResultAggregator} instances.
    * @param {() => number} [deps.timer] -
    *   Optional function returning a high resolution timestamp.
@@ -38,14 +44,20 @@ export class ContentLoadManager {
     logger,
     validatedEventDispatcher,
     contentLoadersConfig,
-    aggregatorFactory = (counts) => new LoadResultAggregator(counts),
+    aggregatorFactory,
     timer = () => performance.now(),
   }) {
+    if (typeof aggregatorFactory !== 'function') {
+      throw new Error('aggregatorFactory must be provided');
+    }
     this.#logger = logger;
-    this.#validatedEventDispatcher = validatedEventDispatcher;
     this.#contentLoadersConfig = contentLoadersConfig;
-    this.#aggregatorFactory = aggregatorFactory;
-    this.#timer = timer;
+    this.#modProcessor = new ModProcessor({
+      logger,
+      validatedEventDispatcher,
+      aggregatorFactory,
+      timer,
+    });
   }
 
   /**
@@ -53,29 +65,36 @@ export class ContentLoadManager {
    *
    * @param {string[]} finalModOrder - Resolved load order of mods.
    * @param {Map<string, ModManifest>} manifests - Map of manifests keyed by ID.
-   * @param {TotalResultsSummary} totalCounts - Object to accumulate totals across mods.
-   * @returns {Promise<Record<string, 'success' | 'skipped' | 'failed'>>} Map of modIds to overall load status.
+   * @param {TotalResultsSummary} totalCounts - Totals from previous operations. This object is not mutated.
+   * @returns {Promise<LoadPhaseResult>} Map of modIds to overall load status and
+   *   the updated totals object.
    */
   async loadContent(finalModOrder, manifests, totalCounts) {
     this.#logger.debug(
       'ModsLoader: Beginning content loading in two phases: definitions, then instances.'
     );
 
+    let runningTotals = deepClone(totalCounts);
+
     // Phase 1: Definitions
-    const definitionResults = await this.loadContentForPhase(
-      finalModOrder,
-      manifests,
-      totalCounts,
-      'definitions'
-    );
+    const { results: definitionResults, updatedTotals: afterDefs } =
+      await this.loadContentForPhase(
+        finalModOrder,
+        manifests,
+        runningTotals,
+        'definitions'
+      );
+    runningTotals = afterDefs;
 
     // Phase 2: Instances
-    const instanceResults = await this.loadContentForPhase(
-      finalModOrder,
-      manifests,
-      totalCounts,
-      'instances'
-    );
+    const { results: instanceResults, updatedTotals: afterInst } =
+      await this.loadContentForPhase(
+        finalModOrder,
+        manifests,
+        runningTotals,
+        'instances'
+      );
+    runningTotals = afterInst;
 
     // Combine results: if a mod failed in either phase, it's marked as failed.
     // Skipped in one phase but success in another could be success, or based on specific logic.
@@ -83,20 +102,26 @@ export class ContentLoadManager {
     // A mod might not have content for all phases.
     const combinedResults = {};
     for (const modId of finalModOrder) {
-      const defStatus = definitionResults[modId] || 'skipped'; // if not present, assume skipped for that phase
-      const instStatus = instanceResults[modId] || 'skipped';
+      const defStatus = definitionResults[modId] || ContentLoadStatus.SKIPPED; // if not present, assume skipped for that phase
+      const instStatus = instanceResults[modId] || ContentLoadStatus.SKIPPED;
 
-      if (defStatus === 'failed' || instStatus === 'failed') {
-        combinedResults[modId] = 'failed';
-      } else if (defStatus === 'success' || instStatus === 'success') {
+      if (
+        defStatus === ContentLoadStatus.FAILED ||
+        instStatus === ContentLoadStatus.FAILED
+      ) {
+        combinedResults[modId] = ContentLoadStatus.FAILED;
+      } else if (
+        defStatus === ContentLoadStatus.SUCCESS ||
+        instStatus === ContentLoadStatus.SUCCESS
+      ) {
         // If it succeeded in at least one phase it had content for, and didn't fail in another
-        combinedResults[modId] = 'success';
+        combinedResults[modId] = ContentLoadStatus.SUCCESS;
       } else {
-        combinedResults[modId] = 'skipped'; // Skipped in all relevant phases
+        combinedResults[modId] = ContentLoadStatus.SKIPPED; // Skipped in all relevant phases
       }
     }
     this.#logger.debug('ModsLoader: Completed both content loading phases.');
-    return combinedResults;
+    return { results: combinedResults, updatedTotals: runningTotals };
   }
 
   /**
@@ -104,16 +129,17 @@ export class ContentLoadManager {
    *
    * @param {string[]} finalModOrder - Resolved load order of mods.
    * @param {Map<string, ModManifest>} manifests - Map of manifests keyed by ID.
-   * @param {TotalResultsSummary} totalCounts - Object to accumulate totals across mods.
+   * @param {TotalResultsSummary} totalCounts - Totals from previous operations. This object is not mutated.
    * @param {'definitions' | 'instances'} phase - The loading phase.
-   * @returns {Promise<Record<string, 'success' | 'skipped' | 'failed'>>} Map of modIds to load status for this phase.
+   * @returns {Promise<LoadPhaseResult>} Map of modIds to load status for this
+   *   phase and the updated totals object.
    */
   async loadContentForPhase(finalModOrder, manifests, totalCounts, phase) {
     this.#logger.debug(
       `ModsLoader: Beginning content loading for phase: ${phase}...`
     );
 
-    /** @type {Record<string, 'success' | 'skipped' | 'failed'>} */
+    /** @type {Record<string, ContentLoadStatus>} */
     const results = {};
     const phaseLoaders = this.#contentLoadersConfig.filter(
       (loaderCfg) => loaderCfg.phase === phase
@@ -125,9 +151,9 @@ export class ContentLoadManager {
       );
       // Fill results with 'skipped' for all mods if no loaders for this phase
       for (const modId of finalModOrder) {
-        results[modId] = 'skipped';
+        results[modId] = ContentLoadStatus.SKIPPED;
       }
-      return results;
+      return { results, updatedTotals: totalCounts };
     }
 
     for (const modId of finalModOrder) {
@@ -152,14 +178,14 @@ export class ContentLoadManager {
         results[modId] = result.status;
 
         // Merge the updated totals back into the main totals object
-        this.#mergeTotals(totalCounts, result.updatedTotals);
+        totalCounts = mergeTotals(totalCounts, result.updatedTotals);
       } catch (error) {
         this.#logger.error(
           `ContentLoadManager: Error during processMod for ${modId}, phase ${phase}. Marking as failed and continuing with other mods in this phase.`,
           { modId, phase, error: error?.message },
           error
         );
-        results[modId] = 'failed'; // Record it as failed for this phase
+        results[modId] = ContentLoadStatus.FAILED; // Record it as failed for this phase
         // DO NOT re-throw; continue processing other mods in this phase.
       }
     }
@@ -167,306 +193,36 @@ export class ContentLoadManager {
     this.#logger.debug(
       `ModsLoader: Completed content loading loop for phase: ${phase}.`
     );
-    return results;
+    return { results, updatedTotals: totalCounts };
   }
 
-  /**
-   * Merges updated totals from an aggregator back into the main totals object.
-   *
-   * @private
-   * @param {TotalResultsSummary} mainTotals - The main totals object to update.
-   * @param {TotalResultsSummary} updatedTotals - The updated totals from an aggregator.
-   * @returns {void}
-   */
-  #mergeTotals(mainTotals, updatedTotals) {
-    for (const [registryKey, counts] of Object.entries(updatedTotals)) {
-      if (!mainTotals[registryKey]) {
-        mainTotals[registryKey] = { count: 0, overrides: 0, errors: 0 };
-      }
-      mainTotals[registryKey].count = counts.count;
-      mainTotals[registryKey].overrides = counts.overrides;
-      mainTotals[registryKey].errors = counts.errors;
-    }
-  }
-
-  /**
-   * Validates that a manifest exists before processing a mod.
-   * Dispatches a failure event and returns a skip result when missing.
-   *
-   * @private
-   * @async
-   * @param {string} modId - Mod identifier.
-   * @param {ModManifest|null} manifest - Manifest for the mod.
-   * @param {'definitions' | 'instances'} phase - Current phase.
-   * @param {LoadResultAggregator} aggregator - Aggregator for counts.
-   * @returns {Promise<
-   *   | { shouldSkip: true; result: { status: 'skipped'; updatedTotals: TotalResultsSummary } }
-   *   | { shouldSkip: false }
-   * >}
-   */
-  async #validateManifest(modId, manifest, phase, aggregator) {
-    if (!manifest) {
-      const reason = `Manifest not found in registry for mod ID '${modId}'. Skipping content load for phase ${phase}.`;
-      this.#logger.error(`ModsLoader: ${reason}`);
-      await this.#recordModFailure(modId, reason);
-      return {
-        shouldSkip: true,
-        result: {
-          status: 'skipped',
-          updatedTotals: aggregator.getTotalCounts(),
-        },
-      };
-    }
-    return { shouldSkip: false };
-  }
-
-  /**
-   * Iterates configured loaders for a mod and aggregates their results.
-   *
-   * @private
-   * @async
-   * @param {string} modId - Mod identifier.
-   * @param {ModManifest} manifest - Manifest for the mod.
-   * @param {Array<LoaderConfigEntry>} phaseLoaders - Loaders for this phase.
-   * @param {'definitions' | 'instances'} phase - Current phase.
-   * @param {LoadResultAggregator} aggregator - Aggregator for counts.
-   * @returns {Promise<{ hasContent: boolean; status: 'success' | 'failed' }>}
-   *   Whether any content was processed and final status.
-   */
-  /**
-   * Runs each configured loader for a mod and aggregates their results.
-   *
-   * @private
-   * @async
-   * @param {string} modId - Mod identifier.
-   * @param {ModManifest} manifest - Manifest for the mod.
-   * @param {Array<LoaderConfigEntry>} phaseLoaders - Loaders for this phase.
-   * @param {'definitions' | 'instances'} phase - Current phase.
-   * @param {LoadResultAggregator} aggregator - Aggregator for counts.
-   * @returns {Promise<{ hasContent: boolean; status: 'success' | 'failed' }>}
-   *   Whether any content was processed and final status.
-   */
-  async #runLoadersForMod(modId, manifest, phaseLoaders, phase, aggregator) {
-    let status = 'success';
-    let hasContentInPhase = false;
-    for (const config of phaseLoaders) {
-      const { loader, contentKey, diskFolder, registryKey } = config;
-      const manifestContent = manifest.content || {};
-      const contentList = resolvePath(manifestContent, contentKey);
-      const hasContentForLoader =
-        Array.isArray(contentList) && contentList.length > 0;
-
-      if (hasContentForLoader) {
-        hasContentInPhase = true;
-        this.#logger.debug(
-          `ModsLoader [${modId}, ${phase}]: Processing ${contentKey} content with ${contentList.length} files...`
-        );
-        this.#logger.debug(
-          `ModsLoader [${modId}, ${phase}]: Found content for '${contentKey}'. Invoking loader '${loader.constructor.name}'.`
-        );
-        try {
-          const result = /** @type {LoadItemsResult} */ (
-            await loader.loadItemsForMod(
-              modId,
-              manifest,
-              contentKey,
-              diskFolder,
-              registryKey
-            )
-          );
-          if (result && typeof result.count === 'number') {
-            aggregator.aggregate(result, registryKey);
-            if (Array.isArray(result.failures) && result.failures.length > 0) {
-              for (const { file, error } of result.failures) {
-                const msg = error?.message || String(error);
-                this.#logger.error(
-                  `ModsLoader [${modId}, ${phase}]: ${registryKey} file '${file}' failed: ${msg}`,
-                  { modId, registryKey, phase, file, error: msg },
-                  error
-                );
-              }
-            }
-          } else {
-            this.#logger.warn(
-              `ModsLoader [${modId}, ${phase}]: Loader for '${registryKey}' returned an unexpected result format. Assuming 0 counts.`,
-              { result }
-            );
-            aggregator.aggregate(null, registryKey);
-          }
-        } catch (error) {
-          const errorMessage = error?.message || String(error);
-          this.#logger.error(
-            `ModsLoader [${modId}, ${phase}]: Error loading content type '${registryKey}'. Continuing...`,
-            { modId, registryKey, phase, error: errorMessage },
-            error
-          );
-          aggregator.recordFailure(registryKey);
-          await this.#validatedEventDispatcher
-            .dispatch(
-              'initialization:world_loader:content_load_failed',
-              { modId, registryKey, error: errorMessage, phase },
-              { allowSchemaNotFound: true }
-            )
-            .catch((e) =>
-              this.#logger.error(
-                `Failed dispatching content_load_failed event for ${modId}/${registryKey}/${phase}`,
-                e
-              )
-            );
-          status = 'failed';
-        }
-      } else {
-        this.#logger.debug(
-          `ModsLoader [${modId}, ${phase}]: Skipping content type '${registryKey}' (key: '${contentKey}') as it's not defined or empty in the manifest.`
-        );
-      }
-    }
-    return { hasContent: hasContentInPhase, status };
-  }
-
-  /**
-   * Dispatches a mod failure event and logs any dispatch errors.
-   *
-   * @private
-   * @async
-   * @param {string} modId - Identifier of the failed mod.
-   * @param {string} reason - Explanation for the failure.
-   * @param {'definitions' | 'instances'} [phase] - Phase context for logging.
-   * @returns {Promise<void>} Resolves when the dispatch completes.
-   */
-  async #recordModFailure(modId, reason, phase) {
-    await this.#validatedEventDispatcher
-      .dispatch(
-        'initialization:world_loader:mod_load_failed',
-        { modId, reason },
-        { allowSchemaNotFound: true }
-      )
-      .catch((dispatchError) =>
-        this.#logger.error(
-          `Failed dispatching mod_load_failed event for ${modId}${phase ? ` after unexpected error in phase ${phase}` : ''}: ${dispatchError.message}`,
-          dispatchError
-        )
-      );
-  }
-
-  /**
-   * Builds a debug summary message after all loaders for a mod have run.
-   *
-   * @private
-   * @param {string} modId - Mod identifier.
-   * @param {'definitions' | 'instances'} phase - Current phase.
-   * @param {number} durationMs - Time taken to process the mod.
-   * @param {LoadResultAggregator} aggregator - Aggregated loader results.
-   * @returns {string} Formatted summary message.
-   */
-  #buildSummaryMessage(modId, phase, durationMs, aggregator) {
-    const totalModOverrides = Object.values(aggregator.modResults).reduce(
-      (sum, res) => sum + (res.overrides || 0),
-      0
-    );
-    const totalModErrors = Object.values(aggregator.modResults).reduce(
-      (sum, res) => sum + (res.errors || 0),
-      0
-    );
-    const typeCountsString = Object.entries(aggregator.modResults)
-      .filter(([, result]) => result.count > 0 || result.errors > 0)
-      .map(
-        ([t, result]) =>
-          `${t}(${result.count}${result.errors > 0 ? ` E:${result.errors}` : ''})`
-      )
-      .sort()
-      .join(', ');
-    return `Mod '${modId}' phase '${phase}' loaded in ${durationMs.toFixed(2)}ms: ${
-      typeCountsString.length > 0
-        ? typeCountsString
-        : 'No items processed in this phase'
-    }${typeCountsString.length > 0 ? ' ' : ''}-> Overrides(${totalModOverrides}), Errors(${totalModErrors})`;
-  }
-
-  /**
-   * Processes content for a single mod using specified loaders for a given phase.
-   *
-   * @private
-   * @param {string} modId - Mod identifier.
-   * @param {ModManifest|null} manifest - Manifest for the mod.
-   * @param {TotalResultsSummary} totalCounts - Aggregated totals object.
-   * @param {Array<LoaderConfigEntry>} phaseLoaders - Loaders applicable for the current phase.
-   * @param {'definitions' | 'instances'} phase - The current loading phase.
-   * @returns {Promise<{status: 'success' | 'skipped' | 'failed', updatedTotals: TotalResultsSummary}>} Status and updated totals for this mod.
-   */
   async processMod(modId, manifest, totalCounts, phaseLoaders, phase) {
-    this.#logger.debug(
-      `--- Loading content for mod: ${modId}, phase: ${phase} ---`
-    );
-    const aggregator = this.#aggregatorFactory(totalCounts);
-    let modDurationMs = 0;
-    /** @type {'success' | 'skipped' | 'failed'} */
-    let status = 'success';
-    let hasContentInPhase = false;
-
-    try {
-      const manifestCheck = await this.#validateManifest(
+    if (!manifest) {
+      return this.#modProcessor.processMod(
         modId,
-        manifest,
-        phase,
-        aggregator
-      );
-      if (manifestCheck.shouldSkip) {
-        return manifestCheck.result;
-      }
-
-      this.#logger.debug(
-        `ModsLoader [${modId}, ${phase}]: Manifest retrieved successfully. Processing content types...`
-      );
-      const modStartTime = this.#timer();
-
-      const { hasContent, status: loaderStatus } = await this.#runLoadersForMod(
-        modId,
-        /** @type {ModManifest} */ (manifest),
+        null,
+        totalCounts,
         phaseLoaders,
-        phase,
-        aggregator
-      );
-
-      hasContentInPhase = hasContent;
-      status = loaderStatus;
-
-      const modEndTime = this.#timer();
-      modDurationMs = modEndTime - modStartTime;
-      this.#logger.debug(
-        `ModsLoader [${modId}, ${phase}]: Content loading loop took ${modDurationMs.toFixed(2)} ms.`
-      );
-    } catch (error) {
-      this.#logger.error(
-        `ModsLoader [${modId}, ${phase}]: Unexpected error during processing for mod '${modId}' in phase '${phase}'. Skipping remaining content for this mod in this phase.`,
-        { modId, phase, error: error?.message },
-        error
-      );
-      await this.#recordModFailure(
-        modId,
-        `Unexpected error in phase ${phase}: ${error?.message}`,
         phase
       );
-      return Promise.reject(error);
     }
-
-    if (!hasContentInPhase && status !== 'failed') {
-      // If the mod had no content for this phase and no errors occurred, it's considered 'skipped' for this phase.
-      // This prevents a mod with only definitions from being marked as 'success' after the instance phase where it has no content.
-      status = 'skipped';
-    }
-
-    const summaryMessage = this.#buildSummaryMessage(
+    return this.#executeModProcessing(
       modId,
-      phase,
-      modDurationMs,
-      aggregator
+      manifest,
+      totalCounts,
+      phaseLoaders,
+      phase
     );
-    this.#logger.debug(summaryMessage);
-    this.#logger.debug(
-      `--- Finished loading content for mod: ${modId}, phase: ${phase} ---`
+  }
+
+  #executeModProcessing(modId, manifest, totalCounts, phaseLoaders, phase) {
+    return this.#modProcessor.processMod(
+      modId,
+      manifest,
+      totalCounts,
+      phaseLoaders,
+      phase
     );
-    return { status, updatedTotals: aggregator.getTotalCounts() };
   }
 }
 

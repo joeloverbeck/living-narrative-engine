@@ -8,6 +8,7 @@ import CommandOutcomeInterpreter from '../../../src/commands/interpreters/comman
 import TurnDirective from '../../../src/turns/constants/turnDirectives.js';
 import { beforeEach, describe, expect, it } from '@jest/globals';
 import { safeDispatchError } from '../../../src/utils/safeDispatchErrorUtils.js';
+import { InvalidArgumentError } from '../../../src/errors/invalidArgumentError.js';
 
 let logger;
 let dispatcher;
@@ -49,20 +50,48 @@ describe('CommandOutcomeInterpreter additional branches', () => {
   it('dispatches error when result lacks success flag', async () => {
     const interpreter = new CommandOutcomeInterpreter({ dispatcher, logger });
     await expect(interpreter.interpret({}, turnContext)).rejects.toThrow(
-      "CommandOutcomeInterpreter: Invalid CommandResult - 'success' boolean is missing. Actor: actor-1."
+      new InvalidArgumentError(
+        "CommandOutcomeInterpreter: Invalid CommandResult - 'success' boolean is missing. Actor: actor-1."
+      )
     );
     expect(safeDispatchError).toHaveBeenCalledWith(
       dispatcher,
       expect.stringContaining('Invalid CommandResult'),
-      expect.any(Object)
+      {
+        raw: 'Actor actor-1, Received Result: {}',
+        timestamp: expect.any(String),
+        stack: expect.any(String),
+        receivedResult: {},
+      }
     );
   });
 
-  it('returns END_TURN_FAILURE when command fails', async () => {
+  it('returns RE_PROMPT when command fails but turnEnded is false', async () => {
     const interpreter = new CommandOutcomeInterpreter({ dispatcher, logger });
     const result = {
       success: false,
       turnEnded: false,
+      actionResult: { actionId: 'fail:action' },
+    };
+    const directive = await interpreter.interpret(result, turnContext);
+    expect(directive).toBe(TurnDirective.RE_PROMPT);
+  });
+
+  it('returns END_TURN_FAILURE when command fails and turnEnded is true', async () => {
+    const interpreter = new CommandOutcomeInterpreter({ dispatcher, logger });
+    const result = {
+      success: false,
+      turnEnded: true,
+      actionResult: { actionId: 'fail:action' },
+    };
+    const directive = await interpreter.interpret(result, turnContext);
+    expect(directive).toBe(TurnDirective.END_TURN_FAILURE);
+  });
+
+  it('defaults to END_TURN_FAILURE when turnEnded is missing', async () => {
+    const interpreter = new CommandOutcomeInterpreter({ dispatcher, logger });
+    const result = {
+      success: false,
       actionResult: { actionId: 'fail:action' },
     };
     const directive = await interpreter.interpret(result, turnContext);
@@ -101,12 +130,19 @@ describe('CommandOutcomeInterpreter additional branches', () => {
   it('dispatches error when turnContext is missing getActor', async () => {
     const interpreter = new CommandOutcomeInterpreter({ dispatcher, logger });
     await expect(interpreter.interpret({}, {})).rejects.toThrow(
-      'CommandOutcomeInterpreter: Invalid turnContext provided.'
+      new InvalidArgumentError(
+        'CommandOutcomeInterpreter: Invalid turnContext provided.'
+      )
     );
     expect(safeDispatchError).toHaveBeenCalledWith(
       dispatcher,
       'CommandOutcomeInterpreter: Invalid turnContext provided.',
-      expect.any(Object)
+      {
+        raw: 'turnContext was object. Expected ITurnContext object.',
+        timestamp: expect.any(String),
+        stack: expect.any(String),
+        receivedContextType: 'object',
+      }
     );
     expect(logger.error).toHaveBeenCalledWith(
       'CommandOutcomeInterpreter: Invalid turnContext provided.',
@@ -118,12 +154,19 @@ describe('CommandOutcomeInterpreter additional branches', () => {
     const interpreter = new CommandOutcomeInterpreter({ dispatcher, logger });
     turnContext.getActor.mockReturnValue({});
     await expect(interpreter.interpret({}, turnContext)).rejects.toThrow(
-      'CommandOutcomeInterpreter: Could not retrieve a valid actor or actor ID from turnContext.'
+      new InvalidArgumentError(
+        'CommandOutcomeInterpreter: Could not retrieve a valid actor or actor ID from turnContext.'
+      )
     );
     expect(safeDispatchError).toHaveBeenCalledWith(
       dispatcher,
       'CommandOutcomeInterpreter: Could not retrieve a valid actor or actor ID from turnContext.',
-      expect.any(Object)
+      {
+        raw: 'Actor object in context was {}.',
+        timestamp: expect.any(String),
+        stack: expect.any(String),
+        actorInContext: {},
+      }
     );
     expect(logger.error).toHaveBeenCalledWith(
       'CommandOutcomeInterpreter: Could not retrieve a valid actor or actor ID from turnContext.',

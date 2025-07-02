@@ -4,7 +4,9 @@
 import { jest, describe, beforeEach, test, expect } from '@jest/globals';
 import { ClientApiKeyProvider } from '../../../src/llms/clientApiKeyProvider.js';
 import * as EnvironmentModule from '../../../src/llms/environmentContext.js';
+import * as LlmUtils from '../../../src/llms/utils/llmUtils.js';
 const { EnvironmentContext } = EnvironmentModule;
+import { InvalidEnvironmentContextError } from '../../../src/errors/invalidEnvironmentContextError.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
 import { LOGGER_INFO_METHOD_ERROR } from '../../common/constants.js';
 import { expectNoDispatch } from '../../common/engine/dispatchTestUtils.js';
@@ -120,40 +122,35 @@ describe('ClientApiKeyProvider', () => {
       );
     });
 
-    test('should return null and log error if environmentContext is invalid', async () => {
-      const spy = jest.spyOn(EnvironmentModule, 'isValidEnvironmentContext');
-      const key = await provider.getKey(llmConfig, null);
-      expect(key).toBeNull();
-      expect(dispatcher.dispatch).toHaveBeenCalledWith(
-        SYSTEM_ERROR_OCCURRED_ID,
-        expect.objectContaining({
-          message:
-            'ClientApiKeyProvider.getKey (test-llm): Invalid environmentContext provided.',
-        })
+    test('should throw InvalidEnvironmentContextError if environmentContext is invalid', async () => {
+      const spy = jest.spyOn(LlmUtils, 'validateEnvironmentContext');
+      await expect(provider.getKey(llmConfig, null)).rejects.toThrow(
+        InvalidEnvironmentContextError
       );
-      expect(spy).toHaveBeenCalledWith(null);
+      expect(spy).toHaveBeenCalledWith(
+        null,
+        'ClientApiKeyProvider.getKey (test-llm)',
+        dispatcher,
+        logger
+      );
       spy.mockRestore();
     });
 
-    test('should return null and log error if environmentContext.isClient is not a function', async () => {
+    test('should throw InvalidEnvironmentContextError if environmentContext.isClient is not a function', async () => {
       const invalidEc = {
         // isClient: 'not-a-function' // or missing
         getExecutionEnvironment: jest.fn().mockReturnValue('client'),
       };
-      const spy = jest.spyOn(EnvironmentModule, 'isValidEnvironmentContext');
-      const key = await provider.getKey(
-        llmConfig,
-        /** @type {any} */ (invalidEc)
+      const spy = jest.spyOn(LlmUtils, 'validateEnvironmentContext');
+      await expect(
+        provider.getKey(llmConfig, /** @type {any} */ (invalidEc))
+      ).rejects.toThrow(InvalidEnvironmentContextError);
+      expect(spy).toHaveBeenCalledWith(
+        invalidEc,
+        'ClientApiKeyProvider.getKey (test-llm)',
+        dispatcher,
+        logger
       );
-      expect(key).toBeNull();
-      expect(dispatcher.dispatch).toHaveBeenCalledWith(
-        SYSTEM_ERROR_OCCURRED_ID,
-        expect.objectContaining({
-          message:
-            'ClientApiKeyProvider.getKey (test-llm): Invalid environmentContext provided.',
-        })
-      );
-      expect(spy).toHaveBeenCalledWith(invalidEc);
       spy.mockRestore();
     });
 

@@ -13,12 +13,12 @@ export * from './objectUtils.js';
 export * from './cloneUtils.js';
 export * from './placeholderPatterns.js';
 export * from './placeholderPathResolver.js';
+export { ExecutionPlaceholderResolver } from './executionPlaceholderResolver.js';
 export { StructureResolver } from './structureResolver.js';
 export * from './jsonCleaning.js';
 export * from './jsonRepair.js';
 export * from './evaluationContextUtils.js';
-export * from './eventDispatchUtils.js';
-export { dispatchWithErrorHandling } from './eventDispatchHelper.js';
+export { EventDispatchService } from './eventDispatchService.js';
 export {
   assertPresent,
   assertFunction,
@@ -28,4 +28,10 @@ export {
   validateDependency,
   validateDependencies,
 } from './dependencyUtils.js';
+export { validateNonEmptyString } from './stringValidation.js';
 export { createErrorDetails } from './errorDetails.js';
+export { readComponent, writeComponent } from './componentAccessUtils.js';
+export * from '../turns/strategies/strategyHelpers.js';
+export * from './operationValidationUtils.js';
+export { safeStringify } from './safeStringify.js';
+export { warnNoActiveTurn } from './warnUtils.js';

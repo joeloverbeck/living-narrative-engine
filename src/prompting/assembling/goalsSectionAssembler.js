@@ -1,6 +1,7 @@
 // src/prompting/goalsSectionAssembler.js
 import { IPromptElementAssembler } from '../../interfaces/IPromptElementAssembler.js';
 import { resolveWrapper } from '../../utils/wrapperUtils.js';
+import { validateAssemblerParams } from './assemblerValidation.js';
 
 export const GOALS_WRAPPER_KEY = 'goals_wrapper';
 
@@ -16,8 +17,18 @@ export class GoalsSectionAssembler extends IPromptElementAssembler {
 
   /** @inheritdoc */
   assemble(elementCfg, promptData, placeholderResolver) {
-    const arr = promptData?.goalsArray;
-    if (!Array.isArray(arr) || arr.length === 0) {
+    const { valid } = validateAssemblerParams({
+      elementConfig: elementCfg,
+      promptData,
+      placeholderResolver,
+      functionName: 'GoalsSectionAssembler.assemble',
+    });
+    if (!valid) {
+      return '';
+    }
+
+    const goals = promptData?.goalsArray;
+    if (!Array.isArray(goals) || goals.length === 0) {
       return '';
     }
 
@@ -31,13 +42,13 @@ export class GoalsSectionAssembler extends IPromptElementAssembler {
       const ms = new Date(ts).getTime();
       return Number.isFinite(ms) ? ms : Number.POSITIVE_INFINITY;
     };
-    const sorted = arr
+    const sortedGoals = goals
       .slice()
       .sort((a, b) => safeMs(a.timestamp) - safeMs(b.timestamp));
 
-    const goalLines = sorted
-      .filter((g) => g?.text)
-      .map((g) => `- ${String(g.text)}`)
+    const goalLines = sortedGoals
+      .filter((goal) => goal?.text)
+      .map((goal) => `- ${String(goal.text)}`)
       .join('\n');
 
     if (!goalLines) {

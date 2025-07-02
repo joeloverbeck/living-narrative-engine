@@ -17,11 +17,12 @@
 
 // --- DI & Helper Imports ---
 import { tokens } from '../tokens.js';
-import { Registrar } from '../registrarHelpers.js';
+import { Registrar } from '../../utils/registrarHelpers.js';
 import { INITIALIZABLE } from '../tags.js';
 
 // --- Service Imports ---
 import { ActionDiscoveryService } from '../../actions/actionDiscoveryService.js';
+import { ActionCandidateProcessor } from '../../actions/actionCandidateProcessor.js';
 import { TargetResolutionService } from '../../actions/targetResolutionService.js';
 import { ActionIndex } from '../../actions/actionIndex.js';
 import { ActionValidationContextBuilder } from '../../actions/validation/actionValidationContextBuilder.js';
@@ -30,7 +31,7 @@ import CommandProcessor from '../../commands/commandProcessor.js';
 import { TraceContext as TraceContextImpl } from '../../actions/tracing/traceContext.js';
 
 // --- Helper Function Imports ---
-import { formatActionCommand } from '../../actions/actionFormatter.js';
+import ActionCommandFormatter from '../../actions/actionFormatter.js';
 import { getActorLocation } from '../../utils/actorLocationUtils.js';
 import { getEntityDisplayName } from '../../utils/entityUtils.js';
 
@@ -73,8 +74,10 @@ export function registerCommandAndAction(container) {
       scopeEngine: c.resolve(tokens.IScopeEngine),
       entityManager: c.resolve(tokens.IEntityManager),
       logger: c.resolve(tokens.ILogger),
+      serviceSetup: c.resolve(tokens.ServiceSetup),
       safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
       jsonLogicEvaluationService: c.resolve(tokens.JsonLogicEvaluationService),
+      dslParser: c.resolve(tokens.DslParser),
     });
   });
 
@@ -87,23 +90,37 @@ export function registerCommandAndAction(container) {
     'Command and Action Registration: Registered TraceContextFactory.'
   );
 
+  // --- Action Candidate Processor ---
+  // Must be registered before ActionDiscoveryService
+  registrar.singletonFactory(tokens.ActionCandidateProcessor, (c) => {
+    return new ActionCandidateProcessor({
+      prerequisiteEvaluationService: c.resolve(
+        tokens.PrerequisiteEvaluationService
+      ),
+      targetResolutionService: c.resolve(tokens.ITargetResolutionService),
+      entityManager: c.resolve(tokens.IEntityManager),
+      actionCommandFormatter: new ActionCommandFormatter(),
+      safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+      getEntityDisplayNameFn: getEntityDisplayName,
+      logger: c.resolve(tokens.ILogger),
+    });
+  });
+  logger.debug(
+    'Command and Action Registration: Registered ActionCandidateProcessor.'
+  );
+
   // --- Action Discovery & Execution ---
   registrar
     .tagged(INITIALIZABLE)
     .singletonFactory(tokens.IActionDiscoveryService, (c) => {
       return new ActionDiscoveryService({
         entityManager: c.resolve(tokens.IEntityManager),
-        prerequisiteEvaluationService: c.resolve(
-          tokens.PrerequisiteEvaluationService
-        ),
         actionIndex: c.resolve(tokens.ActionIndex),
         logger: c.resolve(tokens.ILogger),
-        formatActionCommandFn: formatActionCommand,
-        safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
-        targetResolutionService: c.resolve(tokens.ITargetResolutionService),
+        serviceSetup: c.resolve(tokens.ServiceSetup),
+        actionCandidateProcessor: c.resolve(tokens.ActionCandidateProcessor),
         traceContextFactory: c.resolve(tokens.TraceContextFactory),
         getActorLocationFn: getActorLocation,
-        getEntityDisplayNameFn: getEntityDisplayName,
       });
     });
   logger.debug(
@@ -135,6 +152,7 @@ export function registerCommandAndAction(container) {
     return new CommandProcessor({
       logger: c.resolve(tokens.ILogger),
       safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+      eventDispatchService: c.resolve(tokens.EventDispatchService),
     });
   });
   logger.debug(

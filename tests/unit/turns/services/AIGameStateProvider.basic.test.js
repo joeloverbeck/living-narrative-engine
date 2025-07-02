@@ -68,7 +68,8 @@ describe('AIGameStateProvider', () => {
       mockLogger
     );
     expect(mockActorDataExtractor.extractPromptData).toHaveBeenCalledWith(
-      expectedActorState
+      expectedActorState,
+      'actor-1'
     );
     expect(mockLocationSummaryProvider.build).toHaveBeenCalledWith(
       mockActor,

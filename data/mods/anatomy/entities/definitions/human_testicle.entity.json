@@ -1,0 +1,19 @@
+{
+  "$schema": "http://example.com/schemas/entity-definition.schema.json",
+  "id": "anatomy:human_testicle",
+  "description": "A human male reproductive gland",
+  "components": {
+    "anatomy:part": {
+      "subType": "genital"
+    },
+    "descriptors:size_category": {
+      "size": "small"
+    },
+    "descriptors:shape_general": {
+      "shape": "oval"
+    },
+    "core:name": {
+      "text": "testicle"
+    }
+  }
+}

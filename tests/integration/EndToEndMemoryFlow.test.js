@@ -10,7 +10,12 @@ import { PlaceholderResolver } from '../../src/utils/placeholderResolverUtils.js
 import { PromptStaticContentService } from '../../src/prompting/promptStaticContentService.js';
 import AjvSchemaValidator from '../../src/validation/ajvSchemaValidator.js';
 import { LLMResponseProcessor } from '../../src/turns/services/LLMResponseProcessor.js';
+import { LlmJsonService } from '../../src/llms/llmJsonService.js';
 import { SHORT_TERM_MEMORY_COMPONENT_ID } from '../../src/constants/componentIds.js';
+import {
+  LLM_TURN_ACTION_RESPONSE_SCHEMA,
+  LLM_TURN_ACTION_RESPONSE_SCHEMA_ID,
+} from '../../src/turns/schemas/llmOutputSchemas.js';
 
 // New imports for builder adjustments
 import { AssemblerRegistry } from '../../src/prompting/assemblerRegistry.js';
@@ -126,12 +131,21 @@ describe('End-to-End Short-Term Memory Flow', () => {
       conditionEvaluator: ConditionEvaluator,
     });
 
-    schemaValidator = new AjvSchemaValidator(logger);
+    schemaValidator = new AjvSchemaValidator({
+      logger: logger,
+      preloadSchemas: [
+        {
+          schema: LLM_TURN_ACTION_RESPONSE_SCHEMA,
+          id: LLM_TURN_ACTION_RESPONSE_SCHEMA_ID,
+        },
+      ],
+    });
     const safeEventDispatcher = { dispatch: jest.fn() };
     responseProcessor = new LLMResponseProcessor({
       schemaValidator,
       logger,
       safeEventDispatcher,
+      llmJsonService: new LlmJsonService(),
     });
   });
 

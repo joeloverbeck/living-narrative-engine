@@ -31,7 +31,9 @@ export const createMockActionIndex = () =>
  * @returns {{ resolveTargets: jest.Mock }} Mock target resolution service
  */
 export const createMockTargetResolutionService = () =>
-  createSimpleMock(['resolveTargets']);
+  createSimpleMock(['resolveTargets'], {
+    resolveTargets: jest.fn(() => ({ targets: [] })),
+  });
 
 /**
  * Creates a mock formatActionCommand function.
@@ -39,4 +41,12 @@ export const createMockTargetResolutionService = () =>
  * @description Returns a jest.fn used to format action commands in tests.
  * @returns {jest.Mock} Mock formatting function
  */
-export const createMockFormatActionCommandFn = () => jest.fn();
+
+/**
+ * Creates a mock action command formatter implementing a `format` method.
+ *
+ * @returns {{ format: jest.Mock }} Mock formatter instance
+ */
+export const createMockActionCommandFormatter = () => ({
+  format: jest.fn(),
+});

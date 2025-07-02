@@ -10,6 +10,7 @@
 /** @typedef {import('../entities/entityInstance.js').default} EntityInstance */
 /** @typedef {import('../interfaces/IDataRegistry.js').IDataRegistry} IDataRegistry */
 /** @typedef {import('../interfaces/IScopeRegistry.js').IScopeRegistry} IScopeRegistry */
+/** @typedef {import('../utils/eventDispatchService.js').EventDispatchService} EventDispatchService */
 
 // --- Library Imports ---
 
@@ -19,9 +20,19 @@ import {
   WORLDINIT_ENTITY_INSTANTIATION_FAILED_ID,
 } from '../constants/eventIds.js';
 
+/**
+ * @description Default result object used when no world instances are processed.
+ * @type {{entities: Entity[], instantiatedCount: number, failedCount: number, totalProcessed: number}}
+ */
+const EMPTY_RESULT = {
+  entities: [],
+  instantiatedCount: 0,
+  failedCount: 0,
+  totalProcessed: 0,
+};
+
 // --- Utility Imports ---
 import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
-import { dispatchWithLogging } from '../utils/eventDispatchUtils.js';
 import { WorldInitializationError } from '../errors/InitializationError.js';
 import {
   assertFunction,
@@ -49,6 +60,8 @@ class WorldInitializer {
   #validatedEventDispatcher;
   /** @type {ILogger} */
   #logger;
+  /** @type {EventDispatchService} */
+  #eventDispatchService;
 
   /**
    * Exposes the provided world context for potential external use.
@@ -67,6 +80,7 @@ class WorldInitializer {
    * @param {IWorldContext} dependencies.worldContext - World context reference
    * @param {IGameDataRepository} dependencies.gameDataRepository - Repository for game data
    * @param {ValidatedEventDispatcher} dependencies.validatedEventDispatcher - Event dispatcher
+   * @param {EventDispatchService} dependencies.eventDispatchService - Event dispatch service
    * @param {ILogger} dependencies.logger - Logger instance
    * @param {IScopeRegistry} dependencies.scopeRegistry - Registry used for scope initialization
    * @throws {Error} If any required dependency is missing or invalid.
@@ -76,6 +90,7 @@ class WorldInitializer {
     worldContext,
     gameDataRepository,
     validatedEventDispatcher,
+    eventDispatchService,
     logger,
     scopeRegistry,
   }) {
@@ -114,11 +129,18 @@ class WorldInitializer {
       'WorldInitializer requires an IScopeRegistry with initialize().',
       WorldInitializationError
     );
+    assertFunction(
+      eventDispatchService,
+      'dispatchWithLogging',
+      'WorldInitializer requires an EventDispatchService with dispatchWithLogging().',
+      WorldInitializationError
+    );
 
     this.#entityManager = entityManager;
     this.#worldContext = worldContext;
     this.#repository = gameDataRepository;
     this.#validatedEventDispatcher = validatedEventDispatcher;
+    this.#eventDispatchService = eventDispatchService;
     this.#logger = logger;
 
     this.#logger.debug(
@@ -130,7 +152,7 @@ class WorldInitializer {
    * Loads world data and validates the presence of an instances array.
    *
    * @param {string} worldName - The world identifier.
-   * @returns {Promise<{instances: object[], earlyResult?: {entities: Entity[], instantiatedCount: number, failedCount: number, totalProcessed: number}}>} Object containing instances and optional early result.
+   * @returns {Promise<{instances: object[], earlyResult?: typeof EMPTY_RESULT}>} Object containing instances and optional early result.
    * @private
    */
   async #loadWorldData(worldName) {
@@ -156,12 +178,7 @@ class WorldInitializer {
       );
       return {
         instances: [],
-        earlyResult: {
-          entities: [],
-          instantiatedCount: 0,
-          failedCount: 0,
-          totalProcessed: 0,
-        },
+        earlyResult: EMPTY_RESULT,
       };
     }
 
@@ -256,8 +273,7 @@ class WorldInitializer {
       this.#logger.error(
         `WorldInitializer (Pass 1): Failed to instantiate entity from definition: ${definitionId} for instance: ${instanceId}. createEntityInstance returned null/undefined or threw an error.`
       );
-      await dispatchWithLogging(
-        this.#validatedEventDispatcher,
+      await this.#eventDispatchService.dispatchWithLogging(
         WORLDINIT_ENTITY_INSTANTIATION_FAILED_ID,
         {
           instanceId,
@@ -266,7 +282,6 @@ class WorldInitializer {
           error: `Failed to create entity instance. EntityManager returned null/undefined or threw an error.`,
           reason: 'Initial World Load',
         },
-        this.#logger,
         `instance ${instanceId}`,
         { allowSchemaNotFound: true }
       );
@@ -277,8 +292,7 @@ class WorldInitializer {
       `WorldInitializer (Pass 1): Successfully instantiated entity ${instance.id} (from definition: ${instance.definitionId})`
     );
 
-    await dispatchWithLogging(
-      this.#validatedEventDispatcher,
+    await this.#eventDispatchService.dispatchWithLogging(
       WORLDINIT_ENTITY_INSTANTIATED_ID,
       {
         entityId: instance.id,
@@ -287,7 +301,6 @@ class WorldInitializer {
         worldName: worldName,
         reason: 'Initial World Load',
       },
-      this.#logger,
       `entity ${instance.id}`,
       { allowSchemaNotFound: true }
     );
@@ -338,8 +351,8 @@ class WorldInitializer {
    * Logs the final instantiation summary and returns it.
    *
    * @param {string} worldName - Name of the world being initialized.
-   * @param {{entities: Entity[], instantiatedCount: number, failedCount: number, totalProcessed: number}} result - Summary object.
-   * @returns {{entities: Entity[], instantiatedCount: number, failedCount: number, totalProcessed: number}} The same summary object.
+   * @param {typeof EMPTY_RESULT} result - Summary object.
+   * @returns {typeof EMPTY_RESULT} The same summary object.
    * @private
    */
   #dispatchInstantiationSummary(worldName, result) {
@@ -398,7 +411,7 @@ class WorldInitializer {
    * Dispatches 'worldinit:entity_instantiated' or 'worldinit:entity_instantiation_failed' events.
    *
    * @param {string} worldName - The name of the world to instantiate entities from.
-   * @returns {Promise<{entities: Entity[], instantiatedCount: number, failedCount: number, totalProcessed: number}>} An object containing the list of instantiated entities and counts.
+   * @returns {Promise<typeof EMPTY_RESULT>} An object containing the list of instantiated entities and counts.
    * @private
    */
   async #instantiateEntitiesFromWorld(worldName) {
@@ -449,7 +462,7 @@ class WorldInitializer {
    * Dispatches finer-grained 'worldinit:entity_instantiated' and 'worldinit:entity_instantiation_failed' events.
    *
    * @param {string} worldName - The name of the world to initialize entities for.
-   * @returns {Promise<{entities: Entity[], instantiatedCount: number, failedCount: number, totalProcessed: number}>} Resolves with an object containing instantiated entities and counts.
+   * @returns {Promise<typeof EMPTY_RESULT>} Resolves with an object containing instantiated entities and counts.
    * @throws {Error} If a critical error occurs during initialization that should stop the process (e.g., world not found).
    */
   async initializeWorldEntities(worldName) {

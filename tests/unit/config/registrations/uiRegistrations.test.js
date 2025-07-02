@@ -2,25 +2,21 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { registerUI } from '../../../../src/dependencyInjection/registrations/uiRegistrations.js';
 import { tokens } from '../../../../src/dependencyInjection/tokens.js';
-import { Registrar } from '../../../../src/dependencyInjection/registrarHelpers.js';
+import { Registrar } from '../../../../src/utils/registrarHelpers.js';
 
 // --- Mock Registrar Helper ---
 // The key to a robust test is to mock the boundary, in this case, the Registrar.
 // We create mock functions for each of its methods that we expect `registerUI` to call.
-const mockInstance = jest.fn();
-const mockSingle = jest.fn();
-const mockSingletonFactory = jest.fn();
-jest.mock('../../../../src/dependencyInjection/registrarHelpers.js', () => {
-  // This factory is called by Jest when `new Registrar()` is encountered.
-  // We return an object that has our mock methods on it.
+const mockRegister = jest.fn();
+jest.mock('../../../../src/utils/registrarHelpers.js', () => {
+  const registerWithLog = jest.fn((registrar, token, factory, options) => {
+    registrar.register(token, factory, options);
+  });
   return {
     Registrar: jest.fn().mockImplementation(() => {
-      return {
-        instance: mockInstance,
-        single: mockSingle,
-        singletonFactory: mockSingletonFactory,
-      };
+      return { register: mockRegister, singletonFactory: jest.fn() };
     }),
+    registerWithLog,
   };
 });
 
@@ -71,90 +67,101 @@ describe('registerUI', () => {
     expect(Registrar).toHaveBeenCalledWith(mockContainer);
   });
 
-  it('should register essential external dependencies via registrar.instance()', () => {
-    expect(mockInstance).toHaveBeenCalledWith(
+  it('should register essential external dependencies', () => {
+    expect(mockRegister).toHaveBeenCalledWith(
       tokens.WindowDocument,
-      mockUiElements.document
+      mockUiElements.document,
+      { lifecycle: 'singleton', isInstance: true }
     );
-    expect(mockInstance).toHaveBeenCalledWith(
+    expect(mockRegister).toHaveBeenCalledWith(
       tokens.outputDiv,
-      mockUiElements.outputDiv
+      mockUiElements.outputDiv,
+      { lifecycle: 'singleton', isInstance: true }
     );
-    expect(mockInstance).toHaveBeenCalledWith(
+    expect(mockRegister).toHaveBeenCalledWith(
       tokens.inputElement,
-      mockUiElements.inputElement
+      mockUiElements.inputElement,
+      { lifecycle: 'singleton', isInstance: true }
     );
-    expect(mockInstance).toHaveBeenCalledWith(
+    expect(mockRegister).toHaveBeenCalledWith(
       tokens.titleElement,
-      mockUiElements.titleElement
+      mockUiElements.titleElement,
+      { lifecycle: 'singleton', isInstance: true }
     );
   });
 
-  it('should register core utilities via registrar.singletonFactory()', () => {
-    expect(mockSingletonFactory).toHaveBeenCalledWith(
+  it('should register core utilities via register()', () => {
+    expect(mockRegister).toHaveBeenCalledWith(
       tokens.IDocumentContext,
-      expect.any(Function)
+      expect.any(Function),
+      { lifecycle: 'singletonFactory' }
     );
-    expect(mockSingletonFactory).toHaveBeenCalledWith(
+    expect(mockRegister).toHaveBeenCalledWith(
       tokens.DomElementFactory,
-      expect.any(Function)
+      expect.any(Function),
+      { lifecycle: 'singletonFactory' }
     );
   });
 
-  it('should register alerting services via registrar.single()', () => {
-    // Check that AlertRouter is registered correctly
-    expect(mockSingle).toHaveBeenCalledWith(
+  it('should register alerting services via register()', () => {
+    expect(mockRegister).toHaveBeenCalledWith(
       tokens.AlertRouter,
       expect.any(Function),
-      [tokens.ISafeEventDispatcher]
+      { lifecycle: 'singleton', dependencies: [tokens.ISafeEventDispatcher] }
     );
   });
 
-  it('should register ChatAlertRenderer via registrar.singletonFactory()', () => {
-    // Verify the specific registration for the class we modified
-    expect(mockSingletonFactory).toHaveBeenCalledWith(
+  it('should register ChatAlertRenderer via register()', () => {
+    expect(mockRegister).toHaveBeenCalledWith(
       tokens.ChatAlertRenderer,
-      expect.any(Function)
+      expect.any(Function),
+      { lifecycle: 'singletonFactory' }
     );
   });
 
-  it('should register GlobalKeyHandler via registrar.singletonFactory()', () => {
-    expect(mockSingletonFactory).toHaveBeenCalledWith(
+  it('should register GlobalKeyHandler via register()', () => {
+    expect(mockRegister).toHaveBeenCalledWith(
       tokens.GlobalKeyHandler,
-      expect.any(Function)
+      expect.any(Function),
+      { lifecycle: 'singletonFactory' }
     );
   });
 
   it('should register all other UI components', () => {
-    // Spot-check a few other key registrations to ensure they are still present
-    expect(mockSingletonFactory).toHaveBeenCalledWith(
+    expect(mockRegister).toHaveBeenCalledWith(
       tokens.TitleRenderer,
-      expect.any(Function)
+      expect.any(Function),
+      { lifecycle: 'singletonFactory' }
     );
-    expect(mockSingletonFactory).toHaveBeenCalledWith(
+    expect(mockRegister).toHaveBeenCalledWith(
       tokens.InputStateController,
-      expect.any(Function)
+      expect.any(Function),
+      { lifecycle: 'singletonFactory' }
     );
-    expect(mockSingletonFactory).toHaveBeenCalledWith(
+    expect(mockRegister).toHaveBeenCalledWith(
       tokens.LocationRenderer,
-      expect.any(Function)
+      expect.any(Function),
+      { lifecycle: 'singletonFactory' }
     );
-    expect(mockSingletonFactory).toHaveBeenCalledWith(
+    expect(mockRegister).toHaveBeenCalledWith(
       tokens.ActionButtonsRenderer,
-      expect.any(Function)
+      expect.any(Function),
+      { lifecycle: 'singletonFactory' }
     );
-    expect(mockSingletonFactory).toHaveBeenCalledWith(
+    expect(mockRegister).toHaveBeenCalledWith(
       tokens.PerceptionLogRenderer,
-      expect.any(Function)
+      expect.any(Function),
+      { lifecycle: 'singletonFactory' }
     );
-    expect(mockSingle).toHaveBeenCalledWith(
+    expect(mockRegister).toHaveBeenCalledWith(
       tokens.DomUiFacade,
       expect.any(Function),
-      expect.any(Array)
+      expect.objectContaining({ lifecycle: 'singleton' })
     );
-    expect(mockSingletonFactory).toHaveBeenCalledWith(
+    expect(mockRegister).toHaveBeenCalledWith(
       tokens.EngineUIManager,
-      expect.any(Function)
+      expect.any(Function),
+      { lifecycle: 'singletonFactory' }
     );
   });
 

@@ -1,4 +1,5 @@
 import InitializationService from '../../../../src/initializers/services/initializationService.js';
+import LlmAdapterInitializer from '../../../../src/initializers/services/llmAdapterInitializer.js';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { expectNoDispatch } from '../../../common/engine/dispatchTestUtils.js';
 import { InvalidArgumentError } from '../../../../src/errors/invalidArgumentError.js';
@@ -18,6 +19,7 @@ let domUiFacade;
 let thoughtListener;
 let notesListener;
 let contentDependencyValidator;
+let llmAdapterInitializer;
 
 beforeEach(() => {
   logger = { error: jest.fn(), debug: jest.fn() };
@@ -37,6 +39,7 @@ beforeEach(() => {
   contentDependencyValidator = {
     validate: jest.fn().mockResolvedValue(undefined),
   };
+  llmAdapterInitializer = new LlmAdapterInitializer();
 });
 
 describe('InitializationService invalid world name handling', () => {
@@ -65,6 +68,7 @@ describe('InitializationService invalid world name handling', () => {
           systemInitializer,
           worldInitializer,
           contentDependencyValidator,
+          llmAdapterInitializer,
         },
       });
 

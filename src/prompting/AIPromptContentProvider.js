@@ -8,6 +8,7 @@
 /** @typedef {import('../interfaces/IPerceptionLogFormatter.js').IPerceptionLogFormatter} IPerceptionLogFormatter */
 /** @typedef {import('../interfaces/IGameStateValidationServiceForPrompting.js').IGameStateValidationServiceForPrompting} IGameStateValidationServiceForPrompting */
 /** @typedef {import('../turns/dtos/actionComposite.js').ActionComposite} ActionComposite */
+/** @typedef {import('../types/perceptionLogTypes.js').RawPerceptionLogEntry} RawPerceptionLogEntry */
 
 import { IAIPromptContentProvider } from '../turns/interfaces/IAIPromptContentProvider.js';
 import { ensureTerminalPunctuation } from '../utils/textUtils.js';
@@ -27,6 +28,7 @@ import {
   ERROR_FALLBACK_CRITICAL_GAME_STATE_MISSING,
 } from '../constants/textDefaults.js';
 import { SHORT_TERM_MEMORY_COMPONENT_ID } from '../constants/componentIds.js';
+import { validateDependencies } from '../utils/dependencyUtils.js';
 
 /**
  * @class AIPromptContentProvider
@@ -58,20 +60,36 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
     gameStateValidationService,
   }) {
     super();
-    if (!logger)
-      throw new Error('AIPromptContentProvider: Logger is required.');
-    if (!promptStaticContentService)
-      throw new Error(
-        'AIPromptContentProvider: PromptStaticContentService is required.'
-      );
-    if (!perceptionLogFormatter)
-      throw new Error(
-        'AIPromptContentProvider: PerceptionLogFormatter is required.'
-      );
-    if (!gameStateValidationService)
-      throw new Error(
-        'AIPromptContentProvider: GameStateValidationServiceForPrompting is required.'
-      );
+    validateDependencies(
+      [
+        {
+          dependency: logger,
+          name: 'AIPromptContentProvider: logger',
+          methods: ['info', 'warn', 'error', 'debug'],
+        },
+        {
+          dependency: promptStaticContentService,
+          name: 'AIPromptContentProvider: promptStaticContentService',
+          methods: [
+            'getCoreTaskDescriptionText',
+            'getCharacterPortrayalGuidelines',
+            'getNc21ContentPolicyText',
+            'getFinalLlmInstructionText',
+          ],
+        },
+        {
+          dependency: perceptionLogFormatter,
+          name: 'AIPromptContentProvider: perceptionLogFormatter',
+          methods: ['format'],
+        },
+        {
+          dependency: gameStateValidationService,
+          name: 'AIPromptContentProvider: gameStateValidationService',
+          methods: ['validate'],
+        },
+      ],
+      logger
+    );
 
     this.#logger = logger;
     this.#promptStaticContentService = promptStaticContentService;
@@ -89,10 +107,9 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
    * @param {Array<*>} items - Array of items to format.
    * @param {function(*): string} itemFormatter - Function to convert each item to a string.
    * @param {string} emptyMessage - Message to show if items is empty.
-   * @param {ILogger} logger - Logger instance for debugging.
    * @returns {string} Formatted section string.
    */
-  _formatListSegment(title, items, itemFormatter, emptyMessage, logger) {
+  _formatListSegment(title, items, itemFormatter, emptyMessage) {
     const cleanedTitle = title.replace(/[:\n]*$/, '');
     const lines = [cleanedTitle + ':'];
 
@@ -100,12 +117,12 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
       items.forEach((item) => {
         lines.push(itemFormatter(item));
       });
-      logger.debug(
+      this.#logger.debug(
         `AIPromptContentProvider: Formatted ${items.length} items for section "${cleanedTitle}".`
       );
     } else {
       lines.push(emptyMessage);
-      logger.debug(
+      this.#logger.debug(
         `AIPromptContentProvider: Section "${cleanedTitle}" is empty, using empty message.`
       );
     }
@@ -130,17 +147,154 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
   }
 
   /**
+   * @private
+   * @description Extracts and sanitizes timestamped entries from a component.
+   * @param {object} component - Component containing the entries array.
+   * @param {string} key - Key of the array within the component.
+   * @returns {Array<{text:string,timestamp:string}>} Sanitized array of entries.
+   */
+  _extractTimestampedEntries(component, key) {
+    const entries = Array.isArray(component?.[key]) ? component[key] : [];
+    return entries
+      .filter(
+        (e) =>
+          typeof e.text === 'string' &&
+          e.text.trim().length > 0 &&
+          typeof e.timestamp === 'string' &&
+          e.timestamp.trim().length > 0
+      )
+      .map((e) => ({ text: e.text, timestamp: e.timestamp }));
+  }
+
+  /**
    * Validates if the provided AIGameStateDTO contains the critical information.
    *
    * @param {AIGameStateDTO | null | undefined} gameStateDto - The game state DTO to validate.
-   * @param {ILogger} logger - Logger instance for logging validation issues.
+   * @param {ILogger} _logger - Logger instance for logging validation issues.
    * @returns {{isValid: boolean, errorContent: string | null}} Result of validation.
    */
-  validateGameStateForPrompting(gameStateDto, logger) {
+  validateGameStateForPrompting(gameStateDto, _logger) {
     this.#logger.debug(
       `AIPromptContentProvider.validateGameStateForPrompting: Delegating to GameStateValidationServiceForPrompting.`
     );
     return this.#gameStateValidationService.validate(gameStateDto);
+  }
+
+  /**
+   * @private
+   * Validates the incoming game state or throws an Error if invalid.
+   * @param {AIGameStateDTO | null | undefined} gameStateDto - The DTO to validate.
+   * @param {ILogger} logger - Logger instance passed from caller.
+   * @returns {void}
+   * @throws {Error} If validation fails.
+   */
+  _validateOrThrow(gameStateDto, logger) {
+    const validationResult = this.validateGameStateForPrompting(
+      gameStateDto,
+      logger
+    );
+    if (!validationResult.isValid) {
+      const errorMessage =
+        validationResult.errorContent ||
+        ERROR_FALLBACK_CRITICAL_GAME_STATE_MISSING;
+      this.#logger.error(
+        `AIPromptContentProvider.getPromptData: Critical game state validation failed. Reason: ${errorMessage}`
+      );
+      throw new Error(errorMessage);
+    }
+  }
+
+  /**
+   * @private
+   * Extracts commonly used values from the game state DTO.
+   * @param {AIGameStateDTO} gameStateDto - The game state DTO.
+   * @returns {{characterName: string, currentUserInput: string, perceptionLogArray: Array<RawPerceptionLogEntry>, locationName: string, componentsMap: object}}
+   *   Object containing the extracted values and component map.
+   */
+  _extractCommonValues(gameStateDto) {
+    const characterName =
+      gameStateDto.actorPromptData?.name || DEFAULT_FALLBACK_CHARACTER_NAME;
+    const currentUserInput = gameStateDto.currentUserInput || '';
+    const rawPerceptionLog = /** @type {RawPerceptionLogEntry[]} */ (
+      gameStateDto.perceptionLog || []
+    );
+    const perceptionLogArray =
+      this.#perceptionLogFormatter.format(rawPerceptionLog);
+    const locationName =
+      gameStateDto.currentLocation?.name || 'an unknown place';
+    const componentsMap =
+      gameStateDto?.actorState?.components ??
+      gameStateDto?.components ??
+      gameStateDto?.actorState ??
+      {};
+
+    return {
+      characterName,
+      currentUserInput,
+      perceptionLogArray,
+      locationName,
+      componentsMap,
+    };
+  }
+
+  /**
+   * @private
+   * Extracts memory-related arrays from the provided components map.
+   * @param {object} componentsMap - Actor or game components.
+   * @returns {{thoughtsArray: string[], notesArray: Array<{text:string,timestamp:string}>, goalsArray: Array<{text:string,timestamp:string}>}}
+   *   Object containing memory arrays for prompt data.
+   */
+  _extractMemoryComponents(componentsMap) {
+    const memoryComp = componentsMap[SHORT_TERM_MEMORY_COMPONENT_ID];
+    const thoughtsArray = Array.isArray(memoryComp?.thoughts)
+      ? memoryComp.thoughts.map((t) => t.text).filter(Boolean)
+      : [];
+
+    const notesComp = componentsMap['core:notes'];
+    const notesArray = this._extractTimestampedEntries(notesComp, 'notes');
+
+    const goalsComp = componentsMap['core:goals'];
+    const goalsArray = this._extractTimestampedEntries(goalsComp, 'goals');
+
+    this.#logger.debug(
+      `AIPromptContentProvider.getPromptData: goalsArray contains ${goalsArray.length} entries.`
+    );
+
+    return { thoughtsArray, notesArray, goalsArray };
+  }
+
+  /**
+   * @private
+   * Combines base values and memory arrays into the final PromptData object.
+   * @param {object} baseValues - Preassembled base prompt values.
+   * @param {string[]} thoughtsArray - Extracted short-term memory thoughts.
+   * @param {Array<{text:string,timestamp:string}>} notesArray - Extracted notes.
+   * @param {Array<{text:string,timestamp:string}>} goalsArray - Extracted goals.
+   * @returns {PromptData} The assembled PromptData object.
+   */
+  _buildPromptData(baseValues, thoughtsArray, notesArray, goalsArray) {
+    const promptData = {
+      ...baseValues,
+      thoughtsArray,
+      notesArray,
+      goalsArray,
+    };
+
+    this.#logger.debug(
+      'AIPromptContentProvider.getPromptData: PromptData assembled successfully.'
+    );
+    this.#logger.debug(
+      `AIPromptContentProvider.getPromptData: Assembled PromptData keys: ${Object.keys(
+        promptData
+      ).join(', ')}`
+    );
+    this.#logger.debug(
+      `AIPromptContentProvider.getPromptData: thoughtsArray contains ${thoughtsArray.length} entries.`
+    );
+    this.#logger.debug(
+      `AIPromptContentProvider.getPromptData: notesArray contains ${notesArray.length} entries.`
+    );
+    return promptData;
   }
 
   /**
@@ -157,52 +311,29 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
     );
 
     // 1. Validate incoming DTO
-    const validationResult = this.validateGameStateForPrompting(
-      gameStateDto,
-      logger
-    );
-    if (!validationResult.isValid) {
-      const errorMessage =
-        validationResult.errorContent ||
-        ERROR_FALLBACK_CRITICAL_GAME_STATE_MISSING;
-      this.#logger.error(
-        `AIPromptContentProvider.getPromptData: Critical game state validation failed. Reason: ${errorMessage}`
-      );
-      throw new Error(errorMessage);
-    }
+    this._validateOrThrow(gameStateDto, logger);
 
     // 2. Extract commonly-used values
-    const characterName =
-      gameStateDto.actorPromptData?.name || DEFAULT_FALLBACK_CHARACTER_NAME;
-    const currentUserInput = gameStateDto.currentUserInput || '';
-    const rawPerceptionLog = /** @type {RawPerceptionLogEntry[]} */ (
-      gameStateDto.perceptionLog || []
-    );
-    const perceptionLogArray =
-      this.#perceptionLogFormatter.format(rawPerceptionLog);
-    const locationName =
-      gameStateDto.currentLocation?.name || 'an unknown place';
+    const {
+      characterName,
+      currentUserInput,
+      perceptionLogArray,
+      locationName,
+      componentsMap,
+    } = this._extractCommonValues(gameStateDto);
 
     // 3. Assemble base PromptData
     let promptData;
     try {
-      promptData = {
+      const baseValues = {
         taskDefinitionContent: this.getTaskDefinitionContent(),
-        characterPersonaContent: this.getCharacterPersonaContent(
-          gameStateDto,
-          this.#logger
-        ),
+        characterPersonaContent: this.getCharacterPersonaContent(gameStateDto),
         portrayalGuidelinesContent:
           this.getCharacterPortrayalGuidelinesContent(characterName),
         contentPolicyContent: this.getContentPolicyContent(),
-        worldContextContent: this.getWorldContextContent(
-          gameStateDto,
-          this.#logger
-        ),
-        availableActionsInfoContent: this.getAvailableActionsInfoContent(
-          gameStateDto,
-          this.#logger
-        ),
+        worldContextContent: this.getWorldContextContent(gameStateDto),
+        availableActionsInfoContent:
+          this.getAvailableActionsInfoContent(gameStateDto),
         userInputContent: currentUserInput,
         finalInstructionsContent: this.getFinalInstructionsContent(),
         perceptionLogArray: perceptionLogArray,
@@ -210,63 +341,13 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
         locationName: locationName,
       };
 
-      // 4. Pull short-term memory → thoughtsArray (oldest-first)
-      const componentsMap =
-        gameStateDto?.actorState?.components ??
-        gameStateDto?.components ??
-        gameStateDto?.actorState ??
-        {};
+      const memoryData = this._extractMemoryComponents(componentsMap);
 
-      const memoryComp = componentsMap[SHORT_TERM_MEMORY_COMPONENT_ID];
-      promptData.thoughtsArray = Array.isArray(memoryComp?.thoughts)
-        ? memoryComp.thoughts.map((t) => t.text).filter(Boolean)
-        : [];
-
-      // 5. Pull notes component → notesArray (filter out malformed entries)
-      const notesComp = componentsMap['core:notes'];
-      promptData.notesArray = Array.isArray(notesComp?.notes)
-        ? notesComp.notes
-            .filter(
-              (n) =>
-                typeof n.text === 'string' &&
-                n.text.trim().length > 0 &&
-                typeof n.timestamp === 'string' &&
-                n.timestamp.trim().length > 0
-            )
-            .map((n) => ({ text: n.text, timestamp: n.timestamp }))
-        : [];
-
-      // 6. Pull goals component → goalsArray (filter out malformed entries)
-      const goalsComp = componentsMap['core:goals'];
-      promptData.goalsArray = Array.isArray(goalsComp?.goals)
-        ? goalsComp.goals
-            .filter(
-              (g) =>
-                typeof g.text === 'string' &&
-                g.text.trim().length > 0 &&
-                typeof g.timestamp === 'string' &&
-                g.timestamp.trim().length > 0
-            )
-            .map((g) => ({ text: g.text, timestamp: g.timestamp }))
-        : [];
-      this.#logger.debug(
-        `AIPromptContentProvider.getPromptData: goalsArray contains ${promptData.goalsArray.length} entries.`
-      );
-
-      // 7. Wrap-up / logging
-      this.#logger.debug(
-        'AIPromptContentProvider.getPromptData: PromptData assembled successfully.'
-      );
-      this.#logger.debug(
-        `AIPromptContentProvider.getPromptData: Assembled PromptData keys: ${Object.keys(
-          promptData
-        ).join(', ')}`
-      );
-      this.#logger.debug(
-        `AIPromptContentProvider.getPromptData: thoughtsArray contains ${promptData.thoughtsArray.length} entries.`
-      );
-      this.#logger.debug(
-        `AIPromptContentProvider.getPromptData: notesArray contains ${promptData.notesArray.length} entries.`
+      promptData = this._buildPromptData(
+        baseValues,
+        memoryData.thoughtsArray,
+        memoryData.notesArray,
+        memoryData.goalsArray
       );
 
       return promptData;
@@ -284,10 +365,9 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
 
   /**
    * @param {AIGameStateDTO} gameState - The game state DTO.
-   * @param {ILogger} [logger] - Optional logger instance.
    * @returns {string} Formatted character persona content.
    */
-  getCharacterPersonaContent(gameState, logger) {
+  getCharacterPersonaContent(gameState) {
     this.#logger.debug(
       'AIPromptContentProvider: Formatting character persona content.'
     );
@@ -354,10 +434,9 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
 
   /**
    * @param {AIGameStateDTO} gameState - The game state DTO.
-   * @param {ILogger} [logger] - Optional logger instance.
    * @returns {string} Formatted world context content.
    */
-  getWorldContextContent(gameState, logger) {
+  getWorldContextContent(gameState) {
     this.#logger.debug(
       'AIPromptContentProvider: Formatting world context content.'
     );
@@ -390,8 +469,7 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
             exit.targetLocationId ||
             DEFAULT_FALLBACK_LOCATION_NAME
           }.`,
-        PROMPT_FALLBACK_NO_EXITS,
-        this.#logger
+        PROMPT_FALLBACK_NO_EXITS
       )
     );
     segments.push(
@@ -405,8 +483,7 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
           descriptionText = ensureTerminalPunctuation(descriptionText);
           return `- ${namePart} - Description: ${descriptionText}`;
         },
-        PROMPT_FALLBACK_ALONE_IN_LOCATION,
-        this.#logger
+        PROMPT_FALLBACK_ALONE_IN_LOCATION
       )
     );
     return segments.join('\n\n');
@@ -414,10 +491,9 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
 
   /**
    * @param {AIGameStateDTO} gameState - The game state DTO.
-   * @param {ILogger} [logger] - Optional logger instance.
    * @returns {string} Formatted available actions content.
    */
-  getAvailableActionsInfoContent(gameState, logger) {
+  getAvailableActionsInfoContent(gameState) {
     this.#logger.debug(
       'AIPromptContentProvider: Formatting available actions info content.'
     );
@@ -447,21 +523,20 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
         // The critical change: Add the index clearly at the start of the line.
         return `[Index: ${action.index}] Command: "${commandStr}". Description: ${description}`;
       },
-      noActionsMessage,
-      this.#logger
+      noActionsMessage
     );
   }
 
   /**
-   * @returns {string}
+   * @returns {string} The core task definition text.
    */
   getTaskDefinitionContent() {
     return this.#promptStaticContentService.getCoreTaskDescriptionText();
   }
 
   /**
-   * @param {string} characterName
-   * @returns {string}
+   * @param {string} characterName - Name of the character.
+   * @returns {string} The portrayal guidelines text.
    */
   getCharacterPortrayalGuidelinesContent(characterName) {
     return this.#promptStaticContentService.getCharacterPortrayalGuidelines(
@@ -470,14 +545,14 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
   }
 
   /**
-   * @returns {string}
+   * @returns {string} The NC-21 content policy text.
    */
   getContentPolicyContent() {
     return this.#promptStaticContentService.getNc21ContentPolicyText();
   }
 
   /**
-   * @returns {string}
+   * @returns {string} The final LLM instruction text.
    */
   getFinalInstructionsContent() {
     return this.#promptStaticContentService.getFinalLlmInstructionText();

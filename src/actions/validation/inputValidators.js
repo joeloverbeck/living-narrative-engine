@@ -36,5 +36,5 @@ export function validateActionInputs(actionDefinition, actorEntity, logger) {
     throw new InvalidActorEntityError();
   }
 
-  // Validation for targetCtx has been removed, as prerequisites are now actor-only.
+  // Validation for targetContext has been removed, as prerequisites are now actor-only.
 }

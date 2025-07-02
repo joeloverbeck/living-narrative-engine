@@ -1,6 +1,7 @@
 // src/services/promptElementAssemblers/thoughtsSectionAssembler.js
 import { IPromptElementAssembler } from '../../interfaces/IPromptElementAssembler.js';
 import { resolveWrapper } from '../../utils/wrapperUtils.js';
+import { validateAssemblerParams } from './assemblerValidation.js';
 
 export const THOUGHTS_WRAPPER_KEY = 'thoughts_wrapper';
 
@@ -16,8 +17,18 @@ export class ThoughtsSectionAssembler extends IPromptElementAssembler {
 
   /** @inheritdoc */
   assemble(elementCfg, promptData, placeholderResolver) {
-    const arr = promptData?.thoughtsArray;
-    if (!Array.isArray(arr) || arr.length === 0) {
+    const { valid } = validateAssemblerParams({
+      elementConfig: elementCfg,
+      promptData,
+      placeholderResolver,
+      functionName: 'ThoughtsSectionAssembler.assemble',
+    });
+    if (!valid) {
+      return '';
+    }
+
+    const thoughts = promptData?.thoughtsArray;
+    if (!Array.isArray(thoughts) || thoughts.length === 0) {
       return '';
     }
 
@@ -27,9 +38,11 @@ export class ThoughtsSectionAssembler extends IPromptElementAssembler {
       promptData
     );
 
-    const thoughtLines = arr
-      .filter((t) => t !== null && t !== undefined && t !== '')
-      .map((t) => `- ${String(t)}`)
+    const thoughtLines = thoughts
+      .filter(
+        (thought) => thought !== null && thought !== undefined && thought !== ''
+      )
+      .map((thought) => `- ${String(thought)}`)
       .join('\n');
 
     if (!thoughtLines) {

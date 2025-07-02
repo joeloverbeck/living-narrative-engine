@@ -1,0 +1,18 @@
+{
+  "$schema": "http://example.com/schemas/component.schema.json",
+  "id": "descriptors:firmness",
+  "description": "Describes the firmness or rigidity of an object or body part",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "firmness": {
+        "type": "string",
+        "description": "The firmness level",
+        "enum": ["soft", "pliant", "firm", "hard", "rigid"],
+        "default": "firm"
+      }
+    },
+    "required": ["firmness"],
+    "additionalProperties": false
+  }
+}

@@ -33,8 +33,9 @@
 /** @typedef {import('../../interfaces/IPerceptionLogFormatter.js').IPerceptionLogFormatter} IPerceptionLogFormatter */
 /** @typedef {import('../../interfaces/IGameStateValidationServiceForPrompting.js').IGameStateValidationServiceForPrompting} IGameStateValidationServiceForPrompting */
 /** @typedef {import('../../interfaces/IConfigurationProvider.js').IConfigurationProvider} IConfigurationProvider */
-/** @typedef {import('../../llms/llmConfigService.js').LLMConfigService} LLMConfigService_Concrete */
+/** @typedef {import('../../llms/llmConfigManager.js').LlmConfigManager} LlmConfigManager_Concrete */
 /** @typedef {import('../../utils/placeholderResolverUtils.js').PlaceholderResolver} PlaceholderResolver_Concrete */
+/** @typedef {import('../../utils/executionPlaceholderResolver.js').ExecutionPlaceholderResolver} ExecutionPlaceholderResolver_Concrete */
 /** @typedef {import('../../prompting/assembling/standardElementAssembler.js').StandardElementAssembler} StandardElementAssembler_Concrete */
 /** @typedef {import('../../prompting/assembling/perceptionLogAssembler.js').PerceptionLogAssembler} PerceptionLogAssembler_Concrete */
 /** @typedef {import('../../prompting/assembling/thoughtsSectionAssembler.js').default} ThoughtsSectionAssembler_Concrete */
@@ -44,7 +45,7 @@
 
 // --- DI & Helper Imports ---
 import { tokens } from '../tokens.js';
-import { Registrar, resolveOptional } from '../registrarHelpers.js';
+import { Registrar, resolveOptional } from '../../utils/registrarHelpers.js';
 
 // --- LLM Adapter Imports ---
 import { ConfigurableLLMAdapter } from '../../turns/adapters/configurableLLMAdapter.js';
@@ -52,6 +53,7 @@ import { EnvironmentContext } from '../../llms/environmentContext.js';
 import { ClientApiKeyProvider } from '../../llms/clientApiKeyProvider.js';
 import { RetryHttpClient } from '../../llms/retryHttpClient.js';
 import { LLMStrategyFactory } from '../../llms/LLMStrategyFactory.js';
+import strategyRegistry from '../../llms/strategies/strategyRegistry.js';
 
 // --- AI Turn Handler Import ---
 import ActorTurnHandler from '../../turns/handlers/actorTurnHandler.js';
@@ -61,9 +63,11 @@ import { PromptStaticContentService } from '../../prompting/promptStaticContentS
 import { PerceptionLogFormatter } from '../../formatting/perceptionLogFormatter.js';
 import { GameStateValidationServiceForPrompting } from '../../validation/gameStateValidationServiceForPrompting.js';
 import { HttpConfigurationProvider } from '../../configuration/httpConfigurationProvider.js';
-import { LLMConfigService } from '../../llms/llmConfigService.js';
+import { LlmConfigManager } from '../../llms/llmConfigManager.js';
 import { LlmConfigLoader } from '../../llms/services/llmConfigLoader.js';
+import { LlmJsonService } from '../../llms/llmJsonService.js';
 import { PlaceholderResolver } from '../../utils/placeholderResolverUtils.js';
+import { ExecutionPlaceholderResolver } from '../../utils/executionPlaceholderResolver.js';
 import { StandardElementAssembler } from '../../prompting/assembling/standardElementAssembler.js';
 import {
   PERCEPTION_LOG_WRAPPER_KEY,
@@ -149,7 +153,11 @@ export function registerLlmInfrastructure(registrar, logger) {
       safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
     });
     const httpClient = c.resolve(tokens.IHttpClient);
-    const llmStrategyFactory = new LLMStrategyFactory({ httpClient, logger });
+    const llmStrategyFactory = new LLMStrategyFactory({
+      httpClient,
+      logger,
+      strategyMap: strategyRegistry,
+    });
 
     const adapterInstance = new ConfigurableLLMAdapter({
       logger: c.resolve(tokens.ILogger),
@@ -204,8 +212,8 @@ export function registerPromptingEngine(registrar, logger) {
       })
   );
 
-  registrar.singletonFactory(tokens.LLMConfigService, (c) => {
-    return new LLMConfigService({
+  registrar.singletonFactory(tokens.LlmConfigManager, (c) => {
+    return new LlmConfigManager({
       logger: c.resolve(tokens.ILogger),
       configurationProvider: c.resolve(tokens.IConfigurationProvider),
       configSourceIdentifier: './config/llm-configs.json',
@@ -215,6 +223,10 @@ export function registerPromptingEngine(registrar, logger) {
   registrar.singletonFactory(
     tokens.PlaceholderResolver,
     (c) => new PlaceholderResolver(c.resolve(tokens.ILogger))
+  );
+  registrar.singletonFactory(
+    tokens.ExecutionPlaceholderResolver,
+    (c) => new ExecutionPlaceholderResolver(c.resolve(tokens.ILogger))
   );
   registrar.singletonFactory(
     tokens.StandardElementAssembler,
@@ -300,7 +312,7 @@ export function registerPromptingEngine(registrar, logger) {
   registrar.singletonFactory(tokens.IPromptBuilder, (c) => {
     return new PromptBuilder({
       logger: c.resolve(tokens.ILogger),
-      llmConfigService: c.resolve(tokens.LLMConfigService),
+      llmConfigService: c.resolve(tokens.LlmConfigManager),
       placeholderResolver: c.resolve(tokens.PlaceholderResolver),
       assemblerRegistry: c.resolve(tokens.AssemblerRegistry),
       conditionEvaluator: ConditionEvaluator,
@@ -320,7 +332,12 @@ export function registerPromptingEngine(registrar, logger) {
  */
 export function registerAIGameStateProviders(registrar, logger) {
   registrar.single(tokens.IEntitySummaryProvider, EntitySummaryProvider);
-  registrar.single(tokens.IActorDataExtractor, ActorDataExtractor);
+  registrar.singletonFactory(tokens.IActorDataExtractor, (c) => {
+    return new ActorDataExtractor({
+      anatomyDescriptionService: c.resolve(tokens.AnatomyDescriptionService),
+      entityFinder: c.resolve(tokens.IEntityManager),
+    });
+  });
   registrar.single(tokens.IActorStateProvider, ActorStateProvider);
   registrar.single(tokens.IPerceptionLogProvider, PerceptionLogProvider);
   registrar.singletonFactory(
@@ -331,6 +348,7 @@ export function registerAIGameStateProviders(registrar, logger) {
         actionIndexingService: c.resolve(tokens.IActionIndexer),
         entityManager: c.resolve(tokens.IEntityManager),
         logger: c.resolve(tokens.ILogger),
+        serviceSetup: c.resolve(tokens.ServiceSetup),
       })
   );
   registrar.singletonFactory(tokens.ILocationSummaryProvider, (c) => {
@@ -373,6 +391,7 @@ export function registerAITurnPipeline(registrar, logger) {
       ),
     });
   });
+  registrar.singletonFactory(tokens.LlmJsonService, () => new LlmJsonService());
   registrar.singletonFactory(
     tokens.ILLMResponseProcessor,
     (c) =>
@@ -380,6 +399,7 @@ export function registerAITurnPipeline(registrar, logger) {
         schemaValidator: c.resolve(tokens.ISchemaValidator),
         logger: c.resolve(tokens.ILogger),
         safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+        llmJsonService: c.resolve(tokens.LlmJsonService),
       })
   );
   registrar.singletonFactory(

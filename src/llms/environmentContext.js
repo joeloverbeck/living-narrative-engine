@@ -153,58 +153,77 @@ export class EnvironmentContext {
    */
   #configureProxyUrl(url) {
     if (this.#executionEnvironment === 'client') {
-      if (isNonBlankString(url)) {
-        try {
-          new URL(url.trim());
-          this.#proxyServerUrl = url.trim();
-          this.#logger.debug(
-            `EnvironmentContext: Client-side proxy URL configured to: '${this.#proxyServerUrl}'.`
-          );
-        } catch (e) {
-          this.#logger.warn(
-            `EnvironmentContext: Provided proxyServerUrl '${url}' for client environment is not a valid URL. Falling back to default: '${DEFAULT_PROXY_SERVER_URL}'. Error: ${e.message}`
-          );
-          this.#proxyServerUrl = DEFAULT_PROXY_SERVER_URL;
-        }
-      } else {
-        this.#proxyServerUrl = DEFAULT_PROXY_SERVER_URL;
-        if (url === null || url === undefined) {
-          this.#logger.debug(
-            `EnvironmentContext: Client-side proxyServerUrl not provided. Using default: '${this.#proxyServerUrl}'.`
-          );
-        } else {
-          this.#logger.warn(
-            `EnvironmentContext: Client-side proxyServerUrl provided but was empty or invalid ('${url}'). Using default: '${this.#proxyServerUrl}'.`
-          );
-        }
-      }
-    } else {
-      if (isNonBlankString(url)) {
-        try {
-          new URL(url.trim());
-          this.#proxyServerUrl = url.trim();
-          this.#logger.debug(
-            `EnvironmentContext: proxyServerUrl ('${this.#proxyServerUrl}') was provided for non-client environment ('${this.#executionEnvironment}'). It might not be used.`
-          );
-        } catch (e) {
-          this.#logger.debug(
-            `EnvironmentContext: Provided proxyServerUrl '${url}' for non-client environment is not a valid URL. Setting to default ('${DEFAULT_PROXY_SERVER_URL}'), but it might not be used. Error: ${e.message}`
-          );
-          this.#proxyServerUrl = DEFAULT_PROXY_SERVER_URL;
-        }
-      } else {
-        this.#proxyServerUrl = DEFAULT_PROXY_SERVER_URL;
-        if (url) {
-          this.#logger.debug(
-            `EnvironmentContext: proxyServerUrl was provided but invalid for non-client environment ('${this.#executionEnvironment}'). Defaulting to '${this.#proxyServerUrl}', though it might not be used.`
-          );
-        } else {
-          this.#logger.debug(
-            `EnvironmentContext: proxyServerUrl not provided for non-client environment ('${this.#executionEnvironment}'). Defaulting to '${this.#proxyServerUrl}', though it might not be used.`
-          );
-        }
-      }
+      this.#setClientProxyUrl(url);
+      return;
     }
+
+    this.#setServerProxyUrl(url);
+  }
+
+  /**
+   * Sets the proxy URL when running in a client context.
+   *
+   * @private
+   * @param {string | null} url - Proxy server URL from configuration.
+   */
+  #setClientProxyUrl(url) {
+    if (isNonBlankString(url)) {
+      try {
+        new URL(url.trim());
+        this.#proxyServerUrl = url.trim();
+        this.#logger.debug(
+          `EnvironmentContext: Client-side proxy URL configured to: '${this.#proxyServerUrl}'.`
+        );
+        return;
+      } catch (e) {
+        this.#logger.warn(
+          `EnvironmentContext: Provided proxyServerUrl '${url}' for client environment is not a valid URL. Falling back to default: '${DEFAULT_PROXY_SERVER_URL}'. Error: ${e.message}`
+        );
+      }
+    } else if (url !== null && url !== undefined) {
+      this.#logger.warn(
+        `EnvironmentContext: Client-side proxyServerUrl provided but was empty or invalid ('${url}'). Using default: '${DEFAULT_PROXY_SERVER_URL}'.`
+      );
+    } else {
+      this.#logger.debug(
+        `EnvironmentContext: Client-side proxyServerUrl not provided. Using default: '${DEFAULT_PROXY_SERVER_URL}'.`
+      );
+    }
+
+    this.#proxyServerUrl = DEFAULT_PROXY_SERVER_URL;
+  }
+
+  /**
+   * Sets the proxy URL when running in a server or unknown context.
+   *
+   * @private
+   * @param {string | null} url - Proxy server URL from configuration.
+   */
+  #setServerProxyUrl(url) {
+    if (isNonBlankString(url)) {
+      try {
+        new URL(url.trim());
+        this.#proxyServerUrl = url.trim();
+        this.#logger.debug(
+          `EnvironmentContext: proxyServerUrl ('${this.#proxyServerUrl}') was provided for non-client environment ('${this.#executionEnvironment}'). It might not be used.`
+        );
+        return;
+      } catch (e) {
+        this.#logger.debug(
+          `EnvironmentContext: Provided proxyServerUrl '${url}' for non-client environment is not a valid URL. Setting to default ('${DEFAULT_PROXY_SERVER_URL}'), but it might not be used. Error: ${e.message}`
+        );
+      }
+    } else if (url) {
+      this.#logger.debug(
+        `EnvironmentContext: proxyServerUrl was provided but invalid for non-client environment ('${this.#executionEnvironment}'). Defaulting to '${DEFAULT_PROXY_SERVER_URL}', though it might not be used.`
+      );
+    } else {
+      this.#logger.debug(
+        `EnvironmentContext: proxyServerUrl not provided for non-client environment ('${this.#executionEnvironment}'). Defaulting to '${DEFAULT_PROXY_SERVER_URL}', though it might not be used.`
+      );
+    }
+
+    this.#proxyServerUrl = DEFAULT_PROXY_SERVER_URL;
   }
 
   /**

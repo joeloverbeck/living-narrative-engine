@@ -1,4 +1,5 @@
 import InitializationService from '../../../../src/initializers/services/initializationService.js';
+import LlmAdapterInitializer from '../../../../src/initializers/services/llmAdapterInitializer.js';
 import { SystemInitializationError } from '../../../../src/errors/InitializationError.js';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
@@ -17,6 +18,7 @@ let domUiFacade;
 let thoughtListener;
 let notesListener;
 let contentDependencyValidator;
+let llmAdapterInitializer;
 
 beforeEach(() => {
   logger = { error: jest.fn(), debug: jest.fn(), warn: jest.fn() };
@@ -42,6 +44,7 @@ beforeEach(() => {
   contentDependencyValidator = {
     validate: jest.fn().mockResolvedValue(undefined),
   };
+  llmAdapterInitializer = new LlmAdapterInitializer();
 });
 
 describe('InitializationService DomUiFacade handling', () => {
@@ -68,6 +71,7 @@ describe('InitializationService DomUiFacade handling', () => {
           systemInitializer,
           worldInitializer,
           contentDependencyValidator,
+          llmAdapterInitializer,
           // spatialIndexManager intentionally missing for this test
         },
       });
@@ -94,6 +98,7 @@ describe('InitializationService DomUiFacade handling', () => {
           systemInitializer,
           worldInitializer,
           contentDependencyValidator,
+          llmAdapterInitializer,
         },
       });
     }).toThrow('InitializationService requires a domUiFacade dependency');

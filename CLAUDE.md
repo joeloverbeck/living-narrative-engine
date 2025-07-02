@@ -97,10 +97,18 @@ tests/
 - **No production mocking**: Only mock in test files
 - **Check for duplicates**: Search for existing functionality before creating new code
 
+### Working on new feature or modifying an existing one
+
+- Understand the problem described
+- Ask clarifying questions if necessary
+- Search the codebase for relevant files
+- Think harder about how to break the issue down into a series of small, manageable tasks
+
 ### Testing Requirements
 
 - Framework: Jest with jsdom
 - Coverage targets: 80% branches, 90% functions/lines
+- If in the process of creating or fixing tests, if you detect a bug in the SUT, fix the bug. Don't correct the test code to adapt to a bug in the SUT. The tests should only cover non-buggy production code.
 - Run tests after every complete modification
 - When tests pass without changes after code modifications, write new focused tests
 

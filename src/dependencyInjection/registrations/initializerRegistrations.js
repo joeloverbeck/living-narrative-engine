@@ -2,7 +2,7 @@
 // --- FILE START ---
 
 import { tokens } from '../tokens.js';
-import { Registrar } from '../registrarHelpers.js';
+import { Registrar } from '../../utils/registrarHelpers.js';
 import WorldInitializer from '../../initializers/worldInitializer.js';
 import SystemInitializer from '../../initializers/systemInitializer.js';
 // Import the necessary tag constant (Task 2: Verified, already present)
@@ -24,6 +24,7 @@ export function registerInitializers(container) {
       worldContext: c.resolve(tokens.IWorldContext),
       gameDataRepository: c.resolve(tokens.IGameDataRepository),
       validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
+      eventDispatchService: c.resolve(tokens.EventDispatchService),
       logger: c.resolve(tokens.ILogger),
       scopeRegistry: c.resolve(tokens.IScopeRegistry),
     };
@@ -40,6 +41,7 @@ export function registerInitializers(container) {
       resolver: c, // Pass the container (AppContainer) as the resolver
       logger: c.resolve(tokens.ILogger),
       validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
+      eventDispatchService: c.resolve(tokens.EventDispatchService),
       initializationTag: INITIALIZABLE[0], // Pass the tag string
     };
     return new SystemInitializer(dependencies);

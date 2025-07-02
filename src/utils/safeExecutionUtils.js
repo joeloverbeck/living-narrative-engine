@@ -11,10 +11,6 @@
  * @param {string} [context] - Context message for logging.
  * @returns {{success: boolean, result?: any, error?: any}} Execution result.
  */
-export function safeCall(fn, logger, context = 'safeCall') {
-  return safeExecute(fn, logger, context);
-}
-
 /**
  * Safely executes a synchronous or asynchronous function.
  *

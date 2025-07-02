@@ -16,7 +16,7 @@ describe('LoadResultAggregator', () => {
     agg.aggregate({ count: 2, overrides: 1, errors: 0 }, 'actions');
     agg.aggregate({ count: 1, overrides: 0, errors: 1 }, 'events');
 
-    expect(agg.modResults).toEqual({
+    expect(agg.getModResults()).toEqual({
       actions: { count: 2, overrides: 1, errors: 0 },
       events: { count: 1, overrides: 0, errors: 1 },
     });
@@ -36,8 +36,8 @@ describe('LoadResultAggregator', () => {
     agg.recordFailure('rules');
     agg.recordFailure('missing');
 
-    expect(agg.modResults.rules.errors).toBe(1);
-    expect(agg.modResults.missing.errors).toBe(1);
+    expect(agg.getModResults().rules.errors).toBe(1);
+    expect(agg.getModResults().missing.errors).toBe(1);
 
     // Original totals object should remain unchanged (immutable behavior)
     expect(totals).toEqual({});

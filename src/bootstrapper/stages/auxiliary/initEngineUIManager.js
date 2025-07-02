@@ -1,6 +1,6 @@
 // src/bootstrapper/stages/auxiliary/initEngineUIManager.js
 
-import { resolveAndInitialize } from '../../helpers.js';
+import { resolveAndInitialize } from '../../../utils/bootstrapperHelpers.js';
 import './typedefs.js';
 /** @typedef {import('./typedefs.js').AuxHelperDeps} AuxHelperDeps */
 

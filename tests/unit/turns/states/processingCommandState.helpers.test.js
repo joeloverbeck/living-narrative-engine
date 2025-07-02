@@ -1,9 +1,18 @@
 import { describe, test, expect, jest, beforeEach } from '@jest/globals';
 import { ProcessingCommandState } from '../../../../src/turns/states/processingCommandState.js';
 import { ProcessingWorkflow } from '../../../../src/turns/states/workflows/processingWorkflow.js';
-import TurnDirectiveStrategyResolver from '../../../../src/turns/strategies/turnDirectiveStrategyResolver.js';
+import TurnDirectiveStrategyResolver, {
+  DEFAULT_STRATEGY_MAP,
+} from '../../../../src/turns/strategies/turnDirectiveStrategyResolver.js';
+import * as dispatchSpeechEventModule from '../../../../src/turns/states/helpers/dispatchSpeechEvent.js';
+import { ENTITY_SPOKE_ID } from '../../../../src/constants/eventIds.js';
 
-const mockLogger = { debug: jest.fn(), warn: jest.fn(), error: jest.fn() };
+const mockLogger = {
+  debug: jest.fn(),
+  info: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+};
 const mockHandler = {
   getTurnContext: jest.fn(),
   _resetTurnStateAndResources: jest.fn(),
@@ -48,13 +57,14 @@ describe('ProcessingCommandState helpers', () => {
       commandString: defaultCommandString,
     };
 
+    const resolver = new TurnDirectiveStrategyResolver(DEFAULT_STRATEGY_MAP);
     state = new ProcessingCommandState({
       handler: mockHandler,
       commandProcessor: mockCommandProcessor,
       commandOutcomeInterpreter: mockCommandOutcomeInterpreter,
       commandString: defaultCommandString,
       turnAction: defaultTurnAction,
-      directiveResolver: TurnDirectiveStrategyResolver,
+      directiveResolver: resolver,
     });
     workflow = new ProcessingWorkflow(state, null, null, () => {});
   });
@@ -92,13 +102,14 @@ describe('ProcessingCommandState helpers', () => {
       actionDefinitionId: 'specificAct',
       commandString: 'specific command',
     };
+    const resolver = new TurnDirectiveStrategyResolver(DEFAULT_STRATEGY_MAP);
     state = new ProcessingCommandState({
       handler: mockHandler,
       commandProcessor: mockCommandProcessor,
       commandOutcomeInterpreter: mockCommandOutcomeInterpreter,
       commandString: specificAction.commandString,
       turnAction: specificAction,
-      directiveResolver: TurnDirectiveStrategyResolver,
+      directiveResolver: resolver,
     });
     workflow = new ProcessingWorkflow(state, null, specificAction, () => {});
     const ctx = makeCtx(actor);
@@ -111,17 +122,45 @@ describe('ProcessingCommandState helpers', () => {
     const actor = { id: 'a1' };
     const dispatcher = { dispatch: jest.fn().mockResolvedValue(undefined) };
     const ctx = makeCtx(actor, { getSafeEventDispatcher: () => dispatcher });
+    const helperSpy = jest.spyOn(
+      dispatchSpeechEventModule,
+      'dispatchSpeechEvent'
+    );
     await state._dispatchSpeech(ctx, actor, { speech: 'hi' });
-    expect(dispatcher.dispatch).toHaveBeenCalled();
+    expect(helperSpy).toHaveBeenCalledWith(ctx, mockHandler, 'a1', {
+      speechContent: 'hi',
+    });
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(ENTITY_SPOKE_ID, {
+      entityId: 'a1',
+      speechContent: 'hi',
+    });
+    helperSpy.mockRestore();
   });
 
-  test('_dispatchSpeech warns when dispatcher missing', async () => {
+  test('_dispatchSpeech resolves when dispatcher missing', async () => {
     const actor = { id: 'a1' };
     const ctx = makeCtx(actor, { getSafeEventDispatcher: () => null });
-    await state._dispatchSpeech(ctx, actor, { speech: 'hi' });
-    expect(mockLogger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('SafeEventDispatcher unavailable')
+    const helperSpy = jest.spyOn(
+      dispatchSpeechEventModule,
+      'dispatchSpeechEvent'
     );
+    await expect(
+      state._dispatchSpeech(ctx, actor, { speech: 'hi' })
+    ).resolves.toBeUndefined();
+    expect(helperSpy).toHaveBeenCalledWith(ctx, mockHandler, 'a1', {
+      speechContent: 'hi',
+    });
+    helperSpy.mockRestore();
+  });
+
+  test('_dispatchSpeech rejects when dispatch fails', async () => {
+    const actor = { id: 'a1' };
+    const dispatchErr = new Error('bad');
+    const dispatcher = { dispatch: jest.fn().mockRejectedValue(dispatchErr) };
+    const ctx = makeCtx(actor, { getSafeEventDispatcher: () => dispatcher });
+    await expect(
+      state._dispatchSpeech(ctx, actor, { speech: 'hi' })
+    ).rejects.toBe(dispatchErr);
   });
 
   test('_dispatchSpeechIfNeeded forwards metadata', async () => {
@@ -148,5 +187,18 @@ describe('ProcessingCommandState helpers', () => {
       action,
       workflow._exceptionHandler
     );
+  });
+
+  test('_executeAction delegates errors to exception handler', async () => {
+    const actor = { id: 'a1' };
+    const ctx = makeCtx(actor);
+    const action = { actionDefinitionId: 'act' };
+    const err = new Error('boom');
+    jest.spyOn(state, '_processCommandInternal').mockRejectedValue(err);
+    const handlerSpy = jest.spyOn(workflow._exceptionHandler, 'handle');
+
+    await workflow._executeAction(ctx, actor, action);
+
+    expect(handlerSpy).toHaveBeenCalledWith(ctx, err, actor.id);
   });
 });

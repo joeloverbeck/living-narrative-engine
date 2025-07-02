@@ -188,4 +188,32 @@ describe('persistNotes', () => {
 
     expect(actor.addComponent).not.toHaveBeenCalled();
   });
+
+  test('allows injecting service and now provider', () => {
+    actor.components[NOTES_COMPONENT_ID] = { notes: [] };
+    const notesService = {
+      addNotes: jest.fn(() => ({
+        wasModified: true,
+        component: actor.components[NOTES_COMPONENT_ID],
+        addedNotes: [{ text: 'x', timestamp: 'ts' }],
+      })),
+    };
+    const fakeNow = new Date('2025-01-01T00:00:00Z');
+
+    persistNotes(
+      { notes: ['x'] },
+      actor,
+      logger,
+      dispatcher,
+      notesService,
+      fakeNow
+    );
+
+    expect(notesService.addNotes).toHaveBeenCalledWith(
+      actor.components[NOTES_COMPONENT_ID],
+      ['x'],
+      fakeNow
+    );
+    expect(logger.debug).toHaveBeenCalledWith('Added note: "x" at ts');
+  });
 });

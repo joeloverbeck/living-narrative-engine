@@ -1,0 +1,197 @@
+/* anatomy-visualizer.css */
+
+#anatomy-visualizer-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: var(--primary-bg-color);
+  color: var(--primary-text-color);
+  font-family: var(--font-ui);
+}
+
+/* Header */
+#anatomy-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: var(--panel-bg-color);
+  border-bottom: 1px solid var(--border-color-subtle);
+}
+
+#anatomy-header h1 {
+  margin: 0;
+  font-size: var(--font-size-h1);
+}
+
+#back-button {
+  padding: var(--spacing-xs) var(--spacing-md);
+  font-size: var(--font-size-base);
+}
+
+/* Entity Selector */
+#entity-selector-container {
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: var(--secondary-bg-color);
+  border-bottom: 1px solid var(--border-color-subtle);
+}
+
+#entity-selector-container label {
+  margin-right: var(--spacing-sm);
+  font-weight: 600;
+}
+
+#entity-selector {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  font-size: var(--font-size-base);
+  background: var(--primary-bg-color);
+  color: var(--primary-text-color);
+  border: 1px solid var(--border-color-subtle);
+  border-radius: var(--border-radius-sm);
+  min-width: 300px;
+}
+
+/* Main Content */
+#anatomy-content {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Panels */
+.panel {
+  flex: 1;
+  padding: var(--spacing-md);
+  overflow: auto;
+}
+
+.panel h2 {
+  margin-top: 0;
+  margin-bottom: var(--spacing-md);
+  font-size: var(--font-size-h2);
+  color: var(--secondary-text-color);
+}
+
+/* Graph Panel */
+#anatomy-graph-panel {
+  flex: 2;
+  background: var(--panel-bg-color);
+  border-right: 1px solid var(--border-color-subtle);
+}
+
+#anatomy-graph-container {
+  position: relative;
+  width: 100%;
+  height: calc(100% - 3rem);
+  overflow: auto;
+  background: var(--primary-bg-color);
+  border: 1px solid var(--border-color-subtle);
+  border-radius: var(--border-radius-md);
+}
+
+/* Description Panel */
+#entity-description-panel {
+  flex: 1;
+  background: var(--secondary-bg-color);
+}
+
+#entity-description-content {
+  font-family: var(--font-narrative);
+  line-height: 1.7;
+  color: var(--primary-text-color);
+}
+
+#entity-description-content p {
+  margin: 0 0 var(--spacing-md) 0;
+}
+
+/* SVG Graph Styles */
+#anatomy-graph {
+  display: block;
+  margin: auto;
+}
+
+.anatomy-node {
+  transition: transform 0.2s ease;
+}
+
+.anatomy-node:hover {
+  transform: scale(1.1);
+}
+
+.node-circle {
+  transition: fill-opacity 0.2s ease;
+}
+
+.node-label {
+  fill: var(--primary-text-color);
+  user-select: none;
+}
+
+.anatomy-edge {
+  opacity: 0.6;
+}
+
+/* Anatomy Tooltip */
+.anatomy-tooltip {
+  position: absolute;
+  background: var(--panel-bg-color);
+  color: var(--primary-text-color);
+  border: 1px solid var(--border-color-subtle);
+  border-radius: var(--border-radius-sm);
+  padding: var(--spacing-sm);
+  font-size: var(--font-size-small);
+  line-height: 1.45;
+  box-shadow: var(--shadow-sm);
+  transition:
+    opacity 0.15s ease-in-out,
+    visibility 0.15s ease-in-out;
+  z-index: 100;
+  pointer-events: none;
+  max-width: 300px;
+  transform: translateX(-50%) translateY(-100%);
+}
+
+.tooltip-header {
+  font-weight: 600;
+  font-size: var(--font-size-base);
+  margin-bottom: var(--spacing-xs);
+  color: var(--primary-text-color);
+}
+
+.tooltip-type {
+  font-size: var(--font-size-small);
+  color: var(--secondary-text-color);
+  margin-bottom: var(--spacing-xs);
+}
+
+.tooltip-description {
+  font-size: var(--font-size-small);
+  color: var(--primary-text-color);
+  line-height: 1.4;
+}
+
+/* Message Display */
+.message {
+  padding: var(--spacing-lg);
+  text-align: center;
+  color: var(--secondary-text-color);
+  font-style: italic;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  #anatomy-content {
+    flex-direction: column;
+  }
+
+  #anatomy-graph-panel {
+    border-right: none;
+    border-bottom: 1px solid var(--border-color-subtle);
+  }
+
+  .panel {
+    flex: unset;
+    height: 50%;
+  }
+}

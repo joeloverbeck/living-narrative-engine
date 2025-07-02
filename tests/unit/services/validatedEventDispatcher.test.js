@@ -367,6 +367,41 @@ describe('ValidatedEventDispatcher', () => {
       expect(mockLogger.error).not.toHaveBeenCalled();
     });
 
+    test('should dispatch with debug message when schema missing allowed', async () => {
+      mockGameDataRepository.getEventDefinition.mockReturnValue(
+        eventDefinitionWithSchema
+      );
+      mockSchemaValidator.isSchemaLoaded.mockReturnValue(false);
+      mockEventBus.dispatch.mockResolvedValue(undefined);
+
+      const result = await dispatcher.dispatch(eventName, payload, {
+        allowSchemaNotFound: true,
+      });
+
+      expect(result).toBe(true);
+      expect(mockEventBus.dispatch).toHaveBeenCalledWith(eventName, payload);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('Skipping validation as allowed by options.')
+      );
+      expect(mockLogger.warn).not.toHaveBeenCalled();
+    });
+
+    test('should dispatch with debug message when definition missing allowed', async () => {
+      mockGameDataRepository.getEventDefinition.mockReturnValue(undefined);
+      mockEventBus.dispatch.mockResolvedValue(undefined);
+
+      const result = await dispatcher.dispatch(eventName, payload, {
+        allowSchemaNotFound: true,
+      });
+
+      expect(result).toBe(true);
+      expect(mockEventBus.dispatch).toHaveBeenCalledWith(eventName, payload);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('Skipping validation as allowed by options.')
+      );
+      expect(mockLogger.warn).not.toHaveBeenCalled();
+    });
+
     // --- Scenario 6: Error During Validation Process ---
     test('should NOT dispatch and return false if an error occurs during validation process (e.g., isSchemaLoaded throws)', async () => {
       // Arrange

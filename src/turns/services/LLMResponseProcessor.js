@@ -2,14 +2,14 @@
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../interfaces/coreServices.js').ISchemaValidator} ISchemaValidator */
 import { ILLMResponseProcessor } from '../interfaces/ILLMResponseProcessor.js';
-import { parseAndRepairJson } from '../../utils/llmUtils.js';
+import { LlmJsonService } from '../../llms/llmJsonService.js';
 import { LLM_TURN_ACTION_RESPONSE_SCHEMA_ID } from '../schemas/llmOutputSchemas.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 
 /**
  * Custom error for LLM response processing failures.
  */
-class LLMProcessingError extends Error {
+export class LLMProcessingError extends Error {
   /**
    * @param {string} message
    * @param {object} [details]
@@ -31,11 +31,23 @@ export class LLMResponseProcessor extends ILLMResponseProcessor {
   #logger;
   /** @type {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} */
   #safeEventDispatcher;
+  /** @type {LlmJsonService} */
+  #llmJsonService;
 
   /**
-   * @param {{ schemaValidator: ISchemaValidator, logger: ILogger, safeEventDispatcher: import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher }} options
+   * @param {{
+   *   schemaValidator: ISchemaValidator,
+   *   logger: ILogger,
+   *   safeEventDispatcher: import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher,
+   *   llmJsonService: LlmJsonService,
+   * }} options
    */
-  constructor({ schemaValidator, logger, safeEventDispatcher }) {
+  constructor({
+    schemaValidator,
+    logger,
+    safeEventDispatcher,
+    llmJsonService,
+  }) {
     super();
     if (
       !schemaValidator ||
@@ -55,10 +67,17 @@ export class LLMResponseProcessor extends ILLMResponseProcessor {
         'LLMResponseProcessor requires a valid ISafeEventDispatcher'
       );
     }
+    if (
+      !llmJsonService ||
+      typeof llmJsonService.parseAndRepair !== 'function'
+    ) {
+      throw new Error('LLMResponseProcessor requires a valid LlmJsonService');
+    }
 
     this.#schemaValidator = schemaValidator;
     this.#logger = logger;
     this.#safeEventDispatcher = safeEventDispatcher;
+    this.#llmJsonService = llmJsonService;
 
     // Ensure the required schema is loaded
     if (
@@ -71,24 +90,23 @@ export class LLMResponseProcessor extends ILLMResponseProcessor {
   }
 
   /**
-   * Process a raw LLM JSON response into structured action data.
-   *
-   * @param {string} llmJsonResponse
-   * @param {string} actorId
-   * @returns {Promise<{ success: boolean; action: { chosenIndex: number; speech: string }; extractedData: { thoughts: string; notes?: string[] } }>}
+   * @description Parse and repair the raw JSON from the LLM.
+   * @param {string} llmJsonResponse - Raw JSON string from the LLM.
+   * @param {string} actorId - ID of the actor for logging context.
+   * @returns {Promise<object>} Parsed JSON object.
+   * @throws {LLMProcessingError} If the response is not a string or cannot be parsed.
    */
-  async processResponse(llmJsonResponse, actorId) {
-    // Ensure input is a string
+  async #parseResponse(llmJsonResponse, actorId) {
     if (typeof llmJsonResponse !== 'string') {
       throw new LLMProcessingError(
         `LLM response must be a JSON string for actor ${actorId}.`
       );
     }
 
-    // Clean + parse (with repair)
-    let parsed;
     try {
-      parsed = await parseAndRepairJson(llmJsonResponse, this.#logger);
+      return await this.#llmJsonService.parseAndRepair(llmJsonResponse, {
+        logger: this.#logger,
+      });
     } catch (err) {
       const errorMsg = `LLMResponseProcessor: JSON could not be parsed for actor ${actorId}: ${err.message}`;
       safeDispatchError(
@@ -104,8 +122,16 @@ export class LLMResponseProcessor extends ILLMResponseProcessor {
       );
       throw new LLMProcessingError(errorMsg);
     }
+  }
 
-    // Schema-validate
+  /**
+   * @description Validate the parsed JSON against the turn action schema.
+   * @param {object} parsed - Parsed JSON object.
+   * @param {string} actorId - ID of the actor for logging context.
+   * @throws {LLMProcessingError} When schema validation fails.
+   * @returns {void}
+   */
+  #validateSchema(parsed, actorId) {
     const validationResult = this.#schemaValidator.validate(
       LLM_TURN_ACTION_RESPONSE_SCHEMA_ID,
       parsed
@@ -127,21 +153,39 @@ export class LLMResponseProcessor extends ILLMResponseProcessor {
         { validationErrors: errors }
       );
     }
+  }
 
-    // Extract the required data
+  /**
+   * @description Extract the actionable data from the validated JSON.
+   * @param {object} parsed - Validated JSON object from the LLM.
+   * @param {string} actorId - ID of the actor for logging context.
+   * @returns {{ action: { chosenIndex: number; speech: string }; extractedData: { thoughts: string; notes?: string[] } }}
+   */
+  #extractData(parsed, actorId) {
     const { chosenIndex, speech, thoughts, notes } = parsed;
     this.#logger.debug(
       `LLMResponseProcessor: Validated LLM output for actor ${actorId}. Chosen ID: ${chosenIndex}`
     );
-
-    const finalAction = { chosenIndex, speech };
     return {
-      success: true,
-      action: finalAction,
+      action: { chosenIndex, speech },
       extractedData: {
         thoughts,
         ...(notes !== undefined ? { notes } : {}),
       },
     };
+  }
+
+  /**
+   * Process a raw LLM JSON response into structured action data.
+   *
+   * @param {string} llmJsonResponse
+   * @param {string} actorId
+   * @returns {Promise<{ success: boolean; action: { chosenIndex: number; speech: string }; extractedData: { thoughts: string; notes?: string[] } }>}
+   */
+  async processResponse(llmJsonResponse, actorId) {
+    const parsed = await this.#parseResponse(llmJsonResponse, actorId);
+    this.#validateSchema(parsed, actorId);
+    const { action, extractedData } = this.#extractData(parsed, actorId);
+    return { success: true, action, extractedData };
   }
 }

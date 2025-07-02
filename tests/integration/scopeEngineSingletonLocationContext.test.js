@@ -7,7 +7,9 @@
 import { describe, it, beforeEach, expect, jest } from '@jest/globals';
 import { SimpleEntityManager } from '../common/entities/index.js';
 import { ActionDiscoveryService } from '../../src/actions/actionDiscoveryService.js';
-import { formatActionCommand } from '../../src/actions/actionFormatter.js';
+import { ActionCandidateProcessor } from '../../src/actions/actionCandidateProcessor.js';
+import ActionCommandFormatter from '../../src/actions/actionFormatter.js';
+import { getEntityDisplayName } from '../../src/utils/entityUtils.js';
 import { SafeEventDispatcher } from '../../src/events/safeEventDispatcher.js';
 import ScopeRegistry from '../../src/scopeDsl/scopeRegistry.js';
 import ScopeEngine from '../../src/scopeDsl/engine.js';
@@ -16,6 +18,7 @@ import JsonLogicEvaluationService from '../../src/logic/jsonLogicEvaluationServi
 import InMemoryDataRegistry from '../../src/data/inMemoryDataRegistry.js';
 import { GameDataRepository } from '../../src/data/gameDataRepository.js';
 import { TargetResolutionService } from '../../src/actions/targetResolutionService.js';
+import DefaultDslParser from '../../src/scopeDsl/parser/defaultDslParser.js';
 import { createTraceContext } from '../../src/actions/tracing/traceContext.js';
 import {
   POSITION_COMPONENT_ID,
@@ -179,6 +182,7 @@ describe('Singleton Scope Engine Location Context', () => {
       logger,
       safeEventDispatcher,
       jsonLogicEvaluationService: jsonLogicEval,
+      dslParser: new DefaultDslParser(),
     });
 
     // Mock prerequisite evaluation service
@@ -194,14 +198,22 @@ describe('Singleton Scope Engine Location Context', () => {
       ]),
     };
 
+    // Create the ActionCandidateProcessor
+    const actionCandidateProcessor = new ActionCandidateProcessor({
+      prerequisiteEvaluationService,
+      targetResolutionService,
+      entityManager,
+      actionCommandFormatter: new ActionCommandFormatter(),
+      safeEventDispatcher,
+      getEntityDisplayNameFn: getEntityDisplayName,
+      logger,
+    });
+
     actionDiscoveryService = new ActionDiscoveryService({
       entityManager,
-      prerequisiteEvaluationService,
       actionIndex,
       logger,
-      formatActionCommandFn: formatActionCommand,
-      safeEventDispatcher,
-      targetResolutionService,
+      actionCandidateProcessor,
       traceContextFactory: () => createTraceContext(),
     });
   });

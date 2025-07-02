@@ -1,7 +1,7 @@
 // src/tests/dependencyInjection/registrations/promptBuilderRegistration.test.js
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../../../../interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../../../../services/llmConfigService.js').LLMConfigService} LLMConfigService_Concrete */
+/** @typedef {import('../../../../services/llmConfigManager.js').LlmConfigManager} LlmConfigManager_Concrete */
 /** @typedef {import('../../../../utils/placeholderResolverUtils.js').PlaceholderResolver} PlaceholderResolver_Concrete */
 /** @typedef {import('../../../../services/promptElementAssemblers/standardElementAssembler.js').StandardElementAssembler} StandardElementAssembler_Concrete */
 /** @typedef {import('../../../../services/promptElementAssemblers/perceptionLogAssembler.js').PerceptionLogAssembler} PerceptionLogAssembler_Concrete */
@@ -14,12 +14,12 @@ import { describe, beforeEach, it, expect, jest } from '@jest/globals';
 
 // --- Dependencies for Registration ---
 import { tokens } from '../../../../src/dependencyInjection/tokens.js';
-import { Registrar } from '../../../../src/dependencyInjection/registrarHelpers.js';
+import { Registrar } from '../../../../src/utils/registrarHelpers.js';
 import { MockContainer } from '../../../common/mockFactories/index.js';
 
 // --- Classes to be Mocked ---
 // Mock concrete implementations that will be instantiated by factories or resolved.
-const mockLLMConfigServiceInstance = { getConfig: jest.fn() };
+const mockLlmConfigManagerInstance = { getConfig: jest.fn() };
 const mockPlaceholderResolverInstance = { resolve: jest.fn() };
 const mockStandardElementAssemblerInstance = { assemble: jest.fn() };
 const mockPerceptionLogAssemblerInstance = { assemble: jest.fn() };
@@ -28,10 +28,10 @@ const mockNotesSectionAssemblerInstance = { assemble: jest.fn() };
 const mockPromptBuilderInstance = { build: jest.fn() };
 
 // Mock the modules themselves
-jest.mock('../../../../src/llms/llmConfigService.js', () => ({
-  LLMConfigService: jest
+jest.mock('../../../../src/llms/llmConfigManager.js', () => ({
+  LlmConfigManager: jest
     .fn()
-    .mockImplementation(() => mockLLMConfigServiceInstance),
+    .mockImplementation(() => mockLlmConfigManagerInstance),
 }));
 jest.mock('../../../../src/utils/placeholderResolverUtils.js', () => ({
   PlaceholderResolver: jest
@@ -77,7 +77,7 @@ jest.mock('../../../../src/prompting/promptBuilder.js', () => ({
 }));
 
 // --- Import classes after mocking ---
-import { LLMConfigService } from '../../../../src/llms/llmConfigService.js';
+import { LlmConfigManager } from '../../../../src/llms/llmConfigManager.js';
 import { PlaceholderResolver } from '../../../../src/utils/placeholderResolverUtils.js';
 import { StandardElementAssembler } from '../../../../src/prompting/assembling/standardElementAssembler.js';
 import { PerceptionLogAssembler } from '../../../../src/prompting/assembling/perceptionLogAssembler.js';
@@ -102,8 +102,8 @@ describe('IPromptBuilder Registration and Resolution', () => {
   // We use the actual 'log' from the file (which is mockLogger here)
   const promptBuilderFactory = (c) => {
     const logger = /** @type {ILogger} */ (c.resolve(tokens.ILogger));
-    const llmConfigService = /** @type {LLMConfigService_Concrete} */ (
-      c.resolve(tokens.LLMConfigService)
+    const llmConfigService = /** @type {LlmConfigManager_Concrete} */ (
+      c.resolve(tokens.LlmConfigManager)
     );
     const placeholderResolver = /** @type {PlaceholderResolver_Concrete} */ (
       c.resolve(tokens.PlaceholderResolver)
@@ -150,8 +150,8 @@ describe('IPromptBuilder Registration and Resolution', () => {
     // The factory functions for these will return the mocked instances directly.
     mockContainer.register(tokens.ILogger, mockLogger); // Direct registration of mock
     mockContainer.register(
-      tokens.LLMConfigService,
-      () => mockLLMConfigServiceInstance
+      tokens.LlmConfigManager,
+      () => mockLlmConfigManagerInstance
     );
     mockContainer.register(
       tokens.PlaceholderResolver,
@@ -188,7 +188,7 @@ describe('IPromptBuilder Registration and Resolution', () => {
     // Verify that the PromptBuilder constructor was called with the correct (mocked) dependencies
     expect(PromptBuilder).toHaveBeenCalledWith({
       logger: mockLogger,
-      llmConfigService: mockLLMConfigServiceInstance,
+      llmConfigService: mockLlmConfigManagerInstance,
       placeholderResolver: mockPlaceholderResolverInstance,
       standardElementAssembler: mockStandardElementAssemblerInstance,
       perceptionLogAssembler: mockPerceptionLogAssemblerInstance,

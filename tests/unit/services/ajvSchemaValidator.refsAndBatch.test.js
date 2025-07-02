@@ -8,13 +8,17 @@ import { createMockLogger } from '../testUtils.js';
  * @param {Array<any>} [options.getSchemaReturns] - Values returned by the mocked getSchema in order.
  * @param {Function} [options.addSchemaImpl] - Implementation for addSchema.
  * @param {Function} [options.compileImpl] - Implementation for compile.
+ * @param options.schemaMap
+ * @param options.schemaGetter
  * @returns {{validator: any, logger: ReturnType<typeof createMockLogger>, addSchema: jest.Mock, getSchema: jest.Mock, compile: jest.Mock}}
  * Returns a constructed validator and the mocked functions for assertions.
  */
 function setupMockAjv({
-  getSchemaReturns = [null],
+  getSchemaReturns = [],
   addSchemaImpl,
   compileImpl,
+  schemaMap = {},
+  schemaGetter,
 } = {}) {
   const getSchema = jest.fn();
   getSchemaReturns.forEach((val) => getSchema.mockReturnValueOnce(val));
@@ -22,14 +26,20 @@ function setupMockAjv({
   const compile = jest.fn(compileImpl);
   const removeSchema = jest.fn();
   jest.doMock('ajv', () =>
-    jest.fn(() => ({ addSchema, getSchema, removeSchema, compile }))
+    jest.fn(() => {
+      const instance = { addSchema, getSchema, removeSchema, compile };
+      Object.defineProperty(instance, 'schemas', {
+        get: schemaGetter || (() => schemaMap),
+      });
+      return instance;
+    })
   );
   jest.doMock('ajv-formats', () => jest.fn());
   const AjvSchemaValidator =
     require('../../../src/validation/ajvSchemaValidator.js').default;
   const logger = createMockLogger();
   return {
-    validator: new AjvSchemaValidator(logger),
+    validator: new AjvSchemaValidator({ logger: logger }),
     logger,
     addSchema,
     getSchema,
@@ -46,7 +56,7 @@ afterEach(() => {
 describe('AjvSchemaValidator reference and batch operations', () => {
   it('validateSchemaRefs warns and returns false when schema is missing', () => {
     const { validator, logger } = setupMockAjv({
-      getSchemaReturns: [null, null],
+      getSchemaReturns: [null],
     });
     const result = validator.validateSchemaRefs('missing');
     expect(result).toBe(false);
@@ -58,7 +68,7 @@ describe('AjvSchemaValidator reference and batch operations', () => {
   it('validateSchemaRefs returns true when compilation succeeds', () => {
     const schemaObj = { schema: {} };
     const { validator, compile } = setupMockAjv({
-      getSchemaReturns: [null, schemaObj],
+      getSchemaReturns: [schemaObj],
       compileImpl: () => ({}),
     });
     const result = validator.validateSchemaRefs('good');
@@ -70,7 +80,7 @@ describe('AjvSchemaValidator reference and batch operations', () => {
     const error = new Error('boom');
     const schemaObj = { schema: {} };
     const { validator, logger } = setupMockAjv({
-      getSchemaReturns: [null, schemaObj],
+      getSchemaReturns: [schemaObj],
       compileImpl: () => {
         throw error;
       },
@@ -83,29 +93,18 @@ describe('AjvSchemaValidator reference and batch operations', () => {
     );
   });
 
-  it('getLoadedSchemaIds filters by loaded status', () => {
-    jest.dontMock('ajv');
-    jest.dontMock('ajv-formats');
-    const AjvSchemaValidator =
-      require('../../../src/validation/ajvSchemaValidator.js').default;
-    const logger = createMockLogger();
-    const validator = new AjvSchemaValidator(logger);
-    jest
-      .spyOn(validator, 'isSchemaLoaded')
-      .mockImplementation((id) => id.includes('world.schema.json'));
+  it('getLoadedSchemaIds returns keys from Ajv schema map', () => {
+    const { validator } = setupMockAjv({ schemaMap: { a: {}, b: {} } });
     const result = validator.getLoadedSchemaIds();
-    expect(result).toEqual(['http://example.com/schemas/world.schema.json']);
+    expect(result).toEqual(['a', 'b']);
   });
 
   it('getLoadedSchemaIds logs and returns empty array on error', () => {
-    jest.dontMock('ajv');
-    jest.dontMock('ajv-formats');
-    const AjvSchemaValidator =
-      require('../../../src/validation/ajvSchemaValidator.js').default;
-    const logger = createMockLogger();
-    const validator = new AjvSchemaValidator(logger);
-    jest.spyOn(validator, 'isSchemaLoaded').mockImplementation(() => {
-      throw new Error('fail');
+    const error = new Error('fail');
+    const { validator, logger } = setupMockAjv({
+      schemaGetter: () => {
+        throw error;
+      },
     });
     const result = validator.getLoadedSchemaIds();
     expect(result).toEqual([]);
@@ -121,7 +120,7 @@ describe('AjvSchemaValidator reference and batch operations', () => {
     const AjvSchemaValidator =
       require('../../../src/validation/ajvSchemaValidator.js').default;
     const logger = createMockLogger();
-    const validator = new AjvSchemaValidator(logger);
+    const validator = new AjvSchemaValidator({ logger: logger });
     await expect(validator.addSchemas(null)).rejects.toThrow(
       'addSchemas called with empty or non-array input.'
     );
@@ -138,7 +137,7 @@ describe('AjvSchemaValidator reference and batch operations', () => {
     const AjvSchemaValidator =
       require('../../../src/validation/ajvSchemaValidator.js').default;
     const logger = createMockLogger();
-    const validator = new AjvSchemaValidator(logger);
+    const validator = new AjvSchemaValidator({ logger: logger });
     await expect(validator.addSchemas([{}])).rejects.toThrow(
       'All schemas must be objects with a valid $id.'
     );
@@ -149,7 +148,7 @@ describe('AjvSchemaValidator reference and batch operations', () => {
 
   it('addSchemas resolves and logs on success', async () => {
     const { validator, logger, addSchema } = setupMockAjv({
-      getSchemaReturns: [null],
+      getSchemaReturns: [],
     });
     const schemas = [{ $id: 'a' }, { $id: 'b' }];
     await expect(validator.addSchemas(schemas)).resolves.toBeUndefined();
@@ -163,7 +162,7 @@ describe('AjvSchemaValidator reference and batch operations', () => {
     const error = new Error('batch');
     error.errors = [{ message: 'oops' }];
     const { validator, logger } = setupMockAjv({
-      getSchemaReturns: [null],
+      getSchemaReturns: [],
       addSchemaImpl: () => {
         throw error;
       },

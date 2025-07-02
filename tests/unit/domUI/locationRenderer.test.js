@@ -14,6 +14,7 @@ import {
   jest,
 } from '@jest/globals';
 import { LocationRenderer } from '../../../src/domUI';
+import { LocationNotFoundError } from '../../../src/errors/locationNotFoundError.js';
 
 // --- Mock Dependencies ---
 jest.mock('../../../src/constants/componentIds.js', () => ({
@@ -536,7 +537,11 @@ describe('LocationRenderer', () => {
     });
 
     it('should clear displays and log error if location details not found via EDDP', () => {
-      mockEntityDisplayDataProvider.getLocationDetails.mockReturnValue(null);
+      mockEntityDisplayDataProvider.getLocationDetails.mockImplementation(
+        () => {
+          throw new LocationNotFoundError(MOCK_LOCATION_ID);
+        }
+      );
       simulateTurnStarted();
       expect(
         mockEntityDisplayDataProvider.getLocationDetails

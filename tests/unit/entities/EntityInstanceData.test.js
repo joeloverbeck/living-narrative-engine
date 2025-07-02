@@ -67,6 +67,14 @@ describe('EntityInstanceData', () => {
     ).toThrow('EntityInstanceData requires a valid EntityDefinition object.');
   });
 
+  it('should throw an error if logger lacks required methods', () => {
+    const invalidLogger = {};
+    expect(
+      () =>
+        new EntityInstanceData(validInstanceId, entityDef, {}, invalidLogger)
+    ).toThrow("Invalid or missing method 'info' on dependency 'ILogger'.");
+  });
+
   describe('getComponentData', () => {
     it('should return data from definition if no override exists', () => {
       const instanceData = new EntityInstanceData(

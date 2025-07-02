@@ -81,18 +81,21 @@ describeActionDiscoverySuite(
       bed.mocks.targetResolutionService.resolveTargets.mockImplementation(
         (scopeName) => {
           if (scopeName === 'someScope') {
-            return [
-              { type: 'entity', entityId: 'target1' },
-              { type: 'entity', entityId: 'target2' },
-            ];
+            return {
+              targets: [
+                { type: 'entity', entityId: 'target1' },
+                { type: 'entity', entityId: 'target2' },
+              ],
+            };
           }
-          if (scopeName === 'none') return [{ type: 'none', entityId: null }];
+          if (scopeName === 'none')
+            return { targets: [{ type: 'none', entityId: null }] };
           if (scopeName === 'self')
-            return [{ type: 'entity', entityId: actorEntity.id }];
-          return [];
+            return { targets: [{ type: 'entity', entityId: actorEntity.id }] };
+          return { targets: [] };
         }
       );
-      bed.mocks.formatActionCommandFn.mockReturnValue({
+      bed.mocks.actionCommandFormatter.format.mockReturnValue({
         ok: true,
         value: 'do action',
       });
@@ -146,12 +149,12 @@ describeActionDiscoverySuite(
         expect(trace.addLog).toHaveBeenCalledWith(
           TRACE_STEP,
           `Processing candidate action: '${actionDefSimple.id}'`,
-          'ActionDiscoveryService.#processCandidateAction'
+          'ActionCandidateProcessor.process'
         );
         expect(trace.addLog).toHaveBeenCalledWith(
           TRACE_STEP,
           `Processing candidate action: '${actionDefScope.id}'`,
-          'ActionDiscoveryService.#processCandidateAction'
+          'ActionCandidateProcessor.process'
         );
       });
 
@@ -190,7 +193,7 @@ describeActionDiscoverySuite(
         expect(trace.addLog).toHaveBeenCalledWith(
           TRACE_SUCCESS,
           `Action '${actionDefPrereq.id}' passed actor prerequisite check.`,
-          'ActionDiscoveryService.#processCandidateAction'
+          'ActionCandidateProcessor.process'
         );
       });
 
@@ -210,7 +213,7 @@ describeActionDiscoverySuite(
         expect(trace.addLog).toHaveBeenCalledWith(
           TRACE_FAILURE,
           `Action '${actionDefPrereq.id}' discarded due to failed actor prerequisites.`,
-          'ActionDiscoveryService.#processCandidateAction'
+          'ActionCandidateProcessor.process'
         );
         expect(
           bed.mocks.targetResolutionService.resolveTargets

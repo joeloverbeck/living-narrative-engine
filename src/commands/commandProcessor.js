@@ -5,11 +5,11 @@ import { ATTEMPT_ACTION_ID } from '../constants/eventIds.js';
 import { ICommandProcessor } from './interfaces/ICommandProcessor.js';
 import { initLogger } from '../utils/index.js';
 import { validateDependency, assertValidId } from '../utils/dependencyUtils.js';
+import { InvalidArgumentError } from '../errors/invalidArgumentError.js';
 import {
   createFailureResult,
   dispatchFailure,
 } from './helpers/commandResultUtils.js';
-import { dispatchWithErrorHandling as dispatchEventWithErrorHandling } from '../utils/eventDispatchHelper.js';
 
 // --- Type Imports ---
 /** @typedef {import('../entities/entity.js').default} Entity */
@@ -17,6 +17,7 @@ import { dispatchWithErrorHandling as dispatchEventWithErrorHandling } from '../
 /** @typedef {import('../turns/interfaces/IActorTurnStrategy.js').ITurnAction} ITurnAction */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
+/** @typedef {import('../utils/eventDispatchService.js').EventDispatchService} EventDispatchService */
 /** @typedef {import('../types/commandResult.js').CommandResult} CommandResult */
 
 /**
@@ -28,19 +29,22 @@ class CommandProcessor extends ICommandProcessor {
   #logger;
   /** @type {ISafeEventDispatcher} */
   #safeEventDispatcher;
+  /** @type {EventDispatchService} */
+  #eventDispatchService;
 
   /**
    * Creates an instance of CommandProcessor.
    *
    * @param {object} options - Configuration options for the processor.
    * @param {ISafeEventDispatcher} options.safeEventDispatcher - Required event dispatcher that must implement `dispatch`.
+   * @param {EventDispatchService} options.eventDispatchService - Required event dispatch service.
    * @param {ILogger} [options.logger] - Optional logger instance.
-   * @throws {Error} If `safeEventDispatcher` is missing or lacks a `dispatch` method.
+   * @throws {Error} If required dependencies are missing or lack required methods.
    */
   constructor(options) {
     super();
 
-    const { logger, safeEventDispatcher } = options || {};
+    const { logger, safeEventDispatcher, eventDispatchService } = options || {};
 
     this.#logger = initLogger('CommandProcessor', logger);
 
@@ -53,7 +57,17 @@ class CommandProcessor extends ICommandProcessor {
       }
     );
 
+    validateDependency(
+      eventDispatchService,
+      'eventDispatchService',
+      this.#logger,
+      {
+        requiredMethods: ['dispatchWithErrorHandling'],
+      }
+    );
+
     this.#safeEventDispatcher = safeEventDispatcher;
+    this.#eventDispatchService = eventDispatchService;
 
     this.#logger.debug(
       'CommandProcessor: Instance created and dependencies validated.'
@@ -70,18 +84,14 @@ class CommandProcessor extends ICommandProcessor {
    * @returns {Promise<CommandResult>} A promise that resolves to the command result.
    */
   async dispatchAction(actor, turnAction) {
-    const validationError = this.#validateActionInputs(actor, turnAction);
-    if (validationError) {
-      dispatchFailure(
-        this.#logger,
-        this.#safeEventDispatcher,
-        validationError.userMsg,
-        validationError.internalMsg
-      );
-      return createFailureResult(
-        validationError.userMsg,
-        validationError.internalMsg,
-        turnAction?.commandString
+    try {
+      this.#validateActionInputs(actor, turnAction);
+    } catch (err) {
+      return this.#handleDispatchFailure(
+        'Internal error: Malformed action prevented execution.',
+        err.message,
+        turnAction?.commandString,
+        turnAction?.actionDefinitionId
       );
     }
 
@@ -93,14 +103,12 @@ class CommandProcessor extends ICommandProcessor {
     );
 
     // --- Payload Construction ---
-    const payload = this.#buildAttemptActionPayload(actor, turnAction);
+    const payload = this.#createAttemptActionPayload(actor, turnAction);
 
     // --- Dispatch ---
-    const dispatchSuccess = await dispatchEventWithErrorHandling(
-      this.#safeEventDispatcher,
+    const dispatchSuccess = await this.#eventDispatchService.dispatchWithErrorHandling(
       ATTEMPT_ACTION_ID,
       payload,
-      this.#logger,
       `ATTEMPT_ACTION_ID dispatch for pre-resolved action ${actionId}`
     );
 
@@ -117,15 +125,13 @@ class CommandProcessor extends ICommandProcessor {
     }
 
     const internalMsg = `CRITICAL: Failed to dispatch pre-resolved ATTEMPT_ACTION_ID for ${actorId}, action "${actionId}". Dispatcher reported failure.`;
-    const userMsg = 'Internal error: Failed to initiate action.';
-    this.#logger.error(internalMsg, { payload });
-    dispatchFailure(
-      this.#logger,
-      this.#safeEventDispatcher,
-      userMsg,
-      internalMsg
+    return this.#handleDispatchFailure(
+      'Internal error: Failed to initiate action.',
+      internalMsg,
+      commandString,
+      actionId,
+      { payload }
     );
-    return createFailureResult(userMsg, internalMsg, commandString, actionId);
   }
 
   // --- Private Helper Methods ---
@@ -134,7 +140,8 @@ class CommandProcessor extends ICommandProcessor {
    * @description Validates actor and action inputs for dispatchAction.
    * @param {Entity} actor - The entity performing the action.
    * @param {ITurnAction} turnAction - The proposed action object.
-   * @returns {{userMsg: string, internalMsg: string}|null} Error details when invalid, otherwise null.
+   * @throws {InvalidArgumentError} When either input is invalid.
+   * @returns {void}
    */
   #validateActionInputs(actor, turnAction) {
     const actorId = actor?.id;
@@ -144,37 +151,38 @@ class CommandProcessor extends ICommandProcessor {
       'actionDefinitionId' in turnAction;
 
     if (!actorId || !hasActionDefId) {
-      return {
-        userMsg: 'Internal error: Malformed action prevented execution.',
-        internalMsg:
-          'dispatchAction failed: actor must have id and turnAction must include actionDefinitionId.',
-      };
-    }
-
-    try {
-      assertValidId(actorId, 'CommandProcessor.dispatchAction', this.#logger);
-      assertValidId(
-        turnAction.actionDefinitionId,
-        'CommandProcessor.dispatchAction',
-        this.#logger
+      throw new InvalidArgumentError(
+        'actor must have id and turnAction must include actionDefinitionId.'
       );
-    } catch (err) {
-      return {
-        userMsg: 'Internal error: Malformed action prevented execution.',
-        internalMsg: `dispatchAction failed: ${err.message}`,
-      };
     }
 
-    return null;
+    assertValidId(actorId, 'CommandProcessor.dispatchAction', this.#logger);
+    assertValidId(
+      turnAction.actionDefinitionId,
+      'CommandProcessor.dispatchAction',
+      this.#logger
+    );
   }
 
   /**
-   * @description Builds the payload for an action attempt dispatch.
+   * @description Builds a standardized failure result.
+   * @param {string} userMsg - User-facing error message.
+   * @param {string} internalMsg - Detailed internal error message.
+   * @param {string} [commandString] - Original command string that was processed.
+   * @param {string} [actionId] - Identifier of the attempted action.
+   * @returns {CommandResult} The failure result object.
+   */
+  #buildFailureResult(userMsg, internalMsg, commandString, actionId) {
+    return createFailureResult(userMsg, internalMsg, commandString, actionId);
+  }
+
+  /**
+   * @description Creates the payload for an action attempt dispatch.
    * @param {Entity} actor - The entity performing the action.
    * @param {ITurnAction} turnAction - The resolved turn action.
    * @returns {object} The payload for the `ATTEMPT_ACTION_ID` event.
    */
-  #buildAttemptActionPayload(actor, turnAction) {
+  #createAttemptActionPayload(actor, turnAction) {
     const { actionDefinitionId, resolvedParameters, commandString } =
       turnAction;
     return {
@@ -184,6 +192,40 @@ class CommandProcessor extends ICommandProcessor {
       targetId: resolvedParameters?.targetId || null,
       originalInput: commandString || actionDefinitionId,
     };
+  }
+
+  /**
+   * @description Handles failures during dispatch by logging, dispatching a
+   * system error and returning a standardized failure result.
+   * @param {string} userMsg - User-facing error message.
+   * @param {string} internalMsg - Detailed internal error message.
+   * @param {string} [commandString] - Original command string processed.
+   * @param {string} [actionId] - Identifier of the attempted action.
+   * @param {object} [logContext] - Optional logger context.
+   * @returns {CommandResult} The standardized failure result.
+   */
+  #handleDispatchFailure(
+    userMsg,
+    internalMsg,
+    commandString,
+    actionId,
+    logContext
+  ) {
+    if (logContext) {
+      this.#logger.error(internalMsg, logContext);
+    }
+    dispatchFailure(
+      this.#logger,
+      this.#safeEventDispatcher,
+      userMsg,
+      internalMsg
+    );
+    return this.#buildFailureResult(
+      userMsg,
+      internalMsg,
+      commandString,
+      actionId
+    );
   }
 }
 

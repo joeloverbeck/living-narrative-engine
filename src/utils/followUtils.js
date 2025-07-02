@@ -9,7 +9,10 @@
 
 import { FOLLOWING_COMPONENT_ID } from '../constants/componentIds.js';
 import { isValidEntityManager } from './entityValidationUtils.js';
-import { resolveEntityInstance } from './componentAccessUtils.js';
+import {
+  resolveEntity,
+  getComponent,
+} from '../entities/entityAccessService.js';
 
 /**
  * @description Retrieves the leader an entity is following.
@@ -22,12 +25,12 @@ export function getLeaderId(entityId, entityManager) {
     return null;
   }
 
-  const entity = resolveEntityInstance(entityId, entityManager);
+  const entity = resolveEntity(entityId, entityManager);
   if (!entity) {
     return null;
   }
 
-  const data = entity.getComponentData(FOLLOWING_COMPONENT_ID);
+  const data = getComponent(entity, FOLLOWING_COMPONENT_ID);
   return data && data.leaderId ? data.leaderId : null;
 }
 

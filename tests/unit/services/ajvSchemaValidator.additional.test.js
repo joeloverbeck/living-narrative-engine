@@ -21,7 +21,7 @@ describe('AjvSchemaValidator additional tests', () => {
 
   beforeEach(() => {
     mockLogger = createMockLogger();
-    validator = new AjvSchemaValidator(mockLogger);
+    validator = new AjvSchemaValidator({ logger: mockLogger });
   });
 
   describe('validate method', () => {

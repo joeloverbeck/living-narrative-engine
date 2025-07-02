@@ -1,0 +1,18 @@
+{
+  "$schema": "http://example.com/schemas/component.schema.json",
+  "id": "descriptors:shape_general",
+  "description": "General shape descriptors applicable to various objects",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "shape": {
+        "type": "string",
+        "description": "The general shape",
+        "enum": ["round", "square", "oval", "elongated", "angular", "curved"],
+        "default": "round"
+      }
+    },
+    "required": ["shape"],
+    "additionalProperties": false
+  }
+}

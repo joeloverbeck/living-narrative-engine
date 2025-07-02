@@ -111,6 +111,7 @@ describe('ModManifestProcessor.processManifests', () => {
       expect.stringContaining('Encountered 1 engine version incompatibilities'),
       error
     );
+    // In the new implementation, version validation happens before order resolution
     expect(modLoadOrderResolver.resolve).not.toHaveBeenCalled();
     expect(registry.store).not.toHaveBeenCalledWith(
       'meta',
@@ -161,11 +162,23 @@ describe('ModManifestProcessor.processManifests', () => {
     );
   });
 
-  it('loads missing dependency manifests and resolves final order', async () => {
-    manifestMap = new Map([['modA', { id: 'modA', version: '1.0.0' }]]);
-    const secondMap = new Map([['modC', { id: 'modC', version: '1.0.0' }]]);
+  it('loads dependency manifests recursively', async () => {
+    // Set up modA with a dependency on modC
+    manifestMap = new Map([
+      [
+        'moda',
+        {
+          id: 'modA',
+          version: '1.0.0',
+          dependencies: [{ id: 'modC', version: '^1.0.0' }],
+        },
+      ],
+    ]);
+    const secondMap = new Map([['modc', { id: 'modC', version: '1.0.0' }]]);
+
     manifestLoader = new DummyManifestLoader(manifestMap);
-    modLoadOrderResolver.resolve.mockReturnValue(['modA', 'modC']);
+    modLoadOrderResolver.resolve.mockReturnValue(['modC', 'modA']);
+
     processor = new ModManifestProcessor({
       modManifestLoader: manifestLoader,
       logger,
@@ -175,24 +188,32 @@ describe('ModManifestProcessor.processManifests', () => {
       modVersionValidator,
       modLoadOrderResolver,
     });
-    manifestLoader.loadRequestedManifests.mockImplementationOnce(
-      async () => manifestMap
-    );
-    manifestLoader.loadRequestedManifests.mockImplementationOnce(
-      async () => secondMap
-    );
 
-    const result = await processor.processManifests(
-      ['modA', 'modC'],
+    // First call returns modA, second call returns modC
+    manifestLoader.loadRequestedManifests
+      .mockImplementationOnce(async () => manifestMap)
+      .mockImplementationOnce(async () => secondMap);
+
+    const result = await processor.processManifests(['modA'], worldName);
+
+    // Should load modA first, then discover and load its dependency modC
+    expect(manifestLoader.loadRequestedManifests).toHaveBeenCalledTimes(2);
+    expect(manifestLoader.loadRequestedManifests).toHaveBeenNthCalledWith(
+      1,
+      ['modA'],
+      worldName
+    );
+    expect(manifestLoader.loadRequestedManifests).toHaveBeenNthCalledWith(
+      2,
+      ['modC'],
       worldName
     );
 
-    expect(manifestLoader.loadRequestedManifests).toHaveBeenCalledTimes(2);
     expect(registry.store).toHaveBeenCalledWith('mod_manifests', 'modc', {
       id: 'modC',
       version: '1.0.0',
     });
-    expect(result.finalModOrder).toEqual(['modA', 'modC']);
+    expect(result.finalModOrder).toEqual(['modC', 'modA']);
     expect(result.loadedManifestsMap.size).toBe(2);
   });
 });

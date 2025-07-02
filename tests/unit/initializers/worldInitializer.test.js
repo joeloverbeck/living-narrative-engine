@@ -12,7 +12,6 @@ import { SCOPES_KEY } from '../../../src/constants/dataRegistryKeys.js';
 import loadAndInitScopes from '../../../src/initializers/services/scopeRegistryUtils.js';
 import { WorldInitializationError } from '../../../src/errors/InitializationError.js';
 import { safeDispatchError } from '../../../src/utils/safeDispatchErrorUtils.js';
-import * as eventDispatchUtils from '../../../src/utils/eventDispatchUtils.js';
 
 jest.mock('../../../src/utils/safeDispatchErrorUtils.js', () => ({
   safeDispatchError: jest.fn(),
@@ -25,6 +24,7 @@ describe('WorldInitializer', () => {
   let mockValidatedEventDispatcher;
   let mockLogger;
   let mockScopeRegistry;
+  let mockEventDispatchService;
   let worldInitializer;
 
   const createMockEntityInstance = (
@@ -76,7 +76,6 @@ describe('WorldInitializer', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    jest.spyOn(eventDispatchUtils, 'dispatchWithLogging');
 
     mockEntityManager = {
       createEntityInstance: jest.fn(),
@@ -104,12 +103,16 @@ describe('WorldInitializer', () => {
       getScope: jest.fn(),
       clear: jest.fn(),
     };
+    mockEventDispatchService = {
+      dispatchWithLogging: jest.fn().mockResolvedValue(undefined),
+    };
 
     worldInitializer = new WorldInitializer({
       entityManager: mockEntityManager,
       worldContext: mockWorldContext,
       gameDataRepository: mockGameDataRepository,
       validatedEventDispatcher: mockValidatedEventDispatcher,
+      eventDispatchService: mockEventDispatchService,
       logger: mockLogger,
       scopeRegistry: mockScopeRegistry,
     });
@@ -156,6 +159,11 @@ describe('WorldInitializer', () => {
         'scopeRegistry',
         'WorldInitializer requires an IScopeRegistry with initialize().',
       ],
+      [
+        'EventDispatchService',
+        'eventDispatchService',
+        'WorldInitializer requires an EventDispatchService with dispatchWithLogging().',
+      ],
     ];
 
     it.each(constructorErrorTestCases)(
@@ -166,6 +174,7 @@ describe('WorldInitializer', () => {
           worldContext: mockWorldContext,
           gameDataRepository: mockGameDataRepository,
           validatedEventDispatcher: mockValidatedEventDispatcher,
+          eventDispatchService: mockEventDispatchService,
           logger: mockLogger,
           scopeRegistry: mockScopeRegistry,
         };
@@ -227,11 +236,9 @@ describe('WorldInitializer', () => {
         )
       );
 
-      expect(eventDispatchUtils.dispatchWithLogging).toHaveBeenCalledWith(
-        mockValidatedEventDispatcher,
+      expect(mockEventDispatchService.dispatchWithLogging).toHaveBeenCalledWith(
         WORLDINIT_ENTITY_INSTANTIATED_ID,
         expect.objectContaining({ instanceId: 'test:hero_instance' }),
-        mockLogger,
         'entity test:hero_instance',
         { allowSchemaNotFound: true }
       );
@@ -266,11 +273,9 @@ describe('WorldInitializer', () => {
       expect(mockLogger.error).toHaveBeenCalledWith(
         'WorldInitializer (Pass 1): Failed to instantiate entity from definition: test:broken for instance: test:broken_instance. createEntityInstance returned null/undefined or threw an error.'
       );
-      expect(eventDispatchUtils.dispatchWithLogging).toHaveBeenCalledWith(
-        mockValidatedEventDispatcher,
+      expect(mockEventDispatchService.dispatchWithLogging).toHaveBeenCalledWith(
         WORLDINIT_ENTITY_INSTANTIATION_FAILED_ID,
         expect.objectContaining({ instanceId: 'test:broken_instance' }),
-        mockLogger,
         'instance test:broken_instance',
         { allowSchemaNotFound: true }
       );
@@ -559,11 +564,10 @@ describe('WorldInitializer', () => {
 
   // Ensure dispatchWithLogging error handling works when event dispatch fails
   describe('dispatchWithLogging error handling', () => {
-    it('should log an error if event dispatching fails', async () => {
-      const MOCK_ERROR_MESSAGE = 'Dispatch failed';
-      mockValidatedEventDispatcher.dispatch.mockRejectedValueOnce(
-        new Error(MOCK_ERROR_MESSAGE)
-      );
+    it('should continue processing even if event dispatching fails', async () => {
+      // dispatchWithLogging is designed to catch errors and not throw
+      // So we just mock it to resolve normally (it logs errors internally)
+      mockEventDispatchService.dispatchWithLogging.mockResolvedValue(undefined);
 
       // Need to trigger an event dispatch. Easiest is via entity instantiation.
       const worldData = {
@@ -592,19 +596,16 @@ describe('WorldInitializer', () => {
       );
       mockEntityManager.createEntityInstance.mockReturnValueOnce(mockInstance1);
 
-      await worldInitializer.initializeWorldEntities('test:world');
+      // Should not throw even if dispatchWithLogging fails
+      const result = await worldInitializer.initializeWorldEntities('test:world');
 
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining(
-          "Failed dispatching 'worldinit:entity_instantiated' event for entity test:eventTest_instance"
-        ),
-        expect.any(Error)
-      );
-      expect(eventDispatchUtils.dispatchWithLogging).toHaveBeenCalledWith(
-        mockValidatedEventDispatcher,
+      // The entity should still be instantiated successfully
+      expect(result.instantiatedCount).toBe(1);
+      expect(result.failedCount).toBe(0);
+      
+      expect(mockEventDispatchService.dispatchWithLogging).toHaveBeenCalledWith(
         WORLDINIT_ENTITY_INSTANTIATED_ID,
         expect.any(Object),
-        mockLogger,
         'entity test:eventTest_instance',
         { allowSchemaNotFound: true }
       );

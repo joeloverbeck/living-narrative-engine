@@ -9,6 +9,8 @@
 /** @typedef {import('../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 /** @typedef {import('./tracing/traceContext.js').TraceContext} TraceContext */
 /** @typedef {import('../logic/jsonLogicEvaluationService.js').default} JsonLogicEvaluationService */
+/** @typedef {import('../types/runtimeContext.js').RuntimeContext} RuntimeContext */
+/** @typedef {import('../scopeDsl/IDslParser.js').IDslParser} IDslParser */
 
 import { ITargetResolutionService } from '../interfaces/ITargetResolutionService.js';
 import { ActionTargetContext } from '../models/actionTargetContext.js';
@@ -16,7 +18,7 @@ import {
   TARGET_DOMAIN_SELF,
   TARGET_DOMAIN_NONE,
 } from '../constants/targetDomains.js';
-import { setupService } from '../utils/serviceInitializerUtils.js';
+import { ServiceSetup } from '../utils/serviceInitializerUtils.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/systemEventIds.js';
 
 /**
@@ -33,6 +35,7 @@ export class TargetResolutionService extends ITargetResolutionService {
   #logger;
   #safeEventDispatcher;
   #jsonLogicEvalService;
+  #dslParser;
 
   /**
    * Creates an instance of TargetResolutionService.
@@ -44,17 +47,22 @@ export class TargetResolutionService extends ITargetResolutionService {
    * @param {ILogger} deps.logger - Logger instance.
    * @param {ISafeEventDispatcher} deps.safeEventDispatcher - Dispatches system errors.
    * @param {JsonLogicEvaluationService} deps.jsonLogicEvaluationService - Service to evaluate JsonLogic.
+   * @param {IDslParser} deps.dslParser - Parser used for Scope-DSL expressions.
+   * @param deps.serviceSetup
    */
   constructor({
     scopeRegistry,
     scopeEngine,
     entityManager,
     logger,
+    serviceSetup,
     safeEventDispatcher,
     jsonLogicEvaluationService,
+    dslParser,
   }) {
     super();
-    this.#logger = setupService('TargetResolutionService', logger, {
+    const setup = serviceSetup ?? new ServiceSetup();
+    this.#logger = setup.setupService('TargetResolutionService', logger, {
       scopeRegistry: { value: scopeRegistry, requiredMethods: ['getScope'] },
       scopeEngine: { value: scopeEngine, requiredMethods: ['resolve'] },
       entityManager: { value: entityManager },
@@ -66,12 +74,14 @@ export class TargetResolutionService extends ITargetResolutionService {
         value: jsonLogicEvaluationService,
         requiredMethods: ['evaluate'],
       },
+      dslParser: { value: dslParser, requiredMethods: ['parse'] },
     });
     this.#scopeRegistry = scopeRegistry;
     this.#scopeEngine = scopeEngine;
     this.#entityManager = entityManager;
     this.#safeEventDispatcher = safeEventDispatcher;
     this.#jsonLogicEvalService = jsonLogicEvaluationService;
+    this.#dslParser = dslParser;
   }
 
   /**
@@ -82,7 +92,7 @@ export class TargetResolutionService extends ITargetResolutionService {
    * @param {Entity} actorEntity - The entity performing the action.
    * @param {ActionContext} discoveryContext - Context for DSL evaluation.
    * @param {TraceContext|null} [trace] - Optional tracing instance.
-   * @returns {ActionTargetContext[]} Resolved target contexts.
+   * @returns {import('./resolutionResult.js').ResolutionResult} Resolved targets and optional error.
    */
   resolveTargets(scopeName, actorEntity, discoveryContext, trace = null) {
     const source = 'TargetResolutionService.resolveTargets';
@@ -93,7 +103,7 @@ export class TargetResolutionService extends ITargetResolutionService {
         `Scope is 'none'; returning a single no-target context.`,
         source
       );
-      return [ActionTargetContext.noTarget()];
+      return { targets: [ActionTargetContext.noTarget()] };
     }
 
     if (scopeName === TARGET_DOMAIN_SELF) {
@@ -101,10 +111,10 @@ export class TargetResolutionService extends ITargetResolutionService {
         `Scope is 'self'; returning the actor as the target.`,
         source
       );
-      return [ActionTargetContext.forEntity(actorEntity.id)];
+      return { targets: [ActionTargetContext.forEntity(actorEntity.id)] };
     }
 
-    const targetIds = this.#resolveScopeToIds(
+    const { ids: targetIds, error } = this.#resolveScopeToIds(
       scopeName,
       actorEntity,
       discoveryContext,
@@ -116,7 +126,10 @@ export class TargetResolutionService extends ITargetResolutionService {
       source,
       { targetIds: Array.from(targetIds) }
     );
-    return Array.from(targetIds, (id) => ActionTargetContext.forEntity(id));
+    return {
+      targets: Array.from(targetIds, (id) => ActionTargetContext.forEntity(id)),
+      error,
+    };
   }
 
   /**
@@ -141,28 +154,30 @@ export class TargetResolutionService extends ITargetResolutionService {
     ) {
       const errorMessage = `Missing scope definition: Scope '${scopeName}' not found or has no expression in registry.`;
       this.#handleResolutionError(errorMessage, { scopeName }, trace, source);
-      return new Set();
+      return { ids: new Set(), error: new Error(errorMessage) };
     }
 
     try {
-      // All scopes must have pre-parsed ASTs
-      const ast = scopeDefinition.ast;
+      let ast = scopeDefinition.ast;
       if (!ast) {
-        throw new Error(
-          `Scope definition '${scopeName}' is missing the required AST property. All scopes must have pre-parsed ASTs.`
+        trace?.info(
+          `Parsing expression for scope '${scopeName}' on demand.`,
+          source
         );
+        ast = this.#dslParser.parse(scopeDefinition.expr);
+      } else {
+        trace?.info(`Using pre-parsed AST for scope '${scopeName}'.`, source);
       }
-
-      trace?.info(`Using pre-parsed AST for scope '${scopeName}'.`, source);
 
       const runtimeCtx = this.#buildRuntimeContext(
         actorEntity,
         discoveryContext
       );
-      return (
-        this.#scopeEngine.resolve(ast, actorEntity, runtimeCtx, trace) ??
-        new Set()
-      );
+      return {
+        ids:
+          this.#scopeEngine.resolve(ast, actorEntity, runtimeCtx, trace) ??
+          new Set(),
+      };
     } catch (error) {
       const errorMessage = `Error resolving scope '${scopeName}': ${error.message}`;
       this.#handleResolutionError(
@@ -172,7 +187,7 @@ export class TargetResolutionService extends ITargetResolutionService {
         source,
         error
       );
-      return new Set();
+      return { ids: new Set(), error };
     }
   }
 
@@ -181,7 +196,7 @@ export class TargetResolutionService extends ITargetResolutionService {
    *
    * @param {Entity} actorEntity The current actor entity.
    * @param {ActionContext} discoveryContext Context for scope resolution.
-   * @returns {object} The runtime context for scope evaluation.
+   * @returns {RuntimeContext} The runtime context for scope evaluation.
    * @private
    */
   #buildRuntimeContext(actorEntity, discoveryContext) {

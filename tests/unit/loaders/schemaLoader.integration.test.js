@@ -117,7 +117,7 @@ describe('SchemaLoader Integration Tests', () => {
       }),
     };
 
-    schemaValidator = new AjvSchemaValidator(mockLogger);
+    schemaValidator = new AjvSchemaValidator({ logger: mockLogger });
     schemaLoader = new SchemaLoader(
       mockConfig,
       mockPathResolver,
@@ -338,7 +338,7 @@ describe('SchemaLoader Integration Tests', () => {
         fetch: () => Promise.reject(new Error('File not found')),
       };
 
-      const errorValidator = new AjvSchemaValidator(mockLogger);
+      const errorValidator = new AjvSchemaValidator({ logger: mockLogger });
       const errorSchemaLoader = new SchemaLoader(
         errorConfig,
         errorPathResolver,

@@ -14,10 +14,11 @@ import InitializationService from '../../initializers/services/initializationSer
 import ShutdownService from '../../shutdown/services/shutdownService.js'; // Adjusted path
 import { ThoughtPersistenceListener } from '../../ai/thoughtPersistenceListener.js';
 import { NotesPersistenceListener } from '../../ai/notesPersistenceListener.js';
+import ContentDependencyValidator from '../../initializers/services/contentDependencyValidator.js';
 
 // --- DI & Helper Imports ---
 import { tokens } from '../tokens.js';
-import { Registrar } from '../registrarHelpers.js'; // Adjusted path
+import { Registrar } from '../../utils/registrarHelpers.js'; // Adjusted path
 
 /**
  * Registers the InitializationService and ShutdownService.
@@ -82,6 +83,10 @@ export function registerOrchestration(container) {
       dispatcher: safeEventDispatcher,
     });
     const spatialIndexManager = c.resolve(tokens.ISpatialIndexManager);
+    const contentDependencyValidator = new ContentDependencyValidator({
+      gameDataRepository,
+      logger: initLogger,
+    });
     return new InitializationService({
       log: { logger: initLogger },
       events: { validatedEventDispatcher: initDispatcher, safeEventDispatcher },
@@ -101,6 +106,7 @@ export function registerOrchestration(container) {
         dataRegistry,
         systemInitializer,
         worldInitializer,
+        contentDependencyValidator,
       },
     });
   });

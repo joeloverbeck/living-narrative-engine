@@ -17,12 +17,13 @@ import { INITIALIZABLE } from '../../../src/dependencyInjection/tags.js'; // Cor
 
 // --- Test Suite ---
 describe('SystemInitializer (Tag-Based Refactor)', () => {
-  // AC1: Use mocks for IServiceResolver, ILogger, and ValidatedEventDispatcher
+  // AC1: Use mocks for IServiceResolver, ILogger, ValidatedEventDispatcher, and EventDispatchService
   let mockResolver;
   /** @type {jest.Mocked<ILogger>} */
   let mockLogger;
   /** @type {jest.Mocked<ValidatedEventDispatcher>} */ // Added mock variable
   let mockValidatedEventDispatcher;
+  let mockEventDispatchService;
   /** @type {SystemInitializer} */
   let systemInitializer; // Instance for initializeAll tests
   /** @type {string} */
@@ -76,6 +77,13 @@ describe('SystemInitializer (Tag-Based Refactor)', () => {
       dispatch: jest.fn().mockResolvedValue(undefined), // Basic mock
     };
 
+    // Mock EventDispatchService (AC1 - Added)
+    mockEventDispatchService = {
+      dispatchWithLogging: jest.fn().mockResolvedValue(undefined),
+      safeDispatchEvent: jest.fn().mockResolvedValue(undefined),
+      dispatchWithErrorHandling: jest.fn().mockResolvedValue(true),
+    };
+
     // --- Create Mock System Instances ---
     mockSystemGood1 = {
       initialize: jest.fn().mockResolvedValue(undefined),
@@ -119,6 +127,7 @@ describe('SystemInitializer (Tag-Based Refactor)', () => {
       resolver: mockResolver,
       logger: mockLogger,
       validatedEventDispatcher: mockValidatedEventDispatcher, // Added dispatcher
+      eventDispatchService: mockEventDispatchService,
       initializationTag: testInitializationTag,
     });
   });
@@ -141,6 +150,7 @@ describe('SystemInitializer (Tag-Based Refactor)', () => {
           resolver: null,
           logger: mockLogger,
           validatedEventDispatcher: mockValidatedEventDispatcher, // Need valid dispatcher for this test
+          eventDispatchService: mockEventDispatchService,
           initializationTag: testInitializationTag,
         });
       expect(action).toThrow(expectedResolverErrorMsg);
@@ -154,6 +164,7 @@ describe('SystemInitializer (Tag-Based Refactor)', () => {
           resolver: undefined,
           logger: mockLogger,
           validatedEventDispatcher: mockValidatedEventDispatcher,
+          eventDispatchService: mockEventDispatchService,
           initializationTag: testInitializationTag,
         });
       expect(action).toThrow(expectedResolverErrorMsg);
@@ -174,6 +185,7 @@ describe('SystemInitializer (Tag-Based Refactor)', () => {
           resolver: tempResolver,
           logger: null,
           validatedEventDispatcher: tempDispatcher,
+          eventDispatchService: mockEventDispatchService,
           initializationTag: testInitializationTag,
         });
       // Assert
@@ -197,6 +209,7 @@ describe('SystemInitializer (Tag-Based Refactor)', () => {
           resolver: tempResolver,
           logger: undefined,
           validatedEventDispatcher: tempDispatcher,
+          eventDispatchService: mockEventDispatchService,
           initializationTag: testInitializationTag,
         });
       // Assert
@@ -217,6 +230,7 @@ describe('SystemInitializer (Tag-Based Refactor)', () => {
           resolver: tempResolver,
           logger: mockLogger,
           validatedEventDispatcher: null,
+          eventDispatchService: mockEventDispatchService,
           initializationTag: testInitializationTag,
         });
       // Assert
@@ -233,6 +247,7 @@ describe('SystemInitializer (Tag-Based Refactor)', () => {
           resolver: tempResolver,
           logger: mockLogger,
           validatedEventDispatcher: undefined,
+          eventDispatchService: mockEventDispatchService,
           initializationTag: testInitializationTag,
         });
       // Assert
@@ -250,6 +265,7 @@ describe('SystemInitializer (Tag-Based Refactor)', () => {
           resolver: tempResolver,
           logger: mockLogger,
           validatedEventDispatcher: /** @type {any} */ (invalidDispatcher), // Pass invalid dispatcher
+          eventDispatchService: mockEventDispatchService,
           initializationTag: testInitializationTag,
         });
       // Assert
@@ -265,6 +281,7 @@ describe('SystemInitializer (Tag-Based Refactor)', () => {
           resolver: /** @type {any} */ (invalidResolver),
           logger: mockLogger,
           validatedEventDispatcher: mockValidatedEventDispatcher, // Need valid dispatcher
+          eventDispatchService: mockEventDispatchService,
           initializationTag: testInitializationTag,
         });
       // Assert
@@ -282,6 +299,7 @@ describe('SystemInitializer (Tag-Based Refactor)', () => {
           resolver: mockResolver,
           logger: mockLogger,
           validatedEventDispatcher: mockValidatedEventDispatcher,
+          eventDispatchService: mockEventDispatchService,
           initializationTag: null,
         });
       // Assert
@@ -296,6 +314,7 @@ describe('SystemInitializer (Tag-Based Refactor)', () => {
           resolver: mockResolver,
           logger: mockLogger,
           validatedEventDispatcher: mockValidatedEventDispatcher,
+          eventDispatchService: mockEventDispatchService,
           initializationTag: undefined,
         });
       // Assert
@@ -310,6 +329,7 @@ describe('SystemInitializer (Tag-Based Refactor)', () => {
           resolver: mockResolver,
           logger: mockLogger,
           validatedEventDispatcher: mockValidatedEventDispatcher,
+          eventDispatchService: mockEventDispatchService,
           initializationTag: /** @type {any} */ (123),
         });
       // Assert
@@ -324,6 +344,7 @@ describe('SystemInitializer (Tag-Based Refactor)', () => {
           resolver: mockResolver,
           logger: mockLogger,
           validatedEventDispatcher: mockValidatedEventDispatcher,
+          eventDispatchService: mockEventDispatchService,
           initializationTag: '',
         });
       // Assert
@@ -338,6 +359,7 @@ describe('SystemInitializer (Tag-Based Refactor)', () => {
           resolver: mockResolver,
           logger: mockLogger,
           validatedEventDispatcher: mockValidatedEventDispatcher,
+          eventDispatchService: mockEventDispatchService,
           initializationTag: '   ',
         });
       // Assert
@@ -352,6 +374,7 @@ describe('SystemInitializer (Tag-Based Refactor)', () => {
         resolver: mockResolver,
         logger: mockLogger,
         validatedEventDispatcher: mockValidatedEventDispatcher,
+        eventDispatchService: mockEventDispatchService,
         initializationTag: testInitializationTag,
       });
       // Assert
@@ -420,16 +443,17 @@ describe('SystemInitializer (Tag-Based Refactor)', () => {
 
       // Verify Event Dispatching (Added)
       // FIX: Updated expected count based on actual events dispatched
-      expect(mockValidatedEventDispatcher.dispatch).toHaveBeenCalledTimes(1);
+      expect(mockEventDispatchService.dispatchWithLogging).toHaveBeenCalledTimes(1);
 
       // Check specific event calls
-      expect(mockValidatedEventDispatcher.dispatch).toHaveBeenCalledWith(
+      expect(mockEventDispatchService.dispatchWithLogging).toHaveBeenCalledWith(
         'system:initialization_failed',
         {
           systemName: 'SystemFailInit',
           error: initError.message,
           stack: initError.stack,
         },
+        'SystemFailInit',
         { allowSchemaNotFound: true }
       );
 
@@ -456,7 +480,7 @@ describe('SystemInitializer (Tag-Based Refactor)', () => {
       expect(mockLogger.warn).not.toHaveBeenCalled();
 
       // Verify Event Dispatching (Added)
-      expect(mockValidatedEventDispatcher.dispatch).toHaveBeenCalledTimes(0);
+      expect(mockEventDispatchService.dispatchWithLogging).toHaveBeenCalledTimes(0);
     });
 
     it('[Non-Array Result Scenario] should handle resolver returning non-array gracefully and dispatch events', async () => {
@@ -484,7 +508,7 @@ describe('SystemInitializer (Tag-Based Refactor)', () => {
       expect(mockLogger.warn).toHaveBeenCalledTimes(1); // Only the non-array warning
 
       // Verify Event Dispatching (Added)
-      expect(mockValidatedEventDispatcher.dispatch).toHaveBeenCalledTimes(0);
+      expect(mockEventDispatchService.dispatchWithLogging).toHaveBeenCalledTimes(0);
     });
 
     it('[Resolver Error Scenario] should log the resolution error, dispatch failed event, and re-throw', async () => {
@@ -522,7 +546,7 @@ describe('SystemInitializer (Tag-Based Refactor)', () => {
       expect(mockSystemGood1.initialize).not.toHaveBeenCalled();
 
       // Verify Event Dispatching (Added)
-      expect(mockValidatedEventDispatcher.dispatch).toHaveBeenCalledTimes(0);
+      expect(mockEventDispatchService.dispatchWithLogging).toHaveBeenCalledTimes(0);
     });
 
     it('[Individual Init Error Scenario] should log specific init error, dispatch events, and continue with others', async () => {
@@ -565,14 +589,15 @@ describe('SystemInitializer (Tag-Based Refactor)', () => {
       expect(mockLogger.error).toHaveBeenCalledTimes(1);
 
       // Verify Event Dispatching (Added)
-      expect(mockValidatedEventDispatcher.dispatch).toHaveBeenCalledTimes(1);
-      expect(mockValidatedEventDispatcher.dispatch).toHaveBeenCalledWith(
+      expect(mockEventDispatchService.dispatchWithLogging).toHaveBeenCalledTimes(1);
+      expect(mockEventDispatchService.dispatchWithLogging).toHaveBeenCalledWith(
         'system:initialization_failed',
         {
           systemName: 'SystemFailInit',
           error: initError.message,
           stack: initError.stack,
         },
+        'SystemFailInit',
         { allowSchemaNotFound: true }
       );
     });

@@ -88,6 +88,7 @@ export class ITurnStateFactory {
    * @param {ITurnAction} turnAction - The chosen turn action.
    * @param {Function} directiveResolver - Resolver for command directives.
    * @param {(state: import('../states/processingCommandState.js').ProcessingCommandState, commandString: string|null, action: ITurnAction|null, setAction: (a: ITurnAction|null) => void, handler: import('../states/helpers/processingExceptionHandler.js').ProcessingExceptionHandler) => import('../states/workflows/processingWorkflow.js').ProcessingWorkflow} [processingWorkflowFactory] - Optional factory for ProcessingWorkflow.
+   * @param {(config: object) => import('../states/helpers/commandProcessingWorkflow.js').CommandProcessingWorkflow} [commandProcessingWorkflowFactory] - Optional factory for CommandProcessingWorkflow.
    * @returns {ProcessingCommandState} A new processing command state instance.
    * @abstract
    */
@@ -96,7 +97,8 @@ export class ITurnStateFactory {
     commandString,
     turnAction,
     directiveResolver,
-    processingWorkflowFactory
+    processingWorkflowFactory,
+    commandProcessingWorkflowFactory
   ) {
     throw new Error(
       'ITurnStateFactory.createProcessingCommandState must be implemented by concrete classes.'

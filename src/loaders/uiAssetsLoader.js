@@ -98,9 +98,9 @@ class UiAssetsLoader extends AbstractLoader {
     for (const filename of targetFiles) {
       const path = this.#resolver.resolveModContentPath(modId, 'ui', filename);
 
-      let data;
+      let fileData;
       try {
-        data = await this.#fetcher.fetch(path);
+        fileData = await this.#fetcher.fetch(path);
       } catch (e) {
         errors++;
         failures.push({ file: filename, reason: 'fetch' });
@@ -111,9 +111,9 @@ class UiAssetsLoader extends AbstractLoader {
       }
 
       const schemaId = this.#config.getContentTypeSchemaId(schemaKey);
-      let res;
+      let validationResult;
       try {
-        res = this.#validator.validate(schemaId, data);
+        validationResult = this.#validator.validate(schemaId, fileData);
       } catch (e) {
         errors++;
         failures.push({ file: filename, reason: 'validation' });
@@ -123,7 +123,7 @@ class UiAssetsLoader extends AbstractLoader {
         continue;
       }
 
-      if (!res.isValid) {
+      if (!validationResult.isValid) {
         errors++;
         failures.push({ file: filename, reason: 'validation' });
         this._logger.error(
@@ -132,7 +132,7 @@ class UiAssetsLoader extends AbstractLoader {
         continue;
       }
 
-      for (const [name, value] of Object.entries(data)) {
+      for (const [name, value] of Object.entries(fileData)) {
         if (this.#registry.get(registryCat, name) !== undefined) {
           overrides++;
         }
@@ -229,12 +229,19 @@ class UiAssetsLoader extends AbstractLoader {
 
     for (const filename of files) {
       try {
-        const res = await loader(modId, { content: { ui: [filename] } });
-        count += res.count;
-        overrides += res.overrides;
-        errors += res.errors;
-        if (Array.isArray(res.failures)) {
-          failures.push(...res.failures);
+        const loaderResult = await loader(modId, {
+          content: { ui: [filename] },
+        });
+        count += loaderResult.count;
+        overrides += loaderResult.overrides;
+        errors += loaderResult.errors;
+        if (Array.isArray(loaderResult.failures)) {
+          for (const failure of loaderResult.failures) {
+            this._logger.warn(
+              `UiAssetsLoader [${modId}]: ${failure.file} failed due to ${failure.reason}`
+            );
+          }
+          failures.push(...loaderResult.failures);
         }
       } catch (e) {
         errors++;

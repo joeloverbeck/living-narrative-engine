@@ -67,7 +67,7 @@ describe('Integration: ModsLoader Orchestrator Order and Error Propagation', () 
 
   beforeEach(() => {
     mockLogger = createMockLogger();
-    dataRegistry = new InMemoryDataRegistry(mockLogger);
+    dataRegistry = new InMemoryDataRegistry({ logger: mockLogger });
     executionOrder = [];
     phases = [];
   });

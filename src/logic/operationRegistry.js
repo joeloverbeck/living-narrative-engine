@@ -26,10 +26,14 @@ class OperationRegistry extends BaseService {
   // ---------------------------------------------------------------------------
 
   /**
-   * Register or overwrite a handler.
+   * Register a handler for the given operation type.
+   * If a handler already exists, it will be overwritten and a warning logged.
    *
-   * @param {string}               operationType
-   * @param {OperationHandler}     handler
+   * @param {string} operationType - Unique operation identifier.
+   * @param {OperationHandler} handler - Function invoked when executing the
+   * operation.
+   * @returns {boolean} `true` if a new handler was added, `false` if an
+   * existing handler was overwritten.
    */
   register(operationType, handler) {
     // --- validate ------------------------------------------------------------
@@ -51,7 +55,8 @@ class OperationRegistry extends BaseService {
     }
 
     // --- overwrite warning ---------------------------------------------------
-    if (this.#registry.has(trimmed)) {
+    const isOverwrite = this.#registry.has(trimmed);
+    if (isOverwrite) {
       this.#logger.warn(
         `OperationRegistry: Overwriting existing handler for operation type "${trimmed}".`
       );
@@ -62,6 +67,8 @@ class OperationRegistry extends BaseService {
     this.#logger.debug(
       `OperationRegistry: Registered handler for operation type "${trimmed}".`
     );
+
+    return !isOverwrite;
   }
 
   // ---------------------------------------------------------------------------
@@ -69,8 +76,9 @@ class OperationRegistry extends BaseService {
   /**
    * Retrieve a handler (if any) for the given type.
    *
-   * @param {string} operationType
-   * @returns {OperationHandler|undefined}
+   * @param {string} operationType - Operation identifier to retrieve.
+   * @returns {OperationHandler|undefined} The registered handler or `undefined`
+   * if none is found.
    */
   getHandler(operationType) {
     const trimmed = getNormalizedOperationType(

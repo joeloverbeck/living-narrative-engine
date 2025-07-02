@@ -1,0 +1,19 @@
+{
+  "$schema": "http://example.com/schemas/entity-definition.schema.json",
+  "id": "anatomy:humanoid_ear",
+  "description": "A humanoid ear",
+  "components": {
+    "anatomy:part": {
+      "subType": "ear"
+    },
+    "descriptors:shape_general": {
+      "shape": "round"
+    },
+    "descriptors:size_category": {
+      "size": "medium"
+    },
+    "core:name": {
+      "text": "ear"
+    }
+  }
+}

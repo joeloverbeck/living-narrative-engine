@@ -138,12 +138,11 @@ describe('AwaitingExternalTurnEndState', () => {
     mockUnsubscribeFn = jest.fn();
     mockEventDispatcher.subscribe.mockImplementation(() => mockUnsubscribeFn);
 
-    state = new AwaitingExternalTurnEndState(
-      mockHandler,
-      TIMEOUT_MS,
-      global.setTimeout,
-      global.clearTimeout
-    );
+    state = new AwaitingExternalTurnEndState(mockHandler, {
+      timeoutMs: TIMEOUT_MS,
+      setTimeoutFn: global.setTimeout,
+      clearTimeoutFn: global.clearTimeout,
+    });
   });
 
   afterEach(() => {
@@ -437,6 +436,31 @@ describe('AwaitingExternalTurnEndState', () => {
       // Assert - counters should not increment further because guards are now null/undefined.
       expect(clearTimeoutSpy).toHaveBeenCalledTimes(1);
       expect(mockUnsubscribeFn).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  // --- Internal State Reset ---
+  describe('Internal State Reset', () => {
+    beforeEach(async () => {
+      await state.enterState(mockHandler, null);
+    });
+
+    test('exitState resets internal fields', async () => {
+      await state.exitState(mockHandler, null);
+      expect(state.getInternalStateForTest()).toEqual({
+        timeoutId: null,
+        unsubscribeFn: undefined,
+        awaitingActionId: 'unknown-action',
+      });
+    });
+
+    test('destroy resets internal fields', async () => {
+      await state.destroy(mockHandler);
+      expect(state.getInternalStateForTest()).toEqual({
+        timeoutId: null,
+        unsubscribeFn: undefined,
+        awaitingActionId: 'unknown-action',
+      });
     });
   });
 

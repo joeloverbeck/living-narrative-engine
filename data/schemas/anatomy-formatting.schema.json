@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/schemas/anatomy-formatting.schema.json",
+  "title": "Anatomy Formatting Schema",
+  "description": "Defines formatting rules for anatomy descriptions including part order, pluralization, and descriptor formatting",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Optional. A URI reference to the schema for editor support."
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9_]+$",
+      "description": "Unique identifier for this formatting configuration"
+    },
+    "descriptionOrder": {
+      "type": "array",
+      "description": "Order in which body part types appear in descriptions",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "pairedParts": {
+      "type": "array",
+      "description": "Body part types that are paired (like eyes, arms, etc.) and should be grouped when they have the same descriptors",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "irregularPlurals": {
+      "type": "object",
+      "description": "Mapping of body part types to their irregular plural forms",
+      "additionalProperties": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "descriptorOrder": {
+      "type": "array",
+      "description": "Order in which descriptor component types appear in descriptions",
+      "items": {
+        "type": "string",
+        "pattern": "^descriptors:[a-zA-Z0-9_]+$"
+      },
+      "uniqueItems": true
+    },
+    "descriptorValueKeys": {
+      "type": "array",
+      "description": "Keys to search for when extracting descriptor values from components",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    }
+  },
+  "required": ["id"]
+}

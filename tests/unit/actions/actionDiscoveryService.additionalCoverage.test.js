@@ -1,5 +1,6 @@
-import { beforeEach, expect, it, jest } from '@jest/globals';
+import { beforeEach, expect, it } from '@jest/globals';
 import { describeActionDiscoverySuite } from '../../common/actions/actionDiscoveryServiceTestBed.js';
+import { InvalidActorEntityError } from '../../../src/errors/invalidActorEntityError.js';
 
 // Additional coverage tests for ActionDiscoveryService
 
@@ -11,15 +12,20 @@ describeActionDiscoverySuite(
       bed.mocks.getActorLocationFn.mockReturnValue('room1');
     });
 
-    it('returns empty result when actor entity is null', async () => {
+    it('throws InvalidActorEntityError when actor entity is null or missing id', async () => {
       const bed = getBed();
 
-      const result = await bed.service.getValidActions(null, {});
-
-      expect(result).toEqual({ actions: [], errors: [], trace: null });
-      expect(bed.mocks.logger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('Actor entity is null; returning empty result.')
+      await expect(bed.service.getValidActions(null, {})).rejects.toThrow(
+        new InvalidActorEntityError(
+          'ActionDiscoveryService.getValidActions: actorEntity parameter must be an object with a non-empty id'
+        )
       );
+      await expect(bed.service.getValidActions({}, {})).rejects.toThrow(
+        new InvalidActorEntityError(
+          'ActionDiscoveryService.getValidActions: actorEntity parameter must be an object with a non-empty id'
+        )
+      );
+      expect(bed.mocks.logger.error).toHaveBeenCalledTimes(2);
     });
 
     it('provides a discovery context with getActor helper', async () => {
@@ -33,10 +39,10 @@ describeActionDiscoverySuite(
         (scope, entity, ctx) => {
           // invoke getActor to ensure the arrow function is executed
           expect(ctx.getActor()).toBe(actor);
-          return [{ type: 'none', entityId: null }];
+          return { targets: [{ type: 'none', entityId: null }] };
         }
       );
-      bed.mocks.formatActionCommandFn.mockReturnValue({
+      bed.mocks.actionCommandFormatter.format.mockReturnValue({
         ok: true,
         value: 'wait',
       });
@@ -51,10 +57,10 @@ describeActionDiscoverySuite(
       const def = { id: 'bad', commandVerb: 'bad', scope: 'target' };
       bed.mocks.actionIndex.getCandidateActions.mockReturnValue([def]);
       bed.mocks.prerequisiteEvaluationService.evaluate.mockReturnValue(true);
-      bed.mocks.targetResolutionService.resolveTargets.mockReturnValue([
-        { type: 'entity', entityId: 't1' },
-      ]);
-      bed.mocks.formatActionCommandFn.mockReturnValue({
+      bed.mocks.targetResolutionService.resolveTargets.mockReturnValue({
+        targets: [{ type: 'entity', entityId: 't1' }],
+      });
+      bed.mocks.actionCommandFormatter.format.mockReturnValue({
         ok: false,
         error: new Error('nope'),
         details: { reason: 'bad' },

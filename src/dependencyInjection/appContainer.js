@@ -180,51 +180,84 @@ class AppContainer {
       typeof factoryOrValueOrClass === 'function' && !isClassRegistration;
 
     if (isClassRegistration) {
-      // --- Handle Class constructor (from .single/.transient) ---
-      /** @type {ClassConstructor} */
-      const ClassConstructor = factoryOrValueOrClass;
-      // Ensure deps is an array, even if options.dependencies was null/undefined (though shouldn't happen with Registrar)
-      const deps = Array.isArray(options.dependencies)
-        ? options.dependencies
-        : [];
-      const dependenciesMap = {};
-      const targetClassName = ClassConstructor.name || '[AnonymousClass]';
-
-      // Only resolve dependencies if there are any
-      if (deps.length > 0) {
-        deps.forEach((depToken) => {
-          let propName = String(depToken);
-          if (
-            propName.length > 1 &&
-            propName.startsWith('I') &&
-            propName[1] === propName[1].toUpperCase()
-          )
-            propName = propName.substring(1);
-          propName = propName.charAt(0).toLowerCase() + propName.slice(1);
-          try {
-            dependenciesMap[propName] = this.resolve(depToken);
-          } catch (e) {
-            console.error(
-              `[AppContainer._createInstance for ${key}] FAILED dependency resolution: Cannot resolve "${String(depToken)}" (for prop "${propName}") needed by "${targetClassName}".`,
-              e
-            );
-            throw new Error(
-              `Failed to resolve dependency "${String(depToken)}" needed by "${targetClassName}" (registered as "${key}"): ${e.message}`,
-              { cause: e }
-            );
-          }
-        });
-      }
-
-      // Use 'new', passing an empty map if no dependencies
-      return new ClassConstructor(dependenciesMap);
-    } else if (isFactoryFunction) {
-      // --- Handle Factory function ---
-      return factoryOrValueOrClass(this); // Execute factory
-    } else {
-      // --- Handle Instance/Value registration ---
-      return factoryOrValueOrClass; // Return value
+      return this._instantiateClass(factoryOrValueOrClass, {
+        ...options,
+        registrationKey: key,
+      });
     }
+
+    if (isFactoryFunction) {
+      return this._invokeFactory(factoryOrValueOrClass);
+    }
+
+    return this._returnValue(factoryOrValueOrClass);
+  }
+
+  /**
+   * Instantiates a class with resolved dependencies.
+   *
+   * @private
+   * @param {ClassConstructor} ClassConstructor - The class to instantiate.
+   * @param {RegistrationOptions & { registrationKey?: string }} options - Options including dependencies.
+   * @returns {any} A new instance of the class.
+   */
+  _instantiateClass(ClassConstructor, options = {}) {
+    const deps = Array.isArray(options.dependencies)
+      ? options.dependencies
+      : [];
+    const dependenciesMap = {};
+    const targetClassName = ClassConstructor.name || '[AnonymousClass]';
+    const key = options.registrationKey || targetClassName;
+
+    if (deps.length > 0) {
+      deps.forEach((depToken) => {
+        let propName = String(depToken);
+        if (
+          propName.length > 1 &&
+          propName.startsWith('I') &&
+          propName[1] === propName[1].toUpperCase()
+        ) {
+          propName = propName.substring(1);
+        }
+        propName = propName.charAt(0).toLowerCase() + propName.slice(1);
+        try {
+          dependenciesMap[propName] = this.resolve(depToken);
+        } catch (e) {
+          console.error(
+            `[AppContainer._instantiateClass for ${key}] FAILED dependency resolution: Cannot resolve "${String(depToken)}" (for prop "${propName}") needed by "${targetClassName}".`,
+            e
+          );
+          throw new Error(
+            `Failed to resolve dependency "${String(depToken)}" needed by "${targetClassName}" (registered as "${key}"): ${e.message}`,
+            { cause: e }
+          );
+        }
+      });
+    }
+
+    return new ClassConstructor(dependenciesMap);
+  }
+
+  /**
+   * Executes a factory function with the current container.
+   *
+   * @private
+   * @param {FactoryFunction} factoryFn - Factory to invoke.
+   * @returns {any} Result of the factory function.
+   */
+  _invokeFactory(factoryFn) {
+    return factoryFn(this);
+  }
+
+  /**
+   * Returns a raw registered value.
+   *
+   * @private
+   * @param {any} value - Value to return.
+   * @returns {any} The same value.
+   */
+  _returnValue(value) {
+    return value;
   }
 
   /**

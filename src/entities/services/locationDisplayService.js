@@ -1,17 +1,16 @@
 // src/entities/services/locationDisplayService.js
 
 import {
-  NAME_COMPONENT_ID,
-  DESCRIPTION_COMPONENT_ID,
   EXITS_COMPONENT_ID,
   PORTRAIT_COMPONENT_ID,
 } from '../../constants/componentIds.js';
 import { validateDependency } from '../../utils/dependencyUtils.js';
 import { ensureValidLogger } from '../../utils/loggerUtils.js';
 import { isNonBlankString } from '../../utils/textUtils.js';
-import { getEntityDisplayName } from '../../utils/entityUtils.js';
 import { buildPortraitInfo } from '../utils/portraitUtils.js';
-import { withEntity } from '../utils/entityFetchHelpers.js';
+import { withEntity } from '../../utils/entityFetchHelpers.js';
+import { getDisplayName, getDescription } from '../../utils/displayHelpers.js';
+import { LocationNotFoundError } from '../../errors/locationNotFoundError.js';
 
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 /** @typedef {import('../../interfaces/ILogger.js').ILogger} ILogger */
@@ -83,14 +82,12 @@ export class LocationDisplayService {
    * @returns {string}
    */
   #getEntityName(entityId, defaultName = 'Unknown Entity') {
-    return withEntity(
+    return getDisplayName(
       this.#entityManager,
       entityId,
       defaultName,
-      (entity) => getEntityDisplayName(entity, defaultName, this.#logger),
       this.#logger,
-      this._logPrefix,
-      `getEntityName: Entity with ID '${entityId}' not found. Returning default name.`
+      this._logPrefix
     );
   }
 
@@ -101,29 +98,12 @@ export class LocationDisplayService {
    * @returns {string}
    */
   #getEntityDescription(entityId, defaultDescription = '') {
-    return withEntity(
+    return getDescription(
       this.#entityManager,
       entityId,
       defaultDescription,
-      (entity) => {
-        const descriptionComponent = entity.getComponentData(
-          DESCRIPTION_COMPONENT_ID
-        );
-        if (
-          descriptionComponent &&
-          typeof descriptionComponent.text === 'string'
-        ) {
-          return descriptionComponent.text;
-        }
-
-        this.#logger.debug(
-          `${this._logPrefix} getEntityDescription: Entity '${entityId}' found, but no valid DESCRIPTION_COMPONENT_ID data. Returning default description.`
-        );
-        return defaultDescription;
-      },
       this.#logger,
-      this._logPrefix,
-      `getEntityDescription: Entity with ID '${entityId}' not found. Returning default description.`
+      this._logPrefix
     );
   }
 
@@ -131,14 +111,15 @@ export class LocationDisplayService {
    * Retrieves detailed display information for a location entity.
    *
    * @param {NamespacedId | string} locationEntityId
-   * @returns {{ name: string, description: string, exits: Array<ProcessedExit> } | null}
+   * @returns {{ name: string, description: string, exits: Array<ProcessedExit> }}
+   * @throws {LocationNotFoundError} When the ID is invalid or the entity cannot be found.
    */
   getLocationDetails(locationEntityId) {
     if (!locationEntityId) {
       this.#logger.warn(
         `${this._logPrefix} getLocationDetails called with null or empty locationEntityId.`
       );
-      return null;
+      throw new LocationNotFoundError(locationEntityId);
     }
 
     const locationEntity =
@@ -147,7 +128,7 @@ export class LocationDisplayService {
       this.#logger.debug(
         `${this._logPrefix} getLocationDetails: Location entity with ID '${locationEntityId}' not found.`
       );
-      return null;
+      throw new LocationNotFoundError(locationEntityId);
     }
 
     const name = this.#getEntityName(locationEntityId, 'Unnamed Location');

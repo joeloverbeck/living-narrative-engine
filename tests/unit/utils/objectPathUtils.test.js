@@ -1,5 +1,5 @@
 import { describe, test, expect } from '@jest/globals';
-import { setByPath } from '../../../src/logic/utils/objectPathUtils.js';
+import { setByPath } from '../../../src/utils/objectPathUtils.js';
 
 describe('setByPath', () => {
   test('creates nested objects and sets value', () => {

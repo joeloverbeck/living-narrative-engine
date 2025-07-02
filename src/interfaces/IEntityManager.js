@@ -170,4 +170,15 @@ export class IEntityManager {
       'IEntityManager.getAllComponentTypesForEntity not implemented.'
     );
   }
+
+  /**
+   * (Optional) Clears all entity instances and related caches.
+   * Implementations required by modules like GameStateRestorer should
+   * remove all active entities from memory.
+   *
+   * @returns {void}
+   */
+  clearAll() {
+    throw new Error('IEntityManager.clearAll not implemented.');
+  }
 }

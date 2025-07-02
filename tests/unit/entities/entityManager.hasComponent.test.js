@@ -53,7 +53,7 @@ describeEntityManagerSuite('EntityManager - hasComponent', (getBed) => {
       em.hasComponent(instanceId, componentTypeId)
     );
 
-    describe('with checkOverrideOnly flag', () => {
+    describe('hasComponentOverride (legacy checkOverrideOnly flag)', () => {
       it.each([
         ['component only on definition', false],
         ['component as override', true],

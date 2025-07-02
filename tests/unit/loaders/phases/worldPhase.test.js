@@ -42,7 +42,7 @@ describe('WorldPhase', () => {
       ctx.manifests = manifests;
       Object.freeze(ctx);
       Object.freeze(ctx.totals);
-      worldLoader.loadWorlds.mockResolvedValue(undefined);
+      worldLoader.loadWorlds.mockResolvedValue({});
 
       // Act
       const result = await worldPhase.execute(ctx);

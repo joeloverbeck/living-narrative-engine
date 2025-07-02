@@ -16,7 +16,7 @@ describe('AjvSchemaValidator World Schema Tests', () => {
 
   beforeEach(() => {
     logger = new ConsoleLogger();
-    schemaValidator = new AjvSchemaValidator(logger);
+    schemaValidator = new AjvSchemaValidator({ logger: logger });
   });
 
   describe('World Schema Validation', () => {

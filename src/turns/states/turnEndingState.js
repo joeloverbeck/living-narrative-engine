@@ -13,7 +13,7 @@
 import { AbstractTurnState } from './abstractTurnState.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../constants/eventIds.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
-import { reportMissingActorId } from './helpers/errorReportingUtils.js';
+import { reportMissingActorId } from '../../utils/errorReportingUtils.js';
 import { UNKNOWN_ACTOR_ID } from '../../constants/unknownIds.js';
 import { getLogger, getSafeEventDispatcher } from './helpers/contextUtils.js';
 

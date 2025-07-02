@@ -5,20 +5,19 @@ import { DomUtils } from '../utils/domUtils.js';
 import createMessageElement from './helpers/createMessageElement.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/eventIds.js';
 import { validateDependency } from '../utils/dependencyUtils.js';
-import {
-  // POSITION_COMPONENT_ID, // No longer directly used for current location logic
-  // NAME_COMPONENT_ID, // Handled by EntityDisplayDataProvider
-  // DESCRIPTION_COMPONENT_ID, // Handled by EntityDisplayDataProvider
-  // EXITS_COMPONENT_ID, // Handled by EntityDisplayDataProvider
-  ACTOR_COMPONENT_ID, // Still needed to filter characters
-  // PORTRAIT_COMPONENT_ID might be implicitly used by EntityDisplayDataProvider
-} from '../constants/componentIds.js';
+import {} from // POSITION_COMPONENT_ID, // No longer directly used for current location logic
+// NAME_COMPONENT_ID, // Handled by EntityDisplayDataProvider
+// DESCRIPTION_COMPONENT_ID, // Handled by EntityDisplayDataProvider
+// EXITS_COMPONENT_ID, // Handled by EntityDisplayDataProvider
+// PORTRAIT_COMPONENT_ID might be implicitly used by EntityDisplayDataProvider
+'../constants/componentIds.js';
 
 import { buildLocationDisplayPayload } from './location/buildLocationDisplayPayload.js';
 import { renderPortraitElements } from './location/renderPortraitElements.js';
 import { renderLocationLists } from './location/renderLocationLists.js';
 import { renderCharacterListItem } from './location/renderCharacterListItem.js';
 import { LocationDataService } from './location/locationDataService.js';
+import { LocationNotFoundError } from '../errors/locationNotFoundError.js';
 
 /**
  * @typedef {import('../interfaces/ILogger').ILogger} ILogger
@@ -199,77 +198,94 @@ export class LocationRenderer extends BoundDomRendererBase {
       this.logger.warn(
         `${this._logPrefix} '${event.type}' event is missing entityId. Cannot update location display.`
       );
-      this.#clearAllDisplaysOnErrorWithMessage('No entity specified for turn.');
+      this.#clearDisplayWithError('No entity specified for turn.');
       return;
     }
 
     const currentActorEntityId = event.payload.entityId;
 
+    let currentLocationInstanceId;
     try {
-      const currentLocationInstanceId =
-        this.locationDataService.resolveLocationInstanceId(
-          currentActorEntityId
-        );
+      currentLocationInstanceId =
+        this.#resolveCurrentLocationId(currentActorEntityId);
       if (!currentLocationInstanceId) {
-        this.#clearAllDisplaysOnErrorWithMessage(
-          `Location for ${currentActorEntityId} is unknown.`
-        );
         return;
       }
 
-      const locationDetails = this.entityDisplayDataProvider.getLocationDetails(
-        currentLocationInstanceId
-      );
-
-      if (!locationDetails) {
-        this.safeEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
-          message: `${this._logPrefix} Location details for ID '${currentLocationInstanceId}' not found.`,
-        });
-        this.#clearAllDisplaysOnErrorWithMessage(
-          `Location data for '${currentLocationInstanceId}' missing.`
-        );
-        return;
-      }
-
-      const portraitData =
-        this.entityDisplayDataProvider.getLocationPortraitData(
-          currentLocationInstanceId
-        );
-
-      const charactersInLocation =
-        this.locationDataService.gatherLocationCharacters(
-          currentLocationInstanceId,
-          currentActorEntityId
-        );
-
-      const displayPayload = buildLocationDisplayPayload(
-        locationDetails,
-        portraitData,
-        charactersInLocation
+      const displayPayload = this.#buildDisplayPayload(
+        currentLocationInstanceId,
+        currentActorEntityId
       );
 
       this.render(displayPayload);
     } catch (error) {
+      if (error instanceof LocationNotFoundError) {
+        this.safeEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
+          message: `${this._logPrefix} Location details for ID '${currentLocationInstanceId}' not found.`,
+        });
+        this.#clearDisplayWithError(
+          `Location data for '${currentLocationInstanceId}' missing.`
+        );
+        return;
+      }
       this.safeEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
         message: `${this._logPrefix} Error processing '${event.type}' for entity '${currentActorEntityId}': ${error.message}`,
         details: { stack: error.stack },
       });
-      this.#clearAllDisplaysOnErrorWithMessage(
-        'Error retrieving location details.'
-      );
+      this.#clearDisplayWithError('Error retrieving location details.');
     }
   }
 
   /**
-   * Resolve the location instance ID for the given actor.
+   * Resolve the location instance ID for the given actor and handle missing cases.
    *
    * @private
    * @param {import('../interfaces/CommonTypes').NamespacedId} actorId - Actor entity ID.
-   * @returns {string|null} Instance ID or null when the actor lacks a valid
-   * POSITION_COMPONENT or the entity cannot be located.
+   * @returns {string|null} Resolved location ID or null if not found.
+   */
+  #resolveCurrentLocationId(actorId) {
+    const locId = this.locationDataService.resolveLocationInstanceId(actorId);
+    if (!locId) {
+      this.#clearDisplayWithError(`Location for ${actorId} is unknown.`);
+      return null;
+    }
+    return locId;
+  }
+
+  /**
+   * Build the LocationDisplayPayload for rendering.
+   *
+   * @private
+   * @param {string} locationId - Resolved location instance ID.
+   * @param {import('../interfaces/CommonTypes').NamespacedId} actorId - Actor entity ID.
+   * @returns {LocationDisplayPayload} Structured payload for rendering.
+   */
+  #buildDisplayPayload(locationId, actorId) {
+    const locationDetails =
+      this.entityDisplayDataProvider.getLocationDetails(locationId);
+
+    const portraitData =
+      this.entityDisplayDataProvider.getLocationPortraitData(locationId);
+
+    const charactersInLocation =
+      this.locationDataService.gatherLocationCharacters(locationId, actorId);
+
+    return buildLocationDisplayPayload(
+      locationDetails,
+      portraitData,
+      charactersInLocation
+    );
+  }
+
+  /**
+   * Clear all display elements and show an error message.
+   *
+   * @private
+   * @param {string} message - Error message to display.
+   * @returns {void}
    */
 
-  #clearAllDisplaysOnErrorWithMessage(message) {
+  #clearDisplayWithError(message) {
     const elementsAndDefaults = {
       nameDisplay: `(${DEFAULT_LOCATION_NAME})`,
       // No default for portrait, it will be hidden by render logic
@@ -503,7 +519,7 @@ export class LocationRenderer extends BoundDomRendererBase {
         this.safeEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
           message: `${this._logPrefix} Cannot render, required DOM element '${elKey}' is missing.`,
         });
-        // Potentially call #clearAllDisplaysOnErrorWithMessage or a similar specific error display
+        // Potentially call #clearDisplayWithError or a similar specific error display
         return;
       }
     }
@@ -512,7 +528,7 @@ export class LocationRenderer extends BoundDomRendererBase {
       this.logger.warn(
         `${this._logPrefix} Received null location DTO. Clearing display.`
       );
-      this.#clearAllDisplaysOnErrorWithMessage('(No location data to display)');
+      this.#clearDisplayWithError('(No location data to display)');
       return;
     }
 

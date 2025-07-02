@@ -7,6 +7,16 @@ import {
   GOALS_COMPONENT_ID,
 } from '../../constants/componentIds.js';
 
+const COMPONENTS_TO_INJECT = [
+  {
+    id: SHORT_TERM_MEMORY_COMPONENT_ID,
+    data: { thoughts: [], maxEntries: 10 },
+    name: 'STM',
+  },
+  { id: NOTES_COMPONENT_ID, data: { notes: [] }, name: 'Notes' },
+  { id: GOALS_COMPONENT_ID, data: { goals: [] }, name: 'Goals' },
+];
+
 /**
  * Injects engine-level default components (STM, notes, goals) into an entity if needed.
  *
@@ -16,21 +26,11 @@ import {
  * caller via the provided helper function.
  * @param {import('../entity.js').default} entity - The entity instance to modify.
  * @param {import('../../interfaces/coreServices.js').ILogger} logger - Logger used for debug and error output.
- * @param {function(string, object, string): object} validateAndClone - Function that validates component data and returns a cloned payload.
+ * @param {function(string, object, string): object} validateAndClone - Function that validates component data and returns a cloned payload. The third argument is an error context message.
  */
 export function injectDefaultComponents(entity, logger, validateAndClone) {
   if (entity.hasComponent(ACTOR_COMPONENT_ID)) {
-    const componentsToInject = [
-      {
-        id: SHORT_TERM_MEMORY_COMPONENT_ID,
-        data: { thoughts: [], maxEntries: 10 },
-        name: 'STM',
-      },
-      { id: NOTES_COMPONENT_ID, data: { notes: [] }, name: 'Notes' },
-      { id: GOALS_COMPONENT_ID, data: { goals: [] }, name: 'Goals' },
-    ];
-
-    for (const comp of componentsToInject) {
+    for (const comp of COMPONENTS_TO_INJECT) {
       if (!entity.hasComponent(comp.id)) {
         logger.debug(
           `Injecting ${comp.name} for ${entity.id} (def: ${entity.definitionId})`

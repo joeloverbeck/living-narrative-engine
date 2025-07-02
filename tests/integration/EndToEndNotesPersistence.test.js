@@ -10,6 +10,11 @@ import { PlaceholderResolver } from '../../src/utils/placeholderResolverUtils.js
 import { PromptStaticContentService } from '../../src/prompting/promptStaticContentService.js';
 import AjvSchemaValidator from '../../src/validation/ajvSchemaValidator.js';
 import { LLMResponseProcessor } from '../../src/turns/services/LLMResponseProcessor.js';
+import { LlmJsonService } from '../../src/llms/llmJsonService.js';
+import {
+  LLM_TURN_ACTION_RESPONSE_SCHEMA,
+  LLM_TURN_ACTION_RESPONSE_SCHEMA_ID,
+} from '../../src/turns/schemas/llmOutputSchemas.js';
 import Entity from '../../src/entities/entity.js';
 import EntityDefinition from '../../src/entities/entityDefinition.js';
 import EntityInstanceData from '../../src/entities/entityInstanceData.js';
@@ -172,12 +177,21 @@ describe('End-to-End Notes Persistence Flow', () => {
       conditionEvaluator: ConditionEvaluator,
     });
 
-    schemaValidator = new AjvSchemaValidator(logger);
+    schemaValidator = new AjvSchemaValidator({
+      logger: logger,
+      preloadSchemas: [
+        {
+          schema: LLM_TURN_ACTION_RESPONSE_SCHEMA,
+          id: LLM_TURN_ACTION_RESPONSE_SCHEMA_ID,
+        },
+      ],
+    });
     const safeEventDispatcher = { dispatch: jest.fn() };
     processor = new LLMResponseProcessor({
       schemaValidator,
       logger,
       safeEventDispatcher,
+      llmJsonService: new LlmJsonService(),
     });
   });
 

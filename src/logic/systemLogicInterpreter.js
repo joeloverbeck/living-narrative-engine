@@ -18,7 +18,7 @@ import { isEmptyCondition } from '../utils/jsonLogicUtils.js';
  * ------------------------------------------------------------------------- */
 /** @typedef {import('../interfaces/coreServices.js').ILogger}               ILogger */
 /** @typedef {import('../interfaces/coreServices.js').IDataRegistry}         IDataRegistry */
-/** @typedef {import('../events/eventBus.js').default}                       EventBus */
+/** @typedef {import('../interfaces/IEventBus.js').IEventBus}                IEventBus */
 /** @typedef {import('./jsonLogicEvaluationService.js').default}            JsonLogicEvaluationService */
 /** @typedef {import('../entities/entityManager.js').default}               EntityManager */
 /** @typedef {import('./operationInterpreter.js').default}                  OperationInterpreter */
@@ -31,7 +31,7 @@ import { isEmptyCondition } from '../utils/jsonLogicUtils.js';
  * ------------------------------------------------------------------------- */
 class SystemLogicInterpreter extends BaseService {
   /** @type {ILogger} */ #logger;
-  /** @type {EventBus} */ #eventBus;
+  /** @type {IEventBus} */ #eventBus;
   /** @type {IDataRegistry} */ #dataRegistry;
   /** @type {JsonLogicEvaluationService} */ #jsonLogic;
   /** @type {EntityManager} */ #entityManager;
@@ -110,8 +110,12 @@ class SystemLogicInterpreter extends BaseService {
   }
 
   shutdown() {
-    if (this.#boundEventHandler)
-      this.#eventBus.unsubscribe('*', this.#boundEventHandler);
+    if (this.#boundEventHandler) {
+      const removed = this.#eventBus.unsubscribe('*', this.#boundEventHandler);
+      this.#logger.debug(
+        `SystemLogicInterpreter: removed '*' subscription: ${removed}.`
+      );
+    }
 
     this.#ruleCache.clear();
     this.#boundEventHandler = null;
@@ -257,7 +261,15 @@ class SystemLogicInterpreter extends BaseService {
     }
 
     if (Array.isArray(rule.actions) && rule.actions.length) {
-      this._executeActions(rule.actions, nestedCtx, `Rule '${rule.rule_id}'`);
+      try {
+        this._executeActions(rule.actions, nestedCtx, `Rule '${rule.rule_id}'`);
+      } catch (err) {
+        this.#logger.error(
+          `[Rule ${rule.rule_id}] Error during action sequence:`,
+          err
+        );
+        throw err;
+      }
     }
   }
 

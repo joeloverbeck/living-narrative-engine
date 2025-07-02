@@ -1,0 +1,54 @@
+{
+  "$schema": "../../../schemas/anatomy-formatting.schema.json",
+  "id": "default",
+  "descriptionOrder": [
+    "build",
+    "hair",
+    "eye",
+    "face",
+    "ear",
+    "nose",
+    "mouth",
+    "neck",
+    "breast",
+    "torso",
+    "arm",
+    "hand",
+    "leg",
+    "foot",
+    "tail",
+    "wing"
+  ],
+  "pairedParts": ["eye", "ear", "arm", "leg", "hand", "foot", "breast", "wing"],
+  "irregularPlurals": {
+    "foot": "feet",
+    "tooth": "teeth"
+  },
+  "descriptorOrder": [
+    "descriptors:length_category",
+    "descriptors:length_hair",
+    "descriptors:size_category",
+    "descriptors:size_specific",
+    "descriptors:weight_feel",
+    "descriptors:color_basic",
+    "descriptors:color_extended",
+    "descriptors:shape_general",
+    "descriptors:shape_eye",
+    "descriptors:hair_style",
+    "descriptors:texture",
+    "descriptors:firmness",
+    "descriptors:build"
+  ],
+  "descriptorValueKeys": [
+    "value",
+    "color",
+    "size",
+    "shape",
+    "length",
+    "style",
+    "texture",
+    "firmness",
+    "build",
+    "weight"
+  ]
+}

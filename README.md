@@ -201,6 +201,10 @@ and registry purposes.
 
 Dependencies are declared in the `mod-manifest.json` file within the `dependencies` array. Each entry specifies a
 required `modId` and a `version` requirement (using Semantic Versioning ranges).
+The comparison logic is handled by `ModDependencyValidator.validate`, which accepts
+an optional `{ semverLib }` parameter. Supplying a custom library implementing
+`valid()` and `satisfies()` lets you override the default `semver` package during
+dependency checks.
 
 **Rule D1: Missing Dependency**
 

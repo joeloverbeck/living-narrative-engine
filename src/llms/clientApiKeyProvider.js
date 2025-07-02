@@ -6,7 +6,7 @@ import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
 import { validateDependency } from '../utils/dependencyUtils.js';
 import { initLogger } from '../utils/index.js';
 import { CLOUD_API_TYPES } from './constants/llmConstants.js';
-import { isValidEnvironmentContext } from './environmentContext.js';
+import { getLlmId, validateEnvironmentContext } from './utils/llmUtils.js';
 
 /**
  * @typedef {import('./environmentContext.js').EnvironmentContext} EnvironmentContext
@@ -73,16 +73,14 @@ export class ClientApiKeyProvider extends IApiKeyProvider {
    * @returns {Promise<string | null>} A Promise that always resolves to null.
    */
   async getKey(llmConfig, environmentContext) {
-    const llmId = llmConfig?.configId || 'UnknownLLM'; // For logging context
+    const llmId = getLlmId(llmConfig); // For logging context
 
-    if (!isValidEnvironmentContext(environmentContext)) {
-      safeDispatchError(
-        this.#dispatcher,
-        `ClientApiKeyProvider.getKey (${llmId}): Invalid environmentContext provided.`,
-        { providedValue: environmentContext }
-      );
-      return null;
-    }
+    validateEnvironmentContext(
+      environmentContext,
+      `ClientApiKeyProvider.getKey (${llmId})`,
+      this.#dispatcher,
+      this.#logger
+    );
 
     if (!environmentContext.isClient()) {
       this.#logger.warn(

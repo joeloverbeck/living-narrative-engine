@@ -13,6 +13,7 @@ import { AbstractTurnState } from './abstractTurnState.js';
 
 import { TURN_ENDED_ID } from '../../constants/eventIds.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
+import { createTimeoutError } from '../../utils/timeoutUtils.js';
 import { getLogger, getSafeEventDispatcher } from './helpers/contextUtils.js';
 
 /** @typedef {import('../handlers/baseTurnHandler.js').BaseTurnHandler} BaseTurnHandler */
@@ -29,22 +30,7 @@ const IS_DEV = (process?.env?.NODE_ENV ?? 'production') !== 'production';
 const TIMEOUT_MS = IS_DEV ? 3_000 : 30_000;
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
-/**
- * Builds the timeout error message and `Error` object.
- *
- * @param {string} actorId - ID of the actor awaiting the turn end.
- * @param {string} actionId - The action definition id.
- * @param {number} timeoutMs - Timeout duration in milliseconds.
- * @returns {{message: string, error: Error}}
- */
-function createTimeoutError(actorId, actionId, timeoutMs = TIMEOUT_MS) {
-  const message =
-    `No rule ended the turn for actor ${actorId} after action ` +
-    `'${actionId}'. The engine timed out after ${timeoutMs} ms.`;
-  const error = new Error(message);
-  error.code = 'TURN_END_TIMEOUT';
-  return { message, error };
-}
+// Timeout utilities moved to src/utils/timeoutUtils.js
 
 // ─── AwaitingExternalTurnEndState ──────────────────────────────────────────────
 export class AwaitingExternalTurnEndState extends AbstractTurnState {
@@ -59,15 +45,18 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
    * Creates an instance of AwaitingExternalTurnEndState.
    *
    * @param {BaseTurnHandler} handler - The handler managing the turn state.
-   * @param {number} [timeoutMs] - Timeout duration for waiting.
-   * @param {Function} [setTimeoutFn] - Optional custom setTimeout.
-   * @param {Function} [clearTimeoutFn] - Optional custom clearTimeout.
+   * @param {object} [options] - Optional configuration overrides.
+   * @param {number} [options.timeoutMs] - Timeout duration for waiting.
+   * @param {Function} [options.setTimeoutFn] - Optional custom setTimeout.
+   * @param {Function} [options.clearTimeoutFn] - Optional custom clearTimeout.
    */
   constructor(
     handler,
-    timeoutMs = TIMEOUT_MS,
-    setTimeoutFn = setTimeout,
-    clearTimeoutFn = clearTimeout
+    {
+      timeoutMs = TIMEOUT_MS,
+      setTimeoutFn = setTimeout,
+      clearTimeoutFn = clearTimeout,
+    } = {}
   ) {
     super(handler);
     this.#timeoutMs = timeoutMs;
@@ -136,11 +125,13 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
   //─────────────────────────────────────────────────────────────────────────────
   async exitState(handler, next) {
     this.#clearGuards(this._getTurnContext());
+    this.#resetInternalState();
     await super.exitState(handler, next);
   }
 
   async destroy(handler) {
     this.#clearGuards(this._getTurnContext());
+    this.#resetInternalState();
     await super.destroy(handler);
   }
 
@@ -166,6 +157,33 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
         );
       }
     }
+    this.#resetInternalState();
+  }
+
+  /**
+   * Resets mutable internal fields to a neutral state.
+   *
+   * @private
+   * @returns {void}
+   */
+  #resetInternalState() {
+    this.#timeoutId = null;
+    this.#unsubscribeFn = undefined;
+    this.#awaitingActionId = 'unknown-action';
+  }
+
+  /**
+   * Returns key internal values for unit tests.
+   *
+   * @public
+   * @returns {{timeoutId: any, unsubscribeFn: Function|undefined, awaitingActionId: string}}
+   */
+  getInternalStateForTest() {
+    return {
+      timeoutId: this.#timeoutId,
+      unsubscribeFn: this.#unsubscribeFn,
+      awaitingActionId: this.#awaitingActionId,
+    };
   }
 
   async #onTimeout() {

@@ -18,22 +18,22 @@ import { expect } from '@jest/globals';
  */
 export const AIPromptPipelineDependencySpec = {
   llmAdapter: {
-    error: /ILLMAdapter/,
+    error: /AIPromptPipeline: llmAdapter/,
     methods: ['getAIDecision', 'getCurrentActiveLlmId'],
   },
   gameStateProvider: {
-    error: /IAIGameStateProvider/,
+    error: /AIPromptPipeline: gameStateProvider/,
     methods: ['buildGameState'],
   },
   promptContentProvider: {
-    error: /IAIPromptContentProvider/,
+    error: /AIPromptPipeline: promptContentProvider/,
     methods: ['getPromptData'],
   },
   promptBuilder: {
-    error: /IPromptBuilder/,
+    error: /AIPromptPipeline: promptBuilder/,
     methods: ['build'],
   },
-  logger: { error: /ILogger/, methods: ['info'] },
+  logger: { error: /AIPromptPipeline: logger/, methods: ['info'] },
 };
 
 /**

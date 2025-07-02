@@ -1,0 +1,27 @@
+{
+  "$schema": "http://example.com/schemas/component.schema.json",
+  "id": "descriptors:build",
+  "description": "Body build descriptors for physique and muscle tone",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "build": {
+        "type": "string",
+        "description": "The body build type",
+        "enum": [
+          "skinny",
+          "slim",
+          "toned",
+          "athletic",
+          "shapely",
+          "thick",
+          "muscular",
+          "stocky"
+        ],
+        "default": "average"
+      }
+    },
+    "required": ["build"],
+    "additionalProperties": false
+  }
+}

@@ -113,7 +113,7 @@ class QueryComponentsHandler extends ComponentOperationHandler {
         );
         continue;
       }
-      const trimmedVar = result_variable.trim();
+      const sanitizedVariableName = result_variable.trim();
       let result;
       try {
         result = this.#entityManager.getComponentData(entityId, trimmedType);
@@ -128,7 +128,7 @@ class QueryComponentsHandler extends ComponentOperationHandler {
 
       const valueToStore = result === undefined ? null : result;
       writeContextVariable(
-        trimmedVar,
+        sanitizedVariableName,
         valueToStore,
         executionContext,
         this.#dispatcher,
@@ -137,11 +137,11 @@ class QueryComponentsHandler extends ComponentOperationHandler {
 
       if (result !== undefined) {
         logger.debug(
-          `QueryComponentsHandler: Stored component "${trimmedType}" value in "${trimmedVar}".`
+          `QueryComponentsHandler: Stored component "${trimmedType}" value in "${sanitizedVariableName}".`
         );
       } else {
         logger.debug(
-          `QueryComponentsHandler: Component "${trimmedType}" not found on entity "${entityId}". Stored null in "${trimmedVar}".`
+          `QueryComponentsHandler: Component "${trimmedType}" not found on entity "${entityId}". Stored null in "${sanitizedVariableName}".`
         );
       }
     }

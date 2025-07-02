@@ -131,7 +131,7 @@ describe('closeness action availability chain', () => {
     };
     const testLogger = new ConsoleLogger('DEBUG');
     const bus = new EventBus();
-    const schemaValidator = new AjvSchemaValidator(testLogger);
+    const schemaValidator = new AjvSchemaValidator({ logger: testLogger });
     const validatedEventDispatcher = new ValidatedEventDispatcher({
       eventBus: bus,
       gameDataRepository: dataRegistry,

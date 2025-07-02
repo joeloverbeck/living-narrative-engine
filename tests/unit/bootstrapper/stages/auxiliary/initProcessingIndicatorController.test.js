@@ -4,9 +4,9 @@ import StageError from '../../../../../src/bootstrapper/StageError.js';
 import {
   stageSuccess,
   stageFailure,
-} from '../../../../../src/bootstrapper/helpers.js';
+} from '../../../../../src/utils/bootstrapperHelpers.js';
 
-jest.mock('../../../../../src/bootstrapper/helpers.js', () => ({
+jest.mock('../../../../../src/utils/bootstrapperHelpers.js', () => ({
   __esModule: true,
   stageSuccess: jest.fn(() => ({ success: true })),
   stageFailure: jest.fn((phase, message, cause) => ({

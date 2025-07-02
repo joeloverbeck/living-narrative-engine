@@ -10,6 +10,7 @@ import { BaseManifestItemLoader } from './baseManifestItemLoader.js';
 import { processAndStoreItem } from './helpers/processAndStoreItem.js';
 import { parseAndValidateId } from '../utils/idUtils.js';
 import EntityDefinition from '../entities/entityDefinition.js';
+import { ValidationError } from '../errors/validationError.js';
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../interfaces/coreServices.js').IConfiguration} IConfiguration */
@@ -20,6 +21,9 @@ import EntityDefinition from '../entities/entityDefinition.js';
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../interfaces/manifestItems.js').ModManifest} ModManifest */ // Adjusted path assumption
 /** @typedef {import('../interfaces/coreServices.js').ValidationResult} ValidationResult */
+/** @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
+
+import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/systemEventIds.js';
 
 /**
  * Loads entity definitions (including items, locations, blockers, connections) from mods
@@ -37,6 +41,12 @@ class EntityDefinitionLoader extends BaseManifestItemLoader {
   // --- [LOADER-REFACTOR-04 Change END] ---
 
   /**
+   * @private
+   * @type {ISafeEventDispatcher}
+   */
+  #safeEventDispatcher;
+
+  /**
    * Creates an instance of EntityDefinitionLoader.
    *
    * @param {IConfiguration} config - Configuration service instance.
@@ -45,6 +55,7 @@ class EntityDefinitionLoader extends BaseManifestItemLoader {
    * @param {ISchemaValidator} schemaValidator - Schema validation service instance.
    * @param {IDataRegistry} dataRegistry - Data registry service instance.
    * @param {ILogger} logger - Logging service instance.
+   * @param {ISafeEventDispatcher} safeEventDispatcher - Safe event dispatcher instance.
    */
   constructor(
     config,
@@ -52,7 +63,8 @@ class EntityDefinitionLoader extends BaseManifestItemLoader {
     dataFetcher,
     schemaValidator,
     dataRegistry,
-    logger
+    logger,
+    safeEventDispatcher
   ) {
     // --- [LOADER-REFACTOR-04 Change START]: Call super with 'entityDefinitions' content type ---
     // MODIFIED: Ensure 'entityDefinitions' (camelCase) is passed to match configuration key
@@ -65,6 +77,7 @@ class EntityDefinitionLoader extends BaseManifestItemLoader {
       dataRegistry,
       logger
     );
+    this.#safeEventDispatcher = safeEventDispatcher;
     // --- [LOADER-REFACTOR-04 Change END] ---
 
     // --- [LOADER-REFACTOR-04 Change START]: Removed schema ID retrieval and warning ---
@@ -110,16 +123,18 @@ class EntityDefinitionLoader extends BaseManifestItemLoader {
           null,
           2
         );
-        this._logger.error(
-          `EntityLoader [${modId}]: Runtime validation failed for component '${componentId}' in entity '${entityId}' (file: ${filename}). Errors:\n${errorDetails}`,
-          {
+        // Dispatch system error event instead of logging directly
+        this.#safeEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
+          message: `EntityLoader [${modId}]: Runtime validation failed for component '${componentId}' in entity '${entityId}' (file: ${filename})`,
+          details: {
             modId,
             filename,
             entityId,
             componentId,
             errors: componentValidationResult.errors,
-          }
-        );
+            raw: errorDetails,
+          },
+        });
         validationFailures.push({
           componentId: componentId,
           errors: componentValidationResult.errors,
@@ -136,13 +151,17 @@ class EntityDefinitionLoader extends BaseManifestItemLoader {
         .map((failure) => failure.componentId)
         .join(', ');
       const comprehensiveMessage = `Runtime component validation failed for entity '${entityId}' in file '${filename}' (mod: ${modId}). Invalid components: [${failedComponentIds}]. See previous logs for details.`;
-      this._logger.error(comprehensiveMessage, {
-        modId,
-        filename,
-        entityId,
-        failedComponentIds,
+      // Dispatch system error event instead of logging directly
+      this.#safeEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
+        message: comprehensiveMessage,
+        details: {
+          modId,
+          filename,
+          entityId,
+          failedComponentIds,
+        },
       });
-      throw new Error(comprehensiveMessage);
+      throw new ValidationError(comprehensiveMessage);
     }
     this._logger.debug(
       `EntityLoader [${modId}]: All runtime component validations passed for entity '${entityId}' from ${filename}.`

@@ -1,6 +1,8 @@
 // src/ai/thoughtPersistenceListener.js
 
 import { persistThoughts } from './thoughtPersistenceHook.js';
+import ShortTermMemoryService from './shortTermMemoryService.js';
+/** @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 
 /**
  * @class
@@ -13,13 +15,25 @@ export class ThoughtPersistenceListener {
    *
    * @param {{
    *   logger: import('../interfaces/coreServices.js').ILogger,
-   *   entityManager: import('../interfaces/IEntityManager.js').IEntityManager
+   *   entityManager: import('../interfaces/IEntityManager.js').IEntityManager,
+   *   stmService?: ShortTermMemoryService,
+   *   now?: () => Date
    * }} deps
    *   Dependencies for the listener.
    */
-  constructor({ logger, entityManager }) {
+  constructor({
+    logger,
+    entityManager,
+    dispatcher,
+    stmService = new ShortTermMemoryService(),
+    now = () => new Date(),
+  }) {
     this.logger = logger;
     this.entityManager = entityManager;
+    /** @type {ISafeEventDispatcher | undefined} */
+    this.dispatcher = dispatcher;
+    this.stmService = stmService;
+    this.now = now;
   }
 
   /**
@@ -46,7 +60,10 @@ export class ThoughtPersistenceListener {
       persistThoughts(
         { thoughts: extractedData.thoughts },
         actorEntity,
-        this.logger
+        this.logger,
+        this.dispatcher,
+        this.stmService,
+        this.now()
       );
     } else {
       this.logger.warn(

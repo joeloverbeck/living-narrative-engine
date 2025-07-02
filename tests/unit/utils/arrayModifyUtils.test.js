@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { applyArrayModification } from '../../../src/logic/utils/arrayModifyUtils.js';
+import { applyArrayModification } from '../../../src/utils/arrayModifyUtils.js';
 
 describe('applyArrayModification', () => {
   let logger;

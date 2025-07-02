@@ -1,6 +1,6 @@
 import { describe, test, expect, jest, beforeEach } from '@jest/globals';
 import {
-  getServiceFromContext,
+  ServiceLookupHelper,
   ServiceLookupError,
 } from '../../../../../src/turns/states/helpers/getServiceFromContext.js';
 import { safeDispatchError } from '../../../../../src/utils/safeDispatchErrorUtils.js';
@@ -14,6 +14,7 @@ describe('getServiceFromContext cause chain', () => {
   let dispatcher;
   let handler;
   let state;
+  let helper;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -32,6 +33,7 @@ describe('getServiceFromContext cause chain', () => {
         state.isProcessing = false;
       }),
     };
+    helper = new ServiceLookupHelper(state);
   });
 
   test('throws ServiceLookupError with cause when service method throws', async () => {
@@ -46,8 +48,7 @@ describe('getServiceFromContext cause chain', () => {
 
     let caught;
     try {
-      await getServiceFromContext(
-        state,
+      await helper.getServiceFromContext(
         turnCtx,
         'getCommandProcessor',
         'ICommandProcessor',

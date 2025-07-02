@@ -2,7 +2,7 @@
 // --- JSDoc Imports ---
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../defs.js').ExecutionContext} ExecutionContext */ // ** Corrected type for 2nd arg **
-/** @typedef {import('../../events/eventBus.js').default} EventBus */
+/** @typedef {import('../../interfaces/IEventBus.js').IEventBus} IEventBus */
 /** @typedef {import('../../events/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
 /** @typedef {import('../defs.js').EventDispatchDeps} EventDispatchDeps */
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
@@ -29,14 +29,14 @@ import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
  * @implements {OperationHandler}
  */
 class DispatchEventHandler {
-  /** @type {ValidatedEventDispatcher | EventBus} */
+  /** @type {ValidatedEventDispatcher | IEventBus} */
   #dispatcher;
   /** @type {ILogger} */
   #logger;
 
   /**
    * @param {object} deps
-   * @param {ValidatedEventDispatcher|EventBus} deps.dispatcher
+   * @param {ValidatedEventDispatcher|IEventBus} deps.dispatcher
    * @param {ILogger} deps.logger - The logger service instance.
    * @throws {Error} If dependencies are invalid.
    */

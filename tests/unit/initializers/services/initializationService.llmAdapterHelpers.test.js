@@ -1,4 +1,5 @@
 import InitializationService from '../../../../src/initializers/services/initializationService.js';
+import LlmAdapterInitializer from '../../../../src/initializers/services/llmAdapterInitializer.js';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
 const WORLD = 'helperWorld';
@@ -18,6 +19,7 @@ let domUiFacade;
 let thoughtListener;
 let notesListener;
 let contentDependencyValidator;
+let llmAdapterInitializer;
 
 beforeEach(() => {
   logger = { error: jest.fn(), debug: jest.fn(), warn: jest.fn() };
@@ -43,6 +45,7 @@ beforeEach(() => {
   contentDependencyValidator = {
     validate: jest.fn().mockResolvedValue(undefined),
   };
+  llmAdapterInitializer = new LlmAdapterInitializer();
 });
 
 const createService = (overrides = {}) =>
@@ -68,6 +71,7 @@ const createService = (overrides = {}) =>
       systemInitializer,
       worldInitializer,
       contentDependencyValidator,
+      llmAdapterInitializer,
     },
     ...(overrides || {}),
   });

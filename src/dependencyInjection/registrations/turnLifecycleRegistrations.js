@@ -15,7 +15,7 @@ import { ConcreteTurnContextFactory } from '../../turns/factories/concreteTurnCo
 import { ConcreteTurnStateFactory } from '../../turns/factories/concreteTurnStateFactory.js';
 
 import { tokens } from '../tokens.js';
-import { Registrar } from '../registrarHelpers.js';
+import { Registrar } from '../../utils/registrarHelpers.js';
 import { INITIALIZABLE } from '../tags.js';
 import {
   PLAYER_COMPONENT_ID,

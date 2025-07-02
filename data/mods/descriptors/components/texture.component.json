@@ -1,0 +1,18 @@
+{
+  "$schema": "http://example.com/schemas/component.schema.json",
+  "id": "descriptors:texture",
+  "description": "Describes the surface texture of an object",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "texture": {
+        "type": "string",
+        "description": "The surface texture",
+        "enum": ["smooth", "rough", "silky", "coarse", "bumpy", "velvety"],
+        "default": "smooth"
+      }
+    },
+    "required": ["texture"],
+    "additionalProperties": false
+  }
+}

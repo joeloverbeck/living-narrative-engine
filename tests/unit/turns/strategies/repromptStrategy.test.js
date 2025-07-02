@@ -90,9 +90,9 @@ describe('RepromptStrategy', () => {
 
   test('should correctly execute RE_PROMPT directive and request transition to AwaitingActorDecisionState', async () => {
     const directive = TurnDirective.RE_PROMPT;
-    const cmdProcResult = {}; // Not directly used by this strategy beyond being a parameter
+    const commandResult = {}; // Not directly used by this strategy beyond being a parameter
 
-    await strategy.execute(mockTurnContext, directive, cmdProcResult);
+    await strategy.execute(mockTurnContext, directive, commandResult);
 
     expect(mockTurnContext.getLogger).toHaveBeenCalledTimes(1);
     expect(mockTurnContext.getActor).toHaveBeenCalledTimes(1);
@@ -108,24 +108,19 @@ describe('RepromptStrategy', () => {
 
   test('should throw error and log if wrong directive is provided', async () => {
     const directive = TurnDirective.END_TURN_SUCCESS; // Incorrect directive
-    const cmdProcResult = {};
+    const commandResult = {};
 
     await expect(
-      strategy.execute(mockTurnContext, directive, cmdProcResult)
+      strategy.execute(mockTurnContext, directive, commandResult)
     ).rejects.toThrow(
-      'RepromptStrategy: Received non-RE_PROMPT directive (END_TURN_SUCCESS). Aborting.'
+      'RepromptStrategy: Received wrong directive (END_TURN_SUCCESS). Expected RE_PROMPT.'
     );
 
     expect(mockTurnContext.getLogger).toHaveBeenCalledTimes(1);
     expect(mockTurnContext.getSafeEventDispatcher).toHaveBeenCalledTimes(1);
-    expect(mockTurnContext._safeEventDispatcher.dispatch).toHaveBeenCalledWith(
-      SYSTEM_ERROR_OCCURRED_ID,
-      {
-        message:
-          'RepromptStrategy: Received non-RE_PROMPT directive (END_TURN_SUCCESS). Aborting.',
-        details: { directive },
-      }
-    );
+    expect(
+      mockTurnContext._safeEventDispatcher.dispatch
+    ).not.toHaveBeenCalled();
     expect(mockTurnContext.requestTransition).not.toHaveBeenCalled();
     expect(mockTurnContext.endTurn).not.toHaveBeenCalled();
   });
@@ -134,9 +129,9 @@ describe('RepromptStrategy', () => {
     mockTurnContext.getActor.mockReturnValue(null); // No actor in context
 
     const directive = TurnDirective.RE_PROMPT;
-    const cmdProcResult = {};
+    const commandResult = {};
 
-    await strategy.execute(mockTurnContext, directive, cmdProcResult);
+    await strategy.execute(mockTurnContext, directive, commandResult);
 
     expect(mockTurnContext.getLogger).toHaveBeenCalledTimes(1);
     expect(mockTurnContext.getActor).toHaveBeenCalledTimes(1);
@@ -166,9 +161,9 @@ describe('RepromptStrategy', () => {
     );
 
     const directive = TurnDirective.RE_PROMPT;
-    const cmdProcResult = {};
+    const commandResult = {};
 
-    await strategy.execute(mockTurnContext, directive, cmdProcResult);
+    await strategy.execute(mockTurnContext, directive, commandResult);
 
     expect(mockTurnContext.getLogger).toHaveBeenCalledTimes(1);
     expect(mockTurnContext.getActor).toHaveBeenCalledTimes(1);

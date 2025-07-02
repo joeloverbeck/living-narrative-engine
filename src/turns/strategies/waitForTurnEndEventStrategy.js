@@ -11,6 +11,17 @@
 import { ITurnDirectiveStrategy } from '../interfaces/ITurnDirectiveStrategy.js';
 import TurnDirective from '../constants/turnDirectives.js';
 import { TURN_ENDED_ID } from '../../constants/eventIds.js';
+import {
+  assertDirective,
+  requireContextActor,
+  getLoggerAndClass,
+} from './strategyHelpers.js';
+
+/**
+ * @class WaitForTurnEndEventStrategy
+ * @description Handles the WAIT_FOR_EVENT directive by transitioning to
+ * AwaitingExternalTurnEndState using ITurnContext.
+ */
 
 export default class WaitForTurnEndEventStrategy extends ITurnDirectiveStrategy {
   /**
@@ -23,7 +34,7 @@ export default class WaitForTurnEndEventStrategy extends ITurnDirectiveStrategy 
    * @async
    * @param {ITurnContext} turnContext - The context for the current turn.
    * @param {TurnDirectiveEnum} directive - The directive that triggered this strategy.
-   * @param {CommandResult} [cmdProcResult] - Optional result from command processing.
+   * @param {CommandResult} [commandResult] - Optional result from command processing.
    * @returns {Promise<void>} Resolves when the strategy execution is complete.
    * @throws {Error} If the directive is not WAIT_FOR_EVENT or if a critical error occurs.
    */
@@ -31,26 +42,26 @@ export default class WaitForTurnEndEventStrategy extends ITurnDirectiveStrategy 
     /** @type {ITurnContext} */ turnContext,
     // actor parameter removed as per outcome of Ticket 2
     /** @type {TurnDirectiveEnum}     */ directive,
-    /** @type {CommandResult}    */ cmdProcResult // eslint-disable-line no-unused-vars
+    /** @type {CommandResult}    */ commandResult // eslint-disable-line no-unused-vars
   ) {
-    const className = this.constructor.name;
-    const logger = turnContext.getLogger();
+    const { logger, className } = getLoggerAndClass(this, turnContext);
 
-    if (directive !== TurnDirective.WAIT_FOR_EVENT) {
-      const errorMsg = `${className}: Received wrong directive (${directive}). Expected WAIT_FOR_EVENT.`;
-      logger.error(errorMsg);
-      // As per standard practice in other strategies, throw an error to let the calling state handle it.
-      // This might involve ending the turn with this error.
-      throw new Error(errorMsg);
-    }
+    assertDirective({
+      expected: TurnDirective.WAIT_FOR_EVENT,
+      actual: directive,
+      logger,
+      className,
+    });
 
-    const contextActor = turnContext.getActor();
+    const criticalErrorMsg = `${className}: No actor found in ITurnContext. Cannot transition to AwaitingExternalTurnEndState without an actor.`;
+    const contextActor = requireContextActor({
+      turnContext,
+      logger,
+      className,
+      errorMsg: criticalErrorMsg,
+    });
 
     if (!contextActor) {
-      const criticalErrorMsg = `${className}: No actor found in ITurnContext. Cannot transition to AwaitingExternalTurnEndState without an actor.`;
-      logger.error(criticalErrorMsg);
-      // As per ticket: log this critical error and end the turn via turnContext.endTurn(new Error(...))
-      await turnContext.endTurn(new Error(criticalErrorMsg));
       return;
     }
 

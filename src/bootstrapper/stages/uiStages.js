@@ -1,7 +1,11 @@
 // src/bootstrapper/stages/uiStages.js
 /* eslint-disable no-console */
 
-import { setupButtonListener, stageSuccess, stageFailure } from '../helpers.js';
+import {
+  setupButtonListener,
+  stageSuccess,
+  stageFailure,
+} from '../../utils/bootstrapperHelpers.js';
 
 // eslint-disable-next-line no-unused-vars
 import { tokens } from '../../dependencyInjection/tokens.js';
@@ -90,9 +94,9 @@ export async function setupMenuButtonListenersStage(
     setupButtonListener(
       documentRef,
       'open-save-game-button',
-      () => {
+      async () => {
         logger.debug(`${stageName}: "Open Save Game UI" button clicked.`);
-        gameEngine.showSaveGameUI();
+        await gameEngine.showSaveGameUI();
       },
       logger,
       stageName
@@ -101,9 +105,9 @@ export async function setupMenuButtonListenersStage(
     setupButtonListener(
       documentRef,
       'open-load-game-button',
-      () => {
+      async () => {
         logger.debug(`${stageName}: "Open Load Game UI" button clicked.`);
-        gameEngine.showLoadGameUI();
+        await gameEngine.showLoadGameUI();
       },
       logger,
       stageName

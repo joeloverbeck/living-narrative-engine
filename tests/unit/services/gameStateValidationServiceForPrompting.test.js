@@ -70,6 +70,82 @@ describe('GameStateValidationServiceForPrompting', () => {
     });
   });
 
+  describe('check', () => {
+    it('should return invalid if gameStateDto is null without dispatching', () => {
+      const result = service.check(null);
+      expect(result.isValid).toBe(false);
+      expect(result.errorContent).toBe(
+        ERROR_FALLBACK_CRITICAL_GAME_STATE_MISSING
+      );
+      expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
+    });
+
+    it('should return invalid if gameStateDto is undefined without dispatching', () => {
+      const result = service.check(undefined);
+      expect(result.isValid).toBe(false);
+      expect(result.errorContent).toBe(
+        ERROR_FALLBACK_CRITICAL_GAME_STATE_MISSING
+      );
+      expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
+    });
+
+    it('should return valid and warn if actorState is missing', () => {
+      const dto = createMockGameStateDto({
+        hasActorState: false,
+        hasActorPromptData: true,
+      });
+      const result = service.check(dto);
+      expect(result.isValid).toBe(true);
+      expect(result.errorContent).toBeNull();
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        "GameStateValidationServiceForPrompting.validate: AIGameStateDTO is missing 'actorState'. This might affect prompt data completeness indirectly."
+      );
+      expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
+    });
+
+    it('should return valid and warn if actorPromptData is missing', () => {
+      const dto = createMockGameStateDto({
+        hasActorState: true,
+        hasActorPromptData: false,
+      });
+      const result = service.check(dto);
+      expect(result.isValid).toBe(true);
+      expect(result.errorContent).toBeNull();
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        "GameStateValidationServiceForPrompting.validate: AIGameStateDTO is missing 'actorPromptData'. Character info will be limited or use fallbacks."
+      );
+      expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
+    });
+
+    it('should return valid and warn if both actorState and actorPromptData are missing', () => {
+      const dto = createMockGameStateDto({
+        hasActorState: false,
+        hasActorPromptData: false,
+      });
+      const result = service.check(dto);
+      expect(result.isValid).toBe(true);
+      expect(result.errorContent).toBeNull();
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        "GameStateValidationServiceForPrompting.validate: AIGameStateDTO is missing 'actorState'. This might affect prompt data completeness indirectly."
+      );
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        "GameStateValidationServiceForPrompting.validate: AIGameStateDTO is missing 'actorPromptData'. Character info will be limited or use fallbacks."
+      );
+      expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
+    });
+
+    it('should return valid if gameStateDto is valid and complete', () => {
+      const dto = createMockGameStateDto({
+        hasActorState: true,
+        hasActorPromptData: true,
+      });
+      const result = service.check(dto);
+      expect(result.isValid).toBe(true);
+      expect(result.errorContent).toBeNull();
+      expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
+    });
+  });
+
   describe('validate', () => {
     it('should return invalid if gameStateDto is null', () => {
       const result = service.validate(null);
@@ -114,6 +190,7 @@ describe('GameStateValidationServiceForPrompting', () => {
       expect(mockLogger.warn).toHaveBeenCalledWith(
         "GameStateValidationServiceForPrompting.validate: AIGameStateDTO is missing 'actorState'. This might affect prompt data completeness indirectly."
       );
+      expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
       expect(mockLogger.warn).toHaveBeenCalledTimes(1); // Ensure only this warning
       expect(mockLogger.error).not.toHaveBeenCalled();
     });
@@ -129,6 +206,7 @@ describe('GameStateValidationServiceForPrompting', () => {
       expect(mockLogger.warn).toHaveBeenCalledWith(
         "GameStateValidationServiceForPrompting.validate: AIGameStateDTO is missing 'actorPromptData'. Character info will be limited or use fallbacks."
       );
+      expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
       expect(mockLogger.warn).toHaveBeenCalledTimes(1); // Ensure only this warning
       expect(mockLogger.error).not.toHaveBeenCalled();
     });
@@ -147,6 +225,7 @@ describe('GameStateValidationServiceForPrompting', () => {
       expect(mockLogger.warn).toHaveBeenCalledWith(
         "GameStateValidationServiceForPrompting.validate: AIGameStateDTO is missing 'actorPromptData'. Character info will be limited or use fallbacks."
       );
+      expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
       expect(mockLogger.warn).toHaveBeenCalledTimes(2); // Expect two separate warnings
       expect(mockLogger.error).not.toHaveBeenCalled();
     });
@@ -159,6 +238,7 @@ describe('GameStateValidationServiceForPrompting', () => {
       const result = service.validate(dto);
       expect(result.isValid).toBe(true);
       expect(result.errorContent).toBeNull();
+      expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
       expect(mockLogger.warn).not.toHaveBeenCalled();
       expect(mockLogger.error).not.toHaveBeenCalled();
     });

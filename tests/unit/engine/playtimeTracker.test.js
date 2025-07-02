@@ -1,5 +1,13 @@
-import { describe, test, expect, beforeEach, jest } from '@jest/globals';
+import {
+  describe,
+  test,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import PlaytimeTracker from '../../../src/engine/playtimeTracker.js';
+import * as loggerUtils from '../../../src/utils/loggerUtils.js';
 
 /** @type {jest.Mocked<import('../../../src/interfaces/coreServices.js').ILogger>} */
 const mockLogger = {
@@ -20,13 +28,45 @@ beforeEach(() => {
   jest.useFakeTimers();
   jest.setSystemTime(BASE_TIME);
   mockDispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
+  jest.spyOn(loggerUtils, 'ensureValidLogger');
 });
 
 afterEach(() => {
   jest.useRealTimers();
+  jest.restoreAllMocks();
 });
 
 describe('PlaytimeTracker', () => {
+  test('constructor validates logger with ensureValidLogger', () => {
+    new PlaytimeTracker({
+      logger: mockLogger,
+      safeEventDispatcher: mockDispatcher,
+    });
+
+    expect(loggerUtils.ensureValidLogger).toHaveBeenCalledWith(
+      mockLogger,
+      'PlaytimeTracker'
+    );
+  });
+
+  test('constructor falls back when logger invalid', () => {
+    const invalid = {};
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+
+    const tracker = new PlaytimeTracker({
+      // @ts-ignore intentionally invalid
+      logger: invalid,
+      safeEventDispatcher: mockDispatcher,
+    });
+
+    expect(loggerUtils.ensureValidLogger).toHaveBeenCalledWith(
+      invalid,
+      'PlaytimeTracker'
+    );
+    tracker.startSession();
+    expect(warnSpy).toHaveBeenCalledTimes(1);
+    warnSpy.mockRestore();
+  });
   test('startSession sets start time and logs debug', () => {
     const tracker = new PlaytimeTracker({
       logger: mockLogger,

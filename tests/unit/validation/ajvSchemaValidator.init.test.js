@@ -33,7 +33,7 @@ describe('AjvSchemaValidator initialization edge cases', () => {
     const logger = createMockLogger();
     const AjvSchemaValidator =
       require('../../../src/validation/ajvSchemaValidator.js').default;
-    expect(() => new AjvSchemaValidator(logger)).toThrow(
+    expect(() => new AjvSchemaValidator({ logger: logger })).toThrow(
       'AjvSchemaValidator: Failed to initialize Ajv.'
     );
     expect(logger.error).toHaveBeenCalledWith(
@@ -52,7 +52,10 @@ describe('AjvSchemaValidator initialization edge cases', () => {
     const logger = createMockLogger();
     const AjvSchemaValidator =
       require('../../../src/validation/ajvSchemaValidator.js').default;
-    new AjvSchemaValidator(logger);
+    new AjvSchemaValidator({
+      logger: logger,
+      preloadSchemas: [{ schema: {}, id: 'test' }],
+    });
     expect(addSchema).not.toHaveBeenCalled();
     expect(logger.debug).toHaveBeenCalledWith(
       expect.stringContaining('already loaded. Skipping.')
@@ -71,7 +74,10 @@ describe('AjvSchemaValidator initialization edge cases', () => {
     const logger = createMockLogger();
     const AjvSchemaValidator =
       require('../../../src/validation/ajvSchemaValidator.js').default;
-    new AjvSchemaValidator(logger);
+    new AjvSchemaValidator({
+      logger: logger,
+      preloadSchemas: [{ schema: {}, id: 'test' }],
+    });
     expect(logger.error).toHaveBeenCalledWith(
       expect.stringContaining('Failed to preload schema'),
       expect.objectContaining({

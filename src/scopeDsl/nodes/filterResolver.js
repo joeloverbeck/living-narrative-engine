@@ -4,6 +4,8 @@
  * @typedef {import('../core/gateways.js').EntityGateway} EntityGateway
  */
 
+import { createEvaluationContext } from '../core/entityHelpers.js';
+
 /**
  * @typedef {object} LocationProvider
  * @property {() => {id: string} | null} getLocation - Function to get the current location
@@ -23,73 +25,6 @@ export default function createFilterResolver({
   entitiesGateway,
   locationProvider,
 }) {
-  /**
-   * Creates an evaluation context for a single item
-   *
-   * @param {*} item - Item to filter (entity ID, object, etc.)
-   * @param {object} actorEntity - The acting entity
-   * @returns {object} Evaluation context for JSON Logic
-   */
-  function createEvaluationContext(item, actorEntity) {
-    let entity;
-
-    if (typeof item === 'string') {
-      // Item is an entity ID, get the entity instance
-      entity = entitiesGateway.getEntityInstance(item);
-
-      if (!entity) {
-        // If entity not found, create minimal entity object
-        entity = { id: item };
-      } else if (entity.componentTypeIds) {
-        // Build components object for JsonLogic access
-        const components = {};
-        for (const componentTypeId of entity.componentTypeIds) {
-          const componentData =
-            entity.getComponentData?.(componentTypeId) ||
-            entitiesGateway.getComponentData(item, componentTypeId);
-          if (componentData) {
-            components[componentTypeId] = componentData;
-          }
-        }
-        entity.components = components;
-      }
-    } else if (item && typeof item === 'object') {
-      // Item is already an object (e.g., exit object from component data)
-      entity = item;
-    } else {
-      // Invalid item
-      return null;
-    }
-
-    // Ensure actor also has components property for JsonLogic access
-    let actorWithComponents = actorEntity;
-    if (
-      actorEntity &&
-      actorEntity.componentTypeIds &&
-      !actorEntity.components
-    ) {
-      const actorComponents = {};
-      for (const componentTypeId of actorEntity.componentTypeIds) {
-        const componentData =
-          actorEntity.getComponentData?.(componentTypeId) ||
-          entitiesGateway.getComponentData(actorEntity.id, componentTypeId);
-        if (componentData) {
-          actorComponents[componentTypeId] = componentData;
-        }
-      }
-      actorWithComponents = { ...actorEntity, components: actorComponents };
-    }
-
-    // Get current location
-    const location = locationProvider.getLocation();
-
-    return {
-      entity,
-      actor: actorWithComponents,
-      location,
-    };
-  }
-
   return {
     /**
      * Determines if this resolver can handle the given node
@@ -139,14 +74,26 @@ export default function createFilterResolver({
         // If the item is an array, iterate over its elements for filtering
         if (Array.isArray(item)) {
           for (const arrayElement of item) {
-            const evalCtx = createEvaluationContext(arrayElement, actorEntity);
+            const evalCtx = createEvaluationContext(
+              arrayElement,
+              actorEntity,
+              entitiesGateway,
+              locationProvider,
+              trace
+            );
             if (evalCtx && logicEval.evaluate(node.logic, evalCtx)) {
               result.add(arrayElement);
             }
           }
         } else {
           // Handle single items (entity IDs or objects)
-          const evalCtx = createEvaluationContext(item, actorEntity);
+          const evalCtx = createEvaluationContext(
+            item,
+            actorEntity,
+            entitiesGateway,
+            locationProvider,
+            trace
+          );
           if (evalCtx && logicEval.evaluate(node.logic, evalCtx)) {
             result.add(item);
           }

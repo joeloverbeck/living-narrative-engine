@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Anatomy Visualizer - Living Narrative Engine</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/anatomy-visualizer.css" />
+  </head>
+
+  <body>
+    <div id="anatomy-visualizer-container">
+      <header id="anatomy-header">
+        <h1>Anatomy Visualizer</h1>
+        <button id="back-button" class="menu-button">Back to Menu</button>
+      </header>
+
+      <div id="entity-selector-container">
+        <label for="entity-selector">Select Entity:</label>
+        <select id="entity-selector">
+          <option value="">Loading entities...</option>
+        </select>
+      </div>
+
+      <div id="anatomy-content">
+        <div id="anatomy-graph-panel" class="panel">
+          <h2>Body Parts Graph</h2>
+          <div id="anatomy-graph-container">
+            <svg id="anatomy-graph"></svg>
+          </div>
+        </div>
+
+        <div id="entity-description-panel" class="panel">
+          <h2>Entity Description</h2>
+          <div id="entity-description-content">
+            <p>Select an entity to view its description.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="anatomy-visualizer.js"></script>
+  </body>
+</html>

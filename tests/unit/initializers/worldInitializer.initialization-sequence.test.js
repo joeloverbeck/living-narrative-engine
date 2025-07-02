@@ -10,6 +10,7 @@ describe('WorldInitializer - Initialization Sequence', () => {
   let mockWorldContext;
   let mockGameDataRepository;
   let mockValidatedEventDispatcher;
+  let mockEventDispatchService;
   let mockLogger;
   let mockScopeRegistry;
 
@@ -48,11 +49,18 @@ describe('WorldInitializer - Initialization Sequence', () => {
       getAllScopeNames: jest.fn().mockReturnValue([]),
     };
 
+    mockEventDispatchService = {
+      dispatchWithLogging: jest.fn().mockResolvedValue(undefined),
+      dispatchWithErrorHandling: jest.fn().mockResolvedValue(true),
+      safeDispatchEvent: jest.fn().mockResolvedValue(undefined),
+    };
+
     worldInitializer = new WorldInitializer({
       entityManager: mockEntityManager,
       worldContext: mockWorldContext,
       gameDataRepository: mockGameDataRepository,
       validatedEventDispatcher: mockValidatedEventDispatcher,
+      eventDispatchService: mockEventDispatchService,
       logger: mockLogger,
       scopeRegistry: mockScopeRegistry,
     });

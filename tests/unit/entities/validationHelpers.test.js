@@ -2,7 +2,7 @@ import { describe, it, expect } from '@jest/globals';
 import {
   validationSucceeded,
   formatValidationErrors,
-} from '../../../src/entities/utils/validationHelpers.js';
+} from '../../../src/utils/entitiesValidationHelpers.js';
 
 describe('validationHelpers', () => {
   describe('validationSucceeded', () => {

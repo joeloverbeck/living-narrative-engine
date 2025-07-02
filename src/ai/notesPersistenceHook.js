@@ -7,6 +7,7 @@ import NotesService from './notesService.js';
 import { NOTES_COMPONENT_ID } from '../constants/componentIds.js';
 import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
 import { isNonBlankString } from '../utils/textUtils.js';
+import { fetchComponent, applyComponent } from '../utils/componentHelpers.js';
 
 /**
  * Persists the "notes" produced during an LLM turn into the actor's
@@ -16,8 +17,17 @@ import { isNonBlankString } from '../utils/textUtils.js';
  * @param {object} actorEntity - Entity instance (or test double) that generated the action.
  * @param {import('../interfaces/coreServices.js').ILogger} logger - Application-wide logger.
  * @param {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} dispatcher - Safe dispatcher for error events.
+ * @param {NotesService} [notesService] - Optional notes service instance.
+ * @param {Date} [now] - Date provider for timestamping notes.
  */
-export function persistNotes(action, actorEntity, logger, dispatcher) {
+export function persistNotes(
+  action,
+  actorEntity,
+  logger,
+  dispatcher,
+  notesService = new NotesService(),
+  now = new Date()
+) {
   // Gracefully do nothing if the 'notes' key is entirely absent.
   if (!action || !Object.prototype.hasOwnProperty.call(action, 'notes')) {
     return;
@@ -62,31 +72,23 @@ export function persistNotes(action, actorEntity, logger, dispatcher) {
     return;
   }
 
-  const hasGetter = typeof actorEntity?.getComponentData === 'function';
-  let notesComp = hasGetter
-    ? actorEntity.getComponentData(NOTES_COMPONENT_ID)
-    : actorEntity?.components?.[NOTES_COMPONENT_ID];
+  let notesComp = fetchComponent(actorEntity, NOTES_COMPONENT_ID);
 
   if (!notesComp) {
     notesComp = { notes: [] };
   }
 
-  const notesService = new NotesService();
   const {
     wasModified,
     component: updatedNotesComp,
     addedNotes,
-  } = notesService.addNotes(notesComp, validNotes);
+  } = notesService.addNotes(notesComp, validNotes, now);
 
   if (wasModified) {
     addedNotes.forEach((note) => {
       logger.debug(`Added note: "${note.text}" at ${note.timestamp}`);
     });
 
-    if (typeof actorEntity?.addComponent === 'function') {
-      actorEntity.addComponent(NOTES_COMPONENT_ID, updatedNotesComp);
-    } else if (actorEntity?.components) {
-      actorEntity.components[NOTES_COMPONENT_ID] = updatedNotesComp;
-    }
+    applyComponent(actorEntity, NOTES_COMPONENT_ID, updatedNotesComp);
   }
 }

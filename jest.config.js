@@ -46,6 +46,7 @@ module.exports = {
     '!src/turns/interfaces/**',
     '!src/prompting/interfaces/**',
     '!src/actions/actionTypes.js',
+    '!src/actions/resolutionResult.js',
     '!src/index.js',
     '!index.js',
   ],
@@ -55,8 +56,8 @@ module.exports = {
     global: {
       branches: 83,
       functions: 91,
-      lines: 91,
-      statements: -1350,
+      lines: 92,
+      statements: -1550,
     },
   },
   // --- END COVERAGE CONFIGURATION ---

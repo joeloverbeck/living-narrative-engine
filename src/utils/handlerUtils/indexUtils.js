@@ -1,14 +1,14 @@
 import { assertParamsObject } from './paramsUtils.js';
 import {
   initHandlerLogger,
-  validateDeps,
+  validateServiceDeps,
   resolveExecutionLogger,
-} from './serviceUtils.js';
+} from '../serviceInitializerUtils.js';
 
 export {
   assertParamsObject,
   initHandlerLogger,
-  validateDeps,
+  validateServiceDeps as validateDeps,
   resolveExecutionLogger,
 };
 

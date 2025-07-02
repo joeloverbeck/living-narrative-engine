@@ -211,7 +211,7 @@ describe('RuleLoader Integration (Rule Override via loadItemsForMod)', () => {
     mockValidator = createMockSchemaValidator();
     mockLogger = createMockLogger();
     // Instantiate a *real* registry to hold state across loads
-    realRegistry = new InMemoryDataRegistry(mockLogger); // Pass mock logger if needed by registry
+    realRegistry = new InMemoryDataRegistry({ logger: mockLogger }); // Pass mock logger if needed by registry
 
     // Ensure rule schema ID is configured via base method
     mockConfig.getContentTypeSchemaId.mockImplementation((registryKey) =>

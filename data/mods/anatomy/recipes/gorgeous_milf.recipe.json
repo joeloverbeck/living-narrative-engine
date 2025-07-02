@@ -1,0 +1,116 @@
+{
+  "$schema": "http://example.com/schemas/anatomy.recipe.schema.json",
+  "recipeId": "anatomy:gorgeous_milf",
+  "blueprintId": "anatomy:human_female",
+  "slots": {
+    "torso": {
+      "partType": "torso",
+      "preferId": "anatomy:human_female_torso"
+    },
+    "head": {
+      "partType": "head",
+      "preferId": "anatomy:humanoid_head"
+    },
+    "left_eye": {
+      "partType": "eye",
+      "preferId": "anatomy:human_eye_cobalt",
+      "properties": {
+        "descriptors:color_extended": {
+          "color": "cobalt"
+        },
+        "descriptors:shape_eye": {
+          "shape": "almond"
+        }
+      }
+    },
+    "right_eye": {
+      "partType": "eye",
+      "preferId": "anatomy:human_eye_cobalt",
+      "properties": {
+        "descriptors:color_extended": {
+          "color": "cobalt"
+        },
+        "descriptors:shape_eye": {
+          "shape": "almond"
+        }
+      }
+    },
+    "hair": {
+      "partType": "hair",
+      "preferId": "anatomy:human_hair_raven",
+      "properties": {
+        "descriptors:color_extended": {
+          "color": "raven-black"
+        },
+        "descriptors:length_hair": {
+          "length": "long"
+        },
+        "descriptors:hair_style": {
+          "style": "straight"
+        }
+      }
+    },
+    "left_arm": {
+      "partType": "arm",
+      "preferId": "anatomy:humanoid_arm"
+    },
+    "right_arm": {
+      "partType": "arm",
+      "preferId": "anatomy:humanoid_arm"
+    },
+    "left_leg": {
+      "partType": "leg",
+      "preferId": "anatomy:human_leg_shapely",
+      "properties": {
+        "descriptors:length_category": {
+          "length": "long"
+        },
+        "descriptors:build": {
+          "build": "shapely"
+        }
+      }
+    },
+    "right_leg": {
+      "partType": "leg",
+      "preferId": "anatomy:human_leg_shapely",
+      "properties": {
+        "descriptors:length_category": {
+          "length": "long"
+        },
+        "descriptors:build": {
+          "build": "shapely"
+        }
+      }
+    },
+    "left_breast": {
+      "partType": "breast",
+      "preferId": "anatomy:human_breast_d_cup",
+      "properties": {
+        "descriptors:size_specific": {
+          "size": "D-cup"
+        },
+        "descriptors:weight_feel": {
+          "weight": "meaty"
+        },
+        "descriptors:firmness": {
+          "firmness": "firm"
+        }
+      }
+    },
+    "right_breast": {
+      "partType": "breast",
+      "preferId": "anatomy:human_breast_d_cup",
+      "properties": {
+        "descriptors:size_specific": {
+          "size": "D-cup"
+        },
+        "descriptors:weight_feel": {
+          "weight": "meaty"
+        },
+        "descriptors:firmness": {
+          "firmness": "firm"
+        }
+      }
+    }
+  }
+}

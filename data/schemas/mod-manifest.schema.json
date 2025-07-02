@@ -108,6 +108,15 @@
         },
         "worlds": {
           "$ref": "#/definitions/contentFileList"
+        },
+        "blueprints": {
+          "$ref": "#/definitions/contentFileList"
+        },
+        "recipes": {
+          "$ref": "#/definitions/contentFileList"
+        },
+        "anatomyFormatting": {
+          "$ref": "#/definitions/contentFileList"
         }
       },
       "additionalProperties": false

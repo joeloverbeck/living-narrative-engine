@@ -1,6 +1,7 @@
 // src/interfaces/IScopeEngine.js
 
 /** @typedef {import('../actions/tracing/traceContext.js').TraceContext} TraceContext */
+/** @typedef {import('../types/runtimeContext.js').RuntimeContext} RuntimeContext */
 
 /**
  * @file IScopeEngine.js
@@ -17,7 +18,7 @@ export class IScopeEngine {
    *
    * @param {object} ast - The parsed AST
    * @param {object} actorEntity - The acting entity instance
-   * @param {object} runtimeCtx - Runtime context with services
+   * @param {RuntimeContext} runtimeCtx - Runtime context with services
    * @param {TraceContext} [trace] - Optional trace context for logging
    * @returns {Set<string>} Set of entity IDs
    * @abstract

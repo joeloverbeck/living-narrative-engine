@@ -1,0 +1,22 @@
+{
+  "$schema": "http://example.com/schemas/entity-definition.schema.json",
+  "id": "anatomy:human_hair",
+  "description": "Generic human hair",
+  "components": {
+    "anatomy:part": {
+      "subType": "hair"
+    },
+    "descriptors:color_basic": {
+      "color": "brown"
+    },
+    "descriptors:length_hair": {
+      "length": "medium"
+    },
+    "descriptors:hair_style": {
+      "style": "straight"
+    },
+    "core:name": {
+      "text": "hair"
+    }
+  }
+}

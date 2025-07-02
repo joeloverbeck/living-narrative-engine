@@ -66,6 +66,7 @@ describe('registerInfrastructure', () => {
     // or the test could clear specific registrations before calling registerInfrastructure.
     // For now, we'll leave them as they demonstrate the "overwrite" but don't break most tests.
     container.register(tokens.EventBus, () => mockEventBus); // Will be overwritten
+    container.register(tokens.IEventBus, () => mockEventBus); // Will be overwritten
     container.register(
       tokens.ISpatialIndexManager,
       () => mockSpatialIndexManager
@@ -112,6 +113,7 @@ describe('registerInfrastructure', () => {
     const eventBus = container.resolve(tokens.EventBus);
     expect(eventBus).toBeDefined();
     // expect(eventBus).toBeInstanceOf(ActualEventBus); // If you import the actual EventBus
+    expect(container.resolve(tokens.IEventBus)).toBe(eventBus);
   });
 
   test('should register ISpatialIndexManager correctly', () => {

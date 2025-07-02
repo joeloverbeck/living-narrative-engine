@@ -14,10 +14,12 @@ import {
   ENTITY_SPOKE_ID,
 } from '../../../../src/constants/eventIds.js';
 import TurnDirective from '../../../../src/turns/constants/turnDirectives.js';
-import TurnDirectiveStrategyResolver from '../../../../src/turns/strategies/turnDirectiveStrategyResolver.js';
+import TurnDirectiveStrategyResolver, {
+  DEFAULT_STRATEGY_MAP,
+} from '../../../../src/turns/strategies/turnDirectiveStrategyResolver.js';
 import {
+  ServiceLookupHelper,
   ServiceLookupError,
-  getServiceFromContext,
 } from '../../../../src/turns/states/helpers/getServiceFromContext.js';
 
 class MockActor {
@@ -39,6 +41,7 @@ const mockLogger = {
 
 let mockHandler;
 let processingState;
+let lookupHelper;
 let consoleErrorSpy;
 let consoleWarnSpy;
 let mockCommandProcessor;
@@ -89,15 +92,17 @@ beforeEach(() => {
   };
 
   // Construct a fresh ProcessingCommandState with all required parameters
+  const resolver = new TurnDirectiveStrategyResolver(DEFAULT_STRATEGY_MAP);
   processingState = new ProcessingCommandState({
     handler: mockHandler,
     commandProcessor: mockCommandProcessor,
     commandOutcomeInterpreter: mockCommandOutcomeInterpreter,
     commandString: defaultCommandString,
     turnAction: mockTurnAction,
-    directiveResolver: TurnDirectiveStrategyResolver.default,
+    directiveResolver: resolver,
   });
   mockHandler._currentState = processingState;
+  lookupHelper = new ServiceLookupHelper(processingState);
 
   consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
   consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
@@ -211,13 +216,14 @@ describe('ProcessingCommandState.enterState – error branches', () => {
 
     // Ensure mockCommandOutcomeInterpreter, defaultTurnAction, and TurnDirectiveStrategyResolver
     // are available from the outer beforeEach scope.
+    const resolver = new TurnDirectiveStrategyResolver(DEFAULT_STRATEGY_MAP);
     const customState = new ProcessingCommandState({
       handler: mockHandler,
       commandProcessor: mockCommandProcessor,
       commandOutcomeInterpreter: mockCommandOutcomeInterpreter,
       commandString: 'cmdStr',
       turnAction: null,
-      directiveResolver: TurnDirectiveStrategyResolver.default,
+      directiveResolver: resolver,
     });
     mockHandler._currentState = customState;
     customState.finishProcessing();
@@ -270,13 +276,14 @@ describe('ProcessingCommandState.enterState – error branches', () => {
     const spyEndTurn = mockTurnContext.endTurn;
 
     // Create a local state specifically for this test, with turnAction: null
+    const resolver = new TurnDirectiveStrategyResolver(DEFAULT_STRATEGY_MAP);
     const stateForNullActionTest = new ProcessingCommandState({
       handler: mockHandler,
       commandProcessor: mockCommandProcessor,
       commandOutcomeInterpreter: mockCommandOutcomeInterpreter,
       commandString: defaultCommandString, // from beforeEach
       turnAction: null, // Crucial for this test's logic
-      directiveResolver: TurnDirectiveStrategyResolver.default, // from beforeEach, corrected
+      directiveResolver: resolver, // from beforeEach, corrected
     });
     // mockHandler._currentState = stateForNullActionTest; // Set if handler needs it for context
     stateForNullActionTest.finishProcessing(); // Ensure it starts clean if it matters
@@ -325,13 +332,14 @@ describe('ProcessingCommandState.enterState – error branches', () => {
     const spyEndTurn = mockTurnContext.endTurn;
 
     // Create a local state specifically for this test
+    const resolver = new TurnDirectiveStrategyResolver(DEFAULT_STRATEGY_MAP);
     const stateForInvalidActionTest = new ProcessingCommandState({
       handler: mockHandler,
       commandProcessor: mockCommandProcessor,
       commandOutcomeInterpreter: mockCommandOutcomeInterpreter,
       commandString: badAction.commandString, // Use command string from badAction
       turnAction: null, // Crucial: ensures getChosenAction is called
-      directiveResolver: TurnDirectiveStrategyResolver.default,
+      directiveResolver: resolver,
     });
     stateForInvalidActionTest.finishProcessing(); // Start clean
 
@@ -393,11 +401,12 @@ describe('ProcessingCommandState.enterState – error branches', () => {
     mockHandler.getTurnContext.mockReturnValue(mockTurnContext);
 
     // Mock the resolver so it returns a no-op strategy, preventing further execution
-    jest
-      .spyOn(TurnDirectiveStrategyResolver, 'resolveStrategy')
-      .mockReturnValue({
-        execute: jest.fn().mockResolvedValue(undefined),
-      });
+    const resolverSpeech = new TurnDirectiveStrategyResolver(
+      DEFAULT_STRATEGY_MAP
+    );
+    jest.spyOn(resolverSpeech, 'resolveStrategy').mockReturnValue({
+      execute: jest.fn().mockResolvedValue(undefined),
+    });
 
     // Re-create state so it picks up the overridden resolver
     const stateWithSpeech = new ProcessingCommandState({
@@ -406,7 +415,7 @@ describe('ProcessingCommandState.enterState – error branches', () => {
       commandOutcomeInterpreter: mockCommandOutcomeInterpreter,
       commandString: 'speakCmd',
       turnAction: turnActionWithSpeech,
-      directiveResolver: TurnDirectiveStrategyResolver,
+      directiveResolver: resolverSpeech,
     });
     stateWithSpeech.finishProcessing();
     mockHandler._currentState = stateWithSpeech;
@@ -462,11 +471,12 @@ describe('ProcessingCommandState.enterState – error branches', () => {
     });
     mockHandler.getTurnContext.mockReturnValue(mockTurnContext);
 
-    jest
-      .spyOn(TurnDirectiveStrategyResolver, 'resolveStrategy')
-      .mockReturnValue({
-        execute: jest.fn().mockResolvedValue(undefined),
-      });
+    const notesResolver = new TurnDirectiveStrategyResolver(
+      DEFAULT_STRATEGY_MAP
+    );
+    jest.spyOn(notesResolver, 'resolveStrategy').mockReturnValue({
+      execute: jest.fn().mockResolvedValue(undefined),
+    });
 
     const stateWithNotes = new ProcessingCommandState({
       handler: mockHandler,
@@ -474,7 +484,7 @@ describe('ProcessingCommandState.enterState – error branches', () => {
       commandOutcomeInterpreter: mockCommandOutcomeInterpreter,
       commandString: 'speakCmd',
       turnAction: turnActionWithSpeech,
-      directiveResolver: TurnDirectiveStrategyResolver,
+      directiveResolver: notesResolver,
     });
     stateWithNotes.finishProcessing();
     mockHandler._currentState = stateWithNotes;
@@ -496,8 +506,7 @@ describe('ProcessingCommandState._getServiceFromContext – error branches', () 
   test('should throw ServiceLookupError and clear _isProcessing when turnCtx is null', async () => {
     processingState.startProcessing();
     await expect(
-      getServiceFromContext(
-        processingState,
+      lookupHelper.getServiceFromContext(
         null,
         'getCommandProcessor',
         'ICommandProcessor',
@@ -522,8 +531,7 @@ describe('ProcessingCommandState._getServiceFromContext – error branches', () 
     const dummyCtx = {};
 
     await expect(
-      getServiceFromContext(
-        processingState,
+      lookupHelper.getServiceFromContext(
         dummyCtx,
         'getCommandProcessor',
         'ICommandProcessor',
@@ -554,8 +562,7 @@ describe('ProcessingCommandState._getServiceFromContext – error branches', () 
     mockHandler.getTurnContext.mockReturnValue(mockTurnContext);
 
     await expect(
-      getServiceFromContext(
-        processingState,
+      lookupHelper.getServiceFromContext(
         mockTurnContext,
         'getCommandProcessor',
         'ICommandProcessor',
@@ -591,8 +598,7 @@ describe('ProcessingCommandState._getServiceFromContext – error branches', () 
     mockHandler.getTurnContext.mockReturnValue(mockTurnContext);
 
     await expect(
-      getServiceFromContext(
-        processingState,
+      lookupHelper.getServiceFromContext(
         mockTurnContext,
         'getCommandProcessor',
         'ICommandProcessor',

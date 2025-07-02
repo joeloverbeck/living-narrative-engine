@@ -4,6 +4,7 @@
  */
 
 import { LRUCache } from 'lru-cache';
+import createLruCache from '../../../src/scopeDsl/cache/lruCache.js';
 import ScopeCache from '../../../src/scopeDsl/cache.js';
 import { TURN_STARTED_ID } from '../../../src/constants/eventIds.js';
 
@@ -165,6 +166,44 @@ describe('ScopeCache', () => {
     test('logs successful subscription', () => {
       expect(mockLogger.debugCalls).toContain(
         'ScopeCache: Successfully subscribed to TURN_STARTED_ID events'
+      );
+    });
+
+    test('logs failed subscription when subscribe returns null', () => {
+      const dispatcher = new MockSafeEventDispatcher();
+      dispatcher.subscribe = jest.fn().mockReturnValue(null);
+
+      const failingCache = new ScopeCache({
+        cache: mockCache,
+        scopeEngine: mockScopeEngine,
+        safeEventDispatcher: dispatcher,
+        logger: mockLogger,
+      });
+
+      expect(dispatcher.subscribe).toHaveBeenCalled();
+      expect(failingCache.unsubscribeFn).toBeNull();
+      expect(mockLogger.errorCalls).toContain(
+        'ScopeCache: Failed to subscribe to TURN_STARTED_ID events'
+      );
+    });
+
+    test('handles error thrown during subscription', () => {
+      const dispatcher = new MockSafeEventDispatcher();
+      dispatcher.subscribe = jest.fn(() => {
+        throw new Error('boom');
+      });
+
+      const errorCache = new ScopeCache({
+        cache: mockCache,
+        scopeEngine: mockScopeEngine,
+        safeEventDispatcher: dispatcher,
+        logger: mockLogger,
+      });
+
+      expect(dispatcher.subscribe).toHaveBeenCalled();
+      expect(errorCache.unsubscribeFn).toBeNull();
+      expect(mockLogger.errorCalls).toContain(
+        'ScopeCache: Failed to subscribe to TURN_STARTED_ID events'
       );
     });
   });
@@ -330,6 +369,24 @@ describe('ScopeCache', () => {
       expect(stats).toEqual({
         size: 0,
         maxSize: 128,
+        subscribed: true,
+      });
+    });
+
+    test('returns maxSize for custom LRU cache implementation', () => {
+      const lruCache = createLruCache(64);
+      const scopeCache = new ScopeCache({
+        cache: lruCache,
+        scopeEngine: mockScopeEngine,
+        safeEventDispatcher: mockSafeEventDispatcher,
+        logger: mockLogger,
+      });
+
+      const stats = scopeCache.getStats();
+
+      expect(stats).toEqual({
+        size: 0,
+        maxSize: 64,
         subscribed: true,
       });
     });

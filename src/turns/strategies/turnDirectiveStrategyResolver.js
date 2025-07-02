@@ -7,99 +7,100 @@
 //  (WAIT_FOR_EVENT → WaitForTurnEndEventStrategy) when the directive is null,
 //  undefined, or unrecognised.
 //
-//  The resolver keeps **singletons** of each strategy because all concrete
-//  strategy classes in this code‑base are stateless.  Creating them once avoids
-//  needless GC churn while still playing nicely with unit tests.
-//
-//  Usage:
-//      import TurnDirectiveStrategyResolver from './turnDirectiveStrategyResolver.js';
-//      const strategy = TurnDirectiveStrategyResolver.resolveStrategy(directive);
-//      await strategy.execute(context, actor, directive, cmdProcResult);
+//  Strategies are injected via the constructor allowing callers to substitute
+//  alternative implementations. Instances are cached lazily as they are first
+//  requested. A `clearCache` method is provided for test isolation.
 //
 //  NOTE: This project is plain JavaScript – we rely on JSDoc for intellisense.
 // ────────────────────────────────────────────────────────────────────────────
 
 /** @typedef {import('../handlers/actorTurnHandler.js').default} ActorTurnHandler */
 /** @typedef {import('../../entities/entity.js').default}        Entity */
-/** @typedef {import('../constants/turnDirectives.js').default}    TurnDirective */
+/** @typedef {import('../constants/turnDirectives.js').default}   TurnDirectiveEnum */
 /** @typedef {import('../interfaces/ITurnDirectiveStrategy.js').ITurnDirectiveStrategy} ITurnDirectiveStrategy */
 
-// Enum & concrete strategy imports -------------------------------------------------------
 import TurnDirective from '../constants/turnDirectives.js';
 import RepromptStrategy from './repromptStrategy.js';
 import EndTurnSuccessStrategy from './endTurnSuccessStrategy.js';
 import EndTurnFailureStrategy from './endTurnFailureStrategy.js';
 import WaitForTurnEndEventStrategy from './waitForTurnEndEventStrategy.js';
+import { ITurnDirectiveResolver } from '../interfaces/ITurnDirectiveResolver.js';
 
-// Helper: lazily instantiate strategies exactly once -------------------------------------
-/** @type {Map<string, ITurnDirectiveStrategy>} */
-const STRATEGY_SINGLETONS = new Map();
+export const DEFAULT_STRATEGY_MAP = {
+  [TurnDirective.RE_PROMPT]: RepromptStrategy,
+  [TurnDirective.END_TURN_SUCCESS]: EndTurnSuccessStrategy,
+  [TurnDirective.END_TURN_FAILURE]: EndTurnFailureStrategy,
+  [TurnDirective.WAIT_FOR_EVENT]: WaitForTurnEndEventStrategy,
+};
 
 /**
- * Retrieves a singleton instance for the provided strategy class, creating it
- * on first use.
- *
- * @param {Constructor<ITurnDirectiveStrategy>} strategyClass - The class to
- *        instantiate.
- * @returns {ITurnDirectiveStrategy} The cached instance for the class.
+ * @description Resolver that maps turn directives to concrete strategy instances.
+ * @implements {ITurnDirectiveResolver}
  */
-function getOrCreate(strategyClass) {
-  const key = strategyClass.name;
-  if (!STRATEGY_SINGLETONS.has(key)) {
-    STRATEGY_SINGLETONS.set(key, new strategyClass());
-  }
-  return STRATEGY_SINGLETONS.get(key);
-}
-
-// The actual resolver --------------------------------------------------------------------
-export default class TurnDirectiveStrategyResolver {
-  // We expose a *static* API because the resolver itself has no instance‑level state.
+export default class TurnDirectiveStrategyResolver extends ITurnDirectiveResolver {
+  /** @type {Map<string, Function|ITurnDirectiveStrategy>} */
+  #strategyMap;
+  /** @type {Map<string, ITurnDirectiveStrategy>} */
+  #instances = new Map();
 
   /**
-   * Returns the appropriate ITurnDirectiveStrategy instance for the supplied directive.
-   * If the directive is null / undefined / unknown it falls back to
-   * WaitForTurnEndEventStrategy as a safe default.
-   *
-   * @param {TurnDirective|string|null|undefined} directive – The directive to resolve.
-   * @returns {ITurnDirectiveStrategy} – Concrete strategy ready to execute.
+   * @param {Record<string, Function|ITurnDirectiveStrategy>} strategyMap
+   *        Map of directives to strategy classes, factory functions or instances.
    */
-  static resolveStrategy(directive) {
-    switch (directive) {
-      case TurnDirective.RE_PROMPT:
-        return getOrCreate(RepromptStrategy);
-
-      case TurnDirective.END_TURN_SUCCESS:
-        return getOrCreate(EndTurnSuccessStrategy);
-
-      case TurnDirective.END_TURN_FAILURE:
-        return getOrCreate(EndTurnFailureStrategy);
-
-      case TurnDirective.WAIT_FOR_EVENT:
-        return getOrCreate(WaitForTurnEndEventStrategy);
-
-      default: {
-        // Unknown, null, or undefined directive – choose a safe default.
-        // Design choice: We treat it as WAIT_FOR_EVENT because that mirrors
-        // the legacy behaviour inside the ActorTurnHandler.
-
-        /* istanbul ignore next */
-        if (
-          typeof globalThis !== 'undefined' &&
-          globalThis.process &&
-          globalThis.process.env.NODE_ENV !== 'production'
-        ) {
-          // Helpful debug log when running tests or dev builds.
-          // We **do not** throw because production should keep rolling.
-          // The caller retains ultimate responsibility for safe execution.
-          //  – If that is undesirable, swap the console.warn() for an Error.
-          // eslint-disable-next-line no-console
-          console.warn(
-            `${this.name}: Unrecognised TurnDirective (\u201c${directive}\u201d). Falling back to WAIT_FOR_EVENT.`
-          );
-        }
-
-        return getOrCreate(WaitForTurnEndEventStrategy);
-      }
+  constructor(strategyMap) {
+    super();
+    if (!strategyMap) {
+      throw new Error('TurnDirectiveStrategyResolver: strategyMap is required');
     }
+    this.#strategyMap = new Map(Object.entries(strategyMap));
+  }
+
+  /**
+   * @private
+   * @param {string} directive
+   * @returns {ITurnDirectiveStrategy}
+   */
+  #getInstance(directive) {
+    if (!this.#instances.has(directive)) {
+      const creator = this.#strategyMap.get(directive);
+      let instance = creator;
+      if (typeof creator === 'function') {
+        try {
+          instance = new creator();
+        } catch (e) {
+          instance = creator();
+        }
+      }
+      this.#instances.set(directive, instance);
+    }
+    return this.#instances.get(directive);
+  }
+
+  /**
+   * @override
+   * @param {TurnDirectiveEnum|string|null|undefined} directive - Directive requesting a strategy.
+   * @returns {ITurnDirectiveStrategy} The resolved strategy implementation.
+   */
+  resolveStrategy(directive) {
+    const key = this.#strategyMap.has(directive)
+      ? directive
+      : TurnDirective.WAIT_FOR_EVENT;
+
+    if (key !== directive && process.env.NODE_ENV !== 'production') {
+      // eslint-disable-next-line no-console
+      console.warn(
+        `${this.constructor.name}: Unrecognised TurnDirective (` +
+          `"${directive}"). Falling back to WAIT_FOR_EVENT.`
+      );
+    }
+
+    return this.#getInstance(key);
+  }
+
+  /**
+   * Clears cached strategy instances. Useful for tests.
+   */
+  clearCache() {
+    this.#instances.clear();
   }
 }

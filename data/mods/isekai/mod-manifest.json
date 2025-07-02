@@ -6,6 +6,12 @@
   "description": "Contains the definitions of a demo scenario based on a fantasy setting.",
   "author": "joeloverbeck",
   "gameVersion": ">=0.0.1",
+  "dependencies": [
+    {
+      "id": "anatomy",
+      "version": "^1.0.0"
+    }
+  ],
   "content": {
     "actions": [],
     "components": [],

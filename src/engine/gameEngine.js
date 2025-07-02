@@ -3,12 +3,12 @@
 import { tokens } from '../dependencyInjection/tokens.js';
 import {
   ENGINE_INITIALIZING_UI,
-  ENGINE_OPERATION_FAILED_UI,
   ENGINE_STOPPED_UI,
   REQUEST_SHOW_SAVE_GAME_UI,
   REQUEST_SHOW_LOAD_GAME_UI,
   CANNOT_SAVE_GAME_INFO,
 } from '../constants/eventIds.js';
+import { processOperationFailure } from '../utils/engineErrorUtils.js';
 import EngineState from './engineState.js';
 import GameSessionManager from './gameSessionManager.js';
 import PersistenceCoordinator from './persistenceCoordinator.js';
@@ -114,7 +114,7 @@ class GameEngine {
             safeEventDispatcher: this.#safeEventDispatcher,
             engineState: this.#engineState,
             stopFn: this.stop.bind(this),
-            resetCoreGameStateFn: this._resetCoreGameState.bind(this),
+            resetCoreGameStateFn: this.#resetCoreGameState.bind(this),
             startEngineFn: this.#startEngine.bind(this),
           }));
 
@@ -132,11 +132,11 @@ class GameEngine {
             safeEventDispatcher: this.#safeEventDispatcher,
             sessionManager: this.#sessionManager,
             engineState: this.#engineState,
-            handleLoadFailure: this._handleLoadFailure.bind(this),
+            handleLoadFailure: this.#handleLoadFailure.bind(this),
           }));
   }
 
-  _resetCoreGameState() {
+  #resetCoreGameState() {
     if (this.#entityManager) this.#entityManager.clearAll();
     else
       this.#logger.warn(
@@ -175,7 +175,7 @@ class GameEngine {
     this.#engineState.reset();
   }
 
-  async _executeInitializationSequence(worldName) {
+  async #executeInitializationSequence(worldName) {
     this.#logger.debug(
       'GameEngine._executeInitializationSequence: Dispatching UI event for initialization start.'
     );
@@ -204,69 +204,35 @@ class GameEngine {
   }
 
   /**
-   * Resets engine state and dispatches a failure UI event.
-   *
-   * @private
-   * @param {string} errorMessage - Failure message to display.
-   * @param {string} title - Title for the failure UI event.
-   * @returns {Promise<void>} Resolves when completed.
-   */
-  async _dispatchFailureAndReset(errorMessage, title) {
-    this.#logger.debug(
-      'GameEngine._dispatchFailureAndReset: Dispatching UI event for operation failed.'
-    );
-    if (this.#safeEventDispatcher) {
-      await this.#safeEventDispatcher.dispatch(ENGINE_OPERATION_FAILED_UI, {
-        errorMessage,
-        errorTitle: title,
-      });
-    } else {
-      this.#logger.error(
-        'GameEngine._dispatchFailureAndReset: ISafeEventDispatcher not available, cannot dispatch UI failure event.'
-      );
-    }
-
-    this.#resetEngineState();
-  }
-
-  /**
-   * Logs a failure, dispatches UI, and optionally returns a standardized result.
-   *
    * @private
    * @param {string} contextMessage - Context for the log entry.
    * @param {unknown} error - Error or message to process.
    * @param {string} title - Title for the failure UI event.
    * @param {string} userPrefix - Prefix for the user-facing error message.
    * @param {boolean} [returnResult] - Whether to return a failure object.
-   * @returns {Promise<void | {success: false, error: string, data: null}>} Resolves when complete or returns the failure result.
+   * @returns {Promise<void | {success: false, error: string, data: null}>}
    */
-  async _processOperationFailure(
+  async #processOperationFailure(
     contextMessage,
     error,
     title,
     userPrefix,
     returnResult = false
   ) {
-    const normalizedError =
-      error instanceof Error ? error : new Error(String(error));
-
-    this.#logger.error(
-      `GameEngine.${contextMessage}: ${normalizedError.message}`,
-      normalizedError
+    return processOperationFailure(
+      this.#logger,
+      this.#safeEventDispatcher,
+      contextMessage,
+      error,
+      title,
+      userPrefix,
+      this.#resetEngineState.bind(this),
+      returnResult
     );
-
-    await this._dispatchFailureAndReset(
-      `${userPrefix}: ${normalizedError.message}`,
-      title
-    );
-
-    if (returnResult) {
-      return { success: false, error: normalizedError.message, data: null };
-    }
   }
 
-  async _handleNewGameFailure(error, worldName) {
-    await this._processOperationFailure(
+  async #handleNewGameFailure(error, worldName) {
+    await this.#processOperationFailure(
       `_handleNewGameFailure: Handling new game failure for world "${worldName}"`,
       error,
       'Initialization Error',
@@ -281,7 +247,7 @@ class GameEngine {
    * @param {string} worldName - Name of the world to validate.
    * @returns {void}
    */
-  _validateWorldName(worldName) {
+  #validateWorldName(worldName) {
     assertNonBlankString(
       worldName,
       'worldName',
@@ -297,10 +263,10 @@ class GameEngine {
    * @param {string} worldName - Name of the world being started.
    * @returns {Promise<InitializationResult>} Result of initialization.
    */
-  async _initializeNewGame(worldName) {
+  async #initializeNewGame(worldName) {
     await this.#sessionManager.prepareForNewGameSession(worldName);
-    this._resetCoreGameState();
-    return this._executeInitializationSequence(worldName);
+    this.#resetCoreGameState();
+    return this.#executeInitializationSequence(worldName);
   }
 
   /**
@@ -310,7 +276,7 @@ class GameEngine {
    * @param {string} worldName - Name of the world being started.
    * @returns {Promise<void>} Resolves when finalized.
    */
-  async _finalizeInitializationSuccess(worldName) {
+  async #finalizeInitializationSuccess(worldName) {
     await this.#sessionManager.finalizeNewGameSuccess(worldName);
   }
 
@@ -323,7 +289,7 @@ class GameEngine {
    * @param {string} worldName - Name of the world being started.
    * @returns {Promise<never>} Always throws the processed error.
    */
-  async _handleInitializationError(error, initError, worldName) {
+  async #handleInitializationError(error, initError, worldName) {
     const caughtError =
       error instanceof Error ? error : new Error(String(error));
     this.#logger.error(
@@ -331,23 +297,23 @@ class GameEngine {
       caughtError
     );
     if (caughtError !== initError) {
-      await this._handleNewGameFailure(caughtError, worldName);
+      await this.#handleNewGameFailure(caughtError, worldName);
     }
     throw caughtError;
   }
 
   async startNewGame(worldName) {
-    this._validateWorldName(worldName);
+    this.#validateWorldName(worldName);
     this.#logger.debug(
       `GameEngine: startNewGame called for world "${worldName}".`
     );
     let initError = null;
 
     try {
-      const initResult = await this._initializeNewGame(worldName);
+      const initResult = await this.#initializeNewGame(worldName);
 
       if (initResult.success) {
-        await this._finalizeInitializationSuccess(worldName);
+        await this.#finalizeInitializationSuccess(worldName);
       } else {
         initError =
           initResult.error ||
@@ -355,11 +321,11 @@ class GameEngine {
         this.#logger.warn(
           `GameEngine: InitializationService reported failure for "${worldName}".`
         );
-        await this._handleNewGameFailure(initError, worldName);
+        await this.#handleNewGameFailure(initError, worldName);
         throw initError;
       }
     } catch (error) {
-      await this._handleInitializationError(error, initError, worldName);
+      await this.#handleInitializationError(error, initError, worldName);
     }
   }
 
@@ -405,8 +371,8 @@ class GameEngine {
     );
   }
 
-  async _handleLoadFailure(errorInfo, saveIdentifier) {
-    return this._processOperationFailure(
+  async #handleLoadFailure(errorInfo, saveIdentifier) {
+    return this.#processOperationFailure(
       `_handleLoadFailure: Handling game load failure for identifier "${saveIdentifier}"`,
       errorInfo,
       'Load Failed',
@@ -437,7 +403,7 @@ class GameEngine {
    * @returns {IGamePersistenceService} The persistence service.
    * @throws {Error} When the service is missing.
    */
-  _ensurePersistenceService() {
+  #ensurePersistenceService() {
     if (!this.#gamePersistenceService) {
       throw new Error('GamePersistenceService is unavailable.');
     }
@@ -452,17 +418,25 @@ class GameEngine {
    * @param {string} unavailableMessage - Error message to log when service is missing.
    * @returns {IGamePersistenceService | null} The persistence service or `null`.
    */
-  _ensurePersistenceServiceAvailable(unavailableMessage) {
+  #ensurePersistenceServiceAvailable(unavailableMessage) {
     try {
-      return this._ensurePersistenceService();
+      return this.#ensurePersistenceService();
     } catch {
       this.#logger.error(unavailableMessage);
       return null;
     }
   }
 
-  showSaveGameUI() {
-    const persistenceService = this._ensurePersistenceServiceAvailable(
+  /**
+   * Requests that the UI present the Save Game screen.
+   *
+   * @description Dispatches either {@link REQUEST_SHOW_SAVE_GAME_UI} or
+   * {@link CANNOT_SAVE_GAME_INFO} based on the persistence service state.
+   * @async
+   * @returns {Promise<void>} Resolves when dispatching completes.
+   */
+  async showSaveGameUI() {
+    const persistenceService = this.#ensurePersistenceServiceAvailable(
       'GameEngine.showSaveGameUI: GamePersistenceService is unavailable. Cannot show Save Game UI.'
     );
     if (!persistenceService) {
@@ -473,18 +447,34 @@ class GameEngine {
       this.#logger.debug(
         'GameEngine.showSaveGameUI: Dispatching request to show Save Game UI.'
       );
-      this.#safeEventDispatcher.dispatch(REQUEST_SHOW_SAVE_GAME_UI, {});
+      const success = await this.#safeEventDispatcher.dispatch(
+        REQUEST_SHOW_SAVE_GAME_UI,
+        {}
+      );
+      if (!success) {
+        this.#logger.warn(
+          'GameEngine.showSaveGameUI: SafeEventDispatcher reported failure when dispatching Save Game UI request.'
+        );
+      }
     } else {
       this.#logger.warn(
         'GameEngine.showSaveGameUI: Saving is not currently allowed.'
       );
-      this.#safeEventDispatcher.dispatch(CANNOT_SAVE_GAME_INFO);
+      await this.#safeEventDispatcher.dispatch(CANNOT_SAVE_GAME_INFO);
     }
   }
 
-  showLoadGameUI() {
+  /**
+   * Requests that the UI present the Load Game screen.
+   *
+   * @description Dispatches {@link REQUEST_SHOW_LOAD_GAME_UI} when the
+   * persistence service is available.
+   * @async
+   * @returns {Promise<void>} Resolves when dispatching completes.
+   */
+  async showLoadGameUI() {
     if (
-      !this._ensurePersistenceServiceAvailable(
+      !this.#ensurePersistenceServiceAvailable(
         'GameEngine.showLoadGameUI: GamePersistenceService is unavailable. Cannot show Load Game UI.'
       )
     ) {
@@ -493,7 +483,15 @@ class GameEngine {
     this.#logger.debug(
       'GameEngine.showLoadGameUI: Dispatching request to show Load Game UI.'
     );
-    this.#safeEventDispatcher.dispatch(REQUEST_SHOW_LOAD_GAME_UI, {});
+    const success = await this.#safeEventDispatcher.dispatch(
+      REQUEST_SHOW_LOAD_GAME_UI,
+      {}
+    );
+    if (!success) {
+      this.#logger.warn(
+        'GameEngine.showLoadGameUI: SafeEventDispatcher reported failure when dispatching Load Game UI request.'
+      );
+    }
   }
 
   getEngineStatus() {

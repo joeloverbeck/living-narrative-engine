@@ -135,6 +135,31 @@ export class AbstractTurnState extends ITurnState {
   }
 
   /**
+   * Logs state transitions for entering or exiting a state.
+   *
+   * @private
+   * @param {"enter"|"exit"} action - Whether the state is being entered or exited.
+   * @param {string} actorId - Resolved actor identifier for the log.
+   * @param {string} otherState - Name of the previous or next state.
+   * @returns {void}
+   */
+  _logStateTransition(action, actorId, otherState) {
+    const turnCtx = this._getTurnContext();
+    const logger = getLogger(turnCtx, this._handler);
+
+    const isEnter = action === 'enter';
+    const message = isEnter
+      ? `${this.getStateName()}: Entered. Actor: ${actorId}. Previous state: ${otherState}.`
+      : `${this.getStateName()}: Exiting. Actor: ${actorId}. Transitioning to ${otherState}.`;
+
+    if (logger) {
+      logger.debug(message);
+    } else {
+      console.log(`(Fallback log) ${message}`);
+    }
+  }
+
+  /**
    * Ensures the ITurnContext implements required methods.
    *
    * @protected
@@ -177,7 +202,6 @@ export class AbstractTurnState extends ITurnState {
   /** @override */
   async enterState(handler, previousState) {
     const turnCtx = this._getTurnContext();
-    const logger = getLogger(turnCtx, handler);
 
     let actorIdForLog = 'N/A';
     if (turnCtx && typeof turnCtx.getActor === 'function') {
@@ -185,21 +209,13 @@ export class AbstractTurnState extends ITurnState {
       if (actor && typeof actor.id !== 'undefined') actorIdForLog = actor.id;
     }
 
-    if (logger) {
-      logger.debug(
-        `${this.getStateName()}: Entered. Actor: ${actorIdForLog}. Previous state: ${previousState?.getStateName() ?? 'None'}.`
-      );
-    } else {
-      console.log(
-        `(Fallback log) ${this.getStateName()}: Entered. Actor: ${actorIdForLog}. Previous state: ${previousState?.getStateName() ?? 'None'}.`
-      );
-    }
+    const prevName = previousState?.getStateName() ?? 'None';
+    this._logStateTransition('enter', actorIdForLog, prevName);
   }
 
   /** @override */
   async exitState(handler, nextState) {
     const turnCtx = this._getTurnContext();
-    const logger = getLogger(turnCtx, handler);
 
     let actorIdForLog = 'N/A';
     if (turnCtx && typeof turnCtx.getActor === 'function') {
@@ -207,15 +223,8 @@ export class AbstractTurnState extends ITurnState {
       if (actor && typeof actor.id !== 'undefined') actorIdForLog = actor.id;
     }
 
-    if (logger) {
-      logger.debug(
-        `${this.getStateName()}: Exiting. Actor: ${actorIdForLog}. Transitioning to ${nextState?.getStateName() ?? 'None'}.`
-      );
-    } else {
-      console.log(
-        `(Fallback log) ${this.getStateName()}: Exiting. Actor: ${actorIdForLog}. Transitioning to ${nextState?.getStateName() ?? 'None'}.`
-      );
-    }
+    const nextName = nextState?.getStateName() ?? 'None';
+    this._logStateTransition('exit', actorIdForLog, nextName);
   }
 
   /** @override */
@@ -249,7 +258,7 @@ export class AbstractTurnState extends ITurnState {
   }
 
   /** @override */
-  async processCommandResult(handler, actor, cmdProcResult, commandString) {
+  async processCommandResult(handler, actor, commandResult, commandString) {
     const turnCtx = this._getTurnContext(); // Actor should come from turnCtx
     const logger = getLogger(turnCtx, handler);
     const contextActor = turnCtx?.getActor();
@@ -264,7 +273,7 @@ export class AbstractTurnState extends ITurnState {
   }
 
   /** @override */
-  async handleDirective(handler, actor, directive, cmdProcResult) {
+  async handleDirective(handler, actor, directive, commandResult) {
     const turnCtx = this._getTurnContext(); // Actor should come from turnCtx
     const logger = getLogger(turnCtx, handler);
     const contextActor = turnCtx?.getActor();

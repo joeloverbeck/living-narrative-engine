@@ -1,4 +1,4 @@
-// src/services/validatedEventDispatcher.js
+// src/events/validatedEventDispatcher.js
 
 /**
  * @file Defines the ValidatedEventDispatcher service.
@@ -7,7 +7,7 @@
  * as a facade for subscribing and unsubscribing via the EventBus.
  */
 
-/** @typedef {import('./eventBus.js').default} EventBus */
+/** @typedef {import('../interfaces/IEventBus.js').IEventBus} IEventBus */
 /** @typedef {import('./eventBus.js').EventListener} EventListener */ // Added for type hinting
 /** @typedef {import('../data/gameDataRepository.js').GameDataRepository} GameDataRepository */
 /** @typedef {import('../data/gameDataRepository.js').EventDefinition} EventDefinition */
@@ -24,6 +24,7 @@ import { IValidatedEventDispatcher } from '../interfaces/IValidatedEventDispatch
  * Ensures that events are structurally correct before being sent, when possible.
  */
 class ValidatedEventDispatcher extends IValidatedEventDispatcher {
+  /** @type {IEventBus} */
   #eventBus;
   #gameDataRepository;
   #schemaValidator;
@@ -33,7 +34,7 @@ class ValidatedEventDispatcher extends IValidatedEventDispatcher {
    * Creates an instance of ValidatedEventDispatcher.
    *
    * @param {object} dependencies
-   * @param {EventBus} dependencies.eventBus - The main event bus for dispatching and subscriptions.
+   * @param {IEventBus} dependencies.eventBus - The main event bus for dispatching and subscriptions.
    * @param {GameDataRepository} dependencies.gameDataRepository - Repository to access event definitions.
    * @param {ISchemaValidator} dependencies.schemaValidator - Service to validate payloads against JSON schemas.
    * @param {ILogger} dependencies.logger - Service for logging messages.
@@ -67,6 +68,140 @@ class ValidatedEventDispatcher extends IValidatedEventDispatcher {
   }
 
   /**
+   * Validates the payload for an event if a schema is available.
+   *
+   * @param {string} eventName - Event identifier.
+   * @param {object} payload - Event payload.
+   * @param {boolean} allowSchemaNotFound - If true, suppress warnings when schema is missing.
+   * @returns {{ shouldDispatch: boolean, validationAttempted: boolean, validationPassed: boolean }}
+   */
+  #validatePayload(eventName, payload, allowSchemaNotFound) {
+    let validationAttempted = false;
+
+    try {
+      const eventDefinition =
+        this.#gameDataRepository.getEventDefinition(eventName);
+
+      if (!eventDefinition) {
+        if (!allowSchemaNotFound) {
+          this.#logger.warn(
+            `VED: EventDefinition not found for '${eventName}'. Cannot validate payload. Proceeding with dispatch.`
+          );
+        } else {
+          this.#logger.debug(
+            `VED: EventDefinition not found for '${eventName}'. Skipping validation as allowed by options.`
+          );
+        }
+        return {
+          shouldDispatch: true,
+          validationAttempted,
+          validationPassed: true,
+        };
+      }
+
+      if (!eventDefinition.payloadSchema) {
+        this.#logger.debug(
+          `VED: Event definition '${eventName}' found, but no 'payloadSchema' defined. Skipping validation and proceeding with dispatch.`
+        );
+        return {
+          shouldDispatch: true,
+          validationAttempted,
+          validationPassed: true,
+        };
+      }
+
+      validationAttempted = true;
+      const schemaId = `${eventName}#payload`;
+      if (!this.#schemaValidator.isSchemaLoaded(schemaId)) {
+        if (!allowSchemaNotFound) {
+          this.#logger.warn(
+            `VED: Payload schema '${schemaId}' not found/loaded for event '${eventName}'. Skipping validation and proceeding with dispatch.`
+          );
+        } else {
+          this.#logger.debug(
+            `VED: Payload schema '${schemaId}' not found/loaded for event '${eventName}'. Skipping validation as allowed by options.`
+          );
+        }
+        return {
+          shouldDispatch: true,
+          validationAttempted,
+          validationPassed: true,
+        };
+      }
+
+      this.#logger.debug(
+        `VED: Validating payload for event '${eventName}' against schema '${schemaId}'...`
+      );
+      const validationResult = this.#schemaValidator.validate(
+        schemaId,
+        payload
+      );
+      if (!validationResult.isValid) {
+        const errorDetails =
+          validationResult.errors
+            ?.map((e) => `[${e.instancePath || 'root'}]: ${e.message}`)
+            .join('; ') || 'No details available';
+        this.#logger.error(
+          `VED: Payload validation FAILED for event '${eventName}'. Dispatch SKIPPED. Errors: ${errorDetails}`,
+          {
+            payload,
+            errors: validationResult.errors,
+          }
+        );
+        return {
+          shouldDispatch: false,
+          validationAttempted,
+          validationPassed: false,
+        };
+      }
+
+      this.#logger.debug(
+        `VED: Payload validation SUCCEEDED for event '${eventName}'.`
+      );
+      return {
+        shouldDispatch: true,
+        validationAttempted,
+        validationPassed: true,
+      };
+    } catch (validationProcessError) {
+      this.#logger.error(
+        `VED: Unexpected error during payload validation process for event '${eventName}'. Dispatch will be skipped.`,
+        validationProcessError
+      );
+      return {
+        shouldDispatch: false,
+        validationAttempted: true,
+        validationPassed: false,
+      };
+    }
+  }
+
+  /**
+   * Emits an event through the EventBus and handles errors.
+   *
+   * @param {string} eventName - Name of the event to emit.
+   * @param {object} payload - Event payload.
+   * @returns {Promise<boolean>} Resolves `true` on success, `false` on failure.
+   */
+  async #emitEvent(eventName, payload) {
+    try {
+      this.#logger.debug(
+        `VED: Dispatching event '${eventName}' via EventBus...`,
+        payload
+      );
+      await this.#eventBus.dispatch(eventName, payload);
+      this.#logger.debug(`VED: Event '${eventName}' dispatch successful.`);
+      return true;
+    } catch (dispatchError) {
+      this.#logger.error(
+        `VED: Error occurred during EventBus.dispatch for event '${eventName}':`,
+        dispatchError
+      );
+      return false;
+    }
+  }
+
+  /**
    * Validates the event payload against its definition schema (if available and loaded)
    * and dispatches the event via the EventBus if validation passes or is skipped.
    * Logs detailed information, including warnings if validation is skipped due to
@@ -80,110 +215,23 @@ class ValidatedEventDispatcher extends IValidatedEventDispatcher {
    */
   async dispatch(eventName, payload, options = {}) {
     const { allowSchemaNotFound = false } = options;
-    let shouldDispatch = true;
-    let validationAttempted = false;
-    let validationPassed = true;
-
-    try {
-      const eventDefinition =
-        this.#gameDataRepository.getEventDefinition(eventName);
-
-      if (eventDefinition) {
-        if (eventDefinition.payloadSchema) {
-          validationAttempted = true;
-          const schemaId = `${eventName}#payload`;
-          if (this.#schemaValidator.isSchemaLoaded(schemaId)) {
-            this.#logger.debug(
-              `VED: Validating payload for event '${eventName}' against schema '${schemaId}'...`
-            );
-            const validationResult = this.#schemaValidator.validate(
-              schemaId,
-              payload
-            );
-            if (!validationResult.isValid) {
-              validationPassed = false;
-              const errorDetails =
-                validationResult.errors
-                  ?.map((e) => `[${e.instancePath || 'root'}]: ${e.message}`)
-                  .join('; ') || 'No details available';
-              this.#logger.error(
-                `VED: Payload validation FAILED for event '${eventName}'. Dispatch SKIPPED. Errors: ${errorDetails}`,
-                {
-                  payload,
-                  errors: validationResult.errors,
-                }
-              );
-              shouldDispatch = false;
-            } else {
-              this.#logger.debug(
-                `VED: Payload validation SUCCEEDED for event '${eventName}'.`
-              );
-            }
-          } else {
-            if (!allowSchemaNotFound) {
-              this.#logger.warn(
-                `VED: Payload schema '${schemaId}' not found/loaded for event '${eventName}'. Skipping validation and proceeding with dispatch.`
-              );
-            } else {
-              this.#logger.debug(
-                `VED: Payload schema '${schemaId}' not found/loaded for event '${eventName}'. Skipping validation as allowed by options.`
-              );
-            }
-          }
-        } else {
-          this.#logger.debug(
-            `VED: Event definition '${eventName}' found, but no 'payloadSchema' defined. Skipping validation and proceeding with dispatch.`
-          );
-        }
-      } else {
-        if (!allowSchemaNotFound) {
-          this.#logger.warn(
-            `VED: EventDefinition not found for '${eventName}'. Cannot validate payload. Proceeding with dispatch.`
-          );
-        } else {
-          this.#logger.debug(
-            `VED: EventDefinition not found for '${eventName}'. Skipping validation as allowed by options.`
-          );
-        }
-      }
-    } catch (validationProcessError) {
-      this.#logger.error(
-        `VED: Unexpected error during payload validation process for event '${eventName}'. Dispatch will be skipped.`,
-        validationProcessError
-      );
-      shouldDispatch = false;
-      validationPassed = false;
-    }
+    const { shouldDispatch, validationAttempted, validationPassed } =
+      this.#validatePayload(eventName, payload, allowSchemaNotFound);
 
     if (shouldDispatch) {
-      try {
-        this.#logger.debug(
-          `VED: Dispatching event '${eventName}' via EventBus...`,
-          payload
-        );
-        // Use the internal EventBus instance to dispatch
-        await this.#eventBus.dispatch(eventName, payload);
-        this.#logger.debug(`VED: Event '${eventName}' dispatch successful.`);
-        return true;
-      } catch (dispatchError) {
-        this.#logger.error(
-          `VED: Error occurred during EventBus.dispatch for event '${eventName}':`,
-          dispatchError
-        );
-        return false;
-      }
-    } else {
-      if (validationAttempted && !validationPassed) {
-        this.#logger.debug(
-          `VED: Dispatch skipped for '${eventName}' due to validation failure (see error above).`
-        );
-      } else {
-        this.#logger.debug(
-          `VED: Dispatch explicitly skipped for event '${eventName}'.`
-        );
-      }
-      return false;
+      return this.#emitEvent(eventName, payload);
     }
+
+    if (validationAttempted && !validationPassed) {
+      this.#logger.debug(
+        `VED: Dispatch skipped for '${eventName}' due to validation failure (see error above).`
+      );
+    } else {
+      this.#logger.debug(
+        `VED: Dispatch explicitly skipped for event '${eventName}'.`
+      );
+    }
+    return false;
   }
 
   /**
@@ -193,24 +241,14 @@ class ValidatedEventDispatcher extends IValidatedEventDispatcher {
    *
    * @param {string} eventName - The name of the event to subscribe to.
    * @param {EventListener} listener - The function to call when the event is dispatched.
-   * @returns {() => void} A function that, when called, unsubscribes the listener.
+   * @returns {(() => boolean) | null} An unsubscribe function on success, or `null` on failure.
    */
   subscribe(eventName, listener) {
     this.#logger.debug(
       `VED: Delegating subscription for event "${eventName}" to EventBus.`
     );
     // Delegate subscription to the internal EventBus instance
-    this.#eventBus.subscribe(eventName, listener);
-
-    // --- FIX ---
-    // You MUST return a function that calls unsubscribe, fulfilling the interface contract.
-    return () => {
-      this.#logger.debug(
-        `VED: Executing unsubscribe callback for "${eventName}". Delegating to EventBus.`
-      );
-      this.#eventBus.unsubscribe(eventName, listener);
-    };
-    // --- END FIX ---
+    return this.#eventBus.subscribe(eventName, listener);
   }
 
   /**
@@ -219,14 +257,14 @@ class ValidatedEventDispatcher extends IValidatedEventDispatcher {
    *
    * @param {string} eventName - The name of the event to unsubscribe from.
    * @param {EventListener} listener - The listener function to remove.
-   * @returns {void}
+   * @returns {boolean} `true` if a listener was removed, otherwise `false`.
    */
   unsubscribe(eventName, listener) {
     this.#logger.debug(
       `VED: Delegating unsubscription for event "${eventName}" to EventBus.`
     );
     // Delegate directly to the internal EventBus instance
-    this.#eventBus.unsubscribe(eventName, listener);
+    return this.#eventBus.unsubscribe(eventName, listener);
   }
 }
 

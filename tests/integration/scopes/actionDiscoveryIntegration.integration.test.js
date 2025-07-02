@@ -13,7 +13,9 @@ import {
 } from '@jest/globals';
 import { SimpleEntityManager } from '../../common/entities/index.js';
 import { ActionDiscoveryService } from '../../../src/actions/actionDiscoveryService.js';
-import { formatActionCommand } from '../../../src/actions/actionFormatter.js';
+import { ActionCandidateProcessor } from '../../../src/actions/actionCandidateProcessor.js';
+import ActionCommandFormatter from '../../../src/actions/actionFormatter.js';
+import { getEntityDisplayName } from '../../../src/utils/entityUtils.js';
 import { GameDataRepository } from '../../../src/data/gameDataRepository.js';
 import { SafeEventDispatcher } from '../../../src/events/safeEventDispatcher.js';
 import ScopeRegistry from '../../../src/scopeDsl/scopeRegistry.js';
@@ -31,6 +33,7 @@ import path from 'path';
 import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
 import InMemoryDataRegistry from '../../../src/data/inMemoryDataRegistry.js';
 import { TargetResolutionService } from '../../../src/actions/targetResolutionService.js';
+import DefaultDslParser from '../../../src/scopeDsl/parser/defaultDslParser.js';
 
 // Import actions
 import dismissAction from '../../../data/mods/core/actions/dismiss.action.json';
@@ -188,18 +191,23 @@ describe('Scope Integration Tests', () => {
       logger,
       safeEventDispatcher,
       jsonLogicEvaluationService: jsonLogicEval,
+      dslParser: new DefaultDslParser(),
+    });
+
+    // Create the ActionCandidateProcessor
+    const actionCandidateProcessor = new ActionCandidateProcessor({
+      prerequisiteEvaluationService,
+      targetResolutionService,
+      entityManager,
+      actionCommandFormatter: new ActionCommandFormatter(),
+      safeEventDispatcher,
+      getEntityDisplayNameFn: getEntityDisplayName,
+      logger,
     });
 
     // FIX: Add the new prerequisiteEvaluationService dependency to the constructor
     actionDiscoveryService = new ActionDiscoveryService({
-      gameDataRepository,
       entityManager,
-      prerequisiteEvaluationService, // <-- The fix
-      logger,
-      formatActionCommandFn: formatActionCommand,
-      safeEventDispatcher,
-      targetResolutionService,
-      traceContextFactory: jest.fn(() => ({ addLog: jest.fn(), logs: [] })),
       actionIndex: {
         getCandidateActions: jest
           .fn()
@@ -207,6 +215,9 @@ describe('Scope Integration Tests', () => {
             gameDataRepository.getAllActionDefinitions()
           ),
       },
+      logger,
+      actionCandidateProcessor,
+      traceContextFactory: jest.fn(() => ({ addLog: jest.fn(), logs: [] })),
     });
   });
 

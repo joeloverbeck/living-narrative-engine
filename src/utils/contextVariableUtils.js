@@ -4,7 +4,7 @@ import { getModuleLogger } from './loggerUtils.js';
 import { safeDispatchError } from './safeDispatchErrorUtils.js';
 import { resolveSafeDispatcher } from './dispatcherUtils.js';
 import { isNonBlankString } from './textUtils.js';
-import { safeCall } from './safeExecutionUtils.js';
+import { safeExecute } from './safeExecutionUtils.js';
 import {
   getEvaluationContext,
   ensureEvaluationContext,
@@ -40,7 +40,7 @@ function _validateVariableName(variableName) {
  * @returns {{success: boolean, error?: Error}} Result of the assignment.
  */
 export function setContextValue(context, key, value) {
-  const { success, error } = safeCall(() => {
+  const { success, error } = safeExecute(() => {
     context[key] = value;
   });
   return success ? { success: true } : { success: false, error };
@@ -65,7 +65,7 @@ export function withUpdatedContext(context, key, value) {
     };
   }
 
-  const { success, result, error } = safeCall(() => ({
+  const { success, result, error } = safeExecute(() => ({
     ...context,
     [key]: value,
   }));

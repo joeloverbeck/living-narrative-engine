@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll } from '@jest/globals';
+import { describe, it, expect, beforeAll, jest } from '@jest/globals';
 import fs from 'fs';
 import path from 'path';
 import InMemoryDataRegistry from '../../../src/data/inMemoryDataRegistry.js';
@@ -92,6 +92,8 @@ describe('Integration: Entity Definitions and Instances Loader', () => {
       tokens.IValidatedEventDispatcher,
       createMockValidatedEventDispatcherForIntegration()
     );
+    // Register mock safe event dispatcher
+    container.register(tokens.ISafeEventDispatcher, { dispatch: jest.fn() });
     // Register all loaders and phases
     registerLoaders(container);
     // Register mock data fetcher AFTER loader registration to overwrite
@@ -100,7 +102,7 @@ describe('Integration: Entity Definitions and Instances Loader', () => {
       createMockDataFetcher({ fromDisk: true })
     );
     // Register and load AjvSchemaValidator with schemas
-    const schemaValidator = new AjvSchemaValidator(logger);
+    const schemaValidator = new AjvSchemaValidator({ logger: logger });
     await schemaValidator.addSchema(
       commonSchema,
       'http://example.com/schemas/common.schema.json'
@@ -152,7 +154,7 @@ describe('Integration: Entity Definitions and Instances Loader', () => {
 
     // Verify the returned LoadReport
     expect(result).toEqual({
-      finalModOrder: ['core', 'isekai'],
+      finalModOrder: ['core', 'descriptors', 'anatomy', 'isekai'],
       totals: expect.any(Object),
       incompatibilities: 0,
     });

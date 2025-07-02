@@ -17,20 +17,14 @@ import createFilterResolver from './nodes/filterResolver.js';
 import createUnionResolver from './nodes/unionResolver.js';
 import createArrayIterationResolver from './nodes/arrayIterationResolver.js';
 
+/** @typedef {import('../types/runtimeContext.js').RuntimeContext} RuntimeContext */
+
 /**
  * @typedef {import('../interfaces/IEntityManager.js').IEntityManager} IEntityManager
  * @typedef {import('../interfaces/ISpatialIndexManager.js').ISpatialIndexManager} ISpatialIndexManager
  * @typedef {import('../logic/jsonLogicEvaluationService.js').default} JsonLogicEval
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
  * @typedef {import('../actions/tracing/traceContext.js').TraceContext} TraceContext
- */
-
-/**
- * @typedef {object} RuntimeContext
- * @property {IEntityManager} entityManager
- * @property {ISpatialIndexManager} spatialIndexManager
- * @property {JsonLogicEval} jsonLogicEval
- * @property {ILogger} logger
  */
 
 /**
@@ -52,11 +46,10 @@ import createArrayIterationResolver from './nodes/arrayIterationResolver.js';
  */
 class ScopeEngine extends IScopeEngine {
   constructor() {
-    super(); // Call parent constructor
+    super();
     this.maxDepth = 4;
-    this.dispatcher = null;
-    this.depthGuard = null;
-    this.cycleDetector = null;
+    this.depthGuard = createDepthGuard(this.maxDepth);
+    this.cycleDetector = createCycleDetector();
   }
 
   setMaxDepth(n) {
@@ -67,69 +60,99 @@ class ScopeEngine extends IScopeEngine {
   }
 
   /**
-   * Initialize the engine with resolvers
-   * This method must be called before using resolve()
+   * Creates a provider that returns the current location.
    *
    * @private
+   * @param {RuntimeContext} runtimeCtx - Runtime context with location info.
+   * @returns {{getLocation: function(): {id:string}|null}} Location provider.
    */
-  _ensureInitialized(runtimeCtx) {
-    // Always update the current runtime context
-    this._currentRuntimeCtx = runtimeCtx;
-
-    if (this.dispatcher) return;
-
-    // Create adapters for resolvers to work with runtimeCtx
-    // IMPORTANT: Use arrow function to always get current location from _currentRuntimeCtx
-    const locationProvider = {
-      getLocation: () => this._currentRuntimeCtx?.location,
+  _createLocationProvider(runtimeCtx) {
+    return {
+      getLocation: () => runtimeCtx?.location,
     };
+  }
 
-    const entitiesGateway = {
+  /**
+   * Creates a gateway for entity operations used by resolvers.
+   *
+   * @private
+   * @param {RuntimeContext} runtimeCtx - Runtime context containing entity manager.
+   * @returns {object} Gateway with helper methods for entities.
+   */
+  _createEntitiesGateway(runtimeCtx) {
+    return {
       getEntities: () => {
-        const em = this._currentRuntimeCtx?.entityManager;
+        const em = runtimeCtx?.entityManager;
         return em?.getEntities
           ? em.getEntities()
           : Array.from(em?.entities?.values() || []);
       },
-      getEntitiesWithComponent: (cid) => {
-        return this._currentRuntimeCtx?.entityManager?.getEntitiesWithComponent(
-          cid
-        );
-      },
+      getEntitiesWithComponent: (cid) =>
+        runtimeCtx?.entityManager?.getEntitiesWithComponent(cid),
       hasComponent: (eid, cid) => {
-        const em = this._currentRuntimeCtx?.entityManager;
+        const em = runtimeCtx?.entityManager;
         return em?.hasComponent ? em.hasComponent(eid, cid) : false;
       },
-      getComponentData: (eid, cid) => {
-        return this._currentRuntimeCtx?.entityManager?.getComponentData(
-          eid,
-          cid
-        );
-      },
+      getComponentData: (eid, cid) =>
+        runtimeCtx?.entityManager?.getComponentData(eid, cid),
       getEntityInstance: (eid) => {
-        const em = this._currentRuntimeCtx?.entityManager;
+        const em = runtimeCtx?.entityManager;
         return em?.getEntity ? em.getEntity(eid) : em?.getEntityInstance(eid);
       },
     };
+  }
 
-    const logicEval = {
-      evaluate: (logic, context) => {
-        return this._currentRuntimeCtx?.jsonLogicEval?.evaluate(logic, context);
-      },
+  /**
+   * Creates an adapter for evaluating JSON logic expressions.
+   *
+   * @private
+   * @param {RuntimeContext} runtimeCtx - Runtime context with logic evaluator.
+   * @returns {{evaluate: function(object, object): any}} Logic evaluator.
+   */
+  _createLogicEvaluator(runtimeCtx) {
+    return {
+      evaluate: (logic, context) =>
+        runtimeCtx?.jsonLogicEval?.evaluate(logic, context),
     };
+  }
 
-    // Create resolvers
-    const resolvers = [
+  /**
+   * Constructs the list of node resolvers.
+   *
+   * @private
+   * @param {object} deps - Resolver dependencies.
+   * @param {object} deps.locationProvider - Location provider.
+   * @param {object} deps.entitiesGateway - Entities gateway.
+   * @param {object} deps.logicEval - Logic evaluator.
+   * @returns {Array<object>} Array of resolver objects.
+   */
+  _createResolvers({ locationProvider, entitiesGateway, logicEval }) {
+    return [
       createSourceResolver({ entitiesGateway, locationProvider }),
       createStepResolver({ entitiesGateway }),
       createFilterResolver({ logicEval, entitiesGateway, locationProvider }),
       createUnionResolver(),
       createArrayIterationResolver(),
     ];
+  }
 
-    this.dispatcher = createDispatcher(resolvers);
-    this.depthGuard = createDepthGuard(this.maxDepth);
-    this.cycleDetector = createCycleDetector();
+  /**
+   * Ensures the dispatcher is created and ready for resolution.
+   *
+   * @private
+   * @param {RuntimeContext} runtimeCtx - Runtime context providing dependencies.
+   * @returns {object} Dispatcher used to resolve nodes.
+   */
+  _ensureInitialized(runtimeCtx) {
+    const locationProvider = this._createLocationProvider(runtimeCtx);
+    const entitiesGateway = this._createEntitiesGateway(runtimeCtx);
+    const logicEval = this._createLogicEvaluator(runtimeCtx);
+    const resolvers = this._createResolvers({
+      locationProvider,
+      entitiesGateway,
+      logicEval,
+    });
+    return createDispatcher(resolvers);
   }
 
   /**
@@ -148,7 +171,7 @@ class ScopeEngine extends IScopeEngine {
     trace?.addLog('step', 'Starting scope resolution.', source, { ast });
 
     // Ensure engine is initialized with resolvers
-    this._ensureInitialized(runtimeCtx);
+    const dispatcher = this._ensureInitialized(runtimeCtx);
 
     // Create resolution context for resolvers with wrapped dispatcher
     const ctx = {
@@ -157,14 +180,14 @@ class ScopeEngine extends IScopeEngine {
       trace,
       dispatcher: {
         resolve: (node, innerCtx) =>
-          this._resolveWithDepthAndCycleChecking(node, innerCtx),
+          this._resolveWithDepthAndCycleChecking(node, innerCtx, dispatcher),
       },
       depth: 0,
       cycleDetector: this.cycleDetector,
       depthGuard: this.depthGuard,
     };
 
-    const result = this._resolveWithDepthAndCycleChecking(ast, ctx);
+    const result = this._resolveWithDepthAndCycleChecking(ast, ctx, dispatcher);
 
     const finalTargets = Array.from(result);
     trace?.addLog(
@@ -184,7 +207,7 @@ class ScopeEngine extends IScopeEngine {
    * @returns {Set} Set of resolved values
    * @private
    */
-  _resolveWithDepthAndCycleChecking(node, ctx) {
+  _resolveWithDepthAndCycleChecking(node, ctx, dispatcher) {
     // Check depth
     ctx.depthGuard.ensure(ctx.depth);
 
@@ -202,13 +225,17 @@ class ScopeEngine extends IScopeEngine {
         dispatcher: {
           resolve: (innerNode, innerCtx) => {
             // Use the context passed by the resolver, which already has the correct depth
-            return this._resolveWithDepthAndCycleChecking(innerNode, innerCtx);
+            return this._resolveWithDepthAndCycleChecking(
+              innerNode,
+              innerCtx,
+              dispatcher
+            );
           },
         },
       };
 
       // Use dispatcher to resolve
-      return this.dispatcher.resolve(node, newCtx);
+      return dispatcher.resolve(node, newCtx);
     } finally {
       // Always leave cycle detection
       ctx.cycleDetector.leave();

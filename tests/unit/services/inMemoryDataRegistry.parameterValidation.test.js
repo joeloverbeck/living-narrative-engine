@@ -3,6 +3,7 @@
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import InMemoryDataRegistry from '../../../src/data/inMemoryDataRegistry.js';
 
+import DataRegistryError from '../../../src/errors/dataRegistryError.js';
 describe('InMemoryDataRegistry Parameter Validation', () => {
   let registry;
 
@@ -18,7 +19,9 @@ describe('InMemoryDataRegistry Parameter Validation', () => {
         expect(() => {
           registry.get(undefined, 'someId');
         }).toThrow(
-          'InMemoryDataRegistry.get: type parameter must be a non-empty string'
+          new DataRegistryError(
+            'InMemoryDataRegistry.get: type parameter must be a non-empty string'
+          )
         );
       });
 
@@ -26,7 +29,9 @@ describe('InMemoryDataRegistry Parameter Validation', () => {
         expect(() => {
           registry.get(null, 'someId');
         }).toThrow(
-          'InMemoryDataRegistry.get: type parameter must be a non-empty string'
+          new DataRegistryError(
+            'InMemoryDataRegistry.get: type parameter must be a non-empty string'
+          )
         );
       });
 
@@ -34,7 +39,9 @@ describe('InMemoryDataRegistry Parameter Validation', () => {
         expect(() => {
           registry.get('', 'someId');
         }).toThrow(
-          'InMemoryDataRegistry.get: type parameter must be a non-empty string'
+          new DataRegistryError(
+            'InMemoryDataRegistry.get: type parameter must be a non-empty string'
+          )
         );
       });
 
@@ -42,7 +49,9 @@ describe('InMemoryDataRegistry Parameter Validation', () => {
         expect(() => {
           registry.get('   ', 'someId');
         }).toThrow(
-          'InMemoryDataRegistry.get: type parameter must be a non-empty string'
+          new DataRegistryError(
+            'InMemoryDataRegistry.get: type parameter must be a non-empty string'
+          )
         );
       });
 
@@ -50,7 +59,9 @@ describe('InMemoryDataRegistry Parameter Validation', () => {
         expect(() => {
           registry.get(123, 'someId');
         }).toThrow(
-          'InMemoryDataRegistry.get: type parameter must be a non-empty string'
+          new DataRegistryError(
+            'InMemoryDataRegistry.get: type parameter must be a non-empty string'
+          )
         );
       });
 
@@ -58,7 +69,9 @@ describe('InMemoryDataRegistry Parameter Validation', () => {
         expect(() => {
           registry.get(true, 'someId');
         }).toThrow(
-          'InMemoryDataRegistry.get: type parameter must be a non-empty string'
+          new DataRegistryError(
+            'InMemoryDataRegistry.get: type parameter must be a non-empty string'
+          )
         );
       });
 
@@ -66,7 +79,9 @@ describe('InMemoryDataRegistry Parameter Validation', () => {
         expect(() => {
           registry.get({}, 'someId');
         }).toThrow(
-          'InMemoryDataRegistry.get: type parameter must be a non-empty string'
+          new DataRegistryError(
+            'InMemoryDataRegistry.get: type parameter must be a non-empty string'
+          )
         );
       });
 
@@ -74,7 +89,9 @@ describe('InMemoryDataRegistry Parameter Validation', () => {
         expect(() => {
           registry.get([], 'someId');
         }).toThrow(
-          'InMemoryDataRegistry.get: type parameter must be a non-empty string'
+          new DataRegistryError(
+            'InMemoryDataRegistry.get: type parameter must be a non-empty string'
+          )
         );
       });
     });
@@ -84,7 +101,9 @@ describe('InMemoryDataRegistry Parameter Validation', () => {
         expect(() => {
           registry.get('testType', undefined);
         }).toThrow(
-          'InMemoryDataRegistry.get: id parameter must be a non-empty string'
+          new DataRegistryError(
+            'InMemoryDataRegistry.get: id parameter must be a non-empty string'
+          )
         );
       });
 
@@ -92,7 +111,9 @@ describe('InMemoryDataRegistry Parameter Validation', () => {
         expect(() => {
           registry.get('testType', null);
         }).toThrow(
-          'InMemoryDataRegistry.get: id parameter must be a non-empty string'
+          new DataRegistryError(
+            'InMemoryDataRegistry.get: id parameter must be a non-empty string'
+          )
         );
       });
 
@@ -100,7 +121,9 @@ describe('InMemoryDataRegistry Parameter Validation', () => {
         expect(() => {
           registry.get('testType', '');
         }).toThrow(
-          'InMemoryDataRegistry.get: id parameter must be a non-empty string'
+          new DataRegistryError(
+            'InMemoryDataRegistry.get: id parameter must be a non-empty string'
+          )
         );
       });
 
@@ -108,7 +131,9 @@ describe('InMemoryDataRegistry Parameter Validation', () => {
         expect(() => {
           registry.get('testType', '   ');
         }).toThrow(
-          'InMemoryDataRegistry.get: id parameter must be a non-empty string'
+          new DataRegistryError(
+            'InMemoryDataRegistry.get: id parameter must be a non-empty string'
+          )
         );
       });
 
@@ -116,7 +141,9 @@ describe('InMemoryDataRegistry Parameter Validation', () => {
         expect(() => {
           registry.get('testType', 123);
         }).toThrow(
-          'InMemoryDataRegistry.get: id parameter must be a non-empty string'
+          new DataRegistryError(
+            'InMemoryDataRegistry.get: id parameter must be a non-empty string'
+          )
         );
       });
 
@@ -124,7 +151,9 @@ describe('InMemoryDataRegistry Parameter Validation', () => {
         expect(() => {
           registry.get('testType', false);
         }).toThrow(
-          'InMemoryDataRegistry.get: id parameter must be a non-empty string'
+          new DataRegistryError(
+            'InMemoryDataRegistry.get: id parameter must be a non-empty string'
+          )
         );
       });
 
@@ -132,7 +161,9 @@ describe('InMemoryDataRegistry Parameter Validation', () => {
         expect(() => {
           registry.get('testType', {});
         }).toThrow(
-          'InMemoryDataRegistry.get: id parameter must be a non-empty string'
+          new DataRegistryError(
+            'InMemoryDataRegistry.get: id parameter must be a non-empty string'
+          )
         );
       });
 
@@ -140,7 +171,9 @@ describe('InMemoryDataRegistry Parameter Validation', () => {
         expect(() => {
           registry.get('testType', []);
         }).toThrow(
-          'InMemoryDataRegistry.get: id parameter must be a non-empty string'
+          new DataRegistryError(
+            'InMemoryDataRegistry.get: id parameter must be a non-empty string'
+          )
         );
       });
     });
@@ -150,7 +183,9 @@ describe('InMemoryDataRegistry Parameter Validation', () => {
         expect(() => {
           registry.get();
         }).toThrow(
-          'InMemoryDataRegistry.get: type parameter must be a non-empty string'
+          new DataRegistryError(
+            'InMemoryDataRegistry.get: type parameter must be a non-empty string'
+          )
         );
       });
 
@@ -158,7 +193,9 @@ describe('InMemoryDataRegistry Parameter Validation', () => {
         expect(() => {
           registry.get('testType');
         }).toThrow(
-          'InMemoryDataRegistry.get: id parameter must be a non-empty string'
+          new DataRegistryError(
+            'InMemoryDataRegistry.get: id parameter must be a non-empty string'
+          )
         );
       });
     });
@@ -192,7 +229,9 @@ describe('InMemoryDataRegistry Parameter Validation', () => {
         expect(() => {
           registry.getAll(undefined);
         }).toThrow(
-          'InMemoryDataRegistry.getAll: type parameter must be a non-empty string'
+          new DataRegistryError(
+            'InMemoryDataRegistry.getAll: type parameter must be a non-empty string'
+          )
         );
       });
 
@@ -200,7 +239,9 @@ describe('InMemoryDataRegistry Parameter Validation', () => {
         expect(() => {
           registry.getAll(null);
         }).toThrow(
-          'InMemoryDataRegistry.getAll: type parameter must be a non-empty string'
+          new DataRegistryError(
+            'InMemoryDataRegistry.getAll: type parameter must be a non-empty string'
+          )
         );
       });
 
@@ -208,7 +249,9 @@ describe('InMemoryDataRegistry Parameter Validation', () => {
         expect(() => {
           registry.getAll('');
         }).toThrow(
-          'InMemoryDataRegistry.getAll: type parameter must be a non-empty string'
+          new DataRegistryError(
+            'InMemoryDataRegistry.getAll: type parameter must be a non-empty string'
+          )
         );
       });
 
@@ -216,7 +259,9 @@ describe('InMemoryDataRegistry Parameter Validation', () => {
         expect(() => {
           registry.getAll('   ');
         }).toThrow(
-          'InMemoryDataRegistry.getAll: type parameter must be a non-empty string'
+          new DataRegistryError(
+            'InMemoryDataRegistry.getAll: type parameter must be a non-empty string'
+          )
         );
       });
 
@@ -224,7 +269,9 @@ describe('InMemoryDataRegistry Parameter Validation', () => {
         expect(() => {
           registry.getAll(123);
         }).toThrow(
-          'InMemoryDataRegistry.getAll: type parameter must be a non-empty string'
+          new DataRegistryError(
+            'InMemoryDataRegistry.getAll: type parameter must be a non-empty string'
+          )
         );
       });
 
@@ -232,7 +279,9 @@ describe('InMemoryDataRegistry Parameter Validation', () => {
         expect(() => {
           registry.getAll(true);
         }).toThrow(
-          'InMemoryDataRegistry.getAll: type parameter must be a non-empty string'
+          new DataRegistryError(
+            'InMemoryDataRegistry.getAll: type parameter must be a non-empty string'
+          )
         );
       });
 
@@ -240,7 +289,9 @@ describe('InMemoryDataRegistry Parameter Validation', () => {
         expect(() => {
           registry.getAll({});
         }).toThrow(
-          'InMemoryDataRegistry.getAll: type parameter must be a non-empty string'
+          new DataRegistryError(
+            'InMemoryDataRegistry.getAll: type parameter must be a non-empty string'
+          )
         );
       });
 
@@ -248,7 +299,9 @@ describe('InMemoryDataRegistry Parameter Validation', () => {
         expect(() => {
           registry.getAll([]);
         }).toThrow(
-          'InMemoryDataRegistry.getAll: type parameter must be a non-empty string'
+          new DataRegistryError(
+            'InMemoryDataRegistry.getAll: type parameter must be a non-empty string'
+          )
         );
       });
     });
@@ -258,7 +311,9 @@ describe('InMemoryDataRegistry Parameter Validation', () => {
         expect(() => {
           registry.getAll();
         }).toThrow(
-          'InMemoryDataRegistry.getAll: type parameter must be a non-empty string'
+          new DataRegistryError(
+            'InMemoryDataRegistry.getAll: type parameter must be a non-empty string'
+          )
         );
       });
     });
@@ -290,7 +345,9 @@ describe('InMemoryDataRegistry Parameter Validation', () => {
         expect(() => {
           registry.getContentSource(undefined, 'testId');
         }).toThrow(
-          'InMemoryDataRegistry.getContentSource: type parameter must be a non-empty string'
+          new DataRegistryError(
+            'InMemoryDataRegistry.getContentSource: type parameter must be a non-empty string'
+          )
         );
       });
 
@@ -298,7 +355,9 @@ describe('InMemoryDataRegistry Parameter Validation', () => {
         expect(() => {
           registry.getContentSource(null, 'testId');
         }).toThrow(
-          'InMemoryDataRegistry.getContentSource: type parameter must be a non-empty string'
+          new DataRegistryError(
+            'InMemoryDataRegistry.getContentSource: type parameter must be a non-empty string'
+          )
         );
       });
 
@@ -306,7 +365,9 @@ describe('InMemoryDataRegistry Parameter Validation', () => {
         expect(() => {
           registry.getContentSource('', 'testId');
         }).toThrow(
-          'InMemoryDataRegistry.getContentSource: type parameter must be a non-empty string'
+          new DataRegistryError(
+            'InMemoryDataRegistry.getContentSource: type parameter must be a non-empty string'
+          )
         );
       });
     });
@@ -316,7 +377,9 @@ describe('InMemoryDataRegistry Parameter Validation', () => {
         expect(() => {
           registry.getContentSource('testType', undefined);
         }).toThrow(
-          'InMemoryDataRegistry.getContentSource: id parameter must be a non-empty string'
+          new DataRegistryError(
+            'InMemoryDataRegistry.getContentSource: id parameter must be a non-empty string'
+          )
         );
       });
 
@@ -324,7 +387,9 @@ describe('InMemoryDataRegistry Parameter Validation', () => {
         expect(() => {
           registry.getContentSource('testType', null);
         }).toThrow(
-          'InMemoryDataRegistry.getContentSource: id parameter must be a non-empty string'
+          new DataRegistryError(
+            'InMemoryDataRegistry.getContentSource: id parameter must be a non-empty string'
+          )
         );
       });
 
@@ -332,7 +397,9 @@ describe('InMemoryDataRegistry Parameter Validation', () => {
         expect(() => {
           registry.getContentSource('testType', '');
         }).toThrow(
-          'InMemoryDataRegistry.getContentSource: id parameter must be a non-empty string'
+          new DataRegistryError(
+            'InMemoryDataRegistry.getContentSource: id parameter must be a non-empty string'
+          )
         );
       });
     });

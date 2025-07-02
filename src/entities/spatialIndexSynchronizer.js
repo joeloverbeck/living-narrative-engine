@@ -48,25 +48,26 @@ export class SpatialIndexSynchronizer {
     /** @private */
     this.logger = logger;
 
-    safeEventDispatcher.subscribe(
-      ENTITY_CREATED_ID,
-      this.onEntityAdded.bind(this)
-    );
-    safeEventDispatcher.subscribe(
-      ENTITY_REMOVED_ID,
-      this.onEntityRemoved.bind(this)
-    );
-    safeEventDispatcher.subscribe(
-      COMPONENT_ADDED_ID,
-      this.onPositionChanged.bind(this)
-    );
-    safeEventDispatcher.subscribe(
-      COMPONENT_REMOVED_ID,
-      this.onPositionChanged.bind(this)
-    );
+    this.#subscribeToEvents(safeEventDispatcher);
 
     this.logger.debug(
       'SpatialIndexSynchronizer initialized and listening for events.'
+    );
+  }
+
+  /**
+   * Subscribe to entity lifecycle and component events.
+   *
+   * @private
+   * @param {ISafeEventDispatcher} dispatcher
+   */
+  #subscribeToEvents(dispatcher) {
+    dispatcher.subscribe(ENTITY_CREATED_ID, this.onEntityAdded.bind(this));
+    dispatcher.subscribe(ENTITY_REMOVED_ID, this.onEntityRemoved.bind(this));
+    dispatcher.subscribe(COMPONENT_ADDED_ID, this.onPositionChanged.bind(this));
+    dispatcher.subscribe(
+      COMPONENT_REMOVED_ID,
+      this.onPositionChanged.bind(this)
     );
   }
 

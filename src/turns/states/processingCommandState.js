@@ -22,8 +22,11 @@ import { ProcessingExceptionHandler } from './helpers/processingExceptionHandler
 import { buildSpeechPayload } from './helpers/buildSpeechPayload.js';
 import { ProcessingGuard } from './helpers/processingGuard.js';
 import { finishProcessing } from './helpers/processingErrorUtils.js';
-import { getLogger, getSafeEventDispatcher } from './helpers/contextUtils.js';
-import turnDirectiveResolverAdapter from '../adapters/turnDirectiveResolverAdapter.js';
+import { getLogger } from './helpers/contextUtils.js';
+import { dispatchSpeechEvent } from './helpers/dispatchSpeechEvent.js';
+import TurnDirectiveStrategyResolver, {
+  DEFAULT_STRATEGY_MAP,
+} from '../strategies/turnDirectiveStrategyResolver.js';
 import { ITurnDirectiveResolver } from '../interfaces/ITurnDirectiveResolver.js';
 import {
   validateTurnAction,
@@ -39,7 +42,10 @@ export class ProcessingCommandState extends AbstractTurnState {
   #isProcessing = false;
   _processingGuard;
   /** @type {ITurnDirectiveResolver} */
-  _directiveResolver = turnDirectiveResolverAdapter;
+  _directiveResolver =
+    typeof TurnDirectiveStrategyResolver === 'function'
+      ? new TurnDirectiveStrategyResolver(DEFAULT_STRATEGY_MAP)
+      : TurnDirectiveStrategyResolver;
   _exceptionHandler;
   #turnActionToProcess = null;
   #commandStringForLog = null;
@@ -127,34 +133,24 @@ export class ProcessingCommandState extends AbstractTurnState {
   }
 
   /**
-   * @param {object} deps Dependencies for the state.
-   * @param {ITurnStateHost} deps.handler The turn state host (typically an ActorTurnHandler).
-   * @param {ICommandProcessor} deps.commandProcessor Service to dispatch commands.
-   * @param {ICommandOutcomeInterpreter} deps.commandOutcomeInterpreter Service to interpret command results.
-   * @param {string} deps.commandString The raw command string to process.
-   * @param {ITurnAction} deps.turnAction The structured turn action.
-   * @param {Function} deps.directiveResolver Resolver for turn directives.
-   * @param {(state: ProcessingCommandState, commandString: string|null, action: ITurnAction|null, setAction: (a: ITurnAction|null) => void, handler: ProcessingExceptionHandler) => ProcessingWorkflow} [deps.processingWorkflowFactory] Factory for ProcessingWorkflow.
+   * Validates constructor dependencies.
+   *
+   * @private
+   * @param {object} deps - Constructor dependencies.
+   * @param {ICommandProcessor} deps.commandProcessor - Service to dispatch commands.
+   * @param {ICommandOutcomeInterpreter} deps.commandOutcomeInterpreter - Service to interpret command results.
+   * @param {string} deps.commandString - Raw command string.
+   * @param {ITurnAction} deps.turnAction - Structured turn action.
+   * @param {Function} deps.directiveResolver - Resolver for turn directives.
+   * @returns {void}
    */
-  constructor({
-    handler,
+  _validateDependencies({
     commandProcessor,
     commandOutcomeInterpreter,
     commandString,
     turnAction,
-    directiveResolver = turnDirectiveResolverAdapter,
-    processingWorkflowFactory = (
-      state,
-      cmd,
-      action,
-      setAction,
-      exceptionHandler
-    ) =>
-      new ProcessingWorkflow(state, cmd, action, setAction, exceptionHandler),
+    directiveResolver,
   }) {
-    super(handler);
-
-    // Validate essential dependencies
     if (!commandProcessor) {
       this._throwConstructionError('commandProcessor is required');
     }
@@ -168,7 +164,31 @@ export class ProcessingCommandState extends AbstractTurnState {
     if (!directiveResolver) {
       this._throwConstructionError('directiveResolver is required');
     }
+  }
 
+  /**
+   * Initializes state components after validation.
+   *
+   * @private
+   * @param {object} deps - Constructor dependencies.
+   * @param {ICommandProcessor} deps.commandProcessor - Service to dispatch commands.
+   * @param {ICommandOutcomeInterpreter} deps.commandOutcomeInterpreter - Service to interpret command results.
+   * @param {string} deps.commandString - Raw command string.
+   * @param {ITurnAction} deps.turnAction - Structured turn action.
+   * @param {Function} deps.directiveResolver - Resolver for turn directives.
+   * @param {(state: ProcessingCommandState, commandString: string|null, action: ITurnAction|null, setAction: (a: ITurnAction|null) => void, handler: ProcessingExceptionHandler) => ProcessingWorkflow} deps.processingWorkflowFactory - Factory for ProcessingWorkflow.
+   * @param {(config: object) => CommandProcessingWorkflow} deps.commandProcessingWorkflowFactory - Factory for CommandProcessingWorkflow.
+   * @returns {void}
+   */
+  _initializeComponents({
+    commandProcessor,
+    commandOutcomeInterpreter,
+    commandString,
+    turnAction,
+    directiveResolver,
+    processingWorkflowFactory,
+    commandProcessingWorkflowFactory,
+  }) {
     this.#commandProcessor = commandProcessor;
     this._commandOutcomeInterpreter = commandOutcomeInterpreter;
     this.#commandStringForLog = commandString;
@@ -181,15 +201,59 @@ export class ProcessingCommandState extends AbstractTurnState {
 
     this._processingWorkflowFactory = processingWorkflowFactory;
 
-    // Workflow is instantiated here, pass arguments as a single object
-    this._processingWorkflow = new CommandProcessingWorkflow({
+    this._processingWorkflow = commandProcessingWorkflowFactory({
       state: this,
       exceptionHandler: this._exceptionHandler,
       commandProcessor: this.#commandProcessor,
       commandOutcomeInterpreter: this._commandOutcomeInterpreter,
       directiveStrategyResolver: this._directiveResolver,
     });
+  }
 
+  /**
+   * @param {object} deps Dependencies for the state.
+   * @param {ITurnStateHost} deps.handler The turn state host (typically an ActorTurnHandler).
+   * @param {ICommandProcessor} deps.commandProcessor Service to dispatch commands.
+   * @param {ICommandOutcomeInterpreter} deps.commandOutcomeInterpreter Service to interpret command results.
+   * @param {string} deps.commandString The raw command string to process.
+   * @param {ITurnAction} deps.turnAction The structured turn action.
+   * @param {Function} deps.directiveResolver Resolver for turn directives.
+   * @param {(state: ProcessingCommandState, commandString: string|null, action: ITurnAction|null, setAction: (a: ITurnAction|null) => void, handler: ProcessingExceptionHandler) => ProcessingWorkflow} [deps.processingWorkflowFactory] Factory for ProcessingWorkflow.
+   * @param {(config: object) => CommandProcessingWorkflow} [deps.commandProcessingWorkflowFactory] Factory for CommandProcessingWorkflow.
+   */
+  constructor({
+    handler,
+    commandProcessor,
+    commandOutcomeInterpreter,
+    commandString,
+    turnAction,
+    directiveResolver = typeof TurnDirectiveStrategyResolver === 'function'
+      ? new TurnDirectiveStrategyResolver(DEFAULT_STRATEGY_MAP)
+      : TurnDirectiveStrategyResolver,
+    processingWorkflowFactory = (
+      state,
+      cmd,
+      action,
+      setAction,
+      exceptionHandler
+    ) =>
+      new ProcessingWorkflow(state, cmd, action, setAction, exceptionHandler),
+    commandProcessingWorkflowFactory = (config) =>
+      new CommandProcessingWorkflow(config),
+  }) {
+    super(handler);
+    const deps = {
+      commandProcessor,
+      commandOutcomeInterpreter,
+      commandString,
+      turnAction,
+      directiveResolver,
+      processingWorkflowFactory,
+      commandProcessingWorkflowFactory,
+    };
+
+    this._validateDependencies(deps);
+    this._initializeComponents(deps);
     this._logConstruction();
   }
 
@@ -243,23 +307,7 @@ export class ProcessingCommandState extends AbstractTurnState {
       logger.debug(
         `${this.getStateName()}: Actor ${actorId} spoke: "${payloadBase.speechContent}". Dispatching ${ENTITY_SPOKE_ID}.`
       );
-
-      try {
-        const eventDispatcher = getSafeEventDispatcher(turnCtx, this._handler);
-        if (eventDispatcher) {
-          const payload = { entityId: actorId, ...payloadBase };
-          await eventDispatcher.dispatch(ENTITY_SPOKE_ID, payload);
-          logger.debug(
-            `${this.getStateName()}: Attempted dispatch of ${ENTITY_SPOKE_ID} for actor ${actorId} via TurnContext's SafeEventDispatcher.`,
-            { payload }
-          );
-        }
-      } catch (eventDispatchError) {
-        logger.error(
-          `${this.getStateName()}: Unexpected error when trying to use dispatch for ${ENTITY_SPOKE_ID} for actor ${actorId}: ${eventDispatchError.message}`,
-          eventDispatchError
-        );
-      }
+      await dispatchSpeechEvent(turnCtx, this._handler, actorId, payloadBase);
     } else if (speechRaw !== null && speechRaw !== undefined) {
       logger.debug(
         `${this.getStateName()}: Actor ${actorId} had a non-string or empty speech field in decisionMeta. No ${ENTITY_SPOKE_ID} event dispatched. (Type: ${typeof speechRaw}, Value: "${String(speechRaw)}")`
