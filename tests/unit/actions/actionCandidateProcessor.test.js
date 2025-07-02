@@ -15,7 +15,7 @@ describeActionCandidateProcessorSuite('ActionCandidateProcessor', (getBed) => {
   });
 
   describe('process', () => {
-    it('returns null when action has no targets', () => {
+    it('returns result with no-targets cause when action has no targets', () => {
       const bed = getBed();
       const actionDef = { id: 'test', scope: 'none' };
       const actorEntity = { id: 'actor' };
@@ -23,7 +23,7 @@ describeActionCandidateProcessorSuite('ActionCandidateProcessor', (getBed) => {
 
       const result = bed.service.process(actionDef, actorEntity, context);
 
-      expect(result).toBeNull();
+      expect(result).toEqual({ actions: [], errors: [], cause: 'no-targets' });
     });
 
     it('returns actions when prerequisites pass and targets exist', () => {
@@ -91,7 +91,7 @@ describeActionCandidateProcessorSuite('ActionCandidateProcessor', (getBed) => {
 
       const result = bed.service.process(actionDef, actorEntity, context);
 
-      expect(result).not.toBeNull();
+      expect(result.cause).toBe('prerequisite-error');
       expect(result.actions).toHaveLength(0);
       expect(result.errors).toHaveLength(1);
       expect(result.errors[0]).toEqual({
@@ -102,7 +102,7 @@ describeActionCandidateProcessorSuite('ActionCandidateProcessor', (getBed) => {
       });
     });
 
-    it('returns null when prerequisites fail without error', () => {
+    it('returns result with prerequisites-failed cause when prerequisites fail without error', () => {
       const bed = getBed();
       const actionDef = {
         id: 'test',
@@ -116,7 +116,11 @@ describeActionCandidateProcessorSuite('ActionCandidateProcessor', (getBed) => {
 
       const result = bed.service.process(actionDef, actorEntity, context);
 
-      expect(result).toBeNull();
+      expect(result).toEqual({
+        actions: [],
+        errors: [],
+        cause: 'prerequisites-failed',
+      });
     });
 
     it('includes formatting errors in the result', () => {

@@ -22,6 +22,7 @@ import { createDiscoveryError } from './utils/discoveryErrorUtils.js';
  * @typedef {object} ProcessResult
  * @property {DiscoveredActionInfo[]} actions - Valid discovered actions
  * @property {object[]} errors - Errors encountered during processing
+ * @property {string} [cause] - Optional reason why no actions were produced
  */
 
 /**
@@ -74,7 +75,7 @@ export class ActionCandidateProcessor {
    * @param {Entity} actorEntity - The entity performing the action.
    * @param {ActionContext} context - The action discovery context.
    * @param {TraceContext} [trace] - Optional trace context for logging.
-   * @returns {ProcessResult|null} Result containing valid actions and errors, or null if no valid targets.
+   * @returns {ProcessResult} Result containing valid actions and errors.
    */
   process(actionDef, actorEntity, context, trace = null) {
     const source = 'ActionCandidateProcessor.process';
@@ -89,14 +90,7 @@ export class ActionCandidateProcessor {
         trace
       );
     } catch (error) {
-      this.#logger.error(
-        `Error checking prerequisites for action '${actionDef.id}'.`,
-        error
-      );
-      return {
-        actions: [],
-        errors: [createDiscoveryError(actionDef.id, null, error)],
-      };
+      return this.#handlePrerequisiteError(actionDef, error);
     }
 
     if (!meetsPrereqs) {
@@ -104,7 +98,7 @@ export class ActionCandidateProcessor {
         `Action '${actionDef.id}' discarded due to failed actor prerequisites.`,
         source
       );
-      return null;
+      return { actions: [], errors: [], cause: 'prerequisites-failed' };
     }
     trace?.success(
       `Action '${actionDef.id}' passed actor prerequisite check.`,
@@ -121,21 +115,14 @@ export class ActionCandidateProcessor {
       );
 
     if (resolutionError) {
-      this.#logger.error(
-        `Error resolving scope for action '${actionDef.id}': ${resolutionError.message}`,
-        resolutionError
-      );
-      return {
-        actions: [],
-        errors: [createDiscoveryError(actionDef.id, null, resolutionError)],
-      };
+      return this.#handleResolutionError(actionDef, resolutionError);
     }
 
     if (targetContexts.length === 0) {
       this.#logger.debug(
         `Action '${actionDef.id}' resolved to 0 targets. Skipping.`
       );
-      return null;
+      return { actions: [], errors: [], cause: 'no-targets' };
     }
     trace?.info(
       `Scope for action '${actionDef.id}' resolved to ${targetContexts.length} targets.`,
@@ -170,6 +157,60 @@ export class ActionCandidateProcessor {
   }
 
   /**
+   * Builds the common formatter options object.
+   *
+   * @returns {object} Formatter options passed to the command formatter.
+   * @private
+   */
+  #buildFormatterOptions() {
+    return {
+      logger: this.#logger,
+      debug: true,
+      safeEventDispatcher: this.#safeEventDispatcher,
+    };
+  }
+
+  /**
+   * Handles errors that occur during prerequisite evaluation.
+   *
+   * @param {ActionDefinition} actionDef - The action being processed.
+   * @param {Error} error - The encountered error.
+   * @returns {ProcessResult} Result with the captured error.
+   * @private
+   */
+  #handlePrerequisiteError(actionDef, error) {
+    this.#logger.error(
+      `Error checking prerequisites for action '${actionDef.id}'.`,
+      error
+    );
+    return {
+      actions: [],
+      errors: [createDiscoveryError(actionDef.id, null, error)],
+      cause: 'prerequisite-error',
+    };
+  }
+
+  /**
+   * Handles errors that occur during target resolution.
+   *
+   * @param {ActionDefinition} actionDef - The action being processed.
+   * @param {Error} error - The encountered error.
+   * @returns {ProcessResult} Result with the captured error.
+   * @private
+   */
+  #handleResolutionError(actionDef, error) {
+    this.#logger.error(
+      `Error resolving scope for action '${actionDef.id}': ${error.message}`,
+      error
+    );
+    return {
+      actions: [],
+      errors: [createDiscoveryError(actionDef.id, null, error)],
+      cause: 'resolution-error',
+    };
+  }
+
+  /**
    * Formats an action for a given list of targets.
    *
    * @param {ActionDefinition} actionDef - The action definition.
@@ -181,11 +222,7 @@ export class ActionCandidateProcessor {
     const validActions = [];
     const errors = [];
     // Options are identical for all targets; compute once for reuse
-    const formatterOptions = {
-      logger: this.#logger,
-      debug: true,
-      safeEventDispatcher: this.#safeEventDispatcher,
-    };
+    const formatterOptions = this.#buildFormatterOptions();
 
     for (const targetContext of targetContexts) {
       const formatResult = this.#commandFormatter.format(
