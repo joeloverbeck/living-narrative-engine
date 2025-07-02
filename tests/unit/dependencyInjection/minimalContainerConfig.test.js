@@ -1,0 +1,135 @@
+import {
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  expect,
+  jest,
+} from '@jest/globals';
+import AppContainer from '../../../src/dependencyInjection/appContainer.js';
+import {
+  configureMinimalContainer,
+  loadLoggerConfig,
+} from '../../../src/dependencyInjection/minimalContainerConfig.js';
+import { tokens } from '../../../src/dependencyInjection/tokens.js';
+import ConsoleLogger, { LogLevel } from '../../../src/logging/consoleLogger.js';
+import { LoggerConfigLoader } from '../../../src/configuration/loggerConfigLoader.js';
+
+// Mock registration bundles so configureMinimalContainer can run without side effects
+jest.mock(
+  '../../../src/dependencyInjection/registrations/loadersRegistrations.js'
+);
+jest.mock(
+  '../../../src/dependencyInjection/registrations/infrastructureRegistrations.js'
+);
+jest.mock(
+  '../../../src/dependencyInjection/registrations/persistenceRegistrations.js'
+);
+jest.mock(
+  '../../../src/dependencyInjection/registrations/worldAndEntityRegistrations.js'
+);
+jest.mock(
+  '../../../src/dependencyInjection/registrations/commandAndActionRegistrations.js'
+);
+jest.mock(
+  '../../../src/dependencyInjection/registrations/interpreterRegistrations.js'
+);
+jest.mock(
+  '../../../src/dependencyInjection/registrations/eventBusAdapterRegistrations.js'
+);
+jest.mock(
+  '../../../src/dependencyInjection/registrations/initializerRegistrations.js'
+);
+jest.mock(
+  '../../../src/dependencyInjection/registrations/runtimeRegistrations.js'
+);
+
+describe('minimalContainerConfig logger handling', () => {
+  let container;
+  let setLevelSpy;
+  let warnSpy;
+  let debugSpy;
+  let errorSpy;
+  let loadConfigSpy;
+
+  beforeEach(() => {
+    container = new AppContainer();
+
+    // Ensure ISafeEventDispatcher resolves during configuration
+    const { registerInfrastructure } = jest.requireMock(
+      '../../../src/dependencyInjection/registrations/infrastructureRegistrations.js'
+    );
+    registerInfrastructure.mockImplementation((c) => {
+      c.register(tokens.ISafeEventDispatcher, { dispatch: jest.fn() });
+    });
+
+    setLevelSpy = jest
+      .spyOn(ConsoleLogger.prototype, 'setLogLevel')
+      .mockImplementation(() => {});
+    warnSpy = jest
+      .spyOn(ConsoleLogger.prototype, 'warn')
+      .mockImplementation(() => {});
+    debugSpy = jest
+      .spyOn(ConsoleLogger.prototype, 'debug')
+      .mockImplementation(() => {});
+    errorSpy = jest
+      .spyOn(ConsoleLogger.prototype, 'error')
+      .mockImplementation(() => {});
+
+    loadConfigSpy = jest.spyOn(LoggerConfigLoader.prototype, 'loadConfig');
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it('applies log level when configuration specifies a string', async () => {
+    loadConfigSpy.mockResolvedValue({ logLevel: 'WARN' });
+    configureMinimalContainer(container);
+    await new Promise(process.nextTick);
+    expect(setLevelSpy).toHaveBeenLastCalledWith('WARN');
+    expect(warnSpy).not.toHaveBeenCalled();
+  });
+
+  it('warns when logLevel is not a string', async () => {
+    loadConfigSpy.mockResolvedValue({ logLevel: 5 });
+    configureMinimalContainer(container);
+    await new Promise(process.nextTick);
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining("logLevel' is not a string")
+    );
+  });
+
+  it('warns when loader returns an error result', async () => {
+    loadConfigSpy.mockResolvedValue({
+      error: true,
+      message: 'oops',
+      path: 'p',
+    });
+    configureMinimalContainer(container);
+    await new Promise(process.nextTick);
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining("Failed to load logger configuration from 'p'")
+    );
+  });
+
+  it('logs debug when configuration has no logLevel', async () => {
+    loadConfigSpy.mockResolvedValue({});
+    configureMinimalContainer(container);
+    await new Promise(process.nextTick);
+    expect(debugSpy).toHaveBeenCalledWith(
+      expect.stringContaining(
+        'Logger configuration file loaded but no specific'
+      )
+    );
+  });
+
+  it('logs error when loading configuration throws', async () => {
+    loadConfigSpy.mockRejectedValue(new Error('network'));
+    await loadLoggerConfig(container, new ConsoleLogger(LogLevel.INFO));
+    expect(errorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('CRITICAL ERROR'),
+      expect.any(Object)
+    );
+  });
+});
