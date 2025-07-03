@@ -25,7 +25,8 @@
       "Bash(npm run update-manifest:*)",
       "Bash(npx prettier:*)",
       "Bash(touch:*)",
-      "Bash(awk:*)"
+      "Bash(awk:*)",
+      "Bash(cp:*)"
     ],
     "deny": []
   }
