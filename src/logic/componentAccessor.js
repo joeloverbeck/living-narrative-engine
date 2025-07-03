@@ -37,13 +37,52 @@ export class ComponentAccessorError extends Error {
  *   {@link ComponentAccessorError} instance.
  */
 export function createComponentAccessor(entityId, entityManager, logger) {
+  
   return new Proxy(
     {},
     {
       get(_target, prop) {
         if (typeof prop !== 'string') return undefined;
+        
+        // Special handling for toJSON to enable proper JSON serialization
+        if (prop === 'toJSON') {
+          return () => {
+            try {
+              // Get all component types for this entity
+              const componentTypes = entityManager.getAllComponentTypesForEntity(entityId);
+              const result = {};
+              
+              for (const componentType of componentTypes) {
+                try {
+                  const data = entityManager.getComponentData(entityId, componentType);
+                  if (data !== undefined && data !== null) {
+                    result[componentType] = data;
+                  }
+                } catch (error) {
+                  // Skip components that error during retrieval
+                  logger.debug(
+                    `ComponentAccessor: Skipping component [${componentType}] during JSON serialization due to error`
+                  );
+                }
+              }
+              
+              return result;
+            } catch (error) {
+              logger.warn(
+                `ComponentAccessor: Failed to serialize components for entity [${entityId}]:`,
+                error
+              );
+              return {};
+            }
+          };
+        }
+        
+        
         try {
-          return entityManager.getComponentData(entityId, prop) ?? null;
+          const componentData = entityManager.getComponentData(entityId, prop);
+          
+          
+          return componentData ?? null;
         } catch (error) {
           logger.error(
             `ComponentAccessor: Error fetching component [${String(prop)}] for entity [${entityId}]:`,
@@ -56,8 +95,11 @@ export function createComponentAccessor(entityId, entityManager, logger) {
       },
       has(_target, prop) {
         if (typeof prop !== 'string') return false;
+        
+        
         try {
-          return entityManager.hasComponent(entityId, prop);
+          const hasComponent = entityManager.hasComponent(entityId, prop);
+          return hasComponent;
         } catch (error) {
           logger.error(
             `ComponentAccessor: Error checking component existence [${String(prop)}] for entity [${entityId}]:`,
