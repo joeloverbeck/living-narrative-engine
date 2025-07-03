@@ -82,6 +82,9 @@ describe('registerOrchestration', () => {
     container.register(tokens.ISpatialIndexManager, () => ({
       buildIndex: jest.fn(),
     }));
+    container.register(tokens.AnatomyFormattingService, () => ({
+      initialize: jest.fn(),
+    }));
   });
 
   afterEach(() => {
@@ -156,6 +159,9 @@ describe('registerOrchestration', () => {
     badContainer.register(tokens.ISpatialIndexManager, () => ({
       buildIndex: jest.fn(),
     }));
+    badContainer.register(tokens.AnatomyFormattingService, () => ({
+      initialize: jest.fn(),
+    }));
 
     registerOrchestration(badContainer);
 
@@ -203,6 +209,9 @@ describe('registerOrchestration', () => {
     }));
     badContainer.register(tokens.ISpatialIndexManager, () => ({
       buildIndex: jest.fn(),
+    }));
+    badContainer.register(tokens.AnatomyFormattingService, () => ({
+      initialize: jest.fn(),
     }));
 
     registerOrchestration(badContainer);

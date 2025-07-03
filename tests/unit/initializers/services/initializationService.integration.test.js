@@ -89,6 +89,7 @@ describe('InitializationService Integration with AppContainer', () => {
     }));
     container.register(tokens.ISafeEventDispatcher, () => ({
       subscribe: jest.fn(),
+      dispatch: jest.fn().mockResolvedValue(undefined),
     }));
     container.register(tokens.IEntityManager, () => ({}));
     container.register(tokens.DomUiFacade, () => ({}));
@@ -147,6 +148,7 @@ describe('InitializationService Integration with AppContainer', () => {
     }));
     container.register(tokens.ISafeEventDispatcher, () => ({
       subscribe: jest.fn(),
+      dispatch: jest.fn().mockResolvedValue(undefined),
     }));
     container.register(tokens.IEntityManager, () => ({}));
     container.register(tokens.DomUiFacade, () => ({}));

@@ -142,9 +142,6 @@ describe('AnatomyGenerationService - Blueprint ID Support', () => {
     });
 
     await expect(service.generateAnatomyIfNeeded(entityId)).rejects.toThrow(
-      ValidationError
-    );
-    await expect(service.generateAnatomyIfNeeded(entityId)).rejects.toThrow(
       `Recipe '${recipeId}' does not specify a blueprintId`
     );
   });

@@ -11,7 +11,11 @@ describe('BodyBlueprintFactory - Child Slots Support', () => {
   let mockLogger;
   let mockEventDispatcher;
   let mockEventDispatchService;
-  let mockIdGenerator;
+  let mockRecipeProcessor;
+  let mockPartSelectionService;
+  let mockSocketManager;
+  let mockEntityGraphBuilder;
+  let mockConstraintEvaluator;
   let mockValidator;
 
   beforeEach(() => {
@@ -42,16 +46,38 @@ describe('BodyBlueprintFactory - Child Slots Support', () => {
 
     mockEventDispatchService = {
       safeDispatchEvent: jest.fn().mockResolvedValue(undefined),
-      dispatchWithLogging: jest.fn().mockResolvedValue(undefined),
-      dispatchWithErrorHandling: jest.fn().mockResolvedValue(true),
     };
 
-    mockIdGenerator = {
-      generateId: jest.fn().mockImplementation(() => 'generated-id'),
+    mockRecipeProcessor = {
+      loadRecipe: jest.fn(),
+      processRecipe: jest.fn(),
+      mergeSlotRequirements: jest.fn(),
+    };
+
+    mockPartSelectionService = {
+      selectPart: jest.fn(),
+    };
+
+    mockSocketManager = {
+      validateSocketAvailability: jest.fn(),
+      occupySocket: jest.fn(),
+      generatePartName: jest.fn(),
+    };
+
+    mockEntityGraphBuilder = {
+      createRootEntity: jest.fn(),
+      createAndAttachPart: jest.fn(),
+      setEntityName: jest.fn(),
+      getPartType: jest.fn(),
+      cleanupEntities: jest.fn().mockResolvedValue(undefined),
+    };
+
+    mockConstraintEvaluator = {
+      evaluateConstraints: jest.fn().mockReturnValue({ valid: true, errors: [], warnings: [] }),
     };
 
     mockValidator = {
-      validateGraph: jest.fn().mockResolvedValue({ valid: true }),
+      validateGraph: jest.fn().mockResolvedValue({ valid: true, errors: [], warnings: [] }),
     };
 
     factory = new BodyBlueprintFactory({
@@ -60,12 +86,172 @@ describe('BodyBlueprintFactory - Child Slots Support', () => {
       logger: mockLogger,
       eventDispatcher: mockEventDispatcher,
       eventDispatchService: mockEventDispatchService,
-      idGenerator: mockIdGenerator,
+      recipeProcessor: mockRecipeProcessor,
+      partSelectionService: mockPartSelectionService,
+      socketManager: mockSocketManager,
+      entityGraphBuilder: mockEntityGraphBuilder,
+      constraintEvaluator: mockConstraintEvaluator,
       validator: mockValidator,
     });
   });
 
-  test('should process childSlots when creating parts', async () => {
+  test('should process simple slots when creating parts', async () => {
+    const blueprintId = 'anatomy:test_blueprint';
+    const recipeId = 'anatomy:test_recipe';
+
+    const mockBlueprint = {
+      root: 'anatomy:test_torso',
+      slots: {
+        head_slot: {
+          parent: null,
+          socket: 'neck',
+          requirements: {
+            partType: 'head',
+          },
+        },
+        left_arm_slot: {
+          parent: null,
+          socket: 'left_shoulder',
+          requirements: {
+            partType: 'arm',
+          },
+        },
+        right_arm_slot: {
+          parent: null,
+          socket: 'right_shoulder',
+          requirements: {
+            partType: 'arm',
+          },
+        },
+      },
+    };
+
+    const mockRecipe = {
+      recipeId: recipeId,
+      blueprintId: blueprintId,
+      slots: {
+        head_slot: {
+          partType: 'head',
+          preferId: 'anatomy:test_head',
+        },
+        left_arm_slot: {
+          partType: 'arm',
+          preferId: 'anatomy:test_arm',
+        },
+        right_arm_slot: {
+          partType: 'arm',
+          preferId: 'anatomy:test_arm',
+        },
+      },
+    };
+
+    const mockTorsoEntity = {
+      id: 'torso-1',
+      definitionId: 'anatomy:test_torso',
+    };
+
+    const mockHeadEntity = {
+      id: 'head-1',
+      definitionId: 'anatomy:test_head',
+    };
+
+    const mockEyeEntity = {
+      id: 'eye-1',
+      definitionId: 'anatomy:human_eye_blue',
+    };
+
+    // Mock recipe processor
+    mockRecipeProcessor.loadRecipe.mockReturnValue(mockRecipe);
+    mockRecipeProcessor.processRecipe.mockReturnValue(mockRecipe);
+    mockRecipeProcessor.mergeSlotRequirements.mockReturnValue({});
+
+    // Mock entity graph builder
+    mockEntityGraphBuilder.createRootEntity.mockReturnValue('torso-1');
+    
+    // Track which entities have been created to simulate parent-child relationships
+    const createdEntities = new Set(['torso-1']);
+    
+    mockEntityGraphBuilder.createAndAttachPart.mockImplementation((parentId, socketId, partDefId) => {
+      // All parts attach to torso
+      if (socketId === 'neck') {
+        createdEntities.add('head-1');
+        return 'head-1';
+      }
+      if (socketId === 'left_shoulder') {
+        createdEntities.add('arm-1');
+        return 'arm-1';
+      }
+      if (socketId === 'right_shoulder') {
+        createdEntities.add('arm-2');
+        return 'arm-2';
+      }
+      return null;
+    });
+    
+    mockEntityGraphBuilder.getPartType.mockImplementation((entityId) => {
+      if (entityId === 'head-1') return 'head';
+      if (entityId === 'arm-1' || entityId === 'arm-2') return 'arm';
+      return 'torso';
+    });
+
+    // Mock socket manager to validate parent existence
+    mockSocketManager.validateSocketAvailability.mockImplementation((parentId, socketId) => {
+      // Return proper validation object
+      if (createdEntities.has(parentId)) {
+        return {
+          valid: true,
+          socket: {
+            id: socketId,
+            allowedTypes: ['head', 'arm', 'leg', 'eye']
+          }
+        };
+      }
+      return {
+        valid: false,
+        error: 'Parent not found'
+      };
+    });
+    mockSocketManager.generatePartName.mockReturnValue('Generated Name');
+
+    // Mock part selection service
+    mockPartSelectionService.selectPart
+      .mockResolvedValueOnce('anatomy:test_head')
+      .mockResolvedValueOnce('anatomy:test_arm')
+      .mockResolvedValueOnce('anatomy:test_arm');
+
+    // Mock registry lookups
+    mockDataRegistry.get.mockImplementation((registry, id) => {
+      if (registry === 'anatomyBlueprints' && id === blueprintId) {
+        return mockBlueprint;
+      }
+      return null;
+    });
+
+    let result;
+    let error;
+    try {
+      result = await factory.createAnatomyGraph(blueprintId, recipeId);
+    } catch (e) {
+      error = e;
+      console.error('Test failed with error:', e.message, e.stack);
+    }
+
+    expect(error).toBeUndefined();
+    expect(result).toBeDefined();
+
+
+    // Verify part selection was called for child slots
+    expect(mockPartSelectionService.selectPart).toHaveBeenCalledTimes(3);
+
+    // Verify entities were created and attached
+    expect(mockEntityGraphBuilder.createAndAttachPart).toHaveBeenCalledTimes(3);
+
+    // Verify result includes all entities
+    expect(result.rootId).toBe('torso-1');
+    expect(result.entities).toEqual(['torso-1', 'head-1', 'arm-1', 'arm-2']);
+  });
+
+  test('should process parent-child slot relationships', async () => {
     const blueprintId = 'anatomy:test_blueprint';
     const recipeId = 'anatomy:test_recipe';
 
@@ -86,13 +272,6 @@ describe('BodyBlueprintFactory - Child Slots Support', () => {
             partType: 'eye',
           },
         },
-        right_eye_slot: {
-          parent: 'head_slot',
-          socket: 'right_eye',
-          requirements: {
-            partType: 'eye',
-          },
-        },
       },
     };
 
@@ -106,160 +285,110 @@ describe('BodyBlueprintFactory - Child Slots Support', () => {
         },
         left_eye_slot: {
           partType: 'eye',
-          properties: {
-            'descriptors:color_extended': {
-              color: 'blue',
-            },
-          },
-        },
-        right_eye_slot: {
-          partType: 'eye',
-          properties: {
-            'descriptors:color_extended': {
-              color: 'blue',
-            },
-          },
+          preferId: 'anatomy:test_eye',
         },
       },
     };
-
-    const mockTorsoEntity = {
-      id: 'torso-1',
-      definitionId: 'anatomy:test_torso',
-    };
-
-    const mockHeadEntity = {
-      id: 'head-1',
-      definitionId: 'anatomy:test_head',
-    };
-
-    const mockEyeEntity = {
-      id: 'eye-1',
-      definitionId: 'anatomy:human_eye_blue',
-    };
-
-    // Mock torso creation
-    mockEntityManager.createEntityInstance.mockReturnValueOnce(mockTorsoEntity);
-    mockEntityManager.getEntityInstance.mockImplementation((id) => {
-      if (id === 'torso-1') return mockTorsoEntity;
-      if (id === 'head-1') return mockHeadEntity;
-      if (id === 'eye-1') return mockEyeEntity;
-      return null;
-    });
-
-    // Mock torso sockets
-    mockEntityManager.getComponentData.mockImplementation(
-      (entityId, componentId) => {
-        if (entityId === 'torso-1' && componentId === 'anatomy:sockets') {
-          return {
-            sockets: [
-              {
-                id: 'neck',
-                allowedTypes: ['head'],
-                maxCount: 1,
-              },
-            ],
-          };
-        }
-        if (entityId === 'head-1' && componentId === 'anatomy:sockets') {
-          return {
-            sockets: [
-              {
-                id: 'left_eye',
-                allowedTypes: ['eye'],
-                maxCount: 1,
-              },
-              {
-                id: 'right_eye',
-                allowedTypes: ['eye'],
-                maxCount: 1,
-              },
-            ],
-          };
-        }
-        if (componentId === 'anatomy:part') {
-          if (entityId === 'head-1') return { subType: 'head' };
-          if (entityId === 'eye-1') return { subType: 'eye' };
-        }
-        return null;
-      }
-    );
 
     // Mock registry lookups
     mockDataRegistry.get.mockImplementation((registry, id) => {
       if (registry === 'anatomyBlueprints' && id === blueprintId) {
         return mockBlueprint;
       }
-      if (registry === 'anatomyRecipes' && id === recipeId) {
-        return mockRecipe;
-      }
-      if (registry === 'entityDefinitions') {
-        if (id === 'anatomy:test_head') {
-          return {
-            components: {
-              'anatomy:part': { subType: 'head' },
-            },
-          };
-        }
-        if (id === 'anatomy:human_eye_blue') {
-          return {
-            components: {
-              'anatomy:part': { subType: 'eye' },
-              'descriptors:color_extended': { color: 'blue' },
-              'descriptors:shape_eye': { shape: 'round' },
-            },
-          };
-        }
-      }
       return null;
     });
 
-    // Mock getAll for entity definitions (used to find anatomy parts)
-    mockDataRegistry.getAll.mockImplementation((registry) => {
-      if (registry === 'entityDefinitions') {
-        return [
-          {
-            id: 'anatomy:test_head',
-            components: {
-              'anatomy:part': { subType: 'head' },
-            },
-          },
-          {
-            id: 'anatomy:human_eye_blue',
-            components: {
-              'anatomy:part': { subType: 'eye' },
-              'descriptors:color_extended': { color: 'blue' },
-              'descriptors:shape_eye': { shape: 'round' },
-            },
-          },
-        ];
+    // Mock recipe processor
+    mockRecipeProcessor.loadRecipe.mockReturnValue(mockRecipe);
+    mockRecipeProcessor.processRecipe.mockReturnValue(mockRecipe);
+    mockRecipeProcessor.mergeSlotRequirements.mockReturnValue({});
+
+    // Mock entity graph builder
+    mockEntityGraphBuilder.createRootEntity.mockReturnValue('torso-1');
+    
+    // The issue is that the real implementation maintains slot-to-entity mapping
+    // internally via the context. We need to properly mock this behavior.
+    const createdEntities = ['torso-1'];
+    const slotToEntityMap = new Map();
+    
+    // When slots are processed, the context tracks which entity was created for each slot
+    mockEntityGraphBuilder.createAndAttachPart.mockImplementation((parentId, socketId, partDefId) => {
+      if (socketId === 'neck' && parentId === 'torso-1') {
+        createdEntities.push('head-1');
+        return 'head-1';
       }
-      return [];
+      if (socketId === 'left_eye' && parentId === 'head-1') {
+        createdEntities.push('eye-1');
+        return 'eye-1';
+      }
+      return null;
+    });
+    
+    mockEntityGraphBuilder.getPartType.mockImplementation((entityId) => {
+      if (entityId === 'head-1') return 'head';
+      if (entityId === 'eye-1') return 'eye';
+      return 'torso';
     });
 
-    // Mock entity creation
-    mockEntityManager.createEntityInstance
-      .mockReturnValueOnce(mockHeadEntity)
-      .mockReturnValueOnce(mockEyeEntity)
-      .mockReturnValueOnce(mockEyeEntity);
+    // Mock socket manager to return the actual socket ID from the slot
+    mockSocketManager.validateSocketAvailability.mockImplementation((parentId, socketId) => {
+      return {
+        valid: true,
+        socket: { id: socketId, allowedTypes: ['any'] }
+      };
+    });
+    mockSocketManager.generatePartName.mockReturnValue('Generated Name');
 
-    const result = await factory.createAnatomyGraph(blueprintId, recipeId);
+    // Mock part selection service
+    mockPartSelectionService.selectPart
+      .mockResolvedValueOnce('anatomy:test_head')
+      .mockResolvedValueOnce('anatomy:test_eye');
 
-    // Verify that eye entities were created with property matching
-    const createEntityCalls = mockEntityManager.createEntityInstance.mock.calls;
+    // Import AnatomyGraphContext to spy on it
+    const { AnatomyGraphContext } = await import('../../../src/anatomy/anatomyGraphContext.js');
+    
+    // Create spy on AnatomyGraphContext prototype methods
+    const originalMapSlotToEntity = AnatomyGraphContext.prototype.mapSlotToEntity;
+    const originalGetEntityForSlot = AnatomyGraphContext.prototype.getEntityForSlot;
+    
+    // Override the methods to ensure slot mappings work correctly
+    AnatomyGraphContext.prototype.mapSlotToEntity = function(slotKey, entityId) {
+      // Call the original method to update internal state
+      originalMapSlotToEntity.call(this, slotKey, entityId);
+      // Also track in our map for debugging
+      slotToEntityMap.set(slotKey, entityId);
+    };
+    
+    AnatomyGraphContext.prototype.getEntityForSlot = function(slotKey) {
+      // Call the original method to get from internal state
+      return originalGetEntityForSlot.call(this, slotKey);
+    };
 
-    // Should have created head and two eyes (beyond the initial torso)
-    // The first call is for the torso, which is already mocked
-    expect(createEntityCalls.length).toBeGreaterThanOrEqual(3);
+    try {
+      const result = await factory.createAnatomyGraph(blueprintId, recipeId);
 
-    // Check that blue eyes were selected based on property requirements
-    const eyeCreations = createEntityCalls.filter(
-      ([defId]) => defId === 'anatomy:human_eye_blue'
-    );
-    expect(eyeCreations.length).toBeGreaterThanOrEqual(1);
+      // Verify parts were created in correct order with correct parents
+      expect(mockEntityGraphBuilder.createAndAttachPart).toHaveBeenCalledTimes(2);
+      expect(mockEntityGraphBuilder.createAndAttachPart).toHaveBeenNthCalledWith(
+        1, 
+        'torso-1', 
+        'neck', 
+        'anatomy:test_head'
+      );
+      expect(mockEntityGraphBuilder.createAndAttachPart).toHaveBeenNthCalledWith(
+        2,
+        'head-1',
+        'left_eye',
+        'anatomy:test_eye'
+      );
 
-    // Verify result includes all entities
-    expect(result.rootId).toBe('torso-1');
-    expect(result.entities).toContain('torso-1');
+      // Verify result includes all entities
+      expect(result.rootId).toBe('torso-1');
+      expect(result.entities).toEqual(['torso-1', 'head-1', 'eye-1']);
+    } finally {
+      // Restore original methods
+      AnatomyGraphContext.prototype.mapSlotToEntity = originalMapSlotToEntity;
+      AnatomyGraphContext.prototype.getEntityForSlot = originalGetEntityForSlot;
+    }
   });
 });

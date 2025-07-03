@@ -65,6 +65,7 @@ describe('InitializationService failure scenarios', () => {
           validate: jest.fn().mockResolvedValue(undefined),
         },
         llmAdapterInitializer,
+        anatomyFormattingService: { initialize: jest.fn() },
       },
       llm: {
         llmAdapter: { init: jest.fn() },

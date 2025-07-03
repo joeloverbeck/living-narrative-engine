@@ -5,6 +5,11 @@ import { AnatomyGenerationService } from '../../../src/anatomy/anatomyGeneration
 import { BodyBlueprintFactory } from '../../../src/anatomy/bodyBlueprintFactory.js';
 import { GraphIntegrityValidator } from '../../../src/anatomy/graphIntegrityValidator.js';
 import { BodyGraphService } from '../../../src/anatomy/bodyGraphService.js';
+import { RecipeProcessor } from '../../../src/anatomy/recipeProcessor.js';
+import { PartSelectionService } from '../../../src/anatomy/partSelectionService.js';
+import { SocketManager } from '../../../src/anatomy/socketManager.js';
+import { EntityGraphBuilder } from '../../../src/anatomy/entityGraphBuilder.js';
+import { RecipeConstraintEvaluator } from '../../../src/anatomy/recipeConstraintEvaluator.js';
 import {
   createMockLogger,
   createMockSafeEventDispatcher,
@@ -48,7 +53,34 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
     // Create validator
     this.validator = new GraphIntegrityValidator({
       entityManager: this.entityManager,
+      logger: mocks.logger,
+    });
+
+    // Create new anatomy services
+    this.recipeProcessor = new RecipeProcessor({
       dataRegistry: mocks.registry,
+      logger: mocks.logger,
+    });
+
+    this.partSelectionService = new PartSelectionService({
+      dataRegistry: mocks.registry,
+      logger: mocks.logger,
+      eventDispatchService: mocks.eventDispatchService,
+    });
+
+    this.socketManager = new SocketManager({
+      entityManager: this.entityManager,
+      logger: mocks.logger,
+    });
+
+    this.entityGraphBuilder = new EntityGraphBuilder({
+      entityManager: this.entityManager,
+      dataRegistry: mocks.registry,
+      logger: mocks.logger,
+    });
+
+    this.constraintEvaluator = new RecipeConstraintEvaluator({
+      entityManager: this.entityManager,
       logger: mocks.logger,
     });
 
@@ -59,7 +91,11 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
       logger: mocks.logger,
       eventDispatcher: mocks.eventDispatcher,
       eventDispatchService: mocks.eventDispatchService,
-      idGenerator: mocks.idGenerator,
+      recipeProcessor: this.recipeProcessor,
+      partSelectionService: this.partSelectionService,
+      socketManager: this.socketManager,
+      entityGraphBuilder: this.entityGraphBuilder,
+      constraintEvaluator: this.constraintEvaluator,
       validator: this.validator,
     });
 

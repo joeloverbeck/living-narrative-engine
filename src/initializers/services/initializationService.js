@@ -64,6 +64,7 @@ class InitializationService extends IInitializationService {
   #spatialIndexManager;
   #contentDependencyValidator;
   #llmAdapterInitializer;
+  #anatomyFormattingService;
 
   /**
    * Creates a new InitializationService instance.
@@ -89,6 +90,7 @@ class InitializationService extends IInitializationService {
    *   worldInitializer: WorldInitializer,
    *   contentDependencyValidator: import('./contentDependencyValidator.js').default, // Required validator instance
    *   llmAdapterInitializer: LlmAdapterInitializer,
+   *   anatomyFormattingService: import('../../services/anatomyFormattingService.js').AnatomyFormattingService,
    * }} config.coreSystems - Core engine systems.
    * @description Initializes the complete game system.
    */
@@ -119,6 +121,7 @@ class InitializationService extends IInitializationService {
       worldInitializer,
       contentDependencyValidator,
       llmAdapterInitializer = new LlmAdapterInitializer(),
+      anatomyFormattingService,
     } = coreSystems;
     super();
 
@@ -227,6 +230,12 @@ class InitializationService extends IInitializationService {
       "InitializationService: Missing or invalid required dependency 'llmAdapterInitializer'.",
       SystemInitializationError
     );
+    assertFunction(
+      anatomyFormattingService,
+      'initialize',
+      "InitializationService: Missing or invalid required dependency 'anatomyFormattingService'.",
+      SystemInitializationError
+    );
     this.#validatedEventDispatcher = validatedEventDispatcher;
     this.#modsLoader = modsLoader;
     this.#scopeRegistry = scopeRegistry;
@@ -245,6 +254,7 @@ class InitializationService extends IInitializationService {
     this.#spatialIndexManager = spatialIndexManager;
     this.#contentDependencyValidator = contentDependencyValidator;
     this.#llmAdapterInitializer = llmAdapterInitializer;
+    this.#anatomyFormattingService = anatomyFormattingService;
 
     this.#logger.debug(
       'InitializationService: Instance created successfully with dependencies.'
@@ -270,6 +280,12 @@ class InitializationService extends IInitializationService {
         this.#logger
       );
       await this.#loadMods(worldName);
+      
+      // Initialize AnatomyFormattingService after mods are loaded
+      this.#logger.debug('Initializing AnatomyFormattingService after mod loading...');
+      await this.#anatomyFormattingService.initialize();
+      this.#logger.debug('AnatomyFormattingService initialized successfully.');
+      
       await this.#contentDependencyValidator.validate(worldName);
       await this.#initializeScopeRegistry();
       const llmReady = await this.#llmAdapterInitializer.initialize(

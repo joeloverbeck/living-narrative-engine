@@ -29,6 +29,7 @@ let thoughtListener;
 let notesListener;
 let contentDependencyValidator;
 let llmAdapterInitializer;
+let anatomyFormattingService;
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -60,6 +61,7 @@ beforeEach(() => {
     validate: jest.fn().mockResolvedValue(undefined),
   };
   llmAdapterInitializer = new LlmAdapterInitializer();
+  anatomyFormattingService = { initialize: jest.fn() };
 });
 
 describe('InitializationService persistence listener setup', () => {
@@ -85,6 +87,7 @@ describe('InitializationService persistence listener setup', () => {
         worldInitializer,
         contentDependencyValidator,
         llmAdapterInitializer,
+        anatomyFormattingService,
       },
     });
 

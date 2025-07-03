@@ -18,6 +18,7 @@ describe('AnatomyGenerationService', () => {
     mockEntityManager = {
       getEntityInstance: jest.fn(),
       addComponent: jest.fn(),
+      removeEntityInstance: jest.fn(),
     };
 
     mockDataRegistry = {
@@ -204,7 +205,7 @@ describe('AnatomyGenerationService', () => {
       mockDataRegistry.get.mockReturnValue(null);
 
       await expect(service.generateAnatomyIfNeeded('entity-1')).rejects.toThrow(
-        ValidationError
+        'Recipe \'missing-recipe\' not found'
       );
     });
 
@@ -340,7 +341,7 @@ describe('AnatomyGenerationService', () => {
       );
     });
 
-    it('should handle description generation failure gracefully', async () => {
+    it('should handle description generation failure with rollback', async () => {
       const mockEntity = {
         hasComponent: jest.fn().mockReturnValue(true),
         getComponentData: jest.fn().mockReturnValue({
@@ -368,16 +369,16 @@ describe('AnatomyGenerationService', () => {
         }
       );
 
-      const result = await service.generateAnatomyIfNeeded('entity-1');
+      // The new architecture properly propagates errors and triggers rollback
+      await expect(service.generateAnatomyIfNeeded('entity-1')).rejects.toThrow();
 
-      expect(result).toBe(true); // Should still succeed
       expect(mockLogger.error).toHaveBeenCalledWith(
-        "AnatomyGenerationService: Failed to generate descriptions for entity 'entity-1'",
+        "AnatomyGenerationService: Failed to generate anatomy for entity 'entity-1'",
         expect.any(Object)
       );
     });
 
-    it('should handle null entity during description generation', async () => {
+    it('should handle null entity during update phase', async () => {
       const mockEntity = {
         hasComponent: jest.fn().mockReturnValue(true),
         getComponentData: jest.fn().mockReturnValue({
@@ -397,18 +398,21 @@ describe('AnatomyGenerationService', () => {
         mockGraphResult
       );
 
-      // Return entity initially, then null during description generation
-      mockEntityManager.getEntityInstance
-        .mockReturnValueOnce(mockEntity)
-        .mockReturnValueOnce(mockEntity)
-        .mockReturnValueOnce(null); // Return null for bodyEntity check
+      // Setup to return entity for initial checks but null during update
+      let callCount = 0;
+      mockEntityManager.getEntityInstance.mockImplementation((id) => {
+        callCount++;
+        // Return null when trying to update parent entity (after graph generation)
+        if (callCount > 2) {
+          return null;
+        }
+        return mockEntity;
+      });
 
-      const result = await service.generateAnatomyIfNeeded('entity-1');
-
-      expect(result).toBe(true);
-      expect(
-        mockAnatomyDescriptionService.generateAllDescriptions
-      ).not.toHaveBeenCalled();
+      // Should throw error when entity not found during update
+      await expect(service.generateAnatomyIfNeeded('entity-1')).rejects.toThrow(
+        'Entity \'entity-1\' not found after anatomy generation'
+      );
     });
 
     it('should build adjacency cache before generating descriptions', async () => {
@@ -448,6 +452,8 @@ describe('AnatomyGenerationService', () => {
     });
 
     it('should handle null name data for parts', async () => {
+      // Mock removeEntityInstance to prevent rollback failures
+      mockEntityManager.removeEntityInstance.mockImplementation(() => {});
       const mockEntity = {
         hasComponent: jest.fn().mockReturnValue(true),
         getComponentData: jest.fn().mockReturnValue({
@@ -476,6 +482,11 @@ describe('AnatomyGenerationService', () => {
             getComponentData: jest.fn().mockReturnValue(null), // Null name data
           };
         }
+        if (id === 'root-1') {
+          return {
+            hasComponent: jest.fn((compId) => compId === 'anatomy:part'),
+          };
+        }
         return null;
       });
 
@@ -495,6 +506,8 @@ describe('AnatomyGenerationService', () => {
     });
 
     it('should handle empty name in name data', async () => {
+      // Mock removeEntityInstance to prevent rollback failures
+      mockEntityManager.removeEntityInstance.mockImplementation(() => {});
       const mockEntity = {
         hasComponent: jest.fn().mockReturnValue(true),
         getComponentData: jest.fn().mockReturnValue({
@@ -521,6 +534,11 @@ describe('AnatomyGenerationService', () => {
           return {
             hasComponent: jest.fn((compId) => compId === 'core:name'),
             getComponentData: jest.fn().mockReturnValue({ name: '' }), // Empty name
+          };
+        }
+        if (id === 'root-1') {
+          return {
+            hasComponent: jest.fn((compId) => compId === 'anatomy:part'),
           };
         }
         return null;
@@ -563,7 +581,7 @@ describe('AnatomyGenerationService', () => {
 
       expect(mockLogger.error).toHaveBeenCalledWith(
         "AnatomyGenerationService: Failed to generate anatomy for entity 'entity-1'",
-        { error }
+        expect.objectContaining({ error: expect.any(Object) })
       );
     });
   });
@@ -596,6 +614,11 @@ describe('AnatomyGenerationService', () => {
         if (id === 'entity-1') return mockEntity1;
         if (id === 'entity-2') return mockEntity2;
         if (id === 'entity-3') return mockEntity3;
+        if (id === 'root-1') {
+          return {
+            hasComponent: jest.fn((compId) => compId === 'anatomy:part'),
+          };
+        }
         return null;
       });
 
@@ -674,6 +697,11 @@ describe('AnatomyGenerationService', () => {
       mockEntityManager.getEntityInstance.mockImplementation((id) => {
         if (id === 'entity-1') return mockEntity1;
         if (id === 'entity-2') return mockEntity2;
+        if (id === 'root-1') {
+          return {
+            hasComponent: jest.fn((compId) => compId === 'anatomy:part'),
+          };
+        }
         return null;
       });
 

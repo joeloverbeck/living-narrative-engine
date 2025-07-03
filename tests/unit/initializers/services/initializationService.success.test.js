@@ -22,6 +22,7 @@ let thoughtListener;
 let notesListener;
 let contentDependencyValidator;
 let llmAdapterInitializer;
+let anatomyFormattingService;
 
 beforeEach(() => {
   logger = { error: jest.fn(), debug: jest.fn(), warn: jest.fn() };
@@ -58,6 +59,7 @@ beforeEach(() => {
     validate: jest.fn().mockResolvedValue(undefined),
   };
   llmAdapterInitializer = new LlmAdapterInitializer();
+  anatomyFormattingService = { initialize: jest.fn() };
 });
 
 describe('InitializationService success path', () => {
@@ -83,6 +85,7 @@ describe('InitializationService success path', () => {
         worldInitializer,
         contentDependencyValidator,
         llmAdapterInitializer,
+        anatomyFormattingService,
       },
     });
 

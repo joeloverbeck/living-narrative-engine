@@ -72,6 +72,7 @@ const createService = (overrides = {}) =>
       worldInitializer,
       contentDependencyValidator,
       llmAdapterInitializer,
+      anatomyFormattingService: { initialize: jest.fn() },
     },
     ...(overrides || {}),
   });

@@ -1,8 +1,12 @@
 // src/services/anatomyFormattingService.js
 
+import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/systemEventIds.js';
+import { validateDependencies } from '../utils/dependencyUtils.js';
+
 /**
  * @typedef {import('../interfaces/coreServices.js').IDataRegistry} IDataRegistry
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
+ * @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher
  */
 
 /**
@@ -14,7 +18,6 @@
  * @property {Object.<string, string>} [irregularPlurals] - Mapping of body part types to irregular plurals
  * @property {string[]} [noArticleParts] - Body part types that should not have articles
  * @property {string[]} [descriptorOrder] - Order in which descriptor types appear
- * @property {string[]} [commaSeparatedDescriptors] - Descriptor types using commas instead of hyphens
  * @property {string[]} [descriptorValueKeys] - Keys to search for when extracting descriptor values
  * @property {object} [mergeStrategy] - Optional merge strategy configuration
  */
@@ -28,12 +31,19 @@ export class AnatomyFormattingService {
    * @param {object} params
    * @param {IDataRegistry} params.dataRegistry - Data registry service
    * @param {ILogger} params.logger - Logging service
-   * @param {string[]} params.modLoadOrder - Array of mod IDs in load order
+   * @param {ISafeEventDispatcher} params.safeEventDispatcher - Event dispatcher for error reporting
    */
-  constructor({ dataRegistry, logger, modLoadOrder }) {
+  constructor({ dataRegistry, logger, safeEventDispatcher }) {
+    // Validate dependencies
+    validateDependencies([
+      { dependency: dataRegistry, name: 'dataRegistry', methods: ['getAll', 'get'] },
+      { dependency: logger, name: 'logger', methods: ['info', 'warn', 'error', 'debug'] },
+      { dependency: safeEventDispatcher, name: 'safeEventDispatcher', methods: ['dispatch'] }
+    ], logger);
+    
     this.dataRegistry = dataRegistry;
     this.logger = logger;
-    this.modLoadOrder = modLoadOrder || [];
+    this.safeEventDispatcher = safeEventDispatcher;
 
     // Cache for merged configuration
     this._mergedConfig = null;
@@ -52,8 +62,19 @@ export class AnatomyFormattingService {
       'AnatomyFormattingService: Initializing formatting configuration'
     );
 
+    // Get mod load order from meta registry (stored by ModManifestProcessor)
+    const modLoadOrder = this.dataRegistry.get('meta', 'final_mod_order') || [];
+    
+    this.logger.debug(
+      `AnatomyFormattingService: Using mod load order: [${modLoadOrder.join(', ')}]`
+    );
+
     // Get all anatomy formatting configurations from registry
-    const allConfigs = this.dataRegistry.getAll('anatomyFormatting') || {};
+    const allConfigs = this.dataRegistry.getAll('anatomyFormatting') || [];
+    
+    this.logger.debug(
+      `AnatomyFormattingService: Retrieved ${allConfigs.length} anatomy formatting configs from registry`
+    );
 
     // Start with empty base configuration
     let mergedConfig = {
@@ -63,18 +84,31 @@ export class AnatomyFormattingService {
       irregularPlurals: {},
       noArticleParts: [],
       descriptorOrder: [],
-      commaSeparatedDescriptors: [],
       descriptorValueKeys: [],
     };
 
     // Process configs in mod load order
-    for (const modId of this.modLoadOrder) {
+    for (const modId of modLoadOrder) {
       // Look for configurations from this mod
-      const modConfigs = Object.entries(allConfigs)
-        .filter(([key]) => key.startsWith(`${modId}:`))
-        .map(([, config]) => config);
+      // The configs are stored with metadata including _modId
+      const modConfigs = allConfigs.filter(config => config._modId === modId);
+      
+      this.logger.debug(
+        `AnatomyFormattingService: Found ${modConfigs.length} configs for mod '${modId}'`
+      );
 
       for (const config of modConfigs) {
+        this.logger.debug(
+          `AnatomyFormattingService: Merging config from mod '${modId}':`,
+          {
+            hasDescriptionOrder: !!config.descriptionOrder,
+            descriptionOrderLength: config.descriptionOrder?.length || 0,
+            hasDescriptorOrder: !!config.descriptorOrder,
+            descriptorOrderLength: config.descriptorOrder?.length || 0,
+            hasDescriptorValueKeys: !!config.descriptorValueKeys,
+            descriptorValueKeysLength: config.descriptorValueKeys?.length || 0
+          }
+        );
         mergedConfig = this._mergeConfigurations(mergedConfig, config);
       }
     }
@@ -85,6 +119,9 @@ export class AnatomyFormattingService {
     this.logger.debug('AnatomyFormattingService: Configuration initialized', {
       descriptionOrderCount: mergedConfig.descriptionOrder.length,
       descriptorOrderCount: mergedConfig.descriptorOrder.length,
+      descriptorValueKeysCount: mergedConfig.descriptorValueKeys.length,
+      pairedPartsCount: mergedConfig.pairedParts.length,
+      irregularPluralsCount: Object.keys(mergedConfig.irregularPlurals).length,
     });
   }
 
@@ -107,7 +144,6 @@ export class AnatomyFormattingService {
       'pairedParts',
       'noArticleParts',
       'descriptorOrder',
-      'commaSeparatedDescriptors',
       'descriptorValueKeys',
     ];
 
@@ -151,7 +187,9 @@ export class AnatomyFormattingService {
    */
   getDescriptionOrder() {
     this._ensureInitialized();
-    return [...this._mergedConfig.descriptionOrder];
+    const descriptionOrder = this._mergedConfig.descriptionOrder;
+    this._validateConfiguration('descriptionOrder', descriptionOrder, 'getDescriptionOrder');
+    return [...descriptionOrder];
   }
 
   /**
@@ -161,7 +199,9 @@ export class AnatomyFormattingService {
    */
   getGroupedParts() {
     this._ensureInitialized();
-    return new Set(this._mergedConfig.groupedParts);
+    const groupedParts = this._mergedConfig.groupedParts;
+    // Note: groupedParts is optional and can be empty, so we don't validate it
+    return new Set(groupedParts);
   }
 
   /**
@@ -171,7 +211,9 @@ export class AnatomyFormattingService {
    */
   getPairedParts() {
     this._ensureInitialized();
-    return new Set(this._mergedConfig.pairedParts);
+    const pairedParts = this._mergedConfig.pairedParts;
+    this._validateConfiguration('pairedParts', pairedParts, 'getPairedParts');
+    return new Set(pairedParts);
   }
 
   /**
@@ -181,7 +223,9 @@ export class AnatomyFormattingService {
    */
   getIrregularPlurals() {
     this._ensureInitialized();
-    return { ...this._mergedConfig.irregularPlurals };
+    const irregularPlurals = this._mergedConfig.irregularPlurals;
+    this._validateConfiguration('irregularPlurals', irregularPlurals, 'getIrregularPlurals');
+    return { ...irregularPlurals };
   }
 
   /**
@@ -191,7 +235,9 @@ export class AnatomyFormattingService {
    */
   getNoArticleParts() {
     this._ensureInitialized();
-    return new Set(this._mergedConfig.noArticleParts);
+    const noArticleParts = this._mergedConfig.noArticleParts;
+    // Note: noArticleParts is optional and can be empty, so we don't validate it
+    return new Set(noArticleParts);
   }
 
   /**
@@ -201,18 +247,11 @@ export class AnatomyFormattingService {
    */
   getDescriptorOrder() {
     this._ensureInitialized();
-    return [...this._mergedConfig.descriptorOrder];
+    const descriptorOrder = this._mergedConfig.descriptorOrder;
+    this._validateConfiguration('descriptorOrder', descriptorOrder, 'getDescriptorOrder');
+    return [...descriptorOrder];
   }
 
-  /**
-   * Get the set of descriptors that use comma separation
-   *
-   * @returns {Set<string>} Set of comma-separated descriptor types
-   */
-  getCommaSeparatedDescriptors() {
-    this._ensureInitialized();
-    return new Set(this._mergedConfig.commaSeparatedDescriptors);
-  }
 
   /**
    * Get the list of keys to search for descriptor values
@@ -221,7 +260,9 @@ export class AnatomyFormattingService {
    */
   getDescriptorValueKeys() {
     this._ensureInitialized();
-    return [...this._mergedConfig.descriptorValueKeys];
+    const descriptorValueKeys = this._mergedConfig.descriptorValueKeys;
+    this._validateConfiguration('descriptorValueKeys', descriptorValueKeys, 'getDescriptorValueKeys');
+    return [...descriptorValueKeys];
   }
 
   /**
@@ -234,6 +275,54 @@ export class AnatomyFormattingService {
       throw new Error(
         'AnatomyFormattingService not initialized. Call initialize() first.'
       );
+    }
+  }
+
+  /**
+   * Validate that configuration arrays are not empty and dispatch errors if they are
+   *
+   * @private
+   * @param {string} configKey - The configuration key being validated
+   * @param {*} configValue - The configuration value to validate
+   * @param {string} method - The getter method name calling this validation
+   */
+  _validateConfiguration(configKey, configValue, method) {
+    // Check if the value is empty (array, set, or object)
+    let isEmpty = false;
+    
+    if (Array.isArray(configValue)) {
+      isEmpty = configValue.length === 0;
+    } else if (configValue instanceof Set) {
+      isEmpty = configValue.size === 0;
+    } else if (configValue && typeof configValue === 'object') {
+      isEmpty = Object.keys(configValue).length === 0;
+    } else {
+      isEmpty = !configValue;
+    }
+
+    if (isEmpty) {
+      const message = `AnatomyFormattingService.${method}: ${configKey} configuration is empty`;
+      const details = {
+        method,
+        configKey,
+        expected: `Non-empty ${configKey} configuration`,
+        actual: configValue,
+        impact: 'Body part descriptions will be incomplete or empty',
+        suggestion: 'Ensure "anatomy" mod is loaded in /data/game.json mods list',
+        affectedFeature: 'Body part description generation'
+      };
+
+      this.logger.error(message, details);
+      
+      this.safeEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
+        message,
+        details: {
+          raw: JSON.stringify(details),
+          timestamp: new Date().toISOString()
+        }
+      });
+
+      throw new Error(message);
     }
   }
 }
