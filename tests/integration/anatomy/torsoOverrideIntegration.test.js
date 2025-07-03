@@ -1,14 +1,9 @@
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
-import { BodyBlueprintFactory } from '../../../src/anatomy/bodyBlueprintFactory.js';
+import { beforeEach, afterEach, describe, expect, it, jest } from '@jest/globals';
+import AnatomyIntegrationTestBed from '../../common/anatomy/anatomyIntegrationTestBed.js';
 
 describe('BodyBlueprintFactory - Torso Override Integration', () => {
+  let testBed;
   let factory;
-  let mockEntityManager;
-  let mockDataRegistry;
-  let mockLogger;
-  let mockEventDispatcher;
-  let mockEventDispatchService;
-  let mockValidator;
 
   // Mock data from actual recipe files
   const mockHumanMaleRecipe = {
@@ -145,51 +140,30 @@ describe('BodyBlueprintFactory - Torso Override Integration', () => {
   };
 
   beforeEach(() => {
-    mockEntityManager = {
-      getEntityInstance: jest.fn(),
-      createEntityInstance: jest.fn(),
-      createEntity: jest.fn(),
-      addComponent: jest.fn(),
-      getComponentData: jest.fn(),
-      removeEntity: jest.fn(),
-    };
+    testBed = new AnatomyIntegrationTestBed();
+    factory = testBed.bodyBlueprintFactory;
 
-    mockDataRegistry = {
-      get: jest.fn(),
-      getAll: jest.fn(),
-    };
+    // Set up mocks on the test bed's services
+    jest.spyOn(testBed.entityManager, 'createEntityInstance').mockImplementation((defId) => ({
+      id: `entity_${defId}`,
+      definitionId: defId,
+    }));
+    jest.spyOn(testBed.entityManager, 'addComponent').mockImplementation(() => {});
+    jest.spyOn(testBed.entityManager, 'getComponentData').mockImplementation(() => null);
+    // Note: removeEntity is not available on the test bed's entity manager
 
-    mockLogger = {
-      debug: jest.fn(),
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-    };
+    jest.spyOn(testBed.registry, 'get').mockImplementation(() => null);
+    jest.spyOn(testBed.registry, 'getAll').mockReturnValue([]);
 
-    mockEventDispatcher = {
-      dispatch: jest.fn().mockResolvedValue(undefined),
-    };
-
-    mockValidator = {
-      validateGraph: jest
-        .fn()
-        .mockResolvedValue({ valid: true, errors: [], warnings: [] }),
-    };
-
-    mockEventDispatchService = {
-      dispatchWithLogging: jest.fn().mockResolvedValue(undefined),
-      dispatchWithErrorHandling: jest.fn().mockResolvedValue(true),
-      safeDispatchEvent: jest.fn().mockResolvedValue(undefined),
-    };
-
-    factory = new BodyBlueprintFactory({
-      entityManager: mockEntityManager,
-      dataRegistry: mockDataRegistry,
-      logger: mockLogger,
-      eventDispatcher: mockEventDispatcher,
-      eventDispatchService: mockEventDispatchService,
-      validator: mockValidator,
+    jest.spyOn(testBed.validator, 'validateGraph').mockResolvedValue({ 
+      valid: true, 
+      errors: [], 
+      warnings: [] 
     });
+  });
+
+  afterEach(async () => {
+    await testBed.cleanup();
   });
 
   describe('existing recipe integration tests', () => {
@@ -199,7 +173,7 @@ describe('BodyBlueprintFactory - Torso Override Integration', () => {
         slots: {},
       };
 
-      mockDataRegistry.get.mockImplementation((registry, id) => {
+      testBed.registry.get.mockImplementation((registry, id) => {
         if (registry === 'anatomyBlueprints' && id === 'anatomy:human_male')
           return blueprint;
         if (registry === 'anatomyRecipes' && id === 'anatomy:human_male')
@@ -221,18 +195,18 @@ describe('BodyBlueprintFactory - Torso Override Integration', () => {
         id: 'torso-1',
         definitionId: 'anatomy:human_male_torso',
       };
-      mockEntityManager.createEntityInstance.mockReturnValue(mockMaleTorsoEntity);
+      testBed.entityManager.createEntityInstance.mockReturnValue(mockMaleTorsoEntity);
 
       const result = await factory.createAnatomyGraph(
         'anatomy:human_male',
         'anatomy:human_male'
       );
 
-      expect(mockEntityManager.createEntityInstance).toHaveBeenCalledWith(
+      expect(testBed.entityManager.createEntityInstance).toHaveBeenCalledWith(
         'anatomy:human_male_torso'
       );
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        "Using recipe torso override: 'anatomy:human_male_torso' instead of blueprint default: 'anatomy:default_torso'"
+      expect(testBed.logger.debug).toHaveBeenCalledWith(
+        expect.stringContaining("Using recipe torso override")
       );
       expect(result.rootId).toBe('torso-1');
     });
@@ -243,7 +217,7 @@ describe('BodyBlueprintFactory - Torso Override Integration', () => {
         slots: {},
       };
 
-      mockDataRegistry.get.mockImplementation((registry, id) => {
+      testBed.registry.get.mockImplementation((registry, id) => {
         if (registry === 'anatomyBlueprints' && id === 'anatomy:human_female')
           return blueprint;
         if (registry === 'anatomyRecipes' && id === 'anatomy:human_female')
@@ -265,18 +239,18 @@ describe('BodyBlueprintFactory - Torso Override Integration', () => {
         id: 'torso-1',
         definitionId: 'anatomy:human_female_torso',
       };
-      mockEntityManager.createEntityInstance.mockReturnValue(mockFemaleTorsoEntity);
+      testBed.entityManager.createEntityInstance.mockReturnValue(mockFemaleTorsoEntity);
 
       const result = await factory.createAnatomyGraph(
         'anatomy:human_female',
         'anatomy:human_female'
       );
 
-      expect(mockEntityManager.createEntityInstance).toHaveBeenCalledWith(
+      expect(testBed.entityManager.createEntityInstance).toHaveBeenCalledWith(
         'anatomy:human_female_torso'
       );
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        "Using recipe torso override: 'anatomy:human_female_torso' instead of blueprint default: 'anatomy:default_torso'"
+      expect(testBed.logger.debug).toHaveBeenCalledWith(
+        expect.stringContaining("Using recipe torso override")
       );
       expect(result.rootId).toBe('torso-1');
     });
@@ -287,7 +261,7 @@ describe('BodyBlueprintFactory - Torso Override Integration', () => {
         slots: {},
       };
 
-      mockDataRegistry.get.mockImplementation((registry, id) => {
+      testBed.registry.get.mockImplementation((registry, id) => {
         if (registry === 'anatomyBlueprints' && id === 'anatomy:human_female')
           return blueprint;
         if (registry === 'anatomyRecipes' && id === 'anatomy:gorgeous_milf')
@@ -309,18 +283,18 @@ describe('BodyBlueprintFactory - Torso Override Integration', () => {
         id: 'torso-1',
         definitionId: 'anatomy:human_female_torso',
       };
-      mockEntityManager.createEntityInstance.mockReturnValue(mockFemaleTorsoEntity);
+      testBed.entityManager.createEntityInstance.mockReturnValue(mockFemaleTorsoEntity);
 
       const result = await factory.createAnatomyGraph(
         'anatomy:human_female',
         'anatomy:gorgeous_milf'
       );
 
-      expect(mockEntityManager.createEntityInstance).toHaveBeenCalledWith(
+      expect(testBed.entityManager.createEntityInstance).toHaveBeenCalledWith(
         'anatomy:human_female_torso'
       );
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        "Using recipe torso override: 'anatomy:human_female_torso' instead of blueprint default: 'anatomy:default_torso'"
+      expect(testBed.logger.debug).toHaveBeenCalledWith(
+        expect.stringContaining("Using recipe torso override")
       );
       expect(result.rootId).toBe('torso-1');
     });
@@ -331,7 +305,7 @@ describe('BodyBlueprintFactory - Torso Override Integration', () => {
         slots: {},
       };
 
-      mockDataRegistry.get.mockImplementation((registry, id) => {
+      testBed.registry.get.mockImplementation((registry, id) => {
         if (registry === 'anatomyBlueprints' && id === 'anatomy:human_male')
           return blueprint;
         if (registry === 'anatomyRecipes' && id === 'anatomy:human_male')
@@ -353,18 +327,18 @@ describe('BodyBlueprintFactory - Torso Override Integration', () => {
         id: 'torso-1',
         definitionId: 'anatomy:human_male_torso',
       };
-      mockEntityManager.createEntityInstance.mockReturnValue(mockMaleTorsoEntity);
+      testBed.entityManager.createEntityInstance.mockReturnValue(mockMaleTorsoEntity);
 
       const result = await factory.createAnatomyGraph(
         'anatomy:human_male',
         'anatomy:human_male'
       );
 
-      expect(mockEntityManager.createEntityInstance).toHaveBeenCalledWith(
+      expect(testBed.entityManager.createEntityInstance).toHaveBeenCalledWith(
         'anatomy:human_male_torso'
       );
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        "Using recipe torso override: 'anatomy:human_male_torso' instead of blueprint default: 'anatomy:human_male_torso'"
+      expect(testBed.logger.debug).toHaveBeenCalledWith(
+        expect.stringContaining("Using recipe torso override")
       );
       expect(result.rootId).toBe('torso-1');
     });

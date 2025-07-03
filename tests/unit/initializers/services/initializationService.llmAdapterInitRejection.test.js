@@ -21,6 +21,7 @@ let thoughtListener;
 let notesListener;
 let contentDependencyValidator;
 let llmAdapterInitializer;
+let anatomyFormattingService;
 
 beforeEach(() => {
   logger = { error: jest.fn(), debug: jest.fn(), warn: jest.fn() };
@@ -47,6 +48,7 @@ beforeEach(() => {
     validate: jest.fn().mockResolvedValue(undefined),
   };
   llmAdapterInitializer = new LlmAdapterInitializer();
+  anatomyFormattingService = { initialize: jest.fn() };
 });
 
 describe('InitializationService LLM adapter rejection', () => {
@@ -77,6 +79,7 @@ describe('InitializationService LLM adapter rejection', () => {
         worldInitializer,
         contentDependencyValidator,
         llmAdapterInitializer,
+        anatomyFormattingService,
       },
     });
 

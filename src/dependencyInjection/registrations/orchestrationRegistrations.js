@@ -100,6 +100,7 @@ export function registerOrchestration(container) {
       gameDataRepository,
       logger: initLogger,
     });
+    const anatomyFormattingService = c.resolve(tokens.AnatomyFormattingService);
     return new InitializationService({
       log: { logger: initLogger },
       events: { validatedEventDispatcher: initDispatcher, safeEventDispatcher },
@@ -120,6 +121,7 @@ export function registerOrchestration(container) {
         systemInitializer,
         worldInitializer,
         contentDependencyValidator,
+        anatomyFormattingService,
       },
     });
   });

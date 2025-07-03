@@ -86,7 +86,6 @@ describe('AnatomyFormattingLoader - Path Resolution', () => {
         pairedParts: [],
         noArticleParts: [],
         descriptorOrder: [],
-        commaSeparatedDescriptors: [],
         descriptorValueKeys: [],
       });
 
@@ -134,8 +133,7 @@ describe('AnatomyFormattingLoader - Path Resolution', () => {
           pairedParts: [],
           noArticleParts: [],
           descriptorOrder: [],
-          commaSeparatedDescriptors: [],
-          descriptorValueKeys: [],
+            descriptorValueKeys: [],
         });
       });
 
@@ -191,7 +189,6 @@ describe('AnatomyFormattingLoader - Path Resolution', () => {
         pairedParts: [],
         noArticleParts: [],
         descriptorOrder: [],
-        commaSeparatedDescriptors: [],
         descriptorValueKeys: [],
       });
 
@@ -300,7 +297,6 @@ describe('AnatomyFormattingLoader - Path Resolution', () => {
         pairedParts: [],
         noArticleParts: [],
         descriptorOrder: [],
-        commaSeparatedDescriptors: [],
         descriptorValueKeys: [],
       });
 
@@ -352,8 +348,7 @@ describe('AnatomyFormattingLoader - Path Resolution', () => {
           pairedParts: [],
           noArticleParts: [],
           descriptorOrder: [],
-          commaSeparatedDescriptors: [],
-          descriptorValueKeys: [],
+            descriptorValueKeys: [],
         });
       });
 

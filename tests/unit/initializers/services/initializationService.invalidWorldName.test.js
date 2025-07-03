@@ -20,6 +20,7 @@ let thoughtListener;
 let notesListener;
 let contentDependencyValidator;
 let llmAdapterInitializer;
+let anatomyFormattingService;
 
 beforeEach(() => {
   logger = { error: jest.fn(), debug: jest.fn() };
@@ -40,6 +41,7 @@ beforeEach(() => {
     validate: jest.fn().mockResolvedValue(undefined),
   };
   llmAdapterInitializer = new LlmAdapterInitializer();
+  anatomyFormattingService = { initialize: jest.fn() };
 });
 
 describe('InitializationService invalid world name handling', () => {
@@ -69,6 +71,7 @@ describe('InitializationService invalid world name handling', () => {
           worldInitializer,
           contentDependencyValidator,
           llmAdapterInitializer,
+          anatomyFormattingService,
         },
       });
 

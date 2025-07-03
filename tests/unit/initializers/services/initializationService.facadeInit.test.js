@@ -19,6 +19,7 @@ let thoughtListener;
 let notesListener;
 let contentDependencyValidator;
 let llmAdapterInitializer;
+let anatomyFormattingService;
 
 beforeEach(() => {
   logger = { error: jest.fn(), debug: jest.fn(), warn: jest.fn() };
@@ -45,6 +46,7 @@ beforeEach(() => {
     validate: jest.fn().mockResolvedValue(undefined),
   };
   llmAdapterInitializer = new LlmAdapterInitializer();
+  anatomyFormattingService = { initialize: jest.fn() };
 });
 
 describe('InitializationService DomUiFacade handling', () => {
@@ -72,6 +74,7 @@ describe('InitializationService DomUiFacade handling', () => {
           worldInitializer,
           contentDependencyValidator,
           llmAdapterInitializer,
+          anatomyFormattingService,
           // spatialIndexManager intentionally missing for this test
         },
       });
@@ -99,6 +102,7 @@ describe('InitializationService DomUiFacade handling', () => {
           worldInitializer,
           contentDependencyValidator,
           llmAdapterInitializer,
+          anatomyFormattingService,
         },
       });
     }).toThrow('InitializationService requires a domUiFacade dependency');

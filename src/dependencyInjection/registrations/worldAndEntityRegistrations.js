@@ -45,6 +45,11 @@ import { BodyPartDescriptionBuilder } from '../../anatomy/bodyPartDescriptionBui
 import { BodyDescriptionComposer } from '../../anatomy/bodyDescriptionComposer.js';
 import { AnatomyDescriptionService } from '../../anatomy/anatomyDescriptionService.js';
 import { AnatomyFormattingService } from '../../services/anatomyFormattingService.js';
+import { RecipeProcessor } from '../../anatomy/recipeProcessor.js';
+import { PartSelectionService } from '../../anatomy/partSelectionService.js';
+import { SocketManager } from '../../anatomy/socketManager.js';
+import { EntityGraphBuilder } from '../../anatomy/entityGraphBuilder.js';
+import { RecipeConstraintEvaluator } from '../../anatomy/recipeConstraintEvaluator.js';
 import UuidGenerator from '../../adapters/UuidGenerator.js';
 
 /**
@@ -229,6 +234,69 @@ export function registerWorldAndEntity(container) {
     )}.`
   );
 
+  // --- New Anatomy Services ---
+  registrar.singletonFactory(tokens.RecipeProcessor, (c) => {
+    return new RecipeProcessor({
+      dataRegistry: c.resolve(tokens.IDataRegistry),
+      logger: c.resolve(tokens.ILogger),
+    });
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.RecipeProcessor
+    )}.`
+  );
+
+  registrar.singletonFactory(tokens.PartSelectionService, (c) => {
+    return new PartSelectionService({
+      dataRegistry: c.resolve(tokens.IDataRegistry),
+      logger: c.resolve(tokens.ILogger),
+      eventDispatchService: c.resolve(tokens.EventDispatchService),
+    });
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.PartSelectionService
+    )}.`
+  );
+
+  registrar.singletonFactory(tokens.SocketManager, (c) => {
+    return new SocketManager({
+      entityManager: c.resolve(tokens.IEntityManager),
+      logger: c.resolve(tokens.ILogger),
+    });
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.SocketManager
+    )}.`
+  );
+
+  registrar.singletonFactory(tokens.EntityGraphBuilder, (c) => {
+    return new EntityGraphBuilder({
+      entityManager: c.resolve(tokens.IEntityManager),
+      dataRegistry: c.resolve(tokens.IDataRegistry),
+      logger: c.resolve(tokens.ILogger),
+    });
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.EntityGraphBuilder
+    )}.`
+  );
+
+  registrar.singletonFactory(tokens.RecipeConstraintEvaluator, (c) => {
+    return new RecipeConstraintEvaluator({
+      entityManager: c.resolve(tokens.IEntityManager),
+      logger: c.resolve(tokens.ILogger),
+    });
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.RecipeConstraintEvaluator
+    )}.`
+  );
+
   registrar.singletonFactory(tokens.BodyBlueprintFactory, (c) => {
     return new BodyBlueprintFactory({
       entityManager: c.resolve(tokens.IEntityManager),
@@ -236,7 +304,11 @@ export function registerWorldAndEntity(container) {
       logger: c.resolve(tokens.ILogger),
       eventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
       eventDispatchService: c.resolve(tokens.EventDispatchService),
-      idGenerator: UuidGenerator,
+      recipeProcessor: c.resolve(tokens.RecipeProcessor),
+      partSelectionService: c.resolve(tokens.PartSelectionService),
+      socketManager: c.resolve(tokens.SocketManager),
+      entityGraphBuilder: c.resolve(tokens.EntityGraphBuilder),
+      constraintEvaluator: c.resolve(tokens.RecipeConstraintEvaluator),
       validator: c.resolve(tokens.GraphIntegrityValidator),
     });
   });
@@ -260,21 +332,13 @@ export function registerWorldAndEntity(container) {
   );
 
   // --- Anatomy Description Services ---
-  registrar.singletonFactory(tokens.AnatomyFormattingService, (c) => {
-    // Get mod load order from game config
-    const gameConfig = c
-      .resolve(tokens.IDataRegistry)
-      .get('gameConfig', 'game');
-    const modLoadOrder = gameConfig?.mods || [];
-
+  registrar
+    .singletonFactory(tokens.AnatomyFormattingService, (c) => {
     const anatomyFormattingService = new AnatomyFormattingService({
       dataRegistry: c.resolve(tokens.IDataRegistry),
       logger: c.resolve(tokens.ILogger),
-      modLoadOrder: modLoadOrder,
+      safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
     });
-    
-    // Initialize the service to load formatting configurations
-    anatomyFormattingService.initialize();
     
     return anatomyFormattingService;
   });

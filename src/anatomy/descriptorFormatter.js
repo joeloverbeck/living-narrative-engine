@@ -22,11 +22,6 @@ export class DescriptorFormatter {
       'descriptors:build',
     ];
 
-    this._defaultCommaSeparated = new Set([
-      'descriptors:shape_eye',
-      'descriptors:size_specific',
-      'descriptors:weight_feel',
-    ]);
 
     this._defaultDescriptorValueKeys = [
       'value',
@@ -86,13 +81,8 @@ export class DescriptorFormatter {
    */
   formatSingleDescriptor(descriptor) {
     const { componentId, value } = descriptor;
-    const commaSeparated = this.anatomyFormattingService
-      ?.getCommaSeparatedDescriptors
-      ? this.anatomyFormattingService.getCommaSeparatedDescriptors()
-      : this._defaultCommaSeparated;
-
     // Handle multi-word values that should stay hyphenated
-    if (value.includes('-') && !commaSeparated.has(componentId)) {
+    if (value.includes('-')) {
       return value;
     }
 

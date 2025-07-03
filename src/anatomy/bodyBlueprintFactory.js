@@ -5,43 +5,21 @@
  */
 
 import { InvalidArgumentError } from '../errors/invalidArgumentError.js';
-import { ValidationError } from '../errors/validationError.js';
+import { ValidationError } from '../errors/index.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/systemEventIds.js';
+import { AnatomyGraphContext } from './anatomyGraphContext.js';
 
 /** @typedef {import('../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 /** @typedef {import('../interfaces/coreServices.js').IDataRegistry} IDataRegistry */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 /** @typedef {import('../utils/eventDispatchService.js').EventDispatchService} EventDispatchService */
-
-/**
- * @typedef {object} AnatomyRecipe
- * @property {string} recipeId
- * @property {Object<string, SlotDefinition>} slots
- * @property {Array<PatternDefinition>} [patterns]
- * @property {object} [constraints]
- * @property {Array<Array<string>>} [constraints.requires]
- * @property {Array<Array<string>>} [constraints.excludes]
- */
-
-/**
- * @typedef {object} PatternDefinition
- * @property {string[]} matches
- * @property {string} partType
- * @property {string} [preferId]
- * @property {string[]} [tags]
- * @property {string[]} [notTags]
- * @property {Object<string, object>} [properties]
- */
-
-/**
- * @typedef {object} SlotDefinition
- * @property {string} partType
- * @property {string} [preferId]
- * @property {string[]} [tags]
- * @property {string[]} [notTags]
- * @property {{min?: number, max?: number, exact?: number}} [count]
- */
+/** @typedef {import('./recipeProcessor.js').RecipeProcessor} RecipeProcessor */
+/** @typedef {import('./partSelectionService.js').PartSelectionService} PartSelectionService */
+/** @typedef {import('./socketManager.js').SocketManager} SocketManager */
+/** @typedef {import('./entityGraphBuilder.js').EntityGraphBuilder} EntityGraphBuilder */
+/** @typedef {import('./recipeConstraintEvaluator.js').RecipeConstraintEvaluator} RecipeConstraintEvaluator */
+/** @typedef {import('./graphIntegrityValidator.js').GraphIntegrityValidator} GraphIntegrityValidator */
 
 /**
  * @typedef {object} AnatomyBlueprint
@@ -50,19 +28,9 @@ import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/systemEventIds.js';
  */
 
 /**
- * @typedef {object} Socket
- * @property {string} id
- * @property {string[]} allowedTypes
- * @property {string} [orientation]
- * @property {string} [nameTpl]
- */
-
-/**
- * Factory service that assembles anatomy entity graphs from blueprints and recipes
+ * Factory service that orchestrates anatomy entity graph creation
  */
 export class BodyBlueprintFactory {
-  /** @type {IEntityManager} */
-  #entityManager;
   /** @type {IDataRegistry} */
   #dataRegistry;
   /** @type {ILogger} */
@@ -71,7 +39,17 @@ export class BodyBlueprintFactory {
   #eventDispatcher;
   /** @type {EventDispatchService} */
   #eventDispatchService;
-  /** @type {import('./graphIntegrityValidator.js').GraphIntegrityValidator} */
+  /** @type {RecipeProcessor} */
+  #recipeProcessor;
+  /** @type {PartSelectionService} */
+  #partSelectionService;
+  /** @type {SocketManager} */
+  #socketManager;
+  /** @type {EntityGraphBuilder} */
+  #entityGraphBuilder;
+  /** @type {RecipeConstraintEvaluator} */
+  #constraintEvaluator;
+  /** @type {GraphIntegrityValidator} */
   #validator;
 
   /**
@@ -81,7 +59,12 @@ export class BodyBlueprintFactory {
    * @param {ILogger} deps.logger
    * @param {ISafeEventDispatcher} deps.eventDispatcher
    * @param {EventDispatchService} deps.eventDispatchService
-   * @param {import('./graphIntegrityValidator.js').GraphIntegrityValidator} deps.validator
+   * @param {RecipeProcessor} deps.recipeProcessor
+   * @param {PartSelectionService} deps.partSelectionService
+   * @param {SocketManager} deps.socketManager
+   * @param {EntityGraphBuilder} deps.entityGraphBuilder
+   * @param {RecipeConstraintEvaluator} deps.constraintEvaluator
+   * @param {GraphIntegrityValidator} deps.validator
    */
   constructor({
     entityManager,
@@ -89,10 +72,13 @@ export class BodyBlueprintFactory {
     logger,
     eventDispatcher,
     eventDispatchService,
+    recipeProcessor,
+    partSelectionService,
+    socketManager,
+    entityGraphBuilder,
+    constraintEvaluator,
     validator,
   }) {
-    if (!entityManager)
-      throw new InvalidArgumentError('entityManager is required');
     if (!dataRegistry)
       throw new InvalidArgumentError('dataRegistry is required');
     if (!logger) throw new InvalidArgumentError('logger is required');
@@ -100,13 +86,27 @@ export class BodyBlueprintFactory {
       throw new InvalidArgumentError('eventDispatcher is required');
     if (!eventDispatchService)
       throw new InvalidArgumentError('eventDispatchService is required');
+    if (!recipeProcessor)
+      throw new InvalidArgumentError('recipeProcessor is required');
+    if (!partSelectionService)
+      throw new InvalidArgumentError('partSelectionService is required');
+    if (!socketManager)
+      throw new InvalidArgumentError('socketManager is required');
+    if (!entityGraphBuilder)
+      throw new InvalidArgumentError('entityGraphBuilder is required');
+    if (!constraintEvaluator)
+      throw new InvalidArgumentError('constraintEvaluator is required');
     if (!validator) throw new InvalidArgumentError('validator is required');
 
-    this.#entityManager = entityManager;
     this.#dataRegistry = dataRegistry;
     this.#logger = logger;
     this.#eventDispatcher = eventDispatcher;
     this.#eventDispatchService = eventDispatchService;
+    this.#recipeProcessor = recipeProcessor;
+    this.#partSelectionService = partSelectionService;
+    this.#socketManager = socketManager;
+    this.#entityGraphBuilder = entityGraphBuilder;
+    this.#constraintEvaluator = constraintEvaluator;
     this.#validator = validator;
   }
 
@@ -121,6 +121,8 @@ export class BodyBlueprintFactory {
    * @returns {Promise<{rootId: string, entities: string[]}>} Root entity ID and all created entity IDs
    */
   async createAnatomyGraph(blueprintId, recipeId, options = {}) {
+    let context = null;
+
     try {
       this.#logger.debug(
         `BodyBlueprintFactory: Creating anatomy graph from blueprint '${blueprintId}' and recipe '${recipeId}'`
@@ -128,70 +130,86 @@ export class BodyBlueprintFactory {
 
       // Load blueprint and recipe
       const blueprint = this.#loadBlueprint(blueprintId);
-      const recipe = this.#loadRecipe(recipeId);
+      const recipe = this.#recipeProcessor.loadRecipe(recipeId);
+      const processedRecipe = this.#recipeProcessor.processRecipe(recipe);
 
-      // Expand patterns into slots
-      const expandedRecipe = this.#expandPatternsIntoSlots(recipe);
-
-      // Initialize tracking structures
-      const createdEntities = [];
-      const partCounts = new Map(); // Track counts per part type
-      const socketOccupancy = new Set(); // Track occupied sockets
-      const rng = this.#createRNG(options.seed);
+      // Initialize context
+      context = new AnatomyGraphContext(options.seed);
 
       // Phase 1: Create root entity
-      const rootId = this.#createRootEntity(
+      const rootId = this.#entityGraphBuilder.createRootEntity(
         blueprint.root,
-        expandedRecipe,
+        processedRecipe,
         options.ownerId
       );
-      createdEntities.push(rootId);
+      context.setRootId(rootId);
 
       // Phase 2: Process blueprint slots if defined
       if (blueprint.slots) {
         await this.#processBlueprintSlots(
           blueprint,
-          expandedRecipe,
-          rootId,
-          createdEntities,
-          partCounts,
-          socketOccupancy,
-          rng
+          processedRecipe,
+          context
         );
       }
 
-      // Phase 4: Validate the assembled graph
+      // Phase 3: Validate constraints
+      const constraintResult = this.#constraintEvaluator.evaluateConstraints(
+        context.getCreatedEntities(),
+        processedRecipe
+      );
+
+      if (!constraintResult.valid) {
+        await this.#entityGraphBuilder.cleanupEntities(
+          context.getCreatedEntities()
+        );
+        throw new ValidationError(
+          `Recipe constraints failed: ${constraintResult.errors.join(', ')}`
+        );
+      }
+
+      // Phase 4: Validate graph integrity
       const validationResult = await this.#validator.validateGraph(
-        createdEntities,
-        expandedRecipe,
-        socketOccupancy
+        context.getCreatedEntities(),
+        processedRecipe,
+        context.getSocketOccupancy()
       );
 
       if (!validationResult.valid) {
-        // Clean up created entities on validation failure
-        await this.#cleanupEntities(createdEntities);
+        await this.#entityGraphBuilder.cleanupEntities(
+          context.getCreatedEntities()
+        );
         throw new ValidationError(
           `Anatomy graph validation failed: ${validationResult.errors.join(', ')}`
         );
       }
 
       this.#logger.info(
-        `BodyBlueprintFactory: Successfully created anatomy graph with ${createdEntities.length} entities`
+        `BodyBlueprintFactory: Successfully created anatomy graph with ${context.getCreatedEntities().length} entities`
       );
 
       return {
-        rootId,
-        entities: createdEntities,
+        rootId: context.getRootId(),
+        entities: context.getCreatedEntities(),
       };
     } catch (error) {
       this.#logger.error(
         `BodyBlueprintFactory: Failed to create anatomy graph`,
         { error }
       );
+      
+      // Clean up any created entities on error
+      if (context) {
+        await this.#entityGraphBuilder.cleanupEntities(
+          context.getCreatedEntities()
+        );
+      }
+
       this.#eventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
         error: error.message,
         context: 'BodyBlueprintFactory.createAnatomyGraph',
       });
+      
       throw error;
     }
   }
@@ -214,235 +232,106 @@ export class BodyBlueprintFactory {
   }
 
   /**
-   * Loads a recipe from the registry
-   *
-   * @param {string} recipeId - The recipe ID to load
-   * @private
-   * @returns {AnatomyRecipe} The loaded recipe
-   */
-  #loadRecipe(recipeId) {
-    const recipe = this.#dataRegistry.get('anatomyRecipes', recipeId);
-    if (!recipe) {
-      throw new InvalidArgumentError(
-        `Recipe '${recipeId}' not found in registry`
-      );
-    }
-    return recipe;
-  }
-
-  /**
-   * Expands pattern definitions into individual slot definitions
-   *
-   * @param {AnatomyRecipe} recipe - The recipe with patterns
-   * @private
-   * @returns {AnatomyRecipe} Recipe with expanded slots
-   */
-  #expandPatternsIntoSlots(recipe) {
-    // If no patterns, return as-is
-    if (!recipe.patterns || recipe.patterns.length === 0) {
-      return recipe;
-    }
-
-    // Create a deep copy to avoid modifying the original
-    const expandedRecipe = JSON.parse(JSON.stringify(recipe));
-
-    // Process each pattern
-    for (const pattern of recipe.patterns) {
-      // For each slot key that matches this pattern
-      for (const slotKey of pattern.matches) {
-        // Only apply pattern if slot not already explicitly defined
-        if (!expandedRecipe.slots[slotKey]) {
-          expandedRecipe.slots[slotKey] = {
-            partType: pattern.partType,
-            preferId: pattern.preferId,
-            tags: pattern.tags,
-            notTags: pattern.notTags,
-            properties: pattern.properties,
-          };
-        }
-      }
-    }
-
-    return expandedRecipe;
-  }
-
-
-  /**
-   * Creates a seeded random number generator
-   *
-   * @param {number} [seed] - Optional seed value
-   * @private
-   * @returns {function(): number} Random number generator function
-   */
-  #createRNG(seed) {
-    // Simple seedable RNG using linear congruential generator
-    let state = seed || Date.now();
-    return () => {
-      state = (state * 1664525 + 1013904223) % 4294967296;
-      return state / 4294967296;
-    };
-  }
-
-  /**
-   * Creates the root entity of the anatomy
-   *
-   * @param {string} rootDefinitionId - Definition ID for the root entity
-   * @param {AnatomyRecipe} recipe - The recipe being used
-   * @param {string} [ownerId] - Optional owner entity ID
-   * @private
-   * @returns {string} The created root entity ID
-   */
-  #createRootEntity(rootDefinitionId, recipe, ownerId) {
-    // Check if recipe has a torso override
-    let actualRootDefinitionId = rootDefinitionId;
-    if (recipe.slots?.torso?.preferId) {
-      // Validate that the overridden torso is a valid torso part
-      const overrideDef = this.#dataRegistry.get('entityDefinitions', recipe.slots.torso.preferId);
-      if (overrideDef) {
-        const anatomyPart = overrideDef.components?.['anatomy:part'];
-        if (anatomyPart && anatomyPart.subType === 'torso') {
-          actualRootDefinitionId = recipe.slots.torso.preferId;
-          this.#logger.debug(
-            `Using recipe torso override: '${actualRootDefinitionId}' instead of blueprint default: '${rootDefinitionId}'`
-          );
-        } else {
-          this.#logger.warn(
-            `Recipe torso override '${recipe.slots.torso.preferId}' is not a valid torso part, using blueprint default`
-          );
-        }
-      } else {
-        this.#logger.warn(
-          `Recipe torso override '${recipe.slots.torso.preferId}' not found in registry, using blueprint default`
-        );
-      }
-    }
-
-    const rootEntity =
-      this.#entityManager.createEntityInstance(actualRootDefinitionId);
-
-    if (ownerId) {
-      // Add ownership component if specified
-      this.#entityManager.addComponent(rootEntity.id, 'core:owned_by', {
-        ownerId,
-      });
-    }
-
-    return rootEntity.id;
-  }
-
-  /**
    * Processes blueprint slots to create the anatomy structure
    *
    * @param {AnatomyBlueprint} blueprint - The blueprint with slots
-   * @param {AnatomyRecipe} recipe - The recipe with overrides
-   * @param {string} rootId - The root entity ID
-   * @param {string[]} createdEntities - Array to track created entities
-   * @param {Map} partCounts - Map to track part counts
-   * @param {Map} socketOccupancy - Map to track socket usage
-   * @param {Function} rng - Random number generator
+   * @param {object} recipe - The processed recipe
+   * @param {AnatomyGraphContext} context - The graph building context
    * @private
    */
-  async #processBlueprintSlots(
-    blueprint,
-    recipe,
-    rootId,
-    createdEntities,
-    partCounts,
-    socketOccupancy,
-    rng
-  ) {
-    // Track entities by slot key for parent references
-    const slotToEntity = new Map();
-    slotToEntity.set(null, rootId); // Root has no parent slot
-
-    // Process slots in order (parents before children)
+  async #processBlueprintSlots(blueprint, recipe, context) {
+    // Sort slots by dependency order
     const sortedSlots = this.#sortSlotsByDependency(blueprint.slots);
 
     for (const [slotKey, slot] of sortedSlots) {
       try {
         // Determine parent entity
-        const parentSlotKey = slot.parent || null;
-        const parentEntityId = slotToEntity.get(parentSlotKey);
-
-        if (!parentEntityId) {
-          throw new ValidationError(
-            `Parent slot '${slot.parent}' not found for slot '${slotKey}'`
-          );
-        }
-
-        // Check if socket exists on parent
-        const parentSockets = this.#entityManager.getComponentData(
-          parentEntityId,
-          'anatomy:sockets'
-        );
-        const socket = parentSockets?.sockets?.find(
-          (s) => s.id === slot.socket
-        );
-
-        if (!socket) {
-          const parentEntity =
-            this.#entityManager.getEntityInstance(parentEntityId);
-          throw new ValidationError(
-            `Socket '${slot.socket}' not found on parent entity '${parentEntity?.definitionId || parentEntityId}'`
-          );
-        }
-
-        // Check socket occupancy (each socket can only have 1 part)
-        const occupancyKey = `${parentEntityId}:${slot.socket}`;
-        const isOccupied = socketOccupancy.has(occupancyKey);
-
-        if (isOccupied) {
-          if (!slot.optional) {
+        let parentEntityId;
+        if (slot.parent === null || slot.parent === undefined) {
+          // If no parent specified, attach to root
+          parentEntityId = context.getRootId();
+        } else {
+          // Otherwise, find the entity for the parent slot
+          parentEntityId = context.getEntityForSlot(slot.parent);
+          if (!parentEntityId) {
             throw new ValidationError(
-              `Required socket '${slot.socket}' is already occupied on parent '${parentEntityId}'`
+              `Parent slot '${slot.parent}' not found for slot '${slotKey}'`
             );
           }
+        }
+
+        // Validate socket availability
+        const socketValidation = this.#socketManager.validateSocketAvailability(
+          parentEntityId,
+          slot.socket,
+          context.getSocketOccupancy(),
+          !slot.optional
+        );
+
+        if (!socketValidation.valid) {
+          if (socketValidation.error) {
+            throw new ValidationError(socketValidation.error);
+          }
+          // Skip optional slots if socket not available
           continue;
         }
 
-        // Merge blueprint requirements with recipe overrides
-        const mergedRequirements = this.#mergeSlotRequirements(
+        const socket = socketValidation.socket;
+
+        // Merge requirements and select part
+        const mergedRequirements = this.#recipeProcessor.mergeSlotRequirements(
           slot.requirements,
           recipe.slots?.[slotKey]
         );
 
-        // Find matching part
-        const partEntityDef = await this.#findPartByRequirements(
+        const partDefinitionId = await this.#partSelectionService.selectPart(
           mergedRequirements,
-          socket,
-          slotKey,
-          slot.optional,
-          rng
+          socket.allowedTypes,
+          recipe.slots?.[slotKey],
+          context.getRNG()
         );
 
-        if (!partEntityDef && slot.optional) {
+        if (!partDefinitionId && slot.optional) {
           continue; // Skip optional slots if no part found
         }
 
-        if (!partEntityDef) {
+        if (!partDefinitionId) {
           throw new ValidationError(
             `No part found for required slot '${slotKey}' with requirements: ${JSON.stringify(mergedRequirements)}`
           );
         }
 
         // Create and attach the part
-        const childId = await this.#createAndAttachPart(
+        const childId = this.#entityGraphBuilder.createAndAttachPart(
           parentEntityId,
-          slot.socket,
-          partEntityDef,
-          recipe,
-          socketOccupancy,
-          rng
+          socket.id,
+          partDefinitionId
         );
 
         if (childId) {
-          createdEntities.push(childId);
-          slotToEntity.set(slotKey, childId);
+          context.addCreatedEntity(childId);
+          context.mapSlotToEntity(slotKey, childId);
 
-          // Update counts
-          const partType = this.#getPartType(childId);
-          partCounts.set(partType, (partCounts.get(partType) || 0) + 1);
-          socketOccupancy.add(occupancyKey);
+          // Update part count
+          const partType = this.#entityGraphBuilder.getPartType(childId);
+          context.incrementPartCount(partType);
+
+          // Mark socket as occupied
+          this.#socketManager.occupySocket(
+            parentEntityId,
+            socket.id,
+            context.getSocketOccupancy()
+          );
+
+          // Generate and set name if template provided
+          const name = this.#socketManager.generatePartName(
+            socket,
+            childId,
+            parentEntityId
+          );
+          if (name) {
+            this.#entityGraphBuilder.setEntityName(childId, name);
+          }
         }
       } catch (error) {
         const errorContext = {
@@ -508,640 +397,6 @@ export class BodyBlueprintFactory {
     }
 
     return sorted;
-  }
-
-  /**
-   * Merges blueprint slot requirements with recipe overrides
-   *
-   * @param {object} blueprintReqs - Requirements from blueprint
-   * @param {object} recipeSlot - Recipe slot overrides
-   * @returns {object} Merged requirements
-   * @private
-   */
-  #mergeSlotRequirements(blueprintReqs, recipeSlot) {
-    if (!recipeSlot) return blueprintReqs;
-
-    const merged = { ...blueprintReqs };
-
-    // Recipe can add additional required components
-    if (recipeSlot.tags) {
-      merged.components = [...(merged.components || []), ...recipeSlot.tags];
-    }
-
-    // Recipe can add property requirements
-    if (recipeSlot.properties) {
-      merged.properties = {
-        ...(merged.properties || {}),
-        ...recipeSlot.properties,
-      };
-    }
-
-    return merged;
-  }
-
-  /**
-   * Finds a part entity definition by requirements
-   *
-   * @param {object} requirements - The requirements to match
-   * @param {object} socket - The socket being filled
-   * @param {string} slotKey - The slot key for error context
-   * @param {boolean} optional - Whether the slot is optional
-   * @param {Function} rng - Random number generator
-   * @returns {Promise<string|null>} The entity definition ID or null
-   * @private
-   */
-  async #findPartByRequirements(requirements, socket, slotKey, optional, rng) {
-    // Find candidates by requirements
-    const candidates = this.#findCandidatesByRequirements(
-      requirements,
-      socket.allowedTypes
-    );
-
-    if (candidates.length === 0) {
-      return null;
-    }
-
-    // Random selection from candidates using provided RNG
-    const index = Math.floor(rng() * candidates.length);
-    return candidates[index];
-  }
-
-  /**
-   * Checks if an entity definition matches requirements
-   *
-   * @param {object} entityDef - The entity definition
-   * @param {object} requirements - The requirements to check
-   * @param {string[]} allowedTypes - Allowed part types from socket
-   * @returns {boolean}
-   * @private
-   */
-  #matchesRequirements(entityDef, requirements, allowedTypes) {
-    // Check part type
-    const anatomyPart = entityDef.components?.['anatomy:part'];
-    if (!anatomyPart) return false;
-
-    if (
-      requirements.partType &&
-      anatomyPart.subType !== requirements.partType
-    ) {
-      return false;
-    }
-
-    if (!allowedTypes.includes(anatomyPart.subType)) {
-      return false;
-    }
-
-    // Check required components
-    if (requirements.components) {
-      for (const comp of requirements.components) {
-        if (!entityDef.components[comp]) {
-          return false;
-        }
-      }
-    }
-
-    // Check property requirements
-    if (requirements.properties) {
-      for (const [compId, props] of Object.entries(requirements.properties)) {
-        const component = entityDef.components[compId];
-        if (!component) return false;
-
-        for (const [key, value] of Object.entries(props)) {
-          if (component[key] !== value) {
-            return false;
-          }
-        }
-      }
-    }
-
-    return true;
-  }
-
-  /**
-   * Finds all candidate parts matching requirements
-   *
-   * @param {object} requirements - The requirements
-   * @param {string[]} allowedTypes - Allowed part types
-   * @returns {string[]} Array of entity definition IDs
-   * @private
-   */
-  #findCandidatesByRequirements(requirements, allowedTypes) {
-    const candidates = [];
-    const allEntityDefs = this.#dataRegistry.getAll('entityDefinitions');
-
-    for (const entityDef of allEntityDefs) {
-      if (this.#matchesRequirements(entityDef, requirements, allowedTypes)) {
-        candidates.push(entityDef.id);
-      }
-    }
-
-    return candidates;
-  }
-
-  /**
-   * Selects a part definition based on requirements
-   *
-   * @param requirements
-   * @param socketId
-   * @param recipe
-   * @param rng
-   * @private
-   * @returns {Promise<string|null>} The selected part definition ID or null
-   */
-  async #selectPartByRequirements(requirements, socketId, recipe, rng) {
-    // First check if there's a recipe override for this socket
-    // Find recipe slot that matches this socket type
-    for (const [slotKey, slot] of Object.entries(recipe.slots)) {
-      if (slot.partType === requirements.partType) {
-        // Recipe has a preference for this part type
-        if (slot.preferId) {
-          // Verify the preferred part meets the requirements
-          const entityDef = this.#dataRegistry.get(
-            'entityDefinitions',
-            slot.preferId
-          );
-          if (
-            entityDef &&
-            this.#meetsRequirements(entityDef, requirements, slot)
-          ) {
-            return slot.preferId;
-          }
-        }
-      }
-    }
-
-    // No recipe override or it didn't meet requirements, find candidates
-    const candidates = [];
-
-    // Get all entity definitions to find anatomy parts
-    const allEntityDefs = this.#dataRegistry.getAll('entityDefinitions');
-
-    for (const entityDef of allEntityDefs) {
-      // Skip if not an anatomy part
-      if (!entityDef.components || !entityDef.components['anatomy:part'])
-        continue;
-
-      // Check if this part meets the requirements
-      if (this.#meetsRequirements(entityDef, requirements)) {
-        candidates.push(entityDef.id);
-      }
-    }
-
-    if (candidates.length === 0) {
-      const errorContext = {
-        socketId,
-        requirements: {
-          partType: requirements.partType,
-          components: requirements.components || [],
-        },
-        checkedDefinitions: allEntityDefs.filter(
-          (def) => def.components?.['anatomy:part']
-        ).length,
-        suggestion:
-          `Create an entity definition with 'anatomy:part' component` +
-          (requirements.partType
-            ? ` where subType='${requirements.partType}'`
-            : '') +
-          (requirements.components?.length > 0
-            ? ` and components: [${requirements.components.join(', ')}]`
-            : ''),
-      };
-
-      const errorMessage =
-        `No entity definitions found matching requirements for socket '${socketId}'. ` +
-        (requirements.partType
-          ? `Need part type: '${requirements.partType}'. `
-          : '') +
-        (requirements.components?.length > 0
-          ? `Required components: [${requirements.components.join(', ')}]. `
-          : '') +
-        `Checked ${errorContext.checkedDefinitions} anatomy part definitions.`;
-
-      // Dispatch system error event
-      await this.#eventDispatchService.safeDispatchEvent(
-        SYSTEM_ERROR_OCCURRED_ID,
-        {
-          message: errorMessage,
-          details: {
-            ...errorContext,
-            context: 'BodyBlueprintFactory.selectPartByRequirements',
-          },
-        }
-      );
-
-      return null;
-    }
-
-    // Random selection from candidates
-    const index = Math.floor(rng() * candidates.length);
-    return candidates[index];
-  }
-
-  /**
-   * Checks if an entity definition meets the given requirements
-   *
-   * @param entityDef
-   * @param requirements
-   * @param recipeSlot
-   * @private
-   * @returns {boolean}
-   */
-  #meetsRequirements(entityDef, requirements, recipeSlot = null) {
-    // Check part type if specified
-    if (requirements.partType) {
-      const anatomyPart = entityDef.components['anatomy:part'];
-      if (!anatomyPart || anatomyPart.subType !== requirements.partType) {
-        return false;
-      }
-    }
-
-    // Check required components
-    if (requirements.components && requirements.components.length > 0) {
-      const hasAllComponents = requirements.components.every(
-        (comp) => entityDef.components[comp] !== undefined
-      );
-      if (!hasAllComponents) {
-        return false;
-      }
-    }
-
-    // If recipe slot provided, check its additional constraints
-    if (recipeSlot) {
-      // Check recipe tags
-      if (recipeSlot.tags && recipeSlot.tags.length > 0) {
-        const hasAllTags = recipeSlot.tags.every(
-          (tag) => entityDef.components[tag] !== undefined
-        );
-        if (!hasAllTags) return false;
-      }
-
-      // Check excluded tags
-      if (recipeSlot.notTags && recipeSlot.notTags.length > 0) {
-        const hasExcludedTag = recipeSlot.notTags.some(
-          (tag) => entityDef.components[tag] !== undefined
-        );
-        if (hasExcludedTag) return false;
-      }
-
-      // Check property requirements
-      if (recipeSlot.properties) {
-        if (
-          !this.#matchesPropertyRequirements(entityDef, recipeSlot.properties)
-        ) {
-          return false;
-        }
-      }
-    }
-
-    return true;
-  }
-
-  /**
-   * Checks if an entity definition's components match property requirements
-   *
-   * @param entityDef
-   * @param propertyRequirements
-   * @private
-   * @returns {boolean}
-   */
-  #matchesPropertyRequirements(entityDef, propertyRequirements) {
-    for (const [componentId, requiredProps] of Object.entries(
-      propertyRequirements
-    )) {
-      const component = entityDef.components[componentId];
-      if (!component) return false;
-
-      // Check each required property
-      for (const [propKey, propValue] of Object.entries(requiredProps)) {
-        if (component[propKey] !== propValue) {
-          return false;
-        }
-      }
-    }
-    return true;
-  }
-
-
-  /**
-   * Finds a recipe slot that matches the socket's allowed types
-   *
-   * @param socket
-   * @param recipe
-   * @private
-   */
-  #findMatchingRecipeSlot(socket, recipe) {
-    for (const [slotKey, slot] of Object.entries(recipe.slots)) {
-      if (socket.allowedTypes.includes(slot.partType)) {
-        return slot;
-      }
-    }
-    return null;
-  }
-
-
-  /**
-   * Creates a part for a specific slot configuration
-   *
-   * @param parentId
-   * @param socket
-   * @param recipeSlot
-   * @param recipe
-   * @param socketOccupancy
-   * @param rng
-   * @private
-   */
-  async #createPartForSlot(
-    parentId,
-    socket,
-    recipeSlot,
-    recipe,
-    socketOccupancy,
-    rng
-  ) {
-    let candidates;
-
-    try {
-      // Build candidate list
-      candidates = await this.#findCandidateParts(
-        recipeSlot,
-        socket.allowedTypes
-      );
-
-      // Note: findCandidateParts now throws if no candidates found,
-      // so we don't need to check for empty array here
-    } catch (error) {
-      // Enhance error with parent/socket context
-      const parentEntity = this.#entityManager.getEntityInstance(parentId);
-      const enhancedContext = {
-        parentEntityId: parentId,
-        parentDefinitionId: parentEntity?.definitionId,
-        socketId: socket.id,
-        socketAllowedTypes: socket.allowedTypes,
-        recipeId: recipe.recipeId,
-        error: error.message,
-      };
-
-      const enhancedMessage =
-        `Failed to find parts for socket '${socket.id}' on parent '${parentEntity?.definitionId || parentId}'. ` +
-        `Recipe: '${recipe.recipeId}'. ${error.message}`;
-
-      // Re-dispatch with enhanced context
-      await this.#eventDispatchService.safeDispatchEvent(
-        SYSTEM_ERROR_OCCURRED_ID,
-        {
-          error: enhancedMessage,
-          context: 'BodyBlueprintFactory.createPartForSlot',
-          details: enhancedContext,
-        }
-      );
-
-      throw new ValidationError(enhancedMessage);
-    }
-
-    // Select part (prefer preferId if available)
-    let selectedPartId;
-    if (recipeSlot.preferId && candidates.includes(recipeSlot.preferId)) {
-      selectedPartId = recipeSlot.preferId;
-    } else {
-      // Random selection
-      const index = Math.floor(rng() * candidates.length);
-      selectedPartId = candidates[index];
-    }
-
-    // Create and attach the part
-    return this.#createAndAttachPart(
-      parentId,
-      socket.id,
-      selectedPartId,
-      recipe,
-      socketOccupancy,
-      rng
-    );
-  }
-
-  /**
-   * Finds candidate parts that match slot requirements
-   *
-   * @param recipeSlot
-   * @param allowedTypes
-   * @private
-   */
-  async #findCandidateParts(recipeSlot, allowedTypes) {
-    const candidates = [];
-
-    // Get all entity definitions to find anatomy parts
-    const allEntityDefs = this.#dataRegistry.getAll('entityDefinitions');
-
-    for (const entityDef of allEntityDefs) {
-      // Check if this is an anatomy part
-      const anatomyPart = entityDef.components?.['anatomy:part'];
-      if (!anatomyPart || !allowedTypes.includes(anatomyPart.subType)) continue;
-
-      // Check required tags
-      if (recipeSlot.tags && recipeSlot.tags.length > 0) {
-        const hasAllTags = recipeSlot.tags.every(
-          (tag) => entityDef.components[tag] !== undefined
-        );
-        if (!hasAllTags) continue;
-      }
-
-      // Check excluded tags
-      if (recipeSlot.notTags && recipeSlot.notTags.length > 0) {
-        const hasExcludedTag = recipeSlot.notTags.some(
-          (tag) => entityDef.components[tag] !== undefined
-        );
-        if (hasExcludedTag) continue;
-      }
-
-      // Check property requirements
-      if (recipeSlot.properties) {
-        if (
-          !this.#matchesPropertyRequirements(entityDef, recipeSlot.properties)
-        ) {
-          continue;
-        }
-      }
-
-      candidates.push(entityDef.id);
-    }
-
-    // If no candidates found, this is a critical error that needs immediate attention
-    if (candidates.length === 0) {
-      const errorContext = {
-        partType: recipeSlot.partType,
-        allowedTypes: allowedTypes,
-        requirements: {
-          tags: recipeSlot.tags || [],
-          notTags: recipeSlot.notTags || [],
-          properties: recipeSlot.properties || {},
-          preferId: recipeSlot.preferId || null,
-        },
-        checkedDefinitions: allEntityDefs.length,
-        suggestion: `Create an entity definition with 'anatomy:part' component where subType is one of: [${allowedTypes.join(', ')}]`,
-      };
-
-      const errorMessage =
-        `No entity definitions found matching anatomy requirements. ` +
-        `Need part type '${recipeSlot.partType}' with allowed types: [${allowedTypes.join(', ')}]. ` +
-        (recipeSlot.tags?.length > 0
-          ? `Required tags: [${recipeSlot.tags.join(', ')}]. `
-          : '') +
-        (recipeSlot.notTags?.length > 0
-          ? `Excluded tags: [${recipeSlot.notTags.join(', ')}]. `
-          : '') +
-        (recipeSlot.properties
-          ? `Required properties: ${JSON.stringify(recipeSlot.properties)}. `
-          : '') +
-        `Checked ${allEntityDefs.length} entity definitions.`;
-
-      // Dispatch system error event
-      await this.#eventDispatchService.safeDispatchEvent(
-        SYSTEM_ERROR_OCCURRED_ID,
-        {
-          error: errorMessage,
-          context: 'BodyBlueprintFactory.findCandidateParts',
-          details: errorContext,
-        }
-      );
-
-      // Throw error for caller to handle
-      throw new ValidationError(errorMessage);
-    }
-
-    return candidates;
-  }
-
-  /**
-   * Creates and attaches a part to a parent via a socket
-   *
-   * @param parentId
-   * @param socketId
-   * @param partDefinitionId
-   * @param recipe
-   * @param socketOccupancy
-   * @param rng
-   * @param _recipe
-   * @param _socketOccupancy
-   * @param _rng
-   * @private
-   */
-  async #createAndAttachPart(
-    parentId,
-    socketId,
-    partDefinitionId,
-    _recipe,
-    _socketOccupancy,
-    _rng
-  ) {
-    try {
-      // Get socket details from parent
-      const parentSockets = this.#entityManager.getComponentData(
-        parentId,
-        'anatomy:sockets'
-      );
-      const socket = parentSockets?.sockets?.find((s) => s.id === socketId);
-
-      if (!socket) {
-        this.#logger.error(
-          `Socket '${socketId}' not found on parent entity '${parentId}'`
-        );
-        return null;
-      }
-
-      // Create the child entity
-      const childEntity =
-        this.#entityManager.createEntityInstance(partDefinitionId);
-
-      // Add joint component to establish the connection
-      this.#entityManager.addComponent(childEntity.id, 'anatomy:joint', {
-        parentId: parentId,
-        socketId: socketId,
-      });
-
-      // Generate and set name if template provided
-      if (socket.nameTpl) {
-        const name = this.#generatePartName(socket, childEntity, parentId);
-        this.#entityManager.addComponent(childEntity.id, 'core:name', {
-          text: name,
-        });
-      }
-
-      return childEntity.id;
-    } catch (error) {
-      this.#logger.error(
-        `Failed to create and attach part '${partDefinitionId}'`,
-        { error }
-      );
-      return null;
-    }
-  }
-
-  /**
-   * Generates a name for a part based on socket template
-   *
-   * @param socket
-   * @param childEntity
-   * @param parentId
-   * @private
-   */
-  #generatePartName(socket, childEntity, parentId) {
-    let name = socket.nameTpl;
-
-    // Get part info
-    const anatomyPart = this.#entityManager.getComponentData(
-      childEntity.id,
-      'anatomy:part'
-    );
-    const parentName =
-      this.#entityManager.getComponentData(parentId, 'core:name')?.value ||
-      'parent';
-
-    // Replace template tokens
-    name = name.replace('{{orientation}}', socket.orientation || '');
-    name = name.replace('{{type}}', anatomyPart?.subType || 'part');
-    name = name.replace('{{parent.name}}', parentName);
-
-    // TODO: Handle {{index}} for multiple parts of same type
-    name = name.replace('{{index}}', '');
-
-    return name.trim();
-  }
-
-  /**
-   * Gets the part type from an entity
-   *
-   * @param entityId
-   * @private
-   */
-  #getPartType(entityId) {
-    const anatomyPart = this.#entityManager.getComponentData(
-      entityId,
-      'anatomy:part'
-    );
-    return anatomyPart?.subType || 'unknown';
-  }
-
-  /**
-   * Cleans up entities if validation fails
-   *
-   * @param entityIds
-   * @private
-   */
-  async #cleanupEntities(entityIds) {
-    this.#logger.debug(
-      `Cleaning up ${entityIds.length} entities after validation failure`
-    );
-
-    // Remove in reverse order to handle dependencies
-    for (let i = entityIds.length - 1; i >= 0; i--) {
-      try {
-        await this.#entityManager.removeEntity(entityIds[i]);
-      } catch (error) {
-        this.#logger.error(`Failed to cleanup entity '${entityIds[i]}'`, {
-          error,
-        });
-      }
-    }
   }
 }
 

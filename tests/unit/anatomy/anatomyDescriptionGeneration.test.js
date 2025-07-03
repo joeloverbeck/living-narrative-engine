@@ -16,7 +16,6 @@ describe('Anatomy Description Generation - Edge Cases', () => {
           'descriptors:size_category',
           'descriptors:shape_general',
         ]),
-      getCommaSeparatedDescriptors: jest.fn().mockReturnValue(new Set()),
       getDescriptorValueKeys: jest
         .fn()
         .mockReturnValue(['value', 'color', 'size']),

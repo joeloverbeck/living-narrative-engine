@@ -71,7 +71,6 @@ class AnatomyFormattingLoader extends BaseManifestItemLoader {
       'pairedParts',
       'noArticleParts',
       'descriptorOrder',
-      'commaSeparatedDescriptors',
       'descriptorValueKeys',
     ];
 
