@@ -81,6 +81,11 @@ export class EntityManagerAdapter extends IEntityManager {
   }
 
   /** @inheritdoc */
+  removeEntityInstance(instanceId) {
+    return this.#entityManager.removeEntityInstance(instanceId);
+  }
+
+  /** @inheritdoc */
   getEntitiesInLocation(id) {
     return this.#locationQueryService.getEntitiesInLocation(id);
   }

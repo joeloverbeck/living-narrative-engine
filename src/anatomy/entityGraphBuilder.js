@@ -173,7 +173,7 @@ export class EntityGraphBuilder {
     // Remove in reverse order to handle dependencies
     for (let i = entityIds.length - 1; i >= 0; i--) {
       try {
-        await this.#entityManager.removeEntity(entityIds[i]);
+        await this.#entityManager.removeEntityInstance(entityIds[i]);
       } catch (error) {
         this.#logger.error(
           `EntityGraphBuilder: Failed to cleanup entity '${entityIds[i]}'`,

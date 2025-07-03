@@ -1,132 +1,707 @@
-SystemLogicInterpreter: createJsonLogicContext: Creating JsonLogicEvaluationContext for event type [core:turn_started]. ActorID: [p_erotica:iker_aguirre_instance], TargetID: [None]
-consoleLogger.js:187 SystemLogicInterpreter: createJsonLogicContext: Found actor entity [p_erotica:iker_aguirre_instance]. Creating context entry.
-consoleLogger.js:187 SystemLogicInterpreter: createJsonLogicContext: ComponentAccessor: Creating accessor for entity [p_erotica:iker_aguirre_instance]
-consoleLogger.js:187 SystemLogicInterpreter: createJsonLogicContext: ComponentAccessor: Entity [p_erotica:iker_aguirre_instance] found in EntityManager
-consoleLogger.js:187 SystemLogicInterpreter: createJsonLogicContext: No targetId provided, target context remains null.
-consoleLogger.js:187 SystemLogicInterpreter: [Event: core:turn_started] createNestedExecutionContext returned a valid ExecutionContext.
-consoleLogger.js:187 SystemLogicInterpreter: [Event: core:turn_started] Final ExecutionContext (nested structure) assembled successfully.
-consoleLogger.js:187 SystemLogicInterpreter: [Rule turn_started] No condition defined or condition is empty. Defaulting to passed.
-consoleLogger.js:187 SystemLogicInterpreter: [Rule 'turn_started' - Action 1/1] About to execute operation of type: ADD_COMPONENT
-consoleLogger.js:187 SystemLogicInterpreter: createJsonLogicContext: ComponentAccessor: Attempting to get component [core:name] for entity [p_erotica:iker_aguirre_instance]
-consoleLogger.js:187 SystemLogicInterpreter: createJsonLogicContext: ComponentAccessor: Component [core:name] found for entity [p_erotica:iker_aguirre_instance]
-consoleLogger.js:187 OperationInterpreter: Resolved full string placeholder {event.payload.entityId} to: p_erotica:iker_aguirre_instance
-consoleLogger.js:187 OperationInterpreter: Executing handler for operation type "ADD_COMPONENT"…
-consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
-consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
-consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... 
-{entity: Entity, componentTypeId: 'core:current_actor', componentData: {…}, oldComponentData: undefined}
-consoleLogger.js:187 Successfully added/updated component 'core:current_actor' data on entity 'p_erotica:iker_aguirre_instance'.
-consoleLogger.js:187 SystemLogicInterpreter: ADD_COMPONENT: Successfully added/replaced component "core:current_actor" on entity "p_erotica:iker_aguirre_instance".
-consoleLogger.js:187 SystemLogicInterpreter: [Rule 'turn_started' - Action 1/1] Finished executing operation of type: ADD_COMPONENT
-consoleLogger.js:187 [renderListCommon] Fetched list data. Count: 0
-consoleLogger.js:187 [renderListCommon] Cleared list container.
-consoleLogger.js:187 [renderListCommon] Empty list message displayed.
-consoleLogger.js:187 [PerceptionLogRenderer] _onListRendered called. Scrolling to bottom.
-consoleLogger.js:187 VED: Event 'core:component_added' dispatch successful.
-consoleLogger.js:187 VED: Event 'core:turn_started' dispatch successful.
 consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:component_added'.
-consoleLogger.js:187 VED: Validating payload for event 'core:turn_processing_started' against schema 'core:turn_processing_started#payload'...
-consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:turn_processing_started'.
-consoleLogger.js:187 VED: Dispatching event 'core:turn_processing_started' via EventBus... 
-{entityId: 'p_erotica:iker_aguirre_instance', actorType: 'player'}
-consoleLogger.js:187 VED: Event 'core:turn_processing_started' dispatch successful.
-consoleLogger.js:187 Resolving turn handler for entity p_erotica:iker_aguirre_instance...
-consoleLogger.js:187 TurnHandlerResolver: Resolving handler for actor p_erotica:iker_aguirre_instance...
-consoleLogger.js:187 Match found for actor p_erotica:iker_aguirre_instance. Applying rule: 'Player'.
-consoleLogger.js:187 TurnHandlerResolver: Creating new PlayerHandler for actor p_erotica:iker_aguirre_instance.
-consoleLogger.js:187 CommandProcessor: Instance created and dependencies validated.
-consoleLogger.js:187 CommandOutcomeInterpreter: Instance created successfully.
-consoleLogger.js:187 PromptCoordinator initialised.
-consoleLogger.js:187 PerceptionLogFormatter initialized.
-consoleLogger.js:187 GameStateValidationServiceForPrompting initialized.
-consoleLogger.js:187 AIPromptContentProvider initialized with new services.
-consoleLogger.js:187 LlmConfigManager: Initializing...
-consoleLogger.js:187 LlmConfigManager: Configuration source identifier set to: ./config/llm-configs.json. Configurations will be loaded on demand.
-consoleLogger.js:187 LlmConfigManager: Initialization complete.
-consoleLogger.js:187 AssemblerRegistry: Registered StandardElementAssembler for 9 keys.
-consoleLogger.js:187 AssemblerRegistry: Registered all specialized assemblers.
-consoleLogger.js:187 PromptBuilder (orchestrator‑only) initialised with LlmConfigManager, PlaceholderResolver, AssemblerRegistry and ConditionEvaluator.
-consoleLogger.js:187 AvailableActionsProvider: AvailableActionsProvider initialized and dependencies validated.
-consoleLogger.js:187 TurnActionChoicePipeline initialised
-consoleLogger.js:187 ActorTurnHandler initial state set to: TurnIdleState. EnterState will be called on first transition or explicit start.
-consoleLogger.js:187 ActorTurnHandler initialised. Dependencies assigned. Initial state set.
-consoleLogger.js:187 Calling startTurn on ActorTurnHandler for entity p_erotica:iker_aguirre_instance
-turnManager.js:449 TurnManager: handler = 
-ActorTurnHandler {_logger: ConsoleLogger, #turnEndPort: EventBusTurnEndAdapter, #strategyFactory: ActorAwareStrategyFactory, #turnContextBuilder: TurnContextBuilder, #awaitState: _AwaitTurnEndState, …}
- handler.startTurn = function
-consoleLogger.js:187 ActorTurnHandler.startTurn called for actor p_erotica:iker_aguirre_instance.
-consoleLogger.js:187 ActorAwareStrategyFactory: Creating GenericTurnStrategy for p_erotica:iker_aguirre_instance using provider type human.
-consoleLogger.js:187 ActorTurnHandler: Instantiated turn strategy for actor p_erotica:iker_aguirre_instance via factory.
-consoleLogger.js:187 TurnContextBuilder: Building context for actor p_erotica:iker_aguirre_instance.
-consoleLogger.js:187 ActorTurnHandler._setCurrentTurnContextInternal: Setting turn context to object for actor p_erotica:iker_aguirre_instance.
-consoleLogger.js:187 ActorTurnHandler._setCurrentTurnContextInternal: Aligning _currentActor ('null') with new TurnContext actor ('p_erotica:iker_aguirre_instance').
-consoleLogger.js:187 ActorTurnHandler.startTurn: TurnContext created for actor p_erotica:iker_aguirre_instance via builder.
-consoleLogger.js:187 TurnIdleState: Received startTurn for actor p_erotica:iker_aguirre_instance.
-consoleLogger.js:187 TurnIdleState: ITurnContext confirmed for actor p_erotica:iker_aguirre_instance. Transitioning to AwaitingActorDecisionState.
-consoleLogger.js:187 ActorTurnHandler: Received request to transition to AwaitingInput state.
-consoleLogger.js:187 ActorTurnHandler: State Transition: TurnIdleState → AwaitingActorDecisionState
-consoleLogger.js:187 ActorTurnHandler.onExitState hook: Exiting TurnIdleState to AwaitingActorDecisionState
-consoleLogger.js:187 Turn initiation for p_erotica:iker_aguirre_instance started via ActorTurnHandler. TurnManager now WAITING for 'core:turn_ended' event.
-consoleLogger.js:187 TurnIdleState: Exiting. Actor: p_erotica:iker_aguirre_instance. Transitioning to AwaitingActorDecisionState.
-consoleLogger.js:187 ActorTurnHandler.onEnterState hook: Entering AwaitingActorDecisionState from TurnIdleState
-consoleLogger.js:187 GameSessionManager.finalizeNewGameSuccess: New game started and ready (World: p_erotica:donostia).
-consoleLogger.js:187 AwaitingActorDecisionState: Entered. Actor: p_erotica:iker_aguirre_instance. Previous state: TurnIdleState.
-consoleLogger.js:187 Bootstrap Stage: Start Game: Game started successfully with world: p_erotica:donostia.
-consoleLogger.js:187 Bootstrap Stage: Start Game completed.
-consoleLogger.js:187 AwaitingActorDecisionState: Actor p_erotica:iker_aguirre_instance. Attempting to retrieve turn strategy.
-consoleLogger.js:187 AwaitingActorDecisionState: Strategy GenericTurnStrategy obtained for actor p_erotica:iker_aguirre_instance. Requesting action decision.
-consoleLogger.js:187 [ChoicePipeline] Fetching actions for p_erotica:iker_aguirre_instance
-consoleLogger.js:187 New turn detected. Clearing AvailableActionsProvider cache.
-consoleLogger.js:187 [Cache Miss] Discovering actions for actor p_erotica:iker_aguirre_instance
-consoleLogger.js:187 ActionIndex: Retrieved 4 candidate actions for actor p_erotica:iker_aguirre_instance.
-consoleLogger.js:187 Formatting command for action: core:wait, template: "wait", targetType: none
-consoleLogger.js:187  -> No target type, using template as is.
-consoleLogger.js:187  <- Final formatted command: "wait"
-consoleLogger.js:187 ActionValidationContextBuilder: ActionValidationContextBuilder: Building context for action 'core:follow', actor 'p_erotica:iker_aguirre_instance'. Only actor context is included as target filtering is handled by Scope DSL.
-consoleLogger.js:187 ActionValidationContextBuilder: buildActorContext: Building context for entity [p_erotica:iker_aguirre_instance]
-consoleLogger.js:187 ActionValidationContextBuilder: buildActorContext: Entity [p_erotica:iker_aguirre_instance] found in EntityManager
-consoleLogger.js:187 ActionValidationContextBuilder: buildActorContext: Entity [p_erotica:iker_aguirre_instance] has core:name component
-consoleLogger.js:187 ActionValidationContextBuilder: ComponentAccessor: Creating accessor for entity [p_erotica:iker_aguirre_instance]
-consoleLogger.js:187 ActionValidationContextBuilder: ComponentAccessor: Entity [p_erotica:iker_aguirre_instance] found in EntityManager
-consoleLogger.js:187 ActionValidationContextBuilder: buildActorContext: Created context for entity [p_erotica:iker_aguirre_instance] with id: p_erotica:iker_aguirre_instance
-consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[core:follow]: Evaluation Context Built Successfully.
-consoleLogger.js:163 PrerequisiteEvaluationService: PrereqEval[core:follow]: WARNING - Actor has EMPTY components object. This likely means the entity [p_erotica:iker_aguirre_instance] was not properly loaded.
-consoleLogger.js:187 ActionValidationContextBuilder: ComponentAccessor: Attempting to get component [toJSON] for entity [p_erotica:iker_aguirre_instance]
-consoleLogger.js:187 ActionValidationContextBuilder: ComponentAccessor: Component [toJSON] returned undefined for entity [p_erotica:iker_aguirre_instance]
-consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[core:follow] Context: {
-  "actor": {
-    "id": "p_erotica:iker_aguirre_instance",
-    "components": {}
-  }
-}
-consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[core:follow]: Evaluating 2 prerequisite rule(s)...
-consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[core:follow]: Resolving condition_ref 'core:actor-is-not-rooted'...
-consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[core:follow]:   - Evaluating resolved rule: {"==":[{"var":"actor.components.core:movement.locked"},false]}
-consoleLogger.js:187 JsonLogicEvaluationService: Evaluating rule: {"==":[{"var":"actor.components.core:movement.locked"},false]}. Context keys: actor
-consoleLogger.js:187 ActionValidationContextBuilder: ComponentAccessor: Attempting to get component [core:movement] for entity [p_erotica:iker_aguirre_instance]
-consoleLogger.js:187 ActionValidationContextBuilder: ComponentAccessor: Component [core:movement] found for entity [p_erotica:iker_aguirre_instance]
-consoleLogger.js:187 JsonLogicEvaluationService: Rule evaluation raw result: true, Final boolean: true
-consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[core:follow]:   - Prerequisite Rule 1/2 PASSED.
-consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[core:follow]: Resolving condition_ref 'core:actor-is-following'...
-consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[core:follow]:   - Evaluating resolved rule: {"not":{"!!":{"var":"actor.components.core:following"}}}
-consoleLogger.js:187 JsonLogicEvaluationService: Evaluating rule: {"not":{"!!":{"var":"actor.components.core:following"}}}. Context keys: actor
-consoleLogger.js:187 ActionValidationContextBuilder: ComponentAccessor: Attempting to get component [core:following] for entity [p_erotica:iker_aguirre_instance]
-consoleLogger.js:187 ActionValidationContextBuilder: ComponentAccessor: Component [core:following] returned undefined for entity [p_erotica:iker_aguirre_instance]
-consoleLogger.js:187 JsonLogicEvaluationService: Rule evaluation raw result: true, Final boolean: true
-consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[core:follow]:   - Prerequisite Rule 2/2 PASSED.
-consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[core:follow]: → PASSED (All 2 prerequisite rules evaluated successfully).
-consoleLogger.js:187 ScopeCache: Cache miss for key: p_erotica:iker_aguirre_instance:p_erotica:outside_tables_coffee_shop_instance:{"type":"Filter","logic":{"and":[{"condition_ref":"core:entity-at-location"},{"condition_ref":"core:entity-is-not-current-actor"},{"condition_ref":"core:entity-has-actor-component"},{"not":{"condition_ref":"core:entity-is-following-actor"}}]},"parent":{"type":"Source","kind":"entities","param":"core:position"}}, resolving...
-consoleLogger.js:187 EntityManager.getEntitiesWithComponent: Found 2 entities with component 'core:position'.
-consoleLogger.js:187 JsonLogicEvaluationService: Resolving condition_ref 'core:entity-at-location'...
-consoleLogger.js:187 JsonLogicEvaluationService: Resolving condition_ref 'core:entity-is-not-current-actor'...
-consoleLogger.js:187 JsonLogicEvaluationService: Resolving condition_ref 'core:entity-has-actor-component'...
-consoleLogger.js:187 JsonLogicEvaluationService: Resolving condition_ref 'core:entity-is-following-actor'...
-consoleLogger.js:187 JsonLogicEvaluationService: Evaluating rule: {"and":[{"==":[{"var":"entity.components.core:position.locationId"},{"var":"location.id"}]},{"!=":[{"var":"entity.id"},{"var":"actor.id"}]},{"!!":{"va.... Context keys: entity, actor, location
-consoleLogger.js:187 JsonLogicEvaluationService: Detailed evaluation of AND operation with 4 conditions:
-consoleLogger.js:187 JsonLogicEvaluationService:   Condition 1/4: {"==":[{"var":"entity.components.core:position.locationId"},{"var":"location.id"}]} => true
-consoleLogger.js:187 JsonLogicEvaluationService:     Entity: p_erotica:iker_aguirre_instance, Location: p_erotica:outside_tables_coffee_shop_instance
-consoleLogger.js:187 JsonLogicEvaluationService:     Actor: p_erotica:iker_aguirre_instance, Location: p_erotica:outside_tables_coffee_shop_instance
-consoleLogger.js:187 JsonLogicEvaluationService:     Location: p_erotica:outside_tables_coffee_shop_instance
-consoleLogger.js:187 JsonLogicEvaluationService:   Condition 2/4: {"!=":[{"var":"entity.id"},{"var":"actor.id"}]} => false
-consoleLogger.js:187 JsonLogicEvaluationService:     Entity: p_erotica:iker_aguirre_instance, Location: p_erotica:outside_tables_coffee_shop_instance
-﻿
+consoleLogger.js:187 VED: Event 'core:entity_created' dispatch successful.
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:entity_created'.
+2consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:component_added'.
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:entity_created'.
+2consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:component_added'.
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'system:error_occurred'.
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:entity_created'.
+consoleLogger.js:187 Dispatched system:error_occurred {payload: {…}}
+consoleLogger.js:187 WorldInitializer (Pass 1): Completed. Instantiated 4 entities, 0 failures out of 4 total instances for world 'p_erotica:donostia'.
+consoleLogger.js:187 WorldInitializer: World entity initialization complete for world: p_erotica:donostia. Instantiated: 4, Failed: 0, Total Processed: 4. Spatial index management is handled by SpatialIndexSynchronizer.
+consoleLogger.js:187 VED: Validating payload for event 'core:system_error_occurred' against schema 'core:system_error_occurred#payload'...
+consoleLogger.js:175 VED: Payload validation FAILED for event 'core:system_error_occurred'. Dispatch SKIPPED. Errors: [/details]: must NOT have additional properties; [/details]: must NOT have additional properties; [/details]: must NOT have additional properties; [/details]: must NOT have additional properties; [/details]: must NOT have additional properties {payload: {…}, errors: Array(5)}
+error @ consoleLogger.js:175
+#validatePayload @ validatedEventDispatcher.js:144
+dispatch @ validatedEventDispatcher.js:219
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+safeDispatchEvent @ eventDispatchService.js:149
+#processBlueprintSlots @ bodyBlueprintFactory.js:346
+await in #processBlueprintSlots
+createAnatomyGraph @ bodyBlueprintFactory.js:149
+generate @ anatomyGenerationWorkflow.js:78
+(anonymous) @ anatomyOrchestrator.js:109
+execute @ anatomyUnitOfWork.js:95
+orchestrateGeneration @ anatomyOrchestrator.js:108
+generateAnatomyIfNeeded @ anatomyGenerationService.js:146
+#handleEntityCreated @ anatomyInitializationService.js:101
+(anonymous) @ eventBus.js:136
+dispatch @ eventBus.js:133
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+#dispatchEntityCreated @ entityLifecycleManager.js:177
+createEntityInstance @ entityLifecycleManager.js:214
+createEntityInstance @ entityManager.js:361
+createEntityInstance @ entityManagerAdapter.js:38
+#createInstance @ worldInitializer.js:246
+#instantiateInstance @ worldInitializer.js:337
+#processInstance @ worldInitializer.js:396
+#instantiateEntitiesFromWorld @ worldInitializer.js:438
+await in #instantiateEntitiesFromWorld
+initializeWorldEntities @ worldInitializer.js:484
+#initWorld @ initializationService.js:393
+runInitializationSequence @ initializationService.js:302
+await in runInitializationSequence
+#executeInitializationSequence @ gameEngine.js:197
+await in #executeInitializationSequence
+#initializeNewGame @ gameEngine.js:269
+await in #initializeNewGame
+startNewGame @ gameEngine.js:313
+startGameStage @ engineStages.js:87
+beginGame @ main.js:217
+(anonymous) @ game.html:326
+Promise.then
+(anonymous) @ game.html:323Understand this error
+consoleLogger.js:187 VED: Dispatch skipped for 'core:system_error_occurred' due to validation failure (see error above).
+consoleLogger.js:187 Building spatial index from existing entities...
+consoleLogger.js:151 SpatialIndexManager: Index cleared.
+consoleLogger.js:187 Spatial index built successfully.
+consoleLogger.js:187 InitializationService: Initial world entities instantiated and spatial index built.
+consoleLogger.js:187 VED: Delegating subscription for event "core:action_decided" to EventBus.
+consoleLogger.js:187 SafeEventDispatcher: Successfully subscribed to event 'core:action_decided'.
+consoleLogger.js:187 VED: Delegating subscription for event "core:action_decided" to EventBus.
+consoleLogger.js:187 SafeEventDispatcher: Successfully subscribed to event 'core:action_decided'.
+consoleLogger.js:187 Registered AI persistence listeners.
+consoleLogger.js:187 Ensuring DomUiFacade is instantiated so UI components are ready...
+consoleLogger.js:187 Building ActionIndex with loaded action definitions...
+consoleLogger.js:187 Building action index from 10 definitions...
+consoleLogger.js:187 Action index built. 3 component-to-action maps created.
+consoleLogger.js:187 ActionIndex built with 10 action definitions.
+consoleLogger.js:187 InitializationService: Initialization sequence for world 'p_erotica:donostia' completed successfully (GameLoop resolution removed).
+consoleLogger.js:163 SafeEventDispatcher: Underlying VED failed to dispatch event 'core:system_error_occurred' (returned false). See VED logs for details. Payload: {"message":"Failed to process blueprint slot 'left_eye': No entity definitions found matching anatomy requirements. Need part type: 'eye'. Allowed types: [eye]. Required components: [anatomy:part]. Checked 28 entity definitions.","details":{"slotKey":"left_eye","slot":{"parent":"head","socket":"left_eye","requirements":{"partType":"eye","components":["anatomy:part"]}},"blueprintId":"human_female","recipeId":"p_erotica:amaia_castillo_recipe","context":"BodyBlueprintFactory.processBlueprintSlots"}}
+warn @ consoleLogger.js:163
+dispatch @ safeEventDispatcher.js:136
+await in dispatch
+safeDispatchEvent @ eventDispatchService.js:149
+#processBlueprintSlots @ bodyBlueprintFactory.js:346
+await in #processBlueprintSlots
+createAnatomyGraph @ bodyBlueprintFactory.js:149
+generate @ anatomyGenerationWorkflow.js:78
+(anonymous) @ anatomyOrchestrator.js:109
+execute @ anatomyUnitOfWork.js:95
+orchestrateGeneration @ anatomyOrchestrator.js:108
+generateAnatomyIfNeeded @ anatomyGenerationService.js:146
+#handleEntityCreated @ anatomyInitializationService.js:101
+(anonymous) @ eventBus.js:136
+dispatch @ eventBus.js:133
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+#dispatchEntityCreated @ entityLifecycleManager.js:177
+createEntityInstance @ entityLifecycleManager.js:214
+createEntityInstance @ entityManager.js:361
+createEntityInstance @ entityManagerAdapter.js:38
+#createInstance @ worldInitializer.js:246
+#instantiateInstance @ worldInitializer.js:337
+#processInstance @ worldInitializer.js:396
+#instantiateEntitiesFromWorld @ worldInitializer.js:438
+await in #instantiateEntitiesFromWorld
+initializeWorldEntities @ worldInitializer.js:484
+#initWorld @ initializationService.js:393
+runInitializationSequence @ initializationService.js:302
+await in runInitializationSequence
+#executeInitializationSequence @ gameEngine.js:197
+await in #executeInitializationSequence
+#initializeNewGame @ gameEngine.js:269
+await in #initializeNewGame
+startNewGame @ gameEngine.js:313
+startGameStage @ engineStages.js:87
+beginGame @ main.js:217
+(anonymous) @ game.html:326
+Promise.then
+(anonymous) @ game.html:323Understand this warning
+consoleLogger.js:187 GameEngine._executeInitializationSequence: Initialization sequence completed for "p_erotica:donostia". Success: true
+consoleLogger.js:187 Dispatched core:system_error_occurred {payload: {…}}
+consoleLogger.js:187 GameSessionManager.finalizeNewGameSuccess: Initialization successful for world "p_erotica:donostia". Finalizing new game setup.
+consoleLogger.js:187 PlaytimeTracker: Session started at 1751570351374
+consoleLogger.js:187 GameSessionManager._finalizeGameStart: Dispatching UI event for game ready.
+consoleLogger.js:187 VED: Validating payload for event 'core:ui_ready' against schema 'core:ui_ready#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:ui_ready'.
+consoleLogger.js:187 VED: Dispatching event 'core:ui_ready' via EventBus... {activeWorld: 'p_erotica:donostia', message: 'Enter command...'}
+consoleLogger.js:187 EngineUIManager: Received core:ui_ready {activeWorld: 'p_erotica:donostia', message: 'Enter command...'}
+consoleLogger.js:187 [TitleRenderer] Title set to: "p_erotica:donostia"
+consoleLogger.js:187 [InputStateController] Input enabled.
+consoleLogger.js:187 [InputStateController] Input placeholder set to: "Enter command..."
+consoleLogger.js:187 EngineUIManager: Handled core:ui_ready. UI set to ready state. Active world: p_erotica:donostia.
+consoleLogger.js:175 BodyBlueprintFactory: Failed to create anatomy graph {error: ValidationError: Failed to process blueprint slot 'left_eye': No entity definitions found matching …}
+error @ consoleLogger.js:175
+createAnatomyGraph @ bodyBlueprintFactory.js:196
+await in createAnatomyGraph
+generate @ anatomyGenerationWorkflow.js:78
+(anonymous) @ anatomyOrchestrator.js:109
+execute @ anatomyUnitOfWork.js:95
+orchestrateGeneration @ anatomyOrchestrator.js:108
+generateAnatomyIfNeeded @ anatomyGenerationService.js:146
+#handleEntityCreated @ anatomyInitializationService.js:101
+(anonymous) @ eventBus.js:136
+dispatch @ eventBus.js:133
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+#dispatchEntityCreated @ entityLifecycleManager.js:177
+createEntityInstance @ entityLifecycleManager.js:214
+createEntityInstance @ entityManager.js:361
+createEntityInstance @ entityManagerAdapter.js:38
+#createInstance @ worldInitializer.js:246
+#instantiateInstance @ worldInitializer.js:337
+#processInstance @ worldInitializer.js:396
+#instantiateEntitiesFromWorld @ worldInitializer.js:438
+await in #instantiateEntitiesFromWorld
+initializeWorldEntities @ worldInitializer.js:484
+#initWorld @ initializationService.js:393
+runInitializationSequence @ initializationService.js:302
+await in runInitializationSequence
+#executeInitializationSequence @ gameEngine.js:197
+await in #executeInitializationSequence
+#initializeNewGame @ gameEngine.js:269
+await in #initializeNewGame
+startNewGame @ gameEngine.js:313
+startGameStage @ engineStages.js:87
+beginGame @ main.js:217
+(anonymous) @ game.html:326
+Promise.then
+(anonymous) @ game.html:323Understand this error
+consoleLogger.js:187 EntityGraphBuilder: Cleaning up 6 entities after validation failure
+consoleLogger.js:175 EntityGraphBuilder: Failed to cleanup entity '2b31425b-a66e-435e-98d8-97c2dbd3d122' {error: TypeError: this[#entityManager].removeEntity is not a function
+    at EntityGraphBuilder.cleanupEnt…}
+error @ consoleLogger.js:175
+cleanupEntities @ entityGraphBuilder.js:178
+createAnatomyGraph @ bodyBlueprintFactory.js:203
+await in createAnatomyGraph
+generate @ anatomyGenerationWorkflow.js:78
+(anonymous) @ anatomyOrchestrator.js:109
+execute @ anatomyUnitOfWork.js:95
+orchestrateGeneration @ anatomyOrchestrator.js:108
+generateAnatomyIfNeeded @ anatomyGenerationService.js:146
+#handleEntityCreated @ anatomyInitializationService.js:101
+(anonymous) @ eventBus.js:136
+dispatch @ eventBus.js:133
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+#dispatchEntityCreated @ entityLifecycleManager.js:177
+createEntityInstance @ entityLifecycleManager.js:214
+createEntityInstance @ entityManager.js:361
+createEntityInstance @ entityManagerAdapter.js:38
+#createInstance @ worldInitializer.js:246
+#instantiateInstance @ worldInitializer.js:337
+#processInstance @ worldInitializer.js:396
+#instantiateEntitiesFromWorld @ worldInitializer.js:438
+await in #instantiateEntitiesFromWorld
+initializeWorldEntities @ worldInitializer.js:484
+#initWorld @ initializationService.js:393
+runInitializationSequence @ initializationService.js:302
+await in runInitializationSequence
+#executeInitializationSequence @ gameEngine.js:197
+await in #executeInitializationSequence
+#initializeNewGame @ gameEngine.js:269
+await in #initializeNewGame
+startNewGame @ gameEngine.js:313
+startGameStage @ engineStages.js:87
+beginGame @ main.js:217
+(anonymous) @ game.html:326
+Promise.then
+(anonymous) @ game.html:323Understand this error
+consoleLogger.js:175 EntityGraphBuilder: Failed to cleanup entity 'b924f92d-147d-4875-a3a3-8b0e32ec1b76' {error: TypeError: this[#entityManager].removeEntity is not a function
+    at EntityGraphBuilder.cleanupEnt…}
+error @ consoleLogger.js:175
+cleanupEntities @ entityGraphBuilder.js:178
+createAnatomyGraph @ bodyBlueprintFactory.js:203
+await in createAnatomyGraph
+generate @ anatomyGenerationWorkflow.js:78
+(anonymous) @ anatomyOrchestrator.js:109
+execute @ anatomyUnitOfWork.js:95
+orchestrateGeneration @ anatomyOrchestrator.js:108
+generateAnatomyIfNeeded @ anatomyGenerationService.js:146
+#handleEntityCreated @ anatomyInitializationService.js:101
+(anonymous) @ eventBus.js:136
+dispatch @ eventBus.js:133
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+#dispatchEntityCreated @ entityLifecycleManager.js:177
+createEntityInstance @ entityLifecycleManager.js:214
+createEntityInstance @ entityManager.js:361
+createEntityInstance @ entityManagerAdapter.js:38
+#createInstance @ worldInitializer.js:246
+#instantiateInstance @ worldInitializer.js:337
+#processInstance @ worldInitializer.js:396
+#instantiateEntitiesFromWorld @ worldInitializer.js:438
+await in #instantiateEntitiesFromWorld
+initializeWorldEntities @ worldInitializer.js:484
+#initWorld @ initializationService.js:393
+runInitializationSequence @ initializationService.js:302
+await in runInitializationSequence
+#executeInitializationSequence @ gameEngine.js:197
+await in #executeInitializationSequence
+#initializeNewGame @ gameEngine.js:269
+await in #initializeNewGame
+startNewGame @ gameEngine.js:313
+startGameStage @ engineStages.js:87
+beginGame @ main.js:217
+(anonymous) @ game.html:326
+Promise.then
+(anonymous) @ game.html:323Understand this error
+consoleLogger.js:175 EntityGraphBuilder: Failed to cleanup entity 'b066875e-fea5-4859-ba59-f522e5f7daae' {error: TypeError: this[#entityManager].removeEntity is not a function
+    at EntityGraphBuilder.cleanupEnt…}
+error @ consoleLogger.js:175
+cleanupEntities @ entityGraphBuilder.js:178
+createAnatomyGraph @ bodyBlueprintFactory.js:203
+await in createAnatomyGraph
+generate @ anatomyGenerationWorkflow.js:78
+(anonymous) @ anatomyOrchestrator.js:109
+execute @ anatomyUnitOfWork.js:95
+orchestrateGeneration @ anatomyOrchestrator.js:108
+generateAnatomyIfNeeded @ anatomyGenerationService.js:146
+#handleEntityCreated @ anatomyInitializationService.js:101
+(anonymous) @ eventBus.js:136
+dispatch @ eventBus.js:133
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+#dispatchEntityCreated @ entityLifecycleManager.js:177
+createEntityInstance @ entityLifecycleManager.js:214
+createEntityInstance @ entityManager.js:361
+createEntityInstance @ entityManagerAdapter.js:38
+#createInstance @ worldInitializer.js:246
+#instantiateInstance @ worldInitializer.js:337
+#processInstance @ worldInitializer.js:396
+#instantiateEntitiesFromWorld @ worldInitializer.js:438
+await in #instantiateEntitiesFromWorld
+initializeWorldEntities @ worldInitializer.js:484
+#initWorld @ initializationService.js:393
+runInitializationSequence @ initializationService.js:302
+await in runInitializationSequence
+#executeInitializationSequence @ gameEngine.js:197
+await in #executeInitializationSequence
+#initializeNewGame @ gameEngine.js:269
+await in #initializeNewGame
+startNewGame @ gameEngine.js:313
+startGameStage @ engineStages.js:87
+beginGame @ main.js:217
+(anonymous) @ game.html:326
+Promise.then
+(anonymous) @ game.html:323Understand this error
+consoleLogger.js:175 EntityGraphBuilder: Failed to cleanup entity 'cffc07ee-c523-4485-8365-0ee66eaa2728' {error: TypeError: this[#entityManager].removeEntity is not a function
+    at EntityGraphBuilder.cleanupEnt…}
+error @ consoleLogger.js:175
+cleanupEntities @ entityGraphBuilder.js:178
+createAnatomyGraph @ bodyBlueprintFactory.js:203
+await in createAnatomyGraph
+generate @ anatomyGenerationWorkflow.js:78
+(anonymous) @ anatomyOrchestrator.js:109
+execute @ anatomyUnitOfWork.js:95
+orchestrateGeneration @ anatomyOrchestrator.js:108
+generateAnatomyIfNeeded @ anatomyGenerationService.js:146
+#handleEntityCreated @ anatomyInitializationService.js:101
+(anonymous) @ eventBus.js:136
+dispatch @ eventBus.js:133
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+#dispatchEntityCreated @ entityLifecycleManager.js:177
+createEntityInstance @ entityLifecycleManager.js:214
+createEntityInstance @ entityManager.js:361
+createEntityInstance @ entityManagerAdapter.js:38
+#createInstance @ worldInitializer.js:246
+#instantiateInstance @ worldInitializer.js:337
+#processInstance @ worldInitializer.js:396
+#instantiateEntitiesFromWorld @ worldInitializer.js:438
+await in #instantiateEntitiesFromWorld
+initializeWorldEntities @ worldInitializer.js:484
+#initWorld @ initializationService.js:393
+runInitializationSequence @ initializationService.js:302
+await in runInitializationSequence
+#executeInitializationSequence @ gameEngine.js:197
+await in #executeInitializationSequence
+#initializeNewGame @ gameEngine.js:269
+await in #initializeNewGame
+startNewGame @ gameEngine.js:313
+startGameStage @ engineStages.js:87
+beginGame @ main.js:217
+(anonymous) @ game.html:326
+Promise.then
+(anonymous) @ game.html:323Understand this error
+consoleLogger.js:175 EntityGraphBuilder: Failed to cleanup entity '1cdca414-502b-49d2-928a-b313d7613e2d' {error: TypeError: this[#entityManager].removeEntity is not a function
+    at EntityGraphBuilder.cleanupEnt…}
+error @ consoleLogger.js:175
+cleanupEntities @ entityGraphBuilder.js:178
+createAnatomyGraph @ bodyBlueprintFactory.js:203
+await in createAnatomyGraph
+generate @ anatomyGenerationWorkflow.js:78
+(anonymous) @ anatomyOrchestrator.js:109
+execute @ anatomyUnitOfWork.js:95
+orchestrateGeneration @ anatomyOrchestrator.js:108
+generateAnatomyIfNeeded @ anatomyGenerationService.js:146
+#handleEntityCreated @ anatomyInitializationService.js:101
+(anonymous) @ eventBus.js:136
+dispatch @ eventBus.js:133
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+#dispatchEntityCreated @ entityLifecycleManager.js:177
+createEntityInstance @ entityLifecycleManager.js:214
+createEntityInstance @ entityManager.js:361
+createEntityInstance @ entityManagerAdapter.js:38
+#createInstance @ worldInitializer.js:246
+#instantiateInstance @ worldInitializer.js:337
+#processInstance @ worldInitializer.js:396
+#instantiateEntitiesFromWorld @ worldInitializer.js:438
+await in #instantiateEntitiesFromWorld
+initializeWorldEntities @ worldInitializer.js:484
+#initWorld @ initializationService.js:393
+runInitializationSequence @ initializationService.js:302
+await in runInitializationSequence
+#executeInitializationSequence @ gameEngine.js:197
+await in #executeInitializationSequence
+#initializeNewGame @ gameEngine.js:269
+await in #initializeNewGame
+startNewGame @ gameEngine.js:313
+startGameStage @ engineStages.js:87
+beginGame @ main.js:217
+(anonymous) @ game.html:326
+Promise.then
+(anonymous) @ game.html:323Understand this error
+consoleLogger.js:175 EntityGraphBuilder: Failed to cleanup entity '6da9173b-0ebc-4d61-8d50-2bb67450898b' {error: TypeError: this[#entityManager].removeEntity is not a function
+    at EntityGraphBuilder.cleanupEnt…}
+error @ consoleLogger.js:175
+cleanupEntities @ entityGraphBuilder.js:178
+createAnatomyGraph @ bodyBlueprintFactory.js:203
+await in createAnatomyGraph
+generate @ anatomyGenerationWorkflow.js:78
+(anonymous) @ anatomyOrchestrator.js:109
+execute @ anatomyUnitOfWork.js:95
+orchestrateGeneration @ anatomyOrchestrator.js:108
+generateAnatomyIfNeeded @ anatomyGenerationService.js:146
+#handleEntityCreated @ anatomyInitializationService.js:101
+(anonymous) @ eventBus.js:136
+dispatch @ eventBus.js:133
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+#dispatchEntityCreated @ entityLifecycleManager.js:177
+createEntityInstance @ entityLifecycleManager.js:214
+createEntityInstance @ entityManager.js:361
+createEntityInstance @ entityManagerAdapter.js:38
+#createInstance @ worldInitializer.js:246
+#instantiateInstance @ worldInitializer.js:337
+#processInstance @ worldInitializer.js:396
+#instantiateEntitiesFromWorld @ worldInitializer.js:438
+await in #instantiateEntitiesFromWorld
+initializeWorldEntities @ worldInitializer.js:484
+#initWorld @ initializationService.js:393
+runInitializationSequence @ initializationService.js:302
+await in runInitializationSequence
+#executeInitializationSequence @ gameEngine.js:197
+await in #executeInitializationSequence
+#initializeNewGame @ gameEngine.js:269
+await in #initializeNewGame
+startNewGame @ gameEngine.js:313
+startGameStage @ engineStages.js:87
+beginGame @ main.js:217
+(anonymous) @ game.html:326
+Promise.then
+(anonymous) @ game.html:323Understand this error
+consoleLogger.js:187 VED: Validating payload for event 'core:system_error_occurred' against schema 'core:system_error_occurred#payload'...
+consoleLogger.js:175 VED: Payload validation FAILED for event 'core:system_error_occurred'. Dispatch SKIPPED. Errors: [root]: must have required property 'message'; [root]: must NOT have additional properties; [root]: must NOT have additional properties {payload: {…}, errors: Array(3)}
+error @ consoleLogger.js:175
+#validatePayload @ validatedEventDispatcher.js:144
+dispatch @ validatedEventDispatcher.js:219
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+createAnatomyGraph @ bodyBlueprintFactory.js:208
+await in createAnatomyGraph
+generate @ anatomyGenerationWorkflow.js:78
+(anonymous) @ anatomyOrchestrator.js:109
+execute @ anatomyUnitOfWork.js:95
+orchestrateGeneration @ anatomyOrchestrator.js:108
+generateAnatomyIfNeeded @ anatomyGenerationService.js:146
+#handleEntityCreated @ anatomyInitializationService.js:101
+(anonymous) @ eventBus.js:136
+dispatch @ eventBus.js:133
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+#dispatchEntityCreated @ entityLifecycleManager.js:177
+createEntityInstance @ entityLifecycleManager.js:214
+createEntityInstance @ entityManager.js:361
+createEntityInstance @ entityManagerAdapter.js:38
+#createInstance @ worldInitializer.js:246
+#instantiateInstance @ worldInitializer.js:337
+#processInstance @ worldInitializer.js:396
+#instantiateEntitiesFromWorld @ worldInitializer.js:438
+await in #instantiateEntitiesFromWorld
+initializeWorldEntities @ worldInitializer.js:484
+#initWorld @ initializationService.js:393
+runInitializationSequence @ initializationService.js:302
+await in runInitializationSequence
+#executeInitializationSequence @ gameEngine.js:197
+await in #executeInitializationSequence
+#initializeNewGame @ gameEngine.js:269
+await in #initializeNewGame
+startNewGame @ gameEngine.js:313
+startGameStage @ engineStages.js:87
+beginGame @ main.js:217
+(anonymous) @ game.html:326
+Promise.then
+(anonymous) @ game.html:323Understand this error
+consoleLogger.js:187 VED: Dispatch skipped for 'core:system_error_occurred' due to validation failure (see error above).
+consoleLogger.js:163 SafeEventDispatcher: Underlying VED failed to dispatch event 'core:system_error_occurred' (returned false). See VED logs for details. Payload: {"error":"Failed to process blueprint slot 'left_eye': No entity definitions found matching anatomy requirements. Need part type: 'eye'. Allowed types: [eye]. Required components: [anatomy:part]. Checked 28 entity definitions.","context":"BodyBlueprintFactory.createAnatomyGraph"}
+warn @ consoleLogger.js:163
+dispatch @ safeEventDispatcher.js:136
+await in dispatch
+createAnatomyGraph @ bodyBlueprintFactory.js:208
+await in createAnatomyGraph
+generate @ anatomyGenerationWorkflow.js:78
+(anonymous) @ anatomyOrchestrator.js:109
+execute @ anatomyUnitOfWork.js:95
+orchestrateGeneration @ anatomyOrchestrator.js:108
+generateAnatomyIfNeeded @ anatomyGenerationService.js:146
+#handleEntityCreated @ anatomyInitializationService.js:101
+(anonymous) @ eventBus.js:136
+dispatch @ eventBus.js:133
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+#dispatchEntityCreated @ entityLifecycleManager.js:177
+createEntityInstance @ entityLifecycleManager.js:214
+createEntityInstance @ entityManager.js:361
+createEntityInstance @ entityManagerAdapter.js:38
+#createInstance @ worldInitializer.js:246
+#instantiateInstance @ worldInitializer.js:337
+#processInstance @ worldInitializer.js:396
+#instantiateEntitiesFromWorld @ worldInitializer.js:438
+await in #instantiateEntitiesFromWorld
+initializeWorldEntities @ worldInitializer.js:484
+#initWorld @ initializationService.js:393
+runInitializationSequence @ initializationService.js:302
+await in runInitializationSequence
+#executeInitializationSequence @ gameEngine.js:197
+await in #executeInitializationSequence
+#initializeNewGame @ gameEngine.js:269
+await in #initializeNewGame
+startNewGame @ gameEngine.js:313
+startGameStage @ engineStages.js:87
+beginGame @ main.js:217
+(anonymous) @ game.html:326
+Promise.then
+(anonymous) @ game.html:323Understand this warning
+consoleLogger.js:187 VED: Event 'core:ui_ready' dispatch successful.
+consoleLogger.js:175 AnatomyOrchestrator: AnatomyUnitOfWork: Operation failed, triggering rollback {error: "Failed to process blueprint slot 'left_eye': No en…s: [anatomy:part]. Checked 28 entity definitions.", trackedEntities: 0}
+error @ consoleLogger.js:175
+error @ loggerUtils.js:71
+execute @ anatomyUnitOfWork.js:99
+await in execute
+orchestrateGeneration @ anatomyOrchestrator.js:108
+generateAnatomyIfNeeded @ anatomyGenerationService.js:146
+#handleEntityCreated @ anatomyInitializationService.js:101
+(anonymous) @ eventBus.js:136
+dispatch @ eventBus.js:133
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+#dispatchEntityCreated @ entityLifecycleManager.js:177
+createEntityInstance @ entityLifecycleManager.js:214
+createEntityInstance @ entityManager.js:361
+createEntityInstance @ entityManagerAdapter.js:38
+#createInstance @ worldInitializer.js:246
+#instantiateInstance @ worldInitializer.js:337
+#processInstance @ worldInitializer.js:396
+#instantiateEntitiesFromWorld @ worldInitializer.js:438
+await in #instantiateEntitiesFromWorld
+initializeWorldEntities @ worldInitializer.js:484
+#initWorld @ initializationService.js:393
+runInitializationSequence @ initializationService.js:302
+await in runInitializationSequence
+#executeInitializationSequence @ gameEngine.js:197
+await in #executeInitializationSequence
+#initializeNewGame @ gameEngine.js:269
+await in #initializeNewGame
+startNewGame @ gameEngine.js:313
+startGameStage @ engineStages.js:87
+beginGame @ main.js:217
+(anonymous) @ game.html:326
+Promise.then
+(anonymous) @ game.html:323Understand this error
+consoleLogger.js:151 AnatomyOrchestrator: AnatomyUnitOfWork: Starting rollback. Entities to delete: 0
+consoleLogger.js:151 AnatomyOrchestrator: AnatomyUnitOfWork: Rollback completed successfully
+consoleLogger.js:175 AnatomyErrorHandler: ValidationError occurred during anatomy operation {error: "Failed to process blueprint slot 'left_eye': No en…s: [anatomy:part]. Checked 28 entity definitions.", stack: 'ValidationError: Failed to process blueprint slot …le.js:24316:15\n    at async Promise.all (index 2)', context: {…}}
+error @ consoleLogger.js:175
+handle @ anatomyErrorHandler.js:95
+orchestrateGeneration @ anatomyOrchestrator.js:151
+await in orchestrateGeneration
+generateAnatomyIfNeeded @ anatomyGenerationService.js:146
+#handleEntityCreated @ anatomyInitializationService.js:101
+(anonymous) @ eventBus.js:136
+dispatch @ eventBus.js:133
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+#dispatchEntityCreated @ entityLifecycleManager.js:177
+createEntityInstance @ entityLifecycleManager.js:214
+createEntityInstance @ entityManager.js:361
+createEntityInstance @ entityManagerAdapter.js:38
+#createInstance @ worldInitializer.js:246
+#instantiateInstance @ worldInitializer.js:337
+#processInstance @ worldInitializer.js:396
+#instantiateEntitiesFromWorld @ worldInitializer.js:438
+await in #instantiateEntitiesFromWorld
+initializeWorldEntities @ worldInitializer.js:484
+#initWorld @ initializationService.js:393
+runInitializationSequence @ initializationService.js:302
+await in runInitializationSequence
+#executeInitializationSequence @ gameEngine.js:197
+await in #executeInitializationSequence
+#initializeNewGame @ gameEngine.js:269
+await in #initializeNewGame
+startNewGame @ gameEngine.js:313
+startGameStage @ engineStages.js:87
+beginGame @ main.js:217
+(anonymous) @ game.html:326
+Promise.then
+(anonymous) @ game.html:323Understand this error
+consoleLogger.js:175 AnatomyOrchestrator: AnatomyOrchestrator: Failed to generate anatomy for entity 'p_erotica:amaia_castillo_instance' {error: 'Anatomy operation failed: Failed to process bluepr…s: [anatomy:part]. Checked 28 entity definitions.', trackedEntities: 0, wasRolledBack: true}
+error @ consoleLogger.js:175
+error @ loggerUtils.js:71
+orchestrateGeneration @ anatomyOrchestrator.js:157
+await in orchestrateGeneration
+generateAnatomyIfNeeded @ anatomyGenerationService.js:146
+#handleEntityCreated @ anatomyInitializationService.js:101
+(anonymous) @ eventBus.js:136
+dispatch @ eventBus.js:133
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+#dispatchEntityCreated @ entityLifecycleManager.js:177
+createEntityInstance @ entityLifecycleManager.js:214
+createEntityInstance @ entityManager.js:361
+createEntityInstance @ entityManagerAdapter.js:38
+#createInstance @ worldInitializer.js:246
+#instantiateInstance @ worldInitializer.js:337
+#processInstance @ worldInitializer.js:396
+#instantiateEntitiesFromWorld @ worldInitializer.js:438
+await in #instantiateEntitiesFromWorld
+initializeWorldEntities @ worldInitializer.js:484
+#initWorld @ initializationService.js:393
+runInitializationSequence @ initializationService.js:302
+await in runInitializationSequence
+#executeInitializationSequence @ gameEngine.js:197
+await in #executeInitializationSequence
+#initializeNewGame @ gameEngine.js:269
+await in #initializeNewGame
+startNewGame @ gameEngine.js:313
+startGameStage @ engineStages.js:87
+beginGame @ main.js:217
+(anonymous) @ game.html:326
+Promise.then
+(anonymous) @ game.html:323Understand this error
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:ui_ready'.
+consoleLogger.js:175 AnatomyGenerationService: Failed to generate anatomy for entity 'p_erotica:amaia_castillo_instance' {error: AnatomyGenerationError: Anatomy operation failed: Failed to process blueprint slot 'left_eye': No e…}
+error @ consoleLogger.js:175
+generateAnatomyIfNeeded @ anatomyGenerationService.js:157
+await in generateAnatomyIfNeeded
+#handleEntityCreated @ anatomyInitializationService.js:101
+(anonymous) @ eventBus.js:136
+dispatch @ eventBus.js:133
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+#dispatchEntityCreated @ entityLifecycleManager.js:177
+createEntityInstance @ entityLifecycleManager.js:214
+createEntityInstance @ entityManager.js:361
+createEntityInstance @ entityManagerAdapter.js:38
+#createInstance @ worldInitializer.js:246
+#instantiateInstance @ worldInitializer.js:337
+#processInstance @ worldInitializer.js:396
+#instantiateEntitiesFromWorld @ worldInitializer.js:438
+await in #instantiateEntitiesFromWorld
+initializeWorldEntities @ worldInitializer.js:484
+#initWorld @ initializationService.js:393
+runInitializationSequence @ initializationService.js:302
+await in runInitializationSequence
+#executeInitializationSequence @ gameEngine.js:197
+await in #executeInitializationSequence
+#initializeNewGame @ gameEngine.js:269
+await in #initializeNewGame
+startNewGame @ gameEngine.js:313
+startGameStage @ engineStages.js:87
+beginGame @ main.js:217
+(anonymous) @ game.html:326
+Promise.then
+(anonymous) @ game.html:323Understand this error
+consoleLogger.js:187 GameSessionManager._finalizeGameStart: Starting TurnManager...
+consoleLogger.js:187 ▶️  Turn Manager started.
+consoleLogger.js:187 VED: Delegating subscription for event "core:turn_ended" to EventBus.
+consoleLogger.js:187 TurnEventSubscription: subscribed
+consoleLogger.js:187 ▶️  TurnManager.advanceTurn() initiating...
+consoleLogger.js:175 AnatomyInitializationService: Failed to generate anatomy for entity 'p_erotica:amaia_castillo_instance' {error: AnatomyGenerationError: Anatomy operation failed: Failed to process blueprint slot 'left_eye': No e…}
+error @ consoleLogger.js:175
+#handleEntityCreated @ anatomyInitializationService.js:111
+await in #handleEntityCreated
+(anonymous) @ eventBus.js:136
+dispatch @ eventBus.js:133
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+#dispatchEntityCreated @ entityLifecycleManager.js:177
+createEntityInstance @ entityLifecycleManager.js:214
+createEntityInstance @ entityManager.js:361
+createEntityInstance @ entityManagerAdapter.js:38
+#createInstance @ worldInitializer.js:246
+#instantiateInstance @ worldInitializer.js:337
+#processInstance @ worldInitializer.js:396
+#instantiateEntitiesFromWorld @ worldInitializer.js:438
+await in #instantiateEntitiesFromWorld
+initializeWorldEntities @ worldInitializer.js:484
+#initWorld @ initializationService.js:393
+runInitializationSequence @ initializationService.js:302
+await in runInitializationSequence
+#executeInitializationSequence @ gameEngine.js:197
+await in #executeInitializationSequence
+#initializeNewGame @ gameEngine.js:269
+await in #initializeNewGame
+startNewGame @ gameEngine.js:313
+startGameStage @ engineStages.js:87
+beginGame @ main.js:217
+(anonymous) @ game.html:326
+Promise.then
+(anonymous) @ game.html:323Understand this error
+consoleLogger.js:187 TurnCycle.nextActor(): queue empty
+turnManager.js:315 TurnManager.advanceTurn: nextActor = undefined
+consoleLogger.js:187 Turn queue is empty. Preparing for new round or stopping.

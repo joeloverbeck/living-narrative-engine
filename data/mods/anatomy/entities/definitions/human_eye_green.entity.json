@@ -1,0 +1,19 @@
+{
+    "$schema": "http://example.com/schemas/entity-definition.schema.json",
+    "id": "anatomy:human_eye_green",
+    "description": "A human eye with green iris",
+    "components": {
+        "anatomy:part": {
+            "subType": "eye"
+        },
+        "descriptors:color_extended": {
+            "color": "green"
+        },
+        "descriptors:shape_eye": {
+            "shape": "almond"
+        },
+        "core:name": {
+            "text": "eye"
+        }
+    }
+}
