@@ -206,8 +206,10 @@ export class BodyBlueprintFactory {
       }
 
       this.#eventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
-        error: error.message,
-        context: 'BodyBlueprintFactory.createAnatomyGraph',
+        message: error.message,
+        details: {
+          raw: 'BodyBlueprintFactory.createAnatomyGraph'
+        }
       });
       
       throw error;
@@ -348,9 +350,11 @@ export class BodyBlueprintFactory {
           {
             message: errorMessage,
             details: {
-              ...errorContext,
-              context: 'BodyBlueprintFactory.processBlueprintSlots',
-            },
+              raw: JSON.stringify({
+                ...errorContext,
+                context: 'BodyBlueprintFactory.processBlueprintSlots'
+              })
+            }
           }
         );
 

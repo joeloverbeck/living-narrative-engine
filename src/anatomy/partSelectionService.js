@@ -6,6 +6,7 @@
 
 import { InvalidArgumentError } from '../errors/invalidArgumentError.js';
 import { ValidationError } from '../errors/validationError.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/systemEventIds.js';
 
 /** @typedef {import('../interfaces/coreServices.js').IDataRegistry} IDataRegistry */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
@@ -144,11 +145,12 @@ export class PartSelectionService {
       );
 
       await this.#eventDispatchService.safeDispatchEvent(
-        'system:error_occurred',
+        SYSTEM_ERROR_OCCURRED_ID,
         {
-          error: errorContext.message,
-          context: 'PartSelectionService.findCandidates',
-          details: errorContext,
+          message: errorContext.message,
+          details: {
+            raw: JSON.stringify(errorContext)
+          }
         }
       );
 

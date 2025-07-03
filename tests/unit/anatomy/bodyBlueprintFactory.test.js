@@ -291,8 +291,10 @@ describe('BodyBlueprintFactory (Refactored)', () => {
       expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
         SYSTEM_ERROR_OCCURRED_ID,
         {
-          error: error.message,
-          context: 'BodyBlueprintFactory.createAnatomyGraph',
+          message: error.message,
+          details: {
+            raw: 'BodyBlueprintFactory.createAnatomyGraph'
+          }
         }
       );
     });
