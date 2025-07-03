@@ -18,7 +18,7 @@ import {
   initializeAuxiliaryServicesStage,
 } from './bootstrapper/stages/index.js';
 
-const ACTIVE_WORLD = 'isekai:world';
+const ACTIVE_WORLD = 'p_erotica:donostia';
 
 /** @type {import('./bootstrapper/UIBootstrapper.js').EssentialUIElements | undefined} */
 let uiElements;

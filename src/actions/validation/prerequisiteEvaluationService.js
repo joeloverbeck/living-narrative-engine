@@ -199,6 +199,41 @@ export class PrerequisiteEvaluationService extends BaseService {
       this.#logger.debug(
         `${this.#logPrefix(actionId)}: Evaluation Context Built Successfully.`
       );
+      
+      // Enhanced logging to detect truly missing entities
+      // Note: Since we can't directly access the entity manager from here,
+      // we'll check if the components accessor returns sensible data
+      if (evaluationContext?.actor?.components) {
+        try {
+          // The toJSON method we added should now work
+          const componentsSnapshot = JSON.parse(JSON.stringify(evaluationContext.actor.components));
+          const componentCount = Object.keys(componentsSnapshot).length;
+          
+          if (componentCount === 0) {
+            this.#logger.warn(
+              `${this.#logPrefix(actionId)}: WARNING - Actor entity [${evaluationContext.actor.id}] ` +
+              `appears to have NO components. This may indicate a loading issue.`
+            );
+          } else {
+            this.#logger.debug(
+              `${this.#logPrefix(actionId)}: Actor entity [${evaluationContext.actor.id}] ` +
+              `has ${componentCount} components available.`
+            );
+          }
+        } catch (error) {
+          this.#logger.debug(
+            `${this.#logPrefix(actionId)}: Could not serialize components for validation logging`
+          );
+        }
+      }
+      
+      // Check if the actor context is missing components property entirely
+      if (evaluationContext?.actor && !evaluationContext.actor.components) {
+        this.#logger.error(
+          `${this.#logPrefix(actionId)}: ERROR - Actor context is missing components property entirely!`
+        );
+      }
+      
       this.#logger.debug(
         `${this.#logPrefix(actionId)} Context:`,
         JSON.stringify(evaluationContext, null, 2)
