@@ -3,14 +3,22 @@ const path = require('path');
 
 // Utility to recursively find all .event.json files in a directory
 /**
+ * Recursively find all event files within a directory if it exists.
  *
- * @param dir
+ * @param {string} dir - directory to search
+ * @returns {string[]} array of event file paths
  */
 function findEventFiles(dir) {
   let results = [];
+  if (!fs.existsSync(dir)) {
+    return results;
+  }
   const list = fs.readdirSync(dir);
   list.forEach((file) => {
     const filePath = path.join(dir, file);
+    if (!fs.existsSync(filePath)) {
+      return;
+    }
     const stat = fs.statSync(filePath);
     if (stat && stat.isDirectory()) {
       results = results.concat(findEventFiles(filePath));
@@ -23,9 +31,11 @@ function findEventFiles(dir) {
 
 // Recursively search for $ref fields in an object
 /**
+ * Recursively search an object tree for "$ref" values.
  *
- * @param obj
- * @param refs
+ * @param {object} obj - object to inspect
+ * @param {string[]} refs - accumulator for refs
+ * @returns {string[]} collected refs
  */
 function findRefs(obj, refs = []) {
   if (typeof obj !== 'object' || obj === null) return refs;
@@ -52,12 +62,11 @@ describe('Event payload schemas use only absolute $ref paths to shared schemas',
       const refs = findRefs(payloadSchema);
       // Only check refs that reference common.schema.json or other shared schemas
       refs.forEach((ref) => {
-        // If it references common.schema.json, it must be absolute
-        if (ref.includes('common.schema.json')) {
-          expect(
+        const isCommon = ref.includes('common.schema.json');
+        expect(
+          !isCommon ||
             ref.startsWith('http://example.com/schemas/common.schema.json')
-          ).toBe(true);
-        }
+        ).toBe(true);
         // Optionally, add more checks for other shared schemas here
       });
     }
