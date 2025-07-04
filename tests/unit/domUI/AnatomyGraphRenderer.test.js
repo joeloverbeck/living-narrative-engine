@@ -21,6 +21,15 @@ describe('AnatomyGraphRenderer', () => {
       appendChild: jest.fn(),
       parentElement: null,
       querySelectorAll: jest.fn().mockReturnValue([]),
+      addEventListener: jest.fn(),
+      getBoundingClientRect: jest.fn().mockReturnValue({
+        left: 0,
+        top: 0,
+        width: 800,
+        height: 600
+      }),
+      style: {},
+      id: 'anatomy-graph'
     };
     
     mockContainer = {
@@ -59,7 +68,8 @@ describe('AnatomyGraphRenderer', () => {
         className: '',
         style: {},
         innerHTML: ''
-      }))
+      })),
+      addEventListener: jest.fn()
     };
     
     mockLogger = {
@@ -223,7 +233,7 @@ describe('AnatomyGraphRenderer', () => {
       
       // Assert
       const nodes = Array.from(renderer._nodes.values());
-      expect(nodes[0].y).toBe(50); // depth 0 * 120 + 50 offset
+      expect(nodes[0].y).toBe(80); // depth 0 * 150 + 80 offset (updated spacing)
     });
     
     it('should create nodes for root entity', async () => {
@@ -260,7 +270,7 @@ describe('AnatomyGraphRenderer', () => {
       expect(torso.depth).toBe(0);
       expect(torso.name).toBe('Torso');
       expect(torso.type).toBe('torso');
-      expect(torso.y).toBe(50); // Y offset applied
+      expect(torso.y).toBe(80); // Y offset applied (updated)
     });
   });
   

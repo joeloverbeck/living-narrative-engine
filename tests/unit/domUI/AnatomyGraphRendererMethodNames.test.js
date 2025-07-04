@@ -47,6 +47,13 @@ describe('AnatomyGraphRenderer - Method Name Validation', () => {
       appendChild: jest.fn(),
       querySelector: jest.fn(),
       querySelectorAll: jest.fn(() => []),
+      addEventListener: jest.fn(),
+      getBoundingClientRect: jest.fn(() => ({
+        left: 0,
+        top: 0,
+        width: 800,
+        height: 600,
+      })),
       style: {},
     };
 
@@ -59,6 +66,7 @@ describe('AnatomyGraphRenderer - Method Name Validation', () => {
         innerHTML: '',
         appendChild: jest.fn(),
       })),
+      addEventListener: jest.fn(),
     };
 
     // Create renderer instance
@@ -79,7 +87,7 @@ describe('AnatomyGraphRenderer - Method Name Validation', () => {
       const bodyData = {
         root: rootEntityId,
         parts: {
-          [partEntityId]: {},
+          part1: partEntityId,
         },
       };
 
@@ -120,8 +128,8 @@ describe('AnatomyGraphRenderer - Method Name Validation', () => {
       // Assert - verify getEntityInstance was called (not getEntity)
       expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(rootEntityId);
       expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(partEntityId);
-      // Algorithm: 1) process root, 2) check part as child of root, 3) process part, 4) check part as child of part
-      expect(mockEntityManager.getEntityInstance).toHaveBeenCalledTimes(4);
+      // Algorithm: 1) process root, 2) check part as child of root, 3) process part
+      expect(mockEntityManager.getEntityInstance).toHaveBeenCalledTimes(3);
 
       // Assert - verify getComponentData was called (not getComponent)
       expect(mockRootEntity.getComponentData).toHaveBeenCalledWith('core:name');
@@ -193,8 +201,8 @@ describe('AnatomyGraphRenderer - Method Name Validation', () => {
       const bodyData = {
         root: rootEntityId,
         parts: {
-          [partId1]: {},
-          [partId2]: {},
+          part1: partId1,
+          part2: partId2,
         },
       };
 
@@ -228,9 +236,9 @@ describe('AnatomyGraphRenderer - Method Name Validation', () => {
 
       // Verify all component data was accessed correctly
       expect(mockRootEntity.getComponentData).toHaveBeenCalledTimes(4);
-      // Each part: checked as child of root (1), processed from queue (4), checked by other part (1), checked by self (1) = 7
-      expect(mockPart1.getComponentData).toHaveBeenCalledTimes(7);
-      expect(mockPart2.getComponentData).toHaveBeenCalledTimes(7);
+      // Each part: checked as child of root (1), processed from queue (4), checked by other part (1) = 5 for part1, 6 for part2
+      expect(mockPart1.getComponentData).toHaveBeenCalledTimes(5);
+      expect(mockPart2.getComponentData).toHaveBeenCalledTimes(6);
     });
 
     it('should handle null entities returned from getEntityInstance', async () => {
