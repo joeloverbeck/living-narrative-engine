@@ -22,6 +22,10 @@ class AnatomyGraphRenderer {
     this._tooltip = null;
     this._nodes = new Map();
     this._edges = [];
+    this._viewBox = { x: 0, y: 0, width: 800, height: 600 };
+    this._isPanning = false;
+    this._panStart = { x: 0, y: 0 };
+    this._zoom = 1;
   }
 
   /**
@@ -94,6 +98,13 @@ class AnatomyGraphRenderer {
   async _buildGraphData(bodyData) {
     const visited = new Set();
     const queue = [{ id: bodyData.root, depth: 0, parent: null }];
+    
+    // First, collect all part IDs from the body data
+    const allPartIds = new Set();
+    if (bodyData.parts) {
+      Object.values(bodyData.parts).forEach(partId => allPartIds.add(partId));
+    }
+    allPartIds.add(bodyData.root);
 
     while (queue.length > 0) {
       const { id, depth, parent } = queue.shift();
@@ -122,7 +133,7 @@ class AnatomyGraphRenderer {
           type: partComponent?.subType || 'unknown',
           depth,
           x: 0, // Will be calculated later
-          y: depth * 120 + 50, // Vertical spacing with offset to ensure visibility
+          y: depth * 150 + 80, // Increased vertical spacing for better visibility
         };
 
         this._nodes.set(id, node);
@@ -136,13 +147,19 @@ class AnatomyGraphRenderer {
           });
         }
 
-        // Find children - look for entities with joints pointing to this entity
-        for (const [partId] of Object.entries(bodyData.parts || {})) {
-          const partEntity = await this._entityManager.getEntityInstance(partId);
-          if (partEntity) {
-            const partJoint = partEntity.getComponentData('anatomy:joint');
-            if (partJoint && partJoint.parentId === id) {
-              queue.push({ id: partId, depth: depth + 1, parent: id });
+        // Find children by checking all parts for connections to this entity
+        for (const partId of allPartIds) {
+          if (!visited.has(partId)) {
+            try {
+              const partEntity = await this._entityManager.getEntityInstance(partId);
+              if (partEntity) {
+                const partJoint = partEntity.getComponentData('anatomy:joint');
+                if (partJoint && partJoint.parentId === id) {
+                  queue.push({ id: partId, depth: depth + 1, parent: id });
+                }
+              }
+            } catch (err) {
+              this._logger.warn(`Failed to check entity ${partId}:`, err);
             }
           }
         }
@@ -170,13 +187,50 @@ class AnatomyGraphRenderer {
       levels.get(node.depth).push(node);
     }
 
+    // Calculate width based on maximum number of nodes at any level
+    let maxNodesInLevel = 0;
+    for (const nodes of levels.values()) {
+      maxNodesInLevel = Math.max(maxNodesInLevel, nodes.length);
+    }
+    
+    const minSpacing = 120; // Minimum spacing between nodes
+    const width = Math.max(800, maxNodesInLevel * minSpacing + 200);
+    
     // Position nodes horizontally within each level
-    const width = 800;
     for (const [depth, nodes] of levels) {
       const spacing = width / (nodes.length + 1);
       nodes.forEach((node, index) => {
         node.x = spacing * (index + 1);
       });
+    }
+    
+    // Update viewBox to fit all content
+    this._updateViewBoxToFitContent();
+  }
+  
+  /**
+   * Update viewBox to ensure all nodes are visible
+   *
+   * @private
+   */
+  _updateViewBoxToFitContent() {
+    let minX = Infinity, minY = Infinity;
+    let maxX = -Infinity, maxY = -Infinity;
+    const nodeRadius = 30;
+    const padding = 80;
+    
+    for (const node of this._nodes.values()) {
+      minX = Math.min(minX, node.x - nodeRadius);
+      minY = Math.min(minY, node.y - nodeRadius);
+      maxX = Math.max(maxX, node.x + nodeRadius);
+      maxY = Math.max(maxY, node.y + nodeRadius);
+    }
+    
+    if (this._nodes.size > 0) {
+      this._viewBox.x = minX - padding;
+      this._viewBox.y = minY - padding;
+      this._viewBox.width = (maxX - minX) + padding * 2;
+      this._viewBox.height = (maxY - minY) + padding * 2;
     }
   }
 
@@ -189,33 +243,23 @@ class AnatomyGraphRenderer {
     const container = this._document.getElementById('anatomy-graph-container');
     if (!container) return;
 
-    // Calculate SVG dimensions with padding for node visibility
-    let maxX = 0;
-    let maxY = 0;
-    const nodeRadius = 30;
-    const padding = 50;
-    
-    for (const node of this._nodes.values()) {
-      maxX = Math.max(maxX, node.x + nodeRadius + padding);
-      maxY = Math.max(maxY, node.y + nodeRadius + padding);
-    }
-
-    const width = Math.max(800, maxX);
-    const height = Math.max(600, maxY);
-
-    // Create SVG with proper viewBox to include all content
+    // Create SVG with viewBox
     const svg = this._document.createElementNS(
       'http://www.w3.org/2000/svg',
       'svg'
     );
     svg.setAttribute('width', '100%');
     svg.setAttribute('height', '100%');
-    svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+    svg.setAttribute('viewBox', `${this._viewBox.x} ${this._viewBox.y} ${this._viewBox.width} ${this._viewBox.height}`);
     svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
     svg.id = 'anatomy-graph';
+    svg.style.cursor = 'grab';
 
     container.appendChild(svg);
     this._svg = svg;
+
+    // Setup pan and zoom handlers
+    this._setupPanAndZoom();
 
     // Create tooltip element
     this._tooltip = this._document.createElement('div');
@@ -224,6 +268,87 @@ class AnatomyGraphRenderer {
     this._tooltip.style.visibility = 'hidden';
     this._tooltip.style.opacity = '0';
     container.appendChild(this._tooltip);
+  }
+  
+  /**
+   * Setup pan and zoom functionality
+   *
+   * @private
+   */
+  _setupPanAndZoom() {
+    if (!this._svg) return;
+    
+    // Mouse events for panning
+    this._svg.addEventListener('mousedown', (e) => {
+      if (e.button === 0) { // Left click
+        this._isPanning = true;
+        this._panStart = { x: e.clientX, y: e.clientY };
+        this._svg.style.cursor = 'grabbing';
+        e.preventDefault();
+      }
+    });
+    
+    this._document.addEventListener('mousemove', (e) => {
+      if (this._isPanning && this._svg) {
+        const dx = (e.clientX - this._panStart.x) / this._zoom;
+        const dy = (e.clientY - this._panStart.y) / this._zoom;
+        
+        this._viewBox.x -= dx;
+        this._viewBox.y -= dy;
+        
+        this._updateViewBox();
+        
+        this._panStart = { x: e.clientX, y: e.clientY };
+      }
+    });
+    
+    this._document.addEventListener('mouseup', () => {
+      if (this._isPanning && this._svg) {
+        this._isPanning = false;
+        this._svg.style.cursor = 'grab';
+      }
+    });
+    
+    // Wheel event for zooming
+    this._svg.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      
+      const rect = this._svg.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      
+      // Convert mouse position to SVG coordinates
+      const svgX = (x / rect.width) * this._viewBox.width + this._viewBox.x;
+      const svgY = (y / rect.height) * this._viewBox.height + this._viewBox.y;
+      
+      // Zoom factor
+      const zoomFactor = e.deltaY > 0 ? 1.1 : 0.9;
+      this._zoom *= zoomFactor;
+      this._zoom = Math.max(0.1, Math.min(this._zoom, 5)); // Limit zoom
+      
+      // Update viewBox maintaining mouse position
+      const newWidth = this._viewBox.width * zoomFactor;
+      const newHeight = this._viewBox.height * zoomFactor;
+      
+      this._viewBox.x = svgX - (x / rect.width) * newWidth;
+      this._viewBox.y = svgY - (y / rect.height) * newHeight;
+      this._viewBox.width = newWidth;
+      this._viewBox.height = newHeight;
+      
+      this._updateViewBox();
+    });
+  }
+  
+  /**
+   * Update SVG viewBox attribute
+   *
+   * @private
+   */
+  _updateViewBox() {
+    if (this._svg) {
+      this._svg.setAttribute('viewBox', 
+        `${this._viewBox.x} ${this._viewBox.y} ${this._viewBox.width} ${this._viewBox.height}`);
+    }
   }
 
   /**
@@ -254,18 +379,33 @@ class AnatomyGraphRenderer {
       const targetNode = this._nodes.get(edge.target);
 
       if (sourceNode && targetNode) {
-        const line = this._document.createElementNS(
+        // Create curved path instead of straight line
+        const path = this._document.createElementNS(
           'http://www.w3.org/2000/svg',
-          'line'
+          'path'
         );
-        line.setAttribute('x1', sourceNode.x);
-        line.setAttribute('y1', sourceNode.y);
-        line.setAttribute('x2', targetNode.x);
-        line.setAttribute('y2', targetNode.y);
-        line.setAttribute('class', 'anatomy-edge');
-        line.setAttribute('stroke', '#666');
-        line.setAttribute('stroke-width', '2');
-        edgeGroup.appendChild(line);
+        
+        // Calculate control point for quadratic Bezier curve
+        const midX = (sourceNode.x + targetNode.x) / 2;
+        const midY = (sourceNode.y + targetNode.y) / 2;
+        const curvature = 0.2;
+        const dx = targetNode.x - sourceNode.x;
+        const dy = targetNode.y - sourceNode.y;
+        
+        // Control point perpendicular to the line
+        const controlX = midX - dy * curvature;
+        const controlY = midY + dx * curvature;
+        
+        // Create curved path
+        const d = `M ${sourceNode.x} ${sourceNode.y} Q ${controlX} ${controlY} ${targetNode.x} ${targetNode.y}`;
+        
+        path.setAttribute('d', d);
+        path.setAttribute('class', 'anatomy-edge');
+        path.setAttribute('stroke', '#666');
+        path.setAttribute('stroke-width', '2');
+        path.setAttribute('fill', 'none');
+        path.setAttribute('stroke-opacity', '0.6');
+        edgeGroup.appendChild(path);
       }
     }
 
@@ -404,6 +544,11 @@ class AnatomyGraphRenderer {
           circle.setAttribute('fill-opacity', '1');
         });
       }
+      
+      // Prevent panning when interacting with nodes
+      nodeEl.addEventListener('mousedown', (e) => {
+        e.stopPropagation();
+      });
     });
   }
 }

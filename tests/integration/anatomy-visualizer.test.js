@@ -412,7 +412,7 @@ describe('Anatomy Visualizer Integration', () => {
       expect(mockSvg.setAttribute).toHaveBeenCalledWith('preserveAspectRatio', 'xMidYMid meet');
       expect(mockSvg.setAttribute).toHaveBeenCalledWith(
         'viewBox',
-        expect.stringMatching(/0 0 \d+ \d+/)
+        expect.stringMatching(/-?\d+ -?\d+ \d+ \d+/)
       );
     });
     
@@ -467,4 +467,5 @@ describe('Anatomy Visualizer Integration', () => {
       expect(mockEntity.getComponentData).toHaveBeenCalledWith('anatomy:body');
     });
   });
+  
 });
