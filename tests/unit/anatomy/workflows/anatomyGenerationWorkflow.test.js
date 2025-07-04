@@ -61,13 +61,13 @@ describe('AnatomyGenerationWorkflow', () => {
         if (id === 'arm-1') {
           return {
             hasComponent: jest.fn((compId) => compId === 'core:name'),
-            getComponentData: jest.fn().mockReturnValue({ name: 'left_arm' }),
+            getComponentData: jest.fn().mockReturnValue({ text: 'left_arm' }),
           };
         }
         if (id === 'arm-2') {
           return {
             hasComponent: jest.fn((compId) => compId === 'core:name'),
-            getComponentData: jest.fn().mockReturnValue({ name: 'right_arm' }),
+            getComponentData: jest.fn().mockReturnValue({ text: 'right_arm' }),
           };
         }
         return {
@@ -127,7 +127,7 @@ describe('AnatomyGenerationWorkflow', () => {
         if (id === 'arm-1') {
           return {
             hasComponent: jest.fn((compId) => compId === 'core:name'),
-            getComponentData: jest.fn().mockReturnValue({ name: '' }),
+            getComponentData: jest.fn().mockReturnValue({ text: '' }),
           };
         }
         return null;
