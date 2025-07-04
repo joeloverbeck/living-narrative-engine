@@ -207,7 +207,7 @@ describe('AnatomyGraphRenderer - Enhanced Features', () => {
       await renderer.renderGraph('test', bodyData);
       
       // Assert
-      expect(renderer._nodes.size).toBe(1); // Only torso should be rendered
+      expect(renderer._nodes.size).toBe(2); // Both torso and floating part should be rendered
       expect(renderer._edges.length).toBe(0);
     });
   });

@@ -110,7 +110,7 @@ export class AnatomyGenerationWorkflow extends BaseService {
       
       if (partEntity && partEntity.hasComponent('core:name')) {
         const nameData = partEntity.getComponentData('core:name');
-        const name = nameData ? nameData.name : null;
+        const name = nameData ? nameData.text : null;
         
         if (name) {
           parts[name] = partEntityId;

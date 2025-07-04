@@ -96,6 +96,12 @@ class AnatomyGraphRenderer {
    * @returns {Promise<void>}
    */
   async _buildGraphData(bodyData) {
+    this._logger.debug('Building graph data from bodyData:', {
+      root: bodyData.root,
+      partsCount: Object.keys(bodyData.parts || {}).length,
+      parts: bodyData.parts
+    });
+    
     const visited = new Set();
     const queue = [{ id: bodyData.root, depth: 0, parent: null }];
     
@@ -105,6 +111,8 @@ class AnatomyGraphRenderer {
       Object.values(bodyData.parts).forEach(partId => allPartIds.add(partId));
     }
     allPartIds.add(bodyData.root);
+    
+    this._logger.debug('All part IDs collected:', Array.from(allPartIds));
 
     while (queue.length > 0) {
       const { id, depth, parent } = queue.shift();
@@ -118,12 +126,23 @@ class AnatomyGraphRenderer {
           this._logger.warn(`Entity not found: ${id}`);
           continue;
         }
+        
+        this._logger.debug(`Processing entity ${id} at depth ${depth}`);
 
         // Get entity info
         const nameComponent = entity.getComponentData('core:name');
         const descriptionComponent = entity.getComponentData('core:description');
         const partComponent = entity.getComponentData('anatomy:part');
         const jointComponent = entity.getComponentData('anatomy:joint');
+        
+        this._logger.debug(`Entity ${id} components:`, {
+          hasName: !!nameComponent,
+          nameText: nameComponent?.text,
+          hasPartComponent: !!partComponent,
+          partType: partComponent?.subType,
+          hasJointComponent: !!jointComponent,
+          jointParentId: jointComponent?.parentId
+        });
 
         // Create node
         const node = {
@@ -148,6 +167,8 @@ class AnatomyGraphRenderer {
         }
 
         // Find children by checking all parts for connections to this entity
+        const children = [];
+        // Check from allPartIds set
         for (const partId of allPartIds) {
           if (!visited.has(partId)) {
             try {
@@ -155,6 +176,8 @@ class AnatomyGraphRenderer {
               if (partEntity) {
                 const partJoint = partEntity.getComponentData('anatomy:joint');
                 if (partJoint && partJoint.parentId === id) {
+                  const partName = partEntity.getComponentData('core:name')?.text || partId;
+                  children.push({ id: partId, name: partName });
                   queue.push({ id: partId, depth: depth + 1, parent: id });
                 }
               }
@@ -163,10 +186,72 @@ class AnatomyGraphRenderer {
             }
           }
         }
+        
+        // Also check from bodyData.parts map to ensure we don't miss any
+        if (bodyData.parts) {
+          for (const [partName, partId] of Object.entries(bodyData.parts)) {
+            if (!visited.has(partId) && !children.some(child => child.id === partId)) {
+              try {
+                const partEntity = await this._entityManager.getEntityInstance(partId);
+                if (partEntity) {
+                  const partJoint = partEntity.getComponentData('anatomy:joint');
+                  if (partJoint && partJoint.parentId === id) {
+                    children.push({ id: partId, name: partName });
+                    queue.push({ id: partId, depth: depth + 1, parent: id });
+                  }
+                }
+              } catch (err) {
+                this._logger.warn(`Failed to check entity ${partId} (${partName}):`, err);
+              }
+            }
+          }
+        }
+        
+        this._logger.debug(`Found ${children.length} children for ${id}:`, children);
       } catch (error) {
         this._logger.error(`Error processing entity ${id}:`, error);
       }
     }
+    
+    // Check for any parts that weren't visited
+    const unvisitedParts = [];
+    for (const [partName, partId] of Object.entries(bodyData.parts || {})) {
+      if (!visited.has(partId)) {
+        unvisitedParts.push({ name: partName, id: partId });
+      }
+    }
+    
+    if (unvisitedParts.length > 0) {
+      this._logger.warn(`Found ${unvisitedParts.length} unconnected parts:`, unvisitedParts);
+      
+      // Add unconnected parts as orphaned nodes (for debugging)
+      for (const { name, id } of unvisitedParts) {
+        try {
+          const entity = await this._entityManager.getEntityInstance(id);
+          if (entity) {
+            const nameComponent = entity.getComponentData('core:name');
+            const partComponent = entity.getComponentData('anatomy:part');
+            
+            const node = {
+              id,
+              name: nameComponent?.text || name || id,
+              description: 'Unconnected part',
+              type: partComponent?.subType || 'unknown',
+              depth: 0, // Place at root level
+              x: 0,
+              y: 0
+            };
+            
+            this._nodes.set(id, node);
+            this._logger.debug(`Added unconnected part: ${node.name} (${id})`);
+          }
+        } catch (err) {
+          this._logger.error(`Failed to add unvisited part ${id}:`, err);
+        }
+      }
+    }
+    
+    this._logger.info(`Graph building complete: ${this._nodes.size} nodes, ${this._edges.length} edges`);
 
     // Calculate horizontal positions
     this._calculateNodePositions();
@@ -453,6 +538,45 @@ class AnatomyGraphRenderer {
 
       nodeGroup.appendChild(g);
     }
+    
+    // Add debug info
+    this._addDebugInfo();
+  }
+  
+  /**
+   * Add debug information to the graph
+   * 
+   * @private
+   */
+  _addDebugInfo() {
+    if (!this._svg) return;
+    
+    const debugGroup = this._document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    debugGroup.setAttribute('class', 'debug-info');
+    debugGroup.setAttribute('transform', `translate(${this._viewBox.x + 10}, ${this._viewBox.y + 20})`);
+    
+    // Background rect for readability
+    const bgRect = this._document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    bgRect.setAttribute('x', '-5');
+    bgRect.setAttribute('y', '-15');
+    bgRect.setAttribute('width', '200');
+    bgRect.setAttribute('height', '30');
+    bgRect.setAttribute('fill', 'rgba(255, 255, 255, 0.9)');
+    bgRect.setAttribute('stroke', '#ccc');
+    bgRect.setAttribute('rx', '3');
+    debugGroup.appendChild(bgRect);
+    
+    // Debug text
+    const debugText = this._document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    debugText.setAttribute('x', '0');
+    debugText.setAttribute('y', '0');
+    debugText.setAttribute('font-size', '12');
+    debugText.setAttribute('font-family', 'monospace');
+    debugText.setAttribute('fill', '#666');
+    debugText.textContent = `Nodes: ${this._nodes.size}, Edges: ${this._edges.length}`;
+    debugGroup.appendChild(debugText);
+    
+    this._svg.appendChild(debugGroup);
   }
 
   /**

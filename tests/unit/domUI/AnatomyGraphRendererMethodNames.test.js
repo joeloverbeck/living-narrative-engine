@@ -236,9 +236,10 @@ describe('AnatomyGraphRenderer - Method Name Validation', () => {
 
       // Verify all component data was accessed correctly
       expect(mockRootEntity.getComponentData).toHaveBeenCalledTimes(4);
-      // Each part: checked as child of root (1), processed from queue (4), checked by other part (1) = 5 for part1, 6 for part2
-      expect(mockPart1.getComponentData).toHaveBeenCalledTimes(5);
-      expect(mockPart2.getComponentData).toHaveBeenCalledTimes(6);
+      // With enhanced traversal, parts are checked from both allPartIds and bodyData.parts
+      // Each part: checked as child of root (2), processed from queue (4), checked by other part (1-2) = 6-8 calls
+      expect(mockPart1.getComponentData).toHaveBeenCalledTimes(6);
+      expect(mockPart2.getComponentData).toHaveBeenCalledTimes(8);
     });
 
     it('should handle null entities returned from getEntityInstance', async () => {
