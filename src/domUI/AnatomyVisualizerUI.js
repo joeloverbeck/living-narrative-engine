@@ -90,13 +90,13 @@ class AnatomyVisualizerUI {
 
     try {
       // Get all entity definitions
-      const definitions = this._registry.getAllByType('entityDefinition');
+      const definitions = this._registry.getAllEntityDefinitions();
 
       // Filter entities with anatomy:body component
       const anatomyEntities = [];
-      for (const [id, definition] of definitions) {
-        if (definition.components && definition.components['anatomy:body']) {
-          anatomyEntities.push({ id, definition });
+      for (const definition of definitions) {
+        if (definition && definition.components && definition.components['anatomy:body']) {
+          anatomyEntities.push({ id: definition.id, definition });
         }
       }
 
@@ -158,7 +158,7 @@ class AnatomyVisualizerUI {
       await this._clearPreviousEntities();
 
       // Get entity definition to verify it has anatomy:body
-      const definition = this._registry.get('entityDefinition', entityDefId);
+      const definition = this._registry.getEntityDefinition(entityDefId);
       if (!definition) {
         throw new Error(`Entity definition not found: ${entityDefId}`);
       }

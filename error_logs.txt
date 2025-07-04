@@ -1,524 +1,53 @@
+AnatomyCacheManager: Built cache with 20 nodes
+consoleLogger.js:151 GraphBuildingWorkflow: GraphBuildingWorkflow: Successfully built adjacency cache for root entity '234e1876-90f5-43bb-acd3-fa1472955b44'
+consoleLogger.js:187 VED: Event 'core:component_added' dispatch successful.
+consoleLogger.js:187 DescriptionGenerationWorkflow: DescriptionGenerationWorkflow: Starting description generation for entity '7ae76425-02cf-4402-8398-9d4048a8ed84'
+16consoleLogger.js:187 EntityManager.getEntitiesWithComponent: Found 19 entities with component 'anatomy:joint'.
+consoleLogger.js:175 DescriptionGenerationWorkflow: DescriptionGenerationWorkflow: Failed to generate descriptions for entity '7ae76425-02cf-4402-8398-9d4048a8ed84' {error: 'AnatomyFormattingService not initialized. Call initialize() first.', stack: 'Error: AnatomyFormattingService not initialized. C…://127.0.0.1:8080/anatomy-visualizer.js:43039:30)'}
+error @ consoleLogger.js:175
+error @ loggerUtils.js:71
+generateAll @ descriptionGenerationWorkflow.js:82
+(anonymous) @ anatomyOrchestrator.js:133
+execute @ anatomyUnitOfWork.js:95
+orchestrateGeneration @ anatomyOrchestrator.js:132
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+generateAnatomyIfNeeded @ anatomyGenerationService.js:146
+#handleEntityCreated @ anatomyInitializationService.js:101
+(anonymous) @ eventBus.js:136
+dispatch @ eventBus.js:133
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+#dispatchEntityCreated @ entityLifecycleManager.js:177
+createEntityInstance @ entityLifecycleManager.js:214
+createEntityInstance @ entityManager.js:361
+createEntityInstance @ entityManagerAdapter.js:38
+_loadEntity @ AnatomyVisualizerUI.js:201
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ AnatomyVisualizerUI.js:139
+handleMouseUp_ @ unknownUnderstand this error
 consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:component_added'.
-consoleLogger.js:187 VED: Event 'core:entity_created' dispatch successful.
-consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:entity_created'.
-2consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:component_added'.
-consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:entity_created'.
-2consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:component_added'.
-consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'system:error_occurred'.
-consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:entity_created'.
-consoleLogger.js:187 Dispatched system:error_occurred {payload: {…}}
-consoleLogger.js:187 WorldInitializer (Pass 1): Completed. Instantiated 4 entities, 0 failures out of 4 total instances for world 'p_erotica:donostia'.
-consoleLogger.js:187 WorldInitializer: World entity initialization complete for world: p_erotica:donostia. Instantiated: 4, Failed: 0, Total Processed: 4. Spatial index management is handled by SpatialIndexSynchronizer.
-consoleLogger.js:187 VED: Validating payload for event 'core:system_error_occurred' against schema 'core:system_error_occurred#payload'...
-consoleLogger.js:175 VED: Payload validation FAILED for event 'core:system_error_occurred'. Dispatch SKIPPED. Errors: [/details]: must NOT have additional properties; [/details]: must NOT have additional properties; [/details]: must NOT have additional properties; [/details]: must NOT have additional properties; [/details]: must NOT have additional properties {payload: {…}, errors: Array(5)}
-error @ consoleLogger.js:175
-#validatePayload @ validatedEventDispatcher.js:144
-dispatch @ validatedEventDispatcher.js:219
-dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
-#executeSafely @ safeEventDispatcher.js:88
-dispatch @ safeEventDispatcher.js:122
-safeDispatchEvent @ eventDispatchService.js:149
-#processBlueprintSlots @ bodyBlueprintFactory.js:346
-await in #processBlueprintSlots
-createAnatomyGraph @ bodyBlueprintFactory.js:149
-generate @ anatomyGenerationWorkflow.js:78
-(anonymous) @ anatomyOrchestrator.js:109
-execute @ anatomyUnitOfWork.js:95
-orchestrateGeneration @ anatomyOrchestrator.js:108
-generateAnatomyIfNeeded @ anatomyGenerationService.js:146
-#handleEntityCreated @ anatomyInitializationService.js:101
-(anonymous) @ eventBus.js:136
-dispatch @ eventBus.js:133
-#emitEvent @ validatedEventDispatcher.js:192
-dispatch @ validatedEventDispatcher.js:222
-dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
-#executeSafely @ safeEventDispatcher.js:88
-dispatch @ safeEventDispatcher.js:122
-#dispatchEntityCreated @ entityLifecycleManager.js:177
-createEntityInstance @ entityLifecycleManager.js:214
-createEntityInstance @ entityManager.js:361
-createEntityInstance @ entityManagerAdapter.js:38
-#createInstance @ worldInitializer.js:246
-#instantiateInstance @ worldInitializer.js:337
-#processInstance @ worldInitializer.js:396
-#instantiateEntitiesFromWorld @ worldInitializer.js:438
-await in #instantiateEntitiesFromWorld
-initializeWorldEntities @ worldInitializer.js:484
-#initWorld @ initializationService.js:393
-runInitializationSequence @ initializationService.js:302
-await in runInitializationSequence
-#executeInitializationSequence @ gameEngine.js:197
-await in #executeInitializationSequence
-#initializeNewGame @ gameEngine.js:269
-await in #initializeNewGame
-startNewGame @ gameEngine.js:313
-startGameStage @ engineStages.js:87
-beginGame @ main.js:217
-(anonymous) @ game.html:326
-Promise.then
-(anonymous) @ game.html:323Understand this error
-consoleLogger.js:187 VED: Dispatch skipped for 'core:system_error_occurred' due to validation failure (see error above).
-consoleLogger.js:187 Building spatial index from existing entities...
-consoleLogger.js:151 SpatialIndexManager: Index cleared.
-consoleLogger.js:187 Spatial index built successfully.
-consoleLogger.js:187 InitializationService: Initial world entities instantiated and spatial index built.
-consoleLogger.js:187 VED: Delegating subscription for event "core:action_decided" to EventBus.
-consoleLogger.js:187 SafeEventDispatcher: Successfully subscribed to event 'core:action_decided'.
-consoleLogger.js:187 VED: Delegating subscription for event "core:action_decided" to EventBus.
-consoleLogger.js:187 SafeEventDispatcher: Successfully subscribed to event 'core:action_decided'.
-consoleLogger.js:187 Registered AI persistence listeners.
-consoleLogger.js:187 Ensuring DomUiFacade is instantiated so UI components are ready...
-consoleLogger.js:187 Building ActionIndex with loaded action definitions...
-consoleLogger.js:187 Building action index from 10 definitions...
-consoleLogger.js:187 Action index built. 3 component-to-action maps created.
-consoleLogger.js:187 ActionIndex built with 10 action definitions.
-consoleLogger.js:187 InitializationService: Initialization sequence for world 'p_erotica:donostia' completed successfully (GameLoop resolution removed).
-consoleLogger.js:163 SafeEventDispatcher: Underlying VED failed to dispatch event 'core:system_error_occurred' (returned false). See VED logs for details. Payload: {"message":"Failed to process blueprint slot 'left_eye': No entity definitions found matching anatomy requirements. Need part type: 'eye'. Allowed types: [eye]. Required components: [anatomy:part]. Checked 28 entity definitions.","details":{"slotKey":"left_eye","slot":{"parent":"head","socket":"left_eye","requirements":{"partType":"eye","components":["anatomy:part"]}},"blueprintId":"human_female","recipeId":"p_erotica:amaia_castillo_recipe","context":"BodyBlueprintFactory.processBlueprintSlots"}}
-warn @ consoleLogger.js:163
-dispatch @ safeEventDispatcher.js:136
-await in dispatch
-safeDispatchEvent @ eventDispatchService.js:149
-#processBlueprintSlots @ bodyBlueprintFactory.js:346
-await in #processBlueprintSlots
-createAnatomyGraph @ bodyBlueprintFactory.js:149
-generate @ anatomyGenerationWorkflow.js:78
-(anonymous) @ anatomyOrchestrator.js:109
-execute @ anatomyUnitOfWork.js:95
-orchestrateGeneration @ anatomyOrchestrator.js:108
-generateAnatomyIfNeeded @ anatomyGenerationService.js:146
-#handleEntityCreated @ anatomyInitializationService.js:101
-(anonymous) @ eventBus.js:136
-dispatch @ eventBus.js:133
-#emitEvent @ validatedEventDispatcher.js:192
-dispatch @ validatedEventDispatcher.js:222
-dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
-#executeSafely @ safeEventDispatcher.js:88
-dispatch @ safeEventDispatcher.js:122
-#dispatchEntityCreated @ entityLifecycleManager.js:177
-createEntityInstance @ entityLifecycleManager.js:214
-createEntityInstance @ entityManager.js:361
-createEntityInstance @ entityManagerAdapter.js:38
-#createInstance @ worldInitializer.js:246
-#instantiateInstance @ worldInitializer.js:337
-#processInstance @ worldInitializer.js:396
-#instantiateEntitiesFromWorld @ worldInitializer.js:438
-await in #instantiateEntitiesFromWorld
-initializeWorldEntities @ worldInitializer.js:484
-#initWorld @ initializationService.js:393
-runInitializationSequence @ initializationService.js:302
-await in runInitializationSequence
-#executeInitializationSequence @ gameEngine.js:197
-await in #executeInitializationSequence
-#initializeNewGame @ gameEngine.js:269
-await in #initializeNewGame
-startNewGame @ gameEngine.js:313
-startGameStage @ engineStages.js:87
-beginGame @ main.js:217
-(anonymous) @ game.html:326
-Promise.then
-(anonymous) @ game.html:323Understand this warning
-consoleLogger.js:187 GameEngine._executeInitializationSequence: Initialization sequence completed for "p_erotica:donostia". Success: true
-consoleLogger.js:187 Dispatched core:system_error_occurred {payload: {…}}
-consoleLogger.js:187 GameSessionManager.finalizeNewGameSuccess: Initialization successful for world "p_erotica:donostia". Finalizing new game setup.
-consoleLogger.js:187 PlaytimeTracker: Session started at 1751570351374
-consoleLogger.js:187 GameSessionManager._finalizeGameStart: Dispatching UI event for game ready.
-consoleLogger.js:187 VED: Validating payload for event 'core:ui_ready' against schema 'core:ui_ready#payload'...
-consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:ui_ready'.
-consoleLogger.js:187 VED: Dispatching event 'core:ui_ready' via EventBus... {activeWorld: 'p_erotica:donostia', message: 'Enter command...'}
-consoleLogger.js:187 EngineUIManager: Received core:ui_ready {activeWorld: 'p_erotica:donostia', message: 'Enter command...'}
-consoleLogger.js:187 [TitleRenderer] Title set to: "p_erotica:donostia"
-consoleLogger.js:187 [InputStateController] Input enabled.
-consoleLogger.js:187 [InputStateController] Input placeholder set to: "Enter command..."
-consoleLogger.js:187 EngineUIManager: Handled core:ui_ready. UI set to ready state. Active world: p_erotica:donostia.
-consoleLogger.js:175 BodyBlueprintFactory: Failed to create anatomy graph {error: ValidationError: Failed to process blueprint slot 'left_eye': No entity definitions found matching …}
-error @ consoleLogger.js:175
-createAnatomyGraph @ bodyBlueprintFactory.js:196
-await in createAnatomyGraph
-generate @ anatomyGenerationWorkflow.js:78
-(anonymous) @ anatomyOrchestrator.js:109
-execute @ anatomyUnitOfWork.js:95
-orchestrateGeneration @ anatomyOrchestrator.js:108
-generateAnatomyIfNeeded @ anatomyGenerationService.js:146
-#handleEntityCreated @ anatomyInitializationService.js:101
-(anonymous) @ eventBus.js:136
-dispatch @ eventBus.js:133
-#emitEvent @ validatedEventDispatcher.js:192
-dispatch @ validatedEventDispatcher.js:222
-dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
-#executeSafely @ safeEventDispatcher.js:88
-dispatch @ safeEventDispatcher.js:122
-#dispatchEntityCreated @ entityLifecycleManager.js:177
-createEntityInstance @ entityLifecycleManager.js:214
-createEntityInstance @ entityManager.js:361
-createEntityInstance @ entityManagerAdapter.js:38
-#createInstance @ worldInitializer.js:246
-#instantiateInstance @ worldInitializer.js:337
-#processInstance @ worldInitializer.js:396
-#instantiateEntitiesFromWorld @ worldInitializer.js:438
-await in #instantiateEntitiesFromWorld
-initializeWorldEntities @ worldInitializer.js:484
-#initWorld @ initializationService.js:393
-runInitializationSequence @ initializationService.js:302
-await in runInitializationSequence
-#executeInitializationSequence @ gameEngine.js:197
-await in #executeInitializationSequence
-#initializeNewGame @ gameEngine.js:269
-await in #initializeNewGame
-startNewGame @ gameEngine.js:313
-startGameStage @ engineStages.js:87
-beginGame @ main.js:217
-(anonymous) @ game.html:326
-Promise.then
-(anonymous) @ game.html:323Understand this error
-consoleLogger.js:187 EntityGraphBuilder: Cleaning up 6 entities after validation failure
-consoleLogger.js:175 EntityGraphBuilder: Failed to cleanup entity '2b31425b-a66e-435e-98d8-97c2dbd3d122' {error: TypeError: this[#entityManager].removeEntity is not a function
-    at EntityGraphBuilder.cleanupEnt…}
-error @ consoleLogger.js:175
-cleanupEntities @ entityGraphBuilder.js:178
-createAnatomyGraph @ bodyBlueprintFactory.js:203
-await in createAnatomyGraph
-generate @ anatomyGenerationWorkflow.js:78
-(anonymous) @ anatomyOrchestrator.js:109
-execute @ anatomyUnitOfWork.js:95
-orchestrateGeneration @ anatomyOrchestrator.js:108
-generateAnatomyIfNeeded @ anatomyGenerationService.js:146
-#handleEntityCreated @ anatomyInitializationService.js:101
-(anonymous) @ eventBus.js:136
-dispatch @ eventBus.js:133
-#emitEvent @ validatedEventDispatcher.js:192
-dispatch @ validatedEventDispatcher.js:222
-dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
-#executeSafely @ safeEventDispatcher.js:88
-dispatch @ safeEventDispatcher.js:122
-#dispatchEntityCreated @ entityLifecycleManager.js:177
-createEntityInstance @ entityLifecycleManager.js:214
-createEntityInstance @ entityManager.js:361
-createEntityInstance @ entityManagerAdapter.js:38
-#createInstance @ worldInitializer.js:246
-#instantiateInstance @ worldInitializer.js:337
-#processInstance @ worldInitializer.js:396
-#instantiateEntitiesFromWorld @ worldInitializer.js:438
-await in #instantiateEntitiesFromWorld
-initializeWorldEntities @ worldInitializer.js:484
-#initWorld @ initializationService.js:393
-runInitializationSequence @ initializationService.js:302
-await in runInitializationSequence
-#executeInitializationSequence @ gameEngine.js:197
-await in #executeInitializationSequence
-#initializeNewGame @ gameEngine.js:269
-await in #initializeNewGame
-startNewGame @ gameEngine.js:313
-startGameStage @ engineStages.js:87
-beginGame @ main.js:217
-(anonymous) @ game.html:326
-Promise.then
-(anonymous) @ game.html:323Understand this error
-consoleLogger.js:175 EntityGraphBuilder: Failed to cleanup entity 'b924f92d-147d-4875-a3a3-8b0e32ec1b76' {error: TypeError: this[#entityManager].removeEntity is not a function
-    at EntityGraphBuilder.cleanupEnt…}
-error @ consoleLogger.js:175
-cleanupEntities @ entityGraphBuilder.js:178
-createAnatomyGraph @ bodyBlueprintFactory.js:203
-await in createAnatomyGraph
-generate @ anatomyGenerationWorkflow.js:78
-(anonymous) @ anatomyOrchestrator.js:109
-execute @ anatomyUnitOfWork.js:95
-orchestrateGeneration @ anatomyOrchestrator.js:108
-generateAnatomyIfNeeded @ anatomyGenerationService.js:146
-#handleEntityCreated @ anatomyInitializationService.js:101
-(anonymous) @ eventBus.js:136
-dispatch @ eventBus.js:133
-#emitEvent @ validatedEventDispatcher.js:192
-dispatch @ validatedEventDispatcher.js:222
-dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
-#executeSafely @ safeEventDispatcher.js:88
-dispatch @ safeEventDispatcher.js:122
-#dispatchEntityCreated @ entityLifecycleManager.js:177
-createEntityInstance @ entityLifecycleManager.js:214
-createEntityInstance @ entityManager.js:361
-createEntityInstance @ entityManagerAdapter.js:38
-#createInstance @ worldInitializer.js:246
-#instantiateInstance @ worldInitializer.js:337
-#processInstance @ worldInitializer.js:396
-#instantiateEntitiesFromWorld @ worldInitializer.js:438
-await in #instantiateEntitiesFromWorld
-initializeWorldEntities @ worldInitializer.js:484
-#initWorld @ initializationService.js:393
-runInitializationSequence @ initializationService.js:302
-await in runInitializationSequence
-#executeInitializationSequence @ gameEngine.js:197
-await in #executeInitializationSequence
-#initializeNewGame @ gameEngine.js:269
-await in #initializeNewGame
-startNewGame @ gameEngine.js:313
-startGameStage @ engineStages.js:87
-beginGame @ main.js:217
-(anonymous) @ game.html:326
-Promise.then
-(anonymous) @ game.html:323Understand this error
-consoleLogger.js:175 EntityGraphBuilder: Failed to cleanup entity 'b066875e-fea5-4859-ba59-f522e5f7daae' {error: TypeError: this[#entityManager].removeEntity is not a function
-    at EntityGraphBuilder.cleanupEnt…}
-error @ consoleLogger.js:175
-cleanupEntities @ entityGraphBuilder.js:178
-createAnatomyGraph @ bodyBlueprintFactory.js:203
-await in createAnatomyGraph
-generate @ anatomyGenerationWorkflow.js:78
-(anonymous) @ anatomyOrchestrator.js:109
-execute @ anatomyUnitOfWork.js:95
-orchestrateGeneration @ anatomyOrchestrator.js:108
-generateAnatomyIfNeeded @ anatomyGenerationService.js:146
-#handleEntityCreated @ anatomyInitializationService.js:101
-(anonymous) @ eventBus.js:136
-dispatch @ eventBus.js:133
-#emitEvent @ validatedEventDispatcher.js:192
-dispatch @ validatedEventDispatcher.js:222
-dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
-#executeSafely @ safeEventDispatcher.js:88
-dispatch @ safeEventDispatcher.js:122
-#dispatchEntityCreated @ entityLifecycleManager.js:177
-createEntityInstance @ entityLifecycleManager.js:214
-createEntityInstance @ entityManager.js:361
-createEntityInstance @ entityManagerAdapter.js:38
-#createInstance @ worldInitializer.js:246
-#instantiateInstance @ worldInitializer.js:337
-#processInstance @ worldInitializer.js:396
-#instantiateEntitiesFromWorld @ worldInitializer.js:438
-await in #instantiateEntitiesFromWorld
-initializeWorldEntities @ worldInitializer.js:484
-#initWorld @ initializationService.js:393
-runInitializationSequence @ initializationService.js:302
-await in runInitializationSequence
-#executeInitializationSequence @ gameEngine.js:197
-await in #executeInitializationSequence
-#initializeNewGame @ gameEngine.js:269
-await in #initializeNewGame
-startNewGame @ gameEngine.js:313
-startGameStage @ engineStages.js:87
-beginGame @ main.js:217
-(anonymous) @ game.html:326
-Promise.then
-(anonymous) @ game.html:323Understand this error
-consoleLogger.js:175 EntityGraphBuilder: Failed to cleanup entity 'cffc07ee-c523-4485-8365-0ee66eaa2728' {error: TypeError: this[#entityManager].removeEntity is not a function
-    at EntityGraphBuilder.cleanupEnt…}
-error @ consoleLogger.js:175
-cleanupEntities @ entityGraphBuilder.js:178
-createAnatomyGraph @ bodyBlueprintFactory.js:203
-await in createAnatomyGraph
-generate @ anatomyGenerationWorkflow.js:78
-(anonymous) @ anatomyOrchestrator.js:109
-execute @ anatomyUnitOfWork.js:95
-orchestrateGeneration @ anatomyOrchestrator.js:108
-generateAnatomyIfNeeded @ anatomyGenerationService.js:146
-#handleEntityCreated @ anatomyInitializationService.js:101
-(anonymous) @ eventBus.js:136
-dispatch @ eventBus.js:133
-#emitEvent @ validatedEventDispatcher.js:192
-dispatch @ validatedEventDispatcher.js:222
-dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
-#executeSafely @ safeEventDispatcher.js:88
-dispatch @ safeEventDispatcher.js:122
-#dispatchEntityCreated @ entityLifecycleManager.js:177
-createEntityInstance @ entityLifecycleManager.js:214
-createEntityInstance @ entityManager.js:361
-createEntityInstance @ entityManagerAdapter.js:38
-#createInstance @ worldInitializer.js:246
-#instantiateInstance @ worldInitializer.js:337
-#processInstance @ worldInitializer.js:396
-#instantiateEntitiesFromWorld @ worldInitializer.js:438
-await in #instantiateEntitiesFromWorld
-initializeWorldEntities @ worldInitializer.js:484
-#initWorld @ initializationService.js:393
-runInitializationSequence @ initializationService.js:302
-await in runInitializationSequence
-#executeInitializationSequence @ gameEngine.js:197
-await in #executeInitializationSequence
-#initializeNewGame @ gameEngine.js:269
-await in #initializeNewGame
-startNewGame @ gameEngine.js:313
-startGameStage @ engineStages.js:87
-beginGame @ main.js:217
-(anonymous) @ game.html:326
-Promise.then
-(anonymous) @ game.html:323Understand this error
-consoleLogger.js:175 EntityGraphBuilder: Failed to cleanup entity '1cdca414-502b-49d2-928a-b313d7613e2d' {error: TypeError: this[#entityManager].removeEntity is not a function
-    at EntityGraphBuilder.cleanupEnt…}
-error @ consoleLogger.js:175
-cleanupEntities @ entityGraphBuilder.js:178
-createAnatomyGraph @ bodyBlueprintFactory.js:203
-await in createAnatomyGraph
-generate @ anatomyGenerationWorkflow.js:78
-(anonymous) @ anatomyOrchestrator.js:109
-execute @ anatomyUnitOfWork.js:95
-orchestrateGeneration @ anatomyOrchestrator.js:108
-generateAnatomyIfNeeded @ anatomyGenerationService.js:146
-#handleEntityCreated @ anatomyInitializationService.js:101
-(anonymous) @ eventBus.js:136
-dispatch @ eventBus.js:133
-#emitEvent @ validatedEventDispatcher.js:192
-dispatch @ validatedEventDispatcher.js:222
-dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
-#executeSafely @ safeEventDispatcher.js:88
-dispatch @ safeEventDispatcher.js:122
-#dispatchEntityCreated @ entityLifecycleManager.js:177
-createEntityInstance @ entityLifecycleManager.js:214
-createEntityInstance @ entityManager.js:361
-createEntityInstance @ entityManagerAdapter.js:38
-#createInstance @ worldInitializer.js:246
-#instantiateInstance @ worldInitializer.js:337
-#processInstance @ worldInitializer.js:396
-#instantiateEntitiesFromWorld @ worldInitializer.js:438
-await in #instantiateEntitiesFromWorld
-initializeWorldEntities @ worldInitializer.js:484
-#initWorld @ initializationService.js:393
-runInitializationSequence @ initializationService.js:302
-await in runInitializationSequence
-#executeInitializationSequence @ gameEngine.js:197
-await in #executeInitializationSequence
-#initializeNewGame @ gameEngine.js:269
-await in #initializeNewGame
-startNewGame @ gameEngine.js:313
-startGameStage @ engineStages.js:87
-beginGame @ main.js:217
-(anonymous) @ game.html:326
-Promise.then
-(anonymous) @ game.html:323Understand this error
-consoleLogger.js:175 EntityGraphBuilder: Failed to cleanup entity '6da9173b-0ebc-4d61-8d50-2bb67450898b' {error: TypeError: this[#entityManager].removeEntity is not a function
-    at EntityGraphBuilder.cleanupEnt…}
-error @ consoleLogger.js:175
-cleanupEntities @ entityGraphBuilder.js:178
-createAnatomyGraph @ bodyBlueprintFactory.js:203
-await in createAnatomyGraph
-generate @ anatomyGenerationWorkflow.js:78
-(anonymous) @ anatomyOrchestrator.js:109
-execute @ anatomyUnitOfWork.js:95
-orchestrateGeneration @ anatomyOrchestrator.js:108
-generateAnatomyIfNeeded @ anatomyGenerationService.js:146
-#handleEntityCreated @ anatomyInitializationService.js:101
-(anonymous) @ eventBus.js:136
-dispatch @ eventBus.js:133
-#emitEvent @ validatedEventDispatcher.js:192
-dispatch @ validatedEventDispatcher.js:222
-dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
-#executeSafely @ safeEventDispatcher.js:88
-dispatch @ safeEventDispatcher.js:122
-#dispatchEntityCreated @ entityLifecycleManager.js:177
-createEntityInstance @ entityLifecycleManager.js:214
-createEntityInstance @ entityManager.js:361
-createEntityInstance @ entityManagerAdapter.js:38
-#createInstance @ worldInitializer.js:246
-#instantiateInstance @ worldInitializer.js:337
-#processInstance @ worldInitializer.js:396
-#instantiateEntitiesFromWorld @ worldInitializer.js:438
-await in #instantiateEntitiesFromWorld
-initializeWorldEntities @ worldInitializer.js:484
-#initWorld @ initializationService.js:393
-runInitializationSequence @ initializationService.js:302
-await in runInitializationSequence
-#executeInitializationSequence @ gameEngine.js:197
-await in #executeInitializationSequence
-#initializeNewGame @ gameEngine.js:269
-await in #initializeNewGame
-startNewGame @ gameEngine.js:313
-startGameStage @ engineStages.js:87
-beginGame @ main.js:217
-(anonymous) @ game.html:326
-Promise.then
-(anonymous) @ game.html:323Understand this error
-consoleLogger.js:187 VED: Validating payload for event 'core:system_error_occurred' against schema 'core:system_error_occurred#payload'...
-consoleLogger.js:175 VED: Payload validation FAILED for event 'core:system_error_occurred'. Dispatch SKIPPED. Errors: [root]: must have required property 'message'; [root]: must NOT have additional properties; [root]: must NOT have additional properties {payload: {…}, errors: Array(3)}
-error @ consoleLogger.js:175
-#validatePayload @ validatedEventDispatcher.js:144
-dispatch @ validatedEventDispatcher.js:219
-dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
-#executeSafely @ safeEventDispatcher.js:88
-dispatch @ safeEventDispatcher.js:122
-createAnatomyGraph @ bodyBlueprintFactory.js:208
-await in createAnatomyGraph
-generate @ anatomyGenerationWorkflow.js:78
-(anonymous) @ anatomyOrchestrator.js:109
-execute @ anatomyUnitOfWork.js:95
-orchestrateGeneration @ anatomyOrchestrator.js:108
-generateAnatomyIfNeeded @ anatomyGenerationService.js:146
-#handleEntityCreated @ anatomyInitializationService.js:101
-(anonymous) @ eventBus.js:136
-dispatch @ eventBus.js:133
-#emitEvent @ validatedEventDispatcher.js:192
-dispatch @ validatedEventDispatcher.js:222
-dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
-#executeSafely @ safeEventDispatcher.js:88
-dispatch @ safeEventDispatcher.js:122
-#dispatchEntityCreated @ entityLifecycleManager.js:177
-createEntityInstance @ entityLifecycleManager.js:214
-createEntityInstance @ entityManager.js:361
-createEntityInstance @ entityManagerAdapter.js:38
-#createInstance @ worldInitializer.js:246
-#instantiateInstance @ worldInitializer.js:337
-#processInstance @ worldInitializer.js:396
-#instantiateEntitiesFromWorld @ worldInitializer.js:438
-await in #instantiateEntitiesFromWorld
-initializeWorldEntities @ worldInitializer.js:484
-#initWorld @ initializationService.js:393
-runInitializationSequence @ initializationService.js:302
-await in runInitializationSequence
-#executeInitializationSequence @ gameEngine.js:197
-await in #executeInitializationSequence
-#initializeNewGame @ gameEngine.js:269
-await in #initializeNewGame
-startNewGame @ gameEngine.js:313
-startGameStage @ engineStages.js:87
-beginGame @ main.js:217
-(anonymous) @ game.html:326
-Promise.then
-(anonymous) @ game.html:323Understand this error
-consoleLogger.js:187 VED: Dispatch skipped for 'core:system_error_occurred' due to validation failure (see error above).
-consoleLogger.js:163 SafeEventDispatcher: Underlying VED failed to dispatch event 'core:system_error_occurred' (returned false). See VED logs for details. Payload: {"error":"Failed to process blueprint slot 'left_eye': No entity definitions found matching anatomy requirements. Need part type: 'eye'. Allowed types: [eye]. Required components: [anatomy:part]. Checked 28 entity definitions.","context":"BodyBlueprintFactory.createAnatomyGraph"}
-warn @ consoleLogger.js:163
-dispatch @ safeEventDispatcher.js:136
-await in dispatch
-createAnatomyGraph @ bodyBlueprintFactory.js:208
-await in createAnatomyGraph
-generate @ anatomyGenerationWorkflow.js:78
-(anonymous) @ anatomyOrchestrator.js:109
-execute @ anatomyUnitOfWork.js:95
-orchestrateGeneration @ anatomyOrchestrator.js:108
-generateAnatomyIfNeeded @ anatomyGenerationService.js:146
-#handleEntityCreated @ anatomyInitializationService.js:101
-(anonymous) @ eventBus.js:136
-dispatch @ eventBus.js:133
-#emitEvent @ validatedEventDispatcher.js:192
-dispatch @ validatedEventDispatcher.js:222
-dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
-#executeSafely @ safeEventDispatcher.js:88
-dispatch @ safeEventDispatcher.js:122
-#dispatchEntityCreated @ entityLifecycleManager.js:177
-createEntityInstance @ entityLifecycleManager.js:214
-createEntityInstance @ entityManager.js:361
-createEntityInstance @ entityManagerAdapter.js:38
-#createInstance @ worldInitializer.js:246
-#instantiateInstance @ worldInitializer.js:337
-#processInstance @ worldInitializer.js:396
-#instantiateEntitiesFromWorld @ worldInitializer.js:438
-await in #instantiateEntitiesFromWorld
-initializeWorldEntities @ worldInitializer.js:484
-#initWorld @ initializationService.js:393
-runInitializationSequence @ initializationService.js:302
-await in runInitializationSequence
-#executeInitializationSequence @ gameEngine.js:197
-await in #executeInitializationSequence
-#initializeNewGame @ gameEngine.js:269
-await in #initializeNewGame
-startNewGame @ gameEngine.js:313
-startGameStage @ engineStages.js:87
-beginGame @ main.js:217
-(anonymous) @ game.html:326
-Promise.then
-(anonymous) @ game.html:323Understand this warning
-consoleLogger.js:187 VED: Event 'core:ui_ready' dispatch successful.
-consoleLogger.js:175 AnatomyOrchestrator: AnatomyUnitOfWork: Operation failed, triggering rollback {error: "Failed to process blueprint slot 'left_eye': No en…s: [anatomy:part]. Checked 28 entity definitions.", trackedEntities: 0}
+consoleLogger.js:175 AnatomyOrchestrator: AnatomyUnitOfWork: Operation failed, triggering rollback {error: "Failed to generate descriptions for entity '7ae764…Service not initialized. Call initialize() first.", trackedEntities: 20}
 error @ consoleLogger.js:175
 error @ loggerUtils.js:71
 execute @ anatomyUnitOfWork.js:99
-await in execute
-orchestrateGeneration @ anatomyOrchestrator.js:108
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+orchestrateGeneration @ anatomyOrchestrator.js:132
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
 generateAnatomyIfNeeded @ anatomyGenerationService.js:146
 #handleEntityCreated @ anatomyInitializationService.js:101
 (anonymous) @ eventBus.js:136
@@ -532,32 +61,962 @@ dispatch @ safeEventDispatcher.js:122
 createEntityInstance @ entityLifecycleManager.js:214
 createEntityInstance @ entityManager.js:361
 createEntityInstance @ entityManagerAdapter.js:38
-#createInstance @ worldInitializer.js:246
-#instantiateInstance @ worldInitializer.js:337
-#processInstance @ worldInitializer.js:396
-#instantiateEntitiesFromWorld @ worldInitializer.js:438
-await in #instantiateEntitiesFromWorld
-initializeWorldEntities @ worldInitializer.js:484
-#initWorld @ initializationService.js:393
-runInitializationSequence @ initializationService.js:302
-await in runInitializationSequence
-#executeInitializationSequence @ gameEngine.js:197
-await in #executeInitializationSequence
-#initializeNewGame @ gameEngine.js:269
-await in #initializeNewGame
-startNewGame @ gameEngine.js:313
-startGameStage @ engineStages.js:87
-beginGame @ main.js:217
-(anonymous) @ game.html:326
-Promise.then
-(anonymous) @ game.html:323Understand this error
-consoleLogger.js:151 AnatomyOrchestrator: AnatomyUnitOfWork: Starting rollback. Entities to delete: 0
+_loadEntity @ AnatomyVisualizerUI.js:201
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ AnatomyVisualizerUI.js:139
+handleMouseUp_ @ unknownUnderstand this error
+consoleLogger.js:151 AnatomyOrchestrator: AnatomyUnitOfWork: Starting rollback. Entities to delete: 20
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Deleting entity 'f0bf52b0-5b54-4594-87b9-1da393952991'
+consoleLogger.js:187 Entity 'f0bf52b0-5b54-4594-87b9-1da393952991' removed from repository.
+consoleLogger.js:151 Entity instance f0bf52b0-5b54-4594-87b9-1da393952991 removed from EntityManager.
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_removed' against schema 'core:entity_removed#payload'...
+consoleLogger.js:175 VED: Payload validation FAILED for event 'core:entity_removed'. Dispatch SKIPPED. Errors: [root]: must have required property 'instanceId'; [root]: must NOT have additional properties {payload: {…}, errors: Array(2)}
+error @ consoleLogger.js:175
+#validatePayload @ validatedEventDispatcher.js:144
+dispatch @ validatedEventDispatcher.js:219
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+rollback @ anatomyUnitOfWork.js:156
+execute @ anatomyUnitOfWork.js:103
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+orchestrateGeneration @ anatomyOrchestrator.js:132
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+generateAnatomyIfNeeded @ anatomyGenerationService.js:146
+#handleEntityCreated @ anatomyInitializationService.js:101
+(anonymous) @ eventBus.js:136
+dispatch @ eventBus.js:133
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+#dispatchEntityCreated @ entityLifecycleManager.js:177
+createEntityInstance @ entityLifecycleManager.js:214
+createEntityInstance @ entityManager.js:361
+createEntityInstance @ entityManagerAdapter.js:38
+_loadEntity @ AnatomyVisualizerUI.js:201
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ AnatomyVisualizerUI.js:139
+handleMouseUp_ @ unknownUnderstand this error
+consoleLogger.js:187 VED: Dispatch skipped for 'core:entity_removed' due to validation failure (see error above).
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Successfully deleted entity 'f0bf52b0-5b54-4594-87b9-1da393952991'
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Deleting entity '12bc4daf-6ac3-422a-bb8a-e6971da32f7e'
+consoleLogger.js:187 Entity '12bc4daf-6ac3-422a-bb8a-e6971da32f7e' removed from repository.
+consoleLogger.js:151 Entity instance 12bc4daf-6ac3-422a-bb8a-e6971da32f7e removed from EntityManager.
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_removed' against schema 'core:entity_removed#payload'...
+consoleLogger.js:175 VED: Payload validation FAILED for event 'core:entity_removed'. Dispatch SKIPPED. Errors: [root]: must have required property 'instanceId'; [root]: must NOT have additional properties {payload: {…}, errors: Array(2)}
+error @ consoleLogger.js:175
+#validatePayload @ validatedEventDispatcher.js:144
+dispatch @ validatedEventDispatcher.js:219
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+rollback @ anatomyUnitOfWork.js:156
+execute @ anatomyUnitOfWork.js:103
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+orchestrateGeneration @ anatomyOrchestrator.js:132
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+generateAnatomyIfNeeded @ anatomyGenerationService.js:146
+#handleEntityCreated @ anatomyInitializationService.js:101
+(anonymous) @ eventBus.js:136
+dispatch @ eventBus.js:133
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+#dispatchEntityCreated @ entityLifecycleManager.js:177
+createEntityInstance @ entityLifecycleManager.js:214
+createEntityInstance @ entityManager.js:361
+createEntityInstance @ entityManagerAdapter.js:38
+_loadEntity @ AnatomyVisualizerUI.js:201
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ AnatomyVisualizerUI.js:139
+handleMouseUp_ @ unknownUnderstand this error
+consoleLogger.js:187 VED: Dispatch skipped for 'core:entity_removed' due to validation failure (see error above).
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Successfully deleted entity '12bc4daf-6ac3-422a-bb8a-e6971da32f7e'
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Deleting entity '6b9380c2-341a-4ca2-b3a4-72212c0a720e'
+consoleLogger.js:187 Entity '6b9380c2-341a-4ca2-b3a4-72212c0a720e' removed from repository.
+consoleLogger.js:151 Entity instance 6b9380c2-341a-4ca2-b3a4-72212c0a720e removed from EntityManager.
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_removed' against schema 'core:entity_removed#payload'...
+consoleLogger.js:175 VED: Payload validation FAILED for event 'core:entity_removed'. Dispatch SKIPPED. Errors: [root]: must have required property 'instanceId'; [root]: must NOT have additional properties {payload: {…}, errors: Array(2)}
+error @ consoleLogger.js:175
+#validatePayload @ validatedEventDispatcher.js:144
+dispatch @ validatedEventDispatcher.js:219
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+rollback @ anatomyUnitOfWork.js:156
+execute @ anatomyUnitOfWork.js:103
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+orchestrateGeneration @ anatomyOrchestrator.js:132
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+generateAnatomyIfNeeded @ anatomyGenerationService.js:146
+#handleEntityCreated @ anatomyInitializationService.js:101
+(anonymous) @ eventBus.js:136
+dispatch @ eventBus.js:133
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+#dispatchEntityCreated @ entityLifecycleManager.js:177
+createEntityInstance @ entityLifecycleManager.js:214
+createEntityInstance @ entityManager.js:361
+createEntityInstance @ entityManagerAdapter.js:38
+_loadEntity @ AnatomyVisualizerUI.js:201
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ AnatomyVisualizerUI.js:139
+handleMouseUp_ @ unknownUnderstand this error
+consoleLogger.js:187 VED: Dispatch skipped for 'core:entity_removed' due to validation failure (see error above).
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Successfully deleted entity '6b9380c2-341a-4ca2-b3a4-72212c0a720e'
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Deleting entity '1b8d3957-de76-4921-b0cf-9287dd981168'
+consoleLogger.js:187 Entity '1b8d3957-de76-4921-b0cf-9287dd981168' removed from repository.
+consoleLogger.js:151 Entity instance 1b8d3957-de76-4921-b0cf-9287dd981168 removed from EntityManager.
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_removed' against schema 'core:entity_removed#payload'...
+consoleLogger.js:175 VED: Payload validation FAILED for event 'core:entity_removed'. Dispatch SKIPPED. Errors: [root]: must have required property 'instanceId'; [root]: must NOT have additional properties {payload: {…}, errors: Array(2)}
+error @ consoleLogger.js:175
+#validatePayload @ validatedEventDispatcher.js:144
+dispatch @ validatedEventDispatcher.js:219
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+rollback @ anatomyUnitOfWork.js:156
+execute @ anatomyUnitOfWork.js:103
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+orchestrateGeneration @ anatomyOrchestrator.js:132
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+generateAnatomyIfNeeded @ anatomyGenerationService.js:146
+#handleEntityCreated @ anatomyInitializationService.js:101
+(anonymous) @ eventBus.js:136
+dispatch @ eventBus.js:133
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+#dispatchEntityCreated @ entityLifecycleManager.js:177
+createEntityInstance @ entityLifecycleManager.js:214
+createEntityInstance @ entityManager.js:361
+createEntityInstance @ entityManagerAdapter.js:38
+_loadEntity @ AnatomyVisualizerUI.js:201
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ AnatomyVisualizerUI.js:139
+handleMouseUp_ @ unknownUnderstand this error
+consoleLogger.js:187 VED: Dispatch skipped for 'core:entity_removed' due to validation failure (see error above).
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Successfully deleted entity '1b8d3957-de76-4921-b0cf-9287dd981168'
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Deleting entity '4472038d-2f7d-4e25-ba26-2e410d2634af'
+consoleLogger.js:187 Entity '4472038d-2f7d-4e25-ba26-2e410d2634af' removed from repository.
+consoleLogger.js:151 Entity instance 4472038d-2f7d-4e25-ba26-2e410d2634af removed from EntityManager.
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_removed' against schema 'core:entity_removed#payload'...
+consoleLogger.js:175 VED: Payload validation FAILED for event 'core:entity_removed'. Dispatch SKIPPED. Errors: [root]: must have required property 'instanceId'; [root]: must NOT have additional properties {payload: {…}, errors: Array(2)}
+error @ consoleLogger.js:175
+#validatePayload @ validatedEventDispatcher.js:144
+dispatch @ validatedEventDispatcher.js:219
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+rollback @ anatomyUnitOfWork.js:156
+execute @ anatomyUnitOfWork.js:103
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+orchestrateGeneration @ anatomyOrchestrator.js:132
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+generateAnatomyIfNeeded @ anatomyGenerationService.js:146
+#handleEntityCreated @ anatomyInitializationService.js:101
+(anonymous) @ eventBus.js:136
+dispatch @ eventBus.js:133
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+#dispatchEntityCreated @ entityLifecycleManager.js:177
+createEntityInstance @ entityLifecycleManager.js:214
+createEntityInstance @ entityManager.js:361
+createEntityInstance @ entityManagerAdapter.js:38
+_loadEntity @ AnatomyVisualizerUI.js:201
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ AnatomyVisualizerUI.js:139
+handleMouseUp_ @ unknownUnderstand this error
+consoleLogger.js:187 VED: Dispatch skipped for 'core:entity_removed' due to validation failure (see error above).
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Successfully deleted entity '4472038d-2f7d-4e25-ba26-2e410d2634af'
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Deleting entity '754cba99-a3d4-4993-b761-fb3ce71b844d'
+consoleLogger.js:187 Entity '754cba99-a3d4-4993-b761-fb3ce71b844d' removed from repository.
+consoleLogger.js:151 Entity instance 754cba99-a3d4-4993-b761-fb3ce71b844d removed from EntityManager.
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_removed' against schema 'core:entity_removed#payload'...
+consoleLogger.js:175 VED: Payload validation FAILED for event 'core:entity_removed'. Dispatch SKIPPED. Errors: [root]: must have required property 'instanceId'; [root]: must NOT have additional properties {payload: {…}, errors: Array(2)}
+error @ consoleLogger.js:175
+#validatePayload @ validatedEventDispatcher.js:144
+dispatch @ validatedEventDispatcher.js:219
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+rollback @ anatomyUnitOfWork.js:156
+execute @ anatomyUnitOfWork.js:103
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+orchestrateGeneration @ anatomyOrchestrator.js:132
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+generateAnatomyIfNeeded @ anatomyGenerationService.js:146
+#handleEntityCreated @ anatomyInitializationService.js:101
+(anonymous) @ eventBus.js:136
+dispatch @ eventBus.js:133
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+#dispatchEntityCreated @ entityLifecycleManager.js:177
+createEntityInstance @ entityLifecycleManager.js:214
+createEntityInstance @ entityManager.js:361
+createEntityInstance @ entityManagerAdapter.js:38
+_loadEntity @ AnatomyVisualizerUI.js:201
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ AnatomyVisualizerUI.js:139
+handleMouseUp_ @ unknownUnderstand this error
+consoleLogger.js:187 VED: Dispatch skipped for 'core:entity_removed' due to validation failure (see error above).
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Successfully deleted entity '754cba99-a3d4-4993-b761-fb3ce71b844d'
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Deleting entity 'b686db60-2ca8-43b6-9383-0a14713f9e54'
+consoleLogger.js:187 Entity 'b686db60-2ca8-43b6-9383-0a14713f9e54' removed from repository.
+consoleLogger.js:151 Entity instance b686db60-2ca8-43b6-9383-0a14713f9e54 removed from EntityManager.
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_removed' against schema 'core:entity_removed#payload'...
+consoleLogger.js:175 VED: Payload validation FAILED for event 'core:entity_removed'. Dispatch SKIPPED. Errors: [root]: must have required property 'instanceId'; [root]: must NOT have additional properties {payload: {…}, errors: Array(2)}
+error @ consoleLogger.js:175
+#validatePayload @ validatedEventDispatcher.js:144
+dispatch @ validatedEventDispatcher.js:219
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+rollback @ anatomyUnitOfWork.js:156
+execute @ anatomyUnitOfWork.js:103
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+orchestrateGeneration @ anatomyOrchestrator.js:132
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+generateAnatomyIfNeeded @ anatomyGenerationService.js:146
+#handleEntityCreated @ anatomyInitializationService.js:101
+(anonymous) @ eventBus.js:136
+dispatch @ eventBus.js:133
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+#dispatchEntityCreated @ entityLifecycleManager.js:177
+createEntityInstance @ entityLifecycleManager.js:214
+createEntityInstance @ entityManager.js:361
+createEntityInstance @ entityManagerAdapter.js:38
+_loadEntity @ AnatomyVisualizerUI.js:201
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ AnatomyVisualizerUI.js:139
+handleMouseUp_ @ unknownUnderstand this error
+consoleLogger.js:187 VED: Dispatch skipped for 'core:entity_removed' due to validation failure (see error above).
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Successfully deleted entity 'b686db60-2ca8-43b6-9383-0a14713f9e54'
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Deleting entity '6e2c59cd-80df-4620-a894-b25fc6fc8ca9'
+consoleLogger.js:187 Entity '6e2c59cd-80df-4620-a894-b25fc6fc8ca9' removed from repository.
+consoleLogger.js:151 Entity instance 6e2c59cd-80df-4620-a894-b25fc6fc8ca9 removed from EntityManager.
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_removed' against schema 'core:entity_removed#payload'...
+consoleLogger.js:175 VED: Payload validation FAILED for event 'core:entity_removed'. Dispatch SKIPPED. Errors: [root]: must have required property 'instanceId'; [root]: must NOT have additional properties {payload: {…}, errors: Array(2)}
+error @ consoleLogger.js:175
+#validatePayload @ validatedEventDispatcher.js:144
+dispatch @ validatedEventDispatcher.js:219
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+rollback @ anatomyUnitOfWork.js:156
+execute @ anatomyUnitOfWork.js:103
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+orchestrateGeneration @ anatomyOrchestrator.js:132
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+generateAnatomyIfNeeded @ anatomyGenerationService.js:146
+#handleEntityCreated @ anatomyInitializationService.js:101
+(anonymous) @ eventBus.js:136
+dispatch @ eventBus.js:133
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+#dispatchEntityCreated @ entityLifecycleManager.js:177
+createEntityInstance @ entityLifecycleManager.js:214
+createEntityInstance @ entityManager.js:361
+createEntityInstance @ entityManagerAdapter.js:38
+_loadEntity @ AnatomyVisualizerUI.js:201
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ AnatomyVisualizerUI.js:139
+handleMouseUp_ @ unknownUnderstand this error
+consoleLogger.js:187 VED: Dispatch skipped for 'core:entity_removed' due to validation failure (see error above).
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Successfully deleted entity '6e2c59cd-80df-4620-a894-b25fc6fc8ca9'
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Deleting entity 'a0c64d61-8f65-47c8-affb-627c03c2ad74'
+consoleLogger.js:187 Entity 'a0c64d61-8f65-47c8-affb-627c03c2ad74' removed from repository.
+consoleLogger.js:151 Entity instance a0c64d61-8f65-47c8-affb-627c03c2ad74 removed from EntityManager.
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_removed' against schema 'core:entity_removed#payload'...
+consoleLogger.js:175 VED: Payload validation FAILED for event 'core:entity_removed'. Dispatch SKIPPED. Errors: [root]: must have required property 'instanceId'; [root]: must NOT have additional properties {payload: {…}, errors: Array(2)}
+error @ consoleLogger.js:175
+#validatePayload @ validatedEventDispatcher.js:144
+dispatch @ validatedEventDispatcher.js:219
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+rollback @ anatomyUnitOfWork.js:156
+execute @ anatomyUnitOfWork.js:103
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+orchestrateGeneration @ anatomyOrchestrator.js:132
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+generateAnatomyIfNeeded @ anatomyGenerationService.js:146
+#handleEntityCreated @ anatomyInitializationService.js:101
+(anonymous) @ eventBus.js:136
+dispatch @ eventBus.js:133
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+#dispatchEntityCreated @ entityLifecycleManager.js:177
+createEntityInstance @ entityLifecycleManager.js:214
+createEntityInstance @ entityManager.js:361
+createEntityInstance @ entityManagerAdapter.js:38
+_loadEntity @ AnatomyVisualizerUI.js:201
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ AnatomyVisualizerUI.js:139
+handleMouseUp_ @ unknownUnderstand this error
+consoleLogger.js:187 VED: Dispatch skipped for 'core:entity_removed' due to validation failure (see error above).
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Successfully deleted entity 'a0c64d61-8f65-47c8-affb-627c03c2ad74'
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Deleting entity '34e5d363-b58d-40d0-b805-9a953b039d38'
+consoleLogger.js:187 Entity '34e5d363-b58d-40d0-b805-9a953b039d38' removed from repository.
+consoleLogger.js:151 Entity instance 34e5d363-b58d-40d0-b805-9a953b039d38 removed from EntityManager.
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_removed' against schema 'core:entity_removed#payload'...
+consoleLogger.js:175 VED: Payload validation FAILED for event 'core:entity_removed'. Dispatch SKIPPED. Errors: [root]: must have required property 'instanceId'; [root]: must NOT have additional properties {payload: {…}, errors: Array(2)}
+error @ consoleLogger.js:175
+#validatePayload @ validatedEventDispatcher.js:144
+dispatch @ validatedEventDispatcher.js:219
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+rollback @ anatomyUnitOfWork.js:156
+execute @ anatomyUnitOfWork.js:103
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+orchestrateGeneration @ anatomyOrchestrator.js:132
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+generateAnatomyIfNeeded @ anatomyGenerationService.js:146
+#handleEntityCreated @ anatomyInitializationService.js:101
+(anonymous) @ eventBus.js:136
+dispatch @ eventBus.js:133
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+#dispatchEntityCreated @ entityLifecycleManager.js:177
+createEntityInstance @ entityLifecycleManager.js:214
+createEntityInstance @ entityManager.js:361
+createEntityInstance @ entityManagerAdapter.js:38
+_loadEntity @ AnatomyVisualizerUI.js:201
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ AnatomyVisualizerUI.js:139
+handleMouseUp_ @ unknownUnderstand this error
+consoleLogger.js:187 VED: Dispatch skipped for 'core:entity_removed' due to validation failure (see error above).
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Successfully deleted entity '34e5d363-b58d-40d0-b805-9a953b039d38'
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Deleting entity '3f966c49-59f4-4c7b-871c-b321cb8e0350'
+consoleLogger.js:187 Entity '3f966c49-59f4-4c7b-871c-b321cb8e0350' removed from repository.
+consoleLogger.js:151 Entity instance 3f966c49-59f4-4c7b-871c-b321cb8e0350 removed from EntityManager.
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_removed' against schema 'core:entity_removed#payload'...
+consoleLogger.js:175 VED: Payload validation FAILED for event 'core:entity_removed'. Dispatch SKIPPED. Errors: [root]: must have required property 'instanceId'; [root]: must NOT have additional properties {payload: {…}, errors: Array(2)}
+error @ consoleLogger.js:175
+#validatePayload @ validatedEventDispatcher.js:144
+dispatch @ validatedEventDispatcher.js:219
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+rollback @ anatomyUnitOfWork.js:156
+execute @ anatomyUnitOfWork.js:103
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+orchestrateGeneration @ anatomyOrchestrator.js:132
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+generateAnatomyIfNeeded @ anatomyGenerationService.js:146
+#handleEntityCreated @ anatomyInitializationService.js:101
+(anonymous) @ eventBus.js:136
+dispatch @ eventBus.js:133
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+#dispatchEntityCreated @ entityLifecycleManager.js:177
+createEntityInstance @ entityLifecycleManager.js:214
+createEntityInstance @ entityManager.js:361
+createEntityInstance @ entityManagerAdapter.js:38
+_loadEntity @ AnatomyVisualizerUI.js:201
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ AnatomyVisualizerUI.js:139
+handleMouseUp_ @ unknownUnderstand this error
+consoleLogger.js:187 VED: Dispatch skipped for 'core:entity_removed' due to validation failure (see error above).
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Successfully deleted entity '3f966c49-59f4-4c7b-871c-b321cb8e0350'
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Deleting entity '42c7d3d8-fa00-4c16-ad6a-959352e72a0c'
+consoleLogger.js:187 Entity '42c7d3d8-fa00-4c16-ad6a-959352e72a0c' removed from repository.
+consoleLogger.js:151 Entity instance 42c7d3d8-fa00-4c16-ad6a-959352e72a0c removed from EntityManager.
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_removed' against schema 'core:entity_removed#payload'...
+consoleLogger.js:175 VED: Payload validation FAILED for event 'core:entity_removed'. Dispatch SKIPPED. Errors: [root]: must have required property 'instanceId'; [root]: must NOT have additional properties {payload: {…}, errors: Array(2)}
+error @ consoleLogger.js:175
+#validatePayload @ validatedEventDispatcher.js:144
+dispatch @ validatedEventDispatcher.js:219
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+rollback @ anatomyUnitOfWork.js:156
+execute @ anatomyUnitOfWork.js:103
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+orchestrateGeneration @ anatomyOrchestrator.js:132
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+generateAnatomyIfNeeded @ anatomyGenerationService.js:146
+#handleEntityCreated @ anatomyInitializationService.js:101
+(anonymous) @ eventBus.js:136
+dispatch @ eventBus.js:133
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+#dispatchEntityCreated @ entityLifecycleManager.js:177
+createEntityInstance @ entityLifecycleManager.js:214
+createEntityInstance @ entityManager.js:361
+createEntityInstance @ entityManagerAdapter.js:38
+_loadEntity @ AnatomyVisualizerUI.js:201
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ AnatomyVisualizerUI.js:139
+handleMouseUp_ @ unknownUnderstand this error
+consoleLogger.js:187 VED: Dispatch skipped for 'core:entity_removed' due to validation failure (see error above).
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Successfully deleted entity '42c7d3d8-fa00-4c16-ad6a-959352e72a0c'
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Deleting entity '769ec147-f45f-48e8-9e14-31177940e019'
+consoleLogger.js:187 Entity '769ec147-f45f-48e8-9e14-31177940e019' removed from repository.
+consoleLogger.js:151 Entity instance 769ec147-f45f-48e8-9e14-31177940e019 removed from EntityManager.
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_removed' against schema 'core:entity_removed#payload'...
+consoleLogger.js:175 VED: Payload validation FAILED for event 'core:entity_removed'. Dispatch SKIPPED. Errors: [root]: must have required property 'instanceId'; [root]: must NOT have additional properties {payload: {…}, errors: Array(2)}
+error @ consoleLogger.js:175
+#validatePayload @ validatedEventDispatcher.js:144
+dispatch @ validatedEventDispatcher.js:219
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+rollback @ anatomyUnitOfWork.js:156
+execute @ anatomyUnitOfWork.js:103
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+orchestrateGeneration @ anatomyOrchestrator.js:132
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+generateAnatomyIfNeeded @ anatomyGenerationService.js:146
+#handleEntityCreated @ anatomyInitializationService.js:101
+(anonymous) @ eventBus.js:136
+dispatch @ eventBus.js:133
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+#dispatchEntityCreated @ entityLifecycleManager.js:177
+createEntityInstance @ entityLifecycleManager.js:214
+createEntityInstance @ entityManager.js:361
+createEntityInstance @ entityManagerAdapter.js:38
+_loadEntity @ AnatomyVisualizerUI.js:201
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ AnatomyVisualizerUI.js:139
+handleMouseUp_ @ unknownUnderstand this error
+consoleLogger.js:187 VED: Dispatch skipped for 'core:entity_removed' due to validation failure (see error above).
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Successfully deleted entity '769ec147-f45f-48e8-9e14-31177940e019'
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Deleting entity 'c2164358-a4a0-499b-81aa-e5e1feff5070'
+consoleLogger.js:187 Entity 'c2164358-a4a0-499b-81aa-e5e1feff5070' removed from repository.
+consoleLogger.js:151 Entity instance c2164358-a4a0-499b-81aa-e5e1feff5070 removed from EntityManager.
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_removed' against schema 'core:entity_removed#payload'...
+consoleLogger.js:175 VED: Payload validation FAILED for event 'core:entity_removed'. Dispatch SKIPPED. Errors: [root]: must have required property 'instanceId'; [root]: must NOT have additional properties {payload: {…}, errors: Array(2)}
+error @ consoleLogger.js:175
+#validatePayload @ validatedEventDispatcher.js:144
+dispatch @ validatedEventDispatcher.js:219
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+rollback @ anatomyUnitOfWork.js:156
+execute @ anatomyUnitOfWork.js:103
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+orchestrateGeneration @ anatomyOrchestrator.js:132
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+generateAnatomyIfNeeded @ anatomyGenerationService.js:146
+#handleEntityCreated @ anatomyInitializationService.js:101
+(anonymous) @ eventBus.js:136
+dispatch @ eventBus.js:133
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+#dispatchEntityCreated @ entityLifecycleManager.js:177
+createEntityInstance @ entityLifecycleManager.js:214
+createEntityInstance @ entityManager.js:361
+createEntityInstance @ entityManagerAdapter.js:38
+_loadEntity @ AnatomyVisualizerUI.js:201
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ AnatomyVisualizerUI.js:139
+handleMouseUp_ @ unknownUnderstand this error
+consoleLogger.js:187 VED: Dispatch skipped for 'core:entity_removed' due to validation failure (see error above).
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Successfully deleted entity 'c2164358-a4a0-499b-81aa-e5e1feff5070'
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Deleting entity '5f03f402-8431-40b9-b317-0a8a4acfae01'
+consoleLogger.js:187 Entity '5f03f402-8431-40b9-b317-0a8a4acfae01' removed from repository.
+consoleLogger.js:151 Entity instance 5f03f402-8431-40b9-b317-0a8a4acfae01 removed from EntityManager.
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_removed' against schema 'core:entity_removed#payload'...
+consoleLogger.js:175 VED: Payload validation FAILED for event 'core:entity_removed'. Dispatch SKIPPED. Errors: [root]: must have required property 'instanceId'; [root]: must NOT have additional properties {payload: {…}, errors: Array(2)}
+error @ consoleLogger.js:175
+#validatePayload @ validatedEventDispatcher.js:144
+dispatch @ validatedEventDispatcher.js:219
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+rollback @ anatomyUnitOfWork.js:156
+execute @ anatomyUnitOfWork.js:103
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+orchestrateGeneration @ anatomyOrchestrator.js:132
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+generateAnatomyIfNeeded @ anatomyGenerationService.js:146
+#handleEntityCreated @ anatomyInitializationService.js:101
+(anonymous) @ eventBus.js:136
+dispatch @ eventBus.js:133
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+#dispatchEntityCreated @ entityLifecycleManager.js:177
+createEntityInstance @ entityLifecycleManager.js:214
+createEntityInstance @ entityManager.js:361
+createEntityInstance @ entityManagerAdapter.js:38
+_loadEntity @ AnatomyVisualizerUI.js:201
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ AnatomyVisualizerUI.js:139
+handleMouseUp_ @ unknownUnderstand this error
+consoleLogger.js:187 VED: Dispatch skipped for 'core:entity_removed' due to validation failure (see error above).
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Successfully deleted entity '5f03f402-8431-40b9-b317-0a8a4acfae01'
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Deleting entity 'eda207bb-dd0b-4871-b8e8-82149b916204'
+consoleLogger.js:187 Entity 'eda207bb-dd0b-4871-b8e8-82149b916204' removed from repository.
+consoleLogger.js:151 Entity instance eda207bb-dd0b-4871-b8e8-82149b916204 removed from EntityManager.
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_removed' against schema 'core:entity_removed#payload'...
+consoleLogger.js:175 VED: Payload validation FAILED for event 'core:entity_removed'. Dispatch SKIPPED. Errors: [root]: must have required property 'instanceId'; [root]: must NOT have additional properties {payload: {…}, errors: Array(2)}
+error @ consoleLogger.js:175
+#validatePayload @ validatedEventDispatcher.js:144
+dispatch @ validatedEventDispatcher.js:219
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+rollback @ anatomyUnitOfWork.js:156
+execute @ anatomyUnitOfWork.js:103
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+orchestrateGeneration @ anatomyOrchestrator.js:132
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+generateAnatomyIfNeeded @ anatomyGenerationService.js:146
+#handleEntityCreated @ anatomyInitializationService.js:101
+(anonymous) @ eventBus.js:136
+dispatch @ eventBus.js:133
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+#dispatchEntityCreated @ entityLifecycleManager.js:177
+createEntityInstance @ entityLifecycleManager.js:214
+createEntityInstance @ entityManager.js:361
+createEntityInstance @ entityManagerAdapter.js:38
+_loadEntity @ AnatomyVisualizerUI.js:201
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ AnatomyVisualizerUI.js:139
+handleMouseUp_ @ unknownUnderstand this error
+consoleLogger.js:187 VED: Dispatch skipped for 'core:entity_removed' due to validation failure (see error above).
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Successfully deleted entity 'eda207bb-dd0b-4871-b8e8-82149b916204'
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Deleting entity '91fd96e3-c597-4bf5-848d-36cc252f7936'
+consoleLogger.js:187 Entity '91fd96e3-c597-4bf5-848d-36cc252f7936' removed from repository.
+consoleLogger.js:151 Entity instance 91fd96e3-c597-4bf5-848d-36cc252f7936 removed from EntityManager.
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_removed' against schema 'core:entity_removed#payload'...
+consoleLogger.js:175 VED: Payload validation FAILED for event 'core:entity_removed'. Dispatch SKIPPED. Errors: [root]: must have required property 'instanceId'; [root]: must NOT have additional properties {payload: {…}, errors: Array(2)}
+error @ consoleLogger.js:175
+#validatePayload @ validatedEventDispatcher.js:144
+dispatch @ validatedEventDispatcher.js:219
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+rollback @ anatomyUnitOfWork.js:156
+execute @ anatomyUnitOfWork.js:103
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+orchestrateGeneration @ anatomyOrchestrator.js:132
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+generateAnatomyIfNeeded @ anatomyGenerationService.js:146
+#handleEntityCreated @ anatomyInitializationService.js:101
+(anonymous) @ eventBus.js:136
+dispatch @ eventBus.js:133
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+#dispatchEntityCreated @ entityLifecycleManager.js:177
+createEntityInstance @ entityLifecycleManager.js:214
+createEntityInstance @ entityManager.js:361
+createEntityInstance @ entityManagerAdapter.js:38
+_loadEntity @ AnatomyVisualizerUI.js:201
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ AnatomyVisualizerUI.js:139
+handleMouseUp_ @ unknownUnderstand this error
+consoleLogger.js:187 VED: Dispatch skipped for 'core:entity_removed' due to validation failure (see error above).
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Successfully deleted entity '91fd96e3-c597-4bf5-848d-36cc252f7936'
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Deleting entity 'ff5fbd50-7a7a-492d-a1cd-2768a9c74806'
+consoleLogger.js:187 Entity 'ff5fbd50-7a7a-492d-a1cd-2768a9c74806' removed from repository.
+consoleLogger.js:151 Entity instance ff5fbd50-7a7a-492d-a1cd-2768a9c74806 removed from EntityManager.
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_removed' against schema 'core:entity_removed#payload'...
+consoleLogger.js:175 VED: Payload validation FAILED for event 'core:entity_removed'. Dispatch SKIPPED. Errors: [root]: must have required property 'instanceId'; [root]: must NOT have additional properties {payload: {…}, errors: Array(2)}
+error @ consoleLogger.js:175
+#validatePayload @ validatedEventDispatcher.js:144
+dispatch @ validatedEventDispatcher.js:219
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+rollback @ anatomyUnitOfWork.js:156
+execute @ anatomyUnitOfWork.js:103
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+orchestrateGeneration @ anatomyOrchestrator.js:132
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+generateAnatomyIfNeeded @ anatomyGenerationService.js:146
+#handleEntityCreated @ anatomyInitializationService.js:101
+(anonymous) @ eventBus.js:136
+dispatch @ eventBus.js:133
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+#dispatchEntityCreated @ entityLifecycleManager.js:177
+createEntityInstance @ entityLifecycleManager.js:214
+createEntityInstance @ entityManager.js:361
+createEntityInstance @ entityManagerAdapter.js:38
+_loadEntity @ AnatomyVisualizerUI.js:201
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ AnatomyVisualizerUI.js:139
+handleMouseUp_ @ unknownUnderstand this error
+consoleLogger.js:187 VED: Dispatch skipped for 'core:entity_removed' due to validation failure (see error above).
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Successfully deleted entity 'ff5fbd50-7a7a-492d-a1cd-2768a9c74806'
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Deleting entity '8d38819c-1022-4301-b15f-16677ace0220'
+consoleLogger.js:187 Entity '8d38819c-1022-4301-b15f-16677ace0220' removed from repository.
+consoleLogger.js:151 Entity instance 8d38819c-1022-4301-b15f-16677ace0220 removed from EntityManager.
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_removed' against schema 'core:entity_removed#payload'...
+consoleLogger.js:175 VED: Payload validation FAILED for event 'core:entity_removed'. Dispatch SKIPPED. Errors: [root]: must have required property 'instanceId'; [root]: must NOT have additional properties {payload: {…}, errors: Array(2)}
+error @ consoleLogger.js:175
+#validatePayload @ validatedEventDispatcher.js:144
+dispatch @ validatedEventDispatcher.js:219
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+rollback @ anatomyUnitOfWork.js:156
+execute @ anatomyUnitOfWork.js:103
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+orchestrateGeneration @ anatomyOrchestrator.js:132
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+generateAnatomyIfNeeded @ anatomyGenerationService.js:146
+#handleEntityCreated @ anatomyInitializationService.js:101
+(anonymous) @ eventBus.js:136
+dispatch @ eventBus.js:133
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+#dispatchEntityCreated @ entityLifecycleManager.js:177
+createEntityInstance @ entityLifecycleManager.js:214
+createEntityInstance @ entityManager.js:361
+createEntityInstance @ entityManagerAdapter.js:38
+_loadEntity @ AnatomyVisualizerUI.js:201
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ AnatomyVisualizerUI.js:139
+handleMouseUp_ @ unknownUnderstand this error
+consoleLogger.js:187 VED: Dispatch skipped for 'core:entity_removed' due to validation failure (see error above).
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Successfully deleted entity '8d38819c-1022-4301-b15f-16677ace0220'
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Deleting entity '234e1876-90f5-43bb-acd3-fa1472955b44'
+consoleLogger.js:187 Entity '234e1876-90f5-43bb-acd3-fa1472955b44' removed from repository.
+consoleLogger.js:151 Entity instance 234e1876-90f5-43bb-acd3-fa1472955b44 removed from EntityManager.
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_removed' against schema 'core:entity_removed#payload'...
+consoleLogger.js:175 VED: Payload validation FAILED for event 'core:entity_removed'. Dispatch SKIPPED. Errors: [root]: must have required property 'instanceId'; [root]: must NOT have additional properties {payload: {…}, errors: Array(2)}
+error @ consoleLogger.js:175
+#validatePayload @ validatedEventDispatcher.js:144
+dispatch @ validatedEventDispatcher.js:219
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+rollback @ anatomyUnitOfWork.js:156
+execute @ anatomyUnitOfWork.js:103
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+orchestrateGeneration @ anatomyOrchestrator.js:132
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+generateAnatomyIfNeeded @ anatomyGenerationService.js:146
+#handleEntityCreated @ anatomyInitializationService.js:101
+(anonymous) @ eventBus.js:136
+dispatch @ eventBus.js:133
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+#dispatchEntityCreated @ entityLifecycleManager.js:177
+createEntityInstance @ entityLifecycleManager.js:214
+createEntityInstance @ entityManager.js:361
+createEntityInstance @ entityManagerAdapter.js:38
+_loadEntity @ AnatomyVisualizerUI.js:201
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ AnatomyVisualizerUI.js:139
+handleMouseUp_ @ unknownUnderstand this error
+consoleLogger.js:187 VED: Dispatch skipped for 'core:entity_removed' due to validation failure (see error above).
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Successfully deleted entity '234e1876-90f5-43bb-acd3-fa1472955b44'
 consoleLogger.js:151 AnatomyOrchestrator: AnatomyUnitOfWork: Rollback completed successfully
-consoleLogger.js:175 AnatomyErrorHandler: ValidationError occurred during anatomy operation {error: "Failed to process blueprint slot 'left_eye': No en…s: [anatomy:part]. Checked 28 entity definitions.", stack: 'ValidationError: Failed to process blueprint slot …le.js:24316:15\n    at async Promise.all (index 2)', context: {…}}
+20consoleLogger.js:163 SafeEventDispatcher: Underlying VED failed to dispatch event 'core:entity_removed' (returned false). See VED logs for details. Payload: {"entity":{}}
+warn @ consoleLogger.js:163
+dispatch @ safeEventDispatcher.js:136
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+rollback @ anatomyUnitOfWork.js:156
+execute @ anatomyUnitOfWork.js:103
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+orchestrateGeneration @ anatomyOrchestrator.js:132
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+generateAnatomyIfNeeded @ anatomyGenerationService.js:146
+#handleEntityCreated @ anatomyInitializationService.js:101
+(anonymous) @ eventBus.js:136
+dispatch @ eventBus.js:133
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+#dispatchEntityCreated @ entityLifecycleManager.js:177
+createEntityInstance @ entityLifecycleManager.js:214
+createEntityInstance @ entityManager.js:361
+createEntityInstance @ entityManagerAdapter.js:38
+_loadEntity @ AnatomyVisualizerUI.js:201
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ AnatomyVisualizerUI.js:139
+handleMouseUp_ @ unknownUnderstand this warning
+consoleLogger.js:175 AnatomyErrorHandler: DescriptionGenerationError occurred during anatomy operation {error: "Failed to generate descriptions for entity '7ae764…Service not initialized. Call initialize() first.", stack: 'DescriptionGenerationError: Failed to generate des…p://127.0.0.1:8080/anatomy-visualizer.js:25026:9)', context: {…}, entityId: '7ae76425-02cf-4402-8398-9d4048a8ed84', partIds: null, …}
 error @ consoleLogger.js:175
 handle @ anatomyErrorHandler.js:95
 orchestrateGeneration @ anatomyOrchestrator.js:151
-await in orchestrateGeneration
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
 generateAnatomyIfNeeded @ anatomyGenerationService.js:146
 #handleEntityCreated @ anatomyInitializationService.js:101
 (anonymous) @ eventBus.js:136
@@ -571,30 +1030,23 @@ dispatch @ safeEventDispatcher.js:122
 createEntityInstance @ entityLifecycleManager.js:214
 createEntityInstance @ entityManager.js:361
 createEntityInstance @ entityManagerAdapter.js:38
-#createInstance @ worldInitializer.js:246
-#instantiateInstance @ worldInitializer.js:337
-#processInstance @ worldInitializer.js:396
-#instantiateEntitiesFromWorld @ worldInitializer.js:438
-await in #instantiateEntitiesFromWorld
-initializeWorldEntities @ worldInitializer.js:484
-#initWorld @ initializationService.js:393
-runInitializationSequence @ initializationService.js:302
-await in runInitializationSequence
-#executeInitializationSequence @ gameEngine.js:197
-await in #executeInitializationSequence
-#initializeNewGame @ gameEngine.js:269
-await in #initializeNewGame
-startNewGame @ gameEngine.js:313
-startGameStage @ engineStages.js:87
-beginGame @ main.js:217
-(anonymous) @ game.html:326
-Promise.then
-(anonymous) @ game.html:323Understand this error
-consoleLogger.js:175 AnatomyOrchestrator: AnatomyOrchestrator: Failed to generate anatomy for entity 'p_erotica:amaia_castillo_instance' {error: 'Anatomy operation failed: Failed to process bluepr…s: [anatomy:part]. Checked 28 entity definitions.', trackedEntities: 0, wasRolledBack: true}
+_loadEntity @ AnatomyVisualizerUI.js:201
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ AnatomyVisualizerUI.js:139
+handleMouseUp_ @ unknownUnderstand this error
+consoleLogger.js:175 AnatomyOrchestrator: AnatomyOrchestrator: Failed to generate anatomy for entity '7ae76425-02cf-4402-8398-9d4048a8ed84' {error: "Failed to generate descriptions for entity '7ae764…Service not initialized. Call initialize() first.", trackedEntities: 0, wasRolledBack: true}
 error @ consoleLogger.js:175
 error @ loggerUtils.js:71
 orchestrateGeneration @ anatomyOrchestrator.js:157
-await in orchestrateGeneration
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
 generateAnatomyIfNeeded @ anatomyGenerationService.js:146
 #handleEntityCreated @ anatomyInitializationService.js:101
 (anonymous) @ eventBus.js:136
@@ -608,30 +1060,16 @@ dispatch @ safeEventDispatcher.js:122
 createEntityInstance @ entityLifecycleManager.js:214
 createEntityInstance @ entityManager.js:361
 createEntityInstance @ entityManagerAdapter.js:38
-#createInstance @ worldInitializer.js:246
-#instantiateInstance @ worldInitializer.js:337
-#processInstance @ worldInitializer.js:396
-#instantiateEntitiesFromWorld @ worldInitializer.js:438
-await in #instantiateEntitiesFromWorld
-initializeWorldEntities @ worldInitializer.js:484
-#initWorld @ initializationService.js:393
-runInitializationSequence @ initializationService.js:302
-await in runInitializationSequence
-#executeInitializationSequence @ gameEngine.js:197
-await in #executeInitializationSequence
-#initializeNewGame @ gameEngine.js:269
-await in #initializeNewGame
-startNewGame @ gameEngine.js:313
-startGameStage @ engineStages.js:87
-beginGame @ main.js:217
-(anonymous) @ game.html:326
-Promise.then
-(anonymous) @ game.html:323Understand this error
-consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:ui_ready'.
-consoleLogger.js:175 AnatomyGenerationService: Failed to generate anatomy for entity 'p_erotica:amaia_castillo_instance' {error: AnatomyGenerationError: Anatomy operation failed: Failed to process blueprint slot 'left_eye': No e…}
+_loadEntity @ AnatomyVisualizerUI.js:201
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ AnatomyVisualizerUI.js:139
+handleMouseUp_ @ unknownUnderstand this error
+consoleLogger.js:175 AnatomyGenerationService: Failed to generate anatomy for entity '7ae76425-02cf-4402-8398-9d4048a8ed84' {error: DescriptionGenerationError: Failed to generate descriptions for entity '7ae76425-02cf-4402-8398-9d4…}
 error @ consoleLogger.js:175
 generateAnatomyIfNeeded @ anatomyGenerationService.js:157
-await in generateAnatomyIfNeeded
+handleMouseUp_ @ unknown
+await in handleMouseUp_
 #handleEntityCreated @ anatomyInitializationService.js:101
 (anonymous) @ eventBus.js:136
 dispatch @ eventBus.js:133
@@ -644,34 +1082,16 @@ dispatch @ safeEventDispatcher.js:122
 createEntityInstance @ entityLifecycleManager.js:214
 createEntityInstance @ entityManager.js:361
 createEntityInstance @ entityManagerAdapter.js:38
-#createInstance @ worldInitializer.js:246
-#instantiateInstance @ worldInitializer.js:337
-#processInstance @ worldInitializer.js:396
-#instantiateEntitiesFromWorld @ worldInitializer.js:438
-await in #instantiateEntitiesFromWorld
-initializeWorldEntities @ worldInitializer.js:484
-#initWorld @ initializationService.js:393
-runInitializationSequence @ initializationService.js:302
-await in runInitializationSequence
-#executeInitializationSequence @ gameEngine.js:197
-await in #executeInitializationSequence
-#initializeNewGame @ gameEngine.js:269
-await in #initializeNewGame
-startNewGame @ gameEngine.js:313
-startGameStage @ engineStages.js:87
-beginGame @ main.js:217
-(anonymous) @ game.html:326
-Promise.then
-(anonymous) @ game.html:323Understand this error
-consoleLogger.js:187 GameSessionManager._finalizeGameStart: Starting TurnManager...
-consoleLogger.js:187 ▶️  Turn Manager started.
-consoleLogger.js:187 VED: Delegating subscription for event "core:turn_ended" to EventBus.
-consoleLogger.js:187 TurnEventSubscription: subscribed
-consoleLogger.js:187 ▶️  TurnManager.advanceTurn() initiating...
-consoleLogger.js:175 AnatomyInitializationService: Failed to generate anatomy for entity 'p_erotica:amaia_castillo_instance' {error: AnatomyGenerationError: Anatomy operation failed: Failed to process blueprint slot 'left_eye': No e…}
+_loadEntity @ AnatomyVisualizerUI.js:201
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ AnatomyVisualizerUI.js:139
+handleMouseUp_ @ unknownUnderstand this error
+consoleLogger.js:175 AnatomyInitializationService: Failed to generate anatomy for entity '7ae76425-02cf-4402-8398-9d4048a8ed84' {error: DescriptionGenerationError: Failed to generate descriptions for entity '7ae76425-02cf-4402-8398-9d4…}
 error @ consoleLogger.js:175
 #handleEntityCreated @ anatomyInitializationService.js:111
-await in #handleEntityCreated
+handleMouseUp_ @ unknown
+await in handleMouseUp_
 (anonymous) @ eventBus.js:136
 dispatch @ eventBus.js:133
 #emitEvent @ validatedEventDispatcher.js:192
@@ -683,25 +1103,31 @@ dispatch @ safeEventDispatcher.js:122
 createEntityInstance @ entityLifecycleManager.js:214
 createEntityInstance @ entityManager.js:361
 createEntityInstance @ entityManagerAdapter.js:38
-#createInstance @ worldInitializer.js:246
-#instantiateInstance @ worldInitializer.js:337
-#processInstance @ worldInitializer.js:396
-#instantiateEntitiesFromWorld @ worldInitializer.js:438
-await in #instantiateEntitiesFromWorld
-initializeWorldEntities @ worldInitializer.js:484
-#initWorld @ initializationService.js:393
-runInitializationSequence @ initializationService.js:302
-await in runInitializationSequence
-#executeInitializationSequence @ gameEngine.js:197
-await in #executeInitializationSequence
-#initializeNewGame @ gameEngine.js:269
-await in #initializeNewGame
-startNewGame @ gameEngine.js:313
-startGameStage @ engineStages.js:87
-beginGame @ main.js:217
-(anonymous) @ game.html:326
-Promise.then
-(anonymous) @ game.html:323Understand this error
-consoleLogger.js:187 TurnCycle.nextActor(): queue empty
-turnManager.js:315 TurnManager.advanceTurn: nextActor = undefined
-consoleLogger.js:187 Turn queue is empty. Preparing for new round or stopping.
+_loadEntity @ AnatomyVisualizerUI.js:201
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ AnatomyVisualizerUI.js:139
+handleMouseUp_ @ unknownUnderstand this error
+consoleLogger.js:187 VED: Event 'core:entity_created' dispatch successful.
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:entity_created'.
+AnatomyVisualizerUI.js:188 Uncaught (in promise) TypeError: entity2.getComponent is not a function
+    at AnatomyVisualizerUI.js:188:46
+(anonymous) @ AnatomyVisualizerUI.js:188
+setTimeout
+(anonymous) @ AnatomyVisualizerUI.js:184
+(anonymous) @ eventBus.js:136
+dispatch @ eventBus.js:133
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+#dispatchEntityCreated @ entityLifecycleManager.js:177
+createEntityInstance @ entityLifecycleManager.js:214
+createEntityInstance @ entityManager.js:361
+createEntityInstance @ entityManagerAdapter.js:38
+_loadEntity @ AnatomyVisualizerUI.js:201
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ AnatomyVisualizerUI.js:139
+handleMouseUp_ @ unknownUnderstand this error
