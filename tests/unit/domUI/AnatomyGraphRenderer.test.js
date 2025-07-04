@@ -214,8 +214,72 @@ describe('AnatomyGraphRenderer', () => {
     });
   });
   
+  describe('radial layout features', () => {
+    it('should position children radially around parent', async () => {
+      // Arrange
+      const bodyData = {
+        root: 'torso-id',
+        parts: {
+          torso: 'torso-id',
+          head: 'head-id',
+          'left-arm': 'left-arm-id',
+          'right-arm': 'right-arm-id'
+        }
+      };
+      
+      const mockTorsoEntity = {
+        getComponentData: jest.fn((component) => {
+          if (component === 'core:name') return { text: 'Torso' };
+          if (component === 'anatomy:part') return { subType: 'torso' };
+          return null;
+        })
+      };
+      
+      const createChildEntity = (name, type) => ({
+        getComponentData: jest.fn((component) => {
+          if (component === 'core:name') return { text: name };
+          if (component === 'anatomy:part') return { subType: type };
+          if (component === 'anatomy:joint') return { parentId: 'torso-id' };
+          return null;
+        })
+      });
+      
+      mockEntityManager.getEntityInstance.mockImplementation((id) => {
+        if (id === 'torso-id') return Promise.resolve(mockTorsoEntity);
+        if (id === 'head-id') return Promise.resolve(createChildEntity('Head', 'head'));
+        if (id === 'left-arm-id') return Promise.resolve(createChildEntity('Left Arm', 'arm'));
+        if (id === 'right-arm-id') return Promise.resolve(createChildEntity('Right Arm', 'arm'));
+        return Promise.resolve(null);
+      });
+      
+      // Act
+      await renderer.renderGraph('test', bodyData);
+      
+      // Assert
+      const torso = renderer._nodes.get('torso-id');
+      const head = renderer._nodes.get('head-id');
+      const leftArm = renderer._nodes.get('left-arm-id');
+      const rightArm = renderer._nodes.get('right-arm-id');
+      
+      // Root should be at center
+      expect(torso.x).toBe(600);
+      expect(torso.y).toBe(400);
+      
+      // Children should be at radius 150 from root
+      const expectedRadius = 150;
+      const children = [head, leftArm, rightArm];
+      
+      children.forEach(child => {
+        const dx = child.x - torso.x;
+        const dy = child.y - torso.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        expect(distance).toBeCloseTo(expectedRadius, 1);
+      });
+    });
+  });
+  
   describe('node positioning', () => {
-    it('should position nodes with proper vertical offset', async () => {
+    it('should position root node at center', async () => {
       // Arrange
       const bodyData = {
         root: 'torso-id',
@@ -233,7 +297,8 @@ describe('AnatomyGraphRenderer', () => {
       
       // Assert
       const nodes = Array.from(renderer._nodes.values());
-      expect(nodes[0].y).toBe(80); // depth 0 * 150 + 80 offset (updated spacing)
+      expect(nodes[0].x).toBe(600); // Root at center X
+      expect(nodes[0].y).toBe(400); // Root at center Y
     });
     
     it('should create nodes for root entity', async () => {
@@ -270,7 +335,8 @@ describe('AnatomyGraphRenderer', () => {
       expect(torso.depth).toBe(0);
       expect(torso.name).toBe('Torso');
       expect(torso.type).toBe('torso');
-      expect(torso.y).toBe(80); // Y offset applied (updated)
+      expect(torso.x).toBe(600); // Root at center X
+      expect(torso.y).toBe(400); // Root at center Y
     });
   });
   

@@ -278,7 +278,7 @@ describe('AnatomyGraphRenderer - Enhanced Features', () => {
       // Check that path uses quadratic Bezier curve
       const dAttrCall = pathElement.setAttribute.mock.calls.find(call => call[0] === 'd');
       expect(dAttrCall).toBeDefined();
-      expect(dAttrCall[1]).toMatch(/M \d+ \d+ Q \d+ \d+ \d+ \d+/); // Quadratic Bezier curve pattern
+      expect(dAttrCall[1]).toMatch(/M [\d.]+ [\d.]+ Q [\d.]+ [\d.]+ [\d.]+ [\d.]+/); // Quadratic Bezier curve pattern
       
       // Check other path attributes
       expect(pathElement.setAttribute).toHaveBeenCalledWith('stroke', '#666');

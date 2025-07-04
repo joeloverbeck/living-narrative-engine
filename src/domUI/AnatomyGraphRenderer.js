@@ -258,39 +258,184 @@ class AnatomyGraphRenderer {
   }
 
   /**
-   * Calculate node positions for tree layout
+   * Calculate leaf counts for all nodes (post-order traversal)
+   *
+   * @private
+   */
+  _calculateLeafCounts() {
+    // Build a map of parent -> children relationships
+    const childrenMap = new Map();
+    for (const edge of this._edges) {
+      if (!childrenMap.has(edge.source)) {
+        childrenMap.set(edge.source, []);
+      }
+      childrenMap.get(edge.source).push(edge.target);
+    }
+
+    // Post-order traversal to calculate leaf counts
+    const calculateLeafCount = (nodeId) => {
+      const node = this._nodes.get(nodeId);
+      if (!node) return 0;
+
+      const children = childrenMap.get(nodeId) || [];
+      if (children.length === 0) {
+        // Leaf node
+        node.leafCount = 1;
+        return 1;
+      }
+
+      // Sum children's leaf counts
+      let totalLeafCount = 0;
+      for (const childId of children) {
+        totalLeafCount += calculateLeafCount(childId);
+      }
+      node.leafCount = totalLeafCount;
+      return totalLeafCount;
+    };
+
+    // Find root nodes (nodes with depth 0)
+    for (const node of this._nodes.values()) {
+      if (node.depth === 0) {
+        calculateLeafCount(node.id);
+      }
+    }
+  }
+
+  /**
+   * Convert polar coordinates to cartesian
+   *
+   * @private
+   * @param {number} centerX
+   * @param {number} centerY
+   * @param {number} radius
+   * @param {number} angle - Angle in radians
+   * @returns {{x: number, y: number}}
+   */
+  _polarToCartesian(centerX, centerY, radius, angle) {
+    return {
+      x: centerX + radius * Math.cos(angle),
+      y: centerY + radius * Math.sin(angle)
+    };
+  }
+
+  /**
+   * Calculate minimum radius for a given depth level
+   *
+   * @private
+   * @param {number} depth
+   * @param {number} nodeCount
+   * @returns {number}
+   */
+  _calculateMinimumRadius(depth, nodeCount) {
+    // Base radius for each depth level
+    const baseRadius = 150;
+    // Additional spacing for crowded levels
+    const crowdingFactor = Math.max(1, nodeCount / 8);
+    return baseRadius * depth * crowdingFactor;
+  }
+
+  /**
+   * Get direct children of a node
+   *
+   * @private
+   * @param {string} parentId
+   * @returns {Array<object>}
+   */
+  _getDirectChildren(parentId) {
+    const children = [];
+    for (const edge of this._edges) {
+      if (edge.source === parentId) {
+        const childNode = this._nodes.get(edge.target);
+        if (childNode) {
+          children.push(childNode);
+        }
+      }
+    }
+    return children;
+  }
+
+  /**
+   * Calculate node positions for radial tree layout
    *
    * @private
    */
   _calculateNodePositions() {
-    // Group nodes by depth
-    const levels = new Map();
+    // First, calculate leaf counts for all nodes
+    this._calculateLeafCounts();
+
+    // Initialize node properties for radial layout
     for (const node of this._nodes.values()) {
-      if (!levels.has(node.depth)) {
-        levels.set(node.depth, []);
-      }
-      levels.get(node.depth).push(node);
+      node.angle = 0;
+      node.radius = 0;
+      node.angleStart = 0;
+      node.angleEnd = 0;
     }
 
-    // Calculate width based on maximum number of nodes at any level
-    let maxNodesInLevel = 0;
-    for (const nodes of levels.values()) {
-      maxNodesInLevel = Math.max(maxNodesInLevel, nodes.length);
-    }
-    
-    const minSpacing = 120; // Minimum spacing between nodes
-    const width = Math.max(800, maxNodesInLevel * minSpacing + 200);
-    
-    // Position nodes horizontally within each level
-    for (const [depth, nodes] of levels) {
-      const spacing = width / (nodes.length + 1);
-      nodes.forEach((node, index) => {
-        node.x = spacing * (index + 1);
-      });
-    }
-    
+    // Find root nodes (nodes with depth 0)
+    const roots = Array.from(this._nodes.values()).filter(n => n.depth === 0);
+
+    // Position root at center
+    const centerX = 600;  // Center of typical viewport
+    const centerY = 400;
+
+    roots.forEach(root => {
+      root.x = centerX;
+      root.y = centerY;
+      root.angleStart = 0;
+      root.angleEnd = 2 * Math.PI;
+      
+      // Recursively position children
+      this._positionChildrenRadially(root);
+    });
+
     // Update viewBox to fit all content
     this._updateViewBoxToFitContent();
+  }
+
+  /**
+   * Recursively position children in a radial layout
+   *
+   * @private
+   * @param {object} parent - Parent node
+   */
+  _positionChildrenRadially(parent) {
+    const children = this._getDirectChildren(parent.id);
+    if (children.length === 0) return;
+
+    // Calculate radius for this depth level
+    const radius = this._calculateMinimumRadius(parent.depth + 1, children.length);
+
+    // Calculate angle range for each child based on leaf count
+    const parentAngleRange = parent.angleEnd - parent.angleStart;
+    const totalLeaves = parent.leafCount || 1;
+
+    let currentAngle = parent.angleStart;
+
+    children.forEach(child => {
+      // Proportional angle allocation based on leaf count
+      const childAngleRange = (child.leafCount / totalLeaves) * parentAngleRange;
+      
+      // Minimum angle to prevent overlap (18 degrees in radians)
+      const minAngle = Math.PI / 10;
+      const actualAngleRange = Math.max(childAngleRange, minAngle);
+      
+      // Position at center of allocated range
+      const childAngle = currentAngle + actualAngleRange / 2;
+      
+      // Convert to cartesian coordinates
+      const pos = this._polarToCartesian(parent.x, parent.y, radius, childAngle);
+      child.x = pos.x;
+      child.y = pos.y;
+      child.angle = childAngle;
+      child.radius = radius;
+      child.angleStart = currentAngle;
+      child.angleEnd = currentAngle + actualAngleRange;
+      
+      currentAngle += actualAngleRange;
+      
+      // Recursively position grandchildren
+      this._positionChildrenRadially(child);
+    });
   }
   
   /**
@@ -302,7 +447,7 @@ class AnatomyGraphRenderer {
     let minX = Infinity, minY = Infinity;
     let maxX = -Infinity, maxY = -Infinity;
     const nodeRadius = 30;
-    const padding = 80;
+    const padding = 100; // Increased padding for radial layout
     
     for (const node of this._nodes.values()) {
       minX = Math.min(minX, node.x - nodeRadius);
@@ -312,10 +457,19 @@ class AnatomyGraphRenderer {
     }
     
     if (this._nodes.size > 0) {
-      this._viewBox.x = minX - padding;
-      this._viewBox.y = minY - padding;
-      this._viewBox.width = (maxX - minX) + padding * 2;
-      this._viewBox.height = (maxY - minY) + padding * 2;
+      // Calculate dimensions
+      const width = (maxX - minX) + padding * 2;
+      const height = (maxY - minY) + padding * 2;
+      
+      // For radial layouts, ensure viewBox is roughly square to maintain circular appearance
+      const maxDimension = Math.max(width, height);
+      const centerX = (minX + maxX) / 2;
+      const centerY = (minY + maxY) / 2;
+      
+      this._viewBox.x = centerX - maxDimension / 2;
+      this._viewBox.y = centerY - maxDimension / 2;
+      this._viewBox.width = maxDimension;
+      this._viewBox.height = maxDimension;
     }
   }
 
@@ -464,32 +618,8 @@ class AnatomyGraphRenderer {
       const targetNode = this._nodes.get(edge.target);
 
       if (sourceNode && targetNode) {
-        // Create curved path instead of straight line
-        const path = this._document.createElementNS(
-          'http://www.w3.org/2000/svg',
-          'path'
-        );
-        
-        // Calculate control point for quadratic Bezier curve
-        const midX = (sourceNode.x + targetNode.x) / 2;
-        const midY = (sourceNode.y + targetNode.y) / 2;
-        const curvature = 0.2;
-        const dx = targetNode.x - sourceNode.x;
-        const dy = targetNode.y - sourceNode.y;
-        
-        // Control point perpendicular to the line
-        const controlX = midX - dy * curvature;
-        const controlY = midY + dx * curvature;
-        
-        // Create curved path
-        const d = `M ${sourceNode.x} ${sourceNode.y} Q ${controlX} ${controlY} ${targetNode.x} ${targetNode.y}`;
-        
-        path.setAttribute('d', d);
-        path.setAttribute('class', 'anatomy-edge');
-        path.setAttribute('stroke', '#666');
-        path.setAttribute('stroke-width', '2');
-        path.setAttribute('fill', 'none');
-        path.setAttribute('stroke-opacity', '0.6');
+        // Create curved path optimized for radial layout
+        const path = this._createEdgeElement(edge, sourceNode, targetNode);
         edgeGroup.appendChild(path);
       }
     }
@@ -577,6 +707,58 @@ class AnatomyGraphRenderer {
     debugGroup.appendChild(debugText);
     
     this._svg.appendChild(debugGroup);
+  }
+
+  /**
+   * Create edge element with optimized bezier curve for radial layout
+   *
+   * @private
+   * @param {object} edge - Edge data
+   * @param {object} sourceNode - Source node
+   * @param {object} targetNode - Target node
+   * @returns {SVGElement}
+   */
+  _createEdgeElement(edge, sourceNode, targetNode) {
+    const path = this._document.createElementNS(
+      'http://www.w3.org/2000/svg',
+      'path'
+    );
+    
+    // For radial layout, curve should follow the natural arc
+    const dx = targetNode.x - sourceNode.x;
+    const dy = targetNode.y - sourceNode.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    
+    // Control point calculation for radial layout
+    // The control point is placed along the arc between the nodes
+    const t = 0.3; // Control point at 30% distance from source
+    const midX = sourceNode.x + dx * t;
+    const midY = sourceNode.y + dy * t;
+    
+    // For radial layouts, we want the curve to follow the circular pattern
+    // Calculate the perpendicular direction but scale it based on the radial structure
+    const curvature = 0.15 * (1 + (targetNode.radius || 0) / 500); // Adjust curvature based on radius
+    
+    // Perpendicular offset for curve, but adjusted for radial layout
+    const perpX = -dy / distance;
+    const perpY = dx / distance;
+    
+    const controlX = midX + perpX * curvature * distance;
+    const controlY = midY + perpY * curvature * distance;
+    
+    // Create quadratic bezier path
+    const d = `M ${sourceNode.x} ${sourceNode.y} Q ${controlX} ${controlY} ${targetNode.x} ${targetNode.y}`;
+    
+    path.setAttribute('d', d);
+    path.setAttribute('class', 'anatomy-edge');
+    path.setAttribute('stroke', '#666');
+    path.setAttribute('stroke-width', '2');
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke-opacity', '0.6');
+    path.setAttribute('data-source', edge.source);
+    path.setAttribute('data-target', edge.target);
+    
+    return path;
   }
 
   /**
