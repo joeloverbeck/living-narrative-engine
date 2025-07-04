@@ -97,7 +97,7 @@
     "pubic_hair": {
       "socket": "pubic_hair",
       "requirements": {
-        "partType": "hair",
+        "partType": "pubic_hair",
         "components": ["anatomy:part"]
       },
       "optional": true

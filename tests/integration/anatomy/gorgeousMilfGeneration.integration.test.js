@@ -43,6 +43,7 @@ import humanoidMouth from '../../../data/mods/anatomy/entities/definitions/human
 import humanVagina from '../../../data/mods/anatomy/entities/definitions/human_vagina.entity.json';
 import humanBreast from '../../../data/mods/anatomy/entities/definitions/human_breast.entity.json';
 import humanHair from '../../../data/mods/anatomy/entities/definitions/human_hair.entity.json';
+import humanPubicHair from '../../../data/mods/anatomy/entities/definitions/human_pubic_hair.entity.json';
 import humanFemaleTorso from '../../../data/mods/anatomy/entities/definitions/human_female_torso.entity.json';
 import humanHand from '../../../data/mods/anatomy/entities/definitions/human_hand.entity.json';
 import humanAsshole from '../../../data/mods/anatomy/entities/definitions/human_asshole.entity.json';
@@ -149,6 +150,7 @@ describe('Gorgeous MILF Anatomy Generation Integration Test', () => {
       'anatomy:human_vagina': humanVagina,
       'anatomy:human_breast': humanBreast,
       'anatomy:human_hair': humanHair,
+      'anatomy:human_pubic_hair': humanPubicHair,
       'anatomy:human_female_torso': humanFemaleTorso,
       'anatomy:human_hand': humanHand,
       'anatomy:human_asshole': humanAsshole,
