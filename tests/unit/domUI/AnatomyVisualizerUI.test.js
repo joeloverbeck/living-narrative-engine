@@ -256,7 +256,7 @@ describe('AnatomyVisualizerUI', () => {
 
       const mockEntityInstance = {
         id: 'instance-123',
-        getComponent: jest.fn((type) => {
+        getComponentData: jest.fn((type) => {
           if (type === 'anatomy:body') {
             return { body: { parts: { head: 'head-123', torso: 'torso-123' } } };
           }
