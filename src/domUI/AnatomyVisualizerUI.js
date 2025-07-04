@@ -185,7 +185,7 @@ class AnatomyVisualizerUI {
                 const entity = await this._entityManager.getEntityInstance(
                   event.payload.instanceId
                 );
-                const bodyComponent = entity.getComponent('anatomy:body');
+                const bodyComponent = entity.getComponentData('anatomy:body');
                 if (bodyComponent && bodyComponent.body) {
                   unsubscribe();
                   resolve(event.payload.instanceId);
@@ -218,7 +218,7 @@ class AnatomyVisualizerUI {
       this._updateEntityDescription(entity);
 
       // Get the body component with generated anatomy
-      const bodyComponent = entity.getComponent('anatomy:body');
+      const bodyComponent = entity.getComponentData('anatomy:body');
       if (!bodyComponent || !bodyComponent.body) {
         throw new Error('Anatomy generation failed');
       }
@@ -276,7 +276,7 @@ class AnatomyVisualizerUI {
     );
     if (!descriptionContent) return;
 
-    const descriptionComponent = entity.getComponent('core:description');
+    const descriptionComponent = entity.getComponentData('core:description');
     if (descriptionComponent && descriptionComponent.text) {
       descriptionContent.innerHTML = `<p>${descriptionComponent.text}</p>`;
     } else {

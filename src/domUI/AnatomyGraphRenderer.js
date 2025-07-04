@@ -93,17 +93,17 @@ class AnatomyGraphRenderer {
       visited.add(id);
 
       try {
-        const entity = await this._entityManager.getEntity(id);
+        const entity = await this._entityManager.getEntityInstance(id);
         if (!entity) {
           this._logger.warn(`Entity not found: ${id}`);
           continue;
         }
 
         // Get entity info
-        const nameComponent = entity.getComponent('core:name');
-        const descriptionComponent = entity.getComponent('core:description');
-        const partComponent = entity.getComponent('anatomy:part');
-        const jointComponent = entity.getComponent('anatomy:joint');
+        const nameComponent = entity.getComponentData('core:name');
+        const descriptionComponent = entity.getComponentData('core:description');
+        const partComponent = entity.getComponentData('anatomy:part');
+        const jointComponent = entity.getComponentData('anatomy:joint');
 
         // Create node
         const node = {
@@ -129,9 +129,9 @@ class AnatomyGraphRenderer {
 
         // Find children - look for entities with joints pointing to this entity
         for (const [partId] of Object.entries(bodyData.parts || {})) {
-          const partEntity = await this._entityManager.getEntity(partId);
+          const partEntity = await this._entityManager.getEntityInstance(partId);
           if (partEntity) {
-            const partJoint = partEntity.getComponent('anatomy:joint');
+            const partJoint = partEntity.getComponentData('anatomy:joint');
             if (partJoint && partJoint.parentId === id) {
               queue.push({ id: partId, depth: depth + 1, parent: id });
             }
