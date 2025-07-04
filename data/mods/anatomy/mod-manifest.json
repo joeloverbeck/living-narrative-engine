@@ -38,6 +38,7 @@
         "human_leg_shapely.entity.json",
         "human_male_torso.entity.json",
         "human_penis.entity.json",
+        "human_pubic_hair.entity.json",
         "human_testicle.entity.json",
         "human_vagina.entity.json",
         "humanoid_arm.entity.json",

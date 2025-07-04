@@ -42,6 +42,7 @@ import humanoidMouth from '../../../data/mods/anatomy/entities/definitions/human
 import humanPenis from '../../../data/mods/anatomy/entities/definitions/human_penis.entity.json';
 import humanTesticle from '../../../data/mods/anatomy/entities/definitions/human_testicle.entity.json';
 import humanHair from '../../../data/mods/anatomy/entities/definitions/human_hair.entity.json';
+import humanPubicHair from '../../../data/mods/anatomy/entities/definitions/human_pubic_hair.entity.json';
 import humanMaleTorso from '../../../data/mods/anatomy/entities/definitions/human_male_torso.entity.json';
 import humanEye from '../../../data/mods/anatomy/entities/definitions/human_eye.entity.json';
 import humanAsshole from '../../../data/mods/anatomy/entities/definitions/human_asshole.entity.json';
@@ -158,6 +159,7 @@ describe('Human Male Body Description Integration Test', () => {
       'anatomy:human_penis': humanPenis,
       'anatomy:human_testicle': humanTesticle,
       'anatomy:human_hair': humanHair,
+      'anatomy:human_pubic_hair': humanPubicHair,
       'anatomy:human_male_torso': humanMaleTorso,
       'anatomy:human_eye': humanEye,
       'anatomy:human_asshole': humanAsshole,
