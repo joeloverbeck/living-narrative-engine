@@ -118,6 +118,9 @@ describe('AnatomyVisualizerUI Integration Tests', () => {
     }
   });
 
+  /**
+   *
+   */
   function loadTestData() {
     // Load component definitions
     registry.store('components', 'anatomy:body', bodyComponent);

@@ -67,7 +67,16 @@ class AnatomyGraphRenderer {
   clear() {
     const container = this._document.getElementById('anatomy-graph-container');
     if (container) {
-      container.innerHTML = '';
+      // Remove any existing SVG elements
+      const existingSvg = container.querySelector('svg');
+      if (existingSvg) {
+        existingSvg.remove();
+      }
+      // Remove any existing tooltip
+      const existingTooltip = container.querySelector('.anatomy-tooltip');
+      if (existingTooltip) {
+        existingTooltip.remove();
+      }
     }
     this._nodes.clear();
     this._edges = [];
@@ -113,7 +122,7 @@ class AnatomyGraphRenderer {
           type: partComponent?.subType || 'unknown',
           depth,
           x: 0, // Will be calculated later
-          y: depth * 120, // Vertical spacing
+          y: depth * 120 + 50, // Vertical spacing with offset to ensure visibility
         };
 
         this._nodes.set(id, node);
@@ -180,25 +189,29 @@ class AnatomyGraphRenderer {
     const container = this._document.getElementById('anatomy-graph-container');
     if (!container) return;
 
-    // Calculate SVG dimensions
+    // Calculate SVG dimensions with padding for node visibility
     let maxX = 0;
     let maxY = 0;
+    const nodeRadius = 30;
+    const padding = 50;
+    
     for (const node of this._nodes.values()) {
-      maxX = Math.max(maxX, node.x + 100);
-      maxY = Math.max(maxY, node.y + 100);
+      maxX = Math.max(maxX, node.x + nodeRadius + padding);
+      maxY = Math.max(maxY, node.y + nodeRadius + padding);
     }
 
     const width = Math.max(800, maxX);
     const height = Math.max(600, maxY);
 
-    // Create SVG
+    // Create SVG with proper viewBox to include all content
     const svg = this._document.createElementNS(
       'http://www.w3.org/2000/svg',
       'svg'
     );
-    svg.setAttribute('width', width);
-    svg.setAttribute('height', height);
+    svg.setAttribute('width', '100%');
+    svg.setAttribute('height', '100%');
     svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+    svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
     svg.id = 'anatomy-graph';
 
     container.appendChild(svg);
@@ -352,11 +365,16 @@ class AnatomyGraphRenderer {
         this._tooltip.style.visibility = 'visible';
         this._tooltip.style.opacity = '1';
 
-        // Position tooltip
+        // Position tooltip relative to the node
         const rect = e.currentTarget.getBoundingClientRect();
         const containerRect = this._svg.parentElement.getBoundingClientRect();
-        this._tooltip.style.left = `${rect.left - containerRect.left + rect.width / 2}px`;
-        this._tooltip.style.top = `${rect.top - containerRect.top - 10}px`;
+        
+        // Calculate position accounting for scroll
+        const tooltipX = rect.left - containerRect.left + rect.width / 2;
+        const tooltipY = rect.top - containerRect.top - 10;
+        
+        this._tooltip.style.left = `${tooltipX}px`;
+        this._tooltip.style.top = `${tooltipY}px`;
       });
 
       // Mouse leave
@@ -365,15 +383,24 @@ class AnatomyGraphRenderer {
         this._tooltip.style.opacity = '0';
       });
 
-      // Add hover effect
+      // Add hover effect with smooth transitions
       const circle = nodeEl.querySelector('.node-circle');
       if (circle) {
+        // Store original values
+        const originalRadius = circle.getAttribute('r');
+        const originalStrokeWidth = circle.getAttribute('stroke-width');
+        
         nodeEl.addEventListener('mouseenter', () => {
-          circle.setAttribute('fill-opacity', '0.8');
-          circle.style.cursor = 'pointer';
+          // Slightly increase radius and stroke for hover effect
+          circle.setAttribute('r', String(Number(originalRadius) + 3));
+          circle.setAttribute('stroke-width', '3');
+          circle.setAttribute('fill-opacity', '0.9');
         });
 
         nodeEl.addEventListener('mouseleave', () => {
+          // Restore original values
+          circle.setAttribute('r', originalRadius);
+          circle.setAttribute('stroke-width', originalStrokeWidth);
           circle.setAttribute('fill-opacity', '1');
         });
       }
