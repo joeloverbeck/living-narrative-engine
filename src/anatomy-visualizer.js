@@ -14,6 +14,7 @@ let anatomyDescriptionService;
 let systemInitializer;
 let eventDispatcher;
 let visualizerUI;
+let anatomyFormattingService;
 
 /**
  *
@@ -36,12 +37,17 @@ async function initialize() {
     );
     systemInitializer = container.resolve(tokens.SystemInitializer);
     eventDispatcher = container.resolve(tokens.ISafeEventDispatcher);
+    anatomyFormattingService = container.resolve(tokens.AnatomyFormattingService);
 
     logger.info('Anatomy Visualizer: Starting initialization...');
 
     // Load mods
     logger.info('Anatomy Visualizer: Loading mods...');
     await loadMods();
+
+    // Initialize AnatomyFormattingService after mods are loaded
+    logger.info('Anatomy Visualizer: Initializing AnatomyFormattingService...');
+    await anatomyFormattingService.initialize();
 
     // Initialize all tagged services (including AnatomyInitializationService)
     logger.info('Anatomy Visualizer: Initializing system services...');

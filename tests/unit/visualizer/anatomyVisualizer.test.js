@@ -23,6 +23,7 @@ const modsLoaderMock = {
 const registryMock = {};
 const entityManagerMock = {};
 const anatomyServiceMock = {};
+const anatomyFormattingServiceMock = { initialize: jest.fn(async () => {}) };
 const systemInitializerMock = { initializeAll: jest.fn(async () => {}) };
 const dispatcherMock = {};
 
@@ -39,6 +40,7 @@ jest.mock('../../../src/dependencyInjection/tokens.js', () => ({
     IDataRegistry: 'IDataRegistry',
     IEntityManager: 'IEntityManager',
     AnatomyDescriptionService: 'AnatomyDescriptionService',
+    AnatomyFormattingService: 'AnatomyFormattingService',
     SystemInitializer: 'SystemInitializer',
     ISafeEventDispatcher: 'ISafeEventDispatcher',
   },
@@ -84,6 +86,8 @@ beforeEach(() => {
         return entityManagerMock;
       case 'AnatomyDescriptionService':
         return anatomyServiceMock;
+      case 'AnatomyFormattingService':
+        return anatomyFormattingServiceMock;
       case 'SystemInitializer':
         return systemInitializerMock;
       case 'ISafeEventDispatcher':
