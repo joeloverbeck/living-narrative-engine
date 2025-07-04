@@ -548,6 +548,201 @@ describe('AnatomyVisualizerUI Integration Tests', () => {
       const nodes = svg.querySelectorAll('.anatomy-node');
       expect(nodes.length).toBeGreaterThan(0);
     });
+
+    it('should render anatomy graph with radial layout', async () => {
+      // Arrange - Create a more complex anatomy structure to test radial positioning
+      const rootEntityId = 'test-torso';
+      const bodyData = {
+        root: rootEntityId,
+        parts: {
+          torso: rootEntityId,
+          head: 'head-123',
+          'left-arm': 'left-arm-123',
+          'right-arm': 'right-arm-123',
+          'left-leg': 'left-leg-123',
+          'right-leg': 'right-leg-123'
+        }
+      };
+
+      // Create mock entities for radial layout testing
+      const mockEntities = {
+        [rootEntityId]: {
+          id: rootEntityId,
+          getComponentData: jest.fn((type) => {
+            if (type === 'core:name') return { text: 'Torso' };
+            if (type === 'anatomy:part') return { subType: 'torso' };
+            return null;
+          })
+        },
+        'head-123': {
+          id: 'head-123',
+          getComponentData: jest.fn((type) => {
+            if (type === 'core:name') return { text: 'Head' };
+            if (type === 'anatomy:part') return { subType: 'head' };
+            if (type === 'anatomy:joint') return { parentId: rootEntityId };
+            return null;
+          })
+        },
+        'left-arm-123': {
+          id: 'left-arm-123',
+          getComponentData: jest.fn((type) => {
+            if (type === 'core:name') return { text: 'Left Arm' };
+            if (type === 'anatomy:part') return { subType: 'arm' };
+            if (type === 'anatomy:joint') return { parentId: rootEntityId };
+            return null;
+          })
+        },
+        'right-arm-123': {
+          id: 'right-arm-123',
+          getComponentData: jest.fn((type) => {
+            if (type === 'core:name') return { text: 'Right Arm' };
+            if (type === 'anatomy:part') return { subType: 'arm' };
+            if (type === 'anatomy:joint') return { parentId: rootEntityId };
+            return null;
+          })
+        },
+        'left-leg-123': {
+          id: 'left-leg-123',
+          getComponentData: jest.fn((type) => {
+            if (type === 'core:name') return { text: 'Left Leg' };
+            if (type === 'anatomy:part') return { subType: 'leg' };
+            if (type === 'anatomy:joint') return { parentId: rootEntityId };
+            return null;
+          })
+        },
+        'right-leg-123': {
+          id: 'right-leg-123',
+          getComponentData: jest.fn((type) => {
+            if (type === 'core:name') return { text: 'Right Leg' };
+            if (type === 'anatomy:part') return { subType: 'leg' };
+            if (type === 'anatomy:joint') return { parentId: rootEntityId };
+            return null;
+          })
+        }
+      };
+
+      // Mock entity manager
+      jest.spyOn(entityManager, 'getEntityInstance').mockImplementation((id) => {
+        return Promise.resolve(mockEntities[id]);
+      });
+
+      // Act
+      await visualizerUI._graphRenderer.renderGraph(rootEntityId, bodyData);
+
+      // Assert - Verify radial layout structure
+      const graphContainer = document.getElementById('anatomy-graph-container');
+      const svg = graphContainer.querySelector('svg');
+      expect(svg).toBeDefined();
+
+      // Check viewBox is square (for radial layout)
+      const viewBox = svg.getAttribute('viewBox');
+      const [x, y, width, height] = viewBox.split(' ').map(Number);
+      expect(width).toBeCloseTo(height, 0); // Should be square
+
+      // Verify nodes are positioned radially
+      const nodes = svg.querySelectorAll('.anatomy-node');
+      expect(nodes.length).toBe(6); // Root + 5 children
+
+      // Root should be at center
+      const rootNode = Array.from(nodes).find(n => 
+        n.getAttribute('data-node-id') === rootEntityId
+      );
+      const rootTransform = rootNode.getAttribute('transform');
+      expect(rootTransform).toContain('600'); // Center X
+      expect(rootTransform).toContain('400'); // Center Y
+
+      // Verify edges use bezier curves
+      const edges = svg.querySelectorAll('.anatomy-edge');
+      expect(edges.length).toBe(5); // 5 connections from root to children
+      
+      edges.forEach(edge => {
+        const pathData = edge.getAttribute('d');
+        expect(pathData).toMatch(/^M.*Q.*$/); // Should use quadratic bezier (Q command)
+      });
+    });
+
+    it('should handle complex hierarchical radial layout', async () => {
+      // Arrange - Create a 3-level hierarchy
+      const rootEntityId = 'torso';
+      const bodyData = {
+        root: rootEntityId,
+        parts: {
+          torso: rootEntityId,
+          'left-arm': 'left-arm',
+          'left-hand': 'left-hand',
+          'left-finger1': 'left-finger1',
+          'left-finger2': 'left-finger2'
+        }
+      };
+
+      const mockEntities = {
+        [rootEntityId]: {
+          id: rootEntityId,
+          getComponentData: jest.fn((type) => {
+            if (type === 'core:name') return { text: 'Torso' };
+            if (type === 'anatomy:part') return { subType: 'torso' };
+            return null;
+          })
+        },
+        'left-arm': {
+          id: 'left-arm',
+          getComponentData: jest.fn((type) => {
+            if (type === 'core:name') return { text: 'Left Arm' };
+            if (type === 'anatomy:part') return { subType: 'arm' };
+            if (type === 'anatomy:joint') return { parentId: rootEntityId };
+            return null;
+          })
+        },
+        'left-hand': {
+          id: 'left-hand',
+          getComponentData: jest.fn((type) => {
+            if (type === 'core:name') return { text: 'Left Hand' };
+            if (type === 'anatomy:part') return { subType: 'hand' };
+            if (type === 'anatomy:joint') return { parentId: 'left-arm' };
+            return null;
+          })
+        },
+        'left-finger1': {
+          id: 'left-finger1',
+          getComponentData: jest.fn((type) => {
+            if (type === 'core:name') return { text: 'Finger 1' };
+            if (type === 'anatomy:part') return { subType: 'finger' };
+            if (type === 'anatomy:joint') return { parentId: 'left-hand' };
+            return null;
+          })
+        },
+        'left-finger2': {
+          id: 'left-finger2',
+          getComponentData: jest.fn((type) => {
+            if (type === 'core:name') return { text: 'Finger 2' };
+            if (type === 'anatomy:part') return { subType: 'finger' };
+            if (type === 'anatomy:joint') return { parentId: 'left-hand' };
+            return null;
+          })
+        }
+      };
+
+      jest.spyOn(entityManager, 'getEntityInstance').mockImplementation((id) => {
+        return Promise.resolve(mockEntities[id]);
+      });
+
+      // Act
+      await visualizerUI._graphRenderer.renderGraph(rootEntityId, bodyData);
+
+      // Assert
+      const svg = document.querySelector('svg#anatomy-graph');
+      const nodes = svg.querySelectorAll('.anatomy-node');
+      const edges = svg.querySelectorAll('.anatomy-edge');
+      
+      expect(nodes.length).toBe(5); // All 5 nodes
+      expect(edges.length).toBe(4); // 4 connections
+      
+      // Verify hierarchical structure is preserved
+      const fingerNodes = Array.from(nodes).filter(n => 
+        n.querySelector('text').textContent.includes('Finger')
+      );
+      expect(fingerNodes.length).toBe(2);
+    });
   });
 
   describe('Error Handling', () => {
