@@ -51,6 +51,15 @@ module.exports = {
     '!index.js',
   ],
 
+  coverageThreshold: {
+    global: {
+      branches: 84,
+      functions: 93,
+      lines: -1400,
+      statements: 92,
+    },
+  },
+
   // Optional: Enforce coverage levels. Uncomment and adjust as needed.
   // Optional: Enforce coverage levels. Disabled during agent test generation.
   // --- END COVERAGE CONFIGURATION ---
