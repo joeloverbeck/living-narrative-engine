@@ -125,6 +125,7 @@ describe('SystemLogicInterpreter - Integration Tests - Scenario 4: Invalid Condi
 
     mockJsonLogicEvaluationService = {
       evaluate: jest.fn(), // Configured per test
+      addOperation: jest.fn(), // Mock for custom operations
     };
 
     mockEntityManager = {
@@ -173,6 +174,11 @@ describe('SystemLogicInterpreter - Integration Tests - Scenario 4: Invalid Condi
     // 3. Remove the spy on the internal _executeActions method (remains the same)
     // ...
 
+    // Create the bodyGraphService mock
+    const mockBodyGraphService = {
+      hasPartWithComponentValue: jest.fn().mockReturnValue({ found: false })
+    };
+
     // 4. Instantiate the interpreter (remains the same)
     interpreter = new SystemLogicInterpreter({
       logger: mockLogger,
@@ -181,6 +187,7 @@ describe('SystemLogicInterpreter - Integration Tests - Scenario 4: Invalid Condi
       jsonLogicEvaluationService: mockJsonLogicEvaluationService,
       entityManager: mockEntityManager,
       operationInterpreter: operationInterpreter, // Pass the correctly instantiated OperationInterpreter
+      bodyGraphService: mockBodyGraphService,
     });
 
     // --- Refactoring Changes End ---

@@ -213,6 +213,10 @@ describe('core_handle_follow rule integration', () => {
       operationRegistry,
     });
 
+    const mockBodyGraphService = {
+      hasPartWithComponentValue: jest.fn().mockReturnValue({ found: false })
+    };
+
     const interpreter = new SystemLogicInterpreter({
       logger: testLogger,
       eventBus: bus,
@@ -220,6 +224,7 @@ describe('core_handle_follow rule integration', () => {
       jsonLogicEvaluationService: jsonLogic,
       entityManager: customEntityManager,
       operationInterpreter,
+      bodyGraphService: mockBodyGraphService,
     });
 
     interpreter.initialize();
@@ -279,6 +284,10 @@ describe('core_handle_follow rule integration', () => {
           operationRegistry: newOperationRegistry,
         });
 
+        const mockBodyGraphService = {
+          hasPartWithComponentValue: jest.fn().mockReturnValue({ found: false })
+        };
+
         const newInterpreter = new SystemLogicInterpreter({
           logger: testLogger,
           eventBus: bus,
@@ -286,6 +295,7 @@ describe('core_handle_follow rule integration', () => {
           jsonLogicEvaluationService: jsonLogic,
           entityManager: customEntityManager,
           operationInterpreter: newOperationInterpreter,
+          bodyGraphService: mockBodyGraphService,
         });
 
         newInterpreter.initialize();

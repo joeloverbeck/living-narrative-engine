@@ -20,6 +20,10 @@
     },
     "core:name": {
       "text": "muscular leg"
+    },
+    "core:movement": {
+      "locked": false,
+      "forcedOverride": false
     }
   }
 }

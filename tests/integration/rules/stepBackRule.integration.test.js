@@ -200,6 +200,29 @@ describe('intimacy_handle_step_back rule integration', () => {
       operationRegistry,
     });
 
+    // Create bodyGraphService mock that checks entity components
+    const mockBodyGraphService = {
+      hasPartWithComponentValue: jest.fn((bodyComponent, componentId, propertyPath, expectedValue) => {
+        if (!bodyComponent || !bodyComponent.body || !bodyComponent.body.root) {
+          return { found: false };
+        }
+        
+        // Check all entities in the manager
+        const allEntities = customEntityManager.getAllEntities();
+        for (const entity of allEntities) {
+          if (entity.components && entity.components[componentId]) {
+            const component = entity.components[componentId];
+            const actualValue = propertyPath ? component[propertyPath] : component;
+            if (actualValue === expectedValue) {
+              return { found: true, partId: entity.id };
+            }
+          }
+        }
+        
+        return { found: false };
+      })
+    };
+
     const interpreter = new SystemLogicInterpreter({
       logger: testLogger,
       eventBus: bus,
@@ -207,6 +230,7 @@ describe('intimacy_handle_step_back rule integration', () => {
       jsonLogicEvaluationService: jsonLogic,
       entityManager: customEntityManager,
       operationInterpreter,
+      bodyGraphService: mockBodyGraphService,
     });
 
     interpreter.initialize();
@@ -266,6 +290,29 @@ describe('intimacy_handle_step_back rule integration', () => {
           operationRegistry: newOperationRegistry,
         });
 
+        // Create bodyGraphService mock for the new interpreter
+        const newMockBodyGraphService = {
+          hasPartWithComponentValue: jest.fn((bodyComponent, componentId, propertyPath, expectedValue) => {
+            if (!bodyComponent || !bodyComponent.rootEntityId) {
+              return { found: false };
+            }
+            
+            // Check all entities in the manager
+            const allEntities = customEntityManager.getAllEntities();
+            for (const entity of allEntities) {
+              if (entity.components && entity.components[componentId]) {
+                const component = entity.components[componentId];
+                const actualValue = propertyPath ? component[propertyPath] : component;
+                if (actualValue === expectedValue) {
+                  return { found: true, partId: entity.id };
+                }
+              }
+            }
+            
+            return { found: false };
+          })
+        };
+
         const newInterpreter = new SystemLogicInterpreter({
           logger: testLogger,
           eventBus: bus,
@@ -273,6 +320,7 @@ describe('intimacy_handle_step_back rule integration', () => {
           jsonLogicEvaluationService: jsonLogic,
           entityManager: customEntityManager,
           operationInterpreter: newOperationInterpreter,
+          bodyGraphService: newMockBodyGraphService,
         });
 
         newInterpreter.initialize();
@@ -346,6 +394,36 @@ describe('intimacy_handle_step_back rule integration', () => {
           [NAME_COMPONENT_ID]: { text: 'A' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
           'intimacy:closeness': { partners: ['b1', 'c1'] },
+          'anatomy:body': { 
+            recipeId: 'anatomy:human',
+            body: {
+              root: 'body-a1',
+              parts: {
+                torso: 'body-a1',
+                leg_left: 'leg-left-a1',
+                leg_right: 'leg-right-a1'
+              }
+            }
+          },
+        },
+      },
+      {
+        id: 'body-a1',
+        components: {
+          'anatomy:part': { parentId: null, type: 'body' },
+        },
+      },
+      {
+        id: 'leg-left-a1',
+        components: {
+          'anatomy:part': { parentId: 'body-a1', type: 'leg' },
+          'core:movement': { locked: true },
+        },
+      },
+      {
+        id: 'leg-right-a1',
+        components: {
+          'anatomy:part': { parentId: 'body-a1', type: 'leg' },
           'core:movement': { locked: true },
         },
       },
@@ -354,6 +432,36 @@ describe('intimacy_handle_step_back rule integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'B' },
           'intimacy:closeness': { partners: ['a1', 'c1'] },
+          'anatomy:body': { 
+            recipeId: 'anatomy:human',
+            body: {
+              root: 'body-b1',
+              parts: {
+                torso: 'body-b1',
+                leg_left: 'leg-left-b1',
+                leg_right: 'leg-right-b1'
+              }
+            }
+          },
+        },
+      },
+      {
+        id: 'body-b1',
+        components: {
+          'anatomy:part': { parentId: null, type: 'body' },
+        },
+      },
+      {
+        id: 'leg-left-b1',
+        components: {
+          'anatomy:part': { parentId: 'body-b1', type: 'leg' },
+          'core:movement': { locked: true },
+        },
+      },
+      {
+        id: 'leg-right-b1',
+        components: {
+          'anatomy:part': { parentId: 'body-b1', type: 'leg' },
           'core:movement': { locked: true },
         },
       },
@@ -362,6 +470,36 @@ describe('intimacy_handle_step_back rule integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'C' },
           'intimacy:closeness': { partners: ['a1', 'b1'] },
+          'anatomy:body': { 
+            recipeId: 'anatomy:human',
+            body: {
+              root: 'body-c1',
+              parts: {
+                torso: 'body-c1',
+                leg_left: 'leg-left-c1',
+                leg_right: 'leg-right-c1'
+              }
+            }
+          },
+        },
+      },
+      {
+        id: 'body-c1',
+        components: {
+          'anatomy:part': { parentId: null, type: 'body' },
+        },
+      },
+      {
+        id: 'leg-left-c1',
+        components: {
+          'anatomy:part': { parentId: 'body-c1', type: 'leg' },
+          'core:movement': { locked: true },
+        },
+      },
+      {
+        id: 'leg-right-c1',
+        components: {
+          'anatomy:part': { parentId: 'body-c1', type: 'leg' },
           'core:movement': { locked: true },
         },
       },
@@ -375,8 +513,14 @@ describe('intimacy_handle_step_back rule integration', () => {
     expect(
       testEnv.entityManager.getComponentData('a1', 'intimacy:closeness')
     ).toBeNull();
+    // Check that movement components on legs are updated
     expect(
-      testEnv.entityManager.getComponentData('a1', 'core:movement')
+      testEnv.entityManager.getComponentData('leg-left-a1', 'core:movement')
+    ).toEqual({
+      locked: false,
+    });
+    expect(
+      testEnv.entityManager.getComponentData('leg-right-a1', 'core:movement')
     ).toEqual({
       locked: false,
     });
@@ -386,7 +530,12 @@ describe('intimacy_handle_step_back rule integration', () => {
       partners: ['c1'],
     });
     expect(
-      testEnv.entityManager.getComponentData('b1', 'core:movement')
+      testEnv.entityManager.getComponentData('leg-left-b1', 'core:movement')
+    ).toEqual({
+      locked: true,
+    });
+    expect(
+      testEnv.entityManager.getComponentData('leg-right-b1', 'core:movement')
     ).toEqual({
       locked: true,
     });
@@ -396,7 +545,12 @@ describe('intimacy_handle_step_back rule integration', () => {
       partners: ['b1'],
     });
     expect(
-      testEnv.entityManager.getComponentData('c1', 'core:movement')
+      testEnv.entityManager.getComponentData('leg-left-c1', 'core:movement')
+    ).toEqual({
+      locked: true,
+    });
+    expect(
+      testEnv.entityManager.getComponentData('leg-right-c1', 'core:movement')
     ).toEqual({
       locked: true,
     });
@@ -418,6 +572,36 @@ describe('intimacy_handle_step_back rule integration', () => {
           [NAME_COMPONENT_ID]: { text: 'A' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
           'intimacy:closeness': { partners: ['b1'] },
+          'anatomy:body': { 
+            recipeId: 'anatomy:human',
+            body: {
+              root: 'body-a1',
+              parts: {
+                torso: 'body-a1',
+                leg_left: 'leg-left-a1',
+                leg_right: 'leg-right-a1'
+              }
+            }
+          },
+        },
+      },
+      {
+        id: 'body-a1',
+        components: {
+          'anatomy:part': { parentId: null, type: 'body' },
+        },
+      },
+      {
+        id: 'leg-left-a1',
+        components: {
+          'anatomy:part': { parentId: 'body-a1', type: 'leg' },
+          'core:movement': { locked: true },
+        },
+      },
+      {
+        id: 'leg-right-a1',
+        components: {
+          'anatomy:part': { parentId: 'body-a1', type: 'leg' },
           'core:movement': { locked: true },
         },
       },
@@ -426,6 +610,36 @@ describe('intimacy_handle_step_back rule integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'B' },
           'intimacy:closeness': { partners: ['a1'] },
+          'anatomy:body': { 
+            recipeId: 'anatomy:human',
+            body: {
+              root: 'body-b1',
+              parts: {
+                torso: 'body-b1',
+                leg_left: 'leg-left-b1',
+                leg_right: 'leg-right-b1'
+              }
+            }
+          },
+        },
+      },
+      {
+        id: 'body-b1',
+        components: {
+          'anatomy:part': { parentId: null, type: 'body' },
+        },
+      },
+      {
+        id: 'leg-left-b1',
+        components: {
+          'anatomy:part': { parentId: 'body-b1', type: 'leg' },
+          'core:movement': { locked: true },
+        },
+      },
+      {
+        id: 'leg-right-b1',
+        components: {
+          'anatomy:part': { parentId: 'body-b1', type: 'leg' },
           'core:movement': { locked: true },
         },
       },
@@ -439,8 +653,14 @@ describe('intimacy_handle_step_back rule integration', () => {
     expect(
       testEnv.entityManager.getComponentData('a1', 'intimacy:closeness')
     ).toBeNull();
+    // Check that movement components on legs are updated
     expect(
-      testEnv.entityManager.getComponentData('a1', 'core:movement')
+      testEnv.entityManager.getComponentData('leg-left-a1', 'core:movement')
+    ).toEqual({
+      locked: false,
+    });
+    expect(
+      testEnv.entityManager.getComponentData('leg-right-a1', 'core:movement')
     ).toEqual({
       locked: false,
     });
@@ -448,7 +668,12 @@ describe('intimacy_handle_step_back rule integration', () => {
       testEnv.entityManager.getComponentData('b1', 'intimacy:closeness')
     ).toBeNull();
     expect(
-      testEnv.entityManager.getComponentData('b1', 'core:movement')
+      testEnv.entityManager.getComponentData('leg-left-b1', 'core:movement')
+    ).toEqual({
+      locked: false,
+    });
+    expect(
+      testEnv.entityManager.getComponentData('leg-right-b1', 'core:movement')
     ).toEqual({
       locked: false,
     });
@@ -471,8 +696,46 @@ describe('intimacy_handle_step_back rule integration', () => {
       ent.components['intimacy:closeness'] = {
         partners: ['a1', 'b1', 'c1', 'd1'].filter((p) => p !== id),
       };
-      ent.components['core:movement'].locked = true;
+      // Add anatomy:body component
+      ent.components['anatomy:body'] = { 
+        recipeId: 'anatomy:human',
+        body: {
+          root: `body-${id}`,
+          parts: {
+            torso: `body-${id}`,
+            leg_left: `leg-left-${id}`,
+            leg_right: `leg-right-${id}`
+          }
+        }
+      };
     }
+    
+    // Add body and leg entities for each actor
+    for (const id of ['a1', 'b1', 'c1', 'd1']) {
+      entities.push(
+        {
+          id: `body-${id}`,
+          components: {
+            'anatomy:part': { parentId: null, type: 'body' },
+          },
+        },
+        {
+          id: `leg-left-${id}`,
+          components: {
+            'anatomy:part': { parentId: `body-${id}`, type: 'leg' },
+            'core:movement': { locked: true },
+          },
+        },
+        {
+          id: `leg-right-${id}`,
+          components: {
+            'anatomy:part': { parentId: `body-${id}`, type: 'leg' },
+            'core:movement': { locked: true },
+          },
+        }
+      );
+    }
+    
     testEnv.reset(entities);
 
     testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
@@ -483,8 +746,14 @@ describe('intimacy_handle_step_back rule integration', () => {
     expect(
       testEnv.entityManager.getComponentData('a1', 'intimacy:closeness')
     ).toBeNull();
+    // Check that movement components on legs are updated
     expect(
-      testEnv.entityManager.getComponentData('a1', 'core:movement')
+      testEnv.entityManager.getComponentData('leg-left-a1', 'core:movement')
+    ).toEqual({
+      locked: false,
+    });
+    expect(
+      testEnv.entityManager.getComponentData('leg-right-a1', 'core:movement')
     ).toEqual({
       locked: false,
     });
@@ -496,7 +765,12 @@ describe('intimacy_handle_step_back rule integration', () => {
         ['b1', 'c1', 'd1'].filter((p) => p !== id).sort()
       );
       expect(
-        testEnv.entityManager.getComponentData(id, 'core:movement')
+        testEnv.entityManager.getComponentData(`leg-left-${id}`, 'core:movement')
+      ).toEqual({
+        locked: true,
+      });
+      expect(
+        testEnv.entityManager.getComponentData(`leg-right-${id}`, 'core:movement')
       ).toEqual({
         locked: true,
       });

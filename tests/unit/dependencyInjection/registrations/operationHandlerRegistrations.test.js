@@ -54,6 +54,7 @@ describe('registerOperationHandlers', () => {
       tokens.AutoMoveFollowersHandler,
       tokens.MergeClosenessCircleHandler,
       tokens.RemoveFromClosenessCircleHandler,
+      tokens.HasBodyPartWithComponentValueHandler,
     ];
 
     handlerTokens.forEach((token) => {

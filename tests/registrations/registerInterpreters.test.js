@@ -30,11 +30,16 @@ describe('registerInterpreters', () => {
     });
     container.register(tokens.JsonLogicEvaluationService, {
       evaluate: jest.fn(),
+      addOperation: jest.fn(),
     });
     container.register(tokens.IEntityManager, {
       getEntityInstance: jest.fn(),
       getComponentData: jest.fn(),
       hasComponent: jest.fn(),
+      getEntity: jest.fn(),
+    });
+    container.register(tokens.BodyGraphService, {
+      hasPartWithComponentValue: jest.fn().mockReturnValue({ found: false }),
     });
     container.register(tokens.IValidatedEventDispatcher, {
       dispatch: jest.fn(),

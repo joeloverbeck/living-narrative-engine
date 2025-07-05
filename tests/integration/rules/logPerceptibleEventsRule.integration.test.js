@@ -61,11 +61,7 @@ describe('core_handle_log_perceptible_events rule integration', () => {
     customEntityManager = new SimpleEntityManager([]);
     const dataRegistry = {
       getAllSystemRules: jest.fn().mockReturnValue([logPerceptibleEventsRule]),
-      getConditionDefinition: jest.fn((id) =>
-        id === 'core:event-is-perceptible-event'
-          ? eventIsPerceptibleEvent
-          : undefined
-      ),
+      getConditionDefinition: jest.fn((id) => undefined),
       getEventDefinition: jest.fn((eventName) => {
         // Return a basic event definition for common events
         const commonEvents = {
@@ -123,6 +119,29 @@ describe('core_handle_log_perceptible_events rule integration', () => {
       operationRegistry,
     });
 
+    // Create bodyGraphService mock that checks entity components
+    const mockBodyGraphService = {
+      hasPartWithComponentValue: jest.fn((bodyComponent, componentId, propertyPath, expectedValue) => {
+        if (!bodyComponent || !bodyComponent.rootEntityId) {
+          return { found: false };
+        }
+        
+        // Check all entities in the manager
+        const allEntities = customEntityManager.getAllEntities();
+        for (const entity of allEntities) {
+          if (entity.components && entity.components[componentId]) {
+            const component = entity.components[componentId];
+            const actualValue = propertyPath ? component[propertyPath] : component;
+            if (actualValue === expectedValue) {
+              return { found: true, partId: entity.id };
+            }
+          }
+        }
+        
+        return { found: false };
+      })
+    };
+
     const interpreter = new SystemLogicInterpreter({
       logger: testLogger,
       eventBus: bus,
@@ -130,6 +149,7 @@ describe('core_handle_log_perceptible_events rule integration', () => {
       jsonLogicEvaluationService: jsonLogic,
       entityManager: customEntityManager,
       operationInterpreter,
+      bodyGraphService: mockBodyGraphService,
     });
 
     interpreter.initialize();
@@ -187,6 +207,29 @@ describe('core_handle_log_perceptible_events rule integration', () => {
           operationRegistry: newOperationRegistry,
         });
 
+        // Create bodyGraphService mock for the new interpreter
+        const newMockBodyGraphService = {
+          hasPartWithComponentValue: jest.fn((bodyComponent, componentId, propertyPath, expectedValue) => {
+            if (!bodyComponent || !bodyComponent.rootEntityId) {
+              return { found: false };
+            }
+            
+            // Check all entities in the manager
+            const allEntities = customEntityManager.getAllEntities();
+            for (const entity of allEntities) {
+              if (entity.components && entity.components[componentId]) {
+                const component = entity.components[componentId];
+                const actualValue = propertyPath ? component[propertyPath] : component;
+                if (actualValue === expectedValue) {
+                  return { found: true, partId: entity.id };
+                }
+              }
+            }
+            
+            return { found: false };
+          })
+        };
+
         const newInterpreter = new SystemLogicInterpreter({
           logger: testLogger,
           eventBus: bus,
@@ -194,6 +237,7 @@ describe('core_handle_log_perceptible_events rule integration', () => {
           jsonLogicEvaluationService: jsonLogic,
           entityManager: customEntityManager,
           operationInterpreter: newOperationInterpreter,
+          bodyGraphService: newMockBodyGraphService,
         });
 
         newInterpreter.initialize();

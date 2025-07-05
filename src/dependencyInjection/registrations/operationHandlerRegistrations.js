@@ -33,6 +33,7 @@ import ModifyContextArrayHandler from '../../logic/operationHandlers/modifyConte
 import AutoMoveFollowersHandler from '../../logic/operationHandlers/autoMoveFollowersHandler.js';
 import MergeClosenessCircleHandler from '../../logic/operationHandlers/mergeClosenessCircleHandler.js';
 import RemoveFromClosenessCircleHandler from '../../logic/operationHandlers/removeFromClosenessCircleHandler.js';
+import HasBodyPartWithComponentValueHandler from '../../logic/operationHandlers/hasBodyPartWithComponentValueHandler.js';
 import jsonLogic from 'json-logic-js';
 
 /**
@@ -325,6 +326,17 @@ export function registerOperationHandlers(registrar) {
           entityManager: c.resolve(tokens.IEntityManager),
           safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
           closenessCircleService: c.resolve(tokens.ClosenessCircleService),
+        }),
+    ],
+    [
+      tokens.HasBodyPartWithComponentValueHandler,
+      HasBodyPartWithComponentValueHandler,
+      (c, Handler) =>
+        new Handler({
+          logger: c.resolve(tokens.ILogger),
+          entityManager: c.resolve(tokens.IEntityManager),
+          bodyGraphService: c.resolve(tokens.BodyGraphService),
+          safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
         }),
     ],
   ];

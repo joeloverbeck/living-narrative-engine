@@ -148,6 +148,11 @@ describe('T‑07: enemy_damaged ➜ enemy_dead chained rules', () => {
     dataRegistry.getAllSystemRules = jest.fn();
     dataRegistry.getAllSystemRules.mockReturnValue(rules);
 
+    // ---- Mock bodyGraphService ----------------------------------------------
+    const mockBodyGraphService = {
+      hasPartWithComponentValue: jest.fn().mockReturnValue({ found: false })
+    };
+
     // ---- System‑logic interpreter ------------------------------------------
     interpreter = new SystemLogicInterpreter({
       logger,
@@ -156,6 +161,7 @@ describe('T‑07: enemy_damaged ➜ enemy_dead chained rules', () => {
       jsonLogicEvaluationService: jsonLogicSvc,
       entityManager,
       operationInterpreter: opInterpreter,
+      bodyGraphService: mockBodyGraphService,
     });
 
     interpreter.initialize();

@@ -146,6 +146,7 @@ describe('SystemLogicInterpreter Integration Tests', () => {
   let mockDataRegistry;
   let mockJsonLogicEvaluationService;
   let mockEntityManager;
+  let mockBodyGraphService;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -158,8 +159,15 @@ describe('SystemLogicInterpreter Integration Tests', () => {
       debug: jest.fn(),
       // Add loggedMessages and _log if you need to inspect all log calls for sequence
     };
+
+    mockBodyGraphService = {
+      hasPartWithComponentValue: jest.fn().mockReturnValue({ found: false })
+    };
     mockDataRegistry = { getAllSystemRules: jest.fn() };
-    mockJsonLogicEvaluationService = { evaluate: jest.fn() };
+    mockJsonLogicEvaluationService = { 
+      evaluate: jest.fn(),
+      addOperation: jest.fn()
+    };
     mockEntityManager = {
       getEntityInstance: jest.fn().mockImplementation((entityId) => {
         if (entityId === 'mockActor1') return MOCK_ENTITY_ACTOR;
@@ -210,6 +218,7 @@ describe('SystemLogicInterpreter Integration Tests', () => {
       jsonLogicEvaluationService: mockJsonLogicEvaluationService,
       entityManager: mockEntityManager,
       operationInterpreter: operationInterpreterRealInstance, // Pass the spied-upon instance
+      bodyGraphService: mockBodyGraphService,
     });
     interpreter.initialize();
 

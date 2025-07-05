@@ -23,6 +23,10 @@
     },
     "core:name": {
       "text": "leg"
+    },
+    "core:movement": {
+      "locked": false,
+      "forcedOverride": false
     }
   }
 }

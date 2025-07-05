@@ -2,17 +2,25 @@
 
 Important: you shouldn't modify any code at this stage. The goal is to create a comprehensive PRP.
 
-I'm analyzing body graphs in the anatomy visualizer. The page is anatomy-visualizer.html , and the main code is at src/anatomy-visualizer.js . I've noticed that when I load the body graph of a character whose recipe uses the data/mods/anatomy/blueprints/human_male.blueprints.json , that defines body parts for the "left_testicle" and "right_testicle" sockets, they appear as the plural "Testicle" instead of "Testicles" in the automatic description: "Testicle: small, oval". That likely means something is wrong with the anatomy formatting config at data/mods/anatomy/anatomy-formatting/
+We have created a comprehensive anatomy system that builds body part graphs for entities. We're migrating the abilities/resources to be associated to body parts, not the entity itself. We have migrated "core:movement" ( data/mods/core/components/movement.component.json ) to be now in leg body part entities, not in the entity itself. For example, human_leg_muscular.entity.json has the "core:movement" component now.
 
-In addition, when I switch in the visualizer to see the body graphs of other entities, I'm getting a slew of validation errors for the 'core:entity_removed' event, which likely also appears as ENTITY_REMOVED_ID . See the logs at error_logs.txt . This is likely happening in plenty of places of the repository, so please search all the instances where 'core:entity_removed' or ENTITY_REMOVED_ID are being dispatched, and ensure the payload aligns with the event definition: data/mods/core/events/entity_removed.event.json
+We have four failing tests because they need to adjust to this change: the changes and queries for whether the "core:movement" is locked in an entity need to rely on the anatomy system code to navigate the graph and determine if any body part entity has the "core:movement", what value it has, what value set in it, etc. Code is in src/anatomy/ and subdirectories.
+
+The failing test suites that need to adapt are:
+
+tests/integration/rules/logPerceptibleEventsRule.integration.test.js
+tests/integration/rules/closenessActionAvailability.integration.test.js
+tests/integration/rules/getCloseRule.integration.test.js
+tests/integration/rules/stepBackRule.integration.test.js
 
 ## EXAMPLES:
 
-You have an integration suite for the anatomy visualizer at tests/integration/domUI/AnatomyVisualizerUI.integration.test.js
+You have integration tests for the json-based rules in tests/integration/rules/ 
+You also have integration tests for the anatomy system in tests/integration/anatomy/
 
 ## DOCUMENTATION:
 
-The schema for the anatomy-formatting config file is in data/schemas/anatomy-formatting.schema.json
+Analyze data/schemas/action.schema.json , data/schemas/component.schema.json
 
 ## OTHER CONSIDERATIONS:
 
