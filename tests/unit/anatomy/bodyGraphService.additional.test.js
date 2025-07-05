@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import { BodyGraphService } from '../../../src/anatomy/bodyGraphService.js';
+import { AnatomyCacheManager } from '../../../src/anatomy/anatomyCacheManager.js';
 import SimpleEntityManager from '../../common/entities/simpleEntityManager.js';
 import {
   createMockLogger,
@@ -104,5 +105,22 @@ describe('BodyGraphService additional methods', () => {
     const bodyComponent = { root: 'torso' };
     const parts = service.getAllParts(bodyComponent);
     expect(parts).toEqual(expect.arrayContaining(['torso', 'arm', 'hand']));
+  });
+
+  it('throws when detaching a part without a joint', async () => {
+    await expect(service.detachPart('torso')).rejects.toThrow();
+  });
+
+  it('returns empty array when body component is missing root', () => {
+    expect(service.getAllParts({})).toEqual([]);
+  });
+
+  it('propagates issues from cache validation', () => {
+    const spy = jest
+      .spyOn(AnatomyCacheManager.prototype, 'validateCache')
+      .mockReturnValue({ valid: false, issues: ['bad'] });
+    const result = service.validateCache();
+    expect(result).toEqual({ valid: false, issues: ['bad'] });
+    spy.mockRestore();
   });
 });
