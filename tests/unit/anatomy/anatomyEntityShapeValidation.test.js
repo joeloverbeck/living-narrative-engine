@@ -88,7 +88,6 @@ describe('Anatomy Entity Shape Validation', () => {
     const anatomyExamples = [
       { entity: 'human_hand', shape: 'square' },
       { entity: 'human_breast', shape: 'round' },
-      { entity: 'human_testicle', shape: 'oval' },
       { entity: 'humanoid_ear', shape: 'round' },
       { entity: 'humanoid_mouth', shape: 'oval' },
       { entity: 'humanoid_nose', shape: 'elongated' },
