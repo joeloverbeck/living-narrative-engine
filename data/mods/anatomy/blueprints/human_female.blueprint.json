@@ -139,6 +139,22 @@
         "components": ["anatomy:part"]
       }
     },
+    "left_foot": {
+      "parent": "left_leg",
+      "socket": "ankle",
+      "requirements": {
+        "partType": "foot",
+        "components": ["anatomy:part"]
+      }
+    },
+    "right_foot": {
+      "parent": "right_leg",
+      "socket": "ankle",
+      "requirements": {
+        "partType": "foot",
+        "components": ["anatomy:part"]
+      }
+    },
     "asshole": {
       "socket": "asshole",
       "requirements": {

@@ -20,7 +20,7 @@ import shapeGeneralComponent from '../../../data/mods/descriptors/components/sha
 // Import entity definitions
 import humanoidArm from '../../../data/mods/anatomy/entities/definitions/humanoid_arm.entity.json';
 import humanoidHead from '../../../data/mods/anatomy/entities/definitions/humanoid_head.entity.json';
-import humanoidLeg from '../../../data/mods/anatomy/entities/definitions/humanoid_leg.entity.json';
+import humanoidLeg from '../../../data/mods/anatomy/entities/definitions/human_leg.entity.json';
 import humanoidEar from '../../../data/mods/anatomy/entities/definitions/humanoid_ear.entity.json';
 import humanoidNose from '../../../data/mods/anatomy/entities/definitions/humanoid_nose.entity.json';
 import humanoidMouth from '../../../data/mods/anatomy/entities/definitions/humanoid_mouth.entity.json';
@@ -32,6 +32,7 @@ import humanFemaleTorso from '../../../data/mods/anatomy/entities/definitions/hu
 import humanEye from '../../../data/mods/anatomy/entities/definitions/human_eye_brown.entity.json';
 import humanAsshole from '../../../data/mods/anatomy/entities/definitions/human_asshole.entity.json';
 import humanHand from '../../../data/mods/anatomy/entities/definitions/human_hand.entity.json';
+import humanFoot from '../../../data/mods/anatomy/entities/definitions/human_foot.entity.json';
 import humanFemaleBlueprint from '../../../data/mods/anatomy/blueprints/human_female.blueprint.json';
 import humanFemaleRecipe from '../../../data/mods/anatomy/recipes/human_female.recipe.json';
 
@@ -104,6 +105,7 @@ describe('Human Female Body Graph Integration Test', () => {
       'anatomy:human_eye_brown': humanEye,
       'anatomy:human_asshole': humanAsshole,
       'anatomy:human_hand': humanHand,
+      'anatomy:human_foot': humanFoot,
       'test:human_female': testHumanFemale,
     });
 

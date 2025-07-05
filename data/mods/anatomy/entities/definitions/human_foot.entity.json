@@ -1,0 +1,13 @@
+{
+  "$schema": "http://example.com/schemas/entity-definition.schema.json",
+  "id": "anatomy:human_foot",
+  "description": "A human foot",
+  "components": {
+    "anatomy:part": {
+      "subType": "foot"
+    },
+    "core:name": {
+      "text": "foot"
+    }
+  }
+}

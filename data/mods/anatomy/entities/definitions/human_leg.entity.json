@@ -1,7 +1,7 @@
 {
   "$schema": "http://example.com/schemas/entity-definition.schema.json",
-  "id": "anatomy:humanoid_leg",
-  "description": "A humanoid leg",
+  "id": "anatomy:human_leg",
+  "description": "A human leg",
   "components": {
     "anatomy:part": {
       "subType": "leg"
@@ -9,10 +9,9 @@
     "anatomy:sockets": {
       "sockets": [
         {
-          "id": "knee",
-          "orientation": "lower",
-          "allowedTypes": ["lower_leg"],
-          "nameTpl": "{{parent.name}} lower leg"
+          "id": "ankle",
+          "allowedTypes": ["foot"],
+          "nameTpl": "{{parent.name}} {{type}}"
         }
       ]
     },
