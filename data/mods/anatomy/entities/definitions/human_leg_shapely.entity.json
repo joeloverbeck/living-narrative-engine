@@ -6,6 +6,15 @@
     "anatomy:part": {
       "subType": "leg"
     },
+    "anatomy:sockets": {
+      "sockets": [
+        {
+          "id": "ankle",
+          "allowedTypes": ["foot"],
+          "nameTpl": "{{parent.name}} {{type}}"
+        }
+      ]
+    },
     "descriptors:length_category": {
       "length": "long"
     },

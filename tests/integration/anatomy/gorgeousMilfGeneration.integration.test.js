@@ -35,7 +35,7 @@ import humanHairRaven from '../../../data/mods/anatomy/entities/definitions/huma
 import humanLegShapely from '../../../data/mods/anatomy/entities/definitions/human_leg_shapely.entity.json';
 import humanoidArm from '../../../data/mods/anatomy/entities/definitions/humanoid_arm.entity.json';
 import humanoidHead from '../../../data/mods/anatomy/entities/definitions/humanoid_head.entity.json';
-import humanoidLeg from '../../../data/mods/anatomy/entities/definitions/humanoid_leg.entity.json';
+import humanoidLeg from '../../../data/mods/anatomy/entities/definitions/human_leg.entity.json';
 import humanoidEar from '../../../data/mods/anatomy/entities/definitions/humanoid_ear.entity.json';
 import humanoidNose from '../../../data/mods/anatomy/entities/definitions/humanoid_nose.entity.json';
 import humanoidMouth from '../../../data/mods/anatomy/entities/definitions/humanoid_mouth.entity.json';
@@ -45,6 +45,7 @@ import humanHair from '../../../data/mods/anatomy/entities/definitions/human_hai
 import humanPubicHair from '../../../data/mods/anatomy/entities/definitions/human_pubic_hair.entity.json';
 import humanFemaleTorso from '../../../data/mods/anatomy/entities/definitions/human_female_torso.entity.json';
 import humanHand from '../../../data/mods/anatomy/entities/definitions/human_hand.entity.json';
+import humanFoot from '../../../data/mods/anatomy/entities/definitions/human_foot.entity.json';
 import humanAsshole from '../../../data/mods/anatomy/entities/definitions/human_asshole.entity.json';
 import humanFemaleBlueprint from '../../../data/mods/anatomy/blueprints/human_female.blueprint.json';
 import gorgeousMilfRecipe from '../../../data/mods/anatomy/recipes/gorgeous_milf.recipe.json';
@@ -151,6 +152,7 @@ describe('Gorgeous MILF Anatomy Generation Integration Test', () => {
       'anatomy:human_pubic_hair': humanPubicHair,
       'anatomy:human_female_torso': humanFemaleTorso,
       'anatomy:human_hand': humanHand,
+      'anatomy:human_foot': humanFoot,
       'anatomy:human_asshole': humanAsshole,
       'anatomy:jacqueline_rouxel': jacquelineRouxel,
     });

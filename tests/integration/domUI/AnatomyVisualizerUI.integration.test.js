@@ -25,8 +25,9 @@ import humanMaleTorso from '../../../data/mods/anatomy/entities/definitions/huma
 import humanFemaleTorso from '../../../data/mods/anatomy/entities/definitions/human_female_torso.entity.json';
 import humanoidHead from '../../../data/mods/anatomy/entities/definitions/humanoid_head.entity.json';
 import humanoidArm from '../../../data/mods/anatomy/entities/definitions/humanoid_arm.entity.json';
-import humanoidLeg from '../../../data/mods/anatomy/entities/definitions/humanoid_leg.entity.json';
+import humanoidLeg from '../../../data/mods/anatomy/entities/definitions/human_leg.entity.json';
 import humanHand from '../../../data/mods/anatomy/entities/definitions/human_hand.entity.json';
+import humanFoot from '../../../data/mods/anatomy/entities/definitions/human_foot.entity.json';
 
 // Import blueprints
 import humanMaleBlueprint from '../../../data/mods/anatomy/blueprints/human_male.blueprint.json';
@@ -160,7 +161,8 @@ describe('AnatomyVisualizerUI Integration Tests', () => {
       { id: humanoidHead.id, data: humanoidHead },
       { id: humanoidArm.id, data: humanoidArm },
       { id: humanoidLeg.id, data: humanoidLeg },
-      { id: humanHand.id, data: humanHand }
+      { id: humanHand.id, data: humanHand },
+      { id: humanFoot.id, data: humanFoot }
     ];
 
     entityDefs.forEach(({ id, instance, data }) => {
