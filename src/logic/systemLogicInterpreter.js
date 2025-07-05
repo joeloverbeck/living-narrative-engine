@@ -142,14 +142,15 @@ class SystemLogicInterpreter extends BaseService {
     this.#jsonLogic.addOperation('hasBodyPartWithComponentValue', (args, data) => {
       // Create a minimal execution context for the handler
       const executionContext = {
-        variables: data,
+        evaluationContext: {
+          variables: data
+        },
         instanceId: 'jsonlogic-operation',
       };
 
       // Use the operation interpreter to execute the handler
       const result = this.#operationInterpreter.execute(
-        'HAS_BODY_PART_WITH_COMPONENT_VALUE',
-        args,
+        { type: 'HAS_BODY_PART_WITH_COMPONENT_VALUE', parameters: args },
         executionContext
       );
 

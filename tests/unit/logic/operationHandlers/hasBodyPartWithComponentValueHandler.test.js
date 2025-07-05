@@ -24,7 +24,7 @@ describe('HasBodyPartWithComponentValueHandler', () => {
 
   beforeEach(() => {
     mockEntityManager = {
-      getEntity: jest.fn(),
+      getEntityInstance: jest.fn(),
       getComponentData: jest.fn(),
     };
     mockBodyGraphService = {
@@ -65,9 +65,17 @@ describe('HasBodyPartWithComponentValueHandler', () => {
     const params = ['actor', 'core:movement', 'locked', false];
     const mockEntity = {
       id: 'actor-123',
-      getComponentData: jest.fn().mockReturnValue({ rootEntityId: 'body-123' }),
+      getComponentData: jest.fn().mockReturnValue({ 
+        body: { 
+          root: 'body-123',
+          parts: { 
+            'left leg': 'left-leg-123',
+            'right leg': 'right-leg-123'
+          }
+        }
+      }),
     };
-    mockEntityManager.getEntity.mockReturnValue(mockEntity);
+    mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
     mockBodyGraphService.hasPartWithComponentValue.mockReturnValue({
       found: true,
       partId: 'left-leg-123',
@@ -77,10 +85,18 @@ describe('HasBodyPartWithComponentValueHandler', () => {
     const result = handler.execute(params, executionContext);
 
     // Assert
-    expect(mockEntityManager.getEntity).toHaveBeenCalledWith('actor-123');
+    expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith('actor-123');
     expect(mockEntity.getComponentData).toHaveBeenCalledWith('anatomy:body');
     expect(mockBodyGraphService.hasPartWithComponentValue).toHaveBeenCalledWith(
-      { rootEntityId: 'body-123' },
+      { 
+        body: { 
+          root: 'body-123',
+          parts: { 
+            'left leg': 'left-leg-123',
+            'right leg': 'right-leg-123'
+          }
+        }
+      },
       'core:movement',
       'locked',
       false
@@ -94,9 +110,17 @@ describe('HasBodyPartWithComponentValueHandler', () => {
     const params = ['actor', 'core:movement', 'locked', true];
     const mockEntity = {
       id: 'actor-123',
-      getComponentData: jest.fn().mockReturnValue({ rootEntityId: 'body-123' }),
+      getComponentData: jest.fn().mockReturnValue({ 
+        body: { 
+          root: 'body-123',
+          parts: { 
+            'left leg': 'left-leg-123',
+            'right leg': 'right-leg-123'
+          }
+        }
+      }),
     };
-    mockEntityManager.getEntity.mockReturnValue(mockEntity);
+    mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
     mockBodyGraphService.hasPartWithComponentValue.mockReturnValue({
       found: false,
     });
@@ -115,7 +139,7 @@ describe('HasBodyPartWithComponentValueHandler', () => {
       id: 'actor-123',
       getComponentData: jest.fn().mockReturnValue(null),
     };
-    mockEntityManager.getEntity.mockReturnValue(mockEntity);
+    mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
 
     // Act
     const result = handler.execute(params, executionContext);
@@ -132,7 +156,7 @@ describe('HasBodyPartWithComponentValueHandler', () => {
   test('should return false when entity cannot be resolved', () => {
     // Arrange
     const params = ['nonexistent', 'core:movement', 'locked', false];
-    mockEntityManager.getEntity.mockReturnValue(null);
+    mockEntityManager.getEntityInstance.mockReturnValue(null);
 
     // Act
     const result = handler.execute(params, executionContext);
@@ -150,9 +174,17 @@ describe('HasBodyPartWithComponentValueHandler', () => {
     const params = ['entity-789', 'core:movement', 'locked', false];
     const mockEntity = {
       id: 'entity-789',
-      getComponentData: jest.fn().mockReturnValue({ rootEntityId: 'body-789' }),
+      getComponentData: jest.fn().mockReturnValue({ 
+        body: { 
+          root: 'body-789',
+          parts: { 
+            'left leg': 'leg-789',
+            'right leg': 'leg-789-r'
+          }
+        }
+      }),
     };
-    mockEntityManager.getEntity.mockReturnValue(mockEntity);
+    mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
     mockBodyGraphService.hasPartWithComponentValue.mockReturnValue({
       found: true,
       partId: 'leg-789',
@@ -162,7 +194,7 @@ describe('HasBodyPartWithComponentValueHandler', () => {
     const result = handler.execute(params, executionContext);
 
     // Assert
-    expect(mockEntityManager.getEntity).toHaveBeenCalledWith('entity-789');
+    expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith('entity-789');
     expect(result).toBe(true);
   });
 
@@ -172,9 +204,17 @@ describe('HasBodyPartWithComponentValueHandler', () => {
     const params = [entityRef, 'core:movement', 'locked', false];
     const mockEntity = {
       id: 'entity-999',
-      getComponentData: jest.fn().mockReturnValue({ rootEntityId: 'body-999' }),
+      getComponentData: jest.fn().mockReturnValue({ 
+        body: { 
+          root: 'body-999',
+          parts: { 
+            'left leg': 'leg-999',
+            'right leg': 'leg-999-r'
+          }
+        }
+      }),
     };
-    mockEntityManager.getEntity.mockReturnValue(mockEntity);
+    mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
     mockBodyGraphService.hasPartWithComponentValue.mockReturnValue({
       found: true,
       partId: 'leg-999',
@@ -184,7 +224,7 @@ describe('HasBodyPartWithComponentValueHandler', () => {
     const result = handler.execute(params, executionContext);
 
     // Assert
-    expect(mockEntityManager.getEntity).toHaveBeenCalledWith('entity-999');
+    expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith('entity-999');
     expect(result).toBe(true);
   });
 
@@ -231,9 +271,17 @@ describe('HasBodyPartWithComponentValueHandler', () => {
     const params = ['actor', 'core:movement', 'locked', false];
     const mockEntity = {
       id: 'actor-123',
-      getComponentData: jest.fn().mockReturnValue({ rootEntityId: 'body-123' }),
+      getComponentData: jest.fn().mockReturnValue({ 
+        body: { 
+          root: 'body-123',
+          parts: { 
+            'left leg': 'left-leg-123',
+            'right leg': 'right-leg-123'
+          }
+        }
+      }),
     };
-    mockEntityManager.getEntity.mockReturnValue(mockEntity);
+    mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
     const error = new Error('Service failure');
     mockBodyGraphService.hasPartWithComponentValue.mockImplementation(() => {
       throw error;
@@ -263,9 +311,17 @@ describe('HasBodyPartWithComponentValueHandler', () => {
     const params = ['myEntity', 'core:movement', 'locked', false];
     const mockEntity = {
       id: 'entity-555',
-      getComponentData: jest.fn().mockReturnValue({ rootEntityId: 'body-555' }),
+      getComponentData: jest.fn().mockReturnValue({ 
+        body: { 
+          root: 'body-555',
+          parts: { 
+            'left leg': 'leg-555',
+            'right leg': 'leg-555-r'
+          }
+        }
+      }),
     };
-    mockEntityManager.getEntity.mockReturnValue(mockEntity);
+    mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
     mockBodyGraphService.hasPartWithComponentValue.mockReturnValue({
       found: true,
       partId: 'leg-555',
@@ -275,7 +331,7 @@ describe('HasBodyPartWithComponentValueHandler', () => {
     const result = handler.execute(params, executionContext);
 
     // Assert
-    expect(mockEntityManager.getEntity).toHaveBeenCalledWith('entity-555');
+    expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith('entity-555');
     expect(result).toBe(true);
   });
 
@@ -287,9 +343,17 @@ describe('HasBodyPartWithComponentValueHandler', () => {
     const params = ['myEntity', 'core:movement', 'locked', false];
     const mockEntity = {
       id: 'entity-666',
-      getComponentData: jest.fn().mockReturnValue({ rootEntityId: 'body-666' }),
+      getComponentData: jest.fn().mockReturnValue({ 
+        body: { 
+          root: 'body-666',
+          parts: { 
+            'left leg': 'leg-666',
+            'right leg': 'leg-666-r'
+          }
+        }
+      }),
     };
-    mockEntityManager.getEntity.mockReturnValue(mockEntity);
+    mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
     mockBodyGraphService.hasPartWithComponentValue.mockReturnValue({
       found: true,
       partId: 'leg-666',
@@ -299,7 +363,7 @@ describe('HasBodyPartWithComponentValueHandler', () => {
     const result = handler.execute(params, executionContext);
 
     // Assert
-    expect(mockEntityManager.getEntity).toHaveBeenCalledWith('entity-666');
+    expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith('entity-666');
     expect(result).toBe(true);
   });
 
@@ -308,9 +372,17 @@ describe('HasBodyPartWithComponentValueHandler', () => {
     const params = ['actor', 'core:movement', 'locked', false];
     const mockEntity = {
       id: 'actor-123',
-      getComponentData: jest.fn().mockReturnValue({ rootEntityId: 'body-123' }),
+      getComponentData: jest.fn().mockReturnValue({ 
+        body: { 
+          root: 'body-123',
+          parts: { 
+            'left leg': 'left-leg-123',
+            'right leg': 'right-leg-123'
+          }
+        }
+      }),
     };
-    mockEntityManager.getEntity.mockReturnValue(mockEntity);
+    mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
     mockBodyGraphService.hasPartWithComponentValue.mockReturnValue({
       found: true,
       partId: 'left-leg-123',
