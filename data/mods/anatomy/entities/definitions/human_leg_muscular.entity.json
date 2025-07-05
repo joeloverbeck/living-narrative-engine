@@ -1,0 +1,25 @@
+{
+  "$schema": "http://example.com/schemas/entity-definition.schema.json",
+  "id": "anatomy:human_leg_muscular",
+  "description": "A muscular human leg",
+  "components": {
+    "anatomy:part": {
+      "subType": "leg"
+    },
+    "anatomy:sockets": {
+      "sockets": [
+        {
+          "id": "ankle",
+          "allowedTypes": ["foot"],
+          "nameTpl": "{{parent.name}} {{type}}"
+        }
+      ]
+    },
+    "descriptors:build": {
+      "build": "muscular"
+    },
+    "core:name": {
+      "text": "muscular leg"
+    }
+  }
+}

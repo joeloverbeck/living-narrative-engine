@@ -21,7 +21,7 @@
     {
       "matches": ["left_leg", "right_leg"],
       "partType": "leg",
-      "preferId": "anatomy:humanoid_leg"
+      "preferId": "anatomy:human_leg"
     }
   ]
 }
