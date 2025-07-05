@@ -1,11 +1,7 @@
 ## FEATURE:
 
-We have recently removed "humanoid_leg.entity.json" from the anatomy mod. It defined an invalid socket for a "lower leg". The issue is that now five test suites fail because they imported that leg file. We need to do the following:
-
-1) check out the currently single existing leg entity: "human_leg_shapely.entity.json". We need to add a socket to it for a "foot" partType, and also created a "foot" body part entity at data/mods/anatomy/entities/definitions/ .
-2) Given that "human_leg_shapely.entity.json" is too specific (it specifies descriptors for the legs to be "long" and "shapely"), we need to create a generic "human_leg.entity.json". All the failing tests will need to import that leg instead of the previous "humanoid_leg.entity.json", that no longer exists. This new "human_leg.entity.json" also needs to declare the same socket for a "foot" partType as the "human_leg_shapely.entity.json"
-
-Note: you shouldn't make any code modifications at this point. The goal is to create the PRP that we will execute at a later moment.
+Checking out the results of generating the body graph for the recipe .private/data/mods/p_erotica/recipes/amaia_castillo.recipe.json has shown me that there are some improvements to be made. The "pubic_hair" body part has the "curly" descriptor, yet it doesn't appear in the automatic description for the entity, so likely it needs to be set in the configuration file in data/mods/anatomy/anatomy-formatting/default.json . Regarding order, the description for the pubic hair should appear before the vagina, penis and testicles entries, if they exist. Check out also the definition for the pubic hair entity, which is human_pubic_hair.entity.json, and ensure in the anatomy-formatting default.json that the descriptor component that contains "curly" will also be properly processed.
+In addition, the humanoid_mouth.entity.json should include a socket for teeth, which means that a teeth entity definition will need to be created in data/mods/anatomy/entities/definitions/ . The new teeth entity definition shouldn't have any descriptor components; we want to make those teeth generic.
 
 ## EXAMPLES:
 

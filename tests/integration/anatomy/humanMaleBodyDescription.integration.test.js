@@ -39,6 +39,7 @@ import humanoidLeg from '../../../data/mods/anatomy/entities/definitions/human_l
 import humanoidEar from '../../../data/mods/anatomy/entities/definitions/humanoid_ear.entity.json';
 import humanoidNose from '../../../data/mods/anatomy/entities/definitions/humanoid_nose.entity.json';
 import humanoidMouth from '../../../data/mods/anatomy/entities/definitions/humanoid_mouth.entity.json';
+import humanoidTeeth from '../../../data/mods/anatomy/entities/definitions/humanoid_teeth.entity.json';
 import humanPenis from '../../../data/mods/anatomy/entities/definitions/human_penis.entity.json';
 import humanTesticle from '../../../data/mods/anatomy/entities/definitions/human_testicle.entity.json';
 import humanHair from '../../../data/mods/anatomy/entities/definitions/human_hair.entity.json';
@@ -157,6 +158,7 @@ describe('Human Male Body Description Integration Test', () => {
       'anatomy:humanoid_ear': humanoidEar,
       'anatomy:humanoid_nose': humanoidNose,
       'anatomy:humanoid_mouth': humanoidMouth,
+      'anatomy:humanoid_teeth': humanoidTeeth,
       'anatomy:human_penis': humanPenis,
       'anatomy:human_testicle': humanTesticle,
       'anatomy:human_hair': humanHair,

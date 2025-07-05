@@ -23,6 +23,7 @@ import humanoidLeg from '../../../data/mods/anatomy/entities/definitions/human_l
 import humanoidEar from '../../../data/mods/anatomy/entities/definitions/humanoid_ear.entity.json';
 import humanoidNose from '../../../data/mods/anatomy/entities/definitions/humanoid_nose.entity.json';
 import humanoidMouth from '../../../data/mods/anatomy/entities/definitions/humanoid_mouth.entity.json';
+import humanoidTeeth from '../../../data/mods/anatomy/entities/definitions/humanoid_teeth.entity.json';
 import humanPenis from '../../../data/mods/anatomy/entities/definitions/human_penis.entity.json';
 import humanTesticle from '../../../data/mods/anatomy/entities/definitions/human_testicle.entity.json';
 import humanHair from '../../../data/mods/anatomy/entities/definitions/human_hair.entity.json';
@@ -95,6 +96,7 @@ describe('Human Male Body Graph Integration Test', () => {
       'anatomy:humanoid_ear': humanoidEar,
       'anatomy:humanoid_nose': humanoidNose,
       'anatomy:humanoid_mouth': humanoidMouth,
+      'anatomy:humanoid_teeth': humanoidTeeth,
       'anatomy:human_penis': humanPenis,
       'anatomy:human_testicle': humanTesticle,
       'anatomy:human_hair': humanHair,
@@ -201,10 +203,12 @@ describe('Human Male Body Graph Integration Test', () => {
       arm: 2,
       hand: 2,
       leg: 2,
+      foot: 2,
       eye: 2,
       ear: 2,
       nose: 1,
       mouth: 1,
+      teeth: 1,
       penis: 1,
       testicle: 2,
       asshole: 1,
@@ -236,6 +240,28 @@ describe('Human Male Body Graph Integration Test', () => {
       expect(joint).toBeDefined();
       expect(joint.socketId).toBe('wrist');
       expect(arms).toContain(joint.parentId);
+    }
+
+    // Verify teeth are attached to mouth
+    const mouths = findPartsByType('mouth');
+    const teeth = findPartsByType('teeth');
+    
+    for (const teethId of teeth) {
+      const joint = entityManager.getComponentData(teethId, 'anatomy:joint');
+      expect(joint).toBeDefined();
+      expect(joint.socketId).toBe('teeth');
+      expect(mouths).toContain(joint.parentId);
+    }
+
+    // Verify feet are attached to legs
+    const legs = findPartsByType('leg');
+    const feet = findPartsByType('foot');
+    
+    for (const footId of feet) {
+      const joint = entityManager.getComponentData(footId, 'anatomy:joint');
+      expect(joint).toBeDefined();
+      expect(joint.socketId).toBe('ankle');
+      expect(legs).toContain(joint.parentId);
     }
 
     // Verify all parts have proper parent-child relationships
