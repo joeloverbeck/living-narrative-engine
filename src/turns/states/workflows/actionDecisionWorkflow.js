@@ -11,7 +11,7 @@ export class ActionDecisionWorkflow {
   /**
    * Constructs an instance of ActionDecisionWorkflow.
    *
-   * @param {import('../awaitingActorDecisionState.js').AwaitingActorDecisionState} state - Owning state instance.
+   * @param {object} state - Owning AwaitingActorDecisionState instance.
    * @param {import('../../interfaces/turnStateContextTypes.js').AwaitingActorDecisionStateContext} turnContext - Context for the turn.
    * @param {import('../../../entities/entity.js').default} actor - Actor making the decision.
    * @param {import('../../interfaces/IActorTurnStrategy.js').IActorTurnStrategy} strategy - Strategy used to decide the action.

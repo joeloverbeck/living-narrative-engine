@@ -12,7 +12,7 @@ import TurnDirectiveStrategyResolver, {
 } from '../strategies/turnDirectiveStrategyResolver.js';
 
 /**
- * @typedef {import('../handlers/baseTurnHandler.js').BaseTurnHandler} BaseTurnHandler
+ * @typedef {import('../interfaces/ITurnStateHost.js').ITurnStateHost} BaseTurnHandler
  * @typedef {import('../interfaces/IActorTurnStrategy.js').ITurnAction} ITurnAction
  * @typedef {import('../interfaces/ITurnState.js').ITurnState} ITurnState
  * @typedef {import('../../commands/interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor

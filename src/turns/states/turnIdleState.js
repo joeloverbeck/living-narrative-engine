@@ -4,7 +4,7 @@
 /**
  * @typedef {import("../interfaces/ICommandHandlingState.js").ICommandHandlingState} ICommandHandlingState
  * @typedef {import("../interfaces/ITurnLifecycleState.js").ITurnLifecycleState} ITurnLifecycleState_Interface
- * @typedef {import('../handlers/baseTurnHandler.js').BaseTurnHandler} BaseTurnHandler
+ * @typedef {import('../interfaces/ITurnStateHost.js').ITurnStateHost} BaseTurnHandler
  * @typedef {import('../../entities/entity.js').default} Entity
  * @typedef {import('../interfaces/ITurnState.js').ITurnState} ITurnState_Interface
  * @typedef {import('./abstractTurnState.js').AbstractTurnState} AbstractTurnState_Base

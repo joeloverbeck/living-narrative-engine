@@ -3,7 +3,7 @@
  */
 
 /**
- * @typedef {import('../../handlers/baseTurnHandler.js').BaseTurnHandler} BaseTurnHandler
+ * @typedef {import('../../interfaces/ITurnStateHost.js').ITurnStateHost} BaseTurnHandler
  * @typedef {import('../../interfaces/ITurnContext.js').ITurnContext} ITurnContext
  */
 import { ENTITY_SPOKE_ID } from '../../../constants/eventIds.js';

@@ -11,7 +11,7 @@ import { TurnContext } from '../context/turnContext.js';
  * @typedef {import('../../entities/entity.js').default} Entity
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
  * @typedef {import('../interfaces/IActorTurnStrategy.js').IActorTurnStrategy} IActorTurnStrategy
- * @typedef {import('../handlers/baseTurnHandler.js').BaseTurnHandler} BaseTurnHandler
+ * @typedef {import('../interfaces/ITurnStateHost.js').ITurnStateHost} BaseTurnHandler
  * @typedef {import('../interfaces/ITurnContext.js').ITurnContext} ITurnContext
  * @typedef {import('../../interfaces/IWorldContext.js').IWorldContext} IWorldContext
  * @typedef {import('../ports/ITurnEndPort.js').ITurnEndPort} ITurnEndPort

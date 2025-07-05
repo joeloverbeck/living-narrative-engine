@@ -15,7 +15,7 @@ import { destroyCleanupStrategy } from './helpers/destroyCleanupStrategy.js';
 
 /**
  * @typedef {import('../interfaces/turnStateContextTypes.js').AwaitingActorDecisionStateContext} AwaitingActorDecisionStateContext
- * @typedef {import('../handlers/baseTurnHandler.js').BaseTurnHandler} BaseTurnHandler
+ * @typedef {import('../interfaces/ITurnStateHost.js').ITurnStateHost} BaseTurnHandler
  */
 import {
   validateActorInContext,

@@ -16,7 +16,7 @@ import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import { createTimeoutError } from '../../utils/timeoutUtils.js';
 import { getLogger, getSafeEventDispatcher } from './helpers/contextUtils.js';
 
-/** @typedef {import('../handlers/baseTurnHandler.js').BaseTurnHandler} BaseTurnHandler */
+/** @typedef {import('../interfaces/ITurnStateHost.js').ITurnStateHost} BaseTurnHandler */
 
 /* global process */
 
