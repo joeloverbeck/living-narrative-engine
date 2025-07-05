@@ -29,7 +29,7 @@ import humanBreast from '../../../data/mods/anatomy/entities/definitions/human_b
 import humanHair from '../../../data/mods/anatomy/entities/definitions/human_hair.entity.json';
 import humanPubicHair from '../../../data/mods/anatomy/entities/definitions/human_pubic_hair.entity.json';
 import humanFemaleTorso from '../../../data/mods/anatomy/entities/definitions/human_female_torso.entity.json';
-import humanEye from '../../../data/mods/anatomy/entities/definitions/human_eye.entity.json';
+import humanEye from '../../../data/mods/anatomy/entities/definitions/human_eye_brown.entity.json';
 import humanAsshole from '../../../data/mods/anatomy/entities/definitions/human_asshole.entity.json';
 import humanHand from '../../../data/mods/anatomy/entities/definitions/human_hand.entity.json';
 import humanFemaleBlueprint from '../../../data/mods/anatomy/blueprints/human_female.blueprint.json';
@@ -101,7 +101,7 @@ describe('Human Female Body Graph Integration Test', () => {
       'anatomy:human_hair': humanHair,
       'anatomy:human_pubic_hair': humanPubicHair,
       'anatomy:human_female_torso': humanFemaleTorso,
-      'anatomy:human_eye': humanEye,
+      'anatomy:human_eye_brown': humanEye,
       'anatomy:human_asshole': humanAsshole,
       'anatomy:human_hand': humanHand,
       'test:human_female': testHumanFemale,

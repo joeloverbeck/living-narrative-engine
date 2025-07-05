@@ -6,12 +6,6 @@
     "anatomy:part": {
       "subType": "hand"
     },
-    "descriptors:size_category": {
-      "size": "medium"
-    },
-    "descriptors:shape_general": {
-      "shape": "square"
-    },
     "core:name": {
       "text": "hand"
     }

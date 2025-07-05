@@ -44,7 +44,7 @@ import humanTesticle from '../../../data/mods/anatomy/entities/definitions/human
 import humanHair from '../../../data/mods/anatomy/entities/definitions/human_hair.entity.json';
 import humanPubicHair from '../../../data/mods/anatomy/entities/definitions/human_pubic_hair.entity.json';
 import humanMaleTorso from '../../../data/mods/anatomy/entities/definitions/human_male_torso.entity.json';
-import humanEye from '../../../data/mods/anatomy/entities/definitions/human_eye.entity.json';
+import humanEye from '../../../data/mods/anatomy/entities/definitions/human_eye_brown.entity.json';
 import humanAsshole from '../../../data/mods/anatomy/entities/definitions/human_asshole.entity.json';
 import humanHand from '../../../data/mods/anatomy/entities/definitions/human_hand.entity.json';
 import humanMaleBlueprint from '../../../data/mods/anatomy/blueprints/human_male.blueprint.json';
@@ -161,7 +161,7 @@ describe('Human Male Body Description Integration Test', () => {
       'anatomy:human_hair': humanHair,
       'anatomy:human_pubic_hair': humanPubicHair,
       'anatomy:human_male_torso': humanMaleTorso,
-      'anatomy:human_eye': humanEye,
+      'anatomy:human_eye_brown': humanEye,
       'anatomy:human_asshole': humanAsshole,
       'anatomy:human_hand': humanHand,
       'test:human_male': testHumanMale,
@@ -218,23 +218,17 @@ describe('Human Male Body Description Integration Test', () => {
       const descriptionText = descriptionData.text;
 
       // Verify expected anatomical features are described
+      // Only body parts with descriptor components will appear in the description
+      // After removing mundane descriptors, only Eyes and Hair have descriptors
+      
       // Eyes (should show as "Eyes:" for paired parts)
       expect(descriptionText).toMatch(/\bEyes:\s+/);
-
-      // Ears (should show as "Ears:" for paired parts)
-      expect(descriptionText).toMatch(/\bEars:\s+/);
-
-      // Nose (should be singular)
-      expect(descriptionText).toMatch(/\bNose:\s+/);
-
-      // Mouth (should be singular)
-      expect(descriptionText).toMatch(/\bMouth:\s+/);
 
       // Hair (could be "Hair:" or "Hair 1:", "Hair 2:" for multiple different hair parts)
       expect(descriptionText).toMatch(/\b(Hair|Hair \d+):\s+/);
 
-      // Hands (should show as "Hands:" for paired parts)
-      expect(descriptionText).toMatch(/\bHands:\s+/);
+      // Note: Ears, Nose, Mouth, and Hands no longer appear because their
+      // descriptor components were removed (they were too mundane)
 
       // Note: Penis and Testicles may not appear if they're not being generated
       // or if their formatting configuration is missing. This is acceptable for this test.

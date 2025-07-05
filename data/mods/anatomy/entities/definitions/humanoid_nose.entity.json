@@ -6,12 +6,6 @@
     "anatomy:part": {
       "subType": "nose"
     },
-    "descriptors:shape_general": {
-      "shape": "elongated"
-    },
-    "descriptors:size_category": {
-      "size": "medium"
-    },
     "core:name": {
       "text": "nose"
     }
