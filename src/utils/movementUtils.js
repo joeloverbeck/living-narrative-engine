@@ -5,7 +5,7 @@ import { deepClone } from './cloneUtils.js';
 /**
  * Update the locked state of an entity's movement component.
  *
- * @param {import('../../entities/entityManager.js').default} entityManager - Entity manager.
+ * @param {import('../entities/entityManager.js').default} entityManager - Entity manager.
  * @param {string} entityId - ID of the entity to update.
  * @param {boolean} locked - Whether movement should be locked.
  * @returns {object} Updated movement component.

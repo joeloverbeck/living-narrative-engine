@@ -13,7 +13,7 @@
  * Legacy validators may return `undefined`, `null`, or a bare boolean. Newer
  * validators should return `{ isValid: boolean, errors?: any }`.
  *
- * @param {undefined|null|boolean|import('../../interfaces/coreServices.js').ValidationResult} rawResult
+ * @param {undefined|null|boolean|import('../interfaces/coreServices.js').ValidationResult} rawResult
  *   The raw validation result from a schema validator.
  * @returns {boolean} `true` if validation succeeded, `false` otherwise.
  */
@@ -26,7 +26,7 @@ export function validationSucceeded(rawResult) {
 /**
  * Convert a validation result into a readable string for logs.
  *
- * @param {import('../../interfaces/coreServices.js').ValidationResult|boolean|undefined|null} rawResult
+ * @param {import('../interfaces/coreServices.js').ValidationResult|boolean|undefined|null} rawResult
  *   The raw validation result.
  * @returns {string} Stringified error details or a fallback message.
  */

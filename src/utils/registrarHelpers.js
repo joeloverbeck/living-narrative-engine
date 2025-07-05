@@ -4,9 +4,9 @@
  * @file Helper functions and classes to simplify DI container registration.
  */
 
-/** @typedef {import('./appContainer.js').default} AppContainer */
-/** @typedef {import('./tokens.js').DiToken} DiToken */
-/** @typedef {import('./appContainer.js').FactoryFunction} FactoryFunction */
+/** @typedef {import('../dependencyInjection/appContainer.js').default} AppContainer */
+/** @typedef {import('../dependencyInjection/tokens.js').DiToken} DiToken */
+/** @typedef {import('../dependencyInjection/appContainer.js').FactoryFunction} FactoryFunction */
 /** @typedef {{ lifecycle?: 'singletonFactory' | 'singleton' | 'transient', tags?: string[], dependencies?: DiToken[] }} RegistrationOptions */
 
 /**
