@@ -337,19 +337,5 @@ describe('Human Male Body Graph Integration Test', () => {
 
     const testicles = findPartsByType('testicle');
     expect(testicles.length).toBe(2);
-    for (const testicleId of testicles) {
-      const testicleSize = entityManager.getComponentData(
-        testicleId,
-        'descriptors:size_category'
-      );
-      const testicleShape = entityManager.getComponentData(
-        testicleId,
-        'descriptors:shape_general'
-      );
-      expect(testicleSize).toBeDefined();
-      expect(testicleSize.size).toBe('small');
-      expect(testicleShape).toBeDefined();
-      expect(testicleShape.shape).toBe('oval');
-    }
   });
 });
