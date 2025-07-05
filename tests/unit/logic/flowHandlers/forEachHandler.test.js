@@ -39,7 +39,8 @@ describe('handleForEach', () => {
       node,
       { ...ctx, jsonLogic, scopeLabel: 'Loop' },
       logger,
-      interpreter
+      interpreter,
+      executeActionSequence
     );
     expect(executeActionSequence).toHaveBeenCalledTimes(2);
     expect(captured).toEqual([1, 2]);
@@ -58,7 +59,8 @@ describe('handleForEach', () => {
       node,
       { ...baseCtx, jsonLogic, scopeLabel: 'Loop' },
       logger,
-      interpreter
+      interpreter,
+      executeActionSequence
     );
     expect(logger.warn).toHaveBeenCalled();
     expect(executeActionSequence).not.toHaveBeenCalled();

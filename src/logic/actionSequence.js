@@ -87,7 +87,8 @@ export function executeActionSequence(
             jsonLogic,
           },
           logger,
-          operationInterpreter
+          operationInterpreter,
+          executeActionSequence
         );
         logger.debug(`${tag} Finished executing ${opType} operation.`);
       } else {

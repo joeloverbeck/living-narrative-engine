@@ -39,7 +39,8 @@ describe('handleIf', () => {
       node,
       { ...baseCtx, jsonLogic, scopeLabel: 'S' },
       logger,
-      interpreter
+      interpreter,
+      executeActionSequence
     );
     expect(executeActionSequence).toHaveBeenCalledTimes(1);
     expect(executeActionSequence).toHaveBeenCalledWith(
@@ -62,7 +63,8 @@ describe('handleIf', () => {
       node,
       { ...baseCtx, jsonLogic, scopeLabel: 'S' },
       logger,
-      interpreter
+      interpreter,
+      executeActionSequence
     );
     expect(executeActionSequence).toHaveBeenCalledTimes(1);
     expect(executeActionSequence).toHaveBeenCalledWith(
@@ -84,7 +86,8 @@ describe('handleIf', () => {
       node,
       { ...baseCtx, jsonLogic, scopeLabel: 'S' },
       logger,
-      interpreter
+      interpreter,
+      executeActionSequence
     );
     expect(executeActionSequence).not.toHaveBeenCalled();
   });

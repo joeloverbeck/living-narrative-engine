@@ -7,7 +7,7 @@
 /**
  * @typedef {import('../../entities/entity.js').default} Entity
  * @typedef {import('./IActorTurnStrategy.js').IActorTurnStrategy} IActorTurnStrategy
- * @typedef {import('../handlers/baseTurnHandler.js').BaseTurnHandler} BaseTurnHandler
+ * @typedef {import('./ITurnStateHost.js').ITurnStateHost} ITurnStateHost
  * @typedef {import('./ITurnContext.js').ITurnContext} ITurnContext
  */
 
@@ -30,7 +30,7 @@ export class ITurnContextFactory {
    * @param {Entity} params.actor - The current actor whose turn is being processed.
    * @param {IActorTurnStrategy} params.strategy - The turn strategy for the current actor.
    * @param {OnEndTurnCallback} params.onEndTurnCallback - Callback to execute when endTurn() is called.
-   * @param {BaseTurnHandler} params.handlerInstance - The turn handler instance for requesting transitions.
+   * @param {ITurnStateHost} params.handlerInstance - The turn handler instance for requesting transitions.
    * @param {function():boolean} [params.isAwaitingExternalEventProvider] - Optional provider for external waiting flag.
    * @param {function(boolean,string|null):void} [params.onSetAwaitingExternalEventCallback] - Optional callback when awaiting flag changes.
    * @returns {ITurnContext} The created turn context.
