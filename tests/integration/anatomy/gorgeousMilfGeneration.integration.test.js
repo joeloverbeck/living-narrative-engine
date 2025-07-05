@@ -28,7 +28,6 @@ import colorExtendedComponent from '../../../data/mods/descriptors/components/co
 import hairStyleComponent from '../../../data/mods/descriptors/components/hair_style.component.json';
 
 import humanBreastDCup from '../../../data/mods/anatomy/entities/definitions/human_breast_d_cup.entity.json';
-import humanEye from '../../../data/mods/anatomy/entities/definitions/human_eye.entity.json';
 import humanEyeBlue from '../../../data/mods/anatomy/entities/definitions/human_eye_blue.entity.json';
 import humanEyeBrown from '../../../data/mods/anatomy/entities/definitions/human_eye_brown.entity.json';
 import humanEyeCobalt from '../../../data/mods/anatomy/entities/definitions/human_eye_cobalt.entity.json';
@@ -134,7 +133,6 @@ describe('Gorgeous MILF Anatomy Generation Integration Test', () => {
     // Load entity definitions
     testBed.loadEntityDefinitions({
       'anatomy:human_breast_d_cup': humanBreastDCup,
-      'anatomy:human_eye': humanEye,
       'anatomy:human_eye_blue': humanEyeBlue,
       'anatomy:human_eye_brown': humanEyeBrown,
       'anatomy:human_eye_cobalt': humanEyeCobalt,

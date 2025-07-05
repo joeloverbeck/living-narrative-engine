@@ -6,12 +6,6 @@
     "anatomy:part": {
       "subType": "mouth"
     },
-    "descriptors:shape_general": {
-      "shape": "oval"
-    },
-    "descriptors:size_category": {
-      "size": "medium"
-    },
     "core:name": {
       "text": "mouth"
     }

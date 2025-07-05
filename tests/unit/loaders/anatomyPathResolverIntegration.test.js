@@ -69,11 +69,11 @@ describe('Anatomy Path Resolver Integration', () => {
       const result = pathResolver.resolveModContentPath(
         'anatomy',
         'entities/definitions',
-        'human_eye.entity.json'
+        'human_eye_brown.entity.json'
       );
 
       expect(result).toBe(
-        './data/mods/anatomy/entities/definitions/human_eye.entity.json'
+        './data/mods/anatomy/entities/definitions/human_eye_brown.entity.json'
       );
     });
 

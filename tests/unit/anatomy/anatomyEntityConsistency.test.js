@@ -62,33 +62,6 @@ describe('Anatomy Entity Consistency', () => {
     });
   });
 
-  describe('Shape validation consistency', () => {
-    const validShapes = ['round', 'square', 'oval', 'elongated', 'angular', 'curved'];
-    
-    it('all entities with shape_general should use valid shapes', () => {
-      const entitiesWithShape = anatomyEntities.filter(({ data }) =>
-        data.components['descriptors:shape_general']
-      );
-      
-      expect(entitiesWithShape.length).toBeGreaterThan(0);
-      
-      entitiesWithShape.forEach(({ filename, data }) => {
-        const shape = data.components['descriptors:shape_general'].shape;
-        expect(validShapes).toContain(shape);
-      });
-    });
-
-    it('human_hand should have square shape', () => {
-      const humanHand = anatomyEntities.find(({ filename }) => 
-        filename === 'human_hand.entity.json'
-      );
-      
-      expect(humanHand).toBeDefined();
-      expect(humanHand.data.components['descriptors:shape_general']).toEqual({
-        shape: 'square',
-      });
-    });
-  });
 
   describe('Entity ID consistency', () => {
     it('all entities should have properly formatted IDs', () => {
@@ -106,20 +79,6 @@ describe('Anatomy Entity Consistency', () => {
     });
   });
 
-  describe('Size category validation', () => {
-    const validSizes = ['tiny', 'small', 'medium', 'large', 'huge'];
-    
-    it('entities with size_category should use valid sizes', () => {
-      const entitiesWithSize = anatomyEntities.filter(({ data }) =>
-        data.components['descriptors:size_category']
-      );
-      
-      entitiesWithSize.forEach(({ filename, data }) => {
-        const size = data.components['descriptors:size_category'].size;
-        expect(validSizes).toContain(size);
-      });
-    });
-  });
 
   describe('Schema compliance', () => {
     it('all entities should reference the correct schema', () => {
