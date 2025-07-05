@@ -28,6 +28,14 @@ import {
  */
 export class SpatialIndexSynchronizer {
   /**
+   * Map to track entity positions for removal
+   *
+   * @private
+   * @type {Map<string, string>}
+   */
+  #entityPositions;
+
+  /**
    * @param {object} dependencies
    * @param {ISpatialIndexManager} dependencies.spatialIndexManager
    * @param {ISafeEventDispatcher} dependencies.safeEventDispatcher
@@ -47,6 +55,8 @@ export class SpatialIndexSynchronizer {
     this.spatialIndex = spatialIndexManager;
     /** @private */
     this.logger = logger;
+    /** @private */
+    this.#entityPositions = new Map();
 
     this.#subscribeToEvents(safeEventDispatcher);
 
@@ -121,6 +131,7 @@ export class SpatialIndexSynchronizer {
     const position = entity.getComponentData(POSITION_COMPONENT_ID);
     if (position?.locationId) {
       this.spatialIndex.addEntity(entity.id, position.locationId);
+      this.#entityPositions.set(entity.id, position.locationId);
       this.logger.debug(
         `SpatialSync: Added ${entity.id} to index at ${position.locationId}`
       );
@@ -143,14 +154,21 @@ export class SpatialIndexSynchronizer {
       return;
     }
 
-    const { entity } = payload;
-    if (!entity) return;
-    const position = entity.getComponentData(POSITION_COMPONENT_ID);
-    // We must remove the entity from its last known location
-    if (position?.locationId) {
-      this.spatialIndex.removeEntity(entity.id, position.locationId);
+    const { instanceId } = payload;
+    if (!instanceId) return;
+    
+    // Since we no longer have the entity object, we need to track positions separately
+    // For now, we'll need to maintain a map of entity positions
+    const locationId = this.#entityPositions?.get(instanceId);
+    if (locationId) {
+      this.spatialIndex.removeEntity(instanceId, locationId);
+      this.#entityPositions.delete(instanceId);
       this.logger.debug(
-        `SpatialSync: Removed ${entity.id} from index at ${position.locationId}`
+        `SpatialSync: Removed ${instanceId} from index at ${locationId}`
+      );
+    } else {
+      this.logger.debug(
+        `SpatialSync: Entity ${instanceId} had no tracked location, skipping removal`
       );
     }
   }
@@ -195,6 +213,14 @@ export class SpatialIndexSynchronizer {
       oldLocationId,
       newLocationId
     );
+    
+    // Update our internal tracking
+    if (newLocationId) {
+      this.#entityPositions.set(entity.id, newLocationId);
+    } else {
+      this.#entityPositions.delete(entity.id);
+    }
+    
     this.logger.debug(
       `SpatialSync: Re-indexed ${entity.id} from '${oldLocationId}' to '${newLocationId}' due to position change.`
     );

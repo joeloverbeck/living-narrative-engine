@@ -38,6 +38,7 @@ export class DescriptionConfiguration {
       'foot',
       'breast',
       'wing',
+      'testicle',
     ]);
 
     this._defaultIrregularPlurals = {
@@ -108,6 +109,7 @@ export const DESCRIPTION_CONFIG_CONSTANTS = {
     'foot',
     'breast',
     'wing',
+    'testicle',
   ]),
   DEFAULT_IRREGULAR_PLURALS: {
     foot: 'feet',

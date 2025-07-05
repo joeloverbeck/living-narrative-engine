@@ -1,36 +1,1834 @@
-VED: Dispatching event 'core:component_added' via EventBus... 
-{entity: Entity, componentTypeId: 'core:description', componentData: {…}, oldComponentData: undefined}
-consoleLogger.js:187 Successfully added/updated component 'core:description' data on entity 'a6dd1f2e-78a2-4d2c-9888-539228184c6d'.
-consoleLogger.js:151 DescriptionGenerationWorkflow: DescriptionGenerationWorkflow: Successfully generated descriptions for entity 'a6dd1f2e-78a2-4d2c-9888-539228184c6d'
-consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:component_added'.
-consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Committing unit of work. Entities created: 20, Operations: 3
-15
-consoleLogger.js:187 VED: Event 'core:component_added' dispatch successful.
-consoleLogger.js:151 AnatomyOrchestrator: AnatomyOrchestrator: Successfully completed anatomy generation for entity 'a6dd1f2e-78a2-4d2c-9888-539228184c6d' with 20 parts
-consoleLogger.js:151 AnatomyGenerationService: Successfully generated anatomy for entity 'a6dd1f2e-78a2-4d2c-9888-539228184c6d' with 20 parts
-consoleLogger.js:151 AnatomyInitializationService: Generated anatomy for entity 'a6dd1f2e-78a2-4d2c-9888-539228184c6d'
-15
-consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:component_added'.
-consoleLogger.js:187 VED: Event 'core:entity_created' dispatch successful.
-consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:entity_created'.
-AnatomyVisualizerUI.js:188 Uncaught (in promise) TypeError: entity2.getComponent is not a function
-    at AnatomyVisualizerUI.js:188:46
-(anonymous)	@	AnatomyVisualizerUI.js:188
-setTimeout		
-(anonymous)	@	AnatomyVisualizerUI.js:184
-(anonymous)	@	eventBus.js:136
-dispatch	@	eventBus.js:133
-#emitEvent	@	validatedEventDispatcher.js:192
-dispatch	@	validatedEventDispatcher.js:222
-dispatchResult.#executeSafely.payload.payload	@	safeEventDispatcher.js:124
-#executeSafely	@	safeEventDispatcher.js:88
-dispatch	@	safeEventDispatcher.js:122
-#dispatchEntityCreated	@	entityLifecycleManager.js:177
-createEntityInstance	@	entityLifecycleManager.js:214
-createEntityInstance	@	entityManager.js:361
-createEntityInstance	@	entityManagerAdapter.js:38
-_loadEntity	@	AnatomyVisualizerUI.js:201
-handleMouseUp_	@	unknown
-await in handleMouseUp_		
-(anonymous)	@	AnatomyVisualizerUI.js:139
-handleMouseUp_	@	unknown
+Processing entity 2d42f9e5-4925-4f55-9421-53b15cd5c52a at depth 2
+consoleLogger.js:187 Entity 2d42f9e5-4925-4f55-9421-53b15cd5c52a components: {hasName: true, nameText: 'right leg foot', hasPartComponent: true, partType: 'foot', hasJointComponent: true, …}
+consoleLogger.js:187 Found 0 children for 2d42f9e5-4925-4f55-9421-53b15cd5c52a: []
+consoleLogger.js:187 Processing entity 62cc0e12-9978-462d-ba32-30b45a7aac54 at depth 3
+consoleLogger.js:187 Entity 62cc0e12-9978-462d-ba32-30b45a7aac54 components: {hasName: true, nameText: 'teeth', hasPartComponent: true, partType: 'teeth', hasJointComponent: true, …}
+consoleLogger.js:187 Found 0 children for 62cc0e12-9978-462d-ba32-30b45a7aac54: []
+consoleLogger.js:151 Graph building complete: 23 nodes, 22 edges
+consoleLogger.js:151 AnatomyVisualizerUI: Loading entity p_erotica:iker_aguirre
+consoleLogger.js:187 Cleaning up 24 entities
+consoleLogger.js:187 Entity '0d7b5e22-fa08-482e-9447-2a41126d3b6f' removed from repository.
+consoleLogger.js:151 Entity instance 0d7b5e22-fa08-482e-9447-2a41126d3b6f removed from EntityManager.
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_removed' against schema 'core:entity_removed#payload'...
+consoleLogger.js:175 VED: Payload validation FAILED for event 'core:entity_removed'. Dispatch SKIPPED. Errors: [root]: must have required property 'instanceId'; [root]: must NOT have additional properties {payload: {…}, errors: Array(2)}
+error @ consoleLogger.js:175
+#validatePayload @ validatedEventDispatcher.js:144
+dispatch @ validatedEventDispatcher.js:219
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+_clearPreviousEntities @ AnatomyVisualizerUI.js:258
+_loadEntity @ AnatomyVisualizerUI.js:159
+(anonymous) @ AnatomyVisualizerUI.js:140
+handleMouseUp_ @ unknownUnderstand this error
+consoleLogger.js:187 VED: Dispatch skipped for 'core:entity_removed' due to validation failure (see error above).
+consoleLogger.js:187 Entity '2d42f9e5-4925-4f55-9421-53b15cd5c52a' removed from repository.
+consoleLogger.js:151 Entity instance 2d42f9e5-4925-4f55-9421-53b15cd5c52a removed from EntityManager.
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_removed' against schema 'core:entity_removed#payload'...
+consoleLogger.js:175 VED: Payload validation FAILED for event 'core:entity_removed'. Dispatch SKIPPED. Errors: [root]: must have required property 'instanceId'; [root]: must NOT have additional properties {payload: {…}, errors: Array(2)}
+error @ consoleLogger.js:175
+#validatePayload @ validatedEventDispatcher.js:144
+dispatch @ validatedEventDispatcher.js:219
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+_clearPreviousEntities @ AnatomyVisualizerUI.js:258
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+_loadEntity @ AnatomyVisualizerUI.js:159
+(anonymous) @ AnatomyVisualizerUI.js:140
+handleMouseUp_ @ unknownUnderstand this error
+consoleLogger.js:187 VED: Dispatch skipped for 'core:entity_removed' due to validation failure (see error above).
+consoleLogger.js:163 SafeEventDispatcher: Underlying VED failed to dispatch event 'core:entity_removed' (returned false). See VED logs for details. Payload: {"entity":{}}
+warn @ consoleLogger.js:163
+dispatch @ safeEventDispatcher.js:136
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+_clearPreviousEntities @ AnatomyVisualizerUI.js:258
+_loadEntity @ AnatomyVisualizerUI.js:159
+(anonymous) @ AnatomyVisualizerUI.js:140
+handleMouseUp_ @ unknownUnderstand this warning
+consoleLogger.js:187 Entity '0f1e6d92-1d3f-4c12-a8cc-d253f6828797' removed from repository.
+consoleLogger.js:151 Entity instance 0f1e6d92-1d3f-4c12-a8cc-d253f6828797 removed from EntityManager.
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_removed' against schema 'core:entity_removed#payload'...
+consoleLogger.js:175 VED: Payload validation FAILED for event 'core:entity_removed'. Dispatch SKIPPED. Errors: [root]: must have required property 'instanceId'; [root]: must NOT have additional properties {payload: {…}, errors: Array(2)}
+error @ consoleLogger.js:175
+#validatePayload @ validatedEventDispatcher.js:144
+dispatch @ validatedEventDispatcher.js:219
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+_clearPreviousEntities @ AnatomyVisualizerUI.js:258
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+_loadEntity @ AnatomyVisualizerUI.js:159
+(anonymous) @ AnatomyVisualizerUI.js:140
+handleMouseUp_ @ unknownUnderstand this error
+consoleLogger.js:187 VED: Dispatch skipped for 'core:entity_removed' due to validation failure (see error above).
+consoleLogger.js:163 SafeEventDispatcher: Underlying VED failed to dispatch event 'core:entity_removed' (returned false). See VED logs for details. Payload: {"entity":{}}
+warn @ consoleLogger.js:163
+dispatch @ safeEventDispatcher.js:136
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+_clearPreviousEntities @ AnatomyVisualizerUI.js:258
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+_loadEntity @ AnatomyVisualizerUI.js:159
+(anonymous) @ AnatomyVisualizerUI.js:140
+handleMouseUp_ @ unknownUnderstand this warning
+consoleLogger.js:187 Entity 'fe5afd75-3664-4d18-a80c-5ab059c4449d' removed from repository.
+consoleLogger.js:151 Entity instance fe5afd75-3664-4d18-a80c-5ab059c4449d removed from EntityManager.
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_removed' against schema 'core:entity_removed#payload'...
+consoleLogger.js:175 VED: Payload validation FAILED for event 'core:entity_removed'. Dispatch SKIPPED. Errors: [root]: must have required property 'instanceId'; [root]: must NOT have additional properties {payload: {…}, errors: Array(2)}
+error @ consoleLogger.js:175
+#validatePayload @ validatedEventDispatcher.js:144
+dispatch @ validatedEventDispatcher.js:219
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+_clearPreviousEntities @ AnatomyVisualizerUI.js:258
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+_loadEntity @ AnatomyVisualizerUI.js:159
+(anonymous) @ AnatomyVisualizerUI.js:140
+handleMouseUp_ @ unknownUnderstand this error
+consoleLogger.js:187 VED: Dispatch skipped for 'core:entity_removed' due to validation failure (see error above).
+consoleLogger.js:163 SafeEventDispatcher: Underlying VED failed to dispatch event 'core:entity_removed' (returned false). See VED logs for details. Payload: {"entity":{}}
+warn @ consoleLogger.js:163
+dispatch @ safeEventDispatcher.js:136
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+_clearPreviousEntities @ AnatomyVisualizerUI.js:258
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+_loadEntity @ AnatomyVisualizerUI.js:159
+(anonymous) @ AnatomyVisualizerUI.js:140
+handleMouseUp_ @ unknownUnderstand this warning
+consoleLogger.js:187 Entity '99acb591-63e2-4dfd-8a3f-aecbd39a472d' removed from repository.
+consoleLogger.js:151 Entity instance 99acb591-63e2-4dfd-8a3f-aecbd39a472d removed from EntityManager.
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_removed' against schema 'core:entity_removed#payload'...
+consoleLogger.js:175 VED: Payload validation FAILED for event 'core:entity_removed'. Dispatch SKIPPED. Errors: [root]: must have required property 'instanceId'; [root]: must NOT have additional properties {payload: {…}, errors: Array(2)}
+error @ consoleLogger.js:175
+#validatePayload @ validatedEventDispatcher.js:144
+dispatch @ validatedEventDispatcher.js:219
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+_clearPreviousEntities @ AnatomyVisualizerUI.js:258
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+_loadEntity @ AnatomyVisualizerUI.js:159
+(anonymous) @ AnatomyVisualizerUI.js:140
+handleMouseUp_ @ unknownUnderstand this error
+consoleLogger.js:187 VED: Dispatch skipped for 'core:entity_removed' due to validation failure (see error above).
+consoleLogger.js:163 SafeEventDispatcher: Underlying VED failed to dispatch event 'core:entity_removed' (returned false). See VED logs for details. Payload: {"entity":{}}
+warn @ consoleLogger.js:163
+dispatch @ safeEventDispatcher.js:136
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+_clearPreviousEntities @ AnatomyVisualizerUI.js:258
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+_loadEntity @ AnatomyVisualizerUI.js:159
+(anonymous) @ AnatomyVisualizerUI.js:140
+handleMouseUp_ @ unknownUnderstand this warning
+consoleLogger.js:187 Entity 'b15216cf-c2b9-4fc1-88cb-7fb0080fe6b2' removed from repository.
+consoleLogger.js:151 Entity instance b15216cf-c2b9-4fc1-88cb-7fb0080fe6b2 removed from EntityManager.
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_removed' against schema 'core:entity_removed#payload'...
+consoleLogger.js:175 VED: Payload validation FAILED for event 'core:entity_removed'. Dispatch SKIPPED. Errors: [root]: must have required property 'instanceId'; [root]: must NOT have additional properties {payload: {…}, errors: Array(2)}
+error @ consoleLogger.js:175
+#validatePayload @ validatedEventDispatcher.js:144
+dispatch @ validatedEventDispatcher.js:219
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+_clearPreviousEntities @ AnatomyVisualizerUI.js:258
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+_loadEntity @ AnatomyVisualizerUI.js:159
+(anonymous) @ AnatomyVisualizerUI.js:140
+handleMouseUp_ @ unknownUnderstand this error
+consoleLogger.js:187 VED: Dispatch skipped for 'core:entity_removed' due to validation failure (see error above).
+consoleLogger.js:163 SafeEventDispatcher: Underlying VED failed to dispatch event 'core:entity_removed' (returned false). See VED logs for details. Payload: {"entity":{}}
+warn @ consoleLogger.js:163
+dispatch @ safeEventDispatcher.js:136
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+_clearPreviousEntities @ AnatomyVisualizerUI.js:258
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+_loadEntity @ AnatomyVisualizerUI.js:159
+(anonymous) @ AnatomyVisualizerUI.js:140
+handleMouseUp_ @ unknownUnderstand this warning
+consoleLogger.js:187 Entity '66412873-1ad7-46ed-8d14-1a0a65dd31da' removed from repository.
+consoleLogger.js:151 Entity instance 66412873-1ad7-46ed-8d14-1a0a65dd31da removed from EntityManager.
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_removed' against schema 'core:entity_removed#payload'...
+consoleLogger.js:175 VED: Payload validation FAILED for event 'core:entity_removed'. Dispatch SKIPPED. Errors: [root]: must have required property 'instanceId'; [root]: must NOT have additional properties {payload: {…}, errors: Array(2)}
+error @ consoleLogger.js:175
+#validatePayload @ validatedEventDispatcher.js:144
+dispatch @ validatedEventDispatcher.js:219
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+_clearPreviousEntities @ AnatomyVisualizerUI.js:258
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+_loadEntity @ AnatomyVisualizerUI.js:159
+(anonymous) @ AnatomyVisualizerUI.js:140
+handleMouseUp_ @ unknownUnderstand this error
+consoleLogger.js:187 VED: Dispatch skipped for 'core:entity_removed' due to validation failure (see error above).
+consoleLogger.js:163 SafeEventDispatcher: Underlying VED failed to dispatch event 'core:entity_removed' (returned false). See VED logs for details. Payload: {"entity":{}}
+warn @ consoleLogger.js:163
+dispatch @ safeEventDispatcher.js:136
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+_clearPreviousEntities @ AnatomyVisualizerUI.js:258
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+_loadEntity @ AnatomyVisualizerUI.js:159
+(anonymous) @ AnatomyVisualizerUI.js:140
+handleMouseUp_ @ unknownUnderstand this warning
+consoleLogger.js:187 Entity '4674c3eb-ad07-425a-a3d7-3668082021a0' removed from repository.
+consoleLogger.js:151 Entity instance 4674c3eb-ad07-425a-a3d7-3668082021a0 removed from EntityManager.
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_removed' against schema 'core:entity_removed#payload'...
+consoleLogger.js:175 VED: Payload validation FAILED for event 'core:entity_removed'. Dispatch SKIPPED. Errors: [root]: must have required property 'instanceId'; [root]: must NOT have additional properties {payload: {…}, errors: Array(2)}
+error @ consoleLogger.js:175
+#validatePayload @ validatedEventDispatcher.js:144
+dispatch @ validatedEventDispatcher.js:219
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+_clearPreviousEntities @ AnatomyVisualizerUI.js:258
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+_loadEntity @ AnatomyVisualizerUI.js:159
+(anonymous) @ AnatomyVisualizerUI.js:140
+handleMouseUp_ @ unknownUnderstand this error
+consoleLogger.js:187 VED: Dispatch skipped for 'core:entity_removed' due to validation failure (see error above).
+consoleLogger.js:163 SafeEventDispatcher: Underlying VED failed to dispatch event 'core:entity_removed' (returned false). See VED logs for details. Payload: {"entity":{}}
+warn @ consoleLogger.js:163
+dispatch @ safeEventDispatcher.js:136
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+_clearPreviousEntities @ AnatomyVisualizerUI.js:258
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+_loadEntity @ AnatomyVisualizerUI.js:159
+(anonymous) @ AnatomyVisualizerUI.js:140
+handleMouseUp_ @ unknownUnderstand this warning
+consoleLogger.js:187 Entity 'cf392a43-1db2-4f7d-83da-31f5d5c790fa' removed from repository.
+consoleLogger.js:151 Entity instance cf392a43-1db2-4f7d-83da-31f5d5c790fa removed from EntityManager.
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_removed' against schema 'core:entity_removed#payload'...
+consoleLogger.js:175 VED: Payload validation FAILED for event 'core:entity_removed'. Dispatch SKIPPED. Errors: [root]: must have required property 'instanceId'; [root]: must NOT have additional properties {payload: {…}, errors: Array(2)}
+error @ consoleLogger.js:175
+#validatePayload @ validatedEventDispatcher.js:144
+dispatch @ validatedEventDispatcher.js:219
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+_clearPreviousEntities @ AnatomyVisualizerUI.js:258
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+_loadEntity @ AnatomyVisualizerUI.js:159
+(anonymous) @ AnatomyVisualizerUI.js:140
+handleMouseUp_ @ unknownUnderstand this error
+consoleLogger.js:187 VED: Dispatch skipped for 'core:entity_removed' due to validation failure (see error above).
+consoleLogger.js:163 SafeEventDispatcher: Underlying VED failed to dispatch event 'core:entity_removed' (returned false). See VED logs for details. Payload: {"entity":{}}
+warn @ consoleLogger.js:163
+dispatch @ safeEventDispatcher.js:136
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+_clearPreviousEntities @ AnatomyVisualizerUI.js:258
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+_loadEntity @ AnatomyVisualizerUI.js:159
+(anonymous) @ AnatomyVisualizerUI.js:140
+handleMouseUp_ @ unknownUnderstand this warning
+consoleLogger.js:187 Entity 'e7001502-5544-4cc0-9f78-043bbec74057' removed from repository.
+consoleLogger.js:151 Entity instance e7001502-5544-4cc0-9f78-043bbec74057 removed from EntityManager.
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_removed' against schema 'core:entity_removed#payload'...
+consoleLogger.js:175 VED: Payload validation FAILED for event 'core:entity_removed'. Dispatch SKIPPED. Errors: [root]: must have required property 'instanceId'; [root]: must NOT have additional properties {payload: {…}, errors: Array(2)}
+error @ consoleLogger.js:175
+#validatePayload @ validatedEventDispatcher.js:144
+dispatch @ validatedEventDispatcher.js:219
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+_clearPreviousEntities @ AnatomyVisualizerUI.js:258
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+_loadEntity @ AnatomyVisualizerUI.js:159
+(anonymous) @ AnatomyVisualizerUI.js:140
+handleMouseUp_ @ unknownUnderstand this error
+consoleLogger.js:187 VED: Dispatch skipped for 'core:entity_removed' due to validation failure (see error above).
+consoleLogger.js:163 SafeEventDispatcher: Underlying VED failed to dispatch event 'core:entity_removed' (returned false). See VED logs for details. Payload: {"entity":{}}
+warn @ consoleLogger.js:163
+dispatch @ safeEventDispatcher.js:136
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+_clearPreviousEntities @ AnatomyVisualizerUI.js:258
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+_loadEntity @ AnatomyVisualizerUI.js:159
+(anonymous) @ AnatomyVisualizerUI.js:140
+handleMouseUp_ @ unknownUnderstand this warning
+consoleLogger.js:187 Entity '62cc0e12-9978-462d-ba32-30b45a7aac54' removed from repository.
+consoleLogger.js:151 Entity instance 62cc0e12-9978-462d-ba32-30b45a7aac54 removed from EntityManager.
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_removed' against schema 'core:entity_removed#payload'...
+consoleLogger.js:175 VED: Payload validation FAILED for event 'core:entity_removed'. Dispatch SKIPPED. Errors: [root]: must have required property 'instanceId'; [root]: must NOT have additional properties {payload: {…}, errors: Array(2)}
+error @ consoleLogger.js:175
+#validatePayload @ validatedEventDispatcher.js:144
+dispatch @ validatedEventDispatcher.js:219
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+_clearPreviousEntities @ AnatomyVisualizerUI.js:258
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+_loadEntity @ AnatomyVisualizerUI.js:159
+(anonymous) @ AnatomyVisualizerUI.js:140
+handleMouseUp_ @ unknownUnderstand this error
+consoleLogger.js:187 VED: Dispatch skipped for 'core:entity_removed' due to validation failure (see error above).
+consoleLogger.js:163 SafeEventDispatcher: Underlying VED failed to dispatch event 'core:entity_removed' (returned false). See VED logs for details. Payload: {"entity":{}}
+warn @ consoleLogger.js:163
+dispatch @ safeEventDispatcher.js:136
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+_clearPreviousEntities @ AnatomyVisualizerUI.js:258
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+_loadEntity @ AnatomyVisualizerUI.js:159
+(anonymous) @ AnatomyVisualizerUI.js:140
+handleMouseUp_ @ unknownUnderstand this warning
+consoleLogger.js:187 Entity 'f3d0ddc8-34ed-4b9e-a9ba-93b95cb9b55f' removed from repository.
+consoleLogger.js:151 Entity instance f3d0ddc8-34ed-4b9e-a9ba-93b95cb9b55f removed from EntityManager.
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_removed' against schema 'core:entity_removed#payload'...
+consoleLogger.js:175 VED: Payload validation FAILED for event 'core:entity_removed'. Dispatch SKIPPED. Errors: [root]: must have required property 'instanceId'; [root]: must NOT have additional properties {payload: {…}, errors: Array(2)}
+error @ consoleLogger.js:175
+#validatePayload @ validatedEventDispatcher.js:144
+dispatch @ validatedEventDispatcher.js:219
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+_clearPreviousEntities @ AnatomyVisualizerUI.js:258
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+_loadEntity @ AnatomyVisualizerUI.js:159
+(anonymous) @ AnatomyVisualizerUI.js:140
+handleMouseUp_ @ unknownUnderstand this error
+consoleLogger.js:187 VED: Dispatch skipped for 'core:entity_removed' due to validation failure (see error above).
+consoleLogger.js:163 SafeEventDispatcher: Underlying VED failed to dispatch event 'core:entity_removed' (returned false). See VED logs for details. Payload: {"entity":{}}
+warn @ consoleLogger.js:163
+dispatch @ safeEventDispatcher.js:136
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+_clearPreviousEntities @ AnatomyVisualizerUI.js:258
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+_loadEntity @ AnatomyVisualizerUI.js:159
+(anonymous) @ AnatomyVisualizerUI.js:140
+handleMouseUp_ @ unknownUnderstand this warning
+consoleLogger.js:187 Entity 'dbee5a64-8a69-4208-a99b-07958f0eaf4a' removed from repository.
+consoleLogger.js:151 Entity instance dbee5a64-8a69-4208-a99b-07958f0eaf4a removed from EntityManager.
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_removed' against schema 'core:entity_removed#payload'...
+consoleLogger.js:175 VED: Payload validation FAILED for event 'core:entity_removed'. Dispatch SKIPPED. Errors: [root]: must have required property 'instanceId'; [root]: must NOT have additional properties {payload: {…}, errors: Array(2)}
+error @ consoleLogger.js:175
+#validatePayload @ validatedEventDispatcher.js:144
+dispatch @ validatedEventDispatcher.js:219
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+_clearPreviousEntities @ AnatomyVisualizerUI.js:258
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+_loadEntity @ AnatomyVisualizerUI.js:159
+(anonymous) @ AnatomyVisualizerUI.js:140
+handleMouseUp_ @ unknownUnderstand this error
+consoleLogger.js:187 VED: Dispatch skipped for 'core:entity_removed' due to validation failure (see error above).
+consoleLogger.js:163 SafeEventDispatcher: Underlying VED failed to dispatch event 'core:entity_removed' (returned false). See VED logs for details. Payload: {"entity":{}}
+warn @ consoleLogger.js:163
+dispatch @ safeEventDispatcher.js:136
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+_clearPreviousEntities @ AnatomyVisualizerUI.js:258
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+_loadEntity @ AnatomyVisualizerUI.js:159
+(anonymous) @ AnatomyVisualizerUI.js:140
+handleMouseUp_ @ unknownUnderstand this warning
+consoleLogger.js:187 Entity '37453eca-c19a-42cd-ac8e-efa799a601e9' removed from repository.
+consoleLogger.js:151 Entity instance 37453eca-c19a-42cd-ac8e-efa799a601e9 removed from EntityManager.
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_removed' against schema 'core:entity_removed#payload'...
+consoleLogger.js:175 VED: Payload validation FAILED for event 'core:entity_removed'. Dispatch SKIPPED. Errors: [root]: must have required property 'instanceId'; [root]: must NOT have additional properties {payload: {…}, errors: Array(2)}
+error @ consoleLogger.js:175
+#validatePayload @ validatedEventDispatcher.js:144
+dispatch @ validatedEventDispatcher.js:219
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+_clearPreviousEntities @ AnatomyVisualizerUI.js:258
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+_loadEntity @ AnatomyVisualizerUI.js:159
+(anonymous) @ AnatomyVisualizerUI.js:140
+handleMouseUp_ @ unknownUnderstand this error
+consoleLogger.js:187 VED: Dispatch skipped for 'core:entity_removed' due to validation failure (see error above).
+consoleLogger.js:163 SafeEventDispatcher: Underlying VED failed to dispatch event 'core:entity_removed' (returned false). See VED logs for details. Payload: {"entity":{}}
+warn @ consoleLogger.js:163
+dispatch @ safeEventDispatcher.js:136
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+_clearPreviousEntities @ AnatomyVisualizerUI.js:258
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+_loadEntity @ AnatomyVisualizerUI.js:159
+(anonymous) @ AnatomyVisualizerUI.js:140
+handleMouseUp_ @ unknownUnderstand this warning
+consoleLogger.js:187 Entity '8b1f992d-07fd-480d-af63-14dfed56bd75' removed from repository.
+consoleLogger.js:151 Entity instance 8b1f992d-07fd-480d-af63-14dfed56bd75 removed from EntityManager.
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_removed' against schema 'core:entity_removed#payload'...
+consoleLogger.js:175 VED: Payload validation FAILED for event 'core:entity_removed'. Dispatch SKIPPED. Errors: [root]: must have required property 'instanceId'; [root]: must NOT have additional properties {payload: {…}, errors: Array(2)}
+error @ consoleLogger.js:175
+#validatePayload @ validatedEventDispatcher.js:144
+dispatch @ validatedEventDispatcher.js:219
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+_clearPreviousEntities @ AnatomyVisualizerUI.js:258
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+_loadEntity @ AnatomyVisualizerUI.js:159
+(anonymous) @ AnatomyVisualizerUI.js:140
+handleMouseUp_ @ unknownUnderstand this error
+consoleLogger.js:187 VED: Dispatch skipped for 'core:entity_removed' due to validation failure (see error above).
+consoleLogger.js:163 SafeEventDispatcher: Underlying VED failed to dispatch event 'core:entity_removed' (returned false). See VED logs for details. Payload: {"entity":{}}
+warn @ consoleLogger.js:163
+dispatch @ safeEventDispatcher.js:136
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+_clearPreviousEntities @ AnatomyVisualizerUI.js:258
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+_loadEntity @ AnatomyVisualizerUI.js:159
+(anonymous) @ AnatomyVisualizerUI.js:140
+handleMouseUp_ @ unknownUnderstand this warning
+consoleLogger.js:187 Entity '3b0d7c71-146a-4a6f-9a9a-c99090937328' removed from repository.
+consoleLogger.js:151 Entity instance 3b0d7c71-146a-4a6f-9a9a-c99090937328 removed from EntityManager.
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_removed' against schema 'core:entity_removed#payload'...
+consoleLogger.js:175 VED: Payload validation FAILED for event 'core:entity_removed'. Dispatch SKIPPED. Errors: [root]: must have required property 'instanceId'; [root]: must NOT have additional properties {payload: {…}, errors: Array(2)}
+error @ consoleLogger.js:175
+#validatePayload @ validatedEventDispatcher.js:144
+dispatch @ validatedEventDispatcher.js:219
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+_clearPreviousEntities @ AnatomyVisualizerUI.js:258
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+_loadEntity @ AnatomyVisualizerUI.js:159
+(anonymous) @ AnatomyVisualizerUI.js:140
+handleMouseUp_ @ unknownUnderstand this error
+consoleLogger.js:187 VED: Dispatch skipped for 'core:entity_removed' due to validation failure (see error above).
+consoleLogger.js:163 SafeEventDispatcher: Underlying VED failed to dispatch event 'core:entity_removed' (returned false). See VED logs for details. Payload: {"entity":{}}
+warn @ consoleLogger.js:163
+dispatch @ safeEventDispatcher.js:136
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+_clearPreviousEntities @ AnatomyVisualizerUI.js:258
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+_loadEntity @ AnatomyVisualizerUI.js:159
+(anonymous) @ AnatomyVisualizerUI.js:140
+handleMouseUp_ @ unknownUnderstand this warning
+consoleLogger.js:187 Entity 'f625d3de-83d9-417d-afd4-f193175a4c66' removed from repository.
+consoleLogger.js:151 Entity instance f625d3de-83d9-417d-afd4-f193175a4c66 removed from EntityManager.
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_removed' against schema 'core:entity_removed#payload'...
+consoleLogger.js:175 VED: Payload validation FAILED for event 'core:entity_removed'. Dispatch SKIPPED. Errors: [root]: must have required property 'instanceId'; [root]: must NOT have additional properties {payload: {…}, errors: Array(2)}
+error @ consoleLogger.js:175
+#validatePayload @ validatedEventDispatcher.js:144
+dispatch @ validatedEventDispatcher.js:219
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+_clearPreviousEntities @ AnatomyVisualizerUI.js:258
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+_loadEntity @ AnatomyVisualizerUI.js:159
+(anonymous) @ AnatomyVisualizerUI.js:140
+handleMouseUp_ @ unknownUnderstand this error
+consoleLogger.js:187 VED: Dispatch skipped for 'core:entity_removed' due to validation failure (see error above).
+consoleLogger.js:163 SafeEventDispatcher: Underlying VED failed to dispatch event 'core:entity_removed' (returned false). See VED logs for details. Payload: {"entity":{}}
+warn @ consoleLogger.js:163
+dispatch @ safeEventDispatcher.js:136
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+_clearPreviousEntities @ AnatomyVisualizerUI.js:258
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+_loadEntity @ AnatomyVisualizerUI.js:159
+(anonymous) @ AnatomyVisualizerUI.js:140
+handleMouseUp_ @ unknownUnderstand this warning
+consoleLogger.js:187 Entity '85b2a7fa-a73b-46fc-a03f-dc50718cb296' removed from repository.
+consoleLogger.js:151 Entity instance 85b2a7fa-a73b-46fc-a03f-dc50718cb296 removed from EntityManager.
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_removed' against schema 'core:entity_removed#payload'...
+consoleLogger.js:175 VED: Payload validation FAILED for event 'core:entity_removed'. Dispatch SKIPPED. Errors: [root]: must have required property 'instanceId'; [root]: must NOT have additional properties {payload: {…}, errors: Array(2)}
+error @ consoleLogger.js:175
+#validatePayload @ validatedEventDispatcher.js:144
+dispatch @ validatedEventDispatcher.js:219
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+_clearPreviousEntities @ AnatomyVisualizerUI.js:258
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+_loadEntity @ AnatomyVisualizerUI.js:159
+(anonymous) @ AnatomyVisualizerUI.js:140
+handleMouseUp_ @ unknownUnderstand this error
+consoleLogger.js:187 VED: Dispatch skipped for 'core:entity_removed' due to validation failure (see error above).
+consoleLogger.js:163 SafeEventDispatcher: Underlying VED failed to dispatch event 'core:entity_removed' (returned false). See VED logs for details. Payload: {"entity":{}}
+warn @ consoleLogger.js:163
+dispatch @ safeEventDispatcher.js:136
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+_clearPreviousEntities @ AnatomyVisualizerUI.js:258
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+_loadEntity @ AnatomyVisualizerUI.js:159
+(anonymous) @ AnatomyVisualizerUI.js:140
+handleMouseUp_ @ unknownUnderstand this warning
+consoleLogger.js:187 Entity '24ec57dc-79e5-4322-b145-ca1d4e8fac5e' removed from repository.
+consoleLogger.js:151 Entity instance 24ec57dc-79e5-4322-b145-ca1d4e8fac5e removed from EntityManager.
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_removed' against schema 'core:entity_removed#payload'...
+consoleLogger.js:175 VED: Payload validation FAILED for event 'core:entity_removed'. Dispatch SKIPPED. Errors: [root]: must have required property 'instanceId'; [root]: must NOT have additional properties {payload: {…}, errors: Array(2)}
+error @ consoleLogger.js:175
+#validatePayload @ validatedEventDispatcher.js:144
+dispatch @ validatedEventDispatcher.js:219
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+_clearPreviousEntities @ AnatomyVisualizerUI.js:258
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+_loadEntity @ AnatomyVisualizerUI.js:159
+(anonymous) @ AnatomyVisualizerUI.js:140
+handleMouseUp_ @ unknownUnderstand this error
+consoleLogger.js:187 VED: Dispatch skipped for 'core:entity_removed' due to validation failure (see error above).
+consoleLogger.js:163 SafeEventDispatcher: Underlying VED failed to dispatch event 'core:entity_removed' (returned false). See VED logs for details. Payload: {"entity":{}}
+warn @ consoleLogger.js:163
+dispatch @ safeEventDispatcher.js:136
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+_clearPreviousEntities @ AnatomyVisualizerUI.js:258
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+_loadEntity @ AnatomyVisualizerUI.js:159
+(anonymous) @ AnatomyVisualizerUI.js:140
+handleMouseUp_ @ unknownUnderstand this warning
+consoleLogger.js:187 Entity '3b7e75d8-2e5b-4fc1-a565-12a515394a26' removed from repository.
+consoleLogger.js:151 Entity instance 3b7e75d8-2e5b-4fc1-a565-12a515394a26 removed from EntityManager.
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_removed' against schema 'core:entity_removed#payload'...
+consoleLogger.js:175 VED: Payload validation FAILED for event 'core:entity_removed'. Dispatch SKIPPED. Errors: [root]: must have required property 'instanceId'; [root]: must NOT have additional properties {payload: {…}, errors: Array(2)}
+error @ consoleLogger.js:175
+#validatePayload @ validatedEventDispatcher.js:144
+dispatch @ validatedEventDispatcher.js:219
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+_clearPreviousEntities @ AnatomyVisualizerUI.js:258
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+_loadEntity @ AnatomyVisualizerUI.js:159
+(anonymous) @ AnatomyVisualizerUI.js:140
+handleMouseUp_ @ unknownUnderstand this error
+consoleLogger.js:187 VED: Dispatch skipped for 'core:entity_removed' due to validation failure (see error above).
+consoleLogger.js:163 SafeEventDispatcher: Underlying VED failed to dispatch event 'core:entity_removed' (returned false). See VED logs for details. Payload: {"entity":{}}
+warn @ consoleLogger.js:163
+dispatch @ safeEventDispatcher.js:136
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+_clearPreviousEntities @ AnatomyVisualizerUI.js:258
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+_loadEntity @ AnatomyVisualizerUI.js:159
+(anonymous) @ AnatomyVisualizerUI.js:140
+handleMouseUp_ @ unknownUnderstand this warning
+consoleLogger.js:187 Entity 'fab4f876-60b5-4147-ab3e-c310e8f854ca' removed from repository.
+consoleLogger.js:151 Entity instance fab4f876-60b5-4147-ab3e-c310e8f854ca removed from EntityManager.
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_removed' against schema 'core:entity_removed#payload'...
+consoleLogger.js:175 VED: Payload validation FAILED for event 'core:entity_removed'. Dispatch SKIPPED. Errors: [root]: must have required property 'instanceId'; [root]: must NOT have additional properties {payload: {…}, errors: Array(2)}
+error @ consoleLogger.js:175
+#validatePayload @ validatedEventDispatcher.js:144
+dispatch @ validatedEventDispatcher.js:219
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+_clearPreviousEntities @ AnatomyVisualizerUI.js:258
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+_loadEntity @ AnatomyVisualizerUI.js:159
+(anonymous) @ AnatomyVisualizerUI.js:140
+handleMouseUp_ @ unknownUnderstand this error
+consoleLogger.js:187 VED: Dispatch skipped for 'core:entity_removed' due to validation failure (see error above).
+consoleLogger.js:163 SafeEventDispatcher: Underlying VED failed to dispatch event 'core:entity_removed' (returned false). See VED logs for details. Payload: {"entity":{}}
+warn @ consoleLogger.js:163
+dispatch @ safeEventDispatcher.js:136
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+_clearPreviousEntities @ AnatomyVisualizerUI.js:258
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+_loadEntity @ AnatomyVisualizerUI.js:159
+(anonymous) @ AnatomyVisualizerUI.js:140
+handleMouseUp_ @ unknownUnderstand this warning
+consoleLogger.js:187 Entity '03da2238-9f59-4834-be2e-a87a52a99bf3' removed from repository.
+consoleLogger.js:151 Entity instance 03da2238-9f59-4834-be2e-a87a52a99bf3 removed from EntityManager.
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_removed' against schema 'core:entity_removed#payload'...
+consoleLogger.js:175 VED: Payload validation FAILED for event 'core:entity_removed'. Dispatch SKIPPED. Errors: [root]: must have required property 'instanceId'; [root]: must NOT have additional properties {payload: {…}, errors: Array(2)}
+error @ consoleLogger.js:175
+#validatePayload @ validatedEventDispatcher.js:144
+dispatch @ validatedEventDispatcher.js:219
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+_clearPreviousEntities @ AnatomyVisualizerUI.js:258
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+_loadEntity @ AnatomyVisualizerUI.js:159
+(anonymous) @ AnatomyVisualizerUI.js:140
+handleMouseUp_ @ unknownUnderstand this error
+consoleLogger.js:187 VED: Dispatch skipped for 'core:entity_removed' due to validation failure (see error above).
+consoleLogger.js:163 SafeEventDispatcher: Underlying VED failed to dispatch event 'core:entity_removed' (returned false). See VED logs for details. Payload: {"entity":{}}
+warn @ consoleLogger.js:163
+dispatch @ safeEventDispatcher.js:136
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+_clearPreviousEntities @ AnatomyVisualizerUI.js:258
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+_loadEntity @ AnatomyVisualizerUI.js:159
+(anonymous) @ AnatomyVisualizerUI.js:140
+handleMouseUp_ @ unknownUnderstand this warning
+consoleLogger.js:187 Entity '878e8f76-4830-4958-aeb7-de271d2dde30' removed from repository.
+consoleLogger.js:151 Entity instance 878e8f76-4830-4958-aeb7-de271d2dde30 removed from EntityManager.
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_removed' against schema 'core:entity_removed#payload'...
+consoleLogger.js:175 VED: Payload validation FAILED for event 'core:entity_removed'. Dispatch SKIPPED. Errors: [root]: must have required property 'instanceId'; [root]: must NOT have additional properties {payload: {…}, errors: Array(2)}
+error @ consoleLogger.js:175
+#validatePayload @ validatedEventDispatcher.js:144
+dispatch @ validatedEventDispatcher.js:219
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+_clearPreviousEntities @ AnatomyVisualizerUI.js:258
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+_loadEntity @ AnatomyVisualizerUI.js:159
+(anonymous) @ AnatomyVisualizerUI.js:140
+handleMouseUp_ @ unknownUnderstand this error
+consoleLogger.js:187 VED: Dispatch skipped for 'core:entity_removed' due to validation failure (see error above).
+consoleLogger.js:163 SafeEventDispatcher: Underlying VED failed to dispatch event 'core:entity_removed' (returned false). See VED logs for details. Payload: {"entity":{}}
+warn @ consoleLogger.js:163
+dispatch @ safeEventDispatcher.js:136
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+_clearPreviousEntities @ AnatomyVisualizerUI.js:258
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+_loadEntity @ AnatomyVisualizerUI.js:159
+(anonymous) @ AnatomyVisualizerUI.js:140
+handleMouseUp_ @ unknownUnderstand this warning
+consoleLogger.js:187 Entity '1c2cfa2e-1db7-4b81-8e04-b48dc1061078' removed from repository.
+consoleLogger.js:151 Entity instance 1c2cfa2e-1db7-4b81-8e04-b48dc1061078 removed from EntityManager.
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_removed' against schema 'core:entity_removed#payload'...
+consoleLogger.js:175 VED: Payload validation FAILED for event 'core:entity_removed'. Dispatch SKIPPED. Errors: [root]: must have required property 'instanceId'; [root]: must NOT have additional properties {payload: {…}, errors: Array(2)}
+error @ consoleLogger.js:175
+#validatePayload @ validatedEventDispatcher.js:144
+dispatch @ validatedEventDispatcher.js:219
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+_clearPreviousEntities @ AnatomyVisualizerUI.js:258
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+_loadEntity @ AnatomyVisualizerUI.js:159
+(anonymous) @ AnatomyVisualizerUI.js:140
+handleMouseUp_ @ unknownUnderstand this error
+consoleLogger.js:187 VED: Dispatch skipped for 'core:entity_removed' due to validation failure (see error above).
+consoleLogger.js:163 SafeEventDispatcher: Underlying VED failed to dispatch event 'core:entity_removed' (returned false). See VED logs for details. Payload: {"entity":{}}
+warn @ consoleLogger.js:163
+dispatch @ safeEventDispatcher.js:136
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+_clearPreviousEntities @ AnatomyVisualizerUI.js:258
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+_loadEntity @ AnatomyVisualizerUI.js:159
+(anonymous) @ AnatomyVisualizerUI.js:140
+handleMouseUp_ @ unknownUnderstand this warning
+consoleLogger.js:163 SafeEventDispatcher: Underlying VED failed to dispatch event 'core:entity_removed' (returned false). See VED logs for details. Payload: {"entity":{}}
+warn @ consoleLogger.js:163
+dispatch @ safeEventDispatcher.js:136
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+removeEntityInstance @ entityLifecycleManager.js:275
+removeEntityInstance @ entityManager.js:571
+removeEntityInstance @ entityManagerAdapter.js:85
+_clearPreviousEntities @ AnatomyVisualizerUI.js:258
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+_loadEntity @ AnatomyVisualizerUI.js:159
+(anonymous) @ AnatomyVisualizerUI.js:140
+handleMouseUp_ @ unknownUnderstand this warning
+consoleLogger.js:187 VED: Delegating subscription for event "core:entity_created" to EventBus.

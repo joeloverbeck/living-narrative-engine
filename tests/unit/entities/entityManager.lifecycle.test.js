@@ -417,7 +417,7 @@ describeEntityManagerSuite('EntityManager - removeEntityInstance', (getBed) => {
       entityManager.removeEntityInstance(entity.id);
 
       // Assert
-      expectEntityRemovedDispatch(mocks.eventDispatcher.dispatch, entity);
+      expectEntityRemovedDispatch(mocks.eventDispatcher.dispatch, entity.id);
     });
 
     it('should throw an EntityNotFoundError when trying to remove a non-existent entity', () => {

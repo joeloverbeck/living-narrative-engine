@@ -186,7 +186,7 @@ export const ENTITY_CREATED_ID = 'core:entity_created';
 
 /**
  * @typedef {object} EntityRemovedPayload
- * @property {Entity} entity - The full entity instance being removed.
+ * @property {string} instanceId - The unique instance ID of the entity being removed.
  */
 
 /**

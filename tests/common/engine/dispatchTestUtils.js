@@ -277,12 +277,12 @@ export const expectEntityCreatedDispatch = createDispatchAsserter(
  * Asserts that an ENTITY_REMOVED dispatch with the correct payload occurred.
  *
  * @param {import('@jest/globals').Mock} mock - Mocked dispatch function.
- * @param {import('../../../src/entities/entity.js').default} entity - Entity instance.
+ * @param {string} instanceId - The unique instance ID of the entity being removed.
  * @returns {void}
  */
 export const expectEntityRemovedDispatch = createDispatchAsserter(
   ENTITY_REMOVED_ID,
-  (entity) => ({ entity })
+  (instanceId) => ({ instanceId })
 );
 
 /**

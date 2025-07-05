@@ -43,7 +43,7 @@ export class DescriptionTemplate {
     );
 
     // Use the strategy to format the description
-    return strategy.format(partType, parts, descriptions, this.textFormatter);
+    return strategy.format(partType, parts, descriptions, this.textFormatter, this.config);
   }
 
   /**

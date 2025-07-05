@@ -97,7 +97,7 @@ describe('DescriptionConfiguration', () => {
       const result = config.getPairedParts();
       
       expect(result).toBeInstanceOf(Set);
-      expect(result.size).toBe(8);
+      expect(result.size).toBe(9);
       expect(result.has('eye')).toBe(true);
       expect(result.has('ear')).toBe(true);
       expect(result.has('arm')).toBe(true);
@@ -106,6 +106,7 @@ describe('DescriptionConfiguration', () => {
       expect(result.has('foot')).toBe(true);
       expect(result.has('breast')).toBe(true);
       expect(result.has('wing')).toBe(true);
+      expect(result.has('testicle')).toBe(true);
     });
 
     it('should return default values when service method not available', () => {
@@ -113,7 +114,7 @@ describe('DescriptionConfiguration', () => {
       const result = config.getPairedParts();
       
       expect(result).toBeInstanceOf(Set);
-      expect(result.size).toBe(8);
+      expect(result.size).toBe(9);
     });
 
     it('should return a new Set each time to prevent mutation', () => {

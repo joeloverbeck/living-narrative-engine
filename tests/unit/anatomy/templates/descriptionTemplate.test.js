@@ -11,6 +11,7 @@ describe('DescriptionTemplate', () => {
   beforeEach(() => {
     mockConfig = {
       getPairedParts: jest.fn().mockReturnValue(new Set(['eye', 'arm'])),
+      getIrregularPlurals: jest.fn().mockReturnValue({ foot: 'feet', tooth: 'teeth' }),
     };
 
     mockTextFormatter = {
@@ -151,7 +152,8 @@ describe('DescriptionTemplate', () => {
         'eye',
         mockParts,
         ['blue eyes', 'green eyes'],
-        mockTextFormatter
+        mockTextFormatter,
+        mockConfig
       );
       expect(result).toBe('formatted description');
     });
