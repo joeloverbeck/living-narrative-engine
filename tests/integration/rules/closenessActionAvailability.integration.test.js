@@ -162,6 +162,29 @@ describe('closeness action availability chain', () => {
       logger: testLogger,
       gameDataRepository: dataRegistry,
     });
+    // Create bodyGraphService mock that checks entity components
+    const mockBodyGraphService = {
+      hasPartWithComponentValue: jest.fn((bodyComponent, componentId, propertyPath, expectedValue) => {
+        if (!bodyComponent || !bodyComponent.rootEntityId) {
+          return { found: false };
+        }
+        
+        // Check all entities in the manager
+        const allEntities = entityManager.getAllEntities();
+        for (const entity of allEntities) {
+          if (entity.components && entity.components[componentId]) {
+            const component = entity.components[componentId];
+            const actualValue = propertyPath ? component[propertyPath] : component;
+            if (actualValue === expectedValue) {
+              return { found: true, partId: entity.id };
+            }
+          }
+        }
+        
+        return { found: false };
+      })
+    };
+    
     const interpreter = new SystemLogicInterpreter({
       logger: testLogger,
       eventBus: bus,
@@ -169,6 +192,7 @@ describe('closeness action availability chain', () => {
       jsonLogicEvaluationService: jsonLogic,
       entityManager: entityManager,
       operationInterpreter,
+      bodyGraphService: mockBodyGraphService,
     });
     const capturedEvents = [];
     bus.subscribe('core:turn_ended', (event) => {
@@ -209,6 +233,29 @@ describe('closeness action availability chain', () => {
           logger: testLogger,
           operationRegistry: newOperationRegistry,
         });
+        // Create bodyGraphService mock for the new interpreter
+        const newMockBodyGraphService = {
+          hasPartWithComponentValue: jest.fn((bodyComponent, componentId, propertyPath, expectedValue) => {
+            if (!bodyComponent || !bodyComponent.rootEntityId) {
+              return { found: false };
+            }
+            
+            // Check all entities in the manager
+            const allEntities = newEntityManager.getAllEntities();
+            for (const entity of allEntities) {
+              if (entity.components && entity.components[componentId]) {
+                const component = entity.components[componentId];
+                const actualValue = propertyPath ? component[propertyPath] : component;
+                if (actualValue === expectedValue) {
+                  return { found: true, partId: entity.id };
+                }
+              }
+            }
+            
+            return { found: false };
+          })
+        };
+        
         const newInterpreter = new SystemLogicInterpreter({
           logger: testLogger,
           eventBus: bus,
@@ -216,6 +263,7 @@ describe('closeness action availability chain', () => {
           jsonLogicEvaluationService: jsonLogic,
           entityManager: newEntityManager,
           operationInterpreter: newOperationInterpreter,
+          bodyGraphService: newMockBodyGraphService,
         });
         newInterpreter.initialize();
         testEnv.operationRegistry = newOperationRegistry;
@@ -258,6 +306,26 @@ describe('closeness action availability chain', () => {
           [NAME_COMPONENT_ID]: { text: 'Actor' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
           [ACTOR_COMPONENT_ID]: {},
+          'anatomy:body': { rootEntityId: 'body-a1' },
+        },
+      },
+      {
+        id: 'body-a1',
+        components: {
+          'anatomy:part': { parentId: null, type: 'body' },
+        },
+      },
+      {
+        id: 'leg-left-a1',
+        components: {
+          'anatomy:part': { parentId: 'body-a1', type: 'leg' },
+          'core:movement': { locked: false },
+        },
+      },
+      {
+        id: 'leg-right-a1',
+        components: {
+          'anatomy:part': { parentId: 'body-a1', type: 'leg' },
           'core:movement': { locked: false },
         },
       },
@@ -267,6 +335,26 @@ describe('closeness action availability chain', () => {
           [NAME_COMPONENT_ID]: { text: 'Target' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
           [ACTOR_COMPONENT_ID]: {},
+          'anatomy:body': { rootEntityId: 'body-t1' },
+        },
+      },
+      {
+        id: 'body-t1',
+        components: {
+          'anatomy:part': { parentId: null, type: 'body' },
+        },
+      },
+      {
+        id: 'leg-left-t1',
+        components: {
+          'anatomy:part': { parentId: 'body-t1', type: 'leg' },
+          'core:movement': { locked: false },
+        },
+      },
+      {
+        id: 'leg-right-t1',
+        components: {
+          'anatomy:part': { parentId: 'body-t1', type: 'leg' },
           'core:movement': { locked: false },
         },
       },

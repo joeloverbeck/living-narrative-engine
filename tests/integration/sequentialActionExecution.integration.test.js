@@ -148,6 +148,11 @@ describe('Sequential Action Execution – Success Path', () => {
     dataRegistry.getAllSystemRules = jest.fn();
     dataRegistry.getAllSystemRules.mockReturnValue(rules);
 
+    // Create the bodyGraphService mock
+    const mockBodyGraphService = {
+      hasPartWithComponentValue: jest.fn().mockReturnValue({ found: false })
+    };
+
     sysInterpreter = new SystemLogicInterpreter({
       logger,
       eventBus,
@@ -155,6 +160,7 @@ describe('Sequential Action Execution – Success Path', () => {
       jsonLogicEvaluationService: jsonLogicSvc,
       entityManager,
       operationInterpreter: opInterpreter,
+      bodyGraphService: mockBodyGraphService,
     });
     sysInterpreter.initialize();
 

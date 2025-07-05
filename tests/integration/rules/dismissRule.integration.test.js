@@ -179,6 +179,10 @@ describe('core_handle_dismiss rule integration', () => {
       logger: testLogger,
       operationRegistry,
     });
+    const mockBodyGraphService = {
+      hasPartWithComponentValue: jest.fn().mockReturnValue({ found: false })
+    };
+    
     const interpreter = new SystemLogicInterpreter({
       logger: testLogger,
       eventBus: bus,
@@ -186,6 +190,7 @@ describe('core_handle_dismiss rule integration', () => {
       jsonLogicEvaluationService: jsonLogic,
       entityManager: entityManager,
       operationInterpreter,
+      bodyGraphService: mockBodyGraphService,
     });
     const capturedEvents = [];
     const eventsToCapture = [
@@ -237,6 +242,10 @@ describe('core_handle_dismiss rule integration', () => {
           logger: testLogger,
           operationRegistry: newOperationRegistry,
         });
+        const mockBodyGraphService = {
+          hasPartWithComponentValue: jest.fn().mockReturnValue({ found: false })
+        };
+        
         const newInterpreter = new SystemLogicInterpreter({
           logger: testLogger,
           eventBus: bus,
@@ -244,6 +253,7 @@ describe('core_handle_dismiss rule integration', () => {
           jsonLogicEvaluationService: jsonLogic,
           entityManager: newEntityManager,
           operationInterpreter: newOperationInterpreter,
+          bodyGraphService: mockBodyGraphService,
         });
         newInterpreter.initialize();
         testEnv.operationRegistry = newOperationRegistry;

@@ -126,6 +126,10 @@ export function registerInterpreters(container) {
       'REMOVE_FROM_CLOSENESS_CIRCLE',
       bind(tokens.RemoveFromClosenessCircleHandler)
     );
+    registry.register(
+      'HAS_BODY_PART_WITH_COMPONENT_VALUE',
+      bind(tokens.HasBodyPartWithComponentValueHandler)
+    );
 
     return registry;
   });
@@ -157,6 +161,7 @@ export function registerInterpreters(container) {
         ),
         entityManager: c.resolve(tokens.IEntityManager),
         operationInterpreter: c.resolve(tokens.OperationInterpreter),
+        bodyGraphService: c.resolve(tokens.BodyGraphService),
       })
   );
 }

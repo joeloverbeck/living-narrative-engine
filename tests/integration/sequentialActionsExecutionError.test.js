@@ -114,6 +114,11 @@ describe('Sequential Action Execution – Error Path', () => {
     dataRegistry.getAllSystemRules = jest.fn();
     dataRegistry.getAllSystemRules.mockReturnValue(rules);
 
+    /* Mock bodyGraphService */
+    const mockBodyGraphService = {
+      hasPartWithComponentValue: jest.fn().mockReturnValue({ found: false })
+    };
+
     /* Interpreter */
     sysInterpreter = new SystemLogicInterpreter({
       logger,
@@ -122,6 +127,7 @@ describe('Sequential Action Execution – Error Path', () => {
       jsonLogicEvaluationService: jsonLogicSvc,
       entityManager,
       operationInterpreter: opInterpreter,
+      bodyGraphService: mockBodyGraphService,
     });
     sysInterpreter.initialize();
   });

@@ -186,7 +186,10 @@ describe('SystemLogicInterpreter - Integration Tests - Scenario 6: Context Acces
       getAllSystemRules: jest.fn().mockReturnValue([]),
       getEntityDefinition: jest.fn(),
     };
-    mockJsonLogicEvaluationService = { evaluate: jest.fn() };
+    mockJsonLogicEvaluationService = { 
+      evaluate: jest.fn(),
+      addOperation: jest.fn(), // Mock for custom operations
+    };
     mockEntityManager = {
       getEntityInstance: jest.fn().mockImplementation((entityId) => {
         if (entityId === MOCK_ENTITY_FOR_EVENT.id) return MOCK_ENTITY_FOR_EVENT;
@@ -204,6 +207,11 @@ describe('SystemLogicInterpreter - Integration Tests - Scenario 6: Context Acces
       operationRegistry: operationRegistry,
     });
 
+    // Create the bodyGraphService mock
+    const mockBodyGraphService = {
+      hasPartWithComponentValue: jest.fn().mockReturnValue({ found: false })
+    };
+
     interpreter = new SystemLogicInterpreter({
       logger: mockLogger,
       eventBus: mockEventBus,
@@ -211,6 +219,7 @@ describe('SystemLogicInterpreter - Integration Tests - Scenario 6: Context Acces
       jsonLogicEvaluationService: mockJsonLogicEvaluationService,
       entityManager: mockEntityManager,
       operationInterpreter: operationInterpreterRealInstance,
+      bodyGraphService: mockBodyGraphService,
     });
 
     // Spy on the real _executeActions method

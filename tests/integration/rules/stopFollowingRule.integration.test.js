@@ -236,6 +236,10 @@ describe('stop_following rule integration', () => {
       operationRegistry,
     });
 
+    const mockBodyGraphService = {
+      hasPartWithComponentValue: jest.fn().mockReturnValue({ found: false })
+    };
+
     const interpreter = new SystemLogicInterpreter({
       logger: testLogger,
       eventBus: bus,
@@ -243,6 +247,7 @@ describe('stop_following rule integration', () => {
       jsonLogicEvaluationService: jsonLogic,
       entityManager: entityManager,
       operationInterpreter,
+      bodyGraphService: mockBodyGraphService,
     });
 
     // Create a simple event capture mechanism for testing
@@ -306,6 +311,10 @@ describe('stop_following rule integration', () => {
           operationRegistry: newOperationRegistry,
         });
 
+        const mockBodyGraphService = {
+          hasPartWithComponentValue: jest.fn().mockReturnValue({ found: false })
+        };
+
         const newInterpreter = new SystemLogicInterpreter({
           logger: testLogger,
           eventBus: bus,
@@ -313,6 +322,7 @@ describe('stop_following rule integration', () => {
           jsonLogicEvaluationService: jsonLogic,
           entityManager: newEntityManager,
           operationInterpreter: newOperationInterpreter,
+          bodyGraphService: mockBodyGraphService,
         });
 
         newInterpreter.initialize();

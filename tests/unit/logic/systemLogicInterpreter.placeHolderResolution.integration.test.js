@@ -136,6 +136,7 @@ describe('SystemLogicInterpreter - Integration Test - Placeholder Resolution', (
 
     mockJsonLogicEvaluationService = {
       evaluate: jest.fn(() => true),
+      addOperation: jest.fn(), // Mock for custom operations
     };
 
     mockEntityManager = {
@@ -171,6 +172,11 @@ describe('SystemLogicInterpreter - Integration Test - Placeholder Resolution', (
     mockProcessDataHandler = jest.fn();
     operationRegistry.register('MOCK_PROCESS_DATA', mockProcessDataHandler);
 
+    // Create the bodyGraphService mock
+    const mockBodyGraphService = {
+      hasPartWithComponentValue: jest.fn().mockReturnValue({ found: false })
+    };
+
     interpreter = new SystemLogicInterpreter({
       logger: mockLogger,
       eventBus: mockEventBus,
@@ -178,6 +184,7 @@ describe('SystemLogicInterpreter - Integration Test - Placeholder Resolution', (
       jsonLogicEvaluationService: mockJsonLogicEvaluationService,
       entityManager: mockEntityManager,
       operationInterpreter: operationInterpreter,
+      bodyGraphService: mockBodyGraphService,
     });
 
     mockLogger.clearLogs();

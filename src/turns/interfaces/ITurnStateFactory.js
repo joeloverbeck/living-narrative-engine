@@ -60,8 +60,8 @@ export class ITurnStateFactory {
   /**
    * Creates an Awaiting Player Input state instance.
    *
-  * @param {ITurnStateHost} handler - Handler owning the state machine.
-  * @param {Function} [actionDecisionWorkflowFactory] - Optional factory for the action decision workflow.
+   * @param {ITurnStateHost} handler - Handler owning the state machine.
+   * @param {Function} [actionDecisionWorkflowFactory] - Optional factory for the action decision workflow.
    * @returns {ITurnState} The created awaiting player input state.
    */
   createAwaitingInputState(handler, actionDecisionWorkflowFactory) {
@@ -83,12 +83,12 @@ export class ITurnStateFactory {
   /**
    * Creates an instance of the state responsible for processing a chosen command.
    *
-  * @param {ITurnStateHost} handler - The handler managing the state.
-  * @param {string} commandString - The command string to process.
-  * @param {ITurnAction} turnAction - The chosen turn action.
-  * @param {Function} directiveResolver - Resolver for command directives.
-  * @param {Function} [processingWorkflowFactory] - Optional factory for the processing workflow.
-  * @param {Function} [commandProcessingWorkflowFactory] - Optional factory for the command processing workflow.
+   * @param {ITurnStateHost} handler - The handler managing the state.
+   * @param {string} commandString - The command string to process.
+   * @param {ITurnAction} turnAction - The chosen turn action.
+   * @param {Function} directiveResolver - Resolver for command directives.
+   * @param {Function} [processingWorkflowFactory] - Optional factory for the processing workflow.
+   * @param {Function} [commandProcessingWorkflowFactory] - Optional factory for the command processing workflow.
    * @returns {ProcessingCommandState} A new processing command state instance.
    * @abstract
    */

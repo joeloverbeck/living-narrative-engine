@@ -26,7 +26,8 @@
       "Bash(npx prettier:*)",
       "Bash(touch:*)",
       "Bash(awk:*)",
-      "Bash(cp:*)"
+      "Bash(cp:*)",
+      "WebFetch(domain:json-logic.io)"
     ],
     "deny": []
   }

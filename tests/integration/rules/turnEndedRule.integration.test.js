@@ -95,6 +95,9 @@ describe('core_handle_turn_ended rule integration', () => {
       logger: testLogger,
       gameDataRepository: dataRegistry,
     });
+    const mockBodyGraphService = {
+      hasPartWithComponentValue: jest.fn().mockReturnValue({ found: false })
+    };
     const interpreter = new SystemLogicInterpreter({
       logger: testLogger,
       eventBus: bus,
@@ -102,6 +105,7 @@ describe('core_handle_turn_ended rule integration', () => {
       entityManager: entityManager,
       operationInterpreter,
       jsonLogicEvaluationService: jsonLogic,
+      bodyGraphService: mockBodyGraphService,
     });
     const capturedEvents = [];
     bus.subscribe('core:turn_ended', (event) => {
@@ -146,6 +150,9 @@ describe('core_handle_turn_ended rule integration', () => {
           logger: testLogger,
           gameDataRepository: dataRegistry,
         });
+        const mockBodyGraphService = {
+          hasPartWithComponentValue: jest.fn().mockReturnValue({ found: false })
+        };
         const newInterpreter = new SystemLogicInterpreter({
           logger: testLogger,
           eventBus: bus,
@@ -153,6 +160,7 @@ describe('core_handle_turn_ended rule integration', () => {
           entityManager: newEntityManager,
           operationInterpreter: newOperationInterpreter,
           jsonLogicEvaluationService: newJsonLogic,
+          bodyGraphService: mockBodyGraphService,
         });
         newInterpreter.initialize();
         testEnv.operationRegistry = newOperationRegistry;

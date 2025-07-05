@@ -22,6 +22,7 @@ import { isEmptyCondition } from '../utils/jsonLogicUtils.js';
 /** @typedef {import('./jsonLogicEvaluationService.js').default}            JsonLogicEvaluationService */
 /** @typedef {import('../entities/entityManager.js').default}               EntityManager */
 /** @typedef {import('./operationInterpreter.js').default}                  OperationInterpreter */
+/** @typedef {import('../anatomy/bodyGraphService.js').default}             BodyGraphService */
 /** @typedef {import('../../data/schemas/rule.schema.json').SystemRule}     SystemRule */
 /** @typedef {import('./defs.js').JsonLogicEvaluationContext}               JsonLogicEvaluationContext */
 /** @typedef {{catchAll:SystemRule[], byAction:Map<string,SystemRule[]>}}   RuleBucket */
@@ -36,6 +37,7 @@ class SystemLogicInterpreter extends BaseService {
   /** @type {JsonLogicEvaluationService} */ #jsonLogic;
   /** @type {EntityManager} */ #entityManager;
   /** @type {OperationInterpreter} */ #operationInterpreter;
+  /** @type {BodyGraphService} */ #bodyGraphService;
   /** @type {Map<string,RuleBucket>} */ #ruleCache = new Map();
   /** @type {boolean} */ #initialized = false;
   /** @type {Function|null} */ #boundEventHandler = null;
@@ -48,6 +50,7 @@ class SystemLogicInterpreter extends BaseService {
     jsonLogicEvaluationService,
     entityManager,
     operationInterpreter,
+    bodyGraphService,
   }) {
     super();
     this.#logger = this._init('SystemLogicInterpreter', logger, {
@@ -71,6 +74,10 @@ class SystemLogicInterpreter extends BaseService {
         value: operationInterpreter,
         requiredMethods: ['execute'],
       },
+      bodyGraphService: {
+        value: bodyGraphService,
+        requiredMethods: ['hasPartWithComponentValue'],
+      },
     });
 
     this.#eventBus = eventBus;
@@ -78,6 +85,7 @@ class SystemLogicInterpreter extends BaseService {
     this.#jsonLogic = jsonLogicEvaluationService;
     this.#entityManager = entityManager;
     this.#operationInterpreter = operationInterpreter;
+    this.#bodyGraphService = bodyGraphService;
     this.#boundEventHandler = this.#handleEvent.bind(this);
 
     this.#logger.debug('SystemLogicInterpreter: created');
@@ -93,6 +101,8 @@ class SystemLogicInterpreter extends BaseService {
       return;
     }
 
+    this.#registerCustomJsonLogicOperations();
+    
     this.#loadAndCacheRules();
 
     if (this.#ruleCache.size > 0) {
@@ -121,6 +131,33 @@ class SystemLogicInterpreter extends BaseService {
     this.#boundEventHandler = null;
     this.#initialized = false;
     this.#logger.debug('SystemLogicInterpreter: shut down.');
+  }
+
+  /* --------------------------------------------------------------------- */
+
+  /* Custom JsonLogic Operations                                          */
+
+  #registerCustomJsonLogicOperations() {
+    // Add hasBodyPartWithComponentValue operation
+    this.#jsonLogic.addOperation('hasBodyPartWithComponentValue', (args, data) => {
+      // Create a minimal execution context for the handler
+      const executionContext = {
+        variables: data,
+        instanceId: 'jsonlogic-operation',
+      };
+
+      // Use the operation interpreter to execute the handler
+      const result = this.#operationInterpreter.execute(
+        'HAS_BODY_PART_WITH_COMPONENT_VALUE',
+        args,
+        executionContext
+      );
+
+      // The handler returns a boolean directly
+      return result;
+    });
+
+    this.#logger.debug('Custom JsonLogic operations registered');
   }
 
   /* --------------------------------------------------------------------- */

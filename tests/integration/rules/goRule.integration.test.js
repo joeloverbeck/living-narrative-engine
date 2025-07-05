@@ -192,6 +192,10 @@ describe('core_handle_go rule integration', () => {
       operationRegistry,
     });
 
+    const mockBodyGraphService = {
+      hasPartWithComponentValue: jest.fn().mockReturnValue({ found: false })
+    };
+
     const interpreter = new SystemLogicInterpreter({
       logger: testLogger,
       eventBus: bus,
@@ -199,6 +203,7 @@ describe('core_handle_go rule integration', () => {
       jsonLogicEvaluationService: jsonLogic,
       entityManager: customEntityManager,
       operationInterpreter,
+      bodyGraphService: mockBodyGraphService,
     });
 
     interpreter.initialize();
@@ -240,6 +245,10 @@ describe('core_handle_go rule integration', () => {
           operationRegistry: newOperationRegistry,
         });
 
+        const mockBodyGraphService = {
+          hasPartWithComponentValue: jest.fn().mockReturnValue({ found: false })
+        };
+
         const newInterpreter = new SystemLogicInterpreter({
           logger: testLogger,
           eventBus: bus,
@@ -247,6 +256,7 @@ describe('core_handle_go rule integration', () => {
           jsonLogicEvaluationService: jsonLogic,
           entityManager: customEntityManager,
           operationInterpreter: newOperationInterpreter,
+          bodyGraphService: mockBodyGraphService,
         });
 
         newInterpreter.initialize();
@@ -299,6 +309,27 @@ describe('core_handle_go rule integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Hero' },
           [POSITION_COMPONENT_ID]: { locationId: 'locA' },
+          'anatomy:body': { rootEntityId: 'body-actor1' },
+        },
+      },
+      {
+        id: 'body-actor1',
+        components: {
+          'anatomy:part': { parentId: null, type: 'body' },
+        },
+      },
+      {
+        id: 'leg-left-actor1',
+        components: {
+          'anatomy:part': { parentId: 'body-actor1', type: 'leg' },
+          'core:movement': { locked: false },
+        },
+      },
+      {
+        id: 'leg-right-actor1',
+        components: {
+          'anatomy:part': { parentId: 'body-actor1', type: 'leg' },
+          'core:movement': { locked: false },
         },
       },
       { id: 'locA', components: { [NAME_COMPONENT_ID]: { text: 'Loc A' } } },
@@ -337,6 +368,27 @@ describe('core_handle_go rule integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Hero' },
           [POSITION_COMPONENT_ID]: { locationId: 'locA' },
+          'anatomy:body': { rootEntityId: 'body-actor1' },
+        },
+      },
+      {
+        id: 'body-actor1',
+        components: {
+          'anatomy:part': { parentId: null, type: 'body' },
+        },
+      },
+      {
+        id: 'leg-left-actor1',
+        components: {
+          'anatomy:part': { parentId: 'body-actor1', type: 'leg' },
+          'core:movement': { locked: false },
+        },
+      },
+      {
+        id: 'leg-right-actor1',
+        components: {
+          'anatomy:part': { parentId: 'body-actor1', type: 'leg' },
+          'core:movement': { locked: false },
         },
       },
       { id: 'locA', components: { [NAME_COMPONENT_ID]: { text: 'Loc A' } } },
@@ -369,6 +421,26 @@ describe('core_handle_go rule integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Hero' },
           [POSITION_COMPONENT_ID]: { locationId: 'locA' },
+          'anatomy:body': { rootEntityId: 'body-actor1' },
+        },
+      },
+      {
+        id: 'body-actor1',
+        components: {
+          'anatomy:part': { parentId: null, type: 'body' },
+        },
+      },
+      {
+        id: 'leg-left-actor1',
+        components: {
+          'anatomy:part': { parentId: 'body-actor1', type: 'leg' },
+          'core:movement': { locked: false },
+        },
+      },
+      {
+        id: 'leg-right-actor1',
+        components: {
+          'anatomy:part': { parentId: 'body-actor1', type: 'leg' },
           'core:movement': { locked: false },
         },
       },
