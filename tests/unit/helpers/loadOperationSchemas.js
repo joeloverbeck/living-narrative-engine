@@ -8,6 +8,20 @@ const path = require('path');
  * @param {import('ajv').default} ajv - AJV instance
  */
 function loadOperationSchemas(ajv) {
+  // First, load the base-operation schema that operation schemas depend on
+  const baseSchemaPath = path.join(
+    __dirname,
+    '..',
+    '..',
+    '..',
+    'data',
+    'schemas',
+    'base-operation.schema.json'
+  );
+  const baseSchema = require(baseSchemaPath);
+  ajv.addSchema(baseSchema, 'http://example.com/schemas/base-operation.schema.json');
+
+  // Then load all individual operation schemas
   const dir = path.join(
     __dirname,
     '..',

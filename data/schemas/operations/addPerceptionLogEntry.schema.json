@@ -2,25 +2,21 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "http://example.com/schemas/operations/addPerceptionLogEntry.schema.json",
   "title": "ADD_PERCEPTION_LOG_ENTRY Operation",
-  "type": "object",
-  "properties": {
-    "type": {
-      "const": "ADD_PERCEPTION_LOG_ENTRY"
+  "allOf": [
+    {
+      "$ref": "../base-operation.schema.json"
     },
-    "comment": {
-      "type": "string",
-      "description": "Optional. A human-readable description or note for developers or modders; ignored by the interpreter at runtime."
-    },
-    "condition": {
-      "$ref": "../condition-container.schema.json#",
-      "description": "Optional. If present, this operation only executes if the condition evaluates to true. Can be an inline JSON-Logic rule or a 'condition_ref'."
-    },
-    "parameters": {
-      "$ref": "#/$defs/Parameters"
+    {
+      "properties": {
+        "type": {
+          "const": "ADD_PERCEPTION_LOG_ENTRY"
+        },
+        "parameters": {
+          "$ref": "#/$defs/Parameters"
+        }
+      }
     }
-  },
-  "required": ["type", "parameters"],
-  "additionalProperties": false,
+  ],
   "$defs": {
     "Parameters": {
       "type": "object",
@@ -37,7 +33,10 @@
           "type": "string"
         }
       },
-      "required": ["location_id", "entry"],
+      "required": [
+        "location_id",
+        "entry"
+      ],
       "additionalProperties": false
     }
   }

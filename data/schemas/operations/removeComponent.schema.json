@@ -2,25 +2,21 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "http://example.com/schemas/operations/removeComponent.schema.json",
   "title": "REMOVE_COMPONENT Operation",
-  "type": "object",
-  "properties": {
-    "type": {
-      "const": "REMOVE_COMPONENT"
+  "allOf": [
+    {
+      "$ref": "../base-operation.schema.json"
     },
-    "comment": {
-      "type": "string",
-      "description": "Optional. A human-readable description or note for developers or modders; ignored by the interpreter at runtime."
-    },
-    "condition": {
-      "$ref": "../condition-container.schema.json#",
-      "description": "Optional. If present, this operation only executes if the condition evaluates to true. Can be an inline JSON-Logic rule or a 'condition_ref'."
-    },
-    "parameters": {
-      "$ref": "#/$defs/Parameters"
+    {
+      "properties": {
+        "type": {
+          "const": "REMOVE_COMPONENT"
+        },
+        "parameters": {
+          "$ref": "#/$defs/Parameters"
+        }
+      }
     }
-  },
-  "required": ["type", "parameters"],
-  "additionalProperties": false,
+  ],
   "$defs": {
     "Parameters": {
       "type": "object",
@@ -33,7 +29,10 @@
           "$ref": "../common.schema.json#/definitions/namespacedId"
         }
       },
-      "required": ["entity_ref", "component_type"],
+      "required": [
+        "entity_ref",
+        "component_type"
+      ],
       "additionalProperties": false
     }
   }
