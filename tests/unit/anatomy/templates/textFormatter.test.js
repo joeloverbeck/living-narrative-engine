@@ -38,6 +38,27 @@ describe('TextFormatter', () => {
       expect(formatter.capitalize('hello world')).toBe('Hello world');
       expect(formatter.capitalize(' hello')).toBe(' hello');
     });
+
+    it('should replace underscores with spaces', () => {
+      expect(formatter.capitalize('pubic_hair')).toBe('Pubic hair');
+      expect(formatter.capitalize('body_part')).toBe('Body part');
+      expect(formatter.capitalize('test_with_multiple_underscores')).toBe('Test with multiple underscores');
+    });
+
+    it('should handle strings with both spaces and underscores', () => {
+      expect(formatter.capitalize('hello_world test')).toBe('Hello world test');
+      expect(formatter.capitalize('pubic_hair area')).toBe('Pubic hair area');
+    });
+
+    it('should handle strings starting with underscore', () => {
+      expect(formatter.capitalize('_test')).toBe(' test');
+      expect(formatter.capitalize('_pubic_hair')).toBe(' pubic hair');
+    });
+
+    it('should handle strings ending with underscore', () => {
+      expect(formatter.capitalize('test_')).toBe('Test ');
+      expect(formatter.capitalize('pubic_hair_')).toBe('Pubic hair ');
+    });
   });
 
   describe('getPartLabel', () => {

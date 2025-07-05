@@ -25,4 +25,32 @@ export const DomUtils = {
       element.removeChild(element.firstChild);
     }
   },
+
+  /**
+   * Escapes HTML special characters in a string to prevent XSS attacks.
+   *
+   * @param {string} text - The text to escape.
+   * @returns {string} The escaped text.
+   */
+  escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  },
+
+  /**
+   * Converts newline characters to HTML line breaks while escaping other HTML.
+   * This is safe to use with innerHTML as it escapes potentially dangerous content.
+   *
+   * @param {string} text - The text containing newlines.
+   * @returns {string} HTML string with newlines converted to <br> tags.
+   */
+  textToHtml(text) {
+    if (!text) return '';
+    // First escape any HTML to prevent XSS
+    const escaped = this.escapeHtml(text);
+    // Then convert newlines to <br> tags
+    return escaped.replace(/\n/g, '<br>');
+  },
 };

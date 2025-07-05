@@ -3,6 +3,8 @@
  * @description Helper to render a character list item with optional portrait and tooltip.
  */
 
+import { DomUtils } from '../../utils/domUtils.js';
+
 /** @typedef {import('../domElementFactory.js').default} DomElementFactory */
 /** @typedef {import('../../interfaces/IDocumentContext.js').IDocumentContext} IDocumentContext */
 /** @typedef {import('../../entities/entityDisplayDataProvider.js').CharacterDisplayInfo} CharacterDisplayData */
@@ -16,11 +18,10 @@
  * @returns {HTMLElement} Tooltip span element.
  */
 function createCharacterTooltip(text, domFactory, documentContext) {
-  const span =
-    domFactory.span?.('character-tooltip', text) ??
-    documentContext.document.createElement('span');
-  if (!span.textContent) span.textContent = text;
+  const span = documentContext.document.createElement('span');
   span.classList.add('character-tooltip');
+  // Convert newlines to HTML line breaks
+  span.innerHTML = DomUtils.textToHtml(text);
   return span;
 }
 

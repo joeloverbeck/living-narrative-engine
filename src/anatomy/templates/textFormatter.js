@@ -8,14 +8,17 @@
  */
 export class TextFormatter {
   /**
-   * Capitalize the first letter of a string
+   * Capitalize the first letter of a string and replace underscores with spaces
    *
    * @param {string} str - The string to capitalize
-   * @returns {string} The capitalized string
+   * @returns {string} The capitalized string with underscores replaced by spaces
    */
   capitalize(str) {
     if (!str) return '';
-    return str.charAt(0).toUpperCase() + str.slice(1);
+    // Replace underscores with spaces
+    const withSpaces = str.replace(/_/g, ' ');
+    // Capitalize first letter
+    return withSpaces.charAt(0).toUpperCase() + withSpaces.slice(1);
   }
 
   /**
