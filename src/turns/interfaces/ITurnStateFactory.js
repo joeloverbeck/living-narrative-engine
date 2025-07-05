@@ -60,8 +60,8 @@ export class ITurnStateFactory {
   /**
    * Creates an Awaiting Player Input state instance.
    *
-   * @param {ITurnStateHost} handler - Handler owning the state machine.
-   * @param {(state: import('../states/awaitingActorDecisionState.js').AwaitingActorDecisionState, ctx: import('../interfaces/turnStateContextTypes.js').AwaitingActorDecisionStateContext, actor: import('../../entities/entity.js').default, strategy: import('../interfaces/IActorTurnStrategy.js').IActorTurnStrategy) => import('../states/workflows/actionDecisionWorkflow.js').ActionDecisionWorkflow} [actionDecisionWorkflowFactory] - Optional factory for ActionDecisionWorkflow.
+  * @param {ITurnStateHost} handler - Handler owning the state machine.
+  * @param {Function} [actionDecisionWorkflowFactory] - Optional factory for the action decision workflow.
    * @returns {ITurnState} The created awaiting player input state.
    */
   createAwaitingInputState(handler, actionDecisionWorkflowFactory) {
@@ -83,12 +83,12 @@ export class ITurnStateFactory {
   /**
    * Creates an instance of the state responsible for processing a chosen command.
    *
-   * @param {ITurnStateHost} handler - The handler managing the state.
-   * @param {string} commandString - The command string to process.
-   * @param {ITurnAction} turnAction - The chosen turn action.
-   * @param {Function} directiveResolver - Resolver for command directives.
-   * @param {(state: import('../states/processingCommandState.js').ProcessingCommandState, commandString: string|null, action: ITurnAction|null, setAction: (a: ITurnAction|null) => void, handler: import('../states/helpers/processingExceptionHandler.js').ProcessingExceptionHandler) => import('../states/workflows/processingWorkflow.js').ProcessingWorkflow} [processingWorkflowFactory] - Optional factory for ProcessingWorkflow.
-   * @param {(config: object) => import('../states/helpers/commandProcessingWorkflow.js').CommandProcessingWorkflow} [commandProcessingWorkflowFactory] - Optional factory for CommandProcessingWorkflow.
+  * @param {ITurnStateHost} handler - The handler managing the state.
+  * @param {string} commandString - The command string to process.
+  * @param {ITurnAction} turnAction - The chosen turn action.
+  * @param {Function} directiveResolver - Resolver for command directives.
+  * @param {Function} [processingWorkflowFactory] - Optional factory for the processing workflow.
+  * @param {Function} [commandProcessingWorkflowFactory] - Optional factory for the command processing workflow.
    * @returns {ProcessingCommandState} A new processing command state instance.
    * @abstract
    */
