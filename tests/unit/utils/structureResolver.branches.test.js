@@ -51,4 +51,27 @@ describe('StructureResolver uncovered branches', () => {
     expect(value).toBe(obj);
     expect(spy).toHaveBeenCalledTimes(1);
   });
+
+  it('uses skip keys when provided as a Set', () => {
+    const logger = createLogger();
+    const resolver = new StructureResolver(resolvePath, logger);
+    const input = { a: '{foo}', b: '{bar}' };
+    const context = { foo: 'x', bar: 'y' };
+    const result = resolver.resolveStructure(
+      input,
+      context,
+      {},
+      new Set(['b'])
+    );
+    expect(result).toEqual({ a: 'x', b: '{bar}' });
+  });
+
+  it('defaults to an empty Set when skipKeys is not an array or Set', () => {
+    const logger = createLogger();
+    const resolver = new StructureResolver(resolvePath, logger);
+    const input = { a: '{foo}' };
+    const context = { foo: 'x' };
+    const result = resolver.resolveStructure(input, context, {}, null);
+    expect(result).toEqual({ a: 'x' });
+  });
 });
