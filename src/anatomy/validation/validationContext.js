@@ -4,7 +4,7 @@
 
 import { InvalidArgumentError } from '../../errors/invalidArgumentError.js';
 
-/** @typedef {import('../validationRule.js').ValidationIssue} ValidationIssue */
+/** @typedef {import('./validationRule.js').ValidationIssue} ValidationIssue */
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 
@@ -38,8 +38,10 @@ export class ValidationContext {
   constructor({ entityIds, recipe, socketOccupancy, entityManager, logger }) {
     if (!entityIds) throw new InvalidArgumentError('entityIds is required');
     if (!recipe) throw new InvalidArgumentError('recipe is required');
-    if (!socketOccupancy) throw new InvalidArgumentError('socketOccupancy is required');
-    if (!entityManager) throw new InvalidArgumentError('entityManager is required');
+    if (!socketOccupancy)
+      throw new InvalidArgumentError('socketOccupancy is required');
+    if (!entityManager)
+      throw new InvalidArgumentError('entityManager is required');
     if (!logger) throw new InvalidArgumentError('logger is required');
 
     this.#entityIds = entityIds;
@@ -111,7 +113,7 @@ export class ValidationContext {
    * @returns {ValidationIssue[]}
    */
   getIssuesBySeverity(severity) {
-    return this.#issues.filter(issue => issue.severity === severity);
+    return this.#issues.filter((issue) => issue.severity === severity);
   }
 
   /**
@@ -120,7 +122,7 @@ export class ValidationContext {
    * @returns {string[]} Error messages
    */
   getErrors() {
-    return this.getIssuesBySeverity('error').map(issue => issue.message);
+    return this.getIssuesBySeverity('error').map((issue) => issue.message);
   }
 
   /**
@@ -129,7 +131,7 @@ export class ValidationContext {
    * @returns {string[]} Warning messages
    */
   getWarnings() {
-    return this.getIssuesBySeverity('warning').map(issue => issue.message);
+    return this.getIssuesBySeverity('warning').map((issue) => issue.message);
   }
 
   /**

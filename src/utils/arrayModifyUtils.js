@@ -17,7 +17,7 @@ export const ARRAY_MODIFICATION_MODES = [
  * @param {'push'|'push_unique'|'pop'|'remove_by_value'} mode - Operation type.
  * @param {any[]} array - Array to operate on.
  * @param {any} value - Value used for push-like operations.
- * @param {import('../../interfaces/coreServices.js').ILogger} logger - Logger for errors.
+ * @param {import('../interfaces/coreServices.js').ILogger} logger - Logger for errors.
  * @returns {any[]} The modified array.
  */
 export function applyArrayModification(mode, array, value, logger) {
@@ -44,7 +44,7 @@ export function applyArrayModification(mode, array, value, logger) {
  * @param {'push'|'push_unique'|'pop'|'remove_by_value'} mode - Operation type.
  * @param {any[]} array - Array to operate on.
  * @param {any} value - Value used for push-like operations.
- * @param {import('../../interfaces/coreServices.js').ILogger} [logger] - Logger for errors.
+ * @param {import('../interfaces/coreServices.js').ILogger} [logger] - Logger for errors.
  * @returns {{ nextArray: any[], result: any, modified: boolean }} The next array, result, and modification flag.
  */
 export function advancedArrayModify(mode, array, value, logger) {

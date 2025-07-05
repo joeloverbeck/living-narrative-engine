@@ -8,7 +8,7 @@
 
 /** @typedef {import('../../../data/schemas/operation.schema.json').Operation} Operation */
 /** @typedef {import('../defs.js').ExecutionContext} ExecutionContext */
-/** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../operationInterpreter.js').default} OperationInterpreter */
 /**
  * @typedef {ExecutionContext & {
