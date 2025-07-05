@@ -7,7 +7,7 @@
  * @typedef {import('../../entities/entity.js').default} Entity
  * @typedef {import('../../interfaces/coreServices.js').ILogger}            ILogger
  * @typedef {function(Error|null):void}                                    OnEndTurnCallback
- * @typedef {import('../handlers/baseTurnHandler.js').BaseTurnHandler}      BaseTurnHandler
+ * @typedef {import('../interfaces/ITurnStateHost.js').ITurnStateHost}      ITurnStateHost
  * @typedef {import('../interfaces/IActorTurnStrategy.js').IActorTurnStrategy} IActorTurnStrategy
  * @typedef {import('../interfaces/IActorTurnStrategy.js').ITurnAction}     ITurnAction
  * @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher
@@ -42,7 +42,7 @@ export class TurnContext extends ITurnContext {
   /** @type {TurnContextServices} */ #services;
   /** @type {IActorTurnStrategy}  */ #strategy;
   /** @type {OnEndTurnCallback}   */ #onEndTurnCallback;
-  /** @type {BaseTurnHandler}     */ #handlerInstance;
+  /** @type {ITurnStateHost}     */ #handlerInstance;
   /** @type {boolean}             */ #isAwaitingExternalEvent = false;
   /** @type {function():boolean|null} */ #isAwaitingExternalEventProvider;
   /** @type {function(boolean,string|null):void|null} */
@@ -60,7 +60,7 @@ export class TurnContext extends ITurnContext {
    * @param {TurnContextServices} deps.services - Bag of services for the turn.
    * @param {IActorTurnStrategy} deps.strategy - Strategy determining actor actions.
    * @param {OnEndTurnCallback} deps.onEndTurnCallback - Callback when the turn ends.
-   * @param {BaseTurnHandler} deps.handlerInstance - Owning handler instance.
+   * @param {ITurnStateHost} deps.handlerInstance - Owning handler instance.
    * @param {function():boolean} [deps.isAwaitingExternalEventProvider] - Optional provider for external waiting flag.
    * @param {function(boolean,string|null):void} [deps.onSetAwaitingExternalEventCallback] - Optional callback when awaiting flag changes.
    */

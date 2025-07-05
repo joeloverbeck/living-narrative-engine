@@ -18,7 +18,6 @@
  */
 
 import { evaluateConditionWithLogging } from '../jsonLogicEvaluationService.js';
-import { executeActionSequence } from '../actionSequence.js';
 
 /**
  * Execute IF logic.
@@ -29,7 +28,13 @@ import { executeActionSequence } from '../actionSequence.js';
  * @param {OperationInterpreter} operationInterpreter - Interpreter used to execute nested operations.
  * @returns {void}
  */
-export function handleIf(node, nestedCtx, logger, operationInterpreter) {
+export function handleIf(
+  node,
+  nestedCtx,
+  logger,
+  operationInterpreter,
+  executeActionSequence
+) {
   const {
     condition,
     then_actions: thenActs = [],

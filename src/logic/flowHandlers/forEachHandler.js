@@ -18,7 +18,6 @@
  */
 
 import { resolvePath } from '../../utils/objectUtils.js';
-import { executeActionSequence } from '../actionSequence.js';
 
 /**
  * Execute FOR_EACH logic.
@@ -29,7 +28,13 @@ import { executeActionSequence } from '../actionSequence.js';
  * @param {OperationInterpreter} operationInterpreter - Interpreter for executing the loop body.
  * @returns {void}
  */
-export function handleForEach(node, nestedCtx, logger, operationInterpreter) {
+export function handleForEach(
+  node,
+  nestedCtx,
+  logger,
+  operationInterpreter,
+  executeActionSequence
+) {
   const {
     collection: path,
     item_variable: varName,

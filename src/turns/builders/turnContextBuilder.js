@@ -9,7 +9,7 @@
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
  * @typedef {import('../interfaces/ITurnContextFactory.js').ITurnContextFactory} ITurnContextFactory
  * @typedef {import('../interfaces/IActorTurnStrategy.js').IActorTurnStrategy} IActorTurnStrategy
- * @typedef {import('../handlers/baseTurnHandler.js').BaseTurnHandler} BaseTurnHandler
+ * @typedef {import('../interfaces/ITurnStateHost.js').ITurnStateHost} ITurnStateHost
  * @typedef {import('../context/turnContext.js').OnEndTurnCallback} OnEndTurnCallback
  * @typedef {import('../interfaces/ITurnContext.js').ITurnContext} ITurnContext
  */
@@ -53,7 +53,7 @@ export class TurnContextBuilder {
    * @param {Entity} params.actor - The actor for the turn.
    * @param {IActorTurnStrategy} params.strategy - The actor's turn strategy.
    * @param {OnEndTurnCallback} params.onEndTurn - Callback for when the turn ends.
-   * @param {BaseTurnHandler} params.handlerInstance - The owning turn handler instance for state transitions.
+   * @param {ITurnStateHost} params.handlerInstance - The owning turn handler instance for state transitions.
    * @param {function():boolean} [params.awaitFlagProvider] - Optional function to check if awaiting an external event.
    * @param {function(boolean, string|null):void} [params.setAwaitFlag] - Optional callback to set the awaiting flag.
    * @returns {ITurnContext} The newly created turn context.

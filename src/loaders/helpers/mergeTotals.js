@@ -2,7 +2,6 @@
  * @file Helper to merge totals summaries from different loaders.
  */
 
-/** @typedef {import('../ContentLoadManager.js').default} ContentLoadManager */
 /** @typedef {import('../LoadResultAggregator.js').TotalResultsSummary} TotalResultsSummary */
 
 /**

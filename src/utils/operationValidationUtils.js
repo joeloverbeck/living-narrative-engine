@@ -6,7 +6,10 @@
 /** @typedef {import('../logic/defs.js').ExecutionContext} ExecutionContext */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
-/** @typedef {import('../logic/operationHandlers/modifyComponentHandler.js').EntityRefObject} EntityRefObject */
+/**
+ * @typedef {object} EntityRefObject
+ * @property {string} entityId
+ */
 
 import { resolveEntityId } from './entityRefUtils.js';
 import { safeDispatchError } from './safeDispatchErrorUtils.js';
