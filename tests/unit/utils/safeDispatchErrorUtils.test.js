@@ -53,3 +53,35 @@ describe('dispatchValidationError', () => {
     expect(result).toEqual({ ok: false, error: 'oops' });
   });
 });
+
+describe('additional coverage', () => {
+  it('defaults details to empty object in InvalidDispatcherError', () => {
+    const err = new InvalidDispatcherError('boom');
+    expect(err.details).toEqual({});
+  });
+
+  it('logs and throws when dispatcher is null', () => {
+    const logger = {
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+      debug: jest.fn(),
+    };
+    expect(() =>
+      safeDispatchError(null, 'no dispatcher', undefined, logger)
+    ).toThrow(InvalidDispatcherError);
+    expect(logger.error).toHaveBeenCalledWith(
+      "Invalid or missing method 'dispatch' on dependency 'safeDispatchError: dispatcher'."
+    );
+  });
+
+  it('handles null details in dispatchValidationError', () => {
+    const dispatcher = { dispatch: jest.fn() };
+    const result = dispatchValidationError(dispatcher, 'bad', null);
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(SYSTEM_ERROR_OCCURRED_ID, {
+      message: 'bad',
+      details: null,
+    });
+    expect(result).toEqual({ ok: false, error: 'bad', details: null });
+  });
+});
