@@ -17,7 +17,7 @@ class HasBodyPartWithComponentValueHandler extends BaseOperationHandler {
       logger: { value: logger },
       entityManager: {
         value: entityManager,
-        requiredMethods: ['getEntity', 'getComponentData'],
+        requiredMethods: ['getEntityInstance', 'getComponentData'],
       },
       bodyGraphService: {
         value: bodyGraphService,
@@ -91,20 +91,20 @@ class HasBodyPartWithComponentValueHandler extends BaseOperationHandler {
       
       // Handle both direct entity ID and entity object
       if (typeof entityData === 'string') {
-        return this.#entityManager.getEntity(entityData);
+        return this.#entityManager.getEntityInstance(entityData);
       } else if (entityData?.id) {
-        return this.#entityManager.getEntity(entityData.id);
+        return this.#entityManager.getEntityInstance(entityData.id);
       }
     }
 
     // Try to get entity directly by ID
     if (typeof entityRef === 'string') {
-      return this.#entityManager.getEntity(entityRef);
+      return this.#entityManager.getEntityInstance(entityRef);
     }
 
     // If entityRef is an object with an id property
     if (entityRef?.id) {
-      return this.#entityManager.getEntity(entityRef.id);
+      return this.#entityManager.getEntityInstance(entityRef.id);
     }
 
     return null;
