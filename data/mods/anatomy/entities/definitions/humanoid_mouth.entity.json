@@ -6,6 +6,15 @@
     "anatomy:part": {
       "subType": "mouth"
     },
+    "anatomy:sockets": {
+      "sockets": [
+        {
+          "id": "teeth",
+          "allowedTypes": ["teeth"],
+          "nameTpl": "{{type}}"
+        }
+      ]
+    },
     "core:name": {
       "text": "mouth"
     }

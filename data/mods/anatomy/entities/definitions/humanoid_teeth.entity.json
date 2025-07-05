@@ -1,0 +1,13 @@
+{
+  "$schema": "http://example.com/schemas/entity-definition.schema.json",
+  "id": "anatomy:humanoid_teeth",
+  "description": "Humanoid teeth",
+  "components": {
+    "anatomy:part": {
+      "subType": "teeth"
+    },
+    "core:name": {
+      "text": "teeth"
+    }
+  }
+}

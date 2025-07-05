@@ -86,6 +86,14 @@
         "components": ["anatomy:part"]
       }
     },
+    "teeth": {
+      "parent": "mouth",
+      "socket": "teeth",
+      "requirements": {
+        "partType": "teeth",
+        "components": ["anatomy:part"]
+      }
+    },
     "hair": {
       "parent": "head",
       "socket": "scalp",
