@@ -5,6 +5,7 @@
 
 import AnatomyGraphRenderer from './AnatomyGraphRenderer.js';
 import { ENTITY_CREATED_ID } from '../constants/eventIds.js';
+import { DomUtils } from '../utils/domUtils.js';
 
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../interfaces/coreServices.js').IDataRegistry} IDataRegistry */
@@ -278,7 +279,9 @@ class AnatomyVisualizerUI {
 
     const descriptionComponent = entity.getComponentData('core:description');
     if (descriptionComponent && descriptionComponent.text) {
-      descriptionContent.innerHTML = `<p>${descriptionComponent.text}</p>`;
+      // Convert newlines to HTML line breaks
+      const htmlContent = DomUtils.textToHtml(descriptionComponent.text);
+      descriptionContent.innerHTML = `<p>${htmlContent}</p>`;
     } else {
       descriptionContent.innerHTML =
         '<p>No description available for this entity.</p>';

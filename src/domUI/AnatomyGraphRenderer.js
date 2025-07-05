@@ -3,6 +3,8 @@
  * @description Renders anatomy graphs as interactive SVG visualizations
  */
 
+import { DomUtils } from '../utils/domUtils.js';
+
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../interfaces/coreServices.js').IEntityManager} IEntityManager */
 /** @typedef {import('../interfaces/IDocumentContext.js').IDocumentContext} IDocumentContext */
@@ -803,10 +805,12 @@ class AnatomyGraphRenderer {
 
       // Mouse enter
       nodeEl.addEventListener('mouseenter', (e) => {
+        // Convert description newlines to HTML line breaks
+        const descriptionHtml = DomUtils.textToHtml(node.description);
         this._tooltip.innerHTML = `
-          <div class="tooltip-header">${node.name}</div>
-          <div class="tooltip-type">Type: ${node.type}</div>
-          <div class="tooltip-description">${node.description}</div>
+          <div class="tooltip-header">${DomUtils.escapeHtml(node.name)}</div>
+          <div class="tooltip-type">Type: ${DomUtils.escapeHtml(node.type)}</div>
+          <div class="tooltip-description">${descriptionHtml}</div>
         `;
         this._tooltip.style.visibility = 'visible';
         this._tooltip.style.opacity = '1';
