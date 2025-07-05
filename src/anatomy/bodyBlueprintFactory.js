@@ -133,6 +133,9 @@ export class BodyBlueprintFactory {
       const recipe = this.#recipeProcessor.loadRecipe(recipeId);
       const processedRecipe = this.#recipeProcessor.processRecipe(recipe);
 
+      // Validate recipe slots against blueprint
+      this.#validateRecipeSlots(processedRecipe, blueprint);
+
       // Initialize context
       context = new AnatomyGraphContext(options.seed);
 
@@ -213,6 +216,57 @@ export class BodyBlueprintFactory {
       });
       
       throw error;
+    }
+  }
+
+  /**
+   * Validates that all recipe slot keys exist in the blueprint
+   *
+   * @param {object} recipe - The processed recipe with slots
+   * @param {AnatomyBlueprint} blueprint - The blueprint to validate against
+   * @private
+   * @throws {ValidationError} If recipe contains invalid slot keys
+   */
+  #validateRecipeSlots(recipe, blueprint) {
+    // Skip validation if recipe has no slots
+    if (!recipe.slots || Object.keys(recipe.slots).length === 0) {
+      return;
+    }
+
+    // Collect slot keys that don't exist in blueprint
+    // Note: 'torso' is a special slot used to override the root entity
+    const invalidSlotKeys = [];
+    for (const slotKey of Object.keys(recipe.slots)) {
+      // Skip 'torso' slot as it's used for root entity override
+      if (slotKey === 'torso') {
+        continue;
+      }
+      
+      if (!blueprint.slots || !blueprint.slots[slotKey]) {
+        invalidSlotKeys.push(slotKey);
+      }
+    }
+
+    // If any invalid keys found, dispatch error and throw
+    if (invalidSlotKeys.length > 0) {
+      const blueprintId = blueprint.id || 'unknown';
+      const errorMessage = `Recipe '${recipe.recipeId}' contains invalid slot keys that don't exist in blueprint '${blueprintId}': ${invalidSlotKeys.join(', ')}`;
+      
+      // Dispatch system error with full context
+      this.#eventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
+        message: errorMessage,
+        details: {
+          raw: JSON.stringify({
+            recipeId: recipe.recipeId,
+            blueprintId: blueprintId,
+            invalidSlotKeys,
+            validSlotKeys: Object.keys(blueprint.slots || {}),
+            context: 'BodyBlueprintFactory.validateRecipeSlots'
+          })
+        }
+      });
+      
+      throw new ValidationError(errorMessage);
     }
   }
 
