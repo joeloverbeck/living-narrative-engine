@@ -26,9 +26,10 @@ export class PartGroupingStrategy {
    * @param {Array<object>} parts - Array of part entities
    * @param {Array<string>} descriptions - Array of descriptions
    * @param {object} textFormatter - Text formatter instance
+   * @param {object} config - Configuration object
    * @returns {string} Formatted description
    */
-  format(partType, parts, descriptions, textFormatter) {
+  format(partType, parts, descriptions, textFormatter, config) {
     throw new Error('format must be implemented by subclass');
   }
 }
@@ -41,7 +42,7 @@ export class SinglePartStrategy extends PartGroupingStrategy {
     return descriptions.length === 1;
   }
 
-  format(partType, parts, descriptions, textFormatter) {
+  format(partType, parts, descriptions, textFormatter, config) {
     const label = textFormatter.getPartLabel(partType, 1, () => partType, new Set());
     return textFormatter.formatLabelValue(label, descriptions[0]);
   }
@@ -56,18 +57,18 @@ export class PairedPartsStrategy extends PartGroupingStrategy {
     return pairedParts.has(partType) && descriptions.length === 2;
   }
 
-  format(partType, parts, descriptions, textFormatter) {
+  format(partType, parts, descriptions, textFormatter, config) {
     // Check if all descriptions are the same
     const allSame = descriptions.every(desc => desc === descriptions[0]);
     
     if (allSame) {
       // Same description for both parts
+      const irregularPlurals = config.getIrregularPlurals();
       const pluralizer = (type) => {
-        const irregularPlurals = { foot: 'feet', tooth: 'teeth' };
         if (irregularPlurals[type]) return irregularPlurals[type];
         return `${type}s`;
       };
-      const pairedParts = new Set(['eye', 'ear', 'arm', 'leg', 'hand', 'foot', 'breast', 'wing']);
+      const pairedParts = config.getPairedParts();
       const label = textFormatter.getPartLabel(partType, 2, pluralizer, pairedParts);
       return textFormatter.formatLabelValue(label, descriptions[0]);
     } else {
@@ -104,17 +105,17 @@ export class MultiplePartsStrategy extends PartGroupingStrategy {
     return descriptions.length > 0;
   }
 
-  format(partType, parts, descriptions, textFormatter) {
+  format(partType, parts, descriptions, textFormatter, config) {
     // Check if all descriptions are the same
     const allSame = descriptions.every(desc => desc === descriptions[0]);
     
     if (allSame) {
+      const irregularPlurals = config.getIrregularPlurals();
       const pluralizer = (type) => {
-        const irregularPlurals = { foot: 'feet', tooth: 'teeth' };
         if (irregularPlurals[type]) return irregularPlurals[type];
         return `${type}s`;
       };
-      const pairedParts = new Set(['eye', 'ear', 'arm', 'leg', 'hand', 'foot', 'breast', 'wing']);
+      const pairedParts = config.getPairedParts();
       const label = textFormatter.getPartLabel(partType, descriptions.length, pluralizer, pairedParts);
       return textFormatter.formatLabelValue(label, descriptions[0]);
     } else {

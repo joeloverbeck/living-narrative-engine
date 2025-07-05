@@ -273,7 +273,7 @@ export class EntityLifecycleManager {
         `Entity instance ${entityToRemove.id} removed from EntityManager.`
       );
       this.#eventDispatcher.dispatch(ENTITY_REMOVED_ID, {
-        entity: entityToRemove,
+        instanceId: entityToRemove.id,
       });
     } catch (error) {
       this.#logger.error(

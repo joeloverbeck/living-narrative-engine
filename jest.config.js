@@ -60,7 +60,5 @@ module.exports = {
     },
   },
 
-  // Optional: Enforce coverage levels. Uncomment and adjust as needed.
-  // Optional: Enforce coverage levels. Disabled during agent test generation.
   // --- END COVERAGE CONFIGURATION ---
 };

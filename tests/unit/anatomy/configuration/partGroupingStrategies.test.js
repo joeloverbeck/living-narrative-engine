@@ -29,6 +29,7 @@ describe('PartGroupingStrategies', () => {
     
     mockConfig = {
       getPairedParts: jest.fn().mockReturnValue(new Set(['eye', 'ear', 'arm', 'leg', 'hand', 'foot', 'breast', 'wing'])),
+      getIrregularPlurals: jest.fn().mockReturnValue({ foot: 'feet', tooth: 'teeth' }),
     };
     
     mockPart = {
@@ -74,7 +75,7 @@ describe('PartGroupingStrategies', () => {
 
     describe('format', () => {
       it('should format single part correctly', () => {
-        const result = strategy.format('arm', [mockPart], ['strong arm'], mockTextFormatter);
+        const result = strategy.format('arm', [mockPart], ['strong arm'], mockTextFormatter, mockConfig);
         expect(mockTextFormatter.getPartLabel).toHaveBeenCalledWith('arm', 1, expect.any(Function), new Set());
         expect(mockTextFormatter.formatLabelValue).toHaveBeenCalledWith('Arm', 'strong arm');
         expect(result).toBe('Arm: strong arm');
@@ -109,7 +110,7 @@ describe('PartGroupingStrategies', () => {
 
     describe('format', () => {
       it('should format identical paired parts with plural label', () => {
-        const result = strategy.format('eye', [mockPart, mockPart], ['blue eyes', 'blue eyes'], mockTextFormatter);
+        const result = strategy.format('eye', [mockPart, mockPart], ['blue eyes', 'blue eyes'], mockTextFormatter, mockConfig);
         expect(mockTextFormatter.getPartLabel).toHaveBeenCalledWith('eye', 2, expect.any(Function), expect.any(Set));
         expect(mockTextFormatter.formatLabelValue).toHaveBeenCalledWith('Eyes', 'blue eyes');
         expect(result).toBe('Eyes: blue eyes');
@@ -123,7 +124,7 @@ describe('PartGroupingStrategies', () => {
           getComponentData: jest.fn().mockReturnValue({ text: 'right eye' }),
         };
         
-        const result = strategy.format('eye', [leftPart, rightPart], ['blue eye', 'green eye'], mockTextFormatter);
+        const result = strategy.format('eye', [leftPart, rightPart], ['blue eye', 'green eye'], mockTextFormatter, mockConfig);
         expect(mockTextFormatter.formatSidedItem).toHaveBeenCalledWith('Left', 'eye', 'blue eye');
         expect(mockTextFormatter.formatSidedItem).toHaveBeenCalledWith('Right', 'eye', 'green eye');
         expect(mockTextFormatter.joinLines).toHaveBeenCalledWith(['Left eye: blue eye', 'Right eye: green eye']);
@@ -132,7 +133,7 @@ describe('PartGroupingStrategies', () => {
       it('should fallback to indexed format when no left/right in names', () => {
         mockPart.getComponentData.mockReturnValue({ text: 'eye' });
         
-        const result = strategy.format('eye', [mockPart, mockPart], ['blue eye', 'green eye'], mockTextFormatter);
+        const result = strategy.format('eye', [mockPart, mockPart], ['blue eye', 'green eye'], mockTextFormatter, mockConfig);
         expect(mockTextFormatter.formatIndexedItem).toHaveBeenCalledWith('eye', 1, 'blue eye');
         expect(mockTextFormatter.formatIndexedItem).toHaveBeenCalledWith('eye', 2, 'green eye');
       });
@@ -140,12 +141,12 @@ describe('PartGroupingStrategies', () => {
       it('should handle parts without name component', () => {
         mockPart.getComponentData.mockReturnValue(null);
         
-        const result = strategy.format('eye', [mockPart, mockPart], ['blue eye', 'green eye'], mockTextFormatter);
+        const result = strategy.format('eye', [mockPart, mockPart], ['blue eye', 'green eye'], mockTextFormatter, mockConfig);
         expect(mockTextFormatter.formatIndexedItem).toHaveBeenCalledTimes(2);
       });
 
       it('should handle irregular plural forms', () => {
-        const result = strategy.format('foot', [mockPart, mockPart], ['large foot', 'large foot'], mockTextFormatter);
+        const result = strategy.format('foot', [mockPart, mockPart], ['large foot', 'large foot'], mockTextFormatter, mockConfig);
         
         // Get the pluralizer function that was passed to getPartLabel
         const pluralizerCall = mockTextFormatter.getPartLabel.mock.calls[0];
@@ -179,7 +180,7 @@ describe('PartGroupingStrategies', () => {
         const parts = [mockPart, mockPart, mockPart];
         const descriptions = ['feathered wing', 'feathered wing', 'feathered wing'];
         
-        const result = strategy.format('wing', parts, descriptions, mockTextFormatter);
+        const result = strategy.format('wing', parts, descriptions, mockTextFormatter, mockConfig);
         expect(mockTextFormatter.getPartLabel).toHaveBeenCalledWith('wing', 3, expect.any(Function), expect.any(Set));
         expect(mockTextFormatter.formatLabelValue).toHaveBeenCalledWith('Wings', 'feathered wing');
       });
@@ -188,7 +189,7 @@ describe('PartGroupingStrategies', () => {
         const parts = [mockPart, mockPart, mockPart];
         const descriptions = ['red tentacle', 'blue tentacle', 'green tentacle'];
         
-        const result = strategy.format('tentacle', parts, descriptions, mockTextFormatter);
+        const result = strategy.format('tentacle', parts, descriptions, mockTextFormatter, mockConfig);
         expect(mockTextFormatter.formatIndexedItem).toHaveBeenCalledWith('tentacle', 1, 'red tentacle');
         expect(mockTextFormatter.formatIndexedItem).toHaveBeenCalledWith('tentacle', 2, 'blue tentacle');
         expect(mockTextFormatter.formatIndexedItem).toHaveBeenCalledWith('tentacle', 3, 'green tentacle');

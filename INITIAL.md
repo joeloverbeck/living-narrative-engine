@@ -1,21 +1,18 @@
 ## FEATURE:
 
-I want to create an anatomy recipe for the character .private/data/mods/p_erotica/iker_aguirre.character.json . The new recipe definition should be stored in .private/data/mods/p_erotica/recipes/ . It should be somewhat similar to the existing recipe for Amaia Castillo: .private/data/mods/p_erotica/recipes/amaia_castillo.recipe.json
-The recipe for Iker Aguirre should override the slots for the torso, legs, and arms, to specify that those parts should have a descriptor component that says "muscular". I suspect that no such descriptor component value exists in data/mods/anatomy/components/ , so determine if that "muscular" text fits into any descriptor component, and if not, create a new descriptor component and use it. Given that no human male torso nor arm nor legs entity definitions exist with a corresponding "muscular" descriptor component value exists, then you'll need to create those entity definitions in data/mods/anatomy/entities/definitions/
+Important: you shouldn't modify any code at this stage. The goal is to create a comprehensive PRP.
 
-Note: do not modify any code during this stage. Your goal is to create a comprehensive PRP to implement these changes.
+I'm analyzing body graphs in the anatomy visualizer. The page is anatomy-visualizer.html , and the main code is at src/anatomy-visualizer.js . I've noticed that when I load the body graph of a character whose recipe uses the data/mods/anatomy/blueprints/human_male.blueprints.json , that defines body parts for the "left_testicle" and "right_testicle" sockets, they appear as the plural "Testicle" instead of "Testicles" in the automatic description: "Testicle: small, oval". That likely means something is wrong with the anatomy formatting config at data/mods/anatomy/anatomy-formatting/
+
+In addition, when I switch in the visualizer to see the body graphs of other entities, I'm getting a slew of validation errors for the 'core:entity_removed' event, which likely also appears as ENTITY_REMOVED_ID . See the logs at error_logs.txt . This is likely happening in plenty of places of the repository, so please search all the instances where 'core:entity_removed' or ENTITY_REMOVED_ID are being dispatched, and ensure the payload aligns with the event definition: data/mods/core/events/entity_removed.event.json
 
 ## EXAMPLES:
 
-You have lots of integration suits for the anatomy system in tests/integration/anatomy/
+You have an integration suite for the anatomy visualizer at tests/integration/domUI/AnatomyVisualizerUI.integration.test.js
 
 ## DOCUMENTATION:
 
-The schemas for the recipes, blueprints, and components are in data/schemas/:
-data/schemas/anatomy.blueprint.schema.json
-data/schemas/anatomy.recipe.schema.json
-data/schemas/component.schema.json
-data/schemas/entity-definition.schema.json
+The schema for the anatomy-formatting config file is in data/schemas/anatomy-formatting.schema.json
 
 ## OTHER CONSIDERATIONS:
 

@@ -26,6 +26,7 @@ import { evaluateConditionWithLogging } from '../jsonLogicEvaluationService.js';
  * @param {ActionExecutionContext} nestedCtx - Execution context for nested actions.
  * @param {ILogger} logger - Logger instance for diagnostics.
  * @param {OperationInterpreter} operationInterpreter - Interpreter used to execute nested operations.
+ * @param executeActionSequence
  * @returns {void}
  */
 export function handleIf(

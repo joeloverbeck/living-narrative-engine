@@ -164,7 +164,10 @@ describe('SpatialIndexSynchronizer', () => {
       // Arrange
       synchronizer = initializeSynchronizer();
       const entity = createMockEntity('entity-1', { locationId: 'location-a' });
-      const payload = { entity };
+      // First add the entity so it's tracked
+      synchronizer.onEntityAdded({ type: ENTITY_CREATED_ID, payload: { entity } });
+      
+      const payload = { instanceId: 'entity-1' };
       const eventObject = { type: ENTITY_REMOVED_ID, payload };
 
       // Act - simulate real EventBus behavior
@@ -181,7 +184,8 @@ describe('SpatialIndexSynchronizer', () => {
       // Arrange
       synchronizer = initializeSynchronizer();
       const entity = createMockEntity('entity-1', {});
-      const payload = { entity };
+      // Entity was never added, so no position is tracked
+      const payload = { instanceId: 'entity-1' };
       const eventObject = { type: ENTITY_REMOVED_ID, payload };
 
       // Act - simulate real EventBus behavior

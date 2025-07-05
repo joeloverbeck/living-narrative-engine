@@ -345,10 +345,10 @@ describe('dispatchTestUtils', () => {
 
     it('validates ENTITY_REMOVED helper', () => {
       const mock = jest.fn();
-      const entity = { id: 'e1' };
-      mock(ENTITY_REMOVED_ID, { entity });
+      const instanceId = 'e1';
+      mock(ENTITY_REMOVED_ID, { instanceId });
 
-      expect(() => expectEntityRemovedDispatch(mock, entity)).not.toThrow();
+      expect(() => expectEntityRemovedDispatch(mock, instanceId)).not.toThrow();
     });
 
     it('validates COMPONENT_ADDED helper', () => {

@@ -6,12 +6,6 @@
     "anatomy:part": {
       "subType": "testicle"
     },
-    "descriptors:size_category": {
-      "size": "small"
-    },
-    "descriptors:shape_general": {
-      "shape": "oval"
-    },
     "core:name": {
       "text": "testicle"
     }

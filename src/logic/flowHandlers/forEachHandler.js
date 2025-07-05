@@ -26,6 +26,7 @@ import { resolvePath } from '../../utils/objectUtils.js';
  * @param {ActionExecutionContext} nestedCtx - Execution context for the loop.
  * @param {ILogger} logger - Logger instance for diagnostics.
  * @param {OperationInterpreter} operationInterpreter - Interpreter for executing the loop body.
+ * @param executeActionSequence
  * @returns {void}
  */
 export function handleForEach(
