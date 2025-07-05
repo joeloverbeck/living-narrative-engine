@@ -3,9 +3,8 @@
  * @description Tests to improve coverage of src/scopeDsl/cache.js edge cases and LRU cache behavior
  */
 
-import { jest, describe, beforeEach, it, expect } from '@jest/globals';
+import { jest, describe, beforeEach, expect } from '@jest/globals';
 import { LRUCache } from 'lru-cache';
-import createLruCache from '../../../src/scopeDsl/cache/lruCache.js';
 import ScopeCache from '../../../src/scopeDsl/cache.js';
 import { TURN_STARTED_ID } from '../../../src/constants/eventIds.js';
 
@@ -106,9 +105,9 @@ describe('Scope-DSL Cache - Additional Coverage Tests', () => {
     });
   });
 
-  describe('custom createLruCache behavior', () => {
+  describe('LRUCache behavior', () => {
     test('returns undefined on cache miss', () => {
-      const cache = createLruCache(2);
+      const cache = new LRUCache({ max: 2 });
       expect(cache.get('missing')).toBeUndefined();
     });
   });
@@ -145,7 +144,7 @@ describe('Scope-DSL Cache - Additional Coverage Tests', () => {
     test('should handle failed event subscription', () => {
       mockSafeEventDispatcher.subscribe.mockReturnValue(null);
 
-      const cache = new ScopeCache({
+      new ScopeCache({
         cache: mockCache,
         scopeEngine: mockScopeEngine,
         safeEventDispatcher: mockSafeEventDispatcher,
@@ -332,7 +331,7 @@ describe('Scope-DSL Cache - Additional Coverage Tests', () => {
       // Reset and test with undefined
       mockCache.get.mockReturnValue(undefined);
       mockScopeEngine.resolve.mockReturnValue(new Set(['result']));
-      const result2 = cache.resolve(ast, mockActorEntity, mockRuntimeCtx);
+      cache.resolve(ast, mockActorEntity, mockRuntimeCtx);
       expect(mockScopeEngine.resolve).toHaveBeenCalled();
     });
 
@@ -359,7 +358,6 @@ describe('Scope-DSL Cache - Additional Coverage Tests', () => {
   });
 
   describe('Turn event handling edge cases', () => {
-    let cache;
     let mockCache;
     let mockScopeEngine;
     let mockSafeEventDispatcher;
@@ -394,7 +392,7 @@ describe('Scope-DSL Cache - Additional Coverage Tests', () => {
         error: jest.fn(),
       };
 
-      cache = new ScopeCache({
+      new ScopeCache({
         cache: mockCache,
         scopeEngine: mockScopeEngine,
         safeEventDispatcher: mockSafeEventDispatcher,

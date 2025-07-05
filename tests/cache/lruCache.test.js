@@ -1,8 +1,8 @@
-import createLruCache from '../../src/scopeDsl/cache/lruCache.js';
+import { LRUCache } from 'lru-cache';
 
-describe('createLruCache', () => {
+describe('LRUCache', () => {
   test('evicts oldest entry when max size is exceeded', () => {
-    const cache = createLruCache(3);
+    const cache = new LRUCache({ max: 3 });
 
     cache.set('a', 1);
     cache.set('b', 2);
@@ -17,7 +17,7 @@ describe('createLruCache', () => {
   });
 
   test('moves accessed key to MRU position', () => {
-    const cache = createLruCache(3);
+    const cache = new LRUCache({ max: 3 });
 
     cache.set('a', 1);
     cache.set('b', 2);
@@ -36,7 +36,7 @@ describe('createLruCache', () => {
   });
 
   test('size getter returns accurate count', () => {
-    const cache = createLruCache(5);
+    const cache = new LRUCache({ max: 5 });
 
     expect(cache.size).toBe(0);
 
@@ -52,7 +52,7 @@ describe('createLruCache', () => {
   });
 
   test('exposes configured max size', () => {
-    const cache = createLruCache(4);
+    const cache = new LRUCache({ max: 4 });
 
     expect(cache.max).toBe(4);
   });
