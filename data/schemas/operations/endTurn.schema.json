@@ -2,25 +2,21 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "http://example.com/schemas/operations/endTurn.schema.json",
   "title": "END_TURN Operation",
-  "type": "object",
-  "properties": {
-    "type": {
-      "const": "END_TURN"
+  "allOf": [
+    {
+      "$ref": "../base-operation.schema.json"
     },
-    "comment": {
-      "type": "string",
-      "description": "Optional. A human-readable description or note for developers or modders; ignored by the interpreter at runtime."
-    },
-    "condition": {
-      "$ref": "../condition-container.schema.json#",
-      "description": "Optional. If present, this operation only executes if the condition evaluates to true. Can be an inline JSON-Logic rule or a 'condition_ref'."
-    },
-    "parameters": {
-      "$ref": "#/$defs/Parameters"
+    {
+      "properties": {
+        "type": {
+          "const": "END_TURN"
+        },
+        "parameters": {
+          "$ref": "#/$defs/Parameters"
+        }
+      }
     }
-  },
-  "required": ["type", "parameters"],
-  "additionalProperties": false,
+  ],
   "$defs": {
     "Parameters": {
       "type": "object",
@@ -37,7 +33,10 @@
           "type": "object"
         }
       },
-      "required": ["entityId", "success"],
+      "required": [
+        "entityId",
+        "success"
+      ],
       "additionalProperties": false
     }
   }

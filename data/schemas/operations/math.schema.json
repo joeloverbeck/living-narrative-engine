@@ -2,25 +2,21 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "http://example.com/schemas/operations/math.schema.json",
   "title": "MATH Operation",
-  "type": "object",
-  "properties": {
-    "type": {
-      "const": "MATH"
+  "allOf": [
+    {
+      "$ref": "../base-operation.schema.json"
     },
-    "comment": {
-      "type": "string",
-      "description": "Optional. A human-readable description or note for developers or modders; ignored by the interpreter at runtime."
-    },
-    "condition": {
-      "$ref": "../condition-container.schema.json#",
-      "description": "Optional. If present, this operation only executes if the condition evaluates to true. Can be an inline JSON-Logic rule or a 'condition_ref'."
-    },
-    "parameters": {
-      "$ref": "#/$defs/Parameters"
+    {
+      "properties": {
+        "type": {
+          "const": "MATH"
+        },
+        "parameters": {
+          "$ref": "#/$defs/Parameters"
+        }
+      }
     }
-  },
-  "required": ["type", "parameters"],
-  "additionalProperties": false,
+  ],
   "$defs": {
     "Parameters": {
       "type": "object",
@@ -34,7 +30,10 @@
           "$ref": "#/$defs/MathExpression"
         }
       },
-      "required": ["result_variable", "expression"]
+      "required": [
+        "result_variable",
+        "expression"
+      ]
     },
     "MathExpression": {
       "type": "object",
@@ -42,7 +41,13 @@
       "properties": {
         "operator": {
           "type": "string",
-          "enum": ["add", "subtract", "multiply", "divide", "modulo"]
+          "enum": [
+            "add",
+            "subtract",
+            "multiply",
+            "divide",
+            "modulo"
+          ]
         },
         "operands": {
           "type": "array",
@@ -54,7 +59,10 @@
           "maxItems": 2
         }
       },
-      "required": ["operator", "operands"]
+      "required": [
+        "operator",
+        "operands"
+      ]
     },
     "MathOperand": {
       "description": "An operand for a math expression. Can be a number, a variable reference, or a nested expression.",
@@ -69,7 +77,9 @@
               "type": "string"
             }
           },
-          "required": ["var"],
+          "required": [
+            "var"
+          ],
           "additionalProperties": false
         },
         {

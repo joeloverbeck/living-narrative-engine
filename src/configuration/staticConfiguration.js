@@ -119,6 +119,7 @@ class StaticConfiguration {
       'anatomy.recipe.schema.json',
       'anatomy.blueprint.schema.json',
       'anatomy-formatting.schema.json',
+      'base-operation.schema.json', // Base schema for all operations
       // Prepend the 'operations/' subdirectory to each operation schema file
       ...OPERATION_SCHEMA_FILES.map((file) => `operations/${file}`),
     ];

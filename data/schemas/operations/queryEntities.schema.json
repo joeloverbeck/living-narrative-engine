@@ -2,25 +2,21 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "http://example.com/schemas/operations/queryEntities.schema.json",
   "title": "QUERY_ENTITIES Operation",
-  "type": "object",
-  "properties": {
-    "type": {
-      "const": "QUERY_ENTITIES"
+  "allOf": [
+    {
+      "$ref": "../base-operation.schema.json"
     },
-    "comment": {
-      "type": "string",
-      "description": "Optional. A human-readable description or note for developers or modders; ignored by the interpreter at runtime."
-    },
-    "condition": {
-      "$ref": "../condition-container.schema.json#",
-      "description": "Optional. If present, this operation only executes if the condition evaluates to true. Can be an inline JSON-Logic rule or a 'condition_ref'."
-    },
-    "parameters": {
-      "$ref": "#/$defs/Parameters"
+    {
+      "properties": {
+        "type": {
+          "const": "QUERY_ENTITIES"
+        },
+        "parameters": {
+          "$ref": "#/$defs/Parameters"
+        }
+      }
     }
-  },
-  "required": ["type", "parameters"],
-  "additionalProperties": false,
+  ],
   "$defs": {
     "Parameters": {
       "type": "object",
@@ -65,13 +61,19 @@
                     "$ref": "../json-logic.schema.json#"
                   }
                 },
-                "required": ["component_type", "condition"]
+                "required": [
+                  "component_type",
+                  "condition"
+                ]
               }
             }
           }
         }
       },
-      "required": ["result_variable", "filters"],
+      "required": [
+        "result_variable",
+        "filters"
+      ],
       "additionalProperties": false
     }
   }

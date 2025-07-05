@@ -2,21 +2,21 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "http://example.com/schemas/operations/removeFromClosenessCircle.schema.json",
   "title": "REMOVE_FROM_CLOSENESS_CIRCLE Operation",
-  "type": "object",
-  "properties": {
-    "type": { "const": "REMOVE_FROM_CLOSENESS_CIRCLE" },
-    "comment": {
-      "type": "string",
-      "description": "Optional developer note; ignored at runtime."
+  "allOf": [
+    {
+      "$ref": "../base-operation.schema.json"
     },
-    "condition": {
-      "$ref": "../condition-container.schema.json#",
-      "description": "Optional. If present, this operation only executes if the condition evaluates to true. Can be an inline JSON-Logic rule or a 'condition_ref'."
-    },
-    "parameters": { "$ref": "#/$defs/Parameters" }
-  },
-  "required": ["type", "parameters"],
-  "additionalProperties": false,
+    {
+      "properties": {
+        "type": {
+          "const": "REMOVE_FROM_CLOSENESS_CIRCLE"
+        },
+        "parameters": {
+          "$ref": "#/$defs/Parameters"
+        }
+      }
+    }
+  ],
   "$defs": {
     "Parameters": {
       "type": "object",
@@ -31,7 +31,9 @@
           "minLength": 1
         }
       },
-      "required": ["actor_id"],
+      "required": [
+        "actor_id"
+      ],
       "additionalProperties": false
     }
   }

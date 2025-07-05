@@ -2,25 +2,21 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "http://example.com/schemas/operations/hasComponent.schema.json",
   "title": "HAS_COMPONENT Operation",
-  "type": "object",
-  "properties": {
-    "type": {
-      "const": "HAS_COMPONENT"
+  "allOf": [
+    {
+      "$ref": "../base-operation.schema.json"
     },
-    "comment": {
-      "type": "string",
-      "description": "Optional. A human-readable description or note for developers or modders; ignored by the interpreter at runtime."
-    },
-    "condition": {
-      "$ref": "../condition-container.schema.json#",
-      "description": "Optional. If present, this operation only executes if the condition evaluates to true. Can be an inline JSON-Logic rule or a 'condition_ref'."
-    },
-    "parameters": {
-      "$ref": "#/$defs/Parameters"
+    {
+      "properties": {
+        "type": {
+          "const": "HAS_COMPONENT"
+        },
+        "parameters": {
+          "$ref": "#/$defs/Parameters"
+        }
+      }
     }
-  },
-  "required": ["type", "parameters"],
-  "additionalProperties": false,
+  ],
   "$defs": {
     "Parameters": {
       "type": "object",
@@ -38,7 +34,11 @@
           "minLength": 1
         }
       },
-      "required": ["entity_ref", "component_type", "result_variable"],
+      "required": [
+        "entity_ref",
+        "component_type",
+        "result_variable"
+      ],
       "additionalProperties": false
     }
   }
