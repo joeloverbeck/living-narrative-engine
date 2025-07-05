@@ -2,7 +2,7 @@ import { freeze } from '../../utils';
 
 /**
  * @file AI-specific DI tokens.
- * @typedef {import('../tokens.js').DiToken} DiToken
+ * @typedef {string} DiToken
  */
 
 /**

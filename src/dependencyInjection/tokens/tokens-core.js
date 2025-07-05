@@ -2,7 +2,7 @@ import { freeze } from '../../utils';
 
 /**
  * @file Core DI tokens excluding UI and AI groups.
- * @typedef {import('../tokens.js').DiToken} DiToken
+ * @typedef {string} DiToken
  */
 
 /**

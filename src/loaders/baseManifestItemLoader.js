@@ -19,7 +19,6 @@ import { storeItemInRegistry } from './helpers/registryStoreUtils.js';
 import { extractValidFilenames } from '../utils/filenameUtils.js';
 import { summarizeSettledResults } from './helpers/resultsSummary.js';
 import { validateLoadItemsParams } from './helpers/validationHelpers.js';
-import { processFileWrapper } from './helpers/fileProcessing.js';
 import { validateNonEmptyString } from '../utils/stringValidation.js';
 
 // --- Add LoadItemsResult typedef here for clarity ---
