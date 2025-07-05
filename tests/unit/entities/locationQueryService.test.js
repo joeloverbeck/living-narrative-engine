@@ -14,6 +14,12 @@ describe('LocationQueryService', () => {
     service = new LocationQueryService({ spatialIndexManager, logger });
   });
 
+  it('logs initialization message', () => {
+    expect(logger.debug).toHaveBeenCalledWith(
+      'LocationQueryService initialized.'
+    );
+  });
+
   it('delegates queries to the spatial index manager for valid IDs', () => {
     const set = new Set(['a']);
     spatialIndexManager.getEntitiesInLocation.mockReturnValue(set);
@@ -32,6 +38,20 @@ describe('LocationQueryService', () => {
     expect(spatialIndexManager.getEntitiesInLocation).not.toHaveBeenCalled();
     expect(logger.warn).toHaveBeenCalledWith(
       "LocationQueryService.getEntitiesInLocation called with invalid locationId: ''"
+    );
+    expect(result).toEqual(new Set());
+  });
+
+  it('returns an empty set and logs error on spatial index failure', () => {
+    spatialIndexManager.getEntitiesInLocation.mockImplementation(() => {
+      throw new Error('db failure');
+    });
+
+    const result = service.getEntitiesInLocation('loc1');
+
+    expect(logger.error).toHaveBeenCalledWith(
+      "LocationQueryService.getEntitiesInLocation: Error querying spatial index for location 'loc1':",
+      expect.any(Error)
     );
     expect(result).toEqual(new Set());
   });
