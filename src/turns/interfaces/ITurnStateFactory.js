@@ -73,7 +73,7 @@ export class ITurnStateFactory {
   /**
    * Creates an instance of the state responsible for processing a chosen command.
    *
-   * @param {BaseTurnHandler} handler - The handler managing the state.
+   * @param {ITurnStateHost} handler - The handler managing the state.
    * @param {string} commandString - The command string to process.
    * @param {ITurnAction} turnAction - The chosen turn action.
    * @param {Function} directiveResolver - Resolver for command directives.
@@ -83,7 +83,7 @@ export class ITurnStateFactory {
   /**
    * Creates an instance of the state responsible for processing a chosen command.
    *
-   * @param {BaseTurnHandler} handler - The handler managing the state.
+   * @param {ITurnStateHost} handler - The handler managing the state.
    * @param {string} commandString - The command string to process.
    * @param {ITurnAction} turnAction - The chosen turn action.
    * @param {Function} directiveResolver - Resolver for command directives.

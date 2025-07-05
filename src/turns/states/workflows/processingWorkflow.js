@@ -36,7 +36,7 @@ export class ProcessingWorkflow {
 
   /**
    * @description Acquire context and prepare the state for processing.
-   * @param {import('../../handlers/baseTurnHandler.js').BaseTurnHandler} handler - Owning handler.
+   * @param {import('../../interfaces/ITurnStateHost.js').ITurnStateHost} handler - Owning handler.
    * @param {import('../../interfaces/ITurnState.js').ITurnState|null} previousState - Previous state.
    * @returns {Promise<import('../../interfaces/ITurnContext.js').ITurnContext|null>} Context or null on failure.
    */
@@ -68,7 +68,7 @@ export class ProcessingWorkflow {
   /**
    * Runs the workflow.
    *
-   * @param {import('../../handlers/baseTurnHandler.js').BaseTurnHandler} handler - Owning handler.
+   * @param {import('../../interfaces/ITurnStateHost.js').ITurnStateHost} handler - Owning handler.
    * @param {import('../../interfaces/ITurnState.js').ITurnState|null} previousState - Previous state.
    * @returns {Promise<void>} Resolves when complete.
    */
