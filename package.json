@@ -46,7 +46,7 @@
     "jest-extended": "^6.0.0",
     "prettier": "^3.5.3",
     "whatwg-fetch": "^3.6.20",
-    "yargs": "^17.7.2"
+    "yargs": "^18.0.0"
   },
   "scripts": {
     "format": "prettier --write . --ignore-unknown --log-level error",
