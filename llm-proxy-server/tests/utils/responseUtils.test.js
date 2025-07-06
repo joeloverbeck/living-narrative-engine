@@ -349,5 +349,39 @@ describe('sendProxyError', () => {
       expect(mockRes.send).not.toHaveBeenCalled();
     });
   });
+
+  test('should handle null details by substituting an empty object', () => {
+    const httpStatusCode = 418;
+    const stage = 'null_details';
+    const errorMessage = 'Nothing here';
+    const llmIdForLog = 'null-branch';
+    const originalLoggerPassedToFunction = { name: 'null-test' };
+
+    sendProxyError(
+      mockRes,
+      httpStatusCode,
+      stage,
+      errorMessage,
+      null,
+      llmIdForLog,
+      originalLoggerPassedToFunction
+    );
+
+    expect(ensureValidLogger).toHaveBeenCalledWith(
+      originalLoggerPassedToFunction,
+      'sendProxyError'
+    );
+    expect(mockRes.json).toHaveBeenCalledWith({
+      error: true,
+      message: errorMessage,
+      stage,
+      details: {},
+      originalStatusCode: httpStatusCode,
+    });
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      `LLM Proxy Server: Sending error to client. LLM ID for log: ${llmIdForLog}, Status: ${httpStatusCode}, Stage: "${stage}", Message: "${errorMessage}"`,
+      { errorDetailsSentToClient: {} }
+    );
+  });
 });
 // --- FILE END ---
