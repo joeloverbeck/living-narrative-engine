@@ -180,14 +180,23 @@ export class AnatomyCacheManager {
         'anatomy:part'
       );
 
+      // Debug logging
+      this.#logger.debug(
+        `AnatomyCacheManager: Entity '${entityId}' anatomy:part data: ${JSON.stringify(anatomyPart)}`
+      );
+
       // Create node
       const node = {
         entityId,
-        partType: anatomyPart?.type || 'unknown',
+        partType: anatomyPart?.subType || 'unknown',
         parentId,
         socketId,
         children: [],
       };
+
+      this.#logger.debug(
+        `AnatomyCacheManager: Created node for entity '${entityId}' with partType: '${node.partType}'`
+      );
 
       this.#adjacencyCache.set(entityId, node);
 

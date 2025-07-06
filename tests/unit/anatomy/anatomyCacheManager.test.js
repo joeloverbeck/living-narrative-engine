@@ -120,9 +120,9 @@ describe('AnatomyCacheManager', () => {
       mockEntityManager.getComponentData.mockImplementation(
         (id, componentId) => {
           if (componentId === 'anatomy:part') {
-            if (id === 'torso-1') return { type: 'torso' };
-            if (id === 'arm-1') return { type: 'arm' };
-            if (id === 'hand-1') return { type: 'hand' };
+            if (id === 'torso-1') return { subType: 'torso' };
+            if (id === 'arm-1') return { subType: 'arm' };
+            if (id === 'hand-1') return { subType: 'hand' };
           }
           if (componentId === 'anatomy:joint') {
             if (id === 'arm-1')

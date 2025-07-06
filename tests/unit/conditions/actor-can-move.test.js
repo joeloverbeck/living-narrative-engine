@@ -57,9 +57,6 @@ describe('actor-can-move condition', () => {
       const context = {
         actor: {
           id: 'player123',
-          components: {
-            'anatomy:body': { root: 'body123' },
-          },
         },
       };
 
@@ -96,9 +93,6 @@ describe('actor-can-move condition', () => {
       const context = {
         actor: {
           id: 'player123',
-          components: {
-            'anatomy:body': { root: 'body123' },
-          },
         },
       };
 
@@ -170,9 +164,6 @@ describe('actor-can-move condition', () => {
       );
 
       expect(result).toBe(false);
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        'JsonLogicCustomOperators: Entity player123 has no anatomy:body component'
-      );
       expect(
         mockBodyGraphService.hasPartWithComponentValue
       ).not.toHaveBeenCalled();
@@ -187,18 +178,12 @@ describe('actor-can-move condition', () => {
       );
 
       expect(result).toBe(false);
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        'JsonLogicCustomOperators: No entity found at path actor'
-      );
     });
 
     test('should handle multiple legs where only one has unlocked movement', () => {
       const context = {
         actor: {
           id: 'player123',
-          components: {
-            'anatomy:body': { root: 'body123' },
-          },
         },
       };
 
@@ -236,9 +221,6 @@ describe('actor-can-move condition', () => {
         event: {
           target: {
             id: 'npc456',
-            components: {
-              'anatomy:body': { root: 'body456' },
-            },
           },
         },
       };

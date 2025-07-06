@@ -81,7 +81,9 @@ export class AnatomyGraphAlgorithms {
       visited.add(id);
 
       const node = cacheManager.get(id);
-      if (!node) continue;
+      if (!node) {
+        continue;
+      }
 
       if (node.partType === partType) {
         result.push(id);
