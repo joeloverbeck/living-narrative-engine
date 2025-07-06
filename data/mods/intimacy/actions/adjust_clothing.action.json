@@ -6,8 +6,7 @@
   "description": "Smooth their collar or adjust a displaced garment with possessive care.",
   "scope": "intimacy:close_actors",
   "required_components": {
-    "actor": ["intimacy:closeness"],
-    "target": ["core:actor"]
+    "actor": ["intimacy:closeness"]
   },
   "template": "adjust {target}'s clothing",
   "prerequisites": [

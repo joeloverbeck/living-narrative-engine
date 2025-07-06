@@ -49,13 +49,6 @@
           "items": {
             "type": "string"
           }
-        },
-        "target": {
-          "type": "array",
-          "description": "A list of component IDs that a potential target must possess. Used by the indexer to further refine action candidates.",
-          "items": {
-            "type": "string"
-          }
         }
       },
       "additionalProperties": false

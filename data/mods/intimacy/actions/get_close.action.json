@@ -5,9 +5,7 @@
   "name": "Get Close",
   "description": "Move closer to the target, entering their personal space.",
   "scope": "core:actors_in_location",
-  "required_components": {
-    "target": ["core:actor"]
-  },
+  "required_components": {},
   "template": "get close to {target}",
   "prerequisites": [
     {
