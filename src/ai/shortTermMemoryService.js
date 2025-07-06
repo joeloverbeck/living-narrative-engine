@@ -73,7 +73,8 @@ export default class ShortTermMemoryService {
   }
 
   /**
-   * @description Emits a `ThoughtAdded` event using the configured dispatcher.
+   * Emits a `ThoughtAdded` event using the configured dispatcher.
+   *
    * @param {string | null} entityId - ID of the owner entity.
    * @param {string} text - Thought text.
    * @param {string} timestamp - ISO timestamp of the thought.

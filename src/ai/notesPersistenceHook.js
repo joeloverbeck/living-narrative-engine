@@ -19,7 +19,8 @@ import ComponentAccessService from '../entities/componentAccessService.js';
  * @param {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} dispatcher - Safe dispatcher for error events.
  * @param {NotesService} [notesService] - Optional notes service instance.
  * @param {Date} [now] - Date provider for timestamping notes.
- * @param componentAccess
+ * @param {ComponentAccessService} [componentAccess] - Service for reading and
+ *   writing component data.
  */
 export function persistNotes(
   action,
