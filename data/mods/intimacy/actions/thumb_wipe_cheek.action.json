@@ -6,8 +6,7 @@
   "description": "Gently wipe the target's cheek with your thumb.",
   "scope": "intimacy:close_actors",
   "required_components": {
-    "actor": ["intimacy:closeness"],
-    "target": ["core:actor"]
+    "actor": ["intimacy:closeness"]
   },
   "template": "wipe {target}'s cheek with your thumb",
   "prerequisites": []
