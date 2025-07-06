@@ -1,0 +1,1 @@
+sex:actors_with_penis_in_intimacy := actor.intimacy:closeness.partners[][{"hasPartOfType": [".", "penis"]}]
