@@ -9,7 +9,7 @@
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1",
     "cors": "^2.8.5",
-    "dotenv": "^16.5.0",
+    "dotenv": "^17.0.1",
     "glob": "^11.0.3",
     "gpt-tokenizer": "^3.0.1",
     "jest-mock-extended": "^4.0.0-beta1",
