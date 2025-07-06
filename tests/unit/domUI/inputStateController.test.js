@@ -48,7 +48,7 @@ describe('InputStateController', () => {
     mockLogger = new ConsoleLogger();
     mockSubscriptions = [];
     mockDispatcher = {
-      subscribe: jest.fn((_eventType, _handler) => {
+      subscribe: jest.fn(() => {
         const subscription = { unsubscribe: jest.fn() };
         mockSubscriptions.push(subscription);
         return subscription;
@@ -433,7 +433,7 @@ describe('InputStateController', () => {
 
   describe('Event Handling (VED)', () => {
     it('should handle valid core:disable_input event object', () => {
-      const controller = createController();
+      createController();
       const disableHandler = getVedHandler('core:disable_input');
       expect(disableHandler).toBeInstanceOf(Function);
 
@@ -460,7 +460,7 @@ describe('InputStateController', () => {
     });
 
     it('should handle core:disable_input with missing payload (use default message)', () => {
-      const controller = createController();
+      createController();
       const disableHandler = getVedHandler('core:disable_input');
       inputElement.disabled = false;
       inputElement.placeholder = 'start';
@@ -487,7 +487,7 @@ describe('InputStateController', () => {
     });
 
     it('should handle core:disable_input with payload missing message property (use default message)', () => {
-      const controller = createController();
+      createController();
       const disableHandler = getVedHandler('core:disable_input');
       inputElement.disabled = false;
       inputElement.placeholder = 'start';
@@ -517,7 +517,7 @@ describe('InputStateController', () => {
     });
 
     it('should handle valid core:enable_input event object', () => {
-      const controller = createController();
+      createController();
       const enableHandler = getVedHandler('core:enable_input');
       expect(enableHandler).toBeInstanceOf(Function);
 
@@ -545,7 +545,7 @@ describe('InputStateController', () => {
 
     // Ticket 3.1: Test updated for new default placeholder
     it('should handle core:enable_input with missing payload (use default placeholder)', () => {
-      const controller = createController();
+      createController();
       const enableHandler = getVedHandler('core:enable_input');
       inputElement.disabled = true;
       inputElement.placeholder = 'Initial';
@@ -569,7 +569,7 @@ describe('InputStateController', () => {
 
     // Ticket 3.1: Test updated for new default placeholder
     it('should handle core:enable_input with payload missing placeholder property (use default placeholder)', () => {
-      const controller = createController();
+      createController();
       const enableHandler = getVedHandler('core:enable_input');
       inputElement.disabled = true;
       inputElement.placeholder = 'Initial';
@@ -595,7 +595,7 @@ describe('InputStateController', () => {
     });
 
     it('should not log state changes if event handler does not change state', () => {
-      const controller = createController();
+      createController();
       const disableHandler = getVedHandler('core:disable_input');
       inputElement.disabled = true;
       inputElement.placeholder = 'Already Disabled';

@@ -163,14 +163,16 @@ environment := entities(core:position)[
 
         global.fetch.mockResolvedValue(mockResponse);
 
+        let caughtError;
         try {
           await fetcher.fetch('./test.scope');
-          fail('Expected an error to be thrown');
         } catch (error) {
-          // Verify that the error message contains the truncated response body
-          expect(error.message).toContain('Response body:');
-          expect(error.message.length).toBeLessThan(700); // Original would be ~900+ chars
+          caughtError = error;
         }
+
+        expect(caughtError).toBeDefined();
+        expect(caughtError.message).toContain('Response body:');
+        expect(caughtError.message.length).toBeLessThan(700); // Original would be ~900+ chars
       });
     });
 
