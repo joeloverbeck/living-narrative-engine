@@ -25,7 +25,7 @@
       "type": "SET_VARIABLE",
       "parameters": {
         "variable_name": "logMessage",
-        "value": "{context.actorName} gently fondles {context.targetName}'s breasts."
+        "value": "{context.actorName} eagerly fondles {context.targetName}'s breasts."
       }
     },
     {

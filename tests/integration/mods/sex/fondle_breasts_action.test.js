@@ -1,5 +1,9 @@
 /**
  * @file Integration tests for the sex:fondle_breasts action and rule.
+ * @description Tests the rule execution after the fondle_breasts action is performed.
+ * Note: This test does not test action discovery or scope resolution - it assumes
+ * the action is valid and dispatches it directly. For action discovery tests,
+ * see fondle_breasts_action_discovery.test.js.
  */
 
 import { describe, it, beforeEach, expect, jest } from '@jest/globals';

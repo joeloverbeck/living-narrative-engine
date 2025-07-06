@@ -1,26 +1,691 @@
-﻿
-  warn no-non-package-json: src/validation/ajvSchemaValidator.js → node_modules/ajv/dist/ajv.js
-  warn no-non-package-json: src/validation/ajvSchemaValidator.js → node_modules/ajv-formats/dist/index.js
-  warn no-non-package-json: src/utils/schemaValidationUtils.js → node_modules/ajv/dist/ajv.js
-  warn no-non-package-json: src/utils/jsonRepair.js → node_modules/@toolsycc/json-repair/dist/index.js
-  warn no-non-package-json: src/utils/ajvUtils.js → node_modules/ajv/dist/ajv.js
-  warn no-non-package-json: src/turns/order/queues/initiativePriorityQueue.js → node_modules/tinyqueue/index.js
-  warn no-non-package-json: src/turns/adapters/configurableLLMAdapter.js → node_modules/gpt-tokenizer/esm/main.js
-  warn no-non-package-json: src/persistence/gameStateSerializer.js → node_modules/pako/dist/pako.esm.mjs
-  warn no-non-package-json: src/persistence/gameStateSerializer.js → node_modules/@msgpack/msgpack/dist.cjs/index.cjs
-  warn no-non-package-json: src/modding/modDependencyValidator.js → node_modules/semver/index.js
-  warn no-non-package-json: src/logic/utils/jsonLogicVariableEvaluator.js → node_modules/json-logic-js/logic.js
-  warn no-non-package-json: src/logic/operationHandlers/modifyContextArrayHandler.js → node_modules/lodash/lodash.js
-  warn no-non-package-json: src/logic/operationHandlers/modifyArrayFieldHandler.js → node_modules/lodash/lodash.js
-  warn no-non-package-json: src/logic/operationHandlers/mathHandler.js → node_modules/json-logic-js/logic.js
-  warn no-non-package-json: src/logic/jsonLogicEvaluationService.js → node_modules/json-logic-js/logic.js
-  warn no-non-package-json: src/loaders/gameConfigLoader.js → node_modules/ajv/dist/ajv.js
-  warn no-non-package-json: src/llms/services/llmConfigErrorFormatter.js → node_modules/ajv/dist/ajv.js
-  warn no-non-package-json: src/entities/entityInstanceData.js → node_modules/lodash/lodash.js
-  warn no-non-package-json: src/engine/engineVersionSatisfies.js → node_modules/semver/index.js
-  warn no-non-package-json: src/engine/engineVersion.js → node_modules/semver/index.js
-  warn no-non-package-json: src/dependencyInjection/registrations/operationHandlerRegistrations.js → node_modules/json-logic-js/logic.js
-  warn no-non-package-json: src/dependencyInjection/registrations/infrastructureRegistrations.js → node_modules/lru-cache/dist/esm/index.d.ts
-  warn no-non-package-json: src/adapters/UuidGenerator.js → node_modules/uuid/dist/esm/index.js
-  warn no-non-package-json: src/adapters/LodashCloner.js → node_modules/lodash/lodash.js
-  warn no-non-package-json: src/adapters/DefaultComponentPolicy.js → node_modules/lodash/lodash.js
+﻿ActionValidationContextBuilder: ActionValidationContextBuilder: Building context for action 'intimacy:step_back', actor 'p_erotica:iker_aguirre_instance'. Only actor context is included as target filtering is handled by Scope DSL.
+consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[intimacy:step_back]: Evaluation Context Built Successfully.
+consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[intimacy:step_back]: Actor entity [p_erotica:iker_aguirre_instance] has 13 components available.
+consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[intimacy:step_back] Context: {
+  "actor": {
+    "id": "p_erotica:iker_aguirre_instance",
+    "components": {
+      "core:name": {
+        "text": "Iker Aguirre"
+      },
+      "core:portrait": {
+        "imagePath": "portraits/iker_aguirre.png",
+        "altText": "Iker Aguirre - a young man with a muscular body."
+      },
+      "core:actor": {},
+      "core:player_type": {
+        "type": "human"
+      },
+      "core:perception_log": {
+        "maxEntries": 50,
+        "logEntries": [
+          {
+            "descriptionText": "Iker Aguirre says: \"*seated at an outside table of the coffee shop, Iker takes a sip of his coffee as he passes the page of his novel.*\"",
+            "timestamp": "2025-07-06T11:05:31.521Z",
+            "perceptionType": "speech_local",
+            "actorId": "p_erotica:iker_aguirre_instance",
+            "targetId": null,
+            "involvedEntities": []
+          },
+          {
+            "descriptionText": "Amaia Castillo says: \"Pardonnez-moi... that novel - is it worth the emotional capital? *approaches his table with measured steps, amber eyes fixed on both him and his book* I find myself... reassessing my literary portfolio.\"",
+            "timestamp": "2025-07-06T11:05:43.004Z",
+            "perceptionType": "speech_local",
+            "actorId": "p_erotica:amaia_castillo_instance",
+            "targetId": null,
+            "involvedEntities": []
+          },
+          {
+            "descriptionText": "Amaia Castillo and Iker Aguirre are now close.",
+            "timestamp": "2025-07-06T11:05:43.019Z",
+            "perceptionType": "state_change_observable",
+            "actorId": "p_erotica:amaia_castillo_instance",
+            "targetId": "p_erotica:iker_aguirre_instance",
+            "involvedEntities": []
+          }
+        ]
+      },
+      "anatomy:body": {
+        "recipeId": "p_erotica:iker_aguirre_recipe",
+        "body": {
+          "root": "6f737e08-5ba7-45e1-94c1-3004c24eda57",
+          "parts": {
+            "torso": "6f737e08-5ba7-45e1-94c1-3004c24eda57",
+            "head": "b09c4555-dfde-49fb-93cf-07677f5e05d7",
+            "left arm": "de4749a8-0503-435c-a422-f311dcef7dcc",
+            "right arm": "d217e94f-5ab4-420b-a0f5-0c594dfa4adb",
+            "left leg": "a9aca308-007c-4599-8f07-bdb5c3d2fbb0",
+            "right leg": "b7a8a88e-1c55-4b76-b4a9-30509ac527d4",
+            "left eye": "7f9662c5-e50f-4508-8021-71b9fe57fc8c",
+            "right eye": "aad9a25d-b01b-42de-9874-8399f7304c07",
+            "left ear": "0b12d33d-2df6-4717-9426-c99991ec0e9d",
+            "right ear": "88a6fe7d-3a38-482d-b75c-a90f37dbb98b",
+            "nose": "168960f2-4bc5-4bf3-bb35-bf9d516f6954",
+            "mouth": "f860eae5-cf79-488c-a628-6ec6f6f4de0c",
+            "teeth": "0ab2663b-041c-4ca6-beee-fa9faaefd997",
+            "hair": "ab8b3f9e-c942-4b37-8405-3df061789b85",
+            "pubic hair": "ebb16820-7063-4980-956a-0afeb14c06cf",
+            "penis": "ea1cd781-8c16-4cdd-a60f-b940010efc99",
+            "left testicle": "89e3b691-a2d3-4b55-8001-b1d07a9e5dc2",
+            "right testicle": "b93e9cc1-9473-4231-a1b7-55fe382c5529",
+            "left arm hand": "1dddb513-4abb-419e-8c09-fc8c87644441",
+            "right arm hand": "06c27655-7aa9-4f36-abef-caf236b23caa",
+            "left leg foot": "98e2c1f3-366f-410e-ae00-358f800295b4",
+            "right leg foot": "62343e97-57de-4554-a88f-71dae4cd2c56",
+            "asshole": "60553ec7-74d0-4c82-8353-c7b71967a85c"
+          }
+        }
+      },
+      "core:position": {
+        "locationId": "p_erotica:outside_tables_coffee_shop_instance"
+      },
+      "core:short_term_memory": {
+        "thoughts": [],
+        "maxEntries": 10
+      },
+      "core:notes": {
+        "notes": []
+      },
+      "core:goals": {
+        "goals": []
+      },
+      "core:description": {
+        "text": "Hair: medium, brown, straight\nEyes: brown, round\nTorso: muscular\nArms: muscular\nLegs: muscular\nPubic hair: curly\nPenis: medium"
+      },
+      "intimacy:closeness": {
+        "partners": [
+          "p_erotica:amaia_castillo_instance"
+        ]
+      },
+      "core:current_actor": {}
+    }
+  }
+}
+consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[intimacy:step_back]: Evaluating 1 prerequisite rule(s)...
+consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[intimacy:step_back]: Resolving condition_ref 'core:actor-can-move'...
+consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[intimacy:step_back]:   - Evaluating resolved rule: {"hasPartWithComponentValue":["actor","core:movement","locked",false]}
+consoleLogger.js:187 JsonLogicEvaluationService: Evaluating rule: {"hasPartWithComponentValue":["actor","core:movement","locked",false]}. Context keys: actor
+23
+consoleLogger.js:187 EntityManager.getEntitiesWithComponent: Found 44 entities with component 'anatomy:joint'.
+consoleLogger.js:187 JsonLogicCustomOperators: hasPartWithComponentValue(p_erotica:iker_aguirre_instance, core:movement, locked, false) = false
+consoleLogger.js:187 JsonLogicEvaluationService: Rule evaluation raw result: false, Final boolean: false
+consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[intimacy:step_back]: ← FAILED (Rule 1/1): Prerequisite check FAILED. Rule: {"logic":{"condition_ref":"core:actor-can-move"},"failure_message":"You cannot move without functioning legs."}
+consoleLogger.js:187 PrerequisiteEvaluationService:    Reason: You cannot move without functioning legs.
+consoleLogger.js:187 ScopeCache: Cache hit for key: p_erotica:iker_aguirre_instance:p_erotica:outside_tables_coffee_shop_instance:{"type":"ArrayIterationStep","parent":{"type":"Step","field":"partners","isArray":false,"parent":{"type":"Step","field":"intimacy:closeness","isArray":false,"parent":{"type":"Step","field":"components","isArray":false,"parent":{"type":"Source","kind":"actor"}}}}}
+consoleLogger.js:187 Formatting command for action: intimacy:thumb_wipe_cheek, template: "wipe {target}'s cheek with your thumb", targetType: entity
+consoleLogger.js:187  -> Found entity p_erotica:amaia_castillo_instance, display name: "Amaia Castillo"
+consoleLogger.js:187  <- Final formatted command: "wipe Amaia Castillo's cheek with your thumb"
+consoleLogger.js:187 ScopeCache: Cache miss for key: p_erotica:iker_aguirre_instance:p_erotica:outside_tables_coffee_shop_instance:{"type":"Filter","logic":{"hasPartOfType":["entity","breast"]},"parent":{"type":"ArrayIterationStep","parent":{"type":"Step","field":"partners","isArray":false,"parent":{"type":"Step","field":"intimacy:closeness","isArray":false,"parent":{"type":"Step","field":"components","isArray":false,"parent":{"type":"Source","kind":"actor"}}}}}}, resolving...
+consoleLogger.js:175 TargetResolutionService: Error resolving scope 'sex:actors_with_breasts_in_intimacy': Expression depth limit exceeded (max 4) ScopeDepthError: Expression depth limit exceeded (max 4)
+    at Object.ensure (depthGuard.js:13:15)
+    at ScopeEngine._resolveWithDepthAndCycleChecking (engine.js:212:20)
+    at Object.resolve (engine.js:228:25)
+    at Object.resolve (stepResolver.js:106:43)
+    at Object.resolve (dispatcher.js:14:16)
+    at ScopeEngine._resolveWithDepthAndCycleChecking (engine.js:238:25)
+    at Object.resolve (engine.js:228:25)
+    at Object.resolve (stepResolver.js:106:43)
+    at Object.resolve (dispatcher.js:14:16)
+    at ScopeEngine._resolveWithDepthAndCycleChecking (engine.js:238:25)
+error	@	consoleLogger.js:175
+error	@	loggerUtils.js:71
+#handleResolutionError	@	targetResolutionService.js:232
+#resolveScopeToIds	@	targetResolutionService.js:183
+resolveTargets	@	targetResolutionService.js:117
+process	@	actionCandidateProcessor.js:110
+#processCandidate	@	actionDiscoveryService.js:142
+(anonymous)	@	actionDiscoveryService.js:217
+getValidActions	@	actionDiscoveryService.js:216
+get	@	availableActionsProvider.js:174
+await in get		
+buildChoices	@	turnActionChoicePipeline.js:36
+decideAction	@	genericTurnStrategy.js:45
+_decideAction	@	awaitingActorDecisionState.js:189
+run	@	actionDecisionWorkflow.js:34
+_handleActionDecision	@	awaitingActorDecisionState.js:102
+enterState	@	awaitingActorDecisionState.js:119
+await in enterState		
+_transitionToState	@	baseTurnHandler.js:236
+await in _transitionToState		
+requestAwaitingInputStateTransition	@	baseTurnHandler.js:594
+requestAwaitingInputStateTransition	@	turnContext.js:249
+_requestAwaitingInput	@	turnIdleState.js:140
+startTurn	@	turnIdleState.js:72
+startTurn	@	genericTurnHandler.js:134
+startTurn	@	actorTurnHandler.js:64
+advanceTurn	@	turnManager.js:455
+await in advanceTurn		
+advanceTurn	@	turnManager.js:345
+await in advanceTurn		
+#handleTurnEndedEvent	@	turnManager.js:612
+(anonymous)	@	turnManager.js:195
+(anonymous)	@	turnEventSubscription.js:57
+setTimeout		
+setTimeout	@	RealScheduler.js:13
+wrapped	@	turnEventSubscription.js:57
+(anonymous)	@	eventBus.js:136
+dispatch	@	eventBus.js:133
+#emitEvent	@	validatedEventDispatcher.js:192
+dispatch	@	validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload	@	safeEventDispatcher.js:124
+#executeSafely	@	safeEventDispatcher.js:88
+dispatch	@	safeEventDispatcher.js:122
+execute	@	endTurnHandler.js:88
+(anonymous)	@	interpreterRegistrations.js:59
+execute	@	operationInterpreter.js:94
+executeActionSequence	@	actionSequence.js:95
+_executeActions	@	systemLogicInterpreter.js:322
+#processRule	@	systemLogicInterpreter.js:306
+#handleEvent	@	systemLogicInterpreter.js:249
+(anonymous)	@	eventBus.js:136
+dispatch	@	eventBus.js:133
+#emitEvent	@	validatedEventDispatcher.js:192
+dispatch	@	validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload	@	safeEventDispatcher.js:124
+#executeSafely	@	safeEventDispatcher.js:88
+dispatch	@	safeEventDispatcher.js:122
+dispatchWithErrorHandling	@	eventDispatchService.js:98
+dispatchAction	@	commandProcessor.js:110
+_dispatchAction	@	commandProcessingWorkflow.js:104
+processCommand	@	commandProcessingWorkflow.js:239
+_processCommandInternal	@	processingCommandState.js:333
+_executeAction	@	processingWorkflow.js:261
+await in _executeAction		
+run	@	processingWorkflow.js:87
+await in run		
+enterState	@	processingCommandState.js:290
+_transitionToState	@	baseTurnHandler.js:236
+await in _transitionToState		
+requestProcessingCommandStateTransition	@	baseTurnHandler.js:609
+requestProcessingCommandStateTransition	@	turnContext.js:253
+run	@	actionDecisionWorkflow.js:62
+await in run		
+_handleActionDecision	@	awaitingActorDecisionState.js:102
+enterState	@	awaitingActorDecisionState.js:119
+await in enterState		
+_transitionToState	@	baseTurnHandler.js:236
+await in _transitionToState		
+requestAwaitingInputStateTransition	@	baseTurnHandler.js:594
+requestAwaitingInputStateTransition	@	turnContext.js:249
+_requestAwaitingInput	@	turnIdleState.js:140
+startTurn	@	turnIdleState.js:72
+startTurn	@	genericTurnHandler.js:134
+startTurn	@	actorTurnHandler.js:64
+advanceTurn	@	turnManager.js:455
+await in advanceTurn		
+#handleTurnEndedEvent	@	turnManager.js:612
+(anonymous)	@	turnManager.js:195
+(anonymous)	@	turnEventSubscription.js:57
+setTimeout		
+setTimeout	@	RealScheduler.js:13
+wrapped	@	turnEventSubscription.js:57
+(anonymous)	@	eventBus.js:136
+dispatch	@	eventBus.js:133
+#emitEvent	@	validatedEventDispatcher.js:192
+dispatch	@	validatedEventDispatcher.js:222
+#dispatchViaValidatedDispatcher	@	dispatchEventHandler.js:139
+execute	@	dispatchEventHandler.js:175
+(anonymous)	@	interpreterRegistrations.js:59
+execute	@	operationInterpreter.js:94
+executeActionSequence	@	actionSequence.js:95
+_executeActions	@	systemLogicInterpreter.js:322
+#processRule	@	systemLogicInterpreter.js:306
+#handleEvent	@	systemLogicInterpreter.js:249
+(anonymous)	@	eventBus.js:136
+dispatch	@	eventBus.js:133
+#emitEvent	@	validatedEventDispatcher.js:192
+dispatch	@	validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload	@	safeEventDispatcher.js:124
+#executeSafely	@	safeEventDispatcher.js:88
+dispatch	@	safeEventDispatcher.js:122
+dispatchWithErrorHandling	@	eventDispatchService.js:98
+dispatchAction	@	commandProcessor.js:110
+_dispatchAction	@	commandProcessingWorkflow.js:104
+processCommand	@	commandProcessingWorkflow.js:239
+_processCommandInternal	@	processingCommandState.js:333
+_executeAction	@	processingWorkflow.js:261
+await in _executeAction		
+run	@	processingWorkflow.js:87
+await in run		
+enterState	@	processingCommandState.js:290
+_transitionToState	@	baseTurnHandler.js:236
+await in _transitionToState		
+requestProcessingCommandStateTransition	@	baseTurnHandler.js:609
+requestProcessingCommandStateTransition	@	turnContext.js:253
+run	@	actionDecisionWorkflow.js:62
+await in run		
+_handleActionDecision	@	awaitingActorDecisionState.js:102
+enterState	@	awaitingActorDecisionState.js:119
+await in enterState		
+_transitionToState	@	baseTurnHandler.js:236
+await in _transitionToState		
+requestAwaitingInputStateTransition	@	baseTurnHandler.js:594
+requestAwaitingInputStateTransition	@	turnContext.js:249
+_requestAwaitingInput	@	turnIdleState.js:140
+startTurn	@	turnIdleState.js:72
+startTurn	@	genericTurnHandler.js:134
+startTurn	@	actorTurnHandler.js:64
+advanceTurn	@	turnManager.js:455
+await in advanceTurn		
+advanceTurn	@	turnManager.js:345
+await in advanceTurn		
+start	@	turnManager.js:209
+#finalizeGameStart	@	gameSessionManager.js:146
+await in #finalizeGameStart		
+finalizeNewGameSuccess	@	gameSessionManager.js:167
+#finalizeInitializationSuccess	@	gameEngine.js:280
+startNewGame	@	gameEngine.js:316
+await in startNewGame		
+startGameStage	@	engineStages.js:87
+beginGame	@	main.js:217
+(anonymous)	@	game.html:331
+Promise.then		
+(anonymous)	@	game.html:328
+consoleLogger.js:187 VED: Validating payload for event 'core:system_error_occurred' against schema 'core:system_error_occurred#payload'...
+consoleLogger.js:175 VED: Payload validation FAILED for event 'core:system_error_occurred'. Dispatch SKIPPED. Errors: [/details]: must NOT have additional properties 
+{payload: {…}, errors: Array(1)}
+errors
+: 
+[{…}]
+payload
+: 
+{message: "Error resolving scope 'sex:actors_with_breasts_in_intimacy': Expression depth limit exceeded (max 4)", details: {…}}
+[[Prototype]]
+: 
+Object
+consoleLogger.js:187 VED: Dispatch skipped for 'core:system_error_occurred' due to validation failure (see error above).
+consoleLogger.js:175 Error resolving scope for action 'sex:fondle_breasts': Expression depth limit exceeded (max 4) ScopeDepthError: Expression depth limit exceeded (max 4)
+    at Object.ensure (depthGuard.js:13:15)
+    at ScopeEngine._resolveWithDepthAndCycleChecking (engine.js:212:20)
+    at Object.resolve (engine.js:228:25)
+    at Object.resolve (stepResolver.js:106:43)
+    at Object.resolve (dispatcher.js:14:16)
+    at ScopeEngine._resolveWithDepthAndCycleChecking (engine.js:238:25)
+    at Object.resolve (engine.js:228:25)
+    at Object.resolve (stepResolver.js:106:43)
+    at Object.resolve (dispatcher.js:14:16)
+    at ScopeEngine._resolveWithDepthAndCycleChecking (engine.js:238:25)
+consoleLogger.js:163 SafeEventDispatcher: Underlying VED failed to dispatch event 'core:system_error_occurred' (returned false). See VED logs for details. Payload: {"message":"Error resolving scope 'sex:actors_with_breasts_in_intimacy': Expression depth limit exceeded (max 4)","details":{"error":"Expression depth limit exceeded (max 4)","stack":"ScopeDepthError: Expression depth limit exceeded (max 4)\n    at Object.ensure (http://127.0.0.1:8080/bundle.js:21245:17)\n    at ScopeEngine._resolveWithDepthAndCycleChecking (http://127.0.0.1:8080/bundle.js:26582:22)\n    at Object.resolve (http://127.0.0.1:8080/bundle.js:26591:27)\n    at Object.resolve (http://127.0.0.1:8080/bundle.js:26208:45)\n    at Object.resolve (http://127.0.0.1:8080/bundle.js:26005:18)\n    at ScopeEngine._resolveWithDepthAndCycleChecking (http://127.0.0.1:8080/bundle.js:26599:27)\n    at Object.resolve (http://127.0.0.1:8080/bundle.js:26591:27)\n    at Object.resolve (http://127.0.0.1:8080/bundle.js:26208:45)\n    at Object.resolve (http://127.0.0.1:8080/bundle.js:26005:18)\n    at ScopeEngine._resolveWithDepthAndCycleChecking (http://127.0.0.1:8080/bundle.js:26599:27)"}}
+consoleLogger.js:187 ActionDiscoveryService: Finished action discovery for actor p_erotica:iker_aguirre_instance. Found 4 actions from 9 candidates.
+consoleLogger.js:187 [Action Discovery Trace for actor p_erotica:iker_aguirre_instance]
+consoleLogger.js:198 Action Discovery Trace for p_erotica:iker_aguirre_instance
+consoleLogger.js:219 
+(index)
+type
+message
+source
+timestamp
+data
+0	'info'	"Starting action discovery for actor 'p_erotica:iker_aguirre_instance'."	'getValidActions'	1751799943052	{…}
+1	'data'	"Actor 'p_erotica:iker_aguirre_instance' has components."	'ActionIndex.getCandidateActions'	1751799943052	{…}
+2	'info'	'Added 4 actions with no actor component requirements.'	'ActionIndex.getCandidateActions'	1751799943052	
+3	'info'	"Found 5 actions requiring component 'intimacy:closeness'."	'ActionIndex.getCandidateActions'	1751799943052	
+4	'success'	'Final candidate list contains 9 unique actions.'	'ActionIndex.getCandidateActions'	1751799943053	{…}
+5	'step'	"Processing candidate action: 'core:follow'"	'ActionCandidateProcessor.process'	1751799943053	
+6	'data'	'Built prerequisite evaluation context.'	'PrerequisiteEvaluationService.evaluate'	1751799943053	{…}
+7	'info'	'Evaluating rule.'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1751799943053	{…}
+8	'data'	'Condition reference resolved.'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1751799943053	{…}
+9	'failure'	'Rule evaluation result: false'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1751799943056	{…}
+10	'failure'	"Action 'core:follow' discarded due to failed actor prerequisites."	'ActionCandidateProcessor.process'	1751799943057	
+11	'step'	"Processing candidate action: 'core:go'"	'ActionCandidateProcessor.process'	1751799943057	
+12	'data'	'Built prerequisite evaluation context.'	'PrerequisiteEvaluationService.evaluate'	1751799943057	{…}
+13	'info'	'Evaluating rule.'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1751799943057	{…}
+14	'data'	'Condition reference resolved.'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1751799943058	{…}
+15	'failure'	'Rule evaluation result: false'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1751799943062	{…}
+16	'failure'	"Action 'core:go' discarded due to failed actor prerequisites."	'ActionCandidateProcessor.process'	1751799943062	
+17	'step'	"Processing candidate action: 'core:wait'"	'ActionCandidateProcessor.process'	1751799943062	
+18	'success'	"Action 'core:wait' passed actor prerequisite check."	'ActionCandidateProcessor.process'	1751799943062	
+19	'info'	"Resolving scope 'none'."	'TargetResolutionService.resolveTargets'	1751799943062	
+20	'info'	"Scope is 'none'; returning a single no-target context."	'TargetResolutionService.resolveTargets'	1751799943062	
+21	'info'	"Scope for action 'core:wait' resolved to 1 targets."	'ActionCandidateProcessor.process'	1751799943062	{…}
+22	'step'	"Processing candidate action: 'intimacy:get_close'"	'ActionCandidateProcessor.process'	1751799943062	
+23	'data'	'Built prerequisite evaluation context.'	'PrerequisiteEvaluationService.evaluate'	1751799943062	{…}
+24	'info'	'Evaluating rule.'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1751799943062	{…}
+25	'data'	'Condition reference resolved.'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1751799943062	{…}
+26	'failure'	'Rule evaluation result: false'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1751799943064	{…}
+27	'failure'	"Action 'intimacy:get_close' discarded due to failed actor prerequisites."	'ActionCandidateProcessor.process'	1751799943064	
+28	'step'	"Processing candidate action: 'intimacy:adjust_clothing'"	'ActionCandidateProcessor.process'	1751799943064	
+29	'data'	'Built prerequisite evaluation context.'	'PrerequisiteEvaluationService.evaluate'	1751799943065	{…}
+30	'info'	'Evaluating rule.'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1751799943065	{…}
+31	'data'	'Condition reference resolved.'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1751799943065	{…}
+32	'success'	'Rule evaluation result: true'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1751799943065	{…}
+33	'success'	"Action 'intimacy:adjust_clothing' passed actor prerequisite check."	'ActionCandidateProcessor.process'	1751799943065	
+34	'info'	"Resolving scope 'intimacy:close_actors'."	'TargetResolutionService.resolveTargets'	1751799943065	
+35	'info'	"Resolving scope 'intimacy:close_actors' with DSL."	'TargetResolutionService.#resolveScopeToIds'	1751799943065	
+36	'info'	"Using pre-parsed AST for scope 'intimacy:close_actors'."	'TargetResolutionService.#resolveScopeToIds'	1751799943065	
+37	'info'	"DSL scope 'intimacy:close_actors' resolved to 1 target(s)."	'TargetResolutionService.resolveTargets'	1751799943065	{…}
+38	'info'	"Scope for action 'intimacy:adjust_clothing' resolved to 1 targets."	'ActionCandidateProcessor.process'	1751799943065	{…}
+39	'step'	"Processing candidate action: 'intimacy:kiss_cheek'"	'ActionCandidateProcessor.process'	1751799943065	
+40	'success'	"Action 'intimacy:kiss_cheek' passed actor prerequisite check."	'ActionCandidateProcessor.process'	1751799943065	
+41	'info'	"Resolving scope 'intimacy:close_actors'."	'TargetResolutionService.resolveTargets'	1751799943065	
+42	'info'	"Resolving scope 'intimacy:close_actors' with DSL."	'TargetResolutionService.#resolveScopeToIds'	1751799943065	
+43	'info'	"Using pre-parsed AST for scope 'intimacy:close_actors'."	'TargetResolutionService.#resolveScopeToIds'	1751799943065	
+44	'info'	"DSL scope 'intimacy:close_actors' resolved to 1 target(s)."	'TargetResolutionService.resolveTargets'	1751799943065	{…}
+45	'info'	"Scope for action 'intimacy:kiss_cheek' resolved to 1 targets."	'ActionCandidateProcessor.process'	1751799943065	{…}
+46	'step'	"Processing candidate action: 'intimacy:step_back'"	'ActionCandidateProcessor.process'	1751799943066	
+47	'data'	'Built prerequisite evaluation context.'	'PrerequisiteEvaluationService.evaluate'	1751799943066	{…}
+48	'info'	'Evaluating rule.'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1751799943066	{…}
+49	'data'	'Condition reference resolved.'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1751799943066	{…}
+50	'failure'	'Rule evaluation result: false'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1751799943068	{…}
+51	'failure'	"Action 'intimacy:step_back' discarded due to failed actor prerequisites."	'ActionCandidateProcessor.process'	1751799943068	
+52	'step'	"Processing candidate action: 'intimacy:thumb_wipe_cheek'"	'ActionCandidateProcessor.process'	1751799943068	
+53	'success'	"Action 'intimacy:thumb_wipe_cheek' passed actor prerequisite check."	'ActionCandidateProcessor.process'	1751799943068	
+54	'info'	"Resolving scope 'intimacy:close_actors'."	'TargetResolutionService.resolveTargets'	1751799943068	
+55	'info'	"Resolving scope 'intimacy:close_actors' with DSL."	'TargetResolutionService.#resolveScopeToIds'	1751799943068	
+56	'info'	"Using pre-parsed AST for scope 'intimacy:close_actors'."	'TargetResolutionService.#resolveScopeToIds'	1751799943068	
+57	'info'	"DSL scope 'intimacy:close_actors' resolved to 1 target(s)."	'TargetResolutionService.resolveTargets'	1751799943068	{…}
+58	'info'	"Scope for action 'intimacy:thumb_wipe_cheek' resolved to 1 targets."	'ActionCandidateProcessor.process'	1751799943068	{…}
+59	'step'	"Processing candidate action: 'sex:fondle_breasts'"	'ActionCandidateProcessor.process'	1751799943068	
+60	'success'	"Action 'sex:fondle_breasts' passed actor prerequisite check."	'ActionCandidateProcessor.process'	1751799943068	
+61	'info'	"Resolving scope 'sex:actors_with_breasts_in_intimacy'."	'TargetResolutionService.resolveTargets'	1751799943068	
+62	'info'	"Resolving scope 'sex:actors_with_breasts_in_intimacy' with DSL."	'TargetResolutionService.#resolveScopeToIds'	1751799943068	
+63	'info'	"Using pre-parsed AST for scope 'sex:actors_with_breasts_in_intimacy'."	'TargetResolutionService.#resolveScopeToIds'	1751799943068	
+64	'error'	"Error resolving scope 'sex:actors_with_breasts_in_intimacy': Expression depth limit exceeded (max 4)"	'TargetResolutionService.#resolveScopeToIds'	1751799943068	{…}
+65	'info'	"DSL scope 'sex:actors_with_breasts_in_intimacy' resolved to 0 target(s)."	'TargetResolutionService.resolveTargets'	1751799943069	{…}
+66	'info'	'Finished discovery. Found 4 valid actions.'	'getValidActions'	1751799943070	
+Array(67)
+consoleLogger.js:163 Encountered 1 formatting error(s) during action discovery for actor p_erotica:iker_aguirre_instance. These actions will not be available.
+warn	@	consoleLogger.js:163
+get	@	availableActionsProvider.js:182
+await in get		
+buildChoices	@	turnActionChoicePipeline.js:36
+decideAction	@	genericTurnStrategy.js:45
+_decideAction	@	awaitingActorDecisionState.js:189
+run	@	actionDecisionWorkflow.js:34
+_handleActionDecision	@	awaitingActorDecisionState.js:102
+enterState	@	awaitingActorDecisionState.js:119
+await in enterState		
+_transitionToState	@	baseTurnHandler.js:236
+await in _transitionToState		
+requestAwaitingInputStateTransition	@	baseTurnHandler.js:594
+requestAwaitingInputStateTransition	@	turnContext.js:249
+_requestAwaitingInput	@	turnIdleState.js:140
+startTurn	@	turnIdleState.js:72
+startTurn	@	genericTurnHandler.js:134
+startTurn	@	actorTurnHandler.js:64
+advanceTurn	@	turnManager.js:455
+await in advanceTurn		
+advanceTurn	@	turnManager.js:345
+await in advanceTurn		
+#handleTurnEndedEvent	@	turnManager.js:612
+(anonymous)	@	turnManager.js:195
+(anonymous)	@	turnEventSubscription.js:57
+setTimeout		
+setTimeout	@	RealScheduler.js:13
+wrapped	@	turnEventSubscription.js:57
+(anonymous)	@	eventBus.js:136
+dispatch	@	eventBus.js:133
+#emitEvent	@	validatedEventDispatcher.js:192
+dispatch	@	validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload	@	safeEventDispatcher.js:124
+#executeSafely	@	safeEventDispatcher.js:88
+dispatch	@	safeEventDispatcher.js:122
+execute	@	endTurnHandler.js:88
+(anonymous)	@	interpreterRegistrations.js:59
+execute	@	operationInterpreter.js:94
+executeActionSequence	@	actionSequence.js:95
+_executeActions	@	systemLogicInterpreter.js:322
+#processRule	@	systemLogicInterpreter.js:306
+#handleEvent	@	systemLogicInterpreter.js:249
+(anonymous)	@	eventBus.js:136
+dispatch	@	eventBus.js:133
+#emitEvent	@	validatedEventDispatcher.js:192
+dispatch	@	validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload	@	safeEventDispatcher.js:124
+#executeSafely	@	safeEventDispatcher.js:88
+dispatch	@	safeEventDispatcher.js:122
+dispatchWithErrorHandling	@	eventDispatchService.js:98
+dispatchAction	@	commandProcessor.js:110
+_dispatchAction	@	commandProcessingWorkflow.js:104
+processCommand	@	commandProcessingWorkflow.js:239
+_processCommandInternal	@	processingCommandState.js:333
+_executeAction	@	processingWorkflow.js:261
+await in _executeAction		
+run	@	processingWorkflow.js:87
+await in run		
+enterState	@	processingCommandState.js:290
+_transitionToState	@	baseTurnHandler.js:236
+await in _transitionToState		
+requestProcessingCommandStateTransition	@	baseTurnHandler.js:609
+requestProcessingCommandStateTransition	@	turnContext.js:253
+run	@	actionDecisionWorkflow.js:62
+await in run		
+_handleActionDecision	@	awaitingActorDecisionState.js:102
+enterState	@	awaitingActorDecisionState.js:119
+await in enterState		
+_transitionToState	@	baseTurnHandler.js:236
+await in _transitionToState		
+requestAwaitingInputStateTransition	@	baseTurnHandler.js:594
+requestAwaitingInputStateTransition	@	turnContext.js:249
+_requestAwaitingInput	@	turnIdleState.js:140
+startTurn	@	turnIdleState.js:72
+startTurn	@	genericTurnHandler.js:134
+startTurn	@	actorTurnHandler.js:64
+advanceTurn	@	turnManager.js:455
+await in advanceTurn		
+#handleTurnEndedEvent	@	turnManager.js:612
+(anonymous)	@	turnManager.js:195
+(anonymous)	@	turnEventSubscription.js:57
+setTimeout		
+setTimeout	@	RealScheduler.js:13
+wrapped	@	turnEventSubscription.js:57
+(anonymous)	@	eventBus.js:136
+dispatch	@	eventBus.js:133
+#emitEvent	@	validatedEventDispatcher.js:192
+dispatch	@	validatedEventDispatcher.js:222
+#dispatchViaValidatedDispatcher	@	dispatchEventHandler.js:139
+execute	@	dispatchEventHandler.js:175
+(anonymous)	@	interpreterRegistrations.js:59
+execute	@	operationInterpreter.js:94
+executeActionSequence	@	actionSequence.js:95
+_executeActions	@	systemLogicInterpreter.js:322
+#processRule	@	systemLogicInterpreter.js:306
+#handleEvent	@	systemLogicInterpreter.js:249
+(anonymous)	@	eventBus.js:136
+dispatch	@	eventBus.js:133
+#emitEvent	@	validatedEventDispatcher.js:192
+dispatch	@	validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload	@	safeEventDispatcher.js:124
+#executeSafely	@	safeEventDispatcher.js:88
+dispatch	@	safeEventDispatcher.js:122
+dispatchWithErrorHandling	@	eventDispatchService.js:98
+dispatchAction	@	commandProcessor.js:110
+_dispatchAction	@	commandProcessingWorkflow.js:104
+processCommand	@	commandProcessingWorkflow.js:239
+_processCommandInternal	@	processingCommandState.js:333
+_executeAction	@	processingWorkflow.js:261
+await in _executeAction		
+run	@	processingWorkflow.js:87
+await in run		
+enterState	@	processingCommandState.js:290
+_transitionToState	@	baseTurnHandler.js:236
+await in _transitionToState		
+requestProcessingCommandStateTransition	@	baseTurnHandler.js:609
+requestProcessingCommandStateTransition	@	turnContext.js:253
+run	@	actionDecisionWorkflow.js:62
+await in run		
+_handleActionDecision	@	awaitingActorDecisionState.js:102
+enterState	@	awaitingActorDecisionState.js:119
+await in enterState		
+_transitionToState	@	baseTurnHandler.js:236
+await in _transitionToState		
+requestAwaitingInputStateTransition	@	baseTurnHandler.js:594
+requestAwaitingInputStateTransition	@	turnContext.js:249
+_requestAwaitingInput	@	turnIdleState.js:140
+startTurn	@	turnIdleState.js:72
+startTurn	@	genericTurnHandler.js:134
+startTurn	@	actorTurnHandler.js:64
+advanceTurn	@	turnManager.js:455
+await in advanceTurn		
+advanceTurn	@	turnManager.js:345
+await in advanceTurn		
+start	@	turnManager.js:209
+#finalizeGameStart	@	gameSessionManager.js:146
+await in #finalizeGameStart		
+finalizeNewGameSuccess	@	gameSessionManager.js:167
+#finalizeInitializationSuccess	@	gameEngine.js:280
+startNewGame	@	gameEngine.js:316
+await in startNewGame		
+startGameStage	@	engineStages.js:87
+beginGame	@	main.js:217
+(anonymous)	@	game.html:331
+Promise.then		
+(anonymous)	@	game.html:328
+consoleLogger.js:163   - Action 'sex:fondle_breasts' (Target: N/A): ScopeDepthError: Expression depth limit exceeded (max 4)
+warn	@	consoleLogger.js:163
+(anonymous)	@	availableActionsProvider.js:186
+get	@	availableActionsProvider.js:185
+await in get		
+buildChoices	@	turnActionChoicePipeline.js:36
+decideAction	@	genericTurnStrategy.js:45
+_decideAction	@	awaitingActorDecisionState.js:189
+run	@	actionDecisionWorkflow.js:34
+_handleActionDecision	@	awaitingActorDecisionState.js:102
+enterState	@	awaitingActorDecisionState.js:119
+await in enterState		
+_transitionToState	@	baseTurnHandler.js:236
+await in _transitionToState		
+requestAwaitingInputStateTransition	@	baseTurnHandler.js:594
+requestAwaitingInputStateTransition	@	turnContext.js:249
+_requestAwaitingInput	@	turnIdleState.js:140
+startTurn	@	turnIdleState.js:72
+startTurn	@	genericTurnHandler.js:134
+startTurn	@	actorTurnHandler.js:64
+advanceTurn	@	turnManager.js:455
+await in advanceTurn		
+advanceTurn	@	turnManager.js:345
+await in advanceTurn		
+#handleTurnEndedEvent	@	turnManager.js:612
+(anonymous)	@	turnManager.js:195
+(anonymous)	@	turnEventSubscription.js:57
+setTimeout		
+setTimeout	@	RealScheduler.js:13
+wrapped	@	turnEventSubscription.js:57
+(anonymous)	@	eventBus.js:136
+dispatch	@	eventBus.js:133
+#emitEvent	@	validatedEventDispatcher.js:192
+dispatch	@	validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload	@	safeEventDispatcher.js:124
+#executeSafely	@	safeEventDispatcher.js:88
+dispatch	@	safeEventDispatcher.js:122
+execute	@	endTurnHandler.js:88
+(anonymous)	@	interpreterRegistrations.js:59
+execute	@	operationInterpreter.js:94
+executeActionSequence	@	actionSequence.js:95
+_executeActions	@	systemLogicInterpreter.js:322
+#processRule	@	systemLogicInterpreter.js:306
+#handleEvent	@	systemLogicInterpreter.js:249
+(anonymous)	@	eventBus.js:136
+dispatch	@	eventBus.js:133
+#emitEvent	@	validatedEventDispatcher.js:192
+dispatch	@	validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload	@	safeEventDispatcher.js:124
+#executeSafely	@	safeEventDispatcher.js:88
+dispatch	@	safeEventDispatcher.js:122
+dispatchWithErrorHandling	@	eventDispatchService.js:98
+dispatchAction	@	commandProcessor.js:110
+_dispatchAction	@	commandProcessingWorkflow.js:104
+processCommand	@	commandProcessingWorkflow.js:239
+_processCommandInternal	@	processingCommandState.js:333
+_executeAction	@	processingWorkflow.js:261
+await in _executeAction		
+run	@	processingWorkflow.js:87
+await in run		
+enterState	@	processingCommandState.js:290
+_transitionToState	@	baseTurnHandler.js:236
+await in _transitionToState		
+requestProcessingCommandStateTransition	@	baseTurnHandler.js:609
+requestProcessingCommandStateTransition	@	turnContext.js:253
+run	@	actionDecisionWorkflow.js:62
+await in run		
+_handleActionDecision	@	awaitingActorDecisionState.js:102
+enterState	@	awaitingActorDecisionState.js:119
+await in enterState		
+_transitionToState	@	baseTurnHandler.js:236
+await in _transitionToState		
+requestAwaitingInputStateTransition	@	baseTurnHandler.js:594
+requestAwaitingInputStateTransition	@	turnContext.js:249
+_requestAwaitingInput	@	turnIdleState.js:140
+startTurn	@	turnIdleState.js:72
+startTurn	@	genericTurnHandler.js:134
+startTurn	@	actorTurnHandler.js:64
+advanceTurn	@	turnManager.js:455
+await in advanceTurn		
+#handleTurnEndedEvent	@	turnManager.js:612
+(anonymous)	@	turnManager.js:195
+(anonymous)	@	turnEventSubscription.js:57
+setTimeout		
+setTimeout	@	RealScheduler.js:13
+wrapped	@	turnEventSubscription.js:57
+(anonymous)	@	eventBus.js:136
+dispatch	@	eventBus.js:133
+#emitEvent	@	validatedEventDispatcher.js:192
+dispatch	@	validatedEventDispatcher.js:222
+#dispatchViaValidatedDispatcher	@	dispatchEventHandler.js:139
+execute	@	dispatchEventHandler.js:175
+(anonymous)	@	interpreterRegistrations.js:59
+execute	@	operationInterpreter.js:94
+executeActionSequence	@	actionSequence.js:95
+_executeActions	@	systemLogicInterpreter.js:322
+#processRule	@	systemLogicInterpreter.js:306
+#handleEvent	@	systemLogicInterpreter.js:249
+(anonymous)	@	eventBus.js:136
+dispatch	@	eventBus.js:133
+#emitEvent	@	validatedEventDispatcher.js:192
+dispatch	@	validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload	@	safeEventDispatcher.js:124
+#executeSafely	@	safeEventDispatcher.js:88
+dispatch	@	safeEventDispatcher.js:122
+dispatchWithErrorHandling	@	eventDispatchService.js:98
+dispatchAction	@	commandProcessor.js:110
+_dispatchAction	@	commandProcessingWorkflow.js:104
+processCommand	@	commandProcessingWorkflow.js:239
+_processCommandInternal	@	processingCommandState.js:333
+_executeAction	@	processingWorkflow.js:261
+await in _executeAction		
+run	@	processingWorkflow.js:87
+await in run		
+enterState	@	processingCommandState.js:290
+_transitionToState	@	baseTurnHandler.js:236
+await in _transitionToState		
+requestProcessingCommandStateTransition	@	baseTurnHandler.js:609
+requestProcessingCommandStateTransition	@	turnContext.js:253
+run	@	actionDecisionWorkflow.js:62
+await in run		
+_handleActionDecision	@	awaitingActorDecisionState.js:102
+enterState	@	awaitingActorDecisionState.js:119
+await in enterState		
+_transitionToState	@	baseTurnHandler.js:236
+await in _transitionToState		
+requestAwaitingInputStateTransition	@	baseTurnHandler.js:594
+requestAwaitingInputStateTransition	@	turnContext.js:249
+_requestAwaitingInput	@	turnIdleState.js:140
+startTurn	@	turnIdleState.js:72
+startTurn	@	genericTurnHandler.js:134
+startTurn	@	actorTurnHandler.js:64
+advanceTurn	@	turnManager.js:455
+await in advanceTurn		
+advanceTurn	@	turnManager.js:345
+await in advanceTurn		
+start	@	turnManager.js:209
+#finalizeGameStart	@	gameSessionManager.js:146
+await in #finalizeGameStart		
+finalizeNewGameSuccess	@	gameSessionManager.js:167
+#finalizeInitializationSuccess	@	gameEngine.js:280
+startNewGame	@	gameEngine.js:316
+await in startNewGame		
+startGameStage	@	engineStages.js:87
+beginGame	@	main.js:217
+(anonymous)	@	game.html:331
+Promise.then		
+(anonymous)	@	game.html:328
+consoleLogger.js:187 ActionIndexingService: indexed 4 actions for p_erotica:iker_aguirre_instance
+consoleLogger.js:187 [ChoicePipeline] Actor p_erotica:iker_aguirre_instance: 4 choices ready
+consoleLogger.js:187 VED: Validating payload for event 'core:player_turn_prompt' against schema 'core:player_turn_prompt#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:player_turn_prompt'.
+consoleLogger.js:187 VED: Dispatching event 'core:player_turn_prompt' via EventBus... 
+{entityId: 'p_erotica:iker_aguirre_instance', availableActions: Array(4)}
+consoleLogger.js:187 SystemLogicInterpreter: Received event: core:player_turn_prompt. Found 1 potential rule(s). 
+{payload: {…}}
+consoleLogger.js:187 SystemLogicInterpreter: [Event: core:player_turn_prompt] Assembling execution context via createNestedExecutionContext... (ActorID: p_erotica:iker_aguirre_instance, TargetID: null)
+consoleLogger.js:187 SystemLogicInterpreter: createJsonLogicContext: Creating JsonLogicEvaluationContext for event type [core:player_turn_prompt]. ActorID: [p_erotica:iker_aguirre_instance], TargetID: [None]
