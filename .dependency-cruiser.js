@@ -35,6 +35,19 @@ module.exports = {
       to: {},
     },
     {
+      name: 'no-node-core-in-browser',
+      comment: 'Browser bundle must not pull Node built-ins like fs, path, etc.',
+      severity: 'error',
+      from: { path: '^src/' },
+      to: { dependencyTypes: ['core'] },
+    },
+    {
+      name: 'no-src-to-test',
+      severity: 'error',
+      from: { path: '^src/' },
+      to: { path: '^tests?/' },
+    },
+    {
       name: 'no-deprecated-core',
       comment:
         'A module depends on a node core module that has been deprecated. Find an alternative - these are ' +
@@ -89,6 +102,22 @@ module.exports = {
       from: {},
       to: {
         dependencyTypes: ['npm-no-pkg', 'npm-unknown'],
+        pathNot: [
+          // These packages use dist/index files as their main entry points
+          // which causes false positives with dependency-cruiser
+          'node_modules/ajv/dist/ajv\\.js$',
+          'node_modules/ajv-formats/dist/index\\.js$',
+          'node_modules/lodash/lodash\\.js$',
+          'node_modules/@toolsycc/json-repair/dist/index\\.js$',
+          'node_modules/tinyqueue/index\\.js$',
+          'node_modules/gpt-tokenizer/esm/main\\.js$',
+          'node_modules/pako/dist/pako\\.esm\\.mjs$',
+          'node_modules/@msgpack/msgpack/dist\\.cjs/index\\.cjs$',
+          'node_modules/semver/index\\.js$',
+          'node_modules/json-logic-js/logic\\.js$',
+          'node_modules/uuid/dist/esm/index\\.js$',
+          'node_modules/lru-cache/dist/esm/index\\.d\\.ts$',
+        ],
       },
     },
     {

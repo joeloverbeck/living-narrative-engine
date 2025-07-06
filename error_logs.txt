@@ -1,62 +1,26 @@
 ﻿
-consoleLogger.js:187 JsonLogicCustomOperators: hasPartWithComponentValue(p_erotica:iker_aguirre_instance, core:movement, locked, false) = false
-consoleLogger.js:187 JsonLogicEvaluationService: Rule evaluation raw result: false, Final boolean: false
-consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[intimacy:get_close]: ← FAILED (Rule 1/1): Prerequisite check FAILED. Rule: {"logic":{"condition_ref":"core:actor-can-move"},"failure_message":"You cannot move without functioning legs."}
-consoleLogger.js:187 PrerequisiteEvaluationService:    Reason: You cannot move without functioning legs.
-consoleLogger.js:151 AnatomyGenerationService: Successfully generated anatomy for entity 'p_erotica:amaia_castillo_instance' with 23 parts
-consoleLogger.js:151 AnatomyInitializationService: Generated anatomy for entity 'p_erotica:amaia_castillo_instance'
-9
-consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:component_added'.
-consoleLogger.js:187 ActionDiscoveryService: Finished action discovery for actor p_erotica:iker_aguirre_instance. Found 1 actions from 4 candidates.
-consoleLogger.js:187 [Action Discovery Trace for actor p_erotica:iker_aguirre_instance]
-consoleLogger.js:198 Action Discovery Trace for p_erotica:iker_aguirre_instance
-consoleLogger.js:219 
-(index)
-type
-message
-source
-timestamp
-data
-0	'info'	"Starting action discovery for actor 'p_erotica:iker_aguirre_instance'."	'getValidActions'	1751785988085	{…}
-1	'data'	"Actor 'p_erotica:iker_aguirre_instance' has components."	'ActionIndex.getCandidateActions'	1751785988086	{…}
-2	'info'	'Added 4 actions with no actor component requirements.'	'ActionIndex.getCandidateActions'	1751785988086	
-3	'success'	'Final candidate list contains 4 unique actions.'	'ActionIndex.getCandidateActions'	1751785988086	{…}
-4	'step'	"Processing candidate action: 'core:go'"	'ActionCandidateProcessor.process'	1751785988086	
-5	'data'	'Built prerequisite evaluation context.'	'PrerequisiteEvaluationService.evaluate'	1751785988086	{…}
-6	'info'	'Evaluating rule.'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1751785988086	{…}
-7	'data'	'Condition reference resolved.'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1751785988086	{…}
-8	'failure'	'Rule evaluation result: false'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1751785988087	{…}
-9	'failure'	"Action 'core:go' discarded due to failed actor prerequisites."	'ActionCandidateProcessor.process'	1751785988087	
-10	'step'	"Processing candidate action: 'core:wait'"	'ActionCandidateProcessor.process'	1751785988087	
-11	'success'	"Action 'core:wait' passed actor prerequisite check."	'ActionCandidateProcessor.process'	1751785988087	
-12	'info'	"Resolving scope 'none'."	'TargetResolutionService.resolveTargets'	1751785988087	
-13	'info'	"Scope is 'none'; returning a single no-target context."	'TargetResolutionService.resolveTargets'	1751785988087	
-14	'info'	"Scope for action 'core:wait' resolved to 1 targets."	'ActionCandidateProcessor.process'	1751785988087	{…}
-15	'step'	"Processing candidate action: 'core:follow'"	'ActionCandidateProcessor.process'	1751785988087	
-16	'data'	'Built prerequisite evaluation context.'	'PrerequisiteEvaluationService.evaluate'	1751785988088	{…}
-17	'info'	'Evaluating rule.'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1751785988088	{…}
-18	'data'	'Condition reference resolved.'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1751785988088	{…}
-19	'failure'	'Rule evaluation result: false'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1751785988088	{…}
-20	'failure'	"Action 'core:follow' discarded due to failed actor prerequisites."	'ActionCandidateProcessor.process'	1751785988088	
-21	'step'	"Processing candidate action: 'intimacy:get_close'"	'ActionCandidateProcessor.process'	1751785988088	
-22	'data'	'Built prerequisite evaluation context.'	'PrerequisiteEvaluationService.evaluate'	1751785988088	{…}
-23	'info'	'Evaluating rule.'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1751785988088	{…}
-24	'data'	'Condition reference resolved.'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1751785988088	{…}
-25	'failure'	'Rule evaluation result: false'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1751785988088	{…}
-26	'failure'	"Action 'intimacy:get_close' discarded due to failed actor prerequisites."	'ActionCandidateProcessor.process'	1751785988088	
-27	'info'	'Finished discovery. Found 1 valid actions.'	'getValidActions'	1751785988088	
-Array(28)
-consoleLogger.js:187 ActionIndexingService: indexed 1 actions for p_erotica:iker_aguirre_instance
-consoleLogger.js:187 [ChoicePipeline] Actor p_erotica:iker_aguirre_instance: 1 choices ready
-consoleLogger.js:187 VED: Event 'core:entity_created' dispatch successful.
-consoleLogger.js:187 VED: Validating payload for event 'core:player_turn_prompt' against schema 'core:player_turn_prompt#payload'...
-consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:player_turn_prompt'.
-consoleLogger.js:187 VED: Dispatching event 'core:player_turn_prompt' via EventBus... 
-{entityId: 'p_erotica:iker_aguirre_instance', availableActions: Array(1)}
-consoleLogger.js:187 SystemLogicInterpreter: Received event: core:player_turn_prompt. Found 1 potential rule(s). 
-{payload: {…}}
-consoleLogger.js:187 SystemLogicInterpreter: [Event: core:player_turn_prompt] Assembling execution context via createNestedExecutionContext... (ActorID: p_erotica:iker_aguirre_instance, TargetID: null)
-consoleLogger.js:187 SystemLogicInterpreter: createJsonLogicContext: Creating JsonLogicEvaluationContext for event type [core:player_turn_prompt]. ActorID: [p_erotica:iker_aguirre_instance], TargetID: [None]
-consoleLogger.js:187 SystemLogicInterpreter: createJsonLogicContext: Found actor entity [p_erotica:iker_aguirre_instance]. Creating context entry.
-consoleLogger.js:187 SystemLogicInterpreter: createJsonLogicContext: No targetId provided, target context remains null.
-consoleLogger.js:187 SystemLogicInterpreter: [Event: core:player_turn_prompt] createNestedExecutionContext returned a valid ExecutionContext.
+  warn no-non-package-json: src/validation/ajvSchemaValidator.js → node_modules/ajv/dist/ajv.js
+  warn no-non-package-json: src/validation/ajvSchemaValidator.js → node_modules/ajv-formats/dist/index.js
+  warn no-non-package-json: src/utils/schemaValidationUtils.js → node_modules/ajv/dist/ajv.js
+  warn no-non-package-json: src/utils/jsonRepair.js → node_modules/@toolsycc/json-repair/dist/index.js
+  warn no-non-package-json: src/utils/ajvUtils.js → node_modules/ajv/dist/ajv.js
+  warn no-non-package-json: src/turns/order/queues/initiativePriorityQueue.js → node_modules/tinyqueue/index.js
+  warn no-non-package-json: src/turns/adapters/configurableLLMAdapter.js → node_modules/gpt-tokenizer/esm/main.js
+  warn no-non-package-json: src/persistence/gameStateSerializer.js → node_modules/pako/dist/pako.esm.mjs
+  warn no-non-package-json: src/persistence/gameStateSerializer.js → node_modules/@msgpack/msgpack/dist.cjs/index.cjs
+  warn no-non-package-json: src/modding/modDependencyValidator.js → node_modules/semver/index.js
+  warn no-non-package-json: src/logic/utils/jsonLogicVariableEvaluator.js → node_modules/json-logic-js/logic.js
+  warn no-non-package-json: src/logic/operationHandlers/modifyContextArrayHandler.js → node_modules/lodash/lodash.js
+  warn no-non-package-json: src/logic/operationHandlers/modifyArrayFieldHandler.js → node_modules/lodash/lodash.js
+  warn no-non-package-json: src/logic/operationHandlers/mathHandler.js → node_modules/json-logic-js/logic.js
+  warn no-non-package-json: src/logic/jsonLogicEvaluationService.js → node_modules/json-logic-js/logic.js
+  warn no-non-package-json: src/loaders/gameConfigLoader.js → node_modules/ajv/dist/ajv.js
+  warn no-non-package-json: src/llms/services/llmConfigErrorFormatter.js → node_modules/ajv/dist/ajv.js
+  warn no-non-package-json: src/entities/entityInstanceData.js → node_modules/lodash/lodash.js
+  warn no-non-package-json: src/engine/engineVersionSatisfies.js → node_modules/semver/index.js
+  warn no-non-package-json: src/engine/engineVersion.js → node_modules/semver/index.js
+  warn no-non-package-json: src/dependencyInjection/registrations/operationHandlerRegistrations.js → node_modules/json-logic-js/logic.js
+  warn no-non-package-json: src/dependencyInjection/registrations/infrastructureRegistrations.js → node_modules/lru-cache/dist/esm/index.d.ts
+  warn no-non-package-json: src/adapters/UuidGenerator.js → node_modules/uuid/dist/esm/index.js
+  warn no-non-package-json: src/adapters/LodashCloner.js → node_modules/lodash/lodash.js
+  warn no-non-package-json: src/adapters/DefaultComponentPolicy.js → node_modules/lodash/lodash.js
