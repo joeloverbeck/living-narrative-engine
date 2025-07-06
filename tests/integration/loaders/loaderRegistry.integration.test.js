@@ -8,7 +8,6 @@ import {
 import ActionLoader from '../../../src/loaders/actionLoader.js';
 import ComponentLoader from '../../../src/loaders/componentLoader.js';
 import InMemoryDataRegistry from '../../../src/data/inMemoryDataRegistry.js';
-import { BaseManifestItemLoader } from '../../../src/loaders/baseManifestItemLoader.js';
 import { DuplicateContentError } from '../../../src/errors/duplicateContentError.js';
 
 // --- Mock Service Factories ---
@@ -458,11 +457,11 @@ describe('Integration: Loaders, Registry State, and Overrides (REFACTOR-8.6)', (
       expectedItems.forEach((expected) => {
         const retrievedItem = dataRegistry.get(expected.type, expected.key);
         expect(retrievedItem).toBeDefined();
-        if (expected.type === 'actions') {
-          expect(retrievedItem.id).toBe(expected.key);
-        } else {
-          expect(retrievedItem.id).toBe(expected.baseId || expected.key);
-        }
+        const expectedId =
+          expected.type === 'actions'
+            ? expected.key
+            : expected.baseId || expected.key;
+        expect(retrievedItem.id).toBe(expectedId);
         expect(retrievedItem._fullId).toBe(expected.key);
         expect(retrievedItem._modId).toBe(expected.modId);
       });
