@@ -7,7 +7,7 @@ import { HasPartOfTypeWithComponentValueOperator } from './operators/hasPartOfTy
 
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('./jsonLogicEvaluationService.js').default} JsonLogicEvaluationService */
-/** @typedef {import('../services/BodyGraphService.js').BodyGraphService} BodyGraphService */
+/** @typedef {import('../anatomy/bodyGraphService.js').BodyGraphService} BodyGraphService */
 /** @typedef {import('../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 
 /**

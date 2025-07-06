@@ -8,7 +8,7 @@ import { getBodyComponent, extractRootId } from '../../utils/bodyComponentUtils.
 
 /** @typedef {import('../../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
-/** @typedef {import('../../../services/BodyGraphService.js').BodyGraphService} BodyGraphService */
+/** @typedef {import('../../../anatomy/bodyGraphService.js').BodyGraphService} BodyGraphService */
 
 /**
  * @abstract

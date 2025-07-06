@@ -36,7 +36,7 @@ class SystemInitializer {
    * @param {ValidatedEventDispatcher} dependencies.validatedEventDispatcher - Service for dispatching validated events.
    * @param {EventDispatchService} dependencies.eventDispatchService - Service for event dispatching with logging.
    * @param {string} dependencies.initializationTag - The tag used to identify systems for initialization.
-   * @param {import('../interfaces/IServiceResolver.js').IServiceResolver} dependencies.resolver - Resolver used to locate systems.
+   * @param {*} dependencies.resolver - Resolver used to locate systems.
    * @throws {Error} If resolver, logger, initializationTag, validatedEventDispatcher, or eventDispatchService is invalid or missing.
    */
   constructor({
