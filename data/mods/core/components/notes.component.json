@@ -23,7 +23,7 @@
               "description": "When the note was created."
             }
           },
-          "required": ["text", "timestamp"],
+          "required": ["text"],
           "additionalProperties": false
         }
       }

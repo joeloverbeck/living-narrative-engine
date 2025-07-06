@@ -39,6 +39,7 @@ export class GoalsSectionAssembler extends IPromptElementAssembler {
     );
 
     const safeMs = (ts) => {
+      if (!ts) return Number.POSITIVE_INFINITY; // Goals without timestamps go to the end
       const ms = new Date(ts).getTime();
       return Number.isFinite(ms) ? ms : Number.POSITIVE_INFINITY;
     };
