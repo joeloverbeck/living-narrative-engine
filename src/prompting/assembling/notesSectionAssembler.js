@@ -35,10 +35,12 @@ export class NotesSectionAssembler extends IPromptElementAssembler {
 
     const bodyLines = notes
       .slice()
-      .sort(
-        (a, b) =>
-          new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-      )
+      .sort((a, b) => {
+        // Notes without timestamps go to the end
+        const aTime = a.timestamp ? new Date(a.timestamp).getTime() : Number.POSITIVE_INFINITY;
+        const bTime = b.timestamp ? new Date(b.timestamp).getTime() : Number.POSITIVE_INFINITY;
+        return aTime - bTime;
+      })
       .map((note) => `- ${note.text}`)
       .join('\n');
 

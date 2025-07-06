@@ -2,20 +2,18 @@
 
 Important: your current goal is to create a PRP document. No code modifications should be made at this stage.
 
-Recently we created the page anatomy-visualizer.html, whose entry is the code src/anatomy-visualizer.js . To set up that page, code duplication was created, as the initialization process for the page where the game runs ( game.html ), that is launched through src/main.js , is geared solely towards starting the game.
+Corrently, the goals.component.json and notes.component.json forces setting the timestamp when these components are declared in entity definitions, such as in the definitions in data/mods/isekai/entities/definitions/ and .private/data/mods/p_erotica/entities/definitions/ . Forcing the modder/designer to include the timestamp in the definitions of goals and notes in the entity definitions is awkward, and forces the modder to fake a timestamp just to include the notes or goals component. I want you to remove the requirement of "timestamp", remove the timestamps declared in the existing entity definitions, and modify the code that handles goals and notes components so that they still work if a timestamp is not set.
 
-We created a report for the refactoring opportunities to reduce the code duplication between both initialization routes. It's in reports/anatomy-visualizer-refactoring-analysis.md
-
-Your task is to create a comprehensive PRP document to implement the refactorings specified in that document.
+Your task is to create a comprehensive PRP document to implement these changes.
 
 ## EXAMPLES:
 
-You have an integration test suite for the anatomy visualizer in tests/integration/domUI/AnatomyVisualizerUI.integration.test.js
+Some entities in data/mods/isekai/entities/definitions/ have the goals and the notes components defined.
 
 ## DOCUMENTATION:
 
-None in particular.
+You could check the schemas for components and entity definitions. They're in data/schemas/
 
 ## OTHER CONSIDERATIONS:
 
-Given that these refactorings will affect the initialization of both the regular game as well as the anatomy visualization page, it will be necessary to run 'npm run test' and carefully fix any issues.
+None in particular.
