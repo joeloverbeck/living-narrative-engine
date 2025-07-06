@@ -27,6 +27,7 @@ describe('actor-can-move condition', () => {
       hasPartWithComponentValue: jest.fn(),
       findPartsByType: jest.fn(),
       getAllParts: jest.fn(),
+      buildAdjacencyCache: jest.fn(),
     };
 
     mockEntityManager = {
