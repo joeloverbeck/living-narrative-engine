@@ -1,10 +1,10 @@
 import { describe, beforeEach, it, expect, jest } from '@jest/globals';
 import AppContainer from '../../src/dependencyInjection/appContainer.js';
-import { loadLoggerConfig } from '../../src/dependencyInjection/containerConfig.js';
+import { loadAndApplyLoggerConfig } from '../../src/configuration/utils/loggerConfigUtils.js';
 import { tokens } from '../../src/dependencyInjection/tokens.js';
 import { LoggerConfigLoader } from '../../src/configuration/loggerConfigLoader.js';
 
-describe('loadLoggerConfig', () => {
+describe('loadAndApplyLoggerConfig', () => {
   /** @type {AppContainer} */
   let container;
   let logger;
@@ -30,14 +30,14 @@ describe('loadLoggerConfig', () => {
 
   it('applies log level when configuration specifies a string', async () => {
     loadConfigSpy.mockResolvedValue({ logLevel: 'WARN' });
-    await loadLoggerConfig(container, logger);
+    await loadAndApplyLoggerConfig(container, logger, tokens);
     expect(logger.setLogLevel).toHaveBeenCalledWith('WARN');
     expect(logger.warn).not.toHaveBeenCalled();
   });
 
   it('logs error when loading configuration throws', async () => {
     loadConfigSpy.mockRejectedValue(new Error('network'));
-    await loadLoggerConfig(container, logger);
+    await loadAndApplyLoggerConfig(container, logger, tokens);
     expect(logger.error).toHaveBeenCalledWith(
       expect.stringContaining('CRITICAL ERROR'),
       expect.any(Object)
