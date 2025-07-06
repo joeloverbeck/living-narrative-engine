@@ -109,9 +109,7 @@ describe('TurnOrderService', () => {
 
       // Ensure the *other* queue type wasn't touched
       expect(InitiativePriorityQueue).not.toHaveBeenCalled();
-      if (mockInitiativeQueueInstance) {
-        expect(mockInitiativeQueueInstance.peek).not.toHaveBeenCalled();
-      }
+      expect(mockInitiativeQueueInstance?.peek?.mock.calls.length ?? 0).toBe(0);
 
       // Assert no logs were made by peekNextEntity itself
       expect(mockLogger.info).not.toHaveBeenCalled();
@@ -145,9 +143,7 @@ describe('TurnOrderService', () => {
 
       // Ensure the *other* queue type wasn't touched
       expect(SimpleRoundRobinQueue).not.toHaveBeenCalled();
-      if (mockSimpleQueueInstance) {
-        expect(mockSimpleQueueInstance.peek).not.toHaveBeenCalled();
-      }
+      expect(mockSimpleQueueInstance?.peek?.mock.calls.length ?? 0).toBe(0);
 
       // Assert no logs were made by peekNextEntity itself
       expect(mockLogger.info).not.toHaveBeenCalled();
@@ -174,9 +170,7 @@ describe('TurnOrderService', () => {
       expect(mockSimpleQueueInstance.peek).toHaveBeenCalledWith();
 
       // Ensure the *other* queue type wasn't touched
-      if (mockInitiativeQueueInstance) {
-        expect(mockInitiativeQueueInstance.peek).not.toHaveBeenCalled();
-      }
+      expect(mockInitiativeQueueInstance?.peek?.mock.calls.length ?? 0).toBe(0);
 
       // Assert no logs were made by peekNextEntity itself
       expect(mockLogger.info).not.toHaveBeenCalled();
@@ -208,9 +202,7 @@ describe('TurnOrderService', () => {
       expect(mockInitiativeQueueInstance.peek).toHaveBeenCalledWith();
 
       // Ensure the *other* queue type wasn't touched
-      if (mockSimpleQueueInstance) {
-        expect(mockSimpleQueueInstance.peek).not.toHaveBeenCalled();
-      }
+      expect(mockSimpleQueueInstance?.peek?.mock.calls.length ?? 0).toBe(0);
 
       // Assert no logs were made by peekNextEntity itself
       expect(mockLogger.info).not.toHaveBeenCalled();
@@ -234,10 +226,8 @@ describe('TurnOrderService', () => {
       // Crucially, ensure no queue constructor or peek was called
       expect(SimpleRoundRobinQueue).not.toHaveBeenCalled();
       expect(InitiativePriorityQueue).not.toHaveBeenCalled();
-      if (mockSimpleQueueInstance)
-        expect(mockSimpleQueueInstance.peek).not.toHaveBeenCalled();
-      if (mockInitiativeQueueInstance)
-        expect(mockInitiativeQueueInstance.peek).not.toHaveBeenCalled();
+      expect(mockSimpleQueueInstance?.peek?.mock.calls.length ?? 0).toBe(0);
+      expect(mockInitiativeQueueInstance?.peek?.mock.calls.length ?? 0).toBe(0);
 
       // Assert NO logs were made (unlike getNextEntity, peek is silent when no round)
       expect(mockLogger.info).not.toHaveBeenCalled();

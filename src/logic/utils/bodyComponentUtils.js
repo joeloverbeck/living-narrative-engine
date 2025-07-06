@@ -17,15 +17,20 @@ export function getBodyComponent(entityManager, entityId) {
     return null;
   }
 
-  const bodyComponent = entityManager.getComponentData(entityId, 'anatomy:body');
+  const bodyComponent = entityManager.getComponentData(
+    entityId,
+    'anatomy:body'
+  );
 
   if (!bodyComponent) {
     return null;
   }
 
   // Validate that the component has a valid structure
-  const hasDirectRoot = bodyComponent.root != null;
-  const hasNestedRoot = bodyComponent.body?.root != null;
+  const hasDirectRoot =
+    bodyComponent.root !== undefined && bodyComponent.root !== null;
+  const hasNestedRoot =
+    bodyComponent.body?.root !== undefined && bodyComponent.body?.root !== null;
 
   if (!hasDirectRoot && !hasNestedRoot) {
     return null;
@@ -49,11 +54,15 @@ export function extractRootId(bodyComponent) {
   // Support both formats for backward compatibility
   // Legacy format: { body: { root: 'entity123' } }
   // Current format: { root: 'entity123' }
-  if (bodyComponent.body && bodyComponent.body.root != null) {
+  if (
+    bodyComponent.body &&
+    bodyComponent.body.root !== undefined &&
+    bodyComponent.body.root !== null
+  ) {
     return bodyComponent.body.root;
   }
 
-  if (bodyComponent.root != null) {
+  if (bodyComponent.root !== undefined && bodyComponent.root !== null) {
     return bodyComponent.root;
   }
 
@@ -69,7 +78,7 @@ export function extractRootId(bodyComponent) {
  */
 export function getRootIdFromEntity(entityManager, entityId) {
   const bodyComponent = getBodyComponent(entityManager, entityId);
-  
+
   if (!bodyComponent) {
     return { rootId: null, hasBody: false };
   }
