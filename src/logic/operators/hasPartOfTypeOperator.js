@@ -15,7 +15,7 @@ export class HasPartOfTypeOperator extends BaseBodyPartOperator {
   /**
    * @param {object} dependencies
    * @param {import('../../interfaces/IEntityManager.js').IEntityManager} dependencies.entityManager
-   * @param {import('../../services/BodyGraphService.js').BodyGraphService} dependencies.bodyGraphService
+   * @param {import('../../anatomy/bodyGraphService.js').BodyGraphService} dependencies.bodyGraphService
    * @param {import('../../interfaces/coreServices.js').ILogger} dependencies.logger
    */
   constructor(dependencies) {
