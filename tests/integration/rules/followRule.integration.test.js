@@ -20,6 +20,7 @@ import GetTimestampHandler from '../../../src/logic/operationHandlers/getTimesta
 import EndTurnHandler from '../../../src/logic/operationHandlers/endTurnHandler.js';
 import AddPerceptionLogEntryHandler from '../../../src/logic/operationHandlers/addPerceptionLogEntryHandler.js';
 import logSuccessAndEndTurn from '../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
+import logFailureAndEndTurn from '../../../data/mods/core/macros/logFailureAndEndTurn.macro.json';
 import { expandMacros } from '../../../src/utils/macroUtils.js';
 import {
   FOLLOWING_COMPONENT_ID,
@@ -139,10 +140,13 @@ describe('core_handle_follow rule integration', () => {
   beforeEach(() => {
     customEntityManager = new SimpleEntityManager([]);
     const macroRegistry = {
-      get: (type, id) =>
-        type === 'macros' && id === 'core:logSuccessAndEndTurn'
-          ? logSuccessAndEndTurn
-          : undefined,
+      get: (type, id) => {
+        if (type === 'macros') {
+          if (id === 'core:logSuccessAndEndTurn') return logSuccessAndEndTurn;
+          if (id === 'core:logFailureAndEndTurn') return logFailureAndEndTurn;
+        }
+        return undefined;
+      },
     };
     const expandedRule = {
       ...followRule,
@@ -236,6 +240,7 @@ describe('core_handle_follow rule integration', () => {
     const eventsToCapture = [
       'core:perceptible_event',
       'core:display_successful_action_result',
+      'core:display_failed_action_result',
       'core:turn_ended',
       'core:system_error_occurred',
     ];
@@ -436,5 +441,56 @@ describe('core_handle_follow rule integration', () => {
     ).toBeNull();
     // Errors are dispatched via the event dispatcher; ensure no components were
     // modified when a follow cycle is detected.
+  });
+
+  it('leader cannot follow follower after being followed', () => {
+    testEnv.reset([
+      {
+        id: 'follower1',
+        components: {
+          [NAME_COMPONENT_ID]: { text: 'Follower' },
+          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
+        },
+      },
+      {
+        id: 'leader1',
+        components: {
+          [NAME_COMPONENT_ID]: { text: 'Leader' },
+          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
+        },
+      },
+    ]);
+
+    // Step 1: Follower follows Leader
+    testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      actorId: 'follower1',
+      actionId: 'core:follow',
+      targetId: 'leader1',
+    });
+
+    // Verify the follow relationship was established
+    expect(
+      testEnv.entityManager.getComponentData('follower1', FOLLOWING_COMPONENT_ID)
+    ).toEqual({
+      leaderId: 'leader1',
+    });
+    expect(
+      testEnv.entityManager.getComponentData('leader1', LEADING_COMPONENT_ID)
+    ).toEqual({
+      followers: ['follower1'],
+    });
+
+    // Step 2: Clear events and try to make Leader follow Follower
+    testEnv.events.length = 0;
+    testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      actorId: 'leader1',
+      actionId: 'core:follow',
+      targetId: 'follower1',
+    });
+
+    // This should fail due to cycle detection
+    const types = testEnv.events.map((e) => e.eventType);
+    expect(types).not.toContain('core:display_successful_action_result');
+    expect(types).toContain('core:display_failed_action_result');
   });
 });
