@@ -19,7 +19,10 @@ export function resolveEntityPath(context, pathString) {
   // Special handling for "." which means the current entity in filter context
   if (pathString === '.') {
     const entity = context?.entity;
-    return { entity, isValid: entity != null };
+    return {
+      entity,
+      isValid: entity !== undefined && entity !== null,
+    };
   }
 
   // Navigate the nested path
@@ -28,13 +31,20 @@ export function resolveEntityPath(context, pathString) {
 
   for (const part of pathParts) {
     // Check if we can continue navigating
-    if (current == null || typeof current !== 'object') {
+    if (
+      current === undefined ||
+      current === null ||
+      typeof current !== 'object'
+    ) {
       return { entity: null, isValid: false };
     }
     current = current[part];
   }
 
-  return { entity: current, isValid: current != null };
+  return {
+    entity: current,
+    isValid: current !== undefined && current !== null,
+  };
 }
 
 /**
@@ -44,5 +54,10 @@ export function resolveEntityPath(context, pathString) {
  * @returns {boolean} True if entity has a valid ID
  */
 export function hasValidEntityId(entity) {
-  return entity != null && entity.id != null;
+  return (
+    entity !== undefined &&
+    entity !== null &&
+    entity.id !== undefined &&
+    entity.id !== null
+  );
 }
