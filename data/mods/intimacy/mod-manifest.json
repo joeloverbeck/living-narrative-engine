@@ -17,6 +17,7 @@
       "adjust_clothing.action.json",
       "get_close.action.json",
       "kiss_cheek.action.json",
+      "massage_shoulders.action.json",
       "step_back.action.json",
       "thumb_wipe_cheek.action.json"
     ],
@@ -28,6 +29,7 @@
       "event-is-action-adjust-clothing.condition.json",
       "event-is-action-get-close.condition.json",
       "event-is-action-kiss-cheek.condition.json",
+      "event-is-action-massage-shoulders.condition.json",
       "event-is-action-step-back.condition.json",
       "event-is-action-thumb-wipe-cheek.condition.json"
     ],
@@ -40,6 +42,7 @@
     "rules": [
       "adjust_clothing.rule.json",
       "get_close.rule.json",
+      "handle_massage_shoulders.rule.json",
       "kiss_cheek.rule.json",
       "step_back.rule.json",
       "thumb_wipe_cheek.rule.json"
@@ -49,6 +52,7 @@
       "labels.json"
     ],
     "scopes": [
+      "actors_with_arms_in_intimacy.scope",
       "close_actors.scope"
     ]
   }

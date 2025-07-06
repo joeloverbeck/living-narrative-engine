@@ -1,0 +1,15 @@
+{
+  "$schema": "http://example.com/schemas/action.schema.json",
+  "id": "intimacy:massage_shoulders",
+  "commandVerb": "massage-shoulders",
+  "name": "Massage Shoulders",
+  "description": "Gently massage the target's shoulders.",
+  "scope": "intimacy:actors_with_arms_in_intimacy",
+  "required_components": {
+    "actor": [
+      "intimacy:closeness"
+    ]
+  },
+  "template": "massage {target}'s shoulders",
+  "prerequisites": []
+}
