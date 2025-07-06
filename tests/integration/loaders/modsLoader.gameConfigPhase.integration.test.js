@@ -1,13 +1,10 @@
 const ModsLoader = require('../../../src/loaders/modsLoader.js').default;
 const GameConfigPhase =
   require('../../../src/loaders/phases/GameConfigPhase.js').default;
-const ManifestPhase =
-  require('../../../src/loaders/phases/ManifestPhase.js').default;
 const {
   ModsLoaderPhaseError,
   ModsLoaderErrorCode,
 } = require('../../../src/errors/modsLoaderPhaseError.js');
-const { createLoadContext } = require('../../../src/loaders/LoadContext.js');
 const {
   makeRegistryCache,
 } = require('../../../src/loaders/registryCacheAdapter.js');
@@ -40,7 +37,6 @@ class FakeRegistry {
 
 describe('ModsLoader + GameConfigPhase integration', () => {
   let registry;
-  let context;
   let phases;
   let modsLoader;
   let fakeGameConfigLoader;
@@ -48,7 +44,6 @@ describe('ModsLoader + GameConfigPhase integration', () => {
 
   beforeEach(() => {
     registry = new FakeRegistry();
-    context = createLoadContext({ worldName: 'test', registry });
     fakeLogger.info.mockClear();
     fakeLogger.debug.mockClear();
     fakeLogger.warn.mockClear();
@@ -56,8 +51,10 @@ describe('ModsLoader + GameConfigPhase integration', () => {
   });
 
   /**
+   * Create a GameConfigPhase that resolves to the provided mods configuration.
    *
-   * @param config
+   * @param {string[]} config - Mods listed in game.json.
+   * @returns {GameConfigPhase} Configured phase instance.
    */
   function makeGameConfigPhaseWithConfig(config) {
     fakeGameConfigLoader = { loadConfig: jest.fn().mockResolvedValue(config) };
@@ -68,8 +65,10 @@ describe('ModsLoader + GameConfigPhase integration', () => {
   }
 
   /**
+   * Create a GameConfigPhase that rejects with the given error.
    *
-   * @param error
+   * @param {Error} error - Error thrown when loading game configuration.
+   * @returns {GameConfigPhase} Configured phase instance.
    */
   function makeGameConfigPhaseWithError(error) {
     fakeGameConfigLoader = { loadConfig: jest.fn().mockRejectedValue(error) };
@@ -95,8 +94,10 @@ describe('ModsLoader + GameConfigPhase integration', () => {
   }
 
   /**
+   * Build a simple session that executes provided phases in order.
    *
-   * @param phases
+   * @param {Array} phases - Phases to execute.
+   * @returns {{run: Function}} Session interface with run method.
    */
   function makeSession(phases) {
     return {

@@ -1,4 +1,3 @@
-import { jest } from '@jest/globals';
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import DefaultPathResolver from '../../../src/pathing/defaultPathResolver.js';
 import StaticConfiguration from '../../../src/configuration/staticConfiguration.js';
