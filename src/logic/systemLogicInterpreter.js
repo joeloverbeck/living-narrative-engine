@@ -37,7 +37,7 @@ class SystemLogicInterpreter extends BaseService {
   /** @type {JsonLogicEvaluationService} */ #jsonLogic;
   /** @type {EntityManager} */ #entityManager;
   /** @type {OperationInterpreter} */ #operationInterpreter;
-  /** @type {BodyGraphService} */ #bodyGraphService;
+  /** @type {BodyGraphService} */ #bodyGraphService; // eslint-disable-line no-unused-private-class-members
   /** @type {Map<string,RuleBucket>} */ #ruleCache = new Map();
   /** @type {boolean} */ #initialized = false;
   /** @type {Function|null} */ #boundEventHandler = null;
