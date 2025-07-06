@@ -100,8 +100,23 @@ export class BodyGraphService {
   }
 
   getAllParts(bodyComponent) {
-    if (!bodyComponent || !bodyComponent.root) return [];
-    return AnatomyGraphAlgorithms.getAllParts(bodyComponent.root, this.#cacheManager, this.#entityManager);
+    // Handle both full anatomy:body component and direct body structure
+    let rootId = null;
+    
+    if (!bodyComponent) return [];
+    
+    // Check if this is the full anatomy:body component with nested structure
+    if (bodyComponent.body && bodyComponent.body.root) {
+      rootId = bodyComponent.body.root;
+    }
+    // Check if this is the direct body structure
+    else if (bodyComponent.root) {
+      rootId = bodyComponent.root;
+    }
+    
+    if (!rootId) return [];
+    
+    return AnatomyGraphAlgorithms.getAllParts(rootId, this.#cacheManager, this.#entityManager);
   }
 
   hasPartWithComponent(bodyComponent, componentId) {
