@@ -54,6 +54,33 @@ describe('bootstrapper helpers', () => {
       expect(result.success).toBe(false);
       expect(result.error).toBeInstanceOf(Error);
     });
+
+    it('fails when init function is missing', () => {
+      const container = { resolve: jest.fn(() => ({})) };
+      const logger = createLogger();
+
+      const result = resolveAndInitialize(container, 'Z', 'init', logger);
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBeInstanceOf(Error);
+      expect(logger.error).toHaveBeenCalled();
+    });
+
+    it('fails when init throws an error', () => {
+      const init = jest.fn(() => {
+        throw new Error('boom');
+      });
+      const container = { resolve: jest.fn(() => ({ init })) };
+      const logger = createLogger();
+
+      const result = resolveAndInitialize(container, 'X', 'init', logger);
+
+      expect(init).toHaveBeenCalled();
+      expect(result.success).toBe(false);
+      expect(result.error).toBeInstanceOf(Error);
+      expect(result.error.message).toBe('boom');
+      expect(logger.error).toHaveBeenCalled();
+    });
   });
 
   describe('setupButtonListener', () => {
