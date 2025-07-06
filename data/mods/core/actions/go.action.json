@@ -9,9 +9,9 @@
   "prerequisites": [
     {
       "logic": {
-        "condition_ref": "core:actor-is-not-rooted"
+        "condition_ref": "core:actor-can-move"
       },
-      "failure_message": "You are rooted and cannot move."
+      "failure_message": "You cannot move without functioning legs."
     }
   ]
 }

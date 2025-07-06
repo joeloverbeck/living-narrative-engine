@@ -105,8 +105,8 @@ describe('registerWorldAndEntity', () => {
     {
       token: tokens.JsonLogicEvaluationService,
       Class: JsonLogicEvaluationService,
-      lifecycle: 'singleton', // Assuming it's a direct class registration with deps
-      deps: [tokens.ILogger, tokens.IGameDataRepository, tokens.ServiceSetup],
+      lifecycle: 'singletonFactory', // Registered as factory
+      deps: undefined, // Dependencies are resolved within the factory
     },
     {
       token: tokens.EntityDisplayDataProvider,
