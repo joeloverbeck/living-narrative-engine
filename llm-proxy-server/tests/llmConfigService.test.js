@@ -176,4 +176,29 @@ describe('LlmConfigService', () => {
       configs.configs.gpt4.newProp = 'fail';
     }).toThrow();
   });
+
+  test('initialize handles loader error without originalError', async () => {
+    mockLoader.mockResolvedValue({
+      error: true,
+      message: 'fail',
+      stage: 'loader',
+      pathAttempted: '/tmp/llm.json',
+    });
+
+    const returnedErr = await service.initialize();
+
+    expect(returnedErr).toEqual({
+      message: 'fail',
+      stage: 'loader',
+      details: { pathAttempted: '/tmp/llm.json' },
+    });
+    expect(returnedErr.originalError).toBeUndefined();
+    const err = service.getInitializationErrorDetails();
+    expect(err).toEqual({
+      message: 'fail',
+      stage: 'loader',
+      details: { pathAttempted: '/tmp/llm.json' },
+    });
+    expect(service.isOperational()).toBe(false);
+  });
 });

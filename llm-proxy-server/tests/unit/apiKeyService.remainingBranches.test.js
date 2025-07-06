@@ -89,4 +89,16 @@ describe('ApiKeyService remaining branch coverage', () => {
     expect(res.errorDetails.stage).toBe('api_key_all_sources_failed');
     expect(res.errorDetails.details.reason).toContain('see previous logs');
   });
+
+  test('_createErrorDetails logs N/A when llmId missing', () => {
+    const err = new Error('oops');
+    const details = {};
+    const res = service._createErrorDetails('msg', 'stage', details, err);
+    expect(res).toEqual({
+      message: 'msg',
+      stage: 'stage',
+      details: { originalErrorMessage: 'oops' },
+    });
+    expect(logger.warn.mock.calls[0][0]).toContain('N/A');
+  });
 });
