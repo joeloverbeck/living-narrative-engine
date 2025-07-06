@@ -16,7 +16,8 @@ describe('entityHelpers', () => {
       const entity = {
         id: 'e1',
         componentTypeIds: ['core:name'],
-        getComponentData: (id) => ({ value: 'Entity One' }),
+        // This mocked helper ignores the id argument
+        getComponentData: () => ({ value: 'Entity One' }),
       };
       const gateway = {
         getEntityInstance: jest.fn(() => entity),
