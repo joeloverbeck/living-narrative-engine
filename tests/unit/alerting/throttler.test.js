@@ -220,4 +220,25 @@ describe('Throttler', () => {
       'Throttler: A valid ISafeEventDispatcher instance is required.'
     );
   });
+
+  it('clears stale entries when the timer did not fire', () => {
+    const throttler = new Throttler(mockDispatcher, 'warning');
+    const setSpy = jest.spyOn(global, 'setTimeout').mockImplementation(() => 1);
+    const clearSpy = jest
+      .spyOn(global, 'clearTimeout')
+      .mockImplementation(() => {});
+
+    jest
+      .spyOn(Date, 'now')
+      .mockReturnValueOnce(0)
+      .mockReturnValueOnce(throttleWindowMs + 1);
+
+    expect(throttler.allow(key, payload)).toBe(true);
+    expect(throttler.allow(key, payload)).toBe(true);
+    expect(clearSpy).toHaveBeenCalledWith(1);
+
+    setSpy.mockRestore();
+    clearSpy.mockRestore();
+    jest.restoreAllMocks();
+  });
 });
