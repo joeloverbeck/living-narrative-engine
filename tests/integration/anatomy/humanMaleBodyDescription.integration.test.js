@@ -222,8 +222,14 @@ describe('Human Male Body Description Integration Test', () => {
 
     // Note: The description may be empty if the anatomy parts don't have descriptor components
     // This is a known limitation of the current anatomy data files
-    if (descriptionData.text.length > 0) {
-      const descriptionText = descriptionData.text;
+    if (descriptionData.text.length === 0) {
+      console.warn(
+        'Body description is empty - anatomy parts may be missing descriptor components'
+      );
+      return;
+    }
+
+    const descriptionText = descriptionData.text;
 
       // Verify expected anatomical features are described
       // Only body parts with descriptor components will appear in the description
@@ -240,12 +246,6 @@ describe('Human Male Body Description Integration Test', () => {
 
       // Note: Penis and Testicles may not appear if they're not being generated
       // or if their formatting configuration is missing. This is acceptable for this test.
-    } else {
-      // Log a warning about missing descriptors
-      console.warn(
-        'Body description is empty - anatomy parts may be missing descriptor components'
-      );
-    }
   });
 
   it('should generate complete anatomy for human male with all required body parts', async () => {
