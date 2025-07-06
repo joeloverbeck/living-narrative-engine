@@ -7,8 +7,8 @@ import { Registrar } from '../utils/registrarHelpers.js';
 // --- Import Logger ---
 import ConsoleLogger, { LogLevel } from '../logging/consoleLogger.js';
 
-// --- Import LoggerConfigLoader ---
-import { LoggerConfigLoader } from '../configuration/loggerConfigLoader.js';
+// --- Import Logger Config Utility ---
+import { loadAndApplyLoggerConfig } from '../configuration/utils/loggerConfigUtils.js';
 
 // --- Import Logger Interface for Type Hinting ---
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
@@ -16,20 +16,8 @@ import { LoggerConfigLoader } from '../configuration/loggerConfigLoader.js';
 /** @typedef {import('../data/gameDataRepository.js').GameDataRepository} GameDataRepository */
 /** @typedef {import('../context/worldContext.js').default} WorldContext */
 
-// --- Import registration bundle functions ---
-import { registerLoaders } from './registrations/loadersRegistrations.js';
-import { registerInfrastructure } from './registrations/infrastructureRegistrations.js';
-import { registerPersistence } from './registrations/persistenceRegistrations.js';
-import { registerWorldAndEntity } from './registrations/worldAndEntityRegistrations.js';
-import { registerCommandAndAction } from './registrations/commandAndActionRegistrations.js';
-import { registerInterpreters } from './registrations/interpreterRegistrations.js';
-import { registerAI } from './registrations/aiRegistrations.js';
-import { registerTurnLifecycle } from './registrations/turnLifecycleRegistrations.js';
-import { registerEventBusAdapters } from './registrations/eventBusAdapterRegistrations.js';
-import { registerUI } from './registrations/uiRegistrations.js';
-import { registerInitializers } from './registrations/initializerRegistrations.js';
-import { registerRuntime } from './registrations/runtimeRegistrations.js';
-import { registerOrchestration } from './registrations/orchestrationRegistrations.js';
+// --- Import base container configuration ---
+import { configureBaseContainer } from './baseContainerConfig.js';
 
 /** @typedef {import('./appContainer.js').default} AppContainer */
 /** @typedef {import('../bootstrapper/UIBootstrapper.js').EssentialUIElements} EssentialUIElements */
@@ -67,96 +55,28 @@ export function configureContainer(container, uiElements) {
     '[ContainerConfig] Starting synchronous bundle registration while logger dependencyInjection continues loading in background (if not already done).'
   );
 
-  // --- Registration Order ---
-  // The order is critical to ensure dependencies are available when needed.
-  // 1. Foundational loaders and infrastructure.
-  // 2. Core domain services, broken into logical areas.
-  // 3. High-level systems (AI, turns) that depend on the core services.
-  // 4. UI and application orchestration services at the top.
-
-  registerLoaders(container);
-  registerInfrastructure(container);
-  registerPersistence(container);
-  registerWorldAndEntity(container);
-  registerCommandAndAction(container);
-  registerInterpreters(container);
-  registerAI(container);
-  registerTurnLifecycle(container);
-  registerEventBusAdapters(container);
-  registerUI(container, {
-    outputDiv,
-    inputElement,
-    titleElement,
-    document: doc,
+  // --- Configure container with base configuration ---
+  // The base configuration handles registration order and dependencies
+  configureBaseContainer(container, {
+    includeGameSystems: true,
+    includeUI: true,
+    uiElements: {
+      outputDiv,
+      inputElement,
+      titleElement,
+      document: doc
+    },
+    logger: logger
   });
-  registerInitializers(container);
-  registerRuntime(container);
-  registerOrchestration(container);
 
   logger.debug('[ContainerConfig] All core bundles registered.');
 
   // --- Load logger configuration asynchronously ---
   // This is intentionally fire-and-forget during container setup.
-  loadLoggerConfig(container, logger);
+  loadAndApplyLoggerConfig(container, logger, tokens, 'ContainerConfig');
 
   logger.debug(
     '[ContainerConfig] Configuration and registry population complete.'
   );
 }
 
-/**
- * @description Loads the logger configuration and applies the level if successful.
- * @param {AppContainer} container - The DI container.
- * @param {ConsoleLogger} logger - The logger instance to configure.
- * @returns {Promise<void>} Resolves once configuration is loaded.
- */
-export async function loadLoggerConfig(container, logger) {
-  try {
-    const loggerConfigLoader = new LoggerConfigLoader({
-      logger,
-      safeEventDispatcher: container.resolve(tokens.ISafeEventDispatcher),
-    });
-    logger.debug(
-      '[ContainerConfig] Starting asynchronous load of logger configuration...'
-    );
-    const loggerConfigResult = await loggerConfigLoader.loadConfig();
-
-    if (
-      loggerConfigResult &&
-      !loggerConfigResult.error &&
-      loggerConfigResult.logLevel !== undefined
-    ) {
-      if (typeof loggerConfigResult.logLevel === 'string') {
-        logger.debug(
-          `[ContainerConfig] Logger configuration loaded successfully. Requested level: '${loggerConfigResult.logLevel}'. Applying...`
-        );
-        logger.setLogLevel(loggerConfigResult.logLevel);
-      } else {
-        logger.warn(
-          `[ContainerConfig] Logger configuration loaded, but 'logLevel' is not a string: ${loggerConfigResult.logLevel}. Retaining current log level.`
-        );
-      }
-    } else if (loggerConfigResult && loggerConfigResult.error) {
-      logger.warn(
-        `[ContainerConfig] Failed to load logger configuration from '${
-          loggerConfigResult.path || 'default path'
-        }'. Error: ${loggerConfigResult.message}. Stage: ${
-          loggerConfigResult.stage || 'N/A'
-        }. Retaining current log level.`
-      );
-    } else {
-      logger.debug(
-        '[ContainerConfig] Logger configuration file loaded but no specific logLevel found or file was empty. Retaining current log level.'
-      );
-    }
-  } catch (error) {
-    logger.error(
-      '[ContainerConfig] CRITICAL ERROR during asynchronous logger configuration loading:',
-      {
-        message: error.message,
-        stack: error.stack,
-        errorObj: error,
-      }
-    );
-  }
-}

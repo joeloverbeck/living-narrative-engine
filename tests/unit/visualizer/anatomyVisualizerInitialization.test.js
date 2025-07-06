@@ -12,10 +12,33 @@ import {
   afterEach,
 } from '@jest/globals';
 
-// Mock functions
-const mockConfigure = jest.fn();
-const mockResolve = jest.fn();
+// Mock the CommonBootstrapper
+const mockBootstrap = jest.fn();
+const mockDisplayFatalStartupError = jest.fn();
+
+jest.mock('../../../src/bootstrapper/CommonBootstrapper.js', () => ({
+  CommonBootstrapper: jest.fn().mockImplementation(() => ({
+    bootstrap: mockBootstrap,
+    displayFatalStartupError: mockDisplayFatalStartupError,
+  })),
+}));
+
+// Mock AnatomyVisualizerUI
 const mockUIInitialize = jest.fn();
+jest.mock('../../../src/domUI/AnatomyVisualizerUI.js', () => ({
+  __esModule: true,
+  default: jest.fn().mockImplementation(() => ({
+    initialize: mockUIInitialize,
+  })),
+}));
+
+// Mock tokens
+jest.mock('../../../src/dependencyInjection/tokens.js', () => ({
+  __esModule: true,
+  tokens: {
+    AnatomyDescriptionService: 'AnatomyDescriptionService',
+  },
+}));
 
 const loggerMock = {
   info: jest.fn(),
@@ -23,48 +46,21 @@ const loggerMock = {
   debug: jest.fn(),
   warn: jest.fn(),
 };
-const modsLoaderMock = {
-  loadMods: jest.fn(async () => ({ finalModOrder: ['a', 'b'] })),
+
+const containerMock = {
+  resolve: jest.fn((token) => {
+    if (token === 'AnatomyDescriptionService') {
+      return {};
+    }
+  }),
 };
-const registryMock = {};
-const entityManagerMock = {};
-const anatomyServiceMock = {};
-const anatomyFormattingServiceMock = { initialize: jest.fn(async () => {}) };
-const systemInitializerMock = { initializeAll: jest.fn(async () => {}) };
-const dispatcherMock = {};
 
-jest.mock('../../../src/dependencyInjection/minimalContainerConfig.js', () => ({
-  __esModule: true,
-  configureMinimalContainer: (...args) => mockConfigure(...args),
-}));
-
-jest.mock('../../../src/dependencyInjection/tokens.js', () => ({
-  __esModule: true,
-  tokens: {
-    ILogger: 'ILogger',
-    ModsLoader: 'ModsLoader',
-    IDataRegistry: 'IDataRegistry',
-    IEntityManager: 'IEntityManager',
-    AnatomyDescriptionService: 'AnatomyDescriptionService',
-    AnatomyFormattingService: 'AnatomyFormattingService',
-    SystemInitializer: 'SystemInitializer',
-    ISafeEventDispatcher: 'ISafeEventDispatcher',
-  },
-}));
-
-jest.mock('../../../src/dependencyInjection/appContainer.js', () => ({
-  __esModule: true,
-  default: jest.fn().mockImplementation(() => ({
-    resolve: mockResolve,
-  })),
-}));
-
-jest.mock('../../../src/domUI/AnatomyVisualizerUI.js', () => ({
-  __esModule: true,
-  default: jest.fn().mockImplementation(() => ({
-    initialize: mockUIInitialize,
-  })),
-}));
+const servicesMock = {
+  logger: loggerMock,
+  registry: {},
+  entityManager: {},
+  eventDispatcher: {},
+};
 
 beforeEach(() => {
   jest.resetModules();
@@ -74,87 +70,50 @@ beforeEach(() => {
     value: 'complete',
     writable: true,
   });
-  global.fetch = jest.fn(async () => ({
-    ok: true,
-    json: async () => ({ mods: ['test-mod'] }),
-  }));
   global.alert = jest.fn();
 
-  mockResolve.mockImplementation((token) => {
-    switch (token) {
-      case 'ILogger':
-        return loggerMock;
-      case 'ModsLoader':
-        return modsLoaderMock;
-      case 'IDataRegistry':
-        return registryMock;
-      case 'IEntityManager':
-        return entityManagerMock;
-      case 'AnatomyDescriptionService':
-        return anatomyServiceMock;
-      case 'AnatomyFormattingService':
-        return anatomyFormattingServiceMock;
-      case 'SystemInitializer':
-        return systemInitializerMock;
-      case 'ISafeEventDispatcher':
-        return dispatcherMock;
-      default:
-        return undefined;
+  // Setup default mock behavior
+  mockBootstrap.mockImplementation(async (options) => {
+    // Call the postInitHook if provided
+    if (options && options.postInitHook) {
+      await options.postInitHook(servicesMock, containerMock);
     }
+    return { container: containerMock, services: servicesMock };
   });
 });
 
 afterEach(() => {
-  delete global.fetch;
   delete global.alert;
 });
 
 describe('Anatomy Visualizer Initialization', () => {
   describe('initialization sequence', () => {
-    it('should initialize AnatomyFormattingService after loading mods', async () => {
+    it('should initialize with anatomy formatting enabled', async () => {
       await jest.isolateModulesAsync(async () => {
         await import('../../../src/anatomy-visualizer.js');
       });
       await Promise.resolve();
 
-      // Verify the initialization sequence
-      expect(modsLoaderMock.loadMods).toHaveBeenCalledWith('default', [
-        'test-mod',
-      ]);
-      expect(anatomyFormattingServiceMock.initialize).toHaveBeenCalled();
-      expect(systemInitializerMock.initializeAll).toHaveBeenCalled();
-
-      // Verify AnatomyFormattingService was initialized after mods were loaded
-      const modsLoadCall = modsLoaderMock.loadMods.mock.invocationCallOrder[0];
-      const formatServiceCall =
-        anatomyFormattingServiceMock.initialize.mock.invocationCallOrder[0];
-      const systemInitCall =
-        systemInitializerMock.initializeAll.mock.invocationCallOrder[0];
-
-      expect(formatServiceCall).toBeGreaterThan(modsLoadCall);
-      expect(systemInitCall).toBeGreaterThan(formatServiceCall);
+      // Verify bootstrap was called with includeAnatomyFormatting
+      expect(mockBootstrap).toHaveBeenCalledWith({
+        containerConfigType: 'minimal',
+        worldName: 'default',
+        includeAnatomyFormatting: true,
+        postInitHook: expect.any(Function),
+      });
+      
+      // Verify UI was initialized
+      expect(mockUIInitialize).toHaveBeenCalled();
     });
 
     it('should log initialization steps', async () => {
       await jest.isolateModulesAsync(async () => {
         await import('../../../src/anatomy-visualizer.js');
       });
-      // Wait longer for all async operations
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      // Wait for all async operations
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
-      // Verify key logging steps were called
-      expect(loggerMock.info).toHaveBeenCalledWith(
-        'Anatomy Visualizer: Starting initialization...'
-      );
-      expect(loggerMock.info).toHaveBeenCalledWith(
-        'Anatomy Visualizer: Loading mods...'
-      );
-      expect(loggerMock.info).toHaveBeenCalledWith(
-        'Anatomy Visualizer: Initializing AnatomyFormattingService...'
-      );
-      expect(loggerMock.info).toHaveBeenCalledWith(
-        'Anatomy Visualizer: Initializing system services...'
-      );
+      // Verify key logging steps in the postInitHook
       expect(loggerMock.info).toHaveBeenCalledWith(
         'Anatomy Visualizer: Initializing UI...'
       );
@@ -163,25 +122,20 @@ describe('Anatomy Visualizer Initialization', () => {
       );
     });
 
-    it('should resolve AnatomyFormattingService from container', async () => {
+    it('should resolve AnatomyDescriptionService from container', async () => {
       await jest.isolateModulesAsync(async () => {
         await import('../../../src/anatomy-visualizer.js');
       });
       await Promise.resolve();
 
-      // Verify AnatomyFormattingService was resolved from container
-      expect(mockResolve).toHaveBeenCalledWith('AnatomyFormattingService');
+      // Verify AnatomyDescriptionService was resolved from container
+      expect(containerMock.resolve).toHaveBeenCalledWith('AnatomyDescriptionService');
     });
 
-    it('should handle AnatomyFormattingService initialization failure', async () => {
-      // Make AnatomyFormattingService initialization fail
-      const initError = new Error(
-        'AnatomyFormattingService initialization failed'
-      );
-      anatomyFormattingServiceMock.initialize.mockRejectedValue(initError);
-
-      // Mock console.error to check error handling
-      const consoleError = jest.spyOn(console, 'error').mockImplementation();
+    it('should handle bootstrap failure', async () => {
+      // Make bootstrap fail
+      const initError = new Error('Bootstrap initialization failed');
+      mockBootstrap.mockRejectedValue(initError);
 
       await jest.isolateModulesAsync(async () => {
         await import('../../../src/anatomy-visualizer.js');
@@ -189,33 +143,43 @@ describe('Anatomy Visualizer Initialization', () => {
       await Promise.resolve();
 
       // Verify error was handled
-      expect(consoleError).toHaveBeenCalledWith(
-        'Failed to initialize anatomy visualizer:',
+      expect(mockDisplayFatalStartupError).toHaveBeenCalledWith(
+        'Failed to initialize anatomy visualizer: Bootstrap initialization failed',
         initError
       );
-      expect(global.alert).toHaveBeenCalledWith(
-        'Failed to initialize anatomy visualizer: AnatomyFormattingService initialization failed'
-      );
-
-      consoleError.mockRestore();
     });
 
-    it('should not call systemInitializer if AnatomyFormattingService fails', async () => {
-      // Make AnatomyFormattingService initialization fail
-      anatomyFormattingServiceMock.initialize.mockRejectedValue(
-        new Error('AnatomyFormattingService initialization failed')
-      );
+    it('should handle UI initialization failure', async () => {
+      // Make UI initialization fail
+      const uiError = new Error('UI initialization failed');
+      mockUIInitialize.mockRejectedValue(uiError);
 
-      // Mock console.error
+      // Mock console.error to check error handling
       const consoleError = jest.spyOn(console, 'error').mockImplementation();
+
+      // Mock bootstrap to still succeed but the postInitHook will throw
+      mockBootstrap.mockImplementation(async (options) => {
+        if (options && options.postInitHook) {
+          try {
+            await options.postInitHook(servicesMock, containerMock);
+          } catch (error) {
+            // This error will be caught by the try-catch in anatomy-visualizer.js
+            throw error;
+          }
+        }
+        return { container: containerMock, services: servicesMock };
+      });
 
       await jest.isolateModulesAsync(async () => {
         await import('../../../src/anatomy-visualizer.js');
       });
       await Promise.resolve();
 
-      // Verify systemInitializer was not called
-      expect(systemInitializerMock.initializeAll).not.toHaveBeenCalled();
+      // Verify error was handled
+      expect(mockDisplayFatalStartupError).toHaveBeenCalledWith(
+        'Failed to initialize anatomy visualizer: UI initialization failed',
+        uiError
+      );
 
       consoleError.mockRestore();
     });
