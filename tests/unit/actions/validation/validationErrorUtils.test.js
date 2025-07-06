@@ -36,4 +36,10 @@ describe('formatValidationError', () => {
     const err = formatValidationError(otherErr, 'Source.fn', {});
     expect(err.message).toBe('Source.fn: something else');
   });
+
+  test('handles missing error message gracefully', () => {
+    const noMsgErr = new Error();
+    const err = formatValidationError(noMsgErr, 'Source.fn', {});
+    expect(err.message).toBe('Source.fn: invalid input');
+  });
 });
