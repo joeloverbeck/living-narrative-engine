@@ -55,9 +55,6 @@ describe('AnatomyVisualizerUI Integration Tests', () => {
   let entityManager;
   let anatomyDescriptionService;
   let eventDispatcher;
-  let modsLoader;
-  let anatomyFormattingService;
-  let systemInitializer;
   let originalFetch;
 
   beforeEach(() => {
@@ -102,11 +99,6 @@ describe('AnatomyVisualizerUI Integration Tests', () => {
       tokens.AnatomyDescriptionService
     );
     eventDispatcher = container.resolve(tokens.ISafeEventDispatcher);
-    modsLoader = container.resolve(tokens.ModsLoader);
-    anatomyFormattingService = container.resolve(
-      tokens.AnatomyFormattingService
-    );
-    systemInitializer = container.resolve(tokens.SystemInitializer);
 
     // Pre-load essential components and entities into registry
     loadTestData();
@@ -131,7 +123,7 @@ describe('AnatomyVisualizerUI Integration Tests', () => {
   });
 
   /**
-   *
+   * Load component and entity definitions used throughout the tests.
    */
   function loadTestData() {
     // Load component definitions
@@ -686,7 +678,7 @@ describe('AnatomyVisualizerUI Integration Tests', () => {
 
       // Check viewBox is square (for radial layout)
       const viewBox = svg.getAttribute('viewBox');
-      const [x, y, width, height] = viewBox.split(' ').map(Number);
+      const [, , width, height] = viewBox.split(' ').map(Number);
       expect(width).toBeCloseTo(height, 0); // Should be square
 
       // Verify nodes are positioned radially
@@ -840,7 +832,7 @@ describe('AnatomyVisualizerUI Integration Tests', () => {
       });
 
       // Act
-      const loadPromise = visualizerUI._loadEntity(entityDefId);
+      visualizerUI._loadEntity(entityDefId);
 
       // Trigger entity created event without anatomy
       setTimeout(() => {
@@ -987,7 +979,6 @@ describe('AnatomyVisualizerUI Integration Tests', () => {
       // The important thing is that the entity loads without errors
 
       // Verify cleanup happens on subsequent selections
-      const previousEntities = [...visualizerUI._createdEntities];
 
       // Act 3: Select a different entity
       selector.value = 'anatomy:human_female';
