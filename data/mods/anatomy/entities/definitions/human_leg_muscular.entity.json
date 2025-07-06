@@ -22,7 +22,8 @@
       "text": "muscular leg"
     },
     "core:movement": {
-      "locked": false
+      "locked": false,
+      "forcedOverride": false
     }
   }
 }

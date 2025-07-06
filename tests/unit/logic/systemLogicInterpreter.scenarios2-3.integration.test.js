@@ -136,6 +136,7 @@ describe('SystemLogicInterpreter - Integration Tests - Scenarios 2 & 3 (Refactor
 
     mockJsonLogicEvaluationService = {
       evaluate: jest.fn(),
+      addOperation: jest.fn(), // Mock for custom operations
     };
 
     mockEntityManager = {
@@ -168,6 +169,11 @@ describe('SystemLogicInterpreter - Integration Tests - Scenarios 2 & 3 (Refactor
     });
     operationExecuteSpy = jest.spyOn(operationInterpreterInstance, 'execute');
 
+    // Create the bodyGraphService mock
+    const mockBodyGraphService = {
+      hasPartWithComponentValue: jest.fn().mockReturnValue({ found: false })
+    };
+
     interpreter = new SystemLogicInterpreter({
       logger: mockLogger,
       eventBus: mockEventBus,
@@ -175,6 +181,7 @@ describe('SystemLogicInterpreter - Integration Tests - Scenarios 2 & 3 (Refactor
       jsonLogicEvaluationService: mockJsonLogicEvaluationService,
       entityManager: mockEntityManager,
       operationInterpreter: operationInterpreterInstance,
+      bodyGraphService: mockBodyGraphService,
     });
 
     mockLogger.loggedMessages = [];

@@ -303,6 +303,7 @@ describe('SystemLogicInterpreter - Integration Tests - Conditional Execution Set
     };
     mockJsonLogicEvaluationService = {
       evaluate: jest.fn().mockReturnValue(true),
+      addOperation: jest.fn(), // Mock for custom operations
     };
     mockEntityManager = {
       getEntityInstance: jest.fn().mockImplementation((entityId) => {
@@ -323,6 +324,11 @@ describe('SystemLogicInterpreter - Integration Tests - Conditional Execution Set
     });
     executeSpy = jest.spyOn(operationInterpreterRealInstance, 'execute');
 
+    // Create the bodyGraphService mock
+    const mockBodyGraphService = {
+      hasPartWithComponentValue: jest.fn().mockReturnValue({ found: false })
+    };
+
     interpreter = new SystemLogicInterpreter({
       logger: mockLogger,
       eventBus: mockEventBus,
@@ -330,6 +336,7 @@ describe('SystemLogicInterpreter - Integration Tests - Conditional Execution Set
       jsonLogicEvaluationService: mockJsonLogicEvaluationService,
       entityManager: mockEntityManager,
       operationInterpreter: operationInterpreterRealInstance, // Pass the real instance
+      bodyGraphService: mockBodyGraphService,
     });
     mockLogger.info.mockClear();
   });

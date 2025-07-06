@@ -68,6 +68,10 @@ const mockEntityManager = {
   addComponent: jest.fn(),
   removeComponent: jest.fn(),
   hasComponent: jest.fn(),
+  getEntity: jest.fn(),
+};
+const mockBodyGraphService = {
+  hasPartWithComponentValue: jest.fn().mockReturnValue({ found: false }),
 };
 const mockvalidatedEventDispatcher = {
   dispatch: jest.fn().mockResolvedValue(true),
@@ -126,6 +130,11 @@ describe('registerInterpreters', () => {
         lifecycle: 'singleton',
       }
     );
+
+    // Register BodyGraphService for SystemLogicInterpreter
+    mockContainer.register(tokens.BodyGraphService, mockBodyGraphService, {
+      lifecycle: 'singleton',
+    });
 
     // Clear implementation mocks
     Object.values(mockLogger).forEach((fn) => fn.mockClear?.());
@@ -250,6 +259,7 @@ describe('registerInterpreters', () => {
         jsonLogicEvaluationService: mockJsonLogicService,
         entityManager: mockEntityManager, // Should be the mockEntityManager via IEntityManager
         operationInterpreter: expect.anything(),
+        bodyGraphService: mockBodyGraphService,
       })
     );
   });

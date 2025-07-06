@@ -96,6 +96,11 @@ describe('nested placeholder resolution', () => {
 
     const dataRegistry = { getAllSystemRules: () => [rule] };
 
+    // Create the bodyGraphService mock
+    const mockBodyGraphService = {
+      hasPartWithComponentValue: jest.fn().mockReturnValue({ found: false })
+    };
+
     interpreter = new SystemLogicInterpreter({
       logger,
       eventBus,
@@ -103,6 +108,7 @@ describe('nested placeholder resolution', () => {
       jsonLogicEvaluationService: new JsonLogicEvaluationService({ logger }),
       entityManager: new SimpleEntityManager(),
       operationInterpreter: opInterpreter,
+      bodyGraphService: mockBodyGraphService,
     });
     interpreter.initialize();
   });

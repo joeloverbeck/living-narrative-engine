@@ -189,6 +189,7 @@ describe('SystemLogicInterpreter - Integration Tests - Scenario 5: Multiple Rule
 
     mockJsonLogicEvaluationService = {
       evaluate: jest.fn(), // Behavior configured per test case
+      addOperation: jest.fn(), // Mock for custom operations
     };
 
     // EntityManager mock configured to return scenario-specific entities
@@ -247,6 +248,11 @@ describe('SystemLogicInterpreter - Integration Tests - Scenario 5: Multiple Rule
       operationRegistry: operationRegistry, // <-- Pass the registry instance
     });
 
+    // Create the bodyGraphService mock
+    const mockBodyGraphService = {
+      hasPartWithComponentValue: jest.fn().mockReturnValue({ found: false })
+    };
+
     // 2. Instantiate the interpreter (remains the same)
     interpreter = new SystemLogicInterpreter({
       logger: mockLogger,
@@ -255,6 +261,7 @@ describe('SystemLogicInterpreter - Integration Tests - Scenario 5: Multiple Rule
       jsonLogicEvaluationService: mockJsonLogicEvaluationService,
       entityManager: mockEntityManager,
       operationInterpreter: operationInterpreter, // <-- Pass the correctly instantiated OperationInterpreter
+      bodyGraphService: mockBodyGraphService,
     });
 
     // Clear constructor log call

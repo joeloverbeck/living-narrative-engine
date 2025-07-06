@@ -91,6 +91,10 @@ describe('SystemLogicInterpreter - Operation Execution Integration Test', () => 
       clearLogs: jest.fn(),
     };
 
+    const mockBodyGraphService = {
+      hasPartWithComponentValue: jest.fn().mockReturnValue({ found: false })
+    };
+
     eventBusInstance = new RealEventBus();
     mockDataRegistry = { getAllSystemRules: jest.fn() };
     jsonLogicServiceInstance = new RealJsonLogicEvaluationService({
@@ -134,6 +138,7 @@ describe('SystemLogicInterpreter - Operation Execution Integration Test', () => 
       jsonLogicEvaluationService: jsonLogicServiceInstance,
       entityManager: mockEntityManager,
       operationInterpreter: mockOperationInterpreterInstance,
+      bodyGraphService: mockBodyGraphService,
     });
   });
 

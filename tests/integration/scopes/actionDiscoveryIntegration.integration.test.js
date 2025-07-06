@@ -153,7 +153,7 @@ describe('Scope Integration Tests', () => {
     registry.store('conditions', 'core:actor-is-not-rooted', {
       id: 'core:actor-is-not-rooted',
       logic: {
-        '==': [{ var: 'actor.components.core:movement.locked' }, false],
+        'hasBodyPartWithComponentValue': ['actor', 'core:movement', 'locked', false]
       },
     });
     registry.store('conditions', 'core:exit-is-unblocked', {
@@ -235,6 +235,27 @@ describe('Scope Integration Tests', () => {
           components: {
             [POSITION_COMPONENT_ID]: { locationId: 'room1' },
             [LEADING_COMPONENT_ID]: { followers: [followerId] },
+            'anatomy:body': { rootEntityId: 'body-actor1' },
+          },
+        },
+        {
+          id: 'body-actor1',
+          components: {
+            'anatomy:part': { parentId: null, type: 'body' },
+          },
+        },
+        {
+          id: 'leg-left-actor1',
+          components: {
+            'anatomy:part': { parentId: 'body-actor1', type: 'leg' },
+            'core:movement': { locked: false },
+          },
+        },
+        {
+          id: 'leg-right-actor1',
+          components: {
+            'anatomy:part': { parentId: 'body-actor1', type: 'leg' },
+            'core:movement': { locked: false },
           },
         },
         { id: followerId, components: {} },
@@ -266,13 +287,57 @@ describe('Scope Integration Tests', () => {
       const entities = [
         {
           id: actorId,
-          components: { [POSITION_COMPONENT_ID]: { locationId: room1Id } },
+          components: { 
+            [POSITION_COMPONENT_ID]: { locationId: room1Id },
+            'anatomy:body': { rootEntityId: 'body-actor1' },
+          },
+        },
+        {
+          id: 'body-actor1',
+          components: {
+            'anatomy:part': { parentId: null, type: 'body' },
+          },
+        },
+        {
+          id: 'leg-left-actor1',
+          components: {
+            'anatomy:part': { parentId: 'body-actor1', type: 'leg' },
+            'core:movement': { locked: false },
+          },
+        },
+        {
+          id: 'leg-right-actor1',
+          components: {
+            'anatomy:part': { parentId: 'body-actor1', type: 'leg' },
+            'core:movement': { locked: false },
+          },
         },
         {
           id: targetId,
           components: {
             [POSITION_COMPONENT_ID]: { locationId: room1Id },
             [ACTOR_COMPONENT_ID]: {},
+            'anatomy:body': { rootEntityId: 'body-target1' },
+          },
+        },
+        {
+          id: 'body-target1',
+          components: {
+            'anatomy:part': { parentId: null, type: 'body' },
+          },
+        },
+        {
+          id: 'leg-left-target1',
+          components: {
+            'anatomy:part': { parentId: 'body-target1', type: 'leg' },
+            'core:movement': { locked: false },
+          },
+        },
+        {
+          id: 'leg-right-target1',
+          components: {
+            'anatomy:part': { parentId: 'body-target1', type: 'leg' },
+            'core:movement': { locked: false },
           },
         },
         { id: room1Id, components: {} },
@@ -305,6 +370,26 @@ describe('Scope Integration Tests', () => {
           id: actorId,
           components: {
             [POSITION_COMPONENT_ID]: { locationId: room1Id },
+            'anatomy:body': { rootEntityId: 'body-actor1' },
+          },
+        },
+        {
+          id: 'body-actor1',
+          components: {
+            'anatomy:part': { parentId: null, type: 'body' },
+          },
+        },
+        {
+          id: 'leg-left-actor1',
+          components: {
+            'anatomy:part': { parentId: 'body-actor1', type: 'leg' },
+            'core:movement': { locked: false },
+          },
+        },
+        {
+          id: 'leg-right-actor1',
+          components: {
+            'anatomy:part': { parentId: 'body-actor1', type: 'leg' },
             'core:movement': { locked: false },
           },
         },
@@ -337,7 +422,34 @@ describe('Scope Integration Tests', () => {
 
     it('should discover wait action with none scope', async () => {
       const actorId = 'actor1';
-      entityManager.setEntities([{ id: actorId, components: {} }]);
+      entityManager.setEntities([
+        { 
+          id: actorId, 
+          components: {
+            'anatomy:body': { rootEntityId: 'body-actor1' },
+          } 
+        },
+        {
+          id: 'body-actor1',
+          components: {
+            'anatomy:part': { parentId: null, type: 'body' },
+          },
+        },
+        {
+          id: 'leg-left-actor1',
+          components: {
+            'anatomy:part': { parentId: 'body-actor1', type: 'leg' },
+            'core:movement': { locked: false },
+          },
+        },
+        {
+          id: 'leg-right-actor1',
+          components: {
+            'anatomy:part': { parentId: 'body-actor1', type: 'leg' },
+            'core:movement': { locked: false },
+          },
+        },
+      ]);
 
       const actorEntity = entityManager.getEntityInstance(actorId);
       const context = { jsonLogicEval };

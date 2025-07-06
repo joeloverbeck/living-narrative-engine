@@ -3,11 +3,6 @@
   "id": "core:actor-is-not-rooted",
   "description": "DEPRECATED: Use core:actor-can-move instead. Checks if the actor is able to move (i.e., not rooted or movement-locked).",
   "logic": {
-    "==": [
-      {
-        "var": "actor.components.core:movement.locked"
-      },
-      false
-    ]
+    "hasBodyPartWithComponentValue": ["actor", "core:movement", "locked", false]
   }
 }
