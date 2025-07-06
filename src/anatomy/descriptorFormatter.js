@@ -22,7 +22,6 @@ export class DescriptorFormatter {
       'descriptors:build',
     ];
 
-
     this._defaultDescriptorValueKeys = [
       'value',
       'color',

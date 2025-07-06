@@ -2,12 +2,7 @@
  * @file Tests for anatomy entity consistency and structure
  */
 
-import {
-  describe,
-  it,
-  expect,
-  beforeAll,
-} from '@jest/globals';
+import { describe, it, expect, beforeAll } from '@jest/globals';
 import { promises as fs } from 'fs';
 import path from 'path';
 
@@ -21,8 +16,8 @@ describe('Anatomy Entity Consistency', () => {
   beforeAll(async () => {
     // Load all anatomy entity files
     const files = await fs.readdir(anatomyEntitiesPath);
-    const entityFiles = files.filter(f => f.endsWith('.entity.json'));
-    
+    const entityFiles = files.filter((f) => f.endsWith('.entity.json'));
+
     for (const file of entityFiles) {
       const content = await fs.readFile(
         path.join(anatomyEntitiesPath, file),
@@ -49,19 +44,18 @@ describe('Anatomy Entity Consistency', () => {
     });
 
     it('all anatomy part entities should have anatomy:part component', () => {
-      const partEntities = anatomyEntities.filter(({ data }) => 
-        data.components['anatomy:part']
+      const partEntities = anatomyEntities.filter(
+        ({ data }) => data.components['anatomy:part']
       );
-      
+
       expect(partEntities.length).toBeGreaterThan(0);
-      
+
       partEntities.forEach(({ filename, data }) => {
         expect(data.components['anatomy:part']).toHaveProperty('subType');
         expect(typeof data.components['anatomy:part'].subType).toBe('string');
       });
     });
   });
-
 
   describe('Entity ID consistency', () => {
     it('all entities should have properly formatted IDs', () => {
@@ -78,7 +72,6 @@ describe('Anatomy Entity Consistency', () => {
       });
     });
   });
-
 
   describe('Schema compliance', () => {
     it('all entities should reference the correct schema', () => {

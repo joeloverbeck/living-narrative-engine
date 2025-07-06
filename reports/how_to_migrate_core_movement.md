@@ -17,6 +17,7 @@ The `core:movement` component is currently structured as follows in character en
 **Location**: Character entities (e.g., `/data/mods/isekai/entities/definitions/hero.character.json`)
 
 **Key characteristics**:
+
 - Simple boolean flag indicating whether movement is locked
 - Component exists directly on character entities, not on body parts
 - Used in condition `core:actor-is-not-rooted` to check if movement is allowed
@@ -24,6 +25,7 @@ The `core:movement` component is currently structured as follows in character en
 ### 2. Current Movement Check Implementation
 
 The condition `actor-is-not-rooted.condition.json` currently uses:
+
 ```json
 {
   "logic": {
@@ -44,15 +46,19 @@ This directly accesses the movement component on the actor entity.
 The existing `hasPartWithComponentValue` custom operator follows this pattern:
 
 ```javascript
-jsonLogicEvaluationService.addOperation('hasPartWithComponentValue', function(entityPath, componentId, propertyPath, expectedValue) {
-  // 1. Navigate entity path to get entity
-  // 2. Get entity's anatomy:body component
-  // 3. Use BodyGraphService to check all body parts for matching component value
-  // 4. Return boolean result
-});
+jsonLogicEvaluationService.addOperation(
+  'hasPartWithComponentValue',
+  function (entityPath, componentId, propertyPath, expectedValue) {
+    // 1. Navigate entity path to get entity
+    // 2. Get entity's anatomy:body component
+    // 3. Use BodyGraphService to check all body parts for matching component value
+    // 4. Return boolean result
+  }
+);
 ```
 
 **Key implementation details**:
+
 - Uses `this` context from JSON Logic evaluation
 - Handles nested entity paths (e.g., "actor", "event.target")
 - Requires entity to have `anatomy:body` component
@@ -62,6 +68,7 @@ jsonLogicEvaluationService.addOperation('hasPartWithComponentValue', function(en
 ### 4. Existing Test Coverage
 
 The `hasPartWithComponentValue` operator has comprehensive tests covering:
+
 - ✅ Successful matches when entity has matching part
 - ✅ False results when no matching part exists
 - ✅ Handling entities without body components
@@ -74,6 +81,7 @@ The `hasPartWithComponentValue` operator has comprehensive tests covering:
 ### Option 1: Move core:movement to Body Parts (Recommended)
 
 1. **Add movement component to leg entities**:
+
    ```json
    // In human_leg.entity.json
    {
@@ -85,6 +93,7 @@ The `hasPartWithComponentValue` operator has comprehensive tests covering:
    ```
 
 2. **Update the condition to use hasPartWithComponentValue**:
+
    ```json
    {
      "logic": {
@@ -101,13 +110,18 @@ The `hasPartWithComponentValue` operator has comprehensive tests covering:
 ### Option 2: Create New hasComponentValue Operator
 
 1. **Implement a simpler operator for direct component checks**:
+
    ```javascript
-   jsonLogicEvaluationService.addOperation('hasComponentValue', function(entityPath, componentId, propertyPath, expectedValue) {
-     // Direct component check without body parts
-   });
+   jsonLogicEvaluationService.addOperation(
+     'hasComponentValue',
+     function (entityPath, componentId, propertyPath, expectedValue) {
+       // Direct component check without body parts
+     }
+   );
    ```
 
 2. **Use in condition**:
+
    ```json
    {
      "logic": {

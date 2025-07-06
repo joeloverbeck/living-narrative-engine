@@ -133,7 +133,7 @@ describe('SystemLogicInterpreter - Scenario 1: Invisibility Buff & Scenario 7: L
   beforeEach(() => {
     // --- Mock Implementations (Copied and adapted from Ticket 4/previous test file) ---
     const mockBodyGraphService = {
-      hasPartWithComponentValue: jest.fn().mockReturnValue({ found: false })
+      hasPartWithComponentValue: jest.fn().mockReturnValue({ found: false }),
     };
 
     mockLogger = {
@@ -177,7 +177,7 @@ describe('SystemLogicInterpreter - Scenario 1: Invisibility Buff & Scenario 7: L
 
     mockJsonLogicEvaluationService = {
       evaluate: jest.fn(), // Behavior configured per test case
-      addOperation: jest.fn()
+      addOperation: jest.fn(),
     };
 
     mockEntityManager = {

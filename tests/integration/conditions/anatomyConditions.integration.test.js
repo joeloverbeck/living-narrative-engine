@@ -1,7 +1,7 @@
 /**
  * @jest-environment node
- * 
- * Integration test for anatomy-based conditions using the custom hasPartWithComponentValue operator
+ *
+ * Integration test for anatomy-based conditions using the custom hasPartOfTypeWithComponentValue operator
  */
 
 import { describe, test, expect, beforeEach, jest } from '@jest/globals';
@@ -28,55 +28,71 @@ describe('Anatomy Conditions Integration', () => {
       debug: jest.fn(),
       info: jest.fn(),
       warn: jest.fn(),
-      error: jest.fn()
+      error: jest.fn(),
     };
 
     mockBodyGraphService = {
-      hasPartWithComponentValue: jest.fn()
+      hasPartWithComponentValue: jest.fn(),
+      findPartsByType: jest.fn(),
+      getAllParts: jest.fn(),
     };
 
     mockEntityManager = {
       getComponentData: jest.fn(),
-      getEntityInstance: jest.fn()
+      getEntityInstance: jest.fn(),
     };
 
     mockComponentAccessService = {
-      getComponentForEntity: jest.fn()
+      getComponentForEntity: jest.fn(),
     };
 
     mockGameDataRepository = {
-      getConditionDefinition: jest.fn()
+      getConditionDefinition: jest.fn(),
     };
 
     // Set up condition definitions
-    mockGameDataRepository.getConditionDefinition.mockImplementation((conditionId) => {
-      const conditions = {
-        'core:actor-has-muscular-legs': {
-          id: 'core:actor-has-muscular-legs',
-          logic: {
-            hasPartWithComponentValue: ['actor', 'descriptors:build', 'build', 'muscular']
-          }
-        },
-        'core:actor-has-shapely-legs': {
-          id: 'core:actor-has-shapely-legs',
-          logic: {
-            hasPartWithComponentValue: ['actor', 'descriptors:build', 'build', 'shapely']
-          }
-        }
-      };
-      return conditions[conditionId] || null;
-    });
+    mockGameDataRepository.getConditionDefinition.mockImplementation(
+      (conditionId) => {
+        const conditions = {
+          'core:actor-has-muscular-legs': {
+            id: 'core:actor-has-muscular-legs',
+            logic: {
+              hasPartOfTypeWithComponentValue: [
+                'actor',
+                'leg',
+                'descriptors:build',
+                'build',
+                'muscular',
+              ],
+            },
+          },
+          'core:actor-has-shapely-legs': {
+            id: 'core:actor-has-shapely-legs',
+            logic: {
+              hasPartOfTypeWithComponentValue: [
+                'actor',
+                'leg',
+                'descriptors:build',
+                'build',
+                'shapely',
+              ],
+            },
+          },
+        };
+        return conditions[conditionId] || null;
+      }
+    );
 
     // Create services with custom operators
     jsonLogicService = new JsonLogicEvaluationService({
       logger: mockLogger,
-      gameDataRepository: mockGameDataRepository
+      gameDataRepository: mockGameDataRepository,
     });
 
     customOperators = new JsonLogicCustomOperators({
       logger: mockLogger,
       bodyGraphService: mockBodyGraphService,
-      entityManager: mockEntityManager
+      entityManager: mockEntityManager,
     });
 
     // Register custom operators
@@ -85,14 +101,14 @@ describe('Anatomy Conditions Integration', () => {
     contextBuilder = new ActionValidationContextBuilder({
       entityManager: mockEntityManager,
       componentAccessService: mockComponentAccessService,
-      logger: mockLogger
+      logger: mockLogger,
     });
 
     prerequisiteService = new PrerequisiteEvaluationService({
       logger: mockLogger,
       jsonLogicEvaluationService: jsonLogicService,
       actionValidationContextBuilder: contextBuilder,
-      gameDataRepository: mockGameDataRepository
+      gameDataRepository: mockGameDataRepository,
     });
   });
 
@@ -100,57 +116,66 @@ describe('Anatomy Conditions Integration', () => {
     test('should pass when actor has muscular legs', () => {
       const actor = {
         id: 'player123',
-        components: {}
+        components: {},
       };
 
       mockEntityManager.getEntityInstance.mockReturnValue(actor);
-      mockEntityManager.getComponentData.mockReturnValue({
-        root: 'body123'
-      });
+      mockEntityManager.getComponentData
+        .mockReturnValueOnce({ root: 'body123' }) // anatomy:body
+        .mockReturnValueOnce({ build: 'muscular' }); // descriptors:build for leg123
 
-      mockBodyGraphService.hasPartWithComponentValue.mockReturnValue({
-        found: true,
-        partId: 'leg123'
-      });
+      mockBodyGraphService.findPartsByType.mockReturnValue(['leg123']);
 
-      const prerequisites = [{
-        logic: { condition_ref: 'core:actor-has-muscular-legs' }
-      }];
+      const prerequisites = [
+        {
+          logic: { condition_ref: 'core:actor-has-muscular-legs' },
+        },
+      ];
 
       const actionDefinition = { id: 'core:follow' };
-      const result = prerequisiteService.evaluate(prerequisites, actionDefinition, actor);
+      const result = prerequisiteService.evaluate(
+        prerequisites,
+        actionDefinition,
+        actor
+      );
 
       expect(result).toBe(true);
-      expect(mockBodyGraphService.hasPartWithComponentValue).toHaveBeenCalledWith(
-        { root: 'body123' },
-        'descriptors:build',
-        'build',
-        'muscular'
+      expect(mockBodyGraphService.findPartsByType).toHaveBeenCalledWith(
+        'body123',
+        'leg'
+      );
+      expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(
+        'leg123',
+        'descriptors:build'
       );
     });
 
     test('should fail when actor has no muscular legs', () => {
       const actor = {
         id: 'player123',
-        components: {}
+        components: {},
       };
 
       mockEntityManager.getEntityInstance.mockReturnValue(actor);
-      mockEntityManager.getComponentData.mockReturnValue({
-        root: 'body123'
-      });
+      mockEntityManager.getComponentData
+        .mockReturnValueOnce({ root: 'body123' }) // anatomy:body
+        .mockReturnValueOnce({ build: 'normal' }); // descriptors:build for leg123
 
-      mockBodyGraphService.hasPartWithComponentValue.mockReturnValue({
-        found: false
-      });
+      mockBodyGraphService.findPartsByType.mockReturnValue(['leg123']);
 
-      const prerequisites = [{
-        logic: { condition_ref: 'core:actor-has-muscular-legs' },
-        failure_message: 'You need muscular legs.'
-      }];
+      const prerequisites = [
+        {
+          logic: { condition_ref: 'core:actor-has-muscular-legs' },
+          failure_message: 'You need muscular legs.',
+        },
+      ];
 
       const actionDefinition = { id: 'core:follow' };
-      const result = prerequisiteService.evaluate(prerequisites, actionDefinition, actor);
+      const result = prerequisiteService.evaluate(
+        prerequisites,
+        actionDefinition,
+        actor
+      );
 
       expect(result).toBe(false);
     });
@@ -160,30 +185,35 @@ describe('Anatomy Conditions Integration', () => {
     test('should pass when actor has muscular legs', () => {
       const actor = {
         id: 'player123',
-        components: {}
+        components: {},
       };
 
       mockEntityManager.getEntityInstance.mockReturnValue(actor);
-      mockEntityManager.getComponentData.mockReturnValue({
-        root: 'body123'
-      });
+      mockEntityManager.getComponentData
+        .mockReturnValueOnce({ root: 'body123' }) // anatomy:body for muscular check
+        .mockReturnValueOnce({ build: 'muscular' }); // descriptors:build for leg123
 
-      mockBodyGraphService.hasPartWithComponentValue
-        .mockReturnValueOnce({ found: true, partId: 'leg123' }) // muscular check
-        .mockReturnValueOnce({ found: false }); // shapely check (won't be called due to OR short-circuit)
+      mockBodyGraphService.findPartsByType.mockReturnValue(['leg123']);
 
-      const prerequisites = [{
-        logic: {
-          or: [
-            { condition_ref: 'core:actor-has-muscular-legs' },
-            { condition_ref: 'core:actor-has-shapely-legs' }
-          ]
+      const prerequisites = [
+        {
+          logic: {
+            or: [
+              { condition_ref: 'core:actor-has-muscular-legs' },
+              { condition_ref: 'core:actor-has-shapely-legs' },
+            ],
+          },
+          failure_message:
+            'You need muscular or shapely legs to follow someone.',
         },
-        failure_message: 'You need muscular or shapely legs to follow someone.'
-      }];
+      ];
 
       const actionDefinition = { id: 'core:follow' };
-      const result = prerequisiteService.evaluate(prerequisites, actionDefinition, actor);
+      const result = prerequisiteService.evaluate(
+        prerequisites,
+        actionDefinition,
+        actor
+      );
 
       expect(result).toBe(true);
     });
@@ -191,30 +221,37 @@ describe('Anatomy Conditions Integration', () => {
     test('should pass when actor has shapely legs but not muscular', () => {
       const actor = {
         id: 'player123',
-        components: {}
+        components: {},
       };
 
       mockEntityManager.getEntityInstance.mockReturnValue(actor);
-      mockEntityManager.getComponentData.mockReturnValue({
-        root: 'body123'
-      });
+      mockEntityManager.getComponentData
+        .mockReturnValueOnce({ root: 'body123' }) // anatomy:body for muscular check
+        .mockReturnValueOnce({ build: 'normal' }) // descriptors:build for leg123 (not muscular)
+        .mockReturnValueOnce({ root: 'body123' }) // anatomy:body for shapely check
+        .mockReturnValueOnce({ build: 'shapely' }); // descriptors:build for leg123
 
-      mockBodyGraphService.hasPartWithComponentValue
-        .mockReturnValueOnce({ found: false }) // muscular check
-        .mockReturnValueOnce({ found: true, partId: 'leg456' }); // shapely check
+      mockBodyGraphService.findPartsByType.mockReturnValue(['leg123']);
 
-      const prerequisites = [{
-        logic: {
-          or: [
-            { condition_ref: 'core:actor-has-muscular-legs' },
-            { condition_ref: 'core:actor-has-shapely-legs' }
-          ]
+      const prerequisites = [
+        {
+          logic: {
+            or: [
+              { condition_ref: 'core:actor-has-muscular-legs' },
+              { condition_ref: 'core:actor-has-shapely-legs' },
+            ],
+          },
+          failure_message:
+            'You need muscular or shapely legs to follow someone.',
         },
-        failure_message: 'You need muscular or shapely legs to follow someone.'
-      }];
+      ];
 
       const actionDefinition = { id: 'core:follow' };
-      const result = prerequisiteService.evaluate(prerequisites, actionDefinition, actor);
+      const result = prerequisiteService.evaluate(
+        prerequisites,
+        actionDefinition,
+        actor
+      );
 
       expect(result).toBe(true);
     });
@@ -222,29 +259,37 @@ describe('Anatomy Conditions Integration', () => {
     test('should fail when actor has neither muscular nor shapely legs', () => {
       const actor = {
         id: 'player123',
-        components: {}
+        components: {},
       };
 
       mockEntityManager.getEntityInstance.mockReturnValue(actor);
-      mockEntityManager.getComponentData.mockReturnValue({
-        root: 'body123'
-      });
+      mockEntityManager.getComponentData
+        .mockReturnValueOnce({ root: 'body123' }) // anatomy:body for muscular check
+        .mockReturnValueOnce({ build: 'normal' }) // descriptors:build for leg123 (not muscular)
+        .mockReturnValueOnce({ root: 'body123' }) // anatomy:body for shapely check
+        .mockReturnValueOnce({ build: 'normal' }); // descriptors:build for leg123 (not shapely)
 
-      mockBodyGraphService.hasPartWithComponentValue
-        .mockReturnValue({ found: false });
+      mockBodyGraphService.findPartsByType.mockReturnValue(['leg123']);
 
-      const prerequisites = [{
-        logic: {
-          or: [
-            { condition_ref: 'core:actor-has-muscular-legs' },
-            { condition_ref: 'core:actor-has-shapely-legs' }
-          ]
+      const prerequisites = [
+        {
+          logic: {
+            or: [
+              { condition_ref: 'core:actor-has-muscular-legs' },
+              { condition_ref: 'core:actor-has-shapely-legs' },
+            ],
+          },
+          failure_message:
+            'You need muscular or shapely legs to follow someone.',
         },
-        failure_message: 'You need muscular or shapely legs to follow someone.'
-      }];
+      ];
 
       const actionDefinition = { id: 'core:follow' };
-      const result = prerequisiteService.evaluate(prerequisites, actionDefinition, actor);
+      const result = prerequisiteService.evaluate(
+        prerequisites,
+        actionDefinition,
+        actor
+      );
 
       expect(result).toBe(false);
     });
@@ -254,19 +299,25 @@ describe('Anatomy Conditions Integration', () => {
     test('should handle actor with no body component', () => {
       const actor = {
         id: 'robot123',
-        components: {}
+        components: {},
       };
 
       mockEntityManager.getEntityInstance.mockReturnValue(actor);
       mockEntityManager.getComponentData.mockReturnValue(null); // No body component
 
-      const prerequisites = [{
-        logic: { condition_ref: 'core:actor-has-muscular-legs' },
-        failure_message: 'You need muscular legs.'
-      }];
+      const prerequisites = [
+        {
+          logic: { condition_ref: 'core:actor-has-muscular-legs' },
+          failure_message: 'You need muscular legs.',
+        },
+      ];
 
       const actionDefinition = { id: 'core:follow' };
-      const result = prerequisiteService.evaluate(prerequisites, actionDefinition, actor);
+      const result = prerequisiteService.evaluate(
+        prerequisites,
+        actionDefinition,
+        actor
+      );
 
       expect(result).toBe(false);
     });

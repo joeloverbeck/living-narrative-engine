@@ -33,14 +33,20 @@ class HasBodyPartWithComponentValueHandler extends BaseOperationHandler {
 
   execute(params, executionContext) {
     const logger = this.getLogger(executionContext);
-    
+
     // Validate execution context
     ensureEvaluationContext(executionContext);
 
     // Validate parameters
     if (!Array.isArray(params) || params.length !== 4) {
-      const errorMessage = 'hasBodyPartWithComponentValue requires exactly 4 parameters: [entityRef, componentId, propertyPath, expectedValue]';
-      safeDispatchError(this.#safeEventDispatcher, errorMessage, executionContext.instanceId, logger);
+      const errorMessage =
+        'hasBodyPartWithComponentValue requires exactly 4 parameters: [entityRef, componentId, propertyPath, expectedValue]';
+      safeDispatchError(
+        this.#safeEventDispatcher,
+        errorMessage,
+        executionContext.instanceId,
+        logger
+      );
       return false;
     }
 
@@ -50,7 +56,9 @@ class HasBodyPartWithComponentValueHandler extends BaseOperationHandler {
       // Resolve entity from reference
       const entity = this.#resolveEntity(entityRef, executionContext);
       if (!entity) {
-        logger.debug(`Entity not found for reference: ${JSON.stringify(entityRef)}`);
+        logger.debug(
+          `Entity not found for reference: ${JSON.stringify(entityRef)}`
+        );
         return false;
       }
 
@@ -76,19 +84,27 @@ class HasBodyPartWithComponentValueHandler extends BaseOperationHandler {
 
       return result.found;
     } catch (error) {
-      safeDispatchError(this.#safeEventDispatcher, error.message || 'An error occurred in hasBodyPartWithComponentValue', { error, instanceId: executionContext.instanceId }, logger);
+      safeDispatchError(
+        this.#safeEventDispatcher,
+        error.message || 'An error occurred in hasBodyPartWithComponentValue',
+        { error, instanceId: executionContext.instanceId },
+        logger
+      );
       return false;
     }
   }
 
   #resolveEntity(entityRef, executionContext) {
     // Check evaluationContext.variables first (for test compatibility)
-    const variables = executionContext.evaluationContext?.variables || executionContext.variables || {};
-    
+    const variables =
+      executionContext.evaluationContext?.variables ||
+      executionContext.variables ||
+      {};
+
     // If entityRef is a string, check if it's a context variable
     if (typeof entityRef === 'string' && variables[entityRef]) {
       const entityData = variables[entityRef];
-      
+
       // Handle both direct entity ID and entity object
       if (typeof entityData === 'string') {
         return this.#entityManager.getEntityInstance(entityData);

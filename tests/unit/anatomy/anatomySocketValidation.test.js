@@ -21,22 +21,30 @@ describe('Anatomy Socket Component Validation', () => {
                 id: { type: 'string' },
                 orientation: {
                   type: 'string',
-                  enum: ['left', 'right', 'mid', 'upper', 'lower', 'front', 'back']
+                  enum: [
+                    'left',
+                    'right',
+                    'mid',
+                    'upper',
+                    'lower',
+                    'front',
+                    'back',
+                  ],
                 },
                 allowedTypes: {
                   type: 'array',
                   items: { type: 'string' },
-                  minItems: 1
+                  minItems: 1,
                 },
-                nameTpl: { type: 'string' }
+                nameTpl: { type: 'string' },
               },
               required: ['id', 'allowedTypes'],
-              additionalProperties: false
-            }
-          }
+              additionalProperties: false,
+            },
+          },
         },
         required: ['sockets'],
-        additionalProperties: false
+        additionalProperties: false,
       };
 
       const validate = ajv.compile(socketSchema);
@@ -47,9 +55,9 @@ describe('Anatomy Socket Component Validation', () => {
             id: 'wrist',
             orientation: 'lower',
             allowedTypes: ['hand'],
-            nameTpl: '{{parent.name}} {{type}}'
-          }
-        ]
+            nameTpl: '{{parent.name}} {{type}}',
+          },
+        ],
       };
 
       const isValid = validate(validSocketData);
@@ -70,22 +78,30 @@ describe('Anatomy Socket Component Validation', () => {
                 id: { type: 'string' },
                 orientation: {
                   type: 'string',
-                  enum: ['left', 'right', 'mid', 'upper', 'lower', 'front', 'back']
+                  enum: [
+                    'left',
+                    'right',
+                    'mid',
+                    'upper',
+                    'lower',
+                    'front',
+                    'back',
+                  ],
                 },
                 allowedTypes: {
                   type: 'array',
                   items: { type: 'string' },
-                  minItems: 1
+                  minItems: 1,
                 },
-                nameTpl: { type: 'string' }
+                nameTpl: { type: 'string' },
               },
               required: ['id', 'allowedTypes'],
-              additionalProperties: false
-            }
-          }
+              additionalProperties: false,
+            },
+          },
         },
         required: ['sockets'],
-        additionalProperties: false
+        additionalProperties: false,
       };
 
       const validate = ajv.compile(socketSchema);
@@ -97,9 +113,9 @@ describe('Anatomy Socket Component Validation', () => {
             orientation: 'lower',
             allowedTypes: ['hand'],
             maxCount: 1, // This should be rejected
-            nameTpl: '{{parent.name}} {{type}}'
-          }
-        ]
+            nameTpl: '{{parent.name}} {{type}}',
+          },
+        ],
       };
 
       const isValid = validate(invalidSocketData);
@@ -123,16 +139,16 @@ describe('Anatomy Socket Component Validation', () => {
                 allowedTypes: {
                   type: 'array',
                   items: { type: 'string' },
-                  minItems: 1
-                }
+                  minItems: 1,
+                },
               },
               required: ['id', 'allowedTypes'],
-              additionalProperties: false
-            }
-          }
+              additionalProperties: false,
+            },
+          },
         },
         required: ['sockets'],
-        additionalProperties: false
+        additionalProperties: false,
       };
 
       const validate = ajv.compile(socketSchema);
@@ -141,17 +157,19 @@ describe('Anatomy Socket Component Validation', () => {
         sockets: [
           {
             orientation: 'lower',
-            nameTpl: '{{parent.name}} {{type}}'
+            nameTpl: '{{parent.name}} {{type}}',
             // Missing required 'id' and 'allowedTypes'
-          }
-        ]
+          },
+        ],
       };
 
       const isValid = validate(invalidSocketData);
 
       expect(isValid).toBe(false);
       expect(validate.errors.length).toBeGreaterThan(0);
-      expect(validate.errors.some(error => error.keyword === 'required')).toBe(true);
+      expect(
+        validate.errors.some((error) => error.keyword === 'required')
+      ).toBe(true);
     });
   });
 });

@@ -34,11 +34,7 @@
           "minLength": 1
         }
       },
-      "required": [
-        "current_location_id",
-        "direction",
-        "result_variable"
-      ],
+      "required": ["current_location_id", "direction", "result_variable"],
       "additionalProperties": false
     }
   }

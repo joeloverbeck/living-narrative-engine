@@ -131,17 +131,18 @@ export class RecipeConstraintEvaluator {
         entityId,
         'anatomy:part'
       );
-      
+
       if (anatomyPart?.subType) {
         partTypes.add(anatomyPart.subType);
-        
+
         // Count occurrences
         const currentCount = partTypeCounts.get(anatomyPart.subType) || 0;
         partTypeCounts.set(anatomyPart.subType, currentCount + 1);
       }
 
       // Get all components
-      const componentTypes = this.#entityManager.getAllComponentTypesForEntity(entityId);
+      const componentTypes =
+        this.#entityManager.getAllComponentTypesForEntity(entityId);
       if (componentTypes) {
         for (const componentId of componentTypes) {
           components.add(componentId);
@@ -181,11 +182,11 @@ export class RecipeConstraintEvaluator {
         const missingComponents = requiredComponents.filter(
           (c) => !graphMetadata.components.has(c)
         );
-        
+
         if (missingComponents.length > 0) {
           errors.push(
             `Required constraint not satisfied: has part types [${presentPartTypes.join(', ')}] ` +
-            `but missing required components [${missingComponents.join(', ')}]`
+              `but missing required components [${missingComponents.join(', ')}]`
           );
         }
       }
@@ -204,7 +205,7 @@ export class RecipeConstraintEvaluator {
     for (const constraint of excludesConstraints) {
       // Handle nested format with components array
       const excludedComponents = constraint.components || constraint;
-      
+
       if (Array.isArray(excludedComponents)) {
         const presentExcluded = excludedComponents.filter((c) =>
           graphMetadata.components.has(c)
@@ -213,7 +214,7 @@ export class RecipeConstraintEvaluator {
         if (presentExcluded.length > 1) {
           errors.push(
             `Exclusion constraint violated: found mutually exclusive components ` +
-            `[${presentExcluded.join(', ')}] in the same anatomy`
+              `[${presentExcluded.join(', ')}] in the same anatomy`
           );
         }
       }
@@ -240,24 +241,33 @@ export class RecipeConstraintEvaluator {
           if (actualCount !== slot.count) {
             errors.push(
               `Slot '${slotKey}': expected exactly ${slot.count} parts of type '${partType}' ` +
-              `but found ${actualCount}`
+                `but found ${actualCount}`
             );
           }
         } else if (typeof slot.count === 'object') {
-          if (slot.count.exact !== undefined && actualCount !== slot.count.exact) {
+          if (
+            slot.count.exact !== undefined &&
+            actualCount !== slot.count.exact
+          ) {
             errors.push(
               `Slot '${slotKey}': expected exactly ${slot.count.exact} parts of type '${partType}' ` +
-              `but found ${actualCount}`
+                `but found ${actualCount}`
             );
-          } else if (slot.count.min !== undefined && actualCount < slot.count.min) {
+          } else if (
+            slot.count.min !== undefined &&
+            actualCount < slot.count.min
+          ) {
             errors.push(
               `Slot '${slotKey}': expected at least ${slot.count.min} parts of type '${partType}' ` +
-              `but found ${actualCount}`
+                `but found ${actualCount}`
             );
-          } else if (slot.count.max !== undefined && actualCount > slot.count.max) {
+          } else if (
+            slot.count.max !== undefined &&
+            actualCount > slot.count.max
+          ) {
             errors.push(
               `Slot '${slotKey}': expected at most ${slot.count.max} parts of type '${partType}' ` +
-              `but found ${actualCount}`
+                `but found ${actualCount}`
             );
           }
         }

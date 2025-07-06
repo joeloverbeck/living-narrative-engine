@@ -13,7 +13,7 @@ describe('AnatomyGraphRenderer - Debug Tests', () => {
   let mockDocument;
   let mockContainer;
   let mockSvg;
-  
+
   beforeEach(() => {
     // Mock SVG element
     mockSvg = {
@@ -26,12 +26,12 @@ describe('AnatomyGraphRenderer - Debug Tests', () => {
         left: 0,
         top: 0,
         width: 800,
-        height: 600
+        height: 600,
       }),
       style: { cursor: 'grab' },
-      id: 'anatomy-graph'
+      id: 'anatomy-graph',
     };
-    
+
     // Mock container
     mockContainer = {
       innerHTML: '',
@@ -41,10 +41,10 @@ describe('AnatomyGraphRenderer - Debug Tests', () => {
         left: 0,
         top: 0,
         width: 800,
-        height: 600
-      })
+        height: 600,
+      }),
     };
-    
+
     // Mock document
     mockDocument = {
       getElementById: jest.fn((id) => {
@@ -63,50 +63,50 @@ describe('AnatomyGraphRenderer - Debug Tests', () => {
           addEventListener: jest.fn(),
           querySelector: jest.fn(),
           style: {},
-          tagName
+          tagName,
         };
       }),
       createElement: jest.fn(() => ({
         className: '',
         style: {},
-        innerHTML: ''
+        innerHTML: '',
       })),
-      addEventListener: jest.fn()
+      addEventListener: jest.fn(),
     };
-    
+
     // Mock logger
     mockLogger = {
       debug: jest.fn(),
       info: jest.fn(),
       warn: jest.fn(),
-      error: jest.fn()
+      error: jest.fn(),
     };
-    
+
     // Mock entity manager
     mockEntityManager = {
-      getEntityInstance: jest.fn()
+      getEntityInstance: jest.fn(),
     };
-    
+
     renderer = new AnatomyGraphRenderer({
       logger: mockLogger,
       entityManager: mockEntityManager,
-      documentContext: { document: mockDocument }
+      documentContext: { document: mockDocument },
     });
   });
-  
+
   describe('Parts Collection from bodyData', () => {
     it('should collect all parts from bodyData.parts', async () => {
       // Arrange
       const bodyData = {
         root: 'torso-1',
         parts: {
-          'torso': 'torso-1',
-          'head': 'head-1',
-          'left_arm': 'arm-1',
-          'right_arm': 'arm-2'
-        }
+          torso: 'torso-1',
+          head: 'head-1',
+          left_arm: 'arm-1',
+          right_arm: 'arm-2',
+        },
       };
-      
+
       const createMockEntity = (id, name, type, parentId = null) => ({
         getComponentData: jest.fn((component) => {
           if (component === 'core:name') return { text: name };
@@ -115,22 +115,22 @@ describe('AnatomyGraphRenderer - Debug Tests', () => {
             return { parentId, socketId: `${type}-socket` };
           }
           return null;
-        })
+        }),
       });
-      
+
       mockEntityManager.getEntityInstance.mockImplementation((id) => {
         const entities = {
           'torso-1': createMockEntity('torso-1', 'Torso', 'torso'),
           'head-1': createMockEntity('head-1', 'Head', 'head', 'torso-1'),
           'arm-1': createMockEntity('arm-1', 'Left Arm', 'arm', 'torso-1'),
-          'arm-2': createMockEntity('arm-2', 'Right Arm', 'arm', 'torso-1')
+          'arm-2': createMockEntity('arm-2', 'Right Arm', 'arm', 'torso-1'),
         };
         return Promise.resolve(entities[id] || null);
       });
-      
+
       // Act
       await renderer.renderGraph('test-entity', bodyData);
-      
+
       // Assert
       expect(renderer._nodes.size).toBe(4); // All 4 parts should be processed
       expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -138,24 +138,24 @@ describe('AnatomyGraphRenderer - Debug Tests', () => {
         expect.objectContaining({
           root: 'torso-1',
           partsCount: 4,
-          parts: bodyData.parts
+          parts: bodyData.parts,
         })
       );
       expect(mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining('Graph building complete: 4 nodes, 3 edges')
       );
     });
-    
+
     it('should handle parts without joint components gracefully', async () => {
       // Arrange
       const bodyData = {
         root: 'torso-1',
         parts: {
-          'torso': 'torso-1',
-          'floating_part': 'floating-1' // No joint connection
-        }
+          torso: 'torso-1',
+          floating_part: 'floating-1', // No joint connection
+        },
       };
-      
+
       mockEntityManager.getEntityInstance.mockImplementation((id) => {
         if (id === 'torso-1') {
           return Promise.resolve({
@@ -163,7 +163,7 @@ describe('AnatomyGraphRenderer - Debug Tests', () => {
               if (component === 'core:name') return { text: 'Torso' };
               if (component === 'anatomy:part') return { subType: 'torso' };
               return null;
-            })
+            }),
           });
         }
         if (id === 'floating-1') {
@@ -172,15 +172,15 @@ describe('AnatomyGraphRenderer - Debug Tests', () => {
               if (component === 'core:name') return { text: 'Floating Part' };
               if (component === 'anatomy:part') return { subType: 'unknown' };
               return null; // No joint component
-            })
+            }),
           });
         }
         return Promise.resolve(null);
       });
-      
+
       // Act
       await renderer.renderGraph('test', bodyData);
-      
+
       // Assert
       expect(renderer._nodes.size).toBe(2); // Both parts should be added
       expect(mockLogger.warn).toHaveBeenCalledWith(
@@ -188,27 +188,27 @@ describe('AnatomyGraphRenderer - Debug Tests', () => {
         [{ name: 'floating_part', id: 'floating-1' }]
       );
     });
-    
+
     it('should log component data for each processed entity', async () => {
       // Arrange
       const bodyData = {
         root: 'torso-1',
         parts: {
-          'torso': 'torso-1'
-        }
+          torso: 'torso-1',
+        },
       };
-      
+
       mockEntityManager.getEntityInstance.mockResolvedValue({
         getComponentData: jest.fn((component) => {
           if (component === 'core:name') return { text: 'Torso' };
           if (component === 'anatomy:part') return { subType: 'torso' };
           return null;
-        })
+        }),
       });
-      
+
       // Act
       await renderer.renderGraph('test', bodyData);
-      
+
       // Assert
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'Entity torso-1 components:',
@@ -218,22 +218,22 @@ describe('AnatomyGraphRenderer - Debug Tests', () => {
           hasPartComponent: true,
           partType: 'torso',
           hasJointComponent: false,
-          jointParentId: undefined
+          jointParentId: undefined,
         })
       );
     });
-    
+
     it('should correctly identify and log children for each node', async () => {
       // Arrange
       const bodyData = {
         root: 'torso-1',
         parts: {
-          'torso': 'torso-1',
-          'head': 'head-1',
-          'left_arm': 'arm-1'
-        }
+          torso: 'torso-1',
+          head: 'head-1',
+          left_arm: 'arm-1',
+        },
       };
-      
+
       const createMockEntity = (id, name, type, parentId = null) => ({
         getComponentData: jest.fn((component) => {
           if (component === 'core:name') return { text: name };
@@ -242,43 +242,43 @@ describe('AnatomyGraphRenderer - Debug Tests', () => {
             return { parentId, socketId: `${type}-socket` };
           }
           return null;
-        })
+        }),
       });
-      
+
       mockEntityManager.getEntityInstance.mockImplementation((id) => {
         const entities = {
           'torso-1': createMockEntity('torso-1', 'Torso', 'torso'),
           'head-1': createMockEntity('head-1', 'Head', 'head', 'torso-1'),
-          'arm-1': createMockEntity('arm-1', 'Left Arm', 'arm', 'torso-1')
+          'arm-1': createMockEntity('arm-1', 'Left Arm', 'arm', 'torso-1'),
         };
         return Promise.resolve(entities[id] || null);
       });
-      
+
       // Act
       await renderer.renderGraph('test', bodyData);
-      
+
       // Assert
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'Found 2 children for torso-1:',
         expect.arrayContaining([
           { id: 'head-1', name: 'Head' },
-          { id: 'arm-1', name: 'Left Arm' }
+          { id: 'arm-1', name: 'Left Arm' },
         ])
       );
     });
   });
-  
+
   describe('Debug Info Display', () => {
     it('should add debug info group to SVG', async () => {
       // Arrange
       const bodyData = {
         root: 'torso-1',
         parts: {
-          'torso': 'torso-1',
-          'head': 'head-1'
-        }
+          torso: 'torso-1',
+          head: 'head-1',
+        },
       };
-      
+
       mockEntityManager.getEntityInstance.mockImplementation((id) => {
         if (id === 'torso-1') {
           return Promise.resolve({
@@ -286,7 +286,7 @@ describe('AnatomyGraphRenderer - Debug Tests', () => {
               if (component === 'core:name') return { text: 'Torso' };
               if (component === 'anatomy:part') return { subType: 'torso' };
               return null;
-            })
+            }),
           });
         }
         if (id === 'head-1') {
@@ -294,14 +294,15 @@ describe('AnatomyGraphRenderer - Debug Tests', () => {
             getComponentData: jest.fn((component) => {
               if (component === 'core:name') return { text: 'Head' };
               if (component === 'anatomy:part') return { subType: 'head' };
-              if (component === 'anatomy:joint') return { parentId: 'torso-1', socketId: 'neck' };
+              if (component === 'anatomy:joint')
+                return { parentId: 'torso-1', socketId: 'neck' };
               return null;
-            })
+            }),
           });
         }
         return Promise.resolve(null);
       });
-      
+
       const debugElements = [];
       mockDocument.createElementNS.mockImplementation((ns, tagName) => {
         if (tagName === 'svg') return mockSvg;
@@ -312,27 +313,27 @@ describe('AnatomyGraphRenderer - Debug Tests', () => {
           addEventListener: jest.fn(),
           querySelector: jest.fn(),
           style: {},
-          tagName
+          tagName,
         };
         if (tagName === 'g' || tagName === 'text') {
           debugElements.push(element);
         }
         return element;
       });
-      
+
       // Act
       await renderer.renderGraph('test', bodyData);
-      
+
       // Assert
-      const debugGroup = debugElements.find(el => 
-        el.setAttribute.mock.calls.some(call => 
-          call[0] === 'class' && call[1] === 'debug-info'
+      const debugGroup = debugElements.find((el) =>
+        el.setAttribute.mock.calls.some(
+          (call) => call[0] === 'class' && call[1] === 'debug-info'
         )
       );
       expect(debugGroup).toBeDefined();
-      
-      const debugText = debugElements.find(el => 
-        el.tagName === 'text' && el.textContent.includes('Nodes:')
+
+      const debugText = debugElements.find(
+        (el) => el.tagName === 'text' && el.textContent.includes('Nodes:')
       );
       expect(debugText).toBeDefined();
       expect(debugText.textContent).toBe('Nodes: 2, Edges: 1');

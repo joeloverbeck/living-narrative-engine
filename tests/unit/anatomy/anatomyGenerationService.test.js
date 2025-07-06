@@ -205,7 +205,7 @@ describe('AnatomyGenerationService', () => {
       mockDataRegistry.get.mockReturnValue(null);
 
       await expect(service.generateAnatomyIfNeeded('entity-1')).rejects.toThrow(
-        'Recipe \'missing-recipe\' not found'
+        "Recipe 'missing-recipe' not found"
       );
     });
 
@@ -370,7 +370,9 @@ describe('AnatomyGenerationService', () => {
       );
 
       // The new architecture properly propagates errors and triggers rollback
-      await expect(service.generateAnatomyIfNeeded('entity-1')).rejects.toThrow();
+      await expect(
+        service.generateAnatomyIfNeeded('entity-1')
+      ).rejects.toThrow();
 
       expect(mockLogger.error).toHaveBeenCalledWith(
         "AnatomyGenerationService: Failed to generate anatomy for entity 'entity-1'",
@@ -411,7 +413,7 @@ describe('AnatomyGenerationService', () => {
 
       // Should throw error when entity not found during update
       await expect(service.generateAnatomyIfNeeded('entity-1')).rejects.toThrow(
-        'Entity \'entity-1\' not found after anatomy generation'
+        "Entity 'entity-1' not found after anatomy generation"
       );
     });
 
@@ -440,15 +442,22 @@ describe('AnatomyGenerationService', () => {
       mockBodyGraphService.buildAdjacencyCache.mockImplementation(() => {
         callOrder.push('buildAdjacencyCache');
       });
-      mockAnatomyDescriptionService.generateAllDescriptions.mockImplementation(() => {
-        callOrder.push('generateAllDescriptions');
-      });
+      mockAnatomyDescriptionService.generateAllDescriptions.mockImplementation(
+        () => {
+          callOrder.push('generateAllDescriptions');
+        }
+      );
 
       await service.generateAnatomyIfNeeded('entity-1');
 
       // Verify the order of calls
-      expect(callOrder).toEqual(['buildAdjacencyCache', 'generateAllDescriptions']);
-      expect(mockBodyGraphService.buildAdjacencyCache).toHaveBeenCalledWith('root-1');
+      expect(callOrder).toEqual([
+        'buildAdjacencyCache',
+        'generateAllDescriptions',
+      ]);
+      expect(mockBodyGraphService.buildAdjacencyCache).toHaveBeenCalledWith(
+        'root-1'
+      );
     });
 
     it('should handle null name data for parts', async () => {

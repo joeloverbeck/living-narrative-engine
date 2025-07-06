@@ -3,7 +3,14 @@
  * @description Tests for anatomy visualizer initialization sequence, specifically AnatomyFormattingService
  */
 
-import { jest, describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import {
+  jest,
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+} from '@jest/globals';
 
 // Mock functions
 const mockConfigure = jest.fn();
@@ -111,14 +118,18 @@ describe('Anatomy Visualizer Initialization', () => {
       await Promise.resolve();
 
       // Verify the initialization sequence
-      expect(modsLoaderMock.loadMods).toHaveBeenCalledWith('default', ['test-mod']);
+      expect(modsLoaderMock.loadMods).toHaveBeenCalledWith('default', [
+        'test-mod',
+      ]);
       expect(anatomyFormattingServiceMock.initialize).toHaveBeenCalled();
       expect(systemInitializerMock.initializeAll).toHaveBeenCalled();
 
       // Verify AnatomyFormattingService was initialized after mods were loaded
       const modsLoadCall = modsLoaderMock.loadMods.mock.invocationCallOrder[0];
-      const formatServiceCall = anatomyFormattingServiceMock.initialize.mock.invocationCallOrder[0];
-      const systemInitCall = systemInitializerMock.initializeAll.mock.invocationCallOrder[0];
+      const formatServiceCall =
+        anatomyFormattingServiceMock.initialize.mock.invocationCallOrder[0];
+      const systemInitCall =
+        systemInitializerMock.initializeAll.mock.invocationCallOrder[0];
 
       expect(formatServiceCall).toBeGreaterThan(modsLoadCall);
       expect(systemInitCall).toBeGreaterThan(formatServiceCall);
@@ -129,15 +140,27 @@ describe('Anatomy Visualizer Initialization', () => {
         await import('../../../src/anatomy-visualizer.js');
       });
       // Wait longer for all async operations
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       // Verify key logging steps were called
-      expect(loggerMock.info).toHaveBeenCalledWith('Anatomy Visualizer: Starting initialization...');
-      expect(loggerMock.info).toHaveBeenCalledWith('Anatomy Visualizer: Loading mods...');
-      expect(loggerMock.info).toHaveBeenCalledWith('Anatomy Visualizer: Initializing AnatomyFormattingService...');
-      expect(loggerMock.info).toHaveBeenCalledWith('Anatomy Visualizer: Initializing system services...');
-      expect(loggerMock.info).toHaveBeenCalledWith('Anatomy Visualizer: Initializing UI...');
-      expect(loggerMock.info).toHaveBeenCalledWith('Anatomy Visualizer: Initialization complete');
+      expect(loggerMock.info).toHaveBeenCalledWith(
+        'Anatomy Visualizer: Starting initialization...'
+      );
+      expect(loggerMock.info).toHaveBeenCalledWith(
+        'Anatomy Visualizer: Loading mods...'
+      );
+      expect(loggerMock.info).toHaveBeenCalledWith(
+        'Anatomy Visualizer: Initializing AnatomyFormattingService...'
+      );
+      expect(loggerMock.info).toHaveBeenCalledWith(
+        'Anatomy Visualizer: Initializing system services...'
+      );
+      expect(loggerMock.info).toHaveBeenCalledWith(
+        'Anatomy Visualizer: Initializing UI...'
+      );
+      expect(loggerMock.info).toHaveBeenCalledWith(
+        'Anatomy Visualizer: Initialization complete'
+      );
     });
 
     it('should resolve AnatomyFormattingService from container', async () => {
@@ -152,7 +175,9 @@ describe('Anatomy Visualizer Initialization', () => {
 
     it('should handle AnatomyFormattingService initialization failure', async () => {
       // Make AnatomyFormattingService initialization fail
-      const initError = new Error('AnatomyFormattingService initialization failed');
+      const initError = new Error(
+        'AnatomyFormattingService initialization failed'
+      );
       anatomyFormattingServiceMock.initialize.mockRejectedValue(initError);
 
       // Mock console.error to check error handling
@@ -195,5 +220,4 @@ describe('Anatomy Visualizer Initialization', () => {
       consoleError.mockRestore();
     });
   });
-
 });

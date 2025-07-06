@@ -20,25 +20,27 @@ describe('actor-can-move condition', () => {
       debug: jest.fn(),
       info: jest.fn(),
       warn: jest.fn(),
-      error: jest.fn()
+      error: jest.fn(),
     };
 
     mockBodyGraphService = {
-      hasPartWithComponentValue: jest.fn()
+      hasPartWithComponentValue: jest.fn(),
+      findPartsByType: jest.fn(),
+      getAllParts: jest.fn(),
     };
 
     mockEntityManager = {
-      getComponentData: jest.fn()
+      getComponentData: jest.fn(),
     };
 
     jsonLogicService = new JsonLogicEvaluationService({
-      logger: mockLogger
+      logger: mockLogger,
     });
 
     customOperators = new JsonLogicCustomOperators({
       logger: mockLogger,
       bodyGraphService: mockBodyGraphService,
-      entityManager: mockEntityManager
+      entityManager: mockEntityManager,
     });
 
     customOperators.registerOperators(jsonLogicService);
@@ -47,8 +49,8 @@ describe('actor-can-move condition', () => {
   describe('evaluating actor-can-move condition', () => {
     const actorCanMoveCondition = {
       logic: {
-        hasPartWithComponentValue: ['actor', 'core:movement', 'locked', false]
-      }
+        hasPartWithComponentValue: ['actor', 'core:movement', 'locked', false],
+      },
     };
 
     test('should return true when actor has legs with unlocked movement', () => {
@@ -56,25 +58,33 @@ describe('actor-can-move condition', () => {
         actor: {
           id: 'player123',
           components: {
-            'anatomy:body': { root: 'body123' }
-          }
-        }
+            'anatomy:body': { root: 'body123' },
+          },
+        },
       };
 
       mockEntityManager.getComponentData.mockReturnValue({
-        root: 'body123'
+        root: 'body123',
       });
 
       mockBodyGraphService.hasPartWithComponentValue.mockReturnValue({
         found: true,
-        partId: 'leg123'
+        partId: 'leg123',
       });
 
-      const result = jsonLogicService.evaluate(actorCanMoveCondition.logic, context);
-      
+      const result = jsonLogicService.evaluate(
+        actorCanMoveCondition.logic,
+        context
+      );
+
       expect(result).toBe(true);
-      expect(mockEntityManager.getComponentData).toHaveBeenCalledWith('player123', 'anatomy:body');
-      expect(mockBodyGraphService.hasPartWithComponentValue).toHaveBeenCalledWith(
+      expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(
+        'player123',
+        'anatomy:body'
+      );
+      expect(
+        mockBodyGraphService.hasPartWithComponentValue
+      ).toHaveBeenCalledWith(
         { root: 'body123' },
         'core:movement',
         'locked',
@@ -87,24 +97,29 @@ describe('actor-can-move condition', () => {
         actor: {
           id: 'player123',
           components: {
-            'anatomy:body': { root: 'body123' }
-          }
-        }
+            'anatomy:body': { root: 'body123' },
+          },
+        },
       };
 
       mockEntityManager.getComponentData.mockReturnValue({
-        root: 'body123'
+        root: 'body123',
       });
 
       // Simulating that the body part has movement locked
       mockBodyGraphService.hasPartWithComponentValue.mockReturnValue({
-        found: false
+        found: false,
       });
 
-      const result = jsonLogicService.evaluate(actorCanMoveCondition.logic, context);
-      
+      const result = jsonLogicService.evaluate(
+        actorCanMoveCondition.logic,
+        context
+      );
+
       expect(result).toBe(false);
-      expect(mockBodyGraphService.hasPartWithComponentValue).toHaveBeenCalledWith(
+      expect(
+        mockBodyGraphService.hasPartWithComponentValue
+      ).toHaveBeenCalledWith(
         { root: 'body123' },
         'core:movement',
         'locked',
@@ -117,22 +132,25 @@ describe('actor-can-move condition', () => {
         actor: {
           id: 'player123',
           components: {
-            'anatomy:body': { root: 'body123' }
-          }
-        }
+            'anatomy:body': { root: 'body123' },
+          },
+        },
       };
 
       mockEntityManager.getComponentData.mockReturnValue({
-        root: 'body123'
+        root: 'body123',
       });
 
       // Simulating that no body parts have the movement component
       mockBodyGraphService.hasPartWithComponentValue.mockReturnValue({
-        found: false
+        found: false,
       });
 
-      const result = jsonLogicService.evaluate(actorCanMoveCondition.logic, context);
-      
+      const result = jsonLogicService.evaluate(
+        actorCanMoveCondition.logic,
+        context
+      );
+
       expect(result).toBe(false);
     });
 
@@ -140,26 +158,38 @@ describe('actor-can-move condition', () => {
       const context = {
         actor: {
           id: 'player123',
-          components: {}
-        }
+          components: {},
+        },
       };
 
       mockEntityManager.getComponentData.mockReturnValue(null);
 
-      const result = jsonLogicService.evaluate(actorCanMoveCondition.logic, context);
-      
+      const result = jsonLogicService.evaluate(
+        actorCanMoveCondition.logic,
+        context
+      );
+
       expect(result).toBe(false);
-      expect(mockLogger.debug).toHaveBeenCalledWith('JsonLogicCustomOperators: Entity player123 has no anatomy:body component');
-      expect(mockBodyGraphService.hasPartWithComponentValue).not.toHaveBeenCalled();
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'JsonLogicCustomOperators: Entity player123 has no anatomy:body component'
+      );
+      expect(
+        mockBodyGraphService.hasPartWithComponentValue
+      ).not.toHaveBeenCalled();
     });
 
     test('should return false when actor is missing', () => {
       const context = {};
 
-      const result = jsonLogicService.evaluate(actorCanMoveCondition.logic, context);
-      
+      const result = jsonLogicService.evaluate(
+        actorCanMoveCondition.logic,
+        context
+      );
+
       expect(result).toBe(false);
-      expect(mockLogger.warn).toHaveBeenCalledWith('JsonLogicCustomOperators: No entity found at path actor');
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'JsonLogicCustomOperators: No entity found at path actor'
+      );
     });
 
     test('should handle multiple legs where only one has unlocked movement', () => {
@@ -167,31 +197,39 @@ describe('actor-can-move condition', () => {
         actor: {
           id: 'player123',
           components: {
-            'anatomy:body': { root: 'body123' }
-          }
-        }
+            'anatomy:body': { root: 'body123' },
+          },
+        },
       };
 
       mockEntityManager.getComponentData.mockReturnValue({
-        root: 'body123'
+        root: 'body123',
       });
 
       // At least one leg has unlocked movement
       mockBodyGraphService.hasPartWithComponentValue.mockReturnValue({
         found: true,
-        partId: 'leg_left'
+        partId: 'leg_left',
       });
 
-      const result = jsonLogicService.evaluate(actorCanMoveCondition.logic, context);
-      
+      const result = jsonLogicService.evaluate(
+        actorCanMoveCondition.logic,
+        context
+      );
+
       expect(result).toBe(true);
     });
 
     test('should work with nested entity paths', () => {
       const conditionWithNestedPath = {
         logic: {
-          hasPartWithComponentValue: ['event.target', 'core:movement', 'locked', false]
-        }
+          hasPartWithComponentValue: [
+            'event.target',
+            'core:movement',
+            'locked',
+            false,
+          ],
+        },
       };
 
       const context = {
@@ -199,25 +237,31 @@ describe('actor-can-move condition', () => {
           target: {
             id: 'npc456',
             components: {
-              'anatomy:body': { root: 'body456' }
-            }
-          }
-        }
+              'anatomy:body': { root: 'body456' },
+            },
+          },
+        },
       };
 
       mockEntityManager.getComponentData.mockReturnValue({
-        root: 'body456'
+        root: 'body456',
       });
 
       mockBodyGraphService.hasPartWithComponentValue.mockReturnValue({
         found: true,
-        partId: 'leg456'
+        partId: 'leg456',
       });
 
-      const result = jsonLogicService.evaluate(conditionWithNestedPath.logic, context);
-      
+      const result = jsonLogicService.evaluate(
+        conditionWithNestedPath.logic,
+        context
+      );
+
       expect(result).toBe(true);
-      expect(mockEntityManager.getComponentData).toHaveBeenCalledWith('npc456', 'anatomy:body');
+      expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(
+        'npc456',
+        'anatomy:body'
+      );
     });
   });
 });

@@ -138,7 +138,6 @@ export class GraphIntegrityValidator {
 
     return result;
   }
-
 }
 
 export default GraphIntegrityValidator;

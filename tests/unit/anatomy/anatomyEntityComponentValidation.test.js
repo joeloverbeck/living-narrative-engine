@@ -2,13 +2,7 @@
  * @file Integration tests for anatomy entity component validation
  */
 
-import {
-  describe,
-  it,
-  expect,
-  beforeEach,
-  jest,
-} from '@jest/globals';
+import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import EntityDefinitionLoader from '../../../src/loaders/entityDefinitionLoader.js';
 import AjvSchemaValidator from '../../../src/validation/ajvSchemaValidator.js';
 import InMemoryDataRegistry from '../../../src/data/inMemoryDataRegistry.js';
@@ -39,10 +33,16 @@ describe('Anatomy Entity Component Validation', () => {
 
     // Register component schemas
     schemaValidator.preloadSchemas([
-      { schema: shapeGeneralSchema.dataSchema, id: 'descriptors:shape_general' },
+      {
+        schema: shapeGeneralSchema.dataSchema,
+        id: 'descriptors:shape_general',
+      },
       { schema: partComponentSchema.dataSchema, id: 'anatomy:part' },
       { schema: nameComponentSchema.dataSchema, id: 'core:name' },
-      { schema: sizeCategorySchema.dataSchema, id: 'descriptors:size_category' },
+      {
+        schema: sizeCategorySchema.dataSchema,
+        id: 'descriptors:size_category',
+      },
     ]);
 
     // Mock configuration
@@ -192,7 +192,9 @@ describe('Anatomy Entity Component Validation', () => {
       expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
         'core:system_error_occurred',
         expect.objectContaining({
-          message: expect.stringContaining('Runtime validation failed for component'),
+          message: expect.stringContaining(
+            'Runtime validation failed for component'
+          ),
           details: expect.objectContaining({
             raw: expect.stringContaining('descriptors:shape_general'),
           }),
@@ -229,7 +231,9 @@ describe('Anatomy Entity Component Validation', () => {
       expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
         'core:system_error_occurred',
         expect.objectContaining({
-          message: expect.stringContaining('Runtime validation failed for component'),
+          message: expect.stringContaining(
+            'Runtime validation failed for component'
+          ),
           details: expect.objectContaining({
             raw: expect.stringContaining('descriptors:shape_general'),
           }),

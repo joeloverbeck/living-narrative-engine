@@ -33,10 +33,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "location_id",
-        "entry"
-      ],
+      "required": ["location_id", "entry"],
       "additionalProperties": false
     }
   }

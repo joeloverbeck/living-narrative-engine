@@ -186,7 +186,7 @@ describe('SystemLogicInterpreter - Integration Tests - Scenario 6: Context Acces
       getAllSystemRules: jest.fn().mockReturnValue([]),
       getEntityDefinition: jest.fn(),
     };
-    mockJsonLogicEvaluationService = { 
+    mockJsonLogicEvaluationService = {
       evaluate: jest.fn(),
       addOperation: jest.fn(), // Mock for custom operations
     };
@@ -209,7 +209,7 @@ describe('SystemLogicInterpreter - Integration Tests - Scenario 6: Context Acces
 
     // Create the bodyGraphService mock
     const mockBodyGraphService = {
-      hasPartWithComponentValue: jest.fn().mockReturnValue({ found: false })
+      hasPartWithComponentValue: jest.fn().mockReturnValue({ found: false }),
     };
 
     interpreter = new SystemLogicInterpreter({

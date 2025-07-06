@@ -116,7 +116,7 @@ describe('Sequential Action Execution – Error Path', () => {
 
     /* Mock bodyGraphService */
     const mockBodyGraphService = {
-      hasPartWithComponentValue: jest.fn().mockReturnValue({ found: false })
+      hasPartWithComponentValue: jest.fn().mockReturnValue({ found: false }),
     };
 
     /* Interpreter */

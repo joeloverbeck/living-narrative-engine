@@ -121,25 +121,29 @@ describe('core_handle_log_perceptible_events rule integration', () => {
 
     // Create bodyGraphService mock that checks entity components
     const mockBodyGraphService = {
-      hasPartWithComponentValue: jest.fn((bodyComponent, componentId, propertyPath, expectedValue) => {
-        if (!bodyComponent || !bodyComponent.rootEntityId) {
-          return { found: false };
-        }
-        
-        // Check all entities in the manager
-        const allEntities = customEntityManager.getAllEntities();
-        for (const entity of allEntities) {
-          if (entity.components && entity.components[componentId]) {
-            const component = entity.components[componentId];
-            const actualValue = propertyPath ? component[propertyPath] : component;
-            if (actualValue === expectedValue) {
-              return { found: true, partId: entity.id };
+      hasPartWithComponentValue: jest.fn(
+        (bodyComponent, componentId, propertyPath, expectedValue) => {
+          if (!bodyComponent || !bodyComponent.rootEntityId) {
+            return { found: false };
+          }
+
+          // Check all entities in the manager
+          const allEntities = customEntityManager.getAllEntities();
+          for (const entity of allEntities) {
+            if (entity.components && entity.components[componentId]) {
+              const component = entity.components[componentId];
+              const actualValue = propertyPath
+                ? component[propertyPath]
+                : component;
+              if (actualValue === expectedValue) {
+                return { found: true, partId: entity.id };
+              }
             }
           }
+
+          return { found: false };
         }
-        
-        return { found: false };
-      })
+      ),
     };
 
     const interpreter = new SystemLogicInterpreter({
@@ -209,25 +213,29 @@ describe('core_handle_log_perceptible_events rule integration', () => {
 
         // Create bodyGraphService mock for the new interpreter
         const newMockBodyGraphService = {
-          hasPartWithComponentValue: jest.fn((bodyComponent, componentId, propertyPath, expectedValue) => {
-            if (!bodyComponent || !bodyComponent.rootEntityId) {
-              return { found: false };
-            }
-            
-            // Check all entities in the manager
-            const allEntities = customEntityManager.getAllEntities();
-            for (const entity of allEntities) {
-              if (entity.components && entity.components[componentId]) {
-                const component = entity.components[componentId];
-                const actualValue = propertyPath ? component[propertyPath] : component;
-                if (actualValue === expectedValue) {
-                  return { found: true, partId: entity.id };
+          hasPartWithComponentValue: jest.fn(
+            (bodyComponent, componentId, propertyPath, expectedValue) => {
+              if (!bodyComponent || !bodyComponent.rootEntityId) {
+                return { found: false };
+              }
+
+              // Check all entities in the manager
+              const allEntities = customEntityManager.getAllEntities();
+              for (const entity of allEntities) {
+                if (entity.components && entity.components[componentId]) {
+                  const component = entity.components[componentId];
+                  const actualValue = propertyPath
+                    ? component[propertyPath]
+                    : component;
+                  if (actualValue === expectedValue) {
+                    return { found: true, partId: entity.id };
+                  }
                 }
               }
+
+              return { found: false };
             }
-            
-            return { found: false };
-          })
+          ),
         };
 
         const newInterpreter = new SystemLogicInterpreter({

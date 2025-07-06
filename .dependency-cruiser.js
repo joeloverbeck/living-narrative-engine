@@ -36,7 +36,8 @@ module.exports = {
     },
     {
       name: 'no-node-core-in-browser',
-      comment: 'Browser bundle must not pull Node built-ins like fs, path, etc.',
+      comment:
+        'Browser bundle must not pull Node built-ins like fs, path, etc.',
       severity: 'error',
       from: { path: '^src/' },
       to: { dependencyTypes: ['core'] },

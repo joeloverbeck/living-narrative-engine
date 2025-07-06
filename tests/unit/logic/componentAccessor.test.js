@@ -123,18 +123,24 @@ describe('createComponentAccessor', () => {
         return componentData[type];
       });
 
-      const accessor = createComponentAccessor(ENTITY_ID, mockManager, mockLogger);
+      const accessor = createComponentAccessor(
+        ENTITY_ID,
+        mockManager,
+        mockLogger
+      );
       const serialized = JSON.stringify(accessor);
       const parsed = JSON.parse(serialized);
 
       expect(parsed).toEqual(componentData);
-      expect(mockManager.getAllComponentTypesForEntity).toHaveBeenCalledWith(ENTITY_ID);
+      expect(mockManager.getAllComponentTypesForEntity).toHaveBeenCalledWith(
+        ENTITY_ID
+      );
       expect(mockManager.getComponentData).toHaveBeenCalledTimes(3);
     });
 
     test('skips undefined or null components during serialization', () => {
       const componentTypes = ['core:name', 'core:position', 'core:health'];
-      
+
       mockManager.getAllComponentTypesForEntity.mockReturnValue(componentTypes);
       mockManager.getComponentData.mockImplementation((id, type) => {
         if (type === 'core:name') return { text: 'Test Entity' };
@@ -142,7 +148,11 @@ describe('createComponentAccessor', () => {
         if (type === 'core:health') return null;
       });
 
-      const accessor = createComponentAccessor(ENTITY_ID, mockManager, mockLogger);
+      const accessor = createComponentAccessor(
+        ENTITY_ID,
+        mockManager,
+        mockLogger
+      );
       const serialized = JSON.stringify(accessor);
       const parsed = JSON.parse(serialized);
 
@@ -154,7 +164,11 @@ describe('createComponentAccessor', () => {
         throw new Error('Entity not found');
       });
 
-      const accessor = createComponentAccessor(ENTITY_ID, mockManager, mockLogger);
+      const accessor = createComponentAccessor(
+        ENTITY_ID,
+        mockManager,
+        mockLogger
+      );
       const serialized = JSON.stringify(accessor);
       const parsed = JSON.parse(serialized);
 
@@ -164,7 +178,7 @@ describe('createComponentAccessor', () => {
 
     test('skips components that error during retrieval', () => {
       const componentTypes = ['core:name', 'core:error', 'core:health'];
-      
+
       mockManager.getAllComponentTypesForEntity.mockReturnValue(componentTypes);
       mockManager.getComponentData.mockImplementation((id, type) => {
         if (type === 'core:name') return { text: 'Test Entity' };
@@ -172,7 +186,11 @@ describe('createComponentAccessor', () => {
         if (type === 'core:health') return { current: 100, max: 100 };
       });
 
-      const accessor = createComponentAccessor(ENTITY_ID, mockManager, mockLogger);
+      const accessor = createComponentAccessor(
+        ENTITY_ID,
+        mockManager,
+        mockLogger
+      );
       const serialized = JSON.stringify(accessor);
       const parsed = JSON.parse(serialized);
 
@@ -181,7 +199,9 @@ describe('createComponentAccessor', () => {
         'core:health': { current: 100, max: 100 },
       });
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('Skipping component [core:error] during JSON serialization')
+        expect.stringContaining(
+          'Skipping component [core:error] during JSON serialization'
+        )
       );
     });
 
@@ -190,8 +210,12 @@ describe('createComponentAccessor', () => {
       mockManager.getComponentData.mockReturnValue(undefined);
       mockManager.hasComponent.mockReturnValue(false);
 
-      const accessor = createComponentAccessor(ENTITY_ID, mockManager, mockLogger);
-      
+      const accessor = createComponentAccessor(
+        ENTITY_ID,
+        mockManager,
+        mockLogger
+      );
+
       expect(accessor['core:anything']).toBeNull();
       expect('core:anything' in accessor).toBe(false);
       expect(JSON.stringify(accessor)).toBe('{}');

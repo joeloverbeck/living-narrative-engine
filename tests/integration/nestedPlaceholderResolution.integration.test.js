@@ -98,7 +98,7 @@ describe('nested placeholder resolution', () => {
 
     // Create the bodyGraphService mock
     const mockBodyGraphService = {
-      hasPartWithComponentValue: jest.fn().mockReturnValue({ found: false })
+      hasPartWithComponentValue: jest.fn().mockReturnValue({ found: false }),
     };
 
     interpreter = new SystemLogicInterpreter({

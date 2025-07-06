@@ -171,7 +171,7 @@ describe('SystemLogicInterpreter - Integration Tests - Scenarios 2 & 3 (Refactor
 
     // Create the bodyGraphService mock
     const mockBodyGraphService = {
-      hasPartWithComponentValue: jest.fn().mockReturnValue({ found: false })
+      hasPartWithComponentValue: jest.fn().mockReturnValue({ found: false }),
     };
 
     interpreter = new SystemLogicInterpreter({

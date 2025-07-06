@@ -1,7 +1,3 @@
 {
-  "mods": [
-    "core",
-    "intimacy",
-    "p_erotica"
-  ]
+  "mods": ["core", "intimacy", "p_erotica"]
 }

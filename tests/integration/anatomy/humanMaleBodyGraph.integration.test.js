@@ -234,7 +234,7 @@ describe('Human Male Body Graph Integration Test', () => {
     // Verify hands are attached to arms
     const arms = findPartsByType('arm');
     const hands = findPartsByType('hand');
-    
+
     for (const handId of hands) {
       const joint = entityManager.getComponentData(handId, 'anatomy:joint');
       expect(joint).toBeDefined();
@@ -245,7 +245,7 @@ describe('Human Male Body Graph Integration Test', () => {
     // Verify teeth are attached to mouth
     const mouths = findPartsByType('mouth');
     const teeth = findPartsByType('teeth');
-    
+
     for (const teethId of teeth) {
       const joint = entityManager.getComponentData(teethId, 'anatomy:joint');
       expect(joint).toBeDefined();
@@ -256,7 +256,7 @@ describe('Human Male Body Graph Integration Test', () => {
     // Verify feet are attached to legs
     const legs = findPartsByType('leg');
     const feet = findPartsByType('foot');
-    
+
     for (const footId of feet) {
       const joint = entityManager.getComponentData(footId, 'anatomy:joint');
       expect(joint).toBeDefined();

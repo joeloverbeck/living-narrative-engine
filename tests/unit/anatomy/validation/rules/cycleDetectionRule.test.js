@@ -52,17 +52,19 @@ describe('CycleDetectionRule', () => {
       // Setup
       mockContext.entityIds = ['root', 'child1', 'child2', 'grandchild'];
 
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId === 'anatomy:joint') {
-          const joints = {
-            'child1': { parentId: 'root', socketId: 'socket1' },
-            'child2': { parentId: 'root', socketId: 'socket2' },
-            'grandchild': { parentId: 'child1', socketId: 'socket3' },
-          };
-          return joints[entityId] || null;
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (componentId === 'anatomy:joint') {
+            const joints = {
+              child1: { parentId: 'root', socketId: 'socket1' },
+              child2: { parentId: 'root', socketId: 'socket2' },
+              grandchild: { parentId: 'child1', socketId: 'socket3' },
+            };
+            return joints[entityId] || null;
+          }
+          return null;
         }
-        return null;
-      });
+      );
 
       // Execute
       const issues = await rule.validate(mockContext);
@@ -78,17 +80,19 @@ describe('CycleDetectionRule', () => {
       // Setup - entity1 -> entity2 -> entity1
       mockContext.entityIds = ['entity1', 'entity2'];
 
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId === 'anatomy:joint') {
-          if (entityId === 'entity1') {
-            return { parentId: 'entity2', socketId: 'socket1' };
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (componentId === 'anatomy:joint') {
+            if (entityId === 'entity1') {
+              return { parentId: 'entity2', socketId: 'socket1' };
+            }
+            if (entityId === 'entity2') {
+              return { parentId: 'entity1', socketId: 'socket2' };
+            }
           }
-          if (entityId === 'entity2') {
-            return { parentId: 'entity1', socketId: 'socket2' };
-          }
+          return null;
         }
-        return null;
-      });
+      );
 
       // Execute
       const issues = await rule.validate(mockContext);
@@ -110,17 +114,19 @@ describe('CycleDetectionRule', () => {
       // Setup - A -> B -> C -> A
       mockContext.entityIds = ['A', 'B', 'C'];
 
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId === 'anatomy:joint') {
-          const joints = {
-            'A': { parentId: 'C', socketId: 'socket1' },
-            'B': { parentId: 'A', socketId: 'socket2' },
-            'C': { parentId: 'B', socketId: 'socket3' },
-          };
-          return joints[entityId];
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (componentId === 'anatomy:joint') {
+            const joints = {
+              A: { parentId: 'C', socketId: 'socket1' },
+              B: { parentId: 'A', socketId: 'socket2' },
+              C: { parentId: 'B', socketId: 'socket3' },
+            };
+            return joints[entityId];
+          }
+          return null;
         }
-        return null;
-      });
+      );
 
       // Execute
       const issues = await rule.validate(mockContext);
@@ -135,18 +141,20 @@ describe('CycleDetectionRule', () => {
       // Setup - Two separate cycles
       mockContext.entityIds = ['A', 'B', 'C', 'D'];
 
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId === 'anatomy:joint') {
-          const joints = {
-            'A': { parentId: 'B', socketId: 'socket1' },
-            'B': { parentId: 'A', socketId: 'socket2' },
-            'C': { parentId: 'D', socketId: 'socket3' },
-            'D': { parentId: 'C', socketId: 'socket4' },
-          };
-          return joints[entityId];
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (componentId === 'anatomy:joint') {
+            const joints = {
+              A: { parentId: 'B', socketId: 'socket1' },
+              B: { parentId: 'A', socketId: 'socket2' },
+              C: { parentId: 'D', socketId: 'socket3' },
+              D: { parentId: 'C', socketId: 'socket4' },
+            };
+            return joints[entityId];
+          }
+          return null;
         }
-        return null;
-      });
+      );
 
       // Execute
       const issues = await rule.validate(mockContext);
@@ -160,16 +168,18 @@ describe('CycleDetectionRule', () => {
       // Setup - Two separate trees
       mockContext.entityIds = ['root1', 'child1', 'root2', 'child2'];
 
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId === 'anatomy:joint') {
-          const joints = {
-            'child1': { parentId: 'root1', socketId: 'socket1' },
-            'child2': { parentId: 'root2', socketId: 'socket2' },
-          };
-          return joints[entityId] || null;
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (componentId === 'anatomy:joint') {
+            const joints = {
+              child1: { parentId: 'root1', socketId: 'socket1' },
+              child2: { parentId: 'root2', socketId: 'socket2' },
+            };
+            return joints[entityId] || null;
+          }
+          return null;
         }
-        return null;
-      });
+      );
 
       // Execute
       const issues = await rule.validate(mockContext);

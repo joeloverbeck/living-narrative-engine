@@ -34,11 +34,7 @@
           "minLength": 1
         }
       },
-      "required": [
-        "entity_ref",
-        "component_type",
-        "result_variable"
-      ],
+      "required": ["entity_ref", "component_type", "result_variable"],
       "additionalProperties": false
     }
   }

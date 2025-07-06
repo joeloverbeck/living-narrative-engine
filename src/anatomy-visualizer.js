@@ -37,7 +37,9 @@ async function initialize() {
     );
     systemInitializer = container.resolve(tokens.SystemInitializer);
     eventDispatcher = container.resolve(tokens.ISafeEventDispatcher);
-    anatomyFormattingService = container.resolve(tokens.AnatomyFormattingService);
+    anatomyFormattingService = container.resolve(
+      tokens.AnatomyFormattingService
+    );
 
     logger.info('Anatomy Visualizer: Starting initialization...');
 

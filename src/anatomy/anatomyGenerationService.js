@@ -2,7 +2,7 @@
 
 /**
  * @file Service responsible for generating anatomy for entities with anatomy:body components
- * 
+ *
  * REFACTORED: Now delegates to AnatomyOrchestrator for clean separation of concerns
  * while maintaining backward compatibility
  */
@@ -25,7 +25,7 @@ import { AnatomyErrorHandler } from './orchestration/anatomyErrorHandler.js';
 
 /**
  * Service that handles anatomy generation for entities
- * 
+ *
  * This service now acts as a facade, delegating the actual orchestration
  * to specialized components while maintaining the original public API
  */
@@ -77,19 +77,19 @@ export class AnatomyGenerationService {
       entityManager,
       dataRegistry,
       logger,
-      bodyBlueprintFactory
+      bodyBlueprintFactory,
     });
 
     const descriptionWorkflow = new DescriptionGenerationWorkflow({
       entityManager,
       logger,
-      anatomyDescriptionService
+      anatomyDescriptionService,
     });
 
     const graphBuildingWorkflow = new GraphBuildingWorkflow({
       entityManager,
       logger,
-      bodyGraphService
+      bodyGraphService,
     });
 
     const errorHandler = new AnatomyErrorHandler({ logger });
@@ -101,7 +101,7 @@ export class AnatomyGenerationService {
       generationWorkflow,
       descriptionWorkflow,
       graphBuildingWorkflow,
-      errorHandler
+      errorHandler,
     });
   }
 
@@ -115,13 +115,15 @@ export class AnatomyGenerationService {
     try {
       // Check if generation is needed
       const checkResult = this.#orchestrator.checkGenerationNeeded(entityId);
-      
+
       if (!checkResult.needsGeneration) {
         if (checkResult.reason === 'Entity not found') {
           this.#logger.warn(
             `AnatomyGenerationService: Entity '${entityId}' not found`
           );
-        } else if (checkResult.reason === 'anatomy:body component has no recipeId') {
+        } else if (
+          checkResult.reason === 'anatomy:body component has no recipeId'
+        ) {
           this.#logger.warn(
             `AnatomyGenerationService: Entity '${entityId}' has anatomy:body component but no recipeId`
           );
@@ -135,7 +137,9 @@ export class AnatomyGenerationService {
 
       // Get the recipe ID from the entity
       const entity = this.#entityManager.getEntityInstance(entityId);
-      const anatomyBodyData = entity.getComponentData(ANATOMY_BODY_COMPONENT_ID);
+      const anatomyBodyData = entity.getComponentData(
+        ANATOMY_BODY_COMPONENT_ID
+      );
       const recipeId = anatomyBodyData.recipeId;
 
       this.#logger.info(
@@ -143,7 +147,10 @@ export class AnatomyGenerationService {
       );
 
       // Delegate to orchestrator
-      const result = await this.#orchestrator.orchestrateGeneration(entityId, recipeId);
+      const result = await this.#orchestrator.orchestrateGeneration(
+        entityId,
+        recipeId
+      );
 
       if (result.success) {
         this.#logger.info(

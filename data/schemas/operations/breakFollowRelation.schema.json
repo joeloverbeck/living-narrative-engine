@@ -27,9 +27,7 @@
           "minLength": 1
         }
       },
-      "required": [
-        "follower_id"
-      ],
+      "required": ["follower_id"],
       "additionalProperties": false
     }
   }

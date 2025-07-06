@@ -26,9 +26,7 @@
           "minLength": 1
         }
       },
-      "required": [
-        "result_variable"
-      ],
+      "required": ["result_variable"],
       "additionalProperties": false
     }
   }

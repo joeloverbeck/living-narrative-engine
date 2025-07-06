@@ -36,11 +36,7 @@
           }
         }
       },
-      "required": [
-        "collection",
-        "item_variable",
-        "actions"
-      ],
+      "required": ["collection", "item_variable", "actions"],
       "additionalProperties": false
     }
   }

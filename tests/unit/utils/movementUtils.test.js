@@ -47,20 +47,20 @@ describe('updateMovementLock', () => {
     it('updates movement on all body parts with movement component', () => {
       const leftLegMovement = { locked: false, forcedOverride: false };
       const rightLegMovement = { locked: false, forcedOverride: false };
-      
+
       /** @type {jest.Mocked<IEntityManager>} */
       const manager = {
         getComponentData: jest.fn((id, componentId) => {
           if (id === 'hero1' && componentId === 'anatomy:body') {
-            return { 
+            return {
               body: {
                 root: 'body1',
                 parts: {
                   torso: 'body1',
                   leg_left: 'left-leg1',
-                  leg_right: 'right-leg1'
-                }
-              }
+                  leg_right: 'right-leg1',
+                },
+              },
             };
           }
           if (id === 'left-leg1' && componentId === 'core:movement') {
@@ -78,12 +78,18 @@ describe('updateMovementLock', () => {
 
       expect(result).toEqual({
         updatedParts: [
-          { partId: 'left-leg1', movement: { locked: true, forcedOverride: false } },
-          { partId: 'right-leg1', movement: { locked: true, forcedOverride: false } },
+          {
+            partId: 'left-leg1',
+            movement: { locked: true, forcedOverride: false },
+          },
+          {
+            partId: 'right-leg1',
+            movement: { locked: true, forcedOverride: false },
+          },
         ],
         locked: true,
       });
-      
+
       expect(manager.addComponent).toHaveBeenCalledTimes(2);
       expect(manager.addComponent).toHaveBeenCalledWith(
         'left-leg1',
@@ -102,15 +108,15 @@ describe('updateMovementLock', () => {
       const manager = {
         getComponentData: jest.fn((id, componentId) => {
           if (id === 'hero2' && componentId === 'anatomy:body') {
-            return { 
+            return {
               body: {
                 root: 'body2',
                 parts: {
                   torso: 'body2',
                   arm_left: 'arm1',
-                  arm_right: 'arm2'
-                }
-              }
+                  arm_right: 'arm2',
+                },
+              },
             };
           }
           return undefined;
@@ -127,20 +133,20 @@ describe('updateMovementLock', () => {
     it('handles all body parts with movement components', () => {
       const legMovement = { locked: false, forcedOverride: false };
       const footMovement = { locked: false, forcedOverride: false };
-      
+
       /** @type {jest.Mocked<IEntityManager>} */
       const manager = {
         getComponentData: jest.fn((id, componentId) => {
           if (id === 'hero3' && componentId === 'anatomy:body') {
-            return { 
+            return {
               body: {
                 root: 'body3',
                 parts: {
                   torso: 'body3',
                   leg_left: 'leg1',
-                  foot_left: 'foot1'
-                }
-              }
+                  foot_left: 'foot1',
+                },
+              },
             };
           }
           if (id === 'leg1' && componentId === 'core:movement') {
@@ -158,12 +164,18 @@ describe('updateMovementLock', () => {
 
       expect(result).toEqual({
         updatedParts: [
-          { partId: 'leg1', movement: { locked: false, forcedOverride: false } },
-          { partId: 'foot1', movement: { locked: false, forcedOverride: false } },
+          {
+            partId: 'leg1',
+            movement: { locked: false, forcedOverride: false },
+          },
+          {
+            partId: 'foot1',
+            movement: { locked: false, forcedOverride: false },
+          },
         ],
         locked: false,
       });
-      
+
       expect(manager.addComponent).toHaveBeenCalledWith(
         'leg1',
         'core:movement',

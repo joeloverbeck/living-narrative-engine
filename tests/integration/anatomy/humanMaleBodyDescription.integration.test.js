@@ -4,7 +4,10 @@
 
 import { describe, it, expect, beforeAll, afterEach } from '@jest/globals';
 import AnatomyIntegrationTestBed from '../../common/anatomy/anatomyIntegrationTestBed.js';
-import { ANATOMY_BODY_COMPONENT_ID, DESCRIPTION_COMPONENT_ID } from '../../../src/constants/componentIds.js';
+import {
+  ANATOMY_BODY_COMPONENT_ID,
+  DESCRIPTION_COMPONENT_ID,
+} from '../../../src/constants/componentIds.js';
 
 // Import real anatomy description services
 import { AnatomyDescriptionService } from '../../../src/anatomy/anatomyDescriptionService.js';
@@ -66,7 +69,8 @@ const testHumanMale = {
       text: 'Test Human Male',
     },
     'core:description': {
-      description: 'A test entity for verifying human male anatomy description generation.',
+      description:
+        'A test entity for verifying human male anatomy description generation.',
     },
     'anatomy:body': {
       recipeId: 'anatomy:human_male',
@@ -86,7 +90,7 @@ describe('Human Male Body Description Integration Test', () => {
 
     // Create real anatomy description services
     const descriptorFormatter = new DescriptorFormatter();
-    
+
     const bodyPartDescriptionBuilder = new BodyPartDescriptionBuilder({
       descriptorFormatter,
     });
@@ -211,11 +215,11 @@ describe('Human Male Body Description Integration Test', () => {
       maleEntity.id,
       DESCRIPTION_COMPONENT_ID
     );
-    
+
     expect(descriptionData).toBeDefined();
     expect(descriptionData.text).toBeDefined();
     expect(typeof descriptionData.text).toBe('string');
-    
+
     // Note: The description may be empty if the anatomy parts don't have descriptor components
     // This is a known limitation of the current anatomy data files
     if (descriptionData.text.length > 0) {
@@ -224,7 +228,7 @@ describe('Human Male Body Description Integration Test', () => {
       // Verify expected anatomical features are described
       // Only body parts with descriptor components will appear in the description
       // After removing mundane descriptors, only Eyes and Hair have descriptors
-      
+
       // Eyes (should show as "Eyes:" for paired parts)
       expect(descriptionText).toMatch(/\bEyes:\s+/);
 
@@ -238,7 +242,9 @@ describe('Human Male Body Description Integration Test', () => {
       // or if their formatting configuration is missing. This is acceptable for this test.
     } else {
       // Log a warning about missing descriptors
-      console.warn('Body description is empty - anatomy parts may be missing descriptor components');
+      console.warn(
+        'Body description is empty - anatomy parts may be missing descriptor components'
+      );
     }
   });
 

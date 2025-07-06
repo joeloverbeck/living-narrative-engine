@@ -7,21 +7,25 @@ Living Narrative Engine is a browser-based platform for creating and playing adv
 ## Core Goals
 
 ### 1. **Total Moddability**
+
 - Every aspect of gameplay should be definable through data files
 - Even core mechanics are implemented as replaceable mods
 - No hardcoded game logic in the engine itself
 
 ### 2. **AI-Powered Narrative**
+
 - NPCs powered by Large Language Models for dynamic conversations
 - Memory systems that allow characters to remember and evolve
 - Natural language understanding for player actions
 
 ### 3. **Browser-Based Accessibility**
+
 - Run entirely in web browsers without plugins
 - Cross-platform compatibility
 - Easy distribution and instant play
 
 ### 4. **Developer-Friendly Architecture**
+
 - Clear separation between engine and content
 - Comprehensive JSON schemas for validation
 - Hot-reload during development
@@ -68,6 +72,7 @@ data/mods/
 ```
 
 Each mod contains:
+
 - `mod-manifest.json` - Metadata and dependencies
 - Components, actions, rules, entities, etc.
 - Optional UI assets (icons, labels)
@@ -101,6 +106,7 @@ Game Engine ←→ LLM Proxy Server ←→ LLM Provider
 ```
 
 The proxy server handles:
+
 - API key security
 - Request formatting
 - Error handling
@@ -109,21 +115,25 @@ The proxy server handles:
 ## Technical Constraints
 
 ### 1. **Data-Driven Design**
+
 - All game logic must be expressible in JSON
 - Use JSON Logic for conditions
 - Scope DSL for entity queries when determining target scope (max depth: 4)
 
 ### 2. **Browser Limitations**
+
 - No file system access
 - LocalStorage for saves
 - Memory constraints for large worlds
 
 ### 3. **Performance Considerations**
+
 - Entity queries must be efficient
 - Event cascades need cycle detection
 - Memory components have size limits
 
 ### 4. **Mod Compatibility**
+
 - Mods can conflict or depend on each other
 - Load order matters (defined in `game.json`)
 - Version compatibility checks
@@ -131,6 +141,7 @@ The proxy server handles:
 ## Code Style & Patterns
 
 ### Testing Requirements
+
 - **Framework**: Jest with jsdom
 - **Coverage**: 80% branches, 90% functions/lines
 - **Approach**: Test-driven development for new features
@@ -140,6 +151,7 @@ The proxy server handles:
 - If in the process of creating or fixing tests, if you detect a bug in the SUT, fix the bug. Don't correct the test code to adapt to a bug in the SUT. The tests should only cover non-buggy production code.
 
 ### Development Workflow
+
 1. **Test-Driven Development**: Write tests first for new modules
 2. **Check for duplicates**: Search for existing functionality before creating new code
 3. Implement minimal code to pass
@@ -182,6 +194,7 @@ npm run test           # Run proxy tests
 ```
 
 ### Error Handling
+
 - Fail fast on critical errors (missing deps, invalid schemas)
 - Instead of logging errors, dispatch SYSTEM_ERROR_OCCURRED_ID events, ensuring the payload validates against system_error_occurred.event.json
 - Provide clear error messages for mod developers
@@ -189,25 +202,31 @@ npm run test           # Run proxy tests
 ## Content Creation Guidelines
 
 ### Action Definition
+
 - Ensure they validate against action.schema.json
 
 ### Component Structure
+
 - Ensure they validate against component.schema.json
 
 ### Rule System
+
 - Ensure they validate against rule.schema.json
 
 ## Future Considerations
 
 ### Scalability
+
 - Optimize entity queries for large worlds
 
 ### Extensibility
+
 - Plugin system for engine extensions
 - Custom UI framework support
 - Additional LLM provider integrations
 
 ### Performance
+
 - WebAssembly for compute-intensive operations
 - Worker threads for AI processing
 - Incremental loading for large mods

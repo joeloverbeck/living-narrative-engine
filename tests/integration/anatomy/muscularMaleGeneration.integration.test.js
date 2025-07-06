@@ -190,9 +190,8 @@ describe('Muscular Male Anatomy Generation Integration Test', () => {
 
   it('should generate anatomy for muscular male with muscular torso, arms, and legs', async () => {
     // Create muscular male entity
-    const muscularEntity = entityManager.createEntityInstance(
-      'test:muscular_male'
-    );
+    const muscularEntity =
+      entityManager.createEntityInstance('test:muscular_male');
     expect(muscularEntity).toBeDefined();
     expect(muscularEntity.id).toBeDefined();
 
@@ -271,7 +270,7 @@ describe('Muscular Male Anatomy Generation Integration Test', () => {
     // Test 1: Verify muscular torso
     const torsos = findPartsByType('torso');
     expect(torsos.length).toBe(1); // Should have exactly 1 torso
-    
+
     const torsoBuild = getPartComponent(torsos[0], 'descriptors:build');
     expect(torsoBuild).toBeDefined();
     expect(torsoBuild.build).toBe('muscular');
@@ -327,7 +326,9 @@ describe('Muscular Male Anatomy Generation Integration Test', () => {
 
     // Verify torso slot uses muscular variant
     expect(recipe.slots.torso).toBeDefined();
-    expect(recipe.slots.torso.preferId).toBe('anatomy:human_male_torso_muscular');
+    expect(recipe.slots.torso.preferId).toBe(
+      'anatomy:human_male_torso_muscular'
+    );
 
     // Verify patterns for arms and legs
     expect(recipe.patterns).toBeDefined();

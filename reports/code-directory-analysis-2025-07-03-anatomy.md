@@ -1,6 +1,7 @@
 # Code Directory Analysis Report
 
 ## Executive Summary
+
 - Directory Analyzed: src/anatomy/ (including all subdirectories)
 - Analysis Date: 2025-07-03
 - Total Files: 35 (.js files)
@@ -15,6 +16,7 @@
 ## Directory Overview
 
 ### Recursive Structure
+
 ```
 src/anatomy/
 ├── Root Level Services (14 files)
@@ -65,6 +67,7 @@ src/anatomy/
 ```
 
 ### Key Statistics
+
 - Modules: 35 (14 services, 6 validation rules, 3 workflows, 3 orchestration, 2 config, 2 templates, 5 utilities)
 - External Dependencies: 15+ (entity system, logger, data registry, event dispatcher)
 - Entry Points: 2 primary (AnatomyGenerationService, AnatomyInitializationService)
@@ -77,7 +80,7 @@ src/anatomy/
 
 - **AnatomyGenerationService** (src/anatomy/anatomyGenerationService.js)
   - Purpose: Main facade for anatomy generation operations
-  - External Callers: 
+  - External Callers:
     - `src/initializers/services/initializationService.js` (via DI container)
     - `src/anatomy-visualizer.js:34` (through AnatomyDescriptionService)
   - Exported API: `generateAnatomyIfNeeded()`, `generateAnatomyForEntity()`
@@ -93,7 +96,7 @@ src/anatomy/
 
 - **AnatomyDescriptionService** (src/anatomy/anatomyDescriptionService.js)
   - Purpose: Generates human-readable descriptions of anatomy
-  - External Callers: 
+  - External Callers:
     - `src/turns/services/actorDataExtractor.js:95-97`
     - `src/domUI/AnatomyVisualizerUI.js:30`
   - Usage Patterns: Used by AI turn system and UI visualization
@@ -146,7 +149,7 @@ src/anatomy/
   - Exit Points: Success with anatomy data or rollback on failure
   - Error Handling: AnatomyUnitOfWork provides transactional rollback
 
-- **Limb Detachment Workflow**  
+- **Limb Detachment Workflow**
   - Entry Point: BodyGraphService.detachPart()
   - Processing Steps:
     1. Validate part has joint component
@@ -163,7 +166,7 @@ src/anatomy/
 
 - **System Dependencies**
   - Entity Manager: Core entity/component operations
-  - Data Registry: Blueprint and recipe data access  
+  - Data Registry: Blueprint and recipe data access
   - Logger: Structured logging throughout
   - Event Dispatcher: Lifecycle event handling
 
@@ -201,6 +204,7 @@ src/anatomy/
 ## Data Flow Patterns
 
 ### Input Processing
+
 - Sources: Entity creation events, direct API calls, mod data files
 - Validation: Recipe/blueprint existence, component presence, constraint checking
 - Transformation Pipeline: Event → Recipe Selection → Blueprint Processing → Entity Creation
@@ -229,6 +233,7 @@ src/anatomy/
   - Side Effects: Caches generated descriptions
 
 ### Output Patterns
+
 - Destinations: Entity components, description cache, event system
 - Formats: Component data, text descriptions, event payloads
 - Persistence: Entity manager handles component persistence
@@ -236,6 +241,7 @@ src/anatomy/
 ## Vulnerability Analysis
 
 ### Critical Vulnerabilities
+
 **None found** - The system demonstrates good security practices.
 
 ### Security Risk Summary
@@ -247,7 +253,7 @@ src/anatomy/
 - **Authentication: N/A**
   - Not applicable at this layer - should be handled externally
 
-- **Data Security: 9/10**  
+- **Data Security: 9/10**
   - No sensitive data exposure found
   - Proper error wrapping prevents stack trace leaks
 
@@ -263,6 +269,7 @@ src/anatomy/
 ## Robustness Analysis
 
 ### Current State Assessment
+
 - Error Handling Coverage: 95% - Comprehensive try-catch and error wrapping
 - Fault Tolerance: Unit of Work pattern provides transaction-like behavior
 - Resource Management: Proper cleanup via rollback mechanisms
@@ -348,6 +355,7 @@ src/anatomy/
 ## Critical Observations
 
 ### Technical Debt
+
 - Total Debt Score: 3/10 (Low debt)
 - Major Debt Items:
   1. Some services are large (BodyBlueprintFactory ~400 lines)
@@ -371,6 +379,7 @@ src/anatomy/
   - Migration Path: Add event store incrementally
 
 ### Code Quality Concerns
+
 - Duplication: <5% - Good use of composition
 - Complexity: EntityGraphBuilder and BodyBlueprintFactory have high complexity
 - Maintainability: 8/10 - Good separation of concerns
@@ -379,16 +388,19 @@ src/anatomy/
 ## Recommendations
 
 ### Immediate Actions (This Week)
+
 1. **Add ID Format Validation** - Prevent malformed IDs with regex validation
 2. **Document Cache Invalidation Strategy** - Clear up cache lifecycle
 3. **Add Resource Limits Configuration** - Max parts per anatomy
 
 ### Short-term Improvements (This Month)
+
 1. **Extract Complex Methods** - Refactor BodyBlueprintFactory.createAnatomyGraph()
 2. **Implement Anatomy Diff Tool** - Enable anatomy comparison
 3. **Add Performance Metrics** - Track generation times and cache hits
 
 ### Long-term Strategy (This Quarter)
+
 1. **Design Damage System Architecture** - Plan integration with health/combat
 2. **Prototype Procedural Generation** - Research parametric blueprints
 3. **Implement Event Sourcing** - Better audit trail and replay capability
@@ -396,13 +408,15 @@ src/anatomy/
 ## Risk Assessment
 
 ### Security Risks
+
 - Overall Risk Level: Low
 - Immediate Threats: None identified
-- Mitigation Priority: 
+- Mitigation Priority:
   1. Input validation improvements
   2. Resource limit enforcement
 
 ### Operational Risks
+
 - Stability Concerns: Low - good error handling
 - Performance Risks: Medium - complex anatomies could be slow
 - Scalability Limits: ~1000 parts per anatomy before performance degrades
@@ -410,9 +424,11 @@ src/anatomy/
 ## Appendix
 
 ### File-by-File Analysis
-*[Detailed analysis available in full report - key files covered above]*
+
+_[Detailed analysis available in full report - key files covered above]_
 
 ### Dependency Graph
+
 ```
 AnatomyGenerationService
   └── AnatomyOrchestrator
@@ -430,6 +446,7 @@ AnatomyGenerationService
 ```
 
 ### Vulnerability Details
+
 1. Medium Risk: Missing ID format validation
 2. Medium Risk: No authorization layer
 3. Low Risk: Socket key collision potential
@@ -437,6 +454,7 @@ AnatomyGenerationService
 5. Low Risk: No rate limiting
 
 ### Metrics Summary
+
 - Cyclomatic Complexity: Average 5, Max 15 (createAnatomyGraph)
 - File Sizes: Average 150 lines, Max 400 lines
 - Test Coverage: Core services tested, validation rules need more tests

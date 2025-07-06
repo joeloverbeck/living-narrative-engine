@@ -30,10 +30,7 @@
           "$ref": "#/$defs/MathExpression"
         }
       },
-      "required": [
-        "result_variable",
-        "expression"
-      ]
+      "required": ["result_variable", "expression"]
     },
     "MathExpression": {
       "type": "object",
@@ -41,13 +38,7 @@
       "properties": {
         "operator": {
           "type": "string",
-          "enum": [
-            "add",
-            "subtract",
-            "multiply",
-            "divide",
-            "modulo"
-          ]
+          "enum": ["add", "subtract", "multiply", "divide", "modulo"]
         },
         "operands": {
           "type": "array",
@@ -59,10 +50,7 @@
           "maxItems": 2
         }
       },
-      "required": [
-        "operator",
-        "operands"
-      ]
+      "required": ["operator", "operands"]
     },
     "MathOperand": {
       "description": "An operand for a math expression. Can be a number, a variable reference, or a nested expression.",
@@ -77,9 +65,7 @@
               "type": "string"
             }
           },
-          "required": [
-            "var"
-          ],
+          "required": ["var"],
           "additionalProperties": false
         },
         {

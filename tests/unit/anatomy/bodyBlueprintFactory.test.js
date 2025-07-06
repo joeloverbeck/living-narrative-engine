@@ -64,11 +64,15 @@ describe('BodyBlueprintFactory (Refactored)', () => {
     };
 
     mockConstraintEvaluator = {
-      evaluateConstraints: jest.fn().mockReturnValue({ valid: true, errors: [], warnings: [] }),
+      evaluateConstraints: jest
+        .fn()
+        .mockReturnValue({ valid: true, errors: [], warnings: [] }),
     };
 
     mockValidator = {
-      validateGraph: jest.fn().mockResolvedValue({ valid: true, errors: [], warnings: [] }),
+      validateGraph: jest
+        .fn()
+        .mockResolvedValue({ valid: true, errors: [], warnings: [] }),
     };
 
     // Create factory instance
@@ -161,7 +165,9 @@ describe('BodyBlueprintFactory (Refactored)', () => {
 
       mockRecipeProcessor.loadRecipe.mockReturnValue(mockRecipe);
       mockRecipeProcessor.processRecipe.mockReturnValue(mockRecipe);
-      mockRecipeProcessor.mergeSlotRequirements.mockReturnValue({ partType: 'head' });
+      mockRecipeProcessor.mergeSlotRequirements.mockReturnValue({
+        partType: 'head',
+      });
 
       mockEntityGraphBuilder.createRootEntity.mockReturnValue('root123');
       mockEntityGraphBuilder.createAndAttachPart.mockReturnValue('child123');
@@ -176,7 +182,11 @@ describe('BodyBlueprintFactory (Refactored)', () => {
     });
 
     it('should create anatomy graph successfully', async () => {
-      const result = await factory.createAnatomyGraph(blueprintId, recipeId, options);
+      const result = await factory.createAnatomyGraph(
+        blueprintId,
+        recipeId,
+        options
+      );
 
       expect(result).toEqual({
         rootId: 'root123',
@@ -256,7 +266,11 @@ describe('BodyBlueprintFactory (Refactored)', () => {
         valid: false,
       });
 
-      const result = await factory.createAnatomyGraph(blueprintId, recipeId, options);
+      const result = await factory.createAnatomyGraph(
+        blueprintId,
+        recipeId,
+        options
+      );
 
       expect(result.entities).toEqual(['root123']); // Only root, no child
     });
@@ -264,10 +278,10 @@ describe('BodyBlueprintFactory (Refactored)', () => {
     it('should generate and set part name when template provided', async () => {
       mockSocketManager.validateSocketAvailability.mockReturnValue({
         valid: true,
-        socket: { 
-          id: 'head_socket', 
+        socket: {
+          id: 'head_socket',
           allowedTypes: ['head'],
-          nameTpl: '{{type}} of {{parent.name}}'
+          nameTpl: '{{type}} of {{parent.name}}',
         },
       });
       mockSocketManager.generatePartName.mockReturnValue('head of torso');
@@ -275,7 +289,10 @@ describe('BodyBlueprintFactory (Refactored)', () => {
       await factory.createAnatomyGraph(blueprintId, recipeId, options);
 
       expect(mockSocketManager.generatePartName).toHaveBeenCalled();
-      expect(mockEntityGraphBuilder.setEntityName).toHaveBeenCalledWith('child123', 'head of torso');
+      expect(mockEntityGraphBuilder.setEntityName).toHaveBeenCalledWith(
+        'child123',
+        'head of torso'
+      );
     });
 
     it('should dispatch error event on failure', async () => {
@@ -293,8 +310,8 @@ describe('BodyBlueprintFactory (Refactored)', () => {
         {
           message: error.message,
           details: {
-            raw: 'BodyBlueprintFactory.createAnatomyGraph'
-          }
+            raw: 'BodyBlueprintFactory.createAnatomyGraph',
+          },
         }
       );
     });

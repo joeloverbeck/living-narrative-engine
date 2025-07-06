@@ -104,7 +104,6 @@ repository.save(order);
 }
 }
 
-
 After (Adhering to DIP):
 Java
 // In high-level module
@@ -124,6 +123,7 @@ private final IOrderRepository repository;
         //... logic...
         repository.save(order);
     }
+
 }
 
 // In low-level module
@@ -133,7 +133,6 @@ public void save(Order order) {
 //... SQL-specific implementation...
 }
 }
-
 
 This inversion of control makes the OrderProcessor independent of the database technology and vastly easier to test by injecting a mock IOrderRepository.  
 Category 2: Principles of Implementation Clarity & Predictability
@@ -204,7 +203,6 @@ public int getNextInvoiceNumber() {
 return ++this.lastInvoiceNumber;
 }
 
-
 After (CQS Compliant):
 Java
 public void advanceToNextInvoiceNumber() { // Command
@@ -214,7 +212,6 @@ this.lastInvoiceNumber++;
 public int getCurrentInvoiceNumber() { // Query
 return this.lastInvoiceNumber;
 }
-
 
 This refactoring makes the act of changing state an explicit call, improving predictability and testability.
 Principle 10: Least Astonishment & Consistent Behavior (POLA)

@@ -33,10 +33,7 @@
           }
         }
       },
-      "required": [
-        "entity_ref",
-        "pairs"
-      ],
+      "required": ["entity_ref", "pairs"],
       "additionalProperties": false
     },
     "Pair": {
@@ -51,10 +48,7 @@
           "pattern": "^\\S(.*\\S)?$"
         }
       },
-      "required": [
-        "component_type",
-        "result_variable"
-      ],
+      "required": ["component_type", "result_variable"],
       "additionalProperties": false
     }
   }

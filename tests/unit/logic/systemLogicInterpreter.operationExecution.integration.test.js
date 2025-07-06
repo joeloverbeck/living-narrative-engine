@@ -92,7 +92,7 @@ describe('SystemLogicInterpreter - Operation Execution Integration Test', () => 
     };
 
     const mockBodyGraphService = {
-      hasPartWithComponentValue: jest.fn().mockReturnValue({ found: false })
+      hasPartWithComponentValue: jest.fn().mockReturnValue({ found: false }),
     };
 
     eventBusInstance = new RealEventBus();

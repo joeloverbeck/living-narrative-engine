@@ -24,13 +24,15 @@ describe('RecipeProcessor', () => {
 
   describe('constructor', () => {
     it('should throw error if dataRegistry is not provided', () => {
-      expect(() => new RecipeProcessor({ logger: mockLogger }))
-        .toThrow(InvalidArgumentError);
+      expect(() => new RecipeProcessor({ logger: mockLogger })).toThrow(
+        InvalidArgumentError
+      );
     });
 
     it('should throw error if logger is not provided', () => {
-      expect(() => new RecipeProcessor({ dataRegistry: mockDataRegistry }))
-        .toThrow(InvalidArgumentError);
+      expect(
+        () => new RecipeProcessor({ dataRegistry: mockDataRegistry })
+      ).toThrow(InvalidArgumentError);
     });
   });
 
@@ -48,7 +50,10 @@ describe('RecipeProcessor', () => {
       const result = processor.loadRecipe('test:recipe');
 
       expect(result).toBe(mockRecipe);
-      expect(mockDataRegistry.get).toHaveBeenCalledWith('anatomyRecipes', 'test:recipe');
+      expect(mockDataRegistry.get).toHaveBeenCalledWith(
+        'anatomyRecipes',
+        'test:recipe'
+      );
       expect(mockLogger.debug).toHaveBeenCalledWith(
         "RecipeProcessor: Loaded recipe 'test:recipe' with 1 slots"
       );
@@ -57,10 +62,12 @@ describe('RecipeProcessor', () => {
     it('should throw error if recipe not found', () => {
       mockDataRegistry.get.mockReturnValue(null);
 
-      expect(() => processor.loadRecipe('invalid:recipe'))
-        .toThrow(InvalidArgumentError);
-      expect(() => processor.loadRecipe('invalid:recipe'))
-        .toThrow("Recipe 'invalid:recipe' not found in registry");
+      expect(() => processor.loadRecipe('invalid:recipe')).toThrow(
+        InvalidArgumentError
+      );
+      expect(() => processor.loadRecipe('invalid:recipe')).toThrow(
+        "Recipe 'invalid:recipe' not found in registry"
+      );
     });
   });
 
@@ -189,16 +196,19 @@ describe('RecipeProcessor', () => {
     it('should return true if all properties match', () => {
       const entityDef = {
         components: {
-          'comp1': { prop1: 'value1', prop2: 'value2' },
-          'comp2': { prop3: 'value3' },
+          comp1: { prop1: 'value1', prop2: 'value2' },
+          comp2: { prop3: 'value3' },
         },
       };
       const propertyReqs = {
-        'comp1': { prop1: 'value1' },
-        'comp2': { prop3: 'value3' },
+        comp1: { prop1: 'value1' },
+        comp2: { prop3: 'value3' },
       };
 
-      const result = processor.matchesPropertyRequirements(entityDef, propertyReqs);
+      const result = processor.matchesPropertyRequirements(
+        entityDef,
+        propertyReqs
+      );
 
       expect(result).toBe(true);
     });
@@ -206,14 +216,17 @@ describe('RecipeProcessor', () => {
     it('should return false if component missing', () => {
       const entityDef = {
         components: {
-          'comp1': { prop1: 'value1' },
+          comp1: { prop1: 'value1' },
         },
       };
       const propertyReqs = {
-        'comp2': { prop1: 'value1' },
+        comp2: { prop1: 'value1' },
       };
 
-      const result = processor.matchesPropertyRequirements(entityDef, propertyReqs);
+      const result = processor.matchesPropertyRequirements(
+        entityDef,
+        propertyReqs
+      );
 
       expect(result).toBe(false);
     });
@@ -221,14 +234,17 @@ describe('RecipeProcessor', () => {
     it('should return false if property value does not match', () => {
       const entityDef = {
         components: {
-          'comp1': { prop1: 'value1' },
+          comp1: { prop1: 'value1' },
         },
       };
       const propertyReqs = {
-        'comp1': { prop1: 'value2' },
+        comp1: { prop1: 'value2' },
       };
 
-      const result = processor.matchesPropertyRequirements(entityDef, propertyReqs);
+      const result = processor.matchesPropertyRequirements(
+        entityDef,
+        propertyReqs
+      );
 
       expect(result).toBe(false);
     });

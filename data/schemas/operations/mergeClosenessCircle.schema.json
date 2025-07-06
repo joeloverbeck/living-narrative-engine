@@ -36,10 +36,7 @@
           "description": "Optional context variable to store affected entity IDs."
         }
       },
-      "required": [
-        "actor_id",
-        "target_id"
-      ],
+      "required": ["actor_id", "target_id"],
       "additionalProperties": false
     }
   }

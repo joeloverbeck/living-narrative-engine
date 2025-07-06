@@ -40,27 +40,37 @@ describe('ValidationContext', () => {
 
     it('should throw error if entityIds is missing', () => {
       delete contextParams.entityIds;
-      expect(() => new ValidationContext(contextParams)).toThrow(InvalidArgumentError);
+      expect(() => new ValidationContext(contextParams)).toThrow(
+        InvalidArgumentError
+      );
     });
 
     it('should throw error if recipe is missing', () => {
       delete contextParams.recipe;
-      expect(() => new ValidationContext(contextParams)).toThrow(InvalidArgumentError);
+      expect(() => new ValidationContext(contextParams)).toThrow(
+        InvalidArgumentError
+      );
     });
 
     it('should throw error if socketOccupancy is missing', () => {
       delete contextParams.socketOccupancy;
-      expect(() => new ValidationContext(contextParams)).toThrow(InvalidArgumentError);
+      expect(() => new ValidationContext(contextParams)).toThrow(
+        InvalidArgumentError
+      );
     });
 
     it('should throw error if entityManager is missing', () => {
       delete contextParams.entityManager;
-      expect(() => new ValidationContext(contextParams)).toThrow(InvalidArgumentError);
+      expect(() => new ValidationContext(contextParams)).toThrow(
+        InvalidArgumentError
+      );
     });
 
     it('should throw error if logger is missing', () => {
       delete contextParams.logger;
-      expect(() => new ValidationContext(contextParams)).toThrow(InvalidArgumentError);
+      expect(() => new ValidationContext(contextParams)).toThrow(
+        InvalidArgumentError
+      );
     });
   });
 
@@ -132,10 +142,14 @@ describe('ValidationContext', () => {
     it('should check if has errors', () => {
       expect(context.hasErrors()).toBe(false);
 
-      context.addIssues([{ severity: 'warning', message: 'Warning', ruleId: 'rule1' }]);
+      context.addIssues([
+        { severity: 'warning', message: 'Warning', ruleId: 'rule1' },
+      ]);
       expect(context.hasErrors()).toBe(false);
 
-      context.addIssues([{ severity: 'error', message: 'Error', ruleId: 'rule2' }]);
+      context.addIssues([
+        { severity: 'error', message: 'Error', ruleId: 'rule2' },
+      ]);
       expect(context.hasErrors()).toBe(true);
     });
   });

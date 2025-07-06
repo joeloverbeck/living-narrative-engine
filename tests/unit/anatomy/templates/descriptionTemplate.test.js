@@ -11,7 +11,9 @@ describe('DescriptionTemplate', () => {
   beforeEach(() => {
     mockConfig = {
       getPairedParts: jest.fn().mockReturnValue(new Set(['eye', 'arm'])),
-      getIrregularPlurals: jest.fn().mockReturnValue({ foot: 'feet', tooth: 'teeth' }),
+      getIrregularPlurals: jest
+        .fn()
+        .mockReturnValue({ foot: 'feet', tooth: 'teeth' }),
     };
 
     mockTextFormatter = {
@@ -58,23 +60,33 @@ describe('DescriptionTemplate', () => {
     it('should extract descriptions from parts with getComponentData', () => {
       const parts = [
         {
-          getComponentData: jest.fn().mockReturnValue({ text: 'description 1' }),
+          getComponentData: jest
+            .fn()
+            .mockReturnValue({ text: 'description 1' }),
         },
         {
-          getComponentData: jest.fn().mockReturnValue({ text: 'description 2' }),
+          getComponentData: jest
+            .fn()
+            .mockReturnValue({ text: 'description 2' }),
         },
       ];
 
       const result = template.extractDescriptions(parts);
       expect(result).toEqual(['description 1', 'description 2']);
-      expect(parts[0].getComponentData).toHaveBeenCalledWith('core:description');
-      expect(parts[1].getComponentData).toHaveBeenCalledWith('core:description');
+      expect(parts[0].getComponentData).toHaveBeenCalledWith(
+        'core:description'
+      );
+      expect(parts[1].getComponentData).toHaveBeenCalledWith(
+        'core:description'
+      );
     });
 
     it('should filter out empty descriptions', () => {
       const parts = [
         {
-          getComponentData: jest.fn().mockReturnValue({ text: 'description 1' }),
+          getComponentData: jest
+            .fn()
+            .mockReturnValue({ text: 'description 1' }),
         },
         {
           getComponentData: jest.fn().mockReturnValue({ text: '' }),
@@ -89,11 +101,7 @@ describe('DescriptionTemplate', () => {
     });
 
     it('should handle parts without getComponentData', () => {
-      const parts = [
-        { someOtherMethod: jest.fn() },
-        null,
-        undefined,
-      ];
+      const parts = [{ someOtherMethod: jest.fn() }, null, undefined];
 
       const result = template.extractDescriptions(parts);
       expect(result).toEqual([]);
@@ -141,7 +149,7 @@ describe('DescriptionTemplate', () => {
 
     it('should get strategy and format using it', () => {
       const result = template.formatDescription('eye', mockParts);
-      
+
       expect(mockStrategyFactory.getStrategy).toHaveBeenCalledWith(
         'eye',
         mockParts,
@@ -166,12 +174,12 @@ describe('DescriptionTemplate', () => {
           getComponentData: jest.fn().mockReturnValue({ text: 'strong arm' }),
         },
       ];
-      
+
       // Spy on formatDescription
       const formatDescriptionSpy = jest.spyOn(template, 'formatDescription');
-      
+
       const result = template.createStructuredLine('arm', mockParts);
-      
+
       expect(formatDescriptionSpy).toHaveBeenCalledWith('arm', mockParts);
       expect(result).toBe('formatted description');
     });
@@ -179,9 +187,13 @@ describe('DescriptionTemplate', () => {
 
   describe('integration with real strategy', () => {
     it('should format single part correctly', async () => {
-      const { TextFormatter } = await import('../../../../src/anatomy/templates/textFormatter.js');
-      const { PartGroupingStrategyFactory } = await import('../../../../src/anatomy/configuration/partGroupingStrategies.js');
-      
+      const { TextFormatter } = await import(
+        '../../../../src/anatomy/templates/textFormatter.js'
+      );
+      const { PartGroupingStrategyFactory } = await import(
+        '../../../../src/anatomy/configuration/partGroupingStrategies.js'
+      );
+
       const realTemplate = new DescriptionTemplate({
         config: mockConfig,
         textFormatter: new TextFormatter(),
@@ -190,7 +202,9 @@ describe('DescriptionTemplate', () => {
 
       const parts = [
         {
-          getComponentData: jest.fn().mockReturnValue({ text: 'muscular torso' }),
+          getComponentData: jest
+            .fn()
+            .mockReturnValue({ text: 'muscular torso' }),
         },
       ];
 
@@ -199,9 +213,13 @@ describe('DescriptionTemplate', () => {
     });
 
     it('should format paired parts correctly', async () => {
-      const { TextFormatter } = await import('../../../../src/anatomy/templates/textFormatter.js');
-      const { PartGroupingStrategyFactory } = await import('../../../../src/anatomy/configuration/partGroupingStrategies.js');
-      
+      const { TextFormatter } = await import(
+        '../../../../src/anatomy/templates/textFormatter.js'
+      );
+      const { PartGroupingStrategyFactory } = await import(
+        '../../../../src/anatomy/configuration/partGroupingStrategies.js'
+      );
+
       const realTemplate = new DescriptionTemplate({
         config: mockConfig,
         textFormatter: new TextFormatter(),

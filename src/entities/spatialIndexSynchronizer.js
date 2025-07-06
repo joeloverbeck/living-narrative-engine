@@ -156,7 +156,7 @@ export class SpatialIndexSynchronizer {
 
     const { instanceId } = payload;
     if (!instanceId) return;
-    
+
     // Since we no longer have the entity object, we need to track positions separately
     // For now, we'll need to maintain a map of entity positions
     const locationId = this.#entityPositions?.get(instanceId);
@@ -213,14 +213,14 @@ export class SpatialIndexSynchronizer {
       oldLocationId,
       newLocationId
     );
-    
+
     // Update our internal tracking
     if (newLocationId) {
       this.#entityPositions.set(entity.id, newLocationId);
     } else {
       this.#entityPositions.delete(entity.id);
     }
-    
+
     this.logger.debug(
       `SpatialSync: Re-indexed ${entity.id} from '${oldLocationId}' to '${newLocationId}' due to position change.`
     );

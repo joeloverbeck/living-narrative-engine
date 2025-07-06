@@ -20,7 +20,11 @@ export class AnatomyGraphAlgorithms {
    * @param {number} [maxDepth] - Maximum depth to traverse
    * @returns {string[]} All entity IDs in the sub-graph (including root)
    */
-  static getSubgraph(rootEntityId, cacheManager, maxDepth = ANATOMY_CONSTANTS.MAX_RECURSION_DEPTH) {
+  static getSubgraph(
+    rootEntityId,
+    cacheManager,
+    maxDepth = ANATOMY_CONSTANTS.MAX_RECURSION_DEPTH
+  ) {
     if (!rootEntityId || !cacheManager) return [];
 
     const result = [];
@@ -29,7 +33,7 @@ export class AnatomyGraphAlgorithms {
 
     while (stack.length > 0) {
       const { id, depth } = stack.pop();
-      
+
       if (depth > maxDepth) continue;
       if (visited.has(id)) continue;
 
@@ -56,7 +60,12 @@ export class AnatomyGraphAlgorithms {
    * @param {number} [maxDepth] - Maximum depth to traverse
    * @returns {string[]} Entity IDs of matching parts
    */
-  static findPartsByType(rootEntityId, partType, cacheManager, maxDepth = ANATOMY_CONSTANTS.MAX_RECURSION_DEPTH) {
+  static findPartsByType(
+    rootEntityId,
+    partType,
+    cacheManager,
+    maxDepth = ANATOMY_CONSTANTS.MAX_RECURSION_DEPTH
+  ) {
     if (!rootEntityId || !partType || !cacheManager) return [];
 
     const result = [];
@@ -65,10 +74,10 @@ export class AnatomyGraphAlgorithms {
 
     while (stack.length > 0) {
       const { id, depth } = stack.pop();
-      
+
       if (depth > maxDepth) continue;
       if (visited.has(id)) continue;
-      
+
       visited.add(id);
 
       const node = cacheManager.get(id);
@@ -97,7 +106,12 @@ export class AnatomyGraphAlgorithms {
    * @param {number} [maxDepth] - Maximum depth to traverse
    * @returns {string|null} The root entity ID, or null if not found
    */
-  static getAnatomyRoot(partEntityId, cacheManager, entityManager, maxDepth = ANATOMY_CONSTANTS.MAX_RECURSION_DEPTH) {
+  static getAnatomyRoot(
+    partEntityId,
+    cacheManager,
+    entityManager,
+    maxDepth = ANATOMY_CONSTANTS.MAX_RECURSION_DEPTH
+  ) {
     if (!partEntityId) return null;
 
     let currentId = partEntityId;
@@ -129,7 +143,7 @@ export class AnatomyGraphAlgorithms {
       } else {
         currentId = node.parentId;
       }
-      
+
       depth++;
     }
 
@@ -145,12 +159,21 @@ export class AnatomyGraphAlgorithms {
    * @param {number} [maxDepth] - Maximum path length
    * @returns {string[]|null} Path of entity IDs, or null if no path exists
    */
-  static getPath(fromEntityId, toEntityId, cacheManager, maxDepth = ANATOMY_CONSTANTS.DEFAULT_MAX_PATH_LENGTH) {
+  static getPath(
+    fromEntityId,
+    toEntityId,
+    cacheManager,
+    maxDepth = ANATOMY_CONSTANTS.DEFAULT_MAX_PATH_LENGTH
+  ) {
     if (!fromEntityId || !toEntityId || !cacheManager) return null;
     if (fromEntityId === toEntityId) return [fromEntityId];
 
     // First, find their common ancestor
-    const fromAncestors = this.#getAncestors(fromEntityId, cacheManager, maxDepth);
+    const fromAncestors = this.#getAncestors(
+      fromEntityId,
+      cacheManager,
+      maxDepth
+    );
     const toAncestors = this.#getAncestors(toEntityId, cacheManager, maxDepth);
 
     let commonAncestor = null;
@@ -164,8 +187,18 @@ export class AnatomyGraphAlgorithms {
     if (!commonAncestor) return null;
 
     // Build path: from -> ancestor -> to
-    const pathUp = this.#getPathToAncestor(fromEntityId, commonAncestor, cacheManager, maxDepth);
-    const pathDown = this.#getPathToAncestor(toEntityId, commonAncestor, cacheManager, maxDepth).reverse();
+    const pathUp = this.#getPathToAncestor(
+      fromEntityId,
+      commonAncestor,
+      cacheManager,
+      maxDepth
+    );
+    const pathDown = this.#getPathToAncestor(
+      toEntityId,
+      commonAncestor,
+      cacheManager,
+      maxDepth
+    ).reverse();
 
     // Remove duplicate common ancestor
     if (pathDown.length > 0 && pathDown[0] === commonAncestor) {
@@ -184,7 +217,12 @@ export class AnatomyGraphAlgorithms {
    * @param {number} [maxDepth] - Maximum depth to traverse
    * @returns {string[]} Array of all entity IDs in the anatomy
    */
-  static getAllParts(rootEntityId, cacheManager, entityManager, maxDepth = ANATOMY_CONSTANTS.MAX_RECURSION_DEPTH) {
+  static getAllParts(
+    rootEntityId,
+    cacheManager,
+    entityManager,
+    maxDepth = ANATOMY_CONSTANTS.MAX_RECURSION_DEPTH
+  ) {
     if (!rootEntityId) return [];
 
     const result = [];
@@ -193,7 +231,7 @@ export class AnatomyGraphAlgorithms {
 
     while (stack.length > 0) {
       const { id, depth } = stack.pop();
-      
+
       if (depth > maxDepth) continue;
       if (visited.has(id)) continue;
 
@@ -208,10 +246,14 @@ export class AnatomyGraphAlgorithms {
         }
       } else if (entityManager) {
         // Fallback to direct entity manager lookup - find entities with anatomy:joint
-        const entitiesWithJoints = entityManager.getEntitiesWithComponent('anatomy:joint');
+        const entitiesWithJoints =
+          entityManager.getEntitiesWithComponent('anatomy:joint');
         if (entitiesWithJoints) {
           for (const entity of entitiesWithJoints) {
-            const joint = entityManager.getComponentData(entity.id, 'anatomy:joint');
+            const joint = entityManager.getComponentData(
+              entity.id,
+              'anatomy:joint'
+            );
             if (joint && joint.parentId === id && !visited.has(entity.id)) {
               stack.push({ id: entity.id, depth: depth + 1 });
             }

@@ -61,19 +61,13 @@
                     "$ref": "../json-logic.schema.json#"
                   }
                 },
-                "required": [
-                  "component_type",
-                  "condition"
-                ]
+                "required": ["component_type", "condition"]
               }
             }
           }
         }
       },
-      "required": [
-        "result_variable",
-        "filters"
-      ],
+      "required": ["result_variable", "filters"],
       "additionalProperties": false
     }
   }

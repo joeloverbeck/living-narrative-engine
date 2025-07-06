@@ -53,8 +53,11 @@ export class DescriptionConfiguration {
    * @returns {Array<string>} Ordered array of part types
    */
   getDescriptionOrder() {
-    return this.anatomyFormattingService?.getDescriptionOrder?.()
-      || [...this._defaultDescriptionOrder];
+    return (
+      this.anatomyFormattingService?.getDescriptionOrder?.() || [
+        ...this._defaultDescriptionOrder,
+      ]
+    );
   }
 
   /**
@@ -63,8 +66,10 @@ export class DescriptionConfiguration {
    * @returns {Set<string>} Set of paired part types
    */
   getPairedParts() {
-    return this.anatomyFormattingService?.getPairedParts?.()
-      || new Set(this._defaultPairedParts);
+    return (
+      this.anatomyFormattingService?.getPairedParts?.() ||
+      new Set(this._defaultPairedParts)
+    );
   }
 
   /**
@@ -73,8 +78,11 @@ export class DescriptionConfiguration {
    * @returns {Object<string, string>} Map of singular to plural forms
    */
   getIrregularPlurals() {
-    return this.anatomyFormattingService?.getIrregularPlurals?.()
-      || { ...this._defaultIrregularPlurals };
+    return (
+      this.anatomyFormattingService?.getIrregularPlurals?.() || {
+        ...this._defaultIrregularPlurals,
+      }
+    );
   }
 }
 

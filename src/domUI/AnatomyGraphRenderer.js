@@ -101,19 +101,19 @@ class AnatomyGraphRenderer {
     this._logger.debug('Building graph data from bodyData:', {
       root: bodyData.root,
       partsCount: Object.keys(bodyData.parts || {}).length,
-      parts: bodyData.parts
+      parts: bodyData.parts,
     });
-    
+
     const visited = new Set();
     const queue = [{ id: bodyData.root, depth: 0, parent: null }];
-    
+
     // First, collect all part IDs from the body data
     const allPartIds = new Set();
     if (bodyData.parts) {
-      Object.values(bodyData.parts).forEach(partId => allPartIds.add(partId));
+      Object.values(bodyData.parts).forEach((partId) => allPartIds.add(partId));
     }
     allPartIds.add(bodyData.root);
-    
+
     this._logger.debug('All part IDs collected:', Array.from(allPartIds));
 
     while (queue.length > 0) {
@@ -128,22 +128,23 @@ class AnatomyGraphRenderer {
           this._logger.warn(`Entity not found: ${id}`);
           continue;
         }
-        
+
         this._logger.debug(`Processing entity ${id} at depth ${depth}`);
 
         // Get entity info
         const nameComponent = entity.getComponentData('core:name');
-        const descriptionComponent = entity.getComponentData('core:description');
+        const descriptionComponent =
+          entity.getComponentData('core:description');
         const partComponent = entity.getComponentData('anatomy:part');
         const jointComponent = entity.getComponentData('anatomy:joint');
-        
+
         this._logger.debug(`Entity ${id} components:`, {
           hasName: !!nameComponent,
           nameText: nameComponent?.text,
           hasPartComponent: !!partComponent,
           partType: partComponent?.subType,
           hasJointComponent: !!jointComponent,
-          jointParentId: jointComponent?.parentId
+          jointParentId: jointComponent?.parentId,
         });
 
         // Create node
@@ -174,11 +175,13 @@ class AnatomyGraphRenderer {
         for (const partId of allPartIds) {
           if (!visited.has(partId)) {
             try {
-              const partEntity = await this._entityManager.getEntityInstance(partId);
+              const partEntity =
+                await this._entityManager.getEntityInstance(partId);
               if (partEntity) {
                 const partJoint = partEntity.getComponentData('anatomy:joint');
                 if (partJoint && partJoint.parentId === id) {
-                  const partName = partEntity.getComponentData('core:name')?.text || partId;
+                  const partName =
+                    partEntity.getComponentData('core:name')?.text || partId;
                   children.push({ id: partId, name: partName });
                   queue.push({ id: partId, depth: depth + 1, parent: id });
                 }
@@ -188,33 +191,44 @@ class AnatomyGraphRenderer {
             }
           }
         }
-        
+
         // Also check from bodyData.parts map to ensure we don't miss any
         if (bodyData.parts) {
           for (const [partName, partId] of Object.entries(bodyData.parts)) {
-            if (!visited.has(partId) && !children.some(child => child.id === partId)) {
+            if (
+              !visited.has(partId) &&
+              !children.some((child) => child.id === partId)
+            ) {
               try {
-                const partEntity = await this._entityManager.getEntityInstance(partId);
+                const partEntity =
+                  await this._entityManager.getEntityInstance(partId);
                 if (partEntity) {
-                  const partJoint = partEntity.getComponentData('anatomy:joint');
+                  const partJoint =
+                    partEntity.getComponentData('anatomy:joint');
                   if (partJoint && partJoint.parentId === id) {
                     children.push({ id: partId, name: partName });
                     queue.push({ id: partId, depth: depth + 1, parent: id });
                   }
                 }
               } catch (err) {
-                this._logger.warn(`Failed to check entity ${partId} (${partName}):`, err);
+                this._logger.warn(
+                  `Failed to check entity ${partId} (${partName}):`,
+                  err
+                );
               }
             }
           }
         }
-        
-        this._logger.debug(`Found ${children.length} children for ${id}:`, children);
+
+        this._logger.debug(
+          `Found ${children.length} children for ${id}:`,
+          children
+        );
       } catch (error) {
         this._logger.error(`Error processing entity ${id}:`, error);
       }
     }
-    
+
     // Check for any parts that weren't visited
     const unvisitedParts = [];
     for (const [partName, partId] of Object.entries(bodyData.parts || {})) {
@@ -222,10 +236,13 @@ class AnatomyGraphRenderer {
         unvisitedParts.push({ name: partName, id: partId });
       }
     }
-    
+
     if (unvisitedParts.length > 0) {
-      this._logger.warn(`Found ${unvisitedParts.length} unconnected parts:`, unvisitedParts);
-      
+      this._logger.warn(
+        `Found ${unvisitedParts.length} unconnected parts:`,
+        unvisitedParts
+      );
+
       // Add unconnected parts as orphaned nodes (for debugging)
       for (const { name, id } of unvisitedParts) {
         try {
@@ -233,7 +250,7 @@ class AnatomyGraphRenderer {
           if (entity) {
             const nameComponent = entity.getComponentData('core:name');
             const partComponent = entity.getComponentData('anatomy:part');
-            
+
             const node = {
               id,
               name: nameComponent?.text || name || id,
@@ -241,9 +258,9 @@ class AnatomyGraphRenderer {
               type: partComponent?.subType || 'unknown',
               depth: 0, // Place at root level
               x: 0,
-              y: 0
+              y: 0,
             };
-            
+
             this._nodes.set(id, node);
             this._logger.debug(`Added unconnected part: ${node.name} (${id})`);
           }
@@ -252,8 +269,10 @@ class AnatomyGraphRenderer {
         }
       }
     }
-    
-    this._logger.info(`Graph building complete: ${this._nodes.size} nodes, ${this._edges.length} edges`);
+
+    this._logger.info(
+      `Graph building complete: ${this._nodes.size} nodes, ${this._edges.length} edges`
+    );
 
     // Calculate horizontal positions
     this._calculateNodePositions();
@@ -316,7 +335,7 @@ class AnatomyGraphRenderer {
   _polarToCartesian(centerX, centerY, radius, angle) {
     return {
       x: centerX + radius * Math.cos(angle),
-      y: centerY + radius * Math.sin(angle)
+      y: centerY + radius * Math.sin(angle),
     };
   }
 
@@ -374,18 +393,18 @@ class AnatomyGraphRenderer {
     }
 
     // Find root nodes (nodes with depth 0)
-    const roots = Array.from(this._nodes.values()).filter(n => n.depth === 0);
+    const roots = Array.from(this._nodes.values()).filter((n) => n.depth === 0);
 
     // Position root at center
-    const centerX = 600;  // Center of typical viewport
+    const centerX = 600; // Center of typical viewport
     const centerY = 400;
 
-    roots.forEach(root => {
+    roots.forEach((root) => {
       root.x = centerX;
       root.y = centerY;
       root.angleStart = 0;
       root.angleEnd = 2 * Math.PI;
-      
+
       // Recursively position children
       this._positionChildrenRadially(root);
     });
@@ -405,7 +424,10 @@ class AnatomyGraphRenderer {
     if (children.length === 0) return;
 
     // Calculate radius for this depth level
-    const radius = this._calculateMinimumRadius(parent.depth + 1, children.length);
+    const radius = this._calculateMinimumRadius(
+      parent.depth + 1,
+      children.length
+    );
 
     // Calculate angle range for each child based on leaf count
     const parentAngleRange = parent.angleEnd - parent.angleStart;
@@ -413,61 +435,69 @@ class AnatomyGraphRenderer {
 
     let currentAngle = parent.angleStart;
 
-    children.forEach(child => {
+    children.forEach((child) => {
       // Proportional angle allocation based on leaf count
-      const childAngleRange = (child.leafCount / totalLeaves) * parentAngleRange;
-      
+      const childAngleRange =
+        (child.leafCount / totalLeaves) * parentAngleRange;
+
       // Minimum angle to prevent overlap (18 degrees in radians)
       const minAngle = Math.PI / 10;
       const actualAngleRange = Math.max(childAngleRange, minAngle);
-      
+
       // Position at center of allocated range
       const childAngle = currentAngle + actualAngleRange / 2;
-      
+
       // Convert to cartesian coordinates
-      const pos = this._polarToCartesian(parent.x, parent.y, radius, childAngle);
+      const pos = this._polarToCartesian(
+        parent.x,
+        parent.y,
+        radius,
+        childAngle
+      );
       child.x = pos.x;
       child.y = pos.y;
       child.angle = childAngle;
       child.radius = radius;
       child.angleStart = currentAngle;
       child.angleEnd = currentAngle + actualAngleRange;
-      
+
       currentAngle += actualAngleRange;
-      
+
       // Recursively position grandchildren
       this._positionChildrenRadially(child);
     });
   }
-  
+
   /**
    * Update viewBox to ensure all nodes are visible
    *
    * @private
    */
   _updateViewBoxToFitContent() {
-    let minX = Infinity, minY = Infinity;
-    let maxX = -Infinity, maxY = -Infinity;
+    let minX = Infinity,
+      minY = Infinity;
+    let maxX = -Infinity,
+      maxY = -Infinity;
     const nodeRadius = 30;
     const padding = 100; // Increased padding for radial layout
-    
+
     for (const node of this._nodes.values()) {
       minX = Math.min(minX, node.x - nodeRadius);
       minY = Math.min(minY, node.y - nodeRadius);
       maxX = Math.max(maxX, node.x + nodeRadius);
       maxY = Math.max(maxY, node.y + nodeRadius);
     }
-    
+
     if (this._nodes.size > 0) {
       // Calculate dimensions
-      const width = (maxX - minX) + padding * 2;
-      const height = (maxY - minY) + padding * 2;
-      
+      const width = maxX - minX + padding * 2;
+      const height = maxY - minY + padding * 2;
+
       // For radial layouts, ensure viewBox is roughly square to maintain circular appearance
       const maxDimension = Math.max(width, height);
       const centerX = (minX + maxX) / 2;
       const centerY = (minY + maxY) / 2;
-      
+
       this._viewBox.x = centerX - maxDimension / 2;
       this._viewBox.y = centerY - maxDimension / 2;
       this._viewBox.width = maxDimension;
@@ -491,7 +521,10 @@ class AnatomyGraphRenderer {
     );
     svg.setAttribute('width', '100%');
     svg.setAttribute('height', '100%');
-    svg.setAttribute('viewBox', `${this._viewBox.x} ${this._viewBox.y} ${this._viewBox.width} ${this._viewBox.height}`);
+    svg.setAttribute(
+      'viewBox',
+      `${this._viewBox.x} ${this._viewBox.y} ${this._viewBox.width} ${this._viewBox.height}`
+    );
     svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
     svg.id = 'anatomy-graph';
     svg.style.cursor = 'grab';
@@ -510,7 +543,7 @@ class AnatomyGraphRenderer {
     this._tooltip.style.opacity = '0';
     container.appendChild(this._tooltip);
   }
-  
+
   /**
    * Setup pan and zoom functionality
    *
@@ -518,68 +551,69 @@ class AnatomyGraphRenderer {
    */
   _setupPanAndZoom() {
     if (!this._svg) return;
-    
+
     // Mouse events for panning
     this._svg.addEventListener('mousedown', (e) => {
-      if (e.button === 0) { // Left click
+      if (e.button === 0) {
+        // Left click
         this._isPanning = true;
         this._panStart = { x: e.clientX, y: e.clientY };
         this._svg.style.cursor = 'grabbing';
         e.preventDefault();
       }
     });
-    
+
     this._document.addEventListener('mousemove', (e) => {
       if (this._isPanning && this._svg) {
         const dx = (e.clientX - this._panStart.x) / this._zoom;
         const dy = (e.clientY - this._panStart.y) / this._zoom;
-        
+
         this._viewBox.x -= dx;
         this._viewBox.y -= dy;
-        
+
         this._updateViewBox();
-        
+
         this._panStart = { x: e.clientX, y: e.clientY };
       }
     });
-    
+
     this._document.addEventListener('mouseup', () => {
       if (this._isPanning && this._svg) {
         this._isPanning = false;
         this._svg.style.cursor = 'grab';
       }
     });
-    
+
     // Wheel event for zooming
     this._svg.addEventListener('wheel', (e) => {
       e.preventDefault();
-      
+
       const rect = this._svg.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
-      
+
       // Convert mouse position to SVG coordinates
       const svgX = (x / rect.width) * this._viewBox.width + this._viewBox.x;
       const svgY = (y / rect.height) * this._viewBox.height + this._viewBox.y;
-      
+
       // Zoom factor
       const zoomFactor = e.deltaY > 0 ? 1.1 : 0.9;
       this._zoom *= zoomFactor;
       this._zoom = Math.max(0.1, Math.min(this._zoom, 5)); // Limit zoom
-      
+
       // Update viewBox maintaining mouse position
       const newWidth = this._viewBox.width * zoomFactor;
       const newHeight = this._viewBox.height * zoomFactor;
-      
+
       this._viewBox.x = svgX - (x / rect.width) * newWidth;
       this._viewBox.y = svgY - (y / rect.height) * newHeight;
       this._viewBox.width = newWidth;
       this._viewBox.height = newHeight;
-      
+
       this._updateViewBox();
     });
   }
-  
+
   /**
    * Update SVG viewBox attribute
    *
@@ -587,8 +621,10 @@ class AnatomyGraphRenderer {
    */
   _updateViewBox() {
     if (this._svg) {
-      this._svg.setAttribute('viewBox', 
-        `${this._viewBox.x} ${this._viewBox.y} ${this._viewBox.width} ${this._viewBox.height}`);
+      this._svg.setAttribute(
+        'viewBox',
+        `${this._viewBox.x} ${this._viewBox.y} ${this._viewBox.width} ${this._viewBox.height}`
+      );
     }
   }
 
@@ -670,25 +706,34 @@ class AnatomyGraphRenderer {
 
       nodeGroup.appendChild(g);
     }
-    
+
     // Add debug info
     this._addDebugInfo();
   }
-  
+
   /**
    * Add debug information to the graph
-   * 
+   *
    * @private
    */
   _addDebugInfo() {
     if (!this._svg) return;
-    
-    const debugGroup = this._document.createElementNS('http://www.w3.org/2000/svg', 'g');
+
+    const debugGroup = this._document.createElementNS(
+      'http://www.w3.org/2000/svg',
+      'g'
+    );
     debugGroup.setAttribute('class', 'debug-info');
-    debugGroup.setAttribute('transform', `translate(${this._viewBox.x + 10}, ${this._viewBox.y + 20})`);
-    
+    debugGroup.setAttribute(
+      'transform',
+      `translate(${this._viewBox.x + 10}, ${this._viewBox.y + 20})`
+    );
+
     // Background rect for readability
-    const bgRect = this._document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    const bgRect = this._document.createElementNS(
+      'http://www.w3.org/2000/svg',
+      'rect'
+    );
     bgRect.setAttribute('x', '-5');
     bgRect.setAttribute('y', '-15');
     bgRect.setAttribute('width', '200');
@@ -697,9 +742,12 @@ class AnatomyGraphRenderer {
     bgRect.setAttribute('stroke', '#ccc');
     bgRect.setAttribute('rx', '3');
     debugGroup.appendChild(bgRect);
-    
+
     // Debug text
-    const debugText = this._document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    const debugText = this._document.createElementNS(
+      'http://www.w3.org/2000/svg',
+      'text'
+    );
     debugText.setAttribute('x', '0');
     debugText.setAttribute('y', '0');
     debugText.setAttribute('font-size', '12');
@@ -707,7 +755,7 @@ class AnatomyGraphRenderer {
     debugText.setAttribute('fill', '#666');
     debugText.textContent = `Nodes: ${this._nodes.size}, Edges: ${this._edges.length}`;
     debugGroup.appendChild(debugText);
-    
+
     this._svg.appendChild(debugGroup);
   }
 
@@ -725,32 +773,32 @@ class AnatomyGraphRenderer {
       'http://www.w3.org/2000/svg',
       'path'
     );
-    
+
     // For radial layout, curve should follow the natural arc
     const dx = targetNode.x - sourceNode.x;
     const dy = targetNode.y - sourceNode.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
-    
+
     // Control point calculation for radial layout
     // The control point is placed along the arc between the nodes
     const t = 0.3; // Control point at 30% distance from source
     const midX = sourceNode.x + dx * t;
     const midY = sourceNode.y + dy * t;
-    
+
     // For radial layouts, we want the curve to follow the circular pattern
     // Calculate the perpendicular direction but scale it based on the radial structure
     const curvature = 0.15 * (1 + (targetNode.radius || 0) / 500); // Adjust curvature based on radius
-    
+
     // Perpendicular offset for curve, but adjusted for radial layout
     const perpX = -dy / distance;
     const perpY = dx / distance;
-    
+
     const controlX = midX + perpX * curvature * distance;
     const controlY = midY + perpY * curvature * distance;
-    
+
     // Create quadratic bezier path
     const d = `M ${sourceNode.x} ${sourceNode.y} Q ${controlX} ${controlY} ${targetNode.x} ${targetNode.y}`;
-    
+
     path.setAttribute('d', d);
     path.setAttribute('class', 'anatomy-edge');
     path.setAttribute('stroke', '#666');
@@ -759,7 +807,7 @@ class AnatomyGraphRenderer {
     path.setAttribute('stroke-opacity', '0.6');
     path.setAttribute('data-source', edge.source);
     path.setAttribute('data-target', edge.target);
-    
+
     return path;
   }
 
@@ -818,11 +866,11 @@ class AnatomyGraphRenderer {
         // Position tooltip relative to the node
         const rect = e.currentTarget.getBoundingClientRect();
         const containerRect = this._svg.parentElement.getBoundingClientRect();
-        
+
         // Calculate position accounting for scroll
         const tooltipX = rect.left - containerRect.left + rect.width / 2;
         const tooltipY = rect.top - containerRect.top - 10;
-        
+
         this._tooltip.style.left = `${tooltipX}px`;
         this._tooltip.style.top = `${tooltipY}px`;
       });
@@ -839,7 +887,7 @@ class AnatomyGraphRenderer {
         // Store original values
         const originalRadius = circle.getAttribute('r');
         const originalStrokeWidth = circle.getAttribute('stroke-width');
-        
+
         nodeEl.addEventListener('mouseenter', () => {
           // Slightly increase radius and stroke for hover effect
           circle.setAttribute('r', String(Number(originalRadius) + 3));
@@ -854,7 +902,7 @@ class AnatomyGraphRenderer {
           circle.setAttribute('fill-opacity', '1');
         });
       }
-      
+
       // Prevent panning when interacting with nodes
       nodeEl.addEventListener('mousedown', (e) => {
         e.stopPropagation();

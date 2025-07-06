@@ -19,7 +19,10 @@ function loadOperationSchemas(ajv) {
     'base-operation.schema.json'
   );
   const baseSchema = require(baseSchemaPath);
-  ajv.addSchema(baseSchema, 'http://example.com/schemas/base-operation.schema.json');
+  ajv.addSchema(
+    baseSchema,
+    'http://example.com/schemas/base-operation.schema.json'
+  );
 
   // Then load all individual operation schemas
   const dir = path.join(

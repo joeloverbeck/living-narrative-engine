@@ -24,25 +24,31 @@ describe('DescriptionConfiguration', () => {
 
     it('should accept anatomyFormattingService', () => {
       config = new DescriptionConfiguration(mockAnatomyFormattingService);
-      expect(config.anatomyFormattingService).toBe(mockAnatomyFormattingService);
+      expect(config.anatomyFormattingService).toBe(
+        mockAnatomyFormattingService
+      );
     });
   });
 
   describe('getDescriptionOrder', () => {
     it('should return service values when available', () => {
       const customOrder = ['hair', 'eye', 'face'];
-      mockAnatomyFormattingService.getDescriptionOrder.mockReturnValue(customOrder);
+      mockAnatomyFormattingService.getDescriptionOrder.mockReturnValue(
+        customOrder
+      );
       config = new DescriptionConfiguration(mockAnatomyFormattingService);
 
       const result = config.getDescriptionOrder();
       expect(result).toEqual(customOrder);
-      expect(mockAnatomyFormattingService.getDescriptionOrder).toHaveBeenCalledTimes(1);
+      expect(
+        mockAnatomyFormattingService.getDescriptionOrder
+      ).toHaveBeenCalledTimes(1);
     });
 
     it('should return default values when service not provided', () => {
       config = new DescriptionConfiguration();
       const result = config.getDescriptionOrder();
-      
+
       expect(result).toEqual([
         'build',
         'hair',
@@ -66,7 +72,7 @@ describe('DescriptionConfiguration', () => {
     it('should return default values when service method not available', () => {
       config = new DescriptionConfiguration({});
       const result = config.getDescriptionOrder();
-      
+
       expect(result.length).toBe(16);
       expect(result[0]).toBe('build');
     });
@@ -75,7 +81,7 @@ describe('DescriptionConfiguration', () => {
       config = new DescriptionConfiguration();
       const result1 = config.getDescriptionOrder();
       const result2 = config.getDescriptionOrder();
-      
+
       expect(result1).not.toBe(result2);
       expect(result1).toEqual(result2);
     });
@@ -89,13 +95,15 @@ describe('DescriptionConfiguration', () => {
 
       const result = config.getPairedParts();
       expect(result).toBe(customPaired);
-      expect(mockAnatomyFormattingService.getPairedParts).toHaveBeenCalledTimes(1);
+      expect(mockAnatomyFormattingService.getPairedParts).toHaveBeenCalledTimes(
+        1
+      );
     });
 
     it('should return default values when service not provided', () => {
       config = new DescriptionConfiguration();
       const result = config.getPairedParts();
-      
+
       expect(result).toBeInstanceOf(Set);
       expect(result.size).toBe(9);
       expect(result.has('eye')).toBe(true);
@@ -112,7 +120,7 @@ describe('DescriptionConfiguration', () => {
     it('should return default values when service method not available', () => {
       config = new DescriptionConfiguration({});
       const result = config.getPairedParts();
-      
+
       expect(result).toBeInstanceOf(Set);
       expect(result.size).toBe(9);
     });
@@ -121,7 +129,7 @@ describe('DescriptionConfiguration', () => {
       config = new DescriptionConfiguration();
       const result1 = config.getPairedParts();
       const result2 = config.getPairedParts();
-      
+
       expect(result1).not.toBe(result2);
       expect([...result1]).toEqual([...result2]);
     });
@@ -130,18 +138,22 @@ describe('DescriptionConfiguration', () => {
   describe('getIrregularPlurals', () => {
     it('should return service values when available', () => {
       const customPlurals = { hand: 'hands', mouse: 'mice' };
-      mockAnatomyFormattingService.getIrregularPlurals.mockReturnValue(customPlurals);
+      mockAnatomyFormattingService.getIrregularPlurals.mockReturnValue(
+        customPlurals
+      );
       config = new DescriptionConfiguration(mockAnatomyFormattingService);
 
       const result = config.getIrregularPlurals();
       expect(result).toEqual(customPlurals);
-      expect(mockAnatomyFormattingService.getIrregularPlurals).toHaveBeenCalledTimes(1);
+      expect(
+        mockAnatomyFormattingService.getIrregularPlurals
+      ).toHaveBeenCalledTimes(1);
     });
 
     it('should return default values when service not provided', () => {
       config = new DescriptionConfiguration();
       const result = config.getIrregularPlurals();
-      
+
       expect(result).toEqual({
         foot: 'feet',
         tooth: 'teeth',
@@ -151,7 +163,7 @@ describe('DescriptionConfiguration', () => {
     it('should return default values when service method not available', () => {
       config = new DescriptionConfiguration({});
       const result = config.getIrregularPlurals();
-      
+
       expect(result).toEqual({
         foot: 'feet',
         tooth: 'teeth',
@@ -162,7 +174,7 @@ describe('DescriptionConfiguration', () => {
       config = new DescriptionConfiguration();
       const result1 = config.getIrregularPlurals();
       const result2 = config.getIrregularPlurals();
-      
+
       expect(result1).not.toBe(result2);
       expect(result1).toEqual(result2);
     });
@@ -173,9 +185,9 @@ describe('DescriptionConfiguration', () => {
       config = new DescriptionConfiguration();
       const order = config.getDescriptionOrder();
       const originalLength = order.length;
-      
+
       order.push('test');
-      
+
       const newOrder = config.getDescriptionOrder();
       expect(newOrder.length).toBe(originalLength);
       expect(newOrder).not.toContain('test');
@@ -185,9 +197,9 @@ describe('DescriptionConfiguration', () => {
       config = new DescriptionConfiguration();
       const paired = config.getPairedParts();
       const originalSize = paired.size;
-      
+
       paired.add('test');
-      
+
       const newPaired = config.getPairedParts();
       expect(newPaired.size).toBe(originalSize);
       expect(newPaired.has('test')).toBe(false);
@@ -196,9 +208,9 @@ describe('DescriptionConfiguration', () => {
     it('should not allow mutation of returned irregular plurals', () => {
       config = new DescriptionConfiguration();
       const plurals = config.getIrregularPlurals();
-      
+
       plurals.test = 'tests';
-      
+
       const newPlurals = config.getIrregularPlurals();
       expect(newPlurals.test).toBeUndefined();
     });

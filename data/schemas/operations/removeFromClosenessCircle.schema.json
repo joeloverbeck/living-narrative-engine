@@ -31,9 +31,7 @@
           "minLength": 1
         }
       },
-      "required": [
-        "actor_id"
-      ],
+      "required": ["actor_id"],
       "additionalProperties": false
     }
   }

@@ -202,25 +202,33 @@ describe('intimacy_handle_step_back rule integration', () => {
 
     // Create bodyGraphService mock that checks entity components
     const mockBodyGraphService = {
-      hasPartWithComponentValue: jest.fn((bodyComponent, componentId, propertyPath, expectedValue) => {
-        if (!bodyComponent || !bodyComponent.body || !bodyComponent.body.root) {
-          return { found: false };
-        }
-        
-        // Check all entities in the manager
-        const allEntities = customEntityManager.getAllEntities();
-        for (const entity of allEntities) {
-          if (entity.components && entity.components[componentId]) {
-            const component = entity.components[componentId];
-            const actualValue = propertyPath ? component[propertyPath] : component;
-            if (actualValue === expectedValue) {
-              return { found: true, partId: entity.id };
+      hasPartWithComponentValue: jest.fn(
+        (bodyComponent, componentId, propertyPath, expectedValue) => {
+          if (
+            !bodyComponent ||
+            !bodyComponent.body ||
+            !bodyComponent.body.root
+          ) {
+            return { found: false };
+          }
+
+          // Check all entities in the manager
+          const allEntities = customEntityManager.getAllEntities();
+          for (const entity of allEntities) {
+            if (entity.components && entity.components[componentId]) {
+              const component = entity.components[componentId];
+              const actualValue = propertyPath
+                ? component[propertyPath]
+                : component;
+              if (actualValue === expectedValue) {
+                return { found: true, partId: entity.id };
+              }
             }
           }
+
+          return { found: false };
         }
-        
-        return { found: false };
-      })
+      ),
     };
 
     const interpreter = new SystemLogicInterpreter({
@@ -292,25 +300,29 @@ describe('intimacy_handle_step_back rule integration', () => {
 
         // Create bodyGraphService mock for the new interpreter
         const newMockBodyGraphService = {
-          hasPartWithComponentValue: jest.fn((bodyComponent, componentId, propertyPath, expectedValue) => {
-            if (!bodyComponent || !bodyComponent.rootEntityId) {
-              return { found: false };
-            }
-            
-            // Check all entities in the manager
-            const allEntities = customEntityManager.getAllEntities();
-            for (const entity of allEntities) {
-              if (entity.components && entity.components[componentId]) {
-                const component = entity.components[componentId];
-                const actualValue = propertyPath ? component[propertyPath] : component;
-                if (actualValue === expectedValue) {
-                  return { found: true, partId: entity.id };
+          hasPartWithComponentValue: jest.fn(
+            (bodyComponent, componentId, propertyPath, expectedValue) => {
+              if (!bodyComponent || !bodyComponent.rootEntityId) {
+                return { found: false };
+              }
+
+              // Check all entities in the manager
+              const allEntities = customEntityManager.getAllEntities();
+              for (const entity of allEntities) {
+                if (entity.components && entity.components[componentId]) {
+                  const component = entity.components[componentId];
+                  const actualValue = propertyPath
+                    ? component[propertyPath]
+                    : component;
+                  if (actualValue === expectedValue) {
+                    return { found: true, partId: entity.id };
+                  }
                 }
               }
+
+              return { found: false };
             }
-            
-            return { found: false };
-          })
+          ),
         };
 
         const newInterpreter = new SystemLogicInterpreter({
@@ -394,16 +406,16 @@ describe('intimacy_handle_step_back rule integration', () => {
           [NAME_COMPONENT_ID]: { text: 'A' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
           'intimacy:closeness': { partners: ['b1', 'c1'] },
-          'anatomy:body': { 
+          'anatomy:body': {
             recipeId: 'anatomy:human',
             body: {
               root: 'body-a1',
               parts: {
                 torso: 'body-a1',
                 leg_left: 'leg-left-a1',
-                leg_right: 'leg-right-a1'
-              }
-            }
+                leg_right: 'leg-right-a1',
+              },
+            },
           },
         },
       },
@@ -432,16 +444,16 @@ describe('intimacy_handle_step_back rule integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'B' },
           'intimacy:closeness': { partners: ['a1', 'c1'] },
-          'anatomy:body': { 
+          'anatomy:body': {
             recipeId: 'anatomy:human',
             body: {
               root: 'body-b1',
               parts: {
                 torso: 'body-b1',
                 leg_left: 'leg-left-b1',
-                leg_right: 'leg-right-b1'
-              }
-            }
+                leg_right: 'leg-right-b1',
+              },
+            },
           },
         },
       },
@@ -470,16 +482,16 @@ describe('intimacy_handle_step_back rule integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'C' },
           'intimacy:closeness': { partners: ['a1', 'b1'] },
-          'anatomy:body': { 
+          'anatomy:body': {
             recipeId: 'anatomy:human',
             body: {
               root: 'body-c1',
               parts: {
                 torso: 'body-c1',
                 leg_left: 'leg-left-c1',
-                leg_right: 'leg-right-c1'
-              }
-            }
+                leg_right: 'leg-right-c1',
+              },
+            },
           },
         },
       },
@@ -572,16 +584,16 @@ describe('intimacy_handle_step_back rule integration', () => {
           [NAME_COMPONENT_ID]: { text: 'A' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
           'intimacy:closeness': { partners: ['b1'] },
-          'anatomy:body': { 
+          'anatomy:body': {
             recipeId: 'anatomy:human',
             body: {
               root: 'body-a1',
               parts: {
                 torso: 'body-a1',
                 leg_left: 'leg-left-a1',
-                leg_right: 'leg-right-a1'
-              }
-            }
+                leg_right: 'leg-right-a1',
+              },
+            },
           },
         },
       },
@@ -610,16 +622,16 @@ describe('intimacy_handle_step_back rule integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'B' },
           'intimacy:closeness': { partners: ['a1'] },
-          'anatomy:body': { 
+          'anatomy:body': {
             recipeId: 'anatomy:human',
             body: {
               root: 'body-b1',
               parts: {
                 torso: 'body-b1',
                 leg_left: 'leg-left-b1',
-                leg_right: 'leg-right-b1'
-              }
-            }
+                leg_right: 'leg-right-b1',
+              },
+            },
           },
         },
       },
@@ -697,19 +709,19 @@ describe('intimacy_handle_step_back rule integration', () => {
         partners: ['a1', 'b1', 'c1', 'd1'].filter((p) => p !== id),
       };
       // Add anatomy:body component
-      ent.components['anatomy:body'] = { 
+      ent.components['anatomy:body'] = {
         recipeId: 'anatomy:human',
         body: {
           root: `body-${id}`,
           parts: {
             torso: `body-${id}`,
             leg_left: `leg-left-${id}`,
-            leg_right: `leg-right-${id}`
-          }
-        }
+            leg_right: `leg-right-${id}`,
+          },
+        },
       };
     }
-    
+
     // Add body and leg entities for each actor
     for (const id of ['a1', 'b1', 'c1', 'd1']) {
       entities.push(
@@ -735,7 +747,7 @@ describe('intimacy_handle_step_back rule integration', () => {
         }
       );
     }
-    
+
     testEnv.reset(entities);
 
     testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
@@ -765,12 +777,18 @@ describe('intimacy_handle_step_back rule integration', () => {
         ['b1', 'c1', 'd1'].filter((p) => p !== id).sort()
       );
       expect(
-        testEnv.entityManager.getComponentData(`leg-left-${id}`, 'core:movement')
+        testEnv.entityManager.getComponentData(
+          `leg-left-${id}`,
+          'core:movement'
+        )
       ).toEqual({
         locked: true,
       });
       expect(
-        testEnv.entityManager.getComponentData(`leg-right-${id}`, 'core:movement')
+        testEnv.entityManager.getComponentData(
+          `leg-right-${id}`,
+          'core:movement'
+        )
       ).toEqual({
         locked: true,
       });

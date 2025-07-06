@@ -11,21 +11,21 @@ describe('EntityDefinitionLoader Error Handling', () => {
 
   beforeEach(() => {
     mockSafeEventDispatcher = {
-      dispatch: jest.fn()
+      dispatch: jest.fn(),
     };
 
     mockComponentValidator = {
-      validateComponent: jest.fn()
+      validateComponent: jest.fn(),
     };
 
     mockLogger = {
       debug: jest.fn(),
       error: jest.fn(),
-      warn: jest.fn()
+      warn: jest.fn(),
     };
 
     mockSchemaRegistry = {
-      getSchema: jest.fn()
+      getSchema: jest.fn(),
     };
 
     // For these tests, we'll focus on testing the payload structure
@@ -42,14 +42,15 @@ describe('EntityDefinitionLoader Error Handling', () => {
             instancePath: '/sockets/0',
             keyword: 'additionalProperties',
             params: { additionalProperty: 'maxCount' },
-            message: 'must NOT have additional properties'
-          }
-        ]
+            message: 'must NOT have additional properties',
+          },
+        ],
       };
 
       // Test the payload structure that would be sent
       const payload = {
-        message: 'EntityLoader [anatomy]: Runtime validation failed for component \'anatomy:sockets\' in entity \'anatomy:humanoid_arm\' (file: humanoid_arm.entity.json)',
+        message:
+          "EntityLoader [anatomy]: Runtime validation failed for component 'anatomy:sockets' in entity 'anatomy:humanoid_arm' (file: humanoid_arm.entity.json)",
         details: {
           raw: JSON.stringify({
             modId: 'anatomy',
@@ -57,9 +58,13 @@ describe('EntityDefinitionLoader Error Handling', () => {
             entityId: 'anatomy:humanoid_arm',
             componentId: 'anatomy:sockets',
             errors: mockValidationResult.errors,
-            validationDetails: JSON.stringify(mockValidationResult.errors, null, 2)
-          })
-        }
+            validationDetails: JSON.stringify(
+              mockValidationResult.errors,
+              null,
+              2
+            ),
+          }),
+        },
       };
 
       // Verify payload structure
@@ -68,7 +73,7 @@ describe('EntityDefinitionLoader Error Handling', () => {
       expect(payload.details).toHaveProperty('raw');
       expect(Object.keys(payload)).toEqual(['message', 'details']);
       expect(Object.keys(payload.details)).toEqual(['raw']);
-      
+
       // Verify raw field contains valid JSON
       expect(() => JSON.parse(payload.details.raw)).not.toThrow();
       const parsedRaw = JSON.parse(payload.details.raw);
@@ -91,9 +96,9 @@ describe('EntityDefinitionLoader Error Handling', () => {
             modId,
             filename,
             entityId,
-            failedComponentIds
-          })
-        }
+            failedComponentIds,
+          }),
+        },
       };
 
       // Verify payload structure
@@ -102,7 +107,7 @@ describe('EntityDefinitionLoader Error Handling', () => {
       expect(payload.details).toHaveProperty('raw');
       expect(Object.keys(payload)).toEqual(['message', 'details']);
       expect(Object.keys(payload.details)).toEqual(['raw']);
-      
+
       // Verify raw field contains valid JSON
       expect(() => JSON.parse(payload.details.raw)).not.toThrow();
       const parsedRaw = JSON.parse(payload.details.raw);
@@ -119,9 +124,9 @@ describe('EntityDefinitionLoader Error Handling', () => {
           {
             instancePath: '/sockets/0',
             keyword: 'additionalProperties',
-            params: { additionalProperty: 'maxCount' }
-          }
-        ]
+            params: { additionalProperty: 'maxCount' },
+          },
+        ],
       };
 
       const rawField = JSON.stringify(errorDetails);
@@ -138,7 +143,8 @@ describe('EntityDefinitionLoader Error Handling', () => {
     it('should create payloads that comply with system error event schema', () => {
       // Test both payload formats used in entityDefinitionLoader
       const payload1 = {
-        message: 'EntityLoader [anatomy]: Runtime validation failed for component \'anatomy:sockets\' in entity \'anatomy:humanoid_arm\' (file: humanoid_arm.entity.json)',
+        message:
+          "EntityLoader [anatomy]: Runtime validation failed for component 'anatomy:sockets' in entity 'anatomy:humanoid_arm' (file: humanoid_arm.entity.json)",
         details: {
           raw: JSON.stringify({
             modId: 'anatomy',
@@ -146,27 +152,28 @@ describe('EntityDefinitionLoader Error Handling', () => {
             entityId: 'anatomy:humanoid_arm',
             componentId: 'anatomy:sockets',
             errors: [],
-            validationDetails: 'error details'
-          })
-        }
+            validationDetails: 'error details',
+          }),
+        },
       };
 
       const payload2 = {
-        message: 'Runtime component validation failed for entity \'anatomy:humanoid_arm\' in file \'humanoid_arm.entity.json\' (mod: anatomy). Invalid components: [anatomy:sockets]. See previous logs for details.',
+        message:
+          "Runtime component validation failed for entity 'anatomy:humanoid_arm' in file 'humanoid_arm.entity.json' (mod: anatomy). Invalid components: [anatomy:sockets]. See previous logs for details.",
         details: {
           raw: JSON.stringify({
             modId: 'anatomy',
             filename: 'humanoid_arm.entity.json',
             entityId: 'anatomy:humanoid_arm',
-            failedComponentIds: 'anatomy:sockets'
-          })
-        }
+            failedComponentIds: 'anatomy:sockets',
+          }),
+        },
       };
 
       // Both payloads should have only allowed properties
       expect(Object.keys(payload1)).toEqual(['message', 'details']);
       expect(Object.keys(payload1.details)).toEqual(['raw']);
-      
+
       expect(Object.keys(payload2)).toEqual(['message', 'details']);
       expect(Object.keys(payload2.details)).toEqual(['raw']);
 

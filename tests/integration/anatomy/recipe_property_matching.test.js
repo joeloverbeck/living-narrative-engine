@@ -1,8 +1,6 @@
 import { describe, expect, it, beforeEach, afterEach } from '@jest/globals';
 import AnatomyIntegrationTestBed from '../../common/anatomy/anatomyIntegrationTestBed.js';
-import {
-  ANATOMY_PART_COMPONENT_ID,
-} from '../../../src/constants/componentIds.js';
+import { ANATOMY_PART_COMPONENT_ID } from '../../../src/constants/componentIds.js';
 
 describe('Recipe Property Matching Integration', () => {
   let testBed;
@@ -30,13 +28,13 @@ describe('Recipe Property Matching Integration', () => {
         id: 'anatomy:human_hair_extra',
         components: {
           [ANATOMY_PART_COMPONENT_ID]: { subType: 'hair' },
-          'descriptors:color_extended': { 
+          'descriptors:color_extended': {
             color: 'blonde',
-            intensity: 'bright'  // Additional property not in recipe
+            intensity: 'bright', // Additional property not in recipe
           },
           'descriptors:length_hair': { length: 'long' },
           'descriptors:hair_style': { style: 'wavy' },
-          'descriptors:texture': { texture: 'smooth' },  // Additional property
+          'descriptors:texture': { texture: 'smooth' }, // Additional property
         },
       },
     });
@@ -49,8 +47,8 @@ describe('Recipe Property Matching Integration', () => {
 
     const recipeSlot = {
       properties: {
-        'descriptors:color_extended': { 
-          color: 'blonde'  // Only requires color, not intensity
+        'descriptors:color_extended': {
+          color: 'blonde', // Only requires color, not intensity
         },
         'descriptors:length_hair': { length: 'long' },
         'descriptors:hair_style': { style: 'wavy' },
@@ -81,10 +79,10 @@ describe('Recipe Property Matching Integration', () => {
         id: 'anatomy:hair_extended',
         components: {
           [ANATOMY_PART_COMPONENT_ID]: { subType: 'hair' },
-          'descriptors:color_extended': { 
+          'descriptors:color_extended': {
             color: 'blonde',
             intensity: 'bright',
-            highlight: 'subtle'
+            highlight: 'subtle',
           },
           'descriptors:texture': { texture: 'silky' },
           'descriptors:maintenance': { level: 'high' },
@@ -122,7 +120,7 @@ describe('Recipe Property Matching Integration', () => {
         id: 'anatomy:hair_incomplete',
         components: {
           [ANATOMY_PART_COMPONENT_ID]: { subType: 'hair' },
-          'descriptors:color_extended': { color: 'brown' },  // Wrong color
+          'descriptors:color_extended': { color: 'brown' }, // Wrong color
           'descriptors:length_hair': { length: 'long' },
           'descriptors:hair_style': { style: 'wavy' },
         },
@@ -137,7 +135,7 @@ describe('Recipe Property Matching Integration', () => {
 
     const recipeSlot = {
       properties: {
-        'descriptors:color_extended': { color: 'blonde' },  // Required but not present
+        'descriptors:color_extended': { color: 'blonde' }, // Required but not present
         'descriptors:length_hair': { length: 'long' },
       },
     };
@@ -149,7 +147,9 @@ describe('Recipe Property Matching Integration', () => {
         recipeSlot,
         Math.random
       )
-    ).rejects.toThrow('No entity definitions found matching anatomy requirements');
+    ).rejects.toThrow(
+      'No entity definitions found matching anatomy requirements'
+    );
   });
 
   it('should handle complex property matching scenarios like Amaia Castillo recipe', async () => {
@@ -159,18 +159,18 @@ describe('Recipe Property Matching Integration', () => {
         id: 'anatomy:human_hair_amaia',
         components: {
           [ANATOMY_PART_COMPONENT_ID]: { subType: 'hair' },
-          'descriptors:color_extended': { 
+          'descriptors:color_extended': {
             color: 'blonde',
             intensity: 'bright',
-            undertone: 'golden'
+            undertone: 'golden',
           },
-          'descriptors:length_hair': { 
+          'descriptors:length_hair': {
             length: 'long',
-            layers: true
+            layers: true,
           },
-          'descriptors:hair_style': { 
+          'descriptors:hair_style': {
             style: 'wavy',
-            volume: 'high'
+            volume: 'high',
           },
         },
       },

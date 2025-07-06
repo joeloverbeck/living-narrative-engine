@@ -31,10 +31,7 @@
           "description": "Required. The namespaced ID of the location to move the entity to. Can be a placeholder string like '{event.payload.currentLocationId}'."
         }
       },
-      "required": [
-        "entity_ref",
-        "target_location_id"
-      ],
+      "required": ["entity_ref", "target_location_id"],
       "additionalProperties": false
     }
   }

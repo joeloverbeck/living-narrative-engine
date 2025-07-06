@@ -153,7 +153,12 @@ describe('Scope Integration Tests', () => {
     registry.store('conditions', 'core:actor-is-not-rooted', {
       id: 'core:actor-is-not-rooted',
       logic: {
-        'hasBodyPartWithComponentValue': ['actor', 'core:movement', 'locked', false]
+        hasBodyPartWithComponentValue: [
+          'actor',
+          'core:movement',
+          'locked',
+          false,
+        ],
       },
     });
     registry.store('conditions', 'core:exit-is-unblocked', {
@@ -287,7 +292,7 @@ describe('Scope Integration Tests', () => {
       const entities = [
         {
           id: actorId,
-          components: { 
+          components: {
             [POSITION_COMPONENT_ID]: { locationId: room1Id },
             'anatomy:body': { rootEntityId: 'body-actor1' },
           },
@@ -423,11 +428,11 @@ describe('Scope Integration Tests', () => {
     it('should discover wait action with none scope', async () => {
       const actorId = 'actor1';
       entityManager.setEntities([
-        { 
-          id: actorId, 
+        {
+          id: actorId,
           components: {
             'anatomy:body': { rootEntityId: 'body-actor1' },
-          } 
+          },
         },
         {
           id: 'body-actor1',

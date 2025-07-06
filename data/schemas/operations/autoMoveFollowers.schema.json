@@ -31,10 +31,7 @@
           "minLength": 1
         }
       },
-      "required": [
-        "leader_id",
-        "destination_id"
-      ],
+      "required": ["leader_id", "destination_id"],
       "additionalProperties": false
     }
   }

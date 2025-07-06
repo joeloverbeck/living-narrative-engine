@@ -109,13 +109,13 @@ export function registerWorldAndEntity(container) {
     const jsonLogicService = new JsonLogicEvaluationService({
       logger: c.resolve(tokens.ILogger),
       gameDataRepository: c.resolve(tokens.IGameDataRepository),
-      serviceSetup: c.resolve(tokens.ServiceSetup)
+      serviceSetup: c.resolve(tokens.ServiceSetup),
     });
-    
+
     // Register custom operators
     const customOperators = c.resolve(tokens.JsonLogicCustomOperators);
     customOperators.registerOperators(jsonLogicService);
-    
+
     return jsonLogicService;
   });
   logger.debug(
@@ -276,9 +276,7 @@ export function registerWorldAndEntity(container) {
     });
   });
   logger.debug(
-    `World and Entity Registration: Registered ${String(
-      tokens.SocketManager
-    )}.`
+    `World and Entity Registration: Registered ${String(tokens.SocketManager)}.`
   );
 
   registrar.singletonFactory(tokens.EntityGraphBuilder, (c) => {
@@ -344,7 +342,7 @@ export function registerWorldAndEntity(container) {
     return new JsonLogicCustomOperators({
       logger: c.resolve(tokens.ILogger),
       bodyGraphService: c.resolve(tokens.BodyGraphService),
-      entityManager: c.resolve(tokens.IEntityManager)
+      entityManager: c.resolve(tokens.IEntityManager),
     });
   });
   logger.debug(
@@ -354,14 +352,13 @@ export function registerWorldAndEntity(container) {
   );
 
   // --- Anatomy Description Services ---
-  registrar
-    .singletonFactory(tokens.AnatomyFormattingService, (c) => {
+  registrar.singletonFactory(tokens.AnatomyFormattingService, (c) => {
     const anatomyFormattingService = new AnatomyFormattingService({
       dataRegistry: c.resolve(tokens.IDataRegistry),
       logger: c.resolve(tokens.ILogger),
       safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
     });
-    
+
     return anatomyFormattingService;
   });
   logger.debug(

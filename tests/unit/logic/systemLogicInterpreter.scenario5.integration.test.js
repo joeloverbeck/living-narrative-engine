@@ -250,7 +250,7 @@ describe('SystemLogicInterpreter - Integration Tests - Scenario 5: Multiple Rule
 
     // Create the bodyGraphService mock
     const mockBodyGraphService = {
-      hasPartWithComponentValue: jest.fn().mockReturnValue({ found: false })
+      hasPartWithComponentValue: jest.fn().mockReturnValue({ found: false }),
     };
 
     // 2. Instantiate the interpreter (remains the same)
