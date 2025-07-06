@@ -183,7 +183,7 @@ export class AnatomyCacheManager {
       // Create node
       const node = {
         entityId,
-        partType: anatomyPart?.subType || 'unknown',
+        partType: anatomyPart?.type || 'unknown',
         parentId,
         socketId,
         children: [],

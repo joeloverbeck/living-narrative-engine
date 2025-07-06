@@ -173,6 +173,9 @@ export class JsonLogicCustomOperators extends BaseService {
             return false;
           }
 
+          // Build the cache for this anatomy if not already built
+          bodyGraphService.buildAdjacencyCache(rootId);
+
           // Use BodyGraphService to find parts of the specified type
           const partsOfType = bodyGraphService.findPartsByType(
             rootId,
@@ -249,6 +252,9 @@ export class JsonLogicCustomOperators extends BaseService {
             );
             return false;
           }
+
+          // Build the cache for this anatomy if not already built
+          bodyGraphService.buildAdjacencyCache(rootId);
 
           // Use BodyGraphService to find parts of the specified type
           const partsOfType = bodyGraphService.findPartsByType(

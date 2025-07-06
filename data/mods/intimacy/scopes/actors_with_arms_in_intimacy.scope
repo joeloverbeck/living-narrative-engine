@@ -1,0 +1,1 @@
+intimacy:actors_with_arms_in_intimacy := actor.intimacy:closeness.partners[][{"hasPartOfType": ["entity", "arm"]}]

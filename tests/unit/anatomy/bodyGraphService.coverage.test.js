@@ -37,21 +37,21 @@ describe('BodyGraphService', () => {
       torso: {
         id: 'torso',
         components: {
-          'anatomy:part': { subType: 'torso' },
+          'anatomy:part': { type: 'torso' },
           'anatomy:body': { root: 'torso' },
         },
       },
       arm: {
         id: 'arm',
         components: {
-          'anatomy:part': { subType: 'arm' },
+          'anatomy:part': { type: 'arm' },
           'anatomy:joint': { parentId: 'torso', socketId: 'shoulder' },
         },
       },
       hand: {
         id: 'hand',
         components: {
-          'anatomy:part': { subType: 'hand' },
+          'anatomy:part': { type: 'hand' },
           'anatomy:joint': { parentId: 'arm', socketId: 'wrist' },
           'weapon:grip': {},
           status: { locked: true },

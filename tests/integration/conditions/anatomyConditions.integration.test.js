@@ -35,6 +35,7 @@ describe('Anatomy Conditions Integration', () => {
       hasPartWithComponentValue: jest.fn(),
       findPartsByType: jest.fn(),
       getAllParts: jest.fn(),
+      buildAdjacencyCache: jest.fn(),
     };
 
     mockEntityManager = {
