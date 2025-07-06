@@ -71,16 +71,24 @@ export class JsonLogicCustomOperators extends BaseService {
         try {
           // 'this' is the evaluation context
           const context = this;
+          
+          logger.debug(`hasPartWithComponentValue called with entityPath='${entityPath}', componentId='${componentId}', propertyPath='${propertyPath}', expectedValue='${expectedValue}'`);
 
-          // Navigate the entity path (e.g., "actor" or "target")
-          let entity = context;
-          const pathParts = entityPath.split('.');
-          for (const part of pathParts) {
-            if (!entity || typeof entity !== 'object') {
-              logger.warn(`Invalid path ${entityPath} - ${part} not found`);
-              return false;
+          let entity;
+          // Special handling for "." which means the current entity in filter context
+          if (entityPath === '.') {
+            entity = context.entity;
+          } else {
+            // Navigate the entity path (e.g., "actor" or "target")
+            entity = context;
+            const pathParts = entityPath.split('.');
+            for (const part of pathParts) {
+              if (!entity || typeof entity !== 'object') {
+                logger.warn(`Invalid path ${entityPath} - ${part} not found`);
+                return false;
+              }
+              entity = entity[part];
             }
-            entity = entity[part];
           }
 
           if (!entity || !entity.id) {
@@ -89,6 +97,7 @@ export class JsonLogicCustomOperators extends BaseService {
           }
 
           const entityId = entity.id;
+          logger.debug(`hasPartWithComponentValue: Found entity ID: ${entityId}`);
 
           // Get the body component for this entity
           const bodyComponent = entityManager.getComponentData(
@@ -129,16 +138,24 @@ export class JsonLogicCustomOperators extends BaseService {
         try {
           // 'this' is the evaluation context
           const context = this;
-
-          // Navigate the entity path (e.g., "actor" or "target")
-          let entity = context;
-          const pathParts = entityPath.split('.');
-          for (const part of pathParts) {
-            if (!entity || typeof entity !== 'object') {
-              logger.warn(`Invalid path ${entityPath} - ${part} not found`);
-              return false;
+          
+          logger.debug(`hasPartOfType called with entityPath='${entityPath}', partType='${partType}'`);
+          
+          let entity;
+          // Special handling for "." which means the current entity in filter context
+          if (entityPath === '.') {
+            entity = context.entity;
+          } else {
+            // Navigate the entity path (e.g., "actor" or "target")
+            entity = context;
+            const pathParts = entityPath.split('.');
+            for (const part of pathParts) {
+              if (!entity || typeof entity !== 'object') {
+                logger.warn(`Invalid path ${entityPath} - ${part} not found`);
+                return false;
+              }
+              entity = entity[part];
             }
-            entity = entity[part];
           }
 
           if (!entity || !entity.id) {
@@ -210,15 +227,21 @@ export class JsonLogicCustomOperators extends BaseService {
           // 'this' is the evaluation context
           const context = this;
 
-          // Navigate the entity path (e.g., "actor" or "target")
-          let entity = context;
-          const pathParts = entityPath.split('.');
-          for (const part of pathParts) {
-            if (!entity || typeof entity !== 'object') {
-              logger.warn(`Invalid path ${entityPath} - ${part} not found`);
-              return false;
+          let entity;
+          // Special handling for "." which means the current entity in filter context
+          if (entityPath === '.') {
+            entity = context.entity;
+          } else {
+            // Navigate the entity path (e.g., "actor" or "target")
+            entity = context;
+            const pathParts = entityPath.split('.');
+            for (const part of pathParts) {
+              if (!entity || typeof entity !== 'object') {
+                logger.warn(`Invalid path ${entityPath} - ${part} not found`);
+                return false;
+              }
+              entity = entity[part];
             }
-            entity = entity[part];
           }
 
           if (!entity || !entity.id) {
