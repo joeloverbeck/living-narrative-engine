@@ -62,9 +62,7 @@ describe('engineVersionSatisfies Utility', () => {
     });
 
     // Example tests if ENGINE_VERSION were '1.5.2' (as per ticket examples)
-    // it('should return true for 1.5.x', () => expect(engineVersionSatisfies('1.5.x')).toBe(true));
-    // it('should return true for ^1.4.0', () => expect(engineVersionSatisfies('^1.4.0')).toBe(true));
-    // it('should return true for >=1.0.0', () => expect(engineVersionSatisfies('>=1.0.0')).toBe(true));
+    // These examples are omitted in this test suite since ENGINE_VERSION is 0.0.1
   });
 
   describe('Failure Paths (Returns false)', () => {
