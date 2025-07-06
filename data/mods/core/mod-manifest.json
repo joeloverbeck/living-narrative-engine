@@ -42,11 +42,8 @@
     ],
     "conditions": [
       "actor-can-move.condition.json",
-      "actor-has-muscular-legs.condition.json",
-      "actor-has-shapely-legs.condition.json",
       "actor-is-following.condition.json",
       "actor-is-not-null.condition.json",
-      "actor-is-not-rooted.condition.json",
       "entity-at-location.condition.json",
       "entity-has-actor-component.condition.json",
       "entity-is-following-actor.condition.json",

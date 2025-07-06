@@ -20,7 +20,7 @@
           "white",
           "gray"
         ],
-        "default": "brown"
+        "default": "black"
       }
     },
     "required": ["color"],

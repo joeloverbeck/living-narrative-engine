@@ -368,7 +368,7 @@ describe('BaseManifestItemLoader Constructor', () => {
             mockRegistry,
             validLogger
           )
-      ).toThrow(new TypeError('Missing required dependency: IConfiguration.'));
+      ).toThrow(new Error('Missing required dependency: IConfiguration.'));
       expect(validLogger.error).toHaveBeenCalledWith(
         'Missing required dependency: IConfiguration.'
       );
@@ -388,7 +388,7 @@ describe('BaseManifestItemLoader Constructor', () => {
             validLogger
           )
       ).toThrow(
-        new TypeError(
+        new Error(
           "Invalid or missing method 'getModsBasePath' on dependency 'IConfiguration'."
         )
       );
@@ -415,7 +415,7 @@ describe('BaseManifestItemLoader Constructor', () => {
             validLogger
           )
       ).toThrow(
-        new TypeError(
+        new Error(
           "Invalid or missing method 'getModsBasePath' on dependency 'IConfiguration'."
         )
       );
@@ -442,7 +442,7 @@ describe('BaseManifestItemLoader Constructor', () => {
             validLogger
           )
       ).toThrow(
-        new TypeError(
+        new Error(
           "Invalid or missing method 'getContentTypeSchemaId' on dependency 'IConfiguration'."
         )
       );
@@ -466,7 +466,7 @@ describe('BaseManifestItemLoader Constructor', () => {
             mockRegistry,
             validLogger
           )
-      ).toThrow(new TypeError('Missing required dependency: IPathResolver.'));
+      ).toThrow(new Error('Missing required dependency: IPathResolver.'));
       expect(validLogger.error).toHaveBeenCalledWith(
         'Missing required dependency: IPathResolver.'
       );
@@ -490,7 +490,7 @@ describe('BaseManifestItemLoader Constructor', () => {
             validLogger
           )
       ).toThrow(
-        new TypeError(
+        new Error(
           "Invalid or missing method 'resolveModContentPath' on dependency 'IPathResolver'."
         )
       );
@@ -514,7 +514,7 @@ describe('BaseManifestItemLoader Constructor', () => {
             mockRegistry,
             validLogger
           )
-      ).toThrow(new TypeError('Missing required dependency: IDataFetcher.'));
+      ).toThrow(new Error('Missing required dependency: IDataFetcher.'));
       expect(validLogger.error).toHaveBeenCalledWith(
         'Missing required dependency: IDataFetcher.'
       );
@@ -538,7 +538,7 @@ describe('BaseManifestItemLoader Constructor', () => {
             validLogger
           )
       ).toThrow(
-        new TypeError(
+        new Error(
           "Invalid or missing method 'fetch' on dependency 'IDataFetcher'."
         )
       );
@@ -562,9 +562,7 @@ describe('BaseManifestItemLoader Constructor', () => {
             mockRegistry,
             validLogger
           )
-      ).toThrow(
-        new TypeError('Missing required dependency: ISchemaValidator.')
-      );
+      ).toThrow(new Error('Missing required dependency: ISchemaValidator.'));
       expect(validLogger.error).toHaveBeenCalledWith(
         'Missing required dependency: ISchemaValidator.'
       );
@@ -588,7 +586,7 @@ describe('BaseManifestItemLoader Constructor', () => {
             validLogger
           )
       ).toThrow(
-        new TypeError(
+        new Error(
           "Invalid or missing method 'validate' on dependency 'ISchemaValidator'."
         )
       );
@@ -615,7 +613,7 @@ describe('BaseManifestItemLoader Constructor', () => {
             validLogger
           )
       ).toThrow(
-        new TypeError(
+        new Error(
           "Invalid or missing method 'getValidator' on dependency 'ISchemaValidator'."
         )
       );
@@ -643,7 +641,7 @@ describe('BaseManifestItemLoader Constructor', () => {
             validLogger
           )
       ).toThrow(
-        new TypeError(
+        new Error(
           "Invalid or missing method 'isSchemaLoaded' on dependency 'ISchemaValidator'."
         )
       );
@@ -667,7 +665,7 @@ describe('BaseManifestItemLoader Constructor', () => {
             null,
             validLogger
           )
-      ).toThrow(new TypeError('Missing required dependency: IDataRegistry.'));
+      ).toThrow(new Error('Missing required dependency: IDataRegistry.'));
       expect(validLogger.error).toHaveBeenCalledWith(
         'Missing required dependency: IDataRegistry.'
       );
@@ -691,7 +689,7 @@ describe('BaseManifestItemLoader Constructor', () => {
             validLogger
           )
       ).toThrow(
-        new TypeError(
+        new Error(
           "Invalid or missing method 'store' on dependency 'IDataRegistry'."
         )
       );
@@ -718,7 +716,7 @@ describe('BaseManifestItemLoader Constructor', () => {
             validLogger
           )
       ).toThrow(
-        new TypeError(
+        new Error(
           "Invalid or missing method 'get' on dependency 'IDataRegistry'."
         )
       );
@@ -730,7 +728,7 @@ describe('BaseManifestItemLoader Constructor', () => {
 
   describe('ILogger Validation', () => {
     // These tests run before the logger is assigned internally, so they throw directly.
-    it('should throw TypeError if logger is null', () => {
+    it('should throw Error if logger is null', () => {
       expect(
         () =>
           new BaseManifestItemLoader(
@@ -742,9 +740,9 @@ describe('BaseManifestItemLoader Constructor', () => {
             mockRegistry,
             null
           )
-      ).toThrow(new TypeError('Missing required dependency: ILogger.'));
+      ).toThrow(new Error('Missing required dependency: ILogger.'));
     });
-    it('should throw TypeError if logger is undefined', () => {
+    it('should throw Error if logger is undefined', () => {
       expect(
         () =>
           new BaseManifestItemLoader(
@@ -756,10 +754,10 @@ describe('BaseManifestItemLoader Constructor', () => {
             mockRegistry,
             undefined
           )
-      ).toThrow(new TypeError('Missing required dependency: ILogger.'));
+      ).toThrow(new Error('Missing required dependency: ILogger.'));
     });
 
-    it('should throw TypeError if logger is not an object', () => {
+    it('should throw Error if logger is not an object', () => {
       expect(
         () =>
           new BaseManifestItemLoader(
@@ -772,13 +770,11 @@ describe('BaseManifestItemLoader Constructor', () => {
             'not-an-object'
           )
       ).toThrow(
-        new TypeError(
-          "Invalid or missing method 'info' on dependency 'ILogger'."
-        )
+        new Error("Invalid or missing method 'info' on dependency 'ILogger'.")
       );
     });
 
-    it('should throw TypeError if logger is missing info', () => {
+    it('should throw Error if logger is missing info', () => {
       const incompleteLogger = { ...createMockLogger(), info: undefined };
       expect(
         () =>
@@ -792,12 +788,10 @@ describe('BaseManifestItemLoader Constructor', () => {
             incompleteLogger
           )
       ).toThrow(
-        new TypeError(
-          "Invalid or missing method 'info' on dependency 'ILogger'."
-        )
+        new Error("Invalid or missing method 'info' on dependency 'ILogger'.")
       );
     });
-    it('should throw TypeError if logger is missing warn', () => {
+    it('should throw Error if logger is missing warn', () => {
       const incompleteLogger = { ...createMockLogger(), warn: undefined };
       expect(
         () =>
@@ -811,12 +805,10 @@ describe('BaseManifestItemLoader Constructor', () => {
             incompleteLogger
           )
       ).toThrow(
-        new TypeError(
-          "Invalid or missing method 'warn' on dependency 'ILogger'."
-        )
+        new Error("Invalid or missing method 'warn' on dependency 'ILogger'.")
       );
     });
-    it('should throw TypeError if logger is missing error', () => {
+    it('should throw Error if logger is missing error', () => {
       const incompleteLogger = { ...createMockLogger(), error: undefined };
       expect(
         () =>
@@ -830,12 +822,10 @@ describe('BaseManifestItemLoader Constructor', () => {
             incompleteLogger
           )
       ).toThrow(
-        new TypeError(
-          "Invalid or missing method 'error' on dependency 'ILogger'."
-        )
+        new Error("Invalid or missing method 'error' on dependency 'ILogger'.")
       );
     });
-    it('should throw TypeError if logger is missing debug', () => {
+    it('should throw Error if logger is missing debug', () => {
       const incompleteLogger = { ...createMockLogger(), debug: undefined };
       expect(
         () =>
@@ -849,9 +839,7 @@ describe('BaseManifestItemLoader Constructor', () => {
             incompleteLogger
           )
       ).toThrow(
-        new TypeError(
-          "Invalid or missing method 'debug' on dependency 'ILogger'."
-        )
+        new Error("Invalid or missing method 'debug' on dependency 'ILogger'.")
       );
     });
   });
