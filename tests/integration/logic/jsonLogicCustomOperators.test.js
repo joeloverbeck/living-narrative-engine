@@ -56,17 +56,17 @@ describe('JsonLogicCustomOperators Integration Tests', () => {
       // Add components to create entities
       entityManager.addComponent(characterId, 'core:name', { text: 'Test Character' });
       
-      entityManager.addComponent(torsoId, 'anatomy:part', { type: 'torso' });
+      entityManager.addComponent(torsoId, 'anatomy:part', { subType: 'torso' });
       entityManager.addComponent(torsoId, 'core:name', { text: 'torso' });
 
-      entityManager.addComponent(leftArmId, 'anatomy:part', { type: 'arm' });
+      entityManager.addComponent(leftArmId, 'anatomy:part', { subType: 'arm' });
       entityManager.addComponent(leftArmId, 'core:name', { text: 'left arm' });
       entityManager.addComponent(leftArmId, 'anatomy:joint', {
         parentId: torsoId,
         socketId: 'left_shoulder'
       });
 
-      entityManager.addComponent(rightArmId, 'anatomy:part', { type: 'arm' });
+      entityManager.addComponent(rightArmId, 'anatomy:part', { subType: 'arm' });
       entityManager.addComponent(rightArmId, 'core:name', { text: 'right arm' });
       entityManager.addComponent(rightArmId, 'anatomy:joint', {
         parentId: torsoId,
@@ -110,7 +110,7 @@ describe('JsonLogicCustomOperators Integration Tests', () => {
 
       entityManager.addComponent(characterId, 'core:name', { text: 'Armless Character' });
       
-      entityManager.addComponent(torsoId, 'anatomy:part', { type: 'torso' });
+      entityManager.addComponent(torsoId, 'anatomy:part', { subType: 'torso' });
       entityManager.addComponent(torsoId, 'core:name', { text: 'torso' });
 
       // Add anatomy:body component without arms
@@ -166,17 +166,17 @@ describe('JsonLogicCustomOperators Integration Tests', () => {
 
       entityManager.addComponent(characterId, 'core:name', { text: 'Full Body Character' });
       
-      entityManager.addComponent(torsoId, 'anatomy:part', { type: 'torso' });
+      entityManager.addComponent(torsoId, 'anatomy:part', { subType: 'torso' });
       entityManager.addComponent(torsoId, 'core:name', { text: 'torso' });
 
-      entityManager.addComponent(headId, 'anatomy:part', { type: 'head' });
+      entityManager.addComponent(headId, 'anatomy:part', { subType: 'head' });
       entityManager.addComponent(headId, 'core:name', { text: 'head' });
       entityManager.addComponent(headId, 'anatomy:joint', {
         parentId: torsoId,
         socketId: 'neck'
       });
 
-      entityManager.addComponent(leftLegId, 'anatomy:part', { type: 'leg' });
+      entityManager.addComponent(leftLegId, 'anatomy:part', { subType: 'leg' });
       entityManager.addComponent(leftLegId, 'core:name', { text: 'left leg' });
       entityManager.addComponent(leftLegId, 'anatomy:joint', {
         parentId: torsoId,
@@ -230,10 +230,10 @@ describe('JsonLogicCustomOperators Integration Tests', () => {
 
       entityManager.addComponent(characterId, 'core:name', { text: 'Test Character' });
       
-      entityManager.addComponent(torsoId, 'anatomy:part', { type: 'torso' });
+      entityManager.addComponent(torsoId, 'anatomy:part', { subType: 'torso' });
       entityManager.addComponent(torsoId, 'core:name', { text: 'torso' });
 
-      entityManager.addComponent(armId, 'anatomy:part', { type: 'arm' });
+      entityManager.addComponent(armId, 'anatomy:part', { subType: 'arm' });
       entityManager.addComponent(armId, 'core:name', { text: 'left arm' });
       entityManager.addComponent(armId, 'anatomy:joint', {
         parentId: torsoId,
@@ -310,17 +310,17 @@ describe('JsonLogicCustomOperators Integration Tests', () => {
       });
 
       // Create the body parts that should exist based on the recipe
-      entityManager.addComponent(torsoId, 'anatomy:part', { type: 'torso' });
+      entityManager.addComponent(torsoId, 'anatomy:part', { subType: 'torso' });
       entityManager.addComponent(torsoId, 'core:name', { text: 'torso' });
 
-      entityManager.addComponent(leftArmId, 'anatomy:part', { type: 'arm' });
+      entityManager.addComponent(leftArmId, 'anatomy:part', { subType: 'arm' });
       entityManager.addComponent(leftArmId, 'core:name', { text: 'left arm' });
       entityManager.addComponent(leftArmId, 'anatomy:joint', {
         parentId: torsoId,
         socketId: 'left_shoulder'
       });
 
-      entityManager.addComponent(rightArmId, 'anatomy:part', { type: 'arm' });
+      entityManager.addComponent(rightArmId, 'anatomy:part', { subType: 'arm' });
       entityManager.addComponent(rightArmId, 'core:name', { text: 'right arm' });
       entityManager.addComponent(rightArmId, 'anatomy:joint', {
         parentId: torsoId,

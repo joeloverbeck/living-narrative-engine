@@ -39,7 +39,7 @@ describe('Anatomy Runtime Behavior Integration', () => {
       },
       'anatomy:part': {
         id: 'anatomy:part',
-        data: { type: null },
+        data: { subType: null },
       },
       'anatomy:sockets': {
         id: 'anatomy:sockets',
@@ -52,7 +52,7 @@ describe('Anatomy Runtime Behavior Integration', () => {
       'test:simple_torso': {
         id: 'test:simple_torso',
         components: {
-          'anatomy:part': { type: 'torso' },
+          'anatomy:part': { subType: 'torso' },
           'anatomy:sockets': {
             sockets: [
               { id: 'left_arm_socket', allowedTypes: ['arm'], maxCount: 1 },
@@ -65,7 +65,7 @@ describe('Anatomy Runtime Behavior Integration', () => {
       'test:detachable_arm': {
         id: 'test:detachable_arm',
         components: {
-          'anatomy:part': { type: 'arm' },
+          'anatomy:part': { subType: 'arm' },
           'anatomy:sockets': {
             sockets: [
               { id: 'hand_socket', allowedTypes: ['hand'], maxCount: 1 },
@@ -76,13 +76,13 @@ describe('Anatomy Runtime Behavior Integration', () => {
       'test:simple_hand': {
         id: 'test:simple_hand',
         components: {
-          'anatomy:part': { type: 'hand' },
+          'anatomy:part': { subType: 'hand' },
         },
       },
       'test:simple_head': {
         id: 'test:simple_head',
         components: {
-          'anatomy:part': { type: 'head' },
+          'anatomy:part': { subType: 'head' },
         },
       },
     });

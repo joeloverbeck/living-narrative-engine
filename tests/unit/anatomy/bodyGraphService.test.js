@@ -318,9 +318,9 @@ describe('BodyGraphService', () => {
       mockEntityManager.getComponentData.mockImplementation(
         (id, componentId) => {
           if (componentId === 'anatomy:part') {
-            if (id === 'torso-1') return { type: 'torso' };
-            if (id.startsWith('arm-')) return { type: 'arm' };
-            if (id.startsWith('hand-')) return { type: 'hand' };
+            if (id === 'torso-1') return { subType: 'torso' };
+            if (id.startsWith('arm-')) return { subType: 'arm' };
+            if (id.startsWith('hand-')) return { subType: 'hand' };
           }
           if (componentId === 'anatomy:joint') {
             if (id === 'arm-1')

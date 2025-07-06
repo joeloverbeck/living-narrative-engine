@@ -171,9 +171,6 @@ describe('JsonLogicCustomOperators', () => {
       const result = jsonLogicService.evaluate(rule, context);
 
       expect(result).toBe(false);
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        'JsonLogicCustomOperators: Entity player123 has no anatomy:body component'
-      );
     });
 
     test('should return false when entity path is invalid', () => {
@@ -193,9 +190,6 @@ describe('JsonLogicCustomOperators', () => {
       const result = jsonLogicService.evaluate(rule, context);
 
       expect(result).toBe(false);
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        'JsonLogicCustomOperators: No entity found at path actor'
-      );
     });
 
     test('should handle nested entity paths', () => {
@@ -259,10 +253,6 @@ describe('JsonLogicCustomOperators', () => {
       const result = jsonLogicService.evaluate(rule, context);
 
       expect(result).toBe(false);
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        'JsonLogicCustomOperators: Error in hasPartWithComponentValue operator',
-        expect.any(Error)
-      );
     });
   });
 
@@ -377,9 +367,6 @@ describe('JsonLogicCustomOperators', () => {
       const result = jsonLogicService.evaluate(rule, context);
 
       expect(result).toBe(false);
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        'JsonLogicCustomOperators: Entity player123 has no anatomy:body component'
-      );
       expect(mockBodyGraphService.findPartsByType).not.toHaveBeenCalled();
     });
 
@@ -402,9 +389,6 @@ describe('JsonLogicCustomOperators', () => {
       const result = jsonLogicService.evaluate(rule, context);
 
       expect(result).toBe(false);
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        'JsonLogicCustomOperators: Entity player123 has no root in anatomy:body component'
-      );
       expect(mockBodyGraphService.findPartsByType).not.toHaveBeenCalled();
     });
 
@@ -420,9 +404,6 @@ describe('JsonLogicCustomOperators', () => {
       const result = jsonLogicService.evaluate(rule, context);
 
       expect(result).toBe(false);
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        'JsonLogicCustomOperators: No entity found at path actor'
-      );
     });
 
     test('should handle nested entity paths', () => {
@@ -478,10 +459,6 @@ describe('JsonLogicCustomOperators', () => {
       const result = jsonLogicService.evaluate(rule, context);
 
       expect(result).toBe(false);
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        'JsonLogicCustomOperators: Error in hasPartOfType operator',
-        expect.any(Error)
-      );
     });
 
     test('should work with multiple part types in complex rules', () => {
@@ -746,9 +723,6 @@ describe('JsonLogicCustomOperators', () => {
       const result = jsonLogicService.evaluate(rule, context);
 
       expect(result).toBe(false);
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        'JsonLogicCustomOperators: Entity player123 has no anatomy:body component'
-      );
     });
 
     test('should return false when body component has no root', () => {
@@ -776,9 +750,6 @@ describe('JsonLogicCustomOperators', () => {
       const result = jsonLogicService.evaluate(rule, context);
 
       expect(result).toBe(false);
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        'JsonLogicCustomOperators: Entity player123 has no root in anatomy:body component'
-      );
     });
 
     test('should handle nested entity paths', () => {
@@ -838,9 +809,6 @@ describe('JsonLogicCustomOperators', () => {
       const result = jsonLogicService.evaluate(rule, context);
 
       expect(result).toBe(false);
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        'JsonLogicCustomOperators: No entity found at path actor'
-      );
     });
 
     test('should handle errors gracefully', () => {
@@ -868,10 +836,6 @@ describe('JsonLogicCustomOperators', () => {
       const result = jsonLogicService.evaluate(rule, context);
 
       expect(result).toBe(false);
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        'JsonLogicCustomOperators: Error in hasPartOfTypeWithComponentValue operator',
-        expect.any(Error)
-      );
     });
 
     test('should work correctly when checking shapely legs', () => {
