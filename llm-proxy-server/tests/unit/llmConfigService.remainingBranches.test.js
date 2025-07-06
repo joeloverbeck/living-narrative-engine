@@ -1,4 +1,5 @@
 import { describe, test, expect, beforeEach, jest } from '@jest/globals';
+import * as path from 'node:path';
 
 let LlmConfigService;
 
@@ -13,6 +14,14 @@ const createFsReader = () => ({ readFile: jest.fn() });
 const createAppConfig = (pathArg) => ({
   getLlmConfigPath: jest.fn(() => pathArg),
 });
+
+const sampleConfig = {
+  defaultConfigId: 'gpt4',
+  configs: {
+    gpt4: { configId: 'gpt4', apiType: 'openai', apiKeyFileName: 'key.txt' },
+    local: { configId: 'local', apiType: 'ollama' },
+  },
+};
 
 describe('LlmConfigService remaining branches', () => {
   let fsReader;
@@ -84,5 +93,18 @@ describe('LlmConfigService remaining branches', () => {
     expect(logger.warn).toHaveBeenCalledWith(
       expect.stringContaining('not found')
     );
+  });
+
+  test('getResolvedConfigPath exposes resolved path', async () => {
+    expect(service.getResolvedConfigPath()).toBeNull();
+    await service.initialize();
+    const resolved = path.resolve('/tmp/llm.json');
+    expect(service.getResolvedConfigPath()).toBe(resolved);
+  });
+
+  test('getInitializationErrorDetails returns null when no error', async () => {
+    mockLoader.mockResolvedValue({ error: false, llmConfigs: sampleConfig });
+    await service.initialize();
+    expect(service.getInitializationErrorDetails()).toBeNull();
   });
 });
