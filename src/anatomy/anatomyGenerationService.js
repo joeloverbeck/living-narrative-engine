@@ -9,7 +9,6 @@
 
 import { ANATOMY_BODY_COMPONENT_ID } from '../constants/componentIds.js';
 import { InvalidArgumentError } from '../errors/invalidArgumentError.js';
-import { ValidationError } from '../errors/validationError.js';
 import { AnatomyOrchestrator } from './orchestration/anatomyOrchestrator.js';
 import { AnatomyGenerationWorkflow } from './workflows/anatomyGenerationWorkflow.js';
 import { DescriptionGenerationWorkflow } from './workflows/descriptionGenerationWorkflow.js';
@@ -32,21 +31,21 @@ import { AnatomyErrorHandler } from './orchestration/anatomyErrorHandler.js';
 export class AnatomyGenerationService {
   /** @type {IEntityManager} */
   #entityManager;
-  /** @type {IDataRegistry} */
-  #dataRegistry;
   /** @type {ILogger} */
   #logger;
   /** @type {AnatomyOrchestrator} */
   #orchestrator;
 
   /**
-   * @param {object} deps
-   * @param {IEntityManager} deps.entityManager
-   * @param {IDataRegistry} deps.dataRegistry
-   * @param {ILogger} deps.logger
-   * @param {BodyBlueprintFactory} deps.bodyBlueprintFactory
-   * @param {AnatomyDescriptionService} deps.anatomyDescriptionService
-   * @param {BodyGraphService} deps.bodyGraphService
+   * Creates an instance of the service.
+   *
+   * @param {object} deps - Constructor dependencies.
+   * @param {IEntityManager} deps.entityManager - Entity manager for entity lookups.
+   * @param {IDataRegistry} deps.dataRegistry - Registry used by workflows.
+   * @param {ILogger} deps.logger - Logger instance.
+   * @param {BodyBlueprintFactory} deps.bodyBlueprintFactory - Factory for body blueprints.
+   * @param {AnatomyDescriptionService} deps.anatomyDescriptionService - Service providing textual descriptions.
+   * @param {BodyGraphService} deps.bodyGraphService - Service for body graph operations.
    */
   constructor({
     entityManager,
@@ -69,7 +68,6 @@ export class AnatomyGenerationService {
       throw new InvalidArgumentError('bodyGraphService is required');
 
     this.#entityManager = entityManager;
-    this.#dataRegistry = dataRegistry;
     this.#logger = logger;
 
     // Create workflows
@@ -173,7 +171,7 @@ export class AnatomyGenerationService {
    * Generates anatomy for multiple entities
    *
    * @param {string[]} entityIds - Array of entity instance IDs
-   * @returns {Promise<{generated: string[], skipped: string[], failed: string[]}>}
+   * @returns {Promise<{generated: string[], skipped: string[], failed: string[]}>} Result lists of processed entity IDs.
    */
   async generateAnatomyForEntities(entityIds) {
     const results = {

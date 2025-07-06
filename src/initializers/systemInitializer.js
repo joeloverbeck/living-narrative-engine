@@ -24,19 +24,19 @@ class SystemInitializer {
   /** @type {string} */
   #initializationTag;
   /** @type {ValidatedEventDispatcher} */
-  #validatedEventDispatcher;
+  #validatedEventDispatcher; // eslint-disable-line no-unused-private-class-members
   /** @type {EventDispatchService} */
   #eventDispatchService;
 
   /**
    * Creates an instance of SystemInitializer.
    *
-   * @param {object} dependencies
+   * @param {object} dependencies - Constructor dependencies.
    * @param {ILogger} dependencies.logger - The logging service instance.
    * @param {ValidatedEventDispatcher} dependencies.validatedEventDispatcher - Service for dispatching validated events.
    * @param {EventDispatchService} dependencies.eventDispatchService - Service for event dispatching with logging.
    * @param {string} dependencies.initializationTag - The tag used to identify systems for initialization.
-   * @param dependencies.resolver
+   * @param {import('../interfaces/IServiceResolver.js').IServiceResolver} dependencies.resolver - Resolver used to locate systems.
    * @throws {Error} If resolver, logger, initializationTag, validatedEventDispatcher, or eventDispatchService is invalid or missing.
    */
   constructor({
