@@ -1,7 +1,6 @@
 import { describe, expect, it, beforeEach, afterEach } from '@jest/globals';
 import AnatomyIntegrationTestBed from '../../common/anatomy/anatomyIntegrationTestBed.js';
 import { AnatomyGenerationService } from '../../../src/anatomy/anatomyGenerationService.js';
-import { BodyBlueprintFactory } from '../../../src/anatomy/bodyBlueprintFactory.js';
 import { AnatomyInitializationService } from '../../../src/anatomy/anatomyInitializationService.js';
 import { BodyGraphService } from '../../../src/anatomy/bodyGraphService.js';
 import { ENTITY_CREATED_ID } from '../../../src/constants/eventIds.js';
@@ -16,7 +15,6 @@ const ANATOMY_JOINT_COMPONENT_ID = 'anatomy:joint';
 describe('Anatomy Error Handling Integration', () => {
   let testBed;
   let anatomyGenerationService;
-  let bodyBlueprintFactory;
 
   beforeEach(() => {
     testBed = new AnatomyIntegrationTestBed();
@@ -29,8 +27,6 @@ describe('Anatomy Error Handling Integration', () => {
       anatomyDescriptionService: testBed.mockAnatomyDescriptionService,
       bodyGraphService: testBed.bodyGraphService,
     });
-
-    bodyBlueprintFactory = testBed.bodyBlueprintFactory;
 
     // Load test anatomy components
     testBed.loadComponents({
@@ -643,17 +639,11 @@ describe('Anatomy Error Handling Integration', () => {
       // Either one succeeds and others return false (already generated)
       // Or all succeed (if they don't check for existing anatomy atomically)
       const fulfilled = results.filter((r) => r.status === 'fulfilled');
-      const rejected = results.filter((r) => r.status === 'rejected');
 
       // At least some should complete without throwing
       expect(fulfilled.length).toBeGreaterThan(0);
 
-      // If any succeeded with true, that's good
-      const successCount = fulfilled.filter((r) => r.value === true).length;
-      // If any returned false (already generated), that's also expected
-      const alreadyGeneratedCount = fulfilled.filter(
-        (r) => r.value === false
-      ).length;
+      // If any succeeded with true or returned false (already generated), that's ok
 
       // The important thing is the anatomy was generated
       const bodyComponent = testBed.entityManager.getComponentData(
@@ -806,6 +796,7 @@ describe('Anatomy Error Handling Integration', () => {
         expect(typeof result).toBe('boolean');
       } catch (error) {
         // It's ok if it throws an error for deep nesting
+        // eslint-disable-next-line jest/no-conditional-expect
         expect(error).toBeDefined();
       }
     });

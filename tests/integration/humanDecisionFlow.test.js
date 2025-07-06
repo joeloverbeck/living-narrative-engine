@@ -9,7 +9,6 @@ import { HumanDecisionProvider } from '../../src/turns/providers/humanDecisionPr
 import { TurnActionFactory } from '../../src/turns/factories/turnActionFactory.js';
 import { GenericTurnStrategy } from '../../src/turns/strategies/genericTurnStrategy.js';
 // Import the adapter, which is the key to the fix
-import { ActionIndexerAdapter } from '../../src/turns/adapters/actionIndexerAdapter.js';
 
 /**
  * Integration test verifying that the human decision flow
