@@ -1,0 +1,9 @@
+{
+  "$schema": "http://example.com/schemas/condition.schema.json",
+  "id": "sex:event-is-action-fondle-breasts",
+  "description": "Checks if the triggering event is for the 'sex:fondle_breasts' action.",
+  "logic": {
+    "==": [{ "var": "event.payload.actionId" }, "sex:fondle_breasts"]
+  }
+}
+

@@ -16,5 +16,22 @@
       "version": "^1.0.0"
     }
   ],
-  "content": {}
+  "content": {
+    "actions": [
+      "fondle_breasts.action.json"
+    ],
+    "conditions": [
+      "event-is-action-fondle-breasts.condition.json"
+    ],
+    "rules": [
+      "handle_fondle_breasts.rule.json"
+    ],
+    "scopes": [
+      "actors_with_breasts_in_intimacy.scope"
+    ],
+    "ui": [
+      "icons.json",
+      "labels.json"
+    ]
+  }
 }
