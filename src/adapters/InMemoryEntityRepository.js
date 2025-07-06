@@ -47,7 +47,7 @@ class InMemoryEntityRepository extends IEntityRepository {
   /**
    * Returns an iterator over all stored entities.
    *
-   * @returns {IterableIterator<object>}
+   * @returns {Iterator<object>} Iterator of entities.
    */
   entities() {
     return this.#map.values();
