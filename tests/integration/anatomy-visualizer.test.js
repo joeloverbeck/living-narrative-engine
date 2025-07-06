@@ -5,7 +5,6 @@
 
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import AnatomyVisualizerUI from '../../src/domUI/AnatomyVisualizerUI.js';
-import AnatomyGraphRenderer from '../../src/domUI/AnatomyGraphRenderer.js';
 import { ENTITY_CREATED_ID } from '../../src/constants/eventIds.js';
 
 describe('Anatomy Visualizer Integration', () => {
@@ -58,7 +57,7 @@ describe('Anatomy Visualizer Integration', () => {
             return null;
         }
       }),
-      createElement: jest.fn((tag) => ({
+      createElement: jest.fn(() => ({
         value: '',
         textContent: '',
         appendChild: jest.fn(),

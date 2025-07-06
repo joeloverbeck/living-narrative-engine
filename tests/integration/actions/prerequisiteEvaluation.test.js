@@ -4,8 +4,6 @@ import { jest } from '@jest/globals';
 import { PrerequisiteEvaluationService } from '../../../src/actions/validation/prerequisiteEvaluationService.js';
 import { ActionValidationContextBuilder } from '../../../src/actions/validation/actionValidationContextBuilder.js';
 import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
-import { buildActorContext } from '../../../src/actions/validation/contextBuilders.js';
-import { createComponentAccessor } from '../../../src/logic/componentAccessor.js';
 
 describe('PrerequisiteEvaluation Integration Tests', () => {
   let prereqService;

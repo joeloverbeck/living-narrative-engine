@@ -17,6 +17,7 @@
 /** @typedef {import('../../entities/entity.js').default}        Entity */
 /** @typedef {import('../constants/turnDirectives.js').default}   TurnDirectiveEnum */
 /** @typedef {import('../interfaces/ITurnDirectiveStrategy.js').ITurnDirectiveStrategy} ITurnDirectiveStrategy */
+/* global process */
 
 import TurnDirective from '../constants/turnDirectives.js';
 import RepromptStrategy from './repromptStrategy.js';
@@ -85,7 +86,11 @@ export default class TurnDirectiveStrategyResolver extends ITurnDirectiveResolve
       ? directive
       : TurnDirective.WAIT_FOR_EVENT;
 
-    if (key !== directive && process.env.NODE_ENV !== 'production') {
+    if (
+      key !== directive &&
+      typeof process !== 'undefined' &&
+      process.env.NODE_ENV !== 'production'
+    ) {
       // eslint-disable-next-line no-console
       console.warn(
         `${this.constructor.name}: Unrecognised TurnDirective (` +
