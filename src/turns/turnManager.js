@@ -43,10 +43,6 @@ import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
  * Includes logic to stop if a round completes with no successful turns.
  */
 class TurnManager extends ITurnManager {
-  /** @type {ITurnOrderService} */
-  #turnOrderService;
-  /** @type {EntityManager} */
-  #entityManager;
   /** @type {ILogger} */
   #logger;
   /** @type {IValidatedEventDispatcher} */
@@ -57,8 +53,6 @@ class TurnManager extends ITurnManager {
   #roundManager;
   /** @type {TurnCycle} */
   #turnCycle;
-  /** @type {import('../scheduling').IScheduler} */
-  #scheduler;
 
   /** @type {boolean} */
   #isRunning = false;
@@ -150,15 +144,12 @@ class TurnManager extends ITurnManager {
     }
     // --- End Dependency Validation ---
 
-    this.#turnOrderService = turnOrderService;
-    this.#entityManager = entityManager;
     this.#logger = logger;
     this.#dispatcher = dispatcher;
     this.#turnHandlerResolver = turnHandlerResolver;
     this.#roundManager =
       roundManager || new RoundManager(turnOrderService, entityManager, logger);
     this.#turnCycle = new TurnCycle(turnOrderService, logger);
-    this.#scheduler = scheduler;
     this.#eventSubscription = new TurnEventSubscription(
       dispatcher,
       logger,

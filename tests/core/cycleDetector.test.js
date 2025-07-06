@@ -31,21 +31,23 @@ describe('createCycleDetector', () => {
       detector.enter('scope2');
       detector.enter('scope3');
 
+      let caughtError;
       try {
         detector.enter('scope2');
-        fail('Should have thrown ScopeCycleError');
       } catch (error) {
-        expect(error).toBeInstanceOf(ScopeCycleError);
-        expect(error.message).toBe(
-          'Cycle: scope1 -> scope2 -> scope3 -> scope2'
-        );
-        expect(error.cyclePath).toEqual([
-          'scope1',
-          'scope2',
-          'scope3',
-          'scope2',
-        ]);
+        caughtError = error;
       }
+
+      expect(caughtError).toBeInstanceOf(ScopeCycleError);
+      expect(caughtError.message).toBe(
+        'Cycle: scope1 -> scope2 -> scope3 -> scope2'
+      );
+      expect(caughtError.cyclePath).toEqual([
+        'scope1',
+        'scope2',
+        'scope3',
+        'scope2',
+      ]);
     });
 
     it('should detect self-referencing cycles', () => {
@@ -118,7 +120,7 @@ describe('createCycleDetector', () => {
 
       try {
         detector.enter('scope1');
-      } catch (error) {
+      } catch {
         // Ignore the error
       }
 

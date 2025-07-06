@@ -101,7 +101,7 @@ describe('Anatomy Visualizer Initialization', () => {
         includeAnatomyFormatting: true,
         postInitHook: expect.any(Function),
       });
-      
+
       // Verify UI was initialized
       expect(mockUIInitialize).toHaveBeenCalled();
     });
@@ -129,7 +129,9 @@ describe('Anatomy Visualizer Initialization', () => {
       await Promise.resolve();
 
       // Verify AnatomyDescriptionService was resolved from container
-      expect(containerMock.resolve).toHaveBeenCalledWith('AnatomyDescriptionService');
+      expect(containerMock.resolve).toHaveBeenCalledWith(
+        'AnatomyDescriptionService'
+      );
     });
 
     it('should handle bootstrap failure', async () => {
@@ -160,12 +162,7 @@ describe('Anatomy Visualizer Initialization', () => {
       // Mock bootstrap to still succeed but the postInitHook will throw
       mockBootstrap.mockImplementation(async (options) => {
         if (options && options.postInitHook) {
-          try {
-            await options.postInitHook(servicesMock, containerMock);
-          } catch (error) {
-            // This error will be caught by the try-catch in anatomy-visualizer.js
-            throw error;
-          }
+          await options.postInitHook(servicesMock, containerMock);
         }
         return { container: containerMock, services: servicesMock };
       });
