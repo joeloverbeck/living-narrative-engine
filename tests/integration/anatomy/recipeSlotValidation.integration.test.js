@@ -197,7 +197,7 @@ describe('Anatomy Recipe Slot Validation Integration', () => {
           'test:humanoid',
           'test:invalid_with_context'
         );
-      } catch (error) {
+      } catch {
         // Expected error
       }
 
