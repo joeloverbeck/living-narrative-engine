@@ -9,24 +9,17 @@
         "type": "string",
         "description": "The extended color descriptor",
         "enum": [
+          "amber",
           "blonde",
           "brunette",
-          "brown",
-          "black",
           "raven-black",
-          "red",
           "auburn",
-          "gray",
-          "white",
           "silver",
-          "blue",
           "cobalt",
-          "green",
           "hazel",
-          "amber",
           "violet"
         ],
-        "default": "brown"
+        "default": "raven-black"
       }
     },
     "required": ["color"],

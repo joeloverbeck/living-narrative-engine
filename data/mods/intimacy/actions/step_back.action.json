@@ -9,5 +9,12 @@
     "actor": ["intimacy:closeness"]
   },
   "template": "step back",
-  "prerequisites": []
+  "prerequisites": [
+    {
+      "logic": {
+        "condition_ref": "core:actor-can-move"
+      },
+      "failure_message": "You cannot move without functioning legs."
+    }
+  ]
 }

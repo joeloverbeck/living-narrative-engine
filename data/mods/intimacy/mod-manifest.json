@@ -6,6 +6,12 @@
   "description": "This module allows intimacy between characters. Sex is not included.",
   "author": "joeloverbeck",
   "gameVersion": ">=0.0.1",
+  "dependencies": [
+    {
+      "id": "anatomy",
+      "version": "^1.0.0"
+    }
+  ],
   "content": {
     "actions": [
       "adjust_clothing.action.json",

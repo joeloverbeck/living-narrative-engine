@@ -1,0 +1,20 @@
+{
+  "$schema": "http://example.com/schemas/mod-manifest.schema.json",
+  "id": "sex",
+  "version": "1.0.0",
+  "name": "sex",
+  "description": "This module allows sexual interaction between characters.",
+  "author": "joeloverbeck",
+  "gameVersion": ">=0.0.1",
+  "dependencies": [
+    {
+      "id": "anatomy",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "intimacy",
+      "version": "^1.0.0"
+    }
+  ],
+  "content": {}
+}
