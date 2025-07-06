@@ -161,12 +161,12 @@ describe('SystemLogicInterpreter Integration Tests', () => {
     };
 
     mockBodyGraphService = {
-      hasPartWithComponentValue: jest.fn().mockReturnValue({ found: false })
+      hasPartWithComponentValue: jest.fn().mockReturnValue({ found: false }),
     };
     mockDataRegistry = { getAllSystemRules: jest.fn() };
-    mockJsonLogicEvaluationService = { 
+    mockJsonLogicEvaluationService = {
       evaluate: jest.fn(),
-      addOperation: jest.fn()
+      addOperation: jest.fn(),
     };
     mockEntityManager = {
       getEntityInstance: jest.fn().mockImplementation((entityId) => {

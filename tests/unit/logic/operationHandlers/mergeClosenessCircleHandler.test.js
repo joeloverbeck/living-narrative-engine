@@ -81,9 +81,9 @@ describe('MergeClosenessCircleHandler', () => {
             parts: {
               torso: 'body1',
               leg_left: 'left-leg1',
-              leg_right: 'right-leg1'
-            }
-          }
+              leg_right: 'right-leg1',
+            },
+          },
         };
       }
       if (id === 'left-leg1' && componentId === 'core:movement') {
@@ -100,9 +100,9 @@ describe('MergeClosenessCircleHandler', () => {
             parts: {
               torso: 'body2',
               leg_left: 'left-leg2',
-              leg_right: 'right-leg2'
-            }
-          }
+              leg_right: 'right-leg2',
+            },
+          },
         };
       }
       if (id === 'left-leg2' && componentId === 'core:movement') {
@@ -116,29 +116,45 @@ describe('MergeClosenessCircleHandler', () => {
 
     await handler.execute({ actor_id: 'hero1', target_id: 'hero2' }, execCtx);
 
-    expect(em.addComponent).toHaveBeenCalledWith('hero1', 'intimacy:closeness', {
-      partners: ['hero2'],
-    });
-    expect(em.addComponent).toHaveBeenCalledWith('hero2', 'intimacy:closeness', {
-      partners: ['hero1'],
-    });
+    expect(em.addComponent).toHaveBeenCalledWith(
+      'hero1',
+      'intimacy:closeness',
+      {
+        partners: ['hero2'],
+      }
+    );
+    expect(em.addComponent).toHaveBeenCalledWith(
+      'hero2',
+      'intimacy:closeness',
+      {
+        partners: ['hero1'],
+      }
+    );
     // Movement locked on body parts
     expect(em.addComponent).toHaveBeenCalledWith('left-leg1', 'core:movement', {
       locked: true,
       forcedOverride: false,
     });
-    expect(em.addComponent).toHaveBeenCalledWith('right-leg1', 'core:movement', {
-      locked: true,
-      forcedOverride: false,
-    });
+    expect(em.addComponent).toHaveBeenCalledWith(
+      'right-leg1',
+      'core:movement',
+      {
+        locked: true,
+        forcedOverride: false,
+      }
+    );
     expect(em.addComponent).toHaveBeenCalledWith('left-leg2', 'core:movement', {
       locked: true,
       forcedOverride: false,
     });
-    expect(em.addComponent).toHaveBeenCalledWith('right-leg2', 'core:movement', {
-      locked: true,
-      forcedOverride: false,
-    });
+    expect(em.addComponent).toHaveBeenCalledWith(
+      'right-leg2',
+      'core:movement',
+      {
+        locked: true,
+        forcedOverride: false,
+      }
+    );
   });
 
   test('stores result variable when provided', async () => {
@@ -176,9 +192,9 @@ describe('MergeClosenessCircleHandler', () => {
             root: 'body1',
             parts: {
               torso: 'body1',
-              leg_left: 'left-leg1'
-            }
-          }
+              leg_left: 'left-leg1',
+            },
+          },
         };
       }
       if (id === 'left-leg1' && componentId === 'core:movement') {
@@ -192,9 +208,13 @@ describe('MergeClosenessCircleHandler', () => {
     expect(em.addComponent).toHaveBeenCalledWith('a1', 'intimacy:closeness', {
       partners: ['hero1'],
     });
-    expect(em.addComponent).toHaveBeenCalledWith('hero1', 'intimacy:closeness', {
-      partners: ['a1'],
-    });
+    expect(em.addComponent).toHaveBeenCalledWith(
+      'hero1',
+      'intimacy:closeness',
+      {
+        partners: ['a1'],
+      }
+    );
     // Legacy entity movement locked directly
     expect(em.addComponent).toHaveBeenCalledWith('a1', 'core:movement', {
       locked: true,

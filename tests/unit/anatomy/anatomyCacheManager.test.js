@@ -85,15 +85,21 @@ describe('AnatomyCacheManager', () => {
       cacheManager.set('entity-1', mockNode);
       cacheManager.set('entity-2', { ...mockNode, entityId: 'entity-2' });
       expect(cacheManager.size()).toBe(2);
-      
+
       cacheManager.clear();
       expect(cacheManager.size()).toBe(0);
-      expect(mockLogger.debug).toHaveBeenCalledWith('AnatomyCacheManager: Cache cleared');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'AnatomyCacheManager: Cache cleared'
+      );
     });
 
     it('should throw error when setting with invalid parameters', () => {
-      expect(() => cacheManager.set(null, mockNode)).toThrow(InvalidArgumentError);
-      expect(() => cacheManager.set('entity-1', null)).toThrow(InvalidArgumentError);
+      expect(() => cacheManager.set(null, mockNode)).toThrow(
+        InvalidArgumentError
+      );
+      expect(() => cacheManager.set('entity-1', null)).toThrow(
+        InvalidArgumentError
+      );
     });
   });
 
@@ -111,20 +117,27 @@ describe('AnatomyCacheManager', () => {
         throw new Error(`Entity ${id} not found`);
       });
 
-      mockEntityManager.getComponentData.mockImplementation((id, componentId) => {
-        if (componentId === 'anatomy:part') {
-          if (id === 'torso-1') return { subType: 'torso' };
-          if (id === 'arm-1') return { subType: 'arm' };
-          if (id === 'hand-1') return { subType: 'hand' };
+      mockEntityManager.getComponentData.mockImplementation(
+        (id, componentId) => {
+          if (componentId === 'anatomy:part') {
+            if (id === 'torso-1') return { subType: 'torso' };
+            if (id === 'arm-1') return { subType: 'arm' };
+            if (id === 'hand-1') return { subType: 'hand' };
+          }
+          if (componentId === 'anatomy:joint') {
+            if (id === 'arm-1')
+              return { parentId: 'torso-1', socketId: 'shoulder' };
+            if (id === 'hand-1')
+              return { parentId: 'arm-1', socketId: 'wrist' };
+          }
+          return null;
         }
-        if (componentId === 'anatomy:joint') {
-          if (id === 'arm-1') return { parentId: 'torso-1', socketId: 'shoulder' };
-          if (id === 'hand-1') return { parentId: 'arm-1', socketId: 'wrist' };
-        }
-        return null;
-      });
+      );
 
-      mockEntityManager.getEntitiesWithComponent.mockReturnValue([armEntity, handEntity]);
+      mockEntityManager.getEntitiesWithComponent.mockReturnValue([
+        armEntity,
+        handEntity,
+      ]);
     });
 
     it('should build cache for anatomy graph', () => {
@@ -153,15 +166,21 @@ describe('AnatomyCacheManager', () => {
     });
 
     it('should throw error with invalid parameters', () => {
-      expect(() => cacheManager.buildCache(null, mockEntityManager)).toThrow(InvalidArgumentError);
-      expect(() => cacheManager.buildCache('torso-1', null)).toThrow(InvalidArgumentError);
+      expect(() => cacheManager.buildCache(null, mockEntityManager)).toThrow(
+        InvalidArgumentError
+      );
+      expect(() => cacheManager.buildCache('torso-1', null)).toThrow(
+        InvalidArgumentError
+      );
     });
 
     it('should handle entities without anatomy:part component', () => {
-      mockEntityManager.getComponentData.mockImplementation((id, componentId) => {
-        if (componentId === 'anatomy:part') return null;
-        return null;
-      });
+      mockEntityManager.getComponentData.mockImplementation(
+        (id, componentId) => {
+          if (componentId === 'anatomy:part') return null;
+          return null;
+        }
+      );
 
       cacheManager.buildCache('torso-1', mockEntityManager);
 
@@ -171,14 +190,19 @@ describe('AnatomyCacheManager', () => {
 
     it('should handle cycles in the graph', () => {
       // Create a cycle: arm-1 -> hand-1 -> arm-1
-      mockEntityManager.getComponentData.mockImplementation((id, componentId) => {
-        if (componentId === 'anatomy:joint') {
-          if (id === 'arm-1') return { parentId: 'torso-1', socketId: 'shoulder' };
-          if (id === 'hand-1') return { parentId: 'arm-1', socketId: 'wrist' };
-          if (id === 'torso-1') return { parentId: 'hand-1', socketId: 'cycle' };
+      mockEntityManager.getComponentData.mockImplementation(
+        (id, componentId) => {
+          if (componentId === 'anatomy:joint') {
+            if (id === 'arm-1')
+              return { parentId: 'torso-1', socketId: 'shoulder' };
+            if (id === 'hand-1')
+              return { parentId: 'arm-1', socketId: 'wrist' };
+            if (id === 'torso-1')
+              return { parentId: 'hand-1', socketId: 'cycle' };
+          }
+          return null;
         }
-        return null;
-      });
+      );
 
       cacheManager.buildCache('torso-1', mockEntityManager);
 
@@ -189,36 +213,45 @@ describe('AnatomyCacheManager', () => {
 
     it('should respect max recursion depth', () => {
       const originalMaxDepth = ANATOMY_CONSTANTS.MAX_RECURSION_DEPTH;
-      
+
       // Create a very deep hierarchy
-      const entities = Array.from({ length: 10 }, (_, i) => ({ id: `entity-${i}` }));
-      
+      const entities = Array.from({ length: 10 }, (_, i) => ({
+        id: `entity-${i}`,
+      }));
+
       mockEntityManager.getEntityInstance.mockImplementation((id) => {
-        const entity = entities.find(e => e.id === id);
+        const entity = entities.find((e) => e.id === id);
         if (entity) return entity;
         throw new Error(`Entity ${id} not found`);
       });
 
-      mockEntityManager.getComponentData.mockImplementation((id, componentId) => {
-        if (componentId === 'anatomy:part') {
-          return { subType: 'test-part' };
-        }
-        if (componentId === 'anatomy:joint') {
-          const index = parseInt(id.split('-')[1]);
-          if (index > 0) {
-            return { parentId: `entity-${index - 1}`, socketId: 'test-socket' };
+      mockEntityManager.getComponentData.mockImplementation(
+        (id, componentId) => {
+          if (componentId === 'anatomy:part') {
+            return { subType: 'test-part' };
           }
+          if (componentId === 'anatomy:joint') {
+            const index = parseInt(id.split('-')[1]);
+            if (index > 0) {
+              return {
+                parentId: `entity-${index - 1}`,
+                socketId: 'test-socket',
+              };
+            }
+          }
+          return null;
         }
-        return null;
-      });
+      );
 
-      mockEntityManager.getEntitiesWithComponent.mockReturnValue(entities.slice(1));
+      mockEntityManager.getEntitiesWithComponent.mockReturnValue(
+        entities.slice(1)
+      );
 
       // Temporarily reduce max depth for testing
       Object.defineProperty(ANATOMY_CONSTANTS, 'MAX_RECURSION_DEPTH', {
         value: 3,
         writable: false,
-        configurable: true
+        configurable: true,
       });
 
       cacheManager.buildCache('entity-0', mockEntityManager);
@@ -231,7 +264,7 @@ describe('AnatomyCacheManager', () => {
       Object.defineProperty(ANATOMY_CONSTANTS, 'MAX_RECURSION_DEPTH', {
         value: originalMaxDepth,
         writable: false,
-        configurable: true
+        configurable: true,
       });
     });
 
@@ -260,19 +293,24 @@ describe('AnatomyCacheManager', () => {
         throw new Error(`Entity ${id} not found`);
       });
 
-      mockEntityManager.getComponentData.mockImplementation((id, componentId) => {
-        if (componentId === 'anatomy:joint') {
-          if (id === 'arm-1') return { parentId: 'torso-1', socketId: 'shoulder' };
+      mockEntityManager.getComponentData.mockImplementation(
+        (id, componentId) => {
+          if (componentId === 'anatomy:joint') {
+            if (id === 'arm-1')
+              return { parentId: 'torso-1', socketId: 'shoulder' };
+          }
+          return null;
         }
-        return null;
-      });
+      );
 
       mockEntityManager.getEntitiesWithComponent.mockReturnValue([armEntity]);
       cacheManager.buildCache('torso-1', mockEntityManager);
     });
 
     it('should throw error with invalid parameters', () => {
-      expect(() => cacheManager.validateCache(null)).toThrow(InvalidArgumentError);
+      expect(() => cacheManager.validateCache(null)).toThrow(
+        InvalidArgumentError
+      );
     });
 
     it('should return valid for correct cache', () => {
@@ -293,12 +331,14 @@ describe('AnatomyCacheManager', () => {
     });
 
     it('should detect missing joint components', () => {
-      mockEntityManager.getComponentData.mockImplementation((id, componentId) => {
-        if (componentId === 'anatomy:joint' && id === 'arm-1') {
-          return null; // No joint but cache says it has parent
+      mockEntityManager.getComponentData.mockImplementation(
+        (id, componentId) => {
+          if (componentId === 'anatomy:joint' && id === 'arm-1') {
+            return null; // No joint but cache says it has parent
+          }
+          return null;
         }
-        return null;
-      });
+      );
 
       const result = cacheManager.validateCache(mockEntityManager);
       expect(result.valid).toBe(false);
@@ -308,12 +348,14 @@ describe('AnatomyCacheManager', () => {
     });
 
     it('should detect parent mismatches', () => {
-      mockEntityManager.getComponentData.mockImplementation((id, componentId) => {
-        if (componentId === 'anatomy:joint' && id === 'arm-1') {
-          return { parentId: 'different-parent', socketId: 'shoulder' };
+      mockEntityManager.getComponentData.mockImplementation(
+        (id, componentId) => {
+          if (componentId === 'anatomy:joint' && id === 'arm-1') {
+            return { parentId: 'different-parent', socketId: 'shoulder' };
+          }
+          return null;
         }
-        return null;
-      });
+      );
 
       const result = cacheManager.validateCache(mockEntityManager);
       expect(result.valid).toBe(false);
@@ -329,7 +371,9 @@ describe('AnatomyCacheManager', () => {
 
       const result = cacheManager.validateCache(mockEntityManager);
       expect(result.valid).toBe(false);
-      expect(result.issues).toContain("Child 'missing-child' of 'torso-1' not in cache");
+      expect(result.issues).toContain(
+        "Child 'missing-child' of 'torso-1' not in cache"
+      );
     });
   });
 });

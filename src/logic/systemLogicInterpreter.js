@@ -102,7 +102,7 @@ class SystemLogicInterpreter extends BaseService {
     }
 
     this.#registerCustomJsonLogicOperations();
-    
+
     this.#loadAndCacheRules();
 
     if (this.#ruleCache.size > 0) {
@@ -139,24 +139,27 @@ class SystemLogicInterpreter extends BaseService {
 
   #registerCustomJsonLogicOperations() {
     // Add hasBodyPartWithComponentValue operation
-    this.#jsonLogic.addOperation('hasBodyPartWithComponentValue', (args, data) => {
-      // Create a minimal execution context for the handler
-      const executionContext = {
-        evaluationContext: {
-          variables: data
-        },
-        instanceId: 'jsonlogic-operation',
-      };
+    this.#jsonLogic.addOperation(
+      'hasBodyPartWithComponentValue',
+      (args, data) => {
+        // Create a minimal execution context for the handler
+        const executionContext = {
+          evaluationContext: {
+            variables: data,
+          },
+          instanceId: 'jsonlogic-operation',
+        };
 
-      // Use the operation interpreter to execute the handler
-      const result = this.#operationInterpreter.execute(
-        { type: 'HAS_BODY_PART_WITH_COMPONENT_VALUE', parameters: args },
-        executionContext
-      );
+        // Use the operation interpreter to execute the handler
+        const result = this.#operationInterpreter.execute(
+          { type: 'HAS_BODY_PART_WITH_COMPONENT_VALUE', parameters: args },
+          executionContext
+        );
 
-      // The handler returns a boolean directly
-      return result;
-    });
+        // The handler returns a boolean directly
+        return result;
+      }
+    );
 
     this.#logger.debug('Custom JsonLogic operations registered');
   }

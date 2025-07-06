@@ -27,21 +27,17 @@ export class DescriptionGenerationWorkflow extends BaseService {
    * @param {ILogger} deps.logger
    * @param {AnatomyDescriptionService} deps.anatomyDescriptionService
    */
-  constructor({
-    entityManager,
-    logger,
-    anatomyDescriptionService,
-  }) {
+  constructor({ entityManager, logger, anatomyDescriptionService }) {
     super();
     this.#logger = this._init('DescriptionGenerationWorkflow', logger, {
       entityManager: {
         value: entityManager,
-        requiredMethods: ['getEntityInstance']
+        requiredMethods: ['getEntityInstance'],
       },
       anatomyDescriptionService: {
         value: anatomyDescriptionService,
-        requiredMethods: ['generateAllDescriptions']
-      }
+        requiredMethods: ['generateAllDescriptions'],
+      },
     });
     this.#entityManager = entityManager;
     this.#anatomyDescriptionService = anatomyDescriptionService;
@@ -50,7 +46,7 @@ export class DescriptionGenerationWorkflow extends BaseService {
   /**
    * Generates descriptions for all anatomy parts of an entity
    * Unlike the original implementation, this properly propagates errors
-   * 
+   *
    * @param {string} entityId - The entity ID to generate descriptions for
    * @returns {Promise<void>}
    * @throws {DescriptionGenerationError} If description generation fails
@@ -61,7 +57,7 @@ export class DescriptionGenerationWorkflow extends BaseService {
     );
 
     const bodyEntity = this.#entityManager.getEntityInstance(entityId);
-    
+
     if (!bodyEntity) {
       throw new DescriptionGenerationError(
         `Cannot generate descriptions: Entity '${entityId}' not found`,
@@ -72,7 +68,7 @@ export class DescriptionGenerationWorkflow extends BaseService {
     try {
       // Generate descriptions for all body parts and the body itself
       this.#anatomyDescriptionService.generateAllDescriptions(bodyEntity);
-      
+
       this.#logger.info(
         `DescriptionGenerationWorkflow: Successfully generated descriptions for entity '${entityId}'`
       );
@@ -95,7 +91,7 @@ export class DescriptionGenerationWorkflow extends BaseService {
 
   /**
    * Generates descriptions for specific anatomy parts
-   * 
+   *
    * @param {string} entityId - The entity ID
    * @param {string[]} partIds - Array of part entity IDs to generate descriptions for
    * @returns {Promise<void>}
@@ -107,11 +103,11 @@ export class DescriptionGenerationWorkflow extends BaseService {
     );
 
     const failedParts = [];
-    
+
     for (const partId of partIds) {
       try {
         const partEntity = this.#entityManager.getEntityInstance(partId);
-        
+
         if (!partEntity) {
           this.#logger.warn(
             `DescriptionGenerationWorkflow: Part entity '${partId}' not found, skipping`
@@ -148,13 +144,13 @@ export class DescriptionGenerationWorkflow extends BaseService {
 
   /**
    * Checks if an entity needs description generation
-   * 
+   *
    * @param {string} entityId - The entity ID to check
    * @returns {boolean} True if descriptions should be generated
    */
   needsDescriptions(entityId) {
     const entity = this.#entityManager.getEntityInstance(entityId);
-    
+
     if (!entity) {
       return false;
     }

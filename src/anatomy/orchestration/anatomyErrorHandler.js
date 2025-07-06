@@ -83,7 +83,7 @@ export class AnatomyErrorHandler {
 
   /**
    * Handles errors with context preservation and logging
-   * 
+   *
    * @param {Error} error - The error to handle
    * @param {object} context - Additional context about the operation
    * @returns {Error} - The wrapped error with context
@@ -91,21 +91,23 @@ export class AnatomyErrorHandler {
   handle(error, context = {}) {
     const errorName = error.name || 'UnknownError';
     const errorMessage = error.message || 'Unknown error occurred';
-    
+
     this.#logger.error(
       `AnatomyErrorHandler: ${errorName} occurred during anatomy operation`,
       {
         error: errorMessage,
         stack: error.stack,
         context,
-        ...this.#extractErrorContext(error)
+        ...this.#extractErrorContext(error),
       }
     );
 
     // Wrap the error with appropriate anatomy-specific error type
-    if (error instanceof AnatomyGenerationError ||
-        error instanceof DescriptionGenerationError ||
-        error instanceof GraphBuildingError) {
+    if (
+      error instanceof AnatomyGenerationError ||
+      error instanceof DescriptionGenerationError ||
+      error instanceof GraphBuildingError
+    ) {
       return error; // Already wrapped
     }
 
@@ -143,7 +145,7 @@ export class AnatomyErrorHandler {
 
   /**
    * Extracts additional context from known error types
-   * 
+   *
    * @private
    * @param {Error} error
    * @returns {object}
@@ -164,7 +166,7 @@ export class AnatomyErrorHandler {
     if (error.cause) {
       context.causedBy = {
         name: error.cause.name,
-        message: error.cause.message
+        message: error.cause.message,
       };
     }
 

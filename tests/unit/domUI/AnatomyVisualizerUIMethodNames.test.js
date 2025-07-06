@@ -112,7 +112,9 @@ describe('AnatomyVisualizerUI - Method Name Validation', () => {
         getComponent: undefined,
       };
 
-      mockEntityManager.createEntityInstance.mockResolvedValue(mockEntityInstance);
+      mockEntityManager.createEntityInstance.mockResolvedValue(
+        mockEntityInstance
+      );
       mockEntityManager.getEntityInstance.mockResolvedValue(mockEntityInstance);
 
       // Mock event subscription to trigger the anatomy check
@@ -145,7 +147,9 @@ describe('AnatomyVisualizerUI - Method Name Validation', () => {
       await loadPromise;
 
       // Assert
-      expect(mockEntityInstance.getComponentData).toHaveBeenCalledWith('anatomy:body');
+      expect(mockEntityInstance.getComponentData).toHaveBeenCalledWith(
+        'anatomy:body'
+      );
       // getComponentData is called multiple times: in event handler, for description, and for body
       expect(mockEntityInstance.getComponentData).toHaveBeenCalledTimes(3);
     });
@@ -173,7 +177,9 @@ describe('AnatomyVisualizerUI - Method Name Validation', () => {
         configurable: false,
       });
 
-      mockEntityManager.createEntityInstance.mockResolvedValue(mockEntityInstance);
+      mockEntityManager.createEntityInstance.mockResolvedValue(
+        mockEntityInstance
+      );
       mockEntityManager.getEntityInstance.mockResolvedValue(mockEntityInstance);
 
       // Mock event subscription
@@ -208,10 +214,12 @@ describe('AnatomyVisualizerUI - Method Name Validation', () => {
       }, 50);
 
       // Wait for timeout
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
       // Assert - should not throw error about getComponent not being a function
-      expect(mockEntityInstance.getComponentData).toHaveBeenCalledWith('anatomy:body');
+      expect(mockEntityInstance.getComponentData).toHaveBeenCalledWith(
+        'anatomy:body'
+      );
       // Since no body component, it should not resolve yet
       expect(unsubscribeCalled).toBe(false);
     });
@@ -220,7 +228,7 @@ describe('AnatomyVisualizerUI - Method Name Validation', () => {
       // Arrange
       const entityDefId = 'test:entity';
       const instanceId = 'instance-123';
-      
+
       const mockDefinition = {
         id: entityDefId,
         components: {
@@ -240,7 +248,9 @@ describe('AnatomyVisualizerUI - Method Name Validation', () => {
       };
 
       // Ensure getEntityInstance is called, not getEntity
-      mockEntityManager.createEntityInstance.mockResolvedValue(mockEntityInstance);
+      mockEntityManager.createEntityInstance.mockResolvedValue(
+        mockEntityInstance
+      );
       mockEntityManager.getEntityInstance.mockResolvedValue(mockEntityInstance);
       // Ensure getEntity doesn't exist
       mockEntityManager.getEntity = undefined;
@@ -274,7 +284,9 @@ describe('AnatomyVisualizerUI - Method Name Validation', () => {
       await loadPromise;
 
       // Assert - getEntityInstance is called in the event handler
-      expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(instanceId);
+      expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(
+        instanceId
+      );
     });
   });
 
@@ -301,7 +313,9 @@ describe('AnatomyVisualizerUI - Method Name Validation', () => {
         }),
       };
 
-      mockEntityManager.createEntityInstance.mockResolvedValue(mockEntityInstance);
+      mockEntityManager.createEntityInstance.mockResolvedValue(
+        mockEntityInstance
+      );
       mockEntityManager.getEntityInstance.mockResolvedValue(mockEntityInstance);
 
       let eventCallback;
@@ -317,7 +331,7 @@ describe('AnatomyVisualizerUI - Method Name Validation', () => {
 
       // Act & Assert - should not throw
       const loadPromise = visualizerUI._loadEntity(entityDefId);
-      
+
       setTimeout(() => {
         // This should not throw "entity.getComponent is not a function"
         expect(() => {
@@ -334,7 +348,9 @@ describe('AnatomyVisualizerUI - Method Name Validation', () => {
       await loadPromise;
 
       // Verify the correct method was called
-      expect(mockEntityInstance.getComponentData).toHaveBeenCalledWith('anatomy:body');
+      expect(mockEntityInstance.getComponentData).toHaveBeenCalledWith(
+        'anatomy:body'
+      );
       expect(visualizerUI._graphRenderer.renderGraph).toHaveBeenCalled();
     });
   });

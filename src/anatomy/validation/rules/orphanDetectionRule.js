@@ -36,7 +36,7 @@ export class OrphanDetectionRule extends ValidationRule {
 
     for (const entityId of entityIds) {
       const joint = entityManager.getComponentData(entityId, 'anatomy:joint');
-      
+
       if (joint && !entityIdSet.has(joint.parentId)) {
         // Orphaned part - has a parent that's not in the graph
         issues.push(
@@ -74,8 +74,8 @@ export class OrphanDetectionRule extends ValidationRule {
     context.setMetadata('rootEntities', rootEntities);
 
     logger.debug(
-      `OrphanDetectionRule: Found ${issues.filter(i => i.severity === 'error').length} orphans ` +
-      `and ${rootEntities.length} root entities`
+      `OrphanDetectionRule: Found ${issues.filter((i) => i.severity === 'error').length} orphans ` +
+        `and ${rootEntities.length} root entities`
     );
 
     return issues;

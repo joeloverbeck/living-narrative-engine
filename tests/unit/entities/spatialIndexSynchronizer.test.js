@@ -165,8 +165,11 @@ describe('SpatialIndexSynchronizer', () => {
       synchronizer = initializeSynchronizer();
       const entity = createMockEntity('entity-1', { locationId: 'location-a' });
       // First add the entity so it's tracked
-      synchronizer.onEntityAdded({ type: ENTITY_CREATED_ID, payload: { entity } });
-      
+      synchronizer.onEntityAdded({
+        type: ENTITY_CREATED_ID,
+        payload: { entity },
+      });
+
       const payload = { instanceId: 'entity-1' };
       const eventObject = { type: ENTITY_REMOVED_ID, payload };
 

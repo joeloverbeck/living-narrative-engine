@@ -77,7 +77,10 @@ export class BodyDescriptionComposer {
       // Process body parts
       if (partsByType.has(partType)) {
         const parts = partsByType.get(partType);
-        const structuredLine = this.descriptionTemplate.createStructuredLine(partType, parts);
+        const structuredLine = this.descriptionTemplate.createStructuredLine(
+          partType,
+          parts
+        );
         if (structuredLine) {
           lines.push(structuredLine);
         }
@@ -132,7 +135,6 @@ export class BodyDescriptionComposer {
 
     return partsByType;
   }
-
 
   /**
    * Extract overall build description from body entity

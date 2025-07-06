@@ -155,7 +155,7 @@ describe('AnatomyDescriptionService', () => {
       expect(
         mockBodyDescriptionComposer.composeDescription
       ).toHaveBeenCalledWith(bodyEntity);
-      
+
       // Verify the empty description was still added to the entity
       expect(mockComponentManager.addComponent).toHaveBeenCalledWith(
         'body-1',
@@ -323,7 +323,8 @@ describe('AnatomyDescriptionService', () => {
       expect(mockEventDispatchService.safeDispatchEvent).toHaveBeenCalledWith(
         'core:system_error_occurred',
         expect.objectContaining({
-          message: 'Failed to generate body description for entity "Joel Overberus": Description is empty',
+          message:
+            'Failed to generate body description for entity "Joel Overberus": Description is empty',
           details: expect.objectContaining({
             raw: 'Entity ID: body-1, Recipe ID: anatomy:human_male',
             timestamp: expect.any(String),
@@ -348,7 +349,9 @@ describe('AnatomyDescriptionService', () => {
       });
 
       // Mock composer to return valid description
-      mockBodyDescriptionComposer.composeDescription.mockReturnValue('Valid description');
+      mockBodyDescriptionComposer.composeDescription.mockReturnValue(
+        'Valid description'
+      );
       // Mock entityFinder to return the entity when updateDescription is called
       mockEntityFinder.getEntityInstance.mockReturnValue(bodyEntity);
 

@@ -43,22 +43,29 @@ export class BodyGraphService {
       `BodyGraphService: Detaching part '${partEntityId}' (cascade: ${cascade})`
     );
 
-    const joint = this.#entityManager.getComponentData(partEntityId, 'anatomy:joint');
+    const joint = this.#entityManager.getComponentData(
+      partEntityId,
+      'anatomy:joint'
+    );
     if (!joint) {
-      throw new InvalidArgumentError(`Entity '${partEntityId}' has no joint component - cannot detach`);
+      throw new InvalidArgumentError(
+        `Entity '${partEntityId}' has no joint component - cannot detach`
+      );
     }
 
     const parentId = joint.parentId;
     const socketId = joint.socketId;
-    const toDetach = cascade 
-      ? AnatomyGraphAlgorithms.getSubgraph(partEntityId, this.#cacheManager) 
+    const toDetach = cascade
+      ? AnatomyGraphAlgorithms.getSubgraph(partEntityId, this.#cacheManager)
       : [partEntityId];
 
     await this.#entityManager.removeComponent(partEntityId, 'anatomy:joint');
 
     const parentNode = this.#cacheManager.get(parentId);
     if (parentNode) {
-      parentNode.children = parentNode.children.filter((id) => id !== partEntityId);
+      parentNode.children = parentNode.children.filter(
+        (id) => id !== partEntityId
+      );
     }
 
     if (!cascade) {
@@ -88,23 +95,35 @@ export class BodyGraphService {
   }
 
   findPartsByType(rootEntityId, partType) {
-    return AnatomyGraphAlgorithms.findPartsByType(rootEntityId, partType, this.#cacheManager);
+    return AnatomyGraphAlgorithms.findPartsByType(
+      rootEntityId,
+      partType,
+      this.#cacheManager
+    );
   }
 
   getAnatomyRoot(partEntityId) {
-    return AnatomyGraphAlgorithms.getAnatomyRoot(partEntityId, this.#cacheManager, this.#entityManager);
+    return AnatomyGraphAlgorithms.getAnatomyRoot(
+      partEntityId,
+      this.#cacheManager,
+      this.#entityManager
+    );
   }
 
   getPath(fromEntityId, toEntityId) {
-    return AnatomyGraphAlgorithms.getPath(fromEntityId, toEntityId, this.#cacheManager);
+    return AnatomyGraphAlgorithms.getPath(
+      fromEntityId,
+      toEntityId,
+      this.#cacheManager
+    );
   }
 
   getAllParts(bodyComponent) {
     // Handle both full anatomy:body component and direct body structure
     let rootId = null;
-    
+
     if (!bodyComponent) return [];
-    
+
     // Check if this is the full anatomy:body component with nested structure
     if (bodyComponent.body && bodyComponent.body.root) {
       rootId = bodyComponent.body.root;
@@ -113,25 +132,40 @@ export class BodyGraphService {
     else if (bodyComponent.root) {
       rootId = bodyComponent.root;
     }
-    
+
     if (!rootId) return [];
-    
-    return AnatomyGraphAlgorithms.getAllParts(rootId, this.#cacheManager, this.#entityManager);
+
+    return AnatomyGraphAlgorithms.getAllParts(
+      rootId,
+      this.#cacheManager,
+      this.#entityManager
+    );
   }
 
   hasPartWithComponent(bodyComponent, componentId) {
     const allParts = this.getAllParts(bodyComponent);
     for (const partId of allParts) {
-      const componentData = this.#entityManager.getComponentData(partId, componentId);
+      const componentData = this.#entityManager.getComponentData(
+        partId,
+        componentId
+      );
       if (componentData !== null) return true;
     }
     return false;
   }
 
-  hasPartWithComponentValue(bodyComponent, componentId, propertyPath, expectedValue) {
+  hasPartWithComponentValue(
+    bodyComponent,
+    componentId,
+    propertyPath,
+    expectedValue
+  ) {
     const allParts = this.getAllParts(bodyComponent);
     for (const partId of allParts) {
-      const componentData = this.#entityManager.getComponentData(partId, componentId);
+      const componentData = this.#entityManager.getComponentData(
+        partId,
+        componentId
+      );
       if (componentData !== null) {
         const value = this.#getNestedProperty(componentData, propertyPath);
         if (value === expectedValue) return { found: true, partId };

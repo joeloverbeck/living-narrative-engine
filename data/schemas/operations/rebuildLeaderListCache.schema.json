@@ -31,9 +31,7 @@
           "description": "Array of leader entity IDs."
         }
       },
-      "required": [
-        "leaderIds"
-      ],
+      "required": ["leaderIds"],
       "additionalProperties": false
     }
   }

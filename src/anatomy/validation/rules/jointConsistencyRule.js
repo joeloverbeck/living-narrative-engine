@@ -70,7 +70,7 @@ export class JointConsistencyRule extends ValidationRule {
         'anatomy:sockets'
       );
       const socket = parentSockets?.sockets?.find(
-        s => s.id === joint.socketId
+        (s) => s.id === joint.socketId
       );
 
       if (!socket) {
@@ -81,7 +81,7 @@ export class JointConsistencyRule extends ValidationRule {
               entityId,
               parentId: joint.parentId,
               socketId: joint.socketId,
-              availableSockets: parentSockets?.sockets?.map(s => s.id) || [],
+              availableSockets: parentSockets?.sockets?.map((s) => s.id) || [],
             }
           )
         );

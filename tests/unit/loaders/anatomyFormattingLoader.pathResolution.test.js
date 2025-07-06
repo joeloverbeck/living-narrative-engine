@@ -133,7 +133,7 @@ describe('AnatomyFormattingLoader - Path Resolution', () => {
           pairedParts: [],
           noArticleParts: [],
           descriptorOrder: [],
-            descriptorValueKeys: [],
+          descriptorValueKeys: [],
         });
       });
 
@@ -348,7 +348,7 @@ describe('AnatomyFormattingLoader - Path Resolution', () => {
           pairedParts: [],
           noArticleParts: [],
           descriptorOrder: [],
-            descriptorValueKeys: [],
+          descriptorValueKeys: [],
         });
       });
 

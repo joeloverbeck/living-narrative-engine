@@ -1,58 +1,56 @@
 <!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Living Narrative Engine</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <link rel="stylesheet" href="css/style.css" />
+    <style>
+      body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        margin: 0;
+        text-align: center;
+      }
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Living Narrative Engine</title>
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-  <link rel="manifest" href="/site.webmanifest">
-  <link rel="stylesheet" href="css/style.css" />
-  <style>
-    body {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      margin: 0;
-      text-align: center;
-    }
+      h1 {
+        font-size: 3rem;
+        margin-bottom: 2rem;
+      }
 
-    h1 {
-      font-size: 3rem;
-      margin-bottom: 2rem;
-    }
+      .menu-button {
+        font-size: 1.5rem;
+        padding: 1rem 2rem;
+        margin: 0.5rem;
+        cursor: pointer;
+      }
+    </style>
+  </head>
 
-    .menu-button {
-      font-size: 1.5rem;
-      padding: 1rem 2rem;
-      margin: 0.5rem;
-      cursor: pointer;
-    }
-  </style>
-</head>
-
-<body>
-  <h1>Living Narrative Engine</h1>
-  <button id="start-button" class="menu-button">Start New Game</button>
-  <button id="load-button" class="menu-button">Load Game</button>
-  <button id="anatomy-button" class="menu-button">Anatomy Visualizer</button>
-  <script>
-    document.getElementById('start-button').addEventListener('click', () => {
-      window.location.href = 'game.html';
-    });
-    document.getElementById('load-button').addEventListener('click', () => {
-      window.location.href = 'game.html?load=true';
-    });
-    document
-      .getElementById('anatomy-button')
-      .addEventListener('click', () => {
-        window.location.href = 'anatomy-visualizer.html';
+  <body>
+    <h1>Living Narrative Engine</h1>
+    <button id="start-button" class="menu-button">Start New Game</button>
+    <button id="load-button" class="menu-button">Load Game</button>
+    <button id="anatomy-button" class="menu-button">Anatomy Visualizer</button>
+    <script>
+      document.getElementById('start-button').addEventListener('click', () => {
+        window.location.href = 'game.html';
       });
-  </script>
-</body>
-
+      document.getElementById('load-button').addEventListener('click', () => {
+        window.location.href = 'game.html?load=true';
+      });
+      document
+        .getElementById('anatomy-button')
+        .addEventListener('click', () => {
+          window.location.href = 'anatomy-visualizer.html';
+        });
+    </script>
+  </body>
 </html>

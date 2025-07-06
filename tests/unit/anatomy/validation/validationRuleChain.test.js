@@ -81,9 +81,11 @@ describe('ValidationRuleChain', () => {
         ruleId: 'rule-2',
         ruleName: 'Rule 2',
         shouldApply: jest.fn().mockReturnValue(true),
-        validate: jest.fn().mockResolvedValue([
-          { severity: 'error', message: 'Test error', ruleId: 'rule-2' },
-        ]),
+        validate: jest
+          .fn()
+          .mockResolvedValue([
+            { severity: 'error', message: 'Test error', ruleId: 'rule-2' },
+          ]),
       };
 
       chain.addRule(rule1).addRule(rule2);
@@ -136,7 +138,8 @@ describe('ValidationRuleChain', () => {
       expect(mockContext.addIssues).toHaveBeenCalledWith([
         {
           severity: 'error',
-          message: "Validation rule 'Failing Rule' failed: Rule execution failed",
+          message:
+            "Validation rule 'Failing Rule' failed: Rule execution failed",
           ruleId: 'failing-rule',
           context: { error: 'Rule execution failed' },
         },

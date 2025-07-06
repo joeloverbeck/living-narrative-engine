@@ -59,7 +59,7 @@ describe('PrerequisiteEvaluation Integration Tests', () => {
       const actorId = 'test:actor';
       const actor = { id: actorId };
       const actionDefinition = { id: 'test:action' };
-      
+
       // Setup entity with components
       mockEntityManager.getEntityInstance.mockReturnValue(actor);
       mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
@@ -78,16 +78,17 @@ describe('PrerequisiteEvaluation Integration Tests', () => {
       const prerequisites = [
         {
           logic: {
-            '==': [
-              { var: 'actor.components.core:movement.locked' },
-              false
-            ]
+            '==': [{ var: 'actor.components.core:movement.locked' }, false],
           },
           failure_message: 'Actor is locked and cannot move',
         },
       ];
 
-      const result = prereqService.evaluate(prerequisites, actionDefinition, actor);
+      const result = prereqService.evaluate(
+        prerequisites,
+        actionDefinition,
+        actor
+      );
 
       expect(result).toBe(true);
       expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -99,10 +100,12 @@ describe('PrerequisiteEvaluation Integration Tests', () => {
       const actorId = 'test:actor';
       const actor = { id: actorId };
       const actionDefinition = { id: 'test:action' };
-      
+
       // Setup entity with movement locked
       mockEntityManager.getEntityInstance.mockReturnValue(actor);
-      mockEntityManager.getAllComponentTypesForEntity.mockReturnValue(['core:movement']);
+      mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
+        'core:movement',
+      ]);
       mockEntityManager.getComponentData.mockImplementation((id, type) => {
         if (type === 'core:movement') return { locked: true };
         return undefined;
@@ -112,16 +115,17 @@ describe('PrerequisiteEvaluation Integration Tests', () => {
       const prerequisites = [
         {
           logic: {
-            '==': [
-              { var: 'actor.components.core:movement.locked' },
-              false
-            ]
+            '==': [{ var: 'actor.components.core:movement.locked' }, false],
           },
           failure_message: 'Actor is locked and cannot move',
         },
       ];
 
-      const result = prereqService.evaluate(prerequisites, actionDefinition, actor);
+      const result = prereqService.evaluate(
+        prerequisites,
+        actionDefinition,
+        actor
+      );
 
       expect(result).toBe(false);
       expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -135,7 +139,7 @@ describe('PrerequisiteEvaluation Integration Tests', () => {
       const actorId = 'test:empty_actor';
       const actor = { id: actorId };
       const actionDefinition = { id: 'test:action' };
-      
+
       // Setup entity with no components
       mockEntityManager.getEntityInstance.mockReturnValue(actor);
       mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([]);
@@ -148,7 +152,11 @@ describe('PrerequisiteEvaluation Integration Tests', () => {
         },
       ];
 
-      const result = prereqService.evaluate(prerequisites, actionDefinition, actor);
+      const result = prereqService.evaluate(
+        prerequisites,
+        actionDefinition,
+        actor
+      );
 
       expect(result).toBe(true);
       expect(mockLogger.warn).toHaveBeenCalledWith(
@@ -162,10 +170,12 @@ describe('PrerequisiteEvaluation Integration Tests', () => {
       const actorId = 'test:actor';
       const actor = { id: actorId };
       const actionDefinition = { id: 'test:action' };
-      
+
       // Setup entity
       mockEntityManager.getEntityInstance.mockReturnValue(actor);
-      mockEntityManager.getAllComponentTypesForEntity.mockReturnValue(['core:movement']);
+      mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
+        'core:movement',
+      ]);
       mockEntityManager.getComponentData.mockImplementation((id, type) => {
         if (type === 'core:movement') return { locked: false };
         return undefined;
@@ -175,10 +185,7 @@ describe('PrerequisiteEvaluation Integration Tests', () => {
       mockGameDataRepository.getConditionDefinition.mockReturnValue({
         id: 'test:can-move',
         logic: {
-          '==': [
-            { var: 'actor.components.core:movement.locked' },
-            false
-          ]
+          '==': [{ var: 'actor.components.core:movement.locked' }, false],
         },
       });
 
@@ -189,27 +196,39 @@ describe('PrerequisiteEvaluation Integration Tests', () => {
         },
       ];
 
-      const result = prereqService.evaluate(prerequisites, actionDefinition, actor);
+      const result = prereqService.evaluate(
+        prerequisites,
+        actionDefinition,
+        actor
+      );
 
       expect(result).toBe(true);
-      expect(mockGameDataRepository.getConditionDefinition).toHaveBeenCalledWith('test:can-move');
+      expect(
+        mockGameDataRepository.getConditionDefinition
+      ).toHaveBeenCalledWith('test:can-move');
     });
 
     it('should handle circular condition_ref gracefully', () => {
       const actorId = 'test:actor';
       const actor = { id: actorId };
       const actionDefinition = { id: 'test:action' };
-      
+
       mockEntityManager.getEntityInstance.mockReturnValue(actor);
       mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([]);
 
       // Setup circular reference
       mockGameDataRepository.getConditionDefinition.mockImplementation((id) => {
         if (id === 'test:circular1') {
-          return { id: 'test:circular1', logic: { condition_ref: 'test:circular2' } };
+          return {
+            id: 'test:circular1',
+            logic: { condition_ref: 'test:circular2' },
+          };
         }
         if (id === 'test:circular2') {
-          return { id: 'test:circular2', logic: { condition_ref: 'test:circular1' } };
+          return {
+            id: 'test:circular2',
+            logic: { condition_ref: 'test:circular1' },
+          };
         }
         return null;
       });
@@ -220,7 +239,11 @@ describe('PrerequisiteEvaluation Integration Tests', () => {
         },
       ];
 
-      const result = prereqService.evaluate(prerequisites, actionDefinition, actor);
+      const result = prereqService.evaluate(
+        prerequisites,
+        actionDefinition,
+        actor
+      );
 
       expect(result).toBe(false);
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -235,7 +258,7 @@ describe('PrerequisiteEvaluation Integration Tests', () => {
       const actorId = 'test:missing_actor';
       const actor = { id: actorId };
       const actionDefinition = { id: 'test:action' };
-      
+
       // Entity doesn't exist in manager
       mockEntityManager.getEntityInstance.mockReturnValue(undefined);
       mockEntityManager.getAllComponentTypesForEntity.mockImplementation(() => {
@@ -248,7 +271,11 @@ describe('PrerequisiteEvaluation Integration Tests', () => {
         },
       ];
 
-      const result = prereqService.evaluate(prerequisites, actionDefinition, actor);
+      const result = prereqService.evaluate(
+        prerequisites,
+        actionDefinition,
+        actor
+      );
 
       // Should still evaluate but fail the check
       expect(result).toBe(false);
@@ -260,7 +287,7 @@ describe('PrerequisiteEvaluation Integration Tests', () => {
       const actorId = 'test:actor';
       const actor = { id: actorId };
       const actionDefinition = { id: 'test:complex_action' };
-      
+
       mockEntityManager.getEntityInstance.mockReturnValue(actor);
       mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
         'core:movement',
@@ -275,10 +302,7 @@ describe('PrerequisiteEvaluation Integration Tests', () => {
       const prerequisites = [
         {
           logic: {
-            '==': [
-              { var: 'actor.components.core:movement.locked' },
-              false
-            ]
+            '==': [{ var: 'actor.components.core:movement.locked' }, false],
           },
           failure_message: 'Cannot move',
         },
@@ -286,14 +310,18 @@ describe('PrerequisiteEvaluation Integration Tests', () => {
           logic: {
             '>': [
               { var: 'actor.components.core:health.current' },
-              75 // This will fail
-            ]
+              75, // This will fail
+            ],
           },
           failure_message: 'Not enough health',
         },
       ];
 
-      const result = prereqService.evaluate(prerequisites, actionDefinition, actor);
+      const result = prereqService.evaluate(
+        prerequisites,
+        actionDefinition,
+        actor
+      );
 
       expect(result).toBe(false); // Should fail on second prerequisite
       expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -308,7 +336,7 @@ describe('PrerequisiteEvaluation Integration Tests', () => {
       const actorId = 'test:actor';
       const actor = { id: actorId };
       const actionDefinition = { id: 'test:nested_action' };
-      
+
       mockEntityManager.getEntityInstance.mockReturnValue(actor);
       mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
         'core:movement',
@@ -327,34 +355,29 @@ describe('PrerequisiteEvaluation Integration Tests', () => {
           logic: {
             and: [
               {
-                '==': [
-                  { var: 'actor.components.core:movement.locked' },
-                  false
-                ]
+                '==': [{ var: 'actor.components.core:movement.locked' }, false],
               },
               {
                 or: [
                   {
-                    '>': [
-                      { var: 'actor.components.core:health.current' },
-                      50
-                    ]
+                    '>': [{ var: 'actor.components.core:health.current' }, 50],
                   },
                   {
-                    '>': [
-                      { var: 'actor.components.core:stamina.current' },
-                      50
-                    ]
-                  }
-                ]
-              }
-            ]
+                    '>': [{ var: 'actor.components.core:stamina.current' }, 50],
+                  },
+                ],
+              },
+            ],
           },
           failure_message: 'Complex requirement not met',
         },
       ];
 
-      const result = prereqService.evaluate(prerequisites, actionDefinition, actor);
+      const result = prereqService.evaluate(
+        prerequisites,
+        actionDefinition,
+        actor
+      );
 
       expect(result).toBe(true); // Should pass (movement ok AND (health > 50 OR stamina > 50))
     });
@@ -365,7 +388,7 @@ describe('PrerequisiteEvaluation Integration Tests', () => {
       const actorId = 'test:actor';
       const actor = { id: actorId };
       const actionDefinition = { id: 'test:action' };
-      
+
       // Force an error during context building
       jest.spyOn(contextBuilder, 'buildContext').mockImplementation(() => {
         throw new Error('Context building failed');
@@ -377,7 +400,11 @@ describe('PrerequisiteEvaluation Integration Tests', () => {
         },
       ];
 
-      const result = prereqService.evaluate(prerequisites, actionDefinition, actor);
+      const result = prereqService.evaluate(
+        prerequisites,
+        actionDefinition,
+        actor
+      );
 
       expect(result).toBe(false);
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -390,7 +417,7 @@ describe('PrerequisiteEvaluation Integration Tests', () => {
       const actorId = 'test:actor';
       const actor = { id: actorId };
       const actionDefinition = { id: 'test:action' };
-      
+
       mockEntityManager.getEntityInstance.mockReturnValue(actor);
       mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([]);
 
@@ -405,11 +432,17 @@ describe('PrerequisiteEvaluation Integration Tests', () => {
         },
       ];
 
-      const result = prereqService.evaluate(prerequisites, actionDefinition, actor);
+      const result = prereqService.evaluate(
+        prerequisites,
+        actionDefinition,
+        actor
+      );
 
       expect(result).toBe(false);
       expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Prerequisite item is invalid or missing \'logic\' property')
+        expect.stringContaining(
+          "Prerequisite item is invalid or missing 'logic' property"
+        )
       );
     });
   });

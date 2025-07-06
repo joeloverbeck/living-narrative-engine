@@ -33,7 +33,7 @@ export class AnatomyCacheManager {
    */
   constructor({ logger }) {
     if (!logger) throw new InvalidArgumentError('logger is required');
-    
+
     this.#logger = logger;
     this.#adjacencyCache = new Map();
   }
@@ -58,7 +58,7 @@ export class AnatomyCacheManager {
   set(entityId, node) {
     if (!entityId) throw new InvalidArgumentError('entityId is required');
     if (!node) throw new InvalidArgumentError('node is required');
-    
+
     this.#adjacencyCache.set(entityId, node);
   }
 
@@ -118,8 +118,10 @@ export class AnatomyCacheManager {
    * @returns {void}
    */
   buildCache(rootEntityId, entityManager) {
-    if (!rootEntityId) throw new InvalidArgumentError('rootEntityId is required');
-    if (!entityManager) throw new InvalidArgumentError('entityManager is required');
+    if (!rootEntityId)
+      throw new InvalidArgumentError('rootEntityId is required');
+    if (!entityManager)
+      throw new InvalidArgumentError('entityManager is required');
 
     this.#logger.debug(
       `AnatomyCacheManager: Building cache for anatomy rooted at '${rootEntityId}'`
@@ -127,8 +129,15 @@ export class AnatomyCacheManager {
 
     this.clear();
     const visited = new Set();
-    
-    this.#buildCacheRecursive(rootEntityId, null, null, entityManager, visited, 0);
+
+    this.#buildCacheRecursive(
+      rootEntityId,
+      null,
+      null,
+      entityManager,
+      visited,
+      0
+    );
 
     this.#logger.info(
       `AnatomyCacheManager: Built cache with ${this.#adjacencyCache.size} nodes`
@@ -146,7 +155,14 @@ export class AnatomyCacheManager {
    * @param {number} depth
    * @private
    */
-  #buildCacheRecursive(entityId, parentId, socketId, entityManager, visited, depth) {
+  #buildCacheRecursive(
+    entityId,
+    parentId,
+    socketId,
+    entityManager,
+    visited,
+    depth
+  ) {
     if (depth > ANATOMY_CONSTANTS.MAX_RECURSION_DEPTH) {
       this.#logger.warn(
         `AnatomyCacheManager: Max recursion depth reached at entity '${entityId}'`
@@ -176,7 +192,8 @@ export class AnatomyCacheManager {
       this.#adjacencyCache.set(entityId, node);
 
       // Find all children (entities with joints pointing to this entity)
-      const entitiesWithJoints = entityManager.getEntitiesWithComponent('anatomy:joint');
+      const entitiesWithJoints =
+        entityManager.getEntitiesWithComponent('anatomy:joint');
 
       for (const childEntity of entitiesWithJoints) {
         const joint = entityManager.getComponentData(
@@ -210,7 +227,8 @@ export class AnatomyCacheManager {
    * @returns {{valid: boolean, issues: string[]}}
    */
   validateCache(entityManager) {
-    if (!entityManager) throw new InvalidArgumentError('entityManager is required');
+    if (!entityManager)
+      throw new InvalidArgumentError('entityManager is required');
 
     const issues = [];
 
@@ -225,10 +243,7 @@ export class AnatomyCacheManager {
 
       // Check parent relationship
       if (node.parentId) {
-        const joint = entityManager.getComponentData(
-          entityId,
-          'anatomy:joint'
-        );
+        const joint = entityManager.getComponentData(entityId, 'anatomy:joint');
         if (!joint) {
           issues.push(
             `Entity '${entityId}' in cache has parent but no joint component`

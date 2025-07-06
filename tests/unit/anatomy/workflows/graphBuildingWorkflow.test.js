@@ -106,12 +106,18 @@ describe('GraphBuildingWorkflow', () => {
 
       expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(rootId);
       expect(mockEntity.hasComponent).toHaveBeenCalledWith('anatomy:part');
-      expect(mockBodyGraphService.buildAdjacencyCache).toHaveBeenCalledWith(rootId);
+      expect(mockBodyGraphService.buildAdjacencyCache).toHaveBeenCalledWith(
+        rootId
+      );
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining(`Building adjacency cache for root entity '${rootId}'`)
+        expect.stringContaining(
+          `Building adjacency cache for root entity '${rootId}'`
+        )
       );
       expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining(`Successfully built adjacency cache for root entity '${rootId}'`)
+        expect.stringContaining(
+          `Successfully built adjacency cache for root entity '${rootId}'`
+        )
       );
     });
 
@@ -132,7 +138,9 @@ describe('GraphBuildingWorkflow', () => {
       mockEntityManager.getEntityInstance.mockReturnValue(null);
 
       await expect(workflow.buildCache(rootId)).rejects.toThrow(
-        new InvalidArgumentError(`Root entity '${rootId}' not found in entity manager`)
+        new InvalidArgumentError(
+          `Root entity '${rootId}' not found in entity manager`
+        )
       );
     });
 
@@ -146,9 +154,13 @@ describe('GraphBuildingWorkflow', () => {
       await workflow.buildCache(rootId);
 
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining(`Root entity '${rootId}' does not have anatomy:part component`)
+        expect.stringContaining(
+          `Root entity '${rootId}' does not have anatomy:part component`
+        )
       );
-      expect(mockBodyGraphService.buildAdjacencyCache).toHaveBeenCalledWith(rootId);
+      expect(mockBodyGraphService.buildAdjacencyCache).toHaveBeenCalledWith(
+        rootId
+      );
     });
 
     it('should throw GraphBuildingError when bodyGraphService fails', async () => {
@@ -157,19 +169,23 @@ describe('GraphBuildingWorkflow', () => {
         hasComponent: jest.fn().mockReturnValue(true),
       };
       mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
-      
+
       const originalError = new Error('Build failed');
       mockBodyGraphService.buildAdjacencyCache.mockImplementation(() => {
         throw originalError;
       });
 
-      await expect(workflow.buildCache(rootId)).rejects.toThrow(GraphBuildingError);
+      await expect(workflow.buildCache(rootId)).rejects.toThrow(
+        GraphBuildingError
+      );
       await expect(workflow.buildCache(rootId)).rejects.toThrow(
         `Failed to build adjacency cache for root entity '${rootId}': Build failed`
       );
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining(`Failed to build adjacency cache for root entity '${rootId}'`),
+        expect.stringContaining(
+          `Failed to build adjacency cache for root entity '${rootId}'`
+        ),
         expect.objectContaining({
           error: 'Build failed',
           stack: expect.any(String),
@@ -183,13 +199,15 @@ describe('GraphBuildingWorkflow', () => {
         hasComponent: jest.fn().mockReturnValue(true),
       };
       mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
-      
+
       const invalidArgError = new InvalidArgumentError('Invalid configuration');
       mockBodyGraphService.buildAdjacencyCache.mockImplementation(() => {
         throw invalidArgError;
       });
 
-      await expect(workflow.buildCache(rootId)).rejects.toThrow(invalidArgError);
+      await expect(workflow.buildCache(rootId)).rejects.toThrow(
+        invalidArgError
+      );
       expect(mockLogger.error).not.toHaveBeenCalled();
     });
   });
@@ -213,9 +231,13 @@ describe('GraphBuildingWorkflow', () => {
       await workflow.rebuildCache(rootId);
 
       expect(mockBodyGraphService.clearCache).toHaveBeenCalledWith(rootId);
-      expect(mockBodyGraphService.buildAdjacencyCache).toHaveBeenCalledWith(rootId);
+      expect(mockBodyGraphService.buildAdjacencyCache).toHaveBeenCalledWith(
+        rootId
+      );
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining(`Rebuilding adjacency cache for root entity '${rootId}'`)
+        expect.stringContaining(
+          `Rebuilding adjacency cache for root entity '${rootId}'`
+        )
       );
     });
 
@@ -225,13 +247,15 @@ describe('GraphBuildingWorkflow', () => {
         hasComponent: jest.fn().mockReturnValue(true),
       };
       mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
-      
+
       // Remove clearCache method
       delete mockBodyGraphService.clearCache;
 
       await workflow.rebuildCache(rootId);
 
-      expect(mockBodyGraphService.buildAdjacencyCache).toHaveBeenCalledWith(rootId);
+      expect(mockBodyGraphService.buildAdjacencyCache).toHaveBeenCalledWith(
+        rootId
+      );
     });
 
     it('should propagate errors from buildCache', async () => {
@@ -239,7 +263,9 @@ describe('GraphBuildingWorkflow', () => {
       mockEntityManager.getEntityInstance.mockReturnValue(null);
 
       await expect(workflow.rebuildCache(rootId)).rejects.toThrow(
-        new InvalidArgumentError(`Root entity '${rootId}' not found in entity manager`)
+        new InvalidArgumentError(
+          `Root entity '${rootId}' not found in entity manager`
+        )
       );
     });
   });
@@ -345,7 +371,9 @@ describe('GraphBuildingWorkflow', () => {
         issues: [`Validation error: ${error.message}`],
       });
       expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining(`Error during cache validation for root entity '${rootId}'`),
+        expect.stringContaining(
+          `Error during cache validation for root entity '${rootId}'`
+        ),
         expect.objectContaining({ error: error.message })
       );
     });

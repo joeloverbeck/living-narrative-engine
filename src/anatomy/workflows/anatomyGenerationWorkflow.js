@@ -31,26 +31,21 @@ export class AnatomyGenerationWorkflow extends BaseService {
    * @param {ILogger} deps.logger
    * @param {BodyBlueprintFactory} deps.bodyBlueprintFactory
    */
-  constructor({
-    entityManager,
-    dataRegistry,
-    logger,
-    bodyBlueprintFactory,
-  }) {
+  constructor({ entityManager, dataRegistry, logger, bodyBlueprintFactory }) {
     super();
     this.#logger = this._init('AnatomyGenerationWorkflow', logger, {
       entityManager: {
         value: entityManager,
-        requiredMethods: ['getEntityInstance']
+        requiredMethods: ['getEntityInstance'],
       },
       dataRegistry: {
         value: dataRegistry,
-        requiredMethods: ['get']
+        requiredMethods: ['get'],
       },
       bodyBlueprintFactory: {
         value: bodyBlueprintFactory,
-        requiredMethods: ['createAnatomyGraph']
-      }
+        requiredMethods: ['createAnatomyGraph'],
+      },
     });
     this.#entityManager = entityManager;
     this.#dataRegistry = dataRegistry;
@@ -59,7 +54,7 @@ export class AnatomyGenerationWorkflow extends BaseService {
 
   /**
    * Generates anatomy graph for an entity
-   * 
+   *
    * @param {string} blueprintId - The blueprint ID to use
    * @param {string} recipeId - The recipe ID to use
    * @param {object} options - Additional options
@@ -69,7 +64,7 @@ export class AnatomyGenerationWorkflow extends BaseService {
    */
   async generate(blueprintId, recipeId, options) {
     const { ownerId } = options;
-    
+
     this.#logger.debug(
       `AnatomyGenerationWorkflow: Generating anatomy graph for entity '${ownerId}' using blueprint '${blueprintId}' and recipe '${recipeId}'`
     );
@@ -91,13 +86,13 @@ export class AnatomyGenerationWorkflow extends BaseService {
     return {
       rootId: graphResult.rootId,
       entities: graphResult.entities,
-      partsMap
+      partsMap,
     };
   }
 
   /**
    * Builds a map of part names to entity IDs
-   * 
+   *
    * @private
    * @param {string[]} partEntityIds - Array of part entity IDs
    * @returns {Object<string, string>} Map of part names to entity IDs
@@ -107,11 +102,11 @@ export class AnatomyGenerationWorkflow extends BaseService {
 
     for (const partEntityId of partEntityIds) {
       const partEntity = this.#entityManager.getEntityInstance(partEntityId);
-      
+
       if (partEntity && partEntity.hasComponent('core:name')) {
         const nameData = partEntity.getComponentData('core:name');
         const name = nameData ? nameData.text : null;
-        
+
         if (name) {
           parts[name] = partEntityId;
           this.#logger.debug(
@@ -130,14 +125,14 @@ export class AnatomyGenerationWorkflow extends BaseService {
 
   /**
    * Validates that a recipe exists and has required fields
-   * 
+   *
    * @param {string} recipeId - The recipe ID to validate
    * @returns {string} The blueprint ID from the recipe
    * @throws {ValidationError} If recipe is invalid
    */
   validateRecipe(recipeId) {
     const recipe = this.#dataRegistry.get('anatomyRecipes', recipeId);
-    
+
     if (!recipe) {
       throw new ValidationError(`Recipe '${recipeId}' not found`);
     }

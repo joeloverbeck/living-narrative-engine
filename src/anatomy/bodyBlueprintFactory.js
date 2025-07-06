@@ -149,11 +149,7 @@ export class BodyBlueprintFactory {
 
       // Phase 2: Process blueprint slots if defined
       if (blueprint.slots) {
-        await this.#processBlueprintSlots(
-          blueprint,
-          processedRecipe,
-          context
-        );
+        await this.#processBlueprintSlots(blueprint, processedRecipe, context);
       }
 
       // Phase 3: Validate constraints
@@ -200,7 +196,7 @@ export class BodyBlueprintFactory {
         `BodyBlueprintFactory: Failed to create anatomy graph`,
         { error }
       );
-      
+
       // Clean up any created entities on error
       if (context) {
         await this.#entityGraphBuilder.cleanupEntities(
@@ -211,10 +207,10 @@ export class BodyBlueprintFactory {
       this.#eventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
         message: error.message,
         details: {
-          raw: 'BodyBlueprintFactory.createAnatomyGraph'
-        }
+          raw: 'BodyBlueprintFactory.createAnatomyGraph',
+        },
       });
-      
+
       throw error;
     }
   }
@@ -241,7 +237,7 @@ export class BodyBlueprintFactory {
       if (slotKey === 'torso') {
         continue;
       }
-      
+
       if (!blueprint.slots || !blueprint.slots[slotKey]) {
         invalidSlotKeys.push(slotKey);
       }
@@ -251,7 +247,7 @@ export class BodyBlueprintFactory {
     if (invalidSlotKeys.length > 0) {
       const blueprintId = blueprint.id || 'unknown';
       const errorMessage = `Recipe '${recipe.recipeId}' contains invalid slot keys that don't exist in blueprint '${blueprintId}': ${invalidSlotKeys.join(', ')}`;
-      
+
       // Dispatch system error with full context
       this.#eventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
         message: errorMessage,
@@ -261,11 +257,11 @@ export class BodyBlueprintFactory {
             blueprintId: blueprintId,
             invalidSlotKeys,
             validSlotKeys: Object.keys(blueprint.slots || {}),
-            context: 'BodyBlueprintFactory.validateRecipeSlots'
-          })
-        }
+            context: 'BodyBlueprintFactory.validateRecipeSlots',
+          }),
+        },
       });
-      
+
       throw new ValidationError(errorMessage);
     }
   }
@@ -406,9 +402,9 @@ export class BodyBlueprintFactory {
             details: {
               raw: JSON.stringify({
                 ...errorContext,
-                context: 'BodyBlueprintFactory.processBlueprintSlots'
-              })
-            }
+                context: 'BodyBlueprintFactory.processBlueprintSlots',
+              }),
+            },
           }
         );
 

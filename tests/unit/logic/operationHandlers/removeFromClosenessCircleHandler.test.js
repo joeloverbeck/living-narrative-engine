@@ -120,9 +120,9 @@ describe('RemoveFromClosenessCircleHandler', () => {
             parts: {
               torso: 'body1',
               leg_left: 'left-leg1',
-              leg_right: 'right-leg1'
-            }
-          }
+              leg_right: 'right-leg1',
+            },
+          },
         };
       }
       if (id === 'left-leg1' && componentId === 'core:movement') {
@@ -142,9 +142,9 @@ describe('RemoveFromClosenessCircleHandler', () => {
             parts: {
               torso: 'body2',
               leg_left: 'left-leg2',
-              leg_right: 'right-leg2'
-            }
-          }
+              leg_right: 'right-leg2',
+            },
+          },
         };
       }
       if (id === 'left-leg2' && componentId === 'core:movement') {
@@ -164,9 +164,9 @@ describe('RemoveFromClosenessCircleHandler', () => {
             parts: {
               torso: 'body3',
               leg_left: 'left-leg3',
-              leg_right: 'right-leg3'
-            }
-          }
+              leg_right: 'right-leg3',
+            },
+          },
         };
       }
       if (id === 'left-leg3' && componentId === 'core:movement') {
@@ -201,27 +201,49 @@ describe('RemoveFromClosenessCircleHandler', () => {
     );
 
     // Check hero1 closeness removed
-    expect(mockRemoveComponent).toHaveBeenCalledWith('hero1', 'intimacy:closeness');
-    
+    expect(mockRemoveComponent).toHaveBeenCalledWith(
+      'hero1',
+      'intimacy:closeness'
+    );
+
     // Check hero1's body parts movement unlocked
-    expect(mockAddComponent).toHaveBeenCalledWith('left-leg1', 'core:movement', {
-      locked: false,
-      forcedOverride: false,
-    });
-    expect(mockAddComponent).toHaveBeenCalledWith('right-leg1', 'core:movement', {
-      locked: false,
-      forcedOverride: false,
-    });
-    
+    expect(mockAddComponent).toHaveBeenCalledWith(
+      'left-leg1',
+      'core:movement',
+      {
+        locked: false,
+        forcedOverride: false,
+      }
+    );
+    expect(mockAddComponent).toHaveBeenCalledWith(
+      'right-leg1',
+      'core:movement',
+      {
+        locked: false,
+        forcedOverride: false,
+      }
+    );
+
     // Check other heroes' closeness updated
-    expect(mockAddComponent).toHaveBeenCalledWith('hero2', 'intimacy:closeness', {
-      partners: ['hero3'],
-    });
-    expect(mockAddComponent).toHaveBeenCalledWith('hero3', 'intimacy:closeness', {
-      partners: ['hero2'],
-    });
-    
-    expect(execCtx.evaluationContext.context.remain).toEqual(['hero2', 'hero3']);
+    expect(mockAddComponent).toHaveBeenCalledWith(
+      'hero2',
+      'intimacy:closeness',
+      {
+        partners: ['hero3'],
+      }
+    );
+    expect(mockAddComponent).toHaveBeenCalledWith(
+      'hero3',
+      'intimacy:closeness',
+      {
+        partners: ['hero2'],
+      }
+    );
+
+    expect(execCtx.evaluationContext.context.remain).toEqual([
+      'hero2',
+      'hero3',
+    ]);
   });
 
   test('removes partner component when last member', async () => {
@@ -274,9 +296,9 @@ describe('RemoveFromClosenessCircleHandler', () => {
             root: 'body1',
             parts: {
               torso: 'body1',
-              leg_left: 'left-leg1'
-            }
-          }
+              leg_left: 'left-leg1',
+            },
+          },
         };
       }
       if (id === 'left-leg1' && componentId === 'core:movement') {
@@ -305,16 +327,26 @@ describe('RemoveFromClosenessCircleHandler', () => {
     await handler.execute({ actor_id: 'legacy1' }, execCtx);
 
     // Check legacy1 closeness removed and movement unlocked
-    expect(mockRemoveComponent).toHaveBeenCalledWith('legacy1', 'intimacy:closeness');
+    expect(mockRemoveComponent).toHaveBeenCalledWith(
+      'legacy1',
+      'intimacy:closeness'
+    );
     expect(mockAddComponent).toHaveBeenCalledWith('legacy1', 'core:movement', {
       locked: false,
     });
-    
+
     // Check hero1 closeness removed and body part movement unlocked
-    expect(mockRemoveComponent).toHaveBeenCalledWith('hero1', 'intimacy:closeness');
-    expect(mockAddComponent).toHaveBeenCalledWith('left-leg1', 'core:movement', {
-      locked: false,
-      forcedOverride: false,
-    });
+    expect(mockRemoveComponent).toHaveBeenCalledWith(
+      'hero1',
+      'intimacy:closeness'
+    );
+    expect(mockAddComponent).toHaveBeenCalledWith(
+      'left-leg1',
+      'core:movement',
+      {
+        locked: false,
+        forcedOverride: false,
+      }
+    );
   });
 });

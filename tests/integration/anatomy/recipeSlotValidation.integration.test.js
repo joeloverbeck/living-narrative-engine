@@ -53,9 +53,7 @@ describe('Anatomy Recipe Slot Validation Integration', () => {
         components: {
           [ANATOMY_PART_COMPONENT_ID]: { subType: 'head' },
           [ANATOMY_SOCKETS_COMPONENT_ID]: {
-            sockets: [
-              { id: 'scalp', allowedTypes: ['hair'], maxCount: 1 },
-            ],
+            sockets: [{ id: 'scalp', allowedTypes: ['hair'], maxCount: 1 }],
           },
         },
       },
@@ -205,22 +203,28 @@ describe('Anatomy Recipe Slot Validation Integration', () => {
 
       // Verify event was dispatched
       expect(eventDispatcher.dispatch).toHaveBeenCalled();
-      
+
       // Find the validation error event call
       const calls = eventDispatcher.dispatch.mock.calls;
-      const validationCall = calls.find(call => 
-        call[0] === SYSTEM_ERROR_OCCURRED_ID && 
-        call[1].message.includes('invalid slot keys')
+      const validationCall = calls.find(
+        (call) =>
+          call[0] === SYSTEM_ERROR_OCCURRED_ID &&
+          call[1].message.includes('invalid slot keys')
       );
-      
+
       expect(validationCall).toBeDefined();
       expect(validationCall[1].message).toContain('invalid slot keys');
-      
+
       const details = JSON.parse(validationCall[1].details.raw);
       expect(details.recipeId).toBe('test:invalid_with_context');
       expect(details.blueprintId).toBe('test:humanoid');
       expect(details.invalidSlotKeys).toEqual(['invalidSlot']);
-      expect(details.validSlotKeys).toEqual(['head', 'leftArm', 'rightArm', 'hair']);
+      expect(details.validSlotKeys).toEqual([
+        'head',
+        'leftArm',
+        'rightArm',
+        'hair',
+      ]);
       expect(details.context).toBe('BodyBlueprintFactory.validateRecipeSlots');
     });
   });

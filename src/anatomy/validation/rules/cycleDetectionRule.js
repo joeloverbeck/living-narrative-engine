@@ -39,7 +39,7 @@ export class CycleDetectionRule extends ValidationRule {
       recursionStack.add(entityId);
 
       // Find children (entities that have this as parent in their joint)
-      const children = entityIds.filter(id => {
+      const children = entityIds.filter((id) => {
         const joint = entityManager.getComponentData(id, 'anatomy:joint');
         return joint?.parentId === entityId;
       });

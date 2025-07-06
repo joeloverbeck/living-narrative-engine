@@ -6,9 +6,7 @@
   "description": "Commands your character to follow the specified target, becoming their companion and moving with them.",
   "scope": "core:potential_leaders",
   "required_components": {
-    "target": [
-      "core:actor"
-    ]
+    "target": ["core:actor"]
   },
   "template": "follow {target}",
   "prerequisites": [

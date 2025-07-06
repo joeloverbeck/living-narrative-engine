@@ -38,12 +38,7 @@
     "macros": [],
     "portraits": [],
     "rules": [],
-    "ui": [
-      "icons.json",
-      "labels.json"
-    ],
-    "worlds": [
-      "isekai.world.json"
-    ]
+    "ui": ["icons.json", "labels.json"],
+    "worlds": ["isekai.world.json"]
   }
 }

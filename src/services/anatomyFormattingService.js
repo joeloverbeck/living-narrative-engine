@@ -35,12 +35,27 @@ export class AnatomyFormattingService {
    */
   constructor({ dataRegistry, logger, safeEventDispatcher }) {
     // Validate dependencies
-    validateDependencies([
-      { dependency: dataRegistry, name: 'dataRegistry', methods: ['getAll', 'get'] },
-      { dependency: logger, name: 'logger', methods: ['info', 'warn', 'error', 'debug'] },
-      { dependency: safeEventDispatcher, name: 'safeEventDispatcher', methods: ['dispatch'] }
-    ], logger);
-    
+    validateDependencies(
+      [
+        {
+          dependency: dataRegistry,
+          name: 'dataRegistry',
+          methods: ['getAll', 'get'],
+        },
+        {
+          dependency: logger,
+          name: 'logger',
+          methods: ['info', 'warn', 'error', 'debug'],
+        },
+        {
+          dependency: safeEventDispatcher,
+          name: 'safeEventDispatcher',
+          methods: ['dispatch'],
+        },
+      ],
+      logger
+    );
+
     this.dataRegistry = dataRegistry;
     this.logger = logger;
     this.safeEventDispatcher = safeEventDispatcher;
@@ -64,14 +79,14 @@ export class AnatomyFormattingService {
 
     // Get mod load order from meta registry (stored by ModManifestProcessor)
     const modLoadOrder = this.dataRegistry.get('meta', 'final_mod_order') || [];
-    
+
     this.logger.debug(
       `AnatomyFormattingService: Using mod load order: [${modLoadOrder.join(', ')}]`
     );
 
     // Get all anatomy formatting configurations from registry
     const allConfigs = this.dataRegistry.getAll('anatomyFormatting') || [];
-    
+
     this.logger.debug(
       `AnatomyFormattingService: Retrieved ${allConfigs.length} anatomy formatting configs from registry`
     );
@@ -91,8 +106,8 @@ export class AnatomyFormattingService {
     for (const modId of modLoadOrder) {
       // Look for configurations from this mod
       // The configs are stored with metadata including _modId
-      const modConfigs = allConfigs.filter(config => config._modId === modId);
-      
+      const modConfigs = allConfigs.filter((config) => config._modId === modId);
+
       this.logger.debug(
         `AnatomyFormattingService: Found ${modConfigs.length} configs for mod '${modId}'`
       );
@@ -106,7 +121,7 @@ export class AnatomyFormattingService {
             hasDescriptorOrder: !!config.descriptorOrder,
             descriptorOrderLength: config.descriptorOrder?.length || 0,
             hasDescriptorValueKeys: !!config.descriptorValueKeys,
-            descriptorValueKeysLength: config.descriptorValueKeys?.length || 0
+            descriptorValueKeysLength: config.descriptorValueKeys?.length || 0,
           }
         );
         mergedConfig = this._mergeConfigurations(mergedConfig, config);
@@ -188,7 +203,11 @@ export class AnatomyFormattingService {
   getDescriptionOrder() {
     this._ensureInitialized();
     const descriptionOrder = this._mergedConfig.descriptionOrder;
-    this._validateConfiguration('descriptionOrder', descriptionOrder, 'getDescriptionOrder');
+    this._validateConfiguration(
+      'descriptionOrder',
+      descriptionOrder,
+      'getDescriptionOrder'
+    );
     return [...descriptionOrder];
   }
 
@@ -224,7 +243,11 @@ export class AnatomyFormattingService {
   getIrregularPlurals() {
     this._ensureInitialized();
     const irregularPlurals = this._mergedConfig.irregularPlurals;
-    this._validateConfiguration('irregularPlurals', irregularPlurals, 'getIrregularPlurals');
+    this._validateConfiguration(
+      'irregularPlurals',
+      irregularPlurals,
+      'getIrregularPlurals'
+    );
     return { ...irregularPlurals };
   }
 
@@ -248,10 +271,13 @@ export class AnatomyFormattingService {
   getDescriptorOrder() {
     this._ensureInitialized();
     const descriptorOrder = this._mergedConfig.descriptorOrder;
-    this._validateConfiguration('descriptorOrder', descriptorOrder, 'getDescriptorOrder');
+    this._validateConfiguration(
+      'descriptorOrder',
+      descriptorOrder,
+      'getDescriptorOrder'
+    );
     return [...descriptorOrder];
   }
-
 
   /**
    * Get the list of keys to search for descriptor values
@@ -261,7 +287,11 @@ export class AnatomyFormattingService {
   getDescriptorValueKeys() {
     this._ensureInitialized();
     const descriptorValueKeys = this._mergedConfig.descriptorValueKeys;
-    this._validateConfiguration('descriptorValueKeys', descriptorValueKeys, 'getDescriptorValueKeys');
+    this._validateConfiguration(
+      'descriptorValueKeys',
+      descriptorValueKeys,
+      'getDescriptorValueKeys'
+    );
     return [...descriptorValueKeys];
   }
 
@@ -289,7 +319,7 @@ export class AnatomyFormattingService {
   _validateConfiguration(configKey, configValue, method) {
     // Check if the value is empty (array, set, or object)
     let isEmpty = false;
-    
+
     if (Array.isArray(configValue)) {
       isEmpty = configValue.length === 0;
     } else if (configValue instanceof Set) {
@@ -308,18 +338,19 @@ export class AnatomyFormattingService {
         expected: `Non-empty ${configKey} configuration`,
         actual: configValue,
         impact: 'Body part descriptions will be incomplete or empty',
-        suggestion: 'Ensure "anatomy" mod is loaded in /data/game.json mods list',
-        affectedFeature: 'Body part description generation'
+        suggestion:
+          'Ensure "anatomy" mod is loaded in /data/game.json mods list',
+        affectedFeature: 'Body part description generation',
       };
 
       this.logger.error(message, details);
-      
+
       this.safeEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
         message,
         details: {
           raw: JSON.stringify(details),
-          timestamp: new Date().toISOString()
-        }
+          timestamp: new Date().toISOString(),
+        },
       });
 
       throw new Error(message);

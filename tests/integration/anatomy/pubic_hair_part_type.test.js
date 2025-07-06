@@ -1,8 +1,6 @@
 import { describe, expect, it, beforeEach, afterEach } from '@jest/globals';
 import AnatomyIntegrationTestBed from '../../common/anatomy/anatomyIntegrationTestBed.js';
-import {
-  ANATOMY_PART_COMPONENT_ID,
-} from '../../../src/constants/componentIds.js';
+import { ANATOMY_PART_COMPONENT_ID } from '../../../src/constants/componentIds.js';
 
 describe('Pubic Hair Part Type Integration', () => {
   let testBed;
@@ -86,7 +84,9 @@ describe('Pubic Hair Part Type Integration', () => {
         undefined,
         Math.random
       )
-    ).rejects.toThrow('No entity definitions found matching anatomy requirements');
+    ).rejects.toThrow(
+      'No entity definitions found matching anatomy requirements'
+    );
   });
 
   it('should not select pubic hair entities for regular hair slots', async () => {

@@ -54,13 +54,13 @@ export class EntityGraphBuilder {
   createRootEntity(rootDefinitionId, recipe, ownerId) {
     // Check if recipe has a torso override
     let actualRootDefinitionId = rootDefinitionId;
-    
+
     if (recipe.slots?.torso?.preferId) {
       const overrideDef = this.#dataRegistry.get(
         'entityDefinitions',
         recipe.slots.torso.preferId
       );
-      
+
       if (overrideDef) {
         const anatomyPart = overrideDef.components?.['anatomy:part'];
         if (anatomyPart && anatomyPart.subType === 'torso') {
@@ -80,7 +80,9 @@ export class EntityGraphBuilder {
       }
     }
 
-    const rootEntity = this.#entityManager.createEntityInstance(actualRootDefinitionId);
+    const rootEntity = this.#entityManager.createEntityInstance(
+      actualRootDefinitionId
+    );
 
     if (ownerId) {
       // Add ownership component if specified
@@ -107,7 +109,8 @@ export class EntityGraphBuilder {
   createAndAttachPart(parentId, socketId, partDefinitionId) {
     try {
       // Create the child entity
-      const childEntity = this.#entityManager.createEntityInstance(partDefinitionId);
+      const childEntity =
+        this.#entityManager.createEntityInstance(partDefinitionId);
 
       // Add joint component to establish the connection
       this.#entityManager.addComponent(childEntity.id, 'anatomy:joint', {

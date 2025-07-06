@@ -473,3 +473,103 @@ If a rule throws an error during evaluation for any reason (e.g., invalid operat
 3.  **Return** `false` as the final result for the rule evaluation.
 
 This ensures that the rest of the game logic can continue to function smoothly, treating the failed condition check as if it were simply not met.
+
+## Part VI: Custom Operators
+
+The Living Narrative Engine extends JsonLogic with custom operators for game-specific functionality.
+
+### Anatomy Operators
+
+#### hasPartOfType
+
+Checks if an entity has any body parts of a specific type.
+
+**Syntax**: `{"hasPartOfType": ["entityPath", "partType"]}`
+
+**Parameters**:
+
+- `entityPath`: Path to the entity (e.g., "actor", "target", "event.target")
+- `partType`: The type of body part to check for (e.g., "leg", "arm", "head")
+
+**Returns**: `true` if the entity has at least one body part with the specified type, `false` otherwise.
+
+**Examples**:
+
+Check if the actor has legs:
+
+```json
+{ "hasPartOfType": ["actor", "leg"] }
+```
+
+Check if the target has wings:
+
+```json
+{ "hasPartOfType": ["target", "wing"] }
+```
+
+Complex rule - entity must have arms but no wings:
+
+```json
+{
+  "and": [
+    { "hasPartOfType": ["actor", "arm"] },
+    { "!": { "hasPartOfType": ["actor", "wing"] } }
+  ]
+}
+```
+
+#### hasPartWithComponentValue
+
+Checks if an entity has a body part with a specific component value.
+
+**Syntax**: `{"hasPartWithComponentValue": ["entityPath", "componentId", "propertyPath", "expectedValue"]}`
+
+**Parameters**:
+
+- `entityPath`: Path to the entity
+- `componentId`: The component to check (e.g., "descriptors:build")
+- `propertyPath`: Path to the property within the component
+- `expectedValue`: The value to match
+
+**Example**:
+
+```json
+{
+  "hasPartWithComponentValue": [
+    "actor",
+    "descriptors:build",
+    "build",
+    "muscular"
+  ]
+}
+```
+
+#### hasPartOfTypeWithComponentValue
+
+Checks if an entity has a body part of a specific type with a specific component value. This is useful when you want to check properties of specific body parts, like checking if legs are muscular or arms are cybernetic.
+
+**Syntax**: `{"hasPartOfTypeWithComponentValue": ["entityPath", "partType", "componentId", "propertyPath", "expectedValue"]}`
+
+**Parameters**:
+
+- `entityPath`: Path to the entity
+- `partType`: The type of body part to check (e.g., "leg", "arm", "head")
+- `componentId`: The component to check (e.g., "descriptors:build")
+- `propertyPath`: Path to the property within the component
+- `expectedValue`: The value to match
+
+**Example**:
+
+```json
+{
+  "hasPartOfTypeWithComponentValue": [
+    "actor",
+    "leg",
+    "descriptors:build",
+    "build",
+    "muscular"
+  ]
+}
+```
+
+This checks if the actor has legs that are specifically muscular. Unlike `hasPartWithComponentValue`, this operator only checks parts of the specified type, so an actor with muscular arms but normal legs would return false.

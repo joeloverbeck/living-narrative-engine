@@ -49,10 +49,7 @@
           "type": "string"
         },
         "target_id": {
-          "type": [
-            "string",
-            "null"
-          ]
+          "type": ["string", "null"]
         },
         "involved_entities": {
           "type": "array",

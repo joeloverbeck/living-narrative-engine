@@ -41,7 +41,7 @@ export class SocketLimitRule extends ValidationRule {
         parentId,
         'anatomy:sockets'
       );
-      const socket = socketsComponent?.sockets?.find(s => s.id === socketId);
+      const socket = socketsComponent?.sockets?.find((s) => s.id === socketId);
 
       if (!socket) {
         issues.push(

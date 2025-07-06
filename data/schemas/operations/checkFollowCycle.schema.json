@@ -36,11 +36,7 @@
           "pattern": "^\\S(.*\\S)?$"
         }
       },
-      "required": [
-        "follower_id",
-        "leader_id",
-        "result_variable"
-      ],
+      "required": ["follower_id", "leader_id", "result_variable"],
       "additionalProperties": false
     }
   }

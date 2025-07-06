@@ -110,7 +110,8 @@ describe('AnatomyGraphRenderer - Method Name Validation', () => {
           if (type === 'core:name') return { text: 'Part Name' };
           if (type === 'core:description') return { text: 'Part Description' };
           if (type === 'anatomy:part') return { subType: 'arm' };
-          if (type === 'anatomy:joint') return { parentId: rootEntityId, socketId: 'socket1' };
+          if (type === 'anatomy:joint')
+            return { parentId: rootEntityId, socketId: 'socket1' };
           return null;
         }),
       };
@@ -126,21 +127,37 @@ describe('AnatomyGraphRenderer - Method Name Validation', () => {
       await renderer.renderGraph(rootEntityId, bodyData);
 
       // Assert - verify getEntityInstance was called (not getEntity)
-      expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(rootEntityId);
-      expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(partEntityId);
+      expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(
+        rootEntityId
+      );
+      expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(
+        partEntityId
+      );
       // Algorithm: 1) process root, 2) check part as child of root, 3) process part
       expect(mockEntityManager.getEntityInstance).toHaveBeenCalledTimes(3);
 
       // Assert - verify getComponentData was called (not getComponent)
       expect(mockRootEntity.getComponentData).toHaveBeenCalledWith('core:name');
-      expect(mockRootEntity.getComponentData).toHaveBeenCalledWith('core:description');
-      expect(mockRootEntity.getComponentData).toHaveBeenCalledWith('anatomy:part');
-      expect(mockRootEntity.getComponentData).toHaveBeenCalledWith('anatomy:joint');
+      expect(mockRootEntity.getComponentData).toHaveBeenCalledWith(
+        'core:description'
+      );
+      expect(mockRootEntity.getComponentData).toHaveBeenCalledWith(
+        'anatomy:part'
+      );
+      expect(mockRootEntity.getComponentData).toHaveBeenCalledWith(
+        'anatomy:joint'
+      );
 
       expect(mockPartEntity.getComponentData).toHaveBeenCalledWith('core:name');
-      expect(mockPartEntity.getComponentData).toHaveBeenCalledWith('core:description');
-      expect(mockPartEntity.getComponentData).toHaveBeenCalledWith('anatomy:part');
-      expect(mockPartEntity.getComponentData).toHaveBeenCalledWith('anatomy:joint');
+      expect(mockPartEntity.getComponentData).toHaveBeenCalledWith(
+        'core:description'
+      );
+      expect(mockPartEntity.getComponentData).toHaveBeenCalledWith(
+        'anatomy:part'
+      );
+      expect(mockPartEntity.getComponentData).toHaveBeenCalledWith(
+        'anatomy:joint'
+      );
     });
 
     it('should handle entities without getComponent method gracefully', async () => {
@@ -163,7 +180,9 @@ describe('AnatomyGraphRenderer - Method Name Validation', () => {
       mockEntityManager.getEntityInstance.mockResolvedValue(mockEntity);
 
       // Act & Assert - should not throw
-      await expect(renderer.renderGraph(rootEntityId, bodyData)).resolves.not.toThrow();
+      await expect(
+        renderer.renderGraph(rootEntityId, bodyData)
+      ).resolves.not.toThrow();
 
       // Verify correct method was called
       expect(mockEntity.getComponentData).toHaveBeenCalled();
@@ -187,7 +206,9 @@ describe('AnatomyGraphRenderer - Method Name Validation', () => {
       await renderer.renderGraph(rootEntityId, bodyData);
 
       // Assert - only getEntityInstance should be called
-      expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(rootEntityId);
+      expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(
+        rootEntityId
+      );
       expect(mockEntityManager.getEntity).toBeUndefined();
     });
   });
@@ -232,7 +253,9 @@ describe('AnatomyGraphRenderer - Method Name Validation', () => {
       });
 
       // Act & Assert - should complete without throwing
-      await expect(renderer.renderGraph(rootEntityId, bodyData)).resolves.not.toThrow();
+      await expect(
+        renderer.renderGraph(rootEntityId, bodyData)
+      ).resolves.not.toThrow();
 
       // Verify all component data was accessed correctly
       expect(mockRootEntity.getComponentData).toHaveBeenCalledTimes(4);
@@ -253,14 +276,15 @@ describe('AnatomyGraphRenderer - Method Name Validation', () => {
         },
       };
 
-      mockEntityManager.getEntityInstance
-        .mockResolvedValueOnce(null); // Root entity not found
+      mockEntityManager.getEntityInstance.mockResolvedValueOnce(null); // Root entity not found
 
       // Act
       await renderer.renderGraph(partEntityId, bodyData);
 
       // Assert - should log warning when entity in queue is not found
-      expect(mockLogger.warn).toHaveBeenCalledWith(`Entity not found: ${partEntityId}`);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        `Entity not found: ${partEntityId}`
+      );
     });
   });
 });

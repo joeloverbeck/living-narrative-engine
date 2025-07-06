@@ -146,7 +146,8 @@ export class EntityLifecycleMonitor extends RendererBase {
     }
 
     // UUID v4 pattern
-    const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    const uuidPattern =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
     const isUuid = uuidPattern.test(entityId);
 
     // Try to get the entity and its name
@@ -154,7 +155,7 @@ export class EntityLifecycleMonitor extends RendererBase {
     if (entity && entity.hasComponent(NAME_COMPONENT_ID)) {
       const nameData = entity.getComponentData(NAME_COMPONENT_ID);
       const name = nameData?.text;
-      
+
       if (name) {
         // If ID is UUID, show only name; otherwise show "Name (id)"
         return isUuid ? name : `${name} (${entityId})`;
@@ -204,10 +205,10 @@ export class EntityLifecycleMonitor extends RendererBase {
     const updateType = oldComponentData !== undefined ? 'updated' : 'added';
     const formattedId = this.#formatEntityDisplayName(entityId);
     const message = `Component ${updateType}: ${componentTypeId} on ${formattedId}`;
-    
+
     // Get the actual component data
     const componentData = entity?.getComponentData?.(componentTypeId);
-    
+
     this.#addEventEntry(message, 'component-added', componentData);
   }
 
@@ -250,11 +251,11 @@ export class EntityLifecycleMonitor extends RendererBase {
   #createComponentTooltip(componentData) {
     const tooltip = this.documentContext.create('div');
     tooltip.classList.add('component-data-tooltip');
-    
+
     // Format the JSON with proper indentation
     const formattedData = JSON.stringify(componentData, null, 2);
     tooltip.textContent = formattedData;
-    
+
     return tooltip;
   }
 
@@ -290,9 +291,12 @@ export class EntityLifecycleMonitor extends RendererBase {
 
     li.appendChild(timeSpan);
     li.appendChild(messageSpan);
-    
+
     // Add tooltip for component events if data is available
-    if (componentData && (className === 'component-added' || className === 'component-removed')) {
+    if (
+      componentData &&
+      (className === 'component-added' || className === 'component-removed')
+    ) {
       const tooltip = this.#createComponentTooltip(componentData);
       li.appendChild(tooltip);
       li.classList.add('has-tooltip');

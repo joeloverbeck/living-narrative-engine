@@ -150,7 +150,7 @@ describe('T‑07: enemy_damaged ➜ enemy_dead chained rules', () => {
 
     // ---- Mock bodyGraphService ----------------------------------------------
     const mockBodyGraphService = {
-      hasPartWithComponentValue: jest.fn().mockReturnValue({ found: false })
+      hasPartWithComponentValue: jest.fn().mockReturnValue({ found: false }),
     };
 
     // ---- System‑logic interpreter ------------------------------------------

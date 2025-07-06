@@ -25,15 +25,21 @@ describe('ValidationRule', () => {
     });
 
     it('should throw error when accessing abstract ruleId', () => {
-      expect(() => rule.ruleId).toThrow('ruleId must be implemented by subclass');
+      expect(() => rule.ruleId).toThrow(
+        'ruleId must be implemented by subclass'
+      );
     });
 
     it('should throw error when accessing abstract ruleName', () => {
-      expect(() => rule.ruleName).toThrow('ruleName must be implemented by subclass');
+      expect(() => rule.ruleName).toThrow(
+        'ruleName must be implemented by subclass'
+      );
     });
 
     it('should throw error when calling abstract validate method', async () => {
-      await expect(rule.validate({})).rejects.toThrow('validate must be implemented by subclass');
+      await expect(rule.validate({})).rejects.toThrow(
+        'validate must be implemented by subclass'
+      );
     });
   });
 
@@ -96,8 +102,14 @@ describe('ValidationRule', () => {
       });
 
       it('should include additional context when provided', () => {
-        const additionalContext = { entityId: '456', reason: 'missing component' };
-        const warning = rule.createWarning('Test warning message', additionalContext);
+        const additionalContext = {
+          entityId: '456',
+          reason: 'missing component',
+        };
+        const warning = rule.createWarning(
+          'Test warning message',
+          additionalContext
+        );
 
         expect(warning).toEqual({
           severity: 'warning',
@@ -121,7 +133,10 @@ describe('ValidationRule', () => {
       });
 
       it('should include additional context when provided', () => {
-        const additionalContext = { entityId: '789', detail: 'additional info' };
+        const additionalContext = {
+          entityId: '789',
+          detail: 'additional info',
+        };
         const info = rule.createInfo('Test info message', additionalContext);
 
         expect(info).toEqual({

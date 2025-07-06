@@ -51,7 +51,7 @@ export class TextFormatter {
    */
   joinDescriptors(values) {
     if (!values || values.length === 0) return '';
-    return values.filter(v => v).join(', ');
+    return values.filter((v) => v).join(', ');
   }
 
   /**
@@ -96,6 +96,6 @@ export class TextFormatter {
    * @returns {string} Joined string
    */
   joinLines(lines) {
-    return lines.filter(line => line).join('\n');
+    return lines.filter((line) => line).join('\n');
   }
 }

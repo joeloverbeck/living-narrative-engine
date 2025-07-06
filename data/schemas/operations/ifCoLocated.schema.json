@@ -43,11 +43,7 @@
           "default": []
         }
       },
-      "required": [
-        "entity_ref_a",
-        "entity_ref_b",
-        "then_actions"
-      ],
+      "required": ["entity_ref_a", "entity_ref_b", "then_actions"],
       "additionalProperties": false
     }
   }

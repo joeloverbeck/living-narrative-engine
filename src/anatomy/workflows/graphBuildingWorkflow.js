@@ -28,21 +28,17 @@ export class GraphBuildingWorkflow extends BaseService {
    * @param {ILogger} deps.logger
    * @param {BodyGraphService} deps.bodyGraphService
    */
-  constructor({
-    entityManager,
-    logger,
-    bodyGraphService,
-  }) {
+  constructor({ entityManager, logger, bodyGraphService }) {
     super();
     this.#logger = this._init('GraphBuildingWorkflow', logger, {
       entityManager: {
         value: entityManager,
-        requiredMethods: ['getEntityInstance']
+        requiredMethods: ['getEntityInstance'],
       },
       bodyGraphService: {
         value: bodyGraphService,
-        requiredMethods: ['buildAdjacencyCache']
-      }
+        requiredMethods: ['buildAdjacencyCache'],
+      },
     });
     this.#entityManager = entityManager;
     this.#bodyGraphService = bodyGraphService;
@@ -50,7 +46,7 @@ export class GraphBuildingWorkflow extends BaseService {
 
   /**
    * Builds the adjacency cache for efficient graph traversal
-   * 
+   *
    * @param {string} rootId - The root entity ID of the anatomy graph
    * @returns {Promise<void>}
    * @throws {GraphBuildingError} If cache building fails
@@ -95,7 +91,7 @@ export class GraphBuildingWorkflow extends BaseService {
 
   /**
    * Rebuilds the adjacency cache, useful after modifications
-   * 
+   *
    * @param {string} rootId - The root entity ID of the anatomy graph
    * @returns {Promise<void>}
    * @throws {GraphBuildingError} If cache rebuilding fails
@@ -115,7 +111,7 @@ export class GraphBuildingWorkflow extends BaseService {
 
   /**
    * Validates that the root entity exists and has proper anatomy structure
-   * 
+   *
    * @private
    * @param {string} rootId - The root entity ID to validate
    * @throws {InvalidArgumentError} If root entity is invalid
@@ -143,7 +139,7 @@ export class GraphBuildingWorkflow extends BaseService {
 
   /**
    * Checks if a cache exists for the given root entity
-   * 
+   *
    * @param {string} rootId - The root entity ID to check
    * @returns {boolean} True if cache exists
    */
@@ -164,7 +160,7 @@ export class GraphBuildingWorkflow extends BaseService {
 
   /**
    * Validates the integrity of an existing graph cache
-   * 
+   *
    * @param {string} rootId - The root entity ID to validate
    * @returns {Promise<{valid: boolean, issues: string[]}>}
    */
@@ -183,7 +179,7 @@ export class GraphBuildingWorkflow extends BaseService {
       // For example, checking if all referenced entities in the cache still exist
 
       const valid = issues.length === 0;
-      
+
       if (valid) {
         this.#logger.debug(
           `GraphBuildingWorkflow: Cache for root entity '${rootId}' is valid`

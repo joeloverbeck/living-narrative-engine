@@ -29,10 +29,7 @@
           "$ref": "../common.schema.json#/definitions/namespacedId"
         }
       },
-      "required": [
-        "entity_ref",
-        "component_type"
-      ],
+      "required": ["entity_ref", "component_type"],
       "additionalProperties": false
     }
   }

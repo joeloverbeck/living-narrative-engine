@@ -449,9 +449,7 @@ describe('EntityLifecycleMonitor', () => {
         eventHandlers['core:display_entity_components'](event);
 
         const entry = eventList.children[0];
-        expect(entry.textContent).toContain(
-          'Entity unknown has 0 components:'
-        );
+        expect(entry.textContent).toContain('Entity unknown has 0 components:');
       });
     });
   });

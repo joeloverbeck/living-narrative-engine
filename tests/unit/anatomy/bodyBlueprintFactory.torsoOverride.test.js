@@ -72,7 +72,9 @@ describe('BodyBlueprintFactory - Torso Override', () => {
     };
 
     mockConstraintEvaluator = {
-      evaluateConstraints: jest.fn().mockReturnValue({ valid: true, errors: [], warnings: [] }),
+      evaluateConstraints: jest
+        .fn()
+        .mockReturnValue({ valid: true, errors: [], warnings: [] }),
     };
 
     mockValidator = {
@@ -154,7 +156,10 @@ describe('BodyBlueprintFactory - Torso Override', () => {
       mockDataRegistry.get.mockImplementation((registry, id) => {
         if (registry === 'anatomyBlueprints' && id === 'test-blueprint')
           return blueprint;
-        if (registry === 'entityDefinitions' && id === 'anatomy:human_female_torso') {
+        if (
+          registry === 'entityDefinitions' &&
+          id === 'anatomy:human_female_torso'
+        ) {
           return {
             id: 'anatomy:human_female_torso',
             components: {
@@ -209,7 +214,10 @@ describe('BodyBlueprintFactory - Torso Override', () => {
       mockDataRegistry.get.mockImplementation((registry, id) => {
         if (registry === 'anatomyBlueprints' && id === 'test-blueprint')
           return blueprint;
-        if (registry === 'entityDefinitions' && id === 'anatomy:nonexistent_torso') {
+        if (
+          registry === 'entityDefinitions' &&
+          id === 'anatomy:nonexistent_torso'
+        ) {
           return null; // Entity doesn't exist
         }
         return null;
@@ -306,7 +314,10 @@ describe('BodyBlueprintFactory - Torso Override', () => {
       mockDataRegistry.get.mockImplementation((registry, id) => {
         if (registry === 'anatomyBlueprints' && id === 'test-blueprint')
           return blueprint;
-        if (registry === 'entityDefinitions' && id === 'anatomy:invalid_entity') {
+        if (
+          registry === 'entityDefinitions' &&
+          id === 'anatomy:invalid_entity'
+        ) {
           return {
             id: 'anatomy:invalid_entity',
             components: {
@@ -400,7 +411,10 @@ describe('BodyBlueprintFactory - Torso Override', () => {
       mockDataRegistry.get.mockImplementation((registry, id) => {
         if (registry === 'anatomyBlueprints' && id === 'test-blueprint')
           return blueprint;
-        if (registry === 'entityDefinitions' && id === 'anatomy:human_female_torso') {
+        if (
+          registry === 'entityDefinitions' &&
+          id === 'anatomy:human_female_torso'
+        ) {
           return {
             id: 'anatomy:human_female_torso',
             components: {

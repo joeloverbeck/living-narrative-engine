@@ -47,7 +47,7 @@ export class PartTypeCompatibilityRule extends ValidationRule {
         'anatomy:sockets'
       );
       const socket = parentSockets?.sockets?.find(
-        s => s.id === joint.socketId
+        (s) => s.id === joint.socketId
       );
 
       if (!socket) continue;

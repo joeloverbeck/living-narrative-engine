@@ -52,7 +52,9 @@ describe('AnatomyGenerationWorkflow', () => {
         rootId,
         entities: [rootId, ...partIds],
       };
-      mockBodyBlueprintFactory.createAnatomyGraph.mockResolvedValue(graphResult);
+      mockBodyBlueprintFactory.createAnatomyGraph.mockResolvedValue(
+        graphResult
+      );
     });
 
     it('should generate anatomy graph successfully', async () => {
@@ -75,7 +77,9 @@ describe('AnatomyGenerationWorkflow', () => {
         };
       });
 
-      const result = await workflow.generate(blueprintId, recipeId, { ownerId });
+      const result = await workflow.generate(blueprintId, recipeId, {
+        ownerId,
+      });
 
       expect(result).toEqual({
         rootId,
@@ -101,7 +105,9 @@ describe('AnatomyGenerationWorkflow', () => {
         };
       });
 
-      const result = await workflow.generate(blueprintId, recipeId, { ownerId });
+      const result = await workflow.generate(blueprintId, recipeId, {
+        ownerId,
+      });
 
       expect(result.partsMap).toEqual({});
     });
@@ -117,7 +123,9 @@ describe('AnatomyGenerationWorkflow', () => {
         return null;
       });
 
-      const result = await workflow.generate(blueprintId, recipeId, { ownerId });
+      const result = await workflow.generate(blueprintId, recipeId, {
+        ownerId,
+      });
 
       expect(result.partsMap).toEqual({});
     });
@@ -133,7 +141,9 @@ describe('AnatomyGenerationWorkflow', () => {
         return null;
       });
 
-      const result = await workflow.generate(blueprintId, recipeId, { ownerId });
+      const result = await workflow.generate(blueprintId, recipeId, {
+        ownerId,
+      });
 
       expect(result.partsMap).toEqual({});
     });
@@ -142,8 +152,9 @@ describe('AnatomyGenerationWorkflow', () => {
       const error = new Error('Blueprint creation failed');
       mockBodyBlueprintFactory.createAnatomyGraph.mockRejectedValue(error);
 
-      await expect(workflow.generate(blueprintId, recipeId, { ownerId }))
-        .rejects.toThrow('Blueprint creation failed');
+      await expect(
+        workflow.generate(blueprintId, recipeId, { ownerId })
+      ).rejects.toThrow('Blueprint creation failed');
     });
   });
 
@@ -151,7 +162,7 @@ describe('AnatomyGenerationWorkflow', () => {
     it('should validate recipe successfully', () => {
       const recipeId = 'test-recipe';
       const blueprintId = 'test-blueprint';
-      
+
       mockDataRegistry.get.mockReturnValue({
         blueprintId,
         otherData: 'preserved',
@@ -160,16 +171,21 @@ describe('AnatomyGenerationWorkflow', () => {
       const result = workflow.validateRecipe(recipeId);
 
       expect(result).toBe(blueprintId);
-      expect(mockDataRegistry.get).toHaveBeenCalledWith('anatomyRecipes', recipeId);
+      expect(mockDataRegistry.get).toHaveBeenCalledWith(
+        'anatomyRecipes',
+        recipeId
+      );
     });
 
     it('should throw error if recipe not found', () => {
       mockDataRegistry.get.mockReturnValue(null);
 
-      expect(() => workflow.validateRecipe('missing-recipe'))
-        .toThrow(ValidationError);
-      expect(() => workflow.validateRecipe('missing-recipe'))
-        .toThrow("Recipe 'missing-recipe' not found");
+      expect(() => workflow.validateRecipe('missing-recipe')).toThrow(
+        ValidationError
+      );
+      expect(() => workflow.validateRecipe('missing-recipe')).toThrow(
+        "Recipe 'missing-recipe' not found"
+      );
     });
 
     it('should throw error if recipe has no blueprintId', () => {
@@ -178,10 +194,12 @@ describe('AnatomyGenerationWorkflow', () => {
         // No blueprintId
       });
 
-      expect(() => workflow.validateRecipe('test-recipe'))
-        .toThrow(ValidationError);
-      expect(() => workflow.validateRecipe('test-recipe'))
-        .toThrow("Recipe 'test-recipe' does not specify a blueprintId");
+      expect(() => workflow.validateRecipe('test-recipe')).toThrow(
+        ValidationError
+      );
+      expect(() => workflow.validateRecipe('test-recipe')).toThrow(
+        "Recipe 'test-recipe' does not specify a blueprintId"
+      );
     });
   });
 });

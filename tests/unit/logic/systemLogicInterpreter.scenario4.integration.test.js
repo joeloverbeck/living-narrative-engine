@@ -176,7 +176,7 @@ describe('SystemLogicInterpreter - Integration Tests - Scenario 4: Invalid Condi
 
     // Create the bodyGraphService mock
     const mockBodyGraphService = {
-      hasPartWithComponentValue: jest.fn().mockReturnValue({ found: false })
+      hasPartWithComponentValue: jest.fn().mockReturnValue({ found: false }),
     };
 
     // 4. Instantiate the interpreter (remains the same)

@@ -45,17 +45,19 @@ describe('SocketLimitRule', () => {
       mockContext.socketOccupancy.add('parent-1:socket-1');
       mockContext.socketOccupancy.add('parent-2:socket-2');
 
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId === 'anatomy:sockets') {
-          if (entityId === 'parent-1') {
-            return { sockets: [{ id: 'socket-1' }] };
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (componentId === 'anatomy:sockets') {
+            if (entityId === 'parent-1') {
+              return { sockets: [{ id: 'socket-1' }] };
+            }
+            if (entityId === 'parent-2') {
+              return { sockets: [{ id: 'socket-2' }] };
+            }
           }
-          if (entityId === 'parent-2') {
-            return { sockets: [{ id: 'socket-2' }] };
-          }
+          return null;
         }
-        return null;
-      });
+      );
 
       // Execute
       const issues = await rule.validate(mockContext);
@@ -74,12 +76,14 @@ describe('SocketLimitRule', () => {
       // Setup
       mockContext.socketOccupancy.add('parent-1:missing-socket');
 
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (entityId === 'parent-1' && componentId === 'anatomy:sockets') {
-          return { sockets: [{ id: 'other-socket' }] };
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (entityId === 'parent-1' && componentId === 'anatomy:sockets') {
+            return { sockets: [{ id: 'other-socket' }] };
+          }
+          return null;
         }
-        return null;
-      });
+      );
 
       // Execute
       const issues = await rule.validate(mockContext);
@@ -104,7 +108,9 @@ describe('SocketLimitRule', () => {
 
       // Verify
       expect(issues).toHaveLength(1);
-      expect(issues[0].message).toBe("Socket 'socket-1' not found on entity 'parent-1'");
+      expect(issues[0].message).toBe(
+        "Socket 'socket-1' not found on entity 'parent-1'"
+      );
     });
 
     it('should handle empty socket occupancy', async () => {
@@ -124,23 +130,29 @@ describe('SocketLimitRule', () => {
       mockContext.socketOccupancy.add('parent-1:socket-2');
       mockContext.socketOccupancy.add('parent-2:socket-3');
 
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId === 'anatomy:sockets') {
-          if (entityId === 'parent-1') {
-            return { sockets: [{ id: 'socket-1' }] }; // missing socket-2
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (componentId === 'anatomy:sockets') {
+            if (entityId === 'parent-1') {
+              return { sockets: [{ id: 'socket-1' }] }; // missing socket-2
+            }
+            // parent-2 returns null
           }
-          // parent-2 returns null
+          return null;
         }
-        return null;
-      });
+      );
 
       // Execute
       const issues = await rule.validate(mockContext);
 
       // Verify
       expect(issues).toHaveLength(2);
-      expect(issues[0].message).toBe("Socket 'socket-2' not found on entity 'parent-1'");
-      expect(issues[1].message).toBe("Socket 'socket-3' not found on entity 'parent-2'");
+      expect(issues[0].message).toBe(
+        "Socket 'socket-2' not found on entity 'parent-1'"
+      );
+      expect(issues[1].message).toBe(
+        "Socket 'socket-3' not found on entity 'parent-2'"
+      );
     });
   });
 });

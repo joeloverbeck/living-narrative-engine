@@ -280,12 +280,14 @@ class InitializationService extends IInitializationService {
         this.#logger
       );
       await this.#loadMods(worldName);
-      
+
       // Initialize AnatomyFormattingService after mods are loaded
-      this.#logger.debug('Initializing AnatomyFormattingService after mod loading...');
+      this.#logger.debug(
+        'Initializing AnatomyFormattingService after mod loading...'
+      );
       await this.#anatomyFormattingService.initialize();
       this.#logger.debug('AnatomyFormattingService initialized successfully.');
-      
+
       await this.#contentDependencyValidator.validate(worldName);
       await this.#initializeScopeRegistry();
       const llmReady = await this.#llmAdapterInitializer.initialize(

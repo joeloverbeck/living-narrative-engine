@@ -10,9 +10,7 @@
       "sockets": [
         {
           "id": "wrist",
-          "allowedTypes": [
-            "hand"
-          ],
+          "allowedTypes": ["hand"],
           "nameTpl": "{{parent.name}} {{type}}"
         }
       ]

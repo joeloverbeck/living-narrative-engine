@@ -155,7 +155,10 @@ describe('BodyGraphService', () => {
         }
       );
 
-      mockEntityManager.getEntitiesWithComponent.mockReturnValue([entity1, entity2]);
+      mockEntityManager.getEntitiesWithComponent.mockReturnValue([
+        entity1,
+        entity2,
+      ]);
 
       service.buildAdjacencyCache('entity-1');
 

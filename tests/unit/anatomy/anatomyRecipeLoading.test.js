@@ -71,13 +71,14 @@ describe('Anatomy Recipe Loading and Generation', () => {
       // Mock entities for graph building validation
       mockEntityManager.getEntityInstance.mockImplementation((id) => {
         if (id === 'test-entity-id') return mockEntity;
-        if (id === 'root-entity') return { 
-          hasComponent: jest.fn().mockReturnValue(true),
-          getComponentData: jest.fn().mockReturnValue(null)
-        };
-        return { 
+        if (id === 'root-entity')
+          return {
+            hasComponent: jest.fn().mockReturnValue(true),
+            getComponentData: jest.fn().mockReturnValue(null),
+          };
+        return {
           hasComponent: jest.fn().mockReturnValue(false),
-          getComponentData: jest.fn().mockReturnValue(null)
+          getComponentData: jest.fn().mockReturnValue(null),
         };
       });
 

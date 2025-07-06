@@ -20,24 +20,24 @@ describe('SystemLogicInterpreter - Body Part Movement Validation', () => {
       info: jest.fn(),
       warn: jest.fn(),
       error: jest.fn(),
-      debug: jest.fn()
+      debug: jest.fn(),
     };
 
     // Mock event bus
     mockEventBus = {
       subscribe: jest.fn(),
-      unsubscribe: jest.fn().mockReturnValue(true)
+      unsubscribe: jest.fn().mockReturnValue(true),
     };
 
     // Mock data registry
     mockDataRegistry = {
-      getAllSystemRules: jest.fn().mockReturnValue([])
+      getAllSystemRules: jest.fn().mockReturnValue([]),
     };
 
     // Mock JSON logic
     mockJsonLogic = {
       evaluate: jest.fn(),
-      addOperation: jest.fn()
+      addOperation: jest.fn(),
     };
 
     // Mock entity manager
@@ -46,24 +46,27 @@ describe('SystemLogicInterpreter - Body Part Movement Validation', () => {
       getEntityInstance: jest.fn(),
       getComponentData: jest.fn(),
       hasComponent: jest.fn(),
-      getEntitiesWithComponent: jest.fn().mockReturnValue([])
+      getEntitiesWithComponent: jest.fn().mockReturnValue([]),
     };
-    
+
     // Mock the handler
     hasBodyPartWithComponentValueHandler = jest.fn();
-    
+
     // Mock operation interpreter
     mockOperationInterpreter = {
       execute: jest.fn((operation, executionContext) => {
         if (operation.type === 'HAS_BODY_PART_WITH_COMPONENT_VALUE') {
-          return hasBodyPartWithComponentValueHandler(operation.parameters, executionContext);
+          return hasBodyPartWithComponentValueHandler(
+            operation.parameters,
+            executionContext
+          );
         }
-      })
+      }),
     };
-    
+
     // Mock body graph service
     mockBodyGraphService = {
-      hasPartWithComponentValue: jest.fn()
+      hasPartWithComponentValue: jest.fn(),
     };
 
     interpreter = new SystemLogicInterpreter({
@@ -73,7 +76,7 @@ describe('SystemLogicInterpreter - Body Part Movement Validation', () => {
       jsonLogicEvaluationService: mockJsonLogic,
       entityManager: mockEntityManager,
       operationInterpreter: mockOperationInterpreter,
-      bodyGraphService: mockBodyGraphService
+      bodyGraphService: mockBodyGraphService,
     });
   });
 
@@ -82,7 +85,7 @@ describe('SystemLogicInterpreter - Body Part Movement Validation', () => {
 
     beforeEach(() => {
       interpreter.initialize();
-      
+
       // Capture the custom operation that was registered
       expect(mockJsonLogic.addOperation).toHaveBeenCalledWith(
         'hasBodyPartWithComponentValue',
@@ -94,25 +97,25 @@ describe('SystemLogicInterpreter - Body Part Movement Validation', () => {
     test('should pass correct operation object with parameters to operationInterpreter', () => {
       const args = ['actor', 'core:movement', 'locked', false];
       const data = { actor: { id: 'test-actor-id' } };
-      
+
       hasBodyPartWithComponentValueHandler.mockReturnValue(true);
-      
+
       const result = customOperation(args, data);
-      
+
       // Verify the operation interpreter was called with correct structure
       expect(mockOperationInterpreter.execute).toHaveBeenCalledWith(
         {
           type: 'HAS_BODY_PART_WITH_COMPONENT_VALUE',
-          parameters: args  // Parameters should be included
+          parameters: args, // Parameters should be included
         },
         {
           evaluationContext: {
-            variables: data
+            variables: data,
           },
-          instanceId: 'jsonlogic-operation'
+          instanceId: 'jsonlogic-operation',
         }
       );
-      
+
       expect(result).toBe(true);
     });
 
@@ -120,21 +123,21 @@ describe('SystemLogicInterpreter - Body Part Movement Validation', () => {
       const args = ['target', 'core:health', 'value', 100];
       const data = {
         actor: { id: 'actor-id' },
-        target: { id: 'target-id' }
+        target: { id: 'target-id' },
       };
-      
+
       hasBodyPartWithComponentValueHandler.mockReturnValue(true);
-      
+
       customOperation(args, data);
-      
+
       // Verify the execution context has the correct structure
       const expectedContext = {
         evaluationContext: {
-          variables: data
+          variables: data,
         },
-        instanceId: 'jsonlogic-operation'
+        instanceId: 'jsonlogic-operation',
       };
-      
+
       expect(hasBodyPartWithComponentValueHandler).toHaveBeenCalledWith(
         args,
         expectedContext
@@ -144,22 +147,22 @@ describe('SystemLogicInterpreter - Body Part Movement Validation', () => {
     test('should handle false return from handler', () => {
       const args = ['actor', 'core:movement', 'locked', false];
       const data = { actor: { id: 'test-actor-id' } };
-      
+
       hasBodyPartWithComponentValueHandler.mockReturnValue(false);
-      
+
       const result = customOperation(args, data);
-      
+
       expect(result).toBe(false);
     });
 
     test('should handle undefined return from handler', () => {
       const args = ['actor', 'core:movement', 'locked', false];
       const data = { actor: { id: 'test-actor-id' } };
-      
+
       hasBodyPartWithComponentValueHandler.mockReturnValue(undefined);
-      
+
       const result = customOperation(args, data);
-      
+
       expect(result).toBe(undefined);
     });
   });
@@ -170,17 +173,17 @@ describe('SystemLogicInterpreter - Body Part Movement Validation', () => {
     beforeEach(() => {
       interpreter.initialize();
       customOperation = mockJsonLogic.addOperation.mock.calls[0][1];
-      
+
       // Set up the handler to simulate real behavior
       hasBodyPartWithComponentValueHandler.mockImplementation((params) => {
         const [entityRef, componentId, propertyPath, expectedValue] = params;
-        
+
         // Simulate checking body parts for movement component
         if (componentId === 'core:movement' && propertyPath === 'locked') {
           // Return true if checking for locked === false (not rooted)
           return expectedValue === false;
         }
-        
+
         return false;
       });
     });
@@ -190,7 +193,7 @@ describe('SystemLogicInterpreter - Body Part Movement Validation', () => {
         ['actor', 'core:movement', 'locked', false],
         { actor: { id: 'test-actor' } }
       );
-      
+
       expect(result).toBe(true);
     });
 
@@ -199,16 +202,15 @@ describe('SystemLogicInterpreter - Body Part Movement Validation', () => {
         ['actor', 'core:movement', 'locked', true],
         { actor: { id: 'test-actor' } }
       );
-      
+
       expect(result).toBe(false);
     });
 
     test('should handle different component checks', () => {
-      const result = customOperation(
-        ['actor', 'core:health', 'value', 100],
-        { actor: { id: 'test-actor' } }
-      );
-      
+      const result = customOperation(['actor', 'core:health', 'value', 100], {
+        actor: { id: 'test-actor' },
+      });
+
       expect(result).toBe(false);
     });
   });
@@ -225,7 +227,7 @@ describe('SystemLogicInterpreter - Body Part Movement Validation', () => {
       hasBodyPartWithComponentValueHandler.mockImplementation(() => {
         throw new Error('Handler error');
       });
-      
+
       expect(() => {
         customOperation(['actor', 'core:movement', 'locked', false], {});
       }).toThrow('Handler error');
@@ -239,7 +241,7 @@ describe('SystemLogicInterpreter - Body Part Movement Validation', () => {
         }
         return true;
       });
-      
+
       // Should not throw because we now pass an object with type
       expect(() => {
         customOperation(['actor', 'core:movement', 'locked', false], {});

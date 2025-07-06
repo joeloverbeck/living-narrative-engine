@@ -32,10 +32,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "entity_ref",
-        "result_variable"
-      ],
+      "required": ["entity_ref", "result_variable"],
       "additionalProperties": false
     }
   }

@@ -82,21 +82,24 @@ describe('AnatomyFormattingService', () => {
   });
 
   it('respects replace merge strategies', () => {
-    registry = createMockRegistry([
-      {
-        _modId: 'core',
-        descriptionOrder: ['a'],
-        irregularPlurals: { foo: 'foos' },
-        descriptorOrder: ['x'],
-      },
-      {
-        _modId: 'addon',
-        descriptionOrder: ['b'],
-        irregularPlurals: { bar: 'bars' },
-        descriptorOrder: ['y'],
-        mergeStrategy: { replaceArrays: true, replaceObjects: true },
-      },
-    ], ['core', 'addon']);
+    registry = createMockRegistry(
+      [
+        {
+          _modId: 'core',
+          descriptionOrder: ['a'],
+          irregularPlurals: { foo: 'foos' },
+          descriptorOrder: ['x'],
+        },
+        {
+          _modId: 'addon',
+          descriptionOrder: ['b'],
+          irregularPlurals: { bar: 'bars' },
+          descriptorOrder: ['y'],
+          mergeStrategy: { replaceArrays: true, replaceObjects: true },
+        },
+      ],
+      ['core', 'addon']
+    );
     logger = createMockLogger();
 
     safeEventDispatcher = createMockSafeEventDispatcher();
@@ -169,14 +172,17 @@ describe('AnatomyFormattingService', () => {
           method: 'getDescriptionOrder',
           configKey: 'descriptionOrder',
           impact: 'Body part descriptions will be incomplete or empty',
-          suggestion: 'Ensure "anatomy" mod is loaded in /data/game.json mods list',
+          suggestion:
+            'Ensure "anatomy" mod is loaded in /data/game.json mods list',
         })
       );
 
       expect(safeEventDispatcher.dispatch).toHaveBeenCalledWith(
         'core:system_error_occurred',
         expect.objectContaining({
-          message: expect.stringContaining('descriptionOrder configuration is empty'),
+          message: expect.stringContaining(
+            'descriptionOrder configuration is empty'
+          ),
           details: expect.objectContaining({
             raw: expect.any(String),
             timestamp: expect.any(String),
@@ -229,7 +235,6 @@ describe('AnatomyFormattingService', () => {
       );
     });
 
-
     it('throws and dispatches error when descriptorValueKeys is empty', () => {
       const service = new AnatomyFormattingService({
         dataRegistry: registry,
@@ -254,7 +259,7 @@ describe('AnatomyFormattingService', () => {
       // These should not throw as they are optional
       expect(() => service.getGroupedParts()).not.toThrow();
       expect(() => service.getNoArticleParts()).not.toThrow();
-      
+
       // Should return empty sets
       expect(service.getGroupedParts().size).toBe(0);
       expect(service.getNoArticleParts().size).toBe(0);
@@ -275,19 +280,19 @@ describe('AnatomyFormattingService', () => {
         return null;
       }),
     };
-    
+
     logger = createMockLogger();
     safeEventDispatcher = createMockSafeEventDispatcher();
-    
+
     const service = new AnatomyFormattingService({
       dataRegistry: registryWithNoModOrder,
       logger,
       safeEventDispatcher,
     });
-    
+
     // Should not throw during initialization
     expect(() => service.initialize()).not.toThrow();
-    
+
     // Should log empty mod order
     expect(logger.debug).toHaveBeenCalledWith(
       'AnatomyFormattingService: Using mod load order: []'

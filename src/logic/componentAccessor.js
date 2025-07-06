@@ -37,24 +37,27 @@ export class ComponentAccessorError extends Error {
  *   {@link ComponentAccessorError} instance.
  */
 export function createComponentAccessor(entityId, entityManager, logger) {
-  
   return new Proxy(
     {},
     {
       get(_target, prop) {
         if (typeof prop !== 'string') return undefined;
-        
+
         // Special handling for toJSON to enable proper JSON serialization
         if (prop === 'toJSON') {
           return () => {
             try {
               // Get all component types for this entity
-              const componentTypes = entityManager.getAllComponentTypesForEntity(entityId);
+              const componentTypes =
+                entityManager.getAllComponentTypesForEntity(entityId);
               const result = {};
-              
+
               for (const componentType of componentTypes) {
                 try {
-                  const data = entityManager.getComponentData(entityId, componentType);
+                  const data = entityManager.getComponentData(
+                    entityId,
+                    componentType
+                  );
                   if (data !== undefined && data !== null) {
                     result[componentType] = data;
                   }
@@ -65,7 +68,7 @@ export function createComponentAccessor(entityId, entityManager, logger) {
                   );
                 }
               }
-              
+
               return result;
             } catch (error) {
               logger.warn(
@@ -76,12 +79,10 @@ export function createComponentAccessor(entityId, entityManager, logger) {
             }
           };
         }
-        
-        
+
         try {
           const componentData = entityManager.getComponentData(entityId, prop);
-          
-          
+
           return componentData ?? null;
         } catch (error) {
           logger.error(
@@ -95,8 +96,7 @@ export function createComponentAccessor(entityId, entityManager, logger) {
       },
       has(_target, prop) {
         if (typeof prop !== 'string') return false;
-        
-        
+
         try {
           const hasComponent = entityManager.hasComponent(entityId, prop);
           return hasComponent;

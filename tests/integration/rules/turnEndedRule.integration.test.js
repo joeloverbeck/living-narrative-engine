@@ -96,7 +96,7 @@ describe('core_handle_turn_ended rule integration', () => {
       gameDataRepository: dataRegistry,
     });
     const mockBodyGraphService = {
-      hasPartWithComponentValue: jest.fn().mockReturnValue({ found: false })
+      hasPartWithComponentValue: jest.fn().mockReturnValue({ found: false }),
     };
     const interpreter = new SystemLogicInterpreter({
       logger: testLogger,
@@ -151,7 +151,9 @@ describe('core_handle_turn_ended rule integration', () => {
           gameDataRepository: dataRegistry,
         });
         const mockBodyGraphService = {
-          hasPartWithComponentValue: jest.fn().mockReturnValue({ found: false })
+          hasPartWithComponentValue: jest
+            .fn()
+            .mockReturnValue({ found: false }),
         };
         const newInterpreter = new SystemLogicInterpreter({
           logger: testLogger,

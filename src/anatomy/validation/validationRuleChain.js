@@ -125,6 +125,6 @@ export class ValidationRuleChain {
    * @returns {string[]}
    */
   getRuleNames() {
-    return this.#rules.map(rule => rule.ruleName);
+    return this.#rules.map((rule) => rule.ruleName);
   }
 }

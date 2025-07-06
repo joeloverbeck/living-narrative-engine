@@ -197,7 +197,7 @@ describe('core_handle_follow_auto_move rule integration', () => {
     });
 
     const mockBodyGraphService = {
-      hasPartWithComponentValue: jest.fn().mockReturnValue({ found: false })
+      hasPartWithComponentValue: jest.fn().mockReturnValue({ found: false }),
     };
 
     const interpreter = new SystemLogicInterpreter({
@@ -295,7 +295,9 @@ describe('core_handle_follow_auto_move rule integration', () => {
         });
 
         const mockBodyGraphService = {
-          hasPartWithComponentValue: jest.fn().mockReturnValue({ found: false })
+          hasPartWithComponentValue: jest
+            .fn()
+            .mockReturnValue({ found: false }),
         };
 
         const newInterpreter = new SystemLogicInterpreter({

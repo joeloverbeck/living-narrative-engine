@@ -178,13 +178,9 @@ describe('Schema Reference Validation', () => {
         const distContent = JSON.stringify(distSchema);
 
         // Check that dist version has internal blueprint definitions
-        expect(distContent).toContain(
-          '"blueprintSlot"'
-        );
-        expect(distContent).toContain(
-          '"partRequirements"'
-        );
-        
+        expect(distContent).toContain('"blueprintSlot"');
+        expect(distContent).toContain('"partRequirements"');
+
         // Ensure it uses correct relative paths for common schema
         expect(distContent).toContain(
           '"./common.schema.json#/definitions/namespacedId"'

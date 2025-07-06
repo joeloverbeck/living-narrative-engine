@@ -67,7 +67,9 @@ describe('GraphIntegrityValidator', () => {
 
       expect(result.valid).toBe(false);
       // The error will be wrapped by the validation rules that fail
-      expect(result.errors.some(e => e.includes('failed: Unexpected error'))).toBe(true);
+      expect(
+        result.errors.some((e) => e.includes('failed: Unexpected error'))
+      ).toBe(true);
       // The ValidationRuleChain will log errors for each rule that fails
       expect(mockLogger.error).toHaveBeenCalled();
     });
@@ -240,7 +242,11 @@ describe('GraphIntegrityValidator', () => {
 
       expect(result.valid).toBe(false);
       // The RecipeConstraintEvaluator provides more detailed error messages
-      expect(result.errors.some(e => e.includes('Required constraint not satisfied'))).toBe(true);
+      expect(
+        result.errors.some((e) =>
+          e.includes('Required constraint not satisfied')
+        )
+      ).toBe(true);
     });
 
     it('should validate excludes constraints - success', async () => {
@@ -290,7 +296,9 @@ describe('GraphIntegrityValidator', () => {
       );
 
       expect(result.valid).toBe(false);
-      expect(result.errors.some(e => e.includes('Exclusion constraint violated'))).toBe(true);
+      expect(
+        result.errors.some((e) => e.includes('Exclusion constraint violated'))
+      ).toBe(true);
     });
 
     it('should validate part type constraints with anatomy:part', async () => {
@@ -349,7 +357,11 @@ describe('GraphIntegrityValidator', () => {
       );
 
       expect(result.valid).toBe(false);
-      expect(result.errors.some(e => e.includes("expected exactly 2 parts of type 'arm'"))).toBe(true);
+      expect(
+        result.errors.some((e) =>
+          e.includes("expected exactly 2 parts of type 'arm'")
+        )
+      ).toBe(true);
     });
 
     it('should error about min count not met', async () => {
@@ -380,7 +392,11 @@ describe('GraphIntegrityValidator', () => {
       );
 
       expect(result.valid).toBe(false);
-      expect(result.errors.some(e => e.includes("expected at least 2 parts of type 'arm'"))).toBe(true);
+      expect(
+        result.errors.some((e) =>
+          e.includes("expected at least 2 parts of type 'arm'")
+        )
+      ).toBe(true);
     });
 
     it('should error about max count exceeded', async () => {
@@ -411,7 +427,11 @@ describe('GraphIntegrityValidator', () => {
       );
 
       expect(result.valid).toBe(false);
-      expect(result.errors.some(e => e.includes("expected at most 1 parts of type 'arm'"))).toBe(true);
+      expect(
+        result.errors.some((e) =>
+          e.includes("expected at most 1 parts of type 'arm'")
+        )
+      ).toBe(true);
     });
   });
 

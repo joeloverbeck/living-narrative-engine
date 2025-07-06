@@ -96,7 +96,11 @@ class AnatomyVisualizerUI {
       // Filter entities with anatomy:body component
       const anatomyEntities = [];
       for (const definition of definitions) {
-        if (definition && definition.components && definition.components['anatomy:body']) {
+        if (
+          definition &&
+          definition.components &&
+          definition.components['anatomy:body']
+        ) {
           anatomyEntities.push({ id: definition.id, definition });
         }
       }

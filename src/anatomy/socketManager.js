@@ -118,22 +118,22 @@ export class SocketManager {
     if (!socket) {
       const parentEntity = this.#entityManager.getEntityInstance(parentId);
       const error = `Socket '${socketId}' not found on parent entity '${parentEntity?.definitionId || parentId}'`;
-      
+
       if (isRequired) {
         return { valid: false, error };
       }
-      
+
       this.#logger.debug(`SocketManager: ${error} (optional socket)`);
       return { valid: false };
     }
 
     if (this.isSocketOccupied(parentId, socketId, socketOccupancy)) {
       const error = `Socket '${socketId}' is already occupied on parent '${parentId}'`;
-      
+
       if (isRequired) {
         return { valid: false, error };
       }
-      
+
       this.#logger.debug(`SocketManager: ${error} (optional socket)`);
       return { valid: false };
     }

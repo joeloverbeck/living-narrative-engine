@@ -43,7 +43,12 @@ export class SinglePartStrategy extends PartGroupingStrategy {
   }
 
   format(partType, parts, descriptions, textFormatter, config) {
-    const label = textFormatter.getPartLabel(partType, 1, () => partType, new Set());
+    const label = textFormatter.getPartLabel(
+      partType,
+      1,
+      () => partType,
+      new Set()
+    );
     return textFormatter.formatLabelValue(label, descriptions[0]);
   }
 }
@@ -59,8 +64,8 @@ export class PairedPartsStrategy extends PartGroupingStrategy {
 
   format(partType, parts, descriptions, textFormatter, config) {
     // Check if all descriptions are the same
-    const allSame = descriptions.every(desc => desc === descriptions[0]);
-    
+    const allSame = descriptions.every((desc) => desc === descriptions[0]);
+
     if (allSame) {
       // Same description for both parts
       const irregularPlurals = config.getIrregularPlurals();
@@ -69,26 +74,37 @@ export class PairedPartsStrategy extends PartGroupingStrategy {
         return `${type}s`;
       };
       const pairedParts = config.getPairedParts();
-      const label = textFormatter.getPartLabel(partType, 2, pluralizer, pairedParts);
+      const label = textFormatter.getPartLabel(
+        partType,
+        2,
+        pluralizer,
+        pairedParts
+      );
       return textFormatter.formatLabelValue(label, descriptions[0]);
     } else {
       // Different descriptions for left/right
       const lines = [];
-      const names = parts.map(part => {
+      const names = parts.map((part) => {
         const nameComp = part.getComponentData('core:name');
         return nameComp ? nameComp.text.toLowerCase() : '';
       });
-      
+
       // Try to determine left/right based on name
       for (let i = 0; i < descriptions.length && i < 2; i++) {
         const name = names[i] || '';
         if (name.includes('left')) {
-          lines.push(textFormatter.formatSidedItem('Left', partType, descriptions[i]));
+          lines.push(
+            textFormatter.formatSidedItem('Left', partType, descriptions[i])
+          );
         } else if (name.includes('right')) {
-          lines.push(textFormatter.formatSidedItem('Right', partType, descriptions[i]));
+          lines.push(
+            textFormatter.formatSidedItem('Right', partType, descriptions[i])
+          );
         } else {
           // Fallback if no left/right in name
-          lines.push(textFormatter.formatIndexedItem(partType, i + 1, descriptions[i]));
+          lines.push(
+            textFormatter.formatIndexedItem(partType, i + 1, descriptions[i])
+          );
         }
       }
       return textFormatter.joinLines(lines);
@@ -107,8 +123,8 @@ export class MultiplePartsStrategy extends PartGroupingStrategy {
 
   format(partType, parts, descriptions, textFormatter, config) {
     // Check if all descriptions are the same
-    const allSame = descriptions.every(desc => desc === descriptions[0]);
-    
+    const allSame = descriptions.every((desc) => desc === descriptions[0]);
+
     if (allSame) {
       const irregularPlurals = config.getIrregularPlurals();
       const pluralizer = (type) => {
@@ -116,11 +132,16 @@ export class MultiplePartsStrategy extends PartGroupingStrategy {
         return `${type}s`;
       };
       const pairedParts = config.getPairedParts();
-      const label = textFormatter.getPartLabel(partType, descriptions.length, pluralizer, pairedParts);
+      const label = textFormatter.getPartLabel(
+        partType,
+        descriptions.length,
+        pluralizer,
+        pairedParts
+      );
       return textFormatter.formatLabelValue(label, descriptions[0]);
     } else {
       // Multiple different descriptions
-      const lines = descriptions.map((desc, index) => 
+      const lines = descriptions.map((desc, index) =>
         textFormatter.formatIndexedItem(partType, index + 1, desc)
       );
       return textFormatter.joinLines(lines);

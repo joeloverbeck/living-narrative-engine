@@ -51,7 +51,8 @@ const testHumanFemale = {
       text: 'Test Human Female',
     },
     'core:description': {
-      description: 'A test entity for verifying human female anatomy generation.',
+      description:
+        'A test entity for verifying human female anatomy generation.',
     },
     'anatomy:body': {
       recipeId: 'anatomy:human_female',
@@ -128,7 +129,8 @@ describe('Human Female Body Graph Integration Test', () => {
 
   it('should generate complete anatomy for human female with all required body parts', async () => {
     // Create test entity
-    const femaleEntity = entityManager.createEntityInstance('test:human_female');
+    const femaleEntity =
+      entityManager.createEntityInstance('test:human_female');
     expect(femaleEntity).toBeDefined();
     expect(femaleEntity.id).toBeDefined();
 
@@ -236,7 +238,7 @@ describe('Human Female Body Graph Integration Test', () => {
     // Verify hands are attached to arms
     const arms = findPartsByType('arm');
     const hands = findPartsByType('hand');
-    
+
     for (const handId of hands) {
       const joint = entityManager.getComponentData(handId, 'anatomy:joint');
       expect(joint).toBeDefined();
@@ -247,7 +249,7 @@ describe('Human Female Body Graph Integration Test', () => {
     // Verify teeth are attached to mouth
     const mouths = findPartsByType('mouth');
     const teeth = findPartsByType('teeth');
-    
+
     for (const teethId of teeth) {
       const joint = entityManager.getComponentData(teethId, 'anatomy:joint');
       expect(joint).toBeDefined();
@@ -258,7 +260,7 @@ describe('Human Female Body Graph Integration Test', () => {
     // Verify feet are attached to legs
     const legs = findPartsByType('leg');
     const feet = findPartsByType('foot');
-    
+
     for (const footId of feet) {
       const joint = entityManager.getComponentData(footId, 'anatomy:joint');
       expect(joint).toBeDefined();

@@ -5,10 +5,10 @@ import { PartGroupingStrategyFactory } from '../configuration/partGroupingStrate
  * Template for formatting body part descriptions using strategies and formatters
  */
 export class DescriptionTemplate {
-  constructor({ 
-    config, 
-    textFormatter = new TextFormatter(), 
-    strategyFactory = new PartGroupingStrategyFactory() 
+  constructor({
+    config,
+    textFormatter = new TextFormatter(),
+    strategyFactory = new PartGroupingStrategyFactory(),
   } = {}) {
     this.config = config;
     this.textFormatter = textFormatter;
@@ -29,21 +29,27 @@ export class DescriptionTemplate {
 
     // Get descriptions from core:description component
     const descriptions = this.extractDescriptions(parts);
-    
+
     if (descriptions.length === 0) {
       return '';
     }
 
     // Get the appropriate strategy
     const strategy = this.strategyFactory.getStrategy(
-      partType, 
-      parts, 
-      descriptions, 
+      partType,
+      parts,
+      descriptions,
       this.config
     );
 
     // Use the strategy to format the description
-    return strategy.format(partType, parts, descriptions, this.textFormatter, this.config);
+    return strategy.format(
+      partType,
+      parts,
+      descriptions,
+      this.textFormatter,
+      this.config
+    );
   }
 
   /**
@@ -53,15 +59,17 @@ export class DescriptionTemplate {
    * @returns {Array<string>} Array of descriptions
    */
   extractDescriptions(parts) {
-    return parts.map(part => {
-      if (!part) return '';
-      
-      if (typeof part.getComponentData === 'function') {
-        const descComponent = part.getComponentData('core:description');
-        return descComponent ? descComponent.text : '';
-      }
-      return '';
-    }).filter(desc => desc); // Remove empty descriptions
+    return parts
+      .map((part) => {
+        if (!part) return '';
+
+        if (typeof part.getComponentData === 'function') {
+          const descComponent = part.getComponentData('core:description');
+          return descComponent ? descComponent.text : '';
+        }
+        return '';
+      })
+      .filter((desc) => desc); // Remove empty descriptions
   }
 
   /**

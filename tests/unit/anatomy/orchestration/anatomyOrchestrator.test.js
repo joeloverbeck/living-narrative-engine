@@ -84,11 +84,11 @@ describe('AnatomyOrchestrator', () => {
     beforeEach(() => {
       // Setup default successful workflow
       mockGenerationWorkflow.validateRecipe.mockReturnValue(blueprintId);
-      
+
       const graphResult = {
         rootId,
         entities: [rootId, ...partIds],
-        partsMap: { left_arm: 'part-1', right_arm: 'part-2' }
+        partsMap: { left_arm: 'part-1', right_arm: 'part-2' },
       };
 
       // Make execute return the operation result
@@ -110,22 +110,30 @@ describe('AnatomyOrchestrator', () => {
     });
 
     it('should successfully orchestrate anatomy generation', async () => {
-      const result = await orchestrator.orchestrateGeneration(entityId, recipeId);
+      const result = await orchestrator.orchestrateGeneration(
+        entityId,
+        recipeId
+      );
 
       expect(result).toEqual({
         success: true,
         entityCount: 3,
-        rootId: rootId
+        rootId: rootId,
       });
 
       // Verify workflow order
-      expect(mockGenerationWorkflow.validateRecipe).toHaveBeenCalledWith(recipeId);
+      expect(mockGenerationWorkflow.validateRecipe).toHaveBeenCalledWith(
+        recipeId
+      );
       expect(mockGenerationWorkflow.generate).toHaveBeenCalledWith(
         blueprintId,
         recipeId,
         { ownerId: entityId }
       );
-      expect(mockUnitOfWork.trackEntities).toHaveBeenCalledWith([rootId, ...partIds]);
+      expect(mockUnitOfWork.trackEntities).toHaveBeenCalledWith([
+        rootId,
+        ...partIds,
+      ]);
       expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
         entityId,
         ANATOMY_BODY_COMPONENT_ID,
@@ -133,12 +141,14 @@ describe('AnatomyOrchestrator', () => {
           recipeId,
           body: {
             root: rootId,
-            parts: { left_arm: 'part-1', right_arm: 'part-2' }
-          }
+            parts: { left_arm: 'part-1', right_arm: 'part-2' },
+          },
         })
       );
       expect(mockGraphBuildingWorkflow.buildCache).toHaveBeenCalledWith(rootId);
-      expect(mockDescriptionWorkflow.generateAll).toHaveBeenCalledWith(entityId);
+      expect(mockDescriptionWorkflow.generateAll).toHaveBeenCalledWith(
+        entityId
+      );
       expect(mockUnitOfWork.commit).toHaveBeenCalled();
     });
 
@@ -149,8 +159,9 @@ describe('AnatomyOrchestrator', () => {
       });
       mockErrorHandler.handle.mockReturnValue(error);
 
-      await expect(orchestrator.orchestrateGeneration(entityId, recipeId))
-        .rejects.toThrow('Recipe not found');
+      await expect(
+        orchestrator.orchestrateGeneration(entityId, recipeId)
+      ).rejects.toThrow('Recipe not found');
 
       expect(mockUnitOfWork.execute).not.toHaveBeenCalled();
       expect(mockUnitOfWork.commit).not.toHaveBeenCalled();
@@ -162,20 +173,21 @@ describe('AnatomyOrchestrator', () => {
       mockErrorHandler.handle.mockReturnValue(error);
       mockUnitOfWork.isRolledBack = true;
 
-      await expect(orchestrator.orchestrateGeneration(entityId, recipeId))
-        .rejects.toThrow('Generation failed');
+      await expect(
+        orchestrator.orchestrateGeneration(entityId, recipeId)
+      ).rejects.toThrow('Generation failed');
 
       expect(mockErrorHandler.handle).toHaveBeenCalledWith(error, {
         operation: 'orchestration',
         entityId,
-        recipeId
+        recipeId,
       });
       expect(mockUnitOfWork.commit).not.toHaveBeenCalled();
     });
 
     it('should rollback on description generation failure', async () => {
       const error = new Error('Description generation failed');
-      
+
       // First two executes succeed, third fails
       mockUnitOfWork.execute
         .mockImplementationOnce(async (op) => await op()) // generation
@@ -185,8 +197,9 @@ describe('AnatomyOrchestrator', () => {
       mockErrorHandler.handle.mockReturnValue(error);
       mockUnitOfWork.isRolledBack = true;
 
-      await expect(orchestrator.orchestrateGeneration(entityId, recipeId))
-        .rejects.toThrow('Description generation failed');
+      await expect(
+        orchestrator.orchestrateGeneration(entityId, recipeId)
+      ).rejects.toThrow('Description generation failed');
 
       expect(mockUnitOfWork.commit).not.toHaveBeenCalled();
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -195,12 +208,11 @@ describe('AnatomyOrchestrator', () => {
       );
     });
 
-
     it('should preserve existing anatomy data when updating', async () => {
       const existingData = {
         recipeId,
         customField: 'preserved',
-        anotherField: 42
+        anotherField: 42,
       };
 
       const mockEntity = {
@@ -218,7 +230,7 @@ describe('AnatomyOrchestrator', () => {
           recipeId,
           customField: 'preserved',
           anotherField: 42,
-          body: expect.any(Object)
+          body: expect.any(Object),
         })
       );
     });
@@ -232,7 +244,7 @@ describe('AnatomyOrchestrator', () => {
 
       expect(result).toEqual({
         needsGeneration: false,
-        reason: 'Entity not found'
+        reason: 'Entity not found',
       });
     });
 
@@ -246,7 +258,7 @@ describe('AnatomyOrchestrator', () => {
 
       expect(result).toEqual({
         needsGeneration: false,
-        reason: 'Entity has no anatomy:body component'
+        reason: 'Entity has no anatomy:body component',
       });
     });
 
@@ -261,7 +273,7 @@ describe('AnatomyOrchestrator', () => {
 
       expect(result).toEqual({
         needsGeneration: false,
-        reason: 'anatomy:body component has no recipeId'
+        reason: 'anatomy:body component has no recipeId',
       });
     });
 
@@ -270,7 +282,7 @@ describe('AnatomyOrchestrator', () => {
         hasComponent: jest.fn().mockReturnValue(true),
         getComponentData: jest.fn().mockReturnValue({
           recipeId: 'test-recipe',
-          body: { root: 'existing-root' }
+          body: { root: 'existing-root' },
         }),
       };
       mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
@@ -279,7 +291,7 @@ describe('AnatomyOrchestrator', () => {
 
       expect(result).toEqual({
         needsGeneration: false,
-        reason: 'Anatomy already generated'
+        reason: 'Anatomy already generated',
       });
     });
 
@@ -287,7 +299,7 @@ describe('AnatomyOrchestrator', () => {
       const mockEntity = {
         hasComponent: jest.fn().mockReturnValue(true),
         getComponentData: jest.fn().mockReturnValue({
-          recipeId: 'test-recipe'
+          recipeId: 'test-recipe',
         }),
       };
       mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
@@ -296,7 +308,7 @@ describe('AnatomyOrchestrator', () => {
 
       expect(result).toEqual({
         needsGeneration: true,
-        reason: 'Ready for generation'
+        reason: 'Ready for generation',
       });
     });
   });

@@ -49,13 +49,13 @@ export class AnatomyUnitOfWork {
 
   /**
    * Tracks an entity that was created during this unit of work
-   * 
+   *
    * @param {string} entityId - The ID of the created entity
    * @throws {Error} If unit of work has already been committed or rolled back
    */
   trackEntity(entityId) {
     this.#ensureActive();
-    
+
     if (!entityId) {
       throw new InvalidArgumentError('entityId is required');
     }
@@ -68,7 +68,7 @@ export class AnatomyUnitOfWork {
 
   /**
    * Tracks multiple entities that were created during this unit of work
-   * 
+   *
    * @param {string[]} entityIds - Array of entity IDs to track
    */
   trackEntities(entityIds) {
@@ -76,13 +76,13 @@ export class AnatomyUnitOfWork {
       throw new InvalidArgumentError('entityIds must be an array');
     }
 
-    entityIds.forEach(id => this.trackEntity(id));
+    entityIds.forEach((id) => this.trackEntity(id));
   }
 
   /**
    * Executes an operation within the unit of work
    * If the operation fails, automatic rollback is triggered
-   * 
+   *
    * @template T
    * @param {() => Promise<T>} operation - The operation to execute
    * @returns {Promise<T>} The result of the operation
@@ -108,7 +108,7 @@ export class AnatomyUnitOfWork {
   /**
    * Commits the unit of work, finalizing all operations
    * After commit, no more operations can be performed
-   * 
+   *
    * @returns {Promise<void>}
    */
   async commit() {
@@ -126,7 +126,7 @@ export class AnatomyUnitOfWork {
   /**
    * Rolls back all operations by deleting created entities
    * Entities are deleted in reverse order of creation
-   * 
+   *
    * @returns {Promise<void>}
    */
   async rollback() {
@@ -144,19 +144,23 @@ export class AnatomyUnitOfWork {
     );
 
     const failedDeletions = [];
-    
+
     // Delete entities in reverse order
     for (const entityId of [...this.#createdEntities].reverse()) {
       try {
         this.#logger.debug(`AnatomyUnitOfWork: Deleting entity '${entityId}'`);
-        
+
         // Check if entity still exists before trying to delete
         const entity = this.#entityManager.getEntityInstance(entityId);
         if (entity) {
           this.#entityManager.removeEntityInstance(entityId);
-          this.#logger.debug(`AnatomyUnitOfWork: Successfully deleted entity '${entityId}'`);
+          this.#logger.debug(
+            `AnatomyUnitOfWork: Successfully deleted entity '${entityId}'`
+          );
         } else {
-          this.#logger.debug(`AnatomyUnitOfWork: Entity '${entityId}' already removed`);
+          this.#logger.debug(
+            `AnatomyUnitOfWork: Entity '${entityId}' already removed`
+          );
         }
       } catch (error) {
         this.#logger.error(
@@ -185,7 +189,7 @@ export class AnatomyUnitOfWork {
 
   /**
    * Returns whether this unit of work has been committed
-   * 
+   *
    * @returns {boolean}
    */
   get isCommitted() {
@@ -194,7 +198,7 @@ export class AnatomyUnitOfWork {
 
   /**
    * Returns whether this unit of work has been rolled back
-   * 
+   *
    * @returns {boolean}
    */
   get isRolledBack() {
@@ -203,7 +207,7 @@ export class AnatomyUnitOfWork {
 
   /**
    * Returns the number of entities being tracked
-   * 
+   *
    * @returns {number}
    */
   get trackedEntityCount() {
@@ -212,7 +216,7 @@ export class AnatomyUnitOfWork {
 
   /**
    * Ensures the unit of work is still active (not committed or rolled back)
-   * 
+   *
    * @private
    * @throws {Error} If unit of work is not active
    */

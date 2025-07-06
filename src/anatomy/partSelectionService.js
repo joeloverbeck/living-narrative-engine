@@ -78,12 +78,15 @@ export class PartSelectionService {
         recipeSlot.preferId
       );
 
-      if (preferredDef && this.#meetsAllRequirements(
-        preferredDef,
-        requirements,
-        allowedTypes,
-        recipeSlot
-      )) {
+      if (
+        preferredDef &&
+        this.#meetsAllRequirements(
+          preferredDef,
+          requirements,
+          allowedTypes,
+          recipeSlot
+        )
+      ) {
         this.#logger.debug(
           `PartSelectionService: Using preferred part '${recipeSlot.preferId}'`
         );
@@ -126,12 +129,14 @@ export class PartSelectionService {
     const allEntityDefs = this.#dataRegistry.getAll('entityDefinitions');
 
     for (const entityDef of allEntityDefs) {
-      if (this.#meetsAllRequirements(
-        entityDef,
-        requirements,
-        allowedTypes,
-        recipeSlot
-      )) {
+      if (
+        this.#meetsAllRequirements(
+          entityDef,
+          requirements,
+          allowedTypes,
+          recipeSlot
+        )
+      ) {
         candidates.push(entityDef.id);
       }
     }
@@ -149,8 +154,8 @@ export class PartSelectionService {
         {
           message: errorContext.message,
           details: {
-            raw: JSON.stringify(errorContext)
-          }
+            raw: JSON.stringify(errorContext),
+          },
         }
       );
 
@@ -175,12 +180,18 @@ export class PartSelectionService {
     if (!anatomyPart) return false;
 
     // Check allowed types (handle wildcard)
-    if (!allowedTypes.includes('*') && !allowedTypes.includes(anatomyPart.subType)) {
+    if (
+      !allowedTypes.includes('*') &&
+      !allowedTypes.includes(anatomyPart.subType)
+    ) {
       return false;
     }
 
     // Check part type requirement
-    if (requirements.partType && anatomyPart.subType !== requirements.partType) {
+    if (
+      requirements.partType &&
+      anatomyPart.subType !== requirements.partType
+    ) {
       return false;
     }
 
@@ -211,13 +222,19 @@ export class PartSelectionService {
       }
 
       // Check property requirements
-      if (recipeSlot.properties && !this.#matchesProperties(entityDef, recipeSlot.properties)) {
+      if (
+        recipeSlot.properties &&
+        !this.#matchesProperties(entityDef, recipeSlot.properties)
+      ) {
         return false;
       }
     }
 
     // Check base property requirements
-    if (requirements.properties && !this.#matchesProperties(entityDef, requirements.properties)) {
+    if (
+      requirements.properties &&
+      !this.#matchesProperties(entityDef, requirements.properties)
+    ) {
       return false;
     }
 
@@ -232,7 +249,9 @@ export class PartSelectionService {
    * @returns {boolean} True if properties match
    */
   #matchesProperties(entityDef, propertyRequirements) {
-    for (const [componentId, requiredProps] of Object.entries(propertyRequirements)) {
+    for (const [componentId, requiredProps] of Object.entries(
+      propertyRequirements
+    )) {
       const component = entityDef.components[componentId];
       if (!component) return false;
 
@@ -275,29 +294,33 @@ export class PartSelectionService {
     }
 
     let message = 'No entity definitions found matching anatomy requirements. ';
-    
+
     if (requirements.partType) {
       message += `Need part type: '${requirements.partType}'. `;
     }
-    
+
     message += `Allowed types: [${allowedTypes.join(', ')}]. `;
-    
+
     if (requirements.components?.length > 0) {
       message += `Required components: [${requirements.components.join(', ')}]. `;
     }
-    
+
     if (recipeSlot?.tags?.length > 0) {
       message += `Required tags: [${recipeSlot.tags.join(', ')}]. `;
     }
-    
+
     if (recipeSlot?.notTags?.length > 0) {
       message += `Excluded tags: [${recipeSlot.notTags.join(', ')}]. `;
     }
-    
+
     message += `Checked ${totalDefinitions} entity definitions.`;
 
     context.message = message;
-    context.suggestion = this.#buildSuggestion(requirements, allowedTypes, recipeSlot);
+    context.suggestion = this.#buildSuggestion(
+      requirements,
+      allowedTypes,
+      recipeSlot
+    );
 
     return context;
   }
@@ -312,15 +335,15 @@ export class PartSelectionService {
    */
   #buildSuggestion(requirements, allowedTypes, recipeSlot) {
     let suggestion = `Create an entity definition with 'anatomy:part' component where subType is one of: [${allowedTypes.join(', ')}]`;
-    
+
     if (requirements.components?.length > 0) {
       suggestion += ` and components: [${requirements.components.join(', ')}]`;
     }
-    
+
     if (recipeSlot?.tags?.length > 0) {
       suggestion += ` and tags: [${recipeSlot.tags.join(', ')}]`;
     }
-    
+
     return suggestion;
   }
 }

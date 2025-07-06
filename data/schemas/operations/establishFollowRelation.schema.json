@@ -31,10 +31,7 @@
           "minLength": 1
         }
       },
-      "required": [
-        "follower_id",
-        "leader_id"
-      ],
+      "required": ["follower_id", "leader_id"],
       "additionalProperties": false
     }
   }

@@ -120,38 +120,44 @@ export function createBaseRuleEnvironment({
     });
     // Create the bodyGraphService mock that actually checks entity components
     const mockBodyGraphService = {
-      hasPartWithComponentValue: jest.fn((bodyComponent, componentId, propertyPath, expectedValue) => {
-        // If no body component or root, return not found
-        if (!bodyComponent || !bodyComponent.root) {
-          return { found: false };
-        }
-        
-        // Check the root entity first
-        const rootEntity = entityManager.getEntity(bodyComponent.root);
-        if (rootEntity && rootEntity.components[componentId]) {
-          const component = rootEntity.components[componentId];
-          const actualValue = propertyPath ? component[propertyPath] : component;
-          if (actualValue === expectedValue) {
-            return { found: true, partId: bodyComponent.root };
+      hasPartWithComponentValue: jest.fn(
+        (bodyComponent, componentId, propertyPath, expectedValue) => {
+          // If no body component or root, return not found
+          if (!bodyComponent || !bodyComponent.root) {
+            return { found: false };
           }
-        }
-        
-        // For test environments, also check all entities that look like body parts
-        // This is a simplified approach since we don't have the full graph traversal
-        const allEntities = entityManager.getAllEntities();
-        for (const entity of allEntities) {
-          // Check if this entity has the component we're looking for
-          if (entity.components && entity.components[componentId]) {
-            const component = entity.components[componentId];
-            const actualValue = propertyPath ? component[propertyPath] : component;
+
+          // Check the root entity first
+          const rootEntity = entityManager.getEntity(bodyComponent.root);
+          if (rootEntity && rootEntity.components[componentId]) {
+            const component = rootEntity.components[componentId];
+            const actualValue = propertyPath
+              ? component[propertyPath]
+              : component;
             if (actualValue === expectedValue) {
-              return { found: true, partId: entity.id };
+              return { found: true, partId: bodyComponent.root };
             }
           }
+
+          // For test environments, also check all entities that look like body parts
+          // This is a simplified approach since we don't have the full graph traversal
+          const allEntities = entityManager.getAllEntities();
+          for (const entity of allEntities) {
+            // Check if this entity has the component we're looking for
+            if (entity.components && entity.components[componentId]) {
+              const component = entity.components[componentId];
+              const actualValue = propertyPath
+                ? component[propertyPath]
+                : component;
+              if (actualValue === expectedValue) {
+                return { found: true, partId: entity.id };
+              }
+            }
+          }
+
+          return { found: false };
         }
-        
-        return { found: false };
-      })
+      ),
     };
 
     interpreter = new SystemLogicInterpreter({

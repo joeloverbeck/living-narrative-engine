@@ -42,10 +42,7 @@
           "type": "boolean"
         }
       },
-      "required": [
-        "entity_id",
-        "speech_content"
-      ],
+      "required": ["entity_id", "speech_content"],
       "additionalProperties": false
     }
   }

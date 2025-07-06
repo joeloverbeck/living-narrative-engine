@@ -111,18 +111,24 @@ describe('AnatomyVisualizerUI', () => {
           },
         },
       ];
-      mockRegistry.getAllEntityDefinitions.mockReturnValue(mockEntityDefinitions);
+      mockRegistry.getAllEntityDefinitions.mockReturnValue(
+        mockEntityDefinitions
+      );
 
       // Act
       await visualizerUI.initialize();
 
       // Assert
-      expect(mockLogger.debug).toHaveBeenCalledWith('AnatomyVisualizerUI: Initializing...');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'AnatomyVisualizerUI: Initializing...'
+      );
       expect(mockRegistry.getAllEntityDefinitions).toHaveBeenCalled();
       expect(mockLogger.info).toHaveBeenCalledWith(
         'AnatomyVisualizerUI: Found 2 entities with anatomy:body'
       );
-      expect(mockLogger.debug).toHaveBeenCalledWith('AnatomyVisualizerUI: Initialization complete');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'AnatomyVisualizerUI: Initialization complete'
+      );
     });
 
     it('should handle error when entity selector element is not found', async () => {
@@ -136,7 +142,9 @@ describe('AnatomyVisualizerUI', () => {
       await visualizerUI.initialize();
 
       // Assert
-      expect(mockLogger.error).toHaveBeenCalledWith('Entity selector element not found');
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Entity selector element not found'
+      );
     });
 
     it('should handle error when getAllEntityDefinitions fails', async () => {
@@ -160,8 +168,13 @@ describe('AnatomyVisualizerUI', () => {
       await visualizerUI.initialize();
 
       // Assert
-      expect(mockLogger.error).toHaveBeenCalledWith('Failed to populate entity selector:', error);
-      expect(mockSelector.innerHTML).toBe('<option value="">Error loading entities</option>');
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Failed to populate entity selector:',
+        error
+      );
+      expect(mockSelector.innerHTML).toBe(
+        '<option value="">Error loading entities</option>'
+      );
     });
   });
 
@@ -195,7 +208,9 @@ describe('AnatomyVisualizerUI', () => {
           components: null,
         },
       ];
-      mockRegistry.getAllEntityDefinitions.mockReturnValue(mockEntityDefinitions);
+      mockRegistry.getAllEntityDefinitions.mockReturnValue(
+        mockEntityDefinitions
+      );
 
       // Act
       await visualizerUI._populateEntitySelector();
@@ -228,7 +243,9 @@ describe('AnatomyVisualizerUI', () => {
           components: { 'anatomy:body': {} },
         },
       ];
-      mockRegistry.getAllEntityDefinitions.mockReturnValue(mockEntityDefinitions);
+      mockRegistry.getAllEntityDefinitions.mockReturnValue(
+        mockEntityDefinitions
+      );
 
       // Act
       await visualizerUI._populateEntitySelector();
@@ -258,7 +275,9 @@ describe('AnatomyVisualizerUI', () => {
         id: 'instance-123',
         getComponentData: jest.fn((type) => {
           if (type === 'anatomy:body') {
-            return { body: { parts: { head: 'head-123', torso: 'torso-123' } } };
+            return {
+              body: { parts: { head: 'head-123', torso: 'torso-123' } },
+            };
           }
           if (type === 'core:description') {
             return { text: 'Test description' };
@@ -267,7 +286,9 @@ describe('AnatomyVisualizerUI', () => {
         }),
       };
 
-      mockEntityManager.createEntityInstance.mockResolvedValue(mockEntityInstance);
+      mockEntityManager.createEntityInstance.mockResolvedValue(
+        mockEntityInstance
+      );
       mockEntityManager.getEntityInstance.mockResolvedValue(mockEntityInstance);
 
       // Mock event subscription
@@ -303,7 +324,10 @@ describe('AnatomyVisualizerUI', () => {
       expect(mockLogger.info).toHaveBeenCalledWith(
         `AnatomyVisualizerUI: Loading entity ${entityDefId}`
       );
-      expect(mockEntityManager.createEntityInstance).toHaveBeenCalledWith(entityDefId, {});
+      expect(mockEntityManager.createEntityInstance).toHaveBeenCalledWith(
+        entityDefId,
+        {}
+      );
       expect(visualizerUI._graphRenderer.renderGraph).toHaveBeenCalledWith(
         'instance-123',
         { parts: { head: 'head-123', torso: 'torso-123' } }
@@ -357,9 +381,18 @@ describe('AnatomyVisualizerUI', () => {
 
       // Assert
       expect(mockEntityManager.removeEntityInstance).toHaveBeenCalledTimes(3);
-      expect(mockEntityManager.removeEntityInstance).toHaveBeenNthCalledWith(1, 'entity3');
-      expect(mockEntityManager.removeEntityInstance).toHaveBeenNthCalledWith(2, 'entity2');
-      expect(mockEntityManager.removeEntityInstance).toHaveBeenNthCalledWith(3, 'entity1');
+      expect(mockEntityManager.removeEntityInstance).toHaveBeenNthCalledWith(
+        1,
+        'entity3'
+      );
+      expect(mockEntityManager.removeEntityInstance).toHaveBeenNthCalledWith(
+        2,
+        'entity2'
+      );
+      expect(mockEntityManager.removeEntityInstance).toHaveBeenNthCalledWith(
+        3,
+        'entity1'
+      );
       expect(visualizerUI._createdEntities).toEqual([]);
       expect(visualizerUI._currentEntityId).toBeNull();
     });

@@ -52,24 +52,24 @@ export class AnatomyOrchestrator extends BaseService {
     this.#logger = this._init('AnatomyOrchestrator', logger, {
       entityManager: {
         value: entityManager,
-        requiredMethods: ['getEntityInstance', 'addComponent']
+        requiredMethods: ['getEntityInstance', 'addComponent'],
       },
       generationWorkflow: {
         value: generationWorkflow,
-        requiredMethods: ['generate', 'validateRecipe']
+        requiredMethods: ['generate', 'validateRecipe'],
       },
       descriptionWorkflow: {
         value: descriptionWorkflow,
-        requiredMethods: ['generateAll']
+        requiredMethods: ['generateAll'],
       },
       graphBuildingWorkflow: {
         value: graphBuildingWorkflow,
-        requiredMethods: ['buildCache']
+        requiredMethods: ['buildCache'],
       },
       errorHandler: {
         value: errorHandler,
-        requiredMethods: ['handle']
-      }
+        requiredMethods: ['handle'],
+      },
     });
     this.#entityManager = entityManager;
     this.#generationWorkflow = generationWorkflow;
@@ -80,7 +80,7 @@ export class AnatomyOrchestrator extends BaseService {
 
   /**
    * Orchestrates the complete anatomy generation process
-   * 
+   *
    * @param {string} entityId - The entity to generate anatomy for
    * @param {string} recipeId - The recipe ID to use
    * @returns {Promise<{success: boolean, entityCount: number, rootId: string}>}
@@ -93,24 +93,22 @@ export class AnatomyOrchestrator extends BaseService {
 
     const unitOfWork = new AnatomyUnitOfWork({
       entityManager: this.#entityManager,
-      logger: this.#logger
+      logger: this.#logger,
     });
 
     try {
       // Phase 1: Validate recipe and get blueprint ID
       const blueprintId = this.#generationWorkflow.validateRecipe(recipeId);
-      
+
       this.#logger.debug(
         `AnatomyOrchestrator: Recipe '${recipeId}' validated, using blueprint '${blueprintId}'`
       );
 
       // Phase 2: Generate anatomy graph
       const graphResult = await unitOfWork.execute(async () => {
-        return await this.#generationWorkflow.generate(
-          blueprintId,
-          recipeId,
-          { ownerId: entityId }
-        );
+        return await this.#generationWorkflow.generate(blueprintId, recipeId, {
+          ownerId: entityId,
+        });
       });
 
       // Track all created entities for potential rollback
@@ -143,23 +141,22 @@ export class AnatomyOrchestrator extends BaseService {
       return {
         success: true,
         entityCount: graphResult.entities.length,
-        rootId: graphResult.rootId
+        rootId: graphResult.rootId,
       };
-
     } catch (error) {
       // Unit of work automatically rolled back on error
       const wrappedError = this.#errorHandler.handle(error, {
         operation: 'orchestration',
         entityId,
-        recipeId
+        recipeId,
       });
 
       this.#logger.error(
         `AnatomyOrchestrator: Failed to generate anatomy for entity '${entityId}'`,
-        { 
+        {
           error: wrappedError.message,
           trackedEntities: unitOfWork.trackedEntityCount,
-          wasRolledBack: unitOfWork.isRolledBack
+          wasRolledBack: unitOfWork.isRolledBack,
         }
       );
 
@@ -169,7 +166,7 @@ export class AnatomyOrchestrator extends BaseService {
 
   /**
    * Updates the parent entity with the generated anatomy structure
-   * 
+   *
    * @private
    * @param {string} entityId - The entity ID
    * @param {string} recipeId - The recipe ID
@@ -178,13 +175,16 @@ export class AnatomyOrchestrator extends BaseService {
    */
   async #updateParentEntity(entityId, recipeId, graphResult) {
     const entity = this.#entityManager.getEntityInstance(entityId);
-    
+
     if (!entity) {
-      throw new Error(`Entity '${entityId}' not found after anatomy generation`);
+      throw new Error(
+        `Entity '${entityId}' not found after anatomy generation`
+      );
     }
 
     // Get existing anatomy data to preserve any additional fields
-    const existingData = entity.getComponentData(ANATOMY_BODY_COMPONENT_ID) || {};
+    const existingData =
+      entity.getComponentData(ANATOMY_BODY_COMPONENT_ID) || {};
 
     // Update with the generated anatomy structure
     const updatedData = {
@@ -192,11 +192,15 @@ export class AnatomyOrchestrator extends BaseService {
       recipeId, // Ensure recipe ID is preserved
       body: {
         root: graphResult.rootId,
-        parts: graphResult.partsMap
-      }
+        parts: graphResult.partsMap,
+      },
     };
 
-    this.#entityManager.addComponent(entityId, ANATOMY_BODY_COMPONENT_ID, updatedData);
+    this.#entityManager.addComponent(
+      entityId,
+      ANATOMY_BODY_COMPONENT_ID,
+      updatedData
+    );
 
     this.#logger.debug(
       `AnatomyOrchestrator: Updated entity '${entityId}' with anatomy structure`
@@ -205,46 +209,46 @@ export class AnatomyOrchestrator extends BaseService {
 
   /**
    * Checks if an entity needs anatomy generation
-   * 
+   *
    * @param {string} entityId - The entity ID to check
    * @returns {{needsGeneration: boolean, reason: string}}
    */
   checkGenerationNeeded(entityId) {
     const entity = this.#entityManager.getEntityInstance(entityId);
-    
+
     if (!entity) {
       return {
         needsGeneration: false,
-        reason: 'Entity not found'
+        reason: 'Entity not found',
       };
     }
 
     if (!entity.hasComponent(ANATOMY_BODY_COMPONENT_ID)) {
       return {
         needsGeneration: false,
-        reason: 'Entity has no anatomy:body component'
+        reason: 'Entity has no anatomy:body component',
       };
     }
 
     const anatomyData = entity.getComponentData(ANATOMY_BODY_COMPONENT_ID);
-    
+
     if (!anatomyData || !anatomyData.recipeId) {
       return {
         needsGeneration: false,
-        reason: 'anatomy:body component has no recipeId'
+        reason: 'anatomy:body component has no recipeId',
       };
     }
 
     if (anatomyData.body) {
       return {
         needsGeneration: false,
-        reason: 'Anatomy already generated'
+        reason: 'Anatomy already generated',
       };
     }
 
     return {
       needsGeneration: true,
-      reason: 'Ready for generation'
+      reason: 'Ready for generation',
     };
   }
 }
