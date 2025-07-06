@@ -1,6 +1,5 @@
 import { describe, it, expect, jest } from '@jest/globals';
 import { writeContextVariable } from '../../../src/utils/contextVariableUtils.js';
-import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
 import * as safeDispatchModule from '../../../src/utils/safeDispatchErrorUtils.js';
 
 jest.mock('../../../src/utils/safeDispatchErrorUtils.js');

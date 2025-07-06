@@ -4,9 +4,10 @@ import { getActorLocation } from '../../../src/utils/actorLocationUtils.js';
 /** @typedef {import('../../../src/interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 
 /**
- * Simple mock entity class
+ * Creates a mock entity for tests.
  *
- * @param id
+ * @param {string} id - Identifier for the entity.
+ * @returns {{id: string, getComponentData: jest.Mock}} Mock entity.
  */
 function createMockEntity(id) {
   return { id, getComponentData: jest.fn() };
