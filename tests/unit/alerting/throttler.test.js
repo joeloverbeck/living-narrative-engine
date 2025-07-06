@@ -194,6 +194,23 @@ describe('Throttler', () => {
     );
   });
 
+  it("uses fallback message when original payload lacks 'message'", () => {
+    const throttler = new Throttler(mockDispatcher, 'warning');
+    const payloadNoMsg = { details: { info: true } };
+    throttler.allow('nomsg', payloadNoMsg);
+    throttler.allow('nomsg', payloadNoMsg);
+    jest.advanceTimersByTime(throttleWindowMs);
+    expect(mockDispatcher.dispatch).toHaveBeenCalledTimes(1);
+    expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+      'core:display_warning',
+      {
+        message:
+          "Warning: 'An event' occurred 1 more times in the last 10 seconds.",
+        details: payloadNoMsg.details,
+      }
+    );
+  });
+
   it('should throw an error if an invalid dispatcher is provided', () => {
     // Assert
     expect(() => new Throttler(null, 'warning')).toThrow(
