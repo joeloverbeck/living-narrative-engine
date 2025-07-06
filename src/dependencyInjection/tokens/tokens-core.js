@@ -49,6 +49,7 @@ export const coreTokens = freeze({
   EntityManager: 'EntityManager',
   SpatialIndexSynchronizer: 'SpatialIndexSynchronizer',
   JsonLogicEvaluationService: 'JsonLogicEvaluationService',
+  JsonLogicCustomOperators: 'JsonLogicCustomOperators',
   ActionValidationContextBuilder: 'ActionValidationContextBuilder',
   PrerequisiteEvaluationService: 'PrerequisiteEvaluationService',
   TurnHandlerResolver: 'TurnHandlerResolver',

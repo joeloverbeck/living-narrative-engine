@@ -24,6 +24,7 @@ import EntityManager from '../../entities/entityManager.js';
 import { EntityManagerAdapter } from '../../entities/entityManagerAdapter.js';
 import WorldContext from '../../context/worldContext.js';
 import JsonLogicEvaluationService from '../../logic/jsonLogicEvaluationService.js';
+import JsonLogicCustomOperators from '../../logic/jsonLogicCustomOperators.js';
 import * as closenessCircleService from '../../logic/services/closenessCircleService.js';
 import { EntityDisplayDataProvider } from '../../entities/entityDisplayDataProvider.js';
 import { SpatialIndexSynchronizer } from '../../entities/spatialIndexSynchronizer.js';
@@ -104,11 +105,19 @@ export function registerWorldAndEntity(container) {
     `World and Entity Registration: Registered ${String(tokens.IWorldContext)}.`
   );
 
-  registrar.single(
-    tokens.JsonLogicEvaluationService,
-    JsonLogicEvaluationService,
-    [tokens.ILogger, tokens.IGameDataRepository, tokens.ServiceSetup]
-  );
+  registrar.singletonFactory(tokens.JsonLogicEvaluationService, (c) => {
+    const jsonLogicService = new JsonLogicEvaluationService({
+      logger: c.resolve(tokens.ILogger),
+      gameDataRepository: c.resolve(tokens.IGameDataRepository),
+      serviceSetup: c.resolve(tokens.ServiceSetup)
+    });
+    
+    // Register custom operators
+    const customOperators = c.resolve(tokens.JsonLogicCustomOperators);
+    customOperators.registerOperators(jsonLogicService);
+    
+    return jsonLogicService;
+  });
   logger.debug(
     `World and Entity Registration: Registered ${String(
       tokens.JsonLogicEvaluationService
@@ -328,6 +337,19 @@ export function registerWorldAndEntity(container) {
   logger.debug(
     `World and Entity Registration: Registered ${String(
       tokens.BodyGraphService
+    )}.`
+  );
+
+  registrar.singletonFactory(tokens.JsonLogicCustomOperators, (c) => {
+    return new JsonLogicCustomOperators({
+      logger: c.resolve(tokens.ILogger),
+      bodyGraphService: c.resolve(tokens.BodyGraphService),
+      entityManager: c.resolve(tokens.IEntityManager)
+    });
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.JsonLogicCustomOperators
     )}.`
   );
 

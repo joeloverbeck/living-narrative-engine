@@ -6,15 +6,17 @@
   "description": "Commands your character to follow the specified target, becoming their companion and moving with them.",
   "scope": "core:potential_leaders",
   "required_components": {
-    "target": ["core:actor"]
+    "target": [
+      "core:actor"
+    ]
   },
   "template": "follow {target}",
   "prerequisites": [
     {
       "logic": {
-        "condition_ref": "core:actor-is-not-rooted"
+        "condition_ref": "core:actor-can-move"
       },
-      "failure_message": "You are rooted and cannot move."
+      "failure_message": "You cannot move without functioning legs."
     },
     {
       "logic": {

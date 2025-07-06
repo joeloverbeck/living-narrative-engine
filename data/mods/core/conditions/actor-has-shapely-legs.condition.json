@@ -1,0 +1,8 @@
+{
+  "$schema": "http://example.com/schemas/condition.schema.json",
+  "id": "core:actor-has-shapely-legs",
+  "description": "Checks if the actor has at least one shapely leg.",
+  "logic": {
+    "hasPartWithComponentValue": ["actor", "descriptors:build", "build", "shapely"]
+  }
+}
