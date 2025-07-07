@@ -1,48 +1,17 @@
-/**
- * @jest-environment node
- */
+// @jest-environment node
 const fs = require('fs/promises');
 const path = require('path');
 const {
   registerLoaders,
 } = require('../../../src/dependencyInjection/registrations/loadersRegistrations.js');
 const { tokens } = require('../../../src/dependencyInjection/tokens.js');
-const ModsLoader = require('../../../src/loaders/modsLoader.js').default;
-const { createLoadContext } = require('../../../src/loaders/LoadContext.js');
-
-const GAME_JSON_PATH = path.join(__dirname, '../../../data/game.json');
-const BACKUP_GAME_JSON_PATH = path.join(
-  __dirname,
-  '../../../data/game.json.bak'
-);
-
-// Helper to read/restore game.json
-/**
- *
- */
-async function backupGameJson() {
-  await fs.copyFile(GAME_JSON_PATH, BACKUP_GAME_JSON_PATH);
-}
-/**
- *
- */
-async function restoreGameJson() {
-  await fs.copyFile(BACKUP_GAME_JSON_PATH, GAME_JSON_PATH);
-  await fs.unlink(BACKUP_GAME_JSON_PATH);
-}
-
-/**
- *
- */
-async function writeCoreOnlyGameJson() {
-  const coreOnly = { mods: ['core'] };
-  await fs.writeFile(GAME_JSON_PATH, JSON.stringify(coreOnly, null, 2));
-}
 
 // Node-compatible fetch for local files
 /**
+ * Fetch a local JSON file and return a minimal Response-like object.
  *
- * @param identifier
+ * @param {string} identifier Path to the file to fetch.
+ * @returns {Promise<object>} An object mimicking the Response interface.
  */
 function nodeFileFetch(identifier) {
   const fs = require('fs/promises');
@@ -72,7 +41,7 @@ function nodeFileFetch(identifier) {
         status: 200,
         statusText: 'OK',
       };
-    } catch (error) {
+    } catch {
       return {
         ok: false,
         status: 404,
@@ -94,7 +63,7 @@ describe('Integration: ModsLoader can load the core mod (real files)', () => {
     // Backup original game.json
     try {
       originalGameJson = await fs.readFile(gameJsonPath, 'utf8');
-    } catch (error) {
+    } catch {
       originalGameJson = null;
     }
   });
