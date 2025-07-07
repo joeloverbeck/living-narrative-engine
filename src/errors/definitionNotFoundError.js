@@ -11,6 +11,8 @@
  */
 export class DefinitionNotFoundError extends Error {
   /**
+   * Creates an instance of DefinitionNotFoundError.
+   *
    * @param {string} definitionId - The ID of the definition that was not found.
    */
   constructor(definitionId) {
