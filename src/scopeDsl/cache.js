@@ -120,18 +120,44 @@ class ScopeCache extends IScopeEngine {
    * @param {string} actorId - Actor ID
    * @param {object} ast - The parsed AST
    * @param {RuntimeContext} runtimeCtx - Runtime context containing location
+   * @param {object} actorEntity - The actor entity with components
    * @returns {string} Cache key
    * @private
    */
-  _generateKey(actorId, ast, runtimeCtx) {
+  _generateKey(actorId, ast, runtimeCtx, actorEntity) {
     // Create a stable key from the AST structure
     const astKey = safeStringify(ast);
 
     // Extract location ID from runtime context if available
     const locationId = runtimeCtx?.location?.id || 'no-location';
 
-    // Include location in cache key to ensure cache invalidation on location change
-    return `${actorId}:${locationId}:${astKey}`;
+    // Include relevant component state that affects scope evaluation
+    // For scopes that check following/leading relationships, include that state
+    let componentStateKey = '';
+    if (actorEntity?.components) {
+      const leadingComponent = actorEntity.components['core:leading'];
+      const followingComponent = actorEntity.components['core:following'];
+      
+      if (leadingComponent?.followers) {
+        // Sort followers for stable key generation
+        const sortedFollowers = [...leadingComponent.followers].sort();
+        componentStateKey += `:followers=${sortedFollowers.join(',')}`;
+      }
+      
+      if (followingComponent?.leaderId) {
+        componentStateKey += `:following=${followingComponent.leaderId}`;
+      }
+    }
+
+    // Include component state in cache key to ensure cache invalidation on state change
+    const fullKey = `${actorId}:${locationId}:${astKey}${componentStateKey}`;
+    
+    // Debug log the component state being included in the key
+    if (componentStateKey) {
+      this.logger.debug(`ScopeCache: Including component state in cache key: ${componentStateKey}`);
+    }
+    
+    return fullKey;
   }
 
   /**
@@ -144,7 +170,7 @@ class ScopeCache extends IScopeEngine {
    * @returns {Set<string>} Set of entity IDs
    */
   resolve(ast, actorEntity, runtimeCtx) {
-    const key = this._generateKey(actorEntity.id, ast, runtimeCtx);
+    const key = this._generateKey(actorEntity.id, ast, runtimeCtx, actorEntity);
 
     // Check cache first
     const cached = this.cache.get(key);
