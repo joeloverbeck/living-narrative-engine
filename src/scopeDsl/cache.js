@@ -134,6 +134,7 @@ class ScopeCache extends IScopeEngine {
     // Include relevant component state that affects scope evaluation
     // For scopes that check following/leading relationships, include that state
     let componentStateKey = '';
+    
     if (actorEntity?.components) {
       const leadingComponent = actorEntity.components['core:leading'];
       const followingComponent = actorEntity.components['core:following'];
@@ -170,7 +171,30 @@ class ScopeCache extends IScopeEngine {
    * @returns {Set<string>} Set of entity IDs
    */
   resolve(ast, actorEntity, runtimeCtx) {
-    const key = this._generateKey(actorEntity.id, ast, runtimeCtx, actorEntity);
+    // Handle null/undefined actor entity
+    if (!actorEntity) {
+      return this.scopeEngine.resolve(ast, actorEntity, runtimeCtx);
+    }
+    
+    // If the actor entity doesn't have components, we need to build them first
+    // to ensure the cache key includes the component state
+    let actorWithComponents = actorEntity;
+    
+    if (actorEntity && !actorEntity.components && actorEntity.componentTypeIds) {
+      // Build components for the actor entity to ensure cache key includes component state
+      const components = {};
+      for (const componentTypeId of actorEntity.componentTypeIds) {
+        const data = runtimeCtx.entityManager.getComponentData(actorEntity.id, componentTypeId);
+        if (data) {
+          components[componentTypeId] = data;
+        }
+      }
+      
+      // Create a new actor entity object with components
+      actorWithComponents = { ...actorEntity, components };
+    }
+    
+    const key = this._generateKey(actorWithComponents.id, ast, runtimeCtx, actorWithComponents);
 
     // Check cache first
     const cached = this.cache.get(key);
@@ -180,6 +204,7 @@ class ScopeCache extends IScopeEngine {
     }
 
     // Resolve using the wrapped ScopeEngine and cache the result
+    // Pass the original actorEntity to maintain compatibility
     this.logger.debug(`ScopeCache: Cache miss for key: ${key}, resolving...`);
     const result = this.scopeEngine.resolve(ast, actorEntity, runtimeCtx);
     this.cache.set(key, result);

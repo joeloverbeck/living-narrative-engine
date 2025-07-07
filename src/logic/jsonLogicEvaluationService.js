@@ -54,6 +54,7 @@ class JsonLogicEvaluationService extends BaseService {
     // --- ADDED: Register the 'not' operator alias upon instantiation ---
     this.addOperation('not', (a) => !a);
 
+
     this.#logger.debug('JsonLogicEvaluationService initialized.');
   }
 
@@ -109,6 +110,7 @@ class JsonLogicEvaluationService extends BaseService {
 
     const individualResults = [];
     for (let i = 0; i < args.length; i++) {
+      
       const conditionResult = jsonLogic.apply(args[i], context);
       const conditionBoolean = !!conditionResult;
       const conditionSummary =
