@@ -21,6 +21,7 @@ import { DATASET_ACTION_INDEX } from '../constants/datasetKeys.js';
  * @typedef {import('./domElementFactory.js').default} DomElementFactoryType
  * @typedef {import('./boundDomRendererBase.js').ElementConfigEntry} ElementConfigEntry
  * @typedef {import('./boundDomRendererBase.js').ElementsConfig} ElementsConfig
+ * @typedef {import('../interfaces/CommonTypes.js').NamespacedId} NamespacedId
  */
 
 /**

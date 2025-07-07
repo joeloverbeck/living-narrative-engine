@@ -100,9 +100,9 @@ export class LocationSummaryProvider extends ILocationSummaryProvider {
           return otherEntity
             ? this.#summaryProvider.getSummary(otherEntity)
             : null;
-        } catch (_err) {
+        } catch (err) {
           logger.warn(
-            `LocationSummaryProvider: Could not retrieve entity '${entityId}' in location '${locationId}'.`
+            `LocationSummaryProvider: Could not retrieve entity '${entityId}' in location '${locationId}': ${err.message}`
           );
           return null;
         }
