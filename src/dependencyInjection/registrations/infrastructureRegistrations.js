@@ -15,8 +15,6 @@ import { Registrar } from '../../utils/registrarHelpers.js';
 import { ActionIndexingService } from '../../turns/services/actionIndexingService';
 import ScopeRegistry from '../../scopeDsl/scopeRegistry.js';
 import ScopeEngine from '../../scopeDsl/engine.js';
-import { LRUCache } from 'lru-cache';
-import ScopeCache from '../../scopeDsl/cache.js';
 import DefaultDslParser from '../../scopeDsl/parser/defaultDslParser.js';
 import { ServiceSetup } from '../../utils/serviceInitializerUtils.js';
 import { EventDispatchService } from '../../utils/eventDispatchService.js';
@@ -164,27 +162,12 @@ export function registerInfrastructure(container) {
     `Infrastructure Registration: Registered ${String(tokens.DslParser)}.`
   );
 
-  // Scope DSL Cache (wraps ScopeEngine with caching)
-  registrar.singletonFactory(
-    tokens.ScopeCache,
-    (c) =>
-      new ScopeCache({
-        cache: new LRUCache({ max: 256 }),
-        scopeEngine: c.resolve(tokens.ScopeEngine),
-        safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
-        logger: c.resolve(tokens.ILogger),
-      })
-  );
-  log.debug(
-    `Infrastructure Registration: Registered ${String(tokens.ScopeCache)}.`
-  );
-
-  // Register ScopeCache as the preferred IScopeEngine implementation
-  container.register(tokens.IScopeEngine, (c) => c.resolve(tokens.ScopeCache), {
+  // Register ScopeEngine as the IScopeEngine implementation
+  container.register(tokens.IScopeEngine, (c) => c.resolve(tokens.ScopeEngine), {
     lifecycle: 'singleton',
   });
   log.debug(
-    `Infrastructure Registration: Registered ${String(tokens.IScopeEngine)} -> ScopeCache.`
+    `Infrastructure Registration: Registered ${String(tokens.IScopeEngine)} -> ScopeEngine.`
   );
 
   log.debug('Infrastructure Registration: complete.');

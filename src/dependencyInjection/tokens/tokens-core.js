@@ -169,7 +169,6 @@ export const coreTokens = freeze({
   WorldPhase: 'WorldPhase',
   SummaryPhase: 'SummaryPhase',
   ScopeEngine: 'ScopeEngine',
-  ScopeCache: 'ScopeCache',
   DslParser: 'DslParser',
   TraceContextFactory: 'TraceContextFactory',
 });

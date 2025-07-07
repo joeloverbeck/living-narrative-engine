@@ -63,6 +63,32 @@ export function createEvaluationContext(
   locationProvider,
   trace
 ) {
+  // Critical check: actor should never be undefined in scope evaluation
+  if (!actorEntity) {
+    const error = new Error('Actor entity is undefined in createEvaluationContext. This should never happen during scope evaluation.');
+    console.error('[CRITICAL] createEvaluationContext called with undefined actor:', {
+      item,
+      hasGateway: !!gateway,
+      hasLocationProvider: !!locationProvider,
+      stackTrace: error.stack
+    });
+    // Fail fast - don't continue with undefined actor
+    throw error;
+  }
+  
+  // Additional check: actor must have a valid ID
+  if (!actorEntity.id || actorEntity.id === 'undefined') {
+    const error = new Error(`Actor entity has invalid ID: ${actorEntity.id}. This should never happen.`);
+    console.error('[CRITICAL] Actor entity has invalid ID:', {
+      actorId: actorEntity.id,
+      actorKeys: Object.keys(actorEntity),
+      actorType: typeof actorEntity,
+      item,
+      stackTrace: error.stack
+    });
+    throw error;
+  }
+
   let entity;
 
   if (typeof item === 'string') {
