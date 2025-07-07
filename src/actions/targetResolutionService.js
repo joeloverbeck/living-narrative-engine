@@ -98,6 +98,14 @@ export class TargetResolutionService extends ITargetResolutionService {
     const source = 'TargetResolutionService.resolveTargets';
     trace?.info(`Resolving scope '${scopeName}'.`, source);
 
+    // Validate actor entity before processing
+    if (!actorEntity || !actorEntity.id || actorEntity.id === 'undefined') {
+      const errorMessage = `Invalid actor entity: ${actorEntity ? `id=${actorEntity.id}` : 'null/undefined'}`;
+      this.#logger.error(errorMessage);
+      trace?.error(errorMessage, source);
+      return { targets: [], error: new Error(errorMessage) };
+    }
+
     if (scopeName === TARGET_DOMAIN_NONE) {
       trace?.info(
         `Scope is 'none'; returning a single no-target context.`,
@@ -169,13 +177,32 @@ export class TargetResolutionService extends ITargetResolutionService {
         trace?.info(`Using pre-parsed AST for scope '${scopeName}'.`, source);
       }
 
+      // Ensure actor entity has components built before passing to scope engine
+      // This is necessary for proper scope evaluation that depends on component state
+      let actorWithComponents = actorEntity;
+      
+      if (actorEntity && !actorEntity.components && actorEntity.componentTypeIds) {
+        // Build components for the actor entity
+        const components = {};
+        for (const componentTypeId of actorEntity.componentTypeIds) {
+          const data = this.#entityManager.getComponentData(actorEntity.id, componentTypeId);
+          if (data) {
+            components[componentTypeId] = data;
+          }
+        }
+        
+        // Create a new actor entity object with components
+        actorWithComponents = { ...actorEntity, components };
+      }
+      
       const runtimeCtx = this.#buildRuntimeContext(
-        actorEntity,
+        actorWithComponents,
         discoveryContext
       );
+      
       return {
         ids:
-          this.#scopeEngine.resolve(ast, actorEntity, runtimeCtx, trace) ??
+          this.#scopeEngine.resolve(ast, actorWithComponents, runtimeCtx, trace) ??
           new Set(),
       };
     } catch (error) {

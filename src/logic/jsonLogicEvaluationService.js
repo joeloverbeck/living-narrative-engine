@@ -136,9 +136,19 @@ class JsonLogicEvaluationService extends BaseService {
           if (comp && comp.error) {
             this.#logger.error('Error retrieving actor position', comp.error);
           }
+          // Add validation to catch undefined actor.id
+          if (!context.actor.id) {
+            this.#logger.error('[CRITICAL] Actor exists but actor.id is undefined!', {
+              actorKeys: Object.keys(context.actor || {}),
+              hasComponents: !!context.actor.components
+            });
+          }
           this.#logger.debug(
             `    Actor: ${context.actor.id}, Location: ${comp && !comp.error ? comp.locationId : 'unknown'}`
           );
+        } else {
+          // Log when actor is completely missing
+          this.#logger.debug('    Actor: undefined (missing from context)');
         }
         if (context.location) {
           this.#logger.debug(`    Location: ${context.location.id}`);

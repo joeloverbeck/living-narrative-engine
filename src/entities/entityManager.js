@@ -531,11 +531,7 @@ class EntityManager extends IEntityManager {
         results.push(entity);
       }
     }
-    this.#logger.debug(
-      `EntityManager.getEntitiesWithComponent: Found ${
-        results.length
-      } entities with component '${componentTypeId}'.`
-    );
+
     return results;
   }
 
