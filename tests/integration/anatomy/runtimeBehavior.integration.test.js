@@ -152,7 +152,6 @@ describe('Anatomy Runtime Behavior Integration', () => {
 
       // Track events - mock the dispatch method
       const dispatchedEvents = [];
-      const originalDispatch = testBed.eventDispatcher.dispatch;
       testBed.eventDispatcher.dispatch = jest.fn(
         async (eventTypeOrData, payload) => {
           // Handle both dispatch(eventType, payload) and dispatch({type, payload}) formats
@@ -252,12 +251,9 @@ describe('Anatomy Runtime Behavior Integration', () => {
 
       // Path from hand to torso
       const path = bodyGraphService.getPath(hand.id, torso.id);
-      if (path) {
-        expect(path.length).toBeGreaterThanOrEqual(1);
-        expect(path).toContain(hand.id);
-      } else {
-        console.log('Path finding returned null');
-      }
+      expect(path).not.toBeNull();
+      expect(path.length).toBeGreaterThanOrEqual(1);
+      expect(path).toContain(hand.id);
 
       // Path from part to itself
       const selfPath = bodyGraphService.getPath(arm.id, arm.id);
@@ -328,16 +324,9 @@ describe('Anatomy Runtime Behavior Integration', () => {
       expect(allParts.length).toBeGreaterThanOrEqual(1);
       expect(torsos).toContain(torso.id);
 
-      // If we found the other parts, check them
-      if (arms.length > 0) {
-        expect(arms).toContain(arm.id);
-      }
-      if (hands.length > 0) {
-        expect(hands).toContain(hand.id);
-      }
-      if (heads.length > 0) {
-        expect(heads).toContain(head.id);
-      }
+      expect(arms).toContain(arm.id);
+      expect(hands).toContain(hand.id);
+      expect(heads).toContain(head.id);
     });
   });
 
@@ -371,9 +360,7 @@ describe('Anatomy Runtime Behavior Integration', () => {
       expect(torsos).toHaveLength(1);
 
       // Check if the arm was found
-      if (arms.length > 0) {
-        expect(arms).toContain(newArm.id);
-      }
+      expect(arms).toContain(newArm.id);
     });
   });
 
@@ -470,7 +457,7 @@ describe('Anatomy Runtime Behavior Integration', () => {
       // Track if anatomy was generated
       let anatomyGenerated = false;
       testBed.anatomyGenerationService.generateAnatomyIfNeeded = jest.fn(
-        async (entityId) => {
+        async () => {
           anatomyGenerated = true;
           return true;
         }
