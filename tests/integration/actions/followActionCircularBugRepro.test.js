@@ -4,15 +4,12 @@
  * Amaia can follow Iker even though Iker is already following her.
  */
 
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import { describe, it, expect, beforeEach } from '@jest/globals';
 import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
 import ConsoleLogger from '../../../src/logging/consoleLogger.js';
 import {
   FOLLOWING_COMPONENT_ID,
   LEADING_COMPONENT_ID,
-  NAME_COMPONENT_ID,
-  POSITION_COMPONENT_ID,
-  ACTOR_COMPONENT_ID,
 } from '../../../src/constants/componentIds.js';
 
 describe('Follow Action Circular Bug - Minimal Reproduction', () => {
@@ -33,29 +30,29 @@ describe('Follow Action Circular Bug - Minimal Reproduction', () => {
       id: 'p_erotica:amaia_castillo_instance',
       components: {
         [LEADING_COMPONENT_ID]: {
-          followers: ['p_erotica:iker_aguirre_instance']
-        }
-      }
+          followers: ['p_erotica:iker_aguirre_instance'],
+        },
+      },
     };
 
     const entity = {
       id: 'p_erotica:iker_aguirre_instance',
       components: {
         [FOLLOWING_COMPONENT_ID]: {
-          leaderId: 'p_erotica:amaia_castillo_instance'
-        }
-      }
+          leaderId: 'p_erotica:amaia_castillo_instance',
+        },
+      },
     };
 
     const location = {
-      id: 'p_erotica:outside_tables_coffee_shop_instance'
+      id: 'p_erotica:outside_tables_coffee_shop_instance',
     };
 
     // Create the evaluation context
     const context = {
       actor,
       entity,
-      location
+      location,
     };
 
     console.log('\n=== Test Data ===');
@@ -63,15 +60,15 @@ describe('Follow Action Circular Bug - Minimal Reproduction', () => {
     console.log('Entity (Iker):', JSON.stringify(entity, null, 2));
     console.log('');
 
-    // Test the exact condition from the logs: 
+    // Test the exact condition from the logs:
     // { "not": { "in": [{ "var": "entity.id" }, { "var": "actor.components.core:leading.followers" }] } }
     const condition = {
-      "not": {
-        "in": [
-          { "var": "entity.id" },
-          { "var": "actor.components.core:leading.followers" }
-        ]
-      }
+      not: {
+        in: [
+          { var: 'entity.id' },
+          { var: 'actor.components.core:leading.followers' },
+        ],
+      },
     };
 
     console.log('=== Evaluating Condition ===');
@@ -95,25 +92,33 @@ describe('Follow Action Circular Bug - Minimal Reproduction', () => {
 
     // Test individual parts to understand the issue
     console.log('=== Testing Individual Parts ===');
-    
+
     // Test 1: Can we resolve entity.id?
-    const entityIdCondition = { "var": "entity.id" };
-    const entityIdResult = jsonLogicService.evaluate(entityIdCondition, context);
+    const entityIdCondition = { var: 'entity.id' };
+    const entityIdResult = jsonLogicService.evaluate(
+      entityIdCondition,
+      context
+    );
     console.log('entity.id resolves to:', entityIdResult);
     expect(entityIdResult).toBe(true); // Non-empty string is truthy
-    
+
     // Test 2: Can we resolve the followers array?
-    const followersCondition = { "var": "actor.components.core:leading.followers" };
-    const followersResult = jsonLogicService.evaluate(followersCondition, context);
+    const followersCondition = {
+      var: 'actor.components.core:leading.followers',
+    };
+    const followersResult = jsonLogicService.evaluate(
+      followersCondition,
+      context
+    );
     console.log('followers array resolves to:', followersResult);
     expect(followersResult).toBe(true); // Non-empty array is truthy
-    
+
     // Test 3: Direct "in" test
     const inCondition = {
-      "in": [
-        "p_erotica:iker_aguirre_instance",
-        ["p_erotica:iker_aguirre_instance"]
-      ]
+      in: [
+        'p_erotica:iker_aguirre_instance',
+        ['p_erotica:iker_aguirre_instance'],
+      ],
     };
     const inResult = jsonLogicService.evaluate(inCondition, context);
     console.log('Direct "in" test result:', inResult);
@@ -122,42 +127,36 @@ describe('Follow Action Circular Bug - Minimal Reproduction', () => {
 
   it('tests the in operator with various data types', () => {
     console.log('\n=== Testing "in" operator behavior ===');
-    
+
     // Test 1: String in array
     const test1 = jsonLogicService.evaluate(
-      { "in": ["test", ["test", "other"]] },
+      { in: ['test', ['test', 'other']] },
       {}
     );
     console.log('String in array:', test1);
     expect(test1).toBe(true);
-    
+
     // Test 2: String not in array
     const test2 = jsonLogicService.evaluate(
-      { "in": ["test", ["other", "values"]] },
+      { in: ['test', ['other', 'values']] },
       {}
     );
     console.log('String not in array:', test2);
     expect(test2).toBe(false);
-    
+
     // Test 3: String in null/undefined
-    const test3 = jsonLogicService.evaluate(
-      { "in": ["test", null] },
-      {}
-    );
+    const test3 = jsonLogicService.evaluate({ in: ['test', null] }, {});
     console.log('String in null:', test3);
     expect(test3).toBe(false);
-    
-    const test4 = jsonLogicService.evaluate(
-      { "in": ["test", undefined] },
-      {}
-    );
+
+    const test4 = jsonLogicService.evaluate({ in: ['test', undefined] }, {});
     console.log('String in undefined:', test4);
     expect(test4).toBe(false);
-    
+
     // Test 5: Complex ID matching
-    const complexId = "p_erotica:iker_aguirre_instance";
+    const complexId = 'p_erotica:iker_aguirre_instance';
     const test5 = jsonLogicService.evaluate(
-      { "in": [complexId, [complexId]] },
+      { in: [complexId, [complexId]] },
       {}
     );
     console.log('Complex ID in array:', test5);
@@ -166,33 +165,33 @@ describe('Follow Action Circular Bug - Minimal Reproduction', () => {
 
   it('tests variable resolution with nested paths', async () => {
     console.log('\n=== Testing variable resolution ===');
-    
+
     const context = {
       actor: {
         components: {
-          "core:leading": {
-            followers: ["follower1", "follower2"]
-          }
-        }
-      }
+          'core:leading': {
+            followers: ['follower1', 'follower2'],
+          },
+        },
+      },
     };
-    
+
     // Test nested path resolution
     const followersPath = jsonLogicService.evaluate(
-      { "var": "actor.components.core:leading.followers" },
+      { var: 'actor.components.core:leading.followers' },
       context
     );
     console.log('Resolved followers:', followersPath);
-    
+
     // This should return the actual array, not just true/false
     // The jsonLogic evaluate method converts to boolean, so let's use json-logic directly
     const jsonLogic = await import('json-logic-js');
     const actualFollowers = jsonLogic.default.apply(
-      { "var": "actor.components.core:leading.followers" },
+      { var: 'actor.components.core:leading.followers' },
       context
     );
     console.log('Actual followers array:', actualFollowers);
     expect(Array.isArray(actualFollowers)).toBe(true);
-    expect(actualFollowers).toEqual(["follower1", "follower2"]);
+    expect(actualFollowers).toEqual(['follower1', 'follower2']);
   });
 });

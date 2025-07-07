@@ -6,11 +6,8 @@ import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import ScopeCache from '../../../src/scopeDsl/cache.js';
 import ConsoleLogger from '../../../src/logging/consoleLogger.js';
 import {
-  FOLLOWING_COMPONENT_ID,
   LEADING_COMPONENT_ID,
   NAME_COMPONENT_ID,
-  POSITION_COMPONENT_ID,
-  ACTOR_COMPONENT_ID,
 } from '../../../src/constants/componentIds.js';
 
 describe('Follow Action Cache Fix - Simple Test', () => {
@@ -24,7 +21,7 @@ describe('Follow Action Cache Fix - Simple Test', () => {
   beforeEach(() => {
     logger = new ConsoleLogger('DEBUG');
     cache = new Map();
-    
+
     // Create mock entity manager
     mockEntityManager = {
       getComponentData: jest.fn((entityId, componentId) => {
@@ -37,26 +34,26 @@ describe('Follow Action Cache Fix - Simple Test', () => {
           }
         }
         return null;
-      })
+      }),
     };
-    
+
     // Create mock scope engine
     mockScopeEngine = {
       resolve: jest.fn().mockReturnValue(new Set(['entity1', 'entity2'])),
-      setMaxDepth: jest.fn()
+      setMaxDepth: jest.fn(),
     };
-    
+
     // Create mock event dispatcher
     mockEventDispatcher = {
-      subscribe: jest.fn().mockReturnValue(() => {})
+      subscribe: jest.fn().mockReturnValue(() => {}),
     };
-    
+
     // Create scope cache
     scopeCache = new ScopeCache({
       cache,
       scopeEngine: mockScopeEngine,
       safeEventDispatcher: mockEventDispatcher,
-      logger
+      logger,
     });
   });
 
@@ -64,25 +61,25 @@ describe('Follow Action Cache Fix - Simple Test', () => {
     // Create actor entity without components (like TargetResolutionService does)
     const actorWithoutComponents = {
       id: 'p_erotica:amaia_castillo_instance',
-      componentTypeIds: [NAME_COMPONENT_ID, LEADING_COMPONENT_ID]
+      componentTypeIds: [NAME_COMPONENT_ID, LEADING_COMPONENT_ID],
       // Note: No 'components' property
     };
-    
+
     const ast = { type: 'Test', logic: true };
     const runtimeCtx = {
       entityManager: mockEntityManager,
-      location: { id: 'room_test' }
+      location: { id: 'room_test' },
     };
-    
+
     // Call resolve
     scopeCache.resolve(ast, actorWithoutComponents, runtimeCtx);
-    
+
     // Verify that entity manager was called to fetch components
     expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(
       'p_erotica:amaia_castillo_instance',
       LEADING_COMPONENT_ID
     );
-    
+
     // Verify cache key includes followers
     const cacheKeys = Array.from(cache.keys());
     expect(cacheKeys.length).toBe(1);
@@ -95,22 +92,24 @@ describe('Follow Action Cache Fix - Simple Test', () => {
       id: 'p_erotica:amaia_castillo_instance',
       componentTypeIds: [NAME_COMPONENT_ID, LEADING_COMPONENT_ID],
       components: {
-        [LEADING_COMPONENT_ID]: { followers: ['p_erotica:iker_aguirre_instance'] }
-      }
+        [LEADING_COMPONENT_ID]: {
+          followers: ['p_erotica:iker_aguirre_instance'],
+        },
+      },
     };
-    
+
     const ast = { type: 'Test', logic: true };
     const runtimeCtx = {
       entityManager: mockEntityManager,
-      location: { id: 'room_test' }
+      location: { id: 'room_test' },
     };
-    
+
     // Call resolve
     scopeCache.resolve(ast, actorWithComponents, runtimeCtx);
-    
+
     // Verify that entity manager was NOT called (components already present)
     expect(mockEntityManager.getComponentData).not.toHaveBeenCalled();
-    
+
     // Verify cache key still includes followers
     const cacheKeys = Array.from(cache.keys());
     expect(cacheKeys.length).toBe(1);
@@ -120,32 +119,32 @@ describe('Follow Action Cache Fix - Simple Test', () => {
   it('should generate different cache keys for different follower states', () => {
     const ast = { type: 'Test', logic: true };
     const location = { id: 'room_test' };
-    
+
     // Test 1: Actor with one follower
     const actor1 = {
       id: 'actor1',
       components: {
-        [LEADING_COMPONENT_ID]: { followers: ['follower1'] }
-      }
+        [LEADING_COMPONENT_ID]: { followers: ['follower1'] },
+      },
     };
-    
+
     const runtimeCtx1 = { entityManager: mockEntityManager, location };
     scopeCache.resolve(ast, actor1, runtimeCtx1);
-    
+
     // Test 2: Same actor with different followers
     const actor2 = {
       id: 'actor1',
       components: {
-        [LEADING_COMPONENT_ID]: { followers: ['follower1', 'follower2'] }
-      }
+        [LEADING_COMPONENT_ID]: { followers: ['follower1', 'follower2'] },
+      },
     };
-    
+
     const runtimeCtx2 = { entityManager: mockEntityManager, location };
     scopeCache.resolve(ast, actor2, runtimeCtx2);
-    
+
     // Should have two different cache entries
     expect(cache.size).toBe(2);
-    
+
     const keys = Array.from(cache.keys());
     expect(keys[0]).toContain('followers=follower1');
     expect(keys[1]).toContain('followers=follower1,follower2');
@@ -154,23 +153,28 @@ describe('Follow Action Cache Fix - Simple Test', () => {
   it('builds components when actor entity lacks them', () => {
     const actorWithoutComponents = {
       id: 'test_actor',
-      componentTypeIds: [LEADING_COMPONENT_ID]
+      componentTypeIds: [LEADING_COMPONENT_ID],
     };
-    
+
     const ast = { type: 'Test' };
     const runtimeCtx = {
       entityManager: mockEntityManager,
-      location: { id: 'test_location' }
+      location: { id: 'test_location' },
     };
-    
+
     // Mock entity manager to return component data
-    mockEntityManager.getComponentData.mockReturnValue({ followers: ['test_follower'] });
-    
+    mockEntityManager.getComponentData.mockReturnValue({
+      followers: ['test_follower'],
+    });
+
     scopeCache.resolve(ast, actorWithoutComponents, runtimeCtx);
-    
+
     // Verify that getComponentData was called to build components
-    expect(mockEntityManager.getComponentData).toHaveBeenCalledWith('test_actor', LEADING_COMPONENT_ID);
-    
+    expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(
+      'test_actor',
+      LEADING_COMPONENT_ID
+    );
+
     // Verify cache key includes the built component data
     const cacheKeys = Array.from(cache.keys());
     expect(cacheKeys[0]).toContain('followers=test_follower');
