@@ -36,7 +36,7 @@ describe('Anatomy Entity Consistency', () => {
     });
 
     it('all anatomy entities should have core:name component', () => {
-      anatomyEntities.forEach(({ filename, data }) => {
+      anatomyEntities.forEach(({ data }) => {
         expect(data.components).toHaveProperty('core:name');
         expect(data.components['core:name']).toHaveProperty('text');
         expect(typeof data.components['core:name'].text).toBe('string');
@@ -50,7 +50,7 @@ describe('Anatomy Entity Consistency', () => {
 
       expect(partEntities.length).toBeGreaterThan(0);
 
-      partEntities.forEach(({ filename, data }) => {
+      partEntities.forEach(({ data }) => {
         expect(data.components['anatomy:part']).toHaveProperty('subType');
         expect(typeof data.components['anatomy:part'].subType).toBe('string');
       });
@@ -59,7 +59,7 @@ describe('Anatomy Entity Consistency', () => {
 
   describe('Entity ID consistency', () => {
     it('all entities should have properly formatted IDs', () => {
-      anatomyEntities.forEach(({ filename, data }) => {
+      anatomyEntities.forEach(({ data }) => {
         expect(data.id).toMatch(/^anatomy:[a-zA-Z][a-zA-Z0-9_]*$/);
         expect(data.id.startsWith('anatomy:')).toBe(true);
       });
@@ -75,7 +75,7 @@ describe('Anatomy Entity Consistency', () => {
 
   describe('Schema compliance', () => {
     it('all entities should reference the correct schema', () => {
-      anatomyEntities.forEach(({ filename, data }) => {
+      anatomyEntities.forEach(({ data }) => {
         expect(data.$schema).toBe(
           'http://example.com/schemas/entity-definition.schema.json'
         );
@@ -83,7 +83,7 @@ describe('Anatomy Entity Consistency', () => {
     });
 
     it('all entities should have required fields', () => {
-      anatomyEntities.forEach(({ filename, data }) => {
+      anatomyEntities.forEach(({ data }) => {
         expect(data).toHaveProperty('id');
         expect(data).toHaveProperty('components');
         expect(Object.keys(data.components).length).toBeGreaterThan(0);
