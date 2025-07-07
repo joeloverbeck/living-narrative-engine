@@ -10,6 +10,8 @@
  */
 export class DuplicateContentError extends Error {
   /**
+   * Creates an instance of DuplicateContentError.
+   *
    * @param {string} contentType - The type of content (e.g., 'action', 'component', 'entity').
    * @param {string} qualifiedId - The fully qualified identifier (e.g., 'core:move').
    * @param {string} modId - The ID of the mod attempting to override.
