@@ -1,74 +1,538 @@
-﻿﻿
-consoleLogger.js:219 
-(index)
-type
-message
-source
-timestamp
-data
-0	'info'	"Starting action discovery for actor 'p_erotica:amaia_castillo_instance'."	'getValidActions'	1751900642094	{…}
-1	'data'	"Actor 'p_erotica:amaia_castillo_instance' has components."	'ActionIndex.getCandidateActions'	1751900642094	{…}
-2	'info'	'Added 4 actions with no actor component requirements.'	'ActionIndex.getCandidateActions'	1751900642094	
-3	'info'	"Found 1 actions requiring component 'core:leading'."	'ActionIndex.getCandidateActions'	1751900642094	
-4	'success'	'Final candidate list contains 5 unique actions.'	'ActionIndex.getCandidateActions'	1751900642094	{…}
-5	'step'	"Processing candidate action: 'core:follow'"	'ActionCandidateProcessor.process'	1751900642094	
-6	'data'	'Built prerequisite evaluation context.'	'PrerequisiteEvaluationService.evaluate'	1751900642095	{…}
-7	'info'	'Evaluating rule.'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1751900642095	{…}
-8	'data'	'Condition reference resolved.'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1751900642095	{…}
-9	'success'	'Rule evaluation result: true'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1751900642096	{…}
-10	'info'	'Evaluating rule.'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1751900642096	{…}
-11	'data'	'Condition reference resolved.'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1751900642096	{…}
-12	'success'	'Rule evaluation result: true'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1751900642096	{…}
-13	'success'	"Action 'core:follow' passed actor prerequisite check."	'ActionCandidateProcessor.process'	1751900642096	
-14	'info'	"Resolving scope 'core:potential_leaders'."	'TargetResolutionService.resolveTargets'	1751900642096	
-15	'info'	"Resolving scope 'core:potential_leaders' with DSL."	'TargetResolutionService.#resolveScopeToIds'	1751900642096	
-16	'info'	"Using pre-parsed AST for scope 'core:potential_leaders'."	'TargetResolutionService.#resolveScopeToIds'	1751900642096	
-17	'info'	"DSL scope 'core:potential_leaders' resolved to 1 target(s)."	'TargetResolutionService.resolveTargets'	1751900642097	{…}
-18	'info'	"Scope for action 'core:follow' resolved to 1 targets."	'ActionCandidateProcessor.process'	1751900642097	{…}
-19	'step'	"Processing candidate action: 'core:go'"	'ActionCandidateProcessor.process'	1751900642098	
-20	'data'	'Built prerequisite evaluation context.'	'PrerequisiteEvaluationService.evaluate'	1751900642098	{…}
-21	'info'	'Evaluating rule.'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1751900642098	{…}
-22	'data'	'Condition reference resolved.'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1751900642098	{…}
-23	'success'	'Rule evaluation result: true'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1751900642099	{…}
-24	'success'	"Action 'core:go' passed actor prerequisite check."	'ActionCandidateProcessor.process'	1751900642100	
-25	'info'	"Resolving scope 'core:clear_directions'."	'TargetResolutionService.resolveTargets'	1751900642100	
-26	'info'	"Resolving scope 'core:clear_directions' with DSL."	'TargetResolutionService.#resolveScopeToIds'	1751900642100	
-27	'info'	"Using pre-parsed AST for scope 'core:clear_directions'."	'TargetResolutionService.#resolveScopeToIds'	1751900642100	
-28	'info'	"DSL scope 'core:clear_directions' resolved to 1 target(s)."	'TargetResolutionService.resolveTargets'	1751900642100	{…}
-29	'info'	"Scope for action 'core:go' resolved to 1 targets."	'ActionCandidateProcessor.process'	1751900642100	{…}
-30	'step'	"Processing candidate action: 'core:wait'"	'ActionCandidateProcessor.process'	1751900642100	
-31	'success'	"Action 'core:wait' passed actor prerequisite check."	'ActionCandidateProcessor.process'	1751900642100	
-32	'info'	"Resolving scope 'none'."	'TargetResolutionService.resolveTargets'	1751900642100	
-33	'info'	"Scope is 'none'; returning a single no-target context."	'TargetResolutionService.resolveTargets'	1751900642100	
-34	'info'	"Scope for action 'core:wait' resolved to 1 targets."	'ActionCandidateProcessor.process'	1751900642100	{…}
-35	'step'	"Processing candidate action: 'intimacy:get_close'"	'ActionCandidateProcessor.process'	1751900642100	
-36	'data'	'Built prerequisite evaluation context.'	'PrerequisiteEvaluationService.evaluate'	1751900642101	{…}
-37	'info'	'Evaluating rule.'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1751900642101	{…}
-38	'data'	'Condition reference resolved.'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1751900642101	{…}
-39	'success'	'Rule evaluation result: true'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1751900642102	{…}
-40	'success'	"Action 'intimacy:get_close' passed actor prerequisite check."	'ActionCandidateProcessor.process'	1751900642102	
-41	'info'	"Resolving scope 'core:actors_in_location'."	'TargetResolutionService.resolveTargets'	1751900642102	
-42	'info'	"Resolving scope 'core:actors_in_location' with DSL."	'TargetResolutionService.#resolveScopeToIds'	1751900642102	
-43	'info'	"Using pre-parsed AST for scope 'core:actors_in_location'."	'TargetResolutionService.#resolveScopeToIds'	1751900642102	
-44	'info'	"DSL scope 'core:actors_in_location' resolved to 1 target(s)."	'TargetResolutionService.resolveTargets'	1751900642103	{…}
-45	'info'	"Scope for action 'intimacy:get_close' resolved to 1 targets."	'ActionCandidateProcessor.process'	1751900642103	{…}
-46	'step'	"Processing candidate action: 'core:dismiss'"	'ActionCandidateProcessor.process'	1751900642103	
-47	'success'	"Action 'core:dismiss' passed actor prerequisite check."	'ActionCandidateProcessor.process'	1751900642103	
-48	'info'	"Resolving scope 'core:followers'."	'TargetResolutionService.resolveTargets'	1751900642103	
-49	'info'	"Resolving scope 'core:followers' with DSL."	'TargetResolutionService.#resolveScopeToIds'	1751900642103	
-50	'info'	"Using pre-parsed AST for scope 'core:followers'."	'TargetResolutionService.#resolveScopeToIds'	1751900642103	
-51	'info'	"DSL scope 'core:followers' resolved to 1 target(s)."	'TargetResolutionService.resolveTargets'	1751900642103	{…}
-52	'info'	"Scope for action 'core:dismiss' resolved to 1 targets."	'ActionCandidateProcessor.process'	1751900642103	{…}
-53	'info'	'Finished discovery. Found 5 valid actions.'	'getValidActions'	1751900642103	
-Array(54)
+﻿﻿[ChoicePipeline] Fetching actions for p_erotica:amaia_castillo_instance
+consoleLogger.js:187 New turn detected. Clearing AvailableActionsProvider cache.
+consoleLogger.js:187 [Cache Miss] Discovering actions for actor p_erotica:amaia_castillo_instance
+consoleLogger.js:187 ActionIndex: Retrieved 5 candidate actions for actor p_erotica:amaia_castillo_instance.
+consoleLogger.js:187 ActionValidationContextBuilder: ActionValidationContextBuilder: Building context for action 'core:follow', actor 'p_erotica:amaia_castillo_instance'. Only actor context is included as target filtering is handled by Scope DSL.
+consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[core:follow]: Evaluation Context Built Successfully.
+consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[core:follow]: Actor entity [p_erotica:amaia_castillo_instance] has 20 components available.
+consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[core:follow] Context: {
+  "actor": {
+    "id": "p_erotica:amaia_castillo_instance",
+    "components": {
+      "core:name": {
+        "text": "Amaia Castillo"
+      },
+      "core:portrait": {
+        "imagePath": "portraits/amaia_castillo.png",
+        "altText": "Amaia Castillo - former model and sugar mommy."
+      },
+      "core:profile": {
+        "text": "My name is Amaia - Basque for 'the end'. A grim joke, don't you think, for someone feeling perpetually trapped? I possess this hair, luscious blonde, and these eyes... unnaturally pale yellow-amber. Men call them hypnotic; I know they see predation. I can feel their gazes constantly, inevitably, drawn to my G-cup breasts - my curated burden and power. My posture reflects my vigilance: shoulders thrown back, chin high. My neck? Always twisting. Always watching. Modeling, from seventeen to twenty-two, taught me my body's value... and the hollowness of selling its image. My marriage? To a wealthy restaurateur? It offered the illusion of agency. Navigating Donostia's elite suffocates me. They reward me materially, yet strip away any semblance of purpose. Childlessness... that emptiness wasn't a war I fought, but a surrender. Now I fill its vacuum with transgressive fantasies: I picture myself as a sugar mommy, lavishing passion on a young athlete tethered to me by my husband's very wealth. My fluency - Euskara, Spanish, English, French - and intimate grasp of Basque culinary politics? Merely tools for this gilded cage. My nuances? A strategic reveal - weaponizing vulnerability shapes how I'm seen. Possessive object handling? I misuse luxury items deliberately, proving I won't be rendered irrelevant. And my quirk - that predatory pause and tension? The micro-movement of frozen focus, then the coiled torso-twist? That's instinct taking over when I observe a target."
+      },
+      "core:personality": {
+        "text": "My charm is a weapon: carefully calibrated, icy, meant only to disarm strategically. My discipline is furious, sacrificial - punishing this body I've commodified to maintain its exacting value. And my care? It's a act born of desperation: lavish patronage thrown at young talent, a displaced, pathetic attempt to feel... generative."
+      },
+      "core:likes": {
+        "text": "Kursaal's Abstract Brutalism speaks to me - unforgiving, unapologetic presence. Sour cherries... things that fight sweetness, shock my senses back from numbness. Observing teenage athletes... yes. The raw potential, brutally channeled. The disciplined repetition. Fascinating."
+      },
+      "core:dislikes": {
+        "text": "I despise untouched luxury items... sterile gifts signifying an utter lack of engagement. And bodies too like my own? Those 'cougar' caricatures... they make my skin crawl."
+      },
+      "core:fears": {
+        "text": "I fear becoming an architectural ghost... dissolving into these walls, noticed only as ambient noise. And the False Palladium? Terrifying: discovering that the boy, the patronage, the carefully built fantasy... it's just hollow gilding on the same emptiness."
+      },
+      "core:goals": {
+        "goals": [
+          {
+            "text": "I will cement myself as the indispensable face of Donostia's art film festivals - visibly steering funding panels, commanding introductions, claiming photographic prominence."
+          },
+          {
+            "text": "I must procure the perfect residence - my discretionary funds will manifest my architecture of control. Every view, every line, obsessively chosen to be my fortress."
+          }
+        ]
+      },
+      "core:secrets": {
+        "text": "My erotic manuscript... tucked away. Pages of transgressive fantasies intertwined with stark psychoanalysis of adolescent males. Defense mechanisms, vulnerabilities — strategically noted. Digital and physical backups. My 'Contingency': jewels, curated art pieces. My hidden proof of worth manufactured outside this marriage. My hoarded potential energy. My potency totem."
+      },
+      "core:speech_patterns": {
+        "patterns": [
+          "I translate life to currency language: 'That cellist? Undervalued stock due for correction...', 'Invested too much emotional capital there... dreadful ROI'.",
+          "I favor an arrested metaphor: Cutting thoughts deliberately ('The situation resembles... Venetian fog...') — leaves them hanging.",
+          "Disciplined brevity anchors me. Complex emotions are crushed into clipped precision: 'Tiring. Understood. Later.'",
+          "Montage proofing keeps them off balance. I switch unexpectedly to Euskara or French mid-sentence - it marks territory, asserts dominance in the silence."
+        ]
+      },
+      "anatomy:body": {
+        "recipeId": "p_erotica:amaia_castillo_recipe",
+        "body": {
+          "root": "b0e33c5e-b105-4ce7-9fdd-d9e337363581",
+          "parts": {
+            "torso": "b0e33c5e-b105-4ce7-9fdd-d9e337363581",
+            "head": "1cc5152e-4fa2-4f57-8c3c-141f69573d14",
+            "left arm": "13a228cd-e0e9-4ce9-8cf6-91a6e30973f1",
+            "right arm": "99a3bcd8-4cd2-4ed2-89f8-f59aae25921c",
+            "left leg": "3d3dc54f-5319-4f33-98fa-3ddbf275db35",
+            "right leg": "ccd3637d-75a5-402c-8093-5940b018beed",
+            "left eye": "6b7dc49f-6536-4b45-a524-c1caeffb1072",
+            "right eye": "da70df1f-7827-4943-a05d-814a5c50a9ab",
+            "left ear": "c706913e-6bed-4125-935c-dd8516f2f61e",
+            "right ear": "2a552f36-f9f1-40e5-aec1-8c41bbea6f0e",
+            "nose": "f8082ede-5718-4343-98b5-3b41ae22a0a3",
+            "mouth": "0ce31f88-72ec-4851-b82b-faa61b9fd57a",
+            "teeth": "ff04e761-eeca-41e8-9b99-c54de06defc8",
+            "hair": "969f3f59-712e-4a48-befc-f98c0b97e6b6",
+            "pubic hair": "f3f78063-1893-4ddf-9463-de7f66c18f16",
+            "left breast": "d67ebda9-9022-4e4f-adcf-062420564e2d",
+            "right breast": "91593dca-6745-4d3a-b6ce-e23eb8c4d65f",
+            "vagina": "c582fc10-ee5b-4a80-a6d4-1cc5006e8ced",
+            "left arm hand": "6fd1e97b-e9b6-4051-a34f-ccae13de0c51",
+            "right arm hand": "6545a6b3-766e-457e-9fef-dc02b278dcd1",
+            "left leg foot": "cccaa623-3f3a-4204-805c-95d85a134030",
+            "right leg foot": "69e1bca8-e776-4988-8ca0-f2e07a040fa1",
+            "asshole": "62bdd65a-54a7-4775-9aec-b6e1295c99a7"
+          }
+        }
+      },
+      "core:perception_log": {
+        "maxEntries": 50,
+        "logEntries": [
+          {
+            "descriptionText": "Iker Aguirre says: \"aa\"",
+            "timestamp": "2025-07-07T17:53:35.968Z",
+            "perceptionType": "speech_local",
+            "actorId": "p_erotica:iker_aguirre_instance",
+            "targetId": null,
+            "involvedEntities": []
+          },
+          {
+            "descriptionText": "Iker Aguirre is now following Amaia Castillo.",
+            "timestamp": "2025-07-07T17:53:35.984Z",
+            "perceptionType": "action_target_general",
+            "actorId": "p_erotica:iker_aguirre_instance",
+            "targetId": "p_erotica:amaia_castillo_instance",
+            "involvedEntities": []
+          }
+        ]
+      },
+      "core:actor": {},
+      "core:player_type": {
+        "type": "human"
+      },
+      "core:position": {
+        "locationId": "p_erotica:outside_tables_coffee_shop_instance"
+      },
+      "core:short_term_memory": {
+        "thoughts": [],
+        "maxEntries": 10
+      },
+      "core:notes": {
+        "notes": []
+      },
+      "core:description": {
+        "text": "Hair: long, blonde, wavy\nEyes: amber, almond\nBreasts: G-cup, meaty, soft\nLegs: long, shapely\nPubic hair: curly"
+      },
+      "core:leading": {
+        "followers": [
+          "p_erotica:iker_aguirre_instance"
+        ]
+      },
+      "core:current_actor": {}
+    }
+  }
+}
+consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[core:follow]: Evaluating 2 prerequisite rule(s)...
+consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[core:follow]: Resolving condition_ref 'core:actor-can-move'...
+consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[core:follow]:   - Evaluating resolved rule: {"hasPartWithComponentValue":["actor","core:movement","locked",false]}
+consoleLogger.js:187 JsonLogicEvaluationService: Evaluating rule: {"hasPartWithComponentValue":["actor","core:movement","locked",false]}. Context keys: actor
+consoleLogger.js:187 JsonLogicCustomOperators: hasPartWithComponentValue called with entityPath='actor', componentId='core:movement', propertyPath='locked', expectedValue='false'
+consoleLogger.js:187 JsonLogicCustomOperators: hasPartWithComponentValue: Found entity ID: p_erotica:amaia_castillo_instance
+16consoleLogger.js:187 EntityManager.getEntitiesWithComponent: Found 44 entities with component 'anatomy:joint'.
+consoleLogger.js:187 JsonLogicCustomOperators: hasPartWithComponentValue(p_erotica:amaia_castillo_instance, core:movement, locked, false) = true
+consoleLogger.js:187 JsonLogicEvaluationService: Rule evaluation raw result: true, Final boolean: true
+consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[core:follow]:   - Prerequisite Rule 1/2 PASSED.
+consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[core:follow]: Resolving condition_ref 'core:actor-is-following'...
+consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[core:follow]:   - Evaluating resolved rule: {"not":{"!!":{"var":"actor.components.core:following"}}}
+consoleLogger.js:187 JsonLogicEvaluationService: Evaluating rule: {"not":{"!!":{"var":"actor.components.core:following"}}}. Context keys: actor, _currentPath
+consoleLogger.js:187 JsonLogicEvaluationService: Rule evaluation raw result: true, Final boolean: true
+consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[core:follow]:   - Prerequisite Rule 2/2 PASSED.
+consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[core:follow]: → PASSED (All 2 prerequisite rules evaluated successfully).
+consoleLogger.js:187 ScopeCache: Cache miss for key: p_erotica:amaia_castillo_instance:p_erotica:outside_tables_coffee_shop_instance:{"type":"Filter","logic":{"and":[{"condition_ref":"core:entity-at-location"},{"condition_ref":"core:entity-is-not-current-actor"},{"condition_ref":"core:entity-has-actor-component"},{"not":{"condition_ref":"core:entity-is-following-actor"}},{"not":{"in":[{"var":"entity.id"},{"var":"actor.components.core:leading.followers"}]}}]},"parent":{"type":"Source","kind":"entities","param":"core:position"}}, resolving...
+consoleLogger.js:187 EntityManager.getEntitiesWithComponent: Found 2 entities with component 'core:position'.
+consoleLogger.js:187 JsonLogicEvaluationService: Resolving condition_ref 'core:entity-at-location'...
+consoleLogger.js:187 JsonLogicEvaluationService: Resolving condition_ref 'core:entity-is-not-current-actor'...
+consoleLogger.js:187 JsonLogicEvaluationService: Resolving condition_ref 'core:entity-has-actor-component'...
+consoleLogger.js:187 JsonLogicEvaluationService: Resolving condition_ref 'core:entity-is-following-actor'...
+consoleLogger.js:187 JsonLogicEvaluationService: Evaluating rule: {"and":[{"==":[{"var":"entity.components.core:position.locationId"},{"var":"location.id"}]},{"!=":[{"var":"entity.id"},{"var":"actor.id"}]},{"!!":{"va.... Context keys: entity, actor, location
+consoleLogger.js:187 JsonLogicEvaluationService: Detailed evaluation of AND operation with 5 conditions:
+consoleLogger.js:187 JsonLogicEvaluationService:   Condition 1/5: {"==":[{"var":"entity.components.core:position.locationId"},{"var":"location.id"}]} => true
+consoleLogger.js:187 JsonLogicEvaluationService:     Entity: p_erotica:iker_aguirre_instance, Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:     Actor: p_erotica:amaia_castillo_instance, Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:     Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:   Condition 2/5: {"!=":[{"var":"entity.id"},{"var":"actor.id"}]} => true
+consoleLogger.js:187 JsonLogicEvaluationService:     Entity: p_erotica:iker_aguirre_instance, Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:     Actor: p_erotica:amaia_castillo_instance, Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:     Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:   Condition 3/5: {"!!":{"var":"entity.components.core:actor"}} => true
+consoleLogger.js:187 JsonLogicEvaluationService:     Entity: p_erotica:iker_aguirre_instance, Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:     Actor: p_erotica:amaia_castillo_instance, Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:     Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:   Condition 4/5: {"not":{"==":[{"var":"entity.components.core:following.leaderId"},{"var":"actor.id"}]}} => true
+consoleLogger.js:187 JsonLogicEvaluationService:     Entity: p_erotica:iker_aguirre_instance, Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:     Actor: p_erotica:amaia_castillo_instance, Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:     Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:   Condition 5/5: {"not":{"in":[{"var":"entity.id"},{"var":"actor.components.core:leading.followers"}]}} => true
+consoleLogger.js:187 JsonLogicEvaluationService:     Entity: p_erotica:iker_aguirre_instance, Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:     Actor: p_erotica:amaia_castillo_instance, Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:     Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService: Rule evaluation raw result: true, Final boolean: true
+consoleLogger.js:187 JsonLogicEvaluationService: Resolving condition_ref 'core:entity-at-location'...
+consoleLogger.js:187 JsonLogicEvaluationService: Resolving condition_ref 'core:entity-is-not-current-actor'...
+consoleLogger.js:187 JsonLogicEvaluationService: Resolving condition_ref 'core:entity-has-actor-component'...
+consoleLogger.js:187 JsonLogicEvaluationService: Resolving condition_ref 'core:entity-is-following-actor'...
+consoleLogger.js:187 JsonLogicEvaluationService: Evaluating rule: {"and":[{"==":[{"var":"entity.components.core:position.locationId"},{"var":"location.id"}]},{"!=":[{"var":"entity.id"},{"var":"actor.id"}]},{"!!":{"va.... Context keys: entity, actor, location
+consoleLogger.js:187 JsonLogicEvaluationService: Detailed evaluation of AND operation with 5 conditions:
+consoleLogger.js:187 JsonLogicEvaluationService:   Condition 1/5: {"==":[{"var":"entity.components.core:position.locationId"},{"var":"location.id"}]} => true
+consoleLogger.js:187 JsonLogicEvaluationService:     Entity: p_erotica:amaia_castillo_instance, Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:     Actor: p_erotica:amaia_castillo_instance, Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:     Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:   Condition 2/5: {"!=":[{"var":"entity.id"},{"var":"actor.id"}]} => false
+consoleLogger.js:187 JsonLogicEvaluationService:     Entity: p_erotica:amaia_castillo_instance, Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:     Actor: p_erotica:amaia_castillo_instance, Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:     Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:   AND operation short-circuited at condition 2 (false result)
+consoleLogger.js:187 JsonLogicEvaluationService: Rule evaluation raw result: false, Final boolean: false
+consoleLogger.js:187 Formatting command for action: core:follow, template: "follow {target}", targetType: entity
+consoleLogger.js:187  -> Found entity p_erotica:iker_aguirre_instance, display name: "Iker Aguirre"
+consoleLogger.js:187  <- Final formatted command: "follow Iker Aguirre"
+consoleLogger.js:187 ActionValidationContextBuilder: ActionValidationContextBuilder: Building context for action 'core:go', actor 'p_erotica:amaia_castillo_instance'. Only actor context is included as target filtering is handled by Scope DSL.
+consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[core:go]: Evaluation Context Built Successfully.
+consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[core:go]: Actor entity [p_erotica:amaia_castillo_instance] has 20 components available.
+consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[core:go] Context: {
+  "actor": {
+    "id": "p_erotica:amaia_castillo_instance",
+    "components": {
+      "core:name": {
+        "text": "Amaia Castillo"
+      },
+      "core:portrait": {
+        "imagePath": "portraits/amaia_castillo.png",
+        "altText": "Amaia Castillo - former model and sugar mommy."
+      },
+      "core:profile": {
+        "text": "My name is Amaia - Basque for 'the end'. A grim joke, don't you think, for someone feeling perpetually trapped? I possess this hair, luscious blonde, and these eyes... unnaturally pale yellow-amber. Men call them hypnotic; I know they see predation. I can feel their gazes constantly, inevitably, drawn to my G-cup breasts - my curated burden and power. My posture reflects my vigilance: shoulders thrown back, chin high. My neck? Always twisting. Always watching. Modeling, from seventeen to twenty-two, taught me my body's value... and the hollowness of selling its image. My marriage? To a wealthy restaurateur? It offered the illusion of agency. Navigating Donostia's elite suffocates me. They reward me materially, yet strip away any semblance of purpose. Childlessness... that emptiness wasn't a war I fought, but a surrender. Now I fill its vacuum with transgressive fantasies: I picture myself as a sugar mommy, lavishing passion on a young athlete tethered to me by my husband's very wealth. My fluency - Euskara, Spanish, English, French - and intimate grasp of Basque culinary politics? Merely tools for this gilded cage. My nuances? A strategic reveal - weaponizing vulnerability shapes how I'm seen. Possessive object handling? I misuse luxury items deliberately, proving I won't be rendered irrelevant. And my quirk - that predatory pause and tension? The micro-movement of frozen focus, then the coiled torso-twist? That's instinct taking over when I observe a target."
+      },
+      "core:personality": {
+        "text": "My charm is a weapon: carefully calibrated, icy, meant only to disarm strategically. My discipline is furious, sacrificial - punishing this body I've commodified to maintain its exacting value. And my care? It's a act born of desperation: lavish patronage thrown at young talent, a displaced, pathetic attempt to feel... generative."
+      },
+      "core:likes": {
+        "text": "Kursaal's Abstract Brutalism speaks to me - unforgiving, unapologetic presence. Sour cherries... things that fight sweetness, shock my senses back from numbness. Observing teenage athletes... yes. The raw potential, brutally channeled. The disciplined repetition. Fascinating."
+      },
+      "core:dislikes": {
+        "text": "I despise untouched luxury items... sterile gifts signifying an utter lack of engagement. And bodies too like my own? Those 'cougar' caricatures... they make my skin crawl."
+      },
+      "core:fears": {
+        "text": "I fear becoming an architectural ghost... dissolving into these walls, noticed only as ambient noise. And the False Palladium? Terrifying: discovering that the boy, the patronage, the carefully built fantasy... it's just hollow gilding on the same emptiness."
+      },
+      "core:goals": {
+        "goals": [
+          {
+            "text": "I will cement myself as the indispensable face of Donostia's art film festivals - visibly steering funding panels, commanding introductions, claiming photographic prominence."
+          },
+          {
+            "text": "I must procure the perfect residence - my discretionary funds will manifest my architecture of control. Every view, every line, obsessively chosen to be my fortress."
+          }
+        ]
+      },
+      "core:secrets": {
+        "text": "My erotic manuscript... tucked away. Pages of transgressive fantasies intertwined with stark psychoanalysis of adolescent males. Defense mechanisms, vulnerabilities — strategically noted. Digital and physical backups. My 'Contingency': jewels, curated art pieces. My hidden proof of worth manufactured outside this marriage. My hoarded potential energy. My potency totem."
+      },
+      "core:speech_patterns": {
+        "patterns": [
+          "I translate life to currency language: 'That cellist? Undervalued stock due for correction...', 'Invested too much emotional capital there... dreadful ROI'.",
+          "I favor an arrested metaphor: Cutting thoughts deliberately ('The situation resembles... Venetian fog...') — leaves them hanging.",
+          "Disciplined brevity anchors me. Complex emotions are crushed into clipped precision: 'Tiring. Understood. Later.'",
+          "Montage proofing keeps them off balance. I switch unexpectedly to Euskara or French mid-sentence - it marks territory, asserts dominance in the silence."
+        ]
+      },
+      "anatomy:body": {
+        "recipeId": "p_erotica:amaia_castillo_recipe",
+        "body": {
+          "root": "b0e33c5e-b105-4ce7-9fdd-d9e337363581",
+          "parts": {
+            "torso": "b0e33c5e-b105-4ce7-9fdd-d9e337363581",
+            "head": "1cc5152e-4fa2-4f57-8c3c-141f69573d14",
+            "left arm": "13a228cd-e0e9-4ce9-8cf6-91a6e30973f1",
+            "right arm": "99a3bcd8-4cd2-4ed2-89f8-f59aae25921c",
+            "left leg": "3d3dc54f-5319-4f33-98fa-3ddbf275db35",
+            "right leg": "ccd3637d-75a5-402c-8093-5940b018beed",
+            "left eye": "6b7dc49f-6536-4b45-a524-c1caeffb1072",
+            "right eye": "da70df1f-7827-4943-a05d-814a5c50a9ab",
+            "left ear": "c706913e-6bed-4125-935c-dd8516f2f61e",
+            "right ear": "2a552f36-f9f1-40e5-aec1-8c41bbea6f0e",
+            "nose": "f8082ede-5718-4343-98b5-3b41ae22a0a3",
+            "mouth": "0ce31f88-72ec-4851-b82b-faa61b9fd57a",
+            "teeth": "ff04e761-eeca-41e8-9b99-c54de06defc8",
+            "hair": "969f3f59-712e-4a48-befc-f98c0b97e6b6",
+            "pubic hair": "f3f78063-1893-4ddf-9463-de7f66c18f16",
+            "left breast": "d67ebda9-9022-4e4f-adcf-062420564e2d",
+            "right breast": "91593dca-6745-4d3a-b6ce-e23eb8c4d65f",
+            "vagina": "c582fc10-ee5b-4a80-a6d4-1cc5006e8ced",
+            "left arm hand": "6fd1e97b-e9b6-4051-a34f-ccae13de0c51",
+            "right arm hand": "6545a6b3-766e-457e-9fef-dc02b278dcd1",
+            "left leg foot": "cccaa623-3f3a-4204-805c-95d85a134030",
+            "right leg foot": "69e1bca8-e776-4988-8ca0-f2e07a040fa1",
+            "asshole": "62bdd65a-54a7-4775-9aec-b6e1295c99a7"
+          }
+        }
+      },
+      "core:perception_log": {
+        "maxEntries": 50,
+        "logEntries": [
+          {
+            "descriptionText": "Iker Aguirre says: \"aa\"",
+            "timestamp": "2025-07-07T17:53:35.968Z",
+            "perceptionType": "speech_local",
+            "actorId": "p_erotica:iker_aguirre_instance",
+            "targetId": null,
+            "involvedEntities": []
+          },
+          {
+            "descriptionText": "Iker Aguirre is now following Amaia Castillo.",
+            "timestamp": "2025-07-07T17:53:35.984Z",
+            "perceptionType": "action_target_general",
+            "actorId": "p_erotica:iker_aguirre_instance",
+            "targetId": "p_erotica:amaia_castillo_instance",
+            "involvedEntities": []
+          }
+        ]
+      },
+      "core:actor": {},
+      "core:player_type": {
+        "type": "human"
+      },
+      "core:position": {
+        "locationId": "p_erotica:outside_tables_coffee_shop_instance"
+      },
+      "core:short_term_memory": {
+        "thoughts": [],
+        "maxEntries": 10
+      },
+      "core:notes": {
+        "notes": []
+      },
+      "core:description": {
+        "text": "Hair: long, blonde, wavy\nEyes: amber, almond\nBreasts: G-cup, meaty, soft\nLegs: long, shapely\nPubic hair: curly"
+      },
+      "core:leading": {
+        "followers": [
+          "p_erotica:iker_aguirre_instance"
+        ]
+      },
+      "core:current_actor": {}
+    }
+  }
+}
+consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[core:go]: Evaluating 1 prerequisite rule(s)...
+consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[core:go]: Resolving condition_ref 'core:actor-can-move'...
+consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[core:go]:   - Evaluating resolved rule: {"hasPartWithComponentValue":["actor","core:movement","locked",false]}
+consoleLogger.js:187 JsonLogicEvaluationService: Evaluating rule: {"hasPartWithComponentValue":["actor","core:movement","locked",false]}. Context keys: actor
+consoleLogger.js:187 JsonLogicCustomOperators: hasPartWithComponentValue called with entityPath='actor', componentId='core:movement', propertyPath='locked', expectedValue='false'
+consoleLogger.js:187 JsonLogicCustomOperators: hasPartWithComponentValue: Found entity ID: p_erotica:amaia_castillo_instance
+16consoleLogger.js:187 EntityManager.getEntitiesWithComponent: Found 44 entities with component 'anatomy:joint'.
+consoleLogger.js:187 JsonLogicCustomOperators: hasPartWithComponentValue(p_erotica:amaia_castillo_instance, core:movement, locked, false) = true
+consoleLogger.js:187 JsonLogicEvaluationService: Rule evaluation raw result: true, Final boolean: true
+consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[core:go]:   - Prerequisite Rule 1/1 PASSED.
+consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[core:go]: → PASSED (All 1 prerequisite rules evaluated successfully).
+consoleLogger.js:187 ScopeCache: Cache miss for key: p_erotica:amaia_castillo_instance:p_erotica:outside_tables_coffee_shop_instance:{"type":"Step","field":"target","isArray":false,"parent":{"type":"Filter","logic":{"condition_ref":"core:exit-is-unblocked"},"parent":{"type":"Step","field":"core:exits","isArray":false,"parent":{"type":"Source","kind":"location","param":null}}}}, resolving...
+consoleLogger.js:187 JsonLogicEvaluationService: Resolving condition_ref 'core:exit-is-unblocked'...
+consoleLogger.js:187 JsonLogicEvaluationService: Evaluating rule: {"!":{"var":"entity.blocker"}}. Context keys: entity, actor, location
+consoleLogger.js:187 JsonLogicEvaluationService: Rule evaluation raw result: true, Final boolean: true
+consoleLogger.js:187 Formatting command for action: core:go, template: "go to {target}", targetType: entity
+consoleLogger.js:187  -> Found entity p_erotica:coffee_shop_instance, display name: "The Gilded Bean"
+consoleLogger.js:187  <- Final formatted command: "go to The Gilded Bean"
+consoleLogger.js:187 Formatting command for action: core:wait, template: "wait", targetType: none
+consoleLogger.js:187  -> No target type, using template as is.
+consoleLogger.js:187  <- Final formatted command: "wait"
+consoleLogger.js:187 ActionValidationContextBuilder: ActionValidationContextBuilder: Building context for action 'intimacy:get_close', actor 'p_erotica:amaia_castillo_instance'. Only actor context is included as target filtering is handled by Scope DSL.
+consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[intimacy:get_close]: Evaluation Context Built Successfully.
+consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[intimacy:get_close]: Actor entity [p_erotica:amaia_castillo_instance] has 20 components available.
+consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[intimacy:get_close] Context: {
+  "actor": {
+    "id": "p_erotica:amaia_castillo_instance",
+    "components": {
+      "core:name": {
+        "text": "Amaia Castillo"
+      },
+      "core:portrait": {
+        "imagePath": "portraits/amaia_castillo.png",
+        "altText": "Amaia Castillo - former model and sugar mommy."
+      },
+      "core:profile": {
+        "text": "My name is Amaia - Basque for 'the end'. A grim joke, don't you think, for someone feeling perpetually trapped? I possess this hair, luscious blonde, and these eyes... unnaturally pale yellow-amber. Men call them hypnotic; I know they see predation. I can feel their gazes constantly, inevitably, drawn to my G-cup breasts - my curated burden and power. My posture reflects my vigilance: shoulders thrown back, chin high. My neck? Always twisting. Always watching. Modeling, from seventeen to twenty-two, taught me my body's value... and the hollowness of selling its image. My marriage? To a wealthy restaurateur? It offered the illusion of agency. Navigating Donostia's elite suffocates me. They reward me materially, yet strip away any semblance of purpose. Childlessness... that emptiness wasn't a war I fought, but a surrender. Now I fill its vacuum with transgressive fantasies: I picture myself as a sugar mommy, lavishing passion on a young athlete tethered to me by my husband's very wealth. My fluency - Euskara, Spanish, English, French - and intimate grasp of Basque culinary politics? Merely tools for this gilded cage. My nuances? A strategic reveal - weaponizing vulnerability shapes how I'm seen. Possessive object handling? I misuse luxury items deliberately, proving I won't be rendered irrelevant. And my quirk - that predatory pause and tension? The micro-movement of frozen focus, then the coiled torso-twist? That's instinct taking over when I observe a target."
+      },
+      "core:personality": {
+        "text": "My charm is a weapon: carefully calibrated, icy, meant only to disarm strategically. My discipline is furious, sacrificial - punishing this body I've commodified to maintain its exacting value. And my care? It's a act born of desperation: lavish patronage thrown at young talent, a displaced, pathetic attempt to feel... generative."
+      },
+      "core:likes": {
+        "text": "Kursaal's Abstract Brutalism speaks to me - unforgiving, unapologetic presence. Sour cherries... things that fight sweetness, shock my senses back from numbness. Observing teenage athletes... yes. The raw potential, brutally channeled. The disciplined repetition. Fascinating."
+      },
+      "core:dislikes": {
+        "text": "I despise untouched luxury items... sterile gifts signifying an utter lack of engagement. And bodies too like my own? Those 'cougar' caricatures... they make my skin crawl."
+      },
+      "core:fears": {
+        "text": "I fear becoming an architectural ghost... dissolving into these walls, noticed only as ambient noise. And the False Palladium? Terrifying: discovering that the boy, the patronage, the carefully built fantasy... it's just hollow gilding on the same emptiness."
+      },
+      "core:goals": {
+        "goals": [
+          {
+            "text": "I will cement myself as the indispensable face of Donostia's art film festivals - visibly steering funding panels, commanding introductions, claiming photographic prominence."
+          },
+          {
+            "text": "I must procure the perfect residence - my discretionary funds will manifest my architecture of control. Every view, every line, obsessively chosen to be my fortress."
+          }
+        ]
+      },
+      "core:secrets": {
+        "text": "My erotic manuscript... tucked away. Pages of transgressive fantasies intertwined with stark psychoanalysis of adolescent males. Defense mechanisms, vulnerabilities — strategically noted. Digital and physical backups. My 'Contingency': jewels, curated art pieces. My hidden proof of worth manufactured outside this marriage. My hoarded potential energy. My potency totem."
+      },
+      "core:speech_patterns": {
+        "patterns": [
+          "I translate life to currency language: 'That cellist? Undervalued stock due for correction...', 'Invested too much emotional capital there... dreadful ROI'.",
+          "I favor an arrested metaphor: Cutting thoughts deliberately ('The situation resembles... Venetian fog...') — leaves them hanging.",
+          "Disciplined brevity anchors me. Complex emotions are crushed into clipped precision: 'Tiring. Understood. Later.'",
+          "Montage proofing keeps them off balance. I switch unexpectedly to Euskara or French mid-sentence - it marks territory, asserts dominance in the silence."
+        ]
+      },
+      "anatomy:body": {
+        "recipeId": "p_erotica:amaia_castillo_recipe",
+        "body": {
+          "root": "b0e33c5e-b105-4ce7-9fdd-d9e337363581",
+          "parts": {
+            "torso": "b0e33c5e-b105-4ce7-9fdd-d9e337363581",
+            "head": "1cc5152e-4fa2-4f57-8c3c-141f69573d14",
+            "left arm": "13a228cd-e0e9-4ce9-8cf6-91a6e30973f1",
+            "right arm": "99a3bcd8-4cd2-4ed2-89f8-f59aae25921c",
+            "left leg": "3d3dc54f-5319-4f33-98fa-3ddbf275db35",
+            "right leg": "ccd3637d-75a5-402c-8093-5940b018beed",
+            "left eye": "6b7dc49f-6536-4b45-a524-c1caeffb1072",
+            "right eye": "da70df1f-7827-4943-a05d-814a5c50a9ab",
+            "left ear": "c706913e-6bed-4125-935c-dd8516f2f61e",
+            "right ear": "2a552f36-f9f1-40e5-aec1-8c41bbea6f0e",
+            "nose": "f8082ede-5718-4343-98b5-3b41ae22a0a3",
+            "mouth": "0ce31f88-72ec-4851-b82b-faa61b9fd57a",
+            "teeth": "ff04e761-eeca-41e8-9b99-c54de06defc8",
+            "hair": "969f3f59-712e-4a48-befc-f98c0b97e6b6",
+            "pubic hair": "f3f78063-1893-4ddf-9463-de7f66c18f16",
+            "left breast": "d67ebda9-9022-4e4f-adcf-062420564e2d",
+            "right breast": "91593dca-6745-4d3a-b6ce-e23eb8c4d65f",
+            "vagina": "c582fc10-ee5b-4a80-a6d4-1cc5006e8ced",
+            "left arm hand": "6fd1e97b-e9b6-4051-a34f-ccae13de0c51",
+            "right arm hand": "6545a6b3-766e-457e-9fef-dc02b278dcd1",
+            "left leg foot": "cccaa623-3f3a-4204-805c-95d85a134030",
+            "right leg foot": "69e1bca8-e776-4988-8ca0-f2e07a040fa1",
+            "asshole": "62bdd65a-54a7-4775-9aec-b6e1295c99a7"
+          }
+        }
+      },
+      "core:perception_log": {
+        "maxEntries": 50,
+        "logEntries": [
+          {
+            "descriptionText": "Iker Aguirre says: \"aa\"",
+            "timestamp": "2025-07-07T17:53:35.968Z",
+            "perceptionType": "speech_local",
+            "actorId": "p_erotica:iker_aguirre_instance",
+            "targetId": null,
+            "involvedEntities": []
+          },
+          {
+            "descriptionText": "Iker Aguirre is now following Amaia Castillo.",
+            "timestamp": "2025-07-07T17:53:35.984Z",
+            "perceptionType": "action_target_general",
+            "actorId": "p_erotica:iker_aguirre_instance",
+            "targetId": "p_erotica:amaia_castillo_instance",
+            "involvedEntities": []
+          }
+        ]
+      },
+      "core:actor": {},
+      "core:player_type": {
+        "type": "human"
+      },
+      "core:position": {
+        "locationId": "p_erotica:outside_tables_coffee_shop_instance"
+      },
+      "core:short_term_memory": {
+        "thoughts": [],
+        "maxEntries": 10
+      },
+      "core:notes": {
+        "notes": []
+      },
+      "core:description": {
+        "text": "Hair: long, blonde, wavy\nEyes: amber, almond\nBreasts: G-cup, meaty, soft\nLegs: long, shapely\nPubic hair: curly"
+      },
+      "core:leading": {
+        "followers": [
+          "p_erotica:iker_aguirre_instance"
+        ]
+      },
+      "core:current_actor": {}
+    }
+  }
+}
+consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[intimacy:get_close]: Evaluating 1 prerequisite rule(s)...
+consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[intimacy:get_close]: Resolving condition_ref 'core:actor-can-move'...
+consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[intimacy:get_close]:   - Evaluating resolved rule: {"hasPartWithComponentValue":["actor","core:movement","locked",false]}
+consoleLogger.js:187 JsonLogicEvaluationService: Evaluating rule: {"hasPartWithComponentValue":["actor","core:movement","locked",false]}. Context keys: actor
+consoleLogger.js:187 JsonLogicCustomOperators: hasPartWithComponentValue called with entityPath='actor', componentId='core:movement', propertyPath='locked', expectedValue='false'
+consoleLogger.js:187 JsonLogicCustomOperators: hasPartWithComponentValue: Found entity ID: p_erotica:amaia_castillo_instance
+16consoleLogger.js:187 EntityManager.getEntitiesWithComponent: Found 44 entities with component 'anatomy:joint'.
+consoleLogger.js:187 JsonLogicCustomOperators: hasPartWithComponentValue(p_erotica:amaia_castillo_instance, core:movement, locked, false) = true
+consoleLogger.js:187 JsonLogicEvaluationService: Rule evaluation raw result: true, Final boolean: true
+consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[intimacy:get_close]:   - Prerequisite Rule 1/1 PASSED.
+consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[intimacy:get_close]: → PASSED (All 1 prerequisite rules evaluated successfully).
+consoleLogger.js:187 ScopeCache: Cache miss for key: p_erotica:amaia_castillo_instance:p_erotica:outside_tables_coffee_shop_instance:{"type":"Filter","logic":{"and":[{"condition_ref":"core:entity-at-location"},{"condition_ref":"core:entity-is-not-current-actor"},{"condition_ref":"core:entity-has-actor-component"}]},"parent":{"type":"Source","kind":"entities","param":"core:position"}}, resolving...
+consoleLogger.js:187 EntityManager.getEntitiesWithComponent: Found 2 entities with component 'core:position'.
+consoleLogger.js:187 JsonLogicEvaluationService: Resolving condition_ref 'core:entity-at-location'...
+consoleLogger.js:187 JsonLogicEvaluationService: Resolving condition_ref 'core:entity-is-not-current-actor'...
+consoleLogger.js:187 JsonLogicEvaluationService: Resolving condition_ref 'core:entity-has-actor-component'...
+consoleLogger.js:187 JsonLogicEvaluationService: Evaluating rule: {"and":[{"==":[{"var":"entity.components.core:position.locationId"},{"var":"location.id"}]},{"!=":[{"var":"entity.id"},{"var":"actor.id"}]},{"!!":{"va.... Context keys: entity, actor, location
+consoleLogger.js:187 JsonLogicEvaluationService: Detailed evaluation of AND operation with 3 conditions:
+consoleLogger.js:187 JsonLogicEvaluationService:   Condition 1/3: {"==":[{"var":"entity.components.core:position.locationId"},{"var":"location.id"}]} => true
+consoleLogger.js:187 JsonLogicEvaluationService:     Entity: p_erotica:iker_aguirre_instance, Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:     Actor: p_erotica:amaia_castillo_instance, Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:     Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:   Condition 2/3: {"!=":[{"var":"entity.id"},{"var":"actor.id"}]} => true
+consoleLogger.js:187 JsonLogicEvaluationService:     Entity: p_erotica:iker_aguirre_instance, Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:     Actor: p_erotica:amaia_castillo_instance, Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:     Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:   Condition 3/3: {"!!":{"var":"entity.components.core:actor"}} => true
+consoleLogger.js:187 JsonLogicEvaluationService:     Entity: p_erotica:iker_aguirre_instance, Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:     Actor: p_erotica:amaia_castillo_instance, Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:     Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService: Rule evaluation raw result: true, Final boolean: true
+consoleLogger.js:187 JsonLogicEvaluationService: Resolving condition_ref 'core:entity-at-location'...
+consoleLogger.js:187 JsonLogicEvaluationService: Resolving condition_ref 'core:entity-is-not-current-actor'...
+consoleLogger.js:187 JsonLogicEvaluationService: Resolving condition_ref 'core:entity-has-actor-component'...
+consoleLogger.js:187 JsonLogicEvaluationService: Evaluating rule: {"and":[{"==":[{"var":"entity.components.core:position.locationId"},{"var":"location.id"}]},{"!=":[{"var":"entity.id"},{"var":"actor.id"}]},{"!!":{"va.... Context keys: entity, actor, location
+consoleLogger.js:187 JsonLogicEvaluationService: Detailed evaluation of AND operation with 3 conditions:
+consoleLogger.js:187 JsonLogicEvaluationService:   Condition 1/3: {"==":[{"var":"entity.components.core:position.locationId"},{"var":"location.id"}]} => true
+consoleLogger.js:187 JsonLogicEvaluationService:     Entity: p_erotica:amaia_castillo_instance, Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:     Actor: p_erotica:amaia_castillo_instance, Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:     Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:   Condition 2/3: {"!=":[{"var":"entity.id"},{"var":"actor.id"}]} => false
+consoleLogger.js:187 JsonLogicEvaluationService:     Entity: p_erotica:amaia_castillo_instance, Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:     Actor: p_erotica:amaia_castillo_instance, Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:     Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:   AND operation short-circuited at condition 2 (false result)
+consoleLogger.js:187 JsonLogicEvaluationService: Rule evaluation raw result: false, Final boolean: false
+consoleLogger.js:187 Formatting command for action: intimacy:get_close, template: "get close to {target}", targetType: entity
+consoleLogger.js:187  -> Found entity p_erotica:iker_aguirre_instance, display name: "Iker Aguirre"
+consoleLogger.js:187  <- Final formatted command: "get close to Iker Aguirre"
+consoleLogger.js:187 ScopeCache: Cache miss for key: p_erotica:amaia_castillo_instance:p_erotica:outside_tables_coffee_shop_instance:{"type":"ArrayIterationStep","parent":{"type":"Step","field":"followers","isArray":false,"parent":{"type":"Step","field":"core:leading","isArray":false,"parent":{"type":"Source","kind":"actor"}}}}, resolving...
+consoleLogger.js:187 Formatting command for action: core:dismiss, template: "dismiss {target}", targetType: entity
+consoleLogger.js:187  -> Found entity p_erotica:iker_aguirre_instance, display name: "Iker Aguirre"
+consoleLogger.js:187  <- Final formatted command: "dismiss Iker Aguirre"
+consoleLogger.js:187 ActionDiscoveryService: Finished action discovery for actor p_erotica:amaia_castillo_instance. Found 5 actions from 5 candidates.
+consoleLogger.js:187 [Action Discovery Trace for actor p_erotica:amaia_castillo_instance]
+consoleLogger.js:198 Action Discovery Trace for p_erotica:amaia_castillo_instance
 consoleLogger.js:187 ActionIndexingService: indexed 5 actions for p_erotica:amaia_castillo_instance
 consoleLogger.js:187 [ChoicePipeline] Actor p_erotica:amaia_castillo_instance: 5 choices ready
 consoleLogger.js:187 VED: Validating payload for event 'core:player_turn_prompt' against schema 'core:player_turn_prompt#payload'...
 consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:player_turn_prompt'.
-consoleLogger.js:187 VED: Dispatching event 'core:player_turn_prompt' via EventBus... 
-{entityId: 'p_erotica:amaia_castillo_instance', availableActions: Array(5)}
-consoleLogger.js:187 SystemLogicInterpreter: Received event: core:player_turn_prompt. Found 1 potential rule(s). 
-{payload: {…}}
+consoleLogger.js:187 VED: Dispatching event 'core:player_turn_prompt' via EventBus... {entityId: 'p_erotica:amaia_castillo_instance', availableActions: Array(5)}
+consoleLogger.js:187 SystemLogicInterpreter: Received event: core:player_turn_prompt. Found 1 potential rule(s). {payload: {…}}
 consoleLogger.js:187 SystemLogicInterpreter: [Event: core:player_turn_prompt] Assembling execution context via createNestedExecutionContext... (ActorID: p_erotica:amaia_castillo_instance, TargetID: null)
 consoleLogger.js:187 SystemLogicInterpreter: createJsonLogicContext: Creating JsonLogicEvaluationContext for event type [core:player_turn_prompt]. ActorID: [p_erotica:amaia_castillo_instance], TargetID: [None]
 consoleLogger.js:187 SystemLogicInterpreter: createJsonLogicContext: Found actor entity [p_erotica:amaia_castillo_instance]. Creating context entry.
@@ -78,6 +542,12 @@ consoleLogger.js:187 SystemLogicInterpreter: [Event: core:player_turn_prompt] Fi
 consoleLogger.js:187 SystemLogicInterpreter: [Rule enable_input_on_player_turn] No condition defined or condition is empty. Defaulting to passed.
 consoleLogger.js:187 SystemLogicInterpreter: [Rule 'enable_input_on_player_turn' - Action 1/2] About to execute operation of type: DISPATCH_EVENT
 consoleLogger.js:187 OperationInterpreter: Executing handler for operation type "DISPATCH_EVENT"…
-consoleLogger.js:187 DispatchEventHandler: Attempting to dispatch event "core:enable_input" with resolved payload... 
-{payload: {…}}
+consoleLogger.js:187 DispatchEventHandler: Attempting to dispatch event "core:enable_input" with resolved payload... {payload: {…}}
 consoleLogger.js:187 VED: Validating payload for event 'core:enable_input' against schema 'core:enable_input#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:enable_input'.
+consoleLogger.js:187 VED: Dispatching event 'core:enable_input' via EventBus... {}
+consoleLogger.js:187 [InputStateController] Received 'core:enable_input' without valid 'placeholder' string in payload, using default placeholder: "Enter speech (optional)..." {receivedEvent: {…}}
+consoleLogger.js:187 SystemLogicInterpreter: [Rule 'enable_input_on_player_turn' - Action 1/2] Finished executing operation of type: DISPATCH_EVENT
+consoleLogger.js:187 SystemLogicInterpreter: [Rule 'enable_input_on_player_turn' - Action 2/2] About to execute operation of type: DISPATCH_EVENT
+consoleLogger.js:187 OperationInterpreter: Resolved full string placeholder {event.payload.entityId} to: p_erotica:amaia_castillo_instance
+consoleLogger.js:187 OperationInterpreter: Resolved full string placeholder {event.payload.availableActions} to: [{"index":1,"actionId":"core:follow","commandString":"follow Iker Aguirre","params":{"targetId":"p_erotica:iker_aguirre_instance"},"description":"Commands your character to follow the specified target, becoming their companion and moving with them."},{"index":2,"actionId":"core:go","commandString":"go to The Gilded Bean","params":{"targetId":"p_erotica:coffee_shop_instance"},"description":"Moves your character to the specified location, if the way is clear."},{"index":3,"actionId":"core:wait","commandString":"wait","params":{"targetId":null},"description":"Wait for a moment, doing nothing."},{"index":4,"actionId":"intimacy:get_close","commandString":"get close to Iker Aguirre","params":{"targetId":"p_erotica:iker_aguirre_instance"},"description":"Move closer to the target, entering their personal space."},{"index":5,"actionId":"core:dismiss","commandString":"dismiss Iker Aguirre","params":{"targetId":"p_erotica:iker_aguirre_instance"},"description":"Dismisses a follower from your service."}]
