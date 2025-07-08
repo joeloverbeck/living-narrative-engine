@@ -12,14 +12,12 @@
  */
 export class StringAccumulator {
   /**
-   * @private
    * @type {string[]}
    * @description Internal array of string parts.
    */
   #parts = [];
 
   /**
-   * @private
    * @type {number}
    * @description Cached total length of all parts.
    */
