@@ -3,7 +3,7 @@
  *
  * @description Creates intermediate objects as needed but will not overwrite
  *  non-object values along the path.
- * @param {object} root - Object to modify.
+ * @param {Record<string, any>} root - Object to modify.
  * @param {string} path - Dot-separated path (e.g., 'a.b.c').
  * @param {*} value - Value to assign.
  * @returns {boolean} True if the assignment succeeded, false otherwise.
