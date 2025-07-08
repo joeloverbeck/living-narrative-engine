@@ -747,7 +747,7 @@ describe('ScopeEngine', () => {
     });
 
     it('should preserve all base context properties when overlay is null', () => {
-      const result = engine._mergeContexts(baseCtx, null);
+      const result = engine.contextMerger.merge(baseCtx, null);
       
       expect(result).toEqual(baseCtx);
       expect(result.actorEntity).toBe(mockActorEntity);
@@ -761,7 +761,7 @@ describe('ScopeEngine', () => {
         customProp: 'custom-value'
       };
       
-      const result = engine._mergeContexts(baseCtx, overlayCtx);
+      const result = engine.contextMerger.merge(baseCtx, overlayCtx);
       
       expect(result.actorEntity).toBe(mockActorEntity);
       expect(result.runtimeCtx).toBe(mockRuntimeCtx);
@@ -778,7 +778,7 @@ describe('ScopeEngine', () => {
         depth: 3
       };
       
-      const result = engine._mergeContexts(baseCtx, overlayCtx);
+      const result = engine.contextMerger.merge(baseCtx, overlayCtx);
       
       expect(result.actorEntity).toBe(newActorEntity);
       expect(result.runtimeCtx).toBe(newRuntimeCtx);
@@ -788,16 +788,16 @@ describe('ScopeEngine', () => {
     it('should handle depth correctly', () => {
       // When overlay has no depth, should use base depth + 1
       const overlayCtx = { customProp: 'value' };
-      let result = engine._mergeContexts(baseCtx, overlayCtx);
+      let result = engine.contextMerger.merge(baseCtx, overlayCtx);
       expect(result.depth).toBe(2); // base.depth (1) + 1
 
       // When overlay has depth, should use max of overlay depth and base depth + 1
       overlayCtx.depth = 5;
-      result = engine._mergeContexts(baseCtx, overlayCtx);
+      result = engine.contextMerger.merge(baseCtx, overlayCtx);
       expect(result.depth).toBe(5); // max(5, 1+1)
 
       overlayCtx.depth = 0;
-      result = engine._mergeContexts(baseCtx, overlayCtx);
+      result = engine.contextMerger.merge(baseCtx, overlayCtx);
       expect(result.depth).toBe(2); // max(0, 1+1)
     });
 
@@ -806,8 +806,8 @@ describe('ScopeEngine', () => {
       const overlayCtx = { customProp: 'value' };
       
       expect(() => {
-        engine._mergeContexts(badBaseCtx, overlayCtx);
-      }).toThrow('[CRITICAL] Context merge resulted in missing actorEntity');
+        engine.contextMerger.merge(badBaseCtx, overlayCtx);
+      }).toThrow('[CRITICAL] Context is missing required properties: actorEntity');
     });
 
     it('should throw error if merged context is missing runtimeCtx', () => {
@@ -815,8 +815,8 @@ describe('ScopeEngine', () => {
       const overlayCtx = { customProp: 'value' };
       
       expect(() => {
-        engine._mergeContexts(badBaseCtx, overlayCtx);
-      }).toThrow('[CRITICAL] Context merge resulted in missing runtimeCtx');
+        engine.contextMerger.merge(badBaseCtx, overlayCtx);
+      }).toThrow('[CRITICAL] Context is missing required properties: runtimeCtx');
     });
 
     it('should throw error if merged context is missing dispatcher', () => {
@@ -824,8 +824,8 @@ describe('ScopeEngine', () => {
       const overlayCtx = { customProp: 'value' };
       
       expect(() => {
-        engine._mergeContexts(badBaseCtx, overlayCtx);
-      }).toThrow('[CRITICAL] Context merge resulted in missing dispatcher');
+        engine.contextMerger.merge(badBaseCtx, overlayCtx);
+      }).toThrow('[CRITICAL] Context is missing required properties: dispatcher');
     });
 
     it('should preserve cycleDetector and depthGuard from base context', () => {
@@ -834,7 +834,7 @@ describe('ScopeEngine', () => {
         depthGuard: undefined
       };
       
-      const result = engine._mergeContexts(baseCtx, overlayCtx);
+      const result = engine.contextMerger.merge(baseCtx, overlayCtx);
       
       expect(result.cycleDetector).toBe(baseCtx.cycleDetector);
       expect(result.depthGuard).toBe(baseCtx.depthGuard);
@@ -849,7 +849,7 @@ describe('ScopeEngine', () => {
         customProp2: 'value2'
       };
       
-      const result = engine._mergeContexts(baseCtx, overlayCtx);
+      const result = engine.contextMerger.merge(baseCtx, overlayCtx);
       
       // Should use overlay's dispatcher since it's defined
       expect(result.dispatcher).toBe(newDispatcher);

@@ -26,6 +26,7 @@ export function buildComponents(entityId, entity, entitiesGateway) {
     return components;
   }
 
+
   for (const componentTypeId of entity.componentTypeIds) {
     const data =
       entity.getComponentData?.(componentTypeId) ||

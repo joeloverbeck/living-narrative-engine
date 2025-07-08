@@ -75,14 +75,16 @@ describe('entityHelpers', () => {
     it('preserves Entity class getter properties when adding components', () => {
       // Create a mock Entity class that simulates real Entity behavior
       class MockEntity {
-        #data = { id: 'entity123', definitionId: 'test:entity' };
+        constructor() {
+          this._data = { id: 'entity123', definitionId: 'test:entity' };
+        }
         
         get id() {
-          return this.#data.id;
+          return this._data.id;
         }
         
         get definitionId() {
-          return this.#data.definitionId;
+          return this._data.definitionId;
         }
         
         componentTypeIds = ['core:name', 'core:position'];
