@@ -146,11 +146,7 @@ describe('Multi-mod content loading and world validation', () => {
       manifests,
       totals
     );
-    const updatedTotals = await env.worldLoader.loadWorlds(
-      finalOrder,
-      manifests,
-      afterContent
-    );
+    await env.worldLoader.loadWorlds(finalOrder, manifests, afterContent);
 
     expect(env.registry.getAll('entityDefinitions').length).toBe(2);
     expect(env.registry.getAll('entityInstances').length).toBe(2);

@@ -31,43 +31,13 @@ import {
 import { ATTEMPT_ACTION_ID } from '../../../src/constants/eventIds.js';
 import SetVariableHandler from '../../../src/logic/operationHandlers/setVariableHandler.js';
 import GetNameHandler from '../../../src/logic/operationHandlers/getNameHandler.js';
-import jsonLogic from 'json-logic-js';
-import { createRuleTestEnvironment } from '../../common/engine/systemLogicTestEnv.js';
 import RebuildLeaderListCacheHandler from '../../../src/logic/operationHandlers/rebuildLeaderListCacheHandler.js';
-import { createCapturingEventBus } from '../../common/mockFactories/index.js';
 import { SimpleEntityManager } from '../../common/entities/index.js';
 import { SafeEventDispatcher } from '../../../src/events/safeEventDispatcher.js';
 import ValidatedEventDispatcher from '../../../src/events/validatedEventDispatcher.js';
 import EventBus from '../../../src/events/eventBus.js';
 import AjvSchemaValidator from '../../../src/validation/ajvSchemaValidator.js';
 import ConsoleLogger from '../../../src/logging/consoleLogger.js';
-import {
-  dedupe,
-  merge,
-  repair,
-} from '../../../src/logic/services/closenessCircleService.js';
-
-/**
- *
- * @param em
- */
-function makeStubRebuild(em) {
-  return {
-    execute({ leaderIds }) {
-      for (const lid of leaderIds) {
-        const followers = [];
-        for (const [id, ent] of em.entities) {
-          const f = ent.components[FOLLOWING_COMPONENT_ID];
-          if (f?.leaderId === lid) followers.push(id);
-        }
-        const leader = em.entities.get(lid);
-        if (leader) {
-          leader.components[LEADING_COMPONENT_ID] = { followers };
-        }
-      }
-    },
-  };
-}
 
 /**
  * Creates handlers needed for the follow rule.
@@ -470,7 +440,10 @@ describe('core_handle_follow rule integration', () => {
 
     // Verify the follow relationship was established
     expect(
-      testEnv.entityManager.getComponentData('follower1', FOLLOWING_COMPONENT_ID)
+      testEnv.entityManager.getComponentData(
+        'follower1',
+        FOLLOWING_COMPONENT_ID
+      )
     ).toEqual({
       leaderId: 'leader1',
     });
