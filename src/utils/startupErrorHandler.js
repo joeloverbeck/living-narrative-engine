@@ -82,6 +82,8 @@ export class StartupErrorHandler {
     this.log = getModuleLogger(moduleName, logger);
     this.dom = domAdapter;
     this.dispatcher = dispatcher || null;
+    /** @type {(message: string) => void} */
+    // @ts-ignore - domAdapter may not define alert in its interface
     this.alert = domAdapter.alert;
   }
 
@@ -156,10 +158,11 @@ export class StartupErrorHandler {
       displayedInErrorDiv = this.showErrorInElement(errorDiv, userMessage);
     } catch (e) {
       if (this.dispatcher) {
+        const err = e instanceof Error ? e : new Error(String(e));
         safeDispatchError(
           this.dispatcher,
           'displayFatalStartupError: Failed to set textContent on errorDiv.',
-          { error: e?.message || e }
+          { error: err.message }
         );
       } else {
         this.log.error(
@@ -180,10 +183,11 @@ export class StartupErrorHandler {
         }
       } catch (e) {
         if (this.dispatcher) {
+          const err = e instanceof Error ? e : new Error(String(e));
           safeDispatchError(
             this.dispatcher,
             'displayFatalStartupError: Failed to create or append temporary error element.',
-            { error: e?.message || e }
+            { error: err.message }
           );
         } else {
           this.log.error(
@@ -223,9 +227,10 @@ export class StartupErrorHandler {
       const msg =
         'displayFatalStartupError: Failed to set textContent on titleElement.';
       if (this.dispatcher) {
+        const err = e instanceof Error ? e : new Error(String(e));
         safeDispatchError(this.dispatcher, msg, {
-          raw: e?.message || e,
-          stack: e?.stack,
+          raw: err.message,
+          stack: err.stack,
         });
       } else {
         this.log.error(msg, e);
@@ -238,9 +243,10 @@ export class StartupErrorHandler {
       const msg =
         'displayFatalStartupError: Failed to disable or set placeholder on inputElement.';
       if (this.dispatcher) {
+        const err = e instanceof Error ? e : new Error(String(e));
         safeDispatchError(this.dispatcher, msg, {
-          raw: e?.message || e,
-          stack: e?.stack,
+          raw: err.message,
+          stack: err.stack,
         });
       } else {
         this.log.error(msg, e);
