@@ -20,7 +20,7 @@ export function createTimeoutError(actorId, actionId, timeoutMs) {
   const message =
     `No rule ended the turn for actor ${actorId} after action ` +
     `'${actionId}'. The engine timed out after ${timeoutMs} ms.`;
-  const error = new Error(message);
+  const error = /** @type {Error & { code: string }} */ (new Error(message));
   error.code = 'TURN_END_TIMEOUT';
   return { message, error };
 }
