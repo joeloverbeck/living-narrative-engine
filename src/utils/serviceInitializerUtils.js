@@ -104,6 +104,12 @@ export function setupServiceLogger(serviceName, logger) {
  * @returns {void}
  */
 
+/**
+ *
+ * @param serviceName
+ * @param logger
+ * @param deps
+ */
 export function validateServiceDeps(serviceName, logger, deps) {
   _defaultServiceSetup.validateDeps(serviceName, logger, deps);
 }

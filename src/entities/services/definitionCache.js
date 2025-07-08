@@ -67,6 +67,37 @@ export class DefinitionCache {
   }
 
   /**
+   * Check if a definition exists in the cache.
+   *
+   * @param {string} definitionId - Definition identifier
+   * @returns {boolean} True if definition exists in cache
+   */
+  has(definitionId) {
+    return this.#cache.has(definitionId);
+  }
+
+  /**
+   * Set a definition in the cache.
+   *
+   * @param {string} definitionId - Definition identifier
+   * @param {EntityDefinition} definition - Definition to cache
+   */
+  set(definitionId, definition) {
+    if (!definitionId || typeof definitionId !== 'string') {
+      this.#logger.warn('Invalid definition ID provided to set()');
+      return;
+    }
+
+    if (!definition) {
+      this.#logger.warn('Invalid definition provided to set()');
+      return;
+    }
+
+    this.#cache.set(definitionId, definition);
+    this.#logger.debug(`Definition cached: ${definitionId}`);
+  }
+
+  /**
    * Clear all cached definitions.
    */
   clear() {
