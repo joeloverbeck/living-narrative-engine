@@ -6,15 +6,10 @@
   "description": "Step back from your current intimate partner, ending the closeness.",
   "scope": "none",
   "required_components": {
-    "actor": ["intimacy:closeness"]
+    "actor": [
+      "intimacy:closeness"
+    ]
   },
   "template": "step back",
-  "prerequisites": [
-    {
-      "logic": {
-        "condition_ref": "core:actor-can-move"
-      },
-      "failure_message": "You cannot move without functioning legs."
-    }
-  ]
+  "prerequisites": []
 }
