@@ -8,12 +8,8 @@ import { createMockLogger } from '../../common/mockFactories.js';
 import InMemoryDataRegistry from '../../../src/data/inMemoryDataRegistry.js';
 import ModsLoader from '../../../src/loaders/modsLoader.js';
 import LoaderPhase from '../../../src/loaders/phases/LoaderPhase.js';
-import {
-  ModsLoaderPhaseError,
-  ModsLoaderErrorCode,
-} from '../../../src/errors/modsLoaderPhaseError.js';
+import { ModsLoaderPhaseError } from '../../../src/errors/modsLoaderPhaseError.js';
 import { makeRegistryCache } from '../../../src/loaders/registryCacheAdapter.js';
-import ModsLoadSession from '../../../src/loaders/ModsLoadSession.js';
 import ModsLoaderError from '../../../src/errors/modsLoaderError.js';
 
 /**
@@ -21,7 +17,9 @@ import ModsLoaderError from '../../../src/errors/modsLoaderError.js';
  */
 class MockPhase extends LoaderPhase {
   /**
-   * @param {object} options
+   * Initialize the mock phase.
+   *
+   * @param {object} options - Options object
    * @param {string} options.name - Phase name for identification
    * @param {boolean} [options.shouldFail] - Whether this phase should fail
    * @param {string} [options.errorCode] - Error code if failing
@@ -41,7 +39,7 @@ class MockPhase extends LoaderPhase {
     this.errorCode = errorCode;
     this.errorMessage = errorMessage;
     this.executionOrder = executionOrder;
-    this.execute = jest.fn().mockImplementation(async (context) => {
+    this.execute = jest.fn().mockImplementation(async () => {
       // Track execution order
       this.executionOrder.push(this.name);
 
@@ -298,12 +296,14 @@ describe('Integration: ModsLoader Orchestrator Order and Error Propagation', () 
       );
 
       // Verify the error is the original error, not a ModsLoaderError
+      let caughtError;
       try {
         await modsLoader.loadMods('test-world', ['mod1']);
       } catch (error) {
-        expect(error).toBe(unexpectedError);
-        expect(error).not.toBeInstanceOf(ModsLoaderError);
+        caughtError = error;
       }
+      expect(caughtError).toBe(unexpectedError);
+      expect(caughtError).not.toBeInstanceOf(ModsLoaderError);
     });
   });
 
