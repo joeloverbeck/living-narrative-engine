@@ -52,9 +52,7 @@ describe('core_handle_turn_ended rule integration', () => {
   beforeEach(() => {
     const dataRegistry = {
       getAllSystemRules: jest.fn().mockReturnValue([turnEndedRule]),
-      getConditionDefinition: jest.fn((id) =>
-        id === 'core:event-is-turn-ended' ? eventIsTurnEnded : undefined
-      ),
+      getConditionDefinition: jest.fn(() => undefined),
       getEventDefinition: jest.fn((eventName) => {
         const commonEvents = {
           'core:turn_ended': { payloadSchema: null },
