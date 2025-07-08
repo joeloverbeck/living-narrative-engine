@@ -8,7 +8,10 @@
  * @description Helper for standardized warning messages when no active turn is present.
  */
 
-/** @typedef {import('./loggerUtils.js').Logger} Logger */
+/**
+ * @typedef {import('../interfaces/coreServices.js').ILogger} Logger
+ * Logger interface used throughout the application.
+ */
 
 /**
  * Logs a standardized warning when a method is invoked without an active turn.
