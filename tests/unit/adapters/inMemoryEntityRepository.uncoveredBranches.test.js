@@ -19,4 +19,18 @@ describe('InMemoryEntityRepository uncovered branches', () => {
     repo.add({ id: 'b', val: 2 });
     expect([...repo.entities()].map((e) => e.id)).toEqual(['a', 'b']);
   });
+
+  it('ignores non-object values passed to add()', () => {
+    const repo = new InMemoryEntityRepository();
+    repo.add('foo');
+    repo.add(42);
+    expect(Array.from(repo.entities())).toEqual([]);
+  });
+
+  it('ignores objects missing an id when adding', () => {
+    const repo = new InMemoryEntityRepository();
+    repo.add({ name: 'no id' });
+    repo.add({});
+    expect(Array.from(repo.entities())).toEqual([]);
+  });
 });
