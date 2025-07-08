@@ -7,7 +7,7 @@ import NotesService from '../../../src/ai/notesService.js';
 
 describe('NotesService.addNotes more branches', () => {
   test('skips entries that are not plain strings but adds valid ones', () => {
-    const service = new NotesService();
+    const service = new NotesService({ autoMigrate: false });
     const comp = { notes: [] };
     jest.spyOn(Date.prototype, 'toISOString').mockReturnValue('TS');
 
@@ -19,7 +19,7 @@ describe('NotesService.addNotes more branches', () => {
   });
 
   test('existing notes with non-string text are ignored when checking duplicates', () => {
-    const service = new NotesService();
+    const service = new NotesService({ autoMigrate: false });
     const comp = {
       notes: [{ text: 42 }], // non-string should be ignored during duplicate check
     };

@@ -57,16 +57,37 @@ export function persistNotes(
 
   // Filter out invalid notes before processing, dispatching errors for them.
   const validNotes = [];
-  for (const noteText of notesArray) {
-    if (isNonBlankString(noteText)) {
-      validNotes.push(noteText);
-    } else if (dispatcher) {
+  for (const note of notesArray) {
+    // Handle string notes (legacy format)
+    if (isNonBlankString(note)) {
+      validNotes.push(note);
+    } 
+    // Handle structured notes (new format)
+    else if (
+      typeof note === 'object' && 
+      note !== null && 
+      isNonBlankString(note.text) && 
+      isNonBlankString(note.subject)
+    ) {
+      validNotes.push(note);
+    } 
+    // Invalid note - dispatch error
+    else if (dispatcher) {
+      let errorDetails = { note };
+      
+      // Provide more specific error message
+      if (typeof note === 'object' && note !== null) {
+        if (!note.text || !isNonBlankString(note.text)) {
+          errorDetails.reason = 'Missing or blank text field';
+        } else if (!note.subject || !isNonBlankString(note.subject)) {
+          errorDetails.reason = 'Missing or blank subject field';
+        }
+      }
+      
       safeDispatchError(
         dispatcher,
         'NotesPersistenceHook: Invalid note skipped',
-        {
-          note: noteText,
-        }
+        errorDetails
       );
     }
   }

@@ -4,7 +4,7 @@ import NotesService from '../../../src/ai/notesService.js';
 /** Additional branch coverage for NotesService.addNotes. */
 describe('NotesService extra branch coverage', () => {
   test('returns early when newNotesText is null', () => {
-    const service = new NotesService();
+    const service = new NotesService({ autoMigrate: false });
     const comp = { notes: [] };
 
     const result = service.addNotes(comp, null);
@@ -18,7 +18,7 @@ describe('NotesService extra branch coverage', () => {
   });
 
   test('ignores blank or non-string entries but adds valid ones', () => {
-    const service = new NotesService();
+    const service = new NotesService({ autoMigrate: false });
     const comp = { notes: [] };
     jest.spyOn(Date.prototype, 'toISOString').mockReturnValue('TS');
 

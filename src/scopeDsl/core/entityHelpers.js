@@ -107,6 +107,11 @@ export function createEvaluationContext(
   }
 
   // Helper function to add components while preserving prototype chain
+  /**
+   *
+   * @param entity
+   * @param entityId
+   */
   function addComponentsToEntity(entity, entityId) {
     if (entity.components || !entity.componentTypeIds) {
       return entity;

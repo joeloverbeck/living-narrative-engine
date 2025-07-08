@@ -17,7 +17,7 @@ describe('NotesService', () => {
   let originalToISOString;
 
   beforeEach(() => {
-    notesService = new NotesService();
+    notesService = new NotesService({ autoMigrate: false });
     originalToISOString = Date.prototype.toISOString; // Stub date for consistent timestamps
   });
 
