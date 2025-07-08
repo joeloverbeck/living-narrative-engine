@@ -6,9 +6,13 @@
 import { resolveEntityNameFallback } from './entityNameFallbackUtils.js';
 
 /**
+ * @typedef {import('../logic/defs.js').ExecutionContext} ExecutionContext
+ */
+
+/**
  * Builds the data sources for placeholder resolution.
  *
- * @param {object} executionContext - Execution context supplying actor, target,
+ * @param {ExecutionContext & {context?: object}} executionContext - Execution context supplying actor, target,
  *   and evaluationContext data.
  * @returns {{sources: object[], fallback: object}} Sources array and fallback
  *   object for use with PlaceholderResolver.
