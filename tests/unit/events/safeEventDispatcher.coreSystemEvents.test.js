@@ -19,8 +19,6 @@
  * Runs in a pure Node environment so we can use fs/path and dynamic import().
  */
 
-const fs = require('fs');
-const path = require('path');
 
 /* ── Load the two component JSON files directly via require() ───────── */
 const warningEventDef = require('../../../data/mods/core/events/system_warning_occurred.event.json');
@@ -128,7 +126,8 @@ afterEach(() => jest.clearAllMocks());
 
 /* ─────────────────────────  TESTS  ───────────────────────────────────────── */
 describe('SafeEventDispatcher – core system events', () => {
-  describe(SYSTEM_WARNING_OCCURRED_ID, () => {
+  // Use template string to satisfy jest/valid-title rule
+  describe(`${SYSTEM_WARNING_OCCURRED_ID}`, () => {
     it('dispatches with minimal valid payload', async () => {
       const payload = { message: 'Low disk space' };
       const ok = await dispatcher.dispatch(SYSTEM_WARNING_OCCURRED_ID, payload);
@@ -174,7 +173,7 @@ describe('SafeEventDispatcher – core system events', () => {
     });
   });
 
-  describe(SYSTEM_ERROR_OCCURRED_ID, () => {
+  describe(`${SYSTEM_ERROR_OCCURRED_ID}`, () => {
     it('dispatches with minimal valid payload', async () => {
       const payload = { message: 'Out of memory' };
       const ok = await dispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, payload);
