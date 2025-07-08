@@ -1,67 +1,111 @@
 /**
- * @file EntityLifecycleManager - Handles lifecycle operations for entities.
- * @description Service responsible for creating, reconstructing and removing
- *   entity instances with proper validation, caching and event dispatching.
+ * @file EntityLifecycleManager (Optimized) - Handles lifecycle operations for entities
+ * @description Refactored service with extracted helper classes for better maintainability
  */
 
 import { validateDependency } from '../../utils/dependencyUtils.js';
 import { ensureValidLogger } from '../../utils/loggerUtils.js';
-import { assertValidId } from '../../utils/dependencyUtils.js';
-import {
-  validateReconstructEntityParams as validateReconstructEntityParamsUtil,
-  validateRemoveEntityInstanceParams as validateRemoveEntityInstanceParamsUtil,
-} from '../utils/parameterValidators.js';
-import { DefinitionNotFoundError } from '../../errors/definitionNotFoundError.js';
-import { InvalidArgumentError } from '../../errors/invalidArgumentError.js';
-import { EntityNotFoundError } from '../../errors/entityNotFoundError.js';
 import { RepositoryConsistencyError } from '../../errors/repositoryConsistencyError.js';
-import {
-  ENTITY_CREATED_ID,
-  ENTITY_REMOVED_ID,
-} from '../../constants/eventIds.js';
+import { EntityNotFoundError } from '../../errors/entityNotFoundError.js';
+import EntityLifecycleValidator from './helpers/EntityLifecycleValidator.js';
+import EntityEventDispatcher from './helpers/EntityEventDispatcher.js';
+import EntityDefinitionHelper from './helpers/EntityDefinitionHelper.js';
 
 /**
  * @typedef {import('../factories/entityFactory.js').default} EntityFactory
  * @typedef {import('./entityRepositoryAdapter.js').EntityRepositoryAdapter} EntityRepositoryAdapter
  * @typedef {import('./definitionCache.js').DefinitionCache} DefinitionCache
+ * @typedef {import('./errorTranslator.js').ErrorTranslator} ErrorTranslator
  * @typedef {import('../../interfaces/coreServices.js').IDataRegistry} IDataRegistry
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
  * @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher
- * @typedef {import('../../ports/IEntityRepository.js').IEntityRepository} IEntityRepository
- * @typedef {import('./errorTranslator.js').ErrorTranslator} ErrorTranslator
  */
 
 /**
  * @class EntityLifecycleManager
- * @description Handles creation, reconstruction and removal of entity instances.
+ * @description Optimized entity lifecycle manager with helper classes
  */
 export class EntityLifecycleManager {
-  /** @type {IDataRegistry} @private */
+  /** @type {IDataRegistry} */
   #registry;
-  /** @type {ILogger} @private */
+  /** @type {ILogger} */
   #logger;
-  /** @type {ISafeEventDispatcher} @private */
-  #eventDispatcher;
-  /** @type {EntityRepositoryAdapter} @private */
+  /** @type {EntityRepositoryAdapter} */
   #entityRepository;
-  /** @type {EntityFactory} @private */
+  /** @type {EntityFactory} */
   #factory;
-  /** @type {ErrorTranslator} @private */
+  /** @type {ErrorTranslator} */
   #errorTranslator;
-  /** @type {DefinitionCache} @private */
-  #definitionCache;
+
+  // Helper classes
+  /** @type {EntityLifecycleValidator} */
+  #validator;
+  /** @type {EntityEventDispatcher} */
+  #eventDispatcher;
+  /** @type {EntityDefinitionHelper} */
+  #definitionHelper;
 
   /**
-   * @param {object} deps - Constructor dependencies.
-   * @param {IDataRegistry} deps.registry - Data registry for definitions.
-   * @param {ILogger} deps.logger - Logger instance.
-   * @param {ISafeEventDispatcher} deps.eventDispatcher - Event dispatcher.
-   * @param {EntityRepositoryAdapter} deps.entityRepository - Internal entity repository.
-   * @param {EntityFactory} deps.factory - EntityFactory instance.
-   * @param {ErrorTranslator} deps.errorTranslator - Error translator.
-   * @param {DefinitionCache} deps.definitionCache - Definition cache instance.
+   * @class
+   * @param {object} deps - Constructor dependencies
+   * @param {IDataRegistry} deps.registry - Data registry for definitions
+   * @param {ILogger} deps.logger - Logger instance
+   * @param {ISafeEventDispatcher} deps.eventDispatcher - Event dispatcher
+   * @param {EntityRepositoryAdapter} deps.entityRepository - Internal entity repository
+   * @param {EntityFactory} deps.factory - EntityFactory instance
+   * @param {ErrorTranslator} deps.errorTranslator - Error translator
+   * @param {DefinitionCache} deps.definitionCache - Definition cache instance
    */
   constructor({
+    registry,
+    logger,
+    eventDispatcher,
+    entityRepository,
+    factory,
+    errorTranslator,
+    definitionCache,
+  }) {
+    this.#validateDependencies({
+      registry,
+      logger,
+      eventDispatcher,
+      entityRepository,
+      factory,
+      errorTranslator,
+      definitionCache,
+    });
+
+    this.#initializeCoreDependencies({
+      registry,
+      logger,
+      entityRepository,
+      factory,
+      errorTranslator,
+    });
+
+    this.#initializeHelpers({
+      logger,
+      eventDispatcher,
+      registry,
+      definitionCache,
+    });
+
+    this.#logger.debug('EntityLifecycleManager (optimized) initialized');
+  }
+
+  /**
+   * Validates all constructor dependencies.
+   *
+   * @param {object} deps - Dependencies to validate
+   * @param deps.registry
+   * @param deps.logger
+   * @param deps.eventDispatcher
+   * @param deps.entityRepository
+   * @param deps.factory
+   * @param deps.errorTranslator
+   * @param deps.definitionCache
+   */
+  #validateDependencies({
     registry,
     logger,
     eventDispatcher,
@@ -73,217 +117,284 @@ export class EntityLifecycleManager {
     validateDependency(logger, 'ILogger', console, {
       requiredMethods: ['info', 'error', 'warn', 'debug'],
     });
-    this.#logger = ensureValidLogger(logger, 'EntityLifecycleManager');
+    const tempLogger = ensureValidLogger(logger, 'EntityLifecycleManager');
 
-    validateDependency(registry, 'IDataRegistry', this.#logger, {
+    validateDependency(registry, 'IDataRegistry', tempLogger, {
       requiredMethods: ['getEntityDefinition'],
     });
-    validateDependency(
-      entityRepository,
-      'EntityRepositoryAdapter',
-      this.#logger,
-      {
-        requiredMethods: ['add', 'get', 'has', 'remove', 'clear', 'entities'],
-      }
-    );
-    validateDependency(eventDispatcher, 'ISafeEventDispatcher', this.#logger, {
+    validateDependency(entityRepository, 'EntityRepositoryAdapter', tempLogger, {
+      requiredMethods: ['add', 'get', 'has', 'remove', 'clear', 'entities'],
+    });
+    validateDependency(eventDispatcher, 'ISafeEventDispatcher', tempLogger, {
       requiredMethods: ['dispatch'],
     });
-    validateDependency(factory, 'EntityFactory', this.#logger, {
+    validateDependency(factory, 'EntityFactory', tempLogger, {
       requiredMethods: ['create', 'reconstruct'],
     });
-    validateDependency(errorTranslator, 'ErrorTranslator', this.#logger, {
+    validateDependency(errorTranslator, 'ErrorTranslator', tempLogger, {
       requiredMethods: ['translate'],
     });
-    validateDependency(definitionCache, 'DefinitionCache', this.#logger, {
+    validateDependency(definitionCache, 'DefinitionCache', tempLogger, {
       requiredMethods: ['get', 'clear'],
     });
+  }
 
+  /**
+   * Initializes core dependencies.
+   *
+   * @param {object} deps - Core dependencies
+   * @param deps.registry
+   * @param deps.logger
+   * @param deps.entityRepository
+   * @param deps.factory
+   * @param deps.errorTranslator
+   */
+  #initializeCoreDependencies({
+    registry,
+    logger,
+    entityRepository,
+    factory,
+    errorTranslator,
+  }) {
     this.#registry = registry;
-    this.#eventDispatcher = eventDispatcher;
+    this.#logger = ensureValidLogger(logger, 'EntityLifecycleManager');
     this.#entityRepository = entityRepository;
     this.#factory = factory;
     this.#errorTranslator = errorTranslator;
-    this.#definitionCache = definitionCache;
   }
 
   /**
-   * Validates parameters for {@link createEntityInstance}.
+   * Initializes helper classes.
    *
-   * @private
-   * @param {string} definitionId - Definition ID to validate.
-   * @throws {InvalidArgumentError} If the definitionId is invalid.
+   * @param {object} deps - Helper dependencies
+   * @param deps.logger
+   * @param deps.eventDispatcher
+   * @param deps.registry
+   * @param deps.definitionCache
    */
-  #validateCreateEntityParams(definitionId) {
-    try {
-      assertValidId(
-        definitionId,
-        'EntityManager.createEntityInstance',
-        this.#logger
-      );
-    } catch (err) {
-      if (err && err.name === 'InvalidArgumentError') {
-        const msg = `EntityManager.createEntityInstance: invalid definitionId '${definitionId}'`;
-        this.#logger.warn(msg);
-        throw new InvalidArgumentError(msg, 'definitionId', definitionId);
-      }
-      throw err;
-    }
-  }
-
-  /**
-   * Retrieves an entity definition or throws if missing.
-   *
-   * @private
-   * @param {string} definitionId - Entity definition ID.
-   * @returns {import('../entityDefinition.js').default} The entity definition.
-   * @throws {DefinitionNotFoundError} If the definition is missing.
-   */
-  #getDefinitionForCreate(definitionId) {
-    const definition = this.#definitionCache.get(definitionId);
-    if (!definition) {
-      throw new DefinitionNotFoundError(definitionId);
-    }
-    return definition;
+  #initializeHelpers({
+    logger,
+    eventDispatcher,
+    registry,
+    definitionCache,
+  }) {
+    this.#validator = new EntityLifecycleValidator({ logger });
+    this.#eventDispatcher = new EntityEventDispatcher({ eventDispatcher, logger });
+    this.#definitionHelper = new EntityDefinitionHelper({
+      registry,
+      definitionCache,
+      logger,
+    });
   }
 
   /**
    * Constructs a new entity instance using the factory.
    *
-   * @private
-   * @param {string} definitionId - Definition ID.
-   * @param {object} opts - Creation options.
-   * @param {import('../entityDefinition.js').default} definition - Resolved definition.
-   * @returns {import('../entity.js').default} Newly constructed entity.
+   * @param {string} definitionId - Definition ID
+   * @param {object} opts - Creation options
+   * @param {object} definition - Resolved definition
+   * @returns {object} Newly constructed entity
    */
   #constructEntity(definitionId, opts, definition) {
-    return this.#factory.create(
-      definitionId,
-      opts,
-      this.#registry,
-      this.#entityRepository,
-      definition
-    );
-  }
-
-  /**
-   * Dispatches the ENTITY_CREATED event.
-   *
-   * @private
-   * @param {import('../entity.js').default} entity - Newly created entity.
-   * @param {boolean} wasReconstructed - Flag indicating reconstruction.
-   */
-  #dispatchEntityCreated(entity, wasReconstructed) {
-    this.#eventDispatcher.dispatch(ENTITY_CREATED_ID, {
-      instanceId: entity.id,
-      definitionId: entity.definitionId,
-      wasReconstructed,
-      entity,
-    });
-  }
-
-  /**
-   * Create a new entity instance from a definition.
-   *
-   * @param {string} definitionId - The ID of the entity definition.
-   * @param {object} opts - Options for creation.
-   * @param {string} [opts.instanceId] - Optional instance ID.
-   * @param {Object<string, object>} [opts.componentOverrides] - Component overrides.
-   * @returns {import('../entity.js').default} The newly created entity.
-   * @throws {DefinitionNotFoundError} If the definition is not found.
-   * @throws {InvalidArgumentError} If definitionId is invalid.
-   * @throws {import('../../errors/validationError.js').ValidationError} If validation fails.
-   * @throws {import('../../errors/duplicateEntityError.js').DuplicateEntityError} If duplicate ID.
-   */
-  createEntityInstance(definitionId, opts = {}) {
-    this.#validateCreateEntityParams(definitionId);
-    const definition = this.#getDefinitionForCreate(definitionId);
-
-    this.#logger.debug(
-      `EntityManager.createEntityInstance: Creating entity instance '${opts.instanceId || 'auto-generated'}' from definition '${definitionId}' with overrides:`,
-      opts.componentOverrides
-    );
-
     try {
-      const entity = this.#constructEntity(definitionId, opts, definition);
-      this.#logger.debug(
-        `EntityManager.createEntityInstance: Factory created entity with ID '${entity.id}' and definitionId '${entity.definitionId}'`
+      const entity = this.#factory.create(
+        definitionId,
+        opts,
+        this.#registry,
+        this.#entityRepository,
+        definition
       );
+
+      // Add to repository
       this.#entityRepository.add(entity);
-      this.#logger.debug(`Tracked entity ${entity.id}`);
-      this.#dispatchEntityCreated(entity, false);
+
       return entity;
-    } catch (err) {
-      throw this.#errorTranslator.translate(err);
+    } catch (error) {
+      this.#logger.error(`Failed to construct entity '${definitionId}':`, error);
+      throw this.#errorTranslator.translate(error);
     }
   }
 
   /**
-   * Reconstruct an entity from serialized data.
+   * Reconstructs an entity instance using the factory.
    *
-   * @param {object} serializedEntity - Serialized entity data.
-   * @param {string} serializedEntity.instanceId - Instance ID.
-   * @param {string} serializedEntity.definitionId - Definition ID.
-   * @param {Record<string, object>} [serializedEntity.components] - Component data.
-   * @returns {import('../entity.js').default} The reconstructed entity.
-   * @throws {DefinitionNotFoundError} If definition not found.
-   * @throws {import('../../errors/duplicateEntityError.js').DuplicateEntityError} If duplicate ID.
-   * @throws {import('../../errors/validationError.js').ValidationError} If validation fails.
-   * @throws {Error} If serializedEntity data is invalid.
+   * @param {object} serializedEntity - Serialized entity data
+   * @returns {object} Reconstructed entity
    */
-  reconstructEntity(serializedEntity) {
-    validateReconstructEntityParamsUtil(serializedEntity, this.#logger);
+  #reconstructEntity(serializedEntity) {
     try {
       const entity = this.#factory.reconstruct(
         serializedEntity,
         this.#registry,
         this.#entityRepository
       );
+
+      // Add to repository
       this.#entityRepository.add(entity);
-      this.#logger.debug(`Tracked entity ${entity.id}`);
-      this.#dispatchEntityCreated(entity, true);
+
       return entity;
-    } catch (err) {
-      throw this.#errorTranslator.translate(err);
+    } catch (error) {
+      this.#logger.error(`Failed to reconstruct entity '${serializedEntity.instanceId}':`, error);
+      throw this.#errorTranslator.translate(error);
     }
   }
 
   /**
-   * Remove an existing entity instance.
+   * Create a new entity instance from a definition.
    *
-   * @param {string} instanceId - Entity instance ID.
-   * @throws {EntityNotFoundError} If entity is not found.
-   * @throws {InvalidArgumentError} If instanceId is invalid.
-   * @throws {Error} If internal removal fails.
+   * @param {string} definitionId - The ID of the entity definition
+   * @param {object} opts - Options for creation
+   * @param {string} [opts.instanceId] - Optional instance ID
+   * @param {Object<string, Object>} [opts.componentOverrides] - Component overrides
+   * @returns {object} The newly created entity
+   * @throws {Error} If creation fails
+   */
+  createEntityInstance(definitionId, opts = {}) {
+    // Validate parameters
+    this.#validator.validateCreateEntityParams(definitionId);
+    this.#validator.validateCreationOptions(opts);
+
+    // Get definition
+    const definition = this.#definitionHelper.getDefinitionForCreate(definitionId);
+
+    // Construct entity
+    const entity = this.#constructEntity(definitionId, opts, definition);
+
+    // Dispatch event
+    this.#eventDispatcher.dispatchEntityCreated(entity, false);
+
+    this.#logger.info(`Entity created: ${entity.id} (definition: ${definitionId})`);
+    return entity;
+  }
+
+  /**
+   * Reconstructs an entity instance from a serialized object.
+   *
+   * @param {object} serializedEntity - Serialized entity data
+   * @param {string} serializedEntity.instanceId - Instance ID
+   * @param {string} serializedEntity.definitionId - Definition ID
+   * @param {object} [serializedEntity.components] - Component data
+   * @returns {object} The reconstructed entity
+   * @throws {Error} If reconstruction fails
+   */
+  reconstructEntity(serializedEntity) {
+    // Validate parameters
+    this.#validator.validateReconstructEntityParams(serializedEntity);
+    this.#validator.validateSerializedEntityStructure(serializedEntity);
+
+    // Get definition
+    const definition = this.#definitionHelper.getDefinitionForReconstruct(
+      serializedEntity.definitionId
+    );
+
+    // Reconstruct entity
+    const entity = this.#reconstructEntity(serializedEntity);
+
+    // Dispatch event
+    this.#eventDispatcher.dispatchEntityCreated(entity, true);
+
+    this.#logger.info(`Entity reconstructed: ${entity.id} (definition: ${serializedEntity.definitionId})`);
+    return entity;
+  }
+
+  /**
+   * Remove an entity instance from the manager.
+   *
+   * @param {string} instanceId - The ID of the entity instance to remove
+   * @throws {EntityNotFoundError} If the entity is not found
+   * @throws {Error} If removal fails
    */
   removeEntityInstance(instanceId) {
-    validateRemoveEntityInstanceParamsUtil(instanceId, this.#logger);
+    // Validate parameters
+    this.#validator.validateRemoveEntityInstanceParams(instanceId);
 
-    const entityToRemove = this.#entityRepository.get(instanceId);
-    if (!entityToRemove) {
-      this.#logger.error(
-        `EntityManager.removeEntityInstance: Attempted to remove non-existent entity instance '${instanceId}'.`
-      );
+    // Check entity exists
+    const entity = this.#entityRepository.get(instanceId);
+    if (!entity) {
       throw new EntityNotFoundError(instanceId);
     }
 
     try {
-      this.#entityRepository.remove(entityToRemove.id);
-      this.#logger.info(
-        `Entity instance ${entityToRemove.id} removed from EntityManager.`
-      );
-      this.#eventDispatcher.dispatch(ENTITY_REMOVED_ID, {
-        instanceId: entityToRemove.id,
-      });
+      // Remove from repository
+      const removed = this.#entityRepository.remove(instanceId);
+      
+      if (!removed) {
+        throw new RepositoryConsistencyError(
+          `Repository inconsistency: Entity '${instanceId}' was found but could not be removed`
+        );
+      }
+
+      // Dispatch event
+      this.#eventDispatcher.dispatchEntityRemoved(entity);
+
+      this.#logger.info(`Entity removed: ${instanceId}`);
     } catch (error) {
-      this.#logger.error(
-        `EntityManager.removeEntityInstance: EntityRepository.remove failed for already retrieved entity '${instanceId}'. This indicates a serious internal inconsistency.`
-      );
+      // If repository operations fail, wrap in RepositoryConsistencyError
+      if (error instanceof RepositoryConsistencyError) {
+        throw error;
+      }
+      
+      this.#logger.error(`EntityRepository.remove failed for already retrieved entity '${instanceId}': ${error.message}`);
       throw new RepositoryConsistencyError(
-        instanceId,
-        `Internal error: Failed to remove entity '${instanceId}' from entity repository despite entity being found.`
+        `EntityRepository.remove failed for already retrieved entity '${instanceId}': ${error.message}`
       );
     }
+  }
+
+  /**
+   * Batch create multiple entities.
+   *
+   * @param {Array<{definitionId: string, opts?: object}>} entitySpecs - Entity specifications
+   * @returns {Array<object>} Created entities
+   */
+  batchCreateEntities(entitySpecs) {
+    const results = [];
+    const errors = [];
+
+    for (const spec of entitySpecs) {
+      try {
+        const entity = this.createEntityInstance(spec.definitionId, spec.opts);
+        results.push(entity);
+      } catch (error) {
+        errors.push({ spec, error });
+      }
+    }
+
+    if (errors.length > 0) {
+      this.#logger.warn(`Batch create completed with ${errors.length} errors`);
+    }
+
+    return { entities: results, errors };
+  }
+
+  /**
+   * Preloads entity definitions for better performance.
+   *
+   * @param {string[]} definitionIds - Definition IDs to preload
+   * @returns {object} Preload results
+   */
+  preloadDefinitions(definitionIds) {
+    return this.#definitionHelper.preloadDefinitions(definitionIds);
+  }
+
+  /**
+   * Gets lifecycle statistics.
+   *
+   * @returns {object} Lifecycle statistics
+   */
+  getStats() {
+    return {
+      entityCount: this.#entityRepository.size || 0,
+      cacheStats: this.#definitionHelper.getCacheStats(),
+      eventStats: this.#eventDispatcher.getStats(),
+    };
+  }
+
+  /**
+   * Clears definition cache.
+   */
+  clearCache() {
+    this.#definitionHelper.clearCache();
   }
 }
 
