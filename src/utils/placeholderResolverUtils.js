@@ -44,6 +44,13 @@ export class PlaceholderResolver {
    */
   constructor(logger) {
     this.#logger = ensureValidLogger(logger, 'PlaceholderResolver');
+    /**
+     * Resolve a dotted path on an object.
+     *
+     * @param {object} obj
+     * @param {string} path
+     * @returns {*}
+     */
     const resolvePath = (obj, path) => {
       const { value } = safeResolvePath(
         obj,
@@ -81,16 +88,34 @@ export class PlaceholderResolver {
    * @returns {*} The input with all placeholders resolved.
    */
   resolveStructure(input, context, fallback = {}, skipKeys = []) {
-    return this.#resolver.resolveStructure(input, context, fallback, skipKeys);
+    const skipArray = Array.isArray(skipKeys) ? skipKeys : [...skipKeys];
+    return this.#resolver.resolveStructure(input, context, fallback, skipArray);
   }
 
   // Proxy private helpers for existing unit tests
+  /**
+   * Expose StructureResolver's private method for tests.
+   *
+   * @param {string} value
+   * @param {object[]} sources
+   * @returns {{changed: boolean, value: any}}
+   */
   _handleFullString(value, sources) {
-    return this.#resolver._handleFullString(value, sources);
+    return /** @type {any} */ (this.#resolver)._handleFullString(
+      value,
+      sources
+    );
   }
 
+  /**
+   * Expose StructureResolver's private method for tests.
+   *
+   * @param {string} value
+   * @param {object[]} sources
+   * @returns {{changed: boolean, value: string}}
+   */
   _replaceEmbedded(value, sources) {
-    return this.#resolver._replaceEmbedded(value, sources);
+    return /** @type {any} */ (this.#resolver)._replaceEmbedded(value, sources);
   }
 }
 
