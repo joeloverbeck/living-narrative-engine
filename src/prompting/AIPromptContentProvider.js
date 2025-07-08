@@ -167,6 +167,41 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
   }
 
   /**
+   * @private
+   * @description Extracts notes with support for both legacy and structured formats.
+   * @param {object} notesComp - The notes component.
+   * @returns {Array<{text:string,subject?:string,context?:string,tags?:string[],timestamp?:string}>} Array of notes.
+   */
+  _extractNotes(notesComp) {
+    const notes = Array.isArray(notesComp?.notes) ? notesComp.notes : [];
+    return notes
+      .filter((note) => {
+        // Support both string notes (legacy) and object notes
+        if (typeof note === 'string') {
+          return note.trim().length > 0;
+        }
+        if (typeof note === 'object' && note !== null) {
+          // For objects, text is required
+          return typeof note.text === 'string' && note.text.trim().length > 0;
+        }
+        return false;
+      })
+      .map((note) => {
+        // Convert string notes to object format
+        if (typeof note === 'string') {
+          return { text: note };
+        }
+        // For object notes, include all relevant fields
+        const result = { text: note.text };
+        if (note.subject) result.subject = note.subject;
+        if (note.context) result.context = note.context;
+        if (note.tags) result.tags = note.tags;
+        if (note.timestamp) result.timestamp = note.timestamp;
+        return result;
+      });
+  }
+
+  /**
    * Validates if the provided AIGameStateDTO contains the critical information.
    *
    * @param {AIGameStateDTO | null | undefined} gameStateDto - The game state DTO to validate.
@@ -241,7 +276,7 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
    * @private
    * Extracts memory-related arrays from the provided components map.
    * @param {object} componentsMap - Actor or game components.
-   * @returns {{thoughtsArray: string[], notesArray: Array<{text:string,timestamp:string}>, goalsArray: Array<{text:string,timestamp:string}>}}
+   * @returns {{thoughtsArray: string[], notesArray: Array<{text:string,subject?:string,context?:string,tags?:string[],timestamp?:string}>, goalsArray: Array<{text:string,timestamp:string}>}}
    *   Object containing memory arrays for prompt data.
    */
   _extractMemoryComponents(componentsMap) {
@@ -251,7 +286,7 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
       : [];
 
     const notesComp = componentsMap['core:notes'];
-    const notesArray = this._extractTimestampedEntries(notesComp, 'notes');
+    const notesArray = this._extractNotes(notesComp);
 
     const goalsComp = componentsMap['core:goals'];
     const goalsArray = this._extractTimestampedEntries(goalsComp, 'goals');

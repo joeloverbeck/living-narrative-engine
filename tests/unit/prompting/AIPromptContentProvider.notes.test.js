@@ -153,9 +153,9 @@ describe('AIPromptContentProvider.getPromptData → notesArray', () => {
           'core:notes': {
             notes: [
               { text: 'Valid note', timestamp: validTime },
-              { text: '', timestamp: validTime }, // missing text
-              { text: 'No timestamp' }, // missing timestamp
-              { text: null, timestamp: validTime }, // text not a string
+              { text: '', timestamp: validTime }, // empty text - should be filtered
+              { text: 'No timestamp' }, // missing timestamp - valid per schema
+              { text: null, timestamp: validTime }, // null text - should be filtered
             ],
           },
         },
@@ -175,6 +175,148 @@ describe('AIPromptContentProvider.getPromptData → notesArray', () => {
     const result = await provider.getPromptData(gameStateDto, logger);
     expect(result.notesArray).toEqual([
       { text: 'Valid note', timestamp: validTime },
+      { text: 'No timestamp' },
+    ]);
+  });
+
+  test('when core:notes.notes has structured notes with subject → includes all valid fields', async () => {
+    const now = new Date().toISOString();
+    const gameStateDto = {
+      actorState: {
+        components: {
+          'core:notes': {
+            notes: [
+              {
+                text: 'John seems nervous',
+                subject: 'John',
+                context: 'tavern conversation',
+                tags: ['emotion', 'observation'],
+                timestamp: now,
+              },
+              {
+                text: 'Market prices are rising',
+                subject: 'Market',
+                // no context, tags, or timestamp - still valid
+              },
+            ],
+          },
+        },
+      },
+      actorPromptData: { name: 'Observer' },
+      currentUserInput: '',
+      perceptionLog: [],
+      currentLocation: {
+        name: 'Tavern',
+        description: 'A cozy place',
+        exits: [],
+        characters: [],
+      },
+      availableActions: [],
+    };
+
+    const result = await provider.getPromptData(gameStateDto, logger);
+    expect(result.notesArray).toEqual([
+      {
+        text: 'John seems nervous',
+        subject: 'John',
+        context: 'tavern conversation',
+        tags: ['emotion', 'observation'],
+        timestamp: now,
+      },
+      {
+        text: 'Market prices are rising',
+        subject: 'Market',
+      },
+    ]);
+  });
+
+  test('when core:notes.notes has structured notes missing required fields → filters them out', async () => {
+    const gameStateDto = {
+      actorState: {
+        components: {
+          'core:notes': {
+            notes: [
+              {
+                text: 'Valid structured note',
+                subject: 'ValidSubject',
+              },
+              {
+                // missing text
+                subject: 'InvalidNote1',
+              },
+              {
+                text: 'Missing subject',
+                // missing subject for structured note - but this is still valid as legacy format
+              },
+              {
+                text: '',
+                subject: 'EmptyText',
+              },
+            ],
+          },
+        },
+      },
+      actorPromptData: { name: 'Tester' },
+      currentUserInput: '',
+      perceptionLog: [],
+      currentLocation: {
+        name: 'Lab',
+        description: 'Testing area',
+        exits: [],
+        characters: [],
+      },
+      availableActions: [],
+    };
+
+    const result = await provider.getPromptData(gameStateDto, logger);
+    expect(result.notesArray).toEqual([
+      {
+        text: 'Valid structured note',
+        subject: 'ValidSubject',
+      },
+      {
+        text: 'Missing subject',
+      },
+    ]);
+  });
+
+  test('when core:notes.notes has legacy string notes → converts them to object format', async () => {
+    const gameStateDto = {
+      actorState: {
+        components: {
+          'core:notes': {
+            notes: [
+              'This is a simple string note',
+              'Another legacy note',
+              '', // empty string should be filtered
+              {
+                text: 'Mixed with object note',
+                subject: 'Testing',
+              },
+            ],
+          },
+        },
+      },
+      actorPromptData: { name: 'Legacy' },
+      currentUserInput: '',
+      perceptionLog: [],
+      currentLocation: {
+        name: 'Archive',
+        description: 'Old storage',
+        exits: [],
+        characters: [],
+      },
+      availableActions: [],
+    };
+
+    const result = await provider.getPromptData(gameStateDto, logger);
+    expect(result.notesArray).toEqual([
+      { text: 'This is a simple string note' },
+      { text: 'Another legacy note' },
+      {
+        text: 'Mixed with object note',
+        subject: 'Testing',
+      },
     ]);
   });
 });

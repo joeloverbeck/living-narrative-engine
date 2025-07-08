@@ -11,7 +11,7 @@ describe('NotesService.addNotes additional branches', () => {
   });
 
   test('returns early when newNotesText is not an array', () => {
-    const service = new NotesService();
+    const service = new NotesService({ autoMigrate: false });
     const component = { notes: [] };
 
     const result = service.addNotes(component, 'not-an-array');
@@ -21,7 +21,7 @@ describe('NotesService.addNotes additional branches', () => {
   });
 
   test('ignores blank note entries', () => {
-    const service = new NotesService();
+    const service = new NotesService({ autoMigrate: false });
     const component = { notes: [] };
     jest.spyOn(Date.prototype, 'toISOString').mockReturnValue('TS');
 

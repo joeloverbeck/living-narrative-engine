@@ -3,7 +3,7 @@ import NotesService from '../../../src/ai/notesService.js';
 
 describe('NotesService uncovered branches', () => {
   it('returns early when newNotesText is null', () => {
-    const service = new NotesService();
+    const service = new NotesService({ autoMigrate: false });
     const comp = { notes: [{ text: 'old', timestamp: 'T0' }] };
     const result = service.addNotes(comp, null);
     expect(result).toEqual({
@@ -15,7 +15,7 @@ describe('NotesService uncovered branches', () => {
   });
 
   it('skips non-string and blank notes while adding valid ones', () => {
-    const service = new NotesService();
+    const service = new NotesService({ autoMigrate: false });
     const comp = { notes: [] };
     jest.spyOn(Date.prototype, 'toISOString').mockReturnValue('TS');
 

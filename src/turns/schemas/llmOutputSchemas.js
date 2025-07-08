@@ -38,12 +38,44 @@ export const LLM_TURN_ACTION_RESPONSE_SCHEMA = {
     thoughts: {
       type: 'string',
     },
-    // Optional notes or annotations; each entry must be a non-empty string
+    // Optional notes or annotations; supports both string and structured formats
     notes: {
       type: 'array',
       items: {
-        type: 'string',
-        minLength: 1,
+        oneOf: [
+          // Legacy format: simple string
+          {
+            type: 'string',
+            minLength: 1,
+          },
+          // New structured format
+          {
+            type: 'object',
+            properties: {
+              text: {
+                type: 'string',
+                minLength: 1,
+                description: 'The note content',
+              },
+              subject: {
+                type: 'string',
+                minLength: 1,
+                description: 'Primary subject of the note (entity, location, concept)',
+              },
+              context: {
+                type: 'string',
+                description: 'Where/how this was observed (optional)',
+              },
+              tags: {
+                type: 'array',
+                items: { type: 'string' },
+                description: 'Additional categorization tags (optional)',
+              },
+            },
+            required: ['text', 'subject'],
+            additionalProperties: false,
+          },
+        ],
       },
     },
   },
