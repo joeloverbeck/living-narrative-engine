@@ -9,6 +9,7 @@
  * @property {*} [notes] - Raw notes value.
  */
 import { isNonBlankString } from '../../../utils/textUtils.js';
+import { formatNotesForDisplay } from './noteFormatter.js';
 
 /**
  * Builds a sanitized payload from decision metadata for ENTITY_SPOKE_ID.
@@ -32,18 +33,7 @@ export function buildSpeechPayload(decisionMeta) {
     ? thoughtsRaw.trim()
     : undefined;
 
-  let notes;
-  if (Array.isArray(notesRaw)) {
-    const joined = notesRaw
-      .map((n) => (isNonBlankString(n) ? n.trim() : ''))
-      .filter(Boolean)
-      .join('\n');
-    if (joined) {
-      notes = joined;
-    }
-  } else if (isNonBlankString(notesRaw)) {
-    notes = notesRaw.trim();
-  }
+  const notes = formatNotesForDisplay(notesRaw);
 
   const payload = {
     speechContent: speech,
