@@ -103,13 +103,6 @@ export function setupServiceLogger(serviceName, logger) {
  * @param {Record<string, DependencySpec>} deps - Dependency map.
  * @returns {void}
  */
-
-/**
- *
- * @param serviceName
- * @param logger
- * @param deps
- */
 export function validateServiceDeps(serviceName, logger, deps) {
   _defaultServiceSetup.validateDeps(serviceName, logger, deps);
 }
