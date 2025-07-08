@@ -43,39 +43,12 @@ const MOCK_RULE_NO_CONDITION = {
     { type: 'TEST_ACTION', parameters: { description: 'Log item pickup' } },
   ],
 };
-const MOCK_RULE_ALWAYS_TRUE = {
-  rule_id: 'RULE_ALWAYS_TRUE',
-  event_type: 'PLAYER_HEALED',
-  condition: { '==': [true, true] },
-  actions: [
-    {
-      type: 'TEST_ACTION',
-      parameters: { description: 'Apply post-heal effect' },
-    },
-  ],
-};
 const MOCK_RULE_INVALID_CONDITION = {
   rule_id: 'RULE_INVALID_CONDITION',
   event_type: 'DOOR_OPENED',
   condition: { invalidOperator: [1, 2] },
   actions: [
     { type: 'TEST_ACTION', parameters: { description: 'Should not run' } },
-  ],
-};
-const MOCK_RULE_MULTIPLE_A = {
-  rule_id: 'RULE_ENEMY_CHECK_HP_A',
-  event_type: 'ENEMY_DAMAGED',
-  condition: { '>': [{ var: 'target.components.health.current' }, 0] },
-  actions: [
-    { type: 'TEST_ACTION', parameters: { description: 'Enemy still alive' } },
-  ],
-};
-const MOCK_RULE_MULTIPLE_B = {
-  rule_id: 'RULE_ENEMY_CHECK_HP_B',
-  event_type: 'ENEMY_DAMAGED',
-  condition: { '<=': [{ var: 'target.components.health.current' }, 0] },
-  actions: [
-    { type: 'TEST_ACTION', parameters: { description: 'Enemy defeated' } },
   ],
 };
 const MOCK_RULE_CONTEXT_ACCESS = {
@@ -157,21 +130,9 @@ const MOCK_EVENT_ITEM_PICKED = {
   type: 'ITEM_PICKED_UP',
   payload: { actorId: 'player-1', itemId: 'potion-123' },
 };
-const MOCK_EVENT_PLAYER_HEALED = {
-  type: 'PLAYER_HEALED',
-  payload: { targetId: 'player-1', amount: 10 },
-};
 const MOCK_EVENT_DOOR_OPENED = {
   type: 'DOOR_OPENED',
   payload: { actorId: 'player-1', doorId: 'door-main-hall' },
-};
-const MOCK_EVENT_ENEMY_DAMAGED = {
-  type: 'ENEMY_DAMAGED',
-  payload: { actorId: 'player-1', targetId: 'enemy-1', damage: 3 },
-};
-const MOCK_EVENT_ENEMY_DEFEATED = {
-  type: 'ENEMY_DAMAGED',
-  payload: { actorId: 'player-1', targetId: 'enemy-2', damage: 10 },
 };
 const MOCK_EVENT_CUSTOM = {
   type: 'CUSTOM_EVENT',
@@ -229,12 +190,7 @@ describe('SystemLogicInterpreter - Integration Tests - Conditional Execution Set
 
   // Helper for the NESTED finalNestedExecutionContext
   // This is passed to OperationInterpreter.execute.
-  const createExpectedNestedContext = (
-    event,
-    actorEntity,
-    targetEntity,
-    topLevelLoggerInstance
-  ) => {
+  const createExpectedNestedContext = (event, actorEntity, targetEntity) => {
     // The actor/target at the top level of finalNestedExecutionContext come from jsonLogicDataForEvaluation.actor/target
     const flatLogicContextForNesting = createExpectedFlatJsonLogicContext(
       event,
@@ -268,10 +224,6 @@ describe('SystemLogicInterpreter - Integration Tests - Conditional Execution Set
 
   beforeEach(() => {
     mockLogger = {
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-      debug: jest.fn(),
       loggedMessages: [],
       _log(level, message, ...args) {
         this.loggedMessages.push({
@@ -408,8 +360,7 @@ describe('SystemLogicInterpreter - Integration Tests - Conditional Execution Set
     const expectedNestedCtx = createExpectedNestedContext(
       event,
       MOCK_PLAYER_WITH_BUFF,
-      MOCK_ENEMY_HP_5,
-      mockLogger
+      MOCK_ENEMY_HP_5
     );
     expect(executeSpy).toHaveBeenCalledWith(rule.actions[0], expectedNestedCtx);
   });
@@ -444,8 +395,7 @@ describe('SystemLogicInterpreter - Integration Tests - Conditional Execution Set
     const expectedNestedCtx = createExpectedNestedContext(
       event,
       MOCK_PLAYER_NO_BUFF,
-      null,
-      mockLogger
+      null
     );
     expect(executeSpy).toHaveBeenCalledWith(rule.actions[0], expectedNestedCtx);
   });
@@ -468,8 +418,7 @@ describe('SystemLogicInterpreter - Integration Tests - Conditional Execution Set
     const expectedNestedForItem = createExpectedNestedContext(
       eventItem,
       MOCK_PLAYER_NO_BUFF,
-      null,
-      mockLogger
+      null
     );
     expect(executeSpy).toHaveBeenCalledTimes(1);
     expect(executeSpy).toHaveBeenCalledWith(
@@ -492,8 +441,7 @@ describe('SystemLogicInterpreter - Integration Tests - Conditional Execution Set
     const expectedNestedForSpottedOp = createExpectedNestedContext(
       eventSpotted,
       MOCK_PLAYER_WITH_BUFF,
-      MOCK_ENEMY_HP_5,
-      mockLogger
+      MOCK_ENEMY_HP_5
     );
 
     expect(mockJsonLogicEvaluationService.evaluate).toHaveBeenCalledTimes(1);

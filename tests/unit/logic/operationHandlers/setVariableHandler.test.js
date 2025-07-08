@@ -148,17 +148,11 @@ describe('SetVariableHandler', () => {
           execCtx.evaluationContext.context
         );
         handler.execute(invalidParams, execCtx);
-        if (desc === 'array params') {
-          expect(mockLoggerInstance.error).toHaveBeenCalledWith(
-            expectedErrorMsg,
-            expectedErrorObj
-          );
-        } else {
-          expect(mockLoggerInstance.warn).toHaveBeenCalledWith(
-            expectedErrorMsg,
-            expectedErrorObj
-          );
-        }
+        const logMethod = desc === 'array params' ? 'error' : 'warn';
+        expect(mockLoggerInstance[logMethod]).toHaveBeenCalledWith(
+          expectedErrorMsg,
+          expectedErrorObj
+        );
         expect(JSON.stringify(execCtx.evaluationContext.context)).toEqual(
           initialVarStoreState
         );
@@ -302,7 +296,7 @@ describe('SetVariableHandler', () => {
 
     test.each(invalidExecContextTestCases)(
       'logs error and returns if execution context structure is invalid (%s)',
-      (desc, invalidExecCtx, expectedDetails) => {
+      (desc, invalidExecCtx) => {
         // For these tests, invalidExecCtx might not have the 'logger' property that buildCtx adds.
         // If invalidExecCtx is null/undefined, it won't. If it's an object, we ensure our handler's logger is used.
         handler.execute(validParams, invalidExecCtx);
@@ -396,7 +390,7 @@ describe('SetVariableHandler', () => {
       const execCtx = buildCtx(mockLoggerInstance); // Pass logger
       const mockApply = jest.spyOn(jsonLogic, 'apply');
       // Simulate jsonLogic returning the object itself if it's not a rule it processes
-      mockApply.mockImplementation((rule, data) => rule);
+      mockApply.mockImplementation((rule) => rule);
 
       handler.execute(params, execCtx);
 
