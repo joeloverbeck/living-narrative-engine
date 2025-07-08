@@ -104,12 +104,6 @@ export function setupServiceLogger(serviceName, logger) {
  * @returns {void}
  */
 
-/**
- *
- * @param serviceName
- * @param logger
- * @param deps
- */
 export function validateServiceDeps(serviceName, logger, deps) {
   _defaultServiceSetup.validateDeps(serviceName, logger, deps);
 }
@@ -169,9 +163,11 @@ export function initializeServiceLogger(serviceName, logger, deps) {
 }
 
 /**
+ * Resolve the logger to use for an execution context.
  *
- * @param defaultLogger
- * @param executionContext
+ * @param {import('../interfaces/coreServices.js').ILogger} defaultLogger - The default logger.
+ * @param {import('../logic/defs.js').ExecutionContext} [executionContext] - Optional execution context.
+ * @returns {import('../interfaces/coreServices.js').ILogger} Logger for execution.
  */
 export function resolveExecutionLogger(defaultLogger, executionContext) {
   return _defaultServiceSetup.resolveExecutionLogger(
