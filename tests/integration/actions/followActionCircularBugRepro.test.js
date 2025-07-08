@@ -4,15 +4,12 @@
  * Amaia can follow Iker even though Iker is already following her.
  */
 
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import { describe, it, expect, beforeEach } from '@jest/globals';
 import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
 import ConsoleLogger from '../../../src/logging/consoleLogger.js';
 import {
   FOLLOWING_COMPONENT_ID,
   LEADING_COMPONENT_ID,
-  NAME_COMPONENT_ID,
-  POSITION_COMPONENT_ID,
-  ACTOR_COMPONENT_ID,
 } from '../../../src/constants/componentIds.js';
 
 describe('Follow Action Circular Bug - Minimal Reproduction', () => {
