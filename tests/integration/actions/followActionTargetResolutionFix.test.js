@@ -40,7 +40,7 @@ describe('Follow Action Target Resolution - Invalid Entity ID Fix', () => {
     };
 
     mockLocationProvider = {
-      getLocation: jest.fn().mockReturnValue({ id: 'test-location' })
+      getLocation: jest.fn().mockReturnValue({ id: 'test-location' }),
     };
 
     mockRegistryIndexes = {
@@ -63,7 +63,9 @@ describe('Follow Action Target Resolution - Invalid Entity ID Fix', () => {
     };
 
     mockDslParser = {
-      parse: jest.fn().mockReturnValue({ type: 'All', componentType: 'core:actor' })
+      parse: jest
+        .fn()
+        .mockReturnValue({ type: 'All', componentType: 'core:actor' }),
     };
 
     // Create JsonLogic service
@@ -76,9 +78,12 @@ describe('Follow Action Target Resolution - Invalid Entity ID Fix', () => {
       logger: mockLogger,
       entitiesGateway: {
         getEntityInstance: (id) => mockEntityManager.getEntityInstance(id),
-        getEntitiesWithComponent: (compId) => mockEntityManager.getEntitiesWithComponent(compId),
-        getComponentData: (entityId, compId) => mockEntityManager.getComponentData(entityId, compId),
-        hasComponent: (entityId, compId) => mockEntityManager.hasComponent(entityId, compId),
+        getEntitiesWithComponent: (compId) =>
+          mockEntityManager.getEntitiesWithComponent(compId),
+        getComponentData: (entityId, compId) =>
+          mockEntityManager.getComponentData(entityId, compId),
+        hasComponent: (entityId, compId) =>
+          mockEntityManager.hasComponent(entityId, compId),
       },
       locationProvider: mockLocationProvider,
     });
@@ -103,13 +108,17 @@ describe('Follow Action Target Resolution - Invalid Entity ID Fix', () => {
       id: 'valid-actor',
       componentTypeIds: ['core:actor', 'core:position', 'core:name'],
     };
-    
+
     mockEntityManager.getEntityInstance.mockImplementation((id) => {
       if (id === 'valid-actor') return validActor;
       return null;
     });
 
-    mockEntityManager.getAllComponentTypesForEntity.mockReturnValue(['core:actor', 'core:position', 'core:name']);
+    mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
+      'core:actor',
+      'core:position',
+      'core:name',
+    ]);
     mockEntityManager.getComponentData.mockReturnValue({});
 
     // Create action with scope
@@ -121,7 +130,7 @@ describe('Follow Action Target Resolution - Invalid Entity ID Fix', () => {
 
     // Mock the scope registry to return a valid scope definition
     mockScopeRegistry.getScope.mockReturnValue({
-      expr: 'All("core:actor")'
+      expr: 'All("core:actor")',
     });
 
     // Mock the scope engine to return some valid actors
@@ -153,12 +162,6 @@ describe('Follow Action Target Resolution - Invalid Entity ID Fix', () => {
   });
 
   it('should handle null and undefined actor entities in target resolution', async () => {
-    const followAction = {
-      id: 'core:follow',
-      scope: 'core:potential_leaders',
-      prerequisites: [],
-    };
-
     // Test with null actor
     const nullResult = await targetResolutionService.resolveTargets(
       'core:potential_leaders',
@@ -176,7 +179,9 @@ describe('Follow Action Target Resolution - Invalid Entity ID Fix', () => {
       { currentLocation: { id: 'test-location' } }
     );
     expect(undefinedResult.error).toBeDefined();
-    expect(undefinedResult.error.message).toBe('Actor entity is null or undefined');
+    expect(undefinedResult.error.message).toBe(
+      'Actor entity is null or undefined'
+    );
     expect(undefinedResult.targets).toEqual([]);
   });
 
@@ -206,16 +211,16 @@ describe('Follow Action Target Resolution - Invalid Entity ID Fix', () => {
   it('should validate actor entity in FilterResolver', () => {
     // Test that FilterResolver throws error for invalid actor IDs
     const invalidActor = { id: 'undefined', componentTypeIds: [] };
-    
+
     // Create a simple filter node
     const filterNode = {
       type: 'Filter',
       parent: { type: 'All', componentType: 'core:actor' },
-      logic: { '==': [1, 1] } // Simple always-true logic
+      logic: { '==': [1, 1] }, // Simple always-true logic
     };
 
     const mockDispatcher = {
-      resolve: () => new Set(['some-entity'])
+      resolve: () => new Set(['some-entity']),
     };
 
     const filterResolver = createFilterResolver({
@@ -236,7 +241,7 @@ describe('Follow Action Target Resolution - Invalid Entity ID Fix', () => {
   it('should validate actor entity in createEvaluationContext', () => {
     // Test with actor having 'undefined' as string ID
     const invalidActor = { id: 'undefined', componentTypeIds: [] };
-    
+
     expect(() => {
       createEvaluationContext(
         'some-item',
@@ -244,7 +249,9 @@ describe('Follow Action Target Resolution - Invalid Entity ID Fix', () => {
         mockEntityManager,
         mockLocationProvider
       );
-    }).toThrow('createEvaluationContext: actorEntity has invalid ID: "undefined". This should never happen.');
+    }).toThrow(
+      'createEvaluationContext: actorEntity has invalid ID: "undefined". This should never happen.'
+    );
 
     // Test with null actor
     expect(() => {
@@ -254,7 +261,9 @@ describe('Follow Action Target Resolution - Invalid Entity ID Fix', () => {
         mockEntityManager,
         mockLocationProvider
       );
-    }).toThrow('createEvaluationContext: actorEntity is undefined. This should never happen during scope evaluation.');
+    }).toThrow(
+      'createEvaluationContext: actorEntity is undefined. This should never happen during scope evaluation.'
+    );
 
     // Test with actor without ID
     const actorWithoutId = { name: 'No ID' };
@@ -266,5 +275,4 @@ describe('Follow Action Target Resolution - Invalid Entity ID Fix', () => {
         mockLocationProvider
       );
     }).toThrow('createEvaluationContext: actorEntity has invalid ID');
-  });
-});
+  });});
