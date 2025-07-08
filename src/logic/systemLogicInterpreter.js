@@ -46,7 +46,7 @@ class SystemLogicInterpreter extends BaseService {
 
   /* ----------------------------------------------------------------------- */
   /**
-   * @param {Object} params
+   * @param {object} params
    * @param {ILogger} params.logger
    * @param {IEventBus} params.eventBus
    * @param {IDataRegistry} params.dataRegistry
@@ -153,7 +153,10 @@ class SystemLogicInterpreter extends BaseService {
     // Add hasBodyPartWithComponentValue operation
     this.#jsonLogic.addOperation(
       'hasBodyPartWithComponentValue',
-      /** @param {any} args @param {any} data */
+      /**
+       * @param {any} args @param {any} data
+       * @param data
+       */
       (args, data) => {
         // Create a minimal execution context for the handler
         /** @type {ExecutionContext} */

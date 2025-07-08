@@ -10,6 +10,7 @@ import ScopeCycleError from '../errors/scopeCycleError.js';
 import { IScopeEngine } from '../interfaces/IScopeEngine.js';
 import createDepthGuard from './core/depthGuard.js';
 import createCycleDetector from './core/cycleDetector.js';
+import ContextMerger from './core/contextMerger.js';
 import createDispatcher from './nodes/dispatcher.js';
 import createSourceResolver from './nodes/sourceResolver.js';
 import createStepResolver from './nodes/stepResolver.js';
@@ -50,6 +51,7 @@ class ScopeEngine extends IScopeEngine {
     this.maxDepth = 4;
     this.depthGuard = createDepthGuard(this.maxDepth);
     this.cycleDetector = createCycleDetector();
+    this.contextMerger = new ContextMerger();
   }
 
   setMaxDepth(n) {
@@ -59,65 +61,6 @@ class ScopeEngine extends IScopeEngine {
     }
   }
 
-  /**
-   * Safely merges context objects preserving critical properties
-   *
-   * @private
-   * @param {object} baseCtx - Base context with critical properties
-   * @param {object} overlayCtx - Context to overlay on base
-   * @returns {object} Merged context with validation
-   * @throws {Error} If critical properties are missing
-   */
-  _mergeContexts(baseCtx, overlayCtx) {
-    if (!overlayCtx) {
-      return { ...baseCtx };
-    }
-
-    // Create merged context with explicit property handling
-    const mergedCtx = {
-      // Start with all base properties
-      ...baseCtx,
-      
-      // Overlay non-critical properties from overlayCtx
-      ...Object.keys(overlayCtx).reduce((acc, key) => {
-        // Skip critical properties that we'll handle explicitly
-        if (['actorEntity', 'runtimeCtx', 'dispatcher', 'cycleDetector', 'depthGuard'].includes(key)) {
-          return acc;
-        }
-        acc[key] = overlayCtx[key];
-        return acc;
-      }, {}),
-      
-      // Critical properties - ensure they're never undefined
-      actorEntity: overlayCtx.actorEntity || baseCtx.actorEntity,
-      runtimeCtx: overlayCtx.runtimeCtx || baseCtx.runtimeCtx,
-      dispatcher: overlayCtx.dispatcher || baseCtx.dispatcher,
-      cycleDetector: overlayCtx.cycleDetector || baseCtx.cycleDetector,
-      depthGuard: overlayCtx.depthGuard || baseCtx.depthGuard,
-      
-      // Handle depth specially
-      depth: Math.max(
-        overlayCtx.depth !== undefined ? overlayCtx.depth : 0,
-        baseCtx.depth !== undefined ? baseCtx.depth + 1 : 1
-      ),
-      
-      // Preserve trace if available
-      trace: overlayCtx.trace || baseCtx.trace
-    };
-
-    // Validate critical properties
-    if (!mergedCtx.actorEntity) {
-      throw new Error('[CRITICAL] Context merge resulted in missing actorEntity');
-    }
-    if (!mergedCtx.runtimeCtx) {
-      throw new Error('[CRITICAL] Context merge resulted in missing runtimeCtx');
-    }
-    if (!mergedCtx.dispatcher) {
-      throw new Error('[CRITICAL] Context merge resulted in missing dispatcher');
-    }
-
-    return mergedCtx;
-  }
 
   /**
    * Creates a provider that returns the current location.
@@ -285,7 +228,7 @@ class ScopeEngine extends IScopeEngine {
         dispatcher: {
           resolve: (innerNode, innerCtx) => {
             // Use safe context merging
-            const mergedCtx = this._mergeContexts(ctx, innerCtx);
+            const mergedCtx = this.contextMerger.merge(ctx, innerCtx);
             
             return this._resolveWithDepthAndCycleChecking(
               innerNode,

@@ -93,42 +93,90 @@ export function createEvaluationContext(
     throw error;
   }
 
+  // Create entity with components if needed
   let entity;
-
   if (typeof item === 'string') {
-    entity = gateway.getEntityInstance(item) || { id: item };
+    entity = gateway.getEntityInstance(item);
+    if (!entity) {
+      entity = { id: item };
+    }
   } else if (item && typeof item === 'object') {
     entity = item;
   } else {
     return null;
   }
 
-  if (entity.componentTypeIds && !entity.components) {
-    const comps = getOrBuildComponents(entity.id, entity, gateway, trace);
-    entity.components = comps;
+  // Helper function to add components while preserving prototype chain
+  function addComponentsToEntity(entity, entityId) {
+    if (entity.components || !entity.componentTypeIds) {
+      return entity;
+    }
+    
+    
+    const components = buildComponents(entityId || entity.id, entity, gateway);
+    
+    // Check if it's a plain object or has a custom prototype
+    const proto = Object.getPrototypeOf(entity);
+    if (proto === Object.prototype || proto === null) {
+      // Plain object - safe to use spread
+      return {
+        ...entity,
+        components
+      };
+    }
+    
+    // Entity instance - create a wrapper that preserves the original entity
+    // We can't copy Entity instances because they have private fields
+    const enhancedEntity = Object.create(proto);
+    
+    // Define a getter for each property of the original entity
+    const descriptors = Object.getOwnPropertyDescriptors(proto);
+    for (const [key, descriptor] of Object.entries(descriptors)) {
+      if (descriptor.get) {
+        // This is a getter - create a forwarding getter
+        Object.defineProperty(enhancedEntity, key, {
+          get() { return entity[key]; },
+          enumerable: descriptor.enumerable,
+          configurable: descriptor.configurable
+        });
+      }
+    }
+    
+    // Copy non-getter properties
+    for (const key of Object.keys(entity)) {
+      if (!Object.getOwnPropertyDescriptor(proto, key)?.get) {
+        enhancedEntity[key] = entity[key];
+      }
+    }
+    
+    // Add components
+    enhancedEntity.components = components;
+    
+    return enhancedEntity;
   }
 
-  // We always use the original actorEntity to preserve Entity class instances
-  // with their getter methods. Only add components if needed.
-  let actor = actorEntity;
-  if (actorEntity && actorEntity.componentTypeIds && !actorEntity.components) {
-    const comps = getOrBuildComponents(
-      actorEntity.id,
-      actorEntity,
-      gateway,
-      trace
-    );
-    // Create a new actor object that preserves the prototype chain
-    // This ensures Entity class getter methods are not lost
-    actor = Object.create(Object.getPrototypeOf(actorEntity));
-    // Copy all properties including getters/setters
-    const descriptors = Object.getOwnPropertyDescriptors(actorEntity);
-    Object.defineProperties(actor, descriptors);
-    // Add the components
-    actor.components = comps;
-  }
+  // Ensure entity has components
+  entity = addComponentsToEntity(entity, entity.id || item);
+
+  // Ensure actor has components
+  const actor = addComponentsToEntity(actorEntity, actorEntity.id);
 
   const location = locationProvider.getLocation();
+
+  // Debug logging
+  if (trace) {
+    trace.addLog(
+      'debug',
+      `createEvaluationContext: entity=${entity?.id}, has components=${!!entity?.components}, actor=${actor?.id}, has components=${!!actor?.components}`,
+      'EntityHelpers',
+      {
+        entityId: entity?.id,
+        entityComponentKeys: entity?.components ? Object.keys(entity.components) : [],
+        actorId: actor?.id,
+        actorComponentKeys: actor?.components ? Object.keys(actor.components) : []
+      }
+    );
+  }
 
   return { entity, actor, location };
 }
