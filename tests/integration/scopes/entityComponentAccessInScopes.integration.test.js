@@ -193,7 +193,7 @@ describe('Entity Component Access in Scope Filtering Integration', () => {
       });
 
       // Create NPC at same location
-      entityManager.createEntityInstance('test:character', {
+      const targetEntity = entityManager.createEntityInstance('test:character', {
         instanceId: targetId,
         componentOverrides: {
           [POSITION_COMPONENT_ID]: { locationId },
@@ -283,6 +283,7 @@ describe('Entity Component Access in Scope Filtering Integration', () => {
         actorEntity,
         runtimeCtx
       );
+
 
       // Should find the NPC but not the hero (filtered out by entity-is-not-current-actor)
       expect(result).toBeInstanceOf(Set);

@@ -27,7 +27,12 @@ const makeDummyPerceptionLogFormatter = () => ({
 });
 
 const makeDummyGameStateValidationService = () => ({
-  validate: (dto) => ({ isValid: true, errorContent: null }),
+  /**
+   * Dummy validator simply returns success.
+   *
+   * @returns {{isValid: boolean, errorContent: null}}
+   */
+  validate: () => ({ isValid: true, errorContent: null }),
 });
 
 // ---- Test Suite ---- //

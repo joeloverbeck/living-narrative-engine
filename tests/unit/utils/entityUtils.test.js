@@ -3,12 +3,9 @@ import { getEntityDisplayName } from '../../../src/utils/entityUtils.js';
 import { NAME_COMPONENT_ID } from '../../../src/constants/componentIds.js';
 
 class MockEntity {
-  constructor(id, nameComponentData = undefined, nameProp = undefined) {
+  constructor(id, nameComponentData = undefined) {
     this.id = id;
     this._nameData = nameComponentData;
-    if (nameProp !== undefined) {
-      this.name = nameProp;
-    }
   }
 
   getComponentData(type) {
@@ -35,20 +32,19 @@ describe('getEntityDisplayName', () => {
     expect(logger.warn).not.toHaveBeenCalled();
   });
 
-  it('falls back to entity.name with debug log', () => {
-    const e = new MockEntity('e3', { text: '' }, 'Fallback Name');
-    expect(getEntityDisplayName(e, undefined, logger)).toBe('Fallback Name');
-    expect(logger.debug).toHaveBeenCalledWith(
-      `getEntityDisplayName: Entity 'e3' using fallback 'entity.name' property ('Fallback Name') as '${NAME_COMPONENT_ID}' was not found or lacked 'text'/'value'.`
+  it('falls back to entity.id when name component is empty', () => {
+    const e = new MockEntity('e3', { text: '' });
+    expect(getEntityDisplayName(e, undefined, logger)).toBe('e3');
+    expect(logger.warn).toHaveBeenCalledWith(
+      `getEntityDisplayName: Entity 'e3' has no usable name from '${NAME_COMPONENT_ID}' component. Falling back to entity ID.`
     );
-    expect(logger.warn).not.toHaveBeenCalled();
   });
 
   it('falls back to entity id with warning', () => {
     const e = new MockEntity('e4');
     expect(getEntityDisplayName(e, undefined, logger)).toBe('e4');
     expect(logger.warn).toHaveBeenCalledWith(
-      `getEntityDisplayName: Entity 'e4' has no usable name from component or 'entity.name'. Falling back to entity ID.`
+      `getEntityDisplayName: Entity 'e4' has no usable name from '${NAME_COMPONENT_ID}' component. Falling back to entity ID.`
     );
   });
 

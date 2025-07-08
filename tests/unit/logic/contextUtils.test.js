@@ -527,11 +527,11 @@ describe('resolvePlaceholders (contextUtils.js)', () => {
       );
     });
 
-    test('should fall back to entity.name when component missing', () => {
+    test('should fall back to entity.id when component missing', () => {
       const context = createMockExecutionContext();
 
       expect(resolveEntityNameFallback('actor.name', context, mockLogger)).toBe(
-        'ActorName'
+        'mockActor'
       );
     });
 

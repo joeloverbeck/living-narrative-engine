@@ -1,3 +1,8 @@
+/**
+ * Enum of error codes for the different phases of the mods loader.
+ *
+ * @constant {object}
+ */
 export const ModsLoaderErrorCode = Object.freeze({
   SCHEMA: 'schema',
   GAME_CONFIG: 'game_config',
@@ -8,12 +13,20 @@ export const ModsLoaderErrorCode = Object.freeze({
   UNEXPECTED: 'unexpected',
 });
 
+/**
+ * Error thrown when a specific phase of the mods loader fails.
+ *
+ * @class ModsLoaderPhaseError
+ * @augments Error
+ */
 export class ModsLoaderPhaseError extends Error {
   /**
-   * @param {string} code
-   * @param {string} message
-   * @param {string} phase
-   * @param {Error} [cause]
+   * Creates an error instance for a failed loader phase.
+   *
+   * @param {string} code - A ModsLoaderErrorCode value identifying the phase.
+   * @param {string} message - A human readable error message.
+   * @param {string} phase - Name of the loader phase that failed.
+   * @param {Error} [cause] - Optional underlying error cause.
    */
   constructor(code, message, phase, cause) {
     super(message);

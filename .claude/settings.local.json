@@ -28,7 +28,20 @@
       "Bash(awk:*)",
       "Bash(cp:*)",
       "WebFetch(domain:json-logic.io)",
-      "Bash(./node_modules/.bin/jest tests/integration/logic/jsonLogicCustomOperators.debug.test.js --no-coverage --verbose)"
+      "Bash(./node_modules/.bin/jest tests/integration/logic/jsonLogicCustomOperators.debug.test.js --no-coverage --verbose)",
+      "WebFetch(domain:docs.anthropic.com)",
+      "Bash(test:*)",
+      "Bash(cat:*)",
+      "Bash(npx:*)",
+      "Bash(echo:*)",
+      "Bash(npm search:*)",
+      "WebFetch(domain:github.com)",
+      "mcp__sequential-thinking__sequentialthinking",
+      "Bash(NODE_ENV=test npx jest tests/integration/actions/followActionDebugTest.test.js --no-coverage)",
+      "Bash(for file in ./data/mods/core/scopes/potential_leaders.scope ./data/mods/core/scopes/environment.scope ./data/mods/core/scopes/actors_in_location.scope)",
+      "Bash(do echo \"=== $file ===\")",
+      "Bash(done)",
+      "Bash(npm run typecheck:*)"
     ],
     "deny": []
   }

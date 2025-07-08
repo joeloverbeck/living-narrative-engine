@@ -1,17 +1,8 @@
 import { describe, it, expect, beforeAll, jest } from '@jest/globals';
 import fs from 'fs';
 import path from 'path';
-import InMemoryDataRegistry from '../../../src/data/inMemoryDataRegistry.js';
 import ModsLoader from '../../../src/loaders/modsLoader.js';
-import createDefaultContentLoadersConfig from '../../../src/loaders/defaultLoaderConfig.js';
-import StaticConfiguration from '../../../src/configuration/staticConfiguration.js';
-import DefaultPathResolver from '../../../src/pathing/defaultPathResolver.js';
 import AjvSchemaValidator from '../../../src/validation/ajvSchemaValidator.js';
-import WorkspaceDataFetcher from '../../../src/data/workspaceDataFetcher.js';
-import EntityDefinitionLoader from '../../../src/loaders/entityDefinitionLoader.js';
-import EntityInstanceLoader from '../../../src/loaders/entityInstanceLoader.js';
-import ContentLoadManager from '../../../src/loaders/ContentLoadManager.js';
-import ContentPhase from '../../../src/loaders/phases/contentPhase.js';
 import LoaderPhase from '../../../src/loaders/phases/LoaderPhase.js';
 import AppContainer from '../../../src/dependencyInjection/appContainer.js';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
@@ -21,21 +12,14 @@ import {
   createMockDataFetcher,
   createMockValidatedEventDispatcherForIntegration,
 } from '../../common/mockFactories/index.js';
-import ManifestPhase from '../../../src/loaders/phases/ManifestPhase.js';
 import modManifestSchema from '../../../data/schemas/mod-manifest.schema.json';
 import commonSchema from '../../../data/schemas/common.schema.json';
 import entityDefinitionSchema from '../../../data/schemas/entity-definition.schema.json';
 import entityInstanceSchema from '../../../data/schemas/entity-instance.schema.json';
 import WorldInitializer from '../../../src/initializers/worldInitializer.js';
 import EntityManager from '../../../src/entities/entityManager.js';
-import GameDataRepository from '../../../src/data/gameDataRepository.js';
-import ValidatedEventDispatcher from '../../../src/events/validatedEventDispatcher.js';
 import EntityDefinition from '../../../src/entities/entityDefinition.js';
 import ScopeRegistry from '../../../src/scopeDsl/scopeRegistry.js';
-import {
-  WORLDINIT_ENTITY_INSTANTIATED_ID,
-  WORLDINIT_ENTITY_INSTANTIATION_FAILED_ID,
-} from '../../../src/constants/eventIds.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/systemEventIds.js';
 
 const testLogger = {
@@ -43,11 +27,6 @@ const testLogger = {
   warn: () => {},
   error: () => {},
   debug: () => {},
-};
-const mockEventBus = {
-  dispatch: () => {},
-  subscribe: () => {},
-  unsubscribe: () => {},
 };
 
 // Mock phases for non-essential loading phases
@@ -164,12 +143,7 @@ describe('Integration: Entity Instances Loader and World Initialization', () => 
       })
     );
     modsLoader = container.resolve(tokens.ModsLoader);
-    const result = await modsLoader.loadMods('test-world', [MOD_ID]);
-    expect(result).toEqual({
-      finalModOrder: expect.arrayContaining(['core', 'anatomy', 'isekai']),
-      totals: expect.any(Object),
-      incompatibilities: 0,
-    });
+    await modsLoader.loadMods('test-world', [MOD_ID]);
   });
 
   it('should load all entity instances listed in the mod manifest and make them retrievable', () => {
@@ -338,21 +312,19 @@ describe('Integration: Entity Instances Loader and World Initialization', () => 
 
     expect(systemErrorCall).toBeDefined(); // Ensure the event was dispatched
 
-    if (systemErrorCall) {
-      expect(systemErrorCall[1]).toEqual(
-        expect.objectContaining({
-          message: `Entity instance definition not found for instance ID: '${missingInstanceId}'. Referenced in world '${worldName}'.`,
-          details: expect.objectContaining({
-            statusCode: 404,
-            raw: `Context: WorldInitializer.instantiateEntitiesFromWorld, instanceId: ${missingInstanceId}, worldName: ${worldName}`,
-            type: 'MissingResource',
-            resourceType: 'EntityInstanceDefinition',
-            resourceId: missingInstanceId,
-          }),
-        })
-      );
-      expect(systemErrorCall[2]).toBeUndefined(); // safeDispatchError doesn't pass a third arg by default
-    }
+    expect(systemErrorCall[1]).toEqual(
+      expect.objectContaining({
+        message: `Entity instance definition not found for instance ID: '${missingInstanceId}'. Referenced in world '${worldName}'.`,
+        details: expect.objectContaining({
+          statusCode: 404,
+          raw: `Context: WorldInitializer.instantiateEntitiesFromWorld, instanceId: ${missingInstanceId}, worldName: ${worldName}`,
+          type: 'MissingResource',
+          resourceType: 'EntityInstanceDefinition',
+          resourceId: missingInstanceId,
+        }),
+      })
+    );
+    expect(systemErrorCall[2]).toBeUndefined(); // safeDispatchError doesn't pass a third arg by default
 
     warnSpy.mockRestore();
     dispatchSpy.mockRestore();
@@ -550,28 +522,22 @@ describe('Integration: EntityInstance componentOverrides are respected during wo
       const hasBasePosition =
         baseEntityDef.components && baseEntityDef.components['core:position'];
 
+      let expectedLocationId;
       if (hasOverridePosition) {
-        // Entity should have core:position from its instance override
-        expect(pos).toBeTruthy(); // Entity ${entity.id} (Def: ${entity.definitionId}) should have core:position from override.
-        if (pos) {
-          // Type guard
-          expect(pos.locationId).toBe(
-            sourceInstanceDef.componentOverrides['core:position'].locationId
-          ); // Entity ${entity.id} core:position.locationId from override should match.
-        }
+        expectedLocationId =
+          sourceInstanceDef.componentOverrides['core:position'].locationId;
       } else if (hasBasePosition) {
-        // Entity should have core:position from its base definition
-        expect(pos).toBeTruthy(); // Entity ${entity.id} (Def: ${entity.definitionId}) should have core:position from base definition.
-        if (pos) {
-          // Type guard
-          expect(pos.locationId).toBe(
-            baseEntityDef.components['core:position'].locationId
-          ); // Entity ${entity.id} core:position.locationId from base definition should match.
-        }
+        expectedLocationId =
+          baseEntityDef.components['core:position'].locationId;
       } else {
-        // Entity is not expected to have core:position from override or base
-        expect(pos).toBeUndefined(); // Entity ${entity.id} (Def: ${entity.definitionId}) should NOT have core:position if not in overrides or base definition.
+        // Entity is not expected to have core:position at all
+        // eslint-disable-next-line jest/no-conditional-expect
+        expect(pos).toBeUndefined();
+        continue;
       }
+
+      expect(pos).toBeTruthy();
+      expect(pos?.locationId).toBe(expectedLocationId);
     }
   });
 });

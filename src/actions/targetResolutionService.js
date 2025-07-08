@@ -20,6 +20,7 @@ import {
 } from '../constants/targetDomains.js';
 import { ServiceSetup } from '../utils/serviceInitializerUtils.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/systemEventIds.js';
+import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
 
 /**
  * Service for resolving action target scopes.
@@ -98,6 +99,27 @@ export class TargetResolutionService extends ITargetResolutionService {
     const source = 'TargetResolutionService.resolveTargets';
     trace?.info(`Resolving scope '${scopeName}'.`, source);
 
+    // Comprehensive actor entity validation
+    if (!actorEntity) {
+      const errorMessage = 'Actor entity is null or undefined';
+      this.#logger.error(errorMessage);
+      trace?.error(errorMessage, source);
+      return { targets: [], error: new Error(errorMessage) };
+    }
+    
+    if (!actorEntity.id || typeof actorEntity.id !== 'string' || actorEntity.id === 'undefined') {
+      const errorMessage = `Invalid actor entity ID: ${JSON.stringify(actorEntity.id)} (type: ${typeof actorEntity.id})`;
+      this.#logger.error(errorMessage, {
+        actorEntity,
+        actorId: actorEntity.id,
+        actorIdType: typeof actorEntity.id,
+        hasComponents: !!actorEntity.components,
+        hasComponentTypeIds: !!actorEntity.componentTypeIds
+      });
+      trace?.error(errorMessage, source);
+      return { targets: [], error: new Error(errorMessage) };
+    }
+
     if (scopeName === TARGET_DOMAIN_NONE) {
       trace?.info(
         `Scope is 'none'; returning a single no-target context.`,
@@ -169,15 +191,76 @@ export class TargetResolutionService extends ITargetResolutionService {
         trace?.info(`Using pre-parsed AST for scope '${scopeName}'.`, source);
       }
 
+      // Ensure actor entity has components built before passing to scope engine
+      // This is necessary for proper scope evaluation that depends on component state
+      let actorWithComponents = actorEntity;
+      
+      if (actorEntity && !actorEntity.components) {
+        if (!actorEntity.componentTypeIds || !Array.isArray(actorEntity.componentTypeIds)) {
+          trace?.warn(
+            `Actor entity ${actorEntity.id} has no components or componentTypeIds`,
+            source
+          );
+          // Create empty components object to prevent errors
+          // IMPORTANT: Preserve Entity class getters (especially 'id') that are lost with spread operator
+          actorWithComponents = { 
+            ...actorEntity, 
+            id: actorEntity.id,                          // Explicitly preserve the ID getter
+            definitionId: actorEntity.definitionId,      // Preserve other critical getters
+            componentTypeIds: actorEntity.componentTypeIds,
+            components: {} 
+          };
+        } else {
+          // Build components for the actor entity
+          const components = {};
+          for (const componentTypeId of actorEntity.componentTypeIds) {
+            try {
+              const data = this.#entityManager.getComponentData(actorEntity.id, componentTypeId);
+              if (data) {
+                components[componentTypeId] = data;
+              }
+            } catch (error) {
+              trace?.error(
+                `Failed to get component data for ${componentTypeId} on actor ${actorEntity.id}: ${error.message}`,
+                source
+              );
+            }
+          }
+          
+          // Create a new actor entity object with components
+          // IMPORTANT: Preserve Entity class getters (especially 'id') that are lost with spread operator
+          actorWithComponents = { 
+            ...actorEntity, 
+            id: actorEntity.id,                          // Explicitly preserve the ID getter
+            definitionId: actorEntity.definitionId,      // Preserve other critical getters
+            componentTypeIds: actorEntity.componentTypeIds,
+            components 
+          };
+          trace?.info(
+            `Built ${Object.keys(components).length} components for actor ${actorEntity.id}`,
+            source
+          );
+        }
+      }
+      
       const runtimeCtx = this.#buildRuntimeContext(
-        actorEntity,
+        actorWithComponents,
         discoveryContext
       );
-      return {
-        ids:
-          this.#scopeEngine.resolve(ast, actorEntity, runtimeCtx, trace) ??
-          new Set(),
-      };
+      
+      // Validate runtime context before proceeding
+      if (!runtimeCtx || !runtimeCtx.entityManager) {
+        throw new Error('Invalid runtime context: missing entity manager');
+      }
+      
+      const resolvedIds = this.#scopeEngine.resolve(ast, actorWithComponents, runtimeCtx, trace);
+      
+      // Validate resolved IDs
+      if (!resolvedIds || !(resolvedIds instanceof Set)) {
+        throw new Error(`Scope engine returned invalid result: ${typeof resolvedIds}`);
+      }
+      
+      return { ids: resolvedIds };
     } catch (error) {
       const errorMessage = `Error resolving scope '${scopeName}': ${error.message}`;
       this.#handleResolutionError(
@@ -231,9 +314,23 @@ export class TargetResolutionService extends ITargetResolutionService {
     originalError
       ? this.#logger.error(message, originalError)
       : this.#logger.warn(message);
-    this.#safeEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
+    
+    // Standardize details structure
+    const standardizedDetails = {
+      ...details,
+      scopeName: details.scopeName || source
+    };
+    
+    if (originalError) {
+      standardizedDetails.error = originalError.message;
+      standardizedDetails.stack = originalError.stack;
+    }
+    
+    safeDispatchError(
+      this.#safeEventDispatcher,
       message,
-      details,
-    });
+      standardizedDetails,
+      this.#logger
+    );
   }
 }

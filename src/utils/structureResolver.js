@@ -58,6 +58,7 @@ export class StructureResolver {
             if (
               parent &&
               typeof parent === 'object' &&
+              last !== undefined &&
               Object.prototype.hasOwnProperty.call(parent, last)
             ) {
               return '';
@@ -74,6 +75,12 @@ export class StructureResolver {
     });
   }
 
+  /**
+   * @param {{key: string, optional: boolean}} placeholderInfo
+   * @param {object[]} sources
+   * @returns {any}
+   * @private
+   */
   _resolveFromSources(placeholderInfo, sources) {
     const { key } = placeholderInfo;
     for (const source of sources) {
@@ -90,6 +97,7 @@ export class StructureResolver {
           if (
             parent &&
             typeof parent === 'object' &&
+            last !== undefined &&
             Object.prototype.hasOwnProperty.call(parent, last)
           ) {
             return parent[last];
@@ -110,6 +118,12 @@ export class StructureResolver {
     return value.match(FULL_STRING_PLACEHOLDER_REGEX);
   }
 
+  /**
+   * @param {string} value
+   * @param {object[]} sources
+   * @returns {{changed: boolean, value: any}}
+   * @private
+   */
   _handleFullString(value, sources) {
     const fullMatch = this._getFullPlaceholderMatch(value);
     if (!fullMatch) {
@@ -133,6 +147,12 @@ export class StructureResolver {
     return { changed: true, value: undefined };
   }
 
+  /**
+   * @param {string} value
+   * @param {object[]} sources
+   * @returns {{changed: boolean, value: string}}
+   * @private
+   */
   _replaceEmbedded(value, sources) {
     const replaced = this.resolve(value, ...sources);
     if (replaced === value) {
@@ -165,6 +185,12 @@ export class StructureResolver {
     }
   }
 
+  /**
+   * @param {string} value
+   * @param {object[]} sources
+   * @returns {{changed: boolean, value: any}}
+   * @private
+   */
   _resolveString(value, sources) {
     const fullResult = this._handleFullString(value, sources);
     if (fullResult.changed) {
@@ -174,28 +200,37 @@ export class StructureResolver {
     return this._replaceEmbedded(value, sources);
   }
 
+  /**
+   * @param {any[]} arr
+   * @param {object[]} sources
+   * @returns {{changed: boolean, value: any[]}}
+   * @private
+   */
   _resolveArray(arr, sources) {
     let changed = false;
-    const resolvedArr = arr.map((item) => {
-      const { value: resolvedItem, changed: c } = this._resolveValue(
-        item,
-        sources
-      );
-      if (c) {
-        changed = true;
+    const resolvedArr = arr.map(
+      /** @param {any} item */
+      (item) => {
+        const { value: resolvedItem, changed: c } = this._resolveValue(
+          item,
+          sources
+        );
+        if (c) {
+          changed = true;
+        }
+        return resolvedItem;
       }
-      return resolvedItem;
-    });
+    );
     return { changed, value: changed ? resolvedArr : arr };
   }
 
   /**
    * @description Resolve a single object property while honoring skip keys.
-   * @param {object} obj
+   * @param {Record<string, any>} obj
    * @param {string} key
    * @param {object[]} sources
    * @param {Set<string>} [skipKeys]
-   * @returns {{value: *, changed: boolean}}
+   * @returns {{value: any, changed: boolean}}
    * @private
    */
   _resolveObjectEntry(obj, key, sources, skipKeys) {
@@ -205,8 +240,16 @@ export class StructureResolver {
     return this._resolveValue(obj[key], sources);
   }
 
+  /**
+   * @param {Record<string, any>} obj
+   * @param {object[]} sources
+   * @param {Set<string>} [skipKeys]
+   * @returns {{value: Record<string, any>, changed: boolean}}
+   * @private
+   */
   _resolveObject(obj, sources, skipKeys) {
     let changed = false;
+    /** @type {Record<string, any>} */
     const result = {};
     for (const key in obj) {
       if (Object.prototype.hasOwnProperty.call(obj, key)) {
@@ -225,6 +268,13 @@ export class StructureResolver {
     return { changed, value: changed ? result : obj };
   }
 
+  /**
+   * @param {any} value
+   * @param {object[]} sources
+   * @param {Set<string>} [skipKeys]
+   * @returns {{changed: boolean, value: any}}
+   * @private
+   */
   _resolveValue(value, sources, skipKeys) {
     if (typeof value === 'string') {
       return this._resolveString(value, sources);
@@ -241,6 +291,13 @@ export class StructureResolver {
     return { changed: false, value };
   }
 
+  /**
+   * @param {any} input
+   * @param {any} context
+   * @param {object} [fallback]
+   * @param {string[]} [skipKeys]
+   * @returns {any}
+   */
   resolveStructure(input, context, fallback = {}, skipKeys = []) {
     const sources = Array.isArray(context) ? [...context] : [context];
     if (

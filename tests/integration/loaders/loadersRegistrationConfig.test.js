@@ -39,13 +39,11 @@ describe('Loaders Registration Configuration', () => {
     registerLoaders(container);
 
     // Get the ContentLoadManager to check its configuration
-    const contentLoadManager = container.resolve(tokens.ContentLoadManager);
+    container.resolve(tokens.ContentLoadManager);
 
     // Access the private configuration through the constructor call
     const registrationCalls = mockLogger.debug.mock.calls;
-    const configCall = registrationCalls.find((call) =>
-      call[0]?.includes('ContentLoadManager')
-    );
+    registrationCalls.find((call) => call[0]?.includes('ContentLoadManager'));
 
     // Check that the loaders were registered with correct diskFolder values
     expect(mockLogger.info).toHaveBeenCalledWith(

@@ -11,9 +11,10 @@ describe('Import Path Case Validation', () => {
   const srcDir = path.join(projectRoot, 'src');
 
   /**
-   * Recursively find all JavaScript files in a directory
+   * Recursively find all JavaScript files in a directory.
    *
-   * @param dir
+   * @param {string} dir - Directory to search.
+   * @returns {string[]} Array of JavaScript file paths.
    */
   function findJsFiles(dir) {
     const files = [];
@@ -34,11 +35,11 @@ describe('Import Path Case Validation', () => {
   }
 
   /**
-   * Extract static import statements from a file
-   * Only matches: import ... from '...';
-   * Ignores: dynamic import(), JSDoc @typedef imports, and require()
+   * Extract static import statements from a file.
+   * Only matches: `import ... from '...'` and ignores dynamic imports.
    *
-   * @param filePath
+   * @param {string} filePath - File to parse.
+   * @returns {Array<{importPath:string, line:number, fullMatch:string}>} Parsed imports.
    */
   function extractStaticImports(filePath) {
     const content = fs.readFileSync(filePath, 'utf8');
@@ -63,9 +64,10 @@ describe('Import Path Case Validation', () => {
   }
 
   /**
-   * Check if a file exists with the exact case
+   * Check if a file exists with the exact case.
    *
-   * @param filePath
+   * @param {string} filePath - Path to check.
+   * @returns {boolean} True if file exists with matching case.
    */
   function fileExistsWithCase(filePath) {
     try {
@@ -73,16 +75,17 @@ describe('Import Path Case Validation', () => {
       const filename = path.basename(filePath);
       const files = fs.readdirSync(dir);
       return files.includes(filename);
-    } catch (error) {
+    } catch {
       return false;
     }
   }
 
   /**
-   * Resolve import path to absolute path
+   * Resolve an import path to an absolute path.
    *
-   * @param importPath
-   * @param currentFile
+   * @param {string} importPath - Import path from the file.
+   * @param {string} currentFile - File containing the import.
+   * @returns {string} Absolute resolved path.
    */
   function resolveImportPath(importPath, currentFile) {
     if (importPath.startsWith('src/')) {
@@ -126,6 +129,7 @@ describe('Import Path Case Validation', () => {
             `Case sensitivity issues found:\n${errors.join('\n')}`
           );
         }
+        expect(errors).toHaveLength(0);
       }
     );
   });
@@ -151,6 +155,7 @@ describe('Import Path Case Validation', () => {
           `Found incorrect static import case for ContentLoadManager:\n${errors.join('\n')}`
         );
       }
+      expect(errors).toHaveLength(0);
     });
   });
 });

@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { AnatomyGraphAlgorithms } from '../../../src/anatomy/anatomyGraphAlgorithms.js';
 import { AnatomyCacheManager } from '../../../src/anatomy/anatomyCacheManager.js';
-import { ANATOMY_CONSTANTS } from '../../../src/anatomy/constants/anatomyConstants.js';
 
 describe('AnatomyGraphAlgorithms', () => {
   let mockCacheManager;
@@ -541,8 +540,6 @@ describe('AnatomyGraphAlgorithms', () => {
 
     it('should use default max depth values', () => {
       // Test that default values from ANATOMY_CONSTANTS are used
-      const originalMaxDepth = ANATOMY_CONSTANTS.MAX_RECURSION_DEPTH;
-      const originalMaxPath = ANATOMY_CONSTANTS.DEFAULT_MAX_PATH_LENGTH;
 
       // These should not throw errors and should use the defaults
       expect(() =>

@@ -1,9 +1,10 @@
-core:potential_leaders := entities(core:position)[
+core:potential_leaders := entities(core:position)[][
     {
   "and": [
     { "condition_ref": "core:entity-at-location" },
     { "condition_ref": "core:entity-is-not-current-actor" },
     { "condition_ref": "core:entity-has-actor-component" },
-    { "not": { "condition_ref": "core:entity-is-following-actor" } }
+    { "not": { "condition_ref": "core:entity-is-following-actor" } },
+    { "not": { "in": [{ "var": "entity.id" }, { "var": "actor.components.core:leading.followers" }] } }
   ]
 }]

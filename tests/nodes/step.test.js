@@ -1,4 +1,5 @@
 import createStepResolver from '../../src/scopeDsl/nodes/stepResolver.js';
+import { createTestEntity } from '../common/mockFactories/entities.js';
 
 describe('StepResolver', () => {
   let resolver;
@@ -58,7 +59,8 @@ describe('StepResolver', () => {
   describe('resolve', () => {
     it('should return empty set when parent result is empty', () => {
       const node = { type: 'Step', field: 'core:position', parent: {} };
-      const ctx = { dispatcher, trace };
+      const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+      const ctx = { dispatcher, trace, actorEntity };
 
       dispatcher.resolve.mockReturnValue(new Set());
 
@@ -70,7 +72,8 @@ describe('StepResolver', () => {
 
     it('should extract field values from entity IDs', () => {
       const node = { type: 'Step', field: 'core:position', parent: {} };
-      const ctx = { dispatcher, trace };
+      const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+      const ctx = { dispatcher, trace, actorEntity };
 
       dispatcher.resolve.mockReturnValue(new Set(['entity1', 'entity2']));
 
@@ -92,7 +95,8 @@ describe('StepResolver', () => {
 
     it('should extract field values from objects', () => {
       const node = { type: 'Step', field: 'location', parent: {} };
-      const ctx = { dispatcher, trace };
+      const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+      const ctx = { dispatcher, trace, actorEntity };
 
       const obj1 = { location: 'loc1', name: 'Place 1' };
       const obj2 = { location: 'loc2', name: 'Place 2' };
@@ -106,7 +110,8 @@ describe('StepResolver', () => {
 
     it('should handle mixed entity IDs and objects', () => {
       const node = { type: 'Step', field: 'location', parent: {} };
-      const ctx = { dispatcher, trace };
+      const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+      const ctx = { dispatcher, trace, actorEntity };
 
       const obj = { location: 'objLocation' };
       dispatcher.resolve.mockReturnValue(new Set(['entity1', obj]));
@@ -126,7 +131,8 @@ describe('StepResolver', () => {
 
     it('should skip undefined field values', () => {
       const node = { type: 'Step', field: 'nonexistent', parent: {} };
-      const ctx = { dispatcher, trace };
+      const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+      const ctx = { dispatcher, trace, actorEntity };
 
       const obj1 = { name: 'No field here' };
       const obj2 = { nonexistent: 'Has field', other: 'data' };
@@ -140,7 +146,8 @@ describe('StepResolver', () => {
 
     it('should handle null and non-object parent values', () => {
       const node = { type: 'Step', field: 'someField', parent: {} };
-      const ctx = { dispatcher, trace };
+      const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+      const ctx = { dispatcher, trace, actorEntity };
 
       dispatcher.resolve.mockReturnValue(
         new Set([null, undefined, 123, true, 'not-an-entity'])
@@ -157,7 +164,8 @@ describe('StepResolver', () => {
 
     it('should add trace logs when trace is provided', () => {
       const node = { type: 'Step', field: 'core:position', parent: {} };
-      const ctx = { dispatcher, trace };
+      const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+      const ctx = { dispatcher, trace, actorEntity };
 
       dispatcher.resolve.mockReturnValue(new Set(['entity1', 'entity2']));
 
@@ -180,7 +188,8 @@ describe('StepResolver', () => {
 
     it('should not throw when trace is not provided', () => {
       const node = { type: 'Step', field: 'core:position', parent: {} };
-      const ctx = { dispatcher }; // No trace
+      const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+      const ctx = { dispatcher, actorEntity }; // No trace
 
       dispatcher.resolve.mockReturnValue(new Set(['entity1']));
 
@@ -189,7 +198,8 @@ describe('StepResolver', () => {
 
     it('should preserve object references in results', () => {
       const node = { type: 'Step', field: 'data', parent: {} };
-      const ctx = { dispatcher, trace };
+      const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+      const ctx = { dispatcher, trace, actorEntity };
 
       const dataObj1 = { id: 1, value: 'data1' };
       const dataObj2 = { id: 2, value: 'data2' };
@@ -207,7 +217,8 @@ describe('StepResolver', () => {
 
     it('should handle nested field access from component data', () => {
       const node = { type: 'Step', field: 'core:relationships', parent: {} };
-      const ctx = { dispatcher, trace };
+      const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+      const ctx = { dispatcher, trace, actorEntity };
 
       dispatcher.resolve.mockReturnValue(new Set(['entity1']));
 

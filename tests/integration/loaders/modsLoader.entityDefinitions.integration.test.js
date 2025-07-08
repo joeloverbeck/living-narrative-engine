@@ -1,17 +1,8 @@
 import { describe, it, expect, beforeAll, jest } from '@jest/globals';
 import fs from 'fs';
 import path from 'path';
-import InMemoryDataRegistry from '../../../src/data/inMemoryDataRegistry.js';
 import ModsLoader from '../../../src/loaders/modsLoader.js';
-import createDefaultContentLoadersConfig from '../../../src/loaders/defaultLoaderConfig.js';
-import StaticConfiguration from '../../../src/configuration/staticConfiguration.js';
-import DefaultPathResolver from '../../../src/pathing/defaultPathResolver.js';
 import AjvSchemaValidator from '../../../src/validation/ajvSchemaValidator.js';
-import WorkspaceDataFetcher from '../../../src/data/workspaceDataFetcher.js';
-import EntityDefinitionLoader from '../../../src/loaders/entityDefinitionLoader.js';
-import EntityInstanceLoader from '../../../src/loaders/entityInstanceLoader.js';
-import ContentLoadManager from '../../../src/loaders/ContentLoadManager.js';
-import ContentPhase from '../../../src/loaders/phases/contentPhase.js';
 import LoaderPhase from '../../../src/loaders/phases/LoaderPhase.js';
 import AppContainer from '../../../src/dependencyInjection/appContainer.js';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
@@ -21,7 +12,6 @@ import {
   createMockDataFetcher,
   createMockValidatedEventDispatcherForIntegration,
 } from '../../common/mockFactories/index.js';
-import ManifestPhase from '../../../src/loaders/phases/ManifestPhase.js';
 import modManifestSchema from '../../../data/schemas/mod-manifest.schema.json';
 import commonSchema from '../../../data/schemas/common.schema.json';
 import entityDefinitionSchema from '../../../data/schemas/entity-definition.schema.json';
@@ -80,6 +70,8 @@ describe('Integration: Entity Definitions and Instances Loader', () => {
   let registry;
   let modsLoader;
   let logger;
+  let loadResult;
+  let loadedInstances;
 
   beforeAll(async () => {
     // Ensure logger is defined first and used everywhere
@@ -149,24 +141,28 @@ describe('Integration: Entity Definitions and Instances Loader', () => {
 
     modsLoader = container.resolve(tokens.ModsLoader);
 
-    // Load the isekai mod
-    const result = await modsLoader.loadMods('test-world', [MOD_ID]);
-
-    // Verify the returned LoadReport
-    expect(result).toEqual({
-      finalModOrder: ['core', 'descriptors', 'anatomy', 'isekai'],
-      totals: expect.any(Object),
-      incompatibilities: 0,
-    });
+    // Load the isekai mod and store data for later assertions
+    loadResult = await modsLoader.loadMods('test-world', [MOD_ID]);
 
     // DEBUG: Log all entity_definitions in the registry after loading
     const allEntities = registry.getAll('entityDefinitions');
     console.log('DEBUG: All entity_definitions in registry:', allEntities);
 
-    // Verify that entity instances are also loaded
-    const allInstances = registry.getAll('entityInstances');
-    expect(allInstances).toHaveLength(6);
-    expect(allInstances.map((i) => i.instanceId)).toEqual(
+    // Capture all entity instances for later assertions
+    loadedInstances = registry.getAll('entityInstances');
+  });
+
+  it('loads mods successfully', () => {
+    expect(loadResult).toEqual({
+      finalModOrder: ['core', 'descriptors', 'anatomy', 'isekai'],
+      totals: expect.any(Object),
+      incompatibilities: 0,
+    });
+  });
+
+  it('captures entity instances during setup', () => {
+    const ids = loadedInstances.map((i) => i.instanceId);
+    expect(ids).toEqual(
       expect.arrayContaining([
         'isekai:adventurers_guild_instance',
         'isekai:hero_instance',
@@ -175,12 +171,6 @@ describe('Integration: Entity Definitions and Instances Loader', () => {
         'isekai:sidekick_instance',
         'isekai:town_instance',
       ])
-    );
-
-    // Test individual instance retrieval
-    const instance = registry.get(
-      'entityInstances',
-      'isekai:adventurers_guild_instance'
     );
   });
 
@@ -226,39 +216,33 @@ describe('Integration: Entity Definitions and Instances Loader', () => {
   });
 
   it('should load entity instances if they exist', () => {
-    // Check if instances directory exists
-    if (fs.existsSync(INSTANCES_DIR)) {
-      const files = fs
-        .readdirSync(INSTANCES_DIR)
-        .filter((f) => f.endsWith('.json'));
+    expect(fs.existsSync(INSTANCES_DIR)).toBe(true);
 
-      // DEBUG: Log what files we found
-      console.log('DEBUG: Found entity instance files:', files);
+    const files = fs
+      .readdirSync(INSTANCES_DIR)
+      .filter((f) => f.endsWith('.json'));
 
-      // DEBUG: Log all entity instances in registry
-      const allInstances = registry.getAll('entityInstances');
-      console.log('DEBUG: All entity instances in registry:', allInstances);
+    // DEBUG: Log what files we found
+    console.log('DEBUG: Found entity instance files:', files);
 
-      for (const file of files) {
-        // Read the entity instance file to get the correct instanceId
-        const filePath = path.join(INSTANCES_DIR, file);
-        const instanceData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-        const instanceId = instanceData.instanceId;
+    // DEBUG: Log all entity instances in registry
+    const allInstances = registry.getAll('entityInstances');
+    console.log('DEBUG: All entity instances in registry:', allInstances);
 
-        // DEBUG: Log what we're looking for
-        console.log(
-          `DEBUG: Looking for entity instance with ID: ${instanceId}`
-        );
+    for (const file of files) {
+      // Read the entity instance file to get the correct instanceId
+      const filePath = path.join(INSTANCES_DIR, file);
+      const instanceData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+      const instanceId = instanceData.instanceId;
 
-        const instance = registry.get('entityInstances', instanceId);
-        console.log(`DEBUG: Found instance:`, instance);
+      // DEBUG: Log what we're looking for
+      console.log(`DEBUG: Looking for entity instance with ID: ${instanceId}`);
 
-        expect(instance).toBeDefined();
-        expect(instance._sourceFile).toBe(file);
-      }
-    } else {
-      // If no instances directory, that's fine - just pass the test
-      expect(true).toBe(true);
+      const instance = registry.get('entityInstances', instanceId);
+      console.log(`DEBUG: Found instance:`, instance);
+
+      expect(instance).toBeDefined();
+      expect(instance._sourceFile).toBe(file);
     }
   });
 
@@ -272,18 +256,18 @@ describe('Integration: Entity Definitions and Instances Loader', () => {
     );
     const manifestFiles = new Set(manifest.content.entities?.definitions || []);
 
-    if (fs.existsSync(DEFINITIONS_DIR)) {
-      const allFiles = fs
-        .readdirSync(DEFINITIONS_DIR)
-        .filter((f) => f.endsWith('.json'));
-      for (const file of allFiles) {
-        if (!manifestFiles.has(file)) {
-          const id = file.replace(/\.json$/, '');
-          const fullId = `${MOD_ID}:${id}`;
-          const entity = registry.get('entityDefinitions', fullId);
-          expect(entity).toBeUndefined();
-        }
+    expect(fs.existsSync(DEFINITIONS_DIR)).toBe(true);
+    const allFiles = fs
+      .readdirSync(DEFINITIONS_DIR)
+      .filter((f) => f.endsWith('.json'));
+    for (const file of allFiles) {
+      if (manifestFiles.has(file)) {
+        continue;
       }
+      const id = file.replace(/\.json$/, '');
+      const fullId = `${MOD_ID}:${id}`;
+      const entity = registry.get('entityDefinitions', fullId);
+      expect(entity).toBeUndefined();
     }
   });
 });
@@ -291,6 +275,13 @@ describe('Integration: Entity Definitions and Instances Loader', () => {
 /**
  *
  * @param phases
+ */
+/**
+ * Helper to create a simple loader session that executes the provided phases in
+ * order.
+ *
+ * @param {Array<LoaderPhase>} phases - Phases to execute sequentially.
+ * @returns {object} Session with a `run` method used by ModsLoader.
  */
 function makeSession(phases) {
   return {

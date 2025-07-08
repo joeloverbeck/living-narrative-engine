@@ -21,13 +21,14 @@ import addFormats from 'ajv-formats';
  * Preloads the consolidated v3 turn‐action schema so it can be retrieved by ID.
  */
 class AjvSchemaValidator {
-  #ajv = null;
-  #logger = null;
+  /** @type {import('ajv').default} */
+  #ajv;
+  /** @type {import('../interfaces/coreServices.js').ILogger} */
+  #logger;
 
   /**
    * Ensures the Ajv instance is initialized.
    *
-   * @private
    * @throws {Error} If Ajv is not available.
    * @returns {void}
    */
@@ -40,7 +41,6 @@ class AjvSchemaValidator {
   /**
    * Validates and normalizes a schema ID.
    *
-   * @private
    * @param {string} id - Candidate schema identifier.
    * @returns {string} Normalized schema ID.
    * @throws {Error} If the ID is missing or invalid.
@@ -77,7 +77,8 @@ class AjvSchemaValidator {
     try {
       return this.#requireValidSchemaId(schemaId);
     } catch (error) {
-      this.#logger.error(`AjvSchemaValidator.addSchema: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.#logger.error(`AjvSchemaValidator.addSchema: ${errorMessage}`);
       throw error;
     }
   }
@@ -104,7 +105,7 @@ class AjvSchemaValidator {
         throw new Error(`AjvSchemaValidator: ${errMsg}`);
       }
       try {
-        this.#requireValidSchemaId(schema.$id);
+        this.#requireValidSchemaId(schema.$id || '');
       } catch (error) {
         const errMsg = 'All schemas must be objects with a valid $id.';
         this.#logger.error(`AjvSchemaValidator.addSchemas: ${errMsg}`);
@@ -119,7 +120,7 @@ class AjvSchemaValidator {
    * @param {import('ajv').default} [params.ajvInstance]
    * @param {Array<{ schema: object, id: string }>} [params.preloadSchemas]
    */
-  constructor({ logger, ajvInstance, preloadSchemas } = {}) {
+  constructor({ logger, ajvInstance, preloadSchemas }) {
     if (
       !logger ||
       typeof logger.info !== 'function' ||
@@ -208,13 +209,13 @@ class AjvSchemaValidator {
       }
     } catch (error) {
       this.#logger.error(
-        `AjvSchemaValidator: Error adding schema with ID '${keyToRegister}': ${error.message}`,
+        `AjvSchemaValidator: Error adding schema with ID '${keyToRegister}': ${error instanceof Error ? error.message : String(error)}`,
         {
           schemaId: keyToRegister,
           error: error,
         }
       );
-      if (error.errors) {
+      if (error && typeof error === 'object' && 'errors' in error) {
         this.#logger.error(
           'Ajv Validation Errors (during addSchema):',
           JSON.stringify(error.errors, null, 2)
@@ -279,7 +280,7 @@ class AjvSchemaValidator {
       }
     } catch (error) {
       this.#logger.error(
-        `AjvSchemaValidator: Error removing schema '${idToUse}': ${error.message}`,
+        `AjvSchemaValidator: Error removing schema '${idToUse}': ${error instanceof Error ? error.message : String(error)}`,
         {
           schemaId: idToUse,
           error: error,
@@ -319,7 +320,7 @@ class AjvSchemaValidator {
         }
       } catch (preloadError) {
         this.#logger.error(
-          `AjvSchemaValidator: Failed to preload schema '${entry.id}'. Error: ${preloadError.message}`,
+          `AjvSchemaValidator: Failed to preload schema '${entry.id}'. Error: ${preloadError instanceof Error ? preloadError.message : String(preloadError)}`,
           { schemaId: entry.id, error: preloadError }
         );
       }
@@ -355,7 +356,7 @@ class AjvSchemaValidator {
       originalValidator = this.#ajv.getSchema(schemaId);
     } catch (error) {
       this.#logger.warn(
-        `AjvSchemaValidator: Error accessing schema '${schemaId}' via ajv.getSchema: ${error.message}`,
+        `AjvSchemaValidator: Error accessing schema '${schemaId}' via ajv.getSchema: ${error instanceof Error ? error.message : String(error)}`,
         {
           schemaId: schemaId,
           error: error,
@@ -378,7 +379,7 @@ class AjvSchemaValidator {
         };
       } catch (validationError) {
         this.#logger.error(
-          `AjvSchemaValidator: Runtime error during validation with schema '${schemaId}': ${validationError.message}`,
+          `AjvSchemaValidator: Runtime error during validation with schema '${schemaId}': ${validationError instanceof Error ? validationError.message : String(validationError)}`,
           {
             schemaId: schemaId,
             error: validationError,
@@ -392,7 +393,7 @@ class AjvSchemaValidator {
               schemaPath: '',
               keyword: 'runtimeError',
               params: {},
-              message: `Runtime validation error: ${validationError.message}`,
+              message: `Runtime validation error: ${validationError instanceof Error ? validationError.message : String(validationError)}`,
             },
           ],
         };
@@ -419,7 +420,7 @@ class AjvSchemaValidator {
       return !!validator;
     } catch (error) {
       this.#logger.warn(
-        `AjvSchemaValidator: Error accessing schema '${schemaId}' during isSchemaLoaded: ${error.message}`,
+        `AjvSchemaValidator: Error accessing schema '${schemaId}' during isSchemaLoaded: ${error instanceof Error ? error.message : String(error)}`,
         {
           schemaId: schemaId,
           error: error,
@@ -509,7 +510,7 @@ class AjvSchemaValidator {
       return true;
     } catch (error) {
       this.#logger.error(
-        `AjvSchemaValidator: Schema '${schemaId}' has unresolved $refs or other issues: ${error.message}`,
+        `AjvSchemaValidator: Schema '${schemaId}' has unresolved $refs or other issues: ${error instanceof Error ? error.message : String(error)}`,
         {
           schemaId: schemaId,
           error: error,
@@ -567,10 +568,10 @@ class AjvSchemaValidator {
       );
     } catch (error) {
       this.#logger.error(
-        `AjvSchemaValidator: Error adding schemas in batch: ${error.message}`,
+        `AjvSchemaValidator: Error adding schemas in batch: ${error instanceof Error ? error.message : String(error)}`,
         { error }
       );
-      if (error.errors) {
+      if (error && typeof error === 'object' && 'errors' in error) {
         this.#logger.error(
           'Ajv Validation Errors (during addSchemas):',
           JSON.stringify(error.errors, null, 2)

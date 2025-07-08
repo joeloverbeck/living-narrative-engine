@@ -34,7 +34,8 @@ describe('StepResolver - components edge access', () => {
   describe('resolve with components field', () => {
     it('should build components object from production entity with componentTypeIds', () => {
       const node = { type: 'Step', field: 'components', parent: {} };
-      const ctx = { dispatcher, trace };
+      const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+      const ctx = { dispatcher, trace, actorEntity };
 
       // Mock a production entity with componentTypeIds
       const productionEntity = {
@@ -66,7 +67,8 @@ describe('StepResolver - components edge access', () => {
 
     it('should handle test entity with plain components object', () => {
       const node = { type: 'Step', field: 'components', parent: {} };
-      const ctx = { dispatcher, trace };
+      const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+      const ctx = { dispatcher, trace, actorEntity };
 
       // Create a test entity using the mock factory (should have componentTypeIds getter now)
       const testEntity = createTestEntity('entity1', {
@@ -89,7 +91,8 @@ describe('StepResolver - components edge access', () => {
 
     it('should return empty components and log warning for entities without componentTypeIds', () => {
       const node = { type: 'Step', field: 'components', parent: {} };
-      const ctx = { dispatcher, trace };
+      const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+      const ctx = { dispatcher, trace, actorEntity };
 
       // Mock an entity without componentTypeIds (invalid entity)
       const invalidEntity = {
@@ -122,7 +125,8 @@ describe('StepResolver - components edge access', () => {
 
     it('should fallback to entitiesGateway.getComponentData when entity lacks getComponentData method', () => {
       const node = { type: 'Step', field: 'components', parent: {} };
-      const ctx = { dispatcher, trace };
+      const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+      const ctx = { dispatcher, trace, actorEntity };
 
       // Mock entity with componentTypeIds but no getComponentData method
       const entityWithoutMethod = {
@@ -164,7 +168,8 @@ describe('StepResolver - components edge access', () => {
 
     it('should handle entity not found in gateway', () => {
       const node = { type: 'Step', field: 'components', parent: {} };
-      const ctx = { dispatcher, trace };
+      const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+      const ctx = { dispatcher, trace, actorEntity };
 
       dispatcher.resolve.mockReturnValue(new Set(['nonexistent']));
       entitiesGateway.getEntityInstance.mockReturnValue(null);
@@ -176,7 +181,8 @@ describe('StepResolver - components edge access', () => {
 
     it('should handle multiple entities with components field', () => {
       const node = { type: 'Step', field: 'components', parent: {} };
-      const ctx = { dispatcher, trace };
+      const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+      const ctx = { dispatcher, trace, actorEntity };
 
       const entity1 = createMockEntity('entity1', { isActor: true });
       const entity2 = createTestEntity('entity2', {
@@ -204,7 +210,8 @@ describe('StepResolver - components edge access', () => {
 
     it('should not apply components logic for non-string parent values', () => {
       const node = { type: 'Step', field: 'components', parent: {} };
-      const ctx = { dispatcher, trace };
+      const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+      const ctx = { dispatcher, trace, actorEntity };
 
       const obj = { components: { custom: 'data' } };
       dispatcher.resolve.mockReturnValue(new Set([obj]));

@@ -125,4 +125,4 @@
  */
 
 // Ensure this file doesn't export anything by default if it's just for type definitions
-// export {};
+export {};

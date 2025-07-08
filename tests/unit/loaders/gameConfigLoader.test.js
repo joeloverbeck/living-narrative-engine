@@ -49,13 +49,25 @@ describe('GameConfigLoader.loadConfig', () => {
     dataFetcher.fetch.mockResolvedValue({
       mods: ['modA', CORE_MOD_ID, 'modB'],
     });
-    const mods = await loader.loadConfig();
-    expect(mods).toEqual([CORE_MOD_ID, 'modA', 'modB']);
+    const config = await loader.loadConfig();
+    expect(config.mods).toEqual([CORE_MOD_ID, 'modA', 'modB']);
+    expect(config.startWorld).toBeUndefined();
   });
 
   test('returns mods unchanged when core already first', async () => {
     dataFetcher.fetch.mockResolvedValue({ mods: [CORE_MOD_ID, 'modX'] });
-    const mods = await loader.loadConfig();
-    expect(mods).toEqual([CORE_MOD_ID, 'modX']);
+    const config = await loader.loadConfig();
+    expect(config.mods).toEqual([CORE_MOD_ID, 'modX']);
+    expect(config.startWorld).toBeUndefined();
+  });
+
+  test('includes startWorld when present in config', async () => {
+    dataFetcher.fetch.mockResolvedValue({ 
+      mods: [CORE_MOD_ID, 'modX'],
+      startWorld: 'test:world'
+    });
+    const config = await loader.loadConfig();
+    expect(config.mods).toEqual([CORE_MOD_ID, 'modX']);
+    expect(config.startWorld).toBe('test:world');
   });
 });

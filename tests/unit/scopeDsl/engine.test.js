@@ -718,4 +718,144 @@ describe('ScopeEngine', () => {
       );
     });
   });
+
+  // Test context merging functionality
+  describe('Context Merging', () => {
+    let engine;
+    let mockActorEntity;
+    let mockRuntimeCtx;
+    let baseCtx;
+
+    beforeEach(() => {
+      engine = new ScopeEngine();
+      mockActorEntity = { id: 'entity123', definitionId: 'actor' };
+      mockRuntimeCtx = {
+        entityManager: mockEntityManager,
+        jsonLogicEval: mockJsonLogicEval,
+        location: { id: 'loc123' }
+      };
+      
+      baseCtx = {
+        actorEntity: mockActorEntity,
+        runtimeCtx: mockRuntimeCtx,
+        dispatcher: { resolve: jest.fn() },
+        cycleDetector: { enter: jest.fn(), leave: jest.fn() },
+        depthGuard: { ensure: jest.fn() },
+        depth: 1,
+        trace: mockTraceContext
+      };
+    });
+
+    it('should preserve all base context properties when overlay is null', () => {
+      const result = engine.contextMerger.merge(baseCtx, null);
+      
+      expect(result).toEqual(baseCtx);
+      expect(result.actorEntity).toBe(mockActorEntity);
+      expect(result.runtimeCtx).toBe(mockRuntimeCtx);
+    });
+
+    it('should preserve critical properties from base when overlay has undefined values', () => {
+      const overlayCtx = {
+        actorEntity: undefined,
+        runtimeCtx: undefined,
+        customProp: 'custom-value'
+      };
+      
+      const result = engine.contextMerger.merge(baseCtx, overlayCtx);
+      
+      expect(result.actorEntity).toBe(mockActorEntity);
+      expect(result.runtimeCtx).toBe(mockRuntimeCtx);
+      expect(result.customProp).toBe('custom-value');
+    });
+
+    it('should use overlay properties when they are defined', () => {
+      const newActorEntity = { id: 'entity456', definitionId: 'newActor' };
+      const newRuntimeCtx = { ...mockRuntimeCtx, location: { id: 'loc456' } };
+      
+      const overlayCtx = {
+        actorEntity: newActorEntity,
+        runtimeCtx: newRuntimeCtx,
+        depth: 3
+      };
+      
+      const result = engine.contextMerger.merge(baseCtx, overlayCtx);
+      
+      expect(result.actorEntity).toBe(newActorEntity);
+      expect(result.runtimeCtx).toBe(newRuntimeCtx);
+      expect(result.depth).toBe(3);
+    });
+
+    it('should handle depth correctly', () => {
+      // When overlay has no depth, should use base depth + 1
+      const overlayCtx = { customProp: 'value' };
+      let result = engine.contextMerger.merge(baseCtx, overlayCtx);
+      expect(result.depth).toBe(2); // base.depth (1) + 1
+
+      // When overlay has depth, should use max of overlay depth and base depth + 1
+      overlayCtx.depth = 5;
+      result = engine.contextMerger.merge(baseCtx, overlayCtx);
+      expect(result.depth).toBe(5); // max(5, 1+1)
+
+      overlayCtx.depth = 0;
+      result = engine.contextMerger.merge(baseCtx, overlayCtx);
+      expect(result.depth).toBe(2); // max(0, 1+1)
+    });
+
+    it('should throw error if merged context is missing actorEntity', () => {
+      const badBaseCtx = { ...baseCtx, actorEntity: undefined };
+      const overlayCtx = { customProp: 'value' };
+      
+      expect(() => {
+        engine.contextMerger.merge(badBaseCtx, overlayCtx);
+      }).toThrow('[CRITICAL] Context is missing required properties: actorEntity');
+    });
+
+    it('should throw error if merged context is missing runtimeCtx', () => {
+      const badBaseCtx = { ...baseCtx, runtimeCtx: undefined };
+      const overlayCtx = { customProp: 'value' };
+      
+      expect(() => {
+        engine.contextMerger.merge(badBaseCtx, overlayCtx);
+      }).toThrow('[CRITICAL] Context is missing required properties: runtimeCtx');
+    });
+
+    it('should throw error if merged context is missing dispatcher', () => {
+      const badBaseCtx = { ...baseCtx, dispatcher: undefined };
+      const overlayCtx = { customProp: 'value' };
+      
+      expect(() => {
+        engine.contextMerger.merge(badBaseCtx, overlayCtx);
+      }).toThrow('[CRITICAL] Context is missing required properties: dispatcher');
+    });
+
+    it('should preserve cycleDetector and depthGuard from base context', () => {
+      const overlayCtx = {
+        cycleDetector: undefined,
+        depthGuard: undefined
+      };
+      
+      const result = engine.contextMerger.merge(baseCtx, overlayCtx);
+      
+      expect(result.cycleDetector).toBe(baseCtx.cycleDetector);
+      expect(result.depthGuard).toBe(baseCtx.depthGuard);
+    });
+
+    it('should not include critical properties when reducing overlay properties', () => {
+      const newDispatcher = { resolve: jest.fn() };
+      const overlayCtx = {
+        actorEntity: mockActorEntity,
+        dispatcher: newDispatcher,
+        customProp1: 'value1',
+        customProp2: 'value2'
+      };
+      
+      const result = engine.contextMerger.merge(baseCtx, overlayCtx);
+      
+      // Should use overlay's dispatcher since it's defined
+      expect(result.dispatcher).toBe(newDispatcher);
+      // Should have custom properties
+      expect(result.customProp1).toBe('value1');
+      expect(result.customProp2).toBe('value2');
+    });
+  });
 });

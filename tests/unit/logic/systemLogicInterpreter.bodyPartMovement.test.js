@@ -108,12 +108,17 @@ describe('SystemLogicInterpreter - Body Part Movement Validation', () => {
           type: 'HAS_BODY_PART_WITH_COMPONENT_VALUE',
           parameters: args, // Parameters should be included
         },
-        {
-          evaluationContext: {
-            variables: data,
-          },
-          instanceId: 'jsonlogic-operation',
-        }
+        expect.objectContaining({
+          evaluationContext: data,
+          entityManager: mockEntityManager,
+          validatedEventDispatcher: null,
+          logger: expect.objectContaining({
+            debug: expect.any(Function),
+            error: expect.any(Function),
+            info: expect.any(Function),
+            warn: expect.any(Function),
+          }),
+        })
       );
 
       expect(result).toBe(true);
@@ -131,12 +136,17 @@ describe('SystemLogicInterpreter - Body Part Movement Validation', () => {
       customOperation(args, data);
 
       // Verify the execution context has the correct structure
-      const expectedContext = {
-        evaluationContext: {
-          variables: data,
-        },
-        instanceId: 'jsonlogic-operation',
-      };
+      const expectedContext = expect.objectContaining({
+        evaluationContext: data,
+        entityManager: mockEntityManager,
+        validatedEventDispatcher: null,
+        logger: expect.objectContaining({
+          debug: expect.any(Function),
+          error: expect.any(Function),
+          info: expect.any(Function),
+          warn: expect.any(Function),
+        }),
+      });
 
       expect(hasBodyPartWithComponentValueHandler).toHaveBeenCalledWith(
         args,

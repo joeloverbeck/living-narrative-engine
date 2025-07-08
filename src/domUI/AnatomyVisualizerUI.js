@@ -322,12 +322,35 @@ class AnatomyVisualizerUI {
    * @private
    * @param {string} message
    */
+  /**
+   * Escape HTML characters in a string to prevent XSS
+   *
+   * @private
+   * @param {string} unsafeString
+   * @returns {string} Escaped string
+   */
+  _escapeHtml(unsafeString) {
+    return unsafeString
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  /**
+   * Show a message in the graph panel
+   *
+   * @private
+   * @param {string} message
+   */
   _showMessage(message) {
     const graphContainer = this._document.getElementById(
       'anatomy-graph-container'
     );
     if (graphContainer) {
-      graphContainer.innerHTML = `<div class="message">${message}</div>`;
+      const escapedMessage = this._escapeHtml(message);
+      graphContainer.innerHTML = `<div class="message">${escapedMessage}</div>`;
     }
   }
 }

@@ -165,4 +165,16 @@ export default class SimpleEntityManager {
     }
     return ids;
   }
+
+  /**
+   * Returns all component type IDs for a given entity.
+   *
+   * @param {string} entityId - The entity identifier.
+   * @returns {string[]} Array of component type IDs.
+   */
+  getAllComponentTypesForEntity(entityId) {
+    const entity = this.entities.get(entityId);
+    if (!entity) return [];
+    return Object.keys(entity.components);
+  }
 }

@@ -6,6 +6,7 @@ import {
   SYSTEM_WARNING_OCCURRED_ID,
 } from '../constants/eventIds.js';
 import { fetchWithRetry, initLogger } from '../utils/index.js';
+import { dispatchSystemErrorEvent } from '../utils/systemErrorDispatchUtils.js';
 
 /**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
@@ -134,19 +135,21 @@ export class RetryHttpClient extends IHttpClient {
     });
   }
 
-  #emitError(message, { statusCode, url, raw, stack }) {
+  async #emitError(message, { statusCode, url, raw, stack }) {
     const details = {
       statusCode,
       url,
       raw,
       timestamp: new Date().toISOString(),
       stack,
+      scopeName: 'RetryHttpClient'
     };
-    // *** CORRECTED METHOD CALL ***
-    this.#dispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
+    await dispatchSystemErrorEvent(
+      this.#dispatcher,
       message,
       details,
-    });
+      this.#logger
+    );
   }
 
   /* ---------------------------------------------------------------- *
@@ -218,7 +221,7 @@ export class RetryHttpClient extends IHttpClient {
         }
 
         if (status !== undefined) {
-          this.#emitError(
+          await this.#emitError(
             `HTTP error ${status} from ${url} after ${attempt} attempts`,
             {
               statusCode: status,
@@ -228,7 +231,7 @@ export class RetryHttpClient extends IHttpClient {
             }
           );
         } else {
-          this.#emitError(
+          await this.#emitError(
             `Network failure contacting ${url} after ${attempt} attempts`,
             { statusCode: undefined, url, raw, stack: err.stack }
           );

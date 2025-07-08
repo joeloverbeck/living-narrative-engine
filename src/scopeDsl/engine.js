@@ -10,6 +10,7 @@ import ScopeCycleError from '../errors/scopeCycleError.js';
 import { IScopeEngine } from '../interfaces/IScopeEngine.js';
 import createDepthGuard from './core/depthGuard.js';
 import createCycleDetector from './core/cycleDetector.js';
+import ContextMerger from './core/contextMerger.js';
 import createDispatcher from './nodes/dispatcher.js';
 import createSourceResolver from './nodes/sourceResolver.js';
 import createStepResolver from './nodes/stepResolver.js';
@@ -50,6 +51,7 @@ class ScopeEngine extends IScopeEngine {
     this.maxDepth = 4;
     this.depthGuard = createDepthGuard(this.maxDepth);
     this.cycleDetector = createCycleDetector();
+    this.contextMerger = new ContextMerger();
   }
 
   setMaxDepth(n) {
@@ -58,6 +60,7 @@ class ScopeEngine extends IScopeEngine {
       this.depthGuard = createDepthGuard(n);
     }
   }
+
 
   /**
    * Creates a provider that returns the current location.
@@ -224,10 +227,12 @@ class ScopeEngine extends IScopeEngine {
         depth: ctx.depth + 1,
         dispatcher: {
           resolve: (innerNode, innerCtx) => {
-            // Use the context passed by the resolver, which already has the correct depth
+            // Use safe context merging
+            const mergedCtx = this.contextMerger.merge(ctx, innerCtx);
+            
             return this._resolveWithDepthAndCycleChecking(
               innerNode,
-              innerCtx,
+              mergedCtx,
               dispatcher
             );
           },

@@ -157,6 +157,8 @@ describe('TargetResolutionService - Scope Loading Issue', () => {
       };
 
       mockScopeRegistry.getScope.mockReturnValue(mockScopeDefinition);
+      // Mock scope engine to return a valid Set since the AST will be parsed on demand
+      mockScopeEngine.resolve.mockReturnValue(new Set(['location3', 'location4']));
 
       const mockActor = { id: 'hero', type: 'character' };
       const mockDiscoveryContext = { currentLocation: { id: 'room1' } };
@@ -167,7 +169,7 @@ describe('TargetResolutionService - Scope Loading Issue', () => {
         mockDiscoveryContext
       );
 
-      expect(result.targets).toHaveLength(0);
+      expect(result.targets).toHaveLength(2);
       expect(result.error).toBeUndefined();
       expect(mockSafeEventDispatcher.dispatch).not.toHaveBeenCalled();
       expect(mockDslParser.parse).toHaveBeenCalledWith(

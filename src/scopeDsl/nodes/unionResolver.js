@@ -31,13 +31,28 @@ export default function createUnionResolver() {
     resolve(node, ctx) {
       const { dispatcher, trace } = ctx;
 
+      // Validate context has required properties
+      if (!ctx.actorEntity) {
+        const error = new Error('UnionResolver: actorEntity is missing from context');
+        console.error('[CRITICAL] UnionResolver missing actorEntity:', {
+          hasCtx: !!ctx,
+          ctxKeys: ctx ? Object.keys(ctx) : [],
+          nodeType: node?.type,
+          hasLeft: !!node?.left,
+          hasRight: !!node?.right,
+          depth: ctx?.depth,
+          callStack: new Error().stack
+        });
+        throw error;
+      }
+
       const source = 'UnionResolver';
 
       if (trace) {
         trace.addLog('info', 'Starting union resolution.', source);
       }
 
-      // Recursively resolve left and right nodes
+      // Recursively resolve left and right nodes - pass full context
       const leftResult = dispatcher.resolve(node.left, ctx);
       const rightResult = dispatcher.resolve(node.right, ctx);
 

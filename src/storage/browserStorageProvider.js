@@ -3,6 +3,7 @@ import { IStorageProvider } from '../interfaces/IStorageProvider.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/eventIds.js';
 import { validateDependency } from '../utils/dependencyUtils.js';
 import { StorageErrorCodes } from './storageErrors.js';
+import { dispatchSystemErrorEvent } from '../utils/systemErrorDispatchUtils.js';
 
 /** @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 
@@ -91,10 +92,15 @@ export class BrowserStorageProvider extends IStorageProvider {
             (await handle.requestPermission({ mode: 'readwrite' })) !==
             'granted'
           ) {
-            this.#safeEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
-              message:
-                'BrowserStorageProvider: Permission explicitly denied after selecting directory.',
-            });
+            await dispatchSystemErrorEvent(
+              this.#safeEventDispatcher,
+              'BrowserStorageProvider: Permission explicitly denied after selecting directory.',
+              {
+                scopeName: 'BrowserStorageProvider.#getRootHandle',
+                error: 'Permission denied'
+              },
+              this.#logger
+            );
             throw new Error('Permission denied for the selected directory.');
           }
         }
@@ -106,10 +112,16 @@ export class BrowserStorageProvider extends IStorageProvider {
           this.#logger.warn('User aborted root directory selection.');
           // Let the error propagate so the caller knows the operation can't proceed.
         } else {
-          this.#safeEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
-            message: 'BrowserStorageProvider: Error selecting root directory.',
-            details: { error: error.message, stack: error.stack },
-          });
+          await dispatchSystemErrorEvent(
+            this.#safeEventDispatcher,
+            'BrowserStorageProvider: Error selecting root directory.',
+            {
+              error: error.message,
+              stack: error.stack,
+              scopeName: 'BrowserStorageProvider.#getRootHandle'
+            },
+            this.#logger
+          );
         }
         throw new Error(
           `Failed to obtain root directory handle: ${error.message || 'User action or unexpected error during directory selection.'}`
@@ -158,10 +170,17 @@ export class BrowserStorageProvider extends IStorageProvider {
           );
         } else {
           // Log as error for other types of errors, or if create was true and it still failed.
-          this.#safeEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
-            message: `BrowserStorageProvider: Failed to get/create directory handle for "${part}" in path "${normalizedDirectoryPath}" (options.create: ${isCreateTrue}).`,
-            details: { error: error.message, stack: error.stack },
-          });
+          await dispatchSystemErrorEvent(
+            this.#safeEventDispatcher,
+            `BrowserStorageProvider: Failed to get/create directory handle for "${part}" in path "${normalizedDirectoryPath}" (options.create: ${isCreateTrue}).`,
+            {
+              error: error.message,
+              stack: error.stack,
+              path: normalizedDirectoryPath,
+              scopeName: 'BrowserStorageProvider.#getDirectoryHandle'
+            },
+            this.#logger
+          );
         }
         throw error; // Re-throw for the caller to handle.
       }
@@ -201,10 +220,17 @@ export class BrowserStorageProvider extends IStorageProvider {
     try {
       return await directoryHandle.getFileHandle(fileName, options);
     } catch (error) {
-      this.#safeEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
-        message: `BrowserStorageProvider: Failed to get/create file handle for "${fileName}" in directory path "${pathParts.join('/')}" (original: ${filePath}).`,
-        details: { error: error.message, stack: error.stack },
-      });
+      await dispatchSystemErrorEvent(
+        this.#safeEventDispatcher,
+        `BrowserStorageProvider: Failed to get/create file handle for "${fileName}" in directory path "${pathParts.join('/')}" (original: ${filePath}).`,
+        {
+          error: error.message,
+          stack: error.stack,
+          path: filePath,
+          scopeName: 'BrowserStorageProvider.#getFileHandle'
+        },
+        this.#logger
+      );
       throw error;
     }
   }
@@ -234,10 +260,17 @@ export class BrowserStorageProvider extends IStorageProvider {
         `BrowserStorageProvider: Successfully wrote ${data.byteLength} bytes to temporary file ${tempFilePath}.`
       );
     } catch (error) {
-      this.#safeEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
-        message: `BrowserStorageProvider: Error writing to temporary file ${tempFilePath}: ${error.message}`,
-        details: { error: error.message, stack: error.stack },
-      });
+      await dispatchSystemErrorEvent(
+        this.#safeEventDispatcher,
+        `BrowserStorageProvider: Error writing to temporary file ${tempFilePath}: ${error.message}`,
+        {
+          error: error.message,
+          stack: error.stack,
+          path: tempFilePath,
+          scopeName: 'BrowserStorageProvider.write'
+        },
+        this.#logger
+      );
       try {
         await this.deleteFile(tempFilePath);
         this.#logger.debug(
@@ -273,10 +306,17 @@ export class BrowserStorageProvider extends IStorageProvider {
         `BrowserStorageProvider: Successfully replaced/wrote final file ${normalizedFilePath}.`
       );
     } catch (error) {
-      this.#safeEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
-        message: `BrowserStorageProvider: Error writing to final file ${normalizedFilePath} (replacing original): ${error.message}`,
-        details: { error: error.message, stack: error.stack },
-      });
+      await dispatchSystemErrorEvent(
+        this.#safeEventDispatcher,
+        `BrowserStorageProvider: Error writing to final file ${normalizedFilePath} (replacing original): ${error.message}`,
+        {
+          error: error.message,
+          stack: error.stack,
+          path: normalizedFilePath,
+          scopeName: 'BrowserStorageProvider.write'
+        },
+        this.#logger
+      );
       return {
         success: false,
         error: `Failed to replace original file with new data: ${error.message}. Temporary data saved at ${tempFilePath}.`,
@@ -346,10 +386,17 @@ export class BrowserStorageProvider extends IStorageProvider {
         );
         return [];
       }
-      this.#safeEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
-        message: `BrowserStorageProvider: Error listing files in "${directoryPath}": ${error.message}`,
-        details: { error: error.message, stack: error.stack },
-      });
+      await dispatchSystemErrorEvent(
+        this.#safeEventDispatcher,
+        `BrowserStorageProvider: Error listing files in "${directoryPath}": ${error.message}`,
+        {
+          error: error.message,
+          stack: error.stack,
+          path: directoryPath,
+          scopeName: 'BrowserStorageProvider.listFiles'
+        },
+        this.#logger
+      );
       return [];
     }
   }
@@ -367,10 +414,17 @@ export class BrowserStorageProvider extends IStorageProvider {
       );
       return new Uint8Array(contents);
     } catch (error) {
-      this.#safeEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
-        message: `BrowserStorageProvider: Error reading file ${filePath}: ${error.message}`,
-        details: { error: error.message, stack: error.stack },
-      });
+      await dispatchSystemErrorEvent(
+        this.#safeEventDispatcher,
+        `BrowserStorageProvider: Error reading file ${filePath}: ${error.message}`,
+        {
+          error: error.message,
+          stack: error.stack,
+          path: filePath,
+          scopeName: 'BrowserStorageProvider.read'
+        },
+        this.#logger
+      );
       if (error.name === 'NotFoundError') {
         throw new Error(
           `File not found: ${filePath}. Original error: ${error.message}`
@@ -421,10 +475,17 @@ export class BrowserStorageProvider extends IStorageProvider {
       );
       return { success: true };
     } catch (error) {
-      this.#safeEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
-        message: `BrowserStorageProvider: Error deleting file ${filePath}: ${error.message}`,
-        details: { error: error.message, stack: error.stack },
-      });
+      await dispatchSystemErrorEvent(
+        this.#safeEventDispatcher,
+        `BrowserStorageProvider: Error deleting file ${filePath}: ${error.message}`,
+        {
+          error: error.message,
+          stack: error.stack,
+          path: filePath,
+          scopeName: 'BrowserStorageProvider.delete'
+        },
+        this.#logger
+      );
       if (error.name === 'NotFoundError') {
         return {
           success: true,

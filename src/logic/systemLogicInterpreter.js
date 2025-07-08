@@ -19,12 +19,14 @@ import { isEmptyCondition } from '../utils/jsonLogicUtils.js';
 /** @typedef {import('../interfaces/coreServices.js').ILogger}               ILogger */
 /** @typedef {import('../interfaces/coreServices.js').IDataRegistry}         IDataRegistry */
 /** @typedef {import('../interfaces/IEventBus.js').IEventBus}                IEventBus */
+/** @typedef {import('../interfaces/IEventBus.js').EventListener}           EventListener */
 /** @typedef {import('./jsonLogicEvaluationService.js').default}            JsonLogicEvaluationService */
 /** @typedef {import('../entities/entityManager.js').default}               EntityManager */
 /** @typedef {import('./operationInterpreter.js').default}                  OperationInterpreter */
 /** @typedef {import('../anatomy/bodyGraphService.js').default}             BodyGraphService */
-/** @typedef {import('../../data/schemas/rule.schema.json').SystemRule}     SystemRule */
+/** @typedef {{rule_id?: string, event_type: string, event_payload_filters?: object, condition?: any, actions: any[]}} SystemRule */
 /** @typedef {import('./defs.js').JsonLogicEvaluationContext}               JsonLogicEvaluationContext */
+/** @typedef {import('./defs.js').ExecutionContext}                         ExecutionContext */
 /** @typedef {{catchAll:SystemRule[], byAction:Map<string,SystemRule[]>}}   RuleBucket */
 
 /* ---------------------------------------------------------------------------
@@ -40,9 +42,19 @@ class SystemLogicInterpreter extends BaseService {
   /** @type {BodyGraphService} */ #bodyGraphService; // eslint-disable-line no-unused-private-class-members
   /** @type {Map<string,RuleBucket>} */ #ruleCache = new Map();
   /** @type {boolean} */ #initialized = false;
-  /** @type {Function|null} */ #boundEventHandler = null;
+  /** @type {EventListener|null} */ #boundEventHandler = null;
 
   /* ----------------------------------------------------------------------- */
+  /**
+   * @param {object} params
+   * @param {ILogger} params.logger
+   * @param {IEventBus} params.eventBus
+   * @param {IDataRegistry} params.dataRegistry
+   * @param {JsonLogicEvaluationService} params.jsonLogicEvaluationService
+   * @param {EntityManager} params.entityManager
+   * @param {OperationInterpreter} params.operationInterpreter
+   * @param {BodyGraphService} params.bodyGraphService
+   */
   constructor({
     logger,
     eventBus,
@@ -86,7 +98,7 @@ class SystemLogicInterpreter extends BaseService {
     this.#entityManager = entityManager;
     this.#operationInterpreter = operationInterpreter;
     this.#bodyGraphService = bodyGraphService;
-    this.#boundEventHandler = this.#handleEvent.bind(this);
+    this.#boundEventHandler = /** @type {EventListener} */ (this.#handleEvent.bind(this));
 
     this.#logger.debug('SystemLogicInterpreter: created');
   }
@@ -105,7 +117,7 @@ class SystemLogicInterpreter extends BaseService {
 
     this.#loadAndCacheRules();
 
-    if (this.#ruleCache.size > 0) {
+    if (this.#ruleCache.size > 0 && this.#boundEventHandler) {
       this.#eventBus.subscribe('*', this.#boundEventHandler);
       this.#logger.debug(
         "SystemLogicInterpreter: initialized & subscribed to '*'."
@@ -141,13 +153,19 @@ class SystemLogicInterpreter extends BaseService {
     // Add hasBodyPartWithComponentValue operation
     this.#jsonLogic.addOperation(
       'hasBodyPartWithComponentValue',
+      /**
+       * @param {any} args @param {any} data
+       * @param data
+       */
       (args, data) => {
         // Create a minimal execution context for the handler
+        /** @type {ExecutionContext} */
         const executionContext = {
-          evaluationContext: {
-            variables: data,
-          },
-          instanceId: 'jsonlogic-operation',
+          evaluationContext: /** @type {JsonLogicEvaluationContext} */ (/** @type {any} */ (data)),
+          entityManager: this.#entityManager,
+          validatedEventDispatcher: /** @type {any} */ (null), // Not available in this context
+          logger: this.#logger,
+          // Other properties are optional
         };
 
         // Use the operation interpreter to execute the handler
@@ -224,7 +242,8 @@ class SystemLogicInterpreter extends BaseService {
         actorId,
         targetId,
         this.#entityManager,
-        this.#logger
+        this.#logger,
+        undefined
       );
 
       this.#logger.debug(
@@ -260,6 +279,11 @@ class SystemLogicInterpreter extends BaseService {
 
   /* Rule processing                                                       */
 
+  /**
+   * @param {SystemRule} rule
+   * @param {JsonLogicEvaluationContext} flatCtx
+   * @returns {{passed: boolean, errored: boolean}}
+   */
   #evaluateRuleCondition(rule, flatCtx) {
     const ruleId = rule.rule_id || 'NO_ID';
 
@@ -285,6 +309,11 @@ class SystemLogicInterpreter extends BaseService {
     return { passed, errored };
   }
 
+  /**
+   * @param {SystemRule} rule
+   * @param {{type:string,payload:any}} event
+   * @param {any} nestedCtx
+   */
   #processRule(rule, event, nestedCtx) {
     const { passed, errored } = this.#evaluateRuleCondition(
       rule,
@@ -318,6 +347,11 @@ class SystemLogicInterpreter extends BaseService {
 
   /* Action execution – intentionally public-ish for tests                 */
 
+  /**
+   * @param {any[]} actions
+   * @param {any} nestedCtx
+   * @param {string} scopeLabel
+   */
   _executeActions(actions, nestedCtx, scopeLabel) {
     executeActionSequence(
       actions,

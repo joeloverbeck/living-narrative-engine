@@ -55,7 +55,12 @@ describe('HttpConfigurationProvider additional branches', () => {
       SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
         message: `HttpConfigurationProvider: Failed to fetch configuration from ${url}. Status: 503 HTTP status 503`,
-        details: { status: 503, statusText: 'HTTP status 503' },
+        details: {
+          statusCode: 503,
+          statusText: 'HTTP status 503',
+          url: url,
+          scopeName: 'HttpConfigurationProvider.fetchData'
+        },
       })
     );
   });
@@ -84,7 +89,12 @@ describe('HttpConfigurationProvider additional branches', () => {
       SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
         message: `HttpConfigurationProvider: Failed to parse JSON response from ${url}.`,
-        details: { error: 'boom', stack: undefined },
+        details: {
+          error: 'boom',
+          stack: undefined,
+          url: url,
+          scopeName: 'HttpConfigurationProvider.fetchData'
+        },
       })
     );
   });
@@ -106,7 +116,12 @@ describe('HttpConfigurationProvider additional branches', () => {
       SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
         message: `HttpConfigurationProvider: Error loading or parsing configuration from ${url}. Detail: broken`,
-        details: { error: 'broken', stack: undefined },
+        details: {
+          error: 'broken',
+          stack: undefined,
+          url: url,
+          scopeName: 'HttpConfigurationProvider.fetchData'
+        },
       })
     );
   });

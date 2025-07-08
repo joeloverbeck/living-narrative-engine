@@ -176,7 +176,6 @@ describe('AnatomyGenerationService – additional', () => {
     it('aggregates results across entities', async () => {
       orchestratorInstances.length = 0;
       const service = new AnatomyGenerationService(buildDeps());
-      const orchestratorMock = orchestratorInstances.pop();
       const spy = jest
         .spyOn(service, 'generateAnatomyIfNeeded')
         .mockResolvedValueOnce(true)

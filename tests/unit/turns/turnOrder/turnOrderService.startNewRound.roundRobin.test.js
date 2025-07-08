@@ -103,7 +103,6 @@ describe('TurnOrderService', () => {
       expect(SimpleRoundRobinQueue).toHaveBeenCalledWith();
       // Get the instance created in *this test*
       expect(SimpleRoundRobinQueue.mock.instances.length).toBe(1);
-      const mockQueueInstance = SimpleRoundRobinQueue.mock.instances[0]; // Instance created during Act phase
 
       // 2. Entities Added to Queue (Assert against the persistent mock)
       // <<< This assertion should now pass >>>

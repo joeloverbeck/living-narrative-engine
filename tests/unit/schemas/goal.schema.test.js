@@ -3,8 +3,6 @@
  * @see tests/schemas/goal.schema.test.js
  */
 
-import fs from 'fs';
-import path from 'path';
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
 import { describe, beforeAll, test, expect } from '@jest/globals';

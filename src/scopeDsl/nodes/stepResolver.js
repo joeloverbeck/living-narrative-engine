@@ -102,7 +102,22 @@ export default function createStepResolver({ entitiesGateway }) {
     resolve(node, ctx) {
       const trace = ctx.trace;
 
-      // Use dispatcher to resolve parent node
+      // Validate context has required properties
+      if (!ctx.actorEntity) {
+        const error = new Error('StepResolver: actorEntity is missing from context');
+        console.error('[CRITICAL] StepResolver missing actorEntity:', {
+          hasCtx: !!ctx,
+          ctxKeys: ctx ? Object.keys(ctx) : [],
+          nodeType: node?.type,
+          field: node?.field,
+          parentNodeType: node?.parent?.type,
+          depth: ctx?.depth,
+          callStack: new Error().stack
+        });
+        throw error;
+      }
+
+      // Use dispatcher to resolve parent node - pass full context
       const parentResult = ctx.dispatcher.resolve(node.parent, ctx);
 
       logStepResolution(

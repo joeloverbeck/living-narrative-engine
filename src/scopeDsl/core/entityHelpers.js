@@ -63,33 +63,120 @@ export function createEvaluationContext(
   locationProvider,
   trace
 ) {
-  let entity;
+  // Critical check: actor should never be undefined in scope evaluation
+  if (!actorEntity) {
+    const error = new Error('createEvaluationContext: actorEntity is undefined. This should never happen during scope evaluation.');
+    console.error('[CRITICAL] createEvaluationContext called with undefined actor:', {
+      item,
+      itemType: typeof item,
+      hasGateway: !!gateway,
+      hasLocationProvider: !!locationProvider,
+      // Enhanced debugging: show the call stack to trace where this came from
+      callStack: new Error().stack
+    });
+    // Fail fast - don't continue with undefined actor
+    throw error;
+  }
+  
+  // Additional check: actor must have a valid ID
+  if (!actorEntity.id || actorEntity.id === 'undefined' || typeof actorEntity.id !== 'string') {
+    const error = new Error(`createEvaluationContext: actorEntity has invalid ID: ${JSON.stringify(actorEntity.id)}. This should never happen.`);
+    console.error('[CRITICAL] createEvaluationContext actor has invalid ID:', {
+      actorId: actorEntity.id,
+      actorIdType: typeof actorEntity.id,
+      actorKeys: Object.keys(actorEntity),
+      hasComponents: !!actorEntity.components,
+      item,
+      itemType: typeof item,
+      callStack: new Error().stack
+    });
+    throw error;
+  }
 
+  // Create entity with components if needed
+  let entity;
   if (typeof item === 'string') {
-    entity = gateway.getEntityInstance(item) || { id: item };
+    entity = gateway.getEntityInstance(item);
+    if (!entity) {
+      entity = { id: item };
+    }
   } else if (item && typeof item === 'object') {
     entity = item;
   } else {
     return null;
   }
 
-  if (entity.componentTypeIds && !entity.components) {
-    const comps = getOrBuildComponents(entity.id, entity, gateway, trace);
-    entity.components = comps;
+  // Helper function to add components while preserving prototype chain
+  function addComponentsToEntity(entity, entityId) {
+    if (entity.components || !entity.componentTypeIds) {
+      return entity;
+    }
+    
+    
+    const components = buildComponents(entityId || entity.id, entity, gateway);
+    
+    // Check if it's a plain object or has a custom prototype
+    const proto = Object.getPrototypeOf(entity);
+    if (proto === Object.prototype || proto === null) {
+      // Plain object - safe to use spread
+      return {
+        ...entity,
+        components
+      };
+    }
+    
+    // Entity instance - create a wrapper that preserves the original entity
+    // We can't copy Entity instances because they have private fields
+    const enhancedEntity = Object.create(proto);
+    
+    // Define a getter for each property of the original entity
+    const descriptors = Object.getOwnPropertyDescriptors(proto);
+    for (const [key, descriptor] of Object.entries(descriptors)) {
+      if (descriptor.get) {
+        // This is a getter - create a forwarding getter
+        Object.defineProperty(enhancedEntity, key, {
+          get() { return entity[key]; },
+          enumerable: descriptor.enumerable,
+          configurable: descriptor.configurable
+        });
+      }
+    }
+    
+    // Copy non-getter properties
+    for (const key of Object.keys(entity)) {
+      if (!Object.getOwnPropertyDescriptor(proto, key)?.get) {
+        enhancedEntity[key] = entity[key];
+      }
+    }
+    
+    // Add components
+    enhancedEntity.components = components;
+    
+    return enhancedEntity;
   }
 
-  let actor = actorEntity;
-  if (actorEntity && actorEntity.componentTypeIds && !actorEntity.components) {
-    const comps = getOrBuildComponents(
-      actorEntity.id,
-      actorEntity,
-      gateway,
-      trace
-    );
-    actor = { ...actorEntity, components: comps };
-  }
+  // Ensure entity has components
+  entity = addComponentsToEntity(entity, entity.id || item);
+
+  // Ensure actor has components
+  const actor = addComponentsToEntity(actorEntity, actorEntity.id);
 
   const location = locationProvider.getLocation();
+
+  // Debug logging
+  if (trace) {
+    trace.addLog(
+      'debug',
+      `createEvaluationContext: entity=${entity?.id}, has components=${!!entity?.components}, actor=${actor?.id}, has components=${!!actor?.components}`,
+      'EntityHelpers',
+      {
+        entityId: entity?.id,
+        entityComponentKeys: entity?.components ? Object.keys(entity.components) : [],
+        actorId: actor?.id,
+        actorComponentKeys: actor?.components ? Object.keys(actor.components) : []
+      }
+    );
+  }
 
   return { entity, actor, location };
 }
