@@ -9,8 +9,6 @@ import ruleSchema from '../../../data/schemas/rule.schema.json';
 import commonSchema from '../../../data/schemas/common.schema.json';
 import operationSchema from '../../../data/schemas/operation.schema.json';
 import jsonLogicSchema from '../../../data/schemas/json-logic.schema.json';
-import conditionSchema from '../../../data/schemas/condition.schema.json';
-import conditionContainerSchema from '../../../data/schemas/condition-container.schema.json';
 import loadOperationSchemas from '../../unit/helpers/loadOperationSchemas.js';
 import loadConditionSchemas from '../../unit/helpers/loadConditionSchemas.js';
 import eventIsActionStopFollowing from '../../../data/mods/core/conditions/event-is-action-stop-following.condition.json';
@@ -33,15 +31,12 @@ import DispatchEventHandler from '../../../src/logic/operationHandlers/dispatchE
 import DispatchPerceptibleEventHandler from '../../../src/logic/operationHandlers/dispatchPerceptibleEventHandler.js';
 import EndTurnHandler from '../../../src/logic/operationHandlers/endTurnHandler.js';
 import IfCoLocatedHandler from '../../../src/logic/operationHandlers/ifCoLocatedHandler.js';
-import jsonLogic from 'json-logic-js';
 import {
   FOLLOWING_COMPONENT_ID,
   LEADING_COMPONENT_ID,
-  NAME_COMPONENT_ID,
   POSITION_COMPONENT_ID,
 } from '../../../src/constants/componentIds.js';
 import { ATTEMPT_ACTION_ID } from '../../../src/constants/eventIds.js';
-import { createRuleTestEnvironment } from '../../common/engine/systemLogicTestEnv.js';
 import AddPerceptionLogEntryHandler from '../../../src/logic/operationHandlers/addPerceptionLogEntryHandler.js';
 import { SafeEventDispatcher } from '../../../src/events/safeEventDispatcher.js';
 import ValidatedEventDispatcher from '../../../src/events/validatedEventDispatcher.js';
@@ -226,8 +221,8 @@ describe('stop_following rule integration', () => {
       validatedEventDispatcher,
       safeEventDispatcher
     );
-    const { IF_CO_LOCATED_FACTORY, ...rest } = handlers;
-    for (const [type, handler] of Object.entries(rest)) {
+    delete handlers.IF_CO_LOCATED_FACTORY;
+    for (const [type, handler] of Object.entries(handlers)) {
       operationRegistry.register(type, handler.execute.bind(handler));
     }
 
@@ -297,12 +292,11 @@ describe('stop_following rule integration', () => {
           validatedEventDispatcher,
           safeEventDispatcher
         );
-        const { IF_CO_LOCATED_FACTORY: newIfCoLocatedFactory, ...newRest } =
-          newHandlers;
+        delete newHandlers.IF_CO_LOCATED_FACTORY;
         const newOperationRegistry = new OperationRegistry({
           logger: testLogger,
         });
-        for (const [type, handler] of Object.entries(newRest)) {
+        for (const [type, handler] of Object.entries(newHandlers)) {
           newOperationRegistry.register(type, handler.execute.bind(handler));
         }
 

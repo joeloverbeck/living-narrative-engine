@@ -8,8 +8,6 @@ import ruleSchema from '../../../data/schemas/rule.schema.json';
 import commonSchema from '../../../data/schemas/common.schema.json';
 import operationSchema from '../../../data/schemas/operation.schema.json';
 import jsonLogicSchema from '../../../data/schemas/json-logic.schema.json';
-import conditionSchema from '../../../data/schemas/condition.schema.json';
-import conditionContainerSchema from '../../../data/schemas/condition-container.schema.json';
 import loadOperationSchemas from '../../unit/helpers/loadOperationSchemas.js';
 import loadConditionSchemas from '../../unit/helpers/loadConditionSchemas.js';
 import eventIsActionGo from '../../../data/mods/core/conditions/event-is-action-go.condition.json';
@@ -25,7 +23,6 @@ import DispatchPerceptibleEventHandler from '../../../src/logic/operationHandler
 import EndTurnHandler from '../../../src/logic/operationHandlers/endTurnHandler.js';
 import AddPerceptionLogEntryHandler from '../../../src/logic/operationHandlers/addPerceptionLogEntryHandler.js';
 import QueryComponentsHandler from '../../../src/logic/operationHandlers/queryComponentsHandler.js';
-import jsonLogic from 'json-logic-js';
 import {
   NAME_COMPONENT_ID,
   POSITION_COMPONENT_ID,
