@@ -54,8 +54,6 @@ class EntityFactory {
   #idGenerator;
   /** @type {Function} */
   #cloner;
-  /** @type {object} */
-  #defaultPolicy;
   /** @type {Function} */
   #validateAndClone;
 
@@ -73,16 +71,24 @@ class EntityFactory {
    * @param {ISchemaValidator} deps.validator - Schema validator
    * @param {ILogger} deps.logger - Logger instance
    * @param {function(): string} deps.idGenerator - ID generator function
+   * @param deps.defaultPolicy
    * @param {Function} deps.cloner - Component cloner function
-   * @param {object} deps.defaultPolicy - Default component policy
    * @throws {Error} If any dependency is missing or malformed
    */
   constructor({ validator, logger, idGenerator, cloner, defaultPolicy }) {
-    this.#validateDependencies({ validator, logger, idGenerator, cloner, defaultPolicy });
-    this.#initializeDependencies({ validator, logger, idGenerator, cloner, defaultPolicy });
+    this.#validateDependencies({
+      validator,
+      logger,
+      idGenerator,
+      cloner,
+      defaultPolicy,
+    });
+    this.#initializeDependencies({ validator, logger, idGenerator, cloner });
     this.#initializeSpecializedFactories();
 
-    this.#logger.debug('[EntityFactory] EntityFactory (refactored) initialized.');
+    this.#logger.debug(
+      '[EntityFactory] EntityFactory (refactored) initialized.'
+    );
   }
 
   /**
@@ -95,7 +101,13 @@ class EntityFactory {
    * @param deps.cloner
    * @param deps.defaultPolicy
    */
-  #validateDependencies({ validator, logger, idGenerator, cloner, defaultPolicy }) {
+  #validateDependencies({
+    validator,
+    logger,
+    idGenerator,
+    cloner,
+    defaultPolicy,
+  }) {
     validateDependency(logger, 'ILogger', console, {
       requiredMethods: ['info', 'error', 'warn', 'debug'],
     });
@@ -125,14 +137,12 @@ class EntityFactory {
    * @param deps.logger
    * @param deps.idGenerator
    * @param deps.cloner
-   * @param deps.defaultPolicy
    */
-  #initializeDependencies({ validator, logger, idGenerator, cloner, defaultPolicy }) {
+  #initializeDependencies({ validator, logger, idGenerator, cloner }) {
     this.#validator = validator;
     this.#logger = ensureValidLogger(logger, 'EntityFactory');
     this.#idGenerator = idGenerator;
     this.#cloner = cloner;
-    this.#defaultPolicy = defaultPolicy;
     this.#validateAndClone = createValidateAndClone(
       this.#validator,
       this.#logger,
@@ -185,8 +195,12 @@ class EntityFactory {
     this.#validationFactory.validateCreateIds(definitionId, instanceId);
 
     // Get entity definition
-    const entityDefinition = definition || 
-      this.#definitionLookupFactory.getDefinitionOrThrow(definitionId, registry);
+    const entityDefinition =
+      definition ||
+      this.#definitionLookupFactory.getDefinitionOrThrow(
+        definitionId,
+        registry
+      );
 
     // Resolve actual instance ID
     const actualInstanceId = this.#validationFactory.resolveInstanceId(
@@ -262,11 +276,12 @@ class EntityFactory {
     );
 
     // Validate serialized components
-    const validatedComponents = this.#validationFactory.validateSerializedComponents(
-      components,
-      instanceId,
-      definitionId
-    );
+    const validatedComponents =
+      this.#validationFactory.validateSerializedComponents(
+        components,
+        instanceId,
+        definitionId
+      );
 
     // Construct and return entity
     return this.#constructionFactory.constructEntity(
@@ -305,5 +320,4 @@ class EntityFactory {
     return this.#definitionLookupFactory;
   }
 }
-
 export default EntityFactory;
