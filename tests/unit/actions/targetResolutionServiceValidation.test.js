@@ -67,28 +67,28 @@ describe('TargetResolutionService - Actor Entity Validation', () => {
 
     it('should return error for null actor entity', async () => {
       const result = await targetResolutionService.resolveTargets(
-        mockAction,
+        'test:scope',
         null,
-        null
+        {}
       );
 
       expect(result.error).toBeDefined();
-      expect(result.error.message).toContain('Invalid actor entity: null/undefined');
+      expect(result.error.message).toBe('Actor entity is null or undefined');
       expect(result.targets).toEqual([]);
       expect(mockDependencies.logger.error).toHaveBeenCalledWith(
-        'TargetResolutionService: Invalid actor entity: null/undefined'
+        'TargetResolutionService: Actor entity is null or undefined'
       );
     });
 
     it('should return error for undefined actor entity', async () => {
       const result = await targetResolutionService.resolveTargets(
-        mockAction,
+        'test:scope',
         undefined,
-        null
+        {}
       );
 
       expect(result.error).toBeDefined();
-      expect(result.error.message).toContain('Invalid actor entity: null/undefined');
+      expect(result.error.message).toBe('Actor entity is null or undefined');
       expect(result.targets).toEqual([]);
     });
 
@@ -99,16 +99,23 @@ describe('TargetResolutionService - Actor Entity Validation', () => {
       };
 
       const result = await targetResolutionService.resolveTargets(
-        mockAction,
+        'test:scope',
         invalidActor,
-        null
+        {}
       );
 
       expect(result.error).toBeDefined();
-      expect(result.error.message).toContain('Invalid actor entity: id=undefined');
+      expect(result.error.message).toBe('Invalid actor entity ID: "undefined" (type: string)');
       expect(result.targets).toEqual([]);
       expect(mockDependencies.logger.error).toHaveBeenCalledWith(
-        'TargetResolutionService: Invalid actor entity: id=undefined'
+        'TargetResolutionService: Invalid actor entity ID: "undefined" (type: string)',
+        expect.objectContaining({
+          actorEntity: invalidActor,
+          actorId: 'undefined',
+          actorIdType: 'string',
+          hasComponents: false,
+          hasComponentTypeIds: true
+        })
       );
     });
 
@@ -119,13 +126,13 @@ describe('TargetResolutionService - Actor Entity Validation', () => {
       };
 
       const result = await targetResolutionService.resolveTargets(
-        mockAction,
+        'test:scope',
         actorWithoutId,
-        null
+        {}
       );
 
       expect(result.error).toBeDefined();
-      expect(result.error.message).toContain('Invalid actor entity: id=undefined');
+      expect(result.error.message).toBe('Invalid actor entity ID: undefined (type: undefined)');
       expect(result.targets).toEqual([]);
     });
 
@@ -136,13 +143,13 @@ describe('TargetResolutionService - Actor Entity Validation', () => {
       };
 
       const result = await targetResolutionService.resolveTargets(
-        mockAction,
+        'test:scope',
         actorWithEmptyId,
-        null
+        {}
       );
 
       expect(result.error).toBeDefined();
-      expect(result.error.message).toContain('Invalid actor entity: id=');
+      expect(result.error.message).toBe('Invalid actor entity ID: "" (type: string)');
       expect(result.targets).toEqual([]);
     });
 
@@ -150,12 +157,6 @@ describe('TargetResolutionService - Actor Entity Validation', () => {
       const validActor = {
         id: 'valid-actor-123',
         componentTypeIds: ['core:actor', 'core:position'],
-      };
-
-      const actionWithScope = {
-        id: 'test:action',
-        scope: 'test:scope',
-        prerequisites: [],
       };
 
       mockDependencies.entityManager.getAllComponentTypesForEntity.mockReturnValue([
@@ -183,7 +184,7 @@ describe('TargetResolutionService - Actor Entity Validation', () => {
       };
 
       const result = await targetResolutionService.resolveTargets(
-        actionWithScope,
+        'test:scope',
         validActor,
         discoveryContext
       );
@@ -202,9 +203,9 @@ describe('TargetResolutionService - Actor Entity Validation', () => {
       };
 
       await targetResolutionService.resolveTargets(
-        mockAction,
+        'test:scope',
         invalidActor,
-        null
+        {}
       );
 
       // Should not attempt to build components for invalid actor

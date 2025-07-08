@@ -28,7 +28,21 @@ export default function createArrayIterationResolver() {
     resolve(node, ctx) {
       const trace = ctx.trace;
 
-      // Use dispatcher to resolve parent node
+      // Validate context has required properties
+      if (!ctx.actorEntity) {
+        const error = new Error('ArrayIterationResolver: actorEntity is missing from context');
+        console.error('[CRITICAL] ArrayIterationResolver missing actorEntity:', {
+          hasCtx: !!ctx,
+          ctxKeys: ctx ? Object.keys(ctx) : [],
+          nodeType: node?.type,
+          parentNodeType: node?.parent?.type,
+          depth: ctx?.depth,
+          callStack: new Error().stack
+        });
+        throw error;
+      }
+
+      // Use dispatcher to resolve parent node - pass full context
       const parentResult = ctx.dispatcher.resolve(node.parent, ctx);
 
       if (trace) {

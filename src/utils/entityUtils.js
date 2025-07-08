@@ -8,6 +8,11 @@ import { isNonBlankString } from './textUtils.js';
 /** @typedef {import('../interfaces/ILogger.js').ILogger} ILogger */
 
 /**
+ * @typedef {object} NameComponentData
+ * @property {string} text - The display name text
+ */
+
+/**
  * @description Retrieves the display name of an entity with fallback logic.
  * The lookup priority is:
  * 1. `core:name` component's `text` property.
@@ -35,7 +40,13 @@ export function getEntityDisplayName(
     return entityId || fallbackString;
   }
 
-  const nameComponent = entity.getComponentData(NAME_COMPONENT_ID);
+  // At this point, entity is validated and non-null
+  // TypeScript needs explicit assertion after isValidEntity check
+  /** @type {Entity} */
+  const validEntity = /** @type {Entity} */ (entity);
+  
+  /** @type {NameComponentData | null | undefined} */
+  const nameComponent = /** @type {NameComponentData | undefined} */ (validEntity.getComponentData(NAME_COMPONENT_ID));
   if (nameComponent) {
     if (
       typeof nameComponent.text === 'string' &&
@@ -45,18 +56,12 @@ export function getEntityDisplayName(
     }
   }
 
-  if (typeof entity.name === 'string' && isNonBlankString(entity.name)) {
-    logger?.debug(
-      `getEntityDisplayName: Entity '${entity.id}' using fallback 'entity.name' property ('${entity.name}') as '${NAME_COMPONENT_ID}' was not found or lacked 'text'/'value'.`
-    );
-    return entity.name;
-  }
-
-  if (typeof entity.id === 'string' && isNonBlankString(entity.id)) {
+  // Entity class doesn't have a 'name' property - skip directly to ID check
+  if (typeof validEntity.id === 'string' && isNonBlankString(validEntity.id)) {
     logger?.warn(
-      `getEntityDisplayName: Entity '${entity.id}' has no usable name from component or 'entity.name'. Falling back to entity ID.`
+      `getEntityDisplayName: Entity '${validEntity.id}' has no usable name from '${NAME_COMPONENT_ID}' component. Falling back to entity ID.`
     );
-    return entity.id;
+    return validEntity.id;
   }
 
   logger?.warn(

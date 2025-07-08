@@ -1,3 +1,4 @@
 {
-  "mods": ["core", "p_erotica"]
+  "mods": ["core", "isekai"],
+  "startWorld": "isekai:world"
 }

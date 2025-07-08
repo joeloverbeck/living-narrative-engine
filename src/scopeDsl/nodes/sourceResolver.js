@@ -60,6 +60,33 @@ export default function createSourceResolver({
      */
     resolve(node, ctx) {
       const { actorEntity, trace } = ctx;
+      
+      // Validate context has required properties
+      if (!actorEntity) {
+        const error = new Error('SourceResolver: actorEntity is missing from context');
+        console.error('[CRITICAL] SourceResolver missing actorEntity:', {
+          hasCtx: !!ctx,
+          ctxKeys: ctx ? Object.keys(ctx) : [],
+          nodeType: node?.type,
+          nodeKind: node?.kind,
+          nodeParam: node?.param,
+          depth: ctx?.depth,
+          callStack: new Error().stack
+        });
+        throw error;
+      }
+      
+      if (!actorEntity.id || typeof actorEntity.id !== 'string') {
+        const error = new Error(`SourceResolver: actorEntity has invalid ID: ${JSON.stringify(actorEntity.id)}`);
+        console.error('[CRITICAL] SourceResolver actorEntity has invalid ID:', {
+          actorId: actorEntity.id,
+          actorIdType: typeof actorEntity.id,
+          nodeKind: node?.kind,
+          callStack: new Error().stack
+        });
+        throw error;
+      }
+      
       let result = new Set();
 
       switch (node.kind) {

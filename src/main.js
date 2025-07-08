@@ -18,7 +18,8 @@ import {
   initializeAuxiliaryServicesStage,
 } from './bootstrapper/stages/index.js';
 
-const ACTIVE_WORLD = 'p_erotica:donostia';
+/** @type {string | undefined} */
+let startWorld;
 
 /** @type {import('./bootstrapper/UIBootstrapper.js').EssentialUIElements | undefined} */
 let uiElements;
@@ -32,6 +33,25 @@ let gameEngine = null; // Will be populated by initializeGameEngineStage
 let currentPhaseForError = 'Initial Setup';
 
 /**
+ * @description Loads the game configuration and extracts the startWorld value.
+ * @returns {Promise<string>} The startWorld value from game.json, or 'default' if not specified.
+ */
+async function loadStartWorld() {
+  try {
+    const response = await fetch('./data/game.json');
+    if (!response.ok) {
+      throw new Error(`Failed to load game configuration: ${response.status} ${response.statusText}`);
+    }
+    const gameConfig = await response.json();
+    return gameConfig.startWorld || 'default';
+  } catch (error) {
+    console.error('Failed to load startWorld from game.json:', error);
+    // Return a default world name if loading fails
+    return 'default';
+  }
+}
+
+/**
  * @description Runs bootstrap stages 1–7 and stores resulting instances.
  * @returns {Promise<void>} Resolves when bootstrap stages complete.
  */
@@ -39,6 +59,9 @@ export async function bootstrapApp() {
   currentPhaseForError = 'Initial Setup';
 
   try {
+    // Load startWorld from game configuration
+    startWorld = await loadStartWorld();
+    
     // STAGE 1: Ensure Critical DOM Elements
     currentPhaseForError = 'UI Element Validation';
     const uiResult = await ensureCriticalDOMElementsStage(document, {
@@ -214,7 +237,11 @@ export async function beginGame(showLoadUI = false) {
   }
 
   try {
-    const startResult = await startGameStage(gameEngine, ACTIVE_WORLD, logger);
+    // Use the startWorld loaded from game configuration
+    const worldToLoad = startWorld || 'default';
+    logger.debug(`Starting game with world: ${worldToLoad}`);
+    
+    const startResult = await startGameStage(gameEngine, worldToLoad, logger);
     if (!startResult.success) throw startResult.error;
     if (showLoadUI && typeof gameEngine.showLoadGameUI === 'function') {
       await gameEngine.showLoadGameUI();

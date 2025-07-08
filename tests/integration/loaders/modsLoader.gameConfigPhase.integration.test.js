@@ -57,7 +57,7 @@ describe('ModsLoader + GameConfigPhase integration', () => {
    * @returns {GameConfigPhase} Configured phase instance.
    */
   function makeGameConfigPhaseWithConfig(config) {
-    fakeGameConfigLoader = { loadConfig: jest.fn().mockResolvedValue(config) };
+    fakeGameConfigLoader = { loadConfig: jest.fn().mockResolvedValue({ mods: config }) };
     return new GameConfigPhase({
       gameConfigLoader: fakeGameConfigLoader,
       logger: fakeLogger,

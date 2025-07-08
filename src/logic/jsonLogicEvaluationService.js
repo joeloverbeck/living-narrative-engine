@@ -59,6 +59,120 @@ class JsonLogicEvaluationService extends BaseService {
   }
 
   /**
+   * Validates a JSON Logic rule to ensure it only uses allowed operations.
+   * This prevents potential security issues from arbitrary operations.
+   *
+   * @private
+   * @param {any} rule - The rule to validate (can be object, array, or primitive)
+   * @param {Set<string>} seenObjects - Track objects to prevent circular references
+   * @param {number} depth - Current recursion depth
+   * @throws {Error} If rule contains disallowed operations or exceeds depth limit
+   */
+  #validateJsonLogic(rule, seenObjects = new Set(), depth = 0) {
+    // Define allowed operations - conservative whitelist approach
+    const ALLOWED_OPERATIONS = new Set([
+      // Comparison operators
+      '==', '===', '!=', '!==', '>', '>=', '<', '<=',
+      // Logical operators
+      'and', 'or', 'not', '!', '!!',
+      // Conditional
+      'if',
+      // Data access
+      'var', 'missing', 'missing_some',
+      // Array operations
+      'in', 'cat', 'substr', 'merge',
+      // Math operations
+      '+', '-', '*', '/', '%', 'min', 'max',
+      // String operations
+      'toLowerCase', 'toUpperCase',
+      // Type checks
+      'some', 'none', 'all',
+      // Special
+      'log',
+      // Custom operations we've added
+      'condition_ref', // Used for condition references
+      // Anatomy/body part operators
+      'hasPartWithComponentValue',
+      'hasPartOfType',
+      'hasPartOfTypeWithComponentValue',
+      // Test operators
+      'throw_error_operator' // Used in tests for short-circuit behavior
+    ]);
+
+    const MAX_DEPTH = 50; // Prevent stack overflow from deeply nested rules
+    
+    if (depth > MAX_DEPTH) {
+      throw new Error(`JSON Logic validation error: Maximum nesting depth (${MAX_DEPTH}) exceeded`);
+    }
+
+    // Handle null/undefined
+    if (rule === null || rule === undefined) {
+      return;
+    }
+
+    // Handle primitives (strings, numbers, booleans)
+    if (typeof rule !== 'object') {
+      return;
+    }
+
+    // Handle circular references using WeakSet for object references
+    if (seenObjects.has(rule)) {
+      throw new Error('JSON Logic validation error: Circular reference detected');
+    }
+    seenObjects.add(rule);
+
+    try {
+      // Handle arrays - validate each element
+      if (Array.isArray(rule)) {
+        for (const item of rule) {
+          this.#validateJsonLogic(item, seenObjects, depth + 1);
+        }
+        return;
+      }
+
+      // Handle objects - check operations
+      const keys = Object.keys(rule);
+      
+      // Check for dangerous properties explicitly
+      if (rule.hasOwnProperty('__proto__') || rule.hasOwnProperty('constructor') || rule.hasOwnProperty('prototype')) {
+        const dangerousKey = rule.hasOwnProperty('__proto__') ? '__proto__' : 
+                           rule.hasOwnProperty('constructor') ? 'constructor' : 'prototype';
+        throw new Error(`JSON Logic validation error: Disallowed property '${dangerousKey}'`);
+      }
+      
+      // Also check using getOwnPropertyNames for additional safety
+      const allKeys = Object.getOwnPropertyNames(rule);
+      for (const key of allKeys) {
+        if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
+          throw new Error(`JSON Logic validation error: Disallowed property '${key}'`);
+        }
+      }
+      
+      // Empty objects are not valid JSON Logic rules (they evaluate to truthy but have no operation)
+      if (keys.length === 0) {
+        // Allow empty objects - they're harmless and evaluate to the object itself
+        return;
+      }
+      
+      // For single-key objects, check if it's a valid operation
+      if (keys.length === 1) {
+        const operation = keys[0];
+        if (!ALLOWED_OPERATIONS.has(operation)) {
+          throw new Error(`JSON Logic validation error: Disallowed operation '${operation}'`);
+        }
+      }
+      
+      // Recursively validate all values
+      for (const key of keys) {
+        this.#validateJsonLogic(rule[key], seenObjects, depth + 1);
+      }
+    } finally {
+      // Remove from seen objects when done processing
+      seenObjects.delete(rule);
+    }
+  }
+
+  /**
    * Recursively resolves all `condition_ref` properties within a rule object
    * into their corresponding logic definitions.
    *
@@ -185,6 +299,15 @@ class JsonLogicEvaluationService extends BaseService {
    * @returns {boolean} - The boolean result. Returns false on error.
    */
   evaluate(rule, context) {
+    // Validate the rule before resolving condition refs to catch issues early
+    try {
+      this.#validateJsonLogic(rule);
+    } catch (validationError) {
+      this.#logger.error('JSON Logic validation failed:', validationError);
+      // Return false for invalid rules to prevent execution
+      return false;
+    }
+    
     const resolvedRule = this.#prepareRule(rule);
 
     if (
@@ -204,9 +327,15 @@ class JsonLogicEvaluationService extends BaseService {
       }
     }
 
-    const ruleSummary =
-      JSON.stringify(resolvedRule).substring(0, 150) +
-      (JSON.stringify(resolvedRule).length > 150 ? '...' : '');
+    // Handle null/undefined rules before stringifying
+    let ruleSummary = 'null';
+    if (resolvedRule !== null && resolvedRule !== undefined) {
+      const stringified = JSON.stringify(resolvedRule);
+      if (stringified !== undefined) {
+        ruleSummary = stringified.substring(0, 150) +
+          (stringified.length > 150 ? '...' : '');
+      }
+    }
     this.#logger.debug(
       `Evaluating rule: ${ruleSummary}. Context keys: ${Object.keys(context || {}).join(', ')}`
     );

@@ -33,4 +33,5 @@ export function createLoadContext({ worldName, requestedMods = [], registry }) {
  * @property {TotalResultsSummary} totals
  * @property {number} incompatibilities
  * @property {import('../../../data/schemas/mod-manifest.schema.json').ModManifest[]} [manifests]
+ * @property {string} [startWorld]
  */

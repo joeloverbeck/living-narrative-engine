@@ -28,16 +28,23 @@ export default class GameConfigPhase extends LoaderPhase {
   async execute(ctx) {
     this.logger.info('— GameConfigPhase starting —');
     try {
-      const requestedMods = await this.gameConfigLoader.loadConfig();
+      const gameConfig = await this.gameConfigLoader.loadConfig();
 
       this.logger.debug(
-        `GameConfigPhase: Loaded ${requestedMods.length} mods from game configuration: [${requestedMods.join(', ')}]`
+        `GameConfigPhase: Loaded ${gameConfig.mods.length} mods from game configuration: [${gameConfig.mods.join(', ')}]`
       );
+      
+      if (gameConfig.startWorld) {
+        this.logger.debug(
+          `GameConfigPhase: Loaded startWorld: ${gameConfig.startWorld}`
+        );
+      }
 
       // Create new frozen context with modifications
       const next = {
         ...ctx,
-        requestedMods,
+        requestedMods: gameConfig.mods,
+        startWorld: gameConfig.startWorld,
       };
 
       return Object.freeze(next);

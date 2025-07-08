@@ -57,20 +57,67 @@ export default function createFilterResolver({
           ctxKeys: ctx ? Object.keys(ctx) : [],
           nodeType: node?.type,
           hasDispatcher: !!dispatcher,
-          hasTrace: !!trace
+          hasTrace: !!trace,
+          parentNodeType: node?.parent?.type,
+          // Enhanced debugging: show full context structure
+          contextSnapshot: ctx ? {
+            hasActorEntity: !!ctx.actorEntity,
+            hasRuntimeCtx: !!ctx.runtimeCtx,
+            depth: ctx.depth,
+            // Don't log full objects to avoid circular references
+            keys: Object.keys(ctx).filter(k => k !== 'dispatcher' && k !== 'cycleDetector')
+          } : null,
+          callStack: new Error().stack
         });
         throw error;
       }
 
       // Additional validation for actorEntity ID
-      if (!actorEntity.id || actorEntity.id === 'undefined') {
-        const error = new Error(`FilterResolver: actorEntity has invalid ID: ${actorEntity.id}. This is a critical error.`);
+      if (!actorEntity.id || actorEntity.id === 'undefined' || typeof actorEntity.id !== 'string') {
+        // Enhanced error detection for Entity class spread operator issue
+        const isPossibleSpreadIssue = (
+          !actorEntity.id && 
+          typeof actorEntity === 'object' &&
+          actorEntity !== null &&
+          // Check if this looks like a spread Entity object that lost its getters
+          ('componentTypeIds' in actorEntity || 'components' in actorEntity)
+        );
+        
+        const errorMessage = isPossibleSpreadIssue 
+          ? `FilterResolver: actorEntity has invalid ID: ${JSON.stringify(actorEntity.id)}. This appears to be an Entity instance that lost its 'id' getter method, likely due to improper use of spread operator (...entity). Entity instances must preserve their getter methods.`
+          : `FilterResolver: actorEntity has invalid ID: ${JSON.stringify(actorEntity.id)}. This is a critical error.`;
+          
+        const error = new Error(errorMessage);
         console.error('[CRITICAL] FilterResolver actorEntity has invalid ID:', {
           actorId: actorEntity.id,
+          actorIdType: typeof actorEntity.id,
           actorKeys: Object.keys(actorEntity),
           nodeType: node?.type,
+          parentNodeType: node?.parent?.type,
           hasDispatcher: !!dispatcher,
-          hasTrace: !!trace
+          hasTrace: !!trace,
+          isPossibleSpreadIssue,
+          // Enhanced debugging info
+          contextSnapshot: {
+            hasActorEntity: true,
+            actorEntityKeys: Object.keys(actorEntity),
+            hasComponents: !!actorEntity.components,
+            componentCount: actorEntity.components ? Object.keys(actorEntity.components).length : 0,
+            depth: ctx.depth,
+            contextKeys: Object.keys(ctx).filter(k => k !== 'dispatcher' && k !== 'cycleDetector')
+          },
+          callStack: new Error().stack
+        });
+        throw error;
+      }
+      
+      // Validate node structure
+      if (!node || !node.parent) {
+        const error = new Error('FilterResolver: Invalid node structure - missing parent node.');
+        console.error('[CRITICAL] FilterResolver invalid node structure:', {
+          hasNode: !!node,
+          nodeType: node?.type,
+          hasParent: !!node?.parent
         });
         throw error;
       }
@@ -97,9 +144,19 @@ export default function createFilterResolver({
       const result = new Set();
 
       for (const item of parentResult) {
+        // Skip null or undefined items
+        if (item == null) {
+          if (trace) {
+            trace.addLog('warning', 'Skipping null/undefined item in filter', source);
+          }
+          continue;
+        }
+        
         // If the item is an array, iterate over its elements for filtering
         if (Array.isArray(item)) {
           for (const arrayElement of item) {
+            if (arrayElement == null) continue;
+            
             const evalCtx = createEvaluationContext(
               arrayElement,
               actorEntity,

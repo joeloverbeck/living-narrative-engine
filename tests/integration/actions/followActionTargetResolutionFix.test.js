@@ -161,22 +161,22 @@ describe('Follow Action Target Resolution - Invalid Entity ID Fix', () => {
 
     // Test with null actor
     const nullResult = await targetResolutionService.resolveTargets(
-      followAction,
+      'core:potential_leaders',
       null,
       { currentLocation: { id: 'test-location' } }
     );
     expect(nullResult.error).toBeDefined();
-    expect(nullResult.error.message).toContain('Invalid actor entity');
+    expect(nullResult.error.message).toBe('Actor entity is null or undefined');
     expect(nullResult.targets).toEqual([]);
 
     // Test with undefined actor
     const undefinedResult = await targetResolutionService.resolveTargets(
-      followAction,
+      'core:potential_leaders',
       undefined,
       { currentLocation: { id: 'test-location' } }
     );
     expect(undefinedResult.error).toBeDefined();
-    expect(undefinedResult.error.message).toContain('Invalid actor entity');
+    expect(undefinedResult.error.message).toBe('Actor entity is null or undefined');
     expect(undefinedResult.targets).toEqual([]);
   });
 
@@ -230,7 +230,7 @@ describe('Follow Action Target Resolution - Invalid Entity ID Fix', () => {
         actorEntity: invalidActor,
         dispatcher: mockDispatcher,
       });
-    }).toThrow('actorEntity has invalid ID');
+    }).toThrow('FilterResolver: actorEntity has invalid ID');
   });
 
   it('should validate actor entity in createEvaluationContext', () => {
@@ -244,7 +244,7 @@ describe('Follow Action Target Resolution - Invalid Entity ID Fix', () => {
         mockEntityManager,
         mockLocationProvider
       );
-    }).toThrow('Actor entity has invalid ID: undefined');
+    }).toThrow('createEvaluationContext: actorEntity has invalid ID: "undefined". This should never happen.');
 
     // Test with null actor
     expect(() => {
@@ -254,7 +254,7 @@ describe('Follow Action Target Resolution - Invalid Entity ID Fix', () => {
         mockEntityManager,
         mockLocationProvider
       );
-    }).toThrow('Actor entity is undefined');
+    }).toThrow('createEvaluationContext: actorEntity is undefined. This should never happen during scope evaluation.');
 
     // Test with actor without ID
     const actorWithoutId = { name: 'No ID' };
@@ -265,6 +265,6 @@ describe('Follow Action Target Resolution - Invalid Entity ID Fix', () => {
         mockEntityManager,
         mockLocationProvider
       );
-    }).toThrow('Actor entity has invalid ID');
+    }).toThrow('createEvaluationContext: actorEntity has invalid ID');
   });
 });

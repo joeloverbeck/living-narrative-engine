@@ -5,7 +5,10 @@ import { createLoadContext } from '../../../../src/loaders/LoadContext.js';
 describe('GameConfigPhase', () => {
   it('should create a new context without mutating the previous one', async () => {
     const gameConfigLoader = {
-      loadConfig: jest.fn().mockResolvedValue(['core']),
+      loadConfig: jest.fn().mockResolvedValue({ 
+        mods: ['core'], 
+        startWorld: 'test:world' 
+      }),
     };
     const logger = { info: jest.fn(), debug: jest.fn(), error: jest.fn() };
     const registry = {};
@@ -17,5 +20,6 @@ describe('GameConfigPhase', () => {
     expect(result).not.toBe(ctx);
     expect(ctx.requestedMods).toEqual([]);
     expect(result.requestedMods).toEqual(['core']);
+    expect(result.startWorld).toBe('test:world');
   });
 });
