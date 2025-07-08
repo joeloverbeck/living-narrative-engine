@@ -20,14 +20,11 @@ describe('SimpleRoundRobinQueue', () => {
   let entityA;
   /** @type {Entity} */
   let entityB;
-  /** @type {Entity} */
-  let entityC;
 
   beforeEach(() => {
     queue = new SimpleRoundRobinQueue();
     entityA = { id: 'a', name: 'Entity A' };
     entityB = { id: 'b', name: 'Entity B' };
-    entityC = { id: 'c', name: 'Entity C' };
   });
 
   // --- Test Suite for isEmpty() and size() Methods (TEST-TURN-ORDER-001.10.5) ---

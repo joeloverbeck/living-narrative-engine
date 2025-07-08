@@ -113,10 +113,6 @@ describe('TurnOrderService', () => {
       expect(mockSimpleQueueInstance.getNext).toHaveBeenCalledTimes(1);
       // Ensure the *other* queue type wasn't touched
       expect(InitiativePriorityQueue).not.toHaveBeenCalled();
-      if (mockInitiativeQueueInstance) {
-        // Check only if the other mock instance exists (it shouldn't)
-        expect(mockInitiativeQueueInstance.getNext).not.toHaveBeenCalled();
-      }
       expect(mockLogger.debug).toHaveBeenCalledTimes(1);
       expect(mockLogger.debug).toHaveBeenCalledWith(
         `TurnOrderService: Advancing turn to entity "${expectedEntity.id}".`
@@ -153,10 +149,6 @@ describe('TurnOrderService', () => {
       expect(mockInitiativeQueueInstance.getNext).toHaveBeenCalledTimes(1);
       // Ensure the *other* queue type wasn't touched
       expect(SimpleRoundRobinQueue).not.toHaveBeenCalled();
-      if (mockSimpleQueueInstance) {
-        // Check only if the other mock instance exists (it shouldn't)
-        expect(mockSimpleQueueInstance.getNext).not.toHaveBeenCalled();
-      }
       expect(mockLogger.debug).toHaveBeenCalledTimes(1);
       expect(mockLogger.debug).toHaveBeenCalledWith(
         `TurnOrderService: Advancing turn to entity "${expectedEntity.id}".`
@@ -185,9 +177,6 @@ describe('TurnOrderService', () => {
       // Assert
       expect(result).toBeNull();
       expect(mockSimpleQueueInstance.getNext).toHaveBeenCalledTimes(1);
-      if (mockInitiativeQueueInstance) {
-        expect(mockInitiativeQueueInstance.getNext).not.toHaveBeenCalled();
-      }
       expect(mockLogger.debug).toHaveBeenCalledTimes(1);
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'TurnOrderService: getNextEntity returned null (queue is likely empty).'
@@ -219,9 +208,6 @@ describe('TurnOrderService', () => {
       // Assert
       expect(result).toBeNull();
       expect(mockInitiativeQueueInstance.getNext).toHaveBeenCalledTimes(1);
-      if (mockSimpleQueueInstance) {
-        expect(mockSimpleQueueInstance.getNext).not.toHaveBeenCalled();
-      }
       expect(mockLogger.debug).toHaveBeenCalledTimes(1);
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'TurnOrderService: getNextEntity returned null (queue is likely empty).'
@@ -248,10 +234,6 @@ describe('TurnOrderService', () => {
       // Crucially, ensure no queue constructor or getNext was called
       expect(SimpleRoundRobinQueue).not.toHaveBeenCalled();
       expect(InitiativePriorityQueue).not.toHaveBeenCalled();
-      if (mockSimpleQueueInstance)
-        expect(mockSimpleQueueInstance.getNext).not.toHaveBeenCalled();
-      if (mockInitiativeQueueInstance)
-        expect(mockInitiativeQueueInstance.getNext).not.toHaveBeenCalled();
 
       expect(mockLogger.warn).toHaveBeenCalledTimes(1);
       expect(mockLogger.warn).toHaveBeenCalledWith(

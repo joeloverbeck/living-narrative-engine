@@ -6,14 +6,7 @@
  * handlers log & delegate correctly.
  */
 
-import {
-  describe,
-  it,
-  expect,
-  jest,
-  beforeEach,
-  afterEach,
-} from '@jest/globals';
+import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { TurnIdleState } from '../../../../src/turns/states/turnIdleState.js';
 
 /* ------------------------------------------------------------------ */
@@ -144,6 +137,7 @@ describe('TurnIdleState “idle passthrough” methods', () => {
   };
 
   it('handleSubmittedCommand warns & delegates', async () => {
+    expect.assertions(2);
     const expected =
       "TurnIdleState: Command ('look') submitted by actor-1 but no turn is active (handler is Idle).";
     await expectWarnAndThrow(
@@ -153,6 +147,7 @@ describe('TurnIdleState “idle passthrough” methods', () => {
   });
 
   it('handleTurnEndedEvent warns & delegates (no throw)', async () => {
+    expect.assertions(1);
     const payload = { entityId: actor.id };
     await idle.handleTurnEndedEvent(handler, payload);
     expect(logger.warn).toHaveBeenCalledWith(
@@ -161,6 +156,7 @@ describe('TurnIdleState “idle passthrough” methods', () => {
   });
 
   it('processCommandResult warns & delegates', async () => {
+    expect.assertions(2);
     await expectWarnAndThrow(
       () =>
         idle.processCommandResult(handler, actor, { success: true }, 'look'),
@@ -169,6 +165,7 @@ describe('TurnIdleState “idle passthrough” methods', () => {
   });
 
   it('handleDirective warns & delegates', async () => {
+    expect.assertions(2);
     await expectWarnAndThrow(
       () => idle.handleDirective(handler, actor, 'ANY_DIRECTIVE', {}),
       'TurnIdleState: handleDirective called (for actor-1) but no turn is active.'
