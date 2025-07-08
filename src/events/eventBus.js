@@ -7,12 +7,20 @@ import { IEventBus } from '../interfaces/IEventBus.js';
 
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 
+/**
+ * Callback signature for event listeners used by the EventBus.
+ *
+ * @typedef {(event: {type: string, payload?: any}) => void | Promise<void>} EventListener
+ */
+
 class EventBus extends IEventBus {
   #listeners = new Map(); // Stores eventName -> Set<listenerFn>
   #logger;
 
   /**
-   * @param {{ logger?: ILogger }} [deps]
+   * Creates an EventBus instance.
+   *
+   * @param {{ logger?: ILogger }} [deps] - Optional logger dependency.
    */
   constructor({ logger = console } = {}) {
     super();

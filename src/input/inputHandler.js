@@ -6,6 +6,12 @@
 import { IInputHandler } from '../interfaces/IInputHandler.js';
 
 /**
+ * Callback signature for DOM event listeners.
+ *
+ * @typedef {(event: Event) => void} EventListener
+ */
+
+/**
  * A reusable no-op function for default callbacks.
  *
  * @type {() => void}
@@ -136,7 +142,11 @@ class InputHandler extends IInputHandler {
   _subscribeToEvents() {
     const enableUnsub = this.#validatedEventDispatcher.subscribe(
       'core:enable_input',
-      /** @param {SystemEventPayloads['core:enable_input']} _event - Ignored event payload */
+      /**
+       * Handles 'core:enable_input' events.
+       *
+       * @param {SystemEventPayloads['core:enable_input']} _event - Event payload (unused).
+       */
       (_event) => {
         this.enable();
       }
@@ -144,7 +154,11 @@ class InputHandler extends IInputHandler {
 
     const disableUnsub = this.#validatedEventDispatcher.subscribe(
       'core:disable_input',
-      /** @param {SystemEventPayloads['core:disable_input']} _event - Ignored event payload */
+      /**
+       * Handles 'core:disable_input' events.
+       *
+       * @param {SystemEventPayloads['core:disable_input']} _event - Event payload (unused).
+       */
       (_event) => {
         this.disable();
       }
@@ -159,7 +173,7 @@ class InputHandler extends IInputHandler {
   /**
    * Handles keydown events specifically within the input element (primarily for Enter).
    *
-   * @param {KeyboardEvent} event
+   * @param {KeyboardEvent} event - Keydown event object.
    * @private
    */
   _handleInputKeyDown(event) {

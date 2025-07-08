@@ -45,8 +45,6 @@ describe('UIBootstrapper.gatherEssentialElements', () => {
       <h1>Title</h1>
     `);
     const bootstrapper = new UIBootstrapper();
-    const logSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-
     const result = bootstrapper.gatherEssentialElements(document);
 
     expect(result.outputDiv).toBe(document.querySelector('#outputDiv'));
