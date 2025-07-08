@@ -19,7 +19,7 @@
               "format": "date-time"
             }
           },
-          "required": ["text", "timestamp"],
+          "required": ["text"],
           "additionalProperties": false
         },
         "default": [],

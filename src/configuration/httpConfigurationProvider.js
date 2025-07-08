@@ -3,6 +3,7 @@
 
 import { IConfigurationProvider } from '../interfaces/IConfigurationProvider.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/eventIds.js';
+import { dispatchSystemErrorEvent } from '../utils/systemErrorDispatchUtils.js';
 
 /**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
@@ -73,9 +74,15 @@ export class HttpConfigurationProvider extends IConfigurationProvider {
     ) {
       const errorMessage =
         'HttpConfigurationProvider: sourceUrl must be a non-empty string.';
-      this.#dispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
-        message: errorMessage,
-      });
+      await dispatchSystemErrorEvent(
+        this.#dispatcher,
+        errorMessage,
+        {
+          scopeName: 'HttpConfigurationProvider.fetchData',
+          url: sourceUrl
+        },
+        this.#logger
+      );
       throw new Error(errorMessage);
     }
 
@@ -89,10 +96,17 @@ export class HttpConfigurationProvider extends IConfigurationProvider {
       if (!response.ok) {
         const errorStatusText =
           response.statusText || `HTTP status ${response.status}`;
-        this.#dispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
-          message: `HttpConfigurationProvider: Failed to fetch configuration from ${sourceUrl}. Status: ${response.status} ${errorStatusText}`,
-          details: { status: response.status, statusText: errorStatusText },
-        });
+        await dispatchSystemErrorEvent(
+          this.#dispatcher,
+          `HttpConfigurationProvider: Failed to fetch configuration from ${sourceUrl}. Status: ${response.status} ${errorStatusText}`,
+          {
+            statusCode: response.status,
+            statusText: errorStatusText,
+            url: sourceUrl,
+            scopeName: 'HttpConfigurationProvider.fetchData'
+          },
+          this.#logger
+        );
         throw new Error(
           `Failed to fetch configuration file from ${sourceUrl}: ${errorStatusText}`
         );
@@ -103,16 +117,17 @@ export class HttpConfigurationProvider extends IConfigurationProvider {
       try {
         jsonData = await response.json();
       } catch (parseError) {
-        this.#dispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
-          message: `HttpConfigurationProvider: Failed to parse JSON response from ${sourceUrl}.`,
-          details: {
-            error:
-              parseError instanceof Error
-                ? parseError.message
-                : String(parseError),
+        await dispatchSystemErrorEvent(
+          this.#dispatcher,
+          `HttpConfigurationProvider: Failed to parse JSON response from ${sourceUrl}.`,
+          {
+            error: parseError instanceof Error ? parseError.message : String(parseError),
             stack: parseError instanceof Error ? parseError.stack : undefined,
+            url: sourceUrl,
+            scopeName: 'HttpConfigurationProvider.fetchData'
           },
-        });
+          this.#logger
+        );
         // @ts-ignore
         throw new Error(
           `Failed to parse configuration data from ${sourceUrl} as JSON: ${parseError.message}`
@@ -138,13 +153,17 @@ export class HttpConfigurationProvider extends IConfigurationProvider {
 
       const errorMessage =
         error instanceof Error ? error.message : String(error);
-      this.#dispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
-        message: `HttpConfigurationProvider: Error loading or parsing configuration from ${sourceUrl}. Detail: ${errorMessage}`,
-        details: {
+      await dispatchSystemErrorEvent(
+        this.#dispatcher,
+        `HttpConfigurationProvider: Error loading or parsing configuration from ${sourceUrl}. Detail: ${errorMessage}`,
+        {
           error: error instanceof Error ? error.message : String(error),
           stack: error instanceof Error ? error.stack : undefined,
+          url: sourceUrl,
+          scopeName: 'HttpConfigurationProvider.fetchData'
         },
-      });
+        this.#logger
+      );
       throw new Error(
         `Could not load configuration from ${sourceUrl}: ${errorMessage}`
       );

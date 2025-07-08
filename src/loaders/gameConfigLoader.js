@@ -240,11 +240,13 @@ class GameConfigLoader extends AbstractLoader {
 
   /**
    * Loads, parses, and validates the game configuration file (e.g., game.json).
-   * If validation is successful, ensures CORE_MOD_ID is the first mod ID and returns the array of mod IDs.
+   * If validation is successful, ensures CORE_MOD_ID is the first mod ID and returns the configuration object
+   * with mods array and optional startWorld.
    * Throws an error if any step fails (file not found, parse error, validation error),
    * halting the loading process.
    *
-   * @returns {Promise<string[]>} A promise that resolves with the array of mod IDs (guaranteed to start with CORE_MOD_ID)
+   * @returns {Promise<{mods: string[], startWorld?: string}>} A promise that resolves with the configuration object
+   * containing the array of mod IDs (guaranteed to start with CORE_MOD_ID) and optional startWorld
    * if loading, parsing, and validation succeed. The promise rejects if any step fails.
    * @public
    * @async
@@ -263,7 +265,10 @@ class GameConfigLoader extends AbstractLoader {
         `GameConfigLoader: Successfully loaded and validated ${finalMods.length} mod IDs from game config. Final order: [${finalMods.join(', ')}]`
       );
 
-      return finalMods;
+      return {
+        mods: finalMods,
+        startWorld: config.startWorld
+      };
     } catch (error) {
       if (
         !error.message.startsWith('Failed to fetch') &&

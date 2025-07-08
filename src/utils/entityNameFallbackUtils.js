@@ -40,6 +40,10 @@ export function resolveEntityNameFallback(
       ? entity
       : {
           ...entity,
+          // IMPORTANT: Preserve Entity class getters that are lost with spread operator
+          id: entity.id,
+          definitionId: entity.definitionId,
+          componentTypeIds: entity.componentTypeIds,
           getComponentData: (type) => entity?.components?.[type],
         };
 

@@ -335,3 +335,50 @@ This distinction allows the engine to optimize different types of operations app
 - Missing components or fields: The engine will handle attempts to access non-existent data gracefully. Missing components return empty sets, while missing fields within components return undefined values that are filtered out during array operations. This ensures that scope expressions never throw errors due to missing data.
 - Invalid JSON Logic: Errors within a JSON Logic filter are caught and logged, with the filter evaluating to `false`.
 - Depth Limit Exceeded: The parser will throw an error if an expression is more than 4 levels deep.
+
+## 12. Common Pitfalls and Best Practices
+
+### Common Syntax Errors
+
+**❌ INCORRECT: Missing iterator for entities() filter**
+```
+entities(core:position)[{"==": [{"var": "entity.id"}, "test"]}]
+```
+This syntax is missing the iterator `[]` between `entities()` and the filter. This can cause resolution errors.
+
+**✅ CORRECT: Include iterator before filter**
+```
+entities(core:position)[][{"==": [{"var": "entity.id"}, "test"]}]
+```
+The correct pattern is: `entities(component)[]` for iteration, then `[filter]` for filtering.
+
+### Best Practices
+
+1. **Always use iterator `[]` with entities() before filtering**: The pattern `entities(component)[][filter]` ensures proper AST generation and context propagation.
+
+2. **Validate actor entity context**: When writing custom resolvers or extensions, always validate that the actor entity has a valid string ID.
+
+3. **Test with edge cases**: Test your scopes with:
+   - Empty entity sets
+   - Missing components
+   - Null/undefined values in arrays
+   - Invalid entity IDs
+
+4. **Use descriptive scope names**: Name your scopes clearly to indicate what they target (e.g., `potential_leaders` instead of `scope1`).
+
+5. **Document complex filters**: Add comments in your `.scope` files to explain complex JSON Logic filters.
+
+### Debugging Tips
+
+If you encounter "actorEntity has invalid ID" errors:
+1. Check your scope syntax - ensure you're using the correct `entities()[][filter]` pattern
+2. Verify that the actor entity is properly initialized with a valid string ID
+3. Check that context is properly propagated through the resolution chain
+
+### Migration Guide
+
+If you have existing scopes with the pattern `entities(component)[filter]`, update them to:
+```
+entities(component)[][filter]
+```
+This ensures compatibility with the scope resolution engine and prevents context propagation errors.

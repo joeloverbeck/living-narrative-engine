@@ -158,7 +158,7 @@ describe('EntityDisplayDataProvider', () => {
       mockEntityManager.getEntityInstance.mockReturnValue(mockEntityNoNameComp);
       expect(service.getEntityName('npcNoNameComp')).toBe('npcNoNameComp');
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        "getEntityDisplayName: Entity 'npcNoNameComp' has no usable name from component or 'entity.name'. Falling back to entity ID."
+        "getEntityDisplayName: Entity 'npcNoNameComp' has no usable name from 'core:name' component. Falling back to entity ID."
       );
 
       const mockEntityEmptyName = {

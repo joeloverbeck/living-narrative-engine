@@ -59,7 +59,11 @@ describe('TargetResolutionService error paths', () => {
       SYSTEM_ERROR_OCCURRED_ID,
       {
         message: "Error resolving scope 'core:test': parse fail",
-        details: { error: 'parse fail', stack: parseErr.stack },
+        details: { 
+          error: 'parse fail', 
+          stack: parseErr.stack,
+          scopeName: 'TargetResolutionService.#resolveScopeToIds'
+        },
       }
     );
   });
@@ -91,7 +95,11 @@ describe('TargetResolutionService error paths', () => {
       SYSTEM_ERROR_OCCURRED_ID,
       {
         message: "Error resolving scope 'core:test': resolve fail",
-        details: { error: 'resolve fail', stack: resolveErr.stack },
+        details: { 
+          error: 'resolve fail', 
+          stack: resolveErr.stack,
+          scopeName: 'TargetResolutionService.#resolveScopeToIds'
+        },
       }
     );
   });

@@ -50,7 +50,7 @@ describe('TargetResolutionService additional coverage', () => {
     };
     mockScopeRegistry.getScope.mockReturnValue(scopeDef);
     mockScopeEngine.resolve.mockReturnValue(new Set(['e1', 'e2']));
-    const trace = { info: jest.fn(), error: jest.fn() };
+    const trace = { info: jest.fn(), error: jest.fn(), warn: jest.fn() };
 
     const result = service.resolveTargets(
       'core:test',
@@ -71,7 +71,7 @@ describe('TargetResolutionService additional coverage', () => {
   it('handles non-string expressions with warning and trace', () => {
     const scopeDef = { name: 'bad', expr: 123, modId: 'core', source: 'file' };
     mockScopeRegistry.getScope.mockReturnValue(scopeDef);
-    const trace = { info: jest.fn(), error: jest.fn() };
+    const trace = { info: jest.fn(), error: jest.fn(), warn: jest.fn() };
 
     const result = service.resolveTargets('bad', { id: 'hero' }, {}, trace);
 
@@ -95,7 +95,7 @@ describe('TargetResolutionService additional coverage', () => {
     mockDslParser.parse.mockImplementation(() => {
       throw parseErr;
     });
-    const trace = { info: jest.fn(), error: jest.fn() };
+    const trace = { info: jest.fn(), error: jest.fn(), warn: jest.fn() };
 
     const result = service.resolveTargets(
       'core:test',

@@ -65,26 +65,30 @@ export function createEvaluationContext(
 ) {
   // Critical check: actor should never be undefined in scope evaluation
   if (!actorEntity) {
-    const error = new Error('Actor entity is undefined in createEvaluationContext. This should never happen during scope evaluation.');
+    const error = new Error('createEvaluationContext: actorEntity is undefined. This should never happen during scope evaluation.');
     console.error('[CRITICAL] createEvaluationContext called with undefined actor:', {
       item,
+      itemType: typeof item,
       hasGateway: !!gateway,
       hasLocationProvider: !!locationProvider,
-      stackTrace: error.stack
+      // Enhanced debugging: show the call stack to trace where this came from
+      callStack: new Error().stack
     });
     // Fail fast - don't continue with undefined actor
     throw error;
   }
   
   // Additional check: actor must have a valid ID
-  if (!actorEntity.id || actorEntity.id === 'undefined') {
-    const error = new Error(`Actor entity has invalid ID: ${actorEntity.id}. This should never happen.`);
-    console.error('[CRITICAL] Actor entity has invalid ID:', {
+  if (!actorEntity.id || actorEntity.id === 'undefined' || typeof actorEntity.id !== 'string') {
+    const error = new Error(`createEvaluationContext: actorEntity has invalid ID: ${JSON.stringify(actorEntity.id)}. This should never happen.`);
+    console.error('[CRITICAL] createEvaluationContext actor has invalid ID:', {
       actorId: actorEntity.id,
+      actorIdType: typeof actorEntity.id,
       actorKeys: Object.keys(actorEntity),
-      actorType: typeof actorEntity,
+      hasComponents: !!actorEntity.components,
       item,
-      stackTrace: error.stack
+      itemType: typeof item,
+      callStack: new Error().stack
     });
     throw error;
   }
@@ -104,6 +108,8 @@ export function createEvaluationContext(
     entity.components = comps;
   }
 
+  // We always use the original actorEntity to preserve Entity class instances
+  // with their getter methods. Only add components if needed.
   let actor = actorEntity;
   if (actorEntity && actorEntity.componentTypeIds && !actorEntity.components) {
     const comps = getOrBuildComponents(
@@ -112,7 +118,14 @@ export function createEvaluationContext(
       gateway,
       trace
     );
-    actor = { ...actorEntity, components: comps };
+    // Create a new actor object that preserves the prototype chain
+    // This ensures Entity class getter methods are not lost
+    actor = Object.create(Object.getPrototypeOf(actorEntity));
+    // Copy all properties including getters/setters
+    const descriptors = Object.getOwnPropertyDescriptors(actorEntity);
+    Object.defineProperties(actor, descriptors);
+    // Add the components
+    actor.components = comps;
   }
 
   const location = locationProvider.getLocation();

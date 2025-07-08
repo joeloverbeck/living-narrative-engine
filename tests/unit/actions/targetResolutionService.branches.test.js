@@ -67,7 +67,7 @@ describe('TargetResolutionService - additional branches', () => {
     expect(mockSafeDispatcher.dispatch).not.toHaveBeenCalled();
   });
 
-  it('handles undefined scope resolution result gracefully', () => {
+  it('handles undefined scope resolution result with error', () => {
     const expr = 'actor';
     const def = {
       name: 'core:test',
@@ -82,8 +82,15 @@ describe('TargetResolutionService - additional branches', () => {
     const actor = { id: 'hero' };
     const result = service.resolveTargets('core:test', actor, {});
 
-    expect(result).toEqual({ targets: [], error: undefined });
+    expect(result.targets).toEqual([]);
+    expect(result.error).toBeInstanceOf(Error);
+    expect(result.error.message).toContain('Scope engine returned invalid result: undefined');
     expect(mockScopeEngine.resolve).toHaveBeenCalled();
-    expect(mockSafeDispatcher.dispatch).not.toHaveBeenCalled();
+    expect(mockSafeDispatcher.dispatch).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({
+        message: expect.stringContaining('Scope engine returned invalid result: undefined')
+      })
+    );
   });
 });

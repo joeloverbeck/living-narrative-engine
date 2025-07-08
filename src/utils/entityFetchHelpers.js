@@ -1,4 +1,4 @@
-// src/entities/utils/entityFetchHelpers.js
+// src/utils/entityFetchHelpers.js
 
 import { InvalidEntityIdError } from '../errors/invalidEntityIdError.js';
 import { resolveEntity } from '../entities/entityAccessService.js';
@@ -13,7 +13,7 @@ import { resolveEntity } from '../entities/entityAccessService.js';
  * @description Fetch an entity instance from the provided manager.
  * @param {import('../interfaces/IEntityManager.js').IEntityManager} entityManager - The entity manager instance.
  * @param {import('../interfaces/CommonTypes.js').NamespacedId | string} entityId - Identifier of the entity to fetch.
- * @returns {import('../entities/entity.js').default} The fetched entity instance.
+ * @returns {import('../entities/entity.js').default | null} The fetched entity instance or null if not found.
  * @throws {InvalidEntityIdError} When entityId is falsy.
  */
 export function fetchEntity(entityManager, entityId) {

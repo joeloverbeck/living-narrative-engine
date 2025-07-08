@@ -1,4 +1,5 @@
 import createArrayIterationResolver from '../../src/scopeDsl/nodes/arrayIterationResolver.js';
+import { createTestEntity } from '../common/mockFactories/entities.js';
 
 describe('ArrayIterationResolver', () => {
   let resolver;
@@ -39,7 +40,8 @@ describe('ArrayIterationResolver', () => {
         type: 'ArrayIterationStep',
         parent: { type: 'Step' },
       };
-      const ctx = { dispatcher, trace };
+      const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+      const ctx = { dispatcher, trace, actorEntity };
 
       dispatcher.resolve.mockReturnValue(new Set());
 
@@ -54,7 +56,8 @@ describe('ArrayIterationResolver', () => {
         type: 'ArrayIterationStep',
         parent: { type: 'Step' },
       };
-      const ctx = { dispatcher, trace };
+      const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+      const ctx = { dispatcher, trace, actorEntity };
 
       // Parent returns arrays
       dispatcher.resolve.mockReturnValue(
@@ -76,7 +79,8 @@ describe('ArrayIterationResolver', () => {
         type: 'ArrayIterationStep',
         parent: { type: 'Step' },
       };
-      const ctx = { dispatcher, trace };
+      const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+      const ctx = { dispatcher, trace, actorEntity };
 
       dispatcher.resolve.mockReturnValue(
         new Set([
@@ -103,7 +107,8 @@ describe('ArrayIterationResolver', () => {
         type: 'ArrayIterationStep',
         parent: { type: 'Step' },
       };
-      const ctx = { dispatcher, trace };
+      const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+      const ctx = { dispatcher, trace, actorEntity };
 
       dispatcher.resolve.mockReturnValue(
         new Set([['item1', null, 'item2', undefined, 'item3']])
@@ -119,7 +124,8 @@ describe('ArrayIterationResolver', () => {
         type: 'ArrayIterationStep',
         parent: { type: 'Step' },
       };
-      const ctx = { dispatcher, trace };
+      const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+      const ctx = { dispatcher, trace, actorEntity };
 
       dispatcher.resolve.mockReturnValue(new Set([[], ['item1']]));
 
@@ -133,7 +139,8 @@ describe('ArrayIterationResolver', () => {
         type: 'ArrayIterationStep',
         parent: { type: 'Source' },
       };
-      const ctx = { dispatcher, trace };
+      const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+      const ctx = { dispatcher, trace, actorEntity };
 
       // Source returns entity IDs directly
       dispatcher.resolve.mockReturnValue(
@@ -150,7 +157,8 @@ describe('ArrayIterationResolver', () => {
         type: 'ArrayIterationStep',
         parent: { type: 'Step' },
       };
-      const ctx = { dispatcher, trace };
+      const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+      const ctx = { dispatcher, trace, actorEntity };
 
       dispatcher.resolve.mockReturnValue(
         new Set(['not-an-array', 42, { obj: true }])
@@ -167,7 +175,8 @@ describe('ArrayIterationResolver', () => {
         type: 'ArrayIterationStep',
         parent: { type: 'Step' },
       };
-      const ctx = { dispatcher, trace };
+      const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+      const ctx = { dispatcher, trace, actorEntity };
 
       dispatcher.resolve.mockReturnValue(new Set([['item1', 'item2']]));
 
