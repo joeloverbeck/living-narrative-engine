@@ -4,15 +4,6 @@
  */
 
 import { describe, it, beforeEach, expect, jest } from '@jest/globals';
-import Ajv from 'ajv';
-import ruleSchema from '../../../data/schemas/rule.schema.json';
-import commonSchema from '../../../data/schemas/common.schema.json';
-import operationSchema from '../../../data/schemas/operation.schema.json';
-import jsonLogicSchema from '../../../data/schemas/json-logic.schema.json';
-import conditionSchema from '../../../data/schemas/condition.schema.json';
-import conditionContainerSchema from '../../../data/schemas/condition-container.schema.json';
-import loadOperationSchemas from '../../unit/helpers/loadOperationSchemas.js';
-import loadConditionSchemas from '../../unit/helpers/loadConditionSchemas.js';
 import eventIsActionDismiss from '../../../data/mods/core/conditions/event-is-action-dismiss.condition.json';
 import dismissRule from '../../../data/mods/core/rules/dismiss.rule.json';
 import displaySuccessAndEndTurn from '../../../data/mods/core/macros/displaySuccessAndEndTurn.macro.json';
@@ -23,7 +14,6 @@ import OperationRegistry from '../../../src/logic/operationRegistry.js';
 import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
 import RemoveComponentHandler from '../../../src/logic/operationHandlers/removeComponentHandler.js';
 import ModifyArrayFieldHandler from '../../../src/logic/operationHandlers/modifyArrayFieldHandler.js';
-import HasComponentHandler from '../../../src/logic/operationHandlers/hasComponentHandler.js';
 import QueryComponentHandler from '../../../src/logic/operationHandlers/queryComponentHandler.js';
 import DispatchEventHandler from '../../../src/logic/operationHandlers/dispatchEventHandler.js';
 import DispatchPerceptibleEventHandler from '../../../src/logic/operationHandlers/dispatchPerceptibleEventHandler.js';
@@ -38,7 +28,6 @@ import {
   POSITION_COMPONENT_ID,
 } from '../../../src/constants/componentIds.js';
 import { ATTEMPT_ACTION_ID } from '../../../src/constants/eventIds.js';
-import { createRuleTestEnvironment } from '../../common/engine/systemLogicTestEnv.js';
 import { SimpleEntityManager } from '../../common/entities/index.js';
 import AddPerceptionLogEntryHandler from '../../../src/logic/operationHandlers/addPerceptionLogEntryHandler.js';
 import { SafeEventDispatcher } from '../../../src/events/safeEventDispatcher.js';
@@ -53,8 +42,8 @@ import ConsoleLogger from '../../../src/logging/consoleLogger.js';
  * @param {object} entityManager - Entity manager instance
  * @param {object} eventBus - Event bus instance
  * @param {object} logger - Logger instance
- * @param validatedEventDispatcher
- * @param safeEventDispatcher
+ * @param {ValidatedEventDispatcher} validatedEventDispatcher - Event dispatcher used for validation
+ * @param {SafeEventDispatcher} safeEventDispatcher - Event dispatcher used for safe events
  * @returns {object} Handlers object
  */
 function createHandlers(
@@ -171,7 +160,8 @@ describe('core_handle_dismiss rule integration', () => {
       validatedEventDispatcher,
       safeEventDispatcher
     );
-    const { IF_CO_LOCATED_FACTORY, ...rest } = handlers;
+    // eslint-disable-next-line no-unused-vars
+    const { IF_CO_LOCATED_FACTORY: _unusedFactory, ...rest } = handlers;
     for (const [type, handler] of Object.entries(rest)) {
       operationRegistry.register(type, handler.execute.bind(handler));
     }
@@ -230,7 +220,8 @@ describe('core_handle_dismiss rule integration', () => {
           validatedEventDispatcher,
           safeEventDispatcher
         );
-        const { IF_CO_LOCATED_FACTORY: newIfCoLocatedFactory, ...newRest } =
+        // eslint-disable-next-line no-unused-vars
+        const { IF_CO_LOCATED_FACTORY: _unusedNewFactory, ...newRest } =
           newHandlers;
         const newOperationRegistry = new OperationRegistry({
           logger: testLogger,
@@ -322,9 +313,6 @@ describe('core_handle_dismiss rule integration', () => {
       actionId: 'core:dismiss',
       targetId: 'target1',
     });
-
-    // Debug: log all captured events
-    console.log('DEBUG: All captured events:', testEnv.events);
 
     const types = testEnv.events.map((e) => e.eventType);
     expect(types).toEqual(

@@ -4,8 +4,6 @@
 
 import { describe, it, beforeEach, expect, jest } from '@jest/globals';
 import getCloseRule from '../../../data/mods/intimacy/rules/get_close.rule.json';
-import adjustClothingAction from '../../../data/mods/intimacy/actions/adjust_clothing.action.json';
-import thumbWipeCheekAction from '../../../data/mods/intimacy/actions/thumb_wipe_cheek.action.json';
 import eventIsActionGetClose from '../../../data/mods/intimacy/conditions/event-is-action-get-close.condition.json';
 import logSuccessMacro from '../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
 
@@ -18,14 +16,12 @@ import DispatchEventHandler from '../../../src/logic/operationHandlers/dispatchE
 import DispatchPerceptibleEventHandler from '../../../src/logic/operationHandlers/dispatchPerceptibleEventHandler.js';
 import EndTurnHandler from '../../../src/logic/operationHandlers/endTurnHandler.js';
 import { expandMacros } from '../../../src/utils/macroUtils.js';
-import jsonLogic from 'json-logic-js';
 import {
   NAME_COMPONENT_ID,
   POSITION_COMPONENT_ID,
   ACTOR_COMPONENT_ID,
 } from '../../../src/constants/componentIds.js';
 import { ATTEMPT_ACTION_ID } from '../../../src/constants/eventIds.js';
-import { createRuleTestEnvironment } from '../../common/engine/systemLogicTestEnv.js';
 import { SimpleEntityManager } from '../../common/entities/index.js';
 import AddPerceptionLogEntryHandler from '../../../src/logic/operationHandlers/addPerceptionLogEntryHandler.js';
 import { SafeEventDispatcher } from '../../../src/events/safeEventDispatcher.js';
@@ -49,8 +45,8 @@ import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationSe
  * @param {object} entityManager - Entity manager instance
  * @param {object} eventBus - Event bus instance
  * @param {object} logger - Logger instance
- * @param validatedEventDispatcher
- * @param safeEventDispatcher
+ * @param {ValidatedEventDispatcher} validatedEventDispatcher - Event dispatcher used for validation
+ * @param {SafeEventDispatcher} safeEventDispatcher - Event dispatcher used for safe events
  * @returns {object} Handlers object
  */
 function createHandlers(
@@ -290,9 +286,11 @@ describe('closeness action availability chain', () => {
   });
 
   /**
+   * Check if closeness prerequisites between actor and target are met.
    *
-   * @param actorId
-   * @param targetId
+   * @param {string} actorId - Actor entity identifier
+   * @param {string} targetId - Target entity identifier
+   * @returns {boolean} Whether the closeness relationship exists
    */
   function prerequisitesMet(actorId, targetId) {
     const closeness = testEnv.entityManager.getComponentData(
