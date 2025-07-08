@@ -1,4 +1,4 @@
-import { jest, describe, beforeEach, test, expect } from '@jest/globals';
+import { describe, test, expect } from '@jest/globals';
 
 import {
   InvalidIndexError,

@@ -1,3 +1,4 @@
+/* eslint-env node */
 /**
  * @file EntityConfig - Centralized configuration for entities module
  * @module EntityConfig
@@ -84,7 +85,7 @@ export default class EntityConfig {
       DEFAULT_COMPONENT_TYPES: [
         'core:short_term_memory',
         'core:notes',
-        'core:goals'
+        'core:goals',
       ],
       INJECT_DEFAULTS_ON_CREATION: true,
       INJECT_DEFAULTS_ON_RECONSTRUCTION: true,
@@ -115,10 +116,10 @@ export default class EntityConfig {
   // Environment-specific overrides
   static get ENVIRONMENT() {
     return {
-      NODE_ENV: process.env.NODE_ENV || 'development',
-      IS_PRODUCTION: process.env.NODE_ENV === 'production',
-      IS_DEVELOPMENT: process.env.NODE_ENV === 'development',
-      IS_TEST: process.env.NODE_ENV === 'test',
+      NODE_ENV: globalThis.process?.env.NODE_ENV || 'development',
+      IS_PRODUCTION: globalThis.process?.env.NODE_ENV === 'production',
+      IS_DEVELOPMENT: globalThis.process?.env.NODE_ENV === 'development',
+      IS_TEST: globalThis.process?.env.NODE_ENV === 'test',
     };
   }
 
@@ -198,10 +199,17 @@ export default class EntityConfig {
     // Validate performance settings
     if (config.performance) {
       if (config.performance.SLOW_OPERATION_THRESHOLD <= 0) {
-        throw new Error('EntityConfig: SLOW_OPERATION_THRESHOLD must be positive');
+        throw new Error(
+          'EntityConfig: SLOW_OPERATION_THRESHOLD must be positive'
+        );
       }
-      if (config.performance.MEMORY_WARNING_THRESHOLD <= 0 || config.performance.MEMORY_WARNING_THRESHOLD > 1) {
-        throw new Error('EntityConfig: MEMORY_WARNING_THRESHOLD must be between 0 and 1');
+      if (
+        config.performance.MEMORY_WARNING_THRESHOLD <= 0 ||
+        config.performance.MEMORY_WARNING_THRESHOLD > 1
+      ) {
+        throw new Error(
+          'EntityConfig: MEMORY_WARNING_THRESHOLD must be between 0 and 1'
+        );
       }
     }
 
@@ -216,13 +224,13 @@ export default class EntityConfig {
    */
   static mergeConfig(userConfig = {}) {
     const defaultConfig = this.getConfig();
-    
+
     // Deep merge user config with defaults
     const mergedConfig = this.#deepMerge(defaultConfig, userConfig);
-    
+
     // Validate merged configuration
     this.validateConfig(mergedConfig);
-    
+
     return mergedConfig;
   }
 
@@ -235,17 +243,21 @@ export default class EntityConfig {
    */
   static #deepMerge(target, source) {
     const result = { ...target };
-    
+
     for (const key in source) {
-      if (source.hasOwnProperty(key)) {
-        if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
+      if (Object.prototype.hasOwnProperty.call(source, key)) {
+        if (
+          source[key] &&
+          typeof source[key] === 'object' &&
+          !Array.isArray(source[key])
+        ) {
           result[key] = this.#deepMerge(result[key] || {}, source[key]);
         } else {
           result[key] = source[key];
         }
       }
     }
-    
+
     return result;
   }
 
@@ -270,7 +282,7 @@ export default class EntityConfig {
     const config = this.getConfig();
     const parts = feature.split('.');
     let current = config;
-    
+
     for (const part of parts) {
       if (current && typeof current === 'object' && part in current) {
         current = current[part];
@@ -278,7 +290,6 @@ export default class EntityConfig {
         return false;
       }
     }
-    
+
     return Boolean(current);
-  }
-}
+  }}
