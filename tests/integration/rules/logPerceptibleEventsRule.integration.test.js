@@ -61,7 +61,7 @@ describe('core_handle_log_perceptible_events rule integration', () => {
     customEntityManager = new SimpleEntityManager([]);
     const dataRegistry = {
       getAllSystemRules: jest.fn().mockReturnValue([logPerceptibleEventsRule]),
-      getConditionDefinition: jest.fn((id) => undefined),
+      getConditionDefinition: jest.fn(() => undefined),
       getEventDefinition: jest.fn((eventName) => {
         // Return a basic event definition for common events
         const commonEvents = {

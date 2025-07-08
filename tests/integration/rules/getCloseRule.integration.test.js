@@ -40,7 +40,6 @@ import OperationInterpreter from '../../../src/logic/operationInterpreter.js';
 import OperationRegistry from '../../../src/logic/operationRegistry.js';
 import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
 import { merge } from '../../../src/logic/services/closenessCircleService.js';
-import jsonLogic from 'json-logic-js';
 
 /**
  * Creates handlers needed for the get_close rule.

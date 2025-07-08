@@ -10,6 +10,9 @@ import AddComponentHandler from '../../../src/logic/operationHandlers/addCompone
 import { TURN_STARTED_ID } from '../../../src/constants/eventIds.js';
 import { createRuleTestEnvironment } from '../../common/engine/systemLogicTestEnv.js';
 
+// Minimal condition definition used by tests
+const eventIsTurnStarted = { id: 'core:event-is-turn-started' };
+
 /**
  * Creates handlers needed for the turn_started rule.
  *
