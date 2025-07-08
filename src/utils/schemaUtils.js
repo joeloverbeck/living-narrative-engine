@@ -13,7 +13,7 @@ import { ensureValidLogger } from './loggerUtils.js';
  * @param {object} schema
  * @param {string} schemaId
  * @param {import('../interfaces/coreServices.js').ILogger} logger
- * @param warnMessage
+ * @param {string} [warnMessage]
  * @returns {Promise<void>}
  */
 export async function registerSchema(
@@ -87,7 +87,10 @@ export async function registerInlineSchema(
         context = { ...(errorContext || {}) };
       }
       if (!('error' in context)) {
-        context.error = error?.message || error;
+        context.error =
+          error && typeof error === 'object' && 'message' in error
+            ? /** @type {{message?: any}} */ (error).message
+            : error;
       }
       moduleLogger.error(errorLogMessage, context, error);
     }
