@@ -78,18 +78,18 @@ describe('LLMResponseProcessor – Handling of disallowed properties', () => {
       }
     );
 
-    // 4. To inspect the error's details, we can use a try/catch block.
-    try {
-      await processor.processResponse(jsonPayload, actorId);
-    } catch (e) {
-      // 5. Assert: The error details contain the validation errors from the schema validator.
-      expect(e.details).toBeDefined();
-      expect(e.details.validationErrors).toBeDefined();
-      expect(e.details.validationErrors[0].message).toContain(
-        "Disallowed extra property: 'goals'"
-      );
-      // Assert that obsolete properties are not present.
-      expect(e.details.errorContext).toBeUndefined();
-    }
+    await expect(
+      processor.processResponse(jsonPayload, actorId)
+    ).rejects.toMatchObject({
+      details: {
+        validationErrors: [
+          {
+            message: expect.stringContaining(
+              "Disallowed extra property: 'goals'"
+            ),
+          },
+        ],
+      },
+    });
   });
 });
