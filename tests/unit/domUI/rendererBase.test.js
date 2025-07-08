@@ -105,7 +105,7 @@ describe('RendererBase', () => {
     it('should successfully create an instance with valid dependencies', () => {
       // --- FIX: Constructor call is now correct ---
       expect(() => new ConcreteRenderer(validDeps)).not.toThrow();
-      const instance = new ConcreteRenderer(validDeps);
+      new ConcreteRenderer(validDeps);
       // Check initialization log (uses _logPrefix which depends on class name)
       expect(mockLogger.debug).toHaveBeenCalledWith(
         '[ConcreteRenderer] Initialized.'
