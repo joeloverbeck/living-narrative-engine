@@ -304,6 +304,7 @@ describe('LlmJsonService.parseAndRepair', () => {
       const repairableJson = '{"baz": "qux",}';
       mockRepairJson.mockReturnValue('{"baz": "qux"}');
       await service.parseAndRepair(repairableJson, { logger: mockLogger });
+      expect(mockLogger.info).not.toHaveBeenCalled();
     });
 
     test('should call logger.error when repair attempt fails to produce valid JSON', async () => {
