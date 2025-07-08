@@ -28,7 +28,7 @@ class JsonLogicEvaluationService extends BaseService {
    * @param {object} [dependencies] - The injected services.
    * @param {ILogger} dependencies.logger - Logging service.
    * @param {IGameDataRepository} [dependencies.gameDataRepository] - Repository for accessing condition definitions. Optional for tests.
-   * @param dependencies.serviceSetup
+   * @param {ServiceSetup} [dependencies.serviceSetup] - Optional service setup helper
    * @throws {Error} If required dependencies are missing or invalid.
    */
   constructor({ logger, gameDataRepository, serviceSetup } = {}) {
@@ -54,7 +54,6 @@ class JsonLogicEvaluationService extends BaseService {
     // --- ADDED: Register the 'not' operator alias upon instantiation ---
     this.addOperation('not', (a) => !a);
 
-
     this.#logger.debug('JsonLogicEvaluationService initialized.');
   }
 
@@ -72,21 +71,46 @@ class JsonLogicEvaluationService extends BaseService {
     // Define allowed operations - conservative whitelist approach
     const ALLOWED_OPERATIONS = new Set([
       // Comparison operators
-      '==', '===', '!=', '!==', '>', '>=', '<', '<=',
+      '==',
+      '===',
+      '!=',
+      '!==',
+      '>',
+      '>=',
+      '<',
+      '<=',
       // Logical operators
-      'and', 'or', 'not', '!', '!!',
+      'and',
+      'or',
+      'not',
+      '!',
+      '!!',
       // Conditional
       'if',
       // Data access
-      'var', 'missing', 'missing_some',
+      'var',
+      'missing',
+      'missing_some',
       // Array operations
-      'in', 'cat', 'substr', 'merge',
+      'in',
+      'cat',
+      'substr',
+      'merge',
       // Math operations
-      '+', '-', '*', '/', '%', 'min', 'max',
+      '+',
+      '-',
+      '*',
+      '/',
+      '%',
+      'min',
+      'max',
       // String operations
-      'toLowerCase', 'toUpperCase',
+      'toLowerCase',
+      'toUpperCase',
       // Type checks
-      'some', 'none', 'all',
+      'some',
+      'none',
+      'all',
       // Special
       'log',
       // Custom operations we've added
@@ -96,13 +120,15 @@ class JsonLogicEvaluationService extends BaseService {
       'hasPartOfType',
       'hasPartOfTypeWithComponentValue',
       // Test operators
-      'throw_error_operator' // Used in tests for short-circuit behavior
+      'throw_error_operator', // Used in tests for short-circuit behavior
     ]);
 
     const MAX_DEPTH = 50; // Prevent stack overflow from deeply nested rules
-    
+
     if (depth > MAX_DEPTH) {
-      throw new Error(`JSON Logic validation error: Maximum nesting depth (${MAX_DEPTH}) exceeded`);
+      throw new Error(
+        `JSON Logic validation error: Maximum nesting depth (${MAX_DEPTH}) exceeded`
+      );
     }
 
     // Handle null/undefined
@@ -117,7 +143,9 @@ class JsonLogicEvaluationService extends BaseService {
 
     // Handle circular references using WeakSet for object references
     if (seenObjects.has(rule)) {
-      throw new Error('JSON Logic validation error: Circular reference detected');
+      throw new Error(
+        'JSON Logic validation error: Circular reference detected'
+      );
     }
     seenObjects.add(rule);
 
@@ -132,36 +160,56 @@ class JsonLogicEvaluationService extends BaseService {
 
       // Handle objects - check operations
       const keys = Object.keys(rule);
-      
+
       // Check for dangerous properties explicitly
-      if (rule.hasOwnProperty('__proto__') || rule.hasOwnProperty('constructor') || rule.hasOwnProperty('prototype')) {
-        const dangerousKey = rule.hasOwnProperty('__proto__') ? '__proto__' : 
-                           rule.hasOwnProperty('constructor') ? 'constructor' : 'prototype';
-        throw new Error(`JSON Logic validation error: Disallowed property '${dangerousKey}'`);
+      if (
+        Object.prototype.hasOwnProperty.call(rule, '__proto__') ||
+        Object.prototype.hasOwnProperty.call(rule, 'constructor') ||
+        Object.prototype.hasOwnProperty.call(rule, 'prototype')
+      ) {
+        const dangerousKey = Object.prototype.hasOwnProperty.call(
+          rule,
+          '__proto__'
+        )
+          ? '__proto__'
+          : Object.prototype.hasOwnProperty.call(rule, 'constructor')
+            ? 'constructor'
+            : 'prototype';
+        throw new Error(
+          `JSON Logic validation error: Disallowed property '${dangerousKey}'`
+        );
       }
-      
+
       // Also check using getOwnPropertyNames for additional safety
       const allKeys = Object.getOwnPropertyNames(rule);
       for (const key of allKeys) {
-        if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
-          throw new Error(`JSON Logic validation error: Disallowed property '${key}'`);
+        if (
+          key === '__proto__' ||
+          key === 'constructor' ||
+          key === 'prototype'
+        ) {
+          throw new Error(
+            `JSON Logic validation error: Disallowed property '${key}'`
+          );
         }
       }
-      
+
       // Empty objects are not valid JSON Logic rules (they evaluate to truthy but have no operation)
       if (keys.length === 0) {
         // Allow empty objects - they're harmless and evaluate to the object itself
         return;
       }
-      
+
       // For single-key objects, check if it's a valid operation
       if (keys.length === 1) {
         const operation = keys[0];
         if (!ALLOWED_OPERATIONS.has(operation)) {
-          throw new Error(`JSON Logic validation error: Disallowed operation '${operation}'`);
+          throw new Error(
+            `JSON Logic validation error: Disallowed operation '${operation}'`
+          );
         }
       }
-      
+
       // Recursively validate all values
       for (const key of keys) {
         this.#validateJsonLogic(rule[key], seenObjects, depth + 1);
@@ -224,7 +272,6 @@ class JsonLogicEvaluationService extends BaseService {
 
     const individualResults = [];
     for (let i = 0; i < args.length; i++) {
-      
       const conditionResult = jsonLogic.apply(args[i], context);
       const conditionBoolean = !!conditionResult;
       const conditionSummary =
@@ -252,10 +299,13 @@ class JsonLogicEvaluationService extends BaseService {
           }
           // Add validation to catch undefined actor.id
           if (!context.actor.id) {
-            this.#logger.error('[CRITICAL] Actor exists but actor.id is undefined!', {
-              actorKeys: Object.keys(context.actor || {}),
-              hasComponents: !!context.actor.components
-            });
+            this.#logger.error(
+              '[CRITICAL] Actor exists but actor.id is undefined!',
+              {
+                actorKeys: Object.keys(context.actor || {}),
+                hasComponents: !!context.actor.components,
+              }
+            );
           }
           this.#logger.debug(
             `    Actor: ${context.actor.id}, Location: ${comp && !comp.error ? comp.locationId : 'unknown'}`
@@ -307,7 +357,7 @@ class JsonLogicEvaluationService extends BaseService {
       // Return false for invalid rules to prevent execution
       return false;
     }
-    
+
     const resolvedRule = this.#prepareRule(rule);
 
     if (
@@ -332,7 +382,8 @@ class JsonLogicEvaluationService extends BaseService {
     if (resolvedRule !== null && resolvedRule !== undefined) {
       const stringified = JSON.stringify(resolvedRule);
       if (stringified !== undefined) {
-        ruleSummary = stringified.substring(0, 150) +
+        ruleSummary =
+          stringified.substring(0, 150) +
           (stringified.length > 150 ? '...' : '');
       }
     }
