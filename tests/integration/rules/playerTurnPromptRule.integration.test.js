@@ -10,6 +10,9 @@ import DispatchEventHandler from '../../../src/logic/operationHandlers/dispatchE
 import DispatchPerceptibleEventHandler from '../../../src/logic/operationHandlers/dispatchPerceptibleEventHandler.js';
 import { createRuleTestEnvironment } from '../../common/engine/systemLogicTestEnv.js';
 
+// Minimal stub for the condition used by this test suite
+const eventIsPlayerTurnPrompt = { id: 'core:event-is-player-turn-prompt' };
+
 /**
  * Creates handlers needed for the player_turn_prompt rule.
  *

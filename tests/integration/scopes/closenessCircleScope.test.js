@@ -75,7 +75,6 @@ describe('Closeness Circle Scope Resolution', () => {
     scopeEngine = new ScopeEngine({
       scopeRegistry,
       logger,
-      scopeCache: { get: jest.fn(), set: jest.fn() },
     });
   });
 

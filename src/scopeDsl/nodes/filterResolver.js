@@ -49,6 +49,32 @@ export default function createFilterResolver({
     resolve(node, ctx) {
       const { actorEntity, dispatcher, trace } = ctx;
 
+      // Critical validation: actorEntity must be present and have valid ID
+      if (!actorEntity) {
+        const error = new Error('FilterResolver: actorEntity is undefined in context. This is a critical error.');
+        console.error('[CRITICAL] FilterResolver context missing actorEntity:', {
+          hasCtx: !!ctx,
+          ctxKeys: ctx ? Object.keys(ctx) : [],
+          nodeType: node?.type,
+          hasDispatcher: !!dispatcher,
+          hasTrace: !!trace
+        });
+        throw error;
+      }
+
+      // Additional validation for actorEntity ID
+      if (!actorEntity.id || actorEntity.id === 'undefined') {
+        const error = new Error(`FilterResolver: actorEntity has invalid ID: ${actorEntity.id}. This is a critical error.`);
+        console.error('[CRITICAL] FilterResolver actorEntity has invalid ID:', {
+          actorId: actorEntity.id,
+          actorKeys: Object.keys(actorEntity),
+          nodeType: node?.type,
+          hasDispatcher: !!dispatcher,
+          hasTrace: !!trace
+        });
+        throw error;
+      }
+
       // Recursively resolve parent node
       const parentResult = dispatcher.resolve(node.parent, ctx);
 

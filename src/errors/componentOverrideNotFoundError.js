@@ -10,6 +10,8 @@
  */
 export class ComponentOverrideNotFoundError extends Error {
   /**
+   * Creates an instance of ComponentOverrideNotFoundError.
+   *
    * @param {string} instanceId - The ID of the entity instance.
    * @param {string} componentTypeId - The component type that was not found as an override.
    */
