@@ -3,7 +3,6 @@ import AppContainer from '../../src/dependencyInjection/appContainer.js';
 import { registerTurnLifecycle } from '../../src/dependencyInjection/registrations/turnLifecycleRegistrations.js';
 import { tokens } from '../../src/dependencyInjection/tokens.js';
 import TurnManager from '../../src/turns/turnManager.js';
-import { TurnOrderService } from '../../src/turns/order/turnOrderService.js';
 import TurnHandlerResolver from '../../src/turns/services/turnHandlerResolver.js';
 import { ConcreteTurnStateFactory } from '../../src/turns/factories/concreteTurnStateFactory.js';
 

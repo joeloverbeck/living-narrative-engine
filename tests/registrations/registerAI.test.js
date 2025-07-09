@@ -3,7 +3,6 @@ import AppContainer from '../../src/dependencyInjection/appContainer.js';
 import { registerAI } from '../../src/dependencyInjection/registrations/aiRegistrations.js';
 import { tokens } from '../../src/dependencyInjection/tokens.js';
 import { ConfigurableLLMAdapter } from '../../src/turns/adapters/configurableLLMAdapter.js';
-import ActorTurnHandler from '../../src/turns/handlers/actorTurnHandler.js';
 
 describe('registerAI', () => {
   /** @type {AppContainer} */
