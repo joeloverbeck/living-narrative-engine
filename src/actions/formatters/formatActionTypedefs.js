@@ -31,7 +31,13 @@
 /**
  * Mapping of target types to formatter functions.
  *
- * @typedef {Object.<string, (command: string, context: ActionTargetContext, deps: object) => FormatActionCommandResult>} TargetFormatterMap
+ * @typedef {{
+ *   [key: string]: (
+ *     command: string,
+ *     context: ActionTargetContext,
+ *     deps: object
+ *   ) => FormatActionCommandResult
+ * }} TargetFormatterMap
  */
 
 export const __formatActionTypedefs = true;

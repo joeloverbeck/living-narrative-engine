@@ -19,7 +19,6 @@ import {
   TARGET_DOMAIN_NONE,
 } from '../constants/targetDomains.js';
 import { ServiceSetup } from '../utils/serviceInitializerUtils.js';
-import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/systemEventIds.js';
 import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
 
 /**
@@ -49,7 +48,7 @@ export class TargetResolutionService extends ITargetResolutionService {
    * @param {ISafeEventDispatcher} deps.safeEventDispatcher - Dispatches system errors.
    * @param {JsonLogicEvaluationService} deps.jsonLogicEvaluationService - Service to evaluate JsonLogic.
    * @param {IDslParser} deps.dslParser - Parser used for Scope-DSL expressions.
-   * @param deps.serviceSetup
+   * @param {ServiceSetup} [deps.serviceSetup] - Optional service setup helper.
    */
   constructor({
     scopeRegistry,
@@ -106,15 +105,19 @@ export class TargetResolutionService extends ITargetResolutionService {
       trace?.error(errorMessage, source);
       return { targets: [], error: new Error(errorMessage) };
     }
-    
-    if (!actorEntity.id || typeof actorEntity.id !== 'string' || actorEntity.id === 'undefined') {
+
+    if (
+      !actorEntity.id ||
+      typeof actorEntity.id !== 'string' ||
+      actorEntity.id === 'undefined'
+    ) {
       const errorMessage = `Invalid actor entity ID: ${JSON.stringify(actorEntity.id)} (type: ${typeof actorEntity.id})`;
       this.#logger.error(errorMessage, {
         actorEntity,
         actorId: actorEntity.id,
         actorIdType: typeof actorEntity.id,
         hasComponents: !!actorEntity.components,
-        hasComponentTypeIds: !!actorEntity.componentTypeIds
+        hasComponentTypeIds: !!actorEntity.componentTypeIds,
       });
       trace?.error(errorMessage, source);
       return { targets: [], error: new Error(errorMessage) };
@@ -194,28 +197,34 @@ export class TargetResolutionService extends ITargetResolutionService {
       // Ensure actor entity has components built before passing to scope engine
       // This is necessary for proper scope evaluation that depends on component state
       let actorWithComponents = actorEntity;
-      
+
       if (actorEntity && !actorEntity.components) {
-        if (!actorEntity.componentTypeIds || !Array.isArray(actorEntity.componentTypeIds)) {
+        if (
+          !actorEntity.componentTypeIds ||
+          !Array.isArray(actorEntity.componentTypeIds)
+        ) {
           trace?.warn(
             `Actor entity ${actorEntity.id} has no components or componentTypeIds`,
             source
           );
           // Create empty components object to prevent errors
           // IMPORTANT: Preserve Entity class getters (especially 'id') that are lost with spread operator
-          actorWithComponents = { 
-            ...actorEntity, 
-            id: actorEntity.id,                          // Explicitly preserve the ID getter
-            definitionId: actorEntity.definitionId,      // Preserve other critical getters
+          actorWithComponents = {
+            ...actorEntity,
+            id: actorEntity.id, // Explicitly preserve the ID getter
+            definitionId: actorEntity.definitionId, // Preserve other critical getters
             componentTypeIds: actorEntity.componentTypeIds,
-            components: {} 
+            components: {},
           };
         } else {
           // Build components for the actor entity
           const components = {};
           for (const componentTypeId of actorEntity.componentTypeIds) {
             try {
-              const data = this.#entityManager.getComponentData(actorEntity.id, componentTypeId);
+              const data = this.#entityManager.getComponentData(
+                actorEntity.id,
+                componentTypeId
+              );
               if (data) {
                 components[componentTypeId] = data;
               }
@@ -226,15 +235,15 @@ export class TargetResolutionService extends ITargetResolutionService {
               );
             }
           }
-          
+
           // Create a new actor entity object with components
           // IMPORTANT: Preserve Entity class getters (especially 'id') that are lost with spread operator
-          actorWithComponents = { 
-            ...actorEntity, 
-            id: actorEntity.id,                          // Explicitly preserve the ID getter
-            definitionId: actorEntity.definitionId,      // Preserve other critical getters
+          actorWithComponents = {
+            ...actorEntity,
+            id: actorEntity.id, // Explicitly preserve the ID getter
+            definitionId: actorEntity.definitionId, // Preserve other critical getters
             componentTypeIds: actorEntity.componentTypeIds,
-            components 
+            components,
           };
           trace?.info(
             `Built ${Object.keys(components).length} components for actor ${actorEntity.id}`,
@@ -242,24 +251,31 @@ export class TargetResolutionService extends ITargetResolutionService {
           );
         }
       }
-      
+
       const runtimeCtx = this.#buildRuntimeContext(
         actorWithComponents,
         discoveryContext
       );
-      
+
       // Validate runtime context before proceeding
       if (!runtimeCtx || !runtimeCtx.entityManager) {
         throw new Error('Invalid runtime context: missing entity manager');
       }
-      
-      const resolvedIds = this.#scopeEngine.resolve(ast, actorWithComponents, runtimeCtx, trace);
-      
+
+      const resolvedIds = this.#scopeEngine.resolve(
+        ast,
+        actorWithComponents,
+        runtimeCtx,
+        trace
+      );
+
       // Validate resolved IDs
       if (!resolvedIds || !(resolvedIds instanceof Set)) {
-        throw new Error(`Scope engine returned invalid result: ${typeof resolvedIds}`);
+        throw new Error(
+          `Scope engine returned invalid result: ${typeof resolvedIds}`
+        );
       }
-      
+
       return { ids: resolvedIds };
     } catch (error) {
       const errorMessage = `Error resolving scope '${scopeName}': ${error.message}`;
@@ -314,18 +330,18 @@ export class TargetResolutionService extends ITargetResolutionService {
     originalError
       ? this.#logger.error(message, originalError)
       : this.#logger.warn(message);
-    
+
     // Standardize details structure
     const standardizedDetails = {
       ...details,
-      scopeName: details.scopeName || source
+      scopeName: details.scopeName || source,
     };
-    
+
     if (originalError) {
       standardizedDetails.error = originalError.message;
       standardizedDetails.stack = originalError.stack;
     }
-    
+
     safeDispatchError(
       this.#safeEventDispatcher,
       message,

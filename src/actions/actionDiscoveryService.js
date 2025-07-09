@@ -45,7 +45,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
    * @param {ActionCandidateProcessor} deps.actionCandidateProcessor - Processor for candidate actions.
    * @param {TraceContextFactory} deps.traceContextFactory - Factory for creating trace contexts.
    * @param {Function} deps.getActorLocationFn - Function to get actor location.
-   * @param deps.serviceSetup
+   * @param {ServiceSetup} [deps.serviceSetup] - Optional service setup helper.
    */
   constructor({
     entityManager,
