@@ -62,26 +62,36 @@ export default class BatchOperationManager {
    * @param {number} [deps.defaultBatchSize] - Default batch size
    * @param {boolean} [deps.enableTransactions] - Enable transaction-like behavior
    */
-  constructor({ 
-    lifecycleManager, 
+  constructor({
+    lifecycleManager,
     componentMutationService,
-    logger, 
+    logger,
     defaultBatchSize = 50,
-    enableTransactions = true 
+    enableTransactions = true,
   }) {
     validateDependency(logger, 'ILogger', console, {
       requiredMethods: ['info', 'error', 'warn', 'debug'],
     });
     this.#logger = ensureValidLogger(logger, 'BatchOperationManager');
 
-    validateDependency(lifecycleManager, 'EntityLifecycleManager', this.#logger, {
-      requiredMethods: ['createEntityInstance', 'removeEntityInstance'],
-    });
+    validateDependency(
+      lifecycleManager,
+      'EntityLifecycleManager',
+      this.#logger,
+      {
+        requiredMethods: ['createEntityInstance', 'removeEntityInstance'],
+      }
+    );
     this.#lifecycleManager = lifecycleManager;
 
-    validateDependency(componentMutationService, 'ComponentMutationService', this.#logger, {
-      requiredMethods: ['addComponent', 'removeComponent'],
-    });
+    validateDependency(
+      componentMutationService,
+      'ComponentMutationService',
+      this.#logger,
+      {
+        requiredMethods: ['addComponent', 'removeComponent'],
+      }
+    );
     this.#componentMutationService = componentMutationService;
 
     this.#defaultBatchSize = defaultBatchSize;
@@ -122,14 +132,16 @@ export default class BatchOperationManager {
       processingTime: 0,
     };
 
-    this.#logger.info(`Starting batch entity creation: ${entitySpecs.length} entities`);
+    this.#logger.info(
+      `Starting batch entity creation: ${entitySpecs.length} entities`
+    );
 
     // Process in batches
     for (let i = 0; i < entitySpecs.length; i += batchSize) {
       const batch = entitySpecs.slice(i, i + batchSize);
-      
+
       try {
-        const batchResult = enableParallel 
+        const batchResult = enableParallel
           ? await this.#processBatchParallel(batch, 'create')
           : await this.#processBatchSequential(batch, 'create');
 
@@ -140,16 +152,21 @@ export default class BatchOperationManager {
         result.failureCount += batchResult.failureCount;
 
         if (stopOnError && batchResult.failureCount > 0) {
-          this.#logger.warn(`Stopping batch creation due to error in batch ${Math.floor(i / batchSize) + 1}`);
+          this.#logger.warn(
+            `Stopping batch creation due to error in batch ${Math.floor(i / batchSize) + 1}`
+          );
           break;
         }
       } catch (error) {
-        this.#logger.error(`Batch creation failed for batch ${Math.floor(i / batchSize) + 1}:`, error);
-        
+        this.#logger.error(
+          `Batch creation failed for batch ${Math.floor(i / batchSize) + 1}:`,
+          error
+        );
+
         if (stopOnError) {
           throw error;
         }
-        
+
         // Mark entire batch as failed
         for (const spec of batch) {
           result.failures.push({ item: spec, error });
@@ -160,7 +177,7 @@ export default class BatchOperationManager {
     }
 
     result.processingTime = performance.now() - startTime;
-    
+
     this.#logger.info(`Batch entity creation completed`, {
       totalProcessed: result.totalProcessed,
       successes: result.successCount,
@@ -197,14 +214,16 @@ export default class BatchOperationManager {
       processingTime: 0,
     };
 
-    this.#logger.info(`Starting batch component addition: ${componentSpecs.length} components`);
+    this.#logger.info(
+      `Starting batch component addition: ${componentSpecs.length} components`
+    );
 
     // Process in batches
     for (let i = 0; i < componentSpecs.length; i += batchSize) {
       const batch = componentSpecs.slice(i, i + batchSize);
-      
+
       try {
-        const batchResult = enableParallel 
+        const batchResult = enableParallel
           ? await this.#processBatchParallel(batch, 'addComponent')
           : await this.#processBatchSequential(batch, 'addComponent');
 
@@ -215,16 +234,21 @@ export default class BatchOperationManager {
         result.failureCount += batchResult.failureCount;
 
         if (stopOnError && batchResult.failureCount > 0) {
-          this.#logger.warn(`Stopping batch component addition due to error in batch ${Math.floor(i / batchSize) + 1}`);
+          this.#logger.warn(
+            `Stopping batch component addition due to error in batch ${Math.floor(i / batchSize) + 1}`
+          );
           break;
         }
       } catch (error) {
-        this.#logger.error(`Batch component addition failed for batch ${Math.floor(i / batchSize) + 1}:`, error);
-        
+        this.#logger.error(
+          `Batch component addition failed for batch ${Math.floor(i / batchSize) + 1}:`,
+          error
+        );
+
         if (stopOnError) {
           throw error;
         }
-        
+
         // Mark entire batch as failed
         for (const spec of batch) {
           result.failures.push({ item: spec, error });
@@ -235,7 +259,7 @@ export default class BatchOperationManager {
     }
 
     result.processingTime = performance.now() - startTime;
-    
+
     this.#logger.info(`Batch component addition completed`, {
       totalProcessed: result.totalProcessed,
       successes: result.successCount,
@@ -272,14 +296,16 @@ export default class BatchOperationManager {
       processingTime: 0,
     };
 
-    this.#logger.info(`Starting batch entity removal: ${instanceIds.length} entities`);
+    this.#logger.info(
+      `Starting batch entity removal: ${instanceIds.length} entities`
+    );
 
     // Process in batches
     for (let i = 0; i < instanceIds.length; i += batchSize) {
       const batch = instanceIds.slice(i, i + batchSize);
-      
+
       try {
-        const batchResult = enableParallel 
+        const batchResult = enableParallel
           ? await this.#processBatchParallel(batch, 'remove')
           : await this.#processBatchSequential(batch, 'remove');
 
@@ -290,16 +316,21 @@ export default class BatchOperationManager {
         result.failureCount += batchResult.failureCount;
 
         if (stopOnError && batchResult.failureCount > 0) {
-          this.#logger.warn(`Stopping batch removal due to error in batch ${Math.floor(i / batchSize) + 1}`);
+          this.#logger.warn(
+            `Stopping batch removal due to error in batch ${Math.floor(i / batchSize) + 1}`
+          );
           break;
         }
       } catch (error) {
-        this.#logger.error(`Batch removal failed for batch ${Math.floor(i / batchSize) + 1}:`, error);
-        
+        this.#logger.error(
+          `Batch removal failed for batch ${Math.floor(i / batchSize) + 1}:`,
+          error
+        );
+
         if (stopOnError) {
           throw error;
         }
-        
+
         // Mark entire batch as failed
         for (const instanceId of batch) {
           result.failures.push({ item: instanceId, error });
@@ -310,7 +341,7 @@ export default class BatchOperationManager {
     }
 
     result.processingTime = performance.now() - startTime;
-    
+
     this.#logger.info(`Batch entity removal completed`, {
       totalProcessed: result.totalProcessed,
       successes: result.successCount,
@@ -340,7 +371,7 @@ export default class BatchOperationManager {
 
     for (const item of batch) {
       result.totalProcessed++;
-      
+
       try {
         const operationResult = await this.#executeOperation(item, operation);
         result.successes.push(operationResult);
@@ -411,18 +442,21 @@ export default class BatchOperationManager {
   async #executeOperation(item, operation) {
     switch (operation) {
       case 'create':
-        return this.#lifecycleManager.createEntityInstance(item.definitionId, item.opts);
-      
+        return this.#lifecycleManager.createEntityInstance(
+          item.definitionId,
+          item.opts
+        );
+
       case 'addComponent':
         return this.#componentMutationService.addComponent(
           item.instanceId,
           item.componentTypeId,
           item.componentData
         );
-      
+
       case 'remove':
         return this.#lifecycleManager.removeEntityInstance(item);
-      
+
       default:
         throw new Error(`Unknown batch operation: ${operation}`);
     }

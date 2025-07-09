@@ -20,7 +20,10 @@ import { flushPromisesAndTimers } from '../jestHelpers.js';
 import { EventCaptureMixin } from './eventCaptureMixin.js';
 import { EntitySetupMixin } from './entitySetupMixin.js';
 import { StartHelpersMixin } from './startHelpersMixin.js';
-import { createMockActor, createMockEntity } from '../mockFactories/entities.js';
+import {
+  createMockActor,
+  createMockEntity,
+} from '../mockFactories/entities.js';
 
 /**
  * @description Utility class that instantiates {@link TurnManager} with mocked

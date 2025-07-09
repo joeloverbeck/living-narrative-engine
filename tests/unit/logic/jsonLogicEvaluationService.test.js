@@ -457,26 +457,36 @@ describe('JsonLogicEvaluationService', () => {
       mockLogger.error.mockClear();
       mockLogger.warn.mockClear();
       mockLogger.debug.mockClear();
-      
+
       const mockGameDataRepository = {
-        getConditionDefinition: jest.fn().mockReturnValue(null)
+        getConditionDefinition: jest.fn().mockReturnValue(null),
       };
-      
+
       service = new JsonLogicEvaluationService({
         logger: mockLogger,
-        gameDataRepository: mockGameDataRepository
+        gameDataRepository: mockGameDataRepository,
       });
     });
 
     test('should allow valid operations', () => {
       const validRules = [
         { '==': [{ var: 'actor.id' }, 'entity123'] },
-        { 'and': [{ '>': [{ var: 'value' }, 5] }, { '<': [{ var: 'value' }, 10] }] },
-        { 'or': [{ '==': [{ var: 'type' }, 'npc'] }, { '==': [{ var: 'type' }, 'player'] }] },
-        { 'if': [{ var: 'hasItem' }, 'yes', 'no'] },
-        { 'in': [{ var: 'item' }, ['sword', 'shield', 'potion']] },
+        {
+          and: [
+            { '>': [{ var: 'value' }, 5] },
+            { '<': [{ var: 'value' }, 10] },
+          ],
+        },
+        {
+          or: [
+            { '==': [{ var: 'type' }, 'npc'] },
+            { '==': [{ var: 'type' }, 'player'] },
+          ],
+        },
+        { if: [{ var: 'hasItem' }, 'yes', 'no'] },
+        { in: [{ var: 'item' }, ['sword', 'shield', 'potion']] },
         { '+': [{ var: 'health' }, 10] },
-        { 'not': { '==': [{ var: 'status' }, 'dead'] } }
+        { not: { '==': [{ var: 'status' }, 'dead'] } },
       ];
 
       const context = {
@@ -486,7 +496,7 @@ describe('JsonLogicEvaluationService', () => {
         hasItem: true,
         item: 'sword',
         health: 90,
-        status: 'alive'
+        status: 'alive',
       };
 
       for (const rule of validRules) {
@@ -502,21 +512,21 @@ describe('JsonLogicEvaluationService', () => {
       // Create object with __proto__ as an actual property key
       const protoRule = Object.create(null);
       protoRule['__proto__'] = {};
-      
+
       const invalidRules = [
-        { 'eval': ['dangerous code'] }, // Code execution
-        { 'exec': ['rm -rf /'] }, // System commands
-        { 'require': ['fs'] }, // Module loading
+        { eval: ['dangerous code'] }, // Code execution
+        { exec: ['rm -rf /'] }, // System commands
+        { require: ['fs'] }, // Module loading
         protoRule, // Prototype pollution
-        { 'constructor': {} }, // Constructor access
-        { 'customOp': [1, 2] } // Unknown operation
+        { constructor: {} }, // Constructor access
+        { customOp: [1, 2] }, // Unknown operation
       ];
 
       const context = { actor: { id: 'test' } };
 
       for (const rule of invalidRules) {
         const result = service.evaluate(rule, context);
-        
+
         expect(result).toBe(false);
         expect(mockLogger.error).toHaveBeenCalledWith(
           'JsonLogicEvaluationService: JSON Logic validation failed:',
@@ -530,12 +540,12 @@ describe('JsonLogicEvaluationService', () => {
       // Create a deeply nested rule
       let deepRule = { var: 'value' };
       for (let i = 0; i < 60; i++) {
-        deepRule = { 'not': deepRule };
+        deepRule = { not: deepRule };
       }
 
       const context = { value: true };
       const result = service.evaluate(deepRule, context);
-      
+
       expect(result).toBe(false);
       expect(mockLogger.error).toHaveBeenCalledWith(
         'JsonLogicEvaluationService: JSON Logic validation failed:',
@@ -545,9 +555,9 @@ describe('JsonLogicEvaluationService', () => {
 
     test('should detect circular references in JSON Logic structures', () => {
       // Test circular reference detection in the validation
-      const circularRule = { 'and': [] };
+      const circularRule = { and: [] };
       // Create a circular reference
-      const innerRule = { 'or': [circularRule] };
+      const innerRule = { or: [circularRule] };
       circularRule.and.push(innerRule);
 
       const context = { actor: { id: 'test' } };
@@ -563,34 +573,36 @@ describe('JsonLogicEvaluationService', () => {
     test('should handle complex nested structures', () => {
       // Test a deeply nested but valid structure
       const complexRule = {
-        'and': [
+        and: [
           { '==': [{ var: 'a' }, 1] },
           {
-            'or': [
+            or: [
               { '>': [{ var: 'b' }, 5] },
               {
-                'and': [
+                and: [
                   { '<': [{ var: 'c' }, 10] },
-                  { '!=': [{ var: 'd' }, null] }
-                ]
-              }
-            ]
-          }
-        ]
+                  { '!=': [{ var: 'd' }, null] },
+                ],
+              },
+            ],
+          },
+        ],
       };
 
-      const context = { 
+      const context = {
         actor: { id: 'test' },
         a: 1,
         b: 6,
         c: 8,
-        d: 'value'
+        d: 'value',
       };
       const result = service.evaluate(complexRule, context);
 
       expect(result).toBe(true);
       expect(mockLogger.error).not.toHaveBeenCalledWith(
-        expect.stringContaining('JsonLogicEvaluationService: JSON Logic validation failed'),
+        expect.stringContaining(
+          'JsonLogicEvaluationService: JSON Logic validation failed'
+        ),
         expect.anything()
       );
     });
@@ -608,27 +620,29 @@ describe('JsonLogicEvaluationService', () => {
 
       // No validation errors should be logged for null/undefined
       expect(mockLogger.error).not.toHaveBeenCalledWith(
-        expect.stringContaining('JsonLogicEvaluationService: JSON Logic validation failed'),
+        expect.stringContaining(
+          'JsonLogicEvaluationService: JSON Logic validation failed'
+        ),
         expect.anything()
       );
     });
 
     test('should validate nested operations correctly', () => {
       const nestedRule = {
-        'and': [
+        and: [
           { '==': [{ var: 'actor.type' }, 'player'] },
           {
-            'or': [
+            or: [
               { '>': [{ var: 'actor.level' }, 10] },
-              { 'in': [{ var: 'actor.class' }, ['warrior', 'mage']] }
-            ]
+              { in: [{ var: 'actor.class' }, ['warrior', 'mage']] },
+            ],
           },
           {
-            'not': {
-              '==': [{ var: 'actor.status' }, 'banned']
-            }
-          }
-        ]
+            not: {
+              '==': [{ var: 'actor.status' }, 'banned'],
+            },
+          },
+        ],
       };
 
       const context = {
@@ -637,32 +651,34 @@ describe('JsonLogicEvaluationService', () => {
           type: 'player',
           level: 15,
           class: 'warrior',
-          status: 'active'
-        }
+          status: 'active',
+        },
       };
 
       const result = service.evaluate(nestedRule, context);
       expect(result).toBe(true);
       expect(mockLogger.error).not.toHaveBeenCalledWith(
-        expect.stringContaining('JsonLogicEvaluationService: JSON Logic validation failed'),
+        expect.stringContaining(
+          'JsonLogicEvaluationService: JSON Logic validation failed'
+        ),
         expect.anything()
       );
     });
 
     test('should allow condition_ref as it is whitelisted', () => {
       const ruleWithConditionRef = {
-        'condition_ref': 'some_condition_id'
+        condition_ref: 'some_condition_id',
       };
 
       const context = { actor: { id: 'test' } };
-      
+
       // Even though the condition_ref won't resolve (mock returns null),
       // the validation should pass
       const result = service.evaluate(ruleWithConditionRef, context);
-      
+
       // Check that validation didn't fail
       const validationErrorCalls = mockLogger.error.mock.calls.filter(
-        call => call[0] && call[0].includes('JSON Logic validation failed')
+        (call) => call[0] && call[0].includes('JSON Logic validation failed')
       );
       expect(validationErrorCalls.length).toBe(0);
     });
@@ -671,16 +687,18 @@ describe('JsonLogicEvaluationService', () => {
       const arrayRule = [
         { '==': [1, 1] },
         { '>': [5, 3] },
-        { 'var': 'someValue' }
+        { var: 'someValue' },
       ];
 
       const context = { someValue: 42 };
-      
+
       // Arrays themselves aren't operations, but their contents should be validated
       const result = service.evaluate(arrayRule, context);
-      
+
       expect(mockLogger.error).not.toHaveBeenCalledWith(
-        expect.stringContaining('JsonLogicEvaluationService: JSON Logic validation failed'),
+        expect.stringContaining(
+          'JsonLogicEvaluationService: JSON Logic validation failed'
+        ),
         expect.anything()
       );
     });

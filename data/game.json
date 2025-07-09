@@ -1,7 +1,4 @@
 {
-  "mods": [
-    "core",
-    "p_erotica"
-  ],
+  "mods": ["core", "p_erotica"],
   "startWorld": "p_erotica:donostia"
 }

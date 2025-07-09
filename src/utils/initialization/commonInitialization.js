@@ -15,7 +15,7 @@ export async function initializeCoreServices(container, tokens) {
     systemInitializer: container.resolve(tokens.SystemInitializer),
     eventDispatcher: container.resolve(tokens.ISafeEventDispatcher),
   };
-  
+
   services.logger.debug('Core services resolved successfully');
   return services;
 }
@@ -29,14 +29,18 @@ export async function initializeCoreServices(container, tokens) {
  */
 export async function initializeAnatomyServices(container, logger, tokens) {
   logger.info('Initializing anatomy-specific services...');
-  
-  const anatomyFormattingService = container.resolve(tokens.AnatomyFormattingService);
-  const anatomyDescriptionService = container.resolve(tokens.AnatomyDescriptionService);
-  
+
+  const anatomyFormattingService = container.resolve(
+    tokens.AnatomyFormattingService
+  );
+  const anatomyDescriptionService = container.resolve(
+    tokens.AnatomyDescriptionService
+  );
+
   // Initialize the formatting service after mods are loaded
   await anatomyFormattingService.initialize();
   logger.info('AnatomyFormattingService initialized successfully');
-  
+
   return {
     anatomyFormattingService,
     anatomyDescriptionService,
@@ -52,9 +56,9 @@ export async function initializeAnatomyServices(container, logger, tokens) {
  */
 export async function initializeAuxiliaryServices(container, logger, tokens) {
   logger.info('Initializing auxiliary services...');
-  
+
   const systemInitializer = container.resolve(tokens.SystemInitializer);
   await systemInitializer.initializeAll();
-  
+
   logger.info('Auxiliary services initialized successfully');
 }

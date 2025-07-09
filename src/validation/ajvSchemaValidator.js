@@ -77,7 +77,8 @@ class AjvSchemaValidator {
     try {
       return this.#requireValidSchemaId(schemaId);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       this.#logger.error(`AjvSchemaValidator.addSchema: ${errorMessage}`);
       throw error;
     }

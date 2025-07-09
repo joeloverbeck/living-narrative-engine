@@ -62,9 +62,9 @@ describe('GameConfigLoader.loadConfig', () => {
   });
 
   test('includes startWorld when present in config', async () => {
-    dataFetcher.fetch.mockResolvedValue({ 
+    dataFetcher.fetch.mockResolvedValue({
       mods: [CORE_MOD_ID, 'modX'],
-      startWorld: 'test:world'
+      startWorld: 'test:world',
     });
     const config = await loader.loadConfig();
     expect(config.mods).toEqual([CORE_MOD_ID, 'modX']);

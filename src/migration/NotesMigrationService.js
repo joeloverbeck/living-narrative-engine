@@ -18,15 +18,30 @@ class NotesMigrationService {
       // Possessive pattern "X's..." - extract just the name (check first to avoid capturing "X's Y" as verb pattern)
       { regex: /^([\w\s'-]+)'s\s+/i, type: 'possessive' },
       // "The X..." pattern - extract without "The"
-      { regex: /^The\s+([\w\s'-]+)\s+(is|was|were|has|have|had)\s+/i, type: 'the' },
+      {
+        regex: /^The\s+([\w\s'-]+)\s+(is|was|were|has|have|had)\s+/i,
+        type: 'the',
+      },
       // "X seems/appears/is/was/has..." pattern
-      { regex: /^([\w\s'-]+)\s+(seems?|appears?|is|was|were|has|have|had|looks?|feels?|sounds?)\s+/i, type: 'verb' },
+      {
+        regex:
+          /^([\w\s'-]+)\s+(seems?|appears?|is|was|were|has|have|had|looks?|feels?|sounds?)\s+/i,
+        type: 'verb',
+      },
       // "Note/Info/Text about X" pattern
       { regex: /^[\w\s]+\s+about\s+([\w\s'-]+?)(?:\s|$)/i, type: 'about' },
       // Direct observation "Saw/Heard/Noticed X..."
-      { regex: /^(?:Saw|Heard|Noticed|Observed|Found|Discovered)\s+((?:the\s+)?[\w\s'-]+?)(?:\s+(?:at|in|near|with|sleeping|walking|running|talking|sitting|standing)|\s*[,.]|\s*$)/i, type: 'observation' },
+      {
+        regex:
+          /^(?:Saw|Heard|Noticed|Observed|Found|Discovered)\s+((?:the\s+)?[\w\s'-]+?)(?:\s+(?:at|in|near|with|sleeping|walking|running|talking|sitting|standing)|\s*[,.]|\s*$)/i,
+        type: 'observation',
+      },
       // Location pattern "At/In the X..."
-      { regex: /^(?:At|In|On|Near|Around)\s+(?:the\s+)?([\w\s'-]+?)(?:,|\s+today|\s+yesterday|\s+now|$)/i, type: 'location' },
+      {
+        regex:
+          /^(?:At|In|On|Near|Around)\s+(?:the\s+)?([\w\s'-]+?)(?:,|\s+today|\s+yesterday|\s+now|$)/i,
+        type: 'location',
+      },
     ];
 
     for (const patternObj of patterns) {
@@ -34,13 +49,25 @@ class NotesMigrationService {
       if (match && match[1]) {
         // Clean up the extracted subject
         let subject = match[1].trim();
-        
+
         // For possessive patterns, the capture group already includes 's, so we don't need to remove it
         // The pattern captures up to but not including the apostrophe
-        
+
         // Avoid overly generic subjects
-        if (subject.length > 1 && 
-            !['a', 'an', 'the', 'some', 'any', 'it', 'he', 'she', 'they'].includes(subject.toLowerCase())) {
+        if (
+          subject.length > 1 &&
+          ![
+            'a',
+            'an',
+            'the',
+            'some',
+            'any',
+            'it',
+            'he',
+            'she',
+            'they',
+          ].includes(subject.toLowerCase())
+        ) {
           return subject;
         }
       }
@@ -55,7 +82,24 @@ class NotesMigrationService {
     const words = text.split(/\s+/);
     for (const word of words) {
       // Skip articles and common words
-      if (['a', 'an', 'the', 'is', 'was', 'were', 'has', 'have', 'had', 'to', 'in', 'at', 'on', 'it'].includes(word.toLowerCase())) {
+      if (
+        [
+          'a',
+          'an',
+          'the',
+          'is',
+          'was',
+          'were',
+          'has',
+          'have',
+          'had',
+          'to',
+          'in',
+          'at',
+          'on',
+          'it',
+        ].includes(word.toLowerCase())
+      ) {
         continue;
       }
       // Return first substantial word
@@ -75,11 +119,11 @@ class NotesMigrationService {
    */
   inferTagsFromText(text) {
     const tags = [];
-    
+
     if (!text || typeof text !== 'string') {
       return ['migrated'];
     }
-    
+
     const lowerText = text.toLowerCase();
 
     // Emotion-related tags
@@ -144,14 +188,14 @@ class NotesMigrationService {
         subject: this.extractSubjectFromText(oldNote),
         context: 'legacy note',
         tags: this.inferTagsFromText(oldNote),
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
     }
 
     // Handle object format
     if (typeof oldNote === 'object' && oldNote !== null) {
       const text = oldNote.text || '';
-      
+
       // Check if already in new format
       if (oldNote.subject) {
         return oldNote; // Already migrated
@@ -162,7 +206,7 @@ class NotesMigrationService {
         subject: this.extractSubjectFromText(text),
         context: 'legacy note',
         tags: this.inferTagsFromText(text),
-        timestamp: oldNote.timestamp || new Date().toISOString()
+        timestamp: oldNote.timestamp || new Date().toISOString(),
       };
     }
 
@@ -172,7 +216,7 @@ class NotesMigrationService {
       subject: 'Unknown',
       context: 'legacy note',
       tags: ['migrated', 'unexpected-format'],
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   }
 
@@ -187,7 +231,7 @@ class NotesMigrationService {
       return [];
     }
 
-    return notes.map(note => this.migrateNote(note));
+    return notes.map((note) => this.migrateNote(note));
   }
 
   /**
@@ -200,12 +244,12 @@ class NotesMigrationService {
     if (typeof note === 'string') {
       return true;
     }
-    
+
     if (typeof note === 'object' && note !== null) {
       // New format has 'subject' field
       return !Object.prototype.hasOwnProperty.call(note, 'subject');
     }
-    
+
     return false;
   }
 
@@ -220,7 +264,7 @@ class NotesMigrationService {
       return false;
     }
 
-    return notes.some(note => this.isOldFormat(note));
+    return notes.some((note) => this.isOldFormat(note));
   }
 
   /**
@@ -235,18 +279,18 @@ class NotesMigrationService {
         total: 0,
         oldFormat: 0,
         newFormat: 0,
-        needsMigration: false
+        needsMigration: false,
       };
     }
 
-    const oldFormat = notes.filter(note => this.isOldFormat(note)).length;
+    const oldFormat = notes.filter((note) => this.isOldFormat(note)).length;
     const newFormat = notes.length - oldFormat;
 
     return {
       total: notes.length,
       oldFormat,
       newFormat,
-      needsMigration: oldFormat > 0
+      needsMigration: oldFormat > 0,
     };
   }
 }

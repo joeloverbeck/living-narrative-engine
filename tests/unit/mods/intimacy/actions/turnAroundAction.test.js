@@ -20,12 +20,14 @@ describe('intimacy:turn_around action', () => {
       expect(turnAroundAction.description).toBeTruthy();
     });
 
-    it('uses intimacy:close_actors scope', () => {
-      expect(turnAroundAction.scope).toBe('intimacy:close_actors');
+    it('uses intimacy:close_actors_in_front scope', () => {
+      expect(turnAroundAction.scope).toBe('intimacy:close_actors_in_front');
     });
 
     it('requires intimacy:closeness component for actor', () => {
-      expect(turnAroundAction.required_components.actor).toContain('intimacy:closeness');
+      expect(turnAroundAction.required_components.actor).toContain(
+        'intimacy:closeness'
+      );
     });
 
     it('has correct template', () => {
@@ -42,26 +44,28 @@ describe('intimacy:turn_around action', () => {
       const mockActor = {
         id: 'actor1',
         components: {
-          'intimacy:closeness': { partners: ['target1'] }
-        }
+          'intimacy:closeness': { partners: ['target1'] },
+        },
       };
-      
+
       const mockTarget = {
         id: 'target1',
         components: {
-          'intimacy:closeness': { partners: ['actor1'] }
-        }
+          'intimacy:closeness': { partners: ['actor1'] },
+        },
       };
 
       // Action requires closeness component
       expect(mockActor.components['intimacy:closeness']).toBeDefined();
-      expect(mockTarget.components['intimacy:closeness'].partners).toContain('actor1');
+      expect(mockTarget.components['intimacy:closeness'].partners).toContain(
+        'actor1'
+      );
     });
 
     it('should not be available without closeness component', () => {
       const mockActor = {
         id: 'actor1',
-        components: {}
+        components: {},
       };
 
       // Actor lacks required component

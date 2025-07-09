@@ -63,7 +63,7 @@ export function registerActorAwareStrategy(container) {
             hasComponents: !!entity?.components,
             hasGetComponentData: typeof entity?.getComponentData === 'function',
             playerTypeViaComponents: entity?.components?.['core:player_type'],
-            playerTypeViaMethod: entity?.getComponentData?.('core:player_type')
+            playerTypeViaMethod: entity?.getComponentData?.('core:player_type'),
           });
           return entity;
         },

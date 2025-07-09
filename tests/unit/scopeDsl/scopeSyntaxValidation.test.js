@@ -2,12 +2,12 @@ import { describe, expect, it } from '@jest/globals';
 import { parseDslExpression } from '../../../src/scopeDsl/parser/parser.js';
 
 describe('Scope Syntax Validation', () => {
-
   describe('entities() filter syntax', () => {
     it('should correctly parse entities() with iterator and filter', () => {
-      const validSyntax = 'entities(core:position)[][{"==": [{"var": "entity.id"}, "test"]}]';
+      const validSyntax =
+        'entities(core:position)[][{"==": [{"var": "entity.id"}, "test"]}]';
       const ast = parseDslExpression(validSyntax);
-      
+
       // With correct syntax, the top-level node is the Filter
       expect(ast.type).toBe('Filter');
       // The filter's parent should be the ArrayIterationStep
@@ -20,11 +20,12 @@ describe('Scope Syntax Validation', () => {
 
     it('should handle incorrect syntax entities() with direct filter (missing iterator)', () => {
       // This is the problematic syntax that was causing errors
-      const incorrectSyntax = 'entities(core:position)[{"==": [{"var": "entity.id"}, "test"]}]';
-      
+      const incorrectSyntax =
+        'entities(core:position)[{"==": [{"var": "entity.id"}, "test"]}]';
+
       // This should parse, but the AST structure will be different
       const ast = parseDslExpression(incorrectSyntax);
-      
+
       // With incorrect syntax, the filter might be attached directly to the Source
       // This can cause issues during resolution
       expect(ast.type).toBe('Filter');
@@ -33,12 +34,13 @@ describe('Scope Syntax Validation', () => {
     });
 
     it('should correctly parse multiple filters with iterators', () => {
-      const syntax = 'entities(core:actor)[][{"condition_ref": "core:entity-at-location"}][{"!=": [{"var": "entity.id"}, {"var": "actor.id"}]}]';
+      const syntax =
+        'entities(core:actor)[][{"condition_ref": "core:entity-at-location"}][{"!=": [{"var": "entity.id"}, {"var": "actor.id"}]}]';
       const ast = parseDslExpression(syntax);
-      
+
       // First node should be ArrayIterationStep
       expect(ast.type).toBe('Filter');
-      
+
       // Find all filter nodes
       const filters = [];
       collectNodesByType(ast, 'Filter', filters);
@@ -50,16 +52,17 @@ describe('Scope Syntax Validation', () => {
     it('should correctly parse actor.component.field[] pattern', () => {
       const syntax = 'actor.core:inventory.items[]';
       const ast = parseDslExpression(syntax);
-      
+
       expect(ast.type).toBe('ArrayIterationStep');
       expect(ast.parent.type).toBe('Step');
       expect(ast.parent.field).toBe('items');
     });
 
     it('should correctly parse location.component[filter].field pattern', () => {
-      const syntax = 'location.core:exits[{"==": [{"var": "locked"}, false]}].target';
+      const syntax =
+        'location.core:exits[{"==": [{"var": "locked"}, false]}].target';
       const ast = parseDslExpression(syntax);
-      
+
       expect(ast.type).toBe('Step');
       expect(ast.field).toBe('target');
       expect(ast.parent.type).toBe('Filter');
@@ -68,7 +71,7 @@ describe('Scope Syntax Validation', () => {
     it('should correctly parse union of scopes', () => {
       const syntax = 'actor.core:inventory.items[] + entities(core:item)[]';
       const ast = parseDslExpression(syntax);
-      
+
       expect(ast.type).toBe('Union');
       expect(ast.left.type).toBe('ArrayIterationStep');
       expect(ast.right.type).toBe('ArrayIterationStep');
@@ -99,7 +102,7 @@ describe('Scope Syntax Validation', () => {
  */
 function findNodeByType(node, type) {
   if (node.type === type) return node;
-  
+
   for (const key of Object.keys(node)) {
     if (key === 'type') continue;
     const value = node[key];
@@ -108,7 +111,7 @@ function findNodeByType(node, type) {
       if (found) return found;
     }
   }
-  
+
   return null;
 }
 
@@ -120,7 +123,7 @@ function findNodeByType(node, type) {
  */
 function collectNodesByType(node, type, result = []) {
   if (node.type === type) result.push(node);
-  
+
   for (const key of Object.keys(node)) {
     if (key === 'type') continue;
     const value = node[key];
@@ -128,6 +131,6 @@ function collectNodesByType(node, type, result = []) {
       collectNodesByType(value, type, result);
     }
   }
-  
+
   return result;
 }

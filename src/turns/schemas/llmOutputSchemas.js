@@ -60,7 +60,8 @@ export const LLM_TURN_ACTION_RESPONSE_SCHEMA = {
               subject: {
                 type: 'string',
                 minLength: 1,
-                description: 'Primary subject of the note (entity, location, concept)',
+                description:
+                  'Primary subject of the note (entity, location, concept)',
               },
               context: {
                 type: 'string',

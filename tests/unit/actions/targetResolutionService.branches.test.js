@@ -84,12 +84,16 @@ describe('TargetResolutionService - additional branches', () => {
 
     expect(result.targets).toEqual([]);
     expect(result.error).toBeInstanceOf(Error);
-    expect(result.error.message).toContain('Scope engine returned invalid result: undefined');
+    expect(result.error.message).toContain(
+      'Scope engine returned invalid result: undefined'
+    );
     expect(mockScopeEngine.resolve).toHaveBeenCalled();
     expect(mockSafeDispatcher.dispatch).toHaveBeenCalledWith(
       expect.any(String),
       expect.objectContaining({
-        message: expect.stringContaining('Scope engine returned invalid result: undefined')
+        message: expect.stringContaining(
+          'Scope engine returned invalid result: undefined'
+        ),
       })
     );
   });

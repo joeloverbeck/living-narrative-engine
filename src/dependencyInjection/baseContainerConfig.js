@@ -31,15 +31,17 @@ import { registerUI } from './registrations/uiRegistrations.js';
  * @param {ILogger} [options.logger] - Logger instance for debug logging
  */
 export function configureBaseContainer(container, options = {}) {
-  const { 
-    includeGameSystems = false, 
-    includeUI = false, 
+  const {
+    includeGameSystems = false,
+    includeUI = false,
     uiElements = null,
-    logger = null 
+    logger = null,
   } = options;
 
   if (logger) {
-    logger.debug('[BaseContainerConfig] Starting base container configuration...');
+    logger.debug(
+      '[BaseContainerConfig] Starting base container configuration...'
+    );
   }
 
   // --- Core Registration (always needed) ---
@@ -54,7 +56,9 @@ export function configureBaseContainer(container, options = {}) {
   // --- Conditionally register game-specific services ---
   if (includeGameSystems) {
     if (logger) {
-      logger.debug('[BaseContainerConfig] Registering game-specific systems...');
+      logger.debug(
+        '[BaseContainerConfig] Registering game-specific systems...'
+      );
     }
     registerAI(container);
     registerTurnLifecycle(container);
@@ -81,6 +85,8 @@ export function configureBaseContainer(container, options = {}) {
   }
 
   if (logger) {
-    logger.debug('[BaseContainerConfig] Base container configuration complete.');
+    logger.debug(
+      '[BaseContainerConfig] Base container configuration complete.'
+    );
   }
 }

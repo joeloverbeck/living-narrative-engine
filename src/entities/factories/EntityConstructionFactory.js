@@ -64,7 +64,7 @@ export default class EntityConstructionFactory {
     );
 
     const entity = this.#createEntityWrapper(data);
-    
+
     this.#applyDefaultComponents(entity);
 
     this.#logger.info(
@@ -147,7 +147,11 @@ export default class EntityConstructionFactory {
       `[EntityConstructionFactory] Creating minimal entity '${instanceId}' for testing`
     );
 
-    const data = this.#createEntityInstanceData(instanceId, definition, components);
+    const data = this.#createEntityInstanceData(
+      instanceId,
+      definition,
+      components
+    );
     return this.#createEntityWrapper(data);
   }
 
@@ -161,15 +165,21 @@ export default class EntityConstructionFactory {
    */
   validateConstructionParams(definition, instanceId, components) {
     if (!definition || typeof definition !== 'object') {
-      throw new Error('EntityConstructionFactory: definition must be an object');
+      throw new Error(
+        'EntityConstructionFactory: definition must be an object'
+      );
     }
 
     if (!instanceId || typeof instanceId !== 'string') {
-      throw new Error('EntityConstructionFactory: instanceId must be a non-empty string');
+      throw new Error(
+        'EntityConstructionFactory: instanceId must be a non-empty string'
+      );
     }
 
     if (components && typeof components !== 'object') {
-      throw new Error('EntityConstructionFactory: components must be an object or null');
+      throw new Error(
+        'EntityConstructionFactory: components must be an object or null'
+      );
     }
   }
 }

@@ -171,4 +171,5 @@ export default class EntityLifecycleValidator {
         serializedEntity.components
       );
     }
-  }}
+  }
+}

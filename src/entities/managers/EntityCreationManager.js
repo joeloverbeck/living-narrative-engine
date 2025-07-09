@@ -34,9 +34,14 @@ export default class EntityCreationManager {
     });
     this.#logger = ensureValidLogger(logger, 'EntityCreationManager');
 
-    validateDependency(lifecycleManager, 'EntityLifecycleManager', this.#logger, {
-      requiredMethods: ['createEntityInstance', 'reconstructEntity'],
-    });
+    validateDependency(
+      lifecycleManager,
+      'EntityLifecycleManager',
+      this.#logger,
+      {
+        requiredMethods: ['createEntityInstance', 'reconstructEntity'],
+      }
+    );
     this.#lifecycleManager = lifecycleManager;
 
     this.#logger.debug('EntityCreationManager initialized.');

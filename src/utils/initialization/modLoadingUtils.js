@@ -8,12 +8,18 @@
  * @returns {Promise<object>} The load report from the mods loader
  * @throws {Error} If game configuration fails to load
  */
-export async function loadModsFromGameConfig(modsLoader, logger, worldName = 'default') {
+export async function loadModsFromGameConfig(
+  modsLoader,
+  logger,
+  worldName = 'default'
+) {
   try {
     // Load game configuration
     const gameConfigResponse = await fetch('./data/game.json');
     if (!gameConfigResponse.ok) {
-      throw new Error(`Failed to load game configuration: ${gameConfigResponse.status} ${gameConfigResponse.statusText}`);
+      throw new Error(
+        `Failed to load game configuration: ${gameConfigResponse.status} ${gameConfigResponse.statusText}`
+      );
     }
 
     const gameConfig = await gameConfigResponse.json();
@@ -30,7 +36,7 @@ export async function loadModsFromGameConfig(modsLoader, logger, worldName = 'de
       `Successfully loaded ${loadReport.finalModOrder.length} mods for world '${worldName}'`
     );
     logger.debug('Mod load report:', loadReport);
-    
+
     return loadReport;
   } catch (error) {
     logger.error(`Failed to load mods for world '${worldName}':`, error);

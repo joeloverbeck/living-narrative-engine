@@ -292,4 +292,5 @@ export default class EntityConfig {
     }
 
     return Boolean(current);
-  }}
+  }
+}

@@ -9,13 +9,19 @@ import { getAppConfigService } from '../config/appConfig.js';
 
 // Import security middleware
 import { createSecurityMiddleware } from '../middleware/security.js';
-import { createApiRateLimiter, createLlmRateLimiter } from '../middleware/rateLimiting.js';
-import { 
-  validateLlmRequest, 
-  validateRequestHeaders, 
-  handleValidationErrors 
+import {
+  createApiRateLimiter,
+  createLlmRateLimiter,
+} from '../middleware/rateLimiting.js';
+import {
+  validateLlmRequest,
+  validateRequestHeaders,
+  handleValidationErrors,
 } from '../middleware/validation.js';
-import { createTimeoutMiddleware, createSizeLimitConfig } from '../middleware/timeout.js';
+import {
+  createTimeoutMiddleware,
+  createSizeLimitConfig,
+} from '../middleware/timeout.js';
 
 import { NodeFileSystemReader } from '../nodeFileSystemReader.js';
 import { ConsoleLogger } from '../consoleLogger.js';
@@ -145,7 +151,8 @@ app.get('/', (req, res) => {
 });
 
 // Updated route to use LlmRequestController's handleLlmRequest method with validation and rate limiting
-app.post('/api/llm-request', 
+app.post(
+  '/api/llm-request',
   createLlmRateLimiter(), // Stricter rate limiting for LLM requests
   validateRequestHeaders(), // Validate headers
   validateLlmRequest(), // Validate request body

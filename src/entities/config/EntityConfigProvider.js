@@ -45,14 +45,16 @@ export default class EntityConfigProvider {
     try {
       this.#config = EntityConfig.mergeConfig(userConfig);
       this.#initialized = true;
-      
+
       this.#logger.info('EntityConfigProvider initialized successfully');
       this.#logger.debug('Configuration loaded:', {
         environment: this.#config.environment.NODE_ENV,
         features: this.#getEnabledFeatures(),
       });
     } catch (error) {
-      this.#logger.error(`Failed to initialize EntityConfigProvider: ${error.message}`);
+      this.#logger.error(
+        `Failed to initialize EntityConfigProvider: ${error.message}`
+      );
       throw error;
     }
   }
@@ -194,7 +196,7 @@ export default class EntityConfigProvider {
     this.#ensureInitialized();
     const parts = path.split('.');
     let current = this.#config;
-    
+
     for (const part of parts) {
       if (current && typeof current === 'object' && part in current) {
         current = current[part];
@@ -202,7 +204,7 @@ export default class EntityConfigProvider {
         return undefined;
       }
     }
-    
+
     return current;
   }
 
@@ -216,24 +218,28 @@ export default class EntityConfigProvider {
     this.#ensureInitialized();
     const parts = path.split('.');
     let current = this.#config;
-    
+
     for (let i = 0; i < parts.length - 1; i++) {
       const part = parts[i];
       if (part === '__proto__' || part === 'constructor') {
-        throw new Error(`Invalid configuration path: '${part}' is a reserved property name.`);
+        throw new Error(
+          `Invalid configuration path: '${part}' is a reserved property name.`
+        );
       }
       if (!(part in current) || typeof current[part] !== 'object') {
         current[part] = {};
       }
       current = current[part];
     }
-    
+
     const lastPart = parts[parts.length - 1];
     if (lastPart === '__proto__' || lastPart === 'constructor') {
-      throw new Error(`Invalid configuration path: '${lastPart}' is a reserved property name.`);
+      throw new Error(
+        `Invalid configuration path: '${lastPart}' is a reserved property name.`
+      );
     }
     current[lastPart] = value;
-    
+
     this.#logger.debug(`Configuration value set: ${path} = ${value}`);
   }
 

@@ -6,7 +6,7 @@ We're working on the "sex" mod for our app. We have already a "fondle breasts" a
 
 - The action's template will be "fondle {target}'s penis". The required component for the acting actor requires the actor to have the "anatomy:closeness" component.
 - We will need a new scope definition, one that checks for targets in the acting actor's "anatomy:closeness" array, and filters the targets for those that have a "penis" body part type.
-- The rule needs to dispatch a perceptible event that says that the acting actor has fondled eagerly the target's penis. The rule should also dispatch an action success message indicating that the acting actor fondles the target's penis. 
+- The rule needs to dispatch a perceptible event that says that the acting actor has fondled eagerly the target's penis. The rule should also dispatch an action success message indicating that the acting actor fondles the target's penis.
 
 Your task is to create a comprehensive PRP document to implement these changes.
 

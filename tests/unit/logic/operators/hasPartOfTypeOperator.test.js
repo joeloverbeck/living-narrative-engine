@@ -27,21 +27,26 @@ describe('HasPartOfTypeOperator', () => {
   describe('evaluate', () => {
     it('should find parts of specified type', () => {
       const bodyComponent = { root: 'root123' };
-      mockDependencies.entityManager.getComponentData.mockReturnValue(bodyComponent);
-      mockDependencies.bodyGraphService.findPartsByType.mockReturnValue(['leg1', 'leg2']);
+      mockDependencies.entityManager.getComponentData.mockReturnValue(
+        bodyComponent
+      );
+      mockDependencies.bodyGraphService.findPartsByType.mockReturnValue([
+        'leg1',
+        'leg2',
+      ]);
       mockContext.actor = { id: 'actor123' };
 
       const result = operator.evaluate(['actor', 'leg'], mockContext);
 
-      expect(mockDependencies.entityManager.getComponentData).toHaveBeenCalledWith(
-        'actor123',
-        'anatomy:body'
-      );
-      expect(mockDependencies.bodyGraphService.buildAdjacencyCache).toHaveBeenCalledWith('root123');
-      expect(mockDependencies.bodyGraphService.findPartsByType).toHaveBeenCalledWith(
-        'root123',
-        'leg'
-      );
+      expect(
+        mockDependencies.entityManager.getComponentData
+      ).toHaveBeenCalledWith('actor123', 'anatomy:body');
+      expect(
+        mockDependencies.bodyGraphService.buildAdjacencyCache
+      ).toHaveBeenCalledWith('root123');
+      expect(
+        mockDependencies.bodyGraphService.findPartsByType
+      ).toHaveBeenCalledWith('root123', 'leg');
       expect(mockDependencies.logger.debug).toHaveBeenCalledWith(
         'hasPartOfType(actor123, leg) = true (found 2 parts)'
       );
@@ -50,7 +55,9 @@ describe('HasPartOfTypeOperator', () => {
 
     it('should return false when no parts of type found', () => {
       const bodyComponent = { body: { root: 'root456' } };
-      mockDependencies.entityManager.getComponentData.mockReturnValue(bodyComponent);
+      mockDependencies.entityManager.getComponentData.mockReturnValue(
+        bodyComponent
+      );
       mockDependencies.bodyGraphService.findPartsByType.mockReturnValue([]);
       mockContext.target = { id: 'target789' };
 
@@ -64,16 +71,19 @@ describe('HasPartOfTypeOperator', () => {
 
     it('should handle nested entity paths', () => {
       const bodyComponent = { root: 'root123' };
-      mockDependencies.entityManager.getComponentData.mockReturnValue(bodyComponent);
-      mockDependencies.bodyGraphService.findPartsByType.mockReturnValue(['arm1']);
+      mockDependencies.entityManager.getComponentData.mockReturnValue(
+        bodyComponent
+      );
+      mockDependencies.bodyGraphService.findPartsByType.mockReturnValue([
+        'arm1',
+      ]);
       mockContext.event = { actor: { id: 'eventActor123' } };
 
       const result = operator.evaluate(['event.actor', 'arm'], mockContext);
 
-      expect(mockDependencies.entityManager.getComponentData).toHaveBeenCalledWith(
-        'eventActor123',
-        'anatomy:body'
-      );
+      expect(
+        mockDependencies.entityManager.getComponentData
+      ).toHaveBeenCalledWith('eventActor123', 'anatomy:body');
       expect(result).toBe(true);
     });
 
@@ -102,7 +112,9 @@ describe('HasPartOfTypeOperator', () => {
 
     it('should return false when body component has no root', () => {
       mockContext.actor = { id: 'actor123' };
-      mockDependencies.entityManager.getComponentData.mockReturnValue({ otherProp: 'value' });
+      mockDependencies.entityManager.getComponentData.mockReturnValue({
+        otherProp: 'value',
+      });
 
       const result = operator.evaluate(['actor', 'leg'], mockContext);
 

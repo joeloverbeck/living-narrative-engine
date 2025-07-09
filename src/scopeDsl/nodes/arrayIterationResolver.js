@@ -30,15 +30,20 @@ export default function createArrayIterationResolver() {
 
       // Validate context has required properties
       if (!ctx.actorEntity) {
-        const error = new Error('ArrayIterationResolver: actorEntity is missing from context');
-        console.error('[CRITICAL] ArrayIterationResolver missing actorEntity:', {
-          hasCtx: !!ctx,
-          ctxKeys: ctx ? Object.keys(ctx) : [],
-          nodeType: node?.type,
-          parentNodeType: node?.parent?.type,
-          depth: ctx?.depth,
-          callStack: new Error().stack
-        });
+        const error = new Error(
+          'ArrayIterationResolver: actorEntity is missing from context'
+        );
+        console.error(
+          '[CRITICAL] ArrayIterationResolver missing actorEntity:',
+          {
+            hasCtx: !!ctx,
+            ctxKeys: ctx ? Object.keys(ctx) : [],
+            nodeType: node?.type,
+            parentNodeType: node?.parent?.type,
+            depth: ctx?.depth,
+            callStack: new Error().stack,
+          }
+        );
         throw error;
       }
 

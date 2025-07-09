@@ -65,22 +65,33 @@ export function createEvaluationContext(
 ) {
   // Critical check: actor should never be undefined in scope evaluation
   if (!actorEntity) {
-    const error = new Error('createEvaluationContext: actorEntity is undefined. This should never happen during scope evaluation.');
-    console.error('[CRITICAL] createEvaluationContext called with undefined actor:', {
-      item,
-      itemType: typeof item,
-      hasGateway: !!gateway,
-      hasLocationProvider: !!locationProvider,
-      // Enhanced debugging: show the call stack to trace where this came from
-      callStack: new Error().stack
-    });
+    const error = new Error(
+      'createEvaluationContext: actorEntity is undefined. This should never happen during scope evaluation.'
+    );
+    console.error(
+      '[CRITICAL] createEvaluationContext called with undefined actor:',
+      {
+        item,
+        itemType: typeof item,
+        hasGateway: !!gateway,
+        hasLocationProvider: !!locationProvider,
+        // Enhanced debugging: show the call stack to trace where this came from
+        callStack: new Error().stack,
+      }
+    );
     // Fail fast - don't continue with undefined actor
     throw error;
   }
-  
+
   // Additional check: actor must have a valid ID
-  if (!actorEntity.id || actorEntity.id === 'undefined' || typeof actorEntity.id !== 'string') {
-    const error = new Error(`createEvaluationContext: actorEntity has invalid ID: ${JSON.stringify(actorEntity.id)}. This should never happen.`);
+  if (
+    !actorEntity.id ||
+    actorEntity.id === 'undefined' ||
+    typeof actorEntity.id !== 'string'
+  ) {
+    const error = new Error(
+      `createEvaluationContext: actorEntity has invalid ID: ${JSON.stringify(actorEntity.id)}. This should never happen.`
+    );
     console.error('[CRITICAL] createEvaluationContext actor has invalid ID:', {
       actorId: actorEntity.id,
       actorIdType: typeof actorEntity.id,
@@ -88,7 +99,7 @@ export function createEvaluationContext(
       hasComponents: !!actorEntity.components,
       item,
       itemType: typeof item,
-      callStack: new Error().stack
+      callStack: new Error().stack,
     });
     throw error;
   }
@@ -116,47 +127,48 @@ export function createEvaluationContext(
     if (entity.components || !entity.componentTypeIds) {
       return entity;
     }
-    
-    
+
     const components = buildComponents(entityId || entity.id, entity, gateway);
-    
+
     // Check if it's a plain object or has a custom prototype
     const proto = Object.getPrototypeOf(entity);
     if (proto === Object.prototype || proto === null) {
       // Plain object - safe to use spread
       return {
         ...entity,
-        components
+        components,
       };
     }
-    
+
     // Entity instance - create a wrapper that preserves the original entity
     // We can't copy Entity instances because they have private fields
     const enhancedEntity = Object.create(proto);
-    
+
     // Define a getter for each property of the original entity
     const descriptors = Object.getOwnPropertyDescriptors(proto);
     for (const [key, descriptor] of Object.entries(descriptors)) {
       if (descriptor.get) {
         // This is a getter - create a forwarding getter
         Object.defineProperty(enhancedEntity, key, {
-          get() { return entity[key]; },
+          get() {
+            return entity[key];
+          },
           enumerable: descriptor.enumerable,
-          configurable: descriptor.configurable
+          configurable: descriptor.configurable,
         });
       }
     }
-    
+
     // Copy non-getter properties
     for (const key of Object.keys(entity)) {
       if (!Object.getOwnPropertyDescriptor(proto, key)?.get) {
         enhancedEntity[key] = entity[key];
       }
     }
-    
+
     // Add components
     enhancedEntity.components = components;
-    
+
     return enhancedEntity;
   }
 
@@ -176,9 +188,13 @@ export function createEvaluationContext(
       'EntityHelpers',
       {
         entityId: entity?.id,
-        entityComponentKeys: entity?.components ? Object.keys(entity.components) : [],
+        entityComponentKeys: entity?.components
+          ? Object.keys(entity.components)
+          : [],
         actorId: actor?.id,
-        actorComponentKeys: actor?.components ? Object.keys(actor.components) : []
+        actorComponentKeys: actor?.components
+          ? Object.keys(actor.components)
+          : [],
       }
     );
   }

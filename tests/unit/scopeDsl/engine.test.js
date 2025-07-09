@@ -732,9 +732,9 @@ describe('ScopeEngine', () => {
       mockRuntimeCtx = {
         entityManager: mockEntityManager,
         jsonLogicEval: mockJsonLogicEval,
-        location: { id: 'loc123' }
+        location: { id: 'loc123' },
       };
-      
+
       baseCtx = {
         actorEntity: mockActorEntity,
         runtimeCtx: mockRuntimeCtx,
@@ -742,13 +742,13 @@ describe('ScopeEngine', () => {
         cycleDetector: { enter: jest.fn(), leave: jest.fn() },
         depthGuard: { ensure: jest.fn() },
         depth: 1,
-        trace: mockTraceContext
+        trace: mockTraceContext,
       };
     });
 
     it('should preserve all base context properties when overlay is null', () => {
       const result = engine.contextMerger.merge(baseCtx, null);
-      
+
       expect(result).toEqual(baseCtx);
       expect(result.actorEntity).toBe(mockActorEntity);
       expect(result.runtimeCtx).toBe(mockRuntimeCtx);
@@ -758,11 +758,11 @@ describe('ScopeEngine', () => {
       const overlayCtx = {
         actorEntity: undefined,
         runtimeCtx: undefined,
-        customProp: 'custom-value'
+        customProp: 'custom-value',
       };
-      
+
       const result = engine.contextMerger.merge(baseCtx, overlayCtx);
-      
+
       expect(result.actorEntity).toBe(mockActorEntity);
       expect(result.runtimeCtx).toBe(mockRuntimeCtx);
       expect(result.customProp).toBe('custom-value');
@@ -771,15 +771,15 @@ describe('ScopeEngine', () => {
     it('should use overlay properties when they are defined', () => {
       const newActorEntity = { id: 'entity456', definitionId: 'newActor' };
       const newRuntimeCtx = { ...mockRuntimeCtx, location: { id: 'loc456' } };
-      
+
       const overlayCtx = {
         actorEntity: newActorEntity,
         runtimeCtx: newRuntimeCtx,
-        depth: 3
+        depth: 3,
       };
-      
+
       const result = engine.contextMerger.merge(baseCtx, overlayCtx);
-      
+
       expect(result.actorEntity).toBe(newActorEntity);
       expect(result.runtimeCtx).toBe(newRuntimeCtx);
       expect(result.depth).toBe(3);
@@ -804,38 +804,44 @@ describe('ScopeEngine', () => {
     it('should throw error if merged context is missing actorEntity', () => {
       const badBaseCtx = { ...baseCtx, actorEntity: undefined };
       const overlayCtx = { customProp: 'value' };
-      
+
       expect(() => {
         engine.contextMerger.merge(badBaseCtx, overlayCtx);
-      }).toThrow('[CRITICAL] Context is missing required properties: actorEntity');
+      }).toThrow(
+        '[CRITICAL] Context is missing required properties: actorEntity'
+      );
     });
 
     it('should throw error if merged context is missing runtimeCtx', () => {
       const badBaseCtx = { ...baseCtx, runtimeCtx: undefined };
       const overlayCtx = { customProp: 'value' };
-      
+
       expect(() => {
         engine.contextMerger.merge(badBaseCtx, overlayCtx);
-      }).toThrow('[CRITICAL] Context is missing required properties: runtimeCtx');
+      }).toThrow(
+        '[CRITICAL] Context is missing required properties: runtimeCtx'
+      );
     });
 
     it('should throw error if merged context is missing dispatcher', () => {
       const badBaseCtx = { ...baseCtx, dispatcher: undefined };
       const overlayCtx = { customProp: 'value' };
-      
+
       expect(() => {
         engine.contextMerger.merge(badBaseCtx, overlayCtx);
-      }).toThrow('[CRITICAL] Context is missing required properties: dispatcher');
+      }).toThrow(
+        '[CRITICAL] Context is missing required properties: dispatcher'
+      );
     });
 
     it('should preserve cycleDetector and depthGuard from base context', () => {
       const overlayCtx = {
         cycleDetector: undefined,
-        depthGuard: undefined
+        depthGuard: undefined,
       };
-      
+
       const result = engine.contextMerger.merge(baseCtx, overlayCtx);
-      
+
       expect(result.cycleDetector).toBe(baseCtx.cycleDetector);
       expect(result.depthGuard).toBe(baseCtx.depthGuard);
     });
@@ -846,11 +852,11 @@ describe('ScopeEngine', () => {
         actorEntity: mockActorEntity,
         dispatcher: newDispatcher,
         customProp1: 'value1',
-        customProp2: 'value2'
+        customProp2: 'value2',
       };
-      
+
       const result = engine.contextMerger.merge(baseCtx, overlayCtx);
-      
+
       // Should use overlay's dispatcher since it's defined
       expect(result.dispatcher).toBe(newDispatcher);
       // Should have custom properties

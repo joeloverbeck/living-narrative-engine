@@ -24,21 +24,25 @@ describe('JsonLogicCustomOperators Integration Tests', () => {
       debug: jest.fn(),
       info: jest.fn(),
       warn: jest.fn(),
-      error: jest.fn()
+      error: jest.fn(),
     };
-    
+
     // Create mock event dispatcher
     const eventDispatcher = {
-      dispatch: jest.fn()
+      dispatch: jest.fn(),
     };
-    
+
     entityManager = new SimpleEntityManager();
-    bodyGraphService = new BodyGraphService({ logger, entityManager, eventDispatcher });
+    bodyGraphService = new BodyGraphService({
+      logger,
+      entityManager,
+      eventDispatcher,
+    });
     jsonLogicEvaluationService = new JsonLogicEvaluationService({ logger });
     jsonLogicCustomOperators = new JsonLogicCustomOperators({
       logger,
       bodyGraphService,
-      entityManager
+      entityManager,
     });
 
     // Register the custom operators
@@ -54,8 +58,10 @@ describe('JsonLogicCustomOperators Integration Tests', () => {
       const rightArmId = 'right-arm-1';
 
       // Add components to create entities
-      entityManager.addComponent(characterId, 'core:name', { text: 'Test Character' });
-      
+      entityManager.addComponent(characterId, 'core:name', {
+        text: 'Test Character',
+      });
+
       entityManager.addComponent(torsoId, 'anatomy:part', { subType: 'torso' });
       entityManager.addComponent(torsoId, 'core:name', { text: 'torso' });
 
@@ -63,14 +69,18 @@ describe('JsonLogicCustomOperators Integration Tests', () => {
       entityManager.addComponent(leftArmId, 'core:name', { text: 'left arm' });
       entityManager.addComponent(leftArmId, 'anatomy:joint', {
         parentId: torsoId,
-        socketId: 'left_shoulder'
+        socketId: 'left_shoulder',
       });
 
-      entityManager.addComponent(rightArmId, 'anatomy:part', { subType: 'arm' });
-      entityManager.addComponent(rightArmId, 'core:name', { text: 'right arm' });
+      entityManager.addComponent(rightArmId, 'anatomy:part', {
+        subType: 'arm',
+      });
+      entityManager.addComponent(rightArmId, 'core:name', {
+        text: 'right arm',
+      });
       entityManager.addComponent(rightArmId, 'anatomy:joint', {
         parentId: torsoId,
-        socketId: 'right_shoulder'
+        socketId: 'right_shoulder',
       });
 
       // Add anatomy:body component to character
@@ -81,17 +91,17 @@ describe('JsonLogicCustomOperators Integration Tests', () => {
           parts: {
             torso: torsoId,
             'left arm': leftArmId,
-            'right arm': rightArmId
-          }
-        }
+            'right arm': rightArmId,
+          },
+        },
       });
 
       // Create evaluation context
       const context = {
         actor: {
           id: characterId,
-          components: getComponents(characterId)
-        }
+          components: getComponents(characterId),
+        },
       };
 
       // Test hasPartOfType for arms
@@ -108,8 +118,10 @@ describe('JsonLogicCustomOperators Integration Tests', () => {
       const characterId = 'armless-character';
       const torsoId = 'torso-2';
 
-      entityManager.addComponent(characterId, 'core:name', { text: 'Armless Character' });
-      
+      entityManager.addComponent(characterId, 'core:name', {
+        text: 'Armless Character',
+      });
+
       entityManager.addComponent(torsoId, 'anatomy:part', { subType: 'torso' });
       entityManager.addComponent(torsoId, 'core:name', { text: 'torso' });
 
@@ -119,16 +131,16 @@ describe('JsonLogicCustomOperators Integration Tests', () => {
         body: {
           root: torsoId,
           parts: {
-            torso: torsoId
-          }
-        }
+            torso: torsoId,
+          },
+        },
       });
 
       const context = {
         actor: {
           id: characterId,
-          components: getComponents(characterId)
-        }
+          components: getComponents(characterId),
+        },
       };
 
       const result = jsonLogicEvaluationService.evaluate(
@@ -141,13 +153,15 @@ describe('JsonLogicCustomOperators Integration Tests', () => {
 
     it('should handle entity with no anatomy:body component', () => {
       const characterId = 'no-body-character';
-      entityManager.addComponent(characterId, 'core:name', { text: 'No Body Character' });
+      entityManager.addComponent(characterId, 'core:name', {
+        text: 'No Body Character',
+      });
 
       const context = {
         actor: {
           id: characterId,
-          components: getComponents(characterId)
-        }
+          components: getComponents(characterId),
+        },
       };
 
       const result = jsonLogicEvaluationService.evaluate(
@@ -164,8 +178,10 @@ describe('JsonLogicCustomOperators Integration Tests', () => {
       const headId = 'head-4';
       const leftLegId = 'left-leg-4';
 
-      entityManager.addComponent(characterId, 'core:name', { text: 'Full Body Character' });
-      
+      entityManager.addComponent(characterId, 'core:name', {
+        text: 'Full Body Character',
+      });
+
       entityManager.addComponent(torsoId, 'anatomy:part', { subType: 'torso' });
       entityManager.addComponent(torsoId, 'core:name', { text: 'torso' });
 
@@ -173,14 +189,14 @@ describe('JsonLogicCustomOperators Integration Tests', () => {
       entityManager.addComponent(headId, 'core:name', { text: 'head' });
       entityManager.addComponent(headId, 'anatomy:joint', {
         parentId: torsoId,
-        socketId: 'neck'
+        socketId: 'neck',
       });
 
       entityManager.addComponent(leftLegId, 'anatomy:part', { subType: 'leg' });
       entityManager.addComponent(leftLegId, 'core:name', { text: 'left leg' });
       entityManager.addComponent(leftLegId, 'anatomy:joint', {
         parentId: torsoId,
-        socketId: 'left_hip'
+        socketId: 'left_hip',
       });
 
       entityManager.addComponent(characterId, 'anatomy:body', {
@@ -190,35 +206,41 @@ describe('JsonLogicCustomOperators Integration Tests', () => {
           parts: {
             torso: torsoId,
             head: headId,
-            'left leg': leftLegId
-          }
-        }
+            'left leg': leftLegId,
+          },
+        },
       });
 
       const context = {
         actor: {
           id: characterId,
-          components: getComponents(characterId)
-        }
+          components: getComponents(characterId),
+        },
       };
 
       // Should find head
-      expect(jsonLogicEvaluationService.evaluate(
-        { hasPartOfType: ['actor', 'head'] },
-        context
-      )).toBe(true);
+      expect(
+        jsonLogicEvaluationService.evaluate(
+          { hasPartOfType: ['actor', 'head'] },
+          context
+        )
+      ).toBe(true);
 
       // Should find leg
-      expect(jsonLogicEvaluationService.evaluate(
-        { hasPartOfType: ['actor', 'leg'] },
-        context
-      )).toBe(true);
+      expect(
+        jsonLogicEvaluationService.evaluate(
+          { hasPartOfType: ['actor', 'leg'] },
+          context
+        )
+      ).toBe(true);
 
       // Should not find arm
-      expect(jsonLogicEvaluationService.evaluate(
-        { hasPartOfType: ['actor', 'arm'] },
-        context
-      )).toBe(false);
+      expect(
+        jsonLogicEvaluationService.evaluate(
+          { hasPartOfType: ['actor', 'arm'] },
+          context
+        )
+      ).toBe(false);
     });
   });
 
@@ -228,8 +250,10 @@ describe('JsonLogicCustomOperators Integration Tests', () => {
       const torsoId = 'torso-7';
       const armId = 'arm-7';
 
-      entityManager.addComponent(characterId, 'core:name', { text: 'Test Character' });
-      
+      entityManager.addComponent(characterId, 'core:name', {
+        text: 'Test Character',
+      });
+
       entityManager.addComponent(torsoId, 'anatomy:part', { subType: 'torso' });
       entityManager.addComponent(torsoId, 'core:name', { text: 'torso' });
 
@@ -237,7 +261,7 @@ describe('JsonLogicCustomOperators Integration Tests', () => {
       entityManager.addComponent(armId, 'core:name', { text: 'left arm' });
       entityManager.addComponent(armId, 'anatomy:joint', {
         parentId: torsoId,
-        socketId: 'left_shoulder'
+        socketId: 'left_shoulder',
       });
 
       entityManager.addComponent(characterId, 'anatomy:body', {
@@ -246,16 +270,16 @@ describe('JsonLogicCustomOperators Integration Tests', () => {
           root: torsoId,
           parts: {
             torso: torsoId,
-            'left arm': armId
-          }
-        }
+            'left arm': armId,
+          },
+        },
       });
 
       const context = {
         actor: {
           id: characterId,
-          components: getComponents(characterId)
-        }
+          components: getComponents(characterId),
+        },
       };
 
       // Spy on buildAdjacencyCache to ensure it's called
@@ -293,9 +317,11 @@ describe('JsonLogicCustomOperators Integration Tests', () => {
       const torsoId = 'fb176e4b-3710-4471-8ff5-0ff176c2aa04';
       const leftArmId = '8a1b2c3d-4e5f-6789-0abc-def123456789';
       const rightArmId = '9b2c3d4e-5f6a-789b-0cde-f12345678901';
-      
+
       // Add the character entity with minimal components like in the original
-      entityManager.addComponent(characterId, 'core:name', { text: 'Iker Aguirre' });
+      entityManager.addComponent(characterId, 'core:name', {
+        text: 'Iker Aguirre',
+      });
       entityManager.addComponent(characterId, 'anatomy:body', {
         recipeId: 'p_erotica:iker_aguirre_recipe',
         body: {
@@ -304,9 +330,9 @@ describe('JsonLogicCustomOperators Integration Tests', () => {
             torso: torsoId,
             head: '37050d90-0dcb-495e-8a25-9d004960e5eb',
             'left arm': leftArmId,
-            'right arm': rightArmId
-          }
-        }
+            'right arm': rightArmId,
+          },
+        },
       });
 
       // Create the body parts that should exist based on the recipe
@@ -317,30 +343,34 @@ describe('JsonLogicCustomOperators Integration Tests', () => {
       entityManager.addComponent(leftArmId, 'core:name', { text: 'left arm' });
       entityManager.addComponent(leftArmId, 'anatomy:joint', {
         parentId: torsoId,
-        socketId: 'left_shoulder'
+        socketId: 'left_shoulder',
       });
 
-      entityManager.addComponent(rightArmId, 'anatomy:part', { subType: 'arm' });
-      entityManager.addComponent(rightArmId, 'core:name', { text: 'right arm' });
+      entityManager.addComponent(rightArmId, 'anatomy:part', {
+        subType: 'arm',
+      });
+      entityManager.addComponent(rightArmId, 'core:name', {
+        text: 'right arm',
+      });
       entityManager.addComponent(rightArmId, 'anatomy:joint', {
         parentId: torsoId,
-        socketId: 'right_shoulder'
+        socketId: 'right_shoulder',
       });
 
       // Create the same context structure as in the error log
       const context = {
         entity: {
           id: characterId,
-          components: getComponents(characterId)
+          components: getComponents(characterId),
         },
         actor: {
           id: 'p_erotica:amaia_castillo_instance',
-          components: {}
+          components: {},
         },
         location: {
           id: 'p_erotica:outside_tables_coffee_shop_instance',
-          components: {}
-        }
+          components: {},
+        },
       };
 
       // This is the exact check that was failing

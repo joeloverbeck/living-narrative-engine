@@ -27,8 +27,12 @@ describe('HasPartWithComponentValueOperator', () => {
   describe('evaluate', () => {
     it('should find entity with matching component value', () => {
       const bodyComponent = { root: 'root123' };
-      mockDependencies.entityManager.getComponentData.mockReturnValue(bodyComponent);
-      mockDependencies.bodyGraphService.hasPartWithComponentValue.mockReturnValue({ found: true });
+      mockDependencies.entityManager.getComponentData.mockReturnValue(
+        bodyComponent
+      );
+      mockDependencies.bodyGraphService.hasPartWithComponentValue.mockReturnValue(
+        { found: true }
+      );
       mockContext.actor = { id: 'actor123' };
 
       const result = operator.evaluate(
@@ -36,11 +40,12 @@ describe('HasPartWithComponentValueOperator', () => {
         mockContext
       );
 
-      expect(mockDependencies.entityManager.getComponentData).toHaveBeenCalledWith(
-        'actor123',
-        'anatomy:body'
-      );
-      expect(mockDependencies.bodyGraphService.hasPartWithComponentValue).toHaveBeenCalledWith(
+      expect(
+        mockDependencies.entityManager.getComponentData
+      ).toHaveBeenCalledWith('actor123', 'anatomy:body');
+      expect(
+        mockDependencies.bodyGraphService.hasPartWithComponentValue
+      ).toHaveBeenCalledWith(
         bodyComponent,
         'descriptors:build',
         'build',
@@ -51,8 +56,12 @@ describe('HasPartWithComponentValueOperator', () => {
 
     it('should handle legacy body format', () => {
       const bodyComponent = { body: { root: 'root456' } };
-      mockDependencies.entityManager.getComponentData.mockReturnValue(bodyComponent);
-      mockDependencies.bodyGraphService.hasPartWithComponentValue.mockReturnValue({ found: false });
+      mockDependencies.entityManager.getComponentData.mockReturnValue(
+        bodyComponent
+      );
+      mockDependencies.bodyGraphService.hasPartWithComponentValue.mockReturnValue(
+        { found: false }
+      );
       mockContext.target = { id: 'target789' };
 
       const result = operator.evaluate(
@@ -60,7 +69,9 @@ describe('HasPartWithComponentValueOperator', () => {
         mockContext
       );
 
-      expect(mockDependencies.bodyGraphService.hasPartWithComponentValue).toHaveBeenCalledWith(
+      expect(
+        mockDependencies.bodyGraphService.hasPartWithComponentValue
+      ).toHaveBeenCalledWith(
         bodyComponent,
         'descriptors:color',
         'value',
@@ -71,8 +82,12 @@ describe('HasPartWithComponentValueOperator', () => {
 
     it('should handle special "." path', () => {
       const bodyComponent = { root: 'root123' };
-      mockDependencies.entityManager.getComponentData.mockReturnValue(bodyComponent);
-      mockDependencies.bodyGraphService.hasPartWithComponentValue.mockReturnValue({ found: true });
+      mockDependencies.entityManager.getComponentData.mockReturnValue(
+        bodyComponent
+      );
+      mockDependencies.bodyGraphService.hasPartWithComponentValue.mockReturnValue(
+        { found: true }
+      );
       mockContext.entity = { id: 'current123' };
 
       const result = operator.evaluate(
@@ -80,10 +95,9 @@ describe('HasPartWithComponentValueOperator', () => {
         mockContext
       );
 
-      expect(mockDependencies.entityManager.getComponentData).toHaveBeenCalledWith(
-        'current123',
-        'anatomy:body'
-      );
+      expect(
+        mockDependencies.entityManager.getComponentData
+      ).toHaveBeenCalledWith('current123', 'anatomy:body');
       expect(result).toBe(true);
     });
 

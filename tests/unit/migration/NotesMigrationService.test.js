@@ -10,33 +10,57 @@ describe('NotesMigrationService', () => {
   describe('extractSubjectFromText', () => {
     test('should extract subject from "X seems..." pattern', () => {
       expect(service.extractSubjectFromText('John seems nervous')).toBe('John');
-      expect(service.extractSubjectFromText('Sarah appears tired')).toBe('Sarah');
-      expect(service.extractSubjectFromText('The merchant is wealthy')).toBe('merchant');
+      expect(service.extractSubjectFromText('Sarah appears tired')).toBe(
+        'Sarah'
+      );
+      expect(service.extractSubjectFromText('The merchant is wealthy')).toBe(
+        'merchant'
+      );
     });
 
     test('should extract subject from possessive pattern', () => {
-      expect(service.extractSubjectFromText("John's sword is sharp")).toBe('John');
-      expect(service.extractSubjectFromText("Sarah's magic is powerful")).toBe('Sarah');
+      expect(service.extractSubjectFromText("John's sword is sharp")).toBe(
+        'John'
+      );
+      expect(service.extractSubjectFromText("Sarah's magic is powerful")).toBe(
+        'Sarah'
+      );
     });
 
     test('should extract subject from observation pattern', () => {
-      expect(service.extractSubjectFromText('Saw John at the market')).toBe('John');
-      expect(service.extractSubjectFromText('Noticed the guard sleeping')).toBe('the guard');
+      expect(service.extractSubjectFromText('Saw John at the market')).toBe(
+        'John'
+      );
+      expect(service.extractSubjectFromText('Noticed the guard sleeping')).toBe(
+        'the guard'
+      );
     });
 
     test('should extract subject from location pattern', () => {
-      expect(service.extractSubjectFromText('At the tavern, crowded and noisy')).toBe('tavern');
-      expect(service.extractSubjectFromText('In the market square today')).toBe('market square');
+      expect(
+        service.extractSubjectFromText('At the tavern, crowded and noisy')
+      ).toBe('tavern');
+      expect(service.extractSubjectFromText('In the market square today')).toBe(
+        'market square'
+      );
     });
 
     test('should handle compound names', () => {
-      expect(service.extractSubjectFromText('John Smith seems worried')).toBe('John Smith');
-      expect(service.extractSubjectFromText("Mary-Jane's house is large")).toBe('Mary-Jane');
+      expect(service.extractSubjectFromText('John Smith seems worried')).toBe(
+        'John Smith'
+      );
+      expect(service.extractSubjectFromText("Mary-Jane's house is large")).toBe(
+        'Mary-Jane'
+      );
     });
 
     test('should return Unknown for unclear subjects', () => {
-      expect(service.extractSubjectFromText('It was a dark night')).toBe('Unknown');
-      expect(service.extractSubjectFromText('Something strange happened')).toBe('Something');
+      expect(service.extractSubjectFromText('It was a dark night')).toBe(
+        'Unknown'
+      );
+      expect(service.extractSubjectFromText('Something strange happened')).toBe(
+        'Something'
+      );
       expect(service.extractSubjectFromText('')).toBe('Unknown');
     });
 
@@ -49,29 +73,55 @@ describe('NotesMigrationService', () => {
 
   describe('inferTagsFromText', () => {
     test('should infer emotion tags', () => {
-      expect(service.inferTagsFromText('He seems very nervous')).toContain('emotion');
-      expect(service.inferTagsFromText('He seems very nervous')).toContain('anxiety');
-      expect(service.inferTagsFromText('She was incredibly happy')).toContain('happiness');
-      expect(service.inferTagsFromText('The merchant looked angry')).toContain('anger');
+      expect(service.inferTagsFromText('He seems very nervous')).toContain(
+        'emotion'
+      );
+      expect(service.inferTagsFromText('He seems very nervous')).toContain(
+        'anxiety'
+      );
+      expect(service.inferTagsFromText('She was incredibly happy')).toContain(
+        'happiness'
+      );
+      expect(service.inferTagsFromText('The merchant looked angry')).toContain(
+        'anger'
+      );
     });
 
     test('should infer activity tags', () => {
-      expect(service.inferTagsFromText('Engaged in fierce combat')).toContain('combat');
-      expect(service.inferTagsFromText('Trading at the market')).toContain('trade');
-      expect(service.inferTagsFromText('Council meeting tomorrow')).toContain('politics');
+      expect(service.inferTagsFromText('Engaged in fierce combat')).toContain(
+        'combat'
+      );
+      expect(service.inferTagsFromText('Trading at the market')).toContain(
+        'trade'
+      );
+      expect(service.inferTagsFromText('Council meeting tomorrow')).toContain(
+        'politics'
+      );
       expect(service.inferTagsFromText('Casting a spell')).toContain('magic');
     });
 
     test('should infer relationship tags', () => {
-      expect(service.inferTagsFromText('Made a new friend today')).toContain('relationship');
-      expect(service.inferTagsFromText('Made a new friend today')).toContain('positive');
-      expect(service.inferTagsFromText('My sworn enemy appeared')).toContain('negative');
+      expect(service.inferTagsFromText('Made a new friend today')).toContain(
+        'relationship'
+      );
+      expect(service.inferTagsFromText('Made a new friend today')).toContain(
+        'positive'
+      );
+      expect(service.inferTagsFromText('My sworn enemy appeared')).toContain(
+        'negative'
+      );
     });
 
     test('should infer location tags', () => {
-      expect(service.inferTagsFromText('Met at the tavern')).toContain('location');
-      expect(service.inferTagsFromText('Met at the tavern')).toContain('tavern');
-      expect(service.inferTagsFromText('Shopping at the market')).toContain('market');
+      expect(service.inferTagsFromText('Met at the tavern')).toContain(
+        'location'
+      );
+      expect(service.inferTagsFromText('Met at the tavern')).toContain(
+        'tavern'
+      );
+      expect(service.inferTagsFromText('Shopping at the market')).toContain(
+        'market'
+      );
     });
 
     test('should always include migrated tag', () => {
@@ -80,7 +130,9 @@ describe('NotesMigrationService', () => {
     });
 
     test('should not have duplicate tags', () => {
-      const tags = service.inferTagsFromText('At the market, trading happily with a merchant friend');
+      const tags = service.inferTagsFromText(
+        'At the market, trading happily with a merchant friend'
+      );
       const uniqueTags = [...new Set(tags)];
       expect(tags.length).toBe(uniqueTags.length);
     });
@@ -90,7 +142,7 @@ describe('NotesMigrationService', () => {
     test('should migrate string notes', () => {
       const oldNote = 'John seems nervous';
       const migrated = service.migrateNote(oldNote);
-      
+
       expect(migrated).toHaveProperty('text', 'John seems nervous');
       expect(migrated).toHaveProperty('subject', 'John');
       expect(migrated).toHaveProperty('context', 'legacy note');
@@ -102,10 +154,10 @@ describe('NotesMigrationService', () => {
     test('should migrate object notes without subject', () => {
       const oldNote = {
         text: 'Sarah appears tired',
-        timestamp: '2024-01-15T10:30:00Z'
+        timestamp: '2024-01-15T10:30:00Z',
       };
       const migrated = service.migrateNote(oldNote);
-      
+
       expect(migrated.text).toBe('Sarah appears tired');
       expect(migrated.subject).toBe('Sarah');
       expect(migrated.context).toBe('legacy note');
@@ -118,10 +170,10 @@ describe('NotesMigrationService', () => {
         subject: 'John',
         context: 'tavern observation',
         tags: ['emotion', 'anxiety'],
-        timestamp: '2024-01-15T10:30:00Z'
+        timestamp: '2024-01-15T10:30:00Z',
       };
       const result = service.migrateNote(newNote);
-      
+
       expect(result).toEqual(newNote);
     });
 
@@ -139,7 +191,7 @@ describe('NotesMigrationService', () => {
     test('should add timestamp if missing', () => {
       const oldNote = { text: 'Test note' };
       const migrated = service.migrateNote(oldNote);
-      
+
       expect(migrated.timestamp).toBeDefined();
       expect(new Date(migrated.timestamp)).toBeInstanceOf(Date);
     });
@@ -150,11 +202,15 @@ describe('NotesMigrationService', () => {
       const notes = [
         'String note about John',
         { text: 'Object note about Sarah' },
-        { text: 'Already migrated', subject: 'Market', context: 'morning visit' }
+        {
+          text: 'Already migrated',
+          subject: 'Market',
+          context: 'morning visit',
+        },
       ];
-      
+
       const migrated = service.migrateNotes(notes);
-      
+
       expect(migrated).toHaveLength(3);
       expect(migrated[0].subject).toBe('John');
       expect(migrated[1].subject).toBe('Sarah');
@@ -179,11 +235,15 @@ describe('NotesMigrationService', () => {
 
     test('should identify objects without subject as old format', () => {
       expect(service.isOldFormat({ text: 'Note text' })).toBe(true);
-      expect(service.isOldFormat({ text: 'Note', timestamp: '2024-01-15' })).toBe(true);
+      expect(
+        service.isOldFormat({ text: 'Note', timestamp: '2024-01-15' })
+      ).toBe(true);
     });
 
     test('should identify objects with subject as new format', () => {
-      expect(service.isOldFormat({ text: 'Note', subject: 'John' })).toBe(false);
+      expect(service.isOldFormat({ text: 'Note', subject: 'John' })).toBe(
+        false
+      );
     });
 
     test('should handle edge cases', () => {
@@ -198,7 +258,7 @@ describe('NotesMigrationService', () => {
       const notes = [
         { text: 'New note', subject: 'John' },
         'Old string note',
-        { text: 'Another new note', subject: 'Sarah' }
+        { text: 'Another new note', subject: 'Sarah' },
       ];
       expect(service.needsMigration(notes)).toBe(true);
     });
@@ -206,7 +266,7 @@ describe('NotesMigrationService', () => {
     test('should return false if no notes need migration', () => {
       const notes = [
         { text: 'New note', subject: 'John' },
-        { text: 'Another new note', subject: 'Sarah' }
+        { text: 'Another new note', subject: 'Sarah' },
       ];
       expect(service.needsMigration(notes)).toBe(false);
     });
@@ -224,11 +284,11 @@ describe('NotesMigrationService', () => {
         'Old string note',
         { text: 'Old object note' },
         { text: 'New note', subject: 'John' },
-        { text: 'Another new note', subject: 'Sarah' }
+        { text: 'Another new note', subject: 'Sarah' },
       ];
-      
+
       const stats = service.getMigrationStats(notes);
-      
+
       expect(stats.total).toBe(4);
       expect(stats.oldFormat).toBe(2);
       expect(stats.newFormat).toBe(2);
@@ -238,7 +298,7 @@ describe('NotesMigrationService', () => {
     test('should handle all old format', () => {
       const notes = ['Note 1', 'Note 2', { text: 'Note 3' }];
       const stats = service.getMigrationStats(notes);
-      
+
       expect(stats.oldFormat).toBe(3);
       expect(stats.newFormat).toBe(0);
       expect(stats.needsMigration).toBe(true);
@@ -247,10 +307,10 @@ describe('NotesMigrationService', () => {
     test('should handle all new format', () => {
       const notes = [
         { text: 'Note 1', subject: 'John' },
-        { text: 'Note 2', subject: 'Sarah' }
+        { text: 'Note 2', subject: 'Sarah' },
       ];
       const stats = service.getMigrationStats(notes);
-      
+
       expect(stats.oldFormat).toBe(0);
       expect(stats.newFormat).toBe(2);
       expect(stats.needsMigration).toBe(false);
@@ -261,14 +321,14 @@ describe('NotesMigrationService', () => {
         total: 0,
         oldFormat: 0,
         newFormat: 0,
-        needsMigration: false
+        needsMigration: false,
       });
-      
+
       expect(service.getMigrationStats(null)).toEqual({
         total: 0,
         oldFormat: 0,
         newFormat: 0,
-        needsMigration: false
+        needsMigration: false,
       });
     });
   });

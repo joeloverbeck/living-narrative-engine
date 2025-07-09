@@ -5,6 +5,7 @@
 This report provides a detailed analysis of how actions, rules, conditions, and scopes work together in the intimacy and sex modules of the Living Narrative Engine. The analysis reveals a sophisticated, consent-based system leveraging the ScopeDSL for dynamic targeting and the closeness component for relationship management.
 
 ## Table of Contents
+
 1. [Architecture Overview](#architecture-overview)
 2. [ScopeDSL Implementation](#scopedsl-implementation)
 3. [Action System Analysis](#action-system-analysis)
@@ -48,16 +49,20 @@ data/mods/
 #### Intimacy Module Scopes
 
 1. **`intimacy:close_actors`**
+
    ```
    actor.components.intimacy:closeness.partners[]
    ```
+
    - Returns all entities in the actor's closeness circle
    - Simple array iteration over the partners list
 
 2. **`intimacy:actors_with_arms_in_intimacy`**
+
    ```
    actor.intimacy:closeness.partners[][{"hasPartOfType": [".", "arm"]}]
    ```
+
    - Filters close actors by anatomical requirements
    - Uses custom JSON Logic operator `hasPartOfType`
 
@@ -72,11 +77,13 @@ data/mods/
 ### Key ScopeDSL Patterns Used
 
 1. **Component Access Pattern**
+
    ```
    actor.components.<component_id>.<property>[]
    ```
 
 2. **Anatomical Filtering Pattern**
+
    ```
    <source>[][{"hasPartOfType": [".", "<body_part>"]}]
    ```
@@ -90,6 +97,7 @@ data/mods/
 ### Action Structure
 
 All actions follow a consistent JSON structure:
+
 ```json
 {
   "id": "<mod>:<action_name>",
@@ -105,6 +113,7 @@ All actions follow a consistent JSON structure:
 ### Action Categories
 
 #### 1. Relationship Initiation
+
 - **`intimacy:get_close`**
   - Entry point to intimacy system
   - Uses `core:actors_in_location` scope (broader targeting)
@@ -112,17 +121,20 @@ All actions follow a consistent JSON structure:
   - Creates bidirectional closeness relationship
 
 #### 2. Simple Intimate Actions
+
 - **`intimacy:kiss_cheek`**
 - **`intimacy:thumb_wipe_cheek`**
 - Basic intimate gestures requiring closeness
 - No anatomical requirements
 
 #### 3. Anatomy-Aware Actions
+
 - **`intimacy:massage_shoulders`** - Requires target has arms
 - **`sex:fondle_breasts`** - Requires target has breasts
 - **`sex:fondle_penis`** - Requires target has penis
 
 #### 4. Relationship Termination
+
 - **`intimacy:step_back`**
   - Removes actor from closeness circle
   - Scope: `none` (self-targeted action)
@@ -131,6 +143,7 @@ All actions follow a consistent JSON structure:
 ### Prerequisites Analysis
 
 Only 2 of 8 actions use prerequisites:
+
 - `adjust_clothing`: Requires `intimacy:actor-is-in-closeness`
 - `get_close`: Requires `core:actor-can-move`
 
@@ -141,6 +154,7 @@ Most actions rely on scope filtering and required components instead of prerequi
 ### Rule Execution Pattern
 
 All rules follow a standard execution sequence:
+
 1. Event trigger: `core:attempt_action`
 2. Condition check: `<mod>:event-is-action-<action_name>`
 3. Action sequence:
@@ -182,6 +196,7 @@ All rules follow a standard execution sequence:
 ```
 
 Key properties:
+
 - **Bidirectional**: All partners reference each other
 - **Transitive**: All members form a fully-connected graph
 - **Movement Locking**: Prevents movement while in closeness
@@ -196,27 +211,32 @@ No Closeness → [get_close] → In Closeness Circle → [intimate actions] → 
 ## Design Patterns and Principles
 
 ### 1. Consent-Based Architecture
+
 - Closeness component acts as explicit consent mechanism
 - All intimate actions require mutual closeness relationship
 - Clear entry (get_close) and exit (step_back) points
 
 ### 2. Anatomical Awareness
+
 - Scopes filter based on body part availability
 - Prevents impossible actions through targeting restrictions
 - Uses custom `hasPartOfType` operator for anatomy checks
 
 ### 3. Separation of Concerns
+
 - **Actions**: Define UI and targeting
 - **Scopes**: Handle dynamic filtering
 - **Rules**: Manage execution and state changes
 - **Components**: Store persistent state
 
 ### 4. Modular Extension
+
 - Sex mod extends intimacy patterns without modification
 - Consistent naming conventions across modules
 - Reusable scope patterns
 
 ### 5. Declarative Design
+
 - ScopeDSL enables data-driven targeting
 - JSON Logic for flexible filtering
 - Minimal hardcoded logic
@@ -250,6 +270,7 @@ No Closeness → [get_close] → In Closeness Circle → [intimate actions] → 
 ### 1. Follow Established Patterns
 
 **Action Definition**:
+
 ```json
 {
   "id": "<mod>:<action_name>",
@@ -264,6 +285,7 @@ No Closeness → [get_close] → In Closeness Circle → [intimate actions] → 
 ```
 
 **Rule Structure**:
+
 - Use standard action sequence
 - Set appropriate perception type
 - Include descriptive log messages
@@ -272,8 +294,9 @@ No Closeness → [get_close] → In Closeness Circle → [intimate actions] → 
 ### 2. Create Appropriate Scopes
 
 For anatomy-specific actions:
+
 ```
-intimacy:actors_with_<body_part>_in_intimacy := 
+intimacy:actors_with_<body_part>_in_intimacy :=
   actor.intimacy:closeness.partners[][{"hasPartOfType": [".", "<body_part>"]}]
 ```
 

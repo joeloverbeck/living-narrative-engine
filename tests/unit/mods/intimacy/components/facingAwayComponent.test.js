@@ -20,11 +20,14 @@ describe('intimacy:facing_away component', () => {
     });
 
     it('requires facing_away_from property', () => {
-      expect(facingAwayComponent.dataSchema.required).toContain('facing_away_from');
+      expect(facingAwayComponent.dataSchema.required).toContain(
+        'facing_away_from'
+      );
     });
 
     it('defines facing_away_from as array with unique items', () => {
-      const facingAwayFromSchema = facingAwayComponent.dataSchema.properties.facing_away_from;
+      const facingAwayFromSchema =
+        facingAwayComponent.dataSchema.properties.facing_away_from;
       expect(facingAwayFromSchema.type).toBe('array');
       expect(facingAwayFromSchema.uniqueItems).toBe(true);
       expect(facingAwayFromSchema.default).toEqual([]);
@@ -38,14 +41,14 @@ describe('intimacy:facing_away component', () => {
   describe('component behavior', () => {
     it('should initialize with empty array', () => {
       const newComponent = {
-        facing_away_from: []
+        facing_away_from: [],
       };
       expect(newComponent.facing_away_from).toEqual([]);
     });
 
     it('should store multiple entity IDs', () => {
       const component = {
-        facing_away_from: ['entity1', 'entity2', 'entity3']
+        facing_away_from: ['entity1', 'entity2', 'entity3'],
       };
       expect(component.facing_away_from).toHaveLength(3);
       expect(component.facing_away_from).toContain('entity1');
@@ -55,7 +58,7 @@ describe('intimacy:facing_away component', () => {
 
     it('should support toggling entities', () => {
       const component = {
-        facing_away_from: ['entity1']
+        facing_away_from: ['entity1'],
       };
 
       // Add entity

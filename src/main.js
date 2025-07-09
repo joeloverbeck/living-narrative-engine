@@ -40,7 +40,9 @@ async function loadStartWorld() {
   try {
     const response = await fetch('./data/game.json');
     if (!response.ok) {
-      throw new Error(`Failed to load game configuration: ${response.status} ${response.statusText}`);
+      throw new Error(
+        `Failed to load game configuration: ${response.status} ${response.statusText}`
+      );
     }
     const gameConfig = await response.json();
     return gameConfig.startWorld || 'default';
@@ -61,7 +63,7 @@ export async function bootstrapApp() {
   try {
     // Load startWorld from game configuration
     startWorld = await loadStartWorld();
-    
+
     // STAGE 1: Ensure Critical DOM Elements
     currentPhaseForError = 'UI Element Validation';
     const uiResult = await ensureCriticalDOMElementsStage(document, {
@@ -240,7 +242,7 @@ export async function beginGame(showLoadUI = false) {
     // Use the startWorld loaded from game configuration
     const worldToLoad = startWorld || 'default';
     logger.debug(`Starting game with world: ${worldToLoad}`);
-    
+
     const startResult = await startGameStage(gameEngine, worldToLoad, logger);
     if (!startResult.success) throw startResult.error;
     if (showLoadUI && typeof gameEngine.showLoadGameUI === 'function') {

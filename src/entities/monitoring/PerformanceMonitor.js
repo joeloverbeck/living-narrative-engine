@@ -6,7 +6,10 @@
 import { validateDependency } from '../../utils/dependencyUtils.js';
 import { ensureValidLogger } from '../../utils/loggerUtils.js';
 import { getGlobalConfig, isConfigInitialized } from '../utils/configUtils.js';
-import process from 'node:process';
+// Browser-compatible process detection
+const process = globalThis.process || {
+  memoryUsage: () => ({ heapUsed: 0, heapTotal: 0 }),
+};
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 
@@ -483,4 +486,5 @@ export default class PerformanceMonitor {
     ];
 
     return report.join('\n');
-  }}
+  }
+}

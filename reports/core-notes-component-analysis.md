@@ -9,6 +9,7 @@
 The `core:notes` component is a critical data storage mechanism used throughout the Living Narrative Engine to enable LLM-based AI players to maintain persistent memories. This analysis identified 16 direct references to the component across the codebase, with usage spanning from data persistence to prompt generation.
 
 ### Key Findings
+
 - **16 files** directly reference 'core:notes'
 - Component is deeply integrated into the LLM decision-making pipeline
 - Notes flow through 7 distinct processing stages
@@ -18,6 +19,7 @@ The `core:notes` component is a critical data storage mechanism used throughout 
 ## Component Structure
 
 ### Schema Definition
+
 Location: `data/mods/core/components/notes.component.json`
 
 ```json
@@ -44,6 +46,7 @@ Location: `data/mods/core/components/notes.component.json`
 ## Usage Analysis by Module
 
 ### 1. Constants and Configuration
+
 - **File**: `src/constants/componentIds.js`
 - **Usage**: Defines `NOTES_COMPONENT_ID = 'core:notes'`
 - **Impact**: Central constant used throughout the codebase
@@ -51,15 +54,19 @@ Location: `data/mods/core/components/notes.component.json`
 ### 2. Core Services
 
 #### NotesService (`src/ai/notesService.js`)
+
 **Purpose**: Business logic for note management  
 **Key Operations**:
+
 - `normalizeNoteText()`: Prevents duplicate notes via text normalization
 - `addNotes()`: Adds new notes with timestamp management
 - Maintains chronological ordering
 
 #### NotesPersistenceHook (`src/ai/notesPersistenceHook.js`)
+
 **Purpose**: Persists notes from LLM actions to entities  
 **Flow**:
+
 1. Validates incoming notes array
 2. Filters invalid entries
 3. Uses NotesService for deduplication
@@ -68,6 +75,7 @@ Location: `data/mods/core/components/notes.component.json`
 ### 3. LLM Integration
 
 #### Response Processing
+
 - **File**: `src/turns/services/LLMResponseProcessor.js`
 - **Function**: Extracts notes from LLM JSON responses
 - **Schema**: `src/turns/schemas/llmOutputSchemas.js`
@@ -79,6 +87,7 @@ Location: `data/mods/core/components/notes.component.json`
   ```
 
 #### Prompt Instructions
+
 - **File**: `data/prompts/corePromptText.json`
 - **Guidelines**:
   - "Only record brand-new, critical facts"
@@ -88,11 +97,13 @@ Location: `data/mods/core/components/notes.component.json`
 ### 4. Prompt Generation
 
 #### AIPromptContentProvider (`src/prompting/AIPromptContentProvider.js`)
+
 - Extracts notes from entity components
 - Method: `_extractMemoryComponents()`
 - Provides notes array for prompt assembly
 
 #### NotesSectionAssembler (`src/prompting/assembling/notesSectionAssembler.js`)
+
 - Formats notes as bullet list
 - Sorts by timestamp (oldest first)
 - Wraps with configurable prefix/suffix
@@ -100,17 +111,20 @@ Location: `data/mods/core/components/notes.component.json`
 ### 5. Entity Management
 
 #### DefaultComponentPolicy (`src/adapters/DefaultComponentPolicy.js`)
+
 - Auto-injects empty notes component to actors
 - Initial state: `{ notes: [] }`
 - Triggered by `core:actor` component presence
 
 #### EntityManager (`src/entities/entityManager.js`)
+
 - Standard CRUD operations for component management
 - No special handling for notes
 
 ### 6. Persistence Optimization
 
 #### ComponentCleaningService (`src/persistence/componentCleaningService.js`)
+
 - Removes empty notes arrays during save
 - Reduces save file size
 
@@ -138,11 +152,11 @@ Location: `data/mods/core/components/notes.component.json`
 ## Dependencies and Impact Analysis
 
 ### Direct Dependencies
+
 1. **Core Systems**:
    - Entity management system
    - Component system
    - Event system
-   
 2. **AI/LLM Systems**:
    - LLM response processing
    - Prompt generation
@@ -155,6 +169,7 @@ Location: `data/mods/core/components/notes.component.json`
 ### Files Requiring Updates for Structure Changes
 
 #### Critical Files (Must Update):
+
 1. `data/mods/core/components/notes.component.json` - Schema definition
 2. `src/ai/notesService.js` - Business logic
 3. `src/ai/notesPersistenceHook.js` - Persistence logic
@@ -162,22 +177,26 @@ Location: `data/mods/core/components/notes.component.json`
 5. `src/prompting/assembling/notesSectionAssembler.js` - Prompt formatting
 
 #### Test Files (Must Update):
+
 1. `tests/unit/schemas/core.notes.schema.test.js`
 2. `tests/unit/prompting/AIPromptContentProvider.notes.test.js`
 3. `tests/unit/prompting/AIPromptContentProvider.includeNotesGoals.test.js`
 4. Additional prompt-related tests
 
 #### Documentation:
+
 1. `README.md` - Component documentation
 
 ## Recommendations for Refactoring
 
 ### 1. Maintain Backward Compatibility
+
 - Consider versioning the component schema
 - Implement migration logic for existing save files
 - Add compatibility layer during transition
 
 ### 2. Update Order of Operations
+
 1. Update schema definition
 2. Modify NotesService to handle new structure
 3. Update persistence and validation logic
@@ -187,11 +206,13 @@ Location: `data/mods/core/components/notes.component.json`
 7. Migration utilities for existing data
 
 ### 3. Consider Interface Abstraction
+
 - Create an interface for note operations
 - Decouple implementation from consumers
 - Easier future modifications
 
 ### 4. Testing Strategy
+
 - Create integration tests for complete flow
 - Test migration scenarios
 - Validate backward compatibility
@@ -200,15 +221,18 @@ Location: `data/mods/core/components/notes.component.json`
 ## Risk Assessment
 
 ### High Risk Areas:
+
 1. **Save File Compatibility**: Existing games may break
 2. **LLM Response Processing**: Structure changes affect AI behavior
 3. **Prompt Generation**: May impact AI decision quality
 
 ### Medium Risk Areas:
+
 1. **Performance**: New structure may impact processing speed
 2. **Memory Usage**: Depending on new structure complexity
 
 ### Low Risk Areas:
+
 1. **UI Display**: No direct UI components identified
 2. **Network**: Notes are locally stored
 

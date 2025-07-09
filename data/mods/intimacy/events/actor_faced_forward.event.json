@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "id": "intimacy:actor_faced_forward",
+  "description": "Dispatched when an actor faces forward toward another actor after previously facing away.",
+  "payloadSchema": {
+    "title": "Intimacy: Actor Faced Forward Payload",
+    "description": "Payload for the intimacy:actor_faced_forward event.",
+    "type": "object",
+    "properties": {
+      "actor": {
+        "$ref": "http://example.com/schemas/common.schema.json#/definitions/namespacedId",
+        "description": "The ID of the actor who is now facing forward."
+      },
+      "facing": {
+        "$ref": "http://example.com/schemas/common.schema.json#/definitions/namespacedId",
+        "description": "The ID of the actor who is now being faced."
+      }
+    },
+    "required": ["actor", "facing"],
+    "additionalProperties": false
+  }
+}

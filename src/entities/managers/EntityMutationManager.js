@@ -37,14 +37,24 @@ export default class EntityMutationManager {
     });
     this.#logger = ensureValidLogger(logger, 'EntityMutationManager');
 
-    validateDependency(componentMutationService, 'ComponentMutationService', this.#logger, {
-      requiredMethods: ['addComponent', 'removeComponent'],
-    });
+    validateDependency(
+      componentMutationService,
+      'ComponentMutationService',
+      this.#logger,
+      {
+        requiredMethods: ['addComponent', 'removeComponent'],
+      }
+    );
     this.#componentMutationService = componentMutationService;
 
-    validateDependency(lifecycleManager, 'EntityLifecycleManager', this.#logger, {
-      requiredMethods: ['removeEntityInstance'],
-    });
+    validateDependency(
+      lifecycleManager,
+      'EntityLifecycleManager',
+      this.#logger,
+      {
+        requiredMethods: ['removeEntityInstance'],
+      }
+    );
     this.#lifecycleManager = lifecycleManager;
 
     this.#logger.debug('EntityMutationManager initialized.');

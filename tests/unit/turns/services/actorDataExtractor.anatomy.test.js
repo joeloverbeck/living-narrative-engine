@@ -54,11 +54,15 @@ describe('ActorDataExtractor - Anatomy Handling', () => {
       const result = extractor.extractPromptData(actorState, 'test-actor-id');
 
       // Assert
-      expect(mockEntityFinder.getEntityInstance).toHaveBeenCalledWith('test-actor-id');
-      expect(mockEntity.hasComponent).toHaveBeenCalledWith(ANATOMY_BODY_COMPONENT_ID);
-      expect(mockAnatomyDescriptionService.getOrGenerateBodyDescription).toHaveBeenCalledWith(
-        mockEntity
+      expect(mockEntityFinder.getEntityInstance).toHaveBeenCalledWith(
+        'test-actor-id'
       );
+      expect(mockEntity.hasComponent).toHaveBeenCalledWith(
+        ANATOMY_BODY_COMPONENT_ID
+      );
+      expect(
+        mockAnatomyDescriptionService.getOrGenerateBodyDescription
+      ).toHaveBeenCalledWith(mockEntity);
       expect(result.description).toBe(anatomyDescription + '.');
     });
 
@@ -75,8 +79,12 @@ describe('ActorDataExtractor - Anatomy Handling', () => {
       const result = extractor.extractPromptData(actorState, 'test-actor-id');
 
       // Assert
-      expect(mockEntity.hasComponent).toHaveBeenCalledWith(ANATOMY_BODY_COMPONENT_ID);
-      expect(mockAnatomyDescriptionService.getOrGenerateBodyDescription).not.toHaveBeenCalled();
+      expect(mockEntity.hasComponent).toHaveBeenCalledWith(
+        ANATOMY_BODY_COMPONENT_ID
+      );
+      expect(
+        mockAnatomyDescriptionService.getOrGenerateBodyDescription
+      ).not.toHaveBeenCalled();
       expect(result.description).toBe(componentDescription + '.');
     });
 
@@ -96,7 +104,9 @@ describe('ActorDataExtractor - Anatomy Handling', () => {
       // Setup: Entity has anatomy:body but service returns null
       mockEntityFinder.getEntityInstance.mockReturnValue(mockEntity);
       mockEntity.hasComponent.mockReturnValue(true);
-      mockAnatomyDescriptionService.getOrGenerateBodyDescription.mockReturnValue(null);
+      mockAnatomyDescriptionService.getOrGenerateBodyDescription.mockReturnValue(
+        null
+      );
       const fallbackDescription = 'Fallback description';
 
       // Act
@@ -140,7 +150,10 @@ describe('ActorDataExtractor - Anatomy Handling', () => {
       const actorState = {
         [DESCRIPTION_COMPONENT_ID]: { text: fallbackDescription },
       };
-      const result = extractorNoAnatomy.extractPromptData(actorState, 'test-actor-id');
+      const result = extractorNoAnatomy.extractPromptData(
+        actorState,
+        'test-actor-id'
+      );
 
       // Assert - should fall back to component description
       expect(result.description).toBe(fallbackDescription + '.');
@@ -159,7 +172,10 @@ describe('ActorDataExtractor - Anatomy Handling', () => {
       const actorState = {
         [DESCRIPTION_COMPONENT_ID]: { text: fallbackDescription },
       };
-      const result = extractorNoFinder.extractPromptData(actorState, 'test-actor-id');
+      const result = extractorNoFinder.extractPromptData(
+        actorState,
+        'test-actor-id'
+      );
 
       // Assert - should fall back to component description
       expect(result.description).toBe(fallbackDescription + '.');

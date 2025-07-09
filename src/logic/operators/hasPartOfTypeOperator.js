@@ -46,7 +46,7 @@ export class HasPartOfTypeOperator extends BaseBodyPartOperator {
 
     this.logger.debug(
       `hasPartOfType(${entityId}, ${partType}) = ${partsOfType.length > 0} ` +
-      `(found ${partsOfType.length} parts)`
+        `(found ${partsOfType.length} parts)`
     );
 
     return partsOfType.length > 0;

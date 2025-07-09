@@ -5,7 +5,7 @@ import EntityBuilder from '../../../../src/scopeDsl/core/entityBuilder.js';
 
 // Mock the buildComponents function
 jest.mock('../../../../src/scopeDsl/core/entityComponentUtils.js', () => ({
-  buildComponents: jest.fn()
+  buildComponents: jest.fn(),
 }));
 
 import { buildComponents } from '../../../../src/scopeDsl/core/entityComponentUtils.js';
@@ -26,18 +26,18 @@ describe('EntityBuilder', () => {
       getEntities: jest.fn(),
       getEntitiesWithComponent: jest.fn(),
       hasComponent: jest.fn(),
-      getComponentData: jest.fn()
+      getComponentData: jest.fn(),
     };
 
     // Create mock trace
     mockTrace = {
-      addLog: jest.fn()
+      addLog: jest.fn(),
     };
 
     // Create mock components
     mockComponents = {
       health: { value: 100 },
-      inventory: { items: [] }
+      inventory: { items: [] },
     };
 
     // Mock buildComponents
@@ -75,7 +75,7 @@ describe('EntityBuilder', () => {
       const entity = {
         id: 'entity1',
         componentTypeIds: ['health', 'inventory'],
-        components: { health: { value: 50 } }
+        components: { health: { value: 50 } },
       };
 
       const result = entityBuilder.createWithComponents(entity);
@@ -86,7 +86,7 @@ describe('EntityBuilder', () => {
     it('should return entity as-is if no componentTypeIds', () => {
       const entity = {
         id: 'entity1',
-        name: 'Test Entity'
+        name: 'Test Entity',
       };
 
       const result = entityBuilder.createWithComponents(entity);
@@ -97,7 +97,7 @@ describe('EntityBuilder', () => {
     it('should return entity as-is if componentTypeIds is not an array', () => {
       const entity = {
         id: 'entity1',
-        componentTypeIds: 'not-an-array'
+        componentTypeIds: 'not-an-array',
       };
 
       const result = entityBuilder.createWithComponents(entity);
@@ -109,7 +109,7 @@ describe('EntityBuilder', () => {
       const entity = {
         id: 'entity1',
         name: 'Test Entity',
-        componentTypeIds: ['health', 'inventory']
+        componentTypeIds: ['health', 'inventory'],
       };
 
       const result = entityBuilder.createWithComponents(entity);
@@ -123,7 +123,7 @@ describe('EntityBuilder', () => {
         id: 'entity1',
         name: 'Test Entity',
         componentTypeIds: ['health', 'inventory'],
-        components: mockComponents
+        components: mockComponents,
       });
       expect(result).not.toBe(entity); // Should be a new object
     });
@@ -135,7 +135,7 @@ describe('EntityBuilder', () => {
           this.id = id;
           this.name = name;
         }
-        
+
         getName() {
           return this.name;
         }
@@ -151,7 +151,7 @@ describe('EntityBuilder', () => {
         entity,
         mockGateway
       );
-      
+
       // Should preserve prototype chain
       expect(result).toBeInstanceOf(Entity);
       expect(result.getName()).toBe('Test Entity');
@@ -170,7 +170,7 @@ describe('EntityBuilder', () => {
       expect(result).toEqual({
         id: 'entity1',
         name: 'Test',
-        components: { health: { value: 100 } }
+        components: { health: { value: 100 } },
       });
       expect(result).not.toBe(entity);
     });
@@ -181,7 +181,7 @@ describe('EntityBuilder', () => {
           this.id = id;
           this.name = name;
         }
-        
+
         getName() {
           return this.name;
         }
@@ -196,7 +196,7 @@ describe('EntityBuilder', () => {
       expect(result.getName()).toBe('Test');
       expect(result.components).toBe(components);
       expect(result).not.toBe(entity);
-      
+
       // Components should be immutable
       const descriptor = Object.getOwnPropertyDescriptor(result, 'components');
       expect(descriptor.writable).toBe(false);
@@ -243,7 +243,7 @@ describe('EntityBuilder', () => {
       const mockEntity = {
         id: 'entity1',
         name: 'Test Entity',
-        componentTypeIds: ['health']
+        componentTypeIds: ['health'],
       };
 
       mockGateway.getEntityInstance.mockReturnValue(mockEntity);
@@ -255,7 +255,7 @@ describe('EntityBuilder', () => {
         id: 'entity1',
         name: 'Test Entity',
         componentTypeIds: ['health'],
-        components: mockComponents
+        components: mockComponents,
       });
     });
 
@@ -272,7 +272,7 @@ describe('EntityBuilder', () => {
       const entityObj = {
         id: 'entity1',
         name: 'Test Entity',
-        componentTypeIds: ['health']
+        componentTypeIds: ['health'],
       };
 
       const result = entityBuilder.createEntityForEvaluation(entityObj);
@@ -281,7 +281,7 @@ describe('EntityBuilder', () => {
         id: 'entity1',
         name: 'Test Entity',
         componentTypeIds: ['health'],
-        components: mockComponents
+        components: mockComponents,
       });
     });
 
@@ -298,7 +298,7 @@ describe('EntityBuilder', () => {
       const actorEntity = {
         id: 'actor1',
         name: 'Test Actor',
-        componentTypeIds: ['health']
+        componentTypeIds: ['health'],
       };
 
       const result = entityBuilder.createActorForEvaluation(actorEntity);
@@ -307,20 +307,24 @@ describe('EntityBuilder', () => {
         id: 'actor1',
         name: 'Test Actor',
         componentTypeIds: ['health'],
-        components: mockComponents
+        components: mockComponents,
       });
     });
 
     it('should throw error for null actor', () => {
       expect(() => {
         entityBuilder.createActorForEvaluation(null);
-      }).toThrow('createActorForEvaluation: actorEntity cannot be null or undefined');
+      }).toThrow(
+        'createActorForEvaluation: actorEntity cannot be null or undefined'
+      );
     });
 
     it('should throw error for undefined actor', () => {
       expect(() => {
         entityBuilder.createActorForEvaluation(undefined);
-      }).toThrow('createActorForEvaluation: actorEntity cannot be null or undefined');
+      }).toThrow(
+        'createActorForEvaluation: actorEntity cannot be null or undefined'
+      );
     });
 
     it('should throw error for actor without ID', () => {
@@ -328,7 +332,9 @@ describe('EntityBuilder', () => {
 
       expect(() => {
         entityBuilder.createActorForEvaluation(actorEntity);
-      }).toThrow('createActorForEvaluation: actorEntity must have a valid string ID');
+      }).toThrow(
+        'createActorForEvaluation: actorEntity must have a valid string ID'
+      );
     });
 
     it('should throw error for actor with invalid ID', () => {
@@ -336,7 +342,9 @@ describe('EntityBuilder', () => {
 
       expect(() => {
         entityBuilder.createActorForEvaluation(actorEntity);
-      }).toThrow('createActorForEvaluation: actorEntity must have a valid string ID');
+      }).toThrow(
+        'createActorForEvaluation: actorEntity must have a valid string ID'
+      );
     });
 
     it('should throw error for actor with empty string ID', () => {
@@ -344,14 +352,16 @@ describe('EntityBuilder', () => {
 
       expect(() => {
         entityBuilder.createActorForEvaluation(actorEntity);
-      }).toThrow('createActorForEvaluation: actorEntity must have a valid string ID');
+      }).toThrow(
+        'createActorForEvaluation: actorEntity must have a valid string ID'
+      );
     });
   });
 
   describe('withGateway', () => {
     it('should create new EntityBuilder with gateway', () => {
       const newBuilder = EntityBuilder.withGateway(mockGateway);
-      
+
       expect(newBuilder).toBeInstanceOf(EntityBuilder);
       expect(newBuilder.gateway).toBe(mockGateway);
       expect(newBuilder.trace).toBe(null);
@@ -359,7 +369,7 @@ describe('EntityBuilder', () => {
 
     it('should create new EntityBuilder with gateway and trace', () => {
       const newBuilder = EntityBuilder.withGateway(mockGateway, mockTrace);
-      
+
       expect(newBuilder).toBeInstanceOf(EntityBuilder);
       expect(newBuilder.gateway).toBe(mockGateway);
       expect(newBuilder.trace).toBe(mockTrace);
@@ -371,7 +381,7 @@ describe('EntityBuilder', () => {
       const entity = {
         id: 'entity1',
         name: 'Test Entity',
-        componentTypeIds: ['health', 'inventory']
+        componentTypeIds: ['health', 'inventory'],
       };
 
       entityBuilder.createWithComponents(entity);
@@ -388,7 +398,7 @@ describe('EntityBuilder', () => {
 
       const entity = {
         id: 'entity1',
-        componentTypeIds: ['health']
+        componentTypeIds: ['health'],
       };
 
       const result = entityBuilder.createWithComponents(entity);
@@ -396,7 +406,7 @@ describe('EntityBuilder', () => {
       expect(result).toEqual({
         id: 'entity1',
         componentTypeIds: ['health'],
-        components: null
+        components: null,
       });
     });
 
@@ -405,7 +415,7 @@ describe('EntityBuilder', () => {
 
       const entity = {
         id: 'entity1',
-        componentTypeIds: ['health']
+        componentTypeIds: ['health'],
       };
 
       const result = entityBuilder.createWithComponents(entity);
@@ -413,7 +423,7 @@ describe('EntityBuilder', () => {
       expect(result).toEqual({
         id: 'entity1',
         componentTypeIds: ['health'],
-        components: {}
+        components: {},
       });
     });
   });
@@ -423,7 +433,7 @@ describe('EntityBuilder', () => {
       const originalEntity = {
         id: 'entity1',
         name: 'Test Entity',
-        componentTypeIds: ['health']
+        componentTypeIds: ['health'],
       };
 
       const originalCopy = { ...originalEntity };
@@ -446,13 +456,13 @@ describe('EntityBuilder', () => {
       entity.componentTypeIds = ['health'];
 
       const result = entityBuilder.createWithComponents(entity);
-      
+
       // Check that components property is non-writable for Entity instances
       const descriptor = Object.getOwnPropertyDescriptor(result, 'components');
       expect(descriptor.writable).toBe(false);
       expect(descriptor.configurable).toBe(false);
       expect(descriptor.enumerable).toBe(true);
-      
+
       // Assignment should throw an error because the property is read-only
       expect(() => {
         result.components = { different: 'value' };
@@ -462,17 +472,17 @@ describe('EntityBuilder', () => {
     it('should create mutable components property for plain objects', () => {
       const entity = {
         id: 'entity1',
-        componentTypeIds: ['health']
+        componentTypeIds: ['health'],
       };
 
       const result = entityBuilder.createWithComponents(entity);
-      
+
       // Check that components property is writable for plain objects (by design)
       const descriptor = Object.getOwnPropertyDescriptor(result, 'components');
       expect(descriptor.writable).toBe(true);
       expect(descriptor.configurable).toBe(true);
       expect(descriptor.enumerable).toBe(true);
-      
+
       // Assignment should work for plain objects
       result.components = { different: 'value' };
       expect(result.components).toEqual({ different: 'value' });
@@ -488,7 +498,7 @@ describe('EntityBuilder', () => {
 
       const entity = {
         id: 'entity1',
-        componentTypeIds: ['health']
+        componentTypeIds: ['health'],
       };
 
       expect(() => {

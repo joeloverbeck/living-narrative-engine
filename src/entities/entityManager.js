@@ -436,7 +436,11 @@ class EntityManager extends IEntityManager {
   hasComponent(instanceId, componentTypeId, checkOverrideOnly = false) {
     // Only pass the third parameter if it was explicitly provided
     if (arguments.length === 3) {
-      return this.#queryManager.hasComponent(instanceId, componentTypeId, checkOverrideOnly);
+      return this.#queryManager.hasComponent(
+        instanceId,
+        componentTypeId,
+        checkOverrideOnly
+      );
     }
     return this.#queryManager.hasComponent(instanceId, componentTypeId);
   }

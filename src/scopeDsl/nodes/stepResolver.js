@@ -104,7 +104,9 @@ export default function createStepResolver({ entitiesGateway }) {
 
       // Validate context has required properties
       if (!ctx.actorEntity) {
-        const error = new Error('StepResolver: actorEntity is missing from context');
+        const error = new Error(
+          'StepResolver: actorEntity is missing from context'
+        );
         console.error('[CRITICAL] StepResolver missing actorEntity:', {
           hasCtx: !!ctx,
           ctxKeys: ctx ? Object.keys(ctx) : [],
@@ -112,7 +114,7 @@ export default function createStepResolver({ entitiesGateway }) {
           field: node?.field,
           parentNodeType: node?.parent?.type,
           depth: ctx?.depth,
-          callStack: new Error().stack
+          callStack: new Error().stack,
         });
         throw error;
       }

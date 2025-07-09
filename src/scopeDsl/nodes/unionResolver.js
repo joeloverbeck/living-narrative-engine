@@ -33,7 +33,9 @@ export default function createUnionResolver() {
 
       // Validate context has required properties
       if (!ctx.actorEntity) {
-        const error = new Error('UnionResolver: actorEntity is missing from context');
+        const error = new Error(
+          'UnionResolver: actorEntity is missing from context'
+        );
         console.error('[CRITICAL] UnionResolver missing actorEntity:', {
           hasCtx: !!ctx,
           ctxKeys: ctx ? Object.keys(ctx) : [],
@@ -41,7 +43,7 @@ export default function createUnionResolver() {
           hasLeft: !!node?.left,
           hasRight: !!node?.right,
           depth: ctx?.depth,
-          callStack: new Error().stack
+          callStack: new Error().stack,
         });
         throw error;
       }

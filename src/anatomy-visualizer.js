@@ -11,7 +11,7 @@ let visualizerUI;
  */
 async function initialize() {
   const bootstrapper = new CommonBootstrapper();
-  
+
   try {
     // Bootstrap the application with minimal configuration
     const { container, services } = await bootstrapper.bootstrap({
@@ -21,8 +21,10 @@ async function initialize() {
       postInitHook: async (services, container) => {
         // Initialize UI after all services are ready
         const { logger, registry, entityManager, eventDispatcher } = services;
-        const anatomyDescriptionService = container.resolve(tokens.AnatomyDescriptionService);
-        
+        const anatomyDescriptionService = container.resolve(
+          tokens.AnatomyDescriptionService
+        );
+
         logger.info('Anatomy Visualizer: Initializing UI...');
         visualizerUI = new AnatomyVisualizerUI({
           logger,
@@ -44,7 +46,7 @@ async function initialize() {
         }
 
         logger.info('Anatomy Visualizer: Initialization complete');
-      }
+      },
     });
   } catch (error) {
     bootstrapper.displayFatalStartupError(
@@ -53,7 +55,6 @@ async function initialize() {
     );
   }
 }
-
 
 // Initialize when DOM is ready
 if (document.readyState === 'loading') {

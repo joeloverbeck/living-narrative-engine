@@ -16,6 +16,7 @@ Implement the refactoring recommendations from `reports/anatomy-visualizer-refac
 ## What
 
 Create a unified initialization system that:
+
 - Extracts duplicated logger configuration loading into a shared utility
 - Creates a shared mod loading function that both entry points can use
 - Implements a base container configuration with options for full vs minimal setup
@@ -253,18 +254,26 @@ CREATE tests/unit/bootstrapper/CommonBootstrapper.test.js:
 
 ```javascript
 // Task 1 - loggerConfigUtils.js
-export async function loadAndApplyLoggerConfig(container, logger, configPrefix = 'ContainerConfig') {
+export async function loadAndApplyLoggerConfig(
+  container,
+  logger,
+  configPrefix = 'ContainerConfig'
+) {
   try {
-    logger.debug(`[${configPrefix}] Attempting to load logger configuration...`);
-    
+    logger.debug(
+      `[${configPrefix}] Attempting to load logger configuration...`
+    );
+
     // Check if running in browser
     if (typeof window !== 'undefined') {
       const configLoader = new LoggerConfigLoader(/* ... */);
       const config = await configLoader.loadConfig();
-      
+
       if (config?.logLevel) {
         logger.setLevel(config.logLevel);
-        logger.debug(`[${configPrefix}] Logger level set to: ${config.logLevel}`);
+        logger.debug(
+          `[${configPrefix}] Logger level set to: ${config.logLevel}`
+        );
       }
     }
   } catch (error) {
@@ -273,23 +282,33 @@ export async function loadAndApplyLoggerConfig(container, logger, configPrefix =
 }
 
 // Task 3 - modLoadingUtils.js
-export async function loadModsFromGameConfig(modsLoader, logger, worldName = 'default') {
+export async function loadModsFromGameConfig(
+  modsLoader,
+  logger,
+  worldName = 'default'
+) {
   const gameConfigResponse = await fetch('./data/game.json');
   if (!gameConfigResponse.ok) {
-    throw new Error(`Failed to load game configuration: ${gameConfigResponse.status}`);
+    throw new Error(
+      `Failed to load game configuration: ${gameConfigResponse.status}`
+    );
   }
-  
+
   const gameConfig = await gameConfigResponse.json();
   const requestedMods = gameConfig.mods || [];
-  
+
   logger.info(`Loading ${requestedMods.length} mods for world: ${worldName}`);
   return await modsLoader.loadMods(worldName, requestedMods);
 }
 
 // Task 5 - baseContainerConfig.js
 export function configureBaseContainer(container, options = {}) {
-  const { includeUI = false, includeGameSystems = false, uiElements = null } = options;
-  
+  const {
+    includeUI = false,
+    includeGameSystems = false,
+    uiElements = null,
+  } = options;
+
   // Always register core services
   registerLoaders(container);
   registerInfrastructure(container);
@@ -300,14 +319,14 @@ export function configureBaseContainer(container, options = {}) {
   registerEventBusAdapters(container);
   registerInitializers(container);
   registerRuntime(container);
-  
+
   // Conditionally register game-specific services
   if (includeGameSystems) {
     registerAI(container);
     registerTurnLifecycle(container);
     registerOrchestration(container);
   }
-  
+
   if (includeUI && uiElements) {
     registerUI(container, uiElements);
   }
@@ -321,41 +340,41 @@ export class CommonBootstrapper {
       worldName = 'default',
       uiElements = null,
       postInitHook = null,
-      includeAnatomyFormatting = false
+      includeAnatomyFormatting = false,
     } = options;
-    
+
     // Create and configure container
     const container = new AppContainer();
-    
+
     if (containerConfigType === 'full') {
       configureContainer(container, uiElements);
     } else {
       configureMinimalContainer(container);
     }
-    
+
     // Resolve core services
     const services = await initializeCoreServices(container, tokens);
-    
+
     // Load mods
     const loadReport = await loadModsFromGameConfig(
-      services.modsLoader, 
-      services.logger, 
+      services.modsLoader,
+      services.logger,
       worldName
     );
-    
+
     // Initialize systems
     await services.systemInitializer.initializeAll();
-    
+
     // Initialize anatomy formatting if needed
     if (includeAnatomyFormatting) {
       await initializeAnatomyServices(container, services.logger, tokens);
     }
-    
+
     // Custom post-initialization
     if (postInitHook) {
       await postInitHook(services, container);
     }
-    
+
     return { container, services, loadReport };
   }
 }
@@ -382,7 +401,7 @@ npm run test
 # Specifically verify the anatomy visualizer integration test passes:
 npm run test -- tests/integration/domUI/AnatomyVisualizerUI.integration.test.js
 
-# If any test fails: 
+# If any test fails:
 # 1. Read the error carefully
 # 2. Check if initialization sequence changed
 # 3. Verify service resolution order
@@ -433,12 +452,14 @@ npm run test -- tests/integration/domUI/AnatomyVisualizerUI.integration.test.js
 ## Implementation Confidence Score: 8/10
 
 High confidence due to:
+
 - Clear duplication patterns identified
 - Existing stage patterns to follow
 - Comprehensive test coverage available
 - Well-defined refactoring steps
 
 Moderate risk areas:
+
 - Main.js is critical path and requires careful testing
 - Container registration order must be preserved
 - Integration between new CommonBootstrapper and existing stages

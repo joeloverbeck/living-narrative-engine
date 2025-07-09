@@ -59,7 +59,7 @@ describe('HttpConfigurationProvider additional branches', () => {
           statusCode: 503,
           statusText: 'HTTP status 503',
           url: url,
-          scopeName: 'HttpConfigurationProvider.fetchData'
+          scopeName: 'HttpConfigurationProvider.fetchData',
         },
       })
     );
@@ -93,7 +93,7 @@ describe('HttpConfigurationProvider additional branches', () => {
           error: 'boom',
           stack: undefined,
           url: url,
-          scopeName: 'HttpConfigurationProvider.fetchData'
+          scopeName: 'HttpConfigurationProvider.fetchData',
         },
       })
     );
@@ -120,7 +120,7 @@ describe('HttpConfigurationProvider additional branches', () => {
           error: 'broken',
           stack: undefined,
           url: url,
-          scopeName: 'HttpConfigurationProvider.fetchData'
+          scopeName: 'HttpConfigurationProvider.fetchData',
         },
       })
     );

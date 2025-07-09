@@ -40,7 +40,10 @@
       "definitions": [],
       "instances": []
     },
-    "events": [],
+    "events": [
+      "actor_faced_forward.event.json",
+      "actor_turned_around.event.json"
+    ],
     "macros": [],
     "rules": [
       "adjust_clothing.rule.json",
@@ -57,7 +60,8 @@
     ],
     "scopes": [
       "actors_with_arms_in_intimacy.scope",
-      "close_actors.scope"
+      "close_actors.scope",
+      "close_actors_in_front.scope"
     ]
   }
 }

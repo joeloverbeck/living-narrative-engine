@@ -411,4 +411,5 @@ export function validateBatchItems(items, validator) {
     validCount: validItems.length,
     invalidCount: invalidItems.length,
     totalCount: items.length,
-  };}
+  };
+}

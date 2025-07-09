@@ -64,9 +64,9 @@ export function configureContainer(container, uiElements) {
       outputDiv,
       inputElement,
       titleElement,
-      document: doc
+      document: doc,
     },
-    logger: logger
+    logger: logger,
   });
 
   logger.debug('[ContainerConfig] All core bundles registered.');
@@ -79,4 +79,3 @@ export function configureContainer(container, uiElements) {
     '[ContainerConfig] Configuration and registry population complete.'
   );
 }
-

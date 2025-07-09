@@ -9,6 +9,7 @@ This is a **Node.js Express API server** that acts as a secure proxy for LLM ser
 ## 🏗️ Code Architecture & Structure
 
 ### Directory Layout
+
 ```
 llm-proxy-server/
 ├── src/
@@ -43,12 +44,13 @@ llm-proxy-server/
 ## 🎨 Key Design Patterns
 
 ### 1. Dependency Injection
+
 ```javascript
 // Always inject dependencies through constructor
 class LlmRequestService {
   #apiKeyService;
   #llmConfigService;
-  
+
   constructor(apiKeyService, llmConfigService) {
     this.#apiKeyService = apiKeyService;
     this.#llmConfigService = llmConfigService;
@@ -57,16 +59,19 @@ class LlmRequestService {
 ```
 
 ### 2. Private Class Fields
+
 - Use `#` prefix for private fields
 - Encapsulate internal state
 - Provide public methods for controlled access
 
 ### 3. Interface-Based Design
+
 - Services implement consistent interfaces
 - Controllers depend on abstractions
 - Easy to swap implementations
 
 ### 4. Error Handling Pattern
+
 ```javascript
 // Standardized error responses
 try {
@@ -92,11 +97,11 @@ try {
 // 1. Define the service with private fields
 class NewService {
   #dependency;
-  
+
   constructor(dependency) {
     this.#dependency = dependency;
   }
-  
+
   async performAction(params) {
     // Implementation
   }
@@ -116,21 +121,25 @@ export default NewService;
 ## 🧪 Testing Requirements
 
 ### Test Structure
+
 - **Location**: Tests in `/tests/unit/` and `/tests/integration/`
 - **Naming**: `[filename].test.js`
 - **Coverage**: Minimum 80% required
 
 ### Test Patterns
+
 ```javascript
 describe('ServiceName', () => {
   let service;
   let mockDependency;
-  
+
   beforeEach(() => {
-    mockDependency = { /* mocks */ };
+    mockDependency = {
+      /* mocks */
+    };
     service = new ServiceName(mockDependency);
   });
-  
+
   describe('methodName', () => {
     it('should handle expected case', () => {});
     it('should handle edge case', () => {});
@@ -140,6 +149,7 @@ describe('ServiceName', () => {
 ```
 
 ### Testing Checklist
+
 - [ ] Unit tests for all public methods
 - [ ] Integration tests for API endpoints
 - [ ] Error scenarios covered
@@ -149,6 +159,7 @@ describe('ServiceName', () => {
 ## 🔧 Code Standards
 
 ### ESLint Rules
+
 - **JSDoc required** for all public methods
 - **No var** - Use const/let
 - **Semicolons required**
@@ -156,6 +167,7 @@ describe('ServiceName', () => {
 - **Single quotes** for strings
 
 ### JSDoc Example
+
 ```javascript
 /**
  * Processes an LLM request through the appropriate provider
@@ -171,6 +183,7 @@ async processRequest(requestData) {
 ```
 
 ### Code Quality Rules
+
 - **No console.log** in production code
 - **Async/await** over promise chains
 - **Early returns** to reduce nesting
@@ -180,6 +193,7 @@ async processRequest(requestData) {
 ## 📡 API Contract
 
 Reference the `PROXY_API_CONTRACT.md` file for:
+
 - Endpoint specifications
 - Request/response formats
 - Authentication requirements
@@ -213,6 +227,7 @@ Reference the `PROXY_API_CONTRACT.md` file for:
 ## 🚨 Error Handling
 
 ### Standard Error Response
+
 ```json
 {
   "error": {
@@ -224,6 +239,7 @@ Reference the `PROXY_API_CONTRACT.md` file for:
 ```
 
 ### Error Types
+
 - **400**: Client errors (validation, bad request)
 - **401**: Authentication failures
 - **403**: Authorization failures
@@ -233,6 +249,7 @@ Reference the `PROXY_API_CONTRACT.md` file for:
 ## 🔒 Security Considerations
 
 ### API Key Handling
+
 - Never log API keys
 - Sanitize error messages
 - Use environment variables
@@ -240,6 +257,7 @@ Reference the `PROXY_API_CONTRACT.md` file for:
 - Validate all inputs
 
 ### Request Validation
+
 - Sanitize user inputs
 - Validate request schemas
 - Check content types

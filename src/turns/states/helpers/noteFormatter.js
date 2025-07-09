@@ -55,7 +55,7 @@ function formatSingleNote(note) {
   }
 
   if (Array.isArray(tags) && tags.length > 0) {
-    const validTags = tags.filter(tag => isNonBlankString(tag));
+    const validTags = tags.filter((tag) => isNonBlankString(tag));
     if (validTags.length > 0) {
       formatted = `${formatted} [${validTags.join(', ')}]`;
     }
@@ -81,9 +81,9 @@ export function formatNotesForDisplay(notes) {
 
   if (Array.isArray(notes)) {
     const formatted = notes
-      .map(note => formatSingleNote(note))
+      .map((note) => formatSingleNote(note))
       .filter(Boolean);
-    
+
     return formatted.length > 0 ? formatted.join('\n') : null;
   }
 

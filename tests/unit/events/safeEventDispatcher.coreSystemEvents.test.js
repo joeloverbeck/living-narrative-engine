@@ -19,7 +19,6 @@
  * Runs in a pure Node environment so we can use fs/path and dynamic import().
  */
 
-
 /* ── Load the two component JSON files directly via require() ───────── */
 const warningEventDef = require('../../../data/mods/core/events/system_warning_occurred.event.json');
 const errorEventDef = require('../../../data/mods/core/events/system_error_occurred.event.json');

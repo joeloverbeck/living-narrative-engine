@@ -1,11 +1,14 @@
-import { resolveEntityPath, hasValidEntityId } from '../../../../src/logic/utils/entityPathResolver.js';
+import {
+  resolveEntityPath,
+  hasValidEntityId,
+} from '../../../../src/logic/utils/entityPathResolver.js';
 
 describe('entityPathResolver', () => {
   describe('resolveEntityPath', () => {
     it('should resolve simple path successfully', () => {
       const context = { actor: { id: 'actor123' } };
       const result = resolveEntityPath(context, 'actor');
-      
+
       expect(result).toEqual({
         entity: { id: 'actor123' },
         isValid: true,
@@ -21,7 +24,7 @@ describe('entityPathResolver', () => {
         },
       };
       const result = resolveEntityPath(context, 'event.target');
-      
+
       expect(result).toEqual({
         entity: { id: 'target456' },
         isValid: true,
@@ -39,7 +42,7 @@ describe('entityPathResolver', () => {
         },
       };
       const result = resolveEntityPath(context, 'event.source.parent');
-      
+
       expect(result).toEqual({
         entity: { id: 'parent789' },
         isValid: true,
@@ -49,7 +52,7 @@ describe('entityPathResolver', () => {
     it('should handle special "." path for current entity', () => {
       const context = { entity: { id: 'current123' } };
       const result = resolveEntityPath(context, '.');
-      
+
       expect(result).toEqual({
         entity: { id: 'current123' },
         isValid: true,
@@ -58,7 +61,7 @@ describe('entityPathResolver', () => {
 
     it('should return invalid for null context', () => {
       const result = resolveEntityPath(null, 'actor');
-      
+
       expect(result).toEqual({
         entity: null,
         isValid: false,
@@ -68,7 +71,7 @@ describe('entityPathResolver', () => {
     it('should return invalid for undefined path', () => {
       const context = { actor: { id: 'actor123' } };
       const result = resolveEntityPath(context, undefined);
-      
+
       expect(result).toEqual({
         entity: null,
         isValid: false,
@@ -78,7 +81,7 @@ describe('entityPathResolver', () => {
     it('should return invalid for empty string path', () => {
       const context = { actor: { id: 'actor123' } };
       const result = resolveEntityPath(context, '');
-      
+
       expect(result).toEqual({
         entity: null,
         isValid: false,
@@ -88,7 +91,7 @@ describe('entityPathResolver', () => {
     it('should return invalid for non-string path', () => {
       const context = { actor: { id: 'actor123' } };
       const result = resolveEntityPath(context, 123);
-      
+
       expect(result).toEqual({
         entity: null,
         isValid: false,
@@ -98,7 +101,7 @@ describe('entityPathResolver', () => {
     it('should return invalid when path does not exist', () => {
       const context = { actor: { id: 'actor123' } };
       const result = resolveEntityPath(context, 'nonexistent');
-      
+
       expect(result).toEqual({
         entity: undefined,
         isValid: false,
@@ -108,7 +111,7 @@ describe('entityPathResolver', () => {
     it('should return invalid when intermediate path is null', () => {
       const context = { event: null };
       const result = resolveEntityPath(context, 'event.target');
-      
+
       expect(result).toEqual({
         entity: null,
         isValid: false,
@@ -118,7 +121,7 @@ describe('entityPathResolver', () => {
     it('should return invalid when intermediate path is not an object', () => {
       const context = { event: 'string' };
       const result = resolveEntityPath(context, 'event.target');
-      
+
       expect(result).toEqual({
         entity: null,
         isValid: false,
@@ -128,7 +131,7 @@ describe('entityPathResolver', () => {
     it('should handle "." path when entity is null', () => {
       const context = { entity: null };
       const result = resolveEntityPath(context, '.');
-      
+
       expect(result).toEqual({
         entity: null,
         isValid: false,

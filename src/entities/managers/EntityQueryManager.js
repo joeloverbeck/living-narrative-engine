@@ -40,9 +40,14 @@ export default class EntityQueryManager {
     });
     this.#logger = ensureValidLogger(logger, 'EntityQueryManager');
 
-    validateDependency(entityRepository, 'EntityRepositoryAdapter', this.#logger, {
-      requiredMethods: ['get', 'entities'],
-    });
+    validateDependency(
+      entityRepository,
+      'EntityRepositoryAdapter',
+      this.#logger,
+      {
+        requiredMethods: ['get', 'entities'],
+      }
+    );
     this.#entityRepository = entityRepository;
 
     this.#logger.debug('EntityQueryManager initialized.');

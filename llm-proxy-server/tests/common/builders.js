@@ -28,36 +28,36 @@ export const createMockResponse = () => {
     body: null,
     headersSent: false,
   };
-  
+
   res.status = jest.fn((code) => {
     res.statusCode = code;
     return res;
   });
-  
+
   res.json = jest.fn((data) => {
     res.body = data;
     res.headersSent = true;
     return res;
   });
-  
+
   res.send = jest.fn((data) => {
     res.body = data;
     res.headersSent = true;
     return res;
   });
-  
+
   res.end = jest.fn(() => {
     res.headersSent = true;
     return res;
   });
-  
+
   res.setHeader = jest.fn((name, value) => {
     res.headers[name] = value;
     return res;
   });
-  
+
   res.on = jest.fn();
-  
+
   return res;
 };
 
@@ -79,8 +79,8 @@ export const createValidLlmRequestPayload = (overrides = {}) => ({
     messages: [
       {
         role: 'user',
-        content: 'Test message'
-      }
+        content: 'Test message',
+      },
     ],
     temperature: 0.7,
     max_tokens: 150,

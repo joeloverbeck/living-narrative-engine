@@ -163,7 +163,10 @@ export default class EntityEventDispatcher {
    * @returns {boolean} True if event dispatcher is available
    */
   isAvailable() {
-    return this.#eventDispatcher && typeof this.#eventDispatcher.dispatch === 'function';
+    return (
+      this.#eventDispatcher &&
+      typeof this.#eventDispatcher.dispatch === 'function'
+    );
   }
 
   /**
@@ -172,7 +175,10 @@ export default class EntityEventDispatcher {
    * @returns {object | null} Event dispatcher statistics or null
    */
   getStats() {
-    if (this.#eventDispatcher && typeof this.#eventDispatcher.getStats === 'function') {
+    if (
+      this.#eventDispatcher &&
+      typeof this.#eventDispatcher.getStats === 'function'
+    ) {
       return this.#eventDispatcher.getStats();
     }
     return null;

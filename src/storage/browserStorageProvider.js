@@ -97,7 +97,7 @@ export class BrowserStorageProvider extends IStorageProvider {
               'BrowserStorageProvider: Permission explicitly denied after selecting directory.',
               {
                 scopeName: 'BrowserStorageProvider.#getRootHandle',
-                error: 'Permission denied'
+                error: 'Permission denied',
               },
               this.#logger
             );
@@ -118,7 +118,7 @@ export class BrowserStorageProvider extends IStorageProvider {
             {
               error: error.message,
               stack: error.stack,
-              scopeName: 'BrowserStorageProvider.#getRootHandle'
+              scopeName: 'BrowserStorageProvider.#getRootHandle',
             },
             this.#logger
           );
@@ -177,7 +177,7 @@ export class BrowserStorageProvider extends IStorageProvider {
               error: error.message,
               stack: error.stack,
               path: normalizedDirectoryPath,
-              scopeName: 'BrowserStorageProvider.#getDirectoryHandle'
+              scopeName: 'BrowserStorageProvider.#getDirectoryHandle',
             },
             this.#logger
           );
@@ -227,7 +227,7 @@ export class BrowserStorageProvider extends IStorageProvider {
           error: error.message,
           stack: error.stack,
           path: filePath,
-          scopeName: 'BrowserStorageProvider.#getFileHandle'
+          scopeName: 'BrowserStorageProvider.#getFileHandle',
         },
         this.#logger
       );
@@ -267,7 +267,7 @@ export class BrowserStorageProvider extends IStorageProvider {
           error: error.message,
           stack: error.stack,
           path: tempFilePath,
-          scopeName: 'BrowserStorageProvider.write'
+          scopeName: 'BrowserStorageProvider.write',
         },
         this.#logger
       );
@@ -313,7 +313,7 @@ export class BrowserStorageProvider extends IStorageProvider {
           error: error.message,
           stack: error.stack,
           path: normalizedFilePath,
-          scopeName: 'BrowserStorageProvider.write'
+          scopeName: 'BrowserStorageProvider.write',
         },
         this.#logger
       );
@@ -393,7 +393,7 @@ export class BrowserStorageProvider extends IStorageProvider {
           error: error.message,
           stack: error.stack,
           path: directoryPath,
-          scopeName: 'BrowserStorageProvider.listFiles'
+          scopeName: 'BrowserStorageProvider.listFiles',
         },
         this.#logger
       );
@@ -421,7 +421,7 @@ export class BrowserStorageProvider extends IStorageProvider {
           error: error.message,
           stack: error.stack,
           path: filePath,
-          scopeName: 'BrowserStorageProvider.read'
+          scopeName: 'BrowserStorageProvider.read',
         },
         this.#logger
       );
@@ -482,7 +482,7 @@ export class BrowserStorageProvider extends IStorageProvider {
           error: error.message,
           stack: error.stack,
           path: filePath,
-          scopeName: 'BrowserStorageProvider.delete'
+          scopeName: 'BrowserStorageProvider.delete',
         },
         this.#logger
       );

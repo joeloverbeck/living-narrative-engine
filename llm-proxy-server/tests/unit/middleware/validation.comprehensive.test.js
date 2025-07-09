@@ -1,9 +1,9 @@
 import { describe, test, beforeEach, expect, jest } from '@jest/globals';
-import { 
-  validateLlmRequest, 
-  validateRequestHeaders, 
+import {
+  validateLlmRequest,
+  validateRequestHeaders,
   handleValidationErrors,
-  isUrlSafe 
+  isUrlSafe,
 } from '../../../src/middleware/validation.js';
 
 // Import the actual express-validator to test the real implementation
@@ -29,16 +29,16 @@ describe('Validation Middleware - Comprehensive Tests', () => {
       req.body = {
         llmId: 'test-llm-123',
         targetPayload: { message: 'test' },
-        targetHeaders: { 'x-custom': 'value' }
+        targetHeaders: { 'x-custom': 'value' },
       };
 
       const validators = validateLlmRequest();
-      
+
       // Execute each validator in the chain
       for (const validator of validators) {
         await validator(req, res, next);
       }
-      
+
       // Validators should have been called
       expect(next).toHaveBeenCalled();
     });
@@ -50,7 +50,7 @@ describe('Validation Middleware - Comprehensive Tests', () => {
       };
 
       const validators = validateLlmRequest();
-      
+
       // Find and execute the targetPayload custom validator
       for (const validator of validators) {
         await validator(req, res, next);
@@ -62,11 +62,11 @@ describe('Validation Middleware - Comprehensive Tests', () => {
         llmId: 'test-llm',
         targetPayload: { data: 'test' },
         unexpectedField: 'should not be here',
-        anotherExtra: 'also unexpected'
+        anotherExtra: 'also unexpected',
       };
 
       const validators = validateLlmRequest();
-      
+
       // Execute validators
       for (const validator of validators) {
         await validator(req, res, next);
@@ -83,19 +83,20 @@ describe('Validation Middleware - Comprehensive Tests', () => {
           'header-with-bad\x00value': 'test',
           'x-custom-123_test': 'allowed',
           '!!!invalid###': 'should be cleaned',
-          'very-long-header-name-that-exceeds-one-hundred-characters-limit-and-should-be-rejected-completely': 'too long',
-          'normal': 'x'.repeat(1001), // Value too long
+          'very-long-header-name-that-exceeds-one-hundred-characters-limit-and-should-be-rejected-completely':
+            'too long',
+          normal: 'x'.repeat(1001), // Value too long
           '!!!###$$$': 'header name becomes empty after sanitization', // This will test the empty cleanKey branch
-        }
+        },
       };
 
       const validators = validateLlmRequest();
-      
+
       // Run validators
       for (const validator of validators) {
         await validator(req, res, next);
       }
-      
+
       // The sanitizer should have cleaned the headers
       // Note: The actual sanitization happens within the validator chain
     });
@@ -104,11 +105,11 @@ describe('Validation Middleware - Comprehensive Tests', () => {
       req.body = {
         llmId: 'test-llm',
         targetPayload: { data: 'test' },
-        targetHeaders: 'not-an-object'
+        targetHeaders: 'not-an-object',
       };
 
       const validators = validateLlmRequest();
-      
+
       for (const validator of validators) {
         await validator(req, res, next);
       }
@@ -118,11 +119,11 @@ describe('Validation Middleware - Comprehensive Tests', () => {
       req.body = {
         llmId: 'test-llm',
         targetPayload: { data: 'test' },
-        targetHeaders: null
+        targetHeaders: null,
       };
 
       const validators = validateLlmRequest();
-      
+
       for (const validator of validators) {
         await validator(req, res, next);
       }
@@ -136,11 +137,11 @@ describe('Validation Middleware - Comprehensive Tests', () => {
         'x-custom': 'clean-value',
         'x-bad': 'value\r\ninjection',
         'x-null': 'value\x00null',
-        'authorization': 'Bearer token\nNewline'
+        authorization: 'Bearer token\nNewline',
       };
 
       const validators = validateRequestHeaders();
-      
+
       // Run validators
       for (const validator of validators) {
         await validator(req, res, next);
@@ -153,11 +154,11 @@ describe('Validation Middleware - Comprehensive Tests', () => {
         'x-number': 123,
         'x-boolean': true,
         'x-object': { nested: 'value' },
-        'x-array': ['a', 'b', 'c']
+        'x-array': ['a', 'b', 'c'],
       };
 
       const validators = validateRequestHeaders();
-      
+
       for (const validator of validators) {
         await validator(req, res, next);
       }
@@ -167,22 +168,22 @@ describe('Validation Middleware - Comprehensive Tests', () => {
   describe('Edge cases and error paths', () => {
     test('sanitizeHeaders with entries that cause exceptions', async () => {
       const problematicHeaders = {
-        'good': 'value',
+        good: 'value',
         // Object with null prototype
         __proto__: null,
         // Circular reference
-        circular: {}
+        circular: {},
       };
       problematicHeaders.circular.ref = problematicHeaders;
 
       req.body = {
         llmId: 'test',
         targetPayload: { data: 'test' },
-        targetHeaders: problematicHeaders
+        targetHeaders: problematicHeaders,
       };
 
       const validators = validateLlmRequest();
-      
+
       // Should not throw
       for (const validator of validators) {
         try {

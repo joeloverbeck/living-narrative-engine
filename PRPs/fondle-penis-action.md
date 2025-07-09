@@ -18,6 +18,7 @@ Create a "fondle penis" action and corresponding rule for the sex mod, mirroring
 ## Goal
 
 Implement a complete "fondle penis" action for the sex mod that:
+
 - Creates an action with template "fondle {target}'s penis"
 - Requires the actor to have the "anatomy:closeness" component
 - Defines a scope for targets with a "penis" body part type in the actor's closeness array
@@ -33,12 +34,14 @@ Implement a complete "fondle penis" action for the sex mod that:
 ## What
 
 ### User-Visible Behavior
+
 - Players can select "fondle-penis" action when near partners with appropriate anatomy
 - Action displays as "fondle {target}'s penis" in UI
 - Success triggers visible event: "{actor} fondles eagerly {target}'s penis"
 - Turn ends after successful action
 
 ### Technical Requirements
+
 - JSON-based action, scope, condition, and rule definitions
 - Integration with anatomy system for body part detection
 - Use of intimacy:closeness component for partner filtering
@@ -148,6 +151,7 @@ tests/integration/mods/sex/
 ### Data Models and Structure
 
 All files follow JSON schema validation. Key structures:
+
 - Actions: Define user-available commands with scopes and templates
 - Scopes: Define valid targets using DSL syntax
 - Conditions: JsonLogic expressions for rule triggers
@@ -202,16 +206,18 @@ CREATE tests/integration/mods/sex/fondle_penis_action.test.js:
 ### Per-Task Implementation Details
 
 #### Task 1: Scope Definition Pseudocode
+
 ```
 scope_name := actor.intimacy:closeness.partners[][{"hasPartOfType": [".", "penis"]}]
 // Navigation: actor -> closeness component -> partners array -> filter for penis parts
 ```
 
 #### Task 4: Rule Actions Structure
+
 ```json
 // Critical: Use exact same action sequence as fondle_breasts
 1. GET_NAME for actor
-2. GET_NAME for target  
+2. GET_NAME for target
 3. QUERY_COMPONENT for actor position
 4. SET_VARIABLE with:
    - logMessage: "fondles eagerly {targetName}'s penis"

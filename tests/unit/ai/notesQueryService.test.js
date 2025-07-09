@@ -6,7 +6,7 @@ describe('NotesQueryService', () => {
 
   beforeEach(() => {
     service = new NotesQueryService();
-    
+
     // Sample notes for testing
     sampleNotes = [
       {
@@ -14,44 +14,48 @@ describe('NotesQueryService', () => {
         subject: 'John',
         context: 'tavern conversation',
         tags: ['emotion', 'politics'],
-        timestamp: '2024-01-15T10:00:00Z'
+        timestamp: '2024-01-15T10:00:00Z',
       },
       {
         text: 'Sarah is preparing for battle',
         subject: 'Sarah',
         context: 'training grounds',
         tags: ['combat', 'preparation'],
-        timestamp: '2024-01-15T11:00:00Z'
+        timestamp: '2024-01-15T11:00:00Z',
       },
       {
         text: 'The market is crowded today',
         subject: 'Market',
         context: 'morning patrol',
         tags: ['location', 'observation'],
-        timestamp: '2024-01-15T09:00:00Z'
+        timestamp: '2024-01-15T09:00:00Z',
       },
       {
         text: 'John mentioned Sarah',
         subject: 'John',
         context: 'tavern conversation',
         tags: ['relationship'],
-        timestamp: '2024-01-15T10:30:00Z'
+        timestamp: '2024-01-15T10:30:00Z',
       },
       {
-        text: 'Legacy note without structure' // Legacy format
-      }
+        text: 'Legacy note without structure', // Legacy format
+      },
     ];
   });
 
   describe('queryBySubject', () => {
     test('should find notes by exact subject match', () => {
-      const results = service.queryBySubject(sampleNotes, 'John', { exact: true });
+      const results = service.queryBySubject(sampleNotes, 'John', {
+        exact: true,
+      });
       expect(results).toHaveLength(2);
-      expect(results.every(note => note.subject === 'John')).toBe(true);
+      expect(results.every((note) => note.subject === 'John')).toBe(true);
     });
 
     test('should find notes by partial subject match', () => {
-      const results = service.queryBySubject(sampleNotes, 'joh', { exact: false });
+      const results = service.queryBySubject(sampleNotes, 'joh', {
+        exact: false,
+      });
       expect(results).toHaveLength(2);
     });
 
@@ -79,9 +83,15 @@ describe('NotesQueryService', () => {
 
   describe('queryByContext', () => {
     test('should find notes by exact context match', () => {
-      const results = service.queryByContext(sampleNotes, 'tavern conversation', { exact: true });
+      const results = service.queryByContext(
+        sampleNotes,
+        'tavern conversation',
+        { exact: true }
+      );
       expect(results).toHaveLength(2);
-      expect(results.every(note => note.context === 'tavern conversation')).toBe(true);
+      expect(
+        results.every((note) => note.context === 'tavern conversation')
+      ).toBe(true);
     });
 
     test('should find notes by partial context match', () => {
@@ -113,7 +123,11 @@ describe('NotesQueryService', () => {
     });
 
     test('should find notes with all required tags', () => {
-      const results = service.queryByTags(sampleNotes, ['emotion', 'politics'], { requireAll: true });
+      const results = service.queryByTags(
+        sampleNotes,
+        ['emotion', 'politics'],
+        { requireAll: true }
+      );
       expect(results).toHaveLength(1);
       expect(results[0].tags).toContain('emotion');
       expect(results[0].tags).toContain('politics');
@@ -144,18 +158,26 @@ describe('NotesQueryService', () => {
     });
 
     test('should search in subject when enabled', () => {
-      const results = service.queryByText(sampleNotes, 'Sarah', { searchSubject: true });
+      const results = service.queryByText(sampleNotes, 'Sarah', {
+        searchSubject: true,
+      });
       expect(results).toHaveLength(2); // One in text, one in subject
     });
 
     test('should search in context when enabled', () => {
-      const results = service.queryByText(sampleNotes, 'patrol', { searchContext: true });
+      const results = service.queryByText(sampleNotes, 'patrol', {
+        searchContext: true,
+      });
       expect(results).toHaveLength(1);
       expect(results[0].context).toContain('patrol');
     });
 
     test('should perform exact match when specified', () => {
-      const results = service.queryByText(sampleNotes, 'Legacy note without structure', { exact: true });
+      const results = service.queryByText(
+        sampleNotes,
+        'Legacy note without structure',
+        { exact: true }
+      );
       expect(results).toHaveLength(1);
     });
 
@@ -213,17 +235,21 @@ describe('NotesQueryService', () => {
     test('should combine multiple criteria', () => {
       const results = service.query(sampleNotes, {
         subject: 'John',
-        context: 'tavern'
+        context: 'tavern',
       });
       expect(results).toHaveLength(2);
-      expect(results.every(note => note.subject === 'John' && note.context.includes('tavern'))).toBe(true);
+      expect(
+        results.every(
+          (note) => note.subject === 'John' && note.context.includes('tavern')
+        )
+      ).toBe(true);
     });
 
     test('should apply all filters in sequence', () => {
       const results = service.query(sampleNotes, {
         tags: 'emotion',
         startDate: '2024-01-15T09:00:00Z',
-        endDate: '2024-01-15T11:00:00Z'
+        endDate: '2024-01-15T11:00:00Z',
       });
       expect(results).toHaveLength(1);
       expect(results[0].tags).toContain('emotion');
@@ -235,8 +261,8 @@ describe('NotesQueryService', () => {
         tags: ['emotion', 'politics'],
         options: {
           subject: { exact: false },
-          tags: { requireAll: true }
-        }
+          tags: { requireAll: true },
+        },
       });
       expect(results).toHaveLength(1);
     });
@@ -262,7 +288,15 @@ describe('NotesQueryService', () => {
   describe('getAllTags', () => {
     test('should return sorted unique tags', () => {
       const tags = service.getAllTags(sampleNotes);
-      expect(tags).toEqual(['combat', 'emotion', 'location', 'observation', 'politics', 'preparation', 'relationship']);
+      expect(tags).toEqual([
+        'combat',
+        'emotion',
+        'location',
+        'observation',
+        'politics',
+        'preparation',
+        'relationship',
+      ]);
     });
 
     test('should handle notes without tags', () => {
@@ -274,38 +308,42 @@ describe('NotesQueryService', () => {
   describe('getAllContexts', () => {
     test('should return sorted unique contexts', () => {
       const contexts = service.getAllContexts(sampleNotes);
-      expect(contexts).toEqual(['morning patrol', 'tavern conversation', 'training grounds']);
+      expect(contexts).toEqual([
+        'morning patrol',
+        'tavern conversation',
+        'training grounds',
+      ]);
     });
   });
 
   describe('getStatistics', () => {
     test('should calculate correct statistics', () => {
       const stats = service.getStatistics(sampleNotes);
-      
+
       expect(stats.total).toBe(5);
       expect(stats.structured).toBe(4);
       expect(stats.legacy).toBe(1);
-      
+
       expect(stats.bySubject).toEqual({
-        'John': 2,
-        'Sarah': 1,
-        'Market': 1
+        John: 2,
+        Sarah: 1,
+        Market: 1,
       });
-      
+
       expect(stats.byTag).toEqual({
-        'emotion': 1,
-        'politics': 1,
-        'combat': 1,
-        'preparation': 1,
-        'location': 1,
-        'observation': 1,
-        'relationship': 1
+        emotion: 1,
+        politics: 1,
+        combat: 1,
+        preparation: 1,
+        location: 1,
+        observation: 1,
+        relationship: 1,
       });
-      
+
       expect(stats.byContext).toEqual({
         'tavern conversation': 2,
         'training grounds': 1,
-        'morning patrol': 1
+        'morning patrol': 1,
       });
     });
 

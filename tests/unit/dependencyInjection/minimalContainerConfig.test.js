@@ -7,9 +7,7 @@ import {
   jest,
 } from '@jest/globals';
 import AppContainer from '../../../src/dependencyInjection/appContainer.js';
-import {
-  configureMinimalContainer,
-} from '../../../src/dependencyInjection/minimalContainerConfig.js';
+import { configureMinimalContainer } from '../../../src/dependencyInjection/minimalContainerConfig.js';
 import { loadAndApplyLoggerConfig } from '../../../src/configuration/utils/loggerConfigUtils.js';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import ConsoleLogger, { LogLevel } from '../../../src/logging/consoleLogger.js';
@@ -128,9 +126,14 @@ describe('minimalContainerConfig logger handling', () => {
     const logger = new ConsoleLogger(LogLevel.INFO);
     container.register(tokens.ILogger, logger);
     container.register(tokens.ISafeEventDispatcher, { dispatch: jest.fn() });
-    
+
     loadConfigSpy.mockRejectedValue(new Error('network'));
-    await loadAndApplyLoggerConfig(container, logger, tokens, 'MinimalContainerConfig');
+    await loadAndApplyLoggerConfig(
+      container,
+      logger,
+      tokens,
+      'MinimalContainerConfig'
+    );
     expect(errorSpy).toHaveBeenCalledWith(
       expect.stringContaining('CRITICAL ERROR'),
       expect.any(Object)

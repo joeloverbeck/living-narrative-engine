@@ -21,7 +21,7 @@ describe('loggerConfigUtils', () => {
 
     beforeEach(() => {
       jest.clearAllMocks();
-      
+
       logger = mockLogger();
       mockEventDispatcher = { dispatch: jest.fn() };
       mockTokens = { ISafeEventDispatcher: Symbol('ISafeEventDispatcher') };
@@ -58,13 +58,20 @@ describe('loggerConfigUtils', () => {
         logLevel: 'INFO',
       });
 
-      await loadAndApplyLoggerConfig(mockContainer, logger, mockTokens, 'CustomPrefix');
+      await loadAndApplyLoggerConfig(
+        mockContainer,
+        logger,
+        mockTokens,
+        'CustomPrefix'
+      );
 
       expect(logger.debug).toHaveBeenCalledWith(
         '[CustomPrefix] Starting asynchronous load of logger configuration...'
       );
       expect(logger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('[CustomPrefix] Logger configuration loaded successfully')
+        expect.stringContaining(
+          '[CustomPrefix] Logger configuration loaded successfully'
+        )
       );
     });
 
@@ -77,7 +84,7 @@ describe('loggerConfigUtils', () => {
 
       expect(logger.setLogLevel).not.toHaveBeenCalled();
       expect(logger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('logLevel\' is not a string')
+        expect.stringContaining("logLevel' is not a string")
       );
     });
 

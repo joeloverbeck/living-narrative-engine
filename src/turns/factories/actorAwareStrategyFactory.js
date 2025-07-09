@@ -140,7 +140,7 @@ export class ActorAwareStrategyFactory extends ITurnStrategyFactory {
         hasActor: !!actor,
         hasComponents: !!actor?.components,
         playerTypeComponent: actor?.components?.['core:player_type'],
-        componentKeys: actor?.components ? Object.keys(actor.components) : []
+        componentKeys: actor?.components ? Object.keys(actor.components) : [],
       }
     );
     const type = this.#providerResolver(actor);

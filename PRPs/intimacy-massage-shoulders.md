@@ -91,9 +91,7 @@ Following the pattern from `fondle_breasts.action.json`:
   "description": "Gently massage the target's shoulders.",
   "scope": "intimacy:actors_with_arms_in_intimacy",
   "required_components": {
-    "actor": [
-      "intimacy:closeness"
-    ]
+    "actor": ["intimacy:closeness"]
   },
   "template": "massage {target}'s shoulders",
   "prerequisites": []
@@ -129,7 +127,9 @@ Following the pattern from `handle_fondle_breasts.rule.json`:
   "rule_id": "handle_massage_shoulders",
   "comment": "Handles the 'intimacy:massage_shoulders' action. Dispatches descriptive text and ends the turn.",
   "event_type": "core:attempt_action",
-  "condition": { "condition_ref": "intimacy:event-is-action-massage-shoulders" },
+  "condition": {
+    "condition_ref": "intimacy:event-is-action-massage-shoulders"
+  },
   "actions": [
     {
       "type": "GET_NAME",
@@ -189,15 +189,19 @@ The test follows the pattern from `fondle_breasts_action.test.js`, creating enti
 ## Critical Context for AI Implementation
 
 ### Body Part Structure
+
 The Living Narrative Engine uses an anatomy system where body parts are separate entities linked through `anatomy:part` components. When creating test entities:
+
 1. Create a main entity with `anatomy:body` component pointing to root part
 2. Create body part entities with `anatomy:part` components
 3. Arms have `subType: "arm"` in their `anatomy:part` component
 
 ### hasPartOfType Operator
+
 The custom JSON Logic operator `hasPartOfType` is implemented in `/src/logic/jsonLogicCustomOperators.js`. It checks if an entity has body parts of a specific type by traversing the anatomy tree.
 
 ### Integration with Existing System
+
 - Actions must be registered in the mod manifest
 - Scopes are automatically namespaced by mod (e.g., `actors_with_arms_in_intimacy` becomes `intimacy:actors_with_arms_in_intimacy`)
 - The `core:logSuccessAndEndTurn` macro handles standard action completion

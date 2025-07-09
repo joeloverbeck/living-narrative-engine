@@ -341,15 +341,19 @@ This distinction allows the engine to optimize different types of operations app
 ### Common Syntax Errors
 
 **❌ INCORRECT: Missing iterator for entities() filter**
+
 ```
 entities(core:position)[{"==": [{"var": "entity.id"}, "test"]}]
 ```
+
 This syntax is missing the iterator `[]` between `entities()` and the filter. This can cause resolution errors.
 
 **✅ CORRECT: Include iterator before filter**
+
 ```
 entities(core:position)[][{"==": [{"var": "entity.id"}, "test"]}]
 ```
+
 The correct pattern is: `entities(component)[]` for iteration, then `[filter]` for filtering.
 
 ### Best Practices
@@ -371,6 +375,7 @@ The correct pattern is: `entities(component)[]` for iteration, then `[filter]` f
 ### Debugging Tips
 
 If you encounter "actorEntity has invalid ID" errors:
+
 1. Check your scope syntax - ensure you're using the correct `entities()[][filter]` pattern
 2. Verify that the actor entity is properly initialized with a valid string ID
 3. Check that context is properly propagated through the resolution chain
@@ -378,7 +383,9 @@ If you encounter "actorEntity has invalid ID" errors:
 ### Migration Guide
 
 If you have existing scopes with the pattern `entities(component)[filter]`, update them to:
+
 ```
 entities(component)[][filter]
 ```
+
 This ensures compatibility with the scope resolution engine and prevents context propagation errors.

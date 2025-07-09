@@ -275,4 +275,5 @@ describe('Follow Action Target Resolution - Invalid Entity ID Fix', () => {
         mockLocationProvider
       );
     }).toThrow('createEvaluationContext: actorEntity has invalid ID');
-  });});
+  });
+});

@@ -242,4 +242,3 @@ describe('sex:fondle_breasts action integration', () => {
     expect(types).toContain('core:perceptible_event');
   });
 });
-

@@ -94,11 +94,15 @@ describe('anatomy-visualizer initialization', () => {
       includeAnatomyFormatting: true,
       postInitHook: expect.any(Function),
     });
-    
+
     expect(mockUIInitialize).toHaveBeenCalled();
-    expect(loggerMock.info).toHaveBeenCalledWith('Anatomy Visualizer: Initializing UI...');
-    expect(loggerMock.info).toHaveBeenCalledWith('Anatomy Visualizer: Initialization complete');
-    
+    expect(loggerMock.info).toHaveBeenCalledWith(
+      'Anatomy Visualizer: Initializing UI...'
+    );
+    expect(loggerMock.info).toHaveBeenCalledWith(
+      'Anatomy Visualizer: Initialization complete'
+    );
+
     const backButton = document.getElementById('back-button');
     expect(backButton).not.toBeNull();
   });

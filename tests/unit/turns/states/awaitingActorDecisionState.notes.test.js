@@ -44,7 +44,10 @@ describe('AwaitingActorDecisionState - notes format handling', () => {
     state = new AwaitingActorDecisionState({ getLogger: () => logger });
 
     // Spy on safeDispatchEvent to capture the actual payload
-    safeDispatchEventSpy = jest.spyOn(safeDispatchEventModule, 'safeDispatchEvent');
+    safeDispatchEventSpy = jest.spyOn(
+      safeDispatchEventModule,
+      'safeDispatchEvent'
+    );
   });
 
   afterEach(() => {

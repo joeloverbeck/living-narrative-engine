@@ -6,7 +6,8 @@
  * Waits for all promises to resolve
  * @returns {Promise<void>}
  */
-export const flushPromises = () => new Promise(resolve => setImmediate(resolve));
+export const flushPromises = () =>
+  new Promise((resolve) => setImmediate(resolve));
 
 /**
  * Creates a test environment with common setup
@@ -15,12 +16,12 @@ export const flushPromises = () => new Promise(resolve => setImmediate(resolve))
 export const createTestEnvironment = () => {
   // Save original environment variables
   const originalEnv = { ...process.env };
-  
+
   // Reset function to restore original environment
   const reset = () => {
     process.env = originalEnv;
   };
-  
+
   return {
     originalEnv,
     reset,
@@ -33,14 +34,18 @@ export const createTestEnvironment = () => {
  * @param {number} expectedStatus - Expected status code
  * @param {string} expectedStage - Expected error stage
  */
-export const assertErrorResponse = (response, expectedStatus, expectedStage) => {
+export const assertErrorResponse = (
+  response,
+  expectedStatus,
+  expectedStage
+) => {
   expect(response.statusCode).toBe(expectedStatus);
   expect(response.body).toMatchObject({
     error: true,
     message: expect.any(String),
     originalStatusCode: expectedStatus,
   });
-  
+
   if (expectedStage) {
     expect(response.body.stage).toBe(expectedStage);
   }
@@ -62,7 +67,7 @@ export const assertSuccessResponse = (response, expectedStatus = 200) => {
  * @param {number} ms - Milliseconds to delay
  * @returns {Promise<void>}
  */
-export const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+export const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /**
  * Suppresses console output during tests
@@ -75,12 +80,12 @@ export const suppressConsole = () => {
     error: console.error,
     debug: console.debug,
   };
-  
+
   console.log = jest.fn();
   console.warn = jest.fn();
   console.error = jest.fn();
   console.debug = jest.fn();
-  
+
   return {
     restore: () => {
       console.log = originalConsole.log;
@@ -97,7 +102,8 @@ export const suppressConsole = () => {
  * @returns {string} Random string
  */
 export const generateRandomString = (length = 10) => {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  const chars =
+    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   let result = '';
   for (let i = 0; i < length; i++) {
     result += chars.charAt(Math.floor(Math.random() * chars.length));

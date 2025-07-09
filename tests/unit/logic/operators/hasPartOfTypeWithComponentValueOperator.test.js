@@ -31,8 +31,11 @@ describe('HasPartOfTypeWithComponentValueOperator', () => {
         .mockReturnValueOnce(bodyComponent) // For body component
         .mockReturnValueOnce({ build: 'muscular' }) // For leg1 component
         .mockReturnValueOnce({ build: 'thin' }); // For leg2 component
-      
-      mockDependencies.bodyGraphService.findPartsByType.mockReturnValue(['leg1', 'leg2']);
+
+      mockDependencies.bodyGraphService.findPartsByType.mockReturnValue([
+        'leg1',
+        'leg2',
+      ]);
       mockContext.actor = { id: 'actor123' };
 
       const result = operator.evaluate(
@@ -40,19 +43,18 @@ describe('HasPartOfTypeWithComponentValueOperator', () => {
         mockContext
       );
 
-      expect(mockDependencies.entityManager.getComponentData).toHaveBeenCalledWith(
-        'actor123',
-        'anatomy:body'
-      );
-      expect(mockDependencies.bodyGraphService.buildAdjacencyCache).toHaveBeenCalledWith('root123');
-      expect(mockDependencies.bodyGraphService.findPartsByType).toHaveBeenCalledWith(
-        'root123',
-        'leg'
-      );
-      expect(mockDependencies.entityManager.getComponentData).toHaveBeenCalledWith(
-        'leg1',
-        'descriptors:build'
-      );
+      expect(
+        mockDependencies.entityManager.getComponentData
+      ).toHaveBeenCalledWith('actor123', 'anatomy:body');
+      expect(
+        mockDependencies.bodyGraphService.buildAdjacencyCache
+      ).toHaveBeenCalledWith('root123');
+      expect(
+        mockDependencies.bodyGraphService.findPartsByType
+      ).toHaveBeenCalledWith('root123', 'leg');
+      expect(
+        mockDependencies.entityManager.getComponentData
+      ).toHaveBeenCalledWith('leg1', 'descriptors:build');
       expect(mockDependencies.logger.debug).toHaveBeenCalledWith(
         'hasPartOfTypeWithComponentValue(actor123, leg, descriptors:build, build, muscular) = true (found in part leg1)'
       );
@@ -65,8 +67,11 @@ describe('HasPartOfTypeWithComponentValueOperator', () => {
         .mockReturnValueOnce(bodyComponent)
         .mockReturnValueOnce({ build: 'thin' })
         .mockReturnValueOnce({ build: 'average' });
-      
-      mockDependencies.bodyGraphService.findPartsByType.mockReturnValue(['arm1', 'arm2']);
+
+      mockDependencies.bodyGraphService.findPartsByType.mockReturnValue([
+        'arm1',
+        'arm2',
+      ]);
       mockContext.target = { id: 'target789' };
 
       const result = operator.evaluate(
@@ -85,8 +90,10 @@ describe('HasPartOfTypeWithComponentValueOperator', () => {
       mockDependencies.entityManager.getComponentData
         .mockReturnValueOnce(bodyComponent)
         .mockReturnValueOnce({ status: { health: 'damaged' } });
-      
-      mockDependencies.bodyGraphService.findPartsByType.mockReturnValue(['part1']);
+
+      mockDependencies.bodyGraphService.findPartsByType.mockReturnValue([
+        'part1',
+      ]);
       mockContext.actor = { id: 'actor123' };
 
       const result = operator.evaluate(
@@ -99,7 +106,9 @@ describe('HasPartOfTypeWithComponentValueOperator', () => {
 
     it('should return false when no parts of type exist', () => {
       const bodyComponent = { root: 'root123' };
-      mockDependencies.entityManager.getComponentData.mockReturnValue(bodyComponent);
+      mockDependencies.entityManager.getComponentData.mockReturnValue(
+        bodyComponent
+      );
       mockDependencies.bodyGraphService.findPartsByType.mockReturnValue([]);
       mockContext.actor = { id: 'actor123' };
 
@@ -120,8 +129,11 @@ describe('HasPartOfTypeWithComponentValueOperator', () => {
         .mockReturnValueOnce(bodyComponent)
         .mockReturnValueOnce(null) // Part has no component
         .mockReturnValueOnce({ color: 'red' }); // Second part has component
-      
-      mockDependencies.bodyGraphService.findPartsByType.mockReturnValue(['part1', 'part2']);
+
+      mockDependencies.bodyGraphService.findPartsByType.mockReturnValue([
+        'part1',
+        'part2',
+      ]);
       mockContext.actor = { id: 'actor123' };
 
       const result = operator.evaluate(
