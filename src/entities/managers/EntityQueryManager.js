@@ -182,10 +182,6 @@ export default class EntityQueryManager {
       }
     }
 
-    this.#logger.debug(
-      `EntityQueryManager.getEntitiesWithComponent: Found ${results.length} entities with component '${componentTypeId}'`
-    );
-
     return results;
   }
 

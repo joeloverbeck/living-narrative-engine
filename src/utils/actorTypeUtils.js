@@ -15,14 +15,31 @@
  */
 export function determineActorType(actor) {
   // Check new player_type component first
-  if (actor?.components?.['core:player_type']) {
-    const playerType = actor.components['core:player_type'].type;
+  // Support both Entity instances (with getComponentData) and plain objects
+  let playerTypeComponent;
+  
+  if (actor?.getComponentData && typeof actor.getComponentData === 'function') {
+    playerTypeComponent = actor.getComponentData('core:player_type');
+  } else if (actor?.components?.['core:player_type']) {
+    playerTypeComponent = actor.components['core:player_type'];
+  }
+  
+  if (playerTypeComponent) {
+    const playerType = playerTypeComponent.type;
     // For backward compatibility, map non-human types to 'ai'
     return playerType === 'human' ? 'human' : 'ai';
   }
 
   // Legacy check for core:player component
-  if (actor?.components?.['core:player']) {
+  let playerComponent;
+  
+  if (actor?.getComponentData && typeof actor.getComponentData === 'function') {
+    playerComponent = actor.getComponentData('core:player');
+  } else if (actor?.components?.['core:player']) {
+    playerComponent = actor.components['core:player'];
+  }
+  
+  if (playerComponent) {
     return 'human';
   }
 
@@ -41,17 +58,42 @@ export function determineActorType(actor) {
  */
 export function determineSpecificPlayerType(actor) {
   // Check new player_type component first
-  if (actor?.components?.['core:player_type']) {
-    return actor.components['core:player_type'].type;
+  // Support both Entity instances (with getComponentData) and plain objects
+  let playerTypeComponent;
+  
+  if (actor?.getComponentData && typeof actor.getComponentData === 'function') {
+    playerTypeComponent = actor.getComponentData('core:player_type');
+  } else if (actor?.components?.['core:player_type']) {
+    playerTypeComponent = actor.components['core:player_type'];
+  }
+  
+  if (playerTypeComponent) {
+    return playerTypeComponent.type;
   }
 
   // Check AI type from legacy ai component
-  if (actor?.components?.ai?.type) {
-    return actor.components.ai.type.toLowerCase();
+  let aiComponent;
+  
+  if (actor?.getComponentData && typeof actor.getComponentData === 'function') {
+    aiComponent = actor.getComponentData('ai');
+  } else if (actor?.components?.ai) {
+    aiComponent = actor.components.ai;
+  }
+  
+  if (aiComponent?.type) {
+    return aiComponent.type.toLowerCase();
   }
 
   // Legacy checks
-  if (actor?.components?.['core:player']) {
+  let playerComponent;
+  
+  if (actor?.getComponentData && typeof actor.getComponentData === 'function') {
+    playerComponent = actor.getComponentData('core:player');
+  } else if (actor?.components?.['core:player']) {
+    playerComponent = actor.components['core:player'];
+  }
+  
+  if (playerComponent) {
     return 'human';
   }
 

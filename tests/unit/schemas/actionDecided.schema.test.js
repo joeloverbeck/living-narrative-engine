@@ -71,6 +71,59 @@ describe('Schema – core:action_decided payload', () => {
     expect(validate(payload)).toBe(true);
   });
 
+  test('✓ should validate with object format notes', () => {
+    const payload = {
+      actorId: 'player-1',
+      actorType: 'ai',
+      extractedData: {
+        thoughts: 'Analyzing the situation.',
+        notes: [
+          {
+            text: 'Player seems nervous',
+            subject: 'player-1',
+            context: 'dialogue interaction',
+            tags: ['behavior', 'observation'],
+          },
+        ],
+      },
+    };
+    expect(validate(payload)).toBe(true);
+  });
+
+  test('✓ should validate with mixed string and object format notes', () => {
+    const payload = {
+      actorId: 'player-1',
+      actorType: 'ai',
+      extractedData: {
+        thoughts: 'Mixed format test.',
+        notes: [
+          'Simple string note',
+          {
+            text: 'Structured note',
+            subject: 'test-subject',
+          },
+        ],
+      },
+    };
+    expect(validate(payload)).toBe(true);
+  });
+
+  test('✓ should validate object notes without optional fields', () => {
+    const payload = {
+      actorId: 'player-1',
+      actorType: 'ai',
+      extractedData: {
+        notes: [
+          {
+            text: 'Minimal note',
+            subject: 'something',
+          },
+        ],
+      },
+    };
+    expect(validate(payload)).toBe(true);
+  });
+
   /* ── INVALID CASES ────────────────────────────────────────────────────── */
 
   test('✗ should NOT validate when thoughts is null', () => {
@@ -163,5 +216,68 @@ describe('Schema – core:action_decided payload', () => {
         }),
       ])
     );
+  });
+
+  test('✗ should NOT validate object notes without required text field', () => {
+    const payload = {
+      actorId: 'player-1',
+      actorType: 'ai',
+      extractedData: {
+        notes: [
+          {
+            subject: 'missing-text',
+          },
+        ],
+      },
+    };
+    expect(validate(payload)).toBe(false);
+  });
+
+  test('✗ should NOT validate object notes without required subject field', () => {
+    const payload = {
+      actorId: 'player-1',
+      actorType: 'ai',
+      extractedData: {
+        notes: [
+          {
+            text: 'missing subject',
+          },
+        ],
+      },
+    };
+    expect(validate(payload)).toBe(false);
+  });
+
+  test('✗ should NOT validate object notes with empty text', () => {
+    const payload = {
+      actorId: 'player-1',
+      actorType: 'ai',
+      extractedData: {
+        notes: [
+          {
+            text: '',
+            subject: 'test',
+          },
+        ],
+      },
+    };
+    expect(validate(payload)).toBe(false);
+  });
+
+  test('✗ should NOT validate object notes with additional properties', () => {
+    const payload = {
+      actorId: 'player-1',
+      actorType: 'ai',
+      extractedData: {
+        notes: [
+          {
+            text: 'note text',
+            subject: 'test',
+            invalidProp: 'not allowed',
+          },
+        ],
+      },
+    };
+    expect(validate(payload)).toBe(false);
   });
 });

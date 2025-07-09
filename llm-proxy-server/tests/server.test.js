@@ -166,13 +166,14 @@ describe('server initialization', () => {
 
   test('llm request route wired to controller', async () => {
     await loadServer();
-    expect(app.post).toHaveBeenCalledWith(
-      '/api/llm-request',
-      expect.any(Function)
-    );
-    const handler = app.post.mock.calls.find(
+    // The route now has multiple middleware, so we check for the path and at least one function
+    const postCall = app.post.mock.calls.find(
       (c) => c[0] === '/api/llm-request'
-    )[1];
+    );
+    expect(postCall).toBeDefined();
+    expect(postCall[0]).toBe('/api/llm-request');
+    // The last argument should be the controller handler
+    const handler = postCall[postCall.length - 1];
     const req = {};
     const res = {};
     handler(req, res);
