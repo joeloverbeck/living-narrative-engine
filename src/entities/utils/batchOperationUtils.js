@@ -5,6 +5,7 @@
 
 import { validateBatchSize } from './configUtils.js';
 import { InvalidArgumentError } from '../../errors/invalidArgumentError.js';
+import process from 'process';
 
 /**
  * @typedef {object} BatchProcessingOptions
@@ -65,9 +66,9 @@ export async function processBatch(items, processor, options = {}) {
   // Process in batches
   for (let i = 0; i < items.length; i += batchSize) {
     const batch = items.slice(i, i + batchSize);
-    
+
     try {
-      const batchResult = enableParallel 
+      const batchResult = enableParallel
         ? await processParallelBatch(batch, processor, maxConcurrency)
         : await processSequentialBatch(batch, processor);
 
@@ -96,7 +97,7 @@ export async function processBatch(items, processor, options = {}) {
       if (stopOnError) {
         throw error;
       }
-      
+
       // Mark entire batch as failed
       for (const item of batch) {
         result.failures.push({ item, error });
@@ -129,7 +130,7 @@ export async function processSequentialBatch(batch, processor) {
 
   for (const item of batch) {
     result.totalProcessed++;
-    
+
     try {
       const processResult = await processor(item);
       result.successes.push(processResult);
@@ -151,7 +152,11 @@ export async function processSequentialBatch(batch, processor) {
  * @param {number} maxConcurrency - Maximum concurrent operations
  * @returns {Promise<BatchResult>} Processing results
  */
-export async function processParallelBatch(batch, processor, maxConcurrency = 5) {
+export async function processParallelBatch(
+  batch,
+  processor,
+  maxConcurrency = 5
+) {
   const result = {
     successes: [],
     failures: [],
@@ -162,7 +167,11 @@ export async function processParallelBatch(batch, processor, maxConcurrency = 5)
   };
 
   // Process with concurrency control
-  const results = await processWithConcurrency(batch, processor, maxConcurrency);
+  const results = await processWithConcurrency(
+    batch,
+    processor,
+    maxConcurrency
+  );
 
   for (const itemResult of results) {
     if (itemResult.success) {
@@ -191,8 +200,8 @@ export async function processWithConcurrency(items, processor, maxConcurrency) {
 
   for (const item of items) {
     const promise = processor(item)
-      .then(result => ({ success: true, result, item }))
-      .catch(error => ({ success: false, error, item }));
+      .then((result) => ({ success: true, result, item }))
+      .catch((error) => ({ success: false, error, item }));
 
     results.push(promise);
 
@@ -202,7 +211,10 @@ export async function processWithConcurrency(items, processor, maxConcurrency) {
 
     if (executing.length >= maxConcurrency) {
       await Promise.race(executing);
-      executing.splice(executing.findIndex(p => p === promise), 1);
+      executing.splice(
+        executing.findIndex((p) => p === promise),
+        1
+      );
     }
   }
 
@@ -248,12 +260,20 @@ export function validateBatchProcessingOptions(options) {
   }
 
   if (options.maxConcurrency !== undefined) {
-    if (typeof options.maxConcurrency !== 'number' || options.maxConcurrency <= 0) {
-      throw new InvalidArgumentError('maxConcurrency must be a positive number');
+    if (
+      typeof options.maxConcurrency !== 'number' ||
+      options.maxConcurrency <= 0
+    ) {
+      throw new InvalidArgumentError(
+        'maxConcurrency must be a positive number'
+      );
     }
   }
 
-  if (options.onProgress !== undefined && typeof options.onProgress !== 'function') {
+  if (
+    options.onProgress !== undefined &&
+    typeof options.onProgress !== 'function'
+  ) {
     throw new InvalidArgumentError('onProgress must be a function');
   }
 }
@@ -328,11 +348,11 @@ export async function retryFailedBatch(failures, processor, options = {}) {
   };
 
   while (currentFailures.length > 0 && totalRetries < maxRetries) {
-    const retryItems = currentFailures.map(failure => failure.item);
-    
+    const retryItems = currentFailures.map((failure) => failure.item);
+
     // Wait before retrying
     if (retryDelay > 0) {
-      await new Promise(resolve => setTimeout(resolve, retryDelay));
+      await new Promise((resolve) => setTimeout(resolve, retryDelay));
     }
 
     const retryResult = await processBatch(retryItems, processor, {
@@ -391,5 +411,4 @@ export function validateBatchItems(items, validator) {
     validCount: validItems.length,
     invalidCount: invalidItems.length,
     totalCount: items.length,
-  };
-}
+  };}

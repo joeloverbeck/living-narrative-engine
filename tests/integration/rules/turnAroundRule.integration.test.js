@@ -2,7 +2,14 @@
  * @file Integration tests for the intimacy:turn_around rule.
  */
 
-import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  expect,
+  jest,
+} from '@jest/globals';
 import turnAroundRule from '../../../data/mods/intimacy/rules/turn_around.rule.json';
 import eventIsActionTurnAround from '../../../data/mods/intimacy/conditions/event-is-action-turn-around.condition.json';
 import logSuccessMacro from '../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
@@ -145,23 +152,23 @@ describe('intimacy_handle_turn_around rule integration', () => {
       // Check basic events first to ensure action triggered
       const types = testEnv.events.map((e) => e.eventType);
       expect(types).toContain('core:turn_ended');
-      
+
       // Check that facing_away component was created
       const target = testEnv.entityManager.getEntityInstance('target1');
-      if (target?.components['intimacy:facing_away']) {
-        expect(target.components['intimacy:facing_away'].facing_away_from).toContain('actor1');
-      }
+      expect(target?.components['intimacy:facing_away']).toBeDefined();
+      expect(
+        target.components['intimacy:facing_away'].facing_away_from
+      ).toContain('actor1');
 
       // Only check for events that should exist if rule worked
-      if (types.includes('intimacy:actor_turned_around')) {
-        const turnedAroundEvent = testEnv.events.find(
-          (e) => e.eventType === 'intimacy:actor_turned_around'
-        );
-        expect(turnedAroundEvent.payload).toEqual({
-          actor: 'target1',
-          turned_by: 'actor1',
-        });
-      }
+      expect(types).toContain('intimacy:actor_turned_around');
+      const turnedAroundEvent = testEnv.events.find(
+        (e) => e.eventType === 'intimacy:actor_turned_around'
+      );
+      expect(turnedAroundEvent.payload).toEqual({
+        actor: 'target1',
+        turned_by: 'actor1',
+      });
     });
   });
 
@@ -254,8 +261,12 @@ describe('intimacy_handle_turn_around rule integration', () => {
       // Check that only actor1 was removed
       const target = testEnv.entityManager.getEntityInstance('target1');
       expect(target.components['intimacy:facing_away']).toBeDefined();
-      expect(target.components['intimacy:facing_away'].facing_away_from).not.toContain('actor1');
-      expect(target.components['intimacy:facing_away'].facing_away_from).toContain('actor2');
+      expect(
+        target.components['intimacy:facing_away'].facing_away_from
+      ).not.toContain('actor1');
+      expect(
+        target.components['intimacy:facing_away'].facing_away_from
+      ).toContain('actor2');
     });
   });
 
@@ -297,9 +308,14 @@ describe('intimacy_handle_turn_around rule integration', () => {
 
       // Check that actor1 was added to existing array
       const target = testEnv.entityManager.getEntityInstance('target1');
-      expect(target.components['intimacy:facing_away'].facing_away_from).toContain('actor1');
-      expect(target.components['intimacy:facing_away'].facing_away_from).toContain('actor2');
-      expect(target.components['intimacy:facing_away'].facing_away_from).toHaveLength(2);
+      expect(
+        target.components['intimacy:facing_away'].facing_away_from
+      ).toContain('actor1');
+      expect(
+        target.components['intimacy:facing_away'].facing_away_from
+      ).toContain('actor2');
+      expect(
+        target.components['intimacy:facing_away'].facing_away_from
+      ).toHaveLength(2);
     });
-  });
-});
+  });});
