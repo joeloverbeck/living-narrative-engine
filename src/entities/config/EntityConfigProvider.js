@@ -219,13 +219,20 @@ export default class EntityConfigProvider {
     
     for (let i = 0; i < parts.length - 1; i++) {
       const part = parts[i];
+      if (part === '__proto__' || part === 'constructor') {
+        throw new Error(`Invalid configuration path: '${part}' is a reserved property name.`);
+      }
       if (!(part in current) || typeof current[part] !== 'object') {
         current[part] = {};
       }
       current = current[part];
     }
     
-    current[parts[parts.length - 1]] = value;
+    const lastPart = parts[parts.length - 1];
+    if (lastPart === '__proto__' || lastPart === 'constructor') {
+      throw new Error(`Invalid configuration path: '${lastPart}' is a reserved property name.`);
+    }
+    current[lastPart] = value;
     
     this.#logger.debug(`Configuration value set: ${path} = ${value}`);
   }
