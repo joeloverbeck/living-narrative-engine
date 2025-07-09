@@ -10,6 +10,8 @@
  */
 export class DuplicateEntityError extends Error {
   /**
+   * Create a new DuplicateEntityError instance.
+   *
    * @param {string} entityId - The ID of the entity that already exists.
    * @param {string} [message] - Optional custom error message.
    */

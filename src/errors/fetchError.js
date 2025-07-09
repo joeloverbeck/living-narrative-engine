@@ -10,6 +10,8 @@
  */
 export class FetchError extends Error {
   /**
+   * Create a new FetchError instance.
+   *
    * @param {string} message - Description of the fetch failure.
    * @param {string} [path] - Path or URL that failed to fetch.
    */
