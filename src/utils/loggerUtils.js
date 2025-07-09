@@ -8,19 +8,15 @@
  */
 
 /**
- * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
- */
-
-/**
  * Ensures that a valid logger object is available. If the provided logger is
  * missing or does not implement the expected methods, a console-based fallback
  * logger is returned. Optionally prefixes fallback log messages with a context
  * string for clarity.
  *
- * @param {ILogger | undefined | null} logger - The logger instance to validate.
+ * @param {(import("../interfaces/coreServices.js").ILogger | undefined | null)} logger - The logger instance to validate.
  * @param {string} [fallbackMessagePrefix] - Prefix for messages
  * logged by the fallback logger.
- * @returns {ILogger} A valid logger instance.
+ * @returns {import("../interfaces/coreServices.js").ILogger} A valid logger instance.
  */
 export function ensureValidLogger(
   logger,
@@ -37,11 +33,40 @@ export function ensureValidLogger(
   }
 
   const prefix = fallbackMessagePrefix ? `${fallbackMessagePrefix}: ` : '';
+  /** @type {import('../interfaces/coreServices.js').ILogger} */
   const fallback = {
-    info: (...args) => console.info(prefix, ...args),
-    warn: (...args) => console.warn(prefix, ...args),
-    error: (...args) => console.error(prefix, ...args),
-    debug: (...args) => console.debug(prefix, ...args),
+    /**
+     * @param {string} message
+     * @param {...any} args
+     * @returns {void}
+     */
+    info(message, ...args) {
+      console.info(prefix, message, ...args);
+    },
+    /**
+     * @param {string} message
+     * @param {...any} args
+     * @returns {void}
+     */
+    warn(message, ...args) {
+      console.warn(prefix, message, ...args);
+    },
+    /**
+     * @param {string} message
+     * @param {...any} args
+     * @returns {void}
+     */
+    error(message, ...args) {
+      console.error(prefix, message, ...args);
+    },
+    /**
+     * @param {string} message
+     * @param {...any} args
+     * @returns {void}
+     */
+    debug(message, ...args) {
+      console.debug(prefix, message, ...args);
+    },
   };
 
   if (logger) {
@@ -58,9 +83,9 @@ export function ensureValidLogger(
  * to the provided base logger. Useful for tagging log output with a service
  * identifier while keeping the original logger implementation.
  *
- * @param {ILogger} baseLogger - The logger to wrap.
+ * @param {import("../interfaces/coreServices.js").ILogger} baseLogger - The logger to wrap.
  * @param {string} prefix - Prefix to prepend to each logged message.
- * @returns {ILogger} Logger wrapper with prefixed output methods.
+ * @returns {import("../interfaces/coreServices.js").ILogger} Logger wrapper with prefixed output methods.
  */
 export function createPrefixedLogger(baseLogger, prefix) {
   const safePrefix = prefix || '';
@@ -79,9 +104,9 @@ export function createPrefixedLogger(baseLogger, prefix) {
  * @description Convenience wrapper that validates the provided logger and
  * returns a new logger that automatically prefixes all messages. Useful for
  * utilities that consistently tag their log output.
- * @param {ILogger | undefined | null} logger - Logger instance to validate.
+ * @param {(import("../interfaces/coreServices.js").ILogger | undefined | null)} logger - Logger instance to validate.
  * @param {string} prefix - The prefix applied to each log message.
- * @returns {ILogger} Logger instance that prepends `prefix` to each message.
+ * @returns {import("../interfaces/coreServices.js").ILogger} Logger instance that prepends `prefix` to each message.
  */
 export function getPrefixedLogger(logger, prefix) {
   const validLogger = ensureValidLogger(logger, prefix);
@@ -94,9 +119,9 @@ export function getPrefixedLogger(logger, prefix) {
  * prefix. This is a light-weight helper for service initialization where a
  * simple prefixed logger is sufficient.
  *
- * @param {ILogger | undefined | null} logger - Logger instance to validate.
+ * @param {(import("../interfaces/coreServices.js").ILogger | undefined | null)} logger - Logger instance to validate.
  * @param {string} prefix - Prefix to prepend to every log message.
- * @returns {ILogger} Logger instance that prefixes messages with `prefix`.
+ * @returns {import("../interfaces/coreServices.js").ILogger} Logger instance that prefixes messages with `prefix`.
  */
 export function setupPrefixedLogger(logger, prefix) {
   const name = (prefix || '').replace(/[:\s]+$/, '');
@@ -112,8 +137,8 @@ export function setupPrefixedLogger(logger, prefix) {
  * module name in square brackets. Falls back to the console when the base
  * logger is missing.
  * @param {string} moduleName - Name of the module using the logger.
- * @param {ILogger | undefined | null} logger - Optional logger instance.
- * @returns {ILogger} Logger instance that prefixes messages with `[moduleName]`.
+ * @param {(import("../interfaces/coreServices.js").ILogger | undefined | null)} logger - Optional logger instance.
+ * @returns {import("../interfaces/coreServices.js").ILogger} Logger instance that prefixes messages with `[moduleName]`.
  */
 export function getModuleLogger(moduleName, logger) {
   return getPrefixedLogger(logger, `[${moduleName}] `);
@@ -127,10 +152,10 @@ export function getModuleLogger(moduleName, logger) {
  * {@link ensureValidLogger}. When `optional` is true, missing loggers are
  * allowed and will result in a console-based fallback.
  * @param {string} serviceName - Name used for fallback prefix and error messages.
- * @param {ILogger | undefined | null} logger - Logger instance to validate.
+ * @param {(import("../interfaces/coreServices.js").ILogger | undefined | null)} logger - Logger instance to validate.
  * @param {object} [options] - Additional options.
  * @param {boolean} [options.optional] - Whether the logger is optional.
- * @returns {ILogger} A valid logger instance.
+ * @returns {import("../interfaces/coreServices.js").ILogger} A valid logger instance.
  */
 export function initLogger(serviceName, logger, { optional = false } = {}) {
   if (!optional || logger) {
@@ -158,7 +183,7 @@ export function initLogger(serviceName, logger, { optional = false } = {}) {
  * Logs a truncated preview of `data` at the debug level.
  * If `data` is not a string, it will be JSON stringified first.
  *
- * @param {ILogger} logger - Logger instance used to emit the preview.
+ * @param {import("../interfaces/coreServices.js").ILogger} logger - Logger instance used to emit the preview.
  * @param {string} label - Text to prepend to the preview message.
  * @param {any} data - The data to preview.
  * @param {number} [length] - Maximum number of characters to include.
@@ -175,7 +200,7 @@ export function logPreview(logger, label, data, length = 100) {
  *
  * @description Prepends a play emoji to the provided context string and logs
  * it at the debug level.
- * @param {ILogger} logger - Logger instance used to emit the message.
+ * @param {import("../interfaces/coreServices.js").ILogger} logger - Logger instance used to emit the message.
  * @param {string} context - Descriptive context for the log message.
  * @returns {void}
  */
@@ -188,7 +213,7 @@ export function logStart(logger, context) {
  *
  * @description Prepends a check mark emoji to the provided context string and
  * logs it at the debug level.
- * @param {ILogger} logger - Logger instance used to emit the message.
+ * @param {import("../interfaces/coreServices.js").ILogger} logger - Logger instance used to emit the message.
  * @param {string} context - Descriptive context for the log message.
  * @returns {void}
  */
@@ -202,7 +227,7 @@ export function logEnd(logger, context) {
  * @description Prepends a cross mark emoji to the provided context and appends
  * the error's message. The full error object is also passed to the logger for
  * stack traces.
- * @param {ILogger} logger - Logger instance used to emit the message.
+ * @param {import("../interfaces/coreServices.js").ILogger} logger - Logger instance used to emit the message.
  * @param {string} context - Descriptive context for the log message.
  * @param {Error} err - The error to log alongside the message.
  * @returns {void}
