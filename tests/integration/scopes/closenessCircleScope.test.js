@@ -2,7 +2,7 @@
  * @file Focused test for closeness circle scope resolution
  */
 
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import { describe, it, expect, beforeEach } from '@jest/globals';
 import ScopeEngine from '../../../src/scopeDsl/engine.js';
 import ScopeRegistry from '../../../src/scopeDsl/scopeRegistry.js';
 import { parseDslExpression } from '../../../src/scopeDsl/parser/parser.js';
