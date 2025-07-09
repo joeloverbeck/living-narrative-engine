@@ -88,16 +88,22 @@ class ActorDataExtractor extends IActorDataExtractor {
 
     // First, check if we have an anatomy-based description
     if (actorId && this.anatomyDescriptionService && this.entityFinder) {
-      const actorEntity = this.entityFinder.getEntityInstance(actorId);
-      if (actorEntity && actorEntity.components[ANATOMY_BODY_COMPONENT_ID]) {
-        // Try to get or generate anatomy description
-        const anatomyDescription =
-          this.anatomyDescriptionService.getOrGenerateBodyDescription(
-            actorEntity
-          );
-        if (anatomyDescription) {
-          baseDescription = anatomyDescription;
+      try {
+        const actorEntity = this.entityFinder.getEntityInstance(actorId);
+        if (actorEntity && actorEntity.hasComponent(ANATOMY_BODY_COMPONENT_ID)) {
+          // Try to get or generate anatomy description
+          const anatomyDescription =
+            this.anatomyDescriptionService.getOrGenerateBodyDescription(
+              actorEntity
+            );
+          if (anatomyDescription) {
+            baseDescription = anatomyDescription;
+          }
         }
+      } catch (error) {
+        // If there's an error accessing anatomy data, fall back to default
+        // This ensures the system remains stable even if entity API calls fail
+        console.warn('Failed to extract anatomy description:', error);
       }
     }
 

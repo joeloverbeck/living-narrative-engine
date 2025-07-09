@@ -3,8 +3,19 @@
 // Import necessary modules
 import express from 'express';
 import cors from 'cors';
+import compression from 'compression';
 
 import { getAppConfigService } from '../config/appConfig.js';
+
+// Import security middleware
+import { createSecurityMiddleware } from '../middleware/security.js';
+import { createApiRateLimiter, createLlmRateLimiter } from '../middleware/rateLimiting.js';
+import { 
+  validateLlmRequest, 
+  validateRequestHeaders, 
+  handleValidationErrors 
+} from '../middleware/validation.js';
+import { createTimeoutMiddleware, createSizeLimitConfig } from '../middleware/timeout.js';
 
 import { NodeFileSystemReader } from '../nodeFileSystemReader.js';
 import { ConsoleLogger } from '../consoleLogger.js';
@@ -33,6 +44,18 @@ const appConfigService = getAppConfigService(proxyLogger);
 // Initialize the Express application
 const app = express();
 
+// Apply security middleware
+app.use(createSecurityMiddleware());
+
+// Apply compression middleware
+app.use(compression());
+
+// Apply general rate limiting
+app.use(createApiRateLimiter());
+
+// Apply request timeout (30 seconds default)
+app.use(createTimeoutMiddleware(30000));
+
 // CORS Configuration - This initial log is now covered by the summary log.
 // const PROXY_ALLOWED_ORIGIN_CONFIG = appConfigService.getProxyAllowedOrigin();
 const allowedOriginsArray = appConfigService.getAllowedOriginsArray();
@@ -49,8 +72,9 @@ if (allowedOriginsArray.length > 0) {
   // proxyLogger.warn('LLM Proxy Server: PROXY_ALLOWED_ORIGIN environment variable not set or empty. CORS will not be specifically configured.'); // Removed, will be in summary
 }
 
-// Middleware to parse JSON bodies
-app.use(express.json());
+// Middleware to parse JSON bodies with size limits
+const sizeLimits = createSizeLimitConfig();
+app.use(express.json(sizeLimits.json));
 
 // Define the port for the server using AppConfigService
 const PORT = appConfigService.getProxyPort();
@@ -120,9 +144,13 @@ app.get('/', (req, res) => {
   res.status(200).send('LLM Proxy Server is running and operational!');
 });
 
-// Updated route to use LlmRequestController's handleLlmRequest method
-app.post('/api/llm-request', (req, res) =>
-  llmRequestController.handleLlmRequest(req, res)
+// Updated route to use LlmRequestController's handleLlmRequest method with validation and rate limiting
+app.post('/api/llm-request', 
+  createLlmRateLimiter(), // Stricter rate limiting for LLM requests
+  validateRequestHeaders(), // Validate headers
+  validateLlmRequest(), // Validate request body
+  handleValidationErrors, // Handle validation errors
+  (req, res) => llmRequestController.handleLlmRequest(req, res)
 );
 
 // Asynchronous IIFE for server startup
