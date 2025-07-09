@@ -11,6 +11,8 @@
  */
 export class EntityNotFoundError extends Error {
   /**
+   * Create a new EntityNotFoundError instance.
+   *
    * @param {string} instanceId - The ID of the instance that was not found.
    */
   constructor(instanceId) {
