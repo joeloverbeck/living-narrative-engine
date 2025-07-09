@@ -5,6 +5,7 @@
 
 import { validateBatchSize } from './configUtils.js';
 import { InvalidArgumentError } from '../../errors/invalidArgumentError.js';
+import process from 'process';
 
 /**
  * @typedef {object} BatchProcessingOptions

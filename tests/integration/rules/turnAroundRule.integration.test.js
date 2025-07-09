@@ -162,15 +162,14 @@ describe('intimacy_handle_turn_around rule integration', () => {
       }
 
       // Only check for events that should exist if rule worked
-      if (types.includes('intimacy:actor_turned_around')) {
-        const turnedAroundEvent = testEnv.events.find(
-          (e) => e.eventType === 'intimacy:actor_turned_around'
-        );
-        expect(turnedAroundEvent.payload).toEqual({
-          actor: 'target1',
-          turned_by: 'actor1',
-        });
-      }
+      expect(types).toContain('intimacy:actor_turned_around');
+      const turnedAroundEvent = testEnv.events.find(
+        (e) => e.eventType === 'intimacy:actor_turned_around'
+      );
+      expect(turnedAroundEvent.payload).toEqual({
+        actor: 'target1',
+        turned_by: 'actor1',
+      });
     });
   });
 
