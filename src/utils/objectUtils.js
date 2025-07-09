@@ -46,7 +46,8 @@ export function resolvePath(obj, propertyPath) {
     }
 
     if (Object.prototype.hasOwnProperty.call(current, part)) {
-      current = current[part];
+      const anyCurrent = /** @type {any} */ (current);
+      current = anyCurrent[part];
       if (current === undefined && i < pathParts.length - 1) {
         return undefined;
       }
@@ -90,9 +91,10 @@ export function safeResolvePath(
     const info = contextInfo ? ` (${contextInfo})` : '';
     const message = `Error resolving path "${propertyPath}"${info}`;
     if (dispatcher) {
+      const err = /** @type {any} */ (error);
       safeDispatchError(dispatcher, message, {
-        raw: error?.message || error,
-        stack: error?.stack,
+        raw: err?.message || err,
+        stack: err?.stack,
       });
     } else {
       moduleLogger.error(message, error);
