@@ -19,10 +19,12 @@
       "kiss_cheek.action.json",
       "massage_shoulders.action.json",
       "step_back.action.json",
-      "thumb_wipe_cheek.action.json"
+      "thumb_wipe_cheek.action.json",
+      "turn_around.action.json"
     ],
     "components": [
-      "closeness.component.json"
+      "closeness.component.json",
+      "facing_away.component.json"
     ],
     "conditions": [
       "actor-is-in-closeness.condition.json",
@@ -31,7 +33,8 @@
       "event-is-action-kiss-cheek.condition.json",
       "event-is-action-massage-shoulders.condition.json",
       "event-is-action-step-back.condition.json",
-      "event-is-action-thumb-wipe-cheek.condition.json"
+      "event-is-action-thumb-wipe-cheek.condition.json",
+      "event-is-action-turn-around.condition.json"
     ],
     "entities": {
       "definitions": [],
@@ -45,7 +48,8 @@
       "handle_massage_shoulders.rule.json",
       "kiss_cheek.rule.json",
       "step_back.rule.json",
-      "thumb_wipe_cheek.rule.json"
+      "thumb_wipe_cheek.rule.json",
+      "turn_around.rule.json"
     ],
     "ui": [
       "icons.json",

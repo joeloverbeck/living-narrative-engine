@@ -1,0 +1,8 @@
+{
+  "$schema": "http://example.com/schemas/condition.schema.json",
+  "id": "intimacy:event-is-action-turn-around",
+  "description": "Checks if the triggering event is for the 'intimacy:turn_around' action.",
+  "logic": {
+    "==": [{ "var": "event.payload.actionId" }, "intimacy:turn_around"]
+  }
+}
