@@ -4,13 +4,14 @@
  */
 
 /**
- * Executes a function and captures any thrown error.
+ * Result object returned by {@link safeExecute}.
  *
- * @param {() => any} fn - Function to execute.
- * @param {import('../interfaces/coreServices.js').ILogger} [logger] - Optional logger used for debug output.
- * @param {string} [context] - Context message for logging.
- * @returns {{success: boolean, result?: any, error?: any}} Execution result.
+ * @typedef {object} ExecutionResult
+ * @property {boolean} success Indicates whether the operation succeeded.
+ * @property {any} [result] Result value when successful.
+ * @property {any} [error] Error value when unsuccessful.
  */
+
 /**
  * Safely executes a synchronous or asynchronous function.
  *
@@ -21,23 +22,32 @@
  * @param {() => any | Promise<any>} fn - Function to execute.
  * @param {import('../interfaces/coreServices.js').ILogger} [logger] - Logger used for debug output.
  * @param {string} [context] - Context message for logging.
- * @returns
- *   | {success: true, result: any}
- *   | {success: false, error: any}
- *   | Promise<{success: true, result: any} | {success: false, error: any}>
+ * @returns {ExecutionResult | Promise<ExecutionResult>} Normalized result object.
  */
 export function safeExecute(fn, logger, context = 'safeExecute') {
   try {
     const maybePromise = fn();
     if (maybePromise && typeof maybePromise.then === 'function') {
       return maybePromise
-        .then((result) => ({ success: true, result }))
-        .catch((error) => {
-          if (logger && typeof logger.debug === 'function') {
-            logger.debug(`${context}: operation failed`, error);
+        .then(
+          /**
+           * @param {any} result
+           * @returns {ExecutionResult}
+           */
+          (result) => ({ success: true, result })
+        )
+        .catch(
+          /**
+           * @param {any} error
+           * @returns {ExecutionResult}
+           */
+          (error) => {
+            if (logger && typeof logger.debug === 'function') {
+              logger.debug(`${context}: operation failed`, error);
+            }
+            return { success: false, error };
           }
-          return { success: false, error };
-        });
+        );
     }
     return { success: true, result: maybePromise };
   } catch (error) {
