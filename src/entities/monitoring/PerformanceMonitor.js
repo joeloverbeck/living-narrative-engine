@@ -6,6 +6,7 @@
 import { validateDependency } from '../../utils/dependencyUtils.js';
 import { ensureValidLogger } from '../../utils/loggerUtils.js';
 import { getGlobalConfig, isConfigInitialized } from '../utils/configUtils.js';
+import process from 'node:process';
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 
@@ -56,6 +57,8 @@ export default class PerformanceMonitor {
   #memoryUsageWarnings;
 
   /**
+   * Creates a new PerformanceMonitor.
+   *
    * @class
    * @param {object} deps - Dependencies
    * @param {ILogger} deps.logger - Logger instance
@@ -63,11 +66,11 @@ export default class PerformanceMonitor {
    * @param {number} [deps.slowOperationThreshold] - Threshold for slow operations (ms)
    * @param {number} [deps.maxHistorySize] - Maximum history size
    */
-  constructor({ 
-    logger, 
-    enabled = true, 
-    slowOperationThreshold = 100, 
-    maxHistorySize = 1000 
+  constructor({
+    logger,
+    enabled = true,
+    slowOperationThreshold = 100,
+    maxHistorySize = 1000,
   }) {
     validateDependency(logger, 'ILogger', console, {
       requiredMethods: ['info', 'error', 'warn', 'debug'],
@@ -76,8 +79,11 @@ export default class PerformanceMonitor {
 
     // Apply configuration overrides if available
     const config = isConfigInitialized() ? getGlobalConfig() : null;
-    this.#enabled = config?.isFeatureEnabled('performance.ENABLE_MONITORING') ?? enabled;
-    this.#slowOperationThreshold = config?.getValue('performance.SLOW_OPERATION_THRESHOLD') ?? slowOperationThreshold;
+    this.#enabled =
+      config?.isFeatureEnabled('performance.ENABLE_MONITORING') ?? enabled;
+    this.#slowOperationThreshold =
+      config?.getValue('performance.SLOW_OPERATION_THRESHOLD') ??
+      slowOperationThreshold;
     this.#maxHistorySize = maxHistorySize;
 
     // Initialize tracking structures
@@ -115,9 +121,12 @@ export default class PerformanceMonitor {
     };
 
     this.#activeTimers.set(timerId, timer);
-    
-    this.#logger.debug(`Started timer for operation: ${operation}`, { timerId, context });
-    
+
+    this.#logger.debug(`Started timer for operation: ${operation}`, {
+      timerId,
+      context,
+    });
+
     return timerId;
   }
 
@@ -161,7 +170,7 @@ export default class PerformanceMonitor {
     }
 
     const timerId = this.startTimer(operation, context);
-    
+
     try {
       const result = await fn();
       this.stopTimer(timerId);
@@ -187,7 +196,7 @@ export default class PerformanceMonitor {
     }
 
     const timerId = this.startTimer(operation, context);
-    
+
     try {
       const result = fn();
       this.stopTimer(timerId);
@@ -212,20 +221,25 @@ export default class PerformanceMonitor {
     }
 
     // Update operation counts
-    this.#operationCounts[operation] = (this.#operationCounts[operation] || 0) + 1;
-    
+    this.#operationCounts[operation] =
+      (this.#operationCounts[operation] || 0) + 1;
+
     // Track operation times
     this.#operationTimes.push(duration);
-    
+
     // Check if it's a slow operation
     if (duration > this.#slowOperationThreshold) {
-      this.#slowOperationCounts[operation] = (this.#slowOperationCounts[operation] || 0) + 1;
-      this.#logger.warn(`Slow operation detected: ${operation} took ${duration.toFixed(2)}ms`, {
-        operation,
-        duration,
-        context,
-        threshold: this.#slowOperationThreshold,
-      });
+      this.#slowOperationCounts[operation] =
+        (this.#slowOperationCounts[operation] || 0) + 1;
+      this.#logger.warn(
+        `Slow operation detected: ${operation} took ${duration.toFixed(2)}ms`,
+        {
+          operation,
+          duration,
+          context,
+          threshold: this.#slowOperationThreshold,
+        }
+      );
     }
 
     // Add to history
@@ -241,11 +255,14 @@ export default class PerformanceMonitor {
       this.#operationHistory.shift();
     }
 
-    this.#logger.debug(`Recorded operation: ${operation} (${duration.toFixed(2)}ms)`, {
-      operation,
-      duration,
-      context,
-    });
+    this.#logger.debug(
+      `Recorded operation: ${operation} (${duration.toFixed(2)}ms)`,
+      {
+        operation,
+        duration,
+        context,
+      }
+    );
   }
 
   /**
@@ -259,14 +276,18 @@ export default class PerformanceMonitor {
     }
 
     const totalOperations = this.#operationTimes.length;
-    const slowOperations = Object.values(this.#slowOperationCounts).reduce((a, b) => a + b, 0);
-    
+    const slowOperations = Object.values(this.#slowOperationCounts).reduce(
+      (a, b) => a + b,
+      0
+    );
+
     let averageOperationTime = 0;
     let maxOperationTime = 0;
     let minOperationTime = Infinity;
 
     if (totalOperations > 0) {
-      averageOperationTime = this.#operationTimes.reduce((a, b) => a + b, 0) / totalOperations;
+      averageOperationTime =
+        this.#operationTimes.reduce((a, b) => a + b, 0) / totalOperations;
       maxOperationTime = Math.max(...this.#operationTimes);
       minOperationTime = Math.min(...this.#operationTimes);
     }
@@ -332,7 +353,7 @@ export default class PerformanceMonitor {
     }
 
     return this.#operationHistory
-      .filter(op => op.operation === operation)
+      .filter((op) => op.operation === operation)
       .slice(-limit)
       .sort((a, b) => b.timestamp - a.timestamp);
   }
@@ -349,7 +370,7 @@ export default class PerformanceMonitor {
     }
 
     return this.#operationHistory
-      .filter(op => op.duration > this.#slowOperationThreshold)
+      .filter((op) => op.duration > this.#slowOperationThreshold)
       .slice(-limit)
       .sort((a, b) => b.duration - a.duration);
   }
@@ -364,8 +385,9 @@ export default class PerformanceMonitor {
 
     const memoryUsage = process.memoryUsage();
     const config = isConfigInitialized() ? getGlobalConfig() : null;
-    const warningThreshold = config?.getValue('performance.MEMORY_WARNING_THRESHOLD') ?? 0.8;
-    
+    const warningThreshold =
+      config?.getValue('performance.MEMORY_WARNING_THRESHOLD') ?? 0.8;
+
     // Approximate memory limit (this is a simplified check)
     const memoryLimit = 1024 * 1024 * 1024; // 1GB as default
     const currentUsage = memoryUsage.heapUsed / memoryLimit;
@@ -402,7 +424,9 @@ export default class PerformanceMonitor {
    */
   setEnabled(enabled) {
     this.#enabled = enabled;
-    this.#logger.info(`Performance monitoring ${enabled ? 'enabled' : 'disabled'}`);
+    this.#logger.info(
+      `Performance monitoring ${enabled ? 'enabled' : 'disabled'}`
+    );
   }
 
   /**
@@ -427,10 +451,10 @@ export default class PerformanceMonitor {
 
     const metrics = this.getMetrics();
     const slowOps = this.getSlowOperations(5);
-    
+
     const report = [
       'Performance Monitor Report',
-      '=' .repeat(30),
+      '='.repeat(30),
       `Total Operations: ${metrics.totalOperations}`,
       `Slow Operations: ${metrics.slowOperations}`,
       `Average Time: ${metrics.averageOperationTime.toFixed(2)}ms`,
@@ -441,22 +465,24 @@ export default class PerformanceMonitor {
       '',
       'Top Operations:',
       ...Object.entries(metrics.operationCounts)
-        .sort(([,a], [,b]) => b - a)
+        .sort(([, a], [, b]) => b - a)
         .slice(0, 5)
         .map(([op, count]) => `  ${op}: ${count}`),
       '',
       'Slow Operations by Type:',
       ...Object.entries(metrics.slowOperationsByType)
-        .sort(([,a], [,b]) => b - a)
+        .sort(([, a], [, b]) => b - a)
         .slice(0, 5)
         .map(([op, count]) => `  ${op}: ${count}`),
       '',
       'Recent Slow Operations:',
-      ...slowOps.slice(0, 3).map(op => 
-        `  ${op.operation}: ${op.duration.toFixed(2)}ms (${new Date(op.timestamp).toISOString()})`
-      ),
+      ...slowOps
+        .slice(0, 3)
+        .map(
+          (op) =>
+            `  ${op.operation}: ${op.duration.toFixed(2)}ms (${new Date(op.timestamp).toISOString()})`
+        ),
     ];
 
     return report.join('\n');
-  }
-}
+  }}
