@@ -10,6 +10,7 @@
     "test": "jest --silent --coverage",
     "test:single": "jest --silent=false --runInBand",
     "test:ci": "jest --ci --silent --coverage",
+    "typecheck": "tsc",
     "format": "prettier --write \"**/*.{js,json,md,cjs}\" --log-level error",
     "format:check": "prettier --check \"**/*.{js,json,md,cjs}\" --log-level error",
     "lint": "eslint . --ext .js,.cjs --fix"
@@ -38,6 +39,7 @@
     "eslint-plugin-jsdoc": "^51.3.4",
     "globals": "^16.2.0",
     "jest": "^30.0.4",
-    "prettier": "^3.5.3"
+    "prettier": "^3.5.3",
+    "typescript": "^5.8.3"
   }
 }
