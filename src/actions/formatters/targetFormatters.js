@@ -19,7 +19,8 @@ import {
 /** @typedef {import('./formatActionTypedefs.js').TargetFormatterMap} TargetFormatterMap */
 
 /**
- * @description Replaces the `{target}` placeholder using entity information.
+ * Replaces the `{target}` placeholder using entity information.
+ *
  * @param {string} command - The command template string.
  * @param {ActionTargetContext} context - Target context with `entityId`.
  * @param {{
@@ -62,7 +63,8 @@ export function formatEntityTarget(
 }
 
 /**
- * @description Handles templates without a target.
+ * Handles templates without a target.
+ *
  * @param {string} command - The command template string.
  * @param {ActionTargetContext} _context - Context of type `none` (unused).
  * @param {{ actionId: string, logger: ILogger, debug: boolean }} deps - Logger and flags.
@@ -92,7 +94,7 @@ export function formatNoneTarget(
  * correspond to constants in {@link ../constants/actionTargetTypes.js}.
  *
  * Consumers may provide their own map as the final argument to
- * {@link formatActionCommand} to customize how placeholders are resolved.
+ * See `formatActionCommand` to customize how placeholders are resolved.
  *
  * Example:
  * ```js

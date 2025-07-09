@@ -24,7 +24,8 @@ import { isNonBlankString } from '../utils/textUtils.js';
  *   – Optional dispatcher for error events.
  * @param {ShortTermMemoryService} [stmService] – Optional STM service instance.
  * @param {Date} [now] – Date provider for timestamping.
- * @param componentAccess
+ * @param {ComponentAccessService} [componentAccess]
+ *   – Service used to fetch and apply entity components.
  */
 export function persistThoughts(
   action,
