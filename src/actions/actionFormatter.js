@@ -30,7 +30,8 @@ import { targetFormatterMap } from './formatters/targetFormatters.js';
 /** @typedef {import('./formatters/formatActionTypedefs.js').TargetFormatterMap} TargetFormatterMap */
 
 /**
- * @description Builds a standardized formatting error result.
+ * Builds a standardized formatting error result.
+ *
  * @param {string} message - Human readable error message.
  * @param {object} [details] - Additional error details.
  * @returns {FormatActionError} Result object describing the error.
@@ -40,7 +41,8 @@ function buildFormatError(message, details) {
 }
 
 /**
- * @description Normalizes formatter results to a standard object shape.
+ * Normalizes formatter results to a standard object shape.
+ *
  * @param {string | FormatActionCommandResult} result - Raw formatter result.
  * @returns {FormatActionCommandResult} Normalized result.
  */
@@ -49,7 +51,8 @@ function normalizeFormatResult(result) {
 }
 
 /**
- * @description Checks required inputs for {@link formatActionCommand}.
+ * Checks required inputs for {@link formatActionCommand}.
+ *
  * @param {ActionDefinition} actionDefinition - Action definition to check.
  * @param {ActionTargetContext} targetContext - Target context for formatting.
  * @param {EntityManager} entityManager - Entity manager for lookups.
@@ -100,7 +103,8 @@ function checkFormatInputs(
 }
 
 /**
- * @description Applies the appropriate target formatter and handles errors.
+ * Applies the appropriate target formatter and handles errors.
+ *
  * @param {string} command - The command template string.
  * @param {ActionTargetContext} targetContext - Context describing the target.
  * @param {object} options - Bundled options.
@@ -159,7 +163,8 @@ function applyTargetFormatter(command, targetContext, options) {
 }
 
 /**
- * @description Finalizes a formatted command result.
+ * Finalizes a formatted command result.
+ *
  * @param {string} command - Command string to return.
  * @param {ILogger} logger - Logger for debug output.
  * @param {boolean} debug - If true, debug logging is enabled.
@@ -259,7 +264,7 @@ function formatActionCommand(
  * Default implementation of {@link IActionCommandFormatter}.
  *
  * @class ActionCommandFormatter
- * @description Formats action commands using the standard logic.
+ * Formats action commands using the standard logic.
  * @augments IActionCommandFormatter
  */
 export default class ActionCommandFormatter extends IActionCommandFormatter {
