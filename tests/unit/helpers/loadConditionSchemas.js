@@ -1,12 +1,13 @@
-/* eslint-env node */
+import containerSchema from '../../../data/schemas/condition-container.schema.json' assert { type: 'json' };
+import conditionSchema from '../../../data/schemas/condition.schema.json' assert { type: 'json' };
+
 /**
- * @description Registers condition-related schemas with AJV for testing.
+ * Registers condition-related schemas with AJV for testing.
+ *
  * @param {import('ajv').default} ajv - AJV instance
  * @returns {void}
  */
-function loadConditionSchemas(ajv) {
-  const containerSchema = require('../../../data/schemas/condition-container.schema.json');
-  const conditionSchema = require('../../../data/schemas/condition.schema.json');
+export default function loadConditionSchemas(ajv) {
   ajv.addSchema(
     containerSchema,
     'http://example.com/schemas/condition-container.schema.json'
@@ -16,4 +17,3 @@ function loadConditionSchemas(ajv) {
     'http://example.com/schemas/condition.schema.json'
   );
 }
-module.exports = loadConditionSchemas;
