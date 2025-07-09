@@ -39,8 +39,14 @@ export function executePersistenceOp({
   }
 
   if (asyncOperation) {
-    return safeExecute(op, logger, context).then(
-      ({ success, result, error }) => {
+    return /** @type {Promise<import('./safeExecutionUtils.js').ExecutionResult>} */ (
+      safeExecute(op, logger, context)
+    ).then(
+      /**
+       * @param {import('./safeExecutionUtils.js').ExecutionResult} res
+       */
+      (res) => {
+        const { success, result, error } = res;
         if (success) {
           return result;
         }
@@ -53,7 +59,10 @@ export function executePersistenceOp({
     );
   }
 
-  const { success, result, error } = safeExecute(op, logger, context);
+  const { success, result, error } =
+    /** @type {import('./safeExecutionUtils.js').ExecutionResult} */ (
+      safeExecute(op, logger, context)
+    );
 
   if (success) {
     return createPersistenceSuccess(result);
