@@ -20,6 +20,7 @@ import { flushPromisesAndTimers } from '../jestHelpers.js';
 import { EventCaptureMixin } from './eventCaptureMixin.js';
 import { EntitySetupMixin } from './entitySetupMixin.js';
 import { StartHelpersMixin } from './startHelpersMixin.js';
+import { createMockActor, createMockEntity } from '../mockFactories/entities.js';
 
 /**
  * @description Utility class that instantiates {@link TurnManager} with mocked
@@ -115,6 +116,32 @@ export class TurnManagerTestBed extends EventCaptureMixin(
     this.mocks.turnOrderService.clearCurrentRound.mockResolvedValue();
     this.mocks.dispatcher.dispatch.mockResolvedValue(true);
     this.setupMockHandlerResolver();
+  }
+
+  /**
+   * Creates a mock actor entity and registers it with the entity manager.
+   *
+   * @param {string} id - The entity ID.
+   * @param {object} [options] - Options for creating the actor.
+   * @returns {object} The created actor entity.
+   */
+  createActorEntity(id, options = {}) {
+    const actor = createMockActor(id, options);
+    this.entityManager.activeEntities.set(id, actor);
+    return actor;
+  }
+
+  /**
+   * Creates a mock entity and registers it with the entity manager.
+   *
+   * @param {string} id - The entity ID.
+   * @param {object} [options] - Options for creating the entity.
+   * @returns {object} The created entity.
+   */
+  createEntity(id, options = {}) {
+    const entity = createMockEntity(id, options);
+    this.entityManager.activeEntities.set(id, entity);
+    return entity;
   }
 }
 

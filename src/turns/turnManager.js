@@ -258,7 +258,6 @@ class TurnManager extends ITurnManager {
    */
   getCurrentActor() {
     const actor = this.#currentActor;
-    console.log('TurnManager.getCurrentActor: currentActor =', actor?.id);
     return actor;
   }
 
@@ -303,7 +302,6 @@ class TurnManager extends ITurnManager {
 
     try {
       const nextEntity = await this.#turnCycle.nextActor();
-      console.log('TurnManager.advanceTurn: nextActor =', nextEntity?.id);
 
       if (!nextEntity) {
         // TurnCycle.nextActor() returns null only when the queue is empty
@@ -437,12 +435,6 @@ class TurnManager extends ITurnManager {
           `Calling startTurn on ${handlerName} for entity ${actorId}`
         );
 
-        console.log(
-          'TurnManager: handler =',
-          handler,
-          'handler.startTurn =',
-          typeof handler?.startTurn
-        );
         handler.startTurn(this.#currentActor).catch((startTurnError) => {
           const errorMsg = `Error during handler.startTurn() initiation for entity ${actorId} (${handlerName}): ${startTurnError.message}`;
           safeDispatchError(
