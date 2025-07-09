@@ -78,7 +78,7 @@ export function validateAgainstSchema(
   if (!validationResult.isValid) {
     const computedFailureMsg =
       typeof failureMessage === 'function'
-        ? failureMessage(validationResult.errors)
+        ? failureMessage(validationResult.errors ?? [])
         : failureMessage;
     const errorDetails = formatAjvErrors(validationResult.errors);
     if (computedFailureMsg) {

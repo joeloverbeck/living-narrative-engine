@@ -54,11 +54,22 @@ export function snakeToCamel(str) {
 /**
  * Checks that a string is non-empty after trimming.
  *
- * @param {any} str
- * @returns {boolean}
+ * @param {any} str - Value to evaluate.
+ * @returns {boolean} True if `str` is a non-blank string.
  */
 export function isNonBlankString(str) {
   return typeof str === 'string' && Boolean(str.trim());
+}
+
+/**
+ * Pads a number with leading zeros to at least two digits.
+ *
+ * @param {number} num - Number to pad.
+ * @returns {string} Padded string representation.
+ */
+function padTwo(num) {
+  const str = String(num);
+  return str.length < 2 ? '0'.repeat(2 - str.length) + str : str;
 }
 
 /**
@@ -80,13 +91,7 @@ export function formatPlaytime(totalSeconds) {
   const minutes = Math.floor((totalSeconds % 3600) / 60);
   const seconds = Math.floor(totalSeconds % 60);
 
-  return (
-    String(hours).padStart(2, '0') +
-    ':' +
-    String(minutes).padStart(2, '0') +
-    ':' +
-    String(seconds).padStart(2, '0')
-  );
+  return padTwo(hours) + ':' + padTwo(minutes) + ':' + padTwo(seconds);
 }
 
 /**
