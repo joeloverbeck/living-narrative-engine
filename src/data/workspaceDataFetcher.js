@@ -68,6 +68,7 @@ class WorkspaceDataFetcher {
       // AC: fetch method catches errors (network, HTTP, JSON parsing).
       // Handle potential network errors (e.g., DNS resolution failure, refused connection)
       // or errors thrown from the !response.ok check, or JSON parsing errors.
+      // eslint-disable-next-line no-console -- logging unexpected fetch errors
       console.error(
         `WorkspaceDataFetcher: Error fetching or parsing ${identifier}:`,
         error

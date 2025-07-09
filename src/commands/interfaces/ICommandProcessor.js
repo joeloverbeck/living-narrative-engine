@@ -17,12 +17,12 @@ export class ICommandProcessor {
    *
    * @function dispatchAction
    * @async
-   * @param {Entity} actor - The entity performing the action.
-   * @param {ITurnAction} turnAction - The pre-resolved action object.
+   * @param {Entity} _actor - The entity performing the action.
+   * @param {ITurnAction} _turnAction - The pre-resolved action object.
    * @returns {Promise<CommandResult>} A promise that resolves to the command result.
    * @throws {Error} May throw on critical, unrecoverable errors.
    */
-  async dispatchAction(actor, turnAction) {
+  async dispatchAction(_actor, _turnAction) {
     throw new Error('ICommandProcessor.dispatchAction method not implemented.');
   }
 }
