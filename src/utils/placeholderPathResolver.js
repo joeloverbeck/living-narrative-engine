@@ -10,7 +10,7 @@ import { resolveEntityNameFallback } from './entityNameFallbackUtils.js';
  * Extracts the effective root and path when handling `context.` placeholders.
  *
  * @param {string} placeholderPath - Original placeholder path.
- * @param {object} executionContext - The current execution context.
+ * @param {import('../logic/defs.js').ExecutionContext} executionContext - The current execution context.
  * @returns {{ path: string, root: object } | null} Extracted info or `null` on invalid context.
  */
 export function extractContextPath(placeholderPath, executionContext) {
@@ -33,7 +33,7 @@ export function extractContextPath(placeholderPath, executionContext) {
  * Resolves a placeholder path against the provided execution context.
  *
  * @param {string} placeholderPath - Path from the placeholder (e.g., `context.varA`).
- * @param {object} executionContext - The execution context root object.
+ * @param {import('../logic/defs.js').ExecutionContext} executionContext - The execution context root object.
  * @param {import('../interfaces/coreServices.js').ILogger} [logger] - Optional logger for warnings and errors.
  * @param {string} [logPath] - String used in log messages to indicate the source of the resolution attempt.
  * @returns {any|undefined} The resolved value, or `undefined` when resolution fails.
