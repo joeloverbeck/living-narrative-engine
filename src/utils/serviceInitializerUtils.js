@@ -41,7 +41,8 @@ export class ServiceSetup {
     if (!deps) return;
 
     const checks = [];
-    for (const [depName, spec] of Object.entries(deps)) {
+    for (const depName of Object.keys(deps)) {
+      const spec = deps[depName];
       if (!spec) continue;
       checks.push({
         dependency: spec.value,
