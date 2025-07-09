@@ -48,7 +48,19 @@ export class ActorAwareStrategyFactory extends ITurnStrategyFactory {
   constructor({
     providers = null,
     providerResolver = (actor) => {
-      // Check new player_type component first
+      // Check new player_type component first using Entity API
+      if (actor && typeof actor.getComponentData === 'function') {
+        try {
+          const playerTypeData = actor.getComponentData('core:player_type');
+          if (playerTypeData?.type) {
+            return playerTypeData.type;
+          }
+        } catch (error) {
+          // If getComponentData throws, fall through to other checks
+        }
+      }
+
+      // Fallback: Check if actor has components property (old style)
       if (actor?.components?.['core:player_type']) {
         return actor.components['core:player_type'].type;
       }
@@ -122,6 +134,15 @@ export class ActorAwareStrategyFactory extends ITurnStrategyFactory {
    */
   create(actorId) {
     const actor = this.#actorLookup(actorId);
+    this.#logger.debug(
+      `ActorAwareStrategyFactory: Actor lookup result for ${actorId}:`,
+      {
+        hasActor: !!actor,
+        hasComponents: !!actor?.components,
+        playerTypeComponent: actor?.components?.['core:player_type'],
+        componentKeys: actor?.components ? Object.keys(actor.components) : []
+      }
+    );
     const type = this.#providerResolver(actor);
     const decisionProvider = this.#providers[type];
     if (!decisionProvider) {

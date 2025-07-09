@@ -54,8 +54,19 @@ export function registerActorAwareStrategy(container) {
         logger: c.resolve(tokens.ILogger),
         choicePipeline: c.resolve(tokens.TurnActionChoicePipeline),
         turnActionFactory: c.resolve(tokens.ITurnActionFactory),
-        actorLookup: (id) =>
-          c.resolve(tokens.IEntityManager).getEntityInstance(id),
+        actorLookup: (id) => {
+          const entity = c.resolve(tokens.IEntityManager).getEntityInstance(id);
+          const logger = c.resolve(tokens.ILogger);
+          logger.debug(`[registerActorAwareStrategy] actorLookup for ${id}:`, {
+            hasEntity: !!entity,
+            entityType: entity?.constructor?.name,
+            hasComponents: !!entity?.components,
+            hasGetComponentData: typeof entity?.getComponentData === 'function',
+            playerTypeViaComponents: entity?.components?.['core:player_type'],
+            playerTypeViaMethod: entity?.getComponentData?.('core:player_type')
+          });
+          return entity;
+        },
       };
       const fallbackFactory = resolveOptional(
         c,
@@ -65,13 +76,26 @@ export function registerActorAwareStrategy(container) {
         opts.fallbackFactory = fallbackFactory;
       }
       opts.providerResolver = (actor) => {
-        // Check new player_type component first
-        if (actor?.components?.['core:player_type']) {
-          const playerType = actor.components['core:player_type'].type;
-          return playerType; // 'human', 'llm', or 'goap'
+        // Check new player_type component first using Entity API
+        if (actor && typeof actor.getComponentData === 'function') {
+          try {
+            const playerTypeData = actor.getComponentData('core:player_type');
+            if (playerTypeData?.type) {
+              return playerTypeData.type; // 'human', 'llm', or 'goap'
+            }
+          } catch (error) {
+            // If getComponentData throws, fall through to other checks
+          }
         }
 
-        // Fallback to old detection methods
+        // Fallback to old detection methods for backward compatibility
+        // Check if actor has components property (old style)
+        if (actor?.components?.['core:player_type']) {
+          const playerType = actor.components['core:player_type'].type;
+          return playerType;
+        }
+
+        // Check legacy aiType or ai component
         const type = actor?.aiType ?? actor?.components?.ai?.type;
         if (typeof type === 'string') return type.toLowerCase();
 
@@ -79,6 +103,7 @@ export function registerActorAwareStrategy(container) {
         if (actor?.isAi === true) return 'llm';
 
         // Legacy check for core:player component
+        if (actor?.hasComponent?.('core:player')) return 'human';
         if (actor?.components?.['core:player']) return 'human';
 
         // Default to human for actors without explicit type

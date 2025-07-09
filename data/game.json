@@ -1,4 +1,7 @@
 {
-  "mods": ["core", "isekai"],
-  "startWorld": "isekai:world"
+  "mods": [
+    "core",
+    "p_erotica"
+  ],
+  "startWorld": "p_erotica:donostia"
 }

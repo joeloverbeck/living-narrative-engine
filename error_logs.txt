@@ -1,608 +1,650 @@
-﻿SystemLogicInterpreter: [Rule 'log_perceptible_events' - Action 2/2] About to execute operation of type: ADD_PERCEPTION_LOG_ENTRY
-consoleLogger.js:187 OperationInterpreter: Resolved full string placeholder {event.payload.locationId} to: isekai:adventurers_guild_instance
-consoleLogger.js:187 OperationInterpreter: Resolved full string placeholder {event.payload.descriptionText} to: Joel Overberus says: "aa"
-consoleLogger.js:187 OperationInterpreter: Resolved full string placeholder {event.payload.timestamp} to: 2025-07-08T19:46:12.807Z
-consoleLogger.js:187 OperationInterpreter: Resolved full string placeholder {event.payload.perceptionType} to: speech_local
-consoleLogger.js:187 OperationInterpreter: Resolved full string placeholder {event.payload.actorId} to: isekai:hero_instance
-consoleLogger.js:187 OperationInterpreter: Resolved full string placeholder {event.payload.targetId} to: null
-consoleLogger.js:187 OperationInterpreter: Resolved full string placeholder {event.payload.involvedEntities} to: []
-consoleLogger.js:187 OperationInterpreter: Resolved full string placeholder {event.payload.actorId} to: isekai:hero_instance
-consoleLogger.js:187 OperationInterpreter: Executing handler for operation type "ADD_PERCEPTION_LOG_ENTRY"…
-consoleLogger.js:163 EntityQueryManager.hasComponent: The 3-parameter version is deprecated. Use hasComponentOverride(instanceId, componentTypeId) instead of hasComponent(instanceId, componentTypeId, true).
-warn @ consoleLogger.js:163
-hasComponent @ EntityQueryManager.js:136
-hasComponent @ entityManager.js:437
-hasComponent @ entityManagerAdapter.js:53
-execute @ addPerceptionLogEntryHandler.js:105
-(anonymous) @ interpreterRegistrations.js:59
-execute @ operationInterpreter.js:94
-executeActionSequence @ actionSequence.js:95
-_executeActions @ systemLogicInterpreter.js:356
-#processRule @ systemLogicInterpreter.js:335
-#handleEvent @ systemLogicInterpreter.js:268
-(anonymous) @ eventBus.js:144
-dispatch @ eventBus.js:141
-#emitEvent @ validatedEventDispatcher.js:192
-dispatch @ validatedEventDispatcher.js:222
-dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
-#executeSafely @ safeEventDispatcher.js:88
-dispatch @ safeEventDispatcher.js:122
-execute @ dispatchPerceptibleEventHandler.js:155
-(anonymous) @ interpreterRegistrations.js:59
-execute @ operationInterpreter.js:94
-executeActionSequence @ actionSequence.js:95
-handleIf @ ifHandler.js:70
-executeActionSequence @ actionSequence.js:82
-_executeActions @ systemLogicInterpreter.js:356
-#processRule @ systemLogicInterpreter.js:335
-#handleEvent @ systemLogicInterpreter.js:268
-(anonymous) @ eventBus.js:144
-dispatch @ eventBus.js:141
-#emitEvent @ validatedEventDispatcher.js:192
-dispatch @ validatedEventDispatcher.js:222
-dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
-#executeSafely @ safeEventDispatcher.js:88
-dispatch @ safeEventDispatcher.js:122
-dispatchSpeechEvent @ dispatchSpeechEvent.js:30
-_dispatchSpeech @ processingCommandState.js:310
-_dispatchSpeechIfNeeded @ processingWorkflow.js:242
-run @ processingWorkflow.js:85
-await in run
-enterState @ processingCommandState.js:290
-_transitionToState @ baseTurnHandler.js:236
-await in _transitionToState
-requestProcessingCommandStateTransition @ baseTurnHandler.js:609
-requestProcessingCommandStateTransition @ turnContext.js:253
-run @ actionDecisionWorkflow.js:62
-await in run
-_handleActionDecision @ awaitingActorDecisionState.js:102
-enterState @ awaitingActorDecisionState.js:119
-await in enterState
-_transitionToState @ baseTurnHandler.js:236
-await in _transitionToState
-requestAwaitingInputStateTransition @ baseTurnHandler.js:594
-requestAwaitingInputStateTransition @ turnContext.js:249
-_requestAwaitingInput @ turnIdleState.js:140
-startTurn @ turnIdleState.js:72
-startTurn @ genericTurnHandler.js:134
-startTurn @ actorTurnHandler.js:64
-advanceTurn @ turnManager.js:446
-await in advanceTurn
-advanceTurn @ turnManager.js:336
-await in advanceTurn
-start @ turnManager.js:200
-#finalizeGameStart @ gameSessionManager.js:146
-await in #finalizeGameStart
-finalizeNewGameSuccess @ gameSessionManager.js:167
-#finalizeInitializationSuccess @ gameEngine.js:280
-startNewGame @ gameEngine.js:316
-await in startNewGame
-startGameStage @ engineStages.js:87
-beginGame @ main.js:244
-(anonymous) @ game.html:331
-Promise.then
-(anonymous) @ game.html:328Understand this warning
-consoleLogger.js:187 EntityMutationManager.addComponent: Adding component 'core:perception_log' to entity 'isekai:hero_instance'
+﻿Received 'core:turn_ended' event for entity p_erotica:iker_aguirre_instance. Success: true. Current actor: p_erotica:iker_aguirre_instance
+consoleLogger.js:187 Marking round as having had a successful turn (actor: p_erotica:iker_aguirre_instance).
+consoleLogger.js:187 VED: Validating payload for event 'core:turn_processing_ended' against schema 'core:turn_processing_ended#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:turn_processing_ended'.
+consoleLogger.js:187 VED: Dispatching event 'core:turn_processing_ended' via EventBus... {entityId: 'p_erotica:iker_aguirre_instance', actorType: 'ai'}
+consoleLogger.js:187 Turn for current actor p_erotica:iker_aguirre_instance confirmed ended (Internal Status from Event: Success=true). Advancing turn...
+consoleLogger.js:187 ActorTurnHandler: Normal apparent termination signaled.
+consoleLogger.js:187 ▶️  Calling destroy() on handler (ActorTurnHandler) for completed turn p_erotica:iker_aguirre_instance
+consoleLogger.js:187 ActorTurnHandler.destroy() invoked. Current state: AwaitingExternalTurnEndState
+consoleLogger.js:187 ActorTurnHandler.destroy() invoked. Current state: AwaitingExternalTurnEndState
+consoleLogger.js:187 ActorTurnHandler.destroy: Attempting to cancel active prompt in TurnContext for actor p_erotica:iker_aguirre_instance.
+consoleLogger.js:187 ActorTurnHandler.destroy: Calling destroy() on current state AwaitingExternalTurnEndState.
+consoleLogger.js:187 ActorTurnHandler._markAwaitingTurnEnd: State: Waiting for Actor 'p_erotica:iker_aguirre_instance' → State: Idle
+consoleLogger.js:187 TurnContext for p_erotica:iker_aguirre_instance awaitingExternalEvent → false
+consoleLogger.js:187 AwaitingExternalTurnEndState: Received destroy call. No state-specific cleanup by default in AbstractTurnState.
+consoleLogger.js:187 ▶️  TurnManager.advanceTurn() initiating...
+consoleLogger.js:187 TurnOrderService: Advancing turn to entity "p_erotica:amaia_castillo_instance".
+consoleLogger.js:187 TurnCycle.nextActor(): returning entity p_erotica:amaia_castillo_instance
+consoleLogger.js:187 ActorTurnHandler.destroy: Ensuring transition to TurnIdleState (current: AwaitingExternalTurnEndState).
+consoleLogger.js:187 ActorTurnHandler: State Transition: AwaitingExternalTurnEndState → TurnIdleState
+consoleLogger.js:187 ActorTurnHandler.onExitState hook: Exiting AwaitingExternalTurnEndState to TurnIdleState
+turnManager.js:306 TurnManager.advanceTurn: nextActor = p_erotica:amaia_castillo_instance
+consoleLogger.js:187 Queue not empty, processing next entity.
+consoleLogger.js:187 >>> Starting turn initiation for Entity: p_erotica:amaia_castillo_instance (ai) <<<
+consoleLogger.js:187 VED: Validating payload for event 'core:turn_started' against schema 'core:turn_started#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:turn_started'.
+consoleLogger.js:187 VED: Dispatching event 'core:turn_started' via EventBus... {entityId: 'p_erotica:amaia_castillo_instance', entityType: 'ai', entity: Entity}
+consoleLogger.js:187 [LocationRenderer] Received 'core:turn_started' event. Payload: {entityId: 'p_erotica:amaia_castillo_instance', entityType: 'ai', entity: Entity}
+consoleLogger.js:187 [EntityDisplayDataProvider] getEntityLocationId: Found entity 'p_erotica:amaia_castillo_instance' with type: Entity, has getComponentData: true
+consoleLogger.js:187 [EntityDisplayDataProvider] getEntityLocationId: Position component for 'p_erotica:amaia_castillo_instance': {locationId: 'p_erotica:outside_tables_coffee_shop_instance'}
+consoleLogger.js:187 [LocationDisplayService] getLocationPortraitData: Constructed portrait path for location 'p_erotica:outside_tables_coffee_shop_instance': /data/mods/p_erotica/portraits/outside_tables_coffee_shop.png
+consoleLogger.js:187 [EntityDisplayDataProvider] getEntityPortraitPath: Constructed portrait path for 'p_erotica:iker_aguirre_instance': /data/mods/p_erotica/portraits/iker_aguirre.png
+consoleLogger.js:187 [LocationDataService] Found 1 other characters.
+consoleLogger.js:187 [LocationRenderer] Rendering location: "outside tables of the coffee shop The Gilded Bean".
+consoleLogger.js:187 [renderPortraitElements] Setting location portrait to /data/mods/p_erotica/portraits/outside_tables_coffee_shop.png
+consoleLogger.js:187 [LocationRenderer] Added DOM listener for 'click' on element. {elementPath: '... > div#location-info-container > details#locati…-display > ul.location-detail-list > li.list-item'}
+consoleLogger.js:187 [LocationRenderer] Location "outside tables of the coffee shop The Gilded Bean" display updated.
+consoleLogger.js:187 [PerceptionLogRenderer] _handleTurnStartedForTest received 'core:turn_started' event. Payload: {entityId: 'p_erotica:amaia_castillo_instance', entityType: 'ai', entity: Entity}
+consoleLogger.js:187 [PerceptionLogRenderer] Current actor ID set to: p_erotica:amaia_castillo_instance
+consoleLogger.js:187 [PerceptionLogRenderer] refreshList() called, invoking renderList().
+consoleLogger.js:187 [PerceptionLogRenderer] renderList() called.
+consoleLogger.js:187 [PerceptionLogRenderer] _getListItemsData called. Current actor ID: p_erotica:amaia_castillo_instance
+consoleLogger.js:187 [PerceptionLogRenderer] Successfully fetched 1 log entries for actor 'p_erotica:amaia_castillo_instance'.
+consoleLogger.js:187 [CurrentTurnActorRenderer] Handling core:turn_started for entityId: p_erotica:amaia_castillo_instance
+consoleLogger.js:187 [EntityDisplayDataProvider] getEntityPortraitPath: Constructed portrait path for 'p_erotica:amaia_castillo_instance': /data/mods/p_erotica/portraits/amaia_castillo.png
+consoleLogger.js:187 [CurrentTurnActorRenderer] Setting portrait for Amaia Castillo to /data/mods/p_erotica/portraits/amaia_castillo.png
+consoleLogger.js:187 [ProcessingIndicatorController] Turn started for ai-llm player.
+consoleLogger.js:187 SystemLogicInterpreter: Received event: core:turn_started. Found 1 potential rule(s). {payload: {…}}
+consoleLogger.js:187 SystemLogicInterpreter: [Event: core:turn_started] Assembling execution context via createNestedExecutionContext... (ActorID: p_erotica:amaia_castillo_instance, TargetID: null)
+consoleLogger.js:187 SystemLogicInterpreter: createJsonLogicContext: Creating JsonLogicEvaluationContext for event type [core:turn_started]. ActorID: [p_erotica:amaia_castillo_instance], TargetID: [None]
+consoleLogger.js:187 SystemLogicInterpreter: createJsonLogicContext: Found actor entity [p_erotica:amaia_castillo_instance]. Creating context entry.
+consoleLogger.js:187 SystemLogicInterpreter: createJsonLogicContext: No targetId provided, target context remains null.
+consoleLogger.js:187 SystemLogicInterpreter: [Event: core:turn_started] createNestedExecutionContext returned a valid ExecutionContext.
+consoleLogger.js:187 SystemLogicInterpreter: [Event: core:turn_started] Final ExecutionContext (nested structure) assembled successfully.
+consoleLogger.js:187 SystemLogicInterpreter: [Rule turn_started] No condition defined or condition is empty. Defaulting to passed.
+consoleLogger.js:187 SystemLogicInterpreter: [Rule 'turn_started' - Action 1/1] About to execute operation of type: ADD_COMPONENT
+consoleLogger.js:187 OperationInterpreter: Resolved full string placeholder {event.payload.entityId} to: p_erotica:amaia_castillo_instance
+consoleLogger.js:187 OperationInterpreter: Executing handler for operation type "ADD_COMPONENT"…
+consoleLogger.js:187 EntityMutationManager.addComponent: Adding component 'core:current_actor' to entity 'p_erotica:amaia_castillo_instance'
 consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
 consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
-consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'core:perception_log', componentData: {…}, oldComponentData: {…}}
-consoleLogger.js:187 Successfully added/updated component 'core:perception_log' data on entity 'isekai:hero_instance'.
-consoleLogger.js:163 EntityQueryManager.hasComponent: The 3-parameter version is deprecated. Use hasComponentOverride(instanceId, componentTypeId) instead of hasComponent(instanceId, componentTypeId, true).
-warn @ consoleLogger.js:163
-hasComponent @ EntityQueryManager.js:136
-hasComponent @ entityManager.js:437
-hasComponent @ entityManagerAdapter.js:53
-execute @ addPerceptionLogEntryHandler.js:105
-(anonymous) @ interpreterRegistrations.js:59
-execute @ operationInterpreter.js:94
-executeActionSequence @ actionSequence.js:95
-_executeActions @ systemLogicInterpreter.js:356
-#processRule @ systemLogicInterpreter.js:335
-#handleEvent @ systemLogicInterpreter.js:268
-(anonymous) @ eventBus.js:144
-dispatch @ eventBus.js:141
-#emitEvent @ validatedEventDispatcher.js:192
-dispatch @ validatedEventDispatcher.js:222
-dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
-#executeSafely @ safeEventDispatcher.js:88
-dispatch @ safeEventDispatcher.js:122
-execute @ dispatchPerceptibleEventHandler.js:155
-(anonymous) @ interpreterRegistrations.js:59
-execute @ operationInterpreter.js:94
-executeActionSequence @ actionSequence.js:95
-handleIf @ ifHandler.js:70
-executeActionSequence @ actionSequence.js:82
-_executeActions @ systemLogicInterpreter.js:356
-#processRule @ systemLogicInterpreter.js:335
-#handleEvent @ systemLogicInterpreter.js:268
-(anonymous) @ eventBus.js:144
-dispatch @ eventBus.js:141
-#emitEvent @ validatedEventDispatcher.js:192
-dispatch @ validatedEventDispatcher.js:222
-dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
-#executeSafely @ safeEventDispatcher.js:88
-dispatch @ safeEventDispatcher.js:122
-dispatchSpeechEvent @ dispatchSpeechEvent.js:30
-_dispatchSpeech @ processingCommandState.js:310
-_dispatchSpeechIfNeeded @ processingWorkflow.js:242
-run @ processingWorkflow.js:85
-await in run
-enterState @ processingCommandState.js:290
-_transitionToState @ baseTurnHandler.js:236
-await in _transitionToState
-requestProcessingCommandStateTransition @ baseTurnHandler.js:609
-requestProcessingCommandStateTransition @ turnContext.js:253
-run @ actionDecisionWorkflow.js:62
-await in run
-_handleActionDecision @ awaitingActorDecisionState.js:102
-enterState @ awaitingActorDecisionState.js:119
-await in enterState
-_transitionToState @ baseTurnHandler.js:236
-await in _transitionToState
-requestAwaitingInputStateTransition @ baseTurnHandler.js:594
-requestAwaitingInputStateTransition @ turnContext.js:249
-_requestAwaitingInput @ turnIdleState.js:140
-startTurn @ turnIdleState.js:72
-startTurn @ genericTurnHandler.js:134
-startTurn @ actorTurnHandler.js:64
-advanceTurn @ turnManager.js:446
-await in advanceTurn
-advanceTurn @ turnManager.js:336
-await in advanceTurn
-start @ turnManager.js:200
-#finalizeGameStart @ gameSessionManager.js:146
-await in #finalizeGameStart
-finalizeNewGameSuccess @ gameSessionManager.js:167
-#finalizeInitializationSuccess @ gameEngine.js:280
-startNewGame @ gameEngine.js:316
-await in startNewGame
-startGameStage @ engineStages.js:87
-beginGame @ main.js:244
-(anonymous) @ game.html:331
-Promise.then
-(anonymous) @ game.html:328Understand this warning
-consoleLogger.js:187 EntityMutationManager.addComponent: Adding component 'core:perception_log' to entity 'isekai:ninja_instance'
-consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
-consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
-consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'core:perception_log', componentData: {…}, oldComponentData: {…}}
-consoleLogger.js:187 Successfully added/updated component 'core:perception_log' data on entity 'isekai:ninja_instance'.
-consoleLogger.js:187 SystemLogicInterpreter: ADD_PERCEPTION_LOG_ENTRY: wrote entry to 2/2 perceivers in isekai:adventurers_guild_instance
-consoleLogger.js:187 SystemLogicInterpreter: [Rule 'log_perceptible_events' - Action 2/2] Finished executing operation of type: ADD_PERCEPTION_LOG_ENTRY
-consoleLogger.js:187 SystemLogicInterpreter: [Rule 'entity_speech' IF#2 - Action 2/3] Finished executing operation of type: DISPATCH_PERCEPTIBLE_EVENT
-consoleLogger.js:187 SystemLogicInterpreter: [Rule 'entity_speech' IF#2 - Action 3/3] About to execute operation of type: DISPATCH_SPEECH
-consoleLogger.js:187 OperationInterpreter: Resolved full string placeholder {event.payload.entityId} to: isekai:hero_instance
-consoleLogger.js:187 OperationInterpreter: Resolved full string placeholder {event.payload.speechContent} to: aa
-consoleLogger.js:187 OperationInterpreter: Executing handler for operation type "DISPATCH_SPEECH"…
-consoleLogger.js:187 SystemLogicInterpreter: DISPATCH_SPEECH: dispatching display_speech {payload: {…}}
-consoleLogger.js:187 VED: Validating payload for event 'core:display_speech' against schema 'core:display_speech#payload'...
-consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:display_speech'.
-consoleLogger.js:187 VED: Dispatching event 'core:display_speech' via EventBus... {entityId: 'isekai:hero_instance', speechContent: 'aa', allowHtml: false}
-consoleLogger.js:187 [EntityDisplayDataProvider] getEntityPortraitPath: Constructed portrait path for 'isekai:hero_instance': /data/mods/isekai/portraits/hero.png
-consoleLogger.js:187 [SpeechBubbleRenderer] Added DOM listener for 'load' on element. {elementPath: 'img.speech-portrait'}
-consoleLogger.js:187 [SpeechBubbleRenderer] Added DOM listener for 'error' on element. {elementPath: 'img.speech-portrait'}
-consoleLogger.js:187 [SpeechBubbleRenderer] Rendered speech for Joel Overberus (Player).
-consoleLogger.js:187 SystemLogicInterpreter: [Rule 'entity_speech' IF#2 - Action 3/3] Finished executing operation of type: DISPATCH_SPEECH
-consoleLogger.js:187 SystemLogicInterpreter: [Rule 'entity_speech' - Action 2/2] Finished executing IF operation.
-2consoleLogger.js:187 VED: Event 'core:component_added' dispatch successful.
-consoleLogger.js:187 VED: Event 'core:perceptible_event' dispatch successful.
-consoleLogger.js:187 VED: Event 'core:display_speech' dispatch successful.
-consoleLogger.js:187 VED: Event 'core:entity_spoke' dispatch successful.
-2consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:component_added'.
-consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:perceptible_event'.
-consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:entity_spoke'.
-consoleLogger.js:187 ProcessingCommandState: Invoking commandProcessor.dispatchAction() for actor isekai:hero_instance, actionId: core:follow.
-consoleLogger.js:187 CommandProcessor.dispatchAction: Dispatching pre-resolved action 'core:follow' for actor isekai:hero_instance. {turnAction: {…}}
-consoleLogger.js:187 dispatchWithErrorHandling: Attempting dispatch: ATTEMPT_ACTION_ID dispatch for pre-resolved action core:follow ('core:attempt_action')
-consoleLogger.js:187 VED: Validating payload for event 'core:attempt_action' against schema 'core:attempt_action#payload'...
-consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:attempt_action'.
-consoleLogger.js:187 VED: Dispatching event 'core:attempt_action' via EventBus... {eventName: 'core:attempt_action', actorId: 'isekai:hero_instance', actionId: 'core:follow', targetId: 'isekai:ninja_instance', originalInput: 'follow Ninja Ninjason'}
-consoleLogger.js:187 SystemLogicInterpreter: Received event: core:attempt_action. Found 5 potential rule(s). {payload: {…}}
-consoleLogger.js:187 SystemLogicInterpreter: [Event: core:attempt_action] Assembling execution context via createNestedExecutionContext... (ActorID: isekai:hero_instance, TargetID: isekai:ninja_instance)
-consoleLogger.js:187 SystemLogicInterpreter: createJsonLogicContext: Creating JsonLogicEvaluationContext for event type [core:attempt_action]. ActorID: [isekai:hero_instance], TargetID: [isekai:ninja_instance]
-consoleLogger.js:187 SystemLogicInterpreter: createJsonLogicContext: Found actor entity [isekai:hero_instance]. Creating context entry.
-consoleLogger.js:187 SystemLogicInterpreter: createJsonLogicContext: Found target entity [isekai:ninja_instance]. Creating context entry.
-consoleLogger.js:187 SystemLogicInterpreter: [Event: core:attempt_action] createNestedExecutionContext returned a valid ExecutionContext.
-consoleLogger.js:187 SystemLogicInterpreter: [Event: core:attempt_action] Final ExecutionContext (nested structure) assembled successfully.
-consoleLogger.js:187 SystemLogicInterpreter: [Rule handle_dismiss] Condition found. Evaluating using jsonLogicDataForEval...
-consoleLogger.js:187 JsonLogicEvaluationService: Resolving condition_ref 'core:event-is-action-dismiss'...
-consoleLogger.js:187 JsonLogicEvaluationService: Evaluating rule: {"==":[{"var":"event.payload.actionId"},"core:dismiss"]}. Context keys: event, actor, target, context, globals, entities
-consoleLogger.js:187 JsonLogicEvaluationService: Rule evaluation raw result: false, Final boolean: false
-consoleLogger.js:187 SystemLogicInterpreter: [Rule handle_dismiss] Condition evaluation raw result: false
-consoleLogger.js:187 SystemLogicInterpreter: [Rule handle_dismiss] Condition evaluation final boolean result: false
-consoleLogger.js:187 SystemLogicInterpreter: Rule 'handle_dismiss' actions skipped for event 'core:attempt_action' due to condition evaluating to false.
-consoleLogger.js:187 SystemLogicInterpreter: [Rule core_handle_follow] Condition found. Evaluating using jsonLogicDataForEval...
-consoleLogger.js:187 JsonLogicEvaluationService: Resolving condition_ref 'core:event-is-action-follow'...
-consoleLogger.js:187 JsonLogicEvaluationService: Evaluating rule: {"==":[{"var":"event.payload.actionId"},"core:follow"]}. Context keys: event, actor, target, context, globals, entities
-consoleLogger.js:187 JsonLogicEvaluationService: Rule evaluation raw result: true, Final boolean: true
-consoleLogger.js:187 SystemLogicInterpreter: [Rule core_handle_follow] Condition evaluation raw result: true
-consoleLogger.js:187 SystemLogicInterpreter: [Rule core_handle_follow] Condition evaluation final boolean result: true
-consoleLogger.js:187 SystemLogicInterpreter: [Rule 'core_handle_follow' - Action 1/3] About to execute operation of type: CHECK_FOLLOW_CYCLE
-consoleLogger.js:187 OperationInterpreter: Resolved full string placeholder {event.payload.actorId} to: isekai:hero_instance
-consoleLogger.js:187 OperationInterpreter: Resolved full string placeholder {event.payload.targetId} to: isekai:ninja_instance
-consoleLogger.js:187 OperationInterpreter: Executing handler for operation type "CHECK_FOLLOW_CYCLE"…
-consoleLogger.js:187 SystemLogicInterpreter: CHECK_FOLLOW_CYCLE: Checking cycle for follower=isekai:hero_instance, leader=isekai:ninja_instance
-consoleLogger.js:187 SystemLogicInterpreter: CHECK_FOLLOW_CYCLE: Stored result in "cycleCheck": {"success":true,"cycleDetected":false}
-consoleLogger.js:187 SystemLogicInterpreter: [Rule 'core_handle_follow' - Action 1/3] Finished executing operation of type: CHECK_FOLLOW_CYCLE
-consoleLogger.js:187 SystemLogicInterpreter: [Rule 'core_handle_follow' - Action 2/3] About to execute operation of type: IF
-consoleLogger.js:187 JsonLogicEvaluationService: Evaluating rule: {"var":"context.cycleCheck.cycleDetected"}. Context keys: event, actor, target, context, globals, entities
-consoleLogger.js:187 JsonLogicEvaluationService: Rule evaluation raw result: false, Final boolean: false
-consoleLogger.js:187 SystemLogicInterpreter: Rule 'core_handle_follow' IF#2 Condition evaluation raw result: false
-consoleLogger.js:187 SystemLogicInterpreter: Rule 'core_handle_follow' IF#2 Condition evaluation final boolean result: false
-consoleLogger.js:187 SystemLogicInterpreter: [handleIf] else_actions length: 0
-consoleLogger.js:187 SystemLogicInterpreter: [handleIf] else_actions: []
-consoleLogger.js:187 SystemLogicInterpreter: [Rule 'core_handle_follow' - Action 2/3] Finished executing IF operation.
-consoleLogger.js:187 SystemLogicInterpreter: [Rule 'core_handle_follow' - Action 3/3] About to execute operation of type: IF
-consoleLogger.js:187 JsonLogicEvaluationService: Evaluating rule: {"not":{"var":"context.cycleCheck.cycleDetected"}}. Context keys: event, actor, target, context, globals, entities
-consoleLogger.js:187 JsonLogicEvaluationService: Rule evaluation raw result: true, Final boolean: true
-consoleLogger.js:187 SystemLogicInterpreter: Rule 'core_handle_follow' IF#3 Condition evaluation raw result: true
-consoleLogger.js:187 SystemLogicInterpreter: Rule 'core_handle_follow' IF#3 Condition evaluation final boolean result: true
-consoleLogger.js:187 SystemLogicInterpreter: [handleIf] then_actions length: 12
-consoleLogger.js:187 SystemLogicInterpreter: [handleIf] then_actions: [
-  {
-    "type": "ESTABLISH_FOLLOW_RELATION",
-    "parameters": {
-      "follower_id": "{event.payload.actorId}",
-      "leader_id": "{event.payload.targetId}"
-    }
-  },
-  {
-    "type": "GET_NAME",
-    "parameters": {
-      "entity_ref": "actor",
-      "result_variable": "followerName"
-    }
-  },
-  {
-    "type": "GET_NAME",
-    "parameters": {
-      "entity_ref": {
-        "entityId": "{event.payload.targetId}"
+consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'core:current_actor', componentData: {…}, oldComponentData: undefined}
+consoleLogger.js:187 Successfully added/updated component 'core:current_actor' data on entity 'p_erotica:amaia_castillo_instance'.
+consoleLogger.js:187 SystemLogicInterpreter: ADD_COMPONENT: Successfully added/replaced component "core:current_actor" on entity "p_erotica:amaia_castillo_instance".
+consoleLogger.js:187 SystemLogicInterpreter: [Rule 'turn_started' - Action 1/1] Finished executing operation of type: ADD_COMPONENT
+consoleLogger.js:187 [renderListCommon] Fetched list data. Count: 1
+consoleLogger.js:187 [renderListCommon] Cleared list container.
+consoleLogger.js:187 [renderListCommon] Rendered 1 out of 1 items.
+consoleLogger.js:187 VED: Event 'core:turn_processing_ended' dispatch successful.
+consoleLogger.js:187 AwaitingExternalTurnEndState: Exiting. Actor: p_erotica:iker_aguirre_instance. Transitioning to TurnIdleState.
+consoleLogger.js:187 [PerceptionLogRenderer] _onListRendered called. Scrolling to bottom.
+consoleLogger.js:187 ActorTurnHandler.onEnterState hook: Entering TurnIdleState from AwaitingExternalTurnEndState
+consoleLogger.js:187 VED: Event 'core:component_added' dispatch successful.
+consoleLogger.js:187 VED: Event 'core:turn_started' dispatch successful.
+consoleLogger.js:187 TurnIdleState: Entered. Actor: p_erotica:iker_aguirre_instance. Previous state: AwaitingExternalTurnEndState.
+consoleLogger.js:187 TurnIdleState: Ensuring clean state by calling handler.resetStateAndResources().
+consoleLogger.js:187 ActorTurnHandler._resetTurnStateAndResources specific cleanup for 'enterState-TurnIdleState'.
+consoleLogger.js:187 ActorTurnHandler._resetTurnStateAndResources (context: 'enterState-TurnIdleState'). Context actor: p_erotica:iker_aguirre_instance. Handler actor: p_erotica:iker_aguirre_instance.
+consoleLogger.js:187 ActorTurnHandler._resetTurnStateAndResources: Cancelling active prompt in current TurnContext before clearing it.
+consoleLogger.js:187 ActorTurnHandler: Clearing current TurnContext (was for actor p_erotica:iker_aguirre_instance).
+consoleLogger.js:187 ActorTurnHandler._setCurrentTurnContextInternal: Setting turn context to null.
+consoleLogger.js:187 ActorTurnHandler: Clearing current handler actor (was p_erotica:iker_aguirre_instance).
+consoleLogger.js:187 ActorTurnHandler._setCurrentActorInternal: Setting current actor to null.
+consoleLogger.js:187 ActorTurnHandler: Base per-turn state reset complete for 'enterState-TurnIdleState'. Subclasses may perform additional cleanup.
+consoleLogger.js:187 ActorTurnHandler: Actor-specific state reset complete for 'enterState-TurnIdleState'.
+consoleLogger.js:187 TurnIdleState: Entry complete. Handler is now idle.
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:component_added'.
+consoleLogger.js:187 VED: Validating payload for event 'core:turn_processing_started' against schema 'core:turn_processing_started#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:turn_processing_started'.
+consoleLogger.js:187 VED: Dispatching event 'core:turn_processing_started' via EventBus... {entityId: 'p_erotica:amaia_castillo_instance', actorType: 'ai'}
+consoleLogger.js:187 [ProcessingIndicatorController] Showing processing indicator for type: ai-llm.
+consoleLogger.js:187 ActorTurnHandler.destroy: Calling _resetTurnStateAndResources.
+consoleLogger.js:187 ActorTurnHandler._resetTurnStateAndResources specific cleanup for 'destroy-ActorTurnHandler'.
+consoleLogger.js:187 ActorTurnHandler._resetTurnStateAndResources (context: 'destroy-ActorTurnHandler'). Context actor: None. Handler actor: None.
+consoleLogger.js:187 ActorTurnHandler: Base per-turn state reset complete for 'destroy-ActorTurnHandler'. Subclasses may perform additional cleanup.
+consoleLogger.js:187 ActorTurnHandler: Actor-specific state reset complete for 'destroy-ActorTurnHandler'.
+consoleLogger.js:187 ActorTurnHandler.destroy() complete. Final state: TurnIdleState
+consoleLogger.js:187 ActorTurnHandler.destroy() cleanup complete.
+consoleLogger.js:187 VED: Event 'core:turn_processing_started' dispatch successful.
+consoleLogger.js:187 Resolving turn handler for entity p_erotica:amaia_castillo_instance...
+consoleLogger.js:187 TurnHandlerResolver: Resolving handler for actor p_erotica:amaia_castillo_instance...
+consoleLogger.js:187 Match found for actor p_erotica:amaia_castillo_instance. Applying rule: 'AI'.
+consoleLogger.js:187 TurnHandlerResolver: Creating new AIHandler for actor p_erotica:amaia_castillo_instance.
+consoleLogger.js:187 ActorTurnHandler initial state set to: TurnIdleState. EnterState will be called on first transition or explicit start.
+consoleLogger.js:187 ActorTurnHandler initialised. Dependencies assigned. Initial state set.
+consoleLogger.js:187 Calling startTurn on ActorTurnHandler for entity p_erotica:amaia_castillo_instance
+turnManager.js:440 TurnManager: handler = ActorTurnHandler {_logger: ConsoleLogger, #turnEndPort: EventBusTurnEndAdapter, #strategyFactory: ActorAwareStrategyFactory, #turnContextBuilder: TurnContextBuilder, #awaitState: _AwaitTurnEndState, …} handler.startTurn = function
+consoleLogger.js:187 ActorTurnHandler.startTurn called for actor p_erotica:amaia_castillo_instance.
+consoleLogger.js:187 ActorAwareStrategyFactory: Creating GenericTurnStrategy for p_erotica:amaia_castillo_instance using provider type human.
+consoleLogger.js:187 ActorTurnHandler: Instantiated turn strategy for actor p_erotica:amaia_castillo_instance via factory.
+consoleLogger.js:187 TurnContextBuilder: Building context for actor p_erotica:amaia_castillo_instance.
+consoleLogger.js:187 ActorTurnHandler._setCurrentTurnContextInternal: Setting turn context to object for actor p_erotica:amaia_castillo_instance.
+consoleLogger.js:187 ActorTurnHandler._setCurrentTurnContextInternal: Aligning _currentActor ('null') with new TurnContext actor ('p_erotica:amaia_castillo_instance').
+consoleLogger.js:187 ActorTurnHandler.startTurn: TurnContext created for actor p_erotica:amaia_castillo_instance via builder.
+consoleLogger.js:187 TurnIdleState: Received startTurn for actor p_erotica:amaia_castillo_instance.
+consoleLogger.js:187 TurnIdleState: ITurnContext confirmed for actor p_erotica:amaia_castillo_instance. Transitioning to AwaitingActorDecisionState.
+consoleLogger.js:187 ActorTurnHandler: Received request to transition to AwaitingInput state.
+consoleLogger.js:187 ActorTurnHandler: State Transition: TurnIdleState → AwaitingActorDecisionState
+consoleLogger.js:187 ActorTurnHandler.onExitState hook: Exiting TurnIdleState to AwaitingActorDecisionState
+consoleLogger.js:187 Turn initiation for p_erotica:amaia_castillo_instance started via ActorTurnHandler. TurnManager now WAITING for 'core:turn_ended' event.
+consoleLogger.js:187 TurnIdleState: Exiting. Actor: p_erotica:amaia_castillo_instance. Transitioning to AwaitingActorDecisionState.
+consoleLogger.js:187 ActorTurnHandler.onEnterState hook: Entering AwaitingActorDecisionState from TurnIdleState
+consoleLogger.js:187 AwaitingActorDecisionState: Entered. Actor: p_erotica:amaia_castillo_instance. Previous state: TurnIdleState.
+consoleLogger.js:187 AwaitingActorDecisionState: Actor p_erotica:amaia_castillo_instance. Attempting to retrieve turn strategy.
+consoleLogger.js:187 AwaitingActorDecisionState: Strategy GenericTurnStrategy obtained for actor p_erotica:amaia_castillo_instance. Requesting action decision.
+consoleLogger.js:187 [ChoicePipeline] Fetching actions for p_erotica:amaia_castillo_instance
+consoleLogger.js:187 New turn detected. Clearing AvailableActionsProvider cache.
+consoleLogger.js:187 [Cache Miss] Discovering actions for actor p_erotica:amaia_castillo_instance
+consoleLogger.js:187 ActionIndex: Retrieved 4 candidate actions for actor p_erotica:amaia_castillo_instance.
+consoleLogger.js:187 ActionValidationContextBuilder: ActionValidationContextBuilder: Building context for action 'core:follow', actor 'p_erotica:amaia_castillo_instance'. Only actor context is included as target filtering is handled by Scope DSL.
+consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[core:follow]: Evaluation Context Built Successfully.
+consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[core:follow]: Actor entity [p_erotica:amaia_castillo_instance] has 19 components available.
+consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[core:follow] Context: {
+  "actor": {
+    "id": "p_erotica:amaia_castillo_instance",
+    "components": {
+      "core:name": {
+        "text": "Amaia Castillo"
       },
-      "result_variable": "leaderName"
-    }
-  },
-  {
-    "type": "QUERY_COMPONENT",
-    "comment": "Need the location to tag the perceptible event.",
-    "parameters": {
-      "entity_ref": "actor",
-      "component_type": "core:position",
-      "result_variable": "actorPos"
-    }
-  },
-  {
-    "type": "SET_VARIABLE",
-    "parameters": {
-      "variable_name": "logMessage",
-      "value": "{context.followerName} is now following {context.leaderName}."
-    }
-  },
-  {
-    "type": "SET_VARIABLE",
-    "parameters": {
-      "variable_name": "locationId",
-      "value": "{context.actorPos.locationId}"
-    }
-  },
-  {
-    "type": "SET_VARIABLE",
-    "parameters": {
-      "variable_name": "perceptionType",
-      "value": "action_target_general"
-    }
-  },
-  {
-    "type": "SET_VARIABLE",
-    "parameters": {
-      "variable_name": "targetId",
-      "value": "{event.payload.targetId}"
-    }
-  },
-  {
-    "type": "GET_TIMESTAMP",
-    "parameters": {
-      "result_variable": "nowIso"
-    }
-  },
-  {
-    "type": "DISPATCH_EVENT",
-    "parameters": {
-      "eventType": "core:perceptible_event",
-      "payload": {
-        "eventName": "core:perceptible_event",
-        "locationId": "{context.locationId}",
-        "descriptionText": "{context.logMessage}",
-        "timestamp": "{context.nowIso}",
-        "perceptionType": "{context.perceptionType}",
-        "actorId": "{event.payload.actorId}",
-        "targetId": "{context.targetId}",
-        "involvedEntities": []
-      }
-    }
-  },
-  {
-    "type": "DISPATCH_EVENT",
-    "parameters": {
-      "eventType": "core:display_successful_action_result",
-      "payload": {
-        "message": "{context.logMessage}"
-      }
-    }
-  },
-  {
-    "type": "END_TURN",
-    "parameters": {
-      "entityId": "{event.payload.actorId}",
-      "success": true
+      "core:portrait": {
+        "imagePath": "portraits/amaia_castillo.png",
+        "altText": "Amaia Castillo - former model and sugar mommy."
+      },
+      "core:profile": {
+        "text": "My name is Amaia - Basque for 'the end'. A grim joke, don't you think, for someone feeling perpetually trapped? I possess this hair, luscious blonde, and these eyes... unnaturally pale yellow-amber. Men call them hypnotic; I know they see predation. I can feel their gazes constantly, inevitably, drawn to my G-cup breasts - my curated burden and power. My posture reflects my vigilance: shoulders thrown back, chin high. My neck? Always twisting. Always watching. Modeling, from seventeen to twenty-two, taught me my body's value... and the hollowness of selling its image. My marriage? To a wealthy restaurateur? It offered the illusion of agency. Navigating Donostia's elite suffocates me. They reward me materially, yet strip away any semblance of purpose. Childlessness... that emptiness wasn't a war I fought, but a surrender. Now I fill its vacuum with transgressive fantasies: I picture myself as a sugar mommy, lavishing passion on a young athlete tethered to me by my husband's very wealth. My fluency - Euskara, Spanish, English, French - and intimate grasp of Basque culinary politics? Merely tools for this gilded cage. My nuances? A strategic reveal - weaponizing vulnerability shapes how I'm seen. Possessive object handling? I misuse luxury items deliberately, proving I won't be rendered irrelevant. And my quirk - that predatory pause and tension? The micro-movement of frozen focus, then the coiled torso-twist? That's instinct taking over when I observe a target."
+      },
+      "core:personality": {
+        "text": "My charm is a weapon: carefully calibrated, icy, meant only to disarm strategically. My discipline is furious, sacrificial - punishing this body I've commodified to maintain its exacting value. And my care? It's a act born of desperation: lavish patronage thrown at young talent, a displaced, pathetic attempt to feel... generative."
+      },
+      "core:likes": {
+        "text": "Kursaal's Abstract Brutalism speaks to me - unforgiving, unapologetic presence. Sour cherries... things that fight sweetness, shock my senses back from numbness. Observing teenage athletes... yes. The raw potential, brutally channeled. The disciplined repetition. Fascinating."
+      },
+      "core:dislikes": {
+        "text": "I despise untouched luxury items... sterile gifts signifying an utter lack of engagement. And bodies too like my own? Those 'cougar' caricatures... they make my skin crawl."
+      },
+      "core:fears": {
+        "text": "I fear becoming an architectural ghost... dissolving into these walls, noticed only as ambient noise. And the False Palladium? Terrifying: discovering that the boy, the patronage, the carefully built fantasy... it's just hollow gilding on the same emptiness."
+      },
+      "core:goals": {
+        "goals": [
+          {
+            "text": "I will cement myself as the indispensable face of Donostia's art film festivals - visibly steering funding panels, commanding introductions, claiming photographic prominence."
+          },
+          {
+            "text": "I must procure the perfect residence - my discretionary funds will manifest my architecture of control. Every view, every line, obsessively chosen to be my fortress."
+          }
+        ]
+      },
+      "core:secrets": {
+        "text": "My erotic manuscript... tucked away. Pages of transgressive fantasies intertwined with stark psychoanalysis of adolescent males. Defense mechanisms, vulnerabilities — strategically noted. Digital and physical backups. My 'Contingency': jewels, curated art pieces. My hidden proof of worth manufactured outside this marriage. My hoarded potential energy. My potency totem."
+      },
+      "core:speech_patterns": {
+        "patterns": [
+          "I translate life to currency language: 'That cellist? Undervalued stock due for correction...', 'Invested too much emotional capital there... dreadful ROI'.",
+          "I favor an arrested metaphor: Cutting thoughts deliberately ('The situation resembles... Venetian fog...') — leaves them hanging.",
+          "Disciplined brevity anchors me. Complex emotions are crushed into clipped precision: 'Tiring. Understood. Later.'",
+          "Montage proofing keeps them off balance. I switch unexpectedly to Euskara or French mid-sentence - it marks territory, asserts dominance in the silence."
+        ]
+      },
+      "anatomy:body": {
+        "recipeId": "p_erotica:amaia_castillo_recipe",
+        "body": {
+          "root": "1260e84c-b3d1-4c33-b683-feed895a3ea1",
+          "parts": {
+            "torso": "1260e84c-b3d1-4c33-b683-feed895a3ea1",
+            "head": "ce34b37b-c240-4b43-86f9-55e7aba40e42",
+            "left arm": "652df5d8-9df6-40f0-bdb0-44d101c8ec95",
+            "right arm": "a2e1f3f7-2fee-4646-b5dd-be6860dae273",
+            "left leg": "d90b0d58-210f-48f7-aeee-4db5f099b109",
+            "right leg": "70759dff-7f06-4ba9-8dde-3128315e262d",
+            "left eye": "381c585b-d1ec-408c-a3e3-4ee214dcafef",
+            "right eye": "e08e03b2-e11f-45f6-8ec1-1f01c776bf10",
+            "left ear": "c3a19b84-7a95-49e3-9cd1-d7bc00e1b63c",
+            "right ear": "e4e8f125-f859-4218-a74c-acfc77194ba9",
+            "nose": "70af9c80-35af-49f7-9019-9afc66fa2694",
+            "mouth": "9b621a64-ec17-4eec-a490-55ea84ba6ae9",
+            "teeth": "c8a54815-49f4-469f-99e2-6cbfa1629777",
+            "hair": "fd5f7c32-9b94-4bdb-91d1-48253aa6f1fc",
+            "pubic hair": "699970c2-47a1-47f1-9197-cbc8b34c7e6c",
+            "left breast": "43bd587c-9fe1-4b04-925d-e1572cea345c",
+            "right breast": "5f20659d-e96a-4b24-bad9-d61b315e4d0a",
+            "vagina": "71218d3c-d16d-484d-ad09-fc338b26de36",
+            "left arm hand": "3dbae870-0e20-4f4c-9107-123e46a67ed5",
+            "right arm hand": "ebcb7f08-71c7-4998-af4d-eacb04aabb55",
+            "left leg foot": "e87bb538-d441-468f-a378-37219362f228",
+            "right leg foot": "8449123e-4db2-4d89-b2e6-03ff6c86037e",
+            "asshole": "7c2ae300-4403-4fb7-8a56-7e0883ba1623"
+          }
+        }
+      },
+      "core:perception_log": {
+        "maxEntries": 50,
+        "logEntries": [
+          {
+            "descriptionText": "Iker Aguirre says: \"*Iker is leaning back against the wall of the coffee shop, gazing over the patrons at the afternoon light shining over the water of the La Concha Bay.*\"",
+            "timestamp": "2025-07-09T14:54:32.769Z",
+            "perceptionType": "speech_local",
+            "actorId": "p_erotica:iker_aguirre_instance",
+            "targetId": null,
+            "involvedEntities": []
+          }
+        ]
+      },
+      "core:actor": {},
+      "core:player_type": {
+        "type": "llm"
+      },
+      "core:position": {
+        "locationId": "p_erotica:outside_tables_coffee_shop_instance"
+      },
+      "core:short_term_memory": {
+        "thoughts": [],
+        "maxEntries": 10
+      },
+      "core:notes": {
+        "notes": []
+      },
+      "core:description": {
+        "text": "Hair: long, blonde, wavy\nEyes: amber, almond\nBreasts: G-cup, meaty, soft\nLegs: long, shapely\nPubic hair: curly"
+      },
+      "core:current_actor": {}
     }
   }
-]
-consoleLogger.js:187 SystemLogicInterpreter: [Rule 'core_handle_follow' IF#3 - Action 1/12] About to execute operation of type: ESTABLISH_FOLLOW_RELATION
-consoleLogger.js:187 OperationInterpreter: Resolved full string placeholder {event.payload.actorId} to: isekai:hero_instance
-consoleLogger.js:187 OperationInterpreter: Resolved full string placeholder {event.payload.targetId} to: isekai:ninja_instance
-consoleLogger.js:187 OperationInterpreter: Executing handler for operation type "ESTABLISH_FOLLOW_RELATION"…
-consoleLogger.js:187 RebuildLeaderListCacheHandler: [RebuildLeaderListCacheHandler] Initialized.
-consoleLogger.js:187 EstablishFollowRelationHandler: [EstablishFollowRelationHandler] Initialized
-consoleLogger.js:187 [EstablishFollowRelationHandler] establishing follow: follower=isekai:hero_instance, leader=isekai:ninja_instance
-consoleLogger.js:187 EntityMutationManager.addComponent: Adding component 'core:following' to entity 'isekai:hero_instance'
-consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
-consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
-consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'core:following', componentData: {…}, oldComponentData: undefined}
-consoleLogger.js:187 Successfully added/updated component 'core:following' data on entity 'isekai:hero_instance'.
-consoleLogger.js:187 EntityQueryManager.getEntitiesWithComponent: Found 1 entities with component 'core:following'
-consoleLogger.js:187 EntityMutationManager.addComponent: Adding component 'core:leading' to entity 'isekai:ninja_instance'
-consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
-consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
-consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'core:leading', componentData: {…}, oldComponentData: undefined}
-consoleLogger.js:187 Successfully added/updated component 'core:leading' data on entity 'isekai:ninja_instance'.
-consoleLogger.js:187 [RebuildLeaderListCacheHandler] Rebuilt cache for 1/1 leader(s).
-consoleLogger.js:187 SystemLogicInterpreter: [Rule 'core_handle_follow' IF#3 - Action 1/12] Finished executing operation of type: ESTABLISH_FOLLOW_RELATION
-consoleLogger.js:187 SystemLogicInterpreter: [Rule 'core_handle_follow' IF#3 - Action 2/12] About to execute operation of type: GET_NAME
-consoleLogger.js:187 OperationInterpreter: Executing handler for operation type "GET_NAME"…
-consoleLogger.js:187 SystemLogicInterpreter: GET_NAME: Resolved name for 'isekai:hero_instance' -> 'Joel Overberus'.
-consoleLogger.js:187 SystemLogicInterpreter: [Rule 'core_handle_follow' IF#3 - Action 2/12] Finished executing operation of type: GET_NAME
-consoleLogger.js:187 SystemLogicInterpreter: [Rule 'core_handle_follow' IF#3 - Action 3/12] About to execute operation of type: GET_NAME
-consoleLogger.js:187 OperationInterpreter: Resolved full string placeholder {event.payload.targetId} to: isekai:ninja_instance
-consoleLogger.js:187 OperationInterpreter: Executing handler for operation type "GET_NAME"…
-consoleLogger.js:187 SystemLogicInterpreter: GET_NAME: Resolved name for 'isekai:ninja_instance' -> 'Ninja Ninjason'.
-consoleLogger.js:187 SystemLogicInterpreter: [Rule 'core_handle_follow' IF#3 - Action 3/12] Finished executing operation of type: GET_NAME
-consoleLogger.js:187 SystemLogicInterpreter: [Rule 'core_handle_follow' IF#3 - Action 4/12] About to execute operation of type: QUERY_COMPONENT
-consoleLogger.js:187 OperationInterpreter: Executing handler for operation type "QUERY_COMPONENT"…
-consoleLogger.js:187 SystemLogicInterpreter: QueryComponentHandler: Attempting to query component "core:position" from entity "isekai:hero_instance". Storing result in context variable "actorPos".
-consoleLogger.js:187 SystemLogicInterpreter: QueryComponentHandler: Successfully queried component "core:position" from entity "isekai:hero_instance". Result stored in "actorPos": {"locationId":"isekai:adventurers_guild_instance"}
-consoleLogger.js:187 SystemLogicInterpreter: [Rule 'core_handle_follow' IF#3 - Action 4/12] Finished executing operation of type: QUERY_COMPONENT
-consoleLogger.js:187 SystemLogicInterpreter: [Rule 'core_handle_follow' IF#3 - Action 5/12] About to execute operation of type: SET_VARIABLE
-consoleLogger.js:187 OperationInterpreter: Replaced embedded placeholder {context.followerName} with string: "Joel Overberus"
-consoleLogger.js:187 OperationInterpreter: Replaced embedded placeholder {context.leaderName} with string: "Ninja Ninjason"
-consoleLogger.js:187 OperationInterpreter: Executing handler for operation type "SET_VARIABLE"…
-consoleLogger.js:187 SET_VARIABLE: Value for "logMessage" is not a non-empty object. Using directly.
-consoleLogger.js:187 SET_VARIABLE: Setting context variable "logMessage" in evaluationContext.context to value: "Joel Overberus is now following Ninja Ninjason."
-consoleLogger.js:187 SystemLogicInterpreter: [Rule 'core_handle_follow' IF#3 - Action 5/12] Finished executing operation of type: SET_VARIABLE
-consoleLogger.js:187 SystemLogicInterpreter: [Rule 'core_handle_follow' IF#3 - Action 6/12] About to execute operation of type: SET_VARIABLE
-consoleLogger.js:187 OperationInterpreter: Resolved full string placeholder {context.actorPos.locationId} to: isekai:adventurers_guild_instance
-consoleLogger.js:187 OperationInterpreter: Executing handler for operation type "SET_VARIABLE"…
-consoleLogger.js:187 SET_VARIABLE: Value for "locationId" is not a non-empty object. Using directly.
-consoleLogger.js:187 SET_VARIABLE: Setting context variable "locationId" in evaluationContext.context to value: "isekai:adventurers_guild_instance"
-consoleLogger.js:187 SystemLogicInterpreter: [Rule 'core_handle_follow' IF#3 - Action 6/12] Finished executing operation of type: SET_VARIABLE
-consoleLogger.js:187 SystemLogicInterpreter: [Rule 'core_handle_follow' IF#3 - Action 7/12] About to execute operation of type: SET_VARIABLE
-consoleLogger.js:187 OperationInterpreter: Executing handler for operation type "SET_VARIABLE"…
-consoleLogger.js:187 SET_VARIABLE: Value for "perceptionType" is not a non-empty object. Using directly.
-consoleLogger.js:187 SET_VARIABLE: Setting context variable "perceptionType" in evaluationContext.context to value: "action_target_general"
-consoleLogger.js:187 SystemLogicInterpreter: [Rule 'core_handle_follow' IF#3 - Action 7/12] Finished executing operation of type: SET_VARIABLE
-consoleLogger.js:187 SystemLogicInterpreter: [Rule 'core_handle_follow' IF#3 - Action 8/12] About to execute operation of type: SET_VARIABLE
-consoleLogger.js:187 OperationInterpreter: Resolved full string placeholder {event.payload.targetId} to: isekai:ninja_instance
-consoleLogger.js:187 OperationInterpreter: Executing handler for operation type "SET_VARIABLE"…
-consoleLogger.js:187 SET_VARIABLE: Value for "targetId" is not a non-empty object. Using directly.
-consoleLogger.js:187 SET_VARIABLE: Setting context variable "targetId" in evaluationContext.context to value: "isekai:ninja_instance"
-consoleLogger.js:187 SystemLogicInterpreter: [Rule 'core_handle_follow' IF#3 - Action 8/12] Finished executing operation of type: SET_VARIABLE
-consoleLogger.js:187 SystemLogicInterpreter: [Rule 'core_handle_follow' IF#3 - Action 9/12] About to execute operation of type: GET_TIMESTAMP
-consoleLogger.js:187 OperationInterpreter: Executing handler for operation type "GET_TIMESTAMP"…
-consoleLogger.js:187 SystemLogicInterpreter: GET_TIMESTAMP → nowIso = 2025-07-08T19:46:12.822Z
-consoleLogger.js:187 SystemLogicInterpreter: [Rule 'core_handle_follow' IF#3 - Action 9/12] Finished executing operation of type: GET_TIMESTAMP
-consoleLogger.js:187 SystemLogicInterpreter: [Rule 'core_handle_follow' IF#3 - Action 10/12] About to execute operation of type: DISPATCH_EVENT
-consoleLogger.js:187 OperationInterpreter: Resolved full string placeholder {context.locationId} to: isekai:adventurers_guild_instance
-consoleLogger.js:187 OperationInterpreter: Resolved full string placeholder {context.logMessage} to: Joel Overberus is now following Ninja Ninjason.
-consoleLogger.js:187 OperationInterpreter: Resolved full string placeholder {context.nowIso} to: 2025-07-08T19:46:12.822Z
-consoleLogger.js:187 OperationInterpreter: Resolved full string placeholder {context.perceptionType} to: action_target_general
-consoleLogger.js:187 OperationInterpreter: Resolved full string placeholder {event.payload.actorId} to: isekai:hero_instance
-consoleLogger.js:187 OperationInterpreter: Resolved full string placeholder {context.targetId} to: isekai:ninja_instance
+}
+consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[core:follow]: Evaluating 2 prerequisite rule(s)...
+consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[core:follow]: Resolving condition_ref 'core:actor-can-move'...
+consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[core:follow]:   - Evaluating resolved rule: {"hasPartWithComponentValue":["actor","core:movement","locked",false]}
+consoleLogger.js:187 JsonLogicEvaluationService: Evaluating rule: {"hasPartWithComponentValue":["actor","core:movement","locked",false]}. Context keys: actor
+consoleLogger.js:187 JsonLogicCustomOperators: hasPartWithComponentValue called with entityPath='actor', componentId='core:movement', propertyPath='locked', expectedValue='false'
+consoleLogger.js:187 JsonLogicCustomOperators: hasPartWithComponentValue: Found entity ID: p_erotica:amaia_castillo_instance
+16consoleLogger.js:187 EntityQueryManager.getEntitiesWithComponent: Found 44 entities with component 'anatomy:joint'
+consoleLogger.js:187 JsonLogicCustomOperators: hasPartWithComponentValue(p_erotica:amaia_castillo_instance, core:movement, locked, false) = true
+consoleLogger.js:187 JsonLogicEvaluationService: Rule evaluation raw result: true, Final boolean: true
+consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[core:follow]:   - Prerequisite Rule 1/2 PASSED.
+consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[core:follow]: Resolving condition_ref 'core:actor-is-following'...
+consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[core:follow]:   - Evaluating resolved rule: {"not":{"!!":{"var":"actor.components.core:following"}}}
+consoleLogger.js:187 JsonLogicEvaluationService: Evaluating rule: {"not":{"!!":{"var":"actor.components.core:following"}}}. Context keys: actor, _currentPath
+consoleLogger.js:187 JsonLogicEvaluationService: Rule evaluation raw result: true, Final boolean: true
+consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[core:follow]:   - Prerequisite Rule 2/2 PASSED.
+consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[core:follow]: → PASSED (All 2 prerequisite rules evaluated successfully).
+consoleLogger.js:187 EntityQueryManager.getEntitiesWithComponent: Found 2 entities with component 'core:position'
+consoleLogger.js:187 JsonLogicEvaluationService: Resolving condition_ref 'core:entity-at-location'...
+consoleLogger.js:187 JsonLogicEvaluationService: Resolving condition_ref 'core:entity-is-not-current-actor'...
+consoleLogger.js:187 JsonLogicEvaluationService: Resolving condition_ref 'core:entity-has-actor-component'...
+consoleLogger.js:187 JsonLogicEvaluationService: Resolving condition_ref 'core:entity-is-following-actor'...
+consoleLogger.js:187 JsonLogicEvaluationService: Evaluating rule: {"and":[{"==":[{"var":"entity.components.core:position.locationId"},{"var":"location.id"}]},{"!=":[{"var":"entity.id"},{"var":"actor.id"}]},{"!!":{"va.... Context keys: entity, actor, location
+consoleLogger.js:187 JsonLogicEvaluationService: Detailed evaluation of AND operation with 5 conditions:
+consoleLogger.js:187 JsonLogicEvaluationService:   Condition 1/5: {"==":[{"var":"entity.components.core:position.locationId"},{"var":"location.id"}]} => true
+consoleLogger.js:187 JsonLogicEvaluationService:     Entity: p_erotica:iker_aguirre_instance, Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:     Actor: p_erotica:amaia_castillo_instance, Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:     Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:   Condition 2/5: {"!=":[{"var":"entity.id"},{"var":"actor.id"}]} => true
+consoleLogger.js:187 JsonLogicEvaluationService:     Entity: p_erotica:iker_aguirre_instance, Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:     Actor: p_erotica:amaia_castillo_instance, Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:     Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:   Condition 3/5: {"!!":{"var":"entity.components.core:actor"}} => true
+consoleLogger.js:187 JsonLogicEvaluationService:     Entity: p_erotica:iker_aguirre_instance, Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:     Actor: p_erotica:amaia_castillo_instance, Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:     Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:   Condition 4/5: {"not":{"==":[{"var":"entity.components.core:following.leaderId"},{"var":"actor.id"}]}} => true
+consoleLogger.js:187 JsonLogicEvaluationService:     Entity: p_erotica:iker_aguirre_instance, Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:     Actor: p_erotica:amaia_castillo_instance, Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:     Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:   Condition 5/5: {"not":{"in":[{"var":"entity.id"},{"var":"actor.components.core:leading.followers"}]}} => true
+consoleLogger.js:187 JsonLogicEvaluationService:     Entity: p_erotica:iker_aguirre_instance, Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:     Actor: p_erotica:amaia_castillo_instance, Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:     Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService: Rule evaluation raw result: true, Final boolean: true
+consoleLogger.js:187 JsonLogicEvaluationService: Resolving condition_ref 'core:entity-at-location'...
+consoleLogger.js:187 JsonLogicEvaluationService: Resolving condition_ref 'core:entity-is-not-current-actor'...
+consoleLogger.js:187 JsonLogicEvaluationService: Resolving condition_ref 'core:entity-has-actor-component'...
+consoleLogger.js:187 JsonLogicEvaluationService: Resolving condition_ref 'core:entity-is-following-actor'...
+consoleLogger.js:187 JsonLogicEvaluationService: Evaluating rule: {"and":[{"==":[{"var":"entity.components.core:position.locationId"},{"var":"location.id"}]},{"!=":[{"var":"entity.id"},{"var":"actor.id"}]},{"!!":{"va.... Context keys: entity, actor, location
+consoleLogger.js:187 JsonLogicEvaluationService: Detailed evaluation of AND operation with 5 conditions:
+consoleLogger.js:187 JsonLogicEvaluationService:   Condition 1/5: {"==":[{"var":"entity.components.core:position.locationId"},{"var":"location.id"}]} => true
+consoleLogger.js:187 JsonLogicEvaluationService:     Entity: p_erotica:amaia_castillo_instance, Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:     Actor: p_erotica:amaia_castillo_instance, Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:     Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:   Condition 2/5: {"!=":[{"var":"entity.id"},{"var":"actor.id"}]} => false
+consoleLogger.js:187 JsonLogicEvaluationService:     Entity: p_erotica:amaia_castillo_instance, Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:     Actor: p_erotica:amaia_castillo_instance, Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:     Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:   AND operation short-circuited at condition 2 (false result)
+consoleLogger.js:187 JsonLogicEvaluationService: Rule evaluation raw result: false, Final boolean: false
+consoleLogger.js:187 Formatting command for action: core:follow, template: "follow {target}", targetType: entity
+consoleLogger.js:187  -> Found entity p_erotica:iker_aguirre_instance, display name: "Iker Aguirre"
+consoleLogger.js:187  <- Final formatted command: "follow Iker Aguirre"
+consoleLogger.js:187 ActionValidationContextBuilder: ActionValidationContextBuilder: Building context for action 'core:go', actor 'p_erotica:amaia_castillo_instance'. Only actor context is included as target filtering is handled by Scope DSL.
+consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[core:go]: Evaluation Context Built Successfully.
+consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[core:go]: Actor entity [p_erotica:amaia_castillo_instance] has 19 components available.
+consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[core:go] Context: {
+  "actor": {
+    "id": "p_erotica:amaia_castillo_instance",
+    "components": {
+      "core:name": {
+        "text": "Amaia Castillo"
+      },
+      "core:portrait": {
+        "imagePath": "portraits/amaia_castillo.png",
+        "altText": "Amaia Castillo - former model and sugar mommy."
+      },
+      "core:profile": {
+        "text": "My name is Amaia - Basque for 'the end'. A grim joke, don't you think, for someone feeling perpetually trapped? I possess this hair, luscious blonde, and these eyes... unnaturally pale yellow-amber. Men call them hypnotic; I know they see predation. I can feel their gazes constantly, inevitably, drawn to my G-cup breasts - my curated burden and power. My posture reflects my vigilance: shoulders thrown back, chin high. My neck? Always twisting. Always watching. Modeling, from seventeen to twenty-two, taught me my body's value... and the hollowness of selling its image. My marriage? To a wealthy restaurateur? It offered the illusion of agency. Navigating Donostia's elite suffocates me. They reward me materially, yet strip away any semblance of purpose. Childlessness... that emptiness wasn't a war I fought, but a surrender. Now I fill its vacuum with transgressive fantasies: I picture myself as a sugar mommy, lavishing passion on a young athlete tethered to me by my husband's very wealth. My fluency - Euskara, Spanish, English, French - and intimate grasp of Basque culinary politics? Merely tools for this gilded cage. My nuances? A strategic reveal - weaponizing vulnerability shapes how I'm seen. Possessive object handling? I misuse luxury items deliberately, proving I won't be rendered irrelevant. And my quirk - that predatory pause and tension? The micro-movement of frozen focus, then the coiled torso-twist? That's instinct taking over when I observe a target."
+      },
+      "core:personality": {
+        "text": "My charm is a weapon: carefully calibrated, icy, meant only to disarm strategically. My discipline is furious, sacrificial - punishing this body I've commodified to maintain its exacting value. And my care? It's a act born of desperation: lavish patronage thrown at young talent, a displaced, pathetic attempt to feel... generative."
+      },
+      "core:likes": {
+        "text": "Kursaal's Abstract Brutalism speaks to me - unforgiving, unapologetic presence. Sour cherries... things that fight sweetness, shock my senses back from numbness. Observing teenage athletes... yes. The raw potential, brutally channeled. The disciplined repetition. Fascinating."
+      },
+      "core:dislikes": {
+        "text": "I despise untouched luxury items... sterile gifts signifying an utter lack of engagement. And bodies too like my own? Those 'cougar' caricatures... they make my skin crawl."
+      },
+      "core:fears": {
+        "text": "I fear becoming an architectural ghost... dissolving into these walls, noticed only as ambient noise. And the False Palladium? Terrifying: discovering that the boy, the patronage, the carefully built fantasy... it's just hollow gilding on the same emptiness."
+      },
+      "core:goals": {
+        "goals": [
+          {
+            "text": "I will cement myself as the indispensable face of Donostia's art film festivals - visibly steering funding panels, commanding introductions, claiming photographic prominence."
+          },
+          {
+            "text": "I must procure the perfect residence - my discretionary funds will manifest my architecture of control. Every view, every line, obsessively chosen to be my fortress."
+          }
+        ]
+      },
+      "core:secrets": {
+        "text": "My erotic manuscript... tucked away. Pages of transgressive fantasies intertwined with stark psychoanalysis of adolescent males. Defense mechanisms, vulnerabilities — strategically noted. Digital and physical backups. My 'Contingency': jewels, curated art pieces. My hidden proof of worth manufactured outside this marriage. My hoarded potential energy. My potency totem."
+      },
+      "core:speech_patterns": {
+        "patterns": [
+          "I translate life to currency language: 'That cellist? Undervalued stock due for correction...', 'Invested too much emotional capital there... dreadful ROI'.",
+          "I favor an arrested metaphor: Cutting thoughts deliberately ('The situation resembles... Venetian fog...') — leaves them hanging.",
+          "Disciplined brevity anchors me. Complex emotions are crushed into clipped precision: 'Tiring. Understood. Later.'",
+          "Montage proofing keeps them off balance. I switch unexpectedly to Euskara or French mid-sentence - it marks territory, asserts dominance in the silence."
+        ]
+      },
+      "anatomy:body": {
+        "recipeId": "p_erotica:amaia_castillo_recipe",
+        "body": {
+          "root": "1260e84c-b3d1-4c33-b683-feed895a3ea1",
+          "parts": {
+            "torso": "1260e84c-b3d1-4c33-b683-feed895a3ea1",
+            "head": "ce34b37b-c240-4b43-86f9-55e7aba40e42",
+            "left arm": "652df5d8-9df6-40f0-bdb0-44d101c8ec95",
+            "right arm": "a2e1f3f7-2fee-4646-b5dd-be6860dae273",
+            "left leg": "d90b0d58-210f-48f7-aeee-4db5f099b109",
+            "right leg": "70759dff-7f06-4ba9-8dde-3128315e262d",
+            "left eye": "381c585b-d1ec-408c-a3e3-4ee214dcafef",
+            "right eye": "e08e03b2-e11f-45f6-8ec1-1f01c776bf10",
+            "left ear": "c3a19b84-7a95-49e3-9cd1-d7bc00e1b63c",
+            "right ear": "e4e8f125-f859-4218-a74c-acfc77194ba9",
+            "nose": "70af9c80-35af-49f7-9019-9afc66fa2694",
+            "mouth": "9b621a64-ec17-4eec-a490-55ea84ba6ae9",
+            "teeth": "c8a54815-49f4-469f-99e2-6cbfa1629777",
+            "hair": "fd5f7c32-9b94-4bdb-91d1-48253aa6f1fc",
+            "pubic hair": "699970c2-47a1-47f1-9197-cbc8b34c7e6c",
+            "left breast": "43bd587c-9fe1-4b04-925d-e1572cea345c",
+            "right breast": "5f20659d-e96a-4b24-bad9-d61b315e4d0a",
+            "vagina": "71218d3c-d16d-484d-ad09-fc338b26de36",
+            "left arm hand": "3dbae870-0e20-4f4c-9107-123e46a67ed5",
+            "right arm hand": "ebcb7f08-71c7-4998-af4d-eacb04aabb55",
+            "left leg foot": "e87bb538-d441-468f-a378-37219362f228",
+            "right leg foot": "8449123e-4db2-4d89-b2e6-03ff6c86037e",
+            "asshole": "7c2ae300-4403-4fb7-8a56-7e0883ba1623"
+          }
+        }
+      },
+      "core:perception_log": {
+        "maxEntries": 50,
+        "logEntries": [
+          {
+            "descriptionText": "Iker Aguirre says: \"*Iker is leaning back against the wall of the coffee shop, gazing over the patrons at the afternoon light shining over the water of the La Concha Bay.*\"",
+            "timestamp": "2025-07-09T14:54:32.769Z",
+            "perceptionType": "speech_local",
+            "actorId": "p_erotica:iker_aguirre_instance",
+            "targetId": null,
+            "involvedEntities": []
+          }
+        ]
+      },
+      "core:actor": {},
+      "core:player_type": {
+        "type": "llm"
+      },
+      "core:position": {
+        "locationId": "p_erotica:outside_tables_coffee_shop_instance"
+      },
+      "core:short_term_memory": {
+        "thoughts": [],
+        "maxEntries": 10
+      },
+      "core:notes": {
+        "notes": []
+      },
+      "core:description": {
+        "text": "Hair: long, blonde, wavy\nEyes: amber, almond\nBreasts: G-cup, meaty, soft\nLegs: long, shapely\nPubic hair: curly"
+      },
+      "core:current_actor": {}
+    }
+  }
+}
+consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[core:go]: Evaluating 1 prerequisite rule(s)...
+consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[core:go]: Resolving condition_ref 'core:actor-can-move'...
+consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[core:go]:   - Evaluating resolved rule: {"hasPartWithComponentValue":["actor","core:movement","locked",false]}
+consoleLogger.js:187 JsonLogicEvaluationService: Evaluating rule: {"hasPartWithComponentValue":["actor","core:movement","locked",false]}. Context keys: actor
+consoleLogger.js:187 JsonLogicCustomOperators: hasPartWithComponentValue called with entityPath='actor', componentId='core:movement', propertyPath='locked', expectedValue='false'
+consoleLogger.js:187 JsonLogicCustomOperators: hasPartWithComponentValue: Found entity ID: p_erotica:amaia_castillo_instance
+16consoleLogger.js:187 EntityQueryManager.getEntitiesWithComponent: Found 44 entities with component 'anatomy:joint'
+consoleLogger.js:187 JsonLogicCustomOperators: hasPartWithComponentValue(p_erotica:amaia_castillo_instance, core:movement, locked, false) = true
+consoleLogger.js:187 JsonLogicEvaluationService: Rule evaluation raw result: true, Final boolean: true
+consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[core:go]:   - Prerequisite Rule 1/1 PASSED.
+consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[core:go]: → PASSED (All 1 prerequisite rules evaluated successfully).
+consoleLogger.js:187 JsonLogicEvaluationService: Resolving condition_ref 'core:exit-is-unblocked'...
+consoleLogger.js:187 JsonLogicEvaluationService: Evaluating rule: {"!":{"var":"entity.blocker"}}. Context keys: entity, actor, location
+consoleLogger.js:187 JsonLogicEvaluationService: Rule evaluation raw result: true, Final boolean: true
+consoleLogger.js:187 Formatting command for action: core:go, template: "go to {target}", targetType: entity
+consoleLogger.js:187  -> Found entity p_erotica:coffee_shop_instance, display name: "The Gilded Bean"
+consoleLogger.js:187  <- Final formatted command: "go to The Gilded Bean"
+consoleLogger.js:187 Formatting command for action: core:wait, template: "wait", targetType: none
+consoleLogger.js:187  -> No target type, using template as is.
+consoleLogger.js:187  <- Final formatted command: "wait"
+consoleLogger.js:187 ActionValidationContextBuilder: ActionValidationContextBuilder: Building context for action 'intimacy:get_close', actor 'p_erotica:amaia_castillo_instance'. Only actor context is included as target filtering is handled by Scope DSL.
+consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[intimacy:get_close]: Evaluation Context Built Successfully.
+consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[intimacy:get_close]: Actor entity [p_erotica:amaia_castillo_instance] has 19 components available.
+consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[intimacy:get_close] Context: {
+  "actor": {
+    "id": "p_erotica:amaia_castillo_instance",
+    "components": {
+      "core:name": {
+        "text": "Amaia Castillo"
+      },
+      "core:portrait": {
+        "imagePath": "portraits/amaia_castillo.png",
+        "altText": "Amaia Castillo - former model and sugar mommy."
+      },
+      "core:profile": {
+        "text": "My name is Amaia - Basque for 'the end'. A grim joke, don't you think, for someone feeling perpetually trapped? I possess this hair, luscious blonde, and these eyes... unnaturally pale yellow-amber. Men call them hypnotic; I know they see predation. I can feel their gazes constantly, inevitably, drawn to my G-cup breasts - my curated burden and power. My posture reflects my vigilance: shoulders thrown back, chin high. My neck? Always twisting. Always watching. Modeling, from seventeen to twenty-two, taught me my body's value... and the hollowness of selling its image. My marriage? To a wealthy restaurateur? It offered the illusion of agency. Navigating Donostia's elite suffocates me. They reward me materially, yet strip away any semblance of purpose. Childlessness... that emptiness wasn't a war I fought, but a surrender. Now I fill its vacuum with transgressive fantasies: I picture myself as a sugar mommy, lavishing passion on a young athlete tethered to me by my husband's very wealth. My fluency - Euskara, Spanish, English, French - and intimate grasp of Basque culinary politics? Merely tools for this gilded cage. My nuances? A strategic reveal - weaponizing vulnerability shapes how I'm seen. Possessive object handling? I misuse luxury items deliberately, proving I won't be rendered irrelevant. And my quirk - that predatory pause and tension? The micro-movement of frozen focus, then the coiled torso-twist? That's instinct taking over when I observe a target."
+      },
+      "core:personality": {
+        "text": "My charm is a weapon: carefully calibrated, icy, meant only to disarm strategically. My discipline is furious, sacrificial - punishing this body I've commodified to maintain its exacting value. And my care? It's a act born of desperation: lavish patronage thrown at young talent, a displaced, pathetic attempt to feel... generative."
+      },
+      "core:likes": {
+        "text": "Kursaal's Abstract Brutalism speaks to me - unforgiving, unapologetic presence. Sour cherries... things that fight sweetness, shock my senses back from numbness. Observing teenage athletes... yes. The raw potential, brutally channeled. The disciplined repetition. Fascinating."
+      },
+      "core:dislikes": {
+        "text": "I despise untouched luxury items... sterile gifts signifying an utter lack of engagement. And bodies too like my own? Those 'cougar' caricatures... they make my skin crawl."
+      },
+      "core:fears": {
+        "text": "I fear becoming an architectural ghost... dissolving into these walls, noticed only as ambient noise. And the False Palladium? Terrifying: discovering that the boy, the patronage, the carefully built fantasy... it's just hollow gilding on the same emptiness."
+      },
+      "core:goals": {
+        "goals": [
+          {
+            "text": "I will cement myself as the indispensable face of Donostia's art film festivals - visibly steering funding panels, commanding introductions, claiming photographic prominence."
+          },
+          {
+            "text": "I must procure the perfect residence - my discretionary funds will manifest my architecture of control. Every view, every line, obsessively chosen to be my fortress."
+          }
+        ]
+      },
+      "core:secrets": {
+        "text": "My erotic manuscript... tucked away. Pages of transgressive fantasies intertwined with stark psychoanalysis of adolescent males. Defense mechanisms, vulnerabilities — strategically noted. Digital and physical backups. My 'Contingency': jewels, curated art pieces. My hidden proof of worth manufactured outside this marriage. My hoarded potential energy. My potency totem."
+      },
+      "core:speech_patterns": {
+        "patterns": [
+          "I translate life to currency language: 'That cellist? Undervalued stock due for correction...', 'Invested too much emotional capital there... dreadful ROI'.",
+          "I favor an arrested metaphor: Cutting thoughts deliberately ('The situation resembles... Venetian fog...') — leaves them hanging.",
+          "Disciplined brevity anchors me. Complex emotions are crushed into clipped precision: 'Tiring. Understood. Later.'",
+          "Montage proofing keeps them off balance. I switch unexpectedly to Euskara or French mid-sentence - it marks territory, asserts dominance in the silence."
+        ]
+      },
+      "anatomy:body": {
+        "recipeId": "p_erotica:amaia_castillo_recipe",
+        "body": {
+          "root": "1260e84c-b3d1-4c33-b683-feed895a3ea1",
+          "parts": {
+            "torso": "1260e84c-b3d1-4c33-b683-feed895a3ea1",
+            "head": "ce34b37b-c240-4b43-86f9-55e7aba40e42",
+            "left arm": "652df5d8-9df6-40f0-bdb0-44d101c8ec95",
+            "right arm": "a2e1f3f7-2fee-4646-b5dd-be6860dae273",
+            "left leg": "d90b0d58-210f-48f7-aeee-4db5f099b109",
+            "right leg": "70759dff-7f06-4ba9-8dde-3128315e262d",
+            "left eye": "381c585b-d1ec-408c-a3e3-4ee214dcafef",
+            "right eye": "e08e03b2-e11f-45f6-8ec1-1f01c776bf10",
+            "left ear": "c3a19b84-7a95-49e3-9cd1-d7bc00e1b63c",
+            "right ear": "e4e8f125-f859-4218-a74c-acfc77194ba9",
+            "nose": "70af9c80-35af-49f7-9019-9afc66fa2694",
+            "mouth": "9b621a64-ec17-4eec-a490-55ea84ba6ae9",
+            "teeth": "c8a54815-49f4-469f-99e2-6cbfa1629777",
+            "hair": "fd5f7c32-9b94-4bdb-91d1-48253aa6f1fc",
+            "pubic hair": "699970c2-47a1-47f1-9197-cbc8b34c7e6c",
+            "left breast": "43bd587c-9fe1-4b04-925d-e1572cea345c",
+            "right breast": "5f20659d-e96a-4b24-bad9-d61b315e4d0a",
+            "vagina": "71218d3c-d16d-484d-ad09-fc338b26de36",
+            "left arm hand": "3dbae870-0e20-4f4c-9107-123e46a67ed5",
+            "right arm hand": "ebcb7f08-71c7-4998-af4d-eacb04aabb55",
+            "left leg foot": "e87bb538-d441-468f-a378-37219362f228",
+            "right leg foot": "8449123e-4db2-4d89-b2e6-03ff6c86037e",
+            "asshole": "7c2ae300-4403-4fb7-8a56-7e0883ba1623"
+          }
+        }
+      },
+      "core:perception_log": {
+        "maxEntries": 50,
+        "logEntries": [
+          {
+            "descriptionText": "Iker Aguirre says: \"*Iker is leaning back against the wall of the coffee shop, gazing over the patrons at the afternoon light shining over the water of the La Concha Bay.*\"",
+            "timestamp": "2025-07-09T14:54:32.769Z",
+            "perceptionType": "speech_local",
+            "actorId": "p_erotica:iker_aguirre_instance",
+            "targetId": null,
+            "involvedEntities": []
+          }
+        ]
+      },
+      "core:actor": {},
+      "core:player_type": {
+        "type": "llm"
+      },
+      "core:position": {
+        "locationId": "p_erotica:outside_tables_coffee_shop_instance"
+      },
+      "core:short_term_memory": {
+        "thoughts": [],
+        "maxEntries": 10
+      },
+      "core:notes": {
+        "notes": []
+      },
+      "core:description": {
+        "text": "Hair: long, blonde, wavy\nEyes: amber, almond\nBreasts: G-cup, meaty, soft\nLegs: long, shapely\nPubic hair: curly"
+      },
+      "core:current_actor": {}
+    }
+  }
+}
+consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[intimacy:get_close]: Evaluating 1 prerequisite rule(s)...
+consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[intimacy:get_close]: Resolving condition_ref 'core:actor-can-move'...
+consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[intimacy:get_close]:   - Evaluating resolved rule: {"hasPartWithComponentValue":["actor","core:movement","locked",false]}
+consoleLogger.js:187 JsonLogicEvaluationService: Evaluating rule: {"hasPartWithComponentValue":["actor","core:movement","locked",false]}. Context keys: actor
+consoleLogger.js:187 JsonLogicCustomOperators: hasPartWithComponentValue called with entityPath='actor', componentId='core:movement', propertyPath='locked', expectedValue='false'
+consoleLogger.js:187 JsonLogicCustomOperators: hasPartWithComponentValue: Found entity ID: p_erotica:amaia_castillo_instance
+16consoleLogger.js:187 EntityQueryManager.getEntitiesWithComponent: Found 44 entities with component 'anatomy:joint'
+consoleLogger.js:187 JsonLogicCustomOperators: hasPartWithComponentValue(p_erotica:amaia_castillo_instance, core:movement, locked, false) = true
+consoleLogger.js:187 JsonLogicEvaluationService: Rule evaluation raw result: true, Final boolean: true
+consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[intimacy:get_close]:   - Prerequisite Rule 1/1 PASSED.
+consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[intimacy:get_close]: → PASSED (All 1 prerequisite rules evaluated successfully).
+consoleLogger.js:187 EntityQueryManager.getEntitiesWithComponent: Found 2 entities with component 'core:position'
+consoleLogger.js:187 JsonLogicEvaluationService: Resolving condition_ref 'core:entity-at-location'...
+consoleLogger.js:187 JsonLogicEvaluationService: Resolving condition_ref 'core:entity-is-not-current-actor'...
+consoleLogger.js:187 JsonLogicEvaluationService: Resolving condition_ref 'core:entity-has-actor-component'...
+consoleLogger.js:187 JsonLogicEvaluationService: Evaluating rule: {"and":[{"==":[{"var":"entity.components.core:position.locationId"},{"var":"location.id"}]},{"!=":[{"var":"entity.id"},{"var":"actor.id"}]},{"!!":{"va.... Context keys: entity, actor, location
+consoleLogger.js:187 JsonLogicEvaluationService: Detailed evaluation of AND operation with 3 conditions:
+consoleLogger.js:187 JsonLogicEvaluationService:   Condition 1/3: {"==":[{"var":"entity.components.core:position.locationId"},{"var":"location.id"}]} => true
+consoleLogger.js:187 JsonLogicEvaluationService:     Entity: p_erotica:iker_aguirre_instance, Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:     Actor: p_erotica:amaia_castillo_instance, Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:     Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:   Condition 2/3: {"!=":[{"var":"entity.id"},{"var":"actor.id"}]} => true
+consoleLogger.js:187 JsonLogicEvaluationService:     Entity: p_erotica:iker_aguirre_instance, Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:     Actor: p_erotica:amaia_castillo_instance, Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:     Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:   Condition 3/3: {"!!":{"var":"entity.components.core:actor"}} => true
+consoleLogger.js:187 JsonLogicEvaluationService:     Entity: p_erotica:iker_aguirre_instance, Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:     Actor: p_erotica:amaia_castillo_instance, Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:     Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService: Rule evaluation raw result: true, Final boolean: true
+consoleLogger.js:187 JsonLogicEvaluationService: Resolving condition_ref 'core:entity-at-location'...
+consoleLogger.js:187 JsonLogicEvaluationService: Resolving condition_ref 'core:entity-is-not-current-actor'...
+consoleLogger.js:187 JsonLogicEvaluationService: Resolving condition_ref 'core:entity-has-actor-component'...
+consoleLogger.js:187 JsonLogicEvaluationService: Evaluating rule: {"and":[{"==":[{"var":"entity.components.core:position.locationId"},{"var":"location.id"}]},{"!=":[{"var":"entity.id"},{"var":"actor.id"}]},{"!!":{"va.... Context keys: entity, actor, location
+consoleLogger.js:187 JsonLogicEvaluationService: Detailed evaluation of AND operation with 3 conditions:
+consoleLogger.js:187 JsonLogicEvaluationService:   Condition 1/3: {"==":[{"var":"entity.components.core:position.locationId"},{"var":"location.id"}]} => true
+consoleLogger.js:187 JsonLogicEvaluationService:     Entity: p_erotica:amaia_castillo_instance, Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:     Actor: p_erotica:amaia_castillo_instance, Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:     Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:   Condition 2/3: {"!=":[{"var":"entity.id"},{"var":"actor.id"}]} => false
+consoleLogger.js:187 JsonLogicEvaluationService:     Entity: p_erotica:amaia_castillo_instance, Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:     Actor: p_erotica:amaia_castillo_instance, Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:     Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:   AND operation short-circuited at condition 2 (false result)
+consoleLogger.js:187 JsonLogicEvaluationService: Rule evaluation raw result: false, Final boolean: false
+consoleLogger.js:187 Formatting command for action: intimacy:get_close, template: "get close to {target}", targetType: entity
+consoleLogger.js:187  -> Found entity p_erotica:iker_aguirre_instance, display name: "Iker Aguirre"
+consoleLogger.js:187  <- Final formatted command: "get close to Iker Aguirre"
+consoleLogger.js:187 ActionDiscoveryService: Finished action discovery for actor p_erotica:amaia_castillo_instance. Found 4 actions from 4 candidates.
+consoleLogger.js:187 [Action Discovery Trace for actor p_erotica:amaia_castillo_instance]
+consoleLogger.js:198 Action Discovery Trace for p_erotica:amaia_castillo_instance
+consoleLogger.js:187 ActionIndexingService: indexed 4 actions for p_erotica:amaia_castillo_instance
+consoleLogger.js:187 [ChoicePipeline] Actor p_erotica:amaia_castillo_instance: 4 choices ready
+consoleLogger.js:187 VED: Validating payload for event 'core:player_turn_prompt' against schema 'core:player_turn_prompt#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:player_turn_prompt'.
+consoleLogger.js:187 VED: Dispatching event 'core:player_turn_prompt' via EventBus... {entityId: 'p_erotica:amaia_castillo_instance', availableActions: Array(4)}
+consoleLogger.js:187 SystemLogicInterpreter: Received event: core:player_turn_prompt. Found 1 potential rule(s). {payload: {…}}
+consoleLogger.js:187 SystemLogicInterpreter: [Event: core:player_turn_prompt] Assembling execution context via createNestedExecutionContext... (ActorID: p_erotica:amaia_castillo_instance, TargetID: null)
+consoleLogger.js:187 SystemLogicInterpreter: createJsonLogicContext: Creating JsonLogicEvaluationContext for event type [core:player_turn_prompt]. ActorID: [p_erotica:amaia_castillo_instance], TargetID: [None]
+consoleLogger.js:187 SystemLogicInterpreter: createJsonLogicContext: Found actor entity [p_erotica:amaia_castillo_instance]. Creating context entry.
+consoleLogger.js:187 SystemLogicInterpreter: createJsonLogicContext: No targetId provided, target context remains null.
+consoleLogger.js:187 SystemLogicInterpreter: [Event: core:player_turn_prompt] createNestedExecutionContext returned a valid ExecutionContext.
+consoleLogger.js:187 SystemLogicInterpreter: [Event: core:player_turn_prompt] Final ExecutionContext (nested structure) assembled successfully.
+consoleLogger.js:187 SystemLogicInterpreter: [Rule enable_input_on_player_turn] No condition defined or condition is empty. Defaulting to passed.
+consoleLogger.js:187 SystemLogicInterpreter: [Rule 'enable_input_on_player_turn' - Action 1/2] About to execute operation of type: DISPATCH_EVENT
 consoleLogger.js:187 OperationInterpreter: Executing handler for operation type "DISPATCH_EVENT"…
-consoleLogger.js:187 DispatchEventHandler: Attempting to dispatch event "core:perceptible_event" with resolved payload... {payload: {…}}
-consoleLogger.js:187 VED: Validating payload for event 'core:perceptible_event' against schema 'core:perceptible_event#payload'...
-consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:perceptible_event'.
-consoleLogger.js:187 VED: Dispatching event 'core:perceptible_event' via EventBus... {eventName: 'core:perceptible_event', locationId: 'isekai:adventurers_guild_instance', descriptionText: 'Joel Overberus is now following Ninja Ninjason.', timestamp: '2025-07-08T19:46:12.822Z', perceptionType: 'action_target_general', …}
-consoleLogger.js:187 SystemLogicInterpreter: Received event: core:perceptible_event. Found 1 potential rule(s). {payload: {…}}
-consoleLogger.js:187 SystemLogicInterpreter: [Event: core:perceptible_event] Assembling execution context via createNestedExecutionContext... (ActorID: isekai:hero_instance, TargetID: isekai:ninja_instance)
-consoleLogger.js:187 SystemLogicInterpreter: createJsonLogicContext: Creating JsonLogicEvaluationContext for event type [core:perceptible_event]. ActorID: [isekai:hero_instance], TargetID: [isekai:ninja_instance]
-consoleLogger.js:187 SystemLogicInterpreter: createJsonLogicContext: Found actor entity [isekai:hero_instance]. Creating context entry.
-consoleLogger.js:187 SystemLogicInterpreter: createJsonLogicContext: Found target entity [isekai:ninja_instance]. Creating context entry.
-consoleLogger.js:187 SystemLogicInterpreter: [Event: core:perceptible_event] createNestedExecutionContext returned a valid ExecutionContext.
-consoleLogger.js:187 SystemLogicInterpreter: [Event: core:perceptible_event] Final ExecutionContext (nested structure) assembled successfully.
-consoleLogger.js:187 SystemLogicInterpreter: [Rule log_perceptible_events] No condition defined or condition is empty. Defaulting to passed.
-consoleLogger.js:187 SystemLogicInterpreter: [Rule 'log_perceptible_events' - Action 1/2] About to execute operation of type: SET_VARIABLE
-consoleLogger.js:187 OperationInterpreter: Resolved full string placeholder {event.payload.descriptionText} to: Joel Overberus is now following Ninja Ninjason.
-consoleLogger.js:187 OperationInterpreter: Resolved full string placeholder {event.payload.timestamp} to: 2025-07-08T19:46:12.822Z
-consoleLogger.js:187 OperationInterpreter: Resolved full string placeholder {event.payload.perceptionType} to: action_target_general
-consoleLogger.js:187 OperationInterpreter: Resolved full string placeholder {event.payload.actorId} to: isekai:hero_instance
-consoleLogger.js:187 OperationInterpreter: Resolved full string placeholder {event.payload.targetId} to: isekai:ninja_instance
-consoleLogger.js:187 OperationInterpreter: Resolved full string placeholder {event.payload.involvedEntities} to: []
-consoleLogger.js:187 OperationInterpreter: Executing handler for operation type "SET_VARIABLE"…
-consoleLogger.js:187 SET_VARIABLE: Value for "logEntryData" is a non-empty object. Attempting JsonLogic evaluation using executionContext.evaluationContext as data source.
-consoleLogger.js:187 SET_VARIABLE: JsonLogic evaluation successful for "logEntryData". Result: {"descriptionText":"Joel Overberus is now following Ninja Ninjason.","timestamp":"2025-07-08T19:46:12.822Z","perceptionType":"action_target_general","actorId":"isekai:hero_instance","targetId":"isekai:ninja_instance","involvedEntities":[]}
-consoleLogger.js:187 SET_VARIABLE: Setting context variable "logEntryData" in evaluationContext.context to value: {"descriptionText":"Joel Overberus is now following Ninja Ninjason.","timestamp":"2025-07-08T19:46:12.822Z","perceptionType":"action_target_general","actorId":"isekai:hero_instance","targetId":"isekai:ninja_instance","involvedEntities":[]}
-consoleLogger.js:187 SystemLogicInterpreter: [Rule 'log_perceptible_events' - Action 1/2] Finished executing operation of type: SET_VARIABLE
-consoleLogger.js:187 SystemLogicInterpreter: [Rule 'log_perceptible_events' - Action 2/2] About to execute operation of type: ADD_PERCEPTION_LOG_ENTRY
-consoleLogger.js:187 OperationInterpreter: Resolved full string placeholder {event.payload.locationId} to: isekai:adventurers_guild_instance
-consoleLogger.js:187 OperationInterpreter: Resolved full string placeholder {event.payload.descriptionText} to: Joel Overberus is now following Ninja Ninjason.
-consoleLogger.js:187 OperationInterpreter: Resolved full string placeholder {event.payload.timestamp} to: 2025-07-08T19:46:12.822Z
-consoleLogger.js:187 OperationInterpreter: Resolved full string placeholder {event.payload.perceptionType} to: action_target_general
-consoleLogger.js:187 OperationInterpreter: Resolved full string placeholder {event.payload.actorId} to: isekai:hero_instance
-consoleLogger.js:187 OperationInterpreter: Resolved full string placeholder {event.payload.targetId} to: isekai:ninja_instance
-consoleLogger.js:187 OperationInterpreter: Resolved full string placeholder {event.payload.involvedEntities} to: []
-consoleLogger.js:187 OperationInterpreter: Resolved full string placeholder {event.payload.actorId} to: isekai:hero_instance
-consoleLogger.js:187 OperationInterpreter: Executing handler for operation type "ADD_PERCEPTION_LOG_ENTRY"…
-consoleLogger.js:163 EntityQueryManager.hasComponent: The 3-parameter version is deprecated. Use hasComponentOverride(instanceId, componentTypeId) instead of hasComponent(instanceId, componentTypeId, true).
-warn @ consoleLogger.js:163
-hasComponent @ EntityQueryManager.js:136
-hasComponent @ entityManager.js:437
-hasComponent @ entityManagerAdapter.js:53
-execute @ addPerceptionLogEntryHandler.js:105
-(anonymous) @ interpreterRegistrations.js:59
-execute @ operationInterpreter.js:94
-executeActionSequence @ actionSequence.js:95
-_executeActions @ systemLogicInterpreter.js:356
-#processRule @ systemLogicInterpreter.js:335
-#handleEvent @ systemLogicInterpreter.js:268
-(anonymous) @ eventBus.js:144
-dispatch @ eventBus.js:141
-#emitEvent @ validatedEventDispatcher.js:192
-dispatch @ validatedEventDispatcher.js:222
-#dispatchViaValidatedDispatcher @ dispatchEventHandler.js:139
-execute @ dispatchEventHandler.js:175
-(anonymous) @ interpreterRegistrations.js:59
-execute @ operationInterpreter.js:94
-executeActionSequence @ actionSequence.js:95
-handleIf @ ifHandler.js:70
-executeActionSequence @ actionSequence.js:82
-_executeActions @ systemLogicInterpreter.js:356
-#processRule @ systemLogicInterpreter.js:335
-#handleEvent @ systemLogicInterpreter.js:268
-(anonymous) @ eventBus.js:144
-dispatch @ eventBus.js:141
-#emitEvent @ validatedEventDispatcher.js:192
-dispatch @ validatedEventDispatcher.js:222
-dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
-#executeSafely @ safeEventDispatcher.js:88
-dispatch @ safeEventDispatcher.js:122
-dispatchWithErrorHandling @ eventDispatchService.js:98
-dispatchAction @ commandProcessor.js:110
-_dispatchAction @ commandProcessingWorkflow.js:104
-processCommand @ commandProcessingWorkflow.js:239
-_processCommandInternal @ processingCommandState.js:333
-_executeAction @ processingWorkflow.js:261
-await in _executeAction
-run @ processingWorkflow.js:87
-await in run
-enterState @ processingCommandState.js:290
-_transitionToState @ baseTurnHandler.js:236
-await in _transitionToState
-requestProcessingCommandStateTransition @ baseTurnHandler.js:609
-requestProcessingCommandStateTransition @ turnContext.js:253
-run @ actionDecisionWorkflow.js:62
-await in run
-_handleActionDecision @ awaitingActorDecisionState.js:102
-enterState @ awaitingActorDecisionState.js:119
-await in enterState
-_transitionToState @ baseTurnHandler.js:236
-await in _transitionToState
-requestAwaitingInputStateTransition @ baseTurnHandler.js:594
-requestAwaitingInputStateTransition @ turnContext.js:249
-_requestAwaitingInput @ turnIdleState.js:140
-startTurn @ turnIdleState.js:72
-startTurn @ genericTurnHandler.js:134
-startTurn @ actorTurnHandler.js:64
-advanceTurn @ turnManager.js:446
-await in advanceTurn
-advanceTurn @ turnManager.js:336
-await in advanceTurn
-start @ turnManager.js:200
-#finalizeGameStart @ gameSessionManager.js:146
-await in #finalizeGameStart
-finalizeNewGameSuccess @ gameSessionManager.js:167
-#finalizeInitializationSuccess @ gameEngine.js:280
-startNewGame @ gameEngine.js:316
-await in startNewGame
-startGameStage @ engineStages.js:87
-beginGame @ main.js:244
-(anonymous) @ game.html:331
-Promise.then
-(anonymous) @ game.html:328Understand this warning
-consoleLogger.js:187 EntityMutationManager.addComponent: Adding component 'core:perception_log' to entity 'isekai:hero_instance'
-consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
-consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
-consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'core:perception_log', componentData: {…}, oldComponentData: {…}}
-consoleLogger.js:187 Successfully added/updated component 'core:perception_log' data on entity 'isekai:hero_instance'.
-consoleLogger.js:163 EntityQueryManager.hasComponent: The 3-parameter version is deprecated. Use hasComponentOverride(instanceId, componentTypeId) instead of hasComponent(instanceId, componentTypeId, true).
-warn @ consoleLogger.js:163
-hasComponent @ EntityQueryManager.js:136
-hasComponent @ entityManager.js:437
-hasComponent @ entityManagerAdapter.js:53
-execute @ addPerceptionLogEntryHandler.js:105
-(anonymous) @ interpreterRegistrations.js:59
-execute @ operationInterpreter.js:94
-executeActionSequence @ actionSequence.js:95
-_executeActions @ systemLogicInterpreter.js:356
-#processRule @ systemLogicInterpreter.js:335
-#handleEvent @ systemLogicInterpreter.js:268
-(anonymous) @ eventBus.js:144
-dispatch @ eventBus.js:141
-#emitEvent @ validatedEventDispatcher.js:192
-dispatch @ validatedEventDispatcher.js:222
-#dispatchViaValidatedDispatcher @ dispatchEventHandler.js:139
-execute @ dispatchEventHandler.js:175
-(anonymous) @ interpreterRegistrations.js:59
-execute @ operationInterpreter.js:94
-executeActionSequence @ actionSequence.js:95
-handleIf @ ifHandler.js:70
-executeActionSequence @ actionSequence.js:82
-_executeActions @ systemLogicInterpreter.js:356
-#processRule @ systemLogicInterpreter.js:335
-#handleEvent @ systemLogicInterpreter.js:268
-(anonymous) @ eventBus.js:144
-dispatch @ eventBus.js:141
-#emitEvent @ validatedEventDispatcher.js:192
-dispatch @ validatedEventDispatcher.js:222
-dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
-#executeSafely @ safeEventDispatcher.js:88
-dispatch @ safeEventDispatcher.js:122
-dispatchWithErrorHandling @ eventDispatchService.js:98
-dispatchAction @ commandProcessor.js:110
-_dispatchAction @ commandProcessingWorkflow.js:104
-processCommand @ commandProcessingWorkflow.js:239
-_processCommandInternal @ processingCommandState.js:333
-_executeAction @ processingWorkflow.js:261
-await in _executeAction
-run @ processingWorkflow.js:87
-await in run
-enterState @ processingCommandState.js:290
-_transitionToState @ baseTurnHandler.js:236
-await in _transitionToState
-requestProcessingCommandStateTransition @ baseTurnHandler.js:609
-requestProcessingCommandStateTransition @ turnContext.js:253
-run @ actionDecisionWorkflow.js:62
-await in run
-_handleActionDecision @ awaitingActorDecisionState.js:102
-enterState @ awaitingActorDecisionState.js:119
-await in enterState
-_transitionToState @ baseTurnHandler.js:236
-await in _transitionToState
-requestAwaitingInputStateTransition @ baseTurnHandler.js:594
-requestAwaitingInputStateTransition @ turnContext.js:249
-_requestAwaitingInput @ turnIdleState.js:140
-startTurn @ turnIdleState.js:72
-startTurn @ genericTurnHandler.js:134
-startTurn @ actorTurnHandler.js:64
-advanceTurn @ turnManager.js:446
-await in advanceTurn
-advanceTurn @ turnManager.js:336
-await in advanceTurn
-start @ turnManager.js:200
-#finalizeGameStart @ gameSessionManager.js:146
-await in #finalizeGameStart
-finalizeNewGameSuccess @ gameSessionManager.js:167
-#finalizeInitializationSuccess @ gameEngine.js:280
-startNewGame @ gameEngine.js:316
-await in startNewGame
-startGameStage @ engineStages.js:87
-beginGame @ main.js:244
-(anonymous) @ game.html:331
-Promise.then
-(anonymous) @ game.html:328Understand this warning
-consoleLogger.js:187 EntityMutationManager.addComponent: Adding component 'core:perception_log' to entity 'isekai:ninja_instance'
-consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
-consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
-consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'core:perception_log', componentData: {…}, oldComponentData: {…}}
-consoleLogger.js:187 Successfully added/updated component 'core:perception_log' data on entity 'isekai:ninja_instance'.
-consoleLogger.js:187 SystemLogicInterpreter: ADD_PERCEPTION_LOG_ENTRY: wrote entry to 2/2 perceivers in isekai:adventurers_guild_instance
-consoleLogger.js:187 SystemLogicInterpreter: [Rule 'log_perceptible_events' - Action 2/2] Finished executing operation of type: ADD_PERCEPTION_LOG_ENTRY
-consoleLogger.js:187 SystemLogicInterpreter: [Rule 'core_handle_follow' IF#3 - Action 10/12] Finished executing operation of type: DISPATCH_EVENT
+consoleLogger.js:187 DispatchEventHandler: Attempting to dispatch event "core:enable_input" with resolved payload... {payload: {…}}
+consoleLogger.js:187 VED: Validating payload for event 'core:enable_input' against schema 'core:enable_input#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:enable_input'.
+consoleLogger.js:187 VED: Dispatching event 'core:enable_input' via EventBus... {}
+consoleLogger.js:187 [InputStateController] Received 'core:enable_input' without valid 'placeholder' string in payload, using default placeholder: "Enter speech (optional)..." {receivedEvent: {…}}
+consoleLogger.js:187 SystemLogicInterpreter: [Rule 'enable_input_on_player_turn' - Action 1/2] Finished executing operation of type: DISPATCH_EVENT
+consoleLogger.js:187 SystemLogicInterpreter: [Rule 'enable_input_on_player_turn' - Action 2/2] About to execute operation of type: DISPATCH_EVENT
+consoleLogger.js:187 OperationInterpreter: Resolved full string placeholder {event.payload.entityId} to: p_erotica:amaia_castillo_instance
+consoleLogger.js:187 OperationInterpreter: Resolved full string placeholder {event.payload.availableActions} to: [{"index":1,"actionId":"core:follow","commandString":"follow Iker Aguirre","params":{"targetId":"p_erotica:iker_aguirre_instance"},"description":"Commands your character to follow the specified target, becoming their companion and moving with them."},{"index":2,"actionId":"core:go","commandString":"go to The Gilded Bean","params":{"targetId":"p_erotica:coffee_shop_instance"},"description":"Moves your character to the specified location, if the way is clear."},{"index":3,"actionId":"core:wait","commandString":"wait","params":{"targetId":null},"description":"Wait for a moment, doing nothing."},{"index":4,"actionId":"intimacy:get_close","commandString":"get close to Iker Aguirre","params":{"targetId":"p_erotica:iker_aguirre_instance"},"description":"Move closer to the target, entering their personal space."}]
+consoleLogger.js:187 OperationInterpreter: Executing handler for operation type "DISPATCH_EVENT"…
+consoleLogger.js:187 DispatchEventHandler: Attempting to dispatch event "core:update_available_actions" with resolved payload... {payload: {…}}
+consoleLogger.js:187 VED: Validating payload for event 'core:update_available_actions' against schema 'core:update_available_actions#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:update_available_actions'.
+consoleLogger.js:187 VED: Dispatching event 'core:update_available_actions' via EventBus... {actorId: 'p_erotica:amaia_castillo_instance', actions: Array(4)}
+consoleLogger.js:187 [_ActionButtonsRenderer] Received event object for 'core:update_available_actions'. {eventObject: {…}}
+consoleLogger.js:187 [_ActionButtonsRenderer] Actions received for actor ID: p_erotica:amaia_castillo_instance
+consoleLogger.js:187 [_ActionButtonsRenderer] refreshList() called, invoking renderList().
+consoleLogger.js:187 [_ActionButtonsRenderer] renderList() called.
+consoleLogger.js:187 SystemLogicInterpreter: [Rule 'enable_input_on_player_turn' - Action 2/2] Finished executing operation of type: DISPATCH_EVENT
+consoleLogger.js:187 [renderListCommon] Fetched list data. Count: 4
+consoleLogger.js:187 [renderListCommon] Cleared list container.
+consoleLogger.js:187 [renderListCommon] Rendered 4 out of 4 items.
+consoleLogger.js:187 [_ActionButtonsRenderer] Added DOM listener for 'click' on element. {elementPath: '... > div#app-layout-container > main#center-pane …idget > div#action-buttons > button.action-button'}
+consoleLogger.js:187 [_ActionButtonsRenderer] Added DOM listener for 'click' on element. {elementPath: '... > div#app-layout-container > main#center-pane …idget > div#action-buttons > button.action-button'}
+consoleLogger.js:187 [_ActionButtonsRenderer] Added DOM listener for 'click' on element. {elementPath: '... > div#app-layout-container > main#center-pane …idget > div#action-buttons > button.action-button'}
+consoleLogger.js:187 [_ActionButtonsRenderer] Added DOM listener for 'click' on element. {elementPath: '... > div#app-layout-container > main#center-pane …idget > div#action-buttons > button.action-button'}
+consoleLogger.js:187 [_ActionButtonsRenderer] Rendered 4 action buttons. Selected action: none.
