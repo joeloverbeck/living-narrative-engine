@@ -12,14 +12,16 @@ import NotesMigrationService from '../migration/NotesMigrationService.js';
  */
 export function normalizeNoteText(noteOrText) {
   let text = '';
-  
+
   if (typeof noteOrText === 'string') {
     text = noteOrText;
   } else if (typeof noteOrText === 'object' && noteOrText !== null) {
     // For structured notes, include subject in normalization to avoid false duplicates
-    text = noteOrText.subject ? `${noteOrText.subject}:${noteOrText.text}` : noteOrText.text || '';
+    text = noteOrText.subject
+      ? `${noteOrText.subject}:${noteOrText.text}`
+      : noteOrText.text || '';
   }
-  
+
   return text
     .trim()
     .toLowerCase()
@@ -68,7 +70,10 @@ export default class NotesService {
     }
 
     // Auto-migrate existing notes if enabled
-    if (this.autoMigrate && this.migrationService.needsMigration(notesComp.notes)) {
+    if (
+      this.autoMigrate &&
+      this.migrationService.needsMigration(notesComp.notes)
+    ) {
       notesComp.notes = this.migrationService.migrateNotes(notesComp.notes);
     }
 
@@ -83,14 +88,14 @@ export default class NotesService {
 
     for (const note of newNotes) {
       let noteEntry;
-      
+
       // Handle string notes (legacy format)
       if (typeof note === 'string') {
         const trimmedText = note.trim();
         if (trimmedText === '') {
           continue;
         }
-        
+
         // Convert to structured format if auto-migrate is enabled
         if (this.autoMigrate) {
           noteEntry = this.migrationService.migrateNote(trimmedText);
@@ -99,15 +104,20 @@ export default class NotesService {
         }
       }
       // Handle structured notes (new format)
-      else if (typeof note === 'object' && note !== null && note.text && note.subject) {
+      else if (
+        typeof note === 'object' &&
+        note !== null &&
+        note.text &&
+        note.subject
+      ) {
         noteEntry = {
           text: note.text.trim(),
           subject: note.subject,
           context: note.context,
           tags: note.tags,
-          timestamp: note.timestamp || now.toISOString()
+          timestamp: note.timestamp || now.toISOString(),
         };
-        
+
         if (noteEntry.text === '') {
           continue;
         }

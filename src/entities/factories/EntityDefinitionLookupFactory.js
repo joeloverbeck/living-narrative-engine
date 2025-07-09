@@ -58,7 +58,7 @@ export default class EntityDefinitionLookupFactory {
 
     try {
       const definition = lookupDefinition(definitionId, registry, this.#logger);
-      
+
       if (definition) {
         this.#logger.debug(
           `[EntityDefinitionLookupFactory] Successfully retrieved definition '${definitionId}'`
@@ -68,7 +68,7 @@ export default class EntityDefinitionLookupFactory {
           `[EntityDefinitionLookupFactory] Definition '${definitionId}' not found in registry`
         );
       }
-      
+
       return definition;
     } catch (error) {
       this.#logger.error(
@@ -88,7 +88,7 @@ export default class EntityDefinitionLookupFactory {
    */
   getDefinitionOrThrow(definitionId, registry) {
     const definition = this.getDefinition(definitionId, registry);
-    
+
     if (!definition) {
       this.#logger.error(
         `[EntityDefinitionLookupFactory] Definition '${definitionId}' not found in registry`
@@ -119,7 +119,7 @@ export default class EntityDefinitionLookupFactory {
    */
   getMultipleDefinitions(definitionIds, registry) {
     const results = new Map();
-    
+
     if (!Array.isArray(definitionIds)) {
       this.#logger.warn(
         '[EntityDefinitionLookupFactory] getMultipleDefinitions: definitionIds must be an array'
@@ -133,7 +133,7 @@ export default class EntityDefinitionLookupFactory {
     }
 
     this.#logger.debug(
-      `[EntityDefinitionLookupFactory] Retrieved ${results.size} definitions, ${Array.from(results.values()).filter(d => d !== null).length} successful`
+      `[EntityDefinitionLookupFactory] Retrieved ${results.size} definitions, ${Array.from(results.values()).filter((d) => d !== null).length} successful`
     );
 
     return results;
@@ -147,11 +147,15 @@ export default class EntityDefinitionLookupFactory {
    */
   validateRegistry(registry) {
     if (!registry || typeof registry !== 'object') {
-      throw new Error('EntityDefinitionLookupFactory: registry must be an object');
+      throw new Error(
+        'EntityDefinitionLookupFactory: registry must be an object'
+      );
     }
 
     if (typeof registry.getEntityDefinition !== 'function') {
-      throw new Error('EntityDefinitionLookupFactory: registry must have getEntityDefinition method');
+      throw new Error(
+        'EntityDefinitionLookupFactory: registry must have getEntityDefinition method'
+      );
     }
   }
 }

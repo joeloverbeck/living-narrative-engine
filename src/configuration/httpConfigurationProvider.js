@@ -79,7 +79,7 @@ export class HttpConfigurationProvider extends IConfigurationProvider {
         errorMessage,
         {
           scopeName: 'HttpConfigurationProvider.fetchData',
-          url: sourceUrl
+          url: sourceUrl,
         },
         this.#logger
       );
@@ -103,7 +103,7 @@ export class HttpConfigurationProvider extends IConfigurationProvider {
             statusCode: response.status,
             statusText: errorStatusText,
             url: sourceUrl,
-            scopeName: 'HttpConfigurationProvider.fetchData'
+            scopeName: 'HttpConfigurationProvider.fetchData',
           },
           this.#logger
         );
@@ -121,10 +121,13 @@ export class HttpConfigurationProvider extends IConfigurationProvider {
           this.#dispatcher,
           `HttpConfigurationProvider: Failed to parse JSON response from ${sourceUrl}.`,
           {
-            error: parseError instanceof Error ? parseError.message : String(parseError),
+            error:
+              parseError instanceof Error
+                ? parseError.message
+                : String(parseError),
             stack: parseError instanceof Error ? parseError.stack : undefined,
             url: sourceUrl,
-            scopeName: 'HttpConfigurationProvider.fetchData'
+            scopeName: 'HttpConfigurationProvider.fetchData',
           },
           this.#logger
         );
@@ -160,7 +163,7 @@ export class HttpConfigurationProvider extends IConfigurationProvider {
           error: error instanceof Error ? error.message : String(error),
           stack: error instanceof Error ? error.stack : undefined,
           url: sourceUrl,
-          scopeName: 'HttpConfigurationProvider.fetchData'
+          scopeName: 'HttpConfigurationProvider.fetchData',
         },
         this.#logger
       );

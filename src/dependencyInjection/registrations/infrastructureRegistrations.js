@@ -163,9 +163,13 @@ export function registerInfrastructure(container) {
   );
 
   // Register ScopeEngine as the IScopeEngine implementation
-  container.register(tokens.IScopeEngine, (c) => c.resolve(tokens.ScopeEngine), {
-    lifecycle: 'singleton',
-  });
+  container.register(
+    tokens.IScopeEngine,
+    (c) => c.resolve(tokens.ScopeEngine),
+    {
+      lifecycle: 'singleton',
+    }
+  );
   log.debug(
     `Infrastructure Registration: Registered ${String(tokens.IScopeEngine)} -> ScopeEngine.`
   );

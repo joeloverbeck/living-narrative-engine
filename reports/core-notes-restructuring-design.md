@@ -11,6 +11,7 @@ The current `core:notes` component uses a simple array structure that leads to a
 ## Problem Statement
 
 ### Current Issues
+
 1. **Ambiguous References**: Notes like "he seems nervous" lack subject identification
 2. **Missing Context**: No indication of where/when observations were made
 3. **Poor Organization**: All notes mixed together without categorization
@@ -18,11 +19,13 @@ The current `core:notes` component uses a simple array structure that leads to a
 5. **LLM Behavior**: LLMs dump unstructured information without clear referential context
 
 ### Root Cause
+
 The array-only structure provides no framework for contextual information, leading LLMs to generate notes without proper subject identification.
 
 ## Alternative Designs Considered
 
 ### 1. Dictionary/Map Structure (User's Proposal)
+
 ```json
 {
   "notes": {
@@ -31,10 +34,12 @@ The array-only structure provides no framework for contextual information, leadi
   }
 }
 ```
+
 **Pros**: Simple grouping by subject, clear ownership  
 **Cons**: Rigid categorization, single-subject limitation, major breaking change
 
 ### 2. Tagged Notes Array
+
 ```json
 {
   "notes": [
@@ -46,10 +51,12 @@ The array-only structure provides no framework for contextual information, leadi
   ]
 }
 ```
+
 **Pros**: Flexible multi-tagging, searchable, maintains array structure  
 **Cons**: Tag management complexity, less structured than explicit fields
 
 ### 3. Hierarchical Context Structure
+
 ```json
 {
   "notes": {
@@ -59,27 +66,31 @@ The array-only structure provides no framework for contextual information, leadi
   }
 }
 ```
+
 **Pros**: Clear semantic organization  
 **Cons**: Predetermined categories limiting, complex for LLMs
 
 ### 4. Structured Note Objects (Recommended)
+
 ```json
 {
   "notes": [
     {
       "text": "Seems nervous about the council meeting",
       "subject": "John",
-      "context": "tavern conversation", 
+      "context": "tavern conversation",
       "tags": ["emotion", "politics"],
       "timestamp": "2024-01-15T10:30:00Z"
     }
   ]
 }
 ```
+
 **Pros**: Explicit context, backward compatible, natural for LLMs, flexible  
 **Cons**: Slightly more complex than current structure
 
 ### 5. Hybrid Array + Index
+
 ```json
 {
   "notes": [...],
@@ -89,6 +100,7 @@ The array-only structure provides no framework for contextual information, leadi
   }
 }
 ```
+
 **Pros**: Maintains compatibility, fast lookups  
 **Cons**: Index maintenance overhead, denormalization issues
 
@@ -150,8 +162,8 @@ notes: {
       text: { type: 'string', minLength: 1 },
       subject: { type: 'string', minLength: 1 },
       context: { type: 'string' },
-      tags: { 
-        type: 'array', 
+      tags: {
+        type: 'array',
         items: { type: 'string' }
       }
     },
@@ -181,23 +193,27 @@ NOTES RULES:
 ## Implementation Plan
 
 ### Phase 1: Schema and Core Updates
+
 1. Update `notes.component.json` schema
 2. Create `NotesMigrationService` for data conversion
 3. Update `NotesService` to handle both formats
 4. Implement deduplication with subject consideration
 
 ### Phase 2: LLM Integration
-1. Update `llmOutputSchemas.js` 
+
+1. Update `llmOutputSchemas.js`
 2. Modify `LLMResponseProcessor` for new format
 3. Update prompt templates with examples
 4. Test LLM comprehension and compliance
 
 ### Phase 3: Display and Querying
+
 1. Update `NotesSectionAssembler` for grouped display
 2. Create query utilities for subject-based searches
 3. Implement note filtering/sorting options
 
 ### Phase 4: Migration and Testing
+
 1. Create migration script for existing saves
 2. Update all test suites
 3. Integration testing with full pipeline
@@ -206,23 +222,25 @@ NOTES RULES:
 ## Migration Strategy
 
 ### Automatic Conversion
+
 ```javascript
 function migrateNote(oldNote) {
   // Extract subject from text using NLP patterns
   const subjectPattern = /^([\w\s]+)\s+(seems|appears|is|was|has)/i;
   const match = oldNote.text.match(subjectPattern);
-  
+
   return {
     text: oldNote.text,
-    subject: match ? match[1].trim() : "Unknown",
-    context: "legacy note",
-    tags: ["migrated"],
-    timestamp: oldNote.timestamp || new Date().toISOString()
+    subject: match ? match[1].trim() : 'Unknown',
+    context: 'legacy note',
+    tags: ['migrated'],
+    timestamp: oldNote.timestamp || new Date().toISOString(),
   };
 }
 ```
 
 ### Backward Compatibility
+
 - Support reading both formats during transition
 - Gradually migrate on save
 - Provide manual migration command
@@ -230,15 +248,18 @@ function migrateNote(oldNote) {
 ## Risk Assessment
 
 ### High Priority Risks
+
 1. **Save File Compatibility**: Mitigate with dual-format support
 2. **LLM Compliance**: Extensive prompt testing required
 3. **Performance Impact**: Index subject field for queries
 
 ### Medium Priority Risks
+
 1. **Migration Quality**: Some subjects may be incorrectly extracted
 2. **Increased Complexity**: Provide clear documentation
 
 ### Low Priority Risks
+
 1. **Storage Size**: Minimal increase due to additional fields
 2. **UI Changes**: Display logic easily adaptable
 
@@ -261,6 +282,7 @@ function migrateNote(oldNote) {
 ## Conclusion
 
 The Structured Note Objects design provides the optimal balance of:
+
 - **Contextual clarity** through explicit subject and context fields
 - **Flexibility** via optional tags and context
 - **Backward compatibility** by maintaining array structure

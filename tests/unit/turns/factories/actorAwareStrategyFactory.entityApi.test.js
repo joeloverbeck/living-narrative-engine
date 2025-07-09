@@ -31,11 +31,11 @@ describe('ActorAwareStrategyFactory - Entity API Support', () => {
             return { type: 'llm' };
           }
           return undefined;
-        })
+        }),
       };
 
       lookup = jest.fn(() => mockLLMEntity);
-      
+
       const factory = new ActorAwareStrategyFactory({
         providers,
         logger,
@@ -45,10 +45,12 @@ describe('ActorAwareStrategyFactory - Entity API Support', () => {
       });
 
       const strategy = factory.create('llm-entity');
-      
+
       expect(strategy).toBeInstanceOf(GenericTurnStrategy);
       expect(strategy.decisionProvider).toBe(llmProvider);
-      expect(mockLLMEntity.getComponentData).toHaveBeenCalledWith('core:player_type');
+      expect(mockLLMEntity.getComponentData).toHaveBeenCalledWith(
+        'core:player_type'
+      );
       expect(logger.debug).toHaveBeenCalledWith(
         'ActorAwareStrategyFactory: Creating GenericTurnStrategy for llm-entity using provider type llm.'
       );
@@ -62,11 +64,11 @@ describe('ActorAwareStrategyFactory - Entity API Support', () => {
             return { type: 'human' };
           }
           return undefined;
-        })
+        }),
       };
 
       lookup = jest.fn(() => mockHumanEntity);
-      
+
       const factory = new ActorAwareStrategyFactory({
         providers,
         logger,
@@ -76,10 +78,12 @@ describe('ActorAwareStrategyFactory - Entity API Support', () => {
       });
 
       const strategy = factory.create('human-entity');
-      
+
       expect(strategy).toBeInstanceOf(GenericTurnStrategy);
       expect(strategy.decisionProvider).toBe(humanProvider);
-      expect(mockHumanEntity.getComponentData).toHaveBeenCalledWith('core:player_type');
+      expect(mockHumanEntity.getComponentData).toHaveBeenCalledWith(
+        'core:player_type'
+      );
     });
 
     it('should use goap provider for entity with getComponentData returning goap type', () => {
@@ -90,11 +94,11 @@ describe('ActorAwareStrategyFactory - Entity API Support', () => {
             return { type: 'goap' };
           }
           return undefined;
-        })
+        }),
       };
 
       lookup = jest.fn(() => mockGoapEntity);
-      
+
       const factory = new ActorAwareStrategyFactory({
         providers,
         logger,
@@ -104,20 +108,22 @@ describe('ActorAwareStrategyFactory - Entity API Support', () => {
       });
 
       const strategy = factory.create('goap-entity');
-      
+
       expect(strategy).toBeInstanceOf(GenericTurnStrategy);
       expect(strategy.decisionProvider).toBe(goapProvider);
-      expect(mockGoapEntity.getComponentData).toHaveBeenCalledWith('core:player_type');
+      expect(mockGoapEntity.getComponentData).toHaveBeenCalledWith(
+        'core:player_type'
+      );
     });
 
     it('should default to human for entity with getComponentData but no player_type', () => {
       const mockEntityNoPlayerType = {
         id: 'no-player-type-entity',
-        getComponentData: jest.fn(() => undefined)
+        getComponentData: jest.fn(() => undefined),
       };
 
       lookup = jest.fn(() => mockEntityNoPlayerType);
-      
+
       const factory = new ActorAwareStrategyFactory({
         providers,
         logger,
@@ -127,20 +133,22 @@ describe('ActorAwareStrategyFactory - Entity API Support', () => {
       });
 
       const strategy = factory.create('no-player-type-entity');
-      
+
       expect(strategy).toBeInstanceOf(GenericTurnStrategy);
       expect(strategy.decisionProvider).toBe(humanProvider);
-      expect(mockEntityNoPlayerType.getComponentData).toHaveBeenCalledWith('core:player_type');
+      expect(mockEntityNoPlayerType.getComponentData).toHaveBeenCalledWith(
+        'core:player_type'
+      );
     });
 
     it('should handle entity with getComponentData returning null', () => {
       const mockEntityNullReturn = {
         id: 'null-return-entity',
-        getComponentData: jest.fn(() => null)
+        getComponentData: jest.fn(() => null),
       };
 
       lookup = jest.fn(() => mockEntityNullReturn);
-      
+
       const factory = new ActorAwareStrategyFactory({
         providers,
         logger,
@@ -150,10 +158,12 @@ describe('ActorAwareStrategyFactory - Entity API Support', () => {
       });
 
       const strategy = factory.create('null-return-entity');
-      
+
       expect(strategy).toBeInstanceOf(GenericTurnStrategy);
       expect(strategy.decisionProvider).toBe(humanProvider);
-      expect(mockEntityNullReturn.getComponentData).toHaveBeenCalledWith('core:player_type');
+      expect(mockEntityNullReturn.getComponentData).toHaveBeenCalledWith(
+        'core:player_type'
+      );
     });
   });
 
@@ -170,12 +180,12 @@ describe('ActorAwareStrategyFactory - Entity API Support', () => {
         }),
         // This should be ignored in favor of getComponentData
         components: {
-          'core:player_type': { type: 'human' }
-        }
+          'core:player_type': { type: 'human' },
+        },
       };
 
       lookup = jest.fn(() => mockMixedEntity);
-      
+
       const factory = new ActorAwareStrategyFactory({
         providers,
         logger,
@@ -185,10 +195,12 @@ describe('ActorAwareStrategyFactory - Entity API Support', () => {
       });
 
       const strategy = factory.create('mixed-entity');
-      
+
       // Should use llm from getComponentData, not human from components
       expect(strategy.decisionProvider).toBe(llmProvider);
-      expect(mockMixedEntity.getComponentData).toHaveBeenCalledWith('core:player_type');
+      expect(mockMixedEntity.getComponentData).toHaveBeenCalledWith(
+        'core:player_type'
+      );
     });
 
     it('should fall back to components property if getComponentData is not a function', () => {
@@ -196,12 +208,12 @@ describe('ActorAwareStrategyFactory - Entity API Support', () => {
         id: 'legacy-entity',
         // No getComponentData method
         components: {
-          'core:player_type': { type: 'goap' }
-        }
+          'core:player_type': { type: 'goap' },
+        },
       };
 
       lookup = jest.fn(() => mockLegacyEntity);
-      
+
       const factory = new ActorAwareStrategyFactory({
         providers,
         logger,
@@ -211,7 +223,7 @@ describe('ActorAwareStrategyFactory - Entity API Support', () => {
       });
 
       const strategy = factory.create('legacy-entity');
-      
+
       expect(strategy.decisionProvider).toBe(goapProvider);
     });
 
@@ -220,11 +232,11 @@ describe('ActorAwareStrategyFactory - Entity API Support', () => {
         id: 'error-entity',
         getComponentData: jest.fn(() => {
           throw new Error('Component access error');
-        })
+        }),
       };
 
       lookup = jest.fn(() => mockErrorEntity);
-      
+
       const factory = new ActorAwareStrategyFactory({
         providers,
         logger,
@@ -235,7 +247,7 @@ describe('ActorAwareStrategyFactory - Entity API Support', () => {
 
       // Should not throw, should default to human
       expect(() => factory.create('error-entity')).not.toThrow();
-      
+
       const strategy = factory.create('error-entity');
       expect(strategy.decisionProvider).toBe(humanProvider);
     });
@@ -253,11 +265,11 @@ describe('ActorAwareStrategyFactory - Entity API Support', () => {
             return { override: true };
           }
           return undefined;
-        })
+        }),
       };
 
       lookup = jest.fn(() => mockEntity);
-      
+
       // Custom resolver that checks a custom flag
       const customResolver = (actor) => {
         if (actor && typeof actor.getComponentData === 'function') {
@@ -272,7 +284,7 @@ describe('ActorAwareStrategyFactory - Entity API Support', () => {
         }
         return 'human';
       };
-      
+
       const factory = new ActorAwareStrategyFactory({
         providers,
         providerResolver: customResolver,
@@ -283,10 +295,12 @@ describe('ActorAwareStrategyFactory - Entity API Support', () => {
       });
 
       const strategy = factory.create('custom-entity');
-      
+
       // Should use goap due to custom flag override
       expect(strategy.decisionProvider).toBe(goapProvider);
-      expect(mockEntity.getComponentData).toHaveBeenCalledWith('core:custom_flag');
+      expect(mockEntity.getComponentData).toHaveBeenCalledWith(
+        'core:custom_flag'
+      );
     });
   });
 
@@ -301,12 +315,12 @@ describe('ActorAwareStrategyFactory - Entity API Support', () => {
           return undefined;
         }),
         components: {
-          'core:name': { text: 'Debug Entity' }
-        }
+          'core:name': { text: 'Debug Entity' },
+        },
       };
 
       lookup = jest.fn(() => mockEntity);
-      
+
       const factory = new ActorAwareStrategyFactory({
         providers,
         logger,
@@ -316,14 +330,14 @@ describe('ActorAwareStrategyFactory - Entity API Support', () => {
       });
 
       factory.create('debug-entity');
-      
+
       // Check debug logging includes entity structure info
       expect(logger.debug).toHaveBeenCalledWith(
         expect.stringContaining('Actor lookup result'),
         expect.objectContaining({
           hasActor: true,
           hasComponents: true,
-          componentKeys: ['core:name']
+          componentKeys: ['core:name'],
         })
       );
     });

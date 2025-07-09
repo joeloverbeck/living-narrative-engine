@@ -105,7 +105,9 @@ describe('TargetResolutionService - Actor Entity Validation', () => {
       );
 
       expect(result.error).toBeDefined();
-      expect(result.error.message).toBe('Invalid actor entity ID: "undefined" (type: string)');
+      expect(result.error.message).toBe(
+        'Invalid actor entity ID: "undefined" (type: string)'
+      );
       expect(result.targets).toEqual([]);
       expect(mockDependencies.logger.error).toHaveBeenCalledWith(
         'TargetResolutionService: Invalid actor entity ID: "undefined" (type: string)',
@@ -114,7 +116,7 @@ describe('TargetResolutionService - Actor Entity Validation', () => {
           actorId: 'undefined',
           actorIdType: 'string',
           hasComponents: false,
-          hasComponentTypeIds: true
+          hasComponentTypeIds: true,
         })
       );
     });
@@ -132,7 +134,9 @@ describe('TargetResolutionService - Actor Entity Validation', () => {
       );
 
       expect(result.error).toBeDefined();
-      expect(result.error.message).toBe('Invalid actor entity ID: undefined (type: undefined)');
+      expect(result.error.message).toBe(
+        'Invalid actor entity ID: undefined (type: undefined)'
+      );
       expect(result.targets).toEqual([]);
     });
 
@@ -149,7 +153,9 @@ describe('TargetResolutionService - Actor Entity Validation', () => {
       );
 
       expect(result.error).toBeDefined();
-      expect(result.error.message).toBe('Invalid actor entity ID: "" (type: string)');
+      expect(result.error.message).toBe(
+        'Invalid actor entity ID: "" (type: string)'
+      );
       expect(result.targets).toEqual([]);
     });
 
@@ -159,28 +165,29 @@ describe('TargetResolutionService - Actor Entity Validation', () => {
         componentTypeIds: ['core:actor', 'core:position'],
       };
 
-      mockDependencies.entityManager.getAllComponentTypesForEntity.mockReturnValue([
-        'core:actor',
-        'core:position'
-      ]);
+      mockDependencies.entityManager.getAllComponentTypesForEntity.mockReturnValue(
+        ['core:actor', 'core:position']
+      );
 
       // Mock dslParser to parse the scope expression
       mockDependencies.dslParser.parse.mockReturnValue({
         type: 'All',
-        componentType: 'core:actor'
+        componentType: 'core:actor',
       });
 
       // Mock the scope registry to return a valid scope definition
       mockDependencies.scopeRegistry.getScope.mockReturnValue({
-        expr: 'mock-scope-expression'
+        expr: 'mock-scope-expression',
       });
 
       // Mock scope engine to return some targets as a Set
-      mockDependencies.scopeEngine.resolve.mockReturnValue(new Set(['target1', 'target2']));
+      mockDependencies.scopeEngine.resolve.mockReturnValue(
+        new Set(['target1', 'target2'])
+      );
 
       // Create a discovery context with currentLocation
       const discoveryContext = {
-        currentLocation: { id: 'test-location' }
+        currentLocation: { id: 'test-location' },
       };
 
       const result = await targetResolutionService.resolveTargets(
@@ -209,8 +216,12 @@ describe('TargetResolutionService - Actor Entity Validation', () => {
       );
 
       // Should not attempt to build components for invalid actor
-      expect(mockDependencies.entityManager.getAllComponentTypesForEntity).not.toHaveBeenCalled();
-      expect(mockDependencies.entityManager.getComponentData).not.toHaveBeenCalled();
+      expect(
+        mockDependencies.entityManager.getAllComponentTypesForEntity
+      ).not.toHaveBeenCalled();
+      expect(
+        mockDependencies.entityManager.getComponentData
+      ).not.toHaveBeenCalled();
       expect(mockDependencies.scopeEngine.resolve).not.toHaveBeenCalled();
     });
   });

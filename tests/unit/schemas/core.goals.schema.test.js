@@ -62,7 +62,10 @@ describe('JSON‑Schema – core:goals component', () => {
   test.each([
     ['no core:goals key', {}],
     ['core:goals with empty array', { 'core:goals': { goals: [] } }],
-    ['goal without timestamp', { 'core:goals': { goals: [{ text: 'A goal without timestamp' }] } }],
+    [
+      'goal without timestamp',
+      { 'core:goals': { goals: [{ text: 'A goal without timestamp' }] } },
+    ],
   ])('✓ %s – should validate', (_label, payload) => {
     const ok = validateEntity(payload);
     if (!ok) console.error(validateEntity.errors);

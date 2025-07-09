@@ -30,17 +30,17 @@ describe('ContextMerger', () => {
       cycleDetector: mockCycleDetector,
       depthGuard: mockDepthGuard,
       depth: 0,
-      trace: { addLog: jest.fn() }
+      trace: { addLog: jest.fn() },
     };
 
     mockOverlayCtx = {
       depth: 1,
-      customProp: 'test-value'
+      customProp: 'test-value',
     };
 
     mockValidator = {
       validateForMerging: jest.fn(),
-      validate: jest.fn()
+      validate: jest.fn(),
     };
 
     contextMerger = new ContextMerger(undefined, mockValidator);
@@ -49,7 +49,13 @@ describe('ContextMerger', () => {
   describe('constructor', () => {
     it('should use default critical properties when none provided', () => {
       const merger = new ContextMerger();
-      const expectedProperties = ['actorEntity', 'runtimeCtx', 'dispatcher', 'cycleDetector', 'depthGuard'];
+      const expectedProperties = [
+        'actorEntity',
+        'runtimeCtx',
+        'dispatcher',
+        'cycleDetector',
+        'depthGuard',
+      ];
       expect(merger.getCriticalProperties()).toEqual(expectedProperties);
     });
 
@@ -73,7 +79,10 @@ describe('ContextMerger', () => {
   describe('merge', () => {
     it('should validate inputs before merging', () => {
       contextMerger.merge(mockBaseCtx, mockOverlayCtx);
-      expect(mockValidator.validateForMerging).toHaveBeenCalledWith(mockBaseCtx, mockOverlayCtx);
+      expect(mockValidator.validateForMerging).toHaveBeenCalledWith(
+        mockBaseCtx,
+        mockOverlayCtx
+      );
     });
 
     it('should return copy of base context when overlay is null', () => {
@@ -106,7 +115,7 @@ describe('ContextMerger', () => {
       const overlayActor = { id: 'overlay-actor' };
       const overlayWithCritical = {
         ...mockOverlayCtx,
-        actorEntity: overlayActor
+        actorEntity: overlayActor,
       };
 
       const result = contextMerger.merge(mockBaseCtx, overlayWithCritical);
@@ -127,7 +136,7 @@ describe('ContextMerger', () => {
     it('should handle depth merging when base has no depth', () => {
       const baseWithoutDepth = { ...mockBaseCtx };
       delete baseWithoutDepth.depth;
-      
+
       const result = contextMerger.merge(baseWithoutDepth, mockOverlayCtx);
       expect(result.depth).toBe(1); // Max of overlay (1) and default (1)
     });
@@ -136,7 +145,7 @@ describe('ContextMerger', () => {
       const overlayTrace = { addLog: jest.fn(), id: 'overlay-trace' };
       const overlayWithTrace = {
         ...mockOverlayCtx,
-        trace: overlayTrace
+        trace: overlayTrace,
       };
 
       const result = contextMerger.merge(mockBaseCtx, overlayWithTrace);
@@ -157,11 +166,11 @@ describe('ContextMerger', () => {
       const overlayWithCritical = {
         actorEntity: { id: 'new-actor' },
         dispatcher: { resolve: jest.fn() },
-        customProp: 'test'
+        customProp: 'test',
       };
 
       const result = contextMerger.merge(mockBaseCtx, overlayWithCritical);
-      
+
       // Critical properties should be handled explicitly, not in non-critical merge
       expect(result.actorEntity).toBe(overlayWithCritical.actorEntity);
       expect(result.dispatcher).toBe(overlayWithCritical.dispatcher);
@@ -172,7 +181,7 @@ describe('ContextMerger', () => {
       const baseWithExtra = {
         ...mockBaseCtx,
         baseProp: 'base-value',
-        anotherProp: 42
+        anotherProp: 42,
       };
 
       const result = contextMerger.merge(baseWithExtra, mockOverlayCtx);
@@ -187,10 +196,11 @@ describe('ContextMerger', () => {
         actorEntity: { id: 'should-be-filtered' },
         dispatcher: { resolve: jest.fn() },
         customProp: 'should-be-kept',
-        anotherProp: 'also-kept'
+        anotherProp: 'also-kept',
       };
 
-      const result = contextMerger._mergeNonCriticalProperties(overlayWithMixed);
+      const result =
+        contextMerger._mergeNonCriticalProperties(overlayWithMixed);
       expect(result.actorEntity).toBeUndefined();
       expect(result.dispatcher).toBeUndefined();
       expect(result.customProp).toBe('should-be-kept');
@@ -201,7 +211,7 @@ describe('ContextMerger', () => {
       const onlyCritical = {
         actorEntity: mockActorEntity,
         runtimeCtx: mockRuntimeCtx,
-        dispatcher: mockDispatcher
+        dispatcher: mockDispatcher,
       };
 
       const result = contextMerger._mergeNonCriticalProperties(onlyCritical);
@@ -214,14 +224,20 @@ describe('ContextMerger', () => {
       const overlayActor = { id: 'overlay-actor' };
       const overlayCtx = { actorEntity: overlayActor };
 
-      const result = contextMerger._mergeCriticalProperties(mockBaseCtx, overlayCtx);
+      const result = contextMerger._mergeCriticalProperties(
+        mockBaseCtx,
+        overlayCtx
+      );
       expect(result.actorEntity).toBe(overlayActor);
     });
 
     it('should fallback to base values when overlay values are missing', () => {
       const emptyOverlay = {};
 
-      const result = contextMerger._mergeCriticalProperties(mockBaseCtx, emptyOverlay);
+      const result = contextMerger._mergeCriticalProperties(
+        mockBaseCtx,
+        emptyOverlay
+      );
       expect(result.actorEntity).toBe(mockActorEntity);
       expect(result.runtimeCtx).toBe(mockRuntimeCtx);
       expect(result.dispatcher).toBe(mockDispatcher);
@@ -275,8 +291,14 @@ describe('ContextMerger', () => {
   describe('getCriticalProperties', () => {
     it('should return copy of critical properties array', () => {
       const properties = contextMerger.getCriticalProperties();
-      expect(properties).toEqual(['actorEntity', 'runtimeCtx', 'dispatcher', 'cycleDetector', 'depthGuard']);
-      
+      expect(properties).toEqual([
+        'actorEntity',
+        'runtimeCtx',
+        'dispatcher',
+        'cycleDetector',
+        'depthGuard',
+      ]);
+
       // Should be a copy, not reference
       properties.push('newProp');
       expect(contextMerger.getCriticalProperties()).not.toContain('newProp');
@@ -296,7 +318,9 @@ describe('ContextMerger', () => {
         throw validationError;
       });
 
-      expect(() => contextMerger.merge(mockBaseCtx, mockOverlayCtx)).toThrow(validationError);
+      expect(() => contextMerger.merge(mockBaseCtx, mockOverlayCtx)).toThrow(
+        validationError
+      );
     });
 
     it('should propagate validation errors from final validation', () => {
@@ -305,7 +329,9 @@ describe('ContextMerger', () => {
         throw validationError;
       });
 
-      expect(() => contextMerger.merge(mockBaseCtx, mockOverlayCtx)).toThrow(validationError);
+      expect(() => contextMerger.merge(mockBaseCtx, mockOverlayCtx)).toThrow(
+        validationError
+      );
     });
   });
 
@@ -313,7 +339,7 @@ describe('ContextMerger', () => {
     it('should work with real ContextValidator instance', () => {
       const realMerger = new ContextMerger();
       const result = realMerger.merge(mockBaseCtx, mockOverlayCtx);
-      
+
       expect(result.actorEntity).toBe(mockActorEntity);
       expect(result.customProp).toBe('test-value');
       expect(result.depth).toBe(1);

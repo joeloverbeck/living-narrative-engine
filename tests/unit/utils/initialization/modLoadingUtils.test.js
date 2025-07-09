@@ -17,7 +17,7 @@ describe('modLoadingUtils', () => {
 
     beforeEach(() => {
       jest.clearAllMocks();
-      
+
       mockModsLoader = {
         loadMods: jest.fn(),
       };
@@ -43,11 +43,15 @@ describe('modLoadingUtils', () => {
 
       expect(global.fetch).toHaveBeenCalledWith('./data/game.json');
       expect(logger.info).toHaveBeenCalledWith(
-        'Loading 3 mods for world \'default\': mod1, mod2, mod3'
+        "Loading 3 mods for world 'default': mod1, mod2, mod3"
       );
-      expect(mockModsLoader.loadMods).toHaveBeenCalledWith('default', ['mod1', 'mod2', 'mod3']);
+      expect(mockModsLoader.loadMods).toHaveBeenCalledWith('default', [
+        'mod1',
+        'mod2',
+        'mod3',
+      ]);
       expect(logger.info).toHaveBeenCalledWith(
-        'Successfully loaded 3 mods for world \'default\''
+        "Successfully loaded 3 mods for world 'default'"
       );
       expect(result).toEqual(mockLoadReport);
     });
@@ -64,9 +68,11 @@ describe('modLoadingUtils', () => {
 
       await loadModsFromGameConfig(mockModsLoader, logger, 'custom-world');
 
-      expect(mockModsLoader.loadMods).toHaveBeenCalledWith('custom-world', ['mod1']);
+      expect(mockModsLoader.loadMods).toHaveBeenCalledWith('custom-world', [
+        'mod1',
+      ]);
       expect(logger.info).toHaveBeenCalledWith(
-        expect.stringContaining('for world \'custom-world\'')
+        expect.stringContaining("for world 'custom-world'")
       );
     });
 
@@ -84,7 +90,7 @@ describe('modLoadingUtils', () => {
 
       expect(mockModsLoader.loadMods).toHaveBeenCalledWith('default', []);
       expect(logger.info).toHaveBeenCalledWith(
-        'Loading 0 mods for world \'default\': '
+        "Loading 0 mods for world 'default': "
       );
       expect(result).toEqual(mockLoadReport);
     });
@@ -96,12 +102,12 @@ describe('modLoadingUtils', () => {
         statusText: 'Not Found',
       });
 
-      await expect(loadModsFromGameConfig(mockModsLoader, logger)).rejects.toThrow(
-        'Failed to load game configuration: 404 Not Found'
-      );
+      await expect(
+        loadModsFromGameConfig(mockModsLoader, logger)
+      ).rejects.toThrow('Failed to load game configuration: 404 Not Found');
 
       expect(logger.error).toHaveBeenCalledWith(
-        'Failed to load mods for world \'default\':',
+        "Failed to load mods for world 'default':",
         expect.any(Error)
       );
     });
@@ -116,12 +122,12 @@ describe('modLoadingUtils', () => {
       });
       mockModsLoader.loadMods.mockRejectedValue(loadError);
 
-      await expect(loadModsFromGameConfig(mockModsLoader, logger)).rejects.toThrow(
-        'Mod not found'
-      );
+      await expect(
+        loadModsFromGameConfig(mockModsLoader, logger)
+      ).rejects.toThrow('Mod not found');
 
       expect(logger.error).toHaveBeenCalledWith(
-        'Failed to load mods for world \'default\':',
+        "Failed to load mods for world 'default':",
         loadError
       );
     });
@@ -130,12 +136,12 @@ describe('modLoadingUtils', () => {
       const fetchError = new Error('Network error');
       global.fetch.mockRejectedValue(fetchError);
 
-      await expect(loadModsFromGameConfig(mockModsLoader, logger)).rejects.toThrow(
-        'Network error'
-      );
+      await expect(
+        loadModsFromGameConfig(mockModsLoader, logger)
+      ).rejects.toThrow('Network error');
 
       expect(logger.error).toHaveBeenCalledWith(
-        'Failed to load mods for world \'default\':',
+        "Failed to load mods for world 'default':",
         fetchError
       );
     });

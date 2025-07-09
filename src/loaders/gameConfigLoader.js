@@ -267,7 +267,7 @@ class GameConfigLoader extends AbstractLoader {
 
       return {
         mods: finalMods,
-        startWorld: config.startWorld
+        startWorld: config.startWorld,
       };
     } catch (error) {
       if (

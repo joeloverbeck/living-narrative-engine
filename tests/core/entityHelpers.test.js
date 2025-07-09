@@ -78,31 +78,31 @@ describe('entityHelpers', () => {
         constructor() {
           this._data = { id: 'entity123', definitionId: 'test:entity' };
         }
-        
+
         get id() {
           return this._data.id;
         }
-        
+
         get definitionId() {
           return this._data.definitionId;
         }
-        
+
         componentTypeIds = ['core:name', 'core:position'];
       }
-      
+
       const mockEntity = new MockEntity();
-      
+
       const gateway = {
         getEntityInstance: jest.fn(() => mockEntity),
         getComponentData: jest.fn((entityId, componentId) => {
           if (componentId === 'core:name') return { text: 'Test Entity' };
           if (componentId === 'core:position') return { x: 10, y: 20 };
           return null;
-        })
+        }),
       };
-      
+
       const locationProvider = { getLocation: jest.fn(() => ({ id: 'loc1' })) };
-      
+
       // Test that the actor's getter properties are preserved
       const ctx = createEvaluationContext(
         mockEntity,
@@ -110,26 +110,29 @@ describe('entityHelpers', () => {
         gateway,
         locationProvider
       );
-      
+
       // Verify that the returned actor has working getter properties
       expect(ctx.actor.id).toBe('entity123');
       expect(ctx.actor.definitionId).toBe('test:entity');
-      expect(ctx.actor.componentTypeIds).toEqual(['core:name', 'core:position']);
+      expect(ctx.actor.componentTypeIds).toEqual([
+        'core:name',
+        'core:position',
+      ]);
       expect(ctx.actor.components).toEqual({
         'core:name': { text: 'Test Entity' },
-        'core:position': { x: 10, y: 20 }
+        'core:position': { x: 10, y: 20 },
       });
-      
+
       // Verify that the actor prototype chain is preserved
       expect(Object.getPrototypeOf(ctx.actor)).toBe(MockEntity.prototype);
     });
 
     it('throws error when actorEntity is undefined', () => {
       const gateway = {
-        getEntityInstance: jest.fn(() => ({ id: 'e1' }))
+        getEntityInstance: jest.fn(() => ({ id: 'e1' })),
       };
       const locationProvider = { getLocation: jest.fn(() => ({ id: 'loc1' })) };
-      
+
       expect(() => {
         createEvaluationContext('e1', undefined, gateway, locationProvider);
       }).toThrow('createEvaluationContext: actorEntity is undefined');
@@ -137,12 +140,12 @@ describe('entityHelpers', () => {
 
     it('throws error when actorEntity has invalid id', () => {
       const gateway = {
-        getEntityInstance: jest.fn(() => ({ id: 'e1' }))
+        getEntityInstance: jest.fn(() => ({ id: 'e1' })),
       };
       const locationProvider = { getLocation: jest.fn(() => ({ id: 'loc1' })) };
-      
+
       const invalidActor = { id: undefined, componentTypeIds: [] };
-      
+
       expect(() => {
         createEvaluationContext('e1', invalidActor, gateway, locationProvider);
       }).toThrow('createEvaluationContext: actorEntity has invalid ID');

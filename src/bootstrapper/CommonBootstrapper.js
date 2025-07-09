@@ -5,7 +5,11 @@ import { tokens } from '../dependencyInjection/tokens.js';
 import { configureContainer } from '../dependencyInjection/containerConfig.js';
 import { configureMinimalContainer } from '../dependencyInjection/minimalContainerConfig.js';
 import { loadModsFromGameConfig } from '../utils/initialization/modLoadingUtils.js';
-import { initializeCoreServices, initializeAnatomyServices, initializeAuxiliaryServices } from '../utils/initialization/commonInitialization.js';
+import {
+  initializeCoreServices,
+  initializeAnatomyServices,
+  initializeAuxiliaryServices,
+} from '../utils/initialization/commonInitialization.js';
 import { stageSuccess, stageFailure } from '../utils/bootstrapperHelpers.js';
 import { initializeAnatomyFormattingStage } from './stages/anatomyFormattingStage.js';
 
@@ -50,7 +54,7 @@ export class CommonBootstrapper {
       uiElements = null,
       postInitHook = null,
       includeAnatomyFormatting = false,
-      skipModLoading = false
+      skipModLoading = false,
     } = options;
 
     let container;
@@ -61,10 +65,12 @@ export class CommonBootstrapper {
     try {
       // Step 1: Create and configure container
       container = new AppContainer();
-      
+
       if (containerConfigType === 'full') {
         if (!uiElements) {
-          throw new Error('UI elements are required for full container configuration');
+          throw new Error(
+            'UI elements are required for full container configuration'
+          );
         }
         configureContainer(container, uiElements);
       } else {
@@ -74,27 +80,37 @@ export class CommonBootstrapper {
       // Step 2: Resolve core services
       services = await initializeCoreServices(container, tokens);
       logger = services.logger;
-      
-      logger.info(`CommonBootstrapper: Starting bootstrap process with ${containerConfigType} configuration`);
+
+      logger.info(
+        `CommonBootstrapper: Starting bootstrap process with ${containerConfigType} configuration`
+      );
 
       // Step 3: Load mods (unless skipped)
       if (!skipModLoading) {
         logger.info('CommonBootstrapper: Loading mods...');
         loadReport = await loadModsFromGameConfig(
-          services.modsLoader, 
-          logger, 
+          services.modsLoader,
+          logger,
           worldName
         );
-        logger.info(`CommonBootstrapper: Mod loading complete. Loaded ${loadReport.finalModOrder.length} mods`);
+        logger.info(
+          `CommonBootstrapper: Mod loading complete. Loaded ${loadReport.finalModOrder.length} mods`
+        );
       } else {
         logger.info('CommonBootstrapper: Skipping mod loading as requested');
       }
 
       // Step 4: Initialize anatomy formatting if needed
       if (includeAnatomyFormatting) {
-        const formatResult = await initializeAnatomyFormattingStage(container, logger, tokens);
+        const formatResult = await initializeAnatomyFormattingStage(
+          container,
+          logger,
+          tokens
+        );
         if (!formatResult.success) {
-          throw new Error(`Anatomy formatting initialization failed: ${formatResult.error.message}`);
+          throw new Error(
+            `Anatomy formatting initialization failed: ${formatResult.error.message}`
+          );
         }
       }
 
@@ -108,23 +124,24 @@ export class CommonBootstrapper {
         await postInitHook(services, container);
       }
 
-      logger.info('CommonBootstrapper: Bootstrap process completed successfully');
-      
-      return { 
-        container, 
-        services, 
-        ...(loadReport && { loadReport })
-      };
+      logger.info(
+        'CommonBootstrapper: Bootstrap process completed successfully'
+      );
 
+      return {
+        container,
+        services,
+        ...(loadReport && { loadReport }),
+      };
     } catch (error) {
       const errorMsg = `CommonBootstrapper: Fatal error during initialization: ${error.message}`;
-      
+
       if (logger) {
         logger.error(errorMsg, error);
       } else {
         console.error(errorMsg, error);
       }
-      
+
       throw error;
     }
   }
@@ -142,10 +159,10 @@ export class CommonBootstrapper {
       errorDiv.textContent = message;
       errorDiv.style.display = 'block';
     }
-    
+
     // Always log to console
     console.error(message, error);
-    
+
     // Show alert as fallback
     alert(message);
   }

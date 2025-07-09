@@ -17,9 +17,11 @@ sex (requires both anatomy and intimacy)
 ## Intimacy Module Analysis
 
 ### Purpose
+
 The intimacy module allows characters to enter close physical proximity and perform non-sexual intimate actions. It introduces the concept of "closeness circles" - groups of characters who are physically close to each other.
 
 ### Core Component: Closeness
+
 ```json
 {
   "id": "intimacy:closeness",
@@ -32,14 +34,14 @@ The intimacy module allows characters to enter close physical proximity and perf
 
 ### Actions
 
-| Action | Command | Scope | Prerequisites | Description |
-|--------|---------|--------|---------------|-------------|
-| get_close | get-close | core:actors_in_location | Can move (functioning legs) | Enter someone's personal space, creating/merging closeness circles |
-| step_back | step-back | none | Has closeness component | Exit closeness circle, ending intimacy |
-| adjust_clothing | adjust-clothing | intimacy:close_actors | Actor is in closeness | Smooth clothing with possessive care |
-| kiss_cheek | kiss-cheek | intimacy:close_actors | Has closeness component | Kiss target's cheek |
-| massage_shoulders | massage-shoulders | intimacy:actors_with_arms_in_intimacy | Has closeness component | Massage shoulders (target must have arms) |
-| thumb_wipe_cheek | thumb-wipe-cheek | intimacy:close_actors | Has closeness component | Wipe cheek with thumb |
+| Action            | Command           | Scope                                 | Prerequisites               | Description                                                        |
+| ----------------- | ----------------- | ------------------------------------- | --------------------------- | ------------------------------------------------------------------ |
+| get_close         | get-close         | core:actors_in_location               | Can move (functioning legs) | Enter someone's personal space, creating/merging closeness circles |
+| step_back         | step-back         | none                                  | Has closeness component     | Exit closeness circle, ending intimacy                             |
+| adjust_clothing   | adjust-clothing   | intimacy:close_actors                 | Actor is in closeness       | Smooth clothing with possessive care                               |
+| kiss_cheek        | kiss-cheek        | intimacy:close_actors                 | Has closeness component     | Kiss target's cheek                                                |
+| massage_shoulders | massage-shoulders | intimacy:actors_with_arms_in_intimacy | Has closeness component     | Massage shoulders (target must have arms)                          |
+| thumb_wipe_cheek  | thumb-wipe-cheek  | intimacy:close_actors                 | Has closeness component     | Wipe cheek with thumb                                              |
 
 ### Scopes
 
@@ -70,6 +72,7 @@ The intimacy module allows characters to enter close physical proximity and perf
 #### Simple Rules
 
 All other intimacy actions follow a standard pattern:
+
 1. GET_NAME for actor and target
 2. QUERY_COMPONENT for actor position
 3. SET_VARIABLE for message construction
@@ -79,14 +82,15 @@ All other intimacy actions follow a standard pattern:
 ## Sex Module Analysis
 
 ### Purpose
+
 The sex module extends intimacy to allow sexual interactions between characters who are already in a closeness circle. It depends on both anatomy (for body parts) and intimacy (for closeness).
 
 ### Actions
 
-| Action | Command | Scope | Prerequisites | Description |
-|--------|---------|--------|---------------|-------------|
+| Action         | Command        | Scope                               | Prerequisites           | Description             |
+| -------------- | -------------- | ----------------------------------- | ----------------------- | ----------------------- |
 | fondle_breasts | fondle-breasts | sex:actors_with_breasts_in_intimacy | Has closeness component | Fondle target's breasts |
-| fondle_penis | fondle-penis | sex:actors_with_penis_in_intimacy | Has closeness component | Fondle target's penis |
+| fondle_penis   | fondle-penis   | sex:actors_with_penis_in_intimacy   | Has closeness component | Fondle target's penis   |
 
 ### Scopes
 
@@ -99,6 +103,7 @@ The sex module extends intimacy to allow sexual interactions between characters 
 ### Rule Patterns
 
 Both sex actions follow the same simple pattern as most intimacy actions:
+
 1. GET_NAME for actor and target
 2. QUERY_COMPONENT for actor position
 3. SET_VARIABLE for descriptive message
@@ -108,28 +113,33 @@ Both sex actions follow the same simple pattern as most intimacy actions:
 ## Key Design Patterns
 
 ### 1. Closeness Circle Algorithm
+
 - Fully-connected graph structure where all members know all other members
 - Merging circles combines all participants
 - Leaving a circle may leave others alone (unlocking their movement)
 - Movement is locked while in a closeness circle
 
 ### 2. Anatomy-Based Targeting
+
 - Scopes use `hasPartOfType` to filter valid targets
 - Ensures actions only appear for anatomically appropriate targets
 - Examples: massage requires arms, sexual actions require specific body parts
 
 ### 3. Event Dispatching
+
 - **action_target_general**: For observable actions between two characters
 - **state_change_observable**: For state changes (entering/leaving closeness)
 - All events include location for perception system
 
 ### 4. Consistent Naming Conventions
+
 - Actions: module:verb_object (e.g., intimacy:kiss_cheek)
 - Rules: handle_verb_object or module_handle_verb_object
 - Conditions: event-is-action-{action-name}
 - Scopes: descriptive names indicating filtering criteria
 
 ### 5. Prerequisite Patterns
+
 - Some actions check conditions (e.g., can move)
 - Others rely purely on scope filtering
 - adjust_clothing uniquely requires both scope AND prerequisite check
@@ -137,16 +147,19 @@ Both sex actions follow the same simple pattern as most intimacy actions:
 ## Architecture Insights
 
 ### Modularity
+
 - Clear separation between non-sexual (intimacy) and sexual (sex) interactions
 - Sex module builds on intimacy's closeness system
 - Both modules depend on anatomy for body part detection
 
 ### Extensibility
+
 - New intimate actions can be added following the established patterns
 - New body-part-specific actions can use the scope filtering pattern
 - The closeness component could be extended with additional properties
 
 ### Event System Integration
+
 - All actions generate perceptible events for the game's observation system
 - Different perception types allow NPCs to react appropriately
 - Location-based events enable spatial awareness

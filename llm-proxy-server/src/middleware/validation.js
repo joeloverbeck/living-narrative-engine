@@ -16,7 +16,10 @@ const sanitizeHeaders = (headers) => {
 
   for (const [key, value] of Object.entries(headers)) {
     // Skip if key or value contains dangerous characters
-    if (dangerousCharacters.test(key) || dangerousCharacters.test(String(value))) {
+    if (
+      dangerousCharacters.test(key) ||
+      dangerousCharacters.test(String(value))
+    ) {
       continue;
     }
 
@@ -50,7 +53,9 @@ export const validateLlmRequest = () => {
       .isLength({ min: 1, max: 100 })
       .withMessage('llmId must be between 1 and 100 characters')
       .matches(/^[a-zA-Z0-9\-_]+$/)
-      .withMessage('llmId can only contain alphanumeric characters, hyphens, and underscores'),
+      .withMessage(
+        'llmId can only contain alphanumeric characters, hyphens, and underscores'
+      ),
 
     // Validate targetPayload
     body('targetPayload')
@@ -74,17 +79,18 @@ export const validateLlmRequest = () => {
       .customSanitizer(sanitizeHeaders),
 
     // Validate that no extra fields are present
-    body()
-      .custom((value) => {
-        const allowedFields = ['llmId', 'targetPayload', 'targetHeaders'];
-        const providedFields = Object.keys(value);
-        const extraFields = providedFields.filter(field => !allowedFields.includes(field));
-        
-        if (extraFields.length > 0) {
-          throw new Error(`Unexpected fields: ${extraFields.join(', ')}`);
-        }
-        return true;
-      }),
+    body().custom((value) => {
+      const allowedFields = ['llmId', 'targetPayload', 'targetHeaders'];
+      const providedFields = Object.keys(value);
+      const extraFields = providedFields.filter(
+        (field) => !allowedFields.includes(field)
+      );
+
+      if (extraFields.length > 0) {
+        throw new Error(`Unexpected fields: ${extraFields.join(', ')}`);
+      }
+      return true;
+    }),
   ];
 };
 
@@ -102,13 +108,12 @@ export const validateRequestHeaders = () => {
       .withMessage('Content-Type must be application/json'),
 
     // Sanitize all headers to prevent injection
-    header('*')
-      .customSanitizer((value) => {
-        if (typeof value !== 'string') return value;
-        // Remove any carriage returns, line feeds, or null bytes
-        // eslint-disable-next-line no-control-regex
-        return value.replace(/[\r\n\x00]/g, '');
-      }),
+    header('*').customSanitizer((value) => {
+      if (typeof value !== 'string') return value;
+      // Remove any carriage returns, line feeds, or null bytes
+      // eslint-disable-next-line no-control-regex
+      return value.replace(/[\r\n\x00]/g, '');
+    }),
   ];
 };
 
@@ -121,9 +126,9 @@ export const validateRequestHeaders = () => {
  */
 export const handleValidationErrors = (req, res, next) => {
   const errors = validationResult(req);
-  
+
   if (!errors.isEmpty()) {
-    const errorDetails = errors.array().map(err => ({
+    const errorDetails = errors.array().map((err) => ({
       field: err.path || err.param,
       value: err.value,
       message: err.msg,
@@ -139,7 +144,7 @@ export const handleValidationErrors = (req, res, next) => {
       originalStatusCode: 400,
     });
   }
-  
+
   next();
 };
 
@@ -155,7 +160,7 @@ export const isUrlSafe = (url) => {
 
   try {
     const parsedUrl = new URL(url);
-    
+
     // Only allow HTTPS protocol
     if (parsedUrl.protocol !== 'https:') {
       return false;

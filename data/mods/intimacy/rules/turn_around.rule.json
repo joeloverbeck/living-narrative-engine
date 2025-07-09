@@ -37,7 +37,12 @@
         "condition": {
           "and": [
             { "var": "context.facingState" },
-            { "in": [{ "var": "event.payload.actorId" }, { "var": "context.facingState.facing_away_from" }] }
+            {
+              "in": [
+                { "var": "event.payload.actorId" },
+                { "var": "context.facingState.facing_away_from" }
+              ]
+            }
           ]
         },
         "then_actions": [
@@ -66,7 +71,12 @@
             "comment": "Remove component if array is empty",
             "parameters": {
               "condition": {
-                "==": [{ "var": "context.updatedFacingState.facing_away_from.length" }, 0]
+                "==": [
+                  {
+                    "var": "context.updatedFacingState.facing_away_from.length"
+                  },
+                  0
+                ]
               },
               "then_actions": [
                 {

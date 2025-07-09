@@ -231,21 +231,21 @@ describe('Human Male Body Description Integration Test', () => {
 
     const descriptionText = descriptionData.text;
 
-      // Verify expected anatomical features are described
-      // Only body parts with descriptor components will appear in the description
-      // After removing mundane descriptors, only Eyes and Hair have descriptors
+    // Verify expected anatomical features are described
+    // Only body parts with descriptor components will appear in the description
+    // After removing mundane descriptors, only Eyes and Hair have descriptors
 
-      // Eyes (should show as "Eyes:" for paired parts)
-      expect(descriptionText).toMatch(/\bEyes:\s+/);
+    // Eyes (should show as "Eyes:" for paired parts)
+    expect(descriptionText).toMatch(/\bEyes:\s+/);
 
-      // Hair (could be "Hair:" or "Hair 1:", "Hair 2:" for multiple different hair parts)
-      expect(descriptionText).toMatch(/\b(Hair|Hair \d+):\s+/);
+    // Hair (could be "Hair:" or "Hair 1:", "Hair 2:" for multiple different hair parts)
+    expect(descriptionText).toMatch(/\b(Hair|Hair \d+):\s+/);
 
-      // Note: Ears, Nose, Mouth, and Hands no longer appear because their
-      // descriptor components were removed (they were too mundane)
+    // Note: Ears, Nose, Mouth, and Hands no longer appear because their
+    // descriptor components were removed (they were too mundane)
 
-      // Note: Penis and Testicles may not appear if they're not being generated
-      // or if their formatting configuration is missing. This is acceptable for this test.
+    // Note: Penis and Testicles may not appear if they're not being generated
+    // or if their formatting configuration is missing. This is acceptable for this test.
   });
 
   it('should generate complete anatomy for human male with all required body parts', async () => {

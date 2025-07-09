@@ -286,7 +286,9 @@ describe('JsonLogicCustomOperators', () => {
         'player123',
         'anatomy:body'
       );
-      expect(mockBodyGraphService.buildAdjacencyCache).toHaveBeenCalledWith('body123');
+      expect(mockBodyGraphService.buildAdjacencyCache).toHaveBeenCalledWith(
+        'body123'
+      );
       expect(mockBodyGraphService.findPartsByType).toHaveBeenCalledWith(
         'body123',
         'leg'
@@ -314,7 +316,9 @@ describe('JsonLogicCustomOperators', () => {
       const result = jsonLogicService.evaluate(rule, context);
 
       expect(result).toBe(false);
-      expect(mockBodyGraphService.buildAdjacencyCache).toHaveBeenCalledWith('body123');
+      expect(mockBodyGraphService.buildAdjacencyCache).toHaveBeenCalledWith(
+        'body123'
+      );
       expect(mockBodyGraphService.findPartsByType).toHaveBeenCalledWith(
         'body123',
         'wing'
@@ -343,7 +347,9 @@ describe('JsonLogicCustomOperators', () => {
       const result = jsonLogicService.evaluate(rule, context);
 
       expect(result).toBe(true);
-      expect(mockBodyGraphService.buildAdjacencyCache).toHaveBeenCalledWith('body123');
+      expect(mockBodyGraphService.buildAdjacencyCache).toHaveBeenCalledWith(
+        'body123'
+      );
       expect(mockBodyGraphService.findPartsByType).toHaveBeenCalledWith(
         'body123',
         'arm'
@@ -433,7 +439,9 @@ describe('JsonLogicCustomOperators', () => {
         'npc456',
         'anatomy:body'
       );
-      expect(mockBodyGraphService.buildAdjacencyCache).toHaveBeenCalledWith('body456');
+      expect(mockBodyGraphService.buildAdjacencyCache).toHaveBeenCalledWith(
+        'body456'
+      );
       expect(mockBodyGraphService.findPartsByType).toHaveBeenCalledWith(
         'body456',
         'head'
@@ -488,7 +496,9 @@ describe('JsonLogicCustomOperators', () => {
       const result = jsonLogicService.evaluate(rule, context);
 
       expect(result).toBe(true);
-      expect(mockBodyGraphService.buildAdjacencyCache).toHaveBeenCalledWith('body123');
+      expect(mockBodyGraphService.buildAdjacencyCache).toHaveBeenCalledWith(
+        'body123'
+      );
       expect(mockBodyGraphService.findPartsByType).toHaveBeenCalledWith(
         'body123',
         'leg'
@@ -537,7 +547,9 @@ describe('JsonLogicCustomOperators', () => {
         'player123',
         'anatomy:body'
       );
-      expect(mockBodyGraphService.buildAdjacencyCache).toHaveBeenCalledWith('body123');
+      expect(mockBodyGraphService.buildAdjacencyCache).toHaveBeenCalledWith(
+        'body123'
+      );
       expect(mockBodyGraphService.findPartsByType).toHaveBeenCalledWith(
         'body123',
         'leg'
@@ -576,7 +588,9 @@ describe('JsonLogicCustomOperators', () => {
       const result = jsonLogicService.evaluate(rule, context);
 
       expect(result).toBe(false);
-      expect(mockBodyGraphService.buildAdjacencyCache).toHaveBeenCalledWith('body123');
+      expect(mockBodyGraphService.buildAdjacencyCache).toHaveBeenCalledWith(
+        'body123'
+      );
       expect(mockBodyGraphService.findPartsByType).toHaveBeenCalledWith(
         'body123',
         'leg'
@@ -615,7 +629,9 @@ describe('JsonLogicCustomOperators', () => {
       const result = jsonLogicService.evaluate(rule, context);
 
       expect(result).toBe(false);
-      expect(mockBodyGraphService.buildAdjacencyCache).toHaveBeenCalledWith('body123');
+      expect(mockBodyGraphService.buildAdjacencyCache).toHaveBeenCalledWith(
+        'body123'
+      );
       expect(mockBodyGraphService.findPartsByType).toHaveBeenCalledWith(
         'body123',
         'wing'
@@ -654,7 +670,9 @@ describe('JsonLogicCustomOperators', () => {
       const result = jsonLogicService.evaluate(rule, context);
 
       expect(result).toBe(true);
-      expect(mockBodyGraphService.buildAdjacencyCache).toHaveBeenCalledWith('body123');
+      expect(mockBodyGraphService.buildAdjacencyCache).toHaveBeenCalledWith(
+        'body123'
+      );
       expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(
         'leg1',
         'descriptors:appearance'
@@ -689,7 +707,9 @@ describe('JsonLogicCustomOperators', () => {
       const result = jsonLogicService.evaluate(rule, context);
 
       expect(result).toBe(true);
-      expect(mockBodyGraphService.buildAdjacencyCache).toHaveBeenCalledWith('body123');
+      expect(mockBodyGraphService.buildAdjacencyCache).toHaveBeenCalledWith(
+        'body123'
+      );
       expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(
         'leg1',
         'descriptors:build'

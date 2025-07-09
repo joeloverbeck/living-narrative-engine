@@ -74,12 +74,15 @@ export default class BatchSpatialIndexManager {
    * @returns {Promise<BatchIndexResult>} Batch result
    */
   async batchAdd(additions, options = {}) {
-    const { batchSize = this.#defaultBatchSize, enableParallel = false } = options;
+    const { batchSize = this.#defaultBatchSize, enableParallel = false } =
+      options;
 
     this.#validateBatchInput(additions, 'additions');
 
     const startTime = performance.now();
-    this.#logger.info(`Starting batch spatial index addition: ${additions.length} entities`);
+    this.#logger.info(
+      `Starting batch spatial index addition: ${additions.length} entities`
+    );
 
     const processor = async (addition) => {
       const { entityId, locationId } = addition;
@@ -119,12 +122,15 @@ export default class BatchSpatialIndexManager {
    * @returns {Promise<BatchIndexResult>} Batch result
    */
   async batchRemove(entityIds, options = {}) {
-    const { batchSize = this.#defaultBatchSize, enableParallel = false } = options;
+    const { batchSize = this.#defaultBatchSize, enableParallel = false } =
+      options;
 
     this.#validateBatchInput(entityIds, 'entityIds');
 
     const startTime = performance.now();
-    this.#logger.info(`Starting batch spatial index removal: ${entityIds.length} entities`);
+    this.#logger.info(
+      `Starting batch spatial index removal: ${entityIds.length} entities`
+    );
 
     const processor = async (entityId) => {
       const removed = this.#spatialIndex.remove(entityId);
@@ -163,23 +169,38 @@ export default class BatchSpatialIndexManager {
    * @returns {Promise<BatchIndexResult>} Batch result
    */
   async batchMove(updates, options = {}) {
-    const { batchSize = this.#defaultBatchSize, enableParallel = false } = options;
+    const { batchSize = this.#defaultBatchSize, enableParallel = false } =
+      options;
 
     this.#validateBatchInput(updates, 'updates');
 
     const startTime = performance.now();
-    this.#logger.info(`Starting batch spatial index move: ${updates.length} entities`);
+    this.#logger.info(
+      `Starting batch spatial index move: ${updates.length} entities`
+    );
 
     const processor = async (update) => {
       const { entityId, oldLocationId, newLocationId } = update;
-      
+
       // Validate the update
       if (!entityId || !newLocationId) {
-        throw new InvalidArgumentError('EntityId and newLocationId are required');
+        throw new InvalidArgumentError(
+          'EntityId and newLocationId are required'
+        );
       }
 
-      const moved = this.#spatialIndex.move(entityId, oldLocationId, newLocationId);
-      return { entityId, oldLocationId, newLocationId, moved, operation: 'move' };
+      const moved = this.#spatialIndex.move(
+        entityId,
+        oldLocationId,
+        newLocationId
+      );
+      return {
+        entityId,
+        oldLocationId,
+        newLocationId,
+        moved,
+        operation: 'move',
+      };
     };
 
     const result = await processBatch(updates, processor, {
@@ -214,12 +235,15 @@ export default class BatchSpatialIndexManager {
    * @returns {Promise<BatchIndexResult>} Rebuild result
    */
   async rebuild(entityLocations, options = {}) {
-    const { batchSize = this.#defaultBatchSize, enableParallel = false } = options;
+    const { batchSize = this.#defaultBatchSize, enableParallel = false } =
+      options;
 
     this.#validateBatchInput(entityLocations, 'entityLocations');
 
     const startTime = performance.now();
-    this.#logger.info(`Starting spatial index rebuild: ${entityLocations.length} entities`);
+    this.#logger.info(
+      `Starting spatial index rebuild: ${entityLocations.length} entities`
+    );
 
     // Clear existing index
     this.#spatialIndex.clear();
@@ -263,12 +287,15 @@ export default class BatchSpatialIndexManager {
    * @returns {Promise<object>} Validation results
    */
   async batchValidateLocations(locationIds, options = {}) {
-    const { batchSize = this.#defaultBatchSize, enableParallel = true } = options;
+    const { batchSize = this.#defaultBatchSize, enableParallel = true } =
+      options;
 
     this.#validateBatchInput(locationIds, 'locationIds');
 
     const startTime = performance.now();
-    this.#logger.info(`Starting batch location validation: ${locationIds.length} locations`);
+    this.#logger.info(
+      `Starting batch location validation: ${locationIds.length} locations`
+    );
 
     const processor = async (locationId) => {
       const entities = this.#spatialIndex.getEntitiesAtLocation(locationId);
@@ -290,7 +317,10 @@ export default class BatchSpatialIndexManager {
       successful: result.successes,
       failed: result.failures,
       totalProcessed: result.totalProcessed,
-      totalEntities: result.successes.reduce((sum, loc) => sum + loc.entityCount, 0),
+      totalEntities: result.successes.reduce(
+        (sum, loc) => sum + loc.entityCount,
+        0
+      ),
       processingTime: performance.now() - startTime,
     };
 
@@ -311,7 +341,8 @@ export default class BatchSpatialIndexManager {
    * @returns {Promise<BatchIndexResult>} Synchronization result
    */
   async synchronize(entityProvider, options = {}) {
-    const { batchSize = this.#defaultBatchSize, enableParallel = false } = options;
+    const { batchSize = this.#defaultBatchSize, enableParallel = false } =
+      options;
 
     if (typeof entityProvider !== 'function') {
       throw new InvalidArgumentError('entityProvider must be a function');
@@ -323,13 +354,16 @@ export default class BatchSpatialIndexManager {
     try {
       // Get all entities with their locations
       const entities = await entityProvider();
-      
+
       if (!Array.isArray(entities)) {
         throw new InvalidArgumentError('entityProvider must return an array');
       }
 
       // Rebuild the index with current entities
-      const result = await this.rebuild(entities, { batchSize, enableParallel });
+      const result = await this.rebuild(entities, {
+        batchSize,
+        enableParallel,
+      });
 
       this.#logger.info('Spatial index synchronization completed', {
         entitiesProcessed: result.totalProcessed,
@@ -371,9 +405,10 @@ export default class BatchSpatialIndexManager {
       defaultBatchSize: this.#defaultBatchSize,
       indexSize: this.#spatialIndex.size || 0,
       // Add spatial index stats if available
-      spatialIndexStats: typeof this.#spatialIndex.getStats === 'function' 
-        ? this.#spatialIndex.getStats() 
-        : null,
+      spatialIndexStats:
+        typeof this.#spatialIndex.getStats === 'function'
+          ? this.#spatialIndex.getStats()
+          : null,
     };
   }
 

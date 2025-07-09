@@ -62,7 +62,7 @@ export function createDefaultServicesWithConfig({
   });
 
   // Create EntityRepositoryAdapter with configuration
-  const entityRepository = new EntityRepositoryAdapter({ 
+  const entityRepository = new EntityRepositoryAdapter({
     logger,
     maxEntities: limits.MAX_ENTITIES,
     enableValidation: validationSettings.ENABLE_VALIDATION,
@@ -76,7 +76,9 @@ export function createDefaultServicesWithConfig({
     eventDispatcher,
     maxComponentSize: limits.MAX_COMPONENT_SIZE,
     strictValidation: validationSettings.STRICT_MODE,
-    enableCircuitBreaker: config?.isFeatureEnabled('errorHandling.ENABLE_CIRCUIT_BREAKER'),
+    enableCircuitBreaker: config?.isFeatureEnabled(
+      'errorHandling.ENABLE_CIRCUIT_BREAKER'
+    ),
   });
 
   // Create ErrorTranslator with configuration
@@ -116,7 +118,9 @@ export function createDefaultServicesWithConfig({
     entityFactory,
     enableMonitoring: performanceSettings.ENABLE_MONITORING,
     slowOperationThreshold: performanceSettings.SLOW_OPERATION_THRESHOLD,
-    enableBatchOperations: config?.isFeatureEnabled('performance.ENABLE_BATCH_OPERATIONS'),
+    enableBatchOperations: config?.isFeatureEnabled(
+      'performance.ENABLE_BATCH_OPERATIONS'
+    ),
   });
 
   logger.info('Default services created with configuration-aware settings');
@@ -140,7 +144,7 @@ export function createDefaultServicesWithConfig({
  */
 export function createConfiguredServices(deps, configOverrides = {}) {
   const config = isConfigInitialized() ? getGlobalConfig() : null;
-  
+
   if (config && Object.keys(configOverrides).length > 0) {
     // Apply configuration overrides
     for (const [key, value] of Object.entries(configOverrides)) {

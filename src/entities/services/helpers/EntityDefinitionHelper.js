@@ -57,19 +57,24 @@ export default class EntityDefinitionHelper {
    */
   getDefinitionForCreate(definitionId) {
     let definition = this.#definitionCache.get(definitionId);
-    
+
     if (!definition) {
-      this.#logger.debug(`Definition '${definitionId}' not in cache, fetching from registry`);
-      
+      this.#logger.debug(
+        `Definition '${definitionId}' not in cache, fetching from registry`
+      );
+
       try {
         definition = this.#registry.getEntityDefinition(definitionId);
-        
+
         if (definition) {
           this.#definitionCache.set(definitionId, definition);
           this.#logger.debug(`Cached definition '${definitionId}'`);
         }
       } catch (error) {
-        this.#logger.error(`Failed to fetch definition '${definitionId}' from registry:`, error);
+        this.#logger.error(
+          `Failed to fetch definition '${definitionId}' from registry:`,
+          error
+        );
         throw new DefinitionNotFoundError(definitionId);
       }
     }
@@ -91,7 +96,9 @@ export default class EntityDefinitionHelper {
    */
   getDefinitionForReconstruct(definitionId) {
     // Same logic as create, but with different logging context
-    this.#logger.debug(`Retrieving definition '${definitionId}' for reconstruction`);
+    this.#logger.debug(
+      `Retrieving definition '${definitionId}' for reconstruction`
+    );
     return this.getDefinitionForCreate(definitionId);
   }
 
@@ -116,7 +123,10 @@ export default class EntityDefinitionHelper {
         return true;
       }
     } catch (error) {
-      this.#logger.debug(`Definition '${definitionId}' not found in registry:`, error);
+      this.#logger.debug(
+        `Definition '${definitionId}' not found in registry:`,
+        error
+      );
     }
 
     return false;
@@ -150,7 +160,10 @@ export default class EntityDefinitionHelper {
           results.failed.push(definitionId);
         }
       } catch (error) {
-        this.#logger.debug(`Failed to preload definition '${definitionId}':`, error);
+        this.#logger.debug(
+          `Failed to preload definition '${definitionId}':`,
+          error
+        );
         results.failed.push(definitionId);
       }
     }
@@ -180,18 +193,24 @@ export default class EntityDefinitionHelper {
     const requiredProperties = ['id', 'components'];
     for (const prop of requiredProperties) {
       if (!(prop in definition)) {
-        throw new Error(`Definition '${definitionId}' missing required property: ${prop}`);
+        throw new Error(
+          `Definition '${definitionId}' missing required property: ${prop}`
+        );
       }
     }
 
     // Validate ID matches
     if (definition.id !== definitionId) {
-      throw new Error(`Definition ID mismatch: expected '${definitionId}', got '${definition.id}'`);
+      throw new Error(
+        `Definition ID mismatch: expected '${definitionId}', got '${definition.id}'`
+      );
     }
 
     // Validate components structure
     if (definition.components && typeof definition.components !== 'object') {
-      throw new Error(`Definition '${definitionId}' has invalid components structure`);
+      throw new Error(
+        `Definition '${definitionId}' has invalid components structure`
+      );
     }
   }
 

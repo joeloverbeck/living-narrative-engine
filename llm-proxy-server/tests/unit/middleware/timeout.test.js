@@ -271,4 +271,5 @@ describe('timeout middleware', () => {
         expect(config.json.limit).toBe(expected);
       });
     });
-  });});
+  });
+});

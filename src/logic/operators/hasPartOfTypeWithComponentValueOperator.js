@@ -47,13 +47,16 @@ export class HasPartOfTypeWithComponentValueOperator extends BaseBodyPartOperato
 
     // Check each part of the specified type for the component value
     for (const partId of partsOfType) {
-      const componentData = this.entityManager.getComponentData(partId, componentId);
-      
+      const componentData = this.entityManager.getComponentData(
+        partId,
+        componentId
+      );
+
       if (componentData) {
         // Navigate the property path within the component
         let value = componentData;
         const propParts = propertyPath.split('.');
-        
+
         for (const prop of propParts) {
           if (value && typeof value === 'object') {
             value = value[prop];
@@ -66,7 +69,7 @@ export class HasPartOfTypeWithComponentValueOperator extends BaseBodyPartOperato
         if (value === expectedValue) {
           this.logger.debug(
             `hasPartOfTypeWithComponentValue(${entityId}, ${partType}, ${componentId}, ` +
-            `${propertyPath}, ${expectedValue}) = true (found in part ${partId})`
+              `${propertyPath}, ${expectedValue}) = true (found in part ${partId})`
           );
           return true;
         }
@@ -75,7 +78,7 @@ export class HasPartOfTypeWithComponentValueOperator extends BaseBodyPartOperato
 
     this.logger.debug(
       `hasPartOfTypeWithComponentValue(${entityId}, ${partType}, ${componentId}, ` +
-      `${propertyPath}, ${expectedValue}) = false`
+        `${propertyPath}, ${expectedValue}) = false`
     );
     return false;
   }

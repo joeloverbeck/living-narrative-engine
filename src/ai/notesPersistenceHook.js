@@ -61,20 +61,20 @@ export function persistNotes(
     // Handle string notes (legacy format)
     if (isNonBlankString(note)) {
       validNotes.push(note);
-    } 
+    }
     // Handle structured notes (new format)
     else if (
-      typeof note === 'object' && 
-      note !== null && 
-      isNonBlankString(note.text) && 
+      typeof note === 'object' &&
+      note !== null &&
+      isNonBlankString(note.text) &&
       isNonBlankString(note.subject)
     ) {
       validNotes.push(note);
-    } 
+    }
     // Invalid note - dispatch error
     else if (dispatcher) {
       let errorDetails = { note };
-      
+
       // Provide more specific error message
       if (typeof note === 'object' && note !== null) {
         if (!note.text || !isNonBlankString(note.text)) {
@@ -83,7 +83,7 @@ export function persistNotes(
           errorDetails.reason = 'Missing or blank subject field';
         }
       }
-      
+
       safeDispatchError(
         dispatcher,
         'NotesPersistenceHook: Invalid note skipped',

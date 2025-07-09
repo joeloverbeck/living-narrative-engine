@@ -33,7 +33,7 @@ export default class GameConfigPhase extends LoaderPhase {
       this.logger.debug(
         `GameConfigPhase: Loaded ${gameConfig.mods.length} mods from game configuration: [${gameConfig.mods.join(', ')}]`
       );
-      
+
       if (gameConfig.startWorld) {
         this.logger.debug(
           `GameConfigPhase: Loaded startWorld: ${gameConfig.startWorld}`

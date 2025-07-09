@@ -17,8 +17,8 @@ describe('Entity Spread Operator Bug Regression Tests', () => {
     mockEntityDefinition = new EntityDefinition('test:entity_def', {
       name: 'Test Entity',
       components: {
-        'core:name': { text: 'Test Entity Name' }
-      }
+        'core:name': { text: 'Test Entity Name' },
+      },
     });
 
     mockEntityInstanceData = new EntityInstanceData(
@@ -41,12 +41,12 @@ describe('Entity Spread Operator Bug Regression Tests', () => {
     test('Spread operator loses Entity class getters (demonstrates the bug)', () => {
       // This test demonstrates the bug - spread operator loses getters
       const spreadEntity = { ...mockEntity };
-      
+
       // The spread object loses the getter methods
       expect(spreadEntity.id).toBeUndefined();
       expect(spreadEntity.definitionId).toBeUndefined();
       expect(spreadEntity.componentTypeIds).toBeUndefined();
-      
+
       // But private fields and getter properties are not preserved via spread
       // (this is the expected behavior that caused the bug)
       expect(Object.keys(spreadEntity).length).toBeGreaterThanOrEqual(0);
@@ -60,7 +60,7 @@ describe('Entity Spread Operator Bug Regression Tests', () => {
         definitionId: mockEntity.definitionId,
         componentTypeIds: mockEntity.componentTypeIds,
         // Add additional properties as needed
-        customProperty: 'test value'
+        customProperty: 'test value',
       };
 
       // All getter properties should be preserved
@@ -77,16 +77,16 @@ describe('Entity Spread Operator Bug Regression Tests', () => {
       // Simulate the pattern used in targetResolutionService.js
       const components = {
         'core:name': { text: 'Test Name' },
-        'core:position': { locationId: 'test:location' }
+        'core:position': { locationId: 'test:location' },
       };
 
       // The fixed pattern from targetResolutionService.js
       const actorWithComponents = {
         ...mockEntity,
-        id: mockEntity.id,                          // Explicitly preserve the ID getter
-        definitionId: mockEntity.definitionId,      // Preserve other critical getters
+        id: mockEntity.id, // Explicitly preserve the ID getter
+        definitionId: mockEntity.definitionId, // Preserve other critical getters
         componentTypeIds: mockEntity.componentTypeIds,
-        components
+        components,
       };
 
       // Verify all critical properties are preserved
@@ -104,7 +104,7 @@ describe('Entity Spread Operator Bug Regression Tests', () => {
       // Simulate the pattern used in entityHelpers.js
       const comps = {
         'core:inventory': { items: [] },
-        'core:stats': { health: 100 }
+        'core:stats': { health: 100 },
       };
 
       // The fixed pattern from entityHelpers.js
@@ -113,7 +113,7 @@ describe('Entity Spread Operator Bug Regression Tests', () => {
         id: mockEntity.id,
         definitionId: mockEntity.definitionId,
         componentTypeIds: mockEntity.componentTypeIds,
-        components: comps
+        components: comps,
       };
 
       // Verify all critical properties are preserved
@@ -154,18 +154,18 @@ describe('Entity Spread Operator Bug Regression Tests', () => {
       const corruptedEntity = {
         ...mockEntity,
         componentTypeIds: mockEntity.componentTypeIds,
-        components: { 'core:test': {} }
+        components: { 'core:test': {} },
         // Note: deliberately NOT preserving id, definitionId to simulate the bug
       };
 
       // This entity should be detected as having the spread operator issue
-      const isPossibleSpreadIssue = (
-        !corruptedEntity.id && 
+      const isPossibleSpreadIssue =
+        !corruptedEntity.id &&
         typeof corruptedEntity === 'object' &&
         corruptedEntity !== null &&
         // Check if this looks like a spread Entity object that lost its getters
-        ('componentTypeIds' in corruptedEntity || 'components' in corruptedEntity)
-      );
+        ('componentTypeIds' in corruptedEntity ||
+          'components' in corruptedEntity);
 
       expect(isPossibleSpreadIssue).toBe(true);
       expect(corruptedEntity.id).toBeUndefined();
@@ -176,16 +176,15 @@ describe('Entity Spread Operator Bug Regression Tests', () => {
       // Normal objects should not be detected as spread operator issues
       const normalObject = {
         someProperty: 'value',
-        anotherProperty: 123
+        anotherProperty: 123,
       };
 
-      const isPossibleSpreadIssue = (
-        !normalObject.id && 
+      const isPossibleSpreadIssue =
+        !normalObject.id &&
         typeof normalObject === 'object' &&
         normalObject !== null &&
         // Check if this looks like a spread Entity object that lost its getters
-        ('componentTypeIds' in normalObject || 'components' in normalObject)
-      );
+        ('componentTypeIds' in normalObject || 'components' in normalObject);
 
       expect(isPossibleSpreadIssue).toBe(false);
     });

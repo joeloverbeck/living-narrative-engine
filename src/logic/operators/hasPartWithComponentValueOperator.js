@@ -36,10 +36,12 @@ export class HasPartWithComponentValueOperator extends BaseBodyPartOperator {
 
     this.logger.debug(
       `hasPartWithComponentValue called with entityPath='${context._currentPath || 'unknown'}', ` +
-      `componentId='${componentId}', propertyPath='${propertyPath}', expectedValue='${expectedValue}'`
+        `componentId='${componentId}', propertyPath='${propertyPath}', expectedValue='${expectedValue}'`
     );
 
-    this.logger.debug(`hasPartWithComponentValue: Found entity ID: ${entityId}`);
+    this.logger.debug(
+      `hasPartWithComponentValue: Found entity ID: ${entityId}`
+    );
 
     // Use BodyGraphService to check for the part
     const result = this.bodyGraphService.hasPartWithComponentValue(

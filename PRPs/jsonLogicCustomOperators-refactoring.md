@@ -17,6 +17,7 @@ Refactor the `src/logic/jsonLogicCustomOperators.js` module to eliminate code du
 ## What
 
 Create a modular operator system that:
+
 - Extracts each inline operator implementation into its own focused class
 - Creates shared utilities for duplicated logic (entity path resolution, body component access)
 - Follows the existing BaseOperationHandler pattern from the codebase
@@ -161,12 +162,12 @@ class BaseBodyPartOperator {
     this.bodyGraphService = dependencies.bodyGraphService;
     this.logger = dependencies.logger;
   }
-  
+
   // Template method for operator evaluation
   evaluate(params, context) {
     // Common validation and error handling
   }
-  
+
   // Abstract method for operator-specific logic
   evaluateInternal(entity, params) {
     throw new Error('Must be implemented by subclass');
@@ -178,7 +179,7 @@ const entityPathResolver = {
   resolve(context, pathString) {
     // Navigate nested path like "event.target.id"
     // Return { entity: resolvedValue, isValid: boolean }
-  }
+  },
 };
 
 // Utility structure for body component access
@@ -186,10 +187,10 @@ const bodyComponentUtils = {
   getBodyComponent(entityManager, entityId) {
     // Get anatomy:body component with validation
   },
-  
+
   extractRootId(bodyComponent) {
     // Handle both { root } and { body: { root } } formats
-  }
+  },
 };
 ```
 
@@ -306,49 +307,52 @@ export const entityPathResolver = {
     if (!pathString || typeof pathString !== 'string') {
       return { entity: null, isValid: false };
     }
-    
+
     const pathParts = pathString.split('.');
     let current = context;
-    
+
     for (const part of pathParts) {
       if (current == null || typeof current !== 'object') {
         return { entity: null, isValid: false };
       }
       current = current[part];
     }
-    
+
     return { entity: current, isValid: current != null };
-  }
+  },
 };
 
 // Task 2 - bodyComponentUtils.js
 export const bodyComponentUtils = {
   getBodyComponent(entityManager, entityId) {
     if (!entityId) return null;
-    
-    const bodyComponent = entityManager.getComponentData(entityId, 'anatomy:body');
-    
+
+    const bodyComponent = entityManager.getComponentData(
+      entityId,
+      'anatomy:body'
+    );
+
     if (!bodyComponent) {
       return null;
     }
-    
+
     // Validate structure
     const hasDirectRoot = bodyComponent.root;
     const hasNestedRoot = bodyComponent.body?.root;
-    
+
     if (!hasDirectRoot && !hasNestedRoot) {
       return null;
     }
-    
+
     return bodyComponent;
   },
-  
+
   extractRootId(bodyComponent) {
     if (!bodyComponent) return null;
-    
+
     // Handle both formats
     return bodyComponent.root || bodyComponent.body?.root || null;
-  }
+  },
 };
 
 // Task 3 - BaseBodyPartOperator.js
@@ -357,12 +361,12 @@ export class BaseBodyPartOperator {
     if (!entityManager || !bodyGraphService || !logger) {
       throw new Error('Missing required dependencies');
     }
-    
+
     this.entityManager = entityManager;
     this.bodyGraphService = bodyGraphService;
     this.logger = logger;
   }
-  
+
   evaluate(params, context) {
     try {
       // Common parameter validation
@@ -370,26 +374,30 @@ export class BaseBodyPartOperator {
         this.logger.warn(`${this.operatorName}: Invalid parameters`);
         return false;
       }
-      
+
       const [entityPath, ...operatorParams] = params;
-      
+
       // Resolve entity from path
-      const { entity, isValid } = entityPathResolver.resolve(context, entityPath);
-      
+      const { entity, isValid } = entityPathResolver.resolve(
+        context,
+        entityPath
+      );
+
       if (!isValid) {
-        this.logger.debug(`${this.operatorName}: No entity found at path ${entityPath}`);
+        this.logger.debug(
+          `${this.operatorName}: No entity found at path ${entityPath}`
+        );
         return false;
       }
-      
+
       // Delegate to subclass implementation
       return this.evaluateInternal(entity, operatorParams);
-      
     } catch (error) {
       this.logger.error(`${this.operatorName}: Error during evaluation`, error);
       return false;
     }
   }
-  
+
   evaluateInternal(entity, params) {
     throw new Error('evaluateInternal must be implemented by subclass');
   }
@@ -404,28 +412,35 @@ export class HasPartWithComponentValueOperator extends BaseBodyPartOperator {
     super(dependencies);
     this.operatorName = 'hasPartWithComponentValue';
   }
-  
+
   evaluateInternal(entityId, params) {
     const [componentTypeAndValue] = params;
     const { componentType, value, property } = componentTypeAndValue;
-    
+
     // Get body component
-    const bodyComponent = bodyComponentUtils.getBodyComponent(this.entityManager, entityId);
+    const bodyComponent = bodyComponentUtils.getBodyComponent(
+      this.entityManager,
+      entityId
+    );
     if (!bodyComponent) {
-      this.logger.debug(`${this.operatorName}: No body component for ${entityId}`);
+      this.logger.debug(
+        `${this.operatorName}: No body component for ${entityId}`
+      );
       return false;
     }
-    
+
     // Extract root ID
     const rootId = bodyComponentUtils.extractRootId(bodyComponent);
     if (!rootId) {
       this.logger.warn(`${this.operatorName}: No root ID in body component`);
       return false;
     }
-    
+
     // Check if any part has the component value
-    this.logger.info(`Checking if entity ${entityId} has part with ${componentType}:${property} = ${value}`);
-    
+    this.logger.info(
+      `Checking if entity ${entityId} has part with ${componentType}:${property} = ${value}`
+    );
+
     return this.bodyGraphService.hasPartWithComponentValue(
       rootId,
       componentType,
@@ -442,29 +457,36 @@ import { HasPartOfTypeWithComponentValueOperator } from './operators/hasPartOfTy
 
 export default class JsonLogicCustomOperators {
   static PROVIDER = 'JsonLogicCustomOperators';
-  
-  constructor({ IEntityManager, IBodyGraphService, ILogger, IJsonLogicEvaluationService }) {
+
+  constructor({
+    IEntityManager,
+    IBodyGraphService,
+    ILogger,
+    IJsonLogicEvaluationService,
+  }) {
     this.dependencies = {
       entityManager: IEntityManager,
       bodyGraphService: IBodyGraphService,
-      logger: ILogger
+      logger: ILogger,
     };
     this.evaluationService = IJsonLogicEvaluationService;
   }
-  
+
   registerOperators() {
     // Create operator instances
     const operators = {
-      hasPartWithComponentValue: new HasPartWithComponentValueOperator(this.dependencies),
+      hasPartWithComponentValue: new HasPartWithComponentValueOperator(
+        this.dependencies
+      ),
       hasPartOfType: new HasPartOfTypeOperator(this.dependencies),
-      hasPartOfTypeWithComponentValue: new HasPartOfTypeWithComponentValueOperator(this.dependencies)
+      hasPartOfTypeWithComponentValue:
+        new HasPartOfTypeWithComponentValueOperator(this.dependencies),
     };
-    
+
     // Register each operator
     Object.entries(operators).forEach(([name, operator]) => {
-      this.evaluationService.addOperation(
-        name,
-        (params, data) => operator.evaluate(params, data)
+      this.evaluationService.addOperation(name, (params, data) =>
+        operator.evaluate(params, data)
       );
     });
   }
@@ -546,6 +568,7 @@ npm test -- --testNamePattern="Iker Aguirre issue"
 ## Implementation Confidence Score: 9/10
 
 High confidence due to:
+
 - Clear duplication patterns identified
 - Comprehensive test coverage available
 - Established operation handler patterns to follow
@@ -553,5 +576,6 @@ High confidence due to:
 - Specific test case ("Iker Aguirre issue") ensures correctness
 
 Minor risk area:
+
 - Preserving exact operator behavior during extraction
 - Ensuring all edge cases are maintained

@@ -9,18 +9,27 @@ import ContextValidator from './contextValidator.js';
 
 /**
  * Handles safe merging of context objects preserving critical properties
- * 
+ *
  * Extracted from engine.js to improve maintainability and testability.
  * Provides centralized context merging logic with proper validation.
  */
 class ContextMerger {
   /**
    * Creates a new ContextMerger instance
-   * 
+   *
    * @param {string[]} criticalProperties - Array of property names that must be preserved
    * @param {ContextValidator} validator - Optional validator instance
    */
-  constructor(criticalProperties = ['actorEntity', 'runtimeCtx', 'dispatcher', 'cycleDetector', 'depthGuard'], validator = null) {
+  constructor(
+    criticalProperties = [
+      'actorEntity',
+      'runtimeCtx',
+      'dispatcher',
+      'cycleDetector',
+      'depthGuard',
+    ],
+    validator = null
+  ) {
     this.criticalProperties = criticalProperties;
     this.validator = validator || new ContextValidator(criticalProperties);
   }
@@ -45,18 +54,18 @@ class ContextMerger {
     const mergedCtx = {
       // Start with all base properties
       ...baseCtx,
-      
+
       // Overlay non-critical properties from overlayCtx
       ...this._mergeNonCriticalProperties(overlayCtx),
-      
+
       // Critical properties - ensure they're never undefined
       ...this._mergeCriticalProperties(baseCtx, overlayCtx),
-      
+
       // Handle depth specially
       depth: this._mergeDepth(baseCtx, overlayCtx),
-      
+
       // Preserve trace if available
-      trace: overlayCtx.trace || baseCtx.trace
+      trace: overlayCtx.trace || baseCtx.trace,
     };
 
     // Validate final merged context
@@ -67,7 +76,7 @@ class ContextMerger {
 
   /**
    * Merges non-critical properties from overlay context
-   * 
+   *
    * @param {object} overlayCtx - Context to overlay
    * @returns {object} Non-critical properties from overlay
    * @private
@@ -85,7 +94,7 @@ class ContextMerger {
 
   /**
    * Merges critical properties with proper fallback handling
-   * 
+   *
    * @param {object} baseCtx - Base context
    * @param {object} overlayCtx - Overlay context
    * @returns {object} Merged critical properties
@@ -93,17 +102,17 @@ class ContextMerger {
    */
   _mergeCriticalProperties(baseCtx, overlayCtx) {
     const critical = {};
-    
-    this.criticalProperties.forEach(prop => {
+
+    this.criticalProperties.forEach((prop) => {
       critical[prop] = overlayCtx[prop] || baseCtx[prop];
     });
-    
+
     return critical;
   }
 
   /**
    * Handles depth merging with special logic
-   * 
+   *
    * @param {object} baseCtx - Base context
    * @param {object} overlayCtx - Overlay context
    * @returns {number} Merged depth value
@@ -116,10 +125,9 @@ class ContextMerger {
     );
   }
 
-
   /**
    * Gets the list of critical properties this merger handles
-   * 
+   *
    * @returns {string[]} Array of critical property names
    */
   getCriticalProperties() {
@@ -128,7 +136,7 @@ class ContextMerger {
 
   /**
    * Gets the validator instance used by this merger
-   * 
+   *
    * @returns {ContextValidator} The validator instance
    */
   getValidator() {

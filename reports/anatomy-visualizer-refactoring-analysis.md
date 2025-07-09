@@ -11,6 +11,7 @@ This report analyzes the code duplication between `src/anatomy-visualizer.js` an
 Both `containerConfig.js` and `minimalContainerConfig.js` contain identical `loadLoggerConfig` functions (lines 107-162 in containerConfig.js and lines 88-137 in minimalContainerConfig.js). This is a clear violation of DRY principles.
 
 **Code duplication:**
+
 - Exact same function implementation
 - Same error handling logic
 - Same log messages (with minor prefix differences)
@@ -18,6 +19,7 @@ Both `containerConfig.js` and `minimalContainerConfig.js` contain identical `loa
 ### 2. Duplicated Mods Loading Logic
 
 The anatomy visualizer duplicates the mods loading pattern from the main game:
+
 - `anatomy-visualizer.js` has its own `loadMods` function (lines 89-115)
 - `initializationService.js` has a similar `#loadMods` method (lines 357-363)
 - Both fetch and parse `game.json` independently
@@ -28,6 +30,7 @@ The anatomy visualizer duplicates the mods loading pattern from the main game:
 Both files follow similar initialization sequences but implement them separately:
 
 **anatomy-visualizer.js pattern:**
+
 1. Create container
 2. Configure container (minimal)
 3. Resolve services
@@ -36,6 +39,7 @@ Both files follow similar initialization sequences but implement them separately
 6. Setup UI
 
 **main.js pattern:**
+
 1. Ensure DOM elements
 2. Create container
 3. Configure container (full)
@@ -47,6 +51,7 @@ Both files follow similar initialization sequences but implement them separately
 ### 4. Container Configuration Duplication
 
 The container configuration files share substantial code:
+
 - Both register the same core services in the same order
 - Both use identical logger bootstrapping
 - Both implement the same asynchronous logger config loading
@@ -55,6 +60,7 @@ The container configuration files share substantial code:
 ### 5. Service Resolution Duplication
 
 Both files manually resolve similar sets of services:
+
 - Logger
 - ModsLoader
 - Registry
@@ -70,7 +76,11 @@ Create a shared utility function for logger configuration loading:
 
 ```javascript
 // src/configuration/utils/loggerConfigUtils.js
-export async function loadAndApplyLoggerConfig(container, logger, configPrefix = 'ContainerConfig') {
+export async function loadAndApplyLoggerConfig(
+  container,
+  logger,
+  configPrefix = 'ContainerConfig'
+) {
   // Extract the duplicated loadLoggerConfig logic here
 }
 ```
@@ -112,21 +122,21 @@ Create a base container configuration with optional feature flags:
 // src/dependencyInjection/baseContainerConfig.js
 export function configureBaseContainer(container, options = {}) {
   const { includeUI = false, includeGameSystems = false } = options;
-  
+
   // Register core services (always needed)
   registerLoaders(container);
   registerInfrastructure(container);
   registerPersistence(container);
   registerWorldAndEntity(container);
   // ... other core registrations
-  
+
   // Conditionally register game-specific services
   if (includeGameSystems) {
     registerAI(container);
     registerTurnLifecycle(container);
     registerOrchestration(container);
   }
-  
+
   if (includeUI && options.uiElements) {
     registerUI(container, options.uiElements);
   }
@@ -146,27 +156,27 @@ export class CommonBootstrapper {
       includeUI = false,
       includeGameSystems = false,
       worldName = null,
-      postInitHook = null
+      postInitHook = null,
     } = options;
-    
+
     // Common initialization steps
     const container = new AppContainer();
     configureBaseContainer(container, { includeUI, includeGameSystems });
-    
+
     // Resolve core services
     const services = await initializeCoreServices(container);
-    
+
     // Load mods
     await loadModsFromGameConfig(services.modsLoader, services.logger);
-    
+
     // Initialize systems
     await services.systemInitializer.initializeAll();
-    
+
     // Custom post-initialization
     if (postInitHook) {
       await postInitHook(services);
     }
-    
+
     return { container, services };
   }
 }
@@ -184,16 +194,16 @@ const { services } = await bootstrapper.bootstrap({
   includeGameSystems: false,
   postInitHook: async (services) => {
     await services.anatomyFormattingService.initialize();
-  }
+  },
 });
 
-// main.js  
+// main.js
 const bootstrapper = new CommonBootstrapper();
 const { services } = await bootstrapper.bootstrap({
   includeUI: true,
   includeGameSystems: true,
   uiElements,
-  worldName: ACTIVE_WORLD
+  worldName: ACTIVE_WORLD,
 });
 ```
 

@@ -61,7 +61,6 @@ class ScopeEngine extends IScopeEngine {
     }
   }
 
-
   /**
    * Creates a provider that returns the current location.
    *
@@ -229,7 +228,7 @@ class ScopeEngine extends IScopeEngine {
           resolve: (innerNode, innerCtx) => {
             // Use safe context merging
             const mergedCtx = this.contextMerger.merge(ctx, innerCtx);
-            
+
             return this._resolveWithDepthAndCycleChecking(
               innerNode,
               mergedCtx,

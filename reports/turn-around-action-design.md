@@ -7,6 +7,7 @@ Design a position-aware intimate action that toggles a "facing away" state betwe
 ## Domain Architecture
 
 ### Bounded Context: Intimacy
+
 - **Existing Aggregates**: Closeness (relationship management)
 - **New Aggregate**: PositionalRelationship (spatial orientation between actors)
 - **Domain Events**: ActorTurnedAround, ActorFacedForward
@@ -14,6 +15,7 @@ Design a position-aware intimate action that toggles a "facing away" state betwe
 ### Component Design
 
 **New Component: `intimacy:facing_away`**
+
 ```json
 {
   "id": "intimacy:facing_away",
@@ -35,6 +37,7 @@ Design a position-aware intimate action that toggles a "facing away" state betwe
 ### Action Definition
 
 **File: `data/mods/intimacy/actions/turn_around.action.json`**
+
 ```json
 {
   "id": "intimacy:turn_around",
@@ -53,6 +56,7 @@ Design a position-aware intimate action that toggles a "facing away" state betwe
 You should ensure that the placeholders are used like that: '$EVENT'. Check out other existing rules.
 
 **File: `data/mods/intimacy/rules/turn_around.rule.json`**
+
 ```json
 {
   "id": "intimacy:turn_around",
@@ -160,6 +164,7 @@ You should ensure that the placeholders are used like that: '$EVENT'. Check out 
 ### Supporting Files
 
 **Condition: `data/mods/intimacy/conditions/event-is-action-turn-around.condition.json`**
+
 ```json
 {
   "id": "intimacy:event-is-action-turn-around",
@@ -172,6 +177,7 @@ You should ensure that the placeholders are used like that: '$EVENT'. Check out 
 ### Custom Action Type: TOGGLE_FACING_AWAY
 
 This action type would handle the component manipulation logic:
+
 - Check if target has `intimacy:facing_away` component
 - If action is "add":
   - Create component if not exists
@@ -183,6 +189,7 @@ This action type would handle the component manipulation logic:
 Note: creating a new OperationHandler for a TOGGLE_FACING_AWAY is likely way too granular. Please check out the existing action handlers in data/schemas/operations/ for more general options that will allow you to do the same by chaining some operations.
 
 ### Future Extension Points
+
 - Position-aware actions can check for `intimacy:facing_away` component
 - New scopes like `intimacy:actors_facing_away_in_closeness`
 - Events enable UI updates or mood system integration
@@ -196,7 +203,7 @@ Note: creating a new OperationHandler for a TOGGLE_FACING_AWAY is likely way too
 5. Update UI labels for the new action
 6. Figure out how to implement in the rule the 'toggle facing away' notion without creating a new OperationHandler, which would be way too granular
 7. Add unit tests for the new functionality
-8. Add integration tests for the new rule similar to the integration tests in tests/integration/rules/ and tests/integration/mods/ 
+8. Add integration tests for the new rule similar to the integration tests in tests/integration/rules/ and tests/integration/mods/
 
 ## Testing Strategy
 
@@ -287,14 +294,17 @@ If implementing a custom `TOGGLE_FACING_AWAY` action type is not feasible, the r
 ## Domain Model Considerations
 
 ### Invariants
+
 1. An actor can only be in the `facing_away_from` array once (no duplicates)
 2. The `facing_away` component should only exist if there's at least one actor in the array
 3. Only actors in closeness can modify each other's facing state
 
 ### Value Objects
+
 - **FacingState**: Encapsulates the facing relationship between two actors
 
 ### Aggregate Boundaries
+
 - The `facing_away` component belongs to the target actor's aggregate
 - Modifications must go through the intimacy bounded context
 - The closeness requirement ensures proper authorization

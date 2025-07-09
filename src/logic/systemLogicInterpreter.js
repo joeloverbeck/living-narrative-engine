@@ -98,7 +98,9 @@ class SystemLogicInterpreter extends BaseService {
     this.#entityManager = entityManager;
     this.#operationInterpreter = operationInterpreter;
     this.#bodyGraphService = bodyGraphService;
-    this.#boundEventHandler = /** @type {EventListener} */ (this.#handleEvent.bind(this));
+    this.#boundEventHandler = /** @type {EventListener} */ (
+      this.#handleEvent.bind(this)
+    );
 
     this.#logger.debug('SystemLogicInterpreter: created');
   }
@@ -161,7 +163,9 @@ class SystemLogicInterpreter extends BaseService {
         // Create a minimal execution context for the handler
         /** @type {ExecutionContext} */
         const executionContext = {
-          evaluationContext: /** @type {JsonLogicEvaluationContext} */ (/** @type {any} */ (data)),
+          evaluationContext: /** @type {JsonLogicEvaluationContext} */ (
+            /** @type {any} */ (data)
+          ),
           entityManager: this.#entityManager,
           validatedEventDispatcher: /** @type {any} */ (null), // Not available in this context
           logger: this.#logger,

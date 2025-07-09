@@ -122,9 +122,14 @@ export class EntityLifecycleManager {
     validateDependency(registry, 'IDataRegistry', tempLogger, {
       requiredMethods: ['getEntityDefinition'],
     });
-    validateDependency(entityRepository, 'EntityRepositoryAdapter', tempLogger, {
-      requiredMethods: ['add', 'get', 'has', 'remove', 'clear', 'entities'],
-    });
+    validateDependency(
+      entityRepository,
+      'EntityRepositoryAdapter',
+      tempLogger,
+      {
+        requiredMethods: ['add', 'get', 'has', 'remove', 'clear', 'entities'],
+      }
+    );
     validateDependency(eventDispatcher, 'ISafeEventDispatcher', tempLogger, {
       requiredMethods: ['dispatch'],
     });
@@ -172,14 +177,12 @@ export class EntityLifecycleManager {
    * @param deps.registry
    * @param deps.definitionCache
    */
-  #initializeHelpers({
-    logger,
-    eventDispatcher,
-    registry,
-    definitionCache,
-  }) {
+  #initializeHelpers({ logger, eventDispatcher, registry, definitionCache }) {
     this.#validator = new EntityLifecycleValidator({ logger });
-    this.#eventDispatcher = new EntityEventDispatcher({ eventDispatcher, logger });
+    this.#eventDispatcher = new EntityEventDispatcher({
+      eventDispatcher,
+      logger,
+    });
     this.#definitionHelper = new EntityDefinitionHelper({
       registry,
       definitionCache,
@@ -210,7 +213,10 @@ export class EntityLifecycleManager {
 
       return entity;
     } catch (error) {
-      this.#logger.error(`Failed to construct entity '${definitionId}':`, error);
+      this.#logger.error(
+        `Failed to construct entity '${definitionId}':`,
+        error
+      );
       throw this.#errorTranslator.translate(error);
     }
   }
@@ -234,7 +240,10 @@ export class EntityLifecycleManager {
 
       return entity;
     } catch (error) {
-      this.#logger.error(`Failed to reconstruct entity '${serializedEntity.instanceId}':`, error);
+      this.#logger.error(
+        `Failed to reconstruct entity '${serializedEntity.instanceId}':`,
+        error
+      );
       throw this.#errorTranslator.translate(error);
     }
   }
@@ -255,7 +264,8 @@ export class EntityLifecycleManager {
     this.#validator.validateCreationOptions(opts);
 
     // Get definition
-    const definition = this.#definitionHelper.getDefinitionForCreate(definitionId);
+    const definition =
+      this.#definitionHelper.getDefinitionForCreate(definitionId);
 
     // Construct entity
     const entity = this.#constructEntity(definitionId, opts, definition);
@@ -263,7 +273,9 @@ export class EntityLifecycleManager {
     // Dispatch event
     this.#eventDispatcher.dispatchEntityCreated(entity, false);
 
-    this.#logger.info(`Entity created: ${entity.id} (definition: ${definitionId})`);
+    this.#logger.info(
+      `Entity created: ${entity.id} (definition: ${definitionId})`
+    );
     return entity;
   }
 
@@ -293,7 +305,9 @@ export class EntityLifecycleManager {
     // Dispatch event
     this.#eventDispatcher.dispatchEntityCreated(entity, true);
 
-    this.#logger.info(`Entity reconstructed: ${entity.id} (definition: ${serializedEntity.definitionId})`);
+    this.#logger.info(
+      `Entity reconstructed: ${entity.id} (definition: ${serializedEntity.definitionId})`
+    );
     return entity;
   }
 
@@ -317,7 +331,7 @@ export class EntityLifecycleManager {
     try {
       // Remove from repository
       const removed = this.#entityRepository.remove(instanceId);
-      
+
       if (!removed) {
         throw new RepositoryConsistencyError(
           `Repository inconsistency: Entity '${instanceId}' was found but could not be removed`
@@ -333,8 +347,10 @@ export class EntityLifecycleManager {
       if (error instanceof RepositoryConsistencyError) {
         throw error;
       }
-      
-      this.#logger.error(`EntityRepository.remove failed for already retrieved entity '${instanceId}': ${error.message}`);
+
+      this.#logger.error(
+        `EntityRepository.remove failed for already retrieved entity '${instanceId}': ${error.message}`
+      );
       throw new RepositoryConsistencyError(
         `EntityRepository.remove failed for already retrieved entity '${instanceId}': ${error.message}`
       );

@@ -128,7 +128,11 @@ export default class EntityValidationFactory {
    */
   validateCreateIds(definitionId, instanceId) {
     try {
-      assertValidId(definitionId, 'EntityValidationFactory.validateCreateIds', this.#logger);
+      assertValidId(
+        definitionId,
+        'EntityValidationFactory.validateCreateIds',
+        this.#logger
+      );
     } catch (err) {
       if (err && err.name === 'InvalidArgumentError') {
         const msg = 'definitionId must be a non-empty string.';
@@ -140,10 +144,15 @@ export default class EntityValidationFactory {
 
     if (instanceId !== undefined && instanceId !== null) {
       try {
-        assertValidId(instanceId, 'EntityValidationFactory.validateCreateIds', this.#logger);
+        assertValidId(
+          instanceId,
+          'EntityValidationFactory.validateCreateIds',
+          this.#logger
+        );
       } catch (err) {
         if (err && err.name === 'InvalidArgumentError') {
-          const msg = 'EntityValidationFactory.validateCreateIds: instanceId is missing or invalid.';
+          const msg =
+            'EntityValidationFactory.validateCreateIds: instanceId is missing or invalid.';
           this.#logger.error(`[EntityValidationFactory] ${msg}`);
           throw new InvalidInstanceIdError(instanceId, msg);
         }
@@ -160,17 +169,23 @@ export default class EntityValidationFactory {
    */
   validateReconstructData(serializedEntity) {
     if (!serializedEntity || typeof serializedEntity !== 'object') {
-      const msg = 'EntityValidationFactory.validateReconstructData: serializedEntity data is missing or invalid.';
+      const msg =
+        'EntityValidationFactory.validateReconstructData: serializedEntity data is missing or invalid.';
       this.#logger.error(`[EntityValidationFactory] ${msg}`);
       throw new SerializedEntityError(msg);
     }
 
     const { instanceId } = serializedEntity;
     try {
-      assertValidId(instanceId, 'EntityValidationFactory.validateReconstructData', this.#logger);
+      assertValidId(
+        instanceId,
+        'EntityValidationFactory.validateReconstructData',
+        this.#logger
+      );
     } catch (err) {
       if (err && err.name === 'InvalidArgumentError') {
-        const msg = 'EntityValidationFactory.validateReconstructData: instanceId is missing or invalid in serialized data.';
+        const msg =
+          'EntityValidationFactory.validateReconstructData: instanceId is missing or invalid in serialized data.';
         this.#logger.error(`[EntityValidationFactory] ${msg}`);
         throw new InvalidInstanceIdError(instanceId, msg);
       }

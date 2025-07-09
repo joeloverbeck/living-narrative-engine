@@ -35,7 +35,10 @@ describe('JSON-Schema – core:notes component', () => {
   test.each([
     ['no core:notes key', {}],
     ['core:notes with empty array', { 'core:notes': { notes: [] } }],
-    ['note without timestamp', { 'core:notes': { notes: [{ text: 'A note without timestamp' }] } }],
+    [
+      'note without timestamp',
+      { 'core:notes': { notes: [{ text: 'A note without timestamp' }] } },
+    ],
   ])('✓ %s – should validate', (_label, payload) => {
     const ok = validateEntity(payload);
     if (!ok) console.error(validateEntity.errors);

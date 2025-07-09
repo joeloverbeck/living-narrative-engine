@@ -55,9 +55,11 @@ export const createMockLlmRequestService = () => ({
     success: true,
     data: {
       id: 'test-response-id',
-      choices: [{
-        text: 'Test response',
-      }],
+      choices: [
+        {
+          text: 'Test response',
+        },
+      ],
     },
     headers: {
       'content-type': 'application/json',
@@ -84,7 +86,9 @@ export const createMockAppConfigService = () => ({
   getProxyPort: jest.fn().mockReturnValue(3000),
   getProxyAllowedOrigin: jest.fn().mockReturnValue('http://localhost:3001'),
   getAllowedOriginsArray: jest.fn().mockReturnValue(['http://localhost:3001']),
-  getProxyProjectRootPathForApiKeyFiles: jest.fn().mockReturnValue('/project/root'),
+  getProxyProjectRootPathForApiKeyFiles: jest
+    .fn()
+    .mockReturnValue('/project/root'),
   isProxyPortDefaulted: jest.fn().mockReturnValue(false),
   getLlmConfigsPath: jest.fn().mockReturnValue('./llm-configs.json'),
 });

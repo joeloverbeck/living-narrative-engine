@@ -3,7 +3,10 @@ import { CommonBootstrapper } from '../../../src/bootstrapper/CommonBootstrapper
 import { configureContainer } from '../../../src/dependencyInjection/containerConfig.js';
 import { configureMinimalContainer } from '../../../src/dependencyInjection/minimalContainerConfig.js';
 import { loadModsFromGameConfig } from '../../../src/utils/initialization/modLoadingUtils.js';
-import { initializeCoreServices, initializeAuxiliaryServices } from '../../../src/utils/initialization/commonInitialization.js';
+import {
+  initializeCoreServices,
+  initializeAuxiliaryServices,
+} from '../../../src/utils/initialization/commonInitialization.js';
 import { initializeAnatomyFormattingStage } from '../../../src/bootstrapper/stages/anatomyFormattingStage.js';
 import AppContainer from '../../../src/dependencyInjection/appContainer.js';
 
@@ -27,11 +30,11 @@ describe('CommonBootstrapper', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     bootstrapper = new CommonBootstrapper();
     mockContainer = {};
     AppContainer.mockImplementation(() => mockContainer);
-    
+
     mockServices = {
       logger: mockLogger(),
       modsLoader: { loadMods: jest.fn() },
@@ -40,7 +43,7 @@ describe('CommonBootstrapper', () => {
       systemInitializer: { initializeAll: jest.fn() },
       eventDispatcher: {},
     };
-    
+
     initializeCoreServices.mockResolvedValue(mockServices);
     initializeAuxiliaryServices.mockResolvedValue();
     loadModsFromGameConfig.mockResolvedValue({
@@ -70,20 +73,27 @@ describe('CommonBootstrapper', () => {
 
     it('should bootstrap with full configuration when specified', async () => {
       const uiElements = { outputDiv: {}, inputElement: {} };
-      
+
       await bootstrapper.bootstrap({
         containerConfigType: 'full',
         uiElements,
       });
 
-      expect(configureContainer).toHaveBeenCalledWith(mockContainer, uiElements);
+      expect(configureContainer).toHaveBeenCalledWith(
+        mockContainer,
+        uiElements
+      );
       expect(configureMinimalContainer).not.toHaveBeenCalled();
     });
 
     it('should throw error when full config requested without UI elements', async () => {
-      await expect(bootstrapper.bootstrap({
-        containerConfigType: 'full',
-      })).rejects.toThrow('UI elements are required for full container configuration');
+      await expect(
+        bootstrapper.bootstrap({
+          containerConfigType: 'full',
+        })
+      ).rejects.toThrow(
+        'UI elements are required for full container configuration'
+      );
     });
 
     it('should use custom world name when provided', async () => {
@@ -132,14 +142,18 @@ describe('CommonBootstrapper', () => {
         error: { message: 'Formatting failed' },
       });
 
-      await expect(bootstrapper.bootstrap({
-        includeAnatomyFormatting: true,
-      })).rejects.toThrow('Anatomy formatting initialization failed: Formatting failed');
+      await expect(
+        bootstrapper.bootstrap({
+          includeAnatomyFormatting: true,
+        })
+      ).rejects.toThrow(
+        'Anatomy formatting initialization failed: Formatting failed'
+      );
     });
 
     it('should call post-init hook when provided', async () => {
       const postInitHook = jest.fn();
-      
+
       await bootstrapper.bootstrap({
         postInitHook,
       });
@@ -162,12 +176,12 @@ describe('CommonBootstrapper', () => {
       });
 
       await expect(bootstrapper.bootstrap()).rejects.toThrow('Early failure');
-      
+
       expect(consoleSpy).toHaveBeenCalledWith(
         expect.stringContaining('Fatal error during initialization'),
         error
       );
-      
+
       consoleSpy.mockRestore();
     });
   });
@@ -180,7 +194,7 @@ describe('CommonBootstrapper', () => {
     beforeEach(() => {
       alertSpy = jest.spyOn(global, 'alert').mockImplementation();
       consoleSpy = jest.spyOn(console, 'error').mockImplementation();
-      
+
       // Spy on document.getElementById
       getElementByIdSpy = jest.spyOn(document, 'getElementById');
     });
@@ -194,14 +208,22 @@ describe('CommonBootstrapper', () => {
     it('should display error in error div when available', () => {
       let errorDivTextContent = '';
       let errorDivStyleDisplay = 'none';
-      
+
       const errorDiv = {
-        get textContent() { return errorDivTextContent; },
-        set textContent(value) { errorDivTextContent = value; },
+        get textContent() {
+          return errorDivTextContent;
+        },
+        set textContent(value) {
+          errorDivTextContent = value;
+        },
         style: {
-          get display() { return errorDivStyleDisplay; },
-          set display(value) { errorDivStyleDisplay = value; }
-        }
+          get display() {
+            return errorDivStyleDisplay;
+          },
+          set display(value) {
+            errorDivStyleDisplay = value;
+          },
+        },
       };
       getElementByIdSpy.mockReturnValue(errorDiv);
 

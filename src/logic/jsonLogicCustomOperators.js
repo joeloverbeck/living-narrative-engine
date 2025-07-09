@@ -79,11 +79,12 @@ export class JsonLogicCustomOperators extends BaseService {
       logger: this.#logger,
     });
 
-    const hasPartOfTypeWithComponentValueOp = new HasPartOfTypeWithComponentValueOperator({
-      entityManager: this.#entityManager,
-      bodyGraphService: this.#bodyGraphService,
-      logger: this.#logger,
-    });
+    const hasPartOfTypeWithComponentValueOp =
+      new HasPartOfTypeWithComponentValueOperator({
+        entityManager: this.#entityManager,
+        bodyGraphService: this.#bodyGraphService,
+        logger: this.#logger,
+      });
 
     // Register hasPartWithComponentValue operator
     jsonLogicEvaluationService.addOperation(

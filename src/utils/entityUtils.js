@@ -44,9 +44,11 @@ export function getEntityDisplayName(
   // TypeScript needs explicit assertion after isValidEntity check
   /** @type {Entity} */
   const validEntity = /** @type {Entity} */ (entity);
-  
+
   /** @type {NameComponentData | null | undefined} */
-  const nameComponent = /** @type {NameComponentData | undefined} */ (validEntity.getComponentData(NAME_COMPONENT_ID));
+  const nameComponent = /** @type {NameComponentData | undefined} */ (
+    validEntity.getComponentData(NAME_COMPONENT_ID)
+  );
   if (nameComponent) {
     if (
       typeof nameComponent.text === 'string' &&

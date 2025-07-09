@@ -34,7 +34,9 @@ export function initializeGlobalConfig(logger, userConfig = {}) {
  */
 export function getGlobalConfig() {
   if (!globalConfigProvider) {
-    throw new Error('Global configuration provider is not initialized. Call initializeGlobalConfig() first.');
+    throw new Error(
+      'Global configuration provider is not initialized. Call initializeGlobalConfig() first.'
+    );
   }
   return globalConfigProvider;
 }
@@ -104,7 +106,9 @@ export function getPerformanceSettings() {
 export function validateEntityCount(count) {
   const limits = getLimits();
   if (count > limits.MAX_ENTITIES) {
-    throw new Error(`Entity count ${count} exceeds maximum limit of ${limits.MAX_ENTITIES}`);
+    throw new Error(
+      `Entity count ${count} exceeds maximum limit of ${limits.MAX_ENTITIES}`
+    );
   }
 }
 
@@ -117,7 +121,9 @@ export function validateEntityCount(count) {
 export function validateComponentSize(size) {
   const limits = getLimits();
   if (size > limits.MAX_COMPONENT_SIZE) {
-    throw new Error(`Component size ${size} bytes exceeds maximum limit of ${limits.MAX_COMPONENT_SIZE} bytes`);
+    throw new Error(
+      `Component size ${size} bytes exceeds maximum limit of ${limits.MAX_COMPONENT_SIZE} bytes`
+    );
   }
 }
 
@@ -130,7 +136,9 @@ export function validateComponentSize(size) {
 export function validateBatchSize(batchSize) {
   const limits = getLimits();
   if (batchSize > limits.MAX_BATCH_SIZE) {
-    throw new Error(`Batch size ${batchSize} exceeds maximum limit of ${limits.MAX_BATCH_SIZE}`);
+    throw new Error(
+      `Batch size ${batchSize} exceeds maximum limit of ${limits.MAX_BATCH_SIZE}`
+    );
   }
 }
 
@@ -143,7 +151,9 @@ export function validateBatchSize(batchSize) {
 export function validateStringLength(str) {
   const limits = getLimits();
   if (str && str.length > limits.MAX_STRING_LENGTH) {
-    throw new Error(`String length ${str.length} exceeds maximum limit of ${limits.MAX_STRING_LENGTH}`);
+    throw new Error(
+      `String length ${str.length} exceeds maximum limit of ${limits.MAX_STRING_LENGTH}`
+    );
   }
 }
 
@@ -157,9 +167,11 @@ export function validateStringLength(str) {
 export function validateObjectDepth(obj, currentDepth = 0) {
   const limits = getLimits();
   if (currentDepth > limits.MAX_COMPONENT_DEPTH) {
-    throw new Error(`Object depth ${currentDepth} exceeds maximum limit of ${limits.MAX_COMPONENT_DEPTH}`);
+    throw new Error(
+      `Object depth ${currentDepth} exceeds maximum limit of ${limits.MAX_COMPONENT_DEPTH}`
+    );
   }
-  
+
   if (obj && typeof obj === 'object' && !Array.isArray(obj)) {
     for (const value of Object.values(obj)) {
       if (value && typeof value === 'object') {
@@ -180,7 +192,9 @@ export function validateObjectProperties(obj) {
   if (obj && typeof obj === 'object') {
     const propertyCount = Object.keys(obj).length;
     if (propertyCount > limits.MAX_COMPONENT_PROPERTIES) {
-      throw new Error(`Object property count ${propertyCount} exceeds maximum limit of ${limits.MAX_COMPONENT_PROPERTIES}`);
+      throw new Error(
+        `Object property count ${propertyCount} exceeds maximum limit of ${limits.MAX_COMPONENT_PROPERTIES}`
+      );
     }
   }
 }

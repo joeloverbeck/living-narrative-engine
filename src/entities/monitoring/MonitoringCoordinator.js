@@ -55,7 +55,8 @@ export default class MonitoringCoordinator {
 
     // Apply configuration overrides if available
     const config = isConfigInitialized() ? getGlobalConfig() : null;
-    this.#enabled = config?.isFeatureEnabled('performance.ENABLE_MONITORING') ?? enabled;
+    this.#enabled =
+      config?.isFeatureEnabled('performance.ENABLE_MONITORING') ?? enabled;
     this.#checkInterval = checkInterval;
 
     // Initialize monitoring components
@@ -124,7 +125,7 @@ export default class MonitoringCoordinator {
       return await operation();
     }
 
-    const circuitBreaker = useCircuitBreaker 
+    const circuitBreaker = useCircuitBreaker
       ? this.getCircuitBreaker(operationName, circuitBreakerOptions)
       : null;
 
@@ -162,7 +163,7 @@ export default class MonitoringCoordinator {
       return operation();
     }
 
-    const circuitBreaker = useCircuitBreaker 
+    const circuitBreaker = useCircuitBreaker
       ? this.getCircuitBreaker(operationName, circuitBreakerOptions)
       : null;
 
@@ -284,7 +285,7 @@ export default class MonitoringCoordinator {
   #checkCircuitBreakerHealth() {
     for (const [name, circuitBreaker] of this.#circuitBreakers) {
       const stats = circuitBreaker.getStats();
-      
+
       if (stats.state === 'OPEN') {
         this.#addAlert('warning', `Circuit breaker '${name}' is OPEN`);
       } else if (stats.state === 'HALF_OPEN') {
@@ -295,7 +296,10 @@ export default class MonitoringCoordinator {
       if (stats.totalRequests > 10) {
         const failureRate = stats.totalFailures / stats.totalRequests;
         if (failureRate > 0.5) {
-          this.#addAlert('warning', `High failure rate (${Math.round(failureRate * 100)}%) for circuit breaker '${name}'`);
+          this.#addAlert(
+            'warning',
+            `High failure rate (${Math.round(failureRate * 100)}%) for circuit breaker '${name}'`
+          );
         }
       }
     }
@@ -306,20 +310,28 @@ export default class MonitoringCoordinator {
    */
   #checkPerformanceDegradation() {
     const metrics = this.#performanceMonitor.getMetrics();
-    
+
     // Check for high average operation time
     const config = isConfigInitialized() ? getGlobalConfig() : null;
-    const slowThreshold = config?.getValue('performance.SLOW_OPERATION_THRESHOLD') ?? 100;
-    
+    const slowThreshold =
+      config?.getValue('performance.SLOW_OPERATION_THRESHOLD') ?? 100;
+
     if (metrics.averageOperationTime > slowThreshold * 2) {
-      this.#addAlert('warning', `High average operation time: ${metrics.averageOperationTime.toFixed(2)}ms`);
+      this.#addAlert(
+        'warning',
+        `High average operation time: ${metrics.averageOperationTime.toFixed(2)}ms`
+      );
     }
 
     // Check for high percentage of slow operations
     if (metrics.totalOperations > 0) {
-      const slowOperationRate = metrics.slowOperations / metrics.totalOperations;
+      const slowOperationRate =
+        metrics.slowOperations / metrics.totalOperations;
       if (slowOperationRate > 0.2) {
-        this.#addAlert('warning', `High slow operation rate: ${Math.round(slowOperationRate * 100)}%`);
+        this.#addAlert(
+          'warning',
+          `High slow operation rate: ${Math.round(slowOperationRate * 100)}%`
+        );
       }
     }
   }
@@ -347,8 +359,8 @@ export default class MonitoringCoordinator {
   #cleanupOldAlerts() {
     const maxAge = 24 * 60 * 60 * 1000; // 24 hours
     const cutoff = Date.now() - maxAge;
-    
-    this.#alerts = this.#alerts.filter(alert => alert.timestamp > cutoff);
+
+    this.#alerts = this.#alerts.filter((alert) => alert.timestamp > cutoff);
   }
 
   /**
@@ -365,17 +377,23 @@ export default class MonitoringCoordinator {
     const report = [];
 
     report.push('Entity Module Monitoring Report');
-    report.push('=' .repeat(40));
+    report.push('='.repeat(40));
     report.push(`Monitoring Status: ${this.#enabled ? 'Enabled' : 'Disabled'}`);
-    report.push(`Health Checks: ${stats.healthChecksActive ? 'Active' : 'Inactive'}`);
+    report.push(
+      `Health Checks: ${stats.healthChecksActive ? 'Active' : 'Inactive'}`
+    );
     report.push('');
 
     // Performance section
     report.push('Performance Metrics:');
     report.push(`  Total Operations: ${stats.performance.totalOperations}`);
     report.push(`  Slow Operations: ${stats.performance.slowOperations}`);
-    report.push(`  Average Time: ${stats.performance.averageOperationTime.toFixed(2)}ms`);
-    report.push(`  Max Time: ${stats.performance.maxOperationTime.toFixed(2)}ms`);
+    report.push(
+      `  Average Time: ${stats.performance.averageOperationTime.toFixed(2)}ms`
+    );
+    report.push(
+      `  Max Time: ${stats.performance.maxOperationTime.toFixed(2)}ms`
+    );
     report.push(`  Memory Warnings: ${stats.performance.memoryUsageWarnings}`);
     report.push('');
 
@@ -385,7 +403,9 @@ export default class MonitoringCoordinator {
       report.push('  No circuit breakers active');
     } else {
       for (const [name, cbStats] of Object.entries(stats.circuitBreakers)) {
-        report.push(`  ${name}: ${cbStats.state} (${cbStats.totalFailures}/${cbStats.totalRequests} failures)`);
+        report.push(
+          `  ${name}: ${cbStats.state} (${cbStats.totalFailures}/${cbStats.totalRequests} failures)`
+        );
       }
     }
     report.push('');
@@ -397,7 +417,9 @@ export default class MonitoringCoordinator {
     } else {
       for (const alert of stats.recentAlerts.slice(-5)) {
         const time = new Date(alert.timestamp).toLocaleTimeString();
-        report.push(`  [${time}] ${alert.type.toUpperCase()}: ${alert.message}`);
+        report.push(
+          `  [${time}] ${alert.type.toUpperCase()}: ${alert.message}`
+        );
       }
     }
 
@@ -412,7 +434,7 @@ export default class MonitoringCoordinator {
   setEnabled(enabled) {
     this.#enabled = enabled;
     this.#performanceMonitor.setEnabled(enabled);
-    
+
     for (const circuitBreaker of this.#circuitBreakers.values()) {
       circuitBreaker.setEnabled(enabled);
     }

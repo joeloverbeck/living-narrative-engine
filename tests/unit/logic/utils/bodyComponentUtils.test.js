@@ -20,7 +20,10 @@ describe('bodyComponentUtils', () => {
 
       const result = getBodyComponent(mockEntityManager, 'testEntity');
 
-      expect(mockEntityManager.getComponentData).toHaveBeenCalledWith('testEntity', 'anatomy:body');
+      expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(
+        'testEntity',
+        'anatomy:body'
+      );
       expect(result).toBe(bodyComponent);
     });
 
@@ -34,7 +37,7 @@ describe('bodyComponentUtils', () => {
     });
 
     it('should return body component when it has both formats', () => {
-      const bodyComponent = { 
+      const bodyComponent = {
         root: 'entity123',
         body: { root: 'entity456' },
       };

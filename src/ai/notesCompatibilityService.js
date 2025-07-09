@@ -18,7 +18,7 @@ class NotesCompatibilityService {
     if (typeof note === 'string') {
       return 'string';
     }
-    
+
     if (typeof note === 'object' && note !== null) {
       if (note.subject) {
         return 'structured';
@@ -27,7 +27,7 @@ class NotesCompatibilityService {
         return 'legacy';
       }
     }
-    
+
     return 'invalid';
   }
 
@@ -47,7 +47,7 @@ class NotesCompatibilityService {
       string: 0,
       legacy: 0,
       structured: 0,
-      invalid: 0
+      invalid: 0,
     };
 
     for (const note of notes) {
@@ -65,7 +65,7 @@ class NotesCompatibilityService {
     if (stats.string === stats.total) {
       return { format: 'string', stats };
     }
-    
+
     return { format: 'mixed', stats };
   }
 
@@ -85,9 +85,12 @@ class NotesCompatibilityService {
           errors.push('String note cannot be empty');
         }
         break;
-        
+
       case 'legacy':
-        if (!Object.prototype.hasOwnProperty.call(note, 'text') || typeof note.text !== 'string') {
+        if (
+          !Object.prototype.hasOwnProperty.call(note, 'text') ||
+          typeof note.text !== 'string'
+        ) {
           errors.push('Legacy note must have a text field');
         } else if (note.text.trim() === '') {
           errors.push('Note text cannot be empty');
@@ -96,14 +99,20 @@ class NotesCompatibilityService {
           errors.push('Timestamp must be a string');
         }
         break;
-        
+
       case 'structured':
-        if (!Object.prototype.hasOwnProperty.call(note, 'text') || typeof note.text !== 'string') {
+        if (
+          !Object.prototype.hasOwnProperty.call(note, 'text') ||
+          typeof note.text !== 'string'
+        ) {
           errors.push('Structured note must have a text field');
         } else if (note.text.trim() === '') {
           errors.push('Note text cannot be empty');
         }
-        if (!Object.prototype.hasOwnProperty.call(note, 'subject') || typeof note.subject !== 'string') {
+        if (
+          !Object.prototype.hasOwnProperty.call(note, 'subject') ||
+          typeof note.subject !== 'string'
+        ) {
           errors.push('Structured note must have a subject field');
         } else if (note.subject.trim() === '') {
           errors.push('Subject cannot be empty');
@@ -118,7 +127,7 @@ class NotesCompatibilityService {
           errors.push('Timestamp must be a string');
         }
         break;
-        
+
       case 'invalid':
         errors.push('Note is not in a recognized format');
         break;
@@ -127,7 +136,7 @@ class NotesCompatibilityService {
     return {
       valid: errors.length === 0,
       errors,
-      format
+      format,
     };
   }
 
@@ -140,7 +149,7 @@ class NotesCompatibilityService {
    */
   convertToFormat(note, targetFormat) {
     const currentFormat = this.detectNoteFormat(note);
-    
+
     if (currentFormat === 'invalid') {
       return null;
     }
@@ -158,19 +167,19 @@ class NotesCompatibilityService {
       if (currentFormat === 'legacy') {
         return note; // Already in target format
       }
-      
+
       if (currentFormat === 'string') {
         return {
           text: note,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         };
       }
-      
+
       if (currentFormat === 'structured') {
         // Downgrade structured to legacy
         return {
           text: note.text,
-          timestamp: note.timestamp || new Date().toISOString()
+          timestamp: note.timestamp || new Date().toISOString(),
         };
       }
     }
@@ -191,8 +200,8 @@ class NotesCompatibilityService {
     }
 
     return notes
-      .map(note => this.convertToFormat(note, targetFormat))
-      .filter(note => note !== null);
+      .map((note) => this.convertToFormat(note, targetFormat))
+      .filter((note) => note !== null);
   }
 
   /**
@@ -206,14 +215,16 @@ class NotesCompatibilityService {
     // Convert both to structured format for comparison
     const structured1 = this.convertToFormat(note1, 'structured');
     const structured2 = this.convertToFormat(note2, 'structured');
-    
+
     if (!structured1 || !structured2) {
       return false;
     }
 
     // Compare text and subject (main content)
-    return structured1.text === structured2.text &&
-           structured1.subject === structured2.subject;
+    return (
+      structured1.text === structured2.text &&
+      structured1.subject === structured2.subject
+    );
   }
 
   /**

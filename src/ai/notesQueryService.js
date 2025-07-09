@@ -21,14 +21,14 @@ class NotesQueryService {
     const { exact = false } = options;
     const searchSubject = subject.toLowerCase();
 
-    return notes.filter(note => {
+    return notes.filter((note) => {
       if (!note.subject) {
         return false;
       }
-      
+
       const noteSubject = note.subject.toLowerCase();
-      return exact 
-        ? noteSubject === searchSubject 
+      return exact
+        ? noteSubject === searchSubject
         : noteSubject.includes(searchSubject);
     });
   }
@@ -50,14 +50,14 @@ class NotesQueryService {
     const { exact = false } = options;
     const searchContext = context.toLowerCase();
 
-    return notes.filter(note => {
+    return notes.filter((note) => {
       if (!note.context) {
         return false;
       }
-      
+
       const noteContext = note.context.toLowerCase();
-      return exact 
-        ? noteContext === searchContext 
+      return exact
+        ? noteContext === searchContext
         : noteContext.includes(searchContext);
     });
   }
@@ -78,23 +78,23 @@ class NotesQueryService {
 
     const { requireAll = false } = options;
     const searchTags = Array.isArray(tags) ? tags : [tags];
-    const normalizedSearchTags = searchTags.map(tag => tag.toLowerCase());
+    const normalizedSearchTags = searchTags.map((tag) => tag.toLowerCase());
 
-    return notes.filter(note => {
+    return notes.filter((note) => {
       if (!Array.isArray(note.tags) || note.tags.length === 0) {
         return false;
       }
-      
-      const normalizedNoteTags = note.tags.map(tag => tag.toLowerCase());
-      
+
+      const normalizedNoteTags = note.tags.map((tag) => tag.toLowerCase());
+
       if (requireAll) {
         // Note must have all search tags
-        return normalizedSearchTags.every(searchTag => 
+        return normalizedSearchTags.every((searchTag) =>
           normalizedNoteTags.includes(searchTag)
         );
       } else {
         // Note must have at least one search tag
-        return normalizedSearchTags.some(searchTag => 
+        return normalizedSearchTags.some((searchTag) =>
           normalizedNoteTags.includes(searchTag)
         );
       }
@@ -117,38 +117,38 @@ class NotesQueryService {
       return [];
     }
 
-    const { 
-      exact = false, 
-      searchSubject = false, 
-      searchContext = false 
+    const {
+      exact = false,
+      searchSubject = false,
+      searchContext = false,
     } = options;
-    
+
     const normalizedSearch = searchText.toLowerCase();
 
-    return notes.filter(note => {
+    return notes.filter((note) => {
       const noteText = (note.text || '').toLowerCase();
-      
+
       // Check main text
-      let textMatches = exact 
-        ? noteText === normalizedSearch 
+      let textMatches = exact
+        ? noteText === normalizedSearch
         : noteText.includes(normalizedSearch);
-      
+
       // Check subject if requested
       if (!textMatches && searchSubject && note.subject) {
         const noteSubject = note.subject.toLowerCase();
-        textMatches = exact 
-          ? noteSubject === normalizedSearch 
+        textMatches = exact
+          ? noteSubject === normalizedSearch
           : noteSubject.includes(normalizedSearch);
       }
-      
+
       // Check context if requested
       if (!textMatches && searchContext && note.context) {
         const noteContext = note.context.toLowerCase();
-        textMatches = exact 
-          ? noteContext === normalizedSearch 
+        textMatches = exact
+          ? noteContext === normalizedSearch
           : noteContext.includes(normalizedSearch);
       }
-      
+
       return textMatches;
     });
   }
@@ -173,11 +173,11 @@ class NotesQueryService {
       return [];
     }
 
-    return notes.filter(note => {
+    return notes.filter((note) => {
       if (!note.timestamp) {
         return false;
       }
-      
+
       const noteTime = new Date(note.timestamp).getTime();
       return !isNaN(noteTime) && noteTime >= start && noteTime <= end;
     });
@@ -207,8 +207,8 @@ class NotesQueryService {
     // Apply subject filter
     if (criteria.subject) {
       results = this.queryBySubject(
-        results, 
-        criteria.subject, 
+        results,
+        criteria.subject,
         criteria.options?.subject
       );
     }
@@ -216,8 +216,8 @@ class NotesQueryService {
     // Apply context filter
     if (criteria.context) {
       results = this.queryByContext(
-        results, 
-        criteria.context, 
+        results,
+        criteria.context,
         criteria.options?.context
       );
     }
@@ -225,8 +225,8 @@ class NotesQueryService {
     // Apply tags filter
     if (criteria.tags) {
       results = this.queryByTags(
-        results, 
-        criteria.tags, 
+        results,
+        criteria.tags,
         criteria.options?.tags
       );
     }
@@ -234,8 +234,8 @@ class NotesQueryService {
     // Apply text filter
     if (criteria.text) {
       results = this.queryByText(
-        results, 
-        criteria.text, 
+        results,
+        criteria.text,
         criteria.options?.text
       );
     }
@@ -243,8 +243,8 @@ class NotesQueryService {
     // Apply time range filter
     if (criteria.startDate && criteria.endDate) {
       results = this.queryByTimeRange(
-        results, 
-        criteria.startDate, 
+        results,
+        criteria.startDate,
         criteria.endDate
       );
     }
@@ -264,8 +264,8 @@ class NotesQueryService {
     }
 
     const subjects = new Set();
-    
-    notes.forEach(note => {
+
+    notes.forEach((note) => {
       if (note.subject) {
         subjects.add(note.subject);
       }
@@ -286,10 +286,10 @@ class NotesQueryService {
     }
 
     const tags = new Set();
-    
-    notes.forEach(note => {
+
+    notes.forEach((note) => {
       if (Array.isArray(note.tags)) {
-        note.tags.forEach(tag => tags.add(tag));
+        note.tags.forEach((tag) => tags.add(tag));
       }
     });
 
@@ -308,8 +308,8 @@ class NotesQueryService {
     }
 
     const contexts = new Set();
-    
-    notes.forEach(note => {
+
+    notes.forEach((note) => {
       if (note.context) {
         contexts.add(note.context);
       }
@@ -332,7 +332,7 @@ class NotesQueryService {
         byTag: {},
         byContext: {},
         structured: 0,
-        legacy: 0
+        legacy: 0,
       };
     }
 
@@ -342,28 +342,30 @@ class NotesQueryService {
       byTag: {},
       byContext: {},
       structured: 0,
-      legacy: 0
+      legacy: 0,
     };
 
-    notes.forEach(note => {
+    notes.forEach((note) => {
       // Count structured vs legacy
       if (note.subject) {
         stats.structured++;
-        
+
         // Count by subject
-        stats.bySubject[note.subject] = (stats.bySubject[note.subject] || 0) + 1;
+        stats.bySubject[note.subject] =
+          (stats.bySubject[note.subject] || 0) + 1;
       } else {
         stats.legacy++;
       }
 
       // Count by context
       if (note.context) {
-        stats.byContext[note.context] = (stats.byContext[note.context] || 0) + 1;
+        stats.byContext[note.context] =
+          (stats.byContext[note.context] || 0) + 1;
       }
 
       // Count by tags
       if (Array.isArray(note.tags)) {
-        note.tags.forEach(tag => {
+        note.tags.forEach((tag) => {
           stats.byTag[tag] = (stats.byTag[tag] || 0) + 1;
         });
       }

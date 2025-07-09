@@ -18,22 +18,30 @@ import { stageSuccess, stageFailure } from '../../utils/bootstrapperHelpers.js';
  * @param {TokensObject} tokens - The DI tokens object.
  * @returns {Promise<import('../../types/stageResult.js').StageResult>} Result object indicating success or failure.
  */
-export async function initializeAnatomyFormattingStage(container, logger, tokens) {
+export async function initializeAnatomyFormattingStage(
+  container,
+  logger,
+  tokens
+) {
   const stageName = 'Anatomy Formatting Service Initialization';
   logger.info(`Bootstrap Stage: Starting ${stageName}...`);
 
   try {
     // Resolve the AnatomyFormattingService
-    const anatomyFormattingService = container.resolve(tokens.AnatomyFormattingService);
-    
+    const anatomyFormattingService = container.resolve(
+      tokens.AnatomyFormattingService
+    );
+
     if (!anatomyFormattingService) {
-      throw new Error('AnatomyFormattingService resolved to an invalid object.');
+      throw new Error(
+        'AnatomyFormattingService resolved to an invalid object.'
+      );
     }
 
     // Initialize the service
     logger.debug('Initializing AnatomyFormattingService...');
     await anatomyFormattingService.initialize();
-    
+
     logger.info(`Bootstrap Stage: ${stageName} completed successfully.`);
     return stageSuccess({ anatomyFormattingService });
   } catch (error) {

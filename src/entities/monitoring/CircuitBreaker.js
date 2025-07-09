@@ -81,11 +81,18 @@ export default class CircuitBreaker {
 
     // Apply configuration overrides if available
     const config = isConfigInitialized() ? getGlobalConfig() : null;
-    this.#enabled = config?.isFeatureEnabled('errorHandling.ENABLE_CIRCUIT_BREAKER') ?? true;
-    
+    this.#enabled =
+      config?.isFeatureEnabled('errorHandling.ENABLE_CIRCUIT_BREAKER') ?? true;
+
     this.#name = options.name || 'CircuitBreaker';
-    this.#failureThreshold = config?.getValue('errorHandling.CIRCUIT_BREAKER_THRESHOLD') ?? options.failureThreshold ?? 5;
-    this.#timeout = config?.getValue('errorHandling.CIRCUIT_BREAKER_TIMEOUT') ?? options.timeout ?? 60000;
+    this.#failureThreshold =
+      config?.getValue('errorHandling.CIRCUIT_BREAKER_THRESHOLD') ??
+      options.failureThreshold ??
+      5;
+    this.#timeout =
+      config?.getValue('errorHandling.CIRCUIT_BREAKER_TIMEOUT') ??
+      options.timeout ??
+      60000;
     this.#successThreshold = options.successThreshold ?? 2;
 
     // Initialize state
@@ -124,9 +131,11 @@ export default class CircuitBreaker {
     // Check if circuit is open
     if (this.#state === 'OPEN') {
       const timeSinceLastFailure = Date.now() - this.#lastFailureTime;
-      
+
       if (timeSinceLastFailure < this.#timeout) {
-        const error = new Error(`Circuit breaker '${this.#name}' is OPEN. Requests blocked for ${Math.round((this.#timeout - timeSinceLastFailure) / 1000)}s`);
+        const error = new Error(
+          `Circuit breaker '${this.#name}' is OPEN. Requests blocked for ${Math.round((this.#timeout - timeSinceLastFailure) / 1000)}s`
+        );
         error.name = 'CircuitBreakerOpenError';
         throw error;
       }
@@ -163,9 +172,11 @@ export default class CircuitBreaker {
     // Check if circuit is open
     if (this.#state === 'OPEN') {
       const timeSinceLastFailure = Date.now() - this.#lastFailureTime;
-      
+
       if (timeSinceLastFailure < this.#timeout) {
-        const error = new Error(`Circuit breaker '${this.#name}' is OPEN. Requests blocked for ${Math.round((this.#timeout - timeSinceLastFailure) / 1000)}s`);
+        const error = new Error(
+          `Circuit breaker '${this.#name}' is OPEN. Requests blocked for ${Math.round((this.#timeout - timeSinceLastFailure) / 1000)}s`
+        );
         error.name = 'CircuitBreakerOpenError';
         throw error;
       }
@@ -193,7 +204,7 @@ export default class CircuitBreaker {
 
     if (this.#state === 'HALF_OPEN') {
       this.#successCount++;
-      
+
       if (this.#successCount >= this.#successThreshold) {
         this.#transitionToClosed();
       }
@@ -224,7 +235,10 @@ export default class CircuitBreaker {
 
     if (this.#state === 'HALF_OPEN') {
       this.#transitionToOpen();
-    } else if (this.#state === 'CLOSED' && this.#failureCount >= this.#failureThreshold) {
+    } else if (
+      this.#state === 'CLOSED' &&
+      this.#failureCount >= this.#failureThreshold
+    ) {
       this.#transitionToOpen();
     }
   }
@@ -238,10 +252,13 @@ export default class CircuitBreaker {
     this.#successCount = 0;
     this.#stateChangeTime = Date.now();
 
-    this.#logger.info(`Circuit breaker '${this.#name}' transitioned to CLOSED`, {
-      state: this.#state,
-      timestamp: new Date().toISOString(),
-    });
+    this.#logger.info(
+      `Circuit breaker '${this.#name}' transitioned to CLOSED`,
+      {
+        state: this.#state,
+        timestamp: new Date().toISOString(),
+      }
+    );
   }
 
   /**
@@ -268,11 +285,14 @@ export default class CircuitBreaker {
     this.#successCount = 0;
     this.#stateChangeTime = Date.now();
 
-    this.#logger.info(`Circuit breaker '${this.#name}' transitioned to HALF_OPEN`, {
-      state: this.#state,
-      successThreshold: this.#successThreshold,
-      timestamp: new Date().toISOString(),
-    });
+    this.#logger.info(
+      `Circuit breaker '${this.#name}' transitioned to HALF_OPEN`,
+      {
+        state: this.#state,
+        successThreshold: this.#successThreshold,
+        timestamp: new Date().toISOString(),
+      }
+    );
   }
 
   /**
@@ -368,7 +388,9 @@ export default class CircuitBreaker {
    */
   setEnabled(enabled) {
     this.#enabled = enabled;
-    this.#logger.info(`Circuit breaker '${this.#name}' ${enabled ? 'enabled' : 'disabled'}`);
+    this.#logger.info(
+      `Circuit breaker '${this.#name}' ${enabled ? 'enabled' : 'disabled'}`
+    );
   }
 
   /**
@@ -378,13 +400,15 @@ export default class CircuitBreaker {
    */
   getStatusReport() {
     const stats = this.getStats();
-    const timeSinceLastFailure = stats.lastFailureTime > 0 ? Date.now() - stats.lastFailureTime : 0;
-    const timeSinceLastSuccess = stats.lastSuccessTime > 0 ? Date.now() - stats.lastSuccessTime : 0;
+    const timeSinceLastFailure =
+      stats.lastFailureTime > 0 ? Date.now() - stats.lastFailureTime : 0;
+    const timeSinceLastSuccess =
+      stats.lastSuccessTime > 0 ? Date.now() - stats.lastSuccessTime : 0;
     const timeSinceStateChange = Date.now() - stats.stateChangeTime;
 
     const report = [
       `Circuit Breaker: ${this.#name}`,
-      '=' .repeat(30),
+      '='.repeat(30),
       `State: ${stats.state}`,
       `Enabled: ${stats.enabled}`,
       `Total Requests: ${stats.totalRequests}`,

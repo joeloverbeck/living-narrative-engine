@@ -90,7 +90,10 @@ class ActorDataExtractor extends IActorDataExtractor {
     if (actorId && this.anatomyDescriptionService && this.entityFinder) {
       try {
         const actorEntity = this.entityFinder.getEntityInstance(actorId);
-        if (actorEntity && actorEntity.hasComponent(ANATOMY_BODY_COMPONENT_ID)) {
+        if (
+          actorEntity &&
+          actorEntity.hasComponent(ANATOMY_BODY_COMPONENT_ID)
+        ) {
           // Try to get or generate anatomy description
           const anatomyDescription =
             this.anatomyDescriptionService.getOrGenerateBodyDescription(

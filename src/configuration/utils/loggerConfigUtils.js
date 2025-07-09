@@ -11,7 +11,12 @@ import { LoggerConfigLoader } from '../loggerConfigLoader.js';
  * @param {string} [configPrefix] - The prefix for log messages.
  * @returns {Promise<void>} Resolves once configuration is loaded.
  */
-export async function loadAndApplyLoggerConfig(container, logger, tokens, configPrefix = 'ContainerConfig') {
+export async function loadAndApplyLoggerConfig(
+  container,
+  logger,
+  tokens,
+  configPrefix = 'ContainerConfig'
+) {
   try {
     const loggerConfigLoader = new LoggerConfigLoader({
       logger,

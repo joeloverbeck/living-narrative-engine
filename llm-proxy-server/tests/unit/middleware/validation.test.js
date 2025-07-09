@@ -1,16 +1,16 @@
 import { describe, test, beforeEach, expect, jest } from '@jest/globals';
-import { 
-  validateLlmRequest, 
-  validateRequestHeaders, 
+import {
+  validateLlmRequest,
+  validateRequestHeaders,
   handleValidationErrors,
-  isUrlSafe 
+  isUrlSafe,
 } from '../../../src/middleware/validation.js';
 import { validationResult, body, header } from 'express-validator';
 
 // Mock express-validator
 jest.mock('express-validator', () => {
   const actualValidator = jest.requireActual('express-validator');
-  
+
   const mockBody = jest.fn((field) => {
     const chain = {
       exists: jest.fn().mockReturnThis(),
@@ -27,7 +27,7 @@ jest.mock('express-validator', () => {
     };
     return chain;
   });
-  
+
   const mockHeader = jest.fn((field) => {
     const chain = {
       exists: jest.fn().mockReturnThis(),
@@ -37,7 +37,7 @@ jest.mock('express-validator', () => {
     };
     return chain;
   });
-  
+
   return {
     ...actualValidator,
     body: mockBody,
@@ -65,35 +65,35 @@ describe('Validation Middleware', () => {
   describe('validateLlmRequest', () => {
     test('returns array of validation middleware', () => {
       const validators = validateLlmRequest();
-      
+
       expect(Array.isArray(validators)).toBe(true);
       expect(validators.length).toBeGreaterThan(0);
     });
 
     test('validates llmId field', () => {
       const validators = validateLlmRequest();
-      
+
       // Verify body was called for llmId
       expect(jest.mocked(body)).toHaveBeenCalledWith('llmId');
     });
 
     test('validates targetPayload field', () => {
       const validators = validateLlmRequest();
-      
+
       // Verify body was called for targetPayload
       expect(jest.mocked(body)).toHaveBeenCalledWith('targetPayload');
     });
 
     test('validates targetHeaders field', () => {
       const validators = validateLlmRequest();
-      
+
       // Verify body was called for targetHeaders
       expect(jest.mocked(body)).toHaveBeenCalledWith('targetHeaders');
     });
 
     test('validates no extra fields', () => {
       const validators = validateLlmRequest();
-      
+
       // Verify body was called without parameters for extra fields check
       expect(jest.mocked(body)).toHaveBeenCalledWith();
     });
@@ -102,20 +102,20 @@ describe('Validation Middleware', () => {
   describe('validateRequestHeaders', () => {
     test('returns array of header validation middleware', () => {
       const validators = validateRequestHeaders();
-      
+
       expect(Array.isArray(validators)).toBe(true);
       expect(validators.length).toBeGreaterThan(0);
     });
 
     test('validates content-type header', () => {
       const validators = validateRequestHeaders();
-      
+
       expect(jest.mocked(header)).toHaveBeenCalledWith('content-type');
     });
 
     test('sanitizes all headers', () => {
       const validators = validateRequestHeaders();
-      
+
       expect(jest.mocked(header)).toHaveBeenCalledWith('*');
     });
   });
@@ -126,9 +126,9 @@ describe('Validation Middleware', () => {
         isEmpty: jest.fn().mockReturnValue(true),
         array: jest.fn().mockReturnValue([]),
       });
-      
+
       handleValidationErrors(req, res, next);
-      
+
       expect(next).toHaveBeenCalled();
       expect(res.status).not.toHaveBeenCalled();
     });
@@ -146,14 +146,14 @@ describe('Validation Middleware', () => {
           msg: 'targetPayload must be an object',
         },
       ];
-      
+
       jest.mocked(validationResult).mockReturnValue({
         isEmpty: jest.fn().mockReturnValue(false),
         array: jest.fn().mockReturnValue(mockErrors),
       });
-      
+
       handleValidationErrors(req, res, next);
-      
+
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({
         error: true,
@@ -186,14 +186,14 @@ describe('Validation Middleware', () => {
           msg: 'Field 1 is invalid',
         },
       ];
-      
+
       jest.mocked(validationResult).mockReturnValue({
         isEmpty: jest.fn().mockReturnValue(false),
         array: jest.fn().mockReturnValue(mockErrors),
       });
-      
+
       handleValidationErrors(req, res, next);
-      
+
       const responseData = res.json.mock.calls[0][0];
       expect(responseData.details.validationErrors[0].field).toBe('field1');
     });
@@ -206,14 +206,14 @@ describe('Validation Middleware', () => {
           msg: 'Field 2 is invalid',
         },
       ];
-      
+
       jest.mocked(validationResult).mockReturnValue({
         isEmpty: jest.fn().mockReturnValue(false),
         array: jest.fn().mockReturnValue(mockErrors),
       });
-      
+
       handleValidationErrors(req, res, next);
-      
+
       const responseData = res.json.mock.calls[0][0];
       expect(responseData.details.validationErrors[0].field).toBe('field2');
     });
@@ -325,11 +325,13 @@ describe('Validation Middleware', () => {
     // Testing the actual sanitizeHeaders function through the validation middleware
     test('custom sanitizer is applied to targetHeaders', () => {
       const validators = validateLlmRequest();
-      
+
       // Find the targetHeaders validator
       const bodyMock = jest.mocked(body);
-      const targetHeadersCall = bodyMock.mock.calls.find(call => call[0] === 'targetHeaders');
-      
+      const targetHeadersCall = bodyMock.mock.calls.find(
+        (call) => call[0] === 'targetHeaders'
+      );
+
       expect(targetHeadersCall).toBeDefined();
     });
   });
@@ -337,21 +339,25 @@ describe('Validation Middleware', () => {
   describe('Custom validators', () => {
     test('targetPayload custom validator checks for empty object', () => {
       const validators = validateLlmRequest();
-      
+
       // The custom validator is configured through the chain
       const bodyMock = jest.mocked(body);
-      const targetPayloadCall = bodyMock.mock.calls.find(call => call[0] === 'targetPayload');
-      
+      const targetPayloadCall = bodyMock.mock.calls.find(
+        (call) => call[0] === 'targetPayload'
+      );
+
       expect(targetPayloadCall).toBeDefined();
     });
 
     test('extra fields custom validator is configured', () => {
       const validators = validateLlmRequest();
-      
+
       // Body called without parameters for the extra fields check
       const bodyMock = jest.mocked(body);
-      const extraFieldsCall = bodyMock.mock.calls.find(call => call.length === 0);
-      
+      const extraFieldsCall = bodyMock.mock.calls.find(
+        (call) => call.length === 0
+      );
+
       expect(extraFieldsCall).toBeDefined();
     });
   });

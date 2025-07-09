@@ -179,7 +179,7 @@ describe('intimacy:massage_shoulders action integration', () => {
       (e) => e.eventType === 'core:perceptible_event'
     );
     expect(perceptibleEvent).toBeDefined();
-    
+
     // The text might be in different fields depending on how the macro expands
     // For basic integration test, just verify the event was dispatched correctly
   });

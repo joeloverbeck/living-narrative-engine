@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "id": "intimacy:actor_turned_around",
+  "description": "Dispatched when an actor turns another actor around so they are facing away.",
+  "payloadSchema": {
+    "title": "Intimacy: Actor Turned Around Payload",
+    "description": "Payload for the intimacy:actor_turned_around event.",
+    "type": "object",
+    "properties": {
+      "actor": {
+        "$ref": "http://example.com/schemas/common.schema.json#/definitions/namespacedId",
+        "description": "The ID of the actor who was turned around."
+      },
+      "turned_by": {
+        "$ref": "http://example.com/schemas/common.schema.json#/definitions/namespacedId",
+        "description": "The ID of the actor who initiated the turn around action."
+      }
+    },
+    "required": ["actor", "turned_by"],
+    "additionalProperties": false
+  }
+}

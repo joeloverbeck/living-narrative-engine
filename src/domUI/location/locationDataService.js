@@ -52,7 +52,7 @@ export class LocationDataService {
         const allInstances = this.dataRegistry.getAll('entityInstances') || [];
         const allDefs = this.dataRegistry.getAll('entityDefinitions') || [];
       }
-      
+
       this.safeEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
         message: `Entity '${actorId}' has no valid position or locationId.`,
         details: {

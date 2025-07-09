@@ -3,8 +3,14 @@
  * @description Abstract base class for JSON Logic body part operators
  */
 
-import { resolveEntityPath, hasValidEntityId } from '../../utils/entityPathResolver.js';
-import { getBodyComponent, extractRootId } from '../../utils/bodyComponentUtils.js';
+import {
+  resolveEntityPath,
+  hasValidEntityId,
+} from '../../utils/entityPathResolver.js';
+import {
+  getBodyComponent,
+  extractRootId,
+} from '../../utils/bodyComponentUtils.js';
 
 /** @typedef {import('../../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
@@ -59,7 +65,7 @@ export class BaseBodyPartOperator {
       }
 
       const [entityPath, ...operatorParams] = params;
-      
+
       // Store the entity path for logging
       context._currentPath = entityPath;
 
@@ -67,7 +73,9 @@ export class BaseBodyPartOperator {
       const { entity, isValid } = resolveEntityPath(context, entityPath);
 
       if (!isValid) {
-        this.logger.warn(`${this.operatorName}: No entity found at path ${entityPath}`);
+        this.logger.warn(
+          `${this.operatorName}: No entity found at path ${entityPath}`
+        );
         return false;
       }
 
@@ -75,27 +83,38 @@ export class BaseBodyPartOperator {
       const entityId = entity?.id || entity;
 
       if (!entityId) {
-        this.logger.warn(`${this.operatorName}: Invalid entity at path ${entityPath}`);
+        this.logger.warn(
+          `${this.operatorName}: Invalid entity at path ${entityPath}`
+        );
         return false;
       }
 
       // Get body component
       const bodyComponent = getBodyComponent(this.entityManager, entityId);
       if (!bodyComponent) {
-        this.logger.debug(`${this.operatorName}: Entity ${entityId} has no anatomy:body component`);
+        this.logger.debug(
+          `${this.operatorName}: Entity ${entityId} has no anatomy:body component`
+        );
         return false;
       }
 
       // Extract root ID
       const rootId = extractRootId(bodyComponent);
       if (!rootId) {
-        this.logger.debug(`${this.operatorName}: Entity ${entityId} has no root in anatomy:body component`);
+        this.logger.debug(
+          `${this.operatorName}: Entity ${entityId} has no root in anatomy:body component`
+        );
         return false;
       }
 
       // Delegate to subclass implementation
-      return this.evaluateInternal(entityId, rootId, operatorParams, context, bodyComponent);
-
+      return this.evaluateInternal(
+        entityId,
+        rootId,
+        operatorParams,
+        context,
+        bodyComponent
+      );
     } catch (error) {
       this.logger.error(`${this.operatorName}: Error during evaluation`, error);
       return false;

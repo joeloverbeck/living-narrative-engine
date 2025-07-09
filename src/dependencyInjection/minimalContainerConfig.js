@@ -56,7 +56,7 @@ export function configureMinimalContainer(container) {
   configureBaseContainer(container, {
     includeGameSystems: false,
     includeUI: false,
-    logger: logger
+    logger: logger,
   });
 
   logger.debug('[MinimalContainerConfig] All core bundles registered.');
@@ -66,4 +66,3 @@ export function configureMinimalContainer(container) {
 
   logger.debug('[MinimalContainerConfig] Minimal configuration complete.');
 }
-

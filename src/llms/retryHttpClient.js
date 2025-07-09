@@ -142,7 +142,7 @@ export class RetryHttpClient extends IHttpClient {
       raw,
       timestamp: new Date().toISOString(),
       stack,
-      scopeName: 'RetryHttpClient'
+      scopeName: 'RetryHttpClient',
     };
     await dispatchSystemErrorEvent(
       this.#dispatcher,
