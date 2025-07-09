@@ -60,6 +60,7 @@ class TextDataFetcher {
     } catch (error) {
       // Handle potential network errors (e.g., DNS resolution failure, refused connection)
       // or errors thrown from the !response.ok check, or text parsing errors.
+      // eslint-disable-next-line no-console -- logging unexpected fetch errors
       console.error(
         `TextDataFetcher: Error fetching or parsing ${identifier}:`,
         error
