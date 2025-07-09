@@ -7,7 +7,7 @@
  * Internal recursive helper used by {@link expandMacros} and
  * {@link expandActionArray}.
  *
- * @param {object[]} actions - Array of action or macro reference objects.
+ * @param {Array<Record<string, any>>} actions - Array of action or macro reference objects.
  * @param {import('../interfaces/coreServices.js').IDataRegistry} registry - Data registry used to resolve macros.
  * @param {import('../interfaces/coreServices.js').ILogger} [logger] - Optional logger for warnings.
  * @returns {object[]} A new array with all macros expanded.
@@ -18,6 +18,7 @@ function _expandActions(actions, registry, logger) {
   const result = [];
   for (const action of actions) {
     if (action && action.macro) {
+      /** @type {any} */
       const macro = registry.get('macros', action.macro);
       if (macro && Array.isArray(macro.actions)) {
         result.push(..._expandActions(macro.actions, registry, logger));
@@ -46,7 +47,7 @@ function _expandActions(actions, registry, logger) {
  * A macro reference takes the form `{ "macro": "modId:macroId" }` and will be
  * replaced by the macro's actions. Macros may reference other macros.
  *
- * @param {object[]} actions - Array of action or macro reference objects.
+ * @param {Array<Record<string, any>>} actions - Array of action or macro reference objects.
  * @param {import('../interfaces/coreServices.js').IDataRegistry} registry - Data registry used to resolve macros.
  * @param {import('../interfaces/coreServices.js').ILogger} [logger] - Optional logger for warnings.
  * @returns {object[]} A new array with all macros expanded.
@@ -59,13 +60,14 @@ export function expandMacros(actions, registry, logger) {
  * Finds any unexpanded macro references in an actions tree.
  * Useful for validation after macro expansion.
  *
- * @param {object[]} actions - Array of action objects to check.
+ * @param {Array<Record<string, any>>} actions - Array of action objects to check.
  * @param {string} [path] - Current path in the actions tree for debugging.
  * @returns {Array<{path: string, macro: string, action: object}>} Array of found macro references.
  */
 export function findUnexpandedMacros(actions, path = 'actions') {
   if (!Array.isArray(actions)) return [];
 
+  /** @type {Array<{path: string, macro: string, action: object}>} */
   let found = [];
   actions.forEach((action, idx) => {
     if (action && action.macro) {
