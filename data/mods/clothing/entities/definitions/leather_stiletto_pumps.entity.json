@@ -1,0 +1,35 @@
+{
+  "$schema": "http://example.com/schemas/entity-definition.schema.json",
+  "id": "clothing:leather_stiletto_pumps",
+  "description": "Leather stiletto pumps",
+  "components": {
+    "clothing:wearable": {
+      "wearableType": "shoes",
+      "layer": "base",
+      "coverage": {
+        "required": ["left_foot", "right_foot"],
+        "optional": [],
+        "exclusions": []
+      },
+      "size": "m",
+      "material": "leather",
+      "equipmentSlots": {
+        "primary": "feet_clothing"
+      },
+      "layerPriority": 2,
+      "conflictResolution": "auto_remove"
+    },
+    "core:name": {
+      "text": "leather stiletto pumps"
+    },
+    "core:description": {
+      "text": "Elegant black leather stiletto pumps with a sleek pointed toe and towering heel. The premium leather construction ensures both style and comfort, while the stiletto heel creates a powerful, confident silhouette. These sophisticated shoes transition seamlessly from boardroom to evening events."
+    },
+    "descriptors:color_basic": {
+      "color": "black"
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
+    }
+  }
+}

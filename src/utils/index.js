@@ -30,6 +30,7 @@ export {
 } from './dependencyUtils.js';
 export { validateNonEmptyString } from './stringValidation.js';
 export { createErrorDetails } from './errorDetails.js';
+export { string, type, logger } from './validationCore.js';
 export * from '../turns/strategies/strategyHelpers.js';
 export * from './operationValidationUtils.js';
 export { safeStringify } from './safeStringify.js';

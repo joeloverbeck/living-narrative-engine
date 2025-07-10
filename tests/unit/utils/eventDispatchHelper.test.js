@@ -2,10 +2,10 @@ import { describe, it, expect, jest } from '@jest/globals';
 import { dispatchWithErrorHandling } from '../../../src/utils/eventDispatchHelper.js';
 import { createMockLogger } from '../../common/mockFactories/loggerMocks.js';
 import * as loggerUtils from '../../../src/utils/loggerUtils.js';
-import { safeDispatchError } from '../../../src/utils/safeDispatchErrorUtils.js';
+import { safeDispatchError } from '../../../src/utils/staticErrorDispatcher.js';
 
 jest.mock('../../../src/utils/loggerUtils.js');
-jest.mock('../../../src/utils/safeDispatchErrorUtils.js', () => ({
+jest.mock('../../../src/utils/staticErrorDispatcher.js', () => ({
   safeDispatchError: jest.fn(),
 }));
 

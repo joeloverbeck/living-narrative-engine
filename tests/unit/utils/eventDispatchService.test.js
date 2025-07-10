@@ -3,12 +3,11 @@
  * @file Unit tests for EventDispatchService
  */
 
-import { EventDispatchService } from '../../../src/utils/eventDispatchService.js';
-import { safeDispatchError } from '../../../src/utils/safeDispatchErrorUtils.js';
+import { EventDispatchService, InvalidDispatcherError } from '../../../src/utils/eventDispatchService.js';
 import { createErrorDetails } from '../../../src/utils/errorDetails.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
 
 // Mock the dependencies
-jest.mock('../../../src/utils/safeDispatchErrorUtils.js');
 jest.mock('../../../src/utils/errorDetails.js');
 
 describe('EventDispatchService', () => {
@@ -183,7 +182,10 @@ describe('EventDispatchService', () => {
     it('should handle exceptions and dispatch system error', async () => {
       // Arrange
       const error = new Error('Dispatch error');
-      mockSafeEventDispatcher.dispatch.mockRejectedValue(error);
+      // First call throws, second call (for system error) succeeds
+      mockSafeEventDispatcher.dispatch
+        .mockRejectedValueOnce(error)
+        .mockReturnValueOnce(true);
       createErrorDetails.mockReturnValue({
         message: 'Error details',
         stack: 'Stack trace',
@@ -205,11 +207,12 @@ describe('EventDispatchService', () => {
         expect.stringContaining('CRITICAL - Error during dispatch'),
         error
       );
-      expect(safeDispatchError).toHaveBeenCalledWith(
-        mockSafeEventDispatcher,
-        'System error during event dispatch.',
-        expect.any(Object),
-        mockLogger
+      expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
+        SYSTEM_ERROR_OCCURRED_ID,
+        {
+          message: 'System error during event dispatch.',
+          details: expect.any(Object),
+        }
       );
     });
   });
@@ -249,6 +252,152 @@ describe('EventDispatchService', () => {
         `Failed to dispatch ${eventId}`,
         error
       );
+    });
+  });
+
+  describe('dispatchSystemError', () => {
+    it('should dispatch system error synchronously by default', () => {
+      // Arrange
+      const message = 'Test error message';
+      const details = { code: 'TEST_ERROR' };
+
+      // Act
+      service.dispatchSystemError(message, details);
+
+      // Assert
+      expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
+        SYSTEM_ERROR_OCCURRED_ID,
+        { message, details }
+      );
+    });
+
+    it('should dispatch system error asynchronously when async option is true', async () => {
+      // Arrange
+      mockSafeEventDispatcher.dispatch.mockResolvedValue(true);
+      const message = 'Test async error';
+      const details = { async: true };
+
+      // Act
+      await service.dispatchSystemError(message, details, { async: true });
+
+      // Assert
+      expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
+        SYSTEM_ERROR_OCCURRED_ID,
+        { message, details }
+      );
+    });
+
+    it('should log error when sync dispatch fails', () => {
+      // Arrange
+      const error = new Error('Dispatch failed');
+      mockSafeEventDispatcher.dispatch.mockImplementation(() => {
+        throw error;
+      });
+      const message = 'Test error';
+
+      // Act
+      service.dispatchSystemError(message);
+
+      // Assert
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        `Failed to dispatch system error event: ${message}`,
+        expect.objectContaining({
+          originalDetails: {},
+          dispatchError: error,
+        })
+      );
+    });
+
+    it('should log error when async dispatch fails', async () => {
+      // Arrange
+      const error = new Error('Async dispatch failed');
+      mockSafeEventDispatcher.dispatch.mockReturnValue(Promise.reject(error));
+      const message = 'Test async error';
+      const details = { test: true };
+
+      // Act
+      await service.dispatchSystemError(message, details, { async: true });
+
+      // Assert
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        `Failed to dispatch system error event: ${message}`,
+        expect.objectContaining({
+          originalDetails: details,
+          dispatchError: error,
+        })
+      );
+    });
+
+    it('should throw InvalidDispatcherError when dispatcher is invalid and throwOnInvalidDispatcher is true', () => {
+      // Arrange - Create service with invalid dispatcher
+      mockSafeEventDispatcher.dispatch = null;
+
+      // Act & Assert
+      expect(() => {
+        service.dispatchSystemError('Test', {}, { throwOnInvalidDispatcher: true });
+      }).toThrow(InvalidDispatcherError);
+    });
+
+    it('should not throw when dispatcher is invalid and throwOnInvalidDispatcher is false', () => {
+      // Arrange - We can't create EventDispatchService with null dispatcher
+      // because constructor throws. Instead, let's test the error path differently.
+      mockSafeEventDispatcher.dispatch = null;
+
+      // Act & Assert
+      expect(() => {
+        service.dispatchSystemError('Test', {});
+      }).not.toThrow();
+      expect(mockLogger.error).toHaveBeenCalled();
+    });
+  });
+
+  describe('dispatchValidationError', () => {
+    it('should dispatch system error and return result with details', () => {
+      // Arrange
+      const message = 'Validation failed';
+      const details = { field: 'email', reason: 'invalid format' };
+
+      // Act
+      const result = service.dispatchValidationError(message, details);
+
+      // Assert
+      expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
+        SYSTEM_ERROR_OCCURRED_ID,
+        { message, details }
+      );
+      expect(result).toEqual({
+        ok: false,
+        error: message,
+        details,
+      });
+    });
+
+    it('should dispatch system error and return result without details when details are undefined', () => {
+      // Arrange
+      const message = 'Validation failed';
+
+      // Act
+      const result = service.dispatchValidationError(message);
+
+      // Assert
+      expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
+        SYSTEM_ERROR_OCCURRED_ID,
+        { message, details: {} }
+      );
+      expect(result).toEqual({
+        ok: false,
+        error: message,
+      });
+    });
+
+    it('should throw when dispatcher is invalid', () => {
+      // Arrange
+      mockSafeEventDispatcher.dispatch = null;
+
+      // Act & Assert
+      expect(() => {
+        service.dispatchValidationError('Test');
+      }).toThrow(InvalidDispatcherError);
     });
   });
 });

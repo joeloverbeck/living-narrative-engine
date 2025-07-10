@@ -10,7 +10,7 @@
  */
 
 import { ensureValidLogger } from './loggerUtils.js';
-import { safeDispatchError } from './safeDispatchErrorUtils.js';
+import { safeDispatchError } from './staticErrorDispatcher.js';
 import { createErrorDetails } from './errorDetails.js';
 
 /**
