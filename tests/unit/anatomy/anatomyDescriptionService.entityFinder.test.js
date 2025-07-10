@@ -1,10 +1,5 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { AnatomyDescriptionService } from '../../../src/anatomy/anatomyDescriptionService.js';
-import {
-  ANATOMY_BODY_COMPONENT_ID,
-  ANATOMY_PART_COMPONENT_ID,
-  DESCRIPTION_COMPONENT_ID,
-} from '../../../src/constants/componentIds.js';
 
 describe('AnatomyDescriptionService - EntityFinder method calls', () => {
   let service;
