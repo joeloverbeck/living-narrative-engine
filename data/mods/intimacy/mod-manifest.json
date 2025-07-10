@@ -18,6 +18,7 @@
       "get_close.action.json",
       "kiss_cheek.action.json",
       "massage_shoulders.action.json",
+      "peck_on_lips.action.json",
       "step_back.action.json",
       "thumb_wipe_cheek.action.json",
       "turn_around.action.json"
@@ -34,6 +35,7 @@
       "event-is-action-get-close.condition.json",
       "event-is-action-kiss-cheek.condition.json",
       "event-is-action-massage-shoulders.condition.json",
+      "event-is-action-peck_on_lips.condition.json",
       "event-is-action-step-back.condition.json",
       "event-is-action-thumb-wipe-cheek.condition.json",
       "event-is-action-turn-around.condition.json"
@@ -52,6 +54,7 @@
       "get_close.rule.json",
       "handle_massage_shoulders.rule.json",
       "kiss_cheek.rule.json",
+      "peck_on_lips.rule.json",
       "step_back.rule.json",
       "thumb_wipe_cheek.rule.json",
       "turn_around.rule.json"
