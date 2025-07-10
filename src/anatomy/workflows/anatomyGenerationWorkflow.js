@@ -9,6 +9,7 @@ import { ValidationError } from '../../errors/validationError.js';
 /** @typedef {import('../../interfaces/coreServices.js').IDataRegistry} IDataRegistry */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../bodyBlueprintFactory.js').BodyBlueprintFactory} BodyBlueprintFactory */
+/** @typedef {import('../../clothing/services/clothingInstantiationService.js').ClothingInstantiationService} ClothingInstantiationService */
 
 /**
  * Workflow responsible for generating the anatomy graph structure
@@ -23,6 +24,8 @@ export class AnatomyGenerationWorkflow extends BaseService {
   #logger;
   /** @type {BodyBlueprintFactory} */
   #bodyBlueprintFactory;
+  /** @type {ClothingInstantiationService} */
+  #clothingInstantiationService;
 
   /**
    * @param {object} deps
@@ -30,8 +33,9 @@ export class AnatomyGenerationWorkflow extends BaseService {
    * @param {IDataRegistry} deps.dataRegistry
    * @param {ILogger} deps.logger
    * @param {BodyBlueprintFactory} deps.bodyBlueprintFactory
+   * @param {ClothingInstantiationService} [deps.clothingInstantiationService] - Optional for backward compatibility
    */
-  constructor({ entityManager, dataRegistry, logger, bodyBlueprintFactory }) {
+  constructor({ entityManager, dataRegistry, logger, bodyBlueprintFactory, clothingInstantiationService }) {
     super();
     this.#logger = this._init('AnatomyGenerationWorkflow', logger, {
       entityManager: {
@@ -50,6 +54,7 @@ export class AnatomyGenerationWorkflow extends BaseService {
     this.#entityManager = entityManager;
     this.#dataRegistry = dataRegistry;
     this.#bodyBlueprintFactory = bodyBlueprintFactory;
+    this.#clothingInstantiationService = clothingInstantiationService;
   }
 
   /**
@@ -59,7 +64,7 @@ export class AnatomyGenerationWorkflow extends BaseService {
    * @param {string} recipeId - The recipe ID to use
    * @param {object} options - Additional options
    * @param {string} options.ownerId - The ID of the entity that will own this anatomy
-   * @returns {Promise<{rootId: string, entities: string[], partsMap: Object<string, string>}>}
+   * @returns {Promise<{rootId: string, entities: string[], partsMap: Object<string, string>, clothingResult?: object}>}
    * @throws {ValidationError} If blueprint or recipe is invalid
    */
   async generate(blueprintId, recipeId, options) {
@@ -83,11 +88,50 @@ export class AnatomyGenerationWorkflow extends BaseService {
     // Build the parts map for easy access by name
     const partsMap = this.#buildPartsMap(graphResult.entities);
 
-    return {
+    // Phase 3: Instantiate clothing if specified in recipe
+    let clothingResult;
+    if (this.#clothingInstantiationService) {
+      const recipe = this.#dataRegistry.get('anatomyRecipes', recipeId);
+      if (recipe && recipe.clothingEntities && recipe.clothingEntities.length > 0) {
+        this.#logger.debug(
+          `AnatomyGenerationWorkflow: Instantiating ${recipe.clothingEntities.length} clothing items for entity '${ownerId}'`
+        );
+        
+        try {
+          // Convert partsMap object to Map for clothingInstantiationService
+          const partsMapForClothing = new Map(Object.entries(partsMap));
+          
+          clothingResult = await this.#clothingInstantiationService.instantiateRecipeClothing(
+            ownerId,
+            recipe,
+            partsMapForClothing
+          );
+          
+          this.#logger.debug(
+            `AnatomyGenerationWorkflow: Clothing instantiation completed with ${clothingResult.instantiated.length} items created`
+          );
+        } catch (error) {
+          this.#logger.error(
+            `AnatomyGenerationWorkflow: Failed to instantiate clothing for entity '${ownerId}'`,
+            error
+          );
+          // Continue without clothing - don't fail the entire anatomy generation
+        }
+      }
+    }
+
+    const result = {
       rootId: graphResult.rootId,
       entities: graphResult.entities,
       partsMap,
     };
+
+    // Include clothing result if available
+    if (clothingResult) {
+      result.clothingResult = clothingResult;
+    }
+
+    return result;
   }
 
   /**

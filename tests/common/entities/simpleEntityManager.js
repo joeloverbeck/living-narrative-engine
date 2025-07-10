@@ -60,6 +60,8 @@ export default class SimpleEntityManager {
       },
       getComponentData: (componentType) =>
         entity.components[componentType] ?? null,
+      hasComponent: (componentType) =>
+        Object.prototype.hasOwnProperty.call(entity.components, componentType),
     };
   }
 
@@ -135,6 +137,8 @@ export default class SimpleEntityManager {
             return Object.keys(ent.components);
           },
           getComponentData: (type) => ent.components[type] ?? null,
+          hasComponent: (type) =>
+            Object.prototype.hasOwnProperty.call(ent.components, type),
         });
       }
     }

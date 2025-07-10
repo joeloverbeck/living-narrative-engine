@@ -55,6 +55,11 @@ import { PartDescriptionGenerator } from '../../anatomy/PartDescriptionGenerator
 import { BodyDescriptionOrchestrator } from '../../anatomy/BodyDescriptionOrchestrator.js';
 import { DescriptionPersistenceService } from '../../anatomy/DescriptionPersistenceService.js';
 import { AnatomyQueryCache } from '../../anatomy/cache/AnatomyQueryCache.js';
+import { ClothingInstantiationService } from '../../clothing/services/clothingInstantiationService.js';
+import { LayerCompatibilityService } from '../../clothing/validation/layerCompatibilityService.js';
+import { CoverageValidationService } from '../../clothing/validation/coverageValidationService.js';
+import { EquipmentOrchestrator } from '../../clothing/orchestration/equipmentOrchestrator.js';
+import { AnatomyClothingIntegrationService } from '../../anatomy/integration/anatomyClothingIntegrationService.js';
 import UuidGenerator from '../../adapters/UuidGenerator.js';
 
 /**
@@ -496,11 +501,86 @@ export function registerWorldAndEntity(container) {
       bodyBlueprintFactory: c.resolve(tokens.BodyBlueprintFactory),
       anatomyDescriptionService: c.resolve(tokens.AnatomyDescriptionService),
       bodyGraphService: c.resolve(tokens.BodyGraphService),
+      clothingInstantiationService: c.resolve(tokens.ClothingInstantiationService),
     });
   });
   logger.debug(
     `World and Entity Registration: Registered ${String(
       tokens.AnatomyGenerationService
+    )}.`
+  );
+
+  // Register clothing validation services
+  registrar.singletonFactory(tokens.LayerCompatibilityService, (c) => {
+    return new LayerCompatibilityService({
+      logger: c.resolve(tokens.ILogger),
+      dataRegistry: c.resolve(tokens.IDataRegistry),
+    });
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.LayerCompatibilityService
+    )}.`
+  );
+
+  registrar.singletonFactory(tokens.CoverageValidationService, (c) => {
+    return new CoverageValidationService({
+      logger: c.resolve(tokens.ILogger),
+      dataRegistry: c.resolve(tokens.IDataRegistry),
+    });
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.CoverageValidationService
+    )}.`
+  );
+
+  // Register EquipmentOrchestrator
+  registrar.singletonFactory(tokens.EquipmentOrchestrator, (c) => {
+    return new EquipmentOrchestrator({
+      entityManager: c.resolve(tokens.IEntityManager),
+      logger: c.resolve(tokens.ILogger),
+      eventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+      layerCompatibilityService: c.resolve(tokens.LayerCompatibilityService),
+      coverageValidationService: c.resolve(tokens.CoverageValidationService),
+    });
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.EquipmentOrchestrator
+    )}.`
+  );
+
+  // Register AnatomyClothingIntegrationService
+  registrar.singletonFactory(tokens.AnatomyClothingIntegrationService, (c) => {
+    return new AnatomyClothingIntegrationService({
+      logger: c.resolve(tokens.ILogger),
+      entityManager: c.resolve(tokens.IEntityManager),
+      bodyGraphService: c.resolve(tokens.BodyGraphService),
+      blueprintLoader: c.resolve(tokens.AnatomyBlueprintLoader),
+      recipeLoader: c.resolve(tokens.AnatomyRecipeLoader),
+    });
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.AnatomyClothingIntegrationService
+    )}.`
+  );
+
+  // Register ClothingInstantiationService
+  registrar.singletonFactory(tokens.ClothingInstantiationService, (c) => {
+    return new ClothingInstantiationService({
+      entityManager: c.resolve(tokens.IEntityManager),
+      entityDefinitionLoader: c.resolve(tokens.EntityLoader),
+      equipmentOrchestrator: c.resolve(tokens.EquipmentOrchestrator),
+      anatomyClothingIntegrationService: c.resolve(tokens.AnatomyClothingIntegrationService),
+      logger: c.resolve(tokens.ILogger),
+      eventBus: c.resolve(tokens.ISafeEventDispatcher),
+    });
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.ClothingInstantiationService
     )}.`
   );
 
