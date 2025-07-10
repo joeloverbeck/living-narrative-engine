@@ -3,7 +3,8 @@ import { resolveConditionRefs } from '../../utils/conditionRefResolver.js';
 /** @typedef {import("../../interfaces/coreServices.js").ILogger} ILogger */
 /** @typedef {import("../../data/gameDataRepository.js").GameDataRepository} GameDataRepository */
 /**
- * @description Recursively resolves condition references inside a JSON Logic rule.
+ * Recursively resolves condition references inside a JSON Logic rule.
+ *
  * @param {object | any} logic - The logic tree or value to resolve.
  * @param {GameDataRepository} gameDataRepository - Repository providing condition definitions.
  * @param {ILogger} logger - Logger used for debug output. Only the `debug` method is utilized.

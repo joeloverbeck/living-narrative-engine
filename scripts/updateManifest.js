@@ -181,6 +181,7 @@ async function getAllModNames() {
  * Update the manifest for a specific mod
  *
  * @param {string} modName - The name of the mod to update
+ * @returns {Promise<boolean>} Resolves to true on success, false on failure
  */
 async function updateModManifest(modName) {
   console.log(`Starting manifest update for mod: "${modName}"`);

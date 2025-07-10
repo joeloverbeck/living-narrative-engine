@@ -11,16 +11,8 @@ export const TRACE_ERROR = 'error';
 export const TRACE_DATA = 'data';
 
 /**
- * @typedef {(
- *   typeof TRACE_INFO |
- *   typeof TRACE_SUCCESS |
- *   typeof TRACE_FAILURE |
- *   typeof TRACE_STEP |
- *   typeof TRACE_ERROR |
- *   typeof TRACE_DATA
- * )} LogEntryType
- * 'step' - A major stage in the process.
- * 'data' - Logs a significant data structure (e.g., context, AST).
+ * @typedef {'info' | 'success' | 'failure' | 'step' | 'error' | 'data'} LogEntryType
+ * Classification of a trace log entry.
  */
 
 /**
