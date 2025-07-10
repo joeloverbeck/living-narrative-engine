@@ -50,7 +50,6 @@ export class DescriptionPersistenceService {
       // EntityManager's addComponent handles both adding and updating
       this.#entityManager.addComponent(entityId, DESCRIPTION_COMPONENT_ID, {
         text: description,
-        lastUpdated: new Date().toISOString(),
       });
 
       this.#logger.debug(
@@ -126,7 +125,7 @@ export class DescriptionPersistenceService {
    * Get the current description for an entity
    *
    * @param {string} entityId - The entity to get description for
-   * @returns {{text: string, lastUpdated?: string}|null} The description data or null
+   * @returns {{text: string}|null} The description data or null
    */
   getDescription(entityId) {
     try {

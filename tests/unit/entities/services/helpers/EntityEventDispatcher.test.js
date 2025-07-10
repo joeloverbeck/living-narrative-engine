@@ -152,8 +152,6 @@ describe('EntityEventDispatcher - Entity Removed Events', () => {
 
       testBed.assertEventDispatchedWith(ENTITY_REMOVED_ID, {
         instanceId: entity.id,
-        definitionId: entity.definitionId,
-        entity,
       });
       testBed.assertDispatchCallCount(1);
       testBed.assertLogOperations({ debugs: 1 });
@@ -184,7 +182,8 @@ describe('EntityEventDispatcher - Entity Removed Events', () => {
 
       const dispatchedEvent =
         testBed.getDispatchedEventsOfType(ENTITY_REMOVED_ID)[0];
-      expect(dispatchedEvent.eventData.definitionId).toBeUndefined();
+      expect(dispatchedEvent.eventData.instanceId).toBe('entity-1');
+      expect(Object.keys(dispatchedEvent.eventData)).toEqual(['instanceId']);
     });
   });
 });
@@ -507,14 +506,12 @@ describe('EntityEventDispatcher - Edge Cases and Integration', () => {
       entity.id,
       entity.definitionId
     );
-    testBed.assertEntityEventData(
-      removedEvent.eventData,
-      entity.id,
-      entity.definitionId
-    );
+    
+    // Removed event only has instanceId
+    expect(removedEvent.eventData.instanceId).toBe(entity.id);
+    expect(Object.keys(removedEvent.eventData)).toEqual(['instanceId']);
 
     expect(createdEvent.eventData.wasReconstructed).toBe(true);
-    expect(removedEvent.eventData.wasReconstructed).toBeUndefined();
   });
 
   it('should handle mixed success/failure scenarios in batch operations', () => {

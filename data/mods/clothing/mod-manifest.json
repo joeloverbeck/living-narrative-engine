@@ -37,21 +37,13 @@
       ],
       "instances": []
     },
-    "actions": [
-      "equip.action.json",
-      "unequip.action.json",
-      "transfer_clothing.action.json"
-    ],
+    "actions": [],
     "events": [
       "clothing_equipped.event.json",
       "clothing_unequipped.event.json",
       "clothing_layer_conflict.event.json",
       "clothing_coverage_validated.event.json"
     ],
-    "rules": [
-      "validate_clothing_compatibility.rule.json",
-      "handle_layer_conflicts.rule.json",
-      "auto_unequip_conflicts.rule.json"
-    ]
+    "rules": []
   }
 }

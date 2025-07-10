@@ -2,7 +2,7 @@
   "$schema": "http://example.com/schemas/event.schema.json",
   "id": "clothing_unequipped",
   "description": "Fired when a clothing item is successfully unequipped from an entity",
-  "dataSchema": {
+  "payloadSchema": {
     "type": "object",
     "properties": {
       "entityId": {

@@ -117,6 +117,39 @@ export class AnatomyInitializationService {
   }
 
   /**
+   * Generate anatomy for a specific entity with a given blueprint
+   *
+   * @param {string} entityId - The entity instance ID
+   * @param {string} blueprintId - The anatomy blueprint ID to use
+   * @returns {Promise<boolean>} True if anatomy was generated successfully
+   */
+  async generateAnatomy(entityId, blueprintId) {
+    try {
+      this.#logger.debug(
+        `AnatomyInitializationService: Generating anatomy for entity '${entityId}' with blueprint '${blueprintId}'`
+      );
+
+      // For now, delegate to the generation service
+      // In the future, we might need to pass blueprint info differently
+      const wasGenerated = await this.#anatomyGenerationService.generateAnatomyIfNeeded(entityId);
+
+      if (wasGenerated) {
+        this.#logger.info(
+          `AnatomyInitializationService: Successfully generated anatomy for entity '${entityId}' with blueprint '${blueprintId}'`
+        );
+      }
+
+      return wasGenerated;
+    } catch (error) {
+      this.#logger.error(
+        `AnatomyInitializationService: Failed to generate anatomy for entity '${entityId}' with blueprint '${blueprintId}'`,
+        { error }
+      );
+      throw error;
+    }
+  }
+
+  /**
    * Disposes of the service by removing event listeners
    */
   dispose() {

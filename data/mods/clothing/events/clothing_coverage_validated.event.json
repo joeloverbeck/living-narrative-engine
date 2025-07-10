@@ -2,7 +2,7 @@
   "$schema": "http://example.com/schemas/event.schema.json",
   "id": "clothing_coverage_validated",
   "description": "Fired when clothing coverage validation is performed",
-  "dataSchema": {
+  "payloadSchema": {
     "type": "object",
     "properties": {
       "entityId": {

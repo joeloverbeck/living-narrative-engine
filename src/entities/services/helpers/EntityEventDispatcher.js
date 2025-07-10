@@ -80,13 +80,10 @@ export default class EntityEventDispatcher {
   dispatchEntityRemoved(entity) {
     const eventData = {
       instanceId: entity.id,
-      definitionId: entity.definitionId,
-      entity,
     };
 
     this.#logger.debug('Dispatching ENTITY_REMOVED event', {
       instanceId: entity.id,
-      definitionId: entity.definitionId,
     });
 
     try {
