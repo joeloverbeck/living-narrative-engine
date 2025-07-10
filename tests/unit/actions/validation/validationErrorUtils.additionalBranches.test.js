@@ -1,9 +1,6 @@
 import { describe, it, expect } from '@jest/globals';
 import { formatValidationError } from '../../../../src/actions/validation/validationErrorUtils.js';
 
-// Custom dummy error classes so instanceof checks are false
-class SomeOtherError {}
-
 /**
  * Additional branch coverage for formatValidationError.
  */
