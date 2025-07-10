@@ -21,7 +21,7 @@ import {
   validateActorInContext,
   retrieveStrategyFromContext,
   AWAITING_DECISION_CONTEXT_METHODS,
-} from './helpers/validationUtils.js';
+} from '../../utils/turnStateValidationUtils.js';
 
 /**
  * State in which the engine waits for the current actor’s turn-strategy to

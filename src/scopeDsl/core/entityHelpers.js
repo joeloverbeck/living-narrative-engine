@@ -4,7 +4,7 @@
  * @module entityHelpers
  */
 
-import { buildComponents } from './entityComponentUtils.js';
+import { buildComponents } from '../../utils/entityComponentUtils.js';
 
 /**
  * @typedef {import('./gateways.js').EntityGateway} EntityGateway

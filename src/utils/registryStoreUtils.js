@@ -2,10 +2,10 @@
  * @file Utility for storing items in the registry with standardized metadata and override checks.
  */
 
-/** @typedef {import('../../interfaces/coreServices.js').IDataRegistry} IDataRegistry */
-/** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
-import { SCOPES_KEY } from '../../constants/dataRegistryKeys.js';
-import { DuplicateContentError } from '../../errors/duplicateContentError.js';
+/** @typedef {import('../interfaces/coreServices.js').IDataRegistry} IDataRegistry */
+/** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
+import { SCOPES_KEY } from '../constants/dataRegistryKeys.js';
+import { DuplicateContentError } from '../errors/duplicateContentError.js';
 
 /**
  * Stores an item in the registry, augmenting it with metadata and logging overrides.

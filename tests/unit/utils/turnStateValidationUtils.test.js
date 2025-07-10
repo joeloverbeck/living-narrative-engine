@@ -5,7 +5,7 @@ import {
   validateContextMethods,
   validateActorInContext,
   retrieveStrategyFromContext,
-} from '../../../../../src/turns/states/helpers/validationUtils.js';
+} from '../../../src/utils/turnStateValidationUtils.js';
 
 const makeActor = (id = 'a1') => ({ id });
 

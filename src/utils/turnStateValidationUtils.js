@@ -3,10 +3,10 @@
  */
 
 /**
- * @typedef {import('../../../entities/entity.js').default} Entity
+ * @typedef {import('../entities/entity.js').default} Entity
  */
 
-import { UNKNOWN_ENTITY_ID } from '../../../constants/unknownIds.js';
+import { UNKNOWN_ENTITY_ID } from '../constants/unknownIds.js';
 
 /**
  * @description Method names required on an ITurnContext when used by the
@@ -87,7 +87,7 @@ export function validateContextMethods(turnContext, methods) {
  * within it matches an expected actor.
  *
  * @description Additional validation helper used by multiple states.
- * @param {import('../../interfaces/ITurnContext.js').ITurnContext|null} turnContext
+ * @param {import('../turns/interfaces/ITurnContext.js').ITurnContext|null} turnContext
  *   - The current turn context.
  * @param {?Entity} [expectedActor] - Actor expected to be in the context.
  * @param {string} stateName - Name of the calling state for error messages.
@@ -118,11 +118,11 @@ export function validateActorInContext(turnContext, expectedActor, stateName) {
  * Retrieves and validates the actor's strategy from context.
  *
  * @description Ensures a usable IActorTurnStrategy is available.
- * @param {import('../../interfaces/ITurnContext.js').ITurnContext|null} turnContext
+ * @param {import('../turns/interfaces/ITurnContext.js').ITurnContext|null} turnContext
  *   - The current turn context.
  * @param {Entity} actor - Actor whose strategy is expected.
  * @param {string} stateName - Name of the calling state for error messages.
- * @returns {import('../../interfaces/IActorTurnStrategy.js').IActorTurnStrategy}
+ * @returns {import('../turns/interfaces/IActorTurnStrategy.js').IActorTurnStrategy}
  *   The resolved strategy.
  * @throws {Error} If the strategy is missing or malformed.
  */
