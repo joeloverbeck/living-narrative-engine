@@ -9,10 +9,12 @@ export class DescriptionTemplate {
     config,
     textFormatter = new TextFormatter(),
     strategyFactory = new PartGroupingStrategyFactory(),
+    partDescriptionGenerator = null,
   } = {}) {
     this.config = config;
     this.textFormatter = textFormatter;
     this.strategyFactory = strategyFactory;
+    this.partDescriptionGenerator = partDescriptionGenerator;
   }
 
   /**
@@ -65,7 +67,24 @@ export class DescriptionTemplate {
 
         if (typeof part.getComponentData === 'function') {
           const descComponent = part.getComponentData('core:description');
-          return descComponent ? descComponent.text : '';
+          
+          // If we have a persisted description, use it
+          if (descComponent && descComponent.text) {
+            return descComponent.text;
+          }
+          
+          // If no persisted description and we have a part generator, generate on-the-fly
+          if (this.partDescriptionGenerator && part.id) {
+            try {
+              const generatedDescription = this.partDescriptionGenerator.generatePartDescription(part.id);
+              return generatedDescription || '';
+            } catch (error) {
+              // If generation fails, return empty string
+              return '';
+            }
+          }
+          
+          return '';
         }
         return '';
       })

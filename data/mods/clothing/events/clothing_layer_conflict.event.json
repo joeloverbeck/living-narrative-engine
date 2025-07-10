@@ -2,7 +2,7 @@
   "$schema": "http://example.com/schemas/event.schema.json",
   "id": "clothing_layer_conflict",
   "description": "Fired when layer conflicts are detected during clothing equipment",
-  "dataSchema": {
+  "payloadSchema": {
     "type": "object",
     "properties": {
       "entityId": {

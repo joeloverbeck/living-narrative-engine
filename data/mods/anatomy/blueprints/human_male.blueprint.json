@@ -258,14 +258,6 @@
         "left_leg",
         "right_leg"
       ],
-      "anatomySockets": [
-        "left_chest",
-        "right_chest",
-        "left_shoulder",
-        "right_shoulder",
-        "left_hip",
-        "right_hip"
-      ],
       "allowedLayers": ["outer"],
       "layerOrder": ["outer"],
       "defaultLayer": "outer",

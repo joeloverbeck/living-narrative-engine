@@ -114,14 +114,11 @@ export class BodyDescriptionOrchestrator {
       const entityName = bodyEntity.getComponentData('core:name');
       const nameText = entityName ? entityName.text : bodyEntity.id;
 
-      this.#eventDispatcher.dispatch({
-        type: SYSTEM_ERROR_OCCURRED_ID,
-        payload: {
-          message: `Failed to generate body description for entity "${nameText}": Description is empty`,
-          details: {
-            raw: `Entity ID: ${bodyEntity.id}, Recipe ID: ${bodyEntity.getComponentData(ANATOMY_BODY_COMPONENT_ID)?.recipeId || 'unknown'}`,
-            timestamp: new Date().toISOString(),
-          },
+      this.#eventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
+        message: `Failed to generate body description for entity "${nameText}": Description is empty`,
+        details: {
+          raw: `Entity ID: ${bodyEntity.id}, Recipe ID: ${bodyEntity.getComponentData(ANATOMY_BODY_COMPONENT_ID)?.recipeId || 'unknown'}`,
+          timestamp: new Date().toISOString(),
         },
       });
     }

@@ -10,11 +10,18 @@ import { PartSelectionService } from '../../../src/anatomy/partSelectionService.
 import { SocketManager } from '../../../src/anatomy/socketManager.js';
 import { EntityGraphBuilder } from '../../../src/anatomy/entityGraphBuilder.js';
 import { RecipeConstraintEvaluator } from '../../../src/anatomy/recipeConstraintEvaluator.js';
+import { BodyDescriptionComposer } from '../../../src/anatomy/bodyDescriptionComposer.js';
+import { DescriptionTemplate } from '../../../src/anatomy/templates/descriptionTemplate.js';
+import { AnatomyInitializationService } from '../../../src/anatomy/anatomyInitializationService.js';
+import { AnatomyDescriptionService } from '../../../src/anatomy/anatomyDescriptionService.js';
+import { BodyDescriptionOrchestrator } from '../../../src/anatomy/BodyDescriptionOrchestrator.js';
+import { DescriptionPersistenceService } from '../../../src/anatomy/DescriptionPersistenceService.js';
 import {
   createMockLogger,
   createMockSafeEventDispatcher,
   createMockSchemaValidator,
   createMockEventDispatchService,
+  createMockEntity,
 } from '../mockFactories/index.js';
 import UuidGenerator from '../../../src/adapters/UuidGenerator.js';
 import BaseTestBed from '../baseTestBed.js';
@@ -106,14 +113,108 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
       eventDispatcher: mocks.eventDispatcher,
     });
 
-    // Create a mock anatomy description service
-    this.mockAnatomyDescriptionService = {
-      generateAllDescriptions: () => {},
-      generatePartDescription: () => {},
-      generateBodyDescription: () => {},
-      getOrGenerateBodyDescription: () => null,
-      regenerateDescriptions: () => {},
+    // Create mock dependencies for BodyDescriptionComposer
+    this.mockBodyPartDescriptionBuilder = {
+      buildDescription: (partEntity) => {
+        const partType = partEntity?.getComponentData?.('anatomy:part')?.subType || 'part';
+        return `A ${partType} part`;
+      },
     };
+
+    this.mockAnatomyFormattingService = {
+      formatDescription: (desc) => desc,
+    };
+
+    this.mockPartDescriptionGenerator = {
+      generateDescription: (partEntity) => {
+        if (!partEntity) return 'A body part';
+        const partType = partEntity.getComponentData?.('anatomy:part')?.subType || 'body part';
+        const description = `A human ${partType}`;
+        
+        // Actually add the description component to the entity
+        if (this.entityManager && this.entityManager.addComponent) {
+          this.entityManager.addComponent(partEntity.id, 'core:description', { text: description });
+        }
+        
+        return description;
+      },
+      generatePartDescription: (partId) => {
+        const partEntity = this.entityManager.getEntityInstance(partId);
+        if (!partEntity) return 'A body part';
+        const partType = partEntity.getComponentData?.('anatomy:part')?.subType || 'body part';
+        const description = `A human ${partType}`;
+        
+        // Actually add the description component to the entity
+        if (this.entityManager && this.entityManager.addComponent) {
+          this.entityManager.addComponent(partEntity.id, 'core:description', { text: description });
+        }
+        
+        return description;
+      },
+      generateMultiplePartDescriptions: (partIds) => {
+        const descriptions = new Map();
+        for (const partId of partIds) {
+          const partEntity = this.entityManager.getEntityInstance(partId);
+          if (partEntity) {
+            const description = this.mockPartDescriptionGenerator.generateDescription(partEntity);
+            descriptions.set(partId, description);
+          }
+        }
+        return descriptions;
+      },
+    };
+
+    // Create body description composer
+    this.bodyDescriptionComposer = new BodyDescriptionComposer({
+      bodyPartDescriptionBuilder: this.mockBodyPartDescriptionBuilder,
+      bodyGraphService: this.bodyGraphService,
+      entityFinder: this.entityManager,
+      anatomyFormattingService: this.mockAnatomyFormattingService,
+      partDescriptionGenerator: this.mockPartDescriptionGenerator,
+    });
+
+    // Create description template (exposed separately for testing)
+    this.descriptionTemplate = this.bodyDescriptionComposer.descriptionTemplate;
+
+    // Create mock component manager
+    this.mockComponentManager = {
+      addComponent: (entityId, componentId, data) => {
+        this.entityManager.addComponent(entityId, componentId, data);
+      },
+      updateComponent: (entityId, componentId, data) => {
+        this.entityManager.updateComponent(entityId, componentId, data);
+      },
+    };
+
+    // Create body description orchestrator
+    this.bodyDescriptionOrchestrator = new BodyDescriptionOrchestrator({
+      bodyGraphService: this.bodyGraphService,
+      partDescriptionGenerator: this.mockPartDescriptionGenerator,
+      bodyDescriptionComposer: this.bodyDescriptionComposer,
+      entityManager: this.entityManager,
+      eventDispatcher: mocks.eventDispatcher,
+      logger: mocks.logger,
+    });
+
+    // Create description persistence service
+    this.descriptionPersistenceService = new DescriptionPersistenceService({
+      entityManager: this.entityManager,
+      logger: mocks.logger,
+      eventBus: mocks.eventDispatcher,
+    });
+
+    // Create real anatomy description service
+    this.anatomyDescriptionService = new AnatomyDescriptionService({
+      bodyPartDescriptionBuilder: this.mockBodyPartDescriptionBuilder,
+      bodyDescriptionComposer: this.bodyDescriptionComposer,
+      bodyGraphService: this.bodyGraphService,
+      entityFinder: this.entityManager,
+      componentManager: this.mockComponentManager,
+      eventDispatchService: mocks.eventDispatchService,
+      partDescriptionGenerator: this.mockPartDescriptionGenerator,
+      bodyDescriptionOrchestrator: this.bodyDescriptionOrchestrator,
+      descriptionPersistenceService: this.descriptionPersistenceService,
+    });
 
     // Create anatomy generation service
     this.anatomyGenerationService = new AnatomyGenerationService({
@@ -121,8 +222,15 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
       dataRegistry: mocks.registry,
       logger: mocks.logger,
       bodyBlueprintFactory: this.bodyBlueprintFactory,
-      anatomyDescriptionService: this.mockAnatomyDescriptionService,
+      anatomyDescriptionService: this.anatomyDescriptionService,
       bodyGraphService: this.bodyGraphService,
+    });
+
+    // Create anatomy initialization service
+    this.anatomyInitializationService = new AnatomyInitializationService({
+      eventDispatcher: mocks.eventDispatcher,
+      logger: mocks.logger,
+      anatomyGenerationService: this.anatomyGenerationService,
     });
   }
 
@@ -195,6 +303,18 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
     await this.anatomyGenerationService.generateAnatomyIfNeeded(bodyEntity.id);
 
     return bodyEntity;
+  }
+
+  /**
+   * Creates a mock entity for testing
+   *
+   * @param {string} [id] - Optional entity ID (auto-generated if not provided)
+   * @param {object} [options] - Optional configuration
+   * @returns {object} Mock entity
+   */
+  createMockEntity(id, options = {}) {
+    const entityId = id || UuidGenerator();
+    return createMockEntity(entityId, options);
   }
 
   /**

@@ -284,12 +284,8 @@ export const expectEntityCreatedDispatch = createDispatchAsserter(
 export const expectEntityRemovedDispatch = createDispatchAsserter(
   ENTITY_REMOVED_ID,
   (instanceId, entity) => {
-    const payload = { instanceId };
-    if (entity) {
-      payload.definitionId = entity.definitionId;
-      payload.entity = entity;
-    }
-    return payload;
+    // Only include instanceId as per the schema
+    return { instanceId };
   }
 );
 

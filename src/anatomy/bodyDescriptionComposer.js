@@ -12,17 +12,20 @@ export class BodyDescriptionComposer {
     bodyGraphService,
     entityFinder,
     anatomyFormattingService,
+    partDescriptionGenerator,
   } = {}) {
     this.bodyPartDescriptionBuilder = bodyPartDescriptionBuilder;
     this.bodyGraphService = bodyGraphService;
     this.entityFinder = entityFinder;
     this.anatomyFormattingService = anatomyFormattingService;
+    this.partDescriptionGenerator = partDescriptionGenerator;
 
     // Initialize configuration and template services
     this.config = new DescriptionConfiguration(anatomyFormattingService);
     this.descriptionTemplate = new DescriptionTemplate({
       config: this.config,
       textFormatter: new TextFormatter(),
+      partDescriptionGenerator: this.partDescriptionGenerator,
     });
   }
 

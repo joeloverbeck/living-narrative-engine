@@ -413,6 +413,7 @@ export function registerWorldAndEntity(container) {
       bodyGraphService: c.resolve(tokens.BodyGraphService),
       entityFinder: c.resolve(tokens.IEntityManager),
       anatomyFormattingService: c.resolve(tokens.AnatomyFormattingService),
+      partDescriptionGenerator: c.resolve(tokens.PartDescriptionGenerator),
     });
   });
   logger.debug(
@@ -439,6 +440,7 @@ export function registerWorldAndEntity(container) {
     return new DescriptionPersistenceService({
       logger: c.resolve(tokens.ILogger),
       entityManager: c.resolve(tokens.IEntityManager),
+      eventBus: c.resolve(tokens.ISafeEventDispatcher),
     });
   });
   logger.debug(
