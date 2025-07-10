@@ -1,9 +1,9 @@
-// src/entities/utils/portraitUtils.js
+// src/utils/portraitUtils.js
 
-import { isNonBlankString } from '../../utils/textUtils.js';
-import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
-import { extractModId } from '../../utils/idUtils.js';
-import { PORTRAIT_COMPONENT_ID } from '../../constants/componentIds.js';
+import { isNonBlankString } from './textUtils.js';
+import { safeDispatchError } from './safeDispatchErrorUtils.js';
+import { extractModId } from './idUtils.js';
+import { PORTRAIT_COMPONENT_ID } from '../constants/componentIds.js';
 
 /**
  * Helper utilities for building entity portrait data.
@@ -35,10 +35,10 @@ export function buildAltText(rawAltText) {
 /**
  * Builds portrait path and alt text for an entity.
  *
- * @param {import('../entity.js').default} entity - The entity instance to read portrait data from.
+ * @param {import('../entities/entity.js').default} entity - The entity instance to read portrait data from.
  * @param {string} methodName - The calling method name for log messages.
- * @param {import('../../interfaces/coreServices.js').ILogger} logger - Logger for diagnostics.
- * @param {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} safeEventDispatcher - Dispatcher for error events.
+ * @param {import('../interfaces/coreServices.js').ILogger} logger - Logger for diagnostics.
+ * @param {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} safeEventDispatcher - Dispatcher for error events.
  * @param {string} logPrefix - Prefix for log messages.
  * @returns {{ path: string, altText: string | null } | null} Object with path and alt text, or null if portrait data is invalid.
  */

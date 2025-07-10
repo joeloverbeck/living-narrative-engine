@@ -17,7 +17,7 @@ import { getLogger } from './helpers/contextUtils.js';
 import {
   assertValidActor,
   validateActorInContext,
-} from './helpers/validationUtils.js';
+} from '../../utils/turnStateValidationUtils.js';
 import { warnNoActiveTurn } from '../../utils/warnUtils.js';
 
 /**

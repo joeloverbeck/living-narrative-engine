@@ -15,7 +15,7 @@
 import { ITurnState } from '../interfaces/ITurnState.js';
 import { UNKNOWN_ACTOR_ID } from '../../constants/unknownIds.js';
 import { getLogger } from './helpers/contextUtils.js';
-import { validateContextMethods } from './helpers/validationUtils.js';
+import { validateContextMethods } from '../../utils/turnStateValidationUtils.js';
 
 /**
  * @class AbstractTurnState

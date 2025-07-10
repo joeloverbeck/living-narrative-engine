@@ -32,7 +32,7 @@ import {
   validateTurnAction,
   validateCommandString,
   PROCESSING_CONTEXT_METHODS,
-} from './helpers/validationUtils.js';
+} from '../../utils/turnStateValidationUtils.js';
 
 /**
  * @class ProcessingCommandState

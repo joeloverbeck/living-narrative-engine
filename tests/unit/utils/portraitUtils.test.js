@@ -3,10 +3,10 @@ import {
   buildPortraitPath,
   buildAltText,
   buildPortraitInfo,
-} from '../../../../src/entities/utils/portraitUtils.js';
-import { safeDispatchError } from '../../../../src/utils/safeDispatchErrorUtils.js';
+} from '../../../src/utils/portraitUtils.js';
+import { safeDispatchError } from '../../../src/utils/safeDispatchErrorUtils.js';
 
-jest.mock('../../../../src/utils/safeDispatchErrorUtils.js', () => ({
+jest.mock('../../../src/utils/safeDispatchErrorUtils.js', () => ({
   safeDispatchError: jest.fn(),
 }));
 

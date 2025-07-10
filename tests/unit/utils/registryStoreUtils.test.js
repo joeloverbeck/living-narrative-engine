@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { storeItemInRegistry } from '../../../../src/loaders/helpers/registryStoreUtils.js';
-import { DuplicateContentError } from '../../../../src/errors/duplicateContentError.js';
+import { storeItemInRegistry } from '../../../src/utils/registryStoreUtils.js';
+import { DuplicateContentError } from '../../../src/errors/duplicateContentError.js';
 
 describe('storeItemInRegistry', () => {
   let logger;

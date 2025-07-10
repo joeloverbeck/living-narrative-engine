@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { storeItemInRegistry } from '../../../../src/loaders/helpers/registryStoreUtils.js';
+import { storeItemInRegistry } from '../../../src/utils/registryStoreUtils.js';
 
 describe('registryStoreUtils - Scope ID Mapping', () => {
   let mockLogger;

@@ -4,11 +4,11 @@ import { jest } from '@jest/globals';
 import EntityBuilder from '../../../../src/scopeDsl/core/entityBuilder.js';
 
 // Mock the buildComponents function
-jest.mock('../../../../src/scopeDsl/core/entityComponentUtils.js', () => ({
+jest.mock('../../../../src/utils/entityComponentUtils.js', () => ({
   buildComponents: jest.fn(),
 }));
 
-import { buildComponents } from '../../../../src/scopeDsl/core/entityComponentUtils.js';
+import { buildComponents } from '../../../../src/utils/entityComponentUtils.js';
 
 describe('EntityBuilder', () => {
   let entityBuilder;
