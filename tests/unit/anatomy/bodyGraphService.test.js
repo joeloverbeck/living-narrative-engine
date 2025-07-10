@@ -178,6 +178,62 @@ describe('BodyGraphService', () => {
         expect.any(Object)
       );
     });
+
+    it('should not rebuild cache if it already exists', () => {
+      // Setup entities
+      const torsoEntity = { id: 'torso-1' };
+      const headEntity = { id: 'head-1' };
+      
+      mockEntityManager.getEntityInstance.mockImplementation((id) => {
+        if (id === 'torso-1') return torsoEntity;
+        if (id === 'head-1') return headEntity;
+        return null;
+      });
+
+      mockEntityManager.getComponentData.mockImplementation(
+        (id, componentId) => {
+          if (componentId === 'anatomy:part') {
+            if (id === 'torso-1') return { subType: 'torso' };
+            if (id === 'head-1') return { subType: 'head' };
+          }
+          if (componentId === 'anatomy:joint' && id === 'head-1') {
+            return { parentId: 'torso-1', socketId: 'neck' };
+          }
+          return null;
+        }
+      );
+
+      mockEntityManager.getEntitiesWithComponent.mockReturnValue([headEntity]);
+
+      // First call - should build cache
+      service.buildAdjacencyCache('torso-1');
+      
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        "AnatomyCacheManager: Building cache for anatomy rooted at 'torso-1'"
+      );
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'AnatomyCacheManager: Built cache with 2 nodes'
+      );
+      
+      // Clear the mock calls
+      mockLogger.debug.mockClear();
+      mockLogger.info.mockClear();
+      mockEntityManager.getEntityInstance.mockClear();
+      
+      // Second call - should not rebuild cache
+      service.buildAdjacencyCache('torso-1');
+      
+      // Should not log cache building messages
+      expect(mockLogger.debug).not.toHaveBeenCalledWith(
+        "AnatomyCacheManager: Building cache for anatomy rooted at 'torso-1'"
+      );
+      expect(mockLogger.info).not.toHaveBeenCalledWith(
+        expect.stringContaining('Built cache with')
+      );
+      
+      // Should not call entity manager methods
+      expect(mockEntityManager.getEntityInstance).not.toHaveBeenCalled();
+    });
   });
 
   describe('detachPart', () => {
@@ -506,6 +562,13 @@ describe('BodyGraphService', () => {
     });
 
     it('should return null if no path exists', () => {
+      // Create a new service instance to ensure clean cache state
+      const newService = new BodyGraphService({
+        entityManager: mockEntityManager,
+        logger: mockLogger,
+        eventDispatcher: mockEventDispatcher,
+      });
+      
       // Create a disconnected part
       mockEntityManager.getComponentData.mockImplementation(
         (id, componentId) => {
@@ -516,9 +579,9 @@ describe('BodyGraphService', () => {
           return null;
         }
       );
-      service.buildAdjacencyCache('torso-1');
+      newService.buildAdjacencyCache('torso-1');
 
-      const path = service.getPath('left-hand-1', 'right-hand-1');
+      const path = newService.getPath('left-hand-1', 'right-hand-1');
       expect(path).toBeNull();
     });
 

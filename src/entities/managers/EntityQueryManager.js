@@ -172,6 +172,7 @@ export default class EntityQueryManager {
 
   /**
    * Return **new array** of entities that possess `componentTypeId`.
+   * Uses component index for O(1) lookup performance.
    * Logs diagnostic info for engine analytics / debugging.
    *
    * @param {string} componentTypeId - Component type ID to search for
@@ -180,12 +181,21 @@ export default class EntityQueryManager {
    */
   getEntitiesWithComponent(componentTypeId) {
     validateGetEntitiesWithComponentParamsUtil(componentTypeId, this.#logger);
+    
+    // Use component index for O(1) lookup
+    const entityIds = this.#entityRepository.getEntityIdsByComponent(componentTypeId);
     const results = [];
-    for (const entity of this.entities) {
-      if (entity.hasComponent(componentTypeId)) {
+    
+    for (const entityId of entityIds) {
+      const entity = this.#entityRepository.get(entityId);
+      if (entity) {
         results.push(entity);
       }
     }
+    
+    this.#logger.debug(
+      `EntityQueryManager.getEntitiesWithComponent found ${results.length} entities with component '${componentTypeId}' using index`
+    );
 
     return results;
   }

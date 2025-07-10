@@ -33,7 +33,10 @@ export class BodyGraphService {
   }
 
   buildAdjacencyCache(rootEntityId) {
-    this.#cacheManager.buildCache(rootEntityId, this.#entityManager);
+    // Only build cache if it doesn't already exist for this root
+    if (!this.#cacheManager.hasCacheForRoot(rootEntityId)) {
+      this.#cacheManager.buildCache(rootEntityId, this.#entityManager);
+    }
   }
 
   async detachPart(partEntityId, options = {}) {
@@ -61,15 +64,10 @@ export class BodyGraphService {
 
     await this.#entityManager.removeComponent(partEntityId, 'anatomy:joint');
 
-    const parentNode = this.#cacheManager.get(parentId);
-    if (parentNode) {
-      parentNode.children = parentNode.children.filter(
-        (id) => id !== partEntityId
-      );
-    }
-
-    if (!cascade) {
-      this.#cacheManager.delete(partEntityId);
+    // Find the root of this anatomy to invalidate the correct cache
+    const rootId = this.getAnatomyRoot(parentId);
+    if (rootId) {
+      this.#cacheManager.invalidateCacheForRoot(rootId);
     }
     await this.#eventDispatcher.dispatch({
       type: ANATOMY_CONSTANTS.LIMB_DETACHED_EVENT_ID,
