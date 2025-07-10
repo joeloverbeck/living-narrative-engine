@@ -31,7 +31,8 @@ export async function readSaveFile(storageProvider, logger, filePath) {
       } catch (error) {
         const userMsg = MSG_FILE_READ_ERROR;
         logger.error(`Error reading file ${filePath}:`, error);
-        const details = error?.code || error?.message;
+        const errObj = /** @type {{code?: string; message?: string}} */ (error);
+        const details = errObj?.code || errObj?.message;
         const errMsg = details ? `${userMsg} (${details})` : userMsg;
         return {
           ...createPersistenceFailure(
@@ -97,7 +98,11 @@ export async function readAndDeserialize(
       const readRes = await readSaveFile(storageProvider, logger, filePath);
       if (!readRes.success) return readRes;
 
-      return deserializeAndDecompress(serializer, logger, readRes.data);
+      return deserializeAndDecompress(
+        serializer,
+        logger,
+        /** @type {Uint8Array} */ (readRes.data)
+      );
     },
     logger,
   });
