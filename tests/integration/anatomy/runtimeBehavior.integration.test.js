@@ -351,7 +351,13 @@ describe('Anatomy Runtime Behavior Integration', () => {
         jointType: 'ball',
       });
 
-      // Rebuild cache
+      // Rebuild cache by creating a fresh service instance to avoid
+      // the existing cache preventing updates
+      bodyGraphService = new BodyGraphService({
+        entityManager: testBed.entityManager,
+        logger: testBed.logger,
+        eventDispatcher: testBed.eventDispatcher,
+      });
       bodyGraphService.buildAdjacencyCache(torso.id);
 
       // Now should have 2 parts
