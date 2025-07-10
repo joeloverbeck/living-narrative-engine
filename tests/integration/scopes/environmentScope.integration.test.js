@@ -23,7 +23,6 @@ import { parseScopeDefinitions } from '../../../src/scopeDsl/scopeDefinitionPars
 import DefaultDslParser from '../../../src/scopeDsl/parser/defaultDslParser.js';
 import {
   POSITION_COMPONENT_ID,
-  NAME_COMPONENT_ID,
   ACTOR_COMPONENT_ID,
 } from '../../../src/constants/componentIds.js';
 import fs from 'fs';
@@ -125,10 +124,9 @@ describe('Scope Integration Tests', () => {
       logger,
       gameDataRepository,
     });
-    const domainContextCompatibilityChecker = { check: () => true };
     // FIX: Ensure the mock has a function with the correct arity
     const prerequisiteEvaluationService = {
-      evaluate: (_p1, _p2, _p3, _p4) => true,
+      evaluate: () => true,
     };
     const validatedEventDispatcher = {
       dispatch: () => {},

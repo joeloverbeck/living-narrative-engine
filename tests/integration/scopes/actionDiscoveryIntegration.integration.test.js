@@ -24,7 +24,6 @@ import { parseScopeDefinitions } from '../../../src/scopeDsl/scopeDefinitionPars
 import {
   LEADING_COMPONENT_ID,
   POSITION_COMPONENT_ID,
-  NAME_COMPONENT_ID,
   EXITS_COMPONENT_ID,
   ACTOR_COMPONENT_ID,
 } from '../../../src/constants/componentIds.js';
@@ -171,11 +170,9 @@ describe('Scope Integration Tests', () => {
       logger,
       gameDataRepository,
     });
-    const domainContextCompatibilityChecker = { check: () => true };
-
     // FIX: Create a valid mock for PrerequisiteEvaluationService
     const prerequisiteEvaluationService = {
-      evaluate: jest.fn((_p1, _p2, _p3, _p4) => true),
+      evaluate: jest.fn(() => true),
     };
 
     const validatedEventDispatcher = {
