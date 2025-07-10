@@ -31,7 +31,7 @@ export function buildRuleCache(rules, logger) {
       continue;
     }
 
-    /** @type {RuleBucket} */
+    /** @type {RuleBucket | undefined} */
     let bucket = cache.get(rule.event_type);
     if (!bucket) {
       bucket = { catchAll: [], byAction: new Map() };
@@ -54,10 +54,12 @@ export function buildRuleCache(rules, logger) {
     }
 
     if (rule.event_type === ATTEMPT_ACTION_ID && constId) {
-      (
-        bucket.byAction.get(constId) ??
-        bucket.byAction.set(constId, []).get(constId)
-      ).push(rule);
+      let rulesForId = bucket.byAction.get(constId);
+      if (!rulesForId) {
+        rulesForId = [];
+        bucket.byAction.set(constId, rulesForId);
+      }
+      rulesForId.push(rule);
     } else {
       bucket.catchAll.push(rule);
     }
