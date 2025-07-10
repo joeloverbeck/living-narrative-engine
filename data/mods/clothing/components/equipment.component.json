@@ -1,0 +1,105 @@
+{
+  "$schema": "http://example.com/schemas/component.schema.json",
+  "id": "clothing:equipment",
+  "description": "Tracks equipped clothing items with layer support and conflict resolution",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "equipped": {
+        "type": "object",
+        "description": "Map of equipment slots to their equipped items by layer",
+        "patternProperties": {
+          "^[a-z_]+_clothing$": {
+            "type": "object",
+            "description": "Equipment slot with layered items",
+            "patternProperties": {
+              "^(underwear|base|outer|accessories)$": {
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "description": "Single equipped item entity ID"
+                  },
+                  {
+                    "type": "array",
+                    "items": { "type": "string" },
+                    "description": "Array of equipped item entity IDs for slots that support multiple items"
+                  }
+                ]
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      "maxLayers": {
+        "type": "object",
+        "description": "Maximum number of layers allowed per equipment slot",
+        "patternProperties": {
+          "^[a-z_]+_clothing$": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 4,
+            "description": "Maximum layers for this slot"
+          }
+        },
+        "additionalProperties": false
+      },
+      "slotConstraints": {
+        "type": "object",
+        "description": "Specific constraints for equipment slots",
+        "patternProperties": {
+          "^[a-z_]+_clothing$": {
+            "type": "object",
+            "properties": {
+              "allowedTypes": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "Allowed wearable types for this slot"
+              },
+              "conflictResolution": {
+                "type": "string",
+                "enum": [
+                  "auto_remove",
+                  "prompt_user",
+                  "block_equip",
+                  "layer_swap"
+                ],
+                "description": "Default conflict resolution strategy for this slot"
+              },
+              "layerOrder": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": ["underwear", "base", "outer", "accessories"]
+                },
+                "description": "Required layer order for this slot"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      "lastEquipped": {
+        "type": "object",
+        "description": "Timestamp tracking for last equipped items",
+        "patternProperties": {
+          "^[a-z_]+_clothing$": {
+            "type": "object",
+            "patternProperties": {
+              "^(underwear|base|outer|accessories)$": {
+                "type": "number",
+                "description": "Unix timestamp of last equipment change"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "required": ["equipped"],
+    "additionalProperties": false
+  }
+}

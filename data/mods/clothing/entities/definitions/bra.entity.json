@@ -1,0 +1,29 @@
+{
+  "$schema": "http://example.com/schemas/entity-definition.schema.json",
+  "id": "clothing:bra",
+  "description": "Supportive cotton bra for chest coverage",
+  "components": {
+    "clothing:wearable": {
+      "wearableType": "bra",
+      "layer": "underwear",
+      "coverage": {
+        "required": ["left_chest", "right_chest"],
+        "optional": [],
+        "exclusions": []
+      },
+      "size": "m",
+      "material": "cotton",
+      "equipmentSlots": {
+        "primary": "torso_clothing"
+      },
+      "layerPriority": 1,
+      "conflictResolution": "auto_remove"
+    },
+    "core:name": {
+      "text": "bra"
+    },
+    "core:description": {
+      "text": "A comfortable cotton bra providing good support"
+    }
+  }
+}

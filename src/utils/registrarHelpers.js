@@ -7,13 +7,17 @@
 /** @typedef {import('../dependencyInjection/appContainer.js').default} AppContainer */
 /** @typedef {import('../dependencyInjection/tokens.js').DiToken} DiToken */
 /** @typedef {import('../dependencyInjection/appContainer.js').FactoryFunction} FactoryFunction */
-/** @typedef {{ lifecycle?: 'singletonFactory' | 'singleton' | 'transient', tags?: string[], dependencies?: DiToken[] }} RegistrationOptions */
+/** @typedef {{ lifecycle?: 'singletonFactory' | 'singleton' | 'transient', tags?: string[], dependencies?: DiToken[], isInstance?: boolean }} RegistrationOptions */
 
 /**
  * Represents a constructor for a type T.
  *
  * @template T
  * @typedef {new (...args: any[]) => T} Constructor<T>
+ */
+
+/**
+ * @typedef {keyof Registrar} RegistrarMethod
  */
 
 /**
@@ -198,10 +202,14 @@ export function registerWithLog(registrar, ...params) {
   ) {
     // Signature: (registrar, logger, method, token, ...args)
     const [logger, method, token, ...rest] = params;
-    if (typeof registrar[method] !== 'function') {
+    if (typeof (/** @type {any} */ (registrar)[method]) !== 'function') {
       throw new Error(`Unknown registrar method: ${String(method)}`);
     }
-    registrar[method](token, ...rest);
+    /** @type {keyof Registrar} */
+    const registrarMethod = /** @type {keyof Registrar} */ (method);
+    /** @type {any[]} */
+    const args = rest;
+    /** @type {any} */ (registrar)[registrarMethod](token, ...args);
     logger.debug(`UI Registrations: Registered ${String(token)}.`);
   } else {
     // Signature: (registrar, token, factoryOrValueOrClass, options, logger)

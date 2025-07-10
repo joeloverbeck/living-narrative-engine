@@ -150,8 +150,11 @@ describe('BodyPartDescriptionBuilder refactoring tests', () => {
         }),
       };
 
-      const result = builder.buildMultipleDescription([entity1, entity2], 'eye');
-      
+      const result = builder.buildMultipleDescription(
+        [entity1, entity2],
+        'eye'
+      );
+
       // Should return array of different descriptors
       expect(result).toEqual(['blue eye', 'green eye']);
     });
@@ -176,8 +179,11 @@ describe('BodyPartDescriptionBuilder refactoring tests', () => {
         }),
       };
 
-      const result = builder.buildMultipleDescription([entity1, entity2], 'eye');
-      
+      const result = builder.buildMultipleDescription(
+        [entity1, entity2],
+        'eye'
+      );
+
       // Should return single descriptor for paired parts with same description
       expect(result).toBe('blue eye');
     });

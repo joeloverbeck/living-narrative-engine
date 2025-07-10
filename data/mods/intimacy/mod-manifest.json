@@ -23,10 +23,7 @@
       "thumb_wipe_cheek.action.json",
       "turn_around.action.json"
     ],
-    "components": [
-      "closeness.component.json",
-      "facing_away.component.json"
-    ],
+    "components": ["closeness.component.json", "facing_away.component.json"],
     "conditions": [
       "actor-has-facing-away.condition.json",
       "actor-is-in-closeness.condition.json",
@@ -59,10 +56,7 @@
       "thumb_wipe_cheek.rule.json",
       "turn_around.rule.json"
     ],
-    "ui": [
-      "icons.json",
-      "labels.json"
-    ],
+    "ui": ["icons.json", "labels.json"],
     "scopes": [
       "actors_with_arms_in_intimacy.scope",
       "close_actors.scope",

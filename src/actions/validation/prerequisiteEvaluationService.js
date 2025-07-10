@@ -222,9 +222,10 @@ export class PrerequisiteEvaluationService extends BaseService {
                 `has ${componentCount} components available.`
             );
           }
-        } catch (error) {
+        } catch (err) {
           this.#logger.debug(
-            `${this.#logPrefix(actionId)}: Could not serialize components for validation logging`
+            `${this.#logPrefix(actionId)}: Could not serialize components for validation logging`,
+            err
           );
         }
       }

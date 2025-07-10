@@ -170,5 +170,123 @@
         "components": ["anatomy:part"]
       }
     }
+  },
+  "clothingSlotMappings": {
+    "head_gear": {
+      "blueprintSlots": ["head"],
+      "allowedLayers": ["base", "outer", "armor"],
+      "layerOrder": ["base", "outer", "armor"],
+      "defaultLayer": "base",
+      "tags": ["head", "armor_slot"]
+    },
+    "face_gear": {
+      "blueprintSlots": ["head"],
+      "allowedLayers": ["accessory"],
+      "layerOrder": ["accessory"],
+      "defaultLayer": "accessory",
+      "tags": ["face", "accessory"],
+      "conflictsWith": ["full_helmet"]
+    },
+    "torso_upper": {
+      "anatomySockets": [
+        "left_chest",
+        "right_chest",
+        "left_shoulder",
+        "right_shoulder"
+      ],
+      "allowedLayers": ["underwear", "base", "outer", "armor"],
+      "layerOrder": ["underwear", "base", "outer", "armor"],
+      "defaultLayer": "base",
+      "tags": ["torso", "upper_body"]
+    },
+    "bra": {
+      "blueprintSlots": ["left_breast", "right_breast"],
+      "allowedLayers": ["underwear"],
+      "layerOrder": ["underwear"],
+      "defaultLayer": "underwear",
+      "tags": ["underwear", "female_specific", "chest_support"]
+    },
+    "torso_lower": {
+      "anatomySockets": ["left_hip", "right_hip", "pubic_hair", "vagina"],
+      "allowedLayers": ["underwear", "base", "outer"],
+      "layerOrder": ["underwear", "base", "outer"],
+      "defaultLayer": "base",
+      "tags": ["torso", "lower_body"]
+    },
+    "left_arm_clothing": {
+      "blueprintSlots": ["left_arm"],
+      "allowedLayers": ["base", "outer", "armor"],
+      "layerOrder": ["base", "outer", "armor"],
+      "defaultLayer": "base",
+      "tags": ["arm", "left_side"],
+      "requiresSlots": ["torso_upper"]
+    },
+    "right_arm_clothing": {
+      "blueprintSlots": ["right_arm"],
+      "allowedLayers": ["base", "outer", "armor"],
+      "layerOrder": ["base", "outer", "armor"],
+      "defaultLayer": "base",
+      "tags": ["arm", "right_side"],
+      "requiresSlots": ["torso_upper"]
+    },
+    "hands": {
+      "blueprintSlots": ["left_hand", "right_hand"],
+      "allowedLayers": ["base", "armor"],
+      "layerOrder": ["base", "armor"],
+      "defaultLayer": "base",
+      "tags": ["hands", "extremities"]
+    },
+    "legs": {
+      "blueprintSlots": ["left_leg", "right_leg"],
+      "allowedLayers": ["underwear", "base", "outer", "armor"],
+      "layerOrder": ["underwear", "base", "outer", "armor"],
+      "defaultLayer": "base",
+      "tags": ["legs", "lower_body"]
+    },
+    "feet": {
+      "blueprintSlots": ["left_foot", "right_foot"],
+      "allowedLayers": ["base", "armor"],
+      "layerOrder": ["base", "armor"],
+      "defaultLayer": "base",
+      "tags": ["feet", "extremities"]
+    },
+    "full_body": {
+      "blueprintSlots": [
+        "head",
+        "left_arm",
+        "right_arm",
+        "left_leg",
+        "right_leg",
+        "left_breast",
+        "right_breast"
+      ],
+      "anatomySockets": [
+        "left_chest",
+        "right_chest",
+        "left_shoulder",
+        "right_shoulder",
+        "left_hip",
+        "right_hip"
+      ],
+      "allowedLayers": ["outer"],
+      "layerOrder": ["outer"],
+      "defaultLayer": "outer",
+      "tags": ["full_body", "special"],
+      "conflictsWith": [
+        "torso_upper",
+        "torso_lower",
+        "legs",
+        "left_arm_clothing",
+        "right_arm_clothing",
+        "bra"
+      ]
+    },
+    "panties": {
+      "anatomySockets": ["vagina", "pubic_hair"],
+      "allowedLayers": ["underwear"],
+      "layerOrder": ["underwear"],
+      "defaultLayer": "underwear",
+      "tags": ["underwear", "female_specific"]
+    }
   }
 }

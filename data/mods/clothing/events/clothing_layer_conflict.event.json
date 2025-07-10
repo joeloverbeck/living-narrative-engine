@@ -1,0 +1,86 @@
+{
+  "$schema": "http://example.com/schemas/event.schema.json",
+  "id": "clothing_layer_conflict",
+  "description": "Fired when layer conflicts are detected during clothing equipment",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "entityId": {
+        "type": "string",
+        "description": "The entity experiencing the layer conflict"
+      },
+      "targetItem": {
+        "type": "string",
+        "description": "The clothing item that triggered the conflict"
+      },
+      "conflictingItems": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "itemId": { "type": "string" },
+            "slotId": { "type": "string" },
+            "layer": { "type": "string" },
+            "conflictType": {
+              "type": "string",
+              "enum": [
+                "layer_overlap",
+                "size_mismatch",
+                "coverage_conflict",
+                "requirement_violation"
+              ]
+            }
+          },
+          "required": ["itemId", "slotId", "layer", "conflictType"]
+        },
+        "description": "List of items that conflict with the target item"
+      },
+      "resolution": {
+        "type": "string",
+        "enum": [
+          "auto_remove",
+          "prompt_user",
+          "block_equip",
+          "layer_swap",
+          "pending"
+        ],
+        "description": "How the conflict was or will be resolved"
+      },
+      "resolutionDetails": {
+        "type": "object",
+        "properties": {
+          "removedItems": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Items that were automatically removed"
+          },
+          "swappedLayers": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "itemId": { "type": "string" },
+                "fromLayer": { "type": "string" },
+                "toLayer": { "type": "string" }
+              }
+            },
+            "description": "Items that were moved to different layers"
+          }
+        },
+        "additionalProperties": false
+      },
+      "timestamp": {
+        "type": "number",
+        "description": "Unix timestamp when the conflict was detected"
+      }
+    },
+    "required": [
+      "entityId",
+      "targetItem",
+      "conflictingItems",
+      "resolution",
+      "timestamp"
+    ],
+    "additionalProperties": false
+  }
+}

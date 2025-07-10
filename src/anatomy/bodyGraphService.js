@@ -2,6 +2,7 @@ import { InvalidArgumentError } from '../errors/invalidArgumentError.js';
 import { AnatomyCacheManager } from './anatomyCacheManager.js';
 import { AnatomyGraphAlgorithms } from './anatomyGraphAlgorithms.js';
 import { ANATOMY_CONSTANTS } from './constants/anatomyConstants.js';
+import { AnatomyQueryCache } from './cache/AnatomyQueryCache.js';
 
 /** @typedef {import('../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
@@ -18,8 +19,10 @@ export class BodyGraphService {
   #eventDispatcher;
   /** @type {AnatomyCacheManager} */
   #cacheManager;
+  /** @type {AnatomyQueryCache} */
+  #queryCache;
 
-  constructor({ entityManager, logger, eventDispatcher }) {
+  constructor({ entityManager, logger, eventDispatcher, queryCache }) {
     if (!entityManager)
       throw new InvalidArgumentError('entityManager is required');
     if (!logger) throw new InvalidArgumentError('logger is required');
@@ -30,6 +33,9 @@ export class BodyGraphService {
     this.#logger = logger;
     this.#eventDispatcher = eventDispatcher;
     this.#cacheManager = new AnatomyCacheManager({ logger });
+
+    // Create query cache if not provided
+    this.#queryCache = queryCache || new AnatomyQueryCache({ logger });
   }
 
   buildAdjacencyCache(rootEntityId) {
@@ -68,6 +74,7 @@ export class BodyGraphService {
     const rootId = this.getAnatomyRoot(parentId);
     if (rootId) {
       this.#cacheManager.invalidateCacheForRoot(rootId);
+      this.#queryCache.invalidateRoot(rootId);
     }
     await this.#eventDispatcher.dispatch({
       type: ANATOMY_CONSTANTS.LIMB_DETACHED_EVENT_ID,
@@ -93,11 +100,26 @@ export class BodyGraphService {
   }
 
   findPartsByType(rootEntityId, partType) {
-    return AnatomyGraphAlgorithms.findPartsByType(
+    // Check query cache first
+    const cachedResult = this.#queryCache.getCachedFindPartsByType(
+      rootEntityId,
+      partType
+    );
+    if (cachedResult !== undefined) {
+      return cachedResult;
+    }
+
+    // Perform the query
+    const result = AnatomyGraphAlgorithms.findPartsByType(
       rootEntityId,
       partType,
       this.#cacheManager
     );
+
+    // Cache the result
+    this.#queryCache.cacheFindPartsByType(rootEntityId, partType, result);
+
+    return result;
   }
 
   getAnatomyRoot(partEntityId) {
@@ -133,11 +155,23 @@ export class BodyGraphService {
 
     if (!rootId) return [];
 
-    return AnatomyGraphAlgorithms.getAllParts(
+    // Check query cache first
+    const cachedResult = this.#queryCache.getCachedGetAllParts(rootId);
+    if (cachedResult !== undefined) {
+      return cachedResult;
+    }
+
+    // Perform the query
+    const result = AnatomyGraphAlgorithms.getAllParts(
       rootId,
       this.#cacheManager,
       this.#entityManager
     );
+
+    // Cache the result
+    this.#queryCache.cacheGetAllParts(rootId, result);
+
+    return result;
   }
 
   hasPartWithComponent(bodyComponent, componentId) {

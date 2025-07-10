@@ -1,0 +1,35 @@
+{
+  "$schema": "http://example.com/schemas/entity-definition.schema.json",
+  "id": "clothing:shorts",
+  "description": "Comfortable casual shorts for warm weather",
+  "components": {
+    "clothing:wearable": {
+      "wearableType": "pants",
+      "layer": "base",
+      "coverage": {
+        "required": ["left_hip", "right_hip"],
+        "optional": [
+          "penis",
+          "vagina",
+          "left_testicle",
+          "right_testicle",
+          "pubic_hair"
+        ],
+        "exclusions": []
+      },
+      "size": "m",
+      "material": "cotton",
+      "equipmentSlots": {
+        "primary": "lower_torso_clothing"
+      },
+      "layerPriority": 3,
+      "conflictResolution": "auto_remove"
+    },
+    "core:name": {
+      "text": "shorts"
+    },
+    "core:description": {
+      "text": "Comfortable cotton shorts perfect for warm summer days"
+    }
+  }
+}

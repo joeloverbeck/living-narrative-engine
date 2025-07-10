@@ -188,6 +188,67 @@ describe('AnatomyCacheManager', () => {
       expect(torsoNode.partType).toBe('unknown');
     });
 
+    it('should build parent-to-children map efficiently in O(n) time', () => {
+      // Setup a larger anatomy tree to test O(n) performance
+      const entities = [];
+      const ENTITY_COUNT = 100;
+
+      // Create entities
+      for (let i = 0; i < ENTITY_COUNT; i++) {
+        entities.push({ id: `part-${i}` });
+      }
+
+      mockEntityManager.getEntityInstance.mockImplementation((id) => {
+        const entity = entities.find((e) => e.id === id);
+        if (entity) return entity;
+        throw new Error(`Entity ${id} not found`);
+      });
+
+      mockEntityManager.getComponentData.mockImplementation(
+        (id, componentId) => {
+          if (componentId === 'anatomy:part') {
+            return { subType: 'part' };
+          }
+          if (componentId === 'anatomy:joint') {
+            const index = parseInt(id.split('-')[1]);
+            // Create a tree structure where each entity has parent = index - 1
+            if (index > 0) {
+              return {
+                parentId: `part-${Math.floor((index - 1) / 2)}`,
+                socketId: `socket-${index}`,
+              };
+            }
+          }
+          return null;
+        }
+      );
+
+      // Return all entities except the root as having joints
+      mockEntityManager.getEntitiesWithComponent.mockReturnValue(
+        entities.slice(1)
+      );
+
+      // Track how many times getEntitiesWithComponent is called
+      const getEntitiesCallCount =
+        mockEntityManager.getEntitiesWithComponent.mock.calls.length;
+
+      cacheManager.buildCache('part-0', mockEntityManager);
+
+      // Should only call getEntitiesWithComponent once (O(n)), not once per entity (O(n²))
+      expect(mockEntityManager.getEntitiesWithComponent).toHaveBeenCalledTimes(
+        getEntitiesCallCount + 1
+      );
+      expect(mockEntityManager.getEntitiesWithComponent).toHaveBeenCalledWith(
+        'anatomy:joint'
+      );
+
+      // Verify cache is built correctly
+      expect(cacheManager.size()).toBeGreaterThan(0);
+      const rootNode = cacheManager.get('part-0');
+      expect(rootNode).toBeDefined();
+      expect(rootNode.children.length).toBeGreaterThan(0);
+    });
+
     it('should handle cycles in the graph', () => {
       // Create a cycle: arm-1 -> hand-1 -> arm-1
       mockEntityManager.getComponentData.mockImplementation(
@@ -285,7 +346,7 @@ describe('AnatomyCacheManager', () => {
   describe('cache persistence', () => {
     it('should check if cache exists for root entity', () => {
       expect(cacheManager.hasCacheForRoot('test-root')).toBe(false);
-      
+
       const mockNode = {
         entityId: 'test-root',
         partType: 'torso',
@@ -293,7 +354,7 @@ describe('AnatomyCacheManager', () => {
         socketId: null,
         children: [],
       };
-      
+
       cacheManager.set('test-root', mockNode);
       expect(cacheManager.hasCacheForRoot('test-root')).toBe(true);
     });
@@ -313,7 +374,7 @@ describe('AnatomyCacheManager', () => {
         socketId: null,
         children: ['arm-1', 'leg-1'],
       };
-      
+
       const armNode = {
         entityId: 'arm-1',
         partType: 'arm',
@@ -321,7 +382,7 @@ describe('AnatomyCacheManager', () => {
         socketId: 'arm-socket',
         children: ['hand-1'],
       };
-      
+
       const handNode = {
         entityId: 'hand-1',
         partType: 'hand',
@@ -329,7 +390,7 @@ describe('AnatomyCacheManager', () => {
         socketId: 'hand-socket',
         children: [],
       };
-      
+
       const legNode = {
         entityId: 'leg-1',
         partType: 'leg',
@@ -337,18 +398,18 @@ describe('AnatomyCacheManager', () => {
         socketId: 'leg-socket',
         children: [],
       };
-      
+
       // Build cache
       cacheManager.set('root-1', rootNode);
       cacheManager.set('arm-1', armNode);
       cacheManager.set('hand-1', handNode);
       cacheManager.set('leg-1', legNode);
-      
+
       expect(cacheManager.size()).toBe(4);
-      
+
       // Invalidate cache for this root
       cacheManager.invalidateCacheForRoot('root-1');
-      
+
       // All nodes should be removed
       expect(cacheManager.size()).toBe(0);
       expect(cacheManager.has('root-1')).toBe(false);
@@ -366,7 +427,7 @@ describe('AnatomyCacheManager', () => {
         socketId: null,
         children: ['tree1-arm'],
       };
-      
+
       const tree1Arm = {
         entityId: 'tree1-arm',
         partType: 'arm',
@@ -374,7 +435,7 @@ describe('AnatomyCacheManager', () => {
         socketId: 'arm-socket',
         children: [],
       };
-      
+
       const tree2Root = {
         entityId: 'tree2-root',
         partType: 'torso',
@@ -382,7 +443,7 @@ describe('AnatomyCacheManager', () => {
         socketId: null,
         children: ['tree2-arm'],
       };
-      
+
       const tree2Arm = {
         entityId: 'tree2-arm',
         partType: 'arm',
@@ -390,18 +451,18 @@ describe('AnatomyCacheManager', () => {
         socketId: 'arm-socket',
         children: [],
       };
-      
+
       // Build caches for both trees
       cacheManager.set('tree1-root', tree1Root);
       cacheManager.set('tree1-arm', tree1Arm);
       cacheManager.set('tree2-root', tree2Root);
       cacheManager.set('tree2-arm', tree2Arm);
-      
+
       expect(cacheManager.size()).toBe(4);
-      
+
       // Invalidate only tree1
       cacheManager.invalidateCacheForRoot('tree1-root');
-      
+
       // Tree1 should be removed, tree2 should remain
       expect(cacheManager.size()).toBe(2);
       expect(cacheManager.has('tree1-root')).toBe(false);

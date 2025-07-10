@@ -1,0 +1,36 @@
+{
+  "$schema": "http://example.com/schemas/entity-definition.schema.json",
+  "id": "clothing:jacket",
+  "description": "A warm jacket for cooler weather",
+  "components": {
+    "clothing:wearable": {
+      "wearableType": "jacket",
+      "layer": "outer",
+      "coverage": {
+        "required": ["left_chest", "right_chest"],
+        "optional": [
+          "left_shoulder",
+          "right_shoulder",
+          "neck",
+          "left_arm",
+          "right_arm"
+        ],
+        "exclusions": []
+      },
+      "size": "m",
+      "material": "polyester",
+      "equipmentSlots": {
+        "primary": "torso_clothing",
+        "secondary": ["left_arm_clothing", "right_arm_clothing"]
+      },
+      "layerPriority": 7,
+      "conflictResolution": "auto_remove"
+    },
+    "core:name": {
+      "text": "jacket"
+    },
+    "core:description": {
+      "text": "A warm, comfortable jacket perfect for cooler weather"
+    }
+  }
+}

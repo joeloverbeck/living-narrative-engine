@@ -28,7 +28,11 @@ export { createEventBus } from './eventBus.js';
 
 export { createLoaderMocks } from './loaders.js';
 
-export { createRuleTestDataRegistry } from './entities.js';
+export {
+  createRuleTestDataRegistry,
+  createMockDefinitionCache,
+  createMockEntityDefinition,
+} from './entities.js';
 
 export { MockContainer } from './container.js';
 export { createMockSpatialIndexManager } from './spatialIndexManager.js';

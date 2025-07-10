@@ -1,0 +1,57 @@
+{
+  "$schema": "http://example.com/schemas/mod-manifest.schema.json",
+  "id": "clothing",
+  "version": "1.0.0",
+  "name": "Clothing System",
+  "description": "Comprehensive clothing and equipment system with multi-layer support and gender-flexible design",
+  "author": "Living Narrative Engine",
+  "dependencies": [
+    {
+      "id": "anatomy",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "core",
+      "version": "^1.0.0"
+    }
+  ],
+  "gameVersion": ">=0.0.1",
+  "content": {
+    "components": [
+      "wearable.component.json",
+      "equipment.component.json",
+      "clothing_slot.component.json"
+    ],
+    "entities": {
+      "definitions": [
+        "basic_shirt.entity.json",
+        "jeans.entity.json",
+        "boxers.entity.json",
+        "panties.entity.json",
+        "jacket.entity.json",
+        "dress_shirt.entity.json",
+        "sneakers.entity.json",
+        "bra.entity.json",
+        "t_shirt.entity.json",
+        "shorts.entity.json"
+      ],
+      "instances": []
+    },
+    "actions": [
+      "equip.action.json",
+      "unequip.action.json",
+      "transfer_clothing.action.json"
+    ],
+    "events": [
+      "clothing_equipped.event.json",
+      "clothing_unequipped.event.json",
+      "clothing_layer_conflict.event.json",
+      "clothing_coverage_validated.event.json"
+    ],
+    "rules": [
+      "validate_clothing_compatibility.rule.json",
+      "handle_layer_conflicts.rule.json",
+      "auto_unequip_conflicts.rule.json"
+    ]
+  }
+}

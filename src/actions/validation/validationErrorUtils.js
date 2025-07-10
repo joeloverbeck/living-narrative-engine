@@ -3,23 +3,16 @@
  * @description Helper utilities for formatting action validation errors.
  */
 
+import { InvalidActionDefinitionError } from '../../errors/invalidActionDefinitionError.js';
+import { InvalidActorEntityError } from '../../errors/invalidActorEntityError.js';
+
 /**
  * Formats an Error thrown by validateActionInputs for a consistent message.
  *
  * @param {Error} err - The original error.
  * @param {string} source - Label for the calling function.
- * @param {{actionId?: string, actorId?: string}} ids
- * Identifier info used in the message. The `contextType` property is no longer used.
+ * @param {{actionId?: string, actorId?: string}} ids Identifier info used in the message. The `contextType` property is no longer used.
  * @returns {Error} A new Error instance with the formatted message.
- */
-import { InvalidActionDefinitionError } from '../../errors/invalidActionDefinitionError.js';
-import { InvalidActorEntityError } from '../../errors/invalidActorEntityError.js';
-
-/**
- *
- * @param err
- * @param source
- * @param ids
  */
 export function formatValidationError(err, source, ids) {
   let idInfo = '';
