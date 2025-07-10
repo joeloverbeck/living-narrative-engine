@@ -83,7 +83,8 @@ describe('PrerequisiteEvaluationService serialization edge cases', () => {
     );
 
     expect(mockLogger.debug).toHaveBeenCalledWith(
-      'PrerequisiteEvaluationService: PrereqEval[act]: Could not serialize components for validation logging'
+      'PrerequisiteEvaluationService: PrereqEval[act]: Could not serialize components for validation logging',
+      expect.any(Error)
     );
   });
 });
