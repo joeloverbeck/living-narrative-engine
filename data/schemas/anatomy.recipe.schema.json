@@ -86,6 +86,51 @@
         }
       },
       "additionalProperties": false
+    },
+    "clothingEntities": {
+      "type": "array",
+      "description": "Clothing entities to instantiate and equip during anatomy generation",
+      "items": {
+        "type": "object",
+        "properties": {
+          "entityId": {
+            "$ref": "./common.schema.json#/definitions/namespacedId",
+            "description": "The clothing entity definition to instantiate",
+            "examples": ["clothing:simple_shirt", "apparel:leather_boots"]
+          },
+          "equip": {
+            "type": "boolean",
+            "default": true,
+            "description": "Whether to automatically equip this item after instantiation"
+          },
+          "targetSlot": {
+            "type": "string",
+            "description": "Specific clothing slot to equip to (uses entity's default if not specified)",
+            "examples": ["torso_upper", "feet", "head"]
+          },
+          "layer": {
+            "type": "string",
+            "enum": ["underwear", "base", "outer", "accessories"],
+            "description": "Layer override (uses entity's default if not specified)"
+          },
+          "properties": {
+            "type": "object",
+            "description": "Property overrides for the instantiated entity",
+            "additionalProperties": true,
+            "examples": [
+              { "color": "blue", "size": "medium" },
+              { "condition": 0.8, "quality": "fine" }
+            ]
+          },
+          "skipValidation": {
+            "type": "boolean",
+            "default": false,
+            "description": "Skip slot compatibility validation (use with caution)"
+          }
+        },
+        "required": ["entityId"],
+        "additionalProperties": false
+      }
     }
   },
   "required": ["recipeId", "blueprintId", "slots"],

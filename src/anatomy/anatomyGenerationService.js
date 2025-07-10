@@ -21,6 +21,7 @@ import { AnatomyErrorHandler } from './orchestration/anatomyErrorHandler.js';
 /** @typedef {import('./bodyBlueprintFactory.js').BodyBlueprintFactory} BodyBlueprintFactory */
 /** @typedef {import('./anatomyDescriptionService.js').AnatomyDescriptionService} AnatomyDescriptionService */
 /** @typedef {import('./bodyGraphService.js').BodyGraphService} BodyGraphService */
+/** @typedef {import('../clothing/services/clothingInstantiationService.js').ClothingInstantiationService} ClothingInstantiationService */
 
 /**
  * Service that handles anatomy generation for entities
@@ -46,6 +47,7 @@ export class AnatomyGenerationService {
    * @param {BodyBlueprintFactory} deps.bodyBlueprintFactory - Factory for body blueprints.
    * @param {AnatomyDescriptionService} deps.anatomyDescriptionService - Service providing textual descriptions.
    * @param {BodyGraphService} deps.bodyGraphService - Service for body graph operations.
+   * @param {ClothingInstantiationService} [deps.clothingInstantiationService] - Service for instantiating clothing (optional).
    */
   constructor({
     entityManager,
@@ -54,6 +56,7 @@ export class AnatomyGenerationService {
     bodyBlueprintFactory,
     anatomyDescriptionService,
     bodyGraphService,
+    clothingInstantiationService,
   }) {
     if (!entityManager)
       throw new InvalidArgumentError('entityManager is required');
@@ -76,6 +79,7 @@ export class AnatomyGenerationService {
       dataRegistry,
       logger,
       bodyBlueprintFactory,
+      clothingInstantiationService,
     });
 
     const descriptionWorkflow = new DescriptionGenerationWorkflow({
