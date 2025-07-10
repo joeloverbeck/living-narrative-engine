@@ -1,0 +1,30 @@
+{
+  "$schema": "http://example.com/schemas/entity-definition.schema.json",
+  "id": "clothing:jeans",
+  "description": "Classic denim jeans with a comfortable fit",
+  "components": {
+    "clothing:wearable": {
+      "wearableType": "pants",
+      "layer": "base",
+      "coverage": {
+        "required": ["left_hip", "right_hip"],
+        "optional": ["penis", "vagina", "left_testicle", "right_testicle"],
+        "exclusions": []
+      },
+      "size": "m",
+      "material": "denim",
+      "equipmentSlots": {
+        "primary": "lower_torso_clothing",
+        "secondary": ["left_leg_clothing", "right_leg_clothing"]
+      },
+      "layerPriority": 3,
+      "conflictResolution": "auto_remove"
+    },
+    "core:name": {
+      "text": "jeans"
+    },
+    "core:description": {
+      "text": "Comfortable denim jeans with a classic blue wash"
+    }
+  }
+}

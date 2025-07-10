@@ -1,0 +1,30 @@
+{
+  "$schema": "http://example.com/schemas/entity-definition.schema.json",
+  "id": "clothing:basic_shirt",
+  "description": "A simple cotton shirt suitable for everyday wear",
+  "components": {
+    "clothing:wearable": {
+      "wearableType": "shirt",
+      "layer": "base",
+      "coverage": {
+        "required": ["left_chest", "right_chest"],
+        "optional": ["left_shoulder", "right_shoulder", "neck"],
+        "exclusions": []
+      },
+      "size": "m",
+      "material": "cotton",
+      "equipmentSlots": {
+        "primary": "torso_clothing",
+        "secondary": ["left_arm_clothing", "right_arm_clothing"]
+      },
+      "layerPriority": 3,
+      "conflictResolution": "auto_remove"
+    },
+    "core:name": {
+      "text": "basic shirt"
+    },
+    "core:description": {
+      "text": "A comfortable cotton shirt with a classic fit"
+    }
+  }
+}

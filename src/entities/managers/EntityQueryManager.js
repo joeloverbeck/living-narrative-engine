@@ -181,18 +181,19 @@ export default class EntityQueryManager {
    */
   getEntitiesWithComponent(componentTypeId) {
     validateGetEntitiesWithComponentParamsUtil(componentTypeId, this.#logger);
-    
+
     // Use component index for O(1) lookup
-    const entityIds = this.#entityRepository.getEntityIdsByComponent(componentTypeId);
+    const entityIds =
+      this.#entityRepository.getEntityIdsByComponent(componentTypeId);
     const results = [];
-    
+
     for (const entityId of entityIds) {
       const entity = this.#entityRepository.get(entityId);
       if (entity) {
         results.push(entity);
       }
     }
-    
+
     this.#logger.debug(
       `EntityQueryManager.getEntitiesWithComponent found ${results.length} entities with component '${componentTypeId}' using index`
     );

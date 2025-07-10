@@ -39,7 +39,9 @@ export class EntityRepositoryAdapter {
     this.#mapManager = new MapManager({ throwOnInvalidId: false });
     this.#componentIndex = new Map();
 
-    this.#logger.debug('EntityRepositoryAdapter initialized with component index.');
+    this.#logger.debug(
+      'EntityRepositoryAdapter initialized with component index.'
+    );
   }
 
   /**
@@ -56,11 +58,13 @@ export class EntityRepositoryAdapter {
     }
 
     this.#mapManager.add(entity.id, entity);
-    
+
     // Index the entity's components
     this.#indexEntityComponents(entity);
-    
-    this.#logger.debug(`Entity '${entity.id}' added to repository with ${entity.componentTypeIds?.length || 0} components indexed.`);
+
+    this.#logger.debug(
+      `Entity '${entity.id}' added to repository with ${entity.componentTypeIds?.length || 0} components indexed.`
+    );
   }
 
   /**
@@ -100,10 +104,12 @@ export class EntityRepositoryAdapter {
 
     // Remove from component index
     this.#unindexEntityComponents(entity);
-    
+
     const removed = this.#mapManager.remove(entityId);
     if (removed) {
-      this.#logger.debug(`Entity '${entityId}' removed from repository and component index.`);
+      this.#logger.debug(
+        `Entity '${entityId}' removed from repository and component index.`
+      );
     }
     return removed;
   }
@@ -114,7 +120,9 @@ export class EntityRepositoryAdapter {
   clear() {
     this.#mapManager.clear();
     this.#componentIndex.clear();
-    this.#logger.info('All entities cleared from repository and component index.');
+    this.#logger.info(
+      'All entities cleared from repository and component index.'
+    );
   }
 
   /**
@@ -157,7 +165,9 @@ export class EntityRepositoryAdapter {
       this.#componentIndex.set(componentType, new Set());
     }
     this.#componentIndex.get(componentType).add(entityId);
-    this.#logger.debug(`Indexed component '${componentType}' for entity '${entityId}'`);
+    this.#logger.debug(
+      `Indexed component '${componentType}' for entity '${entityId}'`
+    );
   }
 
   /**
@@ -173,12 +183,15 @@ export class EntityRepositoryAdapter {
       if (entitySet.size === 0) {
         this.#componentIndex.delete(componentType);
       }
-      this.#logger.debug(`Unindexed component '${componentType}' for entity '${entityId}'`);
+      this.#logger.debug(
+        `Unindexed component '${componentType}' for entity '${entityId}'`
+      );
     }
   }
 
   /**
    * Index all components of an entity.
+   *
    * @private
    * @param {Entity} entity - Entity whose components to index
    */
@@ -192,6 +205,7 @@ export class EntityRepositoryAdapter {
 
   /**
    * Remove all components of an entity from the index.
+   *
    * @private
    * @param {Entity} entity - Entity whose components to unindex
    */

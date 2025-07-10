@@ -59,42 +59,54 @@ console.log('- Efficient graph algorithms\n');
 // Demonstrate with actual measurements simulation
 const simulateBenchmark = () => {
   console.log('=== Simulated Benchmark Results ===\n');
-  
+
   // Cache persistence benchmark
   const iterations = 1000;
   const buildTime = 50; // ms
   const cacheHitTime = 0.1; // ms
-  
+
   const withoutCache = buildTime * iterations;
-  const withCache = buildTime + (cacheHitTime * (iterations - 1));
-  
+  const withCache = buildTime + cacheHitTime * (iterations - 1);
+
   console.log(`Cache Persistence (${iterations} iterations):`);
   console.log(`  Without cache: ${withoutCache.toFixed(0)}ms`);
   console.log(`  With cache: ${withCache.toFixed(0)}ms`);
-  console.log(`  Improvement: ${(withoutCache / withCache).toFixed(0)}x faster\n`);
-  
+  console.log(
+    `  Improvement: ${(withoutCache / withCache).toFixed(0)}x faster\n`
+  );
+
   // Component index benchmark
   const entities = 10000;
   const componentsPerEntity = 2;
   const lookupIterations = 1000;
-  
+
   const linearSearchTime = entities * 0.002; // 0.002ms per entity check
   const indexLookupTime = 0.2; // Direct Set lookup
-  
-  console.log(`Component Index (${entities} entities, ${lookupIterations} lookups):`);
-  console.log(`  Linear search: ${(linearSearchTime * lookupIterations).toFixed(0)}ms`);
-  console.log(`  Index lookup: ${(indexLookupTime * lookupIterations).toFixed(0)}ms`);
-  console.log(`  Improvement: ${(linearSearchTime / indexLookupTime).toFixed(0)}x faster\n`);
-  
+
+  console.log(
+    `Component Index (${entities} entities, ${lookupIterations} lookups):`
+  );
+  console.log(
+    `  Linear search: ${(linearSearchTime * lookupIterations).toFixed(0)}ms`
+  );
+  console.log(
+    `  Index lookup: ${(indexLookupTime * lookupIterations).toFixed(0)}ms`
+  );
+  console.log(
+    `  Improvement: ${(linearSearchTime / indexLookupTime).toFixed(0)}x faster\n`
+  );
+
   // Cache building optimization
   const parts = 500;
   const quadraticTime = parts * parts * 0.0008; // O(n²)
   const linearTime = parts * 0.02; // O(n)
-  
+
   console.log(`Cache Building (${parts} parts):`);
   console.log(`  O(n²) algorithm: ${quadraticTime.toFixed(0)}ms`);
   console.log(`  O(n) algorithm: ${linearTime.toFixed(0)}ms`);
-  console.log(`  Improvement: ${(quadraticTime / linearTime).toFixed(0)}x faster`);
+  console.log(
+    `  Improvement: ${(quadraticTime / linearTime).toFixed(0)}x faster`
+  );
 };
 
 simulateBenchmark();

@@ -58,8 +58,14 @@ describe('BodyGraphService additional branch coverage', () => {
     jest
       .spyOn(AnatomyCacheManager.prototype, 'get')
       .mockReturnValue(parentNode);
-    const deleteSpy = jest.spyOn(AnatomyCacheManager.prototype, 'delete');
+    const invalidateCacheSpy = jest.spyOn(
+      AnatomyCacheManager.prototype,
+      'invalidateCacheForRoot'
+    );
     jest.spyOn(AnatomyGraphAlgorithms, 'getSubgraph').mockReturnValue(['arm']);
+    jest
+      .spyOn(AnatomyGraphAlgorithms, 'getAnatomyRoot')
+      .mockReturnValue('torso');
 
     const result = await service.detachPart('arm', { cascade: false });
 
@@ -68,8 +74,8 @@ describe('BodyGraphService additional branch coverage', () => {
       parentId: 'torso',
       socketId: 'shoulder',
     });
-    expect(parentNode.children).toEqual([]);
-    expect(deleteSpy).toHaveBeenCalledWith('arm');
+    // Cache should be invalidated for the root, not individual node deleted
+    expect(invalidateCacheSpy).toHaveBeenCalledWith('torso');
     expect(dispatcher.dispatch).toHaveBeenCalled();
   });
 });

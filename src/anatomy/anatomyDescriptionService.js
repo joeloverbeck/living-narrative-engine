@@ -7,6 +7,7 @@ import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/eventIds.js';
 
 /**
  * Service for generating and managing descriptions for anatomy parts and bodies
+ * This service now delegates to specialized services following SOLID principles
  */
 export class AnatomyDescriptionService {
   constructor({
@@ -16,13 +17,22 @@ export class AnatomyDescriptionService {
     entityFinder,
     componentManager,
     eventDispatchService,
+    partDescriptionGenerator,
+    bodyDescriptionOrchestrator,
+    descriptionPersistenceService,
   }) {
+    // Keep original dependencies for backward compatibility
     this.bodyPartDescriptionBuilder = bodyPartDescriptionBuilder;
     this.bodyDescriptionComposer = bodyDescriptionComposer;
     this.bodyGraphService = bodyGraphService;
     this.entityFinder = entityFinder;
     this.componentManager = componentManager;
     this.eventDispatchService = eventDispatchService;
+
+    // New specialized services
+    this.partDescriptionGenerator = partDescriptionGenerator;
+    this.bodyDescriptionOrchestrator = bodyDescriptionOrchestrator;
+    this.descriptionPersistenceService = descriptionPersistenceService;
   }
 
   /**
@@ -31,6 +41,25 @@ export class AnatomyDescriptionService {
    * @param {object} bodyEntity - The entity with anatomy:body component
    */
   generateAllDescriptions(bodyEntity) {
+    // Delegate to the orchestrator if available
+    if (this.bodyDescriptionOrchestrator) {
+      const { bodyDescription, partDescriptions } =
+        this.bodyDescriptionOrchestrator.generateAllDescriptions(bodyEntity);
+
+      // Persist the descriptions
+      if (this.descriptionPersistenceService) {
+        this.descriptionPersistenceService.updateDescription(
+          bodyEntity.id,
+          bodyDescription
+        );
+        this.descriptionPersistenceService.updateMultipleDescriptions(
+          partDescriptions
+        );
+      }
+      return;
+    }
+
+    // Fallback to original implementation for backward compatibility
     if (!bodyEntity || !bodyEntity.hasComponent(ANATOMY_BODY_COMPONENT_ID)) {
       throw new Error('Entity must have an anatomy:body component');
     }
@@ -58,6 +87,20 @@ export class AnatomyDescriptionService {
    * @param {string} partId - The entity ID of the body part
    */
   generatePartDescription(partId) {
+    // Delegate to the part generator if available
+    if (this.partDescriptionGenerator) {
+      const description =
+        this.partDescriptionGenerator.generatePartDescription(partId);
+      if (description && this.descriptionPersistenceService) {
+        this.descriptionPersistenceService.updateDescription(
+          partId,
+          description
+        );
+      }
+      return;
+    }
+
+    // Fallback to original implementation
     const entity = this.entityFinder.getEntityInstance(partId);
     if (!entity || !entity.hasComponent(ANATOMY_PART_COMPONENT_ID)) {
       return;
@@ -80,6 +123,20 @@ export class AnatomyDescriptionService {
    * @param {object} bodyEntity - The entity with anatomy:body component
    */
   generateBodyDescription(bodyEntity) {
+    // Delegate to the orchestrator if available
+    if (this.bodyDescriptionOrchestrator) {
+      const description =
+        this.bodyDescriptionOrchestrator.generateBodyDescription(bodyEntity);
+      if (this.descriptionPersistenceService) {
+        this.descriptionPersistenceService.updateDescription(
+          bodyEntity.id,
+          description
+        );
+      }
+      return;
+    }
+
+    // Fallback to original implementation
     const description =
       this.bodyDescriptionComposer.composeDescription(bodyEntity);
 
@@ -110,6 +167,24 @@ export class AnatomyDescriptionService {
    * @returns {string|null} The description text or null
    */
   getOrGenerateBodyDescription(entity) {
+    // Delegate to the orchestrator if available
+    if (this.bodyDescriptionOrchestrator) {
+      const description =
+        this.bodyDescriptionOrchestrator.getOrGenerateBodyDescription(entity);
+      if (
+        description &&
+        entity.hasComponent(ANATOMY_BODY_COMPONENT_ID) &&
+        this.descriptionPersistenceService
+      ) {
+        this.descriptionPersistenceService.updateDescription(
+          entity.id,
+          description
+        );
+      }
+      return description;
+    }
+
+    // Fallback to original implementation
     if (!entity) {
       return null;
     }
@@ -149,6 +224,16 @@ export class AnatomyDescriptionService {
    * @param {string} description - The new description text
    */
   updateDescription(entityId, description) {
+    // Delegate to the persistence service if available
+    if (this.descriptionPersistenceService) {
+      this.descriptionPersistenceService.updateDescription(
+        entityId,
+        description
+      );
+      return;
+    }
+
+    // Fallback to original implementation
     const entity = this.entityFinder.getEntityInstance(entityId);
     if (!entity) {
       return;

@@ -208,19 +208,19 @@ export class ComponentMutationService {
 
     // Check if this is a new component (not just an update)
     const isNewComponent = !entity.hasComponent(componentTypeId);
-    
+
     this.#applyComponentUpdate(
       entity,
       componentTypeId,
       validatedData,
       instanceId
     );
-    
+
     // Update component index if this is a new component
     if (isNewComponent) {
       this.#entityRepository.indexComponentAdd(instanceId, componentTypeId);
     }
-    
+
     this.#emitComponentAdded(
       entity,
       componentTypeId,
@@ -278,9 +278,12 @@ export class ComponentMutationService {
       // Update component index - only if the component is completely removed
       // (not just the override, but the component no longer exists on the entity)
       if (!entity.hasComponent(componentTypeId)) {
-        this.#entityRepository.indexComponentRemove(instanceId, componentTypeId);
+        this.#entityRepository.indexComponentRemove(
+          instanceId,
+          componentTypeId
+        );
       }
-      
+
       this.#eventDispatcher.dispatch(COMPONENT_REMOVED_ID, {
         entity,
         componentTypeId,

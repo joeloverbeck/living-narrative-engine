@@ -114,6 +114,12 @@ export function validateReconstructEntityParams(serializedEntity, logger) {
     logger.error(msg);
     throw new InvalidInstanceIdError(serializedEntity.instanceId, msg);
   }
+  if (!isNonBlankString(serializedEntity.definitionId)) {
+    const msg =
+      'EntityManager.reconstructEntity: definitionId is missing or invalid in serialized data.';
+    logger.error(msg);
+    throw new SerializedEntityError(msg);
+  }
 }
 
 /**

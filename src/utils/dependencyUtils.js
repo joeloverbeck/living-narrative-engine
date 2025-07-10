@@ -140,13 +140,13 @@ export function validateDependency(
   if (dependency === null || dependency === undefined) {
     const errorMsg = `Missing required dependency: ${dependencyName}.`;
     effectiveLogger.error(errorMsg);
-    throw new Error(errorMsg);
+    throw new InvalidArgumentError(errorMsg);
   }
 
   if (isFunction && typeof dependency !== 'function') {
     const errorMsg = `Dependency '${dependencyName}' must be a function, but got ${typeof dependency}.`;
     effectiveLogger.error(errorMsg);
-    throw new Error(errorMsg);
+    throw new InvalidArgumentError(errorMsg);
   }
 
   if (requiredMethods && requiredMethods.length > 0) {
@@ -155,7 +155,7 @@ export function validateDependency(
       if (typeof actualMethod !== 'function') {
         const errorMsg = `Invalid or missing method '${method}' on dependency '${dependencyName}'.`;
         effectiveLogger.error(errorMsg);
-        throw new Error(errorMsg);
+        throw new InvalidArgumentError(errorMsg);
       }
     }
   }

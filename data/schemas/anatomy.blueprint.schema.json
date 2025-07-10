@@ -24,6 +24,16 @@
       "additionalProperties": {
         "$ref": "#/definitions/blueprintSlot"
       }
+    },
+    "clothingSlotMappings": {
+      "type": "object",
+      "description": "Maps clothing slots to anatomy attachment points via blueprint slots or sockets",
+      "patternProperties": {
+        "^[a-zA-Z][a-zA-Z0-9_]*$": {
+          "$ref": "#/definitions/clothingSlotMapping"
+        }
+      },
+      "additionalProperties": false
     }
   },
   "required": ["id", "root"],
@@ -78,6 +88,86 @@
         }
       },
       "required": ["partType"],
+      "additionalProperties": false
+    },
+    "clothingSlotMapping": {
+      "type": "object",
+      "description": "Defines how a clothing slot maps to anatomy attachment points",
+      "properties": {
+        "blueprintSlots": {
+          "type": "array",
+          "description": "Blueprint slot IDs this clothing slot covers (e.g., ['left_hand', 'right_hand'])",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        },
+        "anatomySockets": {
+          "type": "array",
+          "description": "Direct socket IDs for parts with orientation-specific sockets (e.g., torso)",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        },
+        "allowedLayers": {
+          "type": "array",
+          "description": "Clothing layers allowed in this slot",
+          "items": {
+            "type": "string",
+            "enum": ["underwear", "base", "outer", "armor", "accessory"]
+          },
+          "minItems": 1
+        },
+        "layerOrder": {
+          "type": "array",
+          "description": "Order of layers from innermost to outermost",
+          "items": {
+            "type": "string"
+          }
+        },
+        "defaultLayer": {
+          "type": "string",
+          "description": "Default layer for single-layer items",
+          "enum": ["underwear", "base", "outer", "armor", "accessory"]
+        },
+        "tags": {
+          "type": "array",
+          "description": "Tags for categorization and filtering",
+          "items": {
+            "type": "string"
+          }
+        },
+        "conflictsWith": {
+          "type": "array",
+          "description": "Other clothing slots this conflicts with",
+          "items": {
+            "type": "string"
+          }
+        },
+        "requiresSlots": {
+          "type": "array",
+          "description": "Other slots that must be available",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": ["allowedLayers", "defaultLayer"],
+      "oneOf": [
+        {
+          "required": ["blueprintSlots"],
+          "not": {
+            "required": ["anatomySockets"]
+          }
+        },
+        {
+          "required": ["anatomySockets"],
+          "not": {
+            "required": ["blueprintSlots"]
+          }
+        }
+      ],
       "additionalProperties": false
     }
   }
