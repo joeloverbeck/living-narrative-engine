@@ -10,6 +10,8 @@
  */
 export class InvalidActionDefinitionError extends Error {
   /**
+   * Constructs a new InvalidActionDefinitionError instance.
+   
    * @param {string} [message] - Optional custom message.
    */
   constructor(message = 'Invalid actionDefinition') {
