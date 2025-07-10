@@ -7,7 +7,7 @@
  * @typedef {import('../interfaces/coreServices.js').ILogger|Console} ILogger
  */
 
-import { safeDispatchError } from './safeDispatchErrorUtils.js';
+import { safeDispatchError } from './staticErrorDispatcher.js';
 
 /**
  * @description Dispatches a system warning and logs when an actor ID is missing.

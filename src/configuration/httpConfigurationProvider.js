@@ -3,7 +3,7 @@
 
 import { IConfigurationProvider } from '../interfaces/IConfigurationProvider.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/eventIds.js';
-import { dispatchSystemErrorEvent } from '../utils/systemErrorDispatchUtils.js';
+import { dispatchSystemErrorEvent } from '../utils/staticErrorDispatcher.js';
 
 /**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger

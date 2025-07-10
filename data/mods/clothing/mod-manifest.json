@@ -33,7 +33,14 @@
         "sneakers.entity.json",
         "bra.entity.json",
         "t_shirt.entity.json",
-        "shorts.entity.json"
+        "shorts.entity.json",
+        "underwired_plunge_bra_nude_silk.entity.json",
+        "nude_thong.entity.json",
+        "black_stretch_silk_bodysuit.entity.json",
+        "white_structured_linen_blazer.entity.json",
+        "graphite_wool_wide_leg_trousers.entity.json",
+        "black_calfskin_belt.entity.json",
+        "leather_stiletto_pumps.entity.json"
       ],
       "instances": []
     },

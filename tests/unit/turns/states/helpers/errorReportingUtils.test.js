@@ -1,8 +1,10 @@
 import { describe, test, expect, jest, beforeEach } from '@jest/globals';
 import { reportMissingActorId } from '../../../../../src/utils/errorReportingUtils.js';
-import { safeDispatchError } from '../../../../../src/utils/safeDispatchErrorUtils.js';
+import { safeDispatchError } from '../../../../../src/utils/staticErrorDispatcher.js';
 
-jest.mock('../../../../../src/utils/safeDispatchErrorUtils.js');
+jest.mock('../../../../../src/utils/staticErrorDispatcher.js', () => ({
+  safeDispatchError: jest.fn(),
+}));
 
 describe('errorReportingUtils', () => {
   beforeEach(() => {

@@ -1,9 +1,9 @@
 import { describe, test, expect, jest, beforeEach } from '@jest/globals';
 import { TurnEndingState } from '../../../../src/turns/states/turnEndingState.js';
 import { UNKNOWN_ACTOR_ID } from '../../../../src/constants/unknownIds.js';
-import { safeDispatchError } from '../../../../src/utils/safeDispatchErrorUtils.js';
+import { safeDispatchError } from '../../../../src/utils/staticErrorDispatcher.js';
 
-jest.mock('../../../../src/utils/safeDispatchErrorUtils.js', () => ({
+jest.mock('../../../../src/utils/staticErrorDispatcher.js', () => ({
   safeDispatchError: jest.fn(),
 }));
 

@@ -19,7 +19,8 @@
           "skirt",
           "hat",
           "gloves",
-          "socks"
+          "socks",
+          "bodysuit"
         ],
         "description": "Category of clothing item"
       },

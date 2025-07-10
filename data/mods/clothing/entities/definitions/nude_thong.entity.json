@@ -1,0 +1,35 @@
+{
+  "$schema": "http://example.com/schemas/entity-definition.schema.json",
+  "id": "clothing:nude_thong",
+  "description": "Delicate nude thong in silky material",
+  "components": {
+    "clothing:wearable": {
+      "wearableType": "underwear",
+      "layer": "underwear",
+      "coverage": {
+        "required": ["pelvis"],
+        "optional": [],
+        "exclusions": []
+      },
+      "size": "m",
+      "material": "silk",
+      "equipmentSlots": {
+        "primary": "waist_clothing"
+      },
+      "layerPriority": 1,
+      "conflictResolution": "auto_remove"
+    },
+    "core:name": {
+      "text": "nude thong"
+    },
+    "core:description": {
+      "text": "An elegant thong in a nude tone, crafted from smooth silk that feels luxurious against the skin. The minimal design provides comfort and invisibility under fitted clothing while maintaining an alluring aesthetic."
+    },
+    "descriptors:color_basic": {
+      "color": "nude"
+    },
+    "descriptors:texture": {
+      "texture": "silky"
+    }
+  }
+}

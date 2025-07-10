@@ -1,0 +1,35 @@
+{
+  "$schema": "http://example.com/schemas/entity-definition.schema.json",
+  "id": "clothing:black_calfskin_belt",
+  "description": "Black calfskin belt with brushed-brass buckle",
+  "components": {
+    "clothing:wearable": {
+      "wearableType": "accessories",
+      "layer": "accessories",
+      "coverage": {
+        "required": ["waist"],
+        "optional": [],
+        "exclusions": []
+      },
+      "size": "m",
+      "material": "calfskin",
+      "equipmentSlots": {
+        "primary": "waist_accessories"
+      },
+      "layerPriority": 9,
+      "conflictResolution": "auto_remove"
+    },
+    "core:name": {
+      "text": "black calfskin belt"
+    },
+    "core:description": {
+      "text": "A sleek black calfskin belt featuring a sophisticated brushed-brass buckle. The supple leather feels luxurious to the touch while the matte brass hardware adds an elegant finishing touch to any outfit. Perfect for both professional and casual styling."
+    },
+    "descriptors:color_basic": {
+      "color": "black"
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
+    }
+  }
+}

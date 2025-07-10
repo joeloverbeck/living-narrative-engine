@@ -15,6 +15,7 @@
           "kinky",
           "braided",
           "ponytail",
+          "ponytails",
           "bun",
           "dreadlocks",
           "mohawk"
@@ -22,7 +23,9 @@
         "default": "straight"
       }
     },
-    "required": ["style"],
+    "required": [
+      "style"
+    ],
     "additionalProperties": false
   }
 }
