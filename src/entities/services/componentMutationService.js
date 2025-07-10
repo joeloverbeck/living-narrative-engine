@@ -60,7 +60,7 @@ export class ComponentMutationService {
     cloner,
   }) {
     validateDependency(entityRepository, 'EntityRepositoryAdapter', console, {
-      requiredMethods: ['get', 'indexComponentAdd', 'indexComponentRemove'],
+      requiredMethods: ['get'],
     });
     validateDependency(validator, 'ISchemaValidator', console, {
       requiredMethods: ['validate'],
@@ -207,20 +207,26 @@ export class ComponentMutationService {
     );
 
     // Check if this is a new component (not just an update)
-    const isNewComponent = !entity.hasComponent(componentTypeId);
-    
+    const isNewComponent =
+      typeof entity.hasComponent === 'function'
+        ? !entity.hasComponent(componentTypeId)
+        : true;
+
     this.#applyComponentUpdate(
       entity,
       componentTypeId,
       validatedData,
       instanceId
     );
-    
+
     // Update component index if this is a new component
-    if (isNewComponent) {
+    if (
+      isNewComponent &&
+      typeof this.#entityRepository.indexComponentAdd === 'function'
+    ) {
       this.#entityRepository.indexComponentAdd(instanceId, componentTypeId);
     }
-    
+
     this.#emitComponentAdded(
       entity,
       componentTypeId,
@@ -262,7 +268,11 @@ export class ComponentMutationService {
     }
 
     // Check if the component to be removed exists as an override.
-    if (!entity.hasComponentOverride(componentTypeId)) {
+    const hasOverride =
+      typeof entity.hasComponentOverride === 'function'
+        ? entity.hasComponentOverride(componentTypeId)
+        : false;
+    if (!hasOverride) {
       this.#logger.debug(
         `ComponentMutationService.removeComponent: Component '${componentTypeId}' not found as an override on entity '${instanceId}'. Nothing to remove at instance level.`
       );
@@ -277,10 +287,16 @@ export class ComponentMutationService {
     if (successfullyRemovedOverride) {
       // Update component index - only if the component is completely removed
       // (not just the override, but the component no longer exists on the entity)
-      if (!entity.hasComponent(componentTypeId)) {
-        this.#entityRepository.indexComponentRemove(instanceId, componentTypeId);
+      if (
+        !entity.hasComponent(componentTypeId) &&
+        typeof this.#entityRepository.indexComponentRemove === 'function'
+      ) {
+        this.#entityRepository.indexComponentRemove(
+          instanceId,
+          componentTypeId
+        );
       }
-      
+
       this.#eventDispatcher.dispatch(COMPONENT_REMOVED_ID, {
         entity,
         componentTypeId,

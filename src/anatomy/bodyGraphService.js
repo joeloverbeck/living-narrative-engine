@@ -33,10 +33,14 @@ export class BodyGraphService {
   }
 
   buildAdjacencyCache(rootEntityId) {
-    // Only build cache if it doesn't already exist for this root
-    if (!this.#cacheManager.hasCacheForRoot(rootEntityId)) {
-      this.#cacheManager.buildCache(rootEntityId, this.#entityManager);
+    if (this.#cacheManager.hasCacheForRoot(rootEntityId)) {
+      const { valid } = this.#cacheManager.validateCache(this.#entityManager);
+      if (valid) {
+        return;
+      }
+      this.#cacheManager.invalidateCacheForRoot(rootEntityId);
     }
+    this.#cacheManager.buildCache(rootEntityId, this.#entityManager);
   }
 
   async detachPart(partEntityId, options = {}) {

@@ -6,7 +6,7 @@ import { PersistenceError } from '../persistence/persistenceErrors.js';
  * Creates a standardized failure result object for persistence operations.
  *
  * @description Convenience helper to wrap error creation.
- * @param {string} code - Error code from {@link PersistenceErrorCodes}.
+ * @param {string} code - Error code from the PersistenceErrorCodes enum.
  * @param {string} message - Human readable error message.
  * @returns {{success: false, error: PersistenceError}} Failure result.
  */
@@ -42,7 +42,9 @@ export function createPersistenceSuccess(data) {
  */
 export function normalizePersistenceFailure(result, fallbackCode, defaultMsg) {
   if (result.success) {
-    return { success: true, data: result.data };
+    // result.data is expected when success is true but optional in the input
+    // type. Cast to satisfy the type checker.
+    return { success: true, data: /** @type {T} */ (result.data) };
   }
 
   if (result.error instanceof PersistenceError) {
