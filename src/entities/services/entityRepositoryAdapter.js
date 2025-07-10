@@ -23,6 +23,8 @@ export class EntityRepositoryAdapter {
   #mapManager;
   /** @type {ILogger} @private */
   #logger;
+  /** @type {Map<string, Set<string>>} @private - componentType -> Set<entityId> */
+  #componentIndex;
 
   /**
    * @param {object} deps - Dependencies
@@ -35,8 +37,9 @@ export class EntityRepositoryAdapter {
 
     this.#logger = ensureValidLogger(logger, 'EntityRepositoryAdapter');
     this.#mapManager = new MapManager({ throwOnInvalidId: false });
+    this.#componentIndex = new Map();
 
-    this.#logger.debug('EntityRepositoryAdapter initialized.');
+    this.#logger.debug('EntityRepositoryAdapter initialized with component index.');
   }
 
   /**
@@ -53,7 +56,11 @@ export class EntityRepositoryAdapter {
     }
 
     this.#mapManager.add(entity.id, entity);
-    this.#logger.debug(`Entity '${entity.id}' added to repository.`);
+    
+    // Index the entity's components
+    this.#indexEntityComponents(entity);
+    
+    this.#logger.debug(`Entity '${entity.id}' added to repository with ${entity.componentTypeIds?.length || 0} components indexed.`);
   }
 
   /**
@@ -84,15 +91,19 @@ export class EntityRepositoryAdapter {
    * @throws {EntityNotFoundError} If entity is not found
    */
   remove(entityId) {
-    if (!this.#mapManager.has(entityId)) {
+    const entity = this.#mapManager.get(entityId);
+    if (!entity) {
       const msg = `Entity with ID '${entityId}' not found in repository.`;
       this.#logger.error(msg);
       throw new EntityNotFoundError(entityId);
     }
 
+    // Remove from component index
+    this.#unindexEntityComponents(entity);
+    
     const removed = this.#mapManager.remove(entityId);
     if (removed) {
-      this.#logger.debug(`Entity '${entityId}' removed from repository.`);
+      this.#logger.debug(`Entity '${entityId}' removed from repository and component index.`);
     }
     return removed;
   }
@@ -102,7 +113,8 @@ export class EntityRepositoryAdapter {
    */
   clear() {
     this.#mapManager.clear();
-    this.#logger.info('All entities cleared from repository.');
+    this.#componentIndex.clear();
+    this.#logger.info('All entities cleared from repository and component index.');
   }
 
   /**
@@ -121,6 +133,74 @@ export class EntityRepositoryAdapter {
    */
   size() {
     return this.#mapManager.size;
+  }
+
+  /**
+   * Get entity IDs that have a specific component type.
+   * Returns empty Set if no entities have the component.
+   *
+   * @param {string} componentType - Component type to search for
+   * @returns {Set<string>} Set of entity IDs with the component
+   */
+  getEntityIdsByComponent(componentType) {
+    return this.#componentIndex.get(componentType) || new Set();
+  }
+
+  /**
+   * Update component index when a component is added to an entity.
+   *
+   * @param {string} entityId - Entity ID
+   * @param {string} componentType - Component type being added
+   */
+  indexComponentAdd(entityId, componentType) {
+    if (!this.#componentIndex.has(componentType)) {
+      this.#componentIndex.set(componentType, new Set());
+    }
+    this.#componentIndex.get(componentType).add(entityId);
+    this.#logger.debug(`Indexed component '${componentType}' for entity '${entityId}'`);
+  }
+
+  /**
+   * Update component index when a component is removed from an entity.
+   *
+   * @param {string} entityId - Entity ID
+   * @param {string} componentType - Component type being removed
+   */
+  indexComponentRemove(entityId, componentType) {
+    const entitySet = this.#componentIndex.get(componentType);
+    if (entitySet) {
+      entitySet.delete(entityId);
+      if (entitySet.size === 0) {
+        this.#componentIndex.delete(componentType);
+      }
+      this.#logger.debug(`Unindexed component '${componentType}' for entity '${entityId}'`);
+    }
+  }
+
+  /**
+   * Index all components of an entity.
+   * @private
+   * @param {Entity} entity - Entity whose components to index
+   */
+  #indexEntityComponents(entity) {
+    if (entity.componentTypeIds) {
+      for (const componentType of entity.componentTypeIds) {
+        this.indexComponentAdd(entity.id, componentType);
+      }
+    }
+  }
+
+  /**
+   * Remove all components of an entity from the index.
+   * @private
+   * @param {Entity} entity - Entity whose components to unindex
+   */
+  #unindexEntityComponents(entity) {
+    if (entity.componentTypeIds) {
+      for (const componentType of entity.componentTypeIds) {
+        this.indexComponentRemove(entity.id, componentType);
+      }
+    }
   }
 }
 

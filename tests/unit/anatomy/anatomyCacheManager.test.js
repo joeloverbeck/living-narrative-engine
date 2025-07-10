@@ -282,6 +282,135 @@ describe('AnatomyCacheManager', () => {
     });
   });
 
+  describe('cache persistence', () => {
+    it('should check if cache exists for root entity', () => {
+      expect(cacheManager.hasCacheForRoot('test-root')).toBe(false);
+      
+      const mockNode = {
+        entityId: 'test-root',
+        partType: 'torso',
+        parentId: null,
+        socketId: null,
+        children: [],
+      };
+      
+      cacheManager.set('test-root', mockNode);
+      expect(cacheManager.hasCacheForRoot('test-root')).toBe(true);
+    });
+
+    it('should return false for null or undefined root entity', () => {
+      expect(cacheManager.hasCacheForRoot(null)).toBe(false);
+      expect(cacheManager.hasCacheForRoot(undefined)).toBe(false);
+      expect(cacheManager.hasCacheForRoot('')).toBe(false);
+    });
+
+    it('should invalidate cache for specific root', () => {
+      // Set up a simple anatomy tree
+      const rootNode = {
+        entityId: 'root-1',
+        partType: 'torso',
+        parentId: null,
+        socketId: null,
+        children: ['arm-1', 'leg-1'],
+      };
+      
+      const armNode = {
+        entityId: 'arm-1',
+        partType: 'arm',
+        parentId: 'root-1',
+        socketId: 'arm-socket',
+        children: ['hand-1'],
+      };
+      
+      const handNode = {
+        entityId: 'hand-1',
+        partType: 'hand',
+        parentId: 'arm-1',
+        socketId: 'hand-socket',
+        children: [],
+      };
+      
+      const legNode = {
+        entityId: 'leg-1',
+        partType: 'leg',
+        parentId: 'root-1',
+        socketId: 'leg-socket',
+        children: [],
+      };
+      
+      // Build cache
+      cacheManager.set('root-1', rootNode);
+      cacheManager.set('arm-1', armNode);
+      cacheManager.set('hand-1', handNode);
+      cacheManager.set('leg-1', legNode);
+      
+      expect(cacheManager.size()).toBe(4);
+      
+      // Invalidate cache for this root
+      cacheManager.invalidateCacheForRoot('root-1');
+      
+      // All nodes should be removed
+      expect(cacheManager.size()).toBe(0);
+      expect(cacheManager.has('root-1')).toBe(false);
+      expect(cacheManager.has('arm-1')).toBe(false);
+      expect(cacheManager.has('hand-1')).toBe(false);
+      expect(cacheManager.has('leg-1')).toBe(false);
+    });
+
+    it('should only invalidate cache for specific root, not other trees', () => {
+      // Set up two separate anatomy trees
+      const tree1Root = {
+        entityId: 'tree1-root',
+        partType: 'torso',
+        parentId: null,
+        socketId: null,
+        children: ['tree1-arm'],
+      };
+      
+      const tree1Arm = {
+        entityId: 'tree1-arm',
+        partType: 'arm',
+        parentId: 'tree1-root',
+        socketId: 'arm-socket',
+        children: [],
+      };
+      
+      const tree2Root = {
+        entityId: 'tree2-root',
+        partType: 'torso',
+        parentId: null,
+        socketId: null,
+        children: ['tree2-arm'],
+      };
+      
+      const tree2Arm = {
+        entityId: 'tree2-arm',
+        partType: 'arm',
+        parentId: 'tree2-root',
+        socketId: 'arm-socket',
+        children: [],
+      };
+      
+      // Build caches for both trees
+      cacheManager.set('tree1-root', tree1Root);
+      cacheManager.set('tree1-arm', tree1Arm);
+      cacheManager.set('tree2-root', tree2Root);
+      cacheManager.set('tree2-arm', tree2Arm);
+      
+      expect(cacheManager.size()).toBe(4);
+      
+      // Invalidate only tree1
+      cacheManager.invalidateCacheForRoot('tree1-root');
+      
+      // Tree1 should be removed, tree2 should remain
+      expect(cacheManager.size()).toBe(2);
+      expect(cacheManager.has('tree1-root')).toBe(false);
+      expect(cacheManager.has('tree1-arm')).toBe(false);
+      expect(cacheManager.has('tree2-root')).toBe(true);
+      expect(cacheManager.has('tree2-arm')).toBe(true);
+    });
+  });
+
   describe('validateCache', () => {
     beforeEach(() => {
       const torsoEntity = { id: 'torso-1' };

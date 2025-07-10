@@ -83,6 +83,18 @@ export class AnatomyCacheManager {
   }
 
   /**
+   * Checks if a cache exists for a specific root entity
+   * A cache is considered to exist if the root entity is present in the cache
+   *
+   * @param {string} rootEntityId - The root entity ID to check
+   * @returns {boolean} True if cache exists for this root
+   */
+  hasCacheForRoot(rootEntityId) {
+    if (!rootEntityId) return false;
+    return this.#adjacencyCache.has(rootEntityId);
+  }
+
+  /**
    * Deletes an entity from the cache
    *
    * @param {string} entityId
@@ -111,6 +123,44 @@ export class AnatomyCacheManager {
   }
 
   /**
+   * Invalidates the cache for a specific root entity
+   * This should be called when anatomy structure changes
+   *
+   * @param {string} rootEntityId - The root entity whose cache should be invalidated
+   * @returns {void}
+   */
+  invalidateCacheForRoot(rootEntityId) {
+    if (!rootEntityId) return;
+    
+    // Remove all entities that belong to this anatomy tree
+    const toRemove = [];
+    for (const [entityId, node] of this.#adjacencyCache.entries()) {
+      // Check if this entity is part of the anatomy tree
+      // by traversing up to find the root
+      let current = node;
+      let currentId = entityId;
+      
+      while (current && current.parentId) {
+        currentId = current.parentId;
+        current = this.#adjacencyCache.get(currentId);
+      }
+      
+      if (currentId === rootEntityId) {
+        toRemove.push(entityId);
+      }
+    }
+    
+    // Remove all entities in this anatomy tree
+    for (const entityId of toRemove) {
+      this.#adjacencyCache.delete(entityId);
+    }
+    
+    this.#logger.debug(
+      `AnatomyCacheManager: Invalidated cache for root '${rootEntityId}', removed ${toRemove.length} entries`
+    );
+  }
+
+  /**
    * Builds the adjacency cache for an anatomy graph
    *
    * @param {string} rootEntityId
@@ -127,6 +177,8 @@ export class AnatomyCacheManager {
       `AnatomyCacheManager: Building cache for anatomy rooted at '${rootEntityId}'`
     );
 
+    // Don't clear if we're checking for existing cache
+    // Clear only when explicitly building a new cache
     this.clear();
     const visited = new Set();
 
