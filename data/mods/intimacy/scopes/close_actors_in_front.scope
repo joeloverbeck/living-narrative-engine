@@ -2,7 +2,7 @@
 // Used by turn_around action to ensure actors can only turn around entities in front of them
 intimacy:close_actors_in_front := actor.intimacy:closeness.partners[][{
   "or": [
-    {"!": [{"var": "actor.intimacy:facing_away"}]},
-    {"not": {"in": [{"var": "entity.id"}, {"var": "actor.intimacy:facing_away.facing_away_from"}]}}
+    {"not": {"condition_ref": "intimacy:actor-has-facing-away"}},
+    {"condition_ref": "intimacy:entity-not-in-facing-away"}
   ]
 }]
