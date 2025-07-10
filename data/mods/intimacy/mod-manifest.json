@@ -27,7 +27,9 @@
       "facing_away.component.json"
     ],
     "conditions": [
+      "actor-has-facing-away.condition.json",
       "actor-is-in-closeness.condition.json",
+      "entity-not-in-facing-away.condition.json",
       "event-is-action-adjust-clothing.condition.json",
       "event-is-action-get-close.condition.json",
       "event-is-action-kiss-cheek.condition.json",
