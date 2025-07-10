@@ -51,6 +51,10 @@ import { PartSelectionService } from '../../anatomy/partSelectionService.js';
 import { SocketManager } from '../../anatomy/socketManager.js';
 import { EntityGraphBuilder } from '../../anatomy/entityGraphBuilder.js';
 import { RecipeConstraintEvaluator } from '../../anatomy/recipeConstraintEvaluator.js';
+import { PartDescriptionGenerator } from '../../anatomy/PartDescriptionGenerator.js';
+import { BodyDescriptionOrchestrator } from '../../anatomy/BodyDescriptionOrchestrator.js';
+import { DescriptionPersistenceService } from '../../anatomy/DescriptionPersistenceService.js';
+import { AnatomyQueryCache } from '../../anatomy/cache/AnatomyQueryCache.js';
 import UuidGenerator from '../../adapters/UuidGenerator.js';
 
 /**
@@ -243,6 +247,18 @@ export function registerWorldAndEntity(container) {
     )}.`
   );
 
+  // Register AnatomyQueryCache early since BodyGraphService depends on it
+  registrar.singletonFactory(tokens.AnatomyQueryCache, (c) => {
+    return new AnatomyQueryCache({
+      logger: c.resolve(tokens.ILogger),
+    });
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.AnatomyQueryCache
+    )}.`
+  );
+
   // --- New Anatomy Services ---
   registrar.singletonFactory(tokens.RecipeProcessor, (c) => {
     return new RecipeProcessor({
@@ -330,6 +346,7 @@ export function registerWorldAndEntity(container) {
       entityManager: c.resolve(tokens.IEntityManager),
       logger: c.resolve(tokens.ILogger),
       eventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+      queryCache: c.resolve(tokens.AnatomyQueryCache),
     });
   });
   logger.debug(
@@ -404,6 +421,48 @@ export function registerWorldAndEntity(container) {
     )}.`
   );
 
+  // Register new anatomy services
+  registrar.singletonFactory(tokens.PartDescriptionGenerator, (c) => {
+    return new PartDescriptionGenerator({
+      logger: c.resolve(tokens.ILogger),
+      bodyPartDescriptionBuilder: c.resolve(tokens.BodyPartDescriptionBuilder),
+      entityManager: c.resolve(tokens.IEntityManager),
+    });
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.PartDescriptionGenerator
+    )}.`
+  );
+
+  registrar.singletonFactory(tokens.DescriptionPersistenceService, (c) => {
+    return new DescriptionPersistenceService({
+      logger: c.resolve(tokens.ILogger),
+      entityManager: c.resolve(tokens.IEntityManager),
+    });
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.DescriptionPersistenceService
+    )}.`
+  );
+
+  registrar.singletonFactory(tokens.BodyDescriptionOrchestrator, (c) => {
+    return new BodyDescriptionOrchestrator({
+      logger: c.resolve(tokens.ILogger),
+      bodyDescriptionComposer: c.resolve(tokens.BodyDescriptionComposer),
+      bodyGraphService: c.resolve(tokens.BodyGraphService),
+      eventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+      entityManager: c.resolve(tokens.IEntityManager),
+      partDescriptionGenerator: c.resolve(tokens.PartDescriptionGenerator),
+    });
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.BodyDescriptionOrchestrator
+    )}.`
+  );
+
   registrar.singletonFactory(tokens.AnatomyDescriptionService, (c) => {
     return new AnatomyDescriptionService({
       bodyPartDescriptionBuilder: c.resolve(tokens.BodyPartDescriptionBuilder),
@@ -412,6 +471,13 @@ export function registerWorldAndEntity(container) {
       entityFinder: c.resolve(tokens.IEntityManager),
       componentManager: c.resolve(tokens.IEntityManager),
       eventDispatchService: c.resolve(tokens.EventDispatchService),
+      partDescriptionGenerator: c.resolve(tokens.PartDescriptionGenerator),
+      bodyDescriptionOrchestrator: c.resolve(
+        tokens.BodyDescriptionOrchestrator
+      ),
+      descriptionPersistenceService: c.resolve(
+        tokens.DescriptionPersistenceService
+      ),
     });
   });
   logger.debug(

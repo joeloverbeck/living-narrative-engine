@@ -10,6 +10,7 @@ describe('BodyGraphService', () => {
   let mockEntityManager;
   let mockLogger;
   let mockEventDispatcher;
+  let mockQueryCache;
 
   beforeEach(() => {
     // Create mocks
@@ -31,11 +32,20 @@ describe('BodyGraphService', () => {
       dispatch: jest.fn().mockResolvedValue(undefined),
     };
 
+    mockQueryCache = {
+      getCachedFindPartsByType: jest.fn(),
+      cacheFindPartsByType: jest.fn(),
+      getCachedGetAllParts: jest.fn(),
+      cacheGetAllParts: jest.fn(),
+      invalidateRoot: jest.fn(),
+    };
+
     // Create service instance
     service = new BodyGraphService({
       entityManager: mockEntityManager,
       logger: mockLogger,
       eventDispatcher: mockEventDispatcher,
+      queryCache: mockQueryCache,
     });
   });
 
@@ -183,7 +193,7 @@ describe('BodyGraphService', () => {
       // Setup entities
       const torsoEntity = { id: 'torso-1' };
       const headEntity = { id: 'head-1' };
-      
+
       mockEntityManager.getEntityInstance.mockImplementation((id) => {
         if (id === 'torso-1') return torsoEntity;
         if (id === 'head-1') return headEntity;
@@ -207,22 +217,22 @@ describe('BodyGraphService', () => {
 
       // First call - should build cache
       service.buildAdjacencyCache('torso-1');
-      
+
       expect(mockLogger.debug).toHaveBeenCalledWith(
         "AnatomyCacheManager: Building cache for anatomy rooted at 'torso-1'"
       );
       expect(mockLogger.info).toHaveBeenCalledWith(
         'AnatomyCacheManager: Built cache with 2 nodes'
       );
-      
+
       // Clear the mock calls
       mockLogger.debug.mockClear();
       mockLogger.info.mockClear();
       mockEntityManager.getEntityInstance.mockClear();
-      
+
       // Second call - should not rebuild cache
       service.buildAdjacencyCache('torso-1');
-      
+
       // Should not log cache building messages
       expect(mockLogger.debug).not.toHaveBeenCalledWith(
         "AnatomyCacheManager: Building cache for anatomy rooted at 'torso-1'"
@@ -230,7 +240,7 @@ describe('BodyGraphService', () => {
       expect(mockLogger.info).not.toHaveBeenCalledWith(
         expect.stringContaining('Built cache with')
       );
-      
+
       // Should not call entity manager methods
       expect(mockEntityManager.getEntityInstance).not.toHaveBeenCalled();
     });
@@ -352,6 +362,16 @@ describe('BodyGraphService', () => {
         })
       );
     });
+
+    it('should invalidate query cache when detaching a part', async () => {
+      // Mock getAnatomyRoot to return torso-1
+      jest.spyOn(service, 'getAnatomyRoot').mockReturnValue('torso-1');
+
+      await service.detachPart('arm-1');
+
+      // Should invalidate cache for the root entity
+      expect(mockQueryCache.invalidateRoot).toHaveBeenCalledWith('torso-1');
+    });
   });
 
   describe('findPartsByType', () => {
@@ -422,6 +442,38 @@ describe('BodyGraphService', () => {
 
       const result = service.findPartsByType('torso-1', 'arm');
       expect(result).toEqual([]);
+    });
+
+    it('should use cached results when available', () => {
+      // Setup cache to return cached result
+      const cachedResult = ['arm-cached-1', 'arm-cached-2'];
+      mockQueryCache.getCachedFindPartsByType.mockReturnValue(cachedResult);
+
+      const result = service.findPartsByType('torso-1', 'arm');
+
+      // Should use cached result
+      expect(result).toEqual(cachedResult);
+      expect(mockQueryCache.getCachedFindPartsByType).toHaveBeenCalledWith(
+        'torso-1',
+        'arm'
+      );
+
+      // Should not perform actual search (AnatomyGraphAlgorithms.findPartsByType not called)
+      expect(mockQueryCache.cacheFindPartsByType).not.toHaveBeenCalled();
+    });
+
+    it('should cache results when not in cache', () => {
+      // Setup cache to return undefined (cache miss)
+      mockQueryCache.getCachedFindPartsByType.mockReturnValue(undefined);
+
+      const result = service.findPartsByType('torso-1', 'arm');
+
+      // Should cache the result
+      expect(mockQueryCache.cacheFindPartsByType).toHaveBeenCalledWith(
+        'torso-1',
+        'arm',
+        expect.arrayContaining(['arm-1', 'arm-2'])
+      );
     });
   });
 
@@ -568,7 +620,7 @@ describe('BodyGraphService', () => {
         logger: mockLogger,
         eventDispatcher: mockEventDispatcher,
       });
-      
+
       // Create a disconnected part
       mockEntityManager.getComponentData.mockImplementation(
         (id, componentId) => {

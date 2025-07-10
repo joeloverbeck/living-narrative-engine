@@ -124,3 +124,83 @@ describe('BodyGraphService additional methods', () => {
     spy.mockRestore();
   });
 });
+
+describe('BodyGraphService query caching', () => {
+  let service;
+  let entityManager;
+  let logger;
+  let dispatcher;
+  let mockQueryCache;
+
+  beforeEach(() => {
+    entityManager = new SimpleEntityManager([
+      {
+        id: 'torso',
+        components: {
+          'anatomy:part': { subType: 'torso' },
+        },
+      },
+      {
+        id: 'arm',
+        components: {
+          'anatomy:part': { subType: 'arm' },
+          'anatomy:joint': { parentId: 'torso', socketId: 'arm_socket' },
+        },
+      },
+    ]);
+    logger = createMockLogger();
+    dispatcher = createMockSafeEventDispatcher();
+    mockQueryCache = {
+      getCachedFindPartsByType: jest.fn(),
+      cacheFindPartsByType: jest.fn(),
+      getCachedGetAllParts: jest.fn(),
+      cacheGetAllParts: jest.fn(),
+      invalidateRoot: jest.fn(),
+    };
+
+    service = new BodyGraphService({
+      entityManager,
+      logger,
+      eventDispatcher: dispatcher,
+      queryCache: mockQueryCache,
+    });
+  });
+
+  it('should use cached getAllParts results when available', () => {
+    const cachedResult = ['torso-cached', 'arm-cached'];
+    mockQueryCache.getCachedGetAllParts.mockReturnValue(cachedResult);
+
+    const bodyComponent = { root: 'torso' };
+    const result = service.getAllParts(bodyComponent);
+
+    expect(result).toEqual(cachedResult);
+    expect(mockQueryCache.getCachedGetAllParts).toHaveBeenCalledWith('torso');
+    expect(mockQueryCache.cacheGetAllParts).not.toHaveBeenCalled();
+  });
+
+  it('should cache getAllParts results when not in cache', () => {
+    mockQueryCache.getCachedGetAllParts.mockReturnValue(undefined);
+    service.buildAdjacencyCache('torso');
+
+    const bodyComponent = { root: 'torso' };
+    const result = service.getAllParts(bodyComponent);
+
+    expect(mockQueryCache.cacheGetAllParts).toHaveBeenCalledWith(
+      'torso',
+      expect.arrayContaining(['torso', 'arm'])
+    );
+  });
+
+  it('should handle nested body structure with caching', () => {
+    mockQueryCache.getCachedGetAllParts.mockReturnValue(undefined);
+    service.buildAdjacencyCache('torso');
+
+    const bodyComponent = { body: { root: 'torso' } };
+    const result = service.getAllParts(bodyComponent);
+
+    expect(mockQueryCache.cacheGetAllParts).toHaveBeenCalledWith(
+      'torso',
+      expect.arrayContaining(['torso', 'arm'])
+    );
+  });
+});

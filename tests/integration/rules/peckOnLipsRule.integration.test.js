@@ -2,7 +2,14 @@
  * @file Integration tests for the intimacy:peck_on_lips rule.
  */
 
-import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  expect,
+  jest,
+} from '@jest/globals';
 import peckOnLipsRule from '../../../data/mods/intimacy/rules/peck_on_lips.rule.json';
 import eventIsActionPeckOnLips from '../../../data/mods/intimacy/conditions/event-is-action-peck_on_lips.condition.json';
 import logSuccessMacro from '../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
@@ -73,11 +80,9 @@ describe('handle_peck_on_lips rule integration', () => {
     });
 
     const ruleWithExpandedActions = { ...peckOnLipsRule, actions: expanded };
-    
+
     const dataRegistry = {
-      getAllSystemRules: jest
-        .fn()
-        .mockReturnValue([ruleWithExpandedActions]),
+      getAllSystemRules: jest.fn().mockReturnValue([ruleWithExpandedActions]),
       getConditionDefinition: jest.fn((id) => {
         if (id === 'intimacy:event-is-action-peck_on_lips') {
           return eventIsActionPeckOnLips;
@@ -104,30 +109,30 @@ describe('handle_peck_on_lips rule integration', () => {
     // Test that the condition works correctly
     const condition = eventIsActionPeckOnLips.logic;
     const jsonLogic = testEnv.jsonLogic;
-    
+
     // Check what the condition expects
     expect(condition).toEqual({
-      "==": [{ "var": "event.payload.actionId" }, "intimacy:peck_on_lips"]
+      '==': [{ var: 'event.payload.actionId' }, 'intimacy:peck_on_lips'],
     });
-    
+
     // The event structure for attempt_action events
     const matchingData = {
       event: {
         payload: {
-          actionId: 'intimacy:peck_on_lips'
-        }
-      }
+          actionId: 'intimacy:peck_on_lips',
+        },
+      },
     };
-    
+
     expect(jsonLogic.evaluate(condition, matchingData)).toBe(true);
-    
+
     // Should not match when actionId is different
     const nonMatchingData = {
       event: {
         payload: {
-          actionId: 'intimacy:different_action'
-        }
-      }
+          actionId: 'intimacy:different_action',
+        },
+      },
     };
     expect(jsonLogic.evaluate(condition, nonMatchingData)).toBe(false);
   });
@@ -157,7 +162,7 @@ describe('handle_peck_on_lips rule integration', () => {
       actionId: 'intimacy:peck_on_lips',
       targetId: 'target1',
     });
-    
+
     const types = testEnv.events.map((e) => e.eventType);
     expect(types).toEqual(
       expect.arrayContaining([
@@ -198,7 +203,9 @@ describe('handle_peck_on_lips rule integration', () => {
       (e) => e.eventType === 'core:perceptible_event'
     );
     expect(perceptibleEvent).toBeDefined();
-    expect(perceptibleEvent.payload.descriptionText).toBe('Alice gives Beth a quick, affectionate peck on the lips.');
+    expect(perceptibleEvent.payload.descriptionText).toBe(
+      'Alice gives Beth a quick, affectionate peck on the lips.'
+    );
   });
 
   it('rule does not fire for different action', () => {
@@ -277,7 +284,9 @@ describe('handle_peck_on_lips rule integration', () => {
     );
     expect(perceptibleEvent).toBeDefined();
     expect(perceptibleEvent.payload.locationId).toBe('room1');
-    expect(perceptibleEvent.payload.perceptionType).toBe('action_target_general');
+    expect(perceptibleEvent.payload.perceptionType).toBe(
+      'action_target_general'
+    );
   });
 
   it('works with different actor and target names', () => {
@@ -310,6 +319,8 @@ describe('handle_peck_on_lips rule integration', () => {
       (e) => e.eventType === 'core:perceptible_event'
     );
     expect(perceptibleEvent).toBeDefined();
-    expect(perceptibleEvent.payload.descriptionText).toBe('John gives Mary a quick, affectionate peck on the lips.');
+    expect(perceptibleEvent.payload.descriptionText).toBe(
+      'John gives Mary a quick, affectionate peck on the lips.'
+    );
   });
 });

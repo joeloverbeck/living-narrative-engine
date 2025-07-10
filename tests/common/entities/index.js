@@ -8,3 +8,6 @@ export * from './invalidInputHelpers.js';
 export * from './definitionBuilders.js';
 export * from './entityFactories.js';
 export * from './testBed.js';
+export { EntityDefinitionHelperTestBed } from './entityDefinitionHelperTestBed.js';
+export { EntityEventDispatcherTestBed } from './entityEventDispatcherTestBed.js';
+export { EntityLifecycleValidatorTestBed } from './entityLifecycleValidatorTestBed.js';

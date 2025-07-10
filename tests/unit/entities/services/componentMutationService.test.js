@@ -5,7 +5,11 @@ import { EntityNotFoundError } from '../../../../src/errors/entityNotFoundError.
 import { ValidationError } from '../../../../src/errors/validationError.js';
 
 const createService = ({ entity } = {}) => {
-  const entityRepository = { get: jest.fn(() => entity) };
+  const entityRepository = {
+    get: jest.fn(() => entity),
+    indexComponentAdd: jest.fn(),
+    indexComponentRemove: jest.fn(),
+  };
   const validator = { validate: jest.fn(() => ({ isValid: true })) };
   const logger = {
     debug: jest.fn(),
@@ -41,6 +45,7 @@ describe('ComponentMutationService.addComponent', () => {
     entity = {
       addComponent: jest.fn(() => true),
       getComponentData: jest.fn(() => undefined),
+      hasComponent: jest.fn(() => false),
     };
   });
 

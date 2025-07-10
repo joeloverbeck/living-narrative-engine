@@ -1,0 +1,35 @@
+{
+  "$schema": "http://example.com/schemas/entity-definition.schema.json",
+  "id": "clothing:boxers",
+  "description": "Comfortable cotton boxers suitable for any anatomy",
+  "components": {
+    "clothing:wearable": {
+      "wearableType": "underwear",
+      "layer": "underwear",
+      "coverage": {
+        "required": ["left_hip", "right_hip"],
+        "optional": [
+          "penis",
+          "left_testicle",
+          "right_testicle",
+          "vagina",
+          "pubic_hair"
+        ],
+        "exclusions": []
+      },
+      "size": "m",
+      "material": "cotton",
+      "equipmentSlots": {
+        "primary": "lower_torso_clothing"
+      },
+      "layerPriority": 1,
+      "conflictResolution": "auto_remove"
+    },
+    "core:name": {
+      "text": "boxers"
+    },
+    "core:description": {
+      "text": "Comfortable cotton boxers with a relaxed fit"
+    }
+  }
+}

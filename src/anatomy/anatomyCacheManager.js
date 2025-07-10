@@ -131,7 +131,7 @@ export class AnatomyCacheManager {
    */
   invalidateCacheForRoot(rootEntityId) {
     if (!rootEntityId) return;
-    
+
     // Remove all entities that belong to this anatomy tree
     const toRemove = [];
     for (const [entityId, node] of this.#adjacencyCache.entries()) {
@@ -139,22 +139,22 @@ export class AnatomyCacheManager {
       // by traversing up to find the root
       let current = node;
       let currentId = entityId;
-      
+
       while (current && current.parentId) {
         currentId = current.parentId;
         current = this.#adjacencyCache.get(currentId);
       }
-      
+
       if (currentId === rootEntityId) {
         toRemove.push(entityId);
       }
     }
-    
+
     // Remove all entities in this anatomy tree
     for (const entityId of toRemove) {
       this.#adjacencyCache.delete(entityId);
     }
-    
+
     this.#logger.debug(
       `AnatomyCacheManager: Invalidated cache for root '${rootEntityId}', removed ${toRemove.length} entries`
     );
@@ -182,18 +182,63 @@ export class AnatomyCacheManager {
     this.clear();
     const visited = new Set();
 
+    // Build parent-to-children map in single pass for O(n) complexity
+    const parentToChildren = this.#buildParentToChildrenMap(entityManager);
+
     this.#buildCacheRecursive(
       rootEntityId,
       null,
       null,
       entityManager,
       visited,
-      0
+      0,
+      parentToChildren
     );
 
     this.#logger.info(
       `AnatomyCacheManager: Built cache with ${this.#adjacencyCache.size} nodes`
     );
+  }
+
+  /**
+   * Builds a parent-to-children map for O(n) child lookup
+   *
+   * @param {IEntityManager} entityManager
+   * @returns {Map<string, Array<{childId: string, socketId: string}>>}
+   * @private
+   */
+  #buildParentToChildrenMap(entityManager) {
+    const parentToChildren = new Map();
+
+    // Get all entities with joints in a single pass
+    const entitiesWithJoints =
+      entityManager.getEntitiesWithComponent('anatomy:joint');
+
+    // Handle case where getEntitiesWithComponent returns null/undefined
+    if (!entitiesWithJoints) {
+      this.#logger.debug('AnatomyCacheManager: No entities with joints found');
+      return parentToChildren;
+    }
+
+    // Build the map in O(n) time
+    for (const entity of entitiesWithJoints) {
+      const joint = entityManager.getComponentData(entity.id, 'anatomy:joint');
+      if (joint?.parentId) {
+        if (!parentToChildren.has(joint.parentId)) {
+          parentToChildren.set(joint.parentId, []);
+        }
+        parentToChildren.get(joint.parentId).push({
+          childId: entity.id,
+          socketId: joint.socketId,
+        });
+      }
+    }
+
+    this.#logger.debug(
+      `AnatomyCacheManager: Built parent-to-children map with ${parentToChildren.size} parent nodes`
+    );
+
+    return parentToChildren;
   }
 
   /**
@@ -205,6 +250,7 @@ export class AnatomyCacheManager {
    * @param {IEntityManager} entityManager
    * @param {Set<string>} visited
    * @param {number} depth
+   * @param {Map<string, Array<{childId: string, socketId: string}>>} parentToChildren
    * @private
    */
   #buildCacheRecursive(
@@ -213,7 +259,8 @@ export class AnatomyCacheManager {
     socketId,
     entityManager,
     visited,
-    depth
+    depth,
+    parentToChildren
   ) {
     if (depth > ANATOMY_CONSTANTS.MAX_RECURSION_DEPTH) {
       this.#logger.warn(
@@ -252,26 +299,20 @@ export class AnatomyCacheManager {
 
       this.#adjacencyCache.set(entityId, node);
 
-      // Find all children (entities with joints pointing to this entity)
-      const entitiesWithJoints =
-        entityManager.getEntitiesWithComponent('anatomy:joint');
+      // Use the parent-to-children map for O(1) lookup instead of O(n) search
+      const children = parentToChildren.get(entityId) || [];
 
-      for (const childEntity of entitiesWithJoints) {
-        const joint = entityManager.getComponentData(
-          childEntity.id,
-          'anatomy:joint'
+      for (const child of children) {
+        node.children.push(child.childId);
+        this.#buildCacheRecursive(
+          child.childId,
+          entityId,
+          child.socketId,
+          entityManager,
+          visited,
+          depth + 1,
+          parentToChildren
         );
-        if (joint && joint.parentId === entityId) {
-          node.children.push(childEntity.id);
-          this.#buildCacheRecursive(
-            childEntity.id,
-            entityId,
-            joint.socketId,
-            entityManager,
-            visited,
-            depth + 1
-          );
-        }
       }
     } catch (error) {
       this.#logger.error(

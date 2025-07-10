@@ -193,16 +193,13 @@ describe('Entity Component Access in Scope Filtering Integration', () => {
       });
 
       // Create NPC at same location
-      const targetEntity = entityManager.createEntityInstance(
-        'test:character',
-        {
-          instanceId: targetId,
-          componentOverrides: {
-            [POSITION_COMPONENT_ID]: { locationId },
-            [NAME_COMPONENT_ID]: { text: 'Friendly NPC' },
-          },
-        }
-      );
+      entityManager.createEntityInstance('test:character', {
+        instanceId: targetId,
+        componentOverrides: {
+          [POSITION_COMPONENT_ID]: { locationId },
+          [NAME_COMPONENT_ID]: { text: 'Friendly NPC' },
+        },
+      });
 
       // Manually build spatial index to ensure it's populated
       spatialIndexManager.buildIndex(entityManager);

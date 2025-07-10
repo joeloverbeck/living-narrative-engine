@@ -1,0 +1,42 @@
+{
+  "$schema": "http://example.com/schemas/event.schema.json",
+  "id": "clothing_equipped",
+  "description": "Fired when a clothing item is successfully equipped on an entity",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "entityId": {
+        "type": "string",
+        "description": "The entity that equipped the clothing"
+      },
+      "clothingItemId": {
+        "type": "string",
+        "description": "The clothing item entity ID that was equipped"
+      },
+      "slotId": {
+        "type": "string",
+        "description": "The equipment slot where the item was equipped"
+      },
+      "layer": {
+        "type": "string",
+        "enum": ["underwear", "base", "outer", "accessories"],
+        "description": "The layer the item was equipped to"
+      },
+      "previousItem": {
+        "type": ["string", "null"],
+        "description": "Previously equipped item ID if one was replaced"
+      },
+      "conflictResolution": {
+        "type": ["string", "null"],
+        "enum": ["auto_remove", "prompt_user", "block_equip", "layer_swap"],
+        "description": "How conflicts were resolved during equipping"
+      },
+      "timestamp": {
+        "type": "number",
+        "description": "Unix timestamp when the item was equipped"
+      }
+    },
+    "required": ["entityId", "clothingItemId", "slotId", "layer", "timestamp"],
+    "additionalProperties": false
+  }
+}

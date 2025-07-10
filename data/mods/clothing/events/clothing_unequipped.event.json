@@ -1,0 +1,55 @@
+{
+  "$schema": "http://example.com/schemas/event.schema.json",
+  "id": "clothing_unequipped",
+  "description": "Fired when a clothing item is successfully unequipped from an entity",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "entityId": {
+        "type": "string",
+        "description": "The entity that unequipped the clothing"
+      },
+      "clothingItemId": {
+        "type": "string",
+        "description": "The clothing item entity ID that was unequipped"
+      },
+      "slotId": {
+        "type": "string",
+        "description": "The equipment slot the item was unequipped from"
+      },
+      "layer": {
+        "type": "string",
+        "enum": ["underwear", "base", "outer", "accessories"],
+        "description": "The layer the item was unequipped from"
+      },
+      "reason": {
+        "type": "string",
+        "enum": [
+          "manual",
+          "conflict_resolution",
+          "forced",
+          "layer_requirement"
+        ],
+        "description": "The reason the item was unequipped"
+      },
+      "cascadeCount": {
+        "type": "number",
+        "minimum": 0,
+        "description": "Number of additional items unequipped due to layer dependencies"
+      },
+      "timestamp": {
+        "type": "number",
+        "description": "Unix timestamp when the item was unequipped"
+      }
+    },
+    "required": [
+      "entityId",
+      "clothingItemId",
+      "slotId",
+      "layer",
+      "reason",
+      "timestamp"
+    ],
+    "additionalProperties": false
+  }
+}

@@ -16,7 +16,6 @@ import ValidatedEventDispatcher from '../../../src/events/validatedEventDispatch
 import EventBus from '../../../src/events/eventBus.js';
 import { GameDataRepository } from '../../../src/data/gameDataRepository.js';
 import InMemoryDataRegistry from '../../../src/data/inMemoryDataRegistry.js';
-import AjvSchemaValidator from '../../../src/validation/ajvSchemaValidator.js';
 import EntityDefinition from '../../../src/entities/entityDefinition.js';
 import {
   POSITION_COMPONENT_ID,
@@ -220,7 +219,7 @@ describe('Spatial Index Synchronization Timing Bug', () => {
     });
 
     // CONNECT SpatialIndexSynchronizer FIRST (this is the correct order)
-    const synchronizer = new SpatialIndexSynchronizer({
+    new SpatialIndexSynchronizer({
       spatialIndexManager,
       safeEventDispatcher: sharedEventDispatcher,
       logger,

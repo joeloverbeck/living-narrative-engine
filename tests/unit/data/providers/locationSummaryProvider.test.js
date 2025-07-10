@@ -14,7 +14,6 @@ import {
   createTestEntity,
 } from '../../../common/mockFactories/index.js';
 
-
 describe('LocationSummaryProvider', () => {
   it('throws if dispatcher lacks dispatch', () => {
     const entityManager = {

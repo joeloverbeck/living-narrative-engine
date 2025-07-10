@@ -46,7 +46,8 @@
       "mcp__context7__get-library-docs",
       "mcp__ide__getDiagnostics",
       "Bash(jest:*)",
-      "Bash(NODE_OPTIONS=\"--max-old-space-size=8192\" npm test -- tests/unit/turns/turnManager.anatomy.test.js --no-coverage)"
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=8192\" npm test -- tests/unit/turns/turnManager.anatomy.test.js --no-coverage)",
+      "Bash(jq:*)"
     ],
     "deny": []
   }

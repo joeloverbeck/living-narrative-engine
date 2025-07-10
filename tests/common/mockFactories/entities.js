@@ -266,3 +266,79 @@ export const createTestEntity = (instanceId, components = {}) => ({
   },
   getComponentData: (id) => components[id] ?? null,
 });
+
+/**
+ * Creates a mock DefinitionCache with Jest mocks.
+ *
+ * @param {object} [options] - Configuration options
+ * @param {Map<string, any>} [options.initialCache] - Initial cache entries
+ * @param {boolean} [options.enableStats] - Whether to enable statistics tracking
+ * @returns {{get: jest.Mock, set: jest.Mock, has: jest.Mock, clear: jest.Mock, size: number}} Mock cache
+ */
+export const createMockDefinitionCache = ({
+  initialCache = new Map(),
+  enableStats = false,
+} = {}) => {
+  const cache = new Map(initialCache);
+  let hits = 0;
+  let misses = 0;
+
+  const mockCache = {
+    get: jest.fn((id) => {
+      if (cache.has(id)) {
+        hits++;
+        return cache.get(id);
+      }
+      misses++;
+      return undefined;
+    }),
+    set: jest.fn((id, definition) => {
+      cache.set(id, definition);
+    }),
+    has: jest.fn((id) => cache.has(id)),
+    clear: jest.fn(() => {
+      cache.clear();
+      hits = 0;
+      misses = 0;
+    }),
+    get size() {
+      return cache.size;
+    },
+    keys: jest.fn(() => cache.keys()),
+  };
+
+  if (enableStats) {
+    mockCache.getStats = jest.fn(() => ({
+      size: cache.size,
+      hits,
+      misses,
+    }));
+  }
+
+  return mockCache;
+};
+
+/**
+ * Creates a mock entity definition for testing.
+ *
+ * @param {string} id - Definition ID
+ * @param {object} [options] - Configuration options
+ * @param {Record<string, any>} [options.components] - Component definitions
+ * @param {string} [options.name] - Entity name
+ * @param {string} [options.description] - Entity description
+ * @returns {{id: string, components: Record<string, any>, name?: string, description?: string}} Mock definition
+ */
+export const createMockEntityDefinition = (
+  id,
+  { components = {}, name, description } = {}
+) => {
+  const definition = {
+    id,
+    components,
+  };
+
+  if (name) definition.name = name;
+  if (description) definition.description = description;
+
+  return definition;
+};

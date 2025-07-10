@@ -1,0 +1,108 @@
+{
+  "$schema": "http://example.com/schemas/action.schema.json",
+  "id": "clothing:transfer_clothing",
+  "description": "Transfers a clothing item from one entity to another",
+  "targetType": "entity",
+  "verb": "transfer clothing to",
+  "validation": {
+    "actor": {
+      "type": "entity",
+      "required": true,
+      "conditions": [
+        {
+          "type": "hasComponent",
+          "componentId": "core:actor"
+        }
+      ]
+    },
+    "target": {
+      "type": "entity",
+      "required": true,
+      "conditions": [
+        {
+          "type": "hasComponent",
+          "componentId": "core:actor"
+        }
+      ]
+    },
+    "subject": {
+      "type": "entity",
+      "required": true,
+      "conditions": [
+        {
+          "type": "hasComponent",
+          "componentId": "clothing:wearable"
+        }
+      ]
+    }
+  },
+  "operation": {
+    "type": "sequence",
+    "operations": [
+      {
+        "type": "log",
+        "level": "info",
+        "message": "{{actor.name}} attempts to transfer {{subject.name}} to {{target.name}}"
+      },
+      {
+        "type": "validateClothingEquipped",
+        "actorId": "{{actor.instanceId}}",
+        "clothingItemId": "{{subject.instanceId}}"
+      },
+      {
+        "type": "validateClothingCompatibility",
+        "actorId": "{{target.instanceId}}",
+        "clothingItemId": "{{subject.instanceId}}"
+      },
+      {
+        "type": "transferClothing",
+        "fromActorId": "{{actor.instanceId}}",
+        "toActorId": "{{target.instanceId}}",
+        "clothingItemId": "{{subject.instanceId}}",
+        "options": {
+          "validateCoverage": true,
+          "conflictResolution": "prompt_user"
+        }
+      },
+      {
+        "type": "dispatchEvent",
+        "eventType": "display_successful_action_result",
+        "payload": {
+          "message": "{{actor.name}} transferred {{subject.name}} to {{target.name}}",
+          "actorId": "{{actor.instanceId}}",
+          "actionType": "transfer_clothing"
+        }
+      }
+    ]
+  },
+  "onFailure": {
+    "type": "dispatchEvent",
+    "eventType": "display_failed_action_result",
+    "payload": {
+      "message": "{{actor.name}} failed to transfer {{subject.name}} to {{target.name}}: {{error.message}}",
+      "actorId": "{{actor.instanceId}}",
+      "actionType": "transfer_clothing"
+    }
+  },
+  "displayName": "Transfer Clothing",
+  "icon": "transfer",
+  "conditions": [
+    {
+      "type": "subjectHasComponent",
+      "componentId": "clothing:wearable"
+    },
+    {
+      "type": "isClothingEquipped",
+      "actorId": "{{actor.instanceId}}",
+      "clothingItemId": "{{subject.instanceId}}"
+    },
+    {
+      "type": "not",
+      "condition": {
+        "type": "isClothingEquipped",
+        "actorId": "{{target.instanceId}}",
+        "clothingItemId": "{{subject.instanceId}}"
+      }
+    }
+  ]
+}

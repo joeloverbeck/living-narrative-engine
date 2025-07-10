@@ -163,13 +163,14 @@ export class BodyPartDescriptionBuilder {
 
   /**
    * Extract components from an entity using getComponentData method
+   *
    * @private
    * @param {object} entity - Entity with getComponentData method
    * @returns {object} Object containing all found components
    */
   #extractEntityComponents(entity) {
     const components = {};
-    
+
     for (const compType of BodyPartDescriptionBuilder.COMPONENT_TYPES) {
       try {
         const data = entity.getComponentData(compType);
@@ -180,7 +181,7 @@ export class BodyPartDescriptionBuilder {
         // Component doesn't exist on entity - this is expected
       }
     }
-    
+
     return components;
   }
 }

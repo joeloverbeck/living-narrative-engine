@@ -351,12 +351,19 @@ describe('Anatomy Runtime Behavior Integration', () => {
         jointType: 'ball',
       });
 
-      // Rebuild cache
-      bodyGraphService.buildAdjacencyCache(torso.id);
+      // Create a new BodyGraphService instance to force cache rebuild
+      const freshBodyGraphService = new BodyGraphService({
+        entityManager: testBed.entityManager,
+        logger: testBed.logger,
+        eventDispatcher: testBed.eventDispatcher,
+      });
+
+      // Build cache with the new part included
+      freshBodyGraphService.buildAdjacencyCache(torso.id);
 
       // Now should have 2 parts
-      const torsos = bodyGraphService.findPartsByType(torso.id, 'torso');
-      const arms = bodyGraphService.findPartsByType(torso.id, 'arm');
+      const torsos = freshBodyGraphService.findPartsByType(torso.id, 'torso');
+      const arms = freshBodyGraphService.findPartsByType(torso.id, 'arm');
       expect(torsos).toHaveLength(1);
 
       // Check if the arm was found
