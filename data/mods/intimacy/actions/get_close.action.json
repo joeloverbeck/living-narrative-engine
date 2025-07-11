@@ -1,7 +1,6 @@
 {
   "$schema": "http://example.com/schemas/action.schema.json",
   "id": "intimacy:get_close",
-  "commandVerb": "get-close",
   "name": "Get Close",
   "description": "Move closer to the target, entering their personal space.",
   "scope": "core:actors_in_location",

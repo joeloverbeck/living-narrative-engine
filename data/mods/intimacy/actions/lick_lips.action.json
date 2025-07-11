@@ -1,7 +1,6 @@
 {
   "$schema": "http://example.com/schemas/action.schema.json",
   "id": "intimacy:lick_lips",
-  "commandVerb": "lick-lips",
   "name": "Lick Lips Seductively",
   "description": "Lean in and seductively lick the target's lips.",
   "scope": "intimacy:close_actors",

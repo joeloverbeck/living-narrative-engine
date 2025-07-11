@@ -1,7 +1,6 @@
 {
   "$schema": "http://example.com/schemas/action.schema.json",
   "id": "intimacy:adjust_clothing",
-  "commandVerb": "adjust-clothing",
   "name": "Adjust Clothing",
   "description": "Smooth their collar or adjust a displaced garment with possessive care.",
   "scope": "intimacy:close_actors",

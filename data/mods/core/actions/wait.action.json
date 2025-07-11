@@ -1,7 +1,6 @@
 {
   "$schema": "http://example.com/schemas/action.schema.json",
   "id": "core:wait",
-  "commandVerb": "wait",
   "name": "Wait",
   "description": "Wait for a moment, doing nothing.",
   "scope": "none",

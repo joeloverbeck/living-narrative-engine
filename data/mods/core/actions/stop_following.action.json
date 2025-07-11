@@ -1,7 +1,6 @@
 {
   "$schema": "http://example.com/schemas/action.schema.json",
   "id": "core:stop_following",
-  "commandVerb": "stop-following",
   "name": "Stop Following",
   "description": "Stops following your current target and becomes independent again.",
   "scope": "none",

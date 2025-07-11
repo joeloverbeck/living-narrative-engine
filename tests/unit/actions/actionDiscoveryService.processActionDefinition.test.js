@@ -22,8 +22,8 @@ describeActionDiscoverySuite(
 
     it('handles scope resolution errors and continues processing', async () => {
       const bed = getBed();
-      const failingDef = { id: 'fail', commandVerb: 'fail', scope: 'badScope' };
-      const okDef = { id: 'ok', commandVerb: 'wait', scope: 'none' };
+      const failingDef = { id: 'fail', name: 'Fail', template: 'fail', scope: 'badScope' };
+      const okDef = { id: 'ok', name: 'Wait', template: 'wait', scope: 'none' };
 
       bed.mocks.actionIndex.getCandidateActions.mockReturnValue([
         failingDef,
@@ -58,7 +58,7 @@ describeActionDiscoverySuite(
 
     it('uses the target resolution service for scoped actions', async () => {
       const bed = getBed();
-      const def = { id: 'attack', commandVerb: 'attack', scope: 'monster' };
+      const def = { id: 'attack', name: 'Attack', template: 'attack {target}', scope: 'monster' };
 
       bed.mocks.actionIndex.getCandidateActions.mockReturnValue([def]);
       bed.mocks.targetResolutionService.resolveTargets.mockReturnValue({
@@ -91,7 +91,7 @@ describeActionDiscoverySuite(
       expect(result.actions).toEqual([
         {
           id: 'attack',
-          name: 'attack',
+          name: 'Attack',
           command: 'attack monster1',
           description: '',
           params: { targetId: 'monster1' },
@@ -101,8 +101,8 @@ describeActionDiscoverySuite(
 
     it('continues discovery when one candidate throws an error', async () => {
       const bed = getBed();
-      const badDef = { id: 'bad', commandVerb: 'bad', scope: 'none' };
-      const okDef = { id: 'ok', commandVerb: 'wait', scope: 'none' };
+      const badDef = { id: 'bad', name: 'Bad', template: 'bad', scope: 'none' };
+      const okDef = { id: 'ok', name: 'Wait', template: 'wait', scope: 'none' };
 
       bed.mocks.actionIndex.getCandidateActions.mockReturnValue([
         badDef,
@@ -113,7 +113,7 @@ describeActionDiscoverySuite(
       });
       bed.mocks.actionCommandFormatter.format.mockImplementation((def) => {
         if (def.id === 'bad') throw new Error('boom');
-        return { ok: true, value: def.commandVerb };
+        return { ok: true, value: def.template };
       });
 
       const result = await bed.service.getValidActions({ id: 'actor' }, {});
@@ -133,11 +133,12 @@ describeActionDiscoverySuite(
       const bed = getBed();
       const badDef = {
         id: 'bad',
-        commandVerb: 'bad',
+        name: 'Bad',
+        template: 'bad',
         scope: 'none',
         prerequisites: [{}],
       };
-      const okDef = { id: 'ok', commandVerb: 'wait', scope: 'none' };
+      const okDef = { id: 'ok', name: 'Wait', template: 'wait', scope: 'none' };
 
       bed.mocks.actionIndex.getCandidateActions.mockReturnValue([
         badDef,

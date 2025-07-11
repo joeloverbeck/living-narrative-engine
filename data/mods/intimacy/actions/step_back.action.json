@@ -1,7 +1,6 @@
 {
   "$schema": "http://example.com/schemas/action.schema.json",
   "id": "intimacy:step_back",
-  "commandVerb": "step-back",
   "name": "Step Back",
   "description": "Step back from your current intimate partner, ending the closeness.",
   "scope": "none",
