@@ -76,7 +76,9 @@ describe('DescriptionPersistenceService', () => {
       const result = service.updateDescription(entityId, description);
 
       expect(result).toBe(true);
-      expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(entityId);
+      expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(
+        entityId
+      );
       expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
         entityId,
         DESCRIPTION_COMPONENT_ID,

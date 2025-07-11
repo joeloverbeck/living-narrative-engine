@@ -32,7 +32,7 @@ describe('Scope-DSL Parser - Edge Cases for Full Coverage', () => {
       // Target lines 289-291: depth limit check
       expect(() => {
         parseDslExpression(
-          'actor.field1[].field2[].field3[].field4[].field5[]'
+          'actor.field1[].field2[].field3[].field4[].field5[].field6[].field7[]'
         );
       }).toThrow('Expression depth limit exceeded');
     });

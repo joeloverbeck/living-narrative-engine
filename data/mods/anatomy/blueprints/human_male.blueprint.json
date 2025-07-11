@@ -2,114 +2,13 @@
   "$schema": "http://example.com/schemas/anatomy.blueprint.schema.json",
   "id": "anatomy:human_male",
   "root": "anatomy:human_male_torso",
+  "compose": [
+    {
+      "part": "anatomy:humanoid_core",
+      "include": ["slots", "clothingSlotMappings"]
+    }
+  ],
   "slots": {
-    "head": {
-      "socket": "neck",
-      "requirements": {
-        "partType": "head",
-        "components": ["anatomy:part"]
-      }
-    },
-    "left_arm": {
-      "socket": "left_shoulder",
-      "requirements": {
-        "partType": "arm",
-        "components": ["anatomy:part"]
-      }
-    },
-    "right_arm": {
-      "socket": "right_shoulder",
-      "requirements": {
-        "partType": "arm",
-        "components": ["anatomy:part"]
-      }
-    },
-    "left_leg": {
-      "socket": "left_hip",
-      "requirements": {
-        "partType": "leg",
-        "components": ["anatomy:part"]
-      }
-    },
-    "right_leg": {
-      "socket": "right_hip",
-      "requirements": {
-        "partType": "leg",
-        "components": ["anatomy:part"]
-      }
-    },
-    "left_eye": {
-      "parent": "head",
-      "socket": "left_eye",
-      "requirements": {
-        "partType": "eye",
-        "components": ["anatomy:part"]
-      }
-    },
-    "right_eye": {
-      "parent": "head",
-      "socket": "right_eye",
-      "requirements": {
-        "partType": "eye",
-        "components": ["anatomy:part"]
-      }
-    },
-    "left_ear": {
-      "parent": "head",
-      "socket": "left_ear",
-      "requirements": {
-        "partType": "ear",
-        "components": ["anatomy:part"]
-      }
-    },
-    "right_ear": {
-      "parent": "head",
-      "socket": "right_ear",
-      "requirements": {
-        "partType": "ear",
-        "components": ["anatomy:part"]
-      }
-    },
-    "nose": {
-      "parent": "head",
-      "socket": "nose",
-      "requirements": {
-        "partType": "nose",
-        "components": ["anatomy:part"]
-      }
-    },
-    "mouth": {
-      "parent": "head",
-      "socket": "mouth",
-      "requirements": {
-        "partType": "mouth",
-        "components": ["anatomy:part"]
-      }
-    },
-    "teeth": {
-      "parent": "mouth",
-      "socket": "teeth",
-      "requirements": {
-        "partType": "teeth",
-        "components": ["anatomy:part"]
-      }
-    },
-    "hair": {
-      "parent": "head",
-      "socket": "scalp",
-      "requirements": {
-        "partType": "hair",
-        "components": ["anatomy:part"]
-      }
-    },
-    "pubic_hair": {
-      "socket": "pubic_hair",
-      "requirements": {
-        "partType": "pubic_hair",
-        "components": ["anatomy:part"]
-      },
-      "optional": true
-    },
     "penis": {
       "socket": "penis",
       "requirements": {
@@ -130,75 +29,9 @@
         "partType": "testicle",
         "components": ["anatomy:part"]
       }
-    },
-    "left_hand": {
-      "parent": "left_arm",
-      "socket": "wrist",
-      "requirements": {
-        "partType": "hand",
-        "components": ["anatomy:part"]
-      }
-    },
-    "right_hand": {
-      "parent": "right_arm",
-      "socket": "wrist",
-      "requirements": {
-        "partType": "hand",
-        "components": ["anatomy:part"]
-      }
-    },
-    "left_foot": {
-      "parent": "left_leg",
-      "socket": "ankle",
-      "requirements": {
-        "partType": "foot",
-        "components": ["anatomy:part"]
-      }
-    },
-    "right_foot": {
-      "parent": "right_leg",
-      "socket": "ankle",
-      "requirements": {
-        "partType": "foot",
-        "components": ["anatomy:part"]
-      }
-    },
-    "asshole": {
-      "socket": "asshole",
-      "requirements": {
-        "partType": "asshole",
-        "components": ["anatomy:part"]
-      }
     }
   },
   "clothingSlotMappings": {
-    "head_gear": {
-      "blueprintSlots": ["head"],
-      "allowedLayers": ["base", "outer", "armor"],
-      "layerOrder": ["base", "outer", "armor"],
-      "defaultLayer": "base",
-      "tags": ["head", "armor_slot"]
-    },
-    "face_gear": {
-      "blueprintSlots": ["head"],
-      "allowedLayers": ["accessory"],
-      "layerOrder": ["accessory"],
-      "defaultLayer": "accessory",
-      "tags": ["face", "accessory"],
-      "conflictsWith": ["full_helmet"]
-    },
-    "torso_upper": {
-      "anatomySockets": [
-        "left_chest",
-        "right_chest",
-        "left_shoulder",
-        "right_shoulder"
-      ],
-      "allowedLayers": ["underwear", "base", "outer", "armor"],
-      "layerOrder": ["underwear", "base", "outer", "armor"],
-      "defaultLayer": "base",
-      "tags": ["torso", "upper_body"]
-    },
     "torso_lower": {
       "anatomySockets": [
         "left_hip",
@@ -212,43 +45,6 @@
       "layerOrder": ["underwear", "base", "outer"],
       "defaultLayer": "base",
       "tags": ["torso", "lower_body"]
-    },
-    "left_arm_clothing": {
-      "blueprintSlots": ["left_arm"],
-      "allowedLayers": ["base", "outer", "armor"],
-      "layerOrder": ["base", "outer", "armor"],
-      "defaultLayer": "base",
-      "tags": ["arm", "left_side"],
-      "requiresSlots": ["torso_upper"]
-    },
-    "right_arm_clothing": {
-      "blueprintSlots": ["right_arm"],
-      "allowedLayers": ["base", "outer", "armor"],
-      "layerOrder": ["base", "outer", "armor"],
-      "defaultLayer": "base",
-      "tags": ["arm", "right_side"],
-      "requiresSlots": ["torso_upper"]
-    },
-    "hands": {
-      "blueprintSlots": ["left_hand", "right_hand"],
-      "allowedLayers": ["base", "armor"],
-      "layerOrder": ["base", "armor"],
-      "defaultLayer": "base",
-      "tags": ["hands", "extremities"]
-    },
-    "legs": {
-      "blueprintSlots": ["left_leg", "right_leg"],
-      "allowedLayers": ["underwear", "base", "outer", "armor"],
-      "layerOrder": ["underwear", "base", "outer", "armor"],
-      "defaultLayer": "base",
-      "tags": ["legs", "lower_body"]
-    },
-    "feet": {
-      "blueprintSlots": ["left_foot", "right_foot"],
-      "allowedLayers": ["base", "armor"],
-      "layerOrder": ["base", "armor"],
-      "defaultLayer": "base",
-      "tags": ["feet", "extremities"]
     },
     "full_body": {
       "blueprintSlots": [

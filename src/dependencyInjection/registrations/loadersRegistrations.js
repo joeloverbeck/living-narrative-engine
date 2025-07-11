@@ -67,6 +67,8 @@ import ScopeLoader from '../../loaders/scopeLoader.js';
 import WorldLoader from '../../loaders/worldLoader.js';
 import AnatomyRecipeLoader from '../../loaders/anatomyRecipeLoader.js';
 import AnatomyBlueprintLoader from '../../loaders/anatomyBlueprintLoader.js';
+import AnatomyBlueprintPartLoader from '../../loaders/anatomyBlueprintPartLoader.js';
+import AnatomySlotLibraryLoader from '../../loaders/anatomySlotLibraryLoader.js';
 import AnatomyFormattingLoader from '../../loaders/anatomyFormattingLoader.js';
 import { SCOPES_KEY } from '../../constants/dataRegistryKeys.js';
 
@@ -197,6 +199,8 @@ export function registerLoaders(container) {
   registerLoader(tokens.GoalLoader, GoalLoader);
   registerLoader(tokens.AnatomyRecipeLoader, AnatomyRecipeLoader);
   registerLoader(tokens.AnatomyBlueprintLoader, AnatomyBlueprintLoader);
+  registerLoader(tokens.AnatomyBlueprintPartLoader, AnatomyBlueprintPartLoader);
+  registerLoader(tokens.AnatomySlotLibraryLoader, AnatomySlotLibraryLoader);
   registerLoader(tokens.AnatomyFormattingLoader, AnatomyFormattingLoader);
 
   // Register ScopeLoader with TextDataFetcher instead of regular IDataFetcher
@@ -278,8 +282,12 @@ export function registerLoaders(container) {
           scopeLoader: c.resolve(tokens.ScopeLoader),
           entityDefinitionLoader: c.resolve(tokens.EntityLoader),
           entityInstanceLoader: c.resolve(tokens.EntityInstanceLoader),
-          anatomyRecipeLoader: c.resolve(tokens.AnatomyRecipeLoader),
+          anatomySlotLibraryLoader: c.resolve(tokens.AnatomySlotLibraryLoader),
+          anatomyBlueprintPartLoader: c.resolve(
+            tokens.AnatomyBlueprintPartLoader
+          ),
           anatomyBlueprintLoader: c.resolve(tokens.AnatomyBlueprintLoader),
+          anatomyRecipeLoader: c.resolve(tokens.AnatomyRecipeLoader),
           anatomyFormattingLoader: c.resolve(tokens.AnatomyFormattingLoader),
         }),
         aggregatorFactory: (counts) => new LoadResultAggregator(counts),

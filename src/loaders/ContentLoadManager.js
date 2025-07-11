@@ -96,6 +96,9 @@ export class ContentLoadManager {
       );
     runningTotals = afterInst;
 
+    // Finalize loaders that support finalization
+    await this.#finalizeLoaders();
+
     // Combine results: if a mod failed in either phase, it's marked as failed.
     // Skipped in one phase but success in another could be success, or based on specific logic.
     // For simplicity, let's say success requires success in phases it participated in.
@@ -223,6 +226,43 @@ export class ContentLoadManager {
       phaseLoaders,
       phase
     );
+  }
+
+  /**
+   * Finalizes loaders that have a finalize method.
+   * This allows loaders to perform post-processing after all content is loaded.
+   *
+   * @returns {Promise<void>}
+   * @private
+   */
+  async #finalizeLoaders() {
+    this.#logger.debug(
+      'ContentLoadManager: Finalizing loaders that support finalization...'
+    );
+
+    // Get unique loaders from the configuration
+    const uniqueLoaders = new Set(
+      this.#contentLoadersConfig.map((config) => config.loader)
+    );
+
+    for (const loader of uniqueLoaders) {
+      if (typeof loader.finalize === 'function') {
+        this.#logger.debug(
+          `ContentLoadManager: Finalizing loader: ${loader.constructor.name}`
+        );
+        try {
+          await loader.finalize();
+        } catch (error) {
+          this.#logger.error(
+            `ContentLoadManager: Error finalizing loader ${loader.constructor.name}`,
+            error
+          );
+          // Continue with other loaders even if one fails
+        }
+      }
+    }
+
+    this.#logger.debug('ContentLoadManager: Loader finalization complete.');
   }
 }
 

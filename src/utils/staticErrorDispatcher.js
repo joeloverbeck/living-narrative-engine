@@ -7,7 +7,10 @@
 /** @typedef {import('../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 
-import { EventDispatchService, InvalidDispatcherError } from './eventDispatchService.js';
+import {
+  EventDispatchService,
+  InvalidDispatcherError,
+} from './eventDispatchService.js';
 import { ensureValidLogger } from './loggerUtils.js';
 
 /**
@@ -17,7 +20,7 @@ import { ensureValidLogger } from './loggerUtils.js';
 export class StaticErrorDispatcher {
   /**
    * Dispatches a system error event with the same signature as safeDispatchError.
-   * 
+   *
    * @param {ISafeEventDispatcher|IValidatedEventDispatcher} dispatcher - Dispatcher used to emit the event.
    * @param {string} message - Human readable error message.
    * @param {object} [details] - Additional structured details for debugging.
@@ -26,8 +29,11 @@ export class StaticErrorDispatcher {
    * @returns {void}
    */
   static dispatchError(dispatcher, message, details = {}, logger) {
-    const log = ensureValidLogger(logger, 'StaticErrorDispatcher.dispatchError');
-    
+    const log = ensureValidLogger(
+      logger,
+      'StaticErrorDispatcher.dispatchError'
+    );
+
     // Create a temporary EventDispatchService instance
     const eventDispatchService = new EventDispatchService({
       safeEventDispatcher: dispatcher,
@@ -35,14 +41,14 @@ export class StaticErrorDispatcher {
     });
 
     // Use the new consolidated method
-    eventDispatchService.dispatchSystemError(message, details, { 
-      throwOnInvalidDispatcher: true 
+    eventDispatchService.dispatchSystemError(message, details, {
+      throwOnInvalidDispatcher: true,
     });
   }
 
   /**
    * Dispatches a system error event asynchronously.
-   * 
+   *
    * @param {ISafeEventDispatcher|IValidatedEventDispatcher} dispatcher - The event dispatcher to use.
    * @param {string} message - The error message.
    * @param {object} details - Additional error details.
@@ -50,8 +56,11 @@ export class StaticErrorDispatcher {
    * @returns {Promise<void>}
    */
   static async dispatchErrorAsync(dispatcher, message, details, logger) {
-    const log = ensureValidLogger(logger, 'StaticErrorDispatcher.dispatchErrorAsync');
-    
+    const log = ensureValidLogger(
+      logger,
+      'StaticErrorDispatcher.dispatchErrorAsync'
+    );
+
     // Create a temporary EventDispatchService instance
     const eventDispatchService = new EventDispatchService({
       safeEventDispatcher: dispatcher,
@@ -59,15 +68,15 @@ export class StaticErrorDispatcher {
     });
 
     // Use the new consolidated method with async option
-    return eventDispatchService.dispatchSystemError(message, details, { 
+    return eventDispatchService.dispatchSystemError(message, details, {
       async: true,
-      throwOnInvalidDispatcher: false 
+      throwOnInvalidDispatcher: false,
     });
   }
 
   /**
    * Dispatches a validation error and returns a standardized result object.
-   * 
+   *
    * @param {ISafeEventDispatcher|IValidatedEventDispatcher} dispatcher - Dispatcher used to emit the event.
    * @param {string} message - Human readable error message.
    * @param {object} [details] - Additional structured details for debugging.
@@ -75,8 +84,11 @@ export class StaticErrorDispatcher {
    * @returns {{ ok: false, error: string, details?: object }} Result object for validation failures.
    */
   static dispatchValidationError(dispatcher, message, details, logger) {
-    const log = ensureValidLogger(logger, 'StaticErrorDispatcher.dispatchValidationError');
-    
+    const log = ensureValidLogger(
+      logger,
+      'StaticErrorDispatcher.dispatchValidationError'
+    );
+
     // Create a temporary EventDispatchService instance
     const eventDispatchService = new EventDispatchService({
       safeEventDispatcher: dispatcher,
@@ -100,7 +112,12 @@ export class StaticErrorDispatcher {
  * @deprecated Use EventDispatchService.dispatchSystemError() or StaticErrorDispatcher.dispatchError()
  */
 export function safeDispatchError(dispatcher, message, details = {}, logger) {
-  return StaticErrorDispatcher.dispatchError(dispatcher, message, details, logger);
+  return StaticErrorDispatcher.dispatchError(
+    dispatcher,
+    message,
+    details,
+    logger
+  );
 }
 
 /**
@@ -112,8 +129,18 @@ export function safeDispatchError(dispatcher, message, details = {}, logger) {
  * @param logger
  * @deprecated Use EventDispatchService.dispatchSystemError() or StaticErrorDispatcher.dispatchErrorAsync()
  */
-export async function dispatchSystemErrorEvent(dispatcher, message, details, logger) {
-  return StaticErrorDispatcher.dispatchErrorAsync(dispatcher, message, details, logger);
+export async function dispatchSystemErrorEvent(
+  dispatcher,
+  message,
+  details,
+  logger
+) {
+  return StaticErrorDispatcher.dispatchErrorAsync(
+    dispatcher,
+    message,
+    details,
+    logger
+  );
 }
 
 /**
@@ -126,5 +153,10 @@ export async function dispatchSystemErrorEvent(dispatcher, message, details, log
  * @deprecated Use EventDispatchService.dispatchValidationError() or StaticErrorDispatcher.dispatchValidationError()
  */
 export function dispatchValidationError(dispatcher, message, details, logger) {
-  return StaticErrorDispatcher.dispatchValidationError(dispatcher, message, details, logger);
+  return StaticErrorDispatcher.dispatchValidationError(
+    dispatcher,
+    message,
+    details,
+    logger
+  );
 }

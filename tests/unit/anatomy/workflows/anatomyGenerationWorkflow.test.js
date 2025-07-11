@@ -210,11 +210,9 @@ describe('AnatomyGenerationWorkflow', () => {
         });
 
         // Verify clothing instantiation was called
-        expect(mockClothingInstantiationService.instantiateRecipeClothing).toHaveBeenCalledWith(
-          ownerId,
-          recipeWithClothing,
-          expect.any(Map)
-        );
+        expect(
+          mockClothingInstantiationService.instantiateRecipeClothing
+        ).toHaveBeenCalledWith(ownerId, recipeWithClothing, expect.any(Map));
 
         // Verify the result includes clothing data
         expect(result).toEqual({
@@ -236,8 +234,10 @@ describe('AnatomyGenerationWorkflow', () => {
         await workflow.generate(blueprintId, recipeId, { ownerId });
 
         // Get the parts map that was passed
-        const passedPartsMap = mockClothingInstantiationService.instantiateRecipeClothing.mock.calls[0][2];
-        
+        const passedPartsMap =
+          mockClothingInstantiationService.instantiateRecipeClothing.mock
+            .calls[0][2];
+
         expect(passedPartsMap).toBeInstanceOf(Map);
         expect(passedPartsMap.get('left_arm')).toBe('arm-1');
       });
@@ -254,7 +254,9 @@ describe('AnatomyGenerationWorkflow', () => {
           ownerId,
         });
 
-        expect(mockClothingInstantiationService.instantiateRecipeClothing).not.toHaveBeenCalled();
+        expect(
+          mockClothingInstantiationService.instantiateRecipeClothing
+        ).not.toHaveBeenCalled();
         expect(result.clothingResult).toBeUndefined();
       });
 
@@ -270,7 +272,9 @@ describe('AnatomyGenerationWorkflow', () => {
           ownerId,
         });
 
-        expect(mockClothingInstantiationService.instantiateRecipeClothing).not.toHaveBeenCalled();
+        expect(
+          mockClothingInstantiationService.instantiateRecipeClothing
+        ).not.toHaveBeenCalled();
         expect(result.clothingResult).toBeUndefined();
       });
 
@@ -300,7 +304,9 @@ describe('AnatomyGenerationWorkflow', () => {
         });
 
         expect(result.clothingResult.errors).toHaveLength(1);
-        expect(result.clothingResult.errors[0]).toBe('Failed to equip pants: slot occupied');
+        expect(result.clothingResult.errors[0]).toBe(
+          'Failed to equip pants: slot occupied'
+        );
       });
 
       it('should handle clothing instantiation failure gracefully', async () => {

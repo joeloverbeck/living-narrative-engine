@@ -34,6 +34,20 @@
         }
       },
       "additionalProperties": false
+    },
+    "parts": {
+      "type": "array",
+      "description": "Simple list of blueprint parts to include (all slots and mappings)",
+      "items": {
+        "$ref": "./common.schema.json#/definitions/namespacedId"
+      }
+    },
+    "compose": {
+      "type": "array",
+      "description": "Advanced composition instructions for including blueprint parts",
+      "items": {
+        "$ref": "#/definitions/composeInstruction"
+      }
     }
   },
   "required": ["id", "root"],
@@ -168,6 +182,41 @@
           }
         }
       ],
+      "additionalProperties": false
+    },
+    "composeInstruction": {
+      "type": "object",
+      "description": "Instructions for composing blueprint parts",
+      "properties": {
+        "part": {
+          "$ref": "./common.schema.json#/definitions/namespacedId",
+          "description": "The blueprint part to include"
+        },
+        "include": {
+          "type": "array",
+          "description": "Which sections to include from the part",
+          "items": {
+            "type": "string",
+            "enum": ["slots", "clothingSlotMappings"]
+          },
+          "minItems": 1
+        },
+        "excludeSlots": {
+          "type": "array",
+          "description": "Specific slot keys to exclude",
+          "items": {
+            "type": "string"
+          }
+        },
+        "excludeClothingSlots": {
+          "type": "array",
+          "description": "Specific clothing slot keys to exclude",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": ["part", "include"],
       "additionalProperties": false
     }
   }

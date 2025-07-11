@@ -374,45 +374,6 @@ export class EquipmentOrchestrator {
   }
 
   /**
-   * Gets available clothing slots for an entity
-   *
-   * @param {string} entityId - Entity to get slots for
-   * @returns {Promise<{success: boolean, slots?: object[], errors?: string[]}>}
-   */
-  async getAvailableClothingSlots(entityId) {
-    try {
-      // This would integrate with anatomy system to determine available clothing slots
-      // based on the entity's anatomy and clothing_slot components
-
-      const clothingSlotData = this.#entityManager.getComponentData(
-        entityId,
-        'clothing:clothing_slot'
-      );
-
-      if (!clothingSlotData) {
-        return {
-          success: true,
-          slots: [],
-        };
-      }
-
-      return {
-        success: true,
-        slots: clothingSlotData.clothingSlots || [],
-      };
-    } catch (error) {
-      this.#logger.error(
-        `EquipmentOrchestrator: Error getting clothing slots for entity '${entityId}'`,
-        { error }
-      );
-      return {
-        success: false,
-        errors: [error.message],
-      };
-    }
-  }
-
-  /**
    * Validates basic requirements for equipment operation
    *
    * @param entityId

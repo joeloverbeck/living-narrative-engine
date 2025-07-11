@@ -1,32 +1,24 @@
-/**
- * @module validationErrorUtils
- * @description Helper utilities for formatting action validation errors.
- */
-
-import { InvalidActionDefinitionError } from '../../errors/invalidActionDefinitionError.js';
-import { InvalidActorEntityError } from '../../errors/invalidActorEntityError.js';
+// src/actions/validation/validationErrorUtils.js
 
 /**
- * Formats an Error thrown by validateActionInputs for a consistent message.
+ * Formats a validation error with additional context.
  *
- * @param {Error} err - The original error.
- * @param {string} source - Label for the calling function.
- * @param {{actionId?: string, actorId?: string}} ids Identifier info used in the message. The `contextType` property is no longer used.
- * @returns {Error} A new Error instance with the formatted message.
+ * @param {Error} error - The original error.
+ * @param {string} context - The context where the error occurred.
+ * @param {object} metadata - Additional metadata to include.
+ * @returns {Error} A new error with formatted message and metadata.
  */
-export function formatValidationError(err, source, ids) {
-  let idInfo = '';
-  if (err instanceof InvalidActionDefinitionError) {
-    idInfo = `(id: ${ids.actionId})`;
-  } else if (err instanceof InvalidActorEntityError) {
-    idInfo = `(id: ${ids.actorId})`;
-  }
-  // Branch for 'Invalid ActionTargetContext' removed as it's no longer thrown.
+export function formatValidationError(error, context, metadata) {
+  const formattedError = new Error(`${context}: ${error.message}`);
+  formattedError.name = 'ValidationError';
+  formattedError.originalError = error;
+  formattedError.metadata = metadata;
 
-  const msg = err.message
-    ? err.message.charAt(0).toLowerCase() + err.message.slice(1)
-    : 'invalid input';
-  return new Error(`${source}: ${msg} ${idInfo}`.trim());
+  // Preserve the original stack trace
+  if (error.stack) {
+    formattedError.stack = error.stack;
+  }
+
+  return formattedError;
 }
 
-export default formatValidationError;

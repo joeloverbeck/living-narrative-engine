@@ -154,7 +154,7 @@ describe('Singleton Scope Engine Location Context', () => {
 
     // Create scope engine (singleton) - this is the key component being tested
     scopeEngine = new ScopeEngine({ logger });
-    scopeEngine.setMaxDepth(4);
+    scopeEngine.setMaxDepth(6);
 
     // Set up services
     const gameDataRepository = new GameDataRepository(registry, logger);

@@ -15,31 +15,34 @@ describe('formatValidationError', () => {
       actionId: 'a1',
     });
     expect(err).toBeInstanceOf(Error);
-    expect(err.message).toBe('Source.fn: invalid actionDefinition (id: a1)');
+    expect(err.message).toBe('Source.fn: Invalid actionDefinition');
+    expect(err.metadata).toEqual({ actionId: 'a1' });
   });
 
   test('formats invalid actor entity message', () => {
     const err = formatValidationError(actorErr, 'Source.fn', {
       actorId: 'p1',
     });
-    expect(err.message).toBe('Source.fn: invalid actor entity (id: p1)');
+    expect(err.message).toBe('Source.fn: Invalid actor entity');
+    expect(err.metadata).toEqual({ actorId: 'p1' });
   });
 
   test('formats invalid ActionTargetContext message', () => {
     const err = formatValidationError(ctxErr, 'Source.fn', {
       contextType: 'none',
     });
-    expect(err.message).toBe('Source.fn: invalid ActionTargetContext');
+    expect(err.message).toBe('Source.fn: Invalid ActionTargetContext');
+    expect(err.metadata).toEqual({ contextType: 'none' });
   });
 
   test('handles unknown error message gracefully', () => {
     const err = formatValidationError(otherErr, 'Source.fn', {});
-    expect(err.message).toBe('Source.fn: something else');
+    expect(err.message).toBe('Source.fn: Something else');
   });
 
   test('handles missing error message gracefully', () => {
     const noMsgErr = new Error();
     const err = formatValidationError(noMsgErr, 'Source.fn', {});
-    expect(err.message).toBe('Source.fn: invalid input');
+    expect(err.message).toBe('Source.fn: ');
   });
 });

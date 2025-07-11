@@ -412,7 +412,7 @@ describe('persistNotes - structured note validation', () => {
         {
           text: 'Valid text',
           // Intentionally not setting subject property at all
-          otherField: 'other'
+          otherField: 'other',
         },
       ],
     };

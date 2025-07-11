@@ -11,7 +11,7 @@ describe('Anatomy Description Generation Pipeline - Integration', () => {
 
   beforeEach(() => {
     testBed = new AnatomyIntegrationTestBed();
-    
+
     // Load basic entity definitions and components needed for tests
     testBed.loadEntityDefinitions({
       'core:actor': {
@@ -19,45 +19,45 @@ describe('Anatomy Description Generation Pipeline - Integration', () => {
         description: 'A basic actor entity',
         components: {
           'core:name': {},
-          'anatomy:body': {}
-        }
+          'anatomy:body': {},
+        },
       },
       'anatomy:body_part': {
         id: 'anatomy:body_part',
         description: 'A basic body part',
         components: {
           'anatomy:part': {},
-          'core:description': {}
-        }
+          'core:description': {},
+        },
       },
       'anatomy:head': {
         id: 'anatomy:head',
         description: 'Head anatomy part',
         components: {
           'anatomy:part': {
-            subType: 'head'
+            subType: 'head',
           },
           'anatomy:sockets': { sockets: [] },
           'core:name': {
-            text: 'head'
+            text: 'head',
           },
-          'core:description': {}
-        }
+          'core:description': {},
+        },
       },
       'anatomy:torso': {
         id: 'anatomy:torso',
         description: 'Torso anatomy part',
         components: {
           'anatomy:part': {},
-          'core:description': {}
-        }
+          'core:description': {},
+        },
       },
       'anatomy:human_female_torso': {
         id: 'anatomy:human_female_torso',
         description: 'A human female torso',
         components: {
           'anatomy:part': {
-            subType: 'torso'
+            subType: 'torso',
           },
           'anatomy:sockets': {
             sockets: [
@@ -65,41 +65,41 @@ describe('Anatomy Description Generation Pipeline - Integration', () => {
                 id: 'neck',
                 orientation: 'upper',
                 allowedTypes: ['head', 'neck'],
-                nameTpl: '{{type}}'
+                nameTpl: '{{type}}',
               },
               {
                 id: 'left_shoulder',
                 orientation: 'left',
                 allowedTypes: ['arm'],
-                nameTpl: '{{orientation}} {{type}}'
+                nameTpl: '{{orientation}} {{type}}',
               },
               {
                 id: 'right_shoulder',
                 orientation: 'right',
                 allowedTypes: ['arm'],
-                nameTpl: '{{orientation}} {{type}}'
-              }
-            ]
+                nameTpl: '{{orientation}} {{type}}',
+              },
+            ],
           },
           'core:name': {
-            text: 'torso'
+            text: 'torso',
           },
-          'core:description': {}
-        }
+          'core:description': {},
+        },
       },
       'anatomy:humanoid_arm': {
         id: 'anatomy:humanoid_arm',
         description: 'A humanoid arm',
         components: {
           'anatomy:part': {
-            subType: 'arm'
+            subType: 'arm',
           },
           'core:name': {
-            text: 'arm'
+            text: 'arm',
           },
-          'core:description': {}
-        }
-      }
+          'core:description': {},
+        },
+      },
     });
 
     testBed.loadComponents({
@@ -109,10 +109,10 @@ describe('Anatomy Description Generation Pipeline - Integration', () => {
         dataSchema: {
           type: 'object',
           properties: {
-            text: { type: 'string' }
+            text: { type: 'string' },
           },
-          required: ['text']
-        }
+          required: ['text'],
+        },
       },
       'core:description': {
         id: 'core:description',
@@ -120,10 +120,10 @@ describe('Anatomy Description Generation Pipeline - Integration', () => {
         dataSchema: {
           type: 'object',
           properties: {
-            text: { type: 'string' }
+            text: { type: 'string' },
           },
-          required: ['text']
-        }
+          required: ['text'],
+        },
       },
       'anatomy:body': {
         id: 'anatomy:body',
@@ -131,14 +131,14 @@ describe('Anatomy Description Generation Pipeline - Integration', () => {
         dataSchema: {
           type: 'object',
           properties: {
-            body: { 
+            body: {
               type: ['object', 'null'],
-              nullable: true 
+              nullable: true,
             },
-            recipeId: { type: 'string' }
+            recipeId: { type: 'string' },
           },
-          required: []
-        }
+          required: [],
+        },
       },
       'anatomy:part': {
         id: 'anatomy:part',
@@ -146,10 +146,10 @@ describe('Anatomy Description Generation Pipeline - Integration', () => {
         dataSchema: {
           type: 'object',
           properties: {
-            partType: { type: 'string' }
+            partType: { type: 'string' },
           },
-          required: ['partType']
-        }
+          required: ['partType'],
+        },
       },
       'anatomy:sockets': {
         id: 'anatomy:sockets',
@@ -157,19 +157,19 @@ describe('Anatomy Description Generation Pipeline - Integration', () => {
         dataSchema: {
           type: 'object',
           properties: {
-            sockets: { 
+            sockets: {
               type: 'array',
-              items: { type: 'object' }
-            }
+              items: { type: 'object' },
+            },
           },
-          required: []
-        }
-      }
+          required: [],
+        },
+      },
     });
 
     // Load basic anatomy blueprint for human_female
     testBed.loadBlueprints({
-      'human_female': {
+      human_female: {
         id: 'human_female',
         description: 'Human female anatomy blueprint',
         root: 'anatomy:human_female_torso',
@@ -178,25 +178,25 @@ describe('Anatomy Description Generation Pipeline - Integration', () => {
             socket: 'neck',
             requirements: {
               partType: 'head',
-              components: ['anatomy:part']
-            }
+              components: ['anatomy:part'],
+            },
           },
           left_arm: {
             socket: 'left_shoulder',
             requirements: {
               partType: 'arm',
-              components: ['anatomy:part']
-            }
+              components: ['anatomy:part'],
+            },
           },
           right_arm: {
             socket: 'right_shoulder',
             requirements: {
               partType: 'arm',
-              components: ['anatomy:part']
-            }
-          }
-        }
-      }
+              components: ['anatomy:part'],
+            },
+          },
+        },
+      },
     });
 
     // Load anatomy recipe
@@ -209,17 +209,17 @@ describe('Anatomy Description Generation Pipeline - Integration', () => {
         slots: {
           head: {
             partType: 'head',
-            preferId: 'anatomy:head'
-          }
+            preferId: 'anatomy:head',
+          },
         },
         patterns: [
           {
             matches: ['left_arm', 'right_arm'],
             partType: 'arm',
-            preferId: 'anatomy:humanoid_arm'
-          }
-        ]
-      }
+            preferId: 'anatomy:humanoid_arm',
+          },
+        ],
+      },
     });
   });
 
@@ -231,19 +231,26 @@ describe('Anatomy Description Generation Pipeline - Integration', () => {
     it('should generate anatomy with proper core:description components', async () => {
       // Arrange - Create an entity that needs anatomy
       const entity = testBed.createMockEntity();
-      testBed.entityManager.createEntityInstance('core:actor', { instanceId: entity.id });
-      testBed.entityManager.addComponent(entity.id, 'core:name', { text: 'Test Character' });
-      testBed.entityManager.addComponent(entity.id, 'anatomy:body', { 
+      testBed.entityManager.createEntityInstance('core:actor', {
+        instanceId: entity.id,
+      });
+      testBed.entityManager.addComponent(entity.id, 'core:name', {
+        text: 'Test Character',
+      });
+      testBed.entityManager.addComponent(entity.id, 'anatomy:body', {
         body: null,
-        recipeId: 'test:human_female_recipe'
+        recipeId: 'test:human_female_recipe',
       });
 
       // Act - Generate anatomy for the entity
-      const result = await testBed.anatomyGenerationService.generateAnatomyIfNeeded(entity.id);
+      const result =
+        await testBed.anatomyGenerationService.generateAnatomyIfNeeded(
+          entity.id
+        );
 
       // Assert - Verify anatomy was created successfully
       expect(result).toBe(true);
-      
+
       // Get the body entity
       const bodyEntity = testBed.entityManager.getEntityInstance(entity.id);
       expect(bodyEntity).toBeTruthy();
@@ -260,11 +267,15 @@ describe('Anatomy Description Generation Pipeline - Integration', () => {
     it('should generate descriptions for individual body parts', async () => {
       // Arrange
       const entity = testBed.createMockEntity();
-      testBed.entityManager.createEntityInstance('core:actor', { instanceId: entity.id });
-      testBed.entityManager.addComponent(entity.id, 'core:name', { text: 'Test Character' });
-      testBed.entityManager.addComponent(entity.id, 'anatomy:body', { 
+      testBed.entityManager.createEntityInstance('core:actor', {
+        instanceId: entity.id,
+      });
+      testBed.entityManager.addComponent(entity.id, 'core:name', {
+        text: 'Test Character',
+      });
+      testBed.entityManager.addComponent(entity.id, 'anatomy:body', {
         body: null,
-        recipeId: 'test:human_female_recipe'
+        recipeId: 'test:human_female_recipe',
       });
 
       // Act
@@ -283,7 +294,11 @@ describe('Anatomy Description Generation Pipeline - Integration', () => {
         const partEntity = testBed.entityManager.getEntityInstance(partId);
         if (partEntity && partEntity.hasComponent('core:description')) {
           const description = partEntity.getComponentData('core:description');
-          if (description && description.text && description.text.trim() !== '') {
+          if (
+            description &&
+            description.text &&
+            description.text.trim() !== ''
+          ) {
             partsWithDescriptions++;
           }
         }
@@ -293,7 +308,7 @@ describe('Anatomy Description Generation Pipeline - Integration', () => {
       // Assert that we have at least some parts with descriptions
       expect(partsChecked).toBeGreaterThan(0);
       expect(partsWithDescriptions).toBeGreaterThan(0);
-      
+
       // For human anatomy, we should have most parts with descriptions
       const descriptionRate = partsWithDescriptions / partsChecked;
       expect(descriptionRate).toBeGreaterThan(0.2); // At least 20% of parts should have descriptions
@@ -302,11 +317,15 @@ describe('Anatomy Description Generation Pipeline - Integration', () => {
     it('should handle description composition without errors', async () => {
       // Arrange
       const entity = testBed.createMockEntity();
-      testBed.entityManager.createEntityInstance('core:actor', { instanceId: entity.id });
-      testBed.entityManager.addComponent(entity.id, 'core:name', { text: 'Test Character' });
-      testBed.entityManager.addComponent(entity.id, 'anatomy:body', { 
+      testBed.entityManager.createEntityInstance('core:actor', {
+        instanceId: entity.id,
+      });
+      testBed.entityManager.addComponent(entity.id, 'core:name', {
+        text: 'Test Character',
+      });
+      testBed.entityManager.addComponent(entity.id, 'anatomy:body', {
         body: null,
-        recipeId: 'test:human_female_recipe'
+        recipeId: 'test:human_female_recipe',
       });
 
       // Act - Generate anatomy
@@ -314,9 +333,10 @@ describe('Anatomy Description Generation Pipeline - Integration', () => {
 
       // Get the body entity for direct composition testing
       const bodyEntity = testBed.entityManager.getEntityInstance(entity.id);
-      
+
       // Act - Test description composition directly
-      const composedDescription = testBed.bodyDescriptionComposer.composeDescription(bodyEntity);
+      const composedDescription =
+        testBed.bodyDescriptionComposer.composeDescription(bodyEntity);
 
       // Assert - Verify composition works without errors
       expect(composedDescription).toBeTruthy();
@@ -327,13 +347,17 @@ describe('Anatomy Description Generation Pipeline - Integration', () => {
     it('should not dispatch system error events for valid anatomy generation', async () => {
       // Arrange
       const entity = testBed.createMockEntity();
-      testBed.entityManager.createEntityInstance('core:actor', { instanceId: entity.id });
-      testBed.entityManager.addComponent(entity.id, 'core:name', { text: 'Test Character' });
-      testBed.entityManager.addComponent(entity.id, 'anatomy:body', { 
-        body: null,
-        recipeId: 'test:human_female_recipe'
+      testBed.entityManager.createEntityInstance('core:actor', {
+        instanceId: entity.id,
       });
-      
+      testBed.entityManager.addComponent(entity.id, 'core:name', {
+        text: 'Test Character',
+      });
+      testBed.entityManager.addComponent(entity.id, 'anatomy:body', {
+        body: null,
+        recipeId: 'test:human_female_recipe',
+      });
+
       // Clear any previous dispatch calls
       testBed.mocks.eventDispatcher.dispatch.mockClear();
 
@@ -341,23 +365,32 @@ describe('Anatomy Description Generation Pipeline - Integration', () => {
       await testBed.anatomyGenerationService.generateAnatomyIfNeeded(entity.id);
 
       // Assert - No error events should have been dispatched
-      const errorCalls = testBed.mocks.eventDispatcher.dispatch.mock.calls.filter(call => {
-        const event = call[0];
-        return event && event.type === 'core:system_error_occurred' && 
-               event.payload && event.payload.message && 
-               event.payload.message.includes('Description is empty');
-      });
+      const errorCalls =
+        testBed.mocks.eventDispatcher.dispatch.mock.calls.filter((call) => {
+          const event = call[0];
+          return (
+            event &&
+            event.type === 'core:system_error_occurred' &&
+            event.payload &&
+            event.payload.message &&
+            event.payload.message.includes('Description is empty')
+          );
+        });
       expect(errorCalls).toHaveLength(0);
     });
 
     it('should generate body descriptions that include part information', async () => {
       // Arrange
       const entity = testBed.createMockEntity();
-      testBed.entityManager.createEntityInstance('core:actor', { instanceId: entity.id });
-      testBed.entityManager.addComponent(entity.id, 'core:name', { text: 'Test Character' });
-      testBed.entityManager.addComponent(entity.id, 'anatomy:body', { 
+      testBed.entityManager.createEntityInstance('core:actor', {
+        instanceId: entity.id,
+      });
+      testBed.entityManager.addComponent(entity.id, 'core:name', {
+        text: 'Test Character',
+      });
+      testBed.entityManager.addComponent(entity.id, 'anatomy:body', {
         body: null,
-        recipeId: 'test:human_female_recipe'
+        recipeId: 'test:human_female_recipe',
       });
 
       // Act
@@ -370,11 +403,21 @@ describe('Anatomy Description Generation Pipeline - Integration', () => {
       // Assert - Description should contain typical body parts
       expect(bodyDescription.text).toBeTruthy();
       const descText = bodyDescription.text.toLowerCase();
-      
+
       // Should contain at least some body parts (flexible test)
-      const bodyParts = ['eye', 'hair', 'arm', 'leg', 'hand', 'foot', 'head', 'breast', 'torso'];
-      const foundParts = bodyParts.filter(part => descText.includes(part));
-      
+      const bodyParts = [
+        'eye',
+        'hair',
+        'arm',
+        'leg',
+        'hand',
+        'foot',
+        'head',
+        'breast',
+        'torso',
+      ];
+      const foundParts = bodyParts.filter((part) => descText.includes(part));
+
       expect(foundParts.length).toBeGreaterThan(0);
     });
   });
@@ -383,16 +426,20 @@ describe('Anatomy Description Generation Pipeline - Integration', () => {
     it('should generate descriptions even when some parts lack core:description initially', async () => {
       // Arrange
       const entity = testBed.createMockEntity();
-      testBed.entityManager.createEntityInstance('core:actor', { instanceId: entity.id });
-      testBed.entityManager.addComponent(entity.id, 'core:name', { text: 'Test Character' });
-      testBed.entityManager.addComponent(entity.id, 'anatomy:body', { 
+      testBed.entityManager.createEntityInstance('core:actor', {
+        instanceId: entity.id,
+      });
+      testBed.entityManager.addComponent(entity.id, 'core:name', {
+        text: 'Test Character',
+      });
+      testBed.entityManager.addComponent(entity.id, 'anatomy:body', {
         body: null,
-        recipeId: 'test:human_female_recipe'
+        recipeId: 'test:human_female_recipe',
       });
 
       // Generate anatomy but simulate missing descriptions on some parts
       await testBed.anatomyGenerationService.generateAnatomyIfNeeded(entity.id);
-      
+
       const bodyEntity = testBed.entityManager.getEntityInstance(entity.id);
       const bodyComponent = bodyEntity.getComponentData('anatomy:body');
       const allParts = testBed.bodyGraphService.getAllParts(bodyComponent.body);
@@ -404,7 +451,8 @@ describe('Anatomy Description Generation Pipeline - Integration', () => {
       }
 
       // Act - Try to compose description (should use fallback generation)
-      const composedDescription = testBed.bodyDescriptionComposer.composeDescription(bodyEntity);
+      const composedDescription =
+        testBed.bodyDescriptionComposer.composeDescription(bodyEntity);
 
       // Assert - Should still generate a valid description using fallback
       expect(composedDescription).toBeTruthy();
@@ -417,10 +465,12 @@ describe('Anatomy Description Generation Pipeline - Integration', () => {
     it('should extract descriptions from parts with fallback generation', async () => {
       // Arrange
       const entity = testBed.createMockEntity();
-      testBed.entityManager.createEntityInstance('core:actor', { instanceId: entity.id });
-      testBed.entityManager.addComponent(entity.id, 'anatomy:body', { 
+      testBed.entityManager.createEntityInstance('core:actor', {
+        instanceId: entity.id,
+      });
+      testBed.entityManager.addComponent(entity.id, 'anatomy:body', {
         body: null,
-        recipeId: 'test:human_female_recipe'
+        recipeId: 'test:human_female_recipe',
       });
       await testBed.anatomyGenerationService.generateAnatomyIfNeeded(entity.id);
 
@@ -431,24 +481,28 @@ describe('Anatomy Description Generation Pipeline - Integration', () => {
       // Get some part entities
       const partEntities = allParts
         .slice(0, 5)
-        .map(id => testBed.entityManager.getEntityInstance(id))
-        .filter(entity => entity);
+        .map((id) => testBed.entityManager.getEntityInstance(id))
+        .filter((entity) => entity);
 
       // Remove descriptions from parts to test fallback
       for (const partEntity of partEntities) {
         if (partEntity.hasComponent('core:description')) {
-          testBed.entityManager.removeComponent(partEntity.id, 'core:description');
+          testBed.entityManager.removeComponent(
+            partEntity.id,
+            'core:description'
+          );
         }
       }
 
       // Act - Extract descriptions using template (should use fallback generation)
-      const descriptions = testBed.descriptionTemplate.extractDescriptions(partEntities);
+      const descriptions =
+        testBed.descriptionTemplate.extractDescriptions(partEntities);
 
       // Assert - Should have generated descriptions for the parts
       expect(descriptions).toBeTruthy();
       expect(Array.isArray(descriptions)).toBe(true);
       expect(descriptions.length).toBeGreaterThan(0);
-      
+
       // All returned descriptions should be non-empty strings
       for (const desc of descriptions) {
         expect(typeof desc).toBe('string');

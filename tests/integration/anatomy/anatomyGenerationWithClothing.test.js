@@ -22,7 +22,7 @@ describe('Anatomy Generation with Clothing Integration', () => {
   let eventBus;
   let clothingInstantiationService;
   let anatomyGenerationWorkflow;
-  
+
   const ownerId = 'actor_123';
   const blueprintId = 'anatomy:human_male';
   const recipeId = 'anatomy:human_peasant';
@@ -32,15 +32,21 @@ describe('Anatomy Generation with Clothing Integration', () => {
     entityManager = new SimpleEntityManager();
     dataRegistry = createStatefulMockDataRegistry();
     logger = createMockLogger();
-    
+
     // Add createEntityInstance method to entityManager for ClothingInstantiationService
     entityManager.createEntityInstance = jest.fn();
-    
+
     // Create mock services
     bodyBlueprintFactory = {
       createAnatomyGraph: jest.fn().mockResolvedValue({
         rootId: 'torso_123',
-        entities: ['torso_123', 'head_123', 'left_arm_123', 'right_arm_123', 'legs_123'],
+        entities: [
+          'torso_123',
+          'head_123',
+          'left_arm_123',
+          'right_arm_123',
+          'legs_123',
+        ],
       }),
     };
 
@@ -192,14 +198,18 @@ describe('Anatomy Generation with Clothing Integration', () => {
         if (definitions[entityId]) {
           return Promise.resolve(definitions[entityId]);
         }
-        return Promise.reject(new Error(`Entity definition not found: ${entityId}`));
+        return Promise.reject(
+          new Error(`Entity definition not found: ${entityId}`)
+        );
       });
 
       // Mock entity creation for clothing
       let clothingCounter = 1;
       entityManager.createEntityInstance.mockImplementation((defId, props) => {
         const clothingId = `clothing_${clothingCounter++}`;
-        const currentEntities = Array.from(entityManager.entities.values()).map(e => ({ id: e.id, components: e.components }));
+        const currentEntities = Array.from(entityManager.entities.values()).map(
+          (e) => ({ id: e.id, components: e.components })
+        );
         currentEntities.push({
           id: clothingId,
           components: {
@@ -214,9 +224,13 @@ describe('Anatomy Generation with Clothing Integration', () => {
     });
 
     it('should generate complete character with anatomy and clothing', async () => {
-      const result = await anatomyGenerationWorkflow.generate(blueprintId, recipeId, {
-        ownerId,
-      });
+      const result = await anatomyGenerationWorkflow.generate(
+        blueprintId,
+        recipeId,
+        {
+          ownerId,
+        }
+      );
 
       // Verify anatomy was created
       expect(result.rootId).toBe('torso_123');
@@ -250,9 +264,13 @@ describe('Anatomy Generation with Clothing Integration', () => {
     });
 
     it('should apply property overrides to clothing entities', async () => {
-      const result = await anatomyGenerationWorkflow.generate(blueprintId, recipeId, {
-        ownerId,
-      });
+      const result = await anatomyGenerationWorkflow.generate(
+        blueprintId,
+        recipeId,
+        {
+          ownerId,
+        }
+      );
 
       // Check that createEntityInstance was called with property overrides
       expect(entityManager.createEntityInstance).toHaveBeenCalledWith(
@@ -286,7 +304,7 @@ describe('Anatomy Generation with Clothing Integration', () => {
       // Anatomy should be created normally
       expect(result.rootId).toBe('torso_123');
       expect(result.entities).toHaveLength(5);
-      
+
       // No clothing result
       expect(result.clothingResult).toBeUndefined();
       expect(eventBus.dispatch).not.toHaveBeenCalled();
@@ -298,9 +316,13 @@ describe('Anatomy Generation with Clothing Integration', () => {
         new Error('Clothing service unavailable')
       );
 
-      const result = await anatomyGenerationWorkflow.generate(blueprintId, recipeId, {
-        ownerId,
-      });
+      const result = await anatomyGenerationWorkflow.generate(
+        blueprintId,
+        recipeId,
+        {
+          ownerId,
+        }
+      );
 
       // Anatomy should still be created
       expect(result.rootId).toBe('torso_123');
@@ -313,13 +335,19 @@ describe('Anatomy Generation with Clothing Integration', () => {
     });
 
     it('should respect equip flag for clothing items', async () => {
-      const result = await anatomyGenerationWorkflow.generate(blueprintId, recipeId, {
-        ownerId,
-      });
+      const result = await anatomyGenerationWorkflow.generate(
+        blueprintId,
+        recipeId,
+        {
+          ownerId,
+        }
+      );
 
       // Verify equipment orchestrator was called only for items with equip: true
-      expect(equipmentOrchestrator.orchestrateEquipment).toHaveBeenCalledTimes(3);
-      
+      expect(equipmentOrchestrator.orchestrateEquipment).toHaveBeenCalledTimes(
+        3
+      );
+
       // Verify straw hat was instantiated but not equipped
       expect(result.clothingResult.instantiated).toContainEqual(
         expect.objectContaining({ definitionId: 'clothing:straw_hat' })
@@ -335,9 +363,13 @@ describe('Anatomy Generation with Clothing Integration', () => {
         .mockResolvedValueOnce({ isValid: true, errors: [] })
         .mockResolvedValueOnce({ isValid: true, errors: [] });
 
-      const result = await anatomyGenerationWorkflow.generate(blueprintId, recipeId, {
-        ownerId,
-      });
+      const result = await anatomyGenerationWorkflow.generate(
+        blueprintId,
+        recipeId,
+        {
+          ownerId,
+        }
+      );
 
       // Should still instantiate valid items
       expect(result.clothingResult.instantiated.length).toBeGreaterThan(0);
@@ -350,9 +382,11 @@ describe('Anatomy Generation with Clothing Integration', () => {
       });
 
       // Get the call to instantiateRecipeClothing
-      const mockCalls = clothingInstantiationService.instantiateRecipeClothing.mock || 
-                       jest.spyOn(clothingInstantiationService, 'instantiateRecipeClothing').mock;
-      
+      const mockCalls =
+        clothingInstantiationService.instantiateRecipeClothing.mock ||
+        jest.spyOn(clothingInstantiationService, 'instantiateRecipeClothing')
+          .mock;
+
       if (mockCalls && mockCalls.calls.length > 0) {
         const partsMapArg = mockCalls.calls[0][2];
         expect(partsMapArg).toBeInstanceOf(Map);
@@ -398,7 +432,7 @@ describe('Anatomy Generation with Clothing Integration', () => {
 
       expect(result.clothingResult.instantiated).toHaveLength(20);
       expect(result.clothingResult.equipped).toHaveLength(10);
-      
+
       // Should complete in reasonable time (< 500ms)
       expect(endTime - startTime).toBeLessThan(500);
     });

@@ -58,7 +58,7 @@ describe('ClothingInstantiationService', () => {
       logger,
       eventBus,
     } = createMocks());
-    
+
     service = new ClothingInstantiationService({
       entityManager,
       entityDefinitionLoader,
@@ -207,10 +207,12 @@ describe('ClothingInstantiationService', () => {
       entityManager.createEntityInstance.mockResolvedValue(createdClothingId);
 
       // Mock validation
-      anatomyClothingIntegrationService.validateSlotCompatibility.mockResolvedValue({
-        isValid: true,
-        errors: [],
-      });
+      anatomyClothingIntegrationService.validateSlotCompatibility.mockResolvedValue(
+        {
+          isValid: true,
+          errors: [],
+        }
+      );
 
       // Mock equipment
       equipmentOrchestrator.orchestrateEquipment.mockResolvedValue({
@@ -264,28 +266,27 @@ describe('ClothingInstantiationService', () => {
 
       // Mock entity definitions
       // Mock entity definitions for validation and instantiation
-      entityDefinitionLoader.load
-        .mockImplementation((entityId) => {
-          switch (entityId) {
-            case 'clothing:simple_shirt':
-              return Promise.resolve({
-                id: 'clothing:simple_shirt',
-                components: { 'clothing:clothing': { slot: 'torso_upper' } },
-              });
-            case 'clothing:leather_boots':
-              return Promise.resolve({
-                id: 'clothing:leather_boots',
-                components: { 'clothing:clothing': { slot: 'feet' } },
-              });
-            case 'clothing:straw_hat':
-              return Promise.resolve({
-                id: 'clothing:straw_hat',
-                components: { 'clothing:clothing': { slot: 'head' } },
-              });
-            default:
-              return Promise.reject(new Error(`Unknown entity: ${entityId}`));
-          }
-        });
+      entityDefinitionLoader.load.mockImplementation((entityId) => {
+        switch (entityId) {
+          case 'clothing:simple_shirt':
+            return Promise.resolve({
+              id: 'clothing:simple_shirt',
+              components: { 'clothing:clothing': { slot: 'torso_upper' } },
+            });
+          case 'clothing:leather_boots':
+            return Promise.resolve({
+              id: 'clothing:leather_boots',
+              components: { 'clothing:clothing': { slot: 'feet' } },
+            });
+          case 'clothing:straw_hat':
+            return Promise.resolve({
+              id: 'clothing:straw_hat',
+              components: { 'clothing:clothing': { slot: 'head' } },
+            });
+          default:
+            return Promise.reject(new Error(`Unknown entity: ${entityId}`));
+        }
+      });
 
       // Mock entity creation
       entityManager.createEntityInstance
@@ -294,10 +295,12 @@ describe('ClothingInstantiationService', () => {
         .mockResolvedValueOnce('clothing_hat_123');
 
       // Mock validation
-      anatomyClothingIntegrationService.validateSlotCompatibility.mockResolvedValue({
-        isValid: true,
-        errors: [],
-      });
+      anatomyClothingIntegrationService.validateSlotCompatibility.mockResolvedValue(
+        {
+          isValid: true,
+          errors: [],
+        }
+      );
 
       // Mock equipment
       equipmentOrchestrator.orchestrateEquipment.mockResolvedValue({
@@ -340,10 +343,12 @@ describe('ClothingInstantiationService', () => {
       });
 
       entityManager.createEntityInstance.mockResolvedValue('clothing_123');
-      anatomyClothingIntegrationService.validateSlotCompatibility.mockResolvedValue({
-        isValid: true,
-        errors: [],
-      });
+      anatomyClothingIntegrationService.validateSlotCompatibility.mockResolvedValue(
+        {
+          isValid: true,
+          errors: [],
+        }
+      );
       equipmentOrchestrator.orchestrateEquipment.mockResolvedValue({
         success: true,
       });
@@ -378,14 +383,18 @@ describe('ClothingInstantiationService', () => {
 
       entityDefinitionLoader.load.mockResolvedValue({
         id: 'clothing:shirt',
-        components: { 'clothing:clothing': { slot: 'torso_upper', layer: 'base' } },
+        components: {
+          'clothing:clothing': { slot: 'torso_upper', layer: 'base' },
+        },
       });
 
       entityManager.createEntityInstance.mockResolvedValue('clothing_123');
-      anatomyClothingIntegrationService.validateSlotCompatibility.mockResolvedValue({
-        isValid: true,
-        errors: [],
-      });
+      anatomyClothingIntegrationService.validateSlotCompatibility.mockResolvedValue(
+        {
+          isValid: true,
+          errors: [],
+        }
+      );
       equipmentOrchestrator.orchestrateEquipment.mockResolvedValue({
         success: true,
       });
@@ -424,10 +433,12 @@ describe('ClothingInstantiationService', () => {
       });
 
       entityManager.createEntityInstance.mockResolvedValue('clothing_123');
-      anatomyClothingIntegrationService.validateSlotCompatibility.mockResolvedValue({
-        isValid: true,
-        errors: [],
-      });
+      anatomyClothingIntegrationService.validateSlotCompatibility.mockResolvedValue(
+        {
+          isValid: true,
+          errors: [],
+        }
+      );
       equipmentOrchestrator.orchestrateEquipment.mockResolvedValue({
         success: true,
       });
@@ -477,7 +488,9 @@ describe('ClothingInstantiationService', () => {
       );
 
       // Verify validation was skipped
-      expect(anatomyClothingIntegrationService.validateSlotCompatibility).not.toHaveBeenCalled();
+      expect(
+        anatomyClothingIntegrationService.validateSlotCompatibility
+      ).not.toHaveBeenCalled();
       expect(equipmentOrchestrator.orchestrateEquipment).toHaveBeenCalledWith(
         actorId,
         'clothing_123',
@@ -503,10 +516,12 @@ describe('ClothingInstantiationService', () => {
         components: { 'clothing:clothing': { slot: 'wings' } },
       });
 
-      anatomyClothingIntegrationService.validateSlotCompatibility.mockResolvedValue({
-        isValid: false,
-        errors: ['Blueprint does not support wings slot'],
-      });
+      anatomyClothingIntegrationService.validateSlotCompatibility.mockResolvedValue(
+        {
+          isValid: false,
+          errors: ['Blueprint does not support wings slot'],
+        }
+      );
 
       const result = await service.instantiateRecipeClothing(
         actorId,
@@ -564,10 +579,12 @@ describe('ClothingInstantiationService', () => {
       });
 
       entityManager.createEntityInstance.mockResolvedValue('clothing_123');
-      anatomyClothingIntegrationService.validateSlotCompatibility.mockResolvedValue({
-        isValid: true,
-        errors: [],
-      });
+      anatomyClothingIntegrationService.validateSlotCompatibility.mockResolvedValue(
+        {
+          isValid: true,
+          errors: [],
+        }
+      );
 
       // Mock equipment failure
       equipmentOrchestrator.orchestrateEquipment.mockResolvedValue({
@@ -611,10 +628,12 @@ describe('ClothingInstantiationService', () => {
         });
 
       entityManager.createEntityInstance.mockResolvedValue('clothing_good_123');
-      anatomyClothingIntegrationService.validateSlotCompatibility.mockResolvedValue({
-        isValid: true,
-        errors: [],
-      });
+      anatomyClothingIntegrationService.validateSlotCompatibility.mockResolvedValue(
+        {
+          isValid: true,
+          errors: [],
+        }
+      );
       equipmentOrchestrator.orchestrateEquipment.mockResolvedValue({
         success: true,
       });
@@ -667,10 +686,12 @@ describe('ClothingInstantiationService', () => {
       });
 
       entityManager.createEntityInstance.mockResolvedValue('clothing_123');
-      anatomyClothingIntegrationService.validateSlotCompatibility.mockResolvedValue({
-        isValid: true,
-        errors: [],
-      });
+      anatomyClothingIntegrationService.validateSlotCompatibility.mockResolvedValue(
+        {
+          isValid: true,
+          errors: [],
+        }
+      );
       equipmentOrchestrator.orchestrateEquipment.mockResolvedValue({
         success: true,
       });

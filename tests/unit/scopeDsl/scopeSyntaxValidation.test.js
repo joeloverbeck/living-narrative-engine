@@ -88,7 +88,7 @@ describe('Scope Syntax Validation', () => {
     });
 
     it('should throw error for exceeding depth limit', () => {
-      const tooDeep = 'actor.a.b.c.d.e'; // Depth 5, exceeds limit of 4
+      const tooDeep = 'actor.a.b.c.d.e.f.g'; // Depth 7, exceeds limit of 6
       expect(() => parseDslExpression(tooDeep)).toThrow();
     });
   });

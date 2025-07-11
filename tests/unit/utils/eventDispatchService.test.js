@@ -3,7 +3,10 @@
  * @file Unit tests for EventDispatchService
  */
 
-import { EventDispatchService, InvalidDispatcherError } from '../../../src/utils/eventDispatchService.js';
+import {
+  EventDispatchService,
+  InvalidDispatcherError,
+} from '../../../src/utils/eventDispatchService.js';
 import { createErrorDetails } from '../../../src/utils/errorDetails.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
 
@@ -334,7 +337,11 @@ describe('EventDispatchService', () => {
 
       // Act & Assert
       expect(() => {
-        service.dispatchSystemError('Test', {}, { throwOnInvalidDispatcher: true });
+        service.dispatchSystemError(
+          'Test',
+          {},
+          { throwOnInvalidDispatcher: true }
+        );
       }).toThrow(InvalidDispatcherError);
     });
 

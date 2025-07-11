@@ -23,6 +23,8 @@ function createMocks() {
       orchestrateEquipment: jest.fn(),
       orchestrateUnequipment: jest.fn(),
       validateEquipmentCompatibility: jest.fn(),
+    },
+    anatomyClothingIntegrationService: {
       getAvailableClothingSlots: jest.fn(),
     },
   };
@@ -33,16 +35,23 @@ describe('ClothingManagementService', () => {
   let logger;
   let eventDispatcher;
   let equipmentOrchestrator;
+  let anatomyClothingIntegrationService;
   let service;
 
   beforeEach(() => {
-    ({ entityManager, logger, eventDispatcher, equipmentOrchestrator } =
-      createMocks());
+    ({
+      entityManager,
+      logger,
+      eventDispatcher,
+      equipmentOrchestrator,
+      anatomyClothingIntegrationService,
+    } = createMocks());
     service = new ClothingManagementService({
       entityManager,
       logger,
       eventDispatcher,
       equipmentOrchestrator,
+      anatomyClothingIntegrationService,
     });
   });
 
@@ -494,7 +503,22 @@ describe('ClothingManagementService', () => {
 
   describe('getAvailableSlots', () => {
     it('should get available clothing slots', async () => {
-      const mockSlots = [
+      const mockSlotsMap = new Map([
+        [
+          'torso_clothing',
+          {
+            allowedLayers: ['underwear', 'base', 'outer'],
+          },
+        ],
+        [
+          'lower_torso_clothing',
+          {
+            allowedLayers: ['underwear', 'base'],
+          },
+        ],
+      ]);
+
+      const expectedSlots = [
         {
           slotId: 'torso_clothing',
           allowedLayers: ['underwear', 'base', 'outer'],
@@ -505,22 +529,21 @@ describe('ClothingManagementService', () => {
         },
       ];
 
-      equipmentOrchestrator.getAvailableClothingSlots.mockResolvedValue({
-        success: true,
-        slots: mockSlots,
-      });
+      anatomyClothingIntegrationService.getAvailableClothingSlots.mockResolvedValue(
+        mockSlotsMap
+      );
 
       const result = await service.getAvailableSlots('entity1');
 
       expect(result.success).toBe(true);
-      expect(result.slots).toEqual(mockSlots);
+      expect(result.slots).toEqual(expectedSlots);
       expect(
-        equipmentOrchestrator.getAvailableClothingSlots
+        anatomyClothingIntegrationService.getAvailableClothingSlots
       ).toHaveBeenCalledWith('entity1');
     });
 
     it('should handle error getting slots', async () => {
-      equipmentOrchestrator.getAvailableClothingSlots.mockRejectedValue(
+      anatomyClothingIntegrationService.getAvailableClothingSlots.mockRejectedValue(
         new Error('Slot retrieval error')
       );
 

@@ -118,6 +118,8 @@ class StaticConfiguration {
       'world.schema.json',
       'anatomy.recipe.schema.json',
       'anatomy.blueprint.schema.json',
+      'anatomy.blueprint-part.schema.json',
+      'anatomy.slot-library.schema.json',
       'anatomy-formatting.schema.json',
       'base-operation.schema.json', // Base schema for all operations
       // Prepend the 'operations/' subdirectory to each operation schema file
@@ -149,6 +151,10 @@ class StaticConfiguration {
       anatomyRecipes: 'http://example.com/schemas/anatomy.recipe.schema.json',
       anatomyBlueprints:
         'http://example.com/schemas/anatomy.blueprint.schema.json',
+      anatomyBlueprintParts:
+        'http://example.com/schemas/anatomy.blueprint-part.schema.json',
+      anatomySlotLibraries:
+        'http://example.com/schemas/anatomy.slot-library.schema.json',
       anatomyFormatting:
         'http://example.com/schemas/anatomy-formatting.schema.json',
       // Scopes use a custom DSL format (.scope files) and are validated by the scope engine,

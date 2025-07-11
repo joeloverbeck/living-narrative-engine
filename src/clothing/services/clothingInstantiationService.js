@@ -4,7 +4,10 @@
  */
 
 import { BaseService } from '../../utils/serviceBase.js';
-import { assertNonBlankString, assertPresent } from '../../utils/dependencyUtils.js';
+import {
+  assertNonBlankString,
+  assertPresent,
+} from '../../utils/dependencyUtils.js';
 import { InvalidArgumentError } from '../../errors/invalidArgumentError.js';
 
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
@@ -113,9 +116,24 @@ export class ClothingInstantiationService extends BaseService {
    * @returns {Promise<ClothingInstantiationResult>} Result containing created clothing IDs and any errors
    */
   async instantiateRecipeClothing(actorId, recipe, anatomyParts) {
-    assertNonBlankString(actorId, 'actorId', 'instantiateRecipeClothing', this.#logger);
-    assertPresent(recipe, 'Recipe is required', InvalidArgumentError, this.#logger);
-    assertPresent(anatomyParts, 'Anatomy parts map is required', InvalidArgumentError, this.#logger);
+    assertNonBlankString(
+      actorId,
+      'actorId',
+      'instantiateRecipeClothing',
+      this.#logger
+    );
+    assertPresent(
+      recipe,
+      'Recipe is required',
+      InvalidArgumentError,
+      this.#logger
+    );
+    assertPresent(
+      anatomyParts,
+      'Anatomy parts map is required',
+      InvalidArgumentError,
+      this.#logger
+    );
 
     const result = {
       instantiated: [],
@@ -144,7 +162,7 @@ export class ClothingInstantiationService extends BaseService {
             recipe.blueprintId,
             [clothingConfig]
           );
-          
+
           if (!validationResult.isValid) {
             // Skip this item but continue processing others
             result.errors.push(...validationResult.errors);
@@ -210,8 +228,8 @@ export class ClothingInstantiationService extends BaseService {
 
     this.#logger.info(
       `Clothing instantiation completed for actor '${actorId}': ` +
-      `${result.instantiated.length} created, ${result.equipped.length} equipped, ` +
-      `${result.errors.length} errors`
+        `${result.instantiated.length} created, ${result.equipped.length} equipped, ` +
+        `${result.errors.length} errors`
     );
 
     return result;
@@ -252,10 +270,11 @@ export class ClothingInstantiationService extends BaseService {
         }
 
         // Validate slot compatibility with blueprint
-        const validationResult = await this.#anatomyClothingIntegrationService.validateSlotCompatibility(
-          blueprintId,
-          targetSlot
-        );
+        const validationResult =
+          await this.#anatomyClothingIntegrationService.validateSlotCompatibility(
+            blueprintId,
+            targetSlot
+          );
 
         if (!validationResult.isValid) {
           errors.push(...validationResult.errors);
@@ -263,7 +282,7 @@ export class ClothingInstantiationService extends BaseService {
       } catch (error) {
         errors.push({
           entityId: config.entityId,
-          error: error.message
+          error: error.message,
         });
       }
     }
@@ -283,7 +302,12 @@ export class ClothingInstantiationService extends BaseService {
    * @returns {Promise<string>} The created entity ID
    */
   async #instantiateClothing(entityDefId, propertyOverrides) {
-    assertNonBlankString(entityDefId, 'entityDefId', '#instantiateClothing', this.#logger);
+    assertNonBlankString(
+      entityDefId,
+      'entityDefId',
+      '#instantiateClothing',
+      this.#logger
+    );
 
     this.#logger.debug(
       `Instantiating clothing entity '${entityDefId}' with overrides:`,

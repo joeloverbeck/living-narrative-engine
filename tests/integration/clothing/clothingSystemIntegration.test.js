@@ -3,6 +3,7 @@ import { ClothingManagementService } from '../../../src/clothing/services/clothi
 import { EquipmentOrchestrator } from '../../../src/clothing/orchestration/equipmentOrchestrator.js';
 import { LayerCompatibilityService } from '../../../src/clothing/validation/layerCompatibilityService.js';
 import { CoverageValidationService } from '../../../src/clothing/validation/coverageValidationService.js';
+import AnatomyClothingIntegrationService from '../../../src/anatomy/integration/anatomyClothingIntegrationService.js';
 
 /**
  * Integration tests for the clothing system
@@ -176,6 +177,16 @@ function createIntegrationMocks() {
 
       return null;
     }),
+
+    getComponent: jest.fn((entityId, componentId) => {
+      return entityManager.getComponentData(entityId, componentId)
+        ? { data: entityManager.getComponentData(entityId, componentId) }
+        : null;
+    }),
+
+    hasComponent: jest.fn((entityId, componentId) => {
+      return entityManager.getComponentData(entityId, componentId) !== null;
+    }),
   };
 
   const logger = {
@@ -205,6 +216,7 @@ describe('ClothingSystem Integration', () => {
   let orchestrator;
   let layerService;
   let coverageService;
+  let anatomyClothingIntegration;
   let mocks;
 
   beforeEach(() => {
@@ -230,11 +242,38 @@ describe('ClothingSystem Integration', () => {
       coverageValidationService: coverageService,
     });
 
+    // Create mock anatomy clothing integration service
+    anatomyClothingIntegration = new AnatomyClothingIntegrationService({
+      logger: mocks.logger,
+      entityManager: mocks.entityManager,
+      bodyGraphService: {
+        getBodyGraph: jest.fn().mockResolvedValue({ root: 'torso1' }),
+      },
+      blueprintLoader: {
+        load: jest.fn().mockResolvedValue({
+          id: 'anatomy:human_male',
+          root: 'anatomy:human_male_torso',
+          clothingSlotMappings: {
+            torso_clothing: {
+              anatomySockets: ['left_chest', 'right_chest'],
+              allowedLayers: ['underwear', 'base', 'outer'],
+              layerOrder: ['underwear', 'base', 'outer'],
+              defaultLayer: 'base',
+            },
+          },
+        }),
+      },
+      recipeLoader: {
+        load: jest.fn(),
+      },
+    });
+
     clothingService = new ClothingManagementService({
       entityManager: mocks.entityManager,
       logger: mocks.logger,
       eventDispatcher: mocks.eventDispatcher,
       equipmentOrchestrator: orchestrator,
+      anatomyClothingIntegrationService: anatomyClothingIntegration,
     });
   });
 

@@ -56,8 +56,10 @@ export function createContentLoadersConfig(loaderMap) {
  * @param {BaseManifestItemLoaderInterface} deps.scopeLoader - Scope loader.
  * @param {BaseManifestItemLoaderInterface} deps.entityDefinitionLoader - Entity definition loader.
  * @param {BaseManifestItemLoaderInterface} deps.entityInstanceLoader - Entity instance loader.
- * @param {BaseManifestItemLoaderInterface} deps.anatomyRecipeLoader - Anatomy recipe loader.
+ * @param {BaseManifestItemLoaderInterface} deps.anatomySlotLibraryLoader - Anatomy slot library loader.
+ * @param {BaseManifestItemLoaderInterface} deps.anatomyBlueprintPartLoader - Anatomy blueprint part loader.
  * @param {BaseManifestItemLoaderInterface} deps.anatomyBlueprintLoader - Anatomy blueprint loader.
+ * @param {BaseManifestItemLoaderInterface} deps.anatomyRecipeLoader - Anatomy recipe loader.
  * @param {BaseManifestItemLoaderInterface} deps.anatomyFormattingLoader - Anatomy formatting loader.
  * @returns {LoaderConfigEntry[]} Array describing loader configuration.
  */
@@ -72,8 +74,10 @@ export function createDefaultContentLoadersConfig({
   scopeLoader,
   entityDefinitionLoader,
   entityInstanceLoader,
-  anatomyRecipeLoader,
+  anatomySlotLibraryLoader,
+  anatomyBlueprintPartLoader,
   anatomyBlueprintLoader,
+  anatomyRecipeLoader,
   anatomyFormattingLoader,
 }) {
   return createContentLoadersConfig({
@@ -87,8 +91,10 @@ export function createDefaultContentLoadersConfig({
     scopes: scopeLoader,
     entityDefinitions: entityDefinitionLoader,
     entityInstances: entityInstanceLoader,
-    anatomyRecipes: anatomyRecipeLoader,
+    anatomySlotLibraries: anatomySlotLibraryLoader,
+    anatomyBlueprintParts: anatomyBlueprintPartLoader,
     anatomyBlueprints: anatomyBlueprintLoader,
+    anatomyRecipes: anatomyRecipeLoader,
     anatomyFormatting: anatomyFormattingLoader,
   });
 }

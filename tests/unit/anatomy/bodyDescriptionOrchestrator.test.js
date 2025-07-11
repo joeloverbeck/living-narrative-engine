@@ -29,7 +29,12 @@ describe('BodyDescriptionOrchestrator', () => {
     }),
     getComponentData: jest.fn().mockImplementation((componentId) => {
       if (componentId === ANATOMY_BODY_COMPONENT_ID) {
-        return config.anatomyBodyData || { body: { root: 'root-1' }, recipeId: 'test-recipe' };
+        return (
+          config.anatomyBodyData || {
+            body: { root: 'root-1' },
+            recipeId: 'test-recipe',
+          }
+        );
       }
       if (componentId === 'core:name') {
         return config.nameData || { text: 'Test Entity' };
@@ -67,11 +72,13 @@ describe('BodyDescriptionOrchestrator', () => {
     };
 
     mockPartDescriptionGenerator = {
-      generateMultiplePartDescriptions: jest.fn().mockReturnValue(new Map([
-        ['part-1', 'A strong arm'],
-        ['part-2', 'A muscular torso'],
-        ['part-3', 'Sturdy legs'],
-      ])),
+      generateMultiplePartDescriptions: jest.fn().mockReturnValue(
+        new Map([
+          ['part-1', 'A strong arm'],
+          ['part-2', 'A muscular torso'],
+          ['part-3', 'Sturdy legs'],
+        ])
+      ),
     };
 
     // Create orchestrator instance
@@ -87,33 +94,42 @@ describe('BodyDescriptionOrchestrator', () => {
 
   describe('constructor', () => {
     it('should throw error if logger is not provided', () => {
-      expect(() => new BodyDescriptionOrchestrator({
-        bodyDescriptionComposer: mockBodyDescriptionComposer,
-        bodyGraphService: mockBodyGraphService,
-        eventDispatcher: mockEventDispatcher,
-        entityManager: mockEntityManager,
-        partDescriptionGenerator: mockPartDescriptionGenerator,
-      })).toThrow('logger is required');
+      expect(
+        () =>
+          new BodyDescriptionOrchestrator({
+            bodyDescriptionComposer: mockBodyDescriptionComposer,
+            bodyGraphService: mockBodyGraphService,
+            eventDispatcher: mockEventDispatcher,
+            entityManager: mockEntityManager,
+            partDescriptionGenerator: mockPartDescriptionGenerator,
+          })
+      ).toThrow('logger is required');
     });
 
     it('should throw error if bodyDescriptionComposer is not provided', () => {
-      expect(() => new BodyDescriptionOrchestrator({
-        logger: mockLogger,
-        bodyGraphService: mockBodyGraphService,
-        eventDispatcher: mockEventDispatcher,
-        entityManager: mockEntityManager,
-        partDescriptionGenerator: mockPartDescriptionGenerator,
-      })).toThrow('bodyDescriptionComposer is required');
+      expect(
+        () =>
+          new BodyDescriptionOrchestrator({
+            logger: mockLogger,
+            bodyGraphService: mockBodyGraphService,
+            eventDispatcher: mockEventDispatcher,
+            entityManager: mockEntityManager,
+            partDescriptionGenerator: mockPartDescriptionGenerator,
+          })
+      ).toThrow('bodyDescriptionComposer is required');
     });
 
     it('should throw error if eventDispatcher is not provided', () => {
-      expect(() => new BodyDescriptionOrchestrator({
-        logger: mockLogger,
-        bodyDescriptionComposer: mockBodyDescriptionComposer,
-        bodyGraphService: mockBodyGraphService,
-        entityManager: mockEntityManager,
-        partDescriptionGenerator: mockPartDescriptionGenerator,
-      })).toThrow('eventDispatcher is required');
+      expect(
+        () =>
+          new BodyDescriptionOrchestrator({
+            logger: mockLogger,
+            bodyDescriptionComposer: mockBodyDescriptionComposer,
+            bodyGraphService: mockBodyGraphService,
+            entityManager: mockEntityManager,
+            partDescriptionGenerator: mockPartDescriptionGenerator,
+          })
+      ).toThrow('eventDispatcher is required');
     });
   });
 
@@ -121,12 +137,16 @@ describe('BodyDescriptionOrchestrator', () => {
     it('should return composed description when successful', () => {
       const entity = createMockBodyEntity();
       const expectedDescription = 'A tall figure with broad shoulders';
-      mockBodyDescriptionComposer.composeDescription.mockReturnValue(expectedDescription);
+      mockBodyDescriptionComposer.composeDescription.mockReturnValue(
+        expectedDescription
+      );
 
       const result = orchestrator.generateBodyDescription(entity);
 
       expect(result).toBe(expectedDescription);
-      expect(mockBodyDescriptionComposer.composeDescription).toHaveBeenCalledWith(entity);
+      expect(
+        mockBodyDescriptionComposer.composeDescription
+      ).toHaveBeenCalledWith(entity);
       expect(mockEventDispatcher.dispatch).not.toHaveBeenCalled();
       expect(mockLogger.debug).toHaveBeenCalledWith(
         `BodyDescriptionOrchestrator: Generated body description for '${entity.id}'`
@@ -143,7 +163,8 @@ describe('BodyDescriptionOrchestrator', () => {
       expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
         SYSTEM_ERROR_OCCURRED_ID,
         {
-          message: 'Failed to generate body description for entity "John Doe": Description is empty',
+          message:
+            'Failed to generate body description for entity "John Doe": Description is empty',
           details: {
             raw: 'Entity ID: test-entity-1, Recipe ID: test-recipe',
             timestamp: expect.any(String),
@@ -152,14 +173,20 @@ describe('BodyDescriptionOrchestrator', () => {
       );
       expect(mockEventDispatcher.dispatch).toHaveBeenCalledTimes(1);
       // Verify the first parameter is a string
-      expect(typeof mockEventDispatcher.dispatch.mock.calls[0][0]).toBe('string');
+      expect(typeof mockEventDispatcher.dispatch.mock.calls[0][0]).toBe(
+        'string'
+      );
       // Verify the second parameter is an object
-      expect(typeof mockEventDispatcher.dispatch.mock.calls[0][1]).toBe('object');
+      expect(typeof mockEventDispatcher.dispatch.mock.calls[0][1]).toBe(
+        'object'
+      );
     });
 
     it('should dispatch error event when description is only whitespace', () => {
       const entity = createMockBodyEntity();
-      mockBodyDescriptionComposer.composeDescription.mockReturnValue('   \n\t  ');
+      mockBodyDescriptionComposer.composeDescription.mockReturnValue(
+        '   \n\t  '
+      );
 
       const result = orchestrator.generateBodyDescription(entity);
 
@@ -205,14 +232,15 @@ describe('BodyDescriptionOrchestrator', () => {
       expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
         SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
-          message: 'Failed to generate body description for entity "test-entity-1": Description is empty',
+          message:
+            'Failed to generate body description for entity "test-entity-1": Description is empty',
         })
       );
     });
 
     it('should include recipe ID in error details when available', () => {
       const entity = createMockBodyEntity({
-        anatomyBodyData: { body: { root: 'root-1' }, recipeId: 'human-male' }
+        anatomyBodyData: { body: { root: 'root-1' }, recipeId: 'human-male' },
       });
       mockBodyDescriptionComposer.composeDescription.mockReturnValue('');
 
@@ -223,14 +251,14 @@ describe('BodyDescriptionOrchestrator', () => {
         expect.objectContaining({
           details: expect.objectContaining({
             raw: 'Entity ID: test-entity-1, Recipe ID: human-male',
-          })
+          }),
         })
       );
     });
 
     it('should handle missing recipe ID gracefully', () => {
       const entity = createMockBodyEntity({
-        anatomyBodyData: { body: { root: 'root-1' } } // No recipeId
+        anatomyBodyData: { body: { root: 'root-1' } }, // No recipeId
       });
       mockBodyDescriptionComposer.composeDescription.mockReturnValue('');
 
@@ -241,14 +269,16 @@ describe('BodyDescriptionOrchestrator', () => {
         expect.objectContaining({
           details: expect.objectContaining({
             raw: 'Entity ID: test-entity-1, Recipe ID: unknown',
-          })
+          }),
         })
       );
     });
 
     it('should not dispatch error event when description is valid', () => {
       const entity = createMockBodyEntity();
-      mockBodyDescriptionComposer.composeDescription.mockReturnValue('Valid description');
+      mockBodyDescriptionComposer.composeDescription.mockReturnValue(
+        'Valid description'
+      );
 
       orchestrator.generateBodyDescription(entity);
 
@@ -263,14 +293,14 @@ describe('BodyDescriptionOrchestrator', () => {
 
       // Get the call arguments
       const [eventId, payload] = mockEventDispatcher.dispatch.mock.calls[0];
-      
+
       // Verify parameter types
       expect(typeof eventId).toBe('string');
       expect(eventId).toBe(SYSTEM_ERROR_OCCURRED_ID);
       expect(typeof payload).toBe('object');
       expect(payload).toHaveProperty('message');
       expect(payload).toHaveProperty('details');
-      
+
       // Ensure we're NOT passing an event object as the first parameter
       expect(eventId).not.toHaveProperty('type');
       expect(eventId).not.toHaveProperty('payload');
@@ -281,7 +311,9 @@ describe('BodyDescriptionOrchestrator', () => {
     it('should generate descriptions for all parts and body', () => {
       const entity = createMockBodyEntity();
       const bodyDescription = 'A well-built figure';
-      mockBodyDescriptionComposer.composeDescription.mockReturnValue(bodyDescription);
+      mockBodyDescriptionComposer.composeDescription.mockReturnValue(
+        bodyDescription
+      );
 
       const result = orchestrator.generateAllDescriptions(entity);
 
@@ -290,22 +322,30 @@ describe('BodyDescriptionOrchestrator', () => {
         partDescriptions: expect.any(Map),
       });
       expect(result.partDescriptions.size).toBe(3);
-      expect(mockBodyGraphService.getAllParts).toHaveBeenCalledWith({ root: 'root-1' });
-      expect(mockPartDescriptionGenerator.generateMultiplePartDescriptions).toHaveBeenCalledWith(['part-1', 'part-2', 'part-3']);
+      expect(mockBodyGraphService.getAllParts).toHaveBeenCalledWith({
+        root: 'root-1',
+      });
+      expect(
+        mockPartDescriptionGenerator.generateMultiplePartDescriptions
+      ).toHaveBeenCalledWith(['part-1', 'part-2', 'part-3']);
     });
 
     it('should throw error if entity has no anatomy:body component', () => {
       const entity = createMockBodyEntity({ hasAnatomyBody: false });
 
-      expect(() => orchestrator.generateAllDescriptions(entity)).toThrow('Entity must have an anatomy:body component');
+      expect(() => orchestrator.generateAllDescriptions(entity)).toThrow(
+        'Entity must have an anatomy:body component'
+      );
     });
 
     it('should throw error if body component has no root', () => {
       const entity = createMockBodyEntity({
-        anatomyBodyData: { body: {} } // No root
+        anatomyBodyData: { body: {} }, // No root
       });
 
-      expect(() => orchestrator.generateAllDescriptions(entity)).toThrow('Body component must have a body.root property');
+      expect(() => orchestrator.generateAllDescriptions(entity)).toThrow(
+        'Body component must have a body.root property'
+      );
     });
 
     it('should dispatch error event when body description is empty', () => {
@@ -332,12 +372,14 @@ describe('BodyDescriptionOrchestrator', () => {
       const entity = createMockBodyEntity({
         hasAnatomyBody: false,
         hasDescription: true,
-        descriptionData: { text: 'A simple object' }
+        descriptionData: { text: 'A simple object' },
       });
 
       const result = orchestrator.getOrGenerateBodyDescription(entity);
       expect(result).toBe('A simple object');
-      expect(mockBodyDescriptionComposer.composeDescription).not.toHaveBeenCalled();
+      expect(
+        mockBodyDescriptionComposer.composeDescription
+      ).not.toHaveBeenCalled();
     });
 
     it('should return null for non-anatomy entity without description', () => {
@@ -353,24 +395,32 @@ describe('BodyDescriptionOrchestrator', () => {
     it('should generate new description for anatomy entity', () => {
       const entity = createMockBodyEntity();
       const expectedDescription = 'Generated description';
-      mockBodyDescriptionComposer.composeDescription.mockReturnValue(expectedDescription);
+      mockBodyDescriptionComposer.composeDescription.mockReturnValue(
+        expectedDescription
+      );
 
       const result = orchestrator.getOrGenerateBodyDescription(entity);
       expect(result).toBe(expectedDescription);
-      expect(mockBodyDescriptionComposer.composeDescription).toHaveBeenCalledWith(entity);
+      expect(
+        mockBodyDescriptionComposer.composeDescription
+      ).toHaveBeenCalledWith(entity);
     });
 
     it('should always regenerate description (isDescriptionCurrent returns false)', () => {
       const entity = createMockBodyEntity({
         hasDescription: true,
-        descriptionData: { text: 'Old description' }
+        descriptionData: { text: 'Old description' },
       });
       const newDescription = 'New generated description';
-      mockBodyDescriptionComposer.composeDescription.mockReturnValue(newDescription);
+      mockBodyDescriptionComposer.composeDescription.mockReturnValue(
+        newDescription
+      );
 
       const result = orchestrator.getOrGenerateBodyDescription(entity);
       expect(result).toBe(newDescription);
-      expect(mockBodyDescriptionComposer.composeDescription).toHaveBeenCalledWith(entity);
+      expect(
+        mockBodyDescriptionComposer.composeDescription
+      ).toHaveBeenCalledWith(entity);
     });
 
     it('should return null when composition fails', () => {
@@ -386,7 +436,7 @@ describe('BodyDescriptionOrchestrator', () => {
     it('should ensure event dispatcher is called with correct signature', () => {
       const entity = createMockBodyEntity();
       mockBodyDescriptionComposer.composeDescription.mockReturnValue('');
-      
+
       // Spy on the dispatch method to capture exact calls
       const dispatchSpy = jest.spyOn(mockEventDispatcher, 'dispatch');
 
@@ -394,20 +444,20 @@ describe('BodyDescriptionOrchestrator', () => {
 
       // Verify the dispatch method signature
       expect(dispatchSpy).toHaveBeenCalledTimes(1);
-      
+
       // Get the actual arguments passed
       const callArgs = dispatchSpy.mock.calls[0];
-      
+
       // First argument should be the event ID string
       expect(callArgs[0]).toBe(SYSTEM_ERROR_OCCURRED_ID);
       expect(typeof callArgs[0]).toBe('string');
-      
+
       // Second argument should be the payload object
       expect(callArgs[1]).toMatchObject({
         message: expect.any(String),
         details: expect.any(Object),
       });
-      
+
       // Ensure we have exactly 2 arguments (not passing options or other params)
       expect(callArgs.length).toBe(2);
     });
@@ -419,16 +469,16 @@ describe('BodyDescriptionOrchestrator', () => {
       orchestrator.generateBodyDescription(entity);
 
       const firstArg = mockEventDispatcher.dispatch.mock.calls[0][0];
-      
+
       // Verify the first argument is a string, not an object
       expect(typeof firstArg).toBe('string');
-      
+
       // If it were an object (bug scenario), it would have these properties
       if (typeof firstArg === 'object' && firstArg !== null) {
         expect(firstArg).not.toHaveProperty('type');
         expect(firstArg).not.toHaveProperty('payload');
       }
-      
+
       // Ensure it's the correct event ID string
       expect(firstArg).toBe(SYSTEM_ERROR_OCCURRED_ID);
     });

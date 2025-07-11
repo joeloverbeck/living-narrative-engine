@@ -54,6 +54,8 @@ import humanHairRaven from '../../../data/mods/anatomy/entities/definitions/huma
 import humanHairBlonde from '../../../data/mods/anatomy/entities/definitions/human_hair_blonde.entity.json';
 import humanPubicHair from '../../../data/mods/anatomy/entities/definitions/human_pubic_hair.entity.json';
 import humanMaleBlueprint from '../../../data/mods/anatomy/blueprints/human_male.blueprint.json';
+import humanoidSlotLibrary from '../../../data/mods/anatomy/libraries/humanoid.slot-library.json';
+import humanoidCorePart from '../../../data/mods/anatomy/parts/humanoid_core.part.json';
 
 // Import core components needed for anatomy
 import nameComponent from '../../../data/mods/core/components/name.component.json';
@@ -171,6 +173,16 @@ describe('Muscular Male Anatomy Generation Integration Test', () => {
       'anatomy:human_hair_blonde': humanHairBlonde,
       'anatomy:human_pubic_hair': humanPubicHair,
       'test:muscular_male': muscularMale,
+    });
+
+    // Load slot libraries
+    testBed.loadSlotLibraries({
+      'anatomy:humanoid_slots': humanoidSlotLibrary,
+    });
+
+    // Load blueprint parts
+    testBed.loadBlueprintParts({
+      'anatomy:humanoid_core': humanoidCorePart,
     });
 
     // Load blueprints

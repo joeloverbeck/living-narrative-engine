@@ -61,7 +61,7 @@ class Parser {
     this.input = input;
     this.tokenizer = tokenizer || new Tokenizer(input);
     this.tokens = this.tokenizer.getTokens();
-    this.depthGuard = depthGuard || createDepthGuard(4);
+    this.depthGuard = depthGuard || createDepthGuard(6);
     this.current = 0;
   }
 

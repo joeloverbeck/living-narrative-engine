@@ -40,7 +40,12 @@ describe('Anatomy Error Event Flow Integration', () => {
     }),
     getComponentData: jest.fn().mockImplementation((componentId) => {
       if (componentId === ANATOMY_BODY_COMPONENT_ID) {
-        return config.anatomyBodyData || { body: { root: 'root-1' }, recipeId: 'test-recipe' };
+        return (
+          config.anatomyBodyData || {
+            body: { root: 'root-1' },
+            recipeId: 'test-recipe',
+          }
+        );
       }
       if (componentId === 'core:name') {
         return config.nameData || { text: 'Test Character' };
@@ -56,34 +61,36 @@ describe('Anatomy Error Event Flow Integration', () => {
 
     // Create schema validator
     schemaValidator = new AjvSchemaValidator({ logger });
-    
+
     // Create data registry and repository
     dataRegistry = new InMemoryDataRegistry({ logger });
     gameDataRepository = new GameDataRepository(dataRegistry, logger);
 
     // Mock the event definition for system error
-    jest.spyOn(gameDataRepository, 'getEventDefinition').mockImplementation((id) => {
-      if (id === SYSTEM_ERROR_OCCURRED_ID) {
-        return {
-          id: SYSTEM_ERROR_OCCURRED_ID,
-          name: 'System Error Occurred',
-          description: 'A system error has occurred',
-          payloadSchema: {
-            type: 'object',
-            properties: {
-              message: { type: 'string' },
-              details: { type: 'object' }
+    jest
+      .spyOn(gameDataRepository, 'getEventDefinition')
+      .mockImplementation((id) => {
+        if (id === SYSTEM_ERROR_OCCURRED_ID) {
+          return {
+            id: SYSTEM_ERROR_OCCURRED_ID,
+            name: 'System Error Occurred',
+            description: 'A system error has occurred',
+            payloadSchema: {
+              type: 'object',
+              properties: {
+                message: { type: 'string' },
+                details: { type: 'object' },
+              },
+              required: ['message'],
             },
-            required: ['message']
-          }
-        };
-      }
-      // Return null for any non-string ID (like objects)
-      if (typeof id !== 'string') {
+          };
+        }
+        // Return null for any non-string ID (like objects)
+        if (typeof id !== 'string') {
+          return null;
+        }
         return null;
-      }
-      return null;
-    });
+      });
 
     // Create real event system chain
     eventBus = new EventBus({ logger });
@@ -91,11 +98,11 @@ describe('Anatomy Error Event Flow Integration', () => {
       eventBus,
       gameDataRepository,
       schemaValidator,
-      logger
+      logger,
     });
-    safeEventDispatcher = new SafeEventDispatcher({ 
-      validatedEventDispatcher, 
-      logger 
+    safeEventDispatcher = new SafeEventDispatcher({
+      validatedEventDispatcher,
+      logger,
     });
 
     // Create mocks for anatomy services
@@ -142,10 +149,11 @@ describe('Anatomy Error Event Flow Integration', () => {
       mockBodyDescriptionComposer.composeDescription.mockReturnValue('');
 
       // Generate body description (which should trigger error)
-      const result = bodyDescriptionOrchestrator.generateBodyDescription(entity);
+      const result =
+        bodyDescriptionOrchestrator.generateBodyDescription(entity);
 
       // Wait for async event dispatch
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Verify the description result
       expect(result).toBe('');
@@ -153,12 +161,13 @@ describe('Anatomy Error Event Flow Integration', () => {
       // Verify event was captured
       expect(capturedEvents).toHaveLength(1);
       const capturedEvent = capturedEvents[0];
-      
+
       // Verify event structure
       expect(capturedEvent).toEqual({
         type: SYSTEM_ERROR_OCCURRED_ID,
         payload: {
-          message: 'Failed to generate body description for entity "John Doe": Description is empty',
+          message:
+            'Failed to generate body description for entity "John Doe": Description is empty',
           details: {
             raw: 'Entity ID: test-entity-1, Recipe ID: test-recipe',
             timestamp: expect.any(String),
@@ -171,13 +180,17 @@ describe('Anatomy Error Event Flow Integration', () => {
       eventBus.subscribe(SYSTEM_ERROR_OCCURRED_ID, eventListener);
 
       const entity = createTestEntity();
-      mockBodyDescriptionComposer.composeDescription.mockReturnValue('   \n\t  ');
+      mockBodyDescriptionComposer.composeDescription.mockReturnValue(
+        '   \n\t  '
+      );
 
       bodyDescriptionOrchestrator.generateBodyDescription(entity);
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       expect(capturedEvents).toHaveLength(1);
-      expect(capturedEvents[0].payload.message).toContain('Description is empty');
+      expect(capturedEvents[0].payload.message).toContain(
+        'Description is empty'
+      );
     });
 
     it('should handle null descriptions', async () => {
@@ -187,20 +200,24 @@ describe('Anatomy Error Event Flow Integration', () => {
       mockBodyDescriptionComposer.composeDescription.mockReturnValue(null);
 
       bodyDescriptionOrchestrator.generateBodyDescription(entity);
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       expect(capturedEvents).toHaveLength(1);
-      expect(capturedEvents[0].payload.message).toContain('Description is empty');
+      expect(capturedEvents[0].payload.message).toContain(
+        'Description is empty'
+      );
     });
 
     it('should not dispatch error for valid descriptions', async () => {
       eventBus.subscribe(SYSTEM_ERROR_OCCURRED_ID, eventListener);
 
       const entity = createTestEntity();
-      mockBodyDescriptionComposer.composeDescription.mockReturnValue('A valid description');
+      mockBodyDescriptionComposer.composeDescription.mockReturnValue(
+        'A valid description'
+      );
 
       bodyDescriptionOrchestrator.generateBodyDescription(entity);
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       expect(capturedEvents).toHaveLength(0);
     });
@@ -216,14 +233,14 @@ describe('Anatomy Error Event Flow Integration', () => {
             type: 'object',
             properties: {
               raw: { type: 'string' },
-              timestamp: { type: 'string' }
-            }
-          }
+              timestamp: { type: 'string' },
+            },
+          },
         },
         required: ['message'],
-        additionalProperties: false
+        additionalProperties: false,
       };
-      
+
       schemaValidator.addSchema(eventSchema, eventSchema.$id);
 
       eventBus.subscribe(SYSTEM_ERROR_OCCURRED_ID, eventListener);
@@ -232,7 +249,7 @@ describe('Anatomy Error Event Flow Integration', () => {
       mockBodyDescriptionComposer.composeDescription.mockReturnValue('');
 
       bodyDescriptionOrchestrator.generateBodyDescription(entity);
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Event should pass validation and be dispatched
       expect(capturedEvents).toHaveLength(1);
@@ -255,11 +272,11 @@ describe('Anatomy Error Event Flow Integration', () => {
         bodyDescriptionOrchestrator.generateBodyDescription(entity);
       }
 
-      await new Promise(resolve => setTimeout(resolve, 20));
+      await new Promise((resolve) => setTimeout(resolve, 20));
 
       // Should have 3 error events
       expect(capturedEvents).toHaveLength(3);
-      
+
       // Verify each event has correct entity info
       expect(capturedEvents[0].payload.message).toContain('Character 1');
       expect(capturedEvents[1].payload.message).toContain('Character 2');
@@ -278,7 +295,7 @@ describe('Anatomy Error Event Flow Integration', () => {
       mockBodyDescriptionComposer.composeDescription.mockReturnValue('');
 
       bodyDescriptionOrchestrator.generateBodyDescription(entity);
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Verify each layer was called with correct parameters
       expect(safeSpy).toHaveBeenCalledWith(
@@ -310,13 +327,16 @@ describe('Anatomy Error Event Flow Integration', () => {
       const incorrectDispatcher = {
         dispatch: async (eventIdOrObject, payload) => {
           // Simulate the bug - passing object as first param
-          if (typeof eventIdOrObject === 'string' && eventIdOrObject === SYSTEM_ERROR_OCCURRED_ID) {
+          if (
+            typeof eventIdOrObject === 'string' &&
+            eventIdOrObject === SYSTEM_ERROR_OCCURRED_ID
+          ) {
             // Transform to incorrect format
             const eventObject = { type: eventIdOrObject, payload };
             return safeEventDispatcher.dispatch(eventObject); // WRONG!
           }
           return safeEventDispatcher.dispatch(eventIdOrObject, payload);
-        }
+        },
       };
 
       // Create orchestrator with incorrect dispatcher
@@ -339,7 +359,7 @@ describe('Anatomy Error Event Flow Integration', () => {
       mockBodyDescriptionComposer.composeDescription.mockReturnValue('');
 
       buggyOrchestrator.generateBodyDescription(entity);
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       // The event should NOT reach the listener due to validation failure
       expect(capturedEvents).toHaveLength(0);
@@ -362,12 +382,12 @@ describe('Anatomy Error Event Flow Integration', () => {
         $id: `${SYSTEM_ERROR_OCCURRED_ID}#payload`,
         type: 'object',
         properties: {
-          message: { type: 'string' }
+          message: { type: 'string' },
         },
         required: ['message'],
-        additionalProperties: false // This will reject 'details' property
+        additionalProperties: false, // This will reject 'details' property
       };
-      
+
       schemaValidator.addSchema(strictSchema, strictSchema.$id);
 
       const errorSpy = jest.spyOn(logger, 'error');
@@ -377,11 +397,11 @@ describe('Anatomy Error Event Flow Integration', () => {
       mockBodyDescriptionComposer.composeDescription.mockReturnValue('');
 
       bodyDescriptionOrchestrator.generateBodyDescription(entity);
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Event should be rejected due to schema validation
       expect(capturedEvents).toHaveLength(0);
-      
+
       // Should see validation error
       expect(errorSpy).toHaveBeenCalledWith(
         expect.stringContaining('Payload validation FAILED'),
@@ -396,26 +416,29 @@ describe('Anatomy Error Event Flow Integration', () => {
       mockBodyDescriptionComposer.composeDescription.mockReturnValue('');
 
       // Generate 10 errors rapidly
-      const entities = Array.from({ length: 10 }, (_, i) => 
-        createTestEntity({ id: `entity-${i}`, nameData: { text: `Character ${i}` } })
+      const entities = Array.from({ length: 10 }, (_, i) =>
+        createTestEntity({
+          id: `entity-${i}`,
+          nameData: { text: `Character ${i}` },
+        })
       );
 
       const startTime = Date.now();
-      
+
       // Dispatch all at once
-      entities.forEach(entity => {
+      entities.forEach((entity) => {
         bodyDescriptionOrchestrator.generateBodyDescription(entity);
       });
 
-      await new Promise(resolve => setTimeout(resolve, 50));
+      await new Promise((resolve) => setTimeout(resolve, 50));
       const endTime = Date.now();
 
       // All events should be captured
       expect(capturedEvents).toHaveLength(10);
-      
+
       // Should complete reasonably quickly (< 100ms)
       expect(endTime - startTime).toBeLessThan(100);
-      
+
       // Each event should have unique entity info
       capturedEvents.forEach((event, index) => {
         expect(event.payload.message).toContain(`Character ${index}`);
@@ -440,11 +463,11 @@ describe('Anatomy Error Event Flow Integration', () => {
         .mockReturnValueOnce('   ') // fail-2
         .mockReturnValueOnce('Another valid description'); // success-2
 
-      const results = entities.map(entity => 
+      const results = entities.map((entity) =>
         bodyDescriptionOrchestrator.generateBodyDescription(entity)
       );
 
-      await new Promise(resolve => setTimeout(resolve, 20));
+      await new Promise((resolve) => setTimeout(resolve, 20));
 
       // Should have 2 error events (for fail-1 and fail-2)
       expect(capturedEvents).toHaveLength(2);

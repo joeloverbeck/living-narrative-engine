@@ -193,7 +193,7 @@ describe('registerLoaders (with Mock DI Container)', () => {
     // Keep register mock history
   });
 
-  it('should register all 36 services/loaders (+ ILogger) as singletons', () => {
+  it('should register all 38 services/loaders (+ ILogger) as singletons', () => {
     // Arrange: Logger is already registered in beforeEach
 
     // Act: Register the loaders
@@ -229,6 +229,8 @@ describe('registerLoaders (with Mock DI Container)', () => {
       tokens.ModsLoader,
       tokens.AnatomyRecipeLoader,
       tokens.AnatomyBlueprintLoader,
+      tokens.AnatomyBlueprintPartLoader,
+      tokens.AnatomySlotLibraryLoader,
       tokens.AnatomyFormattingLoader,
       // Phase-related services and processors
       tokens.ModLoadOrderResolver,
