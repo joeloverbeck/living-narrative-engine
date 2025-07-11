@@ -160,7 +160,6 @@ describe('NotesSectionAssembler - Integration Tests', () => {
       const advancedResolver = {
         resolve: (str, context) => {
           return str
-            .replace(/\\n/g, '\\n')
             .replace('{{location}}', context.location)
             .replace('{{level}}', context.level);
         },
