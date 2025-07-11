@@ -55,6 +55,10 @@ import humanFoot from '../../../data/mods/anatomy/entities/definitions/human_foo
 import humanMaleBlueprint from '../../../data/mods/anatomy/blueprints/human_male.blueprint.json';
 import humanMaleRecipe from '../../../data/mods/anatomy/recipes/human_male.recipe.json';
 
+// Import blueprint parts and slot libraries
+import humanoidCorePart from '../../../data/mods/anatomy/parts/humanoid_core.part.json';
+import humanoidSlotLibrary from '../../../data/mods/anatomy/libraries/humanoid.slot-library.json';
+
 // Import core components
 import nameComponent from '../../../data/mods/core/components/name.component.json';
 import descriptionComponent from '../../../data/mods/core/components/description.component.json';
@@ -173,6 +177,16 @@ describe('Human Male Body Description Integration Test', () => {
       'anatomy:human_hand': humanHand,
       'anatomy:human_foot': humanFoot,
       'test:human_male': testHumanMale,
+    });
+
+    // Load slot libraries (must be before parts)
+    testBed.loadSlotLibraries({
+      'anatomy:humanoid_slots': humanoidSlotLibrary,
+    });
+
+    // Load blueprint parts (must be before blueprints)
+    testBed.loadBlueprintParts({
+      'anatomy:humanoid_core': humanoidCorePart,
     });
 
     // Load blueprints

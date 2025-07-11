@@ -116,7 +116,8 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
     // Create mock dependencies for BodyDescriptionComposer
     this.mockBodyPartDescriptionBuilder = {
       buildDescription: (partEntity) => {
-        const partType = partEntity?.getComponentData?.('anatomy:part')?.subType || 'part';
+        const partType =
+          partEntity?.getComponentData?.('anatomy:part')?.subType || 'part';
         return `A ${partType} part`;
       },
     };
@@ -128,27 +129,33 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
     this.mockPartDescriptionGenerator = {
       generateDescription: (partEntity) => {
         if (!partEntity) return 'A body part';
-        const partType = partEntity.getComponentData?.('anatomy:part')?.subType || 'body part';
+        const partType =
+          partEntity.getComponentData?.('anatomy:part')?.subType || 'body part';
         const description = `A human ${partType}`;
-        
+
         // Actually add the description component to the entity
         if (this.entityManager && this.entityManager.addComponent) {
-          this.entityManager.addComponent(partEntity.id, 'core:description', { text: description });
+          this.entityManager.addComponent(partEntity.id, 'core:description', {
+            text: description,
+          });
         }
-        
+
         return description;
       },
       generatePartDescription: (partId) => {
         const partEntity = this.entityManager.getEntityInstance(partId);
         if (!partEntity) return 'A body part';
-        const partType = partEntity.getComponentData?.('anatomy:part')?.subType || 'body part';
+        const partType =
+          partEntity.getComponentData?.('anatomy:part')?.subType || 'body part';
         const description = `A human ${partType}`;
-        
+
         // Actually add the description component to the entity
         if (this.entityManager && this.entityManager.addComponent) {
-          this.entityManager.addComponent(partEntity.id, 'core:description', { text: description });
+          this.entityManager.addComponent(partEntity.id, 'core:description', {
+            text: description,
+          });
         }
-        
+
         return description;
       },
       generateMultiplePartDescriptions: (partIds) => {
@@ -156,7 +163,8 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
         for (const partId of partIds) {
           const partEntity = this.entityManager.getEntityInstance(partId);
           if (partEntity) {
-            const description = this.mockPartDescriptionGenerator.generateDescription(partEntity);
+            const description =
+              this.mockPartDescriptionGenerator.generateDescription(partEntity);
             descriptions.set(partId, description);
           }
         }
@@ -267,13 +275,168 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
 
   /**
    * Helper method to load anatomy blueprints into the registry
+   * Handles blueprint composition if the blueprint uses parts
    *
    * @param {object} blueprints - Map of blueprint ID to blueprint data
    */
   loadBlueprints(blueprints) {
     for (const [id, data] of Object.entries(blueprints)) {
-      this.registry.store('anatomyBlueprints', id, data);
+      // Check if blueprint needs composition
+      if (data.compose || data.parts) {
+        const composedData = this._composeBlueprint(data);
+        this.registry.store('anatomyBlueprints', id, composedData);
+      } else {
+        this.registry.store('anatomyBlueprints', id, data);
+      }
     }
+  }
+
+  /**
+   * Composes a blueprint by processing parts and compose instructions
+   * Simplified version of the logic in AnatomyBlueprintLoader
+   *
+   * @private
+   * @param {any} blueprintData - The blueprint data
+   * @returns {any} The composed blueprint data
+   */
+  _composeBlueprint(blueprintData) {
+    // Create a deep copy to avoid modifying the original
+    const composed = JSON.parse(JSON.stringify(blueprintData));
+
+    // Initialize slots and clothingSlotMappings if not present
+    if (!composed.slots) composed.slots = {};
+    if (!composed.clothingSlotMappings) composed.clothingSlotMappings = {};
+
+    // Process simple parts inclusion
+    if (composed.parts && Array.isArray(composed.parts)) {
+      for (const partId of composed.parts) {
+        this._includePart(composed, partId, ['slots', 'clothingSlotMappings']);
+      }
+    }
+
+    // Process advanced composition
+    if (composed.compose && Array.isArray(composed.compose)) {
+      for (const instruction of composed.compose) {
+        this._processComposeInstruction(composed, instruction);
+      }
+    }
+
+    // Remove composition fields from final data
+    delete composed.parts;
+    delete composed.compose;
+
+    return composed;
+  }
+
+  /**
+   * Includes a blueprint part into the composed blueprint
+   *
+   * @private
+   * @param {any} composed - The blueprint being composed
+   * @param {string} partId - The part ID to include
+   * @param {string[]} sections - The sections to include
+   */
+  _includePart(composed, partId, sections) {
+    const part = this.registry.get('anatomyBlueprintParts', partId);
+    if (!part) {
+      throw new Error(
+        `Blueprint '${composed.id}' references unknown part '${partId}'`
+      );
+    }
+
+    // Process each section
+    for (const section of sections) {
+      if (part[section]) {
+        this._mergeSection(composed, part, section);
+      }
+    }
+  }
+
+  /**
+   * Processes a single compose instruction
+   *
+   * @private
+   * @param {any} composed - The blueprint being composed
+   * @param {any} instruction - The compose instruction
+   */
+  _processComposeInstruction(composed, instruction) {
+    if (!instruction.part || !instruction.include) {
+      throw new Error(
+        `Invalid compose instruction in blueprint '${composed.id}'`
+      );
+    }
+
+    const part = this.registry.get('anatomyBlueprintParts', instruction.part);
+    if (!part) {
+      throw new Error(
+        `Blueprint '${composed.id}' references unknown part '${instruction.part}'`
+      );
+    }
+
+    // Process included sections
+    for (const section of instruction.include) {
+      if (part[section]) {
+        this._mergeSection(composed, part, section);
+      }
+    }
+  }
+
+  /**
+   * Merges a section from a part into the composed blueprint
+   *
+   * @private
+   * @param {any} composed - The blueprint being composed
+   * @param {any} part - The part containing the section
+   * @param {string} section - The section name to merge
+   */
+  _mergeSection(composed, part, section) {
+    const sectionData = part[section];
+    if (!sectionData) return;
+
+    if (section === 'slots') {
+      for (const [slotKey, slotData] of Object.entries(sectionData)) {
+        if (slotData && typeof slotData === 'object' && slotData.$use) {
+          // Resolve slot from library
+          const resolvedSlot = this._resolveSlotFromLibrary(
+            slotData,
+            part.library
+          );
+          if (resolvedSlot) {
+            composed.slots[slotKey] = { ...resolvedSlot, ...slotData };
+            delete composed.slots[slotKey].$use;
+          }
+        } else {
+          composed.slots[slotKey] = slotData;
+        }
+      }
+    } else {
+      // For other sections, just merge
+      Object.assign(composed[section], sectionData);
+    }
+  }
+
+  /**
+   * Resolves a slot reference from a slot library
+   *
+   * @private
+   * @param {any} slotRef - The slot reference with $use
+   * @param {string} libraryId - The library ID
+   * @returns {any} The resolved slot definition
+   */
+  _resolveSlotFromLibrary(slotRef, libraryId) {
+    const library = this.registry.get('anatomySlotLibraries', libraryId);
+    if (!library) {
+      throw new Error(`Unknown slot library '${libraryId}'`);
+    }
+
+    const slotDef = library.slotDefinitions[slotRef.$use];
+    if (!slotDef) {
+      throw new Error(
+        `Unknown slot definition '${slotRef.$use}' in library '${libraryId}'`
+      );
+    }
+
+    return slotDef;
   }
 
   /**
@@ -284,6 +447,28 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
   loadRecipes(recipes) {
     for (const [id, data] of Object.entries(recipes)) {
       this.registry.store('anatomyRecipes', id, data);
+    }
+  }
+
+  /**
+   * Helper method to load anatomy blueprint parts into the registry
+   *
+   * @param {object} parts - Map of part ID to part data
+   */
+  loadBlueprintParts(parts) {
+    for (const [id, data] of Object.entries(parts)) {
+      this.registry.store('anatomyBlueprintParts', id, data);
+    }
+  }
+
+  /**
+   * Helper method to load anatomy slot libraries into the registry
+   *
+   * @param {object} libraries - Map of library ID to library data
+   */
+  loadSlotLibraries(libraries) {
+    for (const [id, data] of Object.entries(libraries)) {
+      this.registry.store('anatomySlotLibraries', id, data);
     }
   }
 

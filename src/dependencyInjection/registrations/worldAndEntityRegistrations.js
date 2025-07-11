@@ -501,7 +501,9 @@ export function registerWorldAndEntity(container) {
       bodyBlueprintFactory: c.resolve(tokens.BodyBlueprintFactory),
       anatomyDescriptionService: c.resolve(tokens.AnatomyDescriptionService),
       bodyGraphService: c.resolve(tokens.BodyGraphService),
-      clothingInstantiationService: c.resolve(tokens.ClothingInstantiationService),
+      clothingInstantiationService: c.resolve(
+        tokens.ClothingInstantiationService
+      ),
     });
   });
   logger.debug(
@@ -573,7 +575,9 @@ export function registerWorldAndEntity(container) {
       entityManager: c.resolve(tokens.IEntityManager),
       entityDefinitionLoader: c.resolve(tokens.EntityLoader),
       equipmentOrchestrator: c.resolve(tokens.EquipmentOrchestrator),
-      anatomyClothingIntegrationService: c.resolve(tokens.AnatomyClothingIntegrationService),
+      anatomyClothingIntegrationService: c.resolve(
+        tokens.AnatomyClothingIntegrationService
+      ),
       logger: c.resolve(tokens.ILogger),
       eventBus: c.resolve(tokens.ISafeEventDispatcher),
     });

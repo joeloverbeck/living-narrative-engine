@@ -72,17 +72,29 @@ export const meta = {
     phase: 'instances',
     registryKey: 'entityInstances',
   },
-  anatomyRecipes: {
-    contentKey: 'recipes',
-    diskFolder: 'recipes',
+  anatomySlotLibraries: {
+    contentKey: 'slotLibraries',
+    diskFolder: 'libraries',
     phase: 'definitions',
-    registryKey: 'anatomyRecipes',
+    registryKey: 'anatomySlotLibraries',
+  },
+  anatomyBlueprintParts: {
+    contentKey: 'blueprintParts',
+    diskFolder: 'parts',
+    phase: 'definitions',
+    registryKey: 'anatomyBlueprintParts',
   },
   anatomyBlueprints: {
     contentKey: 'blueprints',
     diskFolder: 'blueprints',
     phase: 'definitions',
     registryKey: 'anatomyBlueprints',
+  },
+  anatomyRecipes: {
+    contentKey: 'recipes',
+    diskFolder: 'recipes',
+    phase: 'definitions',
+    registryKey: 'anatomyRecipes',
   },
   anatomyFormatting: {
     contentKey: 'anatomyFormatting',

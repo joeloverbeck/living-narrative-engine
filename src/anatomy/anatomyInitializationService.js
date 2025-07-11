@@ -131,7 +131,8 @@ export class AnatomyInitializationService {
 
       // For now, delegate to the generation service
       // In the future, we might need to pass blueprint info differently
-      const wasGenerated = await this.#anatomyGenerationService.generateAnatomyIfNeeded(entityId);
+      const wasGenerated =
+        await this.#anatomyGenerationService.generateAnatomyIfNeeded(entityId);
 
       if (wasGenerated) {
         this.#logger.info(

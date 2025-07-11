@@ -26,7 +26,7 @@ describe('Event Dispatcher Interface Verification', () => {
         if (typeof id === 'string') {
           return {
             id: 'core:test_event',
-            payloadSchema: { type: 'object' }
+            payloadSchema: { type: 'object' },
           };
         }
         return null;
@@ -40,16 +40,16 @@ describe('Event Dispatcher Interface Verification', () => {
         eventBus: new EventBus({ logger: mockLogger }),
         gameDataRepository: mockGameDataRepository,
         schemaValidator: mockSchemaValidator,
-        logger: mockLogger
+        logger: mockLogger,
       });
 
       const dispatchSpy = jest.spyOn(validatedDispatcher, 'dispatch');
-      
-      const safeDispatcher = new SafeEventDispatcher({ 
-        validatedEventDispatcher: validatedDispatcher, 
-        logger: mockLogger 
+
+      const safeDispatcher = new SafeEventDispatcher({
+        validatedEventDispatcher: validatedDispatcher,
+        logger: mockLogger,
       });
-      
+
       const eventName = 'core:test_event';
       const payload = { message: 'Test message', value: 42 };
       const options = { allowSchemaNotFound: true };
@@ -59,9 +59,10 @@ describe('Event Dispatcher Interface Verification', () => {
       // Verify ValidatedEventDispatcher received correct parameters
       expect(dispatchSpy).toHaveBeenCalledWith(eventName, payload, options);
       expect(dispatchSpy).toHaveBeenCalledTimes(1);
-      
+
       // Verify parameter types
-      const [receivedEventName, receivedPayload, receivedOptions] = dispatchSpy.mock.calls[0];
+      const [receivedEventName, receivedPayload, receivedOptions] =
+        dispatchSpy.mock.calls[0];
       expect(typeof receivedEventName).toBe('string');
       expect(typeof receivedPayload).toBe('object');
       expect(typeof receivedOptions).toBe('object');
@@ -75,7 +76,7 @@ describe('Event Dispatcher Interface Verification', () => {
         eventBus,
         gameDataRepository: mockGameDataRepository,
         schemaValidator: mockSchemaValidator,
-        logger: mockLogger
+        logger: mockLogger,
       });
 
       const eventName = 'core:test_event';
@@ -86,7 +87,7 @@ describe('Event Dispatcher Interface Verification', () => {
       // Verify EventBus received correct parameters
       expect(dispatchSpy).toHaveBeenCalledWith(eventName, payload);
       expect(dispatchSpy).toHaveBeenCalledTimes(1);
-      
+
       // Verify parameter types and order
       const [receivedEventName, receivedPayload] = dispatchSpy.mock.calls[0];
       expect(typeof receivedEventName).toBe('string');
@@ -101,21 +102,26 @@ describe('Event Dispatcher Interface Verification', () => {
         eventBus,
         gameDataRepository: mockGameDataRepository,
         schemaValidator: mockSchemaValidator,
-        logger: mockLogger
+        logger: mockLogger,
       });
-      const safeDispatcher = new SafeEventDispatcher({ 
-        validatedEventDispatcher: validatedDispatcher, 
-        logger: mockLogger 
+      const safeDispatcher = new SafeEventDispatcher({
+        validatedEventDispatcher: validatedDispatcher,
+        logger: mockLogger,
       });
 
       // Simulate incorrect usage - passing event object as first parameter
-      const eventObject = { type: 'core:test_event', payload: { message: 'Test' } };
-      
+      const eventObject = {
+        type: 'core:test_event',
+        payload: { message: 'Test' },
+      };
+
       // This should fail validation in gameDataRepository
       mockGameDataRepository.getEventDefinition.mockImplementation((id) => {
         if (typeof id !== 'string') {
           // Log the error that would appear in real scenario
-          mockLogger.warn(`GameDataRepository: getEventDefinition called with invalid ID: ${id}`);
+          mockLogger.warn(
+            `GameDataRepository: getEventDefinition called with invalid ID: ${id}`
+          );
           return null;
         }
         return { id: 'core:test_event', payloadSchema: { type: 'object' } };
@@ -139,19 +145,19 @@ describe('Event Dispatcher Interface Verification', () => {
       };
       const eventBus = new EventBus({ logger: testLogger });
       let listenerCalled = false;
-      
+
       // Subscribe a listener that should NOT be called
       eventBus.subscribe('core:test_event', () => {
         listenerCalled = true;
       });
-      
+
       // Try to dispatch with an object as event name
       const eventObject = { type: 'core:test_event', payload: {} };
       await eventBus.dispatch(eventObject, {});
 
       // Verify the listener was NOT called due to invalid event name
       expect(listenerCalled).toBe(false);
-      
+
       // The error should have been logged
       expect(testLogger.error).toHaveBeenCalledTimes(1);
       expect(testLogger.error.mock.calls[0][0]).toContain('Invalid event name');
@@ -165,20 +171,20 @@ describe('Event Dispatcher Interface Verification', () => {
         eventBus,
         gameDataRepository: mockGameDataRepository,
         schemaValidator: mockSchemaValidator,
-        logger: mockLogger
+        logger: mockLogger,
       });
       const validatedSpy = jest.spyOn(validatedDispatcher, 'dispatch');
 
-      const safeDispatcher = new SafeEventDispatcher({ 
-        validatedEventDispatcher: validatedDispatcher, 
-        logger: mockLogger 
+      const safeDispatcher = new SafeEventDispatcher({
+        validatedEventDispatcher: validatedDispatcher,
+        logger: mockLogger,
       });
       const safeSpy = jest.spyOn(safeDispatcher, 'dispatch');
 
       const eventName = 'core:system_error_occurred';
       const payload = {
         message: 'Failed to generate body description',
-        details: { raw: 'Entity ID: 123', timestamp: '2024-01-01' }
+        details: { raw: 'Entity ID: 123', timestamp: '2024-01-01' },
       };
 
       await safeDispatcher.dispatch(eventName, payload);
@@ -210,18 +216,20 @@ describe('Event Dispatcher Interface Verification', () => {
         eventBus,
         gameDataRepository: mockGameDataRepository,
         schemaValidator: mockSchemaValidator,
-        logger: mockLogger
+        logger: mockLogger,
       });
 
       // Mock incorrect parameter order (payload first, then event name)
       const payload = { message: 'Test' };
       const eventName = 'core:test_event';
-      
+
       // This simulates calling dispatch(payload, eventName) instead of dispatch(eventName, payload)
       await validatedDispatcher.dispatch(payload, eventName);
 
       // GameDataRepository should receive the payload object as ID
-      expect(mockGameDataRepository.getEventDefinition).toHaveBeenCalledWith(payload);
+      expect(mockGameDataRepository.getEventDefinition).toHaveBeenCalledWith(
+        payload
+      );
       // The mock should return null for non-string IDs, triggering a warning
       expect(mockLogger.warn).toHaveBeenCalledTimes(1);
     });
@@ -232,11 +240,11 @@ describe('Event Dispatcher Interface Verification', () => {
         eventBus,
         gameDataRepository: mockGameDataRepository,
         schemaValidator: mockSchemaValidator,
-        logger: mockLogger
+        logger: mockLogger,
       });
-      const safeDispatcher = new SafeEventDispatcher({ 
-        validatedEventDispatcher: validatedDispatcher, 
-        logger: mockLogger 
+      const safeDispatcher = new SafeEventDispatcher({
+        validatedEventDispatcher: validatedDispatcher,
+        logger: mockLogger,
       });
 
       // Create a mock that simulates the incorrect dispatch call
@@ -244,9 +252,9 @@ describe('Event Dispatcher Interface Verification', () => {
         // This simulates code that incorrectly passes an event object
         const eventObject = {
           type: 'core:system_error_occurred',
-          payload: { message: 'Error occurred' }
+          payload: { message: 'Error occurred' },
         };
-        
+
         // Incorrect: passing the whole object as first parameter
         await dispatcher.dispatch(eventObject);
       };
@@ -266,7 +274,7 @@ describe('Event Dispatcher Interface Verification', () => {
         eventBus: new EventBus({ logger: mockLogger }),
         gameDataRepository: mockGameDataRepository,
         schemaValidator: mockSchemaValidator,
-        logger: mockLogger
+        logger: mockLogger,
       });
 
       let capturedParams = null;
@@ -275,11 +283,11 @@ describe('Event Dispatcher Interface Verification', () => {
         return Promise.resolve(true);
       });
 
-      const safeDispatcher = new SafeEventDispatcher({ 
-        validatedEventDispatcher: validatedDispatcher, 
-        logger: mockLogger 
+      const safeDispatcher = new SafeEventDispatcher({
+        validatedEventDispatcher: validatedDispatcher,
+        logger: mockLogger,
       });
-      
+
       const eventName = 'core:test_event';
       const payload = { test: true };
       const options = { validate: false };
@@ -304,7 +312,7 @@ describe('Event Dispatcher Interface Verification', () => {
       };
       const eventBus = new EventBus({ logger: testLogger });
       const listeners = [];
-      
+
       // Subscribe a listener
       eventBus.subscribe('core:test_event', (event) => {
         listeners.push(event);
@@ -315,20 +323,20 @@ describe('Event Dispatcher Interface Verification', () => {
       expect(listeners).toHaveLength(1);
       expect(listeners[0]).toEqual({
         type: 'core:test_event',
-        payload: { data: 'valid' }
+        payload: { data: 'valid' },
       });
 
       // Test with invalid non-string event name
       listeners.length = 0;
       const invalidEventName = { type: 'core:test_event' };
       await eventBus.dispatch(invalidEventName, { data: 'invalid' });
-      
+
       // Should not reach listener
       expect(listeners).toHaveLength(0);
-      
+
       // Error should have been logged
       expect(testLogger.error).toHaveBeenCalled();
-      const errorCall = testLogger.error.mock.calls.find(call => 
+      const errorCall = testLogger.error.mock.calls.find((call) =>
         call[0].includes('Invalid event name')
       );
       expect(errorCall).toBeDefined();
@@ -337,7 +345,7 @@ describe('Event Dispatcher Interface Verification', () => {
     it('should construct correct event object for listeners', async () => {
       const eventBus = new EventBus({ logger: mockLogger });
       let receivedEvent = null;
-      
+
       eventBus.subscribe('core:system_error_occurred', (event) => {
         receivedEvent = event;
       });
@@ -345,7 +353,7 @@ describe('Event Dispatcher Interface Verification', () => {
       const eventName = 'core:system_error_occurred';
       const payload = {
         message: 'Test error',
-        details: { timestamp: '2024-01-01' }
+        details: { timestamp: '2024-01-01' },
       };
 
       await eventBus.dispatch(eventName, payload);
@@ -353,7 +361,7 @@ describe('Event Dispatcher Interface Verification', () => {
       // Verify listener received correctly formatted event
       expect(receivedEvent).toEqual({
         type: eventName,
-        payload: payload
+        payload: payload,
       });
       expect(receivedEvent.type).toBe(eventName);
       expect(receivedEvent.payload).toBe(payload); // Same reference
@@ -367,11 +375,11 @@ describe('Event Dispatcher Interface Verification', () => {
         eventBus,
         gameDataRepository: mockGameDataRepository,
         schemaValidator: mockSchemaValidator,
-        logger: mockLogger
+        logger: mockLogger,
       });
-      const safeDispatcher = new SafeEventDispatcher({ 
-        validatedEventDispatcher: validatedDispatcher, 
-        logger: mockLogger 
+      const safeDispatcher = new SafeEventDispatcher({
+        validatedEventDispatcher: validatedDispatcher,
+        logger: mockLogger,
       });
 
       // Mock the event definition lookup for system error
@@ -388,7 +396,8 @@ describe('Event Dispatcher Interface Verification', () => {
       // Simulate the exact call from BodyDescriptionOrchestrator
       const SYSTEM_ERROR_OCCURRED_ID = 'core:system_error_occurred';
       await safeDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
-        message: 'Failed to generate body description for entity "Iker Aguirre": Description is empty',
+        message:
+          'Failed to generate body description for entity "Iker Aguirre": Description is empty',
         details: {
           raw: 'Entity ID: 123, Recipe ID: human-male',
           timestamp: new Date().toISOString(),
@@ -403,7 +412,7 @@ describe('Event Dispatcher Interface Verification', () => {
       expect(typeof eventPayload).toBe('object');
       expect(eventPayload).toHaveProperty('message');
       expect(eventPayload).toHaveProperty('details');
-      
+
       // Ensure no errors were logged about invalid event names
       expect(mockLogger.error).not.toHaveBeenCalledWith(
         expect.stringContaining('Invalid event name provided')

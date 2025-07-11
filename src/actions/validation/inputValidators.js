@@ -4,37 +4,34 @@
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../entities/entity.js').default} Entity */
 /** @typedef {import('../../../data/schemas/action.schema.json').ActionDefinition} ActionDefinition */
-// ActionTargetContext import removed as it's no longer validated here.
-
-// ActionTargetContext model import removed.
-import { InvalidActionDefinitionError } from '../../errors/invalidActionDefinitionError.js';
-import { InvalidActorEntityError } from '../../errors/invalidActorEntityError.js';
 
 /**
- * Validate the core inputs for prerequisite evaluation.
- * Ensures an action definition and an actor entity are structurally sound.
- * Any failures will be logged and an Error will be thrown.
+ * Validates that the action definition and actor are properly formed.
  *
- * @param {ActionDefinition} actionDefinition - Definition describing the attempted action.
- * @param {Entity} actorEntity - The entity attempting the action.
- * @param {ILogger} logger - Logger used for reporting validation issues.
- * @throws {Error} If any input is missing required properties or has the wrong type.
- * @returns {void}
+ * @param {ActionDefinition} actionDefinition - The action definition to validate.
+ * @param {Entity} actor - The actor entity to validate.
+ * @param {ILogger} logger - Logger for debug output.
+ * @throws {Error} If validation fails.
  */
-export function validateActionInputs(actionDefinition, actorEntity, logger) {
-  if (!actionDefinition?.id?.trim()) {
-    logger.error('Invalid actionDefinition provided (missing id).', {
-      actionDefinition,
-    });
-    throw new InvalidActionDefinitionError();
+export function validateActionInputs(actionDefinition, actor, logger) {
+  if (!actionDefinition || typeof actionDefinition !== 'object') {
+    throw new Error('Action definition must be a valid object');
   }
 
-  if (!actorEntity?.id?.trim()) {
-    logger.error('Invalid actor entity provided (missing id).', {
-      actor: actorEntity,
-    });
-    throw new InvalidActorEntityError();
+  if (!actionDefinition.id || typeof actionDefinition.id !== 'string') {
+    throw new Error('Action definition must have a valid id property');
   }
 
-  // Validation for targetContext has been removed, as prerequisites are now actor-only.
+  if (!actor || typeof actor !== 'object') {
+    throw new Error('Actor must be a valid object');
+  }
+
+  if (!actor.id || typeof actor.id !== 'string') {
+    throw new Error('Actor must have a valid id property');
+  }
+
+  logger.debug(
+    `Validated inputs - Action: ${actionDefinition.id}, Actor: ${actor.id}`
+  );
 }
+

@@ -3,7 +3,11 @@
  */
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { string, type, logger as loggerValidation } from '../../../src/utils/validationCore.js';
+import {
+  string,
+  type,
+  logger as loggerValidation,
+} from '../../../src/utils/validationCore.js';
 import { InvalidArgumentError } from '../../../src/errors/invalidArgumentError.js';
 import { ensureValidLogger } from '../../../src/utils/loggerUtils.js';
 
@@ -17,7 +21,7 @@ describe('validationCore', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     mockLogger = {
       debug: jest.fn(),
       info: jest.fn(),
@@ -77,7 +81,9 @@ describe('validationCore', () => {
       it('should include context in error message when provided', () => {
         expect(() => {
           string.assertNonBlank('', 'myParam', 'MyFunction');
-        }).toThrow("Parameter 'myParam' must be a non-blank string in MyFunction");
+        }).toThrow(
+          "Parameter 'myParam' must be a non-blank string in MyFunction"
+        );
       });
     });
 
@@ -144,7 +150,7 @@ describe('validationCore', () => {
           method1: () => {},
           method2: () => {},
         };
-        
+
         expect(() => {
           type.assertHasMethods(obj, ['method1', 'method2'], 'testObj');
         }).not.toThrow();
@@ -154,14 +160,14 @@ describe('validationCore', () => {
         const obj = {
           method1: () => {},
         };
-        
+
         expect(() => {
           type.assertHasMethods(obj, ['method1', 'method2'], 'testObj');
         }).toThrow(InvalidArgumentError);
-        
+
         expect(() => {
           type.assertHasMethods(obj, ['method1', 'method2'], 'testObj');
-        }).toThrow("missing required methods: method2");
+        }).toThrow('missing required methods: method2');
       });
 
       it('should throw for non-objects', () => {
@@ -181,7 +187,9 @@ describe('validationCore', () => {
       it('should return false for invalid logger objects', () => {
         expect(loggerValidation.isValid(null)).toBe(false);
         expect(loggerValidation.isValid({})).toBe(false);
-        expect(loggerValidation.isValid({ debug: 'not a function' })).toBe(false);
+        expect(loggerValidation.isValid({ debug: 'not a function' })).toBe(
+          false
+        );
         expect(loggerValidation.isValid({ debug: () => {} })).toBe(false); // Missing other methods
       });
     });

@@ -10,21 +10,25 @@ This report documents the consolidation of utility and helper files that were sc
 ## Files Moved
 
 ### 1. Entity Component Utils
+
 - **From**: `src/scopeDsl/core/entityComponentUtils.js`
 - **To**: `src/utils/entityComponentUtils.js`
 - **Description**: Utility for building component objects for entities
 
 ### 2. Portrait Utils
+
 - **From**: `src/entities/utils/portraitUtils.js`
 - **To**: `src/utils/portraitUtils.js`
 - **Description**: Helper utilities for building entity portrait data
 
 ### 3. Registry Store Utils
+
 - **From**: `src/loaders/helpers/registryStoreUtils.js`
 - **To**: `src/utils/registryStoreUtils.js`
 - **Description**: Utility for storing items in the registry with standardized metadata
 
 ### 4. Turn State Validation Utils
+
 - **From**: `src/turns/states/helpers/validationUtils.js`
 - **To**: `src/utils/turnStateValidationUtils.js`
 - **Description**: Validation utilities for turn state actors
@@ -73,10 +77,12 @@ Each moved file had its internal import paths updated to reflect the new locatio
 ## Validation Results
 
 ### Lint Check
+
 - **Command**: `npm run lint`
 - **Result**: ✅ Passed (existing warnings unrelated to refactoring)
 
 ### Test Suite
+
 - **Command**: Targeted tests for moved files
 - **Result**: ✅ All 57 tests passed
 - **Files tested**:
@@ -86,6 +92,7 @@ Each moved file had its internal import paths updated to reflect the new locatio
   - entityBuilder.test.js
 
 ### Type Check
+
 - **Command**: `npm run typecheck`
 - **Result**: ✅ No new errors introduced (existing TypeScript issues unrelated to refactoring)
 

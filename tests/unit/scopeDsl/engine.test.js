@@ -368,10 +368,10 @@ describe('ScopeEngine', () => {
     });
 
     describe('Depth limit enforcement', () => {
-      test('throws ScopeDepthError when depth > 4', () => {
+      test('throws ScopeDepthError when depth > 6', () => {
         // We construct the AST manually to bypass the parser's own depth limit,
         // allowing us to unit test the engine's depth limit in isolation.
-        // This AST represents an expression like 'actor.a.b.c.d.e' (5 steps).
+        // This AST represents an expression like 'actor.a.b.c.d.e.f.g' (7 steps).
         const source = { type: 'Source', kind: 'actor' };
         const step1 = {
           type: 'Step',
@@ -397,7 +397,19 @@ describe('ScopeEngine', () => {
           isArray: false,
           parent: step3,
         };
-        const ast = { type: 'Step', field: 'e', isArray: false, parent: step4 };
+        const step5 = {
+          type: 'Step',
+          field: 'e',
+          isArray: false,
+          parent: step4,
+        };
+        const step6 = {
+          type: 'Step',
+          field: 'f',
+          isArray: false,
+          parent: step5,
+        };
+        const ast = { type: 'Step', field: 'g', isArray: false, parent: step6 };
 
         // No mocks are needed as the engine should throw before trying to access data.
 
@@ -407,14 +419,14 @@ describe('ScopeEngine', () => {
 
         expect(() => {
           engine.resolve(ast, actorEntity, mockRuntimeCtx);
-        }).toThrow('Expression depth limit exceeded (max 4)');
+        }).toThrow('Expression depth limit exceeded (max 6)');
       });
 
-      test('allows depth exactly 4', () => {
-        // This expression actually has depth 5 (actor + 5 steps), which exceeds the limit
-        // Let's use a simpler expression with exactly depth 4
+      test('allows depth exactly 6', () => {
+        // This expression has exactly depth 6
+        // Let's use an expression with exactly depth 6
         const ast = parseDslExpression(
-          'actor.core:inventory.items[].components'
+          'actor.components.core:inventory.items[].stats.durability'
         );
 
         mockEntityManager.getComponentData.mockImplementation(
@@ -422,8 +434,51 @@ describe('ScopeEngine', () => {
             if (entityId === actorId && componentName === 'core:inventory') {
               return { items: ['item1'] };
             }
-            if (entityId === 'item1' && componentName === 'components') {
-              return { stats: 'some-stats-object', type: 'weapon' };
+            if (entityId === 'item1' && componentName === 'stats') {
+              return { durability: 100, damage: 50 };
+            }
+            return undefined;
+          }
+        );
+
+        expect(() => {
+          engine.resolve(ast, actorEntity, mockRuntimeCtx);
+        }).not.toThrow(ScopeDepthError);
+      });
+
+      test('allows depth exactly 5', () => {
+        // Test depth 5: actor.components.core:inventory.items[].stats
+        const ast = parseDslExpression(
+          'actor.components.core:inventory.items[].stats'
+        );
+
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentName) => {
+            if (entityId === actorId && componentName === 'core:inventory') {
+              return { items: ['item1'] };
+            }
+            if (entityId === 'item1' && componentName === 'stats') {
+              return { durability: 100 };
+            }
+            return undefined;
+          }
+        );
+
+        expect(() => {
+          engine.resolve(ast, actorEntity, mockRuntimeCtx);
+        }).not.toThrow(ScopeDepthError);
+      });
+
+      test('allows depth less than 6', () => {
+        // Test depth 4: actor.components.core:inventory.items[]
+        const ast = parseDslExpression(
+          'actor.components.core:inventory.items[]'
+        );
+
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentName) => {
+            if (entityId === actorId && componentName === 'core:inventory') {
+              return { items: ['item1', 'item2'] };
             }
             return undefined;
           }

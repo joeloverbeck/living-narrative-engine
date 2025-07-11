@@ -12,6 +12,7 @@ import { InvalidArgumentError } from '../../errors/invalidArgumentError.js';
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 /** @typedef {import('../orchestration/equipmentOrchestrator.js').EquipmentOrchestrator} EquipmentOrchestrator */
+/** @typedef {import('../../anatomy/integration/anatomyClothingIntegrationService.js').AnatomyClothingIntegrationService} AnatomyClothingIntegrationService */
 
 /**
  * Facade service for clothing system operations
@@ -28,6 +29,8 @@ export class ClothingManagementService {
   #eventDispatcher;
   /** @type {EquipmentOrchestrator} */
   #orchestrator;
+  /** @type {AnatomyClothingIntegrationService} */
+  #anatomyClothingIntegration;
 
   /**
    * Creates an instance of ClothingManagementService
@@ -37,22 +40,29 @@ export class ClothingManagementService {
    * @param {ILogger} deps.logger - Logger instance
    * @param {ISafeEventDispatcher} deps.eventDispatcher - Event dispatcher for system events
    * @param {EquipmentOrchestrator} deps.equipmentOrchestrator - Orchestrator for complex equipment workflows
+   * @param {AnatomyClothingIntegrationService} deps.anatomyClothingIntegrationService - Service for anatomy-clothing integration
    */
   constructor({
     entityManager,
     logger,
     eventDispatcher,
     equipmentOrchestrator,
+    anatomyClothingIntegrationService,
   }) {
     validateDependency(entityManager, 'IEntityManager');
     validateDependency(logger, 'ILogger');
     validateDependency(eventDispatcher, 'ISafeEventDispatcher');
     validateDependency(equipmentOrchestrator, 'EquipmentOrchestrator');
+    validateDependency(
+      anatomyClothingIntegrationService,
+      'AnatomyClothingIntegrationService'
+    );
 
     this.#entityManager = entityManager;
     this.#logger = logger;
     this.#eventDispatcher = eventDispatcher;
     this.#orchestrator = equipmentOrchestrator;
+    this.#anatomyClothingIntegration = anatomyClothingIntegrationService;
   }
 
   /**
@@ -271,11 +281,24 @@ export class ClothingManagementService {
         `ClothingManagementService: Getting available clothing slots for entity '${entityId}'`
       );
 
-      // Delegate to orchestrator
-      const result =
-        await this.#orchestrator.getAvailableClothingSlots(entityId);
+      // Delegate to anatomy clothing integration service
+      const slots =
+        await this.#anatomyClothingIntegration.getAvailableClothingSlots(
+          entityId
+        );
 
-      return result;
+      // Convert Map to array format for backward compatibility
+      const slotsArray = Array.from(slots.entries()).map(
+        ([slotId, mapping]) => ({
+          slotId,
+          ...mapping,
+        })
+      );
+
+      return {
+        success: true,
+        slots: slotsArray,
+      };
     } catch (error) {
       this.#logger.error(
         `ClothingManagementService: Error getting available slots for entity '${entityId}'`,

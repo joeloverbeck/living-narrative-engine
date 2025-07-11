@@ -70,7 +70,8 @@ describe('Scope-DSL Parser - Additional Coverage Tests', () => {
 
   describe('Parser error scenarios', () => {
     test('should handle depth limit exceeded error', () => {
-      const deepExpression = 'actor.field1.field2.field3.field4.field5';
+      const deepExpression =
+        'actor.field1.field2.field3.field4.field5.field6.field7';
       expect(() => {
         parseDslExpression(deepExpression);
       }).toThrow(ScopeDepthError);

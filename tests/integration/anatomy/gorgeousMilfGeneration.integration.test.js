@@ -50,6 +50,8 @@ import humanFoot from '../../../data/mods/anatomy/entities/definitions/human_foo
 import humanAsshole from '../../../data/mods/anatomy/entities/definitions/human_asshole.entity.json';
 import humanFemaleBlueprint from '../../../data/mods/anatomy/blueprints/human_female.blueprint.json';
 import gorgeousMilfRecipe from '../../../data/mods/anatomy/recipes/gorgeous_milf.recipe.json';
+import humanoidCore from '../../../data/mods/anatomy/parts/humanoid_core.part.json';
+import humanoidSlotLibrary from '../../../data/mods/anatomy/libraries/humanoid.slot-library.json';
 
 // Import core components needed for anatomy
 import nameComponent from '../../../data/mods/core/components/name.component.json';
@@ -157,6 +159,16 @@ describe('Gorgeous MILF Anatomy Generation Integration Test', () => {
       'anatomy:human_foot': humanFoot,
       'anatomy:human_asshole': humanAsshole,
       'anatomy:jacqueline_rouxel': jacquelineRouxel,
+    });
+
+    // Load slot libraries
+    testBed.loadSlotLibraries({
+      'anatomy:humanoid_slots': humanoidSlotLibrary,
+    });
+
+    // Load blueprint parts
+    testBed.loadBlueprintParts({
+      'anatomy:humanoid_core': humanoidCore,
     });
 
     // Load blueprints

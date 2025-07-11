@@ -36,6 +36,8 @@ import humanHand from '../../../data/mods/anatomy/entities/definitions/human_han
 import humanFoot from '../../../data/mods/anatomy/entities/definitions/human_foot.entity.json';
 import humanFemaleBlueprint from '../../../data/mods/anatomy/blueprints/human_female.blueprint.json';
 import humanFemaleRecipe from '../../../data/mods/anatomy/recipes/human_female.recipe.json';
+import humanoidSlotLibrary from '../../../data/mods/anatomy/libraries/humanoid.slot-library.json';
+import humanoidCorePart from '../../../data/mods/anatomy/parts/humanoid_core.part.json';
 
 // Import core components needed for anatomy
 import nameComponent from '../../../data/mods/core/components/name.component.json';
@@ -110,6 +112,16 @@ describe('Human Female Body Graph Integration Test', () => {
       'anatomy:human_hand': humanHand,
       'anatomy:human_foot': humanFoot,
       'test:human_female': testHumanFemale,
+    });
+
+    // Load slot libraries
+    testBed.loadSlotLibraries({
+      'anatomy:humanoid_slots': humanoidSlotLibrary,
+    });
+
+    // Load blueprint parts
+    testBed.loadBlueprintParts({
+      'anatomy:humanoid_core': humanoidCorePart,
     });
 
     // Load blueprints

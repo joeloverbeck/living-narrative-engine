@@ -1,0 +1,13 @@
+{
+  "$schema": "http://example.com/schemas/action.schema.json",
+  "id": "intimacy:massage_back",
+  "commandVerb": "massage-back",
+  "name": "Massage Back",
+  "description": "Gently massage the target's back.",
+  "scope": "intimacy:close_actors_facing_away",
+  "required_components": {
+    "actor": ["intimacy:closeness"]
+  },
+  "template": "massage {target}'s back",
+  "prerequisites": []
+}

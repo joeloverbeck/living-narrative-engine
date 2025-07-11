@@ -44,16 +44,19 @@ describe('Entity Lifecycle Event Schema Validation - Integration', () => {
     mockEventDispatcher = {
       dispatch: (eventType, payload) => {
         capturedEvents.push({ type: eventType, payload });
-        
+
         // Validate the payload against schema
-        const schema = eventType === ENTITY_CREATED_ID ? entityCreatedSchema : entityRemovedSchema;
+        const schema =
+          eventType === ENTITY_CREATED_ID
+            ? entityCreatedSchema
+            : entityRemovedSchema;
         const isValid = schemaValidator.validate(payload, schema);
         if (!isValid) {
           const errors = schemaValidator.getLastErrors();
           throw new Error(`Schema validation failed: ${errors.join(', ')}`);
         }
         return true;
-      }
+      },
     };
 
     // Create entity event dispatcher with mock
@@ -133,7 +136,7 @@ describe('Entity Lifecycle Event Schema Validation - Integration', () => {
       expect(capturedEvent.payload).toEqual({
         instanceId: entity.id,
       });
-      
+
       // Verify no extra properties
       expect(Object.keys(capturedEvent.payload)).toEqual(['instanceId']);
     });
@@ -146,14 +149,18 @@ describe('Entity Lifecycle Event Schema Validation - Integration', () => {
             // Check for extra properties
             const allowedKeys = ['instanceId'];
             const payloadKeys = Object.keys(payload);
-            const hasExtraProperties = payloadKeys.some(key => !allowedKeys.includes(key));
-            
+            const hasExtraProperties = payloadKeys.some(
+              (key) => !allowedKeys.includes(key)
+            );
+
             if (hasExtraProperties) {
-              throw new Error('Schema validation failed: Additional properties not allowed');
+              throw new Error(
+                'Schema validation failed: Additional properties not allowed'
+              );
             }
           }
           return true;
-        }
+        },
       };
 
       const testDispatcher = new EntityEventDispatcher({
@@ -208,15 +215,24 @@ describe('Entity Lifecycle Event Schema Validation - Integration', () => {
       const validatingMockDispatcher = {
         dispatch: (eventType, payload) => {
           if (eventType === ENTITY_CREATED_ID) {
-            const requiredFields = ['instanceId', 'definitionId', 'wasReconstructed', 'entity'];
-            const missingFields = requiredFields.filter(field => !(field in payload));
-            
+            const requiredFields = [
+              'instanceId',
+              'definitionId',
+              'wasReconstructed',
+              'entity',
+            ];
+            const missingFields = requiredFields.filter(
+              (field) => !(field in payload)
+            );
+
             if (missingFields.length > 0) {
-              throw new Error(`Schema validation failed: Missing required fields: ${missingFields.join(', ')}`);
+              throw new Error(
+                `Schema validation failed: Missing required fields: ${missingFields.join(', ')}`
+              );
             }
           }
           return true;
-        }
+        },
       };
 
       const incompletePayload = {
@@ -235,11 +251,13 @@ describe('Entity Lifecycle Event Schema Validation - Integration', () => {
         dispatch: (eventType, payload) => {
           if (eventType === ENTITY_REMOVED_ID) {
             if (!payload.instanceId) {
-              throw new Error('Schema validation failed: Missing required field: instanceId');
+              throw new Error(
+                'Schema validation failed: Missing required field: instanceId'
+              );
             }
           }
           return true;
-        }
+        },
       };
 
       const incompletePayload = {};

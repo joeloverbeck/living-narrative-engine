@@ -181,10 +181,13 @@ export class EventDispatchService {
    */
   dispatchSystemError(message, details = {}, options = {}) {
     const { async = false, throwOnInvalidDispatcher = false } = options;
-    
-    const hasDispatch = this.#safeEventDispatcher && typeof this.#safeEventDispatcher.dispatch === 'function';
+
+    const hasDispatch =
+      this.#safeEventDispatcher &&
+      typeof this.#safeEventDispatcher.dispatch === 'function';
     if (!hasDispatch) {
-      const errorMsg = "Invalid or missing method 'dispatch' on dependency 'EventDispatchService: safeEventDispatcher'.";
+      const errorMsg =
+        "Invalid or missing method 'dispatch' on dependency 'EventDispatchService: safeEventDispatcher'.";
       this.#logger.error(errorMsg);
       if (throwOnInvalidDispatcher) {
         throw new InvalidDispatcherError(errorMsg, {
@@ -198,48 +201,62 @@ export class EventDispatchService {
 
     if (async) {
       try {
-        const result = this.#safeEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, payload);
+        const result = this.#safeEventDispatcher.dispatch(
+          SYSTEM_ERROR_OCCURRED_ID,
+          payload
+        );
         // Handle both Promise and non-Promise returns defensively
         if (result && typeof result.catch === 'function') {
           return result.catch((error) => {
             // If we can't dispatch the error event, at least log it
-            this.#logger.error(`Failed to dispatch system error event: ${message}`, {
-              originalDetails: details,
-              dispatchError: error,
-            });
+            this.#logger.error(
+              `Failed to dispatch system error event: ${message}`,
+              {
+                originalDetails: details,
+                dispatchError: error,
+              }
+            );
           });
         }
         // If not a Promise, wrap in resolved Promise for consistency
         return Promise.resolve();
       } catch (error) {
         // Handle synchronous errors
-        this.#logger.error(`Failed to dispatch system error event: ${message}`, {
-          originalDetails: details,
-          dispatchError: error,
-        });
+        this.#logger.error(
+          `Failed to dispatch system error event: ${message}`,
+          {
+            originalDetails: details,
+            dispatchError: error,
+          }
+        );
         return Promise.resolve();
       }
     } else {
       try {
         this.#safeEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, payload);
       } catch (error) {
-        this.#logger.error(`Failed to dispatch system error event: ${message}`, {
-          originalDetails: details,
-          dispatchError: error,
-        });
+        this.#logger.error(
+          `Failed to dispatch system error event: ${message}`,
+          {
+            originalDetails: details,
+            dispatchError: error,
+          }
+        );
       }
     }
   }
 
   /**
    * Dispatches a validation error and returns a standardized result object.
-   * 
+   *
    * @param {string} message - Human readable error message.
    * @param {object} [details] - Additional structured details for debugging.
    * @returns {{ ok: false, error: string, details?: object }} Result object for validation failures.
    */
   dispatchValidationError(message, details) {
-    this.dispatchSystemError(message, details, { throwOnInvalidDispatcher: true });
+    this.dispatchSystemError(message, details, {
+      throwOnInvalidDispatcher: true,
+    });
     return details !== undefined
       ? { ok: false, error: message, details }
       : { ok: false, error: message };

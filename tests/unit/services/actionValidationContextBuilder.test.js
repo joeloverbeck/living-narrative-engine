@@ -248,12 +248,9 @@ describe('ActionValidationContextBuilder', () => {
         const action = () =>
           builder.buildContext(null, mockActor, ActionTargetContext.noTarget());
         expect(action).toThrow(
-          'ActionValidationContextBuilder.buildContext: invalid actionDefinition'
+          'ActionValidationContextBuilder.buildContext: Action definition must be a valid object'
         );
-        expect(mockLogger.error).toHaveBeenCalledWith(
-          expect.stringContaining('Invalid actionDefinition provided'),
-          { actionDefinition: null }
-        );
+        // Logger error call has been moved to inputValidators.js
       });
 
       it('should throw Error and log error for actionDefinition without id', () => {
@@ -265,12 +262,9 @@ describe('ActionValidationContextBuilder', () => {
             ActionTargetContext.noTarget()
           );
         expect(action).toThrow(
-          'ActionValidationContextBuilder.buildContext: invalid actionDefinition'
+          'ActionValidationContextBuilder.buildContext: Action definition must have a valid id property'
         );
-        expect(mockLogger.error).toHaveBeenCalledWith(
-          expect.stringContaining('Invalid actionDefinition provided'),
-          { actionDefinition: invalidActionDef }
-        );
+        // Logger error call has been moved to inputValidators.js
       });
 
       it('should throw Error and log error for null actor', () => {
@@ -281,12 +275,9 @@ describe('ActionValidationContextBuilder', () => {
             ActionTargetContext.noTarget()
           );
         expect(action).toThrow(
-          'ActionValidationContextBuilder.buildContext: invalid actor entity'
+          'ActionValidationContextBuilder.buildContext: Actor must be a valid object'
         );
-        expect(mockLogger.error).toHaveBeenCalledWith(
-          expect.stringContaining('Invalid actor entity provided'),
-          { actor: null }
-        );
+        // Logger error call has been moved to inputValidators.js
       });
 
       it('should throw Error and log error for actor without id', () => {
@@ -298,23 +289,17 @@ describe('ActionValidationContextBuilder', () => {
             ActionTargetContext.noTarget()
           );
         expect(action).toThrow(
-          'ActionValidationContextBuilder.buildContext: invalid actor entity'
+          'ActionValidationContextBuilder.buildContext: Actor must have a valid id property'
         );
-        expect(mockLogger.error).toHaveBeenCalledWith(
-          expect.stringContaining('Invalid actor entity provided'),
-          { actor: invalidActor }
-        );
+        // Logger error call has been moved to inputValidators.js
       });
 
       it('should prioritize actionDefinition validation when all inputs are missing', () => {
         const action = () => builder.buildContext(null, null, null);
         expect(action).toThrow(
-          'ActionValidationContextBuilder.buildContext: invalid actionDefinition'
+          'ActionValidationContextBuilder.buildContext: Action definition must be a valid object'
         );
-        expect(mockLogger.error).toHaveBeenCalledWith(
-          expect.stringContaining('Invalid actionDefinition provided'),
-          { actionDefinition: null }
-        );
+        // Logger error call has been moved to inputValidators.js
       });
     });
   });

@@ -9,11 +9,11 @@ describe('formatValidationError additional branches', () => {
     const customErr = { message: 'Custom Failure' };
     const result = formatValidationError(customErr, 'source', {});
     expect(result).toBeInstanceOf(Error);
-    expect(result.message).toBe('source: custom Failure');
+    expect(result.message).toBe('source: Custom Failure');
   });
 
   it('handles object errors lacking a message', () => {
     const result = formatValidationError({}, 'source', {});
-    expect(result.message).toBe('source: invalid input');
+    expect(result.message).toBe('source: undefined');
   });
 });

@@ -23,6 +23,7 @@ This report presents a comprehensive analysis of the `src/utils/` directory in t
 ### 1. Error Handling Utilities (8 files)
 
 #### Current State
+
 ```
 errorDetails.js          → Creates error detail objects
 errorReportingUtils.js   → Reports missing actor IDs
@@ -37,6 +38,7 @@ systemErrorDispatchUtils.js → Also dispatches SYSTEM_ERROR_OCCURRED
 #### Major Duplication Found
 
 **System Error Dispatching** (CRITICAL):
+
 - `safeDispatchErrorUtils.js` and `systemErrorDispatchUtils.js` both dispatch the same `SYSTEM_ERROR_OCCURRED_ID` event
 - Only difference is sync vs async dispatching
 - Different dispatcher interfaces used (`ISafeEventDispatcher` vs `IValidatedEventDispatcher`)
@@ -44,11 +46,16 @@ systemErrorDispatchUtils.js → Also dispatches SYSTEM_ERROR_OCCURRED
 #### Consolidation Recommendation
 
 1. **Merge into `systemErrorDispatcher.js`**:
+
 ```javascript
 // Unified system error dispatcher supporting both sync and async
 export class SystemErrorDispatcher {
-  dispatchSync(dispatcher, error, context, logger) { /* ... */ }
-  async dispatchAsync(dispatcher, error, context, logger) { /* ... */ }
+  dispatchSync(dispatcher, error, context, logger) {
+    /* ... */
+  }
+  async dispatchAsync(dispatcher, error, context, logger) {
+    /* ... */
+  }
 }
 ```
 
@@ -58,6 +65,7 @@ export class SystemErrorDispatcher {
 ### 2. Entity-Related Utilities (8 files)
 
 #### Current State
+
 ```
 entityAssertionsUtils.js    → Assert entity validity
 entityComponentUtils.js     → Build components from entity
@@ -72,18 +80,20 @@ entitiesValidationHelpers.js → Validation result formatting
 #### Major Duplication Found
 
 **Entity Validation** (3 different approaches):
+
 ```javascript
 // entityAssertionsUtils.js
-assertValidEntity(entity) // Checks non-null + non-blank ID
+assertValidEntity(entity); // Checks non-null + non-blank ID
 
-// entityValidationUtils.js  
-isValidEntity(entity) // Checks getComponentData method
+// entityValidationUtils.js
+isValidEntity(entity); // Checks getComponentData method
 
 // entityUtils.js
 // Uses isValidEntity() but also does ID checking
 ```
 
 **Name Resolution** (2 implementations):
+
 - `entityNameFallbackUtils.js` - Resolves name placeholders
 - `entityUtils.js` - Gets display names
 - Both access the same `NAME_COMPONENT_ID`
@@ -105,6 +115,7 @@ isValidEntity(entity) // Checks getComponentData method
 ### 3. Event Dispatching Utilities (6 files)
 
 #### Current State
+
 ```
 eventDispatchHelper.js  → Dispatch with error handling
 eventDispatchService.js → Service class (duplicates 3 others!)
@@ -117,11 +128,13 @@ dispatcherUtils.js      → Factory for dispatchers
 #### Major Duplication Found
 
 **EventDispatchService duplicates code from**:
+
 - `eventDispatchHelper.js` - dispatchWithErrorHandling()
 - `eventDispatchUtils.js` - dispatchWithLogging()
 - `safeDispatchEvent.js` - safeDispatchEvent()
 
 **Three "safe dispatch" implementations**:
+
 1. `safeDispatch()` - Basic try-catch
 2. `dispatchWithLogging()` - Promise-based
 3. `safeDispatchEvent()` - Includes validation
@@ -135,6 +148,7 @@ dispatcherUtils.js      → Factory for dispatchers
 ### 4. Validation Utilities (8+ files)
 
 #### Current State
+
 ```
 argValidation.js          → Map and Logger validation
 entityValidationUtils.js  → Entity interface validation
@@ -149,39 +163,55 @@ dependencyUtils.js       → Core validation functions
 #### Major Duplication Found
 
 **String Validation** (4+ implementations):
+
 ```javascript
 // Different files, same logic
-isNonBlankString()      // textUtils.js
-assertNonBlankString()  // dependencyUtils.js
-validateNonEmptyString() // stringValidation.js
-validateComponentType()  // operationValidationUtils.js
+isNonBlankString(); // textUtils.js
+assertNonBlankString(); // dependencyUtils.js
+validateNonEmptyString(); // stringValidation.js
+validateComponentType(); // operationValidationUtils.js
 ```
 
 **Logger Validation** (3+ implementations):
+
 - `assertIsLogger()` - argValidation.js
 - `ensureValidLogger()` - loggerUtils.js
 - Multiple files check same methods
 
 **Method Validation** (4+ implementations):
+
 - Various forms of checking if object has required methods
 
 #### Consolidation Recommendation
 
 1. **Create `validationCore.js`**:
+
 ```javascript
 export const string = {
-  isNonBlank(str) { /* single implementation */ },
-  assertNonBlank(str, name, context) { /* with error */ }
+  isNonBlank(str) {
+    /* single implementation */
+  },
+  assertNonBlank(str, name, context) {
+    /* with error */
+  },
 };
 
 export const type = {
-  assertIsMap(value, name) { /* ... */ },
-  assertHasMethods(obj, methods, name) { /* ... */ }
+  assertIsMap(value, name) {
+    /* ... */
+  },
+  assertHasMethods(obj, methods, name) {
+    /* ... */
+  },
 };
 
 export const logger = {
-  isValid(logger) { /* ... */ },
-  ensure(logger, fallback) { /* ... */ }
+  isValid(logger) {
+    /* ... */
+  },
+  ensure(logger, fallback) {
+    /* ... */
+  },
 };
 ```
 
@@ -191,6 +221,7 @@ export const logger = {
 ### 5. Placeholder Utilities (6 files)
 
 #### Current State
+
 ```
 placeholderParsing.js     → Just re-exports (unnecessary!)
 placeholderPatterns.js    → Regex patterns
@@ -215,6 +246,7 @@ executionPlaceholderResolver.js → Wrapper class
 ### 6. Save/Persistence Utilities (6 files)
 
 #### Current State
+
 ```
 saveFileReadUtils.js     → Read and deserialize saves
 saveMetadataUtils.js     → Validate metadata
@@ -238,11 +270,14 @@ persistenceErrorUtils.js → Error wrapping
 ### 7. Other Common Patterns
 
 #### Logger Utilities Duplication
+
 - Multiple ways to create prefixed loggers
 - `getModuleLogger()`, `getPrefixedLogger()`, `setupPrefixedLogger()`
 
 #### Safe Function Wrappers
+
 - Pattern repeated in multiple files:
+
 ```javascript
 try {
   return { value: result, error: null };
@@ -257,50 +292,77 @@ try {
 Based on the analysis, several new abstractions emerge:
 
 ### 1. **ValidationService**
+
 A comprehensive validation service that unifies all validation logic:
+
 ```javascript
 class ValidationService {
-  validateString(value, options) { /* ... */ }
-  validateEntity(entity, level = 'basic') { /* ... */ }
-  validateLogger(logger) { /* ... */ }
-  validateDependencies(deps, requirements) { /* ... */ }
+  validateString(value, options) {
+    /* ... */
+  }
+  validateEntity(entity, level = 'basic') {
+    /* ... */
+  }
+  validateLogger(logger) {
+    /* ... */
+  }
+  validateDependencies(deps, requirements) {
+    /* ... */
+  }
 }
 ```
 
 ### 2. **ErrorDispatcher**
+
 A unified error handling and dispatching service:
+
 ```javascript
 class ErrorDispatcher {
-  dispatchSystemError(error, context, options) { /* ... */ }
-  handleOperationError(operation, error) { /* ... */ }
-  formatError(error, context) { /* ... */ }
+  dispatchSystemError(error, context, options) {
+    /* ... */
+  }
+  handleOperationError(operation, error) {
+    /* ... */
+  }
+  formatError(error, context) {
+    /* ... */
+  }
 }
 ```
 
 ### 3. **SafeExecutor**
+
 A generic safe execution wrapper:
+
 ```javascript
 class SafeExecutor {
-  execute(operation, errorHandler, logger) { /* ... */ }
-  executeAsync(operation, errorHandler, logger) { /* ... */ }
+  execute(operation, errorHandler, logger) {
+    /* ... */
+  }
+  executeAsync(operation, errorHandler, logger) {
+    /* ... */
+  }
 }
 ```
 
 ## Implementation Priority
 
 ### High Priority (Immediate Impact)
+
 1. **Merge system error dispatchers** - Eliminates most confusing duplication
 2. **Consolidate string validation** - Used everywhere, high impact
 3. **Fix EventDispatchService** - Stop duplicating code from other files
 4. **Remove thin wrapper files** - Quick wins (placeholderParsing.js, etc.)
 
 ### Medium Priority (Significant Improvement)
+
 1. **Unify entity validation** - Important for consistency
 2. **Create ValidationService** - Long-term maintainability
 3. **Consolidate logger utilities** - Reduce confusion
 4. **Merge persistence utilities** - Cleaner architecture
 
 ### Low Priority (Nice to Have)
+
 1. **Standardize parameter ordering** - Consistency improvement
 2. **Extract safe wrapper pattern** - Code reuse
 3. **Consolidate name resolution** - Minor duplication
@@ -308,11 +370,13 @@ class SafeExecutor {
 ## Expected Outcomes
 
 ### Quantitative Improvements
+
 - **File count reduction**: From 91 to ~65-70 files (-25%)
 - **Code line reduction**: Estimated 15-20% fewer lines
 - **Test reduction**: Fewer utilities = fewer tests to maintain
 
 ### Qualitative Improvements
+
 - **Clearer intent**: One obvious place for each type of utility
 - **Easier onboarding**: New developers find utilities faster
 - **Reduced bugs**: Single implementation = single place to fix
@@ -338,6 +402,6 @@ The highest priority items (system error dispatching, string validation, EventDi
 
 ---
 
-*Report generated: [Date of Analysis]*
-*Total files analyzed: 91*
-*Estimated implementation effort: 2-3 weeks for full consolidation*
+_Report generated: [Date of Analysis]_
+_Total files analyzed: 91_
+_Estimated implementation effort: 2-3 weeks for full consolidation_

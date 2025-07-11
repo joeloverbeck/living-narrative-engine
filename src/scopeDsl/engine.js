@@ -48,7 +48,7 @@ import createArrayIterationResolver from './nodes/arrayIterationResolver.js';
 class ScopeEngine extends IScopeEngine {
   constructor() {
     super();
-    this.maxDepth = 4;
+    this.maxDepth = 6;
     this.depthGuard = createDepthGuard(this.maxDepth);
     this.cycleDetector = createCycleDetector();
     this.contextMerger = new ContextMerger();

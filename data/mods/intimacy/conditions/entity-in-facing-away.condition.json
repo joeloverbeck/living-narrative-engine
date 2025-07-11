@@ -1,0 +1,15 @@
+{
+  "$schema": "http://example.com/schemas/condition.schema.json",
+  "id": "intimacy:entity-in-facing-away",
+  "description": "Checks if the entity is in the actor's facing_away_from array (i.e., the actor is facing away from this entity).",
+  "logic": {
+    "in": [
+      {
+        "var": "entity.id"
+      },
+      {
+        "var": "actor.components.intimacy:facing_away.facing_away_from"
+      }
+    ]
+  }
+}

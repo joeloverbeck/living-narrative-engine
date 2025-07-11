@@ -506,7 +506,7 @@ describe('EntityEventDispatcher - Edge Cases and Integration', () => {
       entity.id,
       entity.definitionId
     );
-    
+
     // Removed event only has instanceId
     expect(removedEvent.eventData.instanceId).toBe(entity.id);
     expect(Object.keys(removedEvent.eventData)).toEqual(['instanceId']);

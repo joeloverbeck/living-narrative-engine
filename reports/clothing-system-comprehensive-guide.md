@@ -1,6 +1,7 @@
 # Comprehensive Guide to the Living Narrative Engine Clothing System
 
 ## Table of Contents
+
 1. [System Overview](#system-overview)
 2. [Clothing Slots in Blueprints](#clothing-slots-in-blueprints)
 3. [Clothing Definitions in Recipes](#clothing-definitions-in-recipes)
@@ -47,7 +48,19 @@ The anatomy blueprint schema defines how clothing slots are mapped to anatomical
       "properties": {
         "slotType": {
           "type": "string",
-          "enum": ["head", "torso", "legs", "feet", "hands", "neck", "waist", "back", "fingers", "wrists", "ears"]
+          "enum": [
+            "head",
+            "torso",
+            "legs",
+            "feet",
+            "hands",
+            "neck",
+            "waist",
+            "back",
+            "fingers",
+            "wrists",
+            "ears"
+          ]
         },
         "priority": {
           "type": "number",
@@ -245,7 +258,17 @@ Defines the core properties of a wearable item:
       "description": { "type": "string" },
       "clothingType": {
         "type": "string",
-        "enum": ["shirt", "pants", "dress", "shoes", "hat", "gloves", "jacket", "underwear", "accessories"]
+        "enum": [
+          "shirt",
+          "pants",
+          "dress",
+          "shoes",
+          "hat",
+          "gloves",
+          "jacket",
+          "underwear",
+          "accessories"
+        ]
       },
       "layer": {
         "type": "string",
@@ -259,7 +282,14 @@ Defines the core properties of a wearable item:
       },
       "size": {
         "type": "string",
-        "enum": ["extra_small", "small", "medium", "large", "extra_large", "adjustable"]
+        "enum": [
+          "extra_small",
+          "small",
+          "medium",
+          "large",
+          "extra_large",
+          "adjustable"
+        ]
       },
       "material": {
         "type": "string",
@@ -297,7 +327,16 @@ Extends anatomy sockets for clothing-specific behavior:
     "properties": {
       "slotType": {
         "type": "string",
-        "enum": ["head", "torso", "legs", "feet", "hands", "neck", "waist", "back"]
+        "enum": [
+          "head",
+          "torso",
+          "legs",
+          "feet",
+          "hands",
+          "neck",
+          "waist",
+          "back"
+        ]
       },
       "equippedItems": {
         "type": "array",
@@ -374,30 +413,32 @@ class ClothingInstantiationService {
 
   async instantiateClothingFromRecipe(recipe, characterEntityId) {
     const clothingEntities = [];
-    
+
     for (const clothingDef of recipe.clothing || []) {
       // 1. Create entity with specified ID
       const entityId = `${characterEntityId}_${clothingDef.entityId}`;
       await this.#entityManager.createEntity(entityId);
-      
+
       // 2. Add components
-      for (const [componentId, data] of Object.entries(clothingDef.components)) {
+      for (const [componentId, data] of Object.entries(
+        clothingDef.components
+      )) {
         await this.#entityManager.addComponent(entityId, componentId, data);
       }
-      
+
       // 3. Dispatch creation event
       this.#eventBus.dispatch({
         type: 'CLOTHING_CREATED',
         payload: {
           entityId,
           characterId: characterEntityId,
-          autoEquip: clothingDef.autoEquip ?? true
-        }
+          autoEquip: clothingDef.autoEquip ?? true,
+        },
       });
-      
+
       clothingEntities.push(entityId);
     }
-    
+
     return clothingEntities;
   }
 }
@@ -412,51 +453,69 @@ class AnatomyClothingIntegrationService {
   async validateSlotCompatibility(clothingEntity, anatomyGraph, targetSocket) {
     // 1. Get clothing properties
     const wearable = await this.#entityManager.getComponent(
-      clothingEntity, 
+      clothingEntity,
       'clothing:wearable'
     );
-    
+
     // 2. Get socket's clothing slot mapping
     const slotMapping = anatomyGraph.getSocketClothingMapping(targetSocket);
-    
+
     // 3. Validate layer compatibility
     if (!slotMapping.allowedLayers.includes(wearable.layer)) {
-      throw new Error(`Layer ${wearable.layer} not allowed on socket ${targetSocket}`);
+      throw new Error(
+        `Layer ${wearable.layer} not allowed on socket ${targetSocket}`
+      );
     }
-    
+
     // 4. Validate coverage matches socket type
     const requiredCoverage = this.#mapSlotTypeToCoverage(slotMapping.slotType);
-    const hasRequiredCoverage = requiredCoverage.every(
-      part => wearable.coverage.includes(part)
+    const hasRequiredCoverage = requiredCoverage.every((part) =>
+      wearable.coverage.includes(part)
     );
-    
+
     if (!hasRequiredCoverage) {
       throw new Error('Clothing does not cover required body parts');
     }
-    
+
     // 5. Check for conflicts with existing equipment
-    return this.#checkLayerConflicts(anatomyGraph, targetSocket, wearable.layer);
+    return this.#checkLayerConflicts(
+      anatomyGraph,
+      targetSocket,
+      wearable.layer
+    );
   }
 
-  async equipClothingToAnatomyGraph(clothingEntity, anatomyGraph, characterEntity) {
+  async equipClothingToAnatomyGraph(
+    clothingEntity,
+    anatomyGraph,
+    characterEntity
+  ) {
     // 1. Find compatible sockets
     const compatibleSockets = await this.#findCompatibleSockets(
-      clothingEntity, 
+      clothingEntity,
       anatomyGraph
     );
-    
+
     // 2. Validate each socket
     for (const socket of compatibleSockets) {
-      await this.validateSlotCompatibility(clothingEntity, anatomyGraph, socket);
+      await this.validateSlotCompatibility(
+        clothingEntity,
+        anatomyGraph,
+        socket
+      );
     }
-    
+
     // 3. Update equipment component
-    await this.#entityManager.updateComponent(clothingEntity, 'clothing:equipment', {
-      equipped: true,
-      equippedTo: characterEntity,
-      equippedSlots: compatibleSockets
-    });
-    
+    await this.#entityManager.updateComponent(
+      clothingEntity,
+      'clothing:equipment',
+      {
+        equipped: true,
+        equippedTo: characterEntity,
+        equippedSlots: compatibleSockets,
+      }
+    );
+
     // 4. Update anatomy graph slots
     for (const socket of compatibleSockets) {
       await this.#updateSocketEquipment(anatomyGraph, socket, clothingEntity);
@@ -473,26 +532,25 @@ Manages complex equipment workflows:
 class EquipmentOrchestrator {
   async processEquipmentRequest(request) {
     const workflow = this.#createWorkflow(request);
-    
+
     try {
       // 1. Validate prerequisites
       await workflow.validatePrerequisites();
-      
+
       // 2. Resolve conflicts (unequip conflicting items)
       const conflicts = await workflow.detectConflicts();
       for (const conflict of conflicts) {
         await this.#resolveConflict(conflict);
       }
-      
+
       // 3. Execute equipment changes
       await workflow.execute();
-      
+
       // 4. Update UI/notifications
       this.#eventBus.dispatch({
         type: 'EQUIPMENT_CHANGED',
-        payload: workflow.getChanges()
+        payload: workflow.getChanges(),
       });
-      
     } catch (error) {
       await workflow.rollback();
       throw error;
@@ -564,26 +622,26 @@ class AnatomyGraphBuilder {
   async buildFromRecipe(recipe) {
     // 1. Load blueprint
     const blueprint = await this.#loadBlueprint(recipe.anatomyBlueprint);
-    
+
     // 2. Create base graph structure
     const graph = new AnatomyGraph();
-    
+
     // 3. Add sockets with clothing mappings
     for (const [socketId, socketDef] of Object.entries(blueprint.sockets)) {
       const socket = graph.addSocket(socketId, socketDef);
-      
+
       // Add clothing slot mapping if present
       if (blueprint.clothingSlotMappings?.[socketId]) {
         socket.setClothingMapping(blueprint.clothingSlotMappings[socketId]);
       }
     }
-    
+
     // 4. Add limbs based on recipe selection
     await this.#addLimbs(graph, recipe.limbSelection);
-    
+
     // 5. Initialize clothing slots
     await this.#initializeClothingSlots(graph);
-    
+
     return graph;
   }
 
@@ -599,8 +657,8 @@ class AnatomyGraphBuilder {
             equippedItems: [],
             slotRestrictions: {
               maxItemsPerLayer: 1,
-              blockedLayers: []
-            }
+              blockedLayers: [],
+            },
           }
         );
       }
@@ -618,31 +676,34 @@ class CharacterGenerationService {
   async generateCharacter(recipe, entityId) {
     try {
       // 1. Create anatomy graph
-      const anatomyGraph = await this.#anatomyGraphBuilder.buildFromRecipe(recipe);
-      
+      const anatomyGraph =
+        await this.#anatomyGraphBuilder.buildFromRecipe(recipe);
+
       // 2. Attach graph to character entity
       await this.#attachAnatomyToEntity(entityId, anatomyGraph);
-      
+
       // 3. Instantiate clothing items
-      const clothingEntities = await this.#clothingInstantiationService
-        .instantiateClothingFromRecipe(recipe, entityId);
-      
+      const clothingEntities =
+        await this.#clothingInstantiationService.instantiateClothingFromRecipe(
+          recipe,
+          entityId
+        );
+
       // 4. Auto-equip clothing
       for (const clothingId of clothingEntities) {
         const clothingDef = recipe.clothing.find(
-          c => `${entityId}_${c.entityId}` === clothingId
+          (c) => `${entityId}_${c.entityId}` === clothingId
         );
-        
+
         if (clothingDef?.autoEquip !== false) {
           await this.#equipClothing(clothingId, anatomyGraph, entityId);
         }
       }
-      
+
       // 5. Finalize and validate
       await this.#finalizeCharacter(entityId, anatomyGraph);
-      
+
       return { entityId, anatomyGraph, clothingEntities };
-      
     } catch (error) {
       this.#logger.error('Character generation failed', error);
       throw new CharacterGenerationError(error.message);
@@ -657,8 +718,8 @@ class CharacterGenerationService {
       anatomyGraph,
       options: {
         autoResolveConflicts: true,
-        validateFit: true
-      }
+        validateFit: true,
+      },
     });
   }
 }
@@ -838,7 +899,7 @@ When equipping items that conflict:
 const equipmentRequest = {
   action: 'equip',
   itemId: 'leather_gloves',
-  targetId: 'character_001'
+  targetId: 'character_001',
 };
 
 // The EquipmentOrchestrator will:
@@ -849,11 +910,10 @@ const equipmentRequest = {
 //    c) Force equip (if allowed by game rules)
 
 // Resolution workflow:
-orchestrator.processEquipmentRequest(equipmentRequest)
-  .then(result => {
-    // result.unequipped = ['ring_1', 'ring_2']
-    // result.equipped = ['leather_gloves']
-  });
+orchestrator.processEquipmentRequest(equipmentRequest).then((result) => {
+  // result.unequipped = ['ring_1', 'ring_2']
+  // result.equipped = ['leather_gloves']
+});
 ```
 
 ## API Reference
@@ -904,7 +964,7 @@ class AnatomyClothingIntegrationService {
 
   /**
    * Find all compatible sockets for a clothing item
-   * @param {string} clothingEntity - Clothing entity ID  
+   * @param {string} clothingEntity - Clothing entity ID
    * @param {AnatomyGraph} anatomyGraph - Anatomy to check
    * @returns {Promise<string[]>} Compatible socket IDs
    */
@@ -1016,7 +1076,7 @@ blueprint.json      ──▶    Blueprint Object      ──▶    AnatomyGraph
   ├─ sockets                ├─ Socket defs              ├─ Creates graph
   └─ clothingMappings       └─ Slot mappings            └─ Init slots
 
-recipe.json         ──▶    Recipe Object         ──▶    ClothingInstService  
+recipe.json         ──▶    Recipe Object         ──▶    ClothingInstService
   ├─ anatomy                ├─ Blueprint ref            ├─ Creates entities
   └─ clothing[]             └─ Clothing defs            └─ Adds components
 
@@ -1036,14 +1096,16 @@ The Living Narrative Engine's clothing system provides a sophisticated, fully-mo
 5. **Integration** with anatomy system ensures proper validation and state management
 
 This architecture allows for:
+
 - Complex layered clothing systems
-- Size and fit validation  
+- Size and fit validation
 - Slot conflict resolution
 - Full modding support
 - Event-driven state changes
 - Extensible component system
 
 When defining clothes for a character like Amaia Castillo, you would:
+
 1. Define clothing items in the recipe's `clothing` array
 2. Specify components especially `clothing:wearable` with all properties
 3. Set `autoEquip: true` for initial equipment

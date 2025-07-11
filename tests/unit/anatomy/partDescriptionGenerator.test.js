@@ -104,9 +104,9 @@ describe('PartDescriptionGenerator', () => {
       expect(mockEntity.hasComponent).toHaveBeenCalledWith(
         ANATOMY_PART_COMPONENT_ID
       );
-      expect(mockBodyPartDescriptionBuilder.buildDescription).toHaveBeenCalledWith(
-        mockEntity
-      );
+      expect(
+        mockBodyPartDescriptionBuilder.buildDescription
+      ).toHaveBeenCalledWith(mockEntity);
       expect(mockLogger.debug).toHaveBeenCalledWith(
         `PartDescriptionGenerator: Generated description for part '${partId}'`
       );
@@ -123,7 +123,9 @@ describe('PartDescriptionGenerator', () => {
       expect(mockLogger.debug).toHaveBeenCalledWith(
         `PartDescriptionGenerator: Entity '${partId}' is not an anatomy part`
       );
-      expect(mockBodyPartDescriptionBuilder.buildDescription).not.toHaveBeenCalled();
+      expect(
+        mockBodyPartDescriptionBuilder.buildDescription
+      ).not.toHaveBeenCalled();
     });
 
     it('should return null when entity is not an anatomy part', () => {
@@ -138,7 +140,9 @@ describe('PartDescriptionGenerator', () => {
       expect(mockLogger.debug).toHaveBeenCalledWith(
         `PartDescriptionGenerator: Entity '${partId}' is not an anatomy part`
       );
-      expect(mockBodyPartDescriptionBuilder.buildDescription).not.toHaveBeenCalled();
+      expect(
+        mockBodyPartDescriptionBuilder.buildDescription
+      ).not.toHaveBeenCalled();
     });
 
     it('should return null when description builder returns null', () => {
@@ -328,21 +332,23 @@ describe('PartDescriptionGenerator', () => {
       // Check if needs regeneration
       mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
       mockEntity.getComponentData.mockReturnValue(null);
-      
+
       const needsRegen = generator.needsRegeneration(partId);
       expect(needsRegen).toBe(true);
 
       // Generate description
       mockEntity.hasComponent.mockReturnValue(true);
-      mockBodyPartDescriptionBuilder.buildDescription.mockReturnValue(description);
-      
+      mockBodyPartDescriptionBuilder.buildDescription.mockReturnValue(
+        description
+      );
+
       const generatedDesc = generator.generatePartDescription(partId);
       expect(generatedDesc).toBe(description);
     });
 
     it('should efficiently process large batch of parts', () => {
       const partIds = Array.from({ length: 100 }, (_, i) => `part-${i}`);
-      
+
       mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
       mockEntity.hasComponent.mockReturnValue(true);
       mockBodyPartDescriptionBuilder.buildDescription.mockImplementation(
@@ -353,7 +359,9 @@ describe('PartDescriptionGenerator', () => {
 
       expect(result.size).toBe(100);
       expect(mockEntityManager.getEntityInstance).toHaveBeenCalledTimes(100);
-      expect(mockBodyPartDescriptionBuilder.buildDescription).toHaveBeenCalledTimes(100);
+      expect(
+        mockBodyPartDescriptionBuilder.buildDescription
+      ).toHaveBeenCalledTimes(100);
     });
 
     it('should handle error scenarios gracefully', () => {
@@ -362,14 +370,18 @@ describe('PartDescriptionGenerator', () => {
       // First part succeeds
       mockEntityManager.getEntityInstance.mockReturnValueOnce(mockEntity);
       mockEntity.hasComponent.mockReturnValueOnce(true);
-      mockBodyPartDescriptionBuilder.buildDescription.mockReturnValueOnce('Desc 1');
+      mockBodyPartDescriptionBuilder.buildDescription.mockReturnValueOnce(
+        'Desc 1'
+      );
 
       // Second part throws error
       mockEntityManager.getEntityInstance.mockReturnValueOnce(mockEntity);
       mockEntity.hasComponent.mockReturnValueOnce(true);
-      mockBodyPartDescriptionBuilder.buildDescription.mockImplementationOnce(() => {
-        throw new Error('Builder error');
-      });
+      mockBodyPartDescriptionBuilder.buildDescription.mockImplementationOnce(
+        () => {
+          throw new Error('Builder error');
+        }
+      );
 
       // The current implementation doesn't catch errors in buildDescription,
       // so this would throw. In a real scenario, you might want to add error handling.

@@ -176,8 +176,8 @@ describe('JSON-Schema – Anatomy Recipe Definition', () => {
 
     test('should validate all valid layer types', () => {
       const layers = ['underwear', 'base', 'outer', 'accessories'];
-      
-      layers.forEach(layer => {
+
+      layers.forEach((layer) => {
         const validRecipe = {
           recipeId: 'anatomy:test_layer',
           blueprintId: 'anatomy:human',
@@ -392,7 +392,7 @@ describe('JSON-Schema – Anatomy Recipe Definition', () => {
       if (!ok) {
         // Check if common.schema.json namespacedId pattern catches this
         const hasPatternError = validate.errors.some(
-          err => err.keyword === 'pattern' || err.message?.includes('pattern')
+          (err) => err.keyword === 'pattern' || err.message?.includes('pattern')
         );
         expect(hasPatternError || validate.errors.length > 0).toBe(true);
       }

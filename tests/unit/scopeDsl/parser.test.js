@@ -334,14 +334,14 @@ describe('Scope-DSL Parser', () => {
     describe('Expression depth limit', () => {
       test('should enforce depth limit', () => {
         expect(() => {
-          parseDslExpression('actor.a.b.c.d.e');
+          parseDslExpression('actor.a.b.c.d.e.f.g');
         }).toThrow(ScopeDepthError);
       });
 
       test('should allow maximum depth', () => {
-        const result = parseDslExpression('actor.a.b.c.d');
+        const result = parseDslExpression('actor.a.b.c.d.e.f');
         expect(result.type).toBe('Step');
-        expect(result.field).toBe('d');
+        expect(result.field).toBe('f');
       });
     });
 

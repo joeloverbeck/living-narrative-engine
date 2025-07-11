@@ -35,7 +35,13 @@ export class AnatomyGenerationWorkflow extends BaseService {
    * @param {BodyBlueprintFactory} deps.bodyBlueprintFactory
    * @param {ClothingInstantiationService} [deps.clothingInstantiationService] - Optional for backward compatibility
    */
-  constructor({ entityManager, dataRegistry, logger, bodyBlueprintFactory, clothingInstantiationService }) {
+  constructor({
+    entityManager,
+    dataRegistry,
+    logger,
+    bodyBlueprintFactory,
+    clothingInstantiationService,
+  }) {
     super();
     this.#logger = this._init('AnatomyGenerationWorkflow', logger, {
       entityManager: {
@@ -92,21 +98,26 @@ export class AnatomyGenerationWorkflow extends BaseService {
     let clothingResult;
     if (this.#clothingInstantiationService) {
       const recipe = this.#dataRegistry.get('anatomyRecipes', recipeId);
-      if (recipe && recipe.clothingEntities && recipe.clothingEntities.length > 0) {
+      if (
+        recipe &&
+        recipe.clothingEntities &&
+        recipe.clothingEntities.length > 0
+      ) {
         this.#logger.debug(
           `AnatomyGenerationWorkflow: Instantiating ${recipe.clothingEntities.length} clothing items for entity '${ownerId}'`
         );
-        
+
         try {
           // Convert partsMap object to Map for clothingInstantiationService
           const partsMapForClothing = new Map(Object.entries(partsMap));
-          
-          clothingResult = await this.#clothingInstantiationService.instantiateRecipeClothing(
-            ownerId,
-            recipe,
-            partsMapForClothing
-          );
-          
+
+          clothingResult =
+            await this.#clothingInstantiationService.instantiateRecipeClothing(
+              ownerId,
+              recipe,
+              partsMapForClothing
+            );
+
           this.#logger.debug(
             `AnatomyGenerationWorkflow: Clothing instantiation completed with ${clothingResult.instantiated.length} items created`
           );
