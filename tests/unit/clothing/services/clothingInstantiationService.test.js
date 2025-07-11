@@ -17,8 +17,8 @@ function createMocks() {
       getComponentData: jest.fn(),
       setComponentData: jest.fn(),
     },
-    entityDefinitionLoader: {
-      load: jest.fn(),
+    dataRegistry: {
+      get: jest.fn(),
     },
     equipmentOrchestrator: {
       orchestrateEquipment: jest.fn(),
@@ -26,7 +26,7 @@ function createMocks() {
     },
     anatomyClothingIntegrationService: {
       getClothingCapabilities: jest.fn(),
-      validateSlotCompatibility: jest.fn(),
+      validateClothingSlotCompatibility: jest.fn(),
     },
     logger: {
       info: jest.fn(),
@@ -42,7 +42,7 @@ function createMocks() {
 
 describe('ClothingInstantiationService', () => {
   let entityManager;
-  let entityDefinitionLoader;
+  let dataRegistry;
   let equipmentOrchestrator;
   let anatomyClothingIntegrationService;
   let logger;
@@ -52,7 +52,7 @@ describe('ClothingInstantiationService', () => {
   beforeEach(() => {
     ({
       entityManager,
-      entityDefinitionLoader,
+      dataRegistry,
       equipmentOrchestrator,
       anatomyClothingIntegrationService,
       logger,
@@ -61,7 +61,7 @@ describe('ClothingInstantiationService', () => {
 
     service = new ClothingInstantiationService({
       entityManager,
-      entityDefinitionLoader,
+      dataRegistry,
       equipmentOrchestrator,
       anatomyClothingIntegrationService,
       logger,
@@ -78,7 +78,7 @@ describe('ClothingInstantiationService', () => {
       expect(
         () =>
           new ClothingInstantiationService({
-            entityDefinitionLoader,
+            dataRegistry,
             equipmentOrchestrator,
             anatomyClothingIntegrationService,
             logger,
@@ -87,7 +87,7 @@ describe('ClothingInstantiationService', () => {
       ).toThrow(InvalidArgumentError);
     });
 
-    it('should throw error when entityDefinitionLoader is missing', () => {
+    it('should throw error when dataRegistry is missing', () => {
       expect(
         () =>
           new ClothingInstantiationService({
@@ -105,7 +105,7 @@ describe('ClothingInstantiationService', () => {
         () =>
           new ClothingInstantiationService({
             entityManager,
-            entityDefinitionLoader,
+            dataRegistry,
             anatomyClothingIntegrationService,
             logger,
             eventBus,
@@ -118,7 +118,7 @@ describe('ClothingInstantiationService', () => {
         () =>
           new ClothingInstantiationService({
             entityManager,
-            entityDefinitionLoader,
+            dataRegistry,
             equipmentOrchestrator,
             logger,
             eventBus,
@@ -131,7 +131,7 @@ describe('ClothingInstantiationService', () => {
         () =>
           new ClothingInstantiationService({
             entityManager,
-            entityDefinitionLoader,
+            dataRegistry,
             equipmentOrchestrator,
             anatomyClothingIntegrationService,
             eventBus,
@@ -144,7 +144,7 @@ describe('ClothingInstantiationService', () => {
         () =>
           new ClothingInstantiationService({
             entityManager,
-            entityDefinitionLoader,
+            dataRegistry,
             equipmentOrchestrator,
             anatomyClothingIntegrationService,
             logger,
@@ -194,12 +194,17 @@ describe('ClothingInstantiationService', () => {
       };
 
       // Mock entity definition
-      entityDefinitionLoader.load.mockResolvedValue({
-        id: 'clothing:simple_shirt',
-        components: {
-          'core:name': { text: 'Simple Shirt' },
-          'clothing:clothing': { slot: 'torso_upper' },
-        },
+      dataRegistry.get.mockImplementation((category, id) => {
+        if (category === 'entities' && id === 'clothing:simple_shirt') {
+          return {
+            id: 'clothing:simple_shirt',
+            components: {
+              'core:name': { text: 'Simple Shirt' },
+              'clothing:clothing': { slot: 'torso_upper' },
+            },
+          };
+        }
+        return null;
       });
 
       // Mock entity creation
@@ -207,10 +212,9 @@ describe('ClothingInstantiationService', () => {
       entityManager.createEntityInstance.mockResolvedValue(createdClothingId);
 
       // Mock validation
-      anatomyClothingIntegrationService.validateSlotCompatibility.mockResolvedValue(
+      anatomyClothingIntegrationService.validateClothingSlotCompatibility.mockResolvedValue(
         {
-          isValid: true,
-          errors: [],
+          valid: true,
         }
       );
 
@@ -266,25 +270,26 @@ describe('ClothingInstantiationService', () => {
 
       // Mock entity definitions
       // Mock entity definitions for validation and instantiation
-      entityDefinitionLoader.load.mockImplementation((entityId) => {
-        switch (entityId) {
+      dataRegistry.get.mockImplementation((category, id) => {
+        if (category !== 'entities') return null;
+        switch (id) {
           case 'clothing:simple_shirt':
-            return Promise.resolve({
+            return {
               id: 'clothing:simple_shirt',
               components: { 'clothing:clothing': { slot: 'torso_upper' } },
-            });
+            };
           case 'clothing:leather_boots':
-            return Promise.resolve({
+            return {
               id: 'clothing:leather_boots',
               components: { 'clothing:clothing': { slot: 'feet' } },
-            });
+            };
           case 'clothing:straw_hat':
-            return Promise.resolve({
+            return {
               id: 'clothing:straw_hat',
               components: { 'clothing:clothing': { slot: 'head' } },
-            });
+            };
           default:
-            return Promise.reject(new Error(`Unknown entity: ${entityId}`));
+            return null;
         }
       });
 
@@ -295,10 +300,9 @@ describe('ClothingInstantiationService', () => {
         .mockResolvedValueOnce('clothing_hat_123');
 
       // Mock validation
-      anatomyClothingIntegrationService.validateSlotCompatibility.mockResolvedValue(
+      anatomyClothingIntegrationService.validateClothingSlotCompatibility.mockResolvedValue(
         {
-          isValid: true,
-          errors: [],
+          valid: true,
         }
       );
 
@@ -334,19 +338,23 @@ describe('ClothingInstantiationService', () => {
         ],
       };
 
-      entityDefinitionLoader.load.mockResolvedValue({
-        id: 'clothing:fancy_shirt',
-        components: {
-          'clothing:clothing': { slot: 'torso_upper' },
-          'core:display': { color: 'white' },
-        },
+      dataRegistry.get.mockImplementation((category, id) => {
+        if (category === 'entities' && id === 'clothing:fancy_shirt') {
+          return {
+            id: 'clothing:fancy_shirt',
+            components: {
+              'clothing:clothing': { slot: 'torso_upper' },
+              'core:display': { color: 'white' },
+            },
+          };
+        }
+        return null;
       });
 
       entityManager.createEntityInstance.mockResolvedValue('clothing_123');
-      anatomyClothingIntegrationService.validateSlotCompatibility.mockResolvedValue(
+      anatomyClothingIntegrationService.validateClothingSlotCompatibility.mockResolvedValue(
         {
-          isValid: true,
-          errors: [],
+          valid: true,
         }
       );
       equipmentOrchestrator.orchestrateEquipment.mockResolvedValue({
@@ -381,18 +389,22 @@ describe('ClothingInstantiationService', () => {
         ],
       };
 
-      entityDefinitionLoader.load.mockResolvedValue({
-        id: 'clothing:shirt',
-        components: {
-          'clothing:clothing': { slot: 'torso_upper', layer: 'base' },
-        },
+      dataRegistry.get.mockImplementation((category, id) => {
+        if (category === 'entities' && id === 'clothing:shirt') {
+          return {
+            id: 'clothing:shirt',
+            components: {
+              'clothing:clothing': { slot: 'torso_upper', layer: 'base' },
+            },
+          };
+        }
+        return null;
       });
 
       entityManager.createEntityInstance.mockResolvedValue('clothing_123');
-      anatomyClothingIntegrationService.validateSlotCompatibility.mockResolvedValue(
+      anatomyClothingIntegrationService.validateClothingSlotCompatibility.mockResolvedValue(
         {
-          isValid: true,
-          errors: [],
+          valid: true,
         }
       );
       equipmentOrchestrator.orchestrateEquipment.mockResolvedValue({
@@ -427,16 +439,20 @@ describe('ClothingInstantiationService', () => {
         ],
       };
 
-      entityDefinitionLoader.load.mockResolvedValue({
-        id: 'clothing:versatile_garment',
-        components: { 'clothing:clothing': { slot: 'torso_upper' } },
+      dataRegistry.get.mockImplementation((category, id) => {
+        if (category === 'entities' && id === 'clothing:versatile_garment') {
+          return {
+            id: 'clothing:versatile_garment',
+            components: { 'clothing:clothing': { slot: 'torso_upper' } },
+          };
+        }
+        return null;
       });
 
       entityManager.createEntityInstance.mockResolvedValue('clothing_123');
-      anatomyClothingIntegrationService.validateSlotCompatibility.mockResolvedValue(
+      anatomyClothingIntegrationService.validateClothingSlotCompatibility.mockResolvedValue(
         {
-          isValid: true,
-          errors: [],
+          valid: true,
         }
       );
       equipmentOrchestrator.orchestrateEquipment.mockResolvedValue({
@@ -471,9 +487,14 @@ describe('ClothingInstantiationService', () => {
         ],
       };
 
-      entityDefinitionLoader.load.mockResolvedValue({
-        id: 'clothing:special_item',
-        components: { 'clothing:clothing': { slot: 'special' } },
+      dataRegistry.get.mockImplementation((category, id) => {
+        if (category === 'entities' && id === 'clothing:special_item') {
+          return {
+            id: 'clothing:special_item',
+            components: { 'clothing:clothing': { slot: 'special' } },
+          };
+        }
+        return null;
       });
 
       entityManager.createEntityInstance.mockResolvedValue('clothing_123');
@@ -489,7 +510,7 @@ describe('ClothingInstantiationService', () => {
 
       // Verify validation was skipped
       expect(
-        anatomyClothingIntegrationService.validateSlotCompatibility
+        anatomyClothingIntegrationService.validateClothingSlotCompatibility
       ).not.toHaveBeenCalled();
       expect(equipmentOrchestrator.orchestrateEquipment).toHaveBeenCalledWith(
         actorId,
@@ -511,15 +532,20 @@ describe('ClothingInstantiationService', () => {
         ],
       };
 
-      entityDefinitionLoader.load.mockResolvedValue({
-        id: 'clothing:incompatible_item',
-        components: { 'clothing:clothing': { slot: 'wings' } },
+      dataRegistry.get.mockImplementation((category, id) => {
+        if (category === 'entities' && id === 'clothing:incompatible_item') {
+          return {
+            id: 'clothing:incompatible_item',
+            components: { 'clothing:clothing': { slot: 'wings' } },
+          };
+        }
+        return null;
       });
 
-      anatomyClothingIntegrationService.validateSlotCompatibility.mockResolvedValue(
+      anatomyClothingIntegrationService.validateClothingSlotCompatibility.mockResolvedValue(
         {
-          isValid: false,
-          errors: ['Blueprint does not support wings slot'],
+          valid: false,
+          reason: 'Blueprint does not support wings slot',
         }
       );
 
@@ -545,9 +571,10 @@ describe('ClothingInstantiationService', () => {
         ],
       };
 
-      entityDefinitionLoader.load.mockRejectedValue(
-        new Error('Entity definition not found: clothing:nonexistent')
-      );
+      dataRegistry.get.mockImplementation((category, id) => {
+        // Return null for any entity lookups to simulate not found
+        return null;
+      });
 
       const result = await service.instantiateRecipeClothing(
         actorId,
@@ -556,10 +583,9 @@ describe('ClothingInstantiationService', () => {
       );
 
       expect(result.errors).toHaveLength(1);
-      expect(result.errors[0]).toMatchObject({
-        entityId: 'clothing:nonexistent',
-        error: expect.stringContaining('Entity definition not found'),
-      });
+      expect(result.errors[0]).toContain(
+        "Entity definition 'clothing:nonexistent' not found in registry"
+      );
     });
 
     it('should handle equipment failure gracefully', async () => {
@@ -573,16 +599,20 @@ describe('ClothingInstantiationService', () => {
         ],
       };
 
-      entityDefinitionLoader.load.mockResolvedValue({
-        id: 'clothing:shirt',
-        components: { 'clothing:clothing': { slot: 'torso_upper' } },
+      dataRegistry.get.mockImplementation((category, id) => {
+        if (category === 'entities' && id === 'clothing:shirt') {
+          return {
+            id: 'clothing:shirt',
+            components: { 'clothing:clothing': { slot: 'torso_upper' } },
+          };
+        }
+        return null;
       });
 
       entityManager.createEntityInstance.mockResolvedValue('clothing_123');
-      anatomyClothingIntegrationService.validateSlotCompatibility.mockResolvedValue(
+      anatomyClothingIntegrationService.validateClothingSlotCompatibility.mockResolvedValue(
         {
-          isValid: true,
-          errors: [],
+          valid: true,
         }
       );
 
@@ -620,18 +650,27 @@ describe('ClothingInstantiationService', () => {
       };
 
       // First item fails, second succeeds
-      entityDefinitionLoader.load
-        .mockRejectedValueOnce(new Error('Broken item'))
-        .mockResolvedValueOnce({
-          id: 'clothing:good_item',
-          components: { 'clothing:clothing': { slot: 'feet' } },
-        });
+      let callCount = 0;
+      dataRegistry.get.mockImplementation((category, id) => {
+        callCount++;
+        if (category === 'entities') {
+          if (callCount === 1) {
+            // First call returns null (broken item)
+            return null;
+          } else if (id === 'clothing:good_item') {
+            return {
+              id: 'clothing:good_item',
+              components: { 'clothing:clothing': { slot: 'feet' } },
+            };
+          }
+        }
+        return null;
+      });
 
       entityManager.createEntityInstance.mockResolvedValue('clothing_good_123');
-      anatomyClothingIntegrationService.validateSlotCompatibility.mockResolvedValue(
+      anatomyClothingIntegrationService.validateClothingSlotCompatibility.mockResolvedValue(
         {
-          isValid: true,
-          errors: [],
+          valid: true,
         }
       );
       equipmentOrchestrator.orchestrateEquipment.mockResolvedValue({
@@ -680,16 +719,20 @@ describe('ClothingInstantiationService', () => {
         ],
       };
 
-      entityDefinitionLoader.load.mockResolvedValue({
-        id: 'clothing:shirt',
-        components: { 'clothing:clothing': { slot: 'torso_upper' } },
+      dataRegistry.get.mockImplementation((category, id) => {
+        if (category === 'entities' && id === 'clothing:shirt') {
+          return {
+            id: 'clothing:shirt',
+            components: { 'clothing:clothing': { slot: 'torso_upper' } },
+          };
+        }
+        return null;
       });
 
       entityManager.createEntityInstance.mockResolvedValue('clothing_123');
-      anatomyClothingIntegrationService.validateSlotCompatibility.mockResolvedValue(
+      anatomyClothingIntegrationService.validateClothingSlotCompatibility.mockResolvedValue(
         {
-          isValid: true,
-          errors: [],
+          valid: true,
         }
       );
       equipmentOrchestrator.orchestrateEquipment.mockResolvedValue({

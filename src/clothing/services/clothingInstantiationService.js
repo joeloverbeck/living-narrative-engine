@@ -11,7 +11,7 @@ import {
 import { InvalidArgumentError } from '../../errors/invalidArgumentError.js';
 
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
-/** @typedef {import('../../loaders/entityDefinitionLoader.js').EntityDefinitionLoader} EntityDefinitionLoader */
+/** @typedef {import('../../interfaces/coreServices.js').IDataRegistry} IDataRegistry */
 /** @typedef {import('../orchestration/equipmentOrchestrator.js').EquipmentOrchestrator} EquipmentOrchestrator */
 /** @typedef {import('../../anatomy/integration/anatomyClothingIntegrationService.js').default} AnatomyClothingIntegrationService */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
@@ -45,8 +45,8 @@ import { InvalidArgumentError } from '../../errors/invalidArgumentError.js';
 export class ClothingInstantiationService extends BaseService {
   /** @type {IEntityManager} */
   #entityManager;
-  /** @type {EntityDefinitionLoader} */
-  #entityDefinitionLoader;
+  /** @type {IDataRegistry} */
+  #dataRegistry;
   /** @type {EquipmentOrchestrator} */
   #equipmentOrchestrator;
   /** @type {AnatomyClothingIntegrationService} */
@@ -61,7 +61,7 @@ export class ClothingInstantiationService extends BaseService {
    *
    * @param {object} deps - Constructor dependencies
    * @param {IEntityManager} deps.entityManager - Entity manager for entity operations
-   * @param {EntityDefinitionLoader} deps.entityDefinitionLoader - Loader for entity definitions
+   * @param {IDataRegistry} deps.dataRegistry - Data registry for accessing loaded content
    * @param {EquipmentOrchestrator} deps.equipmentOrchestrator - Orchestrator for equipment workflows
    * @param {AnatomyClothingIntegrationService} deps.anatomyClothingIntegrationService - Anatomy-clothing bridge
    * @param {ILogger} deps.logger - Logger instance
@@ -69,7 +69,7 @@ export class ClothingInstantiationService extends BaseService {
    */
   constructor({
     entityManager,
-    entityDefinitionLoader,
+    dataRegistry,
     equipmentOrchestrator,
     anatomyClothingIntegrationService,
     logger,
@@ -82,9 +82,9 @@ export class ClothingInstantiationService extends BaseService {
         value: entityManager,
         requiredMethods: ['createEntityInstance', 'getEntityInstance'],
       },
-      entityDefinitionLoader: {
-        value: entityDefinitionLoader,
-        requiredMethods: ['load'],
+      dataRegistry: {
+        value: dataRegistry,
+        requiredMethods: ['get'],
       },
       equipmentOrchestrator: {
         value: equipmentOrchestrator,
@@ -92,7 +92,7 @@ export class ClothingInstantiationService extends BaseService {
       },
       anatomyClothingIntegrationService: {
         value: anatomyClothingIntegrationService,
-        requiredMethods: ['validateSlotCompatibility'],
+        requiredMethods: ['validateClothingSlotCompatibility'],
       },
       eventBus: {
         value: eventBus,
@@ -101,7 +101,7 @@ export class ClothingInstantiationService extends BaseService {
     });
 
     this.#entityManager = entityManager;
-    this.#entityDefinitionLoader = entityDefinitionLoader;
+    this.#dataRegistry = dataRegistry;
     this.#equipmentOrchestrator = equipmentOrchestrator;
     this.#anatomyClothingIntegrationService = anatomyClothingIntegrationService;
     this.#eventBus = eventBus;
@@ -159,13 +159,13 @@ export class ClothingInstantiationService extends BaseService {
         // Validate slot compatibility if not skipping
         if (!clothingConfig.skipValidation) {
           const validationResult = await this.#validateClothingSlots(
-            recipe.blueprintId,
+            actorId,
             [clothingConfig]
           );
 
           if (!validationResult.isValid) {
             // Skip this item but continue processing others
-            result.errors.push(...validationResult.errors);
+            result.errors.push(...(validationResult.errors || [`Validation failed for ${clothingConfig.entityId}`]));
             continue;
           }
         }
@@ -236,22 +236,26 @@ export class ClothingInstantiationService extends BaseService {
   }
 
   /**
-   * Validates that clothing entities can be equipped on the blueprint
+   * Validates that clothing entities can be equipped on the actor
    *
    * @private
-   * @param {string} blueprintId - The anatomy blueprint ID
+   * @param {string} actorId - The actor entity ID
    * @param {ClothingEntityConfig[]} clothingEntities - Clothing configurations to validate
    * @returns {Promise<{isValid: boolean, errors: string[]}>} Validation result
    */
-  async #validateClothingSlots(blueprintId, clothingEntities) {
+  async #validateClothingSlots(actorId, clothingEntities) {
     const errors = [];
 
     for (const config of clothingEntities) {
       try {
         // Load entity definition to get default slot
-        const definition = await this.#entityDefinitionLoader.load(
-          config.entityId
-        );
+        const definition = this.#dataRegistry.get('entities', config.entityId);
+        if (!definition) {
+          errors.push(
+            `Entity definition '${config.entityId}' not found in registry`
+          );
+          continue;
+        }
 
         const clothingComponent = definition.components?.['clothing:clothing'];
         if (!clothingComponent) {
@@ -270,14 +274,17 @@ export class ClothingInstantiationService extends BaseService {
         }
 
         // Validate slot compatibility with blueprint
+        // Note: validateClothingSlotCompatibility expects (entityId, slotId, itemId)
+        // Since we're validating before creation, we'll use the actor ID
         const validationResult =
-          await this.#anatomyClothingIntegrationService.validateSlotCompatibility(
-            blueprintId,
-            targetSlot
+          await this.#anatomyClothingIntegrationService.validateClothingSlotCompatibility(
+            actorId,
+            targetSlot,
+            config.entityId
           );
 
-        if (!validationResult.isValid) {
-          errors.push(...validationResult.errors);
+        if (!validationResult.valid) {
+          errors.push(validationResult.reason || `Cannot equip ${config.entityId} to slot ${targetSlot}`);
         }
       } catch (error) {
         errors.push({
@@ -315,7 +322,12 @@ export class ClothingInstantiationService extends BaseService {
     );
 
     // Load the entity definition
-    const definition = await this.#entityDefinitionLoader.load(entityDefId);
+    const definition = this.#dataRegistry.get('entities', entityDefId);
+    if (!definition) {
+      throw new InvalidArgumentError(
+        `Entity definition '${entityDefId}' not found in registry`
+      );
+    }
 
     // Create the entity instance with property overrides
     const clothingId = await this.#entityManager.createEntityInstance(

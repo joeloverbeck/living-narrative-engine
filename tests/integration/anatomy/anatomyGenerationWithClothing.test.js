@@ -16,7 +16,6 @@ describe('Anatomy Generation with Clothing Integration', () => {
   let dataRegistry;
   let logger;
   let bodyBlueprintFactory;
-  let entityDefinitionLoader;
   let equipmentOrchestrator;
   let anatomyClothingIntegrationService;
   let eventBus;
@@ -50,18 +49,13 @@ describe('Anatomy Generation with Clothing Integration', () => {
       }),
     };
 
-    entityDefinitionLoader = {
-      load: jest.fn(),
-    };
-
     equipmentOrchestrator = {
       orchestrateEquipment: jest.fn().mockResolvedValue({ success: true }),
     };
 
     anatomyClothingIntegrationService = {
-      validateSlotCompatibility: jest.fn().mockResolvedValue({
-        isValid: true,
-        errors: [],
+      validateClothingSlotCompatibility: jest.fn().mockResolvedValue({
+        valid: true,
       }),
     };
 
@@ -72,7 +66,7 @@ describe('Anatomy Generation with Clothing Integration', () => {
     // Create real service instances
     clothingInstantiationService = new ClothingInstantiationService({
       entityManager,
-      entityDefinitionLoader,
+      dataRegistry,
       equipmentOrchestrator,
       anatomyClothingIntegrationService,
       logger,
@@ -162,45 +156,34 @@ describe('Anatomy Generation with Clothing Integration', () => {
         ],
       });
 
-      // Setup entity definitions for clothing
-      entityDefinitionLoader.load.mockImplementation((entityId) => {
-        const definitions = {
-          'clothing:peasant_shirt': {
-            id: 'clothing:peasant_shirt',
-            components: {
-              'core:name': { text: 'Peasant Shirt' },
-              'clothing:clothing': { slot: 'torso_upper', layer: 'base' },
-            },
-          },
-          'clothing:rough_trousers': {
-            id: 'clothing:rough_trousers',
-            components: {
-              'core:name': { text: 'Rough Trousers' },
-              'clothing:clothing': { slot: 'legs', layer: 'base' },
-            },
-          },
-          'clothing:worn_boots': {
-            id: 'clothing:worn_boots',
-            components: {
-              'core:name': { text: 'Worn Boots' },
-              'clothing:clothing': { slot: 'feet', layer: 'outer' },
-            },
-          },
-          'clothing:straw_hat': {
-            id: 'clothing:straw_hat',
-            components: {
-              'core:name': { text: 'Straw Hat' },
-              'clothing:clothing': { slot: 'head', layer: 'outer' },
-            },
-          },
-        };
-
-        if (definitions[entityId]) {
-          return Promise.resolve(definitions[entityId]);
-        }
-        return Promise.reject(
-          new Error(`Entity definition not found: ${entityId}`)
-        );
+      // Setup entity definitions for clothing using the stateful mock
+      dataRegistry.store('entities', 'clothing:peasant_shirt', {
+        id: 'clothing:peasant_shirt',
+        components: {
+          'core:name': { text: 'Peasant Shirt' },
+          'clothing:clothing': { slot: 'torso_upper', layer: 'base' },
+        },
+      });
+      dataRegistry.store('entities', 'clothing:rough_trousers', {
+        id: 'clothing:rough_trousers',
+        components: {
+          'core:name': { text: 'Rough Trousers' },
+          'clothing:clothing': { slot: 'legs', layer: 'base' },
+        },
+      });
+      dataRegistry.store('entities', 'clothing:worn_boots', {
+        id: 'clothing:worn_boots',
+        components: {
+          'core:name': { text: 'Worn Boots' },
+          'clothing:clothing': { slot: 'feet', layer: 'outer' },
+        },
+      });
+      dataRegistry.store('entities', 'clothing:straw_hat', {
+        id: 'clothing:straw_hat',
+        components: {
+          'core:name': { text: 'Straw Hat' },
+          'clothing:clothing': { slot: 'head', layer: 'outer' },
+        },
       });
 
       // Mock entity creation for clothing
@@ -311,10 +294,26 @@ describe('Anatomy Generation with Clothing Integration', () => {
     });
 
     it('should continue anatomy generation even if clothing instantiation fails', async () => {
-      // Make clothing instantiation fail
-      entityDefinitionLoader.load.mockRejectedValue(
-        new Error('Clothing service unavailable')
-      );
+      // Make clothing instantiation fail by clearing entities
+      dataRegistry.clear();
+      // Re-add the recipe but not the clothing entities
+      dataRegistry.store('anatomyRecipes', recipeId, {
+        recipeId,
+        blueprintId,
+        slots: {
+          torso: { partType: 'torso' },
+          head: { partType: 'head' },
+          left_arm: { partType: 'arm' },
+          right_arm: { partType: 'arm' },
+          legs: { partType: 'legs' },
+        },
+        clothingEntities: [
+          {
+            entityId: 'clothing:peasant_shirt',
+            equip: true,
+          },
+        ],
+      });
 
       const result = await anatomyGenerationWorkflow.generate(
         blueprintId,
@@ -357,9 +356,9 @@ describe('Anatomy Generation with Clothing Integration', () => {
 
     it('should validate clothing slots against anatomy blueprint', async () => {
       // Make one item fail validation
-      anatomyClothingIntegrationService.validateSlotCompatibility
-        .mockResolvedValueOnce({ isValid: true, errors: [] })
-        .mockResolvedValueOnce({ isValid: false, errors: ['Invalid slot'] })
+      anatomyClothingIntegrationService.validateClothingSlotCompatibility
+        .mockResolvedValueOnce({ valid: true })
+        .mockResolvedValueOnce({ valid: false, reason: 'Invalid slot' })
         .mockResolvedValueOnce({ isValid: true, errors: [] })
         .mockResolvedValueOnce({ isValid: true, errors: [] });
 
@@ -400,10 +399,10 @@ describe('Anatomy Generation with Clothing Integration', () => {
     it('should handle large numbers of clothing items efficiently', async () => {
       // Create recipe with many clothing items
       const manyClothes = [];
-      for (let i = 0; i < 20; i++) {
+      for (let i = 1; i <= 20; i++) {
         manyClothes.push({
           entityId: `clothing:item_${i}`,
-          equip: i < 10, // Only equip first 10
+          equip: i <= 10, // Only equip first 10
         });
       }
 
@@ -414,13 +413,21 @@ describe('Anatomy Generation with Clothing Integration', () => {
         clothingEntities: manyClothes,
       });
 
-      // Mock all clothing definitions
-      entityDefinitionLoader.load.mockResolvedValue({
+      // Store generic clothing definition for all items
+      const genericClothing = {
         id: 'clothing:generic',
         components: {
           'clothing:clothing': { slot: 'torso_upper' },
         },
-      });
+      };
+      
+      // Store all clothing items with the generic definition
+      for (let i = 1; i <= 20; i++) {
+        dataRegistry.store('entities', `clothing:item_${i}`, {
+          ...genericClothing,
+          id: `clothing:item_${i}`,
+        });
+      }
 
       const startTime = Date.now();
       const result = await anatomyGenerationWorkflow.generate(

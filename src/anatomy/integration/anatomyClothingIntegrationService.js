@@ -40,8 +40,7 @@ class AnatomyClothingIntegrationService extends BaseService {
   #logger;
   #entityManager;
   #bodyGraphService;
-  #blueprintLoader;
-  #recipeLoader;
+  #dataRegistry;
   #blueprintCache = new Map();
   #slotResolutionCache = new Map();
 
@@ -49,34 +48,27 @@ class AnatomyClothingIntegrationService extends BaseService {
     logger,
     entityManager,
     bodyGraphService,
-    blueprintLoader,
-    recipeLoader,
+    dataRegistry,
   }) {
     super();
 
     this.#logger = this._init('AnatomyClothingIntegrationService', logger, {
       entityManager: {
         value: entityManager,
-        requiredMethods: ['getComponent', 'hasComponent'],
+        requiredMethods: ['getComponentData', 'hasComponent'],
       },
       bodyGraphService: {
         value: bodyGraphService,
-        requiredMethods: ['getBodyGraph'],
       },
-      blueprintLoader: {
-        value: blueprintLoader,
-        requiredMethods: ['load'],
-      },
-      recipeLoader: {
-        value: recipeLoader,
-        requiredMethods: ['load'],
+      dataRegistry: {
+        value: dataRegistry,
+        requiredMethods: ['get'],
       },
     });
 
     this.#entityManager = entityManager;
     this.#bodyGraphService = bodyGraphService;
-    this.#blueprintLoader = blueprintLoader;
-    this.#recipeLoader = recipeLoader;
+    this.#dataRegistry = dataRegistry;
   }
 
   /**
@@ -275,7 +267,7 @@ class AnatomyClothingIntegrationService extends BaseService {
 
       if (partEntity) {
         // For blueprint slots, the attachment point is where the part connects to its parent
-        const jointComponent = await this.#entityManager.getComponent(
+        const jointComponent = await this.#entityManager.getComponentData(
           partEntity,
           'anatomy:joint'
         );
@@ -311,7 +303,7 @@ class AnatomyClothingIntegrationService extends BaseService {
     const bodyParts = bodyGraph.getAllPartIds();
 
     for (const partId of bodyParts) {
-      const socketsComponent = await this.#entityManager.getComponent(
+      const socketsComponent = await this.#entityManager.getComponentData(
         partId,
         'anatomy:sockets'
       );
@@ -332,7 +324,7 @@ class AnatomyClothingIntegrationService extends BaseService {
 
     // Only check root entity if no body parts have the sockets
     if (attachmentPoints.length === 0) {
-      const rootSockets = await this.#entityManager.getComponent(
+      const rootSockets = await this.#entityManager.getComponentData(
         entityId,
         'anatomy:sockets'
       );
@@ -434,7 +426,7 @@ class AnatomyClothingIntegrationService extends BaseService {
    * @private
    */
   async #getParentConnectionInfo(partEntityId, bodyGraph) {
-    const jointComponent = await this.#entityManager.getComponent(
+    const jointComponent = await this.#entityManager.getComponentData(
       partEntityId,
       'anatomy:joint'
     );
@@ -489,7 +481,7 @@ class AnatomyClothingIntegrationService extends BaseService {
    * @private
    */
   async #getEntityBlueprint(entityId) {
-    const bodyComponent = await this.#entityManager.getComponent(
+    const bodyComponent = await this.#entityManager.getComponentData(
       entityId,
       'anatomy:body'
     );
@@ -502,9 +494,18 @@ class AnatomyClothingIntegrationService extends BaseService {
       return this.#blueprintCache.get(bodyComponent.recipeId);
     }
 
-    // Load through loaders
-    const recipe = await this.#recipeLoader.load(bodyComponent.recipeId);
-    const blueprint = await this.#blueprintLoader.load(recipe.blueprint);
+    // Load from data registry
+    const recipe = this.#dataRegistry.get('anatomyRecipes', bodyComponent.recipeId);
+    if (!recipe) {
+      this.#logger.warn(`Recipe '${bodyComponent.recipeId}' not found in registry`);
+      return null;
+    }
+    
+    const blueprint = this.#dataRegistry.get('anatomyBlueprints', recipe.blueprint);
+    if (!blueprint) {
+      this.#logger.warn(`Blueprint '${recipe.blueprint}' not found in registry`);
+      return null;
+    }
 
     // Cache for performance
     this.#blueprintCache.set(bodyComponent.recipeId, blueprint);
@@ -525,7 +526,7 @@ class AnatomyClothingIntegrationService extends BaseService {
 
     // Collect all sockets
     for (const partId of allParts) {
-      const socketComponent = await this.#entityManager.getComponent(
+      const socketComponent = await this.#entityManager.getComponentData(
         partId,
         'anatomy:sockets'
       );

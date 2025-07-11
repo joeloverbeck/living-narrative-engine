@@ -1,1 +1,192 @@
-# Error logs cleared after fixing import/export issues
+
+ValidationRuleChain: Added rule 'Joint Consistency Validation' to chain
+consoleLogger.js:187 ValidationRuleChain: Added rule 'Orphan Detection' to chain
+consoleLogger.js:187 ValidationRuleChain: Added rule 'Part Type Compatibility' to chain
+consoleLogger.js:187 GraphIntegrityValidator: Initialized with 6 validation rules
+consoleLogger.js:151 AnatomyQueryCache: Initialized with maxSize=1000, ttl=300000ms
+consoleLogger.js:175 ClothingInstantiationService: Invalid or missing method 'validateSlotCompatibility' on dependency 'ClothingInstantiationService: anatomyClothingIntegrationService'.
+error @ consoleLogger.js:175
+error @ loggerUtils.js:96
+validateDependency @ dependencyUtils.js:157
+validateDependencies @ dependencyUtils.js:175
+validateDeps @ serviceInitializerUtils.js:55
+setupService @ serviceInitializerUtils.js:68
+initializeServiceLogger @ serviceInitializerUtils.js:162
+_init @ serviceBase.js:20
+ClothingInstantiationService @ clothingInstantiationService.js:80
+(anonymous) @ worldAndEntityRegistrations.js:574
+_invokeFactory @ appContainer.js:249
+_createInstance @ appContainer.js:190
+resolve @ appContainer.js:109
+(anonymous) @ worldAndEntityRegistrations.js:504
+_invokeFactory @ appContainer.js:249
+_createInstance @ appContainer.js:190
+resolve @ appContainer.js:109
+(anonymous) @ worldAndEntityRegistrations.js:597
+_invokeFactory @ appContainer.js:249
+_createInstance @ appContainer.js:190
+resolve @ appContainer.js:109
+resolveByTag @ appContainer.js:301
+#resolveSystems @ systemInitializer.js:99
+initializeAll @ systemInitializer.js:193
+initializeAuxiliaryServices @ commonInitialization.js:61
+bootstrap @ CommonBootstrapper.js:119
+await in bootstrap
+initialize @ anatomy-visualizer.js:17Understand this error
+appContainer.js:117 AppContainer: Error creating singleton instance for "ClothingInstantiationService": InvalidArgumentError: Invalid or missing method 'validateSlotCompatibility' on dependency 'ClothingInstantiationService: anatomyClothingIntegrationService'.
+    at validateDependency (dependencyUtils.js:158:15)
+    at validateDependencies (dependencyUtils.js:175:5)
+    at ServiceSetup.validateDeps (serviceInitializerUtils.js:55:5)
+    at ServiceSetup.setupService (serviceInitializerUtils.js:68:10)
+    at initializeServiceLogger (serviceInitializerUtils.js:162:31)
+    at ClothingInstantiationService._init (serviceBase.js:20:12)
+    at new ClothingInstantiationService (clothingInstantiationService.js:80:25)
+    at worldAndEntityRegistrations.js:574:12
+    at AppContainer._invokeFactory (appContainer.js:249:12)
+    at AppContainer._createInstance (appContainer.js:190:19)
+resolve @ appContainer.js:117
+(anonymous) @ worldAndEntityRegistrations.js:504
+_invokeFactory @ appContainer.js:249
+_createInstance @ appContainer.js:190
+resolve @ appContainer.js:109
+(anonymous) @ worldAndEntityRegistrations.js:597
+_invokeFactory @ appContainer.js:249
+_createInstance @ appContainer.js:190
+resolve @ appContainer.js:109
+resolveByTag @ appContainer.js:301
+#resolveSystems @ systemInitializer.js:99
+initializeAll @ systemInitializer.js:193
+initializeAuxiliaryServices @ commonInitialization.js:61
+bootstrap @ CommonBootstrapper.js:119
+await in bootstrap
+initialize @ anatomy-visualizer.js:17Understand this error
+appContainer.js:117 AppContainer: Error creating singleton instance for "AnatomyGenerationService": Error: Failed to create instance for "ClothingInstantiationService" (lifecycle: singletonFactory): Invalid or missing method 'validateSlotCompatibility' on dependency 'ClothingInstantiationService: anatomyClothingIntegrationService'.
+    at AppContainer.resolve (appContainer.js:121:15)
+    at worldAndEntityRegistrations.js:504:39
+    at AppContainer._invokeFactory (appContainer.js:249:12)
+    at AppContainer._createInstance (appContainer.js:190:19)
+    at AppContainer.resolve (appContainer.js:109:31)
+    at worldAndEntityRegistrations.js:597:37
+    at AppContainer._invokeFactory (appContainer.js:249:12)
+    at AppContainer._createInstance (appContainer.js:190:19)
+    at AppContainer.resolve (appContainer.js:109:31)
+    at AppContainer.resolveByTag (appContainer.js:301:33)Caused by: InvalidArgumentError: Invalid or missing method 'validateSlotCompatibility' on dependency 'ClothingInstantiationService: anatomyClothingIntegrationService'.
+    at validateDependency (dependencyUtils.js:158:15)
+    at validateDependencies (dependencyUtils.js:175:5)
+    at ServiceSetup.validateDeps (serviceInitializerUtils.js:55:5)
+    at ServiceSetup.setupService (serviceInitializerUtils.js:68:10)
+    at initializeServiceLogger (serviceInitializerUtils.js:162:31)
+    at ClothingInstantiationService._init (serviceBase.js:20:12)
+    at new ClothingInstantiationService (clothingInstantiationService.js:80:25)
+    at worldAndEntityRegistrations.js:574:12
+    at AppContainer._invokeFactory (appContainer.js:249:12)
+    at AppContainer._createInstance (appContainer.js:190:19)
+resolve @ appContainer.js:117
+(anonymous) @ worldAndEntityRegistrations.js:597
+_invokeFactory @ appContainer.js:249
+_createInstance @ appContainer.js:190
+resolve @ appContainer.js:109
+resolveByTag @ appContainer.js:301
+#resolveSystems @ systemInitializer.js:99
+initializeAll @ systemInitializer.js:193
+initializeAuxiliaryServices @ commonInitialization.js:61
+bootstrap @ CommonBootstrapper.js:119
+await in bootstrap
+initialize @ anatomy-visualizer.js:17Understand this error
+appContainer.js:117 AppContainer: Error creating singleton instance for "AnatomyInitializationService": Error: Failed to create instance for "AnatomyGenerationService" (lifecycle: singletonFactory): Failed to create instance for "ClothingInstantiationService" (lifecycle: singletonFactory): Invalid or missing method 'validateSlotCompatibility' on dependency 'ClothingInstantiationService: anatomyClothingIntegrationService'.
+    at AppContainer.resolve (appContainer.js:121:15)
+    at worldAndEntityRegistrations.js:597:37
+    at AppContainer._invokeFactory (appContainer.js:249:12)
+    at AppContainer._createInstance (appContainer.js:190:19)
+    at AppContainer.resolve (appContainer.js:109:31)
+    at AppContainer.resolveByTag (appContainer.js:301:33)
+    at #resolveSystems (systemInitializer.js:99:46)
+    at SystemInitializer.initializeAll (systemInitializer.js:193:44)
+    at initializeAuxiliaryServices (commonInitialization.js:61:27)
+    at CommonBootstrapper.bootstrap (CommonBootstrapper.js:119:13)Caused by: Error: Failed to create instance for "ClothingInstantiationService" (lifecycle: singletonFactory): Invalid or missing method 'validateSlotCompatibility' on dependency 'ClothingInstantiationService: anatomyClothingIntegrationService'.
+    at AppContainer.resolve (appContainer.js:121:15)
+    at worldAndEntityRegistrations.js:504:39
+    at AppContainer._invokeFactory (appContainer.js:249:12)
+    at AppContainer._createInstance (appContainer.js:190:19)
+    at AppContainer.resolve (appContainer.js:109:31)
+    at worldAndEntityRegistrations.js:597:37
+    at AppContainer._invokeFactory (appContainer.js:249:12)
+    at AppContainer._createInstance (appContainer.js:190:19)
+    at AppContainer.resolve (appContainer.js:109:31)
+    at AppContainer.resolveByTag (appContainer.js:301:33)Caused by: InvalidArgumentError: Invalid or missing method 'validateSlotCompatibility' on dependency 'ClothingInstantiationService: anatomyClothingIntegrationService'.
+    at validateDependency (dependencyUtils.js:158:15)
+    at validateDependencies (dependencyUtils.js:175:5)
+    at ServiceSetup.validateDeps (serviceInitializerUtils.js:55:5)
+    at ServiceSetup.setupService (serviceInitializerUtils.js:68:10)
+    at initializeServiceLogger (serviceInitializerUtils.js:162:31)
+    at ClothingInstantiationService._init (serviceBase.js:20:12)
+    at new ClothingInstantiationService (clothingInstantiationService.js:80:25)
+    at worldAndEntityRegistrations.js:574:12
+    at AppContainer._invokeFactory (appContainer.js:249:12)
+    at AppContainer._createInstance (appContainer.js:190:19)
+resolve @ appContainer.js:117
+resolveByTag @ appContainer.js:301
+#resolveSystems @ systemInitializer.js:99
+initializeAll @ systemInitializer.js:193
+initializeAuxiliaryServices @ commonInitialization.js:61
+bootstrap @ CommonBootstrapper.js:119
+await in bootstrap
+initialize @ anatomy-visualizer.js:17Understand this error
+appContainer.js:304 AppContainer: Error resolving tagged instance "AnatomyInitializationService" for tag "initializableSystem": Error: Failed to create instance for "AnatomyInitializationService" (lifecycle: singletonFactory): Failed to create instance for "AnatomyGenerationService" (lifecycle: singletonFactory): Failed to create instance for "ClothingInstantiationService" (lifecycle: singletonFactory): Invalid or missing method 'validateSlotCompatibility' on dependency 'ClothingInstantiationService: anatomyClothingIntegrationService'.
+    at AppContainer.resolve (appContainer.js:121:15)
+    at AppContainer.resolveByTag (appContainer.js:301:33)
+    at #resolveSystems (systemInitializer.js:99:46)
+    at SystemInitializer.initializeAll (systemInitializer.js:193:44)
+    at initializeAuxiliaryServices (commonInitialization.js:61:27)
+    at CommonBootstrapper.bootstrap (CommonBootstrapper.js:119:13)
+    at async HTMLDocument.initialize (anatomy-visualizer.js:17:37)Caused by: Error: Failed to create instance for "AnatomyGenerationService" (lifecycle: singletonFactory): Failed to create instance for "ClothingInstantiationService" (lifecycle: singletonFactory): Invalid or missing method 'validateSlotCompatibility' on dependency 'ClothingInstantiationService: anatomyClothingIntegrationService'.
+    at AppContainer.resolve (appContainer.js:121:15)
+    at worldAndEntityRegistrations.js:597:37
+    at AppContainer._invokeFactory (appContainer.js:249:12)
+    at AppContainer._createInstance (appContainer.js:190:19)
+    at AppContainer.resolve (appContainer.js:109:31)
+    at AppContainer.resolveByTag (appContainer.js:301:33)
+    at #resolveSystems (systemInitializer.js:99:46)
+    at SystemInitializer.initializeAll (systemInitializer.js:193:44)
+    at initializeAuxiliaryServices (commonInitialization.js:61:27)
+    at CommonBootstrapper.bootstrap (CommonBootstrapper.js:119:13)Caused by: Error: Failed to create instance for "ClothingInstantiationService" (lifecycle: singletonFactory): Invalid or missing method 'validateSlotCompatibility' on dependency 'ClothingInstantiationService: anatomyClothingIntegrationService'.
+    at AppContainer.resolve (appContainer.js:121:15)
+    at worldAndEntityRegistrations.js:504:39
+    at AppContainer._invokeFactory (appContainer.js:249:12)
+    at AppContainer._createInstance (appContainer.js:190:19)
+    at AppContainer.resolve (appContainer.js:109:31)
+    at worldAndEntityRegistrations.js:597:37
+    at AppContainer._invokeFactory (appContainer.js:249:12)
+    at AppContainer._createInstance (appContainer.js:190:19)
+    at AppContainer.resolve (appContainer.js:109:31)
+    at AppContainer.resolveByTag (appContainer.js:301:33)Caused by: InvalidArgumentError: Invalid or missing method 'validateSlotCompatibility' on dependency 'ClothingInstantiationService: anatomyClothingIntegrationService'.
+    at validateDependency (dependencyUtils.js:158:15)
+    at validateDependencies (dependencyUtils.js:175:5)
+    at ServiceSetup.validateDeps (serviceInitializerUtils.js:55:5)
+    at ServiceSetup.setupService (serviceInitializerUtils.js:68:10)
+    at initializeServiceLogger (serviceInitializerUtils.js:162:31)
+    at ClothingInstantiationService._init (serviceBase.js:20:12)
+    at new ClothingInstantiationService (clothingInstantiationService.js:80:25)
+    at worldAndEntityRegistrations.js:574:12
+    at AppContainer._invokeFactory (appContainer.js:249:12)
+    at AppContainer._createInstance (appContainer.js:190:19)
+resolveByTag @ appContainer.js:304
+#resolveSystems @ systemInitializer.js:99
+initializeAll @ systemInitializer.js:193
+initializeAuxiliaryServices @ commonInitialization.js:61
+bootstrap @ CommonBootstrapper.js:119
+await in bootstrap
+initialize @ anatomy-visualizer.js:17Understand this error
+consoleLogger.js:187 ActionIndex initialised.
+consoleLogger.js:187 JsonLogicEvaluationService: Custom JSON Logic operation "not" added successfully.
+consoleLogger.js:187 JsonLogicEvaluationService: JsonLogicEvaluationService initialized.
+consoleLogger.js:187 JsonLogicCustomOperators: JsonLogicCustomOperators initialized
+consoleLogger.js:187 JsonLogicCustomOperators: Registering custom JSON Logic operators
+consoleLogger.js:187 JsonLogicEvaluationService: Custom JSON Logic operation "hasPartWithComponentValue" added successfully.
+consoleLogger.js:187 JsonLogicEvaluationService: Custom JSON Logic operation "hasPartOfType" added successfully.
+consoleLogger.js:187 JsonLogicEvaluationService: Custom JSON Logic operation "hasPartOfTypeWithComponentValue" added successfully.
+consoleLogger.js:151 JsonLogicCustomOperators: Custom JSON Logic operators registered successfully
+consoleLogger.js:187 PrerequisiteEvaluationService: PrerequisiteEvaluationService initialised (with ActionValidationContextBuilder and GameDataRepository).
+consoleLogger.js:187 ActionDiscoveryService: ActionDiscoveryService initialised with streamlined logic.
+consoleLogger.js:151 OperationRegistry: OperationRegistry initialized.
+consoleLogger.js:187 OperationRegistry: OperationRegistry: Registered handler for operation type "DISPATCH_EVENT".
