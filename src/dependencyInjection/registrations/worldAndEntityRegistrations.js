@@ -47,19 +47,19 @@ import { BodyDescriptionComposer } from '../../anatomy/bodyDescriptionComposer.j
 import { AnatomyDescriptionService } from '../../anatomy/anatomyDescriptionService.js';
 import { AnatomyFormattingService } from '../../services/anatomyFormattingService.js';
 import { RecipeProcessor } from '../../anatomy/recipeProcessor.js';
-import { PartSelectionService } from '../../anatomy/partSelectionService.js';
+import PartSelectionService from '../../anatomy/partSelectionService.js';
 import { SocketManager } from '../../anatomy/socketManager.js';
 import { EntityGraphBuilder } from '../../anatomy/entityGraphBuilder.js';
 import { RecipeConstraintEvaluator } from '../../anatomy/recipeConstraintEvaluator.js';
 import { PartDescriptionGenerator } from '../../anatomy/PartDescriptionGenerator.js';
 import { BodyDescriptionOrchestrator } from '../../anatomy/BodyDescriptionOrchestrator.js';
-import { DescriptionPersistenceService } from '../../anatomy/DescriptionPersistenceService.js';
+import DescriptionPersistenceService from '../../anatomy/DescriptionPersistenceService.js';
 import { AnatomyQueryCache } from '../../anatomy/cache/AnatomyQueryCache.js';
 import { ClothingInstantiationService } from '../../clothing/services/clothingInstantiationService.js';
 import { LayerCompatibilityService } from '../../clothing/validation/layerCompatibilityService.js';
 import { CoverageValidationService } from '../../clothing/validation/coverageValidationService.js';
 import { EquipmentOrchestrator } from '../../clothing/orchestration/equipmentOrchestrator.js';
-import { AnatomyClothingIntegrationService } from '../../anatomy/integration/anatomyClothingIntegrationService.js';
+import AnatomyClothingIntegrationService from '../../anatomy/integration/anatomyClothingIntegrationService.js';
 import UuidGenerator from '../../adapters/UuidGenerator.js';
 
 /**

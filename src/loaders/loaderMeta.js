@@ -73,13 +73,13 @@ export const meta = {
     registryKey: 'entityInstances',
   },
   anatomySlotLibraries: {
-    contentKey: 'slotLibraries',
+    contentKey: 'libraries',
     diskFolder: 'libraries',
     phase: 'definitions',
     registryKey: 'anatomySlotLibraries',
   },
   anatomyBlueprintParts: {
-    contentKey: 'blueprintParts',
+    contentKey: 'parts',
     diskFolder: 'parts',
     phase: 'definitions',
     registryKey: 'anatomyBlueprintParts',
