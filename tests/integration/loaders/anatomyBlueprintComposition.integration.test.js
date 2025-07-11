@@ -47,8 +47,8 @@ class MockManifestPhase extends LoaderPhase {
       name: 'Test Anatomy',
       version: '1.0.0',
       content: {
-        slotLibraries: ['test.library.json'],
-        blueprintParts: ['test.part.json'],
+        libraries: ['test.library.json'],
+        parts: ['test.part.json'],
         blueprints: ['test.blueprint.json'],
       },
     };
@@ -190,8 +190,8 @@ describe('Anatomy Blueprint Composition Integration', () => {
       name: 'Test Anatomy',
       version: '1.0.0',
       content: {
-        slotLibraries: ['test.library.json'],
-        blueprintParts: ['test.part.json'],
+        libraries: ['test.library.json'],
+        parts: ['test.part.json'],
         blueprints: ['test.blueprint.json'],
       },
     };
