@@ -1,6 +1,5 @@
 {
   "id": "intimacy:peck_on_lips",
-  "commandVerb": "peck-on-lips",
   "name": "Give a peck on the lips",
   "description": "Give someone a quick, light kiss on the lips",
   "scope": "intimacy:close_actors",

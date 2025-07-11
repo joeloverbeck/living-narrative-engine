@@ -1,7 +1,6 @@
 {
   "$schema": "http://example.com/schemas/action.schema.json",
   "id": "core:dismiss",
-  "commandVerb": "dismiss",
   "name": "Dismiss",
   "description": "Dismisses a follower from your service.",
   "scope": "core:followers",

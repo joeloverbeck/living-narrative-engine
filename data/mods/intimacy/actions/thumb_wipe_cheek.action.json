@@ -1,7 +1,6 @@
 {
   "$schema": "http://example.com/schemas/action.schema.json",
   "id": "intimacy:thumb_wipe_cheek",
-  "commandVerb": "thumb-wipe-cheek",
   "name": "Thumb Wipe Cheek",
   "description": "Gently wipe the target's cheek with your thumb.",
   "scope": "intimacy:close_actors",

@@ -11,10 +11,6 @@ describe('intimacy:turn_around action', () => {
       expect(turnAroundAction.id).toBe('intimacy:turn_around');
     });
 
-    it('has correct commandVerb', () => {
-      expect(turnAroundAction.commandVerb).toBe('turn-around');
-    });
-
     it('has appropriate name and description', () => {
       expect(turnAroundAction.name).toBe('Turn Around');
       expect(turnAroundAction.description).toBeTruthy();

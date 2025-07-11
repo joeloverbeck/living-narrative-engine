@@ -1,7 +1,6 @@
 {
   "$schema": "http://example.com/schemas/action.schema.json",
   "id": "sex:fondle_penis",
-  "commandVerb": "fondle-penis",
   "name": "Fondle Penis",
   "description": "Gently fondle the target's penis.",
   "scope": "sex:actors_with_penis_in_intimacy",

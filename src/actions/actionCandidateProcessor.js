@@ -238,7 +238,7 @@ export class ActionCandidateProcessor {
       if (formatResult.ok) {
         validActions.push({
           id: actionDef.id,
-          name: actionDef.name || actionDef.commandVerb,
+          name: actionDef.name,
           command: formatResult.value,
           description: actionDef.description || '',
           params: { targetId: targetContext.entityId },

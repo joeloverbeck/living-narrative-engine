@@ -1,7 +1,6 @@
 {
   "$schema": "http://example.com/schemas/action.schema.json",
   "id": "core:follow",
-  "commandVerb": "follow",
   "name": "Follow",
   "description": "Commands your character to follow the specified target, becoming their companion and moving with them.",
   "scope": "core:potential_leaders",

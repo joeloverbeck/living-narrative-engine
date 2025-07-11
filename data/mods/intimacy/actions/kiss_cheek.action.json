@@ -1,7 +1,6 @@
 {
   "$schema": "http://example.com/schemas/action.schema.json",
   "id": "intimacy:kiss_cheek",
-  "commandVerb": "kiss-cheek",
   "name": "Kiss Cheek",
   "description": "Lean in and softly kiss the target on the cheek.",
   "scope": "intimacy:close_actors",

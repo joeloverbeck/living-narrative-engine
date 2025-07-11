@@ -1,7 +1,6 @@
 {
   "$schema": "http://example.com/schemas/action.schema.json",
   "id": "core:go",
-  "commandVerb": "go",
   "name": "Go",
   "description": "Moves your character to the specified location, if the way is clear.",
   "scope": "core:clear_directions",

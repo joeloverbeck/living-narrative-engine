@@ -1,7 +1,6 @@
 {
   "$schema": "http://example.com/schemas/action.schema.json",
   "id": "intimacy:turn_around",
-  "commandVerb": "turn-around",
   "name": "Turn Around",
   "description": "Turn the target around or have them face you again.",
   "scope": "intimacy:close_actors_in_front",
