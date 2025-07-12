@@ -249,22 +249,27 @@ describe('ClothingSystem Integration', () => {
       bodyGraphService: {
         getBodyGraph: jest.fn().mockResolvedValue({ root: 'torso1' }),
       },
-      blueprintLoader: {
-        load: jest.fn().mockResolvedValue({
-          id: 'anatomy:human_male',
-          root: 'anatomy:human_male_torso',
-          clothingSlotMappings: {
-            torso_clothing: {
-              anatomySockets: ['left_chest', 'right_chest'],
-              allowedLayers: ['underwear', 'base', 'outer'],
-              layerOrder: ['underwear', 'base', 'outer'],
-              defaultLayer: 'base',
-            },
-          },
+      dataRegistry: {
+        get: jest.fn((category, id) => {
+          if (category === 'anatomy-blueprints' && id === 'anatomy:human_male') {
+            return Promise.resolve({
+              id: 'anatomy:human_male',
+              root: 'anatomy:human_male_torso',
+              clothingSlotMappings: {
+                torso_clothing: {
+                  anatomySockets: ['left_chest', 'right_chest'],
+                  allowedLayers: ['underwear', 'base', 'outer'],
+                  layerOrder: ['underwear', 'base', 'outer'],
+                  defaultLayer: 'base',
+                },
+              },
+            });
+          }
+          if (category === 'anatomy-recipe-parts') {
+            return Promise.resolve(null);
+          }
+          return Promise.resolve(null);
         }),
-      },
-      recipeLoader: {
-        load: jest.fn(),
       },
     });
 
@@ -297,15 +302,15 @@ describe('ClothingSystem Integration', () => {
       expect(equipmentData.equipped.torso_clothing.base).toBe('shirt1');
 
       // Verify event was dispatched
-      expect(mocks.eventDispatcher.dispatch).toHaveBeenCalledWith({
-        type: 'clothing_equipped',
-        payload: expect.objectContaining({
+      expect(mocks.eventDispatcher.dispatch).toHaveBeenCalledWith(
+        'clothing:equipped',
+        expect.objectContaining({
           entityId: 'entity1',
           clothingItemId: 'shirt1',
           slotId: 'torso_clothing',
           layer: 'base',
-        }),
-      });
+        })
+      );
     });
 
     it('should successfully unequip clothing from an entity', async () => {
@@ -330,14 +335,14 @@ describe('ClothingSystem Integration', () => {
       expect(equipmentData.equipped.torso_clothing.base).toBeUndefined();
 
       // Verify event was dispatched
-      expect(mocks.eventDispatcher.dispatch).toHaveBeenCalledWith({
-        type: 'clothing_unequipped',
-        payload: expect.objectContaining({
+      expect(mocks.eventDispatcher.dispatch).toHaveBeenCalledWith(
+        'clothing:unequipped',
+        expect.objectContaining({
           entityId: 'entity1',
           clothingItemId: 'shirt1',
           reason: 'manual',
-        }),
-      });
+        })
+      );
     });
   });
 
@@ -670,23 +675,23 @@ describe('ClothingSystem Integration', () => {
     it('should dispatch all appropriate events during equipment workflow', async () => {
       await clothingService.equipClothing('entity1', 'shirt1');
 
-      // Should dispatch clothing_equipped event
-      expect(mocks.eventDispatcher.dispatch).toHaveBeenCalledWith({
-        type: 'clothing_equipped',
-        payload: expect.objectContaining({
+      // Should dispatch clothing:equipped event
+      expect(mocks.eventDispatcher.dispatch).toHaveBeenCalledWith(
+        'clothing:equipped',
+        expect.objectContaining({
           entityId: 'entity1',
           clothingItemId: 'shirt1',
-        }),
-      });
+        })
+      );
 
       // Should dispatch coverage validation event
-      expect(mocks.eventDispatcher.dispatch).toHaveBeenCalledWith({
-        type: 'clothing_coverage_validated',
-        payload: expect.objectContaining({
+      expect(mocks.eventDispatcher.dispatch).toHaveBeenCalledWith(
+        'clothing:coverage_validated',
+        expect.objectContaining({
           entityId: 'entity1',
           clothingItemId: 'shirt1',
-        }),
-      });
+        })
+      );
     });
 
     it('should dispatch conflict events when conflicts occur', async () => {
@@ -711,13 +716,13 @@ describe('ClothingSystem Integration', () => {
       await clothingService.equipClothing('entity1', 'shirt2');
 
       // Should dispatch equipped event for successful resolution
-      expect(mocks.eventDispatcher.dispatch).toHaveBeenCalledWith({
-        type: 'clothing_equipped',
-        payload: expect.objectContaining({
+      expect(mocks.eventDispatcher.dispatch).toHaveBeenCalledWith(
+        'clothing:equipped',
+        expect.objectContaining({
           clothingItemId: 'shirt2',
           conflictResolution: 'auto_remove',
-        }),
-      });
+        })
+      );
     });
   });
 });

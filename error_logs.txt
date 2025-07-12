@@ -1,1 +1,73 @@
-# Error logs cleared after fixing import/export issues
+AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'left ear' to entity 'd491c241-3f17-4dce-868c-2c8c7da63e6f'
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'right ear' to entity 'c27b727b-7974-46c3-b56d-d14bfb93ab56'
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'nose' to entity '7056825d-7f26-4910-b058-500a79efea79'
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'mouth' to entity '35d22e7f-aa0f-4881-a0f7-17c1519b0484'
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'teeth' to entity '10e68182-aec6-4ffa-8817-10404608c431'
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'hair' to entity '1d6cffa4-2c73-4f98-a619-bb48b1adf9a4'
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'pubic hair' to entity 'bf626036-8bd6-47f6-9560-e12c87001349'
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'left arm hand' to entity '3c02527f-4951-49a0-bcff-b0363bac4f34'
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'right arm hand' to entity '4629836a-6b28-4120-8e6e-84e3c609528e'
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'left leg foot' to entity 'b1374ed6-2809-4f24-8642-104df00752c0'
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'right leg foot' to entity '484498b3-db3e-444f-8abe-4790fd48bd2b'
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'asshole' to entity '9fb30eac-5542-427c-8647-df98c3a53235'
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Built parts map with 23 named parts
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Instantiating 7 clothing items for entity 'a87c5a4f-a26d-4239-b4d0-e5a233547f9a'
+consoleLogger.js:151 ClothingInstantiationService: Starting clothing instantiation for actor 'a87c5a4f-a26d-4239-b4d0-e5a233547f9a' with 7 items
+consoleLogger.js:163 VED: EventDefinition not found for 'CLOTHING_INSTANTIATION_COMPLETED'. Cannot validate payload. Proceeding with dispatch.
+warn @ consoleLogger.js:163
+#validatePayload @ validatedEventDispatcher.js:87
+dispatch @ validatedEventDispatcher.js:219
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+instantiateRecipeClothing @ clothingInstantiationService.js:221
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+generate @ anatomyGenerationWorkflow.js:115
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ anatomyOrchestrator.js:109
+execute @ anatomyUnitOfWork.js:95
+orchestrateGeneration @ anatomyOrchestrator.js:108
+generateAnatomyIfNeeded @ anatomyGenerationService.js:152
+#handleEntityCreated @ anatomyInitializationService.js:101
+(anonymous) @ eventBus.js:144
+dispatch @ eventBus.js:141
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+dispatchEntityCreated @ EntityEventDispatcher.js:65
+createEntityInstance @ entityLifecycleManager.js:274
+createEntityInstance @ EntityCreationManager.js:68
+createEntityInstance @ entityManager.js:331
+createEntityInstance @ entityManagerAdapter.js:38
+_loadEntity @ AnatomyVisualizerUI.js:206
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ AnatomyVisualizerUI.js:144
+handleMouseUp_ @ unknownUnderstand this warning
+consoleLogger.js:187 VED: Dispatching event 'CLOTHING_INSTANTIATION_COMPLETED' via EventBus... {actorId: 'a87c5a4f-a26d-4239-b4d0-e5a233547f9a', result: {…}}actorId: "a87c5a4f-a26d-4239-b4d0-e5a233547f9a"result: equipped: []errors: Array(7)0: "Entity definition 'clothing:underwired_plunge_bra_nude_silk' not found in registry"1: "Entity definition 'clothing:nude_thong' not found in registry"2: "Entity definition 'clothing:black_stretch_silk_bodysuit' not found in registry"3: "Entity definition 'clothing:white_structured_linen_blazer' not found in registry"4: "Entity definition 'clothing:graphite_wool_wide_leg_trousers' not found in registry"5: "Entity definition 'clothing:black_calfskin_belt' not found in registry"6: "Entity definition 'clothing:leather_stiletto_pumps' not found in registry"length: 7[[Prototype]]: Array(0)instantiated: [][[Prototype]]: Object[[Prototype]]: Object
+consoleLogger.js:151 ClothingInstantiationService: Clothing instantiation completed for actor 'a87c5a4f-a26d-4239-b4d0-e5a233547f9a': 0 created, 0 equipped, 7 errors
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Clothing instantiation completed with 0 items created
+consoleLogger.js:187 VED: Event 'CLOTHING_INSTANTIATION_COMPLETED' dispatch successful.
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity '0cdeb86e-55be-48c9-897f-22a399d293fa'. Total tracked: 1
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity '6ec9d572-3b5c-4b15-b3f8-950d5768260f'. Total tracked: 2
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity 'd4f0c0f0-a769-414a-ad9e-04094093b10b'. Total tracked: 3
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity 'b0996032-5777-46c5-bc4c-23e47388221c'. Total tracked: 4
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity '632608ac-6b54-48c5-9cab-dc4fc8a7d549'. Total tracked: 5
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity 'd1c489f1-fbf6-440a-be45-ef660a64a9ca'. Total tracked: 6
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity '7b4d2a89-fbf6-42c2-bd41-bdf782ae76c0'. Total tracked: 7

@@ -7,7 +7,9 @@
       "wearableType": "underwear",
       "layer": "underwear",
       "coverage": {
-        "required": ["pelvis"],
+        "required": [
+          "pelvis"
+        ],
         "optional": [],
         "exclusions": []
       },
@@ -25,7 +27,7 @@
     "core:description": {
       "text": "An elegant thong in a nude tone, crafted from smooth silk that feels luxurious against the skin. The minimal design provides comfort and invisibility under fitted clothing while maintaining an alluring aesthetic."
     },
-    "descriptors:color_basic": {
+    "descriptors:color_extended": {
       "color": "nude"
     },
     "descriptors:texture": {

@@ -175,24 +175,21 @@ export class CoverageValidationService {
       };
 
       // Dispatch validation event
-      await this.#eventDispatcher.dispatch({
-        type: 'clothing_coverage_validated',
-        payload: {
-          entityId,
-          clothingItemId,
-          validationResult: validationResult.valid ? 'valid' : 'invalid',
-          requiredCoverage: clothingData.coverage.required,
-          availableParts: anatomy.availableParts,
-          missingParts: coverageDetails.missingRequired || [],
-          excludedParts: coverageDetails.excludedPresent || [],
-          optionalCoverage: clothingData.coverage.optional || [],
-          sizeCompatibility: sizeValidation.details,
-          validationDetails: {
-            errors: errors.length > 0 ? errors : undefined,
-            warnings: warnings.length > 0 ? warnings : undefined,
-          },
-          timestamp: Date.now(),
+      await this.#eventDispatcher.dispatch('clothing:coverage_validated', {
+        entityId,
+        clothingItemId,
+        validationResult: validationResult.valid ? 'valid' : 'invalid',
+        requiredCoverage: clothingData.coverage.required,
+        availableParts: anatomy.availableParts,
+        missingParts: coverageDetails.missingRequired || [],
+        excludedParts: coverageDetails.excludedPresent || [],
+        optionalCoverage: clothingData.coverage.optional || [],
+        sizeCompatibility: sizeValidation.details,
+        validationDetails: {
+          errors: errors.length > 0 ? errors : undefined,
+          warnings: warnings.length > 0 ? warnings : undefined,
         },
+        timestamp: Date.now(),
       });
 
       return validationResult;

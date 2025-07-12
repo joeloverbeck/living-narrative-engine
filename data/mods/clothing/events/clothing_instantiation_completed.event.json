@@ -1,0 +1,68 @@
+{
+  "$schema": "http://example.com/schemas/event.schema.json",
+  "id": "clothing:instantiation_completed",
+  "description": "Fired when clothing instantiation process completes for an actor",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "actorId": {
+        "type": "string",
+        "description": "The ID of the actor for which clothing was instantiated"
+      },
+      "result": {
+        "type": "object",
+        "properties": {
+          "instantiated": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "clothingId": {
+                  "type": "string",
+                  "description": "The ID of the instantiated clothing entity"
+                },
+                "entityDefinitionId": {
+                  "type": "string",
+                  "description": "The definition ID of the clothing item"
+                }
+              },
+              "required": ["clothingId", "entityDefinitionId"],
+              "additionalProperties": false
+            },
+            "description": "List of successfully instantiated clothing items"
+          },
+          "equipped": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "clothingId": {
+                  "type": "string",
+                  "description": "The ID of the equipped clothing entity"
+                },
+                "entityDefinitionId": {
+                  "type": "string",
+                  "description": "The definition ID of the clothing item"
+                }
+              },
+              "required": ["clothingId", "entityDefinitionId"],
+              "additionalProperties": false
+            },
+            "description": "List of successfully equipped clothing items"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of error messages for items that failed to instantiate or equip"
+          }
+        },
+        "required": ["instantiated", "equipped", "errors"],
+        "additionalProperties": false
+      }
+    },
+    "required": ["actorId", "result"],
+    "additionalProperties": false
+  }
+}

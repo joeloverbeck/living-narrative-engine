@@ -305,17 +305,17 @@ describe('BodyGraphService', () => {
         'anatomy:joint'
       );
 
-      expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith({
-        type: LIMB_DETACHED_EVENT_ID,
-        payload: {
+      expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
+        LIMB_DETACHED_EVENT_ID,
+        {
           detachedEntityId: 'arm-1',
           parentEntityId: 'torso-1',
           socketId: 'shoulder',
           detachedCount: 2,
           reason: 'damage',
           timestamp: expect.any(Number),
-        },
-      });
+        }
+      );
     });
 
     it('should detach a part without cascade', async () => {
@@ -328,10 +328,9 @@ describe('BodyGraphService', () => {
       });
 
       expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
+        LIMB_DETACHED_EVENT_ID,
         expect.objectContaining({
-          payload: expect.objectContaining({
-            detachedCount: 1,
-          }),
+          detachedCount: 1,
         })
       );
     });
@@ -355,10 +354,9 @@ describe('BodyGraphService', () => {
       await service.detachPart('arm-1');
 
       expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
+        LIMB_DETACHED_EVENT_ID,
         expect.objectContaining({
-          payload: expect.objectContaining({
-            reason: 'manual',
-          }),
+          reason: 'manual',
         })
       );
     });

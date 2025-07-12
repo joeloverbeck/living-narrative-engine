@@ -1,6 +1,6 @@
 {
   "$schema": "http://example.com/schemas/event.schema.json",
-  "id": "clothing_unequipped",
+  "id": "clothing:unequipped",
   "description": "Fired when a clothing item is successfully unequipped from an entity",
   "payloadSchema": {
     "type": "object",
@@ -19,7 +19,12 @@
       },
       "layer": {
         "type": "string",
-        "enum": ["underwear", "base", "outer", "accessories"],
+        "enum": [
+          "underwear",
+          "base",
+          "outer",
+          "accessories"
+        ],
         "description": "The layer the item was unequipped from"
       },
       "reason": {

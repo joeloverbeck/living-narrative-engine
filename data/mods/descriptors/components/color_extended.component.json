@@ -12,6 +12,7 @@
           "amber",
           "blonde",
           "brunette",
+          "nude",
           "raven-black",
           "auburn",
           "silver",
@@ -22,7 +23,9 @@
         "default": "raven-black"
       }
     },
-    "required": ["color"],
+    "required": [
+      "color"
+    ],
     "additionalProperties": false
   }
 }

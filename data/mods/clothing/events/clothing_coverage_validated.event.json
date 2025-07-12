@@ -1,6 +1,6 @@
 {
   "$schema": "http://example.com/schemas/event.schema.json",
-  "id": "clothing_coverage_validated",
+  "id": "clothing:coverage_validated",
   "description": "Fired when clothing coverage validation is performed",
   "payloadSchema": {
     "type": "object",

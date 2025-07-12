@@ -516,7 +516,7 @@ export function registerWorldAndEntity(container) {
   registrar.singletonFactory(tokens.LayerCompatibilityService, (c) => {
     return new LayerCompatibilityService({
       logger: c.resolve(tokens.ILogger),
-      dataRegistry: c.resolve(tokens.IDataRegistry),
+      entityManager: c.resolve(tokens.IEntityManager),
     });
   });
   logger.debug(
@@ -528,7 +528,8 @@ export function registerWorldAndEntity(container) {
   registrar.singletonFactory(tokens.CoverageValidationService, (c) => {
     return new CoverageValidationService({
       logger: c.resolve(tokens.ILogger),
-      dataRegistry: c.resolve(tokens.IDataRegistry),
+      entityManager: c.resolve(tokens.IEntityManager),
+      eventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
     });
   });
   logger.debug(
@@ -559,8 +560,7 @@ export function registerWorldAndEntity(container) {
       logger: c.resolve(tokens.ILogger),
       entityManager: c.resolve(tokens.IEntityManager),
       bodyGraphService: c.resolve(tokens.BodyGraphService),
-      blueprintLoader: c.resolve(tokens.AnatomyBlueprintLoader),
-      recipeLoader: c.resolve(tokens.AnatomyRecipeLoader),
+      dataRegistry: c.resolve(tokens.IDataRegistry),
     });
   });
   logger.debug(
@@ -573,7 +573,7 @@ export function registerWorldAndEntity(container) {
   registrar.singletonFactory(tokens.ClothingInstantiationService, (c) => {
     return new ClothingInstantiationService({
       entityManager: c.resolve(tokens.IEntityManager),
-      entityDefinitionLoader: c.resolve(tokens.EntityLoader),
+      dataRegistry: c.resolve(tokens.IDataRegistry),
       equipmentOrchestrator: c.resolve(tokens.EquipmentOrchestrator),
       anatomyClothingIntegrationService: c.resolve(
         tokens.AnatomyClothingIntegrationService

@@ -91,15 +91,14 @@ describe('BodyGraphService', () => {
       'anatomy:joint'
     );
     expect(eventDispatcher.dispatch).toHaveBeenCalledWith(
+      LIMB_DETACHED_EVENT_ID,
       expect.objectContaining({
-        type: LIMB_DETACHED_EVENT_ID,
-        payload: expect.objectContaining({
-          detachedEntityId: 'arm',
-          parentEntityId: 'torso',
-          socketId: 'shoulder',
-          detachedCount: 2,
-          reason: 'test',
-        }),
+        detachedEntityId: 'arm',
+        parentEntityId: 'torso',
+        socketId: 'shoulder',
+        detachedCount: 2,
+        reason: 'test',
+        timestamp: expect.any(Number),
       })
     );
   });
