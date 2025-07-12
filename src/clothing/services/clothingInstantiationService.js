@@ -9,6 +9,7 @@ import {
   assertPresent,
 } from '../../utils/dependencyUtils.js';
 import { InvalidArgumentError } from '../../errors/invalidArgumentError.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../constants/eventIds.js';
 
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 /** @typedef {import('../../interfaces/coreServices.js').IDataRegistry} IDataRegistry */
@@ -225,6 +226,20 @@ export class ClothingInstantiationService extends BaseService {
       });
     }
 
+    // Emit system error if there were any failures
+    if (result.errors.length > 0) {
+      this.#eventBus.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
+        message: `Clothing instantiation failed for ${result.errors.length} items`,
+        details: {
+          actorId,
+          totalItems: recipe.clothingEntities?.length || 0,
+          successfullyInstantiated: result.instantiated.length,
+          successfullyEquipped: result.equipped.length,
+          errors: result.errors,
+        },
+      });
+    }
+
     this.#logger.info(
       `Clothing instantiation completed for actor '${actorId}': ` +
         `${result.instantiated.length} created, ${result.equipped.length} equipped, ` +
@@ -256,15 +271,15 @@ export class ClothingInstantiationService extends BaseService {
           continue;
         }
 
-        const clothingComponent = definition.components?.['clothing:clothing'];
+        const clothingComponent = definition.components?.['clothing:wearable'];
         if (!clothingComponent) {
           errors.push(
-            `Entity '${config.entityId}' does not have clothing:clothing component`
+            `Entity '${config.entityId}' does not have clothing:wearable component`
           );
           continue;
         }
 
-        const targetSlot = config.targetSlot || clothingComponent.slot;
+        const targetSlot = config.targetSlot || clothingComponent.equipmentSlots?.primary;
         if (!targetSlot) {
           errors.push(
             `Entity '${config.entityId}' does not specify a clothing slot`

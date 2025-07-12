@@ -501,9 +501,9 @@ class AnatomyClothingIntegrationService extends BaseService {
       return null;
     }
     
-    const blueprint = this.#dataRegistry.get('anatomyBlueprints', recipe.blueprint);
+    const blueprint = this.#dataRegistry.get('anatomyBlueprints', recipe.blueprintId);
     if (!blueprint) {
-      this.#logger.warn(`Blueprint '${recipe.blueprint}' not found in registry`);
+      this.#logger.warn(`Blueprint '${recipe.blueprintId}' not found in registry`);
       return null;
     }
 

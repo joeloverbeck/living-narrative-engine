@@ -91,7 +91,7 @@ describe('ClothingInstantiationService - Event Dispatching', () => {
           return {
             id: 'clothing:simple_shirt',
             components: {
-              'clothing:clothing': { slot: 'torso_upper' },
+              'clothing:wearable': { equipmentSlots: { primary: 'torso_upper' } },
             },
           };
         }
@@ -223,12 +223,12 @@ describe('ClothingInstantiationService - Event Dispatching', () => {
           case 'clothing:valid_shirt':
             return {
               id: 'clothing:valid_shirt',
-              components: { 'clothing:clothing': { slot: 'torso_upper' } },
+              components: { 'clothing:wearable': { equipmentSlots: { primary: 'torso_upper' } } },
             };
           case 'clothing:valid_boots':
             return {
               id: 'clothing:valid_boots',
-              components: { 'clothing:clothing': { slot: 'feet' } },
+              components: { 'clothing:wearable': { equipmentSlots: { primary: 'feet' } } },
             };
           default:
             return null;
@@ -290,7 +290,7 @@ describe('ClothingInstantiationService - Event Dispatching', () => {
 
       dataRegistry.get.mockReturnValue({
         id: 'clothing:test',
-        components: { 'clothing:clothing': { slot: 'test' } },
+        components: { 'clothing:wearable': { equipmentSlots: { primary: 'test' } } },
       });
       anatomyClothingIntegrationService.validateClothingSlotCompatibility.mockResolvedValue(
         { valid: true }

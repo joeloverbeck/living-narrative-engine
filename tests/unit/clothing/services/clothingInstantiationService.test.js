@@ -6,6 +6,7 @@
 import { beforeEach, describe, it, expect, jest } from '@jest/globals';
 import { ClothingInstantiationService } from '../../../../src/clothing/services/clothingInstantiationService.js';
 import { InvalidArgumentError } from '../../../../src/errors/invalidArgumentError.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../../../src/constants/eventIds.js';
 
 /** Helper to create minimal mocks for dependencies */
 function createMocks() {
@@ -200,7 +201,7 @@ describe('ClothingInstantiationService', () => {
             id: 'clothing:simple_shirt',
             components: {
               'core:name': { text: 'Simple Shirt' },
-              'clothing:clothing': { slot: 'torso_upper' },
+              'clothing:wearable': { equipmentSlots: { primary: 'torso_upper' } },
             },
           };
         }
@@ -276,17 +277,17 @@ describe('ClothingInstantiationService', () => {
           case 'clothing:simple_shirt':
             return {
               id: 'clothing:simple_shirt',
-              components: { 'clothing:clothing': { slot: 'torso_upper' } },
+              components: { 'clothing:wearable': { equipmentSlots: { primary: 'torso_upper' } } },
             };
           case 'clothing:leather_boots':
             return {
               id: 'clothing:leather_boots',
-              components: { 'clothing:clothing': { slot: 'feet' } },
+              components: { 'clothing:wearable': { equipmentSlots: { primary: 'feet' } } },
             };
           case 'clothing:straw_hat':
             return {
               id: 'clothing:straw_hat',
-              components: { 'clothing:clothing': { slot: 'head' } },
+              components: { 'clothing:wearable': { equipmentSlots: { primary: 'head' } } },
             };
           default:
             return null;
@@ -343,7 +344,7 @@ describe('ClothingInstantiationService', () => {
           return {
             id: 'clothing:fancy_shirt',
             components: {
-              'clothing:clothing': { slot: 'torso_upper' },
+              'clothing:wearable': { equipmentSlots: { primary: 'torso_upper' } },
               'core:display': { color: 'white' },
             },
           };
@@ -394,7 +395,7 @@ describe('ClothingInstantiationService', () => {
           return {
             id: 'clothing:shirt',
             components: {
-              'clothing:clothing': { slot: 'torso_upper', layer: 'base' },
+              'clothing:wearable': { equipmentSlots: { primary: 'torso_upper' }, layer: 'base' },
             },
           };
         }
@@ -443,7 +444,7 @@ describe('ClothingInstantiationService', () => {
         if (category === 'entityDefinitions' && id === 'clothing:versatile_garment') {
           return {
             id: 'clothing:versatile_garment',
-            components: { 'clothing:clothing': { slot: 'torso_upper' } },
+            components: { 'clothing:wearable': { equipmentSlots: { primary: 'torso_upper' } } },
           };
         }
         return null;
@@ -491,7 +492,7 @@ describe('ClothingInstantiationService', () => {
         if (category === 'entityDefinitions' && id === 'clothing:special_item') {
           return {
             id: 'clothing:special_item',
-            components: { 'clothing:clothing': { slot: 'special' } },
+            components: { 'clothing:wearable': { equipmentSlots: { primary: 'special' } } },
           };
         }
         return null;
@@ -536,7 +537,7 @@ describe('ClothingInstantiationService', () => {
         if (category === 'entityDefinitions' && id === 'clothing:incompatible_item') {
           return {
             id: 'clothing:incompatible_item',
-            components: { 'clothing:clothing': { slot: 'wings' } },
+            components: { 'clothing:wearable': { equipmentSlots: { primary: 'wings' } } },
           };
         }
         return null;
@@ -603,7 +604,7 @@ describe('ClothingInstantiationService', () => {
         if (category === 'entityDefinitions' && id === 'clothing:shirt') {
           return {
             id: 'clothing:shirt',
-            components: { 'clothing:clothing': { slot: 'torso_upper' } },
+            components: { 'clothing:wearable': { equipmentSlots: { primary: 'torso_upper' } } },
           };
         }
         return null;
@@ -660,7 +661,7 @@ describe('ClothingInstantiationService', () => {
           } else if (id === 'clothing:good_item') {
             return {
               id: 'clothing:good_item',
-              components: { 'clothing:clothing': { slot: 'feet' } },
+              components: { 'clothing:wearable': { equipmentSlots: { primary: 'feet' } } },
             };
           }
         }
@@ -723,7 +724,7 @@ describe('ClothingInstantiationService', () => {
         if (category === 'entityDefinitions' && id === 'clothing:shirt') {
           return {
             id: 'clothing:shirt',
-            components: { 'clothing:clothing': { slot: 'torso_upper' } },
+            components: { 'clothing:wearable': { equipmentSlots: { primary: 'torso_upper' } } },
           };
         }
         return null;
@@ -751,6 +752,116 @@ describe('ClothingInstantiationService', () => {
           actorId,
           result,
         }
+      );
+    });
+
+    it('should dispatch SYSTEM_ERROR_OCCURRED_ID when there are instantiation errors', async () => {
+      const recipeWithClothing = {
+        ...mockRecipe,
+        clothingEntities: [
+          {
+            entityId: 'clothing:invalid_item',
+            equip: true,
+          },
+          {
+            entityId: 'clothing:another_invalid',
+            equip: true,
+          },
+        ],
+      };
+
+      // Mock that both items fail validation
+      dataRegistry.get.mockImplementation((category, id) => {
+        if (category === 'entityDefinitions') {
+          if (id === 'clothing:invalid_item' || id === 'clothing:another_invalid') {
+            return {
+              id,
+              components: {
+                // Missing clothing:wearable component
+                'core:name': { text: 'Invalid Item' },
+              },
+            };
+          }
+        }
+        return null;
+      });
+
+      const result = await service.instantiateRecipeClothing(
+        actorId,
+        recipeWithClothing,
+        mockAnatomyParts
+      );
+
+      // Verify system error was dispatched
+      expect(eventBus.dispatch).toHaveBeenCalledWith(
+        SYSTEM_ERROR_OCCURRED_ID,
+        {
+          message: 'Clothing instantiation failed for 2 items',
+          details: {
+            actorId,
+            totalItems: 2,
+            successfullyInstantiated: 0,
+            successfullyEquipped: 0,
+            errors: expect.arrayContaining([
+              expect.stringContaining('does not have clothing:wearable component'),
+              expect.stringContaining('does not have clothing:wearable component'),
+            ]),
+          },
+        }
+      );
+
+      // Also verify the completion event was still dispatched
+      expect(eventBus.dispatch).toHaveBeenCalledWith(
+        'clothing:instantiation_completed',
+        expect.any(Object)
+      );
+    });
+
+    it('should not dispatch SYSTEM_ERROR_OCCURRED_ID when all items succeed', async () => {
+      const recipeWithClothing = {
+        ...mockRecipe,
+        clothingEntities: [
+          {
+            entityId: 'clothing:shirt',
+            equip: true,
+          },
+        ],
+      };
+
+      dataRegistry.get.mockImplementation((category, id) => {
+        if (category === 'entityDefinitions' && id === 'clothing:shirt') {
+          return {
+            id: 'clothing:shirt',
+            components: { 'clothing:wearable': { equipmentSlots: { primary: 'torso_upper' } } },
+          };
+        }
+        return null;
+      });
+
+      entityManager.createEntityInstance.mockResolvedValue('clothing_123');
+      anatomyClothingIntegrationService.validateClothingSlotCompatibility.mockResolvedValue({
+        valid: true,
+      });
+      equipmentOrchestrator.orchestrateEquipment.mockResolvedValue({
+        success: true,
+      });
+
+      await service.instantiateRecipeClothing(
+        actorId,
+        recipeWithClothing,
+        mockAnatomyParts
+      );
+
+      // Verify system error was NOT dispatched
+      expect(eventBus.dispatch).not.toHaveBeenCalledWith(
+        SYSTEM_ERROR_OCCURRED_ID,
+        expect.any(Object)
+      );
+
+      // But completion event should still be dispatched
+      expect(eventBus.dispatch).toHaveBeenCalledWith(
+        'clothing:instantiation_completed',
+        expect.any(Object)
       );
     });
   });
