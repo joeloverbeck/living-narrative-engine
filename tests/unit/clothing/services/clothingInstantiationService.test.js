@@ -240,13 +240,13 @@ describe('ClothingInstantiationService', () => {
         errors: [],
       });
 
-      expect(eventBus.dispatch).toHaveBeenCalledWith({
-        type: 'CLOTHING_INSTANTIATION_COMPLETED',
-        payload: {
+      expect(eventBus.dispatch).toHaveBeenCalledWith(
+        'clothing:instantiation_completed',
+        {
           actorId,
           result: expect.any(Object),
-        },
-      });
+        }
+      );
     });
 
     it('should instantiate multiple clothing items', async () => {
@@ -745,13 +745,13 @@ describe('ClothingInstantiationService', () => {
         mockAnatomyParts
       );
 
-      expect(eventBus.dispatch).toHaveBeenCalledWith({
-        type: 'CLOTHING_INSTANTIATION_COMPLETED',
-        payload: {
+      expect(eventBus.dispatch).toHaveBeenCalledWith(
+        'clothing:instantiation_completed',
+        {
           actorId,
           result,
-        },
-      });
+        }
+      );
     });
   });
 });

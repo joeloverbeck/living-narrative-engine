@@ -1,6 +1,6 @@
 {
   "$schema": "http://example.com/schemas/event.schema.json",
-  "id": "clothing_equipped",
+  "id": "clothing:equipped",
   "description": "Fired when a clothing item is successfully equipped on an entity",
   "payloadSchema": {
     "type": "object",

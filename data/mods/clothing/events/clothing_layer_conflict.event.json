@@ -1,6 +1,6 @@
 {
   "$schema": "http://example.com/schemas/event.schema.json",
-  "id": "clothing_layer_conflict",
+  "id": "clothing:layer_conflict",
   "description": "Fired when layer conflicts are detected during clothing equipment",
   "payloadSchema": {
     "type": "object",

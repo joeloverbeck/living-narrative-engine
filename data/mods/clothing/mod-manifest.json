@@ -47,6 +47,7 @@
     "events": [
       "clothing_coverage_validated.event.json",
       "clothing_equipped.event.json",
+      "clothing_instantiation_completed.event.json",
       "clothing_layer_conflict.event.json",
       "clothing_unequipped.event.json"
     ],

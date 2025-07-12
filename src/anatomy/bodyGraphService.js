@@ -76,16 +76,13 @@ export class BodyGraphService {
       this.#cacheManager.invalidateCacheForRoot(rootId);
       this.#queryCache.invalidateRoot(rootId);
     }
-    await this.#eventDispatcher.dispatch({
-      type: ANATOMY_CONSTANTS.LIMB_DETACHED_EVENT_ID,
-      payload: {
-        detachedEntityId: partEntityId,
-        parentEntityId: parentId,
-        socketId: socketId,
-        detachedCount: toDetach.length,
-        reason: reason,
-        timestamp: Date.now(),
-      },
+    await this.#eventDispatcher.dispatch(ANATOMY_CONSTANTS.LIMB_DETACHED_EVENT_ID, {
+      detachedEntityId: partEntityId,
+      parentEntityId: parentId,
+      socketId: socketId,
+      detachedCount: toDetach.length,
+      reason: reason,
+      timestamp: Date.now(),
     });
 
     this.#logger.info(

@@ -278,15 +278,15 @@ describe('CoverageValidationService', () => {
     it('should dispatch validation event', async () => {
       await service.validateCoverage('entity1', 'clothing1');
 
-      expect(eventDispatcher.dispatch).toHaveBeenCalledWith({
-        type: 'clothing_coverage_validated',
-        payload: expect.objectContaining({
+      expect(eventDispatcher.dispatch).toHaveBeenCalledWith(
+        'clothing:coverage_validated',
+        expect.objectContaining({
           entityId: 'entity1',
           clothingItemId: 'clothing1',
           validationResult: 'valid',
           timestamp: expect.any(Number),
-        }),
-      });
+        })
+      );
     });
   });
 

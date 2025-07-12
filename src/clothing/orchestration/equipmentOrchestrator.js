@@ -157,19 +157,16 @@ export class EquipmentOrchestrator {
 
       if (equipResult.success) {
         // Step 7: Dispatch success event
-        await this.#eventDispatcher.dispatch({
-          type: 'clothing_equipped',
-          payload: {
-            entityId,
-            clothingItemId,
-            slotId: targetSlot,
-            layer: targetLayer,
-            previousItem: equipResult.previousItem,
-            conflictResolution: conflictResult.hasConflicts
-              ? conflictResolution
-              : null,
-            timestamp: Date.now(),
-          },
+        await this.#eventDispatcher.dispatch('clothing:equipped', {
+          entityId,
+          clothingItemId,
+          slotId: targetSlot,
+          layer: targetLayer,
+          previousItem: equipResult.previousItem,
+          conflictResolution: conflictResult.hasConflicts
+            ? conflictResolution
+            : null,
+          timestamp: Date.now(),
         });
 
         this.#logger.info(
@@ -260,17 +257,14 @@ export class EquipmentOrchestrator {
         totalUnequipped++;
 
         // Step 5: Dispatch success event
-        await this.#eventDispatcher.dispatch({
-          type: 'clothing_unequipped',
-          payload: {
-            entityId,
-            clothingItemId,
-            slotId: currentEquipment.slotId,
-            layer: currentEquipment.layer,
-            reason,
-            cascadeCount: cascadeItems.length,
-            timestamp: Date.now(),
-          },
+        await this.#eventDispatcher.dispatch('clothing:unequipped', {
+          entityId,
+          clothingItemId,
+          slotId: currentEquipment.slotId,
+          layer: currentEquipment.layer,
+          reason,
+          cascadeCount: cascadeItems.length,
+          timestamp: Date.now(),
         });
 
         this.#logger.info(

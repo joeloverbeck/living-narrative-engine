@@ -237,13 +237,13 @@ describe('Anatomy Generation with Clothing Integration', () => {
       expect(shirtEntity.getComponentData('clothing:clothing')).toBeTruthy();
 
       // Verify events were dispatched
-      expect(eventBus.dispatch).toHaveBeenCalledWith({
-        type: 'CLOTHING_INSTANTIATION_COMPLETED',
-        payload: expect.objectContaining({
+      expect(eventBus.dispatch).toHaveBeenCalledWith(
+        'clothing:instantiation_completed',
+        expect.objectContaining({
           actorId: ownerId,
           result: expect.any(Object),
-        }),
-      });
+        })
+      );
     });
 
     it('should apply property overrides to clothing entities', async () => {

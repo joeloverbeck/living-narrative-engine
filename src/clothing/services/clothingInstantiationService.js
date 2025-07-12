@@ -217,14 +217,13 @@ export class ClothingInstantiationService extends BaseService {
       }
     }
 
-    // Dispatch completion event
-    this.#eventBus.dispatch({
-      type: 'CLOTHING_INSTANTIATION_COMPLETED',
-      payload: {
+    // Dispatch completion event only if we processed any clothing entities
+    if (recipe.clothingEntities && recipe.clothingEntities.length > 0) {
+      this.#eventBus.dispatch('clothing:instantiation_completed', {
         actorId,
         result,
-      },
-    });
+      });
+    }
 
     this.#logger.info(
       `Clothing instantiation completed for actor '${actorId}': ` +
