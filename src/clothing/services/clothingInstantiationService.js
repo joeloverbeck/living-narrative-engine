@@ -248,7 +248,7 @@ export class ClothingInstantiationService extends BaseService {
     for (const config of clothingEntities) {
       try {
         // Load entity definition to get default slot
-        const definition = this.#dataRegistry.get('entities', config.entityId);
+        const definition = this.#dataRegistry.get('entityDefinitions', config.entityId);
         if (!definition) {
           errors.push(
             `Entity definition '${config.entityId}' not found in registry`
@@ -321,7 +321,7 @@ export class ClothingInstantiationService extends BaseService {
     );
 
     // Load the entity definition
-    const definition = this.#dataRegistry.get('entities', entityDefId);
+    const definition = this.#dataRegistry.get('entityDefinitions', entityDefId);
     if (!definition) {
       throw new InvalidArgumentError(
         `Entity definition '${entityDefId}' not found in registry`

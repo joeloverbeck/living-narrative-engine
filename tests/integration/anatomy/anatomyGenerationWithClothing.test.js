@@ -157,28 +157,28 @@ describe('Anatomy Generation with Clothing Integration', () => {
       });
 
       // Setup entity definitions for clothing using the stateful mock
-      dataRegistry.store('entities', 'clothing:peasant_shirt', {
+      dataRegistry.store('entityDefinitions', 'clothing:peasant_shirt', {
         id: 'clothing:peasant_shirt',
         components: {
           'core:name': { text: 'Peasant Shirt' },
           'clothing:clothing': { slot: 'torso_upper', layer: 'base' },
         },
       });
-      dataRegistry.store('entities', 'clothing:rough_trousers', {
+      dataRegistry.store('entityDefinitions', 'clothing:rough_trousers', {
         id: 'clothing:rough_trousers',
         components: {
           'core:name': { text: 'Rough Trousers' },
           'clothing:clothing': { slot: 'legs', layer: 'base' },
         },
       });
-      dataRegistry.store('entities', 'clothing:worn_boots', {
+      dataRegistry.store('entityDefinitions', 'clothing:worn_boots', {
         id: 'clothing:worn_boots',
         components: {
           'core:name': { text: 'Worn Boots' },
           'clothing:clothing': { slot: 'feet', layer: 'outer' },
         },
       });
-      dataRegistry.store('entities', 'clothing:straw_hat', {
+      dataRegistry.store('entityDefinitions', 'clothing:straw_hat', {
         id: 'clothing:straw_hat',
         components: {
           'core:name': { text: 'Straw Hat' },
@@ -423,7 +423,7 @@ describe('Anatomy Generation with Clothing Integration', () => {
       
       // Store all clothing items with the generic definition
       for (let i = 1; i <= 20; i++) {
-        dataRegistry.store('entities', `clothing:item_${i}`, {
+        dataRegistry.store('entityDefinitions', `clothing:item_${i}`, {
           ...genericClothing,
           id: `clothing:item_${i}`,
         });

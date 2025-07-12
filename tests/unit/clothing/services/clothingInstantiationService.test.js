@@ -195,7 +195,7 @@ describe('ClothingInstantiationService', () => {
 
       // Mock entity definition
       dataRegistry.get.mockImplementation((category, id) => {
-        if (category === 'entities' && id === 'clothing:simple_shirt') {
+        if (category === 'entityDefinitions' && id === 'clothing:simple_shirt') {
           return {
             id: 'clothing:simple_shirt',
             components: {
@@ -271,7 +271,7 @@ describe('ClothingInstantiationService', () => {
       // Mock entity definitions
       // Mock entity definitions for validation and instantiation
       dataRegistry.get.mockImplementation((category, id) => {
-        if (category !== 'entities') return null;
+        if (category !== 'entityDefinitions') return null;
         switch (id) {
           case 'clothing:simple_shirt':
             return {
@@ -339,7 +339,7 @@ describe('ClothingInstantiationService', () => {
       };
 
       dataRegistry.get.mockImplementation((category, id) => {
-        if (category === 'entities' && id === 'clothing:fancy_shirt') {
+        if (category === 'entityDefinitions' && id === 'clothing:fancy_shirt') {
           return {
             id: 'clothing:fancy_shirt',
             components: {
@@ -390,7 +390,7 @@ describe('ClothingInstantiationService', () => {
       };
 
       dataRegistry.get.mockImplementation((category, id) => {
-        if (category === 'entities' && id === 'clothing:shirt') {
+        if (category === 'entityDefinitions' && id === 'clothing:shirt') {
           return {
             id: 'clothing:shirt',
             components: {
@@ -440,7 +440,7 @@ describe('ClothingInstantiationService', () => {
       };
 
       dataRegistry.get.mockImplementation((category, id) => {
-        if (category === 'entities' && id === 'clothing:versatile_garment') {
+        if (category === 'entityDefinitions' && id === 'clothing:versatile_garment') {
           return {
             id: 'clothing:versatile_garment',
             components: { 'clothing:clothing': { slot: 'torso_upper' } },
@@ -488,7 +488,7 @@ describe('ClothingInstantiationService', () => {
       };
 
       dataRegistry.get.mockImplementation((category, id) => {
-        if (category === 'entities' && id === 'clothing:special_item') {
+        if (category === 'entityDefinitions' && id === 'clothing:special_item') {
           return {
             id: 'clothing:special_item',
             components: { 'clothing:clothing': { slot: 'special' } },
@@ -533,7 +533,7 @@ describe('ClothingInstantiationService', () => {
       };
 
       dataRegistry.get.mockImplementation((category, id) => {
-        if (category === 'entities' && id === 'clothing:incompatible_item') {
+        if (category === 'entityDefinitions' && id === 'clothing:incompatible_item') {
           return {
             id: 'clothing:incompatible_item',
             components: { 'clothing:clothing': { slot: 'wings' } },
@@ -600,7 +600,7 @@ describe('ClothingInstantiationService', () => {
       };
 
       dataRegistry.get.mockImplementation((category, id) => {
-        if (category === 'entities' && id === 'clothing:shirt') {
+        if (category === 'entityDefinitions' && id === 'clothing:shirt') {
           return {
             id: 'clothing:shirt',
             components: { 'clothing:clothing': { slot: 'torso_upper' } },
@@ -653,7 +653,7 @@ describe('ClothingInstantiationService', () => {
       let callCount = 0;
       dataRegistry.get.mockImplementation((category, id) => {
         callCount++;
-        if (category === 'entities') {
+        if (category === 'entityDefinitions') {
           if (callCount === 1) {
             // First call returns null (broken item)
             return null;
@@ -720,7 +720,7 @@ describe('ClothingInstantiationService', () => {
       };
 
       dataRegistry.get.mockImplementation((category, id) => {
-        if (category === 'entities' && id === 'clothing:shirt') {
+        if (category === 'entityDefinitions' && id === 'clothing:shirt') {
           return {
             id: 'clothing:shirt',
             components: { 'clothing:clothing': { slot: 'torso_upper' } },
