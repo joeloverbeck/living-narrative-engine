@@ -70,7 +70,7 @@ export class AnatomyGenerationWorkflow extends BaseService {
    * @param {string} recipeId - The recipe ID to use
    * @param {object} options - Additional options
    * @param {string} options.ownerId - The ID of the entity that will own this anatomy
-   * @returns {Promise<{rootId: string, entities: string[], partsMap: Object<string, string>, clothingResult?: object}>}
+   * @returns {Promise<{rootId: string, entities: string[], partsMap: Map<string, string>, slotEntityMappings: Map<string, string>, clothingResult?: object}>}
    * @throws {ValidationError} If blueprint or recipe is invalid
    */
   async generate(blueprintId, recipeId, options) {
@@ -108,14 +108,14 @@ export class AnatomyGenerationWorkflow extends BaseService {
         );
 
         try {
-          // Convert partsMap object to Map for clothingInstantiationService
-          const partsMapForClothing = new Map(Object.entries(partsMap));
+          // Build explicit slot entity mappings
+          const slotEntityMappings = this.#buildSlotEntityMappings(graphResult);
 
           clothingResult =
             await this.#clothingInstantiationService.instantiateRecipeClothing(
               ownerId,
               recipe,
-              partsMapForClothing
+              { partsMap, slotEntityMappings }
             );
 
           this.#logger.debug(
@@ -131,10 +131,14 @@ export class AnatomyGenerationWorkflow extends BaseService {
       }
     }
 
+    // Build explicit slot entity mappings
+    const slotEntityMappings = this.#buildSlotEntityMappings(graphResult);
+
     const result = {
       rootId: graphResult.rootId,
       entities: graphResult.entities,
       partsMap,
+      slotEntityMappings,
     };
 
     // Include clothing result if available
@@ -150,10 +154,10 @@ export class AnatomyGenerationWorkflow extends BaseService {
    *
    * @private
    * @param {string[]} partEntityIds - Array of part entity IDs
-   * @returns {Object<string, string>} Map of part names to entity IDs
+   * @returns {Map<string, string>} Map of part names to entity IDs
    */
   #buildPartsMap(partEntityIds) {
-    const parts = {};
+    const parts = new Map();
 
     for (const partEntityId of partEntityIds) {
       const partEntity = this.#entityManager.getEntityInstance(partEntityId);
@@ -163,7 +167,7 @@ export class AnatomyGenerationWorkflow extends BaseService {
         const name = nameData ? nameData.text : null;
 
         if (name) {
-          parts[name] = partEntityId;
+          parts.set(name, partEntityId);
           this.#logger.debug(
             `AnatomyGenerationWorkflow: Mapped part '${name}' to entity '${partEntityId}'`
           );
@@ -172,10 +176,44 @@ export class AnatomyGenerationWorkflow extends BaseService {
     }
 
     this.#logger.debug(
-      `AnatomyGenerationWorkflow: Built parts map with ${Object.keys(parts).length} named parts`
+      `AnatomyGenerationWorkflow: Built parts map with ${parts.size} named parts`
     );
 
     return parts;
+  }
+
+  /**
+   * Builds explicit slot-to-entity mappings from generation results
+   * Eliminates need for naming assumptions
+   *
+   * @private
+   * @param {object} graphResult - The anatomy graph generation result
+   * @returns {Map<string, string>} Map of slot IDs to entity IDs
+   */
+  #buildSlotEntityMappings(graphResult) {
+    const mappings = new Map();
+    
+    // Build mappings based on actual generated structure
+    for (const entityId of graphResult.entities) {
+      const entity = this.#entityManager.getEntityInstance(entityId);
+      
+      if (entity && entity.hasComponent('anatomy:blueprintSlot')) {
+        const slotComponent = entity.getComponentData('anatomy:blueprintSlot');
+        
+        if (slotComponent && slotComponent.slotId) {
+          mappings.set(slotComponent.slotId, entityId);
+          this.#logger.debug(
+            `AnatomyGenerationWorkflow: Mapped slot '${slotComponent.slotId}' to entity '${entityId}'`
+          );
+        }
+      }
+    }
+    
+    this.#logger.debug(
+      `AnatomyGenerationWorkflow: Built ${mappings.size} slot entity mappings`
+    );
+    
+    return mappings;
   }
 
   /**

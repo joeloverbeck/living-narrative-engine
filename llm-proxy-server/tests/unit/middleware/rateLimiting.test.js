@@ -4,6 +4,13 @@ import {
   createLlmRateLimiter,
   createAuthRateLimiter,
 } from '../../../src/middleware/rateLimiting.js';
+import {
+  RATE_LIMIT_GENERAL_WINDOW_MS,
+  RATE_LIMIT_GENERAL_MAX_REQUESTS,
+  RATE_LIMIT_LLM_WINDOW_MS,
+  RATE_LIMIT_LLM_MAX_REQUESTS,
+  RATE_LIMIT_AUTH_MAX_REQUESTS,
+} from '../../../src/config/constants.js';
 
 // Mock express-rate-limit
 jest.mock('express-rate-limit', () => {
@@ -38,8 +45,8 @@ describe('Rate Limiting Middleware', () => {
       const rateLimiter = createApiRateLimiter();
 
       expect(rateLimiter.config).toMatchObject({
-        windowMs: 15 * 60 * 1000, // 15 minutes
-        max: 100,
+        windowMs: RATE_LIMIT_GENERAL_WINDOW_MS, // 15 minutes
+        max: RATE_LIMIT_GENERAL_MAX_REQUESTS,
         standardHeaders: true,
         legacyHeaders: false,
       });
@@ -83,8 +90,8 @@ describe('Rate Limiting Middleware', () => {
       const rateLimiter = createLlmRateLimiter();
 
       expect(rateLimiter.config).toMatchObject({
-        windowMs: 60 * 1000, // 1 minute
-        max: 10,
+        windowMs: RATE_LIMIT_LLM_WINDOW_MS, // 1 minute
+        max: RATE_LIMIT_LLM_MAX_REQUESTS,
         standardHeaders: true,
         legacyHeaders: false,
         skipSuccessfulRequests: false,
@@ -148,8 +155,8 @@ describe('Rate Limiting Middleware', () => {
       const rateLimiter = createAuthRateLimiter();
 
       expect(rateLimiter.config).toMatchObject({
-        windowMs: 15 * 60 * 1000, // 15 minutes
-        max: 5,
+        windowMs: RATE_LIMIT_GENERAL_WINDOW_MS, // 15 minutes
+        max: RATE_LIMIT_AUTH_MAX_REQUESTS,
         skipSuccessfulRequests: true,
         standardHeaders: true,
         legacyHeaders: false,

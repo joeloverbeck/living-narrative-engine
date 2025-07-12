@@ -6,10 +6,17 @@ import {
   CONTENT_TYPE_JSON,
   AUTH_SCHEME_BEARER_PREFIX,
 } from '../../src/config/constants.js';
-import { Workspace_retry } from '../../src/utils/proxyApiUtils.js';
+import { RetryManager } from '../../src/utils/proxyApiUtils.js';
 
 jest.mock('../../src/utils/proxyApiUtils.js', () => ({
-  Workspace_retry: jest.fn(),
+  RetryManager: jest.fn(),
+}));
+
+// Mock HttpAgentService
+jest.mock('../../src/services/httpAgentService.js', () => ({
+  default: jest.fn().mockImplementation(() => ({
+    getAgent: jest.fn().mockReturnValue(null),
+  })),
 }));
 
 const createLogger = () => ({
@@ -17,6 +24,14 @@ const createLogger = () => ({
   info: jest.fn(),
   warn: jest.fn(),
   error: jest.fn(),
+});
+
+const createHttpAgentService = () => ({
+  getAgent: jest.fn().mockReturnValue(null),
+});
+
+const createAppConfigService = () => ({
+  isHttpAgentEnabled: jest.fn().mockReturnValue(false),
 });
 
 const baseConfig = {
@@ -27,11 +42,28 @@ const baseConfig = {
 
 describe('LlmRequestService remaining branches', () => {
   let logger;
+  let httpAgentService;
+  let appConfigService;
   let service;
+  let mockExecuteWithRetry;
 
   beforeEach(() => {
     logger = createLogger();
-    service = new LlmRequestService(logger);
+    httpAgentService = createHttpAgentService();
+    appConfigService = createAppConfigService();
+
+    // Setup RetryManager mock
+    mockExecuteWithRetry = jest.fn();
+    RetryManager.mockImplementation(() => ({
+      executeWithRetry: mockExecuteWithRetry,
+    }));
+
+    service = new LlmRequestService(
+      logger,
+      httpAgentService,
+      appConfigService,
+      RetryManager
+    );
     jest.clearAllMocks();
   });
 
@@ -70,7 +102,7 @@ describe('LlmRequestService remaining branches', () => {
   });
 
   test('forwardRequest logs preview when response body is long', async () => {
-    Workspace_retry.mockResolvedValue({ data: 'x'.repeat(101) });
+    mockExecuteWithRetry.mockResolvedValue({ data: 'x'.repeat(101) });
     const res = await service.forwardRequest('llm1', baseConfig, {});
     expect(res.success).toBe(true);
     expect(logger.debug).toHaveBeenCalledWith(

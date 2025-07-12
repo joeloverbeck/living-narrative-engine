@@ -1,6 +1,6 @@
 // llm-proxy-server/src/services/llmRequestService.js
 
-import { Workspace_retry } from '../utils/proxyApiUtils.js';
+import { RetryManager } from '../utils/proxyApiUtils.js';
 import { sanitizeErrorForClient } from '../utils/errorFormatter.js';
 import {
   CONTENT_TYPE_JSON,
@@ -8,7 +8,10 @@ import {
   HTTP_HEADER_AUTHORIZATION,
   AUTH_SCHEME_BEARER_PREFIX,
   HTTP_METHOD_POST,
+  PAYLOAD_SANITIZATION_MAX_LENGTH,
+  PAYLOAD_SANITIZATION_ELLIPSIS,
 } from '../config/constants.js'; // MODIFIED: Import constants
+import HttpAgentService from './httpAgentService.js';
 
 /**
  * @typedef {import('../config/llmConfigService.js').LLMModelConfig} LLMModelConfig
@@ -48,17 +51,40 @@ import {
 export class LlmRequestService {
   /** @type {ILogger} */
   #logger;
+  /** @type {HttpAgentService} */
+  #httpAgentService;
+  /** @type {import('../config/appConfig.js').AppConfigService} */
+  #appConfigService;
+  /** @type {typeof RetryManager} */
+  #RetryManager;
 
   /**
    * Constructs an LlmRequestService instance.
    * @param {ILogger} logger - An ILogger instance.
+   * @param {HttpAgentService} httpAgentService - An HttpAgentService instance.
+   * @param {import('../config/appConfig.js').AppConfigService} appConfigService - An AppConfigService instance.
+   * @param {typeof RetryManager} RetryManagerClass - The RetryManager class for dependency injection.
    */
-  constructor(logger) {
+  constructor(logger, httpAgentService, appConfigService, RetryManagerClass) {
     if (!logger) {
       throw new Error('LlmRequestService: logger is required.');
     }
+    if (!httpAgentService) {
+      throw new Error('LlmRequestService: httpAgentService is required.');
+    }
+    if (!appConfigService) {
+      throw new Error('LlmRequestService: appConfigService is required.');
+    }
+    if (!RetryManagerClass) {
+      throw new Error('LlmRequestService: RetryManagerClass is required.');
+    }
     this.#logger = logger;
-    this.#logger.debug('LlmRequestService: Instance created.');
+    this.#httpAgentService = httpAgentService;
+    this.#appConfigService = appConfigService;
+    this.#RetryManager = RetryManagerClass;
+    this.#logger.debug(
+      'LlmRequestService: Instance created with HTTP agent pooling support.'
+    );
   }
 
   /**
@@ -131,8 +157,8 @@ export class LlmRequestService {
    */
   _sanitizePayloadForLogging(targetPayload) {
     const sanitizedPayload = { ...targetPayload }; // Shallow copy
-    const maxLength = 70;
-    const ellipsis = '...';
+    const maxLength = PAYLOAD_SANITIZATION_MAX_LENGTH;
+    const ellipsis = PAYLOAD_SANITIZATION_ELLIPSIS;
 
     if (sanitizedPayload.messages && Array.isArray(sanitizedPayload.messages)) {
       sanitizedPayload.messages = sanitizedPayload.messages.map((m) => {
@@ -157,10 +183,10 @@ export class LlmRequestService {
   }
 
   /**
-   * Handles errors that occur during the forwarding process (typically from Workspace_retry).
+   * Handles errors that occur during the forwarding process (typically from RetryManager).
    * This method populates statusCode, errorStage, errorMessage, and errorDetailsForClient.
    * @private
-   * @param {Error} error - The error object caught from Workspace_retry.
+   * @param {Error} error - The error object caught from RetryManager.
    * @param {string} llmId - The ID of the LLM for which the request was made.
    * @param {string} targetUrl - The target URL that was called.
    * @returns {LlmServiceResponse} A structured error response.
@@ -196,7 +222,7 @@ export class LlmRequestService {
       /API request to .* failed after \d+ attempt\(s\) with status (\d{3}):\s*(.*)/s
     );
     const networkOrOtherErrorMatch = error.message.match(
-      /Workspace_retry: Failed for .* Final error: (.*)/s
+      /RetryManager: Failed for .* (?:due to persistent network error: |Unexpected error: )(.*)/s
     );
 
     if (httpErrorMatch && httpErrorMatch[1] && httpErrorMatch[2]) {
@@ -369,16 +395,29 @@ export class LlmRequestService {
 
     try {
       this.#logger.debug(
-        `LlmRequestService: Initiating call via Workspace_retry to ${targetUrl} for llmId '${llmId}'.`,
+        `LlmRequestService: Initiating call via RetryManager to ${targetUrl} for llmId '${llmId}'.`,
         { llmId }
       );
-      const llmProviderParsedResponse = await Workspace_retry(
+
+      // Get HTTP agent if enabled
+      const httpAgentOptions = {};
+      if (this.#appConfigService.isHttpAgentEnabled()) {
+        const agent = this.#httpAgentService.getAgent(targetUrl);
+        httpAgentOptions.agent = agent;
+        this.#logger.debug(
+          `LlmRequestService: Using HTTP agent with connection pooling for llmId '${llmId}' to ${targetUrl}.`
+        );
+      }
+
+      // Create RetryManager instance and execute request with retry logic
+      const retryManager = new this.#RetryManager(
         targetUrl,
         {
           // MODIFIED: Use imported constant
           method: HTTP_METHOD_POST,
           headers: headers,
           body: JSON.stringify(targetPayload),
+          ...httpAgentOptions, // Include agent if available
         },
         maxRetries,
         baseDelayMs,
@@ -386,11 +425,13 @@ export class LlmRequestService {
         this.#logger
       );
 
+      const llmProviderParsedResponse = await retryManager.executeWithRetry();
+
       const responseBodyPreview =
         JSON.stringify(llmProviderParsedResponse)?.substring(0, 100) +
         (JSON.stringify(llmProviderParsedResponse)?.length > 100 ? '...' : '');
       this.#logger.info(
-        `LlmRequestService: Successfully received response from LLM provider for llmId '${llmId}'. Status: 200 (assumed for Workspace_retry success).`,
+        `LlmRequestService: Successfully received response from LLM provider for llmId '${llmId}'. Status: 200 (assumed for RetryManager success).`,
         { llmId }
       );
       this.#logger.debug(

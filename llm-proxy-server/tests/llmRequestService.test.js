@@ -6,20 +6,37 @@ import {
   HTTP_HEADER_AUTHORIZATION,
   AUTH_SCHEME_BEARER_PREFIX,
   HTTP_METHOD_POST,
+  PAYLOAD_SANITIZATION_MAX_LENGTH,
+  PAYLOAD_SANITIZATION_ELLIPSIS,
 } from '../src/config/constants.js';
 
-// Mock Workspace_retry
+// Mock RetryManager
 jest.mock('../src/utils/proxyApiUtils.js', () => ({
-  Workspace_retry: jest.fn(),
+  RetryManager: jest.fn(),
 }));
 
-import { Workspace_retry } from '../src/utils/proxyApiUtils.js';
+// Mock HttpAgentService
+jest.mock('../src/services/httpAgentService.js', () => ({
+  default: jest.fn().mockImplementation(() => ({
+    getAgent: jest.fn().mockReturnValue(null),
+  })),
+}));
+
+import { RetryManager } from '../src/utils/proxyApiUtils.js';
 
 const createLogger = () => ({
   debug: jest.fn(),
   info: jest.fn(),
   warn: jest.fn(),
   error: jest.fn(),
+});
+
+const createHttpAgentService = () => ({
+  getAgent: jest.fn().mockReturnValue(null),
+});
+
+const createAppConfigService = () => ({
+  isHttpAgentEnabled: jest.fn().mockReturnValue(false),
 });
 
 const baseConfig = {
@@ -32,11 +49,28 @@ const baseConfig = {
 
 describe('LlmRequestService', () => {
   let logger;
+  let httpAgentService;
+  let appConfigService;
   let service;
+  let mockExecuteWithRetry;
 
   beforeEach(() => {
     logger = createLogger();
-    service = new LlmRequestService(logger);
+    httpAgentService = createHttpAgentService();
+    appConfigService = createAppConfigService();
+
+    // Setup RetryManager mock
+    mockExecuteWithRetry = jest.fn();
+    RetryManager.mockImplementation(() => ({
+      executeWithRetry: mockExecuteWithRetry,
+    }));
+
+    service = new LlmRequestService(
+      logger,
+      httpAgentService,
+      appConfigService,
+      RetryManager
+    );
     jest.clearAllMocks();
   });
 
@@ -44,6 +78,24 @@ describe('LlmRequestService', () => {
     expect(() => new LlmRequestService()).toThrow(
       'LlmRequestService: logger is required.'
     );
+  });
+
+  test('constructor requires httpAgentService', () => {
+    expect(() => new LlmRequestService(logger)).toThrow(
+      'LlmRequestService: httpAgentService is required.'
+    );
+  });
+
+  test('constructor requires appConfigService', () => {
+    expect(() => new LlmRequestService(logger, httpAgentService)).toThrow(
+      'LlmRequestService: appConfigService is required.'
+    );
+  });
+
+  test('constructor requires RetryManagerClass', () => {
+    expect(
+      () => new LlmRequestService(logger, httpAgentService, appConfigService)
+    ).toThrow('LlmRequestService: RetryManagerClass is required.');
   });
 
   test('_constructHeaders merges headers correctly', () => {
@@ -67,13 +119,19 @@ describe('LlmRequestService', () => {
   test('_sanitizePayloadForLogging truncates message content', () => {
     const payload = { messages: [{ role: 'user', content: 'a'.repeat(80) }] };
     const result = service._sanitizePayloadForLogging(payload);
-    expect(result.messages[0].content).toBe('a'.repeat(70) + '...');
+    expect(result.messages[0].content).toBe(
+      'a'.repeat(PAYLOAD_SANITIZATION_MAX_LENGTH) +
+        PAYLOAD_SANITIZATION_ELLIPSIS
+    );
   });
 
   test('_sanitizePayloadForLogging truncates prompt', () => {
     const payload = { prompt: 'b'.repeat(75) };
     const result = service._sanitizePayloadForLogging(payload);
-    expect(result.prompt).toBe('b'.repeat(70) + '...');
+    expect(result.prompt).toBe(
+      'b'.repeat(PAYLOAD_SANITIZATION_MAX_LENGTH) +
+        PAYLOAD_SANITIZATION_ELLIPSIS
+    );
   });
 
   test('_handleForwardingError parses HTTP errors', () => {
@@ -94,7 +152,7 @@ describe('LlmRequestService', () => {
 
   test('_handleForwardingError parses network errors', () => {
     const errMsg =
-      'Workspace_retry: Failed for http://example.com after 3 attempt(s) Final error: timeout';
+      'RetryManager: Failed for http://example.com after 3 attempt(s) due to persistent network error: timeout';
     const result = service._handleForwardingError(
       new Error(errMsg),
       'llm1',
@@ -108,7 +166,7 @@ describe('LlmRequestService', () => {
   });
 
   test('forwardRequest returns success on happy path', async () => {
-    Workspace_retry.mockResolvedValue({ ok: true });
+    mockExecuteWithRetry.mockResolvedValue({ ok: true });
     const res = await service.forwardRequest(
       'llm1',
       baseConfig,
@@ -116,7 +174,7 @@ describe('LlmRequestService', () => {
       { 'X-Extra': 'h' },
       'key'
     );
-    expect(Workspace_retry).toHaveBeenCalledWith(
+    expect(RetryManager).toHaveBeenCalledWith(
       baseConfig.endpointUrl,
       {
         method: HTTP_METHOD_POST,
@@ -144,9 +202,9 @@ describe('LlmRequestService', () => {
   });
 
   test('forwardRequest delegates errors to _handleForwardingError', async () => {
-    Workspace_retry.mockRejectedValue(
+    mockExecuteWithRetry.mockRejectedValue(
       new Error(
-        'Workspace_retry: Failed for http://example.com after 1 attempt(s) Final error: fail'
+        'RetryManager: Failed for http://example.com after 1 attempt(s) due to persistent network error: fail'
       )
     );
     const spy = jest.spyOn(service, '_handleForwardingError');
@@ -154,5 +212,56 @@ describe('LlmRequestService', () => {
     expect(spy).toHaveBeenCalled();
     expect(res.success).toBe(false);
     expect(res.errorStage).toBe('llm_forwarding_network_or_retry_exhausted');
+  });
+
+  test('forwardRequest uses HTTP agent when enabled', async () => {
+    appConfigService.isHttpAgentEnabled.mockReturnValue(true);
+    const mockAgent = { id: 'mock-agent' };
+    httpAgentService.getAgent.mockReturnValue(mockAgent);
+
+    mockExecuteWithRetry.mockResolvedValue({ ok: true });
+
+    await service.forwardRequest('llm1', baseConfig, { a: 1 }, {}, 'key');
+
+    expect(appConfigService.isHttpAgentEnabled).toHaveBeenCalled();
+    expect(httpAgentService.getAgent).toHaveBeenCalledWith(
+      baseConfig.endpointUrl
+    );
+    expect(RetryManager).toHaveBeenCalledWith(
+      baseConfig.endpointUrl,
+      {
+        method: HTTP_METHOD_POST,
+        headers: expect.any(Object),
+        body: JSON.stringify({ a: 1 }),
+        agent: mockAgent,
+      },
+      2,
+      10,
+      20,
+      logger
+    );
+  });
+
+  test('forwardRequest does not use HTTP agent when disabled', async () => {
+    appConfigService.isHttpAgentEnabled.mockReturnValue(false);
+
+    mockExecuteWithRetry.mockResolvedValue({ ok: true });
+
+    await service.forwardRequest('llm1', baseConfig, { a: 1 }, {}, 'key');
+
+    expect(appConfigService.isHttpAgentEnabled).toHaveBeenCalled();
+    expect(httpAgentService.getAgent).not.toHaveBeenCalled();
+    expect(RetryManager).toHaveBeenCalledWith(
+      baseConfig.endpointUrl,
+      {
+        method: HTTP_METHOD_POST,
+        headers: expect.any(Object),
+        body: JSON.stringify({ a: 1 }),
+      },
+      2,
+      10,
+      20,
+      logger
+    );
   });
 });

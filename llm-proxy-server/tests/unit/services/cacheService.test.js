@@ -1,0 +1,356 @@
+/**
+ * @file cacheService.test.js - Unit tests for CacheService
+ */
+
+import { jest } from '@jest/globals';
+import CacheService from '../../../src/services/cacheService.js';
+
+const createMockLogger = () => ({
+  debug: jest.fn(),
+  info: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+});
+
+describe('CacheService', () => {
+  let cacheService;
+  let mockLogger;
+
+  beforeEach(() => {
+    mockLogger = createMockLogger();
+    cacheService = new CacheService(mockLogger, {
+      maxSize: 3,
+      defaultTtl: 1000, // 1 second for testing
+    });
+    jest.clearAllMocks();
+  });
+
+  describe('constructor', () => {
+    it('should initialize with default configuration when not provided', () => {
+      new CacheService(mockLogger);
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'CacheService: Initialized with configuration',
+        { maxSize: 1000, defaultTtl: 300000 }
+      );
+    });
+
+    it('should initialize with provided configuration', () => {
+      new CacheService(mockLogger, {
+        maxSize: 3,
+        defaultTtl: 1000,
+      });
+
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'CacheService: Initialized with configuration',
+        { maxSize: 3, defaultTtl: 1000 }
+      );
+    });
+
+    it('should throw error when logger is not provided', () => {
+      expect(() => new CacheService()).toThrow();
+    });
+  });
+
+  describe('get', () => {
+    it('should return undefined for non-existent key', () => {
+      const result = cacheService.get('nonexistent');
+      expect(result).toBeUndefined();
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        "CacheService: Cache miss for key 'nonexistent'"
+      );
+    });
+
+    it('should return cached value for existing key', () => {
+      cacheService.set('key1', 'value1');
+      const result = cacheService.get('key1');
+      expect(result).toBe('value1');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        "CacheService: Cache hit for key 'key1'"
+      );
+    });
+
+    it('should return undefined for expired entry', async () => {
+      cacheService.set('key1', 'value1', 100); // 100ms TTL
+      await new Promise((resolve) => setTimeout(resolve, 150)); // Wait for expiration
+
+      const result = cacheService.get('key1');
+      expect(result).toBeUndefined();
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        "CacheService: Cache entry expired for key 'key1'"
+      );
+    });
+
+    it('should handle complex objects as values', () => {
+      const complexValue = { nested: { data: [1, 2, 3] } };
+      cacheService.set('complex', complexValue);
+      const result = cacheService.get('complex');
+      expect(result).toEqual(complexValue);
+    });
+
+    it('should update LRU order on get', () => {
+      cacheService.set('key1', 'value1');
+      cacheService.set('key2', 'value2');
+      cacheService.set('key3', 'value3');
+
+      // Access key1 to move it to end
+      cacheService.get('key1');
+
+      // Add a new key, should evict key2 (oldest untouched)
+      cacheService.set('key4', 'value4');
+
+      expect(cacheService.get('key1')).toBe('value1');
+      expect(cacheService.get('key2')).toBeUndefined();
+      expect(cacheService.get('key3')).toBe('value3');
+      expect(cacheService.get('key4')).toBe('value4');
+    });
+  });
+
+  describe('set', () => {
+    it('should cache value with default TTL', () => {
+      cacheService.set('key1', 'value1');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        "CacheService: Cached value for key 'key1' with TTL 1000ms"
+      );
+    });
+
+    it('should cache value with custom TTL', () => {
+      cacheService.set('key1', 'value1', 2000);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        "CacheService: Cached value for key 'key1' with TTL 2000ms"
+      );
+    });
+
+    it('should evict oldest entry when cache is full', () => {
+      cacheService.set('key1', 'value1');
+      cacheService.set('key2', 'value2');
+      cacheService.set('key3', 'value3');
+      cacheService.set('key4', 'value4'); // Should evict key1
+
+      expect(cacheService.get('key1')).toBeUndefined();
+      expect(cacheService.get('key2')).toBe('value2');
+      expect(cacheService.get('key3')).toBe('value3');
+      expect(cacheService.get('key4')).toBe('value4');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        "CacheService: Evicted oldest entry with key 'key1'"
+      );
+    });
+
+    it('should update existing key without eviction', () => {
+      cacheService.set('key1', 'value1');
+      cacheService.set('key2', 'value2');
+      cacheService.set('key3', 'value3');
+      cacheService.set('key2', 'updatedValue2'); // Update existing
+
+      expect(cacheService.get('key1')).toBe('value1');
+      expect(cacheService.get('key2')).toBe('updatedValue2');
+      expect(cacheService.get('key3')).toBe('value3');
+    });
+  });
+
+  describe('getOrLoad', () => {
+    it('should return cached value when available', async () => {
+      cacheService.set('key1', 'cachedValue');
+      const loader = jest.fn().mockResolvedValue('loadedValue');
+
+      const result = await cacheService.getOrLoad('key1', loader);
+      expect(result).toBe('cachedValue');
+      expect(loader).not.toHaveBeenCalled();
+    });
+
+    it('should load and cache value when not available', async () => {
+      const loader = jest.fn().mockResolvedValue('loadedValue');
+
+      const result = await cacheService.getOrLoad('key1', loader);
+      expect(result).toBe('loadedValue');
+      expect(loader).toHaveBeenCalled();
+      expect(cacheService.get('key1')).toBe('loadedValue');
+    });
+
+    it('should use custom TTL when provided', async () => {
+      const loader = jest.fn().mockResolvedValue('loadedValue');
+
+      await cacheService.getOrLoad('key1', loader, 500);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        "CacheService: Cached value for key 'key1' with TTL 500ms"
+      );
+    });
+
+    it('should propagate loader errors', async () => {
+      const error = new Error('Load failed');
+      const loader = jest.fn().mockRejectedValue(error);
+
+      await expect(cacheService.getOrLoad('key1', loader)).rejects.toThrow(
+        'Load failed'
+      );
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        "CacheService: Error loading value for key 'key1'",
+        error
+      );
+    });
+  });
+
+  describe('invalidate', () => {
+    it('should remove existing entry', () => {
+      cacheService.set('key1', 'value1');
+      const result = cacheService.invalidate('key1');
+
+      expect(result).toBe(true);
+      expect(cacheService.get('key1')).toBeUndefined();
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        "CacheService: Invalidated cache entry for key 'key1'"
+      );
+    });
+
+    it('should return false for non-existent key', () => {
+      const result = cacheService.invalidate('nonexistent');
+      expect(result).toBe(false);
+    });
+  });
+
+  describe('invalidatePattern', () => {
+    it('should invalidate all matching entries', () => {
+      cacheService.set('user:1', 'value1');
+      cacheService.set('user:2', 'value2');
+      cacheService.set('post:1', 'value3');
+
+      const count = cacheService.invalidatePattern(/^user:/);
+
+      expect(count).toBe(2);
+      expect(cacheService.get('user:1')).toBeUndefined();
+      expect(cacheService.get('user:2')).toBeUndefined();
+      expect(cacheService.get('post:1')).toBe('value3');
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'CacheService: Invalidated 2 cache entries matching pattern /^user:/'
+      );
+    });
+
+    it('should return 0 when no entries match', () => {
+      cacheService.set('post:1', 'value1');
+      const count = cacheService.invalidatePattern(/^user:/);
+      expect(count).toBe(0);
+    });
+  });
+
+  describe('clear', () => {
+    it('should remove all entries', () => {
+      cacheService.set('key1', 'value1');
+      cacheService.set('key2', 'value2');
+      cacheService.set('key3', 'value3');
+
+      cacheService.clear();
+
+      expect(cacheService.get('key1')).toBeUndefined();
+      expect(cacheService.get('key2')).toBeUndefined();
+      expect(cacheService.get('key3')).toBeUndefined();
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'CacheService: Cleared all 3 cache entries'
+      );
+    });
+  });
+
+  describe('getStats', () => {
+    it('should return accurate statistics', () => {
+      // Generate some activity
+      cacheService.set('key1', 'value1');
+      cacheService.get('key1'); // hit
+      cacheService.get('key2'); // miss
+      cacheService.set('key2', 'value2');
+      cacheService.set('key3', 'value3');
+      cacheService.set('key4', 'value4'); // causes eviction
+
+      const stats = cacheService.getStats();
+
+      expect(stats).toEqual({
+        hits: 1,
+        misses: 1,
+        evictions: 1,
+        expirations: 0,
+        size: 3,
+        maxSize: 3,
+        hitRate: '50.00%',
+      });
+    });
+
+    it('should handle zero total requests', () => {
+      const stats = cacheService.getStats();
+      expect(stats.hitRate).toBe('0%');
+    });
+  });
+
+  describe('resetStats', () => {
+    it('should reset all statistics', () => {
+      cacheService.get('key1'); // miss
+      cacheService.set('key1', 'value1');
+      cacheService.get('key1'); // hit
+
+      cacheService.resetStats();
+      const stats = cacheService.getStats();
+
+      expect(stats.hits).toBe(0);
+      expect(stats.misses).toBe(0);
+      expect(stats.evictions).toBe(0);
+      expect(stats.expirations).toBe(0);
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'CacheService: Reset cache statistics'
+      );
+    });
+  });
+
+  describe('getSize', () => {
+    it('should return current cache size', () => {
+      expect(cacheService.getSize()).toBe(0);
+
+      cacheService.set('key1', 'value1');
+      expect(cacheService.getSize()).toBe(1);
+
+      cacheService.set('key2', 'value2');
+      expect(cacheService.getSize()).toBe(2);
+
+      cacheService.invalidate('key1');
+      expect(cacheService.getSize()).toBe(1);
+    });
+  });
+
+  describe('has', () => {
+    it('should return true for existing non-expired entry', () => {
+      cacheService.set('key1', 'value1');
+      expect(cacheService.has('key1')).toBe(true);
+    });
+
+    it('should return false for non-existent key', () => {
+      expect(cacheService.has('nonexistent')).toBe(false);
+    });
+
+    it('should return false and clean up expired entry', async () => {
+      cacheService.set('key1', 'value1', 100); // 100ms TTL
+      await new Promise((resolve) => setTimeout(resolve, 150));
+
+      expect(cacheService.has('key1')).toBe(false);
+      expect(cacheService.getSize()).toBe(0);
+    });
+  });
+
+  describe('edge cases', () => {
+    it('should handle null values', () => {
+      cacheService.set('key1', null);
+      expect(cacheService.get('key1')).toBeNull();
+    });
+
+    it('should handle undefined values', () => {
+      cacheService.set('key1', undefined);
+      expect(cacheService.get('key1')).toBeUndefined();
+      expect(cacheService.has('key1')).toBe(true); // Key exists even with undefined value
+    });
+
+    it('should handle empty string keys', () => {
+      cacheService.set('', 'emptyKeyValue');
+      expect(cacheService.get('')).toBe('emptyKeyValue');
+    });
+
+    it('should handle very large values', () => {
+      const largeArray = new Array(10000).fill('data');
+      cacheService.set('large', largeArray);
+      expect(cacheService.get('large')).toEqual(largeArray);
+    });
+  });
+});

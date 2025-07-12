@@ -7,9 +7,9 @@
   "scripts": {
     "start": "node src/core/server.js",
     "dev": "node --watch src/core/server.js",
-    "test": "jest --silent --coverage",
-    "test:single": "jest --silent=false --runInBand",
-    "test:ci": "jest --ci --silent --coverage",
+    "test": "NODE_ENV=test jest --silent --coverage",
+    "test:single": "NODE_ENV=test jest --silent=false --runInBand",
+    "test:ci": "NODE_ENV=test jest --ci --silent --coverage",
     "typecheck": "tsc",
     "format": "prettier --write \"**/*.{js,json,md,cjs}\" --log-level error",
     "format:check": "prettier --check \"**/*.{js,json,md,cjs}\" --log-level error",

@@ -16,6 +16,10 @@ import { AnatomyInitializationService } from '../../../src/anatomy/anatomyInitia
 import { AnatomyDescriptionService } from '../../../src/anatomy/anatomyDescriptionService.js';
 import { BodyDescriptionOrchestrator } from '../../../src/anatomy/BodyDescriptionOrchestrator.js';
 import { DescriptionPersistenceService } from '../../../src/anatomy/DescriptionPersistenceService.js';
+import { SlotMappingConfiguration } from '../../../src/anatomy/configuration/slotMappingConfiguration.js';
+import { LayerResolutionService } from '../../../src/clothing/services/layerResolutionService.js';
+import AnatomyClothingIntegrationService from '../../../src/anatomy/integration/anatomyClothingIntegrationService.js';
+import ClothingInstantiationService from '../../../src/clothing/services/clothingInstantiationService.js';
 import {
   createMockLogger,
   createMockSafeEventDispatcher,
@@ -239,6 +243,43 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
       eventDispatcher: mocks.eventDispatcher,
       logger: mocks.logger,
       anatomyGenerationService: this.anatomyGenerationService,
+    });
+
+    // Create slot mapping configuration service
+    this.slotMappingConfiguration = new SlotMappingConfiguration({
+      logger: mocks.logger,
+      dataRegistry: mocks.registry,
+      entityManager: this.entityManager,
+    });
+
+    // Create layer resolution service
+    this.layerResolutionService = new LayerResolutionService({
+      logger: mocks.logger,
+    });
+
+    // Create anatomy clothing integration service
+    this.anatomyClothingIntegrationService = new AnatomyClothingIntegrationService({
+      logger: mocks.logger,
+      entityManager: this.entityManager,
+      bodyGraphService: this.bodyGraphService,
+      dataRegistry: mocks.registry,
+      slotMappingConfiguration: this.slotMappingConfiguration,
+    });
+
+    // Create mock equipment orchestrator
+    this.mockEquipmentOrchestrator = {
+      orchestrateEquipment: () => Promise.resolve({ success: true, equipped: [] }),
+    };
+
+    // Create clothing instantiation service
+    this.clothingInstantiationService = new ClothingInstantiationService({
+      entityManager: this.entityManager,
+      dataRegistry: mocks.registry,
+      equipmentOrchestrator: this.mockEquipmentOrchestrator,
+      anatomyClothingIntegrationService: this.anatomyClothingIntegrationService,
+      layerResolutionService: this.layerResolutionService,
+      logger: mocks.logger,
+      eventBus: mocks.eventDispatcher,
     });
   }
 

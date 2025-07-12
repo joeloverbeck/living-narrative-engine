@@ -60,6 +60,8 @@ import { LayerCompatibilityService } from '../../clothing/validation/layerCompat
 import { CoverageValidationService } from '../../clothing/validation/coverageValidationService.js';
 import { EquipmentOrchestrator } from '../../clothing/orchestration/equipmentOrchestrator.js';
 import AnatomyClothingIntegrationService from '../../anatomy/integration/anatomyClothingIntegrationService.js';
+import SlotMappingConfiguration from '../../anatomy/configuration/slotMappingConfiguration.js';
+import LayerResolutionService from '../../clothing/services/layerResolutionService.js';
 import UuidGenerator from '../../adapters/UuidGenerator.js';
 
 /**
@@ -554,6 +556,32 @@ export function registerWorldAndEntity(container) {
     )}.`
   );
 
+  // Register SlotMappingConfiguration
+  registrar.singletonFactory(tokens.SlotMappingConfiguration, (c) => {
+    return new SlotMappingConfiguration({
+      logger: c.resolve(tokens.ILogger),
+      dataRegistry: c.resolve(tokens.IDataRegistry),
+      entityManager: c.resolve(tokens.IEntityManager),
+    });
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.SlotMappingConfiguration
+    )}.`
+  );
+
+  // Register LayerResolutionService
+  registrar.singletonFactory(tokens.LayerResolutionService, (c) => {
+    return new LayerResolutionService({
+      logger: c.resolve(tokens.ILogger),
+    });
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.LayerResolutionService
+    )}.`
+  );
+
   // Register AnatomyClothingIntegrationService
   registrar.singletonFactory(tokens.AnatomyClothingIntegrationService, (c) => {
     return new AnatomyClothingIntegrationService({
@@ -561,6 +589,7 @@ export function registerWorldAndEntity(container) {
       entityManager: c.resolve(tokens.IEntityManager),
       bodyGraphService: c.resolve(tokens.BodyGraphService),
       dataRegistry: c.resolve(tokens.IDataRegistry),
+      slotMappingConfiguration: c.resolve(tokens.SlotMappingConfiguration),
     });
   });
   logger.debug(
@@ -578,6 +607,7 @@ export function registerWorldAndEntity(container) {
       anatomyClothingIntegrationService: c.resolve(
         tokens.AnatomyClothingIntegrationService
       ),
+      layerResolutionService: c.resolve(tokens.LayerResolutionService),
       logger: c.resolve(tokens.ILogger),
       eventBus: c.resolve(tokens.ISafeEventDispatcher),
     });

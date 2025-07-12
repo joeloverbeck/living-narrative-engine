@@ -18,11 +18,19 @@ const createLogger = () => ({
 
 const createFsReader = () => ({ readFile: jest.fn() });
 
+const createCacheService = () => ({
+  get: jest.fn(),
+  set: jest.fn(),
+  invalidatePattern: jest.fn(),
+  getStats: jest.fn(),
+});
+
 const ORIGINAL_ENV = { ...process.env };
 
 describe('ApiKeyService.getApiKey', () => {
   let logger;
   let fsReader;
+  let cacheService;
   let appConfig;
   let service;
 
@@ -30,10 +38,13 @@ describe('ApiKeyService.getApiKey', () => {
     process.env = { ...ORIGINAL_ENV };
     logger = createLogger();
     fsReader = createFsReader();
+    cacheService = createCacheService();
     appConfig = {
       getProxyProjectRootPathForApiKeyFiles: jest.fn(() => '/keys'),
+      isCacheEnabled: jest.fn(() => false), // Default to disabled for existing tests
+      getApiKeyCacheTtl: jest.fn(() => 3600000),
     };
-    service = new ApiKeyService(logger, fsReader, appConfig);
+    service = new ApiKeyService(logger, fsReader, appConfig, cacheService);
     jest.clearAllMocks();
   });
 

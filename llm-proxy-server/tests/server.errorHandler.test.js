@@ -1,14 +1,34 @@
 import { LOG_LLM_ID_UNHANDLED_ERROR } from '../src/config/constants.js';
-import { describe, test, beforeEach, expect, jest } from '@jest/globals';
+import {
+  describe,
+  test,
+  beforeEach,
+  afterEach,
+  expect,
+  jest,
+} from '@jest/globals';
+import { createTestManager } from './common/testServerUtils.js';
 
 let app;
 let expressMock;
 let sendProxyError;
 let errorHandler;
 let consoleLoggerInstance;
+let httpAgentServiceInstance;
+let testManager;
 
 beforeEach(() => {
   jest.resetModules();
+  jest.useFakeTimers();
+  httpAgentServiceInstance = null;
+
+  // Set up test manager for proper resource cleanup
+  // Note: useFakeTimers is false since we handle timers manually in this file
+  testManager = createTestManager({
+    mockProcessSignals: true,
+    useFakeTimers: false,
+    backupEnvironment: false,
+  });
 
   app = {
     use: jest.fn(),
@@ -16,6 +36,9 @@ beforeEach(() => {
     post: jest.fn(),
     listen: jest.fn((p, cb) => cb && cb()),
   };
+
+  // Use test manager to create properly managed server instance
+  testManager.createMockServer(app, { port: 3001 });
 
   expressMock = jest.fn(() => app);
   expressMock.json = jest.fn(() => 'json-mw');
@@ -46,11 +69,155 @@ beforeEach(() => {
     __esModule: true,
     ConsoleLogger,
   }));
+
+  // Mock HttpAgentService to capture instances for cleanup
+  const HttpAgentService = jest.fn().mockImplementation((_logger, _config) => {
+    httpAgentServiceInstance = {
+      cleanup: jest.fn(),
+      getAgent: jest.fn(),
+      destroyAll: jest.fn(),
+      getStats: jest.fn().mockReturnValue({}),
+    };
+    return httpAgentServiceInstance;
+  });
+  jest.doMock('../src/services/httpAgentService.js', () => ({
+    __esModule: true,
+    default: HttpAgentService,
+  }));
+
+  // Mock LlmConfigService and other dependencies
+  const llmConfigServiceInstance = {
+    initialize: jest.fn(),
+    isOperational: jest.fn(() => true),
+    getInitializationErrorDetails: jest.fn(() => null),
+    getLlmConfigs: jest.fn(() => ({ llms: { a: {} } })),
+    getResolvedConfigPath: jest.fn(() => '/path/llm.json'),
+    hasFileBasedApiKeys: jest.fn(() => false),
+  };
+  const LlmConfigService = jest.fn(() => llmConfigServiceInstance);
+  jest.doMock('../src/config/llmConfigService.js', () => ({
+    __esModule: true,
+    LlmConfigService,
+  }));
+
+  const CacheService = jest.fn(() => ({
+    get: jest.fn(),
+    set: jest.fn(),
+    invalidatePattern: jest.fn(),
+    getStats: jest.fn(),
+  }));
+  jest.doMock('../src/services/cacheService.js', () => ({
+    __esModule: true,
+    default: CacheService,
+  }));
+
+  // Mock other services that might be instantiated
+  jest.doMock('../src/services/apiKeyService.js', () => ({
+    __esModule: true,
+    ApiKeyService: jest.fn(() => ({})),
+  }));
+
+  jest.doMock('../src/services/llmRequestService.js', () => ({
+    __esModule: true,
+    LlmRequestService: jest.fn(() => ({})),
+  }));
+
+  jest.doMock('../src/handlers/llmRequestController.js', () => ({
+    __esModule: true,
+    LlmRequestController: jest.fn(() => ({})),
+  }));
+
+  jest.doMock('../src/nodeFileSystemReader.js', () => ({
+    __esModule: true,
+    NodeFileSystemReader: jest.fn(() => ({})),
+  }));
+
+  // Mock appConfig
+  const appConfigServiceMock = {
+    getAllowedOriginsArray: jest.fn(() => []),
+    getProxyPort: jest.fn(() => 3001),
+    isProxyPortDefaulted: jest.fn(() => false),
+    getProxyAllowedOrigin: jest.fn(() => ''),
+    getProxyProjectRootPathForApiKeyFiles: jest.fn(() => '/keys'),
+    isCacheEnabled: jest.fn(() => false),
+    getCacheConfig: jest.fn(() => ({
+      enabled: false,
+      defaultTtl: 300000,
+      maxSize: 1000,
+      apiKeyCacheTtl: 300000,
+    })),
+    isHttpAgentEnabled: jest.fn(() => false),
+    getHttpAgentConfig: jest.fn(() => ({
+      enabled: false,
+      keepAlive: true,
+      maxSockets: 50,
+      maxFreeSockets: 10,
+      timeout: 60000,
+      freeSocketTimeout: 30000,
+      maxTotalSockets: 500,
+    })),
+  };
+  const getAppConfigService = jest.fn(() => appConfigServiceMock);
+  jest.doMock('../src/config/appConfig.js', () => ({
+    __esModule: true,
+    getAppConfigService,
+  }));
+
+  // Mock middleware modules
+  jest.doMock('../src/middleware/security.js', () => ({
+    __esModule: true,
+    createSecurityMiddleware: jest.fn(() => 'security-mw'),
+  }));
+
+  jest.doMock('../src/middleware/rateLimiting.js', () => ({
+    __esModule: true,
+    createApiRateLimiter: jest.fn(() => 'api-rate-limiter'),
+    createLlmRateLimiter: jest.fn(() => 'llm-rate-limiter'),
+  }));
+
+  jest.doMock('../src/middleware/validation.js', () => ({
+    __esModule: true,
+    validateLlmRequest: jest.fn(() => 'validate-llm-request'),
+    validateRequestHeaders: jest.fn(() => 'validate-headers'),
+    handleValidationErrors: jest.fn(() => 'handle-validation-errors'),
+  }));
+
+  jest.doMock('../src/middleware/timeout.js', () => ({
+    __esModule: true,
+    createTimeoutMiddleware: jest.fn(() => 'timeout-mw'),
+    createSizeLimitConfig: jest.fn(() => ({ json: { limit: '1mb' } })),
+  }));
+
+  jest.doMock('compression', () => ({
+    __esModule: true,
+    default: jest.fn(() => 'compression-mw'),
+  }));
+});
+
+afterEach(() => {
+  // Clean up any HttpAgentService instances that might have been created
+  if (
+    httpAgentServiceInstance &&
+    typeof httpAgentServiceInstance.cleanup === 'function'
+  ) {
+    httpAgentServiceInstance.cleanup();
+  }
+
+  // Clean up all resources managed by test manager
+  if (testManager) {
+    testManager.cleanup();
+  }
+
+  jest.useRealTimers();
+  jest.restoreAllMocks();
 });
 
 const loadServer = async () => {
   await import('../src/core/server.js');
-  await new Promise((r) => setTimeout(r, 0));
+
+  // Advance fake timers to allow any pending timers to execute
+  jest.runAllTimers();
+
   const loggerCtor = (await import('../src/consoleLogger.js')).ConsoleLogger;
   consoleLoggerInstance = loggerCtor.mock.results[0].value;
   errorHandler = app.use.mock.calls.find(

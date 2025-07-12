@@ -87,14 +87,12 @@ describe('AnatomyGenerationWorkflow', () => {
         ownerId,
       });
 
-      expect(result).toEqual({
-        rootId,
-        entities: [rootId, ...partIds],
-        partsMap: {
-          left_arm: 'arm-1',
-          right_arm: 'arm-2',
-        },
-      });
+      expect(result.rootId).toEqual(rootId);
+      expect(result.entities).toEqual([rootId, ...partIds]);
+      expect(result.partsMap).toBeInstanceOf(Map);
+      expect(result.partsMap.get('left_arm')).toBe('arm-1');
+      expect(result.partsMap.get('right_arm')).toBe('arm-2');
+      expect(result.slotEntityMappings).toBeInstanceOf(Map);
 
       expect(mockBodyBlueprintFactory.createAnatomyGraph).toHaveBeenCalledWith(
         blueprintId,
@@ -115,7 +113,9 @@ describe('AnatomyGenerationWorkflow', () => {
         ownerId,
       });
 
-      expect(result.partsMap).toEqual({});
+      expect(result.partsMap).toBeInstanceOf(Map);
+      expect(result.partsMap.size).toBe(0);
+      expect(result.slotEntityMappings).toBeInstanceOf(Map);
     });
 
     it('should handle parts with null name data', async () => {
@@ -133,7 +133,9 @@ describe('AnatomyGenerationWorkflow', () => {
         ownerId,
       });
 
-      expect(result.partsMap).toEqual({});
+      expect(result.partsMap).toBeInstanceOf(Map);
+      expect(result.partsMap.size).toBe(0);
+      expect(result.slotEntityMappings).toBeInstanceOf(Map);
     });
 
     it('should handle parts with empty names', async () => {
@@ -151,7 +153,9 @@ describe('AnatomyGenerationWorkflow', () => {
         ownerId,
       });
 
-      expect(result.partsMap).toEqual({});
+      expect(result.partsMap).toBeInstanceOf(Map);
+      expect(result.partsMap.size).toBe(0);
+      expect(result.slotEntityMappings).toBeInstanceOf(Map);
     });
 
     it('should propagate errors from bodyBlueprintFactory', async () => {
@@ -212,15 +216,18 @@ describe('AnatomyGenerationWorkflow', () => {
         // Verify clothing instantiation was called
         expect(
           mockClothingInstantiationService.instantiateRecipeClothing
-        ).toHaveBeenCalledWith(ownerId, recipeWithClothing, expect.any(Map));
+        ).toHaveBeenCalledWith(ownerId, recipeWithClothing, {
+          partsMap: expect.any(Map),
+          slotEntityMappings: expect.any(Map),
+        });
 
         // Verify the result includes clothing data
-        expect(result).toEqual({
-          rootId,
-          entities: [rootId, ...partIds],
-          partsMap: { left_arm: 'arm-1' },
-          clothingResult: mockClothingResult,
-        });
+        expect(result.rootId).toBe(rootId);
+        expect(result.entities).toEqual([rootId, ...partIds]);
+        expect(result.partsMap).toBeInstanceOf(Map);
+        expect(result.partsMap.get('left_arm')).toBe('arm-1');
+        expect(result.slotEntityMappings).toBeInstanceOf(Map);
+        expect(result.clothingResult).toEqual(mockClothingResult);
       });
 
       it('should pass correct parts map to clothing instantiation', async () => {
@@ -233,13 +240,15 @@ describe('AnatomyGenerationWorkflow', () => {
 
         await workflow.generate(blueprintId, recipeId, { ownerId });
 
-        // Get the parts map that was passed
-        const passedPartsMap =
+        // Get the anatomy data that was passed
+        const passedAnatomyData =
           mockClothingInstantiationService.instantiateRecipeClothing.mock
             .calls[0][2];
 
-        expect(passedPartsMap).toBeInstanceOf(Map);
-        expect(passedPartsMap.get('left_arm')).toBe('arm-1');
+        expect(passedAnatomyData).toBeDefined();
+        expect(passedAnatomyData.partsMap).toBeInstanceOf(Map);
+        expect(passedAnatomyData.partsMap.get('left_arm')).toBe('arm-1');
+        expect(passedAnatomyData.slotEntityMappings).toBeInstanceOf(Map);
       });
 
       it('should not call clothing instantiation when recipe has no clothingEntities', async () => {

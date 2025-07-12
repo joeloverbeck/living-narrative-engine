@@ -63,12 +63,28 @@ describe('Anatomy Generation with Clothing Integration', () => {
       dispatch: jest.fn(),
     };
 
+    // Create mock layer resolution service
+    const layerResolutionService = {
+      resolveLayer: jest.fn().mockReturnValue('base'),
+      validateLayerAllowed: jest.fn().mockReturnValue(true),
+      resolveAndValidateLayer: jest.fn().mockImplementation((recipeLayer, entityLayer, blueprintLayer, allowedLayers) => {
+        // Return the first non-null layer, defaulting to 'base'
+        const layer = recipeLayer || entityLayer || blueprintLayer || 'base';
+        return {
+          isValid: true,
+          layer: layer,
+        };
+      }),
+      getPrecedenceOrder: jest.fn().mockReturnValue(['underwear', 'base', 'outer', 'accessories']),
+    };
+
     // Create real service instances
     clothingInstantiationService = new ClothingInstantiationService({
       entityManager,
       dataRegistry,
       equipmentOrchestrator,
       anatomyClothingIntegrationService,
+      layerResolutionService,
       logger,
       eventBus,
     });
@@ -91,6 +107,7 @@ describe('Anatomy Generation with Clothing Integration', () => {
           components: {
             'core:name': { text: 'torso' },
             'anatomy:body_part': { type: 'torso' },
+            'anatomy:blueprintSlot': { slotId: 'torso' },
           },
         },
         {
@@ -98,6 +115,7 @@ describe('Anatomy Generation with Clothing Integration', () => {
           components: {
             'core:name': { text: 'head' },
             'anatomy:body_part': { type: 'head' },
+            'anatomy:blueprintSlot': { slotId: 'head' },
           },
         },
         {
@@ -105,6 +123,7 @@ describe('Anatomy Generation with Clothing Integration', () => {
           components: {
             'core:name': { text: 'left_arm' },
             'anatomy:body_part': { type: 'arm' },
+            'anatomy:blueprintSlot': { slotId: 'left_arm' },
           },
         },
         {
@@ -112,6 +131,7 @@ describe('Anatomy Generation with Clothing Integration', () => {
           components: {
             'core:name': { text: 'right_arm' },
             'anatomy:body_part': { type: 'arm' },
+            'anatomy:blueprintSlot': { slotId: 'right_arm' },
           },
         },
         {
@@ -119,6 +139,7 @@ describe('Anatomy Generation with Clothing Integration', () => {
           components: {
             'core:name': { text: 'legs' },
             'anatomy:body_part': { type: 'legs' },
+            'anatomy:blueprintSlot': { slotId: 'legs' },
           },
         },
       ]);
@@ -202,16 +223,38 @@ describe('Anatomy Generation with Clothing Integration', () => {
       let clothingCounter = 1;
       entityManager.createEntityInstance.mockImplementation((defId, props) => {
         const clothingId = `clothing_${clothingCounter++}`;
+        
+        // Get the entity definition from the data registry
+        const definition = dataRegistry.get('entityDefinitions', defId);
+        const baseComponents = definition ? { ...definition.components } : {};
+        
+        // Merge with property overrides
+        const components = {
+          ...baseComponents,
+          'core:name': { text: defId.replace('clothing:', '') },
+        };
+        
+        // Apply property overrides to the clothing:wearable component
+        if (props && props['clothing:wearable']) {
+          components['clothing:wearable'] = {
+            ...components['clothing:wearable'],
+            ...props['clothing:wearable'],
+          };
+        }
+        
+        // Apply other property overrides
+        for (const [key, value] of Object.entries(props || {})) {
+          if (key !== 'clothing:wearable') {
+            components[key] = value;
+          }
+        }
+        
         const currentEntities = Array.from(entityManager.entities.values()).map(
           (e) => ({ id: e.id, components: e.components })
         );
         currentEntities.push({
           id: clothingId,
-          components: {
-            'core:name': { text: defId.replace('clothing:', '') },
-            'clothing:wearable': { equipped: false },
-            ...props,
-          },
+          components,
         });
         entityManager.setEntities(currentEntities);
         return Promise.resolve(clothingId);
@@ -230,16 +273,22 @@ describe('Anatomy Generation with Clothing Integration', () => {
       // Verify anatomy was created
       expect(result.rootId).toBe('torso_123');
       expect(result.entities).toHaveLength(5);
-      expect(result.partsMap).toEqual({
-        torso: 'torso_123',
-        head: 'head_123',
-        left_arm: 'left_arm_123',
-        right_arm: 'right_arm_123',
-        legs: 'legs_123',
-      });
+      expect(result.partsMap).toBeInstanceOf(Map);
+      expect(result.partsMap.size).toBe(5);
+      expect(result.partsMap.get('torso')).toBe('torso_123');
+      expect(result.partsMap.get('head')).toBe('head_123');
+      expect(result.partsMap.get('left_arm')).toBe('left_arm_123');
+      expect(result.partsMap.get('right_arm')).toBe('right_arm_123');
+      expect(result.partsMap.get('legs')).toBe('legs_123');
 
       // Verify clothing was instantiated
       expect(result.clothingResult).toBeDefined();
+      
+      // Debug: Check for errors
+      if (result.clothingResult.errors && result.clothingResult.errors.length > 0) {
+        console.log('Clothing instantiation errors:', result.clothingResult.errors);
+      }
+      
       expect(result.clothingResult.instantiated).toHaveLength(4);
       expect(result.clothingResult.equipped).toHaveLength(3); // hat not equipped
 
@@ -270,11 +319,22 @@ describe('Anatomy Generation with Clothing Integration', () => {
       // Check that createEntityInstance was called with property overrides
       expect(entityManager.createEntityInstance).toHaveBeenCalledWith(
         'clothing:peasant_shirt',
-        { color: 'brown', condition: 0.7 }
+        expect.objectContaining({
+          color: 'brown',
+          condition: 0.7,
+          'clothing:wearable': expect.objectContaining({
+            layer: 'base'
+          })
+        })
       );
       expect(entityManager.createEntityInstance).toHaveBeenCalledWith(
         'clothing:rough_trousers',
-        { color: 'gray' }
+        expect.objectContaining({
+          color: 'gray',
+          'clothing:wearable': expect.objectContaining({
+            layer: 'base'
+          })
+        })
       );
     });
 
@@ -409,6 +469,59 @@ describe('Anatomy Generation with Clothing Integration', () => {
 
   describe('Performance considerations', () => {
     it('should handle large numbers of clothing items efficiently', async () => {
+      // Setup entity manager with a torso for this test
+      entityManager.setEntities([
+        {
+          id: 'torso_123',
+          components: {
+            'core:name': { text: 'torso' },
+            'anatomy:body_part': { type: 'torso' },
+            'anatomy:blueprintSlot': { slotId: 'torso' },
+          },
+        },
+      ]);
+      
+      // Mock entity creation for this test
+      let clothingCounter = 1;
+      entityManager.createEntityInstance.mockImplementation((defId, props) => {
+        const clothingId = `clothing_${clothingCounter++}`;
+        
+        // Get the entity definition from the data registry
+        const definition = dataRegistry.get('entityDefinitions', defId);
+        const baseComponents = definition ? { ...definition.components } : {};
+        
+        // Merge with property overrides
+        const components = {
+          ...baseComponents,
+          'core:name': { text: defId.replace('clothing:', '') },
+        };
+        
+        // Apply property overrides to the clothing:wearable component
+        if (props && props['clothing:wearable']) {
+          components['clothing:wearable'] = {
+            ...components['clothing:wearable'],
+            ...props['clothing:wearable'],
+          };
+        }
+        
+        // Apply other property overrides
+        for (const [key, value] of Object.entries(props || {})) {
+          if (key !== 'clothing:wearable') {
+            components[key] = value;
+          }
+        }
+        
+        const currentEntities = Array.from(entityManager.entities.values()).map(
+          (e) => ({ id: e.id, components: e.components })
+        );
+        currentEntities.push({
+          id: clothingId,
+          components,
+        });
+        entityManager.setEntities(currentEntities);
+        return Promise.resolve(clothingId);
+      });
+      
       // Create recipe with many clothing items
       const manyClothes = [];
       for (let i = 1; i <= 20; i++) {

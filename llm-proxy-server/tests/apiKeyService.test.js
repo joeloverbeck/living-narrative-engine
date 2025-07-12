@@ -11,19 +11,30 @@ const createLogger = () => ({
 
 const createFsReader = () => ({ readFile: jest.fn() });
 
+const createCacheService = () => ({
+  get: jest.fn(),
+  set: jest.fn(),
+  invalidatePattern: jest.fn(),
+  getStats: jest.fn(),
+});
+
 const mockAppConfig = {
   getProxyProjectRootPathForApiKeyFiles: jest.fn(() => '/root'),
+  isCacheEnabled: jest.fn(() => false), // Default to disabled for existing tests
+  getApiKeyCacheTtl: jest.fn(() => 3600000),
 };
 
 describe('ApiKeyService', () => {
   let logger;
   let fsReader;
+  let cacheService;
   let service;
 
   beforeEach(() => {
     logger = createLogger();
     fsReader = createFsReader();
-    service = new ApiKeyService(logger, fsReader, mockAppConfig);
+    cacheService = createCacheService();
+    service = new ApiKeyService(logger, fsReader, mockAppConfig, cacheService);
     jest.clearAllMocks();
   });
 

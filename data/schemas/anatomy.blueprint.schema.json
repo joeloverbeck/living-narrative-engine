@@ -106,7 +106,7 @@
     },
     "clothingSlotMapping": {
       "type": "object",
-      "description": "Defines how a clothing slot maps to anatomy attachment points",
+      "description": "Defines how a clothing slot maps to anatomy attachment points. Layer precedence: Recipe override > Entity default > Blueprint default. allowedLayers constrains all sources.",
       "properties": {
         "blueprintSlots": {
           "type": "array",
@@ -142,7 +142,7 @@
         },
         "defaultLayer": {
           "type": "string",
-          "description": "Default layer for single-layer items",
+          "description": "Default layer when no recipe/entity override specified (lowest precedence)",
           "enum": ["underwear", "base", "outer", "armor", "accessory"]
         },
         "tags": {

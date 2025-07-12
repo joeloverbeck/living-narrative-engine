@@ -1,6 +1,18 @@
 // llm-proxy-server/src/dependencyInjection/appConfig.js
 /* eslint-disable no-console */
 import dotenv from 'dotenv';
+import {
+  CACHE_DEFAULT_TTL,
+  CACHE_DEFAULT_MAX_SIZE,
+  API_KEY_CACHE_TTL,
+  HTTP_AGENT_KEEP_ALIVE,
+  HTTP_AGENT_MAX_SOCKETS,
+  HTTP_AGENT_MAX_FREE_SOCKETS,
+  HTTP_AGENT_TIMEOUT,
+  HTTP_AGENT_FREE_SOCKET_TIMEOUT,
+  HTTP_AGENT_MAX_TOTAL_SOCKETS,
+  HTTP_AGENT_MAX_IDLE_TIME,
+} from './constants.js';
 
 // Load environment variables from .env file at the very beginning
 dotenv.config();
@@ -38,6 +50,34 @@ class AppConfigService {
   _proxyProjectRootPathForApiKeyFiles;
   /** @private */
   _nodeEnv;
+
+  // Cache configuration
+  /** @private */
+  _cacheEnabled;
+  /** @private */
+  _cacheDefaultTtl;
+  /** @private */
+  _cacheMaxSize;
+  /** @private */
+  _apiKeyCacheTtl;
+
+  // HTTP Agent configuration
+  /** @private */
+  _httpAgentEnabled;
+  /** @private */
+  _httpAgentKeepAlive;
+  /** @private */
+  _httpAgentMaxSockets;
+  /** @private */
+  _httpAgentMaxFreeSockets;
+  /** @private */
+  _httpAgentTimeout;
+  /** @private */
+  _httpAgentFreeSocketTimeout;
+  /** @private */
+  _httpAgentMaxTotalSockets;
+  /** @private */
+  _httpAgentMaxIdleTime;
 
   /**
    * Initializes the AppConfigService. It's recommended to use the getAppConfigService
@@ -163,6 +203,197 @@ class AppConfigService {
       `AppConfigService: NODE_ENV found in environment: '${nodeEnvValue || 'undefined'}'. Effective value: '${this._nodeEnv}'.`
     );
 
+    // Cache Configuration
+    this._logger.debug(`${servicePrefix}Loading cache configuration...`);
+
+    // CACHE_ENABLED (default: true)
+    const cacheEnabledEnv = process.env.CACHE_ENABLED;
+    this._cacheEnabled =
+      cacheEnabledEnv !== undefined
+        ? cacheEnabledEnv.toLowerCase() === 'true'
+        : true;
+    this._logger.debug(
+      `${servicePrefix}CACHE_ENABLED: '${cacheEnabledEnv || 'undefined'}'. Effective value: ${this._cacheEnabled}.`
+    );
+
+    // CACHE_DEFAULT_TTL
+    const cacheDefaultTtlEnv = process.env.CACHE_DEFAULT_TTL;
+    this._cacheDefaultTtl = cacheDefaultTtlEnv
+      ? parseInt(cacheDefaultTtlEnv, 10)
+      : CACHE_DEFAULT_TTL;
+    if (isNaN(this._cacheDefaultTtl)) {
+      this._cacheDefaultTtl = CACHE_DEFAULT_TTL;
+      this._logger.warn(
+        `${servicePrefix}CACHE_DEFAULT_TTL invalid: '${cacheDefaultTtlEnv}'. Using default: ${this._cacheDefaultTtl}ms.`
+      );
+    } else {
+      this._logger.debug(
+        `${servicePrefix}CACHE_DEFAULT_TTL: '${cacheDefaultTtlEnv || 'undefined'}'. Effective value: ${this._cacheDefaultTtl}ms.`
+      );
+    }
+
+    // CACHE_MAX_SIZE
+    const cacheMaxSizeEnv = process.env.CACHE_MAX_SIZE;
+    this._cacheMaxSize = cacheMaxSizeEnv
+      ? parseInt(cacheMaxSizeEnv, 10)
+      : CACHE_DEFAULT_MAX_SIZE;
+    if (isNaN(this._cacheMaxSize) || this._cacheMaxSize <= 0) {
+      this._cacheMaxSize = CACHE_DEFAULT_MAX_SIZE;
+      this._logger.warn(
+        `${servicePrefix}CACHE_MAX_SIZE invalid: '${cacheMaxSizeEnv}'. Using default: ${this._cacheMaxSize}.`
+      );
+    } else {
+      this._logger.debug(
+        `${servicePrefix}CACHE_MAX_SIZE: '${cacheMaxSizeEnv || 'undefined'}'. Effective value: ${this._cacheMaxSize}.`
+      );
+    }
+
+    // API_KEY_CACHE_TTL
+    const apiKeyCacheTtlEnv = process.env.API_KEY_CACHE_TTL;
+    this._apiKeyCacheTtl = apiKeyCacheTtlEnv
+      ? parseInt(apiKeyCacheTtlEnv, 10)
+      : API_KEY_CACHE_TTL;
+    if (isNaN(this._apiKeyCacheTtl)) {
+      this._apiKeyCacheTtl = API_KEY_CACHE_TTL;
+      this._logger.warn(
+        `${servicePrefix}API_KEY_CACHE_TTL invalid: '${apiKeyCacheTtlEnv}'. Using default: ${this._apiKeyCacheTtl}ms.`
+      );
+    } else {
+      this._logger.debug(
+        `${servicePrefix}API_KEY_CACHE_TTL: '${apiKeyCacheTtlEnv || 'undefined'}'. Effective value: ${this._apiKeyCacheTtl}ms.`
+      );
+    }
+
+    // HTTP Agent Configuration
+    this._logger.debug(`${servicePrefix}Loading HTTP agent configuration...`);
+
+    // HTTP_AGENT_ENABLED (default: true)
+    const httpAgentEnabledEnv = process.env.HTTP_AGENT_ENABLED;
+    this._httpAgentEnabled =
+      httpAgentEnabledEnv !== undefined
+        ? httpAgentEnabledEnv.toLowerCase() === 'true'
+        : true;
+    this._logger.debug(
+      `${servicePrefix}HTTP_AGENT_ENABLED: '${httpAgentEnabledEnv || 'undefined'}'. Effective value: ${this._httpAgentEnabled}.`
+    );
+
+    // HTTP_AGENT_KEEP_ALIVE
+    const httpAgentKeepAliveEnv = process.env.HTTP_AGENT_KEEP_ALIVE;
+    this._httpAgentKeepAlive =
+      httpAgentKeepAliveEnv !== undefined
+        ? httpAgentKeepAliveEnv.toLowerCase() === 'true'
+        : HTTP_AGENT_KEEP_ALIVE;
+    this._logger.debug(
+      `${servicePrefix}HTTP_AGENT_KEEP_ALIVE: '${httpAgentKeepAliveEnv || 'undefined'}'. Effective value: ${this._httpAgentKeepAlive}.`
+    );
+
+    // HTTP_AGENT_MAX_SOCKETS
+    const httpAgentMaxSocketsEnv = process.env.HTTP_AGENT_MAX_SOCKETS;
+    this._httpAgentMaxSockets = httpAgentMaxSocketsEnv
+      ? parseInt(httpAgentMaxSocketsEnv, 10)
+      : HTTP_AGENT_MAX_SOCKETS;
+    if (isNaN(this._httpAgentMaxSockets) || this._httpAgentMaxSockets <= 0) {
+      this._httpAgentMaxSockets = HTTP_AGENT_MAX_SOCKETS;
+      this._logger.warn(
+        `${servicePrefix}HTTP_AGENT_MAX_SOCKETS invalid: '${httpAgentMaxSocketsEnv}'. Using default: ${this._httpAgentMaxSockets}.`
+      );
+    } else {
+      this._logger.debug(
+        `${servicePrefix}HTTP_AGENT_MAX_SOCKETS: '${httpAgentMaxSocketsEnv || 'undefined'}'. Effective value: ${this._httpAgentMaxSockets}.`
+      );
+    }
+
+    // HTTP_AGENT_MAX_FREE_SOCKETS
+    const httpAgentMaxFreeSocketsEnv = process.env.HTTP_AGENT_MAX_FREE_SOCKETS;
+    this._httpAgentMaxFreeSockets = httpAgentMaxFreeSocketsEnv
+      ? parseInt(httpAgentMaxFreeSocketsEnv, 10)
+      : HTTP_AGENT_MAX_FREE_SOCKETS;
+    if (
+      isNaN(this._httpAgentMaxFreeSockets) ||
+      this._httpAgentMaxFreeSockets < 0
+    ) {
+      this._httpAgentMaxFreeSockets = HTTP_AGENT_MAX_FREE_SOCKETS;
+      this._logger.warn(
+        `${servicePrefix}HTTP_AGENT_MAX_FREE_SOCKETS invalid: '${httpAgentMaxFreeSocketsEnv}'. Using default: ${this._httpAgentMaxFreeSockets}.`
+      );
+    } else {
+      this._logger.debug(
+        `${servicePrefix}HTTP_AGENT_MAX_FREE_SOCKETS: '${httpAgentMaxFreeSocketsEnv || 'undefined'}'. Effective value: ${this._httpAgentMaxFreeSockets}.`
+      );
+    }
+
+    // HTTP_AGENT_TIMEOUT
+    const httpAgentTimeoutEnv = process.env.HTTP_AGENT_TIMEOUT;
+    this._httpAgentTimeout = httpAgentTimeoutEnv
+      ? parseInt(httpAgentTimeoutEnv, 10)
+      : HTTP_AGENT_TIMEOUT;
+    if (isNaN(this._httpAgentTimeout) || this._httpAgentTimeout <= 0) {
+      this._httpAgentTimeout = HTTP_AGENT_TIMEOUT;
+      this._logger.warn(
+        `${servicePrefix}HTTP_AGENT_TIMEOUT invalid: '${httpAgentTimeoutEnv}'. Using default: ${this._httpAgentTimeout}ms.`
+      );
+    } else {
+      this._logger.debug(
+        `${servicePrefix}HTTP_AGENT_TIMEOUT: '${httpAgentTimeoutEnv || 'undefined'}'. Effective value: ${this._httpAgentTimeout}ms.`
+      );
+    }
+
+    // HTTP_AGENT_FREE_SOCKET_TIMEOUT
+    const httpAgentFreeSocketTimeoutEnv =
+      process.env.HTTP_AGENT_FREE_SOCKET_TIMEOUT;
+    this._httpAgentFreeSocketTimeout = httpAgentFreeSocketTimeoutEnv
+      ? parseInt(httpAgentFreeSocketTimeoutEnv, 10)
+      : HTTP_AGENT_FREE_SOCKET_TIMEOUT;
+    if (
+      isNaN(this._httpAgentFreeSocketTimeout) ||
+      this._httpAgentFreeSocketTimeout <= 0
+    ) {
+      this._httpAgentFreeSocketTimeout = HTTP_AGENT_FREE_SOCKET_TIMEOUT;
+      this._logger.warn(
+        `${servicePrefix}HTTP_AGENT_FREE_SOCKET_TIMEOUT invalid: '${httpAgentFreeSocketTimeoutEnv}'. Using default: ${this._httpAgentFreeSocketTimeout}ms.`
+      );
+    } else {
+      this._logger.debug(
+        `${servicePrefix}HTTP_AGENT_FREE_SOCKET_TIMEOUT: '${httpAgentFreeSocketTimeoutEnv || 'undefined'}'. Effective value: ${this._httpAgentFreeSocketTimeout}ms.`
+      );
+    }
+
+    // HTTP_AGENT_MAX_TOTAL_SOCKETS
+    const httpAgentMaxTotalSocketsEnv =
+      process.env.HTTP_AGENT_MAX_TOTAL_SOCKETS;
+    this._httpAgentMaxTotalSockets = httpAgentMaxTotalSocketsEnv
+      ? parseInt(httpAgentMaxTotalSocketsEnv, 10)
+      : HTTP_AGENT_MAX_TOTAL_SOCKETS;
+    if (
+      isNaN(this._httpAgentMaxTotalSockets) ||
+      this._httpAgentMaxTotalSockets <= 0
+    ) {
+      this._httpAgentMaxTotalSockets = HTTP_AGENT_MAX_TOTAL_SOCKETS;
+      this._logger.warn(
+        `${servicePrefix}HTTP_AGENT_MAX_TOTAL_SOCKETS invalid: '${httpAgentMaxTotalSocketsEnv}'. Using default: ${this._httpAgentMaxTotalSockets}.`
+      );
+    } else {
+      this._logger.debug(
+        `${servicePrefix}HTTP_AGENT_MAX_TOTAL_SOCKETS: '${httpAgentMaxTotalSocketsEnv || 'undefined'}'. Effective value: ${this._httpAgentMaxTotalSockets}.`
+      );
+    }
+
+    // HTTP_AGENT_MAX_IDLE_TIME
+    const httpAgentMaxIdleTimeEnv = process.env.HTTP_AGENT_MAX_IDLE_TIME;
+    this._httpAgentMaxIdleTime = httpAgentMaxIdleTimeEnv
+      ? parseInt(httpAgentMaxIdleTimeEnv, 10)
+      : HTTP_AGENT_MAX_IDLE_TIME;
+    if (isNaN(this._httpAgentMaxIdleTime) || this._httpAgentMaxIdleTime <= 0) {
+      this._httpAgentMaxIdleTime = HTTP_AGENT_MAX_IDLE_TIME;
+      this._logger.warn(
+        `${servicePrefix}HTTP_AGENT_MAX_IDLE_TIME invalid: '${httpAgentMaxIdleTimeEnv}'. Using default: ${this._httpAgentMaxIdleTime}ms.`
+      );
+    } else {
+      this._logger.debug(
+        `${servicePrefix}HTTP_AGENT_MAX_IDLE_TIME: '${httpAgentMaxIdleTimeEnv || 'undefined'}'. Effective value: ${this._httpAgentMaxIdleTime}ms.`
+      );
+    }
+
     this._logger.debug('AppConfigService: Configuration loading complete.');
   }
 
@@ -246,6 +477,136 @@ class AppConfigService {
    */
   isDevelopment() {
     return this._nodeEnv === 'development';
+  }
+
+  // Cache Configuration Getters
+
+  /**
+   * Gets whether caching is enabled.
+   * @returns {boolean} True if caching is enabled, false otherwise.
+   */
+  isCacheEnabled() {
+    return this._cacheEnabled;
+  }
+
+  /**
+   * Gets the default cache TTL in milliseconds.
+   * @returns {number} The default cache TTL.
+   */
+  getCacheDefaultTtl() {
+    return this._cacheDefaultTtl;
+  }
+
+  /**
+   * Gets the maximum cache size.
+   * @returns {number} The maximum number of entries in cache.
+   */
+  getCacheMaxSize() {
+    return this._cacheMaxSize;
+  }
+
+  /**
+   * Gets the API key cache TTL in milliseconds.
+   * @returns {number} The API key cache TTL.
+   */
+  getApiKeyCacheTtl() {
+    return this._apiKeyCacheTtl;
+  }
+
+  /**
+   * Gets the cache configuration object.
+   * @returns {object} Cache configuration object.
+   */
+  getCacheConfig() {
+    return {
+      enabled: this._cacheEnabled,
+      defaultTtl: this._cacheDefaultTtl,
+      maxSize: this._cacheMaxSize,
+      apiKeyCacheTtl: this._apiKeyCacheTtl,
+    };
+  }
+
+  // HTTP Agent Configuration Getters
+
+  /**
+   * Gets whether HTTP agent pooling is enabled.
+   * @returns {boolean} True if HTTP agent pooling is enabled, false otherwise.
+   */
+  isHttpAgentEnabled() {
+    return this._httpAgentEnabled;
+  }
+
+  /**
+   * Gets whether HTTP agent keep-alive is enabled.
+   * @returns {boolean} True if keep-alive is enabled, false otherwise.
+   */
+  getHttpAgentKeepAlive() {
+    return this._httpAgentKeepAlive;
+  }
+
+  /**
+   * Gets the maximum number of sockets per host.
+   * @returns {number} The maximum number of sockets.
+   */
+  getHttpAgentMaxSockets() {
+    return this._httpAgentMaxSockets;
+  }
+
+  /**
+   * Gets the maximum number of free sockets per host.
+   * @returns {number} The maximum number of free sockets.
+   */
+  getHttpAgentMaxFreeSockets() {
+    return this._httpAgentMaxFreeSockets;
+  }
+
+  /**
+   * Gets the HTTP agent socket timeout in milliseconds.
+   * @returns {number} The socket timeout.
+   */
+  getHttpAgentTimeout() {
+    return this._httpAgentTimeout;
+  }
+
+  /**
+   * Gets the HTTP agent free socket timeout in milliseconds.
+   * @returns {number} The free socket timeout.
+   */
+  getHttpAgentFreeSocketTimeout() {
+    return this._httpAgentFreeSocketTimeout;
+  }
+
+  /**
+   * Gets the maximum total sockets across all hosts.
+   * @returns {number} The maximum total sockets.
+   */
+  getHttpAgentMaxTotalSockets() {
+    return this._httpAgentMaxTotalSockets;
+  }
+
+  /**
+   * Gets the maximum idle time for agents in milliseconds.
+   * @returns {number} The maximum idle time.
+   */
+  getHttpAgentMaxIdleTime() {
+    return this._httpAgentMaxIdleTime;
+  }
+
+  /**
+   * Gets the HTTP agent configuration object.
+   * @returns {object} HTTP agent configuration object.
+   */
+  getHttpAgentConfig() {
+    return {
+      enabled: this._httpAgentEnabled,
+      keepAlive: this._httpAgentKeepAlive,
+      maxSockets: this._httpAgentMaxSockets,
+      maxFreeSockets: this._httpAgentMaxFreeSockets,
+      timeout: this._httpAgentTimeout,
+      freeSocketTimeout: this._httpAgentFreeSocketTimeout,
+      maxTotalSockets: this._httpAgentMaxTotalSockets,
+      maxIdleTime: this._httpAgentMaxIdleTime,
+    };
   }
 }
 

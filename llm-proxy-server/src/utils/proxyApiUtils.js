@@ -1,6 +1,10 @@
 // llm-proxy-server/src/utils/proxyApiUtils.js
 
-import { RETRYABLE_HTTP_STATUS_CODES } from '../config/constants.js';
+import {
+  RETRYABLE_HTTP_STATUS_CODES,
+  ERROR_BODY_PREVIEW_LENGTH,
+  ERROR_PREVIEW_SHORT_LENGTH,
+} from '../config/constants.js';
 import { ensureValidLogger } from './loggerUtils.js'; // MODIFIED: Import ensureValidLogger
 
 /**
@@ -27,167 +31,274 @@ function _calculateRetryDelay(currentAttempt, baseDelayMs, maxDelayMs) {
 }
 
 /**
- * @async
- * @function Workspace_retry
- * @description Wraps a fetch API call to provide automatic retries for transient network
- * errors and specific HTTP status codes. It implements an exponential backoff
- * strategy with added jitter.
- *
- * This function is based on the principles outlined in the research documentation,
- * particularly Section 8.2 "Implementing Robust Retry Mechanisms in Javascript".
- * @param {string} url The URL to fetch.
- * @param {object} options The options object for the fetch call (method, headers, body, etc.).
- * @param {number} maxRetries Maximum number of retry attempts before failing.
- * @param {number} baseDelayMs Initial delay in milliseconds for the first retry.
- * @param {number} maxDelayMs Maximum delay in milliseconds between retries, capping the exponential backoff.
- * @param {ILogger} logger - An ILogger instance for logging.
- * @returns {Promise<any>} A promise that resolves with the parsed JSON response on success.
- * @throws {Error} Throws an error if all retries fail, a non-retryable HTTP error occurs,
- * or another unhandled error arises during fetching. The error message will attempt
- * to include details parsed from the error response body (JSON or text).
- * @example
- * try {
- * const options = { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) };
- * // const myLogger = ensureValidLogger(possiblyUndefinedLogger);
- * const responseData = await Workspace_retry('https://api.example.com/data', options, 5, 1000, 30000, myLogger);
- * // myLogger.info(responseData);
- * } catch (error) {
- * // myLogger.error("Failed to fetch data after multiple retries:", error.message);
- * }
+ * @class RetryManager
+ * @description Handles retry logic for HTTP requests with exponential backoff and jitter.
+ * Breaks down the complex retry functionality into focused, testable methods.
  */
-export async function Workspace_retry(
-  url,
-  options,
-  maxRetries,
-  baseDelayMs,
-  maxDelayMs,
-  logger
-) {
-  // MODIFIED: Use ensureValidLogger
-  const currentLogger = ensureValidLogger(logger, 'Workspace_retry');
+class RetryManager {
+  #logger;
+  #url;
+  #options;
+  #maxRetries;
+  #baseDelayMs;
+  #maxDelayMs;
 
   /**
-   * Performs a single fetch attempt and recursively retries on failure.
-   * @param {number} currentAttempt - The current attempt number.
+   * @param {string} url - The URL to fetch.
+   * @param {object} options - The options object for the fetch call.
+   * @param {number} maxRetries - Maximum number of retry attempts.
+   * @param {number} baseDelayMs - Initial delay in milliseconds for the first retry.
+   * @param {number} maxDelayMs - Maximum delay in milliseconds between retries.
+   * @param {ILogger} logger - An ILogger instance for logging.
+   */
+  constructor(url, options, maxRetries, baseDelayMs, maxDelayMs, logger) {
+    this.#url = url;
+    this.#options = options;
+    this.#maxRetries = maxRetries;
+    this.#baseDelayMs = baseDelayMs;
+    this.#maxDelayMs = maxDelayMs;
+    this.#logger = ensureValidLogger(logger, 'RetryManager');
+  }
+
+  /**
+   * Executes the request with retry logic.
+   * @returns {Promise<any>} The parsed JSON response if successful.
+   * @throws {Error} If all retries fail or a non-retryable error occurs.
+   */
+  async executeWithRetry() {
+    this.#logger.debug(
+      `RetryManager: Initiating request sequence for ${this.#url} with maxRetries=${this.#maxRetries}, baseDelayMs=${this.#baseDelayMs}, maxDelayMs=${this.#maxDelayMs}.`
+    );
+    return this.#attemptRequest(1);
+  }
+
+  /**
+   * Attempts a single HTTP request.
+   * @private
+   * @param {number} currentAttempt - The current attempt number (1-based).
    * @returns {Promise<any>} The parsed JSON response if successful.
    */
-  async function attemptFetchRecursive(currentAttempt) {
-    // currentLogger is already defined in the outer scope and is valid
-
+  async #attemptRequest(currentAttempt) {
     try {
-      currentLogger.debug(
-        `Attempt ${currentAttempt}/${maxRetries} - Fetching ${options.method || 'GET'} ${url}`
+      this.#logger.debug(
+        `Attempt ${currentAttempt}/${this.#maxRetries} - Fetching ${this.#options.method || 'GET'} ${this.#url}`
       );
-      const response = await fetch(url, options);
+
+      const response = await fetch(this.#url, this.#options);
 
       if (!response.ok) {
-        let errorBodyText = `Status: ${response.status}, StatusText: ${response.statusText}`;
-        try {
-          const errorJson = await response.json();
-          errorBodyText = JSON.stringify(errorJson);
-          currentLogger.debug(
-            `Attempt ${currentAttempt} for ${url} - Error response body (JSON): ${errorBodyText.substring(0, 500)}`
-          );
-        } catch (e_json) {
-          currentLogger.debug(
-            `Attempt ${currentAttempt} for ${url} - Failed to parse error body as JSON: ${e_json.message}`
-          );
-          try {
-            errorBodyText = await response.text();
-            currentLogger.debug(
-              `Attempt ${currentAttempt} for ${url} - Error response body (Text): ${errorBodyText.substring(0, 500)}`
-            );
-          } catch (e_text) {
-            currentLogger.warn(
-              `Attempt ${currentAttempt} for ${url} - Failed to read error response body as JSON or text. Error: ${e_text.message}`
-            );
-          }
-        }
-
-        const isRetryableStatusCode = RETRYABLE_HTTP_STATUS_CODES.includes(
-          response.status
-        );
-
-        if (isRetryableStatusCode && currentAttempt < maxRetries) {
-          // MODIFIED: Use helper function _calculateRetryDelay
-          const waitTimeMs = _calculateRetryDelay(
-            currentAttempt,
-            baseDelayMs,
-            maxDelayMs
-          );
-          currentLogger.warn(
-            `Attempt ${currentAttempt}/${maxRetries} for ${url} failed with status ${response.status}. Retrying in ${waitTimeMs}ms... Error body preview: ${errorBodyText.substring(0, 100)}`
-          );
-          await new Promise((resolve) => setTimeout(resolve, waitTimeMs));
-          return attemptFetchRecursive(currentAttempt + 1);
-        } else {
-          const errorMessage = `API request to ${url} failed after ${currentAttempt} attempt(s) with status ${response.status}: ${errorBodyText}`;
-          currentLogger.error(
-            `Workspace_retry: ${errorMessage} (Attempt ${currentAttempt}/${maxRetries}, Non-retryable or max retries reached)`
-          );
-          throw new Error(errorMessage);
-        }
+        return await this.#handleHttpError(response, currentAttempt);
       }
-      currentLogger.debug(
-        `Workspace_retry: Attempt ${currentAttempt}/${maxRetries} for ${url} - Request successful (status ${response.status}). Parsing JSON response.`
-      );
-      const responseData = await response.json();
-      currentLogger.info(
-        `Workspace_retry: Successfully fetched and parsed JSON from ${url} after ${currentAttempt} attempt(s).`
-      );
-      return responseData;
+
+      return await this.#handleSuccessResponse(response, currentAttempt);
     } catch (error) {
-      // Re-throw error if it's one we've already constructed and thrown from non-retryable HTTP status
-      if (error.message && error.message.startsWith('API request to')) {
-        throw error;
-      }
-
-      const isNetworkError =
-        error instanceof TypeError &&
-        (error.message.toLowerCase().includes('failed to fetch') ||
-          error.message.toLowerCase().includes('network request failed') ||
-          error.message.toLowerCase().includes('dns lookup failed') ||
-          error.message.toLowerCase().includes('socket hang up') ||
-          error.message.toLowerCase().includes('econnrefused') ||
-          error.message.toLowerCase().includes('econreset') ||
-          error.message.toLowerCase().includes('enotfound') ||
-          error.message.toLowerCase().includes('etimedout'));
-
-      if (isNetworkError && currentAttempt < maxRetries) {
-        // MODIFIED: Use helper function _calculateRetryDelay
-        const waitTimeMs = _calculateRetryDelay(
-          currentAttempt,
-          baseDelayMs,
-          maxDelayMs
-        );
-        currentLogger.warn(
-          `Workspace_retry: Attempt ${currentAttempt}/${maxRetries} for ${url} failed with network error: ${error.message}. Retrying in ${waitTimeMs}ms...`
-        );
-        await new Promise((resolve) => setTimeout(resolve, waitTimeMs));
-        return attemptFetchRecursive(currentAttempt + 1);
-      } else {
-        let finalErrorMessage;
-        if (isNetworkError) {
-          finalErrorMessage = `Workspace_retry: Failed for ${url} after ${currentAttempt} attempt(s) due to persistent network error: ${error.message}`;
-          currentLogger.error(finalErrorMessage, {
-            originalErrorName: error.name,
-            originalErrorMessage: error.message,
-          });
-        } else {
-          finalErrorMessage = `Workspace_retry: Failed for ${url} after ${currentAttempt} attempt(s). Unexpected error: ${error.message}`;
-          currentLogger.error(finalErrorMessage, {
-            originalErrorName: error.name,
-            originalErrorMessage: error.message,
-            stack: error.stack,
-          });
-        }
-        // Ensure the re-thrown error is an Error instance; original 'error' might not be.
-        throw new Error(finalErrorMessage);
-      }
+      return await this.#handleFetchError(error, currentAttempt);
     }
   }
-  currentLogger.debug(
-    `Workspace_retry: Initiating request sequence for ${url} with maxRetries=${maxRetries}, baseDelayMs=${baseDelayMs}, maxDelayMs=${maxDelayMs}.`
-  );
-  return attemptFetchRecursive(1);
+
+  /**
+   * Handles HTTP error responses (4xx, 5xx status codes).
+   * @private
+   * @param {Response} response - The HTTP response object.
+   * @param {number} currentAttempt - The current attempt number.
+   * @returns {Promise<any>} The result of retry attempt or throws error.
+   */
+  async #handleHttpError(response, currentAttempt) {
+    const errorBodyText = await this.#parseErrorResponse(
+      response,
+      currentAttempt
+    );
+    const isRetryable = this.#shouldRetryHttpError(
+      response.status,
+      currentAttempt
+    );
+
+    if (isRetryable) {
+      const waitTimeMs = _calculateRetryDelay(
+        currentAttempt,
+        this.#baseDelayMs,
+        this.#maxDelayMs
+      );
+      this.#logger.warn(
+        `Attempt ${currentAttempt}/${this.#maxRetries} for ${this.#url} failed with status ${response.status}. Retrying in ${waitTimeMs}ms... Error body preview: ${errorBodyText.substring(0, ERROR_PREVIEW_SHORT_LENGTH)}`
+      );
+      await this.#waitForRetry(waitTimeMs);
+      return this.#attemptRequest(currentAttempt + 1);
+    }
+
+    throw this.#createHttpError(response.status, errorBodyText, currentAttempt);
+  }
+
+  /**
+   * Handles successful HTTP responses.
+   * @private
+   * @param {Response} response - The HTTP response object.
+   * @param {number} currentAttempt - The current attempt number.
+   * @returns {Promise<any>} The parsed JSON response.
+   */
+  async #handleSuccessResponse(response, currentAttempt) {
+    this.#logger.debug(
+      `RetryManager: Attempt ${currentAttempt}/${this.#maxRetries} for ${this.#url} - Request successful (status ${response.status}). Parsing JSON response.`
+    );
+    const responseData = await response.json();
+    this.#logger.info(
+      `RetryManager: Successfully fetched and parsed JSON from ${this.#url} after ${currentAttempt} attempt(s).`
+    );
+    return responseData;
+  }
+
+  /**
+   * Handles fetch errors (network issues, timeouts, etc.).
+   * @private
+   * @param {Error} error - The error that occurred during fetch.
+   * @param {number} currentAttempt - The current attempt number.
+   * @returns {Promise<any>} The result of retry attempt or throws error.
+   */
+  async #handleFetchError(error, currentAttempt) {
+    // Re-throw error if it's one we've already constructed and thrown from non-retryable HTTP status
+    if (error.message && error.message.startsWith('API request to')) {
+      throw error;
+    }
+
+    const isNetworkError = this.#isNetworkError(error);
+
+    if (isNetworkError && currentAttempt < this.#maxRetries) {
+      const waitTimeMs = _calculateRetryDelay(
+        currentAttempt,
+        this.#baseDelayMs,
+        this.#maxDelayMs
+      );
+      this.#logger.warn(
+        `RetryManager: Attempt ${currentAttempt}/${this.#maxRetries} for ${this.#url} failed with network error: ${error.message}. Retrying in ${waitTimeMs}ms...`
+      );
+      await this.#waitForRetry(waitTimeMs);
+      return this.#attemptRequest(currentAttempt + 1);
+    }
+
+    throw this.#createNetworkError(error, currentAttempt, isNetworkError);
+  }
+
+  /**
+   * Parses error response body from HTTP response.
+   * @private
+   * @param {Response} response - The HTTP response object.
+   * @param {number} currentAttempt - The current attempt number.
+   * @returns {Promise<string>} The error body text.
+   */
+  async #parseErrorResponse(response, currentAttempt) {
+    let errorBodyText = `Status: ${response.status}, StatusText: ${response.statusText}`;
+
+    try {
+      const errorJson = await response.json();
+      errorBodyText = JSON.stringify(errorJson);
+      this.#logger.debug(
+        `Attempt ${currentAttempt} for ${this.#url} - Error response body (JSON): ${errorBodyText.substring(0, ERROR_BODY_PREVIEW_LENGTH)}`
+      );
+    } catch (e_json) {
+      this.#logger.debug(
+        `Attempt ${currentAttempt} for ${this.#url} - Failed to parse error body as JSON: ${e_json.message}`
+      );
+      try {
+        errorBodyText = await response.text();
+        this.#logger.debug(
+          `Attempt ${currentAttempt} for ${this.#url} - Error response body (Text): ${errorBodyText.substring(0, ERROR_BODY_PREVIEW_LENGTH)}`
+        );
+      } catch (e_text) {
+        this.#logger.warn(
+          `Attempt ${currentAttempt} for ${this.#url} - Failed to read error response body as JSON or text. Error: ${e_text.message}`
+        );
+      }
+    }
+
+    return errorBodyText;
+  }
+
+  /**
+   * Determines if an HTTP error should be retried.
+   * @private
+   * @param {number} statusCode - The HTTP status code.
+   * @param {number} currentAttempt - The current attempt number.
+   * @returns {boolean} True if the error should be retried.
+   */
+  #shouldRetryHttpError(statusCode, currentAttempt) {
+    const isRetryableStatusCode =
+      RETRYABLE_HTTP_STATUS_CODES.includes(statusCode);
+    return isRetryableStatusCode && currentAttempt < this.#maxRetries;
+  }
+
+  /**
+   * Determines if an error is a network error.
+   * @private
+   * @param {Error} error - The error to check.
+   * @returns {boolean} True if it's a network error.
+   */
+  #isNetworkError(error) {
+    return (
+      error instanceof TypeError &&
+      (error.message.toLowerCase().includes('failed to fetch') ||
+        error.message.toLowerCase().includes('network request failed') ||
+        error.message.toLowerCase().includes('dns lookup failed') ||
+        error.message.toLowerCase().includes('socket hang up') ||
+        error.message.toLowerCase().includes('econnrefused') ||
+        error.message.toLowerCase().includes('econreset') ||
+        error.message.toLowerCase().includes('enotfound') ||
+        error.message.toLowerCase().includes('etimedout'))
+    );
+  }
+
+  /**
+   * Creates an HTTP error for failed requests.
+   * @private
+   * @param {number} statusCode - The HTTP status code.
+   * @param {string} errorBodyText - The error body text.
+   * @param {number} currentAttempt - The current attempt number.
+   * @returns {Error} The created error.
+   */
+  #createHttpError(statusCode, errorBodyText, currentAttempt) {
+    const errorMessage = `API request to ${this.#url} failed after ${currentAttempt} attempt(s) with status ${statusCode}: ${errorBodyText}`;
+    this.#logger.error(
+      `RetryManager: ${errorMessage} (Attempt ${currentAttempt}/${this.#maxRetries}, Non-retryable or max retries reached)`
+    );
+    return new Error(errorMessage);
+  }
+
+  /**
+   * Creates a network error for failed requests.
+   * @private
+   * @param {Error} originalError - The original error.
+   * @param {number} currentAttempt - The current attempt number.
+   * @param {boolean} isNetworkError - Whether it's a network error.
+   * @returns {Error} The created error.
+   */
+  #createNetworkError(originalError, currentAttempt, isNetworkError) {
+    let finalErrorMessage;
+    if (isNetworkError) {
+      finalErrorMessage = `RetryManager: Failed for ${this.#url} after ${currentAttempt} attempt(s) due to persistent network error: ${originalError.message}`;
+      this.#logger.error(finalErrorMessage, {
+        originalErrorName: originalError.name,
+        originalErrorMessage: originalError.message,
+      });
+    } else {
+      finalErrorMessage = `RetryManager: Failed for ${this.#url} after ${currentAttempt} attempt(s). Unexpected error: ${originalError.message}`;
+      this.#logger.error(finalErrorMessage, {
+        originalErrorName: originalError.name,
+        originalErrorMessage: originalError.message,
+        stack: originalError.stack,
+      });
+    }
+    return new Error(finalErrorMessage);
+  }
+
+  /**
+   * Waits for the specified delay before retrying.
+   * @private
+   * @param {number} waitTimeMs - The time to wait in milliseconds.
+   * @returns {Promise<void>} A promise that resolves after the delay.
+   */
+  async #waitForRetry(waitTimeMs) {
+    await new Promise((resolve) => setTimeout(resolve, waitTimeMs));
+  }
 }
+
+// Export RetryManager directly for dependency injection
+export { RetryManager };

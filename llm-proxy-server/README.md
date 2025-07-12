@@ -117,7 +117,7 @@ client with a specific `llmId`:
      provider (e.g., `{"HTTP-Referer": "...", "X-Title": "..."}`). The proxy will merge these with standard headers
      like `Content-Type` and the `Authorization` header it constructs.
    - `defaultParameters`: Can contain retry parameters such as `maxRetries`, `baseDelayMs`, and `maxDelayMs`. The proxy
-     uses these values for its `Workspace_retry` logic when making calls to the downstream LLM provider.
+     uses these values for its retry logic when making calls to the downstream LLM provider.
    - `apiType`: Used by the proxy to determine if the LLM is a cloud service requiring an API key or a local service
      that might not need one handled by the proxy.
 

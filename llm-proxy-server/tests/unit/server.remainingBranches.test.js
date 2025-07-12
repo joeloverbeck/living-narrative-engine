@@ -2,7 +2,14 @@ import {
   LOG_LLM_ID_PROXY_NOT_OPERATIONAL,
   LOG_LLM_ID_UNHANDLED_ERROR,
 } from '../../src/config/constants.js';
-import { describe, test, beforeEach, expect, jest } from '@jest/globals';
+import {
+  describe,
+  test,
+  beforeEach,
+  afterEach,
+  expect,
+  jest,
+} from '@jest/globals';
 
 let app;
 let expressMock;
@@ -12,9 +19,13 @@ let operational;
 let consoleLoggerInstance;
 let rootHandler;
 let errorHandler;
+let originalSetTimeout;
 
 beforeEach(() => {
   jest.resetModules();
+
+  // Store original setTimeout
+  originalSetTimeout = global.setTimeout;
 
   app = {
     use: jest.fn(),
@@ -51,6 +62,23 @@ beforeEach(() => {
     isProxyPortDefaulted: jest.fn(() => false),
     getProxyAllowedOrigin: jest.fn(() => ''),
     getProxyProjectRootPathForApiKeyFiles: jest.fn(() => ''),
+    isCacheEnabled: jest.fn(() => false),
+    getCacheConfig: jest.fn(() => ({
+      enabled: false,
+      defaultTtl: 300000,
+      maxSize: 1000,
+      apiKeyCacheTtl: 300000,
+    })),
+    isHttpAgentEnabled: jest.fn(() => false),
+    getHttpAgentConfig: jest.fn(() => ({
+      enabled: false,
+      keepAlive: true,
+      maxSockets: 50,
+      maxFreeSockets: 10,
+      timeout: 60000,
+      freeSocketTimeout: 30000,
+      maxTotalSockets: 500,
+    })),
   };
   const getAppConfigService = jest.fn(() => appConfigServiceMock);
   jest.doMock('../../src/config/appConfig.js', () => ({
@@ -70,6 +98,27 @@ beforeEach(() => {
   jest.doMock('../../src/config/llmConfigService.js', () => ({
     __esModule: true,
     LlmConfigService,
+  }));
+
+  const CacheService = jest.fn(() => ({
+    get: jest.fn(),
+    set: jest.fn(),
+    invalidatePattern: jest.fn(),
+    getStats: jest.fn(),
+  }));
+  jest.doMock('../../src/services/cacheService.js', () => ({
+    __esModule: true,
+    default: CacheService,
+  }));
+
+  const HttpAgentService = jest.fn(() => ({
+    getAgent: jest.fn(),
+    getFetchOptions: jest.fn(),
+    getStats: jest.fn(),
+  }));
+  jest.doMock('../../src/services/httpAgentService.js', () => ({
+    __esModule: true,
+    default: HttpAgentService,
   }));
 
   const ApiKeyService = jest.fn();
@@ -105,6 +154,48 @@ beforeEach(() => {
     __esModule: true,
     NodeFileSystemReader,
   }));
+
+  // Mock process to prevent actual signal handlers from being registered
+  // and prevent actual process.exit calls during tests
+  const originalProcessOn = process.on;
+  const originalProcessExit = process.exit;
+  process.on = jest.fn();
+  process.exit = jest.fn();
+
+  // Store originals for restoration
+  process._originalOn = originalProcessOn;
+  process._originalExit = originalProcessExit;
+
+  // Mock setTimeout for graceful shutdown to prevent actual 10s timeout
+  global.setTimeout = jest.fn((fn, delay) => {
+    if (delay === 10000) {
+      // Don't execute the 10-second timeout callback that calls process.exit(1)
+      return { id: 'mocked-graceful-shutdown-timeout' };
+    }
+    // For other timeouts (like the ones used in tests), use original setTimeout
+    return originalSetTimeout(fn, delay);
+  });
+
+  // Store original setTimeout for restoration
+  process._originalSetTimeout = originalSetTimeout;
+});
+
+afterEach(() => {
+  // Restore original setTimeout
+  if (process._originalSetTimeout) {
+    global.setTimeout = process._originalSetTimeout;
+    delete process._originalSetTimeout;
+  }
+
+  // Restore original process methods if they were stored
+  if (process._originalOn) {
+    process.on = process._originalOn;
+    delete process._originalOn;
+  }
+  if (process._originalExit) {
+    process.exit = process._originalExit;
+    delete process._originalExit;
+  }
 });
 
 const loadServer = async () => {

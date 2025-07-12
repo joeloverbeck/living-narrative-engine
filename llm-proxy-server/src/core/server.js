@@ -30,6 +30,9 @@ import { LlmConfigService } from '../config/llmConfigService.js';
 import { ApiKeyService } from '../services/apiKeyService.js';
 import { LlmRequestService } from '../services/llmRequestService.js';
 import { LlmRequestController } from '../handlers/llmRequestController.js';
+import CacheService from '../services/cacheService.js';
+import HttpAgentService from '../services/httpAgentService.js';
+import { RetryManager } from '../utils/proxyApiUtils.js';
 // Import sendProxyError utility
 import { sendProxyError } from '../utils/responseUtils.js';
 import {
@@ -95,15 +98,32 @@ const llmConfigService = new LlmConfigService(
   appConfigService
 );
 
-// Initialize ApiKeyService
+// Initialize CacheService (if caching is enabled)
+const cacheConfig = appConfigService.getCacheConfig();
+const cacheService = new CacheService(proxyLogger, {
+  maxSize: cacheConfig.maxSize,
+  defaultTtl: cacheConfig.defaultTtl,
+});
+
+// Initialize HttpAgentService (if HTTP agent pooling is enabled)
+const httpAgentConfig = appConfigService.getHttpAgentConfig();
+const httpAgentService = new HttpAgentService(proxyLogger, httpAgentConfig);
+
+// Initialize ApiKeyService with caching support
 const apiKeyService = new ApiKeyService(
   proxyLogger,
   fileSystemReader,
-  appConfigService
+  appConfigService,
+  cacheService
 );
 
-// Initialize LlmRequestService
-const llmRequestService = new LlmRequestService(proxyLogger);
+// Initialize LlmRequestService with HTTP agent pooling support and RetryManager
+const llmRequestService = new LlmRequestService(
+  proxyLogger,
+  httpAgentService,
+  appConfigService,
+  RetryManager
+);
 
 // PROXY_PROJECT_ROOT_PATH_FOR_API_KEY_FILES logging - Removed initial log, will be in summary
 // const PROXY_PROJECT_ROOT_PATH_FOR_API_KEY_FILES = appConfigService.getProxyProjectRootPathForApiKeyFiles();
@@ -160,6 +180,50 @@ app.post(
   (req, res) => llmRequestController.handleLlmRequest(req, res)
 );
 
+// Store server instance for graceful shutdown
+let server;
+
+// Graceful shutdown handler
+const gracefulShutdown = (signal) => {
+  proxyLogger.info(
+    `LLM Proxy Server: Received ${signal}, starting graceful shutdown...`
+  );
+
+  if (server) {
+    server.close(() => {
+      proxyLogger.info('LLM Proxy Server: HTTP server closed');
+
+      // Clean up services
+      if (httpAgentService && httpAgentService.cleanup) {
+        httpAgentService.cleanup();
+        proxyLogger.info('LLM Proxy Server: HTTP agent service cleaned up');
+      }
+
+      proxyLogger.info('LLM Proxy Server: Graceful shutdown complete');
+      if (process.env.NODE_ENV !== 'test') {
+        process.exit(0);
+      }
+    });
+
+    // Force shutdown after timeout (shorter in test environment)
+    const shutdownTimeout = process.env.NODE_ENV === 'test' ? 100 : 10000;
+    setTimeout(() => {
+      proxyLogger.error('LLM Proxy Server: Forced shutdown after timeout');
+      if (process.env.NODE_ENV !== 'test') {
+        process.exit(1);
+      }
+    }, shutdownTimeout);
+  } else {
+    if (process.env.NODE_ENV !== 'test') {
+      process.exit(0);
+    }
+  }
+};
+
+// Register shutdown handlers
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
 // Asynchronous IIFE for server startup
 (async () => {
   // LlmConfigService.initialize() is called here.
@@ -168,7 +232,7 @@ app.post(
   // proxyLogger.info('LLM Proxy Server: Initializing LlmConfigService...'); // This is redundant as LlmConfigService logs its own start.
   await llmConfigService.initialize();
 
-  app.listen(PORT, () => {
+  server = app.listen(PORT, () => {
     proxyLogger.info('--- LLM Proxy Server Startup Summary ---');
     // AC 4.a: Message: LLM Proxy Server listening on port [PORT]
     proxyLogger.info(`LLM Proxy Server listening on port ${PORT}`);
@@ -248,6 +312,31 @@ app.post(
         );
       }
     }
+
+    // Cache Configuration Status
+    if (appConfigService.isCacheEnabled()) {
+      const cacheConfig = appConfigService.getCacheConfig();
+      proxyLogger.info(
+        `LLM Proxy Server: Cache ENABLED - TTL: ${cacheConfig.defaultTtl}ms, Max Size: ${cacheConfig.maxSize} entries, API Key TTL: ${cacheConfig.apiKeyCacheTtl}ms`
+      );
+    } else {
+      proxyLogger.info(
+        `LLM Proxy Server: Cache DISABLED - API keys will be read from source on every request`
+      );
+    }
+
+    // HTTP Agent Configuration Status
+    if (appConfigService.isHttpAgentEnabled()) {
+      const httpAgentConfig = appConfigService.getHttpAgentConfig();
+      proxyLogger.info(
+        `LLM Proxy Server: HTTP Agent Pooling ENABLED - Keep-Alive: ${httpAgentConfig.keepAlive}, Max Sockets: ${httpAgentConfig.maxSockets}, Timeout: ${httpAgentConfig.timeout}ms`
+      );
+    } else {
+      proxyLogger.info(
+        `LLM Proxy Server: HTTP Agent Pooling DISABLED - New connections will be created for each request`
+      );
+    }
+
     proxyLogger.info('--- End of Startup Summary ---');
   });
 })().catch((error) => {
@@ -264,7 +353,9 @@ app.post(
   proxyLogger.error(
     'LLM Proxy Server: CRITICAL - Proxy will NOT be operational due to a severe error during startup initialization steps.'
   );
-  process.exit(1); // Ensure process exits on critical startup failure
+  if (process.env.NODE_ENV !== 'test') {
+    process.exit(1); // Ensure process exits on critical startup failure
+  }
 });
 
 // Global error handler

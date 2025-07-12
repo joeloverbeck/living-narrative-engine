@@ -1,4 +1,9 @@
 import { body, header, validationResult } from 'express-validator';
+import {
+  VALIDATION_HEADER_NAME_MAX_LENGTH,
+  VALIDATION_HEADER_VALUE_MAX_LENGTH,
+  VALIDATION_LLM_ID_MAX_LENGTH,
+} from '../config/constants.js';
 
 /**
  * Sanitizes headers to prevent header injection attacks
@@ -25,9 +30,16 @@ const sanitizeHeaders = (headers) => {
 
     // Only allow alphanumeric, dash, and underscore in header names
     const cleanKey = key.replace(/[^a-zA-Z0-9\-_]/g, '');
-    if (cleanKey && cleanKey.length > 0 && cleanKey.length <= 100) {
+    if (
+      cleanKey &&
+      cleanKey.length > 0 &&
+      cleanKey.length <= VALIDATION_HEADER_NAME_MAX_LENGTH
+    ) {
       // Ensure value is a string and truncate if too long
-      const cleanValue = String(value).substring(0, 1000);
+      const cleanValue = String(value).substring(
+        0,
+        VALIDATION_HEADER_VALUE_MAX_LENGTH
+      );
       sanitized[cleanKey] = cleanValue;
     }
   }
@@ -50,8 +62,10 @@ export const validateLlmRequest = () => {
       .trim()
       .notEmpty()
       .withMessage('llmId cannot be empty')
-      .isLength({ min: 1, max: 100 })
-      .withMessage('llmId must be between 1 and 100 characters')
+      .isLength({ min: 1, max: VALIDATION_LLM_ID_MAX_LENGTH })
+      .withMessage(
+        `llmId must be between 1 and ${VALIDATION_LLM_ID_MAX_LENGTH} characters`
+      )
       .matches(/^[a-zA-Z0-9\-_]+$/)
       .withMessage(
         'llmId can only contain alphanumeric characters, hyphens, and underscores'

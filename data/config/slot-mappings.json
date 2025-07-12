@@ -1,0 +1,20 @@
+{
+  "mappings": {
+    "torso_clothing": {
+      "anatomySlots": ["torso_upper", "torso_lower"],
+      "priority": 1
+    },
+    "left_arm_clothing": {
+      "anatomySlots": ["left_arm"],
+      "priority": 1
+    },
+    "right_arm_clothing": {
+      "anatomySlots": ["right_arm"], 
+      "priority": 1
+    },
+    "full_body_clothing": {
+      "anatomySlots": ["torso_upper", "torso_lower", "left_arm", "right_arm"],
+      "priority": 2
+    }
+  }
+}

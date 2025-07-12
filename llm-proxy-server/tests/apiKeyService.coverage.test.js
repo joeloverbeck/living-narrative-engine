@@ -10,33 +10,47 @@ const createLogger = () => ({
 
 const createFsReader = () => ({ readFile: jest.fn() });
 
+const createCacheService = () => ({
+  get: jest.fn(),
+  set: jest.fn(),
+  invalidatePattern: jest.fn(),
+  getStats: jest.fn(),
+});
+
 const createAppConfig = () => ({
   getProxyProjectRootPathForApiKeyFiles: jest.fn(() => '/root'),
+  isCacheEnabled: jest.fn(() => false),
+  getApiKeyCacheTtl: jest.fn(() => 3600000),
 });
 
 describe('ApiKeyService additional coverage', () => {
   let logger;
   let fsReader;
+  let cacheService;
   let appConfig;
   let service;
 
   beforeEach(() => {
     logger = createLogger();
     fsReader = createFsReader();
+    cacheService = createCacheService();
     appConfig = createAppConfig();
-    service = new ApiKeyService(logger, fsReader, appConfig);
+    service = new ApiKeyService(logger, fsReader, appConfig, cacheService);
     jest.clearAllMocks();
   });
 
   test('constructor enforces required dependencies', () => {
-    expect(() => new ApiKeyService(null, fsReader, appConfig)).toThrow(
-      'ApiKeyService: logger is required.'
-    );
-    expect(() => new ApiKeyService(logger, null, appConfig)).toThrow(
-      'ApiKeyService: fileSystemReader is required.'
-    );
-    expect(() => new ApiKeyService(logger, fsReader, null)).toThrow(
-      'ApiKeyService: appConfigService is required.'
+    expect(
+      () => new ApiKeyService(null, fsReader, appConfig, cacheService)
+    ).toThrow('ApiKeyService: logger is required.');
+    expect(
+      () => new ApiKeyService(logger, null, appConfig, cacheService)
+    ).toThrow('ApiKeyService: fileSystemReader is required.');
+    expect(
+      () => new ApiKeyService(logger, fsReader, null, cacheService)
+    ).toThrow('ApiKeyService: appConfigService is required.');
+    expect(() => new ApiKeyService(logger, fsReader, appConfig, null)).toThrow(
+      'ApiKeyService: cacheService is required.'
     );
   });
 

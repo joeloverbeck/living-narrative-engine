@@ -5,9 +5,11 @@
  */
 
 import { BaseService } from '../../utils/serviceBase.js';
+import SlotMappingConfiguration from '../configuration/slotMappingConfiguration.js';
 
 /** @typedef {object} AnatomyBlueprint - Anatomy blueprint definition from mod data */
 /** @typedef {object} ClothingSlot - Clothing slot definition from mod data */
+/** @typedef {import('../configuration/slotMappingConfiguration.js').SlotMappingConfiguration} SlotMappingConfiguration */
 
 /**
  * Maps clothing slot ID to its configuration
@@ -41,10 +43,11 @@ class AnatomyClothingIntegrationService extends BaseService {
   #entityManager;
   #bodyGraphService;
   #dataRegistry;
+  #slotMappingConfiguration;
   #blueprintCache = new Map();
   #slotResolutionCache = new Map();
 
-  constructor({ logger, entityManager, bodyGraphService, dataRegistry }) {
+  constructor({ logger, entityManager, bodyGraphService, dataRegistry, slotMappingConfiguration }) {
     super();
 
     this.#logger = this._init('AnatomyClothingIntegrationService', logger, {
@@ -59,11 +62,16 @@ class AnatomyClothingIntegrationService extends BaseService {
         value: dataRegistry,
         requiredMethods: ['get'],
       },
+      slotMappingConfiguration: {
+        value: slotMappingConfiguration,
+        requiredMethods: ['getSlotEntityMappings'],
+      },
     });
 
     this.#entityManager = entityManager;
     this.#bodyGraphService = bodyGraphService;
     this.#dataRegistry = dataRegistry;
+    this.#slotMappingConfiguration = slotMappingConfiguration;
   }
 
   /**
@@ -375,42 +383,31 @@ class AnatomyClothingIntegrationService extends BaseService {
       return rootEntityId;
     }
 
-    // For single-level paths (like direct children of root)
-    if (slotPath.length === 1) {
-      const slotId = slotPath[0];
-      const children = bodyGraph.getConnectedParts(rootEntityId);
+    // Get explicit slot-to-entity mappings instead of using hardcoded patterns
+    const slotEntityMappings = await this.#slotMappingConfiguration.getSlotEntityMappings(rootEntityId);
 
-      // In the test setup, the body graph returns the immediate children
-      // We need to find which child corresponds to this slot
-      // Since we don't have detailed slot mapping in the mock, we'll use a simple heuristic
-      for (const childId of children) {
-        // Check if this child ID contains part of the slot name (e.g., 'left_arm' contains 'left')
-        if (slotId.includes('left') && childId.includes('left')) {
-          return childId;
-        }
-        if (slotId.includes('right') && childId.includes('right')) {
-          return childId;
-        }
-      }
-      return null;
-    }
+    // Navigate through the path by following the body graph connections
+    let currentEntity = rootEntityId;
 
-    // For multi-level paths, traverse recursively
-    const [firstSlot, ...restPath] = slotPath;
-    const children = bodyGraph.getConnectedParts(rootEntityId);
+    for (const slotId of slotPath) {
+      // Get connected parts from current entity
+      const connectedParts = bodyGraph.getConnectedParts(currentEntity);
 
-    for (const childId of children) {
-      // Simple matching based on slot name parts
-      if (
-        (firstSlot.includes('left') && childId.includes('left')) ||
-        (firstSlot.includes('right') && childId.includes('right'))
-      ) {
-        // Found the intermediate node, continue traversing
-        return this.#findEntityAtSlotPath(childId, restPath, bodyGraph);
+      // Use explicit mapping instead of hardcoded pattern
+      const mappedEntityId = slotEntityMappings.get(slotId);
+
+      if (mappedEntityId && connectedParts.includes(mappedEntityId)) {
+        currentEntity = mappedEntityId;
+      } else {
+        // Entity not found in connected parts or mapping
+        this.#logger.debug(
+          `No entity mapping found for slot '${slotId}' in root entity '${rootEntityId}'`
+        );
+        return null;
       }
     }
 
-    return null; // Slot path not found
+    return currentEntity;
   }
 
   /**
