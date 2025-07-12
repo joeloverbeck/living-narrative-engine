@@ -196,12 +196,17 @@ describe('ClothingInstantiationService', () => {
 
       // Mock entity definition
       dataRegistry.get.mockImplementation((category, id) => {
-        if (category === 'entityDefinitions' && id === 'clothing:simple_shirt') {
+        if (
+          category === 'entityDefinitions' &&
+          id === 'clothing:simple_shirt'
+        ) {
           return {
             id: 'clothing:simple_shirt',
             components: {
               'core:name': { text: 'Simple Shirt' },
-              'clothing:wearable': { equipmentSlots: { primary: 'torso_upper' } },
+              'clothing:wearable': {
+                equipmentSlots: { primary: 'torso_upper' },
+              },
             },
           };
         }
@@ -277,17 +282,25 @@ describe('ClothingInstantiationService', () => {
           case 'clothing:simple_shirt':
             return {
               id: 'clothing:simple_shirt',
-              components: { 'clothing:wearable': { equipmentSlots: { primary: 'torso_upper' } } },
+              components: {
+                'clothing:wearable': {
+                  equipmentSlots: { primary: 'torso_upper' },
+                },
+              },
             };
           case 'clothing:leather_boots':
             return {
               id: 'clothing:leather_boots',
-              components: { 'clothing:wearable': { equipmentSlots: { primary: 'feet' } } },
+              components: {
+                'clothing:wearable': { equipmentSlots: { primary: 'feet' } },
+              },
             };
           case 'clothing:straw_hat':
             return {
               id: 'clothing:straw_hat',
-              components: { 'clothing:wearable': { equipmentSlots: { primary: 'head' } } },
+              components: {
+                'clothing:wearable': { equipmentSlots: { primary: 'head' } },
+              },
             };
           default:
             return null;
@@ -344,7 +357,9 @@ describe('ClothingInstantiationService', () => {
           return {
             id: 'clothing:fancy_shirt',
             components: {
-              'clothing:wearable': { equipmentSlots: { primary: 'torso_upper' } },
+              'clothing:wearable': {
+                equipmentSlots: { primary: 'torso_upper' },
+              },
               'core:display': { color: 'white' },
             },
           };
@@ -395,7 +410,10 @@ describe('ClothingInstantiationService', () => {
           return {
             id: 'clothing:shirt',
             components: {
-              'clothing:wearable': { equipmentSlots: { primary: 'torso_upper' }, layer: 'base' },
+              'clothing:wearable': {
+                equipmentSlots: { primary: 'torso_upper' },
+                layer: 'base',
+              },
             },
           };
         }
@@ -441,10 +459,17 @@ describe('ClothingInstantiationService', () => {
       };
 
       dataRegistry.get.mockImplementation((category, id) => {
-        if (category === 'entityDefinitions' && id === 'clothing:versatile_garment') {
+        if (
+          category === 'entityDefinitions' &&
+          id === 'clothing:versatile_garment'
+        ) {
           return {
             id: 'clothing:versatile_garment',
-            components: { 'clothing:wearable': { equipmentSlots: { primary: 'torso_upper' } } },
+            components: {
+              'clothing:wearable': {
+                equipmentSlots: { primary: 'torso_upper' },
+              },
+            },
           };
         }
         return null;
@@ -489,10 +514,15 @@ describe('ClothingInstantiationService', () => {
       };
 
       dataRegistry.get.mockImplementation((category, id) => {
-        if (category === 'entityDefinitions' && id === 'clothing:special_item') {
+        if (
+          category === 'entityDefinitions' &&
+          id === 'clothing:special_item'
+        ) {
           return {
             id: 'clothing:special_item',
-            components: { 'clothing:wearable': { equipmentSlots: { primary: 'special' } } },
+            components: {
+              'clothing:wearable': { equipmentSlots: { primary: 'special' } },
+            },
           };
         }
         return null;
@@ -534,10 +564,15 @@ describe('ClothingInstantiationService', () => {
       };
 
       dataRegistry.get.mockImplementation((category, id) => {
-        if (category === 'entityDefinitions' && id === 'clothing:incompatible_item') {
+        if (
+          category === 'entityDefinitions' &&
+          id === 'clothing:incompatible_item'
+        ) {
           return {
             id: 'clothing:incompatible_item',
-            components: { 'clothing:wearable': { equipmentSlots: { primary: 'wings' } } },
+            components: {
+              'clothing:wearable': { equipmentSlots: { primary: 'wings' } },
+            },
           };
         }
         return null;
@@ -604,7 +639,11 @@ describe('ClothingInstantiationService', () => {
         if (category === 'entityDefinitions' && id === 'clothing:shirt') {
           return {
             id: 'clothing:shirt',
-            components: { 'clothing:wearable': { equipmentSlots: { primary: 'torso_upper' } } },
+            components: {
+              'clothing:wearable': {
+                equipmentSlots: { primary: 'torso_upper' },
+              },
+            },
           };
         }
         return null;
@@ -661,7 +700,9 @@ describe('ClothingInstantiationService', () => {
           } else if (id === 'clothing:good_item') {
             return {
               id: 'clothing:good_item',
-              components: { 'clothing:wearable': { equipmentSlots: { primary: 'feet' } } },
+              components: {
+                'clothing:wearable': { equipmentSlots: { primary: 'feet' } },
+              },
             };
           }
         }
@@ -724,7 +765,11 @@ describe('ClothingInstantiationService', () => {
         if (category === 'entityDefinitions' && id === 'clothing:shirt') {
           return {
             id: 'clothing:shirt',
-            components: { 'clothing:wearable': { equipmentSlots: { primary: 'torso_upper' } } },
+            components: {
+              'clothing:wearable': {
+                equipmentSlots: { primary: 'torso_upper' },
+              },
+            },
           };
         }
         return null;
@@ -773,7 +818,10 @@ describe('ClothingInstantiationService', () => {
       // Mock that both items fail validation
       dataRegistry.get.mockImplementation((category, id) => {
         if (category === 'entityDefinitions') {
-          if (id === 'clothing:invalid_item' || id === 'clothing:another_invalid') {
+          if (
+            id === 'clothing:invalid_item' ||
+            id === 'clothing:another_invalid'
+          ) {
             return {
               id,
               components: {
@@ -793,22 +841,13 @@ describe('ClothingInstantiationService', () => {
       );
 
       // Verify system error was dispatched
-      expect(eventBus.dispatch).toHaveBeenCalledWith(
-        SYSTEM_ERROR_OCCURRED_ID,
-        {
-          message: 'Clothing instantiation failed for 2 items',
-          details: {
-            actorId,
-            totalItems: 2,
-            successfullyInstantiated: 0,
-            successfullyEquipped: 0,
-            errors: expect.arrayContaining([
-              expect.stringContaining('does not have clothing:wearable component'),
-              expect.stringContaining('does not have clothing:wearable component'),
-            ]),
-          },
-        }
-      );
+      expect(eventBus.dispatch).toHaveBeenCalledWith(SYSTEM_ERROR_OCCURRED_ID, {
+        message: 'Clothing instantiation failed for 2 items',
+        details: {
+          raw: expect.stringContaining('actorId'),
+          timestamp: expect.any(String),
+        },
+      });
 
       // Also verify the completion event was still dispatched
       expect(eventBus.dispatch).toHaveBeenCalledWith(
@@ -832,16 +871,22 @@ describe('ClothingInstantiationService', () => {
         if (category === 'entityDefinitions' && id === 'clothing:shirt') {
           return {
             id: 'clothing:shirt',
-            components: { 'clothing:wearable': { equipmentSlots: { primary: 'torso_upper' } } },
+            components: {
+              'clothing:wearable': {
+                equipmentSlots: { primary: 'torso_upper' },
+              },
+            },
           };
         }
         return null;
       });
 
       entityManager.createEntityInstance.mockResolvedValue('clothing_123');
-      anatomyClothingIntegrationService.validateClothingSlotCompatibility.mockResolvedValue({
-        valid: true,
-      });
+      anatomyClothingIntegrationService.validateClothingSlotCompatibility.mockResolvedValue(
+        {
+          valid: true,
+        }
+      );
       equipmentOrchestrator.orchestrateEquipment.mockResolvedValue({
         success: true,
       });

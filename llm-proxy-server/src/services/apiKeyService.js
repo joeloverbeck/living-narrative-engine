@@ -5,6 +5,7 @@ import {
   LOCAL_API_TYPES_REQUIRING_NO_PROXY_KEY,
   DEFAULT_ENCODING_UTF8,
 } from '../config/constants.js'; // MODIFIED: Import constants
+import { maskApiKey } from '../utils/loggerUtils.js';
 
 /**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
@@ -198,7 +199,7 @@ export class ApiKeyService {
       }
 
       this.#logger.info(
-        `ApiKeyService._readApiKeyFromFile: Successfully retrieved API key for llmId '${llmId}' from '${fullPath}'.`
+        `ApiKeyService._readApiKeyFromFile: Successfully retrieved API key for llmId '${llmId}' from '${fullPath}'. Key: ${maskApiKey(trimmedKey)}`
       );
       return { key: trimmedKey, error: null };
     } catch (error) {
@@ -293,7 +294,7 @@ export class ApiKeyService {
         actualApiKey = envValue.trim();
         apiKeySource = `environment variable '${envVarName}'`;
         this.#logger.info(
-          `ApiKeyService.getApiKey: Successfully retrieved API key for llmId '${llmId}' from ${apiKeySource}.`
+          `ApiKeyService.getApiKey: Successfully retrieved API key for llmId '${llmId}' from ${apiKeySource}. Key: ${maskApiKey(actualApiKey)}`
         );
       } else {
         this.#logger.warn(
@@ -343,7 +344,7 @@ export class ApiKeyService {
           actualApiKey = fileReadResult.key;
           apiKeySource = `file '${fileName}'`;
           this.#logger.info(
-            `ApiKeyService.getApiKey: Successfully retrieved API key for llmId '${llmId}' from ${apiKeySource}.`
+            `ApiKeyService.getApiKey: Successfully retrieved API key for llmId '${llmId}' from ${apiKeySource}. Key: ${maskApiKey(actualApiKey)}`
           );
           finalErrorDetails = null; // Clear previous error (like env var not found) if file succeeds
         } else {

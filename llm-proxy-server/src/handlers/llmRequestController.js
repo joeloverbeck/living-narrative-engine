@@ -2,6 +2,7 @@
 
 // Import sendProxyError utility
 import { sendProxyError } from '../utils/responseUtils.js';
+import { maskApiKey } from '../utils/loggerUtils.js';
 import {
   CONTENT_TYPE_JSON,
   LOG_LLM_ID_PROXY_NOT_OPERATIONAL,
@@ -282,7 +283,7 @@ export class LlmRequestController {
         return;
       }
       this.#logger.debug(
-        `LlmRequestController: API key successfully obtained for llmId '${llmId}' from source: ${apiKeySourceForLog}.`,
+        `LlmRequestController: API key successfully obtained for llmId '${llmId}' from source: ${apiKeySourceForLog}. Key: ${maskApiKey(actualApiKey)}`,
         { llmId }
       );
     } else {

@@ -1,40 +1,44 @@
-AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'left leg' to entity '2f000445-2b06-4225-8461-9891c0629f90'
-consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'right leg' to entity '15fc2208-0fc3-433c-888f-c6e8cc1994ec'
-consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'left eye' to entity '70f4a0e9-2675-4b18-a900-65b32cc0ca98'
-consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'right eye' to entity '6d754689-d67e-4c51-8477-8f95897e4742'
-consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'left ear' to entity 'be44646f-8961-4f20-8c6f-0371534d511c'
-consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'right ear' to entity 'd0e2b049-32ac-46c2-8884-670591889119'
-consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'nose' to entity '07d5789e-5b57-4f01-951d-f47afea3131f'
-consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'mouth' to entity '0f7ce558-03b8-48be-a00a-f405bfef61e2'
-consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'teeth' to entity 'ecbf152f-4a3c-48ba-ba08-1ca99087b239'
-consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'hair' to entity 'd30f36de-21fe-4229-bd30-ec1a48694cce'
-consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'pubic hair' to entity 'b177927c-000e-441d-a9bf-32e890ba99ca'
-consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'left arm hand' to entity '977027a6-0ba8-4cc8-819f-b46b2a230663'
-consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'right arm hand' to entity '396bad6a-4888-4327-aa22-dd2f25e1733c'
-consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'left leg foot' to entity 'a9d76618-42e9-443c-95f0-bef6f5616e58'
-consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'right leg foot' to entity '76309bbd-dc24-48d0-b047-2e96b189a930'
-consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'asshole' to entity 'f293666b-e420-4f18-a24f-7af93667f7b0'
+AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'left arm' to entity 'd5f0048a-499b-4d09-8d84-32a0c4fbebca'
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'right arm' to entity '565eed08-c109-453a-85fd-7c1a6248b4dd'
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'left leg' to entity 'f08696cc-3711-4b4d-9edc-404165e045e2'
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'right leg' to entity 'c787b0e0-c673-4dd0-b466-767059707262'
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'left eye' to entity '0547d0b2-51a4-4190-af15-9d02dd877460'
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'right eye' to entity '83ec0157-16a6-4a0b-8f77-d8a75a92665e'
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'left ear' to entity 'bcb0219d-c0d6-4582-8649-2da27043ec84'
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'right ear' to entity 'fcfbd314-3eea-42a4-b341-486e2b4c1a91'
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'nose' to entity '2178a081-3b81-4cd7-9f89-fbdbbaa19e34'
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'mouth' to entity 'e574a19d-eabc-484a-a0c3-03ec87caae81'
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'teeth' to entity '741980d6-2261-44e9-b5ce-1b87d628ca5e'
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'hair' to entity '08f1e730-748b-4501-ab66-a24f835f2677'
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'pubic hair' to entity '37c511ff-d2e3-41b2-8e68-fdad71822523'
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'left arm hand' to entity '72520542-59ce-4e79-bb6d-f9cdf602716d'
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'right arm hand' to entity 'ce2d51d1-cba8-4995-b575-f4e35a04ab3d'
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'left leg foot' to entity '7e183295-95ac-4ab9-8557-6479202c839f'
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'right leg foot' to entity '5afa2c6b-1427-494a-8884-c74dc6d72b6b'
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'asshole' to entity '30a457d3-03cb-4d30-8a07-94f61aafb185'
 consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Built parts map with 23 named parts
-consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Instantiating 7 clothing items for entity 'a2ab2cb4-f4b2-493a-a90d-4d657978ee2f'
-consoleLogger.js:151 ClothingInstantiationService: Starting clothing instantiation for actor 'a2ab2cb4-f4b2-493a-a90d-4d657978ee2f' with 7 items
-consoleLogger.js:175 AnatomyClothingIntegrationService: Failed to get clothing slots for entity a2ab2cb4-f4b2-493a-a90d-4d657978ee2f DataRegistryError: InMemoryDataRegistry.get: id parameter must be a non-empty string
-    at InMemoryDataRegistry.get (inMemoryDataRegistry.js:98:13)
-    at #getEntityBlueprint (anatomyClothingIntegrationService.js:504:42)
-    at async AnatomyClothingIntegrationService.getAvailableClothingSlots (anatomyClothingIntegrationService.js:87:25)
-    at async AnatomyClothingIntegrationService.validateClothingSlotCompatibility (anatomyClothingIntegrationService.js:192:28)
-    at async #validateClothingSlots (clothingInstantiationService.js:294:11)
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Instantiating 7 clothing items for entity '0694e464-59b0-4513-bcc4-e62876a57266'
+consoleLogger.js:151 ClothingInstantiationService: Starting clothing instantiation for actor '0694e464-59b0-4513-bcc4-e62876a57266' with 7 items
+consoleLogger.js:175 AnatomyClothingIntegrationService: Failed to get clothing slots for entity 0694e464-59b0-4513-bcc4-e62876a57266 TypeError: this[#bodyGraphService].getBodyGraph is not a function
+    at #getEntityAnatomyStructure (anatomyClothingIntegrationService.js:528:52)
+    at AnatomyClothingIntegrationService.getAvailableClothingSlots (anatomyClothingIntegrationService.js:89:43)
+    at async AnatomyClothingIntegrationService.validateClothingSlotCompatibility (anatomyClothingIntegrationService.js:187:28)
+    at async #validateClothingSlots (clothingInstantiationService.js:301:11)
     at async ClothingInstantiationService.instantiateRecipeClothing (clothingInstantiationService.js:162:36)
     at async AnatomyGenerationWorkflow.generate (anatomyGenerationWorkflow.js:115:13)
     at async anatomyOrchestrator.js:109:16
     at async AnatomyUnitOfWork.execute (anatomyUnitOfWork.js:95:22)
     at async AnatomyOrchestrator.orchestrateGeneration (anatomyOrchestrator.js:108:27)
+    at async AnatomyGenerationService.generateAnatomyIfNeeded (anatomyGenerationService.js:152:22)
 error @ consoleLogger.js:175
 error @ loggerUtils.js:96
-getAvailableClothingSlots @ anatomyClothingIntegrationService.js:114
+getAvailableClothingSlots @ anatomyClothingIntegrationService.js:109
 handleMouseUp_ @ unknown
 await in handleMouseUp_
-validateClothingSlotCompatibility @ anatomyClothingIntegrationService.js:192
-#validateClothingSlots @ clothingInstantiationService.js:294
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+validateClothingSlotCompatibility @ anatomyClothingIntegrationService.js:187
+#validateClothingSlots @ clothingInstantiationService.js:301
 instantiateRecipeClothing @ clothingInstantiationService.js:162
 generate @ anatomyGenerationWorkflow.js:115
 handleMouseUp_ @ unknown
@@ -61,73 +65,27 @@ handleMouseUp_ @ unknown
 await in handleMouseUp_
 (anonymous) @ AnatomyVisualizerUI.js:144
 handleMouseUp_ @ unknownUnderstand this error
-consoleLogger.js:175 AnatomyClothingIntegrationService: Failed to get clothing slots for entity a2ab2cb4-f4b2-493a-a90d-4d657978ee2f DataRegistryError: InMemoryDataRegistry.get: id parameter must be a non-empty string
-    at InMemoryDataRegistry.get (inMemoryDataRegistry.js:98:13)
-    at #getEntityBlueprint (anatomyClothingIntegrationService.js:504:42)
-    at async AnatomyClothingIntegrationService.getAvailableClothingSlots (anatomyClothingIntegrationService.js:87:25)
-    at async AnatomyClothingIntegrationService.validateClothingSlotCompatibility (anatomyClothingIntegrationService.js:192:28)
-    at async #validateClothingSlots (clothingInstantiationService.js:294:11)
+consoleLogger.js:175 AnatomyClothingIntegrationService: Failed to get clothing slots for entity 0694e464-59b0-4513-bcc4-e62876a57266 TypeError: this[#bodyGraphService].getBodyGraph is not a function
+    at #getEntityAnatomyStructure (anatomyClothingIntegrationService.js:528:52)
+    at AnatomyClothingIntegrationService.getAvailableClothingSlots (anatomyClothingIntegrationService.js:89:43)
+    at async AnatomyClothingIntegrationService.validateClothingSlotCompatibility (anatomyClothingIntegrationService.js:187:28)
+    at async #validateClothingSlots (clothingInstantiationService.js:301:11)
     at async ClothingInstantiationService.instantiateRecipeClothing (clothingInstantiationService.js:162:36)
     at async AnatomyGenerationWorkflow.generate (anatomyGenerationWorkflow.js:115:13)
     at async anatomyOrchestrator.js:109:16
     at async AnatomyUnitOfWork.execute (anatomyUnitOfWork.js:95:22)
     at async AnatomyOrchestrator.orchestrateGeneration (anatomyOrchestrator.js:108:27)
+    at async AnatomyGenerationService.generateAnatomyIfNeeded (anatomyGenerationService.js:152:22)
 error @ consoleLogger.js:175
 error @ loggerUtils.js:96
-getAvailableClothingSlots @ anatomyClothingIntegrationService.js:114
+getAvailableClothingSlots @ anatomyClothingIntegrationService.js:109
 handleMouseUp_ @ unknown
 await in handleMouseUp_
-validateClothingSlotCompatibility @ anatomyClothingIntegrationService.js:192
-#validateClothingSlots @ clothingInstantiationService.js:294
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+validateClothingSlotCompatibility @ anatomyClothingIntegrationService.js:187
+#validateClothingSlots @ clothingInstantiationService.js:301
 instantiateRecipeClothing @ clothingInstantiationService.js:162
-handleMouseUp_ @ unknown
-await in handleMouseUp_
-generate @ anatomyGenerationWorkflow.js:115
-handleMouseUp_ @ unknown
-await in handleMouseUp_
-(anonymous) @ anatomyOrchestrator.js:109
-execute @ anatomyUnitOfWork.js:95
-orchestrateGeneration @ anatomyOrchestrator.js:108
-generateAnatomyIfNeeded @ anatomyGenerationService.js:152
-#handleEntityCreated @ anatomyInitializationService.js:101
-(anonymous) @ eventBus.js:144
-dispatch @ eventBus.js:141
-#emitEvent @ validatedEventDispatcher.js:192
-dispatch @ validatedEventDispatcher.js:222
-dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
-#executeSafely @ safeEventDispatcher.js:88
-dispatch @ safeEventDispatcher.js:122
-dispatchEntityCreated @ EntityEventDispatcher.js:65
-createEntityInstance @ entityLifecycleManager.js:274
-createEntityInstance @ EntityCreationManager.js:68
-createEntityInstance @ entityManager.js:331
-createEntityInstance @ entityManagerAdapter.js:38
-_loadEntity @ AnatomyVisualizerUI.js:206
-handleMouseUp_ @ unknown
-await in handleMouseUp_
-(anonymous) @ AnatomyVisualizerUI.js:144
-handleMouseUp_ @ unknownUnderstand this error
-consoleLogger.js:175 AnatomyClothingIntegrationService: Failed to get clothing slots for entity a2ab2cb4-f4b2-493a-a90d-4d657978ee2f DataRegistryError: InMemoryDataRegistry.get: id parameter must be a non-empty string
-    at InMemoryDataRegistry.get (inMemoryDataRegistry.js:98:13)
-    at #getEntityBlueprint (anatomyClothingIntegrationService.js:504:42)
-    at async AnatomyClothingIntegrationService.getAvailableClothingSlots (anatomyClothingIntegrationService.js:87:25)
-    at async AnatomyClothingIntegrationService.validateClothingSlotCompatibility (anatomyClothingIntegrationService.js:192:28)
-    at async #validateClothingSlots (clothingInstantiationService.js:294:11)
-    at async ClothingInstantiationService.instantiateRecipeClothing (clothingInstantiationService.js:162:36)
-    at async AnatomyGenerationWorkflow.generate (anatomyGenerationWorkflow.js:115:13)
-    at async anatomyOrchestrator.js:109:16
-    at async AnatomyUnitOfWork.execute (anatomyUnitOfWork.js:95:22)
-    at async AnatomyOrchestrator.orchestrateGeneration (anatomyOrchestrator.js:108:27)
-error @ consoleLogger.js:175
-error @ loggerUtils.js:96
-getAvailableClothingSlots @ anatomyClothingIntegrationService.js:114
-handleMouseUp_ @ unknown
-await in handleMouseUp_
-validateClothingSlotCompatibility @ anatomyClothingIntegrationService.js:192
-#validateClothingSlots @ clothingInstantiationService.js:294
-instantiateRecipeClothing @ clothingInstantiationService.js:162
-handleMouseUp_ @ unknown
-await in handleMouseUp_
 handleMouseUp_ @ unknown
 await in handleMouseUp_
 generate @ anatomyGenerationWorkflow.js:115
@@ -155,27 +113,27 @@ handleMouseUp_ @ unknown
 await in handleMouseUp_
 (anonymous) @ AnatomyVisualizerUI.js:144
 handleMouseUp_ @ unknownUnderstand this error
-consoleLogger.js:175 AnatomyClothingIntegrationService: Failed to get clothing slots for entity a2ab2cb4-f4b2-493a-a90d-4d657978ee2f DataRegistryError: InMemoryDataRegistry.get: id parameter must be a non-empty string
-    at InMemoryDataRegistry.get (inMemoryDataRegistry.js:98:13)
-    at #getEntityBlueprint (anatomyClothingIntegrationService.js:504:42)
-    at async AnatomyClothingIntegrationService.getAvailableClothingSlots (anatomyClothingIntegrationService.js:87:25)
-    at async AnatomyClothingIntegrationService.validateClothingSlotCompatibility (anatomyClothingIntegrationService.js:192:28)
-    at async #validateClothingSlots (clothingInstantiationService.js:294:11)
+consoleLogger.js:175 AnatomyClothingIntegrationService: Failed to get clothing slots for entity 0694e464-59b0-4513-bcc4-e62876a57266 TypeError: this[#bodyGraphService].getBodyGraph is not a function
+    at #getEntityAnatomyStructure (anatomyClothingIntegrationService.js:528:52)
+    at AnatomyClothingIntegrationService.getAvailableClothingSlots (anatomyClothingIntegrationService.js:89:43)
+    at async AnatomyClothingIntegrationService.validateClothingSlotCompatibility (anatomyClothingIntegrationService.js:187:28)
+    at async #validateClothingSlots (clothingInstantiationService.js:301:11)
     at async ClothingInstantiationService.instantiateRecipeClothing (clothingInstantiationService.js:162:36)
     at async AnatomyGenerationWorkflow.generate (anatomyGenerationWorkflow.js:115:13)
     at async anatomyOrchestrator.js:109:16
     at async AnatomyUnitOfWork.execute (anatomyUnitOfWork.js:95:22)
     at async AnatomyOrchestrator.orchestrateGeneration (anatomyOrchestrator.js:108:27)
+    at async AnatomyGenerationService.generateAnatomyIfNeeded (anatomyGenerationService.js:152:22)
 error @ consoleLogger.js:175
 error @ loggerUtils.js:96
-getAvailableClothingSlots @ anatomyClothingIntegrationService.js:114
+getAvailableClothingSlots @ anatomyClothingIntegrationService.js:109
 handleMouseUp_ @ unknown
 await in handleMouseUp_
-validateClothingSlotCompatibility @ anatomyClothingIntegrationService.js:192
-#validateClothingSlots @ clothingInstantiationService.js:294
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+validateClothingSlotCompatibility @ anatomyClothingIntegrationService.js:187
+#validateClothingSlots @ clothingInstantiationService.js:301
 instantiateRecipeClothing @ clothingInstantiationService.js:162
-handleMouseUp_ @ unknown
-await in handleMouseUp_
 handleMouseUp_ @ unknown
 await in handleMouseUp_
 handleMouseUp_ @ unknown
@@ -205,27 +163,27 @@ handleMouseUp_ @ unknown
 await in handleMouseUp_
 (anonymous) @ AnatomyVisualizerUI.js:144
 handleMouseUp_ @ unknownUnderstand this error
-consoleLogger.js:175 AnatomyClothingIntegrationService: Failed to get clothing slots for entity a2ab2cb4-f4b2-493a-a90d-4d657978ee2f DataRegistryError: InMemoryDataRegistry.get: id parameter must be a non-empty string
-    at InMemoryDataRegistry.get (inMemoryDataRegistry.js:98:13)
-    at #getEntityBlueprint (anatomyClothingIntegrationService.js:504:42)
-    at async AnatomyClothingIntegrationService.getAvailableClothingSlots (anatomyClothingIntegrationService.js:87:25)
-    at async AnatomyClothingIntegrationService.validateClothingSlotCompatibility (anatomyClothingIntegrationService.js:192:28)
-    at async #validateClothingSlots (clothingInstantiationService.js:294:11)
+consoleLogger.js:175 AnatomyClothingIntegrationService: Failed to get clothing slots for entity 0694e464-59b0-4513-bcc4-e62876a57266 TypeError: this[#bodyGraphService].getBodyGraph is not a function
+    at #getEntityAnatomyStructure (anatomyClothingIntegrationService.js:528:52)
+    at AnatomyClothingIntegrationService.getAvailableClothingSlots (anatomyClothingIntegrationService.js:89:43)
+    at async AnatomyClothingIntegrationService.validateClothingSlotCompatibility (anatomyClothingIntegrationService.js:187:28)
+    at async #validateClothingSlots (clothingInstantiationService.js:301:11)
     at async ClothingInstantiationService.instantiateRecipeClothing (clothingInstantiationService.js:162:36)
     at async AnatomyGenerationWorkflow.generate (anatomyGenerationWorkflow.js:115:13)
     at async anatomyOrchestrator.js:109:16
     at async AnatomyUnitOfWork.execute (anatomyUnitOfWork.js:95:22)
     at async AnatomyOrchestrator.orchestrateGeneration (anatomyOrchestrator.js:108:27)
+    at async AnatomyGenerationService.generateAnatomyIfNeeded (anatomyGenerationService.js:152:22)
 error @ consoleLogger.js:175
 error @ loggerUtils.js:96
-getAvailableClothingSlots @ anatomyClothingIntegrationService.js:114
+getAvailableClothingSlots @ anatomyClothingIntegrationService.js:109
 handleMouseUp_ @ unknown
 await in handleMouseUp_
-validateClothingSlotCompatibility @ anatomyClothingIntegrationService.js:192
-#validateClothingSlots @ clothingInstantiationService.js:294
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+validateClothingSlotCompatibility @ anatomyClothingIntegrationService.js:187
+#validateClothingSlots @ clothingInstantiationService.js:301
 instantiateRecipeClothing @ clothingInstantiationService.js:162
-handleMouseUp_ @ unknown
-await in handleMouseUp_
 handleMouseUp_ @ unknown
 await in handleMouseUp_
 handleMouseUp_ @ unknown
@@ -257,27 +215,27 @@ handleMouseUp_ @ unknown
 await in handleMouseUp_
 (anonymous) @ AnatomyVisualizerUI.js:144
 handleMouseUp_ @ unknownUnderstand this error
-consoleLogger.js:175 AnatomyClothingIntegrationService: Failed to get clothing slots for entity a2ab2cb4-f4b2-493a-a90d-4d657978ee2f DataRegistryError: InMemoryDataRegistry.get: id parameter must be a non-empty string
-    at InMemoryDataRegistry.get (inMemoryDataRegistry.js:98:13)
-    at #getEntityBlueprint (anatomyClothingIntegrationService.js:504:42)
-    at async AnatomyClothingIntegrationService.getAvailableClothingSlots (anatomyClothingIntegrationService.js:87:25)
-    at async AnatomyClothingIntegrationService.validateClothingSlotCompatibility (anatomyClothingIntegrationService.js:192:28)
-    at async #validateClothingSlots (clothingInstantiationService.js:294:11)
+consoleLogger.js:175 AnatomyClothingIntegrationService: Failed to get clothing slots for entity 0694e464-59b0-4513-bcc4-e62876a57266 TypeError: this[#bodyGraphService].getBodyGraph is not a function
+    at #getEntityAnatomyStructure (anatomyClothingIntegrationService.js:528:52)
+    at AnatomyClothingIntegrationService.getAvailableClothingSlots (anatomyClothingIntegrationService.js:89:43)
+    at async AnatomyClothingIntegrationService.validateClothingSlotCompatibility (anatomyClothingIntegrationService.js:187:28)
+    at async #validateClothingSlots (clothingInstantiationService.js:301:11)
     at async ClothingInstantiationService.instantiateRecipeClothing (clothingInstantiationService.js:162:36)
     at async AnatomyGenerationWorkflow.generate (anatomyGenerationWorkflow.js:115:13)
     at async anatomyOrchestrator.js:109:16
     at async AnatomyUnitOfWork.execute (anatomyUnitOfWork.js:95:22)
     at async AnatomyOrchestrator.orchestrateGeneration (anatomyOrchestrator.js:108:27)
+    at async AnatomyGenerationService.generateAnatomyIfNeeded (anatomyGenerationService.js:152:22)
 error @ consoleLogger.js:175
 error @ loggerUtils.js:96
-getAvailableClothingSlots @ anatomyClothingIntegrationService.js:114
+getAvailableClothingSlots @ anatomyClothingIntegrationService.js:109
 handleMouseUp_ @ unknown
 await in handleMouseUp_
-validateClothingSlotCompatibility @ anatomyClothingIntegrationService.js:192
-#validateClothingSlots @ clothingInstantiationService.js:294
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+validateClothingSlotCompatibility @ anatomyClothingIntegrationService.js:187
+#validateClothingSlots @ clothingInstantiationService.js:301
 instantiateRecipeClothing @ clothingInstantiationService.js:162
-handleMouseUp_ @ unknown
-await in handleMouseUp_
 handleMouseUp_ @ unknown
 await in handleMouseUp_
 handleMouseUp_ @ unknown
@@ -311,24 +269,82 @@ handleMouseUp_ @ unknown
 await in handleMouseUp_
 (anonymous) @ AnatomyVisualizerUI.js:144
 handleMouseUp_ @ unknownUnderstand this error
-consoleLogger.js:175 AnatomyClothingIntegrationService: Failed to get clothing slots for entity a2ab2cb4-f4b2-493a-a90d-4d657978ee2f DataRegistryError: InMemoryDataRegistry.get: id parameter must be a non-empty string
-    at InMemoryDataRegistry.get (inMemoryDataRegistry.js:98:13)
-    at #getEntityBlueprint (anatomyClothingIntegrationService.js:504:42)
-    at async AnatomyClothingIntegrationService.getAvailableClothingSlots (anatomyClothingIntegrationService.js:87:25)
-    at async AnatomyClothingIntegrationService.validateClothingSlotCompatibility (anatomyClothingIntegrationService.js:192:28)
-    at async #validateClothingSlots (clothingInstantiationService.js:294:11)
+consoleLogger.js:175 AnatomyClothingIntegrationService: Failed to get clothing slots for entity 0694e464-59b0-4513-bcc4-e62876a57266 TypeError: this[#bodyGraphService].getBodyGraph is not a function
+    at #getEntityAnatomyStructure (anatomyClothingIntegrationService.js:528:52)
+    at AnatomyClothingIntegrationService.getAvailableClothingSlots (anatomyClothingIntegrationService.js:89:43)
+    at async AnatomyClothingIntegrationService.validateClothingSlotCompatibility (anatomyClothingIntegrationService.js:187:28)
+    at async #validateClothingSlots (clothingInstantiationService.js:301:11)
     at async ClothingInstantiationService.instantiateRecipeClothing (clothingInstantiationService.js:162:36)
     at async AnatomyGenerationWorkflow.generate (anatomyGenerationWorkflow.js:115:13)
     at async anatomyOrchestrator.js:109:16
     at async AnatomyUnitOfWork.execute (anatomyUnitOfWork.js:95:22)
     at async AnatomyOrchestrator.orchestrateGeneration (anatomyOrchestrator.js:108:27)
+    at async AnatomyGenerationService.generateAnatomyIfNeeded (anatomyGenerationService.js:152:22)
 error @ consoleLogger.js:175
 error @ loggerUtils.js:96
-getAvailableClothingSlots @ anatomyClothingIntegrationService.js:114
+getAvailableClothingSlots @ anatomyClothingIntegrationService.js:109
 handleMouseUp_ @ unknown
 await in handleMouseUp_
-validateClothingSlotCompatibility @ anatomyClothingIntegrationService.js:192
-#validateClothingSlots @ clothingInstantiationService.js:294
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+validateClothingSlotCompatibility @ anatomyClothingIntegrationService.js:187
+#validateClothingSlots @ clothingInstantiationService.js:301
+instantiateRecipeClothing @ clothingInstantiationService.js:162
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+generate @ anatomyGenerationWorkflow.js:115
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ anatomyOrchestrator.js:109
+execute @ anatomyUnitOfWork.js:95
+orchestrateGeneration @ anatomyOrchestrator.js:108
+generateAnatomyIfNeeded @ anatomyGenerationService.js:152
+#handleEntityCreated @ anatomyInitializationService.js:101
+(anonymous) @ eventBus.js:144
+dispatch @ eventBus.js:141
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+dispatchEntityCreated @ EntityEventDispatcher.js:65
+createEntityInstance @ entityLifecycleManager.js:274
+createEntityInstance @ EntityCreationManager.js:68
+createEntityInstance @ entityManager.js:331
+createEntityInstance @ entityManagerAdapter.js:38
+_loadEntity @ AnatomyVisualizerUI.js:206
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ AnatomyVisualizerUI.js:144
+handleMouseUp_ @ unknownUnderstand this error
+consoleLogger.js:175 AnatomyClothingIntegrationService: Failed to get clothing slots for entity 0694e464-59b0-4513-bcc4-e62876a57266 TypeError: this[#bodyGraphService].getBodyGraph is not a function
+    at #getEntityAnatomyStructure (anatomyClothingIntegrationService.js:528:52)
+    at AnatomyClothingIntegrationService.getAvailableClothingSlots (anatomyClothingIntegrationService.js:89:43)
+    at async AnatomyClothingIntegrationService.validateClothingSlotCompatibility (anatomyClothingIntegrationService.js:187:28)
+    at async #validateClothingSlots (clothingInstantiationService.js:301:11)
+    at async ClothingInstantiationService.instantiateRecipeClothing (clothingInstantiationService.js:162:36)
+    at async AnatomyGenerationWorkflow.generate (anatomyGenerationWorkflow.js:115:13)
+    at async anatomyOrchestrator.js:109:16
+    at async AnatomyUnitOfWork.execute (anatomyUnitOfWork.js:95:22)
+    at async AnatomyOrchestrator.orchestrateGeneration (anatomyOrchestrator.js:108:27)
+    at async AnatomyGenerationService.generateAnatomyIfNeeded (anatomyGenerationService.js:152:22)
+error @ consoleLogger.js:175
+error @ loggerUtils.js:96
+getAvailableClothingSlots @ anatomyClothingIntegrationService.js:109
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+validateClothingSlotCompatibility @ anatomyClothingIntegrationService.js:187
+#validateClothingSlots @ clothingInstantiationService.js:301
 instantiateRecipeClothing @ clothingInstantiationService.js:162
 handleMouseUp_ @ unknown
 await in handleMouseUp_
@@ -375,7 +391,7 @@ dispatch @ validatedEventDispatcher.js:219
 dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
 #executeSafely @ safeEventDispatcher.js:88
 dispatch @ safeEventDispatcher.js:122
-instantiateRecipeClothing @ clothingInstantiationService.js:223
+instantiateRecipeClothing @ clothingInstantiationService.js:226
 handleMouseUp_ @ unknown
 await in handleMouseUp_
 handleMouseUp_ @ unknown
@@ -424,7 +440,7 @@ dispatch @ validatedEventDispatcher.js:219
 dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
 #executeSafely @ safeEventDispatcher.js:88
 dispatch @ safeEventDispatcher.js:122
-instantiateRecipeClothing @ clothingInstantiationService.js:231
+instantiateRecipeClothing @ clothingInstantiationService.js:234
 handleMouseUp_ @ unknown
 await in handleMouseUp_
 handleMouseUp_ @ unknown
@@ -465,14 +481,14 @@ await in handleMouseUp_
 (anonymous) @ AnatomyVisualizerUI.js:144
 handleMouseUp_ @ unknownUnderstand this error
 consoleLogger.js:187 VED: Dispatch skipped for 'core:system_error_occurred' due to validation failure (see error above).
-consoleLogger.js:151 ClothingInstantiationService: Clothing instantiation completed for actor 'a2ab2cb4-f4b2-493a-a90d-4d657978ee2f': 0 created, 0 equipped, 7 errors
+consoleLogger.js:151 ClothingInstantiationService: Clothing instantiation completed for actor '0694e464-59b0-4513-bcc4-e62876a57266': 0 created, 0 equipped, 7 errors
 consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Clothing instantiation completed with 0 items created
-consoleLogger.js:163 SafeEventDispatcher: Underlying VED failed to dispatch event 'clothing:instantiation_completed' (returned false). See VED logs for details. Payload: {"actorId":"a2ab2cb4-f4b2-493a-a90d-4d657978ee2f","result":{"instantiated":[],"equipped":[],"errors":[{"entityId":"clothing:underwired_plunge_bra_nude_silk","error":"InMemoryDataRegistry.get: id parameter must be a non-empty string"},{"entityId":"clothing:nude_thong","error":"InMemoryDataRegistry.get: id parameter must be a non-empty string"},{"entityId":"clothing:black_stretch_silk_bodysuit","error":"InMemoryDataRegistry.get: id parameter must be a non-empty string"},{"entityId":"clothing:white_structured_linen_blazer","error":"InMemoryDataRegistry.get: id parameter must be a non-empty string"},{"entityId":"clothing:graphite_wool_wide_leg_trousers","error":"InMemoryDataRegistry.get: id parameter must be a non-empty string"},{"entityId":"clothing:black_calfskin_belt","error":"InMemoryDataRegistry.get: id parameter must be a non-empty string"},{"entityId":"clothing:leather_stiletto_pumps","error":"InMemoryDataRegistry.get: id parameter must be a non-empty string"}]}}
+consoleLogger.js:163 SafeEventDispatcher: Underlying VED failed to dispatch event 'clothing:instantiation_completed' (returned false). See VED logs for details. Payload: {"actorId":"0694e464-59b0-4513-bcc4-e62876a57266","result":{"instantiated":[],"equipped":[],"errors":[{"entityId":"clothing:underwired_plunge_bra_nude_silk","error":"this[#bodyGraphService].getBodyGraph is not a function"},{"entityId":"clothing:nude_thong","error":"this[#bodyGraphService].getBodyGraph is not a function"},{"entityId":"clothing:black_stretch_silk_bodysuit","error":"this[#bodyGraphService].getBodyGraph is not a function"},{"entityId":"clothing:white_structured_linen_blazer","error":"this[#bodyGraphService].getBodyGraph is not a function"},{"entityId":"clothing:graphite_wool_wide_leg_trousers","error":"this[#bodyGraphService].getBodyGraph is not a function"},{"entityId":"clothing:black_calfskin_belt","error":"this[#bodyGraphService].getBodyGraph is not a function"},{"entityId":"clothing:leather_stiletto_pumps","error":"this[#bodyGraphService].getBodyGraph is not a function"}]}}
 warn @ consoleLogger.js:163
 dispatch @ safeEventDispatcher.js:136
 handleMouseUp_ @ unknown
 await in handleMouseUp_
-instantiateRecipeClothing @ clothingInstantiationService.js:223
+instantiateRecipeClothing @ clothingInstantiationService.js:226
 handleMouseUp_ @ unknown
 await in handleMouseUp_
 handleMouseUp_ @ unknown
@@ -512,12 +528,12 @@ handleMouseUp_ @ unknown
 await in handleMouseUp_
 (anonymous) @ AnatomyVisualizerUI.js:144
 handleMouseUp_ @ unknownUnderstand this warning
-consoleLogger.js:163 SafeEventDispatcher: Underlying VED failed to dispatch event 'core:system_error_occurred' (returned false). See VED logs for details. Payload: {"message":"Clothing instantiation failed for 7 items","details":{"actorId":"a2ab2cb4-f4b2-493a-a90d-4d657978ee2f","totalItems":7,"successfullyInstantiated":0,"successfullyEquipped":0,"errors":[{"entityId":"clothing:underwired_plunge_bra_nude_silk","error":"InMemoryDataRegistry.get: id parameter must be a non-empty string"},{"entityId":"clothing:nude_thong","error":"InMemoryDataRegistry.get: id parameter must be a non-empty string"},{"entityId":"clothing:black_stretch_silk_bodysuit","error":"InMemoryDataRegistry.get: id parameter must be a non-empty string"},{"entityId":"clothing:white_structured_linen_blazer","error":"InMemoryDataRegistry.get: id parameter must be a non-empty string"},{"entityId":"clothing:graphite_wool_wide_leg_trousers","error":"InMemoryDataRegistry.get: id parameter must be a non-empty string"},{"entityId":"clothing:black_calfskin_belt","error":"InMemoryDataRegistry.get: id parameter must be a non-empty string"},{"entityId":"clothing:leather_stiletto_pumps","error":"InMemoryDataRegistry.get: id parameter must be a non-empty string"}]}}
+consoleLogger.js:163 SafeEventDispatcher: Underlying VED failed to dispatch event 'core:system_error_occurred' (returned false). See VED logs for details. Payload: {"message":"Clothing instantiation failed for 7 items","details":{"actorId":"0694e464-59b0-4513-bcc4-e62876a57266","totalItems":7,"successfullyInstantiated":0,"successfullyEquipped":0,"errors":[{"entityId":"clothing:underwired_plunge_bra_nude_silk","error":"this[#bodyGraphService].getBodyGraph is not a function"},{"entityId":"clothing:nude_thong","error":"this[#bodyGraphService].getBodyGraph is not a function"},{"entityId":"clothing:black_stretch_silk_bodysuit","error":"this[#bodyGraphService].getBodyGraph is not a function"},{"entityId":"clothing:white_structured_linen_blazer","error":"this[#bodyGraphService].getBodyGraph is not a function"},{"entityId":"clothing:graphite_wool_wide_leg_trousers","error":"this[#bodyGraphService].getBodyGraph is not a function"},{"entityId":"clothing:black_calfskin_belt","error":"this[#bodyGraphService].getBodyGraph is not a function"},{"entityId":"clothing:leather_stiletto_pumps","error":"this[#bodyGraphService].getBodyGraph is not a function"}]}}
 warn @ consoleLogger.js:163
 dispatch @ safeEventDispatcher.js:136
 handleMouseUp_ @ unknown
 await in handleMouseUp_
-instantiateRecipeClothing @ clothingInstantiationService.js:231
+instantiateRecipeClothing @ clothingInstantiationService.js:234
 handleMouseUp_ @ unknown
 await in handleMouseUp_
 handleMouseUp_ @ unknown
@@ -557,17 +573,20 @@ handleMouseUp_ @ unknown
 await in handleMouseUp_
 (anonymous) @ AnatomyVisualizerUI.js:144
 handleMouseUp_ @ unknownUnderstand this warning
-consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity '1b1e24bf-bee5-4744-999a-4a8f91902452'. Total tracked: 1
-consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity 'a8e623b6-5620-4aab-9a58-501f3bf2352d'. Total tracked: 2
-consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity '6a25c80b-45d7-4121-a42b-328f6338ad13'. Total tracked: 3
-consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity '1316a5c4-4afa-45b1-82bb-1d348a60bc4b'. Total tracked: 4
-consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity 'e1dfa263-ed11-4f5c-913f-a46ec984451e'. Total tracked: 5
-consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity 'f63542d7-b11d-4ced-a60d-eae336b281c7'. Total tracked: 6
-consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity 'a0d78027-56ff-45e5-998f-a3206e8134f9'. Total tracked: 7
-consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity '2f000445-2b06-4225-8461-9891c0629f90'. Total tracked: 8
-consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity '15fc2208-0fc3-433c-888f-c6e8cc1994ec'. Total tracked: 9
-consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity '70f4a0e9-2675-4b18-a900-65b32cc0ca98'. Total tracked: 10
-consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity '6d754689-d67e-4c51-8477-8f95897e4742'. Total tracked: 11
-consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity 'be44646f-8961-4f20-8c6f-0371534d511c'. Total tracked: 12
-consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity 'd0e2b049-32ac-46c2-8884-670591889119'. Total tracked: 13
-consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity '07d5789e-5b57-4f01-951d-f47afea3131f'. Total tracked: 14
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity '28b5539d-73e8-4721-8686-f3427040135b'. Total tracked: 1
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity '703ea4b0-d02c-451f-b1fb-190550d5f986'. Total tracked: 2
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity '0b45df57-acda-4f03-a208-535cda0c1fcf'. Total tracked: 3
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity '17d9fe60-191b-4e15-987e-73e573b1a988'. Total tracked: 4
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity '9719682c-63a7-4eac-af03-ca84eb67cd78'. Total tracked: 5
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity 'd5f0048a-499b-4d09-8d84-32a0c4fbebca'. Total tracked: 6
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity '565eed08-c109-453a-85fd-7c1a6248b4dd'. Total tracked: 7
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity 'f08696cc-3711-4b4d-9edc-404165e045e2'. Total tracked: 8
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity 'c787b0e0-c673-4dd0-b466-767059707262'. Total tracked: 9
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity '0547d0b2-51a4-4190-af15-9d02dd877460'. Total tracked: 10
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity '83ec0157-16a6-4a0b-8f77-d8a75a92665e'. Total tracked: 11
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity 'bcb0219d-c0d6-4582-8649-2da27043ec84'. Total tracked: 12
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity 'fcfbd314-3eea-42a4-b341-486e2b4c1a91'. Total tracked: 13
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity '2178a081-3b81-4cd7-9f89-fbdbbaa19e34'. Total tracked: 14
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity 'e574a19d-eabc-484a-a0c3-03ec87caae81'. Total tracked: 15
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity '741980d6-2261-44e9-b5ce-1b87d628ca5e'. Total tracked: 16
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity '08f1e730-748b-4501-ab66-a24f835f2677'. Total tracked: 17

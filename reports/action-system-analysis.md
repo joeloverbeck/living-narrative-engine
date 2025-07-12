@@ -68,7 +68,7 @@ Actions are defined using a JSON schema located at `data/schemas/action.schema.j
   "prerequisites": [
     {
       "logic": {
-        "!": {"var": "actor.components.core:rooted.isRooted"}
+        "!": { "var": "actor.components.core:rooted.isRooted" }
       },
       "failure_message": "You cannot move while rooted"
     }
@@ -98,6 +98,7 @@ The action discovery process follows these stages:
 Entry point: `getValidActions(actorEntity, baseContext, options)`
 
 Process:
+
 1. Validates actor entity
 2. Prepares discovery context with actor location
 3. Fetches candidate actions from index
@@ -109,6 +110,7 @@ Process:
 **Service**: `ActionCandidateProcessor` (`src/actions/actionCandidateProcessor.js`)
 
 For each candidate action:
+
 1. Check actor prerequisites
 2. Resolve targets via scope
 3. Format actions for valid targets
@@ -349,6 +351,7 @@ Actions interact with the ECS through:
 
 **Current**: Errors include basic information
 **Recommendation**: Add rich context including:
+
 - Full action definition
 - Actor state snapshot
 - Evaluation trace
@@ -358,6 +361,7 @@ Actions interact with the ECS through:
 
 **Current**: All actions treated equally
 **Recommendation**: Add priority/weight system for:
+
 - AI decision making
 - UI organization
 - Contextual relevance
@@ -366,6 +370,7 @@ Actions interact with the ECS through:
 
 **Current**: Actions are atomic
 **Recommendation**: Support composite actions:
+
 - Multi-step sequences
 - Conditional branches
 - Rollback on failure
@@ -374,6 +379,7 @@ Actions interact with the ECS through:
 
 **Current**: Basic logging
 **Recommendation**: Add metrics for:
+
 - Discovery time per actor
 - Cache hit rates
 - Rule evaluation time
@@ -383,6 +389,7 @@ Actions interact with the ECS through:
 
 **Current**: Good unit test coverage
 **Recommendation**: Add:
+
 - Performance benchmarks
 - Stress tests with many actions
 - Integration tests for full pipeline
@@ -392,6 +399,7 @@ Actions interact with the ECS through:
 
 **Current**: JSDoc comments
 **Recommendation**: Add:
+
 - Sequence diagrams
 - Decision flowcharts
 - Performance guides
@@ -402,12 +410,14 @@ Actions interact with the ECS through:
 The Living Narrative Engine's action system is well-architected with clear separation of concerns, good performance characteristics, and extensive extensibility. The pipeline from discovery through execution is logical and maintainable.
 
 Key strengths:
+
 - Data-driven design enables easy modding
 - Performance optimizations reduce runtime overhead
 - Comprehensive error handling improves debugging
 - Clean architecture enables testing and maintenance
 
 Areas for improvement primarily focus on:
+
 - Caching for better performance
 - Richer error context for debugging
 - Advanced features like composition and priority

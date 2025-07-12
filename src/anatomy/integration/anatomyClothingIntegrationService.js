@@ -6,8 +6,8 @@
 
 import { BaseService } from '../../utils/serviceBase.js';
 
-/** @typedef {import('../types/anatomy.types.js').AnatomyBlueprint} AnatomyBlueprint */
-/** @typedef {import('../../clothing/types/clothing.types.js').ClothingSlot} ClothingSlot */
+/** @typedef {object} AnatomyBlueprint - Anatomy blueprint definition from mod data */
+/** @typedef {object} ClothingSlot - Clothing slot definition from mod data */
 
 /**
  * Maps clothing slot ID to its configuration
@@ -44,12 +44,7 @@ class AnatomyClothingIntegrationService extends BaseService {
   #blueprintCache = new Map();
   #slotResolutionCache = new Map();
 
-  constructor({
-    logger,
-    entityManager,
-    bodyGraphService,
-    dataRegistry,
-  }) {
+  constructor({ logger, entityManager, bodyGraphService, dataRegistry }) {
     super();
 
     this.#logger = this._init('AnatomyClothingIntegrationService', logger, {
@@ -495,15 +490,25 @@ class AnatomyClothingIntegrationService extends BaseService {
     }
 
     // Load from data registry
-    const recipe = this.#dataRegistry.get('anatomyRecipes', bodyComponent.recipeId);
+    const recipe = this.#dataRegistry.get(
+      'anatomyRecipes',
+      bodyComponent.recipeId
+    );
     if (!recipe) {
-      this.#logger.warn(`Recipe '${bodyComponent.recipeId}' not found in registry`);
+      this.#logger.warn(
+        `Recipe '${bodyComponent.recipeId}' not found in registry`
+      );
       return null;
     }
-    
-    const blueprint = this.#dataRegistry.get('anatomyBlueprints', recipe.blueprintId);
+
+    const blueprint = this.#dataRegistry.get(
+      'anatomyBlueprints',
+      recipe.blueprintId
+    );
     if (!blueprint) {
-      this.#logger.warn(`Blueprint '${recipe.blueprintId}' not found in registry`);
+      this.#logger.warn(
+        `Blueprint '${recipe.blueprintId}' not found in registry`
+      );
       return null;
     }
 

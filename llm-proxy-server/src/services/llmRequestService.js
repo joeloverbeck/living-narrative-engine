@@ -1,6 +1,7 @@
 // llm-proxy-server/src/services/llmRequestService.js
 
 import { Workspace_retry } from '../utils/proxyApiUtils.js';
+import { sanitizeErrorForClient } from '../utils/errorFormatter.js';
 import {
   CONTENT_TYPE_JSON,
   HTTP_HEADER_CONTENT_TYPE,
@@ -178,11 +179,17 @@ export class LlmRequestService {
     let statusCodeToClient = 500;
     let errorStage = 'llm_forwarding_error_unknown';
     let errorMessageToClient = `Proxy failed to get a response from the LLM provider.`;
+    // Sanitize error details for production environment
+    const sanitizedError = sanitizeErrorForClient(
+      error,
+      'llm_forwarding_error_unknown'
+    );
+
     /** @type {ErrorDetailsForClient} */
     let detailsForClient = {
       llmId,
       targetUrl,
-      originalErrorMessage: error.message,
+      originalErrorMessage: sanitizedError.details.originalErrorMessage,
     };
 
     const httpErrorMatch = error.message.match(
@@ -290,12 +297,21 @@ export class LlmRequestService {
     ) {
       const errStage = 'llm_config_invalid_endpoint_url';
       const errMsg = `Proxy server configuration error: LLM endpoint URL is missing or invalid.`;
+      // Sanitize configuration error for production
+      const configError = new Error(
+        'Endpoint URL in LLM configuration is empty or invalid.'
+      );
+      const sanitizedConfigError = sanitizeErrorForClient(
+        configError,
+        errStage,
+        errMsg
+      );
+
       /** @type {ErrorDetailsForClient} */
       const errDetails = {
         llmId,
         targetUrl: targetUrl || 'Not configured',
-        originalErrorMessage:
-          'Endpoint URL in LLM configuration is empty or invalid.',
+        originalErrorMessage: sanitizedConfigError.details.originalErrorMessage,
       };
       this.#logger.error(`LlmRequestService: ${errMsg}`, errDetails);
       return {

@@ -251,7 +251,10 @@ describe('ClothingSystem Integration', () => {
       },
       dataRegistry: {
         get: jest.fn((category, id) => {
-          if (category === 'anatomy-blueprints' && id === 'anatomy:human_male') {
+          if (
+            category === 'anatomy-blueprints' &&
+            id === 'anatomy:human_male'
+          ) {
             return Promise.resolve({
               id: 'anatomy:human_male',
               root: 'anatomy:human_male_torso',

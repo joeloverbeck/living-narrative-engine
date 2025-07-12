@@ -22,7 +22,12 @@ describeActionDiscoverySuite(
 
     it('handles scope resolution errors and continues processing', async () => {
       const bed = getBed();
-      const failingDef = { id: 'fail', name: 'Fail', template: 'fail', scope: 'badScope' };
+      const failingDef = {
+        id: 'fail',
+        name: 'Fail',
+        template: 'fail',
+        scope: 'badScope',
+      };
       const okDef = { id: 'ok', name: 'Wait', template: 'wait', scope: 'none' };
 
       bed.mocks.actionIndex.getCandidateActions.mockReturnValue([
@@ -58,7 +63,12 @@ describeActionDiscoverySuite(
 
     it('uses the target resolution service for scoped actions', async () => {
       const bed = getBed();
-      const def = { id: 'attack', name: 'Attack', template: 'attack {target}', scope: 'monster' };
+      const def = {
+        id: 'attack',
+        name: 'Attack',
+        template: 'attack {target}',
+        scope: 'monster',
+      };
 
       bed.mocks.actionIndex.getCandidateActions.mockReturnValue([def]);
       bed.mocks.targetResolutionService.resolveTargets.mockReturnValue({

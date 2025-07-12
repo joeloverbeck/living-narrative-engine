@@ -5,7 +5,6 @@
 
 import { validateBatchSize } from './configUtils.js';
 import { InvalidArgumentError } from '../../errors/invalidArgumentError.js';
-import process from 'process';
 
 /**
  * @typedef {object} BatchProcessingOptions
@@ -301,25 +300,38 @@ export function createBatchProcessor(defaultOptions = {}) {
  */
 export async function measureBatchPerformance(items, processor, options = {}) {
   const startTime = performance.now();
-  const startMemory = process.memoryUsage();
+  // Only measure memory usage in Node.js environment
+  const startMemory =
+    typeof process !== 'undefined' && process.memoryUsage
+      ? process.memoryUsage()
+      : null;
 
   const result = await processBatch(items, processor, options);
 
   const endTime = performance.now();
-  const endMemory = process.memoryUsage();
+  const endMemory =
+    typeof process !== 'undefined' && process.memoryUsage
+      ? process.memoryUsage()
+      : null;
+
+  const performanceData = {
+    totalTime: endTime - startTime,
+    averageTimePerItem: (endTime - startTime) / items.length,
+    throughput: items.length / ((endTime - startTime) / 1000), // items per second
+  };
+
+  // Add memory usage only if available (Node.js environment)
+  if (startMemory && endMemory) {
+    performanceData.memoryUsage = {
+      heapUsedDelta: endMemory.heapUsed - startMemory.heapUsed,
+      heapTotalDelta: endMemory.heapTotal - startMemory.heapTotal,
+      externalDelta: endMemory.external - startMemory.external,
+    };
+  }
 
   return {
     ...result,
-    performance: {
-      totalTime: endTime - startTime,
-      averageTimePerItem: (endTime - startTime) / items.length,
-      memoryUsage: {
-        heapUsedDelta: endMemory.heapUsed - startMemory.heapUsed,
-        heapTotalDelta: endMemory.heapTotal - startMemory.heapTotal,
-        externalDelta: endMemory.external - startMemory.external,
-      },
-      throughput: items.length / ((endTime - startTime) / 1000), // items per second
-    },
+    performance: performanceData,
   };
 }
 

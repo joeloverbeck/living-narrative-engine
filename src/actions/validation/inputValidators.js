@@ -34,4 +34,3 @@ export function validateActionInputs(actionDefinition, actor, logger) {
     `Validated inputs - Action: ${actionDefinition.id}, Actor: ${actor.id}`
   );
 }
-

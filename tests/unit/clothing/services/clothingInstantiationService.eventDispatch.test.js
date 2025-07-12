@@ -87,11 +87,16 @@ describe('ClothingInstantiationService - Event Dispatching', () => {
 
       // Mock entity definition
       dataRegistry.get.mockImplementation((category, id) => {
-        if (category === 'entityDefinitions' && id === 'clothing:simple_shirt') {
+        if (
+          category === 'entityDefinitions' &&
+          id === 'clothing:simple_shirt'
+        ) {
           return {
             id: 'clothing:simple_shirt',
             components: {
-              'clothing:wearable': { equipmentSlots: { primary: 'torso_upper' } },
+              'clothing:wearable': {
+                equipmentSlots: { primary: 'torso_upper' },
+              },
             },
           };
         }
@@ -223,12 +228,18 @@ describe('ClothingInstantiationService - Event Dispatching', () => {
           case 'clothing:valid_shirt':
             return {
               id: 'clothing:valid_shirt',
-              components: { 'clothing:wearable': { equipmentSlots: { primary: 'torso_upper' } } },
+              components: {
+                'clothing:wearable': {
+                  equipmentSlots: { primary: 'torso_upper' },
+                },
+              },
             };
           case 'clothing:valid_boots':
             return {
               id: 'clothing:valid_boots',
-              components: { 'clothing:wearable': { equipmentSlots: { primary: 'feet' } } },
+              components: {
+                'clothing:wearable': { equipmentSlots: { primary: 'feet' } },
+              },
             };
           default:
             return null;
@@ -290,7 +301,9 @@ describe('ClothingInstantiationService - Event Dispatching', () => {
 
       dataRegistry.get.mockReturnValue({
         id: 'clothing:test',
-        components: { 'clothing:wearable': { equipmentSlots: { primary: 'test' } } },
+        components: {
+          'clothing:wearable': { equipmentSlots: { primary: 'test' } },
+        },
       });
       anatomyClothingIntegrationService.validateClothingSlotCompatibility.mockResolvedValue(
         { valid: true }
@@ -324,7 +337,9 @@ describe('ClothingInstantiationService - Event Dispatching', () => {
 
       // First argument should NOT be an object with type property
       expect(typeof firstArg).toBe('string');
-      expect(firstArg).not.toEqual(expect.objectContaining({ type: expect.any(String) }));
+      expect(firstArg).not.toEqual(
+        expect.objectContaining({ type: expect.any(String) })
+      );
     });
   });
 });

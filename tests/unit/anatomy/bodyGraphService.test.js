@@ -797,4 +797,84 @@ describe('BodyGraphService', () => {
       expect(allParts).toEqual([]);
     });
   });
+
+  describe('getBodyGraph', () => {
+    it('should return body graph object with getAllPartIds method', async () => {
+      const entityId = 'test-entity-1';
+      const mockBodyComponent = {
+        body: { root: 'torso-1' },
+      };
+
+      mockEntityManager.getComponentData.mockResolvedValue(mockBodyComponent);
+
+      const result = await service.getBodyGraph(entityId);
+
+      expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(
+        entityId,
+        'anatomy:body'
+      );
+      expect(result).toHaveProperty('getAllPartIds');
+      expect(typeof result.getAllPartIds).toBe('function');
+    });
+
+    it('should return correct part IDs from getAllPartIds method', async () => {
+      const entityId = 'test-entity-1';
+      const mockBodyComponent = {
+        body: { root: 'torso-1' },
+      };
+      const expectedPartIds = ['torso-1', 'arm-1', 'hand-1'];
+
+      mockEntityManager.getComponentData.mockResolvedValue(mockBodyComponent);
+      mockQueryCache.getCachedGetAllParts.mockReturnValue(expectedPartIds);
+
+      const result = await service.getBodyGraph(entityId);
+      const partIds = result.getAllPartIds();
+
+      expect(partIds).toEqual(expectedPartIds);
+    });
+
+    it('should throw InvalidArgumentError if entityId is null', async () => {
+      await expect(service.getBodyGraph(null)).rejects.toThrow(
+        InvalidArgumentError
+      );
+    });
+
+    it('should throw InvalidArgumentError if entityId is undefined', async () => {
+      await expect(service.getBodyGraph(undefined)).rejects.toThrow(
+        InvalidArgumentError
+      );
+    });
+
+    it('should throw InvalidArgumentError if entityId is not a string', async () => {
+      await expect(service.getBodyGraph(123)).rejects.toThrow(
+        InvalidArgumentError
+      );
+    });
+
+    it('should throw Error if entity has no anatomy:body component', async () => {
+      const entityId = 'test-entity-1';
+
+      mockEntityManager.getComponentData.mockResolvedValue(null);
+
+      await expect(service.getBodyGraph(entityId)).rejects.toThrow(
+        `Entity ${entityId} has no anatomy:body component`
+      );
+    });
+
+    it('should handle direct body structure format', async () => {
+      const entityId = 'test-entity-1';
+      const mockBodyComponent = {
+        root: 'torso-1', // Direct structure instead of nested
+      };
+      const expectedPartIds = ['torso-1'];
+
+      mockEntityManager.getComponentData.mockResolvedValue(mockBodyComponent);
+      mockQueryCache.getCachedGetAllParts.mockReturnValue(expectedPartIds);
+
+      const result = await service.getBodyGraph(entityId);
+      const partIds = result.getAllPartIds();
+
+      expect(partIds).toEqual(expectedPartIds);
+    });
+  });
 });
