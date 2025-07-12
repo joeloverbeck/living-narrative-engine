@@ -111,7 +111,7 @@ describe('Anatomy Generation Debug Integration Tests', () => {
       // Assert
       expect(result.rootId).toBe('torso-1');
       expect(result.entities).toHaveLength(19); // 19 parts total
-      expect(Object.keys(result.partsMap)).toHaveLength(19); // All parts should be in the map
+      expect(result.partsMap.size).toBe(19); // All parts should be in the map
 
       // Verify all expected parts are in the map
       const expectedParts = [
@@ -137,8 +137,8 @@ describe('Anatomy Generation Debug Integration Tests', () => {
       ];
 
       for (const partName of expectedParts) {
-        expect(result.partsMap).toHaveProperty(partName);
-        expect(result.partsMap[partName]).toMatch(/-1$/); // All IDs end with -1
+        expect(result.partsMap.has(partName)).toBe(true);
+        expect(result.partsMap.get(partName)).toMatch(/-1$/); // All IDs end with -1
       }
 
       // Verify logging
@@ -198,8 +198,8 @@ describe('Anatomy Generation Debug Integration Tests', () => {
 
       // Assert
       expect(result.entities).toHaveLength(3);
-      expect(Object.keys(result.partsMap)).toHaveLength(1); // Only torso has a valid name
-      expect(result.partsMap).toEqual({ torso: 'torso-1' });
+      expect(result.partsMap.size).toBe(1); // Only torso has a valid name
+      expect(result.partsMap.get('torso')).toBe('torso-1');
     });
 
     it('should verify the text field is used instead of name field', async () => {
@@ -240,8 +240,8 @@ describe('Anatomy Generation Debug Integration Tests', () => {
       });
 
       // Assert
-      expect(result.partsMap).toEqual({ correct_name: 'part-1' });
-      expect(result.partsMap).not.toHaveProperty('wrong_name');
+      expect(result.partsMap.get('correct_name')).toBe('part-1');
+      expect(result.partsMap.has('wrong_name')).toBe(false);
     });
   });
 

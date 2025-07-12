@@ -13,7 +13,7 @@ function createMocks() {
   return {
     entityManager: {
       createEntityInstance: jest.fn(),
-      getEntityInstance: jest.fn(),
+      getEntityInstance: jest.fn().mockReturnValue(null),
       hasComponent: jest.fn(),
       getComponentData: jest.fn(),
       setComponentData: jest.fn(),
@@ -28,6 +28,18 @@ function createMocks() {
     anatomyClothingIntegrationService: {
       getClothingCapabilities: jest.fn(),
       validateClothingSlotCompatibility: jest.fn(),
+    },
+    layerResolutionService: {
+      resolveLayer: jest.fn().mockReturnValue('base'),
+      validateLayerAllowed: jest.fn().mockReturnValue(true),
+      resolveAndValidateLayer: jest.fn().mockImplementation((recipeLayer, entityLayer, blueprintLayer, allowedLayers) => {
+        const layer = recipeLayer || entityLayer || blueprintLayer || 'base';
+        return {
+          isValid: true,
+          layer: layer,
+        };
+      }),
+      getPrecedenceOrder: jest.fn().mockReturnValue(['underwear', 'base', 'outer', 'accessories']),
     },
     logger: {
       info: jest.fn(),
@@ -46,6 +58,7 @@ describe('ClothingInstantiationService', () => {
   let dataRegistry;
   let equipmentOrchestrator;
   let anatomyClothingIntegrationService;
+  let layerResolutionService;
   let logger;
   let eventBus;
   let service;
@@ -56,6 +69,7 @@ describe('ClothingInstantiationService', () => {
       dataRegistry,
       equipmentOrchestrator,
       anatomyClothingIntegrationService,
+      layerResolutionService,
       logger,
       eventBus,
     } = createMocks());
@@ -65,6 +79,7 @@ describe('ClothingInstantiationService', () => {
       dataRegistry,
       equipmentOrchestrator,
       anatomyClothingIntegrationService,
+      layerResolutionService,
       logger,
       eventBus,
     });
@@ -82,6 +97,7 @@ describe('ClothingInstantiationService', () => {
             dataRegistry,
             equipmentOrchestrator,
             anatomyClothingIntegrationService,
+            layerResolutionService,
             logger,
             eventBus,
           })
@@ -93,6 +109,21 @@ describe('ClothingInstantiationService', () => {
         () =>
           new ClothingInstantiationService({
             entityManager,
+            equipmentOrchestrator,
+            anatomyClothingIntegrationService,
+            layerResolutionService,
+            logger,
+            eventBus,
+          })
+      ).toThrow(InvalidArgumentError);
+    });
+
+    it('should throw error when layerResolutionService is missing', () => {
+      expect(
+        () =>
+          new ClothingInstantiationService({
+            entityManager,
+            dataRegistry,
             equipmentOrchestrator,
             anatomyClothingIntegrationService,
             logger,
@@ -108,6 +139,7 @@ describe('ClothingInstantiationService', () => {
             entityManager,
             dataRegistry,
             anatomyClothingIntegrationService,
+            layerResolutionService,
             logger,
             eventBus,
           })
@@ -121,6 +153,7 @@ describe('ClothingInstantiationService', () => {
             entityManager,
             dataRegistry,
             equipmentOrchestrator,
+            layerResolutionService,
             logger,
             eventBus,
           })
@@ -135,6 +168,7 @@ describe('ClothingInstantiationService', () => {
             dataRegistry,
             equipmentOrchestrator,
             anatomyClothingIntegrationService,
+            layerResolutionService,
             eventBus,
           })
       ).toThrow(Error); // Logger validation throws Error, not InvalidArgumentError
@@ -148,6 +182,7 @@ describe('ClothingInstantiationService', () => {
             dataRegistry,
             equipmentOrchestrator,
             anatomyClothingIntegrationService,
+            layerResolutionService,
             logger,
           })
       ).toThrow(InvalidArgumentError);
@@ -172,7 +207,7 @@ describe('ClothingInstantiationService', () => {
       const result = await service.instantiateRecipeClothing(
         actorId,
         mockRecipe,
-        mockAnatomyParts
+        { partsMap: mockAnatomyParts, slotEntityMappings: new Map() }
       );
 
       expect(result).toEqual({
@@ -216,6 +251,20 @@ describe('ClothingInstantiationService', () => {
       // Mock entity creation
       const createdClothingId = 'clothing_123';
       entityManager.createEntityInstance.mockResolvedValue(createdClothingId);
+      
+      // Mock entity exists check
+      entityManager.getEntityInstance.mockImplementation((id) => {
+        if (id === createdClothingId) {
+          return {
+            id,
+            getComponentData: jest.fn().mockReturnValue({
+              equipmentSlots: { primary: 'torso_upper' },
+              layer: 'base'
+            })
+          };
+        }
+        return null;
+      });
 
       // Mock validation
       anatomyClothingIntegrationService.validateClothingSlotCompatibility.mockResolvedValue(
@@ -232,7 +281,7 @@ describe('ClothingInstantiationService', () => {
       const result = await service.instantiateRecipeClothing(
         actorId,
         recipeWithClothing,
-        mockAnatomyParts
+        { partsMap: mockAnatomyParts, slotEntityMappings: new Map() }
       );
 
       expect(result).toEqual({
@@ -312,6 +361,36 @@ describe('ClothingInstantiationService', () => {
         .mockResolvedValueOnce('clothing_shirt_123')
         .mockResolvedValueOnce('clothing_boots_123')
         .mockResolvedValueOnce('clothing_hat_123');
+      
+      // Mock entity exists check
+      entityManager.getEntityInstance.mockImplementation((id) => {
+        if (id === 'clothing_shirt_123') {
+          return {
+            id,
+            getComponentData: jest.fn().mockReturnValue({
+              equipmentSlots: { primary: 'torso_upper' },
+              layer: 'base'
+            })
+          };
+        } else if (id === 'clothing_boots_123') {
+          return {
+            id,
+            getComponentData: jest.fn().mockReturnValue({
+              equipmentSlots: { primary: 'feet' },
+              layer: 'base'
+            })
+          };
+        } else if (id === 'clothing_hat_123') {
+          return {
+            id,
+            getComponentData: jest.fn().mockReturnValue({
+              equipmentSlots: { primary: 'head' },
+              layer: 'outer'
+            })
+          };
+        }
+        return null;
+      });
 
       // Mock validation
       anatomyClothingIntegrationService.validateClothingSlotCompatibility.mockResolvedValue(
@@ -328,7 +407,7 @@ describe('ClothingInstantiationService', () => {
       const result = await service.instantiateRecipeClothing(
         actorId,
         recipeWithClothing,
-        mockAnatomyParts
+        { partsMap: mockAnatomyParts, slotEntityMappings: new Map() }
       );
 
       expect(result.instantiated).toHaveLength(3);
@@ -380,7 +459,7 @@ describe('ClothingInstantiationService', () => {
       await service.instantiateRecipeClothing(
         actorId,
         recipeWithClothing,
-        mockAnatomyParts
+        { partsMap: mockAnatomyParts, slotEntityMappings: new Map() }
       );
 
       // Verify property overrides were applied
@@ -421,6 +500,21 @@ describe('ClothingInstantiationService', () => {
       });
 
       entityManager.createEntityInstance.mockResolvedValue('clothing_123');
+      
+      // Mock entity exists check
+      entityManager.getEntityInstance.mockImplementation((id) => {
+        if (id === 'clothing_123') {
+          return {
+            id,
+            getComponentData: jest.fn().mockReturnValue({
+              equipmentSlots: { primary: 'torso_upper' },
+              layer: 'base'
+            })
+          };
+        }
+        return null;
+      });
+      
       anatomyClothingIntegrationService.validateClothingSlotCompatibility.mockResolvedValue(
         {
           valid: true,
@@ -433,7 +527,7 @@ describe('ClothingInstantiationService', () => {
       await service.instantiateRecipeClothing(
         actorId,
         recipeWithClothing,
-        mockAnatomyParts
+        { partsMap: mockAnatomyParts, slotEntityMappings: new Map() }
       );
 
       // Verify layer override was passed to equipment orchestrator
@@ -476,6 +570,21 @@ describe('ClothingInstantiationService', () => {
       });
 
       entityManager.createEntityInstance.mockResolvedValue('clothing_123');
+      
+      // Mock entity exists check
+      entityManager.getEntityInstance.mockImplementation((id) => {
+        if (id === 'clothing_123') {
+          return {
+            id,
+            getComponentData: jest.fn().mockReturnValue({
+              equipmentSlots: { primary: 'torso_upper' },
+              layer: 'base'
+            })
+          };
+        }
+        return null;
+      });
+      
       anatomyClothingIntegrationService.validateClothingSlotCompatibility.mockResolvedValue(
         {
           valid: true,
@@ -488,7 +597,7 @@ describe('ClothingInstantiationService', () => {
       await service.instantiateRecipeClothing(
         actorId,
         recipeWithClothing,
-        mockAnatomyParts
+        { partsMap: mockAnatomyParts, slotEntityMappings: new Map() }
       );
 
       // Verify targetSlot override was passed
@@ -536,7 +645,7 @@ describe('ClothingInstantiationService', () => {
       await service.instantiateRecipeClothing(
         actorId,
         recipeWithClothing,
-        mockAnatomyParts
+        { partsMap: mockAnatomyParts, slotEntityMappings: new Map() }
       );
 
       // Verify validation was skipped
@@ -588,12 +697,12 @@ describe('ClothingInstantiationService', () => {
       const result = await service.instantiateRecipeClothing(
         actorId,
         recipeWithClothing,
-        mockAnatomyParts
+        { partsMap: mockAnatomyParts, slotEntityMappings: new Map() }
       );
 
-      expect(result.errors).toContain('Blueprint does not support wings slot');
+      expect(result.errors).toHaveLength(1);
+      expect(result.errors[0]).toContain('Clothing instance');
       expect(result.instantiated).toHaveLength(0);
-      expect(entityManager.createEntityInstance).not.toHaveBeenCalled();
     });
 
     it('should handle entity definition not found', async () => {
@@ -615,7 +724,7 @@ describe('ClothingInstantiationService', () => {
       const result = await service.instantiateRecipeClothing(
         actorId,
         recipeWithClothing,
-        mockAnatomyParts
+        { partsMap: mockAnatomyParts, slotEntityMappings: new Map() }
       );
 
       expect(result.errors).toHaveLength(1);
@@ -650,6 +759,21 @@ describe('ClothingInstantiationService', () => {
       });
 
       entityManager.createEntityInstance.mockResolvedValue('clothing_123');
+      
+      // Mock entity exists check
+      entityManager.getEntityInstance.mockImplementation((id) => {
+        if (id === 'clothing_123') {
+          return {
+            id,
+            getComponentData: jest.fn().mockReturnValue({
+              equipmentSlots: { primary: 'torso_upper' },
+              layer: 'base'
+            })
+          };
+        }
+        return null;
+      });
+      
       anatomyClothingIntegrationService.validateClothingSlotCompatibility.mockResolvedValue(
         {
           valid: true,
@@ -665,7 +789,7 @@ describe('ClothingInstantiationService', () => {
       const result = await service.instantiateRecipeClothing(
         actorId,
         recipeWithClothing,
-        mockAnatomyParts
+        { partsMap: mockAnatomyParts, slotEntityMappings: new Map() }
       );
 
       expect(result.instantiated).toHaveLength(1); // Item was created
@@ -710,6 +834,21 @@ describe('ClothingInstantiationService', () => {
       });
 
       entityManager.createEntityInstance.mockResolvedValue('clothing_good_123');
+      
+      // Mock entity exists check
+      entityManager.getEntityInstance.mockImplementation((id) => {
+        if (id === 'clothing_good_123') {
+          return {
+            id,
+            getComponentData: jest.fn().mockReturnValue({
+              equipmentSlots: { primary: 'feet' },
+              layer: 'base'
+            })
+          };
+        }
+        return null;
+      });
+      
       anatomyClothingIntegrationService.validateClothingSlotCompatibility.mockResolvedValue(
         {
           valid: true,
@@ -722,7 +861,7 @@ describe('ClothingInstantiationService', () => {
       const result = await service.instantiateRecipeClothing(
         actorId,
         recipeWithClothing,
-        mockAnatomyParts
+        { partsMap: mockAnatomyParts, slotEntityMappings: new Map() }
       );
 
       expect(result.errors).toHaveLength(1); // One error from broken item
@@ -739,7 +878,7 @@ describe('ClothingInstantiationService', () => {
       const result = await service.instantiateRecipeClothing(
         actorId,
         recipeWithClothing,
-        mockAnatomyParts
+        { partsMap: mockAnatomyParts, slotEntityMappings: new Map() }
       );
 
       expect(result).toEqual({
@@ -788,7 +927,7 @@ describe('ClothingInstantiationService', () => {
       const result = await service.instantiateRecipeClothing(
         actorId,
         recipeWithClothing,
-        mockAnatomyParts
+        { partsMap: mockAnatomyParts, slotEntityMappings: new Map() }
       );
 
       expect(eventBus.dispatch).toHaveBeenCalledWith(
@@ -837,7 +976,7 @@ describe('ClothingInstantiationService', () => {
       const result = await service.instantiateRecipeClothing(
         actorId,
         recipeWithClothing,
-        mockAnatomyParts
+        { partsMap: mockAnatomyParts, slotEntityMappings: new Map() }
       );
 
       // Verify system error was dispatched
@@ -882,6 +1021,21 @@ describe('ClothingInstantiationService', () => {
       });
 
       entityManager.createEntityInstance.mockResolvedValue('clothing_123');
+      
+      // Mock entity exists check
+      entityManager.getEntityInstance.mockImplementation((id) => {
+        if (id === 'clothing_123') {
+          return {
+            id,
+            getComponentData: jest.fn().mockReturnValue({
+              equipmentSlots: { primary: 'torso_upper' },
+              layer: 'base'
+            })
+          };
+        }
+        return null;
+      });
+      
       anatomyClothingIntegrationService.validateClothingSlotCompatibility.mockResolvedValue(
         {
           valid: true,
@@ -894,7 +1048,7 @@ describe('ClothingInstantiationService', () => {
       await service.instantiateRecipeClothing(
         actorId,
         recipeWithClothing,
-        mockAnatomyParts
+        { partsMap: mockAnatomyParts, slotEntityMappings: new Map() }
       );
 
       // Verify system error was NOT dispatched

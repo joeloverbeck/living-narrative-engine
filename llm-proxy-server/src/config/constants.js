@@ -99,6 +99,169 @@ export const LOG_LLM_ID_PROXY_NOT_OPERATIONAL = 'N/A_PROXY_NOT_OPERATIONAL';
  */
 export const LOG_LLM_ID_REQUEST_VALIDATION_FAILED = 'N/A_VALIDATION';
 
+/**
+ * Cache configuration constants
+ */
+
+/**
+ * Default cache TTL (Time To Live) in milliseconds - 5 minutes.
+ * @type {number}
+ */
+export const CACHE_DEFAULT_TTL = 5 * 60 * 1000;
+
+/**
+ * Default maximum number of entries in cache.
+ * @type {number}
+ */
+export const CACHE_DEFAULT_MAX_SIZE = 1000;
+
+/**
+ * API key cache TTL in milliseconds - 5 minutes.
+ * Used specifically for caching API keys to reduce file system reads.
+ * @type {number}
+ */
+export const API_KEY_CACHE_TTL = 5 * 60 * 1000;
+
+/**
+ * HTTP Agent configuration constants
+ */
+
+/**
+ * Default keep-alive setting for HTTP agents.
+ * @type {boolean}
+ */
+export const HTTP_AGENT_KEEP_ALIVE = true;
+
+/**
+ * Default maximum number of sockets per host.
+ * @type {number}
+ */
+export const HTTP_AGENT_MAX_SOCKETS = 50;
+
+/**
+ * Default maximum number of free sockets to keep open per host.
+ * @type {number}
+ */
+export const HTTP_AGENT_MAX_FREE_SOCKETS = 10;
+
+/**
+ * Default socket timeout in milliseconds - 60 seconds.
+ * @type {number}
+ */
+export const HTTP_AGENT_TIMEOUT = 60000;
+
+/**
+ * Default free socket timeout in milliseconds - 30 seconds.
+ * @type {number}
+ */
+export const HTTP_AGENT_FREE_SOCKET_TIMEOUT = 30000;
+
+/**
+ * Default maximum total sockets across all hosts.
+ * @type {number}
+ */
+export const HTTP_AGENT_MAX_TOTAL_SOCKETS = 500;
+
+/**
+ * Interval for cleaning up idle agents in milliseconds - 5 minutes.
+ * @type {number}
+ */
+export const HTTP_AGENT_CLEANUP_INTERVAL = 5 * 60 * 1000;
+
+/**
+ * Maximum idle time for agents before cleanup in milliseconds - 5 minutes.
+ * @type {number}
+ */
+export const HTTP_AGENT_MAX_IDLE_TIME = 5 * 60 * 1000;
+
+/**
+ * Rate limiting configuration constants
+ */
+
+/**
+ * General API rate limiting window in milliseconds - 15 minutes.
+ * @type {number}
+ */
+export const RATE_LIMIT_GENERAL_WINDOW_MS = 15 * 60 * 1000;
+
+/**
+ * Maximum general API requests per window.
+ * @type {number}
+ */
+export const RATE_LIMIT_GENERAL_MAX_REQUESTS = 100;
+
+/**
+ * LLM API rate limiting window in milliseconds - 1 minute.
+ * @type {number}
+ */
+export const RATE_LIMIT_LLM_WINDOW_MS = 60 * 1000;
+
+/**
+ * Maximum LLM API requests per window.
+ * @type {number}
+ */
+export const RATE_LIMIT_LLM_MAX_REQUESTS = 10;
+
+/**
+ * Maximum authentication requests per window.
+ * @type {number}
+ */
+export const RATE_LIMIT_AUTH_MAX_REQUESTS = 5;
+
+/**
+ * Validation configuration constants
+ */
+
+/**
+ * Maximum length for header names in validation.
+ * @type {number}
+ */
+export const VALIDATION_HEADER_NAME_MAX_LENGTH = 100;
+
+/**
+ * Maximum length for header values in validation.
+ * @type {number}
+ */
+export const VALIDATION_HEADER_VALUE_MAX_LENGTH = 1000;
+
+/**
+ * Maximum length for LLM ID in validation.
+ * @type {number}
+ */
+export const VALIDATION_LLM_ID_MAX_LENGTH = 100;
+
+/**
+ * Payload sanitization constants
+ */
+
+/**
+ * Maximum length for payload content before truncation in logs.
+ * @type {number}
+ */
+export const PAYLOAD_SANITIZATION_MAX_LENGTH = 70;
+
+/**
+ * Ellipsis string used when truncating payload content.
+ * @type {string}
+ */
+export const PAYLOAD_SANITIZATION_ELLIPSIS = '...';
+
+/**
+ * Error response constants
+ */
+
+/**
+ * Maximum length for error body preview in logs.
+ * @type {number}
+ */
+export const ERROR_BODY_PREVIEW_LENGTH = 500;
+
+/**
+ * Maximum length for short error previews in logs.
+ * @type {number}
+ */
+export const ERROR_PREVIEW_SHORT_LENGTH = 100;
+
 // Note: Other potential constants like default retry parameters (maxRetries, delays)
 // are currently handled as localized fallbacks within specific services (e.g., LlmRequestService)
 // if not provided by LLM configurations. They are not centralized here unless they become

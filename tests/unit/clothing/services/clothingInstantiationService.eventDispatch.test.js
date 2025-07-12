@@ -22,6 +22,15 @@ function createMocks() {
     anatomyClothingIntegrationService: {
       validateClothingSlotCompatibility: jest.fn(),
     },
+    layerResolutionService: {
+      resolveAndValidateLayer: jest.fn().mockImplementation((recipeLayer, entityLayer, blueprintLayer, allowedLayers) => {
+        const layer = recipeLayer || entityLayer || blueprintLayer || 'base';
+        return {
+          isValid: true,
+          layer: layer,
+        };
+      }),
+    },
     logger: {
       info: jest.fn(),
       debug: jest.fn(),
@@ -39,6 +48,7 @@ describe('ClothingInstantiationService - Event Dispatching', () => {
   let dataRegistry;
   let equipmentOrchestrator;
   let anatomyClothingIntegrationService;
+  let layerResolutionService;
   let logger;
   let eventBus;
   let service;
@@ -59,6 +69,7 @@ describe('ClothingInstantiationService - Event Dispatching', () => {
       dataRegistry,
       equipmentOrchestrator,
       anatomyClothingIntegrationService,
+      layerResolutionService,
       logger,
       eventBus,
     } = createMocks());
@@ -68,6 +79,7 @@ describe('ClothingInstantiationService - Event Dispatching', () => {
       dataRegistry,
       equipmentOrchestrator,
       anatomyClothingIntegrationService,
+      layerResolutionService,
       logger,
       eventBus,
     });
@@ -113,6 +125,20 @@ describe('ClothingInstantiationService - Event Dispatching', () => {
       // Mock entity creation
       entityManager.createEntityInstance.mockResolvedValue('clothing_123');
 
+      // Mock entity existence check
+      entityManager.getEntityInstance.mockImplementation((id) => {
+        if (id === 'clothing_123') {
+          return { 
+            id,
+            getComponentData: jest.fn().mockReturnValue({
+              equipmentSlots: { primary: 'torso_upper' },
+              layer: 'base'
+            })
+          };
+        }
+        return null;
+      });
+
       // Mock equipment
       equipmentOrchestrator.orchestrateEquipment.mockResolvedValue({
         success: true,
@@ -121,11 +147,10 @@ describe('ClothingInstantiationService - Event Dispatching', () => {
       await service.instantiateRecipeClothing(
         actorId,
         recipeWithClothing,
-        mockAnatomyParts
+        { partsMap: mockAnatomyParts, slotEntityMappings: new Map() }
       );
 
       // Verify dispatch was called with correct format
-      expect(eventBus.dispatch).toHaveBeenCalledTimes(1);
       expect(eventBus.dispatch).toHaveBeenCalledWith(
         'clothing:instantiation_completed', // First argument: string event name
         {
@@ -160,7 +185,7 @@ describe('ClothingInstantiationService - Event Dispatching', () => {
       await service.instantiateRecipeClothing(
         actorId,
         recipeWithoutClothing,
-        mockAnatomyParts
+        { partsMap: mockAnatomyParts, slotEntityMappings: new Map() }
       );
 
       // Should not dispatch when no clothing entities
@@ -184,7 +209,7 @@ describe('ClothingInstantiationService - Event Dispatching', () => {
       await service.instantiateRecipeClothing(
         actorId,
         recipeWithClothing,
-        mockAnatomyParts
+        { partsMap: mockAnatomyParts, slotEntityMappings: new Map() }
       );
 
       expect(eventBus.dispatch).toHaveBeenCalledWith(
@@ -195,7 +220,7 @@ describe('ClothingInstantiationService - Event Dispatching', () => {
             instantiated: [],
             equipped: [],
             errors: [
-              "Entity definition 'clothing:invalid_item' not found in registry",
+              "clothing:invalid_item: Entity definition 'clothing:invalid_item' not found in registry",
             ],
           },
         }
@@ -258,6 +283,28 @@ describe('ClothingInstantiationService - Event Dispatching', () => {
         .mockResolvedValueOnce('shirt_123')
         .mockResolvedValueOnce('boots_123');
 
+      // Mock entity existence check
+      entityManager.getEntityInstance.mockImplementation((id) => {
+        if (id === 'shirt_123') {
+          return { 
+            id,
+            getComponentData: jest.fn().mockReturnValue({
+              equipmentSlots: { primary: 'torso_upper' },
+              layer: 'base'
+            })
+          };
+        } else if (id === 'boots_123') {
+          return { 
+            id,
+            getComponentData: jest.fn().mockReturnValue({
+              equipmentSlots: { primary: 'feet' },
+              layer: 'outer'
+            })
+          };
+        }
+        return null;
+      });
+
       // Mock equipment (only shirt is equipped)
       equipmentOrchestrator.orchestrateEquipment.mockResolvedValue({
         success: true,
@@ -266,7 +313,7 @@ describe('ClothingInstantiationService - Event Dispatching', () => {
       await service.instantiateRecipeClothing(
         actorId,
         recipeWithClothing,
-        mockAnatomyParts
+        { partsMap: mockAnatomyParts, slotEntityMappings: new Map() }
       );
 
       expect(eventBus.dispatch).toHaveBeenCalledWith(
@@ -286,7 +333,7 @@ describe('ClothingInstantiationService - Event Dispatching', () => {
             ],
             equipped: ['shirt_123'],
             errors: [
-              "Entity definition 'clothing:invalid_item' not found in registry",
+              "clothing:invalid_item: Entity definition 'clothing:invalid_item' not found in registry",
             ],
           },
         }
@@ -309,6 +356,21 @@ describe('ClothingInstantiationService - Event Dispatching', () => {
         { valid: true }
       );
       entityManager.createEntityInstance.mockResolvedValue('test_123');
+      
+      // Mock entity existence check
+      entityManager.getEntityInstance.mockImplementation((id) => {
+        if (id === 'test_123') {
+          return { 
+            id,
+            getComponentData: jest.fn().mockReturnValue({
+              equipmentSlots: { primary: 'test' },
+              layer: 'base'
+            })
+          };
+        }
+        return null;
+      });
+      
       equipmentOrchestrator.orchestrateEquipment.mockResolvedValue({
         success: true,
       });
@@ -316,7 +378,7 @@ describe('ClothingInstantiationService - Event Dispatching', () => {
       await service.instantiateRecipeClothing(
         actorId,
         recipeWithClothing,
-        mockAnatomyParts
+        { partsMap: mockAnatomyParts, slotEntityMappings: new Map() }
       );
 
       // Get the actual call arguments

@@ -1,4 +1,11 @@
 import rateLimit from 'express-rate-limit';
+import {
+  RATE_LIMIT_GENERAL_WINDOW_MS,
+  RATE_LIMIT_GENERAL_MAX_REQUESTS,
+  RATE_LIMIT_LLM_WINDOW_MS,
+  RATE_LIMIT_LLM_MAX_REQUESTS,
+  RATE_LIMIT_AUTH_MAX_REQUESTS,
+} from '../config/constants.js';
 
 /**
  * Creates rate limiting middleware for general API requests
@@ -6,14 +13,14 @@ import rateLimit from 'express-rate-limit';
  */
 export const createApiRateLimiter = () => {
   return rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // Limit each IP to 100 requests per windowMs
+    windowMs: RATE_LIMIT_GENERAL_WINDOW_MS, // 15 minutes
+    max: RATE_LIMIT_GENERAL_MAX_REQUESTS, // Limit each IP to 100 requests per windowMs
     message: {
       error: {
         message: 'Too many requests from this IP, please try again later.',
         code: 'RATE_LIMIT_EXCEEDED',
         details: {
-          retryAfter: 15 * 60, // seconds
+          retryAfter: RATE_LIMIT_GENERAL_WINDOW_MS / 1000, // seconds
         },
       },
     },
@@ -25,7 +32,7 @@ export const createApiRateLimiter = () => {
           message: 'Too many requests from this IP, please try again later.',
           code: 'RATE_LIMIT_EXCEEDED',
           details: {
-            retryAfter: 15 * 60, // seconds
+            retryAfter: RATE_LIMIT_GENERAL_WINDOW_MS / 1000, // seconds
           },
         },
       });
@@ -39,14 +46,14 @@ export const createApiRateLimiter = () => {
  */
 export const createLlmRateLimiter = () => {
   return rateLimit({
-    windowMs: 60 * 1000, // 1 minute
-    max: 10, // Limit each IP to 10 LLM requests per minute
+    windowMs: RATE_LIMIT_LLM_WINDOW_MS, // 1 minute
+    max: RATE_LIMIT_LLM_MAX_REQUESTS, // Limit each IP to 10 LLM requests per minute
     message: {
       error: {
         message: 'Too many LLM requests, please try again later.',
         code: 'LLM_RATE_LIMIT_EXCEEDED',
         details: {
-          retryAfter: 60, // seconds
+          retryAfter: RATE_LIMIT_LLM_WINDOW_MS / 1000, // seconds
         },
       },
     },
@@ -64,7 +71,7 @@ export const createLlmRateLimiter = () => {
           message: 'Too many LLM requests, please try again later.',
           code: 'LLM_RATE_LIMIT_EXCEEDED',
           details: {
-            retryAfter: 60, // seconds
+            retryAfter: RATE_LIMIT_LLM_WINDOW_MS / 1000, // seconds
           },
         },
       });
@@ -78,8 +85,8 @@ export const createLlmRateLimiter = () => {
  */
 export const createAuthRateLimiter = () => {
   return rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 5, // Limit each IP to 5 auth requests per windowMs
+    windowMs: RATE_LIMIT_GENERAL_WINDOW_MS, // 15 minutes
+    max: RATE_LIMIT_AUTH_MAX_REQUESTS, // Limit each IP to 5 auth requests per windowMs
     skipSuccessfulRequests: true, // Don't count successful requests
     standardHeaders: true,
     legacyHeaders: false,
@@ -88,7 +95,7 @@ export const createAuthRateLimiter = () => {
         message: 'Too many authentication attempts, please try again later.',
         code: 'AUTH_RATE_LIMIT_EXCEEDED',
         details: {
-          retryAfter: 15 * 60, // seconds
+          retryAfter: RATE_LIMIT_GENERAL_WINDOW_MS / 1000, // seconds
         },
       },
     },

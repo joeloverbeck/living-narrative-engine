@@ -46,6 +46,15 @@ export default {
   },
   // --- END COVERAGE CONFIGURATION ---
 
+  // Detect open handles to help identify resource leaks
+  detectOpenHandles: true,
+
+  // Force exit after tests complete (use sparingly, prefer fixing resource leaks)
+  // forceExit: true,
+
+  // Setup and teardown files
+  setupFilesAfterEnv: [],
+
   // By default, Jest will look for files ending with .js, .jsx, .ts, .tsx, .cjs, .mjs.
   // Your `babel.config.js` is set up to transpile based on your current Node version,
   // and `babel-jest` will use it. This means ES module syntax in your .js files

@@ -274,6 +274,11 @@ describe('ClothingSystem Integration', () => {
           return Promise.resolve(null);
         }),
       },
+      slotMappingConfiguration: {
+        resolveSlotMapping: jest.fn(),
+        getSlotEntityMappings: jest.fn().mockResolvedValue(new Map()),
+        clearCache: jest.fn(),
+      },
     });
 
     clothingService = new ClothingManagementService({

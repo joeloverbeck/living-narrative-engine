@@ -61,12 +61,20 @@ describe('Amaia Castillo Recipe Clothing Integration', () => {
       }),
     };
 
+    // Create mock slot mapping configuration
+    const mockSlotMappingConfiguration = {
+      resolveSlotMapping: jest.fn(),
+      getSlotEntityMappings: jest.fn().mockResolvedValue(new Map()),
+      clearCache: jest.fn(),
+    };
+
     // Create anatomy clothing integration service
     anatomyClothingIntegrationService = new AnatomyClothingIntegrationService({
       logger,
       entityManager,
       bodyGraphService,
       dataRegistry: mockDataRegistry,
+      slotMappingConfiguration: mockSlotMappingConfiguration,
     });
   });
 

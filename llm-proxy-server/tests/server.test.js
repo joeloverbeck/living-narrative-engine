@@ -1,5 +1,13 @@
 import { LOG_LLM_ID_PROXY_NOT_OPERATIONAL } from '../src/config/constants.js';
-import { describe, test, beforeEach, expect, jest } from '@jest/globals';
+import {
+  describe,
+  test,
+  beforeEach,
+  afterEach,
+  expect,
+  jest,
+} from '@jest/globals';
+import { createTestManager } from './common/testServerUtils.js';
 
 let app;
 let expressMock;
@@ -10,9 +18,18 @@ let port;
 let operational;
 let initializationErrorDetails;
 let handleLlmRequest;
+let testManager;
 
 beforeEach(() => {
   jest.resetModules();
+
+  // Set up test manager for proper resource cleanup
+  // Note: useFakeTimers is false to avoid issues with loadServer's setTimeout
+  testManager = createTestManager({
+    mockProcessSignals: true,
+    useFakeTimers: false,
+    backupEnvironment: false,
+  });
 
   app = {
     use: jest.fn(),
@@ -20,6 +37,9 @@ beforeEach(() => {
     post: jest.fn(),
     listen: jest.fn((p, cb) => cb && cb()),
   };
+
+  // Use test manager to create properly managed server instance
+  testManager.createMockServer(app, { port });
 
   expressMock = jest.fn(() => app);
   expressMock.json = jest.fn(() => 'json-mw');
@@ -46,6 +66,23 @@ beforeEach(() => {
     isProxyPortDefaulted: jest.fn(() => false),
     getProxyAllowedOrigin: jest.fn(() => allowedOriginsArray.join(',')),
     getProxyProjectRootPathForApiKeyFiles: jest.fn(() => '/keys'),
+    isCacheEnabled: jest.fn(() => false),
+    getCacheConfig: jest.fn(() => ({
+      enabled: false,
+      defaultTtl: 300000,
+      maxSize: 1000,
+      apiKeyCacheTtl: 300000,
+    })),
+    isHttpAgentEnabled: jest.fn(() => false),
+    getHttpAgentConfig: jest.fn(() => ({
+      enabled: false,
+      keepAlive: true,
+      maxSockets: 50,
+      maxFreeSockets: 10,
+      timeout: 60000,
+      freeSocketTimeout: 30000,
+      maxTotalSockets: 500,
+    })),
   };
   const getAppConfigService = jest.fn(() => appConfigServiceMock);
   jest.doMock('../src/config/appConfig.js', () => ({
@@ -67,6 +104,27 @@ beforeEach(() => {
   jest.doMock('../src/config/llmConfigService.js', () => ({
     __esModule: true,
     LlmConfigService,
+  }));
+
+  const CacheService = jest.fn(() => ({
+    get: jest.fn(),
+    set: jest.fn(),
+    invalidatePattern: jest.fn(),
+    getStats: jest.fn(),
+  }));
+  jest.doMock('../src/services/cacheService.js', () => ({
+    __esModule: true,
+    default: CacheService,
+  }));
+
+  const HttpAgentService = jest.fn(() => ({
+    getAgent: jest.fn(),
+    getFetchOptions: jest.fn(),
+    getStats: jest.fn(),
+  }));
+  jest.doMock('../src/services/httpAgentService.js', () => ({
+    __esModule: true,
+    default: HttpAgentService,
   }));
 
   const ApiKeyService = jest.fn();
@@ -103,6 +161,13 @@ beforeEach(() => {
     __esModule: true,
     NodeFileSystemReader,
   }));
+});
+
+afterEach(() => {
+  // Clean up all resources managed by test manager
+  if (testManager) {
+    testManager.cleanup();
+  }
 });
 
 const loadServer = async () => {

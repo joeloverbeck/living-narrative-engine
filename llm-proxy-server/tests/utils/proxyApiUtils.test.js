@@ -11,7 +11,7 @@ import {
 } from '@jest/globals';
 
 // SUT (System Under Test)
-import { Workspace_retry } from '../../src/utils/proxyApiUtils.js';
+import { RetryManager } from '../../src/utils/proxyApiUtils.js';
 
 // Actual constants used by the SUT
 import { RETRYABLE_HTTP_STATUS_CODES } from '../../src/config/constants.js';
@@ -138,7 +138,7 @@ describe('proxyApiUtils', () => {
     });
   });
 
-  describe('Workspace_retry', () => {
+  describe('RetryManager', () => {
     const mockSuccessResponseData = { data: 'success' };
     const mockErrorJsonResponseData = {
       error: { message: 'error details', code: 'SOME_CODE' },
@@ -173,7 +173,7 @@ describe('proxyApiUtils', () => {
         mockFetchResponse(200, mockSuccessResponseData)
       );
 
-      const result = await Workspace_retry(
+      const retryManager = new RetryManager(
         mockUrl,
         mockDefaultOptions,
         mockMaxRetries,
@@ -182,24 +182,26 @@ describe('proxyApiUtils', () => {
         mockLogger
       );
 
+      const result = await retryManager.executeWithRetry();
+
       expect(result).toEqual(mockSuccessResponseData);
       expect(fetch).toHaveBeenCalledTimes(1);
       expect(fetch).toHaveBeenCalledWith(mockUrl, mockDefaultOptions);
       expect(ensureValidLogger).toHaveBeenCalledWith(
         mockLogger,
-        'Workspace_retry'
+        'RetryManager'
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        `Workspace_retry: Initiating request sequence for ${mockUrl} with maxRetries=${mockMaxRetries}, baseDelayMs=${mockBaseDelayMs}, maxDelayMs=${mockMaxDelayMs}.`
+        `RetryManager: Initiating request sequence for ${mockUrl} with maxRetries=${mockMaxRetries}, baseDelayMs=${mockBaseDelayMs}, maxDelayMs=${mockMaxDelayMs}.`
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
         `Attempt 1/${mockMaxRetries} - Fetching ${mockDefaultOptions.method} ${mockUrl}`
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        `Workspace_retry: Attempt 1/${mockMaxRetries} for ${mockUrl} - Request successful (status 200). Parsing JSON response.`
+        `RetryManager: Attempt 1/${mockMaxRetries} for ${mockUrl} - Request successful (status 200). Parsing JSON response.`
       );
       expect(mockLogger.info).toHaveBeenCalledWith(
-        `Workspace_retry: Successfully fetched and parsed JSON from ${mockUrl} after 1 attempt(s).`
+        `RetryManager: Successfully fetched and parsed JSON from ${mockUrl} after 1 attempt(s).`
       );
       expect(setTimeout).not.toHaveBeenCalled();
     });
@@ -216,7 +218,7 @@ describe('proxyApiUtils', () => {
 
         mathRandomSpy.mockReturnValue(0.5); // No jitter for predictable delay
 
-        const promise = Workspace_retry(
+        const retryManager = new RetryManager(
           mockUrl,
           mockDefaultOptions,
           mockMaxRetries,
@@ -224,6 +226,8 @@ describe('proxyApiUtils', () => {
           mockMaxDelayMs,
           mockLogger
         );
+
+        const promise = retryManager.executeWithRetry();
 
         await jest.runOnlyPendingTimersAsync();
 
@@ -247,7 +251,7 @@ describe('proxyApiUtils', () => {
           )
         );
         expect(mockLogger.info).toHaveBeenCalledWith(
-          `Workspace_retry: Successfully fetched and parsed JSON from ${mockUrl} after 2 attempt(s).`
+          `RetryManager: Successfully fetched and parsed JSON from ${mockUrl} after 2 attempt(s).`
         );
       });
     });
@@ -263,23 +267,23 @@ describe('proxyApiUtils', () => {
         )
       );
 
-      await expect(
-        Workspace_retry(
-          mockUrl,
-          mockDefaultOptions,
-          mockMaxRetries,
-          mockBaseDelayMs,
-          mockMaxDelayMs,
-          mockLogger
-        )
-      ).rejects.toThrow(
+      const retryManager = new RetryManager(
+        mockUrl,
+        mockDefaultOptions,
+        mockMaxRetries,
+        mockBaseDelayMs,
+        mockMaxDelayMs,
+        mockLogger
+      );
+
+      await expect(retryManager.executeWithRetry()).rejects.toThrow(
         `API request to ${mockUrl} failed after 1 attempt(s) with status ${nonRetryableStatus}: ${JSON.stringify(mockErrorJsonResponseData)}`
       );
 
       expect(fetch).toHaveBeenCalledTimes(1);
       expect(setTimeout).not.toHaveBeenCalled();
       expect(mockLogger.error).toHaveBeenCalledWith(
-        `Workspace_retry: API request to ${mockUrl} failed after 1 attempt(s) with status ${nonRetryableStatus}: ${JSON.stringify(mockErrorJsonResponseData)} (Attempt 1/${mockMaxRetries}, Non-retryable or max retries reached)`
+        `RetryManager: API request to ${mockUrl} failed after 1 attempt(s) with status ${nonRetryableStatus}: ${JSON.stringify(mockErrorJsonResponseData)} (Attempt 1/${mockMaxRetries}, Non-retryable or max retries reached)`
       );
     });
 
@@ -303,7 +307,7 @@ describe('proxyApiUtils', () => {
           );
         mathRandomSpy.mockReturnValue(0.5);
 
-        const promise = Workspace_retry(
+        const retryManager = new RetryManager(
           mockUrl,
           mockDefaultOptions,
           mockMaxRetries,
@@ -311,6 +315,8 @@ describe('proxyApiUtils', () => {
           mockMaxDelayMs,
           mockLogger
         );
+
+        const promise = retryManager.executeWithRetry();
         await jest.runOnlyPendingTimersAsync();
         const result = await promise;
 
@@ -327,10 +333,10 @@ describe('proxyApiUtils', () => {
           expectedDelay
         );
         expect(mockLogger.warn).toHaveBeenCalledWith(
-          `Workspace_retry: Attempt 1/${mockMaxRetries} for ${mockUrl} failed with network error: ${networkError.message}. Retrying in ${expectedDelay}ms...`
+          `RetryManager: Attempt 1/${mockMaxRetries} for ${mockUrl} failed with network error: ${networkError.message}. Retrying in ${expectedDelay}ms...`
         );
         expect(mockLogger.info).toHaveBeenCalledWith(
-          `Workspace_retry: Successfully fetched and parsed JSON from ${mockUrl} after 2 attempt(s).`
+          `RetryManager: Successfully fetched and parsed JSON from ${mockUrl} after 2 attempt(s).`
         );
       });
     });
@@ -339,22 +345,22 @@ describe('proxyApiUtils', () => {
       const unexpectedError = new Error('Something totally unexpected!');
       fetch.mockRejectedValueOnce(unexpectedError);
 
-      await expect(
-        Workspace_retry(
-          mockUrl,
-          mockDefaultOptions,
-          mockMaxRetries,
-          mockBaseDelayMs,
-          mockMaxDelayMs,
-          mockLogger
-        )
-      ).rejects.toThrow(
-        `Workspace_retry: Failed for ${mockUrl} after 1 attempt(s). Unexpected error: ${unexpectedError.message}`
+      const retryManager = new RetryManager(
+        mockUrl,
+        mockDefaultOptions,
+        mockMaxRetries,
+        mockBaseDelayMs,
+        mockMaxDelayMs,
+        mockLogger
+      );
+
+      await expect(retryManager.executeWithRetry()).rejects.toThrow(
+        `RetryManager: Failed for ${mockUrl} after 1 attempt(s). Unexpected error: ${unexpectedError.message}`
       );
       expect(fetch).toHaveBeenCalledTimes(1);
       expect(setTimeout).not.toHaveBeenCalled();
       expect(mockLogger.error).toHaveBeenCalledWith(
-        `Workspace_retry: Failed for ${mockUrl} after 1 attempt(s). Unexpected error: ${unexpectedError.message}`,
+        `RetryManager: Failed for ${mockUrl} after 1 attempt(s). Unexpected error: ${unexpectedError.message}`,
         expect.objectContaining({
           originalErrorName: unexpectedError.name,
           originalErrorMessage: unexpectedError.message,
@@ -368,16 +374,16 @@ describe('proxyApiUtils', () => {
       );
       mathRandomSpy.mockReturnValue(0.5);
 
-      await expect(
-        Workspace_retry(
-          mockUrl,
-          mockDefaultOptions,
-          1,
-          mockBaseDelayMs,
-          mockMaxDelayMs,
-          mockLogger
-        )
-      ).rejects.toThrow(
+      const retryManager = new RetryManager(
+        mockUrl,
+        mockDefaultOptions,
+        1,
+        mockBaseDelayMs,
+        mockMaxDelayMs,
+        mockLogger
+      );
+
+      await expect(retryManager.executeWithRetry()).rejects.toThrow(
         `API request to ${mockUrl} failed after 1 attempt(s) with status 500: ${JSON.stringify(mockErrorJsonResponseData)}`
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -402,16 +408,16 @@ describe('proxyApiUtils', () => {
       fetch.mockResolvedValueOnce(response);
       mathRandomSpy.mockReturnValue(0.5);
 
-      await expect(
-        Workspace_retry(
-          mockUrl,
-          mockDefaultOptions,
-          1,
-          mockBaseDelayMs,
-          mockMaxDelayMs,
-          mockLogger
-        )
-      ).rejects.toThrow(
+      const retryManager = new RetryManager(
+        mockUrl,
+        mockDefaultOptions,
+        1,
+        mockBaseDelayMs,
+        mockMaxDelayMs,
+        mockLogger
+      );
+
+      await expect(retryManager.executeWithRetry()).rejects.toThrow(
         `API request to ${mockUrl} failed after 1 attempt(s) with status 500: ${mockErrorTextResponseData}`
       );
       expect(response.json).toHaveBeenCalledTimes(1);
@@ -436,16 +442,16 @@ describe('proxyApiUtils', () => {
       mathRandomSpy.mockReturnValue(0.5);
       const expectedFallbackBodyText = `Status: 500, StatusText: Internal Server Error`;
 
-      await expect(
-        Workspace_retry(
-          mockUrl,
-          mockDefaultOptions,
-          1,
-          mockBaseDelayMs,
-          mockMaxDelayMs,
-          mockLogger
-        )
-      ).rejects.toThrow(
+      const retryManager = new RetryManager(
+        mockUrl,
+        mockDefaultOptions,
+        1,
+        mockBaseDelayMs,
+        mockMaxDelayMs,
+        mockLogger
+      );
+
+      await expect(retryManager.executeWithRetry()).rejects.toThrow(
         `API request to ${mockUrl} failed after 1 attempt(s) with status 500: ${expectedFallbackBodyText}`
       );
       expect(mockLogger.warn).toHaveBeenCalledWith(
@@ -460,7 +466,7 @@ describe('proxyApiUtils', () => {
       fetch.mockResolvedValueOnce(
         mockFetchResponse(200, mockSuccessResponseData)
       );
-      await Workspace_retry(
+      const retryManager = new RetryManager(
         mockUrl,
         mockDefaultOptions,
         1,
@@ -469,9 +475,11 @@ describe('proxyApiUtils', () => {
         null
       );
 
-      expect(ensureValidLogger).toHaveBeenCalledWith(null, 'Workspace_retry');
+      await retryManager.executeWithRetry();
+
+      expect(ensureValidLogger).toHaveBeenCalledWith(null, 'RetryManager');
       expect(fallbackLoggerInstance.debug).toHaveBeenCalledWith(
-        `Workspace_retry: Initiating request sequence for ${mockUrl} with maxRetries=1, baseDelayMs=${mockBaseDelayMs}, maxDelayMs=${mockMaxDelayMs}.`
+        `RetryManager: Initiating request sequence for ${mockUrl} with maxRetries=1, baseDelayMs=${mockBaseDelayMs}, maxDelayMs=${mockMaxDelayMs}.`
       );
       expect(fallbackLoggerInstance.debug).toHaveBeenCalledWith(
         `Attempt 1/1 - Fetching GET ${mockUrl}`
@@ -486,7 +494,7 @@ describe('proxyApiUtils', () => {
       fetch.mockResolvedValueOnce(
         mockFetchResponse(200, mockSuccessResponseData)
       );
-      await Workspace_retry(
+      const retryManager = new RetryManager(
         mockUrl,
         mockDefaultOptions,
         1,
@@ -495,12 +503,14 @@ describe('proxyApiUtils', () => {
         invalidLogger
       );
 
+      await retryManager.executeWithRetry();
+
       expect(ensureValidLogger).toHaveBeenCalledWith(
         invalidLogger,
-        'Workspace_retry'
+        'RetryManager'
       );
       expect(fallbackLoggerInstance.debug).toHaveBeenCalledWith(
-        `Workspace_retry: Initiating request sequence for ${mockUrl} with maxRetries=1, baseDelayMs=${mockBaseDelayMs}, maxDelayMs=${mockMaxDelayMs}.`
+        `RetryManager: Initiating request sequence for ${mockUrl} with maxRetries=1, baseDelayMs=${mockBaseDelayMs}, maxDelayMs=${mockMaxDelayMs}.`
       );
     });
 
@@ -515,7 +525,7 @@ describe('proxyApiUtils', () => {
       fetch.mockResolvedValueOnce(
         mockFetchResponse(200, mockSuccessResponseData)
       );
-      await Workspace_retry(
+      const retryManager = new RetryManager(
         mockUrl,
         mockDefaultOptions,
         1,
@@ -524,15 +534,17 @@ describe('proxyApiUtils', () => {
         null
       );
 
-      const expectedInitialLogMessage = `Workspace_retry: Initiating request sequence for ${mockUrl} with maxRetries=1, baseDelayMs=${mockBaseDelayMs}, maxDelayMs=${mockMaxDelayMs}.`;
+      await retryManager.executeWithRetry();
+
+      const expectedInitialLogMessage = `RetryManager: Initiating request sequence for ${mockUrl} with maxRetries=1, baseDelayMs=${mockBaseDelayMs}, maxDelayMs=${mockMaxDelayMs}.`;
       expect(consoleSpies.debug).toHaveBeenCalledWith(
-        'Workspace_retry: ',
+        'RetryManager: ',
         expectedInitialLogMessage
       );
 
       const expectedAttemptLogMessage = `Attempt 1/1 - Fetching GET ${mockUrl}`;
       expect(consoleSpies.debug).toHaveBeenCalledWith(
-        'Workspace_retry: ',
+        'RetryManager: ',
         expectedAttemptLogMessage
       );
 
@@ -545,7 +557,7 @@ describe('proxyApiUtils', () => {
       fetch.mockResolvedValueOnce(
         mockFetchResponse(200, mockSuccessResponseData)
       );
-      await Workspace_retry(
+      const retryManager2 = new RetryManager(
         mockUrl,
         mockDefaultOptions,
         1,
@@ -553,9 +565,11 @@ describe('proxyApiUtils', () => {
         mockMaxDelayMs,
         invalidLogger
       );
+
+      await retryManager2.executeWithRetry();
       expect(consoleSpies.warn).toHaveBeenCalledWith(
-        'Workspace_retry: ',
-        'An invalid logger instance was provided. Falling back to console logging with prefix "Workspace_retry".'
+        'RetryManager: ',
+        'An invalid logger instance was provided. Falling back to console logging with prefix "RetryManager".'
       );
     });
 
@@ -568,7 +582,7 @@ describe('proxyApiUtils', () => {
       fetch.mockResolvedValueOnce(
         mockFetchResponse(200, mockSuccessResponseData)
       );
-      await Workspace_retry(
+      const retryManager = new RetryManager(
         mockUrl,
         postOptions,
         1,
@@ -576,6 +590,8 @@ describe('proxyApiUtils', () => {
         mockMaxDelayMs,
         mockLogger
       );
+
+      await retryManager.executeWithRetry();
 
       expect(fetch).toHaveBeenCalledWith(mockUrl, postOptions);
       expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -588,7 +604,7 @@ describe('proxyApiUtils', () => {
       fetch.mockResolvedValueOnce(
         mockFetchResponse(200, mockSuccessResponseData)
       );
-      await Workspace_retry(
+      const retryManager = new RetryManager(
         mockUrl,
         optionsWithoutMethod,
         1,
@@ -596,6 +612,8 @@ describe('proxyApiUtils', () => {
         mockMaxDelayMs,
         mockLogger
       );
+
+      await retryManager.executeWithRetry();
 
       expect(fetch).toHaveBeenCalledWith(mockUrl, optionsWithoutMethod);
       expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -614,22 +632,22 @@ describe('proxyApiUtils', () => {
         )
       );
 
-      await expect(
-        Workspace_retry(
-          mockUrl,
-          mockDefaultOptions,
-          0,
-          mockBaseDelayMs,
-          mockMaxDelayMs,
-          mockLogger
-        )
-      ).rejects.toThrow(
+      const retryManager = new RetryManager(
+        mockUrl,
+        mockDefaultOptions,
+        0,
+        mockBaseDelayMs,
+        mockMaxDelayMs,
+        mockLogger
+      );
+
+      await expect(retryManager.executeWithRetry()).rejects.toThrow(
         `API request to ${mockUrl} failed after 1 attempt(s) with status ${nonRetryableStatus}: ${JSON.stringify(mockErrorJsonResponseData)}`
       );
       expect(fetch).toHaveBeenCalledTimes(1);
       expect(setTimeout).not.toHaveBeenCalled();
       expect(mockLogger.error).toHaveBeenCalledWith(
-        `Workspace_retry: API request to ${mockUrl} failed after 1 attempt(s) with status ${nonRetryableStatus}: ${JSON.stringify(mockErrorJsonResponseData)} (Attempt 1/0, Non-retryable or max retries reached)`
+        `RetryManager: API request to ${mockUrl} failed after 1 attempt(s) with status ${nonRetryableStatus}: ${JSON.stringify(mockErrorJsonResponseData)} (Attempt 1/0, Non-retryable or max retries reached)`
       );
     });
 
@@ -637,22 +655,22 @@ describe('proxyApiUtils', () => {
       const networkError = new TypeError('failed to fetch');
       fetch.mockRejectedValueOnce(networkError);
 
-      await expect(
-        Workspace_retry(
-          mockUrl,
-          mockDefaultOptions,
-          0,
-          mockBaseDelayMs,
-          mockMaxDelayMs,
-          mockLogger
-        )
-      ).rejects.toThrow(
-        `Workspace_retry: Failed for ${mockUrl} after 1 attempt(s) due to persistent network error: ${networkError.message}`
+      const retryManager = new RetryManager(
+        mockUrl,
+        mockDefaultOptions,
+        0,
+        mockBaseDelayMs,
+        mockMaxDelayMs,
+        mockLogger
+      );
+
+      await expect(retryManager.executeWithRetry()).rejects.toThrow(
+        `RetryManager: Failed for ${mockUrl} after 1 attempt(s) due to persistent network error: ${networkError.message}`
       );
       expect(fetch).toHaveBeenCalledTimes(1);
       expect(setTimeout).not.toHaveBeenCalled();
       expect(mockLogger.error).toHaveBeenCalledWith(
-        `Workspace_retry: Failed for ${mockUrl} after 1 attempt(s) due to persistent network error: ${networkError.message}`,
+        `RetryManager: Failed for ${mockUrl} after 1 attempt(s) due to persistent network error: ${networkError.message}`,
         {
           originalErrorName: networkError.name,
           originalErrorMessage: networkError.message,

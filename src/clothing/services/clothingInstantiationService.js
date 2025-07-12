@@ -10,11 +10,13 @@ import {
 } from '../../utils/dependencyUtils.js';
 import { InvalidArgumentError } from '../../errors/invalidArgumentError.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../constants/eventIds.js';
+import LayerResolutionService from './layerResolutionService.js';
 
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 /** @typedef {import('../../interfaces/coreServices.js').IDataRegistry} IDataRegistry */
 /** @typedef {import('../orchestration/equipmentOrchestrator.js').EquipmentOrchestrator} EquipmentOrchestrator */
 /** @typedef {import('../../anatomy/integration/anatomyClothingIntegrationService.js').default} AnatomyClothingIntegrationService */
+/** @typedef {import('./layerResolutionService.js').LayerResolutionService} LayerResolutionService */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 
@@ -52,6 +54,8 @@ export class ClothingInstantiationService extends BaseService {
   #equipmentOrchestrator;
   /** @type {AnatomyClothingIntegrationService} */
   #anatomyClothingIntegrationService;
+  /** @type {LayerResolutionService} */
+  #layerResolutionService;
   /** @type {ILogger} */
   #logger;
   /** @type {ISafeEventDispatcher} */
@@ -65,6 +69,7 @@ export class ClothingInstantiationService extends BaseService {
    * @param {IDataRegistry} deps.dataRegistry - Data registry for accessing loaded content
    * @param {EquipmentOrchestrator} deps.equipmentOrchestrator - Orchestrator for equipment workflows
    * @param {AnatomyClothingIntegrationService} deps.anatomyClothingIntegrationService - Anatomy-clothing bridge
+   * @param {LayerResolutionService} deps.layerResolutionService - Layer precedence resolution service
    * @param {ILogger} deps.logger - Logger instance
    * @param {ISafeEventDispatcher} deps.eventBus - Event dispatcher for system events
    */
@@ -73,6 +78,7 @@ export class ClothingInstantiationService extends BaseService {
     dataRegistry,
     equipmentOrchestrator,
     anatomyClothingIntegrationService,
+    layerResolutionService,
     logger,
     eventBus,
   }) {
@@ -95,6 +101,10 @@ export class ClothingInstantiationService extends BaseService {
         value: anatomyClothingIntegrationService,
         requiredMethods: ['validateClothingSlotCompatibility'],
       },
+      layerResolutionService: {
+        value: layerResolutionService,
+        requiredMethods: ['resolveAndValidateLayer'],
+      },
       eventBus: {
         value: eventBus,
         requiredMethods: ['dispatch'],
@@ -105,6 +115,7 @@ export class ClothingInstantiationService extends BaseService {
     this.#dataRegistry = dataRegistry;
     this.#equipmentOrchestrator = equipmentOrchestrator;
     this.#anatomyClothingIntegrationService = anatomyClothingIntegrationService;
+    this.#layerResolutionService = layerResolutionService;
     this.#eventBus = eventBus;
   }
 
@@ -113,10 +124,12 @@ export class ClothingInstantiationService extends BaseService {
    *
    * @param {string} actorId - The character entity being created
    * @param {object} recipe - The anatomy recipe containing clothingEntities
-   * @param {Map<string, string>} anatomyParts - Map of anatomy part names to entity IDs
+   * @param {object} anatomyData - Object containing partsMap and slotEntityMappings
+   * @param {Map<string, string>} anatomyData.partsMap - Map of anatomy part names to entity IDs
+   * @param {Map<string, string>} anatomyData.slotEntityMappings - Map of slot IDs to entity IDs
    * @returns {Promise<ClothingInstantiationResult>} Result containing created clothing IDs and any errors
    */
-  async instantiateRecipeClothing(actorId, recipe, anatomyParts) {
+  async instantiateRecipeClothing(actorId, recipe, anatomyData) {
     assertNonBlankString(
       actorId,
       'actorId',
@@ -130,8 +143,20 @@ export class ClothingInstantiationService extends BaseService {
       this.#logger
     );
     assertPresent(
-      anatomyParts,
+      anatomyData,
+      'Anatomy data is required',
+      InvalidArgumentError,
+      this.#logger
+    );
+    assertPresent(
+      anatomyData.partsMap,
       'Anatomy parts map is required',
+      InvalidArgumentError,
+      this.#logger
+    );
+    assertPresent(
+      anatomyData.slotEntityMappings,
+      'Slot entity mappings are required',
       InvalidArgumentError,
       this.#logger
     );
@@ -157,28 +182,32 @@ export class ClothingInstantiationService extends BaseService {
     // Process each clothing entity
     for (const clothingConfig of recipe.clothingEntities) {
       try {
-        // Validate slot compatibility if not skipping
+        // Instantiate the clothing entity first
+        const clothingId = await this.#instantiateClothing(
+          clothingConfig.entityId,
+          clothingConfig.properties,
+          clothingConfig
+        );
+
+        // Now validate slot compatibility using the actual instance
         if (!clothingConfig.skipValidation) {
-          const validationResult = await this.#validateClothingSlots(actorId, [
-            clothingConfig,
-          ]);
+          const validationResult = await this.#validateClothingSlotAfterInstantiation(
+            actorId,
+            clothingId,
+            clothingConfig
+          );
 
           if (!validationResult.isValid) {
-            // Skip this item but continue processing others
+            // Remove the instantiated entity and skip this item
+            // TODO: Add entity cleanup here if needed
             result.errors.push(
               ...(validationResult.errors || [
-                `Validation failed for ${clothingConfig.entityId}`,
+                `Post-instantiation validation failed for ${clothingConfig.entityId}`,
               ])
             );
             continue;
           }
         }
-
-        // Instantiate the clothing entity
-        const clothingId = await this.#instantiateClothing(
-          clothingConfig.entityId,
-          clothingConfig.properties
-        );
 
         result.instantiated.push({
           id: clothingId,
@@ -253,7 +282,63 @@ export class ClothingInstantiationService extends BaseService {
   }
 
   /**
-   * Validates that clothing entities can be equipped on the actor
+   * Validates that a clothing instance can be equipped on the actor after instantiation
+   *
+   * @private
+   * @param {string} actorId - The actor entity ID
+   * @param {string} clothingInstanceId - The clothing instance ID to validate
+   * @param {ClothingEntityConfig} clothingConfig - Clothing configuration
+   * @returns {Promise<{isValid: boolean, errors: string[]}>} Validation result
+   */
+  async #validateClothingSlotAfterInstantiation(actorId, clothingInstanceId, clothingConfig) {
+    const errors = [];
+
+    try {
+      // Get the actual clothing instance
+      const clothingInstance = this.#entityManager.getEntityInstance(clothingInstanceId);
+      if (!clothingInstance) {
+        errors.push(`Clothing instance '${clothingInstanceId}' not found`);
+        return { isValid: false, errors };
+      }
+
+      const clothingComponent = clothingInstance.getComponentData('clothing:wearable');
+      if (!clothingComponent) {
+        errors.push(`Clothing instance '${clothingInstanceId}' does not have clothing:wearable component`);
+        return { isValid: false, errors };
+      }
+
+      const targetSlot = clothingConfig.targetSlot || clothingComponent.equipmentSlots?.primary;
+      if (!targetSlot) {
+        errors.push(`Clothing instance '${clothingInstanceId}' does not specify a clothing slot`);
+        return { isValid: false, errors };
+      }
+
+      // Validate slot compatibility with blueprint using the actual instance
+      const validationResult =
+        await this.#anatomyClothingIntegrationService.validateClothingSlotCompatibility(
+          actorId,
+          targetSlot,
+          clothingInstanceId  // Now using instance ID instead of definition ID
+        );
+
+      if (!validationResult.valid) {
+        errors.push(
+          validationResult.reason ||
+            `Cannot equip instance ${clothingInstanceId} to slot ${targetSlot}`
+        );
+      }
+    } catch (error) {
+      errors.push(`${clothingInstanceId}: ${error.message}`);
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors,
+    };
+  }
+
+  /**
+   * Validates that clothing entities can be equipped on the actor (legacy method)
    *
    * @private
    * @param {string} actorId - The actor entity ID
@@ -327,9 +412,10 @@ export class ClothingInstantiationService extends BaseService {
    * @private
    * @param {string} entityDefId - Entity definition ID
    * @param {object} [propertyOverrides] - Properties to override
+   * @param {ClothingEntityConfig} clothingConfig - Configuration for the clothing item
    * @returns {Promise<string>} The created entity ID
    */
-  async #instantiateClothing(entityDefId, propertyOverrides) {
+  async #instantiateClothing(entityDefId, propertyOverrides, clothingConfig) {
     assertNonBlankString(
       entityDefId,
       'entityDefId',
@@ -350,10 +436,40 @@ export class ClothingInstantiationService extends BaseService {
       );
     }
 
+    // Apply layer resolution using precedence hierarchy
+    const clothingComponent = definition.components?.['clothing:wearable'];
+    let finalProperties = { ...propertyOverrides };
+    
+    if (clothingComponent) {
+      // Apply layer resolution hierarchy: Recipe > Entity > Blueprint
+      const layerResult = this.#layerResolutionService.resolveAndValidateLayer(
+        clothingConfig.layer,           // Recipe override (highest precedence)
+        clothingComponent.layer,        // Entity default (medium precedence)
+        'base',                         // Blueprint default (lowest precedence)
+        clothingComponent.allowedLayers // Allowed layers constraint
+      );
+      
+      if (!layerResult.isValid) {
+        throw new InvalidArgumentError(
+          `Layer resolution failed for ${entityDefId}: ${layerResult.error}`
+        );
+      }
+      
+      // Set the resolved layer in the clothing component
+      if (!finalProperties['clothing:wearable']) {
+        finalProperties['clothing:wearable'] = {};
+      }
+      finalProperties['clothing:wearable'].layer = layerResult.layer;
+      
+      this.#logger.debug(
+        `Resolved layer for '${entityDefId}': '${layerResult.layer}'`
+      );
+    }
+
     // Create the entity instance with property overrides
     const clothingId = await this.#entityManager.createEntityInstance(
       entityDefId,
-      propertyOverrides || {}
+      finalProperties
     );
 
     return clothingId;

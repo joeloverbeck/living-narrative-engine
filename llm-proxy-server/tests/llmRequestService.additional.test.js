@@ -6,15 +6,31 @@ import {
 } from '../src/config/constants.js';
 
 jest.mock('../src/utils/proxyApiUtils.js', () => ({
-  Workspace_retry: jest.fn(),
+  RetryManager: jest.fn(),
 }));
-import { Workspace_retry } from '../src/utils/proxyApiUtils.js';
+
+// Mock HttpAgentService
+jest.mock('../src/services/httpAgentService.js', () => ({
+  default: jest.fn().mockImplementation(() => ({
+    getAgent: jest.fn().mockReturnValue(null),
+  })),
+}));
+
+import { RetryManager } from '../src/utils/proxyApiUtils.js';
 
 const createLogger = () => ({
   debug: jest.fn(),
   info: jest.fn(),
   warn: jest.fn(),
   error: jest.fn(),
+});
+
+const createHttpAgentService = () => ({
+  getAgent: jest.fn().mockReturnValue(null),
+});
+
+const createAppConfigService = () => ({
+  isHttpAgentEnabled: jest.fn().mockReturnValue(false),
 });
 
 const baseConfig = {
@@ -25,11 +41,28 @@ const baseConfig = {
 
 describe('LlmRequestService additional coverage', () => {
   let logger;
+  let httpAgentService;
+  let appConfigService;
   let service;
+  let mockExecuteWithRetry;
 
   beforeEach(() => {
     logger = createLogger();
-    service = new LlmRequestService(logger);
+    httpAgentService = createHttpAgentService();
+    appConfigService = createAppConfigService();
+
+    // Setup RetryManager mock
+    mockExecuteWithRetry = jest.fn();
+    RetryManager.mockImplementation(() => ({
+      executeWithRetry: mockExecuteWithRetry,
+    }));
+
+    service = new LlmRequestService(
+      logger,
+      httpAgentService,
+      appConfigService,
+      RetryManager
+    );
     jest.clearAllMocks();
   });
 
@@ -77,9 +110,9 @@ describe('LlmRequestService additional coverage', () => {
   });
 
   test('forwardRequest uses default retry parameters', async () => {
-    Workspace_retry.mockResolvedValue({ ok: true });
+    mockExecuteWithRetry.mockResolvedValue({ ok: true });
     const res = await service.forwardRequest('llm1', baseConfig, { a: 1 });
-    expect(Workspace_retry).toHaveBeenCalledWith(
+    expect(RetryManager).toHaveBeenCalledWith(
       baseConfig.endpointUrl,
       {
         method: HTTP_METHOD_POST,

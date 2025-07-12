@@ -11,7 +11,7 @@ import { validationResult, body, header } from 'express-validator';
 jest.mock('express-validator', () => {
   const actualValidator = jest.requireActual('express-validator');
 
-  const mockBody = jest.fn((field) => {
+  const mockBody = jest.fn((_field) => {
     const chain = {
       exists: jest.fn().mockReturnThis(),
       withMessage: jest.fn().mockReturnThis(),
@@ -28,7 +28,7 @@ jest.mock('express-validator', () => {
     return chain;
   });
 
-  const mockHeader = jest.fn((field) => {
+  const mockHeader = jest.fn((_field) => {
     const chain = {
       exists: jest.fn().mockReturnThis(),
       withMessage: jest.fn().mockReturnThis(),
@@ -71,28 +71,28 @@ describe('Validation Middleware', () => {
     });
 
     test('validates llmId field', () => {
-      const validators = validateLlmRequest();
+      validateLlmRequest();
 
       // Verify body was called for llmId
       expect(jest.mocked(body)).toHaveBeenCalledWith('llmId');
     });
 
     test('validates targetPayload field', () => {
-      const validators = validateLlmRequest();
+      validateLlmRequest();
 
       // Verify body was called for targetPayload
       expect(jest.mocked(body)).toHaveBeenCalledWith('targetPayload');
     });
 
     test('validates targetHeaders field', () => {
-      const validators = validateLlmRequest();
+      validateLlmRequest();
 
       // Verify body was called for targetHeaders
       expect(jest.mocked(body)).toHaveBeenCalledWith('targetHeaders');
     });
 
     test('validates no extra fields', () => {
-      const validators = validateLlmRequest();
+      validateLlmRequest();
 
       // Verify body was called without parameters for extra fields check
       expect(jest.mocked(body)).toHaveBeenCalledWith();
@@ -108,13 +108,13 @@ describe('Validation Middleware', () => {
     });
 
     test('validates content-type header', () => {
-      const validators = validateRequestHeaders();
+      validateRequestHeaders();
 
       expect(jest.mocked(header)).toHaveBeenCalledWith('content-type');
     });
 
     test('sanitizes all headers', () => {
-      const validators = validateRequestHeaders();
+      validateRequestHeaders();
 
       expect(jest.mocked(header)).toHaveBeenCalledWith('*');
     });
@@ -324,7 +324,7 @@ describe('Validation Middleware', () => {
   describe('sanitizeHeaders helper', () => {
     // Testing the actual sanitizeHeaders function through the validation middleware
     test('custom sanitizer is applied to targetHeaders', () => {
-      const validators = validateLlmRequest();
+      validateLlmRequest();
 
       // Find the targetHeaders validator
       const bodyMock = jest.mocked(body);
@@ -338,7 +338,7 @@ describe('Validation Middleware', () => {
 
   describe('Custom validators', () => {
     test('targetPayload custom validator checks for empty object', () => {
-      const validators = validateLlmRequest();
+      validateLlmRequest();
 
       // The custom validator is configured through the chain
       const bodyMock = jest.mocked(body);
@@ -350,7 +350,7 @@ describe('Validation Middleware', () => {
     });
 
     test('extra fields custom validator is configured', () => {
-      const validators = validateLlmRequest();
+      validateLlmRequest();
 
       // Body called without parameters for the extra fields check
       const bodyMock = jest.mocked(body);

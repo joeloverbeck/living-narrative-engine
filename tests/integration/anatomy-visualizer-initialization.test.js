@@ -38,6 +38,13 @@ describe('Anatomy Visualizer - Service Integration', () => {
       dispatch: jest.fn(),
     };
 
+    const mockLayerResolutionService = {
+      resolveAndValidateLayer: jest.fn().mockReturnValue({
+        isValid: true,
+        layer: 'base',
+      }),
+    };
+
     let service;
     expect(() => {
       service = new ClothingInstantiationService({
@@ -46,6 +53,7 @@ describe('Anatomy Visualizer - Service Integration', () => {
         equipmentOrchestrator: mockEquipmentOrchestrator,
         anatomyClothingIntegrationService:
           mockAnatomyClothingIntegrationService,
+        layerResolutionService: mockLayerResolutionService,
         logger: createMockLogger(),
         eventBus: mockEventBus,
       });
@@ -80,6 +88,13 @@ describe('Anatomy Visualizer - Service Integration', () => {
       dispatch: jest.fn(),
     };
 
+    const mockLayerResolutionService = {
+      resolveAndValidateLayer: jest.fn().mockReturnValue({
+        isValid: true,
+        layer: 'base',
+      }),
+    };
+
     expect(() => {
       new ClothingInstantiationService({
         entityManager: mockEntityManager,
@@ -87,6 +102,7 @@ describe('Anatomy Visualizer - Service Integration', () => {
         equipmentOrchestrator: mockEquipmentOrchestrator,
         anatomyClothingIntegrationService:
           mockAnatomyClothingIntegrationService,
+        layerResolutionService: mockLayerResolutionService,
         logger: createMockLogger(),
         eventBus: mockEventBus,
       });
@@ -109,6 +125,11 @@ describe('Anatomy Visualizer - Service Integration', () => {
       },
       dataRegistry: {
         get: jest.fn(),
+      },
+      slotMappingConfiguration: {
+        resolveSlotMapping: jest.fn(),
+        getSlotEntityMappings: jest.fn().mockResolvedValue(new Map()),
+        clearCache: jest.fn(),
       },
       logger: createMockLogger(),
     };
@@ -160,11 +181,36 @@ describe('Anatomy Visualizer - Service Integration', () => {
       dispatch: jest.fn(),
     };
 
+    const mockLayerResolutionService = {
+      resolveAndValidateLayer: jest.fn().mockReturnValue({
+        isValid: true,
+        layer: 'base',
+      }),
+    };
+    
+    // Mock entity creation
+    mockEntityManager.createEntityInstance.mockResolvedValue('clothing_123');
+    
+    // Mock entity exists check
+    mockEntityManager.getEntityInstance.mockImplementation((id) => {
+      if (id === 'clothing_123') {
+        return {
+          id,
+          getComponentData: jest.fn().mockReturnValue({
+            equipmentSlots: { primary: 'torso' },
+            layer: 'base'
+          })
+        };
+      }
+      return null;
+    });
+
     const service = new ClothingInstantiationService({
       entityManager: mockEntityManager,
       dataRegistry: mockDataRegistry,
       equipmentOrchestrator: mockEquipmentOrchestrator,
       anatomyClothingIntegrationService: mockAnatomyClothingIntegrationService,
+      layerResolutionService: mockLayerResolutionService,
       logger: createMockLogger(),
       eventBus: mockEventBus,
     });
@@ -181,11 +227,11 @@ describe('Anatomy Visualizer - Service Integration', () => {
     const anatomyParts = new Map();
     anatomyParts.set('torso', 'torso_entity_123');
 
-    await service.instantiateRecipeClothing('actor_123', recipe, anatomyParts);
+    await service.instantiateRecipeClothing('actor_123', recipe, { partsMap: anatomyParts, slotEntityMappings: new Map() });
 
     // Verify the correct method was called
     expect(
       mockAnatomyClothingIntegrationService.validateClothingSlotCompatibility
-    ).toHaveBeenCalledWith('actor_123', 'torso', 'test:clothing');
+    ).toHaveBeenCalledWith('actor_123', 'torso', 'clothing_123');
   });
 });

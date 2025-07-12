@@ -6,6 +6,7 @@ import {
   DEFAULT_ENCODING_UTF8,
 } from '../config/constants.js'; // MODIFIED: Import constants
 import { maskApiKey } from '../utils/loggerUtils.js';
+import CacheService from './cacheService.js';
 
 /**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
@@ -53,6 +54,8 @@ export class ApiKeyService {
   #fileSystemReader;
   /** @type {AppConfigService} */
   #appConfigService;
+  /** @type {CacheService} */
+  #cacheService;
 
   // REMOVED: Static private field as it's now imported from constants.js
   // static #LOCAL_API_TYPES_REQUIRING_NO_PROXY_KEY = [
@@ -66,8 +69,9 @@ export class ApiKeyService {
    * @param {ILogger} logger - An ILogger instance.
    * @param {IFileSystemReader} fileSystemReader - An IFileSystemReader instance.
    * @param {AppConfigService} appConfigService - An AppConfigService instance.
+   * @param {CacheService} cacheService - A CacheService instance.
    */
-  constructor(logger, fileSystemReader, appConfigService) {
+  constructor(logger, fileSystemReader, appConfigService, cacheService) {
     if (!logger) {
       throw new Error('ApiKeyService: logger is required.');
     }
@@ -77,12 +81,16 @@ export class ApiKeyService {
     if (!appConfigService) {
       throw new Error('ApiKeyService: appConfigService is required.');
     }
+    if (!cacheService) {
+      throw new Error('ApiKeyService: cacheService is required.');
+    }
 
     this.#logger = logger;
     this.#fileSystemReader = fileSystemReader;
     this.#appConfigService = appConfigService;
+    this.#cacheService = cacheService;
 
-    this.#logger.debug('ApiKeyService: Instance created.');
+    this.#logger.debug('ApiKeyService: Instance created with caching support.');
   }
 
   /**
@@ -168,6 +176,23 @@ export class ApiKeyService {
     }
 
     const fullPath = path.join(projectRootPath, safeFileName);
+
+    // Check if caching is enabled
+    const isCacheEnabled = this.#appConfigService.isCacheEnabled();
+    const cacheKey = `api_key:file:${fullPath}`;
+    const cacheTtl = this.#appConfigService.getApiKeyCacheTtl();
+
+    // Try to get from cache if enabled
+    if (isCacheEnabled) {
+      const cachedKey = this.#cacheService.get(cacheKey);
+      if (cachedKey !== undefined) {
+        this.#logger.debug(
+          `ApiKeyService._readApiKeyFromFile: Retrieved API key from cache for llmId '${llmId}' from '${fullPath}'. Key: ${maskApiKey(cachedKey)}`
+        );
+        return { key: cachedKey, error: null };
+      }
+    }
+
     this.#logger.debug(
       `ApiKeyService._readApiKeyFromFile: Attempting to read API key from '${fullPath}' for llmId '${llmId}'.`
     );
@@ -196,6 +221,14 @@ export class ApiKeyService {
             }
           ),
         };
+      }
+
+      // Cache the key if caching is enabled
+      if (isCacheEnabled) {
+        this.#cacheService.set(cacheKey, trimmedKey, cacheTtl);
+        this.#logger.debug(
+          `ApiKeyService._readApiKeyFromFile: Cached API key for llmId '${llmId}' from '${fullPath}' with TTL ${cacheTtl}ms.`
+        );
       }
 
       this.#logger.info(
@@ -443,5 +476,64 @@ export class ApiKeyService {
     // For now, relying on logging within _createErrorDetails and _readApiKeyFromFile.
 
     return { apiKey: null, errorDetails: finalErrorDetails, source: 'N/A' };
+  }
+
+  /**
+   * Invalidates cached API keys for a specific LLM ID.
+   * @param {string} llmId - The LLM ID to invalidate cache for.
+   * @returns {number} Number of cache entries invalidated.
+   */
+  invalidateCache(llmId) {
+    if (!this.#appConfigService.isCacheEnabled()) {
+      this.#logger.debug(
+        `ApiKeyService.invalidateCache: Cache is disabled, nothing to invalidate for llmId '${llmId}'.`
+      );
+      return 0;
+    }
+
+    // Invalidate all cache entries related to this llmId
+    // Since we cache by file path, we need to invalidate by pattern
+    const pattern = new RegExp(`^api_key:`);
+    const count = this.#cacheService.invalidatePattern(pattern);
+
+    this.#logger.info(
+      `ApiKeyService.invalidateCache: Invalidated ${count} cache entries for pattern matching API keys.`
+    );
+
+    return count;
+  }
+
+  /**
+   * Invalidates all cached API keys.
+   * @returns {number} Number of cache entries invalidated.
+   */
+  invalidateAllCache() {
+    if (!this.#appConfigService.isCacheEnabled()) {
+      this.#logger.debug(
+        `ApiKeyService.invalidateAllCache: Cache is disabled, nothing to invalidate.`
+      );
+      return 0;
+    }
+
+    const pattern = new RegExp(`^api_key:`);
+    const count = this.#cacheService.invalidatePattern(pattern);
+
+    this.#logger.info(
+      `ApiKeyService.invalidateAllCache: Invalidated ${count} cache entries for all API keys.`
+    );
+
+    return count;
+  }
+
+  /**
+   * Gets cache statistics for API key caching.
+   * @returns {object | null} Cache statistics or null if caching is disabled.
+   */
+  getCacheStats() {
+    if (!this.#appConfigService.isCacheEnabled()) {
+      return null;
+    }
+
+    return this.#cacheService.getStats();
   }
 }

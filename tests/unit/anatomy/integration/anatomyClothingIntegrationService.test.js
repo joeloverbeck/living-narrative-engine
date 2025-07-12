@@ -13,6 +13,7 @@ describe('AnatomyClothingIntegrationService', () => {
   let mockEntityManager;
   let mockBodyGraphService;
   let mockDataRegistry;
+  let mockSlotMappingConfiguration;
 
   beforeEach(() => {
     mockLogger = createMockLogger();
@@ -31,6 +32,13 @@ describe('AnatomyClothingIntegrationService', () => {
     // Create mock data registry
     mockDataRegistry = {
       get: jest.fn(),
+    };
+
+    // Create mock slot mapping configuration
+    mockSlotMappingConfiguration = {
+      resolveSlotMapping: jest.fn(),
+      getSlotEntityMappings: jest.fn().mockResolvedValue(new Map()),
+      clearCache: jest.fn(),
     };
 
     // Create test data
@@ -94,6 +102,7 @@ describe('AnatomyClothingIntegrationService', () => {
       entityManager: mockEntityManager,
       bodyGraphService: mockBodyGraphService,
       dataRegistry: mockDataRegistry,
+      slotMappingConfiguration: mockSlotMappingConfiguration,
     });
   });
 
@@ -109,6 +118,19 @@ describe('AnatomyClothingIntegrationService', () => {
           entityManager: mockEntityManager,
           bodyGraphService: mockBodyGraphService,
           dataRegistry: {}, // Missing 'get' method
+          slotMappingConfiguration: mockSlotMappingConfiguration,
+        });
+      }).toThrow();
+    });
+
+    it('should validate slotMappingConfiguration is provided', () => {
+      expect(() => {
+        new AnatomyClothingIntegrationService({
+          logger: mockLogger,
+          entityManager: mockEntityManager,
+          bodyGraphService: mockBodyGraphService,
+          dataRegistry: mockDataRegistry,
+          // Missing slotMappingConfiguration
         });
       }).toThrow();
     });
@@ -126,6 +148,22 @@ describe('AnatomyClothingIntegrationService', () => {
             if (entityId === 'torso_part') {
               return {
                 sockets: [{ id: 'torso_clothing', orientation: 'neutral' }],
+              };
+            }
+          }
+          if (componentId === 'anatomy:joint') {
+            if (entityId === 'left_hand_part') {
+              return {
+                parentEntityId: 'left_arm_part',
+                parentSocketId: 'hand_socket',
+                childSocketId: 'wrist',
+              };
+            }
+            if (entityId === 'right_hand_part') {
+              return {
+                parentEntityId: 'right_arm_part',
+                parentSocketId: 'hand_socket',
+                childSocketId: 'wrist',
               };
             }
           }
@@ -251,6 +289,16 @@ describe('AnatomyClothingIntegrationService', () => {
         }),
       };
       mockBodyGraphService.getBodyGraph.mockResolvedValue(mockBodyGraph);
+
+      // Setup slot entity mappings for blueprint slot resolution
+      mockSlotMappingConfiguration.getSlotEntityMappings.mockResolvedValue(
+        new Map([
+          ['left_arm', 'left_arm_part'],
+          ['right_arm', 'right_arm_part'],
+          ['left_hand', 'left_hand_part'],
+          ['right_hand', 'right_hand_part'],
+        ])
+      );
     });
 
     it('should resolve blueprint slots to attachment points', async () => {

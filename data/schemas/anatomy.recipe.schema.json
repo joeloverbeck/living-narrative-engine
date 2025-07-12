@@ -111,7 +111,7 @@
           "layer": {
             "type": "string",
             "enum": ["underwear", "base", "outer", "accessories"],
-            "description": "Layer override (uses entity's default if not specified)"
+            "description": "Layer override (highest precedence - overrides entity and blueprint defaults)"
           },
           "properties": {
             "type": "object",

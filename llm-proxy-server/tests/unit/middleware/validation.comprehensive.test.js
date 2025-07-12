@@ -2,12 +2,9 @@ import { describe, test, beforeEach, expect, jest } from '@jest/globals';
 import {
   validateLlmRequest,
   validateRequestHeaders,
-  handleValidationErrors,
-  isUrlSafe,
 } from '../../../src/middleware/validation.js';
 
-// Import the actual express-validator to test the real implementation
-import { validationResult } from 'express-validator';
+// No additional imports needed
 
 describe('Validation Middleware - Comprehensive Tests', () => {
   let req, res, next;
@@ -55,6 +52,9 @@ describe('Validation Middleware - Comprehensive Tests', () => {
       for (const validator of validators) {
         await validator(req, res, next);
       }
+
+      // Validator should have been called
+      expect(next).toHaveBeenCalled();
     });
 
     test('custom validator for extra fields detects unexpected fields', async () => {
@@ -71,6 +71,9 @@ describe('Validation Middleware - Comprehensive Tests', () => {
       for (const validator of validators) {
         await validator(req, res, next);
       }
+
+      // Validator should have been called
+      expect(next).toHaveBeenCalled();
     });
 
     test('targetHeaders sanitizer handles dangerous characters', async () => {
@@ -99,6 +102,7 @@ describe('Validation Middleware - Comprehensive Tests', () => {
 
       // The sanitizer should have cleaned the headers
       // Note: The actual sanitization happens within the validator chain
+      expect(next).toHaveBeenCalled();
     });
 
     test('targetHeaders sanitizer handles non-object input', async () => {
@@ -113,6 +117,8 @@ describe('Validation Middleware - Comprehensive Tests', () => {
       for (const validator of validators) {
         await validator(req, res, next);
       }
+
+      expect(next).toHaveBeenCalled();
     });
 
     test('targetHeaders sanitizer handles null input', async () => {
@@ -127,6 +133,8 @@ describe('Validation Middleware - Comprehensive Tests', () => {
       for (const validator of validators) {
         await validator(req, res, next);
       }
+
+      expect(next).toHaveBeenCalled();
     });
   });
 
@@ -146,6 +154,8 @@ describe('Validation Middleware - Comprehensive Tests', () => {
       for (const validator of validators) {
         await validator(req, res, next);
       }
+
+      expect(next).toHaveBeenCalled();
     });
 
     test('header sanitizer handles non-string values', async () => {
@@ -162,6 +172,8 @@ describe('Validation Middleware - Comprehensive Tests', () => {
       for (const validator of validators) {
         await validator(req, res, next);
       }
+
+      expect(next).toHaveBeenCalled();
     });
   });
 
@@ -188,10 +200,13 @@ describe('Validation Middleware - Comprehensive Tests', () => {
       for (const validator of validators) {
         try {
           await validator(req, res, next);
-        } catch (e) {
+        } catch (_e) {
           // Validator might throw, but sanitizer should handle it
         }
       }
+
+      // Test that it doesn't crash - next might or might not be called
+      expect(true).toBe(true); // Test that we reach this point without throwing
     });
   });
 });

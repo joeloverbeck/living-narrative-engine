@@ -187,12 +187,17 @@ export class AnatomyOrchestrator extends BaseService {
       entity.getComponentData(ANATOMY_BODY_COMPONENT_ID) || {};
 
     // Update with the generated anatomy structure
+    // Convert Map to plain object for backward compatibility
+    const partsObject = graphResult.partsMap instanceof Map 
+      ? Object.fromEntries(graphResult.partsMap) 
+      : graphResult.partsMap;
+    
     const updatedData = {
       ...existingData,
       recipeId, // Ensure recipe ID is preserved
       body: {
         root: graphResult.rootId,
-        parts: graphResult.partsMap,
+        parts: partsObject,
       },
     };
 

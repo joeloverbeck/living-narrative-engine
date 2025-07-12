@@ -5,11 +5,33 @@ import {
   CONTENT_TYPE_JSON,
 } from '../src/config/constants.js';
 
+// Mock HttpAgentService
+jest.mock('../src/services/httpAgentService.js', () => ({
+  default: jest.fn().mockImplementation(() => ({
+    getAgent: jest.fn().mockReturnValue(null),
+  })),
+}));
+
+// Mock RetryManager
+jest.mock('../src/utils/proxyApiUtils.js', () => ({
+  RetryManager: jest.fn(),
+}));
+
+import { RetryManager } from '../src/utils/proxyApiUtils.js';
+
 const createLogger = () => ({
   debug: jest.fn(),
   info: jest.fn(),
   warn: jest.fn(),
   error: jest.fn(),
+});
+
+const createHttpAgentService = () => ({
+  getAgent: jest.fn().mockReturnValue(null),
+});
+
+const createAppConfigService = () => ({
+  isHttpAgentEnabled: jest.fn().mockReturnValue(false),
 });
 
 const baseConfig = {
@@ -20,11 +42,28 @@ const baseConfig = {
 
 describe('LlmRequestService uncovered branches', () => {
   let logger;
+  let httpAgentService;
+  let appConfigService;
   let service;
+  let mockExecuteWithRetry;
 
   beforeEach(() => {
     logger = createLogger();
-    service = new LlmRequestService(logger);
+    httpAgentService = createHttpAgentService();
+    appConfigService = createAppConfigService();
+
+    // Setup RetryManager mock
+    mockExecuteWithRetry = jest.fn();
+    RetryManager.mockImplementation(() => ({
+      executeWithRetry: mockExecuteWithRetry,
+    }));
+
+    service = new LlmRequestService(
+      logger,
+      httpAgentService,
+      appConfigService,
+      RetryManager
+    );
     jest.clearAllMocks();
   });
 
