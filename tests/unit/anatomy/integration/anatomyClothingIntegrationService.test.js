@@ -36,7 +36,7 @@ describe('AnatomyClothingIntegrationService', () => {
     // Create test data
     const testRecipe = {
       id: 'test:humanoid_recipe',
-      blueprint: 'test:humanoid_blueprint',
+      blueprintId: 'test:humanoid_blueprint',
     };
 
     const testBlueprint = {
@@ -327,7 +327,7 @@ describe('AnatomyClothingIntegrationService', () => {
       // Mock blueprint with slot but no valid attachment points
       mockDataRegistry.get.mockImplementation((category, id) => {
         if (category === 'anatomyRecipes' && id === 'test:humanoid_recipe') {
-          return { id: 'test:humanoid_recipe', blueprint: 'test:humanoid_blueprint' };
+          return { id: 'test:humanoid_recipe', blueprintId: 'test:humanoid_blueprint' };
         }
         if (category === 'anatomyBlueprints' && id === 'test:humanoid_blueprint') {
           return {

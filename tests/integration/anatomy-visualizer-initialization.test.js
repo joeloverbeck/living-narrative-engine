@@ -135,8 +135,8 @@ describe('Anatomy Visualizer - Service Integration', () => {
       get: jest.fn().mockReturnValue({
         id: 'test:clothing',
         components: {
-          'clothing:clothing': {
-            slot: 'torso',
+          'clothing:wearable': {
+            equipmentSlots: { primary: 'torso' },
           },
         },
       }),

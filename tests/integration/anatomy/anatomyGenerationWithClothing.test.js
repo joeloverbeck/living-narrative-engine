@@ -161,28 +161,28 @@ describe('Anatomy Generation with Clothing Integration', () => {
         id: 'clothing:peasant_shirt',
         components: {
           'core:name': { text: 'Peasant Shirt' },
-          'clothing:clothing': { slot: 'torso_upper', layer: 'base' },
+          'clothing:wearable': { equipmentSlots: { primary: 'torso_upper' }, layer: 'base' },
         },
       });
       dataRegistry.store('entityDefinitions', 'clothing:rough_trousers', {
         id: 'clothing:rough_trousers',
         components: {
           'core:name': { text: 'Rough Trousers' },
-          'clothing:clothing': { slot: 'legs', layer: 'base' },
+          'clothing:wearable': { equipmentSlots: { primary: 'legs' }, layer: 'base' },
         },
       });
       dataRegistry.store('entityDefinitions', 'clothing:worn_boots', {
         id: 'clothing:worn_boots',
         components: {
           'core:name': { text: 'Worn Boots' },
-          'clothing:clothing': { slot: 'feet', layer: 'outer' },
+          'clothing:wearable': { equipmentSlots: { primary: 'feet' }, layer: 'outer' },
         },
       });
       dataRegistry.store('entityDefinitions', 'clothing:straw_hat', {
         id: 'clothing:straw_hat',
         components: {
           'core:name': { text: 'Straw Hat' },
-          'clothing:clothing': { slot: 'head', layer: 'outer' },
+          'clothing:wearable': { equipmentSlots: { primary: 'head' }, layer: 'outer' },
         },
       });
 
@@ -197,7 +197,7 @@ describe('Anatomy Generation with Clothing Integration', () => {
           id: clothingId,
           components: {
             'core:name': { text: defId.replace('clothing:', '') },
-            'clothing:clothing': { equipped: false },
+            'clothing:wearable': { equipped: false },
             ...props,
           },
         });
@@ -234,7 +234,7 @@ describe('Anatomy Generation with Clothing Integration', () => {
       // Verify clothing entities were created with correct properties
       const shirtEntity = entityManager.getEntityInstance('clothing_1');
       expect(shirtEntity).toBeDefined();
-      expect(shirtEntity.getComponentData('clothing:clothing')).toBeTruthy();
+      expect(shirtEntity.getComponentData('clothing:wearable')).toBeTruthy();
 
       // Verify events were dispatched
       expect(eventBus.dispatch).toHaveBeenCalledWith(
@@ -417,7 +417,7 @@ describe('Anatomy Generation with Clothing Integration', () => {
       const genericClothing = {
         id: 'clothing:generic',
         components: {
-          'clothing:clothing': { slot: 'torso_upper' },
+          'clothing:wearable': { equipmentSlots: { primary: 'torso_upper' } },
         },
       };
       
