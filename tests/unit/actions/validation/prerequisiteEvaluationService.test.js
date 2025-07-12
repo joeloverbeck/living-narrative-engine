@@ -97,7 +97,9 @@ describe('PrerequisiteEvaluationService', () => {
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'PrerequisiteEvaluationService: PrereqEval[test:action]: → PASSED (No prerequisites to evaluate).'
       );
-      expect(mockActionValidationContextBuilder.buildContext).not.toHaveBeenCalled();
+      expect(
+        mockActionValidationContextBuilder.buildContext
+      ).not.toHaveBeenCalled();
     });
 
     it('should return true when all prerequisites pass', () => {
@@ -109,13 +111,16 @@ describe('PrerequisiteEvaluationService', () => {
       ];
       mockJsonLogicEvaluationService.evaluate.mockReturnValue(true);
 
-      const result = service.evaluate(prerequisites, mockActionDefinition, mockActor);
-
-      expect(result).toBe(true);
-      expect(mockActionValidationContextBuilder.buildContext).toHaveBeenCalledWith(
+      const result = service.evaluate(
+        prerequisites,
         mockActionDefinition,
         mockActor
       );
+
+      expect(result).toBe(true);
+      expect(
+        mockActionValidationContextBuilder.buildContext
+      ).toHaveBeenCalledWith(mockActionDefinition, mockActor);
       expect(mockJsonLogicEvaluationService.evaluate).toHaveBeenCalledWith(
         { '==': [1, 1] },
         mockContext
@@ -140,7 +145,11 @@ describe('PrerequisiteEvaluationService', () => {
         .mockReturnValueOnce(true)
         .mockReturnValueOnce(false);
 
-      const result = service.evaluate(prerequisites, mockActionDefinition, mockActor);
+      const result = service.evaluate(
+        prerequisites,
+        mockActionDefinition,
+        mockActor
+      );
 
       expect(result).toBe(false);
       expect(mockJsonLogicEvaluationService.evaluate).toHaveBeenCalledTimes(2);
@@ -162,7 +171,11 @@ describe('PrerequisiteEvaluationService', () => {
         throw new Error('Context build failed');
       });
 
-      const result = service.evaluate(prerequisites, mockActionDefinition, mockActor);
+      const result = service.evaluate(
+        prerequisites,
+        mockActionDefinition,
+        mockActor
+      );
 
       expect(result).toBe(false);
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -179,7 +192,11 @@ describe('PrerequisiteEvaluationService', () => {
         },
       ];
 
-      const result = service.evaluate(prerequisites, mockActionDefinition, mockActor);
+      const result = service.evaluate(
+        prerequisites,
+        mockActionDefinition,
+        mockActor
+      );
 
       expect(result).toBe(false);
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -216,12 +233,16 @@ describe('PrerequisiteEvaluationService', () => {
       });
       mockJsonLogicEvaluationService.evaluate.mockReturnValue(true);
 
-      const result = service.evaluate(prerequisites, mockActionDefinition, mockActor);
+      const result = service.evaluate(
+        prerequisites,
+        mockActionDefinition,
+        mockActor
+      );
 
       expect(result).toBe(true);
-      expect(mockGameDataRepository.getConditionDefinition).toHaveBeenCalledWith(
-        'test:condition'
-      );
+      expect(
+        mockGameDataRepository.getConditionDefinition
+      ).toHaveBeenCalledWith('test:condition');
       expect(mockJsonLogicEvaluationService.evaluate).toHaveBeenCalledWith(
         { '==': [1, 1] },
         mockContext
@@ -234,33 +255,36 @@ describe('PrerequisiteEvaluationService', () => {
           logic: { condition_ref: 'test:outer' },
         },
       ];
-      mockGameDataRepository.getConditionDefinition
-        .mockImplementation((id) => {
-          if (id === 'test:outer') {
-            return {
-              id: 'test:outer',
-              logic: { and: [{ condition_ref: 'test:inner' }, true] },
-            };
-          }
-          if (id === 'test:inner') {
-            return {
-              id: 'test:inner',
-              logic: { '==': [1, 1] },
-            };
-          }
-          return null;
-        });
+      mockGameDataRepository.getConditionDefinition.mockImplementation((id) => {
+        if (id === 'test:outer') {
+          return {
+            id: 'test:outer',
+            logic: { and: [{ condition_ref: 'test:inner' }, true] },
+          };
+        }
+        if (id === 'test:inner') {
+          return {
+            id: 'test:inner',
+            logic: { '==': [1, 1] },
+          };
+        }
+        return null;
+      });
       mockJsonLogicEvaluationService.evaluate.mockReturnValue(true);
 
-      const result = service.evaluate(prerequisites, mockActionDefinition, mockActor);
+      const result = service.evaluate(
+        prerequisites,
+        mockActionDefinition,
+        mockActor
+      );
 
       expect(result).toBe(true);
-      expect(mockGameDataRepository.getConditionDefinition).toHaveBeenCalledWith(
-        'test:outer'
-      );
-      expect(mockGameDataRepository.getConditionDefinition).toHaveBeenCalledWith(
-        'test:inner'
-      );
+      expect(
+        mockGameDataRepository.getConditionDefinition
+      ).toHaveBeenCalledWith('test:outer');
+      expect(
+        mockGameDataRepository.getConditionDefinition
+      ).toHaveBeenCalledWith('test:inner');
     });
 
     it('should detect circular references', () => {
@@ -269,24 +293,27 @@ describe('PrerequisiteEvaluationService', () => {
           logic: { condition_ref: 'test:circular1' },
         },
       ];
-      mockGameDataRepository.getConditionDefinition
-        .mockImplementation((id) => {
-          if (id === 'test:circular1') {
-            return {
-              id: 'test:circular1',
-              logic: { condition_ref: 'test:circular2' },
-            };
-          }
-          if (id === 'test:circular2') {
-            return {
-              id: 'test:circular2',
-              logic: { condition_ref: 'test:circular1' },
-            };
-          }
-          return null;
-        });
+      mockGameDataRepository.getConditionDefinition.mockImplementation((id) => {
+        if (id === 'test:circular1') {
+          return {
+            id: 'test:circular1',
+            logic: { condition_ref: 'test:circular2' },
+          };
+        }
+        if (id === 'test:circular2') {
+          return {
+            id: 'test:circular2',
+            logic: { condition_ref: 'test:circular1' },
+          };
+        }
+        return null;
+      });
 
-      const result = service.evaluate(prerequisites, mockActionDefinition, mockActor);
+      const result = service.evaluate(
+        prerequisites,
+        mockActionDefinition,
+        mockActor
+      );
 
       expect(result).toBe(false);
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -303,7 +330,11 @@ describe('PrerequisiteEvaluationService', () => {
       ];
       mockGameDataRepository.getConditionDefinition.mockReturnValue(null);
 
-      const result = service.evaluate(prerequisites, mockActionDefinition, mockActor);
+      const result = service.evaluate(
+        prerequisites,
+        mockActionDefinition,
+        mockActor
+      );
 
       expect(result).toBe(false);
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -346,7 +377,12 @@ describe('PrerequisiteEvaluationService', () => {
       ];
       mockJsonLogicEvaluationService.evaluate.mockReturnValue(true);
 
-      service.evaluate(prerequisites, mockActionDefinition, mockActor, mockTrace);
+      service.evaluate(
+        prerequisites,
+        mockActionDefinition,
+        mockActor,
+        mockTrace
+      );
 
       expect(mockTrace.data).toHaveBeenCalledWith(
         'Built prerequisite evaluation context.',
@@ -373,7 +409,12 @@ describe('PrerequisiteEvaluationService', () => {
       ];
       mockJsonLogicEvaluationService.evaluate.mockReturnValue(false);
 
-      service.evaluate(prerequisites, mockActionDefinition, mockActor, mockTrace);
+      service.evaluate(
+        prerequisites,
+        mockActionDefinition,
+        mockActor,
+        mockTrace
+      );
 
       expect(mockTrace.failure).toHaveBeenCalledWith(
         'Rule evaluation result: false',
@@ -391,7 +432,9 @@ describe('PrerequisiteEvaluationService', () => {
       });
       mockJsonLogicEvaluationService.evaluate.mockReturnValue(true);
 
-      const result = service.evaluate(prerequisites, null, { id: 'test:actor' });
+      const result = service.evaluate(prerequisites, null, {
+        id: 'test:actor',
+      });
 
       expect(result).toBe(true);
       expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -406,14 +449,18 @@ describe('PrerequisiteEvaluationService', () => {
       });
       mockJsonLogicEvaluationService.evaluate.mockReturnValue(true);
 
-      const result = service.evaluate(prerequisites, { id: 'test:action' }, null);
+      const result = service.evaluate(
+        prerequisites,
+        { id: 'test:action' },
+        null
+      );
 
       expect(result).toBe(true);
       // The unknown_actor appears in the context JSON log
       const debugCalls = mockLogger.debug.mock.calls;
-      const hasUnknownActor = debugCalls.some(call => 
-        call.some(arg => 
-          typeof arg === 'string' && arg.includes('unknown_actor')
+      const hasUnknownActor = debugCalls.some((call) =>
+        call.some(
+          (arg) => typeof arg === 'string' && arg.includes('unknown_actor')
         )
       );
       expect(hasUnknownActor).toBe(true);

@@ -5,7 +5,7 @@
  */
 
 /**
- * @typedef {import('./gateways.js').EntityGateway} EntityGateway
+ * @typedef {import('../scopeDsl/core/gateways.js').EntityGateway} EntityGateway
  */
 
 /**

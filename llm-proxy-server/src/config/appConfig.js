@@ -36,6 +36,8 @@ class AppConfigService {
   _proxyAllowedOrigin;
   /** @private */
   _proxyProjectRootPathForApiKeyFiles;
+  /** @private */
+  _nodeEnv;
 
   /**
    * Initializes the AppConfigService. It's recommended to use the getAppConfigService
@@ -153,6 +155,14 @@ class AppConfigService {
       this._proxyProjectRootPathForApiKeyFiles,
       'API key file retrieval relative to a project root will not be available unless this is set'
     );
+
+    // NODE_ENV
+    const nodeEnvValue = process.env.NODE_ENV;
+    this._nodeEnv = nodeEnvValue || 'development';
+    this._logger.debug(
+      `AppConfigService: NODE_ENV found in environment: '${nodeEnvValue || 'undefined'}'. Effective value: '${this._nodeEnv}'.`
+    );
+
     this._logger.debug('AppConfigService: Configuration loading complete.');
   }
 
@@ -212,6 +222,30 @@ class AppConfigService {
    */
   getProxyProjectRootPathForApiKeyFiles() {
     return this._proxyProjectRootPathForApiKeyFiles;
+  }
+
+  /**
+   * Gets the current NODE_ENV value.
+   * @returns {string} The NODE_ENV value, defaults to 'development' if not set.
+   */
+  getNodeEnv() {
+    return this._nodeEnv;
+  }
+
+  /**
+   * Checks if the application is running in production environment.
+   * @returns {boolean} True if NODE_ENV is 'production', false otherwise.
+   */
+  isProduction() {
+    return this._nodeEnv === 'production';
+  }
+
+  /**
+   * Checks if the application is running in development environment.
+   * @returns {boolean} True if NODE_ENV is 'development' or not set, false otherwise.
+   */
+  isDevelopment() {
+    return this._nodeEnv === 'development';
   }
 }
 

@@ -161,28 +161,40 @@ describe('Anatomy Generation with Clothing Integration', () => {
         id: 'clothing:peasant_shirt',
         components: {
           'core:name': { text: 'Peasant Shirt' },
-          'clothing:wearable': { equipmentSlots: { primary: 'torso_upper' }, layer: 'base' },
+          'clothing:wearable': {
+            equipmentSlots: { primary: 'torso_upper' },
+            layer: 'base',
+          },
         },
       });
       dataRegistry.store('entityDefinitions', 'clothing:rough_trousers', {
         id: 'clothing:rough_trousers',
         components: {
           'core:name': { text: 'Rough Trousers' },
-          'clothing:wearable': { equipmentSlots: { primary: 'legs' }, layer: 'base' },
+          'clothing:wearable': {
+            equipmentSlots: { primary: 'legs' },
+            layer: 'base',
+          },
         },
       });
       dataRegistry.store('entityDefinitions', 'clothing:worn_boots', {
         id: 'clothing:worn_boots',
         components: {
           'core:name': { text: 'Worn Boots' },
-          'clothing:wearable': { equipmentSlots: { primary: 'feet' }, layer: 'outer' },
+          'clothing:wearable': {
+            equipmentSlots: { primary: 'feet' },
+            layer: 'outer',
+          },
         },
       });
       dataRegistry.store('entityDefinitions', 'clothing:straw_hat', {
         id: 'clothing:straw_hat',
         components: {
           'core:name': { text: 'Straw Hat' },
-          'clothing:wearable': { equipmentSlots: { primary: 'head' }, layer: 'outer' },
+          'clothing:wearable': {
+            equipmentSlots: { primary: 'head' },
+            layer: 'outer',
+          },
         },
       });
 
@@ -420,7 +432,7 @@ describe('Anatomy Generation with Clothing Integration', () => {
           'clothing:wearable': { equipmentSlots: { primary: 'torso_upper' } },
         },
       };
-      
+
       // Store all clothing items with the generic definition
       for (let i = 1; i <= 20; i++) {
         dataRegistry.store('entityDefinitions', `clothing:item_${i}`, {

@@ -159,14 +159,17 @@ export class ClothingInstantiationService extends BaseService {
       try {
         // Validate slot compatibility if not skipping
         if (!clothingConfig.skipValidation) {
-          const validationResult = await this.#validateClothingSlots(
-            actorId,
-            [clothingConfig]
-          );
+          const validationResult = await this.#validateClothingSlots(actorId, [
+            clothingConfig,
+          ]);
 
           if (!validationResult.isValid) {
             // Skip this item but continue processing others
-            result.errors.push(...(validationResult.errors || [`Validation failed for ${clothingConfig.entityId}`]));
+            result.errors.push(
+              ...(validationResult.errors || [
+                `Validation failed for ${clothingConfig.entityId}`,
+              ])
+            );
             continue;
           }
         }
@@ -211,10 +214,7 @@ export class ClothingInstantiationService extends BaseService {
           `Error processing clothing entity '${clothingConfig.entityId}'`,
           error
         );
-        result.errors.push({
-          entityId: clothingConfig.entityId,
-          error: error.message,
-        });
+        result.errors.push(`${clothingConfig.entityId}: ${error.message}`);
       }
     }
 
@@ -231,11 +231,14 @@ export class ClothingInstantiationService extends BaseService {
       this.#eventBus.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
         message: `Clothing instantiation failed for ${result.errors.length} items`,
         details: {
-          actorId,
-          totalItems: recipe.clothingEntities?.length || 0,
-          successfullyInstantiated: result.instantiated.length,
-          successfullyEquipped: result.equipped.length,
-          errors: result.errors,
+          raw: JSON.stringify({
+            actorId,
+            totalItems: recipe.clothingEntities?.length || 0,
+            successfullyInstantiated: result.instantiated.length,
+            successfullyEquipped: result.equipped.length,
+            errors: result.errors,
+          }),
+          timestamp: new Date().toISOString(),
         },
       });
     }
@@ -263,7 +266,10 @@ export class ClothingInstantiationService extends BaseService {
     for (const config of clothingEntities) {
       try {
         // Load entity definition to get default slot
-        const definition = this.#dataRegistry.get('entityDefinitions', config.entityId);
+        const definition = this.#dataRegistry.get(
+          'entityDefinitions',
+          config.entityId
+        );
         if (!definition) {
           errors.push(
             `Entity definition '${config.entityId}' not found in registry`
@@ -279,7 +285,8 @@ export class ClothingInstantiationService extends BaseService {
           continue;
         }
 
-        const targetSlot = config.targetSlot || clothingComponent.equipmentSlots?.primary;
+        const targetSlot =
+          config.targetSlot || clothingComponent.equipmentSlots?.primary;
         if (!targetSlot) {
           errors.push(
             `Entity '${config.entityId}' does not specify a clothing slot`
@@ -298,13 +305,13 @@ export class ClothingInstantiationService extends BaseService {
           );
 
         if (!validationResult.valid) {
-          errors.push(validationResult.reason || `Cannot equip ${config.entityId} to slot ${targetSlot}`);
+          errors.push(
+            validationResult.reason ||
+              `Cannot equip ${config.entityId} to slot ${targetSlot}`
+          );
         }
       } catch (error) {
-        errors.push({
-          entityId: config.entityId,
-          error: error.message,
-        });
+        errors.push(`${config.entityId}: ${error.message}`);
       }
     }
 

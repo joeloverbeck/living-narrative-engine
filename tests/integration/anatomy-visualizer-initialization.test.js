@@ -44,7 +44,8 @@ describe('Anatomy Visualizer - Service Integration', () => {
         entityManager: mockEntityManager,
         dataRegistry: mockDataRegistry,
         equipmentOrchestrator: mockEquipmentOrchestrator,
-        anatomyClothingIntegrationService: mockAnatomyClothingIntegrationService,
+        anatomyClothingIntegrationService:
+          mockAnatomyClothingIntegrationService,
         logger: createMockLogger(),
         eventBus: mockEventBus,
       });
@@ -54,7 +55,7 @@ describe('Anatomy Visualizer - Service Integration', () => {
   });
 
   it('should fail if anatomyClothingIntegrationService lacks validateClothingSlotCompatibility', () => {
-    // This test ensures that if the wrong method name is provided, 
+    // This test ensures that if the wrong method name is provided,
     // the service will throw an error during initialization
 
     const mockEntityManager = {
@@ -84,7 +85,8 @@ describe('Anatomy Visualizer - Service Integration', () => {
         entityManager: mockEntityManager,
         dataRegistry: mockDataRegistry,
         equipmentOrchestrator: mockEquipmentOrchestrator,
-        anatomyClothingIntegrationService: mockAnatomyClothingIntegrationService,
+        anatomyClothingIntegrationService:
+          mockAnatomyClothingIntegrationService,
         logger: createMockLogger(),
         eventBus: mockEventBus,
       });

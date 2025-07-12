@@ -7,10 +7,7 @@
       "wearableType": "bra",
       "layer": "underwear",
       "coverage": {
-        "required": [
-          "left_chest",
-          "right_chest"
-        ],
+        "required": ["left_chest", "right_chest"],
         "optional": [],
         "exclusions": []
       },

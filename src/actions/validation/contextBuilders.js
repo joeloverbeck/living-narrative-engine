@@ -17,4 +17,3 @@ export function buildActorContext(entityId, entityManager, logger) {
   // This function already delegates correctly and needs no changes.
   return createEntityContext(entityId, entityManager, logger);
 }
-

@@ -76,14 +76,17 @@ export class BodyGraphService {
       this.#cacheManager.invalidateCacheForRoot(rootId);
       this.#queryCache.invalidateRoot(rootId);
     }
-    await this.#eventDispatcher.dispatch(ANATOMY_CONSTANTS.LIMB_DETACHED_EVENT_ID, {
-      detachedEntityId: partEntityId,
-      parentEntityId: parentId,
-      socketId: socketId,
-      detachedCount: toDetach.length,
-      reason: reason,
-      timestamp: Date.now(),
-    });
+    await this.#eventDispatcher.dispatch(
+      ANATOMY_CONSTANTS.LIMB_DETACHED_EVENT_ID,
+      {
+        detachedEntityId: partEntityId,
+        parentEntityId: parentId,
+        socketId: socketId,
+        detachedCount: toDetach.length,
+        reason: reason,
+        timestamp: Date.now(),
+      }
+    );
 
     this.#logger.info(
       `BodyGraphService: Detached ${toDetach.length} entities from parent '${parentId}'`
@@ -207,6 +210,35 @@ export class BodyGraphService {
     return path.split('.').reduce((current, key) => {
       return current && current[key] !== undefined ? current[key] : undefined;
     }, obj);
+  }
+
+  /**
+   * Gets body graph structure for an entity
+   *
+   * @param {string} entityId - Entity ID to get body graph for
+   * @returns {Promise<{getAllPartIds: () => string[]}>} Body graph object with getAllPartIds method
+   * @throws {InvalidArgumentError} If entityId is invalid
+   * @throws {Error} If entity has no anatomy:body component
+   */
+  async getBodyGraph(entityId) {
+    if (!entityId || typeof entityId !== 'string') {
+      throw new InvalidArgumentError(
+        'Entity ID is required and must be a string'
+      );
+    }
+
+    const bodyComponent = await this.#entityManager.getComponentData(
+      entityId,
+      'anatomy:body'
+    );
+
+    if (!bodyComponent) {
+      throw new Error(`Entity ${entityId} has no anatomy:body component`);
+    }
+
+    return {
+      getAllPartIds: () => this.getAllParts(bodyComponent),
+    };
   }
 
   validateCache() {

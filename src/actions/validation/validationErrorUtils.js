@@ -21,4 +21,3 @@ export function formatValidationError(error, context, metadata) {
 
   return formattedError;
 }
-
