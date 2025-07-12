@@ -1,73 +1,421 @@
-AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'left ear' to entity 'd491c241-3f17-4dce-868c-2c8c7da63e6f'
-consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'right ear' to entity 'c27b727b-7974-46c3-b56d-d14bfb93ab56'
-consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'nose' to entity '7056825d-7f26-4910-b058-500a79efea79'
-consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'mouth' to entity '35d22e7f-aa0f-4881-a0f7-17c1519b0484'
-consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'teeth' to entity '10e68182-aec6-4ffa-8817-10404608c431'
-consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'hair' to entity '1d6cffa4-2c73-4f98-a619-bb48b1adf9a4'
-consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'pubic hair' to entity 'bf626036-8bd6-47f6-9560-e12c87001349'
-consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'left arm hand' to entity '3c02527f-4951-49a0-bcff-b0363bac4f34'
-consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'right arm hand' to entity '4629836a-6b28-4120-8e6e-84e3c609528e'
-consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'left leg foot' to entity 'b1374ed6-2809-4f24-8642-104df00752c0'
-consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'right leg foot' to entity '484498b3-db3e-444f-8abe-4790fd48bd2b'
-consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'asshole' to entity '9fb30eac-5542-427c-8647-df98c3a53235'
+EventLoader [clothing]: Successfully processed event definition from clothing_unequipped.event.json. Returning final registry key: clothing:unequipped, Overwrite: false
+consoleLogger.js:187 [clothing] Successfully processed clothing_unequipped.event.json. Result: ID=clothing:unequipped, Overwrite=false
+consoleLogger.js:151 Mod [clothing] - Processed 5/5 events items.
+consoleLogger.js:187 ModsLoader [clothing, definitions]: Skipping content type 'conditions' (key: 'conditions') as it's not defined or empty in the manifest.
+consoleLogger.js:187 ModsLoader [clothing, definitions]: Skipping content type 'macros' (key: 'macros') as it's not defined or empty in the manifest.
+consoleLogger.js:187 ModsLoader [clothing, definitions]: Skipping content type 'actions' (key: 'actions') as it's not defined or empty in the manifest.
+consoleLogger.js:187 ModsLoader [clothing, definitions]: Skipping content type 'rules' (key: 'rules') as it's not defined or empty in the manifest.
+consoleLogger.js:187 ModsLoader [clothing, definitions]: Skipping content type 'goals' (key: 'goals') as it's not defined or empty in the manifest.
+consoleLogger.js:187 ModsLoader [clothing, definitions]: Skipping content type 'scopes' (key: 'scopes') as it's not defined or empty in the manifest.
+consoleLogger.js:187 ModsLoader [clothing, definitions]: Processing entities.definitions content with 17 files...
+consoleLogger.js:187 ModsLoader [clothing, definitions]: Found content for 'entities.definitions'. Invoking loader 'EntityDefinitionLoader'.
+consoleLogger.js:151 EntityDefinitionLoader: Loading entityDefinitions definitions for mod 'clothing'.
+consoleLogger.js:187 Found 17 potential entities.definitions files to process for mod clothing.
+consoleLogger.js:187 [clothing] Resolved path for basic_shirt.entity.json: ./data/mods/clothing/entities/definitions/basic_shirt.entity.json
+consoleLogger.js:187 [clothing] Resolved path for black_calfskin_belt.entity.json: ./data/mods/clothing/entities/definitions/black_calfskin_belt.entity.json
+consoleLogger.js:187 [clothing] Resolved path for black_stretch_silk_bodysuit.entity.json: ./data/mods/clothing/entities/definitions/black_stretch_silk_bodysuit.entity.json
+consoleLogger.js:187 [clothing] Resolved path for boxers.entity.json: ./data/mods/clothing/entities/definitions/boxers.entity.json
+consoleLogger.js:187 [clothing] Resolved path for bra.entity.json: ./data/mods/clothing/entities/definitions/bra.entity.json
+consoleLogger.js:187 [clothing] Resolved path for dress_shirt.entity.json: ./data/mods/clothing/entities/definitions/dress_shirt.entity.json
+consoleLogger.js:187 [clothing] Resolved path for graphite_wool_wide_leg_trousers.entity.json: ./data/mods/clothing/entities/definitions/graphite_wool_wide_leg_trousers.entity.json
+consoleLogger.js:187 [clothing] Resolved path for jacket.entity.json: ./data/mods/clothing/entities/definitions/jacket.entity.json
+consoleLogger.js:187 [clothing] Resolved path for jeans.entity.json: ./data/mods/clothing/entities/definitions/jeans.entity.json
+consoleLogger.js:187 [clothing] Resolved path for leather_stiletto_pumps.entity.json: ./data/mods/clothing/entities/definitions/leather_stiletto_pumps.entity.json
+consoleLogger.js:187 [clothing] Resolved path for nude_thong.entity.json: ./data/mods/clothing/entities/definitions/nude_thong.entity.json
+consoleLogger.js:187 [clothing] Resolved path for panties.entity.json: ./data/mods/clothing/entities/definitions/panties.entity.json
+consoleLogger.js:187 [clothing] Resolved path for shorts.entity.json: ./data/mods/clothing/entities/definitions/shorts.entity.json
+consoleLogger.js:187 [clothing] Resolved path for sneakers.entity.json: ./data/mods/clothing/entities/definitions/sneakers.entity.json
+consoleLogger.js:187 [clothing] Resolved path for t_shirt.entity.json: ./data/mods/clothing/entities/definitions/t_shirt.entity.json
+consoleLogger.js:187 [clothing] Resolved path for underwired_plunge_bra_nude_silk.entity.json: ./data/mods/clothing/entities/definitions/underwired_plunge_bra_nude_silk.entity.json
+consoleLogger.js:187 [clothing] Resolved path for white_structured_linen_blazer.entity.json: ./data/mods/clothing/entities/definitions/white_structured_linen_blazer.entity.json
+consoleLogger.js:187 [clothing] Fetched data from ./data/mods/clothing/entities/definitions/basic_shirt.entity.json
+consoleLogger.js:187 EntityDefinitionLoader [clothing]: Validating 'basic_shirt.entity.json' against primary schema 'http://example.com/schemas/entity-definition.schema.json'.
+consoleLogger.js:187 EntityLoader [clothing]: Processing fetched item (post-primary validation): basic_shirt.entity.json (Original Type: entityDefinitions)
+consoleLogger.js:187 EntityLoader [clothing]: Extracted full ID 'clothing:basic_shirt' and derived base ID 'basic_shirt' from basic_shirt.entity.json.
+consoleLogger.js:187 EntityLoader [clothing]: Validating 3 components for entity 'clothing:basic_shirt' from basic_shirt.entity.json...
+consoleLogger.js:187    - Component 'clothing:wearable' in entity 'clothing:basic_shirt' passed runtime validation.
+consoleLogger.js:187    - Component 'core:name' in entity 'clothing:basic_shirt' passed runtime validation.
+consoleLogger.js:187    - Component 'core:description' in entity 'clothing:basic_shirt' passed runtime validation.
+consoleLogger.js:187 EntityLoader [clothing]: All runtime component validations passed for entity 'clothing:basic_shirt' from basic_shirt.entity.json.
+consoleLogger.js:187 EntityLoader [clothing]: Created EntityDefinition instance for 'clothing:basic_shirt' from basic_shirt.entity.json. Delegating storage to base helper.
+consoleLogger.js:187 EntityDefinitionLoader [clothing]: Storing item in registry. Category: 'entityDefinitions', Qualified ID: 'clothing:basic_shirt', Base ID: 'basic_shirt', Filename: 'basic_shirt.entity.json'
+consoleLogger.js:187 EntityDefinitionLoader [clothing]: Item 'clothing:basic_shirt' (Base: 'basic_shirt') stored successfully in category 'entityDefinitions'.
+consoleLogger.js:187 EntityLoader [clothing]: Successfully processed entityDefinitions file 'basic_shirt.entity.json'. Returning final registry key: clothing:basic_shirt, Overwrite: false
+consoleLogger.js:187 [clothing] Successfully processed basic_shirt.entity.json. Result: ID=clothing:basic_shirt, Overwrite=false
+consoleLogger.js:187 [clothing] Fetched data from ./data/mods/clothing/entities/definitions/black_calfskin_belt.entity.json
+consoleLogger.js:187 EntityDefinitionLoader [clothing]: Validating 'black_calfskin_belt.entity.json' against primary schema 'http://example.com/schemas/entity-definition.schema.json'.
+consoleLogger.js:187 EntityLoader [clothing]: Processing fetched item (post-primary validation): black_calfskin_belt.entity.json (Original Type: entityDefinitions)
+consoleLogger.js:187 EntityLoader [clothing]: Extracted full ID 'clothing:black_calfskin_belt' and derived base ID 'black_calfskin_belt' from black_calfskin_belt.entity.json.
+consoleLogger.js:187 EntityLoader [clothing]: Validating 5 components for entity 'clothing:black_calfskin_belt' from black_calfskin_belt.entity.json...
+consoleLogger.js:187    - Component 'clothing:wearable' in entity 'clothing:black_calfskin_belt' passed runtime validation.
+consoleLogger.js:187    - Component 'core:name' in entity 'clothing:black_calfskin_belt' passed runtime validation.
+consoleLogger.js:187    - Component 'core:description' in entity 'clothing:black_calfskin_belt' passed runtime validation.
+consoleLogger.js:187    - Component 'descriptors:color_basic' in entity 'clothing:black_calfskin_belt' passed runtime validation.
+consoleLogger.js:187    - Component 'descriptors:texture' in entity 'clothing:black_calfskin_belt' passed runtime validation.
+consoleLogger.js:187 EntityLoader [clothing]: All runtime component validations passed for entity 'clothing:black_calfskin_belt' from black_calfskin_belt.entity.json.
+consoleLogger.js:187 EntityLoader [clothing]: Created EntityDefinition instance for 'clothing:black_calfskin_belt' from black_calfskin_belt.entity.json. Delegating storage to base helper.
+consoleLogger.js:187 EntityDefinitionLoader [clothing]: Storing item in registry. Category: 'entityDefinitions', Qualified ID: 'clothing:black_calfskin_belt', Base ID: 'black_calfskin_belt', Filename: 'black_calfskin_belt.entity.json'
+consoleLogger.js:187 EntityDefinitionLoader [clothing]: Item 'clothing:black_calfskin_belt' (Base: 'black_calfskin_belt') stored successfully in category 'entityDefinitions'.
+consoleLogger.js:187 EntityLoader [clothing]: Successfully processed entityDefinitions file 'black_calfskin_belt.entity.json'. Returning final registry key: clothing:black_calfskin_belt, Overwrite: false
+consoleLogger.js:187 [clothing] Successfully processed black_calfskin_belt.entity.json. Result: ID=clothing:black_calfskin_belt, Overwrite=false
+consoleLogger.js:187 [clothing] Fetched data from ./data/mods/clothing/entities/definitions/black_stretch_silk_bodysuit.entity.json
+consoleLogger.js:187 EntityDefinitionLoader [clothing]: Validating 'black_stretch_silk_bodysuit.entity.json' against primary schema 'http://example.com/schemas/entity-definition.schema.json'.
+consoleLogger.js:187 EntityLoader [clothing]: Processing fetched item (post-primary validation): black_stretch_silk_bodysuit.entity.json (Original Type: entityDefinitions)
+consoleLogger.js:187 EntityLoader [clothing]: Extracted full ID 'clothing:black_stretch_silk_bodysuit' and derived base ID 'black_stretch_silk_bodysuit' from black_stretch_silk_bodysuit.entity.json.
+consoleLogger.js:187 EntityLoader [clothing]: Validating 5 components for entity 'clothing:black_stretch_silk_bodysuit' from black_stretch_silk_bodysuit.entity.json...
+consoleLogger.js:187    - Component 'clothing:wearable' in entity 'clothing:black_stretch_silk_bodysuit' passed runtime validation.
+consoleLogger.js:187    - Component 'core:name' in entity 'clothing:black_stretch_silk_bodysuit' passed runtime validation.
+consoleLogger.js:187    - Component 'core:description' in entity 'clothing:black_stretch_silk_bodysuit' passed runtime validation.
+consoleLogger.js:187    - Component 'descriptors:color_basic' in entity 'clothing:black_stretch_silk_bodysuit' passed runtime validation.
+consoleLogger.js:187    - Component 'descriptors:texture' in entity 'clothing:black_stretch_silk_bodysuit' passed runtime validation.
+consoleLogger.js:187 EntityLoader [clothing]: All runtime component validations passed for entity 'clothing:black_stretch_silk_bodysuit' from black_stretch_silk_bodysuit.entity.json.
+consoleLogger.js:187 EntityLoader [clothing]: Created EntityDefinition instance for 'clothing:black_stretch_silk_bodysuit' from black_stretch_silk_bodysuit.entity.json. Delegating storage to base helper.
+consoleLogger.js:187 EntityDefinitionLoader [clothing]: Storing item in registry. Category: 'entityDefinitions', Qualified ID: 'clothing:black_stretch_silk_bodysuit', Base ID: 'black_stretch_silk_bodysuit', Filename: 'black_stretch_silk_bodysuit.entity.json'
+consoleLogger.js:187 EntityDefinitionLoader [clothing]: Item 'clothing:black_stretch_silk_bodysuit' (Base: 'black_stretch_silk_bodysuit') stored successfully in category 'entityDefinitions'.
+consoleLogger.js:187 EntityLoader [clothing]: Successfully processed entityDefinitions file 'black_stretch_silk_bodysuit.entity.json'. Returning final registry key: clothing:black_stretch_silk_bodysuit, Overwrite: false
+consoleLogger.js:187 [clothing] Successfully processed black_stretch_silk_bodysuit.entity.json. Result: ID=clothing:black_stretch_silk_bodysuit, Overwrite=false
+consoleLogger.js:187 [clothing] Fetched data from ./data/mods/clothing/entities/definitions/boxers.entity.json
+consoleLogger.js:187 EntityDefinitionLoader [clothing]: Validating 'boxers.entity.json' against primary schema 'http://example.com/schemas/entity-definition.schema.json'.
+consoleLogger.js:187 EntityLoader [clothing]: Processing fetched item (post-primary validation): boxers.entity.json (Original Type: entityDefinitions)
+consoleLogger.js:187 EntityLoader [clothing]: Extracted full ID 'clothing:boxers' and derived base ID 'boxers' from boxers.entity.json.
+consoleLogger.js:187 EntityLoader [clothing]: Validating 3 components for entity 'clothing:boxers' from boxers.entity.json...
+consoleLogger.js:187    - Component 'clothing:wearable' in entity 'clothing:boxers' passed runtime validation.
+consoleLogger.js:187    - Component 'core:name' in entity 'clothing:boxers' passed runtime validation.
+consoleLogger.js:187    - Component 'core:description' in entity 'clothing:boxers' passed runtime validation.
+consoleLogger.js:187 EntityLoader [clothing]: All runtime component validations passed for entity 'clothing:boxers' from boxers.entity.json.
+consoleLogger.js:187 EntityLoader [clothing]: Created EntityDefinition instance for 'clothing:boxers' from boxers.entity.json. Delegating storage to base helper.
+consoleLogger.js:187 EntityDefinitionLoader [clothing]: Storing item in registry. Category: 'entityDefinitions', Qualified ID: 'clothing:boxers', Base ID: 'boxers', Filename: 'boxers.entity.json'
+consoleLogger.js:187 EntityDefinitionLoader [clothing]: Item 'clothing:boxers' (Base: 'boxers') stored successfully in category 'entityDefinitions'.
+consoleLogger.js:187 EntityLoader [clothing]: Successfully processed entityDefinitions file 'boxers.entity.json'. Returning final registry key: clothing:boxers, Overwrite: false
+consoleLogger.js:187 [clothing] Successfully processed boxers.entity.json. Result: ID=clothing:boxers, Overwrite=false
+consoleLogger.js:187 [clothing] Fetched data from ./data/mods/clothing/entities/definitions/bra.entity.json
+consoleLogger.js:187 EntityDefinitionLoader [clothing]: Validating 'bra.entity.json' against primary schema 'http://example.com/schemas/entity-definition.schema.json'.
+consoleLogger.js:187 EntityLoader [clothing]: Processing fetched item (post-primary validation): bra.entity.json (Original Type: entityDefinitions)
+consoleLogger.js:187 EntityLoader [clothing]: Extracted full ID 'clothing:bra' and derived base ID 'bra' from bra.entity.json.
+consoleLogger.js:187 EntityLoader [clothing]: Validating 3 components for entity 'clothing:bra' from bra.entity.json...
+consoleLogger.js:187    - Component 'clothing:wearable' in entity 'clothing:bra' passed runtime validation.
+consoleLogger.js:187    - Component 'core:name' in entity 'clothing:bra' passed runtime validation.
+consoleLogger.js:187    - Component 'core:description' in entity 'clothing:bra' passed runtime validation.
+consoleLogger.js:187 EntityLoader [clothing]: All runtime component validations passed for entity 'clothing:bra' from bra.entity.json.
+consoleLogger.js:187 EntityLoader [clothing]: Created EntityDefinition instance for 'clothing:bra' from bra.entity.json. Delegating storage to base helper.
+consoleLogger.js:187 EntityDefinitionLoader [clothing]: Storing item in registry. Category: 'entityDefinitions', Qualified ID: 'clothing:bra', Base ID: 'bra', Filename: 'bra.entity.json'
+consoleLogger.js:187 EntityDefinitionLoader [clothing]: Item 'clothing:bra' (Base: 'bra') stored successfully in category 'entityDefinitions'.
+consoleLogger.js:187 EntityLoader [clothing]: Successfully processed entityDefinitions file 'bra.entity.json'. Returning final registry key: clothing:bra, Overwrite: false
+consoleLogger.js:187 [clothing] Successfully processed bra.entity.json. Result: ID=clothing:bra, Overwrite=false
+consoleLogger.js:187 [clothing] Fetched data from ./data/mods/clothing/entities/definitions/dress_shirt.entity.json
+consoleLogger.js:187 EntityDefinitionLoader [clothing]: Validating 'dress_shirt.entity.json' against primary schema 'http://example.com/schemas/entity-definition.schema.json'.
+consoleLogger.js:187 EntityLoader [clothing]: Processing fetched item (post-primary validation): dress_shirt.entity.json (Original Type: entityDefinitions)
+consoleLogger.js:187 EntityLoader [clothing]: Extracted full ID 'clothing:dress_shirt' and derived base ID 'dress_shirt' from dress_shirt.entity.json.
+consoleLogger.js:187 EntityLoader [clothing]: Validating 3 components for entity 'clothing:dress_shirt' from dress_shirt.entity.json...
+consoleLogger.js:187    - Component 'clothing:wearable' in entity 'clothing:dress_shirt' passed runtime validation.
+consoleLogger.js:187    - Component 'core:name' in entity 'clothing:dress_shirt' passed runtime validation.
+consoleLogger.js:187    - Component 'core:description' in entity 'clothing:dress_shirt' passed runtime validation.
+consoleLogger.js:187 EntityLoader [clothing]: All runtime component validations passed for entity 'clothing:dress_shirt' from dress_shirt.entity.json.
+consoleLogger.js:187 EntityLoader [clothing]: Created EntityDefinition instance for 'clothing:dress_shirt' from dress_shirt.entity.json. Delegating storage to base helper.
+consoleLogger.js:187 EntityDefinitionLoader [clothing]: Storing item in registry. Category: 'entityDefinitions', Qualified ID: 'clothing:dress_shirt', Base ID: 'dress_shirt', Filename: 'dress_shirt.entity.json'
+consoleLogger.js:187 EntityDefinitionLoader [clothing]: Item 'clothing:dress_shirt' (Base: 'dress_shirt') stored successfully in category 'entityDefinitions'.
+consoleLogger.js:187 EntityLoader [clothing]: Successfully processed entityDefinitions file 'dress_shirt.entity.json'. Returning final registry key: clothing:dress_shirt, Overwrite: false
+consoleLogger.js:187 [clothing] Successfully processed dress_shirt.entity.json. Result: ID=clothing:dress_shirt, Overwrite=false
+consoleLogger.js:187 [clothing] Fetched data from ./data/mods/clothing/entities/definitions/graphite_wool_wide_leg_trousers.entity.json
+consoleLogger.js:187 EntityDefinitionLoader [clothing]: Validating 'graphite_wool_wide_leg_trousers.entity.json' against primary schema 'http://example.com/schemas/entity-definition.schema.json'.
+consoleLogger.js:187 EntityLoader [clothing]: Processing fetched item (post-primary validation): graphite_wool_wide_leg_trousers.entity.json (Original Type: entityDefinitions)
+consoleLogger.js:187 EntityLoader [clothing]: Extracted full ID 'clothing:graphite_wool_wide_leg_trousers' and derived base ID 'graphite_wool_wide_leg_trousers' from graphite_wool_wide_leg_trousers.entity.json.
+consoleLogger.js:187 EntityLoader [clothing]: Validating 5 components for entity 'clothing:graphite_wool_wide_leg_trousers' from graphite_wool_wide_leg_trousers.entity.json...
+consoleLogger.js:187    - Component 'clothing:wearable' in entity 'clothing:graphite_wool_wide_leg_trousers' passed runtime validation.
+consoleLogger.js:187    - Component 'core:name' in entity 'clothing:graphite_wool_wide_leg_trousers' passed runtime validation.
+consoleLogger.js:187    - Component 'core:description' in entity 'clothing:graphite_wool_wide_leg_trousers' passed runtime validation.
+consoleLogger.js:187    - Component 'descriptors:color_basic' in entity 'clothing:graphite_wool_wide_leg_trousers' passed runtime validation.
+consoleLogger.js:187    - Component 'descriptors:texture' in entity 'clothing:graphite_wool_wide_leg_trousers' passed runtime validation.
+consoleLogger.js:187 EntityLoader [clothing]: All runtime component validations passed for entity 'clothing:graphite_wool_wide_leg_trousers' from graphite_wool_wide_leg_trousers.entity.json.
+consoleLogger.js:187 EntityLoader [clothing]: Created EntityDefinition instance for 'clothing:graphite_wool_wide_leg_trousers' from graphite_wool_wide_leg_trousers.entity.json. Delegating storage to base helper.
+consoleLogger.js:187 EntityDefinitionLoader [clothing]: Storing item in registry. Category: 'entityDefinitions', Qualified ID: 'clothing:graphite_wool_wide_leg_trousers', Base ID: 'graphite_wool_wide_leg_trousers', Filename: 'graphite_wool_wide_leg_trousers.entity.json'
+consoleLogger.js:187 EntityDefinitionLoader [clothing]: Item 'clothing:graphite_wool_wide_leg_trousers' (Base: 'graphite_wool_wide_leg_trousers') stored successfully in category 'entityDefinitions'.
+consoleLogger.js:187 EntityLoader [clothing]: Successfully processed entityDefinitions file 'graphite_wool_wide_leg_trousers.entity.json'. Returning final registry key: clothing:graphite_wool_wide_leg_trousers, Overwrite: false
+consoleLogger.js:187 [clothing] Successfully processed graphite_wool_wide_leg_trousers.entity.json. Result: ID=clothing:graphite_wool_wide_leg_trousers, Overwrite=false
+consoleLogger.js:187 [clothing] Fetched data from ./data/mods/clothing/entities/definitions/jacket.entity.json
+consoleLogger.js:187 EntityDefinitionLoader [clothing]: Validating 'jacket.entity.json' against primary schema 'http://example.com/schemas/entity-definition.schema.json'.
+consoleLogger.js:187 EntityLoader [clothing]: Processing fetched item (post-primary validation): jacket.entity.json (Original Type: entityDefinitions)
+consoleLogger.js:187 EntityLoader [clothing]: Extracted full ID 'clothing:jacket' and derived base ID 'jacket' from jacket.entity.json.
+consoleLogger.js:187 EntityLoader [clothing]: Validating 3 components for entity 'clothing:jacket' from jacket.entity.json...
+consoleLogger.js:187    - Component 'clothing:wearable' in entity 'clothing:jacket' passed runtime validation.
+consoleLogger.js:187    - Component 'core:name' in entity 'clothing:jacket' passed runtime validation.
+consoleLogger.js:187    - Component 'core:description' in entity 'clothing:jacket' passed runtime validation.
+consoleLogger.js:187 EntityLoader [clothing]: All runtime component validations passed for entity 'clothing:jacket' from jacket.entity.json.
+consoleLogger.js:187 EntityLoader [clothing]: Created EntityDefinition instance for 'clothing:jacket' from jacket.entity.json. Delegating storage to base helper.
+consoleLogger.js:187 EntityDefinitionLoader [clothing]: Storing item in registry. Category: 'entityDefinitions', Qualified ID: 'clothing:jacket', Base ID: 'jacket', Filename: 'jacket.entity.json'
+consoleLogger.js:187 EntityDefinitionLoader [clothing]: Item 'clothing:jacket' (Base: 'jacket') stored successfully in category 'entityDefinitions'.
+consoleLogger.js:187 EntityLoader [clothing]: Successfully processed entityDefinitions file 'jacket.entity.json'. Returning final registry key: clothing:jacket, Overwrite: false
+consoleLogger.js:187 [clothing] Successfully processed jacket.entity.json. Result: ID=clothing:jacket, Overwrite=false
+consoleLogger.js:187 [clothing] Fetched data from ./data/mods/clothing/entities/definitions/jeans.entity.json
+consoleLogger.js:187 EntityDefinitionLoader [clothing]: Validating 'jeans.entity.json' against primary schema 'http://example.com/schemas/entity-definition.schema.json'.
+consoleLogger.js:187 EntityLoader [clothing]: Processing fetched item (post-primary validation): jeans.entity.json (Original Type: entityDefinitions)
+consoleLogger.js:187 EntityLoader [clothing]: Extracted full ID 'clothing:jeans' and derived base ID 'jeans' from jeans.entity.json.
+consoleLogger.js:187 EntityLoader [clothing]: Validating 3 components for entity 'clothing:jeans' from jeans.entity.json...
+consoleLogger.js:187    - Component 'clothing:wearable' in entity 'clothing:jeans' passed runtime validation.
+consoleLogger.js:187    - Component 'core:name' in entity 'clothing:jeans' passed runtime validation.
+consoleLogger.js:187    - Component 'core:description' in entity 'clothing:jeans' passed runtime validation.
+consoleLogger.js:187 EntityLoader [clothing]: All runtime component validations passed for entity 'clothing:jeans' from jeans.entity.json.
+consoleLogger.js:187 EntityLoader [clothing]: Created EntityDefinition instance for 'clothing:jeans' from jeans.entity.json. Delegating storage to base helper.
+consoleLogger.js:187 EntityDefinitionLoader [clothing]: Storing item in registry. Category: 'entityDefinitions', Qualified ID: 'clothing:jeans', Base ID: 'jeans', Filename: 'jeans.entity.json'
+consoleLogger.js:187 EntityDefinitionLoader [clothing]: Item 'clothing:jeans' (Base: 'jeans') stored successfully in category 'entityDefinitions'.
+consoleLogger.js:187 EntityLoader [clothing]: Successfully processed entityDefinitions file 'jeans.entity.json'. Returning final registry key: clothing:jeans, Overwrite: false
+consoleLogger.js:187 [clothing] Successfully processed jeans.entity.json. Result: ID=clothing:jeans, Overwrite=false
+consoleLogger.js:187 [clothing] Fetched data from ./data/mods/clothing/entities/definitions/leather_stiletto_pumps.entity.json
+consoleLogger.js:187 EntityDefinitionLoader [clothing]: Validating 'leather_stiletto_pumps.entity.json' against primary schema 'http://example.com/schemas/entity-definition.schema.json'.
+consoleLogger.js:187 EntityLoader [clothing]: Processing fetched item (post-primary validation): leather_stiletto_pumps.entity.json (Original Type: entityDefinitions)
+consoleLogger.js:187 EntityLoader [clothing]: Extracted full ID 'clothing:leather_stiletto_pumps' and derived base ID 'leather_stiletto_pumps' from leather_stiletto_pumps.entity.json.
+consoleLogger.js:187 EntityLoader [clothing]: Validating 5 components for entity 'clothing:leather_stiletto_pumps' from leather_stiletto_pumps.entity.json...
+consoleLogger.js:187    - Component 'clothing:wearable' in entity 'clothing:leather_stiletto_pumps' passed runtime validation.
+consoleLogger.js:187    - Component 'core:name' in entity 'clothing:leather_stiletto_pumps' passed runtime validation.
+consoleLogger.js:187    - Component 'core:description' in entity 'clothing:leather_stiletto_pumps' passed runtime validation.
+consoleLogger.js:187    - Component 'descriptors:color_basic' in entity 'clothing:leather_stiletto_pumps' passed runtime validation.
+consoleLogger.js:187    - Component 'descriptors:texture' in entity 'clothing:leather_stiletto_pumps' passed runtime validation.
+consoleLogger.js:187 EntityLoader [clothing]: All runtime component validations passed for entity 'clothing:leather_stiletto_pumps' from leather_stiletto_pumps.entity.json.
+consoleLogger.js:187 EntityLoader [clothing]: Created EntityDefinition instance for 'clothing:leather_stiletto_pumps' from leather_stiletto_pumps.entity.json. Delegating storage to base helper.
+consoleLogger.js:187 EntityDefinitionLoader [clothing]: Storing item in registry. Category: 'entityDefinitions', Qualified ID: 'clothing:leather_stiletto_pumps', Base ID: 'leather_stiletto_pumps', Filename: 'leather_stiletto_pumps.entity.json'
+consoleLogger.js:187 EntityDefinitionLoader [clothing]: Item 'clothing:leather_stiletto_pumps' (Base: 'leather_stiletto_pumps') stored successfully in category 'entityDefinitions'.
+consoleLogger.js:187 EntityLoader [clothing]: Successfully processed entityDefinitions file 'leather_stiletto_pumps.entity.json'. Returning final registry key: clothing:leather_stiletto_pumps, Overwrite: false
+consoleLogger.js:187 [clothing] Successfully processed leather_stiletto_pumps.entity.json. Result: ID=clothing:leather_stiletto_pumps, Overwrite=false
+consoleLogger.js:187 [clothing] Fetched data from ./data/mods/clothing/entities/definitions/nude_thong.entity.json
+consoleLogger.js:187 EntityDefinitionLoader [clothing]: Validating 'nude_thong.entity.json' against primary schema 'http://example.com/schemas/entity-definition.schema.json'.
+consoleLogger.js:187 EntityLoader [clothing]: Processing fetched item (post-primary validation): nude_thong.entity.json (Original Type: entityDefinitions)
+consoleLogger.js:187 EntityLoader [clothing]: Extracted full ID 'clothing:nude_thong' and derived base ID 'nude_thong' from nude_thong.entity.json.
+consoleLogger.js:187 EntityLoader [clothing]: Validating 5 components for entity 'clothing:nude_thong' from nude_thong.entity.json...
+consoleLogger.js:187    - Component 'clothing:wearable' in entity 'clothing:nude_thong' passed runtime validation.
+consoleLogger.js:187    - Component 'core:name' in entity 'clothing:nude_thong' passed runtime validation.
+consoleLogger.js:187    - Component 'core:description' in entity 'clothing:nude_thong' passed runtime validation.
+consoleLogger.js:187    - Component 'descriptors:color_extended' in entity 'clothing:nude_thong' passed runtime validation.
+consoleLogger.js:187    - Component 'descriptors:texture' in entity 'clothing:nude_thong' passed runtime validation.
+consoleLogger.js:187 EntityLoader [clothing]: All runtime component validations passed for entity 'clothing:nude_thong' from nude_thong.entity.json.
+consoleLogger.js:187 EntityLoader [clothing]: Created EntityDefinition instance for 'clothing:nude_thong' from nude_thong.entity.json. Delegating storage to base helper.
+consoleLogger.js:187 EntityDefinitionLoader [clothing]: Storing item in registry. Category: 'entityDefinitions', Qualified ID: 'clothing:nude_thong', Base ID: 'nude_thong', Filename: 'nude_thong.entity.json'
+consoleLogger.js:187 EntityDefinitionLoader [clothing]: Item 'clothing:nude_thong' (Base: 'nude_thong') stored successfully in category 'entityDefinitions'.
+consoleLogger.js:187 EntityLoader [clothing]: Successfully processed entityDefinitions file 'nude_thong.entity.json'. Returning final registry key: clothing:nude_thong, Overwrite: false
+consoleLogger.js:187 [clothing] Successfully processed nude_thong.entity.json. Result: ID=clothing:nude_thong, Overwrite=false
+consoleLogger.js:187 [clothing] Fetched data from ./data/mods/clothing/entities/definitions/panties.entity.json
+consoleLogger.js:187 EntityDefinitionLoader [clothing]: Validating 'panties.entity.json' against primary schema 'http://example.com/schemas/entity-definition.schema.json'.
+consoleLogger.js:187 EntityLoader [clothing]: Processing fetched item (post-primary validation): panties.entity.json (Original Type: entityDefinitions)
+consoleLogger.js:187 EntityLoader [clothing]: Extracted full ID 'clothing:panties' and derived base ID 'panties' from panties.entity.json.
+consoleLogger.js:187 EntityLoader [clothing]: Validating 3 components for entity 'clothing:panties' from panties.entity.json...
+consoleLogger.js:187    - Component 'clothing:wearable' in entity 'clothing:panties' passed runtime validation.
+consoleLogger.js:187    - Component 'core:name' in entity 'clothing:panties' passed runtime validation.
+consoleLogger.js:187    - Component 'core:description' in entity 'clothing:panties' passed runtime validation.
+consoleLogger.js:187 EntityLoader [clothing]: All runtime component validations passed for entity 'clothing:panties' from panties.entity.json.
+consoleLogger.js:187 EntityLoader [clothing]: Created EntityDefinition instance for 'clothing:panties' from panties.entity.json. Delegating storage to base helper.
+consoleLogger.js:187 EntityDefinitionLoader [clothing]: Storing item in registry. Category: 'entityDefinitions', Qualified ID: 'clothing:panties', Base ID: 'panties', Filename: 'panties.entity.json'
+consoleLogger.js:187 EntityDefinitionLoader [clothing]: Item 'clothing:panties' (Base: 'panties') stored successfully in category 'entityDefinitions'.
+consoleLogger.js:187 EntityLoader [clothing]: Successfully processed entityDefinitions file 'panties.entity.json'. Returning final registry key: clothing:panties, Overwrite: false
+consoleLogger.js:187 [clothing] Successfully processed panties.entity.json. Result: ID=clothing:panties, Overwrite=false
+consoleLogger.js:187 [clothing] Fetched data from ./data/mods/clothing/entities/definitions/shorts.entity.json
+consoleLogger.js:187 EntityDefinitionLoader [clothing]: Validating 'shorts.entity.json' against primary schema 'http://example.com/schemas/entity-definition.schema.json'.
+consoleLogger.js:187 EntityLoader [clothing]: Processing fetched item (post-primary validation): shorts.entity.json (Original Type: entityDefinitions)
+consoleLogger.js:187 EntityLoader [clothing]: Extracted full ID 'clothing:shorts' and derived base ID 'shorts' from shorts.entity.json.
+consoleLogger.js:187 EntityLoader [clothing]: Validating 3 components for entity 'clothing:shorts' from shorts.entity.json...
+consoleLogger.js:187    - Component 'clothing:wearable' in entity 'clothing:shorts' passed runtime validation.
+consoleLogger.js:187    - Component 'core:name' in entity 'clothing:shorts' passed runtime validation.
+consoleLogger.js:187    - Component 'core:description' in entity 'clothing:shorts' passed runtime validation.
+consoleLogger.js:187 EntityLoader [clothing]: All runtime component validations passed for entity 'clothing:shorts' from shorts.entity.json.
+consoleLogger.js:187 EntityLoader [clothing]: Created EntityDefinition instance for 'clothing:shorts' from shorts.entity.json. Delegating storage to base helper.
+consoleLogger.js:187 EntityDefinitionLoader [clothing]: Storing item in registry. Category: 'entityDefinitions', Qualified ID: 'clothing:shorts', Base ID: 'shorts', Filename: 'shorts.entity.json'
+consoleLogger.js:187 EntityDefinitionLoader [clothing]: Item 'clothing:shorts' (Base: 'shorts') stored successfully in category 'entityDefinitions'.
+consoleLogger.js:187 EntityLoader [clothing]: Successfully processed entityDefinitions file 'shorts.entity.json'. Returning final registry key: clothing:shorts, Overwrite: false
+consoleLogger.js:187 [clothing] Successfully processed shorts.entity.json. Result: ID=clothing:shorts, Overwrite=false
+consoleLogger.js:187 [clothing] Fetched data from ./data/mods/clothing/entities/definitions/sneakers.entity.json
+consoleLogger.js:187 EntityDefinitionLoader [clothing]: Validating 'sneakers.entity.json' against primary schema 'http://example.com/schemas/entity-definition.schema.json'.
+consoleLogger.js:187 EntityLoader [clothing]: Processing fetched item (post-primary validation): sneakers.entity.json (Original Type: entityDefinitions)
+consoleLogger.js:187 EntityLoader [clothing]: Extracted full ID 'clothing:sneakers' and derived base ID 'sneakers' from sneakers.entity.json.
+consoleLogger.js:187 EntityLoader [clothing]: Validating 3 components for entity 'clothing:sneakers' from sneakers.entity.json...
+consoleLogger.js:187    - Component 'clothing:wearable' in entity 'clothing:sneakers' passed runtime validation.
+consoleLogger.js:187    - Component 'core:name' in entity 'clothing:sneakers' passed runtime validation.
+consoleLogger.js:187    - Component 'core:description' in entity 'clothing:sneakers' passed runtime validation.
+consoleLogger.js:187 EntityLoader [clothing]: All runtime component validations passed for entity 'clothing:sneakers' from sneakers.entity.json.
+consoleLogger.js:187 EntityLoader [clothing]: Created EntityDefinition instance for 'clothing:sneakers' from sneakers.entity.json. Delegating storage to base helper.
+consoleLogger.js:187 EntityDefinitionLoader [clothing]: Storing item in registry. Category: 'entityDefinitions', Qualified ID: 'clothing:sneakers', Base ID: 'sneakers', Filename: 'sneakers.entity.json'
+consoleLogger.js:187 EntityDefinitionLoader [clothing]: Item 'clothing:sneakers' (Base: 'sneakers') stored successfully in category 'entityDefinitions'.
+consoleLogger.js:187 EntityLoader [clothing]: Successfully processed entityDefinitions file 'sneakers.entity.json'. Returning final registry key: clothing:sneakers, Overwrite: false
+consoleLogger.js:187 [clothing] Successfully processed sneakers.entity.json. Result: ID=clothing:sneakers, Overwrite=false
+consoleLogger.js:187 [clothing] Fetched data from ./data/mods/clothing/entities/definitions/t_shirt.entity.json
+consoleLogger.js:187 EntityDefinitionLoader [clothing]: Validating 't_shirt.entity.json' against primary schema 'http://example.com/schemas/entity-definition.schema.json'.
+consoleLogger.js:187 EntityLoader [clothing]: Processing fetched item (post-primary validation): t_shirt.entity.json (Original Type: entityDefinitions)
+consoleLogger.js:187 EntityLoader [clothing]: Extracted full ID 'clothing:t_shirt' and derived base ID 't_shirt' from t_shirt.entity.json.
+consoleLogger.js:187 EntityLoader [clothing]: Validating 3 components for entity 'clothing:t_shirt' from t_shirt.entity.json...
+consoleLogger.js:187    - Component 'clothing:wearable' in entity 'clothing:t_shirt' passed runtime validation.
+consoleLogger.js:187    - Component 'core:name' in entity 'clothing:t_shirt' passed runtime validation.
+consoleLogger.js:187    - Component 'core:description' in entity 'clothing:t_shirt' passed runtime validation.
+consoleLogger.js:187 EntityLoader [clothing]: All runtime component validations passed for entity 'clothing:t_shirt' from t_shirt.entity.json.
+consoleLogger.js:187 EntityLoader [clothing]: Created EntityDefinition instance for 'clothing:t_shirt' from t_shirt.entity.json. Delegating storage to base helper.
+consoleLogger.js:187 EntityDefinitionLoader [clothing]: Storing item in registry. Category: 'entityDefinitions', Qualified ID: 'clothing:t_shirt', Base ID: 't_shirt', Filename: 't_shirt.entity.json'
+consoleLogger.js:187 EntityDefinitionLoader [clothing]: Item 'clothing:t_shirt' (Base: 't_shirt') stored successfully in category 'entityDefinitions'.
+consoleLogger.js:187 EntityLoader [clothing]: Successfully processed entityDefinitions file 't_shirt.entity.json'. Returning final registry key: clothing:t_shirt, Overwrite: false
+consoleLogger.js:187 [clothing] Successfully processed t_shirt.entity.json. Result: ID=clothing:t_shirt, Overwrite=false
+consoleLogger.js:187 [clothing] Fetched data from ./data/mods/clothing/entities/definitions/underwired_plunge_bra_nude_silk.entity.json
+consoleLogger.js:187 EntityDefinitionLoader [clothing]: Validating 'underwired_plunge_bra_nude_silk.entity.json' against primary schema 'http://example.com/schemas/entity-definition.schema.json'.
+consoleLogger.js:187 EntityLoader [clothing]: Processing fetched item (post-primary validation): underwired_plunge_bra_nude_silk.entity.json (Original Type: entityDefinitions)
+consoleLogger.js:187 EntityLoader [clothing]: Extracted full ID 'clothing:underwired_plunge_bra_nude_silk' and derived base ID 'underwired_plunge_bra_nude_silk' from underwired_plunge_bra_nude_silk.entity.json.
+consoleLogger.js:187 EntityLoader [clothing]: Validating 5 components for entity 'clothing:underwired_plunge_bra_nude_silk' from underwired_plunge_bra_nude_silk.entity.json...
+consoleLogger.js:187    - Component 'clothing:wearable' in entity 'clothing:underwired_plunge_bra_nude_silk' passed runtime validation.
+consoleLogger.js:187    - Component 'core:name' in entity 'clothing:underwired_plunge_bra_nude_silk' passed runtime validation.
+consoleLogger.js:187    - Component 'core:description' in entity 'clothing:underwired_plunge_bra_nude_silk' passed runtime validation.
+consoleLogger.js:187    - Component 'descriptors:color_extended' in entity 'clothing:underwired_plunge_bra_nude_silk' passed runtime validation.
+consoleLogger.js:187    - Component 'descriptors:texture' in entity 'clothing:underwired_plunge_bra_nude_silk' passed runtime validation.
+consoleLogger.js:187 EntityLoader [clothing]: All runtime component validations passed for entity 'clothing:underwired_plunge_bra_nude_silk' from underwired_plunge_bra_nude_silk.entity.json.
+consoleLogger.js:187 EntityLoader [clothing]: Created EntityDefinition instance for 'clothing:underwired_plunge_bra_nude_silk' from underwired_plunge_bra_nude_silk.entity.json. Delegating storage to base helper.
+consoleLogger.js:187 EntityDefinitionLoader [clothing]: Storing item in registry. Category: 'entityDefinitions', Qualified ID: 'clothing:underwired_plunge_bra_nude_silk', Base ID: 'underwired_plunge_bra_nude_silk', Filename: 'underwired_plunge_bra_nude_silk.entity.json'
+consoleLogger.js:187 EntityDefinitionLoader [clothing]: Item 'clothing:underwired_plunge_bra_nude_silk' (Base: 'underwired_plunge_bra_nude_silk') stored successfully in category 'entityDefinitions'.
+consoleLogger.js:187 EntityLoader [clothing]: Successfully processed entityDefinitions file 'underwired_plunge_bra_nude_silk.entity.json'. Returning final registry key: clothing:underwired_plunge_bra_nude_silk, Overwrite: false
+consoleLogger.js:187 [clothing] Successfully processed underwired_plunge_bra_nude_silk.entity.json. Result: ID=clothing:underwired_plunge_bra_nude_silk, Overwrite=false
+consoleLogger.js:187 [clothing] Fetched data from ./data/mods/clothing/entities/definitions/white_structured_linen_blazer.entity.json
+consoleLogger.js:187 EntityDefinitionLoader [clothing]: Validating 'white_structured_linen_blazer.entity.json' against primary schema 'http://example.com/schemas/entity-definition.schema.json'.
+consoleLogger.js:187 EntityLoader [clothing]: Processing fetched item (post-primary validation): white_structured_linen_blazer.entity.json (Original Type: entityDefinitions)
+consoleLogger.js:187 EntityLoader [clothing]: Extracted full ID 'clothing:white_structured_linen_blazer' and derived base ID 'white_structured_linen_blazer' from white_structured_linen_blazer.entity.json.
+consoleLogger.js:187 EntityLoader [clothing]: Validating 5 components for entity 'clothing:white_structured_linen_blazer' from white_structured_linen_blazer.entity.json...
+consoleLogger.js:187    - Component 'clothing:wearable' in entity 'clothing:white_structured_linen_blazer' passed runtime validation.
+consoleLogger.js:187    - Component 'core:name' in entity 'clothing:white_structured_linen_blazer' passed runtime validation.
+consoleLogger.js:187    - Component 'core:description' in entity 'clothing:white_structured_linen_blazer' passed runtime validation.
+
+-----
+
+[EntityConstructionFactory] Entity instance 'ac9c8ebf-9385-4d3c-a813-51080b302794' (def: 'anatomy:human_foot') created.
+consoleLogger.js:187 Indexed component 'anatomy:part' for entity 'ac9c8ebf-9385-4d3c-a813-51080b302794'
+consoleLogger.js:187 Indexed component 'core:name' for entity 'ac9c8ebf-9385-4d3c-a813-51080b302794'
+consoleLogger.js:187 Entity 'ac9c8ebf-9385-4d3c-a813-51080b302794' added to repository with 2 components indexed.
+consoleLogger.js:187 Dispatching ENTITY_CREATED event {instanceId: 'ac9c8ebf-9385-4d3c-a813-51080b302794', definitionId: 'anatomy:human_foot', wasReconstructed: false}
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_created' against schema 'core:entity_created#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:entity_created'.
+consoleLogger.js:187 VED: Dispatching event 'core:entity_created' via EventBus... {instanceId: 'ac9c8ebf-9385-4d3c-a813-51080b302794', definitionId: 'anatomy:human_foot', wasReconstructed: false, entity: Entity}
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Received payload with entity: Entity {#data: EntityInstanceData}
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity type: object
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity constructor: Entity
+consoleLogger.js:151 Entity created: ac9c8ebf-9385-4d3c-a813-51080b302794 (definition: anatomy:human_foot)
+consoleLogger.js:187 EntityMutationManager.addComponent: Adding component 'anatomy:joint' to entity 'ac9c8ebf-9385-4d3c-a813-51080b302794'
+consoleLogger.js:187 Indexed component 'anatomy:joint' for entity 'ac9c8ebf-9385-4d3c-a813-51080b302794'
+consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
+consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'anatomy:joint', componentData: {…}, oldComponentData: undefined}
+consoleLogger.js:187 Successfully added/updated component 'anatomy:joint' data on entity 'ac9c8ebf-9385-4d3c-a813-51080b302794'.
+consoleLogger.js:187 EntityGraphBuilder: Created entity 'ac9c8ebf-9385-4d3c-a813-51080b302794' from definition 'anatomy:human_foot' and attached to socket 'ankle' on parent '2eef1d5d-5124-492f-83b1-b18efb6bec8b'
+consoleLogger.js:187 SocketManager: Occupied socket 'ankle' on entity '2eef1d5d-5124-492f-83b1-b18efb6bec8b'
+consoleLogger.js:187 SocketManager: Generated name 'right leg foot' for part using template '{{parent.name}} {{type}}'
+consoleLogger.js:187 EntityMutationManager.addComponent: Adding component 'core:name' to entity 'ac9c8ebf-9385-4d3c-a813-51080b302794'
+consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
+consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'core:name', componentData: {…}, oldComponentData: {…}}
+consoleLogger.js:187 Successfully added/updated component 'core:name' data on entity 'ac9c8ebf-9385-4d3c-a813-51080b302794'.
+consoleLogger.js:187 EntityGraphBuilder: Set name 'right leg foot' on entity 'ac9c8ebf-9385-4d3c-a813-51080b302794'
+2consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:component_added'.
+consoleLogger.js:187 VED: Event 'core:entity_created' dispatch successful.
+consoleLogger.js:187 PartSelectionService: Selected 'anatomy:human_asshole' from 1 candidates
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:entity_created'.
+2consoleLogger.js:187 VED: Event 'core:component_added' dispatch successful.
+consoleLogger.js:187 EntityCreationManager.createEntityInstance: Creating entity with definition 'anatomy:human_asshole'
+consoleLogger.js:187 [EntityFactory] Creating entity instance 05a406ce-caef-40e8-8dad-53aeb794ef74 from definition anatomy:human_asshole.
+consoleLogger.js:187 [EntityConstructionFactory] Constructing entity '05a406ce-caef-40e8-8dad-53aeb794ef74' with definition 'anatomy:human_asshole'
+consoleLogger.js:187 [EntityConstructionFactory] Default components applied to entity '05a406ce-caef-40e8-8dad-53aeb794ef74'
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '05a406ce-caef-40e8-8dad-53aeb794ef74' (def: 'anatomy:human_asshole') created.
+consoleLogger.js:187 Indexed component 'anatomy:part' for entity '05a406ce-caef-40e8-8dad-53aeb794ef74'
+consoleLogger.js:187 Indexed component 'core:name' for entity '05a406ce-caef-40e8-8dad-53aeb794ef74'
+consoleLogger.js:187 Entity '05a406ce-caef-40e8-8dad-53aeb794ef74' added to repository with 2 components indexed.
+consoleLogger.js:187 Dispatching ENTITY_CREATED event {instanceId: '05a406ce-caef-40e8-8dad-53aeb794ef74', definitionId: 'anatomy:human_asshole', wasReconstructed: false}
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_created' against schema 'core:entity_created#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:entity_created'.
+consoleLogger.js:187 VED: Dispatching event 'core:entity_created' via EventBus... {instanceId: '05a406ce-caef-40e8-8dad-53aeb794ef74', definitionId: 'anatomy:human_asshole', wasReconstructed: false, entity: Entity}
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Received payload with entity: Entity {#data: EntityInstanceData}
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity type: object
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity constructor: Entity
+consoleLogger.js:151 Entity created: 05a406ce-caef-40e8-8dad-53aeb794ef74 (definition: anatomy:human_asshole)
+consoleLogger.js:187 EntityMutationManager.addComponent: Adding component 'anatomy:joint' to entity '05a406ce-caef-40e8-8dad-53aeb794ef74'
+consoleLogger.js:187 Indexed component 'anatomy:joint' for entity '05a406ce-caef-40e8-8dad-53aeb794ef74'
+consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
+consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'anatomy:joint', componentData: {…}, oldComponentData: undefined}
+consoleLogger.js:187 Successfully added/updated component 'anatomy:joint' data on entity '05a406ce-caef-40e8-8dad-53aeb794ef74'.
+consoleLogger.js:187 EntityGraphBuilder: Created entity '05a406ce-caef-40e8-8dad-53aeb794ef74' from definition 'anatomy:human_asshole' and attached to socket 'asshole' on parent 'a3d0792e-c88b-4585-afd0-d76d68462f4b'
+consoleLogger.js:187 SocketManager: Occupied socket 'asshole' on entity 'a3d0792e-c88b-4585-afd0-d76d68462f4b'
+consoleLogger.js:187 SocketManager: Generated name 'asshole' for part using template '{{type}}'
+consoleLogger.js:187 EntityMutationManager.addComponent: Adding component 'core:name' to entity '05a406ce-caef-40e8-8dad-53aeb794ef74'
+consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
+consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'core:name', componentData: {…}, oldComponentData: {…}}
+consoleLogger.js:187 Successfully added/updated component 'core:name' data on entity '05a406ce-caef-40e8-8dad-53aeb794ef74'.
+consoleLogger.js:187 EntityGraphBuilder: Set name 'asshole' on entity '05a406ce-caef-40e8-8dad-53aeb794ef74'
+2consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:component_added'.
+consoleLogger.js:187 VED: Event 'core:entity_created' dispatch successful.
+consoleLogger.js:187 RecipeConstraintEvaluator: Evaluating constraints for 23 entities
+consoleLogger.js:187 RecipeConstraintEvaluator: All constraints satisfied
+consoleLogger.js:187 GraphIntegrityValidator: Validating graph with 23 entities
+consoleLogger.js:187 ValidationRuleChain: Executing 6 validation rules
+consoleLogger.js:187 ValidationRuleChain: Executing rule 'Socket Limit Validation'
+consoleLogger.js:187 SocketLimitRule: Validating 0 occupied sockets
+consoleLogger.js:187 SocketLimitRule: Found 0 socket limit violations
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:entity_created'.
+2consoleLogger.js:187 VED: Event 'core:component_added' dispatch successful.
+consoleLogger.js:187 ValidationRuleChain: Executing rule 'Recipe Constraint Validation'
+consoleLogger.js:187 RecipeConstraintRule: Validating recipe constraints for 23 entities
+consoleLogger.js:187 RecipeConstraintEvaluator: Evaluating constraints for 23 entities
+consoleLogger.js:187 RecipeConstraintEvaluator: All constraints satisfied
+consoleLogger.js:187 RecipeConstraintRule: Found 0 errors and 0 warnings
+2consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:component_added'.
+consoleLogger.js:187 VED: Event 'core:entity_created' dispatch successful.
+consoleLogger.js:187 ValidationRuleChain: Executing rule 'Cycle Detection'
+consoleLogger.js:187 CycleDetectionRule: Checking for cycles in graph with 23 entities
+consoleLogger.js:187 CycleDetectionRule: No cycles detected
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:entity_created'.
+2consoleLogger.js:187 VED: Event 'core:component_added' dispatch successful.
+consoleLogger.js:187 ValidationRuleChain: Executing rule 'Joint Consistency Validation'
+consoleLogger.js:187 JointConsistencyRule: Validating joints for 23 entities
+consoleLogger.js:187 JointConsistencyRule: Found 0 joint consistency violations
+2consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:component_added'.
+consoleLogger.js:187 VED: Event 'core:entity_created' dispatch successful.
+consoleLogger.js:187 ValidationRuleChain: Executing rule 'Orphan Detection'
+consoleLogger.js:187 OrphanDetectionRule: Checking for orphans in graph with 23 entities
+consoleLogger.js:187 OrphanDetectionRule: Found 0 orphans and 1 root entities
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:entity_created'.
+consoleLogger.js:187 ValidationRuleChain: Executing rule 'Part Type Compatibility'
+consoleLogger.js:187 PartTypeCompatibilityRule: Validating part type compatibility for 23 entities
+consoleLogger.js:187 PartTypeCompatibilityRule: Found 0 part type compatibility violations
+2consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:component_added'.
+consoleLogger.js:187 ValidationRuleChain: Completed validation with 0 errors and 0 warnings
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:entity_created'.
+consoleLogger.js:187 GraphIntegrityValidator: Validation passed without issues
+consoleLogger.js:151 BodyBlueprintFactory: Successfully created anatomy graph with 23 entities
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Generated 23 anatomy parts for entity '75fd8662-f0be-4ea3-ae53-ff3891d9c11a'
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'torso' to entity 'a3d0792e-c88b-4585-afd0-d76d68462f4b'
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'left breast' to entity '072b3f24-c3c4-40f6-bb17-50841ad71920'
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'right breast' to entity 'b92c9de6-d2c0-40ef-9c84-d56d464d948a'
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'vagina' to entity 'c0f0a01a-3b0c-42f8-bc43-eee53fae0767'
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'head' to entity 'ecc5c81b-eed7-4394-a2dd-556f71d2fdf8'
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'left arm' to entity 'c376d579-fe04-441c-8b1d-ffc92585063f'
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'right arm' to entity 'cb07b500-3d69-474e-9396-b467e88b8a15'
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'left leg' to entity 'ee1a2cc3-8f34-4b19-841b-ad5664cf802a'
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'right leg' to entity '2eef1d5d-5124-492f-83b1-b18efb6bec8b'
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'left eye' to entity '66b3f0f3-3569-44f1-bbbf-8ea973173b93'
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'right eye' to entity 'b2e970b2-2e27-43f9-acbb-a094686134ef'
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'left ear' to entity 'c738dad4-44aa-4449-8f2b-b25e00424c56'
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'right ear' to entity '7b6be1c3-6ff7-43e0-8aed-9fc4813200b4'
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'nose' to entity '59640865-95fc-4fa0-8eec-695a856feefe'
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'mouth' to entity '2e8d533a-c8b3-4c40-8d46-4cc613661a6f'
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'teeth' to entity 'fb452fa6-06e9-4ed9-aa04-ae5d6488f68a'
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'hair' to entity '5c93b0eb-13ba-4650-a185-565e9ab27097'
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'pubic hair' to entity 'd9495cbb-d34a-4e91-a58f-e62a0f1bef6a'
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'left arm hand' to entity '7bb6f338-3dc2-463c-9b06-e0626499c52d'
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'right arm hand' to entity '1045ea8f-9440-4d39-9453-05909d4ead08'
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'left leg foot' to entity 'ab12eed0-ab45-4b7c-a02c-20f93a1b4734'
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'right leg foot' to entity 'ac9c8ebf-9385-4d3c-a813-51080b302794'
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Mapped part 'asshole' to entity '05a406ce-caef-40e8-8dad-53aeb794ef74'
 consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Built parts map with 23 named parts
-consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Instantiating 7 clothing items for entity 'a87c5a4f-a26d-4239-b4d0-e5a233547f9a'
-consoleLogger.js:151 ClothingInstantiationService: Starting clothing instantiation for actor 'a87c5a4f-a26d-4239-b4d0-e5a233547f9a' with 7 items
-consoleLogger.js:163 VED: EventDefinition not found for 'CLOTHING_INSTANTIATION_COMPLETED'. Cannot validate payload. Proceeding with dispatch.
-warn @ consoleLogger.js:163
-#validatePayload @ validatedEventDispatcher.js:87
-dispatch @ validatedEventDispatcher.js:219
-dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
-#executeSafely @ safeEventDispatcher.js:88
-dispatch @ safeEventDispatcher.js:122
-instantiateRecipeClothing @ clothingInstantiationService.js:221
-handleMouseUp_ @ unknown
-await in handleMouseUp_
-handleMouseUp_ @ unknown
-await in handleMouseUp_
-handleMouseUp_ @ unknown
-await in handleMouseUp_
-handleMouseUp_ @ unknown
-await in handleMouseUp_
-handleMouseUp_ @ unknown
-await in handleMouseUp_
-handleMouseUp_ @ unknown
-await in handleMouseUp_
-handleMouseUp_ @ unknown
-await in handleMouseUp_
-generate @ anatomyGenerationWorkflow.js:115
-handleMouseUp_ @ unknown
-await in handleMouseUp_
-(anonymous) @ anatomyOrchestrator.js:109
-execute @ anatomyUnitOfWork.js:95
-orchestrateGeneration @ anatomyOrchestrator.js:108
-generateAnatomyIfNeeded @ anatomyGenerationService.js:152
-#handleEntityCreated @ anatomyInitializationService.js:101
-(anonymous) @ eventBus.js:144
-dispatch @ eventBus.js:141
-#emitEvent @ validatedEventDispatcher.js:192
-dispatch @ validatedEventDispatcher.js:222
-dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
-#executeSafely @ safeEventDispatcher.js:88
-dispatch @ safeEventDispatcher.js:122
-dispatchEntityCreated @ EntityEventDispatcher.js:65
-createEntityInstance @ entityLifecycleManager.js:274
-createEntityInstance @ EntityCreationManager.js:68
-createEntityInstance @ entityManager.js:331
-createEntityInstance @ entityManagerAdapter.js:38
-_loadEntity @ AnatomyVisualizerUI.js:206
-handleMouseUp_ @ unknown
-await in handleMouseUp_
-(anonymous) @ AnatomyVisualizerUI.js:144
-handleMouseUp_ @ unknownUnderstand this warning
-consoleLogger.js:187 VED: Dispatching event 'CLOTHING_INSTANTIATION_COMPLETED' via EventBus... {actorId: 'a87c5a4f-a26d-4239-b4d0-e5a233547f9a', result: {…}}actorId: "a87c5a4f-a26d-4239-b4d0-e5a233547f9a"result: equipped: []errors: Array(7)0: "Entity definition 'clothing:underwired_plunge_bra_nude_silk' not found in registry"1: "Entity definition 'clothing:nude_thong' not found in registry"2: "Entity definition 'clothing:black_stretch_silk_bodysuit' not found in registry"3: "Entity definition 'clothing:white_structured_linen_blazer' not found in registry"4: "Entity definition 'clothing:graphite_wool_wide_leg_trousers' not found in registry"5: "Entity definition 'clothing:black_calfskin_belt' not found in registry"6: "Entity definition 'clothing:leather_stiletto_pumps' not found in registry"length: 7[[Prototype]]: Array(0)instantiated: [][[Prototype]]: Object[[Prototype]]: Object
-consoleLogger.js:151 ClothingInstantiationService: Clothing instantiation completed for actor 'a87c5a4f-a26d-4239-b4d0-e5a233547f9a': 0 created, 0 equipped, 7 errors
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Instantiating 7 clothing items for entity '75fd8662-f0be-4ea3-ae53-ff3891d9c11a'
+consoleLogger.js:151 ClothingInstantiationService: Starting clothing instantiation for actor '75fd8662-f0be-4ea3-ae53-ff3891d9c11a' with 7 items
+consoleLogger.js:187 VED: Validating payload for event 'clothing:instantiation_completed' against schema 'clothing:instantiation_completed#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'clothing:instantiation_completed'.
+consoleLogger.js:187 VED: Dispatching event 'clothing:instantiation_completed' via EventBus... {actorId: '75fd8662-f0be-4ea3-ae53-ff3891d9c11a', result: {…}}actorId: "75fd8662-f0be-4ea3-ae53-ff3891d9c11a"result: equipped: []errors: Array(7)0: "Entity definition 'clothing:underwired_plunge_bra_nude_silk' not found in registry"1: "Entity definition 'clothing:nude_thong' not found in registry"2: "Entity definition 'clothing:black_stretch_silk_bodysuit' not found in registry"3: "Entity definition 'clothing:white_structured_linen_blazer' not found in registry"4: "Entity definition 'clothing:graphite_wool_wide_leg_trousers' not found in registry"5: "Entity definition 'clothing:black_calfskin_belt' not found in registry"6: "Entity definition 'clothing:leather_stiletto_pumps' not found in registry"length: 7[[Prototype]]: Array(0)instantiated: [][[Prototype]]: Object[[Prototype]]: Object
+consoleLogger.js:151 ClothingInstantiationService: Clothing instantiation completed for actor '75fd8662-f0be-4ea3-ae53-ff3891d9c11a': 0 created, 0 equipped, 7 errors
 consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Clothing instantiation completed with 0 items created
-consoleLogger.js:187 VED: Event 'CLOTHING_INSTANTIATION_COMPLETED' dispatch successful.
-consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity '0cdeb86e-55be-48c9-897f-22a399d293fa'. Total tracked: 1
-consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity '6ec9d572-3b5c-4b15-b3f8-950d5768260f'. Total tracked: 2
-consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity 'd4f0c0f0-a769-414a-ad9e-04094093b10b'. Total tracked: 3
-consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity 'b0996032-5777-46c5-bc4c-23e47388221c'. Total tracked: 4
-consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity '632608ac-6b54-48c5-9cab-dc4fc8a7d549'. Total tracked: 5
-consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity 'd1c489f1-fbf6-440a-be45-ef660a64a9ca'. Total tracked: 6
-consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity '7b4d2a89-fbf6-42c2-bd41-bdf782ae76c0'. Total tracked: 7
+consoleLogger.js:187 VED: Event 'clothing:instantiation_completed' dispatch successful.
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity 'a3d0792e-c88b-4585-afd0-d76d68462f4b'. Total tracked: 1
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity '072b3f24-c3c4-40f6-bb17-50841ad71920'. Total tracked: 2
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity 'b92c9de6-d2c0-40ef-9c84-d56d464d948a'. Total tracked: 3
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity 'c0f0a01a-3b0c-42f8-bc43-eee53fae0767'. Total tracked: 4
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity 'ecc5c81b-eed7-4394-a2dd-556f71d2fdf8'. Total tracked: 5
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity 'c376d579-fe04-441c-8b1d-ffc92585063f'. Total tracked: 6
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity 'cb07b500-3d69-474e-9396-b467e88b8a15'. Total tracked: 7
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity 'ee1a2cc3-8f34-4b19-841b-ad5664cf802a'. Total tracked: 8

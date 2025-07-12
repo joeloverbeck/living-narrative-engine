@@ -87,7 +87,7 @@ describe('ClothingInstantiationService - Event Dispatching', () => {
 
       // Mock entity definition
       dataRegistry.get.mockImplementation((category, id) => {
-        if (category === 'entities' && id === 'clothing:simple_shirt') {
+        if (category === 'entityDefinitions' && id === 'clothing:simple_shirt') {
           return {
             id: 'clothing:simple_shirt',
             components: {
@@ -218,7 +218,7 @@ describe('ClothingInstantiationService - Event Dispatching', () => {
 
       // Mock entity definitions
       dataRegistry.get.mockImplementation((category, id) => {
-        if (category !== 'entities') return null;
+        if (category !== 'entityDefinitions') return null;
         switch (id) {
           case 'clothing:valid_shirt':
             return {
