@@ -148,7 +148,7 @@ export class EquipmentOrchestrator {
           slotId: targetSlot,
           layer: targetLayer,
           previousItem: equipResult.previousItem,
-          conflictsResolved: conflictResult.hasConflicts,
+          conflictResolution: conflictResult.hasConflicts ? "auto_remove" : null,
           timestamp: Date.now(),
         });
 

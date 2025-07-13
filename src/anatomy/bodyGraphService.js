@@ -178,11 +178,11 @@ export class BodyGraphService {
     const cacheSize = this.#cacheManager.size();
     if (actorEntityId && this.#cacheManager.has(actorEntityId)) {
       cacheRootId = actorEntityId;
-      this.#logger.warn(
+      this.#logger.debug(
         `BodyGraphService: Using actor entity '${actorEntityId}' as cache root instead of blueprint root '${rootId}' (cache size: ${cacheSize})`
       );
     } else {
-      this.#logger.warn(
+      this.#logger.debug(
         `BodyGraphService: Using blueprint root '${rootId}' as cache root (actor '${actorEntityId}' not in cache, cache size: ${cacheSize})`
       );
     }
