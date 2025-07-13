@@ -525,7 +525,6 @@ export function registerWorldAndEntity(container) {
     )}.`
   );
 
-
   // Register EquipmentOrchestrator
   registrar.singletonFactory(tokens.EquipmentOrchestrator, (c) => {
     return new EquipmentOrchestrator({

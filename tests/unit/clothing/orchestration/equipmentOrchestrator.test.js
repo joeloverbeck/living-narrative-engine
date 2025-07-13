@@ -34,13 +34,9 @@ describe('EquipmentOrchestrator', () => {
   let orchestrator;
 
   beforeEach(() => {
-    ({
-      entityManager,
-      logger,
-      eventDispatcher,
-      layerCompatibilityService,
-    } = createMocks());
-    
+    ({ entityManager, logger, eventDispatcher, layerCompatibilityService } =
+      createMocks());
+
     orchestrator = new EquipmentOrchestrator({
       entityManager,
       logger,
@@ -174,12 +170,9 @@ describe('EquipmentOrchestrator', () => {
       });
 
       expect(result.success).toBe(true);
-      expect(layerCompatibilityService.checkLayerConflicts).toHaveBeenCalledWith(
-        'entity1',
-        'jacket1',
-        'outer',
-        'torso_clothing'
-      );
+      expect(
+        layerCompatibilityService.checkLayerConflicts
+      ).toHaveBeenCalledWith('entity1', 'jacket1', 'outer', 'torso_clothing');
     });
 
     it('should handle existing equipment and replace item', async () => {
@@ -190,7 +183,7 @@ describe('EquipmentOrchestrator', () => {
           },
         },
       };
-      
+
       entityManager.getComponentData
         .mockReturnValueOnce({
           layer: 'base',
@@ -253,7 +246,6 @@ describe('EquipmentOrchestrator', () => {
 
       expect(result.success).toBe(true);
     });
-
 
     it('should log debug message at start', async () => {
       entityManager.getComponentData

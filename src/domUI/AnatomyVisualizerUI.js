@@ -13,6 +13,7 @@ import { DomUtils } from '../utils/domUtils.js';
 /** @typedef {import('../anatomy/anatomyDescriptionService.js').default} AnatomyDescriptionService */
 /** @typedef {import('../interfaces/IDocumentContext.js').IDocumentContext} IDocumentContext */
 /** @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
+/** @typedef {import('./visualizer/VisualizerStateController.js').VisualizerStateController} VisualizerStateController */
 
 class AnatomyVisualizerUI {
   /**
@@ -23,6 +24,7 @@ class AnatomyVisualizerUI {
    * @param {AnatomyDescriptionService} dependencies.anatomyDescriptionService
    * @param {ISafeEventDispatcher} dependencies.eventDispatcher
    * @param {IDocumentContext} dependencies.documentContext
+   * @param {VisualizerStateController} dependencies.visualizerStateController
    */
   constructor({
     logger,
@@ -31,6 +33,7 @@ class AnatomyVisualizerUI {
     anatomyDescriptionService,
     eventDispatcher,
     documentContext,
+    visualizerStateController,
   }) {
     this._logger = logger;
     this._registry = registry;
@@ -38,9 +41,11 @@ class AnatomyVisualizerUI {
     this._anatomyDescriptionService = anatomyDescriptionService;
     this._eventDispatcher = eventDispatcher;
     this._document = documentContext.document;
+    this._visualizerStateController = visualizerStateController;
     this._graphRenderer = null;
     this._currentEntityId = null;
     this._createdEntities = [];
+    this._stateUnsubscribe = null;
   }
 
   /**
@@ -64,7 +69,111 @@ class AnatomyVisualizerUI {
     // Setup event listeners
     this._setupEventListeners();
 
+    // Subscribe to visualizer state changes
+    this._subscribeToStateChanges();
+
     this._logger.debug('AnatomyVisualizerUI: Initialization complete');
+  }
+
+  /**
+   * Subscribe to visualizer state changes
+   *
+   * @private
+   */
+  _subscribeToStateChanges() {
+    this._stateUnsubscribe = this._eventDispatcher.subscribe(
+      'VISUALIZER_STATE_CHANGED',
+      this._handleStateChange.bind(this)
+    );
+  }
+
+  /**
+   * Handle visualizer state changes
+   *
+   * @private
+   * @param {object} event
+   */
+  _handleStateChange(event) {
+    const { currentState, selectedEntity, anatomyData, error } = event.payload;
+
+    this._logger.debug(
+      `AnatomyVisualizerUI: State changed to ${currentState}`,
+      {
+        selectedEntity,
+        hasAnatomyData: !!anatomyData,
+        hasError: !!error,
+      }
+    );
+
+    switch (currentState) {
+      case 'LOADING':
+        this._showMessage('Loading anatomy...');
+        break;
+
+      case 'LOADED':
+        if (anatomyData && selectedEntity) {
+          this._handleAnatomyLoaded(selectedEntity, anatomyData);
+        }
+        break;
+
+      case 'READY':
+        // Anatomy visualization is complete
+        this._logger.info('AnatomyVisualizerUI: Visualization ready');
+        break;
+
+      case 'ERROR':
+        if (error) {
+          this._logger.error('AnatomyVisualizerUI: State error:', error);
+          this._showMessage(`Error: ${error.message}`);
+        }
+        break;
+    }
+  }
+
+  /**
+   * Handle anatomy loaded state
+   *
+   * @private
+   * @param {string} entityId
+   * @param {object} anatomyData
+   */
+  async _handleAnatomyLoaded(entityId, anatomyData) {
+    try {
+      this._currentEntityId = entityId;
+
+      // Get the entity instance for description update
+      const entity = await this._entityManager.getEntityInstance(entityId);
+
+      // Update description panel
+      this._updateEntityDescription(entity);
+
+      // Start rendering
+      this._visualizerStateController.startRendering();
+
+      // Render the anatomy graph
+      await this._graphRenderer.renderGraph(entityId, anatomyData);
+
+      // Complete rendering
+      this._visualizerStateController.completeRendering();
+    } catch (error) {
+      this._logger.error('Failed to handle anatomy loaded state:', error);
+      this._visualizerStateController.handleError(error);
+    }
+  }
+
+  /**
+   * Dispose the UI and clean up resources
+   */
+  dispose() {
+    if (this._stateUnsubscribe) {
+      this._stateUnsubscribe();
+      this._stateUnsubscribe = null;
+    }
+
+    // Clear any created entities
+    this._clearPreviousEntities().catch((error) => {
+      this._logger.warn('Error during cleanup:', error);
+    });
   }
 
   /**
@@ -150,7 +259,7 @@ class AnatomyVisualizerUI {
   }
 
   /**
-   * Load and visualize an entity
+   * Load and visualize an entity using the new state management system
    *
    * @private
    * @param {string} entityDefId
@@ -175,32 +284,6 @@ class AnatomyVisualizerUI {
         );
       }
 
-      // Set up a promise to wait for anatomy generation to complete
-      const anatomyGeneratedPromise = new Promise((resolve) => {
-        const unsubscribe = this._eventDispatcher.subscribe(
-          ENTITY_CREATED_ID,
-          (event) => {
-            // Check if this is our main entity and it has anatomy generated
-            if (
-              event.payload.definitionId === entityDefId &&
-              !event.payload.wasReconstructed
-            ) {
-              // Give the anatomy generation a moment to complete
-              setTimeout(async () => {
-                const entity = await this._entityManager.getEntityInstance(
-                  event.payload.instanceId
-                );
-                const bodyComponent = entity.getComponentData('anatomy:body');
-                if (bodyComponent && bodyComponent.body) {
-                  unsubscribe();
-                  resolve(event.payload.instanceId);
-                }
-              }, 100);
-            }
-          }
-        );
-      });
-
       // Create the entity instance - this will trigger anatomy generation
       this._logger.debug(`Creating entity instance for ${entityDefId}`);
       const entityInstance = await this._entityManager.createEntityInstance(
@@ -211,37 +294,12 @@ class AnatomyVisualizerUI {
       // Store the created entity ID for cleanup
       this._createdEntities.push(entityInstance.id);
 
-      // Wait for anatomy generation to complete
-      this._logger.debug('Waiting for anatomy generation to complete...');
-      const mainEntityId = await anatomyGeneratedPromise;
-      this._currentEntityId = mainEntityId;
-
-      // Get the entity with generated anatomy
-      const entity = await this._entityManager.getEntityInstance(mainEntityId);
-
-      // Update description panel with generated description
-      this._updateEntityDescription(entity);
-
-      // Get the body component with generated anatomy
-      const bodyComponent = entity.getComponentData('anatomy:body');
-      if (!bodyComponent || !bodyComponent.body) {
-        throw new Error('Anatomy generation failed');
-      }
-
-      // Collect all created body part entities
-      if (bodyComponent.body.parts) {
-        for (const partId of Object.values(bodyComponent.body.parts)) {
-          if (!this._createdEntities.includes(partId)) {
-            this._createdEntities.push(partId);
-          }
-        }
-      }
-
-      // Render the anatomy graph with actual entities
-      await this._graphRenderer.renderGraph(mainEntityId, bodyComponent.body);
+      // Use the state controller to handle entity selection and anatomy detection
+      // This replaces the problematic 100ms timeout hack with proper state management
+      await this._visualizerStateController.selectEntity(entityInstance.id);
     } catch (error) {
       this._logger.error(`Failed to load entity ${entityDefId}:`, error);
-      this._showMessage(`Failed to load entity: ${error.message}`);
+      this._visualizerStateController.handleError(error);
     }
   }
 
@@ -298,6 +356,9 @@ class AnatomyVisualizerUI {
    * @private
    */
   async _clearVisualization() {
+    // Reset the state controller
+    this._visualizerStateController.reset();
+
     // Clear any created entities
     await this._clearPreviousEntities();
 

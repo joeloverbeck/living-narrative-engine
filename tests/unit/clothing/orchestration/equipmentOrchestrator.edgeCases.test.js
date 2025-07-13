@@ -33,13 +33,9 @@ describe('EquipmentOrchestrator - Edge Cases', () => {
   let orchestrator;
 
   beforeEach(() => {
-    ({
-      entityManager,
-      logger,
-      eventDispatcher,
-      layerCompatibilityService,
-    } = createMocks());
-    
+    ({ entityManager, logger, eventDispatcher, layerCompatibilityService } =
+      createMocks());
+
     orchestrator = new EquipmentOrchestrator({
       entityManager,
       logger,
@@ -72,7 +68,9 @@ describe('EquipmentOrchestrator - Edge Cases', () => {
       });
 
       expect(result.success).toBe(false);
-      expect(result.errors).toContain("Clothing item 'nonexistent_item' not found");
+      expect(result.errors).toContain(
+        "Clothing item 'nonexistent_item' not found"
+      );
     });
 
     it('should handle basic validation failure - item not wearable', async () => {
@@ -87,7 +85,6 @@ describe('EquipmentOrchestrator - Edge Cases', () => {
       expect(result.success).toBe(false);
       expect(result.errors).toContain("Item 'not_wearable' is not wearable");
     });
-
 
     it('should handle auto_remove conflict resolution failure', async () => {
       entityManager.getEntityInstance.mockReturnValue({ id: 'entity1' });
@@ -141,7 +138,7 @@ describe('EquipmentOrchestrator - Edge Cases', () => {
           equipmentSlots: { primary: 'torso_clothing' },
         })
         .mockReturnValueOnce(null); // No existing equipment for mock
-        
+
       layerCompatibilityService.checkLayerConflicts.mockResolvedValue({
         hasConflicts: false,
         conflicts: [],
@@ -344,8 +341,8 @@ describe('EquipmentOrchestrator - Edge Cases', () => {
           layer: 'base',
           equipmentSlots: { primary: 'torso_clothing' },
         })
-        .mockReturnValueOnce(null) // This will fail the validation
-        
+        .mockReturnValueOnce(null); // This will fail the validation
+
       layerCompatibilityService.checkLayerConflicts.mockResolvedValue({
         hasConflicts: true,
         conflicts: [

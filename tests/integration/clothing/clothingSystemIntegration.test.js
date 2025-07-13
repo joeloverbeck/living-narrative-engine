@@ -204,7 +204,6 @@ describe('ClothingSystem Integration', () => {
       logger: mocks.logger,
     });
 
-
     orchestrator = new EquipmentOrchestrator({
       entityManager: mocks.entityManager,
       logger: mocks.logger,

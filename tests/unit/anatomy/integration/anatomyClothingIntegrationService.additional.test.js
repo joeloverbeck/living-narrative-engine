@@ -44,30 +44,30 @@ describe('AnatomyClothingIntegrationService - Additional Coverage', () => {
       await expect(service.getAvailableClothingSlots(123)).rejects.toThrow(
         'Entity ID is required'
       );
-      
-      await expect(service.resolveClothingSlotToAttachmentPoints(123, 'slot')).rejects.toThrow(
-        'Entity ID is required'
-      );
-      
-      await expect(service.validateClothingSlotCompatibility(123, 'slot', 'item')).rejects.toThrow(
-        'Entity ID is required'
-      );
+
+      await expect(
+        service.resolveClothingSlotToAttachmentPoints(123, 'slot')
+      ).rejects.toThrow('Entity ID is required');
+
+      await expect(
+        service.validateClothingSlotCompatibility(123, 'slot', 'item')
+      ).rejects.toThrow('Entity ID is required');
     });
 
     it('should throw when slotId is not a string', async () => {
-      await expect(service.resolveClothingSlotToAttachmentPoints('entity', 123)).rejects.toThrow(
-        'Slot ID is required'
-      );
-      
-      await expect(service.validateClothingSlotCompatibility('entity', 123, 'item')).rejects.toThrow(
-        'Slot ID is required'
-      );
+      await expect(
+        service.resolveClothingSlotToAttachmentPoints('entity', 123)
+      ).rejects.toThrow('Slot ID is required');
+
+      await expect(
+        service.validateClothingSlotCompatibility('entity', 123, 'item')
+      ).rejects.toThrow('Slot ID is required');
     });
 
     it('should throw when itemId is not a string', async () => {
-      await expect(service.validateClothingSlotCompatibility('entity', 'slot', 123)).rejects.toThrow(
-        'Item ID is required'
-      );
+      await expect(
+        service.validateClothingSlotCompatibility('entity', 'slot', 123)
+      ).rejects.toThrow('Item ID is required');
     });
   });
 
@@ -88,9 +88,7 @@ describe('AnatomyClothingIntegrationService - Additional Coverage', () => {
           }
           if (id === 'part2') {
             return {
-              sockets: [
-                { id: 'socket3', orientation: 'upper' },
-              ],
+              sockets: [{ id: 'socket3', orientation: 'upper' }],
             };
           }
         }
@@ -115,10 +113,11 @@ describe('AnatomyClothingIntegrationService - Additional Coverage', () => {
           },
         });
 
-      const attachmentPoints = await service.resolveClothingSlotToAttachmentPoints(
-        'test_entity',
-        'multi_socket_item'
-      );
+      const attachmentPoints =
+        await service.resolveClothingSlotToAttachmentPoints(
+          'test_entity',
+          'multi_socket_item'
+        );
 
       expect(attachmentPoints).toHaveLength(3);
       expect(attachmentPoints).toContainEqual({
@@ -157,7 +156,9 @@ describe('AnatomyClothingIntegrationService - Additional Coverage', () => {
       });
 
       const mockBodyGraph = {
-        getAllPartIds: jest.fn().mockReturnValue(['entity_left_arm', 'other_part']),
+        getAllPartIds: jest
+          .fn()
+          .mockReturnValue(['entity_left_arm', 'other_part']),
         getConnectedParts: jest.fn().mockImplementation((id) => {
           if (id === 'test_entity') {
             return ['entity_left_arm', 'other_part'];
@@ -186,10 +187,11 @@ describe('AnatomyClothingIntegrationService - Additional Coverage', () => {
           },
         });
 
-      const attachmentPoints = await service.resolveClothingSlotToAttachmentPoints(
-        'test_entity',
-        'sleeve'
-      );
+      const attachmentPoints =
+        await service.resolveClothingSlotToAttachmentPoints(
+          'test_entity',
+          'sleeve'
+        );
 
       expect(attachmentPoints).toHaveLength(1);
       expect(attachmentPoints[0]).toMatchObject({
@@ -198,7 +200,9 @@ describe('AnatomyClothingIntegrationService - Additional Coverage', () => {
       });
       // It actually finds it through the normal mapping, not fallback
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining("AnatomyClothingIntegrationService: Found direct slot mapping for 'left_arm'")
+        expect.stringContaining(
+          "AnatomyClothingIntegrationService: Found direct slot mapping for 'left_arm'"
+        )
       );
     });
 
@@ -235,14 +239,17 @@ describe('AnatomyClothingIntegrationService - Additional Coverage', () => {
           },
         });
 
-      const attachmentPoints = await service.resolveClothingSlotToAttachmentPoints(
-        'test_entity',
-        'item'
-      );
+      const attachmentPoints =
+        await service.resolveClothingSlotToAttachmentPoints(
+          'test_entity',
+          'item'
+        );
 
       expect(attachmentPoints).toEqual([]);
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining("No entity found with socket 'missing_socket' for slot 'missing_slot'")
+        expect.stringContaining(
+          "No entity found with socket 'missing_socket' for slot 'missing_slot'"
+        )
       );
     });
   });
@@ -352,7 +359,10 @@ describe('AnatomyClothingIntegrationService - Additional Coverage', () => {
           },
         });
 
-      const sockets = await service.getSlotAnatomySockets('test_entity', 'glove');
+      const sockets = await service.getSlotAnatomySockets(
+        'test_entity',
+        'glove'
+      );
 
       expect(sockets).toHaveLength(2);
       expect(sockets).toContainEqual({
@@ -388,7 +398,7 @@ describe('AnatomyClothingIntegrationService - Additional Coverage', () => {
 
       // First call
       await service.getAvailableClothingSlots('test_entity');
-      
+
       // Second call - should use cached blueprint
       await service.getAvailableClothingSlots('test_entity');
 
@@ -401,12 +411,11 @@ describe('AnatomyClothingIntegrationService - Additional Coverage', () => {
     it('should handle circular parent references in joints', async () => {
       const entityId = 'test_entity';
 
-      const entitiesWithJoints = [
-        { id: 'part1' },
-        { id: 'part2' },
-      ];
+      const entitiesWithJoints = [{ id: 'part1' }, { id: 'part2' }];
 
-      mockEntityManager.getEntitiesWithComponent.mockReturnValue(entitiesWithJoints);
+      mockEntityManager.getEntitiesWithComponent.mockReturnValue(
+        entitiesWithJoints
+      );
       mockEntityManager.getComponentData.mockImplementation((id, component) => {
         if (id === entityId && component === 'anatomy:body') {
           return { recipeId: 'test:recipe' };
@@ -434,7 +443,9 @@ describe('AnatomyClothingIntegrationService - Additional Coverage', () => {
 
       // Should handle circular reference without infinite loop
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('Fallback joint traversal found 0 connected parts')
+        expect.stringContaining(
+          'Fallback joint traversal found 0 connected parts'
+        )
       );
     });
 
@@ -448,7 +459,9 @@ describe('AnatomyClothingIntegrationService - Additional Coverage', () => {
         { id: 'level4' },
       ];
 
-      mockEntityManager.getEntitiesWithComponent.mockReturnValue(entitiesWithJoints);
+      mockEntityManager.getEntitiesWithComponent.mockReturnValue(
+        entitiesWithJoints
+      );
       mockEntityManager.getComponentData.mockImplementation((id, component) => {
         if (id === entityId && component === 'anatomy:body') {
           return { recipeId: 'test:recipe' };
@@ -518,7 +531,9 @@ describe('AnatomyClothingIntegrationService - Additional Coverage', () => {
       });
 
       const mockBodyGraph = {
-        getAllPartIds: jest.fn().mockReturnValue(['torso_entity', 'arm_entity', 'hand_entity']),
+        getAllPartIds: jest
+          .fn()
+          .mockReturnValue(['torso_entity', 'arm_entity', 'hand_entity']),
         getConnectedParts: jest.fn().mockImplementation((id) => {
           if (id === 'torso_entity') return ['arm_entity'];
           if (id === 'arm_entity') return ['hand_entity'];
@@ -532,8 +547,16 @@ describe('AnatomyClothingIntegrationService - Additional Coverage', () => {
         .mockReturnValueOnce({
           slots: {
             torso: { type: 'test:torso', socket: 'torso_socket' },
-            left_arm: { parent: 'torso', type: 'test:arm', socket: 'arm_socket' },
-            left_hand: { parent: 'left_arm', type: 'test:hand', socket: 'hand_socket' },
+            left_arm: {
+              parent: 'torso',
+              type: 'test:arm',
+              socket: 'arm_socket',
+            },
+            left_hand: {
+              parent: 'left_arm',
+              type: 'test:hand',
+              socket: 'hand_socket',
+            },
           },
           clothingSlotMappings: {
             glove: {
@@ -545,10 +568,11 @@ describe('AnatomyClothingIntegrationService - Additional Coverage', () => {
           },
         });
 
-      const attachmentPoints = await service.resolveClothingSlotToAttachmentPoints(
-        'test_entity',
-        'glove'
-      );
+      const attachmentPoints =
+        await service.resolveClothingSlotToAttachmentPoints(
+          'test_entity',
+          'glove'
+        );
 
       expect(attachmentPoints).toHaveLength(1);
       expect(attachmentPoints[0]).toMatchObject({
@@ -623,10 +647,11 @@ describe('AnatomyClothingIntegrationService - Additional Coverage', () => {
           },
         });
 
-      const attachmentPoints = await service.resolveClothingSlotToAttachmentPoints(
-        'test_entity',
-        'mixed_item'
-      );
+      const attachmentPoints =
+        await service.resolveClothingSlotToAttachmentPoints(
+          'test_entity',
+          'mixed_item'
+        );
 
       // Should skip the partial slot and only return valid ones
       expect(mockLogger.warn).toHaveBeenCalledWith(

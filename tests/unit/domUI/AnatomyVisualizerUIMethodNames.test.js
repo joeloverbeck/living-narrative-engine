@@ -13,6 +13,7 @@ describe('AnatomyVisualizerUI - Method Name Validation', () => {
   let mockEntityManager;
   let mockAnatomyDescriptionService;
   let mockEventDispatcher;
+  let mockVisualizerStateController;
   let mockDocument;
   let visualizerUI;
 
@@ -45,6 +46,18 @@ describe('AnatomyVisualizerUI - Method Name Validation', () => {
     // Mock event dispatcher
     mockEventDispatcher = {
       subscribe: jest.fn(),
+    };
+
+    // Mock visualizer state controller
+    mockVisualizerStateController = {
+      selectEntity: jest.fn(),
+      handleError: jest.fn(),
+      reset: jest.fn(),
+      startRendering: jest.fn(),
+      completeRendering: jest.fn(),
+      getCurrentState: jest.fn(),
+      getSelectedEntity: jest.fn(),
+      getAnatomyData: jest.fn(),
     };
 
     // Mock document with elements
@@ -84,6 +97,7 @@ describe('AnatomyVisualizerUI - Method Name Validation', () => {
       anatomyDescriptionService: mockAnatomyDescriptionService,
       eventDispatcher: mockEventDispatcher,
       documentContext: { document: mockDocument },
+      visualizerStateController: mockVisualizerStateController,
     });
   });
 
@@ -115,14 +129,6 @@ describe('AnatomyVisualizerUI - Method Name Validation', () => {
       mockEntityManager.createEntityInstance.mockResolvedValue(
         mockEntityInstance
       );
-      mockEntityManager.getEntityInstance.mockResolvedValue(mockEntityInstance);
-
-      // Mock event subscription to trigger the anatomy check
-      let eventCallback;
-      mockEventDispatcher.subscribe.mockImplementation((eventId, callback) => {
-        eventCallback = callback;
-        return jest.fn(); // unsubscribe function
-      });
 
       // Create a mock graph renderer
       visualizerUI._graphRenderer = {
@@ -131,27 +137,16 @@ describe('AnatomyVisualizerUI - Method Name Validation', () => {
       };
 
       // Act
-      const loadPromise = visualizerUI._loadEntity(entityDefId);
+      await visualizerUI._loadEntity(entityDefId);
 
-      // Simulate entity creation event - this triggers the code at line 188
-      setTimeout(() => {
-        eventCallback({
-          payload: {
-            definitionId: entityDefId,
-            instanceId: 'instance-123',
-            wasReconstructed: false,
-          },
-        });
-      }, 50);
-
-      await loadPromise;
-
-      // Assert
-      expect(mockEntityInstance.getComponentData).toHaveBeenCalledWith(
-        'anatomy:body'
+      // Assert - verify the state controller is called with the correct entity ID
+      expect(mockVisualizerStateController.selectEntity).toHaveBeenCalledWith(
+        'instance-123'
       );
-      // getComponentData is called multiple times: in event handler, for description, and for body
-      expect(mockEntityInstance.getComponentData).toHaveBeenCalledTimes(3);
+      expect(mockEntityManager.createEntityInstance).toHaveBeenCalledWith(
+        entityDefId,
+        {}
+      );
     });
 
     it('should handle entities that do not have getComponent method', async () => {
@@ -180,18 +175,6 @@ describe('AnatomyVisualizerUI - Method Name Validation', () => {
       mockEntityManager.createEntityInstance.mockResolvedValue(
         mockEntityInstance
       );
-      mockEntityManager.getEntityInstance.mockResolvedValue(mockEntityInstance);
-
-      // Mock event subscription
-      let eventCallback;
-      let unsubscribeCalled = false;
-      const unsubscribeFn = jest.fn(() => {
-        unsubscribeCalled = true;
-      });
-      mockEventDispatcher.subscribe.mockImplementation((eventId, callback) => {
-        eventCallback = callback;
-        return unsubscribeFn;
-      });
 
       // Create a mock graph renderer
       visualizerUI._graphRenderer = {
@@ -200,28 +183,16 @@ describe('AnatomyVisualizerUI - Method Name Validation', () => {
       };
 
       // Act
-      const loadPromise = visualizerUI._loadEntity(entityDefId);
-
-      // Simulate entity creation event
-      setTimeout(() => {
-        eventCallback({
-          payload: {
-            definitionId: entityDefId,
-            instanceId: 'instance-123',
-            wasReconstructed: false,
-          },
-        });
-      }, 50);
-
-      // Wait for timeout
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      await visualizerUI._loadEntity(entityDefId);
 
       // Assert - should not throw error about getComponent not being a function
-      expect(mockEntityInstance.getComponentData).toHaveBeenCalledWith(
-        'anatomy:body'
+      expect(mockVisualizerStateController.selectEntity).toHaveBeenCalledWith(
+        'instance-123'
       );
-      // Since no body component, it should not resolve yet
-      expect(unsubscribeCalled).toBe(false);
+      expect(mockEntityManager.createEntityInstance).toHaveBeenCalledWith(
+        entityDefId,
+        {}
+      );
     });
 
     it('should use getEntityInstance() instead of getEntity() when fetching entities', async () => {
@@ -251,16 +222,8 @@ describe('AnatomyVisualizerUI - Method Name Validation', () => {
       mockEntityManager.createEntityInstance.mockResolvedValue(
         mockEntityInstance
       );
-      mockEntityManager.getEntityInstance.mockResolvedValue(mockEntityInstance);
       // Ensure getEntity doesn't exist
       mockEntityManager.getEntity = undefined;
-
-      // Mock event subscription
-      let eventCallback;
-      mockEventDispatcher.subscribe.mockImplementation((eventId, callback) => {
-        eventCallback = callback;
-        return jest.fn();
-      });
 
       visualizerUI._graphRenderer = {
         renderGraph: jest.fn(),
@@ -268,24 +231,15 @@ describe('AnatomyVisualizerUI - Method Name Validation', () => {
       };
 
       // Act
-      const loadPromise = visualizerUI._loadEntity(entityDefId);
+      await visualizerUI._loadEntity(entityDefId);
 
-      // Simulate entity creation event
-      setTimeout(() => {
-        eventCallback({
-          payload: {
-            definitionId: entityDefId,
-            instanceId: instanceId,
-            wasReconstructed: false,
-          },
-        });
-      }, 50);
-
-      await loadPromise;
-
-      // Assert - getEntityInstance is called in the event handler
-      expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(
+      // Assert - verify the state controller is called correctly
+      expect(mockVisualizerStateController.selectEntity).toHaveBeenCalledWith(
         instanceId
+      );
+      expect(mockEntityManager.createEntityInstance).toHaveBeenCalledWith(
+        entityDefId,
+        {}
       );
     });
   });
@@ -316,13 +270,6 @@ describe('AnatomyVisualizerUI - Method Name Validation', () => {
       mockEntityManager.createEntityInstance.mockResolvedValue(
         mockEntityInstance
       );
-      mockEntityManager.getEntityInstance.mockResolvedValue(mockEntityInstance);
-
-      let eventCallback;
-      mockEventDispatcher.subscribe.mockImplementation((eventId, callback) => {
-        eventCallback = callback;
-        return jest.fn();
-      });
 
       visualizerUI._graphRenderer = {
         renderGraph: jest.fn(),
@@ -330,28 +277,18 @@ describe('AnatomyVisualizerUI - Method Name Validation', () => {
       };
 
       // Act & Assert - should not throw
-      const loadPromise = visualizerUI._loadEntity(entityDefId);
+      await expect(
+        visualizerUI._loadEntity(entityDefId)
+      ).resolves.toBeUndefined();
 
-      setTimeout(() => {
-        // This should not throw "entity.getComponent is not a function"
-        expect(() => {
-          eventCallback({
-            payload: {
-              definitionId: entityDefId,
-              instanceId: 'instance-123',
-              wasReconstructed: false,
-            },
-          });
-        }).not.toThrow();
-      }, 50);
-
-      await loadPromise;
-
-      // Verify the correct method was called
-      expect(mockEntityInstance.getComponentData).toHaveBeenCalledWith(
-        'anatomy:body'
+      // Verify the state controller was called correctly
+      expect(mockVisualizerStateController.selectEntity).toHaveBeenCalledWith(
+        'instance-123'
       );
-      expect(visualizerUI._graphRenderer.renderGraph).toHaveBeenCalled();
+      expect(mockEntityManager.createEntityInstance).toHaveBeenCalledWith(
+        entityDefId,
+        {}
+      );
     });
   });
 });

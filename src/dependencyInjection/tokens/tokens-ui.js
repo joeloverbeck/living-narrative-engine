@@ -37,4 +37,7 @@ export const uiTokens = freeze({
   ChatAlertRenderer: 'ChatAlertRenderer',
   ActionResultRenderer: 'ActionResultRenderer',
   EntityLifecycleMonitor: 'EntityLifecycleMonitor',
+  VisualizerState: 'VisualizerState',
+  AnatomyLoadingDetector: 'AnatomyLoadingDetector',
+  VisualizerStateController: 'VisualizerStateController',
 });

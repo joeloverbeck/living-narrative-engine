@@ -610,9 +610,9 @@ describe('LayerCompatibilityService', () => {
               wearableType: 'dress',
               layer: 'base',
               size: 'm',
-              equipmentSlots: { 
-                primary: 'torso_clothing', 
-                secondary: ['arms_clothing'] // Has secondary slots
+              equipmentSlots: {
+                primary: 'torso_clothing',
+                secondary: ['arms_clothing'], // Has secondary slots
               },
             };
           }
@@ -703,15 +703,11 @@ describe('LayerCompatibilityService', () => {
     it('should handle errors gracefully', async () => {
       // Create a mock that throws an error during validation
       const originalLayerOrder = LayerCompatibilityService.LAYER_ORDER;
-      
+
       // Temporarily break LAYER_ORDER to cause an error
       LayerCompatibilityService.LAYER_ORDER = null;
 
-      const result = await service.validateLayerOrdering(
-        'entity1',
-        'base',
-        {}
-      );
+      const result = await service.validateLayerOrdering('entity1', 'base', {});
 
       // Restore original value
       LayerCompatibilityService.LAYER_ORDER = originalLayerOrder;

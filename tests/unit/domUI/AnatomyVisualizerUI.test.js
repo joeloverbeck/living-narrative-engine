@@ -13,6 +13,7 @@ describe('AnatomyVisualizerUI', () => {
   let mockEntityManager;
   let mockAnatomyDescriptionService;
   let mockEventDispatcher;
+  let mockVisualizerStateController;
   let mockDocument;
   let visualizerUI;
 
@@ -45,6 +46,18 @@ describe('AnatomyVisualizerUI', () => {
     // Mock event dispatcher
     mockEventDispatcher = {
       subscribe: jest.fn(),
+    };
+
+    // Mock visualizer state controller
+    mockVisualizerStateController = {
+      selectEntity: jest.fn(),
+      handleError: jest.fn(),
+      reset: jest.fn(),
+      startRendering: jest.fn(),
+      completeRendering: jest.fn(),
+      getCurrentState: jest.fn(),
+      getSelectedEntity: jest.fn(),
+      getAnatomyData: jest.fn(),
     };
 
     // Mock document with elements
@@ -84,6 +97,7 @@ describe('AnatomyVisualizerUI', () => {
       anatomyDescriptionService: mockAnatomyDescriptionService,
       eventDispatcher: mockEventDispatcher,
       documentContext: { document: mockDocument },
+      visualizerStateController: mockVisualizerStateController,
     });
   });
 
@@ -291,34 +305,40 @@ describe('AnatomyVisualizerUI', () => {
       );
       mockEntityManager.getEntityInstance.mockResolvedValue(mockEntityInstance);
 
-      // Mock event subscription
-      let eventCallback;
+      // Mock the selectEntity method to resolve successfully
+      mockVisualizerStateController.selectEntity.mockResolvedValue();
+
+      // Mock event subscription for state changes before initialization
+      let stateChangeCallback;
       mockEventDispatcher.subscribe.mockImplementation((eventId, callback) => {
-        eventCallback = callback;
+        if (eventId === 'VISUALIZER_STATE_CHANGED') {
+          stateChangeCallback = callback;
+        }
         return jest.fn(); // unsubscribe function
       });
 
-      // Create a mock graph renderer
+      // Initialize to set up event subscriptions
+      await visualizerUI.initialize();
+
+      // Create a mock graph renderer after initialization
       visualizerUI._graphRenderer = {
-        renderGraph: jest.fn(),
+        renderGraph: jest.fn().mockResolvedValue(),
         clear: jest.fn(),
       };
 
       // Act
-      const loadPromise = visualizerUI._loadEntity(entityDefId);
+      await visualizerUI._loadEntity(entityDefId);
 
-      // Simulate entity creation event
-      setTimeout(() => {
-        eventCallback({
+      // Simulate the state change to LOADED
+      if (stateChangeCallback) {
+        await stateChangeCallback({
           payload: {
-            definitionId: entityDefId,
-            instanceId: 'instance-123',
-            wasReconstructed: false,
+            currentState: 'LOADED',
+            selectedEntity: 'instance-123',
+            anatomyData: { parts: { head: 'head-123', torso: 'torso-123' } },
           },
         });
-      }, 50);
-
-      await loadPromise;
+      }
 
       // Assert
       expect(mockLogger.info).toHaveBeenCalledWith(
@@ -328,6 +348,10 @@ describe('AnatomyVisualizerUI', () => {
         entityDefId,
         {}
       );
+      expect(mockVisualizerStateController.selectEntity).toHaveBeenCalledWith(
+        'instance-123'
+      );
+      // The renderGraph is now called through the state change handler
       expect(visualizerUI._graphRenderer.renderGraph).toHaveBeenCalledWith(
         'instance-123',
         { parts: { head: 'head-123', torso: 'torso-123' } }

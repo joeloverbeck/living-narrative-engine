@@ -127,28 +127,58 @@ describe('AnatomyClothingIntegrationService - Final Coverage', () => {
             neutral_slot: { socket: 'test_socket' },
           },
           clothingSlotMappings: {
-            left_item: { blueprintSlots: ['left_slot'], allowedLayers: ['base'] },
-            right_item: { blueprintSlots: ['right_slot'], allowedLayers: ['base'] },
-            upper_item: { blueprintSlots: ['upper_slot'], allowedLayers: ['base'] },
-            lower_item: { blueprintSlots: ['lower_slot'], allowedLayers: ['base'] },
-            neutral_item: { blueprintSlots: ['neutral_slot'], allowedLayers: ['base'] },
+            left_item: {
+              blueprintSlots: ['left_slot'],
+              allowedLayers: ['base'],
+            },
+            right_item: {
+              blueprintSlots: ['right_slot'],
+              allowedLayers: ['base'],
+            },
+            upper_item: {
+              blueprintSlots: ['upper_slot'],
+              allowedLayers: ['base'],
+            },
+            lower_item: {
+              blueprintSlots: ['lower_slot'],
+              allowedLayers: ['base'],
+            },
+            neutral_item: {
+              blueprintSlots: ['neutral_slot'],
+              allowedLayers: ['base'],
+            },
           },
         });
 
       // Test each orientation
-      const leftPoints = await service.resolveClothingSlotToAttachmentPoints('test_entity', 'left_item');
+      const leftPoints = await service.resolveClothingSlotToAttachmentPoints(
+        'test_entity',
+        'left_item'
+      );
       expect(leftPoints[0]?.orientation).toBe('left');
 
-      const rightPoints = await service.resolveClothingSlotToAttachmentPoints('test_entity', 'right_item');
+      const rightPoints = await service.resolveClothingSlotToAttachmentPoints(
+        'test_entity',
+        'right_item'
+      );
       expect(rightPoints[0]?.orientation).toBe('right');
 
-      const upperPoints = await service.resolveClothingSlotToAttachmentPoints('test_entity', 'upper_item');
+      const upperPoints = await service.resolveClothingSlotToAttachmentPoints(
+        'test_entity',
+        'upper_item'
+      );
       expect(upperPoints[0]?.orientation).toBe('upper');
 
-      const lowerPoints = await service.resolveClothingSlotToAttachmentPoints('test_entity', 'lower_item');
+      const lowerPoints = await service.resolveClothingSlotToAttachmentPoints(
+        'test_entity',
+        'lower_item'
+      );
       expect(lowerPoints[0]?.orientation).toBe('lower');
 
-      const neutralPoints = await service.resolveClothingSlotToAttachmentPoints('test_entity', 'neutral_item');
+      const neutralPoints = await service.resolveClothingSlotToAttachmentPoints(
+        'test_entity',
+        'neutral_item'
+      );
       expect(neutralPoints[0]?.orientation).toBe('neutral');
     });
   });
@@ -194,12 +224,13 @@ describe('AnatomyClothingIntegrationService - Final Coverage', () => {
 
       const result = await service.getAvailableClothingSlots('test_entity');
       expect(result.has('root_item')).toBe(true);
-      
-      const attachmentPoints = await service.resolveClothingSlotToAttachmentPoints(
-        'test_entity',
-        'root_item'
-      );
-      
+
+      const attachmentPoints =
+        await service.resolveClothingSlotToAttachmentPoints(
+          'test_entity',
+          'root_item'
+        );
+
       expect(attachmentPoints).toHaveLength(1);
       expect(attachmentPoints[0].entityId).toBe('test_entity');
     });
@@ -209,12 +240,12 @@ describe('AnatomyClothingIntegrationService - Final Coverage', () => {
     it('should handle getComponentData returning joint synchronously', async () => {
       const entityId = 'test_entity';
 
-      const entitiesWithJoints = [
-        { id: 'sync_part' },
-      ];
+      const entitiesWithJoints = [{ id: 'sync_part' }];
 
-      mockEntityManager.getEntitiesWithComponent.mockReturnValue(entitiesWithJoints);
-      
+      mockEntityManager.getEntitiesWithComponent.mockReturnValue(
+        entitiesWithJoints
+      );
+
       // Return joint data synchronously (not wrapped in Promise)
       mockEntityManager.getComponentData.mockImplementation((id, component) => {
         if (id === entityId && component === 'anatomy:body') {
@@ -267,7 +298,9 @@ describe('AnatomyClothingIntegrationService - Final Coverage', () => {
       });
 
       const mockBodyGraph = {
-        getAllPartIds: jest.fn().mockReturnValue(['entity_level1', 'entity_level2', 'entity_level3']),
+        getAllPartIds: jest
+          .fn()
+          .mockReturnValue(['entity_level1', 'entity_level2', 'entity_level3']),
         getConnectedParts: jest.fn().mockImplementation((id) => {
           if (id === 'test_entity') return ['entity_level1'];
           if (id === 'entity_level1') return ['entity_level2'];
@@ -283,7 +316,11 @@ describe('AnatomyClothingIntegrationService - Final Coverage', () => {
           slots: {
             level1: { type: 'test:l1', socket: 's1' },
             level2: { parent: 'level1', type: 'test:l2', socket: 's2' },
-            level3: { parent: 'level2', type: 'test:l3', socket: 'deep_socket' },
+            level3: {
+              parent: 'level2',
+              type: 'test:l3',
+              socket: 'deep_socket',
+            },
           },
           clothingSlotMappings: {
             deep_item: {
@@ -295,17 +332,18 @@ describe('AnatomyClothingIntegrationService - Final Coverage', () => {
           },
         });
 
-      const attachmentPoints = await service.resolveClothingSlotToAttachmentPoints(
-        'test_entity',
-        'deep_item'
-      );
+      const attachmentPoints =
+        await service.resolveClothingSlotToAttachmentPoints(
+          'test_entity',
+          'deep_item'
+        );
 
       expect(attachmentPoints).toHaveLength(1);
       expect(attachmentPoints[0]).toMatchObject({
         entityId: 'entity_level3',
         socketId: 'deep_socket',
       });
-      
+
       // Should use slot mappings
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining('Found direct slot mapping')
@@ -346,14 +384,17 @@ describe('AnatomyClothingIntegrationService - Final Coverage', () => {
           },
         });
 
-      const attachmentPoints = await service.resolveClothingSlotToAttachmentPoints(
-        'test_entity',
-        'item'
-      );
+      const attachmentPoints =
+        await service.resolveClothingSlotToAttachmentPoints(
+          'test_entity',
+          'item'
+        );
 
       // Should still try to find the socket
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining("No entity found with socket 'some_socket' for slot 'typeless_slot'")
+        expect.stringContaining(
+          "No entity found with socket 'some_socket' for slot 'typeless_slot'"
+        )
       );
     });
   });
@@ -402,7 +443,7 @@ describe('AnatomyClothingIntegrationService - Final Coverage', () => {
         });
 
       const result = await service.getAvailableClothingSlots('test_entity');
-      
+
       expect(result.has('mixed_item1')).toBe(true); // Valid slot exists
       expect(result.has('mixed_item2')).toBe(false); // Socket doesn't exist
     });
@@ -412,7 +453,7 @@ describe('AnatomyClothingIntegrationService - Final Coverage', () => {
     it('should properly clear all caches including slot mappings', async () => {
       // First populate all caches
       service.setSlotEntityMappings({ slot1: 'entity1' });
-      
+
       mockEntityManager.getComponentData.mockResolvedValue({
         recipeId: 'test:recipe',
       });
@@ -427,10 +468,10 @@ describe('AnatomyClothingIntegrationService - Final Coverage', () => {
         .mockReturnValueOnce({ clothingSlotMappings: {} });
 
       await service.getAvailableClothingSlots('test_entity');
-      
+
       // Clear all caches
       service.clearCache();
-      
+
       // Verify mappings were cleared
       service.setSlotEntityMappings({ slot2: 'entity2' });
       expect(mockLogger.debug).toHaveBeenLastCalledWith(
