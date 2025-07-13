@@ -474,7 +474,7 @@ describe('ClothingManagementService', () => {
         equipmentOrchestrator.orchestrateEquipment
       ).toHaveBeenLastCalledWith({
         entityId: 'entity1',
-        clothingItemId: 'clothing1'
+        clothingItemId: 'clothing1',
       });
     });
 

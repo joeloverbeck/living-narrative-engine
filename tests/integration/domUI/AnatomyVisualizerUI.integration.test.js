@@ -18,6 +18,9 @@ import { configureMinimalContainer } from '../../../src/dependencyInjection/mini
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import { ENTITY_CREATED_ID } from '../../../src/constants/eventIds.js';
 import EntityDefinition from '../../../src/entities/entityDefinition.js';
+import { VisualizerState } from '../../../src/domUI/visualizer/VisualizerState.js';
+import { AnatomyLoadingDetector } from '../../../src/domUI/visualizer/AnatomyLoadingDetector.js';
+import { VisualizerStateController } from '../../../src/domUI/visualizer/VisualizerStateController.js';
 
 // Import anatomy mod data for realistic testing
 import bodyComponent from '../../../data/mods/anatomy/components/body.component.json';
@@ -56,6 +59,9 @@ describe('AnatomyVisualizerUI Integration Tests', () => {
   let anatomyDescriptionService;
   let eventDispatcher;
   let originalFetch;
+  let visualizerState;
+  let anatomyLoadingDetector;
+  let visualizerStateController;
 
   beforeEach(() => {
     // Set up JSDOM for DOM operations
@@ -100,11 +106,42 @@ describe('AnatomyVisualizerUI Integration Tests', () => {
     );
     eventDispatcher = container.resolve(tokens.ISafeEventDispatcher);
 
+    // Create visualizer state management components
+    visualizerState = new VisualizerState({ logger });
+    anatomyLoadingDetector = new AnatomyLoadingDetector({
+      entityManager,
+      eventDispatcher: container.resolve(tokens.IValidatedEventDispatcher),
+      logger,
+    });
+
+    // Mock the waitForEntityWithAnatomy method to resolve immediately for testing
+    jest
+      .spyOn(anatomyLoadingDetector, 'waitForEntityWithAnatomy')
+      .mockResolvedValue(true);
+
+    visualizerStateController = new VisualizerStateController({
+      visualizerState,
+      anatomyLoadingDetector,
+      eventDispatcher: container.resolve(tokens.IValidatedEventDispatcher),
+      logger,
+    });
+
+    // Set the entity manager for testing
+    visualizerStateController._setEntityManager(entityManager);
+
     // Pre-load essential components and entities into registry
     loadTestData();
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    // Clean up visualizer UI first
+    if (visualizerUI) {
+      // Dispose the UI which should clean up event subscriptions
+      visualizerUI.dispose();
+      // Wait a bit for async operations to complete
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+
     // Clean up entities
     if (entityManager) {
       entityManager.clearAll();
@@ -116,9 +153,26 @@ describe('AnatomyVisualizerUI Integration Tests', () => {
     delete global.window;
     delete global.SVGElement;
 
-    // Clean up visualizer
-    if (visualizerUI) {
-      visualizerUI._clearPreviousEntities();
+    // Restore mock
+    if (
+      anatomyLoadingDetector &&
+      anatomyLoadingDetector.waitForEntityWithAnatomy.mockRestore
+    ) {
+      anatomyLoadingDetector.waitForEntityWithAnatomy.mockRestore();
+    }
+
+    // Dispose visualizer state components
+    if (visualizerStateController) {
+      visualizerStateController.dispose();
+    }
+    if (
+      anatomyLoadingDetector &&
+      typeof anatomyLoadingDetector.dispose === 'function'
+    ) {
+      anatomyLoadingDetector.dispose();
+    }
+    if (visualizerState && typeof visualizerState.dispose === 'function') {
+      visualizerState.dispose();
     }
   });
 
@@ -210,6 +264,7 @@ describe('AnatomyVisualizerUI Integration Tests', () => {
         anatomyDescriptionService,
         eventDispatcher,
         documentContext: { document },
+        visualizerStateController,
       });
 
       // Act
@@ -234,6 +289,7 @@ describe('AnatomyVisualizerUI Integration Tests', () => {
         anatomyDescriptionService,
         eventDispatcher,
         documentContext: { document },
+        visualizerStateController,
       });
 
       // Act
@@ -277,6 +333,7 @@ describe('AnatomyVisualizerUI Integration Tests', () => {
         anatomyDescriptionService,
         eventDispatcher,
         documentContext: { document: mockDocument },
+        visualizerStateController,
       });
 
       // Act
@@ -301,6 +358,7 @@ describe('AnatomyVisualizerUI Integration Tests', () => {
         anatomyDescriptionService,
         eventDispatcher,
         documentContext: { document },
+        visualizerStateController,
       });
       await visualizerUI.initialize();
     });
@@ -310,7 +368,7 @@ describe('AnatomyVisualizerUI Integration Tests', () => {
       const entityDefId = 'anatomy:human_male';
       let createdEntityId;
 
-      // We need to mock the entity manager's createEntityInstance to control the anatomy generation
+      // We need to mock the entity manager's createEntityInstance
       const originalCreate = entityManager.createEntityInstance;
       jest
         .spyOn(entityManager, 'createEntityInstance')
@@ -321,19 +379,6 @@ describe('AnatomyVisualizerUI Integration Tests', () => {
             overrides
           );
           createdEntityId = entity.id;
-
-          // Simulate anatomy being generated
-          setTimeout(() => {
-            // Dispatch entity created event
-            eventDispatcher.dispatch(ENTITY_CREATED_ID, {
-              payload: {
-                definitionId: defId,
-                instanceId: entity.id,
-                wasReconstructed: false,
-              },
-            });
-          }, 100);
-
           return entity;
         });
 
@@ -366,6 +411,9 @@ describe('AnatomyVisualizerUI Integration Tests', () => {
       // Act
       await visualizerUI._loadEntity(entityDefId);
 
+      // Wait for state changes to propagate
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
       // Assert
       expect(createdEntityId).toBeDefined();
       expect(visualizerUI._currentEntityId).toBe(createdEntityId);
@@ -380,8 +428,9 @@ describe('AnatomyVisualizerUI Integration Tests', () => {
       // Arrange
       const entityDefId = 'anatomy:human_male';
       let checkedMethod = false;
+      let createdEntityId;
 
-      // Mock createEntityInstance and getEntityInstance similar to previous test
+      // Mock createEntityInstance
       const originalCreate = entityManager.createEntityInstance;
       jest
         .spyOn(entityManager, 'createEntityInstance')
@@ -391,18 +440,7 @@ describe('AnatomyVisualizerUI Integration Tests', () => {
             defId,
             overrides
           );
-
-          // Dispatch event after a delay
-          setTimeout(() => {
-            eventDispatcher.dispatch(ENTITY_CREATED_ID, {
-              payload: {
-                definitionId: defId,
-                instanceId: entity.id,
-                wasReconstructed: false,
-              },
-            });
-          }, 100);
-
+          createdEntityId = entity.id;
           return entity;
         });
 
@@ -471,6 +509,7 @@ describe('AnatomyVisualizerUI Integration Tests', () => {
         anatomyDescriptionService,
         eventDispatcher,
         documentContext: { document },
+        visualizerStateController,
       });
       await visualizerUI.initialize();
     });
@@ -529,6 +568,7 @@ describe('AnatomyVisualizerUI Integration Tests', () => {
         anatomyDescriptionService,
         eventDispatcher,
         documentContext: { document },
+        visualizerStateController,
       });
       await visualizerUI.initialize();
     });
@@ -798,6 +838,7 @@ describe('AnatomyVisualizerUI Integration Tests', () => {
         anatomyDescriptionService,
         eventDispatcher,
         documentContext: { document },
+        visualizerStateController,
       });
       await visualizerUI.initialize();
     });
@@ -809,6 +850,9 @@ describe('AnatomyVisualizerUI Integration Tests', () => {
       // Act
       await visualizerUI._loadEntity('non:existent:entity');
 
+      // Wait for state changes to propagate
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
       // Assert
       expect(errorSpy).toHaveBeenCalledWith(
         'Failed to load entity non:existent:entity:',
@@ -816,7 +860,9 @@ describe('AnatomyVisualizerUI Integration Tests', () => {
       );
 
       const graphContainer = document.getElementById('anatomy-graph-container');
-      expect(graphContainer.innerHTML).toContain('Failed to load entity');
+      expect(graphContainer.innerHTML).toContain(
+        'Error: Entity definition not found'
+      );
 
       errorSpy.mockRestore();
     });
@@ -862,17 +908,16 @@ describe('AnatomyVisualizerUI Integration Tests', () => {
         anatomyDescriptionService,
         eventDispatcher,
         documentContext: { document },
+        visualizerStateController,
       });
       await visualizerUI.initialize();
     });
 
     it('should properly subscribe and unsubscribe from events', async () => {
       // Arrange
-      const entityDefId = 'anatomy:human_male';
       let unsubscribeCalled = false;
-      let createdEntityId;
 
-      // Mock the subscribe method to track unsubscribe
+      // Mock the subscribe method to track unsubscribe for VISUALIZER_STATE_CHANGED
       const originalSubscribe = eventDispatcher.subscribe;
       jest
         .spyOn(eventDispatcher, 'subscribe')
@@ -882,63 +927,35 @@ describe('AnatomyVisualizerUI Integration Tests', () => {
             eventId,
             callback
           );
-          return () => {
-            unsubscribeCalled = true;
-            unsubscribe();
-          };
-        });
 
-      // Mock entity creation
-      const originalCreate = entityManager.createEntityInstance;
-      jest
-        .spyOn(entityManager, 'createEntityInstance')
-        .mockImplementation(async (defId, overrides) => {
-          const entity = await originalCreate.call(
-            entityManager,
-            defId,
-            overrides
-          );
-          createdEntityId = entity.id;
-
-          // Dispatch event after delay
-          setTimeout(() => {
-            eventDispatcher.dispatch(ENTITY_CREATED_ID, {
-              payload: {
-                definitionId: defId,
-                instanceId: entity.id,
-                wasReconstructed: false,
-              },
-            });
-          }, 100);
-
-          return entity;
-        });
-
-      // Mock entity with anatomy
-      jest
-        .spyOn(entityManager, 'getEntityInstance')
-        .mockImplementation(async (id) => {
-          if (id === createdEntityId) {
-            return {
-              id: createdEntityId,
-              getComponentData: jest.fn().mockReturnValue({
-                body: { root: createdEntityId, parts: {} },
-              }),
+          // Track unsubscribe specifically for VISUALIZER_STATE_CHANGED
+          if (eventId === 'VISUALIZER_STATE_CHANGED') {
+            return () => {
+              unsubscribeCalled = true;
+              unsubscribe();
             };
           }
-          return undefined;
+
+          return unsubscribe;
         });
 
-      // Act
-      await visualizerUI._loadEntity(entityDefId);
+      // Act - Initialize (which subscribes to VISUALIZER_STATE_CHANGED)
+      await visualizerUI.initialize();
 
-      // Assert
+      // Verify subscription happened
+      expect(eventDispatcher.subscribe).toHaveBeenCalledWith(
+        'VISUALIZER_STATE_CHANGED',
+        expect.any(Function)
+      );
+
+      // Dispose the UI (which should unsubscribe)
+      visualizerUI.dispose();
+
+      // Assert - The unsubscribe should have been called
       expect(unsubscribeCalled).toBe(true);
 
       // Cleanup
       eventDispatcher.subscribe.mockRestore();
-      entityManager.createEntityInstance.mockRestore();
-      entityManager.getEntityInstance.mockRestore();
     });
   });
 
@@ -954,6 +971,7 @@ describe('AnatomyVisualizerUI Integration Tests', () => {
         anatomyDescriptionService,
         eventDispatcher,
         documentContext: { document },
+        visualizerStateController,
       });
 
       // Act 1: Initialize

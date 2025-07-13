@@ -38,4 +38,3 @@ export default {
     nodeOptions: ['--expose-gc'],
   },
 };
-

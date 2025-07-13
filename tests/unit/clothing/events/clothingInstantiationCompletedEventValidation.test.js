@@ -22,13 +22,19 @@ describe('ClothingInstantiationCompleted Event Validation', () => {
     // Load the clothing:instantiation_completed event schema directly
     const eventDir = path.join(process.cwd(), 'data/mods/clothing/events');
     const eventDefinition = JSON.parse(
-      fs.readFileSync(path.join(eventDir, 'clothing_instantiation_completed.event.json'), 'utf8')
+      fs.readFileSync(
+        path.join(eventDir, 'clothing_instantiation_completed.event.json'),
+        'utf8'
+      )
     );
-    
+
     eventSchema = eventDefinition.payloadSchema;
-    
+
     // Add the schema to the validator
-    await schemaValidator.addSchema(eventSchema, 'clothing:instantiation_completed#payload');
+    await schemaValidator.addSchema(
+      eventSchema,
+      'clothing:instantiation_completed#payload'
+    );
   });
 
   describe('Valid payload formats', () => {
@@ -42,7 +48,7 @@ describe('ClothingInstantiationCompleted Event Validation', () => {
               entityDefinitionId: 'clothing:simple_shirt',
             },
             {
-              clothingId: 'clothing_item_2', 
+              clothingId: 'clothing_item_2',
               entityDefinitionId: 'clothing:blue_jeans',
             },
           ],
@@ -53,14 +59,17 @@ describe('ClothingInstantiationCompleted Event Validation', () => {
             },
             {
               clothingId: 'clothing_item_2',
-              entityDefinitionId: 'clothing:blue_jeans', 
+              entityDefinitionId: 'clothing:blue_jeans',
             },
           ],
           errors: [],
         },
       };
 
-      const result = schemaValidator.validate('clothing:instantiation_completed#payload', validPayload);
+      const result = schemaValidator.validate(
+        'clothing:instantiation_completed#payload',
+        validPayload
+      );
       expect(result.isValid).toBe(true);
       expect(result.errors || []).toEqual([]);
     });
@@ -75,7 +84,10 @@ describe('ClothingInstantiationCompleted Event Validation', () => {
         },
       };
 
-      const result = schemaValidator.validate('clothing:instantiation_completed#payload', validPayload);
+      const result = schemaValidator.validate(
+        'clothing:instantiation_completed#payload',
+        validPayload
+      );
       expect(result.isValid).toBe(true);
       expect(result.errors || []).toEqual([]);
     });
@@ -100,7 +112,10 @@ describe('ClothingInstantiationCompleted Event Validation', () => {
         },
       };
 
-      const result = schemaValidator.validate('clothing:instantiation_completed#payload', validPayload);
+      const result = schemaValidator.validate(
+        'clothing:instantiation_completed#payload',
+        validPayload
+      );
       expect(result.isValid).toBe(true);
       expect(result.errors || []).toEqual([]);
     });
@@ -122,7 +137,10 @@ describe('ClothingInstantiationCompleted Event Validation', () => {
         },
       };
 
-      const result = schemaValidator.validate('clothing:instantiation_completed#payload', invalidPayload);
+      const result = schemaValidator.validate(
+        'clothing:instantiation_completed#payload',
+        invalidPayload
+      );
       expect(result.isValid).toBe(false);
       expect(result.errors.length).toBeGreaterThan(0);
     });
@@ -147,7 +165,10 @@ describe('ClothingInstantiationCompleted Event Validation', () => {
         },
       };
 
-      const result = schemaValidator.validate('clothing:instantiation_completed#payload', invalidPayload);
+      const result = schemaValidator.validate(
+        'clothing:instantiation_completed#payload',
+        invalidPayload
+      );
       expect(result.isValid).toBe(false);
       expect(result.errors.length).toBeGreaterThan(0);
     });
@@ -172,7 +193,10 @@ describe('ClothingInstantiationCompleted Event Validation', () => {
         },
       };
 
-      const result = schemaValidator.validate('clothing:instantiation_completed#payload', invalidPayload);
+      const result = schemaValidator.validate(
+        'clothing:instantiation_completed#payload',
+        invalidPayload
+      );
       expect(result.isValid).toBe(false);
       expect(result.errors.length).toBeGreaterThan(0);
     });
@@ -194,7 +218,10 @@ describe('ClothingInstantiationCompleted Event Validation', () => {
         },
       };
 
-      const result = schemaValidator.validate('clothing:instantiation_completed#payload', invalidPayload);
+      const result = schemaValidator.validate(
+        'clothing:instantiation_completed#payload',
+        invalidPayload
+      );
       expect(result.isValid).toBe(false);
       expect(result.errors.length).toBeGreaterThan(0);
     });
@@ -211,7 +238,10 @@ describe('ClothingInstantiationCompleted Event Validation', () => {
         },
       };
 
-      const result = schemaValidator.validate('clothing:instantiation_completed#payload', invalidPayload);
+      const result = schemaValidator.validate(
+        'clothing:instantiation_completed#payload',
+        invalidPayload
+      );
       expect(result.isValid).toBe(false);
       expect(result.errors.length).toBeGreaterThan(0);
     });
@@ -222,7 +252,10 @@ describe('ClothingInstantiationCompleted Event Validation', () => {
         // missing result
       };
 
-      const result = schemaValidator.validate('clothing:instantiation_completed#payload', invalidPayload);
+      const result = schemaValidator.validate(
+        'clothing:instantiation_completed#payload',
+        invalidPayload
+      );
       expect(result.isValid).toBe(false);
       expect(result.errors.length).toBeGreaterThan(0);
     });
@@ -237,7 +270,10 @@ describe('ClothingInstantiationCompleted Event Validation', () => {
         },
       };
 
-      const result = schemaValidator.validate('clothing:instantiation_completed#payload', invalidPayload);
+      const result = schemaValidator.validate(
+        'clothing:instantiation_completed#payload',
+        invalidPayload
+      );
       expect(result.isValid).toBe(false);
       expect(result.errors.length).toBeGreaterThan(0);
     });
@@ -252,7 +288,10 @@ describe('ClothingInstantiationCompleted Event Validation', () => {
         },
       };
 
-      const result = schemaValidator.validate('clothing:instantiation_completed#payload', invalidPayload);
+      const result = schemaValidator.validate(
+        'clothing:instantiation_completed#payload',
+        invalidPayload
+      );
       expect(result.isValid).toBe(false);
       expect(result.errors.length).toBeGreaterThan(0);
     });
@@ -267,7 +306,10 @@ describe('ClothingInstantiationCompleted Event Validation', () => {
         },
       };
 
-      const result = schemaValidator.validate('clothing:instantiation_completed#payload', invalidPayload);
+      const result = schemaValidator.validate(
+        'clothing:instantiation_completed#payload',
+        invalidPayload
+      );
       expect(result.isValid).toBe(false);
       expect(result.errors.length).toBeGreaterThan(0);
     });
@@ -284,7 +326,10 @@ describe('ClothingInstantiationCompleted Event Validation', () => {
         },
       };
 
-      const result = schemaValidator.validate('clothing:instantiation_completed#payload', invalidPayload);
+      const result = schemaValidator.validate(
+        'clothing:instantiation_completed#payload',
+        invalidPayload
+      );
       expect(result.isValid).toBe(false);
       expect(result.errors.length).toBeGreaterThan(0);
     });
@@ -299,7 +344,10 @@ describe('ClothingInstantiationCompleted Event Validation', () => {
         },
       };
 
-      const result = schemaValidator.validate('clothing:instantiation_completed#payload', invalidPayload);
+      const result = schemaValidator.validate(
+        'clothing:instantiation_completed#payload',
+        invalidPayload
+      );
       expect(result.isValid).toBe(false);
       expect(result.errors.length).toBeGreaterThan(0);
     });
@@ -314,7 +362,10 @@ describe('ClothingInstantiationCompleted Event Validation', () => {
         },
       };
 
-      const result = schemaValidator.validate('clothing:instantiation_completed#payload', invalidPayload);
+      const result = schemaValidator.validate(
+        'clothing:instantiation_completed#payload',
+        invalidPayload
+      );
       expect(result.isValid).toBe(false);
       expect(result.errors.length).toBeGreaterThan(0);
     });
@@ -329,7 +380,10 @@ describe('ClothingInstantiationCompleted Event Validation', () => {
         },
       };
 
-      const result = schemaValidator.validate('clothing:instantiation_completed#payload', invalidPayload);
+      const result = schemaValidator.validate(
+        'clothing:instantiation_completed#payload',
+        invalidPayload
+      );
       expect(result.isValid).toBe(false);
       expect(result.errors.length).toBeGreaterThan(0);
     });
@@ -348,7 +402,10 @@ describe('ClothingInstantiationCompleted Event Validation', () => {
         unexpectedTopLevel: 'also not allowed', // ❌ Additional property
       };
 
-      const result = schemaValidator.validate('clothing:instantiation_completed#payload', invalidPayload);
+      const result = schemaValidator.validate(
+        'clothing:instantiation_completed#payload',
+        invalidPayload
+      );
       expect(result.isValid).toBe(false);
       expect(result.errors.length).toBeGreaterThan(0);
     });
@@ -369,7 +426,10 @@ describe('ClothingInstantiationCompleted Event Validation', () => {
         },
       };
 
-      const result = schemaValidator.validate('clothing:instantiation_completed#payload', invalidPayload);
+      const result = schemaValidator.validate(
+        'clothing:instantiation_completed#payload',
+        invalidPayload
+      );
       expect(result.isValid).toBe(false);
       expect(result.errors.length).toBeGreaterThan(0);
     });
@@ -390,7 +450,10 @@ describe('ClothingInstantiationCompleted Event Validation', () => {
       };
 
       const startTime = Date.now();
-      const result = schemaValidator.validate('clothing:instantiation_completed#payload', validPayload);
+      const result = schemaValidator.validate(
+        'clothing:instantiation_completed#payload',
+        validPayload
+      );
       const endTime = Date.now();
 
       expect(result.isValid).toBe(true);

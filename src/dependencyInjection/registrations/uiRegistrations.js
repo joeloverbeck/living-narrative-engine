@@ -34,6 +34,9 @@ import {
   SaveGameService,
   EntityLifecycleMonitor,
 } from '../../domUI/index.js';
+import { VisualizerState } from '../../domUI/visualizer/VisualizerState.js';
+import { AnatomyLoadingDetector } from '../../domUI/visualizer/AnatomyLoadingDetector.js';
+import { VisualizerStateController } from '../../domUI/visualizer/VisualizerStateController.js';
 import SaveGameUI from '../../domUI/saveGameUI.js';
 import LoadGameUI from '../../domUI/loadGameUI.js';
 import { EngineUIManager } from '../../domUI'; // Corrected import path if EngineUIManager is also in domUI/index.js or directly from its file
@@ -389,6 +392,44 @@ export function registerControllers(registrar, logger) {
         documentContext: c.resolve(tokens.IDocumentContext),
         safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
         domElementFactory: c.resolve(tokens.DomElementFactory),
+      }),
+    { lifecycle: 'singletonFactory' },
+    logger
+  );
+
+  registerWithLog(
+    registrar,
+    tokens.VisualizerState,
+    (c) =>
+      new VisualizerState({
+        logger: c.resolve(tokens.ILogger),
+      }),
+    { lifecycle: 'singletonFactory' },
+    logger
+  );
+
+  registerWithLog(
+    registrar,
+    tokens.AnatomyLoadingDetector,
+    (c) =>
+      new AnatomyLoadingDetector({
+        entityManager: c.resolve(tokens.IEntityManager),
+        eventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
+        logger: c.resolve(tokens.ILogger),
+      }),
+    { lifecycle: 'singletonFactory' },
+    logger
+  );
+
+  registerWithLog(
+    registrar,
+    tokens.VisualizerStateController,
+    (c) =>
+      new VisualizerStateController({
+        visualizerState: c.resolve(tokens.VisualizerState),
+        anatomyLoadingDetector: c.resolve(tokens.AnatomyLoadingDetector),
+        eventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
+        logger: c.resolve(tokens.ILogger),
       }),
     { lifecycle: 'singletonFactory' },
     logger

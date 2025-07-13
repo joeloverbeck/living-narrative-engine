@@ -103,7 +103,10 @@ describe('AnatomyClothingIntegrationService - Coverage Tests', () => {
         if (id === 'test_entity' && component === 'anatomy:body') {
           return { recipeId: 'test:recipe' };
         }
-        if (component === 'anatomy:sockets' && id === 'specific_left_hand_entity') {
+        if (
+          component === 'anatomy:sockets' &&
+          id === 'specific_left_hand_entity'
+        ) {
           return {
             sockets: [{ id: 'left_hand_socket', orientation: 'left' }],
           };
@@ -112,7 +115,9 @@ describe('AnatomyClothingIntegrationService - Coverage Tests', () => {
       });
 
       const mockBodyGraph = {
-        getAllPartIds: jest.fn().mockReturnValue(['some_other_part', 'specific_left_hand_entity']),
+        getAllPartIds: jest
+          .fn()
+          .mockReturnValue(['some_other_part', 'specific_left_hand_entity']),
         getConnectedParts: jest.fn().mockReturnValue([]),
       };
       mockBodyGraphService.getBodyGraph.mockResolvedValue(mockBodyGraph);
@@ -136,10 +141,11 @@ describe('AnatomyClothingIntegrationService - Coverage Tests', () => {
           },
         });
 
-      const attachmentPoints = await service.resolveClothingSlotToAttachmentPoints(
-        'test_entity',
-        'glove'
-      );
+      const attachmentPoints =
+        await service.resolveClothingSlotToAttachmentPoints(
+          'test_entity',
+          'glove'
+        );
 
       // Should find the entity through slot mapping
       expect(attachmentPoints).toHaveLength(1);
@@ -232,7 +238,9 @@ describe('AnatomyClothingIntegrationService - Coverage Tests', () => {
         { id: 'right_arm_part' },
       ];
 
-      mockEntityManager.getEntitiesWithComponent.mockReturnValue(entitiesWithJoints);
+      mockEntityManager.getEntitiesWithComponent.mockReturnValue(
+        entitiesWithJoints
+      );
       mockEntityManager.getComponentData.mockImplementation((id, component) => {
         if (id === entityId && component === 'anatomy:body') {
           return { recipeId: 'test:recipe' };
@@ -279,10 +287,12 @@ describe('AnatomyClothingIntegrationService - Coverage Tests', () => {
       expect(result).toBeInstanceOf(Map);
       expect(result.has('shirt')).toBe(true);
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Body graph for \'test_entity\' returned only 0 parts')
+        expect.stringContaining(
+          "Body graph for 'test_entity' returned only 0 parts"
+        )
       );
       // Check that it found the expected parts through fallback
-      const foundPartLogs = mockLogger.debug.mock.calls.filter(call => 
+      const foundPartLogs = mockLogger.debug.mock.calls.filter((call) =>
         call[0].includes('Found connected part')
       );
       expect(foundPartLogs.length).toBeGreaterThanOrEqual(3); // Found at least 3 connected parts
@@ -297,7 +307,7 @@ describe('AnatomyClothingIntegrationService - Coverage Tests', () => {
         }
         return null;
       });
-      
+
       // Make getEntitiesWithComponent throw an error
       mockEntityManager.getEntitiesWithComponent.mockImplementation(() => {
         throw new Error('Database error');
@@ -325,7 +335,9 @@ describe('AnatomyClothingIntegrationService - Coverage Tests', () => {
 
       expect(result).toBeInstanceOf(Map);
       expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('AnatomyClothingIntegrationService: Failed to find anatomy parts by joints for'),
+        expect.stringContaining(
+          'AnatomyClothingIntegrationService: Failed to find anatomy parts by joints for'
+        ),
         expect.any(Error)
       );
     });
@@ -333,11 +345,11 @@ describe('AnatomyClothingIntegrationService - Coverage Tests', () => {
     it('should handle joint with missing parentEntityId and parentId', async () => {
       const entityId = 'test_entity';
 
-      const entitiesWithJoints = [
-        { id: 'orphan_part' },
-      ];
+      const entitiesWithJoints = [{ id: 'orphan_part' }];
 
-      mockEntityManager.getEntitiesWithComponent.mockReturnValue(entitiesWithJoints);
+      mockEntityManager.getEntitiesWithComponent.mockReturnValue(
+        entitiesWithJoints
+      );
       mockEntityManager.getComponentData.mockImplementation((id, component) => {
         if (id === entityId && component === 'anatomy:body') {
           return { recipeId: 'test:recipe' };
@@ -406,10 +418,11 @@ describe('AnatomyClothingIntegrationService - Coverage Tests', () => {
           },
         });
 
-      const attachmentPoints = await service.resolveClothingSlotToAttachmentPoints(
-        entityId,
-        'test_item'
-      );
+      const attachmentPoints =
+        await service.resolveClothingSlotToAttachmentPoints(
+          entityId,
+          'test_item'
+        );
 
       // The method should handle the missing joint gracefully
       expect(attachmentPoints).toEqual([]);
@@ -542,10 +555,11 @@ describe('AnatomyClothingIntegrationService - Coverage Tests', () => {
           },
         });
 
-      const attachmentPoints = await service.resolveClothingSlotToAttachmentPoints(
-        entityId,
-        'root_item'
-      );
+      const attachmentPoints =
+        await service.resolveClothingSlotToAttachmentPoints(
+          entityId,
+          'root_item'
+        );
 
       expect(attachmentPoints).toHaveLength(1);
       expect(attachmentPoints[0]).toMatchObject({
@@ -590,10 +604,8 @@ describe('AnatomyClothingIntegrationService - Coverage Tests', () => {
           },
         });
 
-      const attachmentPoints = await service.resolveClothingSlotToAttachmentPoints(
-        entityId,
-        'item'
-      );
+      const attachmentPoints =
+        await service.resolveClothingSlotToAttachmentPoints(entityId, 'item');
 
       expect(attachmentPoints).toEqual([]);
       expect(mockLogger.warn).toHaveBeenCalledWith(
@@ -633,7 +645,11 @@ describe('AnatomyClothingIntegrationService - Coverage Tests', () => {
           slots: {
             arm: { type: 'test:arm', socket: 'arm_socket' },
             hand: { parent: 'arm', type: 'test:hand', socket: 'hand_socket' },
-            finger: { parent: 'hand', type: 'test:finger', socket: 'deep_socket' },
+            finger: {
+              parent: 'hand',
+              type: 'test:finger',
+              socket: 'deep_socket',
+            },
           },
           clothingSlotMappings: {
             ring: {
@@ -645,10 +661,8 @@ describe('AnatomyClothingIntegrationService - Coverage Tests', () => {
           },
         });
 
-      const attachmentPoints = await service.resolveClothingSlotToAttachmentPoints(
-        entityId,
-        'ring'
-      );
+      const attachmentPoints =
+        await service.resolveClothingSlotToAttachmentPoints(entityId, 'ring');
 
       // The deep_part actually has the socket, so it finds it
       expect(attachmentPoints).toHaveLength(1);
@@ -695,8 +709,10 @@ describe('AnatomyClothingIntegrationService - Coverage Tests', () => {
 
       expect(result.has('impossible_item')).toBe(false);
       // Check for debug logs about missing sockets
-      const debugCalls = mockLogger.debug.mock.calls.filter(call => 
-        call[0].includes('Socket \'socket') && call[0].includes('not found in anatomy structure')
+      const debugCalls = mockLogger.debug.mock.calls.filter(
+        (call) =>
+          call[0].includes("Socket 'socket") &&
+          call[0].includes('not found in anatomy structure')
       );
       expect(debugCalls.length).toBe(3); // One for each missing socket
     });
@@ -797,7 +813,9 @@ describe('AnatomyClothingIntegrationService - Coverage Tests', () => {
 
       // Should have cached both blueprints
       const calls = mockDataRegistry.get.mock.calls;
-      const blueprintCalls = calls.filter(([cat]) => cat === 'anatomyBlueprints');
+      const blueprintCalls = calls.filter(
+        ([cat]) => cat === 'anatomyBlueprints'
+      );
       expect(blueprintCalls.length).toBe(2); // One for each unique blueprint
     });
   });

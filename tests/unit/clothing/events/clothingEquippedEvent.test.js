@@ -46,23 +46,25 @@ describe('clothing:equipped Event Validation', () => {
       components: ['clothing:equipment'],
     });
 
-    mocks.entityManager.getComponentData.mockImplementation((entityId, componentType) => {
-      if (componentType === 'clothing:wearable') {
-        return {
-          layer: 'base',
-          equipmentSlots: {
-            primary: 'torso_clothing',
-          },
-        };
-      } else if (componentType === 'clothing:equipment') {
-        return {
-          equipped: {
-            torso_clothing: hasConflicts ? { base: 'conflict1' } : {},
-          },
-        };
+    mocks.entityManager.getComponentData.mockImplementation(
+      (entityId, componentType) => {
+        if (componentType === 'clothing:wearable') {
+          return {
+            layer: 'base',
+            equipmentSlots: {
+              primary: 'torso_clothing',
+            },
+          };
+        } else if (componentType === 'clothing:equipment') {
+          return {
+            equipped: {
+              torso_clothing: hasConflicts ? { base: 'conflict1' } : {},
+            },
+          };
+        }
+        return null;
       }
-      return null;
-    });
+    );
 
     // Setup conflict resolution
     mocks.layerCompatibilityService.checkLayerConflicts.mockResolvedValue({
@@ -126,25 +128,27 @@ describe('clothing:equipped Event Validation', () => {
       setupSuccessfulEquipmentMocks(false);
 
       // Mock existing equipment
-      mocks.entityManager.getComponentData.mockImplementation((entityId, componentType) => {
-        if (componentType === 'clothing:wearable') {
-          return {
-            layer: 'base',
-            equipmentSlots: {
-              primary: 'torso_clothing',
-            },
-          };
-        } else if (componentType === 'clothing:equipment') {
-          return {
-            equipped: {
-              torso_clothing: {
-                base: 'oldShirt789',
+      mocks.entityManager.getComponentData.mockImplementation(
+        (entityId, componentType) => {
+          if (componentType === 'clothing:wearable') {
+            return {
+              layer: 'base',
+              equipmentSlots: {
+                primary: 'torso_clothing',
               },
-            },
-          };
+            };
+          } else if (componentType === 'clothing:equipment') {
+            return {
+              equipped: {
+                torso_clothing: {
+                  base: 'oldShirt789',
+                },
+              },
+            };
+          }
+          return null;
         }
-        return null;
-      });
+      );
 
       await orchestrator.orchestrateEquipment({
         entityId: 'actor123',
@@ -170,7 +174,7 @@ describe('clothing:equipped Event Validation', () => {
       });
 
       const eventCall = mocks.eventDispatcher.dispatch.mock.calls.find(
-        call => call[0] === 'clothing:equipped'
+        (call) => call[0] === 'clothing:equipped'
       );
 
       expect(eventCall).toBeDefined();
@@ -191,17 +195,22 @@ describe('clothing:equipped Event Validation', () => {
       expect(typeof payload.timestamp).toBe('number');
 
       // Validate layer enum
-      expect(['underwear', 'base', 'outer', 'accessories']).toContain(payload.layer);
+      expect(['underwear', 'base', 'outer', 'accessories']).toContain(
+        payload.layer
+      );
 
       // Validate conflictResolution enum or null
       expect(
         payload.conflictResolution === null ||
-        ['auto_remove', 'prompt_user', 'block_equip', 'layer_swap'].includes(payload.conflictResolution)
+          ['auto_remove', 'prompt_user', 'block_equip', 'layer_swap'].includes(
+            payload.conflictResolution
+          )
       ).toBe(true);
 
       // Validate previousItem is string or null
       expect(
-        payload.previousItem === null || typeof payload.previousItem === 'string'
+        payload.previousItem === null ||
+          typeof payload.previousItem === 'string'
       ).toBe(true);
     });
 
@@ -215,7 +224,7 @@ describe('clothing:equipped Event Validation', () => {
       });
 
       const eventCall = mocks.eventDispatcher.dispatch.mock.calls.find(
-        call => call[0] === 'clothing:equipped'
+        (call) => call[0] === 'clothing:equipped'
       );
 
       const payload = eventCall[1];
@@ -226,12 +235,12 @@ describe('clothing:equipped Event Validation', () => {
         'layer',
         'previousItem',
         'conflictResolution',
-        'timestamp'
+        'timestamp',
       ];
 
       const actualProperties = Object.keys(payload);
       const extraProperties = actualProperties.filter(
-        prop => !allowedProperties.includes(prop)
+        (prop) => !allowedProperties.includes(prop)
       );
 
       expect(extraProperties).toHaveLength(0);
@@ -249,7 +258,7 @@ describe('clothing:equipped Event Validation', () => {
       });
 
       const eventCall = mocks.eventDispatcher.dispatch.mock.calls.find(
-        call => call[0] === 'clothing:equipped'
+        (call) => call[0] === 'clothing:equipped'
       );
 
       expect(eventCall[1]).not.toHaveProperty('conflictsResolved');
@@ -265,7 +274,7 @@ describe('clothing:equipped Event Validation', () => {
       });
 
       const eventCall = mocks.eventDispatcher.dispatch.mock.calls.find(
-        call => call[0] === 'clothing:equipped'
+        (call) => call[0] === 'clothing:equipped'
       );
 
       const payload = eventCall[1];

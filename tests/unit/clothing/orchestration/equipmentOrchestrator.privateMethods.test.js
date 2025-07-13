@@ -33,13 +33,9 @@ describe('EquipmentOrchestrator - Private Methods Coverage', () => {
   let orchestrator;
 
   beforeEach(() => {
-    ({
-      entityManager,
-      logger,
-      eventDispatcher,
-      layerCompatibilityService,
-    } = createMocks());
-    
+    ({ entityManager, logger, eventDispatcher, layerCompatibilityService } =
+      createMocks());
+
     orchestrator = new EquipmentOrchestrator({
       entityManager,
       logger,
@@ -111,7 +107,9 @@ describe('EquipmentOrchestrator - Private Methods Coverage', () => {
       });
 
       expect(result.valid).toBe(false);
-      expect(result.errors).toContain("Clothing item 'nonexistent_item' not found");
+      expect(result.errors).toContain(
+        "Clothing item 'nonexistent_item' not found"
+      );
     });
 
     it('should handle wearable component validation failure', async () => {
@@ -138,7 +136,7 @@ describe('EquipmentOrchestrator - Private Methods Coverage', () => {
         hasConflicts: true,
         conflicts: [{ conflictingItemId: 'existing_shirt' }],
       });
-      
+
       // Mock calls in order for conflict resolution flow
       entityManager.getComponentData
         .mockReturnValueOnce({

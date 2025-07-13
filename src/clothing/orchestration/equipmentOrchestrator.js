@@ -65,11 +65,7 @@ export class EquipmentOrchestrator {
    * @returns {Promise<{success: boolean, equipped?: boolean, conflicts?: object[], errors?: string[]}>}
    */
   async orchestrateEquipment(request) {
-    const {
-      entityId,
-      clothingItemId,
-      layer,
-    } = request;
+    const { entityId, clothingItemId, layer } = request;
 
     try {
       this.#logger.debug(
@@ -99,10 +95,15 @@ export class EquipmentOrchestrator {
           errors: [`Item '${clothingItemId}' is not wearable`],
         };
       }
-      if (!clothingData.equipmentSlots || !clothingData.equipmentSlots.primary) {
+      if (
+        !clothingData.equipmentSlots ||
+        !clothingData.equipmentSlots.primary
+      ) {
         return {
           success: false,
-          errors: [`Item '${clothingItemId}' has invalid equipment slot configuration`],
+          errors: [
+            `Item '${clothingItemId}' has invalid equipment slot configuration`,
+          ],
         };
       }
       const targetLayer = layer || clothingData.layer;
@@ -148,7 +149,9 @@ export class EquipmentOrchestrator {
           slotId: targetSlot,
           layer: targetLayer,
           previousItem: equipResult.previousItem,
-          conflictResolution: conflictResult.hasConflicts ? "auto_remove" : null,
+          conflictResolution: conflictResult.hasConflicts
+            ? 'auto_remove'
+            : null,
           timestamp: Date.now(),
         });
 
@@ -308,7 +311,11 @@ export class EquipmentOrchestrator {
           clothingItemId,
           'clothing:wearable'
         );
-        if (clothingData && clothingData.equipmentSlots && clothingData.equipmentSlots.primary) {
+        if (
+          clothingData &&
+          clothingData.equipmentSlots &&
+          clothingData.equipmentSlots.primary
+        ) {
           const conflictResult = await this.#layerService.checkLayerConflicts(
             entityId,
             clothingItemId,
