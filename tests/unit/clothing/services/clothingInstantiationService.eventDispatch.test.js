@@ -168,7 +168,12 @@ describe('ClothingInstantiationService - Event Dispatching', () => {
                 entityDefinitionId: 'clothing:simple_shirt',
               },
             ],
-            equipped: ['clothing_123'],
+            equipped: [
+              {
+                clothingId: 'clothing_123',
+                entityDefinitionId: 'clothing:simple_shirt',
+              },
+            ],
             errors: [],
           },
         }
@@ -333,7 +338,12 @@ describe('ClothingInstantiationService - Event Dispatching', () => {
                 entityDefinitionId: 'clothing:valid_boots',
               },
             ],
-            equipped: ['shirt_123'],
+            equipped: [
+              {
+                clothingId: 'shirt_123',
+                entityDefinitionId: 'clothing:valid_shirt',
+              },
+            ],
             errors: [
               "clothing:invalid_item: Entity definition 'clothing:invalid_item' not found in registry",
             ],
