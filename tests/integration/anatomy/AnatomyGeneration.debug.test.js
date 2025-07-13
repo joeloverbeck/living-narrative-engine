@@ -25,6 +25,8 @@ describe('Anatomy Generation Debug Integration Tests', () => {
     // Mock entity manager
     mockEntityManager = {
       getEntityInstance: jest.fn(),
+      getComponentData: jest.fn(),
+      addComponent: jest.fn(),
     };
 
     // Mock data registry

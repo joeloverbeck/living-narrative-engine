@@ -5,6 +5,7 @@
 
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import AnatomyIntegrationTestBed from '../../common/anatomy/anatomyIntegrationTestBed.js';
+import blueprintSlot from '../../../data/mods/anatomy/entities/definitions/blueprint_slot.entity.json';
 
 describe('Anatomy Description Generation Pipeline - Integration', () => {
   let testBed;
@@ -14,6 +15,7 @@ describe('Anatomy Description Generation Pipeline - Integration', () => {
 
     // Load basic entity definitions and components needed for tests
     testBed.loadEntityDefinitions({
+      'anatomy:blueprint_slot': blueprintSlot,
       'core:actor': {
         id: 'core:actor',
         description: 'A basic actor entity',

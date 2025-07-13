@@ -32,6 +32,7 @@ describe('Anatomy Visualizer - Service Integration', () => {
       validateClothingSlotCompatibility: jest.fn().mockResolvedValue({
         valid: true,
       }),
+      setSlotEntityMappings: jest.fn(),
     };
 
     const mockEventBus = {
@@ -126,11 +127,6 @@ describe('Anatomy Visualizer - Service Integration', () => {
       dataRegistry: {
         get: jest.fn(),
       },
-      slotMappingConfiguration: {
-        resolveSlotMapping: jest.fn(),
-        getSlotEntityMappings: jest.fn().mockResolvedValue(new Map()),
-        clearCache: jest.fn(),
-      },
       logger: createMockLogger(),
     };
 
@@ -175,6 +171,7 @@ describe('Anatomy Visualizer - Service Integration', () => {
       validateClothingSlotCompatibility: jest.fn().mockResolvedValue({
         valid: true,
       }),
+      setSlotEntityMappings: jest.fn(),
     };
 
     const mockEventBus = {
@@ -187,10 +184,10 @@ describe('Anatomy Visualizer - Service Integration', () => {
         layer: 'base',
       }),
     };
-    
+
     // Mock entity creation
     mockEntityManager.createEntityInstance.mockResolvedValue('clothing_123');
-    
+
     // Mock entity exists check
     mockEntityManager.getEntityInstance.mockImplementation((id) => {
       if (id === 'clothing_123') {
@@ -198,8 +195,8 @@ describe('Anatomy Visualizer - Service Integration', () => {
           id,
           getComponentData: jest.fn().mockReturnValue({
             equipmentSlots: { primary: 'torso' },
-            layer: 'base'
-          })
+            layer: 'base',
+          }),
         };
       }
       return null;
@@ -227,7 +224,10 @@ describe('Anatomy Visualizer - Service Integration', () => {
     const anatomyParts = new Map();
     anatomyParts.set('torso', 'torso_entity_123');
 
-    await service.instantiateRecipeClothing('actor_123', recipe, { partsMap: anatomyParts, slotEntityMappings: new Map() });
+    await service.instantiateRecipeClothing('actor_123', recipe, {
+      partsMap: anatomyParts,
+      slotEntityMappings: new Map(),
+    });
 
     // Verify the correct method was called
     expect(

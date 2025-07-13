@@ -74,13 +74,23 @@ describe('HttpAgentService', () => {
     it('should initialize with default configuration when not provided', () => {
       new HttpAgentService(mockLogger);
       expect(mockLogger.info).toHaveBeenCalledWith(
-        'HttpAgentService: Initialized with configuration',
+        'HttpAgentService: Initialized with adaptive cleanup configuration',
         expect.objectContaining({
           keepAlive: true,
           maxSockets: 50,
           maxFreeSockets: 10,
           timeout: 60000,
           freeSocketTimeout: 30000,
+          maxTotalSockets: 500,
+          adaptiveCleanup: expect.objectContaining({
+            baseIntervalMs: 300000,
+            minIntervalMs: 60000,
+            maxIntervalMs: 900000,
+            idleThresholdMs: 300000,
+            memoryThresholdMB: 100,
+            highLoadRequestsPerMin: 60,
+            adaptiveCleanupEnabled: true,
+          }),
         })
       );
     });
@@ -95,13 +105,23 @@ describe('HttpAgentService', () => {
       });
 
       expect(mockLogger.info).toHaveBeenCalledWith(
-        'HttpAgentService: Initialized with configuration',
+        'HttpAgentService: Initialized with adaptive cleanup configuration',
         expect.objectContaining({
           keepAlive: true,
           maxSockets: 25,
           maxFreeSockets: 5,
           timeout: 30000,
           freeSocketTimeout: 15000,
+          maxTotalSockets: 500,
+          adaptiveCleanup: expect.objectContaining({
+            baseIntervalMs: 300000,
+            minIntervalMs: 60000,
+            maxIntervalMs: 900000,
+            idleThresholdMs: 300000,
+            memoryThresholdMB: 100,
+            highLoadRequestsPerMin: 60,
+            adaptiveCleanupEnabled: true,
+          }),
         })
       );
     });
@@ -110,21 +130,18 @@ describe('HttpAgentService', () => {
       expect(() => new HttpAgentService()).toThrow();
     });
 
-    it('should set up periodic cleanup', () => {
-      const mockSetInterval = jest.spyOn(global, 'setInterval');
+    it('should set up adaptive cleanup', () => {
+      const mockSetTimeout = jest.spyOn(global, 'setTimeout');
 
       const service = new HttpAgentService(mockLogger);
 
-      // Verify setInterval was called
-      expect(mockSetInterval).toHaveBeenCalledWith(
-        expect.any(Function),
-        300000
-      );
+      // Verify setTimeout was called for adaptive cleanup
+      expect(mockSetTimeout).toHaveBeenCalledWith(expect.any(Function), 300000);
 
       // Clean up the service
       service.cleanup();
 
-      mockSetInterval.mockRestore();
+      mockSetTimeout.mockRestore();
     });
   });
 
@@ -320,6 +337,10 @@ describe('HttpAgentService', () => {
         socketsCreated: 0,
         socketsReused: 0,
         activeAgents: 2,
+        cleanupOperations: 0,
+        adaptiveCleanupAdjustments: 0,
+        lastCleanupDuration: 0,
+        averageCleanupInterval: 300000,
         agentDetails: expect.arrayContaining([
           expect.objectContaining({
             key: 'https://api.example.com:443',
@@ -469,8 +490,8 @@ describe('HttpAgentService', () => {
   });
 
   describe('cleanup', () => {
-    it('should clear interval and destroy all agents', () => {
-      const mockClearInterval = jest.spyOn(global, 'clearInterval');
+    it('should clear timeout and destroy all agents', () => {
+      const mockClearTimeout = jest.spyOn(global, 'clearTimeout');
 
       // Create some agents
       httpAgentService.getAgent('https://api1.example.com');
@@ -479,13 +500,13 @@ describe('HttpAgentService', () => {
       // Call cleanup
       httpAgentService.cleanup();
 
-      // Verify interval was cleared
-      expect(mockClearInterval).toHaveBeenCalled();
+      // Verify timeout was cleared
+      expect(mockClearTimeout).toHaveBeenCalled();
 
       // Verify all agents were destroyed
       expect(mockHttpsAgent.destroy).toHaveBeenCalledTimes(2);
       expect(mockLogger.info).toHaveBeenCalledWith(
-        'HttpAgentService: Cleared cleanup interval timer'
+        'HttpAgentService: Cleared adaptive cleanup timer'
       );
       expect(mockLogger.info).toHaveBeenCalledWith(
         'HttpAgentService: Destroyed all 2 agents'
@@ -494,23 +515,23 @@ describe('HttpAgentService', () => {
       // Verify no agents remain
       expect(httpAgentService.getActiveAgentCount()).toBe(0);
 
-      mockClearInterval.mockRestore();
+      mockClearTimeout.mockRestore();
     });
 
-    it('should handle cleanup when no interval exists', () => {
-      const mockClearInterval = jest.spyOn(global, 'clearInterval');
+    it('should handle cleanup when no timeout exists', () => {
+      const mockClearTimeout = jest.spyOn(global, 'clearTimeout');
 
       // Create a new service and immediately clean it up
       const service = new HttpAgentService(mockLogger);
       service.cleanup();
 
       // Should still work without errors
-      expect(mockClearInterval).toHaveBeenCalled();
+      expect(mockClearTimeout).toHaveBeenCalled();
       expect(mockLogger.info).toHaveBeenCalledWith(
-        'HttpAgentService: Cleared cleanup interval timer'
+        'HttpAgentService: Cleared adaptive cleanup timer'
       );
 
-      mockClearInterval.mockRestore();
+      mockClearTimeout.mockRestore();
     });
   });
 });

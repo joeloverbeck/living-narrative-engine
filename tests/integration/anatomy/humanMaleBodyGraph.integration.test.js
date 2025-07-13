@@ -33,6 +33,7 @@ import humanEye from '../../../data/mods/anatomy/entities/definitions/human_eye_
 import humanAsshole from '../../../data/mods/anatomy/entities/definitions/human_asshole.entity.json';
 import humanHand from '../../../data/mods/anatomy/entities/definitions/human_hand.entity.json';
 import humanFoot from '../../../data/mods/anatomy/entities/definitions/human_foot.entity.json';
+import blueprintSlot from '../../../data/mods/anatomy/entities/definitions/blueprint_slot.entity.json';
 import humanMaleBlueprint from '../../../data/mods/anatomy/blueprints/human_male.blueprint.json';
 import humanMaleRecipe from '../../../data/mods/anatomy/recipes/human_male.recipe.json';
 import humanoidCore from '../../../data/mods/anatomy/parts/humanoid_core.part.json';
@@ -108,6 +109,7 @@ describe('Human Male Body Graph Integration Test', () => {
       'anatomy:human_asshole': humanAsshole,
       'anatomy:human_hand': humanHand,
       'anatomy:human_foot': humanFoot,
+      'anatomy:blueprint_slot': blueprintSlot,
       'test:human_male': testHumanMale,
     });
 

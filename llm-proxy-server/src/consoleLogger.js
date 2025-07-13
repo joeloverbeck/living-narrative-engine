@@ -1,70 +1,114 @@
 // llm-proxy-server/src/consoleLogger.js
-/* eslint-disable no-console */
+
 /**
- * @file Basic ILogger implementation that directs output to the browser/Node console.
- * This class replicates the console.* usage found previously in GameDataRepository and other parts
- * of the system, providing a simple, concrete logger implementation.
+ * @file Enhanced ILogger implementation with colors, icons, and structured formatting
+ * Drop-in replacement for the basic console logger with visual enhancements while maintaining
+ * complete backward compatibility with existing code.
  */
+
+import { getEnhancedConsoleLogger } from './logging/enhancedConsoleLogger.js';
 
 /**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
  */
 
 /**
- * Implements the ILogger interface using the standard console object.
- * Provides basic logging levels (info, warn, error, debug) that map directly
- * to the corresponding console methods.
+ * Enhanced console logger that implements the ILogger interface with visual improvements.
+ * Provides color-coded output, context icons, structured formatting, and intelligent
+ * context detection while maintaining the same API as the original ConsoleLogger.
+ *
+ * Features:
+ * - Color-coded log levels (DEBUG=cyan, INFO=green, WARN=yellow, ERROR=red)
+ * - Context-aware Unicode icons (🚀🔄🔑💾🌐🧹📊🛡️)
+ * - Structured message formatting with visual hierarchy
+ * - Environment-aware behavior (rich formatting in dev, minimal in production)
+ * - Automatic API key masking and security sanitization
+ * - Graceful fallback to plain text if enhanced features fail
  * @implements {ILogger}
  */
 export class ConsoleLogger {
+  /** @type {import('./logging/enhancedConsoleLogger.js').default} */
+  #enhancedLogger;
+
   /**
-   * Logs an informational message to the console.
-   * Uses console.info if available, otherwise console.log acts similarly in most environments.
+   *
+   */
+  constructor() {
+    this.#enhancedLogger = getEnhancedConsoleLogger();
+  }
+
+  /**
+   * Logs an informational message with enhanced formatting.
+   * In enhanced mode: displays with green color, context detection, and structured layout.
+   * In fallback mode: uses standard console.info behavior.
    * @param {string} message - The primary message string to log.
    * @param {...any} args - Additional arguments or objects to include in the log output.
    */
   info(message, ...args) {
-    // AC: info method logs messages using console.info (or console.log).
-    // Using console.info for semantic correctness, though console.log is functionally similar.
-    console.info(message, ...args);
+    this.#enhancedLogger.info(message, ...args);
   }
 
   /**
-   * Logs a warning message to the console.
-   * Uses console.warn.
+   * Logs a warning message with enhanced formatting.
+   * In enhanced mode: displays with yellow color, warning icon, and structured layout.
+   * In fallback mode: uses standard console.warn behavior.
    * @param {string} message - The primary warning message string.
    * @param {...any} args - Additional arguments or objects to include in the warning output.
    */
   warn(message, ...args) {
-    // AC: warn method logs messages using console.warn.
-    console.warn(message, ...args);
+    this.#enhancedLogger.warn(message, ...args);
   }
 
   /**
-   * Logs an error message to the console.
-   * Uses console.error. This often includes stack traces in developer consoles.
+   * Logs an error message with enhanced formatting.
+   * In enhanced mode: displays with bold red color, error icon, and structured layout.
+   * In fallback mode: uses standard console.error behavior.
    * @param {string} message - The primary error message string.
    * @param {...any} args - Additional arguments or objects, typically including an Error object, to log.
    */
   error(message, ...args) {
-    // AC: error method logs messages using console.error.
-    console.error(message, ...args);
+    this.#enhancedLogger.error(message, ...args);
   }
 
   /**
-   * Logs a debug message to the console.
-   * Uses console.debug. Note that browser developer tools often filter these messages
-   * by default; ensure the 'Verbose' or 'Debug' level is enabled to see them.
-   * The ticket allows for future conditional logging based on flags or environment,
-   * but the initial implementation logs directly.
+   * Logs a debug message with enhanced formatting.
+   * In enhanced mode: displays with cyan color, debug icon, and structured layout.
+   * In fallback mode: uses standard console.debug behavior.
+   * Browser developer tools may filter these messages by default; ensure 'Verbose' or 'Debug'
+   * level is enabled to see them.
    * @param {string} message - The primary debug message string.
    * @param {...any} args - Additional arguments or objects to include in the debug output.
    */
   debug(message, ...args) {
-    // AC: debug method logs messages using console.debug.
-    // Per ticket preference, use console.debug.
-    console.debug(message, ...args);
-    // Alternative if console.debug isn't suitable or needs fallback:
-    // console.log(`[DEBUG] ${message}`, ...args);
+    this.#enhancedLogger.debug(message, ...args);
+  }
+
+  /**
+   * Create a secure version of this logger with enhanced data sanitization.
+   * Useful for services that handle sensitive information.
+   * @returns {ILogger} Secure logger instance with enhanced API key masking
+   */
+  createSecure() {
+    return this.#enhancedLogger.createSecure();
+  }
+
+  /**
+   * Test the enhanced logger output (development only).
+   * Displays sample messages showing the enhanced formatting capabilities.
+   * Only runs in development environment to avoid cluttering production logs.
+   */
+  testEnhancedOutput() {
+    this.#enhancedLogger.testOutput();
   }
 }
+
+/**
+ * Create a new console logger instance
+ * @returns {ConsoleLogger} New logger instance
+ */
+export function createConsoleLogger() {
+  return new ConsoleLogger();
+}
+
+// Export default instance for backward compatibility
+export default new ConsoleLogger();

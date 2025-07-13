@@ -6,15 +6,10 @@
     "clothing:wearable": {
       "wearableType": "accessories",
       "layer": "accessories",
-      "coverage": {
-        "required": ["waist"],
-        "optional": [],
-        "exclusions": []
-      },
       "size": "m",
       "material": "calfskin",
       "equipmentSlots": {
-        "primary": "waist_accessories"
+        "primary": "torso_lower"
       },
       "layerPriority": 9,
       "conflictResolution": "auto_remove"

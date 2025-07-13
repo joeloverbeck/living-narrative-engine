@@ -60,7 +60,6 @@ import { LayerCompatibilityService } from '../../clothing/validation/layerCompat
 import { CoverageValidationService } from '../../clothing/validation/coverageValidationService.js';
 import { EquipmentOrchestrator } from '../../clothing/orchestration/equipmentOrchestrator.js';
 import AnatomyClothingIntegrationService from '../../anatomy/integration/anatomyClothingIntegrationService.js';
-import SlotMappingConfiguration from '../../anatomy/configuration/slotMappingConfiguration.js';
 import LayerResolutionService from '../../clothing/services/layerResolutionService.js';
 import UuidGenerator from '../../adapters/UuidGenerator.js';
 
@@ -547,26 +546,11 @@ export function registerWorldAndEntity(container) {
       logger: c.resolve(tokens.ILogger),
       eventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
       layerCompatibilityService: c.resolve(tokens.LayerCompatibilityService),
-      coverageValidationService: c.resolve(tokens.CoverageValidationService),
     });
   });
   logger.debug(
     `World and Entity Registration: Registered ${String(
       tokens.EquipmentOrchestrator
-    )}.`
-  );
-
-  // Register SlotMappingConfiguration
-  registrar.singletonFactory(tokens.SlotMappingConfiguration, (c) => {
-    return new SlotMappingConfiguration({
-      logger: c.resolve(tokens.ILogger),
-      dataRegistry: c.resolve(tokens.IDataRegistry),
-      entityManager: c.resolve(tokens.IEntityManager),
-    });
-  });
-  logger.debug(
-    `World and Entity Registration: Registered ${String(
-      tokens.SlotMappingConfiguration
     )}.`
   );
 
@@ -589,7 +573,6 @@ export function registerWorldAndEntity(container) {
       entityManager: c.resolve(tokens.IEntityManager),
       bodyGraphService: c.resolve(tokens.BodyGraphService),
       dataRegistry: c.resolve(tokens.IDataRegistry),
-      slotMappingConfiguration: c.resolve(tokens.SlotMappingConfiguration),
     });
   });
   logger.debug(

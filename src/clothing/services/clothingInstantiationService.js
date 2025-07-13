@@ -176,6 +176,11 @@ export class ClothingInstantiationService extends BaseService {
       `Starting clothing instantiation for actor '${actorId}' with ${recipe.clothingEntities.length} items`
     );
 
+    // Set slot-entity mappings for improved slot resolution
+    this.#anatomyClothingIntegrationService.setSlotEntityMappings(
+      anatomyData.slotEntityMappings
+    );
+
     // Validate clothing slots against blueprint allowances for all items
     // Note: We'll validate individual items as we process them to allow partial success
 
@@ -191,15 +196,24 @@ export class ClothingInstantiationService extends BaseService {
 
         // Now validate slot compatibility using the actual instance
         if (!clothingConfig.skipValidation) {
-          const validationResult = await this.#validateClothingSlotAfterInstantiation(
-            actorId,
-            clothingId,
-            clothingConfig
+          this.#logger.debug(
+            `ClothingInstantiationService: Starting post-instantiation validation for clothing '${clothingId}' (${clothingConfig.entityId})`
           );
+
+          const validationResult =
+            await this.#validateClothingSlotAfterInstantiation(
+              actorId,
+              clothingId,
+              clothingConfig
+            );
 
           if (!validationResult.isValid) {
             // Remove the instantiated entity and skip this item
             // TODO: Add entity cleanup here if needed
+            this.#logger.debug(
+              `ClothingInstantiationService: Validation failed for '${clothingConfig.entityId}' with errors: ${JSON.stringify(validationResult.errors)}`
+            );
+
             result.errors.push(
               ...(validationResult.errors || [
                 `Post-instantiation validation failed for ${clothingConfig.entityId}`,
@@ -207,11 +221,15 @@ export class ClothingInstantiationService extends BaseService {
             );
             continue;
           }
+
+          this.#logger.debug(
+            `ClothingInstantiationService: Validation passed for clothing '${clothingId}' (${clothingConfig.entityId})`
+          );
         }
 
         result.instantiated.push({
-          id: clothingId,
-          definitionId: clothingConfig.entityId,
+          clothingId: clothingId,
+          entityDefinitionId: clothingConfig.entityId,
         });
 
         this.#logger.debug(
@@ -232,9 +250,11 @@ export class ClothingInstantiationService extends BaseService {
               `Equipped clothing '${clothingId}' on actor '${actorId}'`
             );
           } else {
-            result.errors.push(equipResult.error);
+            result.errors.push(
+              equipResult.errors?.[0] || 'Unknown equipment error'
+            );
             this.#logger.warn(
-              `Failed to equip clothing '${clothingId}': ${equipResult.error}`
+              `Failed to equip clothing '${clothingId}': ${equipResult.errors?.[0] || 'Unknown equipment error'}`
             );
           }
         }
@@ -290,41 +310,65 @@ export class ClothingInstantiationService extends BaseService {
    * @param {ClothingEntityConfig} clothingConfig - Clothing configuration
    * @returns {Promise<{isValid: boolean, errors: string[]}>} Validation result
    */
-  async #validateClothingSlotAfterInstantiation(actorId, clothingInstanceId, clothingConfig) {
+  async #validateClothingSlotAfterInstantiation(
+    actorId,
+    clothingInstanceId,
+    clothingConfig
+  ) {
     const errors = [];
 
     try {
       // Get the actual clothing instance
-      const clothingInstance = this.#entityManager.getEntityInstance(clothingInstanceId);
+      const clothingInstance =
+        this.#entityManager.getEntityInstance(clothingInstanceId);
       if (!clothingInstance) {
         errors.push(`Clothing instance '${clothingInstanceId}' not found`);
         return { isValid: false, errors };
       }
 
-      const clothingComponent = clothingInstance.getComponentData('clothing:wearable');
+      const clothingComponent =
+        clothingInstance.getComponentData('clothing:wearable');
       if (!clothingComponent) {
-        errors.push(`Clothing instance '${clothingInstanceId}' does not have clothing:wearable component`);
+        errors.push(
+          `Clothing instance '${clothingInstanceId}' does not have clothing:wearable component`
+        );
         return { isValid: false, errors };
       }
 
-      const targetSlot = clothingConfig.targetSlot || clothingComponent.equipmentSlots?.primary;
+      const targetSlot =
+        clothingConfig.targetSlot || clothingComponent.equipmentSlots?.primary;
       if (!targetSlot) {
-        errors.push(`Clothing instance '${clothingInstanceId}' does not specify a clothing slot`);
+        errors.push(
+          `Clothing instance '${clothingInstanceId}' does not specify a clothing slot`
+        );
         return { isValid: false, errors };
       }
 
       // Validate slot compatibility with blueprint using the actual instance
+      this.#logger.debug(
+        `ClothingInstantiationService: Validating slot compatibility for clothing '${clothingInstanceId}' in slot '${targetSlot}' on actor '${actorId}'`
+      );
+
       const validationResult =
         await this.#anatomyClothingIntegrationService.validateClothingSlotCompatibility(
           actorId,
           targetSlot,
-          clothingInstanceId  // Now using instance ID instead of definition ID
+          clothingInstanceId // Now using instance ID instead of definition ID
         );
 
       if (!validationResult.valid) {
-        errors.push(
+        const errorMessage =
           validationResult.reason ||
-            `Cannot equip instance ${clothingInstanceId} to slot ${targetSlot}`
+          `Cannot equip instance ${clothingInstanceId} to slot ${targetSlot}`;
+
+        this.#logger.debug(
+          `ClothingInstantiationService: Validation failed for clothing '${clothingInstanceId}': ${errorMessage}`
+        );
+
+        errors.push(errorMessage);
+      } else {
+        this.#logger.debug(
+          `ClothingInstantiationService: Validation passed for clothing '${clothingInstanceId}' in slot '${targetSlot}'`
         );
       }
     } catch (error) {
@@ -439,40 +483,55 @@ export class ClothingInstantiationService extends BaseService {
     // Apply layer resolution using precedence hierarchy
     const clothingComponent = definition.components?.['clothing:wearable'];
     let finalProperties = { ...propertyOverrides };
-    
+
     if (clothingComponent) {
       // Apply layer resolution hierarchy: Recipe > Entity > Blueprint
       const layerResult = this.#layerResolutionService.resolveAndValidateLayer(
-        clothingConfig.layer,           // Recipe override (highest precedence)
-        clothingComponent.layer,        // Entity default (medium precedence)
-        'base',                         // Blueprint default (lowest precedence)
+        clothingConfig.layer, // Recipe override (highest precedence)
+        clothingComponent.layer, // Entity default (medium precedence)
+        'base', // Blueprint default (lowest precedence)
         clothingComponent.allowedLayers // Allowed layers constraint
       );
-      
+
       if (!layerResult.isValid) {
         throw new InvalidArgumentError(
           `Layer resolution failed for ${entityDefId}: ${layerResult.error}`
         );
       }
-      
+
       // Set the resolved layer in the clothing component
       if (!finalProperties['clothing:wearable']) {
         finalProperties['clothing:wearable'] = {};
       }
       finalProperties['clothing:wearable'].layer = layerResult.layer;
-      
+
       this.#logger.debug(
         `Resolved layer for '${entityDefId}': '${layerResult.layer}'`
       );
     }
 
     // Create the entity instance with property overrides
-    const clothingId = await this.#entityManager.createEntityInstance(
+    const clothingEntity = await this.#entityManager.createEntityInstance(
       entityDefId,
       finalProperties
     );
 
-    return clothingId;
+    // Return the entity ID string, not the Entity object
+    if (!clothingEntity) {
+      throw new Error(`Failed to create clothing entity '${entityDefId}'`);
+    }
+
+    // Handle both Entity objects (production) and string IDs (tests)
+    const entityId =
+      typeof clothingEntity === 'string' ? clothingEntity : clothingEntity.id;
+
+    if (!entityId) {
+      throw new Error(
+        `Created clothing entity '${entityDefId}' has no valid ID`
+      );
+    }
+
+    return entityId;
   }
 
   /**
@@ -494,11 +553,13 @@ export class ClothingInstantiationService extends BaseService {
       };
 
       // Use equipment orchestrator to handle the complex workflow
-      const result = await this.#equipmentOrchestrator.orchestrateEquipment(
-        actorId,
-        clothingId,
-        options
-      );
+      const result = await this.#equipmentOrchestrator.orchestrateEquipment({
+        entityId: actorId,
+        clothingItemId: clothingId,
+        layer: options.layer,
+        skipValidation: options.skipValidation,
+        targetSlot: options.targetSlot,
+      });
 
       return result;
     } catch (error) {

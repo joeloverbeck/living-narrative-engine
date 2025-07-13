@@ -6,15 +6,10 @@
     "clothing:wearable": {
       "wearableType": "jacket",
       "layer": "outer",
-      "coverage": {
-        "required": ["torso", "left_arm", "right_arm"],
-        "optional": [],
-        "exclusions": []
-      },
       "size": "m",
       "material": "linen",
       "equipmentSlots": {
-        "primary": "torso_clothing",
+        "primary": "torso_upper",
         "secondary": ["left_arm_clothing", "right_arm_clothing"]
       },
       "layerPriority": 8,

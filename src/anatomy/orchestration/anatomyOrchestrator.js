@@ -188,10 +188,11 @@ export class AnatomyOrchestrator extends BaseService {
 
     // Update with the generated anatomy structure
     // Convert Map to plain object for backward compatibility
-    const partsObject = graphResult.partsMap instanceof Map 
-      ? Object.fromEntries(graphResult.partsMap) 
-      : graphResult.partsMap;
-    
+    const partsObject =
+      graphResult.partsMap instanceof Map
+        ? Object.fromEntries(graphResult.partsMap)
+        : graphResult.partsMap;
+
     const updatedData = {
       ...existingData,
       recipeId, // Ensure recipe ID is preserved

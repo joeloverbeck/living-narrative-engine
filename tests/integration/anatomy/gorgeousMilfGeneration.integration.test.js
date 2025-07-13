@@ -48,6 +48,7 @@ import humanFemaleTorso from '../../../data/mods/anatomy/entities/definitions/hu
 import humanHand from '../../../data/mods/anatomy/entities/definitions/human_hand.entity.json';
 import humanFoot from '../../../data/mods/anatomy/entities/definitions/human_foot.entity.json';
 import humanAsshole from '../../../data/mods/anatomy/entities/definitions/human_asshole.entity.json';
+import blueprintSlot from '../../../data/mods/anatomy/entities/definitions/blueprint_slot.entity.json';
 import humanFemaleBlueprint from '../../../data/mods/anatomy/blueprints/human_female.blueprint.json';
 import gorgeousMilfRecipe from '../../../data/mods/anatomy/recipes/gorgeous_milf.recipe.json';
 import humanoidCore from '../../../data/mods/anatomy/parts/humanoid_core.part.json';
@@ -136,6 +137,7 @@ describe('Gorgeous MILF Anatomy Generation Integration Test', () => {
 
     // Load entity definitions
     testBed.loadEntityDefinitions({
+      'anatomy:blueprint_slot': blueprintSlot,
       'anatomy:human_breast_d_cup': humanBreastDCup,
       'anatomy:human_eye_blue': humanEyeBlue,
       'anatomy:human_eye_brown': humanEyeBrown,

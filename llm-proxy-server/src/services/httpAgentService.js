@@ -26,6 +26,9 @@ class HttpAgentService {
   #config;
   #stats;
   #cleanupIntervalId;
+  #adaptiveCleanupConfig;
+  #lastCleanupTime;
+  #requestFrequencyTracker;
 
   /**
    * Creates an instance of HttpAgentService
@@ -40,6 +43,7 @@ class HttpAgentService {
     this.#logger = logger;
     this.#agents = new Map();
     this.#cleanupIntervalId = null;
+    this.#lastCleanupTime = Date.now();
 
     // Default configuration for agents
     this.#config = {
@@ -52,21 +56,45 @@ class HttpAgentService {
       ...config,
     };
 
-    // Initialize statistics
+    // Adaptive cleanup configuration
+    this.#adaptiveCleanupConfig = {
+      baseIntervalMs: config.baseCleanupIntervalMs || 300000, // 5 minutes default
+      minIntervalMs: config.minCleanupIntervalMs || 60000, // 1 minute minimum
+      maxIntervalMs: config.maxCleanupIntervalMs || 900000, // 15 minutes maximum
+      idleThresholdMs: config.idleThresholdMs || 300000, // 5 minutes idle threshold
+      memoryThresholdMB: config.memoryThresholdMB || 100, // 100MB memory threshold
+      highLoadRequestsPerMin: config.highLoadRequestsPerMin || 60, // High load threshold
+      adaptiveCleanupEnabled: config.adaptiveCleanupEnabled !== false, // Default true
+    };
+
+    // Initialize request frequency tracker (tracks requests per minute)
+    this.#requestFrequencyTracker = {
+      requests: [],
+      windowSizeMs: 60000, // 1 minute window
+    };
+
+    // Initialize enhanced statistics
     this.#stats = {
       agentsCreated: 0,
       requestsServed: 0,
       socketsCreated: 0,
       socketsReused: 0,
+      cleanupOperations: 0,
+      adaptiveCleanupAdjustments: 0,
+      lastCleanupDuration: 0,
+      averageCleanupInterval: this.#adaptiveCleanupConfig.baseIntervalMs,
     };
 
     this.#logger.info(
-      'HttpAgentService: Initialized with configuration',
-      this.#config
+      'HttpAgentService: Initialized with adaptive cleanup configuration',
+      {
+        ...this.#config,
+        adaptiveCleanup: this.#adaptiveCleanupConfig,
+      }
     );
 
-    // Set up periodic cleanup
-    this.#scheduleCleanup();
+    // Set up adaptive cleanup
+    this.#scheduleAdaptiveCleanup();
   }
 
   /**
@@ -121,9 +149,13 @@ class HttpAgentService {
       }
 
       // Update usage statistics
-      agentInfo.lastUsed = Date.now();
+      const now = Date.now();
+      agentInfo.lastUsed = now;
       agentInfo.requestCount++;
       this.#stats.requestsServed++;
+
+      // Track request frequency for adaptive cleanup
+      this.#trackRequestFrequency(now);
 
       this.#logger.debug(
         `HttpAgentService: Reusing agent for ${agentKey} (${agentInfo.requestCount} requests)`
@@ -284,14 +316,43 @@ class HttpAgentService {
   }
 
   /**
-   * Schedules periodic cleanup of idle agents
+   * Schedules adaptive cleanup of idle agents based on usage patterns
    * @private
    */
-  #scheduleCleanup() {
-    // Run cleanup every 5 minutes
-    this.#cleanupIntervalId = setInterval(() => {
-      this.cleanupIdleAgents();
-    }, 300000); // 5 minutes
+  #scheduleAdaptiveCleanup() {
+    if (!this.#adaptiveCleanupConfig.adaptiveCleanupEnabled) {
+      // Fallback to fixed interval cleanup
+      this.#cleanupIntervalId = setInterval(() => {
+        this.#performAdaptiveCleanup();
+      }, this.#adaptiveCleanupConfig.baseIntervalMs);
+      return;
+    }
+
+    // Start with base interval
+    this.#scheduleNextCleanup(this.#adaptiveCleanupConfig.baseIntervalMs);
+  }
+
+  /**
+   * Schedules the next cleanup operation with calculated interval
+   * @param {number} intervalMs - Interval in milliseconds
+   * @private
+   */
+  #scheduleNextCleanup(intervalMs) {
+    if (this.#cleanupIntervalId) {
+      clearTimeout(this.#cleanupIntervalId);
+    }
+
+    this.#cleanupIntervalId = setTimeout(() => {
+      this.#performAdaptiveCleanup();
+
+      // Calculate next interval based on current conditions
+      const nextInterval = this.#calculateNextCleanupInterval();
+      this.#scheduleNextCleanup(nextInterval);
+    }, intervalMs);
+
+    this.#logger.debug(
+      `HttpAgentService: Scheduled next cleanup in ${intervalMs}ms`
+    );
   }
 
   /**
@@ -343,15 +404,248 @@ class HttpAgentService {
    * Call this method when shutting down the service
    */
   cleanup() {
-    // Clear the cleanup interval
+    // Clear the cleanup interval/timeout
     if (this.#cleanupIntervalId) {
-      clearInterval(this.#cleanupIntervalId);
+      clearTimeout(this.#cleanupIntervalId);
       this.#cleanupIntervalId = null;
-      this.#logger.info('HttpAgentService: Cleared cleanup interval timer');
+      this.#logger.info('HttpAgentService: Cleared adaptive cleanup timer');
     }
 
     // Destroy all agents
     this.destroyAll();
+  }
+
+  // Private helper methods for adaptive cleanup
+
+  /**
+   * Tracks request frequency for adaptive cleanup calculations
+   * @param {number} timestamp - Request timestamp
+   * @private
+   */
+  #trackRequestFrequency(timestamp) {
+    // Add new request timestamp
+    this.#requestFrequencyTracker.requests.push(timestamp);
+
+    // Remove old requests outside the tracking window
+    const cutoff = timestamp - this.#requestFrequencyTracker.windowSizeMs;
+    this.#requestFrequencyTracker.requests =
+      this.#requestFrequencyTracker.requests.filter((req) => req > cutoff);
+  }
+
+  /**
+   * Calculates the current request rate (requests per minute)
+   * @returns {number} Requests per minute
+   * @private
+   */
+  #getCurrentRequestRate() {
+    const now = Date.now();
+    const cutoff = now - this.#requestFrequencyTracker.windowSizeMs;
+
+    // Count requests in the last minute
+    const recentRequests = this.#requestFrequencyTracker.requests.filter(
+      (req) => req > cutoff
+    );
+
+    return recentRequests.length;
+  }
+
+  /**
+   * Estimates current memory usage of all agents
+   * @returns {number} Estimated memory usage in MB
+   * @private
+   */
+  #estimateMemoryUsage() {
+    // Rough estimation: each agent uses approximately 1KB base + socket overhead
+    const baseMemoryPerAgent = 1; // KB
+    const socketMemoryOverhead = 0.5; // KB per socket estimate
+
+    let totalSockets = 0;
+    for (const [, agentInfo] of this.#agents) {
+      const agent = agentInfo.agent;
+      if (agent.sockets) {
+        totalSockets += Object.keys(agent.sockets).reduce(
+          (sum, key) => sum + agent.sockets[key].length,
+          0
+        );
+      }
+      if (agent.freeSockets) {
+        totalSockets += Object.keys(agent.freeSockets).reduce(
+          (sum, key) => sum + agent.freeSockets[key].length,
+          0
+        );
+      }
+    }
+
+    const totalMemoryKB =
+      this.#agents.size * baseMemoryPerAgent +
+      totalSockets * socketMemoryOverhead;
+    return totalMemoryKB / 1024; // Convert to MB
+  }
+
+  /**
+   * Calculates the next cleanup interval based on current conditions
+   * @returns {number} Next cleanup interval in milliseconds
+   * @private
+   */
+  #calculateNextCleanupInterval() {
+    if (!this.#adaptiveCleanupConfig.adaptiveCleanupEnabled) {
+      return this.#adaptiveCleanupConfig.baseIntervalMs;
+    }
+
+    const requestRate = this.#getCurrentRequestRate();
+    const memoryUsageMB = this.#estimateMemoryUsage();
+    const agentCount = this.#agents.size;
+    const _timeSinceLastCleanup = Date.now() - this.#lastCleanupTime;
+
+    let intervalMultiplier = 1.0;
+    let adjustmentReason = 'base';
+
+    // Adjust based on request rate
+    if (requestRate > this.#adaptiveCleanupConfig.highLoadRequestsPerMin) {
+      // High load: clean up more frequently
+      intervalMultiplier *= 0.5;
+      adjustmentReason = 'high-load';
+    } else if (requestRate < 10) {
+      // Low load: clean up less frequently
+      intervalMultiplier *= 1.5;
+      adjustmentReason = 'low-load';
+    }
+
+    // Adjust based on memory usage
+    if (memoryUsageMB > this.#adaptiveCleanupConfig.memoryThresholdMB) {
+      // High memory usage: clean up more frequently
+      intervalMultiplier *= 0.7;
+      adjustmentReason += '+high-memory';
+    }
+
+    // Adjust based on agent count
+    if (agentCount > 50) {
+      // Many agents: clean up more frequently
+      intervalMultiplier *= 0.8;
+      adjustmentReason += '+many-agents';
+    } else if (agentCount < 10) {
+      // Few agents: clean up less frequently
+      intervalMultiplier *= 1.3;
+      adjustmentReason += '+few-agents';
+    }
+
+    // Calculate final interval
+    let nextInterval = Math.round(
+      this.#adaptiveCleanupConfig.baseIntervalMs * intervalMultiplier
+    );
+
+    // Apply min/max bounds
+    nextInterval = Math.max(
+      nextInterval,
+      this.#adaptiveCleanupConfig.minIntervalMs
+    );
+    nextInterval = Math.min(
+      nextInterval,
+      this.#adaptiveCleanupConfig.maxIntervalMs
+    );
+
+    // Update average for statistics
+    this.#stats.averageCleanupInterval = Math.round(
+      (this.#stats.averageCleanupInterval + nextInterval) / 2
+    );
+
+    if (nextInterval !== this.#adaptiveCleanupConfig.baseIntervalMs) {
+      this.#stats.adaptiveCleanupAdjustments++;
+      this.#logger.debug(
+        `HttpAgentService: Adaptive cleanup interval adjusted to ${nextInterval}ms (${adjustmentReason})`,
+        {
+          requestRate,
+          memoryUsageMB,
+          agentCount,
+          intervalMultiplier,
+        }
+      );
+    }
+
+    return nextInterval;
+  }
+
+  /**
+   * Performs adaptive cleanup with enhanced logic
+   * @private
+   */
+  #performAdaptiveCleanup() {
+    const startTime = Date.now();
+    const requestRate = this.#getCurrentRequestRate();
+    const memoryUsageMB = this.#estimateMemoryUsage();
+
+    // Determine cleanup aggressiveness based on conditions
+    let idleThreshold = this.#adaptiveCleanupConfig.idleThresholdMs;
+
+    if (requestRate > this.#adaptiveCleanupConfig.highLoadRequestsPerMin) {
+      // High load: keep agents longer to avoid recreation overhead
+      idleThreshold *= 2;
+    } else if (memoryUsageMB > this.#adaptiveCleanupConfig.memoryThresholdMB) {
+      // High memory: clean up more aggressively
+      idleThreshold *= 0.5;
+    }
+
+    // Perform cleanup
+    const cleanedCount = this.cleanupIdleAgents(idleThreshold);
+
+    // Update statistics
+    this.#stats.cleanupOperations++;
+    this.#stats.lastCleanupDuration = Date.now() - startTime;
+    this.#lastCleanupTime = startTime;
+
+    if (cleanedCount > 0 || this.#logger.isDebugEnabled) {
+      this.#logger.info(
+        `HttpAgentService: Adaptive cleanup completed - cleaned ${cleanedCount} agents`,
+        {
+          requestRate,
+          memoryUsageMB,
+          agentCount: this.#agents.size,
+          idleThreshold,
+          duration: this.#stats.lastCleanupDuration,
+        }
+      );
+    }
+  }
+
+  /**
+   * Gets enhanced statistics including adaptive cleanup metrics
+   * @returns {object} Agent statistics with adaptive metrics
+   */
+  getEnhancedStats() {
+    const baseStats = this.getStats();
+    const requestRate = this.#getCurrentRequestRate();
+    const memoryUsageMB = this.#estimateMemoryUsage();
+
+    return {
+      ...baseStats,
+      requestRate,
+      estimatedMemoryUsageMB: memoryUsageMB,
+      adaptiveCleanup: {
+        enabled: this.#adaptiveCleanupConfig.adaptiveCleanupEnabled,
+        adjustments: this.#stats.adaptiveCleanupAdjustments,
+        averageInterval: this.#stats.averageCleanupInterval,
+        lastCleanupDuration: this.#stats.lastCleanupDuration,
+        cleanupOperations: this.#stats.cleanupOperations,
+      },
+    };
+  }
+
+  /**
+   * Forces an immediate adaptive cleanup and returns results
+   * @returns {object} Cleanup results
+   */
+  forceAdaptiveCleanup() {
+    const beforeCount = this.#agents.size;
+    const beforeMemory = this.#estimateMemoryUsage();
+
+    this.#performAdaptiveCleanup();
+
+    return {
+      agentsRemoved: beforeCount - this.#agents.size,
+      memoryFreedMB: beforeMemory - this.#estimateMemoryUsage(),
+      currentAgentCount: this.#agents.size,
+      currentMemoryMB: this.#estimateMemoryUsage(),
+    };
   }
 }
 

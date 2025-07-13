@@ -12,7 +12,6 @@ import { InvalidArgumentError } from '../../errors/invalidArgumentError.js';
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 /** @typedef {import('../validation/layerCompatibilityService.js').LayerCompatibilityService} LayerCompatibilityService */
-/** @typedef {import('../validation/coverageValidationService.js').CoverageValidationService} CoverageValidationService */
 
 /**
  * Orchestrates complex clothing equipment workflows
@@ -29,8 +28,6 @@ export class EquipmentOrchestrator {
   #eventDispatcher;
   /** @type {LayerCompatibilityService} */
   #layerService;
-  /** @type {CoverageValidationService} */
-  #coverageService;
 
   /**
    * Creates an instance of EquipmentOrchestrator
@@ -40,26 +37,22 @@ export class EquipmentOrchestrator {
    * @param {ILogger} deps.logger - Logger instance
    * @param {ISafeEventDispatcher} deps.eventDispatcher - Event dispatcher for system events
    * @param {LayerCompatibilityService} deps.layerCompatibilityService - Layer validation service
-   * @param {CoverageValidationService} deps.coverageValidationService - Coverage validation service
    */
   constructor({
     entityManager,
     logger,
     eventDispatcher,
     layerCompatibilityService,
-    coverageValidationService,
   }) {
     validateDependency(entityManager, 'IEntityManager');
     validateDependency(logger, 'ILogger');
     validateDependency(eventDispatcher, 'ISafeEventDispatcher');
     validateDependency(layerCompatibilityService, 'LayerCompatibilityService');
-    validateDependency(coverageValidationService, 'CoverageValidationService');
 
     this.#entityManager = entityManager;
     this.#logger = logger;
     this.#eventDispatcher = eventDispatcher;
     this.#layerService = layerCompatibilityService;
-    this.#coverageService = coverageValidationService;
   }
 
   /**
@@ -70,7 +63,6 @@ export class EquipmentOrchestrator {
    * @param {string} request.clothingItemId - Clothing item to equip
    * @param {string} [request.layer] - Force specific layer
    * @param {string} [request.conflictResolution] - Conflict resolution strategy
-   * @param {boolean} [request.validateCoverage] - Whether to validate coverage
    * @returns {Promise<{success: boolean, equipped?: boolean, conflicts?: object[], errors?: string[]}>}
    */
   async orchestrateEquipment(request) {
@@ -79,7 +71,6 @@ export class EquipmentOrchestrator {
       clothingItemId,
       layer,
       conflictResolution = 'auto_remove',
-      validateCoverage = true,
     } = request;
 
     try {
@@ -99,21 +90,7 @@ export class EquipmentOrchestrator {
         };
       }
 
-      // Step 2: Validate coverage compatibility if requested
-      if (validateCoverage) {
-        const coverageValidation = await this.#coverageService.validateCoverage(
-          entityId,
-          clothingItemId
-        );
-        if (!coverageValidation.valid) {
-          return {
-            success: false,
-            errors: coverageValidation.errors || ['Coverage validation failed'],
-          };
-        }
-      }
-
-      // Step 3: Determine target layer and slot
+      // Step 2: Determine target layer and slot
       const clothingData = this.#entityManager.getComponentData(
         clothingItemId,
         'clothing:wearable'
@@ -319,18 +296,6 @@ export class EquipmentOrchestrator {
         errors.push(...basicValidation.errors);
       }
 
-      // Coverage validation
-      const coverageValidation = await this.#coverageService.validateCoverage(
-        entityId,
-        clothingItemId
-      );
-      compatibility.coverage = coverageValidation;
-      if (!coverageValidation.valid) {
-        errors.push(
-          ...(coverageValidation.errors || ['Coverage validation failed'])
-        );
-      }
-
       // Layer compatibility
       const clothingData = this.#entityManager.getComponentData(
         clothingItemId,
@@ -513,7 +478,7 @@ export class EquipmentOrchestrator {
       equipmentData.equipped[slotId][layer] = clothingItemId;
 
       // Update entity component
-      await this.#entityManager.setComponentData(
+      this.#entityManager.addComponent(
         entityId,
         'clothing:equipment',
         equipmentData
@@ -574,7 +539,7 @@ export class EquipmentOrchestrator {
       }
 
       // Update entity component
-      await this.#entityManager.setComponentData(
+      this.#entityManager.addComponent(
         entityId,
         'clothing:equipment',
         equipmentData

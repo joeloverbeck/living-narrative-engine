@@ -75,6 +75,46 @@
       "layerOrder": ["underwear"],
       "defaultLayer": "underwear",
       "tags": ["underwear", "female_specific"]
+    },
+    "torso_upper": {
+      "anatomySockets": [
+        "left_shoulder",
+        "right_shoulder",
+        "left_chest",
+        "right_chest"
+      ],
+      "allowedLayers": ["base", "outer"],
+      "layerOrder": ["base", "outer"],
+      "defaultLayer": "outer",
+      "tags": ["torso", "upper_body"]
+    },
+    "legs": {
+      "blueprintSlots": ["left_leg", "right_leg"],
+      "allowedLayers": ["base", "outer"],
+      "layerOrder": ["base", "outer"],
+      "defaultLayer": "base",
+      "tags": ["legs", "lower_body"]
+    },
+    "left_arm_clothing": {
+      "blueprintSlots": ["left_arm"],
+      "allowedLayers": ["base", "outer"],
+      "layerOrder": ["base", "outer"],
+      "defaultLayer": "outer",
+      "tags": ["arm", "left_side"]
+    },
+    "right_arm_clothing": {
+      "blueprintSlots": ["right_arm"],
+      "allowedLayers": ["base", "outer"],
+      "layerOrder": ["base", "outer"],
+      "defaultLayer": "outer",
+      "tags": ["arm", "right_side"]
+    },
+    "feet": {
+      "blueprintSlots": ["left_foot", "right_foot"],
+      "allowedLayers": ["base", "outer"],
+      "layerOrder": ["base", "outer"],
+      "defaultLayer": "base",
+      "tags": ["feet", "footwear"]
     }
   }
 }

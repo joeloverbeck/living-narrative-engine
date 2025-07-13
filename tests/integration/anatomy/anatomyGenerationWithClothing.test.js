@@ -33,7 +33,49 @@ describe('Anatomy Generation with Clothing Integration', () => {
     logger = createMockLogger();
 
     // Add createEntityInstance method to entityManager for ClothingInstantiationService
-    entityManager.createEntityInstance = jest.fn();
+    let clothingEntityCounter = 0;
+    entityManager.createEntityInstance = jest
+      .fn()
+      .mockImplementation((defId) => {
+        const id = `clothing_${++clothingEntityCounter}`;
+        const entity = {
+          id,
+          getComponentData: (compId) => {
+            if (compId === 'clothing:wearable') {
+              const def = dataRegistry.get('entityDefinitions', defId);
+              return def?.components?.['clothing:wearable'] || null;
+            }
+            return null;
+          },
+        };
+        // Store the entity so getEntityInstance can find it
+        entityManager.addEntity(entity);
+        return entity;
+      });
+
+    // Add getComponentData method if not present
+    if (!entityManager.getComponentData) {
+      entityManager.getComponentData = jest
+        .fn()
+        .mockImplementation((entityId, componentId) => {
+          const entity = entityManager.getEntityInstance(entityId);
+          if (!entity) return null;
+          return entity.components?.[componentId] || null;
+        });
+    }
+
+    // Add addComponent method if not present
+    if (!entityManager.addComponent) {
+      entityManager.addComponent = jest
+        .fn()
+        .mockImplementation((entityId, componentId, data) => {
+          const entity = entityManager.getEntityInstance(entityId);
+          if (!entity) return false;
+          if (!entity.components) entity.components = {};
+          entity.components[componentId] = data;
+          return true;
+        });
+    }
 
     // Create mock services
     bodyBlueprintFactory = {
@@ -57,6 +99,7 @@ describe('Anatomy Generation with Clothing Integration', () => {
       validateClothingSlotCompatibility: jest.fn().mockResolvedValue({
         valid: true,
       }),
+      setSlotEntityMappings: jest.fn(),
     };
 
     eventBus = {
@@ -67,15 +110,22 @@ describe('Anatomy Generation with Clothing Integration', () => {
     const layerResolutionService = {
       resolveLayer: jest.fn().mockReturnValue('base'),
       validateLayerAllowed: jest.fn().mockReturnValue(true),
-      resolveAndValidateLayer: jest.fn().mockImplementation((recipeLayer, entityLayer, blueprintLayer, allowedLayers) => {
-        // Return the first non-null layer, defaulting to 'base'
-        const layer = recipeLayer || entityLayer || blueprintLayer || 'base';
-        return {
-          isValid: true,
-          layer: layer,
-        };
-      }),
-      getPrecedenceOrder: jest.fn().mockReturnValue(['underwear', 'base', 'outer', 'accessories']),
+      resolveAndValidateLayer: jest
+        .fn()
+        .mockImplementation(
+          (recipeLayer, entityLayer, blueprintLayer, allowedLayers) => {
+            // Return the first non-null layer, defaulting to 'base'
+            const layer =
+              recipeLayer || entityLayer || blueprintLayer || 'base';
+            return {
+              isValid: true,
+              layer: layer,
+            };
+          }
+        ),
+      getPrecedenceOrder: jest
+        .fn()
+        .mockReturnValue(['underwear', 'base', 'outer', 'accessories']),
     };
 
     // Create real service instances
@@ -223,17 +273,17 @@ describe('Anatomy Generation with Clothing Integration', () => {
       let clothingCounter = 1;
       entityManager.createEntityInstance.mockImplementation((defId, props) => {
         const clothingId = `clothing_${clothingCounter++}`;
-        
+
         // Get the entity definition from the data registry
         const definition = dataRegistry.get('entityDefinitions', defId);
         const baseComponents = definition ? { ...definition.components } : {};
-        
+
         // Merge with property overrides
         const components = {
           ...baseComponents,
           'core:name': { text: defId.replace('clothing:', '') },
         };
-        
+
         // Apply property overrides to the clothing:wearable component
         if (props && props['clothing:wearable']) {
           components['clothing:wearable'] = {
@@ -241,14 +291,14 @@ describe('Anatomy Generation with Clothing Integration', () => {
             ...props['clothing:wearable'],
           };
         }
-        
+
         // Apply other property overrides
         for (const [key, value] of Object.entries(props || {})) {
           if (key !== 'clothing:wearable') {
             components[key] = value;
           }
         }
-        
+
         const currentEntities = Array.from(entityManager.entities.values()).map(
           (e) => ({ id: e.id, components: e.components })
         );
@@ -283,12 +333,18 @@ describe('Anatomy Generation with Clothing Integration', () => {
 
       // Verify clothing was instantiated
       expect(result.clothingResult).toBeDefined();
-      
+
       // Debug: Check for errors
-      if (result.clothingResult.errors && result.clothingResult.errors.length > 0) {
-        console.log('Clothing instantiation errors:', result.clothingResult.errors);
+      if (
+        result.clothingResult.errors &&
+        result.clothingResult.errors.length > 0
+      ) {
+        console.log(
+          'Clothing instantiation errors:',
+          result.clothingResult.errors
+        );
       }
-      
+
       expect(result.clothingResult.instantiated).toHaveLength(4);
       expect(result.clothingResult.equipped).toHaveLength(3); // hat not equipped
 
@@ -323,8 +379,8 @@ describe('Anatomy Generation with Clothing Integration', () => {
           color: 'brown',
           condition: 0.7,
           'clothing:wearable': expect.objectContaining({
-            layer: 'base'
-          })
+            layer: 'base',
+          }),
         })
       );
       expect(entityManager.createEntityInstance).toHaveBeenCalledWith(
@@ -332,8 +388,8 @@ describe('Anatomy Generation with Clothing Integration', () => {
         expect.objectContaining({
           color: 'gray',
           'clothing:wearable': expect.objectContaining({
-            layer: 'base'
-          })
+            layer: 'base',
+          }),
         })
       );
     });
@@ -421,7 +477,7 @@ describe('Anatomy Generation with Clothing Integration', () => {
 
       // Verify straw hat was instantiated but not equipped
       expect(result.clothingResult.instantiated).toContainEqual(
-        expect.objectContaining({ definitionId: 'clothing:straw_hat' })
+        expect.objectContaining({ entityDefinitionId: 'clothing:straw_hat' })
       );
       expect(result.clothingResult.equipped).not.toContain('clothing_4'); // hat ID
     });
@@ -480,22 +536,22 @@ describe('Anatomy Generation with Clothing Integration', () => {
           },
         },
       ]);
-      
+
       // Mock entity creation for this test
       let clothingCounter = 1;
       entityManager.createEntityInstance.mockImplementation((defId, props) => {
         const clothingId = `clothing_${clothingCounter++}`;
-        
+
         // Get the entity definition from the data registry
         const definition = dataRegistry.get('entityDefinitions', defId);
         const baseComponents = definition ? { ...definition.components } : {};
-        
+
         // Merge with property overrides
         const components = {
           ...baseComponents,
           'core:name': { text: defId.replace('clothing:', '') },
         };
-        
+
         // Apply property overrides to the clothing:wearable component
         if (props && props['clothing:wearable']) {
           components['clothing:wearable'] = {
@@ -503,14 +559,14 @@ describe('Anatomy Generation with Clothing Integration', () => {
             ...props['clothing:wearable'],
           };
         }
-        
+
         // Apply other property overrides
         for (const [key, value] of Object.entries(props || {})) {
           if (key !== 'clothing:wearable') {
             components[key] = value;
           }
         }
-        
+
         const currentEntities = Array.from(entityManager.entities.values()).map(
           (e) => ({ id: e.id, components: e.components })
         );
@@ -521,7 +577,7 @@ describe('Anatomy Generation with Clothing Integration', () => {
         entityManager.setEntities(currentEntities);
         return Promise.resolve(clothingId);
       });
-      
+
       // Create recipe with many clothing items
       const manyClothes = [];
       for (let i = 1; i <= 20; i++) {

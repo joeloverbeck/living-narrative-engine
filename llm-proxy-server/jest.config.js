@@ -38,10 +38,10 @@ export default {
   // Adjust them as necessary for the llm-proxy-server.
   coverageThreshold: {
     global: {
-      branches: 78,
-      functions: 94,
-      lines: -55,
-      statements: 90,
+      branches: 93,
+      functions: 97,
+      lines: 97,
+      statements: 97,
     },
   },
   // --- END COVERAGE CONFIGURATION ---
@@ -54,6 +54,10 @@ export default {
 
   // Setup and teardown files
   setupFilesAfterEnv: [],
+
+  // Exclude performance tests from default test runs
+  // Performance tests should be run separately with npm run test:performance
+  testPathIgnorePatterns: ['/node_modules/', '<rootDir>/tests/performance/'],
 
   // By default, Jest will look for files ending with .js, .jsx, .ts, .tsx, .cjs, .mjs.
   // Your `babel.config.js` is set up to transpile based on your current Node version,

@@ -1,0 +1,110 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "llm-proxy-error-response-schema",
+  "title": "LLM Proxy Server Error Response Schema",
+  "description": "JSON schema for validating error responses from the LLM Proxy Server API as defined in PROXY_API_CONTRACT.md Section 2.1",
+  "type": "object",
+  "properties": {
+    "error": {
+      "type": "boolean",
+      "description": "Always `true` to indicate an error response.",
+      "const": true
+    },
+    "message": {
+      "type": "string",
+      "description": "A human-readable error message describing the issue encountered by the proxy.",
+      "minLength": 1
+    },
+    "stage": {
+      "type": "string",
+      "description": "An optional identifier indicating where the error occurred within the proxy. This helps in diagnosing issues.",
+      "enum": [
+        "request_validation",
+        "request_validation_llmid_missing",
+        "request_validation_payload_missing",
+        "llm_config_lookup_error",
+        "llm_config_lookup_failed",
+        "api_key_retrieval_error",
+        "llm_endpoint_resolution_error",
+        "llm_forwarding_error_network",
+        "llm_forwarding_error_http_client",
+        "llm_forwarding_error_http_server",
+        "internal_proxy_error",
+        "internal_api_key_service_state_error",
+        "internal_llm_service_exception",
+        "initialization_failure",
+        "initialization_failure_unknown"
+      ]
+    },
+    "details": {
+      "type": "object",
+      "description": "An optional object containing any additional structured details about the error. The content of this object may vary depending on the 'stage'.",
+      "additionalProperties": true
+    },
+    "originalStatusCode": {
+      "type": "integer",
+      "description": "The HTTP status code that the proxy is returning to the client for this error (e.g., 400, 401, 500).",
+      "minimum": 100,
+      "maximum": 599
+    }
+  },
+  "required": ["error", "message", "originalStatusCode"],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "error": true,
+      "message": "Client request validation failed.",
+      "stage": "request_validation",
+      "details": {
+        "missingFields": ["targetPayload"],
+        "invalidFields": [
+          {
+            "field": "llmId",
+            "value": 123,
+            "reason": "Must be a string."
+          }
+        ]
+      },
+      "originalStatusCode": 400
+    },
+    {
+      "error": true,
+      "message": "Failed to retrieve API key for the specified LLM provider.",
+      "stage": "api_key_retrieval_error",
+      "details": {
+        "llmId": "some-cloud-llm",
+        "reason": "The environment variable 'EXPECTED_API_KEY_ENV_VAR' is not set on the proxy server."
+      },
+      "originalStatusCode": 500
+    },
+    {
+      "error": true,
+      "message": "Network error occurred while attempting to forward request to the LLM provider.",
+      "stage": "llm_forwarding_error_network",
+      "details": {
+        "llmId": "another-cloud-llm",
+        "targetUrl": "https://api.llmprovider.com/v1/chat/completions",
+        "errorFromFetch": "ECONNREFUSED"
+      },
+      "originalStatusCode": 502
+    },
+    {
+      "error": true,
+      "message": "The LLM provider returned an error: Invalid 'model' parameter.",
+      "stage": "llm_forwarding_error_http_client",
+      "details": {
+        "llmId": "openai-gpt-4o",
+        "llmApiStatusCode": 400,
+        "llmApiResponseBody": {
+          "error": {
+            "message": "Invalid 'model' parameter. Please check the model name.",
+            "type": "invalid_request_error",
+            "param": "model",
+            "code": null
+          }
+        }
+      },
+      "originalStatusCode": 400
+    }
+  ]
+}

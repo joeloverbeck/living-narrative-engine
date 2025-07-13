@@ -6,11 +6,6 @@
     "clothing:wearable": {
       "wearableType": "pants",
       "layer": "base",
-      "coverage": {
-        "required": ["left_hip", "right_hip"],
-        "optional": ["penis", "vagina", "left_testicle", "right_testicle"],
-        "exclusions": []
-      },
       "size": "m",
       "material": "denim",
       "equipmentSlots": {

@@ -6,11 +6,6 @@
     "clothing:wearable": {
       "wearableType": "shoes",
       "layer": "base",
-      "coverage": {
-        "required": ["left_foot", "right_foot"],
-        "optional": [],
-        "exclusions": []
-      },
       "size": "m",
       "material": "synthetic",
       "equipmentSlots": {

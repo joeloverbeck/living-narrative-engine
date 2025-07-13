@@ -6,16 +6,10 @@
     "clothing:wearable": {
       "wearableType": "bodysuit",
       "layer": "base",
-      "coverage": {
-        "required": ["torso", "pelvis"],
-        "optional": ["left_chest", "right_chest"],
-        "exclusions": []
-      },
       "size": "m",
       "material": "stretch-silk",
       "equipmentSlots": {
-        "primary": "torso_clothing",
-        "secondary": ["waist_clothing"]
+        "primary": "full_body"
       },
       "layerPriority": 2,
       "conflictResolution": "auto_remove"

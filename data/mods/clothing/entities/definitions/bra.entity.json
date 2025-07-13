@@ -6,11 +6,6 @@
     "clothing:wearable": {
       "wearableType": "bra",
       "layer": "underwear",
-      "coverage": {
-        "required": ["left_chest", "right_chest"],
-        "optional": [],
-        "exclusions": []
-      },
       "size": "m",
       "material": "cotton",
       "equipmentSlots": {

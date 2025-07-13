@@ -38,10 +38,10 @@ export class BodyGraphService {
     this.#queryCache = queryCache || new AnatomyQueryCache({ logger });
   }
 
-  buildAdjacencyCache(rootEntityId) {
+  async buildAdjacencyCache(rootEntityId) {
     // Only build cache if it doesn't already exist for this root
     if (!this.#cacheManager.hasCacheForRoot(rootEntityId)) {
-      this.#cacheManager.buildCache(rootEntityId, this.#entityManager);
+      await this.#cacheManager.buildCache(rootEntityId, this.#entityManager);
     }
   }
 
@@ -138,38 +138,77 @@ export class BodyGraphService {
     );
   }
 
-  getAllParts(bodyComponent) {
+  getAllParts(bodyComponent, actorEntityId = null) {
     // Handle both full anatomy:body component and direct body structure
     let rootId = null;
 
-    if (!bodyComponent) return [];
+    if (!bodyComponent) {
+      this.#logger.debug(
+        'BodyGraphService.getAllParts: No bodyComponent provided'
+      );
+      return [];
+    }
 
     // Check if this is the full anatomy:body component with nested structure
     if (bodyComponent.body && bodyComponent.body.root) {
       rootId = bodyComponent.body.root;
+      this.#logger.debug(
+        `BodyGraphService.getAllParts: Found root ID in bodyComponent.body.root: ${rootId}`
+      );
     }
     // Check if this is the direct body structure
     else if (bodyComponent.root) {
       rootId = bodyComponent.root;
+      this.#logger.debug(
+        `BodyGraphService.getAllParts: Found root ID in bodyComponent.root: ${rootId}`
+      );
     }
 
-    if (!rootId) return [];
+    if (!rootId) {
+      this.#logger.debug(
+        'BodyGraphService.getAllParts: No root ID found in bodyComponent'
+      );
+      return [];
+    }
+
+    // If we have an actor entity ID and it's in the cache, use it as the starting point
+    // This handles cases where the cache is built for the actor but bodyComponent
+    // references the blueprint anatomy root ID
+    let cacheRootId = rootId;
+    const cacheSize = this.#cacheManager.size();
+    if (actorEntityId && this.#cacheManager.has(actorEntityId)) {
+      cacheRootId = actorEntityId;
+      this.#logger.warn(
+        `BodyGraphService: Using actor entity '${actorEntityId}' as cache root instead of blueprint root '${rootId}' (cache size: ${cacheSize})`
+      );
+    } else {
+      this.#logger.warn(
+        `BodyGraphService: Using blueprint root '${rootId}' as cache root (actor '${actorEntityId}' not in cache, cache size: ${cacheSize})`
+      );
+    }
 
     // Check query cache first
-    const cachedResult = this.#queryCache.getCachedGetAllParts(rootId);
+    const cachedResult = this.#queryCache.getCachedGetAllParts(cacheRootId);
     if (cachedResult !== undefined) {
+      this.#logger.debug(
+        `BodyGraphService: Found cached result for root '${cacheRootId}': ${cachedResult.length} parts`
+      );
       return cachedResult;
     }
 
-    // Perform the query
+    // Perform the query starting from the cache root
     const result = AnatomyGraphAlgorithms.getAllParts(
-      rootId,
+      cacheRootId,
       this.#cacheManager,
       this.#entityManager
     );
 
+    this.#logger.warn(
+      `BodyGraphService: AnatomyGraphAlgorithms.getAllParts returned ${result.length} parts for root '${cacheRootId}': [${result.slice(0, 5).join(', ')}${result.length > 5 ? '...' : ''}]`
+    );
+
     // Cache the result
-    this.#queryCache.cacheGetAllParts(rootId, result);
+    this.#queryCache.cacheGetAllParts(cacheRootId, result);
 
     return result;
   }
@@ -227,6 +266,10 @@ export class BodyGraphService {
       );
     }
 
+    this.#logger.debug(
+      `BodyGraphService.getBodyGraph: Getting body graph for entity '${entityId}'`
+    );
+
     const bodyComponent = await this.#entityManager.getComponentData(
       entityId,
       'anatomy:body'
@@ -236,8 +279,16 @@ export class BodyGraphService {
       throw new Error(`Entity ${entityId} has no anatomy:body component`);
     }
 
+    // Ensure cache is built for the actor entity
+    await this.buildAdjacencyCache(entityId);
+
     return {
-      getAllPartIds: () => this.getAllParts(bodyComponent),
+      getAllPartIds: () => this.getAllParts(bodyComponent, entityId),
+      getConnectedParts: (partEntityId) => {
+        // Get connected parts (children) from cache
+        const node = this.#cacheManager.get(partEntityId);
+        return node?.children || [];
+      },
     };
   }
 

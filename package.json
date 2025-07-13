@@ -58,7 +58,6 @@
     "test": "jest --env=jsdom --silent --coverage",
     "test:single": "jest --env=jsdom --silent=false --runInBand",
     "test:ci": "jest --env=jsdom --ci --silent --coverage",
-    "test:load-order": "jest --env=jsdom --silent=false --runInBand tests/integration/loaders/modsLoader.definitionFirst.test.js",
     "test:update": "jest --env=jsdom --updateSnapshot",
     "create-mod": "node scripts/createMod.mjs",
     "update-manifest": "node scripts/updateManifest.js",

@@ -8,6 +8,8 @@
     "start": "node src/core/server.js",
     "dev": "node --watch src/core/server.js",
     "test": "NODE_ENV=test jest --silent --coverage",
+    "test:unit": "NODE_ENV=test jest --silent --coverage --testPathIgnorePatterns='/node_modules/' '<rootDir>/tests/performance/'",
+    "test:performance": "NODE_ENV=test jest tests/performance --silent=false --runInBand --testPathIgnorePatterns='/node_modules/'",
     "test:single": "NODE_ENV=test jest --silent=false --runInBand",
     "test:ci": "NODE_ENV=test jest --ci --silent --coverage",
     "typecheck": "tsc",
@@ -23,6 +25,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "chalk": "^4.1.2",
     "compression": "^1.8.0",
     "cors": "^2.8.5",
     "dotenv": "^17.0.1",
@@ -36,6 +39,8 @@
     "@babel/preset-env": "^7.27.2",
     "@eslint/js": "^9.28.0",
     "@jest/globals": "^30.0.4",
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1",
     "babel-jest": "^30.0.4",
     "eslint": "^9.28.0",
     "eslint-config-prettier": "^10.1.5",
@@ -44,6 +49,7 @@
     "globals": "^16.2.0",
     "jest": "^30.0.4",
     "prettier": "^3.5.3",
+    "supertest": "^7.1.3",
     "typescript": "^5.8.3"
   }
 }

@@ -14,6 +14,9 @@ describe('AnatomyGenerationWorkflow', () => {
     // Create mocks
     mockEntityManager = {
       getEntityInstance: jest.fn(),
+      getComponentData: jest.fn(),
+      addComponent: jest.fn(),
+      createEntityInstance: jest.fn(),
     };
 
     mockDataRegistry = {
@@ -170,8 +173,8 @@ describe('AnatomyGenerationWorkflow', () => {
     describe('with clothing instantiation', () => {
       const mockClothingResult = {
         instantiated: [
-          { id: 'clothing_1', definitionId: 'clothing:shirt' },
-          { id: 'clothing_2', definitionId: 'clothing:pants' },
+          { clothingId: 'clothing_1', entityDefinitionId: 'clothing:shirt' },
+          { clothingId: 'clothing_2', entityDefinitionId: 'clothing:pants' },
         ],
         equipped: ['clothing_1', 'clothing_2'],
         errors: [],
@@ -289,7 +292,9 @@ describe('AnatomyGenerationWorkflow', () => {
 
       it('should include clothing errors in result when instantiation has errors', async () => {
         const clothingWithErrors = {
-          instantiated: [{ id: 'clothing_1', definitionId: 'clothing:shirt' }],
+          instantiated: [
+            { clothingId: 'clothing_1', entityDefinitionId: 'clothing:shirt' },
+          ],
           equipped: [],
           errors: ['Failed to equip pants: slot occupied'],
         };

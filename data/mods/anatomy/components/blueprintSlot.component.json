@@ -1,0 +1,38 @@
+{
+  "$schema": "http://example.com/schemas/component.schema.json",
+  "id": "anatomy:blueprintSlot",
+  "description": "Marks an entity as representing a specific slot from the anatomy blueprint",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "slotId": {
+        "type": "string",
+        "description": "The ID of the blueprint slot this entity represents (e.g., 'left_breast', 'right_breast')"
+      },
+      "socketId": {
+        "type": "string",
+        "description": "The socket ID this slot is associated with, if any"
+      },
+      "requirements": {
+        "type": "object",
+        "description": "Copy of the requirements from the blueprint slot definition",
+        "properties": {
+          "partType": {
+            "type": "string",
+            "description": "Required part type for this slot"
+          },
+          "components": {
+            "type": "array",
+            "description": "Required components for this slot",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "required": ["slotId"],
+    "additionalProperties": false
+  }
+}
