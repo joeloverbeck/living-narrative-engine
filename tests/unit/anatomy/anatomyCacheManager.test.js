@@ -140,8 +140,8 @@ describe('AnatomyCacheManager', () => {
       ]);
     });
 
-    it('should build cache for anatomy graph', () => {
-      cacheManager.buildCache('torso-1', mockEntityManager);
+    it('should build cache for anatomy graph', async () => {
+      await cacheManager.buildCache('torso-1', mockEntityManager);
 
       expect(cacheManager.size()).toBe(3);
       expect(cacheManager.has('torso-1')).toBe(true);
@@ -165,16 +165,16 @@ describe('AnatomyCacheManager', () => {
       );
     });
 
-    it('should throw error with invalid parameters', () => {
-      expect(() => cacheManager.buildCache(null, mockEntityManager)).toThrow(
-        InvalidArgumentError
-      );
-      expect(() => cacheManager.buildCache('torso-1', null)).toThrow(
+    it('should throw error with invalid parameters', async () => {
+      await expect(
+        cacheManager.buildCache(null, mockEntityManager)
+      ).rejects.toThrow(InvalidArgumentError);
+      await expect(cacheManager.buildCache('torso-1', null)).rejects.toThrow(
         InvalidArgumentError
       );
     });
 
-    it('should handle entities without anatomy:part component', () => {
+    it('should handle entities without anatomy:part component', async () => {
       mockEntityManager.getComponentData.mockImplementation(
         (id, componentId) => {
           if (componentId === 'anatomy:part') return null;
@@ -182,13 +182,13 @@ describe('AnatomyCacheManager', () => {
         }
       );
 
-      cacheManager.buildCache('torso-1', mockEntityManager);
+      await cacheManager.buildCache('torso-1', mockEntityManager);
 
       const torsoNode = cacheManager.get('torso-1');
       expect(torsoNode.partType).toBe('unknown');
     });
 
-    it('should build parent-to-children map efficiently in O(n) time', () => {
+    it('should build parent-to-children map efficiently in O(n) time', async () => {
       // Setup a larger anatomy tree to test O(n) performance
       const entities = [];
       const ENTITY_COUNT = 100;
@@ -232,7 +232,7 @@ describe('AnatomyCacheManager', () => {
       const getEntitiesCallCount =
         mockEntityManager.getEntitiesWithComponent.mock.calls.length;
 
-      cacheManager.buildCache('part-0', mockEntityManager);
+      await cacheManager.buildCache('part-0', mockEntityManager);
 
       // Should only call getEntitiesWithComponent once (O(n)), not once per entity (O(n²))
       expect(mockEntityManager.getEntitiesWithComponent).toHaveBeenCalledTimes(
@@ -249,7 +249,7 @@ describe('AnatomyCacheManager', () => {
       expect(rootNode.children.length).toBeGreaterThan(0);
     });
 
-    it('should handle cycles in the graph', () => {
+    it('should handle cycles in the graph', async () => {
       // Create a cycle: arm-1 -> hand-1 -> arm-1
       mockEntityManager.getComponentData.mockImplementation(
         (id, componentId) => {
@@ -265,14 +265,14 @@ describe('AnatomyCacheManager', () => {
         }
       );
 
-      cacheManager.buildCache('torso-1', mockEntityManager);
+      await cacheManager.buildCache('torso-1', mockEntityManager);
 
       // Should handle cycle without infinite loop
       expect(cacheManager.size()).toBeGreaterThan(0);
       expect(mockLogger.info).toHaveBeenCalled();
     });
 
-    it('should respect max recursion depth', () => {
+    it('should respect max recursion depth', async () => {
       const originalMaxDepth = ANATOMY_CONSTANTS.MAX_RECURSION_DEPTH;
 
       // Create a very deep hierarchy
@@ -315,7 +315,7 @@ describe('AnatomyCacheManager', () => {
         configurable: true,
       });
 
-      cacheManager.buildCache('entity-0', mockEntityManager);
+      await cacheManager.buildCache('entity-0', mockEntityManager);
 
       expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining('Max recursion depth reached')
@@ -329,12 +329,12 @@ describe('AnatomyCacheManager', () => {
       });
     });
 
-    it('should log error when entity retrieval fails', () => {
+    it('should log error when entity retrieval fails', async () => {
       mockEntityManager.getEntityInstance.mockImplementation(() => {
         throw new Error('Entity not found');
       });
 
-      cacheManager.buildCache('invalid-entity', mockEntityManager);
+      await cacheManager.buildCache('invalid-entity', mockEntityManager);
 
       expect(mockLogger.error).toHaveBeenCalledWith(
         "AnatomyCacheManager: Failed to build cache node for entity 'invalid-entity'",
@@ -473,7 +473,7 @@ describe('AnatomyCacheManager', () => {
   });
 
   describe('validateCache', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       const torsoEntity = { id: 'torso-1' };
       const armEntity = { id: 'arm-1' };
 
@@ -494,7 +494,7 @@ describe('AnatomyCacheManager', () => {
       );
 
       mockEntityManager.getEntitiesWithComponent.mockReturnValue([armEntity]);
-      cacheManager.buildCache('torso-1', mockEntityManager);
+      await cacheManager.buildCache('torso-1', mockEntityManager);
     });
 
     it('should throw error with invalid parameters', () => {

@@ -6,16 +6,11 @@
     "clothing:wearable": {
       "wearableType": "pants",
       "layer": "base",
-      "coverage": {
-        "required": ["waist", "left_leg", "right_leg"],
-        "optional": ["hips"],
-        "exclusions": []
-      },
       "size": "m",
       "material": "wool",
       "equipmentSlots": {
-        "primary": "legs_clothing",
-        "secondary": ["waist_clothing"]
+        "primary": "legs",
+        "secondary": ["torso_lower"]
       },
       "layerPriority": 3,
       "conflictResolution": "auto_remove"

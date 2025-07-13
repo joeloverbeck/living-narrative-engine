@@ -25,6 +25,7 @@ function createIntegrationMocks() {
           root: 'torso1',
           parts: { torso: 'torso1' },
         },
+        recipeId: 'anatomy:human_male',
       },
     },
     entity2: {
@@ -33,6 +34,7 @@ function createIntegrationMocks() {
           root: 'torso2',
           parts: { torso: 'torso2' },
         },
+        recipeId: 'anatomy:human_male',
       },
     },
   };
@@ -154,6 +156,14 @@ function createIntegrationMocks() {
       return Promise.resolve();
     }),
 
+    addComponent: jest.fn((entityId, componentId, data) => {
+      if (!mockEquipmentData[entityId]) {
+        mockEquipmentData[entityId] = {};
+      }
+      mockEquipmentData[entityId][componentId] = data;
+      return Promise.resolve();
+    }),
+
     getEntityInstance: jest.fn((entityId) => {
       // Check if it's a regular entity
       if (mockEntityData[entityId] !== undefined) {
@@ -247,14 +257,28 @@ describe('ClothingSystem Integration', () => {
       logger: mocks.logger,
       entityManager: mocks.entityManager,
       bodyGraphService: {
-        getBodyGraph: jest.fn().mockResolvedValue({ root: 'torso1' }),
+        getBodyGraph: jest.fn().mockResolvedValue({
+          root: 'torso1',
+          getAllPartIds: jest
+            .fn()
+            .mockReturnValue([
+              'torso1',
+              'left_chest',
+              'right_chest',
+              'left_shoulder',
+              'right_shoulder',
+              'left_hip',
+              'right_hip',
+              'penis',
+              'vagina',
+              'left_arm',
+            ]),
+          getConnectedParts: jest.fn().mockReturnValue([]),
+        }),
       },
       dataRegistry: {
         get: jest.fn((category, id) => {
-          if (
-            category === 'anatomy-blueprints' &&
-            id === 'anatomy:human_male'
-          ) {
+          if (category === 'anatomyBlueprints' && id === 'anatomy:human_male') {
             return Promise.resolve({
               id: 'anatomy:human_male',
               root: 'anatomy:human_male_torso',
@@ -265,19 +289,35 @@ describe('ClothingSystem Integration', () => {
                   layerOrder: ['underwear', 'base', 'outer'],
                   defaultLayer: 'base',
                 },
+                lower_torso_clothing: {
+                  anatomySockets: ['left_hip', 'right_hip'],
+                  allowedLayers: ['underwear', 'base', 'outer'],
+                  layerOrder: ['underwear', 'base', 'outer'],
+                  defaultLayer: 'base',
+                },
+                back_clothing: {
+                  anatomySockets: ['left_shoulder', 'right_shoulder'],
+                  allowedLayers: ['accessories'],
+                  layerOrder: ['accessories'],
+                  defaultLayer: 'accessories',
+                },
+                left_arm_clothing: {
+                  anatomySockets: ['left_shoulder', 'left_arm'],
+                  allowedLayers: ['base'],
+                  layerOrder: ['base'],
+                  defaultLayer: 'base',
+                },
               },
             });
           }
-          if (category === 'anatomy-recipe-parts') {
-            return Promise.resolve(null);
+          if (category === 'anatomyRecipes' && id === 'anatomy:human_male') {
+            return Promise.resolve({
+              id: 'anatomy:human_male',
+              blueprintId: 'anatomy:human_male',
+            });
           }
           return Promise.resolve(null);
         }),
-      },
-      slotMappingConfiguration: {
-        resolveSlotMapping: jest.fn(),
-        getSlotEntityMappings: jest.fn().mockResolvedValue(new Map()),
-        clearCache: jest.fn(),
       },
     });
 
@@ -437,73 +477,6 @@ describe('ClothingSystem Integration', () => {
     });
   });
 
-  describe('Coverage Validation Integration', () => {
-    it('should validate anatomy coverage before equipping', async () => {
-      // Test equipment with missing required anatomy parts
-      mocks.mockClothingData['wings'] = {
-        'clothing:wearable': {
-          wearableType: 'wings',
-          layer: 'accessories',
-          coverage: {
-            required: ['left_wing', 'right_wing'], // Parts that don't exist
-            optional: [],
-            exclusions: [],
-          },
-          size: 'm',
-          equipmentSlots: {
-            primary: 'back_clothing',
-          },
-        },
-      };
-
-      const result = await clothingService.equipClothing('entity1', 'wings');
-
-      if (result.success) {
-        console.error(
-          'Wings equipment should have failed but succeeded:',
-          result
-        );
-      }
-
-      expect(result.success).toBe(false);
-      expect(result.errors).toContain(
-        "Required body part 'left_wing' is not available"
-      );
-      expect(result.errors).toContain(
-        "Required body part 'right_wing' is not available"
-      );
-    });
-
-    it('should validate exclusions properly', async () => {
-      // Mock clothing that excludes existing anatomy
-      mocks.mockClothingData['prosthetic_arm'] = {
-        'clothing:wearable': {
-          wearableType: 'prosthetic',
-          layer: 'base',
-          coverage: {
-            required: ['left_shoulder'],
-            optional: [],
-            exclusions: ['left_arm'], // Conflicts with natural arm
-          },
-          size: 'm',
-          equipmentSlots: {
-            primary: 'left_arm_clothing',
-          },
-        },
-      };
-
-      const result = await clothingService.equipClothing(
-        'entity1',
-        'prosthetic_arm'
-      );
-
-      expect(result.success).toBe(false);
-      expect(result.errors).toContain(
-        "Clothing cannot be worn with 'left_arm' present"
-      );
-    });
-  });
-
   describe('Transfer Clothing Workflow', () => {
     it('should transfer clothing between entities successfully', async () => {
       // Equip shirt on entity1
@@ -542,17 +515,15 @@ describe('ClothingSystem Integration', () => {
       // Equip shirt on entity1
       await clothingService.equipClothing('entity1', 'shirt1');
 
-      // Mock entity2 to fail equipment (no anatomy)
+      // Mock entity2 to not exist (entity not found error)
       const originalImplementation =
-        mocks.entityManager.getComponentData.getMockImplementation();
-      mocks.entityManager.getComponentData.mockImplementation(
-        (entityId, componentId) => {
-          if (entityId === 'entity2' && componentId === 'anatomy:body') {
-            return null; // No anatomy
-          }
-          return originalImplementation(entityId, componentId);
+        mocks.entityManager.getEntityInstance.getMockImplementation();
+      mocks.entityManager.getEntityInstance.mockImplementation((entityId) => {
+        if (entityId === 'entity2') {
+          return null; // Entity not found
         }
-      );
+        return originalImplementation(entityId);
+      });
 
       const result = await clothingService.transferClothing(
         'entity1',
@@ -562,7 +533,7 @@ describe('ClothingSystem Integration', () => {
 
       expect(result.success).toBe(false);
       expect(result.errors).toContain(
-        'Failed to equip on target: Entity has no anatomy data'
+        "Failed to equip on target: Entity 'entity2' not found"
       );
 
       // Verify item was re-equipped on entity1
@@ -583,22 +554,24 @@ describe('ClothingSystem Integration', () => {
 
       expect(result.valid).toBe(true);
       expect(result.compatibility).toBeDefined();
-      expect(result.compatibility.coverage).toBeDefined();
       expect(result.compatibility.layers).toBeDefined();
     });
 
-    it('should detect multiple types of incompatibilities', async () => {
-      // Mock problematic clothing
-      mocks.mockClothingData['problematic_item'] = {
+    it('should detect layer incompatibilities', async () => {
+      // First equip an item to create potential conflicts
+      await clothingService.equipClothing('entity1', 'shirt1');
+
+      // Mock another item that would conflict
+      mocks.mockClothingData['conflicting_shirt'] = {
         'clothing:wearable': {
-          wearableType: 'special',
+          wearableType: 'shirt',
           layer: 'base',
           coverage: {
-            required: ['missing_part'],
+            required: ['left_chest', 'right_chest'],
             optional: [],
-            exclusions: ['left_chest'], // Conflicts with available part
+            exclusions: [],
           },
-          size: 'xs', // Size mismatch
+          size: 'm',
           equipmentSlots: {
             primary: 'torso_clothing',
           },
@@ -607,16 +580,13 @@ describe('ClothingSystem Integration', () => {
 
       const result = await clothingService.validateCompatibility(
         'entity1',
-        'problematic_item'
+        'conflicting_shirt'
       );
 
-      expect(result.valid).toBe(false);
-      expect(result.errors).toContain(
-        "Required body part 'missing_part' is not available"
-      );
-      expect(result.errors).toContain(
-        "Clothing cannot be worn with 'left_chest' present"
-      );
+      // The validation should still pass but detect layer conflicts
+      expect(result.valid).toBe(true);
+      expect(result.compatibility.layers).toBeDefined();
+      expect(result.compatibility.layers.hasConflicts).toBe(true);
     });
   });
 
@@ -686,15 +656,6 @@ describe('ClothingSystem Integration', () => {
       // Should dispatch clothing:equipped event
       expect(mocks.eventDispatcher.dispatch).toHaveBeenCalledWith(
         'clothing:equipped',
-        expect.objectContaining({
-          entityId: 'entity1',
-          clothingItemId: 'shirt1',
-        })
-      );
-
-      // Should dispatch coverage validation event
-      expect(mocks.eventDispatcher.dispatch).toHaveBeenCalledWith(
-        'clothing:coverage_validated',
         expect.objectContaining({
           entityId: 'entity1',
           clothingItemId: 'shirt1',

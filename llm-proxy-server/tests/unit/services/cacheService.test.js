@@ -21,29 +21,51 @@ describe('CacheService', () => {
     cacheService = new CacheService(mockLogger, {
       maxSize: 3,
       defaultTtl: 1000, // 1 second for testing
+      enableAutoCleanup: false, // Disable auto cleanup for tests
     });
     jest.clearAllMocks();
   });
 
+  afterEach(() => {
+    // Clean up any running timers
+    if (cacheService && cacheService.cleanup) {
+      cacheService.cleanup();
+    }
+  });
+
   describe('constructor', () => {
     it('should initialize with default configuration when not provided', () => {
-      new CacheService(mockLogger);
+      const service = new CacheService(mockLogger, {
+        enableAutoCleanup: false,
+      });
       expect(mockLogger.info).toHaveBeenCalledWith(
-        'CacheService: Initialized with configuration',
-        { maxSize: 1000, defaultTtl: 300000 }
+        'CacheService: Initialized with optimized configuration',
+        expect.objectContaining({
+          maxSize: 1000,
+          defaultTtl: 300000,
+          maxMemoryBytes: expect.any(Number),
+          enableAutoCleanup: false,
+        })
       );
+      service.cleanup();
     });
 
     it('should initialize with provided configuration', () => {
-      new CacheService(mockLogger, {
+      const service = new CacheService(mockLogger, {
         maxSize: 3,
         defaultTtl: 1000,
+        enableAutoCleanup: false,
       });
 
       expect(mockLogger.info).toHaveBeenCalledWith(
-        'CacheService: Initialized with configuration',
-        { maxSize: 3, defaultTtl: 1000 }
+        'CacheService: Initialized with optimized configuration',
+        expect.objectContaining({
+          maxSize: 3,
+          defaultTtl: 1000,
+          enableAutoCleanup: false,
+        })
       );
+      service.cleanup();
     });
 
     it('should throw error when logger is not provided', () => {
@@ -131,7 +153,7 @@ describe('CacheService', () => {
       expect(cacheService.get('key3')).toBe('value3');
       expect(cacheService.get('key4')).toBe('value4');
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        "CacheService: Evicted oldest entry with key 'key1'"
+        "CacheService: Evicted LRU entry with key 'key1'"
       );
     });
 
@@ -220,7 +242,9 @@ describe('CacheService', () => {
       expect(cacheService.get('user:2')).toBeUndefined();
       expect(cacheService.get('post:1')).toBe('value3');
       expect(mockLogger.info).toHaveBeenCalledWith(
-        'CacheService: Invalidated 2 cache entries matching pattern /^user:/'
+        expect.stringContaining(
+          'CacheService: Invalidated 2 cache entries matching pattern /^user:/'
+        )
       );
     });
 
@@ -260,15 +284,26 @@ describe('CacheService', () => {
 
       const stats = cacheService.getStats();
 
-      expect(stats).toEqual({
-        hits: 1,
-        misses: 1,
-        evictions: 1,
-        expirations: 0,
-        size: 3,
-        maxSize: 3,
-        hitRate: '50.00%',
-      });
+      expect(stats).toEqual(
+        expect.objectContaining({
+          hits: 1,
+          misses: 1,
+          evictions: 1,
+          expirations: 0,
+          size: 3,
+          maxSize: 3,
+          hitRate: '50.00%',
+          currentMemoryBytes: expect.any(Number),
+          maxMemoryBytes: expect.any(Number),
+          memoryUsagePercent: expect.any(String),
+          averageEntrySize: expect.any(Number),
+          efficiency: expect.objectContaining({
+            memoryEvictionRate: expect.any(String),
+            expirationRate: expect.any(String),
+            autoCleanupCount: expect.any(Number),
+          }),
+        })
+      );
     });
 
     it('should handle zero total requests', () => {
@@ -290,8 +325,10 @@ describe('CacheService', () => {
       expect(stats.misses).toBe(0);
       expect(stats.evictions).toBe(0);
       expect(stats.expirations).toBe(0);
+      expect(stats.memoryEvictions).toBe(0);
+      expect(stats.autoCleanups).toBe(0);
       expect(mockLogger.info).toHaveBeenCalledWith(
-        'CacheService: Reset cache statistics'
+        'CacheService: Reset enhanced cache statistics'
       );
     });
   });

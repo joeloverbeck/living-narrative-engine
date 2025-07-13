@@ -13,7 +13,6 @@ describe('AnatomyClothingIntegrationService - Edge Cases', () => {
   let mockEntityManager;
   let mockBodyGraphService;
   let mockDataRegistry;
-  let mockSlotMappingConfiguration;
 
   beforeEach(() => {
     mockLogger = createMockLogger();
@@ -31,18 +30,11 @@ describe('AnatomyClothingIntegrationService - Edge Cases', () => {
       get: jest.fn(),
     };
 
-    mockSlotMappingConfiguration = {
-      resolveSlotMapping: jest.fn(),
-      getSlotEntityMappings: jest.fn().mockResolvedValue(new Map()),
-      clearCache: jest.fn(),
-    };
-
     service = new AnatomyClothingIntegrationService({
       logger: mockLogger,
       entityManager: mockEntityManager,
       bodyGraphService: mockBodyGraphService,
       dataRegistry: mockDataRegistry,
-      slotMappingConfiguration: mockSlotMappingConfiguration,
     });
   });
 

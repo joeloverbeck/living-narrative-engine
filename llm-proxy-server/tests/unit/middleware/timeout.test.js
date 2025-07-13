@@ -223,25 +223,25 @@ describe('timeout middleware', () => {
     test('returns default configuration when no options provided', () => {
       const config = createSizeLimitConfig();
 
-      expect(config).toEqual({
-        json: {
-          limit: '1mb',
-          strict: true,
-          type: 'application/json',
-        },
+      expect(config.json).toMatchObject({
+        limit: '1mb',
+        strict: true,
+        type: 'application/json',
       });
+      expect(config.json).toHaveProperty('verify');
+      expect(typeof config.json.verify).toBe('function');
     });
 
     test('uses custom jsonLimit when provided', () => {
       const config = createSizeLimitConfig({ jsonLimit: '5mb' });
 
-      expect(config).toEqual({
-        json: {
-          limit: '5mb',
-          strict: true,
-          type: 'application/json',
-        },
+      expect(config.json).toMatchObject({
+        limit: '5mb',
+        strict: true,
+        type: 'application/json',
       });
+      expect(config.json).toHaveProperty('verify');
+      expect(typeof config.json.verify).toBe('function');
     });
 
     test('returns correct structure for Express body parser', () => {
@@ -270,6 +270,174 @@ describe('timeout middleware', () => {
         const config = createSizeLimitConfig({ jsonLimit: input });
         expect(config.json.limit).toBe(expected);
       });
+    });
+
+    test('enforces maximum security limit by default', () => {
+      const config = createSizeLimitConfig({ jsonLimit: '50mb' });
+
+      // Should be capped at security maximum (10mb)
+      expect(config.json.limit).toBe('10mb');
+    });
+
+    test('allows disabling maximum security limit enforcement', () => {
+      const config = createSizeLimitConfig({
+        jsonLimit: '50mb',
+        enforceMaxLimit: false,
+      });
+
+      // Should allow the custom limit when enforcement is disabled
+      expect(config.json.limit).toBe('50mb');
+    });
+
+    test('includes verify function for size validation', () => {
+      const config = createSizeLimitConfig();
+
+      expect(config.json).toHaveProperty('verify');
+      expect(typeof config.json.verify).toBe('function');
+    });
+
+    test('verify function throws error for oversized payloads', () => {
+      const config = createSizeLimitConfig();
+      const verifyFunction = config.json.verify;
+
+      // Create a buffer larger than 10MB (security max)
+      const largeBuffer = Buffer.alloc(11 * 1024 * 1024); // 11MB
+
+      expect(() => {
+        verifyFunction({}, {}, largeBuffer);
+      }).toThrow('Request payload too large');
+    });
+
+    test('verify function allows payloads within size limit', () => {
+      const config = createSizeLimitConfig();
+      const verifyFunction = config.json.verify;
+
+      // Create a buffer smaller than 10MB
+      const smallBuffer = Buffer.alloc(1024); // 1KB
+
+      expect(() => {
+        verifyFunction({}, {}, smallBuffer);
+      }).not.toThrow();
+    });
+
+    test('error thrown by verify function has correct properties', () => {
+      const config = createSizeLimitConfig();
+      const verifyFunction = config.json.verify;
+
+      const largeBuffer = Buffer.alloc(11 * 1024 * 1024);
+
+      expect(() => {
+        verifyFunction({}, {}, largeBuffer);
+      }).toThrow();
+
+      let thrownError;
+      try {
+        verifyFunction({}, {}, largeBuffer);
+      } catch (error) {
+        thrownError = error;
+      }
+
+      expect(thrownError.message).toBe('Request payload too large');
+      expect(thrownError.status).toBe(413);
+      expect(thrownError.code).toBe('LIMIT_FILE_SIZE');
+    });
+
+    test('parseSize helper function works correctly', () => {
+      // Since parseSize is not exported, we test it indirectly through the config
+      const testCases = [
+        { input: '1mb', shouldEnforce: true },
+        { input: '5mb', shouldEnforce: true },
+        { input: '10mb', shouldEnforce: true },
+        { input: '15mb', shouldEnforce: false }, // Should be capped
+      ];
+
+      testCases.forEach(({ input, shouldEnforce }) => {
+        const config = createSizeLimitConfig({ jsonLimit: input });
+        const expectedLimit = shouldEnforce ? input : '10mb';
+        expect(config.json.limit).toBe(expectedLimit);
+      });
+    });
+
+    test('handles edge case size values', () => {
+      const edgeCases = [
+        { input: '10240kb', expected: '10240kb' }, // Exactly 10MB in KB - should pass through
+        { input: '10mb', expected: '10mb' }, // Exactly the limit
+        { input: '10.1mb', expected: '10mb' }, // Just over the limit - should be capped
+      ];
+
+      edgeCases.forEach(({ input, expected }) => {
+        const config = createSizeLimitConfig({ jsonLimit: input });
+        expect(config.json.limit).toBe(expected);
+      });
+    });
+  });
+
+  describe('Security-focused size limit tests', () => {
+    test('prevents DoS attacks via oversized payloads', () => {
+      const config = createSizeLimitConfig();
+      const verifyFunction = config.json.verify;
+
+      // Simulate various attack payload sizes
+      const attackSizes = [
+        50 * 1024 * 1024, // 50MB
+        100 * 1024 * 1024, // 100MB
+        500 * 1024 * 1024, // 500MB
+      ];
+
+      attackSizes.forEach((size) => {
+        const attackBuffer = Buffer.alloc(size);
+        expect(() => {
+          verifyFunction({}, {}, attackBuffer);
+        }).toThrow('Request payload too large');
+      });
+    });
+
+    test('allows legitimate payloads up to security limit', () => {
+      const config = createSizeLimitConfig();
+      const verifyFunction = config.json.verify;
+
+      // Test payloads at various legitimate sizes
+      const legitimateSizes = [
+        1024, // 1KB
+        1024 * 1024, // 1MB
+        5 * 1024 * 1024, // 5MB
+        10 * 1024 * 1024 - 1, // Just under 10MB
+      ];
+
+      legitimateSizes.forEach((size) => {
+        const buffer = Buffer.alloc(size);
+        expect(() => {
+          verifyFunction({}, {}, buffer);
+        }).not.toThrow();
+      });
+    });
+
+    test('security configuration is consistent with constants', () => {
+      const config = createSizeLimitConfig();
+
+      // Default should be 1MB
+      expect(config.json.limit).toBe('1mb');
+
+      // Max should be enforced at 10MB
+      const maxConfig = createSizeLimitConfig({ jsonLimit: '50mb' });
+      expect(maxConfig.json.limit).toBe('10mb');
+    });
+
+    test('verify function correctly calculates buffer size', () => {
+      const config = createSizeLimitConfig();
+      const verifyFunction = config.json.verify;
+
+      // Test exact size limits
+      const exactLimit = Buffer.alloc(10 * 1024 * 1024); // Exactly 10MB
+      const overLimit = Buffer.alloc(10 * 1024 * 1024 + 1); // 1 byte over
+
+      expect(() => {
+        verifyFunction({}, {}, exactLimit);
+      }).not.toThrow();
+
+      expect(() => {
+        verifyFunction({}, {}, overLimit);
+      }).toThrow();
     });
   });
 });

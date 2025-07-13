@@ -82,7 +82,7 @@ describe('BodyGraphService', () => {
   });
 
   describe('buildAdjacencyCache', () => {
-    it('should build cache for a simple anatomy graph', () => {
+    it('should build cache for a simple anatomy graph', async () => {
       // Arrange
       const torsoEntity = { id: 'torso-1' };
       const headEntity = { id: 'head-1' };
@@ -118,7 +118,7 @@ describe('BodyGraphService', () => {
       ]);
 
       // Act
-      service.buildAdjacencyCache('torso-1');
+      await service.buildAdjacencyCache('torso-1');
 
       // Assert
       expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -129,20 +129,20 @@ describe('BodyGraphService', () => {
       );
     });
 
-    it('should handle entities without anatomy:part component', () => {
+    it('should handle entities without anatomy:part component', async () => {
       const entity = { id: 'entity-1' };
       mockEntityManager.getEntityInstance.mockReturnValue(entity);
       mockEntityManager.getComponentData.mockReturnValue(null);
       mockEntityManager.getEntitiesWithComponent.mockReturnValue([]);
 
-      service.buildAdjacencyCache('entity-1');
+      await service.buildAdjacencyCache('entity-1');
 
       expect(mockLogger.info).toHaveBeenCalledWith(
         'AnatomyCacheManager: Built cache with 1 nodes'
       );
     });
 
-    it('should handle cycles in the graph', () => {
+    it('should handle cycles in the graph', async () => {
       const entity1 = { id: 'entity-1' };
       const entity2 = { id: 'entity-2' };
 
@@ -170,18 +170,18 @@ describe('BodyGraphService', () => {
         entity2,
       ]);
 
-      service.buildAdjacencyCache('entity-1');
+      await service.buildAdjacencyCache('entity-1');
 
       // Should handle cycle without infinite loop
       expect(mockLogger.info).toHaveBeenCalled();
     });
 
-    it('should log error when entity retrieval fails', () => {
+    it('should log error when entity retrieval fails', async () => {
       mockEntityManager.getEntityInstance.mockImplementation(() => {
         throw new Error('Entity not found');
       });
 
-      service.buildAdjacencyCache('invalid-entity');
+      await service.buildAdjacencyCache('invalid-entity');
 
       expect(mockLogger.error).toHaveBeenCalledWith(
         "AnatomyCacheManager: Failed to build cache node for entity 'invalid-entity'",
@@ -189,7 +189,7 @@ describe('BodyGraphService', () => {
       );
     });
 
-    it('should not rebuild cache if it already exists', () => {
+    it('should not rebuild cache if it already exists', async () => {
       // Setup entities
       const torsoEntity = { id: 'torso-1' };
       const headEntity = { id: 'head-1' };
@@ -216,7 +216,7 @@ describe('BodyGraphService', () => {
       mockEntityManager.getEntitiesWithComponent.mockReturnValue([headEntity]);
 
       // First call - should build cache
-      service.buildAdjacencyCache('torso-1');
+      await service.buildAdjacencyCache('torso-1');
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
         "AnatomyCacheManager: Building cache for anatomy rooted at 'torso-1'"
@@ -231,7 +231,7 @@ describe('BodyGraphService', () => {
       mockEntityManager.getEntityInstance.mockClear();
 
       // Second call - should not rebuild cache
-      service.buildAdjacencyCache('torso-1');
+      await service.buildAdjacencyCache('torso-1');
 
       // Should not log cache building messages
       expect(mockLogger.debug).not.toHaveBeenCalledWith(
@@ -247,7 +247,7 @@ describe('BodyGraphService', () => {
   });
 
   describe('detachPart', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       // Setup a simple anatomy graph in cache
       const torsoEntity = { id: 'torso-1' };
       const armEntity = { id: 'arm-1' };
@@ -283,7 +283,7 @@ describe('BodyGraphService', () => {
       ]);
 
       // Build the cache
-      service.buildAdjacencyCache('torso-1');
+      await service.buildAdjacencyCache('torso-1');
     });
 
     it('should detach a part with cascade', async () => {
@@ -373,7 +373,7 @@ describe('BodyGraphService', () => {
   });
 
   describe('findPartsByType', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       // Setup anatomy with multiple parts of same type
       const entities = [
         { id: 'torso-1' },
@@ -416,7 +416,7 @@ describe('BodyGraphService', () => {
         entities[3], // hand-1
         entities[4], // hand-2
       ]);
-      service.buildAdjacencyCache('torso-1');
+      await service.buildAdjacencyCache('torso-1');
     });
 
     it('should find all parts of a specific type', () => {
@@ -434,9 +434,9 @@ describe('BodyGraphService', () => {
       expect(legs).toEqual([]);
     });
 
-    it('should handle missing nodes in cache', () => {
+    it('should handle missing nodes in cache', async () => {
       // Clear cache to simulate missing nodes
-      service.buildAdjacencyCache('invalid-root');
+      await service.buildAdjacencyCache('invalid-root');
 
       const result = service.findPartsByType('torso-1', 'arm');
       expect(result).toEqual([]);
@@ -476,7 +476,7 @@ describe('BodyGraphService', () => {
   });
 
   describe('getAnatomyRoot', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       const entities = [{ id: 'torso-1' }, { id: 'arm-1' }, { id: 'hand-1' }];
 
       mockEntityManager.getEntityInstance.mockImplementation((id) => {
@@ -501,7 +501,7 @@ describe('BodyGraphService', () => {
         entities[1], // arm-1
         entities[2], // hand-1
       ]);
-      service.buildAdjacencyCache('torso-1');
+      await service.buildAdjacencyCache('torso-1');
     });
 
     it('should find root from any part', () => {
@@ -549,7 +549,7 @@ describe('BodyGraphService', () => {
   });
 
   describe('getPath', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       // Setup a more complex anatomy graph
       const entities = [
         { id: 'torso-1' },
@@ -592,7 +592,7 @@ describe('BodyGraphService', () => {
         entities[3], // right-arm-1
         entities[4], // right-hand-1
       ]);
-      service.buildAdjacencyCache('torso-1');
+      await service.buildAdjacencyCache('torso-1');
     });
 
     it('should find path between parts', () => {
@@ -611,7 +611,7 @@ describe('BodyGraphService', () => {
       expect(path).toEqual(['torso-1']);
     });
 
-    it('should return null if no path exists', () => {
+    it('should return null if no path exists', async () => {
       // Create a new service instance to ensure clean cache state
       const newService = new BodyGraphService({
         entityManager: mockEntityManager,
@@ -629,7 +629,7 @@ describe('BodyGraphService', () => {
           return null;
         }
       );
-      newService.buildAdjacencyCache('torso-1');
+      await newService.buildAdjacencyCache('torso-1');
 
       const path = newService.getPath('left-hand-1', 'right-hand-1');
       expect(path).toBeNull();
@@ -642,7 +642,7 @@ describe('BodyGraphService', () => {
   });
 
   describe('validateCache', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       const entities = [{ id: 'torso-1' }, { id: 'arm-1' }];
 
       mockEntityManager.getEntityInstance.mockImplementation((id) => {
@@ -664,7 +664,7 @@ describe('BodyGraphService', () => {
       mockEntityManager.getEntitiesWithComponent.mockReturnValue([
         entities[1], // arm-1
       ]);
-      service.buildAdjacencyCache('torso-1');
+      await service.buildAdjacencyCache('torso-1');
     });
 
     it('should return valid for correct cache', () => {
@@ -718,14 +718,14 @@ describe('BodyGraphService', () => {
       );
     });
 
-    it('should detect missing children in cache', () => {
+    it('should detect missing children in cache', async () => {
       // Manually corrupt the cache by adding a non-existent child
-      service.buildAdjacencyCache('torso-1');
+      await service.buildAdjacencyCache('torso-1');
 
       // Get the cache and add a fake child
       mockEntityManager.getEntitiesWithComponent.mockReturnValue([]);
       mockEntityManager.getComponentData.mockImplementation(() => null);
-      service.buildAdjacencyCache('torso-1');
+      await service.buildAdjacencyCache('torso-1');
 
       // Now manually inject a bad child reference
       const torsoEntity = { id: 'torso-1' };
@@ -751,7 +751,7 @@ describe('BodyGraphService', () => {
       mockEntityManager.getEntitiesWithComponent.mockReturnValue([
         fakeChildEntity,
       ]);
-      service.buildAdjacencyCache('torso-1');
+      await service.buildAdjacencyCache('torso-1');
 
       // Now remove the fake child from entities but it should still be in cache
       mockEntityManager.getEntitiesWithComponent.mockReturnValue([]);
@@ -762,7 +762,7 @@ describe('BodyGraphService', () => {
   });
 
   describe('getAllParts', () => {
-    it('should return all entity IDs in the anatomy graph', () => {
+    it('should return all entity IDs in the anatomy graph', async () => {
       // Setup anatomy
       const entities = [{ id: 'torso-1' }, { id: 'arm-1' }, { id: 'hand-1' }];
 
@@ -788,7 +788,7 @@ describe('BodyGraphService', () => {
         entities[1], // arm-1
         entities[2], // hand-1
       ]);
-      service.buildAdjacencyCache('torso-1');
+      await service.buildAdjacencyCache('torso-1');
 
       // Test private method indirectly through findPartsByType with empty type
       const allParts = service.findPartsByType('torso-1', 'nonexistent');

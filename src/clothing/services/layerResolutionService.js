@@ -4,9 +4,7 @@
  */
 
 import { BaseService } from '../../utils/serviceBase.js';
-import {
-  assertPresent,
-} from '../../utils/dependencyUtils.js';
+import { assertPresent } from '../../utils/dependencyUtils.js';
 import { ValidationError } from '../../errors/validationError.js';
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
@@ -47,20 +45,16 @@ export class LayerResolutionService extends BaseService {
       );
       return recipeLayerOverride;
     }
-    
-    // Entity definition has medium priority  
+
+    // Entity definition has medium priority
     if (entityLayer && typeof entityLayer === 'string') {
-      this.#logger.debug(
-        `Using entity layer: '${entityLayer}'`
-      );
+      this.#logger.debug(`Using entity layer: '${entityLayer}'`);
       return entityLayer;
     }
-    
+
     // Blueprint default has lowest priority
     const finalLayer = blueprintDefaultLayer || 'base';
-    this.#logger.debug(
-      `Using blueprint default layer: '${finalLayer}'`
-    );
+    this.#logger.debug(`Using blueprint default layer: '${finalLayer}'`);
     return finalLayer;
   }
 
@@ -80,14 +74,12 @@ export class LayerResolutionService extends BaseService {
     );
 
     if (!allowedLayers || !Array.isArray(allowedLayers)) {
-      this.#logger.warn(
-        'No allowed layers specified, allowing any layer'
-      );
+      this.#logger.warn('No allowed layers specified, allowing any layer');
       return true;
     }
 
     const isAllowed = allowedLayers.includes(layer);
-    
+
     if (!isAllowed) {
       this.#logger.debug(
         `Layer '${layer}' is not in allowed layers: [${allowedLayers.join(', ')}]`
@@ -101,7 +93,7 @@ export class LayerResolutionService extends BaseService {
    * Resolves layer and validates it against blueprint constraints
    *
    * @param {string} [recipeLayerOverride] - Recipe override (highest precedence)
-   * @param {string} [entityLayer] - Entity definition layer (medium precedence)  
+   * @param {string} [entityLayer] - Entity definition layer (medium precedence)
    * @param {string} [blueprintDefaultLayer] - Blueprint default layer (lowest precedence)
    * @param {string[]} [allowedLayers] - Array of allowed layers from blueprint
    * @returns {{layer: string, isValid: boolean, error?: string}} Resolution result
@@ -136,10 +128,7 @@ export class LayerResolutionService extends BaseService {
         isValid: true,
       };
     } catch (error) {
-      this.#logger.error(
-        'Failed to resolve and validate layer',
-        error
-      );
+      this.#logger.error('Failed to resolve and validate layer', error);
       return {
         layer: 'base',
         isValid: false,

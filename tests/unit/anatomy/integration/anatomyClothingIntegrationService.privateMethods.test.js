@@ -14,7 +14,6 @@ describe('AnatomyClothingIntegrationService - Private Methods Coverage', () => {
   let mockEntityManager;
   let mockBodyGraphService;
   let mockDataRegistry;
-  let mockSlotMappingConfiguration;
 
   beforeEach(() => {
     mockLogger = createMockLogger();
@@ -32,35 +31,11 @@ describe('AnatomyClothingIntegrationService - Private Methods Coverage', () => {
       get: jest.fn(),
     };
 
-    mockSlotMappingConfiguration = {
-      resolveSlotMapping: jest.fn(),
-      getSlotEntityMappings: jest.fn().mockImplementation(async (entityId) => {
-        // Return a Map with slot-to-entity mappings for the test cases
-        const mappings = new Map();
-        mappings.set('head', 'head_part');
-        mappings.set('left_hand', 'left_hand_part');
-        mappings.set('right_hand', 'right_hand_part');
-        mappings.set('left_arm', 'left_arm_part');
-        mappings.set('right_arm', 'right_arm_part');
-        mappings.set('left_finger', 'left_finger_part');
-        mappings.set('torso', 'torso_part');
-        mappings.set('left_shoulder', 'left_shoulder_part');
-        mappings.set('left_shoulder_pad', 'left_shoulder_pad_part');
-        // Add orientation test mappings
-        mappings.set('upper_torso', 'upper_torso_part');
-        mappings.set('lower_torso', 'lower_torso_part');
-        mappings.set('center_head', 'center_head_part');
-        return mappings;
-      }),
-      clearCache: jest.fn(),
-    };
-
     service = new AnatomyClothingIntegrationService({
       logger: mockLogger,
       entityManager: mockEntityManager,
       bodyGraphService: mockBodyGraphService,
       dataRegistry: mockDataRegistry,
-      slotMappingConfiguration: mockSlotMappingConfiguration,
     });
   });
 
@@ -78,25 +53,31 @@ describe('AnatomyClothingIntegrationService - Private Methods Coverage', () => {
           // Single-level slots
           head: {
             type: 'test:head',
+            socket: 'head_socket',
           },
           left_arm: {
             type: 'test:arm',
+            socket: 'left_arm_socket',
           },
           right_arm: {
             type: 'test:arm',
+            socket: 'right_arm_socket',
           },
           // Multi-level slots
           left_hand: {
             parent: 'left_arm',
             type: 'test:hand',
+            socket: 'left_hand_socket',
           },
           right_hand: {
             parent: 'right_arm',
             type: 'test:hand',
+            socket: 'right_hand_socket',
           },
           left_finger: {
             parent: 'left_hand',
             type: 'test:finger',
+            socket: 'left_finger_socket',
           },
         },
         clothingSlotMappings: {
@@ -154,6 +135,13 @@ describe('AnatomyClothingIntegrationService - Private Methods Coverage', () => {
             };
           }
         }
+        if (component === 'anatomy:sockets') {
+          if (id === 'head_part') {
+            return {
+              sockets: [{ id: 'head_socket', orientation: 'neutral' }],
+            };
+          }
+        }
         return null;
       });
 
@@ -175,7 +163,7 @@ describe('AnatomyClothingIntegrationService - Private Methods Coverage', () => {
 
       expect(attachmentPoints).toHaveLength(1);
       expect(attachmentPoints[0]).toMatchObject({
-        entityId: entityId,
+        entityId: 'head_part',
         socketId: 'head_socket',
         slotPath: 'head',
         orientation: 'neutral',
@@ -202,6 +190,18 @@ describe('AnatomyClothingIntegrationService - Private Methods Coverage', () => {
               parentEntityId: 'right_arm_part',
               parentSocketId: 'hand_socket',
               childSocketId: 'wrist',
+            };
+          }
+        }
+        if (component === 'anatomy:sockets') {
+          if (id === 'left_hand_part') {
+            return {
+              sockets: [{ id: 'left_hand_socket', orientation: 'left' }],
+            };
+          }
+          if (id === 'right_hand_part') {
+            return {
+              sockets: [{ id: 'right_hand_socket', orientation: 'right' }],
             };
           }
         }
@@ -238,23 +238,23 @@ describe('AnatomyClothingIntegrationService - Private Methods Coverage', () => {
       expect(attachmentPoints).toHaveLength(2);
 
       const leftAttachment = attachmentPoints.find(
-        (p) => p.entityId === 'left_arm_part'
+        (p) => p.entityId === 'left_hand_part'
       );
       const rightAttachment = attachmentPoints.find(
-        (p) => p.entityId === 'right_arm_part'
+        (p) => p.entityId === 'right_hand_part'
       );
 
       expect(leftAttachment).toMatchObject({
-        entityId: 'left_arm_part',
-        socketId: 'hand_socket',
-        slotPath: 'left_arm.left_hand',
+        entityId: 'left_hand_part',
+        socketId: 'left_hand_socket',
+        slotPath: 'left_hand',
         orientation: 'left',
       });
 
       expect(rightAttachment).toMatchObject({
-        entityId: 'right_arm_part',
-        socketId: 'hand_socket',
-        slotPath: 'right_arm.right_hand',
+        entityId: 'right_hand_part',
+        socketId: 'right_hand_socket',
+        slotPath: 'right_hand',
         orientation: 'right',
       });
     });
@@ -272,6 +272,13 @@ describe('AnatomyClothingIntegrationService - Private Methods Coverage', () => {
               parentEntityId: 'left_hand_part',
               parentSocketId: 'finger_socket',
               childSocketId: 'knuckle',
+            };
+          }
+        }
+        if (component === 'anatomy:sockets') {
+          if (id === 'left_finger_part') {
+            return {
+              sockets: [{ id: 'left_finger_socket', orientation: 'left' }],
             };
           }
         }
@@ -306,9 +313,9 @@ describe('AnatomyClothingIntegrationService - Private Methods Coverage', () => {
 
       expect(attachmentPoints).toHaveLength(1);
       expect(attachmentPoints[0]).toMatchObject({
-        entityId: 'left_hand_part',
-        socketId: 'finger_socket',
-        slotPath: 'left_arm.left_hand.left_finger',
+        entityId: 'left_finger_part',
+        socketId: 'left_finger_socket',
+        slotPath: 'left_finger',
         orientation: 'left',
       });
     });
@@ -386,18 +393,22 @@ describe('AnatomyClothingIntegrationService - Private Methods Coverage', () => {
         slots: {
           torso: {
             type: 'test:torso',
+            socket: 'torso_socket',
           },
           left_arm: {
             parent: 'torso',
             type: 'test:arm',
+            socket: 'left_arm_socket',
           },
           left_shoulder: {
             parent: 'left_arm',
             type: 'test:shoulder',
+            socket: 'left_shoulder_socket',
           },
           left_shoulder_pad: {
             parent: 'left_shoulder',
             type: 'test:pad',
+            socket: 'left_shoulder_pad_socket',
           },
         },
         clothingSlotMappings: {
@@ -448,6 +459,15 @@ describe('AnatomyClothingIntegrationService - Private Methods Coverage', () => {
             };
           }
         }
+        if (component === 'anatomy:sockets') {
+          if (id === 'left_shoulder_pad_part') {
+            return {
+              sockets: [
+                { id: 'left_shoulder_pad_socket', orientation: 'left' },
+              ],
+            };
+          }
+        }
         return null;
       });
 
@@ -485,9 +505,12 @@ describe('AnatomyClothingIntegrationService - Private Methods Coverage', () => {
         );
 
       expect(attachmentPoints).toHaveLength(1);
-      expect(attachmentPoints[0].slotPath).toBe(
-        'torso.left_arm.left_shoulder.left_shoulder_pad'
-      );
+      expect(attachmentPoints[0]).toMatchObject({
+        entityId: 'left_shoulder_pad_part',
+        socketId: 'left_shoulder_pad_socket',
+        slotPath: 'left_shoulder_pad',
+        orientation: 'left',
+      });
     });
   });
 
@@ -497,11 +520,11 @@ describe('AnatomyClothingIntegrationService - Private Methods Coverage', () => {
 
       const orientationBlueprint = {
         slots: {
-          left_arm: { type: 'test:arm' },
-          right_arm: { type: 'test:arm' },
-          upper_torso: { type: 'test:torso' },
-          lower_torso: { type: 'test:torso' },
-          center_head: { type: 'test:head' },
+          left_arm: { type: 'test:arm', socket: 'left_arm_socket' },
+          right_arm: { type: 'test:arm', socket: 'right_arm_socket' },
+          upper_torso: { type: 'test:torso', socket: 'upper_torso_socket' },
+          lower_torso: { type: 'test:torso', socket: 'lower_torso_socket' },
+          center_head: { type: 'test:head', socket: 'center_head_socket' },
         },
         clothingSlotMappings: {
           left_glove: {
@@ -580,6 +603,26 @@ describe('AnatomyClothingIntegrationService - Private Methods Coverage', () => {
             },
           };
           return jointMap[id] || null;
+        }
+        if (component === 'anatomy:sockets') {
+          const socketMap = {
+            left_arm_part: {
+              sockets: [{ id: 'left_arm_socket', orientation: 'left' }],
+            },
+            right_arm_part: {
+              sockets: [{ id: 'right_arm_socket', orientation: 'right' }],
+            },
+            upper_torso_part: {
+              sockets: [{ id: 'upper_torso_socket', orientation: 'upper' }],
+            },
+            lower_torso_part: {
+              sockets: [{ id: 'lower_torso_socket', orientation: 'lower' }],
+            },
+            center_head_part: {
+              sockets: [{ id: 'center_head_socket', orientation: 'neutral' }],
+            },
+          };
+          return socketMap[id] || null;
         }
         return null;
       });

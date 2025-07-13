@@ -160,7 +160,7 @@ export class LlmRequestController {
       return;
     }
 
-    const { llmId, targetPayload, targetHeaders } = req.body;
+    const { llmId, targetPayload, targetHeaders = {} } = req.body;
 
     // 2. Request Validation
     const validationError = this._validateRequest(llmId, targetPayload);

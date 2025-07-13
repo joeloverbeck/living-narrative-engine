@@ -5,7 +5,7 @@ import {
   LOCAL_API_TYPES_REQUIRING_NO_PROXY_KEY,
   DEFAULT_ENCODING_UTF8,
 } from '../config/constants.js'; // MODIFIED: Import constants
-import { maskApiKey } from '../utils/loggerUtils.js';
+// import { maskApiKey } from '../utils/loggerUtils.js';
 import CacheService from './cacheService.js';
 
 /**
@@ -187,7 +187,7 @@ export class ApiKeyService {
       const cachedKey = this.#cacheService.get(cacheKey);
       if (cachedKey !== undefined) {
         this.#logger.debug(
-          `ApiKeyService._readApiKeyFromFile: Retrieved API key from cache for llmId '${llmId}' from '${fullPath}'. Key: ${maskApiKey(cachedKey)}`
+          `ApiKeyService._readApiKeyFromFile: Retrieved API key from cache for llmId '${llmId}' from '${fullPath}'.`
         );
         return { key: cachedKey, error: null };
       }
@@ -232,7 +232,7 @@ export class ApiKeyService {
       }
 
       this.#logger.info(
-        `ApiKeyService._readApiKeyFromFile: Successfully retrieved API key for llmId '${llmId}' from '${fullPath}'. Key: ${maskApiKey(trimmedKey)}`
+        `ApiKeyService._readApiKeyFromFile: Successfully retrieved API key for llmId '${llmId}' from '${fullPath}'.`
       );
       return { key: trimmedKey, error: null };
     } catch (error) {
@@ -327,7 +327,7 @@ export class ApiKeyService {
         actualApiKey = envValue.trim();
         apiKeySource = `environment variable '${envVarName}'`;
         this.#logger.info(
-          `ApiKeyService.getApiKey: Successfully retrieved API key for llmId '${llmId}' from ${apiKeySource}. Key: ${maskApiKey(actualApiKey)}`
+          `ApiKeyService.getApiKey: Successfully retrieved API key for llmId '${llmId}' from ${apiKeySource}.`
         );
       } else {
         this.#logger.warn(
@@ -377,7 +377,7 @@ export class ApiKeyService {
           actualApiKey = fileReadResult.key;
           apiKeySource = `file '${fileName}'`;
           this.#logger.info(
-            `ApiKeyService.getApiKey: Successfully retrieved API key for llmId '${llmId}' from ${apiKeySource}. Key: ${maskApiKey(actualApiKey)}`
+            `ApiKeyService.getApiKey: Successfully retrieved API key for llmId '${llmId}' from ${apiKeySource}.`
           );
           finalErrorDetails = null; // Clear previous error (like env var not found) if file succeeds
         } else {
@@ -535,5 +535,21 @@ export class ApiKeyService {
     }
 
     return this.#cacheService.getStats();
+  }
+
+  /**
+   * Resets cache statistics for API key caching.
+   * @returns {void}
+   */
+  resetCacheStats() {
+    if (!this.#appConfigService.isCacheEnabled()) {
+      this.#logger.debug(
+        'ApiKeyService.resetCacheStats: Cache is disabled, nothing to reset.'
+      );
+      return;
+    }
+
+    this.#cacheService.resetStats();
+    this.#logger.info('ApiKeyService.resetCacheStats: Cache statistics reset.');
   }
 }

@@ -14,6 +14,7 @@
   "gameVersion": ">=0.0.1",
   "content": {
     "components": [
+      "blueprintSlot.component.json",
       "body.component.json",
       "joint.component.json",
       "part.component.json",
@@ -21,6 +22,7 @@
     ],
     "entities": {
       "definitions": [
+        "blueprint_slot.entity.json",
         "human_asshole.entity.json",
         "human_breast.entity.json",
         "human_breast_d_cup.entity.json",

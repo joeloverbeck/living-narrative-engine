@@ -19,6 +19,7 @@ describe('AnatomyGenerationService', () => {
       getEntityInstance: jest.fn(),
       addComponent: jest.fn(),
       removeEntityInstance: jest.fn(),
+      getComponentData: jest.fn(),
     };
 
     mockDataRegistry = {

@@ -9,7 +9,7 @@
         "type": "object",
         "description": "Map of equipment slots to their equipped items by layer",
         "patternProperties": {
-          "^[a-z_]+_clothing$": {
+          "^[a-zA-Z][a-zA-Z0-9_]*$": {
             "type": "object",
             "description": "Equipment slot with layered items",
             "patternProperties": {
@@ -36,7 +36,7 @@
         "type": "object",
         "description": "Maximum number of layers allowed per equipment slot",
         "patternProperties": {
-          "^[a-z_]+_clothing$": {
+          "^[a-zA-Z][a-zA-Z0-9_]*$": {
             "type": "integer",
             "minimum": 1,
             "maximum": 4,
@@ -49,7 +49,7 @@
         "type": "object",
         "description": "Specific constraints for equipment slots",
         "patternProperties": {
-          "^[a-z_]+_clothing$": {
+          "^[a-zA-Z][a-zA-Z0-9_]*$": {
             "type": "object",
             "properties": {
               "allowedTypes": {
@@ -85,7 +85,7 @@
         "type": "object",
         "description": "Timestamp tracking for last equipped items",
         "patternProperties": {
-          "^[a-z_]+_clothing$": {
+          "^[a-zA-Z][a-zA-Z0-9_]*$": {
             "type": "object",
             "patternProperties": {
               "^(underwear|base|outer|accessories)$": {

@@ -12,11 +12,13 @@ The clothing and anatomy systems have fundamental architectural mismatches that 
 ### 1. Slot Naming Mismatch
 
 **Problem:**
+
 - **Anatomy blueprints** define clothing slots like: `torso_upper`, `torso_lower`, `full_body`
 - **Clothing entities** use equipment slots like: `torso_clothing`, `left_arm_clothing`, `right_arm_clothing`
 - These naming conventions don't align, requiring complex mapping logic
 
 **Evidence:**
+
 - Blueprint (human_male.blueprint.json): Uses `torso_lower`, `full_body`, `genital_covering`
 - Clothing entity (basic_shirt.entity.json): Uses `torso_clothing` as primary slot
 
@@ -25,11 +27,13 @@ The clothing and anatomy systems have fundamental architectural mismatches that 
 ### 2. Coverage System Incompatibility
 
 **Problem:**
+
 - **Clothing entities** specify coverage using anatomy socket IDs (`left_chest`, `right_chest`)
 - **Blueprints** map clothing slots to either blueprint slots OR anatomy sockets
 - The validation system struggles to reconcile these different approaches
 
 **Evidence:**
+
 ```json
 // Clothing entity uses socket IDs:
 "coverage": {
@@ -54,10 +58,12 @@ The clothing and anatomy systems have fundamental architectural mismatches that 
 
 **Problem:**
 The AnatomyClothingIntegrationService handles two different mapping types:
+
 - `blueprintSlots`: References blueprint slot IDs
 - `anatomySockets`: Direct socket references
 
 **Evidence:**
+
 ```javascript
 // From anatomyClothingIntegrationService.js:148-160
 if (mapping.blueprintSlots) {
@@ -65,8 +71,7 @@ if (mapping.blueprintSlots) {
     entityId,
     mapping.blueprintSlots
   );
-}
-else if (mapping.anatomySockets) {
+} else if (mapping.anatomySockets) {
   attachmentPoints = await this.#resolveDirectSockets(
     entityId,
     mapping.anatomySockets
@@ -82,6 +87,7 @@ else if (mapping.anatomySockets) {
 The system assumes anatomy part entities follow the pattern: `slotId + '_part'`
 
 **Evidence:**
+
 ```javascript
 // From anatomyClothingIntegrationService.js:387
 const expectedEntityId = slotId + '_part';
@@ -92,10 +98,12 @@ const expectedEntityId = slotId + '_part';
 ### 5. Data Structure Mismatches
 
 **Problem:**
+
 - Anatomy system generates `partsMap` as a plain JavaScript object
 - Clothing system expects a Map structure
 
 **Evidence:**
+
 ```javascript
 // From anatomyGenerationWorkflow.js:95
 const partsMap = this.#buildPartsMap(graphResult.entities);
@@ -110,11 +118,13 @@ const partsMapForClothing = new Map(Object.entries(partsMap));
 
 **Problem:**
 Three different sources can define clothing layers:
+
 1. Blueprint's `allowedLayers` and `defaultLayer`
 2. Clothing entity's `layer` property
 3. Recipe's layer override
 
 **Evidence:**
+
 - Blueprint defines: `"defaultLayer": "base"`
 - Clothing entity defines: `"layer": "base"`
 - Recipe can override: `"layer": "outer"`
@@ -124,17 +134,19 @@ Three different sources can define clothing layers:
 ### 7. Validation Timing Issues
 
 **Problem:**
+
 - Clothing validates using entity definition IDs before instantiation
 - Rest of system validates instantiated entities
 
 **Evidence:**
+
 ```javascript
 // From clothingInstantiationService.js:300-305
-const validationResult = 
+const validationResult =
   await this.#anatomyClothingIntegrationService.validateClothingSlotCompatibility(
     actorId,
     targetSlot,
-    config.entityId  // Using definition ID, not instance ID
+    config.entityId // Using definition ID, not instance ID
   );
 ```
 
@@ -143,10 +155,12 @@ const validationResult =
 ### 8. Error Handling Asymmetry
 
 **Problem:**
+
 - Anatomy generation fails completely on errors
 - Clothing instantiation continues with partial success
 
 **Evidence:**
+
 ```javascript
 // From clothingInstantiationService.js:167-175
 if (!validationResult.isValid) {
@@ -161,9 +175,10 @@ if (!validationResult.isValid) {
 ### 9. Socket Wildcard Handling
 
 **Problem:**
-Undocumented wildcard ('*') handling in socket matching
+Undocumented wildcard ('\*') handling in socket matching
 
 **Evidence:**
+
 ```javascript
 // From anatomyClothingIntegrationService.js:563
 if (mapping.anatomySockets.includes('*')) {
@@ -179,6 +194,7 @@ if (mapping.anatomySockets.includes('*')) {
 Multiple uncoordinated caches across systems
 
 **Evidence:**
+
 - AnatomyClothingIntegrationService maintains `#blueprintCache` and `#slotResolutionCache`
 - No coordination with anatomy system caches
 
@@ -190,9 +206,10 @@ Multiple uncoordinated caches across systems
 The parts map uses part names as keys, but clothing system needs entity IDs
 
 **Evidence:**
+
 ```javascript
 // From anatomyGenerationWorkflow.js:164
-parts[name] = partEntityId;  // Maps name to ID
+parts[name] = partEntityId; // Maps name to ID
 ```
 
 **Impact:** Additional lookups required to resolve references.
@@ -201,6 +218,7 @@ parts[name] = partEntityId;  // Maps name to ID
 
 **Problem:**
 Fundamental difference in system mental models:
+
 - **Anatomy:** Physical structure (parts, sockets, joints)
 - **Clothing:** Functional purpose (equipment slots, coverage, layers)
 
@@ -275,9 +293,10 @@ These architectural mismatches explain the difficulties encountered:
 
 ## Conclusion
 
-The clothing and anatomy systems suffer from fundamental architectural mismatches that stem from different conceptual models and independent development. While the current integration layer works, it's complex, brittle, and difficult to maintain. 
+The clothing and anatomy systems suffer from fundamental architectural mismatches that stem from different conceptual models and independent development. While the current integration layer works, it's complex, brittle, and difficult to maintain.
 
 The recommended approach is to:
+
 1. Apply short-term fixes to stabilize the current system
 2. Work toward unified definitions and patterns
 3. Eventually redesign the integration to be more natural and maintainable

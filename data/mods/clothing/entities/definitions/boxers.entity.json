@@ -6,17 +6,6 @@
     "clothing:wearable": {
       "wearableType": "underwear",
       "layer": "underwear",
-      "coverage": {
-        "required": ["left_hip", "right_hip"],
-        "optional": [
-          "penis",
-          "left_testicle",
-          "right_testicle",
-          "vagina",
-          "pubic_hair"
-        ],
-        "exclusions": []
-      },
       "size": "m",
       "material": "cotton",
       "equipmentSlots": {

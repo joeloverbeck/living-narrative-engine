@@ -1,0 +1,75 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "llm-proxy-request-schema",
+  "title": "LLM Proxy Server Request Schema",
+  "description": "JSON schema for validating requests to the LLM Proxy Server API as defined in PROXY_API_CONTRACT.md Section 1.2",
+  "type": "object",
+  "properties": {
+    "llmId": {
+      "type": "string",
+      "description": "The unique identifier for the target LLM configuration (e.g., 'openrouter-claude3-haiku-json-schema'). This ID is known from the `llm-configs.json` file. The proxy server uses this ID to determine the target LLM provider's actual endpoint, retrieve the correct API key securely from its environment, and potentially apply any proxy-side logging or rate-limiting logic.",
+      "minLength": 1,
+      "pattern": "^[a-zA-Z0-9_-]+$"
+    },
+    "targetPayload": {
+      "type": "object",
+      "description": "The fully constructed JSON payload that the client-side ILLMAdapter intends for the *actual* LLM provider. This includes all LLM-specific parameters like 'model', 'messages' (or 'prompt'), 'temperature', 'max_tokens', 'tools', 'response_format', etc.. The proxy server will generally forward this payload as is to the target LLM, after adding authentication.",
+      "additionalProperties": true,
+      "minProperties": 1
+    },
+    "targetHeaders": {
+      "type": "object",
+      "description": "An optional object containing any provider-specific HTTP headers (excluding 'Authorization' and typically 'Content-Type') that the client-side ILLMAdapter has constructed for the actual LLM provider (e.g., {'anthropic-version': '2023-06-01', 'X-Title': 'My Game App'}). The proxy will merge these with its own required headers (like 'Authorization' and 'Content-Type') before forwarding the request.",
+      "additionalProperties": true
+    }
+  },
+  "required": ["llmId", "targetPayload"],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "llmId": "openrouter-claude3-haiku-json-schema",
+      "targetPayload": {
+        "model": "anthropic/claude-3-haiku-20240307",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Generate a description for a fantasy character."
+          }
+        ],
+        "temperature": 0.7,
+        "max_tokens": 150,
+        "response_format": {
+          "type": "json_schema",
+          "json_schema": {
+            "name": "character_description",
+            "strict": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "name": { "type": "string" },
+                "description": { "type": "string" }
+              },
+              "required": ["name", "description"]
+            }
+          }
+        }
+      },
+      "targetHeaders": {
+        "HTTP-Referer": "https://yourgame.com",
+        "X-Title": "My Awesome Text Adventure"
+      }
+    },
+    {
+      "llmId": "openai-gpt-4",
+      "targetPayload": {
+        "model": "gpt-4",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Hello, world!"
+          }
+        ]
+      }
+    }
+  ]
+}

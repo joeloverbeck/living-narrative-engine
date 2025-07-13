@@ -123,6 +123,34 @@ export const CACHE_DEFAULT_MAX_SIZE = 1000;
 export const API_KEY_CACHE_TTL = 5 * 60 * 1000;
 
 /**
+ * Enhanced cache configuration constants for optimized LRU implementation
+ */
+
+/**
+ * Default maximum memory usage for cache in bytes - 50MB.
+ * @type {number}
+ */
+export const CACHE_DEFAULT_MAX_MEMORY_BYTES = 50 * 1024 * 1024;
+
+/**
+ * Default cache cleanup interval in milliseconds - 1 minute.
+ * @type {number}
+ */
+export const CACHE_DEFAULT_CLEANUP_INTERVAL = 60 * 1000;
+
+/**
+ * Minimum cache cleanup interval in milliseconds - 30 seconds.
+ * @type {number}
+ */
+export const CACHE_MIN_CLEANUP_INTERVAL = 30 * 1000;
+
+/**
+ * Maximum cache cleanup interval in milliseconds - 10 minutes.
+ * @type {number}
+ */
+export const CACHE_MAX_CLEANUP_INTERVAL = 10 * 60 * 1000;
+
+/**
  * HTTP Agent configuration constants
  */
 
@@ -175,6 +203,40 @@ export const HTTP_AGENT_CLEANUP_INTERVAL = 5 * 60 * 1000;
 export const HTTP_AGENT_MAX_IDLE_TIME = 5 * 60 * 1000;
 
 /**
+ * Enhanced HTTP Agent configuration constants for adaptive cleanup
+ */
+
+/**
+ * Base cleanup interval for adaptive cleanup in milliseconds - 5 minutes.
+ * @type {number}
+ */
+export const HTTP_AGENT_ADAPTIVE_BASE_CLEANUP_INTERVAL = 5 * 60 * 1000;
+
+/**
+ * Minimum cleanup interval for adaptive cleanup in milliseconds - 1 minute.
+ * @type {number}
+ */
+export const HTTP_AGENT_ADAPTIVE_MIN_CLEANUP_INTERVAL = 60 * 1000;
+
+/**
+ * Maximum cleanup interval for adaptive cleanup in milliseconds - 15 minutes.
+ * @type {number}
+ */
+export const HTTP_AGENT_ADAPTIVE_MAX_CLEANUP_INTERVAL = 15 * 60 * 1000;
+
+/**
+ * Memory threshold for aggressive cleanup in MB - 100MB.
+ * @type {number}
+ */
+export const HTTP_AGENT_MEMORY_THRESHOLD_MB = 100;
+
+/**
+ * High load threshold in requests per minute - 60 requests.
+ * @type {number}
+ */
+export const HTTP_AGENT_HIGH_LOAD_REQUESTS_PER_MIN = 60;
+
+/**
  * Rate limiting configuration constants
  */
 
@@ -209,6 +271,41 @@ export const RATE_LIMIT_LLM_MAX_REQUESTS = 10;
 export const RATE_LIMIT_AUTH_MAX_REQUESTS = 5;
 
 /**
+ * Enhanced rate limiting configuration constants for proxy awareness
+ */
+
+/**
+ * Timeout for suspicious pattern tracking in milliseconds - 1 hour.
+ * @type {number}
+ */
+export const RATE_LIMIT_PATTERN_TRACKING_TIMEOUT = 60 * 60 * 1000;
+
+/**
+ * Maximum suspicious score for adaptive rate limiting.
+ * @type {number}
+ */
+export const RATE_LIMIT_MAX_SUSPICIOUS_SCORE = 10;
+
+/**
+ * Threshold for triggering strict rate limiting.
+ * @type {number}
+ */
+export const RATE_LIMIT_SUSPICIOUS_THRESHOLD = 3;
+
+/**
+ * Common proxy headers for client IP extraction.
+ * @type {string[]}
+ */
+export const RATE_LIMIT_PROXY_HEADERS = [
+  'x-forwarded-for',
+  'x-real-ip',
+  'x-client-ip',
+  'x-forwarded',
+  'forwarded-for',
+  'forwarded',
+];
+
+/**
  * Validation configuration constants
  */
 
@@ -229,6 +326,87 @@ export const VALIDATION_HEADER_VALUE_MAX_LENGTH = 1000;
  * @type {number}
  */
 export const VALIDATION_LLM_ID_MAX_LENGTH = 100;
+
+/**
+ * Security validation constants
+ */
+
+/**
+ * Maximum request payload size in bytes - 10MB as recommended for security.
+ * @type {number}
+ */
+export const SECURITY_MAX_REQUEST_SIZE_BYTES = 10 * 1024 * 1024;
+
+/**
+ * Default request payload size in bytes - 1MB for normal operations.
+ * @type {string}
+ */
+export const SECURITY_DEFAULT_REQUEST_SIZE = '1mb';
+
+/**
+ * Enhanced request payload size for large payloads - 10MB.
+ * @type {string}
+ */
+export const SECURITY_MAX_REQUEST_SIZE = '10mb';
+
+/**
+ * IPv6 address patterns for security validation
+ */
+
+/**
+ * IPv6 loopback addresses that should be blocked for SSRF protection.
+ * @type {string[]}
+ */
+export const SECURITY_IPV6_LOOPBACK_ADDRESSES = [
+  '::1',
+  '::0',
+  '0:0:0:0:0:0:0:1',
+  '0:0:0:0:0:0:0:0',
+];
+
+/**
+ * IPv6 private/internal address prefixes that should be blocked for SSRF protection.
+ * @type {string[]}
+ */
+export const SECURITY_IPV6_PRIVATE_PREFIXES = [
+  'fc',
+  'fd', // Unique Local Addresses (fc00::/7 and fd00::/8)
+  'fe8',
+  'fe9',
+  'fea',
+  'feb', // Link-Local Addresses (fe80::/10)
+  'fec',
+  'fed',
+  'fee',
+  'fef', // Site-Local Addresses (fec0::/10) - deprecated but still blocked
+  'ff', // Multicast Addresses (ff00::/8)
+];
+
+/**
+ * Header pollution protection constants
+ */
+
+/**
+ * Dangerous header names that should be blocked to prevent prototype pollution.
+ * @type {string[]}
+ */
+export const SECURITY_DANGEROUS_HEADER_NAMES = [
+  '__proto__',
+  'constructor',
+  'prototype',
+  'hasOwnProperty',
+  'isPrototypeOf',
+  'propertyIsEnumerable',
+  'toString',
+  'valueOf',
+];
+
+/**
+ * Pattern for detecting potentially dangerous header names (case-insensitive).
+ * @type {RegExp}
+ */
+export const SECURITY_DANGEROUS_HEADER_PATTERN =
+  /^(__proto__|constructor|prototype)$/i;
 
 /**
  * Payload sanitization constants

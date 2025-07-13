@@ -89,7 +89,7 @@
         "description": "How to handle layer conflicts"
       }
     },
-    "required": ["wearableType", "layer", "coverage", "equipmentSlots"],
+    "required": ["wearableType", "layer", "equipmentSlots"],
     "additionalProperties": false
   }
 }

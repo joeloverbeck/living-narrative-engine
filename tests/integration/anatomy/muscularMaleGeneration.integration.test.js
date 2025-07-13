@@ -56,6 +56,7 @@ import humanPubicHair from '../../../data/mods/anatomy/entities/definitions/huma
 import humanMaleBlueprint from '../../../data/mods/anatomy/blueprints/human_male.blueprint.json';
 import humanoidSlotLibrary from '../../../data/mods/anatomy/libraries/humanoid.slot-library.json';
 import humanoidCorePart from '../../../data/mods/anatomy/parts/humanoid_core.part.json';
+import blueprintSlot from '../../../data/mods/anatomy/entities/definitions/blueprint_slot.entity.json';
 
 // Import core components needed for anatomy
 import nameComponent from '../../../data/mods/core/components/name.component.json';
@@ -147,6 +148,7 @@ describe('Muscular Male Anatomy Generation Integration Test', () => {
 
     // Load entity definitions
     testBed.loadEntityDefinitions({
+      'anatomy:blueprint_slot': blueprintSlot,
       'anatomy:human_male_torso': humanMaleTorso,
       'anatomy:human_male_torso_muscular': humanMaleTorsoMuscular,
       'anatomy:humanoid_arm': humanoidArm,

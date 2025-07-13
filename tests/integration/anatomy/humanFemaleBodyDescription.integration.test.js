@@ -48,6 +48,7 @@ import humanBreast from '../../../data/mods/anatomy/entities/definitions/human_b
 import humanHair from '../../../data/mods/anatomy/entities/definitions/human_hair.entity.json';
 import humanPubicHair from '../../../data/mods/anatomy/entities/definitions/human_pubic_hair.entity.json';
 import humanFemaleTorso from '../../../data/mods/anatomy/entities/definitions/human_female_torso.entity.json';
+import blueprintSlot from '../../../data/mods/anatomy/entities/definitions/blueprint_slot.entity.json';
 import humanEye from '../../../data/mods/anatomy/entities/definitions/human_eye_brown.entity.json';
 import humanAsshole from '../../../data/mods/anatomy/entities/definitions/human_asshole.entity.json';
 import humanHand from '../../../data/mods/anatomy/entities/definitions/human_hand.entity.json';
@@ -158,6 +159,7 @@ describe('Human Female Body Description Integration Test', () => {
 
     // Load entity definitions
     testBed.loadEntityDefinitions({
+      'anatomy:blueprint_slot': blueprintSlot,
       'anatomy:humanoid_arm': humanoidArm,
       'anatomy:humanoid_head': humanoidHead,
       'anatomy:humanoid_leg': humanoidLeg,

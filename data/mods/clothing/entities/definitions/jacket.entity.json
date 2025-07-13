@@ -6,17 +6,6 @@
     "clothing:wearable": {
       "wearableType": "jacket",
       "layer": "outer",
-      "coverage": {
-        "required": ["left_chest", "right_chest"],
-        "optional": [
-          "left_shoulder",
-          "right_shoulder",
-          "neck",
-          "left_arm",
-          "right_arm"
-        ],
-        "exclusions": []
-      },
       "size": "m",
       "material": "polyester",
       "equipmentSlots": {

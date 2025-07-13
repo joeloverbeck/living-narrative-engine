@@ -6,16 +6,6 @@
     "clothing:wearable": {
       "wearableType": "shirt",
       "layer": "base",
-      "coverage": {
-        "required": ["left_chest", "right_chest", "neck"],
-        "optional": [
-          "left_shoulder",
-          "right_shoulder",
-          "left_arm",
-          "right_arm"
-        ],
-        "exclusions": []
-      },
       "size": "m",
       "material": "cotton",
       "equipmentSlots": {

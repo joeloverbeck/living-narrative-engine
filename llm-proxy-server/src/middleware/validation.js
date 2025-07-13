@@ -3,10 +3,14 @@ import {
   VALIDATION_HEADER_NAME_MAX_LENGTH,
   VALIDATION_HEADER_VALUE_MAX_LENGTH,
   VALIDATION_LLM_ID_MAX_LENGTH,
+  SECURITY_IPV6_LOOPBACK_ADDRESSES,
+  SECURITY_IPV6_PRIVATE_PREFIXES,
+  SECURITY_DANGEROUS_HEADER_NAMES,
+  SECURITY_DANGEROUS_HEADER_PATTERN,
 } from '../config/constants.js';
 
 /**
- * Sanitizes headers to prevent header injection attacks
+ * Sanitizes headers to prevent header injection and prototype pollution attacks
  * @param {object} headers - Headers object to sanitize
  * @returns {object} Sanitized headers
  */
@@ -15,7 +19,8 @@ const sanitizeHeaders = (headers) => {
     return {};
   }
 
-  const sanitized = {};
+  // Create a clean object without prototype to prevent pollution
+  const sanitized = Object.create(null);
   // eslint-disable-next-line no-control-regex
   const dangerousCharacters = /[\r\n\x00]/g;
 
@@ -28,6 +33,15 @@ const sanitizeHeaders = (headers) => {
       continue;
     }
 
+    // Check for prototype pollution attempts
+    const lowerKey = key.toLowerCase();
+    if (
+      SECURITY_DANGEROUS_HEADER_NAMES.includes(lowerKey) ||
+      SECURITY_DANGEROUS_HEADER_PATTERN.test(key)
+    ) {
+      continue; // Skip dangerous header names
+    }
+
     // Only allow alphanumeric, dash, and underscore in header names
     const cleanKey = key.replace(/[^a-zA-Z0-9\-_]/g, '');
     if (
@@ -35,11 +49,19 @@ const sanitizeHeaders = (headers) => {
       cleanKey.length > 0 &&
       cleanKey.length <= VALIDATION_HEADER_NAME_MAX_LENGTH
     ) {
+      // Additional check for cleaned key to prevent pollution after cleaning
+      const cleanLowerKey = cleanKey.toLowerCase();
+      if (SECURITY_DANGEROUS_HEADER_NAMES.includes(cleanLowerKey)) {
+        continue; // Skip if cleaned key is still dangerous
+      }
+
       // Ensure value is a string and truncate if too long
       const cleanValue = String(value).substring(
         0,
         VALIDATION_HEADER_VALUE_MAX_LENGTH
       );
+
+      // Use bracket notation to safely set property without prototype chain
       sanitized[cleanKey] = cleanValue;
     }
   }
@@ -163,6 +185,56 @@ export const handleValidationErrors = (req, res, next) => {
 };
 
 /**
+ * Checks if an IPv6 address is a loopback address
+ * @param {string} hostname - The hostname to check
+ * @returns {boolean} Whether the address is IPv6 loopback
+ */
+const isIPv6Loopback = (hostname) => {
+  // Remove brackets if present
+  const cleanHostname = hostname.replace(/[[\]]/g, '');
+
+  // Check against known loopback addresses
+  return SECURITY_IPV6_LOOPBACK_ADDRESSES.some((loopback) => {
+    const cleanLoopback = loopback.replace(/[[\]]/g, '');
+    return cleanHostname.toLowerCase() === cleanLoopback.toLowerCase();
+  });
+};
+
+/**
+ * Checks if an IPv6 address is in a private/internal range
+ * @param {string} hostname - The hostname to check
+ * @returns {boolean} Whether the address is IPv6 private
+ */
+const isIPv6Private = (hostname) => {
+  // Remove brackets if present
+  const cleanHostname = hostname.replace(/[[\]]/g, '').toLowerCase();
+
+  // Get the first part of the IPv6 address for prefix matching
+  const firstPart = cleanHostname.split(':')[0];
+
+  // Check against private prefixes (hex prefixes)
+  return SECURITY_IPV6_PRIVATE_PREFIXES.some((prefix) => {
+    return firstPart.startsWith(prefix.toLowerCase());
+  });
+};
+
+/**
+ * Checks if a hostname is an IPv6 address
+ * @param {string} hostname - The hostname to check
+ * @returns {boolean} Whether the hostname is IPv6
+ */
+const isIPv6Address = (hostname) => {
+  // IPv6 addresses in URLs are enclosed in brackets
+  if (hostname.startsWith('[') && hostname.endsWith(']')) {
+    return true;
+  }
+
+  // Also check for IPv6 patterns without brackets (less common but possible)
+  const ipv6Pattern = /^([0-9a-fA-F]{0,4}:){2,7}[0-9a-fA-F]{0,4}$/;
+  return ipv6Pattern.test(hostname);
+};
+
+/**
  * URL validation function to prevent SSRF attacks
  * @param {string} url - URL to validate
  * @returns {boolean} Whether the URL is safe
@@ -186,18 +258,36 @@ export const isUrlSafe = (url) => {
       'localhost',
       '127.0.0.1',
       '0.0.0.0',
+      '::1',
       '[::1]',
-      '[::0]',
+      '::0',
+      '::',
+      '[::]',
+      '0:0:0:0:0:0:0:1',
+      '0:0:0:0:0:0:0:0',
     ];
 
     if (dangerousHosts.includes(hostname)) {
       return false;
     }
 
-    // Check for private IP ranges
-    const ipPattern = /^(\d{1,3}\.){3}\d{1,3}$/;
-    if (ipPattern.test(hostname)) {
+    // Enhanced IPv6 validation
+    if (isIPv6Address(hostname)) {
+      if (isIPv6Loopback(hostname) || isIPv6Private(hostname)) {
+        return false;
+      }
+    }
+
+    // Check for IPv4 private IP ranges
+    const ipv4Pattern = /^(\d{1,3}\.){3}\d{1,3}$/;
+    if (ipv4Pattern.test(hostname)) {
       const parts = hostname.split('.').map(Number);
+
+      // Validate IPv4 octets are in valid range
+      if (parts.some((part) => part < 0 || part > 255)) {
+        return false;
+      }
+
       // 10.0.0.0/8
       if (parts[0] === 10) return false;
       // 172.16.0.0/12
@@ -206,6 +296,14 @@ export const isUrlSafe = (url) => {
       if (parts[0] === 192 && parts[1] === 168) return false;
       // 169.254.0.0/16 (link-local)
       if (parts[0] === 169 && parts[1] === 254) return false;
+      // 127.0.0.0/8 (loopback) - additional coverage
+      if (parts[0] === 127) return false;
+      // 0.0.0.0/8 (this network)
+      if (parts[0] === 0) return false;
+      // 224.0.0.0/4 (multicast)
+      if (parts[0] >= 224 && parts[0] <= 239) return false;
+      // 240.0.0.0/4 (reserved)
+      if (parts[0] >= 240) return false;
     }
 
     return true;

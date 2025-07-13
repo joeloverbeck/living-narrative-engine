@@ -6,15 +6,10 @@
     "clothing:wearable": {
       "wearableType": "underwear",
       "layer": "underwear",
-      "coverage": {
-        "required": ["pelvis"],
-        "optional": [],
-        "exclusions": []
-      },
       "size": "m",
       "material": "silk",
       "equipmentSlots": {
-        "primary": "waist_clothing"
+        "primary": "panties"
       },
       "layerPriority": 1,
       "conflictResolution": "auto_remove"

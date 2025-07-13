@@ -13,7 +13,6 @@ describe('AnatomyClothingIntegrationService', () => {
   let mockEntityManager;
   let mockBodyGraphService;
   let mockDataRegistry;
-  let mockSlotMappingConfiguration;
 
   beforeEach(() => {
     mockLogger = createMockLogger();
@@ -32,13 +31,6 @@ describe('AnatomyClothingIntegrationService', () => {
     // Create mock data registry
     mockDataRegistry = {
       get: jest.fn(),
-    };
-
-    // Create mock slot mapping configuration
-    mockSlotMappingConfiguration = {
-      resolveSlotMapping: jest.fn(),
-      getSlotEntityMappings: jest.fn().mockResolvedValue(new Map()),
-      clearCache: jest.fn(),
     };
 
     // Create test data
@@ -61,10 +53,12 @@ describe('AnatomyClothingIntegrationService', () => {
         left_hand: {
           parent: 'left_arm',
           type: 'test:hand',
+          socket: 'left_hand_socket',
         },
         right_hand: {
           parent: 'right_arm',
           type: 'test:hand',
+          socket: 'right_hand_socket',
         },
       },
       clothingSlotMappings: {
@@ -102,7 +96,6 @@ describe('AnatomyClothingIntegrationService', () => {
       entityManager: mockEntityManager,
       bodyGraphService: mockBodyGraphService,
       dataRegistry: mockDataRegistry,
-      slotMappingConfiguration: mockSlotMappingConfiguration,
     });
   });
 
@@ -118,19 +111,6 @@ describe('AnatomyClothingIntegrationService', () => {
           entityManager: mockEntityManager,
           bodyGraphService: mockBodyGraphService,
           dataRegistry: {}, // Missing 'get' method
-          slotMappingConfiguration: mockSlotMappingConfiguration,
-        });
-      }).toThrow();
-    });
-
-    it('should validate slotMappingConfiguration is provided', () => {
-      expect(() => {
-        new AnatomyClothingIntegrationService({
-          logger: mockLogger,
-          entityManager: mockEntityManager,
-          bodyGraphService: mockBodyGraphService,
-          dataRegistry: mockDataRegistry,
-          // Missing slotMappingConfiguration
         });
       }).toThrow();
     });
@@ -148,6 +128,16 @@ describe('AnatomyClothingIntegrationService', () => {
             if (entityId === 'torso_part') {
               return {
                 sockets: [{ id: 'torso_clothing', orientation: 'neutral' }],
+              };
+            }
+            if (entityId === 'left_hand_part') {
+              return {
+                sockets: [{ id: 'left_hand_socket', orientation: 'left' }],
+              };
+            }
+            if (entityId === 'right_hand_part') {
+              return {
+                sockets: [{ id: 'right_hand_socket', orientation: 'right' }],
               };
             }
           }
@@ -260,6 +250,16 @@ describe('AnatomyClothingIntegrationService', () => {
                 sockets: [{ id: 'torso_clothing', orientation: 'neutral' }],
               };
             }
+            if (entityId === 'left_hand_part') {
+              return {
+                sockets: [{ id: 'left_hand_socket', orientation: 'left' }],
+              };
+            }
+            if (entityId === 'right_hand_part') {
+              return {
+                sockets: [{ id: 'right_hand_socket', orientation: 'right' }],
+              };
+            }
           }
           return null;
         }
@@ -289,16 +289,6 @@ describe('AnatomyClothingIntegrationService', () => {
         }),
       };
       mockBodyGraphService.getBodyGraph.mockResolvedValue(mockBodyGraph);
-
-      // Setup slot entity mappings for blueprint slot resolution
-      mockSlotMappingConfiguration.getSlotEntityMappings.mockResolvedValue(
-        new Map([
-          ['left_arm', 'left_arm_part'],
-          ['right_arm', 'right_arm_part'],
-          ['left_hand', 'left_hand_part'],
-          ['right_hand', 'right_hand_part'],
-        ])
-      );
     });
 
     it('should resolve blueprint slots to attachment points', async () => {
@@ -557,8 +547,8 @@ describe('AnatomyClothingIntegrationService', () => {
         'shirt'
       );
 
-      // Should have been called twice for each method call (4 total before clear, 4 after)
-      expect(mockEntityManager.getComponentData).toHaveBeenCalledTimes(8); // 4 for each call
+      // Should have been called three times for each method call (6 total before clear, 6 after)
+      expect(mockEntityManager.getComponentData).toHaveBeenCalledTimes(12); // 6 for each call
       expect(mockBodyGraphService.getBodyGraph).toHaveBeenCalledTimes(4); // 2 methods x 2 calls each
     });
   });
