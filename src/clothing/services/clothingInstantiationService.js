@@ -245,7 +245,10 @@ export class ClothingInstantiationService extends BaseService {
           );
 
           if (equipResult.success) {
-            result.equipped.push(clothingId);
+            result.equipped.push({
+              clothingId: clothingId,
+              entityDefinitionId: clothingConfig.entityId,
+            });
             this.#logger.debug(
               `Equipped clothing '${clothingId}' on actor '${actorId}'`
             );

@@ -299,7 +299,12 @@ describe('ClothingInstantiationService', () => {
             entityDefinitionId: 'clothing:simple_shirt',
           },
         ],
-        equipped: [createdClothingId],
+        equipped: [
+          {
+            clothingId: createdClothingId,
+            entityDefinitionId: 'clothing:simple_shirt',
+          },
+        ],
         errors: [],
       });
 
