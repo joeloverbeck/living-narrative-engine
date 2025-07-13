@@ -4,15 +4,12 @@
   "description": "Supportive cotton bra for chest coverage",
   "components": {
     "clothing:wearable": {
-      "wearableType": "bra",
       "layer": "underwear",
       "size": "m",
       "material": "cotton",
       "equipmentSlots": {
         "primary": "torso_clothing"
-      },
-      "layerPriority": 1,
-      "conflictResolution": "auto_remove"
+      }
     },
     "core:name": {
       "text": "bra"

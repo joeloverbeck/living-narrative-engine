@@ -72,7 +72,6 @@ export class ClothingManagementService {
    * @param {string} clothingItemId - The clothing item entity ID to equip
    * @param {object} [options] - Equipment options
    * @param {string} [options.layer] - Force specific layer (overrides item default)
-   * @param {string} [options.conflictResolution] - How to handle conflicts
    * @param {boolean} [options.validateCoverage] - Whether to validate anatomy coverage
    * @returns {Promise<{success: boolean, equipped?: boolean, conflicts?: object[], errors?: string[]}>}
    */
@@ -369,9 +368,7 @@ export class ClothingManagementService {
 
       if (!equipResult.success) {
         // Try to re-equip on source if target failed
-        await this.equipClothing(fromEntityId, clothingItemId, {
-          conflictResolution: 'auto_remove',
-        });
+        await this.equipClothing(fromEntityId, clothingItemId, {});
 
         return {
           success: false,

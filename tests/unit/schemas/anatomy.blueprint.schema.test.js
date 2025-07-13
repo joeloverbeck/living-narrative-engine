@@ -68,7 +68,6 @@ describe('JSON-Schema – Anatomy Blueprint with Composition', () => {
           head_gear: {
             blueprintSlots: ['head'],
             allowedLayers: ['base', 'outer', 'armor'],
-            defaultLayer: 'base',
           },
         },
       };
@@ -164,7 +163,6 @@ describe('JSON-Schema – Anatomy Blueprint with Composition', () => {
           integrated_armor: {
             blueprintSlots: ['torso', 'arms', 'legs'],
             allowedLayers: ['armor'],
-            defaultLayer: 'armor',
           },
         },
       };
@@ -404,11 +402,6 @@ describe('JSON-Schema – Anatomy Blueprint with Composition', () => {
           complex_gear: {
             blueprintSlots: ['slot1', 'slot2'],
             allowedLayers: ['underwear', 'base', 'outer', 'armor', 'accessory'],
-            layerOrder: ['underwear', 'base', 'outer', 'armor', 'accessory'],
-            defaultLayer: 'base',
-            tags: ['tag1', 'tag2'],
-            conflictsWith: ['other_gear'],
-            requiresSlots: ['required_slot'],
           },
         },
       };

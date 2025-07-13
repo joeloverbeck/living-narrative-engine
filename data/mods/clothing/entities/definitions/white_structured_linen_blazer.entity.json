@@ -4,16 +4,16 @@
   "description": "White structured linen blazer",
   "components": {
     "clothing:wearable": {
-      "wearableType": "jacket",
       "layer": "outer",
       "size": "m",
       "material": "linen",
       "equipmentSlots": {
         "primary": "torso_upper",
-        "secondary": ["left_arm_clothing", "right_arm_clothing"]
-      },
-      "layerPriority": 8,
-      "conflictResolution": "auto_remove"
+        "secondary": [
+          "left_arm_clothing",
+          "right_arm_clothing"
+        ]
+      }
     },
     "core:name": {
       "text": "white structured blazer"

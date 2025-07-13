@@ -2,7 +2,6 @@ import { beforeEach, describe, it, expect, jest } from '@jest/globals';
 import { ClothingManagementService } from '../../../src/clothing/services/clothingManagementService.js';
 import { EquipmentOrchestrator } from '../../../src/clothing/orchestration/equipmentOrchestrator.js';
 import { LayerCompatibilityService } from '../../../src/clothing/validation/layerCompatibilityService.js';
-import { CoverageValidationService } from '../../../src/clothing/validation/coverageValidationService.js';
 import AnatomyClothingIntegrationService from '../../../src/anatomy/integration/anatomyClothingIntegrationService.js';
 
 /**
@@ -42,56 +41,32 @@ function createIntegrationMocks() {
   const mockClothingData = {
     shirt1: {
       'clothing:wearable': {
-        wearableType: 'shirt',
         layer: 'base',
-        coverage: {
-          required: ['left_chest', 'right_chest'],
-          optional: ['left_shoulder', 'right_shoulder'],
-          exclusions: [],
-        },
         size: 'm',
         material: 'cotton',
         equipmentSlots: {
           primary: 'torso_clothing',
         },
-        layerPriority: 3,
-        conflictResolution: 'auto_remove',
       },
     },
     jacket1: {
       'clothing:wearable': {
-        wearableType: 'jacket',
         layer: 'outer',
-        coverage: {
-          required: ['left_chest', 'right_chest'],
-          optional: ['left_shoulder', 'right_shoulder'],
-          exclusions: [],
-        },
         size: 'm',
         material: 'polyester',
         equipmentSlots: {
           primary: 'torso_clothing',
         },
-        layerPriority: 7,
-        conflictResolution: 'auto_remove',
       },
     },
     underwear1: {
       'clothing:wearable': {
-        wearableType: 'underwear',
         layer: 'underwear',
-        coverage: {
-          required: ['left_hip', 'right_hip'],
-          optional: ['penis', 'vagina'],
-          exclusions: [],
-        },
         size: 'm',
         material: 'cotton',
         equipmentSlots: {
           primary: 'lower_torso_clothing',
         },
-        layerPriority: 1,
-        conflictResolution: 'auto_remove',
       },
     },
   };
@@ -105,19 +80,11 @@ function createIntegrationMocks() {
     entity1: {
       'clothing:equipment': {
         equipped: {},
-        maxLayers: {
-          torso_clothing: 3,
-          lower_torso_clothing: 2,
-        },
       },
     },
     entity2: {
       'clothing:equipment': {
         equipped: {},
-        maxLayers: {
-          torso_clothing: 3,
-          lower_torso_clothing: 2,
-        },
       },
     },
   };
@@ -225,7 +192,6 @@ describe('ClothingSystem Integration', () => {
   let clothingService;
   let orchestrator;
   let layerService;
-  let coverageService;
   let anatomyClothingIntegration;
   let mocks;
 
@@ -238,18 +204,12 @@ describe('ClothingSystem Integration', () => {
       logger: mocks.logger,
     });
 
-    coverageService = new CoverageValidationService({
-      entityManager: mocks.entityManager,
-      logger: mocks.logger,
-      eventDispatcher: mocks.eventDispatcher,
-    });
 
     orchestrator = new EquipmentOrchestrator({
       entityManager: mocks.entityManager,
       logger: mocks.logger,
       eventDispatcher: mocks.eventDispatcher,
       layerCompatibilityService: layerService,
-      coverageValidationService: coverageService,
     });
 
     // Create mock anatomy clothing integration service
@@ -441,20 +401,12 @@ describe('ClothingSystem Integration', () => {
       // Mock a second shirt that would conflict
       mocks.mockClothingData['shirt2'] = {
         'clothing:wearable': {
-          wearableType: 'shirt',
           layer: 'base',
-          coverage: {
-            required: ['left_chest', 'right_chest'],
-            optional: [],
-            exclusions: [],
-          },
           size: 'm',
           material: 'polyester',
           equipmentSlots: {
             primary: 'torso_clothing',
           },
-          layerPriority: 3,
-          conflictResolution: 'auto_remove',
         },
       };
 
@@ -564,13 +516,7 @@ describe('ClothingSystem Integration', () => {
       // Mock another item that would conflict
       mocks.mockClothingData['conflicting_shirt'] = {
         'clothing:wearable': {
-          wearableType: 'shirt',
           layer: 'base',
-          coverage: {
-            required: ['left_chest', 'right_chest'],
-            optional: [],
-            exclusions: [],
-          },
           size: 'm',
           equipmentSlots: {
             primary: 'torso_clothing',
@@ -673,12 +619,9 @@ describe('ClothingSystem Integration', () => {
       // Mock another shirt to create conflict
       mocks.mockClothingData['shirt2'] = {
         'clothing:wearable': {
-          wearableType: 'shirt',
           layer: 'base',
-          coverage: { required: ['left_chest'], optional: [], exclusions: [] },
           size: 'm',
           equipmentSlots: { primary: 'torso_clothing' },
-          conflictResolution: 'auto_remove',
         },
       };
 
@@ -689,7 +632,6 @@ describe('ClothingSystem Integration', () => {
         'clothing:equipped',
         expect.objectContaining({
           clothingItemId: 'shirt2',
-          conflictResolution: 'auto_remove',
         })
       );
     });

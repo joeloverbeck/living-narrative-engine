@@ -306,6 +306,40 @@ export const RATE_LIMIT_PROXY_HEADERS = [
 ];
 
 /**
+ * Memory leak prevention constants for rate limiting suspicious patterns map
+ */
+
+/**
+ * Maximum number of entries in suspicious patterns map to prevent memory leaks.
+ * @type {number}
+ */
+export const RATE_LIMIT_SUSPICIOUS_PATTERNS_MAX_SIZE = 10000;
+
+/**
+ * Cleanup interval for suspicious patterns map in milliseconds - 5 minutes.
+ * @type {number}
+ */
+export const RATE_LIMIT_SUSPICIOUS_PATTERNS_CLEANUP_INTERVAL = 5 * 60 * 1000;
+
+/**
+ * Maximum age for suspicious pattern entries in milliseconds - 2 hours.
+ * @type {number}
+ */
+export const RATE_LIMIT_SUSPICIOUS_PATTERNS_MAX_AGE = 2 * 60 * 60 * 1000;
+
+/**
+ * Batch size for cleaning up expired entries to prevent blocking.
+ * @type {number}
+ */
+export const RATE_LIMIT_SUSPICIOUS_PATTERNS_CLEANUP_BATCH_SIZE = 100;
+
+/**
+ * Minimum time between cleanup operations in milliseconds - 1 minute.
+ * @type {number}
+ */
+export const RATE_LIMIT_SUSPICIOUS_PATTERNS_MIN_CLEANUP_INTERVAL = 60 * 1000;
+
+/**
  * Validation configuration constants
  */
 

@@ -203,7 +203,7 @@ export class BodyGraphService {
       this.#entityManager
     );
 
-    this.#logger.warn(
+    this.#logger.debug(
       `BodyGraphService: AnatomyGraphAlgorithms.getAllParts returned ${result.length} parts for root '${cacheRootId}': [${result.slice(0, 5).join(', ')}${result.length > 5 ? '...' : ''}]`
     );
 

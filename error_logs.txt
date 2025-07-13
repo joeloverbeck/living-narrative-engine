@@ -1,138 +1,18 @@
-VED: Event 'core:component_added' dispatch successful.
-consoleLogger.js:187 VED: Event 'clothing:equipped' dispatch successful.
-consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:component_added'.
-consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'clothing:equipped'.
-consoleLogger.js:151 EquipmentOrchestrator: Successfully equipped 'cbe35fc6-2af9-43cc-9725-adb169895490' on '05435bf3-8b83-44cc-bc94-6620d7e864b5' in layer 'base'
-consoleLogger.js:187 ClothingInstantiationService: Equipped clothing 'cbe35fc6-2af9-43cc-9725-adb169895490' on actor '05435bf3-8b83-44cc-bc94-6620d7e864b5'
-consoleLogger.js:187 VED: Validating payload for event 'clothing:instantiation_completed' against schema 'clothing:instantiation_completed#payload'...
-consoleLogger.js:175 VED: Payload validation FAILED for event 'clothing:instantiation_completed'. Dispatch SKIPPED. Errors: [/result/equipped/0]: must be object; [/result/equipped/1]: must be object; [/result/equipped/2]: must be object; [/result/equipped/3]: must be object; [/result/equipped/4]: must be object; [/result/equipped/5]: must be object; [/result/equipped/6]: must be object {payload: {…}, errors: Array(7)}
-error @ consoleLogger.js:175
-#validatePayload @ validatedEventDispatcher.js:144
-dispatch @ validatedEventDispatcher.js:219
-dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
-#executeSafely @ safeEventDispatcher.js:88
-dispatch @ safeEventDispatcher.js:122
-instantiateRecipeClothing @ clothingInstantiationService.js:272
-handleMouseUp_ @ unknown
-await in handleMouseUp_
-handleMouseUp_ @ unknown
-await in handleMouseUp_
-handleMouseUp_ @ unknown
-await in handleMouseUp_
-handleMouseUp_ @ unknown
-await in handleMouseUp_
-handleMouseUp_ @ unknown
-await in handleMouseUp_
-handleMouseUp_ @ unknown
-await in handleMouseUp_
-handleMouseUp_ @ unknown
-await in handleMouseUp_
-handleMouseUp_ @ unknown
-await in handleMouseUp_
-handleMouseUp_ @ unknown
-await in handleMouseUp_
-handleMouseUp_ @ unknown
-await in handleMouseUp_
-handleMouseUp_ @ unknown
-await in handleMouseUp_
-handleMouseUp_ @ unknown
-await in handleMouseUp_
-handleMouseUp_ @ unknown
-await in handleMouseUp_
-handleMouseUp_ @ unknown
-await in handleMouseUp_
-handleMouseUp_ @ unknown
-await in handleMouseUp_
-handleMouseUp_ @ unknown
-await in handleMouseUp_
-handleMouseUp_ @ unknown
-await in handleMouseUp_
-handleMouseUp_ @ unknown
-await in handleMouseUp_
-handleMouseUp_ @ unknown
-await in handleMouseUp_
-handleMouseUp_ @ unknown
-await in handleMouseUp_
-handleMouseUp_ @ unknown
-await in handleMouseUp_
-generate @ anatomyGenerationWorkflow.js:131
-handleMouseUp_ @ unknown
-await in handleMouseUp_
-handleMouseUp_ @ unknown
-await in handleMouseUp_
-handleMouseUp_ @ unknown
-await in handleMouseUp_
-(anonymous) @ anatomyOrchestrator.js:109
-execute @ anatomyUnitOfWork.js:95
-orchestrateGeneration @ anatomyOrchestrator.js:108
-generateAnatomyIfNeeded @ anatomyGenerationService.js:152
-#handleEntityCreated @ anatomyInitializationService.js:101
-(anonymous) @ eventBus.js:144
-dispatch @ eventBus.js:141
-#emitEvent @ validatedEventDispatcher.js:192
-dispatch @ validatedEventDispatcher.js:222
-dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
-#executeSafely @ safeEventDispatcher.js:88
-dispatch @ safeEventDispatcher.js:122
-dispatchEntityCreated @ EntityEventDispatcher.js:65
-createEntityInstance @ entityLifecycleManager.js:274
-createEntityInstance @ EntityCreationManager.js:68
-createEntityInstance @ entityManager.js:331
-createEntityInstance @ entityManagerAdapter.js:38
-_loadEntity @ AnatomyVisualizerUI.js:206
-handleMouseUp_ @ unknown
-await in handleMouseUp_
-(anonymous) @ AnatomyVisualizerUI.js:144
-handleMouseUp_ @ unknownUnderstand this error
-consoleLogger.js:187 VED: Dispatch skipped for 'clothing:instantiation_completed' due to validation failure (see error above).
-consoleLogger.js:151 ClothingInstantiationService: Clothing instantiation completed for actor '05435bf3-8b83-44cc-bc94-6620d7e864b5': 7 created, 7 equipped, 0 errors
-consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Clothing instantiation completed with 7 items created
-consoleLogger.js:163 SafeEventDispatcher: Underlying VED failed to dispatch event 'clothing:instantiation_completed' (returned false). See VED logs for details. Payload: {"actorId":"05435bf3-8b83-44cc-bc94-6620d7e864b5","result":{"instantiated":[{"clothingId":"25fc998c-9e55-455e-8b17-6f9bbac95735","entityDefinitionId":"clothing:underwired_plunge_bra_nude_silk"},{"clothingId":"6d6d21c6-d190-493c-a629-de90a58a7c4e","entityDefinitionId":"clothing:nude_thong"},{"clothingId":"c2ba9697-b18b-4248-802f-c5b079aa7225","entityDefinitionId":"clothing:black_stretch_silk_bodysuit"},{"clothingId":"689cb27f-7fc5-4970-98cd-77ef588e4d7f","entityDefinitionId":"clothing:white_structured_linen_blazer"},{"clothingId":"608f166b-28f0-4bc1-a542-792db3206079","entityDefinitionId":"clothing:graphite_wool_wide_leg_trousers"},{"clothingId":"9415a6cf-5008-4158-95d0-606c0e1f306b","entityDefinitionId":"clothing:black_calfskin_belt"},{"clothingId":"cbe35fc6-2af9-43cc-9725-adb169895490","entityDefinitionId":"clothing:leather_stiletto_pumps"}],"equipped":["25fc998c-9e55-455e-8b17-6f9bbac95735","6d6d21c6-d190-493c-a629-de90a58a7c4e","c2ba9697-b18b-4248-802f-c5b079aa7225","689cb27f-7fc5-4970-98cd-77ef588e4d7f","608f166b-28f0-4bc1-a542-792db3206079","9415a6cf-5008-4158-95d0-606c0e1f306b","cbe35fc6-2af9-43cc-9725-adb169895490"],"errors":[]}}
+BodyGraphService: Using actor entity 'a9f82e3d-4ede-4c24-8a4a-5d9580fd51cc' as cache root instead of blueprint root '4212bd37-dffe-467a-89a7-d698a9b6f059' (cache size: 24)
+16consoleLogger.js:187 EntityQueryManager.getEntitiesWithComponent found 22 entities with component 'anatomy:joint' using index
+consoleLogger.js:163 BodyGraphService: AnatomyGraphAlgorithms.getAllParts returned 24 parts for root 'a9f82e3d-4ede-4c24-8a4a-5d9580fd51cc': [a9f82e3d-4ede-4c24-8a4a-5d9580fd51cc, 4212bd37-dffe-467a-89a7-d698a9b6f059, 160c66a2-4ef9-4a8a-9cce-330ad49d8667, 03a1e83b-7534-4e9b-9530-eb81abc12ba8, afaa8727-eb6c-431a-8d3f-195c35a8c8d5...]
 warn @ consoleLogger.js:163
-dispatch @ safeEventDispatcher.js:136
+getAllParts @ bodyGraphService.js:206
+getAllPartIds @ bodyGraphService.js:286
+#getEntityAnatomyStructure @ anatomyClothingIntegrationService.js:585
 handleMouseUp_ @ unknown
 await in handleMouseUp_
-instantiateRecipeClothing @ clothingInstantiationService.js:272
+getAvailableClothingSlots @ anatomyClothingIntegrationService.js:91
 handleMouseUp_ @ unknown
 await in handleMouseUp_
-handleMouseUp_ @ unknown
-await in handleMouseUp_
-handleMouseUp_ @ unknown
-await in handleMouseUp_
-handleMouseUp_ @ unknown
-await in handleMouseUp_
-handleMouseUp_ @ unknown
-await in handleMouseUp_
-handleMouseUp_ @ unknown
-await in handleMouseUp_
-handleMouseUp_ @ unknown
-await in handleMouseUp_
-handleMouseUp_ @ unknown
-await in handleMouseUp_
-handleMouseUp_ @ unknown
-await in handleMouseUp_
-handleMouseUp_ @ unknown
-await in handleMouseUp_
-handleMouseUp_ @ unknown
-await in handleMouseUp_
-handleMouseUp_ @ unknown
-await in handleMouseUp_
-handleMouseUp_ @ unknown
-await in handleMouseUp_
-handleMouseUp_ @ unknown
-await in handleMouseUp_
-handleMouseUp_ @ unknown
-await in handleMouseUp_
-handleMouseUp_ @ unknown
-await in handleMouseUp_
-handleMouseUp_ @ unknown
-await in handleMouseUp_
-handleMouseUp_ @ unknown
-await in handleMouseUp_
-handleMouseUp_ @ unknown
-await in handleMouseUp_
-handleMouseUp_ @ unknown
-await in handleMouseUp_
+validateClothingSlotCompatibility @ anatomyClothingIntegrationService.js:189
+#validateClothingSlotAfterInstantiation @ clothingInstantiationService.js:356
+instantiateRecipeClothing @ clothingInstantiationService.js:204
 handleMouseUp_ @ unknown
 await in handleMouseUp_
 generate @ anatomyGenerationWorkflow.js:131
@@ -164,6 +44,6 @@ handleMouseUp_ @ unknown
 await in handleMouseUp_
 (anonymous) @ AnatomyVisualizerUI.js:144
 handleMouseUp_ @ unknownUnderstand this warning
-consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity 'ea9daad0-5fa0-42af-87a7-1f42a51be06d'. Total tracked: 1
-consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity '12626576-8ed4-41a6-94fd-37ad207fb5f6'. Total tracked: 2
-consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity '59e26c51-2e9d-4f81-b32e-c4e9d127a683'. Total tracked: 3
+consoleLogger.js:187 AnatomyQueryCache: Cached result for key 'getAllParts:::a9f82e3d-4ede-4c24-8a4a-5d9580fd51cc'
+consoleLogger.js:187 AnatomyClothingIntegrationService: AnatomyClothingIntegrationService: Collected 22 unique sockets from 25 entities
+consoleLogger.js:187 AnatomyClothingIntegrationService: Found 12 clothing slots for entity a9f82e3d-4ede-4c24-8a4a-5d9580fd51cc

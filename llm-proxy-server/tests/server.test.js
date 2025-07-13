@@ -200,7 +200,7 @@ describe('server initialization', () => {
 
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.send).toHaveBeenCalledWith(
-      'LLM Proxy Server is running and operational!'
+      'LLM Proxy Server is running and operational! Use /health or /health/ready for detailed health checks.'
     );
   });
 

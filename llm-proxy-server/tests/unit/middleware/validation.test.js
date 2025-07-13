@@ -304,18 +304,32 @@ describe('Validation Middleware - Comprehensive Tests', () => {
         expect(isUrlSafe('https://93.184.216.34')).toBe(true);
       });
 
-      test('accepts valid IPv6 global unicast addresses', () => {
-        expect(isUrlSafe('https://[2001:db8::1]')).toBe(true);
+      test('rejects IPv6 documentation addresses', () => {
+        // 2001:db8::/32 is the documentation prefix and should be blocked for SSRF protection
+        expect(isUrlSafe('https://[2001:db8::1]')).toBe(false);
         expect(
           isUrlSafe('https://[2001:0db8:85a3:0000:0000:8a2e:0370:7334]')
-        ).toBe(true);
-        expect(isUrlSafe('https://[2001:db8:85a3::8a2e:370:7334]')).toBe(true);
-        expect(isUrlSafe('https://[2001:db8::8a2e:370:7334]')).toBe(true);
-        expect(isUrlSafe('https://[::ffff:192.0.2.1]')).toBe(true); // IPv4-mapped IPv6
+        ).toBe(false);
+        expect(isUrlSafe('https://[2001:db8:85a3::8a2e:370:7334]')).toBe(false);
+        expect(isUrlSafe('https://[2001:db8::8a2e:370:7334]')).toBe(false);
+      });
+
+      test('accepts valid IPv6 global unicast addresses', () => {
+        expect(isUrlSafe('https://[2600:1f14:123:4567::1]')).toBe(true); // AWS address
+        expect(isUrlSafe('https://[2a00:1450:4001:81a::200e]')).toBe(true); // Google address
+        expect(isUrlSafe('https://[::ffff:8.8.8.8]')).toBe(true); // IPv4-mapped IPv6 with public IP
+      });
+
+      test('rejects IPv4-mapped IPv6 with private/reserved IPs', () => {
+        expect(isUrlSafe('https://[::ffff:192.168.1.1]')).toBe(false); // Private IP
+        expect(isUrlSafe('https://[::ffff:10.0.0.1]')).toBe(false); // Private IP
+        expect(isUrlSafe('https://[::ffff:127.0.0.1]')).toBe(false); // Loopback
+        expect(isUrlSafe('https://[::ffff:192.0.2.1]')).toBe(false); // TEST-NET-1 (reserved)
       });
 
       test('handles IPv6 addresses with ports', () => {
-        expect(isUrlSafe('https://[2001:db8::1]:443')).toBe(true);
+        expect(isUrlSafe('https://[2001:db8::1]:443')).toBe(false); // Documentation address
+        expect(isUrlSafe('https://[2600:1f14:123:4567::1]:443')).toBe(true); // Valid public address
       });
 
       test('accepts IPs outside private ranges', () => {
@@ -591,7 +605,8 @@ describe('Validation Middleware - Comprehensive Tests', () => {
       test('handles IPv6 addresses with ports', () => {
         expect(isUrlSafe('https://[::1]:8080')).toBe(false);
         expect(isUrlSafe('https://[fc00::1]:443')).toBe(false);
-        expect(isUrlSafe('https://[2001:db8::1]:443')).toBe(true);
+        expect(isUrlSafe('https://[2001:db8::1]:443')).toBe(false); // Documentation address
+        expect(isUrlSafe('https://[2600:1f14:123:4567::1]:443')).toBe(true); // Valid public address
       });
 
       test('handles mixed case and brackets', () => {
@@ -661,11 +676,17 @@ describe('Validation Middleware - Comprehensive Tests', () => {
       });
 
       test('validates proper IPv6 hex patterns', () => {
+        // Documentation addresses should be blocked
         expect(
           isUrlSafe('https://[2001:0db8:85a3:0000:0000:8a2e:0370:7334]')
+        ).toBe(false);
+        expect(isUrlSafe('https://[2001:db8:85a3::8a2e:370:7334]')).toBe(false);
+
+        // Valid public addresses
+        expect(
+          isUrlSafe('https://[2600:1f14:123:4567:89ab:cdef:0123:4567]')
         ).toBe(true);
-        expect(isUrlSafe('https://[2001:db8:85a3::8a2e:370:7334]')).toBe(true);
-        expect(isUrlSafe('https://[::ffff:192.0.2.1]')).toBe(true); // IPv4-mapped IPv6
+        expect(isUrlSafe('https://[::ffff:8.8.8.8]')).toBe(true); // IPv4-mapped IPv6 with public IP
       });
 
       test('handles malformed IPv6-like patterns', () => {

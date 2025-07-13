@@ -62,7 +62,6 @@ export class EquipmentOrchestrator {
    * @param {string} request.entityId - Entity to equip item on
    * @param {string} request.clothingItemId - Clothing item to equip
    * @param {string} [request.layer] - Force specific layer
-   * @param {string} [request.conflictResolution] - Conflict resolution strategy
    * @returns {Promise<{success: boolean, equipped?: boolean, conflicts?: object[], errors?: string[]}>}
    */
   async orchestrateEquipment(request) {
@@ -70,7 +69,6 @@ export class EquipmentOrchestrator {
       entityId,
       clothingItemId,
       layer,
-      conflictResolution = 'auto_remove',
     } = request;
 
     try {
@@ -95,6 +93,18 @@ export class EquipmentOrchestrator {
         clothingItemId,
         'clothing:wearable'
       );
+      if (!clothingData) {
+        return {
+          success: false,
+          errors: [`Item '${clothingItemId}' is not wearable`],
+        };
+      }
+      if (!clothingData.equipmentSlots || !clothingData.equipmentSlots.primary) {
+        return {
+          success: false,
+          errors: [`Item '${clothingItemId}' has invalid equipment slot configuration`],
+        };
+      }
       const targetLayer = layer || clothingData.layer;
       const targetSlot = clothingData.equipmentSlots.primary;
 
@@ -106,13 +116,11 @@ export class EquipmentOrchestrator {
         targetSlot
       );
 
-      // Step 5: Resolve conflicts if any
+      // Step 5: Auto-remove conflicts if any
       if (conflictResult.hasConflicts) {
-        const resolutionResult = await this.#resolveConflicts(
+        const resolutionResult = await this.#autoRemoveConflicts(
           entityId,
-          clothingItemId,
-          conflictResult.conflicts,
-          conflictResolution
+          conflictResult.conflicts
         );
 
         if (!resolutionResult.success) {
@@ -140,9 +148,7 @@ export class EquipmentOrchestrator {
           slotId: targetSlot,
           layer: targetLayer,
           previousItem: equipResult.previousItem,
-          conflictResolution: conflictResult.hasConflicts
-            ? conflictResolution
-            : null,
+          conflictsResolved: conflictResult.hasConflicts,
           timestamp: Date.now(),
         });
 
@@ -296,22 +302,26 @@ export class EquipmentOrchestrator {
         errors.push(...basicValidation.errors);
       }
 
-      // Layer compatibility
-      const clothingData = this.#entityManager.getComponentData(
-        clothingItemId,
-        'clothing:wearable'
-      );
-      const conflictResult = await this.#layerService.checkLayerConflicts(
-        entityId,
-        clothingItemId,
-        clothingData.layer,
-        clothingData.equipmentSlots.primary
-      );
-      compatibility.layers = conflictResult;
-      if (conflictResult.hasConflicts) {
-        warnings.push(
-          `${conflictResult.conflicts.length} layer conflict(s) detected`
+      // Layer compatibility - only proceed if basic validation passed
+      if (errors.length === 0) {
+        const clothingData = this.#entityManager.getComponentData(
+          clothingItemId,
+          'clothing:wearable'
         );
+        if (clothingData && clothingData.equipmentSlots && clothingData.equipmentSlots.primary) {
+          const conflictResult = await this.#layerService.checkLayerConflicts(
+            entityId,
+            clothingItemId,
+            clothingData.layer,
+            clothingData.equipmentSlots.primary
+          );
+          compatibility.layers = conflictResult;
+          if (conflictResult.hasConflicts) {
+            warnings.push(
+              `${conflictResult.conflicts.length} layer conflict(s) detected`
+            );
+          }
+        }
       }
 
       return {
@@ -367,45 +377,6 @@ export class EquipmentOrchestrator {
       valid: errors.length === 0,
       errors,
     };
-  }
-
-  /**
-   * Resolves equipment conflicts based on strategy
-   *
-   * @param entityId
-   * @param clothingItemId
-   * @param conflicts
-   * @param strategy
-   * @private
-   */
-  async #resolveConflicts(entityId, clothingItemId, conflicts, strategy) {
-    try {
-      switch (strategy) {
-        case 'auto_remove':
-          return await this.#autoRemoveConflicts(entityId, conflicts);
-        case 'block_equip':
-          return {
-            success: false,
-            errors: ['Equipment blocked due to conflicts'],
-          };
-        case 'prompt_user':
-          // In a real implementation, this would trigger a user prompt
-          return {
-            success: false,
-            errors: ['User confirmation required for conflicts'],
-          };
-        default:
-          return {
-            success: false,
-            errors: [`Unknown conflict resolution strategy: ${strategy}`],
-          };
-      }
-    } catch (error) {
-      return {
-        success: false,
-        errors: [error.message],
-      };
-    }
   }
 
   /**

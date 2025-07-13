@@ -4,15 +4,12 @@
   "description": "Delicate nude thong in silky material",
   "components": {
     "clothing:wearable": {
-      "wearableType": "underwear",
       "layer": "underwear",
       "size": "m",
       "material": "silk",
       "equipmentSlots": {
         "primary": "panties"
-      },
-      "layerPriority": 1,
-      "conflictResolution": "auto_remove"
+      }
     },
     "core:name": {
       "text": "nude thong"

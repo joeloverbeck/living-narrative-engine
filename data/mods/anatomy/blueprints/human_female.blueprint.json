@@ -34,17 +34,11 @@
   "clothingSlotMappings": {
     "bra": {
       "blueprintSlots": ["left_breast", "right_breast"],
-      "allowedLayers": ["underwear"],
-      "layerOrder": ["underwear"],
-      "defaultLayer": "underwear",
-      "tags": ["underwear", "female_specific", "chest_support"]
+      "allowedLayers": ["underwear"]
     },
     "torso_lower": {
       "anatomySockets": ["left_hip", "right_hip", "pubic_hair", "vagina"],
-      "allowedLayers": ["underwear", "base", "outer"],
-      "layerOrder": ["underwear", "base", "outer"],
-      "defaultLayer": "base",
-      "tags": ["torso", "lower_body"]
+      "allowedLayers": ["underwear", "base", "outer"]
     },
     "full_body": {
       "blueprintSlots": [
@@ -56,25 +50,11 @@
         "left_breast",
         "right_breast"
       ],
-      "allowedLayers": ["outer"],
-      "layerOrder": ["outer"],
-      "defaultLayer": "outer",
-      "tags": ["full_body", "special"],
-      "conflictsWith": [
-        "torso_upper",
-        "torso_lower",
-        "legs",
-        "left_arm_clothing",
-        "right_arm_clothing",
-        "bra"
-      ]
+      "allowedLayers": ["outer"]
     },
     "panties": {
       "anatomySockets": ["vagina", "pubic_hair"],
-      "allowedLayers": ["underwear"],
-      "layerOrder": ["underwear"],
-      "defaultLayer": "underwear",
-      "tags": ["underwear", "female_specific"]
+      "allowedLayers": ["underwear"]
     },
     "torso_upper": {
       "anatomySockets": [
@@ -83,38 +63,23 @@
         "left_chest",
         "right_chest"
       ],
-      "allowedLayers": ["base", "outer"],
-      "layerOrder": ["base", "outer"],
-      "defaultLayer": "outer",
-      "tags": ["torso", "upper_body"]
+      "allowedLayers": ["base", "outer"]
     },
     "legs": {
       "blueprintSlots": ["left_leg", "right_leg"],
-      "allowedLayers": ["base", "outer"],
-      "layerOrder": ["base", "outer"],
-      "defaultLayer": "base",
-      "tags": ["legs", "lower_body"]
+      "allowedLayers": ["base", "outer"]
     },
     "left_arm_clothing": {
       "blueprintSlots": ["left_arm"],
-      "allowedLayers": ["base", "outer"],
-      "layerOrder": ["base", "outer"],
-      "defaultLayer": "outer",
-      "tags": ["arm", "left_side"]
+      "allowedLayers": ["base", "outer"]
     },
     "right_arm_clothing": {
       "blueprintSlots": ["right_arm"],
-      "allowedLayers": ["base", "outer"],
-      "layerOrder": ["base", "outer"],
-      "defaultLayer": "outer",
-      "tags": ["arm", "right_side"]
+      "allowedLayers": ["base", "outer"]
     },
     "feet": {
       "blueprintSlots": ["left_foot", "right_foot"],
-      "allowedLayers": ["base", "outer"],
-      "layerOrder": ["base", "outer"],
-      "defaultLayer": "base",
-      "tags": ["feet", "footwear"]
+      "allowedLayers": ["base", "outer"]
     }
   }
 }

@@ -4,15 +4,12 @@
   "description": "Black stretch-silk plunge bodysuit",
   "components": {
     "clothing:wearable": {
-      "wearableType": "bodysuit",
       "layer": "base",
       "size": "m",
       "material": "stretch-silk",
       "equipmentSlots": {
         "primary": "full_body"
-      },
-      "layerPriority": 2,
-      "conflictResolution": "auto_remove"
+      }
     },
     "core:name": {
       "text": "black stretch-silk bodysuit"

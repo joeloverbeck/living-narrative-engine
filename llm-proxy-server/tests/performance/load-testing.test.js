@@ -8,6 +8,7 @@ import {
   test,
   beforeEach,
   afterEach,
+  afterAll,
   expect,
   jest,
 } from '@jest/globals';
@@ -92,8 +93,34 @@ describe('Load Testing', () => {
     jest.clearAllMocks();
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    // Clear all mocks
     jest.restoreAllMocks();
+    jest.clearAllMocks();
+
+    // Clear any timers that might still be running
+    jest.clearAllTimers();
+
+    // Force garbage collection if available
+    if (global.gc) {
+      global.gc();
+    }
+
+    // Add a small delay to allow system recovery
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  });
+
+  afterAll(async () => {
+    // Final cleanup after all tests in this suite
+    jest.restoreAllMocks();
+
+    // Force garbage collection to free memory
+    if (global.gc) {
+      global.gc();
+    }
+
+    // Longer delay after load tests to ensure system recovery
+    await new Promise((resolve) => setTimeout(resolve, 500));
   });
 
   describe('Concurrent Request Handling', () => {

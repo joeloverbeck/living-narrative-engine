@@ -4,15 +4,12 @@
   "description": "Black calfskin belt with brushed-brass buckle",
   "components": {
     "clothing:wearable": {
-      "wearableType": "accessories",
       "layer": "accessories",
       "size": "m",
       "material": "calfskin",
       "equipmentSlots": {
         "primary": "torso_lower"
-      },
-      "layerPriority": 9,
-      "conflictResolution": "auto_remove"
+      }
     },
     "core:name": {
       "text": "black calfskin belt"
