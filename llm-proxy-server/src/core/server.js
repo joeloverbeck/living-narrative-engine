@@ -22,6 +22,15 @@ import {
   createTimeoutMiddleware,
   createSizeLimitConfig,
 } from '../middleware/timeout.js';
+import {
+  createLivenessCheck,
+  createReadinessCheck,
+} from '../middleware/healthCheck.js';
+import MetricsService from '../services/metricsService.js';
+import {
+  createMetricsMiddleware,
+  createLlmMetricsMiddleware,
+} from '../middleware/metrics.js';
 
 import { NodeFileSystemReader } from '../nodeFileSystemReader.js';
 import { ConsoleLogger } from '../consoleLogger.js';
@@ -50,11 +59,27 @@ const proxyLogger = new ConsoleLogger();
 // This will log AppConfigService's own initialization messages.
 const appConfigService = getAppConfigService(proxyLogger);
 
+// Initialize MetricsService for observability
+const metricsService = new MetricsService({
+  logger: proxyLogger,
+  enabled: process.env.METRICS_ENABLED !== 'false', // Enabled by default
+  collectDefaultMetrics: true,
+});
+
 // Initialize the Express application
 const app = express();
 
 // Apply security middleware
 app.use(createSecurityMiddleware());
+
+// Apply metrics middleware for HTTP request tracking
+app.use(
+  createMetricsMiddleware({
+    metricsService,
+    logger: proxyLogger,
+    enabled: metricsService.isEnabled(),
+  })
+);
 
 // Apply compression middleware
 app.use(compression());
@@ -141,7 +166,42 @@ const llmRequestController = new LlmRequestController(
   llmRequestService
 );
 
+// Metrics endpoint for Prometheus scraping
+app.get('/metrics', async (req, res) => {
+  try {
+    const metrics = await metricsService.getMetrics();
+    res.set('Content-Type', 'text/plain; version=0.0.4; charset=utf-8');
+    res.status(200).send(metrics);
+  } catch (error) {
+    proxyLogger.error('Error serving metrics endpoint', error);
+    res.status(500).send('Error retrieving metrics');
+  }
+});
+
+// Health check endpoints for production monitoring
+app.get(
+  '/health',
+  createLivenessCheck({
+    logger: proxyLogger,
+    metricsService,
+  })
+);
+
+app.get(
+  '/health/ready',
+  createReadinessCheck({
+    logger: proxyLogger,
+    llmConfigService,
+    cacheService,
+    httpAgentService,
+  })
+);
+
+// Legacy root endpoint (deprecated - use /health instead)
 app.get('/', (req, res) => {
+  proxyLogger.warn(
+    'Deprecated root endpoint accessed. Use /health or /health/ready instead.'
+  );
   if (!llmConfigService.isOperational()) {
     const initErrorDetails = llmConfigService.getInitializationErrorDetails();
     if (initErrorDetails) {
@@ -167,13 +227,18 @@ app.get('/', (req, res) => {
     }
     return;
   }
-  res.status(200).send('LLM Proxy Server is running and operational!');
+  res
+    .status(200)
+    .send(
+      'LLM Proxy Server is running and operational! Use /health or /health/ready for detailed health checks.'
+    );
 });
 
 // Updated route to use LlmRequestController's handleLlmRequest method with validation and rate limiting
 app.post(
   '/api/llm-request',
   createLlmRateLimiter(), // Stricter rate limiting for LLM requests
+  createLlmMetricsMiddleware({ metricsService, logger: proxyLogger }), // LLM-specific metrics
   validateRequestHeaders(), // Validate headers
   validateLlmRequest(), // Validate request body
   handleValidationErrors, // Handle validation errors
@@ -197,6 +262,12 @@ const gracefulShutdown = (signal) => {
       if (httpAgentService && httpAgentService.cleanup) {
         httpAgentService.cleanup();
         proxyLogger.info('LLM Proxy Server: HTTP agent service cleaned up');
+      }
+
+      // Clean up metrics service
+      if (metricsService && metricsService.clear) {
+        metricsService.clear();
+        proxyLogger.info('LLM Proxy Server: Metrics service cleaned up');
       }
 
       proxyLogger.info('LLM Proxy Server: Graceful shutdown complete');
@@ -334,6 +405,18 @@ process.on('SIGINT', () => gracefulShutdown('SIGINT'));
     } else {
       proxyLogger.info(
         `LLM Proxy Server: HTTP Agent Pooling DISABLED - New connections will be created for each request`
+      );
+    }
+
+    // Metrics Service Configuration Status
+    if (metricsService.isEnabled()) {
+      const metricsStats = metricsService.getStats();
+      proxyLogger.info(
+        `LLM Proxy Server: Metrics Collection ENABLED - Total metrics: ${metricsStats.totalMetrics}, Custom metrics: ${metricsStats.customMetrics}, Default metrics: ${metricsStats.defaultMetrics}. Prometheus endpoint available at /metrics`
+      );
+    } else {
+      proxyLogger.info(
+        `LLM Proxy Server: Metrics Collection DISABLED - Set METRICS_ENABLED=true to enable observability metrics`
       );
     }
 

@@ -40,6 +40,7 @@ jest.mock('express-rate-limit', () => {
 
 describe('Rate Limiting Middleware - Comprehensive Tests', () => {
   let req, res, next;
+  let createdAdaptiveRateLimiters = [];
 
   beforeEach(() => {
     req = {
@@ -52,7 +53,18 @@ describe('Rate Limiting Middleware - Comprehensive Tests', () => {
       json: jest.fn(),
     };
     next = jest.fn();
+    createdAdaptiveRateLimiters = [];
     jest.clearAllMocks();
+  });
+
+  afterEach(() => {
+    // Clean up any adaptive rate limiters to prevent memory leaks
+    createdAdaptiveRateLimiters.forEach((limiter) => {
+      if (limiter && typeof limiter.destroy === 'function') {
+        limiter.destroy();
+      }
+    });
+    createdAdaptiveRateLimiters = [];
   });
 
   describe('createApiRateLimiter - Core Functionality', () => {
@@ -339,13 +351,13 @@ describe('Rate Limiting Middleware - Comprehensive Tests', () => {
       expect(rateLimiter.generatedKey).toBe('ip:203.0.113.1');
     });
 
-    test('accepts IPv6 addresses', () => {
-      req.headers['x-forwarded-for'] = '2001:db8::1';
+    test('accepts public IPv4 addresses from proxy headers', () => {
+      req.headers['x-forwarded-for'] = '8.8.8.8'; // Google's public DNS
 
       const rateLimiter = createApiRateLimiter();
       rateLimiter(req, res, next);
 
-      expect(rateLimiter.generatedKey).toBe('ip:2001:db8::1');
+      expect(rateLimiter.generatedKey).toBe('ip:8.8.8.8');
     });
 
     test('rejects malformed IPv4 addresses', () => {
@@ -564,6 +576,7 @@ describe('Rate Limiting Middleware - Comprehensive Tests', () => {
   describe('createAdaptiveRateLimiter - Adaptive Rate Limiting', () => {
     test('creates adaptive rate limiter with default configuration', () => {
       const rateLimiter = createAdaptiveRateLimiter();
+      createdAdaptiveRateLimiters.push(rateLimiter);
       rateLimiter(req, res, next);
 
       expect(rateLimiter.config).toMatchObject({
@@ -582,6 +595,7 @@ describe('Rate Limiting Middleware - Comprehensive Tests', () => {
       };
 
       const rateLimiter = createAdaptiveRateLimiter(options);
+      createdAdaptiveRateLimiters.push(rateLimiter);
       rateLimiter(req, res, next);
 
       expect(rateLimiter.config.windowMs).toBe(30000);
@@ -591,6 +605,7 @@ describe('Rate Limiting Middleware - Comprehensive Tests', () => {
       req.headers['x-forwarded-for'] = '203.0.113.100';
 
       const rateLimiter = createAdaptiveRateLimiter();
+      createdAdaptiveRateLimiters.push(rateLimiter);
       rateLimiter(req, res, next);
 
       expect(rateLimiter.dynamicMax).toBe(100); // Default base max requests
@@ -600,6 +615,7 @@ describe('Rate Limiting Middleware - Comprehensive Tests', () => {
       req.headers['x-forwarded-for'] = '203.0.113.200';
 
       const rateLimiter = createAdaptiveRateLimiter();
+      createdAdaptiveRateLimiters.push(rateLimiter);
 
       // Make multiple requests to build pattern
       for (let i = 0; i < 5; i++) {
@@ -613,6 +629,7 @@ describe('Rate Limiting Middleware - Comprehensive Tests', () => {
       req.headers['x-forwarded-for'] = '203.0.113.300';
 
       const rateLimiter = createAdaptiveRateLimiter({ baseMaxRequests: 10 });
+      createdAdaptiveRateLimiters.push(rateLimiter);
 
       // Simulate many requests in short time to trigger suspicious behavior
       const originalDateNow = Date.now;
@@ -636,6 +653,7 @@ describe('Rate Limiting Middleware - Comprehensive Tests', () => {
       req.headers['x-forwarded-for'] = '203.0.113.600';
 
       const rateLimiter = createAdaptiveRateLimiter();
+      createdAdaptiveRateLimiters.push(rateLimiter);
       rateLimiter(req, res, next);
 
       expect(res.status).toHaveBeenCalledWith(429);
@@ -657,6 +675,7 @@ describe('Rate Limiting Middleware - Comprehensive Tests', () => {
       req.headers['x-forwarded-for'] = '203.0.113.900';
 
       const rateLimiter = createAdaptiveRateLimiter({ useApiKey: true });
+      createdAdaptiveRateLimiters.push(rateLimiter);
       rateLimiter(req, res, next);
 
       expect(rateLimiter.generatedKey).toBe('api:adaptive...');
@@ -666,6 +685,7 @@ describe('Rate Limiting Middleware - Comprehensive Tests', () => {
       req.headers['x-forwarded-for'] = '203.0.113.999';
 
       const rateLimiter = createAdaptiveRateLimiter({ baseMaxRequests: 5 });
+      createdAdaptiveRateLimiters.push(rateLimiter);
 
       const originalDateNow = Date.now;
       let mockTime = 1000000;

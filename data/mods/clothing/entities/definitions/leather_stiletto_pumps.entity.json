@@ -4,15 +4,12 @@
   "description": "Leather stiletto pumps",
   "components": {
     "clothing:wearable": {
-      "wearableType": "shoes",
       "layer": "base",
       "size": "m",
       "material": "leather",
       "equipmentSlots": {
         "primary": "feet"
-      },
-      "layerPriority": 2,
-      "conflictResolution": "auto_remove"
+      }
     },
     "core:name": {
       "text": "leather stiletto pumps"

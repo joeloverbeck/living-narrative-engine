@@ -4,15 +4,12 @@
   "description": "Comfortable cotton panties with a feminine cut",
   "components": {
     "clothing:wearable": {
-      "wearableType": "underwear",
       "layer": "underwear",
       "size": "m",
       "material": "cotton",
       "equipmentSlots": {
         "primary": "lower_torso_clothing"
-      },
-      "layerPriority": 1,
-      "conflictResolution": "auto_remove"
+      }
     },
     "core:name": {
       "text": "panties"

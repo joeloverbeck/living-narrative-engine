@@ -3,11 +3,14 @@ import {
   VALIDATION_HEADER_NAME_MAX_LENGTH,
   VALIDATION_HEADER_VALUE_MAX_LENGTH,
   VALIDATION_LLM_ID_MAX_LENGTH,
-  SECURITY_IPV6_LOOPBACK_ADDRESSES,
-  SECURITY_IPV6_PRIVATE_PREFIXES,
   SECURITY_DANGEROUS_HEADER_NAMES,
   SECURITY_DANGEROUS_HEADER_PATTERN,
 } from '../config/constants.js';
+import {
+  isIPv6Hostname,
+  isIPv6AddressSafeForSSRF,
+  extractIPv6FromHostname,
+} from '../utils/ipv6Utils.js';
 
 /**
  * Sanitizes headers to prevent header injection and prototype pollution attacks
@@ -185,54 +188,10 @@ export const handleValidationErrors = (req, res, next) => {
 };
 
 /**
- * Checks if an IPv6 address is a loopback address
- * @param {string} hostname - The hostname to check
- * @returns {boolean} Whether the address is IPv6 loopback
+ * Enhanced IPv6 validation using comprehensive IPv6 utilities
+ * These functions replace the previous incomplete regex-based validation
+ * with robust ipaddr.js-based validation that handles all IPv6 edge cases
  */
-const isIPv6Loopback = (hostname) => {
-  // Remove brackets if present
-  const cleanHostname = hostname.replace(/[[\]]/g, '');
-
-  // Check against known loopback addresses
-  return SECURITY_IPV6_LOOPBACK_ADDRESSES.some((loopback) => {
-    const cleanLoopback = loopback.replace(/[[\]]/g, '');
-    return cleanHostname.toLowerCase() === cleanLoopback.toLowerCase();
-  });
-};
-
-/**
- * Checks if an IPv6 address is in a private/internal range
- * @param {string} hostname - The hostname to check
- * @returns {boolean} Whether the address is IPv6 private
- */
-const isIPv6Private = (hostname) => {
-  // Remove brackets if present
-  const cleanHostname = hostname.replace(/[[\]]/g, '').toLowerCase();
-
-  // Get the first part of the IPv6 address for prefix matching
-  const firstPart = cleanHostname.split(':')[0];
-
-  // Check against private prefixes (hex prefixes)
-  return SECURITY_IPV6_PRIVATE_PREFIXES.some((prefix) => {
-    return firstPart.startsWith(prefix.toLowerCase());
-  });
-};
-
-/**
- * Checks if a hostname is an IPv6 address
- * @param {string} hostname - The hostname to check
- * @returns {boolean} Whether the hostname is IPv6
- */
-const isIPv6Address = (hostname) => {
-  // IPv6 addresses in URLs are enclosed in brackets
-  if (hostname.startsWith('[') && hostname.endsWith(']')) {
-    return true;
-  }
-
-  // Also check for IPv6 patterns without brackets (less common but possible)
-  const ipv6Pattern = /^([0-9a-fA-F]{0,4}:){2,7}[0-9a-fA-F]{0,4}$/;
-  return ipv6Pattern.test(hostname);
-};
 
 /**
  * URL validation function to prevent SSRF attacks
@@ -271,9 +230,11 @@ export const isUrlSafe = (url) => {
       return false;
     }
 
-    // Enhanced IPv6 validation
-    if (isIPv6Address(hostname)) {
-      if (isIPv6Loopback(hostname) || isIPv6Private(hostname)) {
+    // Enhanced IPv6 validation using comprehensive utilities
+    if (isIPv6Hostname(hostname)) {
+      // Use SSRF-safe validation for IPv6 addresses
+      const ipv6Address = extractIPv6FromHostname(hostname);
+      if (ipv6Address && !isIPv6AddressSafeForSSRF(ipv6Address)) {
         return false;
       }
     }

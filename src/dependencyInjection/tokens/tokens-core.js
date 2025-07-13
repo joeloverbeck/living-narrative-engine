@@ -81,7 +81,6 @@ export const coreTokens = freeze({
   ClothingInstantiationService: 'ClothingInstantiationService',
   EquipmentOrchestrator: 'EquipmentOrchestrator',
   LayerCompatibilityService: 'LayerCompatibilityService',
-  CoverageValidationService: 'CoverageValidationService',
   AnatomyClothingIntegrationService: 'AnatomyClothingIntegrationService',
   LayerResolutionService: 'LayerResolutionService',
   DescriptorFormatter: 'DescriptorFormatter',

@@ -4,16 +4,13 @@
   "description": "Graphite wool wide-leg trousers",
   "components": {
     "clothing:wearable": {
-      "wearableType": "pants",
       "layer": "base",
       "size": "m",
       "material": "wool",
       "equipmentSlots": {
         "primary": "legs",
         "secondary": ["torso_lower"]
-      },
-      "layerPriority": 3,
-      "conflictResolution": "auto_remove"
+      }
     },
     "core:name": {
       "text": "graphite wide-leg trousers"

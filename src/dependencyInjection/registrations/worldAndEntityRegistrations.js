@@ -57,7 +57,6 @@ import DescriptionPersistenceService from '../../anatomy/DescriptionPersistenceS
 import { AnatomyQueryCache } from '../../anatomy/cache/AnatomyQueryCache.js';
 import { ClothingInstantiationService } from '../../clothing/services/clothingInstantiationService.js';
 import { LayerCompatibilityService } from '../../clothing/validation/layerCompatibilityService.js';
-import { CoverageValidationService } from '../../clothing/validation/coverageValidationService.js';
 import { EquipmentOrchestrator } from '../../clothing/orchestration/equipmentOrchestrator.js';
 import AnatomyClothingIntegrationService from '../../anatomy/integration/anatomyClothingIntegrationService.js';
 import LayerResolutionService from '../../clothing/services/layerResolutionService.js';
@@ -526,18 +525,6 @@ export function registerWorldAndEntity(container) {
     )}.`
   );
 
-  registrar.singletonFactory(tokens.CoverageValidationService, (c) => {
-    return new CoverageValidationService({
-      logger: c.resolve(tokens.ILogger),
-      entityManager: c.resolve(tokens.IEntityManager),
-      eventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
-    });
-  });
-  logger.debug(
-    `World and Entity Registration: Registered ${String(
-      tokens.CoverageValidationService
-    )}.`
-  );
 
   // Register EquipmentOrchestrator
   registrar.singletonFactory(tokens.EquipmentOrchestrator, (c) => {

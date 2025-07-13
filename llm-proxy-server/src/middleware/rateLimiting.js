@@ -5,7 +5,317 @@ import {
   RATE_LIMIT_LLM_WINDOW_MS,
   RATE_LIMIT_LLM_MAX_REQUESTS,
   RATE_LIMIT_AUTH_MAX_REQUESTS,
+  RATE_LIMIT_SUSPICIOUS_PATTERNS_MAX_SIZE,
+  RATE_LIMIT_SUSPICIOUS_PATTERNS_CLEANUP_INTERVAL,
+  RATE_LIMIT_SUSPICIOUS_PATTERNS_MAX_AGE,
+  RATE_LIMIT_SUSPICIOUS_PATTERNS_CLEANUP_BATCH_SIZE,
+  RATE_LIMIT_SUSPICIOUS_PATTERNS_MIN_CLEANUP_INTERVAL,
 } from '../config/constants.js';
+import {
+  isValidPublicIPv6,
+  isIPv6Hostname,
+  extractIPv6FromHostname,
+} from '../utils/ipv6Utils.js';
+
+/**
+ * LRU-based suspicious patterns manager to prevent memory leaks
+ * Implements automatic cleanup and size limits for the suspicious patterns map
+ */
+class SuspiciousPatternsManager {
+  /**
+   * Creates a new SuspiciousPatternsManager instance
+   * @param {object} options - Configuration options for the manager
+   */
+  constructor(options = {}) {
+    this.maxSize = options.maxSize || RATE_LIMIT_SUSPICIOUS_PATTERNS_MAX_SIZE;
+    this.maxAge = options.maxAge || RATE_LIMIT_SUSPICIOUS_PATTERNS_MAX_AGE;
+    this.cleanupInterval =
+      options.cleanupInterval ||
+      RATE_LIMIT_SUSPICIOUS_PATTERNS_CLEANUP_INTERVAL;
+    this.batchSize =
+      options.batchSize || RATE_LIMIT_SUSPICIOUS_PATTERNS_CLEANUP_BATCH_SIZE;
+    this.minCleanupInterval =
+      options.minCleanupInterval ||
+      RATE_LIMIT_SUSPICIOUS_PATTERNS_MIN_CLEANUP_INTERVAL;
+
+    // Use Map to maintain insertion order for LRU implementation
+    this.patterns = new Map();
+
+    // Track access order for LRU eviction
+    this.accessOrder = new Map();
+
+    // Cleanup tracking
+    this.lastCleanup = Date.now();
+    this.cleanupTimer = null;
+    this.periodicCleanupInterval = null;
+
+    // Start periodic cleanup
+    this.startPeriodicCleanup();
+  }
+
+  /**
+   * Gets a pattern entry and updates access order
+   * @param {string} clientKey - Client key to look up
+   * @returns {object|undefined} Pattern entry or undefined if not found
+   */
+  get(clientKey) {
+    if (!clientKey || typeof clientKey !== 'string') {
+      return undefined;
+    }
+
+    const pattern = this.patterns.get(clientKey);
+    if (pattern) {
+      // Update access order for LRU
+      this.accessOrder.set(clientKey, Date.now());
+      return pattern;
+    }
+    return undefined;
+  }
+
+  /**
+   * Sets a pattern entry and manages size limits
+   * @param {string} clientKey - Client key
+   * @param {object} pattern - Pattern data
+   */
+  set(clientKey, pattern) {
+    if (!clientKey || typeof clientKey !== 'string') {
+      return;
+    }
+
+    const now = Date.now();
+
+    // Handle null/undefined patterns safely
+    const safePattern = pattern || {};
+
+    // Update or create entry
+    this.patterns.set(clientKey, {
+      ...safePattern,
+      createdAt: safePattern.createdAt || now,
+      updatedAt: now,
+    });
+
+    // Update access order
+    this.accessOrder.set(clientKey, now);
+
+    // Enforce size limit with LRU eviction
+    this.enforceSize();
+
+    // Trigger cleanup if needed (but not too frequently)
+    if (now - this.lastCleanup > this.minCleanupInterval) {
+      this.scheduleCleanup();
+    }
+  }
+
+  /**
+   * Deletes a pattern entry
+   * @param {string} clientKey - Client key to delete
+   */
+  delete(clientKey) {
+    if (!clientKey || typeof clientKey !== 'string') {
+      return;
+    }
+
+    this.patterns.delete(clientKey);
+    this.accessOrder.delete(clientKey);
+  }
+
+  /**
+   * Gets the current size of the patterns map
+   * @returns {number} Number of entries
+   */
+  size() {
+    return this.patterns.size;
+  }
+
+  /**
+   * Gets memory usage statistics
+   * @returns {object} Memory usage stats
+   */
+  getStats() {
+    const now = Date.now();
+    let expiredCount = 0;
+    let totalRequestsTracked = 0;
+
+    for (const [, pattern] of this.patterns) {
+      if (now - pattern.updatedAt > this.maxAge) {
+        expiredCount++;
+      }
+      totalRequestsTracked += pattern.requests ? pattern.requests.length : 0;
+    }
+
+    return {
+      totalEntries: this.patterns.size,
+      expiredEntries: expiredCount,
+      totalRequestsTracked,
+      memoryUsageEstimate: this.estimateMemoryUsage(),
+      lastCleanup: this.lastCleanup,
+      timeSinceLastCleanup: now - this.lastCleanup,
+    };
+  }
+
+  /**
+   * Estimates memory usage of the patterns map
+   * @returns {number} Estimated memory usage in bytes
+   */
+  estimateMemoryUsage() {
+    let estimate = 0;
+    for (const [key, pattern] of this.patterns) {
+      // Rough estimate: key size + pattern object size
+      estimate += key.length * 2; // UTF-16 characters
+      estimate += 200; // Base object overhead
+      if (pattern.requests) {
+        estimate += pattern.requests.length * 8; // Timestamp array
+      }
+    }
+    return estimate;
+  }
+
+  /**
+   * Enforces size limit by evicting least recently used entries
+   */
+  enforceSize() {
+    if (this.patterns.size <= this.maxSize) {
+      return;
+    }
+
+    // Sort by access time and remove oldest entries
+    const sortedByAccess = Array.from(this.accessOrder.entries()).sort(
+      (a, b) => a[1] - b[1]
+    ); // Sort by timestamp (oldest first)
+
+    const entriesToRemove = this.patterns.size - this.maxSize;
+    for (let i = 0; i < entriesToRemove && i < sortedByAccess.length; i++) {
+      const [clientKey] = sortedByAccess[i];
+      this.delete(clientKey);
+    }
+  }
+
+  /**
+   * Cleans up expired entries in batches to prevent blocking
+   * @param {number} batchSize - Number of entries to process in this batch
+   * @returns {number} Number of entries cleaned up
+   */
+  cleanupExpired(batchSize = this.batchSize) {
+    const now = Date.now();
+    let cleanedCount = 0;
+    let processedCount = 0;
+
+    for (const [clientKey, pattern] of this.patterns) {
+      if (processedCount >= batchSize) {
+        break; // Limit batch size to prevent blocking
+      }
+
+      processedCount++;
+
+      // Check if entry is expired
+      if (now - pattern.updatedAt > this.maxAge) {
+        this.delete(clientKey);
+        cleanedCount++;
+        continue;
+      }
+
+      // Also clean up old requests within the pattern
+      if (pattern.requests && Array.isArray(pattern.requests)) {
+        const originalLength = pattern.requests.length;
+        pattern.requests = pattern.requests.filter(
+          (timestamp) => now - timestamp < this.maxAge
+        );
+
+        // Update the pattern if we cleaned up requests
+        if (pattern.requests.length !== originalLength) {
+          this.patterns.set(clientKey, {
+            ...pattern,
+            updatedAt: now,
+          });
+        }
+      }
+    }
+
+    this.lastCleanup = now;
+    return cleanedCount;
+  }
+
+  /**
+   * Schedules cleanup to run asynchronously
+   */
+  scheduleCleanup() {
+    if (this.cleanupTimer) {
+      return; // Cleanup already scheduled
+    }
+
+    this.cleanupTimer = setTimeout(() => {
+      try {
+        this.cleanupExpired();
+      } catch (_error) {
+        // Silent cleanup failure - will retry on next schedule
+      } finally {
+        this.cleanupTimer = null;
+      }
+    }, 0); // Run on next tick
+  }
+
+  /**
+   * Starts periodic cleanup process
+   */
+  startPeriodicCleanup() {
+    this.periodicCleanupInterval = setInterval(() => {
+      try {
+        this.cleanupExpired();
+      } catch (_error) {
+        // Silent cleanup failure - will retry on next interval
+      }
+    }, this.cleanupInterval);
+  }
+
+  /**
+   * Performs a full cleanup of all expired entries
+   * @returns {number} Number of entries cleaned up
+   */
+  fullCleanup() {
+    const now = Date.now();
+    let cleanedCount = 0;
+
+    for (const [clientKey, pattern] of this.patterns) {
+      if (now - pattern.updatedAt > this.maxAge) {
+        this.delete(clientKey);
+        cleanedCount++;
+      }
+    }
+
+    this.lastCleanup = now;
+    return cleanedCount;
+  }
+
+  /**
+   * Clears all entries (for testing or emergency cleanup)
+   */
+  clear() {
+    this.patterns.clear();
+    this.accessOrder.clear();
+    this.lastCleanup = Date.now();
+  }
+
+  /**
+   * Destroys the manager and cleans up all resources
+   * This should be called when the manager is no longer needed to prevent memory leaks
+   */
+  destroy() {
+    // Clear periodic cleanup interval
+    if (this.periodicCleanupInterval) {
+      clearInterval(this.periodicCleanupInterval);
+      this.periodicCleanupInterval = null;
+    }
+
+    // Clear any pending cleanup timer
+    if (this.cleanupTimer) {
+      clearTimeout(this.cleanupTimer);
+      this.cleanupTimer = null;
+    }
+
+    // Clear all data
+    this.clear();
+  }
+}
 
 /**
  * Extracts the real client IP from request headers with proxy awareness
@@ -13,8 +323,16 @@ import {
  * @returns {string} Real client IP address
  */
 function extractRealClientIP(req) {
+  // Handle invalid request objects
+  if (!req || typeof req !== 'object') {
+    return 'unknown';
+  }
+
+  // Ensure headers exist
+  const headers = req.headers || {};
+
   // Try X-Forwarded-For header (most common proxy header)
-  const xForwardedFor = req.headers['x-forwarded-for'];
+  const xForwardedFor = headers['x-forwarded-for'];
   if (xForwardedFor) {
     // X-Forwarded-For can contain multiple IPs: "client, proxy1, proxy2"
     // Take the first (leftmost) IP which should be the original client
@@ -37,7 +355,7 @@ function extractRealClientIP(req) {
   ];
 
   for (const header of proxyHeaders) {
-    const headerValue = req.headers[header];
+    const headerValue = headers[header];
     if (headerValue) {
       const ip = Array.isArray(headerValue) ? headerValue[0] : headerValue;
       if (isValidPublicIP(ip.trim())) {
@@ -47,22 +365,30 @@ function extractRealClientIP(req) {
   }
 
   // Fallback to direct connection IP
-  return req.ip || req.connection.remoteAddress || 'unknown';
+  const connection = req.connection || {};
+  return req.ip || connection.remoteAddress || 'unknown';
 }
 
 /**
  * Validates if an IP address is a valid public IP (not private/internal)
- * @param {string} ip - IP address to validate
+ * Enhanced with comprehensive IPv6 support using ipaddr.js-based validation
+ * @param {string} ip - IP address to validate (IPv4 or IPv6)
  * @returns {boolean} True if valid public IP
  */
 function isValidPublicIP(ip) {
   if (!ip || typeof ip !== 'string') return false;
 
-  // Basic IP format validation (IPv4)
+  // Check if this might be an IPv6 address
+  if (isIPv6Hostname(ip)) {
+    const ipv6Address = extractIPv6FromHostname(ip);
+    return ipv6Address ? isValidPublicIPv6(ipv6Address) : false;
+  }
+
+  // IPv4 validation (existing logic preserved)
   const ipv4Regex = /^(\d{1,3}\.){3}\d{1,3}$/;
   if (!ipv4Regex.test(ip)) {
-    // Could be IPv6, allow it for now
-    return ip.length > 0 && ip !== 'unknown';
+    // If it's not IPv4 and not recognized as IPv6, reject
+    return false;
   }
 
   const octets = ip.split('.').map(Number);
@@ -103,9 +429,17 @@ function isValidPublicIP(ip) {
 function generateRateLimitKey(req, options = {}) {
   const { useApiKey = false, trustProxy = true } = options;
 
+  // Handle invalid request objects
+  if (!req || typeof req !== 'object') {
+    return 'global:unknown';
+  }
+
+  // Ensure headers exist
+  const headers = req.headers || {};
+
   // Primary: Use API key if available and requested
   if (useApiKey) {
-    const apiKey = req.headers['x-api-key'];
+    const apiKey = headers['x-api-key'];
     if (apiKey && typeof apiKey === 'string' && apiKey.length > 0) {
       return `api:${apiKey.substring(0, 8)}...`; // Use first 8 chars for identification
     }
@@ -120,13 +454,14 @@ function generateRateLimitKey(req, options = {}) {
   }
 
   // Tertiary: Use direct connection IP
-  const directIP = req.ip || req.connection.remoteAddress;
+  const connection = req.connection || {};
+  const directIP = req.ip || connection.remoteAddress;
   if (directIP) {
     return `direct:${directIP}`;
   }
 
   // Fallback: Use User-Agent hash for some level of differentiation
-  const userAgent = req.headers['user-agent'];
+  const userAgent = headers['user-agent'];
   if (userAgent) {
     const hash = hashString(userAgent);
     return `ua:${hash}`;
@@ -296,10 +631,10 @@ export const createAdaptiveRateLimiter = (options = {}) => {
     useApiKey = false,
   } = options;
 
-  // Track suspicious patterns
-  const suspiciousPatterns = new Map();
+  // Track suspicious patterns with LRU eviction to prevent memory leaks
+  const suspiciousPatterns = new SuspiciousPatternsManager(options);
 
-  return rateLimit({
+  const middleware = rateLimit({
     windowMs: baseWindowMs,
     max: (req) => {
       const clientKey = generateRateLimitKey(req, { useApiKey, trustProxy });
@@ -326,7 +661,9 @@ export const createAdaptiveRateLimiter = (options = {}) => {
           suspiciousScore: 0,
           lastRequest: now,
         };
-        suspiciousPatterns.set(clientKey, pattern);
+      } else {
+        // Create a copy to avoid mutating the stored object directly
+        pattern = { ...pattern };
       }
 
       // Add current request
@@ -349,6 +686,9 @@ export const createAdaptiveRateLimiter = (options = {}) => {
         pattern.suspiciousScore = Math.max(0, pattern.suspiciousScore - 0.1);
       }
 
+      // Update the pattern in the manager (this handles LRU eviction automatically)
+      suspiciousPatterns.set(clientKey, pattern);
+
       return clientKey;
     },
     standardHeaders: true,
@@ -370,4 +710,14 @@ export const createAdaptiveRateLimiter = (options = {}) => {
       });
     },
   });
+
+  // Attach cleanup method for testing
+  middleware.destroy = () => {
+    suspiciousPatterns.destroy();
+  };
+
+  return middleware;
 };
+
+// Export SuspiciousPatternsManager for testing
+export { SuspiciousPatternsManager };

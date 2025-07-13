@@ -4,15 +4,12 @@
   "description": "Luxurious underwired plunge bra in nude silk",
   "components": {
     "clothing:wearable": {
-      "wearableType": "bra",
       "layer": "underwear",
       "size": "m",
       "material": "silk",
       "equipmentSlots": {
         "primary": "bra"
-      },
-      "layerPriority": 1,
-      "conflictResolution": "auto_remove"
+      }
     },
     "core:name": {
       "text": "underwired plunge bra"

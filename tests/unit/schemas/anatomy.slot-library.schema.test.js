@@ -142,13 +142,10 @@ describe('JSON-Schema – Anatomy Slot Library Definition', () => {
           standard_head_gear: {
             blueprintSlots: ['head'],
             allowedLayers: ['base', 'outer', 'armor'],
-            defaultLayer: 'base',
           },
           standard_gloves: {
             blueprintSlots: ['left_hand', 'right_hand'],
             allowedLayers: ['base', 'armor'],
-            defaultLayer: 'base',
-            tags: ['hands', 'protection'],
           },
         },
       };
@@ -167,17 +164,10 @@ describe('JSON-Schema – Anatomy Slot Library Definition', () => {
           full_plate_chest: {
             blueprintSlots: ['torso', 'shoulders'],
             allowedLayers: ['armor'],
-            layerOrder: ['armor'],
-            defaultLayer: 'armor',
-            tags: ['heavy_armor', 'torso', 'protection'],
-            conflictsWith: ['light_armor_chest', 'robe'],
-            requiresSlots: ['torso', 'left_shoulder', 'right_shoulder'],
           },
           magic_cloak: {
             anatomySockets: ['back_mount', 'neck_clasp'],
             allowedLayers: ['outer', 'accessory'],
-            defaultLayer: 'outer',
-            tags: ['magical', 'back'],
           },
         },
       };
@@ -258,38 +248,26 @@ describe('JSON-Schema – Anatomy Slot Library Definition', () => {
           standard_head_gear: {
             blueprintSlots: ['head'],
             allowedLayers: ['base', 'outer', 'armor'],
-            layerOrder: ['base', 'outer', 'armor'],
-            defaultLayer: 'base',
-            tags: ['head', 'armor_slot'],
           },
           // Hand gear
           standard_gloves: {
             blueprintSlots: ['left_hand', 'right_hand'],
             allowedLayers: ['base', 'armor'],
-            defaultLayer: 'base',
-            tags: ['hands', 'pair'],
           },
           // Foot gear
           standard_footwear: {
             blueprintSlots: ['left_foot', 'right_foot'],
             allowedLayers: ['base', 'armor'],
-            defaultLayer: 'base',
-            tags: ['feet', 'pair'],
           },
           // Torso gear
           standard_chest_gear: {
             blueprintSlots: ['torso'],
             allowedLayers: ['underwear', 'base', 'outer', 'armor'],
-            layerOrder: ['underwear', 'base', 'outer', 'armor'],
-            defaultLayer: 'base',
-            tags: ['torso', 'armor_slot'],
           },
           // Leg gear
           standard_leg_gear: {
             blueprintSlots: ['left_leg', 'right_leg'],
             allowedLayers: ['underwear', 'base', 'outer', 'armor'],
-            defaultLayer: 'base',
-            tags: ['legs', 'pair'],
           },
         },
       };
@@ -398,7 +376,7 @@ describe('JSON-Schema – Anatomy Slot Library Definition', () => {
         clothingDefinitions: {
           bad_clothing: {
             blueprintSlots: ['head'],
-            // Missing allowedLayers and defaultLayer
+            // Missing allowedLayers
           },
         },
       };
@@ -414,7 +392,6 @@ describe('JSON-Schema – Anatomy Slot Library Definition', () => {
             blueprintSlots: ['head'],
             anatomySockets: ['neck'],
             allowedLayers: ['base'],
-            defaultLayer: 'base',
           },
         },
       };
@@ -429,8 +406,6 @@ describe('JSON-Schema – Anatomy Slot Library Definition', () => {
           all_layers: {
             blueprintSlots: ['torso'],
             allowedLayers: ['underwear', 'base', 'outer', 'armor', 'accessory'],
-            layerOrder: ['underwear', 'base', 'outer', 'armor', 'accessory'],
-            defaultLayer: 'base',
           },
         },
       };
@@ -445,7 +420,6 @@ describe('JSON-Schema – Anatomy Slot Library Definition', () => {
           bad_layer: {
             blueprintSlots: ['head'],
             allowedLayers: ['invalid_layer'],
-            defaultLayer: 'invalid_layer',
           },
         },
       };
@@ -473,12 +447,10 @@ describe('JSON-Schema – Anatomy Slot Library Definition', () => {
           clothing1: {
             blueprintSlots: ['slot1'],
             allowedLayers: ['base'],
-            defaultLayer: 'base',
           },
           clothing2: {
             anatomySockets: ['socket1'],
             allowedLayers: ['armor'],
-            defaultLayer: 'armor',
           },
         },
       };

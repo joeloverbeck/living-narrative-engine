@@ -41,10 +41,7 @@
         "left_testicle",
         "right_testicle"
       ],
-      "allowedLayers": ["underwear", "base", "outer"],
-      "layerOrder": ["underwear", "base", "outer"],
-      "defaultLayer": "base",
-      "tags": ["torso", "lower_body"]
+      "allowedLayers": ["underwear", "base", "outer"]
     },
     "full_body": {
       "blueprintSlots": [
@@ -54,59 +51,31 @@
         "left_leg",
         "right_leg"
       ],
-      "allowedLayers": ["outer"],
-      "layerOrder": ["outer"],
-      "defaultLayer": "outer",
-      "tags": ["full_body", "special"],
-      "conflictsWith": [
-        "torso_upper",
-        "torso_lower",
-        "legs",
-        "left_arm_clothing",
-        "right_arm_clothing"
-      ]
+      "allowedLayers": ["outer"]
     },
     "genital_covering": {
       "anatomySockets": ["penis", "left_testicle", "right_testicle"],
-      "allowedLayers": ["underwear"],
-      "layerOrder": ["underwear"],
-      "defaultLayer": "underwear",
-      "tags": ["underwear", "male_specific"]
+      "allowedLayers": ["underwear"]
     },
     "torso_upper": {
       "blueprintSlots": ["torso"],
-      "allowedLayers": ["underwear", "base", "outer"],
-      "layerOrder": ["underwear", "base", "outer"],
-      "defaultLayer": "base",
-      "tags": ["torso", "upper_body"]
+      "allowedLayers": ["underwear", "base", "outer"]
     },
     "legs": {
       "blueprintSlots": ["left_leg", "right_leg"],
-      "allowedLayers": ["base", "outer"],
-      "layerOrder": ["base", "outer"],
-      "defaultLayer": "base",
-      "tags": ["legs", "lower_body"]
+      "allowedLayers": ["base", "outer"]
     },
     "left_arm_clothing": {
       "blueprintSlots": ["left_arm"],
-      "allowedLayers": ["base", "outer"],
-      "layerOrder": ["base", "outer"],
-      "defaultLayer": "base",
-      "tags": ["arm", "left_side"]
+      "allowedLayers": ["base", "outer"]
     },
     "right_arm_clothing": {
       "blueprintSlots": ["right_arm"],
-      "allowedLayers": ["base", "outer"],
-      "layerOrder": ["base", "outer"],
-      "defaultLayer": "base",
-      "tags": ["arm", "right_side"]
+      "allowedLayers": ["base", "outer"]
     },
     "feet": {
       "blueprintSlots": ["left_foot", "right_foot"],
-      "allowedLayers": ["base", "outer"],
-      "layerOrder": ["base", "outer"],
-      "defaultLayer": "base",
-      "tags": ["feet", "footwear"]
+      "allowedLayers": ["base", "outer"]
     }
   }
 }

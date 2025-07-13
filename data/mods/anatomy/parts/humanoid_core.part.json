@@ -86,13 +86,11 @@
     },
     "left_arm_clothing": {
       "$use": "standard_arm_clothing",
-      "blueprintSlots": ["left_arm"],
-      "tags": ["arm", "left_side"]
+      "blueprintSlots": ["left_arm"]
     },
     "right_arm_clothing": {
       "$use": "standard_arm_clothing",
-      "blueprintSlots": ["right_arm"],
-      "tags": ["arm", "right_side"]
+      "blueprintSlots": ["right_arm"]
     },
     "hands": {
       "$use": "standard_hands"

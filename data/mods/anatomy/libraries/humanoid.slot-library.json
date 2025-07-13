@@ -107,18 +107,11 @@
   "clothingDefinitions": {
     "standard_head_gear": {
       "blueprintSlots": ["head"],
-      "allowedLayers": ["base", "outer", "armor"],
-      "layerOrder": ["base", "outer", "armor"],
-      "defaultLayer": "base",
-      "tags": ["head", "armor_slot"]
+      "allowedLayers": ["base", "outer", "armor"]
     },
     "standard_face_gear": {
       "blueprintSlots": ["head"],
-      "allowedLayers": ["accessory"],
-      "layerOrder": ["accessory"],
-      "defaultLayer": "accessory",
-      "tags": ["face", "accessory"],
-      "conflictsWith": ["full_helmet"]
+      "allowedLayers": ["accessory"]
     },
     "standard_torso_upper": {
       "anatomySockets": [
@@ -127,39 +120,23 @@
         "left_shoulder",
         "right_shoulder"
       ],
-      "allowedLayers": ["underwear", "base", "outer", "armor"],
-      "layerOrder": ["underwear", "base", "outer", "armor"],
-      "defaultLayer": "base",
-      "tags": ["torso", "upper_body"]
+      "allowedLayers": ["underwear", "base", "outer", "armor"]
     },
     "standard_arm_clothing": {
       "blueprintSlots": ["arm"],
-      "allowedLayers": ["base", "outer", "armor"],
-      "layerOrder": ["base", "outer", "armor"],
-      "defaultLayer": "base",
-      "tags": ["arm"],
-      "requiresSlots": ["torso_upper"]
+      "allowedLayers": ["base", "outer", "armor"]
     },
     "standard_hands": {
       "blueprintSlots": ["left_hand", "right_hand"],
-      "allowedLayers": ["base", "armor"],
-      "layerOrder": ["base", "armor"],
-      "defaultLayer": "base",
-      "tags": ["hands", "extremities"]
+      "allowedLayers": ["base", "armor"]
     },
     "standard_legs": {
       "blueprintSlots": ["left_leg", "right_leg"],
-      "allowedLayers": ["underwear", "base", "outer", "armor"],
-      "layerOrder": ["underwear", "base", "outer", "armor"],
-      "defaultLayer": "base",
-      "tags": ["legs", "lower_body"]
+      "allowedLayers": ["underwear", "base", "outer", "armor"]
     },
     "standard_feet": {
       "blueprintSlots": ["left_foot", "right_foot"],
-      "allowedLayers": ["base", "armor"],
-      "layerOrder": ["base", "armor"],
-      "defaultLayer": "base",
-      "tags": ["feet", "extremities"]
+      "allowedLayers": ["base", "armor"]
     }
   }
 }

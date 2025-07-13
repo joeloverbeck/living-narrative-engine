@@ -359,30 +359,50 @@ describe('EnhancedConsoleLogger', () => {
         const logger = getEnhancedConsoleLogger();
 
         // Clear the isolated mocks after logger creation to ignore initialization calls
-        Object.values(isolatedMocks).forEach(mock => mock.mockClear());
+        Object.values(isolatedMocks).forEach((mock) => mock.mockClear());
 
         // Test each log level and verify they call the appropriate console methods
         const initialDebugCalls = isolatedMocks.debug.mock.calls.length;
         logger.debug('Debug test message');
-        expect(isolatedMocks.debug.mock.calls.length).toBeGreaterThan(initialDebugCalls);
+        expect(isolatedMocks.debug.mock.calls.length).toBeGreaterThan(
+          initialDebugCalls
+        );
 
         const initialInfoCalls = isolatedMocks.info.mock.calls.length;
         logger.info('Info test message');
-        expect(isolatedMocks.info.mock.calls.length).toBeGreaterThan(initialInfoCalls);
+        expect(isolatedMocks.info.mock.calls.length).toBeGreaterThan(
+          initialInfoCalls
+        );
 
         const initialWarnCalls = isolatedMocks.warn.mock.calls.length;
         logger.warn('Warn test message');
-        expect(isolatedMocks.warn.mock.calls.length).toBeGreaterThan(initialWarnCalls);
+        expect(isolatedMocks.warn.mock.calls.length).toBeGreaterThan(
+          initialWarnCalls
+        );
 
         const initialErrorCalls = isolatedMocks.error.mock.calls.length;
         logger.error('Error test message');
-        expect(isolatedMocks.error.mock.calls.length).toBeGreaterThan(initialErrorCalls);
+        expect(isolatedMocks.error.mock.calls.length).toBeGreaterThan(
+          initialErrorCalls
+        );
 
         // Verify that the correct console methods were called and contain expected content
-        const debugOutput = isolatedMocks.debug.mock.calls[isolatedMocks.debug.mock.calls.length - 1][0];
-        const infoOutput = isolatedMocks.info.mock.calls[isolatedMocks.info.mock.calls.length - 1][0];
-        const warnOutput = isolatedMocks.warn.mock.calls[isolatedMocks.warn.mock.calls.length - 1][0];
-        const errorOutput = isolatedMocks.error.mock.calls[isolatedMocks.error.mock.calls.length - 1][0];
+        const debugOutput =
+          isolatedMocks.debug.mock.calls[
+            isolatedMocks.debug.mock.calls.length - 1
+          ][0];
+        const infoOutput =
+          isolatedMocks.info.mock.calls[
+            isolatedMocks.info.mock.calls.length - 1
+          ][0];
+        const warnOutput =
+          isolatedMocks.warn.mock.calls[
+            isolatedMocks.warn.mock.calls.length - 1
+          ][0];
+        const errorOutput =
+          isolatedMocks.error.mock.calls[
+            isolatedMocks.error.mock.calls.length - 1
+          ][0];
 
         expect(debugOutput).toContain('Debug test message');
         expect(infoOutput).toContain('Info test message');

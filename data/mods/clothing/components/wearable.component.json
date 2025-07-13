@@ -5,51 +5,10 @@
   "dataSchema": {
     "type": "object",
     "properties": {
-      "wearableType": {
-        "type": "string",
-        "enum": [
-          "shirt",
-          "pants",
-          "underwear",
-          "jacket",
-          "shoes",
-          "accessories",
-          "bra",
-          "dress",
-          "skirt",
-          "hat",
-          "gloves",
-          "socks",
-          "bodysuit"
-        ],
-        "description": "Category of clothing item"
-      },
       "layer": {
         "type": "string",
         "enum": ["underwear", "base", "outer", "accessories"],
         "description": "Layer priority for stacking"
-      },
-      "coverage": {
-        "type": "object",
-        "properties": {
-          "required": {
-            "type": "array",
-            "items": { "type": "string" },
-            "description": "Anatomy sockets that must exist for item to be equipped"
-          },
-          "optional": {
-            "type": "array",
-            "items": { "type": "string" },
-            "description": "Sockets covered if present, ignored if missing"
-          },
-          "exclusions": {
-            "type": "array",
-            "items": { "type": "string" },
-            "description": "Incompatible anatomy configurations that prevent equipping"
-          }
-        },
-        "required": ["required"],
-        "additionalProperties": false
       },
       "size": {
         "type": "string",
@@ -76,20 +35,8 @@
         "required": ["primary"],
         "additionalProperties": false
       },
-      "layerPriority": {
-        "type": "integer",
-        "minimum": 0,
-        "maximum": 10,
-        "description": "Priority within layer (0=innermost, 10=outermost)"
-      },
-      "conflictResolution": {
-        "type": "string",
-        "enum": ["auto_remove", "prompt_user", "block_equip", "layer_swap"],
-        "default": "auto_remove",
-        "description": "How to handle layer conflicts"
-      }
     },
-    "required": ["wearableType", "layer", "equipmentSlots"],
+    "required": ["layer", "equipmentSlots"],
     "additionalProperties": false
   }
 }

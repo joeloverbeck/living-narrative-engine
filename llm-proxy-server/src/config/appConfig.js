@@ -20,12 +20,13 @@ dotenv.config();
 /**
  * @typedef {object} ILogger
  * @description Defines a basic logger interface.
- * @property {(message: any, ...optionalParams: any[]) => void} debug - Logs a debug message.
- * @property {(message: any, ...optionalParams: any[]) => void} info - Logs an informational message.
- * @property {(message: any, ...optionalParams: any[]) => void} warn - Logs a warning message.
- * @property {(message: any, ...optionalParams: any[]) => void} error - Logs an error message.
+ * @property {Function} debug - Logs a debug message.
+ * @property {Function} info - Logs an informational message.
+ * @property {Function} warn - Logs a warning message.
+ * @property {Function} error - Logs an error message.
  */
 
+/** @type {AppConfigService | null} */
 let instance = null;
 
 /**
@@ -33,51 +34,51 @@ let instance = null;
  */
 class AppConfigService {
   /**
-   * @type {ILogger}
+   * @type {any}
    * @private
    */
-  _logger;
+  _logger = console;
 
-  /** @private */
-  _proxyPort;
-  /** @private */
+  /** @type {number} @private */
+  _proxyPort = 3001;
+  /** @type {boolean} @private */
   _isProxyPortDefaulted = false; // Added to track if PROXY_PORT was defaulted
-  /** @private */
-  _llmConfigPath;
-  /** @private */
-  _proxyAllowedOrigin;
-  /** @private */
-  _proxyProjectRootPathForApiKeyFiles;
-  /** @private */
-  _nodeEnv;
+  /** @type {string | null} @private */
+  _llmConfigPath = null;
+  /** @type {string | null} @private */
+  _proxyAllowedOrigin = null;
+  /** @type {string | null} @private */
+  _proxyProjectRootPathForApiKeyFiles = null;
+  /** @type {string} @private */
+  _nodeEnv = 'development';
 
   // Cache configuration
-  /** @private */
-  _cacheEnabled;
-  /** @private */
-  _cacheDefaultTtl;
-  /** @private */
-  _cacheMaxSize;
-  /** @private */
-  _apiKeyCacheTtl;
+  /** @type {boolean} @private */
+  _cacheEnabled = true;
+  /** @type {number} @private */
+  _cacheDefaultTtl = 300000;
+  /** @type {number} @private */
+  _cacheMaxSize = 1000;
+  /** @type {number} @private */
+  _apiKeyCacheTtl = 300000;
 
   // HTTP Agent configuration
-  /** @private */
-  _httpAgentEnabled;
-  /** @private */
-  _httpAgentKeepAlive;
-  /** @private */
-  _httpAgentMaxSockets;
-  /** @private */
-  _httpAgentMaxFreeSockets;
-  /** @private */
-  _httpAgentTimeout;
-  /** @private */
-  _httpAgentFreeSocketTimeout;
-  /** @private */
-  _httpAgentMaxTotalSockets;
-  /** @private */
-  _httpAgentMaxIdleTime;
+  /** @type {boolean} @private */
+  _httpAgentEnabled = true;
+  /** @type {boolean} @private */
+  _httpAgentKeepAlive = true;
+  /** @type {number} @private */
+  _httpAgentMaxSockets = 50;
+  /** @type {number} @private */
+  _httpAgentMaxFreeSockets = 10;
+  /** @type {number} @private */
+  _httpAgentTimeout = 60000;
+  /** @type {number} @private */
+  _httpAgentFreeSocketTimeout = 4000;
+  /** @type {number} @private */
+  _httpAgentMaxTotalSockets = 0;
+  /** @type {number} @private */
+  _httpAgentMaxIdleTime = 60000;
 
   /**
    * Initializes the AppConfigService. It's recommended to use the getAppConfigService
@@ -85,6 +86,7 @@ class AppConfigService {
    * @param {ILogger} logger - An ILogger instance.
    */
   constructor(logger) {
+    /** @type {any} */
     this._logger = logger;
 
     this._logger.debug(

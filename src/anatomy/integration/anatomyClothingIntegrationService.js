@@ -7,7 +7,6 @@
 import { BaseService } from '../../utils/serviceBase.js';
 
 /** @typedef {object} AnatomyBlueprint - Anatomy blueprint definition from mod data */
-
 /** @typedef {object} ClothingSlot - Clothing slot definition from mod data */
 
 /**
@@ -17,11 +16,6 @@ import { BaseService } from '../../utils/serviceBase.js';
  * @property {string[]} [blueprintSlots] - Blueprint slot IDs this clothing slot covers
  * @property {string[]} [anatomySockets] - Direct socket IDs for orientation-specific sockets
  * @property {string[]} allowedLayers - Allowed clothing layers
- * @property {string[]} layerOrder - Layer order from inner to outer
- * @property {string} defaultLayer - Default layer for items
- * @property {string[]} [tags] - Optional categorization tags
- * @property {string[]} [conflictsWith] - Slots that conflict
- * @property {string[]} [requiresSlots] - Required companion slots
  */
 
 /**
@@ -346,92 +340,6 @@ class AnatomyClothingIntegrationService extends BaseService {
     return attachmentPoints;
   }
 
-  /**
-   * Builds the slot path from a slot ID
-   *
-   * @param slotId
-   * @param slotDefinitions
-   * @private
-   */
-  #buildSlotPath(slotId, slotDefinitions) {
-    const path = [];
-    let currentSlot = slotId;
-
-    while (currentSlot) {
-      path.unshift(currentSlot);
-      const slotDef = slotDefinitions[currentSlot];
-      currentSlot = slotDef?.parent;
-    }
-
-    return path;
-  }
-
-  /**
-   * Finds the entity at a specific slot path
-   *
-   * @param rootEntityId
-   * @param slotPath
-   * @param bodyGraph
-   * @private
-   */
-  async #findEntityAtSlotPath(rootEntityId, slotPath, bodyGraph) {
-    // If the path is empty, we're at the root
-    if (slotPath.length === 0) {
-      return rootEntityId;
-    }
-
-    // For single-level paths, try direct slot-entity mapping first
-    if (slotPath.length === 1) {
-      const slotId = slotPath[0];
-
-      // Check if we have a direct mapping for this slot
-      if (this.#slotEntityMappings.has(slotId)) {
-        const mappedEntityId = this.#slotEntityMappings.get(slotId);
-        this.#logger.debug(
-          `AnatomyClothingIntegrationService: Found direct slot mapping for '${slotId}' → '${mappedEntityId}'`
-        );
-        return mappedEntityId;
-      }
-    }
-
-    // Navigate through the path by following the body graph connections
-    let currentEntity = rootEntityId;
-
-    for (const slotId of slotPath) {
-      // First, try direct slot-entity mapping
-      if (this.#slotEntityMappings.has(slotId)) {
-        const mappedEntityId = this.#slotEntityMappings.get(slotId);
-        this.#logger.debug(
-          `AnatomyClothingIntegrationService: Found direct slot mapping for '${slotId}' → '${mappedEntityId}'`
-        );
-        currentEntity = mappedEntityId;
-        continue;
-      }
-
-      // Fallback: Get connected parts from current entity
-      const connectedParts = bodyGraph.getConnectedParts(currentEntity);
-
-      // Legacy fallback pattern for backward compatibility
-      const fallbackEntityId = connectedParts.find(
-        (partId) => partId.includes(slotId) || partId.endsWith(`_${slotId}`)
-      );
-
-      if (fallbackEntityId) {
-        currentEntity = fallbackEntityId;
-        this.#logger.debug(
-          `AnatomyClothingIntegrationService: Found entity for slot '${slotId}' using fallback pattern: '${fallbackEntityId}'`
-        );
-      } else {
-        // Entity not found in connected parts
-        this.#logger.warn(
-          `AnatomyClothingIntegrationService: No entity found for slot '${slotId}' in root entity '${rootEntityId}' (slot mappings: ${this.#slotEntityMappings.size})`
-        );
-        return null;
-      }
-    }
-
-    return currentEntity;
-  }
 
   /**
    * Finds the entity that has the specified socket
@@ -469,47 +377,6 @@ class AnatomyClothingIntegrationService extends BaseService {
     return null;
   }
 
-  /**
-   * Gets parent connection info for a body part
-   *
-   * @param partEntityId
-   * @param bodyGraph
-   * @private
-   */
-  async #getParentConnectionInfo(partEntityId, bodyGraph) {
-    const jointComponent = await this.#entityManager.getComponentData(
-      partEntityId,
-      'anatomy:joint'
-    );
-
-    if (!jointComponent) {
-      return null;
-    }
-
-    return {
-      parentId: jointComponent.parentEntityId,
-      socketId: jointComponent.childSocketId,
-      parentSocketId: jointComponent.parentSocketId,
-    };
-  }
-
-  /**
-   * Checks if a joint matches a slot ID
-   *
-   * @param jointComponent
-   * @param slotId
-   * @private
-   */
-  #matchesSlot(jointComponent, slotId) {
-    // The slot matching needs to be based on the parent socket and blueprint configuration
-    // This is a simplified version - in reality, we'd need to check the blueprint slot definitions
-    // to see if this joint connects to the expected parent socket for this slot
-    // For now, we'll accept any joint as potentially matching
-    // In a complete implementation, we'd verify:
-    // 1. The parent socket matches what's expected for this slot
-    // 2. The part type matches the slot requirements
-    return jointComponent !== null;
-  }
 
   /**
    * Extracts orientation from a slot ID

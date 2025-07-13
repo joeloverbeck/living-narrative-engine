@@ -140,8 +140,6 @@ describe('Anatomy Blueprint Composition Integration', () => {
         hat: {
           blueprintSlots: ['head'],
           allowedLayers: ['base'],
-          defaultLayer: 'base',
-          tags: ['hat'],
         },
       },
     };
@@ -347,8 +345,6 @@ describe('Anatomy Blueprint Composition Integration', () => {
     expect(blueprint.clothingSlotMappings.hat).toEqual({
       blueprintSlots: ['head'],
       allowedLayers: ['base'],
-      defaultLayer: 'base',
-      tags: ['hat'],
     });
   });
 

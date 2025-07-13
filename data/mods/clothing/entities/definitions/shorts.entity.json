@@ -4,15 +4,12 @@
   "description": "Comfortable casual shorts for warm weather",
   "components": {
     "clothing:wearable": {
-      "wearableType": "pants",
       "layer": "base",
       "size": "m",
       "material": "cotton",
       "equipmentSlots": {
         "primary": "lower_torso_clothing"
-      },
-      "layerPriority": 3,
-      "conflictResolution": "auto_remove"
+      }
     },
     "core:name": {
       "text": "shorts"

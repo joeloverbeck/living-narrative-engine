@@ -133,13 +133,10 @@ describe('JSON-Schema – Anatomy Blueprint Part Definition', () => {
           head_gear: {
             blueprintSlots: ['head'],
             allowedLayers: ['base', 'outer', 'armor'],
-            defaultLayer: 'base',
           },
           gloves: {
             blueprintSlots: ['left_hand', 'right_hand'],
             allowedLayers: ['base', 'armor'],
-            defaultLayer: 'base',
-            tags: ['hands', 'protection'],
           },
         },
       };
@@ -158,7 +155,6 @@ describe('JSON-Schema – Anatomy Blueprint Part Definition', () => {
           },
           gloves: {
             $use: 'standard_gloves',
-            tags: ['magical', 'enchanted'], // Override
           },
         },
       };
@@ -206,8 +202,6 @@ describe('JSON-Schema – Anatomy Blueprint Part Definition', () => {
           weapon_sheath: {
             anatomySockets: ['back_mount', 'hip_mount'],
             allowedLayers: ['accessory'],
-            defaultLayer: 'accessory',
-            tags: ['weapon', 'storage'],
           },
         },
       };
@@ -334,11 +328,6 @@ describe('JSON-Schema – Anatomy Blueprint Part Definition', () => {
           test_gear: {
             blueprintSlots: ['slot1', 'slot2'],
             allowedLayers: ['base', 'outer'],
-            layerOrder: ['base', 'outer'],
-            defaultLayer: 'base',
-            tags: ['test'],
-            conflictsWith: ['other_gear'],
-            requiresSlots: ['torso'],
           },
         },
       };
@@ -353,7 +342,6 @@ describe('JSON-Schema – Anatomy Blueprint Part Definition', () => {
           test_gear: {
             anatomySockets: ['socket1', 'socket2'],
             allowedLayers: ['armor'],
-            defaultLayer: 'armor',
           },
         },
       };
@@ -369,7 +357,6 @@ describe('JSON-Schema – Anatomy Blueprint Part Definition', () => {
             blueprintSlots: ['slot1'],
             anatomySockets: ['socket1'],
             allowedLayers: ['base'],
-            defaultLayer: 'base',
           },
         },
       };

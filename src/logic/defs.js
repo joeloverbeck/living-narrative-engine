@@ -53,6 +53,7 @@
 
 /**
  * @typedef {object} OperationParams
+ * @property
  * Represents the parameters provided to an Operation Handler. This is typically
  * the `parameters` object defined within an `Operation` in a SystemRule's action
  * list (conforming to `operation.schema.json`).

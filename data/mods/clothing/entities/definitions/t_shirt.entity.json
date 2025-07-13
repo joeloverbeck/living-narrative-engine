@@ -4,15 +4,12 @@
   "description": "A casual cotton t-shirt for everyday wear",
   "components": {
     "clothing:wearable": {
-      "wearableType": "shirt",
       "layer": "base",
       "size": "m",
       "material": "cotton",
       "equipmentSlots": {
         "primary": "torso_clothing"
-      },
-      "layerPriority": 3,
-      "conflictResolution": "auto_remove"
+      }
     },
     "core:name": {
       "text": "t-shirt"

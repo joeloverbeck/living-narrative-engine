@@ -8,6 +8,7 @@
 
 /**
  * @typedef {object} ComponentDefinition
+ * @property
  * Generic structure for a component definition object.
  */
 

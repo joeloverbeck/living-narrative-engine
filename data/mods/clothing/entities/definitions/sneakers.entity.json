@@ -4,15 +4,12 @@
   "description": "Comfortable athletic sneakers for everyday wear",
   "components": {
     "clothing:wearable": {
-      "wearableType": "shoes",
       "layer": "base",
       "size": "m",
       "material": "synthetic",
       "equipmentSlots": {
         "primary": "feet_clothing"
-      },
-      "layerPriority": 3,
-      "conflictResolution": "auto_remove"
+      }
     },
     "core:name": {
       "text": "sneakers"
