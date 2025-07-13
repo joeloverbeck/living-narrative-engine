@@ -7,12 +7,24 @@
     "properties": {
       "layer": {
         "type": "string",
-        "enum": ["underwear", "base", "outer", "accessories"],
+        "enum": [
+          "underwear",
+          "base",
+          "outer",
+          "accessories"
+        ],
         "description": "Layer priority for stacking"
       },
       "size": {
         "type": "string",
-        "enum": ["xs", "s", "m", "l", "xl", "xxl"],
+        "enum": [
+          "xs",
+          "s",
+          "m",
+          "l",
+          "xl",
+          "xxl"
+        ],
         "description": "Size compatibility for the clothing item"
       },
       "material": {
@@ -28,15 +40,22 @@
           },
           "secondary": {
             "type": "array",
-            "items": { "type": "string" },
+            "items": {
+              "type": "string"
+            },
             "description": "Additional slots this item may occupy"
           }
         },
-        "required": ["primary"],
+        "required": [
+          "primary"
+        ],
         "additionalProperties": false
-      },
+      }
     },
-    "required": ["layer", "equipmentSlots"],
+    "required": [
+      "layer",
+      "equipmentSlots"
+    ],
     "additionalProperties": false
   }
 }
