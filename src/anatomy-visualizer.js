@@ -2,6 +2,7 @@
 
 import { CommonBootstrapper } from './bootstrapper/CommonBootstrapper.js';
 import { tokens } from './dependencyInjection/tokens.js';
+import { registerVisualizerComponents } from './dependencyInjection/registrations/visualizerRegistrations.js';
 import AnatomyVisualizerUI from './domUI/AnatomyVisualizerUI.js';
 
 let visualizerUI;
@@ -19,6 +20,9 @@ async function initialize() {
       worldName: 'default',
       includeAnatomyFormatting: true,
       postInitHook: async (services, container) => {
+        // Register visualizer components that aren't included in minimal configuration
+        registerVisualizerComponents(container);
+
         // Initialize UI after all services are ready
         const { logger, registry, entityManager, eventDispatcher } = services;
         const anatomyDescriptionService = container.resolve(
