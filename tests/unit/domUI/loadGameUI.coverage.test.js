@@ -134,13 +134,20 @@ describe('LoadGameUI', () => {
   });
 
   afterEach(() => {
+    jest.clearAllTimers();
+    jest.useRealTimers();
     jest.clearAllMocks();
+    jest.restoreAllMocks();
+
+    // Clean up global mocks
+    delete global.requestAnimationFrame;
+    delete global.cancelAnimationFrame;
+
     if (mockWindow) mockWindow.close();
     global.window = undefined;
     global.document = undefined;
     global.HTMLElement = undefined;
     global.Element = undefined;
-    global.requestAnimationFrame = undefined;
   });
 
   const createInstance = (depsOverrides = {}) => {

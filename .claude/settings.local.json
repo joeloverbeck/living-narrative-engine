@@ -48,7 +48,8 @@
       "Bash(jest:*)",
       "Bash(NODE_OPTIONS=\"--max-old-space-size=8192\" npm test -- tests/unit/turns/turnManager.anatomy.test.js --no-coverage)",
       "Bash(jq:*)",
-      "Bash(NODE_ENV=test npx jest tests/unit/anatomy/anatomyCacheManager.test.js --no-coverage --verbose)"
+      "Bash(NODE_ENV=test npx jest tests/unit/anatomy/anatomyCacheManager.test.js --no-coverage --verbose)",
+      "Bash(eslint:*)"
     ],
     "deny": []
   }

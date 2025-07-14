@@ -124,8 +124,19 @@ describe('Anatomy Visualizer - Service Integration', () => {
       bodyGraphService: {
         getBodyGraph: jest.fn(),
       },
-      dataRegistry: {
-        get: jest.fn(),
+      anatomyBlueprintRepository: {
+        getBlueprintByRecipeId: jest.fn(),
+        clearCache: jest.fn(),
+      },
+      anatomySocketIndex: {
+        findEntityWithSocket: jest.fn(),
+        buildIndex: jest.fn(),
+        clearCache: jest.fn(),
+      },
+      clothingSlotValidator: {
+        validateSlotCompatibility: jest.fn().mockResolvedValue({
+          valid: true,
+        }),
       },
       logger: createMockLogger(),
     };

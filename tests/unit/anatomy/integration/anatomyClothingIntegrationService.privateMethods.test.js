@@ -13,7 +13,9 @@ describe('AnatomyClothingIntegrationService - Private Methods Coverage', () => {
   let mockLogger;
   let mockEntityManager;
   let mockBodyGraphService;
-  let mockDataRegistry;
+  let mockAnatomyBlueprintRepository;
+  let mockAnatomySocketIndex;
+  let mockClothingSlotValidator;
 
   beforeEach(() => {
     mockLogger = createMockLogger();
@@ -27,15 +29,29 @@ describe('AnatomyClothingIntegrationService - Private Methods Coverage', () => {
       getBodyGraph: jest.fn(),
     };
 
-    mockDataRegistry = {
-      get: jest.fn(),
+    mockAnatomyBlueprintRepository = {
+      getBlueprintByRecipeId: jest.fn(),
+      clearCache: jest.fn(),
+    };
+
+    mockAnatomySocketIndex = {
+      findEntityWithSocket: jest.fn(),
+      buildIndex: jest.fn(),
+      clearCache: jest.fn(),
+    };
+
+    // Create mock clothing slot validator
+    mockClothingSlotValidator = {
+      validateSlotCompatibility: jest.fn(),
     };
 
     service = new AnatomyClothingIntegrationService({
       logger: mockLogger,
       entityManager: mockEntityManager,
       bodyGraphService: mockBodyGraphService,
-      dataRegistry: mockDataRegistry,
+      anatomyBlueprintRepository: mockAnatomyBlueprintRepository,
+      anatomySocketIndex: mockAnatomySocketIndex,
+      clothingSlotValidator: mockClothingSlotValidator,
     });
   });
 
@@ -105,18 +121,14 @@ describe('AnatomyClothingIntegrationService - Private Methods Coverage', () => {
         },
       };
 
-      mockDataRegistry.get.mockImplementation((category, id) => {
-        if (category === 'anatomyRecipes' && id === 'test:humanoid_recipe') {
-          return testRecipe;
+      mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockImplementation(
+        (recipeId) => {
+          if (recipeId === 'test:humanoid_recipe') {
+            return Promise.resolve(testBlueprint);
+          }
+          return Promise.resolve(null);
         }
-        if (
-          category === 'anatomyBlueprints' &&
-          id === 'test:humanoid_blueprint'
-        ) {
-          return testBlueprint;
-        }
-        return null;
-      });
+      );
     });
 
     it('should resolve single-level slot paths correctly', async () => {
@@ -157,6 +169,16 @@ describe('AnatomyClothingIntegrationService - Private Methods Coverage', () => {
         }),
       };
       mockBodyGraphService.getBodyGraph.mockResolvedValue(mockBodyGraph);
+
+      // Setup AnatomySocketIndex to return correct entity for socket
+      mockAnatomySocketIndex.findEntityWithSocket.mockImplementation(
+        (rootEntityId, socketId) => {
+          if (socketId === 'head_socket') {
+            return Promise.resolve('head_part');
+          }
+          return Promise.resolve(null);
+        }
+      );
 
       const attachmentPoints =
         await service.resolveClothingSlotToAttachmentPoints(entityId, 'helmet');
@@ -231,6 +253,17 @@ describe('AnatomyClothingIntegrationService - Private Methods Coverage', () => {
         }),
       };
       mockBodyGraphService.getBodyGraph.mockResolvedValue(mockBodyGraph);
+
+      // Setup AnatomySocketIndex to return correct entities for sockets
+      mockAnatomySocketIndex.findEntityWithSocket.mockImplementation(
+        (rootEntityId, socketId) => {
+          const socketMap = {
+            left_hand_socket: 'left_hand_part',
+            right_hand_socket: 'right_hand_part',
+          };
+          return Promise.resolve(socketMap[socketId] || null);
+        }
+      );
 
       const attachmentPoints =
         await service.resolveClothingSlotToAttachmentPoints(entityId, 'gloves');
@@ -308,6 +341,16 @@ describe('AnatomyClothingIntegrationService - Private Methods Coverage', () => {
       };
       mockBodyGraphService.getBodyGraph.mockResolvedValue(mockBodyGraph);
 
+      // Setup AnatomySocketIndex to return correct entity for socket
+      mockAnatomySocketIndex.findEntityWithSocket.mockImplementation(
+        (rootEntityId, socketId) => {
+          if (socketId === 'left_finger_socket') {
+            return Promise.resolve('left_finger_part');
+          }
+          return Promise.resolve(null);
+        }
+      );
+
       const attachmentPoints =
         await service.resolveClothingSlotToAttachmentPoints(entityId, 'rings');
 
@@ -336,9 +379,9 @@ describe('AnatomyClothingIntegrationService - Private Methods Coverage', () => {
         },
       };
 
-      mockDataRegistry.get
-        .mockReturnValueOnce({ blueprintId: 'test:empty' })
-        .mockReturnValueOnce(emptyPathBlueprint);
+      mockAnatomyBlueprintRepository.getBlueprintByRecipeId
+        .mockResolvedValueOnce({ blueprintId: 'test:empty' })
+        .mockResolvedValueOnce(emptyPathBlueprint);
 
       mockEntityManager.getComponentData.mockResolvedValue({
         recipeId: 'test:empty_recipe',
@@ -352,7 +395,9 @@ describe('AnatomyClothingIntegrationService - Private Methods Coverage', () => {
       const result = await service.getAvailableClothingSlots(entityId);
 
       expect(result).toBeInstanceOf(Map);
-      expect(result.has('root_attachment')).toBe(true);
+      // Empty blueprintSlots array results in no attachment points, so slot is not available
+      expect(result.has('root_attachment')).toBe(false);
+      expect(result.size).toBe(0);
     });
 
     it('should handle slot path not found scenarios', async () => {
@@ -421,9 +466,9 @@ describe('AnatomyClothingIntegrationService - Private Methods Coverage', () => {
         },
       };
 
-      mockDataRegistry.get
-        .mockReturnValueOnce({ blueprintId: 'test:nested' })
-        .mockReturnValueOnce(nestedBlueprint);
+      mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue(
+        nestedBlueprint
+      );
 
       mockEntityManager.getComponentData.mockImplementation((id, component) => {
         if (id === entityId && component === 'anatomy:body') {
@@ -498,6 +543,16 @@ describe('AnatomyClothingIntegrationService - Private Methods Coverage', () => {
       };
       mockBodyGraphService.getBodyGraph.mockResolvedValue(mockBodyGraph);
 
+      // Setup AnatomySocketIndex to return correct entity for socket
+      mockAnatomySocketIndex.findEntityWithSocket.mockImplementation(
+        (rootEntityId, socketId) => {
+          if (socketId === 'left_shoulder_pad_socket') {
+            return Promise.resolve('left_shoulder_pad_part');
+          }
+          return Promise.resolve(null);
+        }
+      );
+
       const attachmentPoints =
         await service.resolveClothingSlotToAttachmentPoints(
           entityId,
@@ -560,15 +615,14 @@ describe('AnatomyClothingIntegrationService - Private Methods Coverage', () => {
         },
       };
 
-      mockDataRegistry.get.mockImplementation((category, id) => {
-        if (category === 'anatomyRecipes' && id === 'test:orientation_recipe') {
-          return { blueprintId: 'test:orientation' };
+      mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockImplementation(
+        (recipeId) => {
+          if (recipeId === 'test:orientation_recipe') {
+            return Promise.resolve(orientationBlueprint);
+          }
+          return Promise.resolve(null);
         }
-        if (category === 'anatomyBlueprints' && id === 'test:orientation') {
-          return orientationBlueprint;
-        }
-        return null;
-      });
+      );
 
       mockEntityManager.getComponentData.mockImplementation((id, component) => {
         if (id === entityId && component === 'anatomy:body') {
@@ -651,6 +705,20 @@ describe('AnatomyClothingIntegrationService - Private Methods Coverage', () => {
         }),
       };
       mockBodyGraphService.getBodyGraph.mockResolvedValue(mockBodyGraph);
+
+      // Setup AnatomySocketIndex to return correct entities for sockets
+      mockAnatomySocketIndex.findEntityWithSocket.mockImplementation(
+        (rootEntityId, socketId) => {
+          const socketMap = {
+            left_arm_socket: 'left_arm_part',
+            right_arm_socket: 'right_arm_part',
+            upper_torso_socket: 'upper_torso_part',
+            lower_torso_socket: 'lower_torso_part',
+            center_head_socket: 'center_head_part',
+          };
+          return Promise.resolve(socketMap[socketId] || null);
+        }
+      );
 
       // Test left orientation
       const leftPoints = await service.resolveClothingSlotToAttachmentPoints(

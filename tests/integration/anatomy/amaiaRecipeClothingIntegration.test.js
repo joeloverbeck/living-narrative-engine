@@ -66,7 +66,21 @@ describe('Amaia Castillo Recipe Clothing Integration', () => {
       logger,
       entityManager,
       bodyGraphService,
-      dataRegistry: mockDataRegistry,
+      anatomyBlueprintRepository: {
+        getBlueprintByRecipeId: (recipeId) =>
+          mockDataRegistry.get('anatomyBlueprints', recipeId),
+        clearCache: () => {},
+      },
+      anatomySocketIndex: {
+        findEntityWithSocket: jest.fn(),
+        buildIndex: jest.fn(),
+        clearCache: jest.fn(),
+      },
+      clothingSlotValidator: {
+        validateSlotCompatibility: jest.fn().mockResolvedValue({
+          valid: true,
+        }),
+      },
     });
   });
 

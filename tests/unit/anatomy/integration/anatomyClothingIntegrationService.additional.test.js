@@ -12,7 +12,9 @@ describe('AnatomyClothingIntegrationService - Additional Coverage', () => {
   let mockLogger;
   let mockEntityManager;
   let mockBodyGraphService;
-  let mockDataRegistry;
+  let mockAnatomyBlueprintRepository;
+  let mockAnatomySocketIndex;
+  let mockClothingSlotValidator;
 
   beforeEach(() => {
     mockLogger = createMockLogger();
@@ -27,15 +29,42 @@ describe('AnatomyClothingIntegrationService - Additional Coverage', () => {
       getBodyGraph: jest.fn(),
     };
 
-    mockDataRegistry = {
-      get: jest.fn(),
+    mockAnatomyBlueprintRepository = {
+      getBlueprintByRecipeId: jest.fn(),
+      clearCache: jest.fn(),
+    };
+
+    mockAnatomySocketIndex = {
+      findEntityWithSocket: jest.fn(),
+      buildIndex: jest.fn(),
+      clearCache: jest.fn(),
+    };
+
+    // Create mock clothing slot validator
+    mockClothingSlotValidator = {
+      validateSlotCompatibility: jest.fn().mockImplementation((entityId, slotId, itemId) => {
+        // Validate parameters like the real validator does
+        if (!entityId || typeof entityId !== 'string') {
+          throw new Error('Entity ID is required');
+        }
+        if (!slotId || typeof slotId !== 'string') {
+          throw new Error('Slot ID is required');
+        }
+        if (!itemId || typeof itemId !== 'string') {
+          throw new Error('Item ID is required');
+        }
+        // Default return for valid cases
+        return Promise.resolve({ valid: true });
+      }),
     };
 
     service = new AnatomyClothingIntegrationService({
       logger: mockLogger,
       entityManager: mockEntityManager,
       bodyGraphService: mockBodyGraphService,
-      dataRegistry: mockDataRegistry,
+      anatomyBlueprintRepository: mockAnatomyBlueprintRepository,
+      anatomySocketIndex: mockAnatomySocketIndex,
+      clothingSlotValidator: mockClothingSlotValidator,
     });
   });
 
@@ -100,18 +129,16 @@ describe('AnatomyClothingIntegrationService - Additional Coverage', () => {
       };
       mockBodyGraphService.getBodyGraph.mockResolvedValue(mockBodyGraph);
 
-      mockDataRegistry.get
-        .mockReturnValueOnce({ blueprintId: 'test:blueprint' })
-        .mockReturnValueOnce({
-          clothingSlotMappings: {
-            multi_socket_item: {
-              anatomySockets: ['socket1', 'socket2', 'socket3'],
-              allowedLayers: ['base'],
-              layerOrder: ['base'],
-              defaultLayer: 'base',
-            },
+      mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue({
+        clothingSlotMappings: {
+          multi_socket_item: {
+            anatomySockets: ['socket1', 'socket2', 'socket3'],
+            allowedLayers: ['base'],
+            layerOrder: ['base'],
+            defaultLayer: 'base',
           },
-        });
+        },
+      });
 
       const attachmentPoints =
         await service.resolveClothingSlotToAttachmentPoints(
@@ -168,24 +195,32 @@ describe('AnatomyClothingIntegrationService - Additional Coverage', () => {
       };
       mockBodyGraphService.getBodyGraph.mockResolvedValue(mockBodyGraph);
 
-      mockDataRegistry.get
-        .mockReturnValueOnce({ blueprintId: 'test:blueprint' })
-        .mockReturnValueOnce({
-          slots: {
-            left_arm: {
-              type: 'test:arm',
-              socket: 'arm_socket',
-            },
+      mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue({
+        slots: {
+          left_arm: {
+            type: 'test:arm',
+            socket: 'arm_socket',
           },
-          clothingSlotMappings: {
-            sleeve: {
-              blueprintSlots: ['left_arm'],
-              allowedLayers: ['base'],
-              layerOrder: ['base'],
-              defaultLayer: 'base',
-            },
+        },
+        clothingSlotMappings: {
+          sleeve: {
+            blueprintSlots: ['left_arm'],
+            allowedLayers: ['base'],
+            layerOrder: ['base'],
+            defaultLayer: 'base',
           },
-        });
+        },
+      });
+
+      // Setup AnatomySocketIndex to return correct entity for socket
+      mockAnatomySocketIndex.findEntityWithSocket.mockImplementation(
+        (rootEntityId, socketId) => {
+          if (socketId === 'arm_socket') {
+            return Promise.resolve('entity_left_arm');
+          }
+          return Promise.resolve(null);
+        }
+      );
 
       const attachmentPoints =
         await service.resolveClothingSlotToAttachmentPoints(
@@ -201,7 +236,7 @@ describe('AnatomyClothingIntegrationService - Additional Coverage', () => {
       // It actually finds it through the normal mapping, not fallback
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining(
-          "AnatomyClothingIntegrationService: Found direct slot mapping for 'left_arm'"
+          "AnatomyClothingIntegrationService: Found slot mapping for 'left_arm'"
         )
       );
     });
@@ -220,24 +255,22 @@ describe('AnatomyClothingIntegrationService - Additional Coverage', () => {
       };
       mockBodyGraphService.getBodyGraph.mockResolvedValue(mockBodyGraph);
 
-      mockDataRegistry.get
-        .mockReturnValueOnce({ blueprintId: 'test:blueprint' })
-        .mockReturnValueOnce({
-          slots: {
-            missing_slot: {
-              type: 'test:part',
-              socket: 'missing_socket',
-            },
+      mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue({
+        slots: {
+          missing_slot: {
+            type: 'test:part',
+            socket: 'missing_socket',
           },
-          clothingSlotMappings: {
-            item: {
-              blueprintSlots: ['missing_slot'],
-              allowedLayers: ['base'],
-              layerOrder: ['base'],
-              defaultLayer: 'base',
-            },
+        },
+        clothingSlotMappings: {
+          item: {
+            blueprintSlots: ['missing_slot'],
+            allowedLayers: ['base'],
+            layerOrder: ['base'],
+            defaultLayer: 'base',
           },
-        });
+        },
+      });
 
       const attachmentPoints =
         await service.resolveClothingSlotToAttachmentPoints(
@@ -271,18 +304,16 @@ describe('AnatomyClothingIntegrationService - Additional Coverage', () => {
       };
       mockBodyGraphService.getBodyGraph.mockResolvedValue(mockBodyGraph);
 
-      mockDataRegistry.get
-        .mockReturnValueOnce({ blueprintId: 'test:blueprint' })
-        .mockReturnValueOnce({
-          clothingSlotMappings: {
-            item: {
-              anatomySockets: ['socket1'],
-              allowedLayers: ['base'],
-              layerOrder: ['base'],
-              defaultLayer: 'base',
-            },
+      mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue({
+        clothingSlotMappings: {
+          item: {
+            anatomySockets: ['socket1'],
+            allowedLayers: ['base'],
+            layerOrder: ['base'],
+            defaultLayer: 'base',
           },
-        });
+        },
+      });
 
       const result = await service.getAvailableClothingSlots('test_entity');
       expect(result.has('item')).toBe(false);
@@ -304,18 +335,16 @@ describe('AnatomyClothingIntegrationService - Additional Coverage', () => {
       };
       mockBodyGraphService.getBodyGraph.mockResolvedValue(mockBodyGraph);
 
-      mockDataRegistry.get
-        .mockReturnValueOnce({ blueprintId: 'test:blueprint' })
-        .mockReturnValueOnce({
-          clothingSlotMappings: {
-            item: {
-              anatomySockets: ['socket1'],
-              allowedLayers: ['base'],
-              layerOrder: ['base'],
-              defaultLayer: 'base',
-            },
+      mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue({
+        clothingSlotMappings: {
+          item: {
+            anatomySockets: ['socket1'],
+            allowedLayers: ['base'],
+            layerOrder: ['base'],
+            defaultLayer: 'base',
           },
-        });
+        },
+      });
 
       const result = await service.getAvailableClothingSlots('test_entity');
       expect(result.has('item')).toBe(false);
@@ -346,18 +375,16 @@ describe('AnatomyClothingIntegrationService - Additional Coverage', () => {
       };
       mockBodyGraphService.getBodyGraph.mockResolvedValue(mockBodyGraph);
 
-      mockDataRegistry.get
-        .mockReturnValueOnce({ blueprintId: 'test:blueprint' })
-        .mockReturnValueOnce({
-          clothingSlotMappings: {
-            glove: {
-              anatomySockets: ['palm_socket', 'finger_socket'],
-              allowedLayers: ['base'],
-              layerOrder: ['base'],
-              defaultLayer: 'base',
-            },
+      mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue({
+        clothingSlotMappings: {
+          glove: {
+            anatomySockets: ['palm_socket', 'finger_socket'],
+            allowedLayers: ['base'],
+            layerOrder: ['base'],
+            defaultLayer: 'base',
           },
-        });
+        },
+      });
 
       const sockets = await service.getSlotAnatomySockets(
         'test_entity',
@@ -392,18 +419,23 @@ describe('AnatomyClothingIntegrationService - Additional Coverage', () => {
       };
       mockBodyGraphService.getBodyGraph.mockResolvedValue(mockBodyGraph);
 
-      mockDataRegistry.get
-        .mockReturnValueOnce({ blueprintId: 'test:blueprint' })
-        .mockReturnValueOnce({ clothingSlotMappings: {} });
+      mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue({
+        clothingSlotMappings: {},
+      });
 
       // First call
       await service.getAvailableClothingSlots('test_entity');
 
-      // Second call - should use cached blueprint
+      // Second call - should use cached available slots
       await service.getAvailableClothingSlots('test_entity');
 
-      // Blueprint should only be loaded once
-      expect(mockDataRegistry.get).toHaveBeenCalledTimes(2); // Recipe + blueprint, not twice
+      // Blueprint repository should only be called once due to available slots caching
+      expect(
+        mockAnatomyBlueprintRepository.getBlueprintByRecipeId
+      ).toHaveBeenCalledTimes(1);
+      expect(
+        mockAnatomyBlueprintRepository.getBlueprintByRecipeId
+      ).toHaveBeenCalledWith('test:recipe');
     });
   });
 
@@ -433,11 +465,9 @@ describe('AnatomyClothingIntegrationService - Additional Coverage', () => {
       };
       mockBodyGraphService.getBodyGraph.mockResolvedValue(mockBodyGraph);
 
-      mockDataRegistry.get
-        .mockReturnValueOnce({ blueprintId: 'test:blueprint' })
-        .mockReturnValueOnce({
-          clothingSlotMappings: {},
-        });
+      mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue({
+        clothingSlotMappings: {},
+      });
 
       await service.getAvailableClothingSlots(entityId);
 
@@ -488,18 +518,16 @@ describe('AnatomyClothingIntegrationService - Additional Coverage', () => {
       };
       mockBodyGraphService.getBodyGraph.mockResolvedValue(mockBodyGraph);
 
-      mockDataRegistry.get
-        .mockReturnValueOnce({ blueprintId: 'test:blueprint' })
-        .mockReturnValueOnce({
-          clothingSlotMappings: {
-            deep_item: {
-              anatomySockets: ['deep_socket'],
-              allowedLayers: ['base'],
-              layerOrder: ['base'],
-              defaultLayer: 'base',
-            },
+      mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue({
+        clothingSlotMappings: {
+          deep_item: {
+            anatomySockets: ['deep_socket'],
+            allowedLayers: ['base'],
+            layerOrder: ['base'],
+            defaultLayer: 'base',
           },
-        });
+        },
+      });
 
       const result = await service.getAvailableClothingSlots(entityId);
 
@@ -542,31 +570,39 @@ describe('AnatomyClothingIntegrationService - Additional Coverage', () => {
       };
       mockBodyGraphService.getBodyGraph.mockResolvedValue(mockBodyGraph);
 
-      mockDataRegistry.get
-        .mockReturnValueOnce({ blueprintId: 'test:blueprint' })
-        .mockReturnValueOnce({
-          slots: {
-            torso: { type: 'test:torso', socket: 'torso_socket' },
-            left_arm: {
-              parent: 'torso',
-              type: 'test:arm',
-              socket: 'arm_socket',
-            },
-            left_hand: {
-              parent: 'left_arm',
-              type: 'test:hand',
-              socket: 'hand_socket',
-            },
+      mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue({
+        slots: {
+          torso: { type: 'test:torso', socket: 'torso_socket' },
+          left_arm: {
+            parent: 'torso',
+            type: 'test:arm',
+            socket: 'arm_socket',
           },
-          clothingSlotMappings: {
-            glove: {
-              blueprintSlots: ['left_hand'],
-              allowedLayers: ['base'],
-              layerOrder: ['base'],
-              defaultLayer: 'base',
-            },
+          left_hand: {
+            parent: 'left_arm',
+            type: 'test:hand',
+            socket: 'hand_socket',
           },
-        });
+        },
+        clothingSlotMappings: {
+          glove: {
+            blueprintSlots: ['left_hand'],
+            allowedLayers: ['base'],
+            layerOrder: ['base'],
+            defaultLayer: 'base',
+          },
+        },
+      });
+
+      // Setup AnatomySocketIndex to return correct entity for socket
+      mockAnatomySocketIndex.findEntityWithSocket.mockImplementation(
+        (rootEntityId, socketId) => {
+          if (socketId === 'hand_socket') {
+            return Promise.resolve('hand_entity');
+          }
+          return Promise.resolve(null);
+        }
+      );
 
       const attachmentPoints =
         await service.resolveClothingSlotToAttachmentPoints(
@@ -593,19 +629,17 @@ describe('AnatomyClothingIntegrationService - Additional Coverage', () => {
       };
       mockBodyGraphService.getBodyGraph.mockResolvedValue(mockBodyGraph);
 
-      mockDataRegistry.get
-        .mockReturnValueOnce({ blueprintId: 'test:blueprint' })
-        .mockReturnValueOnce({
-          slots: null, // Null slots
-          clothingSlotMappings: {
-            item: {
-              blueprintSlots: ['some_slot'],
-              allowedLayers: ['base'],
-              layerOrder: ['base'],
-              defaultLayer: 'base',
-            },
+      mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue({
+        slots: null, // Null slots
+        clothingSlotMappings: {
+          item: {
+            blueprintSlots: ['some_slot'],
+            allowedLayers: ['base'],
+            layerOrder: ['base'],
+            defaultLayer: 'base',
           },
-        });
+        },
+      });
 
       const result = await service.getAvailableClothingSlots('test_entity');
       expect(result.has('item')).toBe(false);
@@ -624,28 +658,26 @@ describe('AnatomyClothingIntegrationService - Additional Coverage', () => {
       };
       mockBodyGraphService.getBodyGraph.mockResolvedValue(mockBodyGraph);
 
-      mockDataRegistry.get
-        .mockReturnValueOnce({ blueprintId: 'test:blueprint' })
-        .mockReturnValueOnce({
-          slots: {
-            partial_slot: {
-              type: 'test:part',
-              // Missing socket property
-            },
-            valid_slot: {
-              type: 'test:part',
-              socket: 'valid_socket',
-            },
+      mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue({
+        slots: {
+          partial_slot: {
+            type: 'test:part',
+            // Missing socket property
           },
-          clothingSlotMappings: {
-            mixed_item: {
-              blueprintSlots: ['partial_slot', 'valid_slot'],
-              allowedLayers: ['base'],
-              layerOrder: ['base'],
-              defaultLayer: 'base',
-            },
+          valid_slot: {
+            type: 'test:part',
+            socket: 'valid_socket',
           },
-        });
+        },
+        clothingSlotMappings: {
+          mixed_item: {
+            blueprintSlots: ['partial_slot', 'valid_slot'],
+            allowedLayers: ['base'],
+            layerOrder: ['base'],
+            defaultLayer: 'base',
+          },
+        },
+      });
 
       const attachmentPoints =
         await service.resolveClothingSlotToAttachmentPoints(

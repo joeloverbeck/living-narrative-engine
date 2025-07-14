@@ -21,6 +21,8 @@ describe('SuspiciousPatternsManager', () => {
   });
 
   afterEach(() => {
+    // Clear any pending timers first
+    jest.clearAllTimers();
     // Restore real timers
     jest.useRealTimers();
     jest.clearAllMocks();

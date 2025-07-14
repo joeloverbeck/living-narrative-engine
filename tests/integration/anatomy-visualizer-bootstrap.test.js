@@ -15,7 +15,8 @@ describe('Anatomy Visualizer - Bootstrap Integration', () => {
 
   beforeEach(() => {
     // Setup DOM environment
-    dom = new JSDOM(`
+    dom = new JSDOM(
+      `
       <!DOCTYPE html>
       <html>
         <body>
@@ -25,10 +26,12 @@ describe('Anatomy Visualizer - Bootstrap Integration', () => {
           <button id="back-button">Back</button>
         </body>
       </html>
-    `, {
-      url: 'http://localhost',
-      pretendToBeVisual: true,
-    });
+    `,
+      {
+        url: 'http://localhost',
+        pretendToBeVisual: true,
+      }
+    );
 
     global.window = dom.window;
     global.document = dom.window.document;
@@ -48,7 +51,7 @@ describe('Anatomy Visualizer - Bootstrap Integration', () => {
 
   it('should successfully register and resolve VisualizerStateController with minimal configuration', async () => {
     // This test verifies the fix for the "No service registered for key VisualizerStateController" error
-    
+
     const bootstrapper = new CommonBootstrapper();
     let resolvedVisualizerStateController = null;
     let resolvedAnatomyDescriptionService = null;
@@ -58,18 +61,23 @@ describe('Anatomy Visualizer - Bootstrap Integration', () => {
       containerConfigType: 'minimal',
       worldName: 'default',
       includeAnatomyFormatting: true,
+      skipModLoading: true,
       postInitHook: async (services, container) => {
         // Import and call registerVisualizerComponents
         const { registerVisualizerComponents } = await import(
           '../../src/dependencyInjection/registrations/visualizerRegistrations.js'
         );
-        
+
         registrationsCalled = true;
         registerVisualizerComponents(container);
 
         // Try to resolve the services that anatomy-visualizer.js needs
-        resolvedAnatomyDescriptionService = container.resolve(tokens.AnatomyDescriptionService);
-        resolvedVisualizerStateController = container.resolve(tokens.VisualizerStateController);
+        resolvedAnatomyDescriptionService = container.resolve(
+          tokens.AnatomyDescriptionService
+        );
+        resolvedVisualizerStateController = container.resolve(
+          tokens.VisualizerStateController
+        );
       },
     });
 
@@ -82,19 +90,23 @@ describe('Anatomy Visualizer - Bootstrap Integration', () => {
     // Assert that services were successfully resolved
     expect(resolvedAnatomyDescriptionService).toBeDefined();
     expect(resolvedAnatomyDescriptionService).not.toBeNull();
-    
+
     expect(resolvedVisualizerStateController).toBeDefined();
     expect(resolvedVisualizerStateController).not.toBeNull();
 
     // Verify the resolved controller has expected methods
-    expect(typeof resolvedVisualizerStateController.selectEntity).toBe('function');
-    expect(typeof resolvedVisualizerStateController.handleError).toBe('function');
+    expect(typeof resolvedVisualizerStateController.selectEntity).toBe(
+      'function'
+    );
+    expect(typeof resolvedVisualizerStateController.handleError).toBe(
+      'function'
+    );
     expect(typeof resolvedVisualizerStateController.reset).toBe('function');
   });
 
   it('should fail to resolve VisualizerStateController without registerVisualizerComponents', async () => {
     // This test verifies that without the fix, the error would occur
-    
+
     const bootstrapper = new CommonBootstrapper();
     let errorThrown = null;
 
@@ -102,6 +114,7 @@ describe('Anatomy Visualizer - Bootstrap Integration', () => {
       containerConfigType: 'minimal',
       worldName: 'default',
       includeAnatomyFormatting: true,
+      skipModLoading: true,
       postInitHook: async (services, container) => {
         // Try to resolve VisualizerStateController WITHOUT calling registerVisualizerComponents
         try {
@@ -117,12 +130,14 @@ describe('Anatomy Visualizer - Bootstrap Integration', () => {
 
     // Assert that the expected error was thrown
     expect(errorThrown).toBeDefined();
-    expect(errorThrown.message).toContain('No service registered for key "VisualizerStateController"');
+    expect(errorThrown.message).toContain(
+      'No service registered for key "VisualizerStateController"'
+    );
   });
 
   it('should register all required visualizer dependencies', async () => {
     // This test ensures all visualizer dependencies are properly registered
-    
+
     const bootstrapper = new CommonBootstrapper();
     let resolvedServices = {};
 
@@ -130,18 +145,25 @@ describe('Anatomy Visualizer - Bootstrap Integration', () => {
       containerConfigType: 'minimal',
       worldName: 'default',
       includeAnatomyFormatting: true,
+      skipModLoading: true,
       postInitHook: async (services, container) => {
         // Import and call registerVisualizerComponents
         const { registerVisualizerComponents } = await import(
           '../../src/dependencyInjection/registrations/visualizerRegistrations.js'
         );
-        
+
         registerVisualizerComponents(container);
 
         // Resolve all visualizer-related services
-        resolvedServices.visualizerState = container.resolve(tokens.VisualizerState);
-        resolvedServices.anatomyLoadingDetector = container.resolve(tokens.AnatomyLoadingDetector);
-        resolvedServices.visualizerStateController = container.resolve(tokens.VisualizerStateController);
+        resolvedServices.visualizerState = container.resolve(
+          tokens.VisualizerState
+        );
+        resolvedServices.anatomyLoadingDetector = container.resolve(
+          tokens.AnatomyLoadingDetector
+        );
+        resolvedServices.visualizerStateController = container.resolve(
+          tokens.VisualizerStateController
+        );
       },
     });
 
@@ -155,15 +177,19 @@ describe('Anatomy Visualizer - Bootstrap Integration', () => {
 
     // Verify service relationships (controller depends on state and detector)
     expect(resolvedServices.visualizerStateController).toBeTruthy();
-    
+
     // Verify the visualizer state has expected methods
-    expect(typeof resolvedServices.visualizerState.getCurrentState).toBe('function');
-    expect(typeof resolvedServices.visualizerState.getSelectedEntity).toBe('function');
+    expect(typeof resolvedServices.visualizerState.getCurrentState).toBe(
+      'function'
+    );
+    expect(typeof resolvedServices.visualizerState.getSelectedEntity).toBe(
+      'function'
+    );
   });
 
   it('should create AnatomyVisualizerUI with all required dependencies', async () => {
     // This test verifies the complete initialization flow works
-    
+
     const bootstrapper = new CommonBootstrapper();
     let anatomyVisualizerUI = null;
     let initializationComplete = false;
@@ -172,20 +198,27 @@ describe('Anatomy Visualizer - Bootstrap Integration', () => {
       containerConfigType: 'minimal',
       worldName: 'default',
       includeAnatomyFormatting: true,
+      skipModLoading: true,
       postInitHook: async (services, container) => {
         // Import required modules
         const { registerVisualizerComponents } = await import(
           '../../src/dependencyInjection/registrations/visualizerRegistrations.js'
         );
-        const AnatomyVisualizerUI = (await import('../../src/domUI/AnatomyVisualizerUI.js')).default;
-        
+        const AnatomyVisualizerUI = (
+          await import('../../src/domUI/AnatomyVisualizerUI.js')
+        ).default;
+
         // Register visualizer components
         registerVisualizerComponents(container);
 
         // Get all required services
         const { logger, registry, entityManager, eventDispatcher } = services;
-        const anatomyDescriptionService = container.resolve(tokens.AnatomyDescriptionService);
-        const visualizerStateController = container.resolve(tokens.VisualizerStateController);
+        const anatomyDescriptionService = container.resolve(
+          tokens.AnatomyDescriptionService
+        );
+        const visualizerStateController = container.resolve(
+          tokens.VisualizerStateController
+        );
 
         // Create UI instance
         anatomyVisualizerUI = new AnatomyVisualizerUI({
