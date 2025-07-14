@@ -62,6 +62,7 @@ import { LayerCompatibilityService } from '../../clothing/validation/layerCompat
 import { ClothingSlotValidator } from '../../clothing/validation/clothingSlotValidator.js';
 import { EquipmentOrchestrator } from '../../clothing/orchestration/equipmentOrchestrator.js';
 import AnatomyClothingIntegrationService from '../../anatomy/integration/anatomyClothingIntegrationService.js';
+import AnatomyClothingIntegrationFacade from '../../anatomy/integration/AnatomyClothingIntegrationFacade.js';
 import AnatomyBlueprintRepository from '../../anatomy/repositories/anatomyBlueprintRepository.js';
 import AnatomySocketIndex from '../../anatomy/services/anatomySocketIndex.js';
 import LayerResolutionService from '../../clothing/services/layerResolutionService.js';
@@ -611,9 +612,10 @@ export function registerWorldAndEntity(container) {
     )}.`
   );
 
-  // Register AnatomyClothingIntegrationService
+  // Register AnatomyClothingIntegrationService using the migration facade
+  // This allows gradual migration of dependent services
   registrar.singletonFactory(tokens.AnatomyClothingIntegrationService, (c) => {
-    return new AnatomyClothingIntegrationService({
+    return new AnatomyClothingIntegrationFacade({
       logger: c.resolve(tokens.ILogger),
       entityManager: c.resolve(tokens.IEntityManager),
       bodyGraphService: c.resolve(tokens.BodyGraphService),
