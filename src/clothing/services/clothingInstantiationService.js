@@ -11,11 +11,16 @@ import {
 import { InvalidArgumentError } from '../../errors/invalidArgumentError.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../constants/eventIds.js';
 import LayerResolutionService from './layerResolutionService.js';
+import { CacheKeyTypes } from '../../anatomy/cache/AnatomyClothingCache.js';
 
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 /** @typedef {import('../../interfaces/coreServices.js').IDataRegistry} IDataRegistry */
 /** @typedef {import('../orchestration/equipmentOrchestrator.js').EquipmentOrchestrator} EquipmentOrchestrator */
-/** @typedef {import('../../anatomy/integration/anatomyClothingIntegrationService.js').default} AnatomyClothingIntegrationService */
+/** @typedef {import('../../anatomy/integration/SlotResolver.js').default} SlotResolver */
+/** @typedef {import('../validation/clothingSlotValidator.js').default} ClothingSlotValidator */
+/** @typedef {import('../../anatomy/repositories/anatomyBlueprintRepository.js').default} AnatomyBlueprintRepository */
+/** @typedef {import('../../anatomy/services/bodyGraphService.js').default} BodyGraphService */
+/** @typedef {import('../../anatomy/cache/AnatomyClothingCache.js').AnatomyClothingCache} AnatomyClothingCache */
 /** @typedef {import('./layerResolutionService.js').LayerResolutionService} LayerResolutionService */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
@@ -52,8 +57,16 @@ export class ClothingInstantiationService extends BaseService {
   #dataRegistry;
   /** @type {EquipmentOrchestrator} */
   #equipmentOrchestrator;
-  /** @type {AnatomyClothingIntegrationService} */
-  #anatomyClothingIntegrationService;
+  /** @type {SlotResolver} */
+  #slotResolver;
+  /** @type {ClothingSlotValidator} */
+  #clothingSlotValidator;
+  /** @type {AnatomyBlueprintRepository} */
+  #anatomyBlueprintRepository;
+  /** @type {BodyGraphService} */
+  #bodyGraphService;
+  /** @type {AnatomyClothingCache} */
+  #cache;
   /** @type {LayerResolutionService} */
   #layerResolutionService;
   /** @type {ILogger} */
@@ -68,7 +81,11 @@ export class ClothingInstantiationService extends BaseService {
    * @param {IEntityManager} deps.entityManager - Entity manager for entity operations
    * @param {IDataRegistry} deps.dataRegistry - Data registry for accessing loaded content
    * @param {EquipmentOrchestrator} deps.equipmentOrchestrator - Orchestrator for equipment workflows
-   * @param {AnatomyClothingIntegrationService} deps.anatomyClothingIntegrationService - Anatomy-clothing bridge
+   * @param {SlotResolver} deps.slotResolver - Resolver for slot-to-socket mapping
+   * @param {ClothingSlotValidator} deps.clothingSlotValidator - Validator for slot compatibility
+   * @param {AnatomyBlueprintRepository} deps.anatomyBlueprintRepository - Repository for anatomy blueprints
+   * @param {BodyGraphService} deps.bodyGraphService - Service for anatomy structure queries
+   * @param {AnatomyClothingCache} deps.anatomyClothingCache - Cache for performance optimization
    * @param {LayerResolutionService} deps.layerResolutionService - Layer precedence resolution service
    * @param {ILogger} deps.logger - Logger instance
    * @param {ISafeEventDispatcher} deps.eventBus - Event dispatcher for system events
@@ -77,7 +94,11 @@ export class ClothingInstantiationService extends BaseService {
     entityManager,
     dataRegistry,
     equipmentOrchestrator,
-    anatomyClothingIntegrationService,
+    slotResolver,
+    clothingSlotValidator,
+    anatomyBlueprintRepository,
+    bodyGraphService,
+    anatomyClothingCache,
     layerResolutionService,
     logger,
     eventBus,
@@ -97,9 +118,25 @@ export class ClothingInstantiationService extends BaseService {
         value: equipmentOrchestrator,
         requiredMethods: ['orchestrateEquipment'],
       },
-      anatomyClothingIntegrationService: {
-        value: anatomyClothingIntegrationService,
-        requiredMethods: ['validateClothingSlotCompatibility'],
+      slotResolver: {
+        value: slotResolver,
+        requiredMethods: ['resolveClothingSlot', 'setSlotEntityMappings'],
+      },
+      clothingSlotValidator: {
+        value: clothingSlotValidator,
+        requiredMethods: ['validateSlotCompatibility'],
+      },
+      anatomyBlueprintRepository: {
+        value: anatomyBlueprintRepository,
+        requiredMethods: ['getBlueprintByRecipeId'],
+      },
+      bodyGraphService: {
+        value: bodyGraphService,
+        requiredMethods: ['getAnatomyData'],
+      },
+      anatomyClothingCache: {
+        value: anatomyClothingCache,
+        requiredMethods: ['get', 'set'],
       },
       layerResolutionService: {
         value: layerResolutionService,
@@ -114,7 +151,11 @@ export class ClothingInstantiationService extends BaseService {
     this.#entityManager = entityManager;
     this.#dataRegistry = dataRegistry;
     this.#equipmentOrchestrator = equipmentOrchestrator;
-    this.#anatomyClothingIntegrationService = anatomyClothingIntegrationService;
+    this.#slotResolver = slotResolver;
+    this.#clothingSlotValidator = clothingSlotValidator;
+    this.#anatomyBlueprintRepository = anatomyBlueprintRepository;
+    this.#bodyGraphService = bodyGraphService;
+    this.#cache = anatomyClothingCache;
     this.#layerResolutionService = layerResolutionService;
     this.#eventBus = eventBus;
   }
@@ -177,7 +218,7 @@ export class ClothingInstantiationService extends BaseService {
     );
 
     // Set slot-entity mappings for improved slot resolution
-    this.#anatomyClothingIntegrationService.setSlotEntityMappings(
+    this.#slotResolver.setSlotEntityMappings(
       anatomyData.slotEntityMappings
     );
 
@@ -305,6 +346,111 @@ export class ClothingInstantiationService extends BaseService {
   }
 
   /**
+   * Validates clothing slot compatibility using decomposed components
+   *
+   * @private
+   * @param {string} entityId - The entity to validate against
+   * @param {string} slotId - The slot to validate
+   * @param {string} itemId - The item to validate
+   * @returns {Promise<{valid: boolean, reason?: string}>} Validation result
+   */
+  async #validateClothingSlot(entityId, slotId, itemId) {
+    try {
+      // Check cache first
+      const cacheKey = `${entityId}:${slotId}:${itemId}`;
+      const cached = this.#cache.get(CacheKeyTypes.VALIDATION, cacheKey);
+      if (cached !== undefined) {
+        return cached;
+      }
+
+      // Get available slots for the entity
+      const availableSlots = await this.#getAvailableClothingSlots(entityId);
+      
+      // Create resolver function for the validator
+      const resolveAttachmentPoints = async (entityId, slotId) => {
+        return await this.#slotResolver.resolveClothingSlot(entityId, slotId);
+      };
+
+      // Perform validation
+      const result = await this.#clothingSlotValidator.validateSlotCompatibility(
+        entityId,
+        slotId,
+        itemId,
+        availableSlots,
+        resolveAttachmentPoints
+      );
+
+      // Cache the result
+      this.#cache.set(CacheKeyTypes.VALIDATION, cacheKey, result);
+
+      return result;
+    } catch (error) {
+      this.#logger.error(
+        `Failed to validate clothing slot: ${error.message}`,
+        error
+      );
+      return {
+        valid: false,
+        reason: `Validation error: ${error.message}`,
+      };
+    }
+  }
+
+  /**
+   * Gets available clothing slots for an entity
+   *
+   * @private
+   * @param {string} entityId - The entity ID
+   * @returns {Promise<Map<string, object>>} Available clothing slots
+   */
+  async #getAvailableClothingSlots(entityId) {
+    // Check cache first
+    const cacheKey = CacheKeyTypes.AVAILABLE_SLOTS + ':' + entityId;
+    const cached = this.#cache.get(CacheKeyTypes.AVAILABLE_SLOTS, cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    try {
+      // Get anatomy data
+      const anatomyData = await this.#bodyGraphService.getAnatomyData(entityId);
+      if (!anatomyData?.recipeId) {
+        this.#logger.debug(`No anatomy data found for entity ${entityId}`);
+        return new Map();
+      }
+
+      // Get blueprint
+      const blueprint = await this.#anatomyBlueprintRepository
+        .getBlueprintByRecipeId(anatomyData.recipeId);
+
+      if (!blueprint?.clothingSlotMappings) {
+        this.#logger.debug(`No clothing slot mappings in blueprint for entity ${entityId}`);
+        return new Map();
+      }
+
+      // Convert to Map format
+      const availableSlots = new Map(
+        Object.entries(blueprint.clothingSlotMappings)
+      );
+
+      // Cache the result
+      this.#cache.set(
+        CacheKeyTypes.AVAILABLE_SLOTS,
+        cacheKey,
+        availableSlots
+      );
+
+      return availableSlots;
+    } catch (error) {
+      this.#logger.error(
+        `Failed to get available clothing slots: ${error.message}`,
+        error
+      );
+      return new Map();
+    }
+  }
+
+  /**
    * Validates that a clothing instance can be equipped on the actor after instantiation
    *
    * @private
@@ -352,12 +498,11 @@ export class ClothingInstantiationService extends BaseService {
         `ClothingInstantiationService: Validating slot compatibility for clothing '${clothingInstanceId}' in slot '${targetSlot}' on actor '${actorId}'`
       );
 
-      const validationResult =
-        await this.#anatomyClothingIntegrationService.validateClothingSlotCompatibility(
-          actorId,
-          targetSlot,
-          clothingInstanceId // Now using instance ID instead of definition ID
-        );
+      const validationResult = await this.#validateClothingSlot(
+        actorId,
+        targetSlot,
+        clothingInstanceId // Now using instance ID instead of definition ID
+      );
 
       if (!validationResult.valid) {
         const errorMessage =
@@ -427,14 +572,11 @@ export class ClothingInstantiationService extends BaseService {
         }
 
         // Validate slot compatibility with blueprint
-        // Note: validateClothingSlotCompatibility expects (entityId, slotId, itemId)
-        // Since we're validating before creation, we'll use the actor ID
-        const validationResult =
-          await this.#anatomyClothingIntegrationService.validateClothingSlotCompatibility(
-            actorId,
-            targetSlot,
-            config.entityId
-          );
+        const validationResult = await this.#validateClothingSlot(
+          actorId,
+          targetSlot,
+          config.entityId
+        );
 
         if (!validationResult.valid) {
           errors.push(

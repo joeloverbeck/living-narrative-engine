@@ -19,6 +19,7 @@ export const CacheKeyTypes = {
   BLUEPRINT: 'blueprint',
   SOCKET_LOOKUP: 'socket_lookup',
   ENTITY_STRUCTURE: 'entity_structure',
+  VALIDATION: 'validation',
 };
 
 /**
@@ -77,7 +78,7 @@ export class AnatomyClothingCache extends BaseService {
           ttl: cacheConfig.ttl,
           updateAgeOnGet: cacheConfig.updateAgeOnGet,
           sizeCalculation: (value) => this.#calculateSize(value),
-          maxSize: this.#config.maxMemoryUsage / Object.keys(CacheKeyTypes).length,
+          maxSize: Math.floor(this.#config.maxMemoryUsage / Object.keys(CacheKeyTypes).length),
           dispose: (value, key) => {
             this.#logger.debug(`Cache entry disposed: ${cacheType}:${key}`);
           },

@@ -121,6 +121,12 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
       eventDispatcher: mocks.eventDispatcher,
     });
 
+    // Add the getAnatomyData method that ClothingInstantiationService expects
+    this.bodyGraphService.getAnatomyData = jest.fn().mockResolvedValue({
+      recipeId: 'human_base',
+      rootEntityId: 'actor123',
+    });
+
     // Create mock dependencies for BodyDescriptionComposer
     this.mockBodyPartDescriptionBuilder = {
       buildDescription: (partEntity) => {
@@ -305,12 +311,35 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
         }),
     };
 
+    // Create missing dependencies for ClothingInstantiationService
+    this.slotResolver = {
+      resolveClothingSlot: jest.fn().mockResolvedValue([
+        { entityId: 'torso', socketId: 'chest', slotPath: 'torso.chest' },
+      ]),
+      setSlotEntityMappings: jest.fn(),
+    };
+
+    this.anatomyBlueprintRepository = {
+      getBlueprintByRecipeId: (recipeId) => {
+        const recipe = mocks.registry.get('anatomyRecipes', recipeId);
+        if (!recipe) {
+          return null;
+        }
+        return mocks.registry.get('anatomyBlueprints', recipe.blueprintId);
+      },
+      clearCache: () => {},
+    };
+
     // Create clothing instantiation service
     this.clothingInstantiationService = new ClothingInstantiationService({
       entityManager: this.entityManager,
       dataRegistry: mocks.registry,
       equipmentOrchestrator: this.mockEquipmentOrchestrator,
-      anatomyClothingIntegrationService: this.anatomyClothingIntegrationService,
+      slotResolver: this.slotResolver,
+      clothingSlotValidator: this.clothingSlotValidator,
+      anatomyBlueprintRepository: this.anatomyBlueprintRepository,
+      bodyGraphService: this.bodyGraphService,
+      anatomyClothingCache: this.anatomyClothingCache,
       layerResolutionService: this.layerResolutionService,
       logger: mocks.logger,
       eventBus: mocks.eventDispatcher,

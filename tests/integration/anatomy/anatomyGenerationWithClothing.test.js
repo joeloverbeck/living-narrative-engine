@@ -17,10 +17,15 @@ describe('Anatomy Generation with Clothing Integration', () => {
   let logger;
   let bodyBlueprintFactory;
   let equipmentOrchestrator;
-  let anatomyClothingIntegrationService;
   let eventBus;
   let clothingInstantiationService;
   let anatomyGenerationWorkflow;
+  let mockSlotResolver;
+  let mockClothingSlotValidator;
+  let mockAnatomyBlueprintRepository;
+  let mockBodyGraphService;
+  let mockAnatomyClothingCache;
+  let layerResolutionService;
 
   const ownerId = 'actor_123';
   const blueprintId = 'anatomy:human_male';
@@ -95,19 +100,12 @@ describe('Anatomy Generation with Clothing Integration', () => {
       orchestrateEquipment: jest.fn().mockResolvedValue({ success: true }),
     };
 
-    anatomyClothingIntegrationService = {
-      validateClothingSlotCompatibility: jest.fn().mockResolvedValue({
-        valid: true,
-      }),
-      setSlotEntityMappings: jest.fn(),
-    };
-
     eventBus = {
       dispatch: jest.fn(),
     };
 
     // Create mock layer resolution service
-    const layerResolutionService = {
+    layerResolutionService = {
       resolveLayer: jest.fn().mockReturnValue('base'),
       validateLayerAllowed: jest.fn().mockReturnValue(true),
       resolveAndValidateLayer: jest
@@ -128,12 +126,85 @@ describe('Anatomy Generation with Clothing Integration', () => {
         .mockReturnValue(['underwear', 'base', 'outer', 'accessories']),
     };
 
+    // Create mock dependencies for ClothingInstantiationService
+    mockSlotResolver = {
+      resolveClothingSlot: jest.fn().mockResolvedValue([
+        { entityId: 'torso', socketId: 'chest', slotPath: 'torso.chest' },
+      ]),
+      setSlotEntityMappings: jest.fn(),
+    };
+
+    mockClothingSlotValidator = {
+      validateSlotCompatibility: jest.fn().mockResolvedValue({ valid: true }),
+    };
+
+    mockAnatomyBlueprintRepository = {
+      getBlueprint: jest.fn().mockResolvedValue({ 
+        clothingSlotMappings: {
+          torso_upper: {
+            blueprintSlots: ['torso.chest'],
+            allowedLayers: ['base', 'outer'],
+          },
+          legs: {
+            blueprintSlots: ['legs.lower'],
+            allowedLayers: ['base', 'outer'],
+          },
+          feet: {
+            blueprintSlots: ['feet.sole'],
+            allowedLayers: ['base', 'outer'],
+          },
+          head: {
+            blueprintSlots: ['head.crown'],
+            allowedLayers: ['base', 'outer'],
+          },
+        },
+      }),
+      getBlueprintByRecipeId: jest.fn().mockResolvedValue({ 
+        clothingSlotMappings: {
+          torso_upper: {
+            blueprintSlots: ['torso.chest'],
+            allowedLayers: ['base', 'outer'],
+          },
+          legs: {
+            blueprintSlots: ['legs.lower'],
+            allowedLayers: ['base', 'outer'],
+          },
+          feet: {
+            blueprintSlots: ['feet.sole'],
+            allowedLayers: ['base', 'outer'],
+          },
+          head: {
+            blueprintSlots: ['head.crown'],
+            allowedLayers: ['base', 'outer'],
+          },
+        },
+      }),
+    };
+
+    mockBodyGraphService = {
+      findPath: jest.fn().mockReturnValue(['torso_123']),
+      getAnatomyData: jest.fn().mockResolvedValue({
+        recipeId: 'human_base',
+        rootEntityId: 'actor123',
+      }),
+    };
+
+    mockAnatomyClothingCache = {
+      get: jest.fn(),
+      set: jest.fn(),
+      has: jest.fn().mockReturnValue(false),
+    };
+
     // Create real service instances
     clothingInstantiationService = new ClothingInstantiationService({
       entityManager,
       dataRegistry,
       equipmentOrchestrator,
-      anatomyClothingIntegrationService,
+      slotResolver: mockSlotResolver,
+      clothingSlotValidator: mockClothingSlotValidator,
+      anatomyBlueprintRepository: mockAnatomyBlueprintRepository,
+      bodyGraphService: mockBodyGraphService,
+      anatomyClothingCache: mockAnatomyClothingCache,
       layerResolutionService,
       logger,
       eventBus,
@@ -483,14 +554,42 @@ describe('Anatomy Generation with Clothing Integration', () => {
     });
 
     it('should validate clothing slots against anatomy blueprint', async () => {
-      // Make one item fail validation
-      anatomyClothingIntegrationService.validateClothingSlotCompatibility
-        .mockResolvedValueOnce({ valid: true })
-        .mockResolvedValueOnce({ valid: false, reason: 'Invalid slot' })
-        .mockResolvedValueOnce({ isValid: true, errors: [] })
-        .mockResolvedValueOnce({ isValid: true, errors: [] });
+      // Make one item fail validation by using the correct mock reference  
+      const clothingInstantiationServiceMock = jest.spyOn(clothingInstantiationService, 'instantiateRecipeClothing');
+      
+      // Create a new instance with failing validation for the second call
+      const failingValidator = {
+        validateSlotCompatibility: jest.fn()
+          .mockResolvedValueOnce({ valid: true })
+          .mockResolvedValueOnce({ valid: false, reason: 'Invalid slot' })
+          .mockResolvedValue({ valid: true }),
+      };
 
-      const result = await anatomyGenerationWorkflow.generate(
+      // Create a new service instance with the failing validator for this test
+      const testClothingService = new ClothingInstantiationService({
+        entityManager,
+        dataRegistry,
+        equipmentOrchestrator,
+        slotResolver: mockSlotResolver,
+        clothingSlotValidator: failingValidator,
+        anatomyBlueprintRepository: mockAnatomyBlueprintRepository,
+        bodyGraphService: mockBodyGraphService,
+        anatomyClothingCache: mockAnatomyClothingCache,
+        layerResolutionService,
+        logger,
+        eventBus,
+      });
+
+      // Create a temporary workflow with the failing service
+      const testWorkflow = new AnatomyGenerationWorkflow({
+        entityManager,
+        dataRegistry,
+        logger,
+        bodyBlueprintFactory,
+        clothingInstantiationService: testClothingService,
+      });
+
+      const result = await testWorkflow.generate(
         blueprintId,
         recipeId,
         {

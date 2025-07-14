@@ -65,6 +65,7 @@ import AnatomyClothingIntegrationService from '../../anatomy/integration/anatomy
 import AnatomyClothingIntegrationFacade from '../../anatomy/integration/AnatomyClothingIntegrationFacade.js';
 import AnatomyBlueprintRepository from '../../anatomy/repositories/anatomyBlueprintRepository.js';
 import AnatomySocketIndex from '../../anatomy/services/anatomySocketIndex.js';
+import SlotResolver from '../../anatomy/integration/SlotResolver.js';
 import LayerResolutionService from '../../clothing/services/layerResolutionService.js';
 import UuidGenerator from '../../adapters/UuidGenerator.js';
 
@@ -612,6 +613,23 @@ export function registerWorldAndEntity(container) {
     )}.`
   );
 
+  // Register SlotResolver
+  registrar.singletonFactory(tokens.SlotResolver, (c) => {
+    return new SlotResolver({
+      logger: c.resolve(tokens.ILogger),
+      entityManager: c.resolve(tokens.IEntityManager),
+      bodyGraphService: c.resolve(tokens.BodyGraphService),
+      anatomyBlueprintRepository: c.resolve(tokens.IAnatomyBlueprintRepository),
+      anatomySocketIndex: c.resolve(tokens.IAnatomySocketIndex),
+      cache: c.resolve(tokens.AnatomyClothingCache),
+    });
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.SlotResolver
+    )}.`
+  );
+
   // Register AnatomyClothingIntegrationService using the migration facade
   // This allows gradual migration of dependent services
   registrar.singletonFactory(tokens.AnatomyClothingIntegrationService, (c) => {
@@ -637,9 +655,11 @@ export function registerWorldAndEntity(container) {
       entityManager: c.resolve(tokens.IEntityManager),
       dataRegistry: c.resolve(tokens.IDataRegistry),
       equipmentOrchestrator: c.resolve(tokens.EquipmentOrchestrator),
-      anatomyClothingIntegrationService: c.resolve(
-        tokens.AnatomyClothingIntegrationService
-      ),
+      slotResolver: c.resolve(tokens.SlotResolver),
+      clothingSlotValidator: c.resolve(tokens.ClothingSlotValidator),
+      anatomyBlueprintRepository: c.resolve(tokens.IAnatomyBlueprintRepository),
+      bodyGraphService: c.resolve(tokens.BodyGraphService),
+      anatomyClothingCache: c.resolve(tokens.AnatomyClothingCache),
       layerResolutionService: c.resolve(tokens.LayerResolutionService),
       logger: c.resolve(tokens.ILogger),
       eventBus: c.resolve(tokens.ISafeEventDispatcher),
@@ -648,6 +668,28 @@ export function registerWorldAndEntity(container) {
   logger.debug(
     `World and Entity Registration: Registered ${String(
       tokens.ClothingInstantiationService
+    )}.`
+  );
+
+  // Register ClothingInstantiationServiceV2 with decomposed dependencies
+  registrar.singletonFactory(tokens.ClothingInstantiationServiceV2, (c) => {
+    return new ClothingInstantiationService({
+      entityManager: c.resolve(tokens.IEntityManager),
+      dataRegistry: c.resolve(tokens.IDataRegistry),
+      equipmentOrchestrator: c.resolve(tokens.EquipmentOrchestrator),
+      slotResolver: c.resolve(tokens.SlotResolver),
+      clothingSlotValidator: c.resolve(tokens.ClothingSlotValidator),
+      anatomyBlueprintRepository: c.resolve(tokens.IAnatomyBlueprintRepository),
+      bodyGraphService: c.resolve(tokens.BodyGraphService),
+      anatomyClothingCache: c.resolve(tokens.AnatomyClothingCache),
+      layerResolutionService: c.resolve(tokens.LayerResolutionService),
+      logger: c.resolve(tokens.ILogger),
+      eventBus: c.resolve(tokens.ISafeEventDispatcher),
+    });
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.ClothingInstantiationServiceV2
     )}.`
   );
 
