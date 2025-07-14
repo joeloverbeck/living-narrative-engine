@@ -5,7 +5,12 @@
  */
 
 import { BaseService } from '../../utils/serviceBase.js';
+import SlotResolver from './SlotResolver.js';
+import ClothingSlotValidator from '../../clothing/validation/clothingSlotValidator.js';
 
+/** @typedef {import('../../interfaces/IAnatomyBlueprintRepository.js').IAnatomyBlueprintRepository} IAnatomyBlueprintRepository */
+/** @typedef {import('../../interfaces/IAnatomySocketIndex.js').IAnatomySocketIndex} IAnatomySocketIndex */
+/** @typedef {import('../../interfaces/IClothingSlotValidator.js').IClothingSlotValidator} IClothingSlotValidator */
 /** @typedef {object} AnatomyBlueprint - Anatomy blueprint definition from mod data */
 /** @typedef {object} ClothingSlot - Clothing slot definition from mod data */
 
@@ -35,12 +40,21 @@ class AnatomyClothingIntegrationService extends BaseService {
   #logger;
   #entityManager;
   #bodyGraphService;
-  #dataRegistry;
-  #blueprintCache = new Map();
-  #slotResolutionCache = new Map();
+  #anatomyBlueprintRepository;
+  #anatomySocketIndex;
+  #slotResolver;
+  #clothingSlotValidator;
   #slotEntityMappings = new Map();
+  #availableSlotsCache = new Map();
 
-  constructor({ logger, entityManager, bodyGraphService, dataRegistry }) {
+  constructor({
+    logger,
+    entityManager,
+    bodyGraphService,
+    anatomyBlueprintRepository,
+    anatomySocketIndex,
+    clothingSlotValidator,
+  }) {
     super();
 
     this.#logger = this._init('AnatomyClothingIntegrationService', logger, {
@@ -51,15 +65,37 @@ class AnatomyClothingIntegrationService extends BaseService {
       bodyGraphService: {
         value: bodyGraphService,
       },
-      dataRegistry: {
-        value: dataRegistry,
-        requiredMethods: ['get'],
+      anatomyBlueprintRepository: {
+        value: anatomyBlueprintRepository,
+        requiredMethods: ['getBlueprintByRecipeId'],
+      },
+      anatomySocketIndex: {
+        value: anatomySocketIndex,
+        requiredMethods: ['findEntityWithSocket', 'buildIndex'],
+      },
+      clothingSlotValidator: {
+        value: clothingSlotValidator,
+        defaultImpl: ClothingSlotValidator,
+        requiredMethods: ['validateSlotCompatibility'],
       },
     });
 
     this.#entityManager = entityManager;
     this.#bodyGraphService = bodyGraphService;
-    this.#dataRegistry = dataRegistry;
+    this.#anatomyBlueprintRepository = anatomyBlueprintRepository;
+    this.#anatomySocketIndex = anatomySocketIndex;
+    this.#clothingSlotValidator =
+      clothingSlotValidator || new ClothingSlotValidator({ logger });
+
+    // Initialize the slot resolver with strategies
+    this.#slotResolver = new SlotResolver({
+      logger,
+      entityManager,
+      bodyGraphService,
+      anatomyBlueprintRepository,
+      anatomySocketIndex,
+      slotEntityMappings: this.#slotEntityMappings,
+    });
   }
 
   /**
@@ -71,6 +107,11 @@ class AnatomyClothingIntegrationService extends BaseService {
   async getAvailableClothingSlots(entityId) {
     if (!entityId || typeof entityId !== 'string') {
       throw new Error('Entity ID is required');
+    }
+
+    // Check cache first
+    if (this.#availableSlotsCache.has(entityId)) {
+      return this.#availableSlotsCache.get(entityId);
     }
 
     try {
@@ -100,6 +141,10 @@ class AnatomyClothingIntegrationService extends BaseService {
       this.#logger.debug(
         `Found ${availableSlots.size} clothing slots for entity ${entityId}`
       );
+
+      // Cache the result
+      this.#availableSlotsCache.set(entityId, availableSlots);
+
       return availableSlots;
     } catch (err) {
       this.#logger.error(
@@ -125,12 +170,6 @@ class AnatomyClothingIntegrationService extends BaseService {
       throw new Error('Slot ID is required');
     }
 
-    // Check cache
-    const cacheKey = `${entityId}:${slotId}`;
-    if (this.#slotResolutionCache.has(cacheKey)) {
-      return this.#slotResolutionCache.get(cacheKey);
-    }
-
     const slots = await this.getAvailableClothingSlots(entityId);
     const mapping = slots.get(slotId);
 
@@ -138,27 +177,8 @@ class AnatomyClothingIntegrationService extends BaseService {
       return [];
     }
 
-    let attachmentPoints = [];
-
-    // Handle blueprint slot references
-    if (mapping.blueprintSlots) {
-      attachmentPoints = await this.#resolveBlueprintSlots(
-        entityId,
-        mapping.blueprintSlots
-      );
-    }
-    // Handle direct socket references (e.g., torso)
-    else if (mapping.anatomySockets) {
-      attachmentPoints = await this.#resolveDirectSockets(
-        entityId,
-        mapping.anatomySockets
-      );
-    }
-
-    // Cache the result
-    this.#slotResolutionCache.set(cacheKey, attachmentPoints);
-
-    return attachmentPoints;
+    // Use the SlotResolver to handle resolution with appropriate strategy
+    return await this.#slotResolver.resolve(entityId, slotId, mapping);
   }
 
   /**
@@ -170,44 +190,22 @@ class AnatomyClothingIntegrationService extends BaseService {
    * @returns {Promise<{valid: boolean, reason?: string}>}
    */
   async validateClothingSlotCompatibility(entityId, slotId, itemId) {
-    if (!entityId || typeof entityId !== 'string') {
-      throw new Error('Entity ID is required');
-    }
-    if (!slotId || typeof slotId !== 'string') {
-      throw new Error('Slot ID is required');
-    }
-    if (!itemId || typeof itemId !== 'string') {
-      throw new Error('Item ID is required');
-    }
-
+    // Get available slots for the entity
     const availableSlots = await this.getAvailableClothingSlots(entityId);
 
-    if (!availableSlots.has(slotId)) {
-      return {
-        valid: false,
-        reason: `Entity lacks clothing slot '${slotId}'`,
-      };
-    }
+    // Create a function to resolve attachment points that the validator can use
+    const resolveAttachmentPoints = async (entityId, slotId) => {
+      return await this.resolveClothingSlotToAttachmentPoints(entityId, slotId);
+    };
 
-    const mapping = availableSlots.get(slotId);
-    const attachmentPoints = await this.resolveClothingSlotToAttachmentPoints(
+    // Delegate to the validator
+    return await this.#clothingSlotValidator.validateSlotCompatibility(
       entityId,
-      slotId
+      slotId,
+      itemId,
+      availableSlots,
+      resolveAttachmentPoints
     );
-
-    if (attachmentPoints.length === 0) {
-      return {
-        valid: false,
-        reason: `Clothing slot '${slotId}' has no valid attachment points`,
-      };
-    }
-
-    // Additional validation could include:
-    // - Check item's required coverage against attachment points
-    // - Validate layer compatibility
-    // - Check for conflicts with other slots
-
-    return { valid: true };
   }
 
   /**
@@ -230,172 +228,9 @@ class AnatomyClothingIntegrationService extends BaseService {
   }
 
   /**
-   * Resolves blueprint slots to actual attachment points
-   *
-   * @param entityId
-   * @param blueprintSlots
-   * @private
-   */
-  async #resolveBlueprintSlots(entityId, blueprintSlots) {
-    const blueprint = await this.#getEntityBlueprint(entityId);
-    const bodyGraph = await this.#bodyGraphService.getBodyGraph(entityId);
-    const attachmentPoints = [];
-
-    for (const slotId of blueprintSlots) {
-      const slotDef = blueprint.slots[slotId];
-      if (!slotDef) {
-        this.#logger.warn(`Blueprint slot '${slotId}' not found`);
-        continue;
-      }
-
-      // For clothing attachment, use the socket defined in the blueprint slot
-      const socketId = slotDef.socket;
-      if (!socketId) {
-        this.#logger.warn(`Blueprint slot '${slotId}' has no socket defined`);
-        continue;
-      }
-
-      // Find which entity has this socket
-      const socketEntity = await this.#findEntityWithSocket(
-        entityId,
-        socketId,
-        bodyGraph
-      );
-      if (socketEntity) {
-        attachmentPoints.push({
-          entityId: socketEntity,
-          socketId: socketId,
-          slotPath: slotId,
-          orientation: this.#extractOrientation(slotId),
-        });
-        this.#logger.debug(
-          `AnatomyClothingIntegrationService: Found direct slot mapping for '${slotId}' → '${socketEntity}'`
-        );
-      } else {
-        this.#logger.warn(
-          `No entity found with socket '${socketId}' for slot '${slotId}'`
-        );
-      }
-    }
-
-    return attachmentPoints;
-  }
-
-  /**
-   * Resolves direct socket references to attachment points
-   *
-   * @param entityId
-   * @param socketIds
-   * @private
-   */
-  async #resolveDirectSockets(entityId, socketIds) {
-    const bodyGraph = await this.#bodyGraphService.getBodyGraph(entityId);
-    const attachmentPoints = [];
-
-    // For direct sockets, we need to find which parts have these sockets
-    // Check body parts first (preferred over root entity)
-    const bodyParts = bodyGraph.getAllPartIds();
-
-    for (const partId of bodyParts) {
-      const socketsComponent = await this.#entityManager.getComponentData(
-        partId,
-        'anatomy:sockets'
-      );
-
-      if (socketsComponent?.sockets) {
-        for (const socket of socketsComponent.sockets) {
-          if (socketIds.includes(socket.id)) {
-            attachmentPoints.push({
-              entityId: partId,
-              socketId: socket.id,
-              slotPath: 'direct',
-              orientation: socket.orientation || 'neutral',
-            });
-          }
-        }
-      }
-    }
-
-    // Only check root entity if no body parts have the sockets
-    if (attachmentPoints.length === 0) {
-      const rootSockets = await this.#entityManager.getComponentData(
-        entityId,
-        'anatomy:sockets'
-      );
-
-      if (rootSockets?.sockets) {
-        for (const socket of rootSockets.sockets) {
-          if (socketIds.includes(socket.id)) {
-            attachmentPoints.push({
-              entityId: entityId,
-              socketId: socket.id,
-              slotPath: 'direct',
-              orientation: socket.orientation || 'neutral',
-            });
-          }
-        }
-      }
-    }
-
-    return attachmentPoints;
-  }
-
-
-  /**
-   * Finds the entity that has the specified socket
-   *
-   * @param {string} rootEntityId - Root entity to search from
-   * @param {string} socketId - Socket ID to find
-   * @param {object} bodyGraph - Body graph structure
-   * @returns {Promise<string|null>} Entity ID that has the socket, or null if not found
-   * @private
-   */
-  async #findEntityWithSocket(rootEntityId, socketId, bodyGraph) {
-    // Check all parts in the body graph
-    const allParts = bodyGraph.getAllPartIds();
-
-    // Include the root entity in the search
-    const entitiesToCheck = [rootEntityId, ...allParts];
-
-    for (const entityId of entitiesToCheck) {
-      const socketsComponent = await this.#entityManager.getComponentData(
-        entityId,
-        'anatomy:sockets'
-      );
-
-      if (socketsComponent && socketsComponent.sockets) {
-        // Search through the sockets array for matching socket ID
-        const foundSocket = socketsComponent.sockets.find(
-          (socket) => socket.id === socketId
-        );
-        if (foundSocket) {
-          return entityId;
-        }
-      }
-    }
-
-    return null;
-  }
-
-
-  /**
-   * Extracts orientation from a slot ID
-   *
-   * @param slotId
-   * @private
-   */
-  #extractOrientation(slotId) {
-    if (slotId.includes('left')) return 'left';
-    if (slotId.includes('right')) return 'right';
-    if (slotId.includes('upper')) return 'upper';
-    if (slotId.includes('lower')) return 'lower';
-    return 'neutral';
-  }
-
-  /**
    * Gets entity's anatomy blueprint
    *
-   * @param entityId
+   * @param {string} entityId - Entity ID to get blueprint for
    * @private
    */
   async #getEntityBlueprint(entityId) {
@@ -407,44 +242,16 @@ class AnatomyClothingIntegrationService extends BaseService {
       return null;
     }
 
-    // Check cache
-    if (this.#blueprintCache.has(bodyComponent.recipeId)) {
-      return this.#blueprintCache.get(bodyComponent.recipeId);
-    }
-
-    // Load from data registry
-    const recipe = this.#dataRegistry.get(
-      'anatomyRecipes',
+    // Use repository for blueprint access (includes caching)
+    return await this.#anatomyBlueprintRepository.getBlueprintByRecipeId(
       bodyComponent.recipeId
     );
-    if (!recipe) {
-      this.#logger.warn(
-        `Recipe '${bodyComponent.recipeId}' not found in registry`
-      );
-      return null;
-    }
-
-    const blueprint = this.#dataRegistry.get(
-      'anatomyBlueprints',
-      recipe.blueprintId
-    );
-    if (!blueprint) {
-      this.#logger.warn(
-        `Blueprint '${recipe.blueprintId}' not found in registry`
-      );
-      return null;
-    }
-
-    // Cache for performance
-    this.#blueprintCache.set(bodyComponent.recipeId, blueprint);
-
-    return blueprint;
   }
 
   /**
    * Gets entity's anatomy structure
    *
-   * @param entityId
+   * @param {string} entityId - Entity ID to get anatomy structure for
    * @private
    */
   async #getEntityAnatomyStructure(entityId) {
@@ -464,20 +271,15 @@ class AnatomyClothingIntegrationService extends BaseService {
       }
     }
 
-    // DEFENSIVE FALLBACK: If bodyGraph returns few parts, try direct joint traversal
-    // This handles cases where the anatomy cache might be incomplete
-    if (allParts.length <= 1) {
-      this.#logger.warn(
-        `AnatomyClothingIntegrationService: Body graph for '${entityId}' returned only ${allParts.length} parts, using fallback joint traversal`
+    // If body graph has no parts, use fallback joint traversal
+    if (allParts.length === 0) {
+      this.#logger.debug(
+        'AnatomyClothingIntegrationService: Body graph empty, using fallback joint traversal'
       );
-
-      const fallbackParts = await this.#findAnatomyPartsByJoints(entityId);
-      if (fallbackParts.length > allParts.length) {
-        this.#logger.debug(
-          `AnatomyClothingIntegrationService: Fallback found ${fallbackParts.length} parts vs ${allParts.length} from body graph`
-        );
-        allParts = fallbackParts;
-      }
+      allParts = await this.#getFallbackConnectedParts(entityId);
+      this.#logger.debug(
+        `Fallback joint traversal found ${allParts.length} connected parts`
+      );
     }
 
     // Collect sockets from all child parts
@@ -506,74 +308,69 @@ class AnatomyClothingIntegrationService extends BaseService {
   }
 
   /**
-   * Fallback method to find anatomy parts by directly querying joint relationships
-   * Used when the body graph cache is incomplete or missing
+   * Gets connected parts using fallback joint traversal when body graph is empty
    *
-   * @param {string} rootEntityId
-   * @returns {Promise<string[]>} Array of part entity IDs
+   * @param {string} entityId - Root entity ID
+   * @returns {Promise<string[]>} Array of connected part entity IDs
    * @private
    */
-  async #findAnatomyPartsByJoints(rootEntityId) {
-    /** @type {string[]} */
-    const allPartIds = [];
-    /** @type {Set<string>} */
-    const visited = new Set();
+  async #getFallbackConnectedParts(entityId) {
+    // Get all entities with joints
+    const entitiesWithJoints = this.#entityManager.getEntitiesWithComponent
+      ? this.#entityManager.getEntitiesWithComponent('anatomy:joint')
+      : [];
 
-    try {
-      // Get all entities with anatomy:joint components
-      const entitiesWithJoints =
-        this.#entityManager.getEntitiesWithComponent('anatomy:joint');
-
-      if (!entitiesWithJoints || entitiesWithJoints.length === 0) {
-        this.#logger.debug(
-          'AnatomyClothingIntegrationService: No entities with joint components found'
-        );
-        return allPartIds;
-      }
-
-      // Build a map of entities that are connected to our root entity
-      const connectedParts = new Set();
-      const toProcess = [rootEntityId];
-      visited.add(rootEntityId);
-
-      while (toProcess.length > 0) {
-        const currentEntityId = toProcess.shift();
-
-        // Find all entities that have this as a parent
-        for (const entity of entitiesWithJoints) {
-          if (visited.has(entity.id)) continue;
-
-          const joint = this.#entityManager.getComponentData(
-            entity.id,
-            'anatomy:joint'
-          );
-          const parentId = joint?.parentEntityId || joint?.parentId;
-
-          if (parentId === currentEntityId) {
-            connectedParts.add(entity.id);
-            toProcess.push(entity.id);
-            visited.add(entity.id);
-
-            this.#logger.debug(
-              `AnatomyClothingIntegrationService: Found connected part '${entity.id}' with parent '${currentEntityId}'`
-            );
-          }
-        }
-      }
-
-      allPartIds.push(...connectedParts);
-
-      this.#logger.debug(
-        `AnatomyClothingIntegrationService: Fallback joint traversal found ${allPartIds.length} connected parts`
-      );
-    } catch (error) {
-      this.#logger.error(
-        `AnatomyClothingIntegrationService: Failed to find anatomy parts by joints for '${rootEntityId}'`,
-        error
-      );
+    if (!entitiesWithJoints || entitiesWithJoints.length === 0) {
+      this.#logger.debug('Fallback found 0 parts');
+      return [];
     }
 
-    return allPartIds;
+    const connectedParts = new Set();
+    const visited = new Set();
+
+    // Traverse from root entity to find all connected parts
+    const queue = [entityId];
+    visited.add(entityId);
+
+    while (queue.length > 0) {
+      const currentEntityId = queue.shift();
+
+      // Find all entities that have this entity as their parent
+      for (const entity of entitiesWithJoints) {
+        const partId = entity.id || entity;
+
+        if (visited.has(partId)) {
+          continue;
+        }
+
+        try {
+          const jointData = await this.#entityManager.getComponentData(
+            partId,
+            'anatomy:joint'
+          );
+
+          // Handle both sync and async getComponentData
+          const joint =
+            jointData instanceof Promise ? await jointData : jointData;
+
+          if (joint?.parentEntityId === currentEntityId) {
+            connectedParts.add(partId);
+            queue.push(partId);
+            visited.add(partId);
+            this.#logger.debug(
+              `AnatomyClothingIntegrationService: Found connected part ${partId} with parent ${currentEntityId}`
+            );
+          }
+        } catch (err) {
+          // Skip entities that don't have valid joint data
+          continue;
+        }
+      }
+    }
+
+    const result = Array.from(connectedParts);
+    this.#logger.debug(`Fallback found ${result.length} parts`);
+    return result;
   }
 
   /**
@@ -635,6 +432,9 @@ class AnatomyClothingIntegrationService extends BaseService {
       this.#slotEntityMappings = new Map();
     }
 
+    // Update the slot resolver's mappings
+    this.#slotResolver.setSlotEntityMappings(this.#slotEntityMappings);
+
     this.#logger.debug(
       `AnatomyClothingIntegrationService: Updated slot-entity mappings with ${this.#slotEntityMappings.size} entries`
     );
@@ -644,9 +444,11 @@ class AnatomyClothingIntegrationService extends BaseService {
    * Clears all caches
    */
   clearCache() {
-    this.#blueprintCache.clear();
-    this.#slotResolutionCache.clear();
+    this.#anatomyBlueprintRepository.clearCache();
+    this.#anatomySocketIndex.clearCache();
+    this.#slotResolver.clearCache();
     this.#slotEntityMappings.clear();
+    this.#availableSlotsCache.clear();
   }
 }
 

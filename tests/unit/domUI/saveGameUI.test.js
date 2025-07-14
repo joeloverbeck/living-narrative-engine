@@ -148,12 +148,28 @@ describe('SaveGameUI', () => {
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
     jest.clearAllTimers();
     jest.useRealTimers();
+    jest.clearAllMocks();
+    jest.restoreAllMocks();
+
+    // Clean up global mocks
+    delete global.requestAnimationFrame;
+    delete global.cancelAnimationFrame;
+
     if (mockWindow) mockWindow.close();
     global.window = undefined;
     global.document = undefined;
+    global.HTMLElement = undefined;
+    global.Element = undefined;
+    global.Node = undefined;
+    global.Event = undefined;
+    global.CustomEvent = undefined;
+    global.MouseEvent = undefined;
+    global.KeyboardEvent = undefined;
+    global.InputEvent = undefined;
+    global.HTMLInputElement = undefined;
+    global.HTMLButtonElement = undefined;
   });
 
   /**

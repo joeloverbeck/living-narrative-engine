@@ -27,11 +27,25 @@ jest.mock('../../../src/domUI/AnatomyVisualizerUI.js', () => ({
   })),
 }));
 
+// Mock registerVisualizerComponents
+jest.mock(
+  '../../../src/dependencyInjection/registrations/visualizerRegistrations.js',
+  () => ({
+    registerVisualizerComponents: jest.fn(),
+  })
+);
+
 // Mock tokens
 jest.mock('../../../src/dependencyInjection/tokens.js', () => ({
   __esModule: true,
   tokens: {
     AnatomyDescriptionService: 'AnatomyDescriptionService',
+    VisualizerState: 'VisualizerState',
+    AnatomyLoadingDetector: 'AnatomyLoadingDetector',
+    VisualizerStateController: 'VisualizerStateController',
+    ILogger: 'ILogger',
+    IEntityManager: 'IEntityManager',
+    IValidatedEventDispatcher: 'IValidatedEventDispatcher',
   },
 }));
 
@@ -45,6 +59,24 @@ const loggerMock = {
 const containerMock = {
   resolve: jest.fn((token) => {
     if (token === 'AnatomyDescriptionService') {
+      return {};
+    }
+    if (token === 'VisualizerStateController') {
+      return {};
+    }
+    if (token === 'VisualizerState') {
+      return {};
+    }
+    if (token === 'AnatomyLoadingDetector') {
+      return {};
+    }
+    if (token === 'ILogger') {
+      return loggerMock;
+    }
+    if (token === 'IEntityManager') {
+      return {};
+    }
+    if (token === 'IValidatedEventDispatcher') {
       return {};
     }
   }),

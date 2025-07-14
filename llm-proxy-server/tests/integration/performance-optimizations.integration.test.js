@@ -109,6 +109,7 @@ describe('Performance Optimizations Integration Tests', () => {
       httpAgentService.cleanup();
     }
 
+    jest.clearAllTimers();
     jest.useRealTimers();
     jest.restoreAllMocks();
   });

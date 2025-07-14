@@ -235,9 +235,9 @@ describe('ClothingSystem Integration', () => {
           getConnectedParts: jest.fn().mockReturnValue([]),
         }),
       },
-      dataRegistry: {
-        get: jest.fn((category, id) => {
-          if (category === 'anatomyBlueprints' && id === 'anatomy:human_male') {
+      anatomyBlueprintRepository: {
+        getBlueprintByRecipeId: jest.fn((recipeId) => {
+          if (recipeId === 'anatomy:human_male') {
             return Promise.resolve({
               id: 'anatomy:human_male',
               root: 'anatomy:human_male_torso',
@@ -269,14 +269,17 @@ describe('ClothingSystem Integration', () => {
               },
             });
           }
-          if (category === 'anatomyRecipes' && id === 'anatomy:human_male') {
-            return Promise.resolve({
-              id: 'anatomy:human_male',
-              blueprintId: 'anatomy:human_male',
-            });
-          }
           return Promise.resolve(null);
         }),
+        clearCache: jest.fn(),
+      },
+      anatomySocketIndex: {
+        findEntityWithSocket: jest.fn(),
+        buildIndex: jest.fn(),
+        clearCache: jest.fn(),
+      },
+      clothingSlotValidator: {
+        validateSlotCompatibility: jest.fn().mockResolvedValue({ valid: true }),
       },
     });
 

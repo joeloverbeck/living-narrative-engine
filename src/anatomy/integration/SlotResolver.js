@@ -1,0 +1,186 @@
+/**
+ * @file Orchestrator for clothing slot resolution strategies
+ * @see src/interfaces/ISlotResolutionStrategy.js
+ * @see src/anatomy/integration/strategies/BlueprintSlotStrategy.js
+ * @see src/anatomy/integration/strategies/DirectSocketStrategy.js
+ */
+
+import {
+  validateDependency,
+  assertPresent,
+} from '../../utils/dependencyUtils.js';
+import { ensureValidLogger } from '../../utils/loggerUtils.js';
+import BlueprintSlotStrategy from './strategies/BlueprintSlotStrategy.js';
+import DirectSocketStrategy from './strategies/DirectSocketStrategy.js';
+
+/** @typedef {import('../../interfaces/ISlotResolutionStrategy.js')} ISlotResolutionStrategy */
+
+/**
+ * Orchestrates different slot resolution strategies
+ * Follows Strategy Pattern to enable extensible slot resolution
+ */
+class SlotResolver {
+  #logger;
+  #strategies;
+  #cache;
+
+  /**
+   * @param {object} params
+   * @param {object} params.logger - Logger instance
+   * @param {ISlotResolutionStrategy[]} [params.strategies] - Optional custom strategies
+   * @param {object} params.entityManager - Entity manager for data access
+   * @param {object} params.bodyGraphService - Body graph service
+   * @param {object} params.anatomyBlueprintRepository - Blueprint repository
+   * @param {object} params.anatomySocketIndex - Socket index service
+   * @param {Map} [params.slotEntityMappings] - Optional slot-to-entity mappings
+   */
+  constructor({
+    logger,
+    strategies,
+    entityManager,
+    bodyGraphService,
+    anatomyBlueprintRepository,
+    anatomySocketIndex,
+    slotEntityMappings,
+  }) {
+    this.#logger = ensureValidLogger(logger, this.constructor.name);
+    this.#cache = new Map();
+
+    // Initialize default strategies if none provided
+    if (strategies) {
+      this.#strategies = strategies;
+    } else {
+      // Create default strategies
+      const blueprintStrategy = new BlueprintSlotStrategy({
+        logger,
+        entityManager,
+        bodyGraphService,
+        anatomyBlueprintRepository,
+        anatomySocketIndex,
+        slotEntityMappings,
+      });
+
+      const directSocketStrategy = new DirectSocketStrategy({
+        logger,
+        entityManager,
+        bodyGraphService,
+      });
+
+      this.#strategies = [blueprintStrategy, directSocketStrategy];
+    }
+
+    // Validate all strategies implement the interface
+    this.#strategies.forEach((strategy, index) => {
+      validateDependency(strategy, 'ISlotResolutionStrategy', null, {
+        requiredMethods: ['canResolve', 'resolve'],
+      });
+    });
+
+    this.#logger.debug(
+      `SlotResolver initialized with ${this.#strategies.length} strategies`
+    );
+  }
+
+  /**
+   * Resolves a clothing slot mapping to attachment points
+   *
+   * @param {string} entityId - Entity to resolve for
+   * @param {string} slotId - Slot identifier for caching
+   * @param {object} mapping - The clothing slot mapping configuration
+   * @returns {Promise<ResolvedAttachmentPoint[]>} Array of resolved attachment points
+   */
+  async resolve(entityId, slotId, mapping) {
+    assertPresent(entityId, 'Entity ID is required');
+    assertPresent(slotId, 'Slot ID is required');
+    assertPresent(mapping, 'Mapping is required');
+
+    // Check cache
+    const cacheKey = `${entityId}:${slotId}`;
+    if (this.#cache.has(cacheKey)) {
+      this.#logger.debug(`Cache hit for slot resolution: ${cacheKey}`);
+      return this.#cache.get(cacheKey);
+    }
+
+    // Find the first strategy that can handle this mapping
+    const strategy = this.#strategies.find((s) => s.canResolve(mapping));
+
+    if (!strategy) {
+      this.#logger.warn(
+        `No strategy found for mapping type in slot '${slotId}'`
+      );
+      return [];
+    }
+
+    try {
+      // Resolve using the selected strategy
+      const attachmentPoints = await strategy.resolve(entityId, mapping);
+
+      // Cache the result
+      this.#cache.set(cacheKey, attachmentPoints);
+
+      this.#logger.debug(
+        `Resolved slot '${slotId}' to ${attachmentPoints.length} attachment points using ${strategy.constructor.name}`
+      );
+
+      return attachmentPoints;
+    } catch (err) {
+      this.#logger.error(
+        `Failed to resolve slot '${slotId}' for entity '${entityId}'`,
+        err
+      );
+      throw err;
+    }
+  }
+
+  /**
+   * Adds a custom strategy to the resolver
+   *
+   * @param {ISlotResolutionStrategy} strategy - Strategy to add
+   */
+  addStrategy(strategy) {
+    validateDependency(strategy, 'ISlotResolutionStrategy', null, {
+      requiredMethods: ['canResolve', 'resolve'],
+    });
+
+    this.#strategies.push(strategy);
+    this.#logger.debug(`Added new strategy: ${strategy.constructor.name}`);
+  }
+
+  /**
+   * Clears the resolution cache
+   */
+  clearCache() {
+    this.#cache.clear();
+    this.#logger.debug('Slot resolution cache cleared');
+  }
+
+  /**
+   * Updates slot-to-entity mappings for blueprint strategy
+   *
+   * @param {Map<string, string>} mappings - Map of slot IDs to entity IDs
+   */
+  setSlotEntityMappings(mappings) {
+    // Find blueprint strategy and update its mappings
+    const blueprintStrategy = this.#strategies.find(
+      (s) => s.constructor.name === 'BlueprintSlotStrategy'
+    );
+
+    if (
+      blueprintStrategy &&
+      typeof blueprintStrategy.setSlotEntityMappings === 'function'
+    ) {
+      blueprintStrategy.setSlotEntityMappings(mappings);
+    }
+  }
+
+  /**
+   * Gets the number of registered strategies
+   *
+   * @returns {number} Strategy count
+   */
+  getStrategyCount() {
+    return this.#strategies.length;
+  }
+}
+
+export default SlotResolver;

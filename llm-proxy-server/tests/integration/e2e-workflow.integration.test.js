@@ -153,6 +153,7 @@ describe('End-to-End Workflow Integration Tests', () => {
     if (httpAgentService && httpAgentService.cleanup) {
       httpAgentService.cleanup();
     }
+    jest.clearAllTimers();
     jest.useRealTimers();
     jest.restoreAllMocks();
   });

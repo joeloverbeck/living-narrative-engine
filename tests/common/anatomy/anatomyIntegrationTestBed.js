@@ -18,7 +18,9 @@ import { BodyDescriptionOrchestrator } from '../../../src/anatomy/BodyDescriptio
 import { DescriptionPersistenceService } from '../../../src/anatomy/DescriptionPersistenceService.js';
 import { LayerResolutionService } from '../../../src/clothing/services/layerResolutionService.js';
 import AnatomyClothingIntegrationService from '../../../src/anatomy/integration/anatomyClothingIntegrationService.js';
+import AnatomySocketIndex from '../../../src/anatomy/services/anatomySocketIndex.js';
 import ClothingInstantiationService from '../../../src/clothing/services/clothingInstantiationService.js';
+import { ClothingSlotValidator } from '../../../src/clothing/validation/clothingSlotValidator.js';
 import {
   createMockLogger,
   createMockSafeEventDispatcher,
@@ -249,13 +251,31 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
       logger: mocks.logger,
     });
 
+    // Create anatomy socket index
+    this.anatomySocketIndex = new AnatomySocketIndex({
+      logger: mocks.logger,
+      entityManager: this.entityManager,
+      bodyGraphService: this.bodyGraphService,
+    });
+
+    // Create clothing slot validator
+    this.clothingSlotValidator = new ClothingSlotValidator({
+      logger: mocks.logger,
+    });
+
     // Create anatomy clothing integration service
     this.anatomyClothingIntegrationService =
       new AnatomyClothingIntegrationService({
         logger: mocks.logger,
         entityManager: this.entityManager,
         bodyGraphService: this.bodyGraphService,
-        dataRegistry: mocks.registry,
+        anatomyBlueprintRepository: {
+          getBlueprintByRecipeId: (recipeId) =>
+            mocks.registry.get('anatomyBlueprints', recipeId),
+          clearCache: () => {},
+        },
+        anatomySocketIndex: this.anatomySocketIndex,
+        clothingSlotValidator: this.clothingSlotValidator,
       });
 
     // Create mock equipment orchestrator

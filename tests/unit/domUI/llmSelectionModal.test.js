@@ -184,9 +184,15 @@ describe('LlmSelectionModal Refactored', () => {
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
-    jest.clearAllTimers(); // Clear any pending timers
+    jest.clearAllTimers(); // Clear any pending timers before restoring real timers
     jest.useRealTimers();
+    jest.clearAllMocks();
+    jest.restoreAllMocks();
+
+    // Clean up global mocks
+    delete global.requestAnimationFrame;
+    delete global.cancelAnimationFrame;
+
     if (mockWindow) mockWindow.close();
     global.window = undefined;
     global.document = undefined;
