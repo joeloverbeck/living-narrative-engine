@@ -5,7 +5,6 @@
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import ClothingInstantiationService from '../../src/clothing/services/clothingInstantiationService.js';
-import AnatomyClothingIntegrationService from '../../src/anatomy/integration/anatomyClothingIntegrationService.js';
 import { createMockLogger } from '../common/mockFactories/loggerMocks.js';
 
 describe('Anatomy Visualizer - Service Integration', () => {
