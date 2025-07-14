@@ -19,8 +19,9 @@ import { DescriptionPersistenceService } from '../../../src/anatomy/DescriptionP
 import { LayerResolutionService } from '../../../src/clothing/services/layerResolutionService.js';
 import AnatomyClothingIntegrationService from '../../../src/anatomy/integration/anatomyClothingIntegrationService.js';
 import AnatomySocketIndex from '../../../src/anatomy/services/anatomySocketIndex.js';
-import ClothingInstantiationService from '../../../src/clothing/services/clothingInstantiationService.js';
+import { ClothingInstantiationService } from '../../../src/clothing/services/clothingInstantiationService.js';
 import { ClothingSlotValidator } from '../../../src/clothing/validation/clothingSlotValidator.js';
+import { ClothingManagementService } from '../../../src/clothing/services/clothingManagementService.js';
 import { AnatomyClothingCache } from '../../../src/anatomy/cache/AnatomyClothingCache.js';
 import { ANATOMY_CLOTHING_CACHE_CONFIG } from '../../../src/anatomy/constants/anatomyConstants.js';
 import {
@@ -278,8 +279,13 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
         entityManager: this.entityManager,
         bodyGraphService: this.bodyGraphService,
         anatomyBlueprintRepository: {
-          getBlueprintByRecipeId: (recipeId) =>
-            mocks.registry.get('anatomyBlueprints', recipeId),
+          getBlueprintByRecipeId: (recipeId) => {
+            const recipe = mocks.registry.get('anatomyRecipes', recipeId);
+            if (!recipe) {
+              return null;
+            }
+            return mocks.registry.get('anatomyBlueprints', recipe.blueprintId);
+          },
           clearCache: () => {},
         },
         anatomySocketIndex: this.anatomySocketIndex,
@@ -289,8 +295,14 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
 
     // Create mock equipment orchestrator
     this.mockEquipmentOrchestrator = {
-      orchestrateEquipment: () =>
-        Promise.resolve({ success: true, equipped: [] }),
+      orchestrateEquipment: (actorId, clothing) =>
+        Promise.resolve({ 
+          success: true, 
+          equipped: clothing.map(item => ({
+            itemId: item.itemId || UuidGenerator(),
+            slot: item.targetSlot,
+          }))
+        }),
     };
 
     // Create clothing instantiation service
@@ -302,6 +314,15 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
       layerResolutionService: this.layerResolutionService,
       logger: mocks.logger,
       eventBus: mocks.eventDispatcher,
+    });
+
+    // Create clothing management service
+    this.clothingManagementService = new ClothingManagementService({
+      entityManager: this.entityManager,
+      logger: mocks.logger,
+      eventDispatcher: mocks.eventDispatcher,
+      equipmentOrchestrator: this.mockEquipmentOrchestrator,
+      anatomyClothingIntegrationService: this.anatomyClothingIntegrationService,
     });
   }
 
@@ -563,6 +584,769 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
   createMockEntity(id, options = {}) {
     const entityId = id || UuidGenerator();
     return createMockEntity(entityId, options);
+  }
+
+  /**
+   * Sets up the test bed with common test data
+   * 
+   * @returns {Promise<void>}
+   */
+  async setup() {
+    // Load core components
+    this.loadComponents({
+      'core:actor': {
+        id: 'core:actor',
+        dataSchema: { type: 'object', properties: {} },
+      },
+      'anatomy:body': {
+        id: 'anatomy:body',
+        dataSchema: {
+          type: 'object',
+          properties: {
+            recipeId: { type: 'string' },
+            bodyParts: { type: 'array', items: { type: 'string' } },
+          },
+        },
+      },
+      'anatomy:part': {
+        id: 'anatomy:part',
+        dataSchema: {
+          type: 'object',
+          properties: {
+            subType: { type: 'string' },
+            tags: { type: 'array', items: { type: 'string' } },
+          },
+        },
+      },
+      'anatomy:sockets': {
+        id: 'anatomy:sockets',
+        dataSchema: {
+          type: 'object',
+          properties: {
+            sockets: { 
+              type: 'array', 
+              items: { 
+                type: 'object',
+                properties: {
+                  id: { type: 'string' },
+                  allowedTypes: { type: 'array', items: { type: 'string' } },
+                  maxCount: { type: 'number' },
+                },
+              } 
+            },
+          },
+        },
+      },
+      'anatomy:joint': {
+        id: 'anatomy:joint',
+        dataSchema: {
+          type: 'object',
+          properties: {
+            parentSocket: { type: 'string' },
+            parentEntity: { type: 'string' },
+            childSocket: { type: 'string' },
+            childEntity: { type: 'string' },
+          },
+        },
+      },
+      'clothing:wearable': {
+        id: 'clothing:wearable',
+        dataSchema: {
+          type: 'object',
+          properties: {
+            slots: { type: 'array', items: { type: 'string' } },
+            layerGroup: { type: 'string' },
+            layer: { type: 'number' },
+          },
+        },
+      },
+      'core:description': {
+        id: 'core:description',
+        dataSchema: {
+          type: 'object',
+          properties: {
+            text: { type: 'string' },
+          },
+        },
+      },
+    });
+
+    // Load basic entity definitions
+    this.loadEntityDefinitions({
+      'test:actor': {
+        id: 'test:actor',
+        description: 'Test actor entity',
+        components: {
+          'core:actor': {},
+        },
+      },
+      'core:shirt_simple': {
+        id: 'core:shirt_simple',
+        description: 'Simple shirt',
+        components: {
+          'clothing:wearable': {
+            slots: ['torso_upper'],
+            layerGroup: 'clothing',
+            layer: 1,
+          },
+        },
+      },
+      'anatomy:blueprint_slot': {
+        id: 'anatomy:blueprint_slot',
+        description: 'Blueprint slot placeholder entity',
+        components: {},
+      },
+    });
+
+    // Load basic recipes
+    this.loadRecipes({
+      'test:human_adult': {
+        id: 'test:human_adult',
+        blueprintId: 'anatomy:human_adult',
+        properties: {},
+      },
+    });
+
+    // Load basic entity definitions for anatomy parts
+    this.loadEntityDefinitions({
+      'anatomy:human_torso': {
+        id: 'anatomy:human_torso',
+        description: 'Human torso',
+        components: {
+          'anatomy:part': {
+            subType: 'torso',
+            tags: ['torso', 'core'],
+          },
+          'anatomy:sockets': {
+            sockets: [
+              { id: 'head_socket', allowedTypes: ['head'], maxCount: 1 },
+              { id: 'torso_upper_socket', allowedTypes: ['torso_upper'], maxCount: 1 },
+              { id: 'torso_lower_socket', allowedTypes: ['torso_lower'], maxCount: 1 },
+            ],
+          },
+        },
+      },
+      'anatomy:human_head': {
+        id: 'anatomy:human_head',
+        description: 'Human head',
+        components: {
+          'anatomy:part': {
+            subType: 'head',
+            tags: ['head'],
+          },
+        },
+      },
+      'anatomy:human_torso_upper': {
+        id: 'anatomy:human_torso_upper',
+        description: 'Human upper torso',
+        components: {
+          'anatomy:part': {
+            subType: 'torso_upper',
+            tags: ['torso', 'upper'],
+          },
+        },
+      },
+      'anatomy:human_torso_lower': {
+        id: 'anatomy:human_torso_lower',
+        description: 'Human lower torso',
+        components: {
+          'anatomy:part': {
+            subType: 'torso_lower',
+            tags: ['torso', 'lower'],
+          },
+        },
+      },
+    });
+
+    // Load basic blueprints
+    this.loadBlueprints({
+      'anatomy:human_adult': {
+        id: 'anatomy:human_adult',
+        root: 'anatomy:human_torso',
+        slots: {
+          head: { 
+            parent: null,  // null means attach to root
+            socket: 'head_socket',
+            preferId: 'anatomy:human_head',
+            tags: ['head'], 
+            required: true 
+          },
+          torso_upper: { 
+            parent: null,  // null means attach to root
+            socket: 'torso_upper_socket',
+            tags: ['torso', 'upper'], 
+            required: true 
+          },
+          torso_lower: { 
+            parent: null,  // null means attach to root
+            socket: 'torso_lower_socket',
+            tags: ['torso', 'lower'], 
+            required: true 
+          },
+        },
+        clothingSlotMappings: {
+          head: ['head'],
+          torso_upper: ['torso_upper'],
+          torso_lower: ['torso_lower'],
+        },
+      },
+    });
+  }
+
+  /**
+   * Gets the entity manager
+   * 
+   * @returns {EntityManager}
+   */
+  getEntityManager() {
+    return this.entityManager;
+  }
+
+  /**
+   * Gets the body graph service
+   * 
+   * @returns {BodyGraphService}
+   */
+  getBodyGraphService() {
+    return this.bodyGraphService;
+  }
+
+  /**
+   * Gets the data registry
+   * 
+   * @returns {InMemoryDataRegistry}
+   */
+  getDataRegistry() {
+    return this.registry;
+  }
+
+  /**
+   * Creates a test actor with anatomy
+   * 
+   * @returns {Promise<object>} Object with actorId and anatomyId
+   */
+  async createTestActorWithAnatomy() {
+    // Create actor entity
+    const actor = this.entityManager.createEntityInstance('test:actor');
+    
+    // Add anatomy body component
+    this.entityManager.addComponent(actor.id, 'anatomy:body', {
+      recipeId: 'test:human_adult',
+      bodyParts: [],
+    });
+
+    // Generate anatomy
+    await this.anatomyGenerationService.generateAnatomyIfNeeded(actor.id);
+
+    // Get the anatomy ID
+    const bodyData = this.entityManager.getComponentData(actor.id, 'anatomy:body');
+    const anatomyId = bodyData?.bodyParts?.[0] || null;
+
+    return {
+      actorId: actor.id,
+      anatomyId,
+    };
+  }
+
+  /**
+   * Creates a test clothing item
+   * 
+   * @param {string} definitionId - The entity definition ID for the clothing
+   * @returns {Promise<string>} The created clothing entity ID
+   */
+  async createTestClothingItem(definitionId) {
+    const clothingEntity = this.entityManager.createEntityInstance(definitionId);
+    return clothingEntity.id;
+  }
+
+  /**
+   * Creates a test actor without anatomy
+   * 
+   * @returns {Promise<string>} The created actor ID
+   */
+  async createTestActorWithEmptyAnatomy() {
+    const actor = this.entityManager.createEntityInstance('test:actor');
+    
+    // Add empty anatomy body component
+    this.entityManager.addComponent(actor.id, 'anatomy:body', {
+      recipeId: null,
+      bodyParts: [],
+    });
+
+    return actor.id;
+  }
+
+  /**
+   * Creates a test actor with complex anatomy
+   * 
+   * @param {number} partCount - Number of parts to create
+   * @returns {Promise<object>} Object with actorId and anatomyId
+   */
+  async createTestActorWithComplexAnatomy(partCount) {
+    // Create actor with basic anatomy first
+    const result = await this.createTestActorWithAnatomy();
+    
+    // Add additional parts as needed to reach the desired count
+    const bodyGraph = await this.bodyGraphService.getBodyGraph(result.actorId);
+    const currentParts = bodyGraph.getAllPartIds();
+    const additionalPartsNeeded = Math.max(0, partCount - currentParts.length);
+    
+    for (let i = 0; i < additionalPartsNeeded; i++) {
+      const partId = this.createBlankEntity();
+      this.entityManager.addComponent(partId, 'anatomy:part', {
+        subType: `extra_part_${i}`,
+        tags: ['extra'],
+      });
+      
+      // Add part to the body graph
+      if (result.anatomyId) {
+        const bodyData = this.entityManager.getComponentData(result.actorId, 'anatomy:body');
+        if (bodyData && bodyData.bodyParts) {
+          bodyData.bodyParts.push(partId);
+          this.entityManager.updateComponent(result.actorId, 'anatomy:body', bodyData);
+        }
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Gets the clothing management service
+   * 
+   * @returns {ClothingManagementService}
+   */
+  getClothingManagementService() {
+    return this.clothingManagementService;
+  }
+
+  /**
+   * Gets the clothing instantiation service
+   * 
+   * @returns {ClothingInstantiationService}
+   */
+  getClothingInstantiationService() {
+    return this.clothingInstantiationService;
+  }
+
+  /**
+   * Creates a blank entity without a definition
+   * This is a helper for tests that need simple entities
+   * 
+   * @returns {string} The created entity ID
+   */
+  createBlankEntity() {
+    // Create a minimal entity definition if it doesn't exist
+    if (!this.registry.get('entityDefinitions', 'test:blank')) {
+      const blankDef = new EntityDefinition('test:blank', {
+        description: 'Blank test entity',
+        components: {},
+      });
+      this.registry.store('entityDefinitions', 'test:blank', blankDef);
+    }
+    
+    const entity = this.entityManager.createEntityInstance('test:blank');
+    return entity.id;
+  }
+
+  /**
+   * Sets up the test bed with required test data
+   * 
+   * @returns {Promise<void>}
+   */
+  async setup() {
+    // Load core test data
+    this.loadCoreTestData();
+  }
+
+  /**
+   * Gets the entity manager
+   * 
+   * @returns {EntityManager}
+   */
+  getEntityManager() {
+    return this.entityManager;
+  }
+
+  /**
+   * Gets the body graph service
+   * 
+   * @returns {BodyGraphService}
+   */
+  getBodyGraphService() {
+    return this.bodyGraphService;
+  }
+
+  /**
+   * Gets the data registry
+   * 
+   * @returns {InMemoryDataRegistry}
+   */
+  getDataRegistry() {
+    return this.registry;
+  }
+
+  /**
+   * Creates a test actor with anatomy
+   * 
+   * @returns {Promise<{actorId: string, anatomyData: object}>}
+   */
+  async createTestActorWithAnatomy() {
+    // Ensure we have the necessary data loaded
+    if (!this.registry.get('entityDefinitions', 'core:actor')) {
+      this.loadCoreTestData();
+    }
+
+    // Create an actor entity
+    const actor = this.entityManager.createEntityInstance('core:actor');
+    const actorId = actor.id;
+
+    // Add anatomy body component with the recipe
+    this.entityManager.addComponent(actorId, 'anatomy:body', {
+      recipeId: 'core:anatomy_humanoid_basic',
+      bodyParts: [],
+    });
+
+    // Generate anatomy for the actor
+    await this.anatomyGenerationService.generateAnatomyIfNeeded(actorId);
+
+    // Get the body graph to extract parts and slot mappings
+    const bodyGraph = await this.bodyGraphService.getBodyGraph(actorId);
+    const partIds = bodyGraph.getAllPartIds();
+    
+    // Build parts map from body graph
+    const partsMap = new Map();
+    for (const partId of partIds) {
+      const partEntity = this.entityManager.getEntityInstance(partId);
+      if (partEntity) {
+        const partData = partEntity.getComponentData('anatomy:part');
+        if (partData && partData.subType) {
+          partsMap.set(partData.subType, partId);
+        }
+      }
+    }
+
+    // Build slot entity mappings (simplified for testing)
+    const slotEntityMappings = new Map();
+    // Add some common slot mappings based on the parts
+    if (partsMap.has('torso')) {
+      slotEntityMappings.set('torso', partsMap.get('torso'));
+      slotEntityMappings.set('torso_upper', partsMap.get('torso'));
+      slotEntityMappings.set('torso_lower', partsMap.get('torso'));
+    }
+    if (partsMap.has('head')) {
+      slotEntityMappings.set('head', partsMap.get('head'));
+    }
+    if (partsMap.has('left_hand')) {
+      slotEntityMappings.set('left_hand', partsMap.get('left_hand'));
+    }
+    if (partsMap.has('right_hand')) {
+      slotEntityMappings.set('right_hand', partsMap.get('right_hand'));
+    }
+
+    return {
+      actorId,
+      anatomyData: {
+        partsMap,
+        slotEntityMappings,
+      },
+    };
+  }
+
+  /**
+   * Creates a test clothing item
+   * 
+   * @param {string} definitionId - The clothing definition ID
+   * @returns {Promise<string>} The created clothing entity ID
+   */
+  async createTestClothingItem(definitionId) {
+    // Ensure we have the clothing definition
+    if (!this.registry.get('entityDefinitions', definitionId)) {
+      // Create a basic clothing definition
+      const clothingDef = new EntityDefinition(definitionId, {
+        description: 'Test clothing item',
+        components: {
+          'clothing:wearable': {
+            equipmentSlots: {
+              primary: 'torso',
+            },
+            layer: 'base',
+            allowedLayers: ['underwear', 'base', 'outer'],
+          },
+        },
+      });
+      this.registry.store('entityDefinitions', definitionId, clothingDef);
+    }
+
+    const clothing = this.entityManager.createEntityInstance(definitionId);
+    return clothing.id;
+  }
+
+  /**
+   * Creates a test actor with empty anatomy
+   * 
+   * @returns {Promise<string>} The actor ID
+   */
+  async createTestActorWithEmptyAnatomy() {
+    // Create an actor entity
+    const actor = this.entityManager.createEntityInstance('core:actor');
+    const actorId = actor.id;
+
+    // Add an empty body component
+    this.entityManager.addComponent(actorId, 'anatomy:body', {
+      recipeId: 'test:empty_anatomy',
+    });
+
+    return actorId;
+  }
+
+  /**
+   * Creates a test actor with complex anatomy
+   * 
+   * @param {number} partCount - Number of body parts to create
+   * @returns {Promise<{actorId: string, anatomyData: object}>}
+   */
+  async createTestActorWithComplexAnatomy(partCount) {
+    // Create an actor entity
+    const actor = this.entityManager.createEntityInstance('core:actor');
+    const actorId = actor.id;
+
+    // Add body component
+    this.entityManager.addComponent(actorId, 'anatomy:body', {
+      recipeId: 'test:complex_anatomy',
+    });
+
+    // Create multiple body parts
+    const partsMap = new Map();
+    const slotEntityMappings = new Map();
+
+    for (let i = 0; i < partCount; i++) {
+      const partDef = new EntityDefinition(`test:part_${i}`, {
+        description: `Test body part ${i}`,
+        components: {
+          'anatomy:part': { type: 'test' },
+          'anatomy:sockets': {
+            sockets: [
+              { id: `socket_test_${i}`, type: 'attachment' },
+            ],
+          },
+        },
+      });
+      this.registry.store('entityDefinitions', `test:part_${i}`, partDef);
+
+      const part = this.entityManager.createEntityInstance(`test:part_${i}`);
+      
+      // Add joint to connect to actor
+      this.entityManager.addComponent(part.id, 'anatomy:joint', {
+        parentEntityId: actorId,
+        socketId: `socket_${i}`,
+      });
+
+      partsMap.set(`part_${i}`, part.id);
+      slotEntityMappings.set(`slot_${i}`, part.id);
+    }
+
+    return {
+      actorId,
+      anatomyData: {
+        partsMap,
+        slotEntityMappings,
+      },
+    };
+  }
+
+  /**
+   * Loads core test data needed for anatomy and clothing tests
+   */
+  loadCoreTestData() {
+    // Load core entity definitions
+    this.loadEntityDefinitions({
+      'core:actor': {
+        id: 'core:actor',
+        description: 'Test actor',
+        components: {},
+      },
+      'core:shirt_simple': {
+        id: 'core:shirt_simple',
+        description: 'Simple shirt',
+        components: {
+          'clothing:wearable': {
+            equipmentSlots: {
+              primary: 'torso',
+            },
+            layer: 'base',
+            allowedLayers: ['underwear', 'base', 'outer'],
+          },
+        },
+      },
+    });
+
+    // Load core anatomy components
+    this.loadComponents({
+      'anatomy:body': {
+        id: 'anatomy:body',
+        description: 'Body component',
+        dataSchema: {
+          type: 'object',
+          properties: {
+            recipeId: { type: 'string' },
+          },
+        },
+      },
+      'anatomy:part': {
+        id: 'anatomy:part',
+        description: 'Body part component',
+        dataSchema: {
+          type: 'object',
+          properties: {
+            type: { type: 'string' },
+          },
+        },
+      },
+      'anatomy:joint': {
+        id: 'anatomy:joint',
+        description: 'Joint component',
+        dataSchema: {
+          type: 'object',
+          properties: {
+            parentEntityId: { type: 'string' },
+            socketId: { type: 'string' },
+          },
+        },
+      },
+      'anatomy:sockets': {
+        id: 'anatomy:sockets',
+        description: 'Sockets component',
+        dataSchema: {
+          type: 'object',
+          properties: {
+            sockets: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  id: { type: 'string' },
+                  type: { type: 'string' },
+                },
+              },
+            },
+          },
+        },
+      },
+      'clothing:wearable': {
+        id: 'clothing:wearable',
+        description: 'Clothing wearable component',
+        dataSchema: {
+          type: 'object',
+          properties: {
+            equipmentSlots: {
+              type: 'object',
+              properties: {
+                primary: { type: 'string' },
+              },
+            },
+            layer: { type: 'string' },
+            allowedLayers: {
+              type: 'array',
+              items: { type: 'string' },
+            },
+          },
+        },
+      },
+      'clothing:equipment': {
+        id: 'clothing:equipment',
+        description: 'Equipment component',
+        dataSchema: {
+          type: 'object',
+          properties: {
+            equipped: { type: 'object' },
+          },
+        },
+      },
+    });
+
+    // Load basic anatomy recipes
+    this.loadRecipes({
+      'core:anatomy_humanoid_basic': {
+        id: 'core:anatomy_humanoid_basic',
+        name: 'Basic Humanoid Anatomy',
+        blueprintId: 'core:humanoid_basic',
+      },
+      'test:empty_anatomy': {
+        id: 'test:empty_anatomy',
+        name: 'Empty Anatomy',
+        blueprintId: 'test:empty_blueprint',
+      },
+      'test:complex_anatomy': {
+        id: 'test:complex_anatomy',
+        name: 'Complex Anatomy',
+        blueprintId: 'test:complex_blueprint',
+      },
+    });
+
+    // Load basic anatomy blueprints
+    this.loadBlueprints({
+      'core:humanoid_basic': {
+        id: 'core:humanoid_basic',
+        name: 'Basic Humanoid',
+        root: 'core:torso',
+        slots: {},
+        clothingSlotMappings: {
+          torso: {
+            blueprintSlots: ['torso'],
+            allowedLayers: ['underwear', 'base', 'outer'],
+          },
+          head: {
+            blueprintSlots: ['head'],
+            allowedLayers: ['base', 'outer'],
+          },
+        },
+      },
+      'test:empty_blueprint': {
+        id: 'test:empty_blueprint',
+        name: 'Empty Blueprint',
+        root: 'test:empty_root',
+        slots: {},
+        clothingSlotMappings: {},
+      },
+      'test:complex_blueprint': {
+        id: 'test:complex_blueprint',
+        name: 'Complex Blueprint',
+        root: 'test:complex_root',
+        slots: {},
+        clothingSlotMappings: {},
+      },
+    });
+
+    // Load body part definitions
+    this.loadEntityDefinitions({
+      'core:torso': {
+        id: 'core:torso',
+        description: 'Torso',
+        components: {
+          'anatomy:part': { type: 'torso', subType: 'torso' },
+          'anatomy:sockets': {
+            sockets: [
+              { id: 'torso_socket', type: 'attachment' },
+            ],
+          },
+        },
+      },
+      'test:empty_root': {
+        id: 'test:empty_root',
+        description: 'Empty root part',
+        components: {
+          'anatomy:part': { type: 'root', subType: 'root' },
+        },
+      },
+      'test:complex_root': {
+        id: 'test:complex_root',
+        description: 'Complex root part',
+        components: {
+          'anatomy:part': { type: 'root', subType: 'root' },
+        },
+      },
+    });
   }
 
   /**
