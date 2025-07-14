@@ -55,6 +55,8 @@ import { PartDescriptionGenerator } from '../../anatomy/PartDescriptionGenerator
 import { BodyDescriptionOrchestrator } from '../../anatomy/BodyDescriptionOrchestrator.js';
 import DescriptionPersistenceService from '../../anatomy/DescriptionPersistenceService.js';
 import { AnatomyQueryCache } from '../../anatomy/cache/AnatomyQueryCache.js';
+import { AnatomyClothingCache } from '../../anatomy/cache/AnatomyClothingCache.js';
+import { ANATOMY_CLOTHING_CACHE_CONFIG } from '../../anatomy/constants/anatomyConstants.js';
 import { ClothingInstantiationService } from '../../clothing/services/clothingInstantiationService.js';
 import { LayerCompatibilityService } from '../../clothing/validation/layerCompatibilityService.js';
 import { ClothingSlotValidator } from '../../clothing/validation/clothingSlotValidator.js';
@@ -594,6 +596,21 @@ export function registerWorldAndEntity(container) {
     )}.`
   );
 
+  // Register AnatomyClothingCache
+  registrar.singletonFactory(tokens.AnatomyClothingCache, (c) => {
+    return new AnatomyClothingCache(
+      {
+        logger: c.resolve(tokens.ILogger),
+      },
+      ANATOMY_CLOTHING_CACHE_CONFIG
+    );
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.AnatomyClothingCache
+    )}.`
+  );
+
   // Register AnatomyClothingIntegrationService
   registrar.singletonFactory(tokens.AnatomyClothingIntegrationService, (c) => {
     return new AnatomyClothingIntegrationService({
@@ -603,6 +620,7 @@ export function registerWorldAndEntity(container) {
       anatomyBlueprintRepository: c.resolve(tokens.IAnatomyBlueprintRepository),
       anatomySocketIndex: c.resolve(tokens.IAnatomySocketIndex),
       clothingSlotValidator: c.resolve(tokens.ClothingSlotValidator),
+      anatomyClothingCache: c.resolve(tokens.AnatomyClothingCache),
     });
   });
   logger.debug(

@@ -7,10 +7,16 @@
 import { BaseService } from '../../utils/serviceBase.js';
 import SlotResolver from './SlotResolver.js';
 import ClothingSlotValidator from '../../clothing/validation/clothingSlotValidator.js';
+import { 
+  AnatomyClothingCache, 
+  CacheKeyTypes 
+} from '../cache/AnatomyClothingCache.js';
+import { ANATOMY_CLOTHING_CACHE_CONFIG } from '../constants/anatomyConstants.js';
 
 /** @typedef {import('../../interfaces/IAnatomyBlueprintRepository.js').IAnatomyBlueprintRepository} IAnatomyBlueprintRepository */
 /** @typedef {import('../../interfaces/IAnatomySocketIndex.js').IAnatomySocketIndex} IAnatomySocketIndex */
 /** @typedef {import('../../interfaces/IClothingSlotValidator.js').IClothingSlotValidator} IClothingSlotValidator */
+/** @typedef {import('../cache/AnatomyClothingCache.js').AnatomyClothingCache} AnatomyClothingCache */
 /** @typedef {object} AnatomyBlueprint - Anatomy blueprint definition from mod data */
 /** @typedef {object} ClothingSlot - Clothing slot definition from mod data */
 
@@ -45,7 +51,7 @@ class AnatomyClothingIntegrationService extends BaseService {
   #slotResolver;
   #clothingSlotValidator;
   #slotEntityMappings = new Map();
-  #availableSlotsCache = new Map();
+  #cache;
 
   constructor({
     logger,
@@ -54,6 +60,7 @@ class AnatomyClothingIntegrationService extends BaseService {
     anatomyBlueprintRepository,
     anatomySocketIndex,
     clothingSlotValidator,
+    anatomyClothingCache,
   }) {
     super();
 
@@ -87,6 +94,9 @@ class AnatomyClothingIntegrationService extends BaseService {
     this.#clothingSlotValidator =
       clothingSlotValidator || new ClothingSlotValidator({ logger });
 
+    // Initialize cache service
+    this.#cache = anatomyClothingCache || new AnatomyClothingCache({ logger }, ANATOMY_CLOTHING_CACHE_CONFIG);
+
     // Initialize the slot resolver with strategies
     this.#slotResolver = new SlotResolver({
       logger,
@@ -95,6 +105,7 @@ class AnatomyClothingIntegrationService extends BaseService {
       anatomyBlueprintRepository,
       anatomySocketIndex,
       slotEntityMappings: this.#slotEntityMappings,
+      cache: this.#cache,
     });
   }
 
@@ -110,8 +121,10 @@ class AnatomyClothingIntegrationService extends BaseService {
     }
 
     // Check cache first
-    if (this.#availableSlotsCache.has(entityId)) {
-      return this.#availableSlotsCache.get(entityId);
+    const cacheKey = AnatomyClothingCache.createAvailableSlotsKey(entityId);
+    const cached = this.#cache.get(CacheKeyTypes.AVAILABLE_SLOTS, cacheKey);
+    if (cached) {
+      return cached;
     }
 
     try {
@@ -143,7 +156,7 @@ class AnatomyClothingIntegrationService extends BaseService {
       );
 
       // Cache the result
-      this.#availableSlotsCache.set(entityId, availableSlots);
+      this.#cache.set(CacheKeyTypes.AVAILABLE_SLOTS, cacheKey, availableSlots);
 
       return availableSlots;
     } catch (err) {
@@ -448,7 +461,16 @@ class AnatomyClothingIntegrationService extends BaseService {
     this.#anatomySocketIndex.clearCache();
     this.#slotResolver.clearCache();
     this.#slotEntityMappings.clear();
-    this.#availableSlotsCache.clear();
+    this.#cache.clearAll();
+  }
+
+  /**
+   * Invalidates cache entries for a specific entity
+   *
+   * @param {string} entityId - Entity ID to invalidate
+   */
+  invalidateCacheForEntity(entityId) {
+    this.#cache.invalidateEntity(entityId);
   }
 }
 

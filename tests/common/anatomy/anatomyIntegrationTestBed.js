@@ -21,6 +21,8 @@ import AnatomyClothingIntegrationService from '../../../src/anatomy/integration/
 import AnatomySocketIndex from '../../../src/anatomy/services/anatomySocketIndex.js';
 import ClothingInstantiationService from '../../../src/clothing/services/clothingInstantiationService.js';
 import { ClothingSlotValidator } from '../../../src/clothing/validation/clothingSlotValidator.js';
+import { AnatomyClothingCache } from '../../../src/anatomy/cache/AnatomyClothingCache.js';
+import { ANATOMY_CLOTHING_CACHE_CONFIG } from '../../../src/anatomy/constants/anatomyConstants.js';
 import {
   createMockLogger,
   createMockSafeEventDispatcher,
@@ -263,6 +265,12 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
       logger: mocks.logger,
     });
 
+    // Create anatomy clothing cache
+    this.anatomyClothingCache = new AnatomyClothingCache(
+      { logger: mocks.logger },
+      ANATOMY_CLOTHING_CACHE_CONFIG
+    );
+
     // Create anatomy clothing integration service
     this.anatomyClothingIntegrationService =
       new AnatomyClothingIntegrationService({
@@ -276,6 +284,7 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
         },
         anatomySocketIndex: this.anatomySocketIndex,
         clothingSlotValidator: this.clothingSlotValidator,
+        anatomyClothingCache: this.anatomyClothingCache,
       });
 
     // Create mock equipment orchestrator

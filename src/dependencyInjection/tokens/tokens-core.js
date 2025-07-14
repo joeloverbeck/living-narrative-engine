@@ -85,6 +85,7 @@ export const coreTokens = freeze({
   IAnatomyBlueprintRepository: 'IAnatomyBlueprintRepository',
   IAnatomySocketIndex: 'IAnatomySocketIndex',
   AnatomyClothingIntegrationService: 'AnatomyClothingIntegrationService',
+  AnatomyClothingCache: 'AnatomyClothingCache',
   LayerResolutionService: 'LayerResolutionService',
   DescriptorFormatter: 'DescriptorFormatter',
   BodyPartDescriptionBuilder: 'BodyPartDescriptionBuilder',
