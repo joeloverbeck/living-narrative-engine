@@ -12,8 +12,13 @@ import {
 import { ensureValidLogger } from '../../utils/loggerUtils.js';
 import BlueprintSlotStrategy from './strategies/BlueprintSlotStrategy.js';
 import DirectSocketStrategy from './strategies/DirectSocketStrategy.js';
+import { 
+  AnatomyClothingCache, 
+  CacheKeyTypes 
+} from '../cache/AnatomyClothingCache.js';
 
 /** @typedef {import('../../interfaces/ISlotResolutionStrategy.js')} ISlotResolutionStrategy */
+/** @typedef {import('../cache/AnatomyClothingCache.js').AnatomyClothingCache} AnatomyClothingCache */
 
 /**
  * Orchestrates different slot resolution strategies
@@ -33,6 +38,7 @@ class SlotResolver {
    * @param {object} params.anatomyBlueprintRepository - Blueprint repository
    * @param {object} params.anatomySocketIndex - Socket index service
    * @param {Map} [params.slotEntityMappings] - Optional slot-to-entity mappings
+   * @param {AnatomyClothingCache} [params.cache] - Cache service
    */
   constructor({
     logger,
@@ -42,9 +48,10 @@ class SlotResolver {
     anatomyBlueprintRepository,
     anatomySocketIndex,
     slotEntityMappings,
+    cache,
   }) {
     this.#logger = ensureValidLogger(logger, this.constructor.name);
-    this.#cache = new Map();
+    this.#cache = cache || new Map();
 
     // Initialize default strategies if none provided
     if (strategies) {
@@ -95,8 +102,16 @@ class SlotResolver {
     assertPresent(mapping, 'Mapping is required');
 
     // Check cache
-    const cacheKey = `${entityId}:${slotId}`;
-    if (this.#cache.has(cacheKey)) {
+    const cacheKey = AnatomyClothingCache.createSlotResolutionKey(entityId, slotId);
+    if (this.#cache.get) {
+      // Using new cache service
+      const cached = this.#cache.get(CacheKeyTypes.SLOT_RESOLUTION, cacheKey);
+      if (cached) {
+        this.#logger.debug(`Cache hit for slot resolution: ${cacheKey}`);
+        return cached;
+      }
+    } else if (this.#cache.has(cacheKey)) {
+      // Fallback to Map cache
       this.#logger.debug(`Cache hit for slot resolution: ${cacheKey}`);
       return this.#cache.get(cacheKey);
     }
@@ -116,7 +131,13 @@ class SlotResolver {
       const attachmentPoints = await strategy.resolve(entityId, mapping);
 
       // Cache the result
-      this.#cache.set(cacheKey, attachmentPoints);
+      if (this.#cache.set && this.#cache.get) {
+        // Using new cache service
+        this.#cache.set(CacheKeyTypes.SLOT_RESOLUTION, cacheKey, attachmentPoints);
+      } else {
+        // Fallback to Map cache
+        this.#cache.set(cacheKey, attachmentPoints);
+      }
 
       this.#logger.debug(
         `Resolved slot '${slotId}' to ${attachmentPoints.length} attachment points using ${strategy.constructor.name}`
@@ -150,7 +171,13 @@ class SlotResolver {
    * Clears the resolution cache
    */
   clearCache() {
-    this.#cache.clear();
+    if (this.#cache.clearType) {
+      // Using new cache service
+      this.#cache.clearType(CacheKeyTypes.SLOT_RESOLUTION);
+    } else {
+      // Fallback to Map cache
+      this.#cache.clear();
+    }
     this.#logger.debug('Slot resolution cache cleared');
   }
 
