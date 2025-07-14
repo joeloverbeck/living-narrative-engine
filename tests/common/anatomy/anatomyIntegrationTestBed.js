@@ -17,11 +17,11 @@ import { AnatomyDescriptionService } from '../../../src/anatomy/anatomyDescripti
 import { BodyDescriptionOrchestrator } from '../../../src/anatomy/BodyDescriptionOrchestrator.js';
 import { DescriptionPersistenceService } from '../../../src/anatomy/DescriptionPersistenceService.js';
 import { LayerResolutionService } from '../../../src/clothing/services/layerResolutionService.js';
-import AnatomyClothingIntegrationService from '../../../src/anatomy/integration/anatomyClothingIntegrationService.js';
 import AnatomySocketIndex from '../../../src/anatomy/services/anatomySocketIndex.js';
 import { ClothingInstantiationService } from '../../../src/clothing/services/clothingInstantiationService.js';
 import { ClothingSlotValidator } from '../../../src/clothing/validation/clothingSlotValidator.js';
-import { ClothingManagementService } from '../../../src/clothing/services/clothingManagementService.js';
+import { ClothingManagementService } from '../../../src/clothing/services/clothingManagementServiceV2.js';
+import AnatomyBlueprintRepository from '../../../src/anatomy/repositories/anatomyBlueprintRepository.js';
 import { AnatomyClothingCache } from '../../../src/anatomy/cache/AnatomyClothingCache.js';
 import { ANATOMY_CLOTHING_CACHE_CONFIG } from '../../../src/anatomy/constants/anatomyConstants.js';
 import {
@@ -278,26 +278,11 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
       ANATOMY_CLOTHING_CACHE_CONFIG
     );
 
-    // Create anatomy clothing integration service
-    this.anatomyClothingIntegrationService =
-      new AnatomyClothingIntegrationService({
-        logger: mocks.logger,
-        entityManager: this.entityManager,
-        bodyGraphService: this.bodyGraphService,
-        anatomyBlueprintRepository: {
-          getBlueprintByRecipeId: (recipeId) => {
-            const recipe = mocks.registry.get('anatomyRecipes', recipeId);
-            if (!recipe) {
-              return null;
-            }
-            return mocks.registry.get('anatomyBlueprints', recipe.blueprintId);
-          },
-          clearCache: () => {},
-        },
-        anatomySocketIndex: this.anatomySocketIndex,
-        clothingSlotValidator: this.clothingSlotValidator,
-        anatomyClothingCache: this.anatomyClothingCache,
-      });
+    // Create anatomy blueprint repository for decomposed services
+    this.anatomyBlueprintRepository = new AnatomyBlueprintRepository({
+      logger: mocks.logger,
+      dataRegistry: mocks.registry,
+    });
 
     // Create mock equipment orchestrator
     this.mockEquipmentOrchestrator = {
@@ -319,16 +304,6 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
       setSlotEntityMappings: jest.fn(),
     };
 
-    this.anatomyBlueprintRepository = {
-      getBlueprintByRecipeId: (recipeId) => {
-        const recipe = mocks.registry.get('anatomyRecipes', recipeId);
-        if (!recipe) {
-          return null;
-        }
-        return mocks.registry.get('anatomyBlueprints', recipe.blueprintId);
-      },
-      clearCache: () => {},
-    };
 
     // Create clothing instantiation service
     this.clothingInstantiationService = new ClothingInstantiationService({
@@ -351,7 +326,10 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
       logger: mocks.logger,
       eventDispatcher: mocks.eventDispatcher,
       equipmentOrchestrator: this.mockEquipmentOrchestrator,
-      anatomyClothingIntegrationService: this.anatomyClothingIntegrationService,
+      anatomyBlueprintRepository: this.anatomyBlueprintRepository,
+      clothingSlotValidator: this.clothingSlotValidator,
+      bodyGraphService: this.bodyGraphService,
+      anatomyClothingCache: this.anatomyClothingCache,
     });
   }
 

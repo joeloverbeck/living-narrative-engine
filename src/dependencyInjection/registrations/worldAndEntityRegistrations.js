@@ -61,8 +61,7 @@ import { ClothingInstantiationService } from '../../clothing/services/clothingIn
 import { LayerCompatibilityService } from '../../clothing/validation/layerCompatibilityService.js';
 import { ClothingSlotValidator } from '../../clothing/validation/clothingSlotValidator.js';
 import { EquipmentOrchestrator } from '../../clothing/orchestration/equipmentOrchestrator.js';
-import AnatomyClothingIntegrationService from '../../anatomy/integration/anatomyClothingIntegrationService.js';
-import AnatomyClothingIntegrationFacade from '../../anatomy/integration/AnatomyClothingIntegrationFacade.js';
+import { ClothingManagementService } from '../../clothing/services/clothingManagementServiceV2.js';
 import AnatomyBlueprintRepository from '../../anatomy/repositories/anatomyBlueprintRepository.js';
 import AnatomySocketIndex from '../../anatomy/services/anatomySocketIndex.js';
 import SlotResolver from '../../anatomy/integration/SlotResolver.js';
@@ -630,22 +629,22 @@ export function registerWorldAndEntity(container) {
     )}.`
   );
 
-  // Register AnatomyClothingIntegrationService using the migration facade
-  // This allows gradual migration of dependent services
-  registrar.singletonFactory(tokens.AnatomyClothingIntegrationService, (c) => {
-    return new AnatomyClothingIntegrationFacade({
-      logger: c.resolve(tokens.ILogger),
+  // Register ClothingManagementService using decomposed services
+  registrar.singletonFactory(tokens.ClothingManagementService, (c) => {
+    return new ClothingManagementService({
       entityManager: c.resolve(tokens.IEntityManager),
-      bodyGraphService: c.resolve(tokens.BodyGraphService),
+      logger: c.resolve(tokens.ILogger),
+      eventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+      equipmentOrchestrator: c.resolve(tokens.EquipmentOrchestrator),
       anatomyBlueprintRepository: c.resolve(tokens.IAnatomyBlueprintRepository),
-      anatomySocketIndex: c.resolve(tokens.IAnatomySocketIndex),
       clothingSlotValidator: c.resolve(tokens.ClothingSlotValidator),
+      bodyGraphService: c.resolve(tokens.BodyGraphService),
       anatomyClothingCache: c.resolve(tokens.AnatomyClothingCache),
     });
   });
   logger.debug(
     `World and Entity Registration: Registered ${String(
-      tokens.AnatomyClothingIntegrationService
+      tokens.ClothingManagementService
     )}.`
   );
 

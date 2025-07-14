@@ -24,10 +24,6 @@ describe('Import/Export Consistency', () => {
           file: 'src/anatomy/DescriptionPersistenceService.js',
           className: 'DescriptionPersistenceService',
         },
-        {
-          file: 'src/anatomy/integration/anatomyClothingIntegrationService.js',
-          className: 'AnatomyClothingIntegrationService',
-        },
       ];
 
       // Check each service file for default export
@@ -107,7 +103,6 @@ describe('Import/Export Consistency', () => {
       const defaultImports = [
         'PartSelectionService',
         'DescriptionPersistenceService',
-        'AnatomyClothingIntegrationService',
       ];
 
       for (const serviceName of defaultImports) {

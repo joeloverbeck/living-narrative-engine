@@ -1,5 +1,5 @@
 import { beforeEach, describe, it, expect, jest } from '@jest/globals';
-import { ClothingManagementService } from '../../../../src/clothing/services/clothingManagementService.js';
+import { ClothingManagementService } from '../../../../src/clothing/services/clothingManagementServiceV2.js';
 import { InvalidArgumentError } from '../../../../src/errors/invalidArgumentError.js';
 
 /** Helper to create minimal mocks for dependencies */
@@ -24,8 +24,20 @@ function createMocks() {
       orchestrateUnequipment: jest.fn(),
       validateEquipmentCompatibility: jest.fn(),
     },
-    anatomyClothingIntegrationService: {
-      getAvailableClothingSlots: jest.fn(),
+    anatomyBlueprintRepository: {
+      getBlueprintByRecipeId: jest.fn(),
+    },
+    clothingSlotValidator: {
+      validateSlotCompatibility: jest.fn(),
+    },
+    bodyGraphService: {
+      getAnatomyData: jest.fn(),
+      getBodyGraph: jest.fn(),
+    },
+    anatomyClothingCache: {
+      get: jest.fn(),
+      set: jest.fn(),
+      invalidateCacheForEntity: jest.fn(),
     },
   };
 }
@@ -35,7 +47,10 @@ describe('ClothingManagementService', () => {
   let logger;
   let eventDispatcher;
   let equipmentOrchestrator;
-  let anatomyClothingIntegrationService;
+  let anatomyBlueprintRepository;
+  let clothingSlotValidator;
+  let bodyGraphService;
+  let anatomyClothingCache;
   let service;
 
   beforeEach(() => {
@@ -44,14 +59,20 @@ describe('ClothingManagementService', () => {
       logger,
       eventDispatcher,
       equipmentOrchestrator,
-      anatomyClothingIntegrationService,
+      anatomyBlueprintRepository,
+      clothingSlotValidator,
+      bodyGraphService,
+      anatomyClothingCache,
     } = createMocks());
     service = new ClothingManagementService({
       entityManager,
       logger,
       eventDispatcher,
       equipmentOrchestrator,
-      anatomyClothingIntegrationService,
+      anatomyBlueprintRepository,
+      clothingSlotValidator,
+      bodyGraphService,
+      anatomyClothingCache,
     });
   });
 
@@ -102,6 +123,18 @@ describe('ClothingManagementService', () => {
             eventDispatcher,
           })
       ).toThrow(InvalidArgumentError);
+    });
+
+    it('should throw error when no anatomy integration service is provided', () => {
+      expect(
+        () =>
+          new ClothingManagementService({
+            entityManager,
+            logger,
+            eventDispatcher,
+            equipmentOrchestrator,
+          })
+      ).toThrow('Either anatomyClothingIntegrationService or anatomyBlueprintRepository must be provided');
     });
   });
 
@@ -521,30 +554,53 @@ describe('ClothingManagementService', () => {
         {
           slotId: 'torso_clothing',
           allowedLayers: ['underwear', 'base', 'outer'],
+          anatomySockets: ['*']
         },
         {
           slotId: 'lower_torso_clothing',
           allowedLayers: ['underwear', 'base'],
+          anatomySockets: ['*']
         },
       ];
 
-      anatomyClothingIntegrationService.getAvailableClothingSlots.mockResolvedValue(
-        mockSlotsMap
-      );
+      // Mock the decomposed service dependencies
+      entityManager.getComponentData
+        .mockReturnValueOnce({ recipeId: 'test-recipe' }) // anatomy:body call
+        .mockReturnValue({ sockets: [] }); // anatomy:sockets calls
+      
+      anatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue({
+        clothingSlotMappings: {
+          'torso_clothing': { 
+            allowedLayers: ['underwear', 'base', 'outer'],
+            anatomySockets: ['*'] // Wildcard allows any anatomy structure
+          },
+          'lower_torso_clothing': { 
+            allowedLayers: ['underwear', 'base'],
+            anatomySockets: ['*'] // Wildcard allows any anatomy structure
+          }
+        },
+        slots: {} // Empty slots object to satisfy validation
+      });
+      
+      bodyGraphService.getBodyGraph.mockResolvedValue({
+        getAllPartIds: () => []
+      });
+      
+      anatomyClothingCache.get.mockReturnValue(null); // Cache miss
 
       const result = await service.getAvailableSlots('entity1');
 
       expect(result.success).toBe(true);
       expect(result.slots).toEqual(expectedSlots);
-      expect(
-        anatomyClothingIntegrationService.getAvailableClothingSlots
-      ).toHaveBeenCalledWith('entity1');
     });
 
     it('should handle error getting slots', async () => {
-      anatomyClothingIntegrationService.getAvailableClothingSlots.mockRejectedValue(
+      // Mock error in decomposed service
+      entityManager.getComponentData.mockReturnValue({ recipeId: 'test-recipe' });
+      anatomyBlueprintRepository.getBlueprintByRecipeId.mockRejectedValue(
         new Error('Slot retrieval error')
       );
+      anatomyClothingCache.get.mockReturnValue(null); // Cache miss
 
       const result = await service.getAvailableSlots('entity1');
 
