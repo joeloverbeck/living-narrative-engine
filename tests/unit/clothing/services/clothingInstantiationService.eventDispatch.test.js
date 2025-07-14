@@ -19,9 +19,36 @@ function createMocks() {
     equipmentOrchestrator: {
       orchestrateEquipment: jest.fn(),
     },
-    anatomyClothingIntegrationService: {
-      validateClothingSlotCompatibility: jest.fn(),
+    slotResolver: {
+      resolveClothingSlot: jest.fn().mockResolvedValue([
+        { entityId: 'torso', socketId: 'chest', slotPath: 'torso.chest' },
+      ]),
       setSlotEntityMappings: jest.fn(),
+    },
+    clothingSlotValidator: {
+      validateSlotCompatibility: jest.fn().mockResolvedValue({
+        valid: true,
+      }),
+    },
+    anatomyBlueprintRepository: {
+      getBlueprintByRecipeId: jest.fn().mockResolvedValue({
+        clothingSlotMappings: {
+          torso_upper: {
+            blueprintSlots: ['torso.chest'],
+            allowedLayers: ['base', 'outer'],
+          },
+        },
+      }),
+    },
+    bodyGraphService: {
+      getAnatomyData: jest.fn().mockResolvedValue({
+        recipeId: 'human_base',
+        rootEntityId: 'actor123',
+      }),
+    },
+    anatomyClothingCache: {
+      get: jest.fn(),
+      set: jest.fn(),
     },
     layerResolutionService: {
       resolveAndValidateLayer: jest
@@ -53,7 +80,11 @@ describe('ClothingInstantiationService - Event Dispatching', () => {
   let entityManager;
   let dataRegistry;
   let equipmentOrchestrator;
-  let anatomyClothingIntegrationService;
+  let slotResolver;
+  let clothingSlotValidator;
+  let anatomyBlueprintRepository;
+  let bodyGraphService;
+  let anatomyClothingCache;
   let layerResolutionService;
   let logger;
   let eventBus;
@@ -74,7 +105,11 @@ describe('ClothingInstantiationService - Event Dispatching', () => {
       entityManager,
       dataRegistry,
       equipmentOrchestrator,
-      anatomyClothingIntegrationService,
+      slotResolver,
+      clothingSlotValidator,
+      anatomyBlueprintRepository,
+      bodyGraphService,
+      anatomyClothingCache,
       layerResolutionService,
       logger,
       eventBus,
@@ -84,7 +119,11 @@ describe('ClothingInstantiationService - Event Dispatching', () => {
       entityManager,
       dataRegistry,
       equipmentOrchestrator,
-      anatomyClothingIntegrationService,
+      slotResolver,
+      clothingSlotValidator,
+      anatomyBlueprintRepository,
+      bodyGraphService,
+      anatomyClothingCache,
       layerResolutionService,
       logger,
       eventBus,
@@ -122,7 +161,7 @@ describe('ClothingInstantiationService - Event Dispatching', () => {
       });
 
       // Mock successful validation
-      anatomyClothingIntegrationService.validateClothingSlotCompatibility.mockResolvedValue(
+      clothingSlotValidator.validateSlotCompatibility.mockResolvedValue(
         {
           valid: true,
         }
@@ -280,7 +319,7 @@ describe('ClothingInstantiationService - Event Dispatching', () => {
       });
 
       // Mock validation
-      anatomyClothingIntegrationService.validateClothingSlotCompatibility.mockResolvedValue(
+      clothingSlotValidator.validateSlotCompatibility.mockResolvedValue(
         {
           valid: true,
         }
@@ -364,7 +403,7 @@ describe('ClothingInstantiationService - Event Dispatching', () => {
           'clothing:wearable': { equipmentSlots: { primary: 'test' } },
         },
       });
-      anatomyClothingIntegrationService.validateClothingSlotCompatibility.mockResolvedValue(
+      clothingSlotValidator.validateSlotCompatibility.mockResolvedValue(
         { valid: true }
       );
       entityManager.createEntityInstance.mockResolvedValue('test_123');

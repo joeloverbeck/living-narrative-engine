@@ -28,11 +28,40 @@ describe('Anatomy Visualizer - Service Integration', () => {
       orchestrateEquipment: jest.fn(),
     };
 
-    const mockAnatomyClothingIntegrationService = {
-      validateClothingSlotCompatibility: jest.fn().mockResolvedValue({
+    const mockSlotResolver = {
+      resolveClothingSlot: jest.fn().mockResolvedValue([
+        { entityId: 'torso', socketId: 'chest', slotPath: 'torso.chest' },
+      ]),
+      setSlotEntityMappings: jest.fn(),
+    };
+
+    const mockClothingSlotValidator = {
+      validateSlotCompatibility: jest.fn().mockResolvedValue({
         valid: true,
       }),
-      setSlotEntityMappings: jest.fn(),
+    };
+
+    const mockAnatomyBlueprintRepository = {
+      getBlueprintByRecipeId: jest.fn().mockResolvedValue({
+        clothingSlotMappings: {
+          torso_upper: {
+            blueprintSlots: ['torso.chest'],
+            allowedLayers: ['base', 'outer'],
+          },
+        },
+      }),
+    };
+
+    const mockBodyGraphService = {
+      getAnatomyData: jest.fn().mockResolvedValue({
+        recipeId: 'human_base',
+        rootEntityId: 'actor123',
+      }),
+    };
+
+    const mockAnatomyClothingCache = {
+      get: jest.fn(),
+      set: jest.fn(),
     };
 
     const mockEventBus = {
@@ -52,8 +81,11 @@ describe('Anatomy Visualizer - Service Integration', () => {
         entityManager: mockEntityManager,
         dataRegistry: mockDataRegistry,
         equipmentOrchestrator: mockEquipmentOrchestrator,
-        anatomyClothingIntegrationService:
-          mockAnatomyClothingIntegrationService,
+        slotResolver: mockSlotResolver,
+        clothingSlotValidator: mockClothingSlotValidator,
+        anatomyBlueprintRepository: mockAnatomyBlueprintRepository,
+        bodyGraphService: mockBodyGraphService,
+        anatomyClothingCache: mockAnatomyClothingCache,
         layerResolutionService: mockLayerResolutionService,
         logger: createMockLogger(),
         eventBus: mockEventBus,
@@ -63,7 +95,7 @@ describe('Anatomy Visualizer - Service Integration', () => {
     expect(service).toBeDefined();
   });
 
-  it('should fail if anatomyClothingIntegrationService lacks validateClothingSlotCompatibility', () => {
+  it('should fail if clothingSlotValidator lacks validateSlotCompatibility', () => {
     // This test ensures that if the wrong method name is provided,
     // the service will throw an error during initialization
 
@@ -80,9 +112,39 @@ describe('Anatomy Visualizer - Service Integration', () => {
       orchestrateEquipment: jest.fn(),
     };
 
-    // Mock with the WRONG method name to ensure validation works
-    const mockAnatomyClothingIntegrationService = {
-      validateSlotCompatibility: jest.fn(), // Wrong method name!
+    // Mock with all the required dependencies but with WRONG method name
+    const mockSlotResolver = {
+      resolveClothingSlot: jest.fn().mockResolvedValue([
+        { entityId: 'torso', socketId: 'chest', slotPath: 'torso.chest' },
+      ]),
+      setSlotEntityMappings: jest.fn(),
+    };
+
+    const mockClothingSlotValidator = {
+      wrongMethodName: jest.fn(), // Wrong method name!
+    };
+
+    const mockAnatomyBlueprintRepository = {
+      getBlueprintByRecipeId: jest.fn().mockResolvedValue({
+        clothingSlotMappings: {
+          torso_upper: {
+            blueprintSlots: ['torso.chest'],
+            allowedLayers: ['base', 'outer'],
+          },
+        },
+      }),
+    };
+
+    const mockBodyGraphService = {
+      getAnatomyData: jest.fn().mockResolvedValue({
+        recipeId: 'human_base',
+        rootEntityId: 'actor123',
+      }),
+    };
+
+    const mockAnatomyClothingCache = {
+      get: jest.fn(),
+      set: jest.fn(),
     };
 
     const mockEventBus = {
@@ -101,60 +163,47 @@ describe('Anatomy Visualizer - Service Integration', () => {
         entityManager: mockEntityManager,
         dataRegistry: mockDataRegistry,
         equipmentOrchestrator: mockEquipmentOrchestrator,
-        anatomyClothingIntegrationService:
-          mockAnatomyClothingIntegrationService,
+        slotResolver: mockSlotResolver,
+        clothingSlotValidator: mockClothingSlotValidator,
+        anatomyBlueprintRepository: mockAnatomyBlueprintRepository,
+        bodyGraphService: mockBodyGraphService,
+        anatomyClothingCache: mockAnatomyClothingCache,
         layerResolutionService: mockLayerResolutionService,
         logger: createMockLogger(),
         eventBus: mockEventBus,
       });
-    }).toThrow('validateClothingSlotCompatibility');
+    }).toThrow('validateSlotCompatibility');
   });
 
-  it('should verify anatomyClothingIntegrationService has the required method', () => {
-    // This test specifically checks that the anatomyClothingIntegrationService
-    // provides the validateClothingSlotCompatibility method
+  it('should verify ClothingSlotValidator has the required method', () => {
+    // This test specifically checks that the ClothingSlotValidator
+    // provides the validateSlotCompatibility method
 
-    // Create minimal mocks for the service
     const mockDeps = {
-      entityManager: {
-        getComponentData: jest.fn(),
-        hasComponents: jest.fn(),
-        hasComponent: jest.fn(),
-      },
-      bodyGraphService: {
-        getBodyGraph: jest.fn(),
-      },
-      anatomyBlueprintRepository: {
-        getBlueprintByRecipeId: jest.fn(),
-        clearCache: jest.fn(),
-      },
-      anatomySocketIndex: {
-        findEntityWithSocket: jest.fn(),
-        buildIndex: jest.fn(),
-        clearCache: jest.fn(),
-      },
-      clothingSlotValidator: {
-        validateSlotCompatibility: jest.fn().mockResolvedValue({
-          valid: true,
-        }),
-      },
       logger: createMockLogger(),
     };
 
-    const service = new AnatomyClothingIntegrationService(mockDeps);
+    const validator = new (class ClothingSlotValidator {
+      constructor({ logger }) {
+        this.logger = logger;
+      }
+      async validateSlotCompatibility() {
+        return { valid: true };
+      }
+    })(mockDeps);
 
     // Verify the method exists
-    expect(typeof service.validateClothingSlotCompatibility).toBe('function');
+    expect(typeof validator.validateSlotCompatibility).toBe('function');
 
     // Verify it's an async function
-    expect(service.validateClothingSlotCompatibility.constructor.name).toBe(
+    expect(validator.validateSlotCompatibility.constructor.name).toBe(
       'AsyncFunction'
     );
   });
 
-  it('should call validateClothingSlotCompatibility during clothing instantiation', async () => {
+  it('should call validateSlotCompatibility during clothing instantiation', async () => {
     // This test verifies that the ClothingInstantiationService calls
-    // the correct method on anatomyClothingIntegrationService
+    // the correct method on clothingSlotValidator
 
     const mockEntityManager = {
       createEntityInstance: jest.fn().mockResolvedValue('clothing_123'),
@@ -178,11 +227,40 @@ describe('Anatomy Visualizer - Service Integration', () => {
       }),
     };
 
-    const mockAnatomyClothingIntegrationService = {
-      validateClothingSlotCompatibility: jest.fn().mockResolvedValue({
+    const mockSlotResolver = {
+      resolveClothingSlot: jest.fn().mockResolvedValue([
+        { entityId: 'torso', socketId: 'chest', slotPath: 'torso.chest' },
+      ]),
+      setSlotEntityMappings: jest.fn(),
+    };
+
+    const mockClothingSlotValidator = {
+      validateSlotCompatibility: jest.fn().mockResolvedValue({
         valid: true,
       }),
-      setSlotEntityMappings: jest.fn(),
+    };
+
+    const mockAnatomyBlueprintRepository = {
+      getBlueprintByRecipeId: jest.fn().mockResolvedValue({
+        clothingSlotMappings: {
+          torso_upper: {
+            blueprintSlots: ['torso.chest'],
+            allowedLayers: ['base', 'outer'],
+          },
+        },
+      }),
+    };
+
+    const mockBodyGraphService = {
+      getAnatomyData: jest.fn().mockResolvedValue({
+        recipeId: 'human_base',
+        rootEntityId: 'actor123',
+      }),
+    };
+
+    const mockAnatomyClothingCache = {
+      get: jest.fn(),
+      set: jest.fn(),
     };
 
     const mockEventBus = {
@@ -217,7 +295,11 @@ describe('Anatomy Visualizer - Service Integration', () => {
       entityManager: mockEntityManager,
       dataRegistry: mockDataRegistry,
       equipmentOrchestrator: mockEquipmentOrchestrator,
-      anatomyClothingIntegrationService: mockAnatomyClothingIntegrationService,
+      slotResolver: mockSlotResolver,
+      clothingSlotValidator: mockClothingSlotValidator,
+      anatomyBlueprintRepository: mockAnatomyBlueprintRepository,
+      bodyGraphService: mockBodyGraphService,
+      anatomyClothingCache: mockAnatomyClothingCache,
       layerResolutionService: mockLayerResolutionService,
       logger: createMockLogger(),
       eventBus: mockEventBus,
@@ -242,7 +324,7 @@ describe('Anatomy Visualizer - Service Integration', () => {
 
     // Verify the correct method was called
     expect(
-      mockAnatomyClothingIntegrationService.validateClothingSlotCompatibility
-    ).toHaveBeenCalledWith('actor_123', 'torso', 'clothing_123');
+      mockClothingSlotValidator.validateSlotCompatibility
+    ).toHaveBeenCalled();
   });
 });

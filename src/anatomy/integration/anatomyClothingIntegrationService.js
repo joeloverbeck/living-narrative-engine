@@ -7,9 +7,9 @@
 import { BaseService } from '../../utils/serviceBase.js';
 import SlotResolver from './SlotResolver.js';
 import ClothingSlotValidator from '../../clothing/validation/clothingSlotValidator.js';
-import { 
-  AnatomyClothingCache, 
-  CacheKeyTypes 
+import {
+  AnatomyClothingCache,
+  CacheKeyTypes
 } from '../cache/AnatomyClothingCache.js';
 import { ANATOMY_CLOTHING_CACHE_CONFIG } from '../constants/anatomyConstants.js';
 
