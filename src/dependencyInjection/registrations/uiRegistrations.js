@@ -429,6 +429,7 @@ export function registerControllers(registrar, logger) {
         visualizerState: c.resolve(tokens.VisualizerState),
         anatomyLoadingDetector: c.resolve(tokens.AnatomyLoadingDetector),
         eventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
+        entityManager: c.resolve(tokens.IEntityManager),
         logger: c.resolve(tokens.ILogger),
       }),
     { lifecycle: 'singletonFactory' },

@@ -1,8 +1,13 @@
-import { beforeEach, describe, expect, jest, test } from '@jest/globals';
+import {
+  beforeEach,
+  afterEach,
+  describe,
+  expect,
+  jest,
+  test,
+} from '@jest/globals';
 import { fetchWithRetry } from '../../../src/utils/httpUtils.js';
 import { RetryManager } from '../../../src/utils/httpRetryManager.js';
-
-jest.useFakeTimers();
 
 let dispatcher;
 
@@ -40,9 +45,15 @@ function mockResponse(
 }
 
 beforeEach(() => {
+  jest.useFakeTimers();
   global.fetch = jest.fn();
   jest.clearAllMocks();
   dispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
+});
+
+afterEach(() => {
+  jest.runOnlyPendingTimers();
+  jest.useRealTimers();
 });
 
 describe('fetchWithRetry additional branch coverage', () => {

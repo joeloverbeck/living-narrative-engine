@@ -19,7 +19,7 @@ import { CacheKeyTypes } from '../../anatomy/cache/AnatomyClothingCache.js';
 /** @typedef {import('../../anatomy/integration/SlotResolver.js').default} SlotResolver */
 /** @typedef {import('../validation/clothingSlotValidator.js').default} ClothingSlotValidator */
 /** @typedef {import('../../anatomy/repositories/anatomyBlueprintRepository.js').default} AnatomyBlueprintRepository */
-/** @typedef {import('../../anatomy/services/bodyGraphService.js').default} BodyGraphService */
+/** @typedef {import('../../anatomy/bodyGraphService.js').default} BodyGraphService */
 /** @typedef {import('../../anatomy/cache/AnatomyClothingCache.js').AnatomyClothingCache} AnatomyClothingCache */
 /** @typedef {import('./layerResolutionService.js').LayerResolutionService} LayerResolutionService */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
@@ -218,9 +218,7 @@ export class ClothingInstantiationService extends BaseService {
     );
 
     // Set slot-entity mappings for improved slot resolution
-    this.#slotResolver.setSlotEntityMappings(
-      anatomyData.slotEntityMappings
-    );
+    this.#slotResolver.setSlotEntityMappings(anatomyData.slotEntityMappings);
 
     // Validate clothing slots against blueprint allowances for all items
     // Note: We'll validate individual items as we process them to allow partial success
@@ -365,20 +363,21 @@ export class ClothingInstantiationService extends BaseService {
 
       // Get available slots for the entity
       const availableSlots = await this.#getAvailableClothingSlots(entityId);
-      
+
       // Create resolver function for the validator
       const resolveAttachmentPoints = async (entityId, slotId) => {
         return await this.#slotResolver.resolveClothingSlot(entityId, slotId);
       };
 
       // Perform validation
-      const result = await this.#clothingSlotValidator.validateSlotCompatibility(
-        entityId,
-        slotId,
-        itemId,
-        availableSlots,
-        resolveAttachmentPoints
-      );
+      const result =
+        await this.#clothingSlotValidator.validateSlotCompatibility(
+          entityId,
+          slotId,
+          itemId,
+          availableSlots,
+          resolveAttachmentPoints
+        );
 
       // Cache the result
       this.#cache.set(CacheKeyTypes.VALIDATION, cacheKey, result);
@@ -420,11 +419,15 @@ export class ClothingInstantiationService extends BaseService {
       }
 
       // Get blueprint
-      const blueprint = await this.#anatomyBlueprintRepository
-        .getBlueprintByRecipeId(anatomyData.recipeId);
+      const blueprint =
+        await this.#anatomyBlueprintRepository.getBlueprintByRecipeId(
+          anatomyData.recipeId
+        );
 
       if (!blueprint?.clothingSlotMappings) {
-        this.#logger.debug(`No clothing slot mappings in blueprint for entity ${entityId}`);
+        this.#logger.debug(
+          `No clothing slot mappings in blueprint for entity ${entityId}`
+        );
         return new Map();
       }
 
@@ -434,11 +437,7 @@ export class ClothingInstantiationService extends BaseService {
       );
 
       // Cache the result
-      this.#cache.set(
-        CacheKeyTypes.AVAILABLE_SLOTS,
-        cacheKey,
-        availableSlots
-      );
+      this.#cache.set(CacheKeyTypes.AVAILABLE_SLOTS, cacheKey, availableSlots);
 
       return availableSlots;
     } catch (error) {
@@ -521,72 +520,6 @@ export class ClothingInstantiationService extends BaseService {
       }
     } catch (error) {
       errors.push(`${clothingInstanceId}: ${error.message}`);
-    }
-
-    return {
-      isValid: errors.length === 0,
-      errors,
-    };
-  }
-
-  /**
-   * Validates that clothing entities can be equipped on the actor (legacy method)
-   *
-   * @private
-   * @param {string} actorId - The actor entity ID
-   * @param {ClothingEntityConfig[]} clothingEntities - Clothing configurations to validate
-   * @returns {Promise<{isValid: boolean, errors: string[]}>} Validation result
-   */
-  async #validateClothingSlots(actorId, clothingEntities) {
-    const errors = [];
-
-    for (const config of clothingEntities) {
-      try {
-        // Load entity definition to get default slot
-        const definition = this.#dataRegistry.get(
-          'entityDefinitions',
-          config.entityId
-        );
-        if (!definition) {
-          errors.push(
-            `Entity definition '${config.entityId}' not found in registry`
-          );
-          continue;
-        }
-
-        const clothingComponent = definition.components?.['clothing:wearable'];
-        if (!clothingComponent) {
-          errors.push(
-            `Entity '${config.entityId}' does not have clothing:wearable component`
-          );
-          continue;
-        }
-
-        const targetSlot =
-          config.targetSlot || clothingComponent.equipmentSlots?.primary;
-        if (!targetSlot) {
-          errors.push(
-            `Entity '${config.entityId}' does not specify a clothing slot`
-          );
-          continue;
-        }
-
-        // Validate slot compatibility with blueprint
-        const validationResult = await this.#validateClothingSlot(
-          actorId,
-          targetSlot,
-          config.entityId
-        );
-
-        if (!validationResult.valid) {
-          errors.push(
-            validationResult.reason ||
-              `Cannot equip ${config.entityId} to slot ${targetSlot}`
-          );
-        }
-      } catch (error) {
-        errors.push(`${config.entityId}: ${error.message}`);
-      }
     }
 
     return {

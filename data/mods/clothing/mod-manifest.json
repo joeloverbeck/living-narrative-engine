@@ -17,7 +17,10 @@
   ],
   "gameVersion": ">=0.0.1",
   "content": {
-    "components": ["equipment.component.json", "wearable.component.json"],
+    "components": [
+      "equipment.component.json",
+      "wearable.component.json"
+    ],
     "entities": {
       "definitions": [
         "basic_shirt.entity.json",
@@ -42,7 +45,6 @@
     },
     "actions": [],
     "events": [
-      "clothing_coverage_validated.event.json",
       "clothing_equipped.event.json",
       "clothing_instantiation_completed.event.json",
       "clothing_layer_conflict.event.json",

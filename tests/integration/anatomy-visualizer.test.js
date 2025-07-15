@@ -15,6 +15,7 @@ describe('Anatomy Visualizer Integration', () => {
   let mockAnatomyDescriptionService;
   let mockEventDispatcher;
   let mockVisualizerStateController;
+  let mockVisualizationComposer;
   let mockDocument;
   let mockEntitySelector;
   let mockGraphContainer;
@@ -125,6 +126,15 @@ describe('Anatomy Visualizer Integration', () => {
       getAnatomyData: jest.fn(),
     };
 
+    mockVisualizationComposer = {
+      initialize: jest.fn(),
+      renderGraph: jest.fn().mockResolvedValue(undefined),
+      clear: jest.fn(),
+      setLayout: jest.fn(),
+      setTheme: jest.fn(),
+      dispose: jest.fn(),
+    };
+
     visualizerUI = new AnatomyVisualizerUI({
       logger: mockLogger,
       registry: mockRegistry,
@@ -133,6 +143,7 @@ describe('Anatomy Visualizer Integration', () => {
       eventDispatcher: mockEventDispatcher,
       documentContext: { document: mockDocument },
       visualizerStateController: mockVisualizerStateController,
+      visualizationComposer: mockVisualizationComposer,
     });
   });
 
@@ -249,7 +260,7 @@ describe('Anatomy Visualizer Integration', () => {
       // Setup event subscription for state changes before initialization
       let stateChangeCallback;
       mockEventDispatcher.subscribe.mockImplementation((eventId, callback) => {
-        if (eventId === 'VISUALIZER_STATE_CHANGED') {
+        if (eventId === 'anatomy:visualizer_state_changed') {
           stateChangeCallback = callback;
         }
         return jest.fn(); // unsubscribe function
@@ -258,11 +269,8 @@ describe('Anatomy Visualizer Integration', () => {
       // Initialize to set up event subscriptions
       await visualizerUI.initialize();
 
-      // Mock graph renderer after initialization
-      visualizerUI._graphRenderer = {
-        renderGraph: jest.fn().mockResolvedValue(),
-        clear: jest.fn(),
-      };
+      // Mock renderGraph calls for this test
+      mockVisualizationComposer.renderGraph.mockResolvedValue(undefined);
 
       // Act - Start loading entity
       await visualizerUI._loadEntity(entityDefId);
@@ -306,7 +314,7 @@ describe('Anatomy Visualizer Integration', () => {
       // Mock event subscription for state changes BEFORE initialization
       let stateChangeCallback;
       mockEventDispatcher.subscribe.mockImplementation((eventId, callback) => {
-        if (eventId === 'VISUALIZER_STATE_CHANGED') {
+        if (eventId === 'anatomy:visualizer_state_changed') {
           stateChangeCallback = callback;
         }
         return jest.fn(); // unsubscribe function
@@ -432,11 +440,8 @@ describe('Anatomy Visualizer Integration', () => {
 
       await visualizerUI.initialize();
 
-      // Create a mock graph renderer after initialization
-      visualizerUI._graphRenderer = {
-        renderGraph: jest.fn(),
-        clear: jest.fn(),
-      };
+      // Mock clear calls for this test
+      mockVisualizationComposer.clear.mockImplementation(() => {});
 
       // Act
       await changeHandler({ target: { value: '' } });
@@ -446,7 +451,7 @@ describe('Anatomy Visualizer Integration', () => {
 
       // Assert
       expect(mockVisualizerStateController.reset).toHaveBeenCalled();
-      expect(visualizerUI._graphRenderer.clear).toHaveBeenCalled();
+      expect(mockVisualizationComposer.clear).toHaveBeenCalled();
       expect(mockDescriptionContent.innerHTML).toBe(
         '<p>Select an entity to view its description.</p>'
       );
@@ -486,7 +491,7 @@ describe('Anatomy Visualizer Integration', () => {
       // Setup event subscription for state changes before initialization
       let stateChangeCallback;
       mockEventDispatcher.subscribe.mockImplementation((eventId, callback) => {
-        if (eventId === 'VISUALIZER_STATE_CHANGED') {
+        if (eventId === 'anatomy:visualizer_state_changed') {
           stateChangeCallback = callback;
         }
         return jest.fn(); // unsubscribe function
@@ -494,11 +499,8 @@ describe('Anatomy Visualizer Integration', () => {
 
       await visualizerUI.initialize();
 
-      // Mock graph renderer after initialization
-      visualizerUI._graphRenderer = {
-        renderGraph: jest.fn().mockResolvedValue(),
-        clear: jest.fn(),
-      };
+      // Mock renderGraph calls for this test
+      mockVisualizationComposer.renderGraph.mockResolvedValue(undefined);
 
       // Act
       await visualizerUI._loadEntity('human');
@@ -520,7 +522,7 @@ describe('Anatomy Visualizer Integration', () => {
       }
 
       // Assert - The graph renderer should have been called with anatomy data
-      expect(visualizerUI._graphRenderer.renderGraph).toHaveBeenCalledWith(
+      expect(mockVisualizationComposer.renderGraph).toHaveBeenCalledWith(
         'human-1',
         {
           body: {
@@ -565,7 +567,7 @@ describe('Anatomy Visualizer Integration', () => {
       // Setup event subscription for state changes before initialization
       let stateChangeCallback;
       mockEventDispatcher.subscribe.mockImplementation((eventId, callback) => {
-        if (eventId === 'VISUALIZER_STATE_CHANGED') {
+        if (eventId === 'anatomy:visualizer_state_changed') {
           stateChangeCallback = callback;
         }
         return jest.fn(); // unsubscribe function
@@ -573,11 +575,8 @@ describe('Anatomy Visualizer Integration', () => {
 
       await visualizerUI.initialize();
 
-      // Mock graph renderer after initialization
-      visualizerUI._graphRenderer = {
-        renderGraph: jest.fn().mockResolvedValue(),
-        clear: jest.fn(),
-      };
+      // Mock renderGraph calls for this test
+      mockVisualizationComposer.renderGraph.mockResolvedValue(undefined);
 
       // Act
       await visualizerUI._loadEntity('human');
@@ -599,8 +598,8 @@ describe('Anatomy Visualizer Integration', () => {
       }
 
       // Assert - The graph renderer should have been called with body data
-      expect(visualizerUI._graphRenderer).toBeDefined();
-      expect(visualizerUI._graphRenderer.renderGraph).toHaveBeenCalledWith(
+      expect(mockVisualizationComposer).toBeDefined();
+      expect(mockVisualizationComposer.renderGraph).toHaveBeenCalledWith(
         'human-1',
         expect.objectContaining({
           body: expect.objectContaining({

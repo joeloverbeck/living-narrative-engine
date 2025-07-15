@@ -1,4 +1,9 @@
 {
-  "mods": ["core", "anatomy", "clothing", "p_erotica"],
+  "mods": [
+    "core",
+    "anatomy",
+    "clothing",
+    "p_erotica"
+  ],
   "startWorld": "p_erotica:donostia"
 }

@@ -14,7 +14,9 @@ describe('ClothingInstantiationService - Decomposed Architecture', () => {
     // Create mock dependencies
     mockDeps = {
       entityManager: {
-        createEntityInstance: jest.fn().mockReturnValue('clothing_instance_123'),
+        createEntityInstance: jest
+          .fn()
+          .mockReturnValue('clothing_instance_123'),
         getEntityInstance: jest.fn().mockReturnValue({
           getComponentData: jest.fn().mockReturnValue({
             equipmentSlots: { primary: 'shirt' },
@@ -39,9 +41,11 @@ describe('ClothingInstantiationService - Decomposed Architecture', () => {
       },
       slotResolver: {
         setSlotEntityMappings: jest.fn(),
-        resolveClothingSlot: jest.fn().mockResolvedValue([
-          { entityId: 'torso', socketId: 'chest', slotPath: 'torso.chest' },
-        ]),
+        resolveClothingSlot: jest
+          .fn()
+          .mockResolvedValue([
+            { entityId: 'torso', socketId: 'chest', slotPath: 'torso.chest' },
+          ]),
       },
       clothingSlotValidator: {
         validateSlotCompatibility: jest.fn().mockResolvedValue({
@@ -276,14 +280,10 @@ describe('ClothingInstantiationService - Decomposed Architecture', () => {
         ],
       };
 
-      await service.instantiateRecipeClothing(
-        'actor123',
-        recipe,
-        {
-          slotEntityMappings: new Map(),
-          partsMap: new Map(),
-        }
-      );
+      await service.instantiateRecipeClothing('actor123', recipe, {
+        slotEntityMappings: new Map(),
+        partsMap: new Map(),
+      });
 
       expect(mockDeps.anatomyClothingCache.set).toHaveBeenCalledWith(
         'validation',
@@ -305,14 +305,10 @@ describe('ClothingInstantiationService - Decomposed Architecture', () => {
         ],
       };
 
-      await service.instantiateRecipeClothing(
-        'actor123',
-        recipe,
-        {
-          slotEntityMappings: new Map(),
-          partsMap: new Map(),
-        }
-      );
+      await service.instantiateRecipeClothing('actor123', recipe, {
+        slotEntityMappings: new Map(),
+        partsMap: new Map(),
+      });
 
       // Should not call validator if cached
       expect(
@@ -334,14 +330,10 @@ describe('ClothingInstantiationService - Decomposed Architecture', () => {
         ],
       };
 
-      await service.instantiateRecipeClothing(
-        'actor123',
-        recipe,
-        {
-          slotEntityMappings: new Map(),
-          partsMap: new Map(),
-        }
-      );
+      await service.instantiateRecipeClothing('actor123', recipe, {
+        slotEntityMappings: new Map(),
+        partsMap: new Map(),
+      });
 
       // Should cache available slots
       expect(mockDeps.anatomyClothingCache.set).toHaveBeenCalledWith(
@@ -395,14 +387,10 @@ describe('ClothingInstantiationService - Decomposed Architecture', () => {
         ],
       };
 
-      await service.instantiateRecipeClothing(
-        'actor123',
-        recipe,
-        {
-          slotEntityMappings: new Map(),
-          partsMap: new Map(),
-        }
-      );
+      await service.instantiateRecipeClothing('actor123', recipe, {
+        slotEntityMappings: new Map(),
+        partsMap: new Map(),
+      });
 
       expect(mockDeps.eventBus.dispatch).toHaveBeenCalledWith(
         'core:system_error_occurred',

@@ -1,0 +1,35 @@
+{
+  "$schema": "http://example.com/schemas/event.schema.json",
+  "id": "anatomy:visualizer_state_changed",
+  "description": "Fired when the anatomy visualizer state changes, including transitions between loading, loaded, rendering, and ready states.",
+  "payloadSchema": {
+    "description": "Defines the structure for the 'anatomy:visualizer_state_changed' event payload.",
+    "type": "object",
+    "required": ["previousState", "currentState"],
+    "properties": {
+      "previousState": {
+        "type": "string",
+        "description": "The state the visualizer was in before this change.",
+        "enum": ["IDLE", "LOADING", "LOADED", "RENDERING", "READY", "ERROR"]
+      },
+      "currentState": {
+        "type": "string", 
+        "description": "The current state of the visualizer after this change.",
+        "enum": ["IDLE", "LOADING", "LOADED", "RENDERING", "READY", "ERROR"]
+      },
+      "selectedEntity": {
+        "type": ["string", "null"],
+        "description": "The ID of the currently selected entity, or null if no entity is selected."
+      },
+      "anatomyData": {
+        "type": ["object", "null"],
+        "description": "The anatomy data for the selected entity, or null if no data is available."
+      },
+      "error": {
+        "type": ["object", "null"],
+        "description": "Error information if the visualizer is in an error state, or null if no error occurred."
+      }
+    },
+    "additionalProperties": false
+  }
+}

@@ -36,7 +36,7 @@ import { configureBaseContainer } from './baseContainerConfig.js';
  *
  * @param {AppContainer} container
  */
-export function configureMinimalContainer(container) {
+export async function configureMinimalContainer(container) {
   const registrar = new Registrar(container);
 
   // --- Bootstrap logger with a default level (e.g., INFO) ---
@@ -52,10 +52,11 @@ export function configureMinimalContainer(container) {
   );
 
   // --- Configure container with base configuration ---
-  // Minimal configuration excludes game systems and UI
-  configureBaseContainer(container, {
+  // Minimal configuration excludes UI but includes anatomy systems for testing
+  await configureBaseContainer(container, {
     includeGameSystems: false,
     includeUI: false,
+    includeAnatomySystems: true,
     logger: logger,
   });
 

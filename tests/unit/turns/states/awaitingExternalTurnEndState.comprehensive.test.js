@@ -14,8 +14,6 @@ import {
 import { flushPromisesAndTimers } from '../../../common/turns/turnManagerTestBed.js';
 import { expectNoDispatch } from '../../../common/engine/dispatchTestUtils.js';
 
-// Use fake timers to control setTimeout/clearTimeout and advance time manually.
-jest.useFakeTimers();
 const TIMEOUT_MS = 10;
 
 // --- Module Mocks ---
@@ -116,6 +114,9 @@ describe('AwaitingExternalTurnEndState', () => {
   let clearTimeoutSpy;
 
   beforeEach(() => {
+    // Use fake timers to control setTimeout/clearTimeout and advance time manually.
+    jest.useFakeTimers();
+
     // Spy on global timers before each test to allow for assertions.
     setTimeoutSpy = jest.spyOn(global, 'setTimeout');
     clearTimeoutSpy = jest.spyOn(global, 'clearTimeout');

@@ -28,9 +28,11 @@ describe('Anatomy Visualizer - Service Integration', () => {
     };
 
     const mockSlotResolver = {
-      resolveClothingSlot: jest.fn().mockResolvedValue([
-        { entityId: 'torso', socketId: 'chest', slotPath: 'torso.chest' },
-      ]),
+      resolveClothingSlot: jest
+        .fn()
+        .mockResolvedValue([
+          { entityId: 'torso', socketId: 'chest', slotPath: 'torso.chest' },
+        ]),
       setSlotEntityMappings: jest.fn(),
     };
 
@@ -113,9 +115,11 @@ describe('Anatomy Visualizer - Service Integration', () => {
 
     // Mock with all the required dependencies but with WRONG method name
     const mockSlotResolver = {
-      resolveClothingSlot: jest.fn().mockResolvedValue([
-        { entityId: 'torso', socketId: 'chest', slotPath: 'torso.chest' },
-      ]),
+      resolveClothingSlot: jest
+        .fn()
+        .mockResolvedValue([
+          { entityId: 'torso', socketId: 'chest', slotPath: 'torso.chest' },
+        ]),
       setSlotEntityMappings: jest.fn(),
     };
 
@@ -227,9 +231,11 @@ describe('Anatomy Visualizer - Service Integration', () => {
     };
 
     const mockSlotResolver = {
-      resolveClothingSlot: jest.fn().mockResolvedValue([
-        { entityId: 'torso', socketId: 'chest', slotPath: 'torso.chest' },
-      ]),
+      resolveClothingSlot: jest
+        .fn()
+        .mockResolvedValue([
+          { entityId: 'torso', socketId: 'chest', slotPath: 'torso.chest' },
+        ]),
       setSlotEntityMappings: jest.fn(),
     };
 

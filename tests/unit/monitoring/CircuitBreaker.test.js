@@ -32,6 +32,12 @@ beforeEach(() => {
   });
 });
 
+afterEach(() => {
+  jest.runOnlyPendingTimers();
+  jest.useRealTimers();
+  jest.clearAllMocks();
+});
+
 describe('CircuitBreaker core behavior', () => {
   it('bypasses execution when disabled', async () => {
     breaker.setEnabled(false);

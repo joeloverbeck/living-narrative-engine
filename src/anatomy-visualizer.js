@@ -31,6 +31,9 @@ async function initialize() {
         const visualizerStateController = container.resolve(
           tokens.VisualizerStateController
         );
+        const visualizationComposer = container.resolve(
+          tokens.VisualizationComposer
+        );
 
         logger.info('Anatomy Visualizer: Initializing UI...');
         visualizerUI = new AnatomyVisualizerUI({
@@ -41,6 +44,7 @@ async function initialize() {
           eventDispatcher,
           documentContext: { document },
           visualizerStateController,
+          visualizationComposer,
         });
 
         await visualizerUI.initialize();

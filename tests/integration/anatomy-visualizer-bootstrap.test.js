@@ -68,6 +68,11 @@ describe('Anatomy Visualizer - Bootstrap Integration', () => {
           '../../src/dependencyInjection/registrations/visualizerRegistrations.js'
         );
 
+        // Register IDocumentContext for the test
+        container.register(tokens.IDocumentContext, {
+          document: global.document,
+        });
+
         registrationsCalled = true;
         registerVisualizerComponents(container);
 
@@ -152,6 +157,11 @@ describe('Anatomy Visualizer - Bootstrap Integration', () => {
           '../../src/dependencyInjection/registrations/visualizerRegistrations.js'
         );
 
+        // Register IDocumentContext for the test
+        container.register(tokens.IDocumentContext, {
+          document: global.document,
+        });
+
         registerVisualizerComponents(container);
 
         // Resolve all visualizer-related services
@@ -208,6 +218,11 @@ describe('Anatomy Visualizer - Bootstrap Integration', () => {
           await import('../../src/domUI/AnatomyVisualizerUI.js')
         ).default;
 
+        // Register IDocumentContext for the test
+        container.register(tokens.IDocumentContext, {
+          document: global.document,
+        });
+
         // Register visualizer components
         registerVisualizerComponents(container);
 
@@ -219,6 +234,9 @@ describe('Anatomy Visualizer - Bootstrap Integration', () => {
         const visualizerStateController = container.resolve(
           tokens.VisualizerStateController
         );
+        const visualizationComposer = container.resolve(
+          tokens.VisualizationComposer
+        );
 
         // Create UI instance
         anatomyVisualizerUI = new AnatomyVisualizerUI({
@@ -229,6 +247,7 @@ describe('Anatomy Visualizer - Bootstrap Integration', () => {
           eventDispatcher,
           documentContext: { document: global.document },
           visualizerStateController,
+          visualizationComposer,
         });
 
         // Initialize UI

@@ -103,6 +103,7 @@ describe('EntityLifecycleMonitor', () => {
 
   afterEach(() => {
     jest.clearAllTimers();
+    jest.useRealTimers();
     jest.restoreAllMocks();
     jest.clearAllMocks();
   });

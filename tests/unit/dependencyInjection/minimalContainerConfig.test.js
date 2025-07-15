@@ -38,6 +38,7 @@ jest.mock(
 jest.mock(
   '../../../src/dependencyInjection/registrations/initializerRegistrations.js'
 );
+
 jest.mock(
   '../../../src/dependencyInjection/registrations/runtimeRegistrations.js'
 );
@@ -59,6 +60,15 @@ describe('minimalContainerConfig logger handling', () => {
     );
     registerInfrastructure.mockImplementation((c) => {
       c.register(tokens.ISafeEventDispatcher, { dispatch: jest.fn() });
+    });
+
+    // Mock initializer registrations to prevent anatomy system warnings
+    const { registerInitializers } = jest.requireMock(
+      '../../../src/dependencyInjection/registrations/initializerRegistrations.js'
+    );
+    registerInitializers.mockImplementation((c) => {
+      c.register(tokens.SystemInitializer, { initialize: jest.fn() });
+      c.register(tokens.AnatomyInitializationService, { initialize: jest.fn() });
     });
 
     setLevelSpy = jest

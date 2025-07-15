@@ -225,6 +225,39 @@ moddable nature.
 
 **Before committing, ensure all tests pass in both the root project and the `llm-proxy-server`.**
 
+### Timer Cleanup in Tests
+
+When writing tests that use `jest.useFakeTimers()`, proper cleanup is mandatory to prevent Jest worker processes from hanging:
+
+```javascript
+// Good - proper cleanup
+describe('MyComponent', () => {
+  beforeEach(() => {
+    jest.useFakeTimers();
+  });
+
+  afterEach(() => {
+    jest.runOnlyPendingTimers();
+    jest.useRealTimers();
+  });
+
+  // ... tests ...
+});
+
+// Bad - missing cleanup
+describe('MyComponent', () => {
+  jest.useFakeTimers(); // Never do this at top level
+
+  // ... tests ...
+});
+```
+
+Always ensure:
+
+- Call `jest.useFakeTimers()` inside `beforeEach()`, not at the module level
+- Call `jest.runOnlyPendingTimers()` followed by `jest.useRealTimers()` in `afterEach()`
+- Clear any intervals or timeouts created in your tests
+
 ## Committing Code and Pull Requests
 
 1. **Pre-Commit Checks**:

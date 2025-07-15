@@ -1,0 +1,303 @@
+/**
+ * @file Unit tests for SlotResolver class
+ * @see src/anatomy/integration/SlotResolver.js
+ */
+
+import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import SlotResolver from '../../../../src/anatomy/integration/SlotResolver.js';
+import BlueprintSlotStrategy from '../../../../src/anatomy/integration/strategies/BlueprintSlotStrategy.js';
+import DirectSocketStrategy from '../../../../src/anatomy/integration/strategies/DirectSocketStrategy.js';
+
+describe('SlotResolver', () => {
+  let slotResolver;
+  let mockLogger;
+  let mockEntityManager;
+  let mockBodyGraphService;
+  let mockAnatomyBlueprintRepository;
+  let mockAnatomySocketIndex;
+  let mockCache;
+
+  beforeEach(() => {
+    mockLogger = {
+      debug: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+      info: jest.fn(),
+    };
+
+    mockEntityManager = {
+      getComponentData: jest.fn(),
+      hasComponent: jest.fn(),
+    };
+
+    mockBodyGraphService = {
+      getBodyGraph: jest.fn(),
+    };
+
+    mockAnatomyBlueprintRepository = {
+      getBlueprintByRecipeId: jest.fn(),
+    };
+
+    mockAnatomySocketIndex = {
+      findEntityWithSocket: jest.fn(),
+    };
+
+    // Mock cache that simulates AnatomyClothingCache behavior
+    mockCache = {
+      get: jest.fn().mockReturnValue(undefined), // Default to cache miss
+      set: jest.fn(),
+      clearType: jest.fn(),
+      has: jest.fn().mockReturnValue(false),
+    };
+
+    slotResolver = new SlotResolver({
+      logger: mockLogger,
+      entityManager: mockEntityManager,
+      bodyGraphService: mockBodyGraphService,
+      anatomyBlueprintRepository: mockAnatomyBlueprintRepository,
+      anatomySocketIndex: mockAnatomySocketIndex,
+      cache: mockCache,
+    });
+  });
+
+  describe('resolveClothingSlot', () => {
+    it('should resolve a clothing slot successfully', async () => {
+      // Mock blueprint strategy behavior
+      const expectedResult = [
+        {
+          entityId: 'torso_entity',
+          socketId: 'chest',
+          slotPath: 'torso.chest',
+          orientation: 'neutral',
+        },
+      ];
+
+      // Mock the blueprint to return clothing slot mappings
+      mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue({
+        id: 'human_base',
+        clothingSlotMappings: {
+          'torso.chest': {
+            blueprintSlots: ['torso_chest'],
+          },
+        },
+        slots: {
+          'torso_chest': {
+            socket: 'chest',
+            type: 'torso',
+          },
+        },
+      });
+
+      // Mock entity manager to return body component
+      mockEntityManager.getComponentData.mockResolvedValue({
+        recipeId: 'human_base',
+      });
+
+      // Mock socket index to find entity
+      mockAnatomySocketIndex.findEntityWithSocket.mockResolvedValue(
+        'torso_entity'
+      );
+
+      // Mock body graph
+      mockBodyGraphService.getBodyGraph.mockResolvedValue({
+        getConnectedParts: jest.fn().mockReturnValue([]),
+      });
+
+      // Test the method
+      const result = await slotResolver.resolveClothingSlot(
+        'actor123',
+        'torso.chest'
+      );
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toMatchObject({
+        entityId: 'torso_entity',
+        socketId: 'chest',
+        slotPath: 'torso_chest',
+      });
+    });
+
+    it('should throw ClothingSlotNotFoundError when no strategy can resolve the slot', async () => {
+      // Make all strategies unable to resolve
+      mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue({
+        slots: {},
+      });
+
+      // Mock entity manager to return an entity without body component
+      mockEntityManager.getComponentData.mockResolvedValue(null);
+
+      await expect(
+        slotResolver.resolveClothingSlot('actor123', 'unknown_slot')
+      ).rejects.toThrow('No blueprint found for entity actor123');
+    });
+
+    it('should propagate errors from strategies', async () => {
+      // Mock an error in the blueprint repository
+      const dbError = new Error('Database error');
+      mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockRejectedValue(
+        dbError
+      );
+
+      // Mock entity manager to return body component
+      mockEntityManager.getComponentData.mockResolvedValue({
+        recipeId: 'human_base',
+      });
+
+      await expect(
+        slotResolver.resolveClothingSlot('actor123', 'torso.chest')
+      ).rejects.toThrow(dbError);
+    });
+
+    it('should validate required parameters', async () => {
+      // Test missing entityId
+      await expect(
+        slotResolver.resolveClothingSlot(null, 'slotId')
+      ).rejects.toThrow();
+
+      // Test missing slotId
+      await expect(
+        slotResolver.resolveClothingSlot('entityId', null)
+      ).rejects.toThrow();
+    });
+
+    it('should throw ClothingSlotNotFoundError when no clothing slot mapping strategy can resolve', async () => {
+      // Create a custom strategy that cannot resolve clothing slot mappings
+      const mockCustomStrategy = {
+        canResolve: jest.fn((mapping) => mapping.socket !== undefined),
+        resolve: jest.fn().mockResolvedValue([
+          {
+            entityId: 'direct_entity',
+            socketId: 'direct_socket',
+          },
+        ]),
+      };
+
+      // Create resolver with custom strategies that don't include ClothingSlotMappingStrategy
+      const customResolver = new SlotResolver({
+        logger: mockLogger,
+        strategies: [mockCustomStrategy],
+        entityManager: mockEntityManager,
+        bodyGraphService: mockBodyGraphService,
+        anatomyBlueprintRepository: mockAnatomyBlueprintRepository,
+        anatomySocketIndex: mockAnatomySocketIndex,
+        cache: mockCache,
+      });
+
+      await expect(
+        customResolver.resolveClothingSlot('actor123', 'some_socket')
+      ).rejects.toThrow(
+        `Clothing slot 'some_socket' not found in blueprint clothing slot mappings`
+      );
+
+      // Should only try to resolve clothing slot mapping
+      expect(mockCustomStrategy.canResolve).toHaveBeenCalledTimes(1);
+      expect(mockCustomStrategy.canResolve).toHaveBeenCalledWith({
+        clothingSlotId: 'some_socket',
+      });
+    });
+  });
+
+  describe('resolve', () => {
+    it('should cache resolution results', async () => {
+      const mapping = { blueprintSlots: ['torso.chest'] };
+
+      // Mock blueprint strategy resolution
+      mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue({
+        slots: {
+          'torso.chest': { socket: 'chest' },
+        },
+      });
+      mockEntityManager.getComponentData.mockResolvedValue({
+        recipeId: 'human_base',
+      });
+      mockAnatomySocketIndex.findEntityWithSocket.mockResolvedValue(
+        'torso_entity'
+      );
+      mockBodyGraphService.getBodyGraph.mockResolvedValue({
+        getConnectedParts: jest.fn().mockReturnValue([]),
+      });
+
+      // First call should hit the strategies
+      await slotResolver.resolve('actor123', 'torso.chest', mapping);
+
+      // Verify cache was set
+      expect(mockCache.set).toHaveBeenCalled();
+
+      // Reset mocks before second call
+      mockCache.get.mockReset();
+      mockCache.get.mockReturnValue([{ entityId: 'cached_entity' }]);
+
+      // Second call should use cache
+      const cachedResult = await slotResolver.resolve(
+        'actor123',
+        'torso.chest',
+        mapping
+      );
+
+      expect(mockCache.get).toHaveBeenCalled();
+      expect(cachedResult).toEqual([{ entityId: 'cached_entity' }]);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('Cache hit for slot resolution')
+      );
+    });
+  });
+
+  describe('setSlotEntityMappings', () => {
+    it('should update slot entity mappings on blueprint strategy', async () => {
+      const mappings = new Map([
+        ['slot1', 'entity1'],
+        ['slot2', 'entity2'],
+      ]);
+
+      slotResolver.setSlotEntityMappings(mappings);
+
+      // Verify it doesn't throw and logs appropriately
+      expect(mockLogger.error).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('clearCache', () => {
+    it('should clear the cache', () => {
+      slotResolver.clearCache();
+
+      expect(mockCache.clearType).toHaveBeenCalledWith(expect.any(String));
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Slot resolution cache cleared'
+      );
+    });
+  });
+
+  describe('getStrategyCount', () => {
+    it('should return the correct number of strategies', () => {
+      const count = slotResolver.getStrategyCount();
+
+      // Should have 3 default strategies (ClothingSlotMappingStrategy, BlueprintSlotStrategy and DirectSocketStrategy)
+      expect(count).toBe(3);
+    });
+  });
+
+  describe('addStrategy', () => {
+    it('should add a new strategy', () => {
+      const mockStrategy = {
+        canResolve: jest.fn(),
+        resolve: jest.fn(),
+      };
+
+      const initialCount = slotResolver.getStrategyCount();
+      slotResolver.addStrategy(mockStrategy);
+
+      expect(slotResolver.getStrategyCount()).toBe(initialCount + 1);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        `Added new strategy: ${mockStrategy.constructor.name}`
+      );
+    });
+
+    it('should validate strategy interface', () => {
+      const invalidStrategy = {
+        // Missing required methods
+      };
+
+      expect(() => slotResolver.addStrategy(invalidStrategy)).toThrow();
+    });
+  });
+});

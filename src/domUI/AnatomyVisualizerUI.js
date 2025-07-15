@@ -3,7 +3,6 @@
  * @description Main UI controller for the anatomy visualization system
  */
 
-import AnatomyGraphRenderer from './AnatomyGraphRenderer.js';
 import { ENTITY_CREATED_ID } from '../constants/eventIds.js';
 import { DomUtils } from '../utils/domUtils.js';
 
@@ -14,6 +13,7 @@ import { DomUtils } from '../utils/domUtils.js';
 /** @typedef {import('../interfaces/IDocumentContext.js').IDocumentContext} IDocumentContext */
 /** @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 /** @typedef {import('./visualizer/VisualizerStateController.js').VisualizerStateController} VisualizerStateController */
+/** @typedef {import('./anatomy-renderer/VisualizationComposer.js').default} VisualizationComposer */
 
 class AnatomyVisualizerUI {
   /**
@@ -25,6 +25,7 @@ class AnatomyVisualizerUI {
    * @param {ISafeEventDispatcher} dependencies.eventDispatcher
    * @param {IDocumentContext} dependencies.documentContext
    * @param {VisualizerStateController} dependencies.visualizerStateController
+   * @param {VisualizationComposer} dependencies.visualizationComposer
    */
   constructor({
     logger,
@@ -34,6 +35,7 @@ class AnatomyVisualizerUI {
     eventDispatcher,
     documentContext,
     visualizerStateController,
+    visualizationComposer,
   }) {
     this._logger = logger;
     this._registry = registry;
@@ -42,7 +44,7 @@ class AnatomyVisualizerUI {
     this._eventDispatcher = eventDispatcher;
     this._document = documentContext.document;
     this._visualizerStateController = visualizerStateController;
-    this._graphRenderer = null;
+    this._visualizationComposer = visualizationComposer;
     this._currentEntityId = null;
     this._createdEntities = [];
     this._stateUnsubscribe = null;
@@ -56,12 +58,11 @@ class AnatomyVisualizerUI {
   async initialize() {
     this._logger.debug('AnatomyVisualizerUI: Initializing...');
 
-    // Initialize graph renderer
-    this._graphRenderer = new AnatomyGraphRenderer({
-      logger: this._logger,
-      entityManager: this._entityManager,
-      documentContext: { document: this._document },
-    });
+    // Initialize visualization composer
+    const container = this._document.getElementById('anatomy-graph-container');
+    if (container) {
+      this._visualizationComposer.initialize(container);
+    }
 
     // Populate entity selector
     await this._populateEntitySelector();
@@ -82,7 +83,7 @@ class AnatomyVisualizerUI {
    */
   _subscribeToStateChanges() {
     this._stateUnsubscribe = this._eventDispatcher.subscribe(
-      'VISUALIZER_STATE_CHANGED',
+      'anatomy:visualizer_state_changed',
       this._handleStateChange.bind(this)
     );
   }
@@ -151,7 +152,7 @@ class AnatomyVisualizerUI {
       this._visualizerStateController.startRendering();
 
       // Render the anatomy graph
-      await this._graphRenderer.renderGraph(entityId, anatomyData);
+      await this._visualizationComposer.renderGraph(entityId, anatomyData);
 
       // Complete rendering
       this._visualizerStateController.completeRendering();
@@ -363,8 +364,8 @@ class AnatomyVisualizerUI {
     await this._clearPreviousEntities();
 
     // Clear graph
-    if (this._graphRenderer) {
-      this._graphRenderer.clear();
+    if (this._visualizationComposer) {
+      this._visualizationComposer.clear();
     }
 
     // Clear description
