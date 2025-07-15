@@ -17,10 +17,7 @@
   ],
   "gameVersion": ">=0.0.1",
   "content": {
-    "components": [
-      "equipment.component.json",
-      "wearable.component.json"
-    ],
+    "components": ["equipment.component.json", "wearable.component.json"],
     "entities": {
       "definitions": [
         "basic_shirt.entity.json",

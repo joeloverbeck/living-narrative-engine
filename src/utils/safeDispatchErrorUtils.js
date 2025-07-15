@@ -7,6 +7,7 @@
 
 /** @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../actions/errors/actionErrorTypes.js').ActionErrorContext} ActionErrorContext */
 
 import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/systemEventIds.js';
 import { ensureValidLogger } from './loggerUtils.js';
@@ -30,17 +31,26 @@ export class InvalidDispatcherError extends Error {
  * Sends a `core:system_error_occurred` event with a consistent payload structure.
  * The dispatcher is validated before dispatching.
  *
+ * Can accept either traditional message/details or an ActionErrorContext object.
+ *
  * @param {ISafeEventDispatcher} dispatcher - Dispatcher used to emit the event.
- * @param {string} message - Human readable error message.
- * @param {object} [details] - Additional structured details for debugging.
+ * @param {string|ActionErrorContext} messageOrContext - Human readable error message or ActionErrorContext.
+ * @param {object} [details] - Additional structured details for debugging (ignored if first param is ActionErrorContext).
  * @param {ILogger} [logger] - Optional logger for error logging. When omitted, a
  * console-based fallback is used.
  * @throws {InvalidDispatcherError} If the dispatcher is missing or invalid.
  * @returns {void}
  * @example
  * safeDispatchError(safeEventDispatcher, 'Invalid action', { id: 'bad-action' });
+ * // or
+ * safeDispatchError(safeEventDispatcher, actionErrorContext);
  */
-export function safeDispatchError(dispatcher, message, details = {}, logger) {
+export function safeDispatchError(
+  dispatcher,
+  messageOrContext,
+  details = {},
+  logger
+) {
   const log = ensureValidLogger(logger, 'safeDispatchError');
   const hasDispatch = dispatcher && typeof dispatcher.dispatch === 'function';
   if (!hasDispatch) {
@@ -52,7 +62,36 @@ export function safeDispatchError(dispatcher, message, details = {}, logger) {
     });
   }
 
-  dispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, { message, details });
+  let message;
+  let eventDetails;
+
+  // Check if we received an ActionErrorContext
+  if (
+    typeof messageOrContext === 'object' &&
+    messageOrContext.actionId &&
+    messageOrContext.error
+  ) {
+    // It's an ActionErrorContext
+    const errorContext = messageOrContext;
+    message =
+      errorContext.error.message || 'An error occurred in the action system';
+    eventDetails = {
+      errorContext,
+      // Include some key fields at top level for backward compatibility
+      actionId: errorContext.actionId,
+      phase: errorContext.phase,
+      targetId: errorContext.targetId,
+    };
+  } else {
+    // Traditional string message
+    message = messageOrContext;
+    eventDetails = details;
+  }
+
+  dispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
+    message,
+    details: eventDetails,
+  });
 }
 
 /**

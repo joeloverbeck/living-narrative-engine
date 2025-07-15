@@ -68,7 +68,9 @@ describe('minimalContainerConfig logger handling', () => {
     );
     registerInitializers.mockImplementation((c) => {
       c.register(tokens.SystemInitializer, { initialize: jest.fn() });
-      c.register(tokens.AnatomyInitializationService, { initialize: jest.fn() });
+      c.register(tokens.AnatomyInitializationService, {
+        initialize: jest.fn(),
+      });
     });
 
     setLevelSpy = jest

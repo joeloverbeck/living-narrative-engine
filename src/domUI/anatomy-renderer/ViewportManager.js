@@ -72,7 +72,7 @@ class ViewportManager {
    * @param {{x?: number, y?: number, width?: number, height?: number}} viewport - Viewport settings
    */
   setViewport(viewport) {
-    const changed = 
+    const changed =
       viewport.x !== this.#viewport.x ||
       viewport.y !== this.#viewport.y ||
       viewport.width !== this.#viewport.width ||
@@ -140,22 +140,25 @@ class ViewportManager {
     const newScale = oldScale * factor;
 
     // Clamp zoom level
-    this.#transform.scale = Math.max(this.#minZoom, Math.min(this.#maxZoom, newScale));
+    this.#transform.scale = Math.max(
+      this.#minZoom,
+      Math.min(this.#maxZoom, newScale)
+    );
     const actualFactor = this.#transform.scale / oldScale;
 
     if (actualFactor === 1) return; // No change
 
     // Convert center point to world coordinates before zoom
-    const worldX = this.#viewport.x + (centerX / oldScale);
-    const worldY = this.#viewport.y + (centerY / oldScale);
+    const worldX = this.#viewport.x + centerX / oldScale;
+    const worldY = this.#viewport.y + centerY / oldScale;
 
     // Update viewport size
     const newWidth = this.#viewport.width * actualFactor;
     const newHeight = this.#viewport.height * actualFactor;
 
     // Adjust viewport position to maintain center point
-    this.#viewport.x = worldX - (centerX / this.#transform.scale);
-    this.#viewport.y = worldY - (centerY / this.#transform.scale);
+    this.#viewport.x = worldX - centerX / this.#transform.scale;
+    this.#viewport.y = worldY - centerY / this.#transform.scale;
     this.#viewport.width = newWidth;
     this.#viewport.height = newHeight;
 
@@ -164,7 +167,9 @@ class ViewportManager {
     }
 
     this.#notifyObservers();
-    this.#logger.debug(`ViewportManager: Zoomed to ${this.#transform.scale.toFixed(2)}x`);
+    this.#logger.debug(
+      `ViewportManager: Zoomed to ${this.#transform.scale.toFixed(2)}x`
+    );
   }
 
   /**
@@ -240,8 +245,8 @@ class ViewportManager {
    */
   screenToWorld(screenX, screenY) {
     return {
-      x: this.#viewport.x + (screenX / this.#transform.scale),
-      y: this.#viewport.y + (screenY / this.#transform.scale),
+      x: this.#viewport.x + screenX / this.#transform.scale,
+      y: this.#viewport.y + screenY / this.#transform.scale,
     };
   }
 
@@ -325,7 +330,7 @@ class ViewportManager {
   setZoomLimits(minZoom, maxZoom) {
     this.#minZoom = Math.max(0.01, minZoom);
     this.#maxZoom = Math.min(100, maxZoom);
-    
+
     // Clamp current zoom
     if (this.#transform.scale < this.#minZoom) {
       this.#transform.scale = this.#minZoom;

@@ -107,7 +107,7 @@ class VisualizerStateController {
           operation: 'entity_selection',
           reason: 'invalid_input',
           severity: 'MEDIUM',
-          recoverable: true
+          recoverable: true,
         }
       );
       await this._handleErrorWithRecovery(error, 'entity_selection');
@@ -126,7 +126,7 @@ class VisualizerStateController {
           operation: 'entity_selection',
           reason: 'concurrent_operation',
           severity: 'MEDIUM',
-          recoverable: true
+          recoverable: true,
         }
       );
       await this._handleErrorWithRecovery(error, 'entity_selection');
@@ -134,44 +134,51 @@ class VisualizerStateController {
     }
 
     const operationId = `select_entity_${entityId}`;
-    
+
     try {
       // Use retry strategy for entity selection
-      await this.#retryStrategy.execute(operationId, async () => {
-        // Start entity selection
-        this.#visualizerState.selectEntity(entityId);
+      await this.#retryStrategy.execute(
+        operationId,
+        async () => {
+          // Start entity selection
+          this.#visualizerState.selectEntity(entityId);
 
-        // Wait for entity creation and anatomy generation
-        const success = await this.#anatomyLoadingDetector.waitForEntityWithAnatomy(entityId, {
-          timeout: 10000, // 10 second timeout
-          retryInterval: 100,
-          useExponentialBackoff: true,
-        });
+          // Wait for entity creation and anatomy generation
+          const success =
+            await this.#anatomyLoadingDetector.waitForEntityWithAnatomy(
+              entityId,
+              {
+                timeout: 10000, // 10 second timeout
+                retryInterval: 100,
+                useExponentialBackoff: true,
+              }
+            );
 
-        if (!success) {
-          throw AnatomyStateError.operationTimeout(
-            'entity_loading',
-            10000,
-            this.#visualizerState.getCurrentState()
-          );
+          if (!success) {
+            throw AnatomyStateError.operationTimeout(
+              'entity_loading',
+              10000,
+              this.#visualizerState.getCurrentState()
+            );
+          }
+
+          // Get anatomy data and update state
+          await this.#processAnatomyData(entityId);
+        },
+        {
+          maxAttempts: 2,
+          strategy: RetryStrategy.STRATEGY_TYPES.LINEAR,
+          context: {
+            operation: 'entity_selection',
+            component: 'VisualizerStateController',
+            data: { entityId },
+          },
         }
-
-        // Get anatomy data and update state
-        await this.#processAnatomyData(entityId);
-      }, {
-        maxAttempts: 2,
-        strategy: RetryStrategy.STRATEGY_TYPES.LINEAR,
-        context: {
-          operation: 'entity_selection',
-          component: 'VisualizerStateController',
-          data: { entityId }
-        }
-      });
-
+      );
     } catch (error) {
       await this._handleErrorWithRecovery(error, 'entity_selection', {
         entityId,
-        retryCallback: () => this.selectEntity(entityId)
+        retryCallback: () => this.selectEntity(entityId),
       });
     }
   }
@@ -213,7 +220,11 @@ class VisualizerStateController {
   async handleError(error, context = {}) {
     this.#throwIfDisposed();
 
-    await this._handleErrorWithRecovery(error, context.operation || 'unknown', context);
+    await this._handleErrorWithRecovery(
+      error,
+      context.operation || 'unknown',
+      context
+    );
   }
 
   /**
@@ -445,7 +456,7 @@ class VisualizerStateController {
       await this.#errorReporter.report(error, {
         operation,
         component: 'VisualizerStateController',
-        ...context
+        ...context,
       });
 
       // Attempt recovery
@@ -453,12 +464,14 @@ class VisualizerStateController {
         operation,
         data: context,
         retryCallback: context.retryCallback,
-        fallbackOptions: context.fallbackOptions || {}
+        fallbackOptions: context.fallbackOptions || {},
       });
 
       if (recoveryResult.success) {
-        this.#logger.info(`Error recovery successful for operation: ${operation}`);
-        
+        this.#logger.info(
+          `Error recovery successful for operation: ${operation}`
+        );
+
         // Apply recovery result if needed
         if (recoveryResult.result) {
           this._applyRecoveryResult(recoveryResult.result, operation);
@@ -467,7 +480,6 @@ class VisualizerStateController {
         // Recovery failed, update state with error
         this.#visualizerState.setError(error);
       }
-
     } catch (recoveryError) {
       this.#logger.error('Error recovery failed:', recoveryError);
       // Fallback to basic error handling
@@ -535,12 +547,12 @@ class VisualizerStateController {
     return new ErrorRecovery(
       {
         logger: this.#logger,
-        eventDispatcher: this.#eventDispatcher
+        eventDispatcher: this.#eventDispatcher,
       },
       {
         maxRetryAttempts: 2,
         retryDelayMs: 1000,
-        useExponentialBackoff: true
+        useExponentialBackoff: true,
       }
     );
   }
@@ -555,12 +567,12 @@ class VisualizerStateController {
     return new ErrorReporter(
       {
         logger: this.#logger,
-        eventDispatcher: this.#eventDispatcher
+        eventDispatcher: this.#eventDispatcher,
       },
       {
         enableMetrics: false, // Disabled by default for now
         reportLevels: ['CRITICAL', 'HIGH'],
-        maxStackTraceLines: 5
+        maxStackTraceLines: 5,
       }
     );
   }
@@ -574,14 +586,14 @@ class VisualizerStateController {
   _createDefaultRetryStrategy() {
     return new RetryStrategy(
       {
-        logger: this.#logger
+        logger: this.#logger,
       },
       {
         maxAttempts: 2,
         baseDelayMs: 1000,
         strategy: RetryStrategy.STRATEGY_TYPES.LINEAR,
         circuitBreakerThreshold: 3,
-        circuitBreakerTimeoutMs: 30000
+        circuitBreakerTimeoutMs: 30000,
       }
     );
   }

@@ -84,13 +84,15 @@ describe('ActionButtonsRenderer', () => {
     );
     document = dom.window.document;
     global.document = document; // Ensure global document is set for DocumentContext
+    globalThis.document = document; // Ensure globalThis document is also set for DocumentContext
     global.HTMLElement = dom.window.HTMLElement; // Ensure global HTMLElement is set
     global.HTMLButtonElement = dom.window.HTMLButtonElement;
     global.HTMLInputElement = dom.window.HTMLInputElement;
     // Note: global.Document is not explicitly set here from dom.window.Document,
     // but DocumentContext tries to grab it from global or use a fallback if needed.
 
-    docContext = new DocumentContext(); // Let it pick up global.document
+    docContext = new DocumentContext(document); // Pass the JSDOM document directly
+
 
     mockLogger = new ConsoleLogger();
     mockVed = new ValidatedEventDispatcher({
@@ -149,6 +151,7 @@ describe('ActionButtonsRenderer', () => {
   afterEach(() => {
     jest.restoreAllMocks();
     delete global.document;
+    delete globalThis.document;
     delete global.HTMLElement;
     delete global.HTMLButtonElement;
     delete global.HTMLInputElement;
@@ -201,7 +204,9 @@ describe('ActionButtonsRenderer', () => {
     });
 
     it('should not throw if domElementFactory is missing or invalid', () => {
-      expect(() => createRenderer({ domElementFactory: null })).not.toThrow();
+      // Test with missing domElementFactory - should use a fallback internally
+      expect(() => createRenderer({ domElementFactory: undefined })).not.toThrow();
+      // Test with invalid domElementFactory object - should handle gracefully
       expect(() => createRenderer({ domElementFactory: {} })).not.toThrow();
     });
 

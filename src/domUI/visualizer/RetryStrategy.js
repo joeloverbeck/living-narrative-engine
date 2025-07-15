@@ -26,11 +26,11 @@ class RetryStrategy {
    * @readonly
    */
   static STRATEGY_TYPES = {
-    IMMEDIATE: 'immediate',           // Retry immediately
-    LINEAR: 'linear',                 // Linear backoff
-    EXPONENTIAL: 'exponential',       // Exponential backoff
-    FIBONACCI: 'fibonacci',           // Fibonacci backoff
-    CUSTOM: 'custom'                  // Custom backoff function
+    IMMEDIATE: 'immediate', // Retry immediately
+    LINEAR: 'linear', // Linear backoff
+    EXPONENTIAL: 'exponential', // Exponential backoff
+    FIBONACCI: 'fibonacci', // Fibonacci backoff
+    CUSTOM: 'custom', // Custom backoff function
   };
 
   /**
@@ -39,9 +39,9 @@ class RetryStrategy {
    * @readonly
    */
   static CIRCUIT_STATES = {
-    CLOSED: 'closed',                 // Normal operation
-    OPEN: 'open',                     // Failing, no retries allowed
-    HALF_OPEN: 'half_open'            // Testing if service recovered
+    CLOSED: 'closed', // Normal operation
+    OPEN: 'open', // Failing, no retries allowed
+    HALF_OPEN: 'half_open', // Testing if service recovered
   };
 
   /**
@@ -80,7 +80,7 @@ class RetryStrategy {
       circuitBreakerThreshold: 5,
       circuitBreakerTimeoutMs: 60000,
       retryableErrors: ['NETWORK_ERROR', 'TIMEOUT_ERROR', 'TEMPORARY_ERROR'],
-      ...defaultConfig
+      ...defaultConfig,
     };
   }
 
@@ -108,7 +108,7 @@ class RetryStrategy {
     }
 
     const finalConfig = { ...this.#defaultConfig, ...config };
-    
+
     // Check circuit breaker
     if (!this._isCircuitClosed(operationId)) {
       throw new Error(`Circuit breaker is open for operation: ${operationId}`);
@@ -129,39 +129,49 @@ class RetryStrategy {
         this._recordSuccess(operationId);
         this._resetRetryAttempts(operationId);
 
-        this.#logger.debug(`Operation ${operationId} succeeded on attempt ${attempt}`);
+        this.#logger.debug(
+          `Operation ${operationId} succeeded on attempt ${attempt}`
+        );
         return result;
-
       } catch (error) {
         lastError = error;
         this._recordFailure(operationId, error);
 
         // Check if we should retry this error
         if (!this._shouldRetryError(error, finalConfig)) {
-          this.#logger.debug(`Operation ${operationId} failed with non-retryable error:`, error.message);
+          this.#logger.debug(
+            `Operation ${operationId} failed with non-retryable error:`,
+            error.message
+          );
           break;
         }
 
         // Check if this is the last attempt
         if (attempt >= finalConfig.maxAttempts) {
-          this.#logger.debug(`Operation ${operationId} failed after ${attempt} attempts`);
+          this.#logger.debug(
+            `Operation ${operationId} failed after ${attempt} attempts`
+          );
           break;
         }
 
         // Calculate delay and wait
         const delay = this._calculateDelay(attempt, finalConfig);
-        this.#logger.debug(`Operation ${operationId} failed on attempt ${attempt}, retrying in ${delay}ms`);
+        this.#logger.debug(
+          `Operation ${operationId} failed on attempt ${attempt}, retrying in ${delay}ms`
+        );
         await this._delay(delay);
       }
     }
 
     // All attempts failed
     const totalTime = Date.now() - startTime;
-    this.#logger.warn(`Operation ${operationId} failed after ${finalConfig.maxAttempts} attempts in ${totalTime}ms`);
-    
+    this.#logger.warn(
+      `Operation ${operationId} failed after ${finalConfig.maxAttempts} attempts in ${totalTime}ms`
+    );
+
     // Update circuit breaker
     this._updateCircuitBreaker(operationId);
-    
+
     throw lastError;
   }
 
@@ -175,11 +185,11 @@ class RetryStrategy {
    */
   async executeSimple(operation, maxAttempts = 3, delayMs = 1000) {
     const operationId = `simple_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
-    
+
     return this.execute(operationId, operation, {
       maxAttempts,
       baseDelayMs: delayMs,
-      strategy: RetryStrategy.STRATEGY_TYPES.LINEAR
+      strategy: RetryStrategy.STRATEGY_TYPES.LINEAR,
     });
   }
 
@@ -200,8 +210,10 @@ class RetryStrategy {
       attempts: attempts ? attempts.attempts : 0,
       failures: attempts ? attempts.failures : 0,
       lastAttempt: attempts ? attempts.lastAttempt : null,
-      circuitBreakerState: circuitBreaker ? circuitBreaker.state : RetryStrategy.CIRCUIT_STATES.CLOSED,
-      circuitBreakerFailures: circuitBreaker ? circuitBreaker.failures : 0
+      circuitBreakerState: circuitBreaker
+        ? circuitBreaker.state
+        : RetryStrategy.CIRCUIT_STATES.CLOSED,
+      circuitBreakerFailures: circuitBreaker ? circuitBreaker.failures : 0,
     };
   }
 
@@ -241,7 +253,7 @@ class RetryStrategy {
         state: RetryStrategy.CIRCUIT_STATES.CLOSED,
         failures: 0,
         lastFailure: null,
-        nextAttemptAllowed: Date.now()
+        nextAttemptAllowed: Date.now(),
       };
     }
 
@@ -249,9 +261,10 @@ class RetryStrategy {
       state: breaker.state,
       failures: breaker.failures,
       lastFailure: breaker.lastFailure,
-      nextAttemptAllowed: breaker.state === RetryStrategy.CIRCUIT_STATES.OPEN ? 
-        breaker.lastFailure + this.#defaultConfig.circuitBreakerTimeoutMs : 
-        Date.now()
+      nextAttemptAllowed:
+        breaker.state === RetryStrategy.CIRCUIT_STATES.OPEN
+          ? breaker.lastFailure + this.#defaultConfig.circuitBreakerTimeoutMs
+          : Date.now(),
     };
   }
 
@@ -283,7 +296,9 @@ class RetryStrategy {
     }
 
     if (cleaned > 0) {
-      this.#logger.debug(`Cleaned up ${cleaned} old retry/circuit breaker entries`);
+      this.#logger.debug(
+        `Cleaned up ${cleaned} old retry/circuit breaker entries`
+      );
     }
   }
 
@@ -327,19 +342,24 @@ class RetryStrategy {
     switch (breaker.state) {
       case RetryStrategy.CIRCUIT_STATES.CLOSED:
         return true;
-      
+
       case RetryStrategy.CIRCUIT_STATES.OPEN:
         // Check if timeout has elapsed
-        if (now >= breaker.lastFailure + this.#defaultConfig.circuitBreakerTimeoutMs) {
+        if (
+          now >=
+          breaker.lastFailure + this.#defaultConfig.circuitBreakerTimeoutMs
+        ) {
           breaker.state = RetryStrategy.CIRCUIT_STATES.HALF_OPEN;
-          this.#logger.debug(`Circuit breaker ${operationId} moved to HALF_OPEN state`);
+          this.#logger.debug(
+            `Circuit breaker ${operationId} moved to HALF_OPEN state`
+          );
           return true;
         }
         return false;
-      
+
       case RetryStrategy.CIRCUIT_STATES.HALF_OPEN:
         return true;
-      
+
       default:
         return true;
     }
@@ -355,11 +375,11 @@ class RetryStrategy {
   _recordAttempt(operationId, attempt) {
     const now = Date.now();
     const existing = this.#retryAttempts.get(operationId);
-    
+
     this.#retryAttempts.set(operationId, {
       attempts: attempt,
       failures: existing ? existing.failures : 0,
-      lastAttempt: now
+      lastAttempt: now,
     });
   }
 
@@ -376,7 +396,9 @@ class RetryStrategy {
       if (breaker.state === RetryStrategy.CIRCUIT_STATES.HALF_OPEN) {
         breaker.state = RetryStrategy.CIRCUIT_STATES.CLOSED;
         breaker.failures = 0;
-        this.#logger.debug(`Circuit breaker ${operationId} moved to CLOSED state after success`);
+        this.#logger.debug(
+          `Circuit breaker ${operationId} moved to CLOSED state after success`
+        );
       } else if (breaker.state === RetryStrategy.CIRCUIT_STATES.CLOSED) {
         breaker.failures = Math.max(0, breaker.failures - 1); // Gradual recovery
       }
@@ -392,7 +414,7 @@ class RetryStrategy {
    */
   _recordFailure(operationId, error) {
     const now = Date.now();
-    
+
     // Update retry attempts
     const existing = this.#retryAttempts.get(operationId);
     if (existing) {
@@ -405,7 +427,7 @@ class RetryStrategy {
       breaker = {
         state: RetryStrategy.CIRCUIT_STATES.CLOSED,
         failures: 0,
-        lastFailure: now
+        lastFailure: now,
       };
       this.#circuitBreakers.set(operationId, breaker);
     }
@@ -427,11 +449,15 @@ class RetryStrategy {
     if (breaker.failures >= this.#defaultConfig.circuitBreakerThreshold) {
       if (breaker.state !== RetryStrategy.CIRCUIT_STATES.OPEN) {
         breaker.state = RetryStrategy.CIRCUIT_STATES.OPEN;
-        this.#logger.warn(`Circuit breaker ${operationId} moved to OPEN state after ${breaker.failures} failures`);
+        this.#logger.warn(
+          `Circuit breaker ${operationId} moved to OPEN state after ${breaker.failures} failures`
+        );
       }
     } else if (breaker.state === RetryStrategy.CIRCUIT_STATES.HALF_OPEN) {
       breaker.state = RetryStrategy.CIRCUIT_STATES.OPEN;
-      this.#logger.debug(`Circuit breaker ${operationId} moved back to OPEN state after HALF_OPEN failure`);
+      this.#logger.debug(
+        `Circuit breaker ${operationId} moved back to OPEN state after HALF_OPEN failure`
+      );
     }
   }
 
@@ -460,17 +486,21 @@ class RetryStrategy {
     }
 
     // Use error classifier to determine retryability
-    const classification = ErrorClassifier.classify(error, config.context || {});
+    const classification = ErrorClassifier.classify(
+      error,
+      config.context || {}
+    );
     if (classification.retryable !== undefined) {
       return classification.retryable;
     }
 
     // Check against configured retryable error types
     if (config.retryableErrors && Array.isArray(config.retryableErrors)) {
-      return config.retryableErrors.some(errorType => 
-        error.name.includes(errorType) || 
-        error.message.includes(errorType) ||
-        (error.code && error.code.includes(errorType))
+      return config.retryableErrors.some(
+        (errorType) =>
+          error.name.includes(errorType) ||
+          error.message.includes(errorType) ||
+          (error.code && error.code.includes(errorType))
       );
     }
 
@@ -481,11 +511,11 @@ class RetryStrategy {
       /temporary/i,
       /unavailable/i,
       /rate limit/i,
-      /fetch/i
+      /fetch/i,
     ];
 
-    return retryablePatterns.some(pattern => 
-      pattern.test(error.message) || pattern.test(error.name)
+    return retryablePatterns.some(
+      (pattern) => pattern.test(error.message) || pattern.test(error.name)
     );
   }
 
@@ -504,27 +534,30 @@ class RetryStrategy {
       case RetryStrategy.STRATEGY_TYPES.IMMEDIATE:
         delay = 0;
         break;
-      
+
       case RetryStrategy.STRATEGY_TYPES.LINEAR:
         delay = config.baseDelayMs * attempt;
         break;
-      
+
       case RetryStrategy.STRATEGY_TYPES.EXPONENTIAL:
         delay = config.baseDelayMs * Math.pow(2, attempt - 1);
         break;
-      
+
       case RetryStrategy.STRATEGY_TYPES.FIBONACCI:
         delay = config.baseDelayMs * this._fibonacci(attempt);
         break;
-      
+
       case RetryStrategy.STRATEGY_TYPES.CUSTOM:
-        if (config.customBackoff && typeof config.customBackoff === 'function') {
+        if (
+          config.customBackoff &&
+          typeof config.customBackoff === 'function'
+        ) {
           delay = config.customBackoff(attempt, config.baseDelayMs);
         } else {
           delay = config.baseDelayMs;
         }
         break;
-      
+
       default:
         delay = config.baseDelayMs;
     }
@@ -551,8 +584,9 @@ class RetryStrategy {
   _fibonacci(n) {
     if (n <= 1) return 1;
     if (n === 2) return 1;
-    
-    let a = 1, b = 1;
+
+    let a = 1,
+      b = 1;
     for (let i = 3; i <= n; i++) {
       [a, b] = [b, a + b];
     }
@@ -567,7 +601,7 @@ class RetryStrategy {
    * @returns {Promise<void>} Promise that resolves after delay
    */
   _delay(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   /**

@@ -134,7 +134,13 @@ describeActionDiscoverySuite(
       expect(result.errors[0]).toMatchObject({
         actionId: 'bad',
         targetId: null,
-        details: null,
+        error: expect.any(Error),
+        phase: expect.any(String),
+        timestamp: expect.any(Number),
+        actorSnapshot: expect.any(Object),
+        evaluationTrace: expect.any(Object),
+        suggestedFixes: expect.any(Array),
+        environmentContext: expect.any(Object),
       });
       expect(result.errors[0].error).toBeInstanceOf(Error);
     });

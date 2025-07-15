@@ -14,6 +14,9 @@ import {
   createMockSafeEventDispatcher,
   createMockActionCommandFormatter,
 } from '../mockFactories';
+import { ActionErrorContextBuilder } from '../../../src/actions/errors/actionErrorContextBuilder.js';
+import { FixSuggestionEngine } from '../../../src/actions/errors/fixSuggestionEngine.js';
+import { TraceContext } from '../../../src/actions/tracing/traceContext.js';
 import { createServiceFactoryMixin } from '../serviceFactoryTestBedMixin.js';
 import { createTestBedHelpers } from '../createTestBedHelpers.js';
 import FactoryTestBed from '../factoryTestBed.js';
@@ -29,8 +32,27 @@ const ServiceFactoryMixin = createServiceFactoryMixin(
     actionCommandFormatter: createMockActionCommandFormatter,
     getActorLocationFn: () => jest.fn(),
     getEntityDisplayNameFn: () => jest.fn(),
+    gameDataRepository: () => ({
+      getComponentDefinition: jest.fn(),
+      getConditionDefinition: jest.fn(),
+    }),
   },
   (mocks, overrides = {}) => {
+    // Create real error context dependencies
+    const fixSuggestionEngine = new FixSuggestionEngine({
+      logger: mocks.logger,
+      gameDataRepository: mocks.gameDataRepository,
+      actionIndex: mocks.actionIndex,
+    });
+
+    const actionErrorContextBuilder = new ActionErrorContextBuilder({
+      entityManager: mocks.entityManager,
+      logger: mocks.logger,
+      fixSuggestionEngine: fixSuggestionEngine,
+    });
+
+    const traceContextFactory = () => new TraceContext();
+
     // Create the ActionCandidateProcessor with the mocked dependencies
     const actionCandidateProcessor =
       overrides.actionCandidateProcessor ??
@@ -42,6 +64,8 @@ const ServiceFactoryMixin = createServiceFactoryMixin(
         safeEventDispatcher: mocks.safeEventDispatcher,
         getEntityDisplayNameFn: mocks.getEntityDisplayNameFn,
         logger: mocks.logger,
+        actionErrorContextBuilder: actionErrorContextBuilder,
+        traceContextFactory: traceContextFactory,
       });
 
     return new ActionDiscoveryService({
@@ -49,10 +73,9 @@ const ServiceFactoryMixin = createServiceFactoryMixin(
       actionIndex: mocks.actionIndex,
       logger: mocks.logger,
       actionCandidateProcessor,
-      traceContextFactory:
-        overrides.traceContextFactory ??
-        jest.fn(() => ({ addLog: jest.fn(), logs: [] })),
+      traceContextFactory: overrides.traceContextFactory ?? traceContextFactory,
       getActorLocationFn: mocks.getActorLocationFn,
+      actionErrorContextBuilder: actionErrorContextBuilder,
     });
   },
   'service'

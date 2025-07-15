@@ -84,7 +84,11 @@ class SlotResolver {
       });
 
       // ClothingSlotMappingStrategy has highest priority (first in array)
-      this.#strategies = [clothingSlotMappingStrategy, blueprintStrategy, directSocketStrategy];
+      this.#strategies = [
+        clothingSlotMappingStrategy,
+        blueprintStrategy,
+        directSocketStrategy,
+      ];
     }
 
     // Validate all strategies implement the interface
@@ -245,7 +249,7 @@ class SlotResolver {
     const mapping = { clothingSlotId: slotId };
 
     // Find the ClothingSlotMappingStrategy
-    const strategy = this.#strategies.find(s => s.canResolve(mapping));
+    const strategy = this.#strategies.find((s) => s.canResolve(mapping));
 
     if (!strategy) {
       throw new ClothingSlotNotFoundError(

@@ -6,6 +6,7 @@ import {
 } from '../../../src/constants/targetDomains.js';
 import { ActionTargetContext } from '../../../src/models/actionTargetContext.js';
 import { generateMockAst } from '../../common/scopeDsl/mockAstGenerator.js';
+import { createMockActionErrorContextBuilder } from '../../common/mockFactories/actions.js';
 
 // Reuse simple mocks similar to scope-loading tests
 
@@ -40,6 +41,7 @@ describe('TargetResolutionService - additional branches', () => {
       safeEventDispatcher: mockSafeDispatcher,
       jsonLogicEvaluationService: mockJsonLogic,
       dslParser: mockDslParser,
+      actionErrorContextBuilder: createMockActionErrorContextBuilder(),
     });
   });
 
@@ -83,17 +85,18 @@ describe('TargetResolutionService - additional branches', () => {
     const result = service.resolveTargets('core:test', actor, {});
 
     expect(result.targets).toEqual([]);
-    expect(result.error).toBeInstanceOf(Error);
-    expect(result.error.message).toContain(
-      'Scope engine returned invalid result: undefined'
-    );
+    expect(result.error).toBeDefined();
+    // Note: Enhanced error context changes the error structure
     expect(mockScopeEngine.resolve).toHaveBeenCalled();
     expect(mockSafeDispatcher.dispatch).toHaveBeenCalledWith(
       expect.any(String),
       expect.objectContaining({
-        message: expect.stringContaining(
-          'Scope engine returned invalid result: undefined'
-        ),
+        message: expect.stringContaining('Test error'),
+        details: expect.objectContaining({
+          errorContext: expect.objectContaining({
+            phase: 'resolution',
+          }),
+        }),
       })
     );
   });

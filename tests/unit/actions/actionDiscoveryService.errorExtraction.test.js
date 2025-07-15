@@ -31,7 +31,9 @@ describeActionDiscoverySuite(
       expect(result.errors[0]).toMatchObject({
         actionId: 'bad',
         targetId: 'target-123',
-        details: null,
+        error: expect.any(Error),
+        phase: expect.any(String),
+        timestamp: expect.any(Number),
       });
     });
 
@@ -51,7 +53,9 @@ describeActionDiscoverySuite(
       expect(result.errors[0]).toMatchObject({
         actionId: 'bad',
         targetId: 'target-456',
-        details: null,
+        error: expect.any(Error),
+        phase: expect.any(String),
+        timestamp: expect.any(Number),
       });
     });
   }

@@ -5,7 +5,10 @@
  */
 
 import { validateDependency } from '../../utils/dependencyUtils.js';
-import { assertPresent, assertNonBlankString } from '../../utils/dependencyUtils.js';
+import {
+  assertPresent,
+  assertNonBlankString,
+} from '../../utils/dependencyUtils.js';
 import { DomUtils } from '../../utils/domUtils.js';
 import { AnatomyRenderError } from '../../errors/anatomyRenderError.js';
 import AnatomyNode from './types/AnatomyNode.js';
@@ -157,7 +160,10 @@ class VisualizationComposer {
         `VisualizationComposer: Rendered ${this.#nodes.size} nodes and ${this.#edges.length} edges`
       );
     } catch (error) {
-      this.#logger.error('VisualizationComposer: Failed to render anatomy graph', error);
+      this.#logger.error(
+        'VisualizationComposer: Failed to render anatomy graph',
+        error
+      );
       throw error;
     }
   }
@@ -255,7 +261,8 @@ class VisualizationComposer {
 
         // Get entity components
         const nameComponent = entity.getComponentData('core:name');
-        const descriptionComponent = entity.getComponentData('core:description');
+        const descriptionComponent =
+          entity.getComponentData('core:description');
         const partComponent = entity.getComponentData('anatomy:part');
         const jointComponent = entity.getComponentData('anatomy:joint');
 
@@ -281,7 +288,8 @@ class VisualizationComposer {
         for (const partId of allPartIds) {
           if (!visited.has(partId)) {
             try {
-              const partEntity = await this.#entityManager.getEntityInstance(partId);
+              const partEntity =
+                await this.#entityManager.getEntityInstance(partId);
               if (partEntity) {
                 const partJoint = partEntity.getComponentData('anatomy:joint');
                 if (partJoint && partJoint.parentId === id) {
@@ -375,7 +383,6 @@ class VisualizationComposer {
       this.#viewportManager.subscribe(() => {
         this.#svgRenderer.updateViewBox(this.#renderContext);
       });
-
     } catch (error) {
       throw AnatomyRenderError.svgRenderingFailed(
         'visualization rendering',

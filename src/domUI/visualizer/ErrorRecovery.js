@@ -83,7 +83,7 @@ class ErrorRecovery {
       operation = 'unknown',
       data = null,
       retryCallback = null,
-      fallbackOptions = {}
+      fallbackOptions = {},
     } = context;
 
     // Log error details
@@ -100,8 +100,12 @@ class ErrorRecovery {
 
     // Execute recovery strategy
     try {
-      const result = await this._executeRecoveryStrategy(strategy, error, context);
-      
+      const result = await this._executeRecoveryStrategy(
+        strategy,
+        error,
+        context
+      );
+
       // Clear retry attempts on successful recovery
       if (result.success) {
         this.#retryAttempts.delete(operation);
@@ -115,7 +119,10 @@ class ErrorRecovery {
         strategy: 'failed',
         error: recoveryError,
         userMessage: 'Recovery failed. Please refresh the page.',
-        suggestions: ['Refresh the page', 'Contact support if the problem persists']
+        suggestions: [
+          'Refresh the page',
+          'Contact support if the problem persists',
+        ],
       };
     }
   }
@@ -179,7 +186,7 @@ class ErrorRecovery {
   getRetryDelay(operation) {
     this._throwIfDisposed();
     const attempts = this.#retryAttempts.get(operation) || 0;
-    
+
     if (!this.#useExponentialBackoff) {
       return this.#retryDelayMs;
     }
@@ -281,7 +288,7 @@ class ErrorRecovery {
     }
 
     let lastError = error;
-    
+
     // Keep retrying until we succeed or exhaust all attempts
     while (this.canRetry(operation)) {
       // Increment retry attempts
@@ -291,29 +298,31 @@ class ErrorRecovery {
       // Calculate delay
       const delay = this.getRetryDelay(operation);
 
-      this.#logger.debug(`Retrying ${operation} (attempt ${attempts}/${this.#maxRetryAttempts}) after ${delay}ms`);
+      this.#logger.debug(
+        `Retrying ${operation} (attempt ${attempts}/${this.#maxRetryAttempts}) after ${delay}ms`
+      );
 
       // Wait before retry
-      await new Promise(resolve => setTimeout(resolve, delay));
+      await new Promise((resolve) => setTimeout(resolve, delay));
 
       try {
         // Execute retry
         const result = await retryCallback();
-        
+
         return {
           success: true,
           strategy: 'retry',
           attempt: attempts,
           result,
           userMessage: `Retry successful after ${attempts} attempt${attempts > 1 ? 's' : ''}.`,
-          suggestions: []
+          suggestions: [],
         };
       } catch (retryError) {
         lastError = retryError;
         // Continue to next iteration if we can still retry
       }
     }
-    
+
     // All retries exhausted, fall back
     return await this._executeFallbackStrategy(lastError, context);
   }
@@ -328,16 +337,16 @@ class ErrorRecovery {
    */
   async _executeCustomFallback(error, context) {
     const strategy = this.#fallbackStrategies.get(error.constructor.name);
-    
+
     try {
       const result = await strategy(error, context);
-      
+
       return {
         success: true,
         strategy: 'custom_fallback',
         result,
         userMessage: result.userMessage || 'Used alternative approach.',
-        suggestions: result.suggestions || []
+        suggestions: result.suggestions || [],
       };
     } catch (fallbackError) {
       // Fall back to built-in fallback if custom strategy fails
@@ -371,7 +380,7 @@ class ErrorRecovery {
       strategy: 'fallback',
       result: fallbackResult.result || null,
       userMessage: fallbackResult.userMessage || 'Used fallback approach.',
-      suggestions: fallbackResult.suggestions || []
+      suggestions: fallbackResult.suggestions || [],
     };
   }
 
@@ -390,20 +399,29 @@ class ErrorRecovery {
           success: true,
           result: { emptyVisualization: true },
           userMessage: 'No anatomy data available for this entity.',
-          suggestions: ['Try selecting a different entity', 'This entity may not have anatomy information']
+          suggestions: [
+            'Try selecting a different entity',
+            'This entity may not have anatomy information',
+          ],
         };
       case 'MISSING_ANATOMY_PARTS':
         return {
           success: true,
           result: { partialVisualization: true },
           userMessage: 'Showing available anatomy parts only.',
-          suggestions: ['Some parts may be loading', 'Try refreshing to load all parts']
+          suggestions: [
+            'Some parts may be loading',
+            'Try refreshing to load all parts',
+          ],
         };
       default:
         return {
           success: false,
           userMessage: 'Could not process anatomy data.',
-          suggestions: ['Try selecting a different entity', 'Check that the entity has valid anatomy data']
+          suggestions: [
+            'Try selecting a different entity',
+            'Check that the entity has valid anatomy data',
+          ],
         };
     }
   }
@@ -423,20 +441,26 @@ class ErrorRecovery {
           success: true,
           result: { textFallback: true },
           userMessage: 'Using text-based anatomy display.',
-          suggestions: ['Your browser may not support graphics features', 'Try using a different browser']
+          suggestions: [
+            'Your browser may not support graphics features',
+            'Try using a different browser',
+          ],
         };
       case 'LAYOUT_CALCULATION_FAILED':
         return {
           success: true,
           result: { simpleLayout: true },
           userMessage: 'Using simplified layout display.',
-          suggestions: ['The anatomy structure may be too complex', 'Try selecting a simpler entity']
+          suggestions: [
+            'The anatomy structure may be too complex',
+            'Try selecting a simpler entity',
+          ],
         };
       default:
         return {
           success: false,
           userMessage: 'Could not render anatomy visualization.',
-          suggestions: ['Try refreshing the page', 'Select a different entity']
+          suggestions: ['Try refreshing the page', 'Select a different entity'],
         };
     }
   }
@@ -456,19 +480,25 @@ class ErrorRecovery {
           success: true,
           result: { stateReset: true },
           userMessage: 'Visualizer state has been reset.',
-          suggestions: ['Try the operation again', 'Start with selecting an entity']
+          suggestions: [
+            'Try the operation again',
+            'Start with selecting an entity',
+          ],
         };
       case 'OPERATION_TIMEOUT':
         return {
           success: false,
           userMessage: 'Operation timed out.',
-          suggestions: ['Try again with a simpler entity', 'Check your network connection']
+          suggestions: [
+            'Try again with a simpler entity',
+            'Check your network connection',
+          ],
         };
       default:
         return {
           success: false,
           userMessage: 'Visualizer state error occurred.',
-          suggestions: ['Try resetting the visualizer', 'Refresh the page']
+          suggestions: ['Try resetting the visualizer', 'Refresh the page'],
         };
     }
   }
@@ -485,7 +515,10 @@ class ErrorRecovery {
     return {
       success: false,
       userMessage: 'An unexpected error occurred.',
-      suggestions: ['Try refreshing the page', 'Contact support if the problem persists']
+      suggestions: [
+        'Try refreshing the page',
+        'Contact support if the problem persists',
+      ],
     };
   }
 
@@ -503,19 +536,26 @@ class ErrorRecovery {
     }
 
     // Timeout errors are retryable
-    if (error instanceof AnatomyStateError && error.code === 'OPERATION_TIMEOUT') {
+    if (
+      error instanceof AnatomyStateError &&
+      error.code === 'OPERATION_TIMEOUT'
+    ) {
       return true;
     }
 
     // Some render errors are retryable
-    if (error instanceof AnatomyRenderError && 
-        ['SVG_RENDERING_FAILED', 'LAYOUT_CALCULATION_FAILED'].includes(error.code)) {
+    if (
+      error instanceof AnatomyRenderError &&
+      ['SVG_RENDERING_FAILED', 'LAYOUT_CALCULATION_FAILED'].includes(error.code)
+    ) {
       return true;
     }
 
     // Data errors with specific codes are retryable
-    if (error instanceof AnatomyDataError && 
-        error.code === 'MISSING_ANATOMY_PARTS') {
+    if (
+      error instanceof AnatomyDataError &&
+      error.code === 'MISSING_ANATOMY_PARTS'
+    ) {
       return true;
     }
 
@@ -539,8 +579,12 @@ class ErrorRecovery {
       if (error.message.includes('fetch')) {
         return {
           result: { networkFallback: true },
-          userMessage: 'Network issue detected. Using cached data if available.',
-          suggestions: ['Check your internet connection', 'Try again in a moment']
+          userMessage:
+            'Network issue detected. Using cached data if available.',
+          suggestions: [
+            'Check your internet connection',
+            'Try again in a moment',
+          ],
         };
       }
       throw error; // Not a network error, let default fallback handle it
@@ -555,18 +599,19 @@ class ErrorRecovery {
    * @param {object} context - Error context
    */
   _logError(error, context) {
-    const errorDetails = error instanceof AnatomyVisualizationError 
-      ? error.getErrorDetails() 
-      : {
-          name: error.name,
-          message: error.message,
-          stack: error.stack
-        };
+    const errorDetails =
+      error instanceof AnatomyVisualizationError
+        ? error.getErrorDetails()
+        : {
+            name: error.name,
+            message: error.message,
+            stack: error.stack,
+          };
 
     this.#logger.error('ErrorRecovery handling error:', {
       error: errorDetails,
       context,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 
@@ -579,12 +624,15 @@ class ErrorRecovery {
    */
   _recordError(error, context) {
     const errorRecord = {
-      error: error instanceof AnatomyVisualizationError ? error.getUserInfo() : {
-        name: error.name,
-        message: error.message
-      },
+      error:
+        error instanceof AnatomyVisualizationError
+          ? error.getUserInfo()
+          : {
+              name: error.name,
+              message: error.message,
+            },
       context,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
 
     this.#errorHistory.push(errorRecord);
@@ -606,13 +654,16 @@ class ErrorRecovery {
   _dispatchErrorEvent(error, context, strategy) {
     try {
       this.#eventDispatcher.dispatch('anatomy:visualizer_error', {
-        error: error instanceof AnatomyVisualizationError ? error.getUserInfo() : {
-          name: error.name,
-          message: error.message
-        },
+        error:
+          error instanceof AnatomyVisualizationError
+            ? error.getUserInfo()
+            : {
+                name: error.name,
+                message: error.message,
+              },
         context,
         strategy,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     } catch (dispatchError) {
       this.#logger.warn('Failed to dispatch error event:', dispatchError);

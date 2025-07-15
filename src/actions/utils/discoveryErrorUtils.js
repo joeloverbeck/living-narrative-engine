@@ -2,34 +2,48 @@
 
 /**
  * @module discoveryErrorUtils
- * @description Utilities for creating and parsing discovery errors.
+ * @description Utilities for creating enhanced action error contexts.
+ * This replaces the old simple error format with comprehensive error context.
+ * @see specs/action-system-better-error-context.md
  */
 
+/** @typedef {import('../errors/actionErrorTypes.js').ActionErrorContext} ActionErrorContext */
+
 /**
- * Creates a standardized error object for action discovery.
+ * Creates an action error context from an existing ActionErrorContext object.
+ * This is a pass-through function that ensures the error context is properly structured.
  *
- * @param {string} actionId - ID of the action that failed.
- * @param {string|null} targetId - ID of the target entity, if available.
- * @param {Error|string} error - The encountered error instance or message.
- * @param {any|null} [details] - Optional additional error details.
- * @returns {{ actionId: string, targetId: string|null, error: Error|string, details: any|null }}
- *   The standardized error object.
+ * @param {ActionErrorContext} errorContext - The complete error context
+ * @returns {ActionErrorContext} The error context
  */
-export function createDiscoveryError(
-  actionId,
-  targetId,
-  error,
-  details = null
-) {
-  return { actionId, targetId, error, details };
+export function createActionErrorContext(errorContext) {
+  // Validate required fields
+  if (!errorContext.actionId) {
+    throw new Error('ActionErrorContext must have actionId');
+  }
+  if (!errorContext.error) {
+    throw new Error('ActionErrorContext must have error');
+  }
+  if (!errorContext.phase) {
+    throw new Error('ActionErrorContext must have phase');
+  }
+
+  return errorContext;
 }
 
 /**
  * Extracts a target entity ID from various error shapes.
+ * This is kept for utility purposes but works with ActionErrorContext.
  *
- * @param {Error|object} error - The error thrown during action processing.
- * @returns {string|null} The resolved target entity ID or null if not present.
+ * @param {Error|ActionErrorContext} error - The error or error context
+ * @returns {string|null} The resolved target entity ID or null if not present
  */
 export function extractTargetId(error) {
+  // If it's an ActionErrorContext
+  if (error.targetId !== undefined) {
+    return error.targetId;
+  }
+
+  // Legacy error object support for extraction
   return error?.targetId ?? error?.target?.entityId ?? error?.entityId ?? null;
 }

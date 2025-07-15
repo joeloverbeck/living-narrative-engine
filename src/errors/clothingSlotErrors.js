@@ -12,7 +12,7 @@ export class ClothingSlotNotFoundError extends Error {
     this.name = 'ClothingSlotNotFoundError';
     this.slotId = slotId;
     this.blueprintId = blueprintId;
-    
+
     // Maintains proper stack trace for where our error was thrown (only V8)
     if (Error.captureStackTrace) {
       Error.captureStackTrace(this, ClothingSlotNotFoundError);
@@ -29,7 +29,7 @@ export class InvalidClothingSlotMappingError extends Error {
     this.name = 'InvalidClothingSlotMappingError';
     this.slotId = slotId;
     this.mapping = mapping;
-    
+
     // Maintains proper stack trace for where our error was thrown (only V8)
     if (Error.captureStackTrace) {
       Error.captureStackTrace(this, InvalidClothingSlotMappingError);

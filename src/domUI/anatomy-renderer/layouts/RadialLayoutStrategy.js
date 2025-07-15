@@ -118,7 +118,10 @@ class RadialLayoutStrategy {
    */
   configure(options) {
     Object.assign(this.#options, options);
-    this.#logger.debug('RadialLayoutStrategy: Configuration updated', this.#options);
+    this.#logger.debug(
+      'RadialLayoutStrategy: Configuration updated',
+      this.#options
+    );
   }
 
   /**
@@ -211,7 +214,10 @@ class RadialLayoutStrategy {
     if (children.length === 0) return;
 
     // Calculate radius for this depth level
-    const radius = this.#calculateMinimumRadius(parent.depth + 1, children.length);
+    const radius = this.#calculateMinimumRadius(
+      parent.depth + 1,
+      children.length
+    );
 
     // Calculate angle range for each child based on leaf count
     const parentAngleRange = parent.angleEnd - parent.angleStart;
@@ -225,7 +231,10 @@ class RadialLayoutStrategy {
         (child.leafCount / totalLeaves) * parentAngleRange;
 
       // Enforce minimum angle to prevent overlap
-      const actualAngleRange = Math.max(childAngleRange, this.#options.minAngle);
+      const actualAngleRange = Math.max(
+        childAngleRange,
+        this.#options.minAngle
+      );
 
       // Position at center of allocated range
       const childAngle = currentAngle + actualAngleRange / 2;
@@ -262,7 +271,10 @@ class RadialLayoutStrategy {
    */
   #calculateMinimumRadius(depth, nodeCount) {
     // Additional spacing for crowded levels
-    const crowdingFactor = Math.max(1, nodeCount / this.#options.crowdingFactor);
+    const crowdingFactor = Math.max(
+      1,
+      nodeCount / this.#options.crowdingFactor
+    );
     return this.#options.baseRadius * depth * crowdingFactor;
   }
 

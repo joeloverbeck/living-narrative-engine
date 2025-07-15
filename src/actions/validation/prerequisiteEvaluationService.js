@@ -269,17 +269,23 @@ export class PrerequisiteEvaluationService extends BaseService {
     const source = 'PrerequisiteEvaluationService._evaluatePrerequisite';
     const originalLogic = prereqObject.logic;
 
-    trace?.info('Evaluating rule.', source, {
+    // Record prerequisite evaluation start
+    trace?.step('Starting prerequisite evaluation', source);
+    trace?.data('Prerequisite rule', source, {
       logic: originalLogic || {},
+      actionId: actionId,
     });
 
+    // Resolve condition references
     const resolvedLogic = this._resolveConditionReferences(
       originalLogic,
       actionId
     );
 
     if (JSON.stringify(originalLogic) !== JSON.stringify(resolvedLogic)) {
-      trace?.data('Condition reference resolved.', source, {
+      trace?.step('Resolving condition_ref', source);
+      trace?.data('Condition reference resolved', source, {
+        originalLogic: originalLogic || {},
         resolvedLogic: resolvedLogic || {},
       });
     }
@@ -290,15 +296,32 @@ export class PrerequisiteEvaluationService extends BaseService {
       )}`
     );
 
+    // Record JSON Logic evaluation
+    trace?.step('Evaluating JSON Logic', source);
+    trace?.data('Evaluation context', source, {
+      actor: evaluationContext.actor?.id,
+      hasComponents: !!evaluationContext.actor?.components,
+      componentCount: evaluationContext.actor?.components
+        ? Object.keys(evaluationContext.actor.components).length
+        : 0,
+    });
+
     const result = this._executeJsonLogic(resolvedLogic, evaluationContext);
 
-    result
-      ? trace?.success(`Rule evaluation result: ${result}`, source, {
-          result: Boolean(result),
-        })
-      : trace?.failure(`Rule evaluation result: ${result}`, source, {
-          result: Boolean(result),
-        });
+    // Record result with appropriate status
+    if (result) {
+      trace?.success(`Prerequisite passed`, source, {
+        result: Boolean(result),
+        logic: resolvedLogic,
+      });
+    } else {
+      trace?.failure(`Prerequisite failed`, source, {
+        result: Boolean(result),
+        logic: resolvedLogic,
+        failureMessage:
+          prereqObject.failure_message || 'Prerequisite condition not met',
+      });
+    }
 
     return result;
   }
@@ -381,12 +404,25 @@ export class PrerequisiteEvaluationService extends BaseService {
    * @returns {boolean} True if all rules pass, false if any fail.
    */
   #evaluateRules(prerequisites, evaluationContext, actionId, trace = null) {
+    const source = 'PrerequisiteEvaluationService.#evaluateRules';
+
     this.#logger.debug(
       `${this.#logPrefix(actionId)}: Evaluating ${prerequisites.length} prerequisite rule(s)...`
     );
 
+    trace?.step(
+      `Evaluating ${prerequisites.length} prerequisite rules`,
+      source
+    );
+
     for (const [index, prereqObject] of prerequisites.entries()) {
       const ruleNumber = index + 1;
+
+      trace?.step(
+        `Evaluating rule ${ruleNumber}/${prerequisites.length}`,
+        source
+      );
+
       if (
         !this._evaluatePrerequisite(
           prereqObject,
@@ -398,8 +434,18 @@ export class PrerequisiteEvaluationService extends BaseService {
         )
       ) {
         // Failure is already logged by _evaluatePrerequisite
+        trace?.failure(`Rule ${ruleNumber} failed`, source, {
+          ruleNumber: ruleNumber,
+          totalRules: prerequisites.length,
+          failureMessage: prereqObject.failure_message,
+        });
         return false;
       }
+
+      trace?.success(`Rule ${ruleNumber} passed`, source, {
+        ruleNumber: ruleNumber,
+        totalRules: prerequisites.length,
+      });
     }
 
     this.#logger.debug(
@@ -424,12 +470,22 @@ export class PrerequisiteEvaluationService extends BaseService {
     const actionId = actionDefinition?.id ?? 'unknown_action';
     const actorId = actor?.id ?? 'unknown_actor';
 
+    // Record prerequisite evaluation start
+    trace?.step('Checking prerequisites', source);
+
     if (!prerequisites || prerequisites.length === 0) {
       this.#logger.debug(
         `${this.#logPrefix(actionId)}: → PASSED (No prerequisites to evaluate).`
       );
+      trace?.success('No prerequisites to evaluate', source);
       return true;
     }
+
+    trace?.data('Prerequisites to evaluate', source, {
+      count: prerequisites.length,
+      actionId: actionId,
+      actorId: actorId,
+    });
 
     const evaluationContext = this.#buildPrerequisiteContext(
       actionDefinition,
@@ -438,18 +494,40 @@ export class PrerequisiteEvaluationService extends BaseService {
       actorId
     );
     if (!evaluationContext) {
+      trace?.failure('Failed to build evaluation context', source, {
+        actionId: actionId,
+        actorId: actorId,
+      });
       return false;
     }
 
-    trace?.data('Built prerequisite evaluation context.', source, {
-      context: evaluationContext || {},
+    trace?.data('Built prerequisite evaluation context', source, {
+      actorId: evaluationContext.actor?.id,
+      hasComponents: !!evaluationContext.actor?.components,
+      componentCount: evaluationContext.actor?.components
+        ? Object.keys(evaluationContext.actor.components).length
+        : 0,
     });
 
-    return this.#evaluateRules(
+    const result = this.#evaluateRules(
       prerequisites,
       evaluationContext,
       actionId,
       trace
     );
+
+    // Record final result
+    if (result) {
+      trace?.success('All prerequisites passed', source, {
+        count: prerequisites.length,
+      });
+    } else {
+      trace?.failure('Prerequisites evaluation failed', source, {
+        actionId: actionId,
+        actorId: actorId,
+      });
+    }
+
+    return result;
   }
 }

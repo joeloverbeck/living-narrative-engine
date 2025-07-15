@@ -24,11 +24,16 @@ describeActionDiscoverySuite(
 
       expect(actions).toEqual([]);
       expect(errors).toHaveLength(1);
-      expect(errors[0]).toEqual({
+      expect(errors[0]).toMatchObject({
         actionId: 'candidateRetrieval',
         targetId: null,
         error: expect.any(Error),
-        details: null,
+        phase: expect.any(String),
+        timestamp: expect.any(Number),
+        actorSnapshot: expect.any(Object),
+        evaluationTrace: expect.any(Object),
+        suggestedFixes: expect.any(Array),
+        environmentContext: expect.any(Object),
       });
       expect(errors[0].error.message).toBe('boom');
       expect(trace).toBeNull();

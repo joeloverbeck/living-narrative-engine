@@ -5,6 +5,7 @@
 import { describe, it, expect, jest } from '@jest/globals';
 import { TargetResolutionService } from '../../../src/actions/targetResolutionService.js';
 import ConsoleLogger from '../../../src/logging/consoleLogger.js';
+import { createMockActionErrorContextBuilder } from '../../common/mockFactories/actions.js';
 
 describe('Follow Action Debug Test', () => {
   it('should pass actor with components to scope engine', () => {
@@ -55,6 +56,7 @@ describe('Follow Action Debug Test', () => {
       safeEventDispatcher: mockEventDispatcher,
       jsonLogicEvaluationService: mockJsonLogicEval,
       dslParser: mockDslParser,
+      actionErrorContextBuilder: createMockActionErrorContextBuilder(),
     });
 
     // Create actor WITHOUT components (simulating the issue)

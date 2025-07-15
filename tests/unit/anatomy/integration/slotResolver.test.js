@@ -81,7 +81,7 @@ describe('SlotResolver', () => {
           },
         },
         slots: {
-          'torso_chest': {
+          torso_chest: {
             socket: 'chest',
             type: 'torso',
           },

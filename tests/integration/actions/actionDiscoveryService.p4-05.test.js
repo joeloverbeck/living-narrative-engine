@@ -13,6 +13,7 @@ import {
 import { PrerequisiteEvaluationService } from '../../../src/actions/validation/prerequisiteEvaluationService.js';
 import { ActionIndex } from '../../../src/actions/actionIndex.js';
 import { IEntityManager } from '../../../src/interfaces/IEntityManager.js';
+import { createMockActionErrorContextBuilder } from '../../common/mockFactories/actions.js';
 
 // Mocks for all dependencies
 const mockActionIndex = mock(ActionIndex);
@@ -33,6 +34,7 @@ const mockFormatActionCommandFn = jest.fn();
 const mockEventDispatcher = mock();
 const mockGetActorLocationFn = jest.fn();
 const mockGetEntityDisplayNameFn = jest.fn();
+const mockActionErrorContextBuilder = createMockActionErrorContextBuilder();
 
 describe('ADS-P4-05: Streamlined ActionDiscoveryService', () => {
   let service;
@@ -60,6 +62,7 @@ describe('ADS-P4-05: Streamlined ActionDiscoveryService', () => {
       safeEventDispatcher: mockEventDispatcher,
       getEntityDisplayNameFn: mockGetEntityDisplayNameFn,
       logger: mockLogger,
+      actionErrorContextBuilder: mockActionErrorContextBuilder,
     });
 
     // Instantiate the service with mocked dependencies.
@@ -70,6 +73,7 @@ describe('ADS-P4-05: Streamlined ActionDiscoveryService', () => {
       actionCandidateProcessor,
       traceContextFactory: jest.fn(() => ({ addLog: jest.fn(), logs: [] })),
       getActorLocationFn: mockGetActorLocationFn,
+      actionErrorContextBuilder: mockActionErrorContextBuilder,
     });
 
     // A standard actor for tests

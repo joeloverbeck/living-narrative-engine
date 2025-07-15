@@ -42,7 +42,7 @@ export class AnatomyRenderError extends AnatomyVisualizationError {
       context: `Anatomy rendering at stage: ${renderStage || 'unknown'}`,
       userMessage: AnatomyRenderError._getUserMessage(renderStage),
       suggestions: AnatomyRenderError._getSuggestions(renderStage),
-      ...parentOptions
+      ...parentOptions,
     });
 
     this.name = 'AnatomyRenderError';
@@ -73,8 +73,8 @@ export class AnatomyRenderError extends AnatomyVisualizationError {
         suggestions: [
           'Refresh the page to reload the interface',
           'Ensure the anatomy visualizer is properly initialized',
-          'Check that the required HTML elements are present'
-        ]
+          'Check that the required HTML elements are present',
+        ],
       }
     );
   }
@@ -101,8 +101,8 @@ export class AnatomyRenderError extends AnatomyVisualizationError {
         suggestions: [
           'Try refreshing the page',
           'Your browser may not support required graphics features',
-          'Try using a different browser if the problem persists'
-        ]
+          'Try using a different browser if the problem persists',
+        ],
       }
     );
   }
@@ -130,8 +130,8 @@ export class AnatomyRenderError extends AnatomyVisualizationError {
         suggestions: [
           'Try selecting a different entity with simpler anatomy',
           'The anatomy structure may be too complex to display',
-          'Try again with a different layout if available'
-        ]
+          'Try again with a different layout if available',
+        ],
       }
     );
   }
@@ -144,22 +144,19 @@ export class AnatomyRenderError extends AnatomyVisualizationError {
    * @returns {AnatomyRenderError} Configured error instance
    */
   static viewportConfigError(issue, viewport) {
-    return new AnatomyRenderError(
-      `Viewport configuration error: ${issue}`,
-      {
-        code: 'VIEWPORT_CONFIG_ERROR',
-        renderStage: 'viewport_setup',
-        viewport,
-        severity: 'MEDIUM',
-        recoverable: true,
-        userMessage: 'Could not configure the visualization display area.',
-        suggestions: [
-          'Try resizing your browser window',
-          'Refresh the page to reset the display',
-          'Check your browser zoom level'
-        ]
-      }
-    );
+    return new AnatomyRenderError(`Viewport configuration error: ${issue}`, {
+      code: 'VIEWPORT_CONFIG_ERROR',
+      renderStage: 'viewport_setup',
+      viewport,
+      severity: 'MEDIUM',
+      recoverable: true,
+      userMessage: 'Could not configure the visualization display area.',
+      suggestions: [
+        'Try resizing your browser window',
+        'Refresh the page to reset the display',
+        'Check your browser zoom level',
+      ],
+    });
   }
 
   /**
@@ -183,8 +180,8 @@ export class AnatomyRenderError extends AnatomyVisualizationError {
         suggestions: [
           'The visualization is still viewable',
           'Try refreshing to restore interactive features',
-          'Some mouse/touch interactions may be unavailable'
-        ]
+          'Some mouse/touch interactions may be unavailable',
+        ],
       }
     );
   }
@@ -209,8 +206,8 @@ export class AnatomyRenderError extends AnatomyVisualizationError {
         suggestions: [
           'Try selecting an entity with simpler anatomy',
           'Close other browser tabs to free up memory',
-          'The visualization may take longer to respond'
-        ]
+          'The visualization may take longer to respond',
+        ],
       }
     );
   }
@@ -256,43 +253,43 @@ export class AnatomyRenderError extends AnatomyVisualizationError {
         return [
           ...baseSuggestions,
           'Ensure your browser supports modern web features',
-          'Check that JavaScript is enabled'
+          'Check that JavaScript is enabled',
         ];
       case 'svg_creation':
         return [
           ...baseSuggestions,
           'Your browser may not support SVG graphics',
-          'Try using a different browser'
+          'Try using a different browser',
         ];
       case 'layout_calculation':
         return [
           'Try selecting a different entity',
           'The anatomy structure may be too complex',
-          ...baseSuggestions
+          ...baseSuggestions,
         ];
       case 'viewport_setup':
         return [
           'Try resizing your browser window',
           'Check your browser zoom level',
-          ...baseSuggestions
+          ...baseSuggestions,
         ];
       case 'interaction_setup':
         return [
           'The visualization is still viewable',
           'Some interactive features may be unavailable',
-          ...baseSuggestions
+          ...baseSuggestions,
         ];
       case 'performance_monitoring':
         return [
           'Try selecting an entity with simpler anatomy',
           'Close other browser tabs',
-          'The visualization may respond slowly'
+          'The visualization may respond slowly',
         ];
       default:
         return [
           ...baseSuggestions,
           'Try selecting a different entity',
-          'Wait a moment and try again'
+          'Wait a moment and try again',
         ];
     }
   }

@@ -68,7 +68,12 @@ class LayoutEngine {
       throw new Error('Strategy must be an object');
     }
 
-    const requiredMethods = ['calculate', 'configure', 'getRequiredSpace', 'getName'];
+    const requiredMethods = [
+      'calculate',
+      'configure',
+      'getRequiredSpace',
+      'getName',
+    ];
     for (const method of requiredMethods) {
       if (typeof strategy[method] !== 'function') {
         throw new Error(`Strategy must implement method: ${method}`);

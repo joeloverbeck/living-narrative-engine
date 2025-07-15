@@ -29,22 +29,22 @@ export class AnatomyVisualizationError extends Error {
   constructor(message, options = {}) {
     super(message);
     this.name = 'AnatomyVisualizationError';
-    
+
     // Error classification
     this.code = options.code || 'ANATOMY_VISUALIZATION_ERROR';
     this.severity = options.severity || 'MEDIUM';
     this.context = options.context || 'Unknown context';
     this.recoverable = options.recoverable !== false; // Default to recoverable
-    
+
     // User-facing information
     this.userMessage = options.userMessage || this._getDefaultUserMessage();
     this.suggestions = options.suggestions || this._getDefaultSuggestions();
-    
+
     // Debugging information
     this.cause = options.cause || null;
     this.metadata = options.metadata || {};
     this.timestamp = new Date().toISOString();
-    
+
     // Stack trace handling
     if (Error.captureStackTrace) {
       Error.captureStackTrace(this, this.constructor);
@@ -69,11 +69,13 @@ export class AnatomyVisualizationError extends Error {
       metadata: this.metadata,
       timestamp: this.timestamp,
       stack: this.stack,
-      cause: this.cause ? {
-        name: this.cause.name,
-        message: this.cause.message,
-        stack: this.cause.stack
-      } : null
+      cause: this.cause
+        ? {
+            name: this.cause.name,
+            message: this.cause.message,
+            stack: this.cause.stack,
+          }
+        : null,
     };
   }
 
@@ -88,7 +90,7 @@ export class AnatomyVisualizationError extends Error {
       severity: this.severity,
       recoverable: this.recoverable,
       suggestions: this.suggestions,
-      timestamp: this.timestamp
+      timestamp: this.timestamp,
     };
   }
 
@@ -100,15 +102,15 @@ export class AnatomyVisualizationError extends Error {
    */
   isAtLeastSeverity(level) {
     const severityLevels = {
-      'LOW': 1,
-      'MEDIUM': 2,
-      'HIGH': 3,
-      'CRITICAL': 4
+      LOW: 1,
+      MEDIUM: 2,
+      HIGH: 3,
+      CRITICAL: 4,
     };
-    
+
     const currentLevel = severityLevels[this.severity] || 2;
     const checkLevel = severityLevels[level] || 2;
-    
+
     return currentLevel >= checkLevel;
   }
 
@@ -150,11 +152,11 @@ export class AnatomyVisualizationError extends Error {
    */
   _getDefaultSuggestions() {
     const baseSuggestions = [];
-    
+
     if (this.recoverable) {
       baseSuggestions.push('Try the operation again');
     }
-    
+
     switch (this.severity) {
       case 'CRITICAL':
         baseSuggestions.push('Refresh the page');
@@ -169,7 +171,7 @@ export class AnatomyVisualizationError extends Error {
         baseSuggestions.push('Wait a moment and try again');
         break;
     }
-    
+
     return baseSuggestions;
   }
 }

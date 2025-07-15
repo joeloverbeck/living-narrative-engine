@@ -90,24 +90,12 @@ export async function configureBaseContainer(container, options = {}) {
   // --- Initialize anatomy systems if requested (for testing) ---
   if (includeAnatomySystems) {
     if (logger) {
-      logger.debug('[BaseContainerConfig] Initializing anatomy systems...');
+      logger.debug(
+        '[BaseContainerConfig] Anatomy systems included, will be initialized by SystemInitializer'
+      );
     }
-    // Initialize anatomy-related systems that were tagged with INITIALIZABLE
-    try {
-      const systemInitializer = container.resolve(tokens.SystemInitializer);
-      // Initialize just the anatomy systems by resolving and initializing them
-      const anatomyInitService = container.resolve(tokens.AnatomyInitializationService);
-      if (anatomyInitService && typeof anatomyInitService.initialize === 'function') {
-        anatomyInitService.initialize();
-        if (logger) {
-          logger.debug('[BaseContainerConfig] AnatomyInitializationService initialized');
-        }
-      }
-    } catch (error) {
-      if (logger) {
-        logger.warn('[BaseContainerConfig] Failed to initialize anatomy systems:', error);
-      }
-    }
+    // AnatomyInitializationService is tagged with INITIALIZABLE and will be
+    // automatically initialized by SystemInitializer during the standard initialization process
   }
 
   if (logger) {

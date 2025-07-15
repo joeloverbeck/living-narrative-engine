@@ -12,6 +12,9 @@ import {
   createMockSafeEventDispatcher,
   createMockActionCommandFormatter,
 } from '../mockFactories';
+import { ActionErrorContextBuilder } from '../../../src/actions/errors/actionErrorContextBuilder.js';
+import { FixSuggestionEngine } from '../../../src/actions/errors/fixSuggestionEngine.js';
+import { TraceContext } from '../../../src/actions/tracing/traceContext.js';
 import { createServiceFactoryMixin } from '../serviceFactoryTestBedMixin.js';
 import { createTestBedHelpers } from '../createTestBedHelpers.js';
 import FactoryTestBed from '../factoryTestBed.js';
@@ -25,9 +28,31 @@ const ServiceFactoryMixin = createServiceFactoryMixin(
     safeEventDispatcher: createMockSafeEventDispatcher,
     actionCommandFormatter: createMockActionCommandFormatter,
     getEntityDisplayNameFn: () => jest.fn(),
+    gameDataRepository: () => ({
+      getComponentDefinition: jest.fn(),
+      getConditionDefinition: jest.fn(),
+    }),
+    actionIndex: () => ({
+      getCandidateActions: jest.fn(),
+    }),
   },
-  (mocks, overrides = {}) =>
-    new ActionCandidateProcessor({
+  (mocks, overrides = {}) => {
+    // Create real error context dependencies
+    const fixSuggestionEngine = new FixSuggestionEngine({
+      logger: mocks.logger,
+      gameDataRepository: mocks.gameDataRepository,
+      actionIndex: mocks.actionIndex,
+    });
+
+    const actionErrorContextBuilder = new ActionErrorContextBuilder({
+      entityManager: mocks.entityManager,
+      logger: mocks.logger,
+      fixSuggestionEngine: fixSuggestionEngine,
+    });
+
+    const traceContextFactory = () => new TraceContext();
+
+    return new ActionCandidateProcessor({
       prerequisiteEvaluationService: mocks.prerequisiteEvaluationService,
       targetResolutionService: mocks.targetResolutionService,
       entityManager: mocks.entityManager,
@@ -35,7 +60,11 @@ const ServiceFactoryMixin = createServiceFactoryMixin(
       safeEventDispatcher: mocks.safeEventDispatcher,
       getEntityDisplayNameFn: mocks.getEntityDisplayNameFn,
       logger: mocks.logger,
-    }),
+      actionErrorContextBuilder: actionErrorContextBuilder,
+      traceContextFactory: traceContextFactory,
+      ...overrides,
+    });
+  },
   'service'
 );
 

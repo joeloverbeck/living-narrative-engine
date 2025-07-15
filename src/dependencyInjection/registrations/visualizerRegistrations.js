@@ -8,6 +8,7 @@ import { Registrar, registerWithLog } from '../../utils/registrarHelpers.js';
 import { VisualizerState } from '../../domUI/visualizer/VisualizerState.js';
 import { AnatomyLoadingDetector } from '../../domUI/visualizer/AnatomyLoadingDetector.js';
 import { VisualizerStateController } from '../../domUI/visualizer/VisualizerStateController.js';
+import DocumentContext from '../../domUI/documentContext.js';
 // Anatomy Renderer Components
 import LayoutEngine from '../../domUI/anatomy-renderer/LayoutEngine.js';
 import RadialLayoutStrategy from '../../domUI/anatomy-renderer/layouts/RadialLayoutStrategy.js';
@@ -30,6 +31,15 @@ export function registerVisualizerComponents(container) {
   const logger = container.resolve(tokens.ILogger);
 
   logger.debug('Visualizer Registrations: Starting...');
+
+  // Register IDocumentContext - required by SVGRenderer and other components
+  registerWithLog(
+    registrar,
+    tokens.IDocumentContext,
+    (c) => new DocumentContext(global.document, c.resolve(tokens.ILogger)),
+    { lifecycle: 'singletonFactory' },
+    logger
+  );
 
   // Register VisualizerState
   registerWithLog(

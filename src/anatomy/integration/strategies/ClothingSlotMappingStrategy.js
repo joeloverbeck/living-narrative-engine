@@ -7,9 +7,9 @@
 
 import { validateDependency } from '../../../utils/dependencyUtils.js';
 import { ensureValidLogger } from '../../../utils/loggerUtils.js';
-import { 
-  ClothingSlotNotFoundError, 
-  InvalidClothingSlotMappingError 
+import {
+  ClothingSlotNotFoundError,
+  InvalidClothingSlotMappingError,
 } from '../../../errors/clothingSlotErrors.js';
 
 /** @typedef {import('../../../interfaces/ISlotResolutionStrategy.js')} ISlotResolutionStrategy */
@@ -33,7 +33,7 @@ class ClothingSlotMappingStrategy {
     entityManager,
     anatomyBlueprintRepository,
     blueprintSlotStrategy,
-    directSocketStrategy
+    directSocketStrategy,
   }) {
     this.#logger = ensureValidLogger(logger, this.constructor.name);
 
@@ -69,7 +69,7 @@ class ClothingSlotMappingStrategy {
    */
   canResolve(mapping) {
     return !!(
-      mapping && 
+      mapping &&
       typeof mapping.clothingSlotId === 'string' &&
       mapping.clothingSlotId.length > 0
     );
@@ -133,7 +133,9 @@ class ClothingSlotMappingStrategy {
           `Failed to resolve blueprint slots for clothing slot '${slotId}'`,
           err
         );
-        throw new Error(`Blueprint slot '${err.message}' not found in clothing slot '${slotId}' mapping`);
+        throw new Error(
+          `Blueprint slot '${err.message}' not found in clothing slot '${slotId}' mapping`
+        );
       }
     }
 
@@ -149,7 +151,9 @@ class ClothingSlotMappingStrategy {
           `Failed to resolve anatomy sockets for clothing slot '${slotId}'`,
           err
         );
-        throw new Error(`Anatomy socket '${err.message}' not found in clothing slot '${slotId}' mapping`);
+        throw new Error(
+          `Anatomy socket '${err.message}' not found in clothing slot '${slotId}' mapping`
+        );
       }
     }
 

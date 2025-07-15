@@ -19,6 +19,7 @@ import InMemoryDataRegistry from '../../src/data/inMemoryDataRegistry.js';
 import { GameDataRepository } from '../../src/data/gameDataRepository.js';
 import { TargetResolutionService } from '../../src/actions/targetResolutionService.js';
 import DefaultDslParser from '../../src/scopeDsl/parser/defaultDslParser.js';
+import { createMockActionErrorContextBuilder } from '../common/mockFactories/actions.js';
 import { createTraceContext } from '../../src/actions/tracing/traceContext.js';
 import {
   POSITION_COMPONENT_ID,
@@ -183,6 +184,7 @@ describe('Singleton Scope Engine Location Context', () => {
       safeEventDispatcher,
       jsonLogicEvaluationService: jsonLogicEval,
       dslParser: new DefaultDslParser(),
+      actionErrorContextBuilder: createMockActionErrorContextBuilder(),
     });
 
     // Mock prerequisite evaluation service
@@ -215,6 +217,7 @@ describe('Singleton Scope Engine Location Context', () => {
       logger,
       actionCandidateProcessor,
       traceContextFactory: () => createTraceContext(),
+      actionErrorContextBuilder: createMockActionErrorContextBuilder(),
     });
   });
 
