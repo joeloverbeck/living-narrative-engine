@@ -115,6 +115,8 @@ export const coreTokens = freeze({
   ITargetResolutionService: 'ITargetResolutionService',
   ActionIndex: 'ActionIndex',
   ActionCandidateProcessor: 'ActionCandidateProcessor',
+  IActionErrorContextBuilder: 'IActionErrorContextBuilder',
+  IFixSuggestionEngine: 'IFixSuggestionEngine',
   IInputHandler: 'IInputHandler',
   GlobalKeyHandler: 'GlobalKeyHandler',
   ITurnOrderService: 'ITurnOrderService',

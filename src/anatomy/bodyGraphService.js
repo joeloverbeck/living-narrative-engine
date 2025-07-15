@@ -294,7 +294,7 @@ export class BodyGraphService {
 
   /**
    * Gets anatomy data for an entity including recipe ID and root entity ID
-   * 
+   *
    * @param {string} entityId - Entity ID to get anatomy data for
    * @returns {Promise<{recipeId: string, rootEntityId: string}|null>} Anatomy data or null if not found
    * @throws {InvalidArgumentError} If entityId is invalid
@@ -324,7 +324,7 @@ export class BodyGraphService {
 
     return {
       recipeId: bodyComponent.recipeId || null,
-      rootEntityId: entityId
+      rootEntityId: entityId,
     };
   }
 

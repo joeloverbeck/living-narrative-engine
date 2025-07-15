@@ -94,11 +94,16 @@ describeActionCandidateProcessorSuite('ActionCandidateProcessor', (getBed) => {
       expect(result.cause).toBe('prerequisite-error');
       expect(result.actions).toHaveLength(0);
       expect(result.errors).toHaveLength(1);
-      expect(result.errors[0]).toEqual({
+      expect(result.errors[0]).toMatchObject({
         actionId: 'test',
         targetId: null,
         error: error,
-        details: null,
+        phase: expect.any(String),
+        timestamp: expect.any(Number),
+        actorSnapshot: expect.any(Object),
+        evaluationTrace: expect.any(Object),
+        suggestedFixes: expect.any(Array),
+        environmentContext: expect.any(Object),
       });
     });
 
@@ -158,11 +163,18 @@ describeActionCandidateProcessorSuite('ActionCandidateProcessor', (getBed) => {
       expect(result.actions).toHaveLength(1);
       expect(result.actions[0].command).toBe('test target1');
       expect(result.errors).toHaveLength(1);
-      expect(result.errors[0]).toEqual({
+      expect(result.errors[0]).toMatchObject({
         actionId: 'test',
         targetId: 'target2',
         error: 'Format failed',
-        details: { targetId: 'target2' },
+        phase: expect.any(String),
+        timestamp: expect.any(Number),
+        actorSnapshot: expect.any(Object),
+        evaluationTrace: expect.any(Object),
+        suggestedFixes: expect.any(Array),
+        environmentContext: expect.objectContaining({
+          formatDetails: { targetId: 'target2' },
+        }),
       });
     });
   });

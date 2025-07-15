@@ -57,7 +57,7 @@ class ErrorReporter {
       maxStackTraceLines: config.maxStackTraceLines || 10,
       includeUserAgent: config.includeUserAgent !== false,
       includeUrl: config.includeUrl !== false,
-      ...config
+      ...config,
     };
   }
 
@@ -89,12 +89,17 @@ class ErrorReporter {
         return {
           reportId,
           status: 'skipped',
-          reason: 'Error does not meet reporting criteria'
+          reason: 'Error does not meet reporting criteria',
         };
       }
 
       // Build comprehensive error report
-      const errorReport = await this._buildErrorReport(error, context, classification, reportId);
+      const errorReport = await this._buildErrorReport(
+        error,
+        context,
+        classification,
+        reportId
+      );
 
       // Execute reporting actions
       await this._executeReporting(errorReport);
@@ -110,15 +115,14 @@ class ErrorReporter {
         reportId,
         status: 'reported',
         classification: classification.category,
-        severity: classification.severity
+        severity: classification.severity,
       };
-
     } catch (reportingError) {
       this.#logger.error('Failed to report error:', reportingError);
       return {
         reportId: null,
         status: 'failed',
-        error: reportingError.message
+        error: reportingError.message,
       };
     }
   }
@@ -146,7 +150,7 @@ class ErrorReporter {
         results.push({
           reportId: null,
           status: 'failed',
-          error: batchError.message
+          error: batchError.message,
         });
       }
     }
@@ -171,7 +175,7 @@ class ErrorReporter {
         CRITICAL: 0,
         HIGH: 0,
         MEDIUM: 0,
-        LOW: 0
+        LOW: 0,
       },
       reportedByCategory: {
         data: 0,
@@ -181,9 +185,9 @@ class ErrorReporter {
         validation: 0,
         permission: 0,
         resource: 0,
-        unknown: 0
+        unknown: 0,
       },
-      lastReportTime: null
+      lastReportTime: null,
     };
   }
 
@@ -197,7 +201,7 @@ class ErrorReporter {
 
     this.#reportingConfig = {
       ...this.#reportingConfig,
-      ...newConfig
+      ...newConfig,
     };
 
     this.#logger.debug('Error reporter configuration updated');
@@ -278,7 +282,7 @@ class ErrorReporter {
         name: error.name,
         message: error.message,
         stack: this._truncateStackTrace(error.stack),
-        toString: error.toString()
+        toString: error.toString(),
       },
 
       // Classification
@@ -291,7 +295,7 @@ class ErrorReporter {
         userId: context.userId || null,
         sessionId: context.sessionId || null,
         data: this._sanitizeData(context.data),
-        metadata: context.metadata || {}
+        metadata: context.metadata || {},
       },
 
       // Environment
@@ -301,7 +305,7 @@ class ErrorReporter {
       browser: this._collectBrowserInfo(),
 
       // Performance information
-      performance: this._collectPerformanceInfo()
+      performance: this._collectPerformanceInfo(),
     };
 
     return report;
@@ -344,8 +348,12 @@ class ErrorReporter {
     try {
       // Increment error counters
       this.#metricsCollector.increment('anatomy_visualizer.errors.total');
-      this.#metricsCollector.increment(`anatomy_visualizer.errors.severity.${errorReport.classification.severity.toLowerCase()}`);
-      this.#metricsCollector.increment(`anatomy_visualizer.errors.category.${errorReport.classification.category}`);
+      this.#metricsCollector.increment(
+        `anatomy_visualizer.errors.severity.${errorReport.classification.severity.toLowerCase()}`
+      );
+      this.#metricsCollector.increment(
+        `anatomy_visualizer.errors.category.${errorReport.classification.category}`
+      );
 
       // Record error timing if operation timing is available
       if (errorReport.context.metadata?.operationDuration) {
@@ -356,8 +364,9 @@ class ErrorReporter {
       }
 
       // Record error rate by component
-      this.#metricsCollector.increment(`anatomy_visualizer.errors.component.${errorReport.context.component}`);
-
+      this.#metricsCollector.increment(
+        `anatomy_visualizer.errors.component.${errorReport.context.component}`
+      );
     } catch (metricsError) {
       this.#logger.warn('Failed to collect error metrics:', metricsError);
     }
@@ -377,7 +386,7 @@ class ErrorReporter {
       severity: classification.severity,
       operation: errorReport.context.operation,
       component: errorReport.context.component,
-      errorMessage: errorReport.error.message
+      errorMessage: errorReport.error.message,
     };
 
     switch (classification.severity) {
@@ -412,10 +421,13 @@ class ErrorReporter {
         category: errorReport.classification.category,
         userMessage: errorReport.classification.userMessageSuggested,
         suggestions: errorReport.classification.actionsSuggested,
-        timestamp: errorReport.timestamp
+        timestamp: errorReport.timestamp,
       });
     } catch (dispatchError) {
-      this.#logger.warn('Failed to dispatch error report event:', dispatchError);
+      this.#logger.warn(
+        'Failed to dispatch error report event:',
+        dispatchError
+      );
     }
   }
 
@@ -436,8 +448,10 @@ class ErrorReporter {
       return stack;
     }
 
-    return lines.slice(0, this.#reportingConfig.maxStackTraceLines).join('\n') + 
-           `\n... (${lines.length - this.#reportingConfig.maxStackTraceLines} more lines)`;
+    return (
+      lines.slice(0, this.#reportingConfig.maxStackTraceLines).join('\n') +
+      `\n... (${lines.length - this.#reportingConfig.maxStackTraceLines} more lines)`
+    );
   }
 
   /**
@@ -456,14 +470,24 @@ class ErrorReporter {
     const sanitized = JSON.parse(JSON.stringify(data));
 
     // Remove common sensitive fields
-    const sensitiveKeys = ['password', 'token', 'secret', 'key', 'auth', 'credential'];
-    
+    const sensitiveKeys = [
+      'password',
+      'token',
+      'secret',
+      'key',
+      'auth',
+      'credential',
+    ];
+
     const sanitizeObject = (obj) => {
       if (typeof obj !== 'object' || obj === null) return obj;
-      
+
       for (const [key, value] of Object.entries(obj)) {
-        if (sensitiveKeys.some(sensitive => 
-          key.toLowerCase().includes(sensitive.toLowerCase()))) {
+        if (
+          sensitiveKeys.some((sensitive) =>
+            key.toLowerCase().includes(sensitive.toLowerCase())
+          )
+        ) {
           obj[key] = '[REDACTED]';
         } else if (typeof value === 'object') {
           sanitizeObject(value);
@@ -483,11 +507,13 @@ class ErrorReporter {
    */
   async _collectEnvironmentInfo() {
     const env = {
-      url: this.#reportingConfig.includeUrl ? 
-        (typeof window !== 'undefined' ? window.location.href : 'unknown') : 
-        '[REDACTED]',
+      url: this.#reportingConfig.includeUrl
+        ? typeof window !== 'undefined'
+          ? window.location.href
+          : 'unknown'
+        : '[REDACTED]',
       timestamp: new Date().toISOString(),
-      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     };
 
     // Add viewport information if in browser
@@ -495,7 +521,7 @@ class ErrorReporter {
       env.viewport = {
         width: window.innerWidth,
         height: window.innerHeight,
-        devicePixelRatio: window.devicePixelRatio
+        devicePixelRatio: window.devicePixelRatio,
       };
     }
 
@@ -514,13 +540,13 @@ class ErrorReporter {
     }
 
     return {
-      userAgent: this.#reportingConfig.includeUserAgent ? 
-        navigator.userAgent : 
-        '[REDACTED]',
+      userAgent: this.#reportingConfig.includeUserAgent
+        ? navigator.userAgent
+        : '[REDACTED]',
       platform: navigator.platform,
       language: navigator.language,
       cookieEnabled: navigator.cookieEnabled,
-      onLine: navigator.onLine
+      onLine: navigator.onLine,
     };
   }
 
@@ -532,7 +558,7 @@ class ErrorReporter {
    */
   _collectPerformanceInfo() {
     const perf = {
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
 
     // Add performance timing if available
@@ -541,7 +567,7 @@ class ErrorReporter {
       perf.pageLoad = {
         navigationStart: timing.navigationStart,
         loadComplete: timing.loadEventEnd - timing.navigationStart,
-        domReady: timing.domContentLoadedEventEnd - timing.navigationStart
+        domReady: timing.domContentLoadedEventEnd - timing.navigationStart,
       };
     }
 
@@ -550,7 +576,7 @@ class ErrorReporter {
       perf.memory = {
         usedJSHeapSize: performance.memory.usedJSHeapSize,
         totalJSHeapSize: performance.memory.totalJSHeapSize,
-        jsHeapSizeLimit: performance.memory.jsHeapSizeLimit
+        jsHeapSizeLimit: performance.memory.jsHeapSizeLimit,
       };
     }
 

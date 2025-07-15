@@ -107,6 +107,7 @@ describe('PrerequisiteEvaluationService additional branches', () => {
 
   test('invokes trace hooks when provided', () => {
     const trace = {
+      step: jest.fn(),
       info: jest.fn(),
       data: jest.fn(),
       success: jest.fn(),
@@ -115,7 +116,7 @@ describe('PrerequisiteEvaluationService additional branches', () => {
     };
     const prereqs = [{ logic: { '==': [1, 1] } }];
     service.evaluate(prereqs, { id: 'act' }, { id: 'a1' }, trace);
-    expect(trace.info).toHaveBeenCalled();
+    expect(trace.step).toHaveBeenCalled();
     expect(trace.data).toHaveBeenCalled();
     expect(
       trace.success.mock.calls.length + trace.failure.mock.calls.length

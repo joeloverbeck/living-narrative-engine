@@ -40,9 +40,13 @@ export class AnatomyStateError extends AnatomyVisualizationError {
       code: 'ANATOMY_STATE_ERROR',
       severity: 'MEDIUM',
       context: `State transition from ${currentState || 'unknown'} to ${targetState || 'unknown'}`,
-      userMessage: AnatomyStateError._getUserMessage(operation, currentState, targetState),
+      userMessage: AnatomyStateError._getUserMessage(
+        operation,
+        currentState,
+        targetState
+      ),
       suggestions: AnatomyStateError._getSuggestions(operation, reason),
-      ...parentOptions
+      ...parentOptions,
     });
 
     this.name = 'AnatomyStateError';
@@ -72,12 +76,13 @@ export class AnatomyStateError extends AnatomyVisualizationError {
         reason: 'transition_not_allowed',
         severity: 'HIGH',
         recoverable: true,
-        userMessage: 'The anatomy visualizer is in an invalid state for this operation.',
+        userMessage:
+          'The anatomy visualizer is in an invalid state for this operation.',
         suggestions: [
           'Wait for the current operation to complete',
           'Try resetting the visualizer',
-          'Refresh the page if the problem persists'
-        ]
+          'Refresh the page if the problem persists',
+        ],
       }
     );
   }
@@ -90,25 +95,22 @@ export class AnatomyStateError extends AnatomyVisualizationError {
    * @returns {AnatomyStateError} Configured error instance
    */
   static initializationFailed(reason, cause) {
-    return new AnatomyStateError(
-      `State initialization failed: ${reason}`,
-      {
-        code: 'STATE_INITIALIZATION_FAILED',
-        currentState: 'UNINITIALIZED',
-        targetState: 'IDLE',
-        operation: 'initialization',
-        reason,
-        cause,
-        severity: 'CRITICAL',
-        recoverable: false,
-        userMessage: 'The anatomy visualizer could not be initialized.',
-        suggestions: [
-          'Refresh the page to restart the visualizer',
-          'Check your browser console for more details',
-          'Ensure your browser supports required features'
-        ]
-      }
-    );
+    return new AnatomyStateError(`State initialization failed: ${reason}`, {
+      code: 'STATE_INITIALIZATION_FAILED',
+      currentState: 'UNINITIALIZED',
+      targetState: 'IDLE',
+      operation: 'initialization',
+      reason,
+      cause,
+      severity: 'CRITICAL',
+      recoverable: false,
+      userMessage: 'The anatomy visualizer could not be initialized.',
+      suggestions: [
+        'Refresh the page to restart the visualizer',
+        'Check your browser console for more details',
+        'Ensure your browser supports required features',
+      ],
+    });
   }
 
   /**
@@ -134,8 +136,8 @@ export class AnatomyStateError extends AnatomyVisualizationError {
         suggestions: [
           'Try the operation again',
           'Check your network connection',
-          'The entity may have complex anatomy that takes time to process'
-        ]
+          'The entity may have complex anatomy that takes time to process',
+        ],
       }
     );
   }
@@ -162,8 +164,8 @@ export class AnatomyStateError extends AnatomyVisualizationError {
         suggestions: [
           'Reset the visualizer to clear the corrupted state',
           'Refresh the page to restart completely',
-          'Try selecting a different entity'
-        ]
+          'Try selecting a different entity',
+        ],
       }
     );
   }
@@ -176,7 +178,11 @@ export class AnatomyStateError extends AnatomyVisualizationError {
    * @param {string} currentState - Current state
    * @returns {AnatomyStateError} Configured error instance
    */
-  static concurrentOperationConflict(currentOperation, attemptedOperation, currentState) {
+  static concurrentOperationConflict(
+    currentOperation,
+    attemptedOperation,
+    currentState
+  ) {
     return new AnatomyStateError(
       `Cannot perform ${attemptedOperation} while ${currentOperation} is in progress in state ${currentState}`,
       {
@@ -191,8 +197,8 @@ export class AnatomyStateError extends AnatomyVisualizationError {
         suggestions: [
           'Wait for the current operation to complete',
           'Try again in a few moments',
-          'Cancel the current operation if possible'
-        ]
+          'Cancel the current operation if possible',
+        ],
       }
     );
   }
@@ -219,8 +225,8 @@ export class AnatomyStateError extends AnatomyVisualizationError {
         suggestions: [
           'Try starting the process over',
           'Select an entity first if none is selected',
-          'Ensure all required steps have been completed'
-        ]
+          'Ensure all required steps have been completed',
+        ],
       }
     );
   }
@@ -307,9 +313,8 @@ export class AnatomyStateError extends AnatomyVisualizationError {
         }
     }
 
-    return baseSuggestions.length > 0 ? baseSuggestions : [
-      'Refresh the page to restart',
-      'Try again after a moment'
-    ];
+    return baseSuggestions.length > 0
+      ? baseSuggestions
+      : ['Refresh the page to restart', 'Try again after a moment'];
   }
 }

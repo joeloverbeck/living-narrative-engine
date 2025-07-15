@@ -27,6 +27,8 @@ import { TargetResolutionService } from '../../actions/targetResolutionService.j
 import { ActionIndex } from '../../actions/actionIndex.js';
 import { ActionValidationContextBuilder } from '../../actions/validation/actionValidationContextBuilder.js';
 import { PrerequisiteEvaluationService } from '../../actions/validation/prerequisiteEvaluationService.js';
+import { ActionErrorContextBuilder } from '../../actions/errors/actionErrorContextBuilder.js';
+import { FixSuggestionEngine } from '../../actions/errors/fixSuggestionEngine.js';
 import CommandProcessor from '../../commands/commandProcessor.js';
 import { TraceContext as TraceContextImpl } from '../../actions/tracing/traceContext.js';
 
@@ -78,6 +80,7 @@ export function registerCommandAndAction(container) {
       safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
       jsonLogicEvaluationService: c.resolve(tokens.JsonLogicEvaluationService),
       dslParser: c.resolve(tokens.DslParser),
+      actionErrorContextBuilder: c.resolve(tokens.IActionErrorContextBuilder),
     });
   });
 
@@ -88,6 +91,32 @@ export function registerCommandAndAction(container) {
   });
   logger.debug(
     'Command and Action Registration: Registered TraceContextFactory.'
+  );
+
+  // --- Fix Suggestion Engine ---
+  // Must be registered before ActionErrorContextBuilder
+  registrar.singletonFactory(tokens.IFixSuggestionEngine, (c) => {
+    return new FixSuggestionEngine({
+      logger: c.resolve(tokens.ILogger),
+      gameDataRepository: c.resolve(tokens.IGameDataRepository),
+      actionIndex: c.resolve(tokens.ActionIndex),
+    });
+  });
+  logger.debug(
+    'Command and Action Registration: Registered FixSuggestionEngine.'
+  );
+
+  // --- Action Error Context Builder ---
+  // Must be registered before ActionCandidateProcessor
+  registrar.singletonFactory(tokens.IActionErrorContextBuilder, (c) => {
+    return new ActionErrorContextBuilder({
+      entityManager: c.resolve(tokens.IEntityManager),
+      logger: c.resolve(tokens.ILogger),
+      fixSuggestionEngine: c.resolve(tokens.IFixSuggestionEngine),
+    });
+  });
+  logger.debug(
+    'Command and Action Registration: Registered ActionErrorContextBuilder.'
   );
 
   // --- Action Candidate Processor ---
@@ -103,6 +132,7 @@ export function registerCommandAndAction(container) {
       safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
       getEntityDisplayNameFn: getEntityDisplayName,
       logger: c.resolve(tokens.ILogger),
+      actionErrorContextBuilder: c.resolve(tokens.IActionErrorContextBuilder),
     });
   });
   logger.debug(
@@ -119,6 +149,7 @@ export function registerCommandAndAction(container) {
         logger: c.resolve(tokens.ILogger),
         serviceSetup: c.resolve(tokens.ServiceSetup),
         actionCandidateProcessor: c.resolve(tokens.ActionCandidateProcessor),
+        actionErrorContextBuilder: c.resolve(tokens.IActionErrorContextBuilder),
         traceContextFactory: c.resolve(tokens.TraceContextFactory),
         getActorLocationFn: getActorLocation,
       });

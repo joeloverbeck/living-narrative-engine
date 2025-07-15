@@ -73,7 +73,7 @@ describe('AnatomyLoadingDetector Integration Tests', () => {
     // Load all required component definitions
     const registry = container.resolve(tokens.IDataRegistry);
     const schemaValidator = container.resolve(tokens.ISchemaValidator);
-    
+
     // Load components
     const components = [
       { id: 'anatomy:body', data: bodyComponent },
@@ -87,7 +87,7 @@ describe('AnatomyLoadingDetector Integration Tests', () => {
     // Store components and register their data schemas for validation
     for (const { id, data } of components) {
       registry.store('componentDefinitions', id, data);
-      
+
       // Register the component's dataSchema for validation
       if (data.dataSchema) {
         await schemaValidator.addSchema(data.dataSchema, id);
@@ -128,17 +128,9 @@ describe('AnatomyLoadingDetector Integration Tests', () => {
       humanFemaleBlueprint
     );
 
-    // Load recipes  
-    registry.store(
-      'anatomyRecipes',
-      'anatomy:human_male',
-      humanMaleRecipe
-    );
-    registry.store(
-      'anatomyRecipes',
-      'anatomy:human_female',
-      humanFemaleRecipe
-    );
+    // Load recipes
+    registry.store('anatomyRecipes', 'anatomy:human_male', humanMaleRecipe);
+    registry.store('anatomyRecipes', 'anatomy:human_female', humanFemaleRecipe);
 
     // Load slot libraries
     registry.store(
@@ -158,14 +150,19 @@ describe('AnatomyLoadingDetector Integration Tests', () => {
     entityManager = container.resolve(tokens.IEntityManager);
     eventDispatcher = container.resolve(tokens.IValidatedEventDispatcher);
     logger = container.resolve(tokens.ILogger);
-    
+
     // Initialize system services that listen for entity creation events
     const systemInitializer = container.resolve(tokens.SystemInitializer);
     await systemInitializer.initializeAll();
-    
+
     // Verify anatomy service is initialized
-    const anatomyInitService = container.resolve(tokens.AnatomyInitializationService);
-    logger.debug('AnatomyInitializationService initialized:', !!anatomyInitService);
+    const anatomyInitService = container.resolve(
+      tokens.AnatomyInitializationService
+    );
+    logger.debug(
+      'AnatomyInitializationService initialized:',
+      !!anatomyInitService
+    );
 
     // Create AnatomyLoadingDetector
     anatomyLoadingDetector = new AnatomyLoadingDetector({
@@ -195,7 +192,7 @@ describe('AnatomyLoadingDetector Integration Tests', () => {
       // Clean up manually if needed
       container = null;
     }
-    
+
     // Clean up DOM
     if (dom) {
       dom.window.close();
@@ -203,17 +200,20 @@ describe('AnatomyLoadingDetector Integration Tests', () => {
       delete global.document;
       delete global.navigator;
     }
-    
+
     jest.clearAllMocks();
   });
 
   describe('Real Anatomy Generation Detection', () => {
     it('should detect anatomy readiness after real anatomy generation', async () => {
-        // Set up event listener to see if anatomy generation is triggered
+      // Set up event listener to see if anatomy generation is triggered
       let anatomyGenerationTriggered = false;
-      const unsubscribeDebug = eventDispatcher.subscribe('ENTITY_CREATED', (event) => {
-        console.log('ENTITY_CREATED event received:', event);
-      });
+      const unsubscribeDebug = eventDispatcher.subscribe(
+        'ENTITY_CREATED',
+        (event) => {
+          console.log('ENTITY_CREATED event received:', event);
+        }
+      );
 
       // Create an actor entity that should trigger anatomy generation
       const actorInstance = await entityManager.createEntityInstance(
@@ -222,15 +222,17 @@ describe('AnatomyLoadingDetector Integration Tests', () => {
       );
 
       console.log('Created entity instance:', actorInstance.id);
-      
+
       // Check initial state
-      const initialBodyComponent = actorInstance.getComponentData('anatomy:body');
+      const initialBodyComponent =
+        actorInstance.getComponentData('anatomy:body');
       console.log('Initial body component:', initialBodyComponent);
 
       // Wait a bit to see if automatic generation happens
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const afterWaitBodyComponent = actorInstance.getComponentData('anatomy:body');
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      const afterWaitBodyComponent =
+        actorInstance.getComponentData('anatomy:body');
       console.log('Body component after wait:', afterWaitBodyComponent);
 
       // Since the anatomy system is complex, let's manually simulate successful anatomy generation
@@ -241,18 +243,25 @@ describe('AnatomyLoadingDetector Integration Tests', () => {
         body: {
           root: 'torso_instance_id',
           parts: {
-            'head': 'head_instance_id',
-            'left_arm': 'left_arm_instance_id',
-            'right_arm': 'right_arm_instance_id',
-            'torso': 'torso_instance_id'
-          }
-        }
+            head: 'head_instance_id',
+            left_arm: 'left_arm_instance_id',
+            right_arm: 'right_arm_instance_id',
+            torso: 'torso_instance_id',
+          },
+        },
       };
-      
+
       // Update the entity's anatomy:body component directly using the entity manager
-      entityManager.addComponent(actorInstance.id, 'anatomy:body', expectedAnatomyData);
-      console.log('Updated anatomy data directly for testing:', expectedAnatomyData);
-      
+      entityManager.addComponent(
+        actorInstance.id,
+        'anatomy:body',
+        expectedAnatomyData
+      );
+      console.log(
+        'Updated anatomy data directly for testing:',
+        expectedAnatomyData
+      );
+
       unsubscribeDebug();
 
       // Use the detector to wait for anatomy to be ready (should now work since we set the data)
@@ -262,7 +271,7 @@ describe('AnatomyLoadingDetector Integration Tests', () => {
       );
 
       console.log('Anatomy ready result:', isReady);
-      
+
       // Check final state
       const finalBodyComponent = actorInstance.getComponentData('anatomy:body');
       console.log('Final body component:', finalBodyComponent);
@@ -271,7 +280,7 @@ describe('AnatomyLoadingDetector Integration Tests', () => {
 
       // Verify the entity has the expected anatomy:body structure
       const bodyComponent = actorInstance.getComponentData('anatomy:body');
-      
+
       expect(bodyComponent).toBeDefined();
       expect(bodyComponent.recipeId).toBe('anatomy:human_male');
       expect(bodyComponent.body).toBeDefined();
@@ -289,7 +298,7 @@ describe('AnatomyLoadingDetector Integration Tests', () => {
           'core:name': { text: 'No Anatomy Entity' },
         },
       });
-      
+
       const registry = container.resolve(tokens.IDataRegistry);
       registry.store('entityDefinitions', 'test:no_anatomy', testDef);
 
@@ -305,7 +314,7 @@ describe('AnatomyLoadingDetector Integration Tests', () => {
       );
 
       expect(isReady).toBe(false);
-      
+
       // Verify the entity doesn't have anatomy:body component
       const bodyComponent = entityInstance.getComponentData('anatomy:body');
       expect(bodyComponent).toBeUndefined();
@@ -321,7 +330,7 @@ describe('AnatomyLoadingDetector Integration Tests', () => {
           },
         },
       });
-      
+
       const registry = container.resolve(tokens.IDataRegistry);
       registry.store('entityDefinitions', 'test:partial_anatomy', testDef);
 
@@ -337,7 +346,7 @@ describe('AnatomyLoadingDetector Integration Tests', () => {
       );
 
       expect(isReady).toBe(false);
-      
+
       // Verify the entity has anatomy:body but not the nested body structure
       const bodyComponent = entityInstance.getComponentData('anatomy:body');
       expect(bodyComponent).toBeDefined();
@@ -347,7 +356,7 @@ describe('AnatomyLoadingDetector Integration Tests', () => {
     });
 
     it('should retry until anatomy is ready with exponential backoff', async () => {
-      // Create an actor entity 
+      // Create an actor entity
       const actorInstance = await entityManager.createEntityInstance(
         'test:actor',
         {}
@@ -360,15 +369,19 @@ describe('AnatomyLoadingDetector Integration Tests', () => {
         body: {
           root: 'torso_instance_id',
           parts: {
-            'head': 'head_instance_id',
-            'left_arm': 'left_arm_instance_id',
-            'right_arm': 'right_arm_instance_id',
-            'torso': 'torso_instance_id'
-          }
-        }
+            head: 'head_instance_id',
+            left_arm: 'left_arm_instance_id',
+            right_arm: 'right_arm_instance_id',
+            torso: 'torso_instance_id',
+          },
+        },
       };
-      
-      entityManager.addComponent(actorInstance.id, 'anatomy:body', expectedAnatomyData);
+
+      entityManager.addComponent(
+        actorInstance.id,
+        'anatomy:body',
+        expectedAnatomyData
+      );
 
       // Track the detection attempts
       const checkAnatomyReadySpy = jest.spyOn(
@@ -379,18 +392,18 @@ describe('AnatomyLoadingDetector Integration Tests', () => {
       // Use the detector with custom retry config (should be fast now since anatomy is ready)
       const isReady = await anatomyLoadingDetector.waitForEntityWithAnatomy(
         actorInstance.id,
-        { 
+        {
           timeout: 10000,
           retryInterval: 100,
-          useExponentialBackoff: true
+          useExponentialBackoff: true,
         }
       );
 
       expect(isReady).toBe(true);
-      
+
       // Verify retry logic was executed
       expect(checkAnatomyReadySpy).toHaveBeenCalled();
-      
+
       checkAnatomyReadySpy.mockRestore();
     });
   });
@@ -422,15 +435,19 @@ describe('AnatomyLoadingDetector Integration Tests', () => {
         body: {
           root: 'torso_instance_id',
           parts: {
-            'head': 'head_instance_id',
-            'left_arm': 'left_arm_instance_id',
-            'right_arm': 'right_arm_instance_id',
-            'torso': 'torso_instance_id'
-          }
-        }
+            head: 'head_instance_id',
+            left_arm: 'left_arm_instance_id',
+            right_arm: 'right_arm_instance_id',
+            torso: 'torso_instance_id',
+          },
+        },
       };
-      
-      entityManager.addComponent(actorInstance.id, 'anatomy:body', expectedAnatomyData);
+
+      entityManager.addComponent(
+        actorInstance.id,
+        'anatomy:body',
+        expectedAnatomyData
+      );
 
       // Use the detector to wait for the entity
       const isReady = await anatomyLoadingDetector.waitForEntityWithAnatomy(
@@ -449,7 +466,7 @@ describe('AnatomyLoadingDetector Integration Tests', () => {
   describe('Error Handling and Logging', () => {
     it('should log detailed debugging information during detection', async () => {
       const logSpy = jest.spyOn(logger, 'debug');
-      
+
       // Create an actor entity
       const actorInstance = await entityManager.createEntityInstance(
         'test:actor',
@@ -463,15 +480,19 @@ describe('AnatomyLoadingDetector Integration Tests', () => {
         body: {
           root: 'torso_instance_id',
           parts: {
-            'head': 'head_instance_id',
-            'left_arm': 'left_arm_instance_id',
-            'right_arm': 'right_arm_instance_id',
-            'torso': 'torso_instance_id'
-          }
-        }
+            head: 'head_instance_id',
+            left_arm: 'left_arm_instance_id',
+            right_arm: 'right_arm_instance_id',
+            torso: 'torso_instance_id',
+          },
+        },
       };
-      
-      entityManager.addComponent(actorInstance.id, 'anatomy:body', expectedAnatomyData);
+
+      entityManager.addComponent(
+        actorInstance.id,
+        'anatomy:body',
+        expectedAnatomyData
+      );
 
       // Use the detector
       const isReady = await anatomyLoadingDetector.waitForEntityWithAnatomy(
@@ -499,14 +520,14 @@ describe('AnatomyLoadingDetector Integration Tests', () => {
 
     it('should log timeout information when detection fails', async () => {
       const logSpy = jest.spyOn(logger, 'warn');
-      
+
       // Create an entity without anatomy
       const testDef = new EntityDefinition('test:no_anatomy_timeout', {
         components: {
           'core:name': { text: 'No Anatomy Timeout Entity' },
         },
       });
-      
+
       const registry = container.resolve(tokens.IDataRegistry);
       registry.store('entityDefinitions', 'test:no_anatomy_timeout', testDef);
 
@@ -532,11 +553,21 @@ describe('AnatomyLoadingDetector Integration Tests', () => {
           timeElapsed: expect.any(Number),
           entityExists: expect.any(Boolean),
           hasBodyComponent: expect.any(Boolean),
-          expectedStructure: expect.stringContaining('Expected: { recipeId: string, body: { root: string, parts: object } }')
+          expectedStructure: expect.stringContaining(
+            'Expected: { recipeId: string, body: { root: string, parts: object } }'
+          ),
         })
       );
 
       logSpy.mockRestore();
     });
   });
+});
+
+// Cleanup shared resources after all tests
+afterAll(() => {
+  if (sharedContainer) {
+    containerSetup = false;
+    sharedContainer = null;
+  }
 });

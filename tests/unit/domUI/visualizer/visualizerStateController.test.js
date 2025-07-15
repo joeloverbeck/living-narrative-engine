@@ -1,5 +1,5 @@
 /**
- * @file Tests for VisualizerStateController - Bridges state management with UI and event integration
+ * @file Tests for VisualizerStateController - Optimized with shared test infrastructure
  */
 
 import {
@@ -10,113 +10,33 @@ import {
   afterEach,
   jest,
 } from '@jest/globals';
+import AnatomyVisualizerTestBed from '../../../common/anatomy/anatomyVisualizerTestBed.js';
 
-// Helper function to create standard mock dependencies
-/**
- * Creates mock dependencies for VisualizerStateController tests
- *
- * @returns {object} Object containing all required mock dependencies
- */
-function createMockDependencies() {
-  return {
-    mockVisualizerState: {
-      getCurrentState: jest.fn(),
-      getSelectedEntity: jest.fn(),
-      getAnatomyData: jest.fn(),
-      getError: jest.fn(),
-      selectEntity: jest.fn(),
-      setAnatomyData: jest.fn(),
-      startRendering: jest.fn(),
-      completeRendering: jest.fn(),
-      setError: jest.fn(),
-      reset: jest.fn(),
-      retry: jest.fn(),
-      subscribe: jest.fn(),
-      dispose: jest.fn(),
-    },
-    mockAnatomyLoadingDetector: {
-      waitForAnatomyReady: jest.fn(),
-      waitForEntityCreation: jest.fn(),
-      waitForEntityWithAnatomy: jest.fn(),
-      dispose: jest.fn(),
-    },
-    mockEventDispatcher: {
-      subscribe: jest.fn(),
-      dispatch: jest.fn(),
-    },
-    mockEntityManager: {
-      getEntityInstance: jest.fn(),
-    },
-    mockLogger: {
-      warn: jest.fn(),
-      error: jest.fn(),
-      debug: jest.fn(),
-    },
-  };
-}
+// Cache the module to avoid repeated require() calls
+let VisualizerStateController;
 
 describe('VisualizerStateController - Initialization', () => {
   let visualizerStateController;
-  let mockVisualizerState;
-  let mockAnatomyLoadingDetector;
-  let mockEventDispatcher;
-  let mockEntityManager;
-  let mockLogger;
+  let testBed;
 
   beforeEach(() => {
-    // Mock dependencies
-    mockVisualizerState = {
-      getCurrentState: jest.fn(),
-      getSelectedEntity: jest.fn(),
-      getAnatomyData: jest.fn(),
-      getError: jest.fn(),
-      selectEntity: jest.fn(),
-      setAnatomyData: jest.fn(),
-      startRendering: jest.fn(),
-      completeRendering: jest.fn(),
-      setError: jest.fn(),
-      reset: jest.fn(),
-      retry: jest.fn(),
-      subscribe: jest.fn(),
-      dispose: jest.fn(),
-    };
+    testBed = new AnatomyVisualizerTestBed();
+    
+    // Load module once and cache it
+    if (!VisualizerStateController) {
+      VisualizerStateController = require('../../../../src/domUI/visualizer/VisualizerStateController.js').VisualizerStateController;
+    }
 
-    mockAnatomyLoadingDetector = {
-      waitForAnatomyReady: jest.fn(),
-      waitForEntityCreation: jest.fn(),
-      waitForEntityWithAnatomy: jest.fn(),
-      dispose: jest.fn(),
-    };
-
-    mockEventDispatcher = {
-      subscribe: jest.fn(),
-      dispatch: jest.fn(),
-    };
-
-    mockEntityManager = {
-      getEntityInstance: jest.fn(),
-    };
-
-    mockLogger = {
-      warn: jest.fn(),
-      error: jest.fn(),
-      debug: jest.fn(),
-    };
-
-    const {
-      VisualizerStateController,
-    } = require('../../../../src/domUI/visualizer/VisualizerStateController.js');
     visualizerStateController = new VisualizerStateController({
-      visualizerState: mockVisualizerState,
-      anatomyLoadingDetector: mockAnatomyLoadingDetector,
-      eventDispatcher: mockEventDispatcher,
-      entityManager: mockEntityManager,
-      logger: mockLogger,
+      visualizerState: testBed.mockVisualizerState,
+      anatomyLoadingDetector: testBed.mockAnatomyLoadingDetector,
+      eventDispatcher: testBed.mockEventDispatcher,
+      entityManager: testBed.mockEntityManager,
+      logger: testBed.mockLogger,
     });
   });
 
-  afterEach(() => {
-    // Only dispose if not already disposed (prevent double disposal)
+  afterEach(async () => {
     if (
       visualizerStateController &&
       typeof visualizerStateController.dispose === 'function'
@@ -127,83 +47,63 @@ describe('VisualizerStateController - Initialization', () => {
         // Ignore disposal errors in tests
       }
     }
-    // Clear mocks immediately without async delay
-    jest.clearAllMocks();
+    await testBed.cleanup();
   });
 
   describe('Constructor and Dependencies', () => {
-    it('should require visualizerState dependency', () => {
-      const {
-        VisualizerStateController,
-      } = require('../../../../src/domUI/visualizer/VisualizerStateController.js');
+    const dependencyTests = [
+      {
+        name: 'visualizerState',
+        omit: 'visualizerState',
+        expectedError: 'Missing required dependency: visualizerState.'
+      },
+      {
+        name: 'anatomyLoadingDetector',
+        omit: 'anatomyLoadingDetector', 
+        expectedError: 'Missing required dependency: anatomyLoadingDetector.'
+      },
+      {
+        name: 'eventDispatcher',
+        omit: 'eventDispatcher',
+        expectedError: 'Missing required dependency: eventDispatcher.'
+      },
+      {
+        name: 'entityManager',
+        omit: 'entityManager',
+        expectedError: 'Missing required dependency: entityManager.'
+      }
+    ];
+
+    test.each(dependencyTests)('should require $name dependency', ({ omit, expectedError }) => {
+      const deps = {
+        visualizerState: testBed.mockVisualizerState,
+        anatomyLoadingDetector: testBed.mockAnatomyLoadingDetector,
+        eventDispatcher: testBed.mockEventDispatcher,
+        entityManager: testBed.mockEntityManager,
+        logger: testBed.mockLogger,
+      };
+      delete deps[omit];
 
       expect(() => {
-        new VisualizerStateController({
-          anatomyLoadingDetector: mockAnatomyLoadingDetector,
-          eventDispatcher: mockEventDispatcher,
-          logger: mockLogger,
-        });
-      }).toThrow('Missing required dependency: visualizerState.');
-    });
-
-    it('should require anatomyLoadingDetector dependency', () => {
-      const {
-        VisualizerStateController,
-      } = require('../../../../src/domUI/visualizer/VisualizerStateController.js');
-
-      expect(() => {
-        new VisualizerStateController({
-          visualizerState: mockVisualizerState,
-          eventDispatcher: mockEventDispatcher,
-          logger: mockLogger,
-        });
-      }).toThrow('Missing required dependency: anatomyLoadingDetector.');
-    });
-
-    it('should require eventDispatcher dependency', () => {
-      const {
-        VisualizerStateController,
-      } = require('../../../../src/domUI/visualizer/VisualizerStateController.js');
-
-      expect(() => {
-        new VisualizerStateController({
-          visualizerState: mockVisualizerState,
-          anatomyLoadingDetector: mockAnatomyLoadingDetector,
-          logger: mockLogger,
-        });
-      }).toThrow('Missing required dependency: eventDispatcher.');
-    });
-
-    it('should require entityManager dependency', () => {
-      const {
-        VisualizerStateController,
-      } = require('../../../../src/domUI/visualizer/VisualizerStateController.js');
-
-      expect(() => {
-        new VisualizerStateController({
-          visualizerState: mockVisualizerState,
-          anatomyLoadingDetector: mockAnatomyLoadingDetector,
-          eventDispatcher: mockEventDispatcher,
-          logger: mockLogger,
-        });
-      }).toThrow('Missing required dependency: entityManager.');
+        new VisualizerStateController(deps);
+      }).toThrow(expectedError);
     });
 
     it('should initialize with proper dependencies', () => {
       expect(visualizerStateController).toBeDefined();
-      expect(mockVisualizerState.subscribe).toHaveBeenCalled();
+      expect(testBed.mockVisualizerState.subscribe).toHaveBeenCalled();
     });
   });
 
   describe('State Subscription', () => {
     it('should subscribe to visualizer state changes on initialization', () => {
-      expect(mockVisualizerState.subscribe).toHaveBeenCalledWith(
+      expect(testBed.mockVisualizerState.subscribe).toHaveBeenCalledWith(
         expect.any(Function)
       );
     });
 
     it('should dispatch events when state changes', () => {
-      const stateChangeHandler = mockVisualizerState.subscribe.mock.calls[0][0];
+      const stateChangeHandler = testBed.mockVisualizerState.subscribe.mock.calls[0][0];
 
       stateChangeHandler({
         previousState: 'IDLE',
@@ -213,7 +113,7 @@ describe('VisualizerStateController - Initialization', () => {
         error: null,
       });
 
-      expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
+      expect(testBed.mockEventDispatcher.dispatch).toHaveBeenCalledWith(
         'anatomy:visualizer_state_changed',
         {
           previousState: 'IDLE',
@@ -229,36 +129,22 @@ describe('VisualizerStateController - Initialization', () => {
 
 describe('VisualizerStateController - Entity Selection Workflow', () => {
   let visualizerStateController;
-  let mockVisualizerState;
-  let mockAnatomyLoadingDetector;
-  let mockEventDispatcher;
-  let mockEntityManager;
-  let mockLogger;
+  let testBed;
 
   beforeEach(() => {
-    const mocks = createMockDependencies();
-    mockVisualizerState = mocks.mockVisualizerState;
-    mockAnatomyLoadingDetector = mocks.mockAnatomyLoadingDetector;
-    mockEventDispatcher = mocks.mockEventDispatcher;
-    mockEntityManager = mocks.mockEntityManager;
-    mockLogger = mocks.mockLogger;
+    testBed = new AnatomyVisualizerTestBed();
+    testBed.mockVisualizerState.getCurrentState.mockReturnValue('IDLE');
 
-    mockVisualizerState.getCurrentState.mockReturnValue('IDLE');
-
-    const {
-      VisualizerStateController,
-    } = require('../../../../src/domUI/visualizer/VisualizerStateController.js');
     visualizerStateController = new VisualizerStateController({
-      visualizerState: mockVisualizerState,
-      anatomyLoadingDetector: mockAnatomyLoadingDetector,
-      eventDispatcher: mockEventDispatcher,
-      entityManager: mockEntityManager,
-      logger: mockLogger,
+      visualizerState: testBed.mockVisualizerState,
+      anatomyLoadingDetector: testBed.mockAnatomyLoadingDetector,
+      eventDispatcher: testBed.mockEventDispatcher,
+      entityManager: testBed.mockEntityManager,
+      logger: testBed.mockLogger,
     });
   });
 
-  afterEach(() => {
-    // Only dispose if not already disposed (prevent double disposal)
+  afterEach(async () => {
     if (
       visualizerStateController &&
       typeof visualizerStateController.dispose === 'function'
@@ -269,180 +155,148 @@ describe('VisualizerStateController - Entity Selection Workflow', () => {
         // Ignore disposal errors in tests
       }
     }
-    // Clear mocks immediately without async delay
-    jest.clearAllMocks();
+    await testBed.cleanup();
   });
 
   describe('Entity Selection', () => {
-    it('should handle entity selection and start anatomy loading workflow', async () => {
-      const entityId = 'test:entity:123';
-      const mockAnatomyData = { root: 'test:root', parts: ['part1', 'part2'] };
+    const entitySelectionScenarios = [
+      {
+        name: 'successful entity selection',
+        entityId: 'test:entity:123',
+        anatomyLoadingResult: true,
+        expectSelectCalled: true,
+        expectSetErrorCalled: false
+      },
+      {
+        name: 'failed entity selection',
+        entityId: 'test:entity:invalid',
+        anatomyLoadingResult: false,
+        expectSelectCalled: true,
+        expectSetErrorCalled: true
+      }
+    ];
 
-      mockAnatomyLoadingDetector.waitForEntityWithAnatomy.mockResolvedValue(
-        true
-      );
-      mockVisualizerState.getCurrentState.mockReturnValue('IDLE'); // Should start in IDLE state
+    test.each(entitySelectionScenarios)(
+      'should handle $name',
+      async ({ entityId, anatomyLoadingResult, expectSelectCalled, expectSetErrorCalled }) => {
+        testBed.mockAnatomyLoadingDetector.waitForEntityWithAnatomy.mockResolvedValue(
+          anatomyLoadingResult
+        );
+        testBed.mockVisualizerState.getCurrentState.mockReturnValue('IDLE');
 
-      await visualizerStateController.selectEntity(entityId);
+        await visualizerStateController.selectEntity(entityId);
 
-      expect(mockVisualizerState.selectEntity).toHaveBeenCalledWith(entityId);
-      expect(
-        mockAnatomyLoadingDetector.waitForEntityWithAnatomy
-      ).toHaveBeenCalledWith(entityId, expect.any(Object));
-    });
+        if (expectSelectCalled) {
+          expect(testBed.mockVisualizerState.selectEntity).toHaveBeenCalledWith(entityId);
+          expect(testBed.mockAnatomyLoadingDetector.waitForEntityWithAnatomy)
+            .toHaveBeenCalledWith(entityId, expect.any(Object));
+        }
+        
+        if (expectSetErrorCalled) {
+          expect(testBed.mockVisualizerState.setError).toHaveBeenCalledWith(
+            expect.any(Error)
+          );
+        }
+      }
+    );
 
-    it('should handle entity selection failure gracefully', async () => {
-      const entityId = 'test:entity:invalid';
+    const invalidEntityTests = [
+      { name: 'empty string', value: '' },
+      { name: 'null', value: null },
+      { name: 'number', value: 123 }
+    ];
 
-      mockAnatomyLoadingDetector.waitForEntityWithAnatomy.mockResolvedValue(
-        false
-      );
-
-      await visualizerStateController.selectEntity(entityId);
-
-      expect(mockVisualizerState.selectEntity).toHaveBeenCalledWith(entityId);
-      expect(mockVisualizerState.setError).toHaveBeenCalledWith(
-        expect.any(Error)
-      );
-    });
-
-    it('should validate entity ID before selection', async () => {
-      // The new implementation handles errors internally via error recovery
-      // Invalid entity IDs won't throw but will be handled gracefully
-      
-      // Test with empty string
-      await visualizerStateController.selectEntity('');
-      // Should not throw, but might log an error
-      
-      // Test with null
-      await visualizerStateController.selectEntity(null);
-      // Should not throw, but might log an error
-      
-      // Test with number
-      await visualizerStateController.selectEntity(123);
-      // Should not throw, but might log an error
-      
-      // The state should remain unchanged or be in error state
-      const state = visualizerStateController.getCurrentState();
-      expect(['IDLE', 'ERROR']).toContain(state);
-    });
+    test.each(invalidEntityTests)(
+      'should validate entity ID: $name',
+      async ({ value }) => {
+        await visualizerStateController.selectEntity(value);
+        
+        const state = visualizerStateController.getCurrentState();
+        expect(['IDLE', 'ERROR']).toContain(state);
+      }
+    );
 
     it('should not allow selection when already processing', async () => {
-      mockVisualizerState.getCurrentState.mockReturnValue('LOADING');
+      testBed.mockVisualizerState.getCurrentState.mockReturnValue('LOADING');
 
-      // The new implementation handles errors internally via error recovery
       await visualizerStateController.selectEntity('test:entity');
-      
-      // The state should remain in LOADING since selection was blocked
-      expect(mockVisualizerState.getCurrentState()).toBe('LOADING');
-      
-      // selectEntity should not have been called on the state since we're already loading
-      expect(mockVisualizerState.selectEntity).not.toHaveBeenCalled();
+
+      expect(testBed.mockVisualizerState.getCurrentState()).toBe('LOADING');
+      expect(testBed.mockVisualizerState.selectEntity).not.toHaveBeenCalled();
     });
   });
 
   describe('Anatomy Data Processing', () => {
-    it('should process anatomy data when available', async () => {
-      const entityId = 'test:entity:123';
-      const mockAnatomyData = { root: 'test:root', parts: ['part1', 'part2'] };
+    const anatomyDataScenarios = [
+      {
+        name: 'available anatomy data',
+        anatomyData: { root: 'test:root', parts: ['part1', 'part2'] },
+        expectSetAnatomyData: true,
+        expectSetError: false
+      },
+      {
+        name: 'missing anatomy data',
+        anatomyData: null,
+        expectSetAnatomyData: false,
+        expectSetError: true
+      }
+    ];
 
-      mockAnatomyLoadingDetector.waitForEntityWithAnatomy.mockResolvedValue(
-        true
-      );
+    test.each(anatomyDataScenarios)(
+      'should process $name',
+      async ({ anatomyData, expectSetAnatomyData, expectSetError }) => {
+        const entityId = 'test:entity:123';
+        
+        testBed.mockAnatomyLoadingDetector.waitForEntityWithAnatomy.mockResolvedValue(true);
+        
+        // Create a custom entity manager for this test
+        const customEntityManager = {
+          getEntityInstance: jest.fn().mockResolvedValue({
+            getComponentData: jest.fn().mockReturnValue(
+              anatomyData ? { body: anatomyData } : anatomyData
+            ),
+          }),
+        };
 
-      // Mock getting anatomy data from entity manager
-      const mockEntityManager = {
-        getEntityInstance: jest.fn().mockResolvedValue({
-          getComponentData: jest
-            .fn()
-            .mockReturnValue({ body: mockAnatomyData }),
-        }),
-      };
+        const testController = new VisualizerStateController({
+          visualizerState: testBed.mockVisualizerState,
+          anatomyLoadingDetector: testBed.mockAnatomyLoadingDetector,
+          eventDispatcher: testBed.mockEventDispatcher,
+          entityManager: customEntityManager,
+          logger: testBed.mockLogger,
+        });
 
-      // Create a new instance with mocked entity manager
-      const {
-        VisualizerStateController,
-      } = require('../../../../src/domUI/visualizer/VisualizerStateController.js');
-      const testController = new VisualizerStateController({
-        visualizerState: mockVisualizerState,
-        anatomyLoadingDetector: mockAnatomyLoadingDetector,
-        eventDispatcher: mockEventDispatcher,
-        entityManager: mockEntityManager,
-        logger: mockLogger,
-      });
+        await testController.selectEntity(entityId);
 
-      await testController.selectEntity(entityId);
-
-      expect(mockVisualizerState.setAnatomyData).toHaveBeenCalledWith(
-        mockAnatomyData
-      );
-    });
-
-    it('should handle missing anatomy data gracefully', async () => {
-      const entityId = 'test:entity:123';
-
-      mockAnatomyLoadingDetector.waitForEntityWithAnatomy.mockResolvedValue(
-        true
-      );
-
-      // Mock entity with no anatomy data
-      const mockEntityManager = {
-        getEntityInstance: jest.fn().mockResolvedValue({
-          getComponentData: jest.fn().mockReturnValue(null),
-        }),
-      };
-
-      // Create a new instance with mocked entity manager
-      const {
-        VisualizerStateController,
-      } = require('../../../../src/domUI/visualizer/VisualizerStateController.js');
-      const testController = new VisualizerStateController({
-        visualizerState: mockVisualizerState,
-        anatomyLoadingDetector: mockAnatomyLoadingDetector,
-        eventDispatcher: mockEventDispatcher,
-        entityManager: mockEntityManager,
-        logger: mockLogger,
-      });
-
-      await testController.selectEntity(entityId);
-
-      expect(mockVisualizerState.setError).toHaveBeenCalledWith(
-        expect.any(Error)
-      );
-    });
+        if (expectSetAnatomyData) {
+          expect(testBed.mockVisualizerState.setAnatomyData).toHaveBeenCalledWith(anatomyData);
+        }
+        
+        if (expectSetError) {
+          expect(testBed.mockVisualizerState.setError).toHaveBeenCalledWith(expect.any(Error));
+        }
+      }
+    );
   });
 });
 
 describe('VisualizerStateController - Rendering Workflow', () => {
   let visualizerStateController;
-  let mockVisualizerState;
-  let mockAnatomyLoadingDetector;
-  let mockEventDispatcher;
-  let mockEntityManager;
-  let mockLogger;
+  let testBed;
 
   beforeEach(() => {
-    const mocks = createMockDependencies();
-    mockVisualizerState = mocks.mockVisualizerState;
-    mockAnatomyLoadingDetector = mocks.mockAnatomyLoadingDetector;
-    mockEventDispatcher = mocks.mockEventDispatcher;
-    mockEntityManager = mocks.mockEntityManager;
-    mockLogger = mocks.mockLogger;
+    testBed = new AnatomyVisualizerTestBed();
 
-    const {
-      VisualizerStateController,
-    } = require('../../../../src/domUI/visualizer/VisualizerStateController.js');
     visualizerStateController = new VisualizerStateController({
-      visualizerState: mockVisualizerState,
-      anatomyLoadingDetector: mockAnatomyLoadingDetector,
-      eventDispatcher: mockEventDispatcher,
-      entityManager: mockEntityManager,
-      logger: mockLogger,
+      visualizerState: testBed.mockVisualizerState,
+      anatomyLoadingDetector: testBed.mockAnatomyLoadingDetector,
+      eventDispatcher: testBed.mockEventDispatcher,
+      entityManager: testBed.mockEntityManager,
+      logger: testBed.mockLogger,
     });
   });
 
-  afterEach(() => {
-    // Only dispose if not already disposed (prevent double disposal)
+  afterEach(async () => {
     if (
       visualizerStateController &&
       typeof visualizerStateController.dispose === 'function'
@@ -453,75 +307,76 @@ describe('VisualizerStateController - Rendering Workflow', () => {
         // Ignore disposal errors in tests
       }
     }
-    // Clear mocks immediately without async delay
-    jest.clearAllMocks();
+    await testBed.cleanup();
   });
 
   describe('Rendering Control', () => {
-    it('should start rendering when anatomy data is ready', () => {
-      mockVisualizerState.getCurrentState.mockReturnValue('LOADED');
+    const renderingScenarios = [
+      {
+        name: 'start rendering when anatomy data is ready',
+        initialState: 'LOADED',
+        action: 'startRendering',
+        expectSuccess: true,
+        expectedError: null
+      },
+      {
+        name: 'complete rendering successfully',
+        initialState: 'RENDERING',
+        action: 'completeRendering',
+        expectSuccess: true,
+        expectedError: null
+      },
+      {
+        name: 'not allow rendering when not in LOADED state',
+        initialState: 'IDLE',
+        action: 'startRendering',
+        expectSuccess: false,
+        expectedError: 'Cannot start rendering from IDLE state'
+      },
+      {
+        name: 'not allow completing rendering when not in RENDERING state',
+        initialState: 'LOADED',
+        action: 'completeRendering',
+        expectSuccess: false,
+        expectedError: 'Cannot complete rendering from LOADED state'
+      }
+    ];
 
-      visualizerStateController.startRendering();
+    test.each(renderingScenarios)(
+      'should $name',
+      ({ initialState, action, expectSuccess, expectedError }) => {
+        testBed.mockVisualizerState.getCurrentState.mockReturnValue(initialState);
 
-      expect(mockVisualizerState.startRendering).toHaveBeenCalled();
-    });
-
-    it('should complete rendering successfully', () => {
-      mockVisualizerState.getCurrentState.mockReturnValue('RENDERING');
-
-      visualizerStateController.completeRendering();
-
-      expect(mockVisualizerState.completeRendering).toHaveBeenCalled();
-    });
-
-    it('should not allow rendering when not in LOADED state', () => {
-      mockVisualizerState.getCurrentState.mockReturnValue('IDLE');
-
-      expect(() => {
-        visualizerStateController.startRendering();
-      }).toThrow('Cannot start rendering from IDLE state');
-    });
-
-    it('should not allow completing rendering when not in RENDERING state', () => {
-      mockVisualizerState.getCurrentState.mockReturnValue('LOADED');
-
-      expect(() => {
-        visualizerStateController.completeRendering();
-      }).toThrow('Cannot complete rendering from LOADED state');
-    });
+        if (expectSuccess) {
+          visualizerStateController[action]();
+          expect(testBed.mockVisualizerState[action]).toHaveBeenCalled();
+        } else {
+          expect(() => {
+            visualizerStateController[action]();
+          }).toThrow(expectedError);
+        }
+      }
+    );
   });
 });
 
 describe('VisualizerStateController - Error Handling', () => {
   let visualizerStateController;
-  let mockVisualizerState;
-  let mockAnatomyLoadingDetector;
-  let mockEventDispatcher;
-  let mockEntityManager;
-  let mockLogger;
+  let testBed;
 
   beforeEach(() => {
-    const mocks = createMockDependencies();
-    mockVisualizerState = mocks.mockVisualizerState;
-    mockAnatomyLoadingDetector = mocks.mockAnatomyLoadingDetector;
-    mockEventDispatcher = mocks.mockEventDispatcher;
-    mockEntityManager = mocks.mockEntityManager;
-    mockLogger = mocks.mockLogger;
+    testBed = new AnatomyVisualizerTestBed();
 
-    const {
-      VisualizerStateController,
-    } = require('../../../../src/domUI/visualizer/VisualizerStateController.js');
     visualizerStateController = new VisualizerStateController({
-      visualizerState: mockVisualizerState,
-      anatomyLoadingDetector: mockAnatomyLoadingDetector,
-      eventDispatcher: mockEventDispatcher,
-      entityManager: mockEntityManager,
-      logger: mockLogger,
+      visualizerState: testBed.mockVisualizerState,
+      anatomyLoadingDetector: testBed.mockAnatomyLoadingDetector,
+      eventDispatcher: testBed.mockEventDispatcher,
+      entityManager: testBed.mockEntityManager,
+      logger: testBed.mockLogger,
     });
   });
 
-  afterEach(() => {
-    // Only dispose if not already disposed (prevent double disposal)
+  afterEach(async () => {
     if (
       visualizerStateController &&
       typeof visualizerStateController.dispose === 'function'
@@ -532,36 +387,29 @@ describe('VisualizerStateController - Error Handling', () => {
         // Ignore disposal errors in tests
       }
     }
-    // Clear mocks immediately without async delay
-    jest.clearAllMocks();
+    await testBed.cleanup();
   });
 
   describe('Error Management', () => {
     it('should handle errors and update state', async () => {
       const error = new Error('Test error');
 
-      // handleError is now async due to error recovery
       await visualizerStateController.handleError(error);
 
-      // The error might be processed through recovery mechanisms
-      // Check that error handling occurred (either setError was called or recovery happened)
-      // We can't guarantee setError is called directly anymore due to recovery
-      
-      // At minimum, the logger should have been used
-      expect(mockLogger.error).toHaveBeenCalled();
+      expect(testBed.mockLogger.error).toHaveBeenCalled();
     });
 
     it('should handle retry from error state', () => {
-      mockVisualizerState.getCurrentState.mockReturnValue('ERROR');
-      mockVisualizerState.getSelectedEntity.mockReturnValue('test:entity');
+      testBed.mockVisualizerState.getCurrentState.mockReturnValue('ERROR');
+      testBed.mockVisualizerState.getSelectedEntity.mockReturnValue('test:entity');
 
       visualizerStateController.retry();
 
-      expect(mockVisualizerState.retry).toHaveBeenCalled();
+      expect(testBed.mockVisualizerState.retry).toHaveBeenCalled();
     });
 
     it('should not allow retry when not in error state', () => {
-      mockVisualizerState.getCurrentState.mockReturnValue('IDLE');
+      testBed.mockVisualizerState.getCurrentState.mockReturnValue('IDLE');
 
       expect(() => {
         visualizerStateController.retry();
@@ -571,41 +419,28 @@ describe('VisualizerStateController - Error Handling', () => {
     it('should reset state and clear errors', () => {
       visualizerStateController.reset();
 
-      expect(mockVisualizerState.reset).toHaveBeenCalled();
+      expect(testBed.mockVisualizerState.reset).toHaveBeenCalled();
     });
   });
 });
 
 describe('VisualizerStateController - State Access', () => {
   let visualizerStateController;
-  let mockVisualizerState;
-  let mockAnatomyLoadingDetector;
-  let mockEventDispatcher;
-  let mockEntityManager;
-  let mockLogger;
+  let testBed;
 
   beforeEach(() => {
-    const mocks = createMockDependencies();
-    mockVisualizerState = mocks.mockVisualizerState;
-    mockAnatomyLoadingDetector = mocks.mockAnatomyLoadingDetector;
-    mockEventDispatcher = mocks.mockEventDispatcher;
-    mockEntityManager = mocks.mockEntityManager;
-    mockLogger = mocks.mockLogger;
+    testBed = new AnatomyVisualizerTestBed();
 
-    const {
-      VisualizerStateController,
-    } = require('../../../../src/domUI/visualizer/VisualizerStateController.js');
     visualizerStateController = new VisualizerStateController({
-      visualizerState: mockVisualizerState,
-      anatomyLoadingDetector: mockAnatomyLoadingDetector,
-      eventDispatcher: mockEventDispatcher,
-      entityManager: mockEntityManager,
-      logger: mockLogger,
+      visualizerState: testBed.mockVisualizerState,
+      anatomyLoadingDetector: testBed.mockAnatomyLoadingDetector,
+      eventDispatcher: testBed.mockEventDispatcher,
+      entityManager: testBed.mockEntityManager,
+      logger: testBed.mockLogger,
     });
   });
 
-  afterEach(() => {
-    // Only dispose if not already disposed (prevent double disposal)
+  afterEach(async () => {
     if (
       visualizerStateController &&
       typeof visualizerStateController.dispose === 'function'
@@ -616,76 +451,64 @@ describe('VisualizerStateController - State Access', () => {
         // Ignore disposal errors in tests
       }
     }
-    // Clear mocks immediately without async delay
-    jest.clearAllMocks();
+    await testBed.cleanup();
   });
 
   describe('State Getters', () => {
-    it('should provide access to current state', () => {
-      mockVisualizerState.getCurrentState.mockReturnValue('READY');
+    const stateGetterScenarios = [
+      {
+        name: 'current state',
+        method: 'getCurrentState',
+        mockValue: 'READY',
+        expectedValue: 'READY'
+      },
+      {
+        name: 'selected entity',
+        method: 'getSelectedEntity',
+        mockValue: 'test:entity',
+        expectedValue: 'test:entity'
+      },
+      {
+        name: 'anatomy data',
+        method: 'getAnatomyData',
+        mockValue: { root: 'test:root', parts: [] },
+        expectedValue: { root: 'test:root', parts: [] }
+      },
+      {
+        name: 'current error',
+        method: 'getError',
+        mockValue: new Error('Test error'),
+        expectedValue: expect.any(Error)
+      }
+    ];
 
-      const state = visualizerStateController.getCurrentState();
+    test.each(stateGetterScenarios)(
+      'should provide access to $name',
+      ({ method, mockValue, expectedValue }) => {
+        testBed.mockVisualizerState[method].mockReturnValue(mockValue);
 
-      expect(state).toBe('READY');
-      expect(mockVisualizerState.getCurrentState).toHaveBeenCalled();
-    });
+        const result = visualizerStateController[method]();
 
-    it('should provide access to selected entity', () => {
-      mockVisualizerState.getSelectedEntity.mockReturnValue('test:entity');
-
-      const entity = visualizerStateController.getSelectedEntity();
-
-      expect(entity).toBe('test:entity');
-      expect(mockVisualizerState.getSelectedEntity).toHaveBeenCalled();
-    });
-
-    it('should provide access to anatomy data', () => {
-      const anatomyData = { root: 'test:root', parts: [] };
-      mockVisualizerState.getAnatomyData.mockReturnValue(anatomyData);
-
-      const data = visualizerStateController.getAnatomyData();
-
-      expect(data).toBe(anatomyData);
-      expect(mockVisualizerState.getAnatomyData).toHaveBeenCalled();
-    });
-
-    it('should provide access to current error', () => {
-      const error = new Error('Test error');
-      mockVisualizerState.getError.mockReturnValue(error);
-
-      const currentError = visualizerStateController.getError();
-
-      expect(currentError).toBe(error);
-      expect(mockVisualizerState.getError).toHaveBeenCalled();
-    });
+        expect(result).toEqual(expectedValue);
+        expect(testBed.mockVisualizerState[method]).toHaveBeenCalled();
+      }
+    );
   });
 });
 
 describe('VisualizerStateController - Cleanup', () => {
   let visualizerStateController;
-  let mockVisualizerState;
-  let mockAnatomyLoadingDetector;
-  let mockEventDispatcher;
-  let mockEntityManager;
-  let mockLogger;
+  let testBed;
 
   beforeEach(() => {
-    const mocks = createMockDependencies();
-    mockVisualizerState = mocks.mockVisualizerState;
-    mockAnatomyLoadingDetector = mocks.mockAnatomyLoadingDetector;
-    mockEventDispatcher = mocks.mockEventDispatcher;
-    mockEntityManager = mocks.mockEntityManager;
-    mockLogger = mocks.mockLogger;
+    testBed = new AnatomyVisualizerTestBed();
 
-    const {
-      VisualizerStateController,
-    } = require('../../../../src/domUI/visualizer/VisualizerStateController.js');
     visualizerStateController = new VisualizerStateController({
-      visualizerState: mockVisualizerState,
-      anatomyLoadingDetector: mockAnatomyLoadingDetector,
-      eventDispatcher: mockEventDispatcher,
-      entityManager: mockEntityManager,
-      logger: mockLogger,
+      visualizerState: testBed.mockVisualizerState,
+      anatomyLoadingDetector: testBed.mockAnatomyLoadingDetector,
+      eventDispatcher: testBed.mockEventDispatcher,
+      entityManager: testBed.mockEntityManager,
+      logger: testBed.mockLogger,
     });
   });
 
@@ -693,8 +516,8 @@ describe('VisualizerStateController - Cleanup', () => {
     it('should dispose all dependencies on cleanup', () => {
       visualizerStateController.dispose();
 
-      expect(mockVisualizerState.dispose).toHaveBeenCalled();
-      expect(mockAnatomyLoadingDetector.dispose).toHaveBeenCalled();
+      expect(testBed.mockVisualizerState.dispose).toHaveBeenCalled();
+      expect(testBed.mockAnatomyLoadingDetector.dispose).toHaveBeenCalled();
     });
 
     it('should prevent operations after disposal', async () => {
@@ -715,8 +538,8 @@ describe('VisualizerStateController - Cleanup', () => {
       visualizerStateController.dispose();
       visualizerStateController.dispose(); // Should not throw
 
-      expect(mockVisualizerState.dispose).toHaveBeenCalledTimes(1);
-      expect(mockAnatomyLoadingDetector.dispose).toHaveBeenCalledTimes(1);
+      expect(testBed.mockVisualizerState.dispose).toHaveBeenCalledTimes(1);
+      expect(testBed.mockAnatomyLoadingDetector.dispose).toHaveBeenCalledTimes(1);
     });
   });
 });

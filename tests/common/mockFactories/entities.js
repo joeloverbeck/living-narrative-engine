@@ -133,6 +133,8 @@ export function createRuleTestDataRegistry() {
  */
 export function createMockEntityManager({ returnArray = false } = {}) {
   const activeEntities = new Map();
+  const entityComponents = new Map();
+
   return {
     activeEntities,
     get entities() {
@@ -141,6 +143,7 @@ export function createMockEntityManager({ returnArray = false } = {}) {
     getEntityIds: jest.fn(() => Array.from(activeEntities.keys())),
     clearAll: jest.fn(() => {
       activeEntities.clear();
+      entityComponents.clear();
     }),
     getActiveEntities: jest.fn(() =>
       returnArray
@@ -148,11 +151,34 @@ export function createMockEntityManager({ returnArray = false } = {}) {
         : activeEntities.values()
     ),
     getEntityInstance: jest.fn((id) => activeEntities.get(id)),
-    removeEntityInstance: jest.fn((id) => activeEntities.delete(id)),
+    removeEntityInstance: jest.fn((id) => {
+      activeEntities.delete(id);
+      entityComponents.delete(id);
+    }),
     reconstructEntity: jest.fn((data) => {
       const entity = { id: data.instanceId || data.id };
       activeEntities.set(entity.id, entity);
       return entity;
+    }),
+    // Required by ActionErrorContextBuilder
+    getEntity: jest.fn((id) => {
+      const entity = activeEntities.get(id);
+      return entity || { id, type: 'unknown' };
+    }),
+    getAllComponents: jest.fn((id) => {
+      return entityComponents.get(id) || {};
+    }),
+    // Helper for tests to set up entity components
+    setEntityComponents: jest.fn((id, components) => {
+      entityComponents.set(id, components);
+    }),
+    // Required by ActionErrorContextBuilder
+    getAllComponentTypesForEntity: jest.fn((id) => {
+      return Object.keys(entityComponents.get(id) || {});
+    }),
+    getComponentData: jest.fn((id, componentType) => {
+      const components = entityComponents.get(id) || {};
+      return components[componentType];
     }),
   };
 }

@@ -11,6 +11,7 @@
 /** @typedef {import('../logic/jsonLogicEvaluationService.js').default} JsonLogicEvaluationService */
 /** @typedef {import('../types/runtimeContext.js').RuntimeContext} RuntimeContext */
 /** @typedef {import('../scopeDsl/IDslParser.js').IDslParser} IDslParser */
+/** @typedef {import('./errors/actionErrorContextBuilder.js').ActionErrorContextBuilder} ActionErrorContextBuilder */
 
 import { ITargetResolutionService } from '../interfaces/ITargetResolutionService.js';
 import { ActionTargetContext } from '../models/actionTargetContext.js';
@@ -20,6 +21,7 @@ import {
 } from '../constants/targetDomains.js';
 import { ServiceSetup } from '../utils/serviceInitializerUtils.js';
 import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
+import { ERROR_PHASES } from './errors/actionErrorTypes.js';
 
 /**
  * Service for resolving action target scopes.
@@ -36,6 +38,7 @@ export class TargetResolutionService extends ITargetResolutionService {
   #safeEventDispatcher;
   #jsonLogicEvalService;
   #dslParser;
+  #actionErrorContextBuilder;
 
   /**
    * Creates an instance of TargetResolutionService.
@@ -48,6 +51,7 @@ export class TargetResolutionService extends ITargetResolutionService {
    * @param {ISafeEventDispatcher} deps.safeEventDispatcher - Dispatches system errors.
    * @param {JsonLogicEvaluationService} deps.jsonLogicEvaluationService - Service to evaluate JsonLogic.
    * @param {IDslParser} deps.dslParser - Parser used for Scope-DSL expressions.
+   * @param {ActionErrorContextBuilder} deps.actionErrorContextBuilder - Builds enhanced error contexts.
    * @param {ServiceSetup} [deps.serviceSetup] - Optional service setup helper.
    */
   constructor({
@@ -59,6 +63,7 @@ export class TargetResolutionService extends ITargetResolutionService {
     safeEventDispatcher,
     jsonLogicEvaluationService,
     dslParser,
+    actionErrorContextBuilder,
   }) {
     super();
     const setup = serviceSetup ?? new ServiceSetup();
@@ -75,6 +80,10 @@ export class TargetResolutionService extends ITargetResolutionService {
         requiredMethods: ['evaluate'],
       },
       dslParser: { value: dslParser, requiredMethods: ['parse'] },
+      actionErrorContextBuilder: {
+        value: actionErrorContextBuilder,
+        requiredMethods: ['buildErrorContext'],
+      },
     });
     this.#scopeRegistry = scopeRegistry;
     this.#scopeEngine = scopeEngine;
@@ -82,6 +91,7 @@ export class TargetResolutionService extends ITargetResolutionService {
     this.#safeEventDispatcher = safeEventDispatcher;
     this.#jsonLogicEvalService = jsonLogicEvaluationService;
     this.#dslParser = dslParser;
+    this.#actionErrorContextBuilder = actionErrorContextBuilder;
   }
 
   /**
@@ -92,9 +102,16 @@ export class TargetResolutionService extends ITargetResolutionService {
    * @param {Entity} actorEntity - The entity performing the action.
    * @param {ActionContext} discoveryContext - Context for DSL evaluation.
    * @param {TraceContext|null} [trace] - Optional tracing instance.
+   * @param {string} [actionId] - Optional action ID for error context.
    * @returns {import('./resolutionResult.js').ResolutionResult} Resolved targets and optional error.
    */
-  resolveTargets(scopeName, actorEntity, discoveryContext, trace = null) {
+  resolveTargets(
+    scopeName,
+    actorEntity,
+    discoveryContext,
+    trace = null,
+    actionId = null
+  ) {
     const source = 'TargetResolutionService.resolveTargets';
     trace?.info(`Resolving scope '${scopeName}'.`, source);
 
@@ -103,6 +120,24 @@ export class TargetResolutionService extends ITargetResolutionService {
       const errorMessage = 'Actor entity is null or undefined';
       this.#logger.error(errorMessage);
       trace?.error(errorMessage, source);
+
+      if (this.#actionErrorContextBuilder) {
+        const error = new Error(errorMessage);
+        error.name = 'InvalidActorError';
+        const errorContext = this.#actionErrorContextBuilder.buildErrorContext({
+          error: error,
+          actionDef: actionId ? { id: actionId } : null,
+          actorId: null,
+          phase: ERROR_PHASES.VALIDATION,
+          trace: trace,
+          additionalContext: {
+            scopeName: scopeName,
+            source: source,
+          },
+        });
+        return { targets: [], error: errorContext };
+      }
+
       return { targets: [], error: new Error(errorMessage) };
     }
 
@@ -112,14 +147,35 @@ export class TargetResolutionService extends ITargetResolutionService {
       actorEntity.id === 'undefined'
     ) {
       const errorMessage = `Invalid actor entity ID: ${JSON.stringify(actorEntity.id)} (type: ${typeof actorEntity.id})`;
-      this.#logger.error(errorMessage, {
+      const errorDetails = {
         actorEntity,
         actorId: actorEntity.id,
         actorIdType: typeof actorEntity.id,
         hasComponents: !!actorEntity.components,
         hasComponentTypeIds: !!actorEntity.componentTypeIds,
-      });
+      };
+
+      this.#logger.error(errorMessage, errorDetails);
       trace?.error(errorMessage, source);
+
+      if (this.#actionErrorContextBuilder) {
+        const error = new Error(errorMessage);
+        error.name = 'InvalidActorIdError';
+        const errorContext = this.#actionErrorContextBuilder.buildErrorContext({
+          error: error,
+          actionDef: actionId ? { id: actionId } : null,
+          actorId: actorEntity.id || 'invalid',
+          phase: ERROR_PHASES.VALIDATION,
+          trace: trace,
+          additionalContext: {
+            ...errorDetails,
+            scopeName: scopeName,
+            source: source,
+          },
+        });
+        return { targets: [], error: errorContext };
+      }
+
       return { targets: [], error: new Error(errorMessage) };
     }
 
@@ -143,7 +199,8 @@ export class TargetResolutionService extends ITargetResolutionService {
       scopeName,
       actorEntity,
       discoveryContext,
-      trace
+      trace,
+      actionId
     );
 
     trace?.info(
@@ -164,10 +221,17 @@ export class TargetResolutionService extends ITargetResolutionService {
    * @param {Entity} actorEntity - The entity initiating the resolution.
    * @param {ActionContext} discoveryContext - Context for evaluating scope rules.
    * @param {TraceContext|null} [trace] - Optional tracing instance.
-   * @returns {Set<string>} The set of resolved entity IDs.
+   * @param {string} [actionId] - Optional action ID for error context.
+   * @returns {{ids: Set<string>, error?: Error}} The set of resolved entity IDs and optional error.
    * @private
    */
-  #resolveScopeToIds(scopeName, actorEntity, discoveryContext, trace = null) {
+  #resolveScopeToIds(
+    scopeName,
+    actorEntity,
+    discoveryContext,
+    trace = null,
+    actionId = null
+  ) {
     const source = 'TargetResolutionService.#resolveScopeToIds';
     trace?.info(`Resolving scope '${scopeName}' with DSL.`, source);
     const scopeDefinition = this.#scopeRegistry.getScope(scopeName);
@@ -178,9 +242,39 @@ export class TargetResolutionService extends ITargetResolutionService {
       !scopeDefinition.expr.trim()
     ) {
       const errorMessage = `Missing scope definition: Scope '${scopeName}' not found or has no expression in registry.`;
-      this.#handleResolutionError(errorMessage, { scopeName }, trace, source);
-      return { ids: new Set(), error: new Error(errorMessage) };
+      const error = new Error(errorMessage);
+      error.name = 'ScopeNotFoundError';
+
+      this.#handleResolutionError(
+        errorMessage,
+        { scopeName },
+        trace,
+        source,
+        error,
+        actionId,
+        actorEntity.id
+      );
+
+      if (this.#actionErrorContextBuilder) {
+        const errorContext = this.#actionErrorContextBuilder.buildErrorContext({
+          error: error,
+          actionDef: actionId ? { id: actionId } : null,
+          actorId: actorEntity.id,
+          phase: ERROR_PHASES.VALIDATION,
+          trace: trace,
+          additionalContext: {
+            scopeName: scopeName,
+            source: source,
+          },
+        });
+        return { ids: new Set(), error: errorContext };
+      }
+
+      return { ids: new Set(), error: error };
     }
+
+    // Declare actorWithComponents outside try block so it's available in catch block
+    let actorWithComponents = actorEntity;
 
     try {
       let ast = scopeDefinition.ast;
@@ -196,7 +290,6 @@ export class TargetResolutionService extends ITargetResolutionService {
 
       // Ensure actor entity has components built before passing to scope engine
       // This is necessary for proper scope evaluation that depends on component state
-      let actorWithComponents = actorEntity;
 
       if (actorEntity && !actorEntity.components) {
         if (
@@ -279,13 +372,39 @@ export class TargetResolutionService extends ITargetResolutionService {
       return { ids: resolvedIds };
     } catch (error) {
       const errorMessage = `Error resolving scope '${scopeName}': ${error.message}`;
+
       this.#handleResolutionError(
         errorMessage,
-        { error: error.message, stack: error.stack },
+        {
+          error: error.message,
+          stack: error.stack,
+          scopeName: scopeName,
+          actorLocation: actorWithComponents?.location || 'unknown',
+        },
         trace,
         source,
-        error
+        error,
+        actionId,
+        actorEntity.id
       );
+
+      if (this.#actionErrorContextBuilder) {
+        const errorContext = this.#actionErrorContextBuilder.buildErrorContext({
+          error: error,
+          actionDef: actionId ? { id: actionId } : null,
+          actorId: actorEntity.id,
+          phase: ERROR_PHASES.VALIDATION,
+          trace: trace,
+          additionalContext: {
+            scopeName: scopeName,
+            source: source,
+            actorLocation: actorWithComponents?.location || 'unknown',
+            scopeExpression: scopeDefinition?.expr,
+          },
+        });
+        return { ids: new Set(), error: errorContext };
+      }
+
       return { ids: new Set(), error };
     }
   }
@@ -309,13 +428,16 @@ export class TargetResolutionService extends ITargetResolutionService {
   }
 
   /**
-   * Logs a resolution error and dispatches a system error event.
+   * Handles resolution errors by building enhanced error contexts.
    *
    * @param {string} message - User-friendly error message.
    * @param {object} details - Supplemental diagnostic information.
    * @param {TraceContext|null} trace - Optional trace used for logging.
    * @param {string} source - Originating service or method name.
    * @param {Error|null} [originalError] - The original error instance, if any.
+   * @param {string} [actionId] - Optional action ID for error context.
+   * @param {string} [actorId] - Optional actor ID for error context.
+   * @param {string} [targetId] - Optional target ID for error context.
    * @returns {void}
    * @private
    */
@@ -324,9 +446,50 @@ export class TargetResolutionService extends ITargetResolutionService {
     details,
     trace,
     source,
-    originalError = null
+    originalError = null,
+    actionId = null,
+    actorId = null,
+    targetId = null
   ) {
     trace?.error(message, source, details);
+
+    const error = originalError || new Error(message);
+    if (!originalError) {
+      error.name = 'TargetResolutionError';
+    }
+
+    // If we have context information, build enhanced error context
+    if (this.#actionErrorContextBuilder && (actionId || actorId)) {
+      try {
+        const errorContext = this.#actionErrorContextBuilder.buildErrorContext({
+          error: error,
+          actionDef: actionId ? { id: actionId } : null,
+          actorId: actorId,
+          phase: ERROR_PHASES.VALIDATION,
+          trace: trace,
+          targetId: targetId,
+          additionalContext: {
+            ...details,
+            source: source,
+            scopeName: details.scopeName,
+          },
+        });
+
+        // Dispatch enhanced error context
+        safeDispatchError(
+          this.#safeEventDispatcher,
+          errorContext,
+          null,
+          this.#logger
+        );
+        return;
+      } catch (contextError) {
+        this.#logger.error('Failed to build error context', contextError);
+        // Fall through to legacy error handling
+      }
+    }
+
+    // Legacy error handling
     originalError
       ? this.#logger.error(message, originalError)
       : this.#logger.warn(message);

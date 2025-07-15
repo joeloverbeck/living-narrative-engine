@@ -10,16 +10,19 @@
 /** @typedef {import('./tracing/traceContext.js').TraceContext} TraceContext */
 /** @typedef {import('./actionTypes.js').TraceContextFactory} TraceContextFactory */
 /** @typedef {import('./actionCandidateProcessor.js').ActionCandidateProcessor} ActionCandidateProcessor */
+/** @typedef {import('./errors/actionErrorContextBuilder.js').ActionErrorContextBuilder} ActionErrorContextBuilder */
+/** @typedef {import('./errors/actionErrorTypes.js').ActionErrorContext} ActionErrorContext */
 
 import { IActionDiscoveryService } from '../interfaces/IActionDiscoveryService.js';
 import { ServiceSetup } from '../utils/serviceInitializerUtils.js';
 import { getActorLocation } from '../utils/actorLocationUtils.js';
 import {
-  createDiscoveryError,
+  createActionErrorContext,
   extractTargetId,
 } from './utils/discoveryErrorUtils.js';
 import { InvalidActorEntityError } from '../errors/invalidActorEntityError.js';
 import { isNonBlankString } from '../utils/textUtils.js';
+import { ERROR_PHASES } from './errors/actionErrorTypes.js';
 
 // ────────────────────────────────────────────────────────────────────────────────
 /**
@@ -34,6 +37,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
   #actionIndex;
   #traceContextFactory;
   #actionCandidateProcessor;
+  #actionErrorContextBuilder;
 
   /**
    * Creates an ActionDiscoveryService instance.
@@ -45,6 +49,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
    * @param {ActionCandidateProcessor} deps.actionCandidateProcessor - Processor for candidate actions.
    * @param {TraceContextFactory} deps.traceContextFactory - Factory for creating trace contexts.
    * @param {Function} deps.getActorLocationFn - Function to get actor location.
+   * @param {ActionErrorContextBuilder} deps.actionErrorContextBuilder - Service for building enhanced error context.
    * @param {ServiceSetup} [deps.serviceSetup] - Optional service setup helper.
    */
   constructor({
@@ -53,6 +58,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     logger,
     actionCandidateProcessor,
     traceContextFactory,
+    actionErrorContextBuilder,
     serviceSetup,
     getActorLocationFn = getActorLocation,
   }) {
@@ -70,6 +76,10 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
         value: actionCandidateProcessor,
         requiredMethods: ['process'],
       },
+      actionErrorContextBuilder: {
+        value: actionErrorContextBuilder,
+        requiredMethods: ['buildErrorContext'],
+      },
       traceContextFactory: { value: traceContextFactory, isFunction: true },
       getActorLocationFn: { value: getActorLocationFn, isFunction: true },
     });
@@ -77,6 +87,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     this.#entityManager = entityManager;
     this.#actionIndex = actionIndex;
     this.#actionCandidateProcessor = actionCandidateProcessor;
+    this.#actionErrorContextBuilder = actionErrorContextBuilder;
     this.#traceContextFactory = traceContextFactory;
     this.#getActorLocationFn = getActorLocationFn;
 
@@ -134,7 +145,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
    * @param {Entity} actorEntity - The actor performing the action.
    * @param {ActionContext} discoveryContext - The populated discovery context.
    * @param {TraceContext|null} trace - Optional trace context.
-   * @returns {Promise<{actions: any[], errors: any[]}>} Result of processing.
+   * @returns {Promise<{actions: any[], errors: ActionErrorContext[]}>} Result of processing.
    * @private
    */
   async #processCandidate(actionDef, actorEntity, discoveryContext, trace) {
@@ -147,13 +158,23 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
       );
       return result ?? { actions: [], errors: [] };
     } catch (err) {
+      const errorContext = this.#actionErrorContextBuilder.buildErrorContext({
+        error: err,
+        actionDef,
+        actorId: actorEntity.id,
+        phase: ERROR_PHASES.DISCOVERY,
+        trace,
+        targetId: extractTargetId(err),
+      });
+
       this.#logger.error(
         `Error processing candidate action '${actionDef.id}': ${err.message}`,
-        err
+        errorContext
       );
+
       return {
         actions: [],
-        errors: [createDiscoveryError(actionDef.id, extractTargetId(err), err)],
+        errors: [createActionErrorContext(errorContext)],
       };
     }
   }
@@ -200,9 +221,21 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     try {
       candidateDefs = this.#fetchCandidateActions(actorEntity, trace);
     } catch (err) {
+      // For candidate retrieval errors, we don't have a specific action definition
+      const errorContext = this.#actionErrorContextBuilder.buildErrorContext({
+        error: err,
+        actionDef: { id: 'candidateRetrieval', name: 'Candidate Retrieval' },
+        actorId: actorEntity.id,
+        phase: ERROR_PHASES.DISCOVERY,
+        trace,
+        additionalContext: {
+          stage: 'candidate_retrieval',
+        },
+      });
+
       return {
         actions: [],
-        errors: [createDiscoveryError('candidateRetrieval', null, err)],
+        errors: [createActionErrorContext(errorContext)],
         trace,
       };
     }

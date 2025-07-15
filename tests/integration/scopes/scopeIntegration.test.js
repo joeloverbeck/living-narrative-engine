@@ -33,6 +33,7 @@ import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationSe
 import InMemoryDataRegistry from '../../../src/data/inMemoryDataRegistry.js';
 import { TargetResolutionService } from '../../../src/actions/targetResolutionService.js';
 import DefaultDslParser from '../../../src/scopeDsl/parser/defaultDslParser.js';
+import { createMockActionErrorContextBuilder } from '../../common/mockFactories/actions.js';
 
 jest.unmock('../../../src/scopeDsl/scopeRegistry.js');
 
@@ -155,6 +156,7 @@ describe('Scope Integration Tests', () => {
       safeEventDispatcher,
       jsonLogicEvaluationService: jsonLogicEval,
       dslParser: new DefaultDslParser(),
+      actionErrorContextBuilder: createMockActionErrorContextBuilder(),
     });
 
     // Create the ActionCandidateProcessor
@@ -180,6 +182,7 @@ describe('Scope Integration Tests', () => {
       logger,
       actionCandidateProcessor,
       traceContextFactory: jest.fn(() => ({ addLog: jest.fn(), logs: [] })),
+      actionErrorContextBuilder: createMockActionErrorContextBuilder(),
       ...overrides,
     });
   };

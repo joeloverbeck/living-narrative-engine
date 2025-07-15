@@ -19,22 +19,22 @@ describe('ErrorRecovery', () => {
       debug: jest.fn(),
       info: jest.fn(),
       warn: jest.fn(),
-      error: jest.fn()
+      error: jest.fn(),
     };
 
     mockEventDispatcher = {
-      dispatch: jest.fn()
+      dispatch: jest.fn(),
     };
 
     errorRecovery = new ErrorRecovery(
       {
         logger: mockLogger,
-        eventDispatcher: mockEventDispatcher
+        eventDispatcher: mockEventDispatcher,
       },
       {
         maxRetryAttempts: 2,
         retryDelayMs: 100,
-        useExponentialBackoff: false
+        useExponentialBackoff: false,
       }
     );
   });
@@ -48,11 +48,15 @@ describe('ErrorRecovery', () => {
   describe('handleError', () => {
     it('should handle anatomy data errors with fallback', async () => {
       // Create a non-recoverable anatomy data error to force fallback
-      const error = AnatomyDataError.invalidAnatomyStructure('test-entity', {}, 'Missing root');
-      
+      const error = AnatomyDataError.invalidAnatomyStructure(
+        'test-entity',
+        {},
+        'Missing root'
+      );
+
       const result = await errorRecovery.handleError(error, {
         operation: 'entity_loading',
-        data: { entityId: 'test-entity' }
+        data: { entityId: 'test-entity' },
       });
 
       // invalidAnatomyStructure errors return success: false with a fallback message
@@ -62,15 +66,18 @@ describe('ErrorRecovery', () => {
     });
 
     it('should handle render errors with fallback', async () => {
-      const error = AnatomyRenderError.svgRenderingFailed('createSVG', new Error('SVG not supported'));
-      
+      const error = AnatomyRenderError.svgRenderingFailed(
+        'createSVG',
+        new Error('SVG not supported')
+      );
+
       // Without a retryCallback, retryable errors will try retry strategy but fail
       // and then fall back to the fallback strategy
       const result = await errorRecovery.handleError(error, {
         operation: 'rendering',
         data: { renderStage: 'svg_creation' },
         // Provide empty fallback options to trigger fallback immediately
-        fallbackOptions: {}
+        fallbackOptions: {},
       });
 
       // The error is retryable but without retryCallback it will fail and use 'failed' strategy
@@ -81,9 +88,13 @@ describe('ErrorRecovery', () => {
     });
 
     it('should attempt retry for retryable errors', async () => {
-      const error = AnatomyStateError.operationTimeout('entity_loading', 5000, 'LOADING');
+      const error = AnatomyStateError.operationTimeout(
+        'entity_loading',
+        5000,
+        'LOADING'
+      );
       let retryCount = 0;
-      
+
       const retryCallback = jest.fn(async () => {
         retryCount++;
         // Always succeed on retry
@@ -96,24 +107,28 @@ describe('ErrorRecovery', () => {
       const result = await errorRecovery.handleError(error, {
         operation: 'entity_loading',
         retryCallback,
-        data: { entityId: 'test-entity' }
+        data: { entityId: 'test-entity' },
       });
 
       // Should use retry strategy and succeed
       if (result.strategy !== 'retry') {
         console.log('Unexpected result:', result);
       }
-      
+
       expect(result.success).toBe(true);
       expect(result.strategy).toBe('retry');
       expect(retryCallback).toHaveBeenCalled();
     });
 
     it('should dispatch error event', async () => {
-      const error = AnatomyDataError.invalidAnatomyStructure('test-entity', {}, 'Missing root');
-      
+      const error = AnatomyDataError.invalidAnatomyStructure(
+        'test-entity',
+        {},
+        'Missing root'
+      );
+
       await errorRecovery.handleError(error, {
-        operation: 'entity_loading'
+        operation: 'entity_loading',
       });
 
       expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
@@ -121,9 +136,9 @@ describe('ErrorRecovery', () => {
         expect.objectContaining({
           error: expect.objectContaining({
             message: expect.any(String),
-            severity: 'HIGH'
+            severity: 'HIGH',
           }),
-          strategy: 'fallback'
+          strategy: 'fallback',
         })
       );
     });
@@ -137,10 +152,14 @@ describe('ErrorRecovery', () => {
     it('should return false when at retry limit after failed attempts', async () => {
       // The error recovery has maxRetryAttempts = 2 in this test setup
       // We need to use a retryable error to trigger retry attempts
-      
-      const retryableError = AnatomyStateError.operationTimeout('test-operation', 5000, 'LOADING');
+
+      const retryableError = AnatomyStateError.operationTimeout(
+        'test-operation',
+        5000,
+        'LOADING'
+      );
       let attemptCount = 0;
-      
+
       const failingCallback = jest.fn(async () => {
         attemptCount++;
         throw retryableError;
@@ -153,20 +172,23 @@ describe('ErrorRecovery', () => {
         // This will attempt the operation up to maxRetryAttempts times
         const result = await errorRecovery.handleError(retryableError, {
           operation: 'test-operation',
-          retryCallback: failingCallback
+          retryCallback: failingCallback,
         });
-        
+
         // If we get here, check the result
         console.log('Result strategy:', result.strategy);
-        console.log('Callback called times:', failingCallback.mock.calls.length);
+        console.log(
+          'Callback called times:',
+          failingCallback.mock.calls.length
+        );
       } catch (err) {
         // Expected to fail after all retries are exhausted
         console.log('Error caught:', err.message);
       }
-      
+
       // Debug: check current retry count
       console.log('Can retry:', errorRecovery.canRetry('test-operation'));
-      
+
       // After 2 retry attempts (configured in beforeEach), canRetry should return false
       expect(errorRecovery.canRetry('test-operation')).toBe(false);
       // The callback should have been called exactly maxRetryAttempts times
@@ -179,7 +201,7 @@ describe('ErrorRecovery', () => {
       const customStrategy = jest.fn().mockResolvedValue({
         result: { customFallback: true },
         userMessage: 'Custom fallback applied',
-        suggestions: ['Custom suggestion']
+        suggestions: ['Custom suggestion'],
       });
 
       errorRecovery.registerFallbackStrategy('CustomError', customStrategy);
@@ -192,9 +214,9 @@ describe('ErrorRecovery', () => {
       }
 
       const error = new CustomError('Custom test error');
-      
+
       const result = await errorRecovery.handleError(error, {
-        operation: 'custom_operation'
+        operation: 'custom_operation',
       });
 
       expect(result.success).toBe(true);
@@ -212,7 +234,7 @@ describe('ErrorRecovery', () => {
       await errorRecovery.handleError(error2, { operation: 'op2' });
 
       const history = errorRecovery.getErrorHistory();
-      
+
       expect(history).toHaveLength(2);
       expect(history[0].error.message).toBe('First error');
       expect(history[1].error.message).toBe('Second error');
@@ -220,7 +242,9 @@ describe('ErrorRecovery', () => {
 
     it('should limit history to specified count', async () => {
       for (let i = 0; i < 5; i++) {
-        await errorRecovery.handleError(new Error(`Error ${i}`), { operation: `op${i}` });
+        await errorRecovery.handleError(new Error(`Error ${i}`), {
+          operation: `op${i}`,
+        });
       }
 
       const history = errorRecovery.getErrorHistory(3);
@@ -231,11 +255,13 @@ describe('ErrorRecovery', () => {
   describe('disposal', () => {
     it('should dispose cleanly', () => {
       expect(errorRecovery.isDisposed()).toBe(false);
-      
+
       errorRecovery.dispose();
-      
+
       expect(errorRecovery.isDisposed()).toBe(true);
-      expect(() => errorRecovery.canRetry('test')).toThrow('ErrorRecovery instance has been disposed');
+      expect(() => errorRecovery.canRetry('test')).toThrow(
+        'ErrorRecovery instance has been disposed'
+      );
     });
   });
 });

@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { TargetResolutionService } from '../../../src/actions/targetResolutionService.js';
 import { ActionTargetContext } from '../../../src/models/actionTargetContext.js';
 import { generateMockAst } from '../../common/scopeDsl/mockAstGenerator.js';
+import { createMockActionErrorContextBuilder } from '../../common/mockFactories/actions.js';
 
 // Additional tests to cover branches not exercised in other suites
 
@@ -37,6 +38,7 @@ describe('TargetResolutionService uncovered branches', () => {
       safeEventDispatcher: mockDispatcher,
       jsonLogicEvaluationService: mockJsonLogic,
       dslParser: mockDslParser,
+      actionErrorContextBuilder: createMockActionErrorContextBuilder(),
     });
   });
 

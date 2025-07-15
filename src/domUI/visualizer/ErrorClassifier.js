@@ -29,7 +29,7 @@ class ErrorClassifier {
     VALIDATION: 'validation',
     PERMISSION: 'permission',
     RESOURCE: 'resource',
-    UNKNOWN: 'unknown'
+    UNKNOWN: 'unknown',
   };
 
   /**
@@ -42,7 +42,7 @@ class ErrorClassifier {
     UI: 'ui',
     SYSTEM: 'system',
     NETWORK: 'network',
-    USER: 'user'
+    USER: 'user',
   };
 
   /**
@@ -51,11 +51,11 @@ class ErrorClassifier {
    * @readonly
    */
   static RECOVERY_PRIORITIES = {
-    IMMEDIATE: 'immediate',    // Handle immediately, critical system function
-    HIGH: 'high',             // Handle quickly, major feature impact
-    MEDIUM: 'medium',         // Handle normally, some feature impact
-    LOW: 'low',               // Handle when convenient, minor impact
-    DEFERRED: 'deferred'      // Handle later, cosmetic or edge case
+    IMMEDIATE: 'immediate', // Handle immediately, critical system function
+    HIGH: 'high', // Handle quickly, major feature impact
+    MEDIUM: 'medium', // Handle normally, some feature impact
+    LOW: 'low', // Handle when convenient, minor impact
+    DEFERRED: 'deferred', // Handle later, cosmetic or edge case
   };
 
   /**
@@ -94,7 +94,7 @@ class ErrorClassifier {
       recommendedStrategy: this._recommendStrategy(error, context),
       fallbackAvailable: this._checkFallbackAvailability(error, context),
       userMessageSuggested: this._generateUserMessage(error, context),
-      actionsSuggested: this._generateActionSuggestions(error, context)
+      actionsSuggested: this._generateActionSuggestions(error, context),
     };
 
     // Add specific error details if it's an anatomy visualization error
@@ -104,7 +104,7 @@ class ErrorClassifier {
         context: error.context,
         metadata: error.metadata,
         userMessage: error.userMessage,
-        suggestions: error.suggestions
+        suggestions: error.suggestions,
       };
     }
 
@@ -127,7 +127,10 @@ class ErrorClassifier {
     }
 
     // Report high severity errors that affect system functionality
-    if (classification.severity === 'HIGH' && classification.systemImpact === 'major') {
+    if (
+      classification.severity === 'HIGH' &&
+      classification.systemImpact === 'major'
+    ) {
       return true;
     }
 
@@ -151,19 +154,25 @@ class ErrorClassifier {
    */
   static getUrgency(error, context = {}) {
     const classification = this.classify(error, context);
-    
+
     // Critical errors are always urgent
     if (classification.severity === 'CRITICAL') {
       return 'urgent';
     }
 
     // High impact on core functionality
-    if (classification.userImpact === 'blocking' || classification.systemImpact === 'major') {
+    if (
+      classification.userImpact === 'blocking' ||
+      classification.systemImpact === 'major'
+    ) {
       return 'high';
     }
 
     // Medium impact or important operations
-    if (classification.userImpact === 'significant' || classification.priority === 'HIGH') {
+    if (
+      classification.userImpact === 'significant' ||
+      classification.priority === 'HIGH'
+    ) {
       return 'medium';
     }
 
@@ -192,10 +201,16 @@ class ErrorClassifier {
     if (error.name === 'TypeError' && error.message.includes('fetch')) {
       return this.ERROR_CATEGORIES.NETWORK;
     }
-    if (error.name === 'ValidationError' || error.message.includes('validation')) {
+    if (
+      error.name === 'ValidationError' ||
+      error.message.includes('validation')
+    ) {
       return this.ERROR_CATEGORIES.VALIDATION;
     }
-    if (error.message.includes('permission') || error.message.includes('unauthorized')) {
+    if (
+      error.message.includes('permission') ||
+      error.message.includes('unauthorized')
+    ) {
       return this.ERROR_CATEGORIES.PERMISSION;
     }
     if (error.message.includes('memory') || error.message.includes('quota')) {
@@ -220,11 +235,12 @@ class ErrorClassifier {
     }
 
     // UI-related errors
-    if (context.component && (
-      context.component.includes('UI') || 
-      context.component.includes('Renderer') ||
-      context.component.includes('Dom')
-    )) {
+    if (
+      context.component &&
+      (context.component.includes('UI') ||
+        context.component.includes('Renderer') ||
+        context.component.includes('Dom'))
+    ) {
       return this.ERROR_DOMAINS.UI;
     }
 
@@ -234,7 +250,10 @@ class ErrorClassifier {
     }
 
     // User input errors
-    if (error.message.includes('invalid input') || error.message.includes('user')) {
+    if (
+      error.message.includes('invalid input') ||
+      error.message.includes('user')
+    ) {
       return this.ERROR_DOMAINS.USER;
     }
 
@@ -261,7 +280,12 @@ class ErrorClassifier {
     }
 
     // High severity for core functionality
-    if (context.operation && ['entity_selection', 'anatomy_loading', 'rendering'].includes(context.operation)) {
+    if (
+      context.operation &&
+      ['entity_selection', 'anatomy_loading', 'rendering'].includes(
+        context.operation
+      )
+    ) {
       return 'HIGH';
     }
 
@@ -324,15 +348,24 @@ class ErrorClassifier {
     }
 
     // Some anatomy errors are retryable
-    if (error instanceof AnatomyDataError && error.code === 'MISSING_ANATOMY_PARTS') {
+    if (
+      error instanceof AnatomyDataError &&
+      error.code === 'MISSING_ANATOMY_PARTS'
+    ) {
       return true;
     }
-    if (error instanceof AnatomyRenderError && error.code === 'SVG_RENDERING_FAILED') {
+    if (
+      error instanceof AnatomyRenderError &&
+      error.code === 'SVG_RENDERING_FAILED'
+    ) {
       return true;
     }
 
     // Validation and permission errors are typically not retryable
-    if (error.name === 'ValidationError' || error.message.includes('permission')) {
+    if (
+      error.name === 'ValidationError' ||
+      error.message.includes('permission')
+    ) {
       return false;
     }
 
@@ -389,12 +422,18 @@ class ErrorClassifier {
     }
 
     // Core features have significant impact
-    if (context.operation && ['entity_selection', 'anatomy_loading'].includes(context.operation)) {
+    if (
+      context.operation &&
+      ['entity_selection', 'anatomy_loading'].includes(context.operation)
+    ) {
       return 'significant';
     }
 
     // Rendering issues have moderate impact
-    if (context.operation === 'rendering' || error instanceof AnatomyRenderError) {
+    if (
+      context.operation === 'rendering' ||
+      error instanceof AnatomyRenderError
+    ) {
       return 'moderate';
     }
 
@@ -473,8 +512,10 @@ class ErrorClassifier {
     }
 
     // Data errors may have fallbacks
-    if (error instanceof AnatomyDataError && 
-        ['MISSING_ANATOMY_PARTS', 'MISSING_ANATOMY_DATA'].includes(error.code)) {
+    if (
+      error instanceof AnatomyDataError &&
+      ['MISSING_ANATOMY_PARTS', 'MISSING_ANATOMY_DATA'].includes(error.code)
+    ) {
       return true;
     }
 

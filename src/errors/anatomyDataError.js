@@ -40,7 +40,7 @@ export class AnatomyDataError extends AnatomyVisualizationError {
       context: `Anatomy data processing for entity: ${entityId || 'unknown'}`,
       userMessage: AnatomyDataError._getUserMessage(dataType, entityId),
       suggestions: AnatomyDataError._getSuggestions(dataType, validationError),
-      ...parentOptions
+      ...parentOptions,
     });
 
     this.name = 'AnatomyDataError';
@@ -70,8 +70,8 @@ export class AnatomyDataError extends AnatomyVisualizationError {
         suggestions: [
           'Try selecting a different entity',
           'Ensure the entity has anatomy components defined',
-          'Check if the entity definition includes anatomy data'
-        ]
+          'Check if the entity definition includes anatomy data',
+        ],
       }
     );
   }
@@ -95,12 +95,13 @@ export class AnatomyDataError extends AnatomyVisualizationError {
         validationError,
         severity: 'HIGH',
         recoverable: false,
-        userMessage: 'The anatomy data for this entity is corrupted or incomplete.',
+        userMessage:
+          'The anatomy data for this entity is corrupted or incomplete.',
         suggestions: [
           'Try selecting a different entity',
           'Contact support if this entity should have valid anatomy data',
-          'Check the entity definition for proper anatomy component structure'
-        ]
+          'Check the entity definition for proper anatomy component structure',
+        ],
       }
     );
   }
@@ -126,8 +127,8 @@ export class AnatomyDataError extends AnatomyVisualizationError {
         suggestions: [
           'The visualization will show available parts only',
           'Try refreshing to reload anatomy data',
-          'Some parts may be loading in the background'
-        ]
+          'Some parts may be loading in the background',
+        ],
       }
     );
   }
@@ -149,12 +150,13 @@ export class AnatomyDataError extends AnatomyVisualizationError {
         metadata: { cyclePath },
         severity: 'HIGH',
         recoverable: false,
-        userMessage: 'The anatomy data has a circular reference that prevents visualization.',
+        userMessage:
+          'The anatomy data has a circular reference that prevents visualization.',
         suggestions: [
           'Try selecting a different entity',
-          'This entity\'s anatomy data needs to be corrected',
-          'Contact support to report this data issue'
-        ]
+          "This entity's anatomy data needs to be corrected",
+          'Contact support to report this data issue',
+        ],
       }
     );
   }
@@ -205,7 +207,9 @@ export class AnatomyDataError extends AnatomyVisualizationError {
 
     switch (dataType) {
       case 'anatomy:body':
-        suggestions.push('Ensure the entity has a valid anatomy:body component');
+        suggestions.push(
+          'Ensure the entity has a valid anatomy:body component'
+        );
         suggestions.push('Check that the root anatomy part is defined');
         break;
       case 'anatomy:part':

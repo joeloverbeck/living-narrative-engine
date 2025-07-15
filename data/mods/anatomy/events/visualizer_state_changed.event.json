@@ -13,7 +13,7 @@
         "enum": ["IDLE", "LOADING", "LOADED", "RENDERING", "READY", "ERROR"]
       },
       "currentState": {
-        "type": "string", 
+        "type": "string",
         "description": "The current state of the visualizer after this change.",
         "enum": ["IDLE", "LOADING", "LOADED", "RENDERING", "READY", "ERROR"]
       },

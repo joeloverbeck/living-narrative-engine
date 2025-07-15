@@ -74,7 +74,7 @@ describe('Anatomy Visualizer Workflow - Integration', () => {
     // Load all required component definitions
     registry = container.resolve(tokens.IDataRegistry);
     const schemaValidator = container.resolve(tokens.ISchemaValidator);
-    
+
     // Load components
     const components = [
       { id: 'anatomy:body', data: bodyComponent },
@@ -88,7 +88,7 @@ describe('Anatomy Visualizer Workflow - Integration', () => {
     // Store components and register their data schemas for validation
     for (const { id, data } of components) {
       registry.store('componentDefinitions', id, data);
-      
+
       // Register the component's dataSchema for validation
       if (data.dataSchema) {
         await schemaValidator.addSchema(data.dataSchema, id);
@@ -129,17 +129,9 @@ describe('Anatomy Visualizer Workflow - Integration', () => {
       humanFemaleBlueprint
     );
 
-    // Load recipes  
-    registry.store(
-      'anatomyRecipes',
-      'anatomy:human_male',
-      humanMaleRecipe
-    );
-    registry.store(
-      'anatomyRecipes',
-      'anatomy:human_female',
-      humanFemaleRecipe
-    );
+    // Load recipes
+    registry.store('anatomyRecipes', 'anatomy:human_male', humanMaleRecipe);
+    registry.store('anatomyRecipes', 'anatomy:human_female', humanFemaleRecipe);
 
     // Load slot libraries
     registry.store(
@@ -170,19 +162,30 @@ describe('Anatomy Visualizer Workflow - Integration', () => {
     entityManager = container.resolve(tokens.IEntityManager);
     eventDispatcher = container.resolve(tokens.IValidatedEventDispatcher);
     logger = container.resolve(tokens.ILogger);
-    
+
     // Initialize system services that listen for entity creation events
     const systemInitializer = container.resolve(tokens.SystemInitializer);
     await systemInitializer.initializeAll();
-    
+
     // Verify anatomy service is initialized
-    const anatomyInitService = container.resolve(tokens.AnatomyInitializationService);
-    logger.debug('AnatomyInitializationService initialized:', !!anatomyInitService);
+    const anatomyInitService = container.resolve(
+      tokens.AnatomyInitializationService
+    );
+    logger.debug(
+      'AnatomyInitializationService initialized:',
+      !!anatomyInitService
+    );
 
     // Create visualizer components with proper dependencies
-    const { VisualizerState } = await import('../../../src/domUI/visualizer/VisualizerState.js');
-    const { AnatomyLoadingDetector } = await import('../../../src/domUI/visualizer/AnatomyLoadingDetector.js');
-    const { VisualizerStateController } = await import('../../../src/domUI/visualizer/VisualizerStateController.js');
+    const { VisualizerState } = await import(
+      '../../../src/domUI/visualizer/VisualizerState.js'
+    );
+    const { AnatomyLoadingDetector } = await import(
+      '../../../src/domUI/visualizer/AnatomyLoadingDetector.js'
+    );
+    const { VisualizerStateController } = await import(
+      '../../../src/domUI/visualizer/VisualizerStateController.js'
+    );
 
     const visualizerState = new VisualizerState({ logger });
     anatomyLoadingDetector = new AnatomyLoadingDetector({
@@ -209,14 +212,19 @@ describe('Anatomy Visualizer Workflow - Integration', () => {
           // Check if entity definition exists first
           const entityDef = registry.getEntityDefinition(entityDefId);
           if (!entityDef) {
-            const error = new Error(`Entity definition not found: ${entityDefId}`);
+            const error = new Error(
+              `Entity definition not found: ${entityDefId}`
+            );
             visualizerStateController.handleError(error);
             throw error;
           }
 
           // Simulate the loadEntity workflow
-          const entityInstance = await entityManager.createEntityInstance(entityDefId, {});
-          
+          const entityInstance = await entityManager.createEntityInstance(
+            entityDefId,
+            {}
+          );
+
           // Check if this entity should have anatomy and manually set it
           if (entityDef.components && entityDef.components['anatomy:body']) {
             // Manually set anatomy data for testing since automatic generation isn't working
@@ -225,22 +233,28 @@ describe('Anatomy Visualizer Workflow - Integration', () => {
               body: {
                 root: 'torso_instance_id',
                 parts: {
-                  'head': 'head_instance_id',
-                  'left_arm': 'left_arm_instance_id',
-                  'right_arm': 'right_arm_instance_id',
-                  'torso': 'torso_instance_id'
-                }
-              }
+                  head: 'head_instance_id',
+                  left_arm: 'left_arm_instance_id',
+                  right_arm: 'right_arm_instance_id',
+                  torso: 'torso_instance_id',
+                },
+              },
             };
-            
-            entityManager.addComponent(entityInstance.id, 'anatomy:body', expectedAnatomyData);
+
+            entityManager.addComponent(
+              entityInstance.id,
+              'anatomy:body',
+              expectedAnatomyData
+            );
           } else {
             // Entity doesn't have anatomy:body component
-            const error = new Error(`Entity ${entityDefId} does not have anatomy:body component`);
+            const error = new Error(
+              `Entity ${entityDefId} does not have anatomy:body component`
+            );
             visualizerStateController.handleError(error);
             throw error;
           }
-          
+
           await visualizerStateController.selectEntity(entityInstance.id);
           return entityInstance;
         } catch (error) {
@@ -258,12 +272,12 @@ describe('Anatomy Visualizer Workflow - Integration', () => {
     if (visualizerStateController) {
       visualizerStateController.dispose();
     }
-    
+
     // Clean up entities
     if (entityManager) {
       entityManager.clearAll();
     }
-    
+
     // Clean up DOM
     if (dom) {
       dom.window.close();
@@ -271,7 +285,7 @@ describe('Anatomy Visualizer Workflow - Integration', () => {
       delete global.document;
       delete global.navigator;
     }
-    
+
     jest.clearAllMocks();
   });
 
@@ -279,7 +293,7 @@ describe('Anatomy Visualizer Workflow - Integration', () => {
     it('should successfully load and display anatomy for a valid entity', async () => {
       // Create an entity with anatomy:body component
       const entityDefId = 'anatomy:humanoid';
-      
+
       // Ensure the entity definition exists and has anatomy:body
       const entityDef = registry.getEntityDefinition(entityDefId);
       expect(entityDef).toBeDefined();
@@ -303,23 +317,29 @@ describe('Anatomy Visualizer Workflow - Integration', () => {
 
       // Verify visualizer state is correct
       expect(visualizerStateController.getCurrentState()).toBe('LOADED');
-      expect(visualizerStateController.getSelectedEntity()).toBe(entityInstance.id);
-      expect(visualizerStateController.getAnatomyData()).toEqual(bodyComponent.body);
+      expect(visualizerStateController.getSelectedEntity()).toBe(
+        entityInstance.id
+      );
+      expect(visualizerStateController.getAnatomyData()).toEqual(
+        bodyComponent.body
+      );
     }, 15000); // 15 second timeout for anatomy generation
 
     it('should handle entity creation timeout gracefully', async () => {
       // Use a non-existent entity definition
       const entityDefId = 'nonexistent:entity';
 
-      await expect(anatomyVisualizerUI.loadEntity(entityDefId)).rejects.toThrow();
+      await expect(
+        anatomyVisualizerUI.loadEntity(entityDefId)
+      ).rejects.toThrow();
 
       // With the new error recovery, the state might not immediately transition to ERROR
       // The error is handled through the recovery mechanism
       const currentState = visualizerStateController.getCurrentState();
-      
+
       // The state should either be ERROR or IDLE (if recovery reset it)
       expect(['ERROR', 'IDLE']).toContain(currentState);
-      
+
       // If in ERROR state, there should be an error
       if (currentState === 'ERROR') {
         expect(visualizerStateController.getError()).toBeDefined();
@@ -335,21 +355,26 @@ describe('Anatomy Visualizer Workflow - Integration', () => {
       });
       registry.store('entityDefinitions', 'test:no_anatomy', noAnatomyDef);
 
-      await expect(anatomyVisualizerUI.loadEntity('test:no_anatomy')).rejects.toThrow();
+      await expect(
+        anatomyVisualizerUI.loadEntity('test:no_anatomy')
+      ).rejects.toThrow();
 
       // With the new error recovery, the state might not immediately transition to ERROR
       // The error is handled through the recovery mechanism
       const currentState = visualizerStateController.getCurrentState();
-      
+
       // The state should either be ERROR or IDLE (if recovery reset it)
       expect(['ERROR', 'IDLE']).toContain(currentState);
     });
 
     it('should detect anatomy readiness correctly', async () => {
       const entityDefId = 'anatomy:humanoid';
-      
+
       // Create entity instance
-      const entityInstance = await entityManager.createEntityInstance(entityDefId, {});
+      const entityInstance = await entityManager.createEntityInstance(
+        entityDefId,
+        {}
+      );
 
       // Manually set anatomy data for testing since automatic generation isn't working
       const expectedAnatomyData = {
@@ -357,15 +382,19 @@ describe('Anatomy Visualizer Workflow - Integration', () => {
         body: {
           root: 'torso_instance_id',
           parts: {
-            'head': 'head_instance_id',
-            'left_arm': 'left_arm_instance_id',
-            'right_arm': 'right_arm_instance_id',
-            'torso': 'torso_instance_id'
-          }
-        }
+            head: 'head_instance_id',
+            left_arm: 'left_arm_instance_id',
+            right_arm: 'right_arm_instance_id',
+            torso: 'torso_instance_id',
+          },
+        },
       };
-      
-      entityManager.addComponent(entityInstance.id, 'anatomy:body', expectedAnatomyData);
+
+      entityManager.addComponent(
+        entityInstance.id,
+        'anatomy:body',
+        expectedAnatomyData
+      );
 
       // Test anatomy loading detector directly
       const isReady = await anatomyLoadingDetector.waitForEntityWithAnatomy(
@@ -378,7 +407,7 @@ describe('Anatomy Visualizer Workflow - Integration', () => {
       // Verify anatomy structure
       const entity = await entityManager.getEntityInstance(entityInstance.id);
       const bodyComponent = entity.getComponentData('anatomy:body');
-      
+
       expect(bodyComponent).toBeDefined();
       expect(bodyComponent.body).toBeDefined();
       expect(bodyComponent.body.root).toBeDefined();
@@ -392,12 +421,15 @@ describe('Anatomy Visualizer Workflow - Integration', () => {
       const stateChanges = [];
 
       // Subscribe to state changes
-      const unsubscribe = eventDispatcher.subscribe('anatomy:visualizer_state_changed', (event) => {
-        stateChanges.push({
-          from: event.payload.previousState,
-          to: event.payload.currentState,
-        });
-      });
+      const unsubscribe = eventDispatcher.subscribe(
+        'anatomy:visualizer_state_changed',
+        (event) => {
+          stateChanges.push({
+            from: event.payload.previousState,
+            to: event.payload.currentState,
+          });
+        }
+      );
 
       try {
         // Load entity and track state transitions
@@ -420,27 +452,30 @@ describe('Anatomy Visualizer Workflow - Integration', () => {
 
     it('should handle retry after error', async () => {
       const error = new Error('Test error');
-      
+
       // First we need to get the controller into a state where it has a selected entity
       // Create an entity instance first
       const entityDefId = 'anatomy:humanoid';
-      const entityInstance = await entityManager.createEntityInstance(entityDefId, {});
-      
+      const entityInstance = await entityManager.createEntityInstance(
+        entityDefId,
+        {}
+      );
+
       // Manually set the visualizer state to have a selected entity
       visualizerStateController._setEntityManager(entityManager);
-      
+
       // Force an error state using handleError which is async
       await visualizerStateController.handleError(error, {
-        operation: 'test_operation'
+        operation: 'test_operation',
       });
-      
+
       // Check if we're in ERROR state
       expect(visualizerStateController.getCurrentState()).toBe('ERROR');
-      
+
       // The error might be wrapped or transformed by the error recovery system
       const currentError = visualizerStateController.getError();
       expect(currentError).toBeDefined();
-      
+
       // Test retry functionality - but only if we have a selected entity
       if (visualizerStateController.getSelectedEntity()) {
         visualizerStateController.retry();
@@ -451,7 +486,7 @@ describe('Anatomy Visualizer Workflow - Integration', () => {
 
     it('should reset state correctly', async () => {
       const entityDefId = 'anatomy:humanoid';
-      
+
       // Load an entity first
       await anatomyVisualizerUI.loadEntity(entityDefId);
       expect(visualizerStateController.getCurrentState()).toBe('LOADED');
@@ -468,20 +503,22 @@ describe('Anatomy Visualizer Workflow - Integration', () => {
     it('should handle anatomy generation failures', async () => {
       // Create an entity that has anatomy:body but will fail during processing
       const entityDefId = 'anatomy:humanoid';
-      
+
       // Mock the visualizer state controller to simulate anatomy generation failure
       const originalSelectEntity = visualizerStateController.selectEntity;
-      visualizerStateController.selectEntity = jest.fn().mockRejectedValue(
-        new Error('Anatomy generation failed')
-      );
+      visualizerStateController.selectEntity = jest
+        .fn()
+        .mockRejectedValue(new Error('Anatomy generation failed'));
 
       try {
-        await expect(anatomyVisualizerUI.loadEntity(entityDefId)).rejects.toThrow();
-        
+        await expect(
+          anatomyVisualizerUI.loadEntity(entityDefId)
+        ).rejects.toThrow();
+
         // With the new error recovery, the state might not immediately transition to ERROR
         // The error is handled through the recovery mechanism
         const currentState = visualizerStateController.getCurrentState();
-        
+
         // The state should either be ERROR or IDLE (if recovery reset it)
         expect(['ERROR', 'IDLE']).toContain(currentState);
       } finally {
@@ -493,7 +530,10 @@ describe('Anatomy Visualizer Workflow - Integration', () => {
     it('should handle timeout scenarios', async () => {
       // Test with very short timeout
       const entityDefId = 'anatomy:humanoid';
-      const entityInstance = await entityManager.createEntityInstance(entityDefId, {});
+      const entityInstance = await entityManager.createEntityInstance(
+        entityDefId,
+        {}
+      );
 
       const isReady = await anatomyLoadingDetector.waitForEntityWithAnatomy(
         entityInstance.id,

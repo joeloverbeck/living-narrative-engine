@@ -118,7 +118,7 @@ describe('Anatomy Visualizer - Dependency Chain Integration', () => {
     // Verify that unknown slots throw the expected error
     await expect(
       slotResolver.resolveClothingSlot('test_entity', 'unknown_slot')
-    ).rejects.toThrow('Clothing slot \'unknown_slot\' not found');
+    ).rejects.toThrow("Clothing slot 'unknown_slot' not found");
   });
 
   it('should demonstrate that the dependency chain issue is resolved', () => {

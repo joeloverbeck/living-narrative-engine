@@ -385,18 +385,17 @@ describe('PrerequisiteEvaluationService', () => {
       );
 
       expect(mockTrace.data).toHaveBeenCalledWith(
-        'Built prerequisite evaluation context.',
+        'Built prerequisite evaluation context',
         'PrerequisiteEvaluationService.evaluate',
         expect.any(Object)
       );
-      expect(mockTrace.info).toHaveBeenCalledWith(
-        'Evaluating rule.',
-        expect.any(String),
-        expect.any(Object)
+      expect(mockTrace.step).toHaveBeenCalledWith(
+        'Evaluating 1 prerequisite rules',
+        'PrerequisiteEvaluationService.#evaluateRules'
       );
       expect(mockTrace.success).toHaveBeenCalledWith(
-        'Rule evaluation result: true',
-        expect.any(String),
+        'Rule 1 passed',
+        'PrerequisiteEvaluationService.#evaluateRules',
         expect.any(Object)
       );
     });
@@ -417,8 +416,8 @@ describe('PrerequisiteEvaluationService', () => {
       );
 
       expect(mockTrace.failure).toHaveBeenCalledWith(
-        'Rule evaluation result: false',
-        expect.any(String),
+        'Prerequisite failed',
+        'PrerequisiteEvaluationService._evaluatePrerequisite',
         expect.any(Object)
       );
     });

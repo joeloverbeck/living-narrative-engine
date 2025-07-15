@@ -14,14 +14,17 @@
 /** @typedef {import('../interfaces/ITargetResolutionService.js').ITargetResolutionService} ITargetResolutionService */
 /** @typedef {import('../data/gameDataRepository.js').ActionDefinition} ActionDefinition */
 /** @typedef {import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo} DiscoveredActionInfo */
+/** @typedef {import('./errors/actionErrorContextBuilder.js').ActionErrorContextBuilder} ActionErrorContextBuilder */
+/** @typedef {import('./errors/actionErrorTypes.js').ActionErrorContext} ActionErrorContext */
 
 // Dependency imports
-import { createDiscoveryError } from './utils/discoveryErrorUtils.js';
+import { createActionErrorContext } from './utils/discoveryErrorUtils.js';
+import { ERROR_PHASES } from './errors/actionErrorTypes.js';
 
 /**
  * @typedef {object} ProcessResult
  * @property {DiscoveredActionInfo[]} actions - Valid discovered actions
- * @property {object[]} errors - Errors encountered during processing
+ * @property {ActionErrorContext[]} errors - Errors encountered during processing
  * @property {string} [cause] - Optional reason why no actions were produced
  */
 
@@ -37,6 +40,7 @@ export class ActionCandidateProcessor {
   #safeEventDispatcher;
   #getEntityDisplayNameFn;
   #logger;
+  #actionErrorContextBuilder;
 
   /**
    * Creates an instance of ActionCandidateProcessor.
@@ -49,6 +53,7 @@ export class ActionCandidateProcessor {
    * @param {ISafeEventDispatcher} deps.safeEventDispatcher - Event dispatcher for error handling.
    * @param {Function} deps.getEntityDisplayNameFn - Function to get entity display names.
    * @param {ILogger} deps.logger - Logger instance for diagnostic output.
+   * @param {ActionErrorContextBuilder} deps.actionErrorContextBuilder - Service for building enhanced error context.
    */
   constructor({
     prerequisiteEvaluationService,
@@ -58,6 +63,7 @@ export class ActionCandidateProcessor {
     safeEventDispatcher,
     getEntityDisplayNameFn,
     logger,
+    actionErrorContextBuilder,
   }) {
     this.#prerequisiteEvaluationService = prerequisiteEvaluationService;
     this.#targetResolutionService = targetResolutionService;
@@ -66,6 +72,7 @@ export class ActionCandidateProcessor {
     this.#safeEventDispatcher = safeEventDispatcher;
     this.#getEntityDisplayNameFn = getEntityDisplayNameFn;
     this.#logger = logger;
+    this.#actionErrorContextBuilder = actionErrorContextBuilder;
   }
 
   /**
@@ -90,7 +97,12 @@ export class ActionCandidateProcessor {
         trace
       );
     } catch (error) {
-      return this.#handlePrerequisiteError(actionDef, error);
+      return this.#handlePrerequisiteError(
+        actionDef,
+        error,
+        actorEntity.id,
+        trace
+      );
     }
 
     if (!meetsPrereqs) {
@@ -115,7 +127,12 @@ export class ActionCandidateProcessor {
       );
 
     if (resolutionError) {
-      return this.#handleResolutionError(actionDef, resolutionError);
+      return this.#handleResolutionError(
+        actionDef,
+        resolutionError,
+        actorEntity.id,
+        trace
+      );
     }
 
     if (targetContexts.length === 0) {
@@ -131,7 +148,12 @@ export class ActionCandidateProcessor {
     );
 
     // STEP 3: Generate DiscoveredActionInfo for all valid targets
-    return this.#formatActionsForTargets(actionDef, targetContexts);
+    return this.#formatActionsForTargets(
+      actionDef,
+      targetContexts,
+      actorEntity.id,
+      trace
+    );
   }
 
   /**
@@ -175,17 +197,28 @@ export class ActionCandidateProcessor {
    *
    * @param {ActionDefinition} actionDef - The action being processed.
    * @param {Error} error - The encountered error.
+   * @param {string} actorId - The actor entity ID.
+   * @param {TraceContext} [trace] - Optional trace context.
    * @returns {ProcessResult} Result with the captured error.
    * @private
    */
-  #handlePrerequisiteError(actionDef, error) {
+  #handlePrerequisiteError(actionDef, error, actorId, trace) {
+    const errorContext = this.#actionErrorContextBuilder.buildErrorContext({
+      error,
+      actionDef,
+      actorId,
+      phase: ERROR_PHASES.VALIDATION,
+      trace,
+    });
+
     this.#logger.error(
       `Error checking prerequisites for action '${actionDef.id}'.`,
-      error
+      errorContext
     );
+
     return {
       actions: [],
-      errors: [createDiscoveryError(actionDef.id, null, error)],
+      errors: [createActionErrorContext(errorContext)],
       cause: 'prerequisite-error',
     };
   }
@@ -195,17 +228,31 @@ export class ActionCandidateProcessor {
    *
    * @param {ActionDefinition} actionDef - The action being processed.
    * @param {Error} error - The encountered error.
+   * @param {string} actorId - The actor entity ID.
+   * @param {TraceContext} [trace] - Optional trace context.
    * @returns {ProcessResult} Result with the captured error.
    * @private
    */
-  #handleResolutionError(actionDef, error) {
+  #handleResolutionError(actionDef, error, actorId, trace) {
+    const errorContext = this.#actionErrorContextBuilder.buildErrorContext({
+      error,
+      actionDef,
+      actorId,
+      phase: ERROR_PHASES.VALIDATION,
+      trace,
+      additionalContext: {
+        scope: actionDef.scope,
+      },
+    });
+
     this.#logger.error(
       `Error resolving scope for action '${actionDef.id}': ${error.message}`,
-      error
+      errorContext
     );
+
     return {
       actions: [],
-      errors: [createDiscoveryError(actionDef.id, null, error)],
+      errors: [createActionErrorContext(errorContext)],
       cause: 'resolution-error',
     };
   }
@@ -215,10 +262,12 @@ export class ActionCandidateProcessor {
    *
    * @param {ActionDefinition} actionDef - The action definition.
    * @param {ActionTargetContext[]} targetContexts - The target contexts to format.
-   * @returns {{actions: DiscoveredActionInfo[], errors: object[]}} The formatted actions and any errors.
+   * @param {string} actorId - The actor entity ID.
+   * @param {TraceContext} [trace] - Optional trace context.
+   * @returns {{actions: DiscoveredActionInfo[], errors: ActionErrorContext[]}} The formatted actions and any errors.
    * @private
    */
-  #formatActionsForTargets(actionDef, targetContexts) {
+  #formatActionsForTargets(actionDef, targetContexts, actorId, trace) {
     const validActions = [];
     const errors = [];
     // Options are identical for all targets; compute once for reuse
@@ -244,16 +293,23 @@ export class ActionCandidateProcessor {
           params: { targetId: targetContext.entityId },
         });
       } else {
-        errors.push(
-          createDiscoveryError(
-            actionDef.id,
-            targetContext.entityId,
-            formatResult.error,
-            formatResult.details
-          )
-        );
+        const errorContext = this.#actionErrorContextBuilder.buildErrorContext({
+          error: formatResult.error,
+          actionDef,
+          actorId,
+          phase: ERROR_PHASES.VALIDATION,
+          trace,
+          targetId: targetContext.entityId,
+          additionalContext: {
+            formatDetails: formatResult.details,
+          },
+        });
+
+        errors.push(createActionErrorContext(errorContext));
+
         this.#logger.warn(
-          `Failed to format command for action '${actionDef.id}' with target '${targetContext.entityId}'.`
+          `Failed to format command for action '${actionDef.id}' with target '${targetContext.entityId}'.`,
+          errorContext
         );
       }
     }

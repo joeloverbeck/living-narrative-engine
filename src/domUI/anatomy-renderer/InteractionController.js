@@ -78,7 +78,9 @@ class InteractionController {
       this.#handlers.set(eventType, new Set());
     }
     this.#handlers.get(eventType).add(handler);
-    this.#logger.debug(`InteractionController: Registered handler for ${eventType}`);
+    this.#logger.debug(
+      `InteractionController: Registered handler for ${eventType}`
+    );
   }
 
   /**
@@ -120,22 +122,42 @@ class InteractionController {
       this.#boundHandlers.set('touchend', this.#handleTouchEnd.bind(this));
 
       // Attach mouse events
-      element.addEventListener('mousedown', this.#boundHandlers.get('mousedown'));
-      document.addEventListener('mousemove', this.#boundHandlers.get('mousemove'));
+      element.addEventListener(
+        'mousedown',
+        this.#boundHandlers.get('mousedown')
+      );
+      document.addEventListener(
+        'mousemove',
+        this.#boundHandlers.get('mousemove')
+      );
       document.addEventListener('mouseup', this.#boundHandlers.get('mouseup'));
       element.addEventListener('wheel', this.#boundHandlers.get('wheel'));
       element.addEventListener('click', this.#boundHandlers.get('click'));
-      element.addEventListener('mouseover', this.#boundHandlers.get('mouseover'));
+      element.addEventListener(
+        'mouseover',
+        this.#boundHandlers.get('mouseover')
+      );
       element.addEventListener('mouseout', this.#boundHandlers.get('mouseout'));
 
       // Attach touch events
-      element.addEventListener('touchstart', this.#boundHandlers.get('touchstart'), { passive: false });
-      element.addEventListener('touchmove', this.#boundHandlers.get('touchmove'), { passive: false });
+      element.addEventListener(
+        'touchstart',
+        this.#boundHandlers.get('touchstart'),
+        { passive: false }
+      );
+      element.addEventListener(
+        'touchmove',
+        this.#boundHandlers.get('touchmove'),
+        { passive: false }
+      );
       element.addEventListener('touchend', this.#boundHandlers.get('touchend'));
 
       this.#logger.debug('InteractionController: Attached to element');
     } catch (error) {
-      throw AnatomyRenderError.interactionSetupFailed('event attachment', error);
+      throw AnatomyRenderError.interactionSetupFailed(
+        'event attachment',
+        error
+      );
     }
   }
 
@@ -146,18 +168,45 @@ class InteractionController {
     if (!this.#element) return;
 
     // Remove mouse events
-    this.#element.removeEventListener('mousedown', this.#boundHandlers.get('mousedown'));
-    document.removeEventListener('mousemove', this.#boundHandlers.get('mousemove'));
+    this.#element.removeEventListener(
+      'mousedown',
+      this.#boundHandlers.get('mousedown')
+    );
+    document.removeEventListener(
+      'mousemove',
+      this.#boundHandlers.get('mousemove')
+    );
     document.removeEventListener('mouseup', this.#boundHandlers.get('mouseup'));
-    this.#element.removeEventListener('wheel', this.#boundHandlers.get('wheel'));
-    this.#element.removeEventListener('click', this.#boundHandlers.get('click'));
-    this.#element.removeEventListener('mouseover', this.#boundHandlers.get('mouseover'));
-    this.#element.removeEventListener('mouseout', this.#boundHandlers.get('mouseout'));
+    this.#element.removeEventListener(
+      'wheel',
+      this.#boundHandlers.get('wheel')
+    );
+    this.#element.removeEventListener(
+      'click',
+      this.#boundHandlers.get('click')
+    );
+    this.#element.removeEventListener(
+      'mouseover',
+      this.#boundHandlers.get('mouseover')
+    );
+    this.#element.removeEventListener(
+      'mouseout',
+      this.#boundHandlers.get('mouseout')
+    );
 
     // Remove touch events
-    this.#element.removeEventListener('touchstart', this.#boundHandlers.get('touchstart'));
-    this.#element.removeEventListener('touchmove', this.#boundHandlers.get('touchmove'));
-    this.#element.removeEventListener('touchend', this.#boundHandlers.get('touchend'));
+    this.#element.removeEventListener(
+      'touchstart',
+      this.#boundHandlers.get('touchstart')
+    );
+    this.#element.removeEventListener(
+      'touchmove',
+      this.#boundHandlers.get('touchmove')
+    );
+    this.#element.removeEventListener(
+      'touchend',
+      this.#boundHandlers.get('touchend')
+    );
 
     this.#boundHandlers.clear();
     this.#element = null;
@@ -187,7 +236,11 @@ class InteractionController {
     const deltaX = event.clientX - this.#panStart.x;
     const deltaY = event.clientY - this.#panStart.y;
 
-    this.#triggerHandlers('pan', { deltaX, deltaY, position: { x: event.clientX, y: event.clientY } });
+    this.#triggerHandlers('pan', {
+      deltaX,
+      deltaY,
+      position: { x: event.clientX, y: event.clientY },
+    });
 
     this.#panStart = { x: event.clientX, y: event.clientY };
   }
@@ -235,7 +288,10 @@ class InteractionController {
    */
   handleHover(event, isEntering) {
     const target = this.#getEventTarget(event);
-    this.#triggerHandlers(isEntering ? 'hoverenter' : 'hoverleave', { event, target });
+    this.#triggerHandlers(isEntering ? 'hoverenter' : 'hoverleave', {
+      event,
+      target,
+    });
   }
 
   /**
@@ -289,7 +345,8 @@ class InteractionController {
    * @param {MouseEvent} event
    */
   #handleMouseDown(event) {
-    if (event.button === 0) { // Left click
+    if (event.button === 0) {
+      // Left click
       const target = event.target;
       // Don't start pan if clicking on a node
       if (!target.closest('.anatomy-node')) {
@@ -405,7 +462,7 @@ class InteractionController {
   #handlePinchZoom(event) {
     const touch1 = event.touches[0];
     const touch2 = event.touches[1];
-    
+
     const distance = Math.hypot(
       touch2.clientX - touch1.clientX,
       touch2.clientY - touch1.clientY
@@ -415,7 +472,7 @@ class InteractionController {
       const zoomFactor = distance / this.#lastPinchDistance;
       const centerX = (touch1.clientX + touch2.clientX) / 2;
       const centerY = (touch1.clientY + touch2.clientY) / 2;
-      
+
       const rect = this.#element.getBoundingClientRect();
       const x = centerX - rect.left;
       const y = centerY - rect.top;
@@ -439,7 +496,7 @@ class InteractionController {
   #getEventTarget(event) {
     const target = event.target;
     const nodeElement = target.closest('.anatomy-node');
-    
+
     if (nodeElement) {
       return {
         type: 'node',
@@ -479,7 +536,10 @@ class InteractionController {
       try {
         handler(data);
       } catch (error) {
-        this.#logger.error(`InteractionController: Error in ${eventType} handler`, error);
+        this.#logger.error(
+          `InteractionController: Error in ${eventType} handler`,
+          error
+        );
       }
     }
 

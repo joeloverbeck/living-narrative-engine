@@ -19,7 +19,9 @@ export class WindowUserPrompt {
    * @returns {boolean} The user's choice.
    */
   confirm(message) {
-    return typeof window !== 'undefined' ? window.confirm(message) : false;
+    // Check both global.window and window to handle test environments
+    const windowObj = (typeof global !== 'undefined' && global.window) || (typeof window !== 'undefined' && window);
+    return windowObj ? windowObj.confirm(message) : false;
   }
 }
 

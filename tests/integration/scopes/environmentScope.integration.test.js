@@ -30,6 +30,7 @@ import path from 'path';
 import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
 import InMemoryDataRegistry from '../../../src/data/inMemoryDataRegistry.js';
 import { TargetResolutionService } from '../../../src/actions/targetResolutionService.js';
+import { createMockActionErrorContextBuilder } from '../../common/mockFactories/actions.js';
 
 // Import actions
 import followAction from '../../../data/mods/core/actions/follow.action.json';
@@ -147,6 +148,7 @@ describe('Scope Integration Tests', () => {
       safeEventDispatcher,
       jsonLogicEvaluationService: jsonLogicEval,
       dslParser: new DefaultDslParser(),
+      actionErrorContextBuilder: createMockActionErrorContextBuilder(),
     });
 
     // Create the ActionCandidateProcessor
@@ -173,6 +175,7 @@ describe('Scope Integration Tests', () => {
       logger,
       actionCandidateProcessor,
       traceContextFactory: jest.fn(() => ({ addLog: jest.fn(), logs: [] })),
+      actionErrorContextBuilder: createMockActionErrorContextBuilder(),
     });
   });
 
