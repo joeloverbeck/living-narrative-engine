@@ -292,6 +292,42 @@ export class BodyGraphService {
     };
   }
 
+  /**
+   * Gets anatomy data for an entity including recipe ID and root entity ID
+   * 
+   * @param {string} entityId - Entity ID to get anatomy data for
+   * @returns {Promise<{recipeId: string, rootEntityId: string}|null>} Anatomy data or null if not found
+   * @throws {InvalidArgumentError} If entityId is invalid
+   */
+  async getAnatomyData(entityId) {
+    if (!entityId || typeof entityId !== 'string') {
+      throw new InvalidArgumentError(
+        'Entity ID is required and must be a string'
+      );
+    }
+
+    this.#logger.debug(
+      `BodyGraphService.getAnatomyData: Getting anatomy data for entity '${entityId}'`
+    );
+
+    const bodyComponent = await this.#entityManager.getComponentData(
+      entityId,
+      'anatomy:body'
+    );
+
+    if (!bodyComponent) {
+      this.#logger.debug(
+        `BodyGraphService.getAnatomyData: Entity '${entityId}' has no anatomy:body component`
+      );
+      return null;
+    }
+
+    return {
+      recipeId: bodyComponent.recipeId || null,
+      rootEntityId: entityId
+    };
+  }
+
   validateCache() {
     return this.#cacheManager.validateCache(this.#entityManager);
   }

@@ -1,1 +1,947 @@
-
+AnatomyCacheManager: Entity 'a40739a2-6b84-454b-85d5-a910e0f63dd0' anatomy:part data: {"subType":"teeth"}, anatomy:body data: undefined
+consoleLogger.js:187 AnatomyCacheManager: Created node for entity 'a40739a2-6b84-454b-85d5-a910e0f63dd0' with partType: 'teeth'
+consoleLogger.js:187 AnatomyCacheManager: Entity '12bbb824-5a4a-4411-b3b7-d8e4a8f8048a' anatomy:part data: {"subType":"hair"}, anatomy:body data: undefined
+consoleLogger.js:187 AnatomyCacheManager: Created node for entity '12bbb824-5a4a-4411-b3b7-d8e4a8f8048a' with partType: 'hair'
+consoleLogger.js:187 AnatomyCacheManager: Entity '8da5c25d-bea7-41e3-96e6-0565e532f887' anatomy:part data: {"subType":"arm"}, anatomy:body data: undefined
+consoleLogger.js:187 AnatomyCacheManager: Created node for entity '8da5c25d-bea7-41e3-96e6-0565e532f887' with partType: 'arm'
+consoleLogger.js:187 AnatomyCacheManager: Entity '4b5166a3-056f-439b-8544-01106fff935d' anatomy:part data: {"subType":"hand"}, anatomy:body data: undefined
+consoleLogger.js:187 AnatomyCacheManager: Created node for entity '4b5166a3-056f-439b-8544-01106fff935d' with partType: 'hand'
+consoleLogger.js:187 AnatomyCacheManager: Entity '1fe8bfb4-f9e9-4d9c-92d2-37d772d75600' anatomy:part data: {"subType":"arm"}, anatomy:body data: undefined
+consoleLogger.js:187 AnatomyCacheManager: Created node for entity '1fe8bfb4-f9e9-4d9c-92d2-37d772d75600' with partType: 'arm'
+consoleLogger.js:187 AnatomyCacheManager: Entity '98afb225-0334-4a81-a1a1-16941e2c7371' anatomy:part data: {"subType":"hand"}, anatomy:body data: undefined
+consoleLogger.js:187 AnatomyCacheManager: Created node for entity '98afb225-0334-4a81-a1a1-16941e2c7371' with partType: 'hand'
+consoleLogger.js:187 AnatomyCacheManager: Entity 'cfa4a28b-e7af-4188-b62b-598850fac1c5' anatomy:part data: {"subType":"leg"}, anatomy:body data: undefined
+consoleLogger.js:187 AnatomyCacheManager: Created node for entity 'cfa4a28b-e7af-4188-b62b-598850fac1c5' with partType: 'leg'
+consoleLogger.js:187 AnatomyCacheManager: Entity 'cabbdb60-7963-4204-863b-c0ab60e0b6f1' anatomy:part data: {"subType":"foot"}, anatomy:body data: undefined
+consoleLogger.js:187 AnatomyCacheManager: Created node for entity 'cabbdb60-7963-4204-863b-c0ab60e0b6f1' with partType: 'foot'
+consoleLogger.js:187 AnatomyCacheManager: Entity '72091d9b-d0d5-488d-9047-a301198df07d' anatomy:part data: {"subType":"leg"}, anatomy:body data: undefined
+consoleLogger.js:187 AnatomyCacheManager: Created node for entity '72091d9b-d0d5-488d-9047-a301198df07d' with partType: 'leg'
+consoleLogger.js:187 AnatomyCacheManager: Entity '713c637e-a664-4c3c-8324-dc8e6efba5b4' anatomy:part data: {"subType":"foot"}, anatomy:body data: undefined
+consoleLogger.js:187 AnatomyCacheManager: Created node for entity '713c637e-a664-4c3c-8324-dc8e6efba5b4' with partType: 'foot'
+consoleLogger.js:187 AnatomyCacheManager: Entity 'fa80fec1-8946-4d64-9b88-496d1962a69a' anatomy:part data: {"subType":"pubic_hair"}, anatomy:body data: undefined
+consoleLogger.js:187 AnatomyCacheManager: Created node for entity 'fa80fec1-8946-4d64-9b88-496d1962a69a' with partType: 'pubic_hair'
+consoleLogger.js:187 AnatomyCacheManager: Entity 'd1c93f48-2ecb-47ee-ad75-a7ff534b88ae' anatomy:part data: {"subType":"asshole"}, anatomy:body data: undefined
+consoleLogger.js:187 AnatomyCacheManager: Created node for entity 'd1c93f48-2ecb-47ee-ad75-a7ff534b88ae' with partType: 'asshole'
+consoleLogger.js:187 AnatomyCacheManager: Successfully connected actor '1996bcbe-3a18-467b-88e1-981871a7453d' to anatomy root '7ebccb28-8a3f-4f10-8621-151df5562af3'
+consoleLogger.js:151 AnatomyCacheManager: Built cache with 24 nodes
+consoleLogger.js:163 Blueprint slot 'bra' not found
+warn @ consoleLogger.js:163
+resolve @ BlueprintSlotStrategy.js:97
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+resolveClothingSlot @ SlotResolver.js:241
+resolveAttachmentPoints @ clothingInstantiationService.js:369
+validateSlotCompatibility @ clothingSlotValidator.js:82
+#validateClothingSlot @ clothingInstantiationService.js:374
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+#validateClothingSlotAfterInstantiation @ clothingInstantiationService.js:500
+instantiateRecipeClothing @ clothingInstantiationService.js:243
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+generate @ anatomyGenerationWorkflow.js:131
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ anatomyOrchestrator.js:109
+execute @ anatomyUnitOfWork.js:95
+orchestrateGeneration @ anatomyOrchestrator.js:108
+generateAnatomyIfNeeded @ anatomyGenerationService.js:152
+#handleEntityCreated @ anatomyInitializationService.js:101
+(anonymous) @ eventBus.js:144
+dispatch @ eventBus.js:141
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+dispatchEntityCreated @ EntityEventDispatcher.js:65
+createEntityInstance @ entityLifecycleManager.js:274
+createEntityInstance @ EntityCreationManager.js:68
+createEntityInstance @ entityManager.js:331
+createEntityInstance @ entityManagerAdapter.js:38
+_loadEntity @ AnatomyVisualizerUI.js:289
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ AnatomyVisualizerUI.js:253
+handleMouseUp_ @ unknownUnderstand this warning
+consoleLogger.js:187 No strategy could resolve slot 'bra' for entity '1996bcbe-3a18-467b-88e1-981871a7453d'
+consoleLogger.js:187 AnatomyClothingCache: Cache set: validation:1996bcbe-3a18-467b-88e1-981871a7453d:bra:eea370c8-7d22-4b07-9a0b-876d5c7d758b
+consoleLogger.js:187 ClothingInstantiationService: ClothingInstantiationService: Validation failed for clothing 'eea370c8-7d22-4b07-9a0b-876d5c7d758b': Clothing slot 'bra' has no valid attachment points
+consoleLogger.js:187 ClothingInstantiationService: ClothingInstantiationService: Validation failed for 'clothing:underwired_plunge_bra_nude_silk' with errors: ["Clothing slot 'bra' has no valid attachment points"]
+consoleLogger.js:187 ClothingInstantiationService: Instantiating clothing entity 'clothing:nude_thong' with overrides: undefined
+consoleLogger.js:187 LayerResolutionService: Using entity layer: 'underwear'
+consoleLogger.js:163 LayerResolutionService: No allowed layers specified, allowing any layer
+warn @ consoleLogger.js:163
+warn @ loggerUtils.js:95
+validateLayerAllowed @ layerResolutionService.js:77
+resolveAndValidateLayer @ layerResolutionService.js:116
+#instantiateClothing @ clothingInstantiationService.js:567
+instantiateRecipeClothing @ clothingInstantiationService.js:230
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+generate @ anatomyGenerationWorkflow.js:131
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ anatomyOrchestrator.js:109
+execute @ anatomyUnitOfWork.js:95
+orchestrateGeneration @ anatomyOrchestrator.js:108
+generateAnatomyIfNeeded @ anatomyGenerationService.js:152
+#handleEntityCreated @ anatomyInitializationService.js:101
+(anonymous) @ eventBus.js:144
+dispatch @ eventBus.js:141
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+dispatchEntityCreated @ EntityEventDispatcher.js:65
+createEntityInstance @ entityLifecycleManager.js:274
+createEntityInstance @ EntityCreationManager.js:68
+createEntityInstance @ entityManager.js:331
+createEntityInstance @ entityManagerAdapter.js:38
+_loadEntity @ AnatomyVisualizerUI.js:289
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ AnatomyVisualizerUI.js:253
+handleMouseUp_ @ unknownUnderstand this warning
+consoleLogger.js:187 ClothingInstantiationService: Resolved layer for 'clothing:nude_thong': 'underwear'
+consoleLogger.js:187 EntityCreationManager.createEntityInstance: Creating entity with definition 'clothing:nude_thong'
+consoleLogger.js:187 [EntityFactory] Creating entity instance e80a380e-1b8b-4a4f-a527-a4db7bbf9cef from definition clothing:nude_thong.
+consoleLogger.js:187 [EntityConstructionFactory] Constructing entity 'e80a380e-1b8b-4a4f-a527-a4db7bbf9cef' with definition 'clothing:nude_thong'
+consoleLogger.js:187 [EntityConstructionFactory] Default components applied to entity 'e80a380e-1b8b-4a4f-a527-a4db7bbf9cef'
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance 'e80a380e-1b8b-4a4f-a527-a4db7bbf9cef' (def: 'clothing:nude_thong') created.
+consoleLogger.js:187 Indexed component 'clothing:wearable' for entity 'e80a380e-1b8b-4a4f-a527-a4db7bbf9cef'
+consoleLogger.js:187 Indexed component 'core:name' for entity 'e80a380e-1b8b-4a4f-a527-a4db7bbf9cef'
+consoleLogger.js:187 Indexed component 'core:description' for entity 'e80a380e-1b8b-4a4f-a527-a4db7bbf9cef'
+consoleLogger.js:187 Indexed component 'descriptors:color_extended' for entity 'e80a380e-1b8b-4a4f-a527-a4db7bbf9cef'
+consoleLogger.js:187 Indexed component 'descriptors:texture' for entity 'e80a380e-1b8b-4a4f-a527-a4db7bbf9cef'
+consoleLogger.js:187 Entity 'e80a380e-1b8b-4a4f-a527-a4db7bbf9cef' added to repository with 5 components indexed.
+consoleLogger.js:187 Dispatching ENTITY_CREATED event {instanceId: 'e80a380e-1b8b-4a4f-a527-a4db7bbf9cef', definitionId: 'clothing:nude_thong', wasReconstructed: false}
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_created' against schema 'core:entity_created#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:entity_created'.
+consoleLogger.js:187 VED: Dispatching event 'core:entity_created' via EventBus... {instanceId: 'e80a380e-1b8b-4a4f-a527-a4db7bbf9cef', definitionId: 'clothing:nude_thong', wasReconstructed: false, entity: Entity}
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Received payload with entity: Entity {#data: EntityInstanceData}
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity type: object
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity constructor: Entity
+consoleLogger.js:151 Entity created: e80a380e-1b8b-4a4f-a527-a4db7bbf9cef (definition: clothing:nude_thong)
+consoleLogger.js:187 ClothingInstantiationService: ClothingInstantiationService: Starting post-instantiation validation for clothing 'e80a380e-1b8b-4a4f-a527-a4db7bbf9cef' (clothing:nude_thong)
+consoleLogger.js:187 ClothingInstantiationService: ClothingInstantiationService: Validating slot compatibility for clothing 'e80a380e-1b8b-4a4f-a527-a4db7bbf9cef' in slot 'panties' on actor '1996bcbe-3a18-467b-88e1-981871a7453d'
+consoleLogger.js:187 AnatomyClothingCache: Cache hit: available_slots:available_slots:1996bcbe-3a18-467b-88e1-981871a7453d
+consoleLogger.js:187 ClothingSlotValidator: Validating slot 'panties' for entity '1996bcbe-3a18-467b-88e1-981871a7453d' with item 'e80a380e-1b8b-4a4f-a527-a4db7bbf9cef'
+consoleLogger.js:187 AnatomyBlueprintRepository: Returning cached blueprint for recipe 'p_erotica:amaia_castillo_recipe'
+consoleLogger.js:187 VED: Event 'core:entity_created' dispatch successful.
+consoleLogger.js:187 BodyGraphService.getBodyGraph: Getting body graph for entity '1996bcbe-3a18-467b-88e1-981871a7453d'
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:entity_created'.
+consoleLogger.js:163 Blueprint slot 'panties' not found
+warn @ consoleLogger.js:163
+resolve @ BlueprintSlotStrategy.js:97
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+resolveClothingSlot @ SlotResolver.js:241
+resolveAttachmentPoints @ clothingInstantiationService.js:369
+validateSlotCompatibility @ clothingSlotValidator.js:82
+#validateClothingSlot @ clothingInstantiationService.js:374
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+#validateClothingSlotAfterInstantiation @ clothingInstantiationService.js:500
+instantiateRecipeClothing @ clothingInstantiationService.js:243
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+generate @ anatomyGenerationWorkflow.js:131
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ anatomyOrchestrator.js:109
+execute @ anatomyUnitOfWork.js:95
+orchestrateGeneration @ anatomyOrchestrator.js:108
+generateAnatomyIfNeeded @ anatomyGenerationService.js:152
+#handleEntityCreated @ anatomyInitializationService.js:101
+(anonymous) @ eventBus.js:144
+dispatch @ eventBus.js:141
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+dispatchEntityCreated @ EntityEventDispatcher.js:65
+createEntityInstance @ entityLifecycleManager.js:274
+createEntityInstance @ EntityCreationManager.js:68
+createEntityInstance @ entityManager.js:331
+createEntityInstance @ entityManagerAdapter.js:38
+_loadEntity @ AnatomyVisualizerUI.js:289
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ AnatomyVisualizerUI.js:253
+handleMouseUp_ @ unknownUnderstand this warning
+consoleLogger.js:187 No strategy could resolve slot 'panties' for entity '1996bcbe-3a18-467b-88e1-981871a7453d'
+consoleLogger.js:187 AnatomyClothingCache: Cache set: validation:1996bcbe-3a18-467b-88e1-981871a7453d:panties:e80a380e-1b8b-4a4f-a527-a4db7bbf9cef
+consoleLogger.js:187 ClothingInstantiationService: ClothingInstantiationService: Validation failed for clothing 'e80a380e-1b8b-4a4f-a527-a4db7bbf9cef': Clothing slot 'panties' has no valid attachment points
+consoleLogger.js:187 ClothingInstantiationService: ClothingInstantiationService: Validation failed for 'clothing:nude_thong' with errors: ["Clothing slot 'panties' has no valid attachment points"]
+consoleLogger.js:187 ClothingInstantiationService: Instantiating clothing entity 'clothing:black_stretch_silk_bodysuit' with overrides: undefined
+consoleLogger.js:187 LayerResolutionService: Using entity layer: 'base'
+consoleLogger.js:163 LayerResolutionService: No allowed layers specified, allowing any layer
+warn @ consoleLogger.js:163
+warn @ loggerUtils.js:95
+validateLayerAllowed @ layerResolutionService.js:77
+resolveAndValidateLayer @ layerResolutionService.js:116
+#instantiateClothing @ clothingInstantiationService.js:567
+instantiateRecipeClothing @ clothingInstantiationService.js:230
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+generate @ anatomyGenerationWorkflow.js:131
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ anatomyOrchestrator.js:109
+execute @ anatomyUnitOfWork.js:95
+orchestrateGeneration @ anatomyOrchestrator.js:108
+generateAnatomyIfNeeded @ anatomyGenerationService.js:152
+#handleEntityCreated @ anatomyInitializationService.js:101
+(anonymous) @ eventBus.js:144
+dispatch @ eventBus.js:141
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+dispatchEntityCreated @ EntityEventDispatcher.js:65
+createEntityInstance @ entityLifecycleManager.js:274
+createEntityInstance @ EntityCreationManager.js:68
+createEntityInstance @ entityManager.js:331
+createEntityInstance @ entityManagerAdapter.js:38
+_loadEntity @ AnatomyVisualizerUI.js:289
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ AnatomyVisualizerUI.js:253
+handleMouseUp_ @ unknownUnderstand this warning
+consoleLogger.js:187 ClothingInstantiationService: Resolved layer for 'clothing:black_stretch_silk_bodysuit': 'base'
+consoleLogger.js:187 EntityCreationManager.createEntityInstance: Creating entity with definition 'clothing:black_stretch_silk_bodysuit'
+consoleLogger.js:187 [EntityFactory] Creating entity instance a06c25f1-d180-40b6-975b-888338625808 from definition clothing:black_stretch_silk_bodysuit.
+consoleLogger.js:187 [EntityConstructionFactory] Constructing entity 'a06c25f1-d180-40b6-975b-888338625808' with definition 'clothing:black_stretch_silk_bodysuit'
+consoleLogger.js:187 [EntityConstructionFactory] Default components applied to entity 'a06c25f1-d180-40b6-975b-888338625808'
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance 'a06c25f1-d180-40b6-975b-888338625808' (def: 'clothing:black_stretch_silk_bodysuit') created.
+consoleLogger.js:187 Indexed component 'clothing:wearable' for entity 'a06c25f1-d180-40b6-975b-888338625808'
+consoleLogger.js:187 Indexed component 'core:name' for entity 'a06c25f1-d180-40b6-975b-888338625808'
+consoleLogger.js:187 Indexed component 'core:description' for entity 'a06c25f1-d180-40b6-975b-888338625808'
+consoleLogger.js:187 Indexed component 'descriptors:color_basic' for entity 'a06c25f1-d180-40b6-975b-888338625808'
+consoleLogger.js:187 Indexed component 'descriptors:texture' for entity 'a06c25f1-d180-40b6-975b-888338625808'
+consoleLogger.js:187 Entity 'a06c25f1-d180-40b6-975b-888338625808' added to repository with 5 components indexed.
+consoleLogger.js:187 Dispatching ENTITY_CREATED event {instanceId: 'a06c25f1-d180-40b6-975b-888338625808', definitionId: 'clothing:black_stretch_silk_bodysuit', wasReconstructed: false}
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_created' against schema 'core:entity_created#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:entity_created'.
+consoleLogger.js:187 VED: Dispatching event 'core:entity_created' via EventBus... {instanceId: 'a06c25f1-d180-40b6-975b-888338625808', definitionId: 'clothing:black_stretch_silk_bodysuit', wasReconstructed: false, entity: Entity}
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Received payload with entity: Entity {#data: EntityInstanceData}
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity type: object
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity constructor: Entity
+consoleLogger.js:151 Entity created: a06c25f1-d180-40b6-975b-888338625808 (definition: clothing:black_stretch_silk_bodysuit)
+consoleLogger.js:187 ClothingInstantiationService: ClothingInstantiationService: Starting post-instantiation validation for clothing 'a06c25f1-d180-40b6-975b-888338625808' (clothing:black_stretch_silk_bodysuit)
+consoleLogger.js:187 ClothingInstantiationService: ClothingInstantiationService: Validating slot compatibility for clothing 'a06c25f1-d180-40b6-975b-888338625808' in slot 'full_body' on actor '1996bcbe-3a18-467b-88e1-981871a7453d'
+consoleLogger.js:187 AnatomyClothingCache: Cache hit: available_slots:available_slots:1996bcbe-3a18-467b-88e1-981871a7453d
+consoleLogger.js:187 ClothingSlotValidator: Validating slot 'full_body' for entity '1996bcbe-3a18-467b-88e1-981871a7453d' with item 'a06c25f1-d180-40b6-975b-888338625808'
+consoleLogger.js:187 AnatomyBlueprintRepository: Returning cached blueprint for recipe 'p_erotica:amaia_castillo_recipe'
+consoleLogger.js:187 VED: Event 'core:entity_created' dispatch successful.
+consoleLogger.js:187 BodyGraphService.getBodyGraph: Getting body graph for entity '1996bcbe-3a18-467b-88e1-981871a7453d'
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:entity_created'.
+consoleLogger.js:163 Blueprint slot 'full_body' not found
+warn @ consoleLogger.js:163
+resolve @ BlueprintSlotStrategy.js:97
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+resolveClothingSlot @ SlotResolver.js:241
+resolveAttachmentPoints @ clothingInstantiationService.js:369
+validateSlotCompatibility @ clothingSlotValidator.js:82
+#validateClothingSlot @ clothingInstantiationService.js:374
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+#validateClothingSlotAfterInstantiation @ clothingInstantiationService.js:500
+instantiateRecipeClothing @ clothingInstantiationService.js:243
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+generate @ anatomyGenerationWorkflow.js:131
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ anatomyOrchestrator.js:109
+execute @ anatomyUnitOfWork.js:95
+orchestrateGeneration @ anatomyOrchestrator.js:108
+generateAnatomyIfNeeded @ anatomyGenerationService.js:152
+#handleEntityCreated @ anatomyInitializationService.js:101
+(anonymous) @ eventBus.js:144
+dispatch @ eventBus.js:141
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+dispatchEntityCreated @ EntityEventDispatcher.js:65
+createEntityInstance @ entityLifecycleManager.js:274
+createEntityInstance @ EntityCreationManager.js:68
+createEntityInstance @ entityManager.js:331
+createEntityInstance @ entityManagerAdapter.js:38
+_loadEntity @ AnatomyVisualizerUI.js:289
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ AnatomyVisualizerUI.js:253
+handleMouseUp_ @ unknownUnderstand this warning
+consoleLogger.js:187 No strategy could resolve slot 'full_body' for entity '1996bcbe-3a18-467b-88e1-981871a7453d'
+consoleLogger.js:187 AnatomyClothingCache: Cache set: validation:1996bcbe-3a18-467b-88e1-981871a7453d:full_body:a06c25f1-d180-40b6-975b-888338625808
+consoleLogger.js:187 ClothingInstantiationService: ClothingInstantiationService: Validation failed for clothing 'a06c25f1-d180-40b6-975b-888338625808': Clothing slot 'full_body' has no valid attachment points
+consoleLogger.js:187 ClothingInstantiationService: ClothingInstantiationService: Validation failed for 'clothing:black_stretch_silk_bodysuit' with errors: ["Clothing slot 'full_body' has no valid attachment points"]
+consoleLogger.js:187 ClothingInstantiationService: Instantiating clothing entity 'clothing:white_structured_linen_blazer' with overrides: undefined
+consoleLogger.js:187 LayerResolutionService: Using entity layer: 'outer'
+consoleLogger.js:163 LayerResolutionService: No allowed layers specified, allowing any layer
+warn @ consoleLogger.js:163
+warn @ loggerUtils.js:95
+validateLayerAllowed @ layerResolutionService.js:77
+resolveAndValidateLayer @ layerResolutionService.js:116
+#instantiateClothing @ clothingInstantiationService.js:567
+instantiateRecipeClothing @ clothingInstantiationService.js:230
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+generate @ anatomyGenerationWorkflow.js:131
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ anatomyOrchestrator.js:109
+execute @ anatomyUnitOfWork.js:95
+orchestrateGeneration @ anatomyOrchestrator.js:108
+generateAnatomyIfNeeded @ anatomyGenerationService.js:152
+#handleEntityCreated @ anatomyInitializationService.js:101
+(anonymous) @ eventBus.js:144
+dispatch @ eventBus.js:141
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+dispatchEntityCreated @ EntityEventDispatcher.js:65
+createEntityInstance @ entityLifecycleManager.js:274
+createEntityInstance @ EntityCreationManager.js:68
+createEntityInstance @ entityManager.js:331
+createEntityInstance @ entityManagerAdapter.js:38
+_loadEntity @ AnatomyVisualizerUI.js:289
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ AnatomyVisualizerUI.js:253
+handleMouseUp_ @ unknownUnderstand this warning
+consoleLogger.js:187 ClothingInstantiationService: Resolved layer for 'clothing:white_structured_linen_blazer': 'outer'
+consoleLogger.js:187 EntityCreationManager.createEntityInstance: Creating entity with definition 'clothing:white_structured_linen_blazer'
+consoleLogger.js:187 [EntityFactory] Creating entity instance 6f486f07-6dde-4f8a-8cb6-c66daa1158ee from definition clothing:white_structured_linen_blazer.
+consoleLogger.js:187 [EntityConstructionFactory] Constructing entity '6f486f07-6dde-4f8a-8cb6-c66daa1158ee' with definition 'clothing:white_structured_linen_blazer'
+consoleLogger.js:187 [EntityConstructionFactory] Default components applied to entity '6f486f07-6dde-4f8a-8cb6-c66daa1158ee'
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '6f486f07-6dde-4f8a-8cb6-c66daa1158ee' (def: 'clothing:white_structured_linen_blazer') created.
+consoleLogger.js:187 Indexed component 'clothing:wearable' for entity '6f486f07-6dde-4f8a-8cb6-c66daa1158ee'
+consoleLogger.js:187 Indexed component 'core:name' for entity '6f486f07-6dde-4f8a-8cb6-c66daa1158ee'
+consoleLogger.js:187 Indexed component 'core:description' for entity '6f486f07-6dde-4f8a-8cb6-c66daa1158ee'
+consoleLogger.js:187 Indexed component 'descriptors:color_basic' for entity '6f486f07-6dde-4f8a-8cb6-c66daa1158ee'
+consoleLogger.js:187 Indexed component 'descriptors:texture' for entity '6f486f07-6dde-4f8a-8cb6-c66daa1158ee'
+consoleLogger.js:187 Entity '6f486f07-6dde-4f8a-8cb6-c66daa1158ee' added to repository with 5 components indexed.
+consoleLogger.js:187 Dispatching ENTITY_CREATED event {instanceId: '6f486f07-6dde-4f8a-8cb6-c66daa1158ee', definitionId: 'clothing:white_structured_linen_blazer', wasReconstructed: false}
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_created' against schema 'core:entity_created#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:entity_created'.
+consoleLogger.js:187 VED: Dispatching event 'core:entity_created' via EventBus... {instanceId: '6f486f07-6dde-4f8a-8cb6-c66daa1158ee', definitionId: 'clothing:white_structured_linen_blazer', wasReconstructed: false, entity: Entity}
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Received payload with entity: Entity {#data: EntityInstanceData}
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity type: object
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity constructor: Entity
+consoleLogger.js:151 Entity created: 6f486f07-6dde-4f8a-8cb6-c66daa1158ee (definition: clothing:white_structured_linen_blazer)
+consoleLogger.js:187 ClothingInstantiationService: ClothingInstantiationService: Starting post-instantiation validation for clothing '6f486f07-6dde-4f8a-8cb6-c66daa1158ee' (clothing:white_structured_linen_blazer)
+consoleLogger.js:187 ClothingInstantiationService: ClothingInstantiationService: Validating slot compatibility for clothing '6f486f07-6dde-4f8a-8cb6-c66daa1158ee' in slot 'torso_upper' on actor '1996bcbe-3a18-467b-88e1-981871a7453d'
+consoleLogger.js:187 AnatomyClothingCache: Cache hit: available_slots:available_slots:1996bcbe-3a18-467b-88e1-981871a7453d
+consoleLogger.js:187 ClothingSlotValidator: Validating slot 'torso_upper' for entity '1996bcbe-3a18-467b-88e1-981871a7453d' with item '6f486f07-6dde-4f8a-8cb6-c66daa1158ee'
+consoleLogger.js:187 AnatomyBlueprintRepository: Returning cached blueprint for recipe 'p_erotica:amaia_castillo_recipe'
+consoleLogger.js:187 VED: Event 'core:entity_created' dispatch successful.
+consoleLogger.js:187 BodyGraphService.getBodyGraph: Getting body graph for entity '1996bcbe-3a18-467b-88e1-981871a7453d'
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:entity_created'.
+consoleLogger.js:163 Blueprint slot 'torso_upper' not found
+warn @ consoleLogger.js:163
+resolve @ BlueprintSlotStrategy.js:97
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+resolveClothingSlot @ SlotResolver.js:241
+resolveAttachmentPoints @ clothingInstantiationService.js:369
+validateSlotCompatibility @ clothingSlotValidator.js:82
+#validateClothingSlot @ clothingInstantiationService.js:374
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+#validateClothingSlotAfterInstantiation @ clothingInstantiationService.js:500
+instantiateRecipeClothing @ clothingInstantiationService.js:243
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+generate @ anatomyGenerationWorkflow.js:131
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ anatomyOrchestrator.js:109
+execute @ anatomyUnitOfWork.js:95
+orchestrateGeneration @ anatomyOrchestrator.js:108
+generateAnatomyIfNeeded @ anatomyGenerationService.js:152
+#handleEntityCreated @ anatomyInitializationService.js:101
+(anonymous) @ eventBus.js:144
+dispatch @ eventBus.js:141
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+dispatchEntityCreated @ EntityEventDispatcher.js:65
+createEntityInstance @ entityLifecycleManager.js:274
+createEntityInstance @ EntityCreationManager.js:68
+createEntityInstance @ entityManager.js:331
+createEntityInstance @ entityManagerAdapter.js:38
+_loadEntity @ AnatomyVisualizerUI.js:289
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ AnatomyVisualizerUI.js:253
+handleMouseUp_ @ unknownUnderstand this warning
+consoleLogger.js:187 No strategy could resolve slot 'torso_upper' for entity '1996bcbe-3a18-467b-88e1-981871a7453d'
+consoleLogger.js:187 AnatomyClothingCache: Cache set: validation:1996bcbe-3a18-467b-88e1-981871a7453d:torso_upper:6f486f07-6dde-4f8a-8cb6-c66daa1158ee
+consoleLogger.js:187 ClothingInstantiationService: ClothingInstantiationService: Validation failed for clothing '6f486f07-6dde-4f8a-8cb6-c66daa1158ee': Clothing slot 'torso_upper' has no valid attachment points
+consoleLogger.js:187 ClothingInstantiationService: ClothingInstantiationService: Validation failed for 'clothing:white_structured_linen_blazer' with errors: ["Clothing slot 'torso_upper' has no valid attachment points"]
+consoleLogger.js:187 ClothingInstantiationService: Instantiating clothing entity 'clothing:graphite_wool_wide_leg_trousers' with overrides: undefined
+consoleLogger.js:187 LayerResolutionService: Using entity layer: 'base'
+consoleLogger.js:163 LayerResolutionService: No allowed layers specified, allowing any layer
+warn @ consoleLogger.js:163
+warn @ loggerUtils.js:95
+validateLayerAllowed @ layerResolutionService.js:77
+resolveAndValidateLayer @ layerResolutionService.js:116
+#instantiateClothing @ clothingInstantiationService.js:567
+instantiateRecipeClothing @ clothingInstantiationService.js:230
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+generate @ anatomyGenerationWorkflow.js:131
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ anatomyOrchestrator.js:109
+execute @ anatomyUnitOfWork.js:95
+orchestrateGeneration @ anatomyOrchestrator.js:108
+generateAnatomyIfNeeded @ anatomyGenerationService.js:152
+#handleEntityCreated @ anatomyInitializationService.js:101
+(anonymous) @ eventBus.js:144
+dispatch @ eventBus.js:141
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+dispatchEntityCreated @ EntityEventDispatcher.js:65
+createEntityInstance @ entityLifecycleManager.js:274
+createEntityInstance @ EntityCreationManager.js:68
+createEntityInstance @ entityManager.js:331
+createEntityInstance @ entityManagerAdapter.js:38
+_loadEntity @ AnatomyVisualizerUI.js:289
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ AnatomyVisualizerUI.js:253
+handleMouseUp_ @ unknownUnderstand this warning
+consoleLogger.js:187 ClothingInstantiationService: Resolved layer for 'clothing:graphite_wool_wide_leg_trousers': 'base'
+consoleLogger.js:187 EntityCreationManager.createEntityInstance: Creating entity with definition 'clothing:graphite_wool_wide_leg_trousers'
+consoleLogger.js:187 [EntityFactory] Creating entity instance 73798b64-7444-4c74-a9c4-0903eaa84355 from definition clothing:graphite_wool_wide_leg_trousers.
+consoleLogger.js:187 [EntityConstructionFactory] Constructing entity '73798b64-7444-4c74-a9c4-0903eaa84355' with definition 'clothing:graphite_wool_wide_leg_trousers'
+consoleLogger.js:187 [EntityConstructionFactory] Default components applied to entity '73798b64-7444-4c74-a9c4-0903eaa84355'
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '73798b64-7444-4c74-a9c4-0903eaa84355' (def: 'clothing:graphite_wool_wide_leg_trousers') created.
+consoleLogger.js:187 Indexed component 'clothing:wearable' for entity '73798b64-7444-4c74-a9c4-0903eaa84355'
+consoleLogger.js:187 Indexed component 'core:name' for entity '73798b64-7444-4c74-a9c4-0903eaa84355'
+consoleLogger.js:187 Indexed component 'core:description' for entity '73798b64-7444-4c74-a9c4-0903eaa84355'
+consoleLogger.js:187 Indexed component 'descriptors:color_basic' for entity '73798b64-7444-4c74-a9c4-0903eaa84355'
+consoleLogger.js:187 Indexed component 'descriptors:texture' for entity '73798b64-7444-4c74-a9c4-0903eaa84355'
+consoleLogger.js:187 Entity '73798b64-7444-4c74-a9c4-0903eaa84355' added to repository with 5 components indexed.
+consoleLogger.js:187 Dispatching ENTITY_CREATED event {instanceId: '73798b64-7444-4c74-a9c4-0903eaa84355', definitionId: 'clothing:graphite_wool_wide_leg_trousers', wasReconstructed: false}
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_created' against schema 'core:entity_created#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:entity_created'.
+consoleLogger.js:187 VED: Dispatching event 'core:entity_created' via EventBus... {instanceId: '73798b64-7444-4c74-a9c4-0903eaa84355', definitionId: 'clothing:graphite_wool_wide_leg_trousers', wasReconstructed: false, entity: Entity}
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Received payload with entity: Entity {#data: EntityInstanceData}
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity type: object
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity constructor: Entity
+consoleLogger.js:151 Entity created: 73798b64-7444-4c74-a9c4-0903eaa84355 (definition: clothing:graphite_wool_wide_leg_trousers)
+consoleLogger.js:187 ClothingInstantiationService: ClothingInstantiationService: Starting post-instantiation validation for clothing '73798b64-7444-4c74-a9c4-0903eaa84355' (clothing:graphite_wool_wide_leg_trousers)
+consoleLogger.js:187 ClothingInstantiationService: ClothingInstantiationService: Validating slot compatibility for clothing '73798b64-7444-4c74-a9c4-0903eaa84355' in slot 'legs' on actor '1996bcbe-3a18-467b-88e1-981871a7453d'
+consoleLogger.js:187 AnatomyClothingCache: Cache hit: available_slots:available_slots:1996bcbe-3a18-467b-88e1-981871a7453d
+consoleLogger.js:187 ClothingSlotValidator: Validating slot 'legs' for entity '1996bcbe-3a18-467b-88e1-981871a7453d' with item '73798b64-7444-4c74-a9c4-0903eaa84355'
+consoleLogger.js:187 AnatomyBlueprintRepository: Returning cached blueprint for recipe 'p_erotica:amaia_castillo_recipe'
+consoleLogger.js:187 VED: Event 'core:entity_created' dispatch successful.
+consoleLogger.js:187 BodyGraphService.getBodyGraph: Getting body graph for entity '1996bcbe-3a18-467b-88e1-981871a7453d'
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:entity_created'.
+consoleLogger.js:163 Blueprint slot 'legs' not found
+warn @ consoleLogger.js:163
+resolve @ BlueprintSlotStrategy.js:97
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+resolveClothingSlot @ SlotResolver.js:241
+resolveAttachmentPoints @ clothingInstantiationService.js:369
+validateSlotCompatibility @ clothingSlotValidator.js:82
+#validateClothingSlot @ clothingInstantiationService.js:374
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+#validateClothingSlotAfterInstantiation @ clothingInstantiationService.js:500
+instantiateRecipeClothing @ clothingInstantiationService.js:243
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+generate @ anatomyGenerationWorkflow.js:131
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ anatomyOrchestrator.js:109
+execute @ anatomyUnitOfWork.js:95
+orchestrateGeneration @ anatomyOrchestrator.js:108
+generateAnatomyIfNeeded @ anatomyGenerationService.js:152
+#handleEntityCreated @ anatomyInitializationService.js:101
+(anonymous) @ eventBus.js:144
+dispatch @ eventBus.js:141
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+dispatchEntityCreated @ EntityEventDispatcher.js:65
+createEntityInstance @ entityLifecycleManager.js:274
+createEntityInstance @ EntityCreationManager.js:68
+createEntityInstance @ entityManager.js:331
+createEntityInstance @ entityManagerAdapter.js:38
+_loadEntity @ AnatomyVisualizerUI.js:289
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ AnatomyVisualizerUI.js:253
+handleMouseUp_ @ unknownUnderstand this warning
+consoleLogger.js:187 No strategy could resolve slot 'legs' for entity '1996bcbe-3a18-467b-88e1-981871a7453d'
+consoleLogger.js:187 AnatomyClothingCache: Cache set: validation:1996bcbe-3a18-467b-88e1-981871a7453d:legs:73798b64-7444-4c74-a9c4-0903eaa84355
+consoleLogger.js:187 ClothingInstantiationService: ClothingInstantiationService: Validation failed for clothing '73798b64-7444-4c74-a9c4-0903eaa84355': Clothing slot 'legs' has no valid attachment points
+consoleLogger.js:187 ClothingInstantiationService: ClothingInstantiationService: Validation failed for 'clothing:graphite_wool_wide_leg_trousers' with errors: ["Clothing slot 'legs' has no valid attachment points"]
+consoleLogger.js:187 ClothingInstantiationService: Instantiating clothing entity 'clothing:black_calfskin_belt' with overrides: undefined
+consoleLogger.js:187 LayerResolutionService: Using entity layer: 'accessories'
+consoleLogger.js:163 LayerResolutionService: No allowed layers specified, allowing any layer
+warn @ consoleLogger.js:163
+warn @ loggerUtils.js:95
+validateLayerAllowed @ layerResolutionService.js:77
+resolveAndValidateLayer @ layerResolutionService.js:116
+#instantiateClothing @ clothingInstantiationService.js:567
+instantiateRecipeClothing @ clothingInstantiationService.js:230
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+generate @ anatomyGenerationWorkflow.js:131
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ anatomyOrchestrator.js:109
+execute @ anatomyUnitOfWork.js:95
+orchestrateGeneration @ anatomyOrchestrator.js:108
+generateAnatomyIfNeeded @ anatomyGenerationService.js:152
+#handleEntityCreated @ anatomyInitializationService.js:101
+(anonymous) @ eventBus.js:144
+dispatch @ eventBus.js:141
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+dispatchEntityCreated @ EntityEventDispatcher.js:65
+createEntityInstance @ entityLifecycleManager.js:274
+createEntityInstance @ EntityCreationManager.js:68
+createEntityInstance @ entityManager.js:331
+createEntityInstance @ entityManagerAdapter.js:38
+_loadEntity @ AnatomyVisualizerUI.js:289
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ AnatomyVisualizerUI.js:253
+handleMouseUp_ @ unknownUnderstand this warning
+consoleLogger.js:187 ClothingInstantiationService: Resolved layer for 'clothing:black_calfskin_belt': 'accessories'
+consoleLogger.js:187 EntityCreationManager.createEntityInstance: Creating entity with definition 'clothing:black_calfskin_belt'
+consoleLogger.js:187 [EntityFactory] Creating entity instance adb723bf-8e5f-45da-a541-951d7b022982 from definition clothing:black_calfskin_belt.
+consoleLogger.js:187 [EntityConstructionFactory] Constructing entity 'adb723bf-8e5f-45da-a541-951d7b022982' with definition 'clothing:black_calfskin_belt'
+consoleLogger.js:187 [EntityConstructionFactory] Default components applied to entity 'adb723bf-8e5f-45da-a541-951d7b022982'
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance 'adb723bf-8e5f-45da-a541-951d7b022982' (def: 'clothing:black_calfskin_belt') created.
+consoleLogger.js:187 Indexed component 'clothing:wearable' for entity 'adb723bf-8e5f-45da-a541-951d7b022982'
+consoleLogger.js:187 Indexed component 'core:name' for entity 'adb723bf-8e5f-45da-a541-951d7b022982'
+consoleLogger.js:187 Indexed component 'core:description' for entity 'adb723bf-8e5f-45da-a541-951d7b022982'
+consoleLogger.js:187 Indexed component 'descriptors:color_basic' for entity 'adb723bf-8e5f-45da-a541-951d7b022982'
+consoleLogger.js:187 Indexed component 'descriptors:texture' for entity 'adb723bf-8e5f-45da-a541-951d7b022982'
+consoleLogger.js:187 Entity 'adb723bf-8e5f-45da-a541-951d7b022982' added to repository with 5 components indexed.
+consoleLogger.js:187 Dispatching ENTITY_CREATED event {instanceId: 'adb723bf-8e5f-45da-a541-951d7b022982', definitionId: 'clothing:black_calfskin_belt', wasReconstructed: false}
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_created' against schema 'core:entity_created#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:entity_created'.
+consoleLogger.js:187 VED: Dispatching event 'core:entity_created' via EventBus... {instanceId: 'adb723bf-8e5f-45da-a541-951d7b022982', definitionId: 'clothing:black_calfskin_belt', wasReconstructed: false, entity: Entity}
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Received payload with entity: Entity {#data: EntityInstanceData}
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity type: object
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity constructor: Entity
+consoleLogger.js:151 Entity created: adb723bf-8e5f-45da-a541-951d7b022982 (definition: clothing:black_calfskin_belt)
+consoleLogger.js:187 ClothingInstantiationService: ClothingInstantiationService: Starting post-instantiation validation for clothing 'adb723bf-8e5f-45da-a541-951d7b022982' (clothing:black_calfskin_belt)
+consoleLogger.js:187 ClothingInstantiationService: ClothingInstantiationService: Validating slot compatibility for clothing 'adb723bf-8e5f-45da-a541-951d7b022982' in slot 'torso_lower' on actor '1996bcbe-3a18-467b-88e1-981871a7453d'
+consoleLogger.js:187 AnatomyClothingCache: Cache hit: available_slots:available_slots:1996bcbe-3a18-467b-88e1-981871a7453d
+consoleLogger.js:187 ClothingSlotValidator: Validating slot 'torso_lower' for entity '1996bcbe-3a18-467b-88e1-981871a7453d' with item 'adb723bf-8e5f-45da-a541-951d7b022982'
+consoleLogger.js:187 AnatomyBlueprintRepository: Returning cached blueprint for recipe 'p_erotica:amaia_castillo_recipe'
+consoleLogger.js:187 VED: Event 'core:entity_created' dispatch successful.
+consoleLogger.js:187 BodyGraphService.getBodyGraph: Getting body graph for entity '1996bcbe-3a18-467b-88e1-981871a7453d'
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:entity_created'.
+consoleLogger.js:163 Blueprint slot 'torso_lower' not found
+warn @ consoleLogger.js:163
+resolve @ BlueprintSlotStrategy.js:97
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+resolveClothingSlot @ SlotResolver.js:241
+resolveAttachmentPoints @ clothingInstantiationService.js:369
+validateSlotCompatibility @ clothingSlotValidator.js:82
+#validateClothingSlot @ clothingInstantiationService.js:374
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+#validateClothingSlotAfterInstantiation @ clothingInstantiationService.js:500
+instantiateRecipeClothing @ clothingInstantiationService.js:243
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+generate @ anatomyGenerationWorkflow.js:131
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ anatomyOrchestrator.js:109
+execute @ anatomyUnitOfWork.js:95
+orchestrateGeneration @ anatomyOrchestrator.js:108
+generateAnatomyIfNeeded @ anatomyGenerationService.js:152
+#handleEntityCreated @ anatomyInitializationService.js:101
+(anonymous) @ eventBus.js:144
+dispatch @ eventBus.js:141
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+dispatchEntityCreated @ EntityEventDispatcher.js:65
+createEntityInstance @ entityLifecycleManager.js:274
+createEntityInstance @ EntityCreationManager.js:68
+createEntityInstance @ entityManager.js:331
+createEntityInstance @ entityManagerAdapter.js:38
+_loadEntity @ AnatomyVisualizerUI.js:289
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ AnatomyVisualizerUI.js:253
+handleMouseUp_ @ unknownUnderstand this warning
+consoleLogger.js:187 No strategy could resolve slot 'torso_lower' for entity '1996bcbe-3a18-467b-88e1-981871a7453d'
+consoleLogger.js:187 AnatomyClothingCache: Cache set: validation:1996bcbe-3a18-467b-88e1-981871a7453d:torso_lower:adb723bf-8e5f-45da-a541-951d7b022982
+consoleLogger.js:187 ClothingInstantiationService: ClothingInstantiationService: Validation failed for clothing 'adb723bf-8e5f-45da-a541-951d7b022982': Clothing slot 'torso_lower' has no valid attachment points
+consoleLogger.js:187 ClothingInstantiationService: ClothingInstantiationService: Validation failed for 'clothing:black_calfskin_belt' with errors: ["Clothing slot 'torso_lower' has no valid attachment points"]
+consoleLogger.js:187 ClothingInstantiationService: Instantiating clothing entity 'clothing:leather_stiletto_pumps' with overrides: undefined
+consoleLogger.js:187 LayerResolutionService: Using entity layer: 'base'
+consoleLogger.js:163 LayerResolutionService: No allowed layers specified, allowing any layer
+warn @ consoleLogger.js:163
+warn @ loggerUtils.js:95
+validateLayerAllowed @ layerResolutionService.js:77
+resolveAndValidateLayer @ layerResolutionService.js:116
+#instantiateClothing @ clothingInstantiationService.js:567
+instantiateRecipeClothing @ clothingInstantiationService.js:230
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+generate @ anatomyGenerationWorkflow.js:131
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ anatomyOrchestrator.js:109
+execute @ anatomyUnitOfWork.js:95
+orchestrateGeneration @ anatomyOrchestrator.js:108
+generateAnatomyIfNeeded @ anatomyGenerationService.js:152
+#handleEntityCreated @ anatomyInitializationService.js:101
+(anonymous) @ eventBus.js:144
+dispatch @ eventBus.js:141
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+dispatchEntityCreated @ EntityEventDispatcher.js:65
+createEntityInstance @ entityLifecycleManager.js:274
+createEntityInstance @ EntityCreationManager.js:68
+createEntityInstance @ entityManager.js:331
+createEntityInstance @ entityManagerAdapter.js:38
+_loadEntity @ AnatomyVisualizerUI.js:289
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ AnatomyVisualizerUI.js:253
+handleMouseUp_ @ unknownUnderstand this warning
+consoleLogger.js:187 ClothingInstantiationService: Resolved layer for 'clothing:leather_stiletto_pumps': 'base'
+consoleLogger.js:187 EntityCreationManager.createEntityInstance: Creating entity with definition 'clothing:leather_stiletto_pumps'
+consoleLogger.js:187 [EntityFactory] Creating entity instance 8cb8c429-cf65-4c8e-9df4-7e8be7e944b3 from definition clothing:leather_stiletto_pumps.
+consoleLogger.js:187 [EntityConstructionFactory] Constructing entity '8cb8c429-cf65-4c8e-9df4-7e8be7e944b3' with definition 'clothing:leather_stiletto_pumps'
+consoleLogger.js:187 [EntityConstructionFactory] Default components applied to entity '8cb8c429-cf65-4c8e-9df4-7e8be7e944b3'
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '8cb8c429-cf65-4c8e-9df4-7e8be7e944b3' (def: 'clothing:leather_stiletto_pumps') created.
+consoleLogger.js:187 Indexed component 'clothing:wearable' for entity '8cb8c429-cf65-4c8e-9df4-7e8be7e944b3'
+consoleLogger.js:187 Indexed component 'core:name' for entity '8cb8c429-cf65-4c8e-9df4-7e8be7e944b3'
+consoleLogger.js:187 Indexed component 'core:description' for entity '8cb8c429-cf65-4c8e-9df4-7e8be7e944b3'
+consoleLogger.js:187 Indexed component 'descriptors:color_basic' for entity '8cb8c429-cf65-4c8e-9df4-7e8be7e944b3'
+consoleLogger.js:187 Indexed component 'descriptors:texture' for entity '8cb8c429-cf65-4c8e-9df4-7e8be7e944b3'
+consoleLogger.js:187 Entity '8cb8c429-cf65-4c8e-9df4-7e8be7e944b3' added to repository with 5 components indexed.
+consoleLogger.js:187 Dispatching ENTITY_CREATED event {instanceId: '8cb8c429-cf65-4c8e-9df4-7e8be7e944b3', definitionId: 'clothing:leather_stiletto_pumps', wasReconstructed: false}
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_created' against schema 'core:entity_created#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:entity_created'.
+consoleLogger.js:187 VED: Dispatching event 'core:entity_created' via EventBus... {instanceId: '8cb8c429-cf65-4c8e-9df4-7e8be7e944b3', definitionId: 'clothing:leather_stiletto_pumps', wasReconstructed: false, entity: Entity}
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Received payload with entity: Entity {#data: EntityInstanceData}
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity type: object
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity constructor: Entity
+consoleLogger.js:151 Entity created: 8cb8c429-cf65-4c8e-9df4-7e8be7e944b3 (definition: clothing:leather_stiletto_pumps)
+consoleLogger.js:187 ClothingInstantiationService: ClothingInstantiationService: Starting post-instantiation validation for clothing '8cb8c429-cf65-4c8e-9df4-7e8be7e944b3' (clothing:leather_stiletto_pumps)
+consoleLogger.js:187 ClothingInstantiationService: ClothingInstantiationService: Validating slot compatibility for clothing '8cb8c429-cf65-4c8e-9df4-7e8be7e944b3' in slot 'feet' on actor '1996bcbe-3a18-467b-88e1-981871a7453d'
+consoleLogger.js:187 AnatomyClothingCache: Cache hit: available_slots:available_slots:1996bcbe-3a18-467b-88e1-981871a7453d
+consoleLogger.js:187 ClothingSlotValidator: Validating slot 'feet' for entity '1996bcbe-3a18-467b-88e1-981871a7453d' with item '8cb8c429-cf65-4c8e-9df4-7e8be7e944b3'
+consoleLogger.js:187 AnatomyBlueprintRepository: Returning cached blueprint for recipe 'p_erotica:amaia_castillo_recipe'
+consoleLogger.js:187 VED: Event 'core:entity_created' dispatch successful.
+consoleLogger.js:187 BodyGraphService.getBodyGraph: Getting body graph for entity '1996bcbe-3a18-467b-88e1-981871a7453d'
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:entity_created'.
+consoleLogger.js:163 Blueprint slot 'feet' not found
+warn @ consoleLogger.js:163
+resolve @ BlueprintSlotStrategy.js:97
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+resolveClothingSlot @ SlotResolver.js:241
+resolveAttachmentPoints @ clothingInstantiationService.js:369
+validateSlotCompatibility @ clothingSlotValidator.js:82
+#validateClothingSlot @ clothingInstantiationService.js:374
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+#validateClothingSlotAfterInstantiation @ clothingInstantiationService.js:500
+instantiateRecipeClothing @ clothingInstantiationService.js:243
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+generate @ anatomyGenerationWorkflow.js:131
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ anatomyOrchestrator.js:109
+execute @ anatomyUnitOfWork.js:95
+orchestrateGeneration @ anatomyOrchestrator.js:108
+generateAnatomyIfNeeded @ anatomyGenerationService.js:152
+#handleEntityCreated @ anatomyInitializationService.js:101
+(anonymous) @ eventBus.js:144
+dispatch @ eventBus.js:141
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+dispatchEntityCreated @ EntityEventDispatcher.js:65
+createEntityInstance @ entityLifecycleManager.js:274
+createEntityInstance @ EntityCreationManager.js:68
+createEntityInstance @ entityManager.js:331
+createEntityInstance @ entityManagerAdapter.js:38
+_loadEntity @ AnatomyVisualizerUI.js:289
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ AnatomyVisualizerUI.js:253
+handleMouseUp_ @ unknownUnderstand this warning
+consoleLogger.js:187 No strategy could resolve slot 'feet' for entity '1996bcbe-3a18-467b-88e1-981871a7453d'
+consoleLogger.js:187 AnatomyClothingCache: Cache set: validation:1996bcbe-3a18-467b-88e1-981871a7453d:feet:8cb8c429-cf65-4c8e-9df4-7e8be7e944b3
+consoleLogger.js:187 ClothingInstantiationService: ClothingInstantiationService: Validation failed for clothing '8cb8c429-cf65-4c8e-9df4-7e8be7e944b3': Clothing slot 'feet' has no valid attachment points
+consoleLogger.js:187 ClothingInstantiationService: ClothingInstantiationService: Validation failed for 'clothing:leather_stiletto_pumps' with errors: ["Clothing slot 'feet' has no valid attachment points"]
+consoleLogger.js:187 VED: Validating payload for event 'clothing:instantiation_completed' against schema 'clothing:instantiation_completed#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'clothing:instantiation_completed'.
+consoleLogger.js:187 VED: Dispatching event 'clothing:instantiation_completed' via EventBus... {actorId: '1996bcbe-3a18-467b-88e1-981871a7453d', result: {…}}actorId: "1996bcbe-3a18-467b-88e1-981871a7453d"result: equipped: []errors: Array(7)0: "Clothing slot 'bra' has no valid attachment points"1: "Clothing slot 'panties' has no valid attachment points"2: "Clothing slot 'full_body' has no valid attachment points"3: "Clothing slot 'torso_upper' has no valid attachment points"4: "Clothing slot 'legs' has no valid attachment points"5: "Clothing slot 'torso_lower' has no valid attachment points"6: "Clothing slot 'feet' has no valid attachment points"length: 7[[Prototype]]: Array(0)instantiated: [][[Prototype]]: Object[[Prototype]]: Object
+consoleLogger.js:187 VED: Validating payload for event 'core:system_error_occurred' against schema 'core:system_error_occurred#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:system_error_occurred'.
+consoleLogger.js:187 VED: Dispatching event 'core:system_error_occurred' via EventBus... {message: 'Clothing instantiation failed for 7 items', details: {…}}details: raw: "{\"actorId\":\"1996bcbe-3a18-467b-88e1-981871a7453d\",\"totalItems\":7,\"successfullyInstantiated\":0,\"successfullyEquipped\":0,\"errors\":[\"Clothing slot 'bra' has no valid attachment points\",\"Clothing slot 'panties' has no valid attachment points\",\"Clothing slot 'full_body' has no valid attachment points\",\"Clothing slot 'torso_upper' has no valid attachment points\",\"Clothing slot 'legs' has no valid attachment points\",\"Clothing slot 'torso_lower' has no valid attachment points\",\"Clothing slot 'feet' has no valid attachment points\"]}"timestamp: "2025-07-15T15:16:38.482Z"[[Prototype]]: Objectconstructor: ƒ Object()hasOwnProperty: ƒ hasOwnProperty()isPrototypeOf: ƒ isPrototypeOf()propertyIsEnumerable: ƒ propertyIsEnumerable()toLocaleString: ƒ toLocaleString()toString: ƒ toString()valueOf: ƒ valueOf()__defineGetter__: ƒ __defineGetter__()__defineSetter__: ƒ __defineSetter__()__lookupGetter__: ƒ __lookupGetter__()__lookupSetter__: ƒ __lookupSetter__()__proto__: (...)get __proto__: ƒ __proto__()set __proto__: ƒ __proto__()message: "Clothing instantiation failed for 7 items"[[Prototype]]: Objectconstructor: ƒ Object()hasOwnProperty: ƒ hasOwnProperty()isPrototypeOf: ƒ isPrototypeOf()propertyIsEnumerable: ƒ propertyIsEnumerable()toLocaleString: ƒ toLocaleString()toString: ƒ toString()valueOf: ƒ valueOf()__defineGetter__: ƒ __defineGetter__()__defineSetter__: ƒ __defineSetter__()__lookupGetter__: ƒ __lookupGetter__()__lookupSetter__: ƒ __lookupSetter__()__proto__: (...)get __proto__: ƒ __proto__()set __proto__: ƒ __proto__()
+consoleLogger.js:151 ClothingInstantiationService: Clothing instantiation completed for actor '1996bcbe-3a18-467b-88e1-981871a7453d': 0 created, 0 equipped, 7 errors

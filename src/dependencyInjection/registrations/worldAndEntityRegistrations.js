@@ -61,7 +61,7 @@ import { ClothingInstantiationService } from '../../clothing/services/clothingIn
 import { LayerCompatibilityService } from '../../clothing/validation/layerCompatibilityService.js';
 import { ClothingSlotValidator } from '../../clothing/validation/clothingSlotValidator.js';
 import { EquipmentOrchestrator } from '../../clothing/orchestration/equipmentOrchestrator.js';
-import { ClothingManagementService } from '../../clothing/services/clothingManagementServiceV2.js';
+import { ClothingManagementService } from '../../clothing/services/clothingManagementService.js';
 import AnatomyBlueprintRepository from '../../anatomy/repositories/anatomyBlueprintRepository.js';
 import AnatomySocketIndex from '../../anatomy/services/anatomySocketIndex.js';
 import SlotResolver from '../../anatomy/integration/SlotResolver.js';
@@ -624,9 +624,7 @@ export function registerWorldAndEntity(container) {
     });
   });
   logger.debug(
-    `World and Entity Registration: Registered ${String(
-      tokens.SlotResolver
-    )}.`
+    `World and Entity Registration: Registered ${String(tokens.SlotResolver)}.`
   );
 
   // Register ClothingManagementService using decomposed services

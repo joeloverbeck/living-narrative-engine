@@ -1,16 +1,27 @@
-import { describe, it, expect, jest, beforeEach } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  jest,
+  beforeEach,
+  afterEach,
+} from '@jest/globals';
 import { RetryManager } from '../../../src/utils/httpRetryManager.js';
-
-jest.useFakeTimers();
 
 /** @type {ReturnType<import('../../common/mockFactories/loggerMocks.js').createMockLogger>} */
 let logger;
 
 beforeEach(() => {
+  jest.useFakeTimers();
   const {
     createMockLogger,
   } = require('../../common/mockFactories/loggerMocks.js');
   logger = createMockLogger();
+});
+
+afterEach(() => {
+  jest.runOnlyPendingTimers();
+  jest.useRealTimers();
 });
 
 describe('RetryManager additional branches', () => {

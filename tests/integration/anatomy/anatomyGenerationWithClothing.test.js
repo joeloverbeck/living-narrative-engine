@@ -128,9 +128,11 @@ describe('Anatomy Generation with Clothing Integration', () => {
 
     // Create mock dependencies for ClothingInstantiationService
     mockSlotResolver = {
-      resolveClothingSlot: jest.fn().mockResolvedValue([
-        { entityId: 'torso', socketId: 'chest', slotPath: 'torso.chest' },
-      ]),
+      resolveClothingSlot: jest
+        .fn()
+        .mockResolvedValue([
+          { entityId: 'torso', socketId: 'chest', slotPath: 'torso.chest' },
+        ]),
       setSlotEntityMappings: jest.fn(),
     };
 
@@ -139,7 +141,7 @@ describe('Anatomy Generation with Clothing Integration', () => {
     };
 
     mockAnatomyBlueprintRepository = {
-      getBlueprint: jest.fn().mockResolvedValue({ 
+      getBlueprint: jest.fn().mockResolvedValue({
         clothingSlotMappings: {
           torso_upper: {
             blueprintSlots: ['torso.chest'],
@@ -159,7 +161,7 @@ describe('Anatomy Generation with Clothing Integration', () => {
           },
         },
       }),
-      getBlueprintByRecipeId: jest.fn().mockResolvedValue({ 
+      getBlueprintByRecipeId: jest.fn().mockResolvedValue({
         clothingSlotMappings: {
           torso_upper: {
             blueprintSlots: ['torso.chest'],
@@ -554,12 +556,16 @@ describe('Anatomy Generation with Clothing Integration', () => {
     });
 
     it('should validate clothing slots against anatomy blueprint', async () => {
-      // Make one item fail validation by using the correct mock reference  
-      const clothingInstantiationServiceMock = jest.spyOn(clothingInstantiationService, 'instantiateRecipeClothing');
-      
+      // Make one item fail validation by using the correct mock reference
+      const clothingInstantiationServiceMock = jest.spyOn(
+        clothingInstantiationService,
+        'instantiateRecipeClothing'
+      );
+
       // Create a new instance with failing validation for the second call
       const failingValidator = {
-        validateSlotCompatibility: jest.fn()
+        validateSlotCompatibility: jest
+          .fn()
           .mockResolvedValueOnce({ valid: true })
           .mockResolvedValueOnce({ valid: false, reason: 'Invalid slot' })
           .mockResolvedValue({ valid: true }),
@@ -589,13 +595,9 @@ describe('Anatomy Generation with Clothing Integration', () => {
         clothingInstantiationService: testClothingService,
       });
 
-      const result = await testWorkflow.generate(
-        blueprintId,
-        recipeId,
-        {
-          ownerId,
-        }
-      );
+      const result = await testWorkflow.generate(blueprintId, recipeId, {
+        ownerId,
+      });
 
       // Should still instantiate valid items
       expect(result.clothingResult.instantiated.length).toBeGreaterThan(0);

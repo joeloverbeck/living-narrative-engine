@@ -1,13 +1,24 @@
-import { beforeEach, describe, expect, jest, test } from '@jest/globals';
+import {
+  beforeEach,
+  afterEach,
+  describe,
+  expect,
+  jest,
+  test,
+} from '@jest/globals';
 import { RetryManager } from '../../../src/utils/httpRetryManager.js';
-
-jest.useFakeTimers();
 
 describe('RetryManager', () => {
   let logger;
 
   beforeEach(() => {
+    jest.useFakeTimers();
     logger = { warn: jest.fn(), debug: jest.fn() };
+  });
+
+  afterEach(() => {
+    jest.runOnlyPendingTimers();
+    jest.useRealTimers();
   });
 
   test('retries network error then succeeds', async () => {

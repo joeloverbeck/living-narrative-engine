@@ -12,7 +12,7 @@ import { ENTITY_CREATED_ID } from '../../constants/eventIds.js';
  * @readonly
  */
 const DEFAULT_CONFIG = {
-  timeout: 5000, // 5 seconds max wait
+  timeout: 10000, // 10 seconds max wait - matches VisualizerStateController usage
   retryInterval: 100, // Start with 100ms
   maxRetries: 20,
   useExponentialBackoff: true,
@@ -102,13 +102,20 @@ class AnatomyLoadingDetector {
       }
     }
 
-    // Timeout reached
+    // Timeout reached - provide detailed information for debugging
+    const finalEntity = await this.#entityManager.getEntityInstance(entityId);
+    const finalBodyComponent = finalEntity?.getComponentData('anatomy:body');
+    
     this.#logger.warn(
       `Timeout waiting for anatomy ready on entity ${entityId}`,
       {
         entityId,
         attempts: attempt,
         timeElapsed: Date.now() - startTime,
+        entityExists: !!finalEntity,
+        hasBodyComponent: !!finalBodyComponent,
+        bodyStructure: finalBodyComponent ? JSON.stringify(finalBodyComponent, null, 2) : null,
+        expectedStructure: 'Expected: { recipeId: string, body: { root: string, parts: object } }'
       }
     );
 
@@ -163,6 +170,18 @@ class AnatomyLoadingDetector {
   async waitForEntityWithAnatomy(entityId, config = {}) {
     this.#throwIfDisposed();
 
+    // First check if entity already exists
+    try {
+      const existingEntity = await this.#entityManager.getEntityInstance(entityId);
+      if (existingEntity) {
+        this.#logger.debug(`Entity ${entityId} already exists, checking anatomy readiness directly`);
+        return await this.waitForAnatomyReady(entityId, config);
+      }
+    } catch (error) {
+      // Entity doesn't exist yet, continue with creation waiting
+      this.#logger.debug(`Entity ${entityId} doesn't exist yet, waiting for creation`);
+    }
+
     return new Promise((resolve) => {
       let isResolved = false;
 
@@ -180,7 +199,12 @@ class AnatomyLoadingDetector {
         } catch (error) {
           this.#logger.error(
             `Error waiting for anatomy on entity ${entityId}:`,
-            error
+            {
+              entityId,
+              error: error.message,
+              stack: error.stack,
+              phase: 'waiting_for_anatomy_ready'
+            }
           );
 
           if (!isResolved) {
@@ -196,7 +220,11 @@ class AnatomyLoadingDetector {
         if (!isResolved) {
           isResolved = true;
           unsubscribe();
-          this.#logger.warn(`Timeout waiting for entity creation: ${entityId}`);
+          this.#logger.warn(`Timeout waiting for entity creation: ${entityId}`, {
+            entityId,
+            timeout,
+            phase: 'waiting_for_entity_creation'
+          });
           resolve(false);
         }
       }, timeout);
@@ -234,17 +262,30 @@ class AnatomyLoadingDetector {
   async #checkAnatomyReady(entityId) {
     const entity = await this.#entityManager.getEntityInstance(entityId);
     if (!entity) {
+      this.#logger.debug?.(`Entity ${entityId} not found`);
       return false;
     }
 
     const bodyComponent = entity.getComponentData('anatomy:body');
+    
+    // Log the actual structure for debugging
+    this.#logger.debug?.(`Checking anatomy readiness for entity ${entityId}:`, {
+      hasBodyComponent: !!bodyComponent,
+      bodyStructure: bodyComponent ? JSON.stringify(bodyComponent, null, 2) : null
+    });
 
-    // Check if anatomy:body component exists and has anatomy data
-    return !!(
+    // Check if anatomy:body component exists and has the expected nested structure
+    const isReady = !!(
       bodyComponent &&
       bodyComponent.body &&
-      (bodyComponent.body.parts || bodyComponent.body.root)
+      bodyComponent.body.root &&
+      bodyComponent.body.parts &&
+      typeof bodyComponent.body.root === 'string' &&
+      typeof bodyComponent.body.parts === 'object'
     );
+
+    this.#logger.debug?.(`Entity ${entityId} anatomy ready: ${isReady}`);
+    return isReady;
   }
 
   /**

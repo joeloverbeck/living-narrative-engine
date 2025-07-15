@@ -10,6 +10,7 @@ import {
   afterEach,
   jest,
 } from '@jest/globals';
+import { ENTITY_CREATED_ID } from '../../../../src/constants/eventIds.js';
 
 describe('AnatomyLoadingDetector - Anatomy Detection', () => {
   let anatomyLoadingDetector;
@@ -89,7 +90,14 @@ describe('AnatomyLoadingDetector - Anatomy Detection', () => {
       const entityId = 'test:entity:123';
       const mockEntity = {
         getComponentData: jest.fn().mockReturnValue({
-          body: { parts: ['test:part1', 'test:part2'] },
+          recipeId: 'test:recipe',
+          body: { 
+            root: 'test:root:123',
+            parts: { 
+              'test:part1': 'entity1',
+              'test:part2': 'entity2' 
+            }
+          },
         }),
       };
 
@@ -144,6 +152,110 @@ describe('AnatomyLoadingDetector - Anatomy Detection', () => {
 
       expect(result).toBe(false);
     });
+
+    it('should handle anatomy:body component with missing root', async () => {
+      const entityId = 'test:entity:123';
+      const mockEntity = {
+        getComponentData: jest.fn().mockReturnValue({
+          recipeId: 'test:recipe',
+          body: { 
+            parts: { 'test:part1': 'entity1' }
+          },
+        }),
+      };
+
+      mockEntityManager.getEntityInstance.mockResolvedValue(mockEntity);
+
+      const result = await anatomyLoadingDetector.waitForAnatomyReady(entityId);
+
+      expect(result).toBe(false);
+    });
+
+    it('should handle anatomy:body component with missing parts', async () => {
+      const entityId = 'test:entity:123';
+      const mockEntity = {
+        getComponentData: jest.fn().mockReturnValue({
+          recipeId: 'test:recipe',
+          body: { 
+            root: 'test:root:123'
+          },
+        }),
+      };
+
+      mockEntityManager.getEntityInstance.mockResolvedValue(mockEntity);
+
+      const result = await anatomyLoadingDetector.waitForAnatomyReady(entityId);
+
+      expect(result).toBe(false);
+    });
+
+    it('should handle anatomy:body component with invalid root type', async () => {
+      const entityId = 'test:entity:123';
+      const mockEntity = {
+        getComponentData: jest.fn().mockReturnValue({
+          recipeId: 'test:recipe',
+          body: { 
+            root: null,
+            parts: { 'test:part1': 'entity1' }
+          },
+        }),
+      };
+
+      mockEntityManager.getEntityInstance.mockResolvedValue(mockEntity);
+
+      const result = await anatomyLoadingDetector.waitForAnatomyReady(entityId);
+
+      expect(result).toBe(false);
+    });
+
+    it('should handle anatomy:body component with invalid parts type', async () => {
+      const entityId = 'test:entity:123';
+      const mockEntity = {
+        getComponentData: jest.fn().mockReturnValue({
+          recipeId: 'test:recipe',
+          body: { 
+            root: 'test:root:123',
+            parts: 'invalid-parts-type'
+          },
+        }),
+      };
+
+      mockEntityManager.getEntityInstance.mockResolvedValue(mockEntity);
+
+      const result = await anatomyLoadingDetector.waitForAnatomyReady(entityId);
+
+      expect(result).toBe(false);
+    });
+
+    it('should log debug information when checking anatomy readiness', async () => {
+      const entityId = 'test:entity:123';
+      const bodyComponent = {
+        recipeId: 'test:recipe',
+        body: { 
+          root: 'test:root:123',
+          parts: { 'test:part1': 'entity1' }
+        },
+      };
+      const mockEntity = {
+        getComponentData: jest.fn().mockReturnValue(bodyComponent),
+      };
+
+      mockEntityManager.getEntityInstance.mockResolvedValue(mockEntity);
+
+      const result = await anatomyLoadingDetector.waitForAnatomyReady(entityId);
+
+      expect(result).toBe(true);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        `Checking anatomy readiness for entity ${entityId}:`,
+        {
+          hasBodyComponent: true,
+          bodyStructure: JSON.stringify(bodyComponent, null, 2)
+        }
+      );
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        `Entity ${entityId} anatomy ready: true`
+      );
+    });
   });
 
   describe('Event-Based Detection', () => {
@@ -154,7 +266,7 @@ describe('AnatomyLoadingDetector - Anatomy Detection', () => {
       anatomyLoadingDetector.waitForEntityCreation(entityId, callback);
 
       expect(mockEventDispatcher.subscribe).toHaveBeenCalledWith(
-        'core:entity_created',
+        ENTITY_CREATED_ID,
         expect.any(Function)
       );
     });
@@ -170,6 +282,9 @@ describe('AnatomyLoadingDetector - Anatomy Detection', () => {
       });
 
       anatomyLoadingDetector.waitForEntityCreation(entityId, callback);
+
+      // Verify that eventHandler was assigned
+      expect(eventHandler).toBeDefined();
 
       // Simulate entity creation event
       eventHandler({
@@ -193,6 +308,9 @@ describe('AnatomyLoadingDetector - Anatomy Detection', () => {
 
       anatomyLoadingDetector.waitForEntityCreation(targetEntityId, callback);
 
+      // Verify that eventHandler was assigned
+      expect(eventHandler).toBeDefined();
+
       // Simulate entity creation event for different entity
       eventHandler({
         type: 'ENTITY_CREATED_ID',
@@ -215,6 +333,9 @@ describe('AnatomyLoadingDetector - Anatomy Detection', () => {
 
       anatomyLoadingDetector.waitForEntityCreation(entityId, callback);
 
+      // Verify that eventHandler was assigned
+      expect(eventHandler).toBeDefined();
+
       // Simulate entity creation event
       eventHandler({
         type: 'ENTITY_CREATED_ID',
@@ -232,7 +353,13 @@ describe('AnatomyLoadingDetector - Anatomy Detection', () => {
         getComponentData: jest
           .fn()
           .mockReturnValueOnce(null) // First call - not ready
-          .mockReturnValueOnce({ body: { parts: ['test:part1'] } }), // Second call - ready
+          .mockReturnValueOnce({ 
+            recipeId: 'test:recipe',
+            body: { 
+              root: 'test:root:123',
+              parts: { 'test:part1': 'entity1' }
+            }
+          }), // Second call - ready
       };
 
       mockEntityManager.getEntityInstance.mockResolvedValue(mockEntity);
@@ -279,7 +406,13 @@ describe('AnatomyLoadingDetector - Anatomy Detection', () => {
           .fn()
           .mockReturnValueOnce(null)
           .mockReturnValueOnce(null)
-          .mockReturnValueOnce({ body: { parts: ['test:part1'] } }),
+          .mockReturnValueOnce({ 
+            recipeId: 'test:recipe',
+            body: { 
+              root: 'test:root:123',
+              parts: { 'test:part1': 'entity1' }
+            }
+          }),
       };
 
       mockEntityManager.getEntityInstance.mockResolvedValue(mockEntity);
@@ -344,11 +477,21 @@ describe('AnatomyLoadingDetector - Comprehensive Integration', () => {
       const entityId = 'test:entity:123';
       const mockEntity = {
         getComponentData: jest.fn().mockReturnValue({
-          body: { parts: ['test:part1', 'test:part2'] },
+          recipeId: 'test:recipe',
+          body: { 
+            root: 'test:root:123',
+            parts: { 
+              'test:part1': 'entity1',
+              'test:part2': 'entity2' 
+            }
+          },
         }),
       };
 
-      mockEntityManager.getEntityInstance.mockResolvedValue(mockEntity);
+      // First call fails (entity doesn't exist), subsequent calls succeed
+      mockEntityManager.getEntityInstance
+        .mockRejectedValueOnce(new Error('Entity not found'))
+        .mockResolvedValue(mockEntity);
 
       let eventHandler;
       const mockUnsubscribe = jest.fn();
@@ -360,6 +503,12 @@ describe('AnatomyLoadingDetector - Comprehensive Integration', () => {
       // Start waiting for entity and anatomy
       const promise = anatomyLoadingDetector.waitForEntityWithAnatomy(entityId);
 
+      // Give a moment for the subscription to be set up
+      await new Promise(resolve => setTimeout(resolve, 10));
+
+      // Verify that eventHandler was assigned
+      expect(eventHandler).toBeDefined();
+
       // Simulate entity creation event
       eventHandler({
         type: 'ENTITY_CREATED_ID',
@@ -370,7 +519,7 @@ describe('AnatomyLoadingDetector - Comprehensive Integration', () => {
 
       expect(result).toBe(true);
       expect(mockEventDispatcher.subscribe).toHaveBeenCalledWith(
-        'core:entity_created',
+        ENTITY_CREATED_ID,
         expect.any(Function)
       );
       expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(
@@ -390,13 +539,19 @@ describe('AnatomyLoadingDetector - Comprehensive Integration', () => {
         return mockUnsubscribe;
       });
 
-      // Make entity manager fail
+      // Make entity manager fail on all calls
       mockEntityManager.getEntityInstance.mockRejectedValue(
         new Error('Entity fetch failed')
       );
 
       // Start waiting for entity and anatomy
       const promise = anatomyLoadingDetector.waitForEntityWithAnatomy(entityId);
+
+      // Give a moment for the subscription to be set up
+      await new Promise(resolve => setTimeout(resolve, 10));
+
+      // Verify that eventHandler was assigned
+      expect(eventHandler).toBeDefined();
 
       // Simulate entity creation event
       eventHandler({

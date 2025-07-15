@@ -16,3 +16,12 @@ export * from './missingInstanceIdError.js';
 export * from './validationError.js';
 export * from './fetchError.js';
 export * from './invalidEnvironmentContextError.js';
+
+// Anatomy visualization error classes
+export * from './anatomyVisualizationError.js';
+export * from './anatomyDataError.js';
+export * from './anatomyRenderError.js';
+export * from './anatomyStateError.js';
+
+// Clothing slot resolution error classes
+export * from './clothingSlotErrors.js';

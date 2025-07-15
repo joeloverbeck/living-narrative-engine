@@ -20,9 +20,11 @@ function createMocks() {
       orchestrateEquipment: jest.fn(),
     },
     slotResolver: {
-      resolveClothingSlot: jest.fn().mockResolvedValue([
-        { entityId: 'torso', socketId: 'chest', slotPath: 'torso.chest' },
-      ]),
+      resolveClothingSlot: jest
+        .fn()
+        .mockResolvedValue([
+          { entityId: 'torso', socketId: 'chest', slotPath: 'torso.chest' },
+        ]),
       setSlotEntityMappings: jest.fn(),
     },
     clothingSlotValidator: {
@@ -161,11 +163,9 @@ describe('ClothingInstantiationService - Event Dispatching', () => {
       });
 
       // Mock successful validation
-      clothingSlotValidator.validateSlotCompatibility.mockResolvedValue(
-        {
-          valid: true,
-        }
-      );
+      clothingSlotValidator.validateSlotCompatibility.mockResolvedValue({
+        valid: true,
+      });
 
       // Mock entity creation
       entityManager.createEntityInstance.mockResolvedValue('clothing_123');
@@ -319,11 +319,9 @@ describe('ClothingInstantiationService - Event Dispatching', () => {
       });
 
       // Mock validation
-      clothingSlotValidator.validateSlotCompatibility.mockResolvedValue(
-        {
-          valid: true,
-        }
-      );
+      clothingSlotValidator.validateSlotCompatibility.mockResolvedValue({
+        valid: true,
+      });
 
       // Mock entity creation
       entityManager.createEntityInstance
@@ -403,9 +401,9 @@ describe('ClothingInstantiationService - Event Dispatching', () => {
           'clothing:wearable': { equipmentSlots: { primary: 'test' } },
         },
       });
-      clothingSlotValidator.validateSlotCompatibility.mockResolvedValue(
-        { valid: true }
-      );
+      clothingSlotValidator.validateSlotCompatibility.mockResolvedValue({
+        valid: true,
+      });
       entityManager.createEntityInstance.mockResolvedValue('test_123');
 
       // Mock entity existence check

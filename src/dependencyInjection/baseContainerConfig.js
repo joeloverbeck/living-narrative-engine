@@ -10,6 +10,7 @@ import { registerInterpreters } from './registrations/interpreterRegistrations.j
 import { registerEventBusAdapters } from './registrations/eventBusAdapterRegistrations.js';
 import { registerInitializers } from './registrations/initializerRegistrations.js';
 import { registerRuntime } from './registrations/runtimeRegistrations.js';
+import { tokens } from './tokens.js';
 
 // Game-specific registrations (conditionally imported)
 import { registerAI } from './registrations/aiRegistrations.js';
@@ -27,13 +28,15 @@ import { registerUI } from './registrations/uiRegistrations.js';
  * @param {object} options - Configuration options
  * @param {boolean} [options.includeGameSystems] - Whether to include game-specific systems (AI, turn lifecycle, orchestration)
  * @param {boolean} [options.includeUI] - Whether to include UI registrations
+ * @param {boolean} [options.includeAnatomySystems] - Whether to include anatomy initialization (for testing)
  * @param {object} [options.uiElements] - UI elements to register if includeUI is true
  * @param {ILogger} [options.logger] - Logger instance for debug logging
  */
-export function configureBaseContainer(container, options = {}) {
+export async function configureBaseContainer(container, options = {}) {
   const {
     includeGameSystems = false,
     includeUI = false,
+    includeAnatomySystems = false,
     uiElements = null,
     logger = null,
   } = options;
@@ -82,6 +85,29 @@ export function configureBaseContainer(container, options = {}) {
   // --- Register orchestration if game systems are included ---
   if (includeGameSystems) {
     registerOrchestration(container);
+  }
+
+  // --- Initialize anatomy systems if requested (for testing) ---
+  if (includeAnatomySystems) {
+    if (logger) {
+      logger.debug('[BaseContainerConfig] Initializing anatomy systems...');
+    }
+    // Initialize anatomy-related systems that were tagged with INITIALIZABLE
+    try {
+      const systemInitializer = container.resolve(tokens.SystemInitializer);
+      // Initialize just the anatomy systems by resolving and initializing them
+      const anatomyInitService = container.resolve(tokens.AnatomyInitializationService);
+      if (anatomyInitService && typeof anatomyInitService.initialize === 'function') {
+        anatomyInitService.initialize();
+        if (logger) {
+          logger.debug('[BaseContainerConfig] AnatomyInitializationService initialized');
+        }
+      }
+    } catch (error) {
+      if (logger) {
+        logger.warn('[BaseContainerConfig] Failed to initialize anatomy systems:', error);
+      }
+    }
   }
 
   if (logger) {

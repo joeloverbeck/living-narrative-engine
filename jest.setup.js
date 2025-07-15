@@ -34,3 +34,32 @@ if (typeof window !== 'undefined') {
 
 // Provide shared typedefs for test suites
 require('./tests/common/engine/engineTestTypedefs.js');
+
+// Global cleanup hook to prevent timer leaks and hanging worker processes
+global.afterEach(() => {
+  // Clear all timers - both mocked and real
+  try {
+    // If using fake timers, run pending timers and restore
+    if (typeof jest.runOnlyPendingTimers === 'function') {
+      jest.runOnlyPendingTimers();
+    }
+    if (typeof jest.useRealTimers === 'function') {
+      jest.useRealTimers();
+    }
+  } catch (e) {
+    // Ignore errors - real timers might already be in use
+  }
+
+  // Always clear all timers and mocks
+  if (typeof jest.clearAllTimers === 'function') {
+    jest.clearAllTimers();
+  }
+  if (typeof jest.clearAllMocks === 'function') {
+    jest.clearAllMocks();
+  }
+
+  // Force clear any active handles that might be keeping the process alive
+  if (typeof global.gc === 'function') {
+    global.gc();
+  }
+});

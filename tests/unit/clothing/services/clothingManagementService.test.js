@@ -1,5 +1,5 @@
 import { beforeEach, describe, it, expect, jest } from '@jest/globals';
-import { ClothingManagementService } from '../../../../src/clothing/services/clothingManagementServiceV2.js';
+import { ClothingManagementService } from '../../../../src/clothing/services/clothingManagementService.js';
 import { InvalidArgumentError } from '../../../../src/errors/invalidArgumentError.js';
 
 /** Helper to create minimal mocks for dependencies */
@@ -134,7 +134,9 @@ describe('ClothingManagementService', () => {
             eventDispatcher,
             equipmentOrchestrator,
           })
-      ).toThrow('Either anatomyClothingIntegrationService or anatomyBlueprintRepository must be provided');
+      ).toThrow(
+        'Either anatomyClothingIntegrationService or anatomyBlueprintRepository must be provided'
+      );
     });
   });
 
@@ -554,12 +556,12 @@ describe('ClothingManagementService', () => {
         {
           slotId: 'torso_clothing',
           allowedLayers: ['underwear', 'base', 'outer'],
-          anatomySockets: ['*']
+          anatomySockets: ['*'],
         },
         {
           slotId: 'lower_torso_clothing',
           allowedLayers: ['underwear', 'base'],
-          anatomySockets: ['*']
+          anatomySockets: ['*'],
         },
       ];
 
@@ -567,25 +569,25 @@ describe('ClothingManagementService', () => {
       entityManager.getComponentData
         .mockReturnValueOnce({ recipeId: 'test-recipe' }) // anatomy:body call
         .mockReturnValue({ sockets: [] }); // anatomy:sockets calls
-      
+
       anatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue({
         clothingSlotMappings: {
-          'torso_clothing': { 
+          torso_clothing: {
             allowedLayers: ['underwear', 'base', 'outer'],
-            anatomySockets: ['*'] // Wildcard allows any anatomy structure
+            anatomySockets: ['*'], // Wildcard allows any anatomy structure
           },
-          'lower_torso_clothing': { 
+          lower_torso_clothing: {
             allowedLayers: ['underwear', 'base'],
-            anatomySockets: ['*'] // Wildcard allows any anatomy structure
-          }
+            anatomySockets: ['*'], // Wildcard allows any anatomy structure
+          },
         },
-        slots: {} // Empty slots object to satisfy validation
+        slots: {}, // Empty slots object to satisfy validation
       });
-      
+
       bodyGraphService.getBodyGraph.mockResolvedValue({
-        getAllPartIds: () => []
+        getAllPartIds: () => [],
       });
-      
+
       anatomyClothingCache.get.mockReturnValue(null); // Cache miss
 
       const result = await service.getAvailableSlots('entity1');
@@ -596,7 +598,9 @@ describe('ClothingManagementService', () => {
 
     it('should handle error getting slots', async () => {
       // Mock error in decomposed service
-      entityManager.getComponentData.mockReturnValue({ recipeId: 'test-recipe' });
+      entityManager.getComponentData.mockReturnValue({
+        recipeId: 'test-recipe',
+      });
       anatomyBlueprintRepository.getBlueprintByRecipeId.mockRejectedValue(
         new Error('Slot retrieval error')
       );

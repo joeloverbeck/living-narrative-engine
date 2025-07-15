@@ -1,10 +1,13 @@
-import { expect, it, jest, describe } from '@jest/globals';
+import { expect, it, jest, describe, afterEach } from '@jest/globals';
 import { createActionDiscoveryBed } from '../../common/actions/actionDiscoveryServiceTestBed.js';
 
 /**
  * Tests to ensure candidate processing runs concurrently.
  */
 describe('ActionDiscoveryService concurrency', () => {
+  afterEach(() => {
+    jest.useRealTimers();
+  });
   const actor = { id: 'actor1' };
   const defs = [
     { id: 'a', commandVerb: 'a', scope: 'none' },

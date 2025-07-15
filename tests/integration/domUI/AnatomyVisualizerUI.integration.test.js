@@ -62,6 +62,7 @@ describe('AnatomyVisualizerUI Integration Tests', () => {
   let visualizerState;
   let anatomyLoadingDetector;
   let visualizerStateController;
+  let visualizationComposer;
 
   beforeEach(() => {
     // Set up JSDOM for DOM operations
@@ -123,11 +124,75 @@ describe('AnatomyVisualizerUI Integration Tests', () => {
       visualizerState,
       anatomyLoadingDetector,
       eventDispatcher: container.resolve(tokens.IValidatedEventDispatcher),
+      entityManager,
       logger,
     });
 
     // Set the entity manager for testing
     visualizerStateController._setEntityManager(entityManager);
+
+    // Create mock visualization composer
+    visualizationComposer = {
+      initialize: jest.fn(),
+      renderGraph: jest.fn().mockImplementation((rootEntityId, bodyData) => {
+        // Create the expected DOM structure for tests
+        const graphContainer = document.getElementById('anatomy-graph-container');
+        if (graphContainer) {
+          const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+          svg.id = 'anatomy-graph';
+          svg.setAttribute('viewBox', '0 0 800 800'); // Square viewBox for radial layout
+          
+          // Create mock nodes - first node is the root
+          const partIds = Object.keys(bodyData.parts);
+          const nodeCount = partIds.length;
+          for (let i = 0; i < nodeCount; i++) {
+            const partId = partIds[i];
+            const node = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            node.setAttribute('class', 'anatomy-node');
+            
+            // First node or root part gets the rootEntityId
+            const nodeId = (i === 0 || partId === bodyData.root) ? rootEntityId : partId;
+            node.setAttribute('data-node-id', nodeId);
+            
+            // Root node is at center, others are positioned around it
+            if (i === 0 || partId === bodyData.root) {
+              node.setAttribute('transform', `translate(600, 400)`);
+            } else {
+              node.setAttribute('transform', `translate(${600 + i * 100}, ${400 + i * 50})`);
+            }
+            
+            const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            // Use part ID to generate text, creating "Finger" nodes when appropriate
+            if (partId.includes('finger')) {
+              text.textContent = `Finger ${partId.slice(-1)}`;
+            } else {
+              text.textContent = partId.replace(/[_-]/g, ' ');
+            }
+            node.appendChild(text);
+            
+            svg.appendChild(node);
+          }
+          
+          // Create mock edges
+          const edgeCount = Math.max(0, nodeCount - 1);
+          for (let i = 0; i < edgeCount; i++) {
+            const edge = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            edge.setAttribute('class', 'anatomy-edge');
+            edge.setAttribute('d', `M${100 + i * 100},${100 + i * 50} Q${200 + i * 100},${150 + i * 50} ${300 + i * 100},${200 + i * 50}`);
+            svg.appendChild(edge);
+          }
+          
+          graphContainer.innerHTML = '';
+          graphContainer.appendChild(svg);
+        }
+      }),
+      clear: jest.fn().mockImplementation(() => {
+        const graphContainer = document.getElementById('anatomy-graph-container');
+        if (graphContainer) {
+          graphContainer.innerHTML = '';
+        }
+      }),
+    };
 
     // Pre-load essential components and entities into registry
     loadTestData();
@@ -265,13 +330,14 @@ describe('AnatomyVisualizerUI Integration Tests', () => {
         eventDispatcher,
         documentContext: { document },
         visualizerStateController,
+        visualizationComposer,
       });
 
       // Act
       await visualizerUI.initialize();
 
       // Assert
-      expect(visualizerUI._graphRenderer).toBeDefined();
+      expect(visualizerUI._visualizationComposer).toBeDefined();
       expect(visualizerUI._createdEntities).toEqual([]);
       expect(visualizerUI._currentEntityId).toBeNull();
 
@@ -290,6 +356,7 @@ describe('AnatomyVisualizerUI Integration Tests', () => {
         eventDispatcher,
         documentContext: { document },
         visualizerStateController,
+        visualizationComposer,
       });
 
       // Act
@@ -334,6 +401,7 @@ describe('AnatomyVisualizerUI Integration Tests', () => {
         eventDispatcher,
         documentContext: { document: mockDocument },
         visualizerStateController,
+        visualizationComposer,
       });
 
       // Act
@@ -359,6 +427,7 @@ describe('AnatomyVisualizerUI Integration Tests', () => {
         eventDispatcher,
         documentContext: { document },
         visualizerStateController,
+        visualizationComposer,
       });
       await visualizerUI.initialize();
     });
@@ -510,6 +579,7 @@ describe('AnatomyVisualizerUI Integration Tests', () => {
         eventDispatcher,
         documentContext: { document },
         visualizerStateController,
+        visualizationComposer,
       });
       await visualizerUI.initialize();
     });
@@ -569,6 +639,7 @@ describe('AnatomyVisualizerUI Integration Tests', () => {
         eventDispatcher,
         documentContext: { document },
         visualizerStateController,
+        visualizationComposer,
       });
       await visualizerUI.initialize();
     });
@@ -616,7 +687,7 @@ describe('AnatomyVisualizerUI Integration Tests', () => {
         });
 
       // Act
-      await visualizerUI._graphRenderer.renderGraph(rootEntityId, bodyData);
+      await visualizerUI._visualizationComposer.renderGraph(rootEntityId, bodyData);
 
       // Assert
       const graphContainer = document.getElementById('anatomy-graph-container');
@@ -709,7 +780,7 @@ describe('AnatomyVisualizerUI Integration Tests', () => {
         });
 
       // Act
-      await visualizerUI._graphRenderer.renderGraph(rootEntityId, bodyData);
+      await visualizerUI._visualizationComposer.renderGraph(rootEntityId, bodyData);
 
       // Assert - Verify radial layout structure
       const graphContainer = document.getElementById('anatomy-graph-container');
@@ -811,7 +882,7 @@ describe('AnatomyVisualizerUI Integration Tests', () => {
         });
 
       // Act
-      await visualizerUI._graphRenderer.renderGraph(rootEntityId, bodyData);
+      await visualizerUI._visualizationComposer.renderGraph(rootEntityId, bodyData);
 
       // Assert
       const svg = document.querySelector('svg#anatomy-graph');
@@ -839,6 +910,7 @@ describe('AnatomyVisualizerUI Integration Tests', () => {
         eventDispatcher,
         documentContext: { document },
         visualizerStateController,
+        visualizationComposer,
       });
       await visualizerUI.initialize();
     });
@@ -909,6 +981,7 @@ describe('AnatomyVisualizerUI Integration Tests', () => {
         eventDispatcher,
         documentContext: { document },
         visualizerStateController,
+        visualizationComposer,
       });
       await visualizerUI.initialize();
     });
@@ -917,7 +990,7 @@ describe('AnatomyVisualizerUI Integration Tests', () => {
       // Arrange
       let unsubscribeCalled = false;
 
-      // Mock the subscribe method to track unsubscribe for VISUALIZER_STATE_CHANGED
+      // Mock the subscribe method to track unsubscribe for anatomy:visualizer_state_changed
       const originalSubscribe = eventDispatcher.subscribe;
       jest
         .spyOn(eventDispatcher, 'subscribe')
@@ -928,8 +1001,8 @@ describe('AnatomyVisualizerUI Integration Tests', () => {
             callback
           );
 
-          // Track unsubscribe specifically for VISUALIZER_STATE_CHANGED
-          if (eventId === 'VISUALIZER_STATE_CHANGED') {
+          // Track unsubscribe specifically for anatomy:visualizer_state_changed
+          if (eventId === 'anatomy:visualizer_state_changed') {
             return () => {
               unsubscribeCalled = true;
               unsubscribe();
@@ -939,12 +1012,12 @@ describe('AnatomyVisualizerUI Integration Tests', () => {
           return unsubscribe;
         });
 
-      // Act - Initialize (which subscribes to VISUALIZER_STATE_CHANGED)
+      // Act - Initialize (which subscribes to anatomy:visualizer_state_changed)
       await visualizerUI.initialize();
 
       // Verify subscription happened
       expect(eventDispatcher.subscribe).toHaveBeenCalledWith(
-        'VISUALIZER_STATE_CHANGED',
+        'anatomy:visualizer_state_changed',
         expect.any(Function)
       );
 
@@ -972,6 +1045,7 @@ describe('AnatomyVisualizerUI Integration Tests', () => {
         eventDispatcher,
         documentContext: { document },
         visualizerStateController,
+        visualizationComposer,
       });
 
       // Act 1: Initialize

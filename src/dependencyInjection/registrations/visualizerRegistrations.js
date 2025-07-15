@@ -8,6 +8,13 @@ import { Registrar, registerWithLog } from '../../utils/registrarHelpers.js';
 import { VisualizerState } from '../../domUI/visualizer/VisualizerState.js';
 import { AnatomyLoadingDetector } from '../../domUI/visualizer/AnatomyLoadingDetector.js';
 import { VisualizerStateController } from '../../domUI/visualizer/VisualizerStateController.js';
+// Anatomy Renderer Components
+import LayoutEngine from '../../domUI/anatomy-renderer/LayoutEngine.js';
+import RadialLayoutStrategy from '../../domUI/anatomy-renderer/layouts/RadialLayoutStrategy.js';
+import SVGRenderer from '../../domUI/anatomy-renderer/SVGRenderer.js';
+import InteractionController from '../../domUI/anatomy-renderer/InteractionController.js';
+import ViewportManager from '../../domUI/anatomy-renderer/ViewportManager.js';
+import VisualizationComposer from '../../domUI/anatomy-renderer/VisualizationComposer.js';
 
 /** @typedef {import('../appContainer.js').default} AppContainer */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
@@ -59,9 +66,96 @@ export function registerVisualizerComponents(container) {
         visualizerState: c.resolve(tokens.VisualizerState),
         anatomyLoadingDetector: c.resolve(tokens.AnatomyLoadingDetector),
         eventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
+        entityManager: c.resolve(tokens.IEntityManager),
         logger: c.resolve(tokens.ILogger),
       }),
     { lifecycle: 'singletonFactory' },
+    logger
+  );
+
+  // Register RadialLayoutStrategy
+  registerWithLog(
+    registrar,
+    tokens.RadialLayoutStrategy,
+    (c) =>
+      new RadialLayoutStrategy({
+        logger: c.resolve(tokens.ILogger),
+      }),
+    { lifecycle: 'transient' },
+    logger
+  );
+
+  // Register LayoutEngine
+  registerWithLog(
+    registrar,
+    tokens.LayoutEngine,
+    (c) => {
+      const layoutEngine = new LayoutEngine({
+        logger: c.resolve(tokens.ILogger),
+      });
+      // Register default radial layout strategy
+      const radialStrategy = c.resolve(tokens.RadialLayoutStrategy);
+      layoutEngine.registerStrategy('radial', radialStrategy);
+      layoutEngine.setStrategy('radial');
+      return layoutEngine;
+    },
+    { lifecycle: 'singletonFactory' },
+    logger
+  );
+
+  // Register SVGRenderer
+  registerWithLog(
+    registrar,
+    tokens.SVGRenderer,
+    (c) =>
+      new SVGRenderer({
+        documentContext: c.resolve(tokens.IDocumentContext),
+        logger: c.resolve(tokens.ILogger),
+      }),
+    { lifecycle: 'transient' },
+    logger
+  );
+
+  // Register InteractionController
+  registerWithLog(
+    registrar,
+    tokens.InteractionController,
+    (c) =>
+      new InteractionController({
+        logger: c.resolve(tokens.ILogger),
+        eventBus: c.resolve(tokens.IValidatedEventDispatcher),
+      }),
+    { lifecycle: 'transient' },
+    logger
+  );
+
+  // Register ViewportManager
+  registerWithLog(
+    registrar,
+    tokens.ViewportManager,
+    (c) =>
+      new ViewportManager({
+        logger: c.resolve(tokens.ILogger),
+      }),
+    { lifecycle: 'transient' },
+    logger
+  );
+
+  // Register VisualizationComposer
+  registerWithLog(
+    registrar,
+    tokens.VisualizationComposer,
+    (c) =>
+      new VisualizationComposer({
+        logger: c.resolve(tokens.ILogger),
+        entityManager: c.resolve(tokens.IEntityManager),
+        documentContext: c.resolve(tokens.IDocumentContext),
+        layoutEngine: c.resolve(tokens.LayoutEngine),
+        svgRenderer: c.resolve(tokens.SVGRenderer),
+        interactionController: c.resolve(tokens.InteractionController),
+        viewportManager: c.resolve(tokens.ViewportManager),
+      }),
+    { lifecycle: 'transient' },
     logger
   );
 

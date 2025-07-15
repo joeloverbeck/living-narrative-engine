@@ -4,7 +4,10 @@
  */
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { AnatomyClothingCache, CacheKeyTypes } from '../../../../src/anatomy/cache/AnatomyClothingCache.js';
+import {
+  AnatomyClothingCache,
+  CacheKeyTypes,
+} from '../../../../src/anatomy/cache/AnatomyClothingCache.js';
 import { createMockLogger } from '../../../common/mockFactories/loggerMocks.js';
 
 describe('AnatomyClothingCache', () => {
@@ -31,8 +34,11 @@ describe('AnatomyClothingCache', () => {
         updateAgeOnGet: false,
         maxMemoryUsage: 52428800, // 50MB
       };
-      
-      const customCache = new AnatomyClothingCache({ logger: mockLogger }, customConfig);
+
+      const customCache = new AnatomyClothingCache(
+        { logger: mockLogger },
+        customConfig
+      );
       expect(customCache).toBeDefined();
       expect(mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining('maxSize=1000')
@@ -49,7 +55,9 @@ describe('AnatomyClothingCache', () => {
       const retrieved = cache.get(CacheKeyTypes.AVAILABLE_SLOTS, key);
 
       expect(retrieved).toEqual(value);
-      expect(mockLogger.debug).toHaveBeenCalledWith(`AnatomyClothingCache: Cache hit: ${CacheKeyTypes.AVAILABLE_SLOTS}:${key}`);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        `AnatomyClothingCache: Cache hit: ${CacheKeyTypes.AVAILABLE_SLOTS}:${key}`
+      );
     });
 
     it('should return undefined for non-existent keys', () => {
@@ -71,10 +79,14 @@ describe('AnatomyClothingCache', () => {
 
     it('should warn about unknown cache types', () => {
       cache.set('unknown-type', 'key', 'value');
-      expect(mockLogger.warn).toHaveBeenCalledWith('AnatomyClothingCache: Unknown cache type: unknown-type');
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'AnatomyClothingCache: Unknown cache type: unknown-type'
+      );
 
       cache.get('unknown-type', 'key');
-      expect(mockLogger.warn).toHaveBeenCalledWith('AnatomyClothingCache: Unknown cache type: unknown-type');
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'AnatomyClothingCache: Unknown cache type: unknown-type'
+      );
     });
 
     it('should support custom TTL for individual entries', () => {
@@ -83,7 +95,7 @@ describe('AnatomyClothingCache', () => {
       const customTTL = 1000; // 1 second
 
       cache.set(CacheKeyTypes.BLUEPRINT, key, value, { ttl: customTTL });
-      
+
       // Should exist immediately
       expect(cache.has(CacheKeyTypes.BLUEPRINT, key)).toBe(true);
     });
@@ -108,9 +120,9 @@ describe('AnatomyClothingCache', () => {
     it('should delete specific entries', () => {
       const key = 'to-delete';
       cache.set(CacheKeyTypes.ENTITY_STRUCTURE, key, 'value');
-      
+
       const deleted = cache.delete(CacheKeyTypes.ENTITY_STRUCTURE, key);
-      
+
       expect(deleted).toBe(true);
       expect(cache.has(CacheKeyTypes.ENTITY_STRUCTURE, key)).toBe(false);
       expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -119,7 +131,10 @@ describe('AnatomyClothingCache', () => {
     });
 
     it('should return false when deleting non-existent entries', () => {
-      const deleted = cache.delete(CacheKeyTypes.ENTITY_STRUCTURE, 'not-exists');
+      const deleted = cache.delete(
+        CacheKeyTypes.ENTITY_STRUCTURE,
+        'not-exists'
+      );
       expect(deleted).toBe(false);
     });
   });
@@ -135,7 +150,7 @@ describe('AnatomyClothingCache', () => {
       expect(cache.has(CacheKeyTypes.AVAILABLE_SLOTS, 'key1')).toBe(false);
       expect(cache.has(CacheKeyTypes.AVAILABLE_SLOTS, 'key2')).toBe(false);
       expect(cache.has(CacheKeyTypes.BLUEPRINT, 'key3')).toBe(true);
-      
+
       expect(mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining('Cleared 2 entries from available_slots cache')
       );
@@ -143,7 +158,9 @@ describe('AnatomyClothingCache', () => {
 
     it('should warn about unknown cache types', () => {
       cache.clearType('unknown-type');
-      expect(mockLogger.warn).toHaveBeenCalledWith('AnatomyClothingCache: Unknown cache type: unknown-type');
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'AnatomyClothingCache: Unknown cache type: unknown-type'
+      );
     });
   });
 
@@ -158,7 +175,7 @@ describe('AnatomyClothingCache', () => {
       expect(cache.has(CacheKeyTypes.AVAILABLE_SLOTS, 'key1')).toBe(false);
       expect(cache.has(CacheKeyTypes.BLUEPRINT, 'key2')).toBe(false);
       expect(cache.has(CacheKeyTypes.SLOT_RESOLUTION, 'key3')).toBe(false);
-      
+
       expect(mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining('Cleared all caches (3 total entries)')
       );
@@ -168,10 +185,14 @@ describe('AnatomyClothingCache', () => {
   describe('invalidateEntity operation', () => {
     it('should invalidate all entries containing entity ID', () => {
       const entityId = 'entity123';
-      
+
       // Add entries with entity ID in different formats
       cache.set(CacheKeyTypes.AVAILABLE_SLOTS, entityId, 'slots');
-      cache.set(CacheKeyTypes.SLOT_RESOLUTION, `${entityId}:slot1`, 'resolution');
+      cache.set(
+        CacheKeyTypes.SLOT_RESOLUTION,
+        `${entityId}:slot1`,
+        'resolution'
+      );
       cache.set(CacheKeyTypes.ENTITY_STRUCTURE, entityId, 'structure');
       cache.set(CacheKeyTypes.SOCKET_LOOKUP, `root:${entityId}`, 'lookup');
       cache.set(CacheKeyTypes.BLUEPRINT, 'unrelated', 'blueprint');
@@ -179,9 +200,13 @@ describe('AnatomyClothingCache', () => {
       cache.invalidateEntity(entityId);
 
       expect(cache.has(CacheKeyTypes.AVAILABLE_SLOTS, entityId)).toBe(false);
-      expect(cache.has(CacheKeyTypes.SLOT_RESOLUTION, `${entityId}:slot1`)).toBe(false);
+      expect(
+        cache.has(CacheKeyTypes.SLOT_RESOLUTION, `${entityId}:slot1`)
+      ).toBe(false);
       expect(cache.has(CacheKeyTypes.ENTITY_STRUCTURE, entityId)).toBe(false);
-      expect(cache.has(CacheKeyTypes.SOCKET_LOOKUP, `root:${entityId}`)).toBe(false);
+      expect(cache.has(CacheKeyTypes.SOCKET_LOOKUP, `root:${entityId}`)).toBe(
+        false
+      );
       expect(cache.has(CacheKeyTypes.BLUEPRINT, 'unrelated')).toBe(true);
 
       expect(mockLogger.info).toHaveBeenCalledWith(
@@ -199,9 +224,15 @@ describe('AnatomyClothingCache', () => {
 
       cache.invalidatePattern('entity1:.*');
 
-      expect(cache.has(CacheKeyTypes.SLOT_RESOLUTION, 'entity1:slot1')).toBe(false);
-      expect(cache.has(CacheKeyTypes.SLOT_RESOLUTION, 'entity1:slot2')).toBe(false);
-      expect(cache.has(CacheKeyTypes.SLOT_RESOLUTION, 'entity2:slot1')).toBe(true);
+      expect(cache.has(CacheKeyTypes.SLOT_RESOLUTION, 'entity1:slot1')).toBe(
+        false
+      );
+      expect(cache.has(CacheKeyTypes.SLOT_RESOLUTION, 'entity1:slot2')).toBe(
+        false
+      );
+      expect(cache.has(CacheKeyTypes.SLOT_RESOLUTION, 'entity2:slot1')).toBe(
+        true
+      );
       expect(cache.has(CacheKeyTypes.AVAILABLE_SLOTS, 'entity1')).toBe(true);
 
       expect(mockLogger.info).toHaveBeenCalledWith(
@@ -254,7 +285,10 @@ describe('AnatomyClothingCache', () => {
     });
 
     it('should create slot resolution key', () => {
-      const key = AnatomyClothingCache.createSlotResolutionKey('entity123', 'slot456');
+      const key = AnatomyClothingCache.createSlotResolutionKey(
+        'entity123',
+        'slot456'
+      );
       expect(key).toBe('entity123:slot456');
     });
 
@@ -264,7 +298,10 @@ describe('AnatomyClothingCache', () => {
     });
 
     it('should create socket lookup key', () => {
-      const key = AnatomyClothingCache.createSocketLookupKey('root123', 'socket456');
+      const key = AnatomyClothingCache.createSocketLookupKey(
+        'root123',
+        'socket456'
+      );
       expect(key).toBe('root123:socket456');
     });
 
@@ -278,16 +315,20 @@ describe('AnatomyClothingCache', () => {
     it('should calculate size for different value types', () => {
       // Test with string
       cache.set(CacheKeyTypes.AVAILABLE_SLOTS, 'string-key', 'test string');
-      
+
       // Test with array
-      cache.set(CacheKeyTypes.AVAILABLE_SLOTS, 'array-key', ['item1', 'item2', 'item3']);
-      
+      cache.set(CacheKeyTypes.AVAILABLE_SLOTS, 'array-key', [
+        'item1',
+        'item2',
+        'item3',
+      ]);
+
       // Test with object
       cache.set(CacheKeyTypes.AVAILABLE_SLOTS, 'object-key', {
         field1: 'value1',
         field2: { nested: 'value' },
       });
-      
+
       // Test with primitive
       cache.set(CacheKeyTypes.AVAILABLE_SLOTS, 'number-key', 42);
 
@@ -302,15 +343,18 @@ describe('AnatomyClothingCache', () => {
         maxSize: 100,
         ttl: 60000,
       };
-      
-      const customCache = new AnatomyClothingCache({ logger: mockLogger }, config);
-      
+
+      const customCache = new AnatomyClothingCache(
+        { logger: mockLogger },
+        config
+      );
+
       // Blueprint cache should have different settings
       const stats = customCache.getStats();
-      
+
       // Blueprint cache should have double the max size
       expect(stats.caches[CacheKeyTypes.BLUEPRINT].maxSize).toBe(200);
-      
+
       // Available slots cache should have half the TTL (not directly testable without mocking time)
       expect(stats.caches[CacheKeyTypes.AVAILABLE_SLOTS].maxSize).toBe(100);
     });
@@ -322,18 +366,22 @@ describe('AnatomyClothingCache', () => {
       cache.set(CacheKeyTypes.AVAILABLE_SLOTS, 'undefined-key', undefined);
 
       expect(cache.get(CacheKeyTypes.AVAILABLE_SLOTS, 'null-key')).toBe(null);
-      expect(cache.get(CacheKeyTypes.AVAILABLE_SLOTS, 'undefined-key')).toBe(undefined);
+      expect(cache.get(CacheKeyTypes.AVAILABLE_SLOTS, 'undefined-key')).toBe(
+        undefined
+      );
     });
 
     it('should handle empty strings as keys', () => {
       cache.set(CacheKeyTypes.AVAILABLE_SLOTS, '', 'empty-key-value');
-      expect(cache.get(CacheKeyTypes.AVAILABLE_SLOTS, '')).toBe('empty-key-value');
+      expect(cache.get(CacheKeyTypes.AVAILABLE_SLOTS, '')).toBe(
+        'empty-key-value'
+      );
     });
 
     it('should handle very large objects', () => {
       const largeArray = new Array(1000).fill({ data: 'test data' });
       cache.set(CacheKeyTypes.ENTITY_STRUCTURE, 'large-key', largeArray);
-      
+
       const retrieved = cache.get(CacheKeyTypes.ENTITY_STRUCTURE, 'large-key');
       expect(retrieved).toEqual(largeArray);
     });

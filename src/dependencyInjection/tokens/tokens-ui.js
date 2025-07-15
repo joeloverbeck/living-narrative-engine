@@ -40,4 +40,11 @@ export const uiTokens = freeze({
   VisualizerState: 'VisualizerState',
   AnatomyLoadingDetector: 'AnatomyLoadingDetector',
   VisualizerStateController: 'VisualizerStateController',
+  // Anatomy Renderer Components
+  LayoutEngine: 'LayoutEngine',
+  RadialLayoutStrategy: 'RadialLayoutStrategy',
+  SVGRenderer: 'SVGRenderer',
+  InteractionController: 'InteractionController',
+  ViewportManager: 'ViewportManager',
+  VisualizationComposer: 'VisualizationComposer',
 });

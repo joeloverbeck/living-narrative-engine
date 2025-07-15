@@ -12,10 +12,12 @@ import {
 import { ensureValidLogger } from '../../utils/loggerUtils.js';
 import BlueprintSlotStrategy from './strategies/BlueprintSlotStrategy.js';
 import DirectSocketStrategy from './strategies/DirectSocketStrategy.js';
-import { 
-  AnatomyClothingCache, 
-  CacheKeyTypes 
+import ClothingSlotMappingStrategy from './strategies/ClothingSlotMappingStrategy.js';
+import {
+  AnatomyClothingCache,
+  CacheKeyTypes,
 } from '../cache/AnatomyClothingCache.js';
+import { ClothingSlotNotFoundError } from '../../errors/clothingSlotErrors.js';
 
 /** @typedef {import('../../interfaces/ISlotResolutionStrategy.js')} ISlotResolutionStrategy */
 /** @typedef {import('../cache/AnatomyClothingCache.js').AnatomyClothingCache} AnatomyClothingCache */
@@ -73,7 +75,16 @@ class SlotResolver {
         bodyGraphService,
       });
 
-      this.#strategies = [blueprintStrategy, directSocketStrategy];
+      const clothingSlotMappingStrategy = new ClothingSlotMappingStrategy({
+        logger,
+        entityManager,
+        anatomyBlueprintRepository,
+        blueprintSlotStrategy: blueprintStrategy,
+        directSocketStrategy,
+      });
+
+      // ClothingSlotMappingStrategy has highest priority (first in array)
+      this.#strategies = [clothingSlotMappingStrategy, blueprintStrategy, directSocketStrategy];
     }
 
     // Validate all strategies implement the interface
@@ -102,7 +113,10 @@ class SlotResolver {
     assertPresent(mapping, 'Mapping is required');
 
     // Check cache
-    const cacheKey = AnatomyClothingCache.createSlotResolutionKey(entityId, slotId);
+    const cacheKey = AnatomyClothingCache.createSlotResolutionKey(
+      entityId,
+      slotId
+    );
     if (this.#cache.get) {
       // Using new cache service
       const cached = this.#cache.get(CacheKeyTypes.SLOT_RESOLUTION, cacheKey);
@@ -133,7 +147,11 @@ class SlotResolver {
       // Cache the result
       if (this.#cache.set && this.#cache.get) {
         // Using new cache service
-        this.#cache.set(CacheKeyTypes.SLOT_RESOLUTION, cacheKey, attachmentPoints);
+        this.#cache.set(
+          CacheKeyTypes.SLOT_RESOLUTION,
+          cacheKey,
+          attachmentPoints
+        );
       } else {
         // Fallback to Map cache
         this.#cache.set(cacheKey, attachmentPoints);
@@ -207,6 +225,38 @@ class SlotResolver {
    */
   getStrategyCount() {
     return this.#strategies.length;
+  }
+
+  /**
+   * Resolves a clothing slot to attachment points for a given entity
+   * Uses strict validation - clothing slots must exist in blueprint clothingSlotMappings
+   *
+   * @param {string} entityId - Entity to resolve for
+   * @param {string} slotId - Clothing slot identifier to resolve
+   * @returns {Promise<ResolvedAttachmentPoint[]>} Array of resolved attachment points
+   * @throws {ClothingSlotNotFoundError} If clothing slot not found in blueprint
+   * @throws {InvalidClothingSlotMappingError} If mapping structure is invalid
+   */
+  async resolveClothingSlot(entityId, slotId) {
+    assertPresent(entityId, 'Entity ID is required');
+    assertPresent(slotId, 'Slot ID is required');
+
+    // Create clothing slot mapping with the provided slotId
+    const mapping = { clothingSlotId: slotId };
+
+    // Find the ClothingSlotMappingStrategy
+    const strategy = this.#strategies.find(s => s.canResolve(mapping));
+
+    if (!strategy) {
+      throw new ClothingSlotNotFoundError(
+        `Clothing slot '${slotId}' not found in blueprint clothing slot mappings`,
+        slotId,
+        'unknown'
+      );
+    }
+
+    // Resolve using the strategy - let errors propagate
+    return await strategy.resolve(entityId, mapping);
   }
 }
 

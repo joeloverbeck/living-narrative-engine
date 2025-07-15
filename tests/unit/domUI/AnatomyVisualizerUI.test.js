@@ -14,6 +14,7 @@ describe('AnatomyVisualizerUI', () => {
   let mockAnatomyDescriptionService;
   let mockEventDispatcher;
   let mockVisualizerStateController;
+  let mockVisualizationComposer;
   let mockDocument;
   let visualizerUI;
 
@@ -60,6 +61,16 @@ describe('AnatomyVisualizerUI', () => {
       getAnatomyData: jest.fn(),
     };
 
+    // Mock visualization composer
+    mockVisualizationComposer = {
+      initialize: jest.fn(),
+      renderGraph: jest.fn().mockResolvedValue(undefined),
+      clear: jest.fn(),
+      setLayout: jest.fn(),
+      setTheme: jest.fn(),
+      dispose: jest.fn(),
+    };
+
     // Mock document with elements
     const mockSelector = {
       innerHTML: '',
@@ -98,6 +109,7 @@ describe('AnatomyVisualizerUI', () => {
       eventDispatcher: mockEventDispatcher,
       documentContext: { document: mockDocument },
       visualizerStateController: mockVisualizerStateController,
+      visualizationComposer: mockVisualizationComposer,
     });
   });
 
@@ -311,7 +323,7 @@ describe('AnatomyVisualizerUI', () => {
       // Mock event subscription for state changes before initialization
       let stateChangeCallback;
       mockEventDispatcher.subscribe.mockImplementation((eventId, callback) => {
-        if (eventId === 'VISUALIZER_STATE_CHANGED') {
+        if (eventId === 'anatomy:visualizer_state_changed') {
           stateChangeCallback = callback;
         }
         return jest.fn(); // unsubscribe function
@@ -320,11 +332,8 @@ describe('AnatomyVisualizerUI', () => {
       // Initialize to set up event subscriptions
       await visualizerUI.initialize();
 
-      // Create a mock graph renderer after initialization
-      visualizerUI._graphRenderer = {
-        renderGraph: jest.fn().mockResolvedValue(),
-        clear: jest.fn(),
-      };
+      // Update the mock to track calls after initialization
+      mockVisualizationComposer.renderGraph.mockClear();
 
       // Act
       await visualizerUI._loadEntity(entityDefId);
@@ -352,7 +361,7 @@ describe('AnatomyVisualizerUI', () => {
         'instance-123'
       );
       // The renderGraph is now called through the state change handler
-      expect(visualizerUI._graphRenderer.renderGraph).toHaveBeenCalledWith(
+      expect(mockVisualizationComposer.renderGraph).toHaveBeenCalledWith(
         'instance-123',
         { parts: { head: 'head-123', torso: 'torso-123' } }
       );

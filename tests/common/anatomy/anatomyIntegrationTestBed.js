@@ -20,7 +20,7 @@ import { LayerResolutionService } from '../../../src/clothing/services/layerReso
 import AnatomySocketIndex from '../../../src/anatomy/services/anatomySocketIndex.js';
 import { ClothingInstantiationService } from '../../../src/clothing/services/clothingInstantiationService.js';
 import { ClothingSlotValidator } from '../../../src/clothing/validation/clothingSlotValidator.js';
-import { ClothingManagementService } from '../../../src/clothing/services/clothingManagementServiceV2.js';
+import { ClothingManagementService } from '../../../src/clothing/services/clothingManagementService.js';
 import AnatomyBlueprintRepository from '../../../src/anatomy/repositories/anatomyBlueprintRepository.js';
 import { AnatomyClothingCache } from '../../../src/anatomy/cache/AnatomyClothingCache.js';
 import { ANATOMY_CLOTHING_CACHE_CONFIG } from '../../../src/anatomy/constants/anatomyConstants.js';
@@ -287,23 +287,24 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
     // Create mock equipment orchestrator
     this.mockEquipmentOrchestrator = {
       orchestrateEquipment: (actorId, clothing) =>
-        Promise.resolve({ 
-          success: true, 
-          equipped: clothing.map(item => ({
+        Promise.resolve({
+          success: true,
+          equipped: clothing.map((item) => ({
             itemId: item.itemId || UuidGenerator(),
             slot: item.targetSlot,
-          }))
+          })),
         }),
     };
 
     // Create missing dependencies for ClothingInstantiationService
     this.slotResolver = {
-      resolveClothingSlot: jest.fn().mockResolvedValue([
-        { entityId: 'torso', socketId: 'chest', slotPath: 'torso.chest' },
-      ]),
+      resolveClothingSlot: jest
+        .fn()
+        .mockResolvedValue([
+          { entityId: 'torso', socketId: 'chest', slotPath: 'torso.chest' },
+        ]),
       setSlotEntityMappings: jest.fn(),
     };
-
 
     // Create clothing instantiation service
     this.clothingInstantiationService = new ClothingInstantiationService({
@@ -595,7 +596,7 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
 
   /**
    * Sets up the test bed with common test data
-   * 
+   *
    * @returns {Promise<void>}
    */
   async setup() {
@@ -630,16 +631,16 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
         dataSchema: {
           type: 'object',
           properties: {
-            sockets: { 
-              type: 'array', 
-              items: { 
+            sockets: {
+              type: 'array',
+              items: {
                 type: 'object',
                 properties: {
                   id: { type: 'string' },
                   allowedTypes: { type: 'array', items: { type: 'string' } },
                   maxCount: { type: 'number' },
                 },
-              } 
+              },
             },
           },
         },
@@ -727,8 +728,16 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
           'anatomy:sockets': {
             sockets: [
               { id: 'head_socket', allowedTypes: ['head'], maxCount: 1 },
-              { id: 'torso_upper_socket', allowedTypes: ['torso_upper'], maxCount: 1 },
-              { id: 'torso_lower_socket', allowedTypes: ['torso_lower'], maxCount: 1 },
+              {
+                id: 'torso_upper_socket',
+                allowedTypes: ['torso_upper'],
+                maxCount: 1,
+              },
+              {
+                id: 'torso_lower_socket',
+                allowedTypes: ['torso_lower'],
+                maxCount: 1,
+              },
             ],
           },
         },
@@ -771,24 +780,24 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
         id: 'anatomy:human_adult',
         root: 'anatomy:human_torso',
         slots: {
-          head: { 
-            parent: null,  // null means attach to root
+          head: {
+            parent: null, // null means attach to root
             socket: 'head_socket',
             preferId: 'anatomy:human_head',
-            tags: ['head'], 
-            required: true 
+            tags: ['head'],
+            required: true,
           },
-          torso_upper: { 
-            parent: null,  // null means attach to root
+          torso_upper: {
+            parent: null, // null means attach to root
             socket: 'torso_upper_socket',
-            tags: ['torso', 'upper'], 
-            required: true 
+            tags: ['torso', 'upper'],
+            required: true,
           },
-          torso_lower: { 
-            parent: null,  // null means attach to root
+          torso_lower: {
+            parent: null, // null means attach to root
             socket: 'torso_lower_socket',
-            tags: ['torso', 'lower'], 
-            required: true 
+            tags: ['torso', 'lower'],
+            required: true,
           },
         },
         clothingSlotMappings: {
@@ -802,7 +811,7 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
 
   /**
    * Gets the entity manager
-   * 
+   *
    * @returns {EntityManager}
    */
   getEntityManager() {
@@ -811,7 +820,7 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
 
   /**
    * Gets the body graph service
-   * 
+   *
    * @returns {BodyGraphService}
    */
   getBodyGraphService() {
@@ -820,7 +829,7 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
 
   /**
    * Gets the data registry
-   * 
+   *
    * @returns {InMemoryDataRegistry}
    */
   getDataRegistry() {
@@ -829,13 +838,13 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
 
   /**
    * Creates a test actor with anatomy
-   * 
+   *
    * @returns {Promise<object>} Object with actorId and anatomyId
    */
   async createTestActorWithAnatomy() {
     // Create actor entity
     const actor = this.entityManager.createEntityInstance('test:actor');
-    
+
     // Add anatomy body component
     this.entityManager.addComponent(actor.id, 'anatomy:body', {
       recipeId: 'test:human_adult',
@@ -846,7 +855,10 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
     await this.anatomyGenerationService.generateAnatomyIfNeeded(actor.id);
 
     // Get the anatomy ID
-    const bodyData = this.entityManager.getComponentData(actor.id, 'anatomy:body');
+    const bodyData = this.entityManager.getComponentData(
+      actor.id,
+      'anatomy:body'
+    );
     const anatomyId = bodyData?.bodyParts?.[0] || null;
 
     return {
@@ -857,23 +869,24 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
 
   /**
    * Creates a test clothing item
-   * 
+   *
    * @param {string} definitionId - The entity definition ID for the clothing
    * @returns {Promise<string>} The created clothing entity ID
    */
   async createTestClothingItem(definitionId) {
-    const clothingEntity = this.entityManager.createEntityInstance(definitionId);
+    const clothingEntity =
+      this.entityManager.createEntityInstance(definitionId);
     return clothingEntity.id;
   }
 
   /**
    * Creates a test actor without anatomy
-   * 
+   *
    * @returns {Promise<string>} The created actor ID
    */
   async createTestActorWithEmptyAnatomy() {
     const actor = this.entityManager.createEntityInstance('test:actor');
-    
+
     // Add empty anatomy body component
     this.entityManager.addComponent(actor.id, 'anatomy:body', {
       recipeId: null,
@@ -885,32 +898,39 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
 
   /**
    * Creates a test actor with complex anatomy
-   * 
+   *
    * @param {number} partCount - Number of parts to create
    * @returns {Promise<object>} Object with actorId and anatomyId
    */
   async createTestActorWithComplexAnatomy(partCount) {
     // Create actor with basic anatomy first
     const result = await this.createTestActorWithAnatomy();
-    
+
     // Add additional parts as needed to reach the desired count
     const bodyGraph = await this.bodyGraphService.getBodyGraph(result.actorId);
     const currentParts = bodyGraph.getAllPartIds();
     const additionalPartsNeeded = Math.max(0, partCount - currentParts.length);
-    
+
     for (let i = 0; i < additionalPartsNeeded; i++) {
       const partId = this.createBlankEntity();
       this.entityManager.addComponent(partId, 'anatomy:part', {
         subType: `extra_part_${i}`,
         tags: ['extra'],
       });
-      
+
       // Add part to the body graph
       if (result.anatomyId) {
-        const bodyData = this.entityManager.getComponentData(result.actorId, 'anatomy:body');
+        const bodyData = this.entityManager.getComponentData(
+          result.actorId,
+          'anatomy:body'
+        );
         if (bodyData && bodyData.bodyParts) {
           bodyData.bodyParts.push(partId);
-          this.entityManager.updateComponent(result.actorId, 'anatomy:body', bodyData);
+          this.entityManager.updateComponent(
+            result.actorId,
+            'anatomy:body',
+            bodyData
+          );
         }
       }
     }
@@ -920,7 +940,7 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
 
   /**
    * Gets the clothing management service
-   * 
+   *
    * @returns {ClothingManagementService}
    */
   getClothingManagementService() {
@@ -929,7 +949,7 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
 
   /**
    * Gets the clothing instantiation service
-   * 
+   *
    * @returns {ClothingInstantiationService}
    */
   getClothingInstantiationService() {
@@ -939,7 +959,7 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
   /**
    * Creates a blank entity without a definition
    * This is a helper for tests that need simple entities
-   * 
+   *
    * @returns {string} The created entity ID
    */
   createBlankEntity() {
@@ -951,14 +971,14 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
       });
       this.registry.store('entityDefinitions', 'test:blank', blankDef);
     }
-    
+
     const entity = this.entityManager.createEntityInstance('test:blank');
     return entity.id;
   }
 
   /**
    * Sets up the test bed with required test data
-   * 
+   *
    * @returns {Promise<void>}
    */
   async setup() {
@@ -968,7 +988,7 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
 
   /**
    * Gets the entity manager
-   * 
+   *
    * @returns {EntityManager}
    */
   getEntityManager() {
@@ -977,7 +997,7 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
 
   /**
    * Gets the body graph service
-   * 
+   *
    * @returns {BodyGraphService}
    */
   getBodyGraphService() {
@@ -986,7 +1006,7 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
 
   /**
    * Gets the data registry
-   * 
+   *
    * @returns {InMemoryDataRegistry}
    */
   getDataRegistry() {
@@ -995,7 +1015,7 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
 
   /**
    * Creates a test actor with anatomy
-   * 
+   *
    * @returns {Promise<{actorId: string, anatomyData: object}>}
    */
   async createTestActorWithAnatomy() {
@@ -1020,7 +1040,7 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
     // Get the body graph to extract parts and slot mappings
     const bodyGraph = await this.bodyGraphService.getBodyGraph(actorId);
     const partIds = bodyGraph.getAllPartIds();
-    
+
     // Build parts map from body graph
     const partsMap = new Map();
     for (const partId of partIds) {
@@ -1062,7 +1082,7 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
 
   /**
    * Creates a test clothing item
-   * 
+   *
    * @param {string} definitionId - The clothing definition ID
    * @returns {Promise<string>} The created clothing entity ID
    */
@@ -1091,7 +1111,7 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
 
   /**
    * Creates a test actor with empty anatomy
-   * 
+   *
    * @returns {Promise<string>} The actor ID
    */
   async createTestActorWithEmptyAnatomy() {
@@ -1109,7 +1129,7 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
 
   /**
    * Creates a test actor with complex anatomy
-   * 
+   *
    * @param {number} partCount - Number of body parts to create
    * @returns {Promise<{actorId: string, anatomyData: object}>}
    */
@@ -1133,16 +1153,14 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
         components: {
           'anatomy:part': { type: 'test' },
           'anatomy:sockets': {
-            sockets: [
-              { id: `socket_test_${i}`, type: 'attachment' },
-            ],
+            sockets: [{ id: `socket_test_${i}`, type: 'attachment' }],
           },
         },
       });
       this.registry.store('entityDefinitions', `test:part_${i}`, partDef);
 
       const part = this.entityManager.createEntityInstance(`test:part_${i}`);
-      
+
       // Add joint to connect to actor
       this.entityManager.addComponent(part.id, 'anatomy:joint', {
         parentEntityId: actorId,
@@ -1333,9 +1351,7 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
         components: {
           'anatomy:part': { type: 'torso', subType: 'torso' },
           'anatomy:sockets': {
-            sockets: [
-              { id: 'torso_socket', type: 'attachment' },
-            ],
+            sockets: [{ id: 'torso_socket', type: 'attachment' }],
           },
         },
       },

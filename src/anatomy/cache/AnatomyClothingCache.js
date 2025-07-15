@@ -70,7 +70,7 @@ export class AnatomyClothingCache extends BaseService {
     // Create separate caches for each type to allow different configurations
     for (const cacheType of Object.values(CacheKeyTypes)) {
       const cacheConfig = this.#getCacheConfig(cacheType);
-      
+
       this.#caches.set(
         cacheType,
         new LRUCache({
@@ -78,7 +78,9 @@ export class AnatomyClothingCache extends BaseService {
           ttl: cacheConfig.ttl,
           updateAgeOnGet: cacheConfig.updateAgeOnGet,
           sizeCalculation: (value) => this.#calculateSize(value),
-          maxSize: Math.floor(this.#config.maxMemoryUsage / Object.keys(CacheKeyTypes).length),
+          maxSize: Math.floor(
+            this.#config.maxMemoryUsage / Object.keys(CacheKeyTypes).length
+          ),
           dispose: (value, key) => {
             this.#logger.debug(`Cache entry disposed: ${cacheType}:${key}`);
           },
@@ -273,7 +275,9 @@ export class AnatomyClothingCache extends BaseService {
       }
     }
 
-    this.#logger.info(`Invalidated ${invalidated} cache entries for entity ${entityId}`);
+    this.#logger.info(
+      `Invalidated ${invalidated} cache entries for entity ${entityId}`
+    );
   }
 
   /**
@@ -286,7 +290,7 @@ export class AnatomyClothingCache extends BaseService {
     let invalidated = 0;
     const regex = new RegExp(pattern);
 
-    const cachesToSearch = cacheType 
+    const cachesToSearch = cacheType
       ? [this.#caches.get(cacheType)].filter(Boolean)
       : Array.from(this.#caches.values());
 
@@ -299,7 +303,9 @@ export class AnatomyClothingCache extends BaseService {
       }
     }
 
-    this.#logger.info(`Invalidated ${invalidated} cache entries matching pattern: ${pattern}`);
+    this.#logger.info(
+      `Invalidated ${invalidated} cache entries matching pattern: ${pattern}`
+    );
   }
 
   /**
