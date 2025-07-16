@@ -93,7 +93,6 @@ describe('ActionButtonsRenderer', () => {
 
     docContext = new DocumentContext(document); // Pass the JSDOM document directly
 
-
     mockLogger = new ConsoleLogger();
     mockVed = new ValidatedEventDispatcher({
       eventBus: {
@@ -205,7 +204,9 @@ describe('ActionButtonsRenderer', () => {
 
     it('should not throw if domElementFactory is missing or invalid', () => {
       // Test with missing domElementFactory - should use a fallback internally
-      expect(() => createRenderer({ domElementFactory: undefined })).not.toThrow();
+      expect(() =>
+        createRenderer({ domElementFactory: undefined })
+      ).not.toThrow();
       // Test with invalid domElementFactory object - should handle gracefully
       expect(() => createRenderer({ domElementFactory: {} })).not.toThrow();
     });

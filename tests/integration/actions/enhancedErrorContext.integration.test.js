@@ -15,7 +15,7 @@ describe('Enhanced Error Context Integration Tests', () => {
 
   beforeEach(() => {
     testBed = new ActionDiscoveryServiceTestBed();
-    
+
     // Set up entity manager with test data
     testBed.mocks.entityManager.getEntity.mockImplementation((id) => ({
       id,
@@ -32,17 +32,21 @@ describe('Enhanced Error Context Integration Tests', () => {
     }));
 
     // Set up game data repository with test data
-    testBed.mocks.gameDataRepository.getComponentDefinition.mockImplementation((id) => ({
-      id,
-      name: `Component ${id}`,
-      description: `Test component ${id}`,
-    }));
+    testBed.mocks.gameDataRepository.getComponentDefinition.mockImplementation(
+      (id) => ({
+        id,
+        name: `Component ${id}`,
+        description: `Test component ${id}`,
+      })
+    );
 
-    testBed.mocks.gameDataRepository.getConditionDefinition.mockImplementation((id) => ({
-      id,
-      name: `Condition ${id}`,
-      description: `Test condition ${id}`,
-    }));
+    testBed.mocks.gameDataRepository.getConditionDefinition.mockImplementation(
+      (id) => ({
+        id,
+        name: `Condition ${id}`,
+        description: `Test condition ${id}`,
+      })
+    );
 
     // Set up action index with test data
     testBed.mocks.actionIndex.getCandidateActions.mockImplementation(() => [
@@ -109,9 +113,11 @@ describe('Enhanced Error Context Integration Tests', () => {
       const processingError = new Error('Processing failed');
       processingError.name = 'ProcessingError';
 
-      testBed.mocks.prerequisiteEvaluationService.evaluate.mockImplementation(() => {
-        throw processingError;
-      });
+      testBed.mocks.prerequisiteEvaluationService.evaluate.mockImplementation(
+        () => {
+          throw processingError;
+        }
+      );
 
       testBed.mocks.targetResolutionService.resolveTargets.mockReturnValue({
         targets: [{ type: 'none', entityId: null }],

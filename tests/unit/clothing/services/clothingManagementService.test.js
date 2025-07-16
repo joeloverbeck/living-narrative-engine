@@ -64,6 +64,7 @@ describe('ClothingManagementService', () => {
       bodyGraphService,
       anatomyClothingCache,
     } = createMocks());
+
     service = new ClothingManagementService({
       entityManager,
       logger,
@@ -125,7 +126,7 @@ describe('ClothingManagementService', () => {
       ).toThrow(InvalidArgumentError);
     });
 
-    it('should throw error when no anatomy integration service is provided', () => {
+    it('should throw error when required dependencies are missing', () => {
       expect(
         () =>
           new ClothingManagementService({
@@ -134,8 +135,13 @@ describe('ClothingManagementService', () => {
             eventDispatcher,
             equipmentOrchestrator,
           })
-      ).toThrow(
-        'Either anatomyClothingIntegrationService or anatomyBlueprintRepository must be provided'
+      ).toThrow('anatomyBlueprintRepository is required');
+    });
+
+    it('should use decomposed architecture when all dependencies are provided', () => {
+      expect(service).toBeInstanceOf(ClothingManagementService);
+      expect(logger.info).toHaveBeenCalledWith(
+        'ClothingManagementService: Using decomposed services architecture'
       );
     });
   });
@@ -617,6 +623,270 @@ describe('ClothingManagementService', () => {
 
       expect(result.success).toBe(false);
       expect(result.errors).toEqual(['entityId is required']);
+    });
+
+    it('should return cached data when available', async () => {
+      const cachedSlots = new Map([
+        ['cached_slot', { allowedLayers: ['base'], cached: true }],
+      ]);
+
+      anatomyClothingCache.get.mockReturnValue(cachedSlots);
+
+      const result = await service.getAvailableSlots('entity1');
+
+      expect(result.success).toBe(true);
+      expect(result.slots).toEqual([
+        { slotId: 'cached_slot', allowedLayers: ['base'], cached: true },
+      ]);
+      expect(
+        anatomyBlueprintRepository.getBlueprintByRecipeId
+      ).not.toHaveBeenCalled();
+    });
+
+    it('should return empty slots when entity has no recipeId', async () => {
+      entityManager.getComponentData.mockReturnValue({ recipeId: null });
+      anatomyClothingCache.get.mockReturnValue(null);
+
+      const result = await service.getAvailableSlots('entity1');
+
+      expect(result.success).toBe(true);
+      expect(result.slots).toEqual([]);
+      expect(
+        anatomyBlueprintRepository.getBlueprintByRecipeId
+      ).not.toHaveBeenCalled();
+    });
+
+    it('should return empty slots when blueprint has no clothingSlotMappings', async () => {
+      entityManager.getComponentData.mockReturnValue({
+        recipeId: 'test-recipe',
+      });
+      anatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue({
+        // No clothingSlotMappings property
+        slots: {},
+      });
+      anatomyClothingCache.get.mockReturnValue(null);
+
+      const result = await service.getAvailableSlots('entity1');
+
+      expect(result.success).toBe(true);
+      expect(result.slots).toEqual([]);
+      expect(logger.debug).toHaveBeenCalledWith(
+        'No clothing slot mappings for entity entity1'
+      );
+    });
+
+    it('should collect sockets from root entity', async () => {
+      entityManager.getComponentData
+        .mockReturnValueOnce({ recipeId: 'test-recipe' }) // anatomy:body
+        .mockReturnValueOnce({
+          // root entity anatomy:sockets
+          sockets: [{ id: 'root_socket_1' }, { id: 'root_socket_2' }],
+        })
+        .mockReturnValue({ sockets: [] }); // Other calls
+
+      anatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue({
+        clothingSlotMappings: {
+          test_slot: {
+            allowedLayers: ['base'],
+            anatomySockets: ['root_socket_1'],
+          },
+        },
+        slots: {},
+      });
+
+      bodyGraphService.getBodyGraph.mockResolvedValue({
+        getAllPartIds: () => [],
+      });
+
+      anatomyClothingCache.get.mockReturnValue(null);
+
+      const result = await service.getAvailableSlots('entity1');
+
+      expect(result.success).toBe(true);
+      expect(result.slots).toHaveLength(1);
+      expect(result.slots[0].slotId).toBe('test_slot');
+    });
+
+    it('should collect sockets from child parts', async () => {
+      entityManager.getComponentData
+        .mockReturnValueOnce({ recipeId: 'test-recipe' }) // anatomy:body
+        .mockReturnValueOnce({ sockets: [] }) // root entity sockets
+        .mockReturnValueOnce({
+          // child part 1 sockets
+          sockets: [{ id: 'child_socket_1' }],
+        })
+        .mockReturnValueOnce({
+          // child part 2 sockets
+          sockets: [{ id: 'child_socket_2' }],
+        });
+
+      anatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue({
+        clothingSlotMappings: {
+          test_slot: {
+            allowedLayers: ['base'],
+            anatomySockets: ['child_socket_1', 'child_socket_2'],
+          },
+        },
+        slots: {},
+      });
+
+      bodyGraphService.getBodyGraph.mockResolvedValue({
+        getAllPartIds: () => ['part1', 'part2'],
+      });
+
+      anatomyClothingCache.get.mockReturnValue(null);
+
+      const result = await service.getAvailableSlots('entity1');
+
+      expect(result.success).toBe(true);
+      expect(result.slots).toHaveLength(1);
+      expect(entityManager.getComponentData).toHaveBeenCalledWith(
+        'part1',
+        'anatomy:sockets'
+      );
+      expect(entityManager.getComponentData).toHaveBeenCalledWith(
+        'part2',
+        'anatomy:sockets'
+      );
+    });
+
+    it('should validate blueprint slots correctly', async () => {
+      entityManager.getComponentData
+        .mockReturnValueOnce({ recipeId: 'test-recipe' })
+        .mockReturnValue({ sockets: [] });
+
+      anatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue({
+        clothingSlotMappings: {
+          valid_slot: {
+            allowedLayers: ['base'],
+            blueprintSlots: ['existing_slot'],
+          },
+          invalid_slot: {
+            allowedLayers: ['base'],
+            blueprintSlots: ['non_existing_slot'],
+          },
+        },
+        slots: {
+          existing_slot: {
+            /* slot data */
+          },
+        },
+      });
+
+      bodyGraphService.getBodyGraph.mockResolvedValue({
+        getAllPartIds: () => [],
+      });
+
+      anatomyClothingCache.get.mockReturnValue(null);
+
+      const result = await service.getAvailableSlots('entity1');
+
+      expect(result.success).toBe(true);
+      expect(result.slots).toHaveLength(1);
+      expect(result.slots[0].slotId).toBe('valid_slot');
+      expect(logger.debug).toHaveBeenCalledWith(
+        "Blueprint slot 'non_existing_slot' not found in blueprint"
+      );
+    });
+
+    it('should handle wildcard sockets', async () => {
+      entityManager.getComponentData
+        .mockReturnValueOnce({ recipeId: 'test-recipe' })
+        .mockReturnValue({ sockets: [] });
+
+      anatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue({
+        clothingSlotMappings: {
+          wildcard_slot: {
+            allowedLayers: ['base'],
+            anatomySockets: ['*'], // Wildcard
+          },
+        },
+        slots: {},
+      });
+
+      bodyGraphService.getBodyGraph.mockResolvedValue({
+        getAllPartIds: () => [],
+      });
+
+      anatomyClothingCache.get.mockReturnValue(null);
+
+      const result = await service.getAvailableSlots('entity1');
+
+      expect(result.success).toBe(true);
+      expect(result.slots).toHaveLength(1);
+      expect(result.slots[0].slotId).toBe('wildcard_slot');
+    });
+
+    it('should validate direct sockets and log when not found', async () => {
+      // Mock body component call first
+      entityManager.getComponentData
+        .mockReturnValueOnce({ recipeId: 'test-recipe' }) // anatomy:body
+        .mockReturnValueOnce({
+          // root entity anatomy:sockets
+          sockets: [{ id: 'existing_socket' }],
+        })
+        .mockReturnValue({ sockets: [] }); // child parts have no sockets
+
+      anatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue({
+        clothingSlotMappings: {
+          invalid_socket_slot: {
+            allowedLayers: ['base'],
+            anatomySockets: ['missing_socket'],
+          },
+          valid_socket_slot: {
+            allowedLayers: ['base'],
+            anatomySockets: ['existing_socket', 'missing_socket'],
+          },
+        },
+        slots: {},
+      });
+
+      bodyGraphService.getBodyGraph.mockResolvedValue({
+        getAllPartIds: () => [],
+      });
+
+      anatomyClothingCache.get.mockReturnValue(null);
+
+      const result = await service.getAvailableSlots('entity1');
+
+      expect(result.success).toBe(true);
+      expect(result.slots).toHaveLength(1);
+      expect(result.slots[0].slotId).toBe('valid_socket_slot');
+      expect(logger.debug).toHaveBeenCalledWith(
+        "Socket 'missing_socket' not found in anatomy structure"
+      );
+    });
+
+    it('should skip slots with neither blueprintSlots nor anatomySockets', async () => {
+      entityManager.getComponentData
+        .mockReturnValueOnce({ recipeId: 'test-recipe' })
+        .mockReturnValue({ sockets: [] });
+
+      anatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue({
+        clothingSlotMappings: {
+          valid_slot: {
+            allowedLayers: ['base'],
+            anatomySockets: ['*'],
+          },
+          invalid_slot: {
+            allowedLayers: ['base'],
+            // Neither blueprintSlots nor anatomySockets
+          },
+        },
+        slots: {},
+      });
+
+      bodyGraphService.getBodyGraph.mockResolvedValue({
+        getAllPartIds: () => [],
+      });
+
+      anatomyClothingCache.get.mockReturnValue(null);
+
+      const result = await service.getAvailableSlots('entity1');
+
+      expect(result.success).toBe(true);
+      expect(result.slots).toHaveLength(1);
+      expect(result.slots[0].slotId).toBe('valid_slot');
     });
   });
 });

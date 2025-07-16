@@ -1,12 +1,8 @@
 /**
  * @file ClothingManagementService - Facade for clothing system operations
  *
- * Supports both the legacy AnatomyClothingIntegrationService
- * and the new decomposed services architecture.
- *
- * Allows gradual migration by accepting either:
- * - The legacy anatomyClothingIntegrationService
- * - The new decomposed services (anatomyBlueprintRepository, clothingSlotValidator, etc.)
+ * Provides high-level API for clothing equipment, validation, and management
+ * using the decomposed services architecture.
  */
 
 import { validateDependency } from '../../utils/dependencyUtils.js';
@@ -21,7 +17,6 @@ import { ANATOMY_CLOTHING_CACHE_CONFIG } from '../../anatomy/constants/anatomyCo
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 /** @typedef {import('../orchestration/equipmentOrchestrator.js').EquipmentOrchestrator} EquipmentOrchestrator */
-// Removed: AnatomyClothingIntegrationService import - service no longer exists
 /** @typedef {import('../../interfaces/IAnatomyBlueprintRepository.js').IAnatomyBlueprintRepository} IAnatomyBlueprintRepository */
 /** @typedef {import('../../interfaces/IClothingSlotValidator.js').IClothingSlotValidator} IClothingSlotValidator */
 
@@ -38,7 +33,7 @@ import { ANATOMY_CLOTHING_CACHE_CONFIG } from '../../anatomy/constants/anatomyCo
  * Facade service for clothing system operations
  *
  * Provides high-level API for clothing equipment, validation, and management
- * while supporting both legacy and new architecture patterns.
+ * using the decomposed services architecture.
  */
 export class ClothingManagementService {
   /** @type {IEntityManager} */
@@ -49,8 +44,6 @@ export class ClothingManagementService {
   #eventDispatcher;
   /** @type {EquipmentOrchestrator} */
   #orchestrator;
-  /** @type {AnatomyClothingIntegrationService|null} */
-  #anatomyClothingIntegration;
   /** @type {IAnatomyBlueprintRepository|null} */
   #anatomyBlueprintRepository;
   /** @type {IClothingSlotValidator|null} */
@@ -68,7 +61,6 @@ export class ClothingManagementService {
    * @param {ILogger} deps.logger - Logger instance
    * @param {ISafeEventDispatcher} deps.eventDispatcher - Event dispatcher for system events
    * @param {EquipmentOrchestrator} deps.equipmentOrchestrator - Orchestrator for complex equipment workflows
-   * @param {AnatomyClothingIntegrationService} [deps.anatomyClothingIntegrationService] - Legacy integrated service
    * @param {IAnatomyBlueprintRepository} [deps.anatomyBlueprintRepository] - New decomposed blueprint repository
    * @param {IClothingSlotValidator} [deps.clothingSlotValidator] - New decomposed slot validator
    * @param {object} [deps.bodyGraphService] - Body graph service for anatomy structure
@@ -79,7 +71,6 @@ export class ClothingManagementService {
     logger,
     eventDispatcher,
     equipmentOrchestrator,
-    anatomyClothingIntegrationService,
     anatomyBlueprintRepository,
     clothingSlotValidator,
     bodyGraphService,
@@ -90,11 +81,15 @@ export class ClothingManagementService {
     validateDependency(eventDispatcher, 'ISafeEventDispatcher');
     validateDependency(equipmentOrchestrator, 'EquipmentOrchestrator');
 
-    // Support both legacy and new architecture
-    if (!anatomyClothingIntegrationService && !anatomyBlueprintRepository) {
-      throw new Error(
-        'Either anatomyClothingIntegrationService or anatomyBlueprintRepository must be provided'
-      );
+    // Validate required dependencies for new architecture
+    if (!anatomyBlueprintRepository) {
+      throw new Error('anatomyBlueprintRepository is required');
+    }
+    if (!clothingSlotValidator) {
+      throw new Error('clothingSlotValidator is required');
+    }
+    if (!bodyGraphService) {
+      throw new Error('bodyGraphService is required');
     }
 
     this.#entityManager = entityManager;
@@ -102,32 +97,19 @@ export class ClothingManagementService {
     this.#eventDispatcher = eventDispatcher;
     this.#orchestrator = equipmentOrchestrator;
 
-    // Legacy path
-    this.#anatomyClothingIntegration =
-      anatomyClothingIntegrationService || null;
+    // Initialize decomposed services
+    this.#anatomyBlueprintRepository = anatomyBlueprintRepository;
+    this.#clothingSlotValidator = clothingSlotValidator;
+    this.#bodyGraphService = bodyGraphService;
 
-    // New decomposed services path
-    this.#anatomyBlueprintRepository = anatomyBlueprintRepository || null;
-    this.#clothingSlotValidator = clothingSlotValidator || null;
-    this.#bodyGraphService = bodyGraphService || null;
+    // Initialize cache
+    this.#cache =
+      anatomyClothingCache ||
+      new AnatomyClothingCache({ logger }, ANATOMY_CLOTHING_CACHE_CONFIG);
 
-    // Initialize cache if using new architecture
-    if (this.#anatomyBlueprintRepository) {
-      this.#cache =
-        anatomyClothingCache ||
-        new AnatomyClothingCache({ logger }, ANATOMY_CLOTHING_CACHE_CONFIG);
-    }
-
-    // Log which architecture we're using
-    if (this.#anatomyClothingIntegration) {
-      this.#logger.info(
-        'ClothingManagementService: Using legacy integrated architecture'
-      );
-    } else {
-      this.#logger.info(
-        'ClothingManagementService: Using new decomposed architecture'
-      );
-    }
+    this.#logger.info(
+      'ClothingManagementService: Using decomposed services architecture'
+    );
   }
 
   /**
@@ -331,7 +313,6 @@ export class ClothingManagementService {
 
   /**
    * Gets available clothing slots for an entity
-   * Supports both legacy and new architecture patterns
    *
    * @param {string} entityId - The entity to get clothing slots for
    * @returns {Promise<{success: boolean, slots?: object[], errors?: string[]}>}
@@ -346,18 +327,8 @@ export class ClothingManagementService {
         `ClothingManagementService: Getting available clothing slots for entity '${entityId}'`
       );
 
-      let slots;
-
-      // Use legacy service if available
-      if (this.#anatomyClothingIntegration) {
-        slots =
-          await this.#anatomyClothingIntegration.getAvailableClothingSlots(
-            entityId
-          );
-      } else {
-        // Use new decomposed approach
-        slots = await this.#getAvailableSlotsDecomposed(entityId);
-      }
+      // Use decomposed approach
+      const slots = await this.#getAvailableSlotsDecomposed(entityId);
 
       // Convert Map to array format for backward compatibility
       const slotsArray = Array.from(slots.entries()).map(

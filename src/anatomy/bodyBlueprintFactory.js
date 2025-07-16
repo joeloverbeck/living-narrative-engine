@@ -149,7 +149,7 @@ export class BodyBlueprintFactory {
 
       // Phase 2: Process blueprint slots if defined
       if (blueprint.slots) {
-        await this.#processBlueprintSlots(blueprint, processedRecipe, context);
+        await this.#processBlueprintSlots(blueprint, processedRecipe, context, options.ownerId);
       }
 
       // Phase 3: Validate constraints
@@ -289,9 +289,10 @@ export class BodyBlueprintFactory {
    * @param {AnatomyBlueprint} blueprint - The blueprint with slots
    * @param {object} recipe - The processed recipe
    * @param {AnatomyGraphContext} context - The graph building context
+   * @param ownerId
    * @private
    */
-  async #processBlueprintSlots(blueprint, recipe, context) {
+  async #processBlueprintSlots(blueprint, recipe, context, ownerId) {
     // Sort slots by dependency order
     const sortedSlots = this.#sortSlotsByDependency(blueprint.slots);
 
@@ -357,7 +358,8 @@ export class BodyBlueprintFactory {
         const childId = this.#entityGraphBuilder.createAndAttachPart(
           parentEntityId,
           socket.id,
-          partDefinitionId
+          partDefinitionId,
+          ownerId
         );
 
         if (childId) {

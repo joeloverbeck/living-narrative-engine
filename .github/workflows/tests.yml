@@ -10,8 +10,8 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This job tests the code in the root directory
-  test-http-client:
+  # Job for unit tests
+  test-unit:
     runs-on: ubuntu-latest # Use the latest version of Ubuntu as the runner
     steps:
       # Step 1: Check out your repository's code so the job can access it
@@ -29,9 +29,55 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      # Step 4: Run the test command defined in your package.json
-      - name: Run tests
-        run: npm run test:ci
+      # Step 4: Run unit tests
+      - name: Run unit tests
+        run: npm run test:unit
+
+  # Job for integration tests
+  test-integration:
+    runs-on: ubuntu-latest # Use the latest version of Ubuntu as the runner
+    steps:
+      # Step 1: Check out your repository's code so the job can access it
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Set up the correct version of Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # You can specify your desired Node.js version
+          cache: 'npm' # Cache npm dependencies for faster runs
+
+      # Step 3: Install the dependencies from your package.json
+      - name: Install dependencies
+        run: npm install
+
+      # Step 4: Run integration tests
+      - name: Run integration tests
+        run: npm run test:integration
+
+  # Job for e2e tests
+  test-e2e:
+    runs-on: ubuntu-latest # Use the latest version of Ubuntu as the runner
+    steps:
+      # Step 1: Check out your repository's code so the job can access it
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Set up the correct version of Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # You can specify your desired Node.js version
+          cache: 'npm' # Cache npm dependencies for faster runs
+
+      # Step 3: Install the dependencies from your package.json
+      - name: Install dependencies
+        run: npm install
+
+      # Step 4: Run e2e tests
+      - name: Run e2e tests
+        run: npm run test:e2e
 
   # This job tests the code in the llm-proxy-server directory
   test-proxy-server:

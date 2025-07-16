@@ -59,26 +59,47 @@ if (typeof window !== 'undefined' && window.EventTarget) {
 }
 
 // Global cleanup hook to prevent timer leaks and hanging worker processes
-global.afterEach(() => {
-  // Clear all timers - both mocked and real
+global.afterEach(async () => {
+  // First, clear all pending timers without executing them
+  if (typeof jest.clearAllTimers === 'function') {
+    jest.clearAllTimers();
+  }
+
+  // Restore real timers if fake timers were used
   try {
-    // If using fake timers, run pending timers and restore
-    if (typeof jest.runOnlyPendingTimers === 'function') {
-      jest.runOnlyPendingTimers();
-    }
-    if (typeof jest.useRealTimers === 'function') {
+    // Check if we're using fake timers by attempting to get the system time
+    const usingFakeTimers = jest.isMockFunction(setTimeout);
+    if (usingFakeTimers || typeof jest.useRealTimers === 'function') {
       jest.useRealTimers();
     }
   } catch (e) {
     // Ignore errors - real timers might already be in use
   }
 
-  // Always clear all timers and mocks
-  if (typeof jest.clearAllTimers === 'function') {
-    jest.clearAllTimers();
-  }
+  // Clear all mocks
   if (typeof jest.clearAllMocks === 'function') {
     jest.clearAllMocks();
+  }
+
+  // Note: We intentionally don't clear all timeout/interval IDs globally
+  // as this can interfere with Jest's internal timers and cause hangs
+
+  // Allow any pending microtasks to complete
+  // Check if we're using fake timers and handle accordingly
+  try {
+    // If fake timers are active, we need to use a different approach
+    if (typeof jest !== 'undefined' && jest.isMockFunction(setTimeout)) {
+      // Use process.nextTick if available (Node.js environment)
+      if (typeof process !== 'undefined' && process.nextTick) {
+        await new Promise((resolve) => process.nextTick(resolve));
+      }
+      // Otherwise, we can skip this step as fake timers are controlling async behavior
+    } else {
+      // Real timers are active, use setTimeout normally
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    }
+  } catch (err) {
+    // If anything fails, we can safely continue as this is just cleanup
   }
 
   // Force clear any active handles that might be keeping the process alive

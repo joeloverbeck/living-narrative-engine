@@ -35,7 +35,11 @@ export class ActionErrorContextBuilder extends BaseService {
     this.#logger = this._init('ActionErrorContextBuilder', logger, {
       entityManager: {
         value: entityManager,
-        requiredMethods: ['getEntityInstance', 'getAllComponentTypesForEntity', 'getComponentData'],
+        requiredMethods: [
+          'getEntityInstance',
+          'getAllComponentTypesForEntity',
+          'getComponentData',
+        ],
       },
       fixSuggestionEngine: {
         value: fixSuggestionEngine,
@@ -124,14 +128,18 @@ export class ActionErrorContextBuilder extends BaseService {
   #createActorSnapshot(actorId) {
     try {
       const actorEntity = this.#entityManager.getEntityInstance(actorId);
-      
+
       // Reconstruct components object from available methods
-      const componentTypes = this.#entityManager.getAllComponentTypesForEntity(actorId);
+      const componentTypes =
+        this.#entityManager.getAllComponentTypesForEntity(actorId);
       const components = {};
       for (const componentType of componentTypes) {
-        components[componentType] = this.#entityManager.getComponentData(actorId, componentType);
+        components[componentType] = this.#entityManager.getComponentData(
+          actorId,
+          componentType
+        );
       }
-      
+
       const locationComponent = components['core:location'];
       const location = locationComponent?.value || 'none';
 

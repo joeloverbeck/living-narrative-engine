@@ -1,22 +1,20 @@
 /**
- * @file Shared test bed for anatomy visualizer components
- * @description Provides unified mock setup and utilities for anatomy visualizer tests
+ * @file Lightweight test bed for anatomy visualizer unit tests (no DOM)
+ * @description Provides mock setup without JSDOM for faster unit test execution
  */
 
 import { jest } from '@jest/globals';
-import { JSDOM } from 'jsdom';
 import BaseTestBed from '../baseTestBed.js';
 import { ENTITY_CREATED_ID } from '../../../src/constants/eventIds.js';
 
 /**
- * Shared test bed for anatomy visualizer components
- * Provides unified mock setup and caching for better performance
+ * Lightweight test bed for anatomy visualizer unit tests
+ * Provides mock setup without DOM dependencies for better performance
  */
-export class AnatomyVisualizerTestBed extends BaseTestBed {
+export class AnatomyVisualizerUnitTestBed extends BaseTestBed {
   constructor() {
     super();
     this.#initializeMocks();
-    this.#setupCachedDependencies();
   }
 
   /**
@@ -37,17 +35,6 @@ export class AnatomyVisualizerTestBed extends BaseTestBed {
     Object.entries(this.mocks).forEach(([key, value]) => {
       this[key] = value;
     });
-  }
-
-  /**
-   * Setup cached dependencies that can be reused across tests
-   *
-   * @private
-   */
-  #setupCachedDependencies() {
-    this.cachedModules = new Map();
-    this.domCache = null;
-    this.containerCache = null;
   }
 
   /**
@@ -125,56 +112,6 @@ export class AnatomyVisualizerTestBed extends BaseTestBed {
       debug: jest.fn(),
       info: jest.fn(),
     };
-  }
-
-  /**
-   * Get or create DOM environment (cached for performance)
-   *
-   * @returns {JSDOM} DOM instance
-   */
-  getDOMEnvironment() {
-    if (!this.domCache) {
-      this.domCache = new JSDOM('<!DOCTYPE html><html><body></body></html>', {
-        url: 'http://localhost',
-        pretendToBeVisual: true,
-      });
-    }
-    return this.domCache;
-  }
-
-  /**
-   * Setup global DOM environment
-   */
-  setupGlobalDOM() {
-    const dom = this.getDOMEnvironment();
-    global.window = dom.window;
-    global.document = dom.window.document;
-    global.navigator = dom.window.navigator;
-  }
-
-  /**
-   * Cleanup global DOM environment
-   */
-  cleanupGlobalDOM() {
-    if (this.domCache) {
-      this.domCache.window.close();
-      delete global.window;
-      delete global.document;
-      delete global.navigator;
-    }
-  }
-
-  /**
-   * Get cached module or load it
-   *
-   * @param {string} modulePath - Path to the module
-   * @returns {any} Module exports
-   */
-  getCachedModule(modulePath) {
-    if (!this.cachedModules.has(modulePath)) {
-      this.cachedModules.set(modulePath, require(modulePath));
-    }
-    return this.cachedModules.get(modulePath);
   }
 
   /**
@@ -346,12 +283,8 @@ export class AnatomyVisualizerTestBed extends BaseTestBed {
    * @override
    */
   async cleanup() {
-    this.cleanupGlobalDOM();
-    this.cachedModules.clear();
-    this.domCache = null;
-    this.containerCache = null;
     await super.cleanup();
   }
 }
 
-export default AnatomyVisualizerTestBed;
+export default AnatomyVisualizerUnitTestBed;

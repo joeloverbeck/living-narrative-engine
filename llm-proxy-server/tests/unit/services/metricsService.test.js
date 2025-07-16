@@ -75,6 +75,24 @@ describe('MetricsService', () => {
         'Metrics collection is disabled'
       );
     });
+
+    it('should collect default metrics when enabled', () => {
+      const service = new MetricsService({
+        logger: mockLogger,
+        enabled: true,
+        collectDefaultMetrics: true,
+        defaultMetricsInterval: 5000,
+      });
+
+      expect(service.isEnabled()).toBe(true);
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'Metrics service initialized',
+        expect.objectContaining({
+          defaultMetrics: true,
+          customMetrics: true,
+        })
+      );
+    });
   });
 
   describe('HTTP Request Metrics', () => {
@@ -138,6 +156,51 @@ describe('MetricsService', () => {
         });
       }).not.toThrow();
     });
+
+    it('should skip recording request size when zero or negative', () => {
+      const data = {
+        method: 'POST',
+        route: '/test',
+        statusCode: 200,
+        duration: 1.0,
+        requestSize: 0,
+        responseSize: 1024,
+      };
+
+      expect(() => {
+        metricsService.recordHttpRequest(data);
+      }).not.toThrow();
+    });
+
+    it('should skip recording response size when zero or negative', () => {
+      const data = {
+        method: 'POST',
+        route: '/test',
+        statusCode: 200,
+        duration: 1.0,
+        requestSize: 1024,
+        responseSize: -100,
+      };
+
+      expect(() => {
+        metricsService.recordHttpRequest(data);
+      }).not.toThrow();
+    });
+
+    it('should handle non-numeric sizes gracefully', () => {
+      const data = {
+        method: 'POST',
+        route: '/test',
+        statusCode: 200,
+        duration: 1.0,
+        requestSize: 'not-a-number',
+        responseSize: null,
+      };
+
+      expect(() => {
+        metricsService.recordHttpRequest(data);
+      }).not.toThrow();
+    });
   });
 
   describe('LLM Request Metrics', () => {
@@ -188,6 +251,60 @@ describe('MetricsService', () => {
         metricsService.recordLlmRequest(data);
       }).not.toThrow();
     });
+
+    it('should not record tokens when disabled', () => {
+      const disabledService = new MetricsService({
+        enabled: false,
+        logger: mockLogger,
+      });
+
+      expect(() => {
+        disabledService.recordLlmRequest({
+          provider: 'openai',
+          model: 'gpt-3.5-turbo',
+          status: 'success',
+          duration: 2.5,
+          tokens: {
+            input: 100,
+            output: 150,
+          },
+        });
+      }).not.toThrow();
+    });
+
+    it('should handle negative token values gracefully', () => {
+      const data = {
+        provider: 'openai',
+        model: 'gpt-3.5-turbo',
+        status: 'success',
+        duration: 2.5,
+        tokens: {
+          input: -100, // Negative input tokens
+          output: -150, // Negative output tokens
+        },
+      };
+
+      expect(() => {
+        metricsService.recordLlmRequest(data);
+      }).not.toThrow();
+    });
+
+    it('should handle non-numeric token values', () => {
+      const data = {
+        provider: 'openai',
+        model: 'gpt-3.5-turbo',
+        status: 'success',
+        duration: 2.5,
+        tokens: {
+          input: 'not-a-number',
+          output: null,
+        },
+      };
+
+      expect(() => {
+        metricsService.recordLlmRequest(data);
+      }).not.toThrow();
+    });
   });
 
   describe('Cache Operation Metrics', () => {
@@ -219,6 +336,49 @@ describe('MetricsService', () => {
         }).not.toThrow();
       });
     });
+
+    it('should handle missing cacheType gracefully', () => {
+      const data = {
+        operation: 'get',
+        result: 'hit',
+        // Missing cacheType, size, and memoryUsage
+      };
+
+      expect(() => {
+        metricsService.recordCacheOperation(data);
+      }).not.toThrow();
+    });
+
+    it('should handle non-numeric size and memory usage', () => {
+      const data = {
+        operation: 'get',
+        result: 'hit',
+        cacheType: 'api_key',
+        size: 'not-a-number',
+        memoryUsage: null,
+      };
+
+      expect(() => {
+        metricsService.recordCacheOperation(data);
+      }).not.toThrow();
+    });
+
+    it('should not record cache metrics when disabled', () => {
+      const disabledService = new MetricsService({
+        enabled: false,
+        logger: mockLogger,
+      });
+
+      expect(() => {
+        disabledService.recordCacheOperation({
+          operation: 'get',
+          result: 'hit',
+          cacheType: 'api_key',
+          size: 50,
+          memoryUsage: 1024000,
+        });
+      }).not.toThrow();
+    });
   });
 
   describe('Rate Limiting Metrics', () => {
@@ -245,6 +405,59 @@ describe('MetricsService', () => {
 
       expect(() => {
         metricsService.recordRateLimiting(data);
+      }).not.toThrow();
+    });
+
+    it('should handle missing limitType or clientType', () => {
+      const data = {
+        patternType: 'rapid_requests',
+        severity: 'high',
+        mapSize: 50,
+      };
+
+      expect(() => {
+        metricsService.recordRateLimiting(data);
+      }).not.toThrow();
+    });
+
+    it('should handle missing patternType or severity', () => {
+      const data = {
+        limitType: 'llm',
+        clientType: 'ip',
+        mapSize: 75,
+      };
+
+      expect(() => {
+        metricsService.recordRateLimiting(data);
+      }).not.toThrow();
+    });
+
+    it('should handle non-numeric mapSize', () => {
+      const data = {
+        limitType: 'llm',
+        clientType: 'ip',
+        mapSize: 'not-a-number',
+      };
+
+      expect(() => {
+        metricsService.recordRateLimiting(data);
+      }).not.toThrow();
+    });
+
+    it('should not record rate limiting metrics when disabled', () => {
+      const disabledService = new MetricsService({
+        enabled: false,
+        logger: mockLogger,
+      });
+
+      expect(() => {
+        disabledService.recordRateLimiting({
+          limitType: 'llm',
+          clientType: 'ip',
+          patternType: 'rapid_requests',
+          severity: 'medium',
+          mapSize: 100,
+        });
       }).not.toThrow();
     });
   });
@@ -276,6 +489,44 @@ describe('MetricsService', () => {
         }).not.toThrow();
       });
     });
+
+    it('should handle missing result or validationType', () => {
+      const data = {
+        incidentType: 'sql_injection',
+        severity: 'critical',
+      };
+
+      expect(() => {
+        metricsService.recordSecurityValidation(data);
+      }).not.toThrow();
+    });
+
+    it('should handle missing incidentType or severity', () => {
+      const data = {
+        result: 'fail',
+        validationType: 'input',
+      };
+
+      expect(() => {
+        metricsService.recordSecurityValidation(data);
+      }).not.toThrow();
+    });
+
+    it('should not record security metrics when disabled', () => {
+      const disabledService = new MetricsService({
+        enabled: false,
+        logger: mockLogger,
+      });
+
+      expect(() => {
+        disabledService.recordSecurityValidation({
+          result: 'pass',
+          validationType: 'headers',
+          incidentType: 'xss_attempt',
+          severity: 'high',
+        });
+      }).not.toThrow();
+    });
   });
 
   describe('API Key Operation Metrics', () => {
@@ -304,6 +555,42 @@ describe('MetricsService', () => {
         }).not.toThrow();
       });
     });
+
+    it('should handle missing fields in API key operation', () => {
+      const data = {
+        // All fields missing
+      };
+
+      expect(() => {
+        metricsService.recordApiKeyOperation(data);
+      }).not.toThrow();
+    });
+
+    it('should handle partial API key operation data', () => {
+      const data = {
+        operation: 'cache_hit',
+        // Missing result and keySource
+      };
+
+      expect(() => {
+        metricsService.recordApiKeyOperation(data);
+      }).not.toThrow();
+    });
+
+    it('should not record API key metrics when disabled', () => {
+      const disabledService = new MetricsService({
+        enabled: false,
+        logger: mockLogger,
+      });
+
+      expect(() => {
+        disabledService.recordApiKeyOperation({
+          operation: 'retrieve',
+          result: 'success',
+          keySource: 'file',
+        });
+      }).not.toThrow();
+    });
   });
 
   describe('Health Check Metrics', () => {
@@ -330,6 +617,55 @@ describe('MetricsService', () => {
           metricsService.recordHealthCheck(check);
         }).not.toThrow();
       });
+    });
+
+    it('should handle missing checkType or result', () => {
+      const data = {
+        duration: 0.03,
+      };
+
+      expect(() => {
+        metricsService.recordHealthCheck(data);
+      }).not.toThrow();
+    });
+
+    it('should handle missing duration', () => {
+      const data = {
+        checkType: 'liveness',
+        result: 'success',
+        // Missing duration
+      };
+
+      expect(() => {
+        metricsService.recordHealthCheck(data);
+      }).not.toThrow();
+    });
+
+    it('should handle non-numeric duration', () => {
+      const data = {
+        checkType: 'readiness',
+        result: 'success',
+        duration: 'not-a-number',
+      };
+
+      expect(() => {
+        metricsService.recordHealthCheck(data);
+      }).not.toThrow();
+    });
+
+    it('should not record health check metrics when disabled', () => {
+      const disabledService = new MetricsService({
+        enabled: false,
+        logger: mockLogger,
+      });
+
+      expect(() => {
+        disabledService.recordHealthCheck({
+          checkType: 'liveness',
+          result: 'success',
+          duration: 0.05,
+        });
+      }).not.toThrow();
     });
   });
 
@@ -358,6 +694,42 @@ describe('MetricsService', () => {
           metricsService.recordError(error);
         }).not.toThrow();
       });
+    });
+
+    it('should handle missing fields in error data', () => {
+      const data = {
+        // All fields missing
+      };
+
+      expect(() => {
+        metricsService.recordError(data);
+      }).not.toThrow();
+    });
+
+    it('should handle partial error data', () => {
+      const data = {
+        errorType: 'network',
+        // Missing component and severity
+      };
+
+      expect(() => {
+        metricsService.recordError(data);
+      }).not.toThrow();
+    });
+
+    it('should not record error metrics when disabled', () => {
+      const disabledService = new MetricsService({
+        enabled: false,
+        logger: mockLogger,
+      });
+
+      expect(() => {
+        disabledService.recordError({
+          errorType: 'validation',
+          component: 'middleware',
+          severity: 'medium',
+        });
+      }).not.toThrow();
     });
   });
 
@@ -455,6 +827,198 @@ describe('MetricsService', () => {
       );
     });
 
+    it('should handle errors in recordLlmRequest gracefully', () => {
+      // Force an error by corrupting the metric
+      metricsService.llmRequestsTotal = null;
+
+      expect(() => {
+        metricsService.recordLlmRequest({
+          provider: 'openai',
+          model: 'gpt-3.5-turbo',
+          status: 'success',
+          duration: 2.5,
+          tokens: {
+            input: 100,
+            output: 150,
+          },
+        });
+      }).not.toThrow();
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Error recording LLM request metrics',
+        expect.any(Error)
+      );
+    });
+
+    it('should handle errors in recordCacheOperation gracefully', () => {
+      // Force an error by corrupting the metric
+      metricsService.cacheOperationsTotal = null;
+
+      expect(() => {
+        metricsService.recordCacheOperation({
+          operation: 'get',
+          result: 'hit',
+          cacheType: 'api_key',
+          size: 50,
+          memoryUsage: 1024000,
+        });
+      }).not.toThrow();
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Error recording cache operation metrics',
+        expect.any(Error)
+      );
+    });
+
+    it('should handle errors in recordRateLimiting gracefully', () => {
+      // Force an error by corrupting the metric
+      metricsService.rateLimitHits = null;
+
+      expect(() => {
+        metricsService.recordRateLimiting({
+          limitType: 'llm',
+          clientType: 'ip',
+          patternType: 'rapid_requests',
+          severity: 'medium',
+          mapSize: 100,
+        });
+      }).not.toThrow();
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Error recording rate limiting metrics',
+        expect.any(Error)
+      );
+    });
+
+    it('should handle errors in recordSecurityValidation gracefully', () => {
+      // Force an error by corrupting the metric
+      metricsService.securityValidationResults = null;
+
+      expect(() => {
+        metricsService.recordSecurityValidation({
+          result: 'pass',
+          validationType: 'headers',
+          incidentType: 'xss_attempt',
+          severity: 'high',
+        });
+      }).not.toThrow();
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Error recording security validation metrics',
+        expect.any(Error)
+      );
+    });
+
+    it('should handle errors in recordApiKeyOperation gracefully', () => {
+      // Force an error by corrupting the metric
+      metricsService.apiKeyOperations = null;
+
+      expect(() => {
+        metricsService.recordApiKeyOperation({
+          operation: 'retrieve',
+          result: 'success',
+          keySource: 'file',
+        });
+      }).not.toThrow();
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Error recording API key operation metrics',
+        expect.any(Error)
+      );
+    });
+
+    it('should handle errors in recordHealthCheck gracefully', () => {
+      // Force an error by corrupting the metric
+      metricsService.healthCheckResults = null;
+
+      expect(() => {
+        metricsService.recordHealthCheck({
+          checkType: 'liveness',
+          result: 'success',
+          duration: 0.05,
+        });
+      }).not.toThrow();
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Error recording health check metrics',
+        expect.any(Error)
+      );
+    });
+
+    it('should handle errors in recordError gracefully', () => {
+      // Force an error by corrupting the metric
+      metricsService.errorsTotal = null;
+
+      expect(() => {
+        metricsService.recordError({
+          errorType: 'validation',
+          component: 'middleware',
+          severity: 'medium',
+        });
+      }).not.toThrow();
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Error recording error metrics',
+        expect.any(Error)
+      );
+    });
+
+    it('should handle errors in reset() gracefully', () => {
+      // Mock the registry to throw an error
+      const originalResetMetrics = metricsService.getRegistry().resetMetrics;
+      metricsService.getRegistry().resetMetrics = jest
+        .fn()
+        .mockImplementation(() => {
+          throw new Error('Test reset error');
+        });
+
+      expect(() => {
+        metricsService.reset();
+      }).not.toThrow();
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Error resetting metrics',
+        expect.any(Error)
+      );
+
+      // Restore original method
+      metricsService.getRegistry().resetMetrics = originalResetMetrics;
+    });
+
+    it('should handle errors in clear() gracefully', () => {
+      // Mock the registry to throw an error
+      const originalClear = metricsService.getRegistry().clear;
+      metricsService.getRegistry().clear = jest.fn().mockImplementation(() => {
+        throw new Error('Test clear error');
+      });
+
+      expect(() => {
+        metricsService.clear();
+      }).not.toThrow();
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Error clearing metrics',
+        expect.any(Error)
+      );
+
+      // Restore original method
+      metricsService.getRegistry().clear = originalClear;
+    });
+
+    it('should not attempt reset when metrics are disabled', () => {
+      const disabledService = new MetricsService({
+        enabled: false,
+        logger: mockLogger,
+      });
+
+      const spy = jest.spyOn(disabledService.getRegistry(), 'resetMetrics');
+
+      disabledService.reset();
+
+      expect(spy).not.toHaveBeenCalled();
+      expect(mockLogger.error).not.toHaveBeenCalled();
+    });
+
     it('should handle errors in getMetrics gracefully', async () => {
       // Mock the registry to throw an error
       const originalMetrics = metricsService.getRegistry().metrics;
@@ -492,6 +1056,72 @@ describe('MetricsService', () => {
         'Error getting metrics stats',
         expect.any(Error)
       );
+
+      // Restore original method
+      metricsService.getRegistry().getMetricsAsJSON = originalGetMetricsAsJSON;
+    });
+
+    it('should handle non-array return from getMetricsAsJSON in getStats', () => {
+      // Mock the registry to return null
+      const originalGetMetricsAsJSON =
+        metricsService.getRegistry().getMetricsAsJSON;
+      metricsService.getRegistry().getMetricsAsJSON = jest
+        .fn()
+        .mockReturnValue(null);
+
+      const stats = metricsService.getStats();
+      expect(stats).toEqual({
+        enabled: true,
+        totalMetrics: 0,
+        customMetrics: 0,
+        defaultMetrics: 0,
+      });
+
+      // Restore original method
+      metricsService.getRegistry().getMetricsAsJSON = originalGetMetricsAsJSON;
+    });
+
+    it('should handle undefined return from getMetricsAsJSON in getStats', () => {
+      // Mock the registry to return undefined
+      const originalGetMetricsAsJSON =
+        metricsService.getRegistry().getMetricsAsJSON;
+      metricsService.getRegistry().getMetricsAsJSON = jest
+        .fn()
+        .mockReturnValue(undefined);
+
+      const stats = metricsService.getStats();
+      expect(stats).toEqual({
+        enabled: true,
+        totalMetrics: 0,
+        customMetrics: 0,
+        defaultMetrics: 0,
+      });
+
+      // Restore original method
+      metricsService.getRegistry().getMetricsAsJSON = originalGetMetricsAsJSON;
+    });
+
+    it('should correctly filter custom and default metrics in getStats', () => {
+      // Mock the registry to return metrics with specific names
+      const originalGetMetricsAsJSON =
+        metricsService.getRegistry().getMetricsAsJSON;
+      metricsService.getRegistry().getMetricsAsJSON = jest
+        .fn()
+        .mockReturnValue([
+          { name: 'llm_proxy_test_metric' },
+          { name: 'llm_proxy_another_metric' },
+          { name: 'nodejs_gc_duration_seconds' },
+          { name: 'process_cpu_seconds_total' },
+          { name: 'llm_proxy_custom_metric' },
+        ]);
+
+      const stats = metricsService.getStats();
+      expect(stats).toEqual({
+        enabled: true,
+        totalMetrics: 5,
+        customMetrics: 3, // Three metrics starting with 'llm_proxy_'
+        defaultMetrics: 2, // Two metrics not starting with 'llm_proxy_'
+      });
 
       // Restore original method
       metricsService.getRegistry().getMetricsAsJSON = originalGetMetricsAsJSON;

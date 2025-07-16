@@ -1,8 +1,8 @@
 /**
  * @file Optimized cache service for anatomy-clothing integration using LRU cache
  * Provides bounded memory usage, TTL support, and intelligent invalidation
- * @see src/anatomy/integration/anatomyClothingIntegrationService.js
  * @see src/anatomy/integration/SlotResolver.js
+ * @see src/clothing/services/clothingManagementService.js
  */
 
 import { LRUCache } from 'lru-cache';

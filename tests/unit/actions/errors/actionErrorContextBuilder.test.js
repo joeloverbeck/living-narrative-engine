@@ -74,11 +74,15 @@ describe('ActionErrorContextBuilder', () => {
         type: 'character',
       });
 
-      mockEntityManager.getAllComponentTypesForEntity.mockReturnValue(Object.keys(mockComponents));
+      mockEntityManager.getAllComponentTypesForEntity.mockReturnValue(
+        Object.keys(mockComponents)
+      );
 
-      mockEntityManager.getComponentData.mockImplementation((id, componentType) => {
-        return mockComponents[componentType];
-      });
+      mockEntityManager.getComponentData.mockImplementation(
+        (id, componentType) => {
+          return mockComponents[componentType];
+        }
+      );
 
       mockFixSuggestionEngine.suggestFixes.mockReturnValue([
         {
@@ -228,10 +232,14 @@ describe('ActionErrorContextBuilder', () => {
       };
 
       mockEntityManager.getAllComponents.mockReturnValue(testComponents);
-      mockEntityManager.getAllComponentTypesForEntity.mockReturnValue(Object.keys(testComponents));
-      mockEntityManager.getComponentData.mockImplementation((id, componentType) => {
-        return testComponents[componentType];
-      });
+      mockEntityManager.getAllComponentTypesForEntity.mockReturnValue(
+        Object.keys(testComponents)
+      );
+      mockEntityManager.getComponentData.mockImplementation(
+        (id, componentType) => {
+          return testComponents[componentType];
+        }
+      );
 
       const context = builder.buildErrorContext({
         error: mockError,
@@ -269,10 +277,14 @@ describe('ActionErrorContextBuilder', () => {
       };
 
       mockEntityManager.getAllComponents.mockReturnValue(testComponents);
-      mockEntityManager.getAllComponentTypesForEntity.mockReturnValue(Object.keys(testComponents));
-      mockEntityManager.getComponentData.mockImplementation((id, componentType) => {
-        return testComponents[componentType];
-      });
+      mockEntityManager.getAllComponentTypesForEntity.mockReturnValue(
+        Object.keys(testComponents)
+      );
+      mockEntityManager.getComponentData.mockImplementation(
+        (id, componentType) => {
+          return testComponents[componentType];
+        }
+      );
 
       const context = builder.buildErrorContext({
         error: mockError,

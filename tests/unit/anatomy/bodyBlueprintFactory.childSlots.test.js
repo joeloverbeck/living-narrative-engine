@@ -391,10 +391,10 @@ describe('BodyBlueprintFactory - Child Slots Support', () => {
       );
       expect(
         mockEntityGraphBuilder.createAndAttachPart
-      ).toHaveBeenNthCalledWith(1, 'torso-1', 'neck', 'anatomy:test_head');
+      ).toHaveBeenNthCalledWith(1, 'torso-1', 'neck', 'anatomy:test_head', undefined);
       expect(
         mockEntityGraphBuilder.createAndAttachPart
-      ).toHaveBeenNthCalledWith(2, 'head-1', 'left_eye', 'anatomy:test_eye');
+      ).toHaveBeenNthCalledWith(2, 'head-1', 'left_eye', 'anatomy:test_eye', undefined);
 
       // Verify result includes all entities
       expect(result.rootId).toBe('torso-1');

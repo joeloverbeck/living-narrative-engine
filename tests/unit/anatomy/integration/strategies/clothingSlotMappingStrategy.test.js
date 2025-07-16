@@ -60,7 +60,7 @@ describe('ClothingSlotMappingStrategy', () => {
       expect(mockLogger.debug).not.toHaveBeenCalled();
     });
 
-    it('should validate required dependencies', () => {
+    it('should validate required dependencies - missing entityManager', () => {
       expect(() => {
         new ClothingSlotMappingStrategy({
           logger: mockLogger,
@@ -68,6 +68,109 @@ describe('ClothingSlotMappingStrategy', () => {
           anatomyBlueprintRepository: mockAnatomyBlueprintRepository,
           blueprintSlotStrategy: mockBlueprintSlotStrategy,
           directSocketStrategy: mockDirectSocketStrategy,
+        });
+      }).toThrow();
+    });
+
+    it('should validate required dependencies - missing anatomyBlueprintRepository', () => {
+      expect(() => {
+        new ClothingSlotMappingStrategy({
+          logger: mockLogger,
+          entityManager: mockEntityManager,
+          // Missing anatomyBlueprintRepository
+          blueprintSlotStrategy: mockBlueprintSlotStrategy,
+          directSocketStrategy: mockDirectSocketStrategy,
+        });
+      }).toThrow();
+    });
+
+    it('should validate required dependencies - missing blueprintSlotStrategy', () => {
+      expect(() => {
+        new ClothingSlotMappingStrategy({
+          logger: mockLogger,
+          entityManager: mockEntityManager,
+          anatomyBlueprintRepository: mockAnatomyBlueprintRepository,
+          // Missing blueprintSlotStrategy
+          directSocketStrategy: mockDirectSocketStrategy,
+        });
+      }).toThrow();
+    });
+
+    it('should validate required dependencies - missing directSocketStrategy', () => {
+      expect(() => {
+        new ClothingSlotMappingStrategy({
+          logger: mockLogger,
+          entityManager: mockEntityManager,
+          anatomyBlueprintRepository: mockAnatomyBlueprintRepository,
+          blueprintSlotStrategy: mockBlueprintSlotStrategy,
+          // Missing directSocketStrategy
+        });
+      }).toThrow();
+    });
+
+    it('should validate entityManager has required methods', () => {
+      const invalidEntityManager = {
+        getComponentData: jest.fn(),
+        // Missing hasComponent method
+      };
+
+      expect(() => {
+        new ClothingSlotMappingStrategy({
+          logger: mockLogger,
+          entityManager: invalidEntityManager,
+          anatomyBlueprintRepository: mockAnatomyBlueprintRepository,
+          blueprintSlotStrategy: mockBlueprintSlotStrategy,
+          directSocketStrategy: mockDirectSocketStrategy,
+        });
+      }).toThrow();
+    });
+
+    it('should validate anatomyBlueprintRepository has required methods', () => {
+      const invalidRepository = {
+        // Missing getBlueprintByRecipeId method
+      };
+
+      expect(() => {
+        new ClothingSlotMappingStrategy({
+          logger: mockLogger,
+          entityManager: mockEntityManager,
+          anatomyBlueprintRepository: invalidRepository,
+          blueprintSlotStrategy: mockBlueprintSlotStrategy,
+          directSocketStrategy: mockDirectSocketStrategy,
+        });
+      }).toThrow();
+    });
+
+    it('should validate blueprintSlotStrategy has required methods', () => {
+      const invalidStrategy = {
+        canResolve: jest.fn(),
+        // Missing resolve method
+      };
+
+      expect(() => {
+        new ClothingSlotMappingStrategy({
+          logger: mockLogger,
+          entityManager: mockEntityManager,
+          anatomyBlueprintRepository: mockAnatomyBlueprintRepository,
+          blueprintSlotStrategy: invalidStrategy,
+          directSocketStrategy: mockDirectSocketStrategy,
+        });
+      }).toThrow();
+    });
+
+    it('should validate directSocketStrategy has required methods', () => {
+      const invalidStrategy = {
+        canResolve: jest.fn(),
+        // Missing resolve method
+      };
+
+      expect(() => {
+        new ClothingSlotMappingStrategy({
+          logger: mockLogger,
+          entityManager: mockEntityManager,
+          anatomyBlueprintRepository: mockAnatomyBlueprintRepository,
+          blueprintSlotStrategy: mockBlueprintSlotStrategy,
+          directSocketStrategy: invalidStrategy,
         });
       }).toThrow();
     });
@@ -452,6 +555,332 @@ describe('ClothingSlotMappingStrategy', () => {
           error
         );
       });
+    });
+  });
+
+  describe('private methods', () => {
+    describe('#getEntityBlueprint', () => {
+      it('should throw error when entity has no body component', async () => {
+        mockEntityManager.getComponentData.mockResolvedValue(null);
+
+        const mapping = { clothingSlotId: 'bra' };
+
+        await expect(strategy.resolve('actor123', mapping)).rejects.toThrow(
+          'No blueprint found for entity actor123'
+        );
+      });
+
+      it('should throw error when body component has no recipeId', async () => {
+        mockEntityManager.getComponentData.mockResolvedValue({});
+
+        const mapping = { clothingSlotId: 'bra' };
+
+        await expect(strategy.resolve('actor123', mapping)).rejects.toThrow(
+          'No blueprint found for entity actor123'
+        );
+      });
+
+      it('should throw error when body component has empty recipeId', async () => {
+        mockEntityManager.getComponentData.mockResolvedValue({
+          recipeId: '',
+        });
+
+        const mapping = { clothingSlotId: 'bra' };
+
+        await expect(strategy.resolve('actor123', mapping)).rejects.toThrow(
+          'No blueprint found for entity actor123'
+        );
+      });
+
+      it('should return blueprint when entity has valid body component', async () => {
+        const mockBodyComponent = { recipeId: 'human_base' };
+        const mockBlueprint = { id: 'human_base', clothingSlotMappings: {} };
+
+        mockEntityManager.getComponentData.mockResolvedValue(mockBodyComponent);
+        mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue(
+          mockBlueprint
+        );
+
+        const mapping = { clothingSlotId: 'bra' };
+        
+        // This will throw because no mapping found, but we're testing the blueprint retrieval
+        await expect(strategy.resolve('actor123', mapping)).rejects.toThrow();
+        
+        expect(mockAnatomyBlueprintRepository.getBlueprintByRecipeId).toHaveBeenCalledWith(
+          'human_base'
+        );
+      });
+    });
+
+    describe('#resolveBlueprintSlots', () => {
+      it('should call blueprintSlotStrategy.resolve with correct mapping', async () => {
+        const mockBlueprint = {
+          id: 'human_base',
+          clothingSlotMappings: {
+            bra: {
+              blueprintSlots: ['left_breast', 'right_breast'],
+            },
+          },
+        };
+
+        mockEntityManager.getComponentData.mockResolvedValue({
+          recipeId: 'human_base',
+        });
+        mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue(
+          mockBlueprint
+        );
+
+        const expectedPoints = [
+          { entityId: 'torso1', socketId: 'left_breast' },
+        ];
+        mockBlueprintSlotStrategy.resolve.mockResolvedValue(expectedPoints);
+
+        const mapping = { clothingSlotId: 'bra' };
+        const result = await strategy.resolve('actor123', mapping);
+
+        expect(mockBlueprintSlotStrategy.resolve).toHaveBeenCalledWith(
+          'actor123',
+          { blueprintSlots: ['left_breast', 'right_breast'] }
+        );
+        expect(result).toEqual(expectedPoints);
+      });
+
+      it('should handle blueprintSlotStrategy errors', async () => {
+        const mockBlueprint = {
+          id: 'human_base',
+          clothingSlotMappings: {
+            bra: {
+              blueprintSlots: ['left_breast'],
+            },
+          },
+        };
+
+        mockEntityManager.getComponentData.mockResolvedValue({
+          recipeId: 'human_base',
+        });
+        mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue(
+          mockBlueprint
+        );
+
+        const error = new Error('Blueprint slot not found');
+        mockBlueprintSlotStrategy.resolve.mockRejectedValue(error);
+
+        const mapping = { clothingSlotId: 'bra' };
+
+        await expect(strategy.resolve('actor123', mapping)).rejects.toThrow(
+          `Blueprint slot 'Blueprint slot not found' not found in clothing slot 'bra' mapping`
+        );
+      });
+    });
+
+    describe('#resolveAnatomySockets', () => {
+      it('should call directSocketStrategy.resolve with correct mapping', async () => {
+        const mockBlueprint = {
+          id: 'human_base',
+          clothingSlotMappings: {
+            panties: {
+              anatomySockets: ['vagina', 'pubic_hair'],
+            },
+          },
+        };
+
+        mockEntityManager.getComponentData.mockResolvedValue({
+          recipeId: 'human_base',
+        });
+        mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue(
+          mockBlueprint
+        );
+
+        const expectedPoints = [
+          { entityId: 'pelvis1', socketId: 'vagina' },
+        ];
+        mockDirectSocketStrategy.resolve.mockResolvedValue(expectedPoints);
+
+        const mapping = { clothingSlotId: 'panties' };
+        const result = await strategy.resolve('actor123', mapping);
+
+        expect(mockDirectSocketStrategy.resolve).toHaveBeenCalledWith(
+          'actor123',
+          { anatomySockets: ['vagina', 'pubic_hair'] }
+        );
+        expect(result).toEqual(expectedPoints);
+      });
+
+      it('should handle directSocketStrategy errors', async () => {
+        const mockBlueprint = {
+          id: 'human_base',
+          clothingSlotMappings: {
+            panties: {
+              anatomySockets: ['vagina'],
+            },
+          },
+        };
+
+        mockEntityManager.getComponentData.mockResolvedValue({
+          recipeId: 'human_base',
+        });
+        mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue(
+          mockBlueprint
+        );
+
+        const error = new Error('Socket not found');
+        mockDirectSocketStrategy.resolve.mockRejectedValue(error);
+
+        const mapping = { clothingSlotId: 'panties' };
+
+        await expect(strategy.resolve('actor123', mapping)).rejects.toThrow(
+          `Anatomy socket 'Socket not found' not found in clothing slot 'panties' mapping`
+        );
+      });
+    });
+  });
+
+  describe('additional edge cases', () => {
+    it('should handle null blueprint response', async () => {
+      mockEntityManager.getComponentData.mockResolvedValue({
+        recipeId: 'human_base',
+      });
+      mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue(null);
+
+      const mapping = { clothingSlotId: 'bra' };
+
+      await expect(strategy.resolve('actor123', mapping)).rejects.toThrow(
+        'No blueprint found for entity actor123'
+      );
+    });
+
+    it('should handle undefined blueprint response', async () => {
+      mockEntityManager.getComponentData.mockResolvedValue({
+        recipeId: 'human_base',
+      });
+      mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue(undefined);
+
+      const mapping = { clothingSlotId: 'bra' };
+
+      await expect(strategy.resolve('actor123', mapping)).rejects.toThrow(
+        'No blueprint found for entity actor123'
+      );
+    });
+
+    it('should handle async errors from getComponentData', async () => {
+      const error = new Error('Database error');
+      mockEntityManager.getComponentData.mockRejectedValue(error);
+
+      const mapping = { clothingSlotId: 'bra' };
+
+      await expect(strategy.resolve('actor123', mapping)).rejects.toThrow(error);
+    });
+
+    it('should handle async errors from getBlueprintByRecipeId', async () => {
+      mockEntityManager.getComponentData.mockResolvedValue({
+        recipeId: 'human_base',
+      });
+
+      const error = new Error('Blueprint repository error');
+      mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockRejectedValue(error);
+
+      const mapping = { clothingSlotId: 'bra' };
+
+      await expect(strategy.resolve('actor123', mapping)).rejects.toThrow(error);
+    });
+
+    it('should handle blueprint with undefined clothingSlotMappings', async () => {
+      const mockBlueprint = {
+        id: 'human_base',
+        // clothingSlotMappings is undefined
+      };
+
+      mockEntityManager.getComponentData.mockResolvedValue({
+        recipeId: 'human_base',
+      });
+      mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue(
+        mockBlueprint
+      );
+
+      const mapping = { clothingSlotId: 'bra' };
+
+      await expect(strategy.resolve('actor123', mapping)).rejects.toThrow(
+        ClothingSlotNotFoundError
+      );
+    });
+
+    it('should handle blueprint with null clothingSlotMappings', async () => {
+      const mockBlueprint = {
+        id: 'human_base',
+        clothingSlotMappings: null,
+      };
+
+      mockEntityManager.getComponentData.mockResolvedValue({
+        recipeId: 'human_base',
+      });
+      mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue(
+        mockBlueprint
+      );
+
+      const mapping = { clothingSlotId: 'bra' };
+
+      await expect(strategy.resolve('actor123', mapping)).rejects.toThrow(
+        ClothingSlotNotFoundError
+      );
+    });
+
+    it('should handle partial blueprint slots failure with anatomy sockets success', async () => {
+      const mockBlueprint = {
+        id: 'human_base',
+        clothingSlotMappings: {
+          shirt: {
+            blueprintSlots: ['torso'],
+            anatomySockets: ['chest'],
+          },
+        },
+      };
+
+      mockEntityManager.getComponentData.mockResolvedValue({
+        recipeId: 'human_base',
+      });
+      mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue(
+        mockBlueprint
+      );
+
+      const blueprintError = new Error('Blueprint slot failed');
+      mockBlueprintSlotStrategy.resolve.mockRejectedValue(blueprintError);
+
+      const mapping = { clothingSlotId: 'shirt' };
+
+      await expect(strategy.resolve('actor123', mapping)).rejects.toThrow(
+        `Blueprint slot 'Blueprint slot failed' not found in clothing slot 'shirt' mapping`
+      );
+    });
+
+    it('should handle partial anatomy sockets failure with blueprint slots success', async () => {
+      const mockBlueprint = {
+        id: 'human_base',
+        clothingSlotMappings: {
+          shirt: {
+            blueprintSlots: ['torso'],
+            anatomySockets: ['chest'],
+          },
+        },
+      };
+
+      mockEntityManager.getComponentData.mockResolvedValue({
+        recipeId: 'human_base',
+      });
+      mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue(
+        mockBlueprint
+      );
+
+      const blueprintPoints = [{ entityId: 'torso1', socketId: 'torso' }];
+      mockBlueprintSlotStrategy.resolve.mockResolvedValue(blueprintPoints);
+
+      const socketError = new Error('Anatomy socket failed');
+      mockDirectSocketStrategy.resolve.mockRejectedValue(socketError);
+
+      const mapping = { clothingSlotId: 'shirt' };
+
+      await expect(strategy.resolve('actor123', mapping)).rejects.toThrow(
+        `Anatomy socket 'Anatomy socket failed' not found in clothing slot 'shirt' mapping`
+      );
     });
   });
 });

@@ -80,7 +80,9 @@ describeActionDiscoverySuite(
       });
       expect(result.errors[0].error.message).toBe('fail');
       expect(bed.mocks.logger.error).toHaveBeenCalledWith(
-        expect.stringContaining("ActionDiscoveryService: Error processing candidate action 'bad': fail"),
+        expect.stringContaining(
+          "ActionDiscoveryService: Error processing candidate action 'bad': fail"
+        ),
         expect.objectContaining({
           actionDefinition: expect.objectContaining({ id: 'bad' }),
           actionId: 'bad',
