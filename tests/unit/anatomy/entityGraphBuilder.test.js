@@ -121,6 +121,56 @@ describe('EntityGraphBuilder', () => {
       expect(id).toBe('armDef');
     });
 
+    it('propagates orientation from socket to child anatomy:part', () => {
+      mocks.entityManager.getComponentData.mockImplementation((id, comp) => {
+        if (id === 'armDef' && comp === 'anatomy:part') {
+          return { subType: 'arm', someOtherField: 'value' };
+        }
+        return null;
+      });
+
+      const id = builder.createAndAttachPart('torso', 'shoulder', 'armDef', 'owner123', 'left');
+      
+      expect(mocks.entityManager.addComponent).toHaveBeenCalledWith(
+        'armDef',
+        'anatomy:part',
+        {
+          subType: 'arm',
+          someOtherField: 'value',
+          orientation: 'left',
+        }
+      );
+      expect(mocks.logger.debug).toHaveBeenCalledWith(
+        "EntityGraphBuilder: Propagated orientation 'left' to child entity 'armDef'"
+      );
+      expect(id).toBe('armDef');
+    });
+
+    it('creates part without orientation when not provided', () => {
+      mocks.entityManager.getComponentData.mockReturnValue(null);
+      
+      const id = builder.createAndAttachPart('torso', 'shoulder', 'armDef', 'owner123');
+      
+      // Should not call addComponent for anatomy:part when no orientation provided
+      expect(mocks.entityManager.addComponent).not.toHaveBeenCalledWith(
+        'armDef',
+        'anatomy:part',
+        expect.any(Object)
+      );
+      expect(id).toBe('armDef');
+    });
+
+    it('adds ownership component when ownerId provided', () => {
+      const id = builder.createAndAttachPart('torso', 'shoulder', 'armDef', 'owner123');
+      
+      expect(mocks.entityManager.addComponent).toHaveBeenCalledWith(
+        'armDef',
+        'core:owned_by',
+        { ownerId: 'owner123' }
+      );
+      expect(id).toBe('armDef');
+    });
+
     it('logs and returns null on failure', () => {
       mocks.entityManager.createEntityInstance.mockImplementation(() => {
         throw new Error('fail');

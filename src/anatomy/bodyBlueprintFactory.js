@@ -331,6 +331,16 @@ export class BodyBlueprintFactory {
 
         const socket = socketValidation.socket;
 
+        // Check if this is an equipment slot (not an anatomy part slot)
+        // Equipment slots typically have requirements like strength, dexterity, etc.
+        // and use sockets like 'grip' which should not create anatomy parts
+        if (this.#isEquipmentSlot(slot, socket)) {
+          this.#logger.debug(
+            `BodyBlueprintFactory: Skipping equipment slot '${slotKey}' (socket: ${socket.id})`
+          );
+          continue;
+        }
+
         // Merge requirements and select part
         const mergedRequirements = this.#recipeProcessor.mergeSlotRequirements(
           slot.requirements,
@@ -359,7 +369,8 @@ export class BodyBlueprintFactory {
           parentEntityId,
           socket.id,
           partDefinitionId,
-          ownerId
+          ownerId,
+          socket.orientation
         );
 
         if (childId) {
@@ -413,6 +424,40 @@ export class BodyBlueprintFactory {
         throw new ValidationError(errorMessage);
       }
     }
+  }
+
+  /**
+   * Checks if a slot is an equipment slot (not an anatomy part slot)
+   * Equipment slots should not create anatomy parts
+   *
+   * @param {object} slot - The slot definition
+   * @param {object} socket - The socket definition
+   * @returns {boolean} True if this is an equipment slot
+   * @private
+   */
+  #isEquipmentSlot(slot, socket) {
+    // Equipment slots typically use sockets like 'grip' for weapons/tools
+    const equipmentSocketTypes = ['grip', 'weapon', 'tool', 'accessory'];
+    
+    if (equipmentSocketTypes.includes(socket.id)) {
+      return true;
+    }
+    
+    // Equipment slots typically have requirements like strength, dexterity, etc.
+    // that are not typical anatomy part requirements
+    const equipmentRequirements = ['strength', 'dexterity', 'intelligence', 'level'];
+    
+    if (slot.requirements) {
+      const hasEquipmentRequirements = equipmentRequirements.some(
+        req => Object.prototype.hasOwnProperty.call(slot.requirements, req)
+      );
+      
+      if (hasEquipmentRequirements) {
+        return true;
+      }
+    }
+    
+    return false;
   }
 
   /**

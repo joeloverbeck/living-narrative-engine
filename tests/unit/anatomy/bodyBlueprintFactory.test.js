@@ -295,6 +295,29 @@ describe('BodyBlueprintFactory (Refactored)', () => {
       );
     });
 
+    it('should pass socket orientation to createAndAttachPart', async () => {
+      const socketWithOrientation = {
+        id: 'head_socket',
+        allowedTypes: ['head'],
+        orientation: 'left',
+      };
+      
+      mockSocketManager.validateSocketAvailability.mockReturnValue({
+        valid: true,
+        socket: socketWithOrientation,
+      });
+
+      await factory.createAnatomyGraph(blueprintId, recipeId, options);
+
+      expect(mockEntityGraphBuilder.createAndAttachPart).toHaveBeenCalledWith(
+        'root123',
+        'head_socket',
+        'test:head',
+        options.ownerId,
+        'left'
+      );
+    });
+
     it('should dispatch error event on failure', async () => {
       const error = new Error('Test error');
       mockRecipeProcessor.loadRecipe.mockImplementation(() => {

@@ -121,24 +121,20 @@ export class TargetResolutionService extends ITargetResolutionService {
       this.#logger.error(errorMessage);
       trace?.error(errorMessage, source);
 
-      if (this.#actionErrorContextBuilder) {
-        const error = new Error(errorMessage);
-        error.name = 'InvalidActorError';
-        const errorContext = this.#actionErrorContextBuilder.buildErrorContext({
-          error: error,
-          actionDef: actionId ? { id: actionId } : null,
-          actorId: null,
-          phase: ERROR_PHASES.VALIDATION,
-          trace: trace,
-          additionalContext: {
-            scopeName: scopeName,
-            source: source,
-          },
-        });
-        return { targets: [], error: errorContext };
-      }
-
-      return { targets: [], error: new Error(errorMessage) };
+      const error = new Error(errorMessage);
+      error.name = 'InvalidActorError';
+      const errorContext = this.#actionErrorContextBuilder.buildErrorContext({
+        error: error,
+        actionDef: actionId ? { id: actionId } : null,
+        actorId: null,
+        phase: ERROR_PHASES.VALIDATION,
+        trace: trace,
+        additionalContext: {
+          scopeName: scopeName,
+          source: source,
+        },
+      });
+      return { targets: [], error: errorContext };
     }
 
     if (
@@ -158,25 +154,21 @@ export class TargetResolutionService extends ITargetResolutionService {
       this.#logger.error(errorMessage, errorDetails);
       trace?.error(errorMessage, source);
 
-      if (this.#actionErrorContextBuilder) {
-        const error = new Error(errorMessage);
-        error.name = 'InvalidActorIdError';
-        const errorContext = this.#actionErrorContextBuilder.buildErrorContext({
-          error: error,
-          actionDef: actionId ? { id: actionId } : null,
-          actorId: actorEntity.id || 'invalid',
-          phase: ERROR_PHASES.VALIDATION,
-          trace: trace,
-          additionalContext: {
-            ...errorDetails,
-            scopeName: scopeName,
-            source: source,
-          },
-        });
-        return { targets: [], error: errorContext };
-      }
-
-      return { targets: [], error: new Error(errorMessage) };
+      const error = new Error(errorMessage);
+      error.name = 'InvalidActorIdError';
+      const errorContext = this.#actionErrorContextBuilder.buildErrorContext({
+        error: error,
+        actionDef: actionId ? { id: actionId } : null,
+        actorId: actorEntity.id || 'invalid',
+        phase: ERROR_PHASES.VALIDATION,
+        trace: trace,
+        additionalContext: {
+          ...errorDetails,
+          scopeName: scopeName,
+          source: source,
+        },
+      });
+      return { targets: [], error: errorContext };
     }
 
     if (scopeName === TARGET_DOMAIN_NONE) {
@@ -255,22 +247,18 @@ export class TargetResolutionService extends ITargetResolutionService {
         actorEntity.id
       );
 
-      if (this.#actionErrorContextBuilder) {
-        const errorContext = this.#actionErrorContextBuilder.buildErrorContext({
-          error: error,
-          actionDef: actionId ? { id: actionId } : null,
-          actorId: actorEntity.id,
-          phase: ERROR_PHASES.VALIDATION,
-          trace: trace,
-          additionalContext: {
-            scopeName: scopeName,
-            source: source,
-          },
-        });
-        return { ids: new Set(), error: errorContext };
-      }
-
-      return { ids: new Set(), error: error };
+      const errorContext = this.#actionErrorContextBuilder.buildErrorContext({
+        error: error,
+        actionDef: actionId ? { id: actionId } : null,
+        actorId: actorEntity.id,
+        phase: ERROR_PHASES.VALIDATION,
+        trace: trace,
+        additionalContext: {
+          scopeName: scopeName,
+          source: source,
+        },
+      });
+      return { ids: new Set(), error: errorContext };
     }
 
     // Declare actorWithComponents outside try block so it's available in catch block
@@ -388,24 +376,20 @@ export class TargetResolutionService extends ITargetResolutionService {
         actorEntity.id
       );
 
-      if (this.#actionErrorContextBuilder) {
-        const errorContext = this.#actionErrorContextBuilder.buildErrorContext({
-          error: error,
-          actionDef: actionId ? { id: actionId } : null,
-          actorId: actorEntity.id,
-          phase: ERROR_PHASES.VALIDATION,
-          trace: trace,
-          additionalContext: {
-            scopeName: scopeName,
-            source: source,
-            actorLocation: actorWithComponents?.location || 'unknown',
-            scopeExpression: scopeDefinition?.expr,
-          },
-        });
-        return { ids: new Set(), error: errorContext };
-      }
-
-      return { ids: new Set(), error };
+      const errorContext = this.#actionErrorContextBuilder.buildErrorContext({
+        error: error,
+        actionDef: actionId ? { id: actionId } : null,
+        actorId: actorEntity.id,
+        phase: ERROR_PHASES.VALIDATION,
+        trace: trace,
+        additionalContext: {
+          scopeName: scopeName,
+          source: source,
+          actorLocation: actorWithComponents?.location || 'unknown',
+          scopeExpression: scopeDefinition?.expr,
+        },
+      });
+      return { ids: new Set(), error: errorContext };
     }
   }
 
@@ -459,7 +443,7 @@ export class TargetResolutionService extends ITargetResolutionService {
     }
 
     // If we have context information, build enhanced error context
-    if (this.#actionErrorContextBuilder && (actionId || actorId)) {
+    if (actionId || actorId) {
       try {
         const errorContext = this.#actionErrorContextBuilder.buildErrorContext({
           error: error,

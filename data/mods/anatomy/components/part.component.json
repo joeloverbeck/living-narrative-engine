@@ -8,6 +8,11 @@
       "subType": {
         "type": "string",
         "description": "The specific type of body part (e.g., 'leg', 'arm', 'breast', 'head')"
+      },
+      "orientation": {
+        "type": "string",
+        "description": "The orientation of the body part inherited from parent socket (e.g., 'left', 'right', 'mid')",
+        "enum": ["left", "right", "mid", "upper", "lower", "front", "back"]
       }
     },
     "required": ["subType"],

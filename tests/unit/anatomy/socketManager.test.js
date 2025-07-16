@@ -169,7 +169,7 @@ describe('SocketManager', () => {
       expect(manager.generatePartName({}, 'c', 'p')).toBeNull();
     });
 
-    it('generates name from template', () => {
+    it('generates name from template with socket orientation', () => {
       const socket = {
         nameTpl: '{{orientation}} {{type}} of {{parent.name}}',
         orientation: 'left',
@@ -187,6 +187,55 @@ describe('SocketManager', () => {
       expect(logger.debug).toHaveBeenLastCalledWith(
         "SocketManager: Generated name 'left arm of Bob' for part using template '{{orientation}} {{type}} of {{parent.name}}'"
       );
+    });
+
+    it('uses effective orientation from child anatomy:part when available', () => {
+      const socket = {
+        nameTpl: '{{effective_orientation}} {{type}}',
+        orientation: 'left',
+      };
+      entityManager.getComponentData.mockImplementation((id, type) => {
+        if (id === 'child' && type === 'anatomy:part')
+          return { subType: 'arm', orientation: 'right' };
+        return undefined;
+      });
+
+      const name = manager.generatePartName(socket, 'child', 'parent');
+
+      expect(name).toBe('right arm');
+    });
+
+    it('falls back to socket orientation for effective_orientation when child has none', () => {
+      const socket = {
+        nameTpl: '{{effective_orientation}} {{type}}',
+        orientation: 'left',
+      };
+      entityManager.getComponentData.mockImplementation((id, type) => {
+        if (id === 'child' && type === 'anatomy:part')
+          return { subType: 'arm' };
+        return undefined;
+      });
+
+      const name = manager.generatePartName(socket, 'child', 'parent');
+
+      expect(name).toBe('left arm');
+    });
+
+    it('handles all template replacements correctly', () => {
+      const socket = {
+        nameTpl: '{{orientation}} {{effective_orientation}} {{type}} {{index}} of {{parent.name}}',
+        orientation: 'left',
+      };
+      entityManager.getComponentData.mockImplementation((id, type) => {
+        if (id === 'child' && type === 'anatomy:part')
+          return { subType: 'arm', orientation: 'right' };
+        if (id === 'parent' && type === 'core:name') return { text: 'Bob' };
+        return undefined;
+      });
+
+      const name = manager.generatePartName(socket, 'child', 'parent');
+
+      expect(name).toBe('left right arm  of Bob');
     });
   });
 

@@ -309,13 +309,13 @@ describe('AnatomyGenerationService', () => {
         if (id === 'entity-1') return mockEntity;
         if (id === 'arm-1') {
           return {
-            hasComponent: jest.fn((compId) => compId === 'core:name'),
+            hasComponent: jest.fn((compId) => compId === 'core:name' || compId === 'anatomy:part'),
             getComponentData: jest.fn().mockReturnValue({ text: 'left_arm' }),
           };
         }
         if (id === 'arm-2') {
           return {
-            hasComponent: jest.fn((compId) => compId === 'core:name'),
+            hasComponent: jest.fn((compId) => compId === 'core:name' || compId === 'anatomy:part'),
             getComponentData: jest.fn().mockReturnValue({ text: 'right_arm' }),
           };
         }

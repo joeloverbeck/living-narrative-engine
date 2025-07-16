@@ -115,4 +115,55 @@ describe('StaticConfiguration Validation Test', () => {
     // 3. Assert
     expect(schemaFiles).toContain('world.schema.json');
   });
+
+  describe('Path and Filename Methods', () => {
+    let configService;
+
+    beforeEach(() => {
+      configService = new StaticConfiguration();
+    });
+
+    it('should return the base data path', () => {
+      const basePath = configService.getBaseDataPath();
+      expect(basePath).toBe('./data');
+    });
+
+    it('should return the schema base path', () => {
+      const schemaPath = configService.getSchemaBasePath();
+      expect(schemaPath).toBe('schemas');
+    });
+
+    it('should return the content base path for a given registry key', () => {
+      // Test with various registry keys
+      expect(configService.getContentBasePath('components')).toBe('components');
+      expect(configService.getContentBasePath('actions')).toBe('actions');
+      expect(configService.getContentBasePath('rules')).toBe('rules');
+      expect(configService.getContentBasePath('anyKey')).toBe('anyKey');
+    });
+
+    it('should return the rule base path', () => {
+      const rulePath = configService.getRuleBasePath();
+      expect(rulePath).toBe('rules');
+    });
+
+    it('should return the game config filename', () => {
+      const filename = configService.getGameConfigFilename();
+      expect(filename).toBe('game.json');
+    });
+
+    it('should return the mod manifest filename', () => {
+      const filename = configService.getModManifestFilename();
+      expect(filename).toBe('mod-manifest.json');
+    });
+
+    it('should return the mods base path', () => {
+      const modsPath = configService.getModsBasePath();
+      expect(modsPath).toBe('mods');
+    });
+
+    it('should return the rule schema ID', () => {
+      const ruleSchemaId = configService.getRuleSchemaId();
+      expect(ruleSchemaId).toBe('http://example.com/schemas/rule.schema.json');
+    });
+  });
 });

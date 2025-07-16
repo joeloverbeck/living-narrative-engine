@@ -175,7 +175,8 @@ export class AnatomyGenerationWorkflow extends BaseService {
     for (const partEntityId of partEntityIds) {
       const partEntity = this.#entityManager.getEntityInstance(partEntityId);
 
-      if (partEntity && partEntity.hasComponent('core:name')) {
+      // Only include entities that have the anatomy:part component
+      if (partEntity && partEntity.hasComponent('anatomy:part') && partEntity.hasComponent('core:name')) {
         const nameData = partEntity.getComponentData('core:name');
         const name = nameData ? nameData.text : null;
 

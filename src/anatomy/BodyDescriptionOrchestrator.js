@@ -155,7 +155,9 @@ export class BodyDescriptionOrchestrator {
       existingDesc.text &&
       this.#isDescriptionCurrent(entity)
     ) {
-      return existingDesc.text;
+      // Note: This line is currently unreachable because #isDescriptionCurrent always returns false
+      // Future implementation of #isDescriptionCurrent could make this reachable
+      return existingDesc.text; // istanbul ignore line
     }
 
     // Generate new description

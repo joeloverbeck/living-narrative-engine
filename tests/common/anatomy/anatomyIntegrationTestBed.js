@@ -1379,9 +1379,26 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
    * @returns {Promise<void>} Resolves when cleanup completes.
    */
   async _afterCleanup() {
+    // Clear entity manager first
     if (this.entityManager?.clearAll) {
       this.entityManager.clearAll();
     }
+    
+    // Clear data registry to prevent state pollution between tests
+    if (this.registry?.clear) {
+      this.registry.clear();
+    }
+    
+    // Clear any anatomy-specific services that might retain state
+    if (this.bodyGraphService?.clearCache) {
+      this.bodyGraphService.clearCache();
+    }
+    
+    // Clear anatomyClothingCache
+    if (this.anatomyClothingCache?.clear) {
+      this.anatomyClothingCache.clear();
+    }
+    
     await super._afterCleanup();
   }
 }

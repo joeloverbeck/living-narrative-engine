@@ -229,7 +229,7 @@ describe('Anatomy Generation with Clothing Integration', () => {
           id: 'torso_123',
           components: {
             'core:name': { text: 'torso' },
-            'anatomy:body_part': { type: 'torso' },
+            'anatomy:part': { type: 'torso' },
             'anatomy:blueprintSlot': { slotId: 'torso' },
           },
         },
@@ -237,7 +237,7 @@ describe('Anatomy Generation with Clothing Integration', () => {
           id: 'head_123',
           components: {
             'core:name': { text: 'head' },
-            'anatomy:body_part': { type: 'head' },
+            'anatomy:part': { type: 'head' },
             'anatomy:blueprintSlot': { slotId: 'head' },
           },
         },
@@ -245,7 +245,7 @@ describe('Anatomy Generation with Clothing Integration', () => {
           id: 'left_arm_123',
           components: {
             'core:name': { text: 'left_arm' },
-            'anatomy:body_part': { type: 'arm' },
+            'anatomy:part': { type: 'arm' },
             'anatomy:blueprintSlot': { slotId: 'left_arm' },
           },
         },
@@ -253,7 +253,7 @@ describe('Anatomy Generation with Clothing Integration', () => {
           id: 'right_arm_123',
           components: {
             'core:name': { text: 'right_arm' },
-            'anatomy:body_part': { type: 'arm' },
+            'anatomy:part': { type: 'arm' },
             'anatomy:blueprintSlot': { slotId: 'right_arm' },
           },
         },
@@ -261,7 +261,7 @@ describe('Anatomy Generation with Clothing Integration', () => {
           id: 'legs_123',
           components: {
             'core:name': { text: 'legs' },
-            'anatomy:body_part': { type: 'legs' },
+            'anatomy:part': { type: 'legs' },
             'anatomy:blueprintSlot': { slotId: 'legs' },
           },
         },
