@@ -8,8 +8,11 @@
       "size": "m",
       "material": "silk",
       "equipmentSlots": {
-        "primary": "bra"
-      }
+        "primary": "underwear_upper"
+      },
+      "allowedLayers": [
+        "underwear"
+      ]
     },
     "core:name": {
       "text": "underwired plunge bra"

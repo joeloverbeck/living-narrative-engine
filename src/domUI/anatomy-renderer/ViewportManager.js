@@ -25,7 +25,9 @@ class ViewportManager {
    * @param {object} [dependencies.initialViewport] - Initial viewport configuration
    */
   constructor({ logger, initialViewport = {} }) {
-    validateDependency(logger, 'ILogger');
+    validateDependency(logger, 'ILogger', console, { 
+      requiredMethods: ['info', 'warn', 'error', 'debug'] 
+    });
 
     this.#logger = logger;
     this.#viewport = {
