@@ -80,10 +80,6 @@
       ],
       "allowedLayers": ["outer"]
     },
-    "genital_covering": {
-      "anatomySockets": ["penis", "left_testicle", "right_testicle"],
-      "allowedLayers": ["underwear"]
-    },
     "torso_upper": {
       "blueprintSlots": ["torso"],
       "allowedLayers": ["underwear", "base", "outer"]

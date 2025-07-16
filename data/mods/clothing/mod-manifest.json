@@ -17,24 +17,17 @@
   ],
   "gameVersion": ">=0.0.1",
   "content": {
-    "components": ["equipment.component.json", "wearable.component.json"],
+    "components": [
+      "equipment.component.json",
+      "wearable.component.json"
+    ],
     "entities": {
       "definitions": [
-        "basic_shirt.entity.json",
         "black_calfskin_belt.entity.json",
         "black_stretch_silk_bodysuit.entity.json",
-        "boxers.entity.json",
-        "bra.entity.json",
-        "dress_shirt.entity.json",
         "graphite_wool_wide_leg_trousers.entity.json",
-        "jacket.entity.json",
-        "jeans.entity.json",
         "leather_stiletto_pumps.entity.json",
         "nude_thong.entity.json",
-        "panties.entity.json",
-        "shorts.entity.json",
-        "sneakers.entity.json",
-        "t_shirt.entity.json",
         "underwired_plunge_bra_nude_silk.entity.json",
         "white_structured_linen_blazer.entity.json"
       ],

@@ -394,6 +394,9 @@ export class BodyBlueprintFactory {
             childId,
             parentEntityId
           );
+          this.#logger.debug(
+            `BodyBlueprintFactory: Generated name '${name}' for child '${childId}' using socket '${socket.id}' with template '${socket.nameTpl}'`
+          );
           if (name) {
             this.#entityGraphBuilder.setEntityName(childId, name);
           }

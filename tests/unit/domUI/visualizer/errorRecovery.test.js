@@ -3,11 +3,12 @@
  * @see src/domUI/visualizer/ErrorRecovery.js
  */
 
-import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import { ErrorRecovery } from '../../../../src/domUI/visualizer/ErrorRecovery.js';
 import { AnatomyDataError } from '../../../../src/errors/anatomyDataError.js';
 import { AnatomyRenderError } from '../../../../src/errors/anatomyRenderError.js';
 import { AnatomyStateError } from '../../../../src/errors/anatomyStateError.js';
+import { AnatomyVisualizationError } from '../../../../src/errors/anatomyVisualizationError.js';
 
 describe('ErrorRecovery', () => {
   let errorRecovery;
@@ -249,6 +250,565 @@ describe('ErrorRecovery', () => {
 
       const history = errorRecovery.getErrorHistory(3);
       expect(history).toHaveLength(3);
+    });
+  });
+
+  describe('constructor and configuration', () => {
+    it('should handle exponential backoff configuration', () => {
+      const errorRecovery = new ErrorRecovery(
+        {
+          logger: mockLogger,
+          eventDispatcher: mockEventDispatcher,
+        },
+        {
+          maxRetryAttempts: 3,
+          retryDelayMs: 500,
+          useExponentialBackoff: true,
+        }
+      );
+
+      // First call with no attempts should return base delay with jitter
+      const initialDelay = errorRecovery.getRetryDelay('test-operation');
+      expect(initialDelay).toBeGreaterThanOrEqual(500); // Base delay
+      expect(initialDelay).toBeLessThan(650); // With 30% jitter
+      
+      // Simulate first retry attempt
+      errorRecovery.clearRetryAttempts('test-operation');
+      // Manually set retry attempts to simulate progression
+      errorRecovery._retryAttempts = errorRecovery._retryAttempts || new Map();
+      errorRecovery._retryAttempts.set('test-operation', 1);
+      
+      const delay = errorRecovery.getRetryDelay('test-operation');
+      expect(delay).toBeGreaterThan(500); // Should be exponentially increased
+      expect(delay).toBeLessThan(1500); // With jitter, shouldn't exceed base*2*1.3
+      
+      errorRecovery.dispose();
+    });
+
+    it('should handle linear backoff configuration', () => {
+      const errorRecovery = new ErrorRecovery(
+        {
+          logger: mockLogger,
+          eventDispatcher: mockEventDispatcher,
+        },
+        {
+          maxRetryAttempts: 3,
+          retryDelayMs: 1000,
+          useExponentialBackoff: false,
+        }
+      );
+
+      expect(errorRecovery.getRetryDelay('test-operation')).toBe(1000);
+      
+      // Even with multiple attempts, should remain constant
+      errorRecovery.clearRetryAttempts('test-operation');
+      errorRecovery._retryAttempts = errorRecovery._retryAttempts || new Map();
+      errorRecovery._retryAttempts.set('test-operation', 2);
+      
+      expect(errorRecovery.getRetryDelay('test-operation')).toBe(1000);
+      
+      errorRecovery.dispose();
+    });
+
+    it('should handle default configuration', () => {
+      const errorRecovery = new ErrorRecovery({
+        logger: mockLogger,
+        eventDispatcher: mockEventDispatcher,
+      });
+
+      // Default uses exponential backoff with jitter
+      const delay = errorRecovery.getRetryDelay('test-operation');
+      expect(delay).toBeGreaterThanOrEqual(1000); // Base delay
+      expect(delay).toBeLessThan(1300); // With 30% jitter
+      expect(errorRecovery.canRetry('test-operation')).toBe(true);
+      
+      errorRecovery.dispose();
+    });
+  });
+
+  describe('data error fallback handling', () => {
+    it('should handle MISSING_ANATOMY_DATA error code with retry callback', async () => {
+      const error = AnatomyDataError.missingAnatomyData('test-entity');
+      
+      // This error is retryable, so provide a retry callback that fails to test fallback
+      const retryCallback = jest.fn().mockRejectedValue(new Error('Retry failed'));
+      
+      const result = await errorRecovery.handleError(error, {
+        operation: 'data-loading',
+        retryCallback,
+      });
+      
+      // When retry callback fails, the error is passed to fallback strategy
+      // But the lastError becomes the retry error, so it falls back to generic error handling
+      expect(result.strategy).toBe('fallback');
+      expect(result.success).toBe(false);
+      expect(result.userMessage).toContain('An unexpected error occurred');
+      expect(result.suggestions).toContain('Try refreshing the page');
+    });
+
+    it('should handle MISSING_ANATOMY_DATA error code without retry callback', async () => {
+      const error = AnatomyDataError.missingAnatomyData('test-entity');
+      
+      // Without retry callback, should fail and return failed strategy
+      const result = await errorRecovery.handleError(error, {
+        operation: 'data-loading',
+      });
+      
+      expect(result.strategy).toBe('failed');
+      expect(result.success).toBe(false);
+      expect(result.userMessage).toContain('Recovery failed');
+    });
+
+    it('should handle MISSING_ANATOMY_PARTS error code with retry callback', async () => {
+      const error = AnatomyDataError.missingAnatomyParts('test-entity', ['part1', 'part2']);
+      
+      // This error is retryable, so provide a retry callback that fails to test fallback
+      const retryCallback = jest.fn().mockRejectedValue(new Error('Retry failed'));
+      
+      const result = await errorRecovery.handleError(error, {
+        operation: 'data-loading',
+        retryCallback,
+      });
+      
+      // When retry callback fails, the error is passed to fallback strategy
+      // But the lastError becomes the retry error, so it falls back to generic error handling
+      expect(result.strategy).toBe('fallback');
+      expect(result.success).toBe(false);
+      expect(result.userMessage).toContain('An unexpected error occurred');
+      expect(result.suggestions).toContain('Try refreshing the page');
+    });
+
+    it('should handle MISSING_ANATOMY_PARTS error code without retry callback', async () => {
+      const error = AnatomyDataError.missingAnatomyParts('test-entity', ['part1', 'part2']);
+      
+      // Without retry callback, should fail and return failed strategy
+      const result = await errorRecovery.handleError(error, {
+        operation: 'data-loading',
+      });
+      
+      expect(result.strategy).toBe('failed');
+      expect(result.success).toBe(false);
+      expect(result.userMessage).toContain('Recovery failed');
+    });
+
+    it('should handle unknown data error codes', async () => {
+      const error = AnatomyDataError.invalidAnatomyStructure('test-entity', {}, 'Unknown issue');
+      
+      const result = await errorRecovery.handleError(error, {
+        operation: 'data-loading',
+      });
+      
+      expect(result.strategy).toBe('fallback');
+      expect(result.success).toBe(false);
+      expect(result.userMessage).toContain('Could not process anatomy data');
+      expect(result.suggestions).toContain('Try selecting a different entity');
+    });
+  });
+
+  describe('render error fallback handling', () => {
+    it('should handle SVG_RENDERING_FAILED error code with retry callback', async () => {
+      const error = AnatomyRenderError.svgRenderingFailed('createSVG', new Error('SVG not supported'));
+      
+      // This error is retryable, so provide a retry callback that fails to test fallback
+      const retryCallback = jest.fn().mockRejectedValue(new Error('Retry failed'));
+      
+      const result = await errorRecovery.handleError(error, {
+        operation: 'rendering',
+        retryCallback,
+      });
+      
+      // When retry callback fails, the error is passed to fallback strategy
+      // But the lastError becomes the retry error, so it falls back to generic error handling
+      expect(result.strategy).toBe('fallback');
+      expect(result.success).toBe(false);
+      expect(result.userMessage).toContain('An unexpected error occurred');
+      expect(result.suggestions).toContain('Try refreshing the page');
+    });
+
+    it('should handle SVG_RENDERING_FAILED error code without retry callback', async () => {
+      const error = AnatomyRenderError.svgRenderingFailed('createSVG', new Error('SVG not supported'));
+      
+      // Without retry callback, should fail and return failed strategy
+      const result = await errorRecovery.handleError(error, {
+        operation: 'rendering',
+      });
+      
+      expect(result.strategy).toBe('failed');
+      expect(result.success).toBe(false);
+      expect(result.userMessage).toContain('Recovery failed');
+    });
+
+    it('should handle LAYOUT_CALCULATION_FAILED error code with retry callback', async () => {
+      const error = AnatomyRenderError.layoutCalculationFailed('calculateLayout', new Error('Layout failed'));
+      
+      // This error is retryable, so provide a retry callback that fails to test fallback
+      const retryCallback = jest.fn().mockRejectedValue(new Error('Retry failed'));
+      
+      const result = await errorRecovery.handleError(error, {
+        operation: 'rendering',
+        retryCallback,
+      });
+      
+      // When retry callback fails, the error is passed to fallback strategy
+      // But the lastError becomes the retry error, so it falls back to generic error handling
+      expect(result.strategy).toBe('fallback');
+      expect(result.success).toBe(false);
+      expect(result.userMessage).toContain('An unexpected error occurred');
+      expect(result.suggestions).toContain('Try refreshing the page');
+    });
+
+    it('should handle LAYOUT_CALCULATION_FAILED error code without retry callback', async () => {
+      const error = AnatomyRenderError.layoutCalculationFailed('calculateLayout', new Error('Layout failed'));
+      
+      // Without retry callback, should fail and return failed strategy
+      const result = await errorRecovery.handleError(error, {
+        operation: 'rendering',
+      });
+      
+      expect(result.strategy).toBe('failed');
+      expect(result.success).toBe(false);
+      expect(result.userMessage).toContain('Recovery failed');
+    });
+
+    it('should handle unknown render error codes', async () => {
+      const error = new AnatomyRenderError('Unknown render error', { code: 'UNKNOWN_RENDER_ERROR' });
+      
+      const result = await errorRecovery.handleError(error, {
+        operation: 'rendering',
+      });
+      
+      // This error is retryable by default but without retry callback, it should fail
+      expect(result.strategy).toBe('failed');
+      expect(result.success).toBe(false);
+      expect(result.userMessage).toContain('Recovery failed');
+    });
+  });
+
+  describe('state error fallback handling', () => {
+    it('should handle INVALID_STATE_TRANSITION error code', async () => {
+      const error = AnatomyStateError.invalidStateTransition('IDLE', 'RENDERING', 'Invalid transition');
+      
+      const result = await errorRecovery.handleError(error, {
+        operation: 'state-transition',
+      });
+      
+      // This error is retryable but without retry callback, it should fail
+      expect(result.strategy).toBe('failed');
+      expect(result.success).toBe(false);
+      expect(result.userMessage).toContain('Recovery failed');
+    });
+
+    it('should handle OPERATION_TIMEOUT error code with retry callback', async () => {
+      const error = AnatomyStateError.operationTimeout('test-operation', 5000, 'LOADING');
+      
+      // This error is retryable, so provide a retry callback that fails to test fallback
+      const retryCallback = jest.fn().mockRejectedValue(new Error('Retry failed'));
+      
+      const result = await errorRecovery.handleError(error, {
+        operation: 'timeout-operation',
+        retryCallback,
+      });
+      
+      // When retry callback fails, the error is passed to fallback strategy
+      // But the lastError becomes the retry error, so it falls back to generic error handling
+      expect(result.strategy).toBe('fallback');
+      expect(result.success).toBe(false);
+      expect(result.userMessage).toContain('An unexpected error occurred');
+      expect(result.suggestions).toContain('Try refreshing the page');
+    });
+
+    it('should handle OPERATION_TIMEOUT error code without retry callback', async () => {
+      const error = AnatomyStateError.operationTimeout('test-operation', 5000, 'LOADING');
+      
+      // Without retry callback, should fail and return failed strategy
+      const result = await errorRecovery.handleError(error, {
+        operation: 'timeout-operation',
+      });
+      
+      expect(result.strategy).toBe('failed');
+      expect(result.success).toBe(false);
+      expect(result.userMessage).toContain('Recovery failed');
+    });
+
+    it('should handle unknown state error codes', async () => {
+      const error = new AnatomyStateError('Unknown state error', { code: 'UNKNOWN_STATE_ERROR' });
+      
+      const result = await errorRecovery.handleError(error, {
+        operation: 'state-operation',
+      });
+      
+      // This error is retryable by default but without retry callback, it should fail
+      expect(result.strategy).toBe('failed');
+      expect(result.success).toBe(false);
+      expect(result.userMessage).toContain('Recovery failed');
+    });
+  });
+
+  describe('_isRetryable', () => {
+    it('should identify network errors as retryable', () => {
+      const networkError = new TypeError('fetch failed');
+      
+      // Access private method for testing
+      const isRetryable = errorRecovery._isRetryable(networkError);
+      expect(isRetryable).toBe(true);
+    });
+
+    it('should identify timeout errors as retryable', () => {
+      const timeoutError = AnatomyStateError.operationTimeout('test-operation', 5000, 'LOADING');
+      
+      const isRetryable = errorRecovery._isRetryable(timeoutError);
+      expect(isRetryable).toBe(true);
+    });
+
+    it('should identify specific render errors as retryable', () => {
+      const renderError = AnatomyRenderError.svgRenderingFailed('createSVG', new Error('SVG failed'));
+      
+      const isRetryable = errorRecovery._isRetryable(renderError);
+      expect(isRetryable).toBe(true);
+    });
+
+    it('should identify layout errors as retryable', () => {
+      const layoutError = AnatomyRenderError.layoutCalculationFailed('calculateLayout', new Error('Layout failed'));
+      
+      const isRetryable = errorRecovery._isRetryable(layoutError);
+      expect(isRetryable).toBe(true);
+    });
+
+    it('should identify specific data errors as retryable', () => {
+      const dataError = AnatomyDataError.missingAnatomyParts('test-entity', ['part1']);
+      
+      const isRetryable = errorRecovery._isRetryable(dataError);
+      expect(isRetryable).toBe(true);
+    });
+
+    it('should check recoverable flag for AnatomyVisualizationError', () => {
+      const recoverableError = new AnatomyVisualizationError('Recoverable error', { recoverable: true });
+      const nonRecoverableError = new AnatomyVisualizationError('Non-recoverable error', { recoverable: false });
+      
+      expect(errorRecovery._isRetryable(recoverableError)).toBe(true);
+      expect(errorRecovery._isRetryable(nonRecoverableError)).toBe(false);
+    });
+
+    it('should return false for unknown errors', () => {
+      const unknownError = new Error('Unknown error');
+      
+      const isRetryable = errorRecovery._isRetryable(unknownError);
+      expect(isRetryable).toBe(false);
+    });
+  });
+
+  describe('_registerDefaultFallbackStrategies', () => {
+    it('should register network error strategy', async () => {
+      const networkError = new TypeError('fetch failed');
+      
+      const result = await errorRecovery.handleError(networkError, {
+        operation: 'network-operation',
+      });
+      
+      // Network errors are retryable, so without retry callback it should fail
+      expect(result.strategy).toBe('failed');
+      expect(result.success).toBe(false);
+      expect(result.userMessage).toContain('Recovery failed');
+    });
+
+    it('should handle non-network TypeError', async () => {
+      const nonNetworkError = new TypeError('Not a fetch error');
+      
+      const result = await errorRecovery.handleError(nonNetworkError, {
+        operation: 'type-operation',
+      });
+      
+      // Non-network TypeError custom strategy throws error, which causes fallback to fail
+      expect(result.strategy).toBe('failed');
+      expect(result.success).toBe(false);
+    });
+  });
+
+  describe('error history management', () => {
+    it('should limit error history to 50 entries', async () => {
+      // Add 55 errors to test the limit
+      for (let i = 0; i < 55; i++) {
+        await errorRecovery.handleError(new Error(`Error ${i}`), {
+          operation: `operation-${i}`,
+        });
+      }
+      
+      const history = errorRecovery.getErrorHistory(100); // Request more than limit
+      expect(history.length).toBe(50);
+      
+      // Should contain the last 50 errors
+      expect(history[0].error.message).toBe('Error 5'); // First kept error
+      expect(history[49].error.message).toBe('Error 54'); // Last error
+    });
+
+    it('should record error details correctly', async () => {
+      const error = new Error('Test error for recording');
+      
+      await errorRecovery.handleError(error, {
+        operation: 'record-test',
+        data: { testData: 'value' },
+      });
+      
+      const history = errorRecovery.getErrorHistory(1);
+      expect(history).toHaveLength(1);
+      expect(history[0].error.message).toBe('Test error for recording');
+      expect(history[0].context.operation).toBe('record-test');
+      expect(history[0].context.data.testData).toBe('value');
+      expect(history[0].timestamp).toBeDefined();
+    });
+  });
+
+  describe('error event dispatching', () => {
+    it('should handle event dispatch failures gracefully', async () => {
+      // Mock event dispatcher to throw error
+      mockEventDispatcher.dispatch.mockImplementation(() => {
+        throw new Error('Event dispatch failed');
+      });
+      
+      const error = new Error('Test error');
+      
+      // Should not throw even if event dispatch fails
+      await expect(errorRecovery.handleError(error, {
+        operation: 'dispatch-test',
+      })).resolves.toBeDefined();
+      
+      // Should log warning about dispatch failure
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Failed to dispatch error event:',
+        expect.any(Error)
+      );
+    });
+
+    it('should dispatch error event with correct structure', async () => {
+      const error = new Error('Test error');
+      
+      await errorRecovery.handleError(error, {
+        operation: 'event-test',
+      });
+      
+      expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
+        'anatomy:visualizer_error',
+        expect.objectContaining({
+          error: expect.objectContaining({
+            name: 'Error',
+            message: 'Test error',
+          }),
+          context: expect.objectContaining({
+            operation: 'event-test',
+          }),
+          strategy: 'fallback',
+          timestamp: expect.any(String),
+        })
+      );
+    });
+
+    it('should handle AnatomyVisualizationError user info', async () => {
+      const error = new AnatomyVisualizationError('Test error', { 
+        code: 'TEST_ERROR',
+        severity: 'HIGH',
+        userMessage: 'User-friendly message'
+      });
+      
+      await errorRecovery.handleError(error, {
+        operation: 'user-info-test',
+      });
+      
+      // This error is retryable by default but without retry callback, it determines strategy as retry
+      expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
+        'anatomy:visualizer_error',
+        expect.objectContaining({
+          error: expect.objectContaining({
+            severity: 'HIGH',
+            message: 'User-friendly message',
+          }),
+          strategy: 'retry',
+        })
+      );
+    });
+  });
+
+  describe('retry strategy execution', () => {
+    it('should throw error if retry callback is missing', async () => {
+      const retryableError = AnatomyStateError.operationTimeout('test-operation', 5000, 'LOADING');
+      
+      const result = await errorRecovery.handleError(retryableError, {
+        operation: 'retry-no-callback',
+      });
+      
+      expect(result.strategy).toBe('failed');
+      expect(result.success).toBe(false);
+      expect(result.userMessage).toContain('Recovery failed');
+    });
+
+    it('should throw error if retry callback is not a function', async () => {
+      const retryableError = AnatomyStateError.operationTimeout('test-operation', 5000, 'LOADING');
+      
+      const result = await errorRecovery.handleError(retryableError, {
+        operation: 'retry-invalid-callback',
+        retryCallback: 'not-a-function',
+      });
+      
+      expect(result.strategy).toBe('failed');
+      expect(result.success).toBe(false);
+      expect(result.userMessage).toContain('Recovery failed');
+    });
+
+    it('should handle retry callback exceptions', async () => {
+      const retryableError = AnatomyStateError.operationTimeout('test-operation', 5000, 'LOADING');
+      
+      const failingCallback = jest.fn().mockRejectedValue(new Error('Callback failed'));
+      
+      const result = await errorRecovery.handleError(retryableError, {
+        operation: 'retry-callback-fail',
+        retryCallback: failingCallback,
+      });
+      
+      expect(result.strategy).toBe('fallback');
+      expect(failingCallback).toHaveBeenCalled();
+    });
+
+    it('should handle multiple retry attempts with exponential backoff', async () => {
+      const retryableError = AnatomyStateError.operationTimeout('test-operation', 5000, 'LOADING');
+      
+      let attemptCount = 0;
+      const partialFailCallback = jest.fn().mockImplementation(async () => {
+        attemptCount++;
+        if (attemptCount < 2) {
+          throw new Error('Still failing');
+        }
+        return { success: true };
+      });
+      
+      const result = await errorRecovery.handleError(retryableError, {
+        operation: 'retry-multiple',
+        retryCallback: partialFailCallback,
+      });
+      
+      expect(result.strategy).toBe('retry');
+      expect(result.success).toBe(true);
+      expect(result.attempt).toBe(2);
+      expect(partialFailCallback).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe('disposed instance handling', () => {
+    it('should throw error when calling methods on disposed instance', async () => {
+      const disposedRecovery = new ErrorRecovery({
+        logger: mockLogger,
+        eventDispatcher: mockEventDispatcher,
+      });
+      
+      disposedRecovery.dispose();
+      
+      // handleError is async, so expect it to reject with the error message
+      await expect(disposedRecovery.handleError(new Error('test'))).rejects.toThrow('ErrorRecovery instance has been disposed');
+      
+      // These are synchronous methods, so they should throw immediately
+      expect(() => disposedRecovery.registerFallbackStrategy('Test', () => {})).toThrow('ErrorRecovery instance has been disposed');
+      expect(() => disposedRecovery.clearRetryAttempts('test')).toThrow('ErrorRecovery instance has been disposed');
+      expect(() => disposedRecovery.getErrorHistory()).toThrow('ErrorRecovery instance has been disposed');
+      expect(() => disposedRecovery.canRetry('test')).toThrow('ErrorRecovery instance has been disposed');
+      expect(() => disposedRecovery.getRetryDelay('test')).toThrow('ErrorRecovery instance has been disposed');
     });
   });
 

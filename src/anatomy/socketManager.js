@@ -184,6 +184,11 @@ export class SocketManager {
     // Get effective orientation (from child entity's anatomy:part or socket)
     const effectiveOrientation = anatomyPart?.orientation || socket.orientation || '';
 
+    // Debug logging for troubleshooting
+    this.#logger.debug(
+      `SocketManager: Generating name for child '${childEntityId}' with template '${socket.nameTpl}' - anatomyPart.orientation: '${anatomyPart?.orientation}', socket.orientation: '${socket.orientation}', effectiveOrientation: '${effectiveOrientation}', subType: '${anatomyPart?.subType}'`
+    );
+
     // Replace template tokens
     name = name.replace('{{orientation}}', socket.orientation || '');
     name = name.replace('{{effective_orientation}}', effectiveOrientation);

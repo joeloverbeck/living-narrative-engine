@@ -1,0 +1,37 @@
+{
+  "$schema": "http://example.com/schemas/event.schema.json",
+  "id": "anatomy:interaction_pan",
+  "description": "Fired during a pan gesture on the anatomy visualization. Provides delta movements and current position as the user drags to move the visualization viewport.",
+  "payloadSchema": {
+    "description": "Defines the structure for the 'anatomy:interaction_pan' event payload.",
+    "type": "object",
+    "required": ["deltaX", "deltaY", "position"],
+    "properties": {
+      "deltaX": {
+        "type": "number",
+        "description": "The horizontal distance moved since the last pan event."
+      },
+      "deltaY": {
+        "type": "number",
+        "description": "The vertical distance moved since the last pan event."
+      },
+      "position": {
+        "type": "object",
+        "description": "The current position of the mouse/touch during the pan gesture.",
+        "required": ["x", "y"],
+        "properties": {
+          "x": {
+            "type": "number",
+            "description": "The current x-coordinate in client coordinates."
+          },
+          "y": {
+            "type": "number",
+            "description": "The current y-coordinate in client coordinates."
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "additionalProperties": false
+  }
+}

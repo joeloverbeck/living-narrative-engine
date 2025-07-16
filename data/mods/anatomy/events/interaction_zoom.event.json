@@ -1,0 +1,29 @@
+{
+  "$schema": "http://example.com/schemas/event.schema.json",
+  "id": "anatomy:interaction_zoom",
+  "description": "Fired when a zoom action occurs on the anatomy visualization. Provides zoom factor, position coordinates, and delta information for viewport adjustments.",
+  "payloadSchema": {
+    "description": "Defines the structure for the 'anatomy:interaction_zoom' event payload.",
+    "type": "object",
+    "required": ["zoomFactor", "x", "y", "deltaY"],
+    "properties": {
+      "zoomFactor": {
+        "type": "number",
+        "description": "The zoom factor to apply to the visualization."
+      },
+      "x": {
+        "type": "number",
+        "description": "The x-coordinate of the zoom center point."
+      },
+      "y": {
+        "type": "number",
+        "description": "The y-coordinate of the zoom center point."
+      },
+      "deltaY": {
+        "type": "number",
+        "description": "The deltaY value from the original wheel event that triggered the zoom."
+      }
+    },
+    "additionalProperties": false
+  }
+}

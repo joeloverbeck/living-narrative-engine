@@ -380,7 +380,10 @@ class VisualizationComposer {
       this.#setupTooltips();
 
       // Subscribe to viewport changes
-      this.#viewportManager.subscribe(() => {
+      this.#viewportManager.subscribe((viewportState) => {
+        // Update the render context with the new viewport state
+        this.#renderContext.updateViewport(viewportState.viewport);
+        // Update the SVG viewBox with the updated context
         this.#svgRenderer.updateViewBox(this.#renderContext);
       });
     } catch (error) {

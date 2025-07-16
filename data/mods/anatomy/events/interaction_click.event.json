@@ -1,0 +1,21 @@
+{
+  "$schema": "http://example.com/schemas/event.schema.json",
+  "id": "anatomy:interaction_click",
+  "description": "Fired when a click occurs on the anatomy visualization. Provides the original click event and the target element for further processing.",
+  "payloadSchema": {
+    "description": "Defines the structure for the 'anatomy:interaction_click' event payload.",
+    "type": "object",
+    "required": ["event", "target"],
+    "properties": {
+      "event": {
+        "type": "object",
+        "description": "The original mouse/pointer event that triggered the click."
+      },
+      "target": {
+        "type": "object",
+        "description": "The target element that was clicked, determined by the event target processing logic."
+      }
+    },
+    "additionalProperties": false
+  }
+}

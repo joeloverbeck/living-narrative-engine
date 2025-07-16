@@ -1,0 +1,29 @@
+{
+  "$schema": "http://example.com/schemas/event.schema.json",
+  "id": "anatomy:interaction_panstart",
+  "description": "Fired when a pan gesture starts on the anatomy visualization. Indicates the beginning of a dragging operation to move the visualization viewport.",
+  "payloadSchema": {
+    "description": "Defines the structure for the 'anatomy:interaction_panstart' event payload.",
+    "type": "object",
+    "required": ["position"],
+    "properties": {
+      "position": {
+        "type": "object",
+        "description": "The initial position where the pan gesture started.",
+        "required": ["x", "y"],
+        "properties": {
+          "x": {
+            "type": "number",
+            "description": "The x-coordinate of the pan start position in client coordinates."
+          },
+          "y": {
+            "type": "number",
+            "description": "The y-coordinate of the pan start position in client coordinates."
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "additionalProperties": false
+  }
+}

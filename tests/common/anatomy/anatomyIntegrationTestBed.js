@@ -248,6 +248,9 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
       bodyGraphService: this.bodyGraphService,
     });
 
+    // Add generateAnatomy method alias for test compatibility
+    this.anatomyGenerationService.generateAnatomy = this.anatomyGenerationService.generateAnatomyIfNeeded;
+
     // Create anatomy initialization service
     this.anatomyInitializationService = new AnatomyInitializationService({
       eventDispatcher: mocks.eventDispatcher,
@@ -332,6 +335,14 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
       bodyGraphService: this.bodyGraphService,
       anatomyClothingCache: this.anatomyClothingCache,
     });
+
+    // Create container and register services
+    this.container = new Map();
+    this.container.set('IEntityManager', this.entityManager);
+    this.container.set('AnatomyGenerationService', this.anatomyGenerationService);
+    this.container.set('SocketManager', this.socketManager);
+    this.container.set('BodyGraphService', this.bodyGraphService);
+    this.container.set('EntityManager', this.entityManager);
   }
 
   /**
@@ -595,16 +606,51 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
   }
 
   /**
-   * Sets up the test bed with common test data
+   * Sets up the test bed with comprehensive anatomy test data
    *
    * @returns {Promise<void>}
    */
   async setup() {
+    // Load comprehensive anatomy mod data
+    await this.loadAnatomyModData();
+  }
+
+  /**
+   * Loads comprehensive anatomy mod data including components, entities, blueprints, and recipes
+   * This mirrors the actual mod structure in data/mods/anatomy/
+   *
+   * @returns {Promise<void>}
+   */
+  async loadAnatomyModData() {
     // Load core components
     this.loadComponents({
       'core:actor': {
         id: 'core:actor',
-        dataSchema: { type: 'object', properties: {} },
+        dataSchema: { 
+          type: 'object', 
+          properties: {},
+          additionalProperties: false
+        },
+      },
+      'core:name': {
+        id: 'core:name',
+        dataSchema: {
+          type: 'object',
+          additionalProperties: false,
+          required: ['text'],
+          properties: {
+            text: { type: 'string' },
+          },
+        },
+      },
+      'core:description': {
+        id: 'core:description',
+        dataSchema: {
+          type: 'object',
+          properties: {
+            text: { type: 'string' },
+          },
+        },
       },
       'anatomy:body': {
         id: 'anatomy:body',
@@ -612,7 +658,13 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
           type: 'object',
           properties: {
             recipeId: { type: 'string' },
-            bodyParts: { type: 'array', items: { type: 'string' } },
+            body: {
+              type: 'object',
+              properties: {
+                root: { type: 'string' },
+                parts: { type: 'object' },
+              },
+            },
           },
         },
       },
@@ -622,8 +674,13 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
           type: 'object',
           properties: {
             subType: { type: 'string' },
-            tags: { type: 'array', items: { type: 'string' } },
+            orientation: { 
+              type: 'string',
+              enum: ['left', 'right', 'mid', 'upper', 'lower', 'front', 'back']
+            },
           },
+          required: ['subType'],
+          additionalProperties: false
         },
       },
       'anatomy:sockets': {
@@ -637,7 +694,9 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
                 type: 'object',
                 properties: {
                   id: { type: 'string' },
+                  orientation: { type: 'string' },
                   allowedTypes: { type: 'array', items: { type: 'string' } },
+                  nameTpl: { type: 'string' },
                   maxCount: { type: 'number' },
                 },
               },
@@ -650,10 +709,8 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
         dataSchema: {
           type: 'object',
           properties: {
-            parentSocket: { type: 'string' },
-            parentEntity: { type: 'string' },
-            childSocket: { type: 'string' },
-            childEntity: { type: 'string' },
+            parentId: { type: 'string' },
+            socketId: { type: 'string' },
           },
         },
       },
@@ -668,144 +725,639 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
           },
         },
       },
-      'core:description': {
-        id: 'core:description',
-        dataSchema: {
-          type: 'object',
-          properties: {
-            text: { type: 'string' },
-          },
-        },
-      },
     });
 
-    // Load basic entity definitions
+    // Load anatomy entity definitions
     this.loadEntityDefinitions({
-      'test:actor': {
-        id: 'test:actor',
-        description: 'Test actor entity',
+      'core:actor': {
+        id: 'core:actor',
+        description: 'Actor entity',
         components: {
           'core:actor': {},
         },
       },
-      'core:shirt_simple': {
-        id: 'core:shirt_simple',
-        description: 'Simple shirt',
-        components: {
-          'clothing:wearable': {
-            slots: ['torso_upper'],
-            layerGroup: 'clothing',
-            layer: 1,
-          },
-        },
-      },
-      'anatomy:blueprint_slot': {
-        id: 'anatomy:blueprint_slot',
-        description: 'Blueprint slot placeholder entity',
-        components: {},
-      },
-    });
-
-    // Load basic recipes
-    this.loadRecipes({
-      'test:human_adult': {
-        id: 'test:human_adult',
-        blueprintId: 'anatomy:human_adult',
-        properties: {},
-      },
-    });
-
-    // Load basic entity definitions for anatomy parts
-    this.loadEntityDefinitions({
-      'anatomy:human_torso': {
-        id: 'anatomy:human_torso',
-        description: 'Human torso',
+      'anatomy:human_female_torso': {
+        id: 'anatomy:human_female_torso',
+        description: 'A human female torso with female-specific anatomy',
         components: {
           'anatomy:part': {
-            subType: 'torso',
-            tags: ['torso', 'core'],
+            subType: 'torso'
           },
           'anatomy:sockets': {
             sockets: [
-              { id: 'head_socket', allowedTypes: ['head'], maxCount: 1 },
               {
-                id: 'torso_upper_socket',
-                allowedTypes: ['torso_upper'],
-                maxCount: 1,
+                id: 'neck',
+                orientation: 'upper',
+                allowedTypes: ['head', 'neck'],
+                nameTpl: '{{type}}'
               },
               {
-                id: 'torso_lower_socket',
-                allowedTypes: ['torso_lower'],
-                maxCount: 1,
+                id: 'left_shoulder',
+                orientation: 'left',
+                allowedTypes: ['arm'],
+                nameTpl: '{{orientation}} {{type}}'
               },
-            ],
+              {
+                id: 'right_shoulder',
+                orientation: 'right',
+                allowedTypes: ['arm'],
+                nameTpl: '{{orientation}} {{type}}'
+              },
+              {
+                id: 'left_hip',
+                orientation: 'left',
+                allowedTypes: ['leg'],
+                nameTpl: '{{orientation}} {{type}}'
+              },
+              {
+                id: 'right_hip',
+                orientation: 'right',
+                allowedTypes: ['leg'],
+                nameTpl: '{{orientation}} {{type}}'
+              },
+              {
+                id: 'left_chest',
+                orientation: 'left',
+                allowedTypes: ['breast'],
+                nameTpl: '{{orientation}} {{type}}'
+              },
+              {
+                id: 'right_chest',
+                orientation: 'right',
+                allowedTypes: ['breast'],
+                nameTpl: '{{orientation}} {{type}}'
+              },
+              {
+                id: 'left_eye',
+                orientation: 'left',
+                allowedTypes: ['eye'],
+                nameTpl: '{{orientation}} {{type}}'
+              },
+              {
+                id: 'right_eye',
+                orientation: 'right',
+                allowedTypes: ['eye'],
+                nameTpl: '{{orientation}} {{type}}'
+              },
+              {
+                id: 'left_ear',
+                orientation: 'left',
+                allowedTypes: ['ear'],
+                nameTpl: '{{orientation}} {{type}}'
+              },
+              {
+                id: 'right_ear',
+                orientation: 'right',
+                allowedTypes: ['ear'],
+                nameTpl: '{{orientation}} {{type}}'
+              },
+              {
+                id: 'nose',
+                allowedTypes: ['nose'],
+                nameTpl: '{{type}}'
+              },
+              {
+                id: 'mouth',
+                allowedTypes: ['mouth'],
+                nameTpl: '{{type}}'
+              },
+              {
+                id: 'teeth',
+                allowedTypes: ['teeth'],
+                nameTpl: '{{type}}'
+              },
+              {
+                id: 'scalp',
+                allowedTypes: ['hair'],
+                nameTpl: '{{type}}'
+              },
+              {
+                id: 'pubic_hair',
+                allowedTypes: ['pubic_hair'],
+                nameTpl: 'pubic hair'
+              },
+              {
+                id: 'vagina',
+                allowedTypes: ['vagina'],
+                nameTpl: '{{type}}'
+              },
+              {
+                id: 'asshole',
+                allowedTypes: ['asshole'],
+                nameTpl: '{{type}}'
+              }
+            ]
           },
-        },
+          'core:name': {
+            text: 'torso'
+          }
+        }
       },
-      'anatomy:human_head': {
-        id: 'anatomy:human_head',
-        description: 'Human head',
+      'anatomy:humanoid_arm': {
+        id: 'anatomy:humanoid_arm',
+        description: 'A humanoid arm',
         components: {
           'anatomy:part': {
-            subType: 'head',
-            tags: ['head'],
+            subType: 'arm'
           },
-        },
+          'anatomy:sockets': {
+            sockets: [
+              {
+                id: 'wrist',
+                allowedTypes: ['hand'],
+                nameTpl: '{{effective_orientation}} {{type}}'
+              }
+            ]
+          },
+          'core:name': {
+            text: 'arm'
+          }
+        }
       },
-      'anatomy:human_torso_upper': {
-        id: 'anatomy:human_torso_upper',
-        description: 'Human upper torso',
+      'anatomy:human_leg': {
+        id: 'anatomy:human_leg',
+        description: 'A human leg',
         components: {
           'anatomy:part': {
-            subType: 'torso_upper',
-            tags: ['torso', 'upper'],
+            subType: 'leg'
           },
-        },
+          'anatomy:sockets': {
+            sockets: [
+              {
+                id: 'ankle',
+                allowedTypes: ['foot'],
+                nameTpl: '{{effective_orientation}} {{type}}'
+              }
+            ]
+          },
+          'core:name': {
+            text: 'leg'
+          }
+        }
       },
-      'anatomy:human_torso_lower': {
-        id: 'anatomy:human_torso_lower',
-        description: 'Human lower torso',
+      'anatomy:human_hand': {
+        id: 'anatomy:human_hand',
+        description: 'A human hand',
         components: {
           'anatomy:part': {
-            subType: 'torso_lower',
-            tags: ['torso', 'lower'],
-          },
-        },
+            subType: 'hand'
+          }
+        }
       },
+      'anatomy:human_foot': {
+        id: 'anatomy:human_foot',
+        description: 'A human foot',
+        components: {
+          'anatomy:part': {
+            subType: 'foot'
+          }
+        }
+      },
+      'anatomy:humanoid_head': {
+        id: 'anatomy:humanoid_head',
+        description: 'A humanoid head',
+        components: {
+          'anatomy:part': {
+            subType: 'head'
+          },
+          'anatomy:sockets': {
+            sockets: [
+              {
+                id: 'left_eye',
+                allowedTypes: ['eye'],
+                nameTpl: '{{orientation}} {{type}}'
+              },
+              {
+                id: 'right_eye',
+                allowedTypes: ['eye'],
+                nameTpl: '{{orientation}} {{type}}'
+              },
+              {
+                id: 'left_ear',
+                allowedTypes: ['ear'],
+                nameTpl: '{{orientation}} {{type}}'
+              },
+              {
+                id: 'right_ear',
+                allowedTypes: ['ear'],
+                nameTpl: '{{orientation}} {{type}}'
+              },
+              {
+                id: 'nose',
+                allowedTypes: ['nose'],
+                nameTpl: '{{type}}'
+              },
+              {
+                id: 'mouth',
+                allowedTypes: ['mouth'],
+                nameTpl: '{{type}}'
+              },
+              {
+                id: 'teeth',
+                allowedTypes: ['teeth'],
+                nameTpl: '{{type}}'
+              },
+              {
+                id: 'scalp',
+                allowedTypes: ['hair'],
+                nameTpl: '{{type}}'
+              }
+            ]
+          },
+          'core:name': {
+            text: 'head'
+          }
+        }
+      },
+      'anatomy:human_eye_amber': {
+        id: 'anatomy:human_eye_amber',
+        description: 'An amber-colored human eye',
+        components: {
+          'anatomy:part': {
+            subType: 'eye'
+          }
+        }
+      },
+      'anatomy:humanoid_ear': {
+        id: 'anatomy:humanoid_ear',
+        description: 'A humanoid ear',
+        components: {
+          'anatomy:part': {
+            subType: 'ear'
+          }
+        }
+      },
+      'anatomy:humanoid_nose': {
+        id: 'anatomy:humanoid_nose',
+        description: 'A humanoid nose',
+        components: {
+          'anatomy:part': {
+            subType: 'nose'
+          }
+        }
+      },
+      'anatomy:humanoid_mouth': {
+        id: 'anatomy:humanoid_mouth',
+        description: 'A humanoid mouth',
+        components: {
+          'anatomy:part': {
+            subType: 'mouth'
+          },
+          'anatomy:sockets': {
+            sockets: [
+              {
+                id: 'teeth',
+                allowedTypes: ['teeth'],
+                nameTpl: '{{type}}'
+              }
+            ]
+          }
+        }
+      },
+      'anatomy:humanoid_teeth': {
+        id: 'anatomy:humanoid_teeth',
+        description: 'Humanoid teeth',
+        components: {
+          'anatomy:part': {
+            subType: 'teeth'
+          }
+        }
+      },
+      'anatomy:human_hair_blonde': {
+        id: 'anatomy:human_hair_blonde',
+        description: 'Blonde human hair',
+        components: {
+          'anatomy:part': {
+            subType: 'hair'
+          }
+        }
+      },
+      'anatomy:human_leg_shapely': {
+        id: 'anatomy:human_leg_shapely',
+        description: 'A shapely human leg',
+        components: {
+          'anatomy:part': {
+            subType: 'leg'
+          },
+          'anatomy:sockets': {
+            sockets: [
+              {
+                id: 'ankle',
+                allowedTypes: ['foot'],
+                nameTpl: '{{effective_orientation}} {{type}}'
+              }
+            ]
+          },
+          'core:name': {
+            text: 'leg'
+          }
+        }
+      },
+      'anatomy:human_breast_g_cup': {
+        id: 'anatomy:human_breast_g_cup',
+        description: 'A G-cup human breast',
+        components: {
+          'anatomy:part': {
+            subType: 'breast'
+          }
+        }
+      },
+      'anatomy:blueprint_slot': {
+        id: 'anatomy:blueprint_slot',
+        description: 'A blueprint slot entity that represents a slot from the anatomy blueprint',
+        components: {
+          'core:name': {
+            text: 'Blueprint Slot'
+          }
+        }
+      }
     });
 
-    // Load basic blueprints
-    this.loadBlueprints({
-      'anatomy:human_adult': {
-        id: 'anatomy:human_adult',
-        root: 'anatomy:human_torso',
+    // Load slot libraries
+    this.loadSlotLibraries({
+      'anatomy:humanoid_slots': {
+        id: 'anatomy:humanoid_slots',
+        description: 'Standard humanoid anatomy slot and clothing definitions',
+        slotDefinitions: {
+          standard_head: {
+            socket: 'neck',
+            requirements: {
+              partType: 'head',
+              components: ['anatomy:part']
+            }
+          },
+          standard_arm: {
+            socket: 'shoulder',
+            requirements: {
+              partType: 'arm',
+              components: ['anatomy:part']
+            }
+          },
+          standard_leg: {
+            socket: 'hip',
+            requirements: {
+              partType: 'leg',
+              components: ['anatomy:part']
+            }
+          },
+          standard_eye: {
+            parent: 'head',
+            socket: 'eye',
+            requirements: {
+              partType: 'eye',
+              components: ['anatomy:part']
+            }
+          },
+          standard_ear: {
+            parent: 'head',
+            socket: 'ear',
+            requirements: {
+              partType: 'ear',
+              components: ['anatomy:part']
+            }
+          },
+          standard_nose: {
+            parent: 'head',
+            socket: 'nose',
+            requirements: {
+              partType: 'nose',
+              components: ['anatomy:part']
+            }
+          },
+          standard_mouth: {
+            parent: 'head',
+            socket: 'mouth',
+            requirements: {
+              partType: 'mouth',
+              components: ['anatomy:part']
+            }
+          },
+          standard_teeth: {
+            parent: 'mouth',
+            socket: 'teeth',
+            requirements: {
+              partType: 'teeth',
+              components: ['anatomy:part']
+            }
+          },
+          standard_hair: {
+            parent: 'head',
+            socket: 'scalp',
+            requirements: {
+              partType: 'hair',
+              components: ['anatomy:part']
+            }
+          },
+          standard_hand: {
+            parent: 'arm',
+            socket: 'wrist',
+            requirements: {
+              partType: 'hand',
+              components: ['anatomy:part']
+            }
+          },
+          standard_foot: {
+            parent: 'leg',
+            socket: 'ankle',
+            requirements: {
+              partType: 'foot',
+              components: ['anatomy:part']
+            }
+          }
+        }
+      }
+    });
+
+    // Load blueprint parts
+    this.loadBlueprintParts({
+      'anatomy:humanoid_core': {
+        id: 'anatomy:humanoid_core',
+        description: 'Core humanoid anatomy using slot library',
+        library: 'anatomy:humanoid_slots',
         slots: {
           head: {
-            parent: null, // null means attach to root
-            socket: 'head_socket',
-            preferId: 'anatomy:human_head',
-            tags: ['head'],
-            required: true,
+            $use: 'standard_head'
           },
-          torso_upper: {
-            parent: null, // null means attach to root
-            socket: 'torso_upper_socket',
-            tags: ['torso', 'upper'],
-            required: true,
+          left_arm: {
+            $use: 'standard_arm',
+            socket: 'left_shoulder'
           },
-          torso_lower: {
-            parent: null, // null means attach to root
-            socket: 'torso_lower_socket',
-            tags: ['torso', 'lower'],
-            required: true,
+          right_arm: {
+            $use: 'standard_arm',
+            socket: 'right_shoulder'
           },
+          left_leg: {
+            $use: 'standard_leg',
+            socket: 'left_hip'
+          },
+          right_leg: {
+            $use: 'standard_leg',
+            socket: 'right_hip'
+          },
+          left_eye: {
+            $use: 'standard_eye',
+            socket: 'left_eye'
+          },
+          right_eye: {
+            $use: 'standard_eye',
+            socket: 'right_eye'
+          },
+          left_ear: {
+            $use: 'standard_ear',
+            socket: 'left_ear'
+          },
+          right_ear: {
+            $use: 'standard_ear',
+            socket: 'right_ear'
+          },
+          nose: {
+            $use: 'standard_nose'
+          },
+          mouth: {
+            $use: 'standard_mouth'
+          },
+          teeth: {
+            $use: 'standard_teeth'
+          },
+          hair: {
+            $use: 'standard_hair'
+          },
+          left_hand: {
+            $use: 'standard_hand',
+            parent: 'left_arm'
+          },
+          right_hand: {
+            $use: 'standard_hand',
+            parent: 'right_arm'
+          },
+          left_foot: {
+            $use: 'standard_foot',
+            parent: 'left_leg'
+          },
+          right_foot: {
+            $use: 'standard_foot',
+            parent: 'right_leg'
+          }
+        }
+      }
+    });
+
+    // Load anatomy blueprints
+    this.loadBlueprints({
+      'anatomy:human_female': {
+        id: 'anatomy:human_female',
+        root: 'anatomy:human_female_torso',
+        compose: [
+          {
+            part: 'anatomy:humanoid_core',
+            include: ['slots', 'clothingSlotMappings']
+          }
+        ],
+        slots: {
+          left_breast: {
+            socket: 'left_chest',
+            requirements: {
+              partType: 'breast',
+              components: ['anatomy:part']
+            }
+          },
+          right_breast: {
+            socket: 'right_chest',
+            requirements: {
+              partType: 'breast',
+              components: ['anatomy:part']
+            }
+          }
+        }
+      }
+    });
+
+    // Load anatomy recipes
+    this.loadRecipes({
+      'p_erotica:amaia_castillo_recipe': {
+        recipeId: 'p_erotica:amaia_castillo_recipe',
+        blueprintId: 'anatomy:human_female',
+        slots: {
+          torso: {
+            partType: 'torso',
+            preferId: 'anatomy:human_female_torso',
+            properties: {
+              'descriptors:build': {
+                build: 'shapely'
+              }
+            }
+          },
+          head: {
+            partType: 'head',
+            preferId: 'anatomy:humanoid_head'
+          },
+          left_eye: {
+            partType: 'eye',
+            preferId: 'anatomy:human_eye_amber'
+          },
+          right_eye: {
+            partType: 'eye',
+            preferId: 'anatomy:human_eye_amber'
+          },
+          hair: {
+            partType: 'hair',
+            preferId: 'anatomy:human_hair_blonde'
+          }
         },
-        clothingSlotMappings: {
-          head: ['head'],
-          torso_upper: ['torso_upper'],
-          torso_lower: ['torso_lower'],
-        },
+        patterns: [
+          {
+            matches: ['left_arm', 'right_arm'],
+            partType: 'arm',
+            preferId: 'anatomy:humanoid_arm'
+          },
+          {
+            matches: ['left_leg', 'right_leg'],
+            partType: 'leg',
+            preferId: 'anatomy:human_leg_shapely'
+          },
+          {
+            matches: ['left_breast', 'right_breast'],
+            partType: 'breast',
+            preferId: 'anatomy:human_breast_g_cup'
+          }
+        ]
       },
+      'anatomy:human_female': {
+        recipeId: 'anatomy:human_female',
+        blueprintId: 'anatomy:human_female',
+        slots: {
+          torso: {
+            partType: 'torso',
+            preferId: 'anatomy:human_female_torso'
+          },
+          head: {
+            partType: 'head',
+            preferId: 'anatomy:humanoid_head'
+          }
+        },
+        patterns: [
+          {
+            matches: ['left_arm', 'right_arm'],
+            partType: 'arm',
+            preferId: 'anatomy:humanoid_arm'
+          },
+          {
+            matches: ['left_leg', 'right_leg'],
+            partType: 'leg',
+            preferId: 'anatomy:human_leg'
+          },
+          {
+            matches: ['left_hand', 'right_hand'],
+            partType: 'hand',
+            preferId: 'anatomy:human_hand'
+          },
+          {
+            matches: ['left_foot', 'right_foot'],
+            partType: 'foot',
+            preferId: 'anatomy:human_foot'
+          }
+        ]
+      }
     });
   }
 
@@ -1178,6 +1730,31 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
         slotEntityMappings,
       },
     };
+  }
+
+  /**
+   * Creates an actor entity with the specified recipe
+   * This method is used by integration tests to create actors for anatomy generation
+   *
+   * @param {object} options - Configuration options
+   * @param {string} options.recipeId - The recipe ID to use for anatomy generation
+   * @returns {object} The created actor entity
+   */
+  createActor({ recipeId }) {
+    // Ensure we have the anatomy mod data loaded
+    if (!this.registry.get('anatomyRecipes', recipeId)) {
+      this.loadAnatomyModData();
+    }
+
+    // Create the actor entity
+    const actor = this.entityManager.createEntityInstance('core:actor');
+
+    // Add the anatomy:body component with the recipe
+    this.entityManager.addComponent(actor.id, 'anatomy:body', {
+      recipeId: recipeId,
+    });
+
+    return actor;
   }
 
   /**

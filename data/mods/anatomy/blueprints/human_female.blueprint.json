@@ -59,10 +59,6 @@
       ],
       "allowedLayers": ["accessory", "armor"]
     },
-    "bra": {
-      "blueprintSlots": ["left_breast", "right_breast"],
-      "allowedLayers": ["underwear"]
-    },
     "torso_lower": {
       "anatomySockets": ["left_hip", "right_hip", "pubic_hair", "vagina"],
       "allowedLayers": ["underwear", "base", "outer"]
@@ -78,10 +74,6 @@
         "right_breast"
       ],
       "allowedLayers": ["outer"]
-    },
-    "panties": {
-      "anatomySockets": ["vagina", "pubic_hair"],
-      "allowedLayers": ["underwear"]
     },
     "torso_upper": {
       "anatomySockets": [

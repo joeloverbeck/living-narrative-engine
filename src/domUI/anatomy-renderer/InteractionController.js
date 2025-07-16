@@ -221,6 +221,7 @@ class InteractionController {
   startPan(event) {
     this.#isPanning = true;
     this.#panStart = { x: event.clientX, y: event.clientY };
+    this.#lastMousePosition = { x: event.clientX, y: event.clientY };
     this.#activeGestures.add('pan');
     this.#triggerHandlers('panstart', { position: this.#panStart });
   }
@@ -233,8 +234,8 @@ class InteractionController {
   updatePan(event) {
     if (!this.#isPanning) return;
 
-    const deltaX = event.clientX - this.#panStart.x;
-    const deltaY = event.clientY - this.#panStart.y;
+    const deltaX = event.clientX - this.#lastMousePosition.x;
+    const deltaY = event.clientY - this.#lastMousePosition.y;
 
     this.#triggerHandlers('pan', {
       deltaX,
@@ -242,7 +243,7 @@ class InteractionController {
       position: { x: event.clientX, y: event.clientY },
     });
 
-    this.#panStart = { x: event.clientX, y: event.clientY };
+    this.#lastMousePosition = { x: event.clientX, y: event.clientY };
   }
 
   /**
@@ -349,7 +350,8 @@ class InteractionController {
       // Left click
       const target = event.target;
       // Don't start pan if clicking on a node
-      if (!target.closest('.anatomy-node')) {
+      const anatomyNode = target && target.closest && target.closest('.anatomy-node');
+      if (!anatomyNode) {
         this.startPan(event);
         event.preventDefault();
       }
@@ -363,7 +365,6 @@ class InteractionController {
    * @param {MouseEvent} event
    */
   #handleMouseMove(event) {
-    this.#lastMousePosition = { x: event.clientX, y: event.clientY };
     if (this.#isPanning) {
       this.updatePan(event);
     }
@@ -544,10 +545,7 @@ class InteractionController {
     }
 
     // Also dispatch event bus events
-    this.#eventBus.dispatch({
-      type: `anatomy:interaction_${eventType}`,
-      payload: data,
-    });
+    this.#eventBus.dispatch(`anatomy:interaction_${eventType}`, data);
   }
 }
 
