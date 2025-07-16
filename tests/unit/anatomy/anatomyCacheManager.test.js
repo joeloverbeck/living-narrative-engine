@@ -341,6 +341,114 @@ describe('AnatomyCacheManager', () => {
         expect.any(Object)
       );
     });
+
+    it('should handle anatomy:body with structure.rootPartId', async () => {
+      // Setup actor with anatomy:body that has structure
+      const actorEntity = { id: 'actor-1' };
+      const bodyPartEntity = { id: 'body-root-1' };
+
+      mockEntityManager.getEntityInstance.mockImplementation((id) => {
+        if (id === 'actor-1') return actorEntity;
+        if (id === 'body-root-1') return bodyPartEntity;
+        throw new Error(`Entity ${id} not found`);
+      });
+
+      mockEntityManager.getComponentData.mockImplementation(
+        (id, componentId) => {
+          if (id === 'actor-1' && componentId === 'anatomy:body') {
+            return {
+              structure: {
+                rootPartId: 'body-root-1',
+              },
+            };
+          }
+          if (id === 'body-root-1' && componentId === 'anatomy:part') {
+            return { subType: 'torso' };
+          }
+          return null;
+        }
+      );
+
+      mockEntityManager.getEntitiesWithComponent.mockReturnValue([]);
+
+      await cacheManager.buildCache('actor-1', mockEntityManager);
+
+      // Verify the actor node has the body part as a child
+      const actorNode = cacheManager.get('actor-1');
+      expect(actorNode.partType).toBe('body_root');
+      expect(actorNode.children).toContain('body-root-1');
+
+      // Verify the body part was processed
+      const bodyPartNode = cacheManager.get('body-root-1');
+      expect(bodyPartNode).toBeDefined();
+      expect(bodyPartNode.parentId).toBe('actor-1');
+      expect(bodyPartNode.socketId).toBe('root_connection');
+    });
+
+    it('should handle anatomy:body without structure gracefully', async () => {
+      const actorEntity = { id: 'actor-1' };
+
+      mockEntityManager.getEntityInstance.mockImplementation((id) => {
+        if (id === 'actor-1') return actorEntity;
+        throw new Error(`Entity ${id} not found`);
+      });
+
+      mockEntityManager.getComponentData.mockImplementation(
+        (id, componentId) => {
+          if (id === 'actor-1' && componentId === 'anatomy:body') {
+            return {}; // anatomy:body exists but no structure
+          }
+          return null;
+        }
+      );
+
+      mockEntityManager.getEntitiesWithComponent.mockReturnValue([]);
+
+      await cacheManager.buildCache('actor-1', mockEntityManager);
+
+      // Should complete without errors
+      const actorNode = cacheManager.get('actor-1');
+      expect(actorNode).toBeDefined();
+      expect(actorNode.children).toEqual([]);
+    });
+
+    it('should handle errors in findAndConnectBodyParts gracefully', async () => {
+      const actorEntity = { id: 'actor-1' };
+
+      mockEntityManager.getEntityInstance.mockImplementation((id) => {
+        if (id === 'actor-1') return actorEntity;
+        throw new Error(`Entity ${id} not found`);
+      });
+
+      let callCount = 0;
+      mockEntityManager.getComponentData.mockImplementation(
+        (id, componentId) => {
+          if (id === 'actor-1' && componentId === 'anatomy:body') {
+            callCount++;
+            // Return anatomy:body on first call for cache building
+            if (callCount === 1) {
+              return { type: 'humanoid' };
+            }
+            // Throw error on second call in findAndConnectBodyParts
+            throw new Error('Component data error');
+          }
+          return null;
+        }
+      );
+
+      mockEntityManager.getEntitiesWithComponent.mockReturnValue([]);
+
+      await cacheManager.buildCache('actor-1', mockEntityManager);
+
+      // Should log debug message and continue
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining("Could not connect body parts for 'actor-1':")
+      );
+
+      // Cache should still be built for the actor
+      const actorNode = cacheManager.get('actor-1');
+      expect(actorNode).toBeDefined();
+    });
   });
 
   describe('cache persistence', () => {
@@ -564,6 +672,292 @@ describe('AnatomyCacheManager', () => {
       expect(result.issues).toContain(
         "Child 'missing-child' of 'torso-1' not in cache"
       );
+    });
+  });
+
+  describe('disconnected actor anatomy handling', () => {
+    it('should connect disconnected actor to anatomy root', async () => {
+      // Setup: Actor with anatomy:body but no direct joint children
+      const actorEntity = { id: 'actor-1' };
+      const anatomyRootEntity = { id: 'anatomy-root-1' };
+      const childPartEntity = { id: 'child-part-1' };
+
+      mockEntityManager.getEntityInstance.mockImplementation((id) => {
+        if (id === 'actor-1') return actorEntity;
+        if (id === 'anatomy-root-1') return anatomyRootEntity;
+        if (id === 'child-part-1') return childPartEntity;
+        throw new Error(`Entity ${id} not found`);
+      });
+
+      mockEntityManager.getComponentData.mockImplementation(
+        (id, componentId) => {
+          if (id === 'actor-1' && componentId === 'anatomy:body') {
+            return { type: 'humanoid' }; // Has anatomy:body but no structure
+          }
+          if (id === 'anatomy-root-1' && componentId === 'anatomy:part') {
+            return { subType: 'torso' };
+          }
+          if (id === 'child-part-1' && componentId === 'anatomy:part') {
+            return { subType: 'arm' };
+          }
+          if (id === 'child-part-1' && componentId === 'anatomy:joint') {
+            return { parentEntityId: 'anatomy-root-1', socketId: 'shoulder' };
+          }
+          return null;
+        }
+      );
+
+      // anatomy-root-1 is a parent but not a child (no joint)
+      // child-part-1 has anatomy-root-1 as parent
+      mockEntityManager.getEntitiesWithComponent.mockReturnValue([
+        childPartEntity,
+      ]);
+
+      await cacheManager.buildCache('actor-1', mockEntityManager);
+
+      // Verify actor is connected to anatomy root
+      const actorNode = cacheManager.get('actor-1');
+      expect(actorNode.children).toContain('anatomy-root-1');
+
+      // Verify anatomy root is properly set up
+      const anatomyRootNode = cacheManager.get('anatomy-root-1');
+      expect(anatomyRootNode).toBeDefined();
+      expect(anatomyRootNode.parentId).toBe('actor-1');
+      expect(anatomyRootNode.socketId).toBe('anatomy_root_connection');
+      expect(anatomyRootNode.children).toContain('child-part-1');
+
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        "AnatomyCacheManager: Successfully connected actor 'actor-1' to anatomy root 'anatomy-root-1'"
+      );
+    });
+
+    it('should handle multiple anatomy root candidates correctly', async () => {
+      // Setup: Multiple entities that are parents but not children
+      const actorEntity = { id: 'actor-1' };
+      const validRootEntity = { id: 'valid-root-1' };
+      const invalidRootEntity = { id: 'invalid-root-1' }; // No anatomy:part
+      const childPartEntity = { id: 'child-1' };
+
+      mockEntityManager.getEntityInstance.mockImplementation((id) => {
+        if (id === 'actor-1') return actorEntity;
+        if (id === 'valid-root-1') return validRootEntity;
+        if (id === 'invalid-root-1') return invalidRootEntity;
+        if (id === 'child-1') return childPartEntity;
+        throw new Error(`Entity ${id} not found`);
+      });
+
+      mockEntityManager.getComponentData.mockImplementation(
+        (id, componentId) => {
+          if (id === 'actor-1' && componentId === 'anatomy:body') {
+            return { type: 'humanoid' };
+          }
+          if (id === 'valid-root-1' && componentId === 'anatomy:part') {
+            return { subType: 'torso' };
+          }
+          // invalid-root-1 has no anatomy:part component
+          if (id === 'child-1' && componentId === 'anatomy:joint') {
+            return { parentEntityId: 'valid-root-1', socketId: 'socket-1' };
+          }
+          return null;
+        }
+      );
+
+      // Create a scenario where invalid-root-1 is also a parent
+      const otherChildEntity = { id: 'other-child' };
+      mockEntityManager.getEntitiesWithComponent.mockReturnValue([
+        childPartEntity,
+        otherChildEntity,
+      ]);
+
+      // Store the original implementation
+      const originalImpl = mockEntityManager.getComponentData.getMockImplementation();
+      
+      // Override getComponentData to handle both implementations
+      mockEntityManager.getComponentData.mockImplementation(
+        (id, componentId) => {
+          if (id === 'other-child' && componentId === 'anatomy:joint') {
+            return { parentEntityId: 'invalid-root-1', socketId: 'socket-2' };
+          }
+          // Call the original implementation for other cases
+          if (id === 'actor-1' && componentId === 'anatomy:body') {
+            return { type: 'humanoid' };
+          }
+          if (id === 'valid-root-1' && componentId === 'anatomy:part') {
+            return { subType: 'torso' };
+          }
+          if (id === 'child-1' && componentId === 'anatomy:joint') {
+            return { parentEntityId: 'valid-root-1', socketId: 'socket-1' };
+          }
+          return null;
+        }
+      );
+
+      await cacheManager.buildCache('actor-1', mockEntityManager);
+
+      // Only the valid root with anatomy:part should be connected
+      const actorNode = cacheManager.get('actor-1');
+      expect(actorNode.children).toContain('valid-root-1');
+      expect(actorNode.children).not.toContain('invalid-root-1');
+    });
+
+    it('should handle case with no valid anatomy roots', async () => {
+      // Setup: Actor with anatomy:body but all entities are children (no roots)
+      const actorEntity = { id: 'actor-1' };
+      const part1Entity = { id: 'part-1' };
+      const part2Entity = { id: 'part-2' };
+
+      mockEntityManager.getEntityInstance.mockImplementation((id) => {
+        if (id === 'actor-1') return actorEntity;
+        if (id === 'part-1') return part1Entity;
+        if (id === 'part-2') return part2Entity;
+        throw new Error(`Entity ${id} not found`);
+      });
+
+      mockEntityManager.getComponentData.mockImplementation(
+        (id, componentId) => {
+          if (id === 'actor-1' && componentId === 'anatomy:body') {
+            return { type: 'humanoid' };
+          }
+          if (id === 'part-1' && componentId === 'anatomy:joint') {
+            return { parentEntityId: 'part-2', socketId: 'socket-1' };
+          }
+          if (id === 'part-2' && componentId === 'anatomy:joint') {
+            return { parentEntityId: 'part-1', socketId: 'socket-2' };
+          }
+          return null;
+        }
+      );
+
+      // Both parts have parents, so neither is a root
+      mockEntityManager.getEntitiesWithComponent.mockReturnValue([
+        part1Entity,
+        part2Entity,
+      ]);
+
+      await cacheManager.buildCache('actor-1', mockEntityManager);
+
+      // Actor should have no children connected
+      const actorNode = cacheManager.get('actor-1');
+      expect(actorNode).toBeDefined();
+      expect(actorNode.children).toEqual([]);
+
+      // Should not throw any errors
+      expect(mockLogger.error).not.toHaveBeenCalled();
+    });
+
+    it('should handle null return from getEntitiesWithComponent', async () => {
+      const actorEntity = { id: 'actor-1' };
+
+      mockEntityManager.getEntityInstance.mockImplementation((id) => {
+        if (id === 'actor-1') return actorEntity;
+        throw new Error(`Entity ${id} not found`);
+      });
+
+      mockEntityManager.getComponentData.mockImplementation(
+        (id, componentId) => {
+          if (id === 'actor-1' && componentId === 'anatomy:body') {
+            return { type: 'humanoid' };
+          }
+          return null;
+        }
+      );
+
+      // Return null instead of empty array
+      mockEntityManager.getEntitiesWithComponent.mockReturnValue(null);
+
+      await cacheManager.buildCache('actor-1', mockEntityManager);
+
+      // Should handle gracefully
+      expect(cacheManager.size()).toBe(1);
+      expect(cacheManager.has('actor-1')).toBe(true);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'AnatomyCacheManager: No entities with joints found'
+      );
+    });
+
+    it('should handle error in handleDisconnectedActorAnatomy', async () => {
+      const actorEntity = { id: 'actor-1' };
+
+      mockEntityManager.getEntityInstance.mockImplementation((id) => {
+        if (id === 'actor-1') return actorEntity;
+        throw new Error(`Entity ${id} not found`);
+      });
+
+      mockEntityManager.getComponentData.mockImplementation(
+        (id, componentId) => {
+          if (id === 'actor-1' && componentId === 'anatomy:body') {
+            return { type: 'humanoid' };
+          }
+          return null;
+        }
+      );
+
+      // Counter to track calls
+      let callCount = 0;
+      mockEntityManager.getEntitiesWithComponent.mockImplementation(() => {
+        callCount++;
+        // Return empty array on first call (for buildParentToChildrenMap)
+        if (callCount === 1) {
+          return [];
+        }
+        // Throw error on second call (in handleDisconnectedActorAnatomy)
+        throw new Error('Database error');
+      });
+
+      await cacheManager.buildCache('actor-1', mockEntityManager);
+
+      // Should log error and continue
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        "AnatomyCacheManager: Failed to handle disconnected actor anatomy for 'actor-1'",
+        expect.any(Object)
+      );
+
+      // Cache should still have the actor
+      expect(cacheManager.has('actor-1')).toBe(true);
+    });
+
+    it('should use alternative parent field names for compatibility', async () => {
+      // Test that it handles both parentEntityId and parentId field names
+      const actorEntity = { id: 'actor-1' };
+      const anatomyRootEntity = { id: 'anatomy-root-1' };
+      const childPartEntity = { id: 'child-part-1' };
+
+      mockEntityManager.getEntityInstance.mockImplementation((id) => {
+        if (id === 'actor-1') return actorEntity;
+        if (id === 'anatomy-root-1') return anatomyRootEntity;
+        if (id === 'child-part-1') return childPartEntity;
+        throw new Error(`Entity ${id} not found`);
+      });
+
+      mockEntityManager.getComponentData.mockImplementation(
+        (id, componentId) => {
+          if (id === 'actor-1' && componentId === 'anatomy:body') {
+            return { type: 'humanoid' };
+          }
+          if (id === 'anatomy-root-1' && componentId === 'anatomy:part') {
+            return { subType: 'torso' };
+          }
+          if (id === 'child-part-1' && componentId === 'anatomy:part') {
+            return { subType: 'arm' };
+          }
+          if (id === 'child-part-1' && componentId === 'anatomy:joint') {
+            // Use parentId instead of parentEntityId
+            return { parentId: 'anatomy-root-1', socketId: 'shoulder' };
+          }
+          return null;
+        }
+      );
+
+      mockEntityManager.getEntitiesWithComponent.mockReturnValue([
+        childPartEntity,
+      ]);
+
+      await cacheManager.buildCache('actor-1', mockEntityManager);
+
+      // Should still work with parentId field
+      const anatomyRootNode = cacheManager.get('anatomy-root-1');
+      expect(anatomyRootNode).toBeDefined();
+      expect(anatomyRootNode.children).toContain('child-part-1');
     });
   });
 });

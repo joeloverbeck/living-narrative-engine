@@ -169,8 +169,7 @@ describe('PrerequisiteEvaluationService › with Tracing', () => {
       );
     });
 
-    // Test removed - trace call no longer exists in implementation
-    it.skip('should log the start of a rule evaluation', () => {
+    it('should log the start of a rule evaluation', () => {
       const prerequisites = [{ logic: { '===': [1, 1] } }];
       mockJsonLogicEvaluationService.evaluate.mockReturnValue(true);
 
@@ -182,16 +181,29 @@ describe('PrerequisiteEvaluationService › with Tracing', () => {
         mockTraceContext
       );
 
+      // Debug: Let's see all the calls made
+      // console.log('All trace calls:', mockTraceContext.addLog.mock.calls);
+
+      // Check for the "Starting prerequisite evaluation" step
       expect(mockTraceContext.addLog).toHaveBeenCalledWith(
-        TRACE_INFO,
-        'Evaluating rule.',
+        'step',
+        'Starting prerequisite evaluation',
+        sourceEvaluatePrerequisite
+      );
+
+      // Also check for the prerequisite rule data log
+      expect(mockTraceContext.addLog).toHaveBeenCalledWith(
+        TRACE_DATA,
+        'Prerequisite rule',
         sourceEvaluatePrerequisite,
-        { logic: prerequisites[0].logic }
+        {
+          logic: prerequisites[0].logic,
+          actionId: mockActionDefinition.id,
+        }
       );
     });
 
-    // Test removed - trace call no longer exists in implementation
-    it.skip('should log the success result of a rule evaluation', () => {
+    it('should log the success result of a rule evaluation', () => {
       const prerequisites = [{ logic: { '===': [1, 1] } }];
       mockJsonLogicEvaluationService.evaluate.mockReturnValue(true);
 
@@ -205,14 +217,16 @@ describe('PrerequisiteEvaluationService › with Tracing', () => {
 
       expect(mockTraceContext.addLog).toHaveBeenCalledWith(
         TRACE_SUCCESS,
-        'Rule evaluation result: true',
+        'Prerequisite passed',
         sourceEvaluatePrerequisite,
-        { result: true }
+        {
+          result: true,
+          logic: prerequisites[0].logic,
+        }
       );
     });
 
-    // Test removed - trace call no longer exists in implementation
-    it.skip('should log the failure result of a rule evaluation', () => {
+    it('should log the failure result of a rule evaluation', () => {
       const prerequisites = [{ logic: { '===': [1, 2] } }];
       mockJsonLogicEvaluationService.evaluate.mockReturnValue(false);
 
@@ -227,14 +241,17 @@ describe('PrerequisiteEvaluationService › with Tracing', () => {
       expect(result).toBe(false);
       expect(mockTraceContext.addLog).toHaveBeenCalledWith(
         TRACE_FAILURE,
-        'Rule evaluation result: false',
+        'Prerequisite failed',
         sourceEvaluatePrerequisite,
-        { result: false }
+        {
+          result: false,
+          logic: prerequisites[0].logic,
+          failureMessage: 'Prerequisite condition not met',
+        }
       );
     });
 
-    // Test removed - trace calls no longer exist in implementation
-    it.skip('should log both original and resolved logic for a condition_ref', () => {
+    it('should log both original and resolved logic for a condition_ref', () => {
       const originalLogic = { condition_ref: 'is_strong' };
       const resolvedLogic = { '===': [{ var: 'actor.strength' }, 10] };
       const prerequisites = [{ logic: originalLogic }];
@@ -248,20 +265,33 @@ describe('PrerequisiteEvaluationService › with Tracing', () => {
         mockTraceContext
       );
 
-      // Log original
+      // Check for prerequisite rule data log (showing original logic)
       expect(mockTraceContext.addLog).toHaveBeenCalledWith(
-        TRACE_INFO,
-        'Evaluating rule.',
+        TRACE_DATA,
+        'Prerequisite rule',
         sourceEvaluatePrerequisite,
-        { logic: originalLogic }
+        {
+          logic: originalLogic,
+          actionId: mockActionDefinition.id,
+        }
+      );
+
+      // Check for resolving step
+      expect(mockTraceContext.addLog).toHaveBeenCalledWith(
+        'step',
+        'Resolving condition_ref',
+        sourceEvaluatePrerequisite
       );
 
       // Log resolved
       expect(mockTraceContext.addLog).toHaveBeenCalledWith(
         TRACE_DATA,
-        'Condition reference resolved.',
+        'Condition reference resolved',
         sourceEvaluatePrerequisite,
-        { resolvedLogic: resolvedLogic }
+        {
+          originalLogic: originalLogic,
+          resolvedLogic: resolvedLogic,
+        }
       );
 
       // Check that the service called the evaluation with the *resolved* logic

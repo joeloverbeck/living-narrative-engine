@@ -331,6 +331,73 @@ export class BodyGraphService {
   validateCache() {
     return this.#cacheManager.validateCache(this.#entityManager);
   }
+
+  /**
+   * Check if cache exists for a root entity
+   *
+   * @param {string} rootEntityId - The root entity ID to check
+   * @returns {boolean} True if cache exists for this root
+   */
+  hasCache(rootEntityId) {
+    return this.#cacheManager.hasCacheForRoot(rootEntityId);
+  }
+
+  /**
+   * Get direct children of an entity from the cache
+   *
+   * @param {string} entityId - The entity ID to get children for
+   * @returns {string[]} Array of child entity IDs
+   */
+  getChildren(entityId) {
+    const node = this.#cacheManager.get(entityId);
+    return node?.children || [];
+  }
+
+  /**
+   * Get parent of an entity from the cache
+   *
+   * @param {string} entityId - The entity ID to get parent for
+   * @returns {string|null} Parent entity ID or null if no parent
+   */
+  getParent(entityId) {
+    const node = this.#cacheManager.get(entityId);
+    return node?.parentId || null;
+  }
+
+  /**
+   * Get all ancestors of an entity (parent, grandparent, etc.)
+   *
+   * @param {string} entityId - The entity ID to get ancestors for
+   * @returns {string[]} Array of ancestor entity IDs (nearest to farthest)
+   */
+  getAncestors(entityId) {
+    const ancestors = [];
+    let current = entityId;
+    
+    while (current) {
+      const parent = this.getParent(current);
+      if (parent) {
+        ancestors.push(parent);
+        current = parent;
+      } else {
+        break;
+      }
+    }
+    
+    return ancestors;
+  }
+
+  /**
+   * Get all descendants of an entity (children, grandchildren, etc.)
+   *
+   * @param {string} entityId - The entity ID to get descendants for
+   * @returns {string[]} Array of descendant entity IDs
+   */
+  getAllDescendants(entityId) {
+    // Use the existing getSubgraph method but exclude the root entity itself
+    const subgraph = AnatomyGraphAlgorithms.getSubgraph(entityId, this.#cacheManager);
+    return subgraph.filter(id => id !== entityId);
+  }
 }
 
 export default BodyGraphService;

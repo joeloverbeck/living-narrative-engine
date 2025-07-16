@@ -563,11 +563,3 @@ describe('AnatomyLoadingDetector Integration Tests', () => {
     });
   });
 });
-
-// Cleanup shared resources after all tests
-afterAll(() => {
-  if (sharedContainer) {
-    containerSetup = false;
-    sharedContainer = null;
-  }
-});

@@ -12,10 +12,10 @@ import EntityInstanceData from '../../../src/entities/entityInstanceData.js'; //
 import { createEntityInstance } from '../../common/entities/index.js';
 
 // --- JSDoc Imports for Type Hinting ---
-/** @typedef {import('../core/interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('./defs.js').JsonLogicEvaluationContext} JsonLogicEvaluationContext */
-/** @typedef {import('./defs.js').GameEvent} GameEvent */
-/** @typedef {import('../entities/entityManager.js').default} EntityManager */ // Import type for mocking
+/** @typedef {import('../../../src/interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../../../src/logic/defs.js').JsonLogicEvaluationContext} JsonLogicEvaluationContext */
+/** @typedef {import('../../../src/logic/defs.js').GameEvent} GameEvent */
+/** @typedef {import('../../../src/entities/entityManager.js').default} EntityManager */ // Import type for mocking
 
 // --- Mock Dependencies ---
 

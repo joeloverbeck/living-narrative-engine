@@ -10,22 +10,54 @@ import {
   afterEach,
   jest,
 } from '@jest/globals';
-import AnatomyVisualizerTestBed from '../../../common/anatomy/anatomyVisualizerTestBed.js';
+import AnatomyVisualizerUnitTestBed from '../../../common/anatomy/anatomyVisualizerUnitTestBed.js';
 
-// Cache the module to avoid repeated require() calls
-let VisualizerStateController;
+// Mock the dependencies before importing the module
+jest.mock('../../../../src/utils/index.js', () => ({
+  validateDependency: jest.fn((dep, name) => {
+    if (!dep) throw new Error(`Missing required dependency: ${name}.`);
+  }),
+}));
+jest.mock('../../../../src/errors/anatomyDataError.js', () => ({
+  AnatomyDataError: class extends Error {},
+}));
+jest.mock('../../../../src/errors/anatomyStateError.js', () => ({
+  AnatomyStateError: class extends Error {},
+}));
+jest.mock('../../../../src/domUI/visualizer/ErrorClassifier.js', () => ({
+  ErrorClassifier: jest.fn(),
+}));
+jest.mock('../../../../src/domUI/visualizer/ErrorRecovery.js', () => ({
+  ErrorRecovery: jest.fn(),
+}));
+jest.mock('../../../../src/domUI/visualizer/ErrorReporter.js', () => ({
+  ErrorReporter: jest.fn(),
+}));
+jest.mock('../../../../src/domUI/visualizer/RetryStrategy.js', () => ({
+  RetryStrategy: Object.assign(
+    jest.fn().mockImplementation(() => ({
+      execute: jest.fn().mockImplementation(async (id, callback) => {
+        return await callback();
+      }),
+    })),
+    {
+      STRATEGY_TYPES: {
+        LINEAR: 'LINEAR',
+        EXPONENTIAL: 'EXPONENTIAL',
+        FIBONACCI: 'FIBONACCI',
+      },
+    }
+  ),
+}));
+
+import { VisualizerStateController } from '../../../../src/domUI/visualizer/VisualizerStateController.js';
 
 describe('VisualizerStateController - Initialization', () => {
   let visualizerStateController;
   let testBed;
 
   beforeEach(() => {
-    testBed = new AnatomyVisualizerTestBed();
-    
-    // Load module once and cache it
-    if (!VisualizerStateController) {
-      VisualizerStateController = require('../../../../src/domUI/visualizer/VisualizerStateController.js').VisualizerStateController;
-    }
+    testBed = new AnatomyVisualizerUnitTestBed();
 
     visualizerStateController = new VisualizerStateController({
       visualizerState: testBed.mockVisualizerState,
@@ -55,39 +87,42 @@ describe('VisualizerStateController - Initialization', () => {
       {
         name: 'visualizerState',
         omit: 'visualizerState',
-        expectedError: 'Missing required dependency: visualizerState.'
+        expectedError: 'Missing required dependency: visualizerState.',
       },
       {
         name: 'anatomyLoadingDetector',
-        omit: 'anatomyLoadingDetector', 
-        expectedError: 'Missing required dependency: anatomyLoadingDetector.'
+        omit: 'anatomyLoadingDetector',
+        expectedError: 'Missing required dependency: anatomyLoadingDetector.',
       },
       {
         name: 'eventDispatcher',
         omit: 'eventDispatcher',
-        expectedError: 'Missing required dependency: eventDispatcher.'
+        expectedError: 'Missing required dependency: eventDispatcher.',
       },
       {
         name: 'entityManager',
         omit: 'entityManager',
-        expectedError: 'Missing required dependency: entityManager.'
-      }
+        expectedError: 'Missing required dependency: entityManager.',
+      },
     ];
 
-    test.each(dependencyTests)('should require $name dependency', ({ omit, expectedError }) => {
-      const deps = {
-        visualizerState: testBed.mockVisualizerState,
-        anatomyLoadingDetector: testBed.mockAnatomyLoadingDetector,
-        eventDispatcher: testBed.mockEventDispatcher,
-        entityManager: testBed.mockEntityManager,
-        logger: testBed.mockLogger,
-      };
-      delete deps[omit];
+    test.each(dependencyTests)(
+      'should require $name dependency',
+      ({ omit, expectedError }) => {
+        const deps = {
+          visualizerState: testBed.mockVisualizerState,
+          anatomyLoadingDetector: testBed.mockAnatomyLoadingDetector,
+          eventDispatcher: testBed.mockEventDispatcher,
+          entityManager: testBed.mockEntityManager,
+          logger: testBed.mockLogger,
+        };
+        delete deps[omit];
 
-      expect(() => {
-        new VisualizerStateController(deps);
-      }).toThrow(expectedError);
-    });
+        expect(() => {
+          new VisualizerStateController(deps);
+        }).toThrow(expectedError);
+      }
+    );
 
     it('should initialize with proper dependencies', () => {
       expect(visualizerStateController).toBeDefined();
@@ -103,7 +138,8 @@ describe('VisualizerStateController - Initialization', () => {
     });
 
     it('should dispatch events when state changes', () => {
-      const stateChangeHandler = testBed.mockVisualizerState.subscribe.mock.calls[0][0];
+      const stateChangeHandler =
+        testBed.mockVisualizerState.subscribe.mock.calls[0][0];
 
       stateChangeHandler({
         previousState: 'IDLE',
@@ -132,7 +168,7 @@ describe('VisualizerStateController - Entity Selection Workflow', () => {
   let testBed;
 
   beforeEach(() => {
-    testBed = new AnatomyVisualizerTestBed();
+    testBed = new AnatomyVisualizerUnitTestBed();
     testBed.mockVisualizerState.getCurrentState.mockReturnValue('IDLE');
 
     visualizerStateController = new VisualizerStateController({
@@ -165,20 +201,25 @@ describe('VisualizerStateController - Entity Selection Workflow', () => {
         entityId: 'test:entity:123',
         anatomyLoadingResult: true,
         expectSelectCalled: true,
-        expectSetErrorCalled: false
+        expectSetErrorCalled: false,
       },
       {
         name: 'failed entity selection',
         entityId: 'test:entity:invalid',
         anatomyLoadingResult: false,
         expectSelectCalled: true,
-        expectSetErrorCalled: true
-      }
+        expectSetErrorCalled: true,
+      },
     ];
 
     test.each(entitySelectionScenarios)(
       'should handle $name',
-      async ({ entityId, anatomyLoadingResult, expectSelectCalled, expectSetErrorCalled }) => {
+      async ({
+        entityId,
+        anatomyLoadingResult,
+        expectSelectCalled,
+        expectSetErrorCalled,
+      }) => {
         testBed.mockAnatomyLoadingDetector.waitForEntityWithAnatomy.mockResolvedValue(
           anatomyLoadingResult
         );
@@ -187,11 +228,14 @@ describe('VisualizerStateController - Entity Selection Workflow', () => {
         await visualizerStateController.selectEntity(entityId);
 
         if (expectSelectCalled) {
-          expect(testBed.mockVisualizerState.selectEntity).toHaveBeenCalledWith(entityId);
-          expect(testBed.mockAnatomyLoadingDetector.waitForEntityWithAnatomy)
-            .toHaveBeenCalledWith(entityId, expect.any(Object));
+          expect(testBed.mockVisualizerState.selectEntity).toHaveBeenCalledWith(
+            entityId
+          );
+          expect(
+            testBed.mockAnatomyLoadingDetector.waitForEntityWithAnatomy
+          ).toHaveBeenCalledWith(entityId, expect.any(Object));
         }
-        
+
         if (expectSetErrorCalled) {
           expect(testBed.mockVisualizerState.setError).toHaveBeenCalledWith(
             expect.any(Error)
@@ -203,14 +247,14 @@ describe('VisualizerStateController - Entity Selection Workflow', () => {
     const invalidEntityTests = [
       { name: 'empty string', value: '' },
       { name: 'null', value: null },
-      { name: 'number', value: 123 }
+      { name: 'number', value: 123 },
     ];
 
     test.each(invalidEntityTests)(
       'should validate entity ID: $name',
       async ({ value }) => {
         await visualizerStateController.selectEntity(value);
-        
+
         const state = visualizerStateController.getCurrentState();
         expect(['IDLE', 'ERROR']).toContain(state);
       }
@@ -232,29 +276,50 @@ describe('VisualizerStateController - Entity Selection Workflow', () => {
         name: 'available anatomy data',
         anatomyData: { root: 'test:root', parts: ['part1', 'part2'] },
         expectSetAnatomyData: true,
-        expectSetError: false
+        expectSetError: false,
       },
       {
         name: 'missing anatomy data',
         anatomyData: null,
         expectSetAnatomyData: false,
-        expectSetError: true
-      }
+        expectSetError: true,
+      },
     ];
 
     test.each(anatomyDataScenarios)(
       'should process $name',
       async ({ anatomyData, expectSetAnatomyData, expectSetError }) => {
         const entityId = 'test:entity:123';
-        
-        testBed.mockAnatomyLoadingDetector.waitForEntityWithAnatomy.mockResolvedValue(true);
-        
+
+        testBed.mockAnatomyLoadingDetector.waitForEntityWithAnatomy.mockResolvedValue(
+          true
+        );
+
         // Create a custom entity manager for this test
         const customEntityManager = {
           getEntityInstance: jest.fn().mockResolvedValue({
-            getComponentData: jest.fn().mockReturnValue(
-              anatomyData ? { body: anatomyData } : anatomyData
-            ),
+            getComponentData: jest
+              .fn()
+              .mockReturnValue(
+                anatomyData ? { body: anatomyData } : anatomyData
+              ),
+          }),
+        };
+
+        // Create mock error handling dependencies
+        const mockErrorRecovery = {
+          handleError: jest.fn().mockResolvedValue({ success: false }),
+        };
+        const mockErrorReporter = {
+          report: jest.fn().mockResolvedValue(),
+        };
+        const mockRetryStrategy = {
+          execute: jest.fn().mockImplementation(async (id, fn) => {
+            try {
+              return await fn();
+            } catch (error) {
+              throw error;
+            }
           }),
         };
 
@@ -264,16 +329,23 @@ describe('VisualizerStateController - Entity Selection Workflow', () => {
           eventDispatcher: testBed.mockEventDispatcher,
           entityManager: customEntityManager,
           logger: testBed.mockLogger,
+          errorRecovery: mockErrorRecovery,
+          errorReporter: mockErrorReporter,
+          retryStrategy: mockRetryStrategy,
         });
 
         await testController.selectEntity(entityId);
 
         if (expectSetAnatomyData) {
-          expect(testBed.mockVisualizerState.setAnatomyData).toHaveBeenCalledWith(anatomyData);
+          expect(
+            testBed.mockVisualizerState.setAnatomyData
+          ).toHaveBeenCalledWith(anatomyData);
         }
-        
+
         if (expectSetError) {
-          expect(testBed.mockVisualizerState.setError).toHaveBeenCalledWith(expect.any(Error));
+          expect(testBed.mockVisualizerState.setError).toHaveBeenCalledWith(
+            expect.any(Error)
+          );
         }
       }
     );
@@ -285,7 +357,7 @@ describe('VisualizerStateController - Rendering Workflow', () => {
   let testBed;
 
   beforeEach(() => {
-    testBed = new AnatomyVisualizerTestBed();
+    testBed = new AnatomyVisualizerUnitTestBed();
 
     visualizerStateController = new VisualizerStateController({
       visualizerState: testBed.mockVisualizerState,
@@ -317,35 +389,37 @@ describe('VisualizerStateController - Rendering Workflow', () => {
         initialState: 'LOADED',
         action: 'startRendering',
         expectSuccess: true,
-        expectedError: null
+        expectedError: null,
       },
       {
         name: 'complete rendering successfully',
         initialState: 'RENDERING',
         action: 'completeRendering',
         expectSuccess: true,
-        expectedError: null
+        expectedError: null,
       },
       {
         name: 'not allow rendering when not in LOADED state',
         initialState: 'IDLE',
         action: 'startRendering',
         expectSuccess: false,
-        expectedError: 'Cannot start rendering from IDLE state'
+        expectedError: 'Cannot start rendering from IDLE state',
       },
       {
         name: 'not allow completing rendering when not in RENDERING state',
         initialState: 'LOADED',
         action: 'completeRendering',
         expectSuccess: false,
-        expectedError: 'Cannot complete rendering from LOADED state'
-      }
+        expectedError: 'Cannot complete rendering from LOADED state',
+      },
     ];
 
     test.each(renderingScenarios)(
       'should $name',
       ({ initialState, action, expectSuccess, expectedError }) => {
-        testBed.mockVisualizerState.getCurrentState.mockReturnValue(initialState);
+        testBed.mockVisualizerState.getCurrentState.mockReturnValue(
+          initialState
+        );
 
         if (expectSuccess) {
           visualizerStateController[action]();
@@ -365,7 +439,7 @@ describe('VisualizerStateController - Error Handling', () => {
   let testBed;
 
   beforeEach(() => {
-    testBed = new AnatomyVisualizerTestBed();
+    testBed = new AnatomyVisualizerUnitTestBed();
 
     visualizerStateController = new VisualizerStateController({
       visualizerState: testBed.mockVisualizerState,
@@ -401,7 +475,9 @@ describe('VisualizerStateController - Error Handling', () => {
 
     it('should handle retry from error state', () => {
       testBed.mockVisualizerState.getCurrentState.mockReturnValue('ERROR');
-      testBed.mockVisualizerState.getSelectedEntity.mockReturnValue('test:entity');
+      testBed.mockVisualizerState.getSelectedEntity.mockReturnValue(
+        'test:entity'
+      );
 
       visualizerStateController.retry();
 
@@ -429,7 +505,7 @@ describe('VisualizerStateController - State Access', () => {
   let testBed;
 
   beforeEach(() => {
-    testBed = new AnatomyVisualizerTestBed();
+    testBed = new AnatomyVisualizerUnitTestBed();
 
     visualizerStateController = new VisualizerStateController({
       visualizerState: testBed.mockVisualizerState,
@@ -460,26 +536,26 @@ describe('VisualizerStateController - State Access', () => {
         name: 'current state',
         method: 'getCurrentState',
         mockValue: 'READY',
-        expectedValue: 'READY'
+        expectedValue: 'READY',
       },
       {
         name: 'selected entity',
         method: 'getSelectedEntity',
         mockValue: 'test:entity',
-        expectedValue: 'test:entity'
+        expectedValue: 'test:entity',
       },
       {
         name: 'anatomy data',
         method: 'getAnatomyData',
         mockValue: { root: 'test:root', parts: [] },
-        expectedValue: { root: 'test:root', parts: [] }
+        expectedValue: { root: 'test:root', parts: [] },
       },
       {
         name: 'current error',
         method: 'getError',
         mockValue: new Error('Test error'),
-        expectedValue: expect.any(Error)
-      }
+        expectedValue: expect.any(Error),
+      },
     ];
 
     test.each(stateGetterScenarios)(
@@ -501,7 +577,7 @@ describe('VisualizerStateController - Cleanup', () => {
   let testBed;
 
   beforeEach(() => {
-    testBed = new AnatomyVisualizerTestBed();
+    testBed = new AnatomyVisualizerUnitTestBed();
 
     visualizerStateController = new VisualizerStateController({
       visualizerState: testBed.mockVisualizerState,
@@ -539,7 +615,9 @@ describe('VisualizerStateController - Cleanup', () => {
       visualizerStateController.dispose(); // Should not throw
 
       expect(testBed.mockVisualizerState.dispose).toHaveBeenCalledTimes(1);
-      expect(testBed.mockAnatomyLoadingDetector.dispose).toHaveBeenCalledTimes(1);
+      expect(testBed.mockAnatomyLoadingDetector.dispose).toHaveBeenCalledTimes(
+        1
+      );
     });
   });
 });

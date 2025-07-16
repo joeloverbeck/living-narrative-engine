@@ -1,7 +1,7 @@
 import { describe, it, beforeEach, expect, jest } from '@jest/globals';
 import { resolvePlaceholders } from '../../../src/utils/contextUtils.js';
 import { NAME_COMPONENT_ID } from '../../../src/constants/componentIds.js';
-import { createMockLogger } from '../testUtils.js';
+import { createMockLogger } from '../../unit/testUtils.js';
 
 describe('resolvePlaceholders integration', () => {
   let logger;

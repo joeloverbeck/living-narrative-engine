@@ -291,7 +291,10 @@ npm run typecheck       # TypeScript type checking
 npm run scope:lint      # Validate scope DSL files
 
 # Testing (run after every modification)
-npm run test            # Run all tests with coverage
+npm run test:unit        # Run unit tests with coverage
+npm run test:integration # Run integration tests with coverage
+npm run test:e2e        # Run end-to-end tests with coverage
+npm run test:ci         # Run all tests (unit + integration + e2e)
 npm run test:single     # Sequential tests for debugging
 
 # Build
@@ -369,7 +372,7 @@ npm run update-manifest # Update mod manifests
 
 - **Run after EVERY modification**:
   - `npm run lint` - fix style issues
-  - `npm run test` - ensure tests pass
+  - `npm run test:ci` - ensure all tests pass
   - `npm run typecheck` - verify types
 - **Comment non-obvious logic** with `// Reason:`
 - **Use domain-specific errors** not generic ones

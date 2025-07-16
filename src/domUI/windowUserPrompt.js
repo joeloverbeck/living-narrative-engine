@@ -20,7 +20,9 @@ export class WindowUserPrompt {
    */
   confirm(message) {
     // Check both global.window and window to handle test environments
-    const windowObj = (typeof global !== 'undefined' && global.window) || (typeof window !== 'undefined' && window);
+    const windowObj =
+      (typeof global !== 'undefined' && global.window) ||
+      (typeof window !== 'undefined' && window);
     return windowObj ? windowObj.confirm(message) : false;
   }
 }

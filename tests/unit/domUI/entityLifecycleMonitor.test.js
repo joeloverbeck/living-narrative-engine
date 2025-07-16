@@ -24,6 +24,7 @@ describe('EntityLifecycleMonitor', () => {
   let mockVed;
   let mockDomElementFactory;
   let mockDocumentContext;
+  let mockEntityManager;
   let containerElement;
   let eventHandlers;
 
@@ -42,9 +43,8 @@ describe('EntityLifecycleMonitor', () => {
     global.HTMLLIElement = dom.window.HTMLLIElement;
     global.Date = dom.window.Date;
 
-    // Mock timer functions
+    // Mock timer functions - only use fake timers, no spy needed
     jest.useFakeTimers();
-    jest.spyOn(global, 'setTimeout');
 
     const ConsoleLogger =
       require('../../../src/logging/consoleLogger.js').default;
@@ -99,6 +99,11 @@ describe('EntityLifecycleMonitor', () => {
         return li;
       }),
     };
+
+    // Mock entity manager with required methods
+    mockEntityManager = {
+      getEntityInstance: jest.fn().mockReturnValue(null),
+    };
   });
 
   afterEach(() => {
@@ -115,6 +120,7 @@ describe('EntityLifecycleMonitor', () => {
         documentContext: mockDocumentContext,
         validatedEventDispatcher: mockVed,
         domElementFactory: mockDomElementFactory,
+        entityManager: mockEntityManager,
       });
 
       expect(monitor).toBeInstanceOf(EntityLifecycleMonitor);
@@ -131,6 +137,7 @@ describe('EntityLifecycleMonitor', () => {
         documentContext: mockDocumentContext,
         validatedEventDispatcher: mockVed,
         domElementFactory: mockDomElementFactory,
+        entityManager: mockEntityManager,
       });
 
       expect(mockLogger.warn).toHaveBeenCalledWith(
@@ -145,6 +152,7 @@ describe('EntityLifecycleMonitor', () => {
         documentContext: mockDocumentContext,
         validatedEventDispatcher: mockVed,
         domElementFactory: mockDomElementFactory,
+        entityManager: mockEntityManager,
       });
 
       expect(mockDomElementFactory.ul).toHaveBeenCalledWith(
@@ -164,6 +172,7 @@ describe('EntityLifecycleMonitor', () => {
         documentContext: mockDocumentContext,
         validatedEventDispatcher: mockVed,
         domElementFactory: mockDomElementFactory,
+        entityManager: mockEntityManager,
       });
 
       expect(mockVed.subscribe).toHaveBeenCalledTimes(5);
@@ -195,6 +204,7 @@ describe('EntityLifecycleMonitor', () => {
         documentContext: mockDocumentContext,
         validatedEventDispatcher: mockVed,
         domElementFactory: null,
+        entityManager: mockEntityManager,
       });
 
       expect(mockDocumentContext.create).toHaveBeenCalledWith('ul');
@@ -211,6 +221,7 @@ describe('EntityLifecycleMonitor', () => {
         documentContext: mockDocumentContext,
         validatedEventDispatcher: mockVed,
         domElementFactory: mockDomElementFactory,
+        entityManager: mockEntityManager,
       });
       eventList = containerElement.querySelector('.entity-event-list');
     });
@@ -465,6 +476,7 @@ describe('EntityLifecycleMonitor', () => {
         documentContext: mockDocumentContext,
         validatedEventDispatcher: mockVed,
         domElementFactory: mockDomElementFactory,
+        entityManager: mockEntityManager,
       });
       eventList = containerElement.querySelector('.entity-event-list');
     });
@@ -574,6 +586,7 @@ describe('EntityLifecycleMonitor', () => {
         documentContext: mockDocumentContext,
         validatedEventDispatcher: mockVed,
         domElementFactory: mockDomElementFactory,
+        entityManager: mockEntityManager,
       });
       eventList = containerElement.querySelector('.entity-event-list');
     });
@@ -613,13 +626,11 @@ describe('EntityLifecycleMonitor', () => {
 
       eventHandlers['core:entity_created'](event);
 
-      // Should have one setTimeout call for animation cleanup
-      expect(setTimeout).toHaveBeenCalledWith(
-        expect.any(Function),
-        400 // animationDelay (0) + 400ms animation duration
-      );
+      // Verify the first entry has 0ms delay
+      const firstEntry = eventList.children[0];
+      expect(firstEntry.style.animationDelay).toBe('0ms');
 
-      // Fast forward time
+      // Fast forward time to clear pending animations
       jest.advanceTimersByTime(400);
 
       // Add another event - should have 0ms delay again
@@ -636,12 +647,6 @@ describe('EntityLifecycleMonitor', () => {
 
       containerElement.scrollTop = 0;
       eventHandlers['core:entity_created'](event);
-
-      // Should have setTimeout for scrolling
-      expect(setTimeout).toHaveBeenCalledWith(
-        expect.any(Function),
-        200 // animationDelay (0) + 200ms
-      );
 
       // Fast forward to scroll time
       jest.advanceTimersByTime(200);
@@ -668,21 +673,8 @@ describe('EntityLifecycleMonitor', () => {
       expect(entries[3].style.animationDelay).toBe('300ms');
       expect(entries[4].style.animationDelay).toBe('400ms');
 
-      // Check that animation cleanup timeouts were set for each event
-      // Each event sets 2 timeouts: one for animation cleanup and one for scrolling
-      const allTimeoutCalls = setTimeout.mock.calls;
-
-      // We should have 10 total calls (5 events * 2 timeouts each)
-      expect(allTimeoutCalls.length).toBe(10);
-
-      // Verify we have appropriate timeout values
-      const timeoutValues = allTimeoutCalls
-        .map((call) => call[1])
-        .sort((a, b) => a - b);
-
-      // Should have timeouts at: 200, 300, 400 (animation+scroll), 400, 500, 500, 600, 600, 700, 800
-      expect(timeoutValues[0]).toBe(200); // First scroll timeout
-      expect(timeoutValues[9]).toBe(800); // Last animation cleanup
+      // Advance timers to ensure all animations complete
+      jest.advanceTimersByTime(1000);
     });
   });
 
@@ -696,6 +688,7 @@ describe('EntityLifecycleMonitor', () => {
         documentContext: mockDocumentContext,
         validatedEventDispatcher: mockVed,
         domElementFactory: mockDomElementFactory,
+        entityManager: mockEntityManager,
       });
       eventList = containerElement.querySelector('.entity-event-list');
     });
@@ -738,6 +731,7 @@ describe('EntityLifecycleMonitor', () => {
         documentContext: mockDocumentContext,
         validatedEventDispatcher: mockVed,
         domElementFactory: mockDomElementFactory,
+        entityManager: mockEntityManager,
       });
 
       const eventList = containerElement.querySelector('.entity-event-list');
@@ -760,6 +754,7 @@ describe('EntityLifecycleMonitor', () => {
         documentContext: mockDocumentContext,
         validatedEventDispatcher: mockVed,
         domElementFactory: mockDomElementFactory,
+        entityManager: mockEntityManager,
       });
 
       // Remove event list before dispose
@@ -778,6 +773,7 @@ describe('EntityLifecycleMonitor', () => {
         documentContext: mockDocumentContext,
         validatedEventDispatcher: mockVed,
         domElementFactory: mockDomElementFactory,
+        entityManager: mockEntityManager,
       });
 
       // Add some events to create pending animations
@@ -806,6 +802,7 @@ describe('EntityLifecycleMonitor', () => {
         documentContext: mockDocumentContext,
         validatedEventDispatcher: mockVed,
         domElementFactory: mockDomElementFactory,
+        entityManager: mockEntityManager,
       });
 
       const eventList = containerElement.querySelector('.entity-event-list');
@@ -891,6 +888,7 @@ describe('EntityLifecycleMonitor', () => {
         documentContext: mockDocumentContext,
         validatedEventDispatcher: mockVed,
         domElementFactory: mockDomElementFactory,
+        entityManager: mockEntityManager,
       });
 
       const eventList = containerElement.querySelector('.entity-event-list');

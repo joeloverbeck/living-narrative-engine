@@ -5,8 +5,6 @@
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import SlotResolver from '../../../../src/anatomy/integration/SlotResolver.js';
-import BlueprintSlotStrategy from '../../../../src/anatomy/integration/strategies/BlueprintSlotStrategy.js';
-import DirectSocketStrategy from '../../../../src/anatomy/integration/strategies/DirectSocketStrategy.js';
 
 describe('SlotResolver', () => {
   let slotResolver;
@@ -62,16 +60,6 @@ describe('SlotResolver', () => {
 
   describe('resolveClothingSlot', () => {
     it('should resolve a clothing slot successfully', async () => {
-      // Mock blueprint strategy behavior
-      const expectedResult = [
-        {
-          entityId: 'torso_entity',
-          socketId: 'chest',
-          slotPath: 'torso.chest',
-          orientation: 'neutral',
-        },
-      ];
-
       // Mock the blueprint to return clothing slot mappings
       mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue({
         id: 'human_base',
@@ -240,6 +228,138 @@ describe('SlotResolver', () => {
         expect.stringContaining('Cache hit for slot resolution')
       );
     });
+
+
+    it('should use Map fallback cache for cache set (line 161)', async () => {
+      const mapping = { blueprintSlots: ['torso.chest'] };
+
+      // Create a cache object that doesn't have the service signature
+      // The condition is: if (this.#cache.set && this.#cache.get) - for service cache
+      // For Map fallback, we need to not have both methods
+      const mapCache = {
+        has: jest.fn().mockReturnValue(false),
+        set: jest.fn(),
+        clear: jest.fn(),
+      };
+
+      // Don't add get method to force fallback to Map set behavior
+
+      // Create resolver with Map fallback cache
+      const resolverWithMapCache = new SlotResolver({
+        logger: mockLogger,
+        entityManager: mockEntityManager,
+        bodyGraphService: mockBodyGraphService,
+        anatomyBlueprintRepository: mockAnatomyBlueprintRepository,
+        anatomySocketIndex: mockAnatomySocketIndex,
+        cache: mapCache,
+      });
+
+      // Mock blueprint strategy resolution
+      mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue({
+        slots: {
+          'torso.chest': { socket: 'chest' },
+        },
+      });
+      mockEntityManager.getComponentData.mockResolvedValue({
+        recipeId: 'human_base',
+      });
+      mockAnatomySocketIndex.findEntityWithSocket.mockResolvedValue(
+        'torso_entity'
+      );
+      mockBodyGraphService.getBodyGraph.mockResolvedValue({
+        getConnectedParts: jest.fn().mockReturnValue([]),
+      });
+
+      // Should use Map fallback cache set
+      await resolverWithMapCache.resolve('actor123', 'torso.chest', mapping);
+
+      // Verify result was cached using Map fallback
+      expect(mapCache.set).toHaveBeenCalledWith(
+        'actor123:torso.chest',
+        expect.any(Array)
+      );
+    });
+
+    it('should return empty array when no strategy can resolve mapping (lines 141-144)', async () => {
+      const mapping = { unknownMappingType: 'test' };
+
+      // Mock all strategies to return false for canResolve
+      const mockStrategy1 = {
+        canResolve: jest.fn().mockReturnValue(false),
+        resolve: jest.fn(),
+      };
+      const mockStrategy2 = {
+        canResolve: jest.fn().mockReturnValue(false),
+        resolve: jest.fn(),
+      };
+
+      // Create resolver with custom strategies that can't resolve
+      const resolverWithCustomStrategies = new SlotResolver({
+        logger: mockLogger,
+        strategies: [mockStrategy1, mockStrategy2],
+        entityManager: mockEntityManager,
+        bodyGraphService: mockBodyGraphService,
+        anatomyBlueprintRepository: mockAnatomyBlueprintRepository,
+        anatomySocketIndex: mockAnatomySocketIndex,
+        cache: mockCache,
+      });
+
+      const result = await resolverWithCustomStrategies.resolve(
+        'actor123',
+        'test.slot',
+        mapping
+      );
+
+      expect(result).toEqual([]);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        `No strategy found for mapping type in slot 'test.slot'`
+      );
+      expect(mockStrategy1.canResolve).toHaveBeenCalledWith(mapping);
+      expect(mockStrategy2.canResolve).toHaveBeenCalledWith(mapping);
+      expect(mockStrategy1.resolve).not.toHaveBeenCalled();
+      expect(mockStrategy2.resolve).not.toHaveBeenCalled();
+    });
+
+    it('should handle errors from strategies and log them (lines 170-174)', async () => {
+      const mapping = { blueprintSlots: ['torso.chest'] };
+      const strategyError = new Error('Strategy failed');
+
+      // Mock blueprint strategy to throw error
+      mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockRejectedValue(
+        strategyError
+      );
+      mockEntityManager.getComponentData.mockResolvedValue({
+        recipeId: 'human_base',
+      });
+
+      await expect(
+        slotResolver.resolve('actor123', 'torso.chest', mapping)
+      ).rejects.toThrow(strategyError);
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        `Failed to resolve slot 'torso.chest' for entity 'actor123'`,
+        strategyError
+      );
+    });
+
+    it('should validate required parameters in resolve', async () => {
+      const mapping = { blueprintSlots: ['torso.chest'] };
+
+      // Test missing entityId
+      await expect(
+        slotResolver.resolve(null, 'slotId', mapping)
+      ).rejects.toThrow();
+
+      // Test missing slotId
+      await expect(
+        slotResolver.resolve('entityId', null, mapping)
+      ).rejects.toThrow();
+
+      // Test missing mapping
+      await expect(
+        slotResolver.resolve('entityId', 'slotId', null)
+      ).rejects.toThrow();
+    });
   });
 
   describe('setSlotEntityMappings', () => {
@@ -261,6 +381,38 @@ describe('SlotResolver', () => {
       slotResolver.clearCache();
 
       expect(mockCache.clearType).toHaveBeenCalledWith(expect.any(String));
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Slot resolution cache cleared'
+      );
+    });
+
+    it('should use Map fallback cache for cache clear (line 201)', () => {
+      // Create a cache object that doesn't have the service signature
+      // The condition is: if (this.#cache.clearType) - for service cache
+      // For Map fallback, we need to not have clearType method
+      const mapCache = {
+        has: jest.fn().mockReturnValue(false),
+        set: jest.fn(),
+        clear: jest.fn(),
+      };
+
+      // Don't add clearType method to force fallback to Map clear behavior
+
+      // Create resolver with Map fallback cache
+      const resolverWithMapCache = new SlotResolver({
+        logger: mockLogger,
+        entityManager: mockEntityManager,
+        bodyGraphService: mockBodyGraphService,
+        anatomyBlueprintRepository: mockAnatomyBlueprintRepository,
+        anatomySocketIndex: mockAnatomySocketIndex,
+        cache: mapCache,
+      });
+
+      // Should use Map fallback cache clear
+      resolverWithMapCache.clearCache();
+
+      // Verify Map fallback clear was called
+      expect(mapCache.clear).toHaveBeenCalled();
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'Slot resolution cache cleared'
       );

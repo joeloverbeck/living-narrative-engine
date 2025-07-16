@@ -104,13 +104,21 @@ export class EntityGraphBuilder {
    * @param {string} parentId - Parent entity ID
    * @param {string} socketId - Socket ID on parent
    * @param {string} partDefinitionId - Definition ID for the part
+   * @param {string} [ownerId] - Owner ID to set on the created part (optional)
    * @returns {string|null} Created entity ID or null on failure
    */
-  createAndAttachPart(parentId, socketId, partDefinitionId) {
+  createAndAttachPart(parentId, socketId, partDefinitionId, ownerId) {
     try {
       // Create the child entity
       const childEntity =
         this.#entityManager.createEntityInstance(partDefinitionId);
+
+      // Add ownership component if specified
+      if (ownerId) {
+        this.#entityManager.addComponent(childEntity.id, 'core:owned_by', {
+          ownerId,
+        });
+      }
 
       // Add joint component to establish the connection
       this.#entityManager.addComponent(childEntity.id, 'anatomy:joint', {

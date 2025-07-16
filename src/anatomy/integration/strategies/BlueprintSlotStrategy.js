@@ -111,7 +111,7 @@ class BlueprintSlotStrategy {
         const socketId = slotDef.socket;
         if (!socketId) {
           this.#logger.warn(
-            `AnatomyClothingIntegrationService: Blueprint slot '${slotId}' has no socket defined`
+            `BlueprintSlotStrategy: Blueprint slot '${slotId}' has no socket defined`
           );
           continue;
         }
@@ -143,7 +143,7 @@ class BlueprintSlotStrategy {
           });
 
           this.#logger.debug(
-            `AnatomyClothingIntegrationService: Found slot mapping for '${slotId}' → '${socketEntity}'`
+            `BlueprintSlotStrategy: Found slot mapping for '${slotId}' → '${socketEntity}'`
           );
         }
       } else {
@@ -231,7 +231,7 @@ class BlueprintSlotStrategy {
     if (this.#slotEntityMappings.has(slotId)) {
       const mappedEntity = this.#slotEntityMappings.get(slotId);
       this.#logger.debug(
-        `AnatomyClothingIntegrationService: Found direct slot mapping for '${slotId}' → '${mappedEntity}'`
+        `BlueprintSlotStrategy: Found direct slot mapping for '${slotId}' → '${mappedEntity}'`
       );
       return mappedEntity;
     }
@@ -376,7 +376,7 @@ class BlueprintSlotStrategy {
     }
 
     this.#logger.debug(
-      `AnatomyClothingIntegrationService: Updated slot-entity mappings with ${this.#slotEntityMappings.size} entries`
+      `BlueprintSlotStrategy: Updated slot-entity mappings with ${this.#slotEntityMappings.size} entries`
     );
   }
 }

@@ -43,10 +43,10 @@ describe('WindowUserPrompt', () => {
       const windowObj = undefined; // Simulating both checks failing
       return windowObj ? windowObj.confirm('ignored') : false;
     });
-    
+
     const result = prompt.confirm('ignored');
     expect(result).toBe(false);
-    
+
     prompt.confirm.mockRestore();
   });
 });

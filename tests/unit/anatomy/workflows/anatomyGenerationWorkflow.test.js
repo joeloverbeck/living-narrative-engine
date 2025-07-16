@@ -394,4 +394,1056 @@ describe('AnatomyGenerationWorkflow', () => {
       );
     });
   });
+
+  describe('blueprint slot entity creation', () => {
+    const blueprintId = 'test-blueprint';
+    const recipeId = 'test-recipe';
+    const ownerId = 'owner-entity';
+    const rootId = 'root-entity';
+    const partIds = ['arm-1', 'arm-2'];
+
+    beforeEach(() => {
+      // Setup default successful generation
+      const graphResult = {
+        rootId,
+        entities: [rootId, ...partIds],
+      };
+      mockBodyBlueprintFactory.createAnatomyGraph.mockResolvedValue(
+        graphResult
+      );
+
+      // Mock entities with names for parts map
+      mockEntityManager.getEntityInstance.mockImplementation((id) => {
+        if (id === 'arm-1') {
+          return {
+            hasComponent: jest.fn((compId) => compId === 'core:name'),
+            getComponentData: jest.fn().mockReturnValue({ text: 'left_arm' }),
+          };
+        }
+        if (id === 'arm-2') {
+          return {
+            hasComponent: jest.fn((compId) => compId === 'core:name'),
+            getComponentData: jest.fn().mockReturnValue({ text: 'right_arm' }),
+          };
+        }
+        return {
+          hasComponent: jest.fn().mockReturnValue(false),
+        };
+      });
+    });
+
+    describe('error handling in #createBlueprintSlotEntities', () => {
+      it('should handle invalid entity return types from createEntityInstance', async () => {
+        // Setup blueprint with slots
+        const blueprint = {
+          slots: {
+            'main-hand': {
+              socket: 'hand',
+              requirements: {},
+            },
+          },
+        };
+        mockDataRegistry.get.mockImplementation((type, id) => {
+          if (type === 'anatomyBlueprints' && id === blueprintId) {
+            return blueprint;
+          }
+          return null;
+        });
+
+        // Mock createEntityInstance to return invalid type
+        mockEntityManager.createEntityInstance.mockResolvedValue(42); // Invalid: number
+
+        await expect(
+          workflow.generate(blueprintId, recipeId, { ownerId })
+        ).rejects.toThrow('Invalid entity returned for slot main-hand');
+
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          expect.stringContaining('Unexpected entity type returned')
+        );
+      });
+
+      it('should handle null entity return from createEntityInstance', async () => {
+        // Setup blueprint with slots
+        const blueprint = {
+          slots: {
+            'main-hand': {
+              socket: 'hand',
+              requirements: {},
+            },
+          },
+        };
+        mockDataRegistry.get.mockImplementation((type, id) => {
+          if (type === 'anatomyBlueprints' && id === blueprintId) {
+            return blueprint;
+          }
+          return null;
+        });
+
+        // Mock createEntityInstance to return null
+        mockEntityManager.createEntityInstance.mockResolvedValue(null);
+
+        await expect(
+          workflow.generate(blueprintId, recipeId, { ownerId })
+        ).rejects.toThrow('Invalid entity returned for slot main-hand');
+
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          expect.stringContaining('Unexpected entity type returned')
+        );
+      });
+
+      it('should handle entity object with invalid id property', async () => {
+        // Setup blueprint with slots
+        const blueprint = {
+          slots: {
+            'main-hand': {
+              socket: 'hand',
+              requirements: {},
+            },
+          },
+        };
+        mockDataRegistry.get.mockImplementation((type, id) => {
+          if (type === 'anatomyBlueprints' && id === blueprintId) {
+            return blueprint;
+          }
+          return null;
+        });
+
+        // Mock createEntityInstance to return object with invalid id
+        mockEntityManager.createEntityInstance.mockResolvedValue({
+          id: null, // Invalid: null id
+        });
+
+        await expect(
+          workflow.generate(blueprintId, recipeId, { ownerId })
+        ).rejects.toThrow('Invalid entity returned for slot main-hand');
+
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          expect.stringContaining('Unexpected entity type returned')
+        );
+      });
+
+      it('should handle entity object with missing id property', async () => {
+        // Setup blueprint with slots
+        const blueprint = {
+          slots: {
+            'main-hand': {
+              socket: 'hand',
+              requirements: {},
+            },
+          },
+        };
+        mockDataRegistry.get.mockImplementation((type, id) => {
+          if (type === 'anatomyBlueprints' && id === blueprintId) {
+            return blueprint;
+          }
+          return null;
+        });
+
+        // Mock createEntityInstance to return object without id
+        mockEntityManager.createEntityInstance.mockResolvedValue({
+          someProperty: 'value',
+          // No id property
+        });
+
+        await expect(
+          workflow.generate(blueprintId, recipeId, { ownerId })
+        ).rejects.toThrow('Invalid entity returned for slot main-hand');
+
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          expect.stringContaining('Unexpected entity type returned')
+        );
+      });
+
+      it('should handle extracted entity ID validation failure', async () => {
+        // Setup blueprint with slots
+        const blueprint = {
+          slots: {
+            'main-hand': {
+              socket: 'hand',
+              requirements: {},
+            },
+          },
+        };
+        mockDataRegistry.get.mockImplementation((type, id) => {
+          if (type === 'anatomyBlueprints' && id === blueprintId) {
+            return blueprint;
+          }
+          return null;
+        });
+
+        // Mock createEntityInstance to return a string, but then mock the ID validation to fail
+        // This will pass the first validation but fail the second validation
+        mockEntityManager.createEntityInstance.mockResolvedValue(''); // Empty string - invalid ID
+
+        await expect(
+          workflow.generate(blueprintId, recipeId, { ownerId })
+        ).rejects.toThrow('Invalid entity ID for slot main-hand');
+
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          expect.stringContaining('Invalid entity ID extracted')
+        );
+      });
+
+      it('should handle component addition failures', async () => {
+        // Setup blueprint with slots
+        const blueprint = {
+          slots: {
+            'main-hand': {
+              socket: 'hand',
+              requirements: {},
+            },
+          },
+        };
+        mockDataRegistry.get.mockImplementation((type, id) => {
+          if (type === 'anatomyBlueprints' && id === blueprintId) {
+            return blueprint;
+          }
+          return null;
+        });
+
+        // Mock successful entity creation
+        mockEntityManager.createEntityInstance.mockResolvedValue(
+          'slot-entity-1'
+        );
+
+        // Mock component addition failure
+        mockEntityManager.addComponent.mockImplementation(
+          (entityId, compId) => {
+            if (compId === 'anatomy:blueprintSlot') {
+              throw new Error('Component addition failed');
+            }
+            return true;
+          }
+        );
+
+        await expect(
+          workflow.generate(blueprintId, recipeId, { ownerId })
+        ).rejects.toThrow('Component addition failed');
+
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          expect.stringContaining('Failed to add component to slot entity'),
+          expect.any(Error)
+        );
+      });
+
+      it('should handle component verification failures', async () => {
+        // Setup blueprint with slots
+        const blueprint = {
+          slots: {
+            'main-hand': {
+              socket: 'hand',
+              requirements: {},
+            },
+          },
+        };
+        mockDataRegistry.get.mockImplementation((type, id) => {
+          if (type === 'anatomyBlueprints' && id === blueprintId) {
+            return blueprint;
+          }
+          return null;
+        });
+
+        // Mock successful entity creation
+        mockEntityManager.createEntityInstance.mockResolvedValue(
+          'slot-entity-1'
+        );
+
+        // Mock successful component addition
+        mockEntityManager.addComponent.mockReturnValue(true);
+
+        // Mock entity retrieval for verification failure
+        mockEntityManager.getEntityInstance.mockImplementation((id) => {
+          if (id === 'slot-entity-1') {
+            return {
+              hasComponent: jest.fn().mockReturnValue(false), // Verification fails
+            };
+          }
+          // Return normal entities for other IDs
+          if (id === 'arm-1') {
+            return {
+              hasComponent: jest.fn((compId) => compId === 'core:name'),
+              getComponentData: jest.fn().mockReturnValue({ text: 'left_arm' }),
+            };
+          }
+          if (id === 'arm-2') {
+            return {
+              hasComponent: jest.fn((compId) => compId === 'core:name'),
+              getComponentData: jest
+                .fn()
+                .mockReturnValue({ text: 'right_arm' }),
+            };
+          }
+          return {
+            hasComponent: jest.fn().mockReturnValue(false),
+          };
+        });
+
+        await expect(
+          workflow.generate(blueprintId, recipeId, { ownerId })
+        ).rejects.toThrow(
+          'Component addition verification failed for slot main-hand'
+        );
+
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          expect.stringContaining('Component verification failed')
+        );
+      });
+
+      it('should handle entity creation failures', async () => {
+        // Setup blueprint with slots
+        const blueprint = {
+          slots: {
+            'main-hand': {
+              socket: 'hand',
+              requirements: {},
+            },
+          },
+        };
+        mockDataRegistry.get.mockImplementation((type, id) => {
+          if (type === 'anatomyBlueprints' && id === blueprintId) {
+            return blueprint;
+          }
+          return null;
+        });
+
+        // Mock entity creation failure
+        mockEntityManager.createEntityInstance.mockRejectedValue(
+          new Error('Entity creation failed')
+        );
+
+        await expect(
+          workflow.generate(blueprintId, recipeId, { ownerId })
+        ).rejects.toThrow('Entity creation failed');
+
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          expect.stringContaining('Failed to create blueprint slot entity'),
+          expect.any(Error)
+        );
+      });
+
+      it('should handle top-level error propagation', async () => {
+        // Setup blueprint with slots
+        const blueprint = {
+          slots: {
+            'main-hand': {
+              socket: 'hand',
+              requirements: {},
+            },
+          },
+        };
+        mockDataRegistry.get.mockImplementation((type, id) => {
+          if (type === 'anatomyBlueprints' && id === blueprintId) {
+            return blueprint;
+          }
+          return null;
+        });
+
+        // Mock any failure in the slot creation process
+        mockEntityManager.createEntityInstance.mockRejectedValue(
+          new Error('General slot creation error')
+        );
+
+        await expect(
+          workflow.generate(blueprintId, recipeId, { ownerId })
+        ).rejects.toThrow('General slot creation error');
+
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          expect.stringContaining('Failed to create blueprint slot entities'),
+          expect.any(Error)
+        );
+      });
+    });
+
+    describe('edge cases for blueprint slot processing', () => {
+      it('should handle blueprint with no slots', async () => {
+        // Setup blueprint without slots
+        const blueprint = {
+          // No slots property
+        };
+        mockDataRegistry.get.mockImplementation((type, id) => {
+          if (type === 'anatomyBlueprints' && id === blueprintId) {
+            return blueprint;
+          }
+          return null;
+        });
+
+        const result = await workflow.generate(blueprintId, recipeId, {
+          ownerId,
+        });
+
+        expect(result.rootId).toBe(rootId);
+        expect(result.entities).toEqual([rootId, ...partIds]);
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          expect.stringContaining('No blueprint slots found')
+        );
+      });
+
+      it('should handle blueprint with empty slots object', async () => {
+        // Setup blueprint with empty slots
+        const blueprint = {
+          slots: {},
+        };
+        mockDataRegistry.get.mockImplementation((type, id) => {
+          if (type === 'anatomyBlueprints' && id === blueprintId) {
+            return blueprint;
+          }
+          return null;
+        });
+
+        const result = await workflow.generate(blueprintId, recipeId, {
+          ownerId,
+        });
+
+        expect(result.rootId).toBe(rootId);
+        expect(result.entities).toEqual([rootId, ...partIds]);
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          expect.stringContaining('Found 0 slots in blueprint')
+        );
+      });
+
+      it('should handle null blueprint', async () => {
+        // Setup null blueprint
+        mockDataRegistry.get.mockImplementation((type, id) => {
+          if (type === 'anatomyBlueprints' && id === blueprintId) {
+            return null;
+          }
+          return null;
+        });
+
+        const result = await workflow.generate(blueprintId, recipeId, {
+          ownerId,
+        });
+
+        expect(result.rootId).toBe(rootId);
+        expect(result.entities).toEqual([rootId, ...partIds]);
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          expect.stringContaining('No blueprint slots found')
+        );
+      });
+
+      it('should successfully create blueprint slot entities', async () => {
+        // Setup blueprint with slots
+        const blueprint = {
+          slots: {
+            'main-hand': {
+              socket: 'hand',
+              requirements: { strength: 10 },
+            },
+            'off-hand': {
+              socket: 'hand',
+              requirements: { dexterity: 8 },
+            },
+          },
+        };
+        mockDataRegistry.get.mockImplementation((type, id) => {
+          if (type === 'anatomyBlueprints' && id === blueprintId) {
+            return blueprint;
+          }
+          return null;
+        });
+
+        // Mock successful entity creation
+        let entityIdCounter = 0;
+        mockEntityManager.createEntityInstance.mockImplementation(() => {
+          entityIdCounter++;
+          return Promise.resolve(`slot-entity-${entityIdCounter}`);
+        });
+
+        // Mock successful component addition
+        mockEntityManager.addComponent.mockReturnValue(true);
+
+        // Mock entity retrieval for verification
+        mockEntityManager.getEntityInstance.mockImplementation((id) => {
+          if (id.startsWith('slot-entity-')) {
+            return {
+              hasComponent: jest.fn().mockReturnValue(true),
+              getComponentData: jest.fn().mockReturnValue({
+                slotId: id === 'slot-entity-1' ? 'main-hand' : 'off-hand',
+                socketId: 'hand',
+                requirements:
+                  id === 'slot-entity-1' ? { strength: 10 } : { dexterity: 8 },
+              }),
+            };
+          }
+          // Return normal entities for other IDs
+          if (id === 'arm-1') {
+            return {
+              hasComponent: jest.fn((compId) => compId === 'core:name'),
+              getComponentData: jest.fn().mockReturnValue({ text: 'left_arm' }),
+            };
+          }
+          if (id === 'arm-2') {
+            return {
+              hasComponent: jest.fn((compId) => compId === 'core:name'),
+              getComponentData: jest
+                .fn()
+                .mockReturnValue({ text: 'right_arm' }),
+            };
+          }
+          return {
+            hasComponent: jest.fn().mockReturnValue(false),
+          };
+        });
+
+        const result = await workflow.generate(blueprintId, recipeId, {
+          ownerId,
+        });
+
+        expect(result.rootId).toBe(rootId);
+        expect(result.entities).toContain('slot-entity-1');
+        expect(result.entities).toContain('slot-entity-2');
+        expect(result.slotEntityMappings.get('main-hand')).toBe(
+          'slot-entity-1'
+        );
+        expect(result.slotEntityMappings.get('off-hand')).toBe('slot-entity-2');
+
+        expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
+          'slot-entity-1',
+          'anatomy:blueprintSlot',
+          {
+            slotId: 'main-hand',
+            socketId: 'hand',
+            requirements: { strength: 10 },
+          }
+        );
+
+        expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
+          'slot-entity-2',
+          'anatomy:blueprintSlot',
+          {
+            slotId: 'off-hand',
+            socketId: 'hand',
+            requirements: { dexterity: 8 },
+          }
+        );
+      });
+
+      it('should handle entity creation returning entity object with valid id', async () => {
+        // Setup blueprint with slots
+        const blueprint = {
+          slots: {
+            'main-hand': {
+              socket: 'hand',
+              requirements: { strength: 10 },
+            },
+          },
+        };
+        mockDataRegistry.get.mockImplementation((type, id) => {
+          if (type === 'anatomyBlueprints' && id === blueprintId) {
+            return blueprint;
+          }
+          return null;
+        });
+
+        // Mock entity creation returning entity object with valid id
+        mockEntityManager.createEntityInstance.mockResolvedValue({
+          id: 'slot-entity-1',
+          otherProperty: 'value',
+        });
+
+        // Mock successful component addition
+        mockEntityManager.addComponent.mockReturnValue(true);
+
+        // Mock entity retrieval for verification
+        mockEntityManager.getEntityInstance.mockImplementation((id) => {
+          if (id === 'slot-entity-1') {
+            return {
+              hasComponent: jest.fn().mockReturnValue(true),
+              getComponentData: jest.fn().mockReturnValue({
+                slotId: 'main-hand',
+                socketId: 'hand',
+                requirements: { strength: 10 },
+              }),
+            };
+          }
+          // Return normal entities for other IDs
+          if (id === 'arm-1') {
+            return {
+              hasComponent: jest.fn((compId) => compId === 'core:name'),
+              getComponentData: jest.fn().mockReturnValue({ text: 'left_arm' }),
+            };
+          }
+          if (id === 'arm-2') {
+            return {
+              hasComponent: jest.fn((compId) => compId === 'core:name'),
+              getComponentData: jest
+                .fn()
+                .mockReturnValue({ text: 'right_arm' }),
+            };
+          }
+          return {
+            hasComponent: jest.fn().mockReturnValue(false),
+          };
+        });
+
+        const result = await workflow.generate(blueprintId, recipeId, {
+          ownerId,
+        });
+
+        expect(result.rootId).toBe(rootId);
+        expect(result.entities).toContain('slot-entity-1');
+        expect(result.slotEntityMappings.get('main-hand')).toBe(
+          'slot-entity-1'
+        );
+
+        expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
+          'slot-entity-1',
+          'anatomy:blueprintSlot',
+          {
+            slotId: 'main-hand',
+            socketId: 'hand',
+            requirements: { strength: 10 },
+          }
+        );
+      });
+    });
+  });
+
+  describe('without clothing instantiation service', () => {
+    const blueprintId = 'test-blueprint';
+    const recipeId = 'test-recipe';
+    const ownerId = 'owner-entity';
+    const rootId = 'root-entity';
+    const partIds = ['arm-1', 'arm-2'];
+
+    beforeEach(() => {
+      // Create workflow without clothing instantiation service
+      workflow = new AnatomyGenerationWorkflow({
+        entityManager: mockEntityManager,
+        dataRegistry: mockDataRegistry,
+        logger: mockLogger,
+        bodyBlueprintFactory: mockBodyBlueprintFactory,
+        // No clothingInstantiationService
+      });
+
+      // Setup default successful generation
+      const graphResult = {
+        rootId,
+        entities: [rootId, ...partIds],
+      };
+      mockBodyBlueprintFactory.createAnatomyGraph.mockResolvedValue(
+        graphResult
+      );
+
+      // Mock entities with names for parts map
+      mockEntityManager.getEntityInstance.mockImplementation((id) => {
+        if (id === 'arm-1') {
+          return {
+            hasComponent: jest.fn((compId) => compId === 'core:name'),
+            getComponentData: jest.fn().mockReturnValue({ text: 'left_arm' }),
+          };
+        }
+        if (id === 'arm-2') {
+          return {
+            hasComponent: jest.fn((compId) => compId === 'core:name'),
+            getComponentData: jest.fn().mockReturnValue({ text: 'right_arm' }),
+          };
+        }
+        return {
+          hasComponent: jest.fn().mockReturnValue(false),
+        };
+      });
+    });
+
+    it('should skip clothing instantiation when service is not provided', async () => {
+      const result = await workflow.generate(blueprintId, recipeId, {
+        ownerId,
+      });
+
+      expect(result.rootId).toBe(rootId);
+      expect(result.entities).toEqual([rootId, ...partIds]);
+      expect(result.clothingResult).toBeUndefined();
+    });
+  });
+
+  describe('#updateAnatomyBodyComponent', () => {
+    const blueprintId = 'test-blueprint';
+    const recipeId = 'test-recipe';
+    const ownerId = 'owner-entity';
+    const rootId = 'root-entity';
+    const partIds = ['arm-1', 'arm-2'];
+
+    beforeEach(() => {
+      // Setup default successful generation
+      const graphResult = {
+        rootId,
+        entities: [rootId, ...partIds],
+      };
+      mockBodyBlueprintFactory.createAnatomyGraph.mockResolvedValue(
+        graphResult
+      );
+
+      // Mock entities with names for parts map
+      mockEntityManager.getEntityInstance.mockImplementation((id) => {
+        if (id === 'arm-1') {
+          return {
+            hasComponent: jest.fn((compId) => compId === 'core:name'),
+            getComponentData: jest.fn().mockReturnValue({ text: 'left_arm' }),
+          };
+        }
+        if (id === 'arm-2') {
+          return {
+            hasComponent: jest.fn((compId) => compId === 'core:name'),
+            getComponentData: jest.fn().mockReturnValue({ text: 'right_arm' }),
+          };
+        }
+        return {
+          hasComponent: jest.fn().mockReturnValue(false),
+        };
+      });
+    });
+
+    it('should update anatomy body component with new structure', async () => {
+      mockEntityManager.getComponentData.mockReturnValue(null);
+
+      const result = await workflow.generate(blueprintId, recipeId, {
+        ownerId,
+      });
+
+      expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
+        ownerId,
+        'anatomy:body',
+        {
+          recipeId,
+          body: {
+            root: rootId,
+            parts: {
+              left_arm: 'arm-1',
+              right_arm: 'arm-2',
+            },
+          },
+        }
+      );
+
+      expect(result.rootId).toBe(rootId);
+      expect(result.entities).toEqual([rootId, ...partIds]);
+    });
+
+    it('should preserve existing anatomy data when updating', async () => {
+      const existingData = {
+        someExistingField: 'preserved',
+        oldRecipeId: 'old-recipe',
+      };
+
+      mockEntityManager.getComponentData.mockReturnValue(existingData);
+
+      const result = await workflow.generate(blueprintId, recipeId, {
+        ownerId,
+      });
+
+      expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
+        ownerId,
+        'anatomy:body',
+        {
+          someExistingField: 'preserved',
+          oldRecipeId: 'old-recipe',
+          recipeId,
+          body: {
+            root: rootId,
+            parts: {
+              left_arm: 'arm-1',
+              right_arm: 'arm-2',
+            },
+          },
+        }
+      );
+
+      expect(result.rootId).toBe(rootId);
+      expect(result.entities).toEqual([rootId, ...partIds]);
+    });
+
+    it('should handle Map to object conversion for backward compatibility', async () => {
+      mockEntityManager.getComponentData.mockReturnValue(null);
+
+      const result = await workflow.generate(blueprintId, recipeId, {
+        ownerId,
+      });
+
+      // Verify that the parts map is converted to a plain object
+      const addComponentCall = mockEntityManager.addComponent.mock.calls.find(
+        (call) => call[1] === 'anatomy:body'
+      );
+      expect(addComponentCall[2].body.parts).toEqual({
+        left_arm: 'arm-1',
+        right_arm: 'arm-2',
+      });
+      expect(addComponentCall[2].body.parts).not.toBeInstanceOf(Map);
+
+      expect(result.rootId).toBe(rootId);
+      expect(result.entities).toEqual([rootId, ...partIds]);
+    });
+
+    it('should handle non-Map parts object correctly', async () => {
+      mockEntityManager.getComponentData.mockReturnValue(null);
+
+      // Create a test workflow that overrides the private method through a test backdoor
+      class TestWorkflow extends AnatomyGenerationWorkflow {
+        // Override the updateAnatomyBodyComponent to use a plain object
+        async updateAnatomyBodyComponent(entityId, recipeId, graphResult) {
+          // Get existing anatomy data to preserve any additional fields
+          const existingData =
+            this.entityManager.getComponentData(entityId, 'anatomy:body') || {};
+
+          // Use a plain object instead of Map
+          const partsObject = {
+            left_arm: 'arm-1',
+            right_arm: 'arm-2',
+          };
+
+          const updatedData = {
+            ...existingData,
+            recipeId,
+            body: {
+              root: graphResult.rootId,
+              parts: partsObject,
+            },
+          };
+
+          this.entityManager.addComponent(
+            entityId,
+            'anatomy:body',
+            updatedData
+          );
+        }
+
+        get entityManager() {
+          return this._entityManager;
+        }
+
+        set entityManager(value) {
+          this._entityManager = value;
+        }
+      }
+
+      const testWorkflow = new TestWorkflow({
+        entityManager: mockEntityManager,
+        dataRegistry: mockDataRegistry,
+        logger: mockLogger,
+        bodyBlueprintFactory: mockBodyBlueprintFactory,
+        clothingInstantiationService: mockClothingInstantiationService,
+      });
+
+      testWorkflow.entityManager = mockEntityManager;
+
+      const result = await testWorkflow.generate(blueprintId, recipeId, {
+        ownerId,
+      });
+
+      // Verify that the parts object is used directly
+      const addComponentCall = mockEntityManager.addComponent.mock.calls.find(
+        (call) => call[1] === 'anatomy:body'
+      );
+      expect(addComponentCall[2].body.parts).toEqual({
+        left_arm: 'arm-1',
+        right_arm: 'arm-2',
+      });
+      expect(addComponentCall[2].body.parts).not.toBeInstanceOf(Map);
+
+      expect(result.rootId).toBe(rootId);
+      expect(result.entities).toEqual([rootId, ...partIds]);
+    });
+  });
+
+  describe('#buildSlotEntityMappings edge cases', () => {
+    const blueprintId = 'test-blueprint';
+    const recipeId = 'test-recipe';
+    const ownerId = 'owner-entity';
+    const rootId = 'root-entity';
+    const partIds = ['arm-1', 'arm-2'];
+
+    beforeEach(() => {
+      // Setup default successful generation
+      const graphResult = {
+        rootId,
+        entities: [rootId, ...partIds, 'slot-entity-1'],
+      };
+      mockBodyBlueprintFactory.createAnatomyGraph.mockResolvedValue(
+        graphResult
+      );
+
+      // Mock entities with names for parts map
+      mockEntityManager.getEntityInstance.mockImplementation((id) => {
+        if (id === 'arm-1') {
+          return {
+            hasComponent: jest.fn((compId) => compId === 'core:name'),
+            getComponentData: jest.fn().mockReturnValue({ text: 'left_arm' }),
+          };
+        }
+        if (id === 'arm-2') {
+          return {
+            hasComponent: jest.fn((compId) => compId === 'core:name'),
+            getComponentData: jest.fn().mockReturnValue({ text: 'right_arm' }),
+          };
+        }
+        return {
+          hasComponent: jest.fn().mockReturnValue(false),
+        };
+      });
+    });
+
+    it('should handle entities without blueprint slot components', async () => {
+      const result = await workflow.generate(blueprintId, recipeId, {
+        ownerId,
+      });
+
+      expect(result.slotEntityMappings.size).toBe(0);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('has anatomy:blueprintSlot component: false')
+      );
+    });
+
+    it('should handle entities with invalid slot component data', async () => {
+      mockEntityManager.getEntityInstance.mockImplementation((id) => {
+        if (id === 'slot-entity-1') {
+          return {
+            hasComponent: jest.fn(
+              (compId) => compId === 'anatomy:blueprintSlot'
+            ),
+            getComponentData: jest.fn().mockReturnValue(null), // Invalid data
+          };
+        }
+        if (id === 'arm-1') {
+          return {
+            hasComponent: jest.fn((compId) => compId === 'core:name'),
+            getComponentData: jest.fn().mockReturnValue({ text: 'left_arm' }),
+          };
+        }
+        if (id === 'arm-2') {
+          return {
+            hasComponent: jest.fn((compId) => compId === 'core:name'),
+            getComponentData: jest.fn().mockReturnValue({ text: 'right_arm' }),
+          };
+        }
+        return {
+          hasComponent: jest.fn().mockReturnValue(false),
+        };
+      });
+
+      const result = await workflow.generate(blueprintId, recipeId, {
+        ownerId,
+      });
+
+      expect(result.slotEntityMappings.size).toBe(0);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Component data missing or invalid')
+      );
+    });
+
+    it('should handle entities with missing slot IDs in components', async () => {
+      mockEntityManager.getEntityInstance.mockImplementation((id) => {
+        if (id === 'slot-entity-1') {
+          return {
+            hasComponent: jest.fn(
+              (compId) => compId === 'anatomy:blueprintSlot'
+            ),
+            getComponentData: jest.fn().mockReturnValue({
+              socketId: 'hand',
+              requirements: {},
+              // Missing slotId
+            }),
+          };
+        }
+        if (id === 'arm-1') {
+          return {
+            hasComponent: jest.fn((compId) => compId === 'core:name'),
+            getComponentData: jest.fn().mockReturnValue({ text: 'left_arm' }),
+          };
+        }
+        if (id === 'arm-2') {
+          return {
+            hasComponent: jest.fn((compId) => compId === 'core:name'),
+            getComponentData: jest.fn().mockReturnValue({ text: 'right_arm' }),
+          };
+        }
+        return {
+          hasComponent: jest.fn().mockReturnValue(false),
+        };
+      });
+
+      const result = await workflow.generate(blueprintId, recipeId, {
+        ownerId,
+      });
+
+      expect(result.slotEntityMappings.size).toBe(0);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Component data missing or invalid')
+      );
+    });
+
+    it('should handle entities that cannot be retrieved', async () => {
+      mockEntityManager.getEntityInstance.mockImplementation((id) => {
+        if (id === 'slot-entity-1') {
+          return null; // Entity not found
+        }
+        if (id === 'arm-1') {
+          return {
+            hasComponent: jest.fn((compId) => compId === 'core:name'),
+            getComponentData: jest.fn().mockReturnValue({ text: 'left_arm' }),
+          };
+        }
+        if (id === 'arm-2') {
+          return {
+            hasComponent: jest.fn((compId) => compId === 'core:name'),
+            getComponentData: jest.fn().mockReturnValue({ text: 'right_arm' }),
+          };
+        }
+        return {
+          hasComponent: jest.fn().mockReturnValue(false),
+        };
+      });
+
+      const result = await workflow.generate(blueprintId, recipeId, {
+        ownerId,
+      });
+
+      expect(result.slotEntityMappings.size).toBe(0);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Could not retrieve entity instance')
+      );
+    });
+
+    it('should successfully build slot entity mappings', async () => {
+      mockEntityManager.getEntityInstance.mockImplementation((id) => {
+        if (id === 'slot-entity-1') {
+          return {
+            hasComponent: jest.fn(
+              (compId) => compId === 'anatomy:blueprintSlot'
+            ),
+            getComponentData: jest.fn().mockReturnValue({
+              slotId: 'main-hand',
+              socketId: 'hand',
+              requirements: { strength: 10 },
+            }),
+          };
+        }
+        if (id === 'arm-1') {
+          return {
+            hasComponent: jest.fn((compId) => compId === 'core:name'),
+            getComponentData: jest.fn().mockReturnValue({ text: 'left_arm' }),
+          };
+        }
+        if (id === 'arm-2') {
+          return {
+            hasComponent: jest.fn((compId) => compId === 'core:name'),
+            getComponentData: jest.fn().mockReturnValue({ text: 'right_arm' }),
+          };
+        }
+        return {
+          hasComponent: jest.fn().mockReturnValue(false),
+        };
+      });
+
+      const result = await workflow.generate(blueprintId, recipeId, {
+        ownerId,
+      });
+
+      expect(result.slotEntityMappings.size).toBe(1);
+      expect(result.slotEntityMappings.get('main-hand')).toBe('slot-entity-1');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining(
+          "Successfully mapped slot 'main-hand' to entity 'slot-entity-1'"
+        )
+      );
+    });
+  });
 });
