@@ -1,88 +1,645 @@
-Summary of all failing tests
- FAIL  tests/integration/domUI/AnatomyLoadingDetector.integration.test.js (11.907 s)
-
-
-  ● Test suite failed to run
-
-    ReferenceError: sharedContainer is not defined
-
-      567 | // Cleanup shared resources after all tests
-      568 | afterAll(() => {
-    > 569 |   if (sharedContainer) {
-          |   ^
-      570 |     containerSetup = false;
-      571 |     sharedContainer = null;
-      572 |   }
-
-      at Object.<anonymous> (tests/integration/domUI/AnatomyLoadingDetector.integration.test.js:569:3)
-
- FAIL  tests/unit/domUI/visualizer/visualizerStateController.test.js (23.839 s)
-  ● VisualizerStateController - Entity Selection Workflow › Anatomy Data Processing › should process missing anatomy data
-
-    expect(jest.fn()).toHaveBeenCalledWith(...expected)
-
-    Expected: Any<Error>
-
-    Number of calls: 0
-
-      274 |         
-      275 |         if (expectSetError) {
-    > 276 |           expect(testBed.mockVisualizerState.setError).toHaveBeenCalledWith(expect.any(Error));
-          |                                                        ^
-      277 |         }
-      278 |       }
-      279 |     );
-
-      at toHaveBeenCalledWith (tests/unit/domUI/visualizer/visualizerStateController.test.js:276:56)
-
- FAIL  tests/unit/domUI/visualizer/anatomyLoadingDetector.test.js (165.375 s)
-  ● AnatomyLoadingDetector - Anatomy Detection › Timeout and Retry Logic › should use configurable timeout for anatomy detection
-
-    thrown: "Exceeded timeout of 30000 ms for a test.
-    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
-
-      248 |
-      249 |   describe('Timeout and Retry Logic', () => {
-    > 250 |     it('should use configurable timeout for anatomy detection', async () => {
-          |       ^
-      251 |       await testBed.withFakeTimers(async () => {
-      252 |         const entityId = 'test:entity:123';
-      253 |         const mockEntity = {
-
-      at tests/unit/domUI/visualizer/anatomyLoadingDetector.test.js:250:7
-      at tests/unit/domUI/visualizer/anatomyLoadingDetector.test.js:249:11
-      at Object.<anonymous> (tests/unit/domUI/visualizer/anatomyLoadingDetector.test.js:19:9)
-
-  ● AnatomyLoadingDetector - Anatomy Detection › Timeout and Retry Logic › should timeout if anatomy is never ready
-
-    thrown: "Exceeded timeout of 30000 ms for a test.
-    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
-
-      280 |     });
-      281 |
-    > 282 |     it('should timeout if anatomy is never ready', async () => {
-          |       ^
-      283 |       await testBed.withFakeTimers(async () => {
-      284 |         const entityId = 'test:entity:123';
-      285 |         const mockEntity = {
-
-      at tests/unit/domUI/visualizer/anatomyLoadingDetector.test.js:282:7
-      at tests/unit/domUI/visualizer/anatomyLoadingDetector.test.js:249:11
-      at Object.<anonymous> (tests/unit/domUI/visualizer/anatomyLoadingDetector.test.js:19:9)
-
-  ● AnatomyLoadingDetector - Anatomy Detection › Timeout and Retry Logic › should use exponential backoff for retries
-
-    thrown: "Exceeded timeout of 30000 ms for a test.
-    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
-
-      306 |     });
-      307 |
-    > 308 |     it('should use exponential backoff for retries', async () => {
-          |       ^
-      309 |       await testBed.withFakeTimers(async () => {
-      310 |         const entityId = 'test:entity:123';
-      311 |         const mockEntity = {
-
-      at tests/unit/domUI/visualizer/anatomyLoadingDetector.test.js:308:7
-      at tests/unit/domUI/visualizer/anatomyLoadingDetector.test.js:249:11
-      at Object.<anonymous> (tests/unit/domUI/visualizer/anatomyLoadingDetector.test.js:19:9)
+VED: Event 'core:component_added' dispatch successful.
+consoleLogger.js:187 VED: Event 'clothing:equipped' dispatch successful.
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:component_added'.
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'clothing:equipped'.
+consoleLogger.js:151 EquipmentOrchestrator: Successfully equipped 'd8c41d36-1436-4610-ae3a-e31df884b57c' on '26335dd6-8271-4a5c-b3fb-ca838fa8123d' in layer 'underwear'
+consoleLogger.js:187 ClothingInstantiationService: Equipped clothing 'd8c41d36-1436-4610-ae3a-e31df884b57c' on actor '26335dd6-8271-4a5c-b3fb-ca838fa8123d'
+consoleLogger.js:187 ClothingInstantiationService: Instantiating clothing entity 'clothing:nude_thong' with overrides: undefined
+consoleLogger.js:187 LayerResolutionService: Using entity layer: 'underwear'
+consoleLogger.js:163 LayerResolutionService: No allowed layers specified, allowing any layer
+warn @ consoleLogger.js:163
+warn @ loggerUtils.js:95
+validateLayerAllowed @ layerResolutionService.js:77
+resolveAndValidateLayer @ layerResolutionService.js:116
+#instantiateClothing @ clothingInstantiationService.js:567
+instantiateRecipeClothing @ clothingInstantiationService.js:230
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+generate @ anatomyGenerationWorkflow.js:131
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ anatomyOrchestrator.js:109
+execute @ anatomyUnitOfWork.js:95
+orchestrateGeneration @ anatomyOrchestrator.js:108
+generateAnatomyIfNeeded @ anatomyGenerationService.js:152
+#handleEntityCreated @ anatomyInitializationService.js:101
+(anonymous) @ eventBus.js:144
+dispatch @ eventBus.js:141
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+dispatchEntityCreated @ EntityEventDispatcher.js:65
+createEntityInstance @ entityLifecycleManager.js:274
+createEntityInstance @ EntityCreationManager.js:68
+createEntityInstance @ entityManager.js:331
+createEntityInstance @ entityManagerAdapter.js:38
+_loadEntity @ AnatomyVisualizerUI.js:290
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ AnatomyVisualizerUI.js:254
+handleMouseUp_ @ unknownUnderstand this warning
+consoleLogger.js:187 ClothingInstantiationService: Resolved layer for 'clothing:nude_thong': 'underwear'
+consoleLogger.js:187 EntityCreationManager.createEntityInstance: Creating entity with definition 'clothing:nude_thong'
+consoleLogger.js:187 [EntityFactory] Creating entity instance df2c3c43-7919-4b01-9473-7f75fe0b776a from definition clothing:nude_thong.
+consoleLogger.js:187 [EntityConstructionFactory] Constructing entity 'df2c3c43-7919-4b01-9473-7f75fe0b776a' with definition 'clothing:nude_thong'
+consoleLogger.js:187 [EntityConstructionFactory] Default components applied to entity 'df2c3c43-7919-4b01-9473-7f75fe0b776a'
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance 'df2c3c43-7919-4b01-9473-7f75fe0b776a' (def: 'clothing:nude_thong') created.
+consoleLogger.js:187 Indexed component 'clothing:wearable' for entity 'df2c3c43-7919-4b01-9473-7f75fe0b776a'
+consoleLogger.js:187 Indexed component 'core:name' for entity 'df2c3c43-7919-4b01-9473-7f75fe0b776a'
+consoleLogger.js:187 Indexed component 'core:description' for entity 'df2c3c43-7919-4b01-9473-7f75fe0b776a'
+consoleLogger.js:187 Indexed component 'descriptors:color_extended' for entity 'df2c3c43-7919-4b01-9473-7f75fe0b776a'
+consoleLogger.js:187 Indexed component 'descriptors:texture' for entity 'df2c3c43-7919-4b01-9473-7f75fe0b776a'
+consoleLogger.js:187 Entity 'df2c3c43-7919-4b01-9473-7f75fe0b776a' added to repository with 5 components indexed.
+consoleLogger.js:187 Dispatching ENTITY_CREATED event {instanceId: 'df2c3c43-7919-4b01-9473-7f75fe0b776a', definitionId: 'clothing:nude_thong', wasReconstructed: false}
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_created' against schema 'core:entity_created#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:entity_created'.
+consoleLogger.js:187 VED: Dispatching event 'core:entity_created' via EventBus... {instanceId: 'df2c3c43-7919-4b01-9473-7f75fe0b776a', definitionId: 'clothing:nude_thong', wasReconstructed: false, entity: Entity}
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Received payload with entity: Entity {#data: EntityInstanceData}
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity type: object
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity constructor: Entity
+consoleLogger.js:151 Entity created: df2c3c43-7919-4b01-9473-7f75fe0b776a (definition: clothing:nude_thong)
+consoleLogger.js:187 ClothingInstantiationService: ClothingInstantiationService: Starting post-instantiation validation for clothing 'df2c3c43-7919-4b01-9473-7f75fe0b776a' (clothing:nude_thong)
+consoleLogger.js:187 ClothingInstantiationService: ClothingInstantiationService: Validating slot compatibility for clothing 'df2c3c43-7919-4b01-9473-7f75fe0b776a' in slot 'panties' on actor '26335dd6-8271-4a5c-b3fb-ca838fa8123d'
+consoleLogger.js:187 AnatomyClothingCache: Cache hit: available_slots:available_slots:26335dd6-8271-4a5c-b3fb-ca838fa8123d
+consoleLogger.js:187 ClothingSlotValidator: Validating slot 'panties' for entity '26335dd6-8271-4a5c-b3fb-ca838fa8123d' with item 'df2c3c43-7919-4b01-9473-7f75fe0b776a'
+consoleLogger.js:187 AnatomyBlueprintRepository: Returning cached blueprint for recipe 'p_erotica:amaia_castillo_recipe'
+consoleLogger.js:187 VED: Event 'core:entity_created' dispatch successful.
+consoleLogger.js:187 BodyGraphService.getBodyGraph: Getting body graph for entity '26335dd6-8271-4a5c-b3fb-ca838fa8123d'
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:entity_created'.
+consoleLogger.js:187 BodyGraphService.getAllParts: Found root ID in bodyComponent.body.root: 0f900465-f751-4d21-af6b-dafbf56db116
+consoleLogger.js:187 BodyGraphService: Using actor entity '26335dd6-8271-4a5c-b3fb-ca838fa8123d' as cache root instead of blueprint root '0f900465-f751-4d21-af6b-dafbf56db116' (cache size: 24)
+16consoleLogger.js:187 EntityQueryManager.getEntitiesWithComponent found 22 entities with component 'anatomy:joint' using index
+consoleLogger.js:187 BodyGraphService: AnatomyGraphAlgorithms.getAllParts returned 24 parts for root '26335dd6-8271-4a5c-b3fb-ca838fa8123d': [26335dd6-8271-4a5c-b3fb-ca838fa8123d, 0f900465-f751-4d21-af6b-dafbf56db116, d924f9ea-889f-40e4-bafe-8f860c1e8e46, ee1d4b2a-8ce7-4a1b-aeec-8338a6c83c17, e6caf838-6681-4a6b-884a-899a069b3dfc...]
+consoleLogger.js:187 AnatomyQueryCache: Cached result for key 'getAllParts:::26335dd6-8271-4a5c-b3fb-ca838fa8123d'
+consoleLogger.js:187 Resolved clothing slot 'panties' to 2 attachment points
+consoleLogger.js:187 ClothingSlotValidator: Slot 'panties' has 2 valid attachment points
+consoleLogger.js:187 AnatomyClothingCache: Cache set: validation:26335dd6-8271-4a5c-b3fb-ca838fa8123d:panties:df2c3c43-7919-4b01-9473-7f75fe0b776a
+consoleLogger.js:187 ClothingInstantiationService: ClothingInstantiationService: Validation passed for clothing 'df2c3c43-7919-4b01-9473-7f75fe0b776a' in slot 'panties'
+consoleLogger.js:187 ClothingInstantiationService: ClothingInstantiationService: Validation passed for clothing 'df2c3c43-7919-4b01-9473-7f75fe0b776a' (clothing:nude_thong)
+consoleLogger.js:187 ClothingInstantiationService: Instantiated clothing 'clothing:nude_thong' as entity 'df2c3c43-7919-4b01-9473-7f75fe0b776a'
+consoleLogger.js:187 EquipmentOrchestrator: Starting equipment orchestration for 'df2c3c43-7919-4b01-9473-7f75fe0b776a' on '26335dd6-8271-4a5c-b3fb-ca838fa8123d'
+consoleLogger.js:187 LayerCompatibilityService: Checking layer conflicts for 'df2c3c43-7919-4b01-9473-7f75fe0b776a' in layer 'underwear' on '26335dd6-8271-4a5c-b3fb-ca838fa8123d'
+consoleLogger.js:187 EntityMutationManager.addComponent: Adding component 'clothing:equipment' to entity '26335dd6-8271-4a5c-b3fb-ca838fa8123d'
+consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
+consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'clothing:equipment', componentData: {…}, oldComponentData: {…}}
+consoleLogger.js:187 Successfully added/updated component 'clothing:equipment' data on entity '26335dd6-8271-4a5c-b3fb-ca838fa8123d'.
+consoleLogger.js:187 VED: Validating payload for event 'clothing:equipped' against schema 'clothing:equipped#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'clothing:equipped'.
+consoleLogger.js:187 VED: Dispatching event 'clothing:equipped' via EventBus... {entityId: '26335dd6-8271-4a5c-b3fb-ca838fa8123d', clothingItemId: 'df2c3c43-7919-4b01-9473-7f75fe0b776a', slotId: 'panties', layer: 'underwear', previousItem: null, …}
+consoleLogger.js:187 VED: Event 'core:component_added' dispatch successful.
+consoleLogger.js:187 VED: Event 'clothing:equipped' dispatch successful.
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:component_added'.
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'clothing:equipped'.
+consoleLogger.js:151 EquipmentOrchestrator: Successfully equipped 'df2c3c43-7919-4b01-9473-7f75fe0b776a' on '26335dd6-8271-4a5c-b3fb-ca838fa8123d' in layer 'underwear'
+consoleLogger.js:187 ClothingInstantiationService: Equipped clothing 'df2c3c43-7919-4b01-9473-7f75fe0b776a' on actor '26335dd6-8271-4a5c-b3fb-ca838fa8123d'
+consoleLogger.js:187 ClothingInstantiationService: Instantiating clothing entity 'clothing:black_stretch_silk_bodysuit' with overrides: undefined
+consoleLogger.js:187 LayerResolutionService: Using entity layer: 'base'
+consoleLogger.js:163 LayerResolutionService: No allowed layers specified, allowing any layer
+warn @ consoleLogger.js:163
+warn @ loggerUtils.js:95
+validateLayerAllowed @ layerResolutionService.js:77
+resolveAndValidateLayer @ layerResolutionService.js:116
+#instantiateClothing @ clothingInstantiationService.js:567
+instantiateRecipeClothing @ clothingInstantiationService.js:230
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+generate @ anatomyGenerationWorkflow.js:131
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ anatomyOrchestrator.js:109
+execute @ anatomyUnitOfWork.js:95
+orchestrateGeneration @ anatomyOrchestrator.js:108
+generateAnatomyIfNeeded @ anatomyGenerationService.js:152
+#handleEntityCreated @ anatomyInitializationService.js:101
+(anonymous) @ eventBus.js:144
+dispatch @ eventBus.js:141
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+dispatchEntityCreated @ EntityEventDispatcher.js:65
+createEntityInstance @ entityLifecycleManager.js:274
+createEntityInstance @ EntityCreationManager.js:68
+createEntityInstance @ entityManager.js:331
+createEntityInstance @ entityManagerAdapter.js:38
+_loadEntity @ AnatomyVisualizerUI.js:290
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ AnatomyVisualizerUI.js:254
+handleMouseUp_ @ unknownUnderstand this warning
+consoleLogger.js:187 ClothingInstantiationService: Resolved layer for 'clothing:black_stretch_silk_bodysuit': 'base'
+consoleLogger.js:187 EntityCreationManager.createEntityInstance: Creating entity with definition 'clothing:black_stretch_silk_bodysuit'
+consoleLogger.js:187 [EntityFactory] Creating entity instance f6018c16-993d-4c16-8667-f0c4d1038f6e from definition clothing:black_stretch_silk_bodysuit.
+consoleLogger.js:187 [EntityConstructionFactory] Constructing entity 'f6018c16-993d-4c16-8667-f0c4d1038f6e' with definition 'clothing:black_stretch_silk_bodysuit'
+consoleLogger.js:187 [EntityConstructionFactory] Default components applied to entity 'f6018c16-993d-4c16-8667-f0c4d1038f6e'
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance 'f6018c16-993d-4c16-8667-f0c4d1038f6e' (def: 'clothing:black_stretch_silk_bodysuit') created.
+consoleLogger.js:187 Indexed component 'clothing:wearable' for entity 'f6018c16-993d-4c16-8667-f0c4d1038f6e'
+consoleLogger.js:187 Indexed component 'core:name' for entity 'f6018c16-993d-4c16-8667-f0c4d1038f6e'
+consoleLogger.js:187 Indexed component 'core:description' for entity 'f6018c16-993d-4c16-8667-f0c4d1038f6e'
+consoleLogger.js:187 Indexed component 'descriptors:color_basic' for entity 'f6018c16-993d-4c16-8667-f0c4d1038f6e'
+consoleLogger.js:187 Indexed component 'descriptors:texture' for entity 'f6018c16-993d-4c16-8667-f0c4d1038f6e'
+consoleLogger.js:187 Entity 'f6018c16-993d-4c16-8667-f0c4d1038f6e' added to repository with 5 components indexed.
+consoleLogger.js:187 Dispatching ENTITY_CREATED event {instanceId: 'f6018c16-993d-4c16-8667-f0c4d1038f6e', definitionId: 'clothing:black_stretch_silk_bodysuit', wasReconstructed: false}
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_created' against schema 'core:entity_created#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:entity_created'.
+consoleLogger.js:187 VED: Dispatching event 'core:entity_created' via EventBus... {instanceId: 'f6018c16-993d-4c16-8667-f0c4d1038f6e', definitionId: 'clothing:black_stretch_silk_bodysuit', wasReconstructed: false, entity: Entity}
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Received payload with entity: Entity {#data: EntityInstanceData}
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity type: object
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity constructor: Entity
+consoleLogger.js:151 Entity created: f6018c16-993d-4c16-8667-f0c4d1038f6e (definition: clothing:black_stretch_silk_bodysuit)
+consoleLogger.js:187 ClothingInstantiationService: ClothingInstantiationService: Starting post-instantiation validation for clothing 'f6018c16-993d-4c16-8667-f0c4d1038f6e' (clothing:black_stretch_silk_bodysuit)
+consoleLogger.js:187 ClothingInstantiationService: ClothingInstantiationService: Validating slot compatibility for clothing 'f6018c16-993d-4c16-8667-f0c4d1038f6e' in slot 'full_body' on actor '26335dd6-8271-4a5c-b3fb-ca838fa8123d'
+consoleLogger.js:187 AnatomyClothingCache: Cache hit: available_slots:available_slots:26335dd6-8271-4a5c-b3fb-ca838fa8123d
+consoleLogger.js:187 ClothingSlotValidator: Validating slot 'full_body' for entity '26335dd6-8271-4a5c-b3fb-ca838fa8123d' with item 'f6018c16-993d-4c16-8667-f0c4d1038f6e'
+consoleLogger.js:187 AnatomyBlueprintRepository: Returning cached blueprint for recipe 'p_erotica:amaia_castillo_recipe'
+consoleLogger.js:187 VED: Event 'core:entity_created' dispatch successful.
+consoleLogger.js:187 AnatomyBlueprintRepository: Returning cached blueprint for recipe 'p_erotica:amaia_castillo_recipe'
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:entity_created'.
+consoleLogger.js:187 BodyGraphService.getBodyGraph: Getting body graph for entity '26335dd6-8271-4a5c-b3fb-ca838fa8123d'
+consoleLogger.js:187 BlueprintSlotStrategy: Found direct slot mapping for 'head' → 'e9b393ec-e9de-4789-bd2c-a944923efdc1'
+consoleLogger.js:187 BlueprintSlotStrategy: Found slot mapping for 'head' → 'e9b393ec-e9de-4789-bd2c-a944923efdc1'
+consoleLogger.js:187 BlueprintSlotStrategy: Found direct slot mapping for 'left_arm' → 'd0b1d852-3ba2-47b2-8e8a-7bf58c014875'
+consoleLogger.js:187 BlueprintSlotStrategy: Found slot mapping for 'left_arm' → 'd0b1d852-3ba2-47b2-8e8a-7bf58c014875'
+consoleLogger.js:187 BlueprintSlotStrategy: Found direct slot mapping for 'right_arm' → 'a3282809-f39e-4718-ad3c-49261bd45036'
+consoleLogger.js:187 BlueprintSlotStrategy: Found slot mapping for 'right_arm' → 'a3282809-f39e-4718-ad3c-49261bd45036'
+consoleLogger.js:187 BlueprintSlotStrategy: Found direct slot mapping for 'left_leg' → 'd63c2074-059c-4249-b62a-d34cd6a5ce24'
+consoleLogger.js:187 BlueprintSlotStrategy: Found slot mapping for 'left_leg' → 'd63c2074-059c-4249-b62a-d34cd6a5ce24'
+consoleLogger.js:187 BlueprintSlotStrategy: Found direct slot mapping for 'right_leg' → 'ad63b3d7-68f5-4caa-9d98-6e055cdf33cb'
+consoleLogger.js:187 BlueprintSlotStrategy: Found slot mapping for 'right_leg' → 'ad63b3d7-68f5-4caa-9d98-6e055cdf33cb'
+consoleLogger.js:187 BlueprintSlotStrategy: Found direct slot mapping for 'left_breast' → '6d455f61-0b31-42b8-84b7-be6f1ad1f27f'
+consoleLogger.js:187 BlueprintSlotStrategy: Found slot mapping for 'left_breast' → '6d455f61-0b31-42b8-84b7-be6f1ad1f27f'
+consoleLogger.js:187 BlueprintSlotStrategy: Found direct slot mapping for 'right_breast' → 'f1853eac-72bb-4527-9d1e-e59fa14955e9'
+consoleLogger.js:187 BlueprintSlotStrategy: Found slot mapping for 'right_breast' → 'f1853eac-72bb-4527-9d1e-e59fa14955e9'
+consoleLogger.js:187 Resolved clothing slot 'full_body' to 7 attachment points
+consoleLogger.js:187 ClothingSlotValidator: Slot 'full_body' has 7 valid attachment points
+consoleLogger.js:187 AnatomyClothingCache: Cache set: validation:26335dd6-8271-4a5c-b3fb-ca838fa8123d:full_body:f6018c16-993d-4c16-8667-f0c4d1038f6e
+consoleLogger.js:187 ClothingInstantiationService: ClothingInstantiationService: Validation passed for clothing 'f6018c16-993d-4c16-8667-f0c4d1038f6e' in slot 'full_body'
+consoleLogger.js:187 ClothingInstantiationService: ClothingInstantiationService: Validation passed for clothing 'f6018c16-993d-4c16-8667-f0c4d1038f6e' (clothing:black_stretch_silk_bodysuit)
+consoleLogger.js:187 ClothingInstantiationService: Instantiated clothing 'clothing:black_stretch_silk_bodysuit' as entity 'f6018c16-993d-4c16-8667-f0c4d1038f6e'
+consoleLogger.js:187 EquipmentOrchestrator: Starting equipment orchestration for 'f6018c16-993d-4c16-8667-f0c4d1038f6e' on '26335dd6-8271-4a5c-b3fb-ca838fa8123d'
+consoleLogger.js:187 LayerCompatibilityService: Checking layer conflicts for 'f6018c16-993d-4c16-8667-f0c4d1038f6e' in layer 'base' on '26335dd6-8271-4a5c-b3fb-ca838fa8123d'
+consoleLogger.js:187 EntityMutationManager.addComponent: Adding component 'clothing:equipment' to entity '26335dd6-8271-4a5c-b3fb-ca838fa8123d'
+consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
+consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'clothing:equipment', componentData: {…}, oldComponentData: {…}}
+consoleLogger.js:187 Successfully added/updated component 'clothing:equipment' data on entity '26335dd6-8271-4a5c-b3fb-ca838fa8123d'.
+consoleLogger.js:187 VED: Validating payload for event 'clothing:equipped' against schema 'clothing:equipped#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'clothing:equipped'.
+consoleLogger.js:187 VED: Dispatching event 'clothing:equipped' via EventBus... {entityId: '26335dd6-8271-4a5c-b3fb-ca838fa8123d', clothingItemId: 'f6018c16-993d-4c16-8667-f0c4d1038f6e', slotId: 'full_body', layer: 'base', previousItem: null, …}
+consoleLogger.js:187 VED: Event 'core:component_added' dispatch successful.
+consoleLogger.js:187 VED: Event 'clothing:equipped' dispatch successful.
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:component_added'.
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'clothing:equipped'.
+consoleLogger.js:151 EquipmentOrchestrator: Successfully equipped 'f6018c16-993d-4c16-8667-f0c4d1038f6e' on '26335dd6-8271-4a5c-b3fb-ca838fa8123d' in layer 'base'
+consoleLogger.js:187 ClothingInstantiationService: Equipped clothing 'f6018c16-993d-4c16-8667-f0c4d1038f6e' on actor '26335dd6-8271-4a5c-b3fb-ca838fa8123d'
+consoleLogger.js:187 ClothingInstantiationService: Instantiating clothing entity 'clothing:white_structured_linen_blazer' with overrides: undefined
+consoleLogger.js:187 LayerResolutionService: Using entity layer: 'outer'
+consoleLogger.js:163 LayerResolutionService: No allowed layers specified, allowing any layer
+warn @ consoleLogger.js:163
+warn @ loggerUtils.js:95
+validateLayerAllowed @ layerResolutionService.js:77
+resolveAndValidateLayer @ layerResolutionService.js:116
+#instantiateClothing @ clothingInstantiationService.js:567
+instantiateRecipeClothing @ clothingInstantiationService.js:230
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+generate @ anatomyGenerationWorkflow.js:131
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ anatomyOrchestrator.js:109
+execute @ anatomyUnitOfWork.js:95
+orchestrateGeneration @ anatomyOrchestrator.js:108
+generateAnatomyIfNeeded @ anatomyGenerationService.js:152
+#handleEntityCreated @ anatomyInitializationService.js:101
+(anonymous) @ eventBus.js:144
+dispatch @ eventBus.js:141
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+dispatchEntityCreated @ EntityEventDispatcher.js:65
+createEntityInstance @ entityLifecycleManager.js:274
+createEntityInstance @ EntityCreationManager.js:68
+createEntityInstance @ entityManager.js:331
+createEntityInstance @ entityManagerAdapter.js:38
+_loadEntity @ AnatomyVisualizerUI.js:290
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ AnatomyVisualizerUI.js:254
+handleMouseUp_ @ unknownUnderstand this warning
+consoleLogger.js:187 ClothingInstantiationService: Resolved layer for 'clothing:white_structured_linen_blazer': 'outer'
+consoleLogger.js:187 EntityCreationManager.createEntityInstance: Creating entity with definition 'clothing:white_structured_linen_blazer'
+consoleLogger.js:187 [EntityFactory] Creating entity instance be5a3e5a-20bd-41f1-9cbf-9d02d6c11037 from definition clothing:white_structured_linen_blazer.
+consoleLogger.js:187 [EntityConstructionFactory] Constructing entity 'be5a3e5a-20bd-41f1-9cbf-9d02d6c11037' with definition 'clothing:white_structured_linen_blazer'
+consoleLogger.js:187 [EntityConstructionFactory] Default components applied to entity 'be5a3e5a-20bd-41f1-9cbf-9d02d6c11037'
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance 'be5a3e5a-20bd-41f1-9cbf-9d02d6c11037' (def: 'clothing:white_structured_linen_blazer') created.
+consoleLogger.js:187 Indexed component 'clothing:wearable' for entity 'be5a3e5a-20bd-41f1-9cbf-9d02d6c11037'
+consoleLogger.js:187 Indexed component 'core:name' for entity 'be5a3e5a-20bd-41f1-9cbf-9d02d6c11037'
+consoleLogger.js:187 Indexed component 'core:description' for entity 'be5a3e5a-20bd-41f1-9cbf-9d02d6c11037'
+consoleLogger.js:187 Indexed component 'descriptors:color_basic' for entity 'be5a3e5a-20bd-41f1-9cbf-9d02d6c11037'
+consoleLogger.js:187 Indexed component 'descriptors:texture' for entity 'be5a3e5a-20bd-41f1-9cbf-9d02d6c11037'
+consoleLogger.js:187 Entity 'be5a3e5a-20bd-41f1-9cbf-9d02d6c11037' added to repository with 5 components indexed.
+consoleLogger.js:187 Dispatching ENTITY_CREATED event {instanceId: 'be5a3e5a-20bd-41f1-9cbf-9d02d6c11037', definitionId: 'clothing:white_structured_linen_blazer', wasReconstructed: false}
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_created' against schema 'core:entity_created#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:entity_created'.
+consoleLogger.js:187 VED: Dispatching event 'core:entity_created' via EventBus... {instanceId: 'be5a3e5a-20bd-41f1-9cbf-9d02d6c11037', definitionId: 'clothing:white_structured_linen_blazer', wasReconstructed: false, entity: Entity}
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Received payload with entity: Entity {#data: EntityInstanceData}
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity type: object
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity constructor: Entity
+consoleLogger.js:151 Entity created: be5a3e5a-20bd-41f1-9cbf-9d02d6c11037 (definition: clothing:white_structured_linen_blazer)
+consoleLogger.js:187 ClothingInstantiationService: ClothingInstantiationService: Starting post-instantiation validation for clothing 'be5a3e5a-20bd-41f1-9cbf-9d02d6c11037' (clothing:white_structured_linen_blazer)
+consoleLogger.js:187 ClothingInstantiationService: ClothingInstantiationService: Validating slot compatibility for clothing 'be5a3e5a-20bd-41f1-9cbf-9d02d6c11037' in slot 'torso_upper' on actor '26335dd6-8271-4a5c-b3fb-ca838fa8123d'
+consoleLogger.js:187 AnatomyClothingCache: Cache hit: available_slots:available_slots:26335dd6-8271-4a5c-b3fb-ca838fa8123d
+consoleLogger.js:187 ClothingSlotValidator: Validating slot 'torso_upper' for entity '26335dd6-8271-4a5c-b3fb-ca838fa8123d' with item 'be5a3e5a-20bd-41f1-9cbf-9d02d6c11037'
+consoleLogger.js:187 AnatomyBlueprintRepository: Returning cached blueprint for recipe 'p_erotica:amaia_castillo_recipe'
+consoleLogger.js:187 VED: Event 'core:entity_created' dispatch successful.
+consoleLogger.js:187 BodyGraphService.getBodyGraph: Getting body graph for entity '26335dd6-8271-4a5c-b3fb-ca838fa8123d'
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:entity_created'.
+consoleLogger.js:187 BodyGraphService.getAllParts: Found root ID in bodyComponent.body.root: 0f900465-f751-4d21-af6b-dafbf56db116
+consoleLogger.js:187 BodyGraphService: Using actor entity '26335dd6-8271-4a5c-b3fb-ca838fa8123d' as cache root instead of blueprint root '0f900465-f751-4d21-af6b-dafbf56db116' (cache size: 24)
+consoleLogger.js:187 AnatomyQueryCache: Cache hit for key 'getAllParts:::26335dd6-8271-4a5c-b3fb-ca838fa8123d'
+consoleLogger.js:187 BodyGraphService: Found cached result for root '26335dd6-8271-4a5c-b3fb-ca838fa8123d': 24 parts
+consoleLogger.js:187 Resolved clothing slot 'torso_upper' to 4 attachment points
+consoleLogger.js:187 ClothingSlotValidator: Slot 'torso_upper' has 4 valid attachment points
+consoleLogger.js:187 AnatomyClothingCache: Cache set: validation:26335dd6-8271-4a5c-b3fb-ca838fa8123d:torso_upper:be5a3e5a-20bd-41f1-9cbf-9d02d6c11037
+consoleLogger.js:187 ClothingInstantiationService: ClothingInstantiationService: Validation passed for clothing 'be5a3e5a-20bd-41f1-9cbf-9d02d6c11037' in slot 'torso_upper'
+consoleLogger.js:187 ClothingInstantiationService: ClothingInstantiationService: Validation passed for clothing 'be5a3e5a-20bd-41f1-9cbf-9d02d6c11037' (clothing:white_structured_linen_blazer)
+consoleLogger.js:187 ClothingInstantiationService: Instantiated clothing 'clothing:white_structured_linen_blazer' as entity 'be5a3e5a-20bd-41f1-9cbf-9d02d6c11037'
+consoleLogger.js:187 EquipmentOrchestrator: Starting equipment orchestration for 'be5a3e5a-20bd-41f1-9cbf-9d02d6c11037' on '26335dd6-8271-4a5c-b3fb-ca838fa8123d'
+consoleLogger.js:187 LayerCompatibilityService: Checking layer conflicts for 'be5a3e5a-20bd-41f1-9cbf-9d02d6c11037' in layer 'outer' on '26335dd6-8271-4a5c-b3fb-ca838fa8123d'
+consoleLogger.js:187 EntityMutationManager.addComponent: Adding component 'clothing:equipment' to entity '26335dd6-8271-4a5c-b3fb-ca838fa8123d'
+consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
+consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'clothing:equipment', componentData: {…}, oldComponentData: {…}}
+consoleLogger.js:187 Successfully added/updated component 'clothing:equipment' data on entity '26335dd6-8271-4a5c-b3fb-ca838fa8123d'.
+consoleLogger.js:187 VED: Validating payload for event 'clothing:equipped' against schema 'clothing:equipped#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'clothing:equipped'.
+consoleLogger.js:187 VED: Dispatching event 'clothing:equipped' via EventBus... {entityId: '26335dd6-8271-4a5c-b3fb-ca838fa8123d', clothingItemId: 'be5a3e5a-20bd-41f1-9cbf-9d02d6c11037', slotId: 'torso_upper', layer: 'outer', previousItem: null, …}
+consoleLogger.js:187 VED: Event 'core:component_added' dispatch successful.
+consoleLogger.js:187 VED: Event 'clothing:equipped' dispatch successful.
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:component_added'.
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'clothing:equipped'.
+consoleLogger.js:151 EquipmentOrchestrator: Successfully equipped 'be5a3e5a-20bd-41f1-9cbf-9d02d6c11037' on '26335dd6-8271-4a5c-b3fb-ca838fa8123d' in layer 'outer'
+consoleLogger.js:187 ClothingInstantiationService: Equipped clothing 'be5a3e5a-20bd-41f1-9cbf-9d02d6c11037' on actor '26335dd6-8271-4a5c-b3fb-ca838fa8123d'
+consoleLogger.js:187 ClothingInstantiationService: Instantiating clothing entity 'clothing:graphite_wool_wide_leg_trousers' with overrides: undefined
+consoleLogger.js:187 LayerResolutionService: Using entity layer: 'base'
+consoleLogger.js:163 LayerResolutionService: No allowed layers specified, allowing any layer
+warn @ consoleLogger.js:163
+warn @ loggerUtils.js:95
+validateLayerAllowed @ layerResolutionService.js:77
+resolveAndValidateLayer @ layerResolutionService.js:116
+#instantiateClothing @ clothingInstantiationService.js:567
+instantiateRecipeClothing @ clothingInstantiationService.js:230
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+generate @ anatomyGenerationWorkflow.js:131
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ anatomyOrchestrator.js:109
+execute @ anatomyUnitOfWork.js:95
+orchestrateGeneration @ anatomyOrchestrator.js:108
+generateAnatomyIfNeeded @ anatomyGenerationService.js:152
+#handleEntityCreated @ anatomyInitializationService.js:101
+(anonymous) @ eventBus.js:144
+dispatch @ eventBus.js:141
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+dispatchEntityCreated @ EntityEventDispatcher.js:65
+createEntityInstance @ entityLifecycleManager.js:274
+createEntityInstance @ EntityCreationManager.js:68
+createEntityInstance @ entityManager.js:331
+createEntityInstance @ entityManagerAdapter.js:38
+_loadEntity @ AnatomyVisualizerUI.js:290
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ AnatomyVisualizerUI.js:254
+handleMouseUp_ @ unknownUnderstand this warning
+consoleLogger.js:187 ClothingInstantiationService: Resolved layer for 'clothing:graphite_wool_wide_leg_trousers': 'base'
+consoleLogger.js:187 EntityCreationManager.createEntityInstance: Creating entity with definition 'clothing:graphite_wool_wide_leg_trousers'
+consoleLogger.js:187 [EntityFactory] Creating entity instance 03356d5e-47ea-4616-b208-dc1092f456b5 from definition clothing:graphite_wool_wide_leg_trousers.
+consoleLogger.js:187 [EntityConstructionFactory] Constructing entity '03356d5e-47ea-4616-b208-dc1092f456b5' with definition 'clothing:graphite_wool_wide_leg_trousers'
+consoleLogger.js:187 [EntityConstructionFactory] Default components applied to entity '03356d5e-47ea-4616-b208-dc1092f456b5'
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '03356d5e-47ea-4616-b208-dc1092f456b5' (def: 'clothing:graphite_wool_wide_leg_trousers') created.
+consoleLogger.js:187 Indexed component 'clothing:wearable' for entity '03356d5e-47ea-4616-b208-dc1092f456b5'
+consoleLogger.js:187 Indexed component 'core:name' for entity '03356d5e-47ea-4616-b208-dc1092f456b5'
+consoleLogger.js:187 Indexed component 'core:description' for entity '03356d5e-47ea-4616-b208-dc1092f456b5'
+consoleLogger.js:187 Indexed component 'descriptors:color_basic' for entity '03356d5e-47ea-4616-b208-dc1092f456b5'
+consoleLogger.js:187 Indexed component 'descriptors:texture' for entity '03356d5e-47ea-4616-b208-dc1092f456b5'
+consoleLogger.js:187 Entity '03356d5e-47ea-4616-b208-dc1092f456b5' added to repository with 5 components indexed.
+consoleLogger.js:187 Dispatching ENTITY_CREATED event {instanceId: '03356d5e-47ea-4616-b208-dc1092f456b5', definitionId: 'clothing:graphite_wool_wide_leg_trousers', wasReconstructed: false}
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_created' against schema 'core:entity_created#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:entity_created'.
+consoleLogger.js:187 VED: Dispatching event 'core:entity_created' via EventBus... {instanceId: '03356d5e-47ea-4616-b208-dc1092f456b5', definitionId: 'clothing:graphite_wool_wide_leg_trousers', wasReconstructed: false, entity: Entity}
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Received payload with entity: Entity {#data: EntityInstanceData}
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity type: object
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity constructor: Entity
+consoleLogger.js:151 Entity created: 03356d5e-47ea-4616-b208-dc1092f456b5 (definition: clothing:graphite_wool_wide_leg_trousers)
+consoleLogger.js:187 ClothingInstantiationService: ClothingInstantiationService: Starting post-instantiation validation for clothing '03356d5e-47ea-4616-b208-dc1092f456b5' (clothing:graphite_wool_wide_leg_trousers)
+consoleLogger.js:187 ClothingInstantiationService: ClothingInstantiationService: Validating slot compatibility for clothing '03356d5e-47ea-4616-b208-dc1092f456b5' in slot 'legs' on actor '26335dd6-8271-4a5c-b3fb-ca838fa8123d'
+consoleLogger.js:187 AnatomyClothingCache: Cache hit: available_slots:available_slots:26335dd6-8271-4a5c-b3fb-ca838fa8123d
+consoleLogger.js:187 ClothingSlotValidator: Validating slot 'legs' for entity '26335dd6-8271-4a5c-b3fb-ca838fa8123d' with item '03356d5e-47ea-4616-b208-dc1092f456b5'
+consoleLogger.js:187 AnatomyBlueprintRepository: Returning cached blueprint for recipe 'p_erotica:amaia_castillo_recipe'
+consoleLogger.js:187 VED: Event 'core:entity_created' dispatch successful.
+consoleLogger.js:187 AnatomyBlueprintRepository: Returning cached blueprint for recipe 'p_erotica:amaia_castillo_recipe'
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:entity_created'.
+consoleLogger.js:187 BodyGraphService.getBodyGraph: Getting body graph for entity '26335dd6-8271-4a5c-b3fb-ca838fa8123d'
+consoleLogger.js:187 BlueprintSlotStrategy: Found direct slot mapping for 'left_leg' → 'd63c2074-059c-4249-b62a-d34cd6a5ce24'
+consoleLogger.js:187 BlueprintSlotStrategy: Found slot mapping for 'left_leg' → 'd63c2074-059c-4249-b62a-d34cd6a5ce24'
+consoleLogger.js:187 BlueprintSlotStrategy: Found direct slot mapping for 'right_leg' → 'ad63b3d7-68f5-4caa-9d98-6e055cdf33cb'
+consoleLogger.js:187 BlueprintSlotStrategy: Found slot mapping for 'right_leg' → 'ad63b3d7-68f5-4caa-9d98-6e055cdf33cb'
+consoleLogger.js:187 Resolved clothing slot 'legs' to 2 attachment points
+consoleLogger.js:187 ClothingSlotValidator: Slot 'legs' has 2 valid attachment points
+consoleLogger.js:187 AnatomyClothingCache: Cache set: validation:26335dd6-8271-4a5c-b3fb-ca838fa8123d:legs:03356d5e-47ea-4616-b208-dc1092f456b5
+consoleLogger.js:187 ClothingInstantiationService: ClothingInstantiationService: Validation passed for clothing '03356d5e-47ea-4616-b208-dc1092f456b5' in slot 'legs'
+consoleLogger.js:187 ClothingInstantiationService: ClothingInstantiationService: Validation passed for clothing '03356d5e-47ea-4616-b208-dc1092f456b5' (clothing:graphite_wool_wide_leg_trousers)
+consoleLogger.js:187 ClothingInstantiationService: Instantiated clothing 'clothing:graphite_wool_wide_leg_trousers' as entity '03356d5e-47ea-4616-b208-dc1092f456b5'
+consoleLogger.js:187 EquipmentOrchestrator: Starting equipment orchestration for '03356d5e-47ea-4616-b208-dc1092f456b5' on '26335dd6-8271-4a5c-b3fb-ca838fa8123d'
+consoleLogger.js:187 LayerCompatibilityService: Checking layer conflicts for '03356d5e-47ea-4616-b208-dc1092f456b5' in layer 'base' on '26335dd6-8271-4a5c-b3fb-ca838fa8123d'
+consoleLogger.js:187 EntityMutationManager.addComponent: Adding component 'clothing:equipment' to entity '26335dd6-8271-4a5c-b3fb-ca838fa8123d'
+consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
+consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'clothing:equipment', componentData: {…}, oldComponentData: {…}}
+consoleLogger.js:187 Successfully added/updated component 'clothing:equipment' data on entity '26335dd6-8271-4a5c-b3fb-ca838fa8123d'.
+consoleLogger.js:187 VED: Validating payload for event 'clothing:equipped' against schema 'clothing:equipped#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'clothing:equipped'.
+consoleLogger.js:187 VED: Dispatching event 'clothing:equipped' via EventBus... {entityId: '26335dd6-8271-4a5c-b3fb-ca838fa8123d', clothingItemId: '03356d5e-47ea-4616-b208-dc1092f456b5', slotId: 'legs', layer: 'base', previousItem: null, …}
+consoleLogger.js:187 VED: Event 'core:component_added' dispatch successful.
+consoleLogger.js:187 VED: Event 'clothing:equipped' dispatch successful.
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:component_added'.
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'clothing:equipped'.
+consoleLogger.js:151 EquipmentOrchestrator: Successfully equipped '03356d5e-47ea-4616-b208-dc1092f456b5' on '26335dd6-8271-4a5c-b3fb-ca838fa8123d' in layer 'base'
+consoleLogger.js:187 ClothingInstantiationService: Equipped clothing '03356d5e-47ea-4616-b208-dc1092f456b5' on actor '26335dd6-8271-4a5c-b3fb-ca838fa8123d'
+consoleLogger.js:187 ClothingInstantiationService: Instantiating clothing entity 'clothing:black_calfskin_belt' with overrides: undefined
+consoleLogger.js:187 LayerResolutionService: Using entity layer: 'accessories'
+consoleLogger.js:163 LayerResolutionService: No allowed layers specified, allowing any layer
+warn @ consoleLogger.js:163
+warn @ loggerUtils.js:95
+validateLayerAllowed @ layerResolutionService.js:77
+resolveAndValidateLayer @ layerResolutionService.js:116
+#instantiateClothing @ clothingInstantiationService.js:567
+instantiateRecipeClothing @ clothingInstantiationService.js:230
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+generate @ anatomyGenerationWorkflow.js:131
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ anatomyOrchestrator.js:109
+execute @ anatomyUnitOfWork.js:95
+orchestrateGeneration @ anatomyOrchestrator.js:108
+generateAnatomyIfNeeded @ anatomyGenerationService.js:152
+#handleEntityCreated @ anatomyInitializationService.js:101
+(anonymous) @ eventBus.js:144
+dispatch @ eventBus.js:141
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+dispatchEntityCreated @ EntityEventDispatcher.js:65
+createEntityInstance @ entityLifecycleManager.js:274
+createEntityInstance @ EntityCreationManager.js:68
+createEntityInstance @ entityManager.js:331
+createEntityInstance @ entityManagerAdapter.js:38
+_loadEntity @ AnatomyVisualizerUI.js:290
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ AnatomyVisualizerUI.js:254
+handleMouseUp_ @ unknownUnderstand this warning
+consoleLogger.js:187 ClothingInstantiationService: Resolved layer for 'clothing:black_calfskin_belt': 'accessories'
+consoleLogger.js:187 EntityCreationManager.createEntityInstance: Creating entity with definition 'clothing:black_calfskin_belt'
+consoleLogger.js:187 [EntityFactory] Creating entity instance 70001f77-ef63-4822-b31c-7dc6205c56f2 from definition clothing:black_calfskin_belt.
+consoleLogger.js:187 [EntityConstructionFactory] Constructing entity '70001f77-ef63-4822-b31c-7dc6205c56f2' with definition 'clothing:black_calfskin_belt'
+consoleLogger.js:187 [EntityConstructionFactory] Default components applied to entity '70001f77-ef63-4822-b31c-7dc6205c56f2'
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '70001f77-ef63-4822-b31c-7dc6205c56f2' (def: 'clothing:black_calfskin_belt') created.
+consoleLogger.js:187 Indexed component 'clothing:wearable' for entity '70001f77-ef63-4822-b31c-7dc6205c56f2'
+consoleLogger.js:187 Indexed component 'core:name' for entity '70001f77-ef63-4822-b31c-7dc6205c56f2'
+consoleLogger.js:187 Indexed component 'core:description' for entity '70001f77-ef63-4822-b31c-7dc6205c56f2'
+consoleLogger.js:187 Indexed component 'descriptors:color_basic' for entity '70001f77-ef63-4822-b31c-7dc6205c56f2'
+consoleLogger.js:187 Indexed component 'descriptors:texture' for entity '70001f77-ef63-4822-b31c-7dc6205c56f2'
+consoleLogger.js:187 Entity '70001f77-ef63-4822-b31c-7dc6205c56f2' added to repository with 5 components indexed.
+consoleLogger.js:187 Dispatching ENTITY_CREATED event {instanceId: '70001f77-ef63-4822-b31c-7dc6205c56f2', definitionId: 'clothing:black_calfskin_belt', wasReconstructed: false}
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_created' against schema 'core:entity_created#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:entity_created'.
+consoleLogger.js:187 VED: Dispatching event 'core:entity_created' via EventBus... {instanceId: '70001f77-ef63-4822-b31c-7dc6205c56f2', definitionId: 'clothing:black_calfskin_belt', wasReconstructed: false, entity: Entity}
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Received payload with entity: Entity {#data: EntityInstanceData}
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity type: object
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity constructor: Entity
+consoleLogger.js:151 Entity created: 70001f77-ef63-4822-b31c-7dc6205c56f2 (definition: clothing:black_calfskin_belt)
+consoleLogger.js:187 ClothingInstantiationService: ClothingInstantiationService: Starting post-instantiation validation for clothing '70001f77-ef63-4822-b31c-7dc6205c56f2' (clothing:black_calfskin_belt)
+consoleLogger.js:187 ClothingInstantiationService: ClothingInstantiationService: Validating slot compatibility for clothing '70001f77-ef63-4822-b31c-7dc6205c56f2' in slot 'torso_lower' on actor '26335dd6-8271-4a5c-b3fb-ca838fa8123d'
+consoleLogger.js:187 AnatomyClothingCache: Cache hit: available_slots:available_slots:26335dd6-8271-4a5c-b3fb-ca838fa8123d
+consoleLogger.js:187 ClothingSlotValidator: Validating slot 'torso_lower' for entity '26335dd6-8271-4a5c-b3fb-ca838fa8123d' with item '70001f77-ef63-4822-b31c-7dc6205c56f2'
+consoleLogger.js:187 AnatomyBlueprintRepository: Returning cached blueprint for recipe 'p_erotica:amaia_castillo_recipe'
+consoleLogger.js:187 VED: Event 'core:entity_created' dispatch successful.
+consoleLogger.js:187 BodyGraphService.getBodyGraph: Getting body graph for entity '26335dd6-8271-4a5c-b3fb-ca838fa8123d'
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:entity_created'.
+consoleLogger.js:187 BodyGraphService.getAllParts: Found root ID in bodyComponent.body.root: 0f900465-f751-4d21-af6b-dafbf56db116
+consoleLogger.js:187 BodyGraphService: Using actor entity '26335dd6-8271-4a5c-b3fb-ca838fa8123d' as cache root instead of blueprint root '0f900465-f751-4d21-af6b-dafbf56db116' (cache size: 24)
+consoleLogger.js:187 AnatomyQueryCache: Cache hit for key 'getAllParts:::26335dd6-8271-4a5c-b3fb-ca838fa8123d'
+consoleLogger.js:187 BodyGraphService: Found cached result for root '26335dd6-8271-4a5c-b3fb-ca838fa8123d': 24 parts
+consoleLogger.js:187 Resolved clothing slot 'torso_lower' to 4 attachment points
+consoleLogger.js:187 ClothingSlotValidator: Slot 'torso_lower' has 4 valid attachment points
+consoleLogger.js:187 AnatomyClothingCache: Cache set: validation:26335dd6-8271-4a5c-b3fb-ca838fa8123d:torso_lower:70001f77-ef63-4822-b31c-7dc6205c56f2
+consoleLogger.js:187 ClothingInstantiationService: ClothingInstantiationService: Validation passed for clothing '70001f77-ef63-4822-b31c-7dc6205c56f2' in slot 'torso_lower'
+consoleLogger.js:187 ClothingInstantiationService: ClothingInstantiationService: Validation passed for clothing '70001f77-ef63-4822-b31c-7dc6205c56f2' (clothing:black_calfskin_belt)
+consoleLogger.js:187 ClothingInstantiationService: Instantiated clothing 'clothing:black_calfskin_belt' as entity '70001f77-ef63-4822-b31c-7dc6205c56f2'
+consoleLogger.js:187 EquipmentOrchestrator: Starting equipment orchestration for '70001f77-ef63-4822-b31c-7dc6205c56f2' on '26335dd6-8271-4a5c-b3fb-ca838fa8123d'
+consoleLogger.js:187 LayerCompatibilityService: Checking layer conflicts for '70001f77-ef63-4822-b31c-7dc6205c56f2' in layer 'accessories' on '26335dd6-8271-4a5c-b3fb-ca838fa8123d'
+consoleLogger.js:187 EntityMutationManager.addComponent: Adding component 'clothing:equipment' to entity '26335dd6-8271-4a5c-b3fb-ca838fa8123d'
+consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
+consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'clothing:equipment', componentData: {…}, oldComponentData: {…}}
+consoleLogger.js:187 Successfully added/updated component 'clothing:equipment' data on entity '26335dd6-8271-4a5c-b3fb-ca838fa8123d'.
+consoleLogger.js:187 VED: Validating payload for event 'clothing:equipped' against schema 'clothing:equipped#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'clothing:equipped'.
+consoleLogger.js:187 VED: Dispatching event 'clothing:equipped' via EventBus... {entityId: '26335dd6-8271-4a5c-b3fb-ca838fa8123d', clothingItemId: '70001f77-ef63-4822-b31c-7dc6205c56f2', slotId: 'torso_lower', layer: 'accessories', previousItem: null, …}
+consoleLogger.js:187 VED: Event 'core:component_added' dispatch successful.
+consoleLogger.js:187 VED: Event 'clothing:equipped' dispatch successful.
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:component_added'.
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'clothing:equipped'.
+consoleLogger.js:151 EquipmentOrchestrator: Successfully equipped '70001f77-ef63-4822-b31c-7dc6205c56f2' on '26335dd6-8271-4a5c-b3fb-ca838fa8123d' in layer 'accessories'
+consoleLogger.js:187 ClothingInstantiationService: Equipped clothing '70001f77-ef63-4822-b31c-7dc6205c56f2' on actor '26335dd6-8271-4a5c-b3fb-ca838fa8123d'
+consoleLogger.js:187 ClothingInstantiationService: Instantiating clothing entity 'clothing:leather_stiletto_pumps' with overrides: undefined
+consoleLogger.js:187 LayerResolutionService: Using entity layer: 'base'
+consoleLogger.js:163 LayerResolutionService: No allowed layers specified, allowing any layer
+warn @ consoleLogger.js:163
+warn @ loggerUtils.js:95
+validateLayerAllowed @ layerResolutionService.js:77
+resolveAndValidateLayer @ layerResolutionService.js:116
+#instantiateClothing @ clothingInstantiationService.js:567
+instantiateRecipeClothing @ clothingInstantiationService.js:230
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+generate @ anatomyGenerationWorkflow.js:131
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ anatomyOrchestrator.js:109
+execute @ anatomyUnitOfWork.js:95
+orchestrateGeneration @ anatomyOrchestrator.js:108
+generateAnatomyIfNeeded @ anatomyGenerationService.js:152
+#handleEntityCreated @ anatomyInitializationService.js:101
+(anonymous) @ eventBus.js:144
+dispatch @ eventBus.js:141
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+dispatchEntityCreated @ EntityEventDispatcher.js:65
+createEntityInstance @ entityLifecycleManager.js:274
+createEntityInstance @ EntityCreationManager.js:68
+createEntityInstance @ entityManager.js:331
+createEntityInstance @ entityManagerAdapter.js:38
+_loadEntity @ AnatomyVisualizerUI.js:290
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ AnatomyVisualizerUI.js:254
+handleMouseUp_ @ unknownUnderstand this warning
+consoleLogger.js:187 ClothingInstantiationService: Resolved layer for 'clothing:leather_stiletto_pumps': 'base'
+consoleLogger.js:187 EntityCreationManager.createEntityInstance: Creating entity with definition 'clothing:leather_stiletto_pumps'

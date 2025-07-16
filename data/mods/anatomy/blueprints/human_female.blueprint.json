@@ -32,6 +32,33 @@
     }
   },
   "clothingSlotMappings": {
+    "underwear_upper": {
+      "anatomySockets": [
+        "left_breast",
+        "right_breast", 
+        "left_chest",
+        "right_chest",
+        "chest_center"
+      ],
+      "allowedLayers": ["underwear"]
+    },
+    "underwear_lower": {
+      "anatomySockets": [
+        "pubic_hair",
+        "penis",
+        "left_testicle",
+        "right_testicle",
+        "vagina"
+      ],
+      "allowedLayers": ["underwear"]
+    },
+    "back_accessory": {
+      "anatomySockets": [
+        "upper_back",
+        "lower_back"
+      ],
+      "allowedLayers": ["accessory", "armor"]
+    },
     "bra": {
       "blueprintSlots": ["left_breast", "right_breast"],
       "allowedLayers": ["underwear"]

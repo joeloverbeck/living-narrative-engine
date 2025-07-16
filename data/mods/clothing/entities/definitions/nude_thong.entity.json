@@ -8,8 +8,9 @@
       "size": "m",
       "material": "silk",
       "equipmentSlots": {
-        "primary": "panties"
-      }
+        "primary": "underwear_lower"
+      },
+      "allowedLayers": ["underwear"]
     },
     "core:name": {
       "text": "nude thong"

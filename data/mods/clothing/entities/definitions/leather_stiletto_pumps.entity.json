@@ -9,7 +9,8 @@
       "material": "leather",
       "equipmentSlots": {
         "primary": "feet"
-      }
+      },
+      "allowedLayers": ["base"]
     },
     "core:name": {
       "text": "leather stiletto pumps"
