@@ -8,8 +8,9 @@
       "size": "m",
       "material": "cotton",
       "equipmentSlots": {
-        "primary": "lower_torso_clothing"
-      }
+        "primary": "underwear_lower"
+      },
+      "allowedLayers": ["underwear"]
     },
     "core:name": {
       "text": "panties"

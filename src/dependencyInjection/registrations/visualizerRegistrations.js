@@ -36,7 +36,12 @@ export function registerVisualizerComponents(container) {
   registerWithLog(
     registrar,
     tokens.IDocumentContext,
-    (c) => new DocumentContext(global.document, c.resolve(tokens.ILogger)),
+    (c) => new DocumentContext(
+      (typeof globalThis !== 'undefined' && globalThis.document) || 
+      (typeof window !== 'undefined' && window.document) || 
+      null, 
+      c.resolve(tokens.ILogger)
+    ),
     { lifecycle: 'singletonFactory' },
     logger
   );

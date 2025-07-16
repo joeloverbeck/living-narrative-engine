@@ -9,7 +9,8 @@
       "material": "calfskin",
       "equipmentSlots": {
         "primary": "torso_lower"
-      }
+      },
+      "allowedLayers": ["accessories"]
     },
     "core:name": {
       "text": "black calfskin belt"

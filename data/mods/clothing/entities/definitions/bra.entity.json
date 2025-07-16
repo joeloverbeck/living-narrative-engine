@@ -8,8 +8,9 @@
       "size": "m",
       "material": "cotton",
       "equipmentSlots": {
-        "primary": "torso_clothing"
-      }
+        "primary": "underwear_upper"
+      },
+      "allowedLayers": ["underwear"]
     },
     "core:name": {
       "text": "bra"

@@ -9,7 +9,8 @@
       "material": "stretch-silk",
       "equipmentSlots": {
         "primary": "full_body"
-      }
+      },
+      "allowedLayers": ["underwear", "base", "outer"]
     },
     "core:name": {
       "text": "black stretch-silk bodysuit"

@@ -229,6 +229,47 @@ describe('setupGlobalEventListenersStage', () => {
 
     expect(stop).not.toHaveBeenCalled();
   });
+
+  it('logs warning when gameEngine is null in beforeunload callback', async () => {
+    let cb;
+    const windowRef = {
+      addEventListener: jest.fn((evt, fn) => {
+        cb = fn;
+      }),
+    };
+    const logger = createLogger();
+
+    await setupGlobalEventListenersStage(null, logger, windowRef);
+    await cb();
+
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining('gameEngine instance is not available')
+    );
+  });
+
+  it('handles gameEngine.stop() rejection in beforeunload callback', async () => {
+    let cb;
+    const windowRef = {
+      addEventListener: jest.fn((evt, fn) => {
+        cb = fn;
+      }),
+    };
+    const stop = jest.fn().mockRejectedValue(new Error('stop failed'));
+    const gameEngine = {
+      getEngineStatus: () => ({ isLoopRunning: true }),
+      stop,
+    };
+    const logger = createLogger();
+
+    await setupGlobalEventListenersStage(gameEngine, logger, windowRef);
+    await cb();
+
+    expect(stop).toHaveBeenCalled();
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.stringContaining('Error during gameEngine.stop()'),
+      expect.any(Error)
+    );
+  });
 });
 
 describe('startGameStage', () => {

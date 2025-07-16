@@ -36,6 +36,14 @@
         },
         "required": ["primary"],
         "additionalProperties": false
+      },
+      "allowedLayers": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "enum": ["underwear", "base", "outer", "accessories"]
+        },
+        "description": "Layers allowed for this clothing item based on equipment slot"
       }
     },
     "required": ["layer", "equipmentSlots"],

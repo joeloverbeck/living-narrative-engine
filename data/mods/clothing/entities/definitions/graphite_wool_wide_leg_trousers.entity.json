@@ -10,7 +10,8 @@
       "equipmentSlots": {
         "primary": "legs",
         "secondary": ["torso_lower"]
-      }
+      },
+      "allowedLayers": ["underwear", "base", "outer"]
     },
     "core:name": {
       "text": "graphite wide-leg trousers"
