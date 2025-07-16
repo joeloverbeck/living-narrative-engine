@@ -99,7 +99,7 @@ describe('Gorgeous MILF Anatomy Generation Integration Test', () => {
   let entityManager;
   let anatomyGenerationService;
 
-  beforeAll(() => {
+  beforeEach(() => {
     testBed = new AnatomyIntegrationTestBed();
     entityManager = testBed.entityManager;
     anatomyGenerationService = testBed.anatomyGenerationService;

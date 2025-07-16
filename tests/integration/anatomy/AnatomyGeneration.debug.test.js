@@ -83,7 +83,7 @@ describe('Anatomy Generation Debug Integration Tests', () => {
 
       const partEntities = bodyParts.map((part) => ({
         id: part.id,
-        hasComponent: jest.fn((component) => component === 'core:name'),
+        hasComponent: jest.fn((component) => component === 'core:name' || component === 'anatomy:part'),
         getComponentData: jest.fn((component) => {
           if (component === 'core:name') {
             return { text: part.name, name: part.name }; // Include both for compatibility
@@ -163,9 +163,10 @@ describe('Anatomy Generation Debug Integration Tests', () => {
       const partEntities = [
         {
           id: 'torso-1',
-          hasComponent: jest.fn(() => true),
+          hasComponent: jest.fn((component) => component === 'core:name' || component === 'anatomy:part'),
           getComponentData: jest.fn((component) => {
             if (component === 'core:name') return { text: 'torso' };
+            if (component === 'anatomy:part') return { subType: 'torso' };
             return null;
           }),
         },
@@ -176,9 +177,10 @@ describe('Anatomy Generation Debug Integration Tests', () => {
         },
         {
           id: 'empty-name-1',
-          hasComponent: jest.fn(() => true),
+          hasComponent: jest.fn((component) => component === 'anatomy:part'),
           getComponentData: jest.fn((component) => {
             if (component === 'core:name') return { text: '' }; // Empty name
+            if (component === 'anatomy:part') return { subType: 'generic' };
             return null;
           }),
         },
@@ -217,13 +219,16 @@ describe('Anatomy Generation Debug Integration Tests', () => {
       // Create entity with both text and name fields
       const partEntity = {
         id: 'part-1',
-        hasComponent: jest.fn(() => true),
+        hasComponent: jest.fn((component) => component === 'core:name' || component === 'anatomy:part'),
         getComponentData: jest.fn((component) => {
           if (component === 'core:name') {
             return {
               text: 'correct_name', // This should be used
               name: 'wrong_name', // This should NOT be used
             };
+          }
+          if (component === 'anatomy:part') {
+            return { subType: 'generic' };
           }
           return null;
         }),

@@ -140,7 +140,7 @@ describe('Follow Action Target Resolution - Invalid Entity ID Fix', () => {
 
     // Test 1: Valid actor should resolve targets successfully
     const validResult = await targetResolutionService.resolveTargets(
-      followAction,
+      followAction.scope,
       validActor,
       { currentLocation: { id: 'test-location' } }
     );
@@ -154,7 +154,7 @@ describe('Follow Action Target Resolution - Invalid Entity ID Fix', () => {
     };
 
     const invalidResult = await targetResolutionService.resolveTargets(
-      followAction,
+      followAction.scope,
       invalidActor,
       { currentLocation: { id: 'test-location' } }
     );
@@ -198,7 +198,7 @@ describe('Follow Action Target Resolution - Invalid Entity ID Fix', () => {
     };
 
     const result = await targetResolutionService.resolveTargets(
-      followAction,
+      followAction.scope,
       actorWithoutId,
       { currentLocation: { id: 'test-location' } }
     );

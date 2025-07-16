@@ -181,8 +181,12 @@ export class SocketManager {
       this.#entityManager.getComponentData(parentId, 'core:name')?.text ||
       'parent';
 
+    // Get effective orientation (from child entity's anatomy:part or socket)
+    const effectiveOrientation = anatomyPart?.orientation || socket.orientation || '';
+
     // Replace template tokens
     name = name.replace('{{orientation}}', socket.orientation || '');
+    name = name.replace('{{effective_orientation}}', effectiveOrientation);
     name = name.replace('{{type}}', anatomyPart?.subType || 'part');
     name = name.replace('{{parent.name}}', parentName);
 

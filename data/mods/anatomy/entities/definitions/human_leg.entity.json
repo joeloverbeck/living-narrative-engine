@@ -11,7 +11,7 @@
         {
           "id": "ankle",
           "allowedTypes": ["foot"],
-          "nameTpl": "{{parent.name}} {{type}}"
+          "nameTpl": "{{effective_orientation}} {{type}}"
         }
       ]
     },

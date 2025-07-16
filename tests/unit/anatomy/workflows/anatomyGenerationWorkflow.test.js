@@ -71,13 +71,13 @@ describe('AnatomyGenerationWorkflow', () => {
       mockEntityManager.getEntityInstance.mockImplementation((id) => {
         if (id === 'arm-1') {
           return {
-            hasComponent: jest.fn((compId) => compId === 'core:name'),
+            hasComponent: jest.fn((compId) => compId === 'core:name' || compId === 'anatomy:part'),
             getComponentData: jest.fn().mockReturnValue({ text: 'left_arm' }),
           };
         }
         if (id === 'arm-2') {
           return {
-            hasComponent: jest.fn((compId) => compId === 'core:name'),
+            hasComponent: jest.fn((compId) => compId === 'core:name' || compId === 'anatomy:part'),
             getComponentData: jest.fn().mockReturnValue({ text: 'right_arm' }),
           };
         }
@@ -190,7 +190,7 @@ describe('AnatomyGenerationWorkflow', () => {
         mockEntityManager.getEntityInstance.mockImplementation((id) => {
           if (id === 'arm-1') {
             return {
-              hasComponent: jest.fn((compId) => compId === 'core:name'),
+              hasComponent: jest.fn((compId) => compId === 'core:name' || compId === 'anatomy:part'),
               getComponentData: jest.fn().mockReturnValue({ text: 'left_arm' }),
             };
           }
@@ -416,13 +416,13 @@ describe('AnatomyGenerationWorkflow', () => {
       mockEntityManager.getEntityInstance.mockImplementation((id) => {
         if (id === 'arm-1') {
           return {
-            hasComponent: jest.fn((compId) => compId === 'core:name'),
+            hasComponent: jest.fn((compId) => compId === 'core:name' || compId === 'anatomy:part'),
             getComponentData: jest.fn().mockReturnValue({ text: 'left_arm' }),
           };
         }
         if (id === 'arm-2') {
           return {
-            hasComponent: jest.fn((compId) => compId === 'core:name'),
+            hasComponent: jest.fn((compId) => compId === 'core:name' || compId === 'anatomy:part'),
             getComponentData: jest.fn().mockReturnValue({ text: 'right_arm' }),
           };
         }
@@ -1029,13 +1029,13 @@ describe('AnatomyGenerationWorkflow', () => {
       mockEntityManager.getEntityInstance.mockImplementation((id) => {
         if (id === 'arm-1') {
           return {
-            hasComponent: jest.fn((compId) => compId === 'core:name'),
+            hasComponent: jest.fn((compId) => compId === 'core:name' || compId === 'anatomy:part'),
             getComponentData: jest.fn().mockReturnValue({ text: 'left_arm' }),
           };
         }
         if (id === 'arm-2') {
           return {
-            hasComponent: jest.fn((compId) => compId === 'core:name'),
+            hasComponent: jest.fn((compId) => compId === 'core:name' || compId === 'anatomy:part'),
             getComponentData: jest.fn().mockReturnValue({ text: 'right_arm' }),
           };
         }
@@ -1077,13 +1077,13 @@ describe('AnatomyGenerationWorkflow', () => {
       mockEntityManager.getEntityInstance.mockImplementation((id) => {
         if (id === 'arm-1') {
           return {
-            hasComponent: jest.fn((compId) => compId === 'core:name'),
+            hasComponent: jest.fn((compId) => compId === 'core:name' || compId === 'anatomy:part'),
             getComponentData: jest.fn().mockReturnValue({ text: 'left_arm' }),
           };
         }
         if (id === 'arm-2') {
           return {
-            hasComponent: jest.fn((compId) => compId === 'core:name'),
+            hasComponent: jest.fn((compId) => compId === 'core:name' || compId === 'anatomy:part'),
             getComponentData: jest.fn().mockReturnValue({ text: 'right_arm' }),
           };
         }
@@ -1265,13 +1265,13 @@ describe('AnatomyGenerationWorkflow', () => {
       mockEntityManager.getEntityInstance.mockImplementation((id) => {
         if (id === 'arm-1') {
           return {
-            hasComponent: jest.fn((compId) => compId === 'core:name'),
+            hasComponent: jest.fn((compId) => compId === 'core:name' || compId === 'anatomy:part'),
             getComponentData: jest.fn().mockReturnValue({ text: 'left_arm' }),
           };
         }
         if (id === 'arm-2') {
           return {
-            hasComponent: jest.fn((compId) => compId === 'core:name'),
+            hasComponent: jest.fn((compId) => compId === 'core:name' || compId === 'anatomy:part'),
             getComponentData: jest.fn().mockReturnValue({ text: 'right_arm' }),
           };
         }

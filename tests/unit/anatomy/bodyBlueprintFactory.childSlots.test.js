@@ -176,7 +176,7 @@ describe('BodyBlueprintFactory - Child Slots Support', () => {
     const createdEntities = new Set(['torso-1']);
 
     mockEntityGraphBuilder.createAndAttachPart.mockImplementation(
-      (parentId, socketId, partDefId) => {
+      (parentId, socketId, partDefId, ownerId, orientation) => {
         // All parts attach to torso
         if (socketId === 'neck') {
           createdEntities.add('head-1');
@@ -320,7 +320,7 @@ describe('BodyBlueprintFactory - Child Slots Support', () => {
 
     // When slots are processed, the context tracks which entity was created for each slot
     mockEntityGraphBuilder.createAndAttachPart.mockImplementation(
-      (parentId, socketId, partDefId) => {
+      (parentId, socketId, partDefId, ownerId, orientation) => {
         if (socketId === 'neck' && parentId === 'torso-1') {
           createdEntities.push('head-1');
           return 'head-1';
@@ -391,10 +391,10 @@ describe('BodyBlueprintFactory - Child Slots Support', () => {
       );
       expect(
         mockEntityGraphBuilder.createAndAttachPart
-      ).toHaveBeenNthCalledWith(1, 'torso-1', 'neck', 'anatomy:test_head', undefined);
+      ).toHaveBeenNthCalledWith(1, 'torso-1', 'neck', 'anatomy:test_head', undefined, undefined);
       expect(
         mockEntityGraphBuilder.createAndAttachPart
-      ).toHaveBeenNthCalledWith(2, 'head-1', 'left_eye', 'anatomy:test_eye', undefined);
+      ).toHaveBeenNthCalledWith(2, 'head-1', 'left_eye', 'anatomy:test_eye', undefined, undefined);
 
       // Verify result includes all entities
       expect(result.rootId).toBe('torso-1');

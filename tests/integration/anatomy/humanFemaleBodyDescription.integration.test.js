@@ -87,7 +87,7 @@ describe('Human Female Body Description Integration Test', () => {
   let anatomyGenerationService;
   let anatomyDescriptionService;
 
-  beforeAll(() => {
+  beforeEach(() => {
     testBed = new AnatomyIntegrationTestBed();
     entityManager = testBed.entityManager;
 

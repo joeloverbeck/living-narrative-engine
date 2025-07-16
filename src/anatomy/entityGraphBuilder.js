@@ -105,9 +105,10 @@ export class EntityGraphBuilder {
    * @param {string} socketId - Socket ID on parent
    * @param {string} partDefinitionId - Definition ID for the part
    * @param {string} [ownerId] - Owner ID to set on the created part (optional)
+   * @param {string} [socketOrientation] - Orientation from the parent socket (optional)
    * @returns {string|null} Created entity ID or null on failure
    */
-  createAndAttachPart(parentId, socketId, partDefinitionId, ownerId) {
+  createAndAttachPart(parentId, socketId, partDefinitionId, ownerId, socketOrientation) {
     try {
       // Create the child entity
       const childEntity =
@@ -125,6 +126,24 @@ export class EntityGraphBuilder {
         parentId: parentId,
         socketId: socketId,
       });
+
+      // Propagate orientation from parent socket to child's anatomy:part component
+      if (socketOrientation) {
+        const anatomyPart = this.#entityManager.getComponentData(
+          childEntity.id,
+          'anatomy:part'
+        );
+        if (anatomyPart) {
+          // Update the anatomy:part component with the orientation
+          this.#entityManager.addComponent(childEntity.id, 'anatomy:part', {
+            ...anatomyPart,
+            orientation: socketOrientation,
+          });
+          this.#logger.debug(
+            `EntityGraphBuilder: Propagated orientation '${socketOrientation}' to child entity '${childEntity.id}'`
+          );
+        }
+      }
 
       this.#logger.debug(
         `EntityGraphBuilder: Created entity '${childEntity.id}' from definition '${partDefinitionId}' and attached to socket '${socketId}' on parent '${parentId}'`

@@ -11,7 +11,7 @@
         {
           "id": "wrist",
           "allowedTypes": ["hand"],
-          "nameTpl": "{{parent.name}} {{type}}"
+          "nameTpl": "{{effective_orientation}} {{type}}"
         }
       ]
     },
