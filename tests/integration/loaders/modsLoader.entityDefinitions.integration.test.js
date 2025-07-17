@@ -97,19 +97,19 @@ describe('Integration: Entity Definitions and Instances Loader', () => {
     const schemaValidator = new AjvSchemaValidator({ logger: logger });
     await schemaValidator.addSchema(
       commonSchema,
-      'http://example.com/schemas/common.schema.json'
+      'schema://living-narrative-engine/common.schema.json'
     );
     await schemaValidator.addSchema(
       modManifestSchema,
-      'http://example.com/schemas/mod-manifest.schema.json'
+      'schema://living-narrative-engine/mod-manifest.schema.json'
     );
     await schemaValidator.addSchema(
       entityDefinitionSchema,
-      'http://example.com/schemas/entity-definition.schema.json'
+      'schema://living-narrative-engine/entity-definition.schema.json'
     );
     await schemaValidator.addSchema(
       entityInstanceSchema,
-      'http://example.com/schemas/entity-instance.schema.json'
+      'schema://living-narrative-engine/entity-instance.schema.json'
     );
     container.register(tokens.ISchemaValidator, schemaValidator);
     // Resolve registry from the container

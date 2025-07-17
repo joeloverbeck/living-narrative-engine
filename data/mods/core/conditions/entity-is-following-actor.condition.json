@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/condition.schema.json",
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
   "id": "core:entity-is-following-actor",
   "description": "Checks if the entity's 'following' component points to the actor's ID.",
   "logic": {

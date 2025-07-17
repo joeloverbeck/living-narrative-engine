@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/component.schema.json",
+  "$schema": "schema://living-narrative-engine/component.schema.json",
   "id": "core:entity_created",
   "description": "Fired when a new entity instance is successfully created or reconstructed by the EntityManager. This event signals that a new entity is now tracked and available in the world.",
   "payloadSchema": {
@@ -8,11 +8,11 @@
     "required": ["instanceId", "definitionId", "wasReconstructed", "entity"],
     "properties": {
       "instanceId": {
-        "$ref": "http://example.com/schemas/common.schema.json#/definitions/namespacedId",
+        "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/namespacedId",
         "description": "The unique instance ID of the created entity."
       },
       "definitionId": {
-        "$ref": "http://example.com/schemas/common.schema.json#/definitions/namespacedId",
+        "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/namespacedId",
         "description": "The definition ID from which the entity was created."
       },
       "wasReconstructed": {

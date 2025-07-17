@@ -135,7 +135,7 @@ beforeEach(() => {
 describe('BaseManifestItemLoader Constructor', () => {
   it('should instantiate successfully with valid contentType and dependencies', () => {
     // Arrange: Mocks are created in beforeEach, dependencyInjection mock returns a default schema ID
-    const schemaId = 'http://example.com/schemas/default.schema.json';
+    const schemaId = 'schema://living-narrative-engine/default.schema.json';
     mockConfig.getContentTypeSchemaId.mockReturnValue(schemaId);
 
     // Act: Instantiate (re-run here for isolation, using a different variable name)

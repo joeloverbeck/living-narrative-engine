@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/event.schema.json",
+  "$schema": "schema://living-narrative-engine/event.schema.json",
   "id": "anatomy:interaction_click",
   "description": "Fired when a click occurs on the anatomy visualization. Provides the original click event and the target element for further processing.",
   "payloadSchema": {

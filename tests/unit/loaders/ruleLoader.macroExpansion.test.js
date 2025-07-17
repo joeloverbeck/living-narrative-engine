@@ -6,7 +6,7 @@ const createMockDeps = () => {
     getModsBasePath: jest.fn().mockReturnValue('./mods'),
     getContentTypeSchemaId: jest
       .fn()
-      .mockReturnValue('http://example.com/schemas/rule.schema.json'),
+      .mockReturnValue('schema://living-narrative-engine/rule.schema.json'),
   };
   const resolver = { resolveModContentPath: jest.fn() };
   const fetcher = { fetch: jest.fn() };

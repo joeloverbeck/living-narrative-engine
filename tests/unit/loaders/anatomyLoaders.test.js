@@ -63,11 +63,11 @@ describe('Anatomy Loaders Configuration', () => {
 
     it('should return correct schema IDs for anatomy content types', () => {
       expect(config.getContentTypeSchemaId('anatomyRecipes')).toBe(
-        'http://example.com/schemas/anatomy.recipe.schema.json'
+        'schema://living-narrative-engine/anatomy.recipe.schema.json'
       );
 
       expect(config.getContentTypeSchemaId('anatomyBlueprints')).toBe(
-        'http://example.com/schemas/anatomy.blueprint.schema.json'
+        'schema://living-narrative-engine/anatomy.blueprint.schema.json'
       );
     });
   });
@@ -102,7 +102,7 @@ describe('Anatomy Loaders Configuration', () => {
       // Access the private field via reflection for testing
       const primarySchemaId = loader._primarySchemaId;
       expect(primarySchemaId).toBe(
-        'http://example.com/schemas/anatomy.recipe.schema.json'
+        'schema://living-narrative-engine/anatomy.recipe.schema.json'
       );
     });
   });
@@ -135,7 +135,7 @@ describe('Anatomy Loaders Configuration', () => {
 
       const primarySchemaId = loader._primarySchemaId;
       expect(primarySchemaId).toBe(
-        'http://example.com/schemas/anatomy.blueprint.schema.json'
+        'schema://living-narrative-engine/anatomy.blueprint.schema.json'
       );
     });
   });

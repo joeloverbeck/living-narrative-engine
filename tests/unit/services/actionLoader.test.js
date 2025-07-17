@@ -23,9 +23,9 @@ const createMockConfiguration = (overrides = {}) => ({
       if (result !== undefined) return result;
     }
     if (registryKey === 'actions') {
-      return 'http://example.com/schemas/action.schema.json';
+      return 'schema://living-narrative-engine/action.schema.json';
     }
-    return `http://example.com/schemas/${registryKey}.schema.json`;
+    return `schema://living-narrative-engine/${registryKey}.schema.json`;
   }),
   getSchemaBasePath: jest.fn().mockReturnValue('schemas'),
   getSchemaFiles: jest.fn().mockReturnValue([]),
@@ -115,7 +115,7 @@ let validatePrimarySchemaSpy; // Keep the spy setup, but don't assert call in _p
 
 // --- Test Constants (Keep as is) ---
 const TEST_MOD_ID = 'test-action-mod';
-const ACTION_SCHEMA_ID = 'http://example.com/schemas/action.schema.json';
+const ACTION_SCHEMA_ID = 'schema://living-narrative-engine/action.schema.json';
 const ACTION_CONTENT_KEY = 'actions';
 const ACTION_CONTENT_DIR = 'actions';
 const ACTION_TYPE_NAME = 'actions';

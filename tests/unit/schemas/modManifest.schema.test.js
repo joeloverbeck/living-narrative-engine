@@ -24,7 +24,7 @@ describe('JSON-Schema – Mod Manifest', () => {
     // Add dependent schemas so AJV can resolve $ref pointers
     ajv.addSchema(
       commonSchema,
-      'http://example.com/schemas/common.schema.json'
+      'schema://living-narrative-engine/common.schema.json'
     );
 
     // Compile the main schema to be tested

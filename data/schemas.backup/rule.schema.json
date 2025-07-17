@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/schemas/rule.schema.json",
+  "title": "System Rule Schema",
+  "description": "Defines the structure for a System Rule file, which represents a piece of data-driven game logic based on the Event-Condition-Action (ECA) pattern. A rule listens for a specific event, optionally checks conditions, and executes a sequence of actions.",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Optional. URI reference to the schema this rule definition file conforms to (for editor tooling)."
+    },
+    "rule_id": {
+      "type": "string",
+      "description": "Optional unique identifier for the rule, useful for debugging and logging.",
+      "$comment": "While optional in schema, strongly recommended for traceability."
+    },
+    "event_type": {
+      "$ref": "./common.schema.json#/definitions/namespacedId",
+      "description": "Required. Specifies the namespaced ID of the event that triggers this rule's evaluation."
+    },
+    "condition": {
+      "$ref": "./condition-container.schema.json#",
+      "description": "Optional. A condition that must evaluate to true for the `actions` to execute. Can be an inline JSON-Logic rule or a reference to a named Condition definition via 'condition_ref'. If omitted, the actions are always executed."
+    },
+    "actions": {
+      "type": "array",
+      "description": "Required. Ordered list of actions (Operations or Macro References) to execute sequentially if the rule's event_type matches and its condition (if any) evaluates to true.",
+      "minItems": 1,
+      "items": {
+        "$ref": "operation.schema.json#/$defs/Action",
+        "description": "An Action object, which can be a concrete Operation or a Macro Reference, conforming to the structure defined in operation.schema.json."
+      }
+    },
+    "comment": {
+      "type": "string",
+      "description": "Optional. A human-readable description or note for developers or modders; ignored by the interpreter at runtime."
+    }
+  },
+  "required": ["event_type", "actions"],
+  "additionalProperties": false
+}

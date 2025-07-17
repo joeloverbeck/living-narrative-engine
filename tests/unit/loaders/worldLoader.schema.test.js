@@ -23,7 +23,7 @@ describe('WorldLoader Schema Validation', () => {
     mockConfig = {
       getContentTypeSchemaId: jest.fn((key) => {
         if (key === 'world') {
-          return 'http://example.com/schemas/world.schema.json';
+          return 'schema://living-narrative-engine/world.schema.json';
         }
         return undefined;
       }),
@@ -91,7 +91,7 @@ describe('WorldLoader Schema Validation', () => {
       // Act & Assert
       expect(mockConfig.getContentTypeSchemaId).toBeDefined();
       expect(mockConfig.getContentTypeSchemaId('world')).toBe(
-        'http://example.com/schemas/world.schema.json'
+        'schema://living-narrative-engine/world.schema.json'
       );
     });
 
@@ -174,7 +174,7 @@ describe('WorldLoader Schema Validation', () => {
         './data/mods/test-mod/worlds/test.world.json'
       );
       expect(mockSchemaValidator.validate).toHaveBeenCalledWith(
-        'http://example.com/schemas/world.schema.json',
+        'schema://living-narrative-engine/world.schema.json',
         mockWorldData
       );
       expect(mockDataRegistry.store).toHaveBeenCalledWith(
@@ -218,7 +218,7 @@ describe('WorldLoader Schema Validation', () => {
 
       // Assert
       expect(mockSchemaValidator.validate).toHaveBeenCalledWith(
-        'http://example.com/schemas/world.schema.json',
+        'schema://living-narrative-engine/world.schema.json',
         mockWorldData
       );
     });

@@ -31,13 +31,13 @@ const createMockConfiguration = (overrides = {}) => ({
   ),
   getContentTypeSchemaId: jest.fn((registryKey) => {
     if (registryKey === 'components') {
-      return 'http://example.com/schemas/component.schema.json';
+      return 'schema://living-narrative-engine/component.schema.json';
     }
     if (registryKey === 'game')
-      return 'http://example.com/schemas/game.schema.json';
+      return 'schema://living-narrative-engine/game.schema.json';
     if (registryKey === 'mod-manifest')
-      return 'http://example.com/schemas/mod-manifest.schema.json';
-    return `http://example.com/schemas/${registryKey}.schema.json`;
+      return 'schema://living-narrative-engine/mod-manifest.schema.json';
+    return `schema://living-narrative-engine/${registryKey}.schema.json`;
   }),
   getSchemaBasePath: jest.fn().mockReturnValue('schemas'),
   getSchemaFiles: jest.fn().mockReturnValue([]),
@@ -48,7 +48,7 @@ const createMockConfiguration = (overrides = {}) => ({
   getRuleBasePath: jest.fn().mockReturnValue('rules'),
   getRuleSchemaId: jest
     .fn()
-    .mockReturnValue('http://example.com/schemas/rule.schema.json'),
+    .mockReturnValue('schema://living-narrative-engine/rule.schema.json'),
   ...overrides,
 });
 

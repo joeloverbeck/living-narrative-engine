@@ -15,10 +15,10 @@ const createMockConfiguration = (overrides = {}) => ({
   getModsBasePath: jest.fn().mockReturnValue('./data/mods'),
   getContentTypeSchemaId: jest.fn((registryKey) => {
     if (registryKey === 'actions')
-      return 'http://example.com/schemas/action.schema.json';
+      return 'schema://living-narrative-engine/action.schema.json';
     if (registryKey === 'components')
-      return 'http://example.com/schemas/component.schema.json';
-    return `http://example.com/schemas/${registryKey}.schema.json`;
+      return 'schema://living-narrative-engine/component.schema.json';
+    return `schema://living-narrative-engine/${registryKey}.schema.json`;
   }),
   getSchemaBasePath: jest.fn().mockReturnValue('./data/schemas'),
   getSchemaFiles: jest.fn().mockReturnValue([]),
@@ -30,7 +30,7 @@ const createMockConfiguration = (overrides = {}) => ({
   getRuleBasePath: jest.fn().mockReturnValue('rules'),
   getRuleSchemaId: jest
     .fn()
-    .mockReturnValue('http://example.com/schemas/rule.schema.json'),
+    .mockReturnValue('schema://living-narrative-engine/rule.schema.json'),
   ...overrides,
 });
 
@@ -180,11 +180,11 @@ describe('Integration: Loaders, Registry State, and Overrides (REFACTOR-8.6)', (
       mockLogger
     );
     mockValidator._setSchemaLoaded(
-      'http://example.com/schemas/action.schema.json',
+      'schema://living-narrative-engine/action.schema.json',
       {}
     );
     mockValidator._setSchemaLoaded(
-      'http://example.com/schemas/component.schema.json',
+      'schema://living-narrative-engine/component.schema.json',
       {}
     );
   });

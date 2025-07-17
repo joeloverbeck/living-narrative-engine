@@ -22,7 +22,7 @@ function loadOperationSchemas(ajv) {
   const baseSchema = require(baseSchemaPath);
   ajv.addSchema(
     baseSchema,
-    'http://example.com/schemas/base-operation.schema.json'
+    'schema://living-narrative-engine/base-operation.schema.json'
   );
 
   // Then load all individual operation schemas
@@ -37,7 +37,7 @@ function loadOperationSchemas(ajv) {
   );
   for (const file of fs.readdirSync(dir)) {
     const schema = require(path.join(dir, file));
-    const id = `http://example.com/schemas/operations/${file}`;
+    const id = `schema://living-narrative-engine/operations/${file}`;
     ajv.addSchema(schema, id);
   }
 }

@@ -21,7 +21,7 @@ describe('intimacy:closeness component definition', () => {
     // We must add it to AJV with its full URI as the key, so that AJV can resolve the $refs.
     ajv.addSchema(
       commonSchema,
-      'http://example.com/schemas/common.schema.json'
+      'schema://living-narrative-engine/common.schema.json'
     );
 
     const valid = ajv.validate(componentDefinitionSchema, closenessComponent);

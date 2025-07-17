@@ -22,7 +22,7 @@ describe('JSON-Schema – Anatomy Recipe Definition', () => {
     // Add referenced schemas to AJV instance
     ajv.addSchema(
       commonSchema,
-      'http://example.com/schemas/common.schema.json'
+      'schema://living-narrative-engine/common.schema.json'
     );
 
     // Compile the main schema we want to test

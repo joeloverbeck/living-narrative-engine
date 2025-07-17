@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/schemas/operations/queryComponent.schema.json",
+  "title": "QUERY_COMPONENT Operation",
+  "allOf": [
+    {
+      "$ref": "../base-operation.schema.json"
+    },
+    {
+      "properties": {
+        "type": {
+          "const": "QUERY_COMPONENT"
+        },
+        "parameters": {
+          "$ref": "#/$defs/Parameters"
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "Parameters": {
+      "type": "object",
+      "description": "Parameters for the QUERY_COMPONENT operation.",
+      "properties": {
+        "entity_ref": {
+          "$ref": "../common.schema.json#/definitions/entityReference"
+        },
+        "component_type": {
+          "$ref": "../common.schema.json#/definitions/namespacedId"
+        },
+        "result_variable": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^\\S(.*\\S)?$"
+        },
+        "missing_value": {}
+      },
+      "required": ["entity_ref", "component_type", "result_variable"],
+      "additionalProperties": false
+    }
+  }
+}

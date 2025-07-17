@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/component.schema.json",
+  "$schema": "schema://living-narrative-engine/component.schema.json",
   "id": "core:action_decided",
   "description": "Dispatched when any actor (human or AI) has chosen its next action.",
   "payloadSchema": {
@@ -8,7 +8,7 @@
     "type": "object",
     "properties": {
       "actorId": {
-        "$ref": "http://example.com/schemas/common.schema.json#/definitions/namespacedId",
+        "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/namespacedId",
         "description": "The ID of the actor that decided an action."
       },
       "actorType": {

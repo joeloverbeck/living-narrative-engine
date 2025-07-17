@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "http://example.com/schemas/operation.schema.json",
+  "$id": "schema://living-narrative-engine/operation.schema.json",
   "title": "Operation Schema",
   "description": "Defines the structure for a single Action, which can be either a concrete Operation or a reference to a Macro. Operations interact with the ECS framework, control execution flow, manage variables, or interact with the UI. Based on the 'type' field, the 'parameters' object must conform to a specific structure.",
   "$ref": "#/$defs/Action",

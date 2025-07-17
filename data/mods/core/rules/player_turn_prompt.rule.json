@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/rule.schema.json",
+  "$schema": "schema://living-narrative-engine/rule.schema.json",
   "rule_id": "enable_input_on_player_turn",
   "event_type": "core:player_turn_prompt",
   "comment": "Listens for the prompt for player input. Enables the text command input UI and updates the available action buttons with actor context.",

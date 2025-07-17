@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/component.schema.json",
+  "$schema": "schema://living-narrative-engine/component.schema.json",
   "id": "core:owned_by",
   "description": "Indicates that this entity is owned by another entity",
   "dataSchema": {

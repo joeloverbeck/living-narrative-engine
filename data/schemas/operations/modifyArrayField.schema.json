@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "http://example.com/schemas/operations/modifyArrayField.schema.json",
+  "$id": "schema://living-narrative-engine/operations/modifyArrayField.schema.json",
   "title": "MODIFY_ARRAY_FIELD Operation",
   "allOf": [
     {

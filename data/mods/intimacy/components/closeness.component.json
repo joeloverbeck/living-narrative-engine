@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/component.schema.json",
+  "$schema": "schema://living-narrative-engine/component.schema.json",
   "id": "intimacy:closeness",
   "description": "A fully-connected, order-independent set of actors who have explicitly chosen to be 'close'. Its presence indicates an actor is part of a Closeness Circle.",
   "dataSchema": {
@@ -13,7 +13,7 @@
         "uniqueItems": true,
         "default": [],
         "items": {
-          "$ref": "http://example.com/schemas/common.schema.json#/definitions/namespacedId"
+          "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/namespacedId"
         }
       }
     }

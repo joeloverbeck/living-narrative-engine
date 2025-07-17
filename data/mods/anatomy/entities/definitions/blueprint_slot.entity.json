@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/entity-definition.schema.json",
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
   "id": "anatomy:blueprint_slot",
   "description": "A blueprint slot entity that represents a slot from the anatomy blueprint",
   "components": {

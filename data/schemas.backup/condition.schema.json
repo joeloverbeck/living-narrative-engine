@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/schemas/condition.schema.json",
+  "title": "Condition Definition",
+  "description": "Defines a reusable, named JSON-Logic condition that can be referenced by actions, rules, and operations.",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "$ref": "./common.schema.json#/definitions/BaseDefinition/properties/$schema"
+    },
+    "id": {
+      "$ref": "./common.schema.json#/definitions/BaseDefinition/properties/id"
+    },
+    "description": {
+      "$ref": "./common.schema.json#/definitions/BaseDefinition/properties/description"
+    },
+    "logic": {
+      "$ref": "./json-logic.schema.json#",
+      "description": "Required. The JSON-Logic object that defines the condition's evaluation."
+    }
+  },
+  "required": ["id", "description", "logic"],
+  "additionalProperties": false
+}

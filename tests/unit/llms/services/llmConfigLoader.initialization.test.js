@@ -39,15 +39,15 @@ const mockSchemaValidatorInstance = () => ({
 const mockConfigurationInstance = () => ({
   getContentTypeSchemaId: jest.fn((registryKey) => {
     if (registryKey === 'llm-configs') {
-      return 'http://example.com/schemas/llm-configs.schema.json';
+      return 'schema://living-narrative-engine/llm-configs.schema.json';
     }
-    return `http://example.com/schemas/${registryKey}.schema.json`;
+    return `schema://living-narrative-engine/${registryKey}.schema.json`;
   }),
   // Add other IConfiguration methods if LlmConfigLoader uses them, otherwise keep minimal
 });
 
 const LLM_CONFIG_SCHEMA_ID =
-  'http://example.com/schemas/llm-configs.schema.json';
+  'schema://living-narrative-engine/llm-configs.schema.json';
 const MOCK_LLM_CONFIG_PATH = 'config/llm-configs.json';
 const MOCK_RAW_LLM_CONFIG_DATA = {
   defaultConfigId: 'test-llm',
@@ -174,7 +174,7 @@ describe('LlmConfigLoader - Initialization and Schema Handling', () => {
         if (registryKey === 'llm-configs') {
           return undefined; // Simulate schema ID not found for 'llm-configs'
         }
-        return `http://example.com/schemas/${registryKey}.schema.json`;
+        return `schema://living-narrative-engine/${registryKey}.schema.json`;
       }
     );
     // fetchWithRetry will still be called as this check happens after fetch.

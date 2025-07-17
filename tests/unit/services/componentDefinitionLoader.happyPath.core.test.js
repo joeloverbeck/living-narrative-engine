@@ -30,9 +30,9 @@ const createMockConfiguration = (overrides = {}) => ({
   ),
   getContentTypeSchemaId: jest.fn((registryKey) => {
     if (registryKey === 'components') {
-      return 'http://example.com/schemas/component.schema.json';
+      return 'schema://living-narrative-engine/component.schema.json';
     }
-    return `http://example.com/schemas/${registryKey}.schema.json`;
+    return `schema://living-narrative-engine/${registryKey}.schema.json`;
   }),
   getSchemaBasePath: jest.fn().mockReturnValue('schemas'),
   getSchemaFiles: jest.fn().mockReturnValue([]),
@@ -42,7 +42,7 @@ const createMockConfiguration = (overrides = {}) => ({
   getRuleBasePath: jest.fn().mockReturnValue('rules'),
   getRuleSchemaId: jest
     .fn()
-    .mockReturnValue('http://example.com/schemas/rule.schema.json'),
+    .mockReturnValue('schema://living-narrative-engine/rule.schema.json'),
   ...overrides,
 });
 
@@ -294,7 +294,7 @@ describe('ComponentLoader (Happy Path - Core Mod)', () => {
 
   // --- Define schema IDs ---
   const componentDefinitionSchemaId =
-    'http://example.com/schemas/component.schema.json';
+    'schema://living-narrative-engine/component.schema.json';
 
   beforeEach(() => {
     // --- Setup: Instantiate Mocks ---
@@ -314,7 +314,7 @@ describe('ComponentLoader (Happy Path - Core Mod)', () => {
     // Config: Ensure it returns the correct schema ID for 'components'
     mockConfig.getContentTypeSchemaId.mockImplementation((registryKey) => {
       if (registryKey === 'components') return componentDefinitionSchemaId;
-      return `http://example.com/schemas/${registryKey}.schema.json`;
+      return `schema://living-narrative-engine/${registryKey}.schema.json`;
     });
 
     // Resolver: Ensure it returns the expected paths (already done by default mock, but explicit is ok too)

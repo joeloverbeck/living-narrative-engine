@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/mod-manifest.schema.json",
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
   "id": "anatomy",
   "version": "1.0.0",
   "name": "Anatomy System",
@@ -23,6 +23,7 @@
     "entities": {
       "definitions": [
         "blueprint_slot.entity.json",
+        "human_ass_cheek.entity.json",
         "human_asshole.entity.json",
         "human_breast.entity.json",
         "human_breast_d_cup.entity.json",

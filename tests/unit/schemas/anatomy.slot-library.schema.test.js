@@ -23,11 +23,11 @@ describe('JSON-Schema – Anatomy Slot Library Definition', () => {
     // Add referenced schemas to AJV instance
     ajv.addSchema(
       commonSchema,
-      'http://example.com/schemas/common.schema.json'
+      'schema://living-narrative-engine/common.schema.json'
     );
     ajv.addSchema(
       anatomyBlueprintSchema,
-      'http://example.com/schemas/anatomy.blueprint.schema.json'
+      'schema://living-narrative-engine/anatomy.blueprint.schema.json'
     );
 
     // Compile the main schema we want to test

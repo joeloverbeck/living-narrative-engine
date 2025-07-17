@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "http://example.com/schemas/entity-instance.schema.json",
+  "$id": "schema://living-narrative-engine/entity-instance.schema.json",
   "title": "Entity Instance",
   "description": "Represents a specific, unique occurrence of an entity within the game world. It links to a definition and specifies only the unique properties or changes for that particular instance.",
   "type": "object",

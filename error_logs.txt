@@ -1,16 +1,17 @@
-Root Cause Analysis
+ FAIL   e2e  tests/e2e/actions/TurnBasedActionProcessing.e2e.test.js (10.059 s)
+  ● Turn-Based Action Processing E2E › should maintain performance across multiple turns
 
-  The issue was not in the test suites but in the System Under Test (SUT). Recent changes to the action discovery pipeline fundamentally altered the action formatting behavior:
+    expect(received).toBeLessThan(expected)
 
-  - Before: Generated separate actions for each target (2 targets → 2 actions)
-  - After: Generates one action with all targets in a targets array (2 targets → 1 action with targets array)
+    Expected: < 0
+    Received:   0
 
-  Changes Made
+      356 |
+      357 |     // Cached should be significantly faster
+    > 358 |     expect(cachedTime).toBeLessThan(uncachedTime * 0.2); // At least 5x faster
+          |                        ^
+      359 |   });
+      360 |
+      361 |   /**
 
-  Updated test expectations in 5 test files to match the new SUT behavior:
-
-  1. actionDiscoveryService.tracing.test.js: Updated expected action count from 2 → 1
-  2. actionCandidateProcessor.test.js: Updated to expect 1 action with targets array instead of 2 separate actions
-  3. actionDiscoveryService.processActionDefinition.test.js: Added expected targets array to action object
-  4. actionDiscoverySystem.go.test.js: Added expected targets array to go action
-  5. actionDiscoveryService.locationRetrieval.test.js: Updated to expect 1 go action with 2 targets instead of 2 separate go actions
+      at Object.toBeLessThan (tests/e2e/actions/TurnBasedActionProcessing.e2e.test.js:358:24)

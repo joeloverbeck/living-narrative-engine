@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "http://example.com/schemas/anatomy.slot-library.schema.json",
+  "$id": "schema://living-narrative-engine/anatomy.slot-library.schema.json",
   "title": "Anatomy Slot Library",
   "description": "Centralized library of reusable slot and clothing definitions",
   "type": "object",

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "http://example.com/schemas/operations/getName.schema.json",
+  "$id": "schema://living-narrative-engine/operations/getName.schema.json",
   "title": "GET_NAME Operation",
   "allOf": [
     {

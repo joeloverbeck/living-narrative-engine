@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "http://example.com/schemas/anatomy.blueprint.schema.json",
+  "$id": "schema://living-narrative-engine/anatomy.blueprint.schema.json",
   "title": "Anatomy Blueprint",
   "description": "Defines the structural graph of how body parts connect via sockets",
   "type": "object",

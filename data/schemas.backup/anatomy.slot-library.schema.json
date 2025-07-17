@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/schemas/anatomy.slot-library.schema.json",
+  "title": "Anatomy Slot Library",
+  "description": "Centralized library of reusable slot and clothing definitions",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "format": "uri",
+      "description": "Optional. A URI reference to the schema that this document conforms to"
+    },
+    "id": {
+      "$ref": "./common.schema.json#/definitions/namespacedId",
+      "description": "Unique identifier for this slot library in namespaced format (e.g., 'anatomy:humanoid_slots')"
+    },
+    "description": {
+      "type": "string",
+      "description": "Human-readable description of what this library contains"
+    },
+    "slotDefinitions": {
+      "type": "object",
+      "description": "Named slot definitions that can be referenced via $use",
+      "additionalProperties": {
+        "$ref": "./anatomy.blueprint.schema.json#/definitions/blueprintSlot"
+      }
+    },
+    "clothingDefinitions": {
+      "type": "object",
+      "description": "Named clothing slot mapping definitions that can be referenced via $use",
+      "additionalProperties": {
+        "$ref": "./anatomy.blueprint.schema.json#/definitions/clothingSlotMapping"
+      }
+    }
+  },
+  "required": ["id"],
+  "additionalProperties": false
+}

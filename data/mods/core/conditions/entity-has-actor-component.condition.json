@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/condition.schema.json",
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
   "id": "core:entity-has-actor-component",
   "description": "Checks that the entity has the 'core:actor' component.",
   "logic": {

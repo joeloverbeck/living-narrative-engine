@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/schemas/operations/ifCoLocated.schema.json",
+  "title": "IF_CO_LOCATED Operation",
+  "allOf": [
+    {
+      "$ref": "../base-operation.schema.json"
+    },
+    {
+      "properties": {
+        "type": {
+          "const": "IF_CO_LOCATED"
+        },
+        "parameters": {
+          "$ref": "#/$defs/Parameters"
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "Parameters": {
+      "type": "object",
+      "description": "Parameters for the IF_CO_LOCATED operation. Executes different actions based on shared location.",
+      "properties": {
+        "entity_ref_a": {
+          "$ref": "../common.schema.json#/definitions/entityReference"
+        },
+        "entity_ref_b": {
+          "$ref": "../common.schema.json#/definitions/entityReference"
+        },
+        "then_actions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "../operation.schema.json#/$defs/Action"
+          }
+        },
+        "else_actions": {
+          "type": "array",
+          "items": {
+            "$ref": "../operation.schema.json#/$defs/Action"
+          },
+          "default": []
+        }
+      },
+      "required": ["entity_ref_a", "entity_ref_b", "then_actions"],
+      "additionalProperties": false
+    }
+  }
+}

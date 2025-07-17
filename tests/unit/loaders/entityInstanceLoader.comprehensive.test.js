@@ -80,7 +80,7 @@ describe('EntityInstanceLoader', () => {
       const registryKey = 'entityInstances';
 
       const testInstanceData = {
-        $schema: 'http://example.com/schemas/entity-instance.schema.json',
+        $schema: 'schema://living-narrative-engine/entity-instance.schema.json',
         instanceId: 'goblin_sentry_01',
         definitionId: 'core:goblin',
         componentOverrides: {
@@ -179,7 +179,7 @@ describe('EntityInstanceLoader', () => {
 
       // Invalid data: missing the required 'definitionId' property.
       const invalidInstanceData = {
-        $schema: 'http://example.com/schemas/entity-instance.schema.json',
+        $schema: 'schema://living-narrative-engine/entity-instance.schema.json',
         instanceId: 'core:invalid_sentry_01',
         componentOverrides: {},
       };

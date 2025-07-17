@@ -8,7 +8,7 @@
     "type": "object",
     "properties": {
       "entityId": {
-        "$ref": "http://example.com/schemas/common.schema.json#/definitions/namespacedId",
+        "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/namespacedId",
         "description": "The ID of the entity that spoke. Used to fetch the portrait."
       },
       "speechContent": {

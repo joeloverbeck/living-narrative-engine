@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/action.schema.json",
+  "$schema": "schema://living-narrative-engine/action.schema.json",
   "id": "core:stop_following",
   "name": "Stop Following",
   "description": "Stops following your current target and becomes independent again.",

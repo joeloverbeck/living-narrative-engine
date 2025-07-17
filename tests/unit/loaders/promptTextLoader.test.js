@@ -17,7 +17,9 @@ import {
 const createMockConfiguration = (overrides = {}) => ({
   getContentTypeSchemaId: jest
     .fn()
-    .mockReturnValue('http://example.com/schemas/prompt-text.schema.json'),
+    .mockReturnValue(
+      'schema://living-narrative-engine/prompt-text.schema.json'
+    ),
   ...overrides,
 });
 
@@ -91,7 +93,7 @@ describe('PromptTextLoader', () => {
       'prompt-text'
     );
     expect(schemaValidator.validate).toHaveBeenCalledWith(
-      'http://example.com/schemas/prompt-text.schema.json',
+      'schema://living-narrative-engine/prompt-text.schema.json',
       { example: true }
     );
     expect(dataRegistry.store).toHaveBeenCalledWith('prompt_text', 'core', {
@@ -122,7 +124,7 @@ describe('PromptTextLoader', () => {
 
     // Assert: Verify that the real configuration returns the correct schema ID
     expect(schemaValidator.validate).toHaveBeenCalledWith(
-      'http://example.com/schemas/prompt-text.schema.json',
+      'schema://living-narrative-engine/prompt-text.schema.json',
       { example: true }
     );
   });

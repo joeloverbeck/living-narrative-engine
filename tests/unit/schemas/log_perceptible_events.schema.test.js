@@ -26,20 +26,20 @@ describe('core/rules/log_perceptible_events.rule.json', () => {
     // Register dependent schemas under their canonical $id so $refs resolve
     ajv.addSchema(
       commonSchema,
-      'http://example.com/schemas/common.schema.json'
+      'schema://living-narrative-engine/common.schema.json'
     );
     ajv.addSchema(
       operationSchema,
-      'http://example.com/schemas/operation.schema.json'
+      'schema://living-narrative-engine/operation.schema.json'
     );
     ajv.addSchema(
       conditionContainerSchema,
-      'http://example.com/schemas/condition-container.schema.json'
+      'schema://living-narrative-engine/condition-container.schema.json'
     );
     loadOperationSchemas(ajv);
     ajv.addSchema(
       jsonLogicSchema,
-      'http://example.com/schemas/json-logic.schema.json'
+      'schema://living-narrative-engine/json-logic.schema.json'
     );
   });
 

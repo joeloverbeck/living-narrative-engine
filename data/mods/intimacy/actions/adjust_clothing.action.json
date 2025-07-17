@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/action.schema.json",
+  "$schema": "schema://living-narrative-engine/action.schema.json",
   "id": "intimacy:adjust_clothing",
   "name": "Adjust Clothing",
   "description": "Smooth their collar or adjust a displaced garment with possessive care.",

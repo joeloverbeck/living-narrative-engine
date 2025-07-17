@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "http://example.com/schemas/operations/addPerceptionLogEntry.schema.json",
+  "$id": "schema://living-narrative-engine/operations/addPerceptionLogEntry.schema.json",
   "title": "ADD_PERCEPTION_LOG_ENTRY Operation",
   "allOf": [
     {

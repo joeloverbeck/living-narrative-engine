@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/schemas/operations/dispatchEvent.schema.json",
+  "title": "DISPATCH_EVENT Operation",
+  "allOf": [
+    {
+      "$ref": "../base-operation.schema.json"
+    },
+    {
+      "properties": {
+        "type": {
+          "const": "DISPATCH_EVENT"
+        },
+        "parameters": {
+          "$ref": "#/$defs/Parameters"
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "Parameters": {
+      "type": "object",
+      "description": "Parameters for the DISPATCH_EVENT operation. Sends an event through the dispatcher.",
+      "properties": {
+        "eventType": {
+          "$ref": "../common.schema.json#/definitions/namespacedId"
+        },
+        "payload": {
+          "type": "object",
+          "default": {}
+        }
+      },
+      "required": ["eventType"],
+      "additionalProperties": false
+    }
+  }
+}

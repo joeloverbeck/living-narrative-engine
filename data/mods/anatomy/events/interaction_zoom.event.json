@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/event.schema.json",
+  "$schema": "schema://living-narrative-engine/event.schema.json",
   "id": "anatomy:interaction_zoom",
   "description": "Fired when a zoom action occurs on the anatomy visualization. Provides zoom factor, position coordinates, and delta information for viewport adjustments.",
   "payloadSchema": {

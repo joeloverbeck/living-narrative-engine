@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/event.schema.json",
+  "$schema": "schema://living-narrative-engine/event.schema.json",
   "id": "anatomy:interaction_panend",
   "description": "Fired when a pan gesture ends on the anatomy visualization. Indicates the completion of a dragging operation to move the visualization viewport.",
   "payloadSchema": {

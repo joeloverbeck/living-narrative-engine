@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/schemas/operations/resolveDirection.schema.json",
+  "title": "RESOLVE_DIRECTION Operation",
+  "allOf": [
+    {
+      "$ref": "../base-operation.schema.json"
+    },
+    {
+      "properties": {
+        "type": {
+          "const": "RESOLVE_DIRECTION"
+        },
+        "parameters": {
+          "$ref": "#/$defs/Parameters"
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "Parameters": {
+      "type": "object",
+      "properties": {
+        "current_location_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "direction": {
+          "type": "string",
+          "minLength": 1
+        },
+        "result_variable": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": ["current_location_id", "direction", "result_variable"],
+      "additionalProperties": false
+    }
+  }
+}

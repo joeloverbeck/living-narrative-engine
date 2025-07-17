@@ -16,7 +16,7 @@ describe('Schema – core:action_decided payload', () => {
     const ajv = new Ajv({ strict: true, allErrors: true });
     ajv.addSchema(
       commonSchema,
-      'http://example.com/schemas/common.schema.json'
+      'schema://living-narrative-engine/common.schema.json'
     );
     validate = ajv.compile(eventDef.payloadSchema);
   });

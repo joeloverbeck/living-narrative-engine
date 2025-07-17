@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/schemas/prompt-text.schema.json",
+  "title": "Prompt Text",
+  "description": "Defines the structure for the core prompt text file.",
+  "type": "object",
+  "properties": {
+    "coreTaskDescriptionText": { "type": "string" },
+    "characterPortrayalGuidelinesTemplate": { "type": "string" },
+    "nc21ContentPolicyText": { "type": "string" },
+    "finalLlmInstructionText": { "type": "string" }
+  },
+  "required": [
+    "coreTaskDescriptionText",
+    "characterPortrayalGuidelinesTemplate",
+    "nc21ContentPolicyText",
+    "finalLlmInstructionText"
+  ],
+  "additionalProperties": false
+}

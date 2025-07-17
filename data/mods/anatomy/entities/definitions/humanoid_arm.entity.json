@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/entity-definition.schema.json",
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
   "id": "anatomy:humanoid_arm",
   "description": "A humanoid arm",
   "components": {

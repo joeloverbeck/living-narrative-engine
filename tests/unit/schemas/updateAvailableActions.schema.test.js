@@ -19,7 +19,7 @@ describe('Schema – core:update_available_actions payload', () => {
     addFormats(ajv);
     ajv.addSchema(
       commonSchema,
-      'http://example.com/schemas/common.schema.json'
+      'schema://living-narrative-engine/common.schema.json'
     );
     validate = ajv.compile(eventDef.payloadSchema);
   });

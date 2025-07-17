@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/condition.schema.json",
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
   "id": "core:event-is-action-dismiss",
   "description": "Checks if the triggering event is for the 'core:dismiss' action.",
   "logic": {

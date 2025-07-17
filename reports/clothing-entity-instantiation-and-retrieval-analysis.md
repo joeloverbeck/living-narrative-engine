@@ -9,12 +9,14 @@ This report analyzes the clothing entity instantiation and storage workflow duri
 The clothing system follows a modular architecture with clear separation of concerns:
 
 ### Core Components
+
 - **ClothingInstantiationService**: Handles clothing entity creation and equipment
 - **EquipmentOrchestrator**: Manages complex equipment workflows
 - **ClothingManagementService**: Provides high-level API for clothing operations
 - **AnatomyGenerationWorkflow**: Orchestrates anatomy graph generation including clothing
 
 ### Data Flow
+
 ```
 Recipe Definition → Clothing Instantiation → Equipment Storage → Retrieval via API
 ```
@@ -22,6 +24,7 @@ Recipe Definition → Clothing Instantiation → Equipment Storage → Retrieval
 ## Clothing Entity Instantiation Process
 
 ### 1. Trigger Point
+
 Clothing instantiation occurs during anatomy graph generation in **`AnatomyGenerationWorkflow.generate()`** at lines 124-156:
 
 ```javascript
@@ -29,11 +32,12 @@ Clothing instantiation occurs during anatomy graph generation in **`AnatomyGener
 if (this.#clothingInstantiationService) {
   const recipe = this.#dataRegistry.get('anatomyRecipes', recipeId);
   if (recipe && recipe.clothingEntities && recipe.clothingEntities.length > 0) {
-    clothingResult = await this.#clothingInstantiationService.instantiateRecipeClothing(
-      ownerId,
-      recipe,
-      { partsMap, slotEntityMappings }
-    );
+    clothingResult =
+      await this.#clothingInstantiationService.instantiateRecipeClothing(
+        ownerId,
+        recipe,
+        { partsMap, slotEntityMappings }
+      );
   }
 }
 ```
@@ -53,6 +57,7 @@ The **`ClothingInstantiationService.instantiateRecipeClothing()`** method follow
 ### 3. Entity Creation Details
 
 **`#instantiateClothing()`** method (lines 540-613):
+
 - Loads entity definition from data registry
 - Applies layer resolution hierarchy: Recipe > Entity > Blueprint
 - Creates entity instance with property overrides
@@ -61,9 +66,11 @@ The **`ClothingInstantiationService.instantiateRecipeClothing()`** method follow
 ## Clothing Entity Storage Structure
 
 ### Storage Location
+
 Clothing entities are stored in the **`clothing:equipment`** component attached to the actor entity.
 
 ### Data Structure
+
 ```javascript
 {
   "equipped": {
@@ -75,6 +82,7 @@ Clothing entities are stored in the **`clothing:equipment`** component attached 
 ```
 
 ### Storage Process
+
 Equipment storage occurs in **`EquipmentOrchestrator.#performEquipment()`** (lines 436-476):
 
 1. **Component Retrieval**: Gets or creates `clothing:equipment` component
@@ -87,6 +95,7 @@ Equipment storage occurs in **`EquipmentOrchestrator.#performEquipment()`** (lin
 ### Core Properties Available for Retrieval
 
 #### 1. Component: `clothing:wearable`
+
 - **layer**: Layer priority ("underwear", "base", "outer", "accessories")
 - **size**: Size compatibility ("xs", "s", "m", "l", "xl", "xxl")
 - **material**: Material composition (e.g., "silk", "stretch-silk")
@@ -94,18 +103,23 @@ Equipment storage occurs in **`EquipmentOrchestrator.#performEquipment()`** (lin
 - **allowedLayers**: Valid layers for this item
 
 #### 2. Component: `core:name`
+
 - **text**: Display name of the clothing item
 
 #### 3. Component: `core:description`
+
 - **text**: Detailed description of the clothing item
 
 #### 4. Component: `descriptors:color_*`
+
 - **color**: Color information (basic, extended variants)
 
 #### 5. Component: `descriptors:texture`
+
 - **texture**: Surface texture properties
 
 ### Example Entity Structure
+
 ```javascript
 {
   "id": "clothing:underwired_plunge_bra_nude_silk",
@@ -138,6 +152,7 @@ Equipment storage occurs in **`EquipmentOrchestrator.#performEquipment()`** (lin
 ### 1. Via ClothingManagementService API
 
 **`getEquippedItems(entityId)`** (lines 231-271):
+
 ```javascript
 const result = await clothingManagementService.getEquippedItems(actorId);
 // Returns: { success: boolean, equipped: object, errors?: string[] }
@@ -146,7 +161,10 @@ const result = await clothingManagementService.getEquippedItems(actorId);
 ### 2. Direct Component Access
 
 ```javascript
-const equipmentData = entityManager.getComponentData(entityId, 'clothing:equipment');
+const equipmentData = entityManager.getComponentData(
+  entityId,
+  'clothing:equipment'
+);
 const equippedItems = equipmentData?.equipped || {};
 ```
 
@@ -161,9 +179,11 @@ const clothingEntity = entityManager.getEntityInstance(clothingEntityId);
 // Extract properties
 const wearableComponent = clothingEntity.getComponentData('clothing:wearable');
 const nameComponent = clothingEntity.getComponentData('core:name');
-const descriptionComponent = clothingEntity.getComponentData('core:description');
-const colorComponent = clothingEntity.getComponentData('descriptors:color_extended') || 
-                      clothingEntity.getComponentData('descriptors:color_basic');
+const descriptionComponent =
+  clothingEntity.getComponentData('core:description');
+const colorComponent =
+  clothingEntity.getComponentData('descriptors:color_extended') ||
+  clothingEntity.getComponentData('descriptors:color_basic');
 const textureComponent = clothingEntity.getComponentData('descriptors:texture');
 ```
 
@@ -179,17 +199,21 @@ const textureComponent = clothingEntity.getComponentData('descriptors:texture');
 ### Sample Retrieval Function
 
 ```javascript
-async function getClothingDetailsForVisualizer(actorId, entityManager, clothingService) {
+async function getClothingDetailsForVisualizer(
+  actorId,
+  entityManager,
+  clothingService
+) {
   const clothingDetails = [];
-  
+
   // Get equipped items
   const equipmentResult = await clothingService.getEquippedItems(actorId);
   if (!equipmentResult.success) {
     return { success: false, errors: equipmentResult.errors };
   }
-  
+
   const equipped = equipmentResult.equipped;
-  
+
   // Process each slot
   for (const [slotId, layers] of Object.entries(equipped)) {
     for (const [layer, clothingEntityId] of Object.entries(layers)) {
@@ -198,10 +222,11 @@ async function getClothingDetailsForVisualizer(actorId, entityManager, clothingS
         const wearable = entity.getComponentData('clothing:wearable');
         const name = entity.getComponentData('core:name');
         const description = entity.getComponentData('core:description');
-        const color = entity.getComponentData('descriptors:color_extended') || 
-                     entity.getComponentData('descriptors:color_basic');
+        const color =
+          entity.getComponentData('descriptors:color_extended') ||
+          entity.getComponentData('descriptors:color_basic');
         const texture = entity.getComponentData('descriptors:texture');
-        
+
         clothingDetails.push({
           entityId: clothingEntityId,
           definitionId: entity.definitionId,
@@ -213,12 +238,12 @@ async function getClothingDetailsForVisualizer(actorId, entityManager, clothingS
           size: wearable?.size || 'Unknown',
           color: color?.color || 'Unknown',
           texture: texture?.texture || 'Unknown',
-          allowedLayers: wearable?.allowedLayers || []
+          allowedLayers: wearable?.allowedLayers || [],
         });
       }
     }
   }
-  
+
   return { success: true, clothingDetails };
 }
 ```
@@ -230,7 +255,7 @@ The visualizer panel should display:
 ```javascript
 {
   slotId: "underwear_upper",
-  layer: "underwear", 
+  layer: "underwear",
   items: [
     {
       entityId: "generated_entity_id",
@@ -250,6 +275,7 @@ The visualizer panel should display:
 ## Caching and Performance Considerations
 
 ### AnatomyClothingCache
+
 The system includes an optimized LRU cache (`AnatomyClothingCache`) for performance:
 
 - **Cache Types**: Available slots, slot resolution, blueprints, validation results
@@ -257,6 +283,7 @@ The system includes an optimized LRU cache (`AnatomyClothingCache`) for performa
 - **Invalidation**: Entity-based and pattern-based invalidation
 
 ### Cache Usage for Retrieval
+
 ```javascript
 // Check cache first
 const cacheKey = AnatomyClothingCache.createAvailableSlotsKey(entityId);
@@ -266,12 +293,14 @@ const cached = cache.get(CacheKeyTypes.AVAILABLE_SLOTS, cacheKey);
 ## Error Handling and Validation
 
 ### Instantiation Errors
+
 - Entity definition not found
 - Layer resolution failures
 - Slot validation failures
 - Equipment conflicts
 
 ### Retrieval Safeguards
+
 - Null checks for equipment components
 - Entity existence validation
 - Component data validation
@@ -280,12 +309,14 @@ const cached = cache.get(CacheKeyTypes.AVAILABLE_SLOTS, cacheKey);
 ## Integration Points
 
 ### Key Service Dependencies
+
 - **EntityManager**: Entity creation and component management
 - **DataRegistry**: Access to entity definitions and recipes
 - **SlotResolver**: Slot-to-socket mapping resolution
 - **BodyGraphService**: Anatomy structure queries
 
 ### Event System Integration
+
 - `clothing:instantiation_completed`: Fired after clothing creation
 - `clothing:equipped`: Fired after successful equipment
 - `clothing:unequipped`: Fired after unequipment

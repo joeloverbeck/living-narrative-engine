@@ -125,7 +125,8 @@ describe('Anatomy Blueprint Composition Integration', () => {
 
     // Create test slot library
     const slotLibrary = {
-      $schema: 'http://example.com/schemas/anatomy.slot-library.schema.json',
+      $schema:
+        'schema://living-narrative-engine/anatomy.slot-library.schema.json',
       id: 'test_anatomy:test_library',
       slotDefinitions: {
         head: {
@@ -150,7 +151,8 @@ describe('Anatomy Blueprint Composition Integration', () => {
 
     // Create test blueprint part
     const blueprintPart = {
-      $schema: 'http://example.com/schemas/anatomy.blueprint-part.schema.json',
+      $schema:
+        'schema://living-narrative-engine/anatomy.blueprint-part.schema.json',
       id: 'test_anatomy:test_part',
       library: 'test_anatomy:test_library',
       slots: {
@@ -167,7 +169,7 @@ describe('Anatomy Blueprint Composition Integration', () => {
 
     // Create test blueprint that uses composition
     const blueprint = {
-      $schema: 'http://example.com/schemas/anatomy.blueprint.schema.json',
+      $schema: 'schema://living-narrative-engine/anatomy.blueprint.schema.json',
       id: 'test_anatomy:test_blueprint',
       root: 'test_anatomy:test_torso',
       compose: [
@@ -249,27 +251,27 @@ describe('Anatomy Blueprint Composition Integration', () => {
     // Load common schema first (no dependencies)
     await schemaValidator.addSchema(
       commonSchema,
-      'http://example.com/schemas/common.schema.json'
+      'schema://living-narrative-engine/common.schema.json'
     );
     // Load mod manifest schema (references common)
     await schemaValidator.addSchema(
       modManifestSchema,
-      'http://example.com/schemas/mod-manifest.schema.json'
+      'schema://living-narrative-engine/mod-manifest.schema.json'
     );
     // Load blueprint schema second (references common)
     await schemaValidator.addSchema(
       anatomyBlueprintSchema,
-      'http://example.com/schemas/anatomy.blueprint.schema.json'
+      'schema://living-narrative-engine/anatomy.blueprint.schema.json'
     );
     // Load slot library schema third (references blueprint)
     await schemaValidator.addSchema(
       anatomySlotLibrarySchema,
-      'http://example.com/schemas/anatomy.slot-library.schema.json'
+      'schema://living-narrative-engine/anatomy.slot-library.schema.json'
     );
     // Load blueprint part schema last (references slot library and blueprint)
     await schemaValidator.addSchema(
       anatomyBlueprintPartSchema,
-      'http://example.com/schemas/anatomy.blueprint-part.schema.json'
+      'schema://living-narrative-engine/anatomy.blueprint-part.schema.json'
     );
     container.register(tokens.ISchemaValidator, schemaValidator);
 

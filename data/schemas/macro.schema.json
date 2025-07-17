@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "http://example.com/schemas/macro.schema.json",
+  "$id": "schema://living-narrative-engine/macro.schema.json",
   "title": "Macro Definition",
   "description": "Encapsulates a reusable sequence of operations that can be inserted into System Rules.",
   "type": "object",

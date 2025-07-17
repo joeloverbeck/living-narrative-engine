@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/rule.schema.json",
+  "$schema": "schema://living-narrative-engine/rule.schema.json",
   "rule_id": "core_follow_auto_move",
   "comment": "After a leader moves, find co-located followers using QUERY_ENTITIES and move them, dispatching events to log the auto-move and inform the UI.",
   "event_type": "core:entity_moved",

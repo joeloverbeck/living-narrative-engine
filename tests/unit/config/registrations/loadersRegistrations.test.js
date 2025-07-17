@@ -71,13 +71,15 @@ const mockConfiguration = {
   getContentTypeSchemaId: jest.fn((registryKey) => {
     const map = {
       /* map based on actual dependencyInjection if needed */
-      components: 'http://example.com/schemas/component.schema.json',
-      actions: 'http://example.com/schemas/action.schema.json',
-      events: 'http://example.com/schemas/component.schema.json',
-      entities: 'http://example.com/schemas/entity-definition.schema.json',
-      rules: 'http://example.com/schemas/rule.schema.json',
-      game: 'http://example.com/schemas/game.schema.json',
-      'mod-manifest': 'http://example.com/schemas/mod-manifest.schema.json',
+      components: 'schema://living-narrative-engine/component.schema.json',
+      actions: 'schema://living-narrative-engine/action.schema.json',
+      events: 'schema://living-narrative-engine/component.schema.json',
+      entities:
+        'schema://living-narrative-engine/entity-definition.schema.json',
+      rules: 'schema://living-narrative-engine/rule.schema.json',
+      game: 'schema://living-narrative-engine/game.schema.json',
+      'mod-manifest':
+        'schema://living-narrative-engine/mod-manifest.schema.json',
     };
     return map[registryKey];
   }),
@@ -89,7 +91,7 @@ const mockConfiguration = {
   getRuleBasePath: jest.fn().mockReturnValue('./data/system-rules'),
   getRuleSchemaId: jest
     .fn()
-    .mockReturnValue('http://example.com/schemas/rule.schema.json'),
+    .mockReturnValue('schema://living-narrative-engine/rule.schema.json'),
 };
 
 // Provide all methods used by ANY loader being registered
@@ -127,7 +129,7 @@ const mockSchemaValidator = {
 // Provide all methods used by ANY loader being registered
 const mockDataFetcher = {
   fetch: jest.fn().mockResolvedValue({
-    $id: 'http://example.com/schemas/common.schema.json', // Default for schema load
+    $id: 'schema://living-narrative-engine/common.schema.json', // Default for schema load
     id: 'test-id', // Default for content load
     dataSchema: {}, // Default for component load
   }),

@@ -15,7 +15,7 @@ const mockLogger = {
 const mockConfiguration = {
   getContentTypeSchemaId: jest.fn((type) => {
     if (type === 'mod-manifest') {
-      return 'http://example.com/schemas/mod-manifest.schema.json';
+      return 'schema://living-narrative-engine/mod-manifest.schema.json';
     }
     return undefined;
   }),
@@ -44,7 +44,7 @@ class MockSchemaValidator {
 
     // Pre-add a generic schema that should pass for the isekai manifest
     const genericModManifestSchema = {
-      $id: 'http://example.com/schemas/mod-manifest.schema.json',
+      $id: 'schema://living-narrative-engine/mod-manifest.schema.json',
       type: 'object',
       properties: {
         $schema: { type: 'string', format: 'uri' },
@@ -112,7 +112,7 @@ class MockSchemaValidator {
 
 // Corrected Isekai Mod Manifest Content
 const isekaiManifestContent = {
-  $schema: 'http://example.com/schemas/mod-manifest.schema.json',
+  $schema: 'schema://living-narrative-engine/mod-manifest.schema.json',
   id: 'isekai',
   version: '1.0.0',
   name: 'isekai',
@@ -344,7 +344,7 @@ describe('ModManifestLoader Isekai Content Validation', () => {
       ),
       expect.objectContaining({
         modId: 'isekai',
-        schemaId: 'http://example.com/schemas/mod-manifest.schema.json',
+        schemaId: 'schema://living-narrative-engine/mod-manifest.schema.json',
       })
     );
   });

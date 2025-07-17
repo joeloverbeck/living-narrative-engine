@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/condition.schema.json",
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
   "id": "intimacy:actor-has-facing-away",
   "description": "Checks if the actor has a facing_away component (is facing away from someone).",
   "logic": {

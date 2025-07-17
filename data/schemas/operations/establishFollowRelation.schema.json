@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "http://example.com/schemas/operations/establishFollowRelation.schema.json",
+  "$id": "schema://living-narrative-engine/operations/establishFollowRelation.schema.json",
   "title": "ESTABLISH_FOLLOW_RELATION Operation",
   "allOf": [
     {

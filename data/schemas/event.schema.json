@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "http://example.com/schemas/event.schema.json",
+  "$id": "schema://living-narrative-engine/event.schema.json",
   "title": "Event Schema",
   "description": "Defines the structure for an individual event definition file. Specifies the event's unique ID, an optional description, and an optional schema defining the structure of the event's payload.",
   "type": "object",

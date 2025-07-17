@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "http://example.com/schemas/operations/log.schema.json",
+  "$id": "schema://living-narrative-engine/operations/log.schema.json",
   "title": "LOG Operation",
   "allOf": [
     {

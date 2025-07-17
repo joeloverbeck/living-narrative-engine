@@ -19,14 +19,17 @@ let validate;
 beforeAll(() => {
   const ajv = new Ajv({ allErrors: true });
   addFormats(ajv);
-  ajv.addSchema(commonSchema, 'http://example.com/schemas/common.schema.json');
+  ajv.addSchema(
+    commonSchema,
+    'schema://living-narrative-engine/common.schema.json'
+  );
   ajv.addSchema(
     jsonLogicSchema,
-    'http://example.com/schemas/json-logic.schema.json'
+    'schema://living-narrative-engine/json-logic.schema.json'
   );
   ajv.addSchema(
     conditionContainerSchema,
-    'http://example.com/schemas/condition-container.schema.json'
+    'schema://living-narrative-engine/condition-container.schema.json'
   );
   validate = ajv.compile(conditionSchema);
 });

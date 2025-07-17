@@ -36,7 +36,7 @@ const createMockConfiguration = (overrides = {}) => ({
   getModsBasePath: jest.fn().mockReturnValue('./data/mods'), // Added
   getContentTypeSchemaId: jest
     .fn()
-    .mockReturnValue('http://example.com/schemas/rule.schema.json'),
+    .mockReturnValue('schema://living-narrative-engine/rule.schema.json'),
   // --- Other potentially used methods (good practice to include) ---
   getContentBasePath: jest.fn(
     (registryKey) => `./data/mods/test-mod/${registryKey}`
@@ -50,7 +50,7 @@ const createMockConfiguration = (overrides = {}) => ({
   getRuleBasePath: jest.fn().mockReturnValue('rules'), // Keep specific getter if RuleLoader uses it directly
   getRuleSchemaId: jest
     .fn()
-    .mockReturnValue('http://example.com/schemas/rule.schema.json'), // Keep specific getter
+    .mockReturnValue('schema://living-narrative-engine/rule.schema.json'), // Keep specific getter
   ...overrides,
 });
 
@@ -92,7 +92,7 @@ const createMockDataFetcher = () => ({
 
 /** Mocks ISchemaValidator - needed for successful processing */
 const createMockSchemaValidator = () => {
-  const ruleSchemaId = 'http://example.com/schemas/rule.schema.json';
+  const ruleSchemaId = 'schema://living-narrative-engine/rule.schema.json';
   const mockRuleValidatorFn = jest.fn((data) => ({
     // Simple validation for test purposes
     isValid:
@@ -223,7 +223,7 @@ describe('RuleLoader (Path Resolution & Fetching via loadItemsForMod)', () => {
     mockRegistry = createMockDataRegistry();
 
     // Ensure rule schema ID is configured via the base class method access
-    const ruleSchemaId = 'http://example.com/schemas/rule.schema.json';
+    const ruleSchemaId = 'schema://living-narrative-engine/rule.schema.json';
     mockConfig.getContentTypeSchemaId.mockImplementation(
       (registryKey) =>
         registryKey === RULE_TYPE_NAME ? ruleSchemaId : undefined // Use constant

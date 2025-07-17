@@ -17,7 +17,7 @@ describe('EntityInstanceLoader', () => {
   let mockLogger;
 
   const PRIMARY_SCHEMA_ID =
-    'http://example.com/schemas/entity-instance.schema.json';
+    'schema://living-narrative-engine/entity-instance.schema.json';
 
   beforeEach(() => {
     // Create a real data registry for testing
@@ -74,7 +74,7 @@ describe('EntityInstanceLoader', () => {
   describe('Schema Validation', () => {
     it('should reject entity instance with missing instanceId', async () => {
       const invalidInstance = {
-        $schema: 'http://example.com/schemas/entity-instance.schema.json',
+        $schema: 'schema://living-narrative-engine/entity-instance.schema.json',
         definitionId: 'test:some_entity',
         componentOverrides: {
           'core:name': { text: 'Test Entity' },
@@ -134,7 +134,7 @@ describe('EntityInstanceLoader', () => {
 
     it('should reject entity instance with missing definitionId', async () => {
       const invalidInstance = {
-        $schema: 'http://example.com/schemas/entity-instance.schema.json',
+        $schema: 'schema://living-narrative-engine/entity-instance.schema.json',
         instanceId: 'test-mod:my_instance', // Properly namespaced
         // Missing definitionId
         componentOverrides: {
@@ -193,7 +193,7 @@ describe('EntityInstanceLoader', () => {
 
     it('should reject entity instance with invalid additional properties', async () => {
       const invalidInstance = {
-        $schema: 'http://example.com/schemas/entity-instance.schema.json',
+        $schema: 'schema://living-narrative-engine/entity-instance.schema.json',
         instanceId: 'test:my_instance',
         definitionId: 'test:some_entity',
         id: 'should-not-be-here', // This is not allowed in instances
@@ -261,7 +261,7 @@ describe('EntityInstanceLoader', () => {
 
     it('should accept valid entity instance', async () => {
       const validInstance = {
-        $schema: 'http://example.com/schemas/entity-instance.schema.json',
+        $schema: 'schema://living-narrative-engine/entity-instance.schema.json',
         instanceId: 'test-mod:my_character', // Properly namespaced
         definitionId: 'test:character_template',
         componentOverrides: {
@@ -310,7 +310,8 @@ describe('EntityInstanceLoader', () => {
     it('should provide clear error message for entity definition used as instance', async () => {
       // This mimics the jacqueline_rouxel.entity.json issue
       const entityDefinition = {
-        $schema: 'http://example.com/schemas/entity-definition.schema.json',
+        $schema:
+          'schema://living-narrative-engine/entity-definition.schema.json',
         id: 'test:some_entity',
         description: 'An entity definition mistakenly used as instance',
         components: {
@@ -419,13 +420,13 @@ describe('EntityInstanceLoader', () => {
 
     it('should continue processing other files when one fails', async () => {
       const validInstance = {
-        $schema: 'http://example.com/schemas/entity-instance.schema.json',
+        $schema: 'schema://living-narrative-engine/entity-instance.schema.json',
         instanceId: 'test-mod:valid_instance', // Properly namespaced
         definitionId: 'test:some_entity',
       };
 
       const invalidInstance = {
-        $schema: 'http://example.com/schemas/entity-instance.schema.json',
+        $schema: 'schema://living-narrative-engine/entity-instance.schema.json',
         // Missing instanceId will cause it to fail
         definitionId: 'test:some_entity',
       };

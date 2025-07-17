@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "http://example.com/schemas/llm-configs.schema.json",
+  "$id": "schema://living-narrative-engine/llm-configs.schema.json",
   "title": "LLM Configurations",
   "description": "Defines the structure for the llm-configs.json file, which holds various LLM configurations, including API details, prompt engineering settings, and JSON output strategies.",
   "type": "object",

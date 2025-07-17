@@ -74,7 +74,9 @@ describe('Cross-Mod Action Integration E2E', () => {
         description: 'A private bedroom for intimate interactions',
         components: {
           'core:name': { name: 'Test Bedroom' },
-          'core:description': { description: 'A private bedroom for intimate interactions' },
+          'core:description': {
+            description: 'A private bedroom for intimate interactions',
+          },
           'core:position': { x: 0, y: 0, z: 0 },
           'core:exits': {
             north: { target: 'test-living-room', blocked: false },
@@ -105,7 +107,10 @@ describe('Cross-Mod Action Integration E2E', () => {
     ];
 
     for (const location of locations) {
-      const definition = createEntityDefinition(location.id, location.components);
+      const definition = createEntityDefinition(
+        location.id,
+        location.components
+      );
       registry.store('entityDefinitions', location.id, definition);
       await entityManager.createEntityInstance(location.id, {
         instanceId: location.id,
@@ -133,7 +138,7 @@ describe('Cross-Mod Action Integration E2E', () => {
           'anatomy:breasts': { size: 'none' },
         },
       },
-      
+
       // NPC with intimacy components but no anatomy
       npcIntimate: {
         id: 'test-npc-intimate',
@@ -142,10 +147,13 @@ describe('Cross-Mod Action Integration E2E', () => {
           'core:position': { locationId: 'test-bedroom' },
           'core:actor': { isPlayer: false },
           'core:movement': { locked: false },
-          'intimacy:closeness': { level: 5, relationships: { 'test-player-full': 5 } },
+          'intimacy:closeness': {
+            level: 5,
+            relationships: { 'test-player-full': 5 },
+          },
         },
       },
-      
+
       // NPC with anatomy components suitable for sex mod actions
       npcAnatomical: {
         id: 'test-npc-anatomical',
@@ -154,12 +162,15 @@ describe('Cross-Mod Action Integration E2E', () => {
           'core:position': { locationId: 'test-bedroom' },
           'core:actor': { isPlayer: false },
           'core:movement': { locked: false },
-          'intimacy:closeness': { level: 8, relationships: { 'test-player-full': 8 } },
+          'intimacy:closeness': {
+            level: 8,
+            relationships: { 'test-player-full': 8 },
+          },
           'anatomy:body': { type: 'humanoid', sex: 'female' },
           'anatomy:breasts': { size: 'medium' },
         },
       },
-      
+
       // Basic NPC with only core components
       npcBasic: {
         id: 'test-npc-basic',
@@ -222,7 +233,7 @@ describe('Cross-Mod Action Integration E2E', () => {
         prerequisites: [],
         required_components: { actor: ['core:following'] },
       },
-      
+
       // Intimacy mod actions
       {
         id: 'intimacy:get_close',
@@ -252,18 +263,19 @@ describe('Cross-Mod Action Integration E2E', () => {
         ],
         required_components: { actor: ['intimacy:closeness'] },
       },
-      
+
       // Sex mod actions
       {
         id: 'sex:fondle_breasts',
         name: 'Fondle Breasts',
-        description: 'Gently fondle the target\'s breasts',
+        description: "Gently fondle the target's breasts",
         scope: 'sex:actors_with_breasts_in_intimacy',
-        template: 'fondle {target}\'s breasts',
+        template: "fondle {target}'s breasts",
         prerequisites: [
           {
             logic: { condition_ref: 'sex:high-intimacy' },
-            failure_message: 'You need a higher level of intimacy for this action.',
+            failure_message:
+              'You need a higher level of intimacy for this action.',
           },
         ],
         required_components: { actor: ['intimacy:closeness'] },
@@ -305,11 +317,13 @@ describe('Cross-Mod Action Integration E2E', () => {
 
     // Get the game data repository to ensure actions are accessible
     const gameDataRepository = container.resolve(tokens.IGameDataRepository);
-    
+
     // Build the action index with all registered actions
     const allActions = gameDataRepository.getAllActionDefinitions();
     actionIndex.buildIndex(allActions);
-    logger.debug(`Built action index with ${allActions.length} cross-mod actions`);
+    logger.debug(
+      `Built action index with ${allActions.length} cross-mod actions`
+    );
   }
 
   /**
@@ -318,11 +332,16 @@ describe('Cross-Mod Action Integration E2E', () => {
   async function registerCrossModScopes() {
     // Define scope expressions
     const scopeExpressions = {
-      'core:clear_directions': 'location.core:exits[{"condition_ref": "core:exit-is-unblocked"}].target',
-      'core:other_actors': 'entities(core:actor)[{ var: "id", neq: { var: "actor.id" } }]',
-      'core:actors_in_location': 'entities(core:actor)[{ var: "core:position.locationId", eq: { var: "actor.core:position.locationId" } }][{ var: "id", neq: { var: "actor.id" } }]',
-      'intimacy:close_actors': 'entities(core:actor)[{ var: "core:position.locationId", eq: { var: "actor.core:position.locationId" } }][{ var: "id", neq: { var: "actor.id" } }]',
-      'sex:actors_with_breasts_in_intimacy': 'entities(core:actor)[{ var: "core:position.locationId", eq: { var: "actor.core:position.locationId" } }][{ var: "anatomy:breasts", exists: true }][{ var: "id", neq: { var: "actor.id" } }]',
+      'core:clear_directions':
+        'location.core:exits[{"condition_ref": "core:exit-is-unblocked"}].target',
+      'core:other_actors':
+        'entities(core:actor)[{ var: "id", neq: { var: "actor.id" } }]',
+      'core:actors_in_location':
+        'entities(core:actor)[{ var: "core:position.locationId", eq: { var: "actor.core:position.locationId" } }][{ var: "id", neq: { var: "actor.id" } }]',
+      'intimacy:close_actors':
+        'entities(core:actor)[{ var: "core:position.locationId", eq: { var: "actor.core:position.locationId" } }][{ var: "id", neq: { var: "actor.id" } }]',
+      'sex:actors_with_breasts_in_intimacy':
+        'entities(core:actor)[{ var: "core:position.locationId", eq: { var: "actor.core:position.locationId" } }][{ var: "anatomy:breasts", exists: true }][{ var: "id", neq: { var: "actor.id" } }]',
     };
 
     const scopeDefinitions = {};
@@ -403,7 +422,7 @@ describe('Cross-Mod Action Integration E2E', () => {
 
     // May have actions from sex mod if prerequisites are met
     // (depends on target actors and intimacy levels)
-    
+
     // Verify action IDs are properly namespaced
     result.actions.forEach((action) => {
       expect(action.id).toMatch(/^(core|intimacy|sex):/);
@@ -417,8 +436,9 @@ describe('Cross-Mod Action Integration E2E', () => {
   test('should enforce mod-specific prerequisites and component requirements', async () => {
     const player = await entityManager.getEntityInstance('test-player-full');
     const basicNpc = await entityManager.getEntityInstance('test-npc-basic');
-    const intimateNpc = await entityManager.getEntityInstance('test-npc-intimate');
-    
+    const intimateNpc =
+      await entityManager.getEntityInstance('test-npc-intimate');
+
     const baseContext = {
       currentLocation: await entityManager.getEntityInstance('test-bedroom'),
       allEntities: Array.from(entityManager.entities),
@@ -437,31 +457,32 @@ describe('Cross-Mod Action Integration E2E', () => {
     );
 
     // Player should have intimacy actions, basic NPC should not
-    const playerIntimacyActions = playerActions.actions.filter(
-      a => a.id.startsWith('intimacy:')
+    const playerIntimacyActions = playerActions.actions.filter((a) =>
+      a.id.startsWith('intimacy:')
     );
-    const basicNpcIntimacyActions = basicNpcActions.actions.filter(
-      a => a.id.startsWith('intimacy:')
+    const basicNpcIntimacyActions = basicNpcActions.actions.filter((a) =>
+      a.id.startsWith('intimacy:')
     );
 
     // Player should have at least some intimacy actions if targets are available
     // and prerequisites are met
-    const hasIntimacyComponents = player.getComponentData('intimacy:closeness') !== null;
-    
+    const hasIntimacyComponents =
+      player.getComponentData('intimacy:closeness') !== null;
+
     // Note: The availability of intimacy actions depends on meeting prerequisites
     // and having valid targets in the same location
-    
+
     // Basic NPC might have get_close (no component requirement) but not kiss_cheek
     const basicKissAction = basicNpcIntimacyActions.find(
-      a => a.id === 'intimacy:kiss_cheek'
+      (a) => a.id === 'intimacy:kiss_cheek'
     );
     expect(basicKissAction).toBeUndefined();
 
     // Test sex mod actions require high intimacy
-    const sexActions = playerActions.actions.filter(
-      a => a.id.startsWith('sex:')
+    const sexActions = playerActions.actions.filter((a) =>
+      a.id.startsWith('sex:')
     );
-    
+
     // Sex actions should only appear if there are valid targets with required anatomy
     // and sufficient intimacy level
     if (sexActions.length > 0) {
@@ -479,8 +500,10 @@ describe('Cross-Mod Action Integration E2E', () => {
    */
   test('should resolve scopes correctly across different mods', async () => {
     const player = await entityManager.getEntityInstance('test-player-full');
-    const anatomicalNpc = await entityManager.getEntityInstance('test-npc-anatomical');
-    
+    const anatomicalNpc = await entityManager.getEntityInstance(
+      'test-npc-anatomical'
+    );
+
     const baseContext = {
       currentLocation: await entityManager.getEntityInstance('test-bedroom'),
       allEntities: Array.from(entityManager.entities),
@@ -494,9 +517,9 @@ describe('Cross-Mod Action Integration E2E', () => {
 
     // Check core:actors_in_location scope (used by intimacy:get_close)
     const getCloseActions = result.actions.filter(
-      a => a.id === 'intimacy:get_close'
+      (a) => a.id === 'intimacy:get_close'
     );
-    
+
     // Should have get_close actions for actors in the same location if action is available
     const actorsInBedroom = ['test-npc-intimate', 'test-npc-anatomical'];
     if (getCloseActions.length > 0) {
@@ -508,9 +531,9 @@ describe('Cross-Mod Action Integration E2E', () => {
 
     // Check sex:actors_with_breasts_in_intimacy scope
     const fondleActions = result.actions.filter(
-      a => a.id === 'sex:fondle_breasts'
+      (a) => a.id === 'sex:fondle_breasts'
     );
-    
+
     // Should only target actors with breasts component and high intimacy
     if (fondleActions.length > 0) {
       fondleActions.forEach((action) => {
@@ -526,44 +549,47 @@ describe('Cross-Mod Action Integration E2E', () => {
    */
   test('should execute actions from different mods correctly', async () => {
     const player = await entityManager.getEntityInstance('test-player-full');
-    
+
     // Test core mod action (wait)
     const waitAction = testBed.createTurnAction('core:wait', null, 'wait');
     const waitResult = await testBed.executeAction(player.id, waitAction);
-    
+
     expect(waitResult.success).toBe(true);
     expect(waitResult.actionResult.actionId).toBe('core:wait');
-    
+
     // Verify event was dispatched
     let attemptEvent = testBed.getLastEventOfType(ATTEMPT_ACTION_ID);
     expect(attemptEvent.payload.actionId).toBe('core:wait');
-    
+
     // Test intimacy mod action (get_close)
     const getCloseAction = testBed.createTurnAction(
       'intimacy:get_close',
       'test-npc-intimate',
       'get close to test-npc-intimate'
     );
-    const getCloseResult = await testBed.executeAction(player.id, getCloseAction);
-    
+    const getCloseResult = await testBed.executeAction(
+      player.id,
+      getCloseAction
+    );
+
     expect(getCloseResult.success).toBe(true);
     expect(getCloseResult.actionResult.actionId).toBe('intimacy:get_close');
-    
+
     attemptEvent = testBed.getLastEventOfType(ATTEMPT_ACTION_ID);
     expect(attemptEvent.payload.actionId).toBe('intimacy:get_close');
     expect(attemptEvent.payload.targetId).toBe('test-npc-intimate');
-    
+
     // Test sex mod action (would require proper setup and prerequisites)
     const fondleAction = testBed.createTurnAction(
       'sex:fondle_breasts',
       'test-npc-anatomical',
-      'fondle test-npc-anatomical\'s breasts'
+      "fondle test-npc-anatomical's breasts"
     );
     const fondleResult = await testBed.executeAction(player.id, fondleAction);
-    
+
     expect(fondleResult.success).toBe(true);
     expect(fondleResult.actionResult.actionId).toBe('sex:fondle_breasts');
-    
+
     attemptEvent = testBed.getLastEventOfType(ATTEMPT_ACTION_ID);
     expect(attemptEvent.payload.actionId).toBe('sex:fondle_breasts');
   });
@@ -588,31 +614,33 @@ describe('Cross-Mod Action Integration E2E', () => {
     result.actions.forEach((action) => {
       // Action ID should include mod namespace
       expect(action.id).toMatch(/^(core|intimacy|sex):/);
-      
+
       // Command should be properly formatted
       expect(action.command).toBeDefined();
       expect(typeof action.command).toBe('string');
-      
+
       // Command should not contain template placeholders
       expect(action.command).not.toContain('{');
       expect(action.command).not.toContain('}');
-      
+
       // Description should be present
       expect(action.description).toBeDefined();
     });
 
     // Check specific action formats
-    const waitAction = result.actions.find(a => a.id === 'core:wait');
+    const waitAction = result.actions.find((a) => a.id === 'core:wait');
     if (waitAction) {
       expect(waitAction.command).toBe('wait');
     }
 
-    const goActions = result.actions.filter(a => a.id === 'core:go');
+    const goActions = result.actions.filter((a) => a.id === 'core:go');
     goActions.forEach((action) => {
       expect(action.command).toMatch(/^go to .+$/);
     });
 
-    const intimacyActions = result.actions.filter(a => a.id.startsWith('intimacy:'));
+    const intimacyActions = result.actions.filter((a) =>
+      a.id.startsWith('intimacy:')
+    );
     intimacyActions.forEach((action) => {
       // Should have target in command if it has a target parameter
       if (action.params.targetId) {
@@ -638,8 +666,8 @@ describe('Cross-Mod Action Integration E2E', () => {
     );
 
     // Sex mod actions depend on intimacy mod components
-    const sexActions = result.actions.filter(a => a.id.startsWith('sex:'));
-    
+    const sexActions = result.actions.filter((a) => a.id.startsWith('sex:'));
+
     // If there are sex actions, player must have intimacy components
     if (sexActions.length > 0) {
       const playerComponents = player.getComponentData('intimacy:closeness');
@@ -648,14 +676,16 @@ describe('Cross-Mod Action Integration E2E', () => {
 
     // Intimacy actions that reference core conditions should work
     const intimacyActionsWithCoreConditions = result.actions.filter(
-      a => a.id === 'intimacy:get_close'
+      (a) => a.id === 'intimacy:get_close'
     );
-    
+
     // These might be available if targets meet prerequisites
     // The test verifies integration, not guaranteed availability
     if (intimacyActionsWithCoreConditions.length > 0) {
       // Verify they reference core conditions properly
-      expect(intimacyActionsWithCoreConditions[0].id).toBe('intimacy:get_close');
+      expect(intimacyActionsWithCoreConditions[0].id).toBe(
+        'intimacy:get_close'
+      );
     }
   });
 
@@ -666,7 +696,8 @@ describe('Cross-Mod Action Integration E2E', () => {
   test('should handle missing mod components gracefully', async () => {
     const basicNpc = await entityManager.getEntityInstance('test-npc-basic');
     const baseContext = {
-      currentLocation: await entityManager.getEntityInstance('test-living-room'),
+      currentLocation:
+        await entityManager.getEntityInstance('test-living-room'),
       allEntities: Array.from(entityManager.entities),
     };
 
@@ -678,22 +709,22 @@ describe('Cross-Mod Action Integration E2E', () => {
     );
 
     // Should still get core actions
-    const coreActions = result.actions.filter(a => a.id.startsWith('core:'));
+    const coreActions = result.actions.filter((a) => a.id.startsWith('core:'));
     expect(coreActions.length).toBeGreaterThan(0);
 
     // Should not get actions requiring missing components
     const intimacyActions = result.actions.filter(
-      a => a.id === 'intimacy:kiss_cheek'
+      (a) => a.id === 'intimacy:kiss_cheek'
     );
     expect(intimacyActions.length).toBe(0);
 
-    const sexActions = result.actions.filter(a => a.id.startsWith('sex:'));
+    const sexActions = result.actions.filter((a) => a.id.startsWith('sex:'));
     expect(sexActions.length).toBe(0);
 
     // Should not have errors for missing components
     if (result.errors) {
-      const componentErrors = result.errors.filter(
-        e => e.message.includes('component')
+      const componentErrors = result.errors.filter((e) =>
+        e.message.includes('component')
       );
       expect(componentErrors.length).toBe(0);
     }
@@ -722,15 +753,15 @@ describe('Cross-Mod Action Integration E2E', () => {
 
     // Should complete quickly even with multiple mods
     expect(discoveryTime).toBeLessThan(1000); // 1 second max
-    
+
     // Should return valid results
     expect(result.actions).toBeDefined();
     expect(Array.isArray(result.actions)).toBe(true);
-    
+
     // Should have actions from at least one mod (core at minimum)
-    const mods = new Set(result.actions.map(a => a.id.split(':')[0]));
+    const mods = new Set(result.actions.map((a) => a.id.split(':')[0]));
     expect(mods.size).toBeGreaterThanOrEqual(1);
-    
+
     // Verify we at least have core actions
     expect(mods.has('core')).toBe(true);
   });

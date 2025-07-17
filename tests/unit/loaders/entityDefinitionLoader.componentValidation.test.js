@@ -50,7 +50,7 @@ describe('EntityDefinitionLoader Component Validation', () => {
       get: (key) => {
         const config = {
           'schemas.entityDefinitions':
-            'http://example.com/schemas/entity-definition.schema.json',
+            'schema://living-narrative-engine/entity-definition.schema.json',
           'registryKeys.entityDefinitions': 'entity_definitions',
         };
         return config[key];
@@ -58,7 +58,7 @@ describe('EntityDefinitionLoader Component Validation', () => {
       getModsBasePath: () => './data/mods',
       getContentTypeSchemaId: (contentType) => {
         if (contentType === 'entityDefinitions') {
-          return 'http://example.com/schemas/entity-definition.schema.json';
+          return 'schema://living-narrative-engine/entity-definition.schema.json';
         }
         return null;
       },
@@ -85,7 +85,7 @@ describe('EntityDefinitionLoader Component Validation', () => {
     // Register entity definition schema
     const entityDefinitionSchema = {
       $schema: 'http://json-schema.org/draft-07/schema#',
-      $id: 'http://example.com/schemas/entity-definition.schema.json',
+      $id: 'schema://living-narrative-engine/entity-definition.schema.json',
       type: 'object',
       properties: {
         $schema: { type: 'string' },
@@ -102,7 +102,7 @@ describe('EntityDefinitionLoader Component Validation', () => {
     schemaValidator.preloadSchemas([
       {
         schema: entityDefinitionSchema,
-        id: 'http://example.com/schemas/entity-definition.schema.json',
+        id: 'schema://living-narrative-engine/entity-definition.schema.json',
       },
     ]);
 
@@ -123,7 +123,7 @@ describe('EntityDefinitionLoader Component Validation', () => {
 
   it('should successfully load entity with socket without orientation', async () => {
     const entityData = {
-      $schema: 'http://example.com/schemas/entity-definition.schema.json',
+      $schema: 'schema://living-narrative-engine/entity-definition.schema.json',
       id: 'anatomy:test_torso',
       components: {
         'anatomy:part': {
@@ -175,7 +175,7 @@ describe('EntityDefinitionLoader Component Validation', () => {
 
   it('should fail to load entity with invalid orientation in socket', async () => {
     const entityData = {
-      $schema: 'http://example.com/schemas/entity-definition.schema.json',
+      $schema: 'schema://living-narrative-engine/entity-definition.schema.json',
       id: 'anatomy:invalid_torso',
       components: {
         'anatomy:part': {
@@ -229,7 +229,7 @@ describe('EntityDefinitionLoader Component Validation', () => {
 
   it('should successfully load entity with valid orientation in socket', async () => {
     const entityData = {
-      $schema: 'http://example.com/schemas/entity-definition.schema.json',
+      $schema: 'schema://living-narrative-engine/entity-definition.schema.json',
       id: 'anatomy:valid_torso',
       components: {
         'anatomy:part': {
@@ -287,7 +287,7 @@ describe('EntityDefinitionLoader Component Validation', () => {
 
   it('should handle mixed socket orientations correctly', async () => {
     const entityData = {
-      $schema: 'http://example.com/schemas/entity-definition.schema.json',
+      $schema: 'schema://living-narrative-engine/entity-definition.schema.json',
       id: 'anatomy:mixed_torso',
       components: {
         'anatomy:part': {
@@ -341,7 +341,7 @@ describe('EntityDefinitionLoader Component Validation', () => {
 
   it('should fail when entity is missing required id field', async () => {
     const entityData = {
-      $schema: 'http://example.com/schemas/entity-definition.schema.json',
+      $schema: 'schema://living-narrative-engine/entity-definition.schema.json',
       // Missing required 'id' field
       components: {
         'core:name': {

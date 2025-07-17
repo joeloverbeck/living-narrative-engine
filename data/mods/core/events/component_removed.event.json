@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/event.schema.json",
+  "$schema": "schema://living-narrative-engine/event.schema.json",
   "id": "core:component_removed",
   "description": "Fired when a component override is successfully removed from an entity instance. This reverts the component's state to its definition's default.",
   "payloadSchema": {
@@ -12,7 +12,7 @@
         "description": "The full entity instance from which the component was removed."
       },
       "componentTypeId": {
-        "$ref": "http://example.com/schemas/common.schema.json#/definitions/namespacedId",
+        "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/namespacedId",
         "description": "The ID of the component that was removed."
       },
       "oldComponentData": {

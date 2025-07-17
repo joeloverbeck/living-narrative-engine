@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "http://example.com/schemas/operations/removeComponent.schema.json",
+  "$id": "schema://living-narrative-engine/operations/removeComponent.schema.json",
   "title": "REMOVE_COMPONENT Operation",
   "allOf": [
     {

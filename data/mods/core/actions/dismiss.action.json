@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/action.schema.json",
+  "$schema": "schema://living-narrative-engine/action.schema.json",
   "id": "core:dismiss",
   "name": "Dismiss",
   "description": "Dismisses a follower from your service.",

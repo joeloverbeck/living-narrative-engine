@@ -28,15 +28,15 @@ describe('JSON-Schema – GOAP Goal Definition', () => {
     // so that it can resolve the '$ref' pointers correctly.
     ajv.addSchema(
       commonSchema,
-      'http://example.com/schemas/common.schema.json'
+      'schema://living-narrative-engine/common.schema.json'
     );
     ajv.addSchema(
       jsonLogicSchema,
-      'http://example.com/schemas/json-logic.schema.json'
+      'schema://living-narrative-engine/json-logic.schema.json'
     );
     ajv.addSchema(
       conditionContainerSchema,
-      'http://example.com/schemas/condition-container.schema.json'
+      'schema://living-narrative-engine/condition-container.schema.json'
     );
 
     // Compile the main schema we want to test.

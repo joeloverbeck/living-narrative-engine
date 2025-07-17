@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/entity-definition.schema.json",
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
   "id": "clothing:leather_stiletto_pumps",
   "description": "Leather stiletto pumps",
   "components": {

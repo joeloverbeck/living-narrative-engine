@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/component.schema.json",
+  "$schema": "schema://living-narrative-engine/component.schema.json",
   "id": "anatomy:sockets",
   "description": "Defines attachment points (sockets) on a body part where other parts can connect",
   "dataSchema": {

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "http://example.com/schemas/operations/forEach.schema.json",
+  "$id": "schema://living-narrative-engine/operations/forEach.schema.json",
   "title": "FOR_EACH Operation",
   "allOf": [
     {

@@ -48,13 +48,13 @@ const mockConfigurationInstance = () => ({
   getSchemaFiles: jest.fn().mockReturnValue([]),
   getContentTypeSchemaId: jest.fn((registryKey) => {
     if (registryKey === 'llm-configs') {
-      return 'http://example.com/schemas/llm-configs.schema.json';
+      return 'schema://living-narrative-engine/llm-configs.schema.json';
     }
-    return `http://example.com/schemas/${registryKey}.schema.json`;
+    return `schema://living-narrative-engine/${registryKey}.schema.json`;
   }),
   getRuleSchemaId: jest
     .fn()
-    .mockReturnValue('http://example.com/schemas/rule.schema.json'),
+    .mockReturnValue('schema://living-narrative-engine/rule.schema.json'),
 });
 
 const defaultLlmConfigPath = 'config/llm-configs.json';
@@ -312,7 +312,7 @@ describe('LlmConfigLoader', () => {
         'llm-configs'
       );
       expect(schemaValidatorMock.validate).toHaveBeenCalledWith(
-        'http://example.com/schemas/llm-configs.schema.json',
+        'schema://living-narrative-engine/llm-configs.schema.json',
         expectedRootConfig
       );
     });

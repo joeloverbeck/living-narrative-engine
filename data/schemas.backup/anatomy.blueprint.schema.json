@@ -1,0 +1,190 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/schemas/anatomy.blueprint.schema.json",
+  "title": "Anatomy Blueprint",
+  "description": "Defines the structural graph of how body parts connect via sockets",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "format": "uri",
+      "description": "Optional. A URI reference to the schema that this document conforms to"
+    },
+    "id": {
+      "$ref": "./common.schema.json#/definitions/namespacedId",
+      "description": "Unique identifier for this anatomy blueprint in namespaced format (e.g., 'anatomy:humanoid_standard')"
+    },
+    "root": {
+      "$ref": "./common.schema.json#/definitions/namespacedId",
+      "description": "The root entity definition ID that serves as the entry point for the anatomy graph"
+    },
+    "slots": {
+      "type": "object",
+      "description": "Complete structural definition of body part slots and their requirements",
+      "additionalProperties": {
+        "$ref": "#/definitions/blueprintSlot"
+      }
+    },
+    "clothingSlotMappings": {
+      "type": "object",
+      "description": "Maps clothing slots to anatomy attachment points via blueprint slots or sockets",
+      "patternProperties": {
+        "^[a-zA-Z][a-zA-Z0-9_]*$": {
+          "$ref": "#/definitions/clothingSlotMapping"
+        }
+      },
+      "additionalProperties": false
+    },
+    "parts": {
+      "type": "array",
+      "description": "Simple list of blueprint parts to include (all slots and mappings)",
+      "items": {
+        "$ref": "./common.schema.json#/definitions/namespacedId"
+      }
+    },
+    "compose": {
+      "type": "array",
+      "description": "Advanced composition instructions for including blueprint parts",
+      "items": {
+        "$ref": "#/definitions/composeInstruction"
+      }
+    }
+  },
+  "required": ["id", "root"],
+  "additionalProperties": false,
+  "definitions": {
+    "blueprintSlot": {
+      "type": "object",
+      "description": "Defines a slot in the anatomy blueprint with its requirements",
+      "properties": {
+        "parent": {
+          "type": "string",
+          "description": "The slot key of the parent part, or null for slots on the root"
+        },
+        "socket": {
+          "type": "string",
+          "description": "The socket ID on the parent where this part attaches"
+        },
+        "requirements": {
+          "$ref": "#/definitions/partRequirements"
+        },
+        "optional": {
+          "type": "boolean",
+          "description": "Whether this slot must be filled (default: false)",
+          "default": false
+        }
+      },
+      "required": ["socket", "requirements"],
+      "additionalProperties": false
+    },
+    "partRequirements": {
+      "type": "object",
+      "description": "Requirements for selecting a body part",
+      "properties": {
+        "partType": {
+          "type": "string",
+          "description": "The required part type (e.g., 'head', 'arm', 'eye')"
+        },
+        "components": {
+          "type": "array",
+          "description": "Required components that the part must have",
+          "items": {
+            "$ref": "./common.schema.json#/definitions/namespacedId"
+          }
+        },
+        "properties": {
+          "type": "object",
+          "description": "Required component property values",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        }
+      },
+      "required": ["partType"],
+      "additionalProperties": false
+    },
+    "clothingSlotMapping": {
+      "type": "object",
+      "description": "Defines how a clothing slot maps to anatomy attachment points. Layer precedence: Recipe override > Entity default > Blueprint default. allowedLayers constrains all sources.",
+      "properties": {
+        "blueprintSlots": {
+          "type": "array",
+          "description": "Blueprint slot IDs this clothing slot covers (e.g., ['left_hand', 'right_hand'])",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        },
+        "anatomySockets": {
+          "type": "array",
+          "description": "Direct socket IDs for parts with orientation-specific sockets (e.g., torso)",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        },
+        "allowedLayers": {
+          "type": "array",
+          "description": "Clothing layers allowed in this slot",
+          "items": {
+            "type": "string",
+            "enum": ["underwear", "base", "outer", "armor", "accessory"]
+          },
+          "minItems": 1
+        }
+      },
+      "required": ["allowedLayers"],
+      "oneOf": [
+        {
+          "required": ["blueprintSlots"],
+          "not": {
+            "required": ["anatomySockets"]
+          }
+        },
+        {
+          "required": ["anatomySockets"],
+          "not": {
+            "required": ["blueprintSlots"]
+          }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "composeInstruction": {
+      "type": "object",
+      "description": "Instructions for composing blueprint parts",
+      "properties": {
+        "part": {
+          "$ref": "./common.schema.json#/definitions/namespacedId",
+          "description": "The blueprint part to include"
+        },
+        "include": {
+          "type": "array",
+          "description": "Which sections to include from the part",
+          "items": {
+            "type": "string",
+            "enum": ["slots", "clothingSlotMappings"]
+          },
+          "minItems": 1
+        },
+        "excludeSlots": {
+          "type": "array",
+          "description": "Specific slot keys to exclude",
+          "items": {
+            "type": "string"
+          }
+        },
+        "excludeClothingSlots": {
+          "type": "array",
+          "description": "Specific clothing slot keys to exclude",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": ["part", "include"],
+      "additionalProperties": false
+    }
+  }
+}

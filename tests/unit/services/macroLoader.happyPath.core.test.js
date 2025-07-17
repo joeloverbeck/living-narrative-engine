@@ -11,7 +11,7 @@ const createMockConfiguration = (overrides = {}) => ({
   getModsBasePath: jest.fn(() => './data/mods'),
   getContentTypeSchemaId: jest.fn((registryKey) => {
     if (registryKey === 'macros') {
-      return 'http://example.com/schemas/macro.schema.json';
+      return 'schema://living-narrative-engine/macro.schema.json';
     }
     return undefined;
   }),

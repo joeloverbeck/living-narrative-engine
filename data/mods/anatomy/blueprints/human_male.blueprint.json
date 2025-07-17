@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/anatomy.blueprint.schema.json",
+  "$schema": "schema://living-narrative-engine/anatomy.blueprint.schema.json",
   "id": "anatomy:human_male",
   "root": "anatomy:human_male_torso",
   "compose": [

@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/component.schema.json",
+  "$schema": "schema://living-narrative-engine/component.schema.json",
   "id": "core:perceptible_event",
   "description": "Dispatched when an action or occurrence happens that should be perceptible to entities within a specific location. This event is intended to be logged by observers for creating a history of local happenings.",
   "payloadSchema": {
@@ -19,7 +19,7 @@
         "const": "core:perceptible_event"
       },
       "locationId": {
-        "$ref": "http://example.com/schemas/common.schema.json#/definitions/namespacedId",
+        "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/namespacedId",
         "description": "The ID of the location where the event occurred and can be perceived."
       },
       "descriptionText": {
@@ -49,18 +49,18 @@
         ]
       },
       "actorId": {
-        "$ref": "http://example.com/schemas/common.schema.json#/definitions/namespacedId",
+        "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/namespacedId",
         "description": "The ID of the entity primarily responsible for causing the event."
       },
       "targetId": {
-        "$ref": "http://example.com/schemas/common.schema.json#/definitions/nullableNamespacedId",
+        "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/nullableNamespacedId",
         "description": "Optional. The ID of the primary entity or item targeted by the event (e.g., who was spoken to, what item was picked up)."
       },
       "involvedEntities": {
         "type": "array",
         "description": "Optional. An array of other entity IDs that were involved or directly affected by the event, beyond the primary actor and target. (e.g., multiple recipients of an effect).",
         "items": {
-          "$ref": "http://example.com/schemas/common.schema.json#/definitions/namespacedId"
+          "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/namespacedId"
         },
         "default": []
       },

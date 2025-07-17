@@ -1,0 +1,81 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/schemas/anatomy.blueprint-part.schema.json",
+  "title": "Anatomy Blueprint Part",
+  "description": "Reusable anatomy structure definitions that can be composed into complete blueprints",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "format": "uri",
+      "description": "Optional. A URI reference to the schema that this document conforms to"
+    },
+    "id": {
+      "$ref": "./common.schema.json#/definitions/namespacedId",
+      "description": "Unique identifier for this blueprint part in namespaced format (e.g., 'anatomy:humanoid_core')"
+    },
+    "description": {
+      "type": "string",
+      "description": "Human-readable description of what this part represents"
+    },
+    "library": {
+      "$ref": "./common.schema.json#/definitions/namespacedId",
+      "description": "Optional reference to a slot library for $use references"
+    },
+    "slots": {
+      "type": "object",
+      "description": "Slot definitions that can be included in a blueprint",
+      "additionalProperties": {
+        "oneOf": [
+          {
+            "$ref": "./anatomy.blueprint.schema.json#/definitions/blueprintSlot",
+            "description": "Standard slot definition"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "$use": {
+                "type": "string",
+                "description": "Reference to a slot definition in the library"
+              }
+            },
+            "additionalProperties": {
+              "description": "Override properties from the library definition"
+            },
+            "required": ["$use"]
+          }
+        ]
+      }
+    },
+    "clothingSlotMappings": {
+      "type": "object",
+      "description": "Clothing slot mappings that can be included in a blueprint",
+      "patternProperties": {
+        "^[a-zA-Z][a-zA-Z0-9_]*$": {
+          "oneOf": [
+            {
+              "$ref": "./anatomy.blueprint.schema.json#/definitions/clothingSlotMapping",
+              "description": "Standard clothing slot mapping"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "$use": {
+                  "type": "string",
+                  "description": "Reference to a clothing mapping definition in the library"
+                }
+              },
+              "additionalProperties": {
+                "description": "Override properties from the library definition"
+              },
+              "required": ["$use"]
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": ["id"],
+  "additionalProperties": false
+}

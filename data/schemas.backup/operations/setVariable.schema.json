@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/schemas/operations/setVariable.schema.json",
+  "title": "SET_VARIABLE Operation",
+  "allOf": [
+    {
+      "$ref": "../base-operation.schema.json"
+    },
+    {
+      "properties": {
+        "type": {
+          "const": "SET_VARIABLE"
+        },
+        "parameters": {
+          "$ref": "#/$defs/Parameters"
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "Parameters": {
+      "type": "object",
+      "description": "Parameters for the SET_VARIABLE operation. Sets or updates a variable within the current rule execution context.",
+      "properties": {
+        "variable_name": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^\\S(.*\\S)?$"
+        },
+        "value": {}
+      },
+      "required": ["variable_name", "value"],
+      "additionalProperties": false
+    }
+  }
+}

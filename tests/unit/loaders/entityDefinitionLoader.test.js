@@ -77,7 +77,8 @@ describe('EntityDefinitionLoader', () => {
       const registryKey = 'entityDefinitions';
 
       const testEntityData = {
-        $schema: 'http://example.com/schemas/entity-definition.schema.json',
+        $schema:
+          'schema://living-narrative-engine/entity-definition.schema.json',
         id: 'goblin',
         description: 'A standard goblin warrior, weak but numerous.',
         components: {
@@ -166,7 +167,8 @@ describe('EntityDefinitionLoader', () => {
       const primarySchemaId = 'entity-definition-schema';
 
       const invalidEntityData = {
-        $schema: 'http://example.com/schemas/entity-definition.schema.json',
+        $schema:
+          'schema://living-narrative-engine/entity-definition.schema.json',
         id: 'core:invalid-goblin',
         description: 'An invalid goblin missing its components.',
       };

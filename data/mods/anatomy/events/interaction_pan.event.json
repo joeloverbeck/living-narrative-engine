@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/event.schema.json",
+  "$schema": "schema://living-narrative-engine/event.schema.json",
   "id": "anatomy:interaction_pan",
   "description": "Fired during a pan gesture on the anatomy visualization. Provides delta movements and current position as the user drags to move the visualization viewport.",
   "payloadSchema": {

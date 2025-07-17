@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/event.schema.json",
+  "$schema": "schema://living-narrative-engine/event.schema.json",
   "id": "core:speech_input_lost_focus",
   "description": "Fired when the speech input element loses focus, indicating the human player has stopped typing.",
   "payloadSchema": {

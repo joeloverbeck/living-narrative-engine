@@ -284,17 +284,17 @@ describe('core_handle_go rule integration', () => {
     const ajv = new Ajv({ allErrors: true });
     ajv.addSchema(
       commonSchema,
-      'http://example.com/schemas/common.schema.json'
+      'schema://living-narrative-engine/common.schema.json'
     );
     ajv.addSchema(
       operationSchema,
-      'http://example.com/schemas/operation.schema.json'
+      'schema://living-narrative-engine/operation.schema.json'
     );
     loadOperationSchemas(ajv);
     loadConditionSchemas(ajv);
     ajv.addSchema(
       jsonLogicSchema,
-      'http://example.com/schemas/json-logic.schema.json'
+      'schema://living-narrative-engine/json-logic.schema.json'
     );
     const valid = ajv.validate(ruleSchema, goRule);
     if (!valid) console.error(ajv.errors);

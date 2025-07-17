@@ -45,6 +45,7 @@ import humanTesticle from '../../../data/mods/anatomy/entities/definitions/human
 import humanHand from '../../../data/mods/anatomy/entities/definitions/human_hand.entity.json';
 import humanFoot from '../../../data/mods/anatomy/entities/definitions/human_foot.entity.json';
 import humanAsshole from '../../../data/mods/anatomy/entities/definitions/human_asshole.entity.json';
+import humanAssCheek from '../../../data/mods/anatomy/entities/definitions/human_ass_cheek.entity.json';
 import humanEyeBlue from '../../../data/mods/anatomy/entities/definitions/human_eye_blue.entity.json';
 import humanEyeBrown from '../../../data/mods/anatomy/entities/definitions/human_eye_brown.entity.json';
 import humanEyeCobalt from '../../../data/mods/anatomy/entities/definitions/human_eye_cobalt.entity.json';
@@ -64,7 +65,7 @@ import descriptionComponent from '../../../data/mods/core/components/description
 
 // Define the muscular male recipe inline
 const muscularMaleRecipe = {
-  $schema: 'http://example.com/schemas/anatomy.recipe.schema.json',
+  $schema: 'schema://living-narrative-engine/anatomy.recipe.schema.json',
   recipeId: 'test:muscular_male_recipe',
   blueprintId: 'anatomy:human_male',
   slots: {
@@ -93,7 +94,7 @@ const muscularMaleRecipe = {
 
 // Define muscular male entity inline for testing
 const muscularMale = {
-  $schema: 'http://example.com/schemas/entity-definition.schema.json',
+  $schema: 'schema://living-narrative-engine/entity-definition.schema.json',
   id: 'test:muscular_male',
   components: {
     'core:name': {
@@ -166,6 +167,7 @@ describe('Muscular Male Anatomy Generation Integration Test', () => {
       'anatomy:human_hand': humanHand,
       'anatomy:human_foot': humanFoot,
       'anatomy:human_asshole': humanAsshole,
+      'anatomy:human_ass_cheek': humanAssCheek,
       'anatomy:human_eye_blue': humanEyeBlue,
       'anatomy:human_eye_brown': humanEyeBrown,
       'anatomy:human_eye_cobalt': humanEyeCobalt,

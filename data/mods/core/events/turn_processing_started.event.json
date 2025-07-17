@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/event-definition.schema.json",
+  "$schema": "schema://living-narrative-engine/event-definition.schema.json",
   "id": "core:turn_processing_started",
   "description": "Fired just before the game begins processing an entity's turn.",
   "payloadSchema": {
@@ -8,7 +8,7 @@
     "type": "object",
     "properties": {
       "entityId": {
-        "$ref": "http://example.com/schemas/common.schema.json#/definitions/namespacedId",
+        "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/namespacedId",
         "description": "ID of the entity whose turn is starting."
       },
       "actorType": {

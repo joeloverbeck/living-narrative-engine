@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/component.schema.json",
+  "$schema": "schema://living-narrative-engine/component.schema.json",
   "id": "descriptors:size_category",
   "description": "General size categories applicable to various objects and features",
   "dataSchema": {

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "http://example.com/schemas/anatomy.blueprint-part.schema.json",
+  "$id": "schema://living-narrative-engine/anatomy.blueprint-part.schema.json",
   "title": "Anatomy Blueprint Part",
   "description": "Reusable anatomy structure definitions that can be composed into complete blueprints",
   "type": "object",

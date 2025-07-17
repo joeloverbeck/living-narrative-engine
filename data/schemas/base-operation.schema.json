@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "http://example.com/schemas/base-operation.schema.json",
+  "$id": "schema://living-narrative-engine/base-operation.schema.json",
   "title": "Base Operation Schema",
   "description": "Base schema for all operations, defining common fields that every operation must have.",
   "type": "object",

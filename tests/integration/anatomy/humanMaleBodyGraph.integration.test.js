@@ -31,6 +31,7 @@ import humanPubicHair from '../../../data/mods/anatomy/entities/definitions/huma
 import humanMaleTorso from '../../../data/mods/anatomy/entities/definitions/human_male_torso.entity.json';
 import humanEye from '../../../data/mods/anatomy/entities/definitions/human_eye_brown.entity.json';
 import humanAsshole from '../../../data/mods/anatomy/entities/definitions/human_asshole.entity.json';
+import humanAssCheek from '../../../data/mods/anatomy/entities/definitions/human_ass_cheek.entity.json';
 import humanHand from '../../../data/mods/anatomy/entities/definitions/human_hand.entity.json';
 import humanFoot from '../../../data/mods/anatomy/entities/definitions/human_foot.entity.json';
 import blueprintSlot from '../../../data/mods/anatomy/entities/definitions/blueprint_slot.entity.json';
@@ -45,7 +46,7 @@ import descriptionComponent from '../../../data/mods/core/components/description
 
 // Define test entity for human male
 const testHumanMale = {
-  $schema: 'http://example.com/schemas/entity-definition.schema.json',
+  $schema: 'schema://living-narrative-engine/entity-definition.schema.json',
   id: 'test:human_male',
   description: 'Test human male for body graph verification',
   components: {
@@ -107,6 +108,7 @@ describe('Human Male Body Graph Integration Test', () => {
       'anatomy:human_male_torso': humanMaleTorso,
       'anatomy:human_eye_brown': humanEye,
       'anatomy:human_asshole': humanAsshole,
+      'anatomy:human_ass_cheek': humanAssCheek,
       'anatomy:human_hand': humanHand,
       'anatomy:human_foot': humanFoot,
       'anatomy:blueprint_slot': blueprintSlot,

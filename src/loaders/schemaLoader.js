@@ -195,9 +195,9 @@ class SchemaLoader extends AbstractLoader {
 
     // Check for common issues
     const criticalSchemas = [
-      'http://example.com/schemas/common.schema.json',
-      'http://example.com/schemas/world.schema.json',
-      'http://example.com/schemas/entity-instance.schema.json',
+      'schema://living-narrative-engine/common.schema.json',
+      'schema://living-narrative-engine/world.schema.json',
+      'schema://living-narrative-engine/entity-instance.schema.json',
     ];
 
     for (const schemaId of criticalSchemas) {

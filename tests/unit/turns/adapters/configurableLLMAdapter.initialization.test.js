@@ -33,7 +33,7 @@ const mockLlmConfigLoaderInstance = () => ({
 });
 
 const MOCK_LLM_CONFIG_SCHEMA_ID =
-  'http://example.com/schemas/llm-configs.schema.json';
+  'schema://living-narrative-engine/llm-configs.schema.json';
 
 describe('ConfigurableLLMAdapter - Initialization Handling', () => {
   let mockLogger;

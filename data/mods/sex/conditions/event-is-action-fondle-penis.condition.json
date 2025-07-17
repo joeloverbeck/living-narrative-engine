@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/condition.schema.json",
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
   "id": "sex:event-is-action-fondle-penis",
   "description": "Checks if the triggering event is for the 'sex:fondle_penis' action.",
   "logic": {

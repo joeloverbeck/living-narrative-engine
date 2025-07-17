@@ -46,33 +46,33 @@ describe('StaticConfiguration - Anatomy System', () => {
     it('should return correct schema IDs for anatomy content types', () => {
       // Test recipe schema ID
       expect(config.getContentTypeSchemaId('anatomyRecipes')).toBe(
-        'http://example.com/schemas/anatomy.recipe.schema.json'
+        'schema://living-narrative-engine/anatomy.recipe.schema.json'
       );
 
       // Test blueprint schema ID
       expect(config.getContentTypeSchemaId('anatomyBlueprints')).toBe(
-        'http://example.com/schemas/anatomy.blueprint.schema.json'
+        'schema://living-narrative-engine/anatomy.blueprint.schema.json'
       );
 
       // Test blueprint part schema ID
       expect(config.getContentTypeSchemaId('anatomyBlueprintParts')).toBe(
-        'http://example.com/schemas/anatomy.blueprint-part.schema.json'
+        'schema://living-narrative-engine/anatomy.blueprint-part.schema.json'
       );
 
       // Test slot library schema ID
       expect(config.getContentTypeSchemaId('anatomySlotLibraries')).toBe(
-        'http://example.com/schemas/anatomy.slot-library.schema.json'
+        'schema://living-narrative-engine/anatomy.slot-library.schema.json'
       );
     });
 
     it('should not affect existing content type schema IDs', () => {
       // Verify existing mappings still work
       expect(config.getContentTypeSchemaId('components')).toBe(
-        'http://example.com/schemas/component.schema.json'
+        'schema://living-narrative-engine/component.schema.json'
       );
 
       expect(config.getContentTypeSchemaId('entityDefinitions')).toBe(
-        'http://example.com/schemas/entity-definition.schema.json'
+        'schema://living-narrative-engine/entity-definition.schema.json'
       );
 
       expect(config.getContentTypeSchemaId('scopes')).toBeNull();

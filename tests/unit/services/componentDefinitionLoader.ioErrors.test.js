@@ -20,9 +20,9 @@ const createMockConfiguration = (overrides = {}) => ({
   ),
   getContentTypeSchemaId: jest.fn((registryKey) => {
     if (registryKey === 'components') {
-      return 'http://example.com/schemas/component.schema.json';
+      return 'schema://living-narrative-engine/component.schema.json';
     }
-    return `http://example.com/schemas/${registryKey}.schema.json`;
+    return `schema://living-narrative-engine/${registryKey}.schema.json`;
   }),
   getSchemaBasePath: jest.fn().mockReturnValue('schemas'),
   getSchemaFiles: jest.fn().mockReturnValue([]),
@@ -32,7 +32,7 @@ const createMockConfiguration = (overrides = {}) => ({
   getRuleBasePath: jest.fn().mockReturnValue('rules'),
   getRuleSchemaId: jest
     .fn()
-    .mockReturnValue('http://example.com/schemas/rule.schema.json'),
+    .mockReturnValue('schema://living-narrative-engine/rule.schema.json'),
   ...overrides,
 });
 
@@ -245,7 +245,7 @@ describe('ComponentLoader (Sub-Ticket 6.7: Path/Fetch Errors)', () => {
   const filename = 'file.component.json';
   const errorManifest = createMockModManifest(modId, [filename]); // Manifest with one file
   const componentDefinitionSchemaId =
-    'http://example.com/schemas/component.schema.json';
+    'schema://living-narrative-engine/component.schema.json';
 
   // --- Setup ---
   beforeEach(() => {

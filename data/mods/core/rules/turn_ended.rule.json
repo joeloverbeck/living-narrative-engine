@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/rule.schema.json",
+  "$schema": "schema://living-narrative-engine/rule.schema.json",
   "rule_id": "turn_ended",
   "comment": "Handles the end of an entity's turn by unmarking them as the current actor.",
   "event_type": "core:turn_ended",

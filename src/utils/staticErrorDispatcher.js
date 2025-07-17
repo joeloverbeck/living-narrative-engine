@@ -105,10 +105,10 @@ export class StaticErrorDispatcher {
 /**
  * Drop-in replacement for safeDispatchError function.
  *
- * @param dispatcher
- * @param message
- * @param details
- * @param logger
+ * @param {ISafeEventDispatcher|IValidatedEventDispatcher} dispatcher
+ * @param {string} message
+ * @param {object} details
+ * @param {ILogger} logger
  * @deprecated Use EventDispatchService.dispatchSystemError() or StaticErrorDispatcher.dispatchError()
  */
 export function safeDispatchError(dispatcher, message, details = {}, logger) {
@@ -123,10 +123,10 @@ export function safeDispatchError(dispatcher, message, details = {}, logger) {
 /**
  * Drop-in replacement for dispatchSystemErrorEvent function.
  *
- * @param dispatcher
- * @param message
- * @param details
- * @param logger
+ * @param {ISafeEventDispatcher|IValidatedEventDispatcher} dispatcher
+ * @param {string} message
+ * @param {object} details
+ * @param {ILogger} logger
  * @deprecated Use EventDispatchService.dispatchSystemError() or StaticErrorDispatcher.dispatchErrorAsync()
  */
 export async function dispatchSystemErrorEvent(
@@ -146,10 +146,10 @@ export async function dispatchSystemErrorEvent(
 /**
  * Drop-in replacement for dispatchValidationError function.
  *
- * @param dispatcher
- * @param message
- * @param details
- * @param logger
+ * @param {ISafeEventDispatcher|IValidatedEventDispatcher} dispatcher
+ * @param {string} message
+ * @param {object} details
+ * @param {ILogger} logger
  * @deprecated Use EventDispatchService.dispatchValidationError() or StaticErrorDispatcher.dispatchValidationError()
  */
 export function dispatchValidationError(dispatcher, message, details, logger) {
