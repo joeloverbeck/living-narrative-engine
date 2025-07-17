@@ -60,6 +60,8 @@ export default class PerformanceMonitor {
   #memoryUsageWarnings;
 
   /**
+   * Creates a new PerformanceMonitor instance.
+   *
    * @class
    * @param {object} deps - Dependencies
    * @param {ILogger} deps.logger - Logger instance

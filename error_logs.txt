@@ -1,17 +1,472 @@
- FAIL   e2e  tests/e2e/actions/TurnBasedActionProcessing.e2e.test.js (10.059 s)
-  ● Turn-Based Action Processing E2E › should maintain performance across multiple turns
-
-    expect(received).toBeLessThan(expected)
-
-    Expected: < 0
-    Received:   0
-
-      356 |
-      357 |     // Cached should be significantly faster
-    > 358 |     expect(cachedTime).toBeLessThan(uncachedTime * 0.2); // At least 5x faster
-          |                        ^
-      359 |   });
-      360 |
-      361 |   /**
-
-      at Object.toBeLessThan (tests/e2e/actions/TurnBasedActionProcessing.e2e.test.js:358:24)
+VED: Event 'clothing:equipped' dispatch successful.
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:component_added'.
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'clothing:equipped'.
+consoleLogger.js:151 EquipmentOrchestrator: Successfully equipped '263128e4-fc31-41b6-af81-d59368c805ff' on '323b38ad-3403-43d8-b732-7bd8209df4bb' in layer 'base'
+consoleLogger.js:187 ClothingInstantiationService: Equipped clothing '263128e4-fc31-41b6-af81-d59368c805ff' on actor '323b38ad-3403-43d8-b732-7bd8209df4bb'
+consoleLogger.js:187 VED: Validating payload for event 'clothing:instantiation_completed' against schema 'clothing:instantiation_completed#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'clothing:instantiation_completed'.
+consoleLogger.js:187 VED: Dispatching event 'clothing:instantiation_completed' via EventBus... {actorId: '323b38ad-3403-43d8-b732-7bd8209df4bb', result: {…}}
+consoleLogger.js:151 ClothingInstantiationService: Clothing instantiation completed for actor '323b38ad-3403-43d8-b732-7bd8209df4bb': 7 created, 7 equipped, 0 errors
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Clothing instantiation completed with 7 items created
+consoleLogger.js:187 VED: Event 'clothing:instantiation_completed' dispatch successful.
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity 'b3636f70-1980-43e0-ab73-d11ea0d796d3'. Total tracked: 1
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity '1cd2bf8c-b12b-404e-86fd-2d59f26c02ab'. Total tracked: 2
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity 'b583bac6-98cb-445f-9728-a566c7adb26b'. Total tracked: 3
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity '52e40d09-69bf-4836-afd8-3a0bde23c480'. Total tracked: 4
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity '703a5ad2-9b3a-4698-8616-6105480fa763'. Total tracked: 5
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity '170b18a6-f19c-4c65-a8f0-c24a19b6914d'. Total tracked: 6
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity 'da44318b-cd30-4e17-8a06-bfc1fbc447d8'. Total tracked: 7
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity 'ba95ec90-91dd-4709-b44e-7ba20d4a3e39'. Total tracked: 8
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity 'fb67bf52-c9e3-402d-b7ad-ac874ddd9f16'. Total tracked: 9
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity 'b944b251-903b-47cb-80d7-54c2aaed40ca'. Total tracked: 10
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity 'ffcb6a97-3a3c-451c-a5bc-b53d5a506511'. Total tracked: 11
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity 'bf25b6a3-1fd4-4bdd-bc35-0688950f4167'. Total tracked: 12
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity '4b4c28eb-5791-4d63-9f1a-e18762df8d95'. Total tracked: 13
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity 'bf2c8f91-21c0-4e35-a14a-8c8e007a376e'. Total tracked: 14
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity 'dc889613-8c85-48c3-a884-afd9e20fe3b6'. Total tracked: 15
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity '5efc6787-2ced-4291-b652-1965d6cabb7a'. Total tracked: 16
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity '0f1b4b8c-ac3d-474a-8886-6071d4cbb4e9'. Total tracked: 17
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity 'b605c911-0922-44c3-9a3b-7aceb5c1b624'. Total tracked: 18
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity 'f052f9dd-8b9e-4211-9854-9fca0a82c715'. Total tracked: 19
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity 'ec8796f6-3b51-4cdb-b966-793c36f0bb23'. Total tracked: 20
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity '81594e6d-574c-4207-8db3-1b6af3c2344e'. Total tracked: 21
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity '28c0004f-0ae9-4de2-9474-2ec830938b36'. Total tracked: 22
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity '40d7599f-d83f-41f0-8579-d000e5274c0c'. Total tracked: 23
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity '3e65013f-6582-4398-b6b9-8878a1352bae'. Total tracked: 24
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity '762d0bd3-d5ab-4469-b056-bd7d1cd6705a'. Total tracked: 25
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity '7b6ebe1c-9ce9-45ff-b4c7-3a753551ff28'. Total tracked: 26
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity '45601aab-ab4d-4942-a829-ddec3b7261dc'. Total tracked: 27
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity '5035d5f2-a70c-4d14-9188-855b1acfb9f0'. Total tracked: 28
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity '0923872a-7bf2-4c02-b4ee-0987c30ca4f7'. Total tracked: 29
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity 'd0445a6f-1e5f-4fcb-801f-b3d3e6bc9e7e'. Total tracked: 30
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity 'd1aad168-4f8b-4396-ad7e-4d04a9817c7f'. Total tracked: 31
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity 'c8010aea-d85d-40f2-a5ba-686cba5454a1'. Total tracked: 32
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity 'f1cc2392-b955-43f2-b248-1cbdf4e708a0'. Total tracked: 33
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity '84695a8e-eacb-4865-9bd8-31a2bd4ebc12'. Total tracked: 34
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity '055784c4-8dcc-49ea-8c7c-572a3e402ac8'. Total tracked: 35
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity '05388013-fd4e-4ff0-b077-74983ffab49e'. Total tracked: 36
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity '05b3decc-cd5a-4cc5-ba01-604f81532373'. Total tracked: 37
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity 'd4250eb8-a421-49a7-87b5-8cb74c3a792d'. Total tracked: 38
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity 'e74c262c-27be-497a-b17d-ef7cafd85ca1'. Total tracked: 39
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity 'd6ee75ee-1851-42b7-a285-ca17b2f76a89'. Total tracked: 40
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity 'a17ce92b-8e92-4943-a42f-77bbc8b8a8f0'. Total tracked: 41
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity '56e5af82-7691-4fa4-aa33-f936855c3130'. Total tracked: 42
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity 'f4751e63-16c3-4375-b75d-096bbcfebf76'. Total tracked: 43
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity 'c12cc885-6f2e-4fde-9122-78f0d1f1a0fd'. Total tracked: 44
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity 'e2178988-279e-4617-bfe9-e59ef998c8d6'. Total tracked: 45
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity 'e5c21fc0-1eee-4433-b44b-398cc1d8a97c'. Total tracked: 46
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity '52a07e9d-8cc2-410b-9173-509a7c1680ac'. Total tracked: 47
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity 'd229aaf1-0514-4763-9a0d-e19b7f0cea18'. Total tracked: 48
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Tracked entity 'a69647fb-0a25-4d76-b181-0665962a52b7'. Total tracked: 49
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyOrchestrator: Generated 49 anatomy parts
+consoleLogger.js:187 EntityMutationManager.addComponent: Adding component 'anatomy:body' to entity '323b38ad-3403-43d8-b732-7bd8209df4bb'
+consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
+consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'anatomy:body', componentData: {…}, oldComponentData: {…}}
+consoleLogger.js:187 Successfully added/updated component 'anatomy:body' data on entity '323b38ad-3403-43d8-b732-7bd8209df4bb'.
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyOrchestrator: Updated entity '323b38ad-3403-43d8-b732-7bd8209df4bb' with anatomy structure
+consoleLogger.js:187 GraphBuildingWorkflow: GraphBuildingWorkflow: Building adjacency cache for root entity 'b3636f70-1980-43e0-ab73-d11ea0d796d3'
+consoleLogger.js:187 GraphBuildingWorkflow: GraphBuildingWorkflow: Root entity 'b3636f70-1980-43e0-ab73-d11ea0d796d3' validated successfully
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'clothing:instantiation_completed'.
+consoleLogger.js:151 GraphBuildingWorkflow: GraphBuildingWorkflow: Successfully built adjacency cache for root entity 'b3636f70-1980-43e0-ab73-d11ea0d796d3'
+consoleLogger.js:187 VED: Event 'core:component_added' dispatch successful.
+consoleLogger.js:187 DescriptionGenerationWorkflow: DescriptionGenerationWorkflow: Starting description generation for entity '323b38ad-3403-43d8-b732-7bd8209df4bb'
+consoleLogger.js:187 BodyGraphService.getAllParts: Found root ID in bodyComponent.root: b3636f70-1980-43e0-ab73-d11ea0d796d3
+consoleLogger.js:187 BodyGraphService: Using blueprint root 'b3636f70-1980-43e0-ab73-d11ea0d796d3' as cache root (actor 'null' not in cache, cache size: 26)
+18consoleLogger.js:187 EntityQueryManager.getEntitiesWithComponent found 24 entities with component 'anatomy:joint' using index
+consoleLogger.js:187 BodyGraphService: AnatomyGraphAlgorithms.getAllParts returned 25 parts for root 'b3636f70-1980-43e0-ab73-d11ea0d796d3': [b3636f70-1980-43e0-ab73-d11ea0d796d3, 762d0bd3-d5ab-4469-b056-bd7d1cd6705a, 3e65013f-6582-4398-b6b9-8878a1352bae, 40d7599f-d83f-41f0-8579-d000e5274c0c, b605c911-0922-44c3-9a3b-7aceb5c1b624...]
+consoleLogger.js:187 AnatomyQueryCache: Cached result for key 'getAllParts:::b3636f70-1980-43e0-ab73-d11ea0d796d3'
+consoleLogger.js:187 PartDescriptionGenerator: No description generated for part 'b3636f70-1980-43e0-ab73-d11ea0d796d3'
+consoleLogger.js:187 PartDescriptionGenerator: No description generated for part '762d0bd3-d5ab-4469-b056-bd7d1cd6705a'
+consoleLogger.js:187 PartDescriptionGenerator: No description generated for part '3e65013f-6582-4398-b6b9-8878a1352bae'
+consoleLogger.js:187 PartDescriptionGenerator: No description generated for part '40d7599f-d83f-41f0-8579-d000e5274c0c'
+consoleLogger.js:187 PartDescriptionGenerator: Generated description for part 'b605c911-0922-44c3-9a3b-7aceb5c1b624'
+consoleLogger.js:187 PartDescriptionGenerator: Generated description for part 'fb67bf52-c9e3-402d-b7ad-ac874ddd9f16'
+consoleLogger.js:187 PartDescriptionGenerator: No description generated for part '28c0004f-0ae9-4de2-9474-2ec830938b36'
+consoleLogger.js:187 PartDescriptionGenerator: Generated description for part 'ba95ec90-91dd-4709-b44e-7ba20d4a3e39'
+consoleLogger.js:187 PartDescriptionGenerator: No description generated for part '81594e6d-574c-4207-8db3-1b6af3c2344e'
+consoleLogger.js:187 PartDescriptionGenerator: No description generated for part 'da44318b-cd30-4e17-8a06-bfc1fbc447d8'
+consoleLogger.js:187 PartDescriptionGenerator: No description generated for part 'ec8796f6-3b51-4cdb-b966-793c36f0bb23'
+consoleLogger.js:187 PartDescriptionGenerator: No description generated for part '170b18a6-f19c-4c65-a8f0-c24a19b6914d'
+consoleLogger.js:187 PartDescriptionGenerator: No description generated for part 'f052f9dd-8b9e-4211-9854-9fca0a82c715'
+consoleLogger.js:187 PartDescriptionGenerator: No description generated for part '703a5ad2-9b3a-4698-8616-6105480fa763'
+consoleLogger.js:187 PartDescriptionGenerator: Generated description for part '0f1b4b8c-ac3d-474a-8886-6071d4cbb4e9'
+consoleLogger.js:187 PartDescriptionGenerator: No description generated for part 'dc889613-8c85-48c3-a884-afd9e20fe3b6'
+consoleLogger.js:187 PartDescriptionGenerator: No description generated for part '5efc6787-2ced-4291-b652-1965d6cabb7a'
+consoleLogger.js:187 PartDescriptionGenerator: No description generated for part 'bf2c8f91-21c0-4e35-a14a-8c8e007a376e'
+consoleLogger.js:187 PartDescriptionGenerator: No description generated for part '4b4c28eb-5791-4d63-9f1a-e18762df8d95'
+consoleLogger.js:187 PartDescriptionGenerator: No description generated for part 'bf25b6a3-1fd4-4bdd-bc35-0688950f4167'
+consoleLogger.js:187 PartDescriptionGenerator: Generated description for part 'ffcb6a97-3a3c-451c-a5bc-b53d5a506511'
+consoleLogger.js:187 PartDescriptionGenerator: Generated description for part 'b944b251-903b-47cb-80d7-54c2aaed40ca'
+consoleLogger.js:187 PartDescriptionGenerator: No description generated for part '52e40d09-69bf-4836-afd8-3a0bde23c480'
+consoleLogger.js:187 PartDescriptionGenerator: Generated description for part 'b583bac6-98cb-445f-9728-a566c7adb26b'
+consoleLogger.js:187 PartDescriptionGenerator: Generated description for part '1cd2bf8c-b12b-404e-86fd-2d59f26c02ab'
+consoleLogger.js:151 PartDescriptionGenerator: Generated 8 descriptions out of 25 parts
+consoleLogger.js:187 BodyGraphService.getAllParts: Found root ID in bodyComponent.root: b3636f70-1980-43e0-ab73-d11ea0d796d3
+consoleLogger.js:187 BodyGraphService: Using blueprint root 'b3636f70-1980-43e0-ab73-d11ea0d796d3' as cache root (actor 'null' not in cache, cache size: 26)
+consoleLogger.js:187 AnatomyQueryCache: Cache hit for key 'getAllParts:::b3636f70-1980-43e0-ab73-d11ea0d796d3'
+consoleLogger.js:187 BodyGraphService: Found cached result for root 'b3636f70-1980-43e0-ab73-d11ea0d796d3': 25 parts
+consoleLogger.js:187 PartDescriptionGenerator: Generated description for part '0f1b4b8c-ac3d-474a-8886-6071d4cbb4e9'
+consoleLogger.js:187 PartDescriptionGenerator: Generated description for part 'ffcb6a97-3a3c-451c-a5bc-b53d5a506511'
+consoleLogger.js:187 PartDescriptionGenerator: Generated description for part 'b944b251-903b-47cb-80d7-54c2aaed40ca'
+consoleLogger.js:187 PartDescriptionGenerator: No description generated for part '4b4c28eb-5791-4d63-9f1a-e18762df8d95'
+consoleLogger.js:187 PartDescriptionGenerator: No description generated for part 'bf25b6a3-1fd4-4bdd-bc35-0688950f4167'
+consoleLogger.js:187 PartDescriptionGenerator: No description generated for part 'bf2c8f91-21c0-4e35-a14a-8c8e007a376e'
+consoleLogger.js:187 PartDescriptionGenerator: No description generated for part 'dc889613-8c85-48c3-a884-afd9e20fe3b6'
+consoleLogger.js:187 PartDescriptionGenerator: Generated description for part 'b583bac6-98cb-445f-9728-a566c7adb26b'
+consoleLogger.js:187 PartDescriptionGenerator: Generated description for part '1cd2bf8c-b12b-404e-86fd-2d59f26c02ab'
+consoleLogger.js:187 PartDescriptionGenerator: No description generated for part 'b3636f70-1980-43e0-ab73-d11ea0d796d3'
+consoleLogger.js:187 PartDescriptionGenerator: No description generated for part 'da44318b-cd30-4e17-8a06-bfc1fbc447d8'
+consoleLogger.js:187 PartDescriptionGenerator: No description generated for part '170b18a6-f19c-4c65-a8f0-c24a19b6914d'
+consoleLogger.js:187 PartDescriptionGenerator: No description generated for part 'ec8796f6-3b51-4cdb-b966-793c36f0bb23'
+consoleLogger.js:187 PartDescriptionGenerator: No description generated for part 'f052f9dd-8b9e-4211-9854-9fca0a82c715'
+consoleLogger.js:187 PartDescriptionGenerator: Generated description for part 'fb67bf52-c9e3-402d-b7ad-ac874ddd9f16'
+consoleLogger.js:187 PartDescriptionGenerator: Generated description for part 'ba95ec90-91dd-4709-b44e-7ba20d4a3e39'
+consoleLogger.js:187 PartDescriptionGenerator: No description generated for part '28c0004f-0ae9-4de2-9474-2ec830938b36'
+consoleLogger.js:187 PartDescriptionGenerator: No description generated for part '81594e6d-574c-4207-8db3-1b6af3c2344e'
+consoleLogger.js:187 PartDescriptionGenerator: Generated description for part 'b605c911-0922-44c3-9a3b-7aceb5c1b624'
+consoleLogger.js:187 PartDescriptionGenerator: No description generated for part '52e40d09-69bf-4836-afd8-3a0bde23c480'
+consoleLogger.js:187 BodyDescriptionOrchestrator: Generated body description for '323b38ad-3403-43d8-b732-7bd8209df4bb'
+consoleLogger.js:151 BodyDescriptionOrchestrator: Generated descriptions for body '323b38ad-3403-43d8-b732-7bd8209df4bb' with 8 parts
+consoleLogger.js:187 EntityMutationManager.addComponent: Adding component 'core:description' to entity '323b38ad-3403-43d8-b732-7bd8209df4bb'
+consoleLogger.js:187 Indexed component 'core:description' for entity '323b38ad-3403-43d8-b732-7bd8209df4bb'
+consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
+consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'core:description', componentData: {…}, oldComponentData: undefined}
+consoleLogger.js:187 Successfully added/updated component 'core:description' data on entity '323b38ad-3403-43d8-b732-7bd8209df4bb'.
+consoleLogger.js:187 DescriptionPersistenceService: Updated description for entity '323b38ad-3403-43d8-b732-7bd8209df4bb'
+consoleLogger.js:187 EntityMutationManager.addComponent: Adding component 'core:description' to entity 'b605c911-0922-44c3-9a3b-7aceb5c1b624'
+consoleLogger.js:187 Indexed component 'core:description' for entity 'b605c911-0922-44c3-9a3b-7aceb5c1b624'
+consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
+consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'core:description', componentData: {…}, oldComponentData: undefined}
+consoleLogger.js:187 Successfully added/updated component 'core:description' data on entity 'b605c911-0922-44c3-9a3b-7aceb5c1b624'.
+consoleLogger.js:187 DescriptionPersistenceService: Updated description for entity 'b605c911-0922-44c3-9a3b-7aceb5c1b624'
+consoleLogger.js:187 EntityMutationManager.addComponent: Adding component 'core:description' to entity 'fb67bf52-c9e3-402d-b7ad-ac874ddd9f16'
+consoleLogger.js:187 Indexed component 'core:description' for entity 'fb67bf52-c9e3-402d-b7ad-ac874ddd9f16'
+consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
+consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'core:description', componentData: {…}, oldComponentData: undefined}
+consoleLogger.js:187 Successfully added/updated component 'core:description' data on entity 'fb67bf52-c9e3-402d-b7ad-ac874ddd9f16'.
+consoleLogger.js:187 DescriptionPersistenceService: Updated description for entity 'fb67bf52-c9e3-402d-b7ad-ac874ddd9f16'
+consoleLogger.js:187 EntityMutationManager.addComponent: Adding component 'core:description' to entity 'ba95ec90-91dd-4709-b44e-7ba20d4a3e39'
+consoleLogger.js:187 Indexed component 'core:description' for entity 'ba95ec90-91dd-4709-b44e-7ba20d4a3e39'
+consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
+consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'core:description', componentData: {…}, oldComponentData: undefined}
+consoleLogger.js:187 Successfully added/updated component 'core:description' data on entity 'ba95ec90-91dd-4709-b44e-7ba20d4a3e39'.
+consoleLogger.js:187 DescriptionPersistenceService: Updated description for entity 'ba95ec90-91dd-4709-b44e-7ba20d4a3e39'
+consoleLogger.js:187 EntityMutationManager.addComponent: Adding component 'core:description' to entity '0f1b4b8c-ac3d-474a-8886-6071d4cbb4e9'
+consoleLogger.js:187 Indexed component 'core:description' for entity '0f1b4b8c-ac3d-474a-8886-6071d4cbb4e9'
+consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
+consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'core:description', componentData: {…}, oldComponentData: undefined}
+consoleLogger.js:187 Successfully added/updated component 'core:description' data on entity '0f1b4b8c-ac3d-474a-8886-6071d4cbb4e9'.
+consoleLogger.js:187 DescriptionPersistenceService: Updated description for entity '0f1b4b8c-ac3d-474a-8886-6071d4cbb4e9'
+consoleLogger.js:187 EntityMutationManager.addComponent: Adding component 'core:description' to entity 'ffcb6a97-3a3c-451c-a5bc-b53d5a506511'
+consoleLogger.js:187 Indexed component 'core:description' for entity 'ffcb6a97-3a3c-451c-a5bc-b53d5a506511'
+consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
+consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'core:description', componentData: {…}, oldComponentData: undefined}
+consoleLogger.js:187 Successfully added/updated component 'core:description' data on entity 'ffcb6a97-3a3c-451c-a5bc-b53d5a506511'.
+consoleLogger.js:187 DescriptionPersistenceService: Updated description for entity 'ffcb6a97-3a3c-451c-a5bc-b53d5a506511'
+consoleLogger.js:187 EntityMutationManager.addComponent: Adding component 'core:description' to entity 'b944b251-903b-47cb-80d7-54c2aaed40ca'
+consoleLogger.js:187 Indexed component 'core:description' for entity 'b944b251-903b-47cb-80d7-54c2aaed40ca'
+consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
+consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'core:description', componentData: {…}, oldComponentData: undefined}
+consoleLogger.js:187 Successfully added/updated component 'core:description' data on entity 'b944b251-903b-47cb-80d7-54c2aaed40ca'.
+consoleLogger.js:187 DescriptionPersistenceService: Updated description for entity 'b944b251-903b-47cb-80d7-54c2aaed40ca'
+consoleLogger.js:187 EntityMutationManager.addComponent: Adding component 'core:description' to entity 'b583bac6-98cb-445f-9728-a566c7adb26b'
+consoleLogger.js:187 Indexed component 'core:description' for entity 'b583bac6-98cb-445f-9728-a566c7adb26b'
+consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
+consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'core:description', componentData: {…}, oldComponentData: undefined}
+consoleLogger.js:187 Successfully added/updated component 'core:description' data on entity 'b583bac6-98cb-445f-9728-a566c7adb26b'.
+consoleLogger.js:187 DescriptionPersistenceService: Updated description for entity 'b583bac6-98cb-445f-9728-a566c7adb26b'
+consoleLogger.js:187 EntityMutationManager.addComponent: Adding component 'core:description' to entity '1cd2bf8c-b12b-404e-86fd-2d59f26c02ab'
+consoleLogger.js:187 Indexed component 'core:description' for entity '1cd2bf8c-b12b-404e-86fd-2d59f26c02ab'
+consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
+consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'core:description', componentData: {…}, oldComponentData: undefined}
+consoleLogger.js:187 Successfully added/updated component 'core:description' data on entity '1cd2bf8c-b12b-404e-86fd-2d59f26c02ab'.
+consoleLogger.js:187 DescriptionPersistenceService: Updated description for entity '1cd2bf8c-b12b-404e-86fd-2d59f26c02ab'
+consoleLogger.js:151 DescriptionPersistenceService: Updated 8 descriptions, 0 failed
+consoleLogger.js:151 DescriptionGenerationWorkflow: DescriptionGenerationWorkflow: Successfully generated descriptions for entity '323b38ad-3403-43d8-b732-7bd8209df4bb'
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:component_added'.
+consoleLogger.js:187 AnatomyOrchestrator: AnatomyUnitOfWork: Committing unit of work. Entities created: 49, Operations: 3
+9consoleLogger.js:187 VED: Event 'core:component_added' dispatch successful.
+consoleLogger.js:151 AnatomyOrchestrator: AnatomyOrchestrator: Successfully completed anatomy generation for entity '323b38ad-3403-43d8-b732-7bd8209df4bb' with 49 parts
+consoleLogger.js:151 AnatomyGenerationService: Successfully generated anatomy for entity '323b38ad-3403-43d8-b732-7bd8209df4bb' with 49 parts
+consoleLogger.js:151 AnatomyInitializationService: Generated anatomy for entity '323b38ad-3403-43d8-b732-7bd8209df4bb'
+9consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:component_added'.
+consoleLogger.js:187 VED: Event 'core:entity_created' dispatch successful.
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:entity_created'.
+consoleLogger.js:187 Checking anatomy readiness for entity 323b38ad-3403-43d8-b732-7bd8209df4bb: {hasBodyComponent: true, bodyStructure: '{\n  "recipeId": "p_erotica:amaia_castillo_recipe",…762d0bd3-d5ab-4469-b056-bd7d1cd6705a"\n    }\n  }\n}'}
+consoleLogger.js:187 Entity 323b38ad-3403-43d8-b732-7bd8209df4bb anatomy ready: true
+consoleLogger.js:187 Anatomy ready for entity 323b38ad-3403-43d8-b732-7bd8209df4bb after 1 attempts
+consoleLogger.js:187 VED: Validating payload for event 'anatomy:visualizer_state_changed' against schema 'anatomy:visualizer_state_changed#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'anatomy:visualizer_state_changed'.
+consoleLogger.js:187 VED: Dispatching event 'anatomy:visualizer_state_changed' via EventBus... {previousState: 'LOADING', currentState: 'LOADED', selectedEntity: '323b38ad-3403-43d8-b732-7bd8209df4bb', anatomyData: {…}, error: null}
+consoleLogger.js:187 AnatomyVisualizerUI: State changed to LOADED {selectedEntity: '323b38ad-3403-43d8-b732-7bd8209df4bb', hasAnatomyData: true, hasError: false}
+consoleLogger.js:187 ClothingManagementService: Getting equipped items for entity '323b38ad-3403-43d8-b732-7bd8209df4bb'
+consoleLogger.js:187 Operation select_entity_323b38ad-3403-43d8-b732-7bd8209df4bb succeeded on attempt 1
+consoleLogger.js:163 No clothing data for entity: 134dc9ed-7cfc-4753-af91-42a73eaf0ffc
+warn @ consoleLogger.js:163
+_getClothingItemDetails @ AnatomyVisualizerUI.js:628
+await in _getClothingItemDetails
+_processEquipmentData @ AnatomyVisualizerUI.js:591
+_retrieveEquipmentData @ AnatomyVisualizerUI.js:542
+await in _retrieveEquipmentData
+_handleAnatomyLoaded @ AnatomyVisualizerUI.js:213
+await in _handleAnatomyLoaded
+_handleStateChange @ AnatomyVisualizerUI.js:177
+(anonymous) @ eventBus.js:144
+dispatch @ eventBus.js:141
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+#handleStateChange @ VisualizerStateController.js:385
+#notifyObservers @ VisualizerState.js:270
+#setState @ VisualizerState.js:248
+setAnatomyData @ VisualizerState.js:142
+#processAnatomyData @ VisualizerStateController.js:423
+await in #processAnatomyData
+#retryStrategy.execute.maxAttempts @ VisualizerStateController.js:166
+await in #retryStrategy.execute.maxAttempts
+execute @ RetryStrategy.js:126
+selectEntity @ VisualizerStateController.js:140
+_loadEntity @ AnatomyVisualizerUI.js:373
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ AnatomyVisualizerUI.js:327
+handleMouseUp_ @ unknownUnderstand this warning
+consoleLogger.js:187 VED: Event 'anatomy:visualizer_state_changed' dispatch successful.
+consoleLogger.js:163 No clothing data for entity: 5bd5e48f-386e-4778-bc1e-b77fa5091c75
+warn @ consoleLogger.js:163
+_getClothingItemDetails @ AnatomyVisualizerUI.js:628
+await in _getClothingItemDetails
+_processEquipmentData @ AnatomyVisualizerUI.js:591
+await in _processEquipmentData
+_retrieveEquipmentData @ AnatomyVisualizerUI.js:542
+await in _retrieveEquipmentData
+_handleAnatomyLoaded @ AnatomyVisualizerUI.js:213
+await in _handleAnatomyLoaded
+_handleStateChange @ AnatomyVisualizerUI.js:177
+(anonymous) @ eventBus.js:144
+dispatch @ eventBus.js:141
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+#handleStateChange @ VisualizerStateController.js:385
+#notifyObservers @ VisualizerState.js:270
+#setState @ VisualizerState.js:248
+setAnatomyData @ VisualizerState.js:142
+#processAnatomyData @ VisualizerStateController.js:423
+await in #processAnatomyData
+#retryStrategy.execute.maxAttempts @ VisualizerStateController.js:166
+await in #retryStrategy.execute.maxAttempts
+execute @ RetryStrategy.js:126
+selectEntity @ VisualizerStateController.js:140
+_loadEntity @ AnatomyVisualizerUI.js:373
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ AnatomyVisualizerUI.js:327
+handleMouseUp_ @ unknownUnderstand this warning
+consoleLogger.js:163 No clothing data for entity: 2da44f06-18d0-45e7-ad89-aaf84eec5804
+warn @ consoleLogger.js:163
+_getClothingItemDetails @ AnatomyVisualizerUI.js:628
+await in _getClothingItemDetails
+_processEquipmentData @ AnatomyVisualizerUI.js:591
+await in _processEquipmentData
+_retrieveEquipmentData @ AnatomyVisualizerUI.js:542
+await in _retrieveEquipmentData
+_handleAnatomyLoaded @ AnatomyVisualizerUI.js:213
+await in _handleAnatomyLoaded
+_handleStateChange @ AnatomyVisualizerUI.js:177
+(anonymous) @ eventBus.js:144
+dispatch @ eventBus.js:141
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+#handleStateChange @ VisualizerStateController.js:385
+#notifyObservers @ VisualizerState.js:270
+#setState @ VisualizerState.js:248
+setAnatomyData @ VisualizerState.js:142
+#processAnatomyData @ VisualizerStateController.js:423
+await in #processAnatomyData
+#retryStrategy.execute.maxAttempts @ VisualizerStateController.js:166
+await in #retryStrategy.execute.maxAttempts
+execute @ RetryStrategy.js:126
+selectEntity @ VisualizerStateController.js:140
+_loadEntity @ AnatomyVisualizerUI.js:373
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ AnatomyVisualizerUI.js:327
+handleMouseUp_ @ unknownUnderstand this warning
+consoleLogger.js:163 No clothing data for entity: 4f1fb287-4c53-4b59-be27-a211a80fc66d
+warn @ consoleLogger.js:163
+_getClothingItemDetails @ AnatomyVisualizerUI.js:628
+await in _getClothingItemDetails
+_processEquipmentData @ AnatomyVisualizerUI.js:591
+await in _processEquipmentData
+_retrieveEquipmentData @ AnatomyVisualizerUI.js:542
+await in _retrieveEquipmentData
+_handleAnatomyLoaded @ AnatomyVisualizerUI.js:213
+await in _handleAnatomyLoaded
+_handleStateChange @ AnatomyVisualizerUI.js:177
+(anonymous) @ eventBus.js:144
+dispatch @ eventBus.js:141
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+#handleStateChange @ VisualizerStateController.js:385
+#notifyObservers @ VisualizerState.js:270
+#setState @ VisualizerState.js:248
+setAnatomyData @ VisualizerState.js:142
+#processAnatomyData @ VisualizerStateController.js:423
+await in #processAnatomyData
+#retryStrategy.execute.maxAttempts @ VisualizerStateController.js:166
+await in #retryStrategy.execute.maxAttempts
+execute @ RetryStrategy.js:126
+selectEntity @ VisualizerStateController.js:140
+_loadEntity @ AnatomyVisualizerUI.js:373
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ AnatomyVisualizerUI.js:327
+handleMouseUp_ @ unknownUnderstand this warning
+consoleLogger.js:163 No clothing data for entity: 7e48898a-ee10-47c0-9f5f-4123d068899a
+warn @ consoleLogger.js:163
+_getClothingItemDetails @ AnatomyVisualizerUI.js:628
+await in _getClothingItemDetails
+_processEquipmentData @ AnatomyVisualizerUI.js:591
+await in _processEquipmentData
+_retrieveEquipmentData @ AnatomyVisualizerUI.js:542
+await in _retrieveEquipmentData
+_handleAnatomyLoaded @ AnatomyVisualizerUI.js:213
+await in _handleAnatomyLoaded
+_handleStateChange @ AnatomyVisualizerUI.js:177
+(anonymous) @ eventBus.js:144
+dispatch @ eventBus.js:141
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+#handleStateChange @ VisualizerStateController.js:385
+#notifyObservers @ VisualizerState.js:270
+#setState @ VisualizerState.js:248
+setAnatomyData @ VisualizerState.js:142
+#processAnatomyData @ VisualizerStateController.js:423
+await in #processAnatomyData
+#retryStrategy.execute.maxAttempts @ VisualizerStateController.js:166
+await in #retryStrategy.execute.maxAttempts
+execute @ RetryStrategy.js:126
+selectEntity @ VisualizerStateController.js:140
+_loadEntity @ AnatomyVisualizerUI.js:373
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ AnatomyVisualizerUI.js:327
+handleMouseUp_ @ unknownUnderstand this warning
+consoleLogger.js:163 No clothing data for entity: 3139f8a6-c164-4900-8824-8bcf446dcc8e
+warn @ consoleLogger.js:163
+_getClothingItemDetails @ AnatomyVisualizerUI.js:628
+await in _getClothingItemDetails
+_processEquipmentData @ AnatomyVisualizerUI.js:591
+await in _processEquipmentData
+_retrieveEquipmentData @ AnatomyVisualizerUI.js:542
+await in _retrieveEquipmentData
+_handleAnatomyLoaded @ AnatomyVisualizerUI.js:213
+await in _handleAnatomyLoaded
+_handleStateChange @ AnatomyVisualizerUI.js:177
+(anonymous) @ eventBus.js:144
+dispatch @ eventBus.js:141
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+#handleStateChange @ VisualizerStateController.js:385
+#notifyObservers @ VisualizerState.js:270
+#setState @ VisualizerState.js:248
+setAnatomyData @ VisualizerState.js:142
+#processAnatomyData @ VisualizerStateController.js:423
+await in #processAnatomyData
+#retryStrategy.execute.maxAttempts @ VisualizerStateController.js:166
+await in #retryStrategy.execute.maxAttempts
+execute @ RetryStrategy.js:126
+selectEntity @ VisualizerStateController.js:140
+_loadEntity @ AnatomyVisualizerUI.js:373
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ AnatomyVisualizerUI.js:327
+handleMouseUp_ @ unknownUnderstand this warning
+consoleLogger.js:163 No clothing data for entity: 263128e4-fc31-41b6-af81-d59368c805ff
+warn @ consoleLogger.js:163
+_getClothingItemDetails @ AnatomyVisualizerUI.js:628
+await in _getClothingItemDetails
+_processEquipmentData @ AnatomyVisualizerUI.js:591
+await in _processEquipmentData
+_retrieveEquipmentData @ AnatomyVisualizerUI.js:542
+await in _retrieveEquipmentData
+_handleAnatomyLoaded @ AnatomyVisualizerUI.js:213
+await in _handleAnatomyLoaded
+_handleStateChange @ AnatomyVisualizerUI.js:177
+(anonymous) @ eventBus.js:144
+dispatch @ eventBus.js:141
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+#handleStateChange @ VisualizerStateController.js:385
+#notifyObservers @ VisualizerState.js:270
+#setState @ VisualizerState.js:248
+setAnatomyData @ VisualizerState.js:142
+#processAnatomyData @ VisualizerStateController.js:423
+await in #processAnatomyData
+#retryStrategy.execute.maxAttempts @ VisualizerStateController.js:166
+await in #retryStrategy.execute.maxAttempts
+execute @ RetryStrategy.js:126
+selectEntity @ VisualizerStateController.js:140
+_loadEntity @ AnatomyVisualizerUI.js:373
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+handleMouseUp_ @ unknown
+await in handleMouseUp_
+(anonymous) @ AnatomyVisualizerUI.js:327
+handleMouseUp_ @ unknownUnderstand this warning
+consoleLogger.js:187 VED: Validating payload for event 'anatomy:visualizer_state_changed' against schema 'anatomy:visualizer_state_changed#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'anatomy:visualizer_state_changed'.
+consoleLogger.js:187 VED: Dispatching event 'anatomy:visualizer_state_changed' via EventBus... {previousState: 'LOADED', currentState: 'RENDERING', selectedEntity: '323b38ad-3403-43d8-b732-7bd8209df4bb', anatomyData: {…}, error: null}
+consoleLogger.js:187 AnatomyVisualizerUI: State changed to RENDERING {selectedEntity: '323b38ad-3403-43d8-b732-7bd8209df4bb', hasAnatomyData: true, hasError: false}
+consoleLogger.js:187 VisualizationComposer: Rendering graph for entity 323b38ad-3403-43d8-b732-7bd8209df4bb
+consoleLogger.js:187 SVGRenderer: SVG cleared
+consoleLogger.js:187 ViewportManager: Reset to default
+consoleLogger.js:187 VisualizationComposer: Cleared
+consoleLogger.js:187 VisualizationComposer: Building graph data {root: 'b3636f70-1980-43e0-ab73-d11ea0d796d3', partsCount: 25}
+consoleLogger.js:187 VED: Event 'anatomy:visualizer_state_changed' dispatch successful.
+consoleLogger.js:187 Found 12 children for b3636f70-1980-43e0-ab73-d11ea0d796d3
+consoleLogger.js:187 Found 0 children for 1cd2bf8c-b12b-404e-86fd-2d59f26c02ab
+consoleLogger.js:187 Found 0 children for b583bac6-98cb-445f-9728-a566c7adb26b
+consoleLogger.js:187 Found 0 children for 52e40d09-69bf-4836-afd8-3a0bde23c480
+consoleLogger.js:187 Found 7 children for 703a5ad2-9b3a-4698-8616-6105480fa763
+consoleLogger.js:187 Found 1 children for 170b18a6-f19c-4c65-a8f0-c24a19b6914d
+consoleLogger.js:187 Found 1 children for da44318b-cd30-4e17-8a06-bfc1fbc447d8
+consoleLogger.js:187 Found 1 children for ba95ec90-91dd-4709-b44e-7ba20d4a3e39
+consoleLogger.js:187 Found 1 children for fb67bf52-c9e3-402d-b7ad-ac874ddd9f16
+consoleLogger.js:187 Found 0 children for b605c911-0922-44c3-9a3b-7aceb5c1b624
+consoleLogger.js:187 Found 0 children for 40d7599f-d83f-41f0-8579-d000e5274c0c
+consoleLogger.js:187 Found 0 children for 3e65013f-6582-4398-b6b9-8878a1352bae
+consoleLogger.js:187 Found 0 children for 762d0bd3-d5ab-4469-b056-bd7d1cd6705a
+consoleLogger.js:187 Found 0 children for b944b251-903b-47cb-80d7-54c2aaed40ca
+consoleLogger.js:187 Found 0 children for ffcb6a97-3a3c-451c-a5bc-b53d5a506511
+consoleLogger.js:187 Found 0 children for bf25b6a3-1fd4-4bdd-bc35-0688950f4167
+consoleLogger.js:187 Found 0 children for 4b4c28eb-5791-4d63-9f1a-e18762df8d95
+consoleLogger.js:187 Found 0 children for bf2c8f91-21c0-4e35-a14a-8c8e007a376e
+consoleLogger.js:187 Found 1 children for dc889613-8c85-48c3-a884-afd9e20fe3b6
+consoleLogger.js:187 Found 0 children for 0f1b4b8c-ac3d-474a-8886-6071d4cbb4e9
+consoleLogger.js:187 Found 0 children for f052f9dd-8b9e-4211-9854-9fca0a82c715
+consoleLogger.js:187 Found 0 children for ec8796f6-3b51-4cdb-b966-793c36f0bb23
+consoleLogger.js:187 Found 0 children for 81594e6d-574c-4207-8db3-1b6af3c2344e
+consoleLogger.js:187 Found 0 children for 28c0004f-0ae9-4de2-9474-2ec830938b36
+consoleLogger.js:187 Found 0 children for 5efc6787-2ced-4291-b652-1965d6cabb7a

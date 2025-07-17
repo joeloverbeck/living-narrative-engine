@@ -89,9 +89,76 @@
   border-radius: var(--border-radius-md);
 }
 
-/* Description Panel */
+/* Right panels container */
+#right-panels-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Equipment Panel */
+#equipment-panel {
+  flex: 0 0 auto;
+  max-height: 40%;
+  background: var(--secondary-bg-color);
+  border-bottom: 1px solid var(--border-color-subtle);
+  display: flex;
+  flex-direction: column;
+}
+
+#equipment-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--spacing-sm);
+}
+
+/* Equipment slot styling */
+.equipment-slot {
+  margin-bottom: var(--spacing-md);
+  padding: var(--spacing-sm);
+  background: var(--primary-bg-color);
+  border-radius: var(--border-radius-sm);
+  border: 1px solid var(--border-color-subtle);
+}
+
+.equipment-slot-header {
+  font-weight: 600;
+  color: var(--secondary-text-color);
+  margin-bottom: var(--spacing-xs);
+}
+
+.equipment-layer {
+  margin-left: var(--spacing-md);
+  margin-bottom: var(--spacing-xs);
+}
+
+.equipment-layer-name {
+  font-size: var(--font-size-small);
+  color: var(--secondary-text-color);
+  font-style: italic;
+}
+
+.equipment-item {
+  margin-left: var(--spacing-lg);
+  padding: var(--spacing-xs) 0;
+  color: var(--primary-text-color);
+}
+
+.equipment-item-name {
+  font-weight: 500;
+}
+
+.equipment-item-details {
+  font-size: var(--font-size-small);
+  color: var(--secondary-text-color);
+  margin-left: var(--spacing-xs);
+}
+
+/* Adjust description panel */
 #entity-description-panel {
   flex: 1;
+  min-height: 0;
   background: var(--secondary-bg-color);
 }
 
@@ -188,8 +255,15 @@
     border-bottom: 1px solid var(--border-color-subtle);
   }
 
+  #right-panels-container {
+    height: 50%;
+  }
+
+  #equipment-panel {
+    max-height: 50%;
+  }
+
   .panel {
     flex: unset;
-    height: 50%;
   }
 }

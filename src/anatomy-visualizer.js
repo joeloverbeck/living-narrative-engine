@@ -35,6 +35,18 @@ async function initialize() {
           tokens.VisualizationComposer
         );
 
+        // Try to resolve ClothingManagementService - it may not be registered
+        let clothingManagementService = null;
+        try {
+          clothingManagementService = container.resolve(
+            tokens.ClothingManagementService
+          );
+        } catch (err) {
+          logger.warn(
+            'ClothingManagementService not available - equipment panel will be disabled'
+          );
+        }
+
         logger.info('Anatomy Visualizer: Initializing UI...');
         visualizerUI = new AnatomyVisualizerUI({
           logger,
@@ -45,6 +57,7 @@ async function initialize() {
           documentContext: { document },
           visualizerStateController,
           visualizationComposer,
+          clothingManagementService,
         });
 
         await visualizerUI.initialize();

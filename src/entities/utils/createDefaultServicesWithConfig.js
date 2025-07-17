@@ -9,6 +9,7 @@ import ErrorTranslator from '../services/errorTranslator.js';
 import EntityFactory from '../factories/entityFactory.js';
 import DefinitionCache from '../services/definitionCache.js';
 import EntityLifecycleManager from '../services/entityLifecycleManager.js';
+import MonitoringCoordinator from '../monitoring/MonitoringCoordinator.js';
 import { getGlobalConfig, isConfigInitialized } from './configUtils.js';
 
 /** @typedef {import('../services/entityRepositoryAdapter.js').EntityRepositoryAdapter} EntityRepositoryAdapter */
@@ -17,6 +18,7 @@ import { getGlobalConfig, isConfigInitialized } from './configUtils.js';
 /** @typedef {import('../factories/entityFactory.js').default} EntityFactory */
 /** @typedef {import('../services/definitionCache.js').DefinitionCache} DefinitionCache */
 /** @typedef {import('../services/entityLifecycleManager.js').EntityLifecycleManager} EntityLifecycleManager */
+/** @typedef {import('../monitoring/MonitoringCoordinator.js').default} MonitoringCoordinator */
 
 /**
  * Assemble default service dependencies for EntityManager with configuration awareness.
@@ -36,6 +38,7 @@ import { getGlobalConfig, isConfigInitialized } from './configUtils.js';
  *   entityFactory: EntityFactory,
  *   definitionCache: DefinitionCache,
  *   entityLifecycleManager: EntityLifecycleManager,
+ *   monitoringCoordinator: MonitoringCoordinator,
  * }} Collection of default service instances configured according to EntityConfig.
  */
 export function createDefaultServicesWithConfig({
@@ -54,6 +57,11 @@ export function createDefaultServicesWithConfig({
   const validationSettings = config?.getValidationSettings() || {};
   const performanceSettings = config?.getPerformanceSettings() || {};
 
+  // Validate configuration if available
+  if (config) {
+    validateServiceConfiguration(config);
+  }
+
   logger.debug('Creating default services with configuration:', {
     limits,
     cacheSettings,
@@ -61,24 +69,35 @@ export function createDefaultServicesWithConfig({
     performanceSettings,
   });
 
+  // Create MonitoringCoordinator with configuration
+  const monitoringCoordinator = new MonitoringCoordinator({
+    logger,
+    enabled: config?.isFeatureEnabled('performance.ENABLE_MONITORING') ?? true,
+    checkInterval:
+      config?.getValue('monitoring.HEALTH_CHECK_INTERVAL') ?? 30000,
+  });
+
   // Create EntityRepositoryAdapter with configuration
   const entityRepository = new EntityRepositoryAdapter({
     logger,
     maxEntities: limits.MAX_ENTITIES,
     enableValidation: validationSettings.ENABLE_VALIDATION,
+    monitoringCoordinator,
   });
 
   // Create ComponentMutationService with configuration
   const componentMutationService = new ComponentMutationService({
-    registry,
+    entityRepository,
     validator,
     logger,
     eventDispatcher,
+    cloner,
     maxComponentSize: limits.MAX_COMPONENT_SIZE,
     strictValidation: validationSettings.STRICT_MODE,
     enableCircuitBreaker: config?.isFeatureEnabled(
       'errorHandling.ENABLE_CIRCUIT_BREAKER'
     ),
+    monitoringCoordinator,
   });
 
   // Create ErrorTranslator with configuration
@@ -99,6 +118,7 @@ export function createDefaultServicesWithConfig({
 
   // Create DefinitionCache with configuration
   const definitionCache = new DefinitionCache({
+    registry,
     logger,
     enableCache: cacheSettings.ENABLE_DEFINITION_CACHE,
     cacheTtl: cacheSettings.DEFINITION_CACHE_TTL,
@@ -108,19 +128,13 @@ export function createDefaultServicesWithConfig({
   // Create EntityLifecycleManager with configuration
   const entityLifecycleManager = new EntityLifecycleManager({
     registry,
-    validator,
     logger,
     eventDispatcher,
-    idGenerator,
-    cloner,
-    defaultPolicy,
     entityRepository,
-    entityFactory,
-    enableMonitoring: performanceSettings.ENABLE_MONITORING,
-    slowOperationThreshold: performanceSettings.SLOW_OPERATION_THRESHOLD,
-    enableBatchOperations: config?.isFeatureEnabled(
-      'performance.ENABLE_BATCH_OPERATIONS'
-    ),
+    factory: entityFactory,
+    errorTranslator,
+    definitionCache,
+    monitoringCoordinator,
   });
 
   logger.info('Default services created with configuration-aware settings');
@@ -132,6 +146,7 @@ export function createDefaultServicesWithConfig({
     entityFactory,
     definitionCache,
     entityLifecycleManager,
+    monitoringCoordinator,
   };
 }
 
@@ -230,6 +245,92 @@ export function validateServiceConfiguration(config) {
     if (config.getValue(path) === undefined) {
       throw new Error(`Required configuration path '${path}' is missing`);
     }
+  }
+
+  // Validate monitoring configuration if enabled
+  if (config.getValue('performance.ENABLE_MONITORING')) {
+    validateMonitoringConfiguration(config);
+  }
+}
+
+/**
+ * Validates monitoring-specific configuration.
+ *
+ * @param {object} config - Configuration to validate
+ * @throws {Error} If monitoring configuration is invalid
+ */
+export function validateMonitoringConfiguration(config) {
+  const requiredMonitoringPaths = [
+    'performance.SLOW_OPERATION_THRESHOLD',
+    'performance.MEMORY_WARNING_THRESHOLD',
+    'errorHandling.ENABLE_CIRCUIT_BREAKER',
+    'errorHandling.CIRCUIT_BREAKER_THRESHOLD',
+    'errorHandling.CIRCUIT_BREAKER_TIMEOUT',
+    'monitoring.HEALTH_CHECK_INTERVAL',
+  ];
+
+  for (const path of requiredMonitoringPaths) {
+    if (config.getValue(path) === undefined) {
+      throw new Error(
+        `Required monitoring configuration path '${path}' is missing`
+      );
+    }
+  }
+
+  // Validate threshold values
+  const slowOperationThreshold = config.getValue(
+    'performance.SLOW_OPERATION_THRESHOLD'
+  );
+  if (
+    typeof slowOperationThreshold !== 'number' ||
+    slowOperationThreshold <= 0
+  ) {
+    throw new Error(
+      'performance.SLOW_OPERATION_THRESHOLD must be a positive number'
+    );
+  }
+
+  const memoryWarningThreshold = config.getValue(
+    'performance.MEMORY_WARNING_THRESHOLD'
+  );
+  if (
+    typeof memoryWarningThreshold !== 'number' ||
+    memoryWarningThreshold <= 0 ||
+    memoryWarningThreshold > 1
+  ) {
+    throw new Error(
+      'performance.MEMORY_WARNING_THRESHOLD must be a number between 0 and 1'
+    );
+  }
+
+  const circuitBreakerThreshold = config.getValue(
+    'errorHandling.CIRCUIT_BREAKER_THRESHOLD'
+  );
+  if (
+    typeof circuitBreakerThreshold !== 'number' ||
+    circuitBreakerThreshold <= 0
+  ) {
+    throw new Error(
+      'errorHandling.CIRCUIT_BREAKER_THRESHOLD must be a positive number'
+    );
+  }
+
+  const circuitBreakerTimeout = config.getValue(
+    'errorHandling.CIRCUIT_BREAKER_TIMEOUT'
+  );
+  if (typeof circuitBreakerTimeout !== 'number' || circuitBreakerTimeout <= 0) {
+    throw new Error(
+      'errorHandling.CIRCUIT_BREAKER_TIMEOUT must be a positive number'
+    );
+  }
+
+  const healthCheckInterval = config.getValue(
+    'monitoring.HEALTH_CHECK_INTERVAL'
+  );
+  if (typeof healthCheckInterval !== 'number' || healthCheckInterval <= 0) {
+    throw new Error(
+      'monitoring.HEALTH_CHECK_INTERVAL must be a positive number'
+    );
   }
 }
 

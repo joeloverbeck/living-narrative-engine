@@ -14,6 +14,7 @@ import { DomUtils } from '../utils/domUtils.js';
 /** @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 /** @typedef {import('./visualizer/VisualizerStateController.js').VisualizerStateController} VisualizerStateController */
 /** @typedef {import('./anatomy-renderer/VisualizationComposer.js').default} VisualizationComposer */
+/** @typedef {import('../clothing/services/clothingManagementService.js').ClothingManagementService} ClothingManagementService */
 
 class AnatomyVisualizerUI {
   /**
@@ -26,6 +27,7 @@ class AnatomyVisualizerUI {
    * @param {IDocumentContext} dependencies.documentContext
    * @param {VisualizerStateController} dependencies.visualizerStateController
    * @param {VisualizationComposer} dependencies.visualizationComposer
+   * @param {ClothingManagementService} [dependencies.clothingManagementService]
    */
   constructor({
     logger,
@@ -36,6 +38,7 @@ class AnatomyVisualizerUI {
     documentContext,
     visualizerStateController,
     visualizationComposer,
+    clothingManagementService,
   }) {
     this._logger = logger;
     this._registry = registry;
@@ -45,9 +48,11 @@ class AnatomyVisualizerUI {
     this._document = documentContext.document;
     this._visualizerStateController = visualizerStateController;
     this._visualizationComposer = visualizationComposer;
+    this._clothingManagementService = clothingManagementService;
     this._currentEntityId = null;
     this._createdEntities = [];
     this._stateUnsubscribe = null;
+    this._equipmentCache = new Map();
   }
 
   /**
@@ -73,6 +78,11 @@ class AnatomyVisualizerUI {
     // Subscribe to visualizer state changes
     this._subscribeToStateChanges();
 
+    // Subscribe to equipment events if service is available
+    if (this._clothingManagementService) {
+      this._subscribeToEquipmentEvents();
+    }
+
     this._logger.debug('AnatomyVisualizerUI: Initialization complete');
   }
 
@@ -86,6 +96,57 @@ class AnatomyVisualizerUI {
       'anatomy:visualizer_state_changed',
       this._handleStateChange.bind(this)
     );
+  }
+
+  /**
+   * Subscribe to equipment-related events
+   *
+   * @private
+   */
+  _subscribeToEquipmentEvents() {
+    this._equipmentUnsubscribes = [];
+
+    // Subscribe to equipment changes
+    const equipmentEvents = [
+      'clothing:equipped',
+      'clothing:unequipped',
+      'clothing:equipment_updated',
+    ];
+
+    for (const eventType of equipmentEvents) {
+      const unsubscribe = this._eventDispatcher.subscribe(
+        eventType,
+        this._handleEquipmentChange.bind(this)
+      );
+      this._equipmentUnsubscribes.push(unsubscribe);
+    }
+  }
+
+  /**
+   * Handle equipment change events
+   *
+   * @private
+   * @param {object} event
+   */
+  async _handleEquipmentChange(event) {
+    const { entityId } = event.payload;
+
+    // Only update if the changed entity is the currently displayed one
+    if (entityId !== this._currentEntityId) {
+      return;
+    }
+
+    this._logger.debug(
+      `AnatomyVisualizerUI: Equipment changed for ${entityId}`,
+      event
+    );
+
+    // Clear cache for this entity
+    this._equipmentCache.delete(entityId);
+
+    // Refresh equipment display
+    const equipmentResult = await this._retrieveEquipmentData(entityId);
+    this._updateEquipmentDisplay(equipmentResult);
   }
 
   /**
@@ -148,6 +209,10 @@ class AnatomyVisualizerUI {
       // Update description panel
       this._updateEntityDescription(entity);
 
+      // Update equipment panel
+      const equipmentResult = await this._retrieveEquipmentData(entityId);
+      this._updateEquipmentDisplay(equipmentResult);
+
       // Start rendering
       this._visualizerStateController.startRendering();
 
@@ -169,6 +234,14 @@ class AnatomyVisualizerUI {
     if (this._stateUnsubscribe) {
       this._stateUnsubscribe();
       this._stateUnsubscribe = null;
+    }
+
+    // Unsubscribe from equipment events
+    if (this._equipmentUnsubscribes) {
+      for (const unsubscribe of this._equipmentUnsubscribes) {
+        unsubscribe();
+      }
+      this._equipmentUnsubscribes = [];
     }
 
     // Clear any created entities
@@ -376,6 +449,16 @@ class AnatomyVisualizerUI {
       descriptionContent.innerHTML =
         '<p>Select an entity to view its description.</p>';
     }
+
+    // Clear equipment
+    const equipmentContent = this._document.getElementById('equipment-content');
+    if (equipmentContent) {
+      equipmentContent.innerHTML =
+        '<p class="message">Select an entity to view its equipment.</p>';
+    }
+
+    // Clear equipment cache
+    this._equipmentCache.clear();
   }
 
   /**
@@ -414,6 +497,329 @@ class AnatomyVisualizerUI {
       const escapedMessage = this._escapeHtml(message);
       graphContainer.innerHTML = `<div class="message">${escapedMessage}</div>`;
     }
+  }
+
+  /**
+   * Retrieve equipment data for an entity
+   *
+   * @private
+   * @param {string} entityId
+   * @returns {Promise<{success: boolean, hasEquipment?: boolean, equipmentData?: Array, message?: string, errors?: string[]}>}
+   */
+  async _retrieveEquipmentData(entityId) {
+    // Check cache first
+    const cached = this._equipmentCache.get(entityId);
+    if (cached) {
+      return cached;
+    }
+
+    if (!this._clothingManagementService) {
+      return { success: false, message: 'Clothing service not available' };
+    }
+
+    try {
+      // Check if entity has equipment component
+      const hasEquipment = this._entityManager.hasComponent(
+        entityId,
+        'clothing:equipment'
+      );
+
+      if (!hasEquipment) {
+        const result = { success: true, hasEquipment: false };
+        this._equipmentCache.set(entityId, result);
+        return result;
+      }
+
+      // Get equipped items
+      const equipmentResult =
+        await this._clothingManagementService.getEquippedItems(entityId);
+
+      if (!equipmentResult.success) {
+        return { success: false, errors: equipmentResult.errors };
+      }
+
+      // Process and structure equipment data
+      const structuredData = await this._processEquipmentData(
+        equipmentResult.equipped,
+        entityId
+      );
+
+      const result = {
+        success: true,
+        hasEquipment: true,
+        equipmentData: structuredData,
+      };
+
+      // Cache the result
+      this._equipmentCache.set(entityId, result);
+
+      return result;
+    } catch (error) {
+      this._logger.error('Failed to retrieve equipment data', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Process raw equipment data into structured format
+   *
+   * @private
+   * @param {object} equipped - Raw equipment data from component
+   * @param {string} ownerId - Owner entity ID
+   * @returns {Promise<Array>} Structured equipment data
+   */
+  async _processEquipmentData(equipped, ownerId) {
+    const processedSlots = [];
+
+    for (const [slotId, layers] of Object.entries(equipped)) {
+      const slotData = {
+        slotId,
+        layers: [],
+      };
+
+      for (const [layerName, clothingEntityId] of Object.entries(layers)) {
+        const items = Array.isArray(clothingEntityId)
+          ? clothingEntityId
+          : [clothingEntityId];
+
+        const layerData = {
+          layerName,
+          items: [],
+        };
+
+        for (const entityId of items) {
+          const itemData = await this._getClothingItemDetails(entityId);
+          if (itemData) {
+            layerData.items.push(itemData);
+          }
+        }
+
+        if (layerData.items.length > 0) {
+          slotData.layers.push(layerData);
+        }
+      }
+
+      if (slotData.layers.length > 0) {
+        processedSlots.push(slotData);
+      }
+    }
+
+    return processedSlots;
+  }
+
+  /**
+   * Get details for a clothing item entity
+   *
+   * @private
+   * @param {string} entityId - Clothing entity ID
+   * @returns {Promise<object|null>} Clothing item details
+   */
+  async _getClothingItemDetails(entityId) {
+    try {
+      const entity = await this._entityManager.getEntityInstance(entityId);
+      if (!entity) {
+        this._logger.warn(`Clothing entity not found: ${entityId}`);
+        return null;
+      }
+
+      // Get wearable component (contains material, size, etc.)
+      const wearableData = entity.getComponentData('clothing:wearable');
+      if (!wearableData) {
+        this._logger.warn(`No wearable data for entity: ${entityId}`);
+        return null;
+      }
+
+      // Get name component
+      const nameComponent = entity.getComponentData('core:name');
+      const name = nameComponent?.text || 'Unknown';
+
+      // Get color from descriptors if available
+      const colorDescriptor = entity.getComponentData('descriptors:color_basic');
+      const color = colorDescriptor?.color || 'unknown';
+
+      // Get texture from descriptors if available
+      const textureDescriptor = entity.getComponentData('descriptors:texture');
+      const texture = textureDescriptor?.texture || null;
+
+      return {
+        entityId,
+        definitionId: entity.definitionId,
+        name,
+        material: wearableData.material || 'unknown',
+        color,
+        size: wearableData.size || 'unknown',
+        texture,
+      };
+    } catch (error) {
+      this._logger.error(
+        `Failed to get clothing item details for ${entityId}`,
+        error
+      );
+      return null;
+    }
+  }
+
+  /**
+   * Update the equipment display panel
+   *
+   * @private
+   * @param {object} equipmentResult - Result from _retrieveEquipmentData
+   */
+  _updateEquipmentDisplay(equipmentResult) {
+    const container = this._document.getElementById('equipment-content');
+    if (!container) return;
+
+    // Clear existing content
+    container.innerHTML = '';
+
+    if (!equipmentResult.success) {
+      container.innerHTML =
+        '<p class="message error">Failed to load equipment data</p>';
+      return;
+    }
+
+    if (!equipmentResult.hasEquipment) {
+      container.innerHTML =
+        '<p class="message">This entity has no equipment</p>';
+      return;
+    }
+
+    if (
+      !equipmentResult.equipmentData ||
+      equipmentResult.equipmentData.length === 0
+    ) {
+      container.innerHTML = '<p class="message">No items equipped</p>';
+      return;
+    }
+
+    // Render equipment data
+    const fragment = this._createEquipmentFragment(
+      equipmentResult.equipmentData
+    );
+    container.appendChild(fragment);
+  }
+
+  /**
+   * Create DOM fragment for equipment display
+   *
+   * @private
+   * @param {Array} equipmentData - Structured equipment data
+   * @returns {DocumentFragment} DOM fragment with equipment elements
+   */
+  _createEquipmentFragment(equipmentData) {
+    const fragment = this._document.createDocumentFragment();
+
+    for (const slot of equipmentData) {
+      const slotElement = this._createSlotElement(slot);
+      fragment.appendChild(slotElement);
+    }
+
+    return fragment;
+  }
+
+  /**
+   * Create DOM element for a single equipment slot
+   *
+   * @private
+   * @param {object} slotData - Slot data with layers and items
+   * @returns {HTMLElement} Slot DOM element
+   */
+  _createSlotElement(slotData) {
+    const slotDiv = this._document.createElement('div');
+    slotDiv.className = 'equipment-slot';
+
+    // Create slot header
+    const header = this._document.createElement('div');
+    header.className = 'equipment-slot-header';
+    header.textContent = this._formatSlotName(slotData.slotId);
+    slotDiv.appendChild(header);
+
+    // Add layers
+    for (const layer of slotData.layers) {
+      const layerDiv = this._createLayerElement(layer);
+      slotDiv.appendChild(layerDiv);
+    }
+
+    return slotDiv;
+  }
+
+  /**
+   * Create DOM element for a layer within a slot
+   *
+   * @private
+   * @param {object} layerData - Layer data with items
+   * @returns {HTMLElement} Layer DOM element
+   */
+  _createLayerElement(layerData) {
+    const layerDiv = this._document.createElement('div');
+    layerDiv.className = 'equipment-layer';
+
+    // Layer name
+    const layerName = this._document.createElement('div');
+    layerName.className = 'equipment-layer-name';
+    layerName.textContent = `Layer: ${layerData.layerName}`;
+    layerDiv.appendChild(layerName);
+
+    // Add items
+    for (const item of layerData.items) {
+      const itemDiv = this._createItemElement(item);
+      layerDiv.appendChild(itemDiv);
+    }
+
+    return layerDiv;
+  }
+
+  /**
+   * Create DOM element for a single equipment item
+   *
+   * @private
+   * @param {object} itemData - Item data
+   * @returns {HTMLElement} Item DOM element
+   */
+  _createItemElement(itemData) {
+    const itemDiv = this._document.createElement('div');
+    itemDiv.className = 'equipment-item';
+
+    // Item name
+    const nameSpan = this._document.createElement('span');
+    nameSpan.className = 'equipment-item-name';
+    nameSpan.textContent = '• ' + itemData.name;
+    itemDiv.appendChild(nameSpan);
+
+    // Item details
+    const details = [];
+    if (itemData.material && itemData.material !== 'unknown') {
+      details.push(itemData.material);
+    }
+    if (itemData.color && itemData.color !== 'unknown') {
+      details.push(itemData.color);
+    }
+    if (itemData.size && itemData.size !== 'unknown') {
+      details.push(`size ${itemData.size}`);
+    }
+
+    if (details.length > 0) {
+      const detailsSpan = this._document.createElement('span');
+      detailsSpan.className = 'equipment-item-details';
+      detailsSpan.textContent = ` (${details.join(', ')})`;
+      itemDiv.appendChild(detailsSpan);
+    }
+
+    return itemDiv;
+  }
+
+  /**
+   * Format slot ID into human-readable name
+   *
+   * @private
+   * @param {string} slotId - Slot ID (e.g., "underwear_upper")
+   * @returns {string} Formatted name (e.g., "Underwear Upper")
+   */
+  _formatSlotName(slotId) {
+    return slotId
+      .split('_')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
   }
 }
 

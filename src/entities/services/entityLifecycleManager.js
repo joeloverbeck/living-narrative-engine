@@ -10,12 +10,14 @@ import { EntityNotFoundError } from '../../errors/entityNotFoundError.js';
 import EntityLifecycleValidator from './helpers/EntityLifecycleValidator.js';
 import EntityEventDispatcher from './helpers/EntityEventDispatcher.js';
 import EntityDefinitionHelper from './helpers/EntityDefinitionHelper.js';
+import MonitoringCoordinator from '../monitoring/MonitoringCoordinator.js';
 
 /**
  * @typedef {import('../factories/entityFactory.js').default} EntityFactory
  * @typedef {import('./entityRepositoryAdapter.js').EntityRepositoryAdapter} EntityRepositoryAdapter
  * @typedef {import('./definitionCache.js').DefinitionCache} DefinitionCache
  * @typedef {import('./errorTranslator.js').ErrorTranslator} ErrorTranslator
+ * @typedef {import('../monitoring/MonitoringCoordinator.js').default} MonitoringCoordinator
  * @typedef {import('../../interfaces/coreServices.js').IDataRegistry} IDataRegistry
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
  * @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher
@@ -44,6 +46,8 @@ export class EntityLifecycleManager {
   #eventDispatcher;
   /** @type {EntityDefinitionHelper} */
   #definitionHelper;
+  /** @type {MonitoringCoordinator} */
+  #monitoringCoordinator;
 
   /**
    * @class
@@ -55,6 +59,7 @@ export class EntityLifecycleManager {
    * @param {EntityFactory} deps.factory - EntityFactory instance
    * @param {ErrorTranslator} deps.errorTranslator - Error translator
    * @param {DefinitionCache} deps.definitionCache - Definition cache instance
+   * @param {MonitoringCoordinator} [deps.monitoringCoordinator] - Monitoring coordinator
    */
   constructor({
     registry,
@@ -64,6 +69,7 @@ export class EntityLifecycleManager {
     factory,
     errorTranslator,
     definitionCache,
+    monitoringCoordinator,
   }) {
     this.#validateDependencies({
       registry,
@@ -73,6 +79,7 @@ export class EntityLifecycleManager {
       factory,
       errorTranslator,
       definitionCache,
+      monitoringCoordinator,
     });
 
     this.#initializeCoreDependencies({
@@ -88,6 +95,7 @@ export class EntityLifecycleManager {
       eventDispatcher,
       registry,
       definitionCache,
+      monitoringCoordinator,
     });
 
     this.#logger.debug('EntityLifecycleManager (optimized) initialized');
@@ -104,6 +112,7 @@ export class EntityLifecycleManager {
    * @param deps.factory
    * @param deps.errorTranslator
    * @param deps.definitionCache
+   * @param deps.monitoringCoordinator
    */
   #validateDependencies({
     registry,
@@ -113,6 +122,7 @@ export class EntityLifecycleManager {
     factory,
     errorTranslator,
     definitionCache,
+    monitoringCoordinator,
   }) {
     validateDependency(logger, 'ILogger', console, {
       requiredMethods: ['info', 'error', 'warn', 'debug'],
@@ -142,6 +152,22 @@ export class EntityLifecycleManager {
     validateDependency(definitionCache, 'DefinitionCache', tempLogger, {
       requiredMethods: ['get', 'clear'],
     });
+
+    // MonitoringCoordinator is optional
+    if (monitoringCoordinator) {
+      validateDependency(
+        monitoringCoordinator,
+        'MonitoringCoordinator',
+        tempLogger,
+        {
+          requiredMethods: [
+            'executeMonitored',
+            'getCircuitBreaker',
+            'getStats',
+          ],
+        }
+      );
+    }
   }
 
   /**
@@ -176,8 +202,15 @@ export class EntityLifecycleManager {
    * @param deps.eventDispatcher
    * @param deps.registry
    * @param deps.definitionCache
+   * @param deps.monitoringCoordinator
    */
-  #initializeHelpers({ logger, eventDispatcher, registry, definitionCache }) {
+  #initializeHelpers({
+    logger,
+    eventDispatcher,
+    registry,
+    definitionCache,
+    monitoringCoordinator,
+  }) {
     this.#validator = new EntityLifecycleValidator({ logger });
     this.#eventDispatcher = new EntityEventDispatcher({
       eventDispatcher,
@@ -188,6 +221,7 @@ export class EntityLifecycleManager {
       definitionCache,
       logger,
     });
+    this.#monitoringCoordinator = monitoringCoordinator;
   }
 
   /**
@@ -246,6 +280,28 @@ export class EntityLifecycleManager {
       );
       throw this.#errorTranslator.translate(error);
     }
+  }
+
+  /**
+   * Create a new entity instance from a definition with monitoring.
+   *
+   * @param {string} definitionId - The ID of the entity definition
+   * @param {object} opts - Options for creation
+   * @param {string} [opts.instanceId] - Optional instance ID
+   * @param {Object<string, Object>} [opts.componentOverrides] - Component overrides
+   * @returns {object} The newly created entity
+   * @throws {Error} If creation fails
+   */
+  async createEntityInstanceWithMonitoring(definitionId, opts = {}) {
+    if (!this.#monitoringCoordinator) {
+      return this.createEntityInstance(definitionId, opts);
+    }
+
+    return await this.#monitoringCoordinator.executeMonitored(
+      'createEntityInstance',
+      () => this.createEntityInstance(definitionId, opts),
+      { context: `definition:${definitionId}` }
+    );
   }
 
   /**
@@ -309,6 +365,25 @@ export class EntityLifecycleManager {
       `Entity reconstructed: ${entity.id} (definition: ${serializedEntity.definitionId})`
     );
     return entity;
+  }
+
+  /**
+   * Remove an entity instance from the manager with monitoring.
+   *
+   * @param {string} instanceId - The ID of the entity instance to remove
+   * @throws {EntityNotFoundError} If the entity is not found
+   * @throws {Error} If removal fails
+   */
+  async removeEntityInstanceWithMonitoring(instanceId) {
+    if (!this.#monitoringCoordinator) {
+      return this.removeEntityInstance(instanceId);
+    }
+
+    return await this.#monitoringCoordinator.executeMonitored(
+      'removeEntityInstance',
+      () => this.removeEntityInstance(instanceId),
+      { context: `instance:${instanceId}` }
+    );
   }
 
   /**
@@ -399,11 +474,45 @@ export class EntityLifecycleManager {
    * @returns {object} Lifecycle statistics
    */
   getStats() {
-    return {
+    const stats = {
       entityCount: this.#entityRepository.size || 0,
       cacheStats: this.#definitionHelper.getCacheStats(),
       eventStats: this.#eventDispatcher.getStats(),
     };
+
+    // Add monitoring stats if available
+    if (this.#monitoringCoordinator) {
+      stats.monitoringStats = this.#monitoringCoordinator.getStats();
+    }
+
+    return stats;
+  }
+
+  /**
+   * Gets monitoring statistics if monitoring is enabled.
+   *
+   * @returns {object|null} Monitoring statistics or null if disabled
+   */
+  getMonitoringStats() {
+    return this.#monitoringCoordinator
+      ? this.#monitoringCoordinator.getStats()
+      : null;
+  }
+
+  /**
+   * Gets circuit breaker status for a specific operation.
+   *
+   * @param {string} operationName - Name of the operation
+   * @returns {object|null} Circuit breaker status or null if disabled
+   */
+  getCircuitBreakerStatus(operationName) {
+    if (!this.#monitoringCoordinator) {
+      return null;
+    }
+
+    const circuitBreaker =
+      this.#monitoringCoordinator.getCircuitBreaker(operationName);
+    return circuitBreaker.getStats();
   }
 
   /**

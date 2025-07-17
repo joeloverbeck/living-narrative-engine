@@ -37,10 +37,12 @@ export default class MonitoringCoordinator {
   #enabled;
   /** @type {number} */
   #checkInterval;
-  /** @type {NodeJS.Timeout} */
+  /** @type {number|null} */
   #intervalHandle;
 
   /**
+   * Creates a new MonitoringCoordinator instance.
+   *
    * @class
    * @param {object} deps - Dependencies
    * @param {ILogger} deps.logger - Logger instance
