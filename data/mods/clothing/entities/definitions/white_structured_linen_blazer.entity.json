@@ -8,12 +8,19 @@
       "material": "linen",
       "equipmentSlots": {
         "primary": "torso_upper",
-        "secondary": ["left_arm_clothing", "right_arm_clothing"]
+        "secondary": [
+          "left_arm_clothing",
+          "right_arm_clothing"
+        ]
       },
-      "allowedLayers": ["underwear", "base", "outer"]
+      "allowedLayers": [
+        "underwear",
+        "base",
+        "outer"
+      ]
     },
     "core:name": {
-      "text": "white structured blazer"
+      "text": "structured blazer"
     },
     "core:description": {
       "text": "A crisp white blazer crafted from premium linen with structured shoulders and a tailored silhouette. The clean lines and professional cut make it perfect for business or formal occasions, while the breathable linen fabric ensures comfort throughout the day. Features refined details like notched lapels and functional buttons."

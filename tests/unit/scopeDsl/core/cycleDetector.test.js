@@ -1,5 +1,5 @@
-import createCycleDetector from '../../src/scopeDsl/core/cycleDetector.js';
-import ScopeCycleError from '../../src/errors/scopeCycleError.js';
+import createCycleDetector from '../../../../src/scopeDsl/core/cycleDetector.js';
+import ScopeCycleError from '../../../../src/errors/scopeCycleError.js';
 
 describe('createCycleDetector', () => {
   let detector;
