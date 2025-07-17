@@ -63,17 +63,15 @@ describeActionDiscoverySuite(
       const goActions = result.actions.filter((a) => a.id === 'core:go');
       expect(goActions).toHaveLength(2);
 
-      const target2Action = goActions.find(
-        (a) => a.params.targetId === 'loc-2'
-      );
-      expect(target2Action).toBeDefined();
-      expect(target2Action.command).toBe('go loc-2');
+      const goAction1 = goActions.find((a) => a.params.targetId === 'loc-2');
+      expect(goAction1).toBeDefined();
+      expect(goAction1.command).toBe('go loc-2');
+      expect(goAction1.params.targetId).toBe('loc-2');
 
-      const target3Action = goActions.find(
-        (a) => a.params.targetId === 'loc-3'
-      );
-      expect(target3Action).toBeDefined();
-      expect(target3Action.command).toBe('go loc-3');
+      const goAction2 = goActions.find((a) => a.params.targetId === 'loc-3');
+      expect(goAction2).toBeDefined();
+      expect(goAction2.command).toBe('go loc-3');
+      expect(goAction2.params.targetId).toBe('loc-3');
 
       const waitAction = result.actions.find((a) => a.id === 'core:wait');
       expect(waitAction).toBeDefined();
