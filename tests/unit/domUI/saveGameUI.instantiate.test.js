@@ -1,18 +1,19 @@
 import { JSDOM } from 'jsdom';
-import LoadGameUI from '../../src/domUI/loadGameUI.js';
-import DocumentContext from '../../src/domUI/documentContext.js';
-import DomElementFactory from '../../src/domUI/domElementFactory.js';
+import SaveGameUI from '../../../src/domUI/saveGameUI.js';
+import SaveGameService from '../../../src/domUI/saveGameService.js';
+import DocumentContext from '../../../src/domUI/documentContext.js';
+import DomElementFactory from '../../../src/domUI/domElementFactory.js';
 import { describe, it, expect, jest } from '@jest/globals';
 
-describe('LoadGameUI instantiation', () => {
+describe('SaveGameUI instantiation', () => {
   it('can be created with mocked services and a custom DocumentContext', () => {
     const html = `<!DOCTYPE html><body>
-      <div id="load-game-screen">
-        <div id="load-slots-container"></div>
-        <div id="load-game-status-message"></div>
-        <button id="confirm-load-button"></button>
-        <button id="delete-save-button"></button>
-        <button id="cancel-load-button"></button>
+      <div id="save-game-screen">
+        <button id="cancel-save-button"></button>
+        <div id="save-slots-container"></div>
+        <input id="save-name-input" />
+        <button id="confirm-save-button"></button>
+        <div id="save-game-status-message"></div>
       </div>
     </body>`;
     const dom = new JSDOM(html);
@@ -26,26 +27,27 @@ describe('LoadGameUI instantiation', () => {
     };
     const docContext = new DocumentContext(document, mockLogger);
     const factory = new DomElementFactory(docContext);
-    const saveLoadService = {
-      listManualSaveSlots: jest.fn(),
-      deleteManualSave: jest.fn(),
-    };
+    const saveLoadService = { listManualSaveSlots: jest.fn() };
     const dispatcher = {
       subscribe: jest.fn(() => ({ unsubscribe: jest.fn() })),
       dispatch: jest.fn(),
     };
     const userPrompt = { confirm: jest.fn(() => true) };
+    const saveGameService = new SaveGameService({
+      logger: mockLogger,
+      userPrompt,
+    });
 
-    const ui = new LoadGameUI({
+    const ui = new SaveGameUI({
       logger: mockLogger,
       documentContext: docContext,
       domElementFactory: factory,
       saveLoadService,
       validatedEventDispatcher: dispatcher,
-      userPrompt,
+      saveGameService,
     });
 
-    expect(ui).toBeInstanceOf(LoadGameUI);
+    expect(ui).toBeInstanceOf(SaveGameUI);
     expect(userPrompt.confirm).not.toHaveBeenCalled();
     expect(typeof ui.show).toBe('function');
     ui.show();

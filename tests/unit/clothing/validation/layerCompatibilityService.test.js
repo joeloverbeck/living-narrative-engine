@@ -83,7 +83,6 @@ describe('LayerCompatibilityService', () => {
             return {
               wearableType: 'shirt',
               layer: 'base',
-              size: 'm',
               equipmentSlots: {
                 primary: 'torso_clothing',
                 secondary: [],
@@ -105,7 +104,6 @@ describe('LayerCompatibilityService', () => {
             return {
               wearableType: 'shirt',
               layer: 'base',
-              size: 'm',
               equipmentSlots: { primary: 'torso_clothing', secondary: [] },
             };
           }
@@ -140,7 +138,6 @@ describe('LayerCompatibilityService', () => {
             return {
               wearableType: 'shirt',
               layer: 'base',
-              size: 'm',
               equipmentSlots: { primary: 'torso_clothing', secondary: [] },
             };
           }
@@ -166,187 +163,9 @@ describe('LayerCompatibilityService', () => {
       });
     });
 
-    it('should detect size mismatch conflicts', async () => {
-      entityManager.getComponentData.mockImplementation(
-        (entityId, componentId) => {
-          if (componentId === 'clothing:equipment') {
-            return {
-              equipped: {
-                torso_clothing: {
-                  underwear: 'tight_undershirt',
-                },
-              },
-            };
-          }
-          if (componentId === 'clothing:wearable') {
-            if (entityId === 'new_shirt') {
-              return {
-                wearableType: 'shirt',
-                layer: 'base',
-                size: 'xxl', // Much larger than existing
-                equipmentSlots: { primary: 'torso_clothing', secondary: [] },
-              };
-            }
-            if (entityId === 'tight_undershirt') {
-              return {
-                wearableType: 'undershirt',
-                layer: 'underwear',
-                size: 'xs', // Much smaller
-                equipmentSlots: { primary: 'torso_clothing', secondary: [] },
-              };
-            }
-          }
-          return null;
-        }
-      );
 
-      const result = await service.checkLayerConflicts(
-        'entity1',
-        'new_shirt',
-        'base',
-        'torso_clothing'
-      );
 
-      expect(result.hasConflicts).toBe(true);
-      expect(result.conflicts.some((c) => c.type === 'size_mismatch')).toBe(
-        true
-      );
-    });
 
-    it('should handle invalid size values without crashing', async () => {
-      entityManager.getComponentData.mockImplementation(
-        (entityId, componentId) => {
-          if (componentId === 'clothing:equipment') {
-            return {
-              equipped: {
-                torso_clothing: {
-                  underwear: 'custom_shirt',
-                },
-              },
-            };
-          }
-          if (componentId === 'clothing:wearable') {
-            if (entityId === 'new_shirt') {
-              return {
-                wearableType: 'shirt',
-                layer: 'base',
-                size: 'unknown_size', // Invalid size
-                equipmentSlots: { primary: 'torso_clothing', secondary: [] },
-              };
-            }
-            if (entityId === 'custom_shirt') {
-              return {
-                wearableType: 'undershirt',
-                layer: 'underwear',
-                size: 'custom', // Also invalid
-                equipmentSlots: { primary: 'torso_clothing', secondary: [] },
-              };
-            }
-          }
-          return null;
-        }
-      );
-
-      const result = await service.checkLayerConflicts(
-        'entity1',
-        'new_shirt',
-        'base',
-        'torso_clothing'
-      );
-
-      // Should not crash and treat as potential conflict
-      expect(result.hasConflicts).toBe(false); // Medium severity doesn't create conflict
-    });
-
-    it('should not flag conflicts for medium severity size differences', async () => {
-      entityManager.getComponentData.mockImplementation(
-        (entityId, componentId) => {
-          if (componentId === 'clothing:equipment') {
-            return {
-              equipped: {
-                torso_clothing: {
-                  underwear: 'undershirt',
-                },
-              },
-            };
-          }
-          if (componentId === 'clothing:wearable') {
-            if (entityId === 'new_shirt') {
-              return {
-                wearableType: 'shirt',
-                layer: 'base',
-                size: 'l', // 2 sizes larger (medium severity)
-                equipmentSlots: { primary: 'torso_clothing', secondary: [] },
-              };
-            }
-            if (entityId === 'undershirt') {
-              return {
-                wearableType: 'undershirt',
-                layer: 'underwear',
-                size: 's', // small
-                equipmentSlots: { primary: 'torso_clothing', secondary: [] },
-              };
-            }
-          }
-          return null;
-        }
-      );
-
-      const result = await service.checkLayerConflicts(
-        'entity1',
-        'new_shirt',
-        'base',
-        'torso_clothing'
-      );
-
-      // Medium severity should not create conflicts
-      expect(result.hasConflicts).toBe(false);
-    });
-
-    it('should not flag conflicts for low severity size differences', async () => {
-      entityManager.getComponentData.mockImplementation(
-        (entityId, componentId) => {
-          if (componentId === 'clothing:equipment') {
-            return {
-              equipped: {
-                torso_clothing: {
-                  underwear: 'undershirt',
-                },
-              },
-            };
-          }
-          if (componentId === 'clothing:wearable') {
-            if (entityId === 'new_shirt') {
-              return {
-                wearableType: 'shirt',
-                layer: 'base',
-                size: 'm', // 1 size larger (low severity)
-                equipmentSlots: { primary: 'torso_clothing', secondary: [] },
-              };
-            }
-            if (entityId === 'undershirt') {
-              return {
-                wearableType: 'undershirt',
-                layer: 'underwear',
-                size: 's', // small
-                equipmentSlots: { primary: 'torso_clothing', secondary: [] },
-              };
-            }
-          }
-          return null;
-        }
-      );
-
-      const result = await service.checkLayerConflicts(
-        'entity1',
-        'new_shirt',
-        'base',
-        'torso_clothing'
-      );
-
-      // Low severity should not create conflicts
-      expect(result.hasConflicts).toBe(false);
-    });
 
     it('should detect layer ordering violations', async () => {
       entityManager.getComponentData.mockImplementation(
@@ -364,7 +183,6 @@ describe('LayerCompatibilityService', () => {
             return {
               wearableType: 'jacket',
               layer: 'outer',
-              size: 'm',
               equipmentSlots: { primary: 'torso_clothing', secondary: [] },
             };
           }
@@ -398,7 +216,6 @@ describe('LayerCompatibilityService', () => {
             return {
               wearableType: 'shirt',
               layer: 'base',
-              size: 'm',
               equipmentSlots: { primary: 'torso_clothing', secondary: [] },
             };
           }
@@ -429,7 +246,6 @@ describe('LayerCompatibilityService', () => {
             return {
               wearableType: 'shirt',
               layer: 'base',
-              size: 'm',
               equipmentSlots: { primary: 'torso_clothing', secondary: [] },
             };
           }
@@ -489,7 +305,6 @@ describe('LayerCompatibilityService', () => {
             return {
               wearableType: 'underwear',
               layer: 'underwear', // Trying to add underwear after accessories
-              size: 'm',
               equipmentSlots: { primary: 'torso_clothing', secondary: [] },
             };
           }
@@ -525,7 +340,6 @@ describe('LayerCompatibilityService', () => {
             return {
               wearableType: 'jacket',
               layer: 'outer', // Outer layer requires base layer
-              size: 'm',
               equipmentSlots: { primary: 'torso_clothing', secondary: [] },
             };
           }
@@ -572,7 +386,6 @@ describe('LayerCompatibilityService', () => {
             return {
               wearableType: 'jacket',
               layer: 'outer', // Outer layer requires base layer
-              size: 'm',
               equipmentSlots: { primary: 'torso_clothing', secondary: [] },
             };
           }
@@ -609,7 +422,6 @@ describe('LayerCompatibilityService', () => {
             return {
               wearableType: 'dress',
               layer: 'base',
-              size: 'm',
               equipmentSlots: {
                 primary: 'torso_clothing',
                 secondary: ['arms_clothing'], // Has secondary slots
@@ -805,25 +617,6 @@ describe('LayerCompatibilityService', () => {
       });
     });
 
-    it('should suggest size adjustment for size mismatches', async () => {
-      const conflicts = [
-        {
-          type: 'size_mismatch',
-          conflictingItemId: 'item1',
-          severity: 'medium',
-        },
-      ];
-
-      const result = await service.suggestResolutions(conflicts);
-
-      expect(result).toHaveLength(1);
-      expect(result[0]).toEqual({
-        type: 'size_adjust',
-        target: 'item1',
-        description: 'Consider different size or adjust fit',
-        priority: 3,
-      });
-    });
 
     it('should suggest equipping required layers', async () => {
       const conflicts = [
@@ -883,7 +676,6 @@ describe('LayerCompatibilityService', () => {
 
     it('should sort strategies by priority', async () => {
       const conflicts = [
-        { type: 'size_mismatch', severity: 'medium' },
         {
           type: 'layer_overlap',
           conflictingItemId: 'item1',
@@ -895,27 +687,12 @@ describe('LayerCompatibilityService', () => {
 
       const result = await service.suggestResolutions(conflicts);
 
-      expect(result).toHaveLength(3);
+      expect(result).toHaveLength(2);
       expect(result[0].priority).toBe(1); // layer_overlap and layer_requirement both priority 1
-      expect(result[2].priority).toBe(3); // size_mismatch priority 3
+      expect(result[1].priority).toBe(1); // layer_requirement priority 1
     });
   });
 
-  describe('private helper methods', () => {
-    describe('size mismatch calculation', () => {
-      it('should calculate high severity for large size differences', () => {
-        // This tests the private method through the public interface
-        const service = new LayerCompatibilityService({
-          entityManager,
-          logger,
-        });
-
-        // We can't directly test private methods, but we can verify the behavior
-        // through integration testing with checkLayerConflicts
-        expect(LayerCompatibilityService.LAYER_ORDER).toBeDefined();
-      });
-    });
-  });
 
   describe('error handling', () => {
     it('should handle entityManager errors gracefully', async () => {

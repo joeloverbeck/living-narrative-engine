@@ -1,10 +1,10 @@
 import { JSDOM } from 'jsdom';
 import { describe, it, expect, jest } from '@jest/globals';
-import SaveGameUI from '../../src/domUI/saveGameUI.js';
-import SaveGameService from '../../src/domUI/saveGameService.js';
-import DocumentContext from '../../src/domUI/documentContext.js';
-import DomElementFactory from '../../src/domUI/domElementFactory.js';
-import { createMockLogger } from '../common/mockFactories';
+import SaveGameUI from '../../../src/domUI/saveGameUI.js';
+import SaveGameService from '../../../src/domUI/saveGameService.js';
+import DocumentContext from '../../../src/domUI/documentContext.js';
+import DomElementFactory from '../../../src/domUI/domElementFactory.js';
+import { createMockLogger } from '../../common/mockFactories';
 
 /**
  *

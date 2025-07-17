@@ -1,6 +1,6 @@
 import { describe, it, expect, jest } from '@jest/globals';
-import SaveGameService from '../../src/domUI/saveGameService.js';
-import { createMockLogger } from '../common/mockFactories';
+import SaveGameService from '../../../src/domUI/saveGameService.js';
+import { createMockLogger } from '../../common/mockFactories';
 
 /**
  *

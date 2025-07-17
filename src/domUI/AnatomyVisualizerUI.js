@@ -647,7 +647,6 @@ class AnatomyVisualizerUI {
         name,
         material: wearableData.material || 'unknown',
         color,
-        size: wearableData.size || 'unknown',
         texture,
       };
     } catch (error) {
@@ -793,9 +792,6 @@ class AnatomyVisualizerUI {
     }
     if (itemData.color && itemData.color !== 'unknown') {
       details.push(itemData.color);
-    }
-    if (itemData.size && itemData.size !== 'unknown') {
-      details.push(`size ${itemData.size}`);
     }
 
     if (details.length > 0) {

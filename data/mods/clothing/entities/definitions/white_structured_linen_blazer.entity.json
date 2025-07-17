@@ -5,7 +5,6 @@
   "components": {
     "clothing:wearable": {
       "layer": "outer",
-      "size": "m",
       "material": "linen",
       "equipmentSlots": {
         "primary": "torso_upper",
