@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach } from '@jest/globals';
-import createSourceResolver from '../../src/scopeDsl/nodes/sourceResolver.js';
+import createSourceResolver from '../../../../src/scopeDsl/nodes/sourceResolver.js';
 
 describe('sourceResolver', () => {
   let resolver;

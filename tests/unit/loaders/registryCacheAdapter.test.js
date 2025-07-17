@@ -1,4 +1,6 @@
-const { makeRegistryCache } = require('../../src/loaders/registryCacheAdapter');
+const {
+  makeRegistryCache,
+} = require('../../../src/loaders/registryCacheAdapter');
 
 describe('makeRegistryCache', () => {
   it('snapshot/clear/restore round-trip keeps deep-equal data', () => {

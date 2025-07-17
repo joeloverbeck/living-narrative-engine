@@ -111,7 +111,6 @@ export class LayerCompatibilityService {
           );
         }
 
-
         // Check layer ordering requirements
         const orderingConflicts = await this.#checkLayerOrdering(
           entityId,
@@ -313,7 +312,6 @@ export class LayerCompatibilityService {
     return strategies.sort((a, b) => a.priority - b.priority);
   }
 
-
   /**
    * Checks layer ordering requirements
    *
@@ -431,5 +429,4 @@ export class LayerCompatibilityService {
 
     return conflicts;
   }
-
 }

@@ -634,7 +634,9 @@ class AnatomyVisualizerUI {
       const name = nameComponent?.text || 'Unknown';
 
       // Get color from descriptors if available
-      const colorDescriptor = entity.getComponentData('descriptors:color_basic');
+      const colorDescriptor = entity.getComponentData(
+        'descriptors:color_basic'
+      );
       const color = colorDescriptor?.color || 'unknown';
 
       // Get texture from descriptors if available

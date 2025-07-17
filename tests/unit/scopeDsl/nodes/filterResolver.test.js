@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach, jest } from '@jest/globals';
-import createFilterResolver from '../../src/scopeDsl/nodes/filterResolver.js';
+import createFilterResolver from '../../../../src/scopeDsl/nodes/filterResolver.js';
 
 describe('filterResolver', () => {
   let resolver;

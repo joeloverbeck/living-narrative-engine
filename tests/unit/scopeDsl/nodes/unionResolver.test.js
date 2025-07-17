@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach, jest } from '@jest/globals';
-import createUnionResolver from '../../src/scopeDsl/nodes/unionResolver.js';
+import createUnionResolver from '../../../../src/scopeDsl/nodes/unionResolver.js';
 
 describe('unionResolver', () => {
   let resolver;

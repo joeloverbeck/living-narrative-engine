@@ -1,12 +1,12 @@
 import { describe, beforeEach, it, expect, jest } from '@jest/globals';
-import AppContainer from '../../src/dependencyInjection/appContainer.js';
-import { registerTurnLifecycle } from '../../src/dependencyInjection/registrations/turnLifecycleRegistrations.js';
-import { tokens } from '../../src/dependencyInjection/tokens.js';
-import TurnManager from '../../src/turns/turnManager.js';
-import TurnHandlerResolver from '../../src/turns/services/turnHandlerResolver.js';
-import { ConcreteTurnStateFactory } from '../../src/turns/factories/concreteTurnStateFactory.js';
+import AppContainer from '../../../../src/dependencyInjection/appContainer.js';
+import { registerTurnLifecycle } from '../../../../src/dependencyInjection/registrations/turnLifecycleRegistrations.js';
+import { tokens } from '../../../../src/dependencyInjection/tokens.js';
+import TurnManager from '../../../../src/turns/turnManager.js';
+import TurnHandlerResolver from '../../../../src/turns/services/turnHandlerResolver.js';
+import { ConcreteTurnStateFactory } from '../../../../src/turns/factories/concreteTurnStateFactory.js';
 
-import ActorTurnHandler from '../../src/turns/handlers/actorTurnHandler.js';
+import ActorTurnHandler from '../../../../src/turns/handlers/actorTurnHandler.js';
 
 describe('registerTurnLifecycle', () => {
   /** @type {AppContainer} */

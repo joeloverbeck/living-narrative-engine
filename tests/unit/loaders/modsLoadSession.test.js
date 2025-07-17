@@ -1,4 +1,5 @@
-const ModsLoadSession = require('../../src/loaders/ModsLoadSession.js').default;
+const ModsLoadSession =
+  require('../../../src/loaders/ModsLoadSession.js').default;
 
 describe('ModsLoadSession', () => {
   it('executes phases in order', async () => {

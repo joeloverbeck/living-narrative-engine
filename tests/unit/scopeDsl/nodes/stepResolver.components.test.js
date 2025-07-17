@@ -1,9 +1,9 @@
 import { jest } from '@jest/globals';
-import createStepResolver from '../../src/scopeDsl/nodes/stepResolver.js';
+import createStepResolver from '../../../../src/scopeDsl/nodes/stepResolver.js';
 import {
   createMockEntity,
   createTestEntity,
-} from '../common/mockFactories/entities.js';
+} from '../../../common/mockFactories/entities.js';
 
 describe('StepResolver - components edge access', () => {
   let resolver;

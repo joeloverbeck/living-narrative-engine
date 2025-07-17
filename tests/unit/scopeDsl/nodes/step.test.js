@@ -1,5 +1,5 @@
-import createStepResolver from '../../src/scopeDsl/nodes/stepResolver.js';
-import { createTestEntity } from '../common/mockFactories/entities.js';
+import createStepResolver from '../../../../src/scopeDsl/nodes/stepResolver.js';
+import { createTestEntity } from '../../../common/mockFactories/entities.js';
 
 describe('StepResolver', () => {
   let resolver;

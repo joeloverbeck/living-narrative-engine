@@ -15,6 +15,7 @@
   "content": {
     "actions": [
       "adjust_clothing.action.json",
+      "fondle_ass.action.json",
       "get_close.action.json",
       "kiss_cheek.action.json",
       "lick_lips.action.json",
@@ -25,13 +26,17 @@
       "thumb_wipe_cheek.action.json",
       "turn_around.action.json"
     ],
-    "components": ["closeness.component.json", "facing_away.component.json"],
+    "components": [
+      "closeness.component.json",
+      "facing_away.component.json"
+    ],
     "conditions": [
       "actor-has-facing-away.condition.json",
       "actor-is-in-closeness.condition.json",
       "entity-in-facing-away.condition.json",
       "entity-not-in-facing-away.condition.json",
       "event-is-action-adjust-clothing.condition.json",
+      "event-is-action-fondle-ass.condition.json",
       "event-is-action-get-close.condition.json",
       "event-is-action-kiss-cheek.condition.json",
       "event-is-action-lick-lips.condition.json",
@@ -54,6 +59,7 @@
     "rules": [
       "adjust_clothing.rule.json",
       "get_close.rule.json",
+      "handle_fondle_ass.rule.json",
       "handle_massage_shoulders.rule.json",
       "kiss_cheek.rule.json",
       "lick_lips.rule.json",
@@ -63,9 +69,13 @@
       "thumb_wipe_cheek.rule.json",
       "turn_around.rule.json"
     ],
-    "ui": ["icons.json", "labels.json"],
+    "ui": [
+      "icons.json",
+      "labels.json"
+    ],
     "scopes": [
       "actors_with_arms_in_intimacy.scope",
+      "actors_with_ass_cheeks_in_intimacy.scope",
       "close_actors.scope",
       "close_actors_facing_away.scope",
       "close_actors_in_front.scope"

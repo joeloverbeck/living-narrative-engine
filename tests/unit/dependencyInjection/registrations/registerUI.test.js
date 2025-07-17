@@ -1,9 +1,9 @@
 import { describe, beforeEach, it, expect, jest } from '@jest/globals';
-import AppContainer from '../../src/dependencyInjection/appContainer.js';
-import { registerUI } from '../../src/dependencyInjection/registrations/uiRegistrations.js';
-import { tokens } from '../../src/dependencyInjection/tokens.js';
-import InputHandler from '../../src/input/inputHandler.js';
-import { ChatAlertRenderer } from '../../src/domUI/chatAlertRenderer.js';
+import AppContainer from '../../../../src/dependencyInjection/appContainer.js';
+import { registerUI } from '../../../../src/dependencyInjection/registrations/uiRegistrations.js';
+import { tokens } from '../../../../src/dependencyInjection/tokens.js';
+import InputHandler from '../../../../src/input/inputHandler.js';
+import { ChatAlertRenderer } from '../../../../src/domUI/chatAlertRenderer.js';
 
 describe('registerUI', () => {
   /** @type {AppContainer} */

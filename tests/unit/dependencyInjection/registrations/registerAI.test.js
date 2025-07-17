@@ -1,8 +1,8 @@
 import { describe, beforeEach, it, expect, jest } from '@jest/globals';
-import AppContainer from '../../src/dependencyInjection/appContainer.js';
-import { registerAI } from '../../src/dependencyInjection/registrations/aiRegistrations.js';
-import { tokens } from '../../src/dependencyInjection/tokens.js';
-import { ConfigurableLLMAdapter } from '../../src/turns/adapters/configurableLLMAdapter.js';
+import AppContainer from '../../../../src/dependencyInjection/appContainer.js';
+import { registerAI } from '../../../../src/dependencyInjection/registrations/aiRegistrations.js';
+import { tokens } from '../../../../src/dependencyInjection/tokens.js';
+import { ConfigurableLLMAdapter } from '../../../../src/turns/adapters/configurableLLMAdapter.js';
 
 describe('registerAI', () => {
   /** @type {AppContainer} */
