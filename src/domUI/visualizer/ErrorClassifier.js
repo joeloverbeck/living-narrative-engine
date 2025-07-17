@@ -138,7 +138,7 @@ class ErrorClassifier {
     // This would be implemented with error history tracking
 
     // Report errors with unknown causes for investigation
-    if (classification.category === 'UNKNOWN') {
+    if (classification.category === this.ERROR_CATEGORIES.UNKNOWN) {
       return true;
     }
 
@@ -543,14 +543,14 @@ class ErrorClassifier {
     }
 
     switch (category) {
-      case this.ERROR_CATEGORIES.DATA:
-        return 'Could not load anatomy data for this entity.';
-      case this.ERROR_CATEGORIES.RENDER:
-        return 'Could not display the anatomy visualization.';
-      case this.ERROR_CATEGORIES.STATE:
-        return 'The anatomy visualizer encountered a state error.';
       case this.ERROR_CATEGORIES.NETWORK:
         return 'Network connection issue. Please check your internet connection.';
+      case this.ERROR_CATEGORIES.VALIDATION:
+        return 'Invalid input provided to the anatomy visualizer.';
+      case this.ERROR_CATEGORIES.PERMISSION:
+        return 'You do not have permission to view this anatomy data.';
+      case this.ERROR_CATEGORIES.RESOURCE:
+        return 'Insufficient resources to display the anatomy visualization.';
       default:
         return 'An error occurred with the anatomy visualizer.';
     }
@@ -578,17 +578,21 @@ class ErrorClassifier {
     }
 
     switch (category) {
-      case this.ERROR_CATEGORIES.DATA:
-        suggestions.push('Try selecting a different entity');
-        suggestions.push('Check that the entity has anatomy data');
-        break;
-      case this.ERROR_CATEGORIES.RENDER:
-        suggestions.push('Refresh the page');
-        suggestions.push('Try using a different browser');
-        break;
       case this.ERROR_CATEGORIES.NETWORK:
         suggestions.push('Check your internet connection');
         suggestions.push('Try again in a moment');
+        break;
+      case this.ERROR_CATEGORIES.VALIDATION:
+        suggestions.push('Check your input and try again');
+        suggestions.push('Ensure all required fields are filled correctly');
+        break;
+      case this.ERROR_CATEGORIES.PERMISSION:
+        suggestions.push('Contact your administrator for access');
+        suggestions.push('Ensure you are logged in with the correct account');
+        break;
+      case this.ERROR_CATEGORIES.RESOURCE:
+        suggestions.push('Close other applications to free up resources');
+        suggestions.push('Try again with a smaller dataset');
         break;
       default:
         suggestions.push('Refresh the page');

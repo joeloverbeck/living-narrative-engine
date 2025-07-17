@@ -167,7 +167,9 @@ class ErrorReporter {
   getStatistics() {
     this._throwIfDisposed();
 
-    // This would be implemented with actual metrics collection
+    // TODO: Implement actual metrics collection
+    // This method currently returns placeholder data and should be
+    // implemented to track real error reporting statistics
     // For now, return placeholder statistics
     return {
       totalReported: 0,
