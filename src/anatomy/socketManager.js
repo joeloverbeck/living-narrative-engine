@@ -186,11 +186,13 @@ export class SocketManager {
 
     // Debug logging for troubleshooting
     this.#logger.debug(
-      `SocketManager: Generating name for child '${childEntityId}' with template '${socket.nameTpl}' - anatomyPart.orientation: '${anatomyPart?.orientation}', socket.orientation: '${socket.orientation}', effectiveOrientation: '${effectiveOrientation}', subType: '${anatomyPart?.subType}'`
+      `SocketManager: Generating name for child '${childEntityId}' with template '${socket.nameTpl}' - anatomyPart.orientation: '${anatomyPart?.orientation}', socket.orientation: '${socket.orientation}', effectiveOrientation: '${effectiveOrientation}', subType: '${anatomyPart?.subType}', socket.id: '${socket.id}'`
     );
 
     // Replace template tokens
-    name = name.replace('{{orientation}}', socket.orientation || '');
+    // For {{orientation}}, use socket orientation if available, otherwise use effective orientation
+    // This handles cases where socket definitions don't include orientation but it's inferred from slot names
+    name = name.replace('{{orientation}}', socket.orientation || effectiveOrientation);
     name = name.replace('{{effective_orientation}}', effectiveOrientation);
     name = name.replace('{{type}}', anatomyPart?.subType || 'part');
     name = name.replace('{{parent.name}}', parentName);

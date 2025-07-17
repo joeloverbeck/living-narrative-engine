@@ -91,12 +91,15 @@ export class AnatomyGenerationWorkflow extends BaseService {
       `AnatomyGenerationWorkflow: Generated ${graphResult.entities.length} anatomy parts for entity '${ownerId}'`
     );
 
+    // Build the parts map for easy access by name
+    // IMPORTANT: This must happen AFTER createAnatomyGraph completes, as that's when
+    // socket-based naming is applied to entities
+    const partsMap = this.#buildPartsMap(graphResult.entities);
+
     // Phase 2.5: Update the anatomy:body component with the structure BEFORE clothing
     // This is critical because clothing validation needs to access the body graph
-    await this.#updateAnatomyBodyComponent(ownerId, recipeId, graphResult);
-
-    // Build the parts map for easy access by name
-    const partsMap = this.#buildPartsMap(graphResult.entities);
+    // Pass the already-built parts map to avoid building it twice
+    await this.#updateAnatomyBodyComponent(ownerId, recipeId, graphResult, partsMap);
 
     // Add partsMap to graphResult for later use
     graphResult.partsMap = partsMap;
@@ -182,8 +185,12 @@ export class AnatomyGenerationWorkflow extends BaseService {
 
         if (name) {
           parts.set(name, partEntityId);
+          
+          // Debug logging to understand naming issues
+          const anatomyPart = partEntity.getComponentData('anatomy:part');
+          const jointData = partEntity.getComponentData('anatomy:joint');
           this.#logger.debug(
-            `AnatomyGenerationWorkflow: Mapped part '${name}' to entity '${partEntityId}'`
+            `AnatomyGenerationWorkflow: Mapped part '${name}' to entity '${partEntityId}' - subType: ${anatomyPart?.subType}, orientation: ${anatomyPart?.orientation}, parentId: ${jointData?.parentId}, socketId: ${jointData?.socketId}`
           );
         }
       }
@@ -422,9 +429,10 @@ export class AnatomyGenerationWorkflow extends BaseService {
    * @param {string} entityId - The entity ID
    * @param {string} recipeId - The recipe ID
    * @param {object} graphResult - The graph generation result
+   * @param {Map<string, string>} partsMap - Pre-built parts map
    * @returns {Promise<void>}
    */
-  async #updateAnatomyBodyComponent(entityId, recipeId, graphResult) {
+  async #updateAnatomyBodyComponent(entityId, recipeId, graphResult, partsMap) {
     this.#logger.debug(
       `AnatomyGenerationWorkflow: Updating anatomy:body component for entity '${entityId}' with structure`
     );
@@ -432,9 +440,6 @@ export class AnatomyGenerationWorkflow extends BaseService {
     // Get existing anatomy data to preserve any additional fields
     const existingData =
       this.#entityManager.getComponentData(entityId, 'anatomy:body') || {};
-
-    // We need to build the parts map here since it's not yet in graphResult
-    const partsMap = this.#buildPartsMap(graphResult.entities);
 
     // Convert Map to plain object for backward compatibility
     const partsObject =
