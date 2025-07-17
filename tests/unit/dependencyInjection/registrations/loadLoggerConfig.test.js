@@ -1,8 +1,8 @@
 import { describe, beforeEach, it, expect, jest } from '@jest/globals';
-import AppContainer from '../../src/dependencyInjection/appContainer.js';
-import { loadAndApplyLoggerConfig } from '../../src/configuration/utils/loggerConfigUtils.js';
-import { tokens } from '../../src/dependencyInjection/tokens.js';
-import { LoggerConfigLoader } from '../../src/configuration/loggerConfigLoader.js';
+import AppContainer from '../../../../src/dependencyInjection/appContainer.js';
+import { loadAndApplyLoggerConfig } from '../../../../src/configuration/utils/loggerConfigUtils.js';
+import { tokens } from '../../../../src/dependencyInjection/tokens.js';
+import { LoggerConfigLoader } from '../../../../src/configuration/loggerConfigLoader.js';
 
 describe('loadAndApplyLoggerConfig', () => {
   /** @type {AppContainer} */

@@ -1,0 +1,8 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "intimacy:event-is-action-fondle-ass",
+  "description": "Checks if the triggering event is for the 'intimacy:fondle_ass' action.",
+  "logic": {
+    "==": [{ "var": "event.payload.actionId" }, "intimacy:fondle_ass"]
+  }
+}

@@ -163,10 +163,6 @@ describe('LayerCompatibilityService', () => {
       });
     });
 
-
-
-
-
     it('should detect layer ordering violations', async () => {
       entityManager.getComponentData.mockImplementation(
         (entityId, componentId) => {
@@ -617,7 +613,6 @@ describe('LayerCompatibilityService', () => {
       });
     });
 
-
     it('should suggest equipping required layers', async () => {
       const conflicts = [
         {
@@ -692,7 +687,6 @@ describe('LayerCompatibilityService', () => {
       expect(result[1].priority).toBe(1); // layer_requirement priority 1
     });
   });
-
 
   describe('error handling', () => {
     it('should handle entityManager errors gracefully', async () => {

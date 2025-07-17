@@ -166,20 +166,36 @@ export class BaseTurnHandler {
   }
 
   _setCurrentTurnContextInternal(turnContext) {
+    let actorId = 'null';
+    if (turnContext) {
+      try {
+        actorId = turnContext.getActor()?.id || 'null';
+      } catch (e) {
+        actorId = 'error-accessing-actor';
+      }
+    }
+    
     this.getLogger().debug(
       `${this.constructor.name}._setCurrentTurnContextInternal: Setting turn context to ${
-        turnContext ? `object for actor ${turnContext.getActor()?.id}` : 'null'
+        turnContext ? `object for actor ${actorId}` : 'null'
       }.`
     );
     this._currentTurnContext = turnContext;
     if (turnContext) {
-      if (this._currentActor?.id !== turnContext.getActor()?.id) {
+      try {
+        const contextActor = turnContext.getActor();
+        if (this._currentActor?.id !== contextActor?.id) {
+          this.getLogger().debug(
+            `${this.constructor.name}._setCurrentTurnContextInternal: Aligning _currentActor ('${this._currentActor?.id || 'null'}') with new TurnContext actor ('${
+              contextActor?.id || 'null'
+            }').`
+          );
+          this._currentActor = contextActor;
+        }
+      } catch (e) {
         this.getLogger().debug(
-          `${this.constructor.name}._setCurrentTurnContextInternal: Aligning _currentActor ('${this._currentActor?.id || 'null'}') with new TurnContext actor ('${
-            turnContext.getActor()?.id || 'null'
-          }').`
+          `${this.constructor.name}._setCurrentTurnContextInternal: Error accessing actor from TurnContext: ${e.message}. Keeping current actor.`
         );
-        this._currentActor = turnContext.getActor();
       }
     }
   }
@@ -199,8 +215,13 @@ export class BaseTurnHandler {
     const prevState = this._currentState;
 
     // MODIFIED: Use the new identity method, which depends only on the abstraction.
-    const nextIsIdle =
-      typeof newState.isIdle === 'function' ? newState.isIdle() : false;
+    let nextIsIdle = false;
+    try {
+      nextIsIdle = typeof newState.isIdle === 'function' ? newState.isIdle() : false;
+    } catch (e) {
+      // If isIdle throws an error, assume it's not idle
+      nextIsIdle = false;
+    }
     if (prevState === newState && !nextIsIdle) {
       logger.debug(
         `${this.constructor.name}: Attempted to transition to the same state ${
@@ -211,7 +232,7 @@ export class BaseTurnHandler {
     }
 
     const prevStateName = prevState
-      ? prevState.getStateName()
+      ? (typeof prevState.getStateName === 'function' ? prevState.getStateName() : 'N/A')
       : 'None (Initial)';
     logger.debug(
       `${this.constructor.name}: State Transition: ${prevStateName} → ${newState.getStateName()}`
@@ -306,7 +327,14 @@ export class BaseTurnHandler {
 
     this._assertHandlerActiveUnlessDestroying(fromDestroy);
     const logger = this.getLogger();
-    const contextActorId = this._currentTurnContext?.getActor()?.id;
+    
+    let contextActorId;
+    try {
+      contextActorId = this._currentTurnContext?.getActor()?.id;
+    } catch (e) {
+      contextActorId = null;
+    }
+    
     const handlerActorId = this._currentActor?.id;
     const effectiveActor =
       endedActorId ||
@@ -337,14 +365,28 @@ export class BaseTurnHandler {
     }
 
     // MODIFIED: Use the new identity methods. Add a null check for safety.
-    const stateIsEnding =
-      typeof this._currentState?.isEnding === 'function'
-        ? this._currentState.isEnding()
-        : false;
-    const stateIsIdle =
-      typeof this._currentState?.isIdle === 'function'
-        ? this._currentState.isIdle()
-        : false;
+    let stateIsEnding = false;
+    let stateIsIdle = false;
+    
+    try {
+      stateIsEnding =
+        typeof this._currentState?.isEnding === 'function'
+          ? this._currentState.isEnding()
+          : false;
+    } catch (e) {
+      // If isEnding throws an error, assume it's not ending
+      stateIsEnding = false;
+    }
+    
+    try {
+      stateIsIdle =
+        typeof this._currentState?.isIdle === 'function'
+          ? this._currentState.isIdle()
+          : false;
+    } catch (e) {
+      // If isIdle throws an error, assume it's not idle
+      stateIsIdle = false;
+    }
     if (!fromDestroy && this._currentState && (stateIsEnding || stateIsIdle)) {
       if (turnError) {
         logger.warn(
@@ -385,7 +427,14 @@ export class BaseTurnHandler {
 
   _resetTurnStateAndResources(logContext = 'N/A') {
     const logger = this.getLogger();
-    const contextActorId = this._currentTurnContext?.getActor()?.id;
+    
+    let contextActorId;
+    try {
+      contextActorId = this._currentTurnContext?.getActor()?.id;
+    } catch (e) {
+      contextActorId = null;
+    }
+    
     const handlerActorId = this._currentActor?.id;
 
     logger.debug(
@@ -469,7 +518,9 @@ export class BaseTurnHandler {
     this._isDestroying = true;
     logger.debug(
       `${name}.destroy() invoked. Current state: ${
-        this._currentState?.getStateName() ?? 'N/A'
+        this._currentState && typeof this._currentState.getStateName === 'function' 
+          ? this._currentState.getStateName() 
+          : 'N/A'
       }`
     );
 
@@ -504,7 +555,17 @@ export class BaseTurnHandler {
     }
 
     // MODIFIED: Use the new identity method. Add a null check for safety.
-    if (this._currentState && !this._currentState.isIdle()) {
+    let needsTransition = false;
+    if (this._currentState && typeof this._currentState.isIdle === 'function') {
+      try {
+        needsTransition = !this._currentState.isIdle();
+      } catch (e) {
+        // If isIdle throws an error, assume it's not idle and needs transition
+        needsTransition = true;
+      }
+    }
+    
+    if (needsTransition) {
       logger.debug(
         `${name}.destroy: Ensuring transition to TurnIdleState (current: ${this._currentState?.getStateName() ?? 'N/A'}).`
       );
@@ -578,6 +639,7 @@ export class BaseTurnHandler {
    * This method should be called by states via the ITurnContext.
    */
   async requestIdleStateTransition() {
+    this._assertHandlerActive();
     this.getLogger().debug(
       `${this.constructor.name}: Received request to transition to Idle state.`
     );
@@ -588,6 +650,7 @@ export class BaseTurnHandler {
    * Initiates a transition to the AwaitingInput state using the state factory.
    */
   async requestAwaitingInputStateTransition() {
+    this._assertHandlerActive();
     this.getLogger().debug(
       `${this.constructor.name}: Received request to transition to AwaitingInput state.`
     );
@@ -603,6 +666,7 @@ export class BaseTurnHandler {
    * @param {ITurnAction} turnAction
    */
   async requestProcessingCommandStateTransition(commandString, turnAction) {
+    this._assertHandlerActive();
     this.getLogger().debug(
       `${this.constructor.name}: Received request to transition to ProcessingCommand state.`
     );
@@ -620,6 +684,7 @@ export class BaseTurnHandler {
    * Initiates a transition to the AwaitingExternalTurnEnd state using the state factory.
    */
   async requestAwaitingExternalTurnEndStateTransition() {
+    this._assertHandlerActive();
     this.getLogger().debug(
       `${this.constructor.name}: Received request to transition to AwaitingExternalTurnEnd state.`
     );

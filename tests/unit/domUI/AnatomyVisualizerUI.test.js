@@ -48,7 +48,9 @@ describe('AnatomyVisualizerUI', () => {
 
     // Mock clothing management service
     mockClothingManagementService = {
-      getEquippedItems: jest.fn().mockResolvedValue({ success: true, equipped: {} }),
+      getEquippedItems: jest
+        .fn()
+        .mockResolvedValue({ success: true, equipped: {} }),
     };
 
     // Mock event dispatcher

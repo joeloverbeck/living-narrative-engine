@@ -1,10 +1,10 @@
 import { describe, beforeEach, it, expect, jest } from '@jest/globals';
-import AppContainer from '../../src/dependencyInjection/appContainer.js';
-import { registerInterpreters } from '../../src/dependencyInjection/registrations/interpreterRegistrations.js';
-import { tokens } from '../../src/dependencyInjection/tokens.js';
-import OperationRegistry from '../../src/logic/operationRegistry.js';
-import OperationInterpreter from '../../src/logic/operationInterpreter.js';
-import SystemLogicInterpreter from '../../src/logic/systemLogicInterpreter.js';
+import AppContainer from '../../../../src/dependencyInjection/appContainer.js';
+import { registerInterpreters } from '../../../../src/dependencyInjection/registrations/interpreterRegistrations.js';
+import { tokens } from '../../../../src/dependencyInjection/tokens.js';
+import OperationRegistry from '../../../../src/logic/operationRegistry.js';
+import OperationInterpreter from '../../../../src/logic/operationInterpreter.js';
+import SystemLogicInterpreter from '../../../../src/logic/systemLogicInterpreter.js';
 
 describe('registerInterpreters', () => {
   /** @type {AppContainer} */

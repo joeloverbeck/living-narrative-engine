@@ -8,16 +8,9 @@
       "material": "linen",
       "equipmentSlots": {
         "primary": "torso_upper",
-        "secondary": [
-          "left_arm_clothing",
-          "right_arm_clothing"
-        ]
+        "secondary": ["left_arm_clothing", "right_arm_clothing"]
       },
-      "allowedLayers": [
-        "underwear",
-        "base",
-        "outer"
-      ]
+      "allowedLayers": ["underwear", "base", "outer"]
     },
     "core:name": {
       "text": "structured blazer"

@@ -1,5 +1,5 @@
-import createArrayIterationResolver from '../../src/scopeDsl/nodes/arrayIterationResolver.js';
-import { createTestEntity } from '../common/mockFactories/entities.js';
+import createArrayIterationResolver from '../../../../src/scopeDsl/nodes/arrayIterationResolver.js';
+import { createTestEntity } from '../../../common/mockFactories/entities.js';
 
 describe('ArrayIterationResolver', () => {
   let resolver;
