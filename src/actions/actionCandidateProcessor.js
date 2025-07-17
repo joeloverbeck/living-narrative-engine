@@ -285,13 +285,15 @@ export class ActionCandidateProcessor {
       );
 
       if (formatResult.ok) {
-        validActions.push({
+        const actionInfo = {
           id: actionDef.id,
           name: actionDef.name,
           command: formatResult.value,
           description: actionDef.description || '',
           params: { targetId: targetContext.entityId },
-        });
+        };
+
+        validActions.push(actionInfo);
       } else {
         const errorContext = this.#actionErrorContextBuilder.buildErrorContext({
           error: formatResult.error,
@@ -313,6 +315,7 @@ export class ActionCandidateProcessor {
         );
       }
     }
+
     return { actions: validActions, errors };
   }
 }
