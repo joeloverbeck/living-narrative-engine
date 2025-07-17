@@ -364,13 +364,32 @@ export class BodyBlueprintFactory {
           );
         }
 
+        // Use socket orientation if available, otherwise extract from slot key
+        // For slots like "left_hand", "right_foot", extract "left" or "right"
+        let orientation = socket.orientation;
+        if (!orientation && slotKey) {
+          // Check if slot key starts with a known orientation prefix
+          const orientationPrefixes = ['left', 'right', 'upper', 'lower', 'front', 'back'];
+          for (const prefix of orientationPrefixes) {
+            if (slotKey.startsWith(prefix + '_')) {
+              orientation = prefix;
+              break;
+            }
+          }
+        }
+        
+        // Debug logging for orientation issues
+        this.#logger.debug(
+          `BodyBlueprintFactory: Creating part for slot '${slotKey}' - socket.orientation: ${socket.orientation}, extracted orientation: ${orientation}, socket.nameTpl: ${socket.nameTpl}`
+        );
+        
         // Create and attach the part
         const childId = this.#entityGraphBuilder.createAndAttachPart(
           parentEntityId,
           socket.id,
           partDefinitionId,
           ownerId,
-          socket.orientation
+          orientation
         );
 
         if (childId) {
