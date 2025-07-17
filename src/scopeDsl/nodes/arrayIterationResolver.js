@@ -1,5 +1,3 @@
-import flattenIntoSet from '../core/flattenIntoSet.js';
-
 /**
  * Creates an ArrayIterationStep node resolver for flattening array values.
  * Resolves ArrayIterationStep nodes by flattening arrays from parent results.

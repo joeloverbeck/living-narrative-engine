@@ -68,6 +68,8 @@ export default class CircuitBreaker {
   #enabled;
 
   /**
+   * Creates a new CircuitBreaker instance.
+   *
    * @class
    * @param {object} deps - Dependencies
    * @param {ILogger} deps.logger - Logger instance

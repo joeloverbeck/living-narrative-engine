@@ -9,9 +9,11 @@ import { validateDependency } from '../../utils/dependencyUtils.js';
 import { ensureValidLogger } from '../../utils/loggerUtils.js';
 import { EntityNotFoundError } from '../../errors/entityNotFoundError.js';
 import { DuplicateEntityError } from '../../errors/duplicateEntityError.js';
+import MonitoringCoordinator from '../monitoring/MonitoringCoordinator.js';
 
 /** @typedef {import('../entity.js').default} Entity */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../monitoring/MonitoringCoordinator.js').default} MonitoringCoordinator */
 
 /**
  * @class EntityRepositoryAdapter
@@ -25,22 +27,56 @@ export class EntityRepositoryAdapter {
   #logger;
   /** @type {Map<string, Set<string>>} @private - componentType -> Set<entityId> */
   #componentIndex;
+  /** @type {MonitoringCoordinator} @private */
+  #monitoringCoordinator;
 
   /**
    * @param {object} deps - Dependencies
    * @param {ILogger} deps.logger - Logger instance
+   * @param {MonitoringCoordinator} [deps.monitoringCoordinator] - Monitoring coordinator
    */
-  constructor({ logger }) {
+  constructor({ logger, monitoringCoordinator }) {
     validateDependency(logger, 'ILogger', console, {
       requiredMethods: ['info', 'error', 'warn', 'debug'],
     });
 
+    // MonitoringCoordinator is optional
+    if (monitoringCoordinator) {
+      validateDependency(
+        monitoringCoordinator,
+        'MonitoringCoordinator',
+        console,
+        {
+          requiredMethods: ['executeMonitored', 'getCircuitBreaker'],
+        }
+      );
+    }
+
     this.#logger = ensureValidLogger(logger, 'EntityRepositoryAdapter');
     this.#mapManager = new MapManager({ throwOnInvalidId: false });
     this.#componentIndex = new Map();
+    this.#monitoringCoordinator = monitoringCoordinator;
 
     this.#logger.debug(
       'EntityRepositoryAdapter initialized with component index.'
+    );
+  }
+
+  /**
+   * Add an entity to the repository with performance monitoring.
+   *
+   * @param {Entity} entity - Entity to add
+   * @throws {DuplicateEntityError} If entity with same ID already exists
+   */
+  async addWithMonitoring(entity) {
+    if (!this.#monitoringCoordinator) {
+      return this.add(entity);
+    }
+
+    return await this.#monitoringCoordinator.executeMonitored(
+      'repository.add',
+      () => this.add(entity),
+      { context: `entity:${entity.id}` }
     );
   }
 
@@ -68,6 +104,24 @@ export class EntityRepositoryAdapter {
   }
 
   /**
+   * Get an entity by ID with performance monitoring.
+   *
+   * @param {string} entityId - Entity ID to lookup
+   * @returns {Promise<Entity|undefined>} Entity if found, undefined otherwise
+   */
+  async getWithMonitoring(entityId) {
+    if (!this.#monitoringCoordinator) {
+      return this.get(entityId);
+    }
+
+    return await this.#monitoringCoordinator.executeMonitored(
+      'repository.get',
+      () => this.get(entityId),
+      { context: `entity:${entityId}` }
+    );
+  }
+
+  /**
    * Get an entity by ID.
    *
    * @param {string} entityId - Entity ID to lookup
@@ -85,6 +139,25 @@ export class EntityRepositoryAdapter {
    */
   has(entityId) {
     return this.#mapManager.has(entityId);
+  }
+
+  /**
+   * Remove an entity from the repository with performance monitoring.
+   *
+   * @param {string} entityId - Entity ID to remove
+   * @returns {Promise<boolean>} True if entity was removed, false if not found
+   * @throws {EntityNotFoundError} If entity is not found
+   */
+  async removeWithMonitoring(entityId) {
+    if (!this.#monitoringCoordinator) {
+      return this.remove(entityId);
+    }
+
+    return await this.#monitoringCoordinator.executeMonitored(
+      'repository.remove',
+      () => this.remove(entityId),
+      { context: `entity:${entityId}` }
+    );
   }
 
   /**
@@ -215,6 +288,96 @@ export class EntityRepositoryAdapter {
         this.indexComponentRemove(entity.id, componentType);
       }
     }
+  }
+
+  /**
+   * Batch add multiple entities with monitoring.
+   *
+   * @param {Entity[]} entities - Entities to add
+   * @returns {Promise<object>} Results with successes and errors
+   */
+  async batchAddWithMonitoring(entities) {
+    if (!this.#monitoringCoordinator) {
+      return this.batchAdd(entities);
+    }
+
+    return await this.#monitoringCoordinator.executeMonitored(
+      'repository.batchAdd',
+      () => this.batchAdd(entities),
+      { context: `entities:${entities.length}` }
+    );
+  }
+
+  /**
+   * Batch add multiple entities.
+   *
+   * @param {Entity[]} entities - Entities to add
+   * @returns {object} Results with successes and errors
+   */
+  batchAdd(entities) {
+    const results = [];
+    const errors = [];
+
+    for (const entity of entities) {
+      try {
+        this.add(entity);
+        results.push(entity);
+      } catch (error) {
+        errors.push({ entity, error });
+      }
+    }
+
+    if (errors.length > 0) {
+      this.#logger.warn(`Batch add completed with ${errors.length} errors`);
+    }
+
+    return { entities: results, errors };
+  }
+
+  /**
+   * Batch remove multiple entities with monitoring.
+   *
+   * @param {string[]} entityIds - Entity IDs to remove
+   * @returns {Promise<object>} Results with successes and errors
+   */
+  async batchRemoveWithMonitoring(entityIds) {
+    if (!this.#monitoringCoordinator) {
+      return this.batchRemove(entityIds);
+    }
+
+    return await this.#monitoringCoordinator.executeMonitored(
+      'repository.batchRemove',
+      () => this.batchRemove(entityIds),
+      { context: `entityIds:${entityIds.length}` }
+    );
+  }
+
+  /**
+   * Batch remove multiple entities.
+   *
+   * @param {string[]} entityIds - Entity IDs to remove
+   * @returns {object} Results with successes and errors
+   */
+  batchRemove(entityIds) {
+    const results = [];
+    const errors = [];
+
+    for (const entityId of entityIds) {
+      try {
+        const removed = this.remove(entityId);
+        if (removed) {
+          results.push(entityId);
+        }
+      } catch (error) {
+        errors.push({ entityId, error });
+      }
+    }
+
+    if (errors.length > 0) {
+      this.#logger.warn(`Batch remove completed with ${errors.length} errors`);
+    }
+
+    return { removedIds: results, errors };
   }
 }
 

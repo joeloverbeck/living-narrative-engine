@@ -18,6 +18,7 @@ import {
   COMPONENT_ADDED_ID,
   COMPONENT_REMOVED_ID,
 } from '../../constants/eventIds.js';
+import MonitoringCoordinator from '../monitoring/MonitoringCoordinator.js';
 
 /** @typedef {import('../entity.js').default} Entity */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
@@ -25,6 +26,7 @@ import {
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 /** @typedef {import('../../ports/IComponentCloner.js').IComponentCloner} IComponentCloner */
 /** @typedef {import('./entityRepositoryAdapter.js').EntityRepositoryAdapter} EntityRepositoryAdapter */
+/** @typedef {import('../monitoring/MonitoringCoordinator.js').default} MonitoringCoordinator */
 
 /**
  * @class ComponentMutationService
@@ -43,6 +45,8 @@ export class ComponentMutationService {
   #cloner;
   /** @type {(componentTypeId: string, data: object, context: string) => object} @private */
   #validateAndClone;
+  /** @type {MonitoringCoordinator} @private */
+  #monitoringCoordinator;
 
   /**
    * @param {object} deps - Dependencies
@@ -51,6 +55,7 @@ export class ComponentMutationService {
    * @param {ILogger} deps.logger - Logger instance
    * @param {ISafeEventDispatcher} deps.eventDispatcher - Event dispatcher
    * @param {IComponentCloner} deps.cloner - Component cloner
+   * @param {MonitoringCoordinator} [deps.monitoringCoordinator] - Monitoring coordinator
    */
   constructor({
     entityRepository,
@@ -58,6 +63,7 @@ export class ComponentMutationService {
     logger,
     eventDispatcher,
     cloner,
+    monitoringCoordinator,
   }) {
     validateDependency(entityRepository, 'EntityRepositoryAdapter', console, {
       requiredMethods: ['get', 'indexComponentAdd', 'indexComponentRemove'],
@@ -75,11 +81,24 @@ export class ComponentMutationService {
       isFunction: true,
     });
 
+    // MonitoringCoordinator is optional
+    if (monitoringCoordinator) {
+      validateDependency(
+        monitoringCoordinator,
+        'MonitoringCoordinator',
+        console,
+        {
+          requiredMethods: ['executeMonitored', 'getCircuitBreaker'],
+        }
+      );
+    }
+
     this.#entityRepository = entityRepository;
     this.#validator = validator;
     this.#logger = ensureValidLogger(logger, 'ComponentMutationService');
     this.#eventDispatcher = eventDispatcher;
     this.#cloner = cloner;
+    this.#monitoringCoordinator = monitoringCoordinator;
     this.#validateAndClone = createValidateAndClone(
       this.#validator,
       this.#logger,
@@ -236,6 +255,33 @@ export class ComponentMutationService {
   }
 
   /**
+   * Adds or updates a component on an existing entity instance with circuit breaker protection.
+   *
+   * @param {string} instanceId - The ID of the entity instance.
+   * @param {string} componentTypeId - The unique ID of the component type.
+   * @param {object} componentData - The data for the component.
+   * @throws {EntityNotFoundError} If entity not found.
+   * @throws {InvalidArgumentError} If parameters are invalid.
+   * @throws {ValidationError} If component data validation fails.
+   * @throws {Error} If circuit breaker is open.
+   */
+  async addComponentWithCircuitBreaker(
+    instanceId,
+    componentTypeId,
+    componentData
+  ) {
+    if (!this.#monitoringCoordinator) {
+      return this.addComponent(instanceId, componentTypeId, componentData);
+    }
+
+    const circuitBreaker =
+      this.#monitoringCoordinator.getCircuitBreaker('addComponent');
+    return await circuitBreaker.execute(() =>
+      this.addComponent(instanceId, componentTypeId, componentData)
+    );
+  }
+
+  /**
    * Removes a component override from an existing entity instance.
    *
    * @param {string} instanceId - The ID of the entity instance.
@@ -301,6 +347,60 @@ export class ComponentMutationService {
         `Failed to remove component '${componentTypeId}' from entity '${instanceId}'. Internal entity removal failed.`
       );
     }
+  }
+
+  /**
+   * Removes a component override from an existing entity instance with circuit breaker protection.
+   *
+   * @param {string} instanceId - The ID of the entity instance.
+   * @param {string} componentTypeId - The unique ID of the component type to remove.
+   * @throws {EntityNotFoundError} If entity not found.
+   * @throws {InvalidArgumentError} If parameters are invalid.
+   * @throws {ComponentOverrideNotFoundError} If component override does not exist.
+   * @throws {Error} If removal fails or circuit breaker is open.
+   */
+  async removeComponentWithCircuitBreaker(instanceId, componentTypeId) {
+    if (!this.#monitoringCoordinator) {
+      return this.removeComponent(instanceId, componentTypeId);
+    }
+
+    const circuitBreaker =
+      this.#monitoringCoordinator.getCircuitBreaker('removeComponent');
+    return await circuitBreaker.execute(() =>
+      this.removeComponent(instanceId, componentTypeId)
+    );
+  }
+
+  /**
+   * Batch add multiple components to entities.
+   *
+   * @param {Array<{instanceId: string, componentTypeId: string, componentData: object}>} componentSpecs - Component specifications
+   * @returns {Promise<object>} Results with successes and errors
+   */
+  async batchAddComponents(componentSpecs) {
+    const results = [];
+    const errors = [];
+
+    for (const spec of componentSpecs) {
+      try {
+        const result = await this.addComponentWithCircuitBreaker(
+          spec.instanceId,
+          spec.componentTypeId,
+          spec.componentData
+        );
+        results.push({ spec, result });
+      } catch (error) {
+        errors.push({ spec, error });
+      }
+    }
+
+    if (errors.length > 0) {
+      this.#logger.warn(
+        `Batch add components completed with ${errors.length} errors`
+      );
+    }
+
+    return { results, errors };
   }
 }
 
