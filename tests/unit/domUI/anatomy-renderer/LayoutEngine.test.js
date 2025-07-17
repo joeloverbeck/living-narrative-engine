@@ -3,7 +3,14 @@
  * @description Comprehensive unit tests for LayoutEngine class covering all methods and edge cases
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import LayoutEngine from '../../../../src/domUI/anatomy-renderer/LayoutEngine.js';
 import AnatomyVisualizerTestBed from '../../../common/anatomy/anatomyVisualizerTestBed.js';
 
@@ -16,7 +23,7 @@ describe('LayoutEngine', () => {
   beforeEach(() => {
     testBed = new AnatomyVisualizerTestBed();
     mockLogger = testBed.mockLogger;
-    
+
     // Create a mock strategy following ILayoutStrategy interface
     mockStrategy = {
       calculate: jest.fn(),
@@ -75,7 +82,7 @@ describe('LayoutEngine', () => {
   describe('registerStrategy', () => {
     it('should register a valid strategy', () => {
       layoutEngine.registerStrategy('test-strategy', mockStrategy);
-      
+
       expect(layoutEngine.hasStrategy('test-strategy')).toBe(true);
       expect(layoutEngine.getAvailableStrategies()).toContain('test-strategy');
       expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -85,17 +92,17 @@ describe('LayoutEngine', () => {
 
     it('should set first registered strategy as current', () => {
       layoutEngine.registerStrategy('test-strategy', mockStrategy);
-      
+
       expect(layoutEngine.getCurrentStrategyName()).toBe('test-strategy');
     });
 
     it('should not change current strategy when registering additional strategies', () => {
       const secondStrategy = { ...mockStrategy };
       secondStrategy.getName = jest.fn().mockReturnValue('second-strategy');
-      
+
       layoutEngine.registerStrategy('first-strategy', mockStrategy);
       layoutEngine.registerStrategy('second-strategy', secondStrategy);
-      
+
       expect(layoutEngine.getCurrentStrategyName()).toBe('first-strategy');
     });
 
@@ -144,7 +151,7 @@ describe('LayoutEngine', () => {
     it('should throw error when strategy is missing calculate method', () => {
       const invalidStrategy = { ...mockStrategy };
       delete invalidStrategy.calculate;
-      
+
       expect(() => {
         layoutEngine.registerStrategy('test-strategy', invalidStrategy);
       }).toThrow('Strategy must implement method: calculate');
@@ -153,7 +160,7 @@ describe('LayoutEngine', () => {
     it('should throw error when strategy is missing configure method', () => {
       const invalidStrategy = { ...mockStrategy };
       delete invalidStrategy.configure;
-      
+
       expect(() => {
         layoutEngine.registerStrategy('test-strategy', invalidStrategy);
       }).toThrow('Strategy must implement method: configure');
@@ -162,7 +169,7 @@ describe('LayoutEngine', () => {
     it('should throw error when strategy is missing getRequiredSpace method', () => {
       const invalidStrategy = { ...mockStrategy };
       delete invalidStrategy.getRequiredSpace;
-      
+
       expect(() => {
         layoutEngine.registerStrategy('test-strategy', invalidStrategy);
       }).toThrow('Strategy must implement method: getRequiredSpace');
@@ -171,7 +178,7 @@ describe('LayoutEngine', () => {
     it('should throw error when strategy is missing getName method', () => {
       const invalidStrategy = { ...mockStrategy };
       delete invalidStrategy.getName;
-      
+
       expect(() => {
         layoutEngine.registerStrategy('test-strategy', invalidStrategy);
       }).toThrow('Strategy must implement method: getName');
@@ -180,7 +187,7 @@ describe('LayoutEngine', () => {
     it('should throw error when strategy method is not a function', () => {
       const invalidStrategy = { ...mockStrategy };
       invalidStrategy.calculate = 'not-a-function';
-      
+
       expect(() => {
         layoutEngine.registerStrategy('test-strategy', invalidStrategy);
       }).toThrow('Strategy must implement method: calculate');
@@ -189,10 +196,10 @@ describe('LayoutEngine', () => {
     it('should allow replacing existing strategy', () => {
       const newStrategy = { ...mockStrategy };
       newStrategy.getName = jest.fn().mockReturnValue('new-test-strategy');
-      
+
       layoutEngine.registerStrategy('test-strategy', mockStrategy);
       layoutEngine.registerStrategy('test-strategy', newStrategy);
-      
+
       expect(layoutEngine.hasStrategy('test-strategy')).toBe(true);
       expect(layoutEngine.getAvailableStrategies()).toHaveLength(1);
     });
@@ -201,7 +208,7 @@ describe('LayoutEngine', () => {
   describe('hasStrategy', () => {
     it('should return true for registered strategy', () => {
       layoutEngine.registerStrategy('test-strategy', mockStrategy);
-      
+
       expect(layoutEngine.hasStrategy('test-strategy')).toBe(true);
     });
 
@@ -229,7 +236,7 @@ describe('LayoutEngine', () => {
 
     it('should set current strategy to registered strategy', () => {
       layoutEngine.setStrategy('test-strategy');
-      
+
       expect(layoutEngine.getCurrentStrategyName()).toBe('test-strategy');
       expect(mockLogger.info).toHaveBeenCalledWith(
         "LayoutEngine: Active strategy set to 'test-strategy'"
@@ -269,10 +276,10 @@ describe('LayoutEngine', () => {
     it('should allow switching between registered strategies', () => {
       const secondStrategy = { ...mockStrategy };
       secondStrategy.getName = jest.fn().mockReturnValue('second-strategy');
-      
+
       layoutEngine.registerStrategy('second-strategy', secondStrategy);
       layoutEngine.setStrategy('second-strategy');
-      
+
       expect(layoutEngine.getCurrentStrategyName()).toBe('second-strategy');
     });
   });
@@ -284,18 +291,18 @@ describe('LayoutEngine', () => {
 
     it('should return current strategy name when strategy is set', () => {
       layoutEngine.registerStrategy('test-strategy', mockStrategy);
-      
+
       expect(layoutEngine.getCurrentStrategyName()).toBe('test-strategy');
     });
 
     it('should return updated strategy name after switching', () => {
       const secondStrategy = { ...mockStrategy };
       secondStrategy.getName = jest.fn().mockReturnValue('second-strategy');
-      
+
       layoutEngine.registerStrategy('first-strategy', mockStrategy);
       layoutEngine.registerStrategy('second-strategy', secondStrategy);
       layoutEngine.setStrategy('second-strategy');
-      
+
       expect(layoutEngine.getCurrentStrategyName()).toBe('second-strategy');
     });
   });
@@ -307,17 +314,17 @@ describe('LayoutEngine', () => {
 
     it('should return array with single strategy name', () => {
       layoutEngine.registerStrategy('test-strategy', mockStrategy);
-      
+
       expect(layoutEngine.getAvailableStrategies()).toEqual(['test-strategy']);
     });
 
     it('should return array with multiple strategy names', () => {
       const secondStrategy = { ...mockStrategy };
       secondStrategy.getName = jest.fn().mockReturnValue('second-strategy');
-      
+
       layoutEngine.registerStrategy('first-strategy', mockStrategy);
       layoutEngine.registerStrategy('second-strategy', secondStrategy);
-      
+
       const strategies = layoutEngine.getAvailableStrategies();
       expect(strategies).toHaveLength(2);
       expect(strategies).toContain('first-strategy');
@@ -326,10 +333,10 @@ describe('LayoutEngine', () => {
 
     it('should not expose internal strategies map', () => {
       layoutEngine.registerStrategy('test-strategy', mockStrategy);
-      
+
       const strategies = layoutEngine.getAvailableStrategies();
       strategies.push('modified');
-      
+
       expect(layoutEngine.getAvailableStrategies()).toEqual(['test-strategy']);
     });
   });
@@ -342,10 +349,10 @@ describe('LayoutEngine', () => {
     it('should remove strategy when not current', () => {
       const secondStrategy = { ...mockStrategy };
       secondStrategy.getName = jest.fn().mockReturnValue('second-strategy');
-      
+
       layoutEngine.registerStrategy('second-strategy', secondStrategy);
       layoutEngine.removeStrategy('second-strategy');
-      
+
       expect(layoutEngine.hasStrategy('second-strategy')).toBe(false);
       expect(layoutEngine.getAvailableStrategies()).toEqual(['test-strategy']);
       expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -370,11 +377,11 @@ describe('LayoutEngine', () => {
       secondStrategy.getName = jest.fn().mockReturnValue('second-strategy');
       const thirdStrategy = { ...mockStrategy };
       thirdStrategy.getName = jest.fn().mockReturnValue('third-strategy');
-      
+
       layoutEngine.registerStrategy('second-strategy', secondStrategy);
       layoutEngine.registerStrategy('third-strategy', thirdStrategy);
       layoutEngine.removeStrategy('second-strategy');
-      
+
       expect(layoutEngine.hasStrategy('test-strategy')).toBe(true);
       expect(layoutEngine.hasStrategy('third-strategy')).toBe(true);
       expect(layoutEngine.hasStrategy('second-strategy')).toBe(false);
@@ -384,9 +391,9 @@ describe('LayoutEngine', () => {
   describe('clearStrategies', () => {
     it('should clear all strategies when called', () => {
       layoutEngine.registerStrategy('test-strategy', mockStrategy);
-      
+
       layoutEngine.clearStrategies();
-      
+
       expect(layoutEngine.getAvailableStrategies()).toEqual([]);
       expect(layoutEngine.getCurrentStrategyName()).toBeNull();
       expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -397,12 +404,12 @@ describe('LayoutEngine', () => {
     it('should clear multiple strategies', () => {
       const secondStrategy = { ...mockStrategy };
       secondStrategy.getName = jest.fn().mockReturnValue('second-strategy');
-      
+
       layoutEngine.registerStrategy('first-strategy', mockStrategy);
       layoutEngine.registerStrategy('second-strategy', secondStrategy);
-      
+
       layoutEngine.clearStrategies();
-      
+
       expect(layoutEngine.getAvailableStrategies()).toEqual([]);
       expect(layoutEngine.getCurrentStrategyName()).toBeNull();
     });
@@ -416,7 +423,7 @@ describe('LayoutEngine', () => {
     it('should reset current strategy to null', () => {
       layoutEngine.registerStrategy('test-strategy', mockStrategy);
       expect(layoutEngine.getCurrentStrategyName()).toBe('test-strategy');
-      
+
       layoutEngine.clearStrategies();
       expect(layoutEngine.getCurrentStrategyName()).toBeNull();
     });
@@ -435,9 +442,7 @@ describe('LayoutEngine', () => {
       ]);
 
       // Mock edges as an array
-      mockEdges = [
-        { source: 'node1', target: 'node2' },
-      ];
+      mockEdges = [{ source: 'node1', target: 'node2' }];
 
       // Mock render context
       mockRenderContext = {
@@ -487,7 +492,9 @@ describe('LayoutEngine', () => {
       layoutEngine.calculateLayout(mockNodes, mockEdges, mockRenderContext);
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringMatching(/LayoutEngine: Layout calculation completed in \d+\.\d+ms/)
+        expect.stringMatching(
+          /LayoutEngine: Layout calculation completed in \d+\.\d+ms/
+        )
       );
     });
 
@@ -553,7 +560,9 @@ describe('LayoutEngine', () => {
       );
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringMatching(/LayoutEngine: Layout calculation completed in \d+\.\d+ms/)
+        expect.stringMatching(
+          /LayoutEngine: Layout calculation completed in \d+\.\d+ms/
+        )
       );
     });
   });
@@ -720,10 +729,12 @@ describe('LayoutEngine', () => {
       });
 
       layoutEngine.registerStrategy('test-strategy', mockStrategy);
-      
+
       // Error should not change current strategy
       expect(() => {
-        layoutEngine.calculateLayout(new Map(), [], { updatePerformance: jest.fn() });
+        layoutEngine.calculateLayout(new Map(), [], {
+          updatePerformance: jest.fn(),
+        });
       }).toThrow('Test error');
 
       expect(layoutEngine.getCurrentStrategyName()).toBe('test-strategy');

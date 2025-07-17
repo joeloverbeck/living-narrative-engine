@@ -373,7 +373,7 @@ export class BodyGraphService {
   getAncestors(entityId) {
     const ancestors = [];
     let current = entityId;
-    
+
     while (current) {
       const parent = this.getParent(current);
       if (parent) {
@@ -383,7 +383,7 @@ export class BodyGraphService {
         break;
       }
     }
-    
+
     return ancestors;
   }
 
@@ -395,8 +395,11 @@ export class BodyGraphService {
    */
   getAllDescendants(entityId) {
     // Use the existing getSubgraph method but exclude the root entity itself
-    const subgraph = AnatomyGraphAlgorithms.getSubgraph(entityId, this.#cacheManager);
-    return subgraph.filter(id => id !== entityId);
+    const subgraph = AnatomyGraphAlgorithms.getSubgraph(
+      entityId,
+      this.#cacheManager
+    );
+    return subgraph.filter((id) => id !== entityId);
   }
 }
 

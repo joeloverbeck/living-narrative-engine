@@ -3,7 +3,14 @@
  * @description Tests for anatomy visualization interaction handling
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import InteractionController from '../../../../src/domUI/anatomy-renderer/InteractionController.js';
 import { AnatomyRenderError } from '../../../../src/errors/anatomyRenderError.js';
 
@@ -106,9 +113,9 @@ describe('InteractionController', () => {
 
     it('should register handler for event type', () => {
       const handler = jest.fn();
-      
+
       interactionController.registerHandler('pan', handler);
-      
+
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'InteractionController: Registered handler for pan'
       );
@@ -117,19 +124,19 @@ describe('InteractionController', () => {
     it('should register multiple handlers for same event type', () => {
       const handler1 = jest.fn();
       const handler2 = jest.fn();
-      
+
       interactionController.registerHandler('pan', handler1);
       interactionController.registerHandler('pan', handler2);
-      
+
       expect(mockLogger.debug).toHaveBeenCalledTimes(2);
     });
 
     it('should unregister handler', () => {
       const handler = jest.fn();
-      
+
       interactionController.registerHandler('pan', handler);
       interactionController.unregisterHandler('pan', handler);
-      
+
       // Should not call handler after unregistering
       interactionController.startPan({ clientX: 100, clientY: 200 });
       expect(handler).not.toHaveBeenCalled();
@@ -137,7 +144,7 @@ describe('InteractionController', () => {
 
     it('should handle unregistering non-existent handler', () => {
       const handler = jest.fn();
-      
+
       // Should not throw when unregistering non-existent handler
       expect(() => {
         interactionController.unregisterHandler('nonexistent', handler);
@@ -155,7 +162,7 @@ describe('InteractionController', () => {
 
     it('should attach to element successfully', () => {
       interactionController.attachToElement(mockElement);
-      
+
       expect(mockElement.addEventListener).toHaveBeenCalledWith(
         'mousedown',
         expect.any(Function)
@@ -190,10 +197,10 @@ describe('InteractionController', () => {
         'touchend',
         expect.any(Function)
       );
-      
+
       // Document event listeners are attached
       expect(global.document.addEventListener).toHaveBeenCalledTimes(2);
-      
+
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'InteractionController: Attached to element'
       );
@@ -214,7 +221,7 @@ describe('InteractionController', () => {
     it('should detach from element successfully', () => {
       interactionController.attachToElement(mockElement);
       interactionController.detachFromElement();
-      
+
       expect(mockElement.removeEventListener).toHaveBeenCalledWith(
         'mousedown',
         expect.any(Function)
@@ -247,10 +254,10 @@ describe('InteractionController', () => {
         'touchend',
         expect.any(Function)
       );
-      
+
       // Document event listeners are removed
       expect(global.document.removeEventListener).toHaveBeenCalledTimes(2);
-      
+
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'InteractionController: Detached from element'
       );
@@ -275,18 +282,18 @@ describe('InteractionController', () => {
     it('should start pan gesture', () => {
       const handler = jest.fn();
       interactionController.registerHandler('panstart', handler);
-      
+
       const event = { clientX: 100, clientY: 200 };
       interactionController.startPan(event);
-      
+
       const state = interactionController.getGestureState();
       expect(state.isPanning).toBe(true);
       expect(state.activeGestures).toContain('pan');
-      
+
       expect(handler).toHaveBeenCalledWith({
         position: { x: 100, y: 200 },
       });
-      
+
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
         'anatomy:interaction_panstart',
         { position: { x: 100, y: 200 } }
@@ -296,20 +303,20 @@ describe('InteractionController', () => {
     it('should update pan gesture', () => {
       const handler = jest.fn();
       interactionController.registerHandler('pan', handler);
-      
+
       // Start pan first
       interactionController.startPan({ clientX: 100, clientY: 200 });
-      
+
       // Update pan
       const event = { clientX: 120, clientY: 230 };
       interactionController.updatePan(event);
-      
+
       expect(handler).toHaveBeenCalledWith({
         deltaX: 20,
         deltaY: 30,
         position: { x: 120, y: 230 },
       });
-      
+
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
         'anatomy:interaction_pan',
         {
@@ -323,11 +330,11 @@ describe('InteractionController', () => {
     it('should not update pan when not panning', () => {
       const handler = jest.fn();
       interactionController.registerHandler('pan', handler);
-      
+
       // Try to update without starting pan
       const event = { clientX: 120, clientY: 230 };
       interactionController.updatePan(event);
-      
+
       expect(handler).not.toHaveBeenCalled();
       expect(mockEventBus.dispatch).not.toHaveBeenCalled();
     });
@@ -335,19 +342,19 @@ describe('InteractionController', () => {
     it('should end pan gesture', () => {
       const handler = jest.fn();
       interactionController.registerHandler('panend', handler);
-      
+
       // Start pan first
       interactionController.startPan({ clientX: 100, clientY: 200 });
-      
+
       // End pan
       interactionController.endPan();
-      
+
       const state = interactionController.getGestureState();
       expect(state.isPanning).toBe(false);
       expect(state.activeGestures).not.toContain('pan');
-      
+
       expect(handler).toHaveBeenCalledWith({});
-      
+
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
         'anatomy:interaction_panend',
         {}
@@ -357,10 +364,10 @@ describe('InteractionController', () => {
     it('should not end pan when not panning', () => {
       const handler = jest.fn();
       interactionController.registerHandler('panend', handler);
-      
+
       // Try to end without starting pan
       interactionController.endPan();
-      
+
       expect(handler).not.toHaveBeenCalled();
       expect(mockEventBus.dispatch).not.toHaveBeenCalled();
     });
@@ -368,10 +375,10 @@ describe('InteractionController', () => {
     it('should calculate delta correctly for consecutive updates', () => {
       const handler = jest.fn();
       interactionController.registerHandler('pan', handler);
-      
+
       // Start pan
       interactionController.startPan({ clientX: 100, clientY: 200 });
-      
+
       // First update
       interactionController.updatePan({ clientX: 120, clientY: 230 });
       expect(handler).toHaveBeenLastCalledWith({
@@ -379,7 +386,7 @@ describe('InteractionController', () => {
         deltaY: 30,
         position: { x: 120, y: 230 },
       });
-      
+
       // Second update (delta should be from last position)
       interactionController.updatePan({ clientX: 140, clientY: 250 });
       expect(handler).toHaveBeenLastCalledWith({
@@ -406,15 +413,15 @@ describe('InteractionController', () => {
     it('should handle zoom in', () => {
       const handler = jest.fn();
       interactionController.registerHandler('zoom', handler);
-      
+
       const event = {
         deltaY: 100, // Positive delta = zoom in
         clientX: 400,
         clientY: 300,
       };
-      
+
       interactionController.handleZoom(event);
-      
+
       expect(handler).toHaveBeenCalledWith({
         zoomFactor: 1.1,
         x: 400,
@@ -426,15 +433,15 @@ describe('InteractionController', () => {
     it('should handle zoom out', () => {
       const handler = jest.fn();
       interactionController.registerHandler('zoom', handler);
-      
+
       const event = {
         deltaY: -100, // Negative delta = zoom out
         clientX: 400,
         clientY: 300,
       };
-      
+
       interactionController.handleZoom(event);
-      
+
       expect(handler).toHaveBeenCalledWith({
         zoomFactor: 0.9,
         x: 400,
@@ -455,14 +462,14 @@ describe('InteractionController', () => {
     it('should handle click on background', () => {
       const handler = jest.fn();
       interactionController.registerHandler('click', handler);
-      
+
       const mockTarget = {
         closest: jest.fn().mockReturnValue(null),
       };
-      
+
       const event = { target: mockTarget };
       interactionController.handleClick(event);
-      
+
       expect(handler).toHaveBeenCalledWith({
         event,
         target: {
@@ -475,21 +482,21 @@ describe('InteractionController', () => {
     it('should handle click on anatomy node', () => {
       const handler = jest.fn();
       interactionController.registerHandler('click', handler);
-      
+
       const mockNodeElement = {
         getAttribute: jest.fn().mockReturnValue('node123'),
       };
-      
+
       const mockTarget = {
         closest: jest.fn().mockImplementation((selector) => {
           if (selector === '.anatomy-node') return mockNodeElement;
           return null;
         }),
       };
-      
+
       const event = { target: mockTarget };
       interactionController.handleClick(event);
-      
+
       expect(handler).toHaveBeenCalledWith({
         event,
         target: {
@@ -503,7 +510,7 @@ describe('InteractionController', () => {
     it('should handle click on anatomy edge', () => {
       const handler = jest.fn();
       interactionController.registerHandler('click', handler);
-      
+
       const mockEdgeElement = {
         getAttribute: jest.fn().mockImplementation((attr) => {
           if (attr === 'data-source') return 'source123';
@@ -511,7 +518,7 @@ describe('InteractionController', () => {
           return null;
         }),
       };
-      
+
       const mockTarget = {
         closest: jest.fn().mockImplementation((selector) => {
           if (selector === '.anatomy-node') return null;
@@ -519,10 +526,10 @@ describe('InteractionController', () => {
           return null;
         }),
       };
-      
+
       const event = { target: mockTarget };
       interactionController.handleClick(event);
-      
+
       expect(handler).toHaveBeenCalledWith({
         event,
         target: {
@@ -546,14 +553,14 @@ describe('InteractionController', () => {
     it('should handle hover enter', () => {
       const handler = jest.fn();
       interactionController.registerHandler('hoverenter', handler);
-      
+
       const mockTarget = {
         closest: jest.fn().mockReturnValue(null),
       };
-      
+
       const event = { target: mockTarget };
       interactionController.handleHover(event, true);
-      
+
       expect(handler).toHaveBeenCalledWith({
         event,
         target: {
@@ -566,14 +573,14 @@ describe('InteractionController', () => {
     it('should handle hover leave', () => {
       const handler = jest.fn();
       interactionController.registerHandler('hoverleave', handler);
-      
+
       const mockTarget = {
         closest: jest.fn().mockReturnValue(null),
       };
-      
+
       const event = { target: mockTarget };
       interactionController.handleHover(event, false);
-      
+
       expect(handler).toHaveBeenCalledWith({
         event,
         target: {
@@ -595,10 +602,10 @@ describe('InteractionController', () => {
     it('should handle key press', () => {
       const handler = jest.fn();
       interactionController.registerHandler('keypress', handler);
-      
+
       const event = { key: 'Enter' };
       interactionController.handleKeyPress(event);
-      
+
       expect(handler).toHaveBeenCalledWith({
         key: 'Enter',
         event,
@@ -622,16 +629,18 @@ describe('InteractionController', () => {
     it('should handle single touch as pan start', () => {
       const handler = jest.fn();
       interactionController.registerHandler('panstart', handler);
-      
+
       const event = {
-        touches: [{
-          clientX: 100,
-          clientY: 200,
-        }],
+        touches: [
+          {
+            clientX: 100,
+            clientY: 200,
+          },
+        ],
       };
-      
+
       interactionController.handleTouch(event, 'start');
-      
+
       expect(handler).toHaveBeenCalledWith({
         position: { x: 100, y: 200 },
       });
@@ -640,19 +649,19 @@ describe('InteractionController', () => {
     it('should handle single touch as pan move', () => {
       const handler = jest.fn();
       interactionController.registerHandler('pan', handler);
-      
+
       // Start pan first
       const startEvent = {
         touches: [{ clientX: 100, clientY: 200 }],
       };
       interactionController.handleTouch(startEvent, 'start');
-      
+
       // Move touch
       const moveEvent = {
         touches: [{ clientX: 120, clientY: 230 }],
       };
       interactionController.handleTouch(moveEvent, 'move');
-      
+
       expect(handler).toHaveBeenCalledWith({
         deltaX: 20,
         deltaY: 30,
@@ -663,41 +672,41 @@ describe('InteractionController', () => {
     it('should handle single touch as pan end', () => {
       const handler = jest.fn();
       interactionController.registerHandler('panend', handler);
-      
+
       // Start pan first
       const startEvent = {
         touches: [{ clientX: 100, clientY: 200 }],
       };
       interactionController.handleTouch(startEvent, 'start');
-      
+
       // End touch - needs single touch to match the logic
       const endEvent = {
         touches: [{ clientX: 100, clientY: 200 }],
       };
       interactionController.handleTouch(endEvent, 'end');
-      
+
       expect(handler).toHaveBeenCalledWith({});
     });
 
     it('should handle two finger touch as zoom', () => {
       const handler = jest.fn();
       interactionController.registerHandler('zoom', handler);
-      
+
       const event = {
         touches: [
           { clientX: 100, clientY: 200 },
           { clientX: 200, clientY: 300 },
         ],
       };
-      
+
       interactionController.handleTouch(event, 'move');
-      
+
       // Should not call zoom handler on first touch (no previous distance)
       expect(handler).not.toHaveBeenCalled();
-      
+
       // Second touch should calculate zoom
       interactionController.handleTouch(event, 'move');
-      
+
       expect(handler).toHaveBeenCalledWith({
         zoomFactor: 1, // Same distance = no zoom
         x: 150, // Center X
@@ -708,7 +717,7 @@ describe('InteractionController', () => {
     it('should handle zoom with different distances', () => {
       const handler = jest.fn();
       interactionController.registerHandler('zoom', handler);
-      
+
       // First touch to establish distance
       const event1 = {
         touches: [
@@ -717,7 +726,7 @@ describe('InteractionController', () => {
         ],
       };
       interactionController.handleTouch(event1, 'move');
-      
+
       // Second touch with different distance
       const event2 = {
         touches: [
@@ -726,7 +735,7 @@ describe('InteractionController', () => {
         ],
       };
       interactionController.handleTouch(event2, 'move');
-      
+
       expect(handler).toHaveBeenCalledWith({
         zoomFactor: expect.any(Number),
         x: 150, // Center X
@@ -737,7 +746,7 @@ describe('InteractionController', () => {
     it('should ignore touches with more than 2 fingers', () => {
       const handler = jest.fn();
       interactionController.registerHandler('zoom', handler);
-      
+
       const event = {
         touches: [
           { clientX: 100, clientY: 200 },
@@ -745,9 +754,9 @@ describe('InteractionController', () => {
           { clientX: 300, clientY: 400 },
         ],
       };
-      
+
       interactionController.handleTouch(event, 'move');
-      
+
       expect(handler).not.toHaveBeenCalled();
     });
   });
@@ -764,14 +773,14 @@ describe('InteractionController', () => {
       const errorHandler = jest.fn().mockImplementation(() => {
         throw new Error('Handler error');
       });
-      
+
       interactionController.registerHandler('panstart', errorHandler);
-      
+
       // Should not throw, but log error
       expect(() => {
         interactionController.startPan({ clientX: 100, clientY: 200 });
       }).not.toThrow();
-      
+
       expect(mockLogger.error).toHaveBeenCalledWith(
         'InteractionController: Error in panstart handler',
         expect.any(Error)
@@ -783,12 +792,12 @@ describe('InteractionController', () => {
         throw new Error('Handler error');
       });
       const goodHandler = jest.fn();
-      
+
       interactionController.registerHandler('panstart', errorHandler);
       interactionController.registerHandler('panstart', goodHandler);
-      
+
       interactionController.startPan({ clientX: 100, clientY: 200 });
-      
+
       expect(errorHandler).toHaveBeenCalled();
       expect(goodHandler).toHaveBeenCalled();
       expect(mockLogger.error).toHaveBeenCalled();
@@ -806,9 +815,9 @@ describe('InteractionController', () => {
     it('should dispatch event bus events for registered handlers', () => {
       const handler = jest.fn();
       interactionController.registerHandler('panstart', handler);
-      
+
       interactionController.startPan({ clientX: 100, clientY: 200 });
-      
+
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
         'anatomy:interaction_panstart',
         { position: { x: 100, y: 200 } }
@@ -819,9 +828,9 @@ describe('InteractionController', () => {
       // Register a dummy handler to ensure triggerHandlers doesn't return early
       const dummyHandler = jest.fn();
       interactionController.registerHandler('panstart', dummyHandler);
-      
+
       interactionController.startPan({ clientX: 100, clientY: 200 });
-      
+
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
         'anatomy:interaction_panstart',
         { position: { x: 100, y: 200 } }
@@ -845,7 +854,7 @@ describe('InteractionController', () => {
     it('should handle mouse down on left button', () => {
       const handler = jest.fn();
       interactionController.registerHandler('panstart', handler);
-      
+
       const event = {
         button: 0, // Left button
         clientX: 100,
@@ -853,13 +862,14 @@ describe('InteractionController', () => {
         target: { closest: jest.fn().mockReturnValue(null) },
         preventDefault: jest.fn(),
       };
-      
+
       // Get the bound mousedown handler
-      const mouseDownHandler = mockElement.addEventListener.mock.calls
-        .find(call => call[0] === 'mousedown')[1];
-      
+      const mouseDownHandler = mockElement.addEventListener.mock.calls.find(
+        (call) => call[0] === 'mousedown'
+      )[1];
+
       mouseDownHandler(event);
-      
+
       expect(handler).toHaveBeenCalledWith({
         position: { x: 100, y: 200 },
       });
@@ -869,7 +879,7 @@ describe('InteractionController', () => {
     it('should not handle mouse down on anatomy node', () => {
       const handler = jest.fn();
       interactionController.registerHandler('panstart', handler);
-      
+
       const mockNode = { closest: jest.fn().mockReturnValue(true) };
       const event = {
         button: 0, // Left button
@@ -878,13 +888,14 @@ describe('InteractionController', () => {
         target: mockNode,
         preventDefault: jest.fn(),
       };
-      
+
       // Get the bound mousedown handler
-      const mouseDownHandler = mockElement.addEventListener.mock.calls
-        .find(call => call[0] === 'mousedown')[1];
-      
+      const mouseDownHandler = mockElement.addEventListener.mock.calls.find(
+        (call) => call[0] === 'mousedown'
+      )[1];
+
       mouseDownHandler(event);
-      
+
       expect(handler).not.toHaveBeenCalled();
       expect(event.preventDefault).not.toHaveBeenCalled();
     });
@@ -892,7 +903,7 @@ describe('InteractionController', () => {
     it('should not handle mouse down on right button', () => {
       const handler = jest.fn();
       interactionController.registerHandler('panstart', handler);
-      
+
       const event = {
         button: 2, // Right button
         clientX: 100,
@@ -900,13 +911,14 @@ describe('InteractionController', () => {
         target: { closest: jest.fn().mockReturnValue(null) },
         preventDefault: jest.fn(),
       };
-      
+
       // Get the bound mousedown handler
-      const mouseDownHandler = mockElement.addEventListener.mock.calls
-        .find(call => call[0] === 'mousedown')[1];
-      
+      const mouseDownHandler = mockElement.addEventListener.mock.calls.find(
+        (call) => call[0] === 'mousedown'
+      )[1];
+
       mouseDownHandler(event);
-      
+
       expect(handler).not.toHaveBeenCalled();
       expect(event.preventDefault).not.toHaveBeenCalled();
     });
@@ -914,21 +926,22 @@ describe('InteractionController', () => {
     it('should handle mouse move when panning', () => {
       const handler = jest.fn();
       interactionController.registerHandler('pan', handler);
-      
+
       // Start panning first
       interactionController.startPan({ clientX: 100, clientY: 200 });
-      
+
       const event = {
         clientX: 120,
         clientY: 230,
       };
-      
+
       // Get the bound mousemove handler
-      const mouseMoveHandler = global.document.addEventListener.mock.calls
-        .find(call => call[0] === 'mousemove')[1];
-      
+      const mouseMoveHandler = global.document.addEventListener.mock.calls.find(
+        (call) => call[0] === 'mousemove'
+      )[1];
+
       mouseMoveHandler(event);
-      
+
       expect(handler).toHaveBeenCalledWith({
         deltaX: 20,
         deltaY: 30,
@@ -939,54 +952,57 @@ describe('InteractionController', () => {
     it('should handle mouse move when not panning', () => {
       const handler = jest.fn();
       interactionController.registerHandler('pan', handler);
-      
+
       const event = {
         clientX: 120,
         clientY: 230,
       };
-      
+
       // Get the bound mousemove handler
-      const mouseMoveHandler = global.document.addEventListener.mock.calls
-        .find(call => call[0] === 'mousemove')[1];
-      
+      const mouseMoveHandler = global.document.addEventListener.mock.calls.find(
+        (call) => call[0] === 'mousemove'
+      )[1];
+
       mouseMoveHandler(event);
-      
+
       expect(handler).not.toHaveBeenCalled();
     });
 
     it('should handle mouse up', () => {
       const handler = jest.fn();
       interactionController.registerHandler('panend', handler);
-      
+
       // Start panning first
       interactionController.startPan({ clientX: 100, clientY: 200 });
-      
+
       // Get the bound mouseup handler
-      const mouseUpHandler = global.document.addEventListener.mock.calls
-        .find(call => call[0] === 'mouseup')[1];
-      
+      const mouseUpHandler = global.document.addEventListener.mock.calls.find(
+        (call) => call[0] === 'mouseup'
+      )[1];
+
       mouseUpHandler();
-      
+
       expect(handler).toHaveBeenCalledWith({});
     });
 
     it('should handle wheel event', () => {
       const handler = jest.fn();
       interactionController.registerHandler('zoom', handler);
-      
+
       const event = {
         deltaY: 100,
         clientX: 400,
         clientY: 300,
         preventDefault: jest.fn(),
       };
-      
+
       // Get the bound wheel handler
-      const wheelHandler = mockElement.addEventListener.mock.calls
-        .find(call => call[0] === 'wheel')[1];
-      
+      const wheelHandler = mockElement.addEventListener.mock.calls.find(
+        (call) => call[0] === 'wheel'
+      )[1];
+
       wheelHandler(event);
-      
+
       expect(event.preventDefault).toHaveBeenCalled();
       expect(handler).toHaveBeenCalledWith({
         zoomFactor: 1.1,
@@ -999,17 +1015,18 @@ describe('InteractionController', () => {
     it('should handle click when not panning', () => {
       const handler = jest.fn();
       interactionController.registerHandler('click', handler);
-      
+
       const event = {
         target: { closest: jest.fn().mockReturnValue(null) },
       };
-      
+
       // Get the bound click handler
-      const clickHandler = mockElement.addEventListener.mock.calls
-        .find(call => call[0] === 'click')[1];
-      
+      const clickHandler = mockElement.addEventListener.mock.calls.find(
+        (call) => call[0] === 'click'
+      )[1];
+
       clickHandler(event);
-      
+
       expect(handler).toHaveBeenCalledWith({
         event,
         target: { type: 'background', element: event.target },
@@ -1019,37 +1036,39 @@ describe('InteractionController', () => {
     it('should not handle click when panning', () => {
       const handler = jest.fn();
       interactionController.registerHandler('click', handler);
-      
+
       // Start panning to add 'pan' to active gestures
       interactionController.startPan({ clientX: 100, clientY: 200 });
-      
+
       const event = {
         target: { closest: jest.fn().mockReturnValue(null) },
       };
-      
+
       // Get the bound click handler
-      const clickHandler = mockElement.addEventListener.mock.calls
-        .find(call => call[0] === 'click')[1];
-      
+      const clickHandler = mockElement.addEventListener.mock.calls.find(
+        (call) => call[0] === 'click'
+      )[1];
+
       clickHandler(event);
-      
+
       expect(handler).not.toHaveBeenCalled();
     });
 
     it('should handle mouseover', () => {
       const handler = jest.fn();
       interactionController.registerHandler('hoverenter', handler);
-      
+
       const event = {
         target: { closest: jest.fn().mockReturnValue(null) },
       };
-      
+
       // Get the bound mouseover handler
-      const mouseOverHandler = mockElement.addEventListener.mock.calls
-        .find(call => call[0] === 'mouseover')[1];
-      
+      const mouseOverHandler = mockElement.addEventListener.mock.calls.find(
+        (call) => call[0] === 'mouseover'
+      )[1];
+
       mouseOverHandler(event);
-      
+
       expect(handler).toHaveBeenCalledWith({
         event,
         target: { type: 'background', element: event.target },
@@ -1059,17 +1078,18 @@ describe('InteractionController', () => {
     it('should handle mouseout', () => {
       const handler = jest.fn();
       interactionController.registerHandler('hoverleave', handler);
-      
+
       const event = {
         target: { closest: jest.fn().mockReturnValue(null) },
       };
-      
+
       // Get the bound mouseout handler
-      const mouseOutHandler = mockElement.addEventListener.mock.calls
-        .find(call => call[0] === 'mouseout')[1];
-      
+      const mouseOutHandler = mockElement.addEventListener.mock.calls.find(
+        (call) => call[0] === 'mouseout'
+      )[1];
+
       mouseOutHandler(event);
-      
+
       expect(handler).toHaveBeenCalledWith({
         event,
         target: { type: 'background', element: event.target },
@@ -1079,18 +1099,19 @@ describe('InteractionController', () => {
     it('should handle touchstart', () => {
       const handler = jest.fn();
       interactionController.registerHandler('panstart', handler);
-      
+
       const event = {
         touches: [{ clientX: 100, clientY: 200 }],
         preventDefault: jest.fn(),
       };
-      
+
       // Get the bound touchstart handler
-      const touchStartHandler = mockElement.addEventListener.mock.calls
-        .find(call => call[0] === 'touchstart')[1];
-      
+      const touchStartHandler = mockElement.addEventListener.mock.calls.find(
+        (call) => call[0] === 'touchstart'
+      )[1];
+
       touchStartHandler(event);
-      
+
       expect(event.preventDefault).toHaveBeenCalled();
       expect(handler).toHaveBeenCalledWith({
         position: { x: 100, y: 200 },
@@ -1100,21 +1121,22 @@ describe('InteractionController', () => {
     it('should handle touchmove', () => {
       const handler = jest.fn();
       interactionController.registerHandler('pan', handler);
-      
+
       // Start panning first
       interactionController.startPan({ clientX: 100, clientY: 200 });
-      
+
       const event = {
         touches: [{ clientX: 120, clientY: 230 }],
         preventDefault: jest.fn(),
       };
-      
+
       // Get the bound touchmove handler
-      const touchMoveHandler = mockElement.addEventListener.mock.calls
-        .find(call => call[0] === 'touchmove')[1];
-      
+      const touchMoveHandler = mockElement.addEventListener.mock.calls.find(
+        (call) => call[0] === 'touchmove'
+      )[1];
+
       touchMoveHandler(event);
-      
+
       expect(event.preventDefault).toHaveBeenCalled();
       expect(handler).toHaveBeenCalledWith({
         deltaX: 20,
@@ -1126,20 +1148,21 @@ describe('InteractionController', () => {
     it('should handle touchend', () => {
       const handler = jest.fn();
       interactionController.registerHandler('panend', handler);
-      
+
       // Start panning first
       interactionController.startPan({ clientX: 100, clientY: 200 });
-      
+
       const event = {
         touches: [{ clientX: 100, clientY: 200 }],
       };
-      
+
       // Get the bound touchend handler
-      const touchEndHandler = mockElement.addEventListener.mock.calls
-        .find(call => call[0] === 'touchend')[1];
-      
+      const touchEndHandler = mockElement.addEventListener.mock.calls.find(
+        (call) => call[0] === 'touchend'
+      )[1];
+
       touchEndHandler(event);
-      
+
       expect(handler).toHaveBeenCalledWith({});
     });
   });

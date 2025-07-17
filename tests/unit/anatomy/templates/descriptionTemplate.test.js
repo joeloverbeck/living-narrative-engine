@@ -63,7 +63,9 @@ describe('DescriptionTemplate', () => {
         config: mockConfig,
         partDescriptionGenerator: mockGenerator,
       });
-      expect(templateWithGenerator.partDescriptionGenerator).toBe(mockGenerator);
+      expect(templateWithGenerator.partDescriptionGenerator).toBe(
+        mockGenerator
+      );
     });
 
     it('should initialize partDescriptionGenerator as null when not provided', () => {
@@ -140,7 +142,9 @@ describe('DescriptionTemplate', () => {
 
     it('should use partDescriptionGenerator when no persisted description exists', () => {
       const mockGenerator = {
-        generatePartDescription: jest.fn().mockReturnValue('generated description'),
+        generatePartDescription: jest
+          .fn()
+          .mockReturnValue('generated description'),
       };
       const templateWithGenerator = new DescriptionTemplate({
         config: mockConfig,
@@ -161,10 +165,17 @@ describe('DescriptionTemplate', () => {
       ];
 
       const result = templateWithGenerator.extractDescriptions(parts);
-      
-      expect(mockGenerator.generatePartDescription).toHaveBeenCalledWith('part1');
-      expect(mockGenerator.generatePartDescription).toHaveBeenCalledWith('part2');
-      expect(result).toEqual(['generated description', 'generated description']);
+
+      expect(mockGenerator.generatePartDescription).toHaveBeenCalledWith(
+        'part1'
+      );
+      expect(mockGenerator.generatePartDescription).toHaveBeenCalledWith(
+        'part2'
+      );
+      expect(result).toEqual([
+        'generated description',
+        'generated description',
+      ]);
     });
 
     it('should handle partDescriptionGenerator errors gracefully', () => {
@@ -188,14 +199,17 @@ describe('DescriptionTemplate', () => {
       ];
 
       const result = templateWithGenerator.extractDescriptions(parts);
-      
-      expect(mockGenerator.generatePartDescription).toHaveBeenCalledWith('part1');
+
+      expect(mockGenerator.generatePartDescription).toHaveBeenCalledWith(
+        'part1'
+      );
       expect(result).toEqual([]);
     });
 
     it('should handle partDescriptionGenerator returning null or empty string', () => {
       const mockGenerator = {
-        generatePartDescription: jest.fn()
+        generatePartDescription: jest
+          .fn()
           .mockReturnValueOnce(null)
           .mockReturnValueOnce('')
           .mockReturnValueOnce(undefined),
@@ -223,7 +237,7 @@ describe('DescriptionTemplate', () => {
       ];
 
       const result = templateWithGenerator.extractDescriptions(parts);
-      
+
       expect(mockGenerator.generatePartDescription).toHaveBeenCalledTimes(3);
       expect(result).toEqual([]);
     });
@@ -246,14 +260,16 @@ describe('DescriptionTemplate', () => {
       ];
 
       const result = templateWithGenerator.extractDescriptions(parts);
-      
+
       expect(mockGenerator.generatePartDescription).not.toHaveBeenCalled();
       expect(result).toEqual([]);
     });
 
     it('should prefer persisted descriptions over generated ones', () => {
       const mockGenerator = {
-        generatePartDescription: jest.fn().mockReturnValue('generated description'),
+        generatePartDescription: jest
+          .fn()
+          .mockReturnValue('generated description'),
       };
       const templateWithGenerator = new DescriptionTemplate({
         config: mockConfig,
@@ -265,19 +281,22 @@ describe('DescriptionTemplate', () => {
       const parts = [
         {
           id: 'part1',
-          getComponentData: jest.fn().mockReturnValue({ text: 'persisted description' }),
+          getComponentData: jest
+            .fn()
+            .mockReturnValue({ text: 'persisted description' }),
         },
       ];
 
       const result = templateWithGenerator.extractDescriptions(parts);
-      
+
       expect(mockGenerator.generatePartDescription).not.toHaveBeenCalled();
       expect(result).toEqual(['persisted description']);
     });
 
     it('should handle mixed scenario with some persisted and some generated descriptions', () => {
       const mockGenerator = {
-        generatePartDescription: jest.fn()
+        generatePartDescription: jest
+          .fn()
           .mockReturnValueOnce('generated for part2')
           .mockReturnValueOnce('generated for part4'),
       };
@@ -308,11 +327,20 @@ describe('DescriptionTemplate', () => {
       ];
 
       const result = templateWithGenerator.extractDescriptions(parts);
-      
-      expect(mockGenerator.generatePartDescription).toHaveBeenCalledWith('part2');
-      expect(mockGenerator.generatePartDescription).toHaveBeenCalledWith('part4');
+
+      expect(mockGenerator.generatePartDescription).toHaveBeenCalledWith(
+        'part2'
+      );
+      expect(mockGenerator.generatePartDescription).toHaveBeenCalledWith(
+        'part4'
+      );
       expect(mockGenerator.generatePartDescription).toHaveBeenCalledTimes(2);
-      expect(result).toEqual(['persisted 1', 'generated for part2', 'persisted 3', 'generated for part4']);
+      expect(result).toEqual([
+        'persisted 1',
+        'generated for part2',
+        'persisted 3',
+        'generated for part4',
+      ]);
     });
   });
 

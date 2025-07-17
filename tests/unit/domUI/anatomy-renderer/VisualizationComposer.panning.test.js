@@ -25,47 +25,49 @@ describe('VisualizationComposer - Panning Integration', () => {
 
   beforeEach(() => {
     // Create DOM environment
-    dom = new JSDOM('<!DOCTYPE html><html><body><div id="container"></div></body></html>');
+    dom = new JSDOM(
+      '<!DOCTYPE html><html><body><div id="container"></div></body></html>'
+    );
     global.document = dom.window.document;
     global.window = dom.window;
 
     container = document.getElementById('container');
-    
+
     // Ensure container exists
     if (!container) {
       container = document.createElement('div');
       container.id = 'container';
       document.body.appendChild(container);
     }
-    
+
     // Create mocks
     mockLogger = {
       debug: jest.fn(),
       info: jest.fn(),
       warn: jest.fn(),
-      error: jest.fn()
+      error: jest.fn(),
     };
-    
+
     mockEntityManager = {
-      getEntityInstance: jest.fn()
+      getEntityInstance: jest.fn(),
     };
-    
+
     // Create real components
     viewportManager = new ViewportManager({ logger: mockLogger });
-    interactionController = new InteractionController({ 
-      logger: mockLogger, 
-      eventBus: { dispatch: jest.fn() }
+    interactionController = new InteractionController({
+      logger: mockLogger,
+      eventBus: { dispatch: jest.fn() },
     });
-    svgRenderer = new SVGRenderer({ 
+    svgRenderer = new SVGRenderer({
       documentContext: { document },
-      logger: mockLogger 
+      logger: mockLogger,
     });
     layoutEngine = new LayoutEngine({ logger: mockLogger });
-    
+
     // Register layout strategy
     const radialStrategy = new RadialLayoutStrategy({ logger: mockLogger });
     layoutEngine.registerStrategy('radial', radialStrategy);
-    
+
     // Create visualization composer
     visualizationComposer = new VisualizationComposer({
       logger: mockLogger,
@@ -74,9 +76,9 @@ describe('VisualizationComposer - Panning Integration', () => {
       layoutEngine,
       svgRenderer,
       interactionController,
-      viewportManager
+      viewportManager,
     });
-    
+
     // Initialize composer
     visualizationComposer.initialize(container);
   });
@@ -92,16 +94,17 @@ describe('VisualizationComposer - Panning Integration', () => {
     mockEntityManager.getEntityInstance.mockResolvedValue({
       getComponentData: jest.fn().mockImplementation((componentId) => {
         if (componentId === 'core:name') return { text: 'Test Root' };
-        if (componentId === 'core:description') return { text: 'Test description' };
+        if (componentId === 'core:description')
+          return { text: 'Test description' };
         if (componentId === 'anatomy:part') return { subType: 'torso' };
         return null;
-      })
+      }),
     });
 
     // Create minimal anatomy data
     const anatomyData = {
       root: 'test-root',
-      parts: {}
+      parts: {},
     };
 
     // Render the graph to create the SVG
@@ -114,7 +117,7 @@ describe('VisualizationComposer - Panning Integration', () => {
     // Get initial viewBox
     const initialViewBox = svgElement.getAttribute('viewBox');
     expect(initialViewBox).toBeDefined();
-    
+
     // Parse initial viewBox values
     const initialValues = initialViewBox.split(' ').map(Number);
     const [initialX, initialY] = initialValues;
@@ -127,7 +130,7 @@ describe('VisualizationComposer - Panning Integration', () => {
     // Get updated viewBox
     const updatedViewBox = svgElement.getAttribute('viewBox');
     expect(updatedViewBox).toBeDefined();
-    
+
     // Parse updated viewBox values
     const updatedValues = updatedViewBox.split(' ').map(Number);
     const [updatedX, updatedY] = updatedValues;
@@ -135,7 +138,7 @@ describe('VisualizationComposer - Panning Integration', () => {
     // ViewBox should have changed according to the pan delta
     expect(updatedX).not.toBe(initialX);
     expect(updatedY).not.toBe(initialY);
-    
+
     // Verify the pan worked correctly (viewport coordinates should be updated)
     expect(updatedViewBox).not.toBe(initialViewBox);
   });
@@ -145,16 +148,17 @@ describe('VisualizationComposer - Panning Integration', () => {
     mockEntityManager.getEntityInstance.mockResolvedValue({
       getComponentData: jest.fn().mockImplementation((componentId) => {
         if (componentId === 'core:name') return { text: 'Test Root' };
-        if (componentId === 'core:description') return { text: 'Test description' };
+        if (componentId === 'core:description')
+          return { text: 'Test description' };
         if (componentId === 'anatomy:part') return { subType: 'torso' };
         return null;
-      })
+      }),
     });
 
     // Create minimal anatomy data
     const anatomyData = {
       root: 'test-root',
-      parts: {}
+      parts: {},
     };
 
     // Render the graph
@@ -177,7 +181,7 @@ describe('VisualizationComposer - Panning Integration', () => {
     const svgElement = container.querySelector('svg');
     const viewBox = svgElement.getAttribute('viewBox');
     const viewBoxParts = viewBox.split(' ').map(Number);
-    
+
     // ViewBox should match the updated viewport
     expect(viewBoxParts[0]).toBe(updatedViewport.x);
     expect(viewBoxParts[1]).toBe(updatedViewport.y);
@@ -188,33 +192,34 @@ describe('VisualizationComposer - Panning Integration', () => {
     mockEntityManager.getEntityInstance.mockResolvedValue({
       getComponentData: jest.fn().mockImplementation((componentId) => {
         if (componentId === 'core:name') return { text: 'Test Root' };
-        if (componentId === 'core:description') return { text: 'Test description' };
+        if (componentId === 'core:description')
+          return { text: 'Test description' };
         if (componentId === 'anatomy:part') return { subType: 'torso' };
         return null;
-      })
+      }),
     });
 
     // Create minimal anatomy data
     const anatomyData = {
       root: 'test-root',
-      parts: {}
+      parts: {},
     };
 
     // Render the graph
     await visualizationComposer.renderGraph('test-root', anatomyData);
 
     const svgElement = container.querySelector('svg');
-    
+
     // Get initial viewBox
     const initialViewBox = svgElement.getAttribute('viewBox');
-    
+
     // Apply multiple pan operations
     viewportManager.pan(50, 30);
     const firstPanViewBox = svgElement.getAttribute('viewBox');
-    
+
     viewportManager.pan(25, 15);
     const secondPanViewBox = svgElement.getAttribute('viewBox');
-    
+
     viewportManager.pan(-75, -45);
     const thirdPanViewBox = svgElement.getAttribute('viewBox');
 
@@ -222,14 +227,13 @@ describe('VisualizationComposer - Panning Integration', () => {
     expect(firstPanViewBox).not.toBe(initialViewBox);
     expect(secondPanViewBox).not.toBe(firstPanViewBox);
     expect(thirdPanViewBox).not.toBe(secondPanViewBox);
-    
+
     // Final viewBox should be close to initial after the reverse pan
     // (accounting for accumulated floating point precision)
     const initialValues = initialViewBox.split(' ').map(Number);
     const finalValues = thirdPanViewBox.split(' ').map(Number);
-    
+
     expect(Math.abs(finalValues[0] - initialValues[0])).toBeLessThan(0.01);
     expect(Math.abs(finalValues[1] - initialValues[1])).toBeLessThan(0.01);
   });
-
 });

@@ -83,7 +83,10 @@ describe('Anatomy Generation Debug Integration Tests', () => {
 
       const partEntities = bodyParts.map((part) => ({
         id: part.id,
-        hasComponent: jest.fn((component) => component === 'core:name' || component === 'anatomy:part'),
+        hasComponent: jest.fn(
+          (component) =>
+            component === 'core:name' || component === 'anatomy:part'
+        ),
         getComponentData: jest.fn((component) => {
           if (component === 'core:name') {
             return { text: part.name, name: part.name }; // Include both for compatibility
@@ -163,7 +166,10 @@ describe('Anatomy Generation Debug Integration Tests', () => {
       const partEntities = [
         {
           id: 'torso-1',
-          hasComponent: jest.fn((component) => component === 'core:name' || component === 'anatomy:part'),
+          hasComponent: jest.fn(
+            (component) =>
+              component === 'core:name' || component === 'anatomy:part'
+          ),
           getComponentData: jest.fn((component) => {
             if (component === 'core:name') return { text: 'torso' };
             if (component === 'anatomy:part') return { subType: 'torso' };
@@ -219,7 +225,10 @@ describe('Anatomy Generation Debug Integration Tests', () => {
       // Create entity with both text and name fields
       const partEntity = {
         id: 'part-1',
-        hasComponent: jest.fn((component) => component === 'core:name' || component === 'anatomy:part'),
+        hasComponent: jest.fn(
+          (component) =>
+            component === 'core:name' || component === 'anatomy:part'
+        ),
         getComponentData: jest.fn((component) => {
           if (component === 'core:name') {
             return {

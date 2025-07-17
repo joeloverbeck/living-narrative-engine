@@ -31,9 +31,9 @@ describe('Universal Clothing Slots Integration', () => {
           'right_breast',
           'left_chest',
           'right_chest',
-          'chest_center'
+          'chest_center',
         ],
-        allowedLayers: ['underwear']
+        allowedLayers: ['underwear'],
       },
       underwear_lower: {
         anatomySockets: [
@@ -41,27 +41,24 @@ describe('Universal Clothing Slots Integration', () => {
           'penis',
           'left_testicle',
           'right_testicle',
-          'vagina'
+          'vagina',
         ],
-        allowedLayers: ['underwear']
+        allowedLayers: ['underwear'],
       },
       back_accessory: {
-        anatomySockets: [
-          'upper_back',
-          'lower_back'
-        ],
-        allowedLayers: ['accessory', 'armor']
+        anatomySockets: ['upper_back', 'lower_back'],
+        allowedLayers: ['accessory', 'armor'],
       },
       // Legacy slots for backward compatibility
       genital_covering: {
         anatomySockets: ['penis', 'left_testicle', 'right_testicle'],
-        allowedLayers: ['underwear']
+        allowedLayers: ['underwear'],
       },
       torso_upper: {
         blueprintSlots: ['torso'],
-        allowedLayers: ['underwear', 'base', 'outer']
-      }
-    }
+        allowedLayers: ['underwear', 'base', 'outer'],
+      },
+    },
   };
 
   const femaleBlueprint = {
@@ -73,9 +70,9 @@ describe('Universal Clothing Slots Integration', () => {
           'right_breast',
           'left_chest',
           'right_chest',
-          'chest_center'
+          'chest_center',
         ],
-        allowedLayers: ['underwear']
+        allowedLayers: ['underwear'],
       },
       underwear_lower: {
         anatomySockets: [
@@ -83,27 +80,24 @@ describe('Universal Clothing Slots Integration', () => {
           'penis',
           'left_testicle',
           'right_testicle',
-          'vagina'
+          'vagina',
         ],
-        allowedLayers: ['underwear']
+        allowedLayers: ['underwear'],
       },
       back_accessory: {
-        anatomySockets: [
-          'upper_back',
-          'lower_back'
-        ],
-        allowedLayers: ['accessory', 'armor']
+        anatomySockets: ['upper_back', 'lower_back'],
+        allowedLayers: ['accessory', 'armor'],
       },
       // Legacy slots for backward compatibility
       bra: {
         blueprintSlots: ['left_breast', 'right_breast'],
-        allowedLayers: ['underwear']
+        allowedLayers: ['underwear'],
       },
       panties: {
         anatomySockets: ['vagina', 'pubic_hair'],
-        allowedLayers: ['underwear']
-      }
-    }
+        allowedLayers: ['underwear'],
+      },
+    },
   };
 
   beforeEach(() => {
@@ -139,7 +133,9 @@ describe('Universal Clothing Slots Integration', () => {
 
     mockBodyGraphService.getBodyGraph.mockResolvedValue({
       getConnectedParts: jest.fn().mockReturnValue([]),
-      getAllPartIds: jest.fn().mockReturnValue(['torso_entity', 'pelvis_entity']),
+      getAllPartIds: jest
+        .fn()
+        .mockReturnValue(['torso_entity', 'pelvis_entity']),
     });
 
     slotResolver = new SlotResolver({
@@ -156,53 +152,62 @@ describe('Universal Clothing Slots Integration', () => {
     describe('Male wearing female underwear', () => {
       beforeEach(() => {
         // Mock male entity with male anatomy
-        mockEntityManager.getComponentData.mockImplementation((entityId, componentType) => {
-          if (componentType === 'anatomy:body') {
-            return Promise.resolve({ recipeId: 'anatomy:human_male' });
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentType) => {
+            if (componentType === 'anatomy:body') {
+              return Promise.resolve({ recipeId: 'anatomy:human_male' });
+            }
+            if (componentType === 'anatomy:sockets') {
+              return Promise.resolve({
+                sockets: [
+                  { id: 'pubic_hair', orientation: 'neutral' },
+                  { id: 'penis', orientation: 'neutral' },
+                  { id: 'left_testicle', orientation: 'neutral' },
+                  { id: 'right_testicle', orientation: 'neutral' },
+                  { id: 'left_chest', orientation: 'neutral' },
+                  { id: 'right_chest', orientation: 'neutral' },
+                  { id: 'upper_back', orientation: 'neutral' },
+                  { id: 'lower_back', orientation: 'neutral' },
+                ],
+              });
+            }
+            return Promise.resolve(null);
           }
-          if (componentType === 'anatomy:sockets') {
-            return Promise.resolve({
-              sockets: [
-                { id: 'pubic_hair', orientation: 'neutral' },
-                { id: 'penis', orientation: 'neutral' },
-                { id: 'left_testicle', orientation: 'neutral' },
-                { id: 'right_testicle', orientation: 'neutral' },
-                { id: 'left_chest', orientation: 'neutral' },
-                { id: 'right_chest', orientation: 'neutral' },
-                { id: 'upper_back', orientation: 'neutral' },
-                { id: 'lower_back', orientation: 'neutral' },
-              ]
-            });
-          }
-          return Promise.resolve(null);
-        });
+        );
 
-        mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue(maleBlueprint);
+        mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue(
+          maleBlueprint
+        );
 
         // Mock socket resolution for male anatomy
-        mockAnatomySocketIndex.findEntityWithSocket.mockImplementation((entityId, socketId) => {
-          const maleSocketMap = {
-            'pubic_hair': 'pelvis_entity',
-            'penis': 'pelvis_entity',
-            'left_testicle': 'pelvis_entity',
-            'right_testicle': 'pelvis_entity',
-            'left_chest': 'torso_entity',
-            'right_chest': 'torso_entity',
-            'upper_back': 'torso_entity',
-            'lower_back': 'torso_entity',
-          };
-          return Promise.resolve(maleSocketMap[socketId] || null);
-        });
+        mockAnatomySocketIndex.findEntityWithSocket.mockImplementation(
+          (entityId, socketId) => {
+            const maleSocketMap = {
+              pubic_hair: 'pelvis_entity',
+              penis: 'pelvis_entity',
+              left_testicle: 'pelvis_entity',
+              right_testicle: 'pelvis_entity',
+              left_chest: 'torso_entity',
+              right_chest: 'torso_entity',
+              upper_back: 'torso_entity',
+              lower_back: 'torso_entity',
+            };
+            return Promise.resolve(maleSocketMap[socketId] || null);
+          }
+        );
       });
 
       it('should allow male entity to wear panties using universal underwear_lower slot', async () => {
-        const result = await slotResolver.resolveClothingSlot('male_actor', 'underwear_lower');
+        const result = await slotResolver.resolveClothingSlot(
+          'male_actor',
+          'underwear_lower'
+        );
 
         expect(result).toBeDefined();
         expect(result.length).toBeGreaterThan(0);
 
         // Should attach to male genital anatomy
-        const attachedSockets = result.map(point => point.socketId);
+        const attachedSockets = result.map((point) => point.socketId);
         expect(attachedSockets).toContain('pubic_hair');
         expect(attachedSockets).toContain('penis');
         expect(attachedSockets).toContain('left_testicle');
@@ -213,13 +218,16 @@ describe('Universal Clothing Slots Integration', () => {
       });
 
       it('should allow male entity to wear bra using universal underwear_upper slot', async () => {
-        const result = await slotResolver.resolveClothingSlot('male_actor', 'underwear_upper');
+        const result = await slotResolver.resolveClothingSlot(
+          'male_actor',
+          'underwear_upper'
+        );
 
         expect(result).toBeDefined();
         expect(result.length).toBeGreaterThan(0);
 
         // Should attach to male chest anatomy
-        const attachedSockets = result.map(point => point.socketId);
+        const attachedSockets = result.map((point) => point.socketId);
         expect(attachedSockets).toContain('left_chest');
         expect(attachedSockets).toContain('right_chest');
 
@@ -232,49 +240,58 @@ describe('Universal Clothing Slots Integration', () => {
     describe('Female wearing male underwear', () => {
       beforeEach(() => {
         // Mock female entity with female anatomy
-        mockEntityManager.getComponentData.mockImplementation((entityId, componentType) => {
-          if (componentType === 'anatomy:body') {
-            return Promise.resolve({ recipeId: 'anatomy:human_female' });
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentType) => {
+            if (componentType === 'anatomy:body') {
+              return Promise.resolve({ recipeId: 'anatomy:human_female' });
+            }
+            if (componentType === 'anatomy:sockets') {
+              return Promise.resolve({
+                sockets: [
+                  { id: 'pubic_hair', orientation: 'neutral' },
+                  { id: 'vagina', orientation: 'neutral' },
+                  { id: 'left_breast', orientation: 'neutral' },
+                  { id: 'right_breast', orientation: 'neutral' },
+                  { id: 'upper_back', orientation: 'neutral' },
+                  { id: 'lower_back', orientation: 'neutral' },
+                ],
+              });
+            }
+            return Promise.resolve(null);
           }
-          if (componentType === 'anatomy:sockets') {
-            return Promise.resolve({
-              sockets: [
-                { id: 'pubic_hair', orientation: 'neutral' },
-                { id: 'vagina', orientation: 'neutral' },
-                { id: 'left_breast', orientation: 'neutral' },
-                { id: 'right_breast', orientation: 'neutral' },
-                { id: 'upper_back', orientation: 'neutral' },
-                { id: 'lower_back', orientation: 'neutral' },
-              ]
-            });
-          }
-          return Promise.resolve(null);
-        });
+        );
 
-        mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue(femaleBlueprint);
+        mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue(
+          femaleBlueprint
+        );
 
         // Mock socket resolution for female anatomy
-        mockAnatomySocketIndex.findEntityWithSocket.mockImplementation((entityId, socketId) => {
-          const femaleSocketMap = {
-            'pubic_hair': 'pelvis_entity',
-            'vagina': 'pelvis_entity',
-            'left_breast': 'torso_entity',
-            'right_breast': 'torso_entity',
-            'upper_back': 'torso_entity',
-            'lower_back': 'torso_entity',
-          };
-          return Promise.resolve(femaleSocketMap[socketId] || null);
-        });
+        mockAnatomySocketIndex.findEntityWithSocket.mockImplementation(
+          (entityId, socketId) => {
+            const femaleSocketMap = {
+              pubic_hair: 'pelvis_entity',
+              vagina: 'pelvis_entity',
+              left_breast: 'torso_entity',
+              right_breast: 'torso_entity',
+              upper_back: 'torso_entity',
+              lower_back: 'torso_entity',
+            };
+            return Promise.resolve(femaleSocketMap[socketId] || null);
+          }
+        );
       });
 
       it('should allow female entity to wear boxers using universal underwear_lower slot', async () => {
-        const result = await slotResolver.resolveClothingSlot('female_actor', 'underwear_lower');
+        const result = await slotResolver.resolveClothingSlot(
+          'female_actor',
+          'underwear_lower'
+        );
 
         expect(result).toBeDefined();
         expect(result.length).toBeGreaterThan(0);
 
         // Should attach to female genital anatomy
-        const attachedSockets = result.map(point => point.socketId);
+        const attachedSockets = result.map((point) => point.socketId);
         expect(attachedSockets).toContain('pubic_hair');
         expect(attachedSockets).toContain('vagina');
 
@@ -285,13 +302,16 @@ describe('Universal Clothing Slots Integration', () => {
       });
 
       it('should allow female entity to wear male chest underwear using universal underwear_upper slot', async () => {
-        const result = await slotResolver.resolveClothingSlot('female_actor', 'underwear_upper');
+        const result = await slotResolver.resolveClothingSlot(
+          'female_actor',
+          'underwear_upper'
+        );
 
         expect(result).toBeDefined();
         expect(result.length).toBeGreaterThan(0);
 
         // Should attach to female breast anatomy
-        const attachedSockets = result.map(point => point.socketId);
+        const attachedSockets = result.map((point) => point.socketId);
         expect(attachedSockets).toContain('left_breast');
         expect(attachedSockets).toContain('right_breast');
 
@@ -305,65 +325,79 @@ describe('Universal Clothing Slots Integration', () => {
   describe('Backpack Slot Functionality', () => {
     beforeEach(() => {
       // Mock entity with back anatomy
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentType) => {
-        if (componentType === 'anatomy:body') {
-          return Promise.resolve({ recipeId: 'anatomy:human_male' });
-        }
-        if (componentType === 'anatomy:sockets') {
-          // Return sockets for pelvis_entity only
-          if (entityId === 'pelvis_entity') {
-            return Promise.resolve({
-              sockets: [
-                { id: 'upper_back', orientation: 'neutral' },
-                { id: 'lower_back', orientation: 'neutral' },
-              ]
-            });
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentType) => {
+          if (componentType === 'anatomy:body') {
+            return Promise.resolve({ recipeId: 'anatomy:human_male' });
+          }
+          if (componentType === 'anatomy:sockets') {
+            // Return sockets for pelvis_entity only
+            if (entityId === 'pelvis_entity') {
+              return Promise.resolve({
+                sockets: [
+                  { id: 'upper_back', orientation: 'neutral' },
+                  { id: 'lower_back', orientation: 'neutral' },
+                ],
+              });
+            }
+            return Promise.resolve(null);
           }
           return Promise.resolve(null);
         }
-        return Promise.resolve(null);
-      });
+      );
 
-      mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue(maleBlueprint);
+      mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue(
+        maleBlueprint
+      );
 
       // Mock socket resolution for back anatomy
-      mockAnatomySocketIndex.findEntityWithSocket.mockImplementation((entityId, socketId) => {
-        const backSocketMap = {
-          'upper_back': 'torso_entity',
-          'lower_back': 'torso_entity',
-        };
-        return Promise.resolve(backSocketMap[socketId] || null);
-      });
+      mockAnatomySocketIndex.findEntityWithSocket.mockImplementation(
+        (entityId, socketId) => {
+          const backSocketMap = {
+            upper_back: 'torso_entity',
+            lower_back: 'torso_entity',
+          };
+          return Promise.resolve(backSocketMap[socketId] || null);
+        }
+      );
     });
 
     it('should allow entities to wear backpacks using back_accessory slot', async () => {
-      const result = await slotResolver.resolveClothingSlot('actor', 'back_accessory');
+      const result = await slotResolver.resolveClothingSlot(
+        'actor',
+        'back_accessory'
+      );
 
       expect(result).toBeDefined();
       expect(result.length).toBeGreaterThan(0);
 
       // Should attach to back anatomy
-      const attachedSockets = result.map(point => point.socketId);
+      const attachedSockets = result.map((point) => point.socketId);
       expect(attachedSockets).toContain('upper_back');
       expect(attachedSockets).toContain('lower_back');
 
       // Verify entities match
-      result.forEach(point => {
+      result.forEach((point) => {
         expect(point.entityId).toBe('pelvis_entity');
       });
     });
 
     it('should work across both male and female blueprints', async () => {
       // Test with female blueprint
-      mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue(femaleBlueprint);
+      mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue(
+        femaleBlueprint
+      );
 
-      const result = await slotResolver.resolveClothingSlot('female_actor', 'back_accessory');
+      const result = await slotResolver.resolveClothingSlot(
+        'female_actor',
+        'back_accessory'
+      );
 
       expect(result).toBeDefined();
       expect(result.length).toBeGreaterThan(0);
 
       // Should attach to back anatomy regardless of gender
-      const attachedSockets = result.map(point => point.socketId);
+      const attachedSockets = result.map((point) => point.socketId);
       expect(attachedSockets).toContain('upper_back');
       expect(attachedSockets).toContain('lower_back');
     });
@@ -372,40 +406,49 @@ describe('Universal Clothing Slots Integration', () => {
   describe('Backward Compatibility', () => {
     it('should maintain compatibility with legacy male genital_covering slot', async () => {
       // Mock male entity
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentType) => {
-        if (componentType === 'anatomy:body') {
-          return Promise.resolve({ recipeId: 'anatomy:human_male' });
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentType) => {
+          if (componentType === 'anatomy:body') {
+            return Promise.resolve({ recipeId: 'anatomy:human_male' });
+          }
+          if (componentType === 'anatomy:sockets') {
+            return Promise.resolve({
+              sockets: [
+                { id: 'penis', orientation: 'neutral' },
+                { id: 'left_testicle', orientation: 'neutral' },
+                { id: 'right_testicle', orientation: 'neutral' },
+              ],
+            });
+          }
+          return Promise.resolve(null);
         }
-        if (componentType === 'anatomy:sockets') {
-          return Promise.resolve({
-            sockets: [
-              { id: 'penis', orientation: 'neutral' },
-              { id: 'left_testicle', orientation: 'neutral' },
-              { id: 'right_testicle', orientation: 'neutral' },
-            ]
-          });
+      );
+
+      mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue(
+        maleBlueprint
+      );
+
+      mockAnatomySocketIndex.findEntityWithSocket.mockImplementation(
+        (entityId, socketId) => {
+          const maleSocketMap = {
+            penis: 'pelvis_entity',
+            left_testicle: 'pelvis_entity',
+            right_testicle: 'pelvis_entity',
+          };
+          return Promise.resolve(maleSocketMap[socketId] || null);
         }
-        return Promise.resolve(null);
-      });
+      );
 
-      mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue(maleBlueprint);
-
-      mockAnatomySocketIndex.findEntityWithSocket.mockImplementation((entityId, socketId) => {
-        const maleSocketMap = {
-          'penis': 'pelvis_entity',
-          'left_testicle': 'pelvis_entity',
-          'right_testicle': 'pelvis_entity',
-        };
-        return Promise.resolve(maleSocketMap[socketId] || null);
-      });
-
-      const result = await slotResolver.resolveClothingSlot('male_actor', 'genital_covering');
+      const result = await slotResolver.resolveClothingSlot(
+        'male_actor',
+        'genital_covering'
+      );
 
       expect(result).toBeDefined();
       expect(result.length).toBeGreaterThan(0);
 
       // Should work with legacy slot
-      const attachedSockets = result.map(point => point.socketId);
+      const attachedSockets = result.map((point) => point.socketId);
       expect(attachedSockets).toContain('penis');
       expect(attachedSockets).toContain('left_testicle');
       expect(attachedSockets).toContain('right_testicle');
@@ -413,38 +456,49 @@ describe('Universal Clothing Slots Integration', () => {
 
     it('should maintain compatibility with legacy female panties slots', async () => {
       // Mock female entity
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentType) => {
-        if (componentType === 'anatomy:body') {
-          return Promise.resolve({ recipeId: 'anatomy:human_female' });
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentType) => {
+          if (componentType === 'anatomy:body') {
+            return Promise.resolve({ recipeId: 'anatomy:human_female' });
+          }
+          if (componentType === 'anatomy:sockets') {
+            return Promise.resolve({
+              sockets: [
+                { id: 'vagina', orientation: 'neutral' },
+                { id: 'pubic_hair', orientation: 'neutral' },
+              ],
+            });
+          }
+          return Promise.resolve(null);
         }
-        if (componentType === 'anatomy:sockets') {
-          return Promise.resolve({
-            sockets: [
-              { id: 'vagina', orientation: 'neutral' },
-              { id: 'pubic_hair', orientation: 'neutral' },
-            ]
-          });
+      );
+
+      mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue(
+        femaleBlueprint
+      );
+
+      mockAnatomySocketIndex.findEntityWithSocket.mockImplementation(
+        (entityId, socketId) => {
+          const femaleSocketMap = {
+            vagina: 'pelvis_entity',
+            pubic_hair: 'pelvis_entity',
+          };
+          return Promise.resolve(femaleSocketMap[socketId] || null);
         }
-        return Promise.resolve(null);
-      });
-
-      mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue(femaleBlueprint);
-
-      mockAnatomySocketIndex.findEntityWithSocket.mockImplementation((entityId, socketId) => {
-        const femaleSocketMap = {
-          'vagina': 'pelvis_entity',
-          'pubic_hair': 'pelvis_entity',
-        };
-        return Promise.resolve(femaleSocketMap[socketId] || null);
-      });
+      );
 
       // Test legacy panties slot using anatomySockets
-      const pantiesResult = await slotResolver.resolveClothingSlot('female_actor', 'panties');
+      const pantiesResult = await slotResolver.resolveClothingSlot(
+        'female_actor',
+        'panties'
+      );
       expect(pantiesResult).toBeDefined();
       expect(pantiesResult.length).toBeGreaterThan(0);
 
       // Verify socket attachments for panties (anatomySockets)
-      const pantiesAttachedSockets = pantiesResult.map(point => point.socketId);
+      const pantiesAttachedSockets = pantiesResult.map(
+        (point) => point.socketId
+      );
       expect(pantiesAttachedSockets).toContain('vagina');
       expect(pantiesAttachedSockets).toContain('pubic_hair');
     });
@@ -453,40 +507,49 @@ describe('Universal Clothing Slots Integration', () => {
   describe('Socket Filtering and Error Handling', () => {
     it('should gracefully handle missing anatomy sockets', async () => {
       // Mock entity missing some anatomy sockets
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentType) => {
-        if (componentType === 'anatomy:body') {
-          return Promise.resolve({ recipeId: 'anatomy:human_male' });
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentType) => {
+          if (componentType === 'anatomy:body') {
+            return Promise.resolve({ recipeId: 'anatomy:human_male' });
+          }
+          if (componentType === 'anatomy:sockets') {
+            return Promise.resolve({
+              sockets: [
+                { id: 'pubic_hair', orientation: 'neutral' },
+                { id: 'penis', orientation: 'neutral' },
+                // Missing testicle sockets
+              ],
+            });
+          }
+          return Promise.resolve(null);
         }
-        if (componentType === 'anatomy:sockets') {
-          return Promise.resolve({
-            sockets: [
-              { id: 'pubic_hair', orientation: 'neutral' },
-              { id: 'penis', orientation: 'neutral' },
-              // Missing testicle sockets
-            ]
-          });
+      );
+
+      mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue(
+        maleBlueprint
+      );
+
+      mockAnatomySocketIndex.findEntityWithSocket.mockImplementation(
+        (entityId, socketId) => {
+          const partialSocketMap = {
+            pubic_hair: 'pelvis_entity',
+            penis: 'pelvis_entity',
+            // Missing testicle sockets return null
+          };
+          return Promise.resolve(partialSocketMap[socketId] || null);
         }
-        return Promise.resolve(null);
-      });
+      );
 
-      mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue(maleBlueprint);
-
-      mockAnatomySocketIndex.findEntityWithSocket.mockImplementation((entityId, socketId) => {
-        const partialSocketMap = {
-          'pubic_hair': 'pelvis_entity',
-          'penis': 'pelvis_entity',
-          // Missing testicle sockets return null
-        };
-        return Promise.resolve(partialSocketMap[socketId] || null);
-      });
-
-      const result = await slotResolver.resolveClothingSlot('male_actor', 'underwear_lower');
+      const result = await slotResolver.resolveClothingSlot(
+        'male_actor',
+        'underwear_lower'
+      );
 
       expect(result).toBeDefined();
       expect(result.length).toBeGreaterThan(0);
 
       // Should only attach to existing sockets
-      const attachedSockets = result.map(point => point.socketId);
+      const attachedSockets = result.map((point) => point.socketId);
       expect(attachedSockets).toContain('pubic_hair');
       expect(attachedSockets).toContain('penis');
       expect(attachedSockets).not.toContain('left_testicle');
@@ -496,28 +559,35 @@ describe('Universal Clothing Slots Integration', () => {
 
     it('should handle case where no anatomy sockets exist', async () => {
       // Mock entity with no compatible anatomy sockets
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentType) => {
-        if (componentType === 'anatomy:body') {
-          return Promise.resolve({ recipeId: 'anatomy:human_male' });
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentType) => {
+          if (componentType === 'anatomy:body') {
+            return Promise.resolve({ recipeId: 'anatomy:human_male' });
+          }
+          if (componentType === 'anatomy:sockets') {
+            return Promise.resolve({
+              sockets: [{ id: 'unrelated_socket', orientation: 'neutral' }],
+            });
+          }
+          return Promise.resolve(null);
         }
-        if (componentType === 'anatomy:sockets') {
-          return Promise.resolve({
-            sockets: [
-              { id: 'unrelated_socket', orientation: 'neutral' },
-            ]
-          });
+      );
+
+      mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue(
+        maleBlueprint
+      );
+
+      mockAnatomySocketIndex.findEntityWithSocket.mockImplementation(
+        (entityId, socketId) => {
+          // No compatible sockets
+          return Promise.resolve(null);
         }
-        return Promise.resolve(null);
-      });
+      );
 
-      mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue(maleBlueprint);
-
-      mockAnatomySocketIndex.findEntityWithSocket.mockImplementation((entityId, socketId) => {
-        // No compatible sockets
-        return Promise.resolve(null);
-      });
-
-      const result = await slotResolver.resolveClothingSlot('male_actor', 'underwear_lower');
+      const result = await slotResolver.resolveClothingSlot(
+        'male_actor',
+        'underwear_lower'
+      );
 
       // Should return empty array rather than throwing error
       expect(result).toBeDefined();
@@ -529,25 +599,35 @@ describe('Universal Clothing Slots Integration', () => {
     it('should prioritize new universal slots over legacy slots', async () => {
       // This test verifies that the universal slot system is properly integrated
       // and that both new and old slots are available simultaneously
-      
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentType) => {
-        if (componentType === 'anatomy:body') {
-          return Promise.resolve({ recipeId: 'anatomy:human_male' });
-        }
-        return Promise.resolve(null);
-      });
 
-      mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue(maleBlueprint);
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentType) => {
+          if (componentType === 'anatomy:body') {
+            return Promise.resolve({ recipeId: 'anatomy:human_male' });
+          }
+          return Promise.resolve(null);
+        }
+      );
+
+      mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue(
+        maleBlueprint
+      );
 
       // Test that both universal and legacy slots are available
-      expect(maleBlueprint.clothingSlotMappings).toHaveProperty('underwear_lower');
-      expect(maleBlueprint.clothingSlotMappings).toHaveProperty('genital_covering');
-      
+      expect(maleBlueprint.clothingSlotMappings).toHaveProperty(
+        'underwear_lower'
+      );
+      expect(maleBlueprint.clothingSlotMappings).toHaveProperty(
+        'genital_covering'
+      );
+
       // Universal slot should be more comprehensive
       const universalSlot = maleBlueprint.clothingSlotMappings.underwear_lower;
       const legacySlot = maleBlueprint.clothingSlotMappings.genital_covering;
-      
-      expect(universalSlot.anatomySockets.length).toBeGreaterThan(legacySlot.anatomySockets.length);
+
+      expect(universalSlot.anatomySockets.length).toBeGreaterThan(
+        legacySlot.anatomySockets.length
+      );
       expect(universalSlot.anatomySockets).toContain('vagina'); // Cross-gender compatibility
       expect(legacySlot.anatomySockets).not.toContain('vagina'); // Legacy is gender-specific
     });

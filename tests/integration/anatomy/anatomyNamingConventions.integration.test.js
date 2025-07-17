@@ -21,7 +21,7 @@ describe('Anatomy Naming Conventions Integration Tests', () => {
       // Arrange
       const recipeId = 'anatomy:human_female';
       const actor = testBed.createActor({ recipeId });
-      
+
       // Generate anatomy for the actor
       const anatomyService = testBed.container.get('AnatomyGenerationService');
       await anatomyService.generateAnatomy(actor.id);
@@ -44,10 +44,18 @@ describe('Anatomy Naming Conventions Integration Tests', () => {
       expect(parts['right foot']).toBeDefined();
 
       // Verify the entities have correct names in their core:name component
-      const leftHandEntity = entityManager.getEntityInstance(parts['left hand']);
-      const rightHandEntity = entityManager.getEntityInstance(parts['right hand']);
-      const leftFootEntity = entityManager.getEntityInstance(parts['left foot']);
-      const rightFootEntity = entityManager.getEntityInstance(parts['right foot']);
+      const leftHandEntity = entityManager.getEntityInstance(
+        parts['left hand']
+      );
+      const rightHandEntity = entityManager.getEntityInstance(
+        parts['right hand']
+      );
+      const leftFootEntity = entityManager.getEntityInstance(
+        parts['left foot']
+      );
+      const rightFootEntity = entityManager.getEntityInstance(
+        parts['right foot']
+      );
 
       const leftHandName = leftHandEntity.getComponentData('core:name');
       const rightHandName = rightHandEntity.getComponentData('core:name');
@@ -64,7 +72,7 @@ describe('Anatomy Naming Conventions Integration Tests', () => {
       // Arrange
       const recipeId = 'anatomy:human_female';
       const actor = testBed.createActor({ recipeId });
-      
+
       // Generate anatomy for the actor
       const anatomyService = testBed.container.get('AnatomyGenerationService');
       await anatomyService.generateAnatomy(actor.id);
@@ -84,9 +92,13 @@ describe('Anatomy Naming Conventions Integration Tests', () => {
 
       // Verify the entities have correct names in their core:name component
       const leftArmEntity = entityManager.getEntityInstance(parts['left arm']);
-      const rightArmEntity = entityManager.getEntityInstance(parts['right arm']);
+      const rightArmEntity = entityManager.getEntityInstance(
+        parts['right arm']
+      );
       const leftLegEntity = entityManager.getEntityInstance(parts['left leg']);
-      const rightLegEntity = entityManager.getEntityInstance(parts['right leg']);
+      const rightLegEntity = entityManager.getEntityInstance(
+        parts['right leg']
+      );
 
       const leftArmName = leftArmEntity.getComponentData('core:name');
       const rightArmName = rightArmEntity.getComponentData('core:name');
@@ -103,7 +115,7 @@ describe('Anatomy Naming Conventions Integration Tests', () => {
       // Arrange
       const recipeId = 'anatomy:human_female';
       const actor = testBed.createActor({ recipeId });
-      
+
       // Generate anatomy for the actor
       const anatomyService = testBed.container.get('AnatomyGenerationService');
       await anatomyService.generateAnatomy(actor.id);
@@ -117,13 +129,13 @@ describe('Anatomy Naming Conventions Integration Tests', () => {
       // Assert - verify simple type template works for single parts
       // Template: "{{type}}"
       const singleParts = ['nose', 'mouth', 'teeth', 'hair'];
-      
+
       for (const partName of singleParts) {
         expect(parts[partName]).toBeDefined();
-        
+
         const partEntity = entityManager.getEntityInstance(parts[partName]);
         const partNameComponent = partEntity.getComponentData('core:name');
-        
+
         expect(partNameComponent?.text).toBe(partName);
       }
     });
@@ -134,7 +146,7 @@ describe('Anatomy Naming Conventions Integration Tests', () => {
       // Arrange
       const recipeId = 'anatomy:human_female';
       const actor = testBed.createActor({ recipeId });
-      
+
       // Generate anatomy for the actor
       const anatomyService = testBed.container.get('AnatomyGenerationService');
       await anatomyService.generateAnatomy(actor.id);
@@ -146,10 +158,18 @@ describe('Anatomy Naming Conventions Integration Tests', () => {
       const parts = anatomyData.body.parts;
 
       // Assert - verify orientation propagation from parent to child
-      const leftHandEntity = entityManager.getEntityInstance(parts['left hand']);
-      const rightHandEntity = entityManager.getEntityInstance(parts['right hand']);
-      const leftFootEntity = entityManager.getEntityInstance(parts['left foot']);
-      const rightFootEntity = entityManager.getEntityInstance(parts['right foot']);
+      const leftHandEntity = entityManager.getEntityInstance(
+        parts['left hand']
+      );
+      const rightHandEntity = entityManager.getEntityInstance(
+        parts['right hand']
+      );
+      const leftFootEntity = entityManager.getEntityInstance(
+        parts['left foot']
+      );
+      const rightFootEntity = entityManager.getEntityInstance(
+        parts['right foot']
+      );
 
       // Check that orientation is correctly set in anatomy:part components
       const leftHandPart = leftHandEntity.getComponentData('anatomy:part');
@@ -168,7 +188,7 @@ describe('Anatomy Naming Conventions Integration Tests', () => {
       // Arrange
       const recipeId = 'anatomy:human_female';
       const actor = testBed.createActor({ recipeId });
-      
+
       // Generate anatomy for the actor
       const anatomyService = testBed.container.get('AnatomyGenerationService');
       await anatomyService.generateAnatomy(actor.id);
@@ -202,7 +222,7 @@ describe('Anatomy Naming Conventions Integration Tests', () => {
       // Arrange
       const recipeId = 'anatomy:human_female';
       const actor = testBed.createActor({ recipeId });
-      
+
       // Generate anatomy for the actor
       const anatomyService = testBed.container.get('AnatomyGenerationService');
       await anatomyService.generateAnatomy(actor.id);
@@ -214,10 +234,18 @@ describe('Anatomy Naming Conventions Integration Tests', () => {
       const parts = anatomyData.body.parts;
 
       // Assert - verify that different entity definitions can have same subType
-      const leftHandEntity = entityManager.getEntityInstance(parts['left hand']);
-      const rightHandEntity = entityManager.getEntityInstance(parts['right hand']);
-      const leftFootEntity = entityManager.getEntityInstance(parts['left foot']);
-      const rightFootEntity = entityManager.getEntityInstance(parts['right foot']);
+      const leftHandEntity = entityManager.getEntityInstance(
+        parts['left hand']
+      );
+      const rightHandEntity = entityManager.getEntityInstance(
+        parts['right hand']
+      );
+      const leftFootEntity = entityManager.getEntityInstance(
+        parts['left foot']
+      );
+      const rightFootEntity = entityManager.getEntityInstance(
+        parts['right foot']
+      );
 
       // Both hands should have the same subType but different names
       const leftHandPart = leftHandEntity.getComponentData('anatomy:part');
@@ -248,7 +276,7 @@ describe('Anatomy Naming Conventions Integration Tests', () => {
       // Arrange
       const recipeId = 'anatomy:human_female';
       const actor = testBed.createActor({ recipeId });
-      
+
       // Generate anatomy for the actor
       const anatomyService = testBed.container.get('AnatomyGenerationService');
       await anatomyService.generateAnatomy(actor.id);
@@ -261,21 +289,35 @@ describe('Anatomy Naming Conventions Integration Tests', () => {
 
       // Get arm entities to check their socket configurations
       const leftArmEntity = entityManager.getEntityInstance(parts['left arm']);
-      const rightArmEntity = entityManager.getEntityInstance(parts['right arm']);
+      const rightArmEntity = entityManager.getEntityInstance(
+        parts['right arm']
+      );
       const leftLegEntity = entityManager.getEntityInstance(parts['left leg']);
-      const rightLegEntity = entityManager.getEntityInstance(parts['right leg']);
+      const rightLegEntity = entityManager.getEntityInstance(
+        parts['right leg']
+      );
 
       // Assert - verify socket templates exist and are correct
       const leftArmSockets = leftArmEntity.getComponentData('anatomy:sockets');
-      const rightArmSockets = rightArmEntity.getComponentData('anatomy:sockets');
+      const rightArmSockets =
+        rightArmEntity.getComponentData('anatomy:sockets');
       const leftLegSockets = leftLegEntity.getComponentData('anatomy:sockets');
-      const rightLegSockets = rightLegEntity.getComponentData('anatomy:sockets');
+      const rightLegSockets =
+        rightLegEntity.getComponentData('anatomy:sockets');
 
       // Check that sockets have the correct name templates
-      expect(leftArmSockets?.sockets?.[0]?.nameTpl).toBe('{{effective_orientation}} {{type}}');
-      expect(rightArmSockets?.sockets?.[0]?.nameTpl).toBe('{{effective_orientation}} {{type}}');
-      expect(leftLegSockets?.sockets?.[0]?.nameTpl).toBe('{{effective_orientation}} {{type}}');
-      expect(rightLegSockets?.sockets?.[0]?.nameTpl).toBe('{{effective_orientation}} {{type}}');
+      expect(leftArmSockets?.sockets?.[0]?.nameTpl).toBe(
+        '{{effective_orientation}} {{type}}'
+      );
+      expect(rightArmSockets?.sockets?.[0]?.nameTpl).toBe(
+        '{{effective_orientation}} {{type}}'
+      );
+      expect(leftLegSockets?.sockets?.[0]?.nameTpl).toBe(
+        '{{effective_orientation}} {{type}}'
+      );
+      expect(rightLegSockets?.sockets?.[0]?.nameTpl).toBe(
+        '{{effective_orientation}} {{type}}'
+      );
 
       // Check socket IDs are correct
       expect(leftArmSockets?.sockets?.[0]?.id).toBe('wrist');

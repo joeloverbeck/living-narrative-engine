@@ -602,13 +602,13 @@ describe('ClothingSlotMappingStrategy', () => {
         );
 
         const mapping = { clothingSlotId: 'bra' };
-        
+
         // This will throw because no mapping found, but we're testing the blueprint retrieval
         await expect(strategy.resolve('actor123', mapping)).rejects.toThrow();
-        
-        expect(mockAnatomyBlueprintRepository.getBlueprintByRecipeId).toHaveBeenCalledWith(
-          'human_base'
-        );
+
+        expect(
+          mockAnatomyBlueprintRepository.getBlueprintByRecipeId
+        ).toHaveBeenCalledWith('human_base');
       });
     });
 
@@ -691,9 +691,7 @@ describe('ClothingSlotMappingStrategy', () => {
           mockBlueprint
         );
 
-        const expectedPoints = [
-          { entityId: 'pelvis1', socketId: 'vagina' },
-        ];
+        const expectedPoints = [{ entityId: 'pelvis1', socketId: 'vagina' }];
         mockDirectSocketStrategy.resolve.mockResolvedValue(expectedPoints);
 
         const mapping = { clothingSlotId: 'panties' };
@@ -740,7 +738,9 @@ describe('ClothingSlotMappingStrategy', () => {
       mockEntityManager.getComponentData.mockResolvedValue({
         recipeId: 'human_base',
       });
-      mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue(null);
+      mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue(
+        null
+      );
 
       const mapping = { clothingSlotId: 'bra' };
 
@@ -753,7 +753,9 @@ describe('ClothingSlotMappingStrategy', () => {
       mockEntityManager.getComponentData.mockResolvedValue({
         recipeId: 'human_base',
       });
-      mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue(undefined);
+      mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue(
+        undefined
+      );
 
       const mapping = { clothingSlotId: 'bra' };
 
@@ -768,7 +770,9 @@ describe('ClothingSlotMappingStrategy', () => {
 
       const mapping = { clothingSlotId: 'bra' };
 
-      await expect(strategy.resolve('actor123', mapping)).rejects.toThrow(error);
+      await expect(strategy.resolve('actor123', mapping)).rejects.toThrow(
+        error
+      );
     });
 
     it('should handle async errors from getBlueprintByRecipeId', async () => {
@@ -777,11 +781,15 @@ describe('ClothingSlotMappingStrategy', () => {
       });
 
       const error = new Error('Blueprint repository error');
-      mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockRejectedValue(error);
+      mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockRejectedValue(
+        error
+      );
 
       const mapping = { clothingSlotId: 'bra' };
 
-      await expect(strategy.resolve('actor123', mapping)).rejects.toThrow(error);
+      await expect(strategy.resolve('actor123', mapping)).rejects.toThrow(
+        error
+      );
     });
 
     it('should handle blueprint with undefined clothingSlotMappings', async () => {

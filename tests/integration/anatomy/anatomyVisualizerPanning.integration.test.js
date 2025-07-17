@@ -47,7 +47,7 @@ describe('Anatomy Visualizer Panning Integration', () => {
     // Mock document.addEventListener and removeEventListener for InteractionController
     mockDocumentAddEventListener = jest.fn();
     mockDocumentRemoveEventListener = jest.fn();
-    
+
     // Mock document methods on the actual document object
     document.addEventListener = mockDocumentAddEventListener;
     document.removeEventListener = mockDocumentRemoveEventListener;
@@ -66,7 +66,8 @@ describe('Anatomy Visualizer Panning Integration', () => {
     // Load the actual event definitions for panning
     const panstartEventDef = {
       id: 'anatomy:interaction_panstart',
-      description: 'Fired when a pan gesture starts on the anatomy visualization',
+      description:
+        'Fired when a pan gesture starts on the anatomy visualization',
       payloadSchema: {
         type: 'object',
         required: ['position'],
@@ -167,7 +168,7 @@ describe('Anatomy Visualizer Panning Integration', () => {
   describe('Pan gesture event dispatch', () => {
     beforeEach(() => {
       interactionController.attachToElement(mockElement);
-      
+
       // Register dummy handlers to ensure event dispatch happens
       interactionController.registerHandler('panstart', () => {});
       interactionController.registerHandler('pan', () => {});
@@ -187,7 +188,7 @@ describe('Anatomy Visualizer Panning Integration', () => {
       interactionController.startPan(mouseEvent);
 
       // Wait for async event dispatch
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       console.log('Dispatch spy calls:', dispatchSpy.mock.calls);
       console.log('Captured events:', capturedEvents);
@@ -214,7 +215,7 @@ describe('Anatomy Visualizer Panning Integration', () => {
       interactionController.updatePan(moveEvent);
 
       // Wait for async event dispatch
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       expect(capturedEvents).toHaveLength(1);
       const event = capturedEvents[0];
@@ -239,7 +240,7 @@ describe('Anatomy Visualizer Panning Integration', () => {
       interactionController.endPan();
 
       // Wait for async event dispatch
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       expect(capturedEvents).toHaveLength(1);
       const event = capturedEvents[0];
@@ -264,7 +265,7 @@ describe('Anatomy Visualizer Panning Integration', () => {
       interactionController.endPan();
 
       // Wait for async event dispatch
-      await new Promise(resolve => setTimeout(resolve, 20));
+      await new Promise((resolve) => setTimeout(resolve, 20));
 
       expect(capturedEvents).toHaveLength(4);
 
@@ -287,7 +288,7 @@ describe('Anatomy Visualizer Panning Integration', () => {
       interactionController.updatePan(moveEvent);
 
       // Wait a bit to ensure no events are dispatched
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       expect(capturedEvents).toHaveLength(0);
     });
@@ -297,7 +298,7 @@ describe('Anatomy Visualizer Panning Integration', () => {
       interactionController.endPan();
 
       // Wait a bit to ensure no events are dispatched
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       expect(capturedEvents).toHaveLength(0);
     });
@@ -306,7 +307,7 @@ describe('Anatomy Visualizer Panning Integration', () => {
   describe('Event validation', () => {
     beforeEach(() => {
       interactionController.attachToElement(mockElement);
-      
+
       // Register dummy handlers to ensure event dispatch happens
       interactionController.registerHandler('panstart', () => {});
       interactionController.registerHandler('pan', () => {});
@@ -323,7 +324,7 @@ describe('Anatomy Visualizer Panning Integration', () => {
       interactionController.startPan(mouseEvent);
 
       // Wait for async event dispatch
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Event should pass validation and be dispatched
       expect(capturedEvents).toHaveLength(1);
@@ -345,7 +346,7 @@ describe('Anatomy Visualizer Panning Integration', () => {
       interactionController.updatePan(moveEvent);
 
       // Wait for async event dispatch
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Event should pass validation and be dispatched
       expect(capturedEvents).toHaveLength(1);
@@ -368,7 +369,7 @@ describe('Anatomy Visualizer Panning Integration', () => {
       interactionController.endPan();
 
       // Wait for async event dispatch
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Event should pass validation and be dispatched
       expect(capturedEvents).toHaveLength(1);
@@ -382,7 +383,7 @@ describe('Anatomy Visualizer Panning Integration', () => {
   describe('Mouse event integration', () => {
     beforeEach(() => {
       interactionController.attachToElement(mockElement);
-      
+
       // Register dummy handlers to ensure event dispatch happens
       interactionController.registerHandler('panstart', () => {});
       interactionController.registerHandler('pan', () => {});
@@ -395,15 +396,16 @@ describe('Anatomy Visualizer Panning Integration', () => {
 
     it('should handle mouse down event to start panning', async () => {
       const mouseDownEvent = createMockMouseEvent(100, 200, 0); // Left click
-      
+
       // Get the bound handler that was added to the element
-      const mouseDownHandler = mockElement.addEventListener.mock.calls
-        .find(call => call[0] === 'mousedown')[1];
+      const mouseDownHandler = mockElement.addEventListener.mock.calls.find(
+        (call) => call[0] === 'mousedown'
+      )[1];
 
       mouseDownHandler(mouseDownEvent);
 
       // Wait for async event dispatch
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       expect(capturedEvents).toHaveLength(1);
       expect(capturedEvents[0].type).toBe('anatomy:interaction_panstart');
@@ -419,15 +421,16 @@ describe('Anatomy Visualizer Panning Integration', () => {
 
       // Simulate mouse move
       const mouseMoveEvent = createMockMouseEvent(120, 230);
-      
+
       // Get the bound handler that was added to document
-      const mouseMoveHandler = mockDocumentAddEventListener.mock.calls
-        .find(call => call[0] === 'mousemove')[1];
+      const mouseMoveHandler = mockDocumentAddEventListener.mock.calls.find(
+        (call) => call[0] === 'mousemove'
+      )[1];
 
       mouseMoveHandler(mouseMoveEvent);
 
       // Wait for async event dispatch
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       expect(capturedEvents).toHaveLength(1);
       expect(capturedEvents[0].type).toBe('anatomy:interaction_pan');
@@ -442,15 +445,16 @@ describe('Anatomy Visualizer Panning Integration', () => {
 
       // Simulate mouse up
       const mouseUpEvent = createMockMouseEvent(120, 230);
-      
+
       // Get the bound handler that was added to document
-      const mouseUpHandler = mockDocumentAddEventListener.mock.calls
-        .find(call => call[0] === 'mouseup')[1];
+      const mouseUpHandler = mockDocumentAddEventListener.mock.calls.find(
+        (call) => call[0] === 'mouseup'
+      )[1];
 
       mouseUpHandler(mouseUpEvent);
 
       // Wait for async event dispatch
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       expect(capturedEvents).toHaveLength(1);
       expect(capturedEvents[0].type).toBe('anatomy:interaction_panend');
@@ -459,19 +463,20 @@ describe('Anatomy Visualizer Panning Integration', () => {
     it('should not start panning when clicking on anatomy nodes', async () => {
       // Mock clicking on an anatomy node
       const mockAnatomyNodeElement = { classList: { contains: jest.fn() } };
-      const mockAnatomyNode = { 
-        closest: jest.fn().mockReturnValue(mockAnatomyNodeElement) 
+      const mockAnatomyNode = {
+        closest: jest.fn().mockReturnValue(mockAnatomyNodeElement),
       };
       const mouseDownEvent = createMockMouseEvent(100, 200, 0);
       mouseDownEvent.target = mockAnatomyNode;
 
-      const mouseDownHandler = mockElement.addEventListener.mock.calls
-        .find(call => call[0] === 'mousedown')[1];
+      const mouseDownHandler = mockElement.addEventListener.mock.calls.find(
+        (call) => call[0] === 'mousedown'
+      )[1];
 
       mouseDownHandler(mouseDownEvent);
 
       // Wait a bit to ensure no events are dispatched
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       expect(capturedEvents).toHaveLength(0);
       expect(mouseDownEvent.preventDefault).not.toHaveBeenCalled();
@@ -481,7 +486,7 @@ describe('Anatomy Visualizer Panning Integration', () => {
   describe('Gesture state management', () => {
     beforeEach(() => {
       interactionController.attachToElement(mockElement);
-      
+
       // Register dummy handlers to ensure event dispatch happens
       interactionController.registerHandler('panstart', () => {});
       interactionController.registerHandler('pan', () => {});
@@ -509,7 +514,7 @@ describe('Anatomy Visualizer Panning Integration', () => {
       interactionController.endPan();
 
       // Wait for async event dispatch
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       state = interactionController.getGestureState();
       expect(state.isPanning).toBe(false);
@@ -525,18 +530,22 @@ describe('Anatomy Visualizer Panning Integration', () => {
       ];
 
       // Start panning
-      interactionController.startPan(createMockMouseEvent(positions[0].x, positions[0].y));
+      interactionController.startPan(
+        createMockMouseEvent(positions[0].x, positions[0].y)
+      );
 
       // Rapid pan updates
       for (let i = 1; i < positions.length; i++) {
-        interactionController.updatePan(createMockMouseEvent(positions[i].x, positions[i].y));
+        interactionController.updatePan(
+          createMockMouseEvent(positions[i].x, positions[i].y)
+        );
       }
 
       // End panning
       interactionController.endPan();
 
       // Wait for async event dispatch
-      await new Promise(resolve => setTimeout(resolve, 20));
+      await new Promise((resolve) => setTimeout(resolve, 20));
 
       // Should have 1 start + 3 updates + 1 end = 5 events
       expect(capturedEvents).toHaveLength(5);
@@ -551,7 +560,7 @@ describe('Anatomy Visualizer Panning Integration', () => {
   describe('Error handling', () => {
     beforeEach(() => {
       interactionController.attachToElement(mockElement);
-      
+
       // Register dummy handlers to ensure event dispatch happens
       interactionController.registerHandler('panstart', () => {});
       interactionController.registerHandler('pan', () => {});
@@ -566,21 +575,23 @@ describe('Anatomy Visualizer Panning Integration', () => {
       const errorSpy = jest.spyOn(logger, 'error');
 
       // Mock invalid event definition that would cause validation to fail
-      jest.spyOn(gameDataRepository, 'getEventDefinition').mockImplementation((id) => {
-        if (id === 'anatomy:interaction_panstart') {
-          return {
-            id: 'anatomy:interaction_panstart',
-            payloadSchema: {
-              type: 'object',
-              required: ['invalidField'], // This will cause validation to fail
-              properties: {
-                invalidField: { type: 'string' },
+      jest
+        .spyOn(gameDataRepository, 'getEventDefinition')
+        .mockImplementation((id) => {
+          if (id === 'anatomy:interaction_panstart') {
+            return {
+              id: 'anatomy:interaction_panstart',
+              payloadSchema: {
+                type: 'object',
+                required: ['invalidField'], // This will cause validation to fail
+                properties: {
+                  invalidField: { type: 'string' },
+                },
               },
-            },
-          };
-        }
-        return null;
-      });
+            };
+          }
+          return null;
+        });
 
       // Add the invalid schema to the validator
       const invalidSchema = {
@@ -597,7 +608,7 @@ describe('Anatomy Visualizer Panning Integration', () => {
       interactionController.startPan(mouseEvent);
 
       // Wait for async event dispatch
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Event should be rejected due to validation failure
       expect(capturedEvents).toHaveLength(0);

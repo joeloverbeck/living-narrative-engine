@@ -564,7 +564,11 @@ describe('BlueprintSlotStrategy', () => {
         slots: {
           root_slot: { type: 'root', parent: null },
           child_slot: { type: 'child', parent: 'root_slot' },
-          target_slot: { type: 'target', socket: 'target_socket', parent: 'child_slot' },
+          target_slot: {
+            type: 'target',
+            socket: 'target_socket',
+            parent: 'child_slot',
+          },
         },
       };
 
@@ -755,7 +759,11 @@ describe('BlueprintSlotStrategy', () => {
         slots: {
           existing_slot: { type: 'existing' },
           // missing_intermediate is not defined
-          target_slot: { type: 'target', socket: 'target_socket', parent: 'missing_intermediate' },
+          target_slot: {
+            type: 'target',
+            socket: 'target_socket',
+            parent: 'missing_intermediate',
+          },
         },
       };
 
@@ -784,7 +792,11 @@ describe('BlueprintSlotStrategy', () => {
       const mockBlueprint = {
         slots: {
           intermediate: { type: 'intermediate' },
-          target_slot: { type: 'target', socket: 'target_socket', parent: 'intermediate' },
+          target_slot: {
+            type: 'target',
+            socket: 'target_socket',
+            parent: 'intermediate',
+          },
         },
       };
 
@@ -856,7 +868,9 @@ describe('BlueprintSlotStrategy', () => {
 
       // This test exercises the slot path traversal that reaches line 280 (return currentEntity)
       expect(mockBodyGraph.getConnectedParts).toHaveBeenCalledWith('actor123');
-      expect(mockBodyGraph.getConnectedParts).toHaveBeenCalledWith('root_entity');
+      expect(mockBodyGraph.getConnectedParts).toHaveBeenCalledWith(
+        'root_entity'
+      );
     });
 
     it('should handle slot with undefined blueprint definition', async () => {
@@ -879,7 +893,7 @@ describe('BlueprintSlotStrategy', () => {
 
       const mapping = { blueprintSlots: ['undefined_slot'] };
       const result = await strategy.resolve('actor123', mapping);
-      
+
       // Should return empty array and handle gracefully
       expect(result).toEqual([]);
     });
@@ -1039,7 +1053,7 @@ describe('BlueprintSlotStrategy', () => {
       );
 
       const mapping = { blueprintSlots: ['test_slot'] };
-      
+
       await expect(strategy.resolve('actor123', mapping)).rejects.toThrow(
         'Blueprint repository error'
       );
@@ -1049,7 +1063,9 @@ describe('BlueprintSlotStrategy', () => {
       mockEntityManager.getComponentData.mockResolvedValue({
         recipeId: 'human_base',
       });
-      mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue(null);
+      mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue(
+        null
+      );
 
       const mapping = { blueprintSlots: ['test_slot'] };
       const result = await strategy.resolve('actor123', mapping);
@@ -1068,7 +1084,7 @@ describe('BlueprintSlotStrategy', () => {
       );
 
       const mapping = { blueprintSlots: ['test_slot'] };
-      
+
       await expect(strategy.resolve('actor123', mapping)).rejects.toThrow(
         'Entity manager error'
       );

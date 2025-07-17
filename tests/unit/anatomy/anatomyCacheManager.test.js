@@ -770,8 +770,9 @@ describe('AnatomyCacheManager', () => {
       ]);
 
       // Store the original implementation
-      const originalImpl = mockEntityManager.getComponentData.getMockImplementation();
-      
+      const originalImpl =
+        mockEntityManager.getComponentData.getMockImplementation();
+
       // Override getComponentData to handle both implementations
       mockEntityManager.getComponentData.mockImplementation(
         (id, componentId) => {

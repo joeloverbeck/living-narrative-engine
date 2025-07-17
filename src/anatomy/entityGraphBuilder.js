@@ -108,7 +108,13 @@ export class EntityGraphBuilder {
    * @param {string} [socketOrientation] - Orientation from the parent socket (optional)
    * @returns {string|null} Created entity ID or null on failure
    */
-  createAndAttachPart(parentId, socketId, partDefinitionId, ownerId, socketOrientation) {
+  createAndAttachPart(
+    parentId,
+    socketId,
+    partDefinitionId,
+    ownerId,
+    socketOrientation
+  ) {
     try {
       // Create the child entity
       const childEntity =

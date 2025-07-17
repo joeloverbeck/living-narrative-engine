@@ -99,7 +99,12 @@ export class AnatomyGenerationWorkflow extends BaseService {
     // Phase 2.5: Update the anatomy:body component with the structure BEFORE clothing
     // This is critical because clothing validation needs to access the body graph
     // Pass the already-built parts map to avoid building it twice
-    await this.#updateAnatomyBodyComponent(ownerId, recipeId, graphResult, partsMap);
+    await this.#updateAnatomyBodyComponent(
+      ownerId,
+      recipeId,
+      graphResult,
+      partsMap
+    );
 
     // Add partsMap to graphResult for later use
     graphResult.partsMap = partsMap;
@@ -179,13 +184,17 @@ export class AnatomyGenerationWorkflow extends BaseService {
       const partEntity = this.#entityManager.getEntityInstance(partEntityId);
 
       // Only include entities that have the anatomy:part component
-      if (partEntity && partEntity.hasComponent('anatomy:part') && partEntity.hasComponent('core:name')) {
+      if (
+        partEntity &&
+        partEntity.hasComponent('anatomy:part') &&
+        partEntity.hasComponent('core:name')
+      ) {
         const nameData = partEntity.getComponentData('core:name');
         const name = nameData ? nameData.text : null;
 
         if (name) {
           parts.set(name, partEntityId);
-          
+
           // Debug logging to understand naming issues
           const anatomyPart = partEntity.getComponentData('anatomy:part');
           const jointData = partEntity.getComponentData('anatomy:joint');

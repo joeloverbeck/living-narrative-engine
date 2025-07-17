@@ -149,7 +149,12 @@ export class BodyBlueprintFactory {
 
       // Phase 2: Process blueprint slots if defined
       if (blueprint.slots) {
-        await this.#processBlueprintSlots(blueprint, processedRecipe, context, options.ownerId);
+        await this.#processBlueprintSlots(
+          blueprint,
+          processedRecipe,
+          context,
+          options.ownerId
+        );
       }
 
       // Phase 3: Validate constraints
@@ -369,7 +374,14 @@ export class BodyBlueprintFactory {
         let orientation = socket.orientation;
         if (!orientation && slotKey) {
           // Check if slot key starts with a known orientation prefix
-          const orientationPrefixes = ['left', 'right', 'upper', 'lower', 'front', 'back'];
+          const orientationPrefixes = [
+            'left',
+            'right',
+            'upper',
+            'lower',
+            'front',
+            'back',
+          ];
           for (const prefix of orientationPrefixes) {
             if (slotKey.startsWith(prefix + '_')) {
               orientation = prefix;
@@ -377,12 +389,12 @@ export class BodyBlueprintFactory {
             }
           }
         }
-        
+
         // Debug logging for orientation issues
         this.#logger.debug(
           `BodyBlueprintFactory: Creating part for slot '${slotKey}' - socket.orientation: ${socket.orientation}, extracted orientation: ${orientation}, socket.nameTpl: ${socket.nameTpl}`
         );
-        
+
         // Create and attach the part
         const childId = this.#entityGraphBuilder.createAndAttachPart(
           parentEntityId,
@@ -460,25 +472,30 @@ export class BodyBlueprintFactory {
   #isEquipmentSlot(slot, socket) {
     // Equipment slots typically use sockets like 'grip' for weapons/tools
     const equipmentSocketTypes = ['grip', 'weapon', 'tool', 'accessory'];
-    
+
     if (equipmentSocketTypes.includes(socket.id)) {
       return true;
     }
-    
+
     // Equipment slots typically have requirements like strength, dexterity, etc.
     // that are not typical anatomy part requirements
-    const equipmentRequirements = ['strength', 'dexterity', 'intelligence', 'level'];
-    
+    const equipmentRequirements = [
+      'strength',
+      'dexterity',
+      'intelligence',
+      'level',
+    ];
+
     if (slot.requirements) {
-      const hasEquipmentRequirements = equipmentRequirements.some(
-        req => Object.prototype.hasOwnProperty.call(slot.requirements, req)
+      const hasEquipmentRequirements = equipmentRequirements.some((req) =>
+        Object.prototype.hasOwnProperty.call(slot.requirements, req)
       );
-      
+
       if (hasEquipmentRequirements) {
         return true;
       }
     }
-    
+
     return false;
   }
 

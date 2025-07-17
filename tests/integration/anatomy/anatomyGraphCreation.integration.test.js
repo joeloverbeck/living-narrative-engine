@@ -21,7 +21,7 @@ describe('Anatomy Graph Creation Integration Tests', () => {
       // Arrange
       const recipeId = 'anatomy:human_female';
       const actor = testBed.createActor({ recipeId });
-      
+
       // Generate anatomy for the actor
       const anatomyService = testBed.container.get('AnatomyGenerationService');
       await anatomyService.generateAnatomy(actor.id);
@@ -37,18 +37,18 @@ describe('Anatomy Graph Creation Integration Tests', () => {
       expect(anatomyData.body.parts).toBeDefined();
 
       const parts = anatomyData.body.parts;
-      
+
       // Check that both hands exist with proper names
       expect(parts['left hand']).toBeDefined();
       expect(parts['right hand']).toBeDefined();
-      
+
       // Verify they are different entities
       expect(parts['left hand']).not.toBe(parts['right hand']);
-      
+
       // Check that both feet exist with proper names
       expect(parts['left foot']).toBeDefined();
       expect(parts['right foot']).toBeDefined();
-      
+
       // Verify they are different entities
       expect(parts['left foot']).not.toBe(parts['right foot']);
     });
@@ -57,7 +57,7 @@ describe('Anatomy Graph Creation Integration Tests', () => {
       // Arrange
       const recipeId = 'anatomy:human_female';
       const actor = testBed.createActor({ recipeId });
-      
+
       // Generate anatomy for the actor
       const anatomyService = testBed.container.get('AnatomyGenerationService');
       await anatomyService.generateAnatomy(actor.id);
@@ -69,8 +69,12 @@ describe('Anatomy Graph Creation Integration Tests', () => {
       const parts = anatomyData.body.parts;
 
       // Get hand entities
-      const leftHandEntity = entityManager.getEntityInstance(parts['left hand']);
-      const rightHandEntity = entityManager.getEntityInstance(parts['right hand']);
+      const leftHandEntity = entityManager.getEntityInstance(
+        parts['left hand']
+      );
+      const rightHandEntity = entityManager.getEntityInstance(
+        parts['right hand']
+      );
 
       // Assert
       expect(leftHandEntity).toBeDefined();
@@ -97,7 +101,7 @@ describe('Anatomy Graph Creation Integration Tests', () => {
       // Arrange
       const recipeId = 'anatomy:human_female';
       const actor = testBed.createActor({ recipeId });
-      
+
       // Generate anatomy for the actor
       const anatomyService = testBed.container.get('AnatomyGenerationService');
       await anatomyService.generateAnatomy(actor.id);
@@ -109,8 +113,12 @@ describe('Anatomy Graph Creation Integration Tests', () => {
       const parts = anatomyData.body.parts;
 
       // Get foot entities
-      const leftFootEntity = entityManager.getEntityInstance(parts['left foot']);
-      const rightFootEntity = entityManager.getEntityInstance(parts['right foot']);
+      const leftFootEntity = entityManager.getEntityInstance(
+        parts['left foot']
+      );
+      const rightFootEntity = entityManager.getEntityInstance(
+        parts['right foot']
+      );
 
       // Assert
       expect(leftFootEntity).toBeDefined();
@@ -137,7 +145,7 @@ describe('Anatomy Graph Creation Integration Tests', () => {
       // Arrange
       const recipeId = 'anatomy:human_female';
       const actor = testBed.createActor({ recipeId });
-      
+
       // Generate anatomy for the actor
       const anatomyService = testBed.container.get('AnatomyGenerationService');
       await anatomyService.generateAnatomy(actor.id);
@@ -149,10 +157,18 @@ describe('Anatomy Graph Creation Integration Tests', () => {
       const parts = anatomyData.body.parts;
 
       // Get hand entities
-      const leftHandEntity = entityManager.getEntityInstance(parts['left hand']);
-      const rightHandEntity = entityManager.getEntityInstance(parts['right hand']);
-      const leftFootEntity = entityManager.getEntityInstance(parts['left foot']);
-      const rightFootEntity = entityManager.getEntityInstance(parts['right foot']);
+      const leftHandEntity = entityManager.getEntityInstance(
+        parts['left hand']
+      );
+      const rightHandEntity = entityManager.getEntityInstance(
+        parts['right hand']
+      );
+      const leftFootEntity = entityManager.getEntityInstance(
+        parts['left foot']
+      );
+      const rightFootEntity = entityManager.getEntityInstance(
+        parts['right foot']
+      );
 
       // Assert
       const leftHandPart = leftHandEntity.getComponentData('anatomy:part');
@@ -177,7 +193,7 @@ describe('Anatomy Graph Creation Integration Tests', () => {
       // Arrange
       const recipeId = 'anatomy:human_female';
       const actor = testBed.createActor({ recipeId });
-      
+
       // Generate anatomy for the actor
       const anatomyService = testBed.container.get('AnatomyGenerationService');
       await anatomyService.generateAnatomy(actor.id);
@@ -190,19 +206,28 @@ describe('Anatomy Graph Creation Integration Tests', () => {
 
       // Assert - verify we have all expected parts
       const expectedParts = [
-        'left arm', 'right arm',
-        'left leg', 'right leg',
-        'left hand', 'right hand',
-        'left foot', 'right foot',
-        'left eye', 'right eye',
-        'left ear', 'right ear',
-        'nose', 'mouth', 'teeth', 'hair'
+        'left arm',
+        'right arm',
+        'left leg',
+        'right leg',
+        'left hand',
+        'right hand',
+        'left foot',
+        'right foot',
+        'left eye',
+        'right eye',
+        'left ear',
+        'right ear',
+        'nose',
+        'mouth',
+        'teeth',
+        'hair',
       ];
 
       for (const partName of expectedParts) {
         expect(parts[partName]).toBeDefined();
         expect(typeof parts[partName]).toBe('string');
-        
+
         // Verify the entity exists
         const partEntity = entityManager.getEntityInstance(parts[partName]);
         expect(partEntity).toBeDefined();
@@ -210,7 +235,9 @@ describe('Anatomy Graph Creation Integration Tests', () => {
       }
 
       // Verify we have at least the expected number of parts
-      expect(Object.keys(parts).length).toBeGreaterThanOrEqual(expectedParts.length);
+      expect(Object.keys(parts).length).toBeGreaterThanOrEqual(
+        expectedParts.length
+      );
     });
   });
 
@@ -219,7 +246,7 @@ describe('Anatomy Graph Creation Integration Tests', () => {
       // Arrange
       const recipeId = 'anatomy:human_female';
       const actor = testBed.createActor({ recipeId });
-      
+
       // Generate anatomy for the actor
       const anatomyService = testBed.container.get('AnatomyGenerationService');
       await anatomyService.generateAnatomy(actor.id);
@@ -233,7 +260,7 @@ describe('Anatomy Graph Creation Integration Tests', () => {
       // Assert - verify we don't have generic names that would cause conflicts
       expect(parts['hand']).toBeUndefined();
       expect(parts['foot']).toBeUndefined();
-      
+
       // Verify we have the correctly named parts instead
       expect(parts['left hand']).toBeDefined();
       expect(parts['right hand']).toBeDefined();
@@ -246,7 +273,7 @@ describe('Anatomy Graph Creation Integration Tests', () => {
       const recipeId = 'anatomy:human_female';
       const actor = testBed.createActor({ recipeId });
       const anatomyService = testBed.container.get('AnatomyGenerationService');
-      
+
       // Generate anatomy twice
       await anatomyService.generateAnatomy(actor.id);
       await anatomyService.generateAnatomy(actor.id);
@@ -262,12 +289,16 @@ describe('Anatomy Graph Creation Integration Tests', () => {
       expect(parts['right hand']).toBeDefined();
       expect(parts['left foot']).toBeDefined();
       expect(parts['right foot']).toBeDefined();
-      
+
       // Verify all parts still exist as entities
       expect(entityManager.getEntityInstance(parts['left hand'])).toBeDefined();
-      expect(entityManager.getEntityInstance(parts['right hand'])).toBeDefined();
+      expect(
+        entityManager.getEntityInstance(parts['right hand'])
+      ).toBeDefined();
       expect(entityManager.getEntityInstance(parts['left foot'])).toBeDefined();
-      expect(entityManager.getEntityInstance(parts['right foot'])).toBeDefined();
+      expect(
+        entityManager.getEntityInstance(parts['right foot'])
+      ).toBeDefined();
     });
   });
 });

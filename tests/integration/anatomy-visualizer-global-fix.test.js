@@ -62,12 +62,12 @@ describe('Anatomy Visualizer - Global Object Fix', () => {
       // Assert
       const documentContext = container.resolve(tokens.IDocumentContext);
       expect(documentContext).toBeInstanceOf(DocumentContext);
-      
+
       // Test that document operations work (should not throw)
       expect(() => {
         documentContext.query('test-selector');
       }).not.toThrow();
-      
+
       expect(() => {
         documentContext.create('div');
       }).not.toThrow();
@@ -92,7 +92,9 @@ describe('Anatomy Visualizer - Global Object Fix', () => {
       }).not.toThrow();
 
       // Assert
-      const visualizationComposer = container.resolve(tokens.VisualizationComposer);
+      const visualizationComposer = container.resolve(
+        tokens.VisualizationComposer
+      );
       expect(visualizationComposer).toBeDefined();
       expect(typeof visualizationComposer.initialize).toBe('function');
       expect(typeof visualizationComposer.renderGraph).toBe('function');
@@ -139,8 +141,12 @@ describe('Anatomy Visualizer - Global Object Fix', () => {
       });
 
       // Verify logger was used to debug registration process
-      expect(logger.debug).toHaveBeenCalledWith('Visualizer Registrations: Starting...');
-      expect(logger.debug).toHaveBeenCalledWith('Visualizer Registrations: Complete.');
+      expect(logger.debug).toHaveBeenCalledWith(
+        'Visualizer Registrations: Starting...'
+      );
+      expect(logger.debug).toHaveBeenCalledWith(
+        'Visualizer Registrations: Complete.'
+      );
     });
   });
 
@@ -184,14 +190,14 @@ describe('Anatomy Visualizer - Global Object Fix', () => {
       // Assert - DocumentContext should be functional regardless of specific global environment
       const documentContext = container.resolve(tokens.IDocumentContext);
       expect(documentContext).toBeInstanceOf(DocumentContext);
-      
+
       // Test basic operations (should not throw)
       expect(() => {
         const result = documentContext.query('body');
         // Result may be null but should not throw
         expect(result).toBeDefined();
       }).not.toThrow();
-      
+
       expect(() => {
         const element = documentContext.create('div');
         expect(element).toBeDefined();
@@ -203,7 +209,7 @@ describe('Anatomy Visualizer - Global Object Fix', () => {
     it('should work with different global object patterns', () => {
       // This test verifies the fix works by checking that the registration
       // uses the proper fallback chain: globalThis.document || window.document || null
-      
+
       // Arrange
       container.register(tokens.IEntityManager, () => ({
         createEntityInstance: jest.fn(),
@@ -222,7 +228,7 @@ describe('Anatomy Visualizer - Global Object Fix', () => {
       // Assert - DocumentContext should be created successfully
       const documentContext = container.resolve(tokens.IDocumentContext);
       expect(documentContext).toBeInstanceOf(DocumentContext);
-      
+
       // The document property should be accessible (whether it's the actual document or null)
       expect(documentContext.document).toBeDefined();
     });

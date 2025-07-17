@@ -208,20 +208,20 @@ describe('Anatomy Graph Building Pipeline E2E Tests', () => {
                 id: 'head',
                 max: 1,
                 nameTpl: '{{type}}',
-                allowedTypes: ['head']
+                allowedTypes: ['head'],
               },
               {
                 id: 'arm',
                 max: 2,
                 nameTpl: '{{type}}',
-                allowedTypes: ['arm']
+                allowedTypes: ['arm'],
               },
               {
                 id: 'leg',
                 max: 2,
                 nameTpl: '{{type}}',
-                allowedTypes: ['leg']
-              }
+                allowedTypes: ['leg'],
+              },
             ],
           },
           'core:name': {
@@ -257,8 +257,8 @@ describe('Anatomy Graph Building Pipeline E2E Tests', () => {
                 id: 'hand',
                 max: 1,
                 nameTpl: '{{parent.name}}_{{type}}',
-                allowedTypes: ['hand']
-              }
+                allowedTypes: ['hand'],
+              },
             ],
           },
           'core:name': {
@@ -278,8 +278,8 @@ describe('Anatomy Graph Building Pipeline E2E Tests', () => {
               {
                 id: 'grip',
                 max: 1,
-                allowedTypes: ['*']
-              }
+                allowedTypes: ['*'],
+              },
             ],
           },
           'core:name': {
@@ -314,56 +314,56 @@ describe('Anatomy Graph Building Pipeline E2E Tests', () => {
           head: {
             socket: 'head',
             preferId: 'test:head',
-            required: true
+            required: true,
           },
           left_arm: {
             socket: 'arm',
             orientation: 'left',
             preferId: 'test:arm',
-            required: true
+            required: true,
           },
           right_arm: {
             socket: 'arm',
             orientation: 'right',
             preferId: 'test:arm',
-            required: true
+            required: true,
           },
           left_leg: {
             socket: 'leg',
             orientation: 'left',
             preferId: 'test:leg',
-            required: true
+            required: true,
           },
           right_leg: {
             socket: 'leg',
             orientation: 'right',
             preferId: 'test:leg',
-            required: true
+            required: true,
           },
           left_hand: {
             socket: 'hand',
             parent: 'left_arm',
             preferId: 'test:hand',
-            required: true
+            required: true,
           },
           right_hand: {
             socket: 'hand',
             parent: 'right_arm',
             preferId: 'test:hand',
-            required: true
+            required: true,
           },
           'main-hand': {
             socket: 'grip',
             parent: 'right_hand',
             requirements: { strength: 5 },
-            required: false
+            required: false,
           },
           'off-hand': {
             socket: 'grip',
             parent: 'left_hand',
             requirements: { dexterity: 3 },
-            required: false
-          }
+            required: false,
+          },
         },
       },
     });
@@ -374,20 +374,20 @@ describe('Anatomy Graph Building Pipeline E2E Tests', () => {
         id: 'test:torso',
         type: 'torso',
         sockets: {
-          head: { 
+          head: {
             id: 'head',
             max: 1,
-            nameTpl: '{{type}}'  // Will generate "head"
+            nameTpl: '{{type}}', // Will generate "head"
           },
-          arm: { 
+          arm: {
             id: 'arm',
             max: 2,
-            nameTpl: '{{type}}'  // Socket doesn't have orientation, so just use type
+            nameTpl: '{{type}}', // Socket doesn't have orientation, so just use type
           },
-          leg: { 
+          leg: {
             id: 'leg',
             max: 2,
-            nameTpl: '{{type}}'  // Socket doesn't have orientation, so just use type
+            nameTpl: '{{type}}', // Socket doesn't have orientation, so just use type
           },
         },
       },
@@ -473,30 +473,30 @@ describe('Anatomy Graph Building Pipeline E2E Tests', () => {
     if (testBed?.cleanup) {
       await testBed.cleanup();
     }
-    
+
     // Additional cleanup to prevent state pollution between tests
     if (testBed) {
       // Clear the data registry completely to prevent component/entity definition pollution
       if (testBed.registry?.clear) {
         testBed.registry.clear();
       }
-      
+
       // Clear entity manager state
       if (testBed.entityManager?.clearAll) {
         testBed.entityManager.clearAll();
       }
-      
+
       // Clear any anatomy-specific caches
       if (testBed.bodyGraphService?.clearCache) {
         testBed.bodyGraphService.clearCache();
       }
-      
+
       // Clear clothing cache
       if (testBed.anatomyClothingCache?.clear) {
         testBed.anatomyClothingCache.clear();
       }
     }
-    
+
     jest.clearAllMocks();
   });
 
@@ -566,7 +566,8 @@ describe('Anatomy Graph Building Pipeline E2E Tests', () => {
       expect(anatomyData.body.parts).toBeDefined();
 
       // Verify parts were created
-      const allPartEntities = entityManager.getEntitiesWithComponent('anatomy:part');
+      const allPartEntities =
+        entityManager.getEntitiesWithComponent('anatomy:part');
 
       // Step 4: Verify entity graph was created
       const rootId = anatomyData.body.root;
@@ -578,32 +579,36 @@ describe('Anatomy Graph Building Pipeline E2E Tests', () => {
       expect(rootPartData.subType).toBe('torso');
 
       // Step 5: Verify parts were created
-      const partEntities = entityManager.getEntitiesWithComponent('anatomy:part');
-      
+      const partEntities =
+        entityManager.getEntitiesWithComponent('anatomy:part');
+
       // Filter to only parts owned by this anatomy (excluding root)
-      const anatomyParts = partEntities.filter(entity => {
+      const anatomyParts = partEntities.filter((entity) => {
         const ownedBy = entity.getComponentData('core:owned_by');
         return ownedBy && ownedBy.ownerId === ownerId && entity.id !== rootId;
       });
 
       // We should have at least 7 parts (head, 2 arms, 2 hands, 2 legs)
       expect(anatomyParts.length).toBeGreaterThanOrEqual(7);
-      
+
       // Verify part types are correct
-      const partTypes = anatomyParts.map(entity => 
-        entity.getComponentData('anatomy:part').subType
+      const partTypes = anatomyParts.map(
+        (entity) => entity.getComponentData('anatomy:part').subType
       );
-      
-      
+
       // Part types validated - test setup creates expected anatomy structure
-      
+
       // Check that we have the expected parts for this specific anatomy
       // Note: Count exact numbers to detect duplicates
       // Note: The test setup creates the basic anatomy structure as expected
-      expect(partTypes.filter(type => type === 'head').length).toBeGreaterThanOrEqual(1);
-      expect(partTypes.filter(type => type === 'arm').length).toBe(2);
-      expect(partTypes.filter(type => type === 'hand').length).toBeGreaterThanOrEqual(2);
-      expect(partTypes.filter(type => type === 'leg').length).toBe(2);
+      expect(
+        partTypes.filter((type) => type === 'head').length
+      ).toBeGreaterThanOrEqual(1);
+      expect(partTypes.filter((type) => type === 'arm').length).toBe(2);
+      expect(
+        partTypes.filter((type) => type === 'hand').length
+      ).toBeGreaterThanOrEqual(2);
+      expect(partTypes.filter((type) => type === 'leg').length).toBe(2);
 
       // Step 6: Verify blueprint slot entities were created
       const slotIds = [];
@@ -632,9 +637,8 @@ describe('Anatomy Graph Building Pipeline E2E Tests', () => {
       expect(descendants.length).toBeGreaterThan(5); // Should include hands
 
       // Step 8: Verify descriptions were generated
-      const descriptionEntities = entityManager.getEntitiesWithComponent(
-        'core:description'
-      );
+      const descriptionEntities =
+        entityManager.getEntitiesWithComponent('core:description');
       expect(descriptionEntities.length).toBeGreaterThan(0);
 
       // Check specific part has description - first build partsMap
@@ -645,7 +649,7 @@ describe('Anatomy Graph Building Pipeline E2E Tests', () => {
           partsMap[partData.subType] = part.id;
         }
       }
-      
+
       const headEntity = entityManager.getEntityInstance(partsMap.head);
       if (headEntity && headEntity.hasComponent('core:description')) {
         const description = headEntity.getComponentData('core:description');
@@ -772,18 +776,21 @@ describe('Anatomy Graph Building Pipeline E2E Tests', () => {
       // Find an arm part and test its children
       const armParts = [];
       for (const childId of torsoChildren) {
-        const partData = entityManager.getComponentData(childId, 'anatomy:part');
+        const partData = entityManager.getComponentData(
+          childId,
+          'anatomy:part'
+        );
         if (partData && partData.subType === 'arm') {
           armParts.push(childId);
         }
       }
       expect(armParts.length).toBe(2); // Should have 2 arms
-      
+
       // Test that arms have hands as children
       const firstArmId = armParts[0];
       const armChildren = bodyGraphService.getChildren(firstArmId);
       expect(armChildren.length).toBe(1); // Should have one hand
-      
+
       // Test parent queries - get the hand and verify its parent is the arm
       const handId = armChildren[0];
       const handParent = bodyGraphService.getParent(handId);
@@ -825,19 +832,20 @@ describe('Anatomy Graph Building Pipeline E2E Tests', () => {
       );
 
       // Get all anatomy parts with descriptions
-      const partEntities = entityManager.getEntitiesWithComponent('anatomy:part');
-      const partsWithDescriptions = partEntities.filter(entity => 
+      const partEntities =
+        entityManager.getEntitiesWithComponent('anatomy:part');
+      const partsWithDescriptions = partEntities.filter((entity) =>
         entity.hasComponent('core:description')
       );
-      
+
       // Should have descriptions for all parts
       expect(partsWithDescriptions.length).toBeGreaterThan(0);
-      
+
       // Check each part has a proper description
       for (const partEntity of partsWithDescriptions) {
         const description = partEntity.getComponentData('core:description');
         const partData = partEntity.getComponentData('anatomy:part');
-        
+
         expect(description.text).toBeDefined();
         expect(typeof description.text).toBe('string');
         expect(description.text.length).toBeGreaterThan(0);
@@ -993,9 +1001,8 @@ describe('Anatomy Graph Building Pipeline E2E Tests', () => {
       }
 
       // Check descriptions were generated
-      const descriptionEntities = entityManager.getEntitiesWithComponent(
-        'core:description'
-      );
+      const descriptionEntities =
+        entityManager.getEntitiesWithComponent('core:description');
       if (descriptionEntities.length > 0) {
         executionMarkers.descriptionsGenerated = true;
       }

@@ -350,7 +350,8 @@ class InteractionController {
       // Left click
       const target = event.target;
       // Don't start pan if clicking on a node
-      const anatomyNode = target && target.closest && target.closest('.anatomy-node');
+      const anatomyNode =
+        target && target.closest && target.closest('.anatomy-node');
       if (!anatomyNode) {
         this.startPan(event);
         event.preventDefault();
