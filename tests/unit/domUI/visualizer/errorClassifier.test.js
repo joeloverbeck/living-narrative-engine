@@ -69,7 +69,8 @@ describe('ErrorClassifier', () => {
           systemImpact: 'minimal',
           recommendedStrategy: 'fallback',
           fallbackAvailable: false,
-          userMessageSuggested: 'An error occurred with the anatomy visualizer.',
+          userMessageSuggested:
+            'An error occurred with the anatomy visualizer.',
           actionsSuggested: expect.arrayContaining(['Refresh the page']),
         });
       });
@@ -369,9 +370,9 @@ describe('ErrorClassifier', () => {
 
       it('should assign HIGH priority to MEDIUM severity with significant impact', () => {
         const error = new Error('Significant error with medium severity');
-        const context = { 
-          operation: 'entity_selection',  // This gives significant user impact
-          component: 'UIComponent'  // This gives MEDIUM severity
+        const context = {
+          operation: 'entity_selection', // This gives significant user impact
+          component: 'UIComponent', // This gives MEDIUM severity
         };
         const classification = ErrorClassifier.classify(error, context);
         expect(classification.priority).toBe('high');
@@ -540,7 +541,6 @@ describe('ErrorClassifier', () => {
         );
       });
 
-
       it('should generate network error message', () => {
         const error = new TypeError('Failed to fetch');
         const classification = ErrorClassifier.classify(error);
@@ -598,7 +598,6 @@ describe('ErrorClassifier', () => {
         const classification = ErrorClassifier.classify(error);
         expect(classification.actionsSuggested).toContain('Try again');
       });
-
 
       it('should generate network error suggestions', () => {
         const error = new TypeError('Failed to fetch');

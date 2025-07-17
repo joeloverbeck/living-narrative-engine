@@ -3,7 +3,14 @@
  * @description Comprehensive tests for error reporting functionality, metrics collection, and configuration
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { ErrorReporter } from '../../../../src/domUI/visualizer/ErrorReporter.js';
 import { ErrorClassifier } from '../../../../src/domUI/visualizer/ErrorClassifier.js';
 import { AnatomyVisualizationError } from '../../../../src/errors/anatomyVisualizationError.js';
@@ -98,7 +105,7 @@ describe('ErrorReporter', () => {
     global.performance = originalPerformance;
     global.navigator = originalNavigator;
     delete global.window;
-    
+
     // Clear all mocks
     jest.clearAllMocks();
   });
@@ -138,7 +145,7 @@ describe('ErrorReporter', () => {
       });
 
       const result = await errorReporter.report(error);
-      
+
       // Should skip due to severity level not in default reportLevels
       expect(result.status).toBe('skipped');
       expect(result.reason).toBe('Error does not meet reporting criteria');
@@ -207,8 +214,13 @@ describe('ErrorReporter', () => {
       });
 
       expect(ErrorClassifier.classify).toHaveBeenCalledWith(error, context);
-      expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('Error reported with ID:'));
-      expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('HIGH SEVERITY ERROR'), expect.any(Object));
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('Error reported with ID:')
+      );
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('HIGH SEVERITY ERROR'),
+        expect.any(Object)
+      );
     });
 
     it('should skip reporting when error does not meet criteria', async () => {
@@ -253,7 +265,7 @@ describe('ErrorReporter', () => {
       const error = new Error('Critical error');
       const result = await errorReporter.report(error);
 
-      // Should be reported 
+      // Should be reported
       expect(result.status).toBe('reported');
       expect(mockLogger.error).toHaveBeenCalled();
     });
@@ -304,10 +316,18 @@ describe('ErrorReporter', () => {
 
       await errorReporter.report(error, context);
 
-      expect(mockMetricsCollector.increment).toHaveBeenCalledWith('anatomy_visualizer.errors.total');
-      expect(mockMetricsCollector.increment).toHaveBeenCalledWith('anatomy_visualizer.errors.severity.high');
-      expect(mockMetricsCollector.increment).toHaveBeenCalledWith('anatomy_visualizer.errors.category.unknown');
-      expect(mockMetricsCollector.increment).toHaveBeenCalledWith('anatomy_visualizer.errors.component.test_comp');
+      expect(mockMetricsCollector.increment).toHaveBeenCalledWith(
+        'anatomy_visualizer.errors.total'
+      );
+      expect(mockMetricsCollector.increment).toHaveBeenCalledWith(
+        'anatomy_visualizer.errors.severity.high'
+      );
+      expect(mockMetricsCollector.increment).toHaveBeenCalledWith(
+        'anatomy_visualizer.errors.category.unknown'
+      );
+      expect(mockMetricsCollector.increment).toHaveBeenCalledWith(
+        'anatomy_visualizer.errors.component.test_comp'
+      );
       expect(mockMetricsCollector.timing).toHaveBeenCalledWith(
         'anatomy_visualizer.errors.operation_duration.test_op',
         100
@@ -380,21 +400,40 @@ describe('ErrorReporter', () => {
         error: expect.any(String),
       });
 
-      expect(mockLogger.error).toHaveBeenCalledWith('Failed to report error:', expect.any(Error));
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Failed to report error:',
+        expect.any(Error)
+      );
     });
 
     it('should handle different severity levels correctly', async () => {
       const testCases = [
-        { severity: 'CRITICAL', logMethod: 'error', logPrefix: 'CRITICAL ERROR' },
-        { severity: 'HIGH', logMethod: 'error', logPrefix: 'HIGH SEVERITY ERROR' },
-        { severity: 'MEDIUM', logMethod: 'warn', logPrefix: 'MEDIUM SEVERITY ERROR' },
-        { severity: 'LOW', logMethod: 'debug', logPrefix: 'LOW SEVERITY ERROR' },
+        {
+          severity: 'CRITICAL',
+          logMethod: 'error',
+          logPrefix: 'CRITICAL ERROR',
+        },
+        {
+          severity: 'HIGH',
+          logMethod: 'error',
+          logPrefix: 'HIGH SEVERITY ERROR',
+        },
+        {
+          severity: 'MEDIUM',
+          logMethod: 'warn',
+          logPrefix: 'MEDIUM SEVERITY ERROR',
+        },
+        {
+          severity: 'LOW',
+          logMethod: 'debug',
+          logPrefix: 'LOW SEVERITY ERROR',
+        },
         { severity: 'UNKNOWN', logMethod: 'info', logPrefix: 'ERROR' },
       ];
 
       for (const { severity, logMethod, logPrefix } of testCases) {
         jest.clearAllMocks();
-        
+
         errorReporter = new ErrorReporter(
           {
             logger: mockLogger,
@@ -411,7 +450,7 @@ describe('ErrorReporter', () => {
         });
 
         await errorReporter.report(new Error('Test'));
-        
+
         expect(mockLogger[logMethod]).toHaveBeenCalledWith(
           expect.stringContaining(logPrefix),
           expect.any(Object)
@@ -447,7 +486,7 @@ describe('ErrorReporter', () => {
       // with sensitive information
       expect(mockLogger.error).toHaveBeenCalled();
       expect(capturedReport).toBeDefined();
-      
+
       // The logged data should not contain sensitive information
       const loggedDataStr = JSON.stringify(capturedReport);
       expect(loggedDataStr).not.toContain('secret123');
@@ -458,7 +497,7 @@ describe('ErrorReporter', () => {
       const longStackLines = Array(20)
         .fill(null)
         .map((_, i) => `    at function${i} (file${i}.js:${i}:${i})`);
-      
+
       const error = new Error('Test error');
       error.stack = `Error: Test error\n${longStackLines.join('\n')}`;
 
@@ -506,7 +545,7 @@ describe('ErrorReporter', () => {
 
       // Verify that the error was reported
       expect(mockLogger.error).toHaveBeenCalled();
-      
+
       // The environment collection methods would be called internally
       // We can't directly test their output but we know they were invoked
       // as part of the report building process
@@ -610,11 +649,11 @@ describe('ErrorReporter', () => {
 
     it('should handle batch errors that throw during processing', async () => {
       // Make report method throw for testing catch block
-      jest.spyOn(errorReporter, 'report').mockRejectedValueOnce(new Error('Report failed'));
+      jest
+        .spyOn(errorReporter, 'report')
+        .mockRejectedValueOnce(new Error('Report failed'));
 
-      const errorBatch = [
-        { error: new Error('Error 1') },
-      ];
+      const errorBatch = [{ error: new Error('Error 1') }];
 
       const results = await errorReporter.reportBatch(errorBatch);
 
@@ -667,7 +706,9 @@ describe('ErrorReporter', () => {
         maxStackTraceLines: 3,
       });
 
-      expect(mockLogger.debug).toHaveBeenCalledWith('Error reporter configuration updated');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Error reporter configuration updated'
+      );
     });
 
     it('should merge configuration with existing config', () => {
@@ -750,16 +791,16 @@ describe('ErrorReporter', () => {
 
     it('should dispose properly', () => {
       expect(errorReporter.isDisposed()).toBe(false);
-      
+
       errorReporter.dispose();
-      
+
       expect(errorReporter.isDisposed()).toBe(true);
     });
 
     it('should handle multiple dispose calls', () => {
       errorReporter.dispose();
       errorReporter.dispose(); // Should not throw
-      
+
       expect(errorReporter.isDisposed()).toBe(true);
     });
 
@@ -770,9 +811,9 @@ describe('ErrorReporter', () => {
         'ErrorReporter has been disposed'
       );
 
-      await expect(errorReporter.reportBatch([{ error: new Error('Test') }])).rejects.toThrow(
-        'ErrorReporter has been disposed'
-      );
+      await expect(
+        errorReporter.reportBatch([{ error: new Error('Test') }])
+      ).rejects.toThrow('ErrorReporter has been disposed');
 
       expect(() => errorReporter.getStatistics()).toThrow(
         'ErrorReporter has been disposed'
@@ -825,7 +866,7 @@ describe('ErrorReporter', () => {
 
     it('should handle null/undefined error gracefully', async () => {
       const result = await errorReporter.report(null);
-      
+
       // Should fail during classification
       expect(result.status).toBe('failed');
     });
@@ -856,7 +897,7 @@ describe('ErrorReporter', () => {
       // JSON.stringify with circular reference will throw, but should be caught
       // and the report should still succeed
       const result = await errorReporter.report(error, context);
-      
+
       // The result might be failed or reported depending on error handling
       // Let's just verify it doesn't crash the entire process
       expect(result).toBeDefined();

@@ -103,7 +103,12 @@ describeActionCandidateProcessorSuite('ActionCandidateProcessor', (getBed) => {
         })
       );
 
-      const result = bed.service.process(actionDef, actorEntity, context, mockTrace);
+      const result = bed.service.process(
+        actionDef,
+        actorEntity,
+        context,
+        mockTrace
+      );
 
       expect(result).not.toBeNull();
       expect(result.actions).toHaveLength(2);
@@ -197,7 +202,9 @@ describeActionCandidateProcessorSuite('ActionCandidateProcessor', (getBed) => {
         params: { targetId: null },
       });
       expect(result.errors).toHaveLength(0);
-      expect(bed.mocks.prerequisiteEvaluationService.evaluate).not.toHaveBeenCalled();
+      expect(
+        bed.mocks.prerequisiteEvaluationService.evaluate
+      ).not.toHaveBeenCalled();
     });
 
     it('processes actions with empty prerequisites array successfully', () => {
@@ -227,7 +234,9 @@ describeActionCandidateProcessorSuite('ActionCandidateProcessor', (getBed) => {
         params: { targetId: null },
       });
       expect(result.errors).toHaveLength(0);
-      expect(bed.mocks.prerequisiteEvaluationService.evaluate).not.toHaveBeenCalled();
+      expect(
+        bed.mocks.prerequisiteEvaluationService.evaluate
+      ).not.toHaveBeenCalled();
     });
 
     it('includes formatting errors in the result', () => {

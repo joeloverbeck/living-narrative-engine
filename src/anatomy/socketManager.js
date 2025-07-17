@@ -182,7 +182,8 @@ export class SocketManager {
       'parent';
 
     // Get effective orientation (from child entity's anatomy:part or socket)
-    const effectiveOrientation = anatomyPart?.orientation || socket.orientation || '';
+    const effectiveOrientation =
+      anatomyPart?.orientation || socket.orientation || '';
 
     // Debug logging for troubleshooting
     this.#logger.debug(
@@ -192,7 +193,10 @@ export class SocketManager {
     // Replace template tokens
     // For {{orientation}}, use socket orientation if available, otherwise use effective orientation
     // This handles cases where socket definitions don't include orientation but it's inferred from slot names
-    name = name.replace('{{orientation}}', socket.orientation || effectiveOrientation);
+    name = name.replace(
+      '{{orientation}}',
+      socket.orientation || effectiveOrientation
+    );
     name = name.replace('{{effective_orientation}}', effectiveOrientation);
     name = name.replace('{{type}}', anatomyPart?.subType || 'part');
     name = name.replace('{{parent.name}}', parentName);

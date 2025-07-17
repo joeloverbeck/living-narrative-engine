@@ -3,7 +3,10 @@
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import { RecipeConstraintEvaluator } from '../../../src/anatomy/recipeConstraintEvaluator.js';
 import { InvalidArgumentError } from '../../../src/errors/invalidArgumentError.js';
-import { createMockEntityManager, createMockLogger } from '../../common/mockFactories/index.js';
+import {
+  createMockEntityManager,
+  createMockLogger,
+} from '../../common/mockFactories/index.js';
 
 describe('RecipeConstraintEvaluator', () => {
   let mockEntityManager;
@@ -83,13 +86,17 @@ describe('RecipeConstraintEvaluator', () => {
         const entityIds = ['entity1'];
 
         // Mock entity has head part but no brain component
-        mockEntityManager.getComponentData.mockImplementation((entityId, componentType) => {
-          if (componentType === 'anatomy:part') {
-            return { subType: 'head' };
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentType) => {
+            if (componentType === 'anatomy:part') {
+              return { subType: 'head' };
+            }
+            return null;
           }
-          return null;
-        });
-        mockEntityManager.getAllComponentTypesForEntity.mockReturnValue(['anatomy:part']);
+        );
+        mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
+          'anatomy:part',
+        ]);
 
         const result = evaluator.evaluateConstraints(entityIds, recipe);
 
@@ -103,7 +110,7 @@ describe('RecipeConstraintEvaluator', () => {
       it('should log warning when constraints pass with warnings', () => {
         // Since the current implementation doesn't generate warnings,
         // we'll use a spy to replace one of the private methods to add a warning
-        
+
         const recipe = {
           slots: {
             arm: {
@@ -114,27 +121,37 @@ describe('RecipeConstraintEvaluator', () => {
         };
         const entityIds = ['entity1'];
 
-        mockEntityManager.getComponentData.mockImplementation((entityId, componentType) => {
-          if (componentType === 'anatomy:part') {
-            return { subType: 'arm' };
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentType) => {
+            if (componentType === 'anatomy:part') {
+              return { subType: 'arm' };
+            }
+            return null;
           }
-          return null;
-        });
+        );
 
         // Use Jest spyOn to intercept the private method
-        const originalBuildGraphMetadata = evaluator['_buildGraphMetadata'] || 
-          evaluator[Object.getOwnPropertySymbols(evaluator).find(s => String(s).includes('buildGraphMetadata'))];
-        
+        const originalBuildGraphMetadata =
+          evaluator['_buildGraphMetadata'] ||
+          evaluator[
+            Object.getOwnPropertySymbols(evaluator).find((s) =>
+              String(s).includes('buildGraphMetadata')
+            )
+          ];
+
         // Since we can't easily spy on private methods, we'll test this differently
         // by monkey-patching the evaluateConstraints method
-        const originalEvaluateConstraints = evaluator.evaluateConstraints.bind(evaluator);
-        
-        evaluator.evaluateConstraints = function(entityIds, recipe) {
+        const originalEvaluateConstraints =
+          evaluator.evaluateConstraints.bind(evaluator);
+
+        evaluator.evaluateConstraints = function (entityIds, recipe) {
           const errors = [];
-          const warnings = ['Test warning: This is a simulated warning for coverage'];
-          
+          const warnings = [
+            'Test warning: This is a simulated warning for coverage',
+          ];
+
           const valid = errors.length === 0;
-          
+
           // Execute the logging logic directly to test the warning branch
           if (!valid) {
             mockLogger.error(
@@ -149,18 +166,18 @@ describe('RecipeConstraintEvaluator', () => {
               'RecipeConstraintEvaluator: All constraints satisfied'
             );
           }
-          
+
           return { valid, errors, warnings };
         };
 
         const result = evaluator.evaluateConstraints(entityIds, recipe);
-        
+
         expect(result.valid).toBe(true);
         expect(result.warnings).toHaveLength(1);
         expect(mockLogger.warn).toHaveBeenCalledWith(
           'RecipeConstraintEvaluator: Constraints passed with 1 warnings'
         );
-        
+
         // Restore original method
         evaluator.evaluateConstraints = originalEvaluateConstraints;
       });
@@ -180,12 +197,14 @@ describe('RecipeConstraintEvaluator', () => {
         };
         const entityIds = ['entity1'];
 
-        mockEntityManager.getComponentData.mockImplementation((entityId, componentType) => {
-          if (componentType === 'anatomy:part') {
-            return { subType: 'head' };
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentType) => {
+            if (componentType === 'anatomy:part') {
+              return { subType: 'head' };
+            }
+            return null;
           }
-          return null;
-        });
+        );
         mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
           'anatomy:part',
           'anatomy:brain',
@@ -211,13 +230,17 @@ describe('RecipeConstraintEvaluator', () => {
         };
         const entityIds = ['entity1'];
 
-        mockEntityManager.getComponentData.mockImplementation((entityId, componentType) => {
-          if (componentType === 'anatomy:part') {
-            return { subType: 'head' };
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentType) => {
+            if (componentType === 'anatomy:part') {
+              return { subType: 'head' };
+            }
+            return null;
           }
-          return null;
-        });
-        mockEntityManager.getAllComponentTypesForEntity.mockReturnValue(['anatomy:part']);
+        );
+        mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
+          'anatomy:part',
+        ]);
 
         const result = evaluator.evaluateConstraints(entityIds, recipe);
 
@@ -225,7 +248,9 @@ describe('RecipeConstraintEvaluator', () => {
         expect(result.errors).toHaveLength(1);
         expect(result.errors[0]).toContain('Required constraint not satisfied');
         expect(result.errors[0]).toContain('has part types [head]');
-        expect(result.errors[0]).toContain('missing required components [anatomy:brain]');
+        expect(result.errors[0]).toContain(
+          'missing required components [anatomy:brain]'
+        );
       });
 
       it('should handle multiple required part types', () => {
@@ -241,21 +266,27 @@ describe('RecipeConstraintEvaluator', () => {
         };
         const entityIds = ['entity1', 'entity2'];
 
-        mockEntityManager.getComponentData.mockImplementation((entityId, componentType) => {
-          if (componentType === 'anatomy:part') {
-            return entityId === 'entity1' 
-              ? { subType: 'head' }
-              : { subType: 'neck' };
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentType) => {
+            if (componentType === 'anatomy:part') {
+              return entityId === 'entity1'
+                ? { subType: 'head' }
+                : { subType: 'neck' };
+            }
+            return null;
           }
-          return null;
-        });
-        mockEntityManager.getAllComponentTypesForEntity.mockReturnValue(['anatomy:part']);
+        );
+        mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
+          'anatomy:part',
+        ]);
 
         const result = evaluator.evaluateConstraints(entityIds, recipe);
 
         expect(result.valid).toBe(false);
         expect(result.errors[0]).toContain('has part types [head, neck]');
-        expect(result.errors[0]).toContain('missing required components [anatomy:spine]');
+        expect(result.errors[0]).toContain(
+          'missing required components [anatomy:spine]'
+        );
       });
 
       it('should skip constraint check when no required part types are present', () => {
@@ -271,13 +302,17 @@ describe('RecipeConstraintEvaluator', () => {
         };
         const entityIds = ['entity1'];
 
-        mockEntityManager.getComponentData.mockImplementation((entityId, componentType) => {
-          if (componentType === 'anatomy:part') {
-            return { subType: 'arm' };
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentType) => {
+            if (componentType === 'anatomy:part') {
+              return { subType: 'arm' };
+            }
+            return null;
           }
-          return null;
-        });
-        mockEntityManager.getAllComponentTypesForEntity.mockReturnValue(['anatomy:part']);
+        );
+        mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
+          'anatomy:part',
+        ]);
 
         const result = evaluator.evaluateConstraints(entityIds, recipe);
 
@@ -299,7 +334,9 @@ describe('RecipeConstraintEvaluator', () => {
         };
         const entityIds = ['entity1'];
 
-        mockEntityManager.getAllComponentTypesForEntity.mockReturnValue(['anatomy:legs']);
+        mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
+          'anatomy:legs',
+        ]);
 
         const result = evaluator.evaluateConstraints(entityIds, recipe);
 
@@ -319,7 +356,9 @@ describe('RecipeConstraintEvaluator', () => {
         };
         const entityIds = ['entity1'];
 
-        mockEntityManager.getAllComponentTypesForEntity.mockReturnValue(['anatomy:arms']);
+        mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
+          'anatomy:arms',
+        ]);
 
         const result = evaluator.evaluateConstraints(entityIds, recipe);
 
@@ -339,40 +378,46 @@ describe('RecipeConstraintEvaluator', () => {
         };
         const entityIds = ['entity1', 'entity2'];
 
-        mockEntityManager.getAllComponentTypesForEntity.mockImplementation((entityId) => {
-          return entityId === 'entity1' 
-            ? ['anatomy:wings']
-            : ['anatomy:arms'];
-        });
+        mockEntityManager.getAllComponentTypesForEntity.mockImplementation(
+          (entityId) => {
+            return entityId === 'entity1'
+              ? ['anatomy:wings']
+              : ['anatomy:arms'];
+          }
+        );
 
         const result = evaluator.evaluateConstraints(entityIds, recipe);
 
         expect(result.valid).toBe(false);
         expect(result.errors).toHaveLength(1);
         expect(result.errors[0]).toContain('Exclusion constraint violated');
-        expect(result.errors[0]).toContain('mutually exclusive components [anatomy:wings, anatomy:arms]');
+        expect(result.errors[0]).toContain(
+          'mutually exclusive components [anatomy:wings, anatomy:arms]'
+        );
       });
 
       it('should handle array format for excludes constraints', () => {
         const recipe = {
           constraints: {
-            excludes: [
-              ['anatomy:fur', 'anatomy:scales'],
-            ],
+            excludes: [['anatomy:fur', 'anatomy:scales']],
           },
         };
         const entityIds = ['entity1', 'entity2'];
 
-        mockEntityManager.getAllComponentTypesForEntity.mockImplementation((entityId) => {
-          return entityId === 'entity1' 
-            ? ['anatomy:fur']
-            : ['anatomy:scales'];
-        });
+        mockEntityManager.getAllComponentTypesForEntity.mockImplementation(
+          (entityId) => {
+            return entityId === 'entity1'
+              ? ['anatomy:fur']
+              : ['anatomy:scales'];
+          }
+        );
 
         const result = evaluator.evaluateConstraints(entityIds, recipe);
 
         expect(result.valid).toBe(false);
-        expect(result.errors[0]).toContain('mutually exclusive components [anatomy:fur, anatomy:scales]');
+        expect(result.errors[0]).toContain(
+          'mutually exclusive components [anatomy:fur, anatomy:scales]'
+        );
       });
     });
 
@@ -388,12 +433,14 @@ describe('RecipeConstraintEvaluator', () => {
         };
         const entityIds = ['entity1', 'entity2'];
 
-        mockEntityManager.getComponentData.mockImplementation((entityId, componentType) => {
-          if (componentType === 'anatomy:part') {
-            return { subType: 'arm' };
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentType) => {
+            if (componentType === 'anatomy:part') {
+              return { subType: 'arm' };
+            }
+            return null;
           }
-          return null;
-        });
+        );
 
         const result = evaluator.evaluateConstraints(entityIds, recipe);
 
@@ -412,12 +459,14 @@ describe('RecipeConstraintEvaluator', () => {
         };
         const entityIds = ['entity1'];
 
-        mockEntityManager.getComponentData.mockImplementation((entityId, componentType) => {
-          if (componentType === 'anatomy:part') {
-            return { subType: 'arm' };
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentType) => {
+            if (componentType === 'anatomy:part') {
+              return { subType: 'arm' };
+            }
+            return null;
           }
-          return null;
-        });
+        );
 
         const result = evaluator.evaluateConstraints(entityIds, recipe);
 
@@ -439,12 +488,14 @@ describe('RecipeConstraintEvaluator', () => {
         };
         const entityIds = ['entity1'];
 
-        mockEntityManager.getComponentData.mockImplementation((entityId, componentType) => {
-          if (componentType === 'anatomy:part') {
-            return { subType: 'head' };
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentType) => {
+            if (componentType === 'anatomy:part') {
+              return { subType: 'head' };
+            }
+            return null;
           }
-          return null;
-        });
+        );
 
         const result = evaluator.evaluateConstraints(entityIds, recipe);
 
@@ -463,12 +514,14 @@ describe('RecipeConstraintEvaluator', () => {
         };
         const entityIds = ['entity1', 'entity2'];
 
-        mockEntityManager.getComponentData.mockImplementation((entityId, componentType) => {
-          if (componentType === 'anatomy:part') {
-            return { subType: 'head' };
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentType) => {
+            if (componentType === 'anatomy:part') {
+              return { subType: 'head' };
+            }
+            return null;
           }
-          return null;
-        });
+        );
 
         const result = evaluator.evaluateConstraints(entityIds, recipe);
 
@@ -489,12 +542,14 @@ describe('RecipeConstraintEvaluator', () => {
         };
         const entityIds = ['entity1'];
 
-        mockEntityManager.getComponentData.mockImplementation((entityId, componentType) => {
-          if (componentType === 'anatomy:part') {
-            return { subType: 'leg' };
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentType) => {
+            if (componentType === 'anatomy:part') {
+              return { subType: 'leg' };
+            }
+            return null;
           }
-          return null;
-        });
+        );
 
         const result = evaluator.evaluateConstraints(entityIds, recipe);
 
@@ -515,12 +570,14 @@ describe('RecipeConstraintEvaluator', () => {
         };
         const entityIds = ['entity1', 'entity2', 'entity3'];
 
-        mockEntityManager.getComponentData.mockImplementation((entityId, componentType) => {
-          if (componentType === 'anatomy:part') {
-            return { subType: 'eye' };
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentType) => {
+            if (componentType === 'anatomy:part') {
+              return { subType: 'eye' };
+            }
+            return null;
           }
-          return null;
-        });
+        );
 
         const result = evaluator.evaluateConstraints(entityIds, recipe);
 
@@ -541,12 +598,14 @@ describe('RecipeConstraintEvaluator', () => {
         };
         const entityIds = Array.from({ length: 9 }, (_, i) => `entity${i + 1}`);
 
-        mockEntityManager.getComponentData.mockImplementation((entityId, componentType) => {
-          if (componentType === 'anatomy:part') {
-            return { subType: 'finger' };
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentType) => {
+            if (componentType === 'anatomy:part') {
+              return { subType: 'finger' };
+            }
+            return null;
           }
-          return null;
-        });
+        );
 
         const result = evaluator.evaluateConstraints(entityIds, recipe);
 
@@ -565,12 +624,14 @@ describe('RecipeConstraintEvaluator', () => {
         };
         const entityIds = ['entity1'];
 
-        mockEntityManager.getComponentData.mockImplementation((entityId, componentType) => {
-          if (componentType === 'anatomy:part') {
-            return { subType: 'arm' };
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentType) => {
+            if (componentType === 'anatomy:part') {
+              return { subType: 'arm' };
+            }
+            return null;
           }
-          return null;
-        });
+        );
 
         const result = evaluator.evaluateConstraints(entityIds, recipe);
 
@@ -589,12 +650,14 @@ describe('RecipeConstraintEvaluator', () => {
         };
         const entityIds = ['entity1'];
 
-        mockEntityManager.getComponentData.mockImplementation((entityId, componentType) => {
-          if (componentType === 'anatomy:part') {
-            return { subType: 'tail' };
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentType) => {
+            if (componentType === 'anatomy:part') {
+              return { subType: 'tail' };
+            }
+            return null;
           }
-          return null;
-        });
+        );
 
         const result = evaluator.evaluateConstraints(entityIds, recipe);
 
@@ -628,19 +691,23 @@ describe('RecipeConstraintEvaluator', () => {
         };
         const entityIds = ['entity1', 'entity2', 'entity3'];
 
-        mockEntityManager.getComponentData.mockImplementation((entityId, componentType) => {
-          if (componentType === 'anatomy:part') {
-            if (entityId === 'entity1') return { subType: 'torso' };
-            return { subType: 'arm' };
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentType) => {
+            if (componentType === 'anatomy:part') {
+              if (entityId === 'entity1') return { subType: 'torso' };
+              return { subType: 'arm' };
+            }
+            return null;
           }
-          return null;
-        });
-        mockEntityManager.getAllComponentTypesForEntity.mockImplementation((entityId) => {
-          if (entityId === 'entity1') {
-            return ['anatomy:part', 'anatomy:spine', 'anatomy:endoskeleton'];
+        );
+        mockEntityManager.getAllComponentTypesForEntity.mockImplementation(
+          (entityId) => {
+            if (entityId === 'entity1') {
+              return ['anatomy:part', 'anatomy:spine', 'anatomy:endoskeleton'];
+            }
+            return ['anatomy:part'];
           }
-          return ['anatomy:part'];
-        });
+        );
 
         const result = evaluator.evaluateConstraints(entityIds, recipe);
 
@@ -659,12 +726,14 @@ describe('RecipeConstraintEvaluator', () => {
         };
         const entityIds = ['entity1', 'entity2'];
 
-        mockEntityManager.getComponentData.mockImplementation((entityId, componentType) => {
-          if (componentType === 'anatomy:part' && entityId === 'entity1') {
-            return { subType: 'head' };
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentType) => {
+            if (componentType === 'anatomy:part' && entityId === 'entity1') {
+              return { subType: 'head' };
+            }
+            return null;
           }
-          return null;
-        });
+        );
 
         const result = evaluator.evaluateConstraints(entityIds, recipe);
 

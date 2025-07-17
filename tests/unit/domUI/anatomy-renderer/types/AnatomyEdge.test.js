@@ -48,7 +48,11 @@ describe('AnatomyEdge', () => {
     });
 
     it('should handle special characters in IDs', () => {
-      const edge = new AnatomyEdge('left-arm:upper', 'left-arm:lower', 'elbow-socket-123');
+      const edge = new AnatomyEdge(
+        'left-arm:upper',
+        'left-arm:lower',
+        'elbow-socket-123'
+      );
 
       expect(edge.source).toBe('left-arm:upper');
       expect(edge.target).toBe('left-arm:lower');
@@ -482,7 +486,11 @@ describe('AnatomyEdge', () => {
       clone.metadata.tags.push('modified');
 
       expect(anatomyEdge.metadata.visual.style).toBe('solid'); // shared reference
-      expect(anatomyEdge.metadata.tags).toEqual(['important', 'animated', 'modified']); // shared reference
+      expect(anatomyEdge.metadata.tags).toEqual([
+        'important',
+        'animated',
+        'modified',
+      ]); // shared reference
     });
 
     it('should preserve getId() functionality', () => {

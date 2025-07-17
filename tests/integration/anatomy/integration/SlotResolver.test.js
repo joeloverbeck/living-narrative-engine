@@ -229,7 +229,6 @@ describe('SlotResolver', () => {
       );
     });
 
-
     it('should use Map fallback cache for cache set (line 161)', async () => {
       const mapping = { blueprintSlots: ['torso.chest'] };
 

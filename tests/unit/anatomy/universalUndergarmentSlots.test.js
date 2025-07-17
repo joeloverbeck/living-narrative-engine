@@ -22,10 +22,10 @@ describe('Universal Underwear Slots', () => {
           'left_breast',
           'right_breast',
           'left_chest',
-          'right_chest', 
-          'chest_center'
+          'right_chest',
+          'chest_center',
         ],
-        allowedLayers: ['underwear']
+        allowedLayers: ['underwear'],
       },
       underwear_lower: {
         anatomySockets: [
@@ -33,18 +33,15 @@ describe('Universal Underwear Slots', () => {
           'penis',
           'left_testicle',
           'right_testicle',
-          'vagina'
+          'vagina',
         ],
-        allowedLayers: ['underwear']
+        allowedLayers: ['underwear'],
       },
       back_accessory: {
-        anatomySockets: [
-          'upper_back',
-          'lower_back'
-        ],
-        allowedLayers: ['accessory', 'armor']
-      }
-    }
+        anatomySockets: ['upper_back', 'lower_back'],
+        allowedLayers: ['accessory', 'armor'],
+      },
+    },
   };
 
   const femaleBlueprint = {
@@ -56,9 +53,9 @@ describe('Universal Underwear Slots', () => {
           'right_breast',
           'left_chest',
           'right_chest',
-          'chest_center'
+          'chest_center',
         ],
-        allowedLayers: ['underwear']
+        allowedLayers: ['underwear'],
       },
       underwear_lower: {
         anatomySockets: [
@@ -66,18 +63,15 @@ describe('Universal Underwear Slots', () => {
           'penis',
           'left_testicle',
           'right_testicle',
-          'vagina'
+          'vagina',
         ],
-        allowedLayers: ['underwear']
+        allowedLayers: ['underwear'],
       },
       back_accessory: {
-        anatomySockets: [
-          'upper_back',
-          'lower_back'
-        ],
-        allowedLayers: ['accessory', 'armor']
-      }
-    }
+        anatomySockets: ['upper_back', 'lower_back'],
+        allowedLayers: ['accessory', 'armor'],
+      },
+    },
   };
 
   beforeEach(() => {
@@ -126,39 +120,39 @@ describe('Universal Underwear Slots', () => {
 
     it('should include all necessary anatomy sockets for underwear_upper', () => {
       const upperSlot = maleBlueprint.clothingSlotMappings.underwear_upper;
-      
+
       // Should include chest sockets for both male and female anatomy
       expect(upperSlot.anatomySockets).toContain('left_breast');
       expect(upperSlot.anatomySockets).toContain('right_breast');
       expect(upperSlot.anatomySockets).toContain('left_chest');
       expect(upperSlot.anatomySockets).toContain('right_chest');
       expect(upperSlot.anatomySockets).toContain('chest_center');
-      
+
       // Should only allow underwear layer
       expect(upperSlot.allowedLayers).toEqual(['underwear']);
     });
 
     it('should include all necessary anatomy sockets for underwear_lower', () => {
       const lowerSlot = maleBlueprint.clothingSlotMappings.underwear_lower;
-      
+
       // Should include genital sockets for both male and female anatomy
       expect(lowerSlot.anatomySockets).toContain('pubic_hair');
       expect(lowerSlot.anatomySockets).toContain('penis');
       expect(lowerSlot.anatomySockets).toContain('left_testicle');
       expect(lowerSlot.anatomySockets).toContain('right_testicle');
       expect(lowerSlot.anatomySockets).toContain('vagina');
-      
+
       // Should only allow underwear layer
       expect(lowerSlot.allowedLayers).toEqual(['underwear']);
     });
 
     it('should include back accessory slot for backpacks', () => {
       const backSlot = maleBlueprint.clothingSlotMappings.back_accessory;
-      
+
       // Should include back sockets
       expect(backSlot.anatomySockets).toContain('upper_back');
       expect(backSlot.anatomySockets).toContain('lower_back');
-      
+
       // Should allow accessory and armor layers
       expect(backSlot.allowedLayers).toEqual(['accessory', 'armor']);
     });
@@ -167,101 +161,118 @@ describe('Universal Underwear Slots', () => {
   describe('Socket Resolution Logic', () => {
     it('should resolve to male-specific sockets for male anatomy', () => {
       // Mock male entity with male anatomy sockets
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentType) => {
-        if (componentType === 'anatomy:body') {
-          return Promise.resolve({ recipeId: 'anatomy:human_male' });
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentType) => {
+          if (componentType === 'anatomy:body') {
+            return Promise.resolve({ recipeId: 'anatomy:human_male' });
+          }
+          if (componentType === 'anatomy:sockets') {
+            return Promise.resolve({
+              sockets: [
+                { id: 'pubic_hair', orientation: 'neutral' },
+                { id: 'penis', orientation: 'neutral' },
+                { id: 'left_testicle', orientation: 'neutral' },
+                { id: 'right_testicle', orientation: 'neutral' },
+                { id: 'left_chest', orientation: 'neutral' },
+                { id: 'right_chest', orientation: 'neutral' },
+              ],
+            });
+          }
+          return Promise.resolve(null);
         }
-        if (componentType === 'anatomy:sockets') {
-          return Promise.resolve({
-            sockets: [
-              { id: 'pubic_hair', orientation: 'neutral' },
-              { id: 'penis', orientation: 'neutral' },
-              { id: 'left_testicle', orientation: 'neutral' },
-              { id: 'right_testicle', orientation: 'neutral' },
-              { id: 'left_chest', orientation: 'neutral' },
-              { id: 'right_chest', orientation: 'neutral' },
-            ]
-          });
-        }
-        return Promise.resolve(null);
-      });
+      );
 
-      mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue(maleBlueprint);
+      mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue(
+        maleBlueprint
+      );
 
       // Test that underwear_lower would resolve to male-specific sockets
       const lowerSlot = maleBlueprint.clothingSlotMappings.underwear_lower;
-      const maleExpectedSockets = ['pubic_hair', 'penis', 'left_testicle', 'right_testicle'];
-      
+      const maleExpectedSockets = [
+        'pubic_hair',
+        'penis',
+        'left_testicle',
+        'right_testicle',
+      ];
+
       // All male sockets should be present in the universal slot definition
-      maleExpectedSockets.forEach(socket => {
+      maleExpectedSockets.forEach((socket) => {
         expect(lowerSlot.anatomySockets).toContain(socket);
       });
     });
 
     it('should resolve to female-specific sockets for female anatomy', () => {
       // Mock female entity with female anatomy sockets
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentType) => {
-        if (componentType === 'anatomy:body') {
-          return Promise.resolve({ recipeId: 'anatomy:human_female' });
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentType) => {
+          if (componentType === 'anatomy:body') {
+            return Promise.resolve({ recipeId: 'anatomy:human_female' });
+          }
+          if (componentType === 'anatomy:sockets') {
+            return Promise.resolve({
+              sockets: [
+                { id: 'pubic_hair', orientation: 'neutral' },
+                { id: 'vagina', orientation: 'neutral' },
+                { id: 'left_breast', orientation: 'neutral' },
+                { id: 'right_breast', orientation: 'neutral' },
+              ],
+            });
+          }
+          return Promise.resolve(null);
         }
-        if (componentType === 'anatomy:sockets') {
-          return Promise.resolve({
-            sockets: [
-              { id: 'pubic_hair', orientation: 'neutral' },
-              { id: 'vagina', orientation: 'neutral' },
-              { id: 'left_breast', orientation: 'neutral' },
-              { id: 'right_breast', orientation: 'neutral' },
-            ]
-          });
-        }
-        return Promise.resolve(null);
-      });
+      );
 
-      mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue(femaleBlueprint);
+      mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue(
+        femaleBlueprint
+      );
 
       // Test that underwear_lower would resolve to female-specific sockets
       const lowerSlot = femaleBlueprint.clothingSlotMappings.underwear_lower;
       const femaleExpectedSockets = ['pubic_hair', 'vagina'];
-      
+
       // All female sockets should be present in the universal slot definition
-      femaleExpectedSockets.forEach(socket => {
+      femaleExpectedSockets.forEach((socket) => {
         expect(lowerSlot.anatomySockets).toContain(socket);
       });
 
       // Test that underwear_upper would resolve to female-specific sockets
       const upperSlot = femaleBlueprint.clothingSlotMappings.underwear_upper;
       const femaleChestSockets = ['left_breast', 'right_breast'];
-      
-      femaleChestSockets.forEach(socket => {
+
+      femaleChestSockets.forEach((socket) => {
         expect(upperSlot.anatomySockets).toContain(socket);
       });
     });
 
     it('should gracefully handle missing anatomy sockets', () => {
       // Mock entity with only some anatomy sockets
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentType) => {
-        if (componentType === 'anatomy:body') {
-          return Promise.resolve({ recipeId: 'anatomy:human_male' });
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentType) => {
+          if (componentType === 'anatomy:body') {
+            return Promise.resolve({ recipeId: 'anatomy:human_male' });
+          }
+          if (componentType === 'anatomy:sockets') {
+            return Promise.resolve({
+              sockets: [
+                { id: 'pubic_hair', orientation: 'neutral' },
+                { id: 'penis', orientation: 'neutral' },
+                // Missing testicle sockets
+              ],
+            });
+          }
+          return Promise.resolve(null);
         }
-        if (componentType === 'anatomy:sockets') {
-          return Promise.resolve({
-            sockets: [
-              { id: 'pubic_hair', orientation: 'neutral' },
-              { id: 'penis', orientation: 'neutral' },
-              // Missing testicle sockets
-            ]
-          });
-        }
-        return Promise.resolve(null);
-      });
+      );
 
-      mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue(maleBlueprint);
+      mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue(
+        maleBlueprint
+      );
 
       // The slot definition should still include all possible sockets
       const lowerSlot = maleBlueprint.clothingSlotMappings.underwear_lower;
       expect(lowerSlot.anatomySockets).toContain('left_testicle');
       expect(lowerSlot.anatomySockets).toContain('right_testicle');
-      
+
       // The resolution system should filter out missing sockets at runtime
       // (This would be tested in integration tests)
     });
@@ -270,23 +281,37 @@ describe('Universal Underwear Slots', () => {
   describe('Backward Compatibility', () => {
     it('should have universal slots available for cross-gender compatibility', () => {
       // Both male and female blueprints should have universal slots
-      expect(maleBlueprint.clothingSlotMappings).toHaveProperty('underwear_lower');
-      expect(maleBlueprint.clothingSlotMappings).toHaveProperty('underwear_upper');
-      expect(maleBlueprint.clothingSlotMappings).toHaveProperty('back_accessory');
-      
-      expect(femaleBlueprint.clothingSlotMappings).toHaveProperty('underwear_lower');
-      expect(femaleBlueprint.clothingSlotMappings).toHaveProperty('underwear_upper');
-      expect(femaleBlueprint.clothingSlotMappings).toHaveProperty('back_accessory');
+      expect(maleBlueprint.clothingSlotMappings).toHaveProperty(
+        'underwear_lower'
+      );
+      expect(maleBlueprint.clothingSlotMappings).toHaveProperty(
+        'underwear_upper'
+      );
+      expect(maleBlueprint.clothingSlotMappings).toHaveProperty(
+        'back_accessory'
+      );
+
+      expect(femaleBlueprint.clothingSlotMappings).toHaveProperty(
+        'underwear_lower'
+      );
+      expect(femaleBlueprint.clothingSlotMappings).toHaveProperty(
+        'underwear_upper'
+      );
+      expect(femaleBlueprint.clothingSlotMappings).toHaveProperty(
+        'back_accessory'
+      );
     });
 
     it('should ensure universal slots are comprehensive', () => {
       // Universal slots should contain all necessary anatomy sockets
-      const maleUniversalLower = maleBlueprint.clothingSlotMappings.underwear_lower;
-      const femaleUniversalLower = femaleBlueprint.clothingSlotMappings.underwear_lower;
-      
+      const maleUniversalLower =
+        maleBlueprint.clothingSlotMappings.underwear_lower;
+      const femaleUniversalLower =
+        femaleBlueprint.clothingSlotMappings.underwear_lower;
+
       // Should be identical between blueprints
       expect(maleUniversalLower).toEqual(femaleUniversalLower);
-      
+
       // Should contain both male and female anatomy sockets
       expect(maleUniversalLower.anatomySockets).toContain('penis');
       expect(maleUniversalLower.anatomySockets).toContain('vagina');
@@ -298,11 +323,11 @@ describe('Universal Underwear Slots', () => {
     it('should allow male entities to use female-oriented clothing slots', () => {
       // Male blueprint should have slots that can work with female clothing
       const maleUpperSlot = maleBlueprint.clothingSlotMappings.underwear_upper;
-      
+
       // Should include breast sockets (even though male anatomy may not have them)
       expect(maleUpperSlot.anatomySockets).toContain('left_breast');
       expect(maleUpperSlot.anatomySockets).toContain('right_breast');
-      
+
       // Should also include male chest sockets
       expect(maleUpperSlot.anatomySockets).toContain('left_chest');
       expect(maleUpperSlot.anatomySockets).toContain('right_chest');
@@ -310,13 +335,14 @@ describe('Universal Underwear Slots', () => {
 
     it('should allow female entities to use male-oriented clothing slots', () => {
       // Female blueprint should have slots that can work with male clothing
-      const femaleLowerSlot = femaleBlueprint.clothingSlotMappings.underwear_lower;
-      
+      const femaleLowerSlot =
+        femaleBlueprint.clothingSlotMappings.underwear_lower;
+
       // Should include male genital sockets (even though female anatomy may not have them)
       expect(femaleLowerSlot.anatomySockets).toContain('penis');
       expect(femaleLowerSlot.anatomySockets).toContain('left_testicle');
       expect(femaleLowerSlot.anatomySockets).toContain('right_testicle');
-      
+
       // Should also include female genital sockets
       expect(femaleLowerSlot.anatomySockets).toContain('vagina');
     });
@@ -325,17 +351,29 @@ describe('Universal Underwear Slots', () => {
   describe('Layer Restrictions', () => {
     it('should enforce proper layer restrictions for underwear slots', () => {
       // Underwear slots should only allow underwear layer
-      expect(maleBlueprint.clothingSlotMappings.underwear_upper.allowedLayers).toEqual(['underwear']);
-      expect(maleBlueprint.clothingSlotMappings.underwear_lower.allowedLayers).toEqual(['underwear']);
-      
-      expect(femaleBlueprint.clothingSlotMappings.underwear_upper.allowedLayers).toEqual(['underwear']);
-      expect(femaleBlueprint.clothingSlotMappings.underwear_lower.allowedLayers).toEqual(['underwear']);
+      expect(
+        maleBlueprint.clothingSlotMappings.underwear_upper.allowedLayers
+      ).toEqual(['underwear']);
+      expect(
+        maleBlueprint.clothingSlotMappings.underwear_lower.allowedLayers
+      ).toEqual(['underwear']);
+
+      expect(
+        femaleBlueprint.clothingSlotMappings.underwear_upper.allowedLayers
+      ).toEqual(['underwear']);
+      expect(
+        femaleBlueprint.clothingSlotMappings.underwear_lower.allowedLayers
+      ).toEqual(['underwear']);
     });
 
     it('should enforce proper layer restrictions for back accessory slots', () => {
       // Back accessory should allow accessory and armor layers
-      expect(maleBlueprint.clothingSlotMappings.back_accessory.allowedLayers).toEqual(['accessory', 'armor']);
-      expect(femaleBlueprint.clothingSlotMappings.back_accessory.allowedLayers).toEqual(['accessory', 'armor']);
+      expect(
+        maleBlueprint.clothingSlotMappings.back_accessory.allowedLayers
+      ).toEqual(['accessory', 'armor']);
+      expect(
+        femaleBlueprint.clothingSlotMappings.back_accessory.allowedLayers
+      ).toEqual(['accessory', 'armor']);
     });
   });
 
@@ -345,12 +383,13 @@ describe('Universal Underwear Slots', () => {
         id: 'anatomy:incomplete',
         clothingSlotMappings: {
           // Missing underwear slots
-        }
+        },
       };
 
       // Should not throw when accessing missing slots
       expect(() => {
-        const slot = blueprintWithMissingSlots.clothingSlotMappings.underwear_upper;
+        const slot =
+          blueprintWithMissingSlots.clothingSlotMappings.underwear_upper;
         expect(slot).toBeUndefined();
       }).not.toThrow();
     });
@@ -358,7 +397,7 @@ describe('Universal Underwear Slots', () => {
     it('should validate slot structure', () => {
       const invalidSlot = {
         // Missing anatomySockets
-        allowedLayers: ['underwear']
+        allowedLayers: ['underwear'],
       };
 
       // Should be able to detect invalid slot structure

@@ -41,18 +41,18 @@ class LoggerConfiguration {
     // If TTY properties are missing (deleted in tests), default to true for development
     const stdoutTTY = process.stdout.isTTY;
     const stderrTTY = process.stderr.isTTY;
-    
+
     // If both are explicitly false, we're definitely not in a TTY
     if (stdoutTTY === false && stderrTTY === false) {
       return false;
     }
-    
+
     // If either is undefined (missing), default to true for development environments
     if (stdoutTTY === undefined || stderrTTY === undefined) {
       const env = process.env.NODE_ENV || 'development';
       return env !== 'production';
     }
-    
+
     // Normal case: both are present, use standard check
     return Boolean(stdoutTTY && stderrTTY);
   }

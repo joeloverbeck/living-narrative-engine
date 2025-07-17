@@ -129,8 +129,14 @@ describe('EntityGraphBuilder', () => {
         return null;
       });
 
-      const id = builder.createAndAttachPart('torso', 'shoulder', 'armDef', 'owner123', 'left');
-      
+      const id = builder.createAndAttachPart(
+        'torso',
+        'shoulder',
+        'armDef',
+        'owner123',
+        'left'
+      );
+
       expect(mocks.entityManager.addComponent).toHaveBeenCalledWith(
         'armDef',
         'anatomy:part',
@@ -148,9 +154,14 @@ describe('EntityGraphBuilder', () => {
 
     it('creates part without orientation when not provided', () => {
       mocks.entityManager.getComponentData.mockReturnValue(null);
-      
-      const id = builder.createAndAttachPart('torso', 'shoulder', 'armDef', 'owner123');
-      
+
+      const id = builder.createAndAttachPart(
+        'torso',
+        'shoulder',
+        'armDef',
+        'owner123'
+      );
+
       // Should not call addComponent for anatomy:part when no orientation provided
       expect(mocks.entityManager.addComponent).not.toHaveBeenCalledWith(
         'armDef',
@@ -161,8 +172,13 @@ describe('EntityGraphBuilder', () => {
     });
 
     it('adds ownership component when ownerId provided', () => {
-      const id = builder.createAndAttachPart('torso', 'shoulder', 'armDef', 'owner123');
-      
+      const id = builder.createAndAttachPart(
+        'torso',
+        'shoulder',
+        'armDef',
+        'owner123'
+      );
+
       expect(mocks.entityManager.addComponent).toHaveBeenCalledWith(
         'armDef',
         'core:owned_by',

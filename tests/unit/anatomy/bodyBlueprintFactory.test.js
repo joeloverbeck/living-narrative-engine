@@ -301,7 +301,7 @@ describe('BodyBlueprintFactory (Refactored)', () => {
         allowedTypes: ['head'],
         orientation: 'left',
       };
-      
+
       mockSocketManager.validateSocketAvailability.mockReturnValue({
         valid: true,
         socket: socketWithOrientation,

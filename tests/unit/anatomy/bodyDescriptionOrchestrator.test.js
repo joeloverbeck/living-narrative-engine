@@ -467,8 +467,9 @@ describe('BodyDescriptionOrchestrator', () => {
       });
 
       // Override the getOrGenerateBodyDescription method to simulate #isDescriptionCurrent returning true
-      const originalMethod = testOrchestrator.getOrGenerateBodyDescription.bind(testOrchestrator);
-      testOrchestrator.getOrGenerateBodyDescription = function(entity) {
+      const originalMethod =
+        testOrchestrator.getOrGenerateBodyDescription.bind(testOrchestrator);
+      testOrchestrator.getOrGenerateBodyDescription = function (entity) {
         if (!entity) {
           return null;
         }
@@ -476,7 +477,9 @@ describe('BodyDescriptionOrchestrator', () => {
         // Check if entity has anatomy:body component
         if (!entity.hasComponent(ANATOMY_BODY_COMPONENT_ID)) {
           // Not an anatomy entity, return existing description if any
-          const descComponent = entity.getComponentData(DESCRIPTION_COMPONENT_ID);
+          const descComponent = entity.getComponentData(
+            DESCRIPTION_COMPONENT_ID
+          );
           return descComponent ? descComponent.text : null;
         }
 
@@ -493,12 +496,14 @@ describe('BodyDescriptionOrchestrator', () => {
       };
 
       const result = testOrchestrator.getOrGenerateBodyDescription(entity);
-      
+
       // Verify that the existing description is returned (line 158 executed)
       expect(result).toBe('Existing current description');
-      
+
       // Verify that the composer was NOT called since we returned the existing description
-      expect(mockBodyDescriptionComposer.composeDescription).not.toHaveBeenCalled();
+      expect(
+        mockBodyDescriptionComposer.composeDescription
+      ).not.toHaveBeenCalled();
     });
 
     it('should return null when composition fails', () => {

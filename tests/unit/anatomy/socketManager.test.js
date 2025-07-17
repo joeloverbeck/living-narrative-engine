@@ -223,7 +223,8 @@ describe('SocketManager', () => {
 
     it('handles all template replacements correctly', () => {
       const socket = {
-        nameTpl: '{{orientation}} {{effective_orientation}} {{type}} {{index}} of {{parent.name}}',
+        nameTpl:
+          '{{orientation}} {{effective_orientation}} {{type}} {{index}} of {{parent.name}}',
         orientation: 'left',
       };
       entityManager.getComponentData.mockImplementation((id, type) => {

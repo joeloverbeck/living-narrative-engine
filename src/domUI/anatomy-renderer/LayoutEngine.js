@@ -63,7 +63,12 @@ class LayoutEngine {
    * @param {ILayoutStrategy} strategy - Strategy implementation
    */
   registerStrategy(name, strategy) {
-    assertNonBlankString(name, 'Strategy name', 'LayoutEngine.registerStrategy', this.#logger);
+    assertNonBlankString(
+      name,
+      'Strategy name',
+      'LayoutEngine.registerStrategy',
+      this.#logger
+    );
 
     // Validate strategy interface
     if (!strategy || typeof strategy !== 'object') {
@@ -97,7 +102,12 @@ class LayoutEngine {
    * @param {string} name - Strategy name
    */
   setStrategy(name) {
-    assertNonBlankString(name, 'Strategy name', 'LayoutEngine.setStrategy', this.#logger);
+    assertNonBlankString(
+      name,
+      'Strategy name',
+      'LayoutEngine.setStrategy',
+      this.#logger
+    );
 
     const strategy = this.#strategies.get(name);
     if (!strategy) {

@@ -63,7 +63,12 @@ describe('AnatomyNode', () => {
     });
 
     it('should handle special characters in name', () => {
-      const specialNode = new AnatomyNode('special', 'Left Hand (Palm)', 'hand', 3);
+      const specialNode = new AnatomyNode(
+        'special',
+        'Left Hand (Palm)',
+        'hand',
+        3
+      );
 
       expect(specialNode.name).toBe('Left Hand (Palm)');
     });
@@ -289,9 +294,9 @@ describe('AnatomyNode', () => {
       const bounds = anatomyNode.getBounds();
 
       expect(bounds).toEqual({
-        left: 75,    // 100 - 50/2
-        top: 160,    // 200 - 80/2
-        right: 125,  // 100 + 50/2
+        left: 75, // 100 - 50/2
+        top: 160, // 200 - 80/2
+        right: 125, // 100 + 50/2
         bottom: 240, // 200 + 80/2
       });
     });
@@ -317,9 +322,9 @@ describe('AnatomyNode', () => {
       const bounds = anatomyNode.getBounds();
 
       expect(bounds).toEqual({
-        left: -50,   // 0 - 100/2
-        top: -100,   // 0 - 200/2
-        right: 50,   // 0 + 100/2
+        left: -50, // 0 - 100/2
+        top: -100, // 0 - 200/2
+        right: 50, // 0 + 100/2
         bottom: 100, // 0 + 200/2
       });
     });
@@ -331,9 +336,9 @@ describe('AnatomyNode', () => {
       const bounds = anatomyNode.getBounds();
 
       expect(bounds).toEqual({
-        left: -65,   // -50 - 30/2
-        top: -120,   // -100 - 40/2
-        right: -35,  // -50 + 30/2
+        left: -65, // -50 - 30/2
+        top: -120, // -100 - 40/2
+        right: -35, // -50 + 30/2
         bottom: -80, // -100 + 40/2
       });
     });
@@ -344,9 +349,9 @@ describe('AnatomyNode', () => {
 
       const bounds = anatomyNode.getBounds();
 
-      expect(bounds.left).toBeCloseTo(7.9);    // 10.5 - 5.2/2
-      expect(bounds.top).toBeCloseTo(16);      // 20.3 - 8.6/2
-      expect(bounds.right).toBeCloseTo(13.1);  // 10.5 + 5.2/2
+      expect(bounds.left).toBeCloseTo(7.9); // 10.5 - 5.2/2
+      expect(bounds.top).toBeCloseTo(16); // 20.3 - 8.6/2
+      expect(bounds.right).toBeCloseTo(13.1); // 10.5 + 5.2/2
       expect(bounds.bottom).toBeCloseTo(24.6); // 20.3 + 8.6/2
     });
 
@@ -508,7 +513,11 @@ describe('AnatomyNode', () => {
       clone.metadata.tags.push('modified');
 
       expect(anatomyNode.metadata.visual.color).toBe('blue'); // shared reference
-      expect(anatomyNode.metadata.tags).toEqual(['important', 'visible', 'modified']); // shared reference
+      expect(anatomyNode.metadata.tags).toEqual([
+        'important',
+        'visible',
+        'modified',
+      ]); // shared reference
     });
   });
 

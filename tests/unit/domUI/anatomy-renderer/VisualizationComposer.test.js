@@ -3,7 +3,14 @@
  * @description Comprehensive unit tests for VisualizationComposer class covering all methods and edge cases
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import VisualizationComposer from '../../../../src/domUI/anatomy-renderer/VisualizationComposer.js';
 import AnatomyVisualizerTestBed from '../../../common/anatomy/anatomyVisualizerTestBed.js';
 import { AnatomyRenderError } from '../../../../src/errors/anatomyRenderError.js';
@@ -12,20 +19,23 @@ import AnatomyEdge from '../../../../src/domUI/anatomy-renderer/types/AnatomyEdg
 import RenderContext from '../../../../src/domUI/anatomy-renderer/types/RenderContext.js';
 
 // Mock RenderContext
-jest.mock('../../../../src/domUI/anatomy-renderer/types/RenderContext.js', () => {
-  return jest.fn().mockImplementation(() => ({
-    updateTheme: jest.fn(),
-    updatePerformance: jest.fn(),
-    updateViewport: jest.fn(),
-  }));
-});
+jest.mock(
+  '../../../../src/domUI/anatomy-renderer/types/RenderContext.js',
+  () => {
+    return jest.fn().mockImplementation(() => ({
+      updateTheme: jest.fn(),
+      updatePerformance: jest.fn(),
+      updateViewport: jest.fn(),
+    }));
+  }
+);
 
 // Mock DomUtils
 jest.mock('../../../../src/utils/domUtils.js', () => ({
   DomUtils: {
     textToHtml: jest.fn((text) => text),
     escapeHtml: jest.fn((text) => text),
-  }
+  },
 }));
 
 describe('VisualizationComposer', () => {
@@ -52,7 +62,7 @@ describe('VisualizationComposer', () => {
         getElementById: jest.fn(),
         createElement: jest.fn(),
         createElementNS: jest.fn(),
-      }
+      },
     };
 
     // Mock layout engine
@@ -110,7 +120,7 @@ describe('VisualizationComposer', () => {
         left: 0,
         top: 0,
         width: 800,
-        height: 600
+        height: 600,
       }),
     };
 
@@ -153,16 +163,33 @@ describe('VisualizationComposer', () => {
     });
 
     it('should setup interaction handlers during construction', () => {
-      expect(mockInteractionController.registerHandler).toHaveBeenCalledWith('pan', expect.any(Function));
-      expect(mockInteractionController.registerHandler).toHaveBeenCalledWith('zoom', expect.any(Function));
-      expect(mockInteractionController.registerHandler).toHaveBeenCalledWith('panstart', expect.any(Function));
-      expect(mockInteractionController.registerHandler).toHaveBeenCalledWith('panend', expect.any(Function));
-      expect(mockInteractionController.registerHandler).toHaveBeenCalledWith('click', expect.any(Function));
+      expect(mockInteractionController.registerHandler).toHaveBeenCalledWith(
+        'pan',
+        expect.any(Function)
+      );
+      expect(mockInteractionController.registerHandler).toHaveBeenCalledWith(
+        'zoom',
+        expect.any(Function)
+      );
+      expect(mockInteractionController.registerHandler).toHaveBeenCalledWith(
+        'panstart',
+        expect.any(Function)
+      );
+      expect(mockInteractionController.registerHandler).toHaveBeenCalledWith(
+        'panend',
+        expect.any(Function)
+      );
+      expect(mockInteractionController.registerHandler).toHaveBeenCalledWith(
+        'click',
+        expect.any(Function)
+      );
     });
 
     it('should initialize with container element', () => {
       visualizationComposer.initialize(mockContainer);
-      expect(mockLogger.debug).toHaveBeenCalledWith('VisualizationComposer: Initialized');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'VisualizationComposer: Initialized'
+      );
     });
 
     it('should throw error when initializing without container', () => {
@@ -184,7 +211,7 @@ describe('VisualizationComposer', () => {
         parts: {
           head: 'head-entity',
           torso: 'torso-entity',
-        }
+        },
       };
 
       const mockRootEntity = {
@@ -199,7 +226,8 @@ describe('VisualizationComposer', () => {
         getComponentData: jest.fn((type) => {
           if (type === 'core:name') return { text: 'Head' };
           if (type === 'anatomy:part') return { subType: 'head' };
-          if (type === 'anatomy:joint') return { parentId: 'root-entity', socketId: 'neck' };
+          if (type === 'anatomy:joint')
+            return { parentId: 'root-entity', socketId: 'neck' };
           return null;
         }),
       };
@@ -225,8 +253,9 @@ describe('VisualizationComposer', () => {
       const rootEntityId = 'test:root';
       const bodyData = null;
 
-      await expect(visualizationComposer.renderGraph(rootEntityId, bodyData))
-        .rejects.toThrow();
+      await expect(
+        visualizationComposer.renderGraph(rootEntityId, bodyData)
+      ).rejects.toThrow();
     });
 
     it('should handle body data without root', async () => {
@@ -235,17 +264,21 @@ describe('VisualizationComposer', () => {
 
       await visualizationComposer.renderGraph(rootEntityId, bodyData);
 
-      expect(mockLogger.warn).toHaveBeenCalledWith('No body data or root found');
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'No body data or root found'
+      );
     });
 
     it('should throw error with invalid root entity ID', async () => {
-      await expect(visualizationComposer.renderGraph('', { root: 'test' }))
-        .rejects.toThrow();
+      await expect(
+        visualizationComposer.renderGraph('', { root: 'test' })
+      ).rejects.toThrow();
     });
 
     it('should throw error with invalid body data', async () => {
-      await expect(visualizationComposer.renderGraph('test:root', null))
-        .rejects.toThrow();
+      await expect(
+        visualizationComposer.renderGraph('test:root', null)
+      ).rejects.toThrow();
     });
 
     it('should handle rendering errors', async () => {
@@ -267,8 +300,9 @@ describe('VisualizationComposer', () => {
 
       mockEntityManager.getEntityInstance.mockResolvedValue(mockEntity);
 
-      await expect(visualizationComposer.renderGraph(rootEntityId, bodyData))
-        .rejects.toThrow();
+      await expect(
+        visualizationComposer.renderGraph(rootEntityId, bodyData)
+      ).rejects.toThrow();
 
       expect(mockLogger.error).toHaveBeenCalledWith(
         'VisualizationComposer: Failed to render anatomy graph',
@@ -289,7 +323,9 @@ describe('VisualizationComposer', () => {
       expect(mockSvgRenderer.getSVGElement).toHaveBeenCalled();
       expect(mockInteractionController.detachFromElement).toHaveBeenCalled();
       expect(mockViewportManager.reset).toHaveBeenCalled();
-      expect(mockLogger.debug).toHaveBeenCalledWith('VisualizationComposer: Cleared');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'VisualizationComposer: Cleared'
+      );
     });
 
     it('should handle clear when no container is set', () => {
@@ -310,7 +346,9 @@ describe('VisualizationComposer', () => {
       mockSvgRenderer.getSVGElement.mockReturnValue(null);
 
       expect(() => visualizationComposer.clear()).not.toThrow();
-      expect(mockInteractionController.detachFromElement).not.toHaveBeenCalled();
+      expect(
+        mockInteractionController.detachFromElement
+      ).not.toHaveBeenCalled();
     });
   });
 
@@ -351,7 +389,7 @@ describe('VisualizationComposer', () => {
         parts: {
           head: 'head-entity',
           torso: 'torso-entity',
-        }
+        },
       };
 
       const mockRootEntity = {
@@ -366,7 +404,8 @@ describe('VisualizationComposer', () => {
         getComponentData: jest.fn((type) => {
           if (type === 'core:name') return { text: 'Head' };
           if (type === 'anatomy:part') return { subType: 'head' };
-          if (type === 'anatomy:joint') return { parentId: 'root-entity', socketId: 'neck' };
+          if (type === 'anatomy:joint')
+            return { parentId: 'root-entity', socketId: 'neck' };
           return null;
         }),
       };
@@ -378,8 +417,12 @@ describe('VisualizationComposer', () => {
 
       await visualizationComposer.buildGraphData(bodyData);
 
-      expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith('root-entity');
-      expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith('head-entity');
+      expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(
+        'root-entity'
+      );
+      expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(
+        'head-entity'
+      );
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'VisualizationComposer: Building graph data',
         expect.any(Object)
@@ -391,7 +434,7 @@ describe('VisualizationComposer', () => {
         root: 'root-entity',
         parts: {
           head: 'head-entity',
-        }
+        },
       };
 
       const mockRootEntity = {
@@ -406,7 +449,8 @@ describe('VisualizationComposer', () => {
         getComponentData: jest.fn((type) => {
           if (type === 'core:name') return { text: 'Head' };
           if (type === 'anatomy:part') return { subType: 'head' };
-          if (type === 'anatomy:joint') return { parentId: 'root-entity', socketId: 'neck' };
+          if (type === 'anatomy:joint')
+            return { parentId: 'root-entity', socketId: 'neck' };
           return null;
         }),
       };
@@ -418,7 +462,9 @@ describe('VisualizationComposer', () => {
 
       await visualizationComposer.buildGraphData(bodyData);
 
-      expect(mockLogger.debug).toHaveBeenCalledWith('Found 1 children for root-entity');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Found 1 children for root-entity'
+      );
     });
 
     it('should handle missing entities gracefully', async () => {
@@ -426,7 +472,7 @@ describe('VisualizationComposer', () => {
         root: 'root-entity',
         parts: {
           missing: 'missing-entity',
-        }
+        },
       };
 
       const mockRootEntity = {
@@ -452,10 +498,12 @@ describe('VisualizationComposer', () => {
     it('should handle entity loading errors', async () => {
       const bodyData = {
         root: 'root-entity',
-        parts: {}
+        parts: {},
       };
 
-      mockEntityManager.getEntityInstance.mockRejectedValue(new Error('Entity error'));
+      mockEntityManager.getEntityInstance.mockRejectedValue(
+        new Error('Entity error')
+      );
 
       await visualizationComposer.buildGraphData(bodyData);
 
@@ -470,7 +518,7 @@ describe('VisualizationComposer', () => {
         root: 'root-entity',
         parts: {
           unconnected: 'unconnected-entity',
-        }
+        },
       };
 
       const mockRootEntity = {
@@ -512,7 +560,9 @@ describe('VisualizationComposer', () => {
       visualizationComposer.performLayout();
 
       expect(mockLayoutEngine.calculateLayout).toHaveBeenCalled();
-      expect(mockLogger.debug).toHaveBeenCalledWith('VisualizationComposer: Performing layout');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'VisualizationComposer: Performing layout'
+      );
     });
 
     it('should handle layout calculation errors', () => {
@@ -520,7 +570,9 @@ describe('VisualizationComposer', () => {
         throw new Error('Layout failed');
       });
 
-      expect(() => visualizationComposer.performLayout()).toThrow(AnatomyRenderError);
+      expect(() => visualizationComposer.performLayout()).toThrow(
+        AnatomyRenderError
+      );
     });
   });
 
@@ -544,7 +596,9 @@ describe('VisualizationComposer', () => {
       expect(mockSvgRenderer.renderEdges).toHaveBeenCalled();
       expect(mockSvgRenderer.renderNodes).toHaveBeenCalled();
       expect(mockSvgRenderer.addDebugInfo).toHaveBeenCalled();
-      expect(mockInteractionController.attachToElement).toHaveBeenCalledWith(mockSvgElement);
+      expect(mockInteractionController.attachToElement).toHaveBeenCalledWith(
+        mockSvgElement
+      );
       expect(mockViewportManager.subscribe).toHaveBeenCalled();
     });
 
@@ -559,7 +613,9 @@ describe('VisualizationComposer', () => {
         viewportManager: mockViewportManager,
       });
 
-      await expect(composer.renderVisualization()).rejects.toThrow(AnatomyRenderError);
+      await expect(composer.renderVisualization()).rejects.toThrow(
+        AnatomyRenderError
+      );
     });
 
     it('should handle SVG rendering errors', async () => {
@@ -567,7 +623,9 @@ describe('VisualizationComposer', () => {
         throw new Error('SVG creation failed');
       });
 
-      await expect(visualizationComposer.renderVisualization()).rejects.toThrow(AnatomyRenderError);
+      await expect(visualizationComposer.renderVisualization()).rejects.toThrow(
+        AnatomyRenderError
+      );
     });
 
     it('should handle case when SVG element is null', async () => {
@@ -584,8 +642,10 @@ describe('VisualizationComposer', () => {
     });
 
     it('should handle pan interaction', () => {
-      const panHandler = mockInteractionController.registerHandler.mock.calls
-        .find(call => call[0] === 'pan')[1];
+      const panHandler =
+        mockInteractionController.registerHandler.mock.calls.find(
+          (call) => call[0] === 'pan'
+        )[1];
 
       panHandler({ deltaX: 10, deltaY: 20 });
 
@@ -593,8 +653,10 @@ describe('VisualizationComposer', () => {
     });
 
     it('should handle zoom interaction', () => {
-      const zoomHandler = mockInteractionController.registerHandler.mock.calls
-        .find(call => call[0] === 'zoom')[1];
+      const zoomHandler =
+        mockInteractionController.registerHandler.mock.calls.find(
+          (call) => call[0] === 'zoom'
+        )[1];
 
       zoomHandler({ zoomFactor: 1.5, x: 100, y: 200 });
 
@@ -602,8 +664,10 @@ describe('VisualizationComposer', () => {
     });
 
     it('should handle panstart interaction', () => {
-      const panStartHandler = mockInteractionController.registerHandler.mock.calls
-        .find(call => call[0] === 'panstart')[1];
+      const panStartHandler =
+        mockInteractionController.registerHandler.mock.calls.find(
+          (call) => call[0] === 'panstart'
+        )[1];
 
       panStartHandler();
 
@@ -611,8 +675,10 @@ describe('VisualizationComposer', () => {
     });
 
     it('should handle panend interaction', () => {
-      const panEndHandler = mockInteractionController.registerHandler.mock.calls
-        .find(call => call[0] === 'panend')[1];
+      const panEndHandler =
+        mockInteractionController.registerHandler.mock.calls.find(
+          (call) => call[0] === 'panend'
+        )[1];
 
       panEndHandler();
 
@@ -620,8 +686,10 @@ describe('VisualizationComposer', () => {
     });
 
     it('should handle click interaction', () => {
-      const clickHandler = mockInteractionController.registerHandler.mock.calls
-        .find(call => call[0] === 'click')[1];
+      const clickHandler =
+        mockInteractionController.registerHandler.mock.calls.find(
+          (call) => call[0] === 'click'
+        )[1];
 
       clickHandler({ target: { type: 'node', id: 'test-node' } });
 
@@ -631,8 +699,10 @@ describe('VisualizationComposer', () => {
     it('should handle panstart when SVG element is null', () => {
       mockSvgRenderer.getSVGElement.mockReturnValue(null);
 
-      const panStartHandler = mockInteractionController.registerHandler.mock.calls
-        .find(call => call[0] === 'panstart')[1];
+      const panStartHandler =
+        mockInteractionController.registerHandler.mock.calls.find(
+          (call) => call[0] === 'panstart'
+        )[1];
 
       expect(() => panStartHandler()).not.toThrow();
     });
@@ -640,8 +710,10 @@ describe('VisualizationComposer', () => {
     it('should handle panend when SVG element is null', () => {
       mockSvgRenderer.getSVGElement.mockReturnValue(null);
 
-      const panEndHandler = mockInteractionController.registerHandler.mock.calls
-        .find(call => call[0] === 'panend')[1];
+      const panEndHandler =
+        mockInteractionController.registerHandler.mock.calls.find(
+          (call) => call[0] === 'panend'
+        )[1];
 
       expect(() => panEndHandler()).not.toThrow();
     });
@@ -661,16 +733,16 @@ describe('VisualizationComposer', () => {
           left: 100,
           top: 200,
           width: 50,
-          height: 50
+          height: 50,
         }),
         currentTarget: {
           getBoundingClientRect: jest.fn().mockReturnValue({
             left: 100,
             top: 200,
             width: 50,
-            height: 50
-          })
-        }
+            height: 50,
+          }),
+        },
       };
 
       const mockCircle = {
@@ -688,13 +760,18 @@ describe('VisualizationComposer', () => {
 
     it('should setup tooltips for nodes', async () => {
       // Mock nodes in the visualization composer
-      const mockNode = new AnatomyNode('test-node', 'Test Node', 'test-type', 0);
+      const mockNode = new AnatomyNode(
+        'test-node',
+        'Test Node',
+        'test-type',
+        0
+      );
       mockNode.description = 'Test description';
-      
+
       // Access private nodes map using renderGraph to populate it
       const bodyData = {
         root: 'test-node',
-        parts: {}
+        parts: {},
       };
 
       const mockEntity = {
@@ -710,16 +787,25 @@ describe('VisualizationComposer', () => {
 
       await visualizationComposer.renderGraph('test-root', bodyData);
 
-      expect(mockNodeElement.addEventListener).toHaveBeenCalledWith('mouseenter', expect.any(Function));
-      expect(mockNodeElement.addEventListener).toHaveBeenCalledWith('mouseleave', expect.any(Function));
-      expect(mockNodeElement.addEventListener).toHaveBeenCalledWith('mousedown', expect.any(Function));
+      expect(mockNodeElement.addEventListener).toHaveBeenCalledWith(
+        'mouseenter',
+        expect.any(Function)
+      );
+      expect(mockNodeElement.addEventListener).toHaveBeenCalledWith(
+        'mouseleave',
+        expect.any(Function)
+      );
+      expect(mockNodeElement.addEventListener).toHaveBeenCalledWith(
+        'mousedown',
+        expect.any(Function)
+      );
     });
 
     it('should show tooltip on mouse enter', async () => {
       // Setup node data first
       const bodyData = {
         root: 'test-node',
-        parts: {}
+        parts: {},
       };
 
       const mockEntity = {
@@ -735,9 +821,10 @@ describe('VisualizationComposer', () => {
       await visualizationComposer.renderGraph('test-root', bodyData);
 
       // Find the mouseenter handler
-      const mouseEnterCall = mockNodeElement.addEventListener.mock.calls
-        .find(call => call[0] === 'mouseenter');
-      
+      const mouseEnterCall = mockNodeElement.addEventListener.mock.calls.find(
+        (call) => call[0] === 'mouseenter'
+      );
+
       if (mouseEnterCall) {
         const mouseEnterHandler = mouseEnterCall[1];
         mouseEnterHandler({ currentTarget: mockNodeElement.currentTarget });
@@ -753,7 +840,7 @@ describe('VisualizationComposer', () => {
       // Setup node data first
       const bodyData = {
         root: 'test-node',
-        parts: {}
+        parts: {},
       };
 
       const mockEntity = {
@@ -768,9 +855,10 @@ describe('VisualizationComposer', () => {
       await visualizationComposer.renderGraph('test-root', bodyData);
 
       // Find the mouseleave handler
-      const mouseLeaveCall = mockNodeElement.addEventListener.mock.calls
-        .find(call => call[0] === 'mouseleave');
-      
+      const mouseLeaveCall = mockNodeElement.addEventListener.mock.calls.find(
+        (call) => call[0] === 'mouseleave'
+      );
+
       if (mouseLeaveCall) {
         const mouseLeaveHandler = mouseLeaveCall[1];
         mouseLeaveHandler();
@@ -783,7 +871,7 @@ describe('VisualizationComposer', () => {
       // Setup node data first
       const bodyData = {
         root: 'test-node',
-        parts: {}
+        parts: {},
       };
 
       const mockEntity = {
@@ -798,29 +886,45 @@ describe('VisualizationComposer', () => {
       await visualizationComposer.renderGraph('test-root', bodyData);
 
       // Find the second mouseenter handler (hover effects)
-      const mouseEnterCalls = mockNodeElement.addEventListener.mock.calls
-        .filter(call => call[0] === 'mouseenter');
-      
+      const mouseEnterCalls =
+        mockNodeElement.addEventListener.mock.calls.filter(
+          (call) => call[0] === 'mouseenter'
+        );
+
       if (mouseEnterCalls.length > 1) {
         const hoverHandler = mouseEnterCalls[1][1];
         hoverHandler();
 
         const mockCircle = mockNodeElement.querySelector();
         expect(mockCircle.setAttribute).toHaveBeenCalledWith('r', '13');
-        expect(mockCircle.setAttribute).toHaveBeenCalledWith('stroke-width', '3');
-        expect(mockCircle.setAttribute).toHaveBeenCalledWith('fill-opacity', '0.9');
+        expect(mockCircle.setAttribute).toHaveBeenCalledWith(
+          'stroke-width',
+          '3'
+        );
+        expect(mockCircle.setAttribute).toHaveBeenCalledWith(
+          'fill-opacity',
+          '0.9'
+        );
 
         // Test mouse leave for hover effects
-        const mouseLeaveCalls = mockNodeElement.addEventListener.mock.calls
-          .filter(call => call[0] === 'mouseleave');
-        
+        const mouseLeaveCalls =
+          mockNodeElement.addEventListener.mock.calls.filter(
+            (call) => call[0] === 'mouseleave'
+          );
+
         if (mouseLeaveCalls.length > 1) {
           const hoverLeaveHandler = mouseLeaveCalls[1][1];
           hoverLeaveHandler();
 
           expect(mockCircle.setAttribute).toHaveBeenCalledWith('r', '10');
-          expect(mockCircle.setAttribute).toHaveBeenCalledWith('stroke-width', '2');
-          expect(mockCircle.setAttribute).toHaveBeenCalledWith('fill-opacity', '1');
+          expect(mockCircle.setAttribute).toHaveBeenCalledWith(
+            'stroke-width',
+            '2'
+          );
+          expect(mockCircle.setAttribute).toHaveBeenCalledWith(
+            'fill-opacity',
+            '1'
+          );
         }
       }
     });
@@ -829,7 +933,7 @@ describe('VisualizationComposer', () => {
       // Setup node data first
       const bodyData = {
         root: 'test-node',
-        parts: {}
+        parts: {},
       };
 
       const mockEntity = {
@@ -844,9 +948,10 @@ describe('VisualizationComposer', () => {
       await visualizationComposer.renderGraph('test-root', bodyData);
 
       // Find the mousedown handler
-      const mouseDownCall = mockNodeElement.addEventListener.mock.calls
-        .find(call => call[0] === 'mousedown');
-      
+      const mouseDownCall = mockNodeElement.addEventListener.mock.calls.find(
+        (call) => call[0] === 'mousedown'
+      );
+
       if (mouseDownCall) {
         const mouseDownHandler = mouseDownCall[1];
         const mockEvent = { stopPropagation: jest.fn() };
@@ -863,7 +968,7 @@ describe('VisualizationComposer', () => {
       // Setup node data with missing node
       const bodyData = {
         root: 'test-node',
-        parts: {}
+        parts: {},
       };
 
       const mockEntity = {
@@ -875,7 +980,7 @@ describe('VisualizationComposer', () => {
       };
 
       mockEntityManager.getEntityInstance.mockResolvedValue(mockEntity);
-      
+
       // Mock getAttribute to return non-existent node ID
       mockNodeElement.getAttribute.mockReturnValue('non-existent-node');
 
@@ -883,7 +988,9 @@ describe('VisualizationComposer', () => {
 
       // Should not throw error when setting up tooltips for non-existent nodes
       // But no event listeners should be added since the node doesn't exist
-      expect(() => visualizationComposer.renderGraph('test-root', bodyData)).not.toThrow();
+      expect(() =>
+        visualizationComposer.renderGraph('test-root', bodyData)
+      ).not.toThrow();
     });
   });
 
@@ -895,7 +1002,7 @@ describe('VisualizationComposer', () => {
         root: 'root-entity',
         parts: {
           unconnected: 'unconnected-entity',
-        }
+        },
       };
 
       const mockRootEntity = {
@@ -926,7 +1033,7 @@ describe('VisualizationComposer', () => {
         root: 'root-entity',
         parts: {
           child: 'child-entity',
-        }
+        },
       };
 
       const mockRootEntity = {

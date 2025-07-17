@@ -136,7 +136,10 @@ describe('AnatomyLoadingDetector - Anatomy Detection', () => {
         { recipeId: 'test:recipe' }, // missing body
         { recipeId: 'test:recipe', body: { root: 'test:root' } }, // missing parts
         { recipeId: 'test:recipe', body: { parts: {} } }, // missing root
-        { recipeId: 'test:recipe', body: { root: 'test:root', parts: 'invalid' } }, // invalid parts type
+        {
+          recipeId: 'test:recipe',
+          body: { root: 'test:root', parts: 'invalid' },
+        }, // invalid parts type
       ];
 
       for (const anatomyData of invalidStructures) {
@@ -146,14 +149,19 @@ describe('AnatomyLoadingDetector - Anatomy Detection', () => {
           hasValidAnatomy: false,
           anatomyData,
         });
-        
-        testBed.mockEntityManager.getEntityInstance.mockResolvedValue(mockEntity);
-        
+
+        testBed.mockEntityManager.getEntityInstance.mockResolvedValue(
+          mockEntity
+        );
+
         // Use immediate check instead of waiting
-        const result = await anatomyLoadingDetector.waitForAnatomyReady(entityId, {
-          timeout: 0, // Don't wait, just check immediately
-          retryInterval: 0,
-        });
+        const result = await anatomyLoadingDetector.waitForAnatomyReady(
+          entityId,
+          {
+            timeout: 0, // Don't wait, just check immediately
+            retryInterval: 0,
+          }
+        );
         expect(result).toBe(false);
       }
     }, 10000); // Set explicit timeout

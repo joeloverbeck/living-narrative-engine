@@ -1,11 +1,11 @@
 /**
  * @file End-to-end test for the complete action discovery workflow
  * @see tests/e2e/actions/ActionDiscoveryWorkflow.e2e.test.js
- * 
+ *
  * This test suite covers the entire action discovery pipeline from entity
  * components through to formatted actions ready for UI display, including:
  * - Action index building and initialization
- * - Component-based action filtering 
+ * - Component-based action filtering
  * - Prerequisites evaluation with JSON Logic
  * - Target resolution using scope DSL
  * - Action formatting for display
@@ -26,7 +26,10 @@ import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import { DEFAULT_TEST_WORLD } from '../../common/constants.js';
 import AppContainer from '../../../src/dependencyInjection/appContainer.js';
 import { configureContainer } from '../../../src/dependencyInjection/containerConfig.js';
-import { createEntityDefinition, createEntityInstance } from '../../common/entities/entityFactories.js';
+import {
+  createEntityDefinition,
+  createEntityInstance,
+} from '../../common/entities/entityFactories.js';
 import { TraceContext } from '../../../src/actions/tracing/traceContext.js';
 
 /**
@@ -51,13 +54,15 @@ describe('Complete Action Discovery Workflow E2E', () => {
       titleElement: document.createElement('h1'),
       document,
     });
-    
+
     // Get real services from container
     entityManager = container.resolve(tokens.IEntityManager);
     actionDiscoveryService = container.resolve(tokens.IActionDiscoveryService);
     actionIndex = container.resolve(tokens.ActionIndex);
-    availableActionsProvider = container.resolve(tokens.IAvailableActionsProvider);
-    
+    availableActionsProvider = container.resolve(
+      tokens.IAvailableActionsProvider
+    );
+
     // Set up test world and actors
     await setupTestWorld();
     await setupTestActors();
@@ -94,8 +99,8 @@ describe('Complete Action Discovery Workflow E2E', () => {
         template: 'wait',
         prerequisites: [],
         required_components: {
-          actor: []
-        }
+          actor: [],
+        },
       },
       {
         id: 'core:go',
@@ -105,8 +110,8 @@ describe('Complete Action Discovery Workflow E2E', () => {
         template: 'go to {target}',
         prerequisites: [],
         required_components: {
-          actor: ['core:position']
-        }
+          actor: ['core:position'],
+        },
       },
       {
         id: 'core:follow',
@@ -116,9 +121,9 @@ describe('Complete Action Discovery Workflow E2E', () => {
         template: 'follow {target}',
         prerequisites: [],
         required_components: {
-          actor: ['core:following']
-        }
-      }
+          actor: ['core:following'],
+        },
+      },
     ];
 
     // Add action definitions to the registry
@@ -131,18 +136,19 @@ describe('Complete Action Discovery Workflow E2E', () => {
     const testConditions = [
       {
         id: 'core:actor-can-move',
-        description: 'Checks if the actor has functioning legs capable of movement',
+        description:
+          'Checks if the actor has functioning legs capable of movement',
         logic: {
-          '==': [{ 'var': 'actor.core:movement.locked' }, false]
-        }
+          '==': [{ var: 'actor.core:movement.locked' }, false],
+        },
       },
       {
         id: 'core:exit-is-unblocked',
         description: 'Checks if an exit is unblocked',
         logic: {
-          '==': [{ 'var': 'blocked' }, false]
-        }
-      }
+          '==': [{ var: 'blocked' }, false],
+        },
+      },
     ];
 
     for (const condition of testConditions) {
@@ -152,11 +158,13 @@ describe('Complete Action Discovery Workflow E2E', () => {
     // Add scope definitions for testing
     const scopeRegistry = container.resolve(tokens.IScopeRegistry);
     const dslParser = container.resolve(tokens.DslParser);
-    
+
     // Parse the DSL expressions to get the ASTs
-    const clearDirectionsExpr = 'location.core:exits[{"condition_ref": "core:exit-is-unblocked"}].target';
-    const otherActorsExpr = 'entities(core:actor)[{ var: "id", neq: { var: "actor.id" } }]';
-    
+    const clearDirectionsExpr =
+      'location.core:exits[{"condition_ref": "core:exit-is-unblocked"}].target';
+    const otherActorsExpr =
+      'entities(core:actor)[{ var: "id", neq: { var: "actor.id" } }]';
+
     let clearDirectionsAst, otherActorsAst;
     try {
       clearDirectionsAst = dslParser.parse(clearDirectionsExpr);
@@ -165,25 +173,30 @@ describe('Complete Action Discovery Workflow E2E', () => {
       console.error('Failed to parse scope DSL expression', e);
       // Use simple fallbacks for testing
       clearDirectionsAst = { type: 'Source', kind: 'location' };
-      otherActorsAst = { type: 'Source', kind: 'entities', param: 'core:actor' };
+      otherActorsAst = {
+        type: 'Source',
+        kind: 'entities',
+        param: 'core:actor',
+      };
     }
-    
+
     // Add the scope definitions with ASTs
     const scopeDefinitions = {
       'core:clear_directions': {
-        id: 'core:clear_directions', 
+        id: 'core:clear_directions',
         expr: clearDirectionsExpr,
         ast: clearDirectionsAst,
-        description: 'Available exits from current location that are not blocked'
+        description:
+          'Available exits from current location that are not blocked',
       },
       'core:other_actors': {
         id: 'core:other_actors',
         expr: otherActorsExpr,
         ast: otherActorsAst,
-        description: 'Other actors in the game (excluding the current actor)'
-      }
+        description: 'Other actors in the game (excluding the current actor)',
+      },
     };
-    
+
     // Initialize the scope registry with our scope definitions
     try {
       scopeRegistry.initialize(scopeDefinitions);
@@ -194,10 +207,10 @@ describe('Complete Action Discovery Workflow E2E', () => {
     // Build the action index
     const gameDataRepository = container.resolve(tokens.IGameDataRepository);
     const logger = container.resolve(tokens.ILogger);
-    
+
     // Build action index with the test actions
     actionIndex.buildIndex(testActions);
-    
+
     logger.debug(`Built action index with ${testActions.length} test actions`);
   }
 
@@ -213,36 +226,51 @@ describe('Complete Action Discovery Workflow E2E', () => {
           description: 'A test room for action discovery',
           components: {
             'core:name': { name: 'Test Room 1' },
-            'core:description': { description: 'A test room for action discovery' },
+            'core:description': {
+              description: 'A test room for action discovery',
+            },
             'core:position': { x: 0, y: 0, z: 0 },
-            'core:exits': { north: 'test-location-2', south: null, east: null, west: null }
-          }
+            'core:exits': {
+              north: 'test-location-2',
+              south: null,
+              east: null,
+              west: null,
+            },
+          },
         },
         {
-          id: 'test-location-2', 
+          id: 'test-location-2',
           name: 'Test Room 2',
           description: 'Another test room',
           components: {
             'core:name': { name: 'Test Room 2' },
             'core:description': { description: 'Another test room' },
             'core:position': { x: 1, y: 0, z: 0 },
-            'core:exits': { north: null, south: 'test-location-1', east: null, west: null }
-          }
-        }
-      ]
+            'core:exits': {
+              north: null,
+              south: 'test-location-1',
+              east: null,
+              west: null,
+            },
+          },
+        },
+      ],
     };
 
     // Create location definitions and instances
     for (const location of testWorld.locations) {
-      const definition = createEntityDefinition(location.id, location.components);
+      const definition = createEntityDefinition(
+        location.id,
+        location.components
+      );
       // Add the definition to the registry
       const registry = container.resolve(tokens.IDataRegistry);
       registry.store('entityDefinitions', location.id, definition);
-      
+
       // Create the entity instance
       await entityManager.createEntityInstance(location.id, {
         instanceId: location.id,
-        definitionId: location.id
+        definitionId: location.id,
       });
     }
   }
@@ -261,10 +289,10 @@ describe('Complete Action Discovery Workflow E2E', () => {
           'core:actor': { isPlayer: true },
           'core:closeness': { relationships: {} },
           'core:following': { following: null, followers: [] },
-          'core:movement': { locked: false }
-        }
+          'core:movement': { locked: false },
+        },
       },
-      
+
       // NPC actor with different components
       npc: {
         id: 'test-npc',
@@ -273,10 +301,10 @@ describe('Complete Action Discovery Workflow E2E', () => {
           'core:position': { locationId: 'test-location-1' },
           'core:actor': { isPlayer: false },
           'core:closeness': { relationships: {} },
-          'core:movement': { locked: false }
-        }
+          'core:movement': { locked: false },
+        },
       },
-      
+
       // Follower actor
       follower: {
         id: 'test-follower',
@@ -285,10 +313,10 @@ describe('Complete Action Discovery Workflow E2E', () => {
           'core:position': { locationId: 'test-location-1' },
           'core:actor': { isPlayer: false },
           'core:following': { following: 'test-player', followers: [] },
-          'core:movement': { locked: false }
-        }
+          'core:movement': { locked: false },
+        },
       },
-      
+
       // Minimal actor with only core components
       minimal: {
         id: 'test-minimal',
@@ -296,9 +324,9 @@ describe('Complete Action Discovery Workflow E2E', () => {
           'core:name': { name: 'Minimal Actor' },
           'core:position': { locationId: 'test-location-2' },
           'core:actor': { isPlayer: false },
-          'core:movement': { locked: false }
-        }
-      }
+          'core:movement': { locked: false },
+        },
+      },
     };
 
     // Create actor definitions and instances
@@ -307,11 +335,11 @@ describe('Complete Action Discovery Workflow E2E', () => {
       // Add the definition to the registry
       const registry = container.resolve(tokens.IDataRegistry);
       registry.store('entityDefinitions', actor.id, definition);
-      
+
       // Create the entity instance
       await entityManager.createEntityInstance(actor.id, {
         instanceId: actor.id,
-        definitionId: actor.id
+        definitionId: actor.id,
       });
     }
   }
@@ -323,19 +351,24 @@ describe('Complete Action Discovery Workflow E2E', () => {
   test('should build action index with component-based filtering', async () => {
     // Verify action index is initialized
     expect(actionIndex).toBeDefined();
-    
+
     // Test action index has been built
-    const playerEntity = await entityManager.getEntityInstance(testActors.player.id);
+    const playerEntity = await entityManager.getEntityInstance(
+      testActors.player.id
+    );
     const trace = createTraceContext();
-    const candidateActions = await actionIndex.getCandidateActions(playerEntity, trace);
-    
+    const candidateActions = await actionIndex.getCandidateActions(
+      playerEntity,
+      trace
+    );
+
     // Should have actions available for player
     expect(candidateActions).toBeDefined();
     expect(Array.isArray(candidateActions)).toBe(true);
     expect(candidateActions.length).toBeGreaterThan(0);
-    
+
     // Should include core actions like 'go' and 'wait'
-    const actionIds = candidateActions.map(action => action.id);
+    const actionIds = candidateActions.map((action) => action.id);
     expect(actionIds).toContain('core:go');
     expect(actionIds).toContain('core:wait');
   });
@@ -345,10 +378,12 @@ describe('Complete Action Discovery Workflow E2E', () => {
    * Verifies the complete discovery pipeline works end-to-end
    */
   test('should complete full action discovery pipeline for player', async () => {
-    const playerEntity = await entityManager.getEntityInstance(testActors.player.id);
+    const playerEntity = await entityManager.getEntityInstance(
+      testActors.player.id
+    );
     const baseContext = {
       currentLocation: await entityManager.getEntityInstance('test-location-1'),
-      allEntities: Array.from(entityManager.entities)
+      allEntities: Array.from(entityManager.entities),
     };
 
     // Test complete discovery workflow
@@ -358,18 +393,17 @@ describe('Complete Action Discovery Workflow E2E', () => {
       { trace: true }
     );
 
-
     // Should return valid actions
     expect(discoveredActions).toBeDefined();
     expect(discoveredActions.actions).toBeDefined();
     expect(Array.isArray(discoveredActions.actions)).toBe(true);
     expect(discoveredActions.actions.length).toBeGreaterThan(0);
-    
+
     // Should have tracing information
     expect(discoveredActions.trace).toBeDefined();
     expect(discoveredActions.trace.logs).toBeDefined();
     expect(discoveredActions.trace.logs.length).toBeGreaterThan(0);
-    
+
     // Verify action structure
     const firstAction = discoveredActions.actions[0];
     expect(firstAction).toHaveProperty('id');
@@ -383,12 +417,16 @@ describe('Complete Action Discovery Workflow E2E', () => {
    * Verifies actions are correctly filtered based on actor components
    */
   test('should filter actions based on actor components', async () => {
-    const playerEntity = await entityManager.getEntityInstance(testActors.player.id);
-    const minimalEntity = await entityManager.getEntityInstance(testActors.minimal.id);
-    
+    const playerEntity = await entityManager.getEntityInstance(
+      testActors.player.id
+    );
+    const minimalEntity = await entityManager.getEntityInstance(
+      testActors.minimal.id
+    );
+
     const baseContext = {
       currentLocation: await entityManager.getEntityInstance('test-location-1'),
-      allEntities: Array.from(entityManager.entities)
+      allEntities: Array.from(entityManager.entities),
     };
 
     // Get actions for both actors
@@ -403,32 +441,33 @@ describe('Complete Action Discovery Workflow E2E', () => {
       { trace: true }
     );
 
-
     // Player should have more actions due to more components
     expect(playerActions.actions.length).toBeGreaterThan(0);
     expect(minimalActions.actions.length).toBeGreaterThan(0);
-    
+
     // Actions requiring following component should only be available to player
-    const playerActionIds = playerActions.actions.map(a => a.id);
-    const minimalActionIds = minimalActions.actions.map(a => a.id);
-    
+    const playerActionIds = playerActions.actions.map((a) => a.id);
+    const minimalActionIds = minimalActions.actions.map((a) => a.id);
+
     // Both should have basic actions
     expect(playerActionIds).toContain('core:go');
     expect(playerActionIds).toContain('core:wait');
     expect(minimalActionIds).toContain('core:go');
     expect(minimalActionIds).toContain('core:wait');
-    
+
     // Following-related actions should only be available to actors with following component
-    const followingActions = playerActionIds.filter(id => 
-      id.includes('follow') || id.includes('dismiss')
+    const followingActions = playerActionIds.filter(
+      (id) => id.includes('follow') || id.includes('dismiss')
     );
-    const minimalFollowingActions = minimalActionIds.filter(id => 
-      id.includes('follow') || id.includes('dismiss')
+    const minimalFollowingActions = minimalActionIds.filter(
+      (id) => id.includes('follow') || id.includes('dismiss')
     );
-    
+
     // Player has following component, minimal actor doesn't
     if (followingActions.length > 0) {
-      expect(minimalFollowingActions.length).toBeLessThanOrEqual(followingActions.length);
+      expect(minimalFollowingActions.length).toBeLessThanOrEqual(
+        followingActions.length
+      );
     }
   });
 
@@ -437,12 +476,16 @@ describe('Complete Action Discovery Workflow E2E', () => {
    * Verifies that action prerequisites are properly evaluated
    */
   test('should evaluate action prerequisites correctly', async () => {
-    const playerEntity = await entityManager.getEntityInstance(testActors.player.id);
-    const followerEntity = await entityManager.getEntityInstance(testActors.follower.id);
-    
+    const playerEntity = await entityManager.getEntityInstance(
+      testActors.player.id
+    );
+    const followerEntity = await entityManager.getEntityInstance(
+      testActors.follower.id
+    );
+
     const baseContext = {
       currentLocation: await entityManager.getEntityInstance('test-location-1'),
-      allEntities: Array.from(entityManager.entities)
+      allEntities: Array.from(entityManager.entities),
     };
 
     // Get actions for both actors
@@ -458,16 +501,16 @@ describe('Complete Action Discovery Workflow E2E', () => {
     // Both should have valid actions
     expect(playerActions.actions.length).toBeGreaterThan(0);
     expect(followerActions.actions.length).toBeGreaterThan(0);
-    
+
     // Check for actions with different prerequisites
-    const playerActionIds = playerActions.actions.map(a => a.id);
-    const followerActionIds = followerActions.actions.map(a => a.id);
-    
+    const playerActionIds = playerActions.actions.map((a) => a.id);
+    const followerActionIds = followerActions.actions.map((a) => a.id);
+
     // Stop following should only be available to followers
     if (followerActionIds.includes('core:stop_following')) {
       expect(playerActionIds).not.toContain('core:stop_following');
     }
-    
+
     // Dismiss should only be available to entities with followers
     if (playerActionIds.includes('core:dismiss')) {
       expect(followerActionIds).not.toContain('core:dismiss');
@@ -479,10 +522,12 @@ describe('Complete Action Discovery Workflow E2E', () => {
    * Verifies that actions are correctly resolved with separate actions per target
    */
   test('should resolve action targets using scope DSL', async () => {
-    const playerEntity = await entityManager.getEntityInstance(testActors.player.id);
+    const playerEntity = await entityManager.getEntityInstance(
+      testActors.player.id
+    );
     const baseContext = {
       currentLocation: await entityManager.getEntityInstance('test-location-1'),
-      allEntities: Array.from(entityManager.entities)
+      allEntities: Array.from(entityManager.entities),
     };
 
     const discoveredActions = await actionDiscoveryService.getValidActions(
@@ -491,22 +536,24 @@ describe('Complete Action Discovery Workflow E2E', () => {
     );
 
     // Find actions for movement (like 'go' action)
-    const goActions = discoveredActions.actions.filter(a => a.id === 'core:go');
+    const goActions = discoveredActions.actions.filter(
+      (a) => a.id === 'core:go'
+    );
     if (goActions.length > 0) {
-      goActions.forEach(action => {
+      goActions.forEach((action) => {
         expect(action).toHaveProperty('id');
         expect(action).toHaveProperty('params');
         expect(action.params).toHaveProperty('targetId');
         expect(typeof action.params.targetId).toBe('string');
       });
     }
-    
+
     // Find actions with entity targets (like social actions)
-    const socialActions = discoveredActions.actions.filter(a => 
-      a.id.includes('intimacy:') || a.id.includes('follow')
+    const socialActions = discoveredActions.actions.filter(
+      (a) => a.id.includes('intimacy:') || a.id.includes('follow')
     );
-    
-    socialActions.forEach(action => {
+
+    socialActions.forEach((action) => {
       expect(action).toHaveProperty('params');
       expect(action.params).toHaveProperty('targetId');
       if (action.params.targetId) {
@@ -520,10 +567,12 @@ describe('Complete Action Discovery Workflow E2E', () => {
    * Verifies that actions are properly formatted for UI display
    */
   test('should format actions for display correctly', async () => {
-    const playerEntity = await entityManager.getEntityInstance(testActors.player.id);
+    const playerEntity = await entityManager.getEntityInstance(
+      testActors.player.id
+    );
     const baseContext = {
       currentLocation: await entityManager.getEntityInstance('test-location-1'),
-      allEntities: Array.from(entityManager.entities)
+      allEntities: Array.from(entityManager.entities),
     };
 
     const discoveredActions = await actionDiscoveryService.getValidActions(
@@ -532,25 +581,28 @@ describe('Complete Action Discovery Workflow E2E', () => {
     );
 
     // Verify all actions have proper formatting
-    discoveredActions.actions.forEach(action => {
+    discoveredActions.actions.forEach((action) => {
       // Required fields
       expect(action).toHaveProperty('id');
       expect(action).toHaveProperty('name');
       expect(action).toHaveProperty('command');
       expect(action).toHaveProperty('params');
-      
+
       // Fields should be strings
       expect(typeof action.id).toBe('string');
       expect(typeof action.name).toBe('string');
       expect(typeof action.command).toBe('string');
       expect(typeof action.params).toBe('object');
-      
+
       // Command should be formatted (not contain placeholders)
       expect(action.command).not.toContain('{');
       expect(action.command).not.toContain('}');
-      
+
       // Params should contain targetId for actions that have targets
-      if (action.params.targetId !== null && action.params.targetId !== undefined) {
+      if (
+        action.params.targetId !== null &&
+        action.params.targetId !== undefined
+      ) {
         expect(typeof action.params.targetId).toBe('string');
       }
     });
@@ -561,51 +613,53 @@ describe('Complete Action Discovery Workflow E2E', () => {
    * Verifies that actions are cached within turn scope
    */
   test('should cache actions within turn scope', async () => {
-    const playerEntity = await entityManager.getEntityInstance(testActors.player.id);
+    const playerEntity = await entityManager.getEntityInstance(
+      testActors.player.id
+    );
     const turnContext = {
       turnNumber: 1,
-      currentActor: playerEntity
+      currentActor: playerEntity,
     };
 
     // Get logger from container
     const logger = container.resolve(tokens.ILogger);
-    
+
     // First call should populate cache
     const firstCall = await availableActionsProvider.get(
       playerEntity,
       turnContext,
       logger
     );
-    
+
     expect(firstCall).toBeDefined();
     expect(Array.isArray(firstCall)).toBe(true);
     expect(firstCall.length).toBeGreaterThan(0);
-    
+
     // Second call with same turn context should use cache
     const secondCall = await availableActionsProvider.get(
       playerEntity,
       turnContext,
       logger
     );
-    
+
     expect(secondCall).toBeDefined();
     expect(secondCall.length).toBe(firstCall.length);
-    
+
     // Results should be identical (from cache)
     expect(secondCall).toEqual(firstCall);
-    
+
     // Different turn should bypass cache
     const newTurnContext = {
       turnNumber: 2,
-      currentActor: playerEntity
+      currentActor: playerEntity,
     };
-    
+
     const thirdCall = await availableActionsProvider.get(
       playerEntity,
       newTurnContext,
       logger
     );
-    
+
     expect(thirdCall).toBeDefined();
     expect(Array.isArray(thirdCall)).toBe(true);
   });
@@ -615,13 +669,17 @@ describe('Complete Action Discovery Workflow E2E', () => {
    * Verifies that different actors get different action sets
    */
   test('should provide different actions for different actors', async () => {
-    const playerEntity = await entityManager.getEntityInstance(testActors.player.id);
+    const playerEntity = await entityManager.getEntityInstance(
+      testActors.player.id
+    );
     const npcEntity = await entityManager.getEntityInstance(testActors.npc.id);
-    const followerEntity = await entityManager.getEntityInstance(testActors.follower.id);
-    
+    const followerEntity = await entityManager.getEntityInstance(
+      testActors.follower.id
+    );
+
     const baseContext = {
       currentLocation: await entityManager.getEntityInstance('test-location-1'),
-      allEntities: Array.from(entityManager.entities)
+      allEntities: Array.from(entityManager.entities),
     };
 
     // Get actions for all actors
@@ -642,30 +700,32 @@ describe('Complete Action Discovery Workflow E2E', () => {
     expect(playerActions.actions.length).toBeGreaterThan(0);
     expect(npcActions.actions.length).toBeGreaterThan(0);
     expect(followerActions.actions.length).toBeGreaterThan(0);
-    
+
     // Extract action IDs for comparison
-    const playerActionIds = playerActions.actions.map(a => a.id);
-    const npcActionIds = npcActions.actions.map(a => a.id);
-    const followerActionIds = followerActions.actions.map(a => a.id);
-    
+    const playerActionIds = playerActions.actions.map((a) => a.id);
+    const npcActionIds = npcActions.actions.map((a) => a.id);
+    const followerActionIds = followerActions.actions.map((a) => a.id);
+
     // All should have basic actions
-    [playerActionIds, npcActionIds, followerActionIds].forEach(actionIds => {
+    [playerActionIds, npcActionIds, followerActionIds].forEach((actionIds) => {
       expect(actionIds).toContain('core:wait');
       expect(actionIds).toContain('core:go');
     });
-    
+
     // Check for role-specific actions
-    const hasFollowingActions = (actionIds) => 
-      actionIds.some(id => id.includes('follow') || id.includes('dismiss'));
-    
+    const hasFollowingActions = (actionIds) =>
+      actionIds.some((id) => id.includes('follow') || id.includes('dismiss'));
+
     // Player and NPC might have different following-related actions
     // based on their current following state
     const playerHasFollowing = hasFollowingActions(playerActionIds);
     const npcHasFollowing = hasFollowingActions(npcActionIds);
     const followerHasFollowing = hasFollowingActions(followerActionIds);
-    
+
     // At least one should have following actions
-    expect(playerHasFollowing || npcHasFollowing || followerHasFollowing).toBe(true);
+    expect(playerHasFollowing || npcHasFollowing || followerHasFollowing).toBe(
+      true
+    );
   });
 
   /**
@@ -673,10 +733,12 @@ describe('Complete Action Discovery Workflow E2E', () => {
    * Verifies proper error handling and trace collection
    */
   test('should handle errors and provide comprehensive tracing', async () => {
-    const playerEntity = await entityManager.getEntityInstance(testActors.player.id);
+    const playerEntity = await entityManager.getEntityInstance(
+      testActors.player.id
+    );
     const baseContext = {
       currentLocation: await entityManager.getEntityInstance('test-location-1'),
-      allEntities: Array.from(entityManager.entities)
+      allEntities: Array.from(entityManager.entities),
     };
 
     // Test with tracing enabled
@@ -690,24 +752,24 @@ describe('Complete Action Discovery Workflow E2E', () => {
     expect(result.trace).toBeDefined();
     expect(result.trace.logs).toBeDefined();
     expect(Array.isArray(result.trace.logs)).toBe(true);
-    
+
     // Should have at least some trace entries
     expect(result.trace.logs.length).toBeGreaterThan(0);
-    
+
     // Trace entries should have proper structure
-    result.trace.logs.forEach(entry => {
+    result.trace.logs.forEach((entry) => {
       expect(entry).toHaveProperty('message');
       expect(typeof entry.message).toBe('string');
       expect(entry.message.length).toBeGreaterThan(0);
     });
-    
+
     // Should have both valid actions and any errors
     expect(result.actions).toBeDefined();
     expect(Array.isArray(result.actions)).toBe(true);
-    
+
     if (result.errors) {
       expect(Array.isArray(result.errors)).toBe(true);
-      result.errors.forEach(error => {
+      result.errors.forEach((error) => {
         expect(error).toHaveProperty('actionId');
         expect(error).toHaveProperty('phase');
         expect(error).toHaveProperty('message');
@@ -720,10 +782,12 @@ describe('Complete Action Discovery Workflow E2E', () => {
    * Verifies that actions from different mods work together
    */
   test('should integrate actions across different mods', async () => {
-    const playerEntity = await entityManager.getEntityInstance(testActors.player.id);
+    const playerEntity = await entityManager.getEntityInstance(
+      testActors.player.id
+    );
     const baseContext = {
       currentLocation: await entityManager.getEntityInstance('test-location-1'),
-      allEntities: Array.from(entityManager.entities)
+      allEntities: Array.from(entityManager.entities),
     };
 
     const discoveredActions = await actionDiscoveryService.getValidActions(
@@ -733,7 +797,7 @@ describe('Complete Action Discovery Workflow E2E', () => {
 
     // Group actions by mod
     const actionsByMod = {};
-    discoveredActions.actions.forEach(action => {
+    discoveredActions.actions.forEach((action) => {
       const [mod] = action.id.split(':');
       if (!actionsByMod[mod]) {
         actionsByMod[mod] = [];
@@ -744,14 +808,14 @@ describe('Complete Action Discovery Workflow E2E', () => {
     // Should have actions from core mod at minimum
     expect(actionsByMod.core).toBeDefined();
     expect(actionsByMod.core.length).toBeGreaterThan(0);
-    
+
     // Check for actions from other mods if they exist
     const availableMods = Object.keys(actionsByMod);
     expect(availableMods).toContain('core');
-    
+
     // Verify each mod's actions are properly formatted
     Object.entries(actionsByMod).forEach(([mod, actions]) => {
-      actions.forEach(action => {
+      actions.forEach((action) => {
         expect(action.id).toStartWith(`${mod}:`);
         expect(action.name).toBeDefined();
         expect(action.description).toBeDefined();
@@ -765,10 +829,12 @@ describe('Complete Action Discovery Workflow E2E', () => {
    * Verifies discovery performance is within acceptable limits
    */
   test('should complete discovery within performance limits', async () => {
-    const playerEntity = await entityManager.getEntityInstance(testActors.player.id);
+    const playerEntity = await entityManager.getEntityInstance(
+      testActors.player.id
+    );
     const baseContext = {
       currentLocation: await entityManager.getEntityInstance('test-location-1'),
-      allEntities: Array.from(entityManager.entities)
+      allEntities: Array.from(entityManager.entities),
     };
 
     // Measure discovery time
@@ -778,26 +844,26 @@ describe('Complete Action Discovery Workflow E2E', () => {
       baseContext
     );
     const endTime = Date.now();
-    
+
     const discoveryTime = endTime - startTime;
-    
+
     // Should complete within reasonable time (adjust threshold as needed)
     expect(discoveryTime).toBeLessThan(5000); // 5 seconds max
-    
+
     // Should return valid results
     expect(result.actions).toBeDefined();
     expect(Array.isArray(result.actions)).toBe(true);
     expect(result.actions.length).toBeGreaterThan(0);
-    
+
     // Test multiple discoveries for caching performance
     const cacheStartTime = Date.now();
     await actionDiscoveryService.getValidActions(playerEntity, baseContext);
     await actionDiscoveryService.getValidActions(playerEntity, baseContext);
     await actionDiscoveryService.getValidActions(playerEntity, baseContext);
     const cacheEndTime = Date.now();
-    
+
     const cacheTime = cacheEndTime - cacheStartTime;
-    
+
     // Multiple calls should be faster due to caching (allow more tolerance)
     // Cache time should be reasonable (under 100ms for 3 cached calls)
     expect(cacheTime).toBeLessThan(100);

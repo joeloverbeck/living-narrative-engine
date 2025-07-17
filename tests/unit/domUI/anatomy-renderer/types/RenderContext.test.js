@@ -347,19 +347,34 @@ describe('RenderContext', () => {
     });
 
     it('should return correct viewBox string with updated viewport', () => {
-      renderContext.updateViewport({ x: 100, y: 200, width: 1000, height: 700 });
+      renderContext.updateViewport({
+        x: 100,
+        y: 200,
+        width: 1000,
+        height: 700,
+      });
 
       expect(renderContext.getViewBoxString()).toBe('100 200 1000 700');
     });
 
     it('should handle negative viewport values', () => {
-      renderContext.updateViewport({ x: -50, y: -100, width: 500, height: 400 });
+      renderContext.updateViewport({
+        x: -50,
+        y: -100,
+        width: 500,
+        height: 400,
+      });
 
       expect(renderContext.getViewBoxString()).toBe('-50 -100 500 400');
     });
 
     it('should handle decimal viewport values', () => {
-      renderContext.updateViewport({ x: 10.5, y: 20.3, width: 100.7, height: 200.9 });
+      renderContext.updateViewport({
+        x: 10.5,
+        y: 20.3,
+        width: 100.7,
+        height: 200.9,
+      });
 
       expect(renderContext.getViewBoxString()).toBe('10.5 20.3 100.7 200.9');
     });
@@ -414,7 +429,12 @@ describe('RenderContext', () => {
       renderContext.updateTheme({ nodeColors: { torso: '#ff0000' } });
       renderContext.updateOptions({ showDebugInfo: false });
       renderContext.updatePerformance({ nodeCount: 10 });
-      renderContext.updateContainerBounds({ width: 1000, height: 700, left: 0, top: 0 });
+      renderContext.updateContainerBounds({
+        width: 1000,
+        height: 700,
+        left: 0,
+        top: 0,
+      });
 
       const clone = renderContext.clone();
 
@@ -431,14 +451,19 @@ describe('RenderContext', () => {
     it('should preserve all values in the clone', () => {
       // Modify the original context
       renderContext.updateViewport({ x: 100, y: 200, scale: 2 });
-      renderContext.updateTheme({ 
+      renderContext.updateTheme({
         nodeColors: { torso: '#ff0000' },
         edgeColor: '#00ff00',
         backgroundColor: '#0000ff',
       });
       renderContext.updateOptions({ showDebugInfo: false, nodeRadius: 40 });
       renderContext.updatePerformance({ nodeCount: 15, fps: 30 });
-      renderContext.updateContainerBounds({ width: 1000, height: 700, left: 50, top: 25 });
+      renderContext.updateContainerBounds({
+        width: 1000,
+        height: 700,
+        left: 50,
+        top: 25,
+      });
 
       const clone = renderContext.clone();
 

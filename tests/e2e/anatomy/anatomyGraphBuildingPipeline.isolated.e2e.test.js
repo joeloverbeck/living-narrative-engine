@@ -185,20 +185,20 @@ describe('Anatomy Graph Building Pipeline - ISOLATED Test', () => {
                 id: 'head',
                 max: 1,
                 nameTpl: '{{type}}',
-                allowedTypes: ['head']
+                allowedTypes: ['head'],
               },
               {
                 id: 'arm',
                 max: 2,
                 nameTpl: '{{type}}',
-                allowedTypes: ['arm']
+                allowedTypes: ['arm'],
               },
               {
                 id: 'leg',
                 max: 2,
                 nameTpl: '{{type}}',
-                allowedTypes: ['leg']
-              }
+                allowedTypes: ['leg'],
+              },
             ],
           },
           'core:name': {
@@ -234,8 +234,8 @@ describe('Anatomy Graph Building Pipeline - ISOLATED Test', () => {
                 id: 'hand',
                 max: 1,
                 nameTpl: '{{parent.name}}_{{type}}',
-                allowedTypes: ['hand']
-              }
+                allowedTypes: ['hand'],
+              },
             ],
           },
           'core:name': {
@@ -255,8 +255,8 @@ describe('Anatomy Graph Building Pipeline - ISOLATED Test', () => {
               {
                 id: 'grip',
                 max: 1,
-                allowedTypes: ['*']
-              }
+                allowedTypes: ['*'],
+              },
             ],
           },
           'core:name': {
@@ -305,56 +305,56 @@ describe('Anatomy Graph Building Pipeline - ISOLATED Test', () => {
           head: {
             socket: 'head',
             preferId: 'test:head',
-            required: true
+            required: true,
           },
           left_arm: {
             socket: 'arm',
             orientation: 'left',
             preferId: 'test:arm',
-            required: true
+            required: true,
           },
           right_arm: {
             socket: 'arm',
             orientation: 'right',
             preferId: 'test:arm',
-            required: true
+            required: true,
           },
           left_leg: {
             socket: 'leg',
             orientation: 'left',
             preferId: 'test:leg',
-            required: true
+            required: true,
           },
           right_leg: {
             socket: 'leg',
             orientation: 'right',
             preferId: 'test:leg',
-            required: true
+            required: true,
           },
           left_hand: {
             socket: 'hand',
             parent: 'left_arm',
             preferId: 'test:hand',
-            required: true
+            required: true,
           },
           right_hand: {
             socket: 'hand',
             parent: 'right_arm',
             preferId: 'test:hand',
-            required: true
+            required: true,
           },
           'main-hand': {
             socket: 'grip',
             parent: 'right_hand',
             requirements: { strength: 5 },
-            required: false
+            required: false,
           },
           'off-hand': {
             socket: 'grip',
             parent: 'left_hand',
             requirements: { dexterity: 3 },
-            required: false
-          }
+            required: false,
+          },
         },
       },
     });
@@ -387,7 +387,7 @@ describe('Anatomy Graph Building Pipeline - ISOLATED Test', () => {
     if (testBed?.cleanup) {
       await testBed.cleanup();
     }
-    
+
     // Extra cleanup to ensure isolation
     if (testBed) {
       if (testBed.registry?.clear) {
@@ -403,7 +403,7 @@ describe('Anatomy Graph Building Pipeline - ISOLATED Test', () => {
         testBed.anatomyClothingCache.clear();
       }
     }
-    
+
     jest.clearAllMocks();
   });
 
@@ -435,7 +435,8 @@ describe('Anatomy Graph Building Pipeline - ISOLATED Test', () => {
       expect(initialData.body).toBeUndefined();
 
       // Step 2: Execute the complete pipeline through generateAnatomyIfNeeded
-      const result = await anatomyGenerationService.generateAnatomyIfNeeded(ownerId);
+      const result =
+        await anatomyGenerationService.generateAnatomyIfNeeded(ownerId);
       expect(result).toBe(true);
 
       // Step 3: Verify anatomy:body component was updated with structure
@@ -459,10 +460,11 @@ describe('Anatomy Graph Building Pipeline - ISOLATED Test', () => {
       expect(rootPartData.subType).toBe('torso');
 
       // Step 5: Verify parts were created
-      const partEntities = entityManager.getEntitiesWithComponent('anatomy:part');
-      
+      const partEntities =
+        entityManager.getEntitiesWithComponent('anatomy:part');
+
       // Filter to only parts owned by this anatomy (excluding root)
-      const anatomyParts = partEntities.filter(entity => {
+      const anatomyParts = partEntities.filter((entity) => {
         const ownedBy = entity.getComponentData('core:owned_by');
         return ownedBy && ownedBy.ownerId === ownerId && entity.id !== rootId;
       });
@@ -471,40 +473,44 @@ describe('Anatomy Graph Building Pipeline - ISOLATED Test', () => {
       console.log('=== ISOLATED TEST DEBUG INFO ===');
       console.log('Total part entities:', partEntities.length);
       console.log('Anatomy parts (excluding root):', anatomyParts.length);
-      
-      const partTypes = anatomyParts.map(entity => {
+
+      const partTypes = anatomyParts.map((entity) => {
         const partData = entity.getComponentData('anatomy:part');
         const nameData = entity.getComponentData('core:name');
         return {
           id: entity.id,
           subType: partData.subType,
           name: nameData?.text,
-          ownerId: entity.getComponentData('core:owned_by')?.ownerId
+          ownerId: entity.getComponentData('core:owned_by')?.ownerId,
         };
       });
-      
+
       console.log('Part details:', JSON.stringify(partTypes, null, 2));
-      
+
       // Count by type
       const typeCounts = {};
-      partTypes.forEach(part => {
+      partTypes.forEach((part) => {
         typeCounts[part.subType] = (typeCounts[part.subType] || 0) + 1;
       });
-      
+
       console.log('Part type counts:', typeCounts);
       console.log('=== END DEBUG INFO ===');
 
       // Extract just the part types for assertions
-      const partTypesList = partTypes.map(part => part.subType);
-      
+      const partTypesList = partTypes.map((part) => part.subType);
+
       // We should have at least 7 parts (head, 2 arms, 2 hands, 2 legs)
       expect(anatomyParts.length).toBeGreaterThanOrEqual(7);
-      
+
       // Check that we have the expected parts for this specific anatomy
-      expect(partTypesList.filter(type => type === 'head').length).toBeGreaterThanOrEqual(1);
-      expect(partTypesList.filter(type => type === 'arm').length).toBe(2);
-      expect(partTypesList.filter(type => type === 'hand').length).toBeGreaterThanOrEqual(2);
-      expect(partTypesList.filter(type => type === 'leg').length).toBe(2);
+      expect(
+        partTypesList.filter((type) => type === 'head').length
+      ).toBeGreaterThanOrEqual(1);
+      expect(partTypesList.filter((type) => type === 'arm').length).toBe(2);
+      expect(
+        partTypesList.filter((type) => type === 'hand').length
+      ).toBeGreaterThanOrEqual(2);
+      expect(partTypesList.filter((type) => type === 'leg').length).toBe(2);
     });
   });
 });
