@@ -7,7 +7,7 @@
       "layer": "underwear",
       "material": "silk",
       "equipmentSlots": {
-        "primary": "underwear_upper"
+        "primary": "torso_upper"
       },
       "allowedLayers": ["underwear"]
     },

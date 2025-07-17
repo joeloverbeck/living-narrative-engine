@@ -2,7 +2,7 @@ import { jest } from '@jest/globals';
 import {
   getOrBuildComponents,
   createEvaluationContext,
-} from '../../src/scopeDsl/core/entityHelpers.js';
+} from '../../../../src/scopeDsl/core/entityHelpers.js';
 
 describe('entityHelpers', () => {
   describe('getOrBuildComponents', () => {

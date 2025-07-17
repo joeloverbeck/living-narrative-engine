@@ -1,8 +1,8 @@
 import { describe, it, expect, jest } from '@jest/globals';
-import TurnEventSubscription from '../../src/turns/turnEventSubscription.js';
-import { ImmediateScheduler } from '../../src/scheduling/index.js';
-import { TURN_ENDED_ID } from '../../src/constants/eventIds.js';
-import { createEventBus } from '../common/mockFactories/index.js';
+import TurnEventSubscription from '../../../src/turns/turnEventSubscription.js';
+import { ImmediateScheduler } from '../../../src/scheduling/index.js';
+import { TURN_ENDED_ID } from '../../../src/constants/eventIds.js';
+import { createEventBus } from '../../common/mockFactories/index.js';
 
 describe('TurnEventSubscription', () => {
   it('invokes callback via scheduler when event dispatched', async () => {

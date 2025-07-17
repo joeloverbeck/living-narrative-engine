@@ -1,5 +1,5 @@
 import { describe, it, expect } from '@jest/globals';
-import { ImmediateScheduler } from '../../src/scheduling/index.js';
+import { ImmediateScheduler } from '../../../src/scheduling/index.js';
 
 describe('ImmediateScheduler', () => {
   it('runs callbacks synchronously', () => {

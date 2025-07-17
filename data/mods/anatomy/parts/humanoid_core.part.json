@@ -109,12 +109,6 @@
     "feet": {
       "$use": "standard_feet"
     },
-    "underwear_upper": {
-      "$use": "standard_underwear_upper"
-    },
-    "underwear_lower": {
-      "$use": "standard_underwear_lower"
-    },
     "torso_lower": {
       "$use": "standard_torso_lower"
     },

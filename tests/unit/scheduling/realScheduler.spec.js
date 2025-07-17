@@ -1,5 +1,5 @@
 import { describe, it, expect, jest } from '@jest/globals';
-import { RealScheduler } from '../../src/scheduling/index.js';
+import { RealScheduler } from '../../../src/scheduling/index.js';
 
 describe('RealScheduler', () => {
   it('delegates setTimeout to globalThis.setTimeout', () => {

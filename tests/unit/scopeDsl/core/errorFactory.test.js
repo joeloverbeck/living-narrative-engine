@@ -1,5 +1,5 @@
-import errorFactory from '../../src/scopeDsl/core/errorFactory.js';
-import { ScopeDslError } from '../../src/scopeDsl/errors/scopeDslError.js';
+import errorFactory from '../../../../src/scopeDsl/core/errorFactory.js';
+import { ScopeDslError } from '../../../../src/scopeDsl/errors/scopeDslError.js';
 
 describe('errorFactory', () => {
   describe('unknown', () => {

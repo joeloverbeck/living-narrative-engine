@@ -122,8 +122,11 @@
     },
     "standard_torso_upper": {
       "anatomySockets": [
+        "left_breast",
+        "right_breast",
         "left_chest",
         "right_chest",
+        "chest_center",
         "left_shoulder",
         "right_shoulder"
       ],
@@ -145,29 +148,19 @@
       "blueprintSlots": ["left_foot", "right_foot"],
       "allowedLayers": ["base", "armor"]
     },
-    "standard_underwear_upper": {
+    "standard_torso_lower": {
       "anatomySockets": [
-        "left_breast",
-        "right_breast",
-        "left_chest",
-        "right_chest",
-        "chest_center"
-      ],
-      "allowedLayers": ["underwear"]
-    },
-    "standard_underwear_lower": {
-      "anatomySockets": [
+        "left_hip",
+        "right_hip",
+        "waist_front",
+        "waist_back",
         "pubic_hair",
         "penis",
         "left_testicle",
         "right_testicle",
         "vagina"
       ],
-      "allowedLayers": ["underwear"]
-    },
-    "standard_torso_lower": {
-      "anatomySockets": ["left_hip", "right_hip", "waist_front", "waist_back"],
-      "allowedLayers": ["accessory", "armor"]
+      "allowedLayers": ["underwear", "base", "outer", "armor"]
     },
     "standard_back_accessory": {
       "anatomySockets": ["upper_back", "lower_back"],

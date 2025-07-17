@@ -1,4 +1,4 @@
-import TurnCycle from '../../src/turns/turnCycle.js';
+import TurnCycle from '../../../src/turns/turnCycle.js';
 
 describe('TurnCycle', () => {
   let mockService;

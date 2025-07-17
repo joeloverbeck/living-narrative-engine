@@ -7,12 +7,12 @@
       "layer": "underwear",
       "material": "silk",
       "equipmentSlots": {
-        "primary": "underwear_lower"
+        "primary": "torso_lower"
       },
       "allowedLayers": ["underwear"]
     },
     "core:name": {
-      "text": "nude thong"
+      "text": "thong"
     },
     "core:description": {
       "text": "An elegant thong in a nude tone, crafted from smooth silk that feels luxurious against the skin. The minimal design provides comfort and invisibility under fitted clothing while maintaining an alluring aesthetic."
