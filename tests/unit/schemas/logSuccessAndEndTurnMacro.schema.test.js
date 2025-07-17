@@ -34,19 +34,19 @@ describe("Macro Definition: 'core:logSuccessAndEndTurn'", () => {
     // Add schemas that other schemas depend on. Using the full $id as the key is crucial.
     ajv.addSchema(
       commonSchema,
-      'http://example.com/schemas/common.schema.json'
+      'schema://living-narrative-engine/common.schema.json'
     );
     ajv.addSchema(
       operationSchema,
-      'http://example.com/schemas/operation.schema.json'
+      'schema://living-narrative-engine/operation.schema.json'
     );
     ajv.addSchema(
       jsonLogicSchema,
-      'http://example.com/schemas/json-logic.schema.json'
+      'schema://living-narrative-engine/json-logic.schema.json'
     );
     ajv.addSchema(
       conditionContainerSchema,
-      'http://example.com/schemas/condition-container.schema.json'
+      'schema://living-narrative-engine/condition-container.schema.json'
     );
 
     // The main operation schema references individual schemas for each operation type.

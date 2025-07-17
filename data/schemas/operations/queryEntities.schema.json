@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "http://example.com/schemas/operations/queryEntities.schema.json",
+  "$id": "schema://living-narrative-engine/operations/queryEntities.schema.json",
   "title": "QUERY_ENTITIES Operation",
   "allOf": [
     {

@@ -70,7 +70,7 @@ describe('Schema Reference Validation', () => {
 
       const schemaIds = validator.getLoadedSchemaIds();
       expect(schemaIds).toContain(
-        'http://example.com/schemas/anatomy.recipe.schema.json'
+        'schema://living-narrative-engine/anatomy.recipe.schema.json'
       );
     });
 
@@ -88,7 +88,7 @@ describe('Schema Reference Validation', () => {
 
       const schemaIds = validator.getLoadedSchemaIds();
       expect(schemaIds).toContain(
-        'http://example.com/schemas/anatomy.blueprint.schema.json'
+        'schema://living-narrative-engine/anatomy.blueprint.schema.json'
       );
     });
 
@@ -198,7 +198,7 @@ describe('Schema Reference Validation', () => {
     it('should detect and report unresolved schema references', async () => {
       // Create a schema with an invalid reference
       const schemaWithBadRef = {
-        $id: 'http://example.com/schemas/test-bad-ref.schema.json',
+        $id: 'schema://living-narrative-engine/test-bad-ref.schema.json',
         type: 'object',
         properties: {
           slot: {

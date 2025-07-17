@@ -19,9 +19,9 @@ const createMockConfiguration = (overrides = {}) => ({
   ),
   getContentTypeSchemaId: jest.fn((registryKey) => {
     if (registryKey === 'components') {
-      return 'http://example.com/schemas/component.schema.json';
+      return 'schema://living-narrative-engine/component.schema.json';
     }
-    return `http://example.com/schemas/${registryKey}.schema.json`;
+    return `schema://living-narrative-engine/${registryKey}.schema.json`;
   }),
   getSchemaBasePath: jest.fn().mockReturnValue('schemas'),
   getSchemaFiles: jest.fn().mockReturnValue([]),
@@ -31,7 +31,7 @@ const createMockConfiguration = (overrides = {}) => ({
   getRuleBasePath: jest.fn().mockReturnValue('rules'),
   getRuleSchemaId: jest
     .fn()
-    .mockReturnValue('http://example.com/schemas/rule.schema.json'),
+    .mockReturnValue('schema://living-narrative-engine/rule.schema.json'),
   ...overrides,
 });
 
@@ -301,7 +301,7 @@ describe('ComponentLoader (Sub-Ticket 6.9: Registry Storage Failure)', () => {
   const finalRegistryKey = `${modId}:${baseComponentId}`; // = "storeFailMod:store_fail"
 
   const componentDefSchemaId =
-    'http://example.com/schemas/component.schema.json';
+    'schema://living-narrative-engine/component.schema.json';
   // Use ID from file when creating the mock definition data
   const validDef = createMockComponentDefinition(componentIdFromFile, {
     type: 'object',

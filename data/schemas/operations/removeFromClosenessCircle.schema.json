@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "http://example.com/schemas/operations/removeFromClosenessCircle.schema.json",
+  "$id": "schema://living-narrative-engine/operations/removeFromClosenessCircle.schema.json",
   "title": "REMOVE_FROM_CLOSENESS_CIRCLE Operation",
   "allOf": [
     {

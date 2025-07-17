@@ -107,19 +107,19 @@ describe('Integration: Entity Instances Loader and World Initialization', () => 
     const schemaValidator = new AjvSchemaValidator({ logger: logger });
     await schemaValidator.addSchema(
       commonSchema,
-      'http://example.com/schemas/common.schema.json'
+      'schema://living-narrative-engine/common.schema.json'
     );
     await schemaValidator.addSchema(
       modManifestSchema,
-      'http://example.com/schemas/mod-manifest.schema.json'
+      'schema://living-narrative-engine/mod-manifest.schema.json'
     );
     await schemaValidator.addSchema(
       entityDefinitionSchema,
-      'http://example.com/schemas/entity-definition.schema.json'
+      'schema://living-narrative-engine/entity-definition.schema.json'
     );
     await schemaValidator.addSchema(
       entityInstanceSchema,
-      'http://example.com/schemas/entity-instance.schema.json'
+      'schema://living-narrative-engine/entity-instance.schema.json'
     );
     container.register(tokens.ISchemaValidator, schemaValidator);
     registry = container.resolve(tokens.IDataRegistry);
@@ -373,19 +373,19 @@ describe('Integration: EntityInstance componentOverrides are respected during wo
     // Add all necessary schemas (ensure these paths are correct relative to this file or adjust)
     await schemaValidator.addSchema(
       commonSchema,
-      'http://example.com/schemas/common.schema.json'
+      'schema://living-narrative-engine/common.schema.json'
     );
     await schemaValidator.addSchema(
       modManifestSchema,
-      'http://example.com/schemas/mod-manifest.schema.json'
+      'schema://living-narrative-engine/mod-manifest.schema.json'
     );
     await schemaValidator.addSchema(
       entityDefinitionSchema,
-      'http://example.com/schemas/entity-definition.schema.json'
+      'schema://living-narrative-engine/entity-definition.schema.json'
     );
     await schemaValidator.addSchema(
       entityInstanceSchema,
-      'http://example.com/schemas/entity-instance.schema.json'
+      'schema://living-narrative-engine/entity-instance.schema.json'
     );
     // Add any other schemas that might be needed by the loaded content
     localContainer.register(tokens.ISchemaValidator, schemaValidator);

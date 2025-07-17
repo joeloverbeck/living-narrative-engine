@@ -50,7 +50,7 @@ describe('Anatomy Entity Component Validation', () => {
       get: (key) => {
         const config = {
           'schemas.entityDefinitions':
-            'http://example.com/schemas/entity-definition.schema.json',
+            'schema://living-narrative-engine/entity-definition.schema.json',
           'registryKeys.entityDefinitions': 'entity_definitions',
         };
         return config[key];
@@ -58,7 +58,7 @@ describe('Anatomy Entity Component Validation', () => {
       getModsBasePath: () => './data/mods',
       getContentTypeSchemaId: (contentType) => {
         if (contentType === 'entityDefinitions') {
-          return 'http://example.com/schemas/entity-definition.schema.json';
+          return 'schema://living-narrative-engine/entity-definition.schema.json';
         }
         return null;
       },
@@ -85,7 +85,7 @@ describe('Anatomy Entity Component Validation', () => {
     // Register entity definition schema
     const entityDefinitionSchema = {
       $schema: 'http://json-schema.org/draft-07/schema#',
-      $id: 'http://example.com/schemas/entity-definition.schema.json',
+      $id: 'schema://living-narrative-engine/entity-definition.schema.json',
       type: 'object',
       properties: {
         $schema: { type: 'string' },
@@ -102,7 +102,7 @@ describe('Anatomy Entity Component Validation', () => {
     schemaValidator.preloadSchemas([
       {
         schema: entityDefinitionSchema,
-        id: 'http://example.com/schemas/entity-definition.schema.json',
+        id: 'schema://living-narrative-engine/entity-definition.schema.json',
       },
     ]);
 
@@ -120,7 +120,8 @@ describe('Anatomy Entity Component Validation', () => {
   describe('Human hand entity validation', () => {
     it('should validate human_hand entity with correct shape', async () => {
       const humanHandEntity = {
-        $schema: 'http://example.com/schemas/entity-definition.schema.json',
+        $schema:
+          'schema://living-narrative-engine/entity-definition.schema.json',
         id: 'anatomy:human_hand',
         description: 'A human hand',
         components: {
@@ -158,7 +159,8 @@ describe('Anatomy Entity Component Validation', () => {
 
     it('should fail validation for human_hand with invalid shape', async () => {
       const humanHandEntity = {
-        $schema: 'http://example.com/schemas/entity-definition.schema.json',
+        $schema:
+          'schema://living-narrative-engine/entity-definition.schema.json',
         id: 'anatomy:human_hand',
         description: 'A human hand',
         components: {
@@ -206,7 +208,8 @@ describe('Anatomy Entity Component Validation', () => {
   describe('Component validation error reporting', () => {
     it('should properly report validation errors with details', async () => {
       const invalidEntity = {
-        $schema: 'http://example.com/schemas/entity-definition.schema.json',
+        $schema:
+          'schema://living-narrative-engine/entity-definition.schema.json',
         id: 'test:invalid_entity',
         description: 'Test entity with invalid components',
         components: {

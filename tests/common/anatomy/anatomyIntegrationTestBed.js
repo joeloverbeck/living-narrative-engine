@@ -1394,6 +1394,46 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
   }
 
   /**
+   * Gets a slot library by ID
+   *
+   * @param {string} id - The slot library ID
+   * @returns {object} The slot library data
+   */
+  getSlotLibrary(id) {
+    return this.registry.get('anatomySlotLibraries', id);
+  }
+
+  /**
+   * Gets a blueprint part by ID
+   *
+   * @param {string} id - The blueprint part ID
+   * @returns {object} The blueprint part data
+   */
+  getPart(id) {
+    return this.registry.get('anatomyBlueprintParts', id);
+  }
+
+  /**
+   * Gets a blueprint by ID
+   *
+   * @param {string} id - The blueprint ID
+   * @returns {object} The blueprint data
+   */
+  getBlueprint(id) {
+    return this.registry.get('anatomyBlueprints', id);
+  }
+
+  /**
+   * Gets an entity definition by ID
+   *
+   * @param {string} id - The entity definition ID
+   * @returns {object} The entity definition data
+   */
+  getEntityDefinition(id) {
+    return this.registry.get('entityDefinitions', id);
+  }
+
+  /**
    * Creates a test actor with anatomy
    *
    * @returns {Promise<object>} Object with actorId and anatomyId

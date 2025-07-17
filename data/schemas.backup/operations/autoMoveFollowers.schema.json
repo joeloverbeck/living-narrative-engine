@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/schemas/operations/autoMoveFollowers.schema.json",
+  "title": "AUTO_MOVE_FOLLOWERS Operation",
+  "allOf": [
+    {
+      "$ref": "../base-operation.schema.json"
+    },
+    {
+      "properties": {
+        "type": {
+          "const": "AUTO_MOVE_FOLLOWERS"
+        },
+        "parameters": {
+          "$ref": "#/$defs/Parameters"
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "Parameters": {
+      "type": "object",
+      "description": "Moves followers of a leader to a destination location.",
+      "properties": {
+        "leader_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "destination_id": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": ["leader_id", "destination_id"],
+      "additionalProperties": false
+    }
+  }
+}

@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/rule.schema.json",
+  "$schema": "schema://living-narrative-engine/rule.schema.json",
   "rule_id": "handle_fondle_breasts",
   "comment": "Handles the 'sex:fondle_breasts' action. Dispatches descriptive text and ends the turn.",
   "event_type": "core:attempt_action",

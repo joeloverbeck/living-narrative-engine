@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "http://example.com/schemas/world.schema.json",
+  "$id": "schema://living-narrative-engine/world.schema.json",
   "title": "World Definition",
   "description": "Defines a self-contained, instantiable game world, including its identity and initial entity population.",
   "type": "object",

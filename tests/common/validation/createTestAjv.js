@@ -16,16 +16,22 @@ export default function createTestAjv() {
   const ajv = new Ajv({ allErrors: true, strict: false });
 
   // Add core schemas
-  ajv.addSchema(commonSchema, 'http://example.com/schemas/common.schema.json');
+  ajv.addSchema(
+    commonSchema,
+    'schema://living-narrative-engine/common.schema.json'
+  );
   ajv.addSchema(
     operationSchema,
-    'http://example.com/schemas/operation.schema.json'
+    'schema://living-narrative-engine/operation.schema.json'
   );
   ajv.addSchema(
     jsonLogicSchema,
-    'http://example.com/schemas/json-logic.schema.json'
+    'schema://living-narrative-engine/json-logic.schema.json'
   );
-  ajv.addSchema(ruleSchema, 'http://example.com/schemas/rule.schema.json');
+  ajv.addSchema(
+    ruleSchema,
+    'schema://living-narrative-engine/rule.schema.json'
+  );
 
   // Load operation and condition schemas using existing helpers
   // Note: loadConditionSchemas already adds condition.schema.json and condition-container.schema.json

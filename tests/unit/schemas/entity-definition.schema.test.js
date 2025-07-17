@@ -43,7 +43,7 @@ describe('Schema – Game Entity Definition contract', () => {
 
   test('should validate an entity definition that INCLUDES the $schema property', () => {
     const validEntityWithSchema = {
-      $schema: 'http://example.com/schemas/entity-definition.schema.json',
+      $schema: 'schema://living-narrative-engine/entity-definition.schema.json',
       id: 'core:adventurers_guild',
       components: {
         'core:name': { text: "Adventurers' Guild" },

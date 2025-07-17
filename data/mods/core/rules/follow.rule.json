@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/rule.schema.json",
+  "$schema": "schema://living-narrative-engine/rule.schema.json",
   "rule_id": "core_handle_follow",
   "comment": "Checks for follow cycles, then adds core:following to the actor, ensures core:leading exists on the leader, updates follower lists, emits a perceptible ‘follow’ event, and informs the UI.",
   "event_type": "core:attempt_action",

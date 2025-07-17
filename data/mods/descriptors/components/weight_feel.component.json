@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/component.schema.json",
+  "$schema": "schema://living-narrative-engine/component.schema.json",
   "id": "descriptors:weight_feel",
   "description": "Describes the perceived weight or density of an object",
   "dataSchema": {

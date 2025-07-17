@@ -41,20 +41,20 @@ describe('core_follow_auto_move.rule.json', () => {
     // register each schema with its canonical $id
     ajv.addSchema(
       commonSchema,
-      'http://example.com/schemas/common.schema.json'
+      'schema://living-narrative-engine/common.schema.json'
     );
     ajv.addSchema(
       operationSchema,
-      'http://example.com/schemas/operation.schema.json'
+      'schema://living-narrative-engine/operation.schema.json'
     );
     ajv.addSchema(
       conditionContainerSchema,
-      'http://example.com/schemas/condition-container.schema.json'
+      'schema://living-narrative-engine/condition-container.schema.json'
     );
     loadOperationSchemas(ajv);
     ajv.addSchema(
       jsonLogicSchema,
-      'http://example.com/schemas/json-logic.schema.json'
+      'schema://living-narrative-engine/json-logic.schema.json'
     );
     // now compile & validate
     const valid = ajv.validate(ruleSchema, rule);

@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/rule.schema.json",
+  "$schema": "schema://living-narrative-engine/rule.schema.json",
   "rule_id": "handle_turn_around",
   "comment": "Handles the 'intimacy:turn_around' action. Toggles the facing_away state between actors in closeness.",
   "event_type": "core:attempt_action",

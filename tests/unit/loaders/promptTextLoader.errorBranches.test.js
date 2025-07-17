@@ -8,7 +8,9 @@ import {
 const createMockConfiguration = () => ({
   getContentTypeSchemaId: jest
     .fn()
-    .mockReturnValue('http://example.com/schemas/prompt-text.schema.json'),
+    .mockReturnValue(
+      'schema://living-narrative-engine/prompt-text.schema.json'
+    ),
 });
 
 const createMockSchemaValidator = () => ({
@@ -76,7 +78,7 @@ describe('PromptTextLoader validation failure branch', () => {
       'prompt-text'
     );
     expect(schemaValidator.validate).toHaveBeenCalledWith(
-      'http://example.com/schemas/prompt-text.schema.json',
+      'schema://living-narrative-engine/prompt-text.schema.json',
       { example: true }
     );
     expect(logger.error).toHaveBeenCalledWith(

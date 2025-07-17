@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "http://example.com/schemas/operations/addComponent.schema.json",
+  "$id": "schema://living-narrative-engine/operations/addComponent.schema.json",
   "title": "ADD_COMPONENT Operation",
   "allOf": [
     {

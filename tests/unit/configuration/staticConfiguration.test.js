@@ -47,25 +47,27 @@ describe('StaticConfiguration Validation Test', () => {
 
       // Assert that it's a valid-looking URI
       // CORRECTED: Removed .withContext()
-      expect(schemaId).toMatch(/^https?:\/\//);
+      expect(schemaId).toMatch(/^schema:\/\/living-narrative-engine\//);
 
       // Focused assertion for llm-configs schema ID
       if (registryKey === 'llm-configs') {
         expect(schemaId).toBe(
-          'http://example.com/schemas/llm-configs.schema.json'
+          'schema://living-narrative-engine/llm-configs.schema.json'
         );
       }
 
       // Focused assertion for prompt-text schema ID
       if (registryKey === 'prompt-text') {
         expect(schemaId).toBe(
-          'http://example.com/schemas/prompt-text.schema.json'
+          'schema://living-narrative-engine/prompt-text.schema.json'
         );
       }
 
       // Focused assertion for world schema ID
       if (registryKey === 'world') {
-        expect(schemaId).toBe('http://example.com/schemas/world.schema.json');
+        expect(schemaId).toBe(
+          'schema://living-narrative-engine/world.schema.json'
+        );
       }
 
       // Optional: Log on success for visibility during test runs
@@ -163,7 +165,9 @@ describe('StaticConfiguration Validation Test', () => {
 
     it('should return the rule schema ID', () => {
       const ruleSchemaId = configService.getRuleSchemaId();
-      expect(ruleSchemaId).toBe('http://example.com/schemas/rule.schema.json');
+      expect(ruleSchemaId).toBe(
+        'schema://living-narrative-engine/rule.schema.json'
+      );
     });
   });
 });

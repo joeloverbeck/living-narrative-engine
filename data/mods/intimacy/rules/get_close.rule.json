@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/rule.schema.json",
+  "$schema": "schema://living-narrative-engine/rule.schema.json",
   "rule_id": "intimacy_handle_get_close",
   "comment": "Handles the 'intimacy:get_close' action. Implements algorithm §5.1 from the spec. It merges actor, target, and their existing partners into a new, single, fully-connected closeness circle, then locks movement for all members.",
   "event_type": "core:attempt_action",

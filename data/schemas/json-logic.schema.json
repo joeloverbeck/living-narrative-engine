@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "http://example.com/schemas/json-logic.schema.json",
+  "$id": "schema://living-narrative-engine/json-logic.schema.json",
   "title": "JSON Logic Rule",
   "description": "A JSON Schema representing a JSON Logic rule object. It supports composite logical operators (and, or, not) and allows for nesting of condition references.",
   "$comment": "This version has been updated to allow condition references ('condition_ref') to be nested within the logic, enabling composite conditions.",

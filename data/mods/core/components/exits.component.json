@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/component.schema.json",
+  "$schema": "schema://living-narrative-engine/component.schema.json",
   "id": "core:exits",
   "description": "Signifies the possible exits from a location entity. Each exit defines a direction, a target location, and an optional entity that might block the path. Target and blocker IDs will be resolved to instance IDs during world initialization.",
   "dataSchema": {
@@ -14,11 +14,11 @@
           "description": "A user-facing string identifying the exit (e.g., 'north', 'enter the cellar', 'towards the glowing portal'). This is typically used in player commands or displayed as an option."
         },
         "target": {
-          "$ref": "http://example.com/schemas/common.schema.json#/definitions/namespacedId",
+          "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/namespacedId",
           "description": "The unique namespaced ID of the entity (usually another location) that this exit leads to."
         },
         "blocker": {
-          "$ref": "http://example.com/schemas/common.schema.json#/definitions/nullableNamespacedId",
+          "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/nullableNamespacedId",
           "default": null,
           "description": "Optional namespaced ID of an entity (e.g., a door, rubble, a magical barrier) that may be blocking this exit. Null or absent means no specific entity is blocking this path."
         }

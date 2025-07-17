@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "http://example.com/schemas/operations/mergeClosenessCircle.schema.json",
+  "$id": "schema://living-narrative-engine/operations/mergeClosenessCircle.schema.json",
   "title": "MERGE_CLOSENESS_CIRCLE Operation",
   "allOf": [
     {

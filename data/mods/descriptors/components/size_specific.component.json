@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/component.schema.json",
+  "$schema": "schema://living-narrative-engine/component.schema.json",
   "id": "descriptors:size_specific",
   "description": "Context-specific size descriptors (e.g., cup sizes for anatomy)",
   "dataSchema": {

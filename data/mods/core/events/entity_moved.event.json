@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/component.schema.json",
+  "$schema": "schema://living-narrative-engine/component.schema.json",
   "id": "core:entity_moved",
   "description": "Dispatched when an entity has successfully moved from one location to another. This event triggers follower movement.",
   "payloadSchema": {
@@ -18,15 +18,15 @@
         "const": "core:entity_moved"
       },
       "entityId": {
-        "$ref": "http://example.com/schemas/common.schema.json#/definitions/namespacedId",
+        "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/namespacedId",
         "description": "The ID of the entity that moved."
       },
       "previousLocationId": {
-        "$ref": "http://example.com/schemas/common.schema.json#/definitions/namespacedId",
+        "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/namespacedId",
         "description": "The ID of the location the entity was in before the move."
       },
       "currentLocationId": {
-        "$ref": "http://example.com/schemas/common.schema.json#/definitions/namespacedId",
+        "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/namespacedId",
         "description": "The ID of the location the entity is now in after the move."
       },
       "movement_type": {

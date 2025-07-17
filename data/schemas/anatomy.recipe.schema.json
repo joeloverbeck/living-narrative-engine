@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "http://example.com/schemas/anatomy.recipe.schema.json",
+  "$id": "schema://living-narrative-engine/anatomy.recipe.schema.json",
   "title": "Anatomy Recipe",
   "description": "Defines what parts a creature should have (types, tags, counts, preferences, exclusions)",
   "type": "object",

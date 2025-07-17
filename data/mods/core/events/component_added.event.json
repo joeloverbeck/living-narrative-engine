@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/event.schema.json",
+  "$schema": "schema://living-narrative-engine/event.schema.json",
   "id": "core:component_added",
   "description": "Fired when a component is successfully added to or updated on an entity instance. This includes both adding new components and changing the data of existing ones.",
   "payloadSchema": {
@@ -12,7 +12,7 @@
         "description": "The full entity instance that received the component."
       },
       "componentTypeId": {
-        "$ref": "http://example.com/schemas/common.schema.json#/definitions/namespacedId",
+        "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/namespacedId",
         "description": "The ID of the component that was added or updated."
       },
       "componentData": {

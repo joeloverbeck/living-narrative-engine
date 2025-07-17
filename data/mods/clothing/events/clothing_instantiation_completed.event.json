@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/event.schema.json",
+  "$schema": "schema://living-narrative-engine/event.schema.json",
   "id": "clothing:instantiation_completed",
   "description": "Fired when clothing instantiation process completes for an actor",
   "payloadSchema": {

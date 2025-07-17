@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/component.schema.json",
+  "$schema": "schema://living-narrative-engine/component.schema.json",
   "id": "core:entity_removed",
   "description": "Fired just before an entity instance is removed from the EntityManager. Listeners can use this to perform cleanup related to the entity before it is gone.",
   "payloadSchema": {
@@ -8,7 +8,7 @@
     "required": ["instanceId"],
     "properties": {
       "instanceId": {
-        "$ref": "http://example.com/schemas/common.schema.json#/definitions/namespacedId",
+        "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/namespacedId",
         "description": "The unique instance ID of the entity being removed."
       }
     },

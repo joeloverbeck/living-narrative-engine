@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/component.schema.json",
+  "$schema": "schema://living-narrative-engine/component.schema.json",
   "id": "anatomy:body",
   "description": "Links an entity to an anatomy recipe and stores the generated body structure",
   "dataSchema": {

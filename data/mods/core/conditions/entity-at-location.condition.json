@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/condition.schema.json",
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
   "id": "core:entity-at-location",
   "description": "True when the entity's current locationId matches the location under evaluation.",
   "logic": {

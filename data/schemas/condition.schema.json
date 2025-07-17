@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "http://example.com/schemas/condition.schema.json",
+  "$id": "schema://living-narrative-engine/condition.schema.json",
   "title": "Condition Definition",
   "description": "Defines a reusable, named JSON-Logic condition that can be referenced by actions, rules, and operations.",
   "type": "object",

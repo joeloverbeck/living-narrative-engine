@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/rule.schema.json",
+  "$schema": "schema://living-narrative-engine/rule.schema.json",
   "rule_id": "entity_speech",
   "comment": "Handles entity speech by querying speaker's info, fetching timestamp, dispatching a 'core:perceptible_event' for logging, and dispatching a UI speech event. Now validates component existence first.",
   "event_type": "core:entity_spoke",

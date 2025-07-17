@@ -48,6 +48,7 @@ import humanFemaleTorso from '../../../data/mods/anatomy/entities/definitions/hu
 import humanHand from '../../../data/mods/anatomy/entities/definitions/human_hand.entity.json';
 import humanFoot from '../../../data/mods/anatomy/entities/definitions/human_foot.entity.json';
 import humanAsshole from '../../../data/mods/anatomy/entities/definitions/human_asshole.entity.json';
+import humanAssCheek from '../../../data/mods/anatomy/entities/definitions/human_ass_cheek.entity.json';
 import blueprintSlot from '../../../data/mods/anatomy/entities/definitions/blueprint_slot.entity.json';
 import humanFemaleBlueprint from '../../../data/mods/anatomy/blueprints/human_female.blueprint.json';
 import gorgeousMilfRecipe from '../../../data/mods/anatomy/recipes/gorgeous_milf.recipe.json';
@@ -60,7 +61,7 @@ import descriptionComponent from '../../../data/mods/core/components/description
 
 // Define human female entity inline (example entity for testing)
 const humanFemale = {
-  $schema: 'http://example.com/schemas/entity-definition.schema.json',
+  $schema: 'schema://living-narrative-engine/entity-definition.schema.json',
   id: 'anatomy:human_female',
   components: {
     'core:name': {
@@ -74,7 +75,7 @@ const humanFemale = {
 
 // Define Jacqueline Rouxel entity inline (test-only entity)
 const jacquelineRouxel = {
-  $schema: 'http://example.com/schemas/entity-definition.schema.json',
+  $schema: 'schema://living-narrative-engine/entity-definition.schema.json',
   id: 'anatomy:jacqueline_rouxel',
   description: 'Jacqueline Rouxel - A gorgeous woman',
   components: {
@@ -160,6 +161,7 @@ describe('Gorgeous MILF Anatomy Generation Integration Test', () => {
       'anatomy:human_hand': humanHand,
       'anatomy:human_foot': humanFoot,
       'anatomy:human_asshole': humanAsshole,
+      'anatomy:human_ass_cheek': humanAssCheek,
       'anatomy:jacqueline_rouxel': jacquelineRouxel,
     });
 

@@ -81,7 +81,7 @@ describe('Anatomy Loader Path Resolution', () => {
       };
 
       const mockRecipeData = {
-        $schema: 'http://example.com/schemas/anatomy.recipe.schema.json',
+        $schema: 'schema://living-narrative-engine/anatomy.recipe.schema.json',
         recipeId: 'anatomy:human_male',
         blueprintId: 'anatomy:human_male',
         slots: {},
@@ -126,7 +126,7 @@ describe('Anatomy Loader Path Resolution', () => {
       };
 
       const mockRecipeData = {
-        $schema: 'http://example.com/schemas/anatomy.recipe.schema.json',
+        $schema: 'schema://living-narrative-engine/anatomy.recipe.schema.json',
         recipeId: 'anatomy:gorgeous_milf',
         blueprintId: 'anatomy:gorgeous_milf',
         slots: {},
@@ -211,7 +211,8 @@ describe('Anatomy Loader Path Resolution', () => {
       };
 
       const mockBlueprintData = {
-        $schema: 'http://example.com/schemas/anatomy.blueprint.schema.json',
+        $schema:
+          'schema://living-narrative-engine/anatomy.blueprint.schema.json',
         blueprintId: 'anatomy:human_male',
         slots: {},
       };
@@ -255,7 +256,8 @@ describe('Anatomy Loader Path Resolution', () => {
       };
 
       const mockBlueprintData = {
-        $schema: 'http://example.com/schemas/anatomy.blueprint.schema.json',
+        $schema:
+          'schema://living-narrative-engine/anatomy.blueprint.schema.json',
         blueprintId: 'anatomy:human_female',
         slots: {},
       };
@@ -304,7 +306,7 @@ describe('Anatomy Loader Path Resolution', () => {
       };
 
       const mockRecipeData = {
-        $schema: 'http://example.com/schemas/anatomy.recipe.schema.json',
+        $schema: 'schema://living-narrative-engine/anatomy.recipe.schema.json',
         recipeId: 'custom-mod:test',
         blueprintId: 'custom-mod:test',
         slots: {},

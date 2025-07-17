@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/rule.schema.json",
+  "$schema": "schema://living-narrative-engine/rule.schema.json",
   "rule_id": "turn_started",
   "comment": "Handles the start of an entity's turn by notifying the UI with the entity's name.",
   "event_type": "core:turn_started",

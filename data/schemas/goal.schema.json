@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "http://example.com/schemas/goal.schema.json",
+  "$id": "schema://living-narrative-engine/goal.schema.json",
   "title": "GOAP Goal Definition",
   "description": "Defines a single, reusable world-state target for a GOAP agent. It specifies the goal's priority, the conditions under which it is relevant, and the desired state of the world to be achieved.",
   "$comment": "Goals are evaluated highest 'priority' first. The 'relevance' condition must pass against the live world state for the goal to be considered by the planner.",

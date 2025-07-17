@@ -1,0 +1,192 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/schemas/llm-configs.schema.json",
+  "title": "LLM Configurations",
+  "description": "Defines the structure for the llm-configs.json file, which holds various LLM configurations, including API details, prompt engineering settings, and JSON output strategies.",
+  "type": "object",
+  "properties": {
+    "defaultConfigId": {
+      "type": "string",
+      "description": "The ID of the default LLM configuration to use. This ID must correspond to one of the keys in the 'configs' object."
+    },
+    "configs": {
+      "type": "object",
+      "description": "A map of LLM configurations, where each key is a unique configId.",
+      "additionalProperties": {
+        "$ref": "#/definitions/llmConfiguration"
+      }
+    }
+  },
+  "required": ["defaultConfigId", "configs"],
+  "definitions": {
+    "llmConfiguration": {
+      "type": "object",
+      "description": "A self-contained LLM configuration, including properties for prompt engineering and API interaction.",
+      "properties": {
+        "configId": {
+          "type": "string",
+          "description": "Unique identifier for this LLM configuration. It is recommended this matches the key used in the parent 'configs' object for consistency."
+        },
+        "displayName": {
+          "type": "string",
+          "description": "A user-friendly name for this configuration, suitable for display in UIs."
+        },
+        "modelIdentifier": {
+          "type": "string",
+          "description": "The specific model ID (e.g., from a provider like OpenRouter) or a model family identifier that this configuration targets."
+        },
+        "endpointUrl": {
+          "type": "string",
+          "format": "uri",
+          "description": "The base API endpoint URL for interacting with the LLM."
+        },
+        "apiType": {
+          "type": "string",
+          "description": "Identifier for the API type or provider (e.g., 'openai', 'openrouter', 'anthropic', 'custom_ollama'). This helps in determining the correct strategy or request format.",
+          "examples": [
+            "openai",
+            "openrouter",
+            "anthropic_claude",
+            "ollama_local"
+          ]
+        },
+        "apiKeyEnvVar": {
+          "type": "string",
+          "description": "(Optional) The name of the environment variable from which to retrieve the API key, primarily for server-side usage."
+        },
+        "apiKeyFileName": {
+          "type": "string",
+          "description": "(Optional) The name of the file from which to retrieve the API key (e.g., 'my_api_key.txt'), primarily for server-side local development."
+        },
+        "jsonOutputStrategy": {
+          "type": "object",
+          "description": "Defines the strategy for ensuring JSON output from the LLM.",
+          "properties": {
+            "method": {
+              "type": "string",
+              "description": "The method to use for enforcing JSON output.",
+              "examples": [
+                "tool_calling",
+                "openrouter_tool_calling",
+                "gbnf_grammar",
+                "native_json_mode",
+                "openrouter_json_schema",
+                "manual_prompting"
+              ]
+            },
+            "toolName": {
+              "type": "string",
+              "description": "Required if 'method' is 'tool_calling' or 'openrouter_tool_calling'. The name of the tool the LLM should call."
+            },
+            "grammar": {
+              "type": "string",
+              "description": "Required if 'method' is 'gbnf_grammar'. The GBNF grammar string or a path to a grammar file."
+            },
+            "jsonSchema": {
+              "type": "object",
+              "description": "Required if 'method' is 'openrouter_json_schema' or similar schema-based methods. The JSON schema definition for the expected output."
+            }
+          },
+          "required": ["method"],
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "method": {
+                    "enum": ["tool_calling", "openrouter_tool_calling"]
+                  }
+                }
+              },
+              "then": {
+                "required": ["toolName"]
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "method": {
+                    "const": "gbnf_grammar"
+                  }
+                }
+              },
+              "then": {
+                "required": ["grammar"]
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "method": {
+                    "const": "openrouter_json_schema"
+                  }
+                }
+              },
+              "then": {
+                "required": ["jsonSchema"]
+              }
+            }
+          ],
+          "additionalProperties": false
+        },
+        "defaultParameters": {
+          "type": "object",
+          "description": "(Optional) Default parameters to send with requests to the LLM (e.g., temperature, max_tokens). These can be overridden.",
+          "additionalProperties": true
+        },
+        "providerSpecificHeaders": {
+          "type": "object",
+          "description": "(Optional) HTTP headers specific to the LLM provider to be included in requests.",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "promptElements": {
+          "type": "array",
+          "description": "Defines named prompt parts and their wrappers.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "key": {
+                "type": "string",
+                "description": "Unique key for the prompt element (e.g., 'system_prompt')."
+              },
+              "prefix": {
+                "type": "string",
+                "description": "String to prepend to this part's content."
+              },
+              "suffix": {
+                "type": "string",
+                "description": "String to append to this part's content."
+              }
+            },
+            "required": ["key", "prefix", "suffix"],
+            "additionalProperties": false
+          }
+        },
+        "promptAssemblyOrder": {
+          "type": "array",
+          "description": "Ordered list of 'promptElements' keys, defining the sequence of prompt assembly.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "contextTokenLimit": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "(Optional) The maximum number of tokens the model can handle in its context."
+        }
+      },
+      "required": [
+        "configId",
+        "displayName",
+        "modelIdentifier",
+        "endpointUrl",
+        "apiType",
+        "jsonOutputStrategy",
+        "promptElements",
+        "promptAssemblyOrder"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

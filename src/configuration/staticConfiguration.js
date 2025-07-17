@@ -133,30 +133,33 @@ class StaticConfiguration {
    */
   getContentTypeSchemaId(registryKey) {
     const map = {
-      components: 'http://example.com/schemas/component.schema.json',
-      actions: 'http://example.com/schemas/action.schema.json',
-      events: 'http://example.com/schemas/event.schema.json',
-      conditions: 'http://example.com/schemas/condition.schema.json',
-      macros: 'http://example.com/schemas/macro.schema.json',
-      rules: 'http://example.com/schemas/rule.schema.json',
-      goals: 'http://example.com/schemas/goal.schema.json',
+      components: 'schema://living-narrative-engine/component.schema.json',
+      actions: 'schema://living-narrative-engine/action.schema.json',
+      events: 'schema://living-narrative-engine/event.schema.json',
+      conditions: 'schema://living-narrative-engine/condition.schema.json',
+      macros: 'schema://living-narrative-engine/macro.schema.json',
+      rules: 'schema://living-narrative-engine/rule.schema.json',
+      goals: 'schema://living-narrative-engine/goal.schema.json',
       entityDefinitions:
-        'http://example.com/schemas/entity-definition.schema.json',
-      entityInstances: 'http://example.com/schemas/entity-instance.schema.json',
-      'llm-configs': 'http://example.com/schemas/llm-configs.schema.json',
-      'mod-manifest': 'http://example.com/schemas/mod-manifest.schema.json',
-      game: 'http://example.com/schemas/game.schema.json',
-      world: 'http://example.com/schemas/world.schema.json',
-      'prompt-text': 'http://example.com/schemas/prompt-text.schema.json',
-      anatomyRecipes: 'http://example.com/schemas/anatomy.recipe.schema.json',
+        'schema://living-narrative-engine/entity-definition.schema.json',
+      entityInstances:
+        'schema://living-narrative-engine/entity-instance.schema.json',
+      'llm-configs': 'schema://living-narrative-engine/llm-configs.schema.json',
+      'mod-manifest':
+        'schema://living-narrative-engine/mod-manifest.schema.json',
+      game: 'schema://living-narrative-engine/game.schema.json',
+      world: 'schema://living-narrative-engine/world.schema.json',
+      'prompt-text': 'schema://living-narrative-engine/prompt-text.schema.json',
+      anatomyRecipes:
+        'schema://living-narrative-engine/anatomy.recipe.schema.json',
       anatomyBlueprints:
-        'http://example.com/schemas/anatomy.blueprint.schema.json',
+        'schema://living-narrative-engine/anatomy.blueprint.schema.json',
       anatomyBlueprintParts:
-        'http://example.com/schemas/anatomy.blueprint-part.schema.json',
+        'schema://living-narrative-engine/anatomy.blueprint-part.schema.json',
       anatomySlotLibraries:
-        'http://example.com/schemas/anatomy.slot-library.schema.json',
+        'schema://living-narrative-engine/anatomy.slot-library.schema.json',
       anatomyFormatting:
-        'http://example.com/schemas/anatomy-formatting.schema.json',
+        'schema://living-narrative-engine/anatomy-formatting.schema.json',
       // Scopes use a custom DSL format (.scope files) and are validated by the scope engine,
       // not by JSON schema validation. Explicitly return null to indicate no schema validation.
       scopes: null,
@@ -168,7 +171,7 @@ class StaticConfiguration {
 
   /** @returns {string} */
   getRuleSchemaId() {
-    return 'http://example.com/schemas/rule.schema.json';
+    return 'schema://living-narrative-engine/rule.schema.json';
   }
 }
 

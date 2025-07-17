@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/component.schema.json",
+  "$schema": "schema://living-narrative-engine/component.schema.json",
   "id": "core:position",
   "description": "Represents the entity's location within the game world.",
   "dataSchema": {
@@ -7,7 +7,7 @@
     "type": "object",
     "properties": {
       "locationId": {
-        "$ref": "http://example.com/schemas/common.schema.json#/definitions/namespacedId",
+        "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/namespacedId",
         "description": "The ID of the location entity where the entity resides. This will be resolved to an instance ID during world initialization."
       }
     },

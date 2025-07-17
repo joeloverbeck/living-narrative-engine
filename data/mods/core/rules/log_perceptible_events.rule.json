@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/rule.schema.json",
+  "$schema": "schema://living-narrative-engine/rule.schema.json",
   "rule_id": "log_perceptible_events",
   "comment": "Logs perceptible events directly via ADD_PERCEPTION_LOG_ENTRY.",
   "event_type": "core:perceptible_event",

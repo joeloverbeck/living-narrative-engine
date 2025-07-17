@@ -12,7 +12,7 @@ const createMockConfiguration = (overrides = {}) => ({
   getModsBasePath: jest.fn().mockReturnValue('./data/mods'),
   getContentTypeSchemaId: jest
     .fn()
-    .mockReturnValue('http://example.com/schemas/default.schema.json'),
+    .mockReturnValue('schema://living-narrative-engine/default.schema.json'),
   getSchemaBasePath: jest.fn().mockReturnValue('schemas'),
   getSchemaFiles: jest.fn().mockReturnValue([]),
   getWorldBasePath: jest.fn().mockReturnValue('worlds'),

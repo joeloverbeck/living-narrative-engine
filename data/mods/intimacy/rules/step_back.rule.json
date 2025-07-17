@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/rule.schema.json",
+  "$schema": "schema://living-narrative-engine/rule.schema.json",
   "rule_id": "intimacy_handle_step_back",
   "comment": "Handles the 'intimacy:step_back' action. Implements algorithm §5.2 from the spec. It removes the actor from their circle, cleans up their components, and unlocks any partners who are now alone.",
   "event_type": "core:attempt_action",

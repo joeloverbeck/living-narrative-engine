@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "http://example.com/schemas/operations/rebuildLeaderListCache.schema.json",
+  "$id": "schema://living-narrative-engine/operations/rebuildLeaderListCache.schema.json",
   "title": "REBUILD_LEADER_LIST_CACHE Operation",
   "allOf": [
     {

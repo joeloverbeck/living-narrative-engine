@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "http://example.com/schemas/operations/setVariable.schema.json",
+  "$id": "schema://living-narrative-engine/operations/setVariable.schema.json",
   "title": "SET_VARIABLE Operation",
   "allOf": [
     {

@@ -10,7 +10,7 @@ describe('EntityDefinitionLoader Schema Retrieval', () => {
   let mockLogger;
 
   const ENTITY_DEFINITION_SCHEMA_ID =
-    'http://example.com/schemas/entity-definition.schema.json';
+    'schema://living-narrative-engine/entity-definition.schema.json';
   const EXPECTED_CONTENT_TYPE_KEY = 'entityDefinitions';
 
   beforeEach(() => {
@@ -90,7 +90,7 @@ describe('EntityDefinitionLoader Schema Retrieval', () => {
       if (contentType === EXPECTED_CONTENT_TYPE_KEY) {
         return null; // Simulate schema ID not found
       }
-      return 'http://example.com/schemas/some.other.schema.json';
+      return 'schema://living-narrative-engine/some.other.schema.json';
     });
 
     const loader = new EntityDefinitionLoader(
@@ -118,7 +118,7 @@ describe('EntityDefinitionLoader Schema Retrieval', () => {
       if (contentType === EXPECTED_CONTENT_TYPE_KEY) {
         return undefined; // Simulate schema ID not found
       }
-      return 'http://example.com/schemas/some.other.schema.json';
+      return 'schema://living-narrative-engine/some.other.schema.json';
     });
 
     const loader = new EntityDefinitionLoader(

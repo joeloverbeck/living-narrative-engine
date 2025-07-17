@@ -19,9 +19,9 @@ import AjvSchemaValidator from '../../../src/validation/ajvSchemaValidator.js';
 const createMockConfiguration = (overrides = {}) => ({
   getContentTypeSchemaId: jest.fn((t) => {
     if (t === 'mod-manifest') {
-      return 'http://example.com/schemas/mod-manifest.schema.json';
+      return 'schema://living-narrative-engine/mod-manifest.schema.json';
     }
-    return `http://example.com/schemas/${t}.schema.json`;
+    return `schema://living-narrative-engine/${t}.schema.json`;
   }),
   ...overrides,
 });
@@ -144,7 +144,8 @@ describe('ModManifestLoader — branch edges', () => {
 /* -------------------------------------------------------------------------- */
 
 describe('ModManifestLoader — integration (AjvSchemaValidator)', () => {
-  const MOD_SCHEMA_ID = 'http://example.com/schemas/mod-manifest.schema.json';
+  const MOD_SCHEMA_ID =
+    'schema://living-narrative-engine/mod-manifest.schema.json';
 
   // lean schema — enough for loader purposes
   const manifestSchema = {

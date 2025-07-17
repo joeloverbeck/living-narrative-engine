@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/event.schema.json",
+  "$schema": "schema://living-narrative-engine/event.schema.json",
   "id": "anatomy:visualizer_state_changed",
   "description": "Fired when the anatomy visualizer state changes, including transitions between loading, loaded, rendering, and ready states.",
   "payloadSchema": {

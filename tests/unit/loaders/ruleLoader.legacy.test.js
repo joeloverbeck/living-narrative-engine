@@ -36,12 +36,12 @@ const createMockConfiguration = (overrides = {}) => ({
   ),
   getContentTypeSchemaId: jest.fn((registryKey) => {
     if (registryKey === 'rules') {
-      return 'http://example.com/schemas/rule.schema.json';
+      return 'schema://living-narrative-engine/rule.schema.json';
     }
     if (registryKey === 'components') {
-      return 'http://example.com/schemas/component.schema.json';
+      return 'schema://living-narrative-engine/component.schema.json';
     }
-    return `http://example.com/schemas/${registryKey}.schema.json`; // Generic fallback
+    return `schema://living-narrative-engine/${registryKey}.schema.json`; // Generic fallback
   }),
   getSchemaBasePath: jest.fn().mockReturnValue('schemas'),
   getSchemaFiles: jest.fn().mockReturnValue([]),
@@ -53,7 +53,7 @@ const createMockConfiguration = (overrides = {}) => ({
   getRuleBasePath: jest.fn().mockReturnValue('rules'), // Relevant for RuleLoader
   getRuleSchemaId: jest
     .fn()
-    .mockReturnValue('http://example.com/schemas/rule.schema.json'),
+    .mockReturnValue('schema://living-narrative-engine/rule.schema.json'),
   ...overrides,
 });
 
@@ -356,7 +356,8 @@ describe('RuleLoader (Sub-Ticket 4.2: Verify Absence of Legacy Discovery)', () =
   const RULE_CONTENT_DIR = 'rules';
   const RULE_TYPE_NAME = 'rules';
 
-  const defaultRuleSchemaId = 'http://example.com/schemas/rule.schema.json';
+  const defaultRuleSchemaId =
+    'schema://living-narrative-engine/rule.schema.json';
 
   // Example rule content for tests that need valid data
   const validRuleData = {

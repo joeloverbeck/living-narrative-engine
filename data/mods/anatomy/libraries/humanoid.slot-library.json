@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/anatomy.slot-library.schema.json",
+  "$schema": "schema://living-narrative-engine/anatomy.slot-library.schema.json",
   "id": "anatomy:humanoid_slots",
   "description": "Standard humanoid anatomy slot and clothing definitions",
   "slotDefinitions": {
@@ -100,6 +100,13 @@
       "socket": "asshole",
       "requirements": {
         "partType": "asshole",
+        "components": ["anatomy:part"]
+      }
+    },
+    "standard_ass_cheek": {
+      "socket": "ass",
+      "requirements": {
+        "partType": "ass_cheek",
         "components": ["anatomy:part"]
       }
     }

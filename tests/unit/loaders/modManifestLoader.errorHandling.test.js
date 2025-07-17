@@ -11,7 +11,7 @@ describe('ModManifestLoader Error Handling', () => {
   let modManifestLoader;
 
   const MOD_MANIFEST_SCHEMA_ID =
-    'http://example.com/schemas/mod-manifest.schema.json';
+    'schema://living-narrative-engine/mod-manifest.schema.json';
 
   beforeEach(() => {
     mockConfiguration = {

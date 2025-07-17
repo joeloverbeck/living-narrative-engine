@@ -27,9 +27,9 @@ const createMockConfiguration = (overrides = {}) => ({
       if (result !== undefined) return result;
     }
     if (registryKey === 'events') {
-      return 'http://example.com/schemas/event.schema.json';
+      return 'schema://living-narrative-engine/event.schema.json';
     }
-    return `http://example.com/schemas/${registryKey}.schema.json`;
+    return `schema://living-narrative-engine/${registryKey}.schema.json`;
   }),
   getSchemaBasePath: jest.fn().mockReturnValue('schemas'),
   getSchemaFiles: jest.fn().mockReturnValue([]),

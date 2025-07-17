@@ -77,7 +77,7 @@ describe('Anatomy Entity Consistency', () => {
     it('all entities should reference the correct schema', () => {
       anatomyEntities.forEach(({ data }) => {
         expect(data.$schema).toBe(
-          'http://example.com/schemas/entity-definition.schema.json'
+          'schema://living-narrative-engine/entity-definition.schema.json'
         );
       });
     });

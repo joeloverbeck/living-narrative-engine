@@ -39,7 +39,7 @@ const createMockLogger = (overrides = {}) => ({
 
 // --- Constants ---
 const ENTITY_DEFINITION_SCHEMA_ID =
-  'http://example.com/schemas/entity-definition.schema.json';
+  'schema://living-narrative-engine/entity-definition.schema.json';
 const TEST_MOD_ID = 'test-entity-mod';
 const GENERIC_CONTENT_KEY = 'entityDefinitions';
 const GENERIC_CONTENT_DIR = 'entityDefinitions';
@@ -76,7 +76,7 @@ beforeEach(() => {
 
   mockConfig.getContentTypeSchemaId.mockImplementation((registryKey) => {
     if (registryKey === 'entityDefinitions') return ENTITY_DEFINITION_SCHEMA_ID;
-    return `http://example.com/schemas/${registryKey}.schema.json`;
+    return `schema://living-narrative-engine/${registryKey}.schema.json`;
   });
 
   entityLoader._config = mockConfig;

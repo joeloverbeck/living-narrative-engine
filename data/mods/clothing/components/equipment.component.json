@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/component.schema.json",
+  "$schema": "schema://living-narrative-engine/component.schema.json",
   "id": "clothing:equipment",
   "description": "Tracks equipped clothing items organized by slot and layer",
   "dataSchema": {

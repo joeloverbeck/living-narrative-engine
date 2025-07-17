@@ -5,7 +5,14 @@
 
 /* eslint-disable no-unused-vars */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 
 // Mock dependencies before importing
 jest.mock('../../../../src/utils/index.js', () => ({
@@ -26,7 +33,7 @@ jest.mock('../../../../src/domUI/visualizer/ErrorClassifier.js', () => ({
         domain: 'test',
         retryable: undefined, // Most errors don't have explicit retryability
       };
-      
+
       // Only set explicit retryability for specific cases
       if (error.message.includes('non-retryable')) {
         // Ensure this doesn't match any default retry patterns
@@ -34,13 +41,16 @@ jest.mock('../../../../src/domUI/visualizer/ErrorClassifier.js', () => ({
       } else if (error.message.includes('explicitly-retryable')) {
         // Only explicitly retryable if it says so
         result.retryable = true;
-      } else if (error.message.match(/network|timeout|temporary|unavailable/i) || error.name === 'TimeoutError') {
+      } else if (
+        error.message.match(/network|timeout|temporary|unavailable/i) ||
+        error.name === 'TimeoutError'
+      ) {
         // These should be retryable to ensure tests work
         result.retryable = true;
       }
       // For all other cases, leave it undefined
       // so RetryStrategy falls back to its default pattern matching
-      
+
       return result;
     }),
   },
@@ -73,7 +83,7 @@ describe('RetryStrategy', () => {
   describe('Constructor and Initialization', () => {
     it('should initialize with default configuration', () => {
       retryStrategy = new RetryStrategy({ logger: mockLogger });
-      
+
       expect(retryStrategy).toBeDefined();
       expect(retryStrategy.isDisposed()).toBe(false);
     });
@@ -91,7 +101,7 @@ describe('RetryStrategy', () => {
       };
 
       retryStrategy = new RetryStrategy({ logger: mockLogger }, customConfig);
-      
+
       expect(retryStrategy).toBeDefined();
       expect(retryStrategy.isDisposed()).toBe(false);
     });
@@ -123,9 +133,9 @@ describe('RetryStrategy', () => {
 
     it('should execute successful operation on first attempt', async () => {
       const operation = jest.fn().mockResolvedValue('success');
-      
+
       const result = await retryStrategy.execute('test_op', operation);
-      
+
       expect(result).toBe('success');
       expect(operation).toHaveBeenCalledTimes(1);
       expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -147,21 +157,23 @@ describe('RetryStrategy', () => {
         maxAttempts: 3,
         baseDelayMs: 100,
       });
-      
+
       expect(result).toBe('success');
       expect(operation).toHaveBeenCalledTimes(3);
     });
 
     it('should fail after max attempts', async () => {
-      const operation = jest.fn().mockRejectedValue(new Error('network timeout'));
-      
+      const operation = jest
+        .fn()
+        .mockRejectedValue(new Error('network timeout'));
+
       await expect(
         retryStrategy.execute('test_op', operation, {
           maxAttempts: 3,
           baseDelayMs: 10,
         })
       ).rejects.toThrow('network timeout');
-      
+
       expect(operation).toHaveBeenCalledTimes(3);
       expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining('failed after 3 attempts')
@@ -169,12 +181,14 @@ describe('RetryStrategy', () => {
     });
 
     it('should not retry non-retryable errors', async () => {
-      const operation = jest.fn().mockRejectedValue(new Error('non-retryable error'));
-      
+      const operation = jest
+        .fn()
+        .mockRejectedValue(new Error('non-retryable error'));
+
       await expect(
         retryStrategy.execute('test_op', operation, { maxAttempts: 3 })
       ).rejects.toThrow('non-retryable error');
-      
+
       expect(operation).toHaveBeenCalledTimes(1);
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining('non-retryable error'),
@@ -218,13 +232,14 @@ describe('RetryStrategy', () => {
         strategy: RetryStrategy.STRATEGY_TYPES.IMMEDIATE,
         maxAttempts: 3,
       });
-      
+
       expect(result).toBe('success');
       expect(operation).toHaveBeenCalledTimes(3);
     });
 
     it('should use linear strategy', async () => {
-      const operation = jest.fn()
+      const operation = jest
+        .fn()
         .mockRejectedValueOnce(new Error('network unavailable'))
         .mockRejectedValueOnce(new Error('network unavailable'))
         .mockResolvedValue('success');
@@ -241,7 +256,8 @@ describe('RetryStrategy', () => {
     });
 
     it('should use exponential strategy', async () => {
-      const operation = jest.fn()
+      const operation = jest
+        .fn()
         .mockRejectedValueOnce(new Error('timeout occurred'))
         .mockRejectedValueOnce(new Error('timeout occurred'))
         .mockResolvedValue('success');
@@ -258,7 +274,8 @@ describe('RetryStrategy', () => {
     });
 
     it('should use fibonacci strategy', async () => {
-      const operation = jest.fn()
+      const operation = jest
+        .fn()
         .mockRejectedValueOnce(new Error('network unavailable'))
         .mockRejectedValueOnce(new Error('network unavailable'))
         .mockResolvedValue('success');
@@ -276,7 +293,8 @@ describe('RetryStrategy', () => {
 
     it('should use custom backoff strategy', async () => {
       const customBackoff = jest.fn((attempt) => attempt * 50);
-      const operation = jest.fn()
+      const operation = jest
+        .fn()
         .mockRejectedValueOnce(new Error('timeout occurred'))
         .mockRejectedValueOnce(new Error('timeout occurred'))
         .mockResolvedValue('success');
@@ -295,7 +313,8 @@ describe('RetryStrategy', () => {
     });
 
     it('should fall back to base delay when custom strategy has no function', async () => {
-      const operation = jest.fn()
+      const operation = jest
+        .fn()
         .mockRejectedValueOnce(new Error('temporary failure'))
         .mockResolvedValue('success');
 
@@ -310,7 +329,8 @@ describe('RetryStrategy', () => {
     });
 
     it('should handle unknown strategy type', async () => {
-      const operation = jest.fn()
+      const operation = jest
+        .fn()
         .mockRejectedValueOnce(new Error('network error'))
         .mockResolvedValue('success');
 
@@ -343,41 +363,42 @@ describe('RetryStrategy', () => {
 
     it('should execute with simple parameters', async () => {
       const operation = jest.fn().mockResolvedValue('success');
-      
+
       const result = await retryStrategy.executeSimple(operation, 2, 100);
-      
+
       expect(result).toBe('success');
       expect(operation).toHaveBeenCalledTimes(1);
     });
 
     it('should retry with linear strategy', async () => {
-      const operation = jest.fn()
+      const operation = jest
+        .fn()
         .mockRejectedValueOnce(new Error('network error'))
         .mockResolvedValue('success');
 
       const result = await retryStrategy.executeSimple(operation, 2, 50);
-      
+
       expect(result).toBe('success');
       expect(operation).toHaveBeenCalledTimes(2);
     });
 
     it('should use default parameters when not provided', async () => {
       const operation = jest.fn().mockResolvedValue('success');
-      
+
       const result = await retryStrategy.executeSimple(operation);
-      
+
       expect(result).toBe('success');
     });
 
     it('should generate unique operation IDs', async () => {
       const operation1 = jest.fn().mockResolvedValue('success1');
       const operation2 = jest.fn().mockResolvedValue('success2');
-      
+
       const [result1, result2] = await Promise.all([
         retryStrategy.executeSimple(operation1),
         retryStrategy.executeSimple(operation2),
       ]);
-      
+
       expect(result1).toBe('success1');
       expect(result2).toBe('success2');
     });
@@ -385,10 +406,13 @@ describe('RetryStrategy', () => {
 
   describe('Circuit Breaker', () => {
     beforeEach(() => {
-      retryStrategy = new RetryStrategy({ logger: mockLogger }, {
-        circuitBreakerThreshold: 3,
-        circuitBreakerTimeoutMs: 1000,
-      });
+      retryStrategy = new RetryStrategy(
+        { logger: mockLogger },
+        {
+          circuitBreakerThreshold: 3,
+          circuitBreakerTimeoutMs: 1000,
+        }
+      );
       jest.spyOn(global, 'setTimeout').mockImplementation((fn) => {
         fn();
         return 1;
@@ -417,17 +441,17 @@ describe('RetryStrategy', () => {
 
       // Circuit should be open, preventing execution
       const circuitOp = jest.fn().mockResolvedValue('success');
-      
-      await expect(
-        retryStrategy.execute('test_op', circuitOp)
-      ).rejects.toThrow('Circuit breaker is open');
-      
+
+      await expect(retryStrategy.execute('test_op', circuitOp)).rejects.toThrow(
+        'Circuit breaker is open'
+      );
+
       expect(circuitOp).not.toHaveBeenCalled();
     });
 
     it('should transition to half-open after timeout', async () => {
       const operation = jest.fn().mockRejectedValue(new Error('network error'));
-      
+
       // Use real timers for this test
       if (global.setTimeout.mockRestore) {
         global.setTimeout.mockRestore();
@@ -449,12 +473,12 @@ describe('RetryStrategy', () => {
       // Should allow one attempt in half-open state
       const successOp = jest.fn().mockResolvedValue('success');
       const result = await retryStrategy.execute('test_op', successOp);
-      
+
       expect(result).toBe('success');
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining('moved to HALF_OPEN state')
       );
-      
+
       jest.useRealTimers();
     });
 
@@ -471,7 +495,7 @@ describe('RetryStrategy', () => {
       }
 
       retryStrategy.resetCircuitBreaker('test_op');
-      
+
       const status = retryStrategy.getCircuitBreakerStatus('test_op');
       expect(status.state).toBe(RetryStrategy.CIRCUIT_STATES.CLOSED);
       expect(status.failures).toBe(0);
@@ -506,7 +530,7 @@ describe('RetryStrategy', () => {
       }
 
       const stats = retryStrategy.getRetryStatistics('test_op');
-      
+
       expect(stats).toMatchObject({
         operationId: 'test_op',
         attempts: 2,
@@ -518,7 +542,8 @@ describe('RetryStrategy', () => {
     });
 
     it('should reset retry statistics after success', async () => {
-      const operation = jest.fn()
+      const operation = jest
+        .fn()
         .mockRejectedValueOnce(new Error('network error'))
         .mockResolvedValue('success');
 
@@ -528,7 +553,7 @@ describe('RetryStrategy', () => {
       });
 
       const stats = retryStrategy.getRetryStatistics('test_op');
-      
+
       // The stats get reset after successful execution, so check for success state
       expect(stats).toMatchObject({
         operationId: 'test_op',
@@ -542,7 +567,7 @@ describe('RetryStrategy', () => {
 
     it('should return default statistics for unknown operation', () => {
       const stats = retryStrategy.getRetryStatistics('unknown_op');
-      
+
       expect(stats).toMatchObject({
         operationId: 'unknown_op',
         attempts: 0,
@@ -555,7 +580,7 @@ describe('RetryStrategy', () => {
 
     it('should get circuit breaker status', () => {
       const status = retryStrategy.getCircuitBreakerStatus('test_op');
-      
+
       expect(status).toMatchObject({
         state: RetryStrategy.CIRCUIT_STATES.CLOSED,
         failures: 0,
@@ -565,7 +590,8 @@ describe('RetryStrategy', () => {
     });
 
     it('should reset retry attempts', async () => {
-      const operation = jest.fn()
+      const operation = jest
+        .fn()
         .mockRejectedValueOnce(new Error('network error'))
         .mockResolvedValue('success');
 
@@ -575,7 +601,7 @@ describe('RetryStrategy', () => {
       });
 
       retryStrategy.resetRetryAttempts('test_op');
-      
+
       const stats = retryStrategy.getRetryStatistics('test_op');
       expect(stats.attempts).toBe(0);
       expect(stats.failures).toBe(0);
@@ -589,7 +615,7 @@ describe('RetryStrategy', () => {
 
     it('should cleanup old entries', async () => {
       const operation = jest.fn().mockResolvedValue('success');
-      
+
       // Create some entries
       await retryStrategy.execute('old_op', operation);
       await retryStrategy.execute('new_op', operation);
@@ -612,9 +638,9 @@ describe('RetryStrategy', () => {
         fn();
         return 1;
       });
-      
+
       const operation = jest.fn().mockRejectedValue(new Error('network error'));
-      
+
       // Create entries that will be cleaned
       try {
         await retryStrategy.execute('old_op', operation, { maxAttempts: 1 });
@@ -640,7 +666,7 @@ describe('RetryStrategy', () => {
 
     it('should handle cleanup with no old entries', () => {
       retryStrategy.cleanup(3600000);
-      
+
       // Should not log anything
       expect(mockLogger.debug).not.toHaveBeenCalledWith(
         expect.stringContaining('Cleaned up')
@@ -649,22 +675,22 @@ describe('RetryStrategy', () => {
 
     it('should dispose properly', () => {
       expect(retryStrategy.isDisposed()).toBe(false);
-      
+
       retryStrategy.dispose();
-      
+
       expect(retryStrategy.isDisposed()).toBe(true);
     });
 
     it('should handle multiple dispose calls', () => {
       retryStrategy.dispose();
       retryStrategy.dispose(); // Should not throw
-      
+
       expect(retryStrategy.isDisposed()).toBe(true);
     });
 
     it('should throw when using disposed instance', () => {
       retryStrategy.dispose();
-      
+
       expect(() => retryStrategy.getRetryStatistics('test')).toThrow(
         'RetryStrategy instance has been disposed'
       );
@@ -684,10 +710,10 @@ describe('RetryStrategy', () => {
 
     it('should throw when executing with disposed instance', async () => {
       retryStrategy.dispose();
-      
-      await expect(
-        retryStrategy.execute('test', jest.fn())
-      ).rejects.toThrow('RetryStrategy instance has been disposed');
+
+      await expect(retryStrategy.execute('test', jest.fn())).rejects.toThrow(
+        'RetryStrategy instance has been disposed'
+      );
     });
   });
 
@@ -708,7 +734,8 @@ describe('RetryStrategy', () => {
 
     it('should retry based on error patterns', async () => {
       const networkError = new Error('Network timeout occurred');
-      const operation = jest.fn()
+      const operation = jest
+        .fn()
         .mockRejectedValueOnce(networkError)
         .mockResolvedValue('success');
 
@@ -724,8 +751,9 @@ describe('RetryStrategy', () => {
     it('should check error code for retryability', async () => {
       const error = new Error('Some error');
       error.code = 'NETWORK_ERROR';
-      
-      const operation = jest.fn()
+
+      const operation = jest
+        .fn()
         .mockRejectedValueOnce(error)
         .mockResolvedValue('success');
 
@@ -742,8 +770,9 @@ describe('RetryStrategy', () => {
     it('should check error name for retryability', async () => {
       const error = new Error('Some error');
       error.name = 'TimeoutError';
-      
-      const operation = jest.fn()
+
+      const operation = jest
+        .fn()
         .mockRejectedValueOnce(error)
         .mockResolvedValue('success');
 
@@ -773,7 +802,8 @@ describe('RetryStrategy', () => {
 
     it('should retry when custom condition returns true', async () => {
       const retryCondition = jest.fn().mockReturnValue(true);
-      const operation = jest.fn()
+      const operation = jest
+        .fn()
         .mockRejectedValueOnce(new Error('error'))
         .mockResolvedValue('success');
 
@@ -804,7 +834,8 @@ describe('RetryStrategy', () => {
     });
 
     it('should respect max delay limit', async () => {
-      const operation = jest.fn()
+      const operation = jest
+        .fn()
         .mockRejectedValueOnce(new Error('network error'))
         .mockResolvedValue('success');
 
@@ -822,8 +853,9 @@ describe('RetryStrategy', () => {
     it('should apply jitter to delays', async () => {
       // Seed random for predictable jitter
       const mockRandom = jest.spyOn(Math, 'random').mockReturnValue(0.5);
-      
-      const operation = jest.fn()
+
+      const operation = jest
+        .fn()
         .mockRejectedValueOnce(new Error('network error'))
         .mockResolvedValue('success');
 
@@ -834,14 +866,15 @@ describe('RetryStrategy', () => {
       });
 
       expect(operation).toHaveBeenCalledTimes(2);
-      
+
       mockRandom.mockRestore();
     });
 
     it('should handle negative jitter correctly', async () => {
       const mockRandom = jest.spyOn(Math, 'random').mockReturnValue(0);
-      
-      const operation = jest.fn()
+
+      const operation = jest
+        .fn()
         .mockRejectedValueOnce(new Error('network error'))
         .mockResolvedValue('success');
 
@@ -852,7 +885,7 @@ describe('RetryStrategy', () => {
       });
 
       expect(result).toBe('success');
-      
+
       mockRandom.mockRestore();
     });
   });
@@ -879,13 +912,13 @@ describe('RetryStrategy', () => {
       await expect(
         retryStrategy.execute('test_op', operation, { maxAttempts: 0 })
       ).rejects.toBeDefined();
-      
+
       expect(operation).not.toHaveBeenCalled();
     });
 
     it('should handle fibonacci for large attempts', async () => {
       const operation = jest.fn();
-      
+
       // Mock to always fail
       for (let i = 0; i < 10; i++) {
         operation.mockRejectedValueOnce(new Error('network error'));
@@ -944,7 +977,7 @@ describe('RetryStrategy', () => {
 
     it('should test _fibonacci through fibonacci strategy', async () => {
       const operation = jest.fn();
-      
+
       // Test multiple fibonacci numbers
       for (let i = 0; i < 6; i++) {
         operation.mockRejectedValueOnce(new Error('network error'));
@@ -963,7 +996,7 @@ describe('RetryStrategy', () => {
 
     it('should test circuit breaker state transitions thoroughly', async () => {
       const operation = jest.fn().mockRejectedValue(new Error('network error'));
-      
+
       // Test CLOSED -> OPEN transition
       for (let i = 0; i < 5; i++) {
         try {
@@ -982,24 +1015,26 @@ describe('RetryStrategy', () => {
       }
       jest.useFakeTimers();
       jest.advanceTimersByTime(60001);
-      
+
       // Next attempt should be allowed in HALF_OPEN state
       const successOp = jest.fn().mockResolvedValue('success');
       await retryStrategy.execute('cb_test', successOp);
-      
+
       status = retryStrategy.getCircuitBreakerStatus('cb_test');
       expect(status.state).toBe(RetryStrategy.CIRCUIT_STATES.CLOSED);
-      
+
       jest.useRealTimers();
     });
 
     it('should test gradual recovery in circuit breaker', async () => {
       const operation = jest.fn().mockRejectedValue(new Error('network error'));
-      
+
       // Add some failures but not enough to open
       for (let i = 0; i < 2; i++) {
         try {
-          await retryStrategy.execute('gradual_test', operation, { maxAttempts: 1 });
+          await retryStrategy.execute('gradual_test', operation, {
+            maxAttempts: 1,
+          });
         } catch (_) {
           // Expected
         }
@@ -1008,7 +1043,7 @@ describe('RetryStrategy', () => {
       // Success should reduce failure count
       const successOp = jest.fn().mockResolvedValue('success');
       await retryStrategy.execute('gradual_test', successOp);
-      
+
       // Another success
       await retryStrategy.execute('gradual_test', successOp);
 
@@ -1018,11 +1053,13 @@ describe('RetryStrategy', () => {
 
     it('should test HALF_OPEN -> OPEN transition on failure', async () => {
       const operation = jest.fn().mockRejectedValue(new Error('network error'));
-      
+
       // Open the circuit
       for (let i = 0; i < 5; i++) {
         try {
-          await retryStrategy.execute('half_open_test', operation, { maxAttempts: 1 });
+          await retryStrategy.execute('half_open_test', operation, {
+            maxAttempts: 1,
+          });
         } catch (_) {
           // Expected
         }
@@ -1037,14 +1074,16 @@ describe('RetryStrategy', () => {
 
       // Fail in HALF_OPEN state
       try {
-        await retryStrategy.execute('half_open_test', operation, { maxAttempts: 1 });
+        await retryStrategy.execute('half_open_test', operation, {
+          maxAttempts: 1,
+        });
       } catch (_) {
         // Expected
       }
 
       const status = retryStrategy.getCircuitBreakerStatus('half_open_test');
       expect(status.state).toBe(RetryStrategy.CIRCUIT_STATES.OPEN);
-      
+
       jest.useRealTimers();
     });
   });

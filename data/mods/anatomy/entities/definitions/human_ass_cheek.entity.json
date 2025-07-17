@@ -1,0 +1,13 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:human_ass_cheek",
+  "description": "A human ass cheek/buttock",
+  "components": {
+    "anatomy:part": {
+      "subType": "ass_cheek"
+    },
+    "core:name": {
+      "text": "ass cheek"
+    }
+  }
+}

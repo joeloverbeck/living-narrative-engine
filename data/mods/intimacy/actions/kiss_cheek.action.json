@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/action.schema.json",
+  "$schema": "schema://living-narrative-engine/action.schema.json",
   "id": "intimacy:kiss_cheek",
   "name": "Kiss Cheek",
   "description": "Lean in and softly kiss the target on the cheek.",

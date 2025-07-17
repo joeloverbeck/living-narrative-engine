@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/component.schema.json",
+  "$schema": "schema://living-narrative-engine/component.schema.json",
   "id": "core:player_type",
   "description": "Indicates the type of player controlling this entity. Used to distinguish between human players and different types of AI players.",
   "dataSchema": {

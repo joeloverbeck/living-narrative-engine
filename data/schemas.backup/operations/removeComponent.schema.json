@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/schemas/operations/removeComponent.schema.json",
+  "title": "REMOVE_COMPONENT Operation",
+  "allOf": [
+    {
+      "$ref": "../base-operation.schema.json"
+    },
+    {
+      "properties": {
+        "type": {
+          "const": "REMOVE_COMPONENT"
+        },
+        "parameters": {
+          "$ref": "#/$defs/Parameters"
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "Parameters": {
+      "type": "object",
+      "description": "Parameters for the REMOVE_COMPONENT operation. Removes a component from an entity.",
+      "properties": {
+        "entity_ref": {
+          "$ref": "../common.schema.json#/definitions/entityReference"
+        },
+        "component_type": {
+          "$ref": "../common.schema.json#/definitions/namespacedId"
+        }
+      },
+      "required": ["entity_ref", "component_type"],
+      "additionalProperties": false
+    }
+  }
+}

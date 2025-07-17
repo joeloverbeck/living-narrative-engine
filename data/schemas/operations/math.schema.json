@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "http://example.com/schemas/operations/math.schema.json",
+  "$id": "schema://living-narrative-engine/operations/math.schema.json",
   "title": "MATH Operation",
   "allOf": [
     {

@@ -106,24 +106,30 @@ export class ActionExecutionTestBed {
    */
   setupComponentChangeMonitoring() {
     // Monitor component changes through entity events
-    this.componentAddedSubscription = this.eventBus.subscribe('core:component_added', (event) => {
-      this.stateChanges.push({
-        type: 'component_added',
-        entityId: event.payload.entity.id,
-        componentId: event.payload.componentTypeId,
-        data: event.payload.componentData,
-        timestamp: Date.now(),
-      });
-    });
+    this.componentAddedSubscription = this.eventBus.subscribe(
+      'core:component_added',
+      (event) => {
+        this.stateChanges.push({
+          type: 'component_added',
+          entityId: event.payload.entity.id,
+          componentId: event.payload.componentTypeId,
+          data: event.payload.componentData,
+          timestamp: Date.now(),
+        });
+      }
+    );
 
-    this.componentRemovedSubscription = this.eventBus.subscribe('core:component_removed', (event) => {
-      this.stateChanges.push({
-        type: 'component_removed',
-        entityId: event.payload.entity.id,
-        componentId: event.payload.componentTypeId,
-        timestamp: Date.now(),
-      });
-    });
+    this.componentRemovedSubscription = this.eventBus.subscribe(
+      'core:component_removed',
+      (event) => {
+        this.stateChanges.push({
+          type: 'component_removed',
+          entityId: event.payload.entity.id,
+          componentId: event.payload.componentTypeId,
+          timestamp: Date.now(),
+        });
+      }
+    );
   }
 
   /**

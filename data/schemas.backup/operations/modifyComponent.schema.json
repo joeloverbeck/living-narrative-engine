@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/schemas/operations/modifyComponent.schema.json",
+  "title": "MODIFY_COMPONENT Operation",
+  "allOf": [
+    {
+      "$ref": "../base-operation.schema.json"
+    },
+    {
+      "properties": {
+        "type": {
+          "const": "MODIFY_COMPONENT"
+        },
+        "parameters": {
+          "$ref": "#/$defs/Parameters"
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "Parameters": {
+      "type": "object",
+      "description": "Parameters for the MODIFY_COMPONENT operation. Modifies a specific field within an existing component (mode \"set\" only—use a MATH + SET_VARIABLE combo for arithmetic).",
+      "properties": {
+        "entity_ref": {
+          "$ref": "../common.schema.json#/definitions/entityReference"
+        },
+        "component_type": {
+          "$ref": "../common.schema.json#/definitions/namespacedId"
+        },
+        "field": {
+          "type": "string",
+          "minLength": 1
+        },
+        "mode": {
+          "type": "string",
+          "enum": ["set"],
+          "default": "set"
+        },
+        "value": {}
+      },
+      "required": ["entity_ref", "component_type", "field", "mode", "value"],
+      "additionalProperties": false
+    }
+  }
+}

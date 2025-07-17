@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "http://example.com/schemas/action.schema.json",
+  "$id": "schema://living-narrative-engine/action.schema.json",
   "title": "Action Schema",
   "description": "Defines the structure for an Action Definition, used by the Dynamic Action Discovery system to determine valid commands based on game state. It specifies targeting and JSON Logic prerequisites, and output format. Prerequisites are now handled solely by JSON Logic.",
   "type": "object",

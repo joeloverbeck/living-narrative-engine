@@ -139,7 +139,11 @@ describe('Action Validation Edge Cases E2E', () => {
       'test:empty-scope': {
         id: 'test:empty-scope',
         expr: 'entities(test:non-existent-type)',
-        ast: { type: 'Source', kind: 'entities', param: 'test:non-existent-type' },
+        ast: {
+          type: 'Source',
+          kind: 'entities',
+          param: 'test:non-existent-type',
+        },
         description: 'Scope that will resolve to no entities',
       },
       'test:invalid-dsl': {
@@ -295,7 +299,10 @@ describe('Action Validation Edge Cases E2E', () => {
         template: 'perform special action',
         prerequisites: [],
         required_components: {
-          actor: ['test:non-existent-component', 'test:another-missing-component'],
+          actor: [
+            'test:non-existent-component',
+            'test:another-missing-component',
+          ],
         },
       },
       // Action with complex failing prerequisites
@@ -393,10 +400,10 @@ describe('Action Validation Edge Cases E2E', () => {
       .join('\n');
     expect(traceMessages).toContain('failed');
     expect(traceMessages).toContain('prerequisite');
-    
+
     // Check for circular reference error in trace
     expect(traceMessages).toContain('Circular reference detected');
-    
+
     // Check for missing reference error in trace
     expect(traceMessages).toContain('Could not resolve condition_ref');
   });
@@ -520,7 +527,7 @@ describe('Action Validation Edge Cases E2E', () => {
         e.actionId === 'test:action-invalid-scope' ||
         e.actionId === 'test:action-broken-filter'
     );
-    
+
     // If we have scope errors, verify their structure
     if (scopeErrors.length > 0) {
       scopeErrors.forEach((error) => {
@@ -567,9 +574,7 @@ describe('Action Validation Edge Cases E2E', () => {
 
     // Action requiring non-existent components should not match any actor
     // Since the action requires components that don't exist, it shouldn't appear for any actor
-    const npcEntity = await entityManager.getEntityInstance(
-      testActors.npc.id
-    );
+    const npcEntity = await entityManager.getEntityInstance(testActors.npc.id);
     const npcActions = await actionDiscoveryService.getValidActions(
       npcEntity,
       baseContext
@@ -614,7 +619,7 @@ describe('Action Validation Edge Cases E2E', () => {
 
     // Should still process valid actions despite errors
     expect(discoveredActions.actions.length).toBeGreaterThan(0);
-    
+
     // Check trace contains multiple error scenarios
     const traceMessages = discoveredActions.trace.logs
       .map((l) => l.message)

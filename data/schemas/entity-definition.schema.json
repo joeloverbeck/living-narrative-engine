@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "http://example.com/schemas/entity-definition.schema.json",
+  "$id": "schema://living-narrative-engine/entity-definition.schema.json",
   "title": "Entity Definition",
   "description": "Defines a template or 'prefab' for a game entity. It specifies the entity's type, its default components, and their initial state. This schema acts as a blueprint for creating entity instances.",
   "type": "object",

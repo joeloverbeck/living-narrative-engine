@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "http://example.com/schemas/game.schema.json",
+  "$id": "schema://living-narrative-engine/game.schema.json",
   "title": "Game Configuration",
   "description": "Schema for the game configuration file (game.json), defining the required list of mods and the default starting world.",
   "type": "object",

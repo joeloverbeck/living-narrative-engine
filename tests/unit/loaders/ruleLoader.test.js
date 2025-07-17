@@ -35,13 +35,13 @@ const createMockConfiguration = (overrides = {}) => ({
       // Delegate to getRuleSchemaId or return a fixed value if getRuleSchemaId isn't used directly
       // Assuming RuleLoader might use this OR getRuleSchemaId directly.
       // Let's use a default value here and allow overriding getRuleSchemaId separately.
-      return 'http://example.com/schemas/rule.schema.json';
+      return 'schema://living-narrative-engine/rule.schema.json';
     }
     // Add other types if needed for different loaders tested in the same context potentially
     if (registryKey === 'components') {
-      return 'http://example.com/schemas/component.schema.json';
+      return 'schema://living-narrative-engine/component.schema.json';
     }
-    return `http://example.com/schemas/${registryKey}.schema.json`; // Generic fallback
+    return `schema://living-narrative-engine/${registryKey}.schema.json`; // Generic fallback
   }),
   getSchemaBasePath: jest.fn().mockReturnValue('schemas'),
   getSchemaFiles: jest.fn().mockReturnValue([]),
@@ -54,7 +54,7 @@ const createMockConfiguration = (overrides = {}) => ({
   // Explicitly mock getRuleSchemaId as RuleLoader might use it
   getRuleSchemaId: jest
     .fn()
-    .mockReturnValue('http://example.com/schemas/rule.schema.json'),
+    .mockReturnValue('schema://living-narrative-engine/rule.schema.json'),
   ...overrides,
 });
 
@@ -295,7 +295,8 @@ describe('RuleLoader (Sub-Ticket 4.1: Test Setup & Mocking)', () => {
   let loader; //: RuleLoader;
 
   // --- Shared Test Data ---
-  const defaultRuleSchemaId = 'http://example.com/schemas/rule.schema.json';
+  const defaultRuleSchemaId =
+    'schema://living-narrative-engine/rule.schema.json';
   const modId = 'test-mod';
 
   // --- Helper Functions for Mock Scenario Setup ---

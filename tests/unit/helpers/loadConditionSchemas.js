@@ -10,10 +10,10 @@ import conditionSchema from '../../../data/schemas/condition.schema.json' assert
 export default function loadConditionSchemas(ajv) {
   ajv.addSchema(
     containerSchema,
-    'http://example.com/schemas/condition-container.schema.json'
+    'schema://living-narrative-engine/condition-container.schema.json'
   );
   ajv.addSchema(
     conditionSchema,
-    'http://example.com/schemas/condition.schema.json'
+    'schema://living-narrative-engine/condition.schema.json'
   );
 }

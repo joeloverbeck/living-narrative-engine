@@ -17,7 +17,9 @@ const dataFetcher = {
 
 class StubValidator {
   constructor() {
-    this.loaded = new Set(['http://example.com/schemas/event.schema.json']);
+    this.loaded = new Set([
+      'schema://living-narrative-engine/event.schema.json',
+    ]);
     this.validate = jest.fn(() => ({ isValid: true, errors: null }));
   }
 
@@ -35,7 +37,7 @@ const CONFIG_FIX = {
   // mirrors the code fix above
   getContentTypeSchemaId: (t) =>
     ({
-      events: 'http://example.com/schemas/event.schema.json',
+      events: 'schema://living-narrative-engine/event.schema.json',
     })[t] || null,
   getModsBasePath: () => '',
 };
@@ -54,7 +56,7 @@ describe('EventLoader – schema mapping', () => {
 
     // private but testable: _primarySchemaId is set in the base-ctor
     expect(loader._primarySchemaId).toBe(
-      'http://example.com/schemas/event.schema.json'
+      'schema://living-narrative-engine/event.schema.json'
     );
 
     // run one tiny file through the complete wrapper ­– the stub validator gets called
@@ -67,7 +69,7 @@ describe('EventLoader – schema mapping', () => {
     );
 
     expect(validator.validate).toHaveBeenCalledWith(
-      'http://example.com/schemas/event.schema.json',
+      'schema://living-narrative-engine/event.schema.json',
       expect.any(Object)
     );
   });

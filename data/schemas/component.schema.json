@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "http://example.com/schemas/component.schema.json",
+  "$id": "schema://living-narrative-engine/component.schema.json",
   "title": "Component Definition",
   "description": "Defines the structure for a single component type definition file, specifying its ID, an optional schema declaration for itself, the schema for its data payload, and metadata for resolving definition IDs to instance IDs.",
   "type": "object",

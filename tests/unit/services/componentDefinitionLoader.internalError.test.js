@@ -12,8 +12,8 @@ const createMockConfiguration = (overrides = {}) => ({
   ),
   getContentTypeSchemaId: jest.fn((registryKey) =>
     registryKey === 'components'
-      ? 'http://example.com/schemas/component.schema.json'
-      : `http://example.com/schemas/${registryKey}.schema.json`
+      ? 'schema://living-narrative-engine/component.schema.json'
+      : `schema://living-narrative-engine/${registryKey}.schema.json`
   ),
   getSchemaBasePath: jest.fn().mockReturnValue('schemas'),
   getSchemaFiles: jest.fn().mockReturnValue([]),
@@ -24,7 +24,7 @@ const createMockConfiguration = (overrides = {}) => ({
   getRuleBasePath: jest.fn().mockReturnValue('rules'),
   getRuleSchemaId: jest
     .fn()
-    .mockReturnValue('http://example.com/schemas/rule.schema.json'),
+    .mockReturnValue('schema://living-narrative-engine/rule.schema.json'),
   ...overrides,
 });
 const createMockPathResolver = (overrides = {}) => ({
@@ -139,7 +139,7 @@ describe('ComponentLoader (Internal Definition Errors)', () => {
     loader;
   const modId = 'internalErrorMod';
   const componentDefSchemaId =
-    'http://example.com/schemas/component.schema.json';
+    'schema://living-narrative-engine/component.schema.json';
 
   beforeEach(() => {
     jest.clearAllMocks();

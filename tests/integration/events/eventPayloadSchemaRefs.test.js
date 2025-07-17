@@ -65,7 +65,9 @@ describe('Event payload schemas use only absolute $ref paths to shared schemas',
         const isCommon = ref.includes('common.schema.json');
         expect(
           !isCommon ||
-            ref.startsWith('http://example.com/schemas/common.schema.json')
+            ref.startsWith(
+              'schema://living-narrative-engine/common.schema.json'
+            )
         ).toBe(true);
         // Optionally, add more checks for other shared schemas here
       });

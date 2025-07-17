@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "http://example.com/schemas/operations/getTimestamp.schema.json",
+  "$id": "schema://living-narrative-engine/operations/getTimestamp.schema.json",
   "title": "GET_TIMESTAMP Operation",
   "allOf": [
     {

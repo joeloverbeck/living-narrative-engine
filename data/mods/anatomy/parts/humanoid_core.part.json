@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/anatomy.blueprint-part.schema.json",
+  "$schema": "schema://living-narrative-engine/anatomy.blueprint-part.schema.json",
   "id": "anatomy:humanoid_core",
   "description": "Core humanoid anatomy using slot library",
   "library": "anatomy:humanoid_slots",
@@ -72,6 +72,14 @@
     },
     "asshole": {
       "$use": "standard_asshole"
+    },
+    "left_ass": {
+      "$use": "standard_ass_cheek",
+      "socket": "left_ass"
+    },
+    "right_ass": {
+      "$use": "standard_ass_cheek",
+      "socket": "right_ass"
     }
   },
   "clothingSlotMappings": {

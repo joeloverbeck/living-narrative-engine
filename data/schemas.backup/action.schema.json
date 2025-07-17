@@ -1,0 +1,69 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/schemas/action.schema.json",
+  "title": "Action Schema",
+  "description": "Defines the structure for an Action Definition, used by the Dynamic Action Discovery system to determine valid commands based on game state. It specifies targeting and JSON Logic prerequisites, and output format. Prerequisites are now handled solely by JSON Logic.",
+  "type": "object",
+  "definitions": {},
+  "properties": {
+    "$schema": {
+      "$ref": "./common.schema.json#/definitions/BaseDefinition/properties/$schema"
+    },
+    "id": {
+      "$ref": "./common.schema.json#/definitions/BaseDefinition/properties/id"
+    },
+    "description": {
+      "$ref": "./common.schema.json#/definitions/BaseDefinition/properties/description"
+    },
+    "name": {
+      "type": "string",
+      "description": "Optional. Human-readable name or verb for the action (e.g., 'Eat', 'Attack', 'Go'). This is the primary display name for the action in UI elements like buttons and tooltips."
+    },
+    "scope": {
+      "type": "string",
+      "description": "Required. The namescaped DSL scope that defines where to look for potential targets for this action. Notes: inline scopes in the DSL are not supported.",
+      "examples": ["core:followers", "core:environment", "core:directions"]
+    },
+    "required_components": {
+      "type": "object",
+      "description": "HIGH-LEVEL PRE-FILTERING. Specifies component IDs required on the actor or target for this action to be considered for discovery. This is the primary mechanism used by the ActionIndex service for performance optimization.",
+      "properties": {
+        "actor": {
+          "type": "array",
+          "description": "A list of component IDs that the actor must possess for this action to be a candidate.",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "prerequisites": {
+      "type": "array",
+      "description": "ACTOR/WORLD STATE VALIDATION. Checks conditions on the actor (e.g., has enough mana, not rooted) or the global game state. Target-specific filtering and validation should be handled exclusively by the 'scope' property's DSL expression.",
+      "items": {
+        "type": "object",
+        "required": ["logic"],
+        "properties": {
+          "logic": {
+            "$ref": "./condition-container.schema.json#",
+            "description": "The condition to evaluate. Can be an inline JSON-Logic rule or a reference to a named Condition definition via 'condition_ref'."
+          },
+          "failure_message": {
+            "type": "string",
+            "description": "An optional message to be logged or displayed if this prerequisite fails. Useful for debugging or providing player feedback."
+          }
+        },
+        "additionalProperties": false
+      },
+      "default": []
+    },
+    "template": {
+      "type": "string",
+      "description": "Required. Text template for generating the command string output, using placeholders like {target} (e.g., 'eat {target}', 'wait')."
+    }
+  },
+  "required": ["id", "description", "name", "scope", "template"],
+  "additionalProperties": true,
+  "$comment": "Allows additional properties for future extensions like action costs or effects definitions."
+}

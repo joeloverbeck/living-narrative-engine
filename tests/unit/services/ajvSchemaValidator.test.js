@@ -37,7 +37,7 @@ const basicTypeSchema = {
 // --- NEW: Complex "Real-Life" Schema ---
 const commonSchema = {
   $schema: 'http://json-schema.org/draft-07/schema#',
-  $id: 'http://example.com/schemas/common.schema.json',
+  $id: 'schema://living-narrative-engine/common.schema.json',
   title: 'Common Definitions',
   definitions: {
     namespacedId: {

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "http://example.com/schemas/operations/dispatchEvent.schema.json",
+  "$id": "schema://living-narrative-engine/operations/dispatchEvent.schema.json",
   "title": "DISPATCH_EVENT Operation",
   "allOf": [
     {

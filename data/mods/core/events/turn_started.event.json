@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/component.schema.json",
+  "$schema": "schema://living-narrative-engine/component.schema.json",
   "id": "core:turn_started",
   "description": "Fired when an entity's turn begins.",
   "payloadSchema": {
@@ -8,7 +8,7 @@
     "type": "object",
     "properties": {
       "entityId": {
-        "$ref": "http://example.com/schemas/common.schema.json#/definitions/namespacedId",
+        "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/namespacedId",
         "description": "The unique ID of the entity whose turn is starting."
       },
       "entityType": {

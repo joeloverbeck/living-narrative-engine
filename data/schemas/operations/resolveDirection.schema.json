@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "http://example.com/schemas/operations/resolveDirection.schema.json",
+  "$id": "schema://living-narrative-engine/operations/resolveDirection.schema.json",
   "title": "RESOLVE_DIRECTION Operation",
   "allOf": [
     {

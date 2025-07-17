@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/world.schema.json",
+  "$schema": "schema://living-narrative-engine/world.schema.json",
   "id": "isekai:world",
   "name": "Isekai",
   "description": "A self-contained game world encompassing the town, the Adventurers' Guild, and its inhabitants.",

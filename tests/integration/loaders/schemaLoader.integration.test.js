@@ -22,7 +22,7 @@ describe('SchemaLoader Integration Tests', () => {
 
   // Test schema data
   const commonSchemaData = {
-    $id: 'http://example.com/schemas/common.schema.json',
+    $id: 'schema://living-narrative-engine/common.schema.json',
     $schema: 'http://json-schema.org/draft-07/schema#',
     $defs: {
       namespacedId: {
@@ -33,15 +33,15 @@ describe('SchemaLoader Integration Tests', () => {
   };
 
   const entityInstanceSchemaData = {
-    $id: 'http://example.com/schemas/entity-instance.schema.json',
+    $id: 'schema://living-narrative-engine/entity-instance.schema.json',
     $schema: 'http://json-schema.org/draft-07/schema#',
     type: 'object',
     properties: {
       instanceId: {
-        $ref: 'http://example.com/schemas/common.schema.json#/$defs/namespacedId',
+        $ref: 'schema://living-narrative-engine/common.schema.json#/$defs/namespacedId',
       },
       definitionId: {
-        $ref: 'http://example.com/schemas/common.schema.json#/$defs/namespacedId',
+        $ref: 'schema://living-narrative-engine/common.schema.json#/$defs/namespacedId',
       },
     },
     required: ['instanceId', 'definitionId'],
@@ -49,19 +49,19 @@ describe('SchemaLoader Integration Tests', () => {
   };
 
   const worldSchemaData = {
-    $id: 'http://example.com/schemas/world.schema.json',
+    $id: 'schema://living-narrative-engine/world.schema.json',
     $schema: 'http://json-schema.org/draft-07/schema#',
     type: 'object',
     properties: {
       id: {
-        $ref: 'http://example.com/schemas/common.schema.json#/$defs/namespacedId',
+        $ref: 'schema://living-narrative-engine/common.schema.json#/$defs/namespacedId',
       },
       name: { type: 'string' },
       description: { type: 'string' },
       instances: {
         type: 'array',
         items: {
-          $ref: 'http://example.com/schemas/entity-instance.schema.json',
+          $ref: 'schema://living-narrative-engine/entity-instance.schema.json',
         },
       },
     },
@@ -136,13 +136,13 @@ describe('SchemaLoader Integration Tests', () => {
       const summary = schemaLoader.getSchemaLoadingSummary();
       expect(summary.issues).toHaveLength(0);
       expect(summary.loadedSchemas).toContain(
-        'http://example.com/schemas/common.schema.json'
+        'schema://living-narrative-engine/common.schema.json'
       );
       expect(summary.loadedSchemas).toContain(
-        'http://example.com/schemas/world.schema.json'
+        'schema://living-narrative-engine/world.schema.json'
       );
       expect(summary.loadedSchemas).toContain(
-        'http://example.com/schemas/entity-instance.schema.json'
+        'schema://living-narrative-engine/entity-instance.schema.json'
       );
     });
 
@@ -152,13 +152,13 @@ describe('SchemaLoader Integration Tests', () => {
 
       // Act
       const worldSchemaValid = schemaValidator.validateSchemaRefs(
-        'http://example.com/schemas/world.schema.json'
+        'schema://living-narrative-engine/world.schema.json'
       );
       const entityInstanceSchemaValid = schemaValidator.validateSchemaRefs(
-        'http://example.com/schemas/entity-instance.schema.json'
+        'schema://living-narrative-engine/entity-instance.schema.json'
       );
       const commonSchemaValid = schemaValidator.validateSchemaRefs(
-        'http://example.com/schemas/common.schema.json'
+        'schema://living-narrative-engine/common.schema.json'
       );
 
       // Assert
@@ -189,7 +189,7 @@ describe('SchemaLoader Integration Tests', () => {
 
       // Act
       const result = schemaValidator.validate(
-        'http://example.com/schemas/world.schema.json',
+        'schema://living-narrative-engine/world.schema.json',
         validWorldData
       );
 
@@ -211,7 +211,7 @@ describe('SchemaLoader Integration Tests', () => {
 
       // Act
       const result = schemaValidator.validate(
-        'http://example.com/schemas/world.schema.json',
+        'schema://living-narrative-engine/world.schema.json',
         invalidWorldData
       );
 
@@ -242,11 +242,11 @@ describe('SchemaLoader Integration Tests', () => {
 
       // Act
       const validResult = schemaValidator.validate(
-        'http://example.com/schemas/entity-instance.schema.json',
+        'schema://living-narrative-engine/entity-instance.schema.json',
         validInstance
       );
       const invalidResult = schemaValidator.validate(
-        'http://example.com/schemas/entity-instance.schema.json',
+        'schema://living-narrative-engine/entity-instance.schema.json',
         invalidInstance
       );
 
@@ -288,11 +288,11 @@ describe('SchemaLoader Integration Tests', () => {
       };
 
       const validResult = schemaValidator.validate(
-        'http://example.com/schemas/world.schema.json',
+        'schema://living-narrative-engine/world.schema.json',
         validWorld
       );
       const invalidResult = schemaValidator.validate(
-        'http://example.com/schemas/world.schema.json',
+        'schema://living-narrative-engine/world.schema.json',
         invalidWorld
       );
 
@@ -308,13 +308,13 @@ describe('SchemaLoader Integration Tests', () => {
 
       // Assert
       const commonLoaded = schemaValidator.isSchemaLoaded(
-        'http://example.com/schemas/common.schema.json'
+        'schema://living-narrative-engine/common.schema.json'
       );
       const worldLoaded = schemaValidator.isSchemaLoaded(
-        'http://example.com/schemas/world.schema.json'
+        'schema://living-narrative-engine/world.schema.json'
       );
       const entityInstanceLoaded = schemaValidator.isSchemaLoaded(
-        'http://example.com/schemas/entity-instance.schema.json'
+        'schema://living-narrative-engine/entity-instance.schema.json'
       );
 
       expect(commonLoaded).toBe(true);

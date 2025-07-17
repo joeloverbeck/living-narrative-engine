@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/condition.schema.json",
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
   "id": "intimacy:actor-is-in-closeness",
   "description": "Checks if the actor is in a state of 'closeness' with another entity.",
   "logic": {

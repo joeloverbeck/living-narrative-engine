@@ -37,9 +37,9 @@ const createMockConfiguration = (overrides = {}) => ({
   ),
   getContentTypeSchemaId: jest.fn((registryKey) => {
     if (registryKey === 'rules') {
-      return 'http://example.com/schemas/rule.schema.json';
+      return 'schema://living-narrative-engine/rule.schema.json';
     }
-    return `http://example.com/schemas/${registryKey}.schema.json`;
+    return `schema://living-narrative-engine/${registryKey}.schema.json`;
   }),
   getSchemaBasePath: jest.fn().mockReturnValue('schemas'),
   getSchemaFiles: jest.fn().mockReturnValue([]),
@@ -52,7 +52,7 @@ const createMockConfiguration = (overrides = {}) => ({
   // Keep getRuleSchemaId for potential direct use, though base class uses getContentTypeSchemaId
   getRuleSchemaId: jest
     .fn()
-    .mockReturnValue('http://example.com/schemas/rule.schema.json'),
+    .mockReturnValue('schema://living-narrative-engine/rule.schema.json'),
   ...overrides,
 });
 
@@ -102,7 +102,7 @@ const createMockDataFetcher = () => ({
 
 // --- Mock SchemaValidator (Now needed for valid input tests) ---
 const createMockSchemaValidator = () => {
-  const ruleSchemaId = 'http://example.com/schemas/rule.schema.json';
+  const ruleSchemaId = 'schema://living-narrative-engine/rule.schema.json';
   // Define the schema validation result behavior
   const validationResultFn = (data) => {
     const isValid =
@@ -200,7 +200,8 @@ describe('RuleLoader (Manifest Input Handling via loadItemsForMod)', () => {
   const RULE_CONTENT_DIR = 'rules';
   const RULE_TYPE_NAME = 'rules';
 
-  const defaultRuleSchemaId = 'http://example.com/schemas/rule.schema.json';
+  const defaultRuleSchemaId =
+    'schema://living-narrative-engine/rule.schema.json';
 
   // --- Setup ---
   beforeEach(() => {

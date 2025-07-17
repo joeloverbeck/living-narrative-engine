@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/condition.schema.json",
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
   "id": "core:entity-is-not-current-actor",
   "description": "True when the entity being evaluated is **not** the actor entity.",
   "logic": {
