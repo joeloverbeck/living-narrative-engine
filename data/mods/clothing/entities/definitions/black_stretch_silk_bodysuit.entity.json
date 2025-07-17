@@ -5,7 +5,6 @@
   "components": {
     "clothing:wearable": {
       "layer": "base",
-      "size": "m",
       "material": "stretch-silk",
       "equipmentSlots": {
         "primary": "full_body"

@@ -5,7 +5,6 @@
   "components": {
     "clothing:wearable": {
       "layer": "underwear",
-      "size": "m",
       "material": "silk",
       "equipmentSlots": {
         "primary": "underwear_lower"

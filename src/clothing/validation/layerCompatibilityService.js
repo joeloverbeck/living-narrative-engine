@@ -111,14 +111,6 @@ export class LayerCompatibilityService {
           );
         }
 
-        // Check size compatibility with other layers
-        const sizeConflicts = await this.#checkSizeCompatibility(
-          entityId,
-          newItemData,
-          slotEquipment,
-          targetLayer
-        );
-        conflicts.push(...sizeConflicts);
 
         // Check layer ordering requirements
         const orderingConflicts = await this.#checkLayerOrdering(
@@ -321,52 +313,6 @@ export class LayerCompatibilityService {
     return strategies.sort((a, b) => a.priority - b.priority);
   }
 
-  /**
-   * Checks size compatibility between clothing items
-   *
-   * @param entityId
-   * @param newItemData
-   * @param slotEquipment
-   * @param targetLayer
-   * @private
-   */
-  async #checkSizeCompatibility(
-    entityId,
-    newItemData,
-    slotEquipment,
-    targetLayer
-  ) {
-    const conflicts = [];
-
-    for (const [layer, itemId] of Object.entries(slotEquipment)) {
-      if (layer === targetLayer || !itemId) continue;
-
-      const existingItemData = this.#entityManager.getComponentData(
-        itemId,
-        'clothing:wearable'
-      );
-      if (!existingItemData) continue;
-
-      // Check if sizes are compatible (basic implementation)
-      if (newItemData.size !== existingItemData.size) {
-        const sizeMismatch = this.#calculateSizeMismatch(
-          newItemData.size,
-          existingItemData.size
-        );
-        if (sizeMismatch.severity === 'high') {
-          conflicts.push({
-            type: 'size_mismatch',
-            conflictingItemId: itemId,
-            layer,
-            severity: sizeMismatch.severity,
-            details: `Size mismatch: ${newItemData.size} vs ${existingItemData.size}`,
-          });
-        }
-      }
-    }
-
-    return conflicts;
-  }
 
   /**
    * Checks layer ordering requirements
@@ -486,30 +432,4 @@ export class LayerCompatibilityService {
     return conflicts;
   }
 
-  /**
-   * Calculates size mismatch severity
-   *
-   * @param size1
-   * @param size2
-   * @private
-   */
-  #calculateSizeMismatch(size1, size2) {
-    const sizeOrder = ['xs', 's', 'm', 'l', 'xl', 'xxl'];
-    const index1 = sizeOrder.indexOf(size1);
-    const index2 = sizeOrder.indexOf(size2);
-
-    if (index1 === -1 || index2 === -1) {
-      return { severity: 'medium' };
-    }
-
-    const difference = Math.abs(index1 - index2);
-
-    if (difference >= 3) {
-      return { severity: 'high' };
-    } else if (difference >= 2) {
-      return { severity: 'medium' };
-    } else {
-      return { severity: 'low' };
-    }
-  }
 }

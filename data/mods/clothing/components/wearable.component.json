@@ -10,11 +10,6 @@
         "enum": ["underwear", "base", "outer", "accessories"],
         "description": "Layer priority for stacking"
       },
-      "size": {
-        "type": "string",
-        "enum": ["xs", "s", "m", "l", "xl", "xxl"],
-        "description": "Size compatibility for the clothing item"
-      },
       "material": {
         "type": "string",
         "description": "Material composition of the clothing item"
