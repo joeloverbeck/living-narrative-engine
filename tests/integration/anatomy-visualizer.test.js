@@ -477,81 +477,8 @@ describe('Anatomy Visualizer Integration', () => {
               },
             };
           }
-          return null;
-        }),
-      };
-
-      mockRegistry.getEntityDefinition.mockReturnValue(mockDefinition);
-      mockEntityManager.createEntityInstance.mockResolvedValue(mockEntity);
-      mockEntityManager.getEntityInstance.mockResolvedValue(mockEntity);
-
-      // Mock the selectEntity method to resolve successfully
-      mockVisualizerStateController.selectEntity.mockResolvedValue();
-
-      // Setup event subscription for state changes before initialization
-      let stateChangeCallback;
-      mockEventDispatcher.subscribe.mockImplementation((eventId, callback) => {
-        if (eventId === 'anatomy:visualizer_state_changed') {
-          stateChangeCallback = callback;
-        }
-        return jest.fn(); // unsubscribe function
-      });
-
-      await visualizerUI.initialize();
-
-      // Mock renderGraph calls for this test
-      mockVisualizationComposer.renderGraph.mockResolvedValue(undefined);
-
-      // Act
-      await visualizerUI._loadEntity('human');
-
-      // Simulate the state change to LOADED
-      if (stateChangeCallback) {
-        await stateChangeCallback({
-          payload: {
-            currentState: 'LOADED',
-            selectedEntity: 'human-1',
-            anatomyData: {
-              body: {
-                root: 'torso-1',
-                parts: { torso: 'torso-1' },
-              },
-            },
-          },
-        });
-      }
-
-      // Assert - The graph renderer should have been called with anatomy data
-      expect(mockVisualizationComposer.renderGraph).toHaveBeenCalledWith(
-        'human-1',
-        {
-          body: {
-            root: 'torso-1',
-            parts: { torso: 'torso-1' },
-          },
-        }
-      );
-    });
-
-    it('should prevent node cut-off with proper Y offset', async () => {
-      // This test verifies that the graph renderer is called properly
-      // The actual offset implementation is tested in AnatomyGraphRenderer unit tests
-
-      const mockDefinition = {
-        id: 'human',
-        components: { 'anatomy:body': {} },
-      };
-
-      const mockEntity = {
-        id: 'human-1',
-        getComponentData: jest.fn((comp) => {
-          if (comp === 'anatomy:body') {
-            return {
-              body: {
-                root: 'torso-1',
-                parts: { torso: 'torso-1' },
-              },
-            };
+          if (comp === 'core:description') {
+            return { text: 'A human being' };
           }
           return null;
         }),
@@ -581,17 +508,90 @@ describe('Anatomy Visualizer Integration', () => {
       // Act
       await visualizerUI._loadEntity('human');
 
-      // Simulate the state change to LOADED
+      // Simulate the state change to LOADED with correct anatomy data structure
       if (stateChangeCallback) {
         await stateChangeCallback({
           payload: {
             currentState: 'LOADED',
             selectedEntity: 'human-1',
             anatomyData: {
+              root: 'torso-1',
+              parts: { torso: 'torso-1' },
+            },
+          },
+        });
+      }
+
+      // Assert - The graph renderer should have been called with anatomy data
+      expect(mockVisualizationComposer.renderGraph).toHaveBeenCalledWith(
+        'human-1',
+        {
+          root: 'torso-1',
+          parts: { torso: 'torso-1' },
+        }
+      );
+    });
+
+    it('should prevent node cut-off with proper Y offset', async () => {
+      // This test verifies that the graph renderer is called properly
+      // The actual offset implementation is tested in AnatomyGraphRenderer unit tests
+
+      const mockDefinition = {
+        id: 'human',
+        components: { 'anatomy:body': {} },
+      };
+
+      const mockEntity = {
+        id: 'human-1',
+        getComponentData: jest.fn((comp) => {
+          if (comp === 'anatomy:body') {
+            return {
               body: {
                 root: 'torso-1',
                 parts: { torso: 'torso-1' },
               },
+            };
+          }
+          if (comp === 'core:description') {
+            return { text: 'A human being' };
+          }
+          return null;
+        }),
+      };
+
+      mockRegistry.getEntityDefinition.mockReturnValue(mockDefinition);
+      mockEntityManager.createEntityInstance.mockResolvedValue(mockEntity);
+      mockEntityManager.getEntityInstance.mockResolvedValue(mockEntity);
+
+      // Mock the selectEntity method to resolve successfully
+      mockVisualizerStateController.selectEntity.mockResolvedValue();
+
+      // Setup event subscription for state changes before initialization
+      let stateChangeCallback;
+      mockEventDispatcher.subscribe.mockImplementation((eventId, callback) => {
+        if (eventId === 'anatomy:visualizer_state_changed') {
+          stateChangeCallback = callback;
+        }
+        return jest.fn(); // unsubscribe function
+      });
+
+      await visualizerUI.initialize();
+
+      // Mock renderGraph calls for this test
+      mockVisualizationComposer.renderGraph.mockResolvedValue(undefined);
+
+      // Act
+      await visualizerUI._loadEntity('human');
+
+      // Simulate the state change to LOADED with correct anatomy data structure
+      if (stateChangeCallback) {
+        await stateChangeCallback({
+          payload: {
+            currentState: 'LOADED',
+            selectedEntity: 'human-1',
+            anatomyData: {
+              root: 'torso-1',
+              parts: { torso: 'torso-1' },
             },
           },
         });
@@ -602,10 +602,8 @@ describe('Anatomy Visualizer Integration', () => {
       expect(mockVisualizationComposer.renderGraph).toHaveBeenCalledWith(
         'human-1',
         expect.objectContaining({
-          body: expect.objectContaining({
-            root: 'torso-1',
-            parts: expect.objectContaining({ torso: 'torso-1' }),
-          }),
+          root: 'torso-1',
+          parts: expect.objectContaining({ torso: 'torso-1' }),
         })
       );
     });

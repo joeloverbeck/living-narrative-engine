@@ -77,13 +77,14 @@
   flex: 2;
   background: var(--panel-bg-color);
   border-right: 1px solid var(--border-color-subtle);
+  overflow: hidden; /* Remove scrollbars from the graph panel */
 }
 
 #anatomy-graph-container {
   position: relative;
   width: 100%;
   height: calc(100% - 3rem);
-  overflow: auto;
+  overflow: hidden; /* Remove scrollbars from the SVG container */
   background: var(--primary-bg-color);
   border: 1px solid var(--border-color-subtle);
   border-radius: var(--border-radius-md);

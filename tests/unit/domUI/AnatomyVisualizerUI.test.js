@@ -15,6 +15,7 @@ describe('AnatomyVisualizerUI', () => {
   let mockEventDispatcher;
   let mockVisualizerStateController;
   let mockVisualizationComposer;
+  let mockClothingManagementService;
   let mockDocument;
   let visualizerUI;
 
@@ -39,10 +40,16 @@ describe('AnatomyVisualizerUI', () => {
       createEntityInstance: jest.fn(),
       getEntityInstance: jest.fn(),
       removeEntityInstance: jest.fn(),
+      hasComponent: jest.fn().mockReturnValue(false),
     };
 
     // Mock anatomy description service
     mockAnatomyDescriptionService = {};
+
+    // Mock clothing management service
+    mockClothingManagementService = {
+      getEquippedItems: jest.fn().mockResolvedValue({ success: true, equipped: {} }),
+    };
 
     // Mock event dispatcher
     mockEventDispatcher = {
@@ -110,6 +117,7 @@ describe('AnatomyVisualizerUI', () => {
       documentContext: { document: mockDocument },
       visualizerStateController: mockVisualizerStateController,
       visualizationComposer: mockVisualizationComposer,
+      clothingManagementService: mockClothingManagementService,
     });
   });
 

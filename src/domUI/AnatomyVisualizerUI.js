@@ -155,7 +155,7 @@ class AnatomyVisualizerUI {
    * @private
    * @param {object} event
    */
-  _handleStateChange(event) {
+  async _handleStateChange(event) {
     const { currentState, selectedEntity, anatomyData, error } = event.payload;
 
     this._logger.debug(
@@ -174,7 +174,7 @@ class AnatomyVisualizerUI {
 
       case 'LOADED':
         if (anatomyData && selectedEntity) {
-          this._handleAnatomyLoaded(selectedEntity, anatomyData);
+          await this._handleAnatomyLoaded(selectedEntity, anatomyData);
         }
         break;
 
