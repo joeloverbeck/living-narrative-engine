@@ -235,7 +235,8 @@ describe('Anatomy Runtime Behavior Integration', () => {
       const arm = await testBed.entityManager.createEntityInstance(
         'test:detachable_arm'
       );
-      const hand = await testBed.entityManager.createEntityInstance('test:simple_hand');
+      const hand =
+        await testBed.entityManager.createEntityInstance('test:simple_hand');
 
       await testBed.entityManager.addComponent(arm.id, 'anatomy:joint', {
         parentId: torso.id,
@@ -265,7 +266,8 @@ describe('Anatomy Runtime Behavior Integration', () => {
       const arm = await testBed.entityManager.createEntityInstance(
         'test:detachable_arm'
       );
-      const hand = await testBed.entityManager.createEntityInstance('test:simple_hand');
+      const hand =
+        await testBed.entityManager.createEntityInstance('test:simple_hand');
 
       await testBed.entityManager.addComponent(arm.id, 'anatomy:joint', {
         parentId: torso.id,
@@ -290,7 +292,8 @@ describe('Anatomy Runtime Behavior Integration', () => {
       const arm = await testBed.entityManager.createEntityInstance(
         'test:detachable_arm'
       );
-      const hand = await testBed.entityManager.createEntityInstance('test:simple_hand');
+      const hand =
+        await testBed.entityManager.createEntityInstance('test:simple_hand');
       const head =
         await testBed.entityManager.createEntityInstance('test:simple_head');
 

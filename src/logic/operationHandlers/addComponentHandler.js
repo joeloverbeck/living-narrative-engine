@@ -97,7 +97,11 @@ class AddComponentHandler extends ComponentOperationHandler {
     // 5. Execute Add Component
     try {
       // EntityManager.addComponent handles both adding new and replacing existing
-      await this.#entityManager.addComponent(entityId, trimmedComponentType, value);
+      await this.#entityManager.addComponent(
+        entityId,
+        trimmedComponentType,
+        value
+      );
       log.debug(
         `ADD_COMPONENT: Successfully added/replaced component "${trimmedComponentType}" on entity "${entityId}".`
       );

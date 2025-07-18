@@ -426,12 +426,17 @@ describe('Anatomy Error Handling Integration', () => {
     it('should handle entity manager failures during anatomy operations', async () => {
       const torso =
         await testBed.entityManager.createEntityInstance('test:valid_torso');
-      const arm = await testBed.entityManager.createEntityInstance('test:valid_arm');
+      const arm =
+        await testBed.entityManager.createEntityInstance('test:valid_arm');
 
-      await testBed.entityManager.addComponent(arm.id, ANATOMY_JOINT_COMPONENT_ID, {
-        parentId: torso.id,
-        socketId: 'arm_socket',
-      });
+      await testBed.entityManager.addComponent(
+        arm.id,
+        ANATOMY_JOINT_COMPONENT_ID,
+        {
+          parentId: torso.id,
+          socketId: 'arm_socket',
+        }
+      );
 
       const bodyGraphService = new BodyGraphService({
         entityManager: testBed.entityManager,
@@ -656,17 +661,27 @@ describe('Anatomy Error Handling Integration', () => {
     it('should handle concurrent graph modifications', async () => {
       const torso =
         await testBed.entityManager.createEntityInstance('test:valid_torso');
-      const arm1 = await testBed.entityManager.createEntityInstance('test:valid_arm');
-      const arm2 = await testBed.entityManager.createEntityInstance('test:valid_arm');
+      const arm1 =
+        await testBed.entityManager.createEntityInstance('test:valid_arm');
+      const arm2 =
+        await testBed.entityManager.createEntityInstance('test:valid_arm');
 
-      await testBed.entityManager.addComponent(arm1.id, ANATOMY_JOINT_COMPONENT_ID, {
-        parentId: torso.id,
-        socketId: 'arm_socket',
-      });
-      await testBed.entityManager.addComponent(arm2.id, ANATOMY_JOINT_COMPONENT_ID, {
-        parentId: torso.id,
-        socketId: 'arm_socket',
-      });
+      await testBed.entityManager.addComponent(
+        arm1.id,
+        ANATOMY_JOINT_COMPONENT_ID,
+        {
+          parentId: torso.id,
+          socketId: 'arm_socket',
+        }
+      );
+      await testBed.entityManager.addComponent(
+        arm2.id,
+        ANATOMY_JOINT_COMPONENT_ID,
+        {
+          parentId: torso.id,
+          socketId: 'arm_socket',
+        }
+      );
 
       const bodyGraphService = new BodyGraphService({
         entityManager: testBed.entityManager,

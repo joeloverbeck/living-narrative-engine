@@ -113,6 +113,17 @@ export default class EntityConfig {
     };
   }
 
+  // Monitoring settings
+  static get MONITORING() {
+    return {
+      ENABLE_HEALTH_CHECKS: true,
+      HEALTH_CHECK_INTERVAL: 30000, // 30 seconds
+      ALERT_RETENTION_HOURS: 24,
+      ENABLE_PERFORMANCE_ALERTS: true,
+      SLOW_OPERATION_ALERT_THRESHOLD: 200, // ms
+    };
+  }
+
   // Environment-specific overrides
   static get ENVIRONMENT() {
     return {
@@ -139,6 +150,7 @@ export default class EntityConfig {
       defaults: this.DEFAULTS,
       entityCreation: this.ENTITY_CREATION,
       spatialIndex: this.SPATIAL_INDEX,
+      monitoring: this.MONITORING,
       environment: this.ENVIRONMENT,
     };
 

@@ -147,7 +147,6 @@ describe('DispatchEventHandler', () => {
     };
     await handler.execute(params, mockEvaluationContext);
 
-
     expect(mockDispatcher.dispatch).toHaveBeenCalledTimes(1);
     expect(mockDispatcher.dispatch).toHaveBeenCalledWith('PLAYER_ACTION', {
       action: 'move',
@@ -276,7 +275,10 @@ describe('DispatchEventHandler', () => {
   });
 
   test('execute should log error and not dispatch if eventType is an empty or whitespace string', async () => {
-    await handler.execute({ eventType: '', payload: {} }, mockEvaluationContext);
+    await handler.execute(
+      { eventType: '', payload: {} },
+      mockEvaluationContext
+    );
     expect(mockLogger.error).toHaveBeenCalledTimes(1);
     expect(mockLogger.error).toHaveBeenCalledWith(
       expect.stringContaining('Invalid or missing "eventType" parameter'),
@@ -285,7 +287,10 @@ describe('DispatchEventHandler', () => {
     expectNoDispatch(mockDispatcher.dispatch);
     mockLogger.error.mockClear(); // Clear for next check
 
-    await handler.execute({ eventType: '   ', payload: {} }, mockEvaluationContext);
+    await handler.execute(
+      { eventType: '   ', payload: {} },
+      mockEvaluationContext
+    );
     expect(mockLogger.error).toHaveBeenCalledTimes(1);
     expect(mockLogger.error).toHaveBeenCalledWith(
       expect.stringContaining('Invalid or missing "eventType" parameter'),
@@ -384,8 +389,8 @@ describe('DispatchEventHandler', () => {
     const errorCall = mockLogger.error.mock.calls[0];
     const errorMessage = errorCall[0];
     expect(
-      errorMessage.includes('Synchronous error occurred') || 
-      errorMessage.includes('Error during async processing')
+      errorMessage.includes('Synchronous error occurred') ||
+        errorMessage.includes('Error during async processing')
     ).toBe(true);
     expect(errorCall[1]).toMatchObject({ error: syncError });
     expect(mockLogger.debug).toHaveBeenCalledTimes(1);
@@ -404,7 +409,6 @@ describe('DispatchEventHandler', () => {
     const params = { eventType: 'ASYNC_FAIL_EVENT', payload: {} };
 
     await handler.execute(params, mockEvaluationContext);
-
 
     expect(mockDispatcher.dispatch).toHaveBeenCalledTimes(1);
     expect(mockLogger.debug).toHaveBeenCalledWith(

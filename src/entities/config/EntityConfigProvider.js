@@ -183,7 +183,18 @@ export default class EntityConfigProvider {
    */
   isFeatureEnabled(feature) {
     this.#ensureInitialized();
-    return EntityConfig.isFeatureEnabled(feature);
+    const parts = feature.split('.');
+    let current = this.#config;
+
+    for (const part of parts) {
+      if (current && typeof current === 'object' && part in current) {
+        current = current[part];
+      } else {
+        return false;
+      }
+    }
+
+    return Boolean(current);
   }
 
   /**

@@ -40,7 +40,11 @@ export async function updateMovementLock(entityManager, entityId, locked) {
           updatedMovement.locked = locked;
 
           // Update the component
-          await entityManager.addComponent(partId, 'core:movement', updatedMovement);
+          await entityManager.addComponent(
+            partId,
+            'core:movement',
+            updatedMovement
+          );
           updatedParts.push({ partId, movement: updatedMovement });
         }
       }

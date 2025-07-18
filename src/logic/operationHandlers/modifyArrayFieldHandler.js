@@ -322,7 +322,12 @@ class ModifyArrayFieldHandler extends ComponentOperationHandler {
 
     // 5. Commit
     if (
-      !(await this.#commitChanges(entityId, componentType, clonedComponentData, logger))
+      !(await this.#commitChanges(
+        entityId,
+        componentType,
+        clonedComponentData,
+        logger
+      ))
     ) {
       return;
     }
