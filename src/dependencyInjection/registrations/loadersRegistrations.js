@@ -239,6 +239,7 @@ export function registerLoaders(container) {
         dataFetcher: c.resolve(tokens.IDataFetcher),
         schemaValidator: c.resolve(tokens.ISchemaValidator),
         dataRegistry: c.resolve(tokens.IDataRegistry),
+        pathConfiguration: c.resolve(tokens.IPathConfiguration),
         logger: c.resolve(tokens.ILogger),
       })
   );

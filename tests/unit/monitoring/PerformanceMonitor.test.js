@@ -159,9 +159,13 @@ describe('PerformanceMonitor', () => {
     });
 
     it('should time a synchronous operation', () => {
-      const result = monitor.timeSync('test-op', () => {
-        return 'test-result';
-      }, 'test-context');
+      const result = monitor.timeSync(
+        'test-op',
+        () => {
+          return 'test-result';
+        },
+        'test-context'
+      );
 
       expect(result).toBe('test-result');
       const metrics = monitor.getMetrics();
@@ -278,7 +282,9 @@ describe('PerformanceMonitor', () => {
 
       const metrics = monitor.getMetrics();
       expect(metrics.minOperationTime).toBeGreaterThan(0);
-      expect(metrics.maxOperationTime).toBeGreaterThan(metrics.minOperationTime);
+      expect(metrics.maxOperationTime).toBeGreaterThan(
+        metrics.minOperationTime
+      );
     });
 
     it('should track active timers', () => {

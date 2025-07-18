@@ -1,37 +1,16 @@
-import { describe, it, expect, afterEach } from '@jest/globals';
+import { describe, it, expect } from '@jest/globals';
 import EntityConfig from '../../../src/entities/config/EntityConfig.js';
 
-// Preserve original NODE_ENV
-const ORIGINAL_ENV = process.env.NODE_ENV;
-
-afterEach(() => {
-  process.env.NODE_ENV = ORIGINAL_ENV;
-});
-
-describe('EntityConfig.getConfig environment overrides', () => {
-  it('applies production overrides', () => {
-    process.env.NODE_ENV = 'production';
+describe('EntityConfig.getConfig base configuration', () => {
+  it('returns base configuration without environment overrides', () => {
     const config = EntityConfig.getConfig();
+    // Base configuration should have default values
     expect(config.logging.ENABLE_DEBUG_LOGGING).toBe(false);
     expect(config.performance.ENABLE_OPERATION_TRACING).toBe(false);
     expect(config.validation.STRICT_MODE).toBe(true);
-  });
-
-  it('applies development overrides', () => {
-    process.env.NODE_ENV = 'development';
-    const config = EntityConfig.getConfig();
-    expect(config.logging.ENABLE_DEBUG_LOGGING).toBe(true);
-    expect(config.performance.ENABLE_OPERATION_TRACING).toBe(true);
-    expect(config.validation.STRICT_MODE).toBe(false);
-  });
-
-  it('applies test overrides', () => {
-    process.env.NODE_ENV = 'test';
-    const config = EntityConfig.getConfig();
-    expect(config.logging.ENABLE_DEBUG_LOGGING).toBe(false);
-    expect(config.performance.ENABLE_MONITORING).toBe(false);
-    expect(config.cache.ENABLE_VALIDATION_CACHE).toBe(false);
-    expect(config.cache.ENABLE_DEFINITION_CACHE).toBe(false);
+    expect(config.performance.ENABLE_MONITORING).toBe(true);
+    expect(config.cache.ENABLE_VALIDATION_CACHE).toBe(true);
+    expect(config.cache.ENABLE_DEFINITION_CACHE).toBe(true);
   });
 });
 
@@ -82,10 +61,10 @@ describe('EntityConfig helper methods', () => {
   });
 
   it('isFeatureEnabled checks nested flags', () => {
-    process.env.NODE_ENV = 'development';
+    // Base config has ENABLE_OPERATION_TRACING = false
     expect(
       EntityConfig.isFeatureEnabled('performance.ENABLE_OPERATION_TRACING')
-    ).toBe(true);
+    ).toBe(false);
     expect(EntityConfig.isFeatureEnabled('unknown.feature')).toBe(false);
   });
 });

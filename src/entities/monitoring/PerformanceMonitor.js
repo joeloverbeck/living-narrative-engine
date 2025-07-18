@@ -5,7 +5,6 @@
 
 import { validateDependency } from '../../utils/dependencyUtils.js';
 import { ensureValidLogger } from '../../utils/loggerUtils.js';
-import { getGlobalConfig, isConfigInitialized } from '../utils/configUtils.js';
 // Browser-compatible process detection
 const process = globalThis.process || {
   memoryUsage: () => ({ heapUsed: 0, heapTotal: 0 }),
@@ -80,13 +79,8 @@ export default class PerformanceMonitor {
     });
     this.#logger = ensureValidLogger(logger, 'PerformanceMonitor');
 
-    // Apply configuration overrides if available
-    const config = isConfigInitialized() ? getGlobalConfig() : null;
-    this.#enabled =
-      config?.isFeatureEnabled('performance.ENABLE_MONITORING') ?? enabled;
-    this.#slowOperationThreshold =
-      config?.getValue('performance.SLOW_OPERATION_THRESHOLD') ??
-      slowOperationThreshold;
+    this.#enabled = enabled;
+    this.#slowOperationThreshold = slowOperationThreshold;
     this.#maxHistorySize = maxHistorySize;
 
     // Initialize tracking structures
@@ -387,9 +381,7 @@ export default class PerformanceMonitor {
     }
 
     const memoryUsage = process.memoryUsage();
-    const config = isConfigInitialized() ? getGlobalConfig() : null;
-    const warningThreshold =
-      config?.getValue('performance.MEMORY_WARNING_THRESHOLD') ?? 0.8;
+    const warningThreshold = 0.8; // Default warning threshold
 
     // Approximate memory limit (this is a simplified check)
     const memoryLimit = 1024 * 1024 * 1024; // 1GB as default

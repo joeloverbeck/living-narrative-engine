@@ -1,7 +1,6 @@
 // src/llms/services/llmConfigLoader.js
 // --- FILE START ---
 
-import { fetchWithRetry } from '../../utils/index.js';
 import { performSemanticValidations } from '../../validation/llmConfigSemanticValidator.js';
 import {
   formatAjvErrorToStandardizedError,
@@ -24,6 +23,10 @@ import { isNonBlankString } from '../../utils/textUtils.js';
 
 /**
  * @typedef {import('../../interfaces/coreServices.js').IConfiguration} IConfiguration
+ */
+
+/**
+ * @typedef {import('../../interfaces/coreServices.js').IDataFetcher} IDataFetcher
  */
 
 // --- NEW JSDoc Type Definitions based on schema ---
@@ -121,10 +124,8 @@ export class LlmConfigLoader {
   #schemaValidator;
   #configuration;
   #safeEventDispatcher;
+  #dataFetcher;
   #defaultConfigPath = 'config/llm-configs.json';
-  #defaultMaxRetries = 3;
-  #defaultBaseDelayMs = 500;
-  #defaultMaxDelayMs = 5000;
 
   constructor(dependencies = {}) {
     // Corrected error messages to include "valid"
@@ -154,6 +155,12 @@ export class LlmConfigLoader {
     }
     this.#safeEventDispatcher = dependencies.safeEventDispatcher;
 
+    if (!dependencies.dataFetcher)
+      throw new Error(
+        'LlmConfigLoader: Constructor requires a valid IDataFetcher instance.'
+      );
+    this.#dataFetcher = dependencies.dataFetcher;
+
     if (
       dependencies.defaultConfigPath &&
       typeof dependencies.defaultConfigPath === 'string'
@@ -163,7 +170,7 @@ export class LlmConfigLoader {
   }
 
   /**
-   * Fetches the configuration file using {@link fetchWithRetry}.
+   * Fetches the configuration file using the injected IDataFetcher.
    *
    * @private
    * @param {string} path - Location of the configuration file.
@@ -173,15 +180,7 @@ export class LlmConfigLoader {
     this.#logger.debug(
       `LlmConfigLoader: Attempting to load LLM Prompt configurations from: ${path}`
     );
-    const result = await fetchWithRetry(
-      path,
-      { method: 'GET', headers: { Accept: 'application/json' } },
-      this.#defaultMaxRetries,
-      this.#defaultBaseDelayMs,
-      this.#defaultMaxDelayMs,
-      this.#safeEventDispatcher,
-      this.#logger
-    );
+    const result = await this.#dataFetcher.fetch(path);
     this.#logger.debug(
       `LlmConfigLoader: Successfully fetched and parsed LLM Prompt configurations from ${path}.`
     );

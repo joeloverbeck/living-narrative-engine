@@ -35,6 +35,7 @@ The `llm-configs.json` file is the central configuration for all LLM interaction
 ### Configuration Structure
 
 The configuration defines:
+
 - **Multiple LLM profiles** with unique `configId`s
 - **API settings**: endpoint URLs, API types, authentication
 - **JSON output strategies**: tool calling or JSON schema methods
@@ -73,11 +74,13 @@ graph TD
 ### Detailed Workflow Steps
 
 #### 1. Entry Point: Decision Request
+
 - **Component**: `LLMDecisionProvider` (src/turns/providers/llmDecisionProvider.js)
 - **Method**: Delegates to `LLMChooser.choose()`
 - **Input**: Actor entity, turn context, available actions, abort signal
 
 #### 2. Prompt Generation Pipeline
+
 - **Component**: `AIPromptPipeline` (src/prompting/AIPromptPipeline.js)
 - **Process**:
   1. Determines active LLM ID
@@ -87,6 +90,7 @@ graph TD
   5. Delegates to PromptBuilder
 
 #### 3. Prompt Assembly
+
 - **Component**: `PromptBuilder` (src/prompting/promptBuilder.js)
 - **Process**:
   1. Loads LLM configuration for active LLM
@@ -97,6 +101,7 @@ graph TD
   6. Resolves placeholders
 
 #### 4. LLM Adapter Execution
+
 - **Component**: `ConfigurableLLMAdapter` (src/turns/adapters/configurableLLMAdapter.js)
 - **Process**:
   1. Validates configuration completeness
@@ -106,6 +111,7 @@ graph TD
   5. Creates appropriate strategy instance
 
 #### 5. Strategy Pattern Implementation
+
 - **Strategies**:
   - `OpenRouterToolCallingStrategy`: Uses OpenAI-style tool calling
   - `OpenRouterJsonSchemaStrategy`: Uses JSON schema validation
@@ -177,6 +183,7 @@ graph LR
 ### Error Handling
 
 The system implements comprehensive error handling:
+
 - Configuration errors: Missing fields, invalid values
 - Token limit errors: Prompt too long
 - API errors: Authentication, rate limits, network issues
@@ -193,15 +200,15 @@ describe('E2E: LLM Prompt Generation Pipeline', () => {
     const testActor = createTestActor({ isAI: true });
     const context = createTestContext();
     const actions = createTestActions();
-    
+
     // Execute: Generate prompt
     const promptPipeline = container.get(IAIPromptPipeline);
     const prompt = await promptPipeline.generatePrompt(
-      testActor, 
-      context, 
+      testActor,
+      context,
       actions
     );
-    
+
     // Assert: Verify prompt structure
     expect(prompt).toContain('<task_definition>');
     expect(prompt).toContain('<character_persona>');
@@ -219,33 +226,39 @@ describe('E2E: LLM Adapter with Mock Responses', () => {
     // Setup: Mock HTTP client
     const mockHttpClient = {
       request: jest.fn().mockResolvedValue({
-        choices: [{
-          message: {
-            tool_calls: [{
-              type: 'function',
-              function: {
-                name: 'function_call',
-                arguments: JSON.stringify({
-                  chosenIndex: 1,
-                  speech: "Hello there!",
-                  thoughts: "I should greet them."
-                })
-              }
-            }]
-          }
-        }]
-      })
+        choices: [
+          {
+            message: {
+              tool_calls: [
+                {
+                  type: 'function',
+                  function: {
+                    name: 'function_call',
+                    arguments: JSON.stringify({
+                      chosenIndex: 1,
+                      speech: 'Hello there!',
+                      thoughts: 'I should greet them.',
+                    }),
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      }),
     };
-    
+
     // Execute: Full decision flow
-    const adapter = new ConfigurableLLMAdapter({ /* deps */ });
+    const adapter = new ConfigurableLLMAdapter({
+      /* deps */
+    });
     await adapter.init({ llmConfigLoader });
     const response = await adapter.getAIDecision(testPrompt);
-    
+
     // Assert: Verify response
     const parsed = JSON.parse(response);
     expect(parsed.chosenIndex).toBe(1);
-    expect(parsed.speech).toBe("Hello there!");
+    expect(parsed.speech).toBe('Hello there!');
   });
 });
 ```
@@ -256,16 +269,20 @@ describe('E2E: LLM Adapter with Mock Responses', () => {
 describe('E2E: LLM Configuration Management', () => {
   test('should load configs and switch between LLMs', async () => {
     // Setup: Multiple LLM configs
-    const configLoader = new LlmConfigLoader({ /* deps */ });
-    const adapter = new ConfigurableLLMAdapter({ /* deps */ });
-    
+    const configLoader = new LlmConfigLoader({
+      /* deps */
+    });
+    const adapter = new ConfigurableLLMAdapter({
+      /* deps */
+    });
+
     // Execute: Initialize and switch
     await adapter.init({ llmConfigLoader: configLoader });
     const initialLlm = await adapter.getCurrentActiveLlmId();
-    
+
     await adapter.setActiveLlm('openrouter-qwen3-235b-a22b');
     const newLlm = await adapter.getCurrentActiveLlmId();
-    
+
     // Assert: Verify switching
     expect(initialLlm).toBe('openrouter-claude-sonnet-4-toolcalling');
     expect(newLlm).toBe('openrouter-qwen3-235b-a22b');
@@ -280,19 +297,19 @@ describe('E2E: LLM Error Handling', () => {
   test('should handle token limit errors gracefully', async () => {
     // Setup: Create oversized prompt
     const hugePrompt = 'x'.repeat(300000); // Exceeds token limit
-    
+
     // Execute & Assert
-    await expect(
-      adapter.getAIDecision(hugePrompt)
-    ).rejects.toThrow(PromptTooLongError);
+    await expect(adapter.getAIDecision(hugePrompt)).rejects.toThrow(
+      PromptTooLongError
+    );
   });
-  
+
   test('should handle malformed LLM responses', async () => {
     // Setup: Mock invalid response
     mockHttpClient.request.mockResolvedValue({
-      choices: [{ message: { content: 'not json' } }]
+      choices: [{ message: { content: 'not json' } }],
     });
-    
+
     // Execute & Assert
     await expect(
       llmChooser.choose({ actor, context, actions })
@@ -309,13 +326,13 @@ describe('E2E: Token Estimation and Limits', () => {
     // Setup: Prompt near token limit
     const config = await adapter.getCurrentActiveLlmConfig();
     const nearLimitPrompt = generatePromptNearLimit(config.contextTokenLimit);
-    
+
     // Spy on logger
     const loggerSpy = jest.spyOn(logger, 'warn');
-    
+
     // Execute
     await adapter.getAIDecision(nearLimitPrompt);
-    
+
     // Assert: Warning logged
     expect(loggerSpy).toHaveBeenCalledWith(
       expect.stringContaining('nearing the limit')
@@ -332,19 +349,19 @@ describe('E2E: Complete AI Turn Execution', () => {
     // Setup: Complete game environment
     const gameEngine = await setupTestGameEngine();
     const aiActor = createAIActor();
-    
+
     // Execute: Run AI turn
     const turnResult = await gameEngine.executeAiTurn(aiActor);
-    
+
     // Assert: Verify complete flow
     expect(turnResult).toMatchObject({
       actorId: aiActor.id,
       action: expect.objectContaining({
         chosenIndex: expect.any(Number),
-        speech: expect.any(String)
+        speech: expect.any(String),
       }),
       thoughts: expect.any(String),
-      success: true
+      success: true,
     });
   });
 });
@@ -360,17 +377,17 @@ describe('E2E: Prompt Element Assembly', () => {
       taskDefinition: 'Test task',
       characterPersona: 'Test character',
       perceptionLog: [{ type: 'observation', content: 'Test' }],
-      availableActions: [{ index: 1, description: 'Test action' }]
+      availableActions: [{ index: 1, description: 'Test action' }],
     };
-    
+
     // Execute: Build prompt
     const prompt = await promptBuilder.build('test-llm', promptData);
-    
+
     // Assert: All elements present and ordered
     const taskIndex = prompt.indexOf('<task_definition>');
     const personaIndex = prompt.indexOf('<character_persona>');
     const actionsIndex = prompt.indexOf('<indexed_choices>');
-    
+
     expect(taskIndex).toBeLessThan(personaIndex);
     expect(personaIndex).toBeLessThan(actionsIndex);
   });
@@ -411,6 +428,7 @@ describe('E2E: Prompt Element Assembly', () => {
 The LLM prompting workflow in Living Narrative Engine is a well-architected system with clear separation of concerns, comprehensive error handling, and flexible configuration. The recommended E2E tests cover the critical paths and edge cases, ensuring reliable AI-driven gameplay.
 
 Key strengths:
+
 - Modular architecture with clear interfaces
 - Comprehensive validation at every step
 - Flexible configuration system
@@ -418,6 +436,7 @@ Key strengths:
 - Support for multiple LLM providers and strategies
 
 Areas for testing focus:
+
 - Complete workflow integration
 - Error handling and recovery
 - Configuration management

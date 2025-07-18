@@ -18,6 +18,7 @@ import ScopeEngine from '../../scopeDsl/engine.js';
 import DefaultDslParser from '../../scopeDsl/parser/defaultDslParser.js';
 import { ServiceSetup } from '../../utils/serviceInitializerUtils.js';
 import { EventDispatchService } from '../../utils/eventDispatchService.js';
+import { ProductionPathConfiguration } from '../../configuration/productionPathConfiguration.js';
 
 /**
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
@@ -56,6 +57,15 @@ export function registerInfrastructure(container) {
   registrar.instance(tokens.ServiceSetup, new ServiceSetup());
   log.debug(
     `Infrastructure Registration: Registered ${String(tokens.ServiceSetup)}.`
+  );
+
+  // Register path configuration
+  registrar.instance(
+    tokens.IPathConfiguration,
+    new ProductionPathConfiguration()
+  );
+  log.debug(
+    `Infrastructure Registration: Registered ${String(tokens.IPathConfiguration)}.`
   );
 
   // ─── Shared ActionIndexingService ─────────────────────────────

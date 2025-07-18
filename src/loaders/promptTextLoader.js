@@ -10,6 +10,7 @@
 /** @typedef {import('../interfaces/coreServices.js').ISchemaValidator} ISchemaValidator */
 /** @typedef {import('../interfaces/coreServices.js').IDataRegistry} IDataRegistry */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../interfaces/IPathConfiguration.js').IPathConfiguration} IPathConfiguration */
 import { ValidationError } from '../errors/validationError.js';
 
 import AbstractLoader from './abstractLoader.js';
@@ -26,6 +27,7 @@ class PromptTextLoader extends AbstractLoader {
   #dataFetcher;
   #schemaValidator;
   #dataRegistry;
+  #pathConfiguration;
 
   /**
    * Creates a new PromptTextLoader instance.
@@ -36,6 +38,7 @@ class PromptTextLoader extends AbstractLoader {
    * @param {IDataFetcher} deps.dataFetcher - Data fetching service.
    * @param {ISchemaValidator} deps.schemaValidator - Schema validator service.
    * @param {IDataRegistry} deps.dataRegistry - Data registry service.
+   * @param {IPathConfiguration} deps.pathConfiguration - Path configuration service.
    * @param {ILogger} deps.logger - Logger service.
    */
   constructor({
@@ -44,6 +47,7 @@ class PromptTextLoader extends AbstractLoader {
     dataFetcher,
     schemaValidator,
     dataRegistry,
+    pathConfiguration,
     logger,
   }) {
     super(logger, [
@@ -64,6 +68,11 @@ class PromptTextLoader extends AbstractLoader {
         methods: ['validate'],
       },
       { dependency: dataRegistry, name: 'IDataRegistry', methods: ['store'] },
+      {
+        dependency: pathConfiguration,
+        name: 'IPathConfiguration',
+        methods: ['getPromptTextFilename'],
+      },
     ]);
 
     this.#configuration = configuration;
@@ -71,6 +80,7 @@ class PromptTextLoader extends AbstractLoader {
     this.#dataFetcher = dataFetcher;
     this.#schemaValidator = schemaValidator;
     this.#dataRegistry = dataRegistry;
+    this.#pathConfiguration = pathConfiguration;
   }
 
   /**
@@ -83,7 +93,7 @@ class PromptTextLoader extends AbstractLoader {
   async loadPromptText() {
     const filePath = this.#pathResolver.resolveContentPath(
       'prompts',
-      'corePromptText.json'
+      this.#pathConfiguration.getPromptTextFilename()
     );
     this._logger.debug(
       `PromptTextLoader: Loading prompt text from ${filePath}.`

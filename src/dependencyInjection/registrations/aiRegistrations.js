@@ -134,6 +134,7 @@ export function registerLlmInfrastructure(registrar, logger) {
         schemaValidator: c.resolve(tokens.ISchemaValidator),
         configuration: c.resolve(tokens.IConfiguration),
         safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+        dataFetcher: c.resolve(tokens.IDataFetcher),
       })
   );
   logger.debug(
@@ -216,7 +217,9 @@ export function registerPromptingEngine(registrar, logger) {
     return new LlmConfigManager({
       logger: c.resolve(tokens.ILogger),
       configurationProvider: c.resolve(tokens.IConfigurationProvider),
-      configSourceIdentifier: './config/llm-configs.json',
+      configSourceIdentifier: c
+        .resolve(tokens.IPathConfiguration)
+        .getLLMConfigPath(),
     });
   });
 

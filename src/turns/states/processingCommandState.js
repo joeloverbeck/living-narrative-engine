@@ -161,7 +161,7 @@ export class ProcessingCommandState extends AbstractTurnState {
       this._throwConstructionError(msg)
     );
     validateTurnAction(turnAction, (msg) => this._throwConstructionError(msg));
-    if (!directiveResolver) {
+    if (directiveResolver === null) {
       this._throwConstructionError('directiveResolver is required');
     }
   }

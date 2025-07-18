@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import EntityConfigProvider from '../../../../src/entities/config/EntityConfigProvider.js';
 import EntityConfig from '../../../../src/entities/config/EntityConfig.js';
+import { TestEnvironmentProvider } from '../../../../src/configuration/TestEnvironmentProvider.js';
 
 describe('EntityConfigProvider', () => {
   let mockLogger;
@@ -237,16 +238,23 @@ describe('EntityConfigProvider', () => {
       expect(isEnabled).toBe(false);
     });
 
-    it('should delegate to EntityConfig.isFeatureEnabled', () => {
-      const spy = jest.spyOn(EntityConfig, 'isFeatureEnabled');
-      provider.isFeatureEnabled('performance.ENABLE_MONITORING');
-      expect(spy).toHaveBeenCalledWith('performance.ENABLE_MONITORING');
-      spy.mockRestore();
-    });
-
     it('should work correctly with initialized provider', () => {
       const result = provider.isFeatureEnabled('performance.ENABLE_MONITORING');
       expect(typeof result).toBe('boolean');
+    });
+
+    it('should respect environment-specific overrides', () => {
+      // Test with test environment provider
+      const testEnvProvider = new TestEnvironmentProvider();
+      const testProvider = new EntityConfigProvider({
+        logger: mockLogger,
+        environmentProvider: testEnvProvider,
+      });
+
+      // In test environment, ENABLE_MONITORING should be false
+      expect(
+        testProvider.isFeatureEnabled('performance.ENABLE_MONITORING')
+      ).toBe(false);
     });
   });
 

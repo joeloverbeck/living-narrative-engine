@@ -18,6 +18,7 @@ export const coreTokens = freeze({
   IDataFetcher: 'IDataFetcher',
   ITextDataFetcher: 'ITextDataFetcher',
   IConfiguration: 'IConfiguration',
+  IPathConfiguration: 'IPathConfiguration',
   IPathResolver: 'IPathResolver',
   ISchemaValidator: 'ISchemaValidator',
   IDataRegistry: 'IDataRegistry',

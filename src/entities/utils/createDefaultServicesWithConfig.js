@@ -75,6 +75,12 @@ export function createDefaultServicesWithConfig({
     enabled: config?.isFeatureEnabled('performance.ENABLE_MONITORING') ?? true,
     checkInterval:
       config?.getValue('monitoring.HEALTH_CHECK_INTERVAL') ?? 30000,
+    circuitBreakerOptions: {
+      failureThreshold:
+        config?.getValue('errorHandling.CIRCUIT_BREAKER_THRESHOLD') ?? 5,
+      timeout:
+        config?.getValue('errorHandling.CIRCUIT_BREAKER_TIMEOUT') ?? 60000,
+    },
   });
 
   // Create EntityRepositoryAdapter with configuration

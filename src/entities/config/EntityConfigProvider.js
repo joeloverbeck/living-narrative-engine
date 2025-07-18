@@ -6,8 +6,10 @@
 import EntityConfig from './EntityConfig.js';
 import { validateDependency } from '../../utils/dependencyUtils.js';
 import { ensureValidLogger } from '../../utils/loggerUtils.js';
+import { ProcessEnvironmentProvider } from '../../configuration/ProcessEnvironmentProvider.js';
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../../interfaces/IEnvironmentProvider.js').IEnvironmentProvider} IEnvironmentProvider */
 
 /**
  * @class EntityConfigProvider
@@ -18,6 +20,8 @@ export default class EntityConfigProvider {
   #config;
   /** @type {ILogger} */
   #logger;
+  /** @type {IEnvironmentProvider} */
+  #environmentProvider;
   /** @type {boolean} */
   #initialized = false;
 
@@ -25,13 +29,19 @@ export default class EntityConfigProvider {
    * @class
    * @param {object} deps - Dependencies
    * @param {ILogger} deps.logger - Logger instance
+   * @param {IEnvironmentProvider} [deps.environmentProvider] - Environment provider
    * @param {object} [deps.userConfig] - User configuration overrides
    */
-  constructor({ logger, userConfig = {} }) {
+  constructor({
+    logger,
+    environmentProvider = new ProcessEnvironmentProvider(),
+    userConfig = {},
+  }) {
     validateDependency(logger, 'ILogger', console, {
       requiredMethods: ['info', 'error', 'warn', 'debug'],
     });
     this.#logger = ensureValidLogger(logger, 'EntityConfigProvider');
+    this.#environmentProvider = environmentProvider;
 
     this.#initialize(userConfig);
   }
@@ -43,7 +53,21 @@ export default class EntityConfigProvider {
    */
   #initialize(userConfig) {
     try {
-      this.#config = EntityConfig.mergeConfig(userConfig);
+      // Get base configuration without environment overrides
+      const baseConfig = EntityConfig.getConfig();
+
+      // Apply environment-specific overrides
+      this.#applyEnvironmentOverrides(baseConfig);
+
+      // Merge with user config
+      this.#config = this.#deepMerge(baseConfig, userConfig);
+
+      // Update environment section with actual environment provider values
+      this.#config.environment = this.#environmentProvider.getEnvironment();
+
+      // Validate final configuration
+      EntityConfig.validateConfig(this.#config);
+
       this.#initialized = true;
 
       this.#logger.info('EntityConfigProvider initialized successfully');
@@ -60,6 +84,30 @@ export default class EntityConfigProvider {
   }
 
   /**
+   * Applies environment-specific configuration overrides.
+   *
+   * @param {object} config - Configuration to apply overrides to
+   */
+  #applyEnvironmentOverrides(config) {
+    const env = this.#environmentProvider.getEnvironment();
+
+    if (env.IS_PRODUCTION) {
+      config.logging.ENABLE_DEBUG_LOGGING = false;
+      config.performance.ENABLE_OPERATION_TRACING = false;
+      config.validation.STRICT_MODE = true;
+    } else if (env.IS_DEVELOPMENT) {
+      config.logging.ENABLE_DEBUG_LOGGING = true;
+      config.performance.ENABLE_OPERATION_TRACING = true;
+      config.validation.STRICT_MODE = false;
+    } else if (env.IS_TEST) {
+      config.logging.ENABLE_DEBUG_LOGGING = false;
+      config.performance.ENABLE_MONITORING = false;
+      config.cache.ENABLE_VALIDATION_CACHE = false;
+      config.cache.ENABLE_DEFINITION_CACHE = false;
+    }
+  }
+
+  /**
    * Gets enabled features for logging.
    *
    * @returns {object} Enabled features
@@ -71,6 +119,33 @@ export default class EntityConfigProvider {
       validation: this.#config.validation.STRICT_MODE,
       caching: this.#config.cache.ENABLE_DEFINITION_CACHE,
     };
+  }
+
+  /**
+   * Deep merges two objects.
+   *
+   * @param {object} target - Target object
+   * @param {object} source - Source object
+   * @returns {object} Merged object
+   */
+  #deepMerge(target, source) {
+    const result = { ...target };
+
+    for (const key in source) {
+      if (Object.prototype.hasOwnProperty.call(source, key)) {
+        if (
+          source[key] &&
+          typeof source[key] === 'object' &&
+          !Array.isArray(source[key])
+        ) {
+          result[key] = this.#deepMerge(result[key] || {}, source[key]);
+        } else {
+          result[key] = source[key];
+        }
+      }
+    }
+
+    return result;
   }
 
   /**

@@ -305,14 +305,22 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
    * @param {string[]} thoughtsArray - Extracted short-term memory thoughts.
    * @param {Array<{text:string,timestamp:string}>} notesArray - Extracted notes.
    * @param {Array<{text:string,timestamp:string}>} goalsArray - Extracted goals.
+   * @param {ActionComposite[]} [indexedChoicesArray] - Array of available actions with indices.
    * @returns {PromptData} The assembled PromptData object.
    */
-  _buildPromptData(baseValues, thoughtsArray, notesArray, goalsArray) {
+  _buildPromptData(
+    baseValues,
+    thoughtsArray,
+    notesArray,
+    goalsArray,
+    indexedChoicesArray = []
+  ) {
     const promptData = {
       ...baseValues,
       thoughtsArray,
       notesArray,
       goalsArray,
+      indexedChoicesArray,
     };
 
     this.#logger.debug(
@@ -328,6 +336,9 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
     );
     this.#logger.debug(
       `AIPromptContentProvider.getPromptData: notesArray contains ${notesArray.length} entries.`
+    );
+    this.#logger.debug(
+      `AIPromptContentProvider.getPromptData: indexedChoicesArray contains ${indexedChoicesArray.length} entries.`
     );
     return promptData;
   }
@@ -378,11 +389,25 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
 
       const memoryData = this._extractMemoryComponents(componentsMap);
 
+      // Extract availableActions and ensure they have indices and required properties
+      const availableActions = gameStateDto.availableActions || [];
+      const indexedChoicesArray = availableActions.map((action, idx) => ({
+        ...action,
+        index: action.index || idx + 1, // Use existing index or generate 1-based index
+        commandString:
+          action.commandString ||
+          action.displayName ||
+          DEFAULT_FALLBACK_ACTION_COMMAND,
+        description:
+          action.description || DEFAULT_FALLBACK_ACTION_DESCRIPTION_RAW,
+      }));
+
       promptData = this._buildPromptData(
         baseValues,
         memoryData.thoughtsArray,
         memoryData.notesArray,
-        memoryData.goalsArray
+        memoryData.goalsArray,
+        indexedChoicesArray
       );
 
       return promptData;

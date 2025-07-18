@@ -6,18 +6,12 @@
  * - Element assemblers (perception log, thoughts, notes, indexed choices)
  * - Placeholder resolution
  * - Assembly order and formatting
- * 
+ *
  * Note: This is a focused test on the prompt building components without
  * requiring the full LLM configuration system.
  */
 
-import {
-  describe,
-  beforeEach,
-  test,
-  expect,
-  jest,
-} from '@jest/globals';
+import { describe, beforeEach, test, expect, jest } from '@jest/globals';
 import AppContainer from '../../../src/dependencyInjection/appContainer.js';
 import { configureContainer } from '../../../src/dependencyInjection/containerConfig.js';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
@@ -47,7 +41,9 @@ describe('Prompt Builder Components E2E', () => {
     perceptionLogAssembler = container.resolve(aiTokens.PerceptionLogAssembler);
     thoughtsAssembler = container.resolve(aiTokens.ThoughtsSectionAssembler);
     notesAssembler = container.resolve(aiTokens.NotesSectionAssembler);
-    indexedChoicesAssembler = container.resolve(aiTokens.IndexedChoicesAssembler);
+    indexedChoicesAssembler = container.resolve(
+      aiTokens.IndexedChoicesAssembler
+    );
     logger = container.resolve(tokens.ILogger);
   });
 
@@ -57,7 +53,8 @@ describe('Prompt Builder Components E2E', () => {
    */
   test('should resolve placeholders in content', () => {
     // Arrange
-    const content = 'Hello {actorName}, you are in {locationName}. Your goal is {goal}.';
+    const content =
+      'Hello {actorName}, you are in {locationName}. Your goal is {goal}.';
     const data = {
       actorName: 'Elara',
       locationName: 'The Silver Dragon Inn',
@@ -68,7 +65,9 @@ describe('Prompt Builder Components E2E', () => {
     const resolved = placeholderResolver.resolve(content, data);
 
     // Assert
-    expect(resolved).toBe('Hello Elara, you are in The Silver Dragon Inn. Your goal is to find the lost artifact.');
+    expect(resolved).toBe(
+      'Hello Elara, you are in The Silver Dragon Inn. Your goal is to find the lost artifact.'
+    );
   });
 
   /**
@@ -77,7 +76,8 @@ describe('Prompt Builder Components E2E', () => {
    */
   test('should resolve nested placeholders', () => {
     // Arrange
-    const content = '{greeting}, {actor.name}! You have {actor.stats.health} HP.';
+    const content =
+      '{greeting}, {actor.name}! You have {actor.stats.health} HP.';
     const data = {
       greeting: 'Greetings',
       actor: {
@@ -132,11 +132,14 @@ describe('Prompt Builder Components E2E', () => {
       suffix: '\n</perception_log>',
     };
     const allPromptElementsMap = new Map([
-      ['perception_log_entry', {
-        key: 'perception_log_entry',
-        prefix: '<entry type="{type}">\n',
-        suffix: '\n</entry>\n',
-      }]
+      [
+        'perception_log_entry',
+        {
+          key: 'perception_log_entry',
+          prefix: '<entry type="{type}">\n',
+          suffix: '\n</entry>\n',
+        },
+      ],
     ]);
 
     // Act - Call with correct parameters: elementConfig, promptData, placeholderResolver, allPromptElementsMap
@@ -229,7 +232,7 @@ describe('Prompt Builder Components E2E', () => {
     const promptData = {
       notesArray: [
         { text: 'Remember the password is "swordfish"' },
-        { text: 'Check the basement at midnight' }
+        { text: 'Check the basement at midnight' },
       ],
     };
     const elementConfig = {
@@ -287,8 +290,16 @@ describe('Prompt Builder Components E2E', () => {
     const promptData = {
       indexedChoicesArray: [
         { index: 1, commandString: 'Wait', description: 'Wait and observe' },
-        { index: 2, commandString: 'Go North', description: 'Move to the market' },
-        { index: 3, commandString: 'Talk to Innkeeper', description: 'Start a conversation' },
+        {
+          index: 2,
+          commandString: 'Go North',
+          description: 'Move to the market',
+        },
+        {
+          index: 3,
+          commandString: 'Talk to Innkeeper',
+          description: 'Start a conversation',
+        },
       ],
     };
     const elementConfig = {
@@ -309,7 +320,9 @@ describe('Prompt Builder Components E2E', () => {
     expect(assembled).toContain('</actions>');
     expect(assembled).toContain('index: 1 --> Wait (Wait and observe)');
     expect(assembled).toContain('index: 2 --> Go North (Move to the market)');
-    expect(assembled).toContain('index: 3 --> Talk to Innkeeper (Start a conversation)');
+    expect(assembled).toContain(
+      'index: 3 --> Talk to Innkeeper (Start a conversation)'
+    );
   });
 
   /**
@@ -320,8 +333,16 @@ describe('Prompt Builder Components E2E', () => {
     // Arrange
     const promptData = {
       indexedChoicesArray: [
-        { index: 1, commandString: 'Attack Goblin', description: 'Attack the goblin with your sword' },
-        { index: 2, commandString: 'Cast Spell on Ally', description: 'Cast a healing spell' },
+        {
+          index: 1,
+          commandString: 'Attack Goblin',
+          description: 'Attack the goblin with your sword',
+        },
+        {
+          index: 2,
+          commandString: 'Cast Spell on Ally',
+          description: 'Cast a healing spell',
+        },
       ],
     };
     const elementConfig = {
@@ -338,8 +359,12 @@ describe('Prompt Builder Components E2E', () => {
     );
 
     // Assert
-    expect(assembled).toContain('index: 1 --> Attack Goblin (Attack the goblin with your sword)');
-    expect(assembled).toContain('index: 2 --> Cast Spell on Ally (Cast a healing spell)');
+    expect(assembled).toContain(
+      'index: 1 --> Attack Goblin (Attack the goblin with your sword)'
+    );
+    expect(assembled).toContain(
+      'index: 2 --> Cast Spell on Ally (Cast a healing spell)'
+    );
   });
 
   /**
@@ -382,9 +407,7 @@ describe('Prompt Builder Components E2E', () => {
     // Arrange
     const promptData = {
       actorName: 'Elara the Bard',
-      thoughtsArray: [
-        'As {actorName}, I should be careful here.',
-      ],
+      thoughtsArray: ['As {actorName}, I should be careful here.'],
     };
     const elementConfig = {
       key: 'thoughts_wrapper',

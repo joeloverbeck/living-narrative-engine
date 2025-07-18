@@ -163,6 +163,72 @@ describe('ProcessingCommandState helpers', () => {
     ).rejects.toBe(dispatchErr);
   });
 
+  test('_dispatchSpeech logs debug when speech is non-string', async () => {
+    const actor = { id: 'a1' };
+    const ctx = makeCtx(actor);
+    const decisionMeta = { speech: 123 }; // non-string speech
+
+    await state._dispatchSpeech(ctx, actor, decisionMeta);
+
+    expect(mockLogger.debug).toHaveBeenCalledWith(
+      expect.stringContaining('had a non-string or empty speech field')
+    );
+    expect(mockLogger.debug).toHaveBeenCalledWith(
+      expect.stringContaining('Type: number, Value: "123"')
+    );
+  });
+
+  test('_dispatchSpeech logs debug when speech is empty string', async () => {
+    const actor = { id: 'a1' };
+    const ctx = makeCtx(actor);
+    const decisionMeta = { speech: '' }; // empty string speech
+
+    await state._dispatchSpeech(ctx, actor, decisionMeta);
+
+    expect(mockLogger.debug).toHaveBeenCalledWith(
+      expect.stringContaining('had a non-string or empty speech field')
+    );
+    expect(mockLogger.debug).toHaveBeenCalledWith(
+      expect.stringContaining('Type: string, Value: ""')
+    );
+  });
+
+  test('_dispatchSpeech logs debug when speech is undefined', async () => {
+    const actor = { id: 'a1' };
+    const ctx = makeCtx(actor);
+    const decisionMeta = { speech: undefined }; // undefined speech
+
+    await state._dispatchSpeech(ctx, actor, decisionMeta);
+
+    expect(mockLogger.debug).toHaveBeenCalledWith(
+      expect.stringContaining("has no 'speech' field in decisionMeta")
+    );
+  });
+
+  test('_dispatchSpeech logs debug when speech is null', async () => {
+    const actor = { id: 'a1' };
+    const ctx = makeCtx(actor);
+    const decisionMeta = { speech: null }; // null speech
+
+    await state._dispatchSpeech(ctx, actor, decisionMeta);
+
+    expect(mockLogger.debug).toHaveBeenCalledWith(
+      expect.stringContaining("has no 'speech' field in decisionMeta")
+    );
+  });
+
+  test('_dispatchSpeech logs debug when decisionMeta has no speech property', async () => {
+    const actor = { id: 'a1' };
+    const ctx = makeCtx(actor);
+    const decisionMeta = { thoughts: 'some thoughts' }; // no speech property
+
+    await state._dispatchSpeech(ctx, actor, decisionMeta);
+
+    expect(mockLogger.debug).toHaveBeenCalledWith(
+      expect.stringContaining("has no 'speech' field in decisionMeta")
+    );
+  });
+
   test('_dispatchSpeechIfNeeded forwards metadata', async () => {
     const actor = { id: 'a1' };
     const ctx = makeCtx(actor, { getDecisionMeta: () => ({ speech: 'hi' }) });
