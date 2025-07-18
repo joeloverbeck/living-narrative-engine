@@ -140,7 +140,7 @@ export class BodyBlueprintFactory {
       context = new AnatomyGraphContext(options.seed);
 
       // Phase 1: Create root entity
-      const rootId = this.#entityGraphBuilder.createRootEntity(
+      const rootId = await this.#entityGraphBuilder.createRootEntity(
         blueprint.root,
         processedRecipe,
         options.ownerId
@@ -396,7 +396,7 @@ export class BodyBlueprintFactory {
         );
 
         // Create and attach the part
-        const childId = this.#entityGraphBuilder.createAndAttachPart(
+        const childId = await this.#entityGraphBuilder.createAndAttachPart(
           parentEntityId,
           socket.id,
           partDefinitionId,
@@ -429,7 +429,7 @@ export class BodyBlueprintFactory {
             `BodyBlueprintFactory: Generated name '${name}' for child '${childId}' using socket '${socket.id}' with template '${socket.nameTpl}'`
           );
           if (name) {
-            this.#entityGraphBuilder.setEntityName(childId, name);
+            await this.#entityGraphBuilder.setEntityName(childId, name);
           }
         }
       } catch (error) {

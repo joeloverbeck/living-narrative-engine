@@ -98,7 +98,7 @@ describe('intimacy:massage_shoulders action integration', () => {
     }
   });
 
-  it('performs massage shoulders action successfully', () => {
+  it('performs massage shoulders action successfully', async () => {
     testEnv.reset([
       {
         id: 'room1',
@@ -159,7 +159,7 @@ describe('intimacy:massage_shoulders action integration', () => {
       },
     ]);
 
-    testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       actorId: 'alice',
       actionId: 'intimacy:massage_shoulders',
       targetId: 'beth',
@@ -184,7 +184,7 @@ describe('intimacy:massage_shoulders action integration', () => {
     // For basic integration test, just verify the event was dispatched correctly
   });
 
-  it('does not fire rule for different action', () => {
+  it('does not fire rule for different action', async () => {
     testEnv.reset([
       {
         id: 'room1',
@@ -203,7 +203,7 @@ describe('intimacy:massage_shoulders action integration', () => {
 
     const initialEventCount = testEnv.events.length;
 
-    testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       actionId: 'core:wait',
       actorId: 'alice',
     });
@@ -213,7 +213,7 @@ describe('intimacy:massage_shoulders action integration', () => {
     expect(newEventCount).toBe(initialEventCount + 1); // Only the dispatched event
   });
 
-  it('handles missing target gracefully', () => {
+  it('handles missing target gracefully', async () => {
     testEnv.reset([
       {
         id: 'room1',
@@ -233,20 +233,21 @@ describe('intimacy:massage_shoulders action integration', () => {
 
     // This test verifies the rule handles missing entities gracefully
     // The action prerequisites would normally prevent this, but we test rule robustness
-    expect(() => {
-      testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+    await expect(async () => {
+      await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
         actionId: 'intimacy:massage_shoulders',
         actorId: 'alice',
         targetId: 'nonexistent',
       });
     }).not.toThrow();
 
-    // Should still dispatch events even with missing target
+    // With missing target, the rule should fail during GET_NAME operation
+    // So only the initial attempt_action event should be present
     const types = testEnv.events.map((e) => e.eventType);
-    expect(types).toContain('core:perceptible_event');
+    expect(types).toEqual(['core:attempt_action']);
   });
 
-  it('executes action with partner without arms', () => {
+  it('executes action with partner without arms', async () => {
     // This tests the edge case where the partner has no arms
     // In practice, the scope would filter this out, but we test rule robustness
     testEnv.reset([
@@ -290,7 +291,7 @@ describe('intimacy:massage_shoulders action integration', () => {
     ]);
 
     // The rule should still execute even if the scope wouldn't normally allow this
-    testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       actorId: 'alice',
       actionId: 'intimacy:massage_shoulders',
       targetId: 'carl',

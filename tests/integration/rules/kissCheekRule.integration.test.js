@@ -95,7 +95,7 @@ describe('intimacy_handle_kiss_cheek rule integration', () => {
     }
   });
 
-  it('performs kiss cheek action successfully', () => {
+  it('performs kiss cheek action successfully', async () => {
     testEnv.reset([
       {
         id: 'actor1',
@@ -115,7 +115,7 @@ describe('intimacy_handle_kiss_cheek rule integration', () => {
       },
     ]);
 
-    testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       actorId: 'actor1',
       actionId: 'intimacy:kiss_cheek',
       targetId: 'target1',

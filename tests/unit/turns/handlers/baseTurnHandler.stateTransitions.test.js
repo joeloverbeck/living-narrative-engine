@@ -3,7 +3,14 @@
  * This file focuses on complex state transition scenarios and edge cases
  */
 
-import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  jest,
+  beforeEach,
+  afterEach,
+} from '@jest/globals';
 import { BaseTurnHandler } from '../../../../src/turns/handlers/baseTurnHandler.js';
 import { TurnIdleState } from '../../../../src/turns/states/turnIdleState.js';
 import { TurnEndingState } from '../../../../src/turns/states/turnEndingState.js';
@@ -30,7 +37,7 @@ class TransitionTestHandler extends BaseTurnHandler {
     super({
       logger: mockLogger,
       turnStateFactory: mockTurnStateFactory,
-      ...opts
+      ...opts,
     });
   }
 
@@ -90,7 +97,7 @@ describe('BaseTurnHandler State Transitions Tests', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     // Create mock states
     mockState = {
       enterState: jest.fn().mockResolvedValue(undefined),
@@ -147,13 +154,13 @@ describe('BaseTurnHandler State Transitions Tests', () => {
   describe('State transition lifecycle', () => {
     it('should call exit hook before state exitState', async () => {
       const callOrder = [];
-      
+
       const exitingState = {
         ...mockState,
         exitState: jest.fn().mockImplementation(async () => {
           callOrder.push('state-exitState');
         }),
-        getStateName: () => 'ExitingState'
+        getStateName: () => 'ExitingState',
       };
 
       const enteringState = {
@@ -161,11 +168,11 @@ describe('BaseTurnHandler State Transitions Tests', () => {
         enterState: jest.fn().mockImplementation(async () => {
           callOrder.push('state-enterState');
         }),
-        getStateName: () => 'EnteringState'
+        getStateName: () => 'EnteringState',
       };
 
       handler._setTestCurrentState(exitingState);
-      
+
       // Mock the hooks to track call order
       jest.spyOn(handler, 'onExitState').mockImplementation(async () => {
         callOrder.push('hook-onExitState');
@@ -180,7 +187,7 @@ describe('BaseTurnHandler State Transitions Tests', () => {
         'hook-onExitState',
         'state-exitState',
         'hook-onEnterState',
-        'state-enterState'
+        'state-enterState',
       ]);
     });
 
@@ -188,20 +195,22 @@ describe('BaseTurnHandler State Transitions Tests', () => {
       const exitingState = {
         ...mockState,
         exitState: jest.fn().mockRejectedValue(new Error('Exit failed')),
-        getStateName: () => 'ExitingState'
+        getStateName: () => 'ExitingState',
       };
 
       const enteringState = {
         ...mockState,
-        getStateName: () => 'EnteringState'
+        getStateName: () => 'EnteringState',
       };
 
       handler._setTestCurrentState(exitingState);
-      
+
       await handler._exposeTransitionToState(enteringState);
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Error during ExitingState.exitState or onExitState hook'),
+        expect.stringContaining(
+          'Error during ExitingState.exitState or onExitState hook'
+        ),
         expect.any(Error)
       );
       expect(enteringState.enterState).toHaveBeenCalled();
@@ -211,16 +220,16 @@ describe('BaseTurnHandler State Transitions Tests', () => {
     it('should handle missing getStateName in previous state', async () => {
       const stateWithoutName = {
         ...mockState,
-        getStateName: undefined
+        getStateName: undefined,
       };
 
       const enteringState = {
         ...mockState,
-        getStateName: () => 'EnteringState'
+        getStateName: () => 'EnteringState',
       };
 
       handler._setTestCurrentState(stateWithoutName);
-      
+
       await handler._exposeTransitionToState(enteringState);
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -231,15 +240,17 @@ describe('BaseTurnHandler State Transitions Tests', () => {
     it('should handle null previous state gracefully', async () => {
       const enteringState = {
         ...mockState,
-        getStateName: () => 'EnteringState'
+        getStateName: () => 'EnteringState',
       };
 
       handler._setTestCurrentState(null);
-      
+
       await handler._exposeTransitionToState(enteringState);
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('State Transition: None (Initial) → EnteringState')
+        expect.stringContaining(
+          'State Transition: None (Initial) → EnteringState'
+        )
       );
       expect(handler._currentState).toBe(enteringState);
     });
@@ -250,11 +261,11 @@ describe('BaseTurnHandler State Transitions Tests', () => {
       const idleState = {
         ...mockState,
         isIdle: jest.fn().mockReturnValue(true),
-        getStateName: () => 'TurnIdleState'
+        getStateName: () => 'TurnIdleState',
       };
 
       handler._setTestCurrentState(idleState);
-      
+
       await handler._exposeTransitionToState(idleState);
 
       expect(idleState.enterState).toHaveBeenCalled();
@@ -267,16 +278,18 @@ describe('BaseTurnHandler State Transitions Tests', () => {
       const nonIdleState = {
         ...mockState,
         isIdle: jest.fn().mockReturnValue(false),
-        getStateName: () => 'NonIdleState'
+        getStateName: () => 'NonIdleState',
       };
 
       handler._setTestCurrentState(nonIdleState);
-      
+
       await handler._exposeTransitionToState(nonIdleState);
 
       expect(nonIdleState.enterState).not.toHaveBeenCalled();
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('Attempted to transition to the same state NonIdleState. Skipping')
+        expect.stringContaining(
+          'Attempted to transition to the same state NonIdleState. Skipping'
+        )
       );
     });
 
@@ -289,13 +302,15 @@ describe('BaseTurnHandler State Transitions Tests', () => {
       };
 
       handler._setTestCurrentState(stateWithoutIsIdle);
-      
+
       await handler._exposeTransitionToState(stateWithoutIsIdle);
 
       // Should not skip since isIdle defaults to false
       expect(stateWithoutIsIdle.enterState).not.toHaveBeenCalled();
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('Attempted to transition to the same state StateWithoutIsIdle. Skipping')
+        expect.stringContaining(
+          'Attempted to transition to the same state StateWithoutIsIdle. Skipping'
+        )
       );
     });
   });
@@ -306,7 +321,7 @@ describe('BaseTurnHandler State Transitions Tests', () => {
         ...mockState,
         enterState: jest.fn().mockRejectedValue(new Error('Enter failed')),
         getStateName: () => 'FailingState',
-        isIdle: jest.fn().mockReturnValue(false)
+        isIdle: jest.fn().mockReturnValue(false),
       };
 
       const actor = { id: 'test-actor' };
@@ -317,9 +332,13 @@ describe('BaseTurnHandler State Transitions Tests', () => {
       await handler._exposeTransitionToState(failingState);
 
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Forcing transition to TurnIdleState due to error entering FailingState')
+        expect.stringContaining(
+          'Forcing transition to TurnIdleState due to error entering FailingState'
+        )
       );
-      expect(mockTurnStateFactory.createIdleState).toHaveBeenCalledWith(handler);
+      expect(mockTurnStateFactory.createIdleState).toHaveBeenCalledWith(
+        handler
+      );
     });
 
     it('should handle recovery failure gracefully', async () => {
@@ -327,22 +346,26 @@ describe('BaseTurnHandler State Transitions Tests', () => {
         ...mockState,
         enterState: jest.fn().mockRejectedValue(new Error('Enter failed')),
         getStateName: () => 'FailingState',
-        isIdle: jest.fn().mockReturnValue(false)
+        isIdle: jest.fn().mockReturnValue(false),
       };
 
       const failingRecoveryState = {
         ...mockState,
         enterState: jest.fn().mockRejectedValue(new Error('Recovery failed')),
         getStateName: () => 'TurnIdleState',
-        isIdle: jest.fn().mockReturnValue(true)
+        isIdle: jest.fn().mockReturnValue(true),
       };
 
-      mockTurnStateFactory.createIdleState.mockReturnValue(failingRecoveryState);
+      mockTurnStateFactory.createIdleState.mockReturnValue(
+        failingRecoveryState
+      );
 
       await handler._exposeTransitionToState(failingState);
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('CRITICAL - Failed to enter TurnIdleState even after an error')
+        expect.stringContaining(
+          'CRITICAL - Failed to enter TurnIdleState even after an error'
+        )
       );
       expect(handler._currentState).toBe(failingRecoveryState);
     });
@@ -352,13 +375,15 @@ describe('BaseTurnHandler State Transitions Tests', () => {
         ...mockState,
         enterState: jest.fn().mockRejectedValue(new Error('Idle enter failed')),
         getStateName: () => 'TurnIdleState',
-        isIdle: jest.fn().mockReturnValue(true)
+        isIdle: jest.fn().mockReturnValue(true),
       };
 
       await handler._exposeTransitionToState(failingIdleState);
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('CRITICAL - Failed to enter TurnIdleState even after an error')
+        expect.stringContaining(
+          'CRITICAL - Failed to enter TurnIdleState even after an error'
+        )
       );
     });
   });
@@ -373,7 +398,7 @@ describe('BaseTurnHandler State Transitions Tests', () => {
         ...mockState,
         enterState: jest.fn().mockRejectedValue(new Error('Enter failed')),
         getStateName: () => 'FailingState',
-        isIdle: jest.fn().mockReturnValue(false)
+        isIdle: jest.fn().mockReturnValue(false),
       };
 
       await handler._exposeTransitionToState(failingState);
@@ -391,7 +416,7 @@ describe('BaseTurnHandler State Transitions Tests', () => {
         ...mockState,
         enterState: jest.fn().mockRejectedValue(new Error('Enter failed')),
         getStateName: () => 'FailingState',
-        isIdle: jest.fn().mockReturnValue(false)
+        isIdle: jest.fn().mockReturnValue(false),
       };
 
       await handler._exposeTransitionToState(failingState);
@@ -406,7 +431,7 @@ describe('BaseTurnHandler State Transitions Tests', () => {
         ...mockState,
         enterState: jest.fn().mockRejectedValue(new Error('Enter failed')),
         getStateName: () => 'FailingState',
-        isIdle: jest.fn().mockReturnValue(false)
+        isIdle: jest.fn().mockReturnValue(false),
       };
 
       await handler._exposeTransitionToState(failingState);
@@ -424,17 +449,19 @@ describe('BaseTurnHandler State Transitions Tests', () => {
         isIdle: jest.fn().mockImplementation(() => {
           throw new Error('isIdle error');
         }),
-        getStateName: () => 'ErrorState'
+        getStateName: () => 'ErrorState',
       };
 
       handler._setTestCurrentState(errorState);
-      
+
       await handler._exposeTransitionToState(errorState);
 
       // Should not skip transition due to isIdle error
       expect(errorState.enterState).not.toHaveBeenCalled();
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('Attempted to transition to the same state ErrorState. Skipping')
+        expect.stringContaining(
+          'Attempted to transition to the same state ErrorState. Skipping'
+        )
       );
     });
 
@@ -444,11 +471,11 @@ describe('BaseTurnHandler State Transitions Tests', () => {
         isEnding: jest.fn().mockImplementation(() => {
           throw new Error('isEnding error');
         }),
-        getStateName: () => 'ErrorState'
+        getStateName: () => 'ErrorState',
       };
 
       handler._setTestCurrentState(errorState);
-      
+
       await handler._exposeHandleTurnEnd('test-actor');
 
       // Should proceed with transition despite isEnding error
@@ -464,11 +491,11 @@ describe('BaseTurnHandler State Transitions Tests', () => {
         isEnding: jest.fn().mockImplementation(() => {
           throw new Error('isEnding error');
         }),
-        getStateName: () => 'ErrorState'
+        getStateName: () => 'ErrorState',
       };
 
       handler._setTestCurrentState(errorState);
-      
+
       await handler._exposeHandleTurnEnd('test-actor');
 
       // Should proceed with transition
@@ -479,7 +506,7 @@ describe('BaseTurnHandler State Transitions Tests', () => {
   describe('Public transition request methods', () => {
     it('should handle transition request when handler is destroying', async () => {
       handler._setTestIsDestroying(true);
-      
+
       await expect(handler.requestIdleStateTransition()).rejects.toThrow(
         'destroying or has been destroyed'
       );
@@ -487,19 +514,24 @@ describe('BaseTurnHandler State Transitions Tests', () => {
 
     it('should handle transition request when handler is destroyed', async () => {
       handler._setTestIsDestroyed(true);
-      
-      await expect(handler.requestAwaitingInputStateTransition()).rejects.toThrow(
-        'destroying or has been destroyed'
-      );
+
+      await expect(
+        handler.requestAwaitingInputStateTransition()
+      ).rejects.toThrow('destroying or has been destroyed');
     });
 
     it('should create processing command state with TurnDirectiveStrategyResolver', async () => {
       const commandString = 'test command';
       const turnAction = { commandString, actionDefinitionId: 'test:action' };
-      
-      await handler.requestProcessingCommandStateTransition(commandString, turnAction);
 
-      expect(mockTurnStateFactory.createProcessingCommandState).toHaveBeenCalledWith(
+      await handler.requestProcessingCommandStateTransition(
+        commandString,
+        turnAction
+      );
+
+      expect(
+        mockTurnStateFactory.createProcessingCommandState
+      ).toHaveBeenCalledWith(
         handler,
         commandString,
         turnAction,
@@ -508,19 +540,33 @@ describe('BaseTurnHandler State Transitions Tests', () => {
     });
 
     it('should handle all transition request methods in sequence', async () => {
-      const turnAction = { commandString: 'test', actionDefinitionId: 'test:action' };
-      
+      const turnAction = {
+        commandString: 'test',
+        actionDefinitionId: 'test:action',
+      };
+
       await handler.requestIdleStateTransition();
       await handler.requestAwaitingInputStateTransition();
       await handler.requestProcessingCommandStateTransition('test', turnAction);
       await handler.requestAwaitingExternalTurnEndStateTransition();
 
-      expect(mockTurnStateFactory.createIdleState).toHaveBeenCalledWith(handler);
-      expect(mockTurnStateFactory.createAwaitingInputState).toHaveBeenCalledWith(handler);
-      expect(mockTurnStateFactory.createProcessingCommandState).toHaveBeenCalledWith(
-        handler, 'test', turnAction, expect.any(TurnDirectiveStrategyResolver)
+      expect(mockTurnStateFactory.createIdleState).toHaveBeenCalledWith(
+        handler
       );
-      expect(mockTurnStateFactory.createAwaitingExternalTurnEndState).toHaveBeenCalledWith(handler);
+      expect(
+        mockTurnStateFactory.createAwaitingInputState
+      ).toHaveBeenCalledWith(handler);
+      expect(
+        mockTurnStateFactory.createProcessingCommandState
+      ).toHaveBeenCalledWith(
+        handler,
+        'test',
+        turnAction,
+        expect.any(TurnDirectiveStrategyResolver)
+      );
+      expect(
+        mockTurnStateFactory.createAwaitingExternalTurnEndState
+      ).toHaveBeenCalledWith(handler);
     });
   });
 
@@ -529,7 +575,7 @@ describe('BaseTurnHandler State Transitions Tests', () => {
       const states = [
         { ...mockState, getStateName: () => 'State1' },
         { ...mockState, getStateName: () => 'State2' },
-        { ...mockState, getStateName: () => 'State3' }
+        { ...mockState, getStateName: () => 'State3' },
       ];
 
       for (const state of states) {
@@ -544,13 +590,13 @@ describe('BaseTurnHandler State Transitions Tests', () => {
 
     it('should handle transition with complex hook interactions', async () => {
       let hookCallCount = 0;
-      
+
       const complexState = {
         ...mockState,
         getStateName: () => 'ComplexState',
         enterState: jest.fn().mockImplementation(async () => {
           hookCallCount++;
-        })
+        }),
       };
 
       jest.spyOn(handler, 'onEnterState').mockImplementation(async () => {
@@ -572,15 +618,17 @@ describe('BaseTurnHandler State Transitions Tests', () => {
         ...mockState,
         enterState: jest.fn().mockRejectedValue(new Error('Enter failed')),
         getStateName: () => 'FailingState',
-        isIdle: jest.fn().mockReturnValue(false)
+        isIdle: jest.fn().mockReturnValue(false),
       };
 
       mockTurnStateFactory.createIdleState.mockImplementation(() => {
         throw new Error('Factory error');
       });
 
-      await expect(handler._exposeTransitionToState(failingState)).rejects.toThrow('Factory error');
-      
+      await expect(
+        handler._exposeTransitionToState(failingState)
+      ).rejects.toThrow('Factory error');
+
       // Restore the factory to prevent errors during cleanup
       mockTurnStateFactory.createIdleState.mockReturnValue(mockIdleState);
     });
@@ -591,7 +639,7 @@ describe('BaseTurnHandler State Transitions Tests', () => {
       const minimalState = {
         enterState: jest.fn().mockResolvedValue(undefined),
         exitState: jest.fn().mockResolvedValue(undefined),
-        getStateName: () => 'MinimalState'
+        getStateName: () => 'MinimalState',
         // No isIdle, isEnding, or destroy methods
       };
 
@@ -604,12 +652,12 @@ describe('BaseTurnHandler State Transitions Tests', () => {
     it('should handle transition during handler lifecycle events', async () => {
       const transitionState = {
         ...mockState,
-        getStateName: () => 'TransitionState'
+        getStateName: () => 'TransitionState',
       };
 
       // Set up a scenario where transition happens during destroy
       handler._setTestIsDestroying(true);
-      
+
       await handler._exposeTransitionToState(transitionState);
 
       expect(handler._currentState).toBe(transitionState);

@@ -192,7 +192,7 @@ describe('Gorgeous MILF Anatomy Generation Integration Test', () => {
 
   it('should generate complete anatomy for Jacqueline Rouxel with all specified features', async () => {
     // Create Jacqueline entity
-    const jacquelineEntity = entityManager.createEntityInstance(
+    const jacquelineEntity = await entityManager.createEntityInstance(
       'anatomy:jacqueline_rouxel'
     );
     expect(jacquelineEntity).toBeDefined();

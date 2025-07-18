@@ -295,7 +295,7 @@ describe('core_handle_follow rule integration', () => {
     }
   });
 
-  it('performs follow action successfully', () => {
+  it('performs follow action successfully', async () => {
     testEnv.reset([
       {
         id: 'f1',
@@ -313,7 +313,7 @@ describe('core_handle_follow rule integration', () => {
       },
     ]);
 
-    testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       actorId: 'f1',
       actionId: 'core:follow',
       targetId: 'l1',
@@ -337,7 +337,7 @@ describe('core_handle_follow rule integration', () => {
     expect(valid).toBe(true);
   });
 
-  it('successful follow updates components and dispatches events', () => {
+  it('successful follow updates components and dispatches events', async () => {
     testEnv.reset([
       {
         id: 'f1',
@@ -355,7 +355,7 @@ describe('core_handle_follow rule integration', () => {
       },
     ]);
 
-    testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       actorId: 'f1',
       actionId: 'core:follow',
       targetId: 'l1',
@@ -413,7 +413,7 @@ describe('core_handle_follow rule integration', () => {
     // modified when a follow cycle is detected.
   });
 
-  it('leader cannot follow follower after being followed', () => {
+  it('leader cannot follow follower after being followed', async () => {
     testEnv.reset([
       {
         id: 'follower1',
@@ -432,7 +432,7 @@ describe('core_handle_follow rule integration', () => {
     ]);
 
     // Step 1: Follower follows Leader
-    testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       actorId: 'follower1',
       actionId: 'core:follow',
       targetId: 'leader1',
@@ -455,7 +455,7 @@ describe('core_handle_follow rule integration', () => {
 
     // Step 2: Clear events and try to make Leader follow Follower
     testEnv.events.length = 0;
-    testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       actorId: 'leader1',
       actionId: 'core:follow',
       targetId: 'follower1',

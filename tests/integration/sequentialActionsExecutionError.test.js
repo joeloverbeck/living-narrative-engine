@@ -148,7 +148,7 @@ describe('Sequential Action Execution – Error Path', () => {
     expect(failingHandlerMock).toHaveBeenCalledTimes(1);
 
     /* ✔️ Errors logged with contextual message and propagated */
-    expect(logger.error).toHaveBeenCalledTimes(3);
+    expect(logger.error).toHaveBeenCalledTimes(4);
 
     expect(logger.error).toHaveBeenNthCalledWith(
       1,
@@ -160,13 +160,18 @@ describe('Sequential Action Execution – Error Path', () => {
     expect(logger.error).toHaveBeenNthCalledWith(
       2,
       expect.stringContaining(
-        '[Rule test-sequential-error] Error during action sequence:'
+        '_executeActions: Error in action sequence for Rule'
       ),
       expect.objectContaining({ message: 'Intentional Test Failure' })
     );
     expect(logger.error).toHaveBeenNthCalledWith(
       3,
-      expect.stringContaining("rule 'test-sequential-error' threw:"),
+      expect.stringContaining("Rule test-sequential-error: Error during action sequence:"),
+      expect.objectContaining({ message: 'Intentional Test Failure' })
+    );
+    expect(logger.error).toHaveBeenNthCalledWith(
+      4,
+      expect.stringContaining("Rule 'test-sequential-error' threw error:"),
       expect.objectContaining({ message: 'Intentional Test Failure' })
     );
 

@@ -14,7 +14,7 @@ describe('executeActionSequence error propagation', () => {
     jest.clearAllMocks();
   });
 
-  test('rethrows errors from operation handlers', () => {
+  test('rethrows errors from operation handlers', async () => {
     const interpreter = {
       execute: jest.fn(() => {
         throw new Error('boom');
@@ -24,9 +24,9 @@ describe('executeActionSequence error propagation', () => {
     const actions = [{ type: 'TEST' }, { type: 'SKIP' }];
     const ctx = { evaluationContext: {}, scopeLabel: 'T', jsonLogic: {} };
 
-    expect(() =>
+    await expect(
       executeActionSequence(actions, ctx, logger, interpreter)
-    ).toThrow('boom');
+    ).rejects.toThrow('boom');
 
     expect(interpreter.execute).toHaveBeenCalledTimes(1);
     expect(logger.error).toHaveBeenCalledWith(

@@ -78,9 +78,9 @@ describeEntityManagerSuite(
         expect(bed.entityManager).toBeDefined();
       });
 
-      it('should default to a UUIDv4 generator if none is provided', () => {
+      it('should default to a UUIDv4 generator if none is provided', async () => {
         // Arrange
-        const entity = getBed().createBasicEntity();
+        const entity = await getBed().createBasicEntity();
 
         // Assert
         // This is an indirect test. We can't check *which* function was used,
@@ -98,12 +98,12 @@ describeEntityManagerSuite(
 
 describeEntityManagerSuite('EntityManager - createEntityInstance', (getBed) => {
   describe('createEntityInstance', () => {
-    it('should create an entity with an ID from the injected generator if no instanceId is provided', () => {
+    it('should create an entity with an ID from the injected generator if no instanceId is provided', async () => {
       // Arrange
       const mockIdGenerator = () => 'test-entity-id-123';
       const bed = new EntityManagerTestBed({ idGenerator: mockIdGenerator });
 
-      const entity = bed.createBasicEntity();
+      const entity = await bed.createBasicEntity();
 
       // Assert
       expect(entity).toBeInstanceOf(Entity);
@@ -111,13 +111,13 @@ describeEntityManagerSuite('EntityManager - createEntityInstance', (getBed) => {
       expect(entity.definitionId).toBe(TestData.DefinitionIDs.BASIC);
     });
 
-    it('should create an entity with a specific instanceId if provided, ignoring the generator', () => {
+    it('should create an entity with a specific instanceId if provided, ignoring the generator', async () => {
       // Arrange
       const mockIdGenerator = jest.fn(() => 'should-not-be-called');
       const bed = new EntityManagerTestBed({ idGenerator: mockIdGenerator });
       const { PRIMARY } = TestData.InstanceIDs;
 
-      const entity = bed.createBasicEntity({
+      const entity = await bed.createBasicEntity({
         instanceId: PRIMARY,
       });
 
@@ -127,11 +127,11 @@ describeEntityManagerSuite('EntityManager - createEntityInstance', (getBed) => {
       expect(mockIdGenerator).not.toHaveBeenCalled();
     });
 
-    it('should dispatch an ENTITY_CREATED event upon successful creation', () => {
+    it('should dispatch an ENTITY_CREATED event upon successful creation', async () => {
       // Arrange
       const { mocks } = getBed();
 
-      const entity = getBed().createBasicEntity();
+      const entity = await getBed().createBasicEntity();
 
       // Assert
       expectEntityCreatedDispatch(
@@ -141,43 +141,43 @@ describeEntityManagerSuite('EntityManager - createEntityInstance', (getBed) => {
       );
     });
 
-    it('should throw a DefinitionNotFoundError if the definitionId does not exist', () => {
+    it('should throw a DefinitionNotFoundError if the definitionId does not exist', async () => {
       // Arrange
       const { entityManager } = getBed();
       const NON_EXISTENT_DEF_ID = 'non:existent';
       getBed().setupDefinitions(); // No definitions available
 
       // Act & Assert
-      expect(() =>
+      await expect(
         entityManager.createEntityInstance(NON_EXISTENT_DEF_ID)
-      ).toThrow(new DefinitionNotFoundError(NON_EXISTENT_DEF_ID));
+      ).rejects.toThrow(new DefinitionNotFoundError(NON_EXISTENT_DEF_ID));
     });
 
-    it('should throw a DuplicateEntityError if an entity with the provided instanceId already exists', () => {
+    it('should throw a DuplicateEntityError if an entity with the provided instanceId already exists', async () => {
       // Arrange
       const { entityManager } = getBed();
       const { PRIMARY } = TestData.InstanceIDs;
-      getBed().createBasicEntity({ instanceId: PRIMARY }); // Create the first one
+      await getBed().createBasicEntity({ instanceId: PRIMARY }); // Create the first one
 
       // Act & Assert
-      expect(() => {
+      await expect(
         entityManager.createEntityInstance(TestData.DefinitionIDs.BASIC, {
           instanceId: PRIMARY,
-        });
-      }).toThrow(DuplicateEntityError);
+        })
+      ).rejects.toThrow(DuplicateEntityError);
     });
 
     runInvalidDefinitionIdTests(getBed, (em, defId) =>
       em.createEntityInstance(defId)
     );
 
-    it('should fetch and cache the EntityDefinition on first use', () => {
+    it('should fetch and cache the EntityDefinition on first use', async () => {
       // Arrange
       const { mocks } = getBed();
 
       // Act
-      getBed().createBasicEntity({ instanceId: 'e1' });
-      getBed().createBasicEntity({ instanceId: 'e2' });
+      await getBed().createBasicEntity({ instanceId: 'e1' });
+      await getBed().createBasicEntity({ instanceId: 'e2' });
 
       // Assert
       expect(mocks.registry.getEntityDefinition).toHaveBeenCalledTimes(1);
@@ -186,7 +186,7 @@ describeEntityManagerSuite('EntityManager - createEntityInstance', (getBed) => {
       );
     });
 
-    it('should correctly apply component overrides', () => {
+    it('should correctly apply component overrides', async () => {
       // Arrange
       const overrides = {
         'core:description': { text: 'Overridden Description' },
@@ -194,7 +194,7 @@ describeEntityManagerSuite('EntityManager - createEntityInstance', (getBed) => {
       };
 
       // Act
-      const entity = getBed().createBasicEntity({
+      const entity = await getBed().createBasicEntity({
         overrides,
       });
 
@@ -206,7 +206,7 @@ describeEntityManagerSuite('EntityManager - createEntityInstance', (getBed) => {
       expect(entity.getComponentData('new:component').data).toBe('xyz');
     });
 
-    it('should throw an error if component validation fails during creation', () => {
+    it('should throw an error if component validation fails during creation', async () => {
       // Arrange
       const { entityManager, mocks } = getBed();
       const { PRIMARY } = TestData.InstanceIDs;
@@ -218,12 +218,12 @@ describeEntityManagerSuite('EntityManager - createEntityInstance', (getBed) => {
       });
 
       // Act & Assert
-      expect(() =>
+      await expect(
         entityManager.createEntityInstance(TestData.DefinitionIDs.BASIC, {
           instanceId: PRIMARY,
           componentOverrides: { 'core:name': { name: 'invalid' } },
         })
-      ).toThrow(/Validation failed/);
+      ).rejects.toThrow(/Validation failed/);
     });
   });
 });
@@ -291,14 +291,14 @@ describeEntityManagerSuite('EntityManager - reconstructEntity', (getBed) => {
       );
     });
 
-    it('should throw a DuplicateEntityError if an entity with the same ID already exists', () => {
+    it('should throw a DuplicateEntityError if an entity with the same ID already exists', async () => {
       // Arrange
       const { entityManager } = getBed();
       const { PRIMARY } = TestData.InstanceIDs;
       getBed().setupTestDefinitions('basic');
 
       // Create the first entity
-      getBed().createBasicEntity({ instanceId: PRIMARY });
+      await getBed().createBasicEntity({ instanceId: PRIMARY });
 
       const serializedEntity = buildSerializedEntity(
         PRIMARY,
@@ -312,14 +312,14 @@ describeEntityManagerSuite('EntityManager - reconstructEntity', (getBed) => {
       );
     });
 
-    it('should map duplicate ID errors to legacy message', () => {
+    it('should map duplicate ID errors to legacy message', async () => {
       // Arrange
       const { entityManager } = getBed();
       const { PRIMARY } = TestData.InstanceIDs;
       getBed().setupTestDefinitions('basic');
 
       // Pre-create entity to trigger duplicate case
-      getBed().createBasicEntity({ instanceId: PRIMARY });
+      await getBed().createBasicEntity({ instanceId: PRIMARY });
 
       const serializedEntity = buildSerializedEntity(
         PRIMARY,
@@ -395,26 +395,28 @@ describeEntityManagerSuite('EntityManager - reconstructEntity', (getBed) => {
 
 describeEntityManagerSuite('EntityManager - removeEntityInstance', (getBed) => {
   describe('removeEntityInstance', () => {
-    it('should remove an existing entity', () => {
+    it('should remove an existing entity', async () => {
       // Arrange
       const { entityManager } = getBed();
-      const entity = getBed().createBasicEntity();
+      const entity = await getBed().createBasicEntity();
       expect(entityManager.getEntityInstance(entity.id)).toBe(entity);
 
       // Act
-      entityManager.removeEntityInstance(entity.id);
+      await entityManager.removeEntityInstance(entity.id);
 
       // Assert
       expect(entityManager.getEntityInstance(entity.id)).toBeUndefined();
     });
 
-    it('should dispatch an ENTITY_REMOVED event upon successful removal', () => {
+    it('should dispatch an ENTITY_REMOVED event upon successful removal', async () => {
       // Arrange
       const { entityManager, mocks } = getBed();
-      const entity = getBed().createEntity('basic', { resetDispatch: true });
+      const entity = await getBed().createEntity('basic', {
+        resetDispatch: true,
+      });
 
       // Act
-      entityManager.removeEntityInstance(entity.id);
+      await entityManager.removeEntityInstance(entity.id);
 
       // Assert
       expectEntityRemovedDispatch(
@@ -424,13 +426,13 @@ describeEntityManagerSuite('EntityManager - removeEntityInstance', (getBed) => {
       );
     });
 
-    it('should throw an EntityNotFoundError when trying to remove a non-existent entity', () => {
+    it('should throw an EntityNotFoundError when trying to remove a non-existent entity', async () => {
       // Arrange
       const { entityManager } = getBed();
       const { PRIMARY } = TestData.InstanceIDs;
 
       // Act & Assert
-      expect(() => entityManager.removeEntityInstance(PRIMARY)).toThrow(
+      await expect(entityManager.removeEntityInstance(PRIMARY)).rejects.toThrow(
         new EntityNotFoundError(PRIMARY)
       );
     });
@@ -439,7 +441,7 @@ describeEntityManagerSuite('EntityManager - removeEntityInstance', (getBed) => {
       em.removeEntityInstance(instanceId)
     );
 
-    it('should throw a RepositoryConsistencyError if entityRepository fails', () => {
+    it('should throw a RepositoryConsistencyError if entityRepository fails', async () => {
       const store = new Map();
       const stubRepo = {
         add: jest.fn((entity) => {
@@ -483,9 +485,9 @@ describeEntityManagerSuite('EntityManager - removeEntityInstance', (getBed) => {
         instanceId: PRIMARY,
       });
 
-      expect(() => lifecycleManager.removeEntityInstance(PRIMARY)).toThrow(
-        RepositoryConsistencyError
-      );
+      await expect(
+        lifecycleManager.removeEntityInstance(PRIMARY)
+      ).rejects.toThrow(RepositoryConsistencyError);
       expect(mocks.logger.error).toHaveBeenCalledWith(
         expect.stringContaining(
           'EntityRepository.remove failed for already retrieved entity'
@@ -497,11 +499,11 @@ describeEntityManagerSuite('EntityManager - removeEntityInstance', (getBed) => {
 
 describeEntityManagerSuite('EntityManager - clearAll', (getBed) => {
   describe('clearAll', () => {
-    it('should remove all active entities', () => {
+    it('should remove all active entities', async () => {
       // Arrange
       const { entityManager } = getBed();
-      const entity1 = getBed().createBasicEntity();
-      const entity2 = getBed().createBasicEntity();
+      const entity1 = await getBed().createBasicEntity();
+      const entity2 = await getBed().createBasicEntity();
 
       expect(Array.from(entityManager.entities).length).toBe(2);
 
@@ -514,20 +516,20 @@ describeEntityManagerSuite('EntityManager - clearAll', (getBed) => {
       expect(entityManager.getEntityInstance(entity2.id)).toBeUndefined();
     });
 
-    it('should clear the internal definition cache', () => {
+    it('should clear the internal definition cache', async () => {
       // Arrange
       const { entityManager, mocks } = getBed();
 
       // Act
-      getBed().createBasicEntity({ instanceId: 'e1' });
+      await getBed().createBasicEntity({ instanceId: 'e1' });
       // This should hit the cache
-      getBed().createBasicEntity({ instanceId: 'e2' });
+      await getBed().createBasicEntity({ instanceId: 'e2' });
       expect(mocks.registry.getEntityDefinition).toHaveBeenCalledTimes(1);
 
       entityManager.clearAll();
 
       // After clearing, it should fetch from the registry again
-      getBed().createBasicEntity({ instanceId: 'e3' });
+      await getBed().createBasicEntity({ instanceId: 'e3' });
       expect(mocks.registry.getEntityDefinition).toHaveBeenCalledTimes(2);
     });
 

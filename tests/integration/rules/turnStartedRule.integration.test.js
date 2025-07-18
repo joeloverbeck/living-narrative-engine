@@ -59,7 +59,7 @@ describe('core_handle_turn_started rule integration', () => {
     }
   });
 
-  it('adds current_actor component when turn_started is received', () => {
+  it('adds current_actor component when turn_started is received', async () => {
     testEnv.reset([
       {
         id: 'test-entity',
@@ -67,7 +67,7 @@ describe('core_handle_turn_started rule integration', () => {
       },
     ]);
 
-    testEnv.eventBus.dispatch(TURN_STARTED_ID, {
+    await testEnv.eventBus.dispatch(TURN_STARTED_ID, {
       entityId: 'test-entity',
     });
 

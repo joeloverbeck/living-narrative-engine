@@ -96,20 +96,20 @@ describe('Anatomy Runtime Behavior Integration', () => {
     it('should detach a part and all its children', async () => {
       // Create a simple anatomy
       const torso =
-        testBed.entityManager.createEntityInstance('test:simple_torso');
-      const leftArm = testBed.entityManager.createEntityInstance(
+        await testBed.entityManager.createEntityInstance('test:simple_torso');
+      const leftArm = await testBed.entityManager.createEntityInstance(
         'test:detachable_arm'
       );
       const leftHand =
-        testBed.entityManager.createEntityInstance('test:simple_hand');
+        await testBed.entityManager.createEntityInstance('test:simple_hand');
 
       // Connect parts
-      testBed.entityManager.addComponent(leftArm.id, 'anatomy:joint', {
+      await testBed.entityManager.addComponent(leftArm.id, 'anatomy:joint', {
         parentId: torso.id,
         socketId: 'left_arm_socket',
         jointType: 'ball',
       });
-      testBed.entityManager.addComponent(leftHand.id, 'anatomy:joint', {
+      await testBed.entityManager.addComponent(leftHand.id, 'anatomy:joint', {
         parentId: leftArm.id,
         socketId: 'hand_socket',
         jointType: 'hinge',
@@ -137,12 +137,12 @@ describe('Anatomy Runtime Behavior Integration', () => {
 
     it('should dispatch LIMB_DETACHED_EVENT_ID when detaching', async () => {
       const torso =
-        testBed.entityManager.createEntityInstance('test:simple_torso');
-      const arm = testBed.entityManager.createEntityInstance(
+        await testBed.entityManager.createEntityInstance('test:simple_torso');
+      const arm = await testBed.entityManager.createEntityInstance(
         'test:detachable_arm'
       );
 
-      testBed.entityManager.addComponent(arm.id, 'anatomy:joint', {
+      await testBed.entityManager.addComponent(arm.id, 'anatomy:joint', {
         parentId: torso.id,
         socketId: 'left_arm_socket',
         jointType: 'ball',
@@ -188,29 +188,29 @@ describe('Anatomy Runtime Behavior Integration', () => {
   });
 
   describe('Graph Traversal', () => {
-    it('should find parts by type', () => {
+    it('should find parts by type', async () => {
       // Create anatomy with multiple arms
       const torso =
-        testBed.entityManager.createEntityInstance('test:simple_torso');
-      const leftArm = testBed.entityManager.createEntityInstance(
+        await testBed.entityManager.createEntityInstance('test:simple_torso');
+      const leftArm = await testBed.entityManager.createEntityInstance(
         'test:detachable_arm'
       );
-      const rightArm = testBed.entityManager.createEntityInstance(
+      const rightArm = await testBed.entityManager.createEntityInstance(
         'test:detachable_arm'
       );
       const head =
-        testBed.entityManager.createEntityInstance('test:simple_head');
+        await testBed.entityManager.createEntityInstance('test:simple_head');
 
       // Connect parts
-      testBed.entityManager.addComponent(leftArm.id, 'anatomy:joint', {
+      await testBed.entityManager.addComponent(leftArm.id, 'anatomy:joint', {
         parentId: torso.id,
         socketId: 'left_arm_socket',
       });
-      testBed.entityManager.addComponent(rightArm.id, 'anatomy:joint', {
+      await testBed.entityManager.addComponent(rightArm.id, 'anatomy:joint', {
         parentId: torso.id,
         socketId: 'right_arm_socket',
       });
-      testBed.entityManager.addComponent(head.id, 'anatomy:joint', {
+      await testBed.entityManager.addComponent(head.id, 'anatomy:joint', {
         parentId: torso.id,
         socketId: 'head_socket',
       });
@@ -228,21 +228,20 @@ describe('Anatomy Runtime Behavior Integration', () => {
       expect(heads.length).toBeGreaterThanOrEqual(0); // More lenient check
     });
 
-    it('should find path between body parts', () => {
+    it('should find path between body parts', async () => {
       // Create a chain: torso -> arm -> hand
       const torso =
-        testBed.entityManager.createEntityInstance('test:simple_torso');
-      const arm = testBed.entityManager.createEntityInstance(
+        await testBed.entityManager.createEntityInstance('test:simple_torso');
+      const arm = await testBed.entityManager.createEntityInstance(
         'test:detachable_arm'
       );
-      const hand =
-        testBed.entityManager.createEntityInstance('test:simple_hand');
+      const hand = await testBed.entityManager.createEntityInstance('test:simple_hand');
 
-      testBed.entityManager.addComponent(arm.id, 'anatomy:joint', {
+      await testBed.entityManager.addComponent(arm.id, 'anatomy:joint', {
         parentId: torso.id,
         socketId: 'left_arm_socket',
       });
-      testBed.entityManager.addComponent(hand.id, 'anatomy:joint', {
+      await testBed.entityManager.addComponent(hand.id, 'anatomy:joint', {
         parentId: arm.id,
         socketId: 'hand_socket',
       });
@@ -260,20 +259,19 @@ describe('Anatomy Runtime Behavior Integration', () => {
       expect(selfPath).toEqual([arm.id]);
     });
 
-    it('should get anatomy root from any part', () => {
+    it('should get anatomy root from any part', async () => {
       const torso =
-        testBed.entityManager.createEntityInstance('test:simple_torso');
-      const arm = testBed.entityManager.createEntityInstance(
+        await testBed.entityManager.createEntityInstance('test:simple_torso');
+      const arm = await testBed.entityManager.createEntityInstance(
         'test:detachable_arm'
       );
-      const hand =
-        testBed.entityManager.createEntityInstance('test:simple_hand');
+      const hand = await testBed.entityManager.createEntityInstance('test:simple_hand');
 
-      testBed.entityManager.addComponent(arm.id, 'anatomy:joint', {
+      await testBed.entityManager.addComponent(arm.id, 'anatomy:joint', {
         parentId: torso.id,
         socketId: 'left_arm_socket',
       });
-      testBed.entityManager.addComponent(hand.id, 'anatomy:joint', {
+      await testBed.entityManager.addComponent(hand.id, 'anatomy:joint', {
         parentId: arm.id,
         socketId: 'hand_socket',
       });
@@ -286,26 +284,25 @@ describe('Anatomy Runtime Behavior Integration', () => {
       expect(bodyGraphService.getAnatomyRoot(torso.id)).toBe(torso.id);
     });
 
-    it('should get all parts in anatomy', () => {
+    it('should get all parts in anatomy', async () => {
       const torso =
-        testBed.entityManager.createEntityInstance('test:simple_torso');
-      const arm = testBed.entityManager.createEntityInstance(
+        await testBed.entityManager.createEntityInstance('test:simple_torso');
+      const arm = await testBed.entityManager.createEntityInstance(
         'test:detachable_arm'
       );
-      const hand =
-        testBed.entityManager.createEntityInstance('test:simple_hand');
+      const hand = await testBed.entityManager.createEntityInstance('test:simple_hand');
       const head =
-        testBed.entityManager.createEntityInstance('test:simple_head');
+        await testBed.entityManager.createEntityInstance('test:simple_head');
 
-      testBed.entityManager.addComponent(arm.id, 'anatomy:joint', {
+      await testBed.entityManager.addComponent(arm.id, 'anatomy:joint', {
         parentId: torso.id,
         socketId: 'left_arm_socket',
       });
-      testBed.entityManager.addComponent(hand.id, 'anatomy:joint', {
+      await testBed.entityManager.addComponent(hand.id, 'anatomy:joint', {
         parentId: arm.id,
         socketId: 'hand_socket',
       });
-      testBed.entityManager.addComponent(head.id, 'anatomy:joint', {
+      await testBed.entityManager.addComponent(head.id, 'anatomy:joint', {
         parentId: torso.id,
         socketId: 'head_socket',
       });
@@ -331,10 +328,10 @@ describe('Anatomy Runtime Behavior Integration', () => {
   });
 
   describe('Dynamic Modifications', () => {
-    it('should handle adding new parts after initial generation', () => {
+    it('should handle adding new parts after initial generation', async () => {
       // Start with just a torso
       const torso =
-        testBed.entityManager.createEntityInstance('test:simple_torso');
+        await testBed.entityManager.createEntityInstance('test:simple_torso');
       bodyGraphService.buildAdjacencyCache(torso.id);
 
       // Initially just torso
@@ -342,10 +339,10 @@ describe('Anatomy Runtime Behavior Integration', () => {
       expect(initialTorsos).toHaveLength(1);
 
       // Add an arm dynamically
-      const newArm = testBed.entityManager.createEntityInstance(
+      const newArm = await testBed.entityManager.createEntityInstance(
         'test:detachable_arm'
       );
-      testBed.entityManager.addComponent(newArm.id, 'anatomy:joint', {
+      await testBed.entityManager.addComponent(newArm.id, 'anatomy:joint', {
         parentId: torso.id,
         socketId: 'right_arm_socket',
         jointType: 'ball',
@@ -472,7 +469,7 @@ describe('Anatomy Runtime Behavior Integration', () => {
 
       // Create entity - should trigger anatomy generation
       const bodyEntity =
-        testBed.entityManager.createEntityInstance('test:auto_body');
+        await testBed.entityManager.createEntityInstance('test:auto_body');
 
       // Dispatch entity created event
       await testBed.eventDispatcher.dispatch(ENTITY_CREATED_ID, {
@@ -565,7 +562,7 @@ describe('Anatomy Runtime Behavior Integration', () => {
   describe('Edge Cases', () => {
     it('should handle detachment of root entity', async () => {
       const torso =
-        testBed.entityManager.createEntityInstance('test:simple_torso');
+        await testBed.entityManager.createEntityInstance('test:simple_torso');
       bodyGraphService.buildAdjacencyCache(torso.id);
 
       // Should throw error when trying to detach root (no joint)
@@ -574,18 +571,18 @@ describe('Anatomy Runtime Behavior Integration', () => {
       );
     });
 
-    it('should handle cycles in ancestry lookup', () => {
+    it('should handle cycles in ancestry lookup', async () => {
       const part1 =
-        testBed.entityManager.createEntityInstance('test:simple_torso');
+        await testBed.entityManager.createEntityInstance('test:simple_torso');
       const part2 =
-        testBed.entityManager.createEntityInstance('test:simple_torso');
+        await testBed.entityManager.createEntityInstance('test:simple_torso');
 
       // Create a cycle (normally prevented, but testing edge case)
-      testBed.entityManager.addComponent(part1.id, 'anatomy:joint', {
+      await testBed.entityManager.addComponent(part1.id, 'anatomy:joint', {
         parentId: part2.id,
         socketId: 'socket1',
       });
-      testBed.entityManager.addComponent(part2.id, 'anatomy:joint', {
+      await testBed.entityManager.addComponent(part2.id, 'anatomy:joint', {
         parentId: part1.id,
         socketId: 'socket2',
       });
@@ -595,9 +592,9 @@ describe('Anatomy Runtime Behavior Integration', () => {
       expect(root).toBeNull();
     });
 
-    it('should handle missing entities in graph operations', () => {
+    it('should handle missing entities in graph operations', async () => {
       const torso =
-        testBed.entityManager.createEntityInstance('test:simple_torso');
+        await testBed.entityManager.createEntityInstance('test:simple_torso');
       bodyGraphService.buildAdjacencyCache(torso.id);
 
       // Try operations with non-existent entity

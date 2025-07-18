@@ -202,7 +202,7 @@ export class AnatomyOrchestrator extends BaseService {
       },
     };
 
-    this.#entityManager.addComponent(
+    await this.#entityManager.addComponent(
       entityId,
       ANATOMY_BODY_COMPONENT_ID,
       updatedData

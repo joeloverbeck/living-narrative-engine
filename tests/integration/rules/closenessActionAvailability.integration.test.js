@@ -304,7 +304,7 @@ describe('closeness action availability chain', () => {
     );
   }
 
-  it('enables intimacy actions after get_close is executed', () => {
+  it('enables intimacy actions after get_close is executed', async () => {
     testEnv.reset([
       {
         id: 'a1',
@@ -368,7 +368,7 @@ describe('closeness action availability chain', () => {
 
     expect(prerequisitesMet('a1', 't1')).toBe(false);
 
-    testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       actorId: 'a1',
       actionId: 'intimacy:get_close',
       targetId: 't1',

@@ -28,7 +28,7 @@ describe('EntityManager Integration Tests', () => {
    * a complete Entity object from a definition and instance data, ensuring
    * that instance-specific component overrides are correctly applied.
    */
-  test('should create an entity instance by merging definition and instance overrides', () => {
+  test('should create an entity instance by merging definition and instance overrides', async () => {
     // Arrange: Set up test data and registry state
     const definitionId = 'core:goblin';
     const instanceId = 'core:goblin_sentry';
@@ -52,7 +52,7 @@ describe('EntityManager Integration Tests', () => {
     };
 
     // Act: Call the method under test
-    const entity = entityManager.createEntityInstance(definitionId, {
+    const entity = await entityManager.createEntityInstance(definitionId, {
       instanceId,
       componentOverrides,
     });
@@ -86,7 +86,7 @@ describe('EntityManager Integration Tests', () => {
    * Verifies that the EntityManager fails gracefully when attempting to create
    * an entity from a `definitionId` that is not present in the DataRegistry.
    */
-  test('should throw an error when creating an instance with a missing definition', () => {
+  test('should throw an error when creating an instance with a missing definition', async () => {
     // Arrange
     const nonExistentDefinitionId = 'core:non_existent_template';
     const instanceId = 'core:ghost';
@@ -94,11 +94,11 @@ describe('EntityManager Integration Tests', () => {
 
     // Act & Assert
     // [x] Assert that the call throws a descriptive Error.
-    expect(() => {
-      entityManager.createEntityInstance(nonExistentDefinitionId, {
+    await expect(async () => {
+      await entityManager.createEntityInstance(nonExistentDefinitionId, {
         instanceId,
       });
-    }).toThrow(expectedErrorMessage);
+    }).rejects.toThrow(expectedErrorMessage);
 
     // [x] Assert that no partial or invalid entity is tracked by the manager.
     const entity = entityManager.getEntityInstance(instanceId);

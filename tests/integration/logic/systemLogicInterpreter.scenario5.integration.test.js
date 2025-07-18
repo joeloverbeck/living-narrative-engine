@@ -284,7 +284,7 @@ describe('SystemLogicInterpreter - Integration Tests - Scenario 5: Multiple Rule
 
   // Test Case 1 (Target HP 5)
   // AC: Test Clarity
-  it('TC1: should execute only Rule B (play_hit_sfx) when target HP is 5', () => {
+  it('TC1: should execute only Rule B (play_hit_sfx) when target HP is 5', async () => {
     // Arrange
     // Implementation Task: Configure mockDataRegistry
     mockDataRegistry.getAllSystemRules.mockReturnValue([
@@ -323,7 +323,7 @@ describe('SystemLogicInterpreter - Integration Tests - Scenario 5: Multiple Rule
     interpreter.initialize();
     expect(capturedEventListener).toBeInstanceOf(Function);
     // Implementation Task: Dispatch the mock EnemyDamaged event (HP 5 target)
-    capturedEventListener(MOCK_EVENT_ENEMY_DAMAGED_HP5);
+    await capturedEventListener(MOCK_EVENT_ENEMY_DAMAGED_HP5);
 
     // Assert
     // Implementation Task: Assert mockJsonLogicEvaluationService.evaluate was called twice
@@ -355,7 +355,7 @@ describe('SystemLogicInterpreter - Integration Tests - Scenario 5: Multiple Rule
 
   // Test Case 2 (Target HP 0)
   // AC: Test Clarity
-  it('TC2: should execute Rule A (dispatch_enemy_death) and Rule B (play_hit_sfx) when target HP is 0', () => {
+  it('TC2: should execute Rule A (dispatch_enemy_death) and Rule B (play_hit_sfx) when target HP is 0', async () => {
     // Arrange
     // Implementation Task: Reset mocks (handled by afterEach/beforeEach)
 
@@ -396,7 +396,7 @@ describe('SystemLogicInterpreter - Integration Tests - Scenario 5: Multiple Rule
     interpreter.initialize();
     expect(capturedEventListener).toBeInstanceOf(Function);
     // Implementation Task: Dispatch the mock EnemyDamaged event (HP 0 target)
-    capturedEventListener(MOCK_EVENT_ENEMY_DAMAGED_HP0);
+    await capturedEventListener(MOCK_EVENT_ENEMY_DAMAGED_HP0);
 
     // Assert
     // Implementation Task: Assert mockJsonLogicEvaluationService.evaluate was called twice

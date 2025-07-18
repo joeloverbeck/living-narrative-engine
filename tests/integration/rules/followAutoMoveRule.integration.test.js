@@ -330,7 +330,7 @@ describe('core_handle_follow_auto_move rule integration', () => {
     }
   });
 
-  it('performs follow auto move action successfully', () => {
+  it('performs follow auto move action successfully', async () => {
     testEnv.reset([
       {
         id: 'actor1',
@@ -354,7 +354,7 @@ describe('core_handle_follow_auto_move rule integration', () => {
       followers: ['target1'],
     });
 
-    testEnv.eventBus.dispatch('core:entity_moved', {
+    await testEnv.eventBus.dispatch('core:entity_moved', {
       entityId: 'actor1',
       previousLocationId: 'room1',
       currentLocationId: 'room2',

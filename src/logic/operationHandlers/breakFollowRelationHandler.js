@@ -61,7 +61,7 @@ class BreakFollowRelationHandler extends BaseOperationHandler {
    * @param {{ follower_id: string }} params
    * @param {ExecutionContext} executionContext
    */
-  execute(params, executionContext) {
+  async execute(params, executionContext) {
     const logger = this.getLogger(executionContext);
     if (!assertParamsObject(params, logger, 'BREAK_FOLLOW_RELATION')) return;
 
@@ -87,7 +87,7 @@ class BreakFollowRelationHandler extends BaseOperationHandler {
       return;
     }
     try {
-      this.#entityManager.removeComponent(followerId, FOLLOWING_COMPONENT_ID);
+      await this.#entityManager.removeComponent(followerId, FOLLOWING_COMPONENT_ID);
     } catch (err) {
       safeDispatchError(
         this.#dispatcher,
@@ -98,7 +98,7 @@ class BreakFollowRelationHandler extends BaseOperationHandler {
       return;
     }
     if (currentData.leaderId) {
-      this.#rebuildHandler.execute(
+      await this.#rebuildHandler.execute(
         { leaderIds: [currentData.leaderId] },
         executionContext
       );

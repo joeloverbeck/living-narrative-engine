@@ -20,7 +20,7 @@ describe('Anatomy Graph Creation Integration Tests', () => {
     it('should create both left and right hands with correct names', async () => {
       // Arrange
       const recipeId = 'anatomy:human_female';
-      const actor = testBed.createActor({ recipeId });
+      const actor = await testBed.createActor({ recipeId });
 
       // Generate anatomy for the actor
       const anatomyService = testBed.container.get('AnatomyGenerationService');
@@ -56,7 +56,7 @@ describe('Anatomy Graph Creation Integration Tests', () => {
     it('should correctly parent hands to their respective arms', async () => {
       // Arrange
       const recipeId = 'anatomy:human_female';
-      const actor = testBed.createActor({ recipeId });
+      const actor = await testBed.createActor({ recipeId });
 
       // Generate anatomy for the actor
       const anatomyService = testBed.container.get('AnatomyGenerationService');
@@ -100,7 +100,7 @@ describe('Anatomy Graph Creation Integration Tests', () => {
     it('should correctly parent feet to their respective legs', async () => {
       // Arrange
       const recipeId = 'anatomy:human_female';
-      const actor = testBed.createActor({ recipeId });
+      const actor = await testBed.createActor({ recipeId });
 
       // Generate anatomy for the actor
       const anatomyService = testBed.container.get('AnatomyGenerationService');
@@ -144,7 +144,7 @@ describe('Anatomy Graph Creation Integration Tests', () => {
     it('should ensure hands and feet have proper orientation in anatomy:part component', async () => {
       // Arrange
       const recipeId = 'anatomy:human_female';
-      const actor = testBed.createActor({ recipeId });
+      const actor = await testBed.createActor({ recipeId });
 
       // Generate anatomy for the actor
       const anatomyService = testBed.container.get('AnatomyGenerationService');
@@ -192,7 +192,7 @@ describe('Anatomy Graph Creation Integration Tests', () => {
     it('should create complete anatomy graph with all expected parts', async () => {
       // Arrange
       const recipeId = 'anatomy:human_female';
-      const actor = testBed.createActor({ recipeId });
+      const actor = await testBed.createActor({ recipeId });
 
       // Generate anatomy for the actor
       const anatomyService = testBed.container.get('AnatomyGenerationService');
@@ -245,7 +245,7 @@ describe('Anatomy Graph Creation Integration Tests', () => {
     it('should not create duplicate parts with generic names', async () => {
       // Arrange
       const recipeId = 'anatomy:human_female';
-      const actor = testBed.createActor({ recipeId });
+      const actor = await testBed.createActor({ recipeId });
 
       // Generate anatomy for the actor
       const anatomyService = testBed.container.get('AnatomyGenerationService');
@@ -271,7 +271,7 @@ describe('Anatomy Graph Creation Integration Tests', () => {
     it('should handle multiple anatomy generation calls idempotently', async () => {
       // Arrange
       const recipeId = 'anatomy:human_female';
-      const actor = testBed.createActor({ recipeId });
+      const actor = await testBed.createActor({ recipeId });
       const anatomyService = testBed.container.get('AnatomyGenerationService');
 
       // Generate anatomy twice

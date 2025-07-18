@@ -23,9 +23,15 @@ import { InvalidArgumentError } from '../../../src/errors/invalidArgumentError.j
  * @returns {void}
  */
 function runInvalidCases(values, message, getBed, invoke) {
-  it.each(values)(message, (...args) => {
+  it.each(values)(message, async (...args) => {
     const { entityManager, mocks } = getBed();
-    expect(() => invoke(entityManager, ...args)).toThrow(InvalidArgumentError);
+    // Check if the method returns a promise
+    const result = invoke(entityManager, ...args);
+    if (result && typeof result.then === 'function') {
+      await expect(result).rejects.toThrow(InvalidArgumentError);
+    } else {
+      expect(() => result).toThrow(InvalidArgumentError);
+    }
     expect(mocks.logger.warn).toHaveBeenCalled();
   });
 }
@@ -60,11 +66,14 @@ function createInvalidInputTest(values, message) {
 export function runInvalidIdPairTests(getBed, invoke) {
   it.each(TestData.InvalidValues.invalidIdPairs)(
     'should throw InvalidArgumentError for invalid inputs',
-    (instanceId, componentId) => {
+    async (instanceId, componentId) => {
       const { entityManager, mocks } = getBed();
       let error;
       try {
-        invoke(entityManager, instanceId, componentId);
+        const result = invoke(entityManager, instanceId, componentId);
+        if (result && typeof result.then === 'function') {
+          await result;
+        }
       } catch (err) {
         error = err;
       }

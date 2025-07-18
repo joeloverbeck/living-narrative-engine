@@ -206,8 +206,7 @@ describe('Muscular Male Anatomy Generation Integration Test', () => {
 
   it('should generate anatomy for muscular male with muscular torso, arms, and legs', async () => {
     // Create muscular male entity
-    const muscularEntity =
-      entityManager.createEntityInstance('test:muscular_male');
+    const muscularEntity = await entityManager.createEntityInstance('test:muscular_male');
     expect(muscularEntity).toBeDefined();
     expect(muscularEntity.id).toBeDefined();
 

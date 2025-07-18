@@ -54,18 +54,18 @@ export default class EntityCreationManager {
    * @param {object} opts - Options for entity creation.
    * @param {string} [opts.instanceId] - Optional. A specific ID for the new instance.
    * @param {Object<string, object>} [opts.componentOverrides] - Optional. Component data to override or add.
-   * @returns {Entity} The newly created entity instance.
+   * @returns {Promise<Entity>} The newly created entity instance.
    * @throws {DefinitionNotFoundError} If the definition is not found.
    * @throws {DuplicateEntityError} If an entity with the given instanceId already exists.
    * @throws {InvalidArgumentError} If definitionId is invalid.
    * @throws {ValidationError} If component data validation fails.
    */
-  createEntityInstance(definitionId, opts = {}) {
+  async createEntityInstance(definitionId, opts = {}) {
     this.#logger.debug(
       `EntityCreationManager.createEntityInstance: Creating entity with definition '${definitionId}'`
     );
 
-    return this.#lifecycleManager.createEntityInstance(definitionId, opts);
+    return await this.#lifecycleManager.createEntityInstance(definitionId, opts);
   }
 
   /**

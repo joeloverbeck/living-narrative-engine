@@ -98,56 +98,53 @@ class DispatchEventHandler {
    * @description Dispatch using an EventBus instance.
    * @param {string} eventType - Normalized event name.
    * @param {object} payload - Normalized payload object.
-   * @returns {void}
+   * @returns {Promise<void>}
    * @private
    */
-  #dispatchViaEventBus(eventType, payload) {
+  async #dispatchViaEventBus(eventType, payload) {
     const logger = this.#logger;
-    Promise.resolve(this.#dispatcher.dispatch(eventType, payload))
-      .then(() => {
-        const listenerCount = this.#dispatcher.listenerCount(eventType);
-        if (listenerCount === 0) {
-          logger.warn(
-            `DispatchEventHandler: No listeners for event "${eventType}".`
-          );
-        } else {
-          logger.debug(
-            `DispatchEventHandler: Dispatched "${eventType}" to ${
-              Number.isNaN(listenerCount) ? 'unknown' : listenerCount
-            } listener(s) via EventBus.`
-          );
-        }
-      })
-      .catch((err) => {
-        logger.error(
-          `DispatchEventHandler: Error during dispatch of event "${eventType}" via EventBus.`,
-          { error: err, eventType, payload }
+    try {
+      await this.#dispatcher.dispatch(eventType, payload);
+      const listenerCount = this.#dispatcher.listenerCount(eventType);
+      if (listenerCount === 0) {
+        logger.warn(
+          `DispatchEventHandler: No listeners for event "${eventType}".`
         );
-      });
+      } else {
+        logger.debug(
+          `DispatchEventHandler: Dispatched "${eventType}" to ${
+            Number.isNaN(listenerCount) ? 'unknown' : listenerCount
+          } listener(s) via EventBus.`
+        );
+      }
+    } catch (err) {
+      logger.error(
+        `DispatchEventHandler: Error during dispatch of event "${eventType}" via EventBus.`,
+        { error: err, eventType, payload }
+      );
+    }
   }
 
   /**
    * @description Dispatch using a ValidatedEventDispatcher instance.
    * @param {string} eventType - Normalized event name.
    * @param {object} payload - Normalized payload object.
-   * @returns {void}
+   * @returns {Promise<void>}
    * @private
    */
-  #dispatchViaValidatedDispatcher(eventType, payload) {
+  async #dispatchViaValidatedDispatcher(eventType, payload) {
     const logger = this.#logger;
-    this.#dispatcher
-      .dispatch(eventType, payload)
-      .then(() => {
-        logger.debug(
-          `DispatchEventHandler: Event "${eventType}" dispatched (Validated).`
-        );
-      })
-      .catch((err) => {
-        logger.error(
-          `DispatchEventHandler: Error during async processing of event "${eventType}" via ValidatedEventDispatcher.`,
-          { error: err, eventType, payload }
-        );
-      });
+    try {
+      await this.#dispatcher.dispatch(eventType, payload);
+      logger.debug(
+        `DispatchEventHandler: Event "${eventType}" dispatched (Validated).`
+      );
+    } catch (err) {
+      logger.error(
+        `DispatchEventHandler: Error during async processing of event "${eventType}" via ValidatedEventDispatcher.`,
+        { error: err, eventType, payload }
+      );
+    }
   }
 
   /**
@@ -156,7 +153,7 @@ class DispatchEventHandler {
    * @param {DispatchEventParameters|null|undefined} params - Parameters with placeholders already resolved.
    * @param {ExecutionContext} executionContext - The context (used for services, not resolution here).
    */
-  execute(params, executionContext) {
+  async execute(params, executionContext) {
     void executionContext;
     const logger = this.#logger;
     const validated = this.#validateParams(params, logger);
@@ -170,9 +167,9 @@ class DispatchEventHandler {
 
     try {
       if (typeof this.#dispatcher.listenerCount === 'function') {
-        this.#dispatchViaEventBus(eventType, payload);
+        await this.#dispatchViaEventBus(eventType, payload);
       } else if (typeof this.#dispatcher.dispatch === 'function') {
-        this.#dispatchViaValidatedDispatcher(eventType, payload);
+        await this.#dispatchViaValidatedDispatcher(eventType, payload);
       } else {
         logger.error(
           `DispatchEventHandler: Internal error – dispatcher lacks a recognised dispatch method. "${eventType}" not sent.`

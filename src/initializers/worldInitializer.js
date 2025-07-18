@@ -232,10 +232,10 @@ class WorldInitializer {
    * @param {string} definitionId - The definition ID to instantiate from.
    * @param {string} instanceId - The instance identifier for the new entity.
    * @param {object} [componentOverrides] - Optional component overrides.
-   * @returns {Entity|null} The created entity instance or null on failure.
+   * @returns {Promise<Entity|null>} The created entity instance or null on failure.
    * @private
    */
-  #createInstance(definitionId, instanceId, componentOverrides) {
+  async #createInstance(definitionId, instanceId, componentOverrides) {
     this.#logger.debug(
       `WorldInitializer (Pass 1): Attempting to create entity instance '${instanceId}' from definition '${definitionId}' with overrides:`,
       componentOverrides
@@ -243,7 +243,7 @@ class WorldInitializer {
 
     let instance;
     try {
-      instance = this.#entityManager.createEntityInstance(definitionId, {
+      instance = await this.#entityManager.createEntityInstance(definitionId, {
         instanceId,
         componentOverrides,
       });
@@ -334,7 +334,7 @@ class WorldInitializer {
 
     const { definitionId, componentOverrides } = validation;
 
-    const instance = this.#createInstance(
+    const instance = await this.#createInstance(
       definitionId,
       instanceId,
       componentOverrides

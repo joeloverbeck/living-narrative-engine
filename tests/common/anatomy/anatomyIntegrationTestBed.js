@@ -1783,19 +1783,19 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
    *
    * @param {object} options - Configuration options
    * @param {string} options.recipeId - The recipe ID to use for anatomy generation
-   * @returns {object} The created actor entity
+   * @returns {Promise<object>} The created actor entity
    */
-  createActor({ recipeId }) {
+  async createActor({ recipeId }) {
     // Ensure we have the anatomy mod data loaded
     if (!this.registry.get('anatomyRecipes', recipeId)) {
       this.loadAnatomyModData();
     }
 
     // Create the actor entity
-    const actor = this.entityManager.createEntityInstance('core:actor');
+    const actor = await this.entityManager.createEntityInstance('core:actor');
 
     // Add the anatomy:body component with the recipe
-    this.entityManager.addComponent(actor.id, 'anatomy:body', {
+    await this.entityManager.addComponent(actor.id, 'anatomy:body', {
       recipeId: recipeId,
     });
 

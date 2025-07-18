@@ -65,7 +65,7 @@ class EstablishFollowRelationHandler extends BaseOperationHandler {
    * @param {{ follower_id: string, leader_id: string }} params
    * @param {ExecutionContext} executionContext
    */
-  execute(params, executionContext) {
+  async execute(params, executionContext) {
     const logger = executionContext?.logger ?? this.#logger;
     if (!assertParamsObject(params, logger, 'ESTABLISH_FOLLOW_RELATION'))
       return;
@@ -111,7 +111,7 @@ class EstablishFollowRelationHandler extends BaseOperationHandler {
       FOLLOWING_COMPONENT_ID
     );
     try {
-      this.#entityManager.addComponent(followerId, FOLLOWING_COMPONENT_ID, {
+      await this.#entityManager.addComponent(followerId, FOLLOWING_COMPONENT_ID, {
         leaderId: leaderId,
       });
     } catch (err) {
@@ -132,7 +132,7 @@ class EstablishFollowRelationHandler extends BaseOperationHandler {
     const leaderIds = [leaderId];
     if (oldData?.leaderId && oldData.leaderId !== leaderId)
       leaderIds.push(oldData.leaderId);
-    this.#rebuildHandler.execute({ leaderIds }, executionContext);
+    await this.#rebuildHandler.execute({ leaderIds }, executionContext);
   }
 }
 

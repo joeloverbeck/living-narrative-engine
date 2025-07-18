@@ -39,7 +39,7 @@ class OperationInterpreter extends BaseService {
    * @param {Operation}      operation
    * @param {ExecutionContext} executionContext
    */
-  execute(operation, executionContext) {
+  async execute(operation, executionContext) {
     const opType = getNormalizedOperationType(
       operation?.type,
       this.#logger,
@@ -91,7 +91,7 @@ class OperationInterpreter extends BaseService {
     // -----------------------------------------------------------------------
     try {
       this.#logger.debug(`Executing handler for operation type "${opType}"…`);
-      handler(paramsForHandler, executionContext);
+      await handler(paramsForHandler, executionContext);
     } catch (handlerErr) {
       // Bubble up – SystemLogicInterpreter will handle halting the sequence
       this.#logger.debug(

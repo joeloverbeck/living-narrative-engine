@@ -72,7 +72,7 @@ class ModifyComponentHandler extends ComponentOperationHandler {
    * @param {ModifyComponentOperationParams|null|undefined} params
    * @param {ExecutionContext} executionContext
    */
-  execute(params, executionContext) {
+  async execute(params, executionContext) {
     const logger = this.getLogger(executionContext);
 
     // ── validate base params ───────────────────────────────────────
@@ -142,7 +142,7 @@ class ModifyComponentHandler extends ComponentOperationHandler {
 
     // ── commit via EntityManager ───────────────────────────────────
     try {
-      const success = this.#entityManager.addComponent(
+      const success = await this.#entityManager.addComponent(
         entityId,
         componentType,
         updatedComponent

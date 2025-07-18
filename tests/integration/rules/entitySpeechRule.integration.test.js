@@ -66,7 +66,7 @@ describe('core_handle_entity_speech rule integration', () => {
     }
   });
 
-  it('dispatches perceptible event when entity speaks', () => {
+  it('dispatches perceptible event when entity speaks', async () => {
     testEnv.reset([
       {
         id: 'speaker1',
@@ -77,7 +77,7 @@ describe('core_handle_entity_speech rule integration', () => {
       },
     ]);
 
-    testEnv.eventBus.dispatch(ENTITY_SPOKE_ID, {
+    await testEnv.eventBus.dispatch(ENTITY_SPOKE_ID, {
       entityId: 'speaker1',
       speechContent: 'Hello, world!',
     });

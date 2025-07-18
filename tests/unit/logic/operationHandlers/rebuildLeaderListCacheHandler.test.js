@@ -169,8 +169,8 @@ describe('RebuildLeaderListCacheHandler', () => {
     test.each([
       ['null params', null],
       ['undefined params', undefined],
-    ])('should warn and abort given %s', (caseName, params) => {
-      handler.execute(params, mockExecutionContext);
+    ])('should warn and abort given %s', async (caseName, params) => {
+      await handler.execute(params, mockExecutionContext);
       expect(mockLogger.warn).toHaveBeenCalledWith(
         'REBUILD_LEADER_LIST_CACHE: params missing or invalid.',
         { params }
@@ -182,24 +182,24 @@ describe('RebuildLeaderListCacheHandler', () => {
       ['params with no leaderIds', {}],
       ['params with non-array leaderIds', { leaderIds: 'not-an-array' }],
       ['params with empty leaderIds array', { leaderIds: [] }],
-    ])('should log debug and skip execution given %s', (caseName, params) => {
-      handler.execute(params, mockExecutionContext);
+    ])('should log debug and skip execution given %s', async (caseName, params) => {
+      await handler.execute(params, mockExecutionContext);
       expect(mockLogger.debug).toHaveBeenCalledWith(
         '[RebuildLeaderListCacheHandler] No leaderIds provided; skipping.'
       );
       expect(mockEntityManager.getEntitiesWithComponent).not.toHaveBeenCalled();
     });
 
-    test('should filter out invalid leaderIds and skip if the resulting array is empty', () => {
+    test('should filter out invalid leaderIds and skip if the resulting array is empty', async () => {
       const params = { leaderIds: [null, '', '   ', undefined, 123] };
-      handler.execute(params, mockExecutionContext);
+      await handler.execute(params, mockExecutionContext);
       expect(mockLogger.debug).toHaveBeenCalledWith(
         '[RebuildLeaderListCacheHandler] leaderIds empty after filtering; skipping.'
       );
       expect(mockEntityManager.getEntitiesWithComponent).not.toHaveBeenCalled();
     });
 
-    test('should filter out invalid IDs but proceed with valid ones', () => {
+    test('should filter out invalid IDs but proceed with valid ones', async () => {
       const params = { leaderIds: ['leader1', null, '  ', 'leader2'] };
       // Setup mock to return no followers to isolate the filtering logic
       mockEntityManager.getEntitiesWithComponent.mockReturnValue([]);
@@ -207,7 +207,7 @@ describe('RebuildLeaderListCacheHandler', () => {
         makeMockEntity(id)
       );
 
-      handler.execute(params, mockExecutionContext);
+      await handler.execute(params, mockExecutionContext);
 
       // It should attempt to process only the two valid leaders.
       expect(mockEntityManager.getEntityInstance).toHaveBeenCalledTimes(2);
@@ -226,7 +226,7 @@ describe('RebuildLeaderListCacheHandler', () => {
   // 3. Core Logic Tests
   // -----------------------------------------------------------------------------
   describe('Core Logic', () => {
-    test('should add a "core:leading" component to a leader with one follower', () => {
+    test('should add a "core:leading" component to a leader with one follower', async () => {
       // Arrange
       const leader = makeMockEntity('leader1');
       const follower = makeMockEntity('follower1', {
@@ -238,7 +238,7 @@ describe('RebuildLeaderListCacheHandler', () => {
       const params = { leaderIds: ['leader1'] };
 
       // Act
-      handler.execute(params, mockExecutionContext);
+      await handler.execute(params, mockExecutionContext);
 
       // Assert
       expect(mockEntityManager.addComponent).toHaveBeenCalledTimes(1);
@@ -255,7 +255,7 @@ describe('RebuildLeaderListCacheHandler', () => {
       );
     });
 
-    test('should add a "core:leading" component with a list of multiple followers', () => {
+    test('should add a "core:leading" component with a list of multiple followers', async () => {
       // Arrange
       const leader = makeMockEntity('leader1');
       const follower1 = makeMockEntity('follower1', {
@@ -279,7 +279,7 @@ describe('RebuildLeaderListCacheHandler', () => {
       const params = { leaderIds: ['leader1'] };
 
       // Act
-      handler.execute(params, mockExecutionContext);
+      await handler.execute(params, mockExecutionContext);
 
       // Assert
       expect(mockEntityManager.addComponent).toHaveBeenCalledTimes(1);
@@ -293,7 +293,7 @@ describe('RebuildLeaderListCacheHandler', () => {
       expect(mockEntityManager.removeComponent).not.toHaveBeenCalled();
     });
 
-    test('should remove "core:leading" component from a leader with no followers', () => {
+    test('should remove "core:leading" component from a leader with no followers', async () => {
       // Arrange
       const leader = makeMockEntity('leader1');
       // Simulate that no entities have the 'following' component
@@ -303,7 +303,7 @@ describe('RebuildLeaderListCacheHandler', () => {
       const params = { leaderIds: ['leader1'] };
 
       // Act
-      handler.execute(params, mockExecutionContext);
+      await handler.execute(params, mockExecutionContext);
 
       // Assert
       expect(mockEntityManager.removeComponent).toHaveBeenCalledTimes(1);
@@ -317,7 +317,7 @@ describe('RebuildLeaderListCacheHandler', () => {
       );
     });
 
-    test('should handle multiple leaders correctly in a single call', () => {
+    test('should handle multiple leaders correctly in a single call', async () => {
       // Arrange
       const leader1 = makeMockEntity('leader1'); // Will have followers
       const leader2 = makeMockEntity('leader2'); // Will have no followers
@@ -348,7 +348,7 @@ describe('RebuildLeaderListCacheHandler', () => {
       const params = { leaderIds: ['leader1', 'leader2', 'leader3'] };
 
       // Act
-      handler.execute(params, mockExecutionContext);
+      await handler.execute(params, mockExecutionContext);
 
       // Assert
       expect(mockEntityManager.addComponent).toHaveBeenCalledTimes(2);
@@ -382,7 +382,7 @@ describe('RebuildLeaderListCacheHandler', () => {
   // 4. Edge Cases and Error Handling
   // -----------------------------------------------------------------------------
   describe('Edge Cases and Error Handling', () => {
-    test('should log a warning and skip a leader that is not found', () => {
+    test('should log a warning and skip a leader that is not found', async () => {
       // Arrange
       mockEntityManager.getEntitiesWithComponent.mockReturnValue([]);
       // leader 'dne' (does not exist) will not be found
@@ -391,7 +391,7 @@ describe('RebuildLeaderListCacheHandler', () => {
       const params = { leaderIds: ['dne'] };
 
       // Act
-      handler.execute(params, mockExecutionContext);
+      await handler.execute(params, mockExecutionContext);
 
       // Assert
       expect(mockLogger.warn).toHaveBeenCalledTimes(1);
@@ -405,7 +405,7 @@ describe('RebuildLeaderListCacheHandler', () => {
       );
     });
 
-    test('should ignore followers with invalid or missing leaderId data', () => {
+    test('should ignore followers with invalid or missing leaderId data', async () => {
       const leader = makeMockEntity('leader1');
       const follower1 = makeMockEntity('follower1', {
         [FOLLOWING_COMPONENT_ID]: { leaderId: 'leader1' },
@@ -435,7 +435,7 @@ describe('RebuildLeaderListCacheHandler', () => {
       const params = { leaderIds: ['leader1'] };
 
       // Act
-      handler.execute(params, mockExecutionContext);
+      await handler.execute(params, mockExecutionContext);
 
       // Assert: Only the valid follower should be in the list.
       expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
@@ -447,7 +447,7 @@ describe('RebuildLeaderListCacheHandler', () => {
       );
     });
 
-    test('should log an error if addComponent fails but continue processing', () => {
+    test('should log an error if addComponent fails but continue processing', async () => {
       // Arrange
       const leader1 = makeMockEntity('leader1');
       const leader2 = makeMockEntity('leader2');
@@ -476,7 +476,7 @@ describe('RebuildLeaderListCacheHandler', () => {
       const params = { leaderIds: ['leader1', 'leader2'] };
 
       // Act
-      handler.execute(params, mockExecutionContext);
+      await handler.execute(params, mockExecutionContext);
 
       // Assert
       expect(dispatcher.dispatch).toHaveBeenCalledTimes(1);
@@ -505,7 +505,7 @@ describe('RebuildLeaderListCacheHandler', () => {
       );
     });
 
-    test('should log an error if removeComponent fails', () => {
+    test('should log an error if removeComponent fails', async () => {
       // Arrange
       const leader = makeMockEntity('leader1');
       mockEntityManager.getEntitiesWithComponent.mockReturnValue([]); // No followers
@@ -517,7 +517,7 @@ describe('RebuildLeaderListCacheHandler', () => {
       const params = { leaderIds: ['leader1'] };
 
       // Act
-      handler.execute(params, mockExecutionContext);
+      await handler.execute(params, mockExecutionContext);
 
       // Assert
       expect(dispatcher.dispatch).toHaveBeenCalledTimes(1);

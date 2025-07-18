@@ -5,6 +5,7 @@
 The Living Narrative Engine implements a sophisticated anatomy description generation system that transforms anatomy graphs into human-readable descriptions. The architecture follows modern software engineering principles with clear separation of concerns, layered service architecture, and extensible design patterns.
 
 **Key Components:**
+
 - Configuration-driven formatting system (`data/mods/anatomy/anatomy-formatting/`)
 - Layered service architecture with specialized responsibilities
 - Template-based description composition
@@ -95,28 +96,68 @@ The system uses a data-driven approach with configuration files in `data/mods/an
 {
   "id": "default",
   "descriptionOrder": [
-    "build", "hair", "eye", "face", "ear", "nose", "mouth", "neck",
-    "breast", "torso", "arm", "hand", "leg", "foot", "pubic_hair",
-    "vagina", "penis", "testicle", "tail", "wing"
+    "build",
+    "hair",
+    "eye",
+    "face",
+    "ear",
+    "nose",
+    "mouth",
+    "neck",
+    "breast",
+    "torso",
+    "arm",
+    "hand",
+    "leg",
+    "foot",
+    "pubic_hair",
+    "vagina",
+    "penis",
+    "testicle",
+    "tail",
+    "wing"
   ],
   "pairedParts": [
-    "eye", "ear", "arm", "leg", "hand", "foot", "breast", "wing", "testicle"
+    "eye",
+    "ear",
+    "arm",
+    "leg",
+    "hand",
+    "foot",
+    "breast",
+    "wing",
+    "testicle"
   ],
   "irregularPlurals": {
     "foot": "feet",
     "tooth": "teeth"
   },
   "descriptorOrder": [
-    "descriptors:length_category", "descriptors:length_hair",
-    "descriptors:size_category", "descriptors:size_specific",
-    "descriptors:weight_feel", "descriptors:color_basic",
-    "descriptors:color_extended", "descriptors:shape_general",
-    "descriptors:shape_eye", "descriptors:hair_style",
-    "descriptors:texture", "descriptors:firmness", "descriptors:build"
+    "descriptors:length_category",
+    "descriptors:length_hair",
+    "descriptors:size_category",
+    "descriptors:size_specific",
+    "descriptors:weight_feel",
+    "descriptors:color_basic",
+    "descriptors:color_extended",
+    "descriptors:shape_general",
+    "descriptors:shape_eye",
+    "descriptors:hair_style",
+    "descriptors:texture",
+    "descriptors:firmness",
+    "descriptors:build"
   ],
   "descriptorValueKeys": [
-    "value", "color", "size", "shape", "length", "style",
-    "texture", "firmness", "build", "weight"
+    "value",
+    "color",
+    "size",
+    "shape",
+    "length",
+    "style",
+    "texture",
+    "firmness",
+    "build",
+    "weight"
   ]
 }
 ```
@@ -139,9 +180,9 @@ The system uses a data-driven approach with configuration files in `data/mods/an
 generateAllDescriptions(bodyEntity) {
   // Delegate to orchestrator if available
   if (this.bodyDescriptionOrchestrator) {
-    const { bodyDescription, partDescriptions } = 
+    const { bodyDescription, partDescriptions } =
       this.bodyDescriptionOrchestrator.generateAllDescriptions(bodyEntity);
-    
+
     // Persist descriptions through specialized service
     this.descriptionPersistenceService.updateDescription(bodyEntity.id, bodyDescription);
     this.descriptionPersistenceService.updateMultipleDescriptions(partDescriptions);
@@ -161,7 +202,7 @@ generatePartDescription(partId) {
   if (!entity || !entity.hasComponent(ANATOMY_PART_COMPONENT_ID)) {
     return null;
   }
-  
+
   // Delegate to builder for actual description construction
   const description = this.#bodyPartDescriptionBuilder.buildDescription(entity);
   return description;
@@ -176,15 +217,15 @@ generatePartDescription(partId) {
 buildDescription(entity) {
   const components = this.#extractEntityComponents(entity);
   const anatomyPart = components['anatomy:part'];
-  
+
   if (!anatomyPart || !anatomyPart.subType) {
     return '';
   }
-  
+
   // Extract and format descriptors
   const descriptors = this.descriptorFormatter.extractDescriptors(components);
   const formattedDescriptors = this.descriptorFormatter.formatDescriptors(descriptors);
-  
+
   return formattedDescriptors; // Returns just descriptors, no articles or part names
 }
 ```
@@ -196,7 +237,7 @@ buildDescription(entity) {
 ```javascript
 extractDescriptors(components) {
   const descriptors = [];
-  
+
   for (const [componentId, componentData] of Object.entries(components)) {
     if (componentId.startsWith('descriptors:') && componentData) {
       const value = this.extractDescriptorValue(componentId, componentData);
@@ -220,9 +261,9 @@ formatDescriptors(descriptors) {
     const orderB = descriptorOrder.indexOf(b.componentId);
     return orderA - orderB;
   });
-  
+
   // Format and join with commas
-  const formattedValues = sortedDescriptors.map(desc => 
+  const formattedValues = sortedDescriptors.map(desc =>
     this.formatSingleDescriptor(desc)
   );
   return formattedValues.join(', ');
@@ -237,14 +278,14 @@ formatDescriptors(descriptors) {
 composeDescription(bodyEntity) {
   const bodyComponent = bodyEntity.getComponentData(ANATOMY_BODY_COMPONENT_ID);
   const allParts = this.bodyGraphService.getAllParts(bodyComponent.body);
-  
+
   // Group parts by subtype
   const partsByType = this.groupPartsByType(allParts);
-  
+
   // Build structured description following configured order
   const lines = [];
   const descriptionOrder = this.config.getDescriptionOrder();
-  
+
   for (const partType of descriptionOrder) {
     if (partType === 'build') {
       const buildDescription = this.extractBuildDescription(bodyEntity);
@@ -253,7 +294,7 @@ composeDescription(bodyEntity) {
       }
       continue;
     }
-    
+
     if (partsByType.has(partType)) {
       const parts = partsByType.get(partType);
       const structuredLine = this.descriptionTemplate.createStructuredLine(partType, parts);
@@ -262,7 +303,7 @@ composeDescription(bodyEntity) {
       }
     }
   }
-  
+
   return lines.join('\n');
 }
 ```
@@ -279,14 +320,14 @@ createStructuredLine(partType, parts) {
 formatDescription(partType, parts) {
   // Extract descriptions from core:description components
   const descriptions = this.extractDescriptions(parts);
-  
+
   if (descriptions.length === 0) {
     return '';
   }
-  
+
   // Get appropriate strategy for formatting
   const strategy = this.strategyFactory.getStrategy(partType, parts, descriptions, this.config);
-  
+
   // Use strategy to format the description
   return strategy.format(partType, parts, descriptions, this.textFormatter, this.config);
 }
@@ -302,7 +343,7 @@ The system updates the `core:description` component for each entity:
 updateDescription(entityId, description) {
   const entity = this.entityFinder.getEntityInstance(entityId);
   if (!entity) return;
-  
+
   // EntityManager handles both adding and updating
   this.componentManager.addComponent(entityId, DESCRIPTION_COMPONENT_ID, {
     text: description,
@@ -346,8 +387,12 @@ Each anatomy part entity contains multiple descriptor components:
     "body": {
       "root": "torso_entity_id",
       "parts": {
-        "torso_entity_id": { /* part data */ },
-        "head_entity_id": { /* part data */ }
+        "torso_entity_id": {
+          /* part data */
+        },
+        "head_entity_id": {
+          /* part data */
+        }
       }
     }
   },
@@ -394,10 +439,10 @@ extractDescriptions(parts) {
   return parts.map(part => {
     // Current: Get persisted anatomy description
     const anatomyDesc = part.getComponentData('core:description');
-    
+
     // EXTENSION: Add clothing descriptions
     const clothingDesc = this.getClothingDescription(part);
-    
+
     // Combine anatomy and clothing descriptions
     return this.combineDescriptions(anatomyDesc?.text, clothingDesc);
   }).filter(desc => desc);
@@ -412,16 +457,16 @@ extractDescriptions(parts) {
 generateAllDescriptions(bodyEntity) {
   // Current: Generate anatomy descriptions
   const { bodyDescription, partDescriptions } = this.generateAnatomyDescriptions(bodyEntity);
-  
+
   // EXTENSION: Generate clothing descriptions
   const clothingDescriptions = this.generateClothingDescriptions(bodyEntity);
-  
+
   // Combine descriptions
   const enhancedDescriptions = this.combineAnatomyAndClothingDescriptions(
-    partDescriptions, 
+    partDescriptions,
     clothingDescriptions
   );
-  
+
   return { bodyDescription, partDescriptions: enhancedDescriptions };
 }
 ```
@@ -434,26 +479,26 @@ generateAllDescriptions(bodyEntity) {
 composeDescription(bodyEntity) {
   // Current composition logic...
   const lines = [];
-  
+
   for (const partType of descriptionOrder) {
     if (partsByType.has(partType)) {
       const parts = partsByType.get(partType);
-      
+
       // Current: Get anatomy description
       const anatomyLine = this.descriptionTemplate.createStructuredLine(partType, parts);
-      
+
       // EXTENSION: Get clothing description for this part type
       const clothingLine = this.getClothingDescriptionForPartType(partType, parts);
-      
+
       // Combine both descriptions
       const combinedLine = this.combineAnatomyAndClothingLine(anatomyLine, clothingLine);
-      
+
       if (combinedLine) {
         lines.push(combinedLine);
       }
     }
   }
-  
+
   return lines.join('\n');
 }
 ```
@@ -463,11 +508,12 @@ composeDescription(bodyEntity) {
 Proposed extension to the current flow:
 
 ```
-Anatomy Graph + Clothing Items → Part Descriptions (Anatomy + Clothing) → 
+Anatomy Graph + Clothing Items → Part Descriptions (Anatomy + Clothing) →
 Formatted Descriptions → Composed Body Description (Enhanced)
 ```
 
 **Enhanced Flow:**
+
 1. **Anatomy Description Generation** (Current)
 2. **Clothing Attachment Resolution** (Existing infrastructure)
 3. **Clothing Description Generation** (New)
@@ -553,11 +599,13 @@ The system implements several orchestration patterns:
 ### 1. **Template-Based Extension** (Recommended Approach)
 
 **Implementation Strategy:**
+
 - Extend `DescriptionTemplate.extractDescriptions()` to include clothing descriptions
 - Add clothing description generation to the template system
 - Maintain backward compatibility with existing anatomy descriptions
 
 **Benefits:**
+
 - Minimal disruption to existing architecture
 - Leverages existing template and formatting infrastructure
 - Easy to configure and customize
@@ -566,11 +614,13 @@ The system implements several orchestration patterns:
 ### 2. **Configuration-Driven Clothing Descriptions**
 
 **Implementation Strategy:**
+
 - Extend anatomy formatting configuration to include clothing description rules
 - Add clothing-specific descriptors and ordering
 - Integrate with existing configuration system
 
 **Configuration Extension Example:**
+
 ```json
 {
   "descriptionOrder": ["build", "hair", "eye", "clothing_head", "face", ...],
@@ -589,11 +639,13 @@ The system implements several orchestration patterns:
 ### 3. **Orchestrator-Level Integration**
 
 **Implementation Strategy:**
+
 - Add clothing description generation to `BodyDescriptionOrchestrator`
 - Create new clothing-specific services parallel to anatomy services
 - Combine descriptions at the orchestration level
 
 **Benefits:**
+
 - Clear separation between anatomy and clothing systems
 - Parallel processing capabilities
 - Easy to enable/disable clothing descriptions
@@ -602,11 +654,13 @@ The system implements several orchestration patterns:
 ### 4. **Component-Based Clothing Descriptions**
 
 **Implementation Strategy:**
+
 - Create clothing-specific descriptor components
 - Extend entity model to include clothing descriptors
 - Integrate with existing descriptor processing pipeline
 
 **Component Example:**
+
 ```json
 {
   "anatomy:part": { "subType": "torso" },
@@ -627,6 +681,7 @@ The system implements several orchestration patterns:
 ### 5. **Workflow Integration**
 
 **Implementation Strategy:**
+
 - Extend `DescriptionGenerationWorkflow` to include clothing processing
 - Add clothing description steps to the workflow
 - Maintain transaction consistency across anatomy and clothing descriptions
@@ -634,16 +689,19 @@ The system implements several orchestration patterns:
 ### Implementation Phases
 
 #### Phase 1: Foundation
+
 1. Extend configuration system to support clothing descriptions
 2. Add clothing description extraction methods
 3. Create clothing-specific descriptor components
 
 #### Phase 2: Integration
+
 1. Modify template system to include clothing descriptions
 2. Update orchestration layer to handle clothing
 3. Extend persistence layer for enhanced descriptions
 
 #### Phase 3: Optimization
+
 1. Add caching for clothing descriptions
 2. Implement performance optimizations
 3. Add configuration options for clothing integration modes
@@ -651,15 +709,19 @@ The system implements several orchestration patterns:
 ### Challenges and Solutions
 
 #### Challenge 1: Performance Impact
+
 **Solution:** Leverage existing caching infrastructure and lazy loading
 
 #### Challenge 2: Configuration Complexity
+
 **Solution:** Provide sensible defaults and modular configuration options
 
 #### Challenge 3: Backward Compatibility
+
 **Solution:** Implement feature flags and graceful degradation
 
 #### Challenge 4: Description Coherence
+
 **Solution:** Implement smart combination logic and configuration-driven rules
 
 ## Conclusion
@@ -672,4 +734,4 @@ The system's modern architecture, with its emphasis on dependency injection, ser
 
 ---
 
-*This analysis provides the technical foundation for extending the anatomy description system to include clothing descriptions, ensuring integration follows existing architectural patterns and maintains system quality.*
+_This analysis provides the technical foundation for extending the anatomy description system to include clothing descriptions, ensuring integration follows existing architectural patterns and maintains system quality._

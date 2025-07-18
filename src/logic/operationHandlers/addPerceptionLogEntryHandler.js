@@ -80,7 +80,7 @@ class AddPerceptionLogEntryHandler extends BaseOperationHandler {
    * @param {AddPerceptionLogEntryParams} params
    * @param {import('../defs.js').ExecutionContext} executionContext – Unused for now.
    */
-  execute(params, executionContext) {
+  async execute(params, executionContext) {
     const log = this.getLogger(executionContext);
 
     /* ── validation ─────────────────────────────────────────────── */
@@ -130,7 +130,7 @@ class AddPerceptionLogEntryHandler extends BaseOperationHandler {
 
       /* write back ---------------------------------------------------------- */
       try {
-        this.#entityManager.addComponent(
+        await this.#entityManager.addComponent(
           id,
           PERCEPTION_LOG_COMPONENT_ID,
           updatedComponent

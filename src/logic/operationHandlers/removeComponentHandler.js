@@ -73,10 +73,10 @@ class RemoveComponentHandler extends ComponentOperationHandler {
    *
    * @param {RemoveComponentOperationParams | null | undefined} params - The parameters for the operation.
    * @param {ExecutionContext} executionContext - The execution context.
-   * @returns {void}
+   * @returns {Promise<void>}
    * @implements {OperationHandler}
    */
-  execute(params, executionContext) {
+  async execute(params, executionContext) {
     const log = this.getLogger(executionContext);
 
     // 1. Validate Parameters
@@ -106,7 +106,7 @@ class RemoveComponentHandler extends ComponentOperationHandler {
       // Behavior if component doesn't exist might depend on EntityManager implementation
       // (e.g., it might return false or just do nothing silently). We assume it
       // doesn't throw an error for non-existent components, but might for invalid entityId.
-      const removed = this.#entityManager.removeComponent(
+      const removed = await this.#entityManager.removeComponent(
         entityId,
         trimmedComponentType
       );

@@ -275,7 +275,7 @@ describe('core_handle_dismiss rule integration', () => {
     }
   });
 
-  it('performs dismiss action successfully', () => {
+  it('performs dismiss action successfully', async () => {
     testEnv.reset([
       {
         id: 'actor1',
@@ -308,7 +308,7 @@ describe('core_handle_dismiss rule integration', () => {
       ifCoLocatedHandler.execute.bind(ifCoLocatedHandler)
     );
 
-    testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       actorId: 'actor1',
       actionId: 'core:dismiss',
       targetId: 'target1',

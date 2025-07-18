@@ -292,16 +292,16 @@ describe('OperationInterpreter', () => {
   /* ────────────────────────────────────────────────────────────────────────
      Re-throw handler errors
      ─────────────────────────────────────────────────────────────────────── */
-  test('execute should re-throw errors originating from the handler function', () => {
+  test('execute should re-throw errors originating from the handler function', async () => {
     const error = new Error('Handler failed!');
     mockHandlerWithError.mockImplementationOnce(() => {
       throw error;
     });
     mockRegistry.getHandler.mockReturnValue(mockHandlerWithError);
 
-    expect(() =>
+    await expect(
       interpreter.execute(errorOperation, mockExecutionContext)
-    ).toThrow(error);
+    ).rejects.toThrow(error);
 
     expect(mockRegistry.getHandler).toHaveBeenCalledWith('ERROR_OP');
     expect(mockHandlerWithError).toHaveBeenCalledTimes(1);

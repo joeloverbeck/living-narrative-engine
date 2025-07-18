@@ -96,7 +96,7 @@ describe('intimacy_handle_thumb_wipe_cheek rule integration', () => {
     }
   });
 
-  it('performs thumb wipe cheek action successfully', () => {
+  it('performs thumb wipe cheek action successfully', async () => {
     testEnv.reset([
       {
         id: 'actor1',
@@ -116,7 +116,7 @@ describe('intimacy_handle_thumb_wipe_cheek rule integration', () => {
       },
     ]);
 
-    testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       actorId: 'actor1',
       actionId: 'intimacy:thumb_wipe_cheek',
       targetId: 'target1',

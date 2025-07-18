@@ -29,7 +29,7 @@ import { resolvePath } from '../../utils/objectUtils.js';
  * @param executeActionSequence
  * @returns {void}
  */
-export function handleForEach(
+export async function handleForEach(
   node,
   nestedCtx,
   logger,
@@ -66,7 +66,7 @@ export function handleForEach(
   try {
     for (let i = 0; i < collection.length; i++) {
       store[varName] = collection[i];
-      executeActionSequence(
+      await executeActionSequence(
         actions,
         {
           ...baseCtx,

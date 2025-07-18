@@ -5,7 +5,7 @@ import { updateMovementLock } from '../../../src/utils/movementUtils.js';
 
 describe('updateMovementLock', () => {
   describe('legacy entities without anatomy', () => {
-    it('returns cloned component with updated lock state without mutating original', () => {
+    it('returns cloned component with updated lock state without mutating original', async () => {
       const original = { locked: false, speed: 10 };
       /** @type {jest.Mocked<IEntityManager>} */
       const manager = {
@@ -17,7 +17,7 @@ describe('updateMovementLock', () => {
         addComponent: jest.fn(),
       };
 
-      const result = updateMovementLock(manager, 'e1', true);
+      const result = await updateMovementLock(manager, 'e1', true);
 
       expect(result).toEqual({ locked: true, speed: 10 });
       expect(result).not.toBe(original);
@@ -29,14 +29,14 @@ describe('updateMovementLock', () => {
       );
     });
 
-    it('returns null when no movement component exists', () => {
+    it('returns null when no movement component exists', async () => {
       /** @type {jest.Mocked<IEntityManager>} */
       const manager = {
         getComponentData: jest.fn().mockReturnValue(undefined),
         addComponent: jest.fn(),
       };
 
-      const result = updateMovementLock(manager, 'e2', false);
+      const result = await updateMovementLock(manager, 'e2', false);
 
       expect(result).toBeNull();
       expect(manager.addComponent).not.toHaveBeenCalled();
@@ -44,7 +44,7 @@ describe('updateMovementLock', () => {
   });
 
   describe('anatomy-based entities', () => {
-    it('updates movement on all body parts with movement component', () => {
+    it('updates movement on all body parts with movement component', async () => {
       const leftLegMovement = { locked: false, forcedOverride: false };
       const rightLegMovement = { locked: false, forcedOverride: false };
 
@@ -74,7 +74,7 @@ describe('updateMovementLock', () => {
         addComponent: jest.fn(),
       };
 
-      const result = updateMovementLock(manager, 'hero1', true);
+      const result = await updateMovementLock(manager, 'hero1', true);
 
       expect(result).toEqual({
         updatedParts: [
@@ -103,7 +103,7 @@ describe('updateMovementLock', () => {
       );
     });
 
-    it('returns null when no body parts have movement component', () => {
+    it('returns null when no body parts have movement component', async () => {
       /** @type {jest.Mocked<IEntityManager>} */
       const manager = {
         getComponentData: jest.fn((id, componentId) => {
@@ -124,13 +124,13 @@ describe('updateMovementLock', () => {
         addComponent: jest.fn(),
       };
 
-      const result = updateMovementLock(manager, 'hero2', true);
+      const result = await updateMovementLock(manager, 'hero2', true);
 
       expect(result).toBeNull();
       expect(manager.addComponent).not.toHaveBeenCalled();
     });
 
-    it('handles all body parts with movement components', () => {
+    it('handles all body parts with movement components', async () => {
       const legMovement = { locked: false, forcedOverride: false };
       const footMovement = { locked: false, forcedOverride: false };
 
@@ -160,7 +160,7 @@ describe('updateMovementLock', () => {
         addComponent: jest.fn(),
       };
 
-      const result = updateMovementLock(manager, 'hero3', false);
+      const result = await updateMovementLock(manager, 'hero3', false);
 
       expect(result).toEqual({
         updatedParts: [

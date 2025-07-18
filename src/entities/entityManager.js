@@ -321,14 +321,14 @@ class EntityManager extends IEntityManager {
    * @param {object} opts - Options for entity creation
    * @param {string} [opts.instanceId] - Optional specific ID for the new instance
    * @param {Object<string, object>} [opts.componentOverrides] - Optional component data overrides
-   * @returns {Entity} The newly created entity instance
+   * @returns {Promise<Entity>} The newly created entity instance
    * @throws {DefinitionNotFoundError} If the definition is not found
    * @throws {DuplicateEntityError} If an entity with the given instanceId already exists
    * @throws {InvalidArgumentError} If definitionId is invalid
    * @throws {ValidationError} If component data validation fails
    */
-  createEntityInstance(definitionId, opts = {}) {
-    return this.#creationManager.createEntityInstance(definitionId, opts);
+  async createEntityInstance(definitionId, opts = {}) {
+    return await this.#creationManager.createEntityInstance(definitionId, opts);
   }
 
   /**
@@ -358,13 +358,13 @@ class EntityManager extends IEntityManager {
    * @param {string} instanceId - The ID of the entity instance
    * @param {string} componentTypeId - The unique ID of the component type
    * @param {object} componentData - The data for the component
-   * @returns {boolean} True if the component was added or updated successfully
+   * @returns {Promise<boolean>} True if the component was added or updated successfully
    * @throws {EntityNotFoundError} If entity not found
    * @throws {InvalidArgumentError} If parameters are invalid
    * @throws {ValidationError} If component data validation fails
    */
-  addComponent(instanceId, componentTypeId, componentData) {
-    return this.#mutationManager.addComponent(
+  async addComponent(instanceId, componentTypeId, componentData) {
+    return await this.#mutationManager.addComponent(
       instanceId,
       componentTypeId,
       componentData
@@ -381,8 +381,8 @@ class EntityManager extends IEntityManager {
    * @throws {ComponentOverrideNotFoundError} If component override does not exist
    * @throws {Error} If removal fails
    */
-  removeComponent(instanceId, componentTypeId) {
-    this.#mutationManager.removeComponent(instanceId, componentTypeId);
+  async removeComponent(instanceId, componentTypeId) {
+    await this.#mutationManager.removeComponent(instanceId, componentTypeId);
   }
 
   /**
@@ -393,8 +393,8 @@ class EntityManager extends IEntityManager {
    * @throws {InvalidArgumentError} If the instanceId is invalid
    * @throws {Error} If internal removal operation fails
    */
-  removeEntityInstance(instanceId) {
-    return this.#mutationManager.removeEntityInstance(instanceId);
+  async removeEntityInstance(instanceId) {
+    return await this.#mutationManager.removeEntityInstance(instanceId);
   }
 
   /* ---------------------------------------------------------------------- */

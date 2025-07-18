@@ -99,7 +99,7 @@ describe('intimacy:fondle_ass action integration', () => {
     }
   });
 
-  it('performs fondle ass action successfully', () => {
+  it('performs fondle ass action successfully', async () => {
     testEnv.reset([
       {
         id: 'room1',
@@ -160,7 +160,7 @@ describe('intimacy:fondle_ass action integration', () => {
       },
     ]);
 
-    testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       actorId: 'alice',
       actionId: 'intimacy:fondle_ass',
       targetId: 'beth',
@@ -180,7 +180,7 @@ describe('intimacy:fondle_ass action integration', () => {
     // which needs to be properly configured in the test environment
   });
 
-  it('does not fire rule for different action', () => {
+  it('does not fire rule for different action', async () => {
     testEnv.reset([
       {
         id: 'room1',
@@ -199,7 +199,7 @@ describe('intimacy:fondle_ass action integration', () => {
 
     const initialEventCount = testEnv.events.length;
 
-    testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       actionId: 'core:wait',
       actorId: 'alice',
     });
@@ -209,7 +209,7 @@ describe('intimacy:fondle_ass action integration', () => {
     expect(newEventCount).toBe(initialEventCount + 1); // Only the dispatched event
   });
 
-  it('handles missing target gracefully', () => {
+  it('handles missing target gracefully', async () => {
     testEnv.reset([
       {
         id: 'room1',
@@ -229,20 +229,18 @@ describe('intimacy:fondle_ass action integration', () => {
 
     // This test verifies the rule handles missing entities gracefully
     // The action prerequisites would normally prevent this, but we test rule robustness
-    expect(() => {
-      testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-        actionId: 'intimacy:fondle_ass',
-        actorId: 'alice',
-        targetId: 'nonexistent',
-      });
-    }).not.toThrow();
+    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      actionId: 'intimacy:fondle_ass',
+      actorId: 'alice',
+      targetId: 'nonexistent',
+    });
 
     // Should still dispatch events even with missing target
     const types = testEnv.events.map((e) => e.eventType);
     expect(types).toContain('core:perceptible_event');
   });
 
-  it('verifies message content for fondle ass action', () => {
+  it('verifies message content for fondle ass action', async () => {
     testEnv.reset([
       {
         id: 'room1',
@@ -293,7 +291,7 @@ describe('intimacy:fondle_ass action integration', () => {
       },
     ]);
 
-    testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       actorId: 'alice',
       actionId: 'intimacy:fondle_ass',
       targetId: 'beth',

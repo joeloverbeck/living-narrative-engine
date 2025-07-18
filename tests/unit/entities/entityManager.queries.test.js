@@ -21,11 +21,11 @@ describeEntityManagerSuite(
     //
     // ----------------------------------------------------------------------//
     describe('getEntityInstance', () => {
-      it('should return the correct entity instance if the ID exists', () => {
+      it('should return the correct entity instance if the ID exists', async () => {
         // Arrange
         const { entityManager } = getBed();
         const { PRIMARY } = TestData.InstanceIDs;
-        const expectedEntity = getBed().createBasicEntity({
+        const expectedEntity = await getBed().createBasicEntity({
           instanceId: PRIMARY,
         });
 
@@ -81,10 +81,10 @@ describeEntityManagerSuite(
         expect(results).toEqual([]);
       });
 
-      it('should return an empty array if no entities have the specified component', () => {
+      it('should return an empty array if no entities have the specified component', async () => {
         // Arrange
         const { entityManager } = getBed();
-        getBed().createBasicEntity({
+        await getBed().createBasicEntity({
           overrides: { [COMPONENT_B]: { val: 1 } },
         });
 
@@ -95,18 +95,18 @@ describeEntityManagerSuite(
         expect(results).toEqual([]);
       });
 
-      it('should return only entities that have the specified component', () => {
+      it('should return only entities that have the specified component', async () => {
         // Arrange
         const { entityManager } = getBed();
-        const entity1 = getBed().createBasicEntity({
+        const entity1 = await getBed().createBasicEntity({
           instanceId: 'instance-1',
           overrides: { [COMPONENT_A]: { val: 1 } },
         });
-        const entity2 = getBed().createBasicEntity({
+        const entity2 = await getBed().createBasicEntity({
           instanceId: 'instance-2',
           overrides: { [COMPONENT_B]: { val: 2 } },
         });
-        const entity3 = getBed().createBasicEntity({
+        const entity3 = await getBed().createBasicEntity({
           instanceId: 'instance-3',
           overrides: {
             [COMPONENT_A]: { val: 3 },
@@ -125,14 +125,14 @@ describeEntityManagerSuite(
         expect(resultIds).not.toContain(entity2.id);
       });
 
-      it('should return entities that have the component on their definition', () => {
+      it('should return entities that have the component on their definition', async () => {
         // Arrange
         const { entityManager } = getBed();
         const { NAME_COMPONENT_ID } = TestData.ComponentIDs;
         getBed().setupTestDefinitions('basic', 'actor'); // basic has name, actor does not
 
-        const entityWithComponent = getBed().createBasicEntity();
-        const entityWithoutComponent = getBed().createEntity('actor');
+        const entityWithComponent = await getBed().createBasicEntity();
+        const entityWithoutComponent = await getBed().createEntity('actor');
 
         // Act
         const results =
@@ -147,10 +147,10 @@ describeEntityManagerSuite(
 
       it.each(TestData.InvalidValues.invalidIds)(
         'should throw InvalidArgumentError for invalid componentTypeId %p',
-        (invalidId) => {
+        async (invalidId) => {
           // Arrange
           const { entityManager, mocks } = getBed();
-          getBed().createBasicEntity();
+          await getBed().createBasicEntity();
 
           // Act & Assert
           expect(() =>
@@ -162,10 +162,10 @@ describeEntityManagerSuite(
         }
       );
 
-      it('should return a new array, not a live reference', () => {
+      it('should return a new array, not a live reference', async () => {
         // Arrange
         const { entityManager } = getBed();
-        const entity1 = getBed().createBasicEntity({
+        const entity1 = await getBed().createBasicEntity({
           overrides: { [COMPONENT_A]: { val: 1 } },
         });
 
@@ -174,7 +174,7 @@ describeEntityManagerSuite(
         expect(results1).toHaveLength(1);
 
         // Modify the state by adding another entity with the component
-        const entity2 = getBed().createBasicEntity({
+        const entity2 = await getBed().createBasicEntity({
           overrides: { [COMPONENT_A]: { val: 2 } },
         });
 
@@ -200,12 +200,12 @@ describeEntityManagerSuite(
 
       let entity1, entity2, entity3, entity4;
 
-      beforeEach(() => {
+      beforeEach(async () => {
         const { entityManager } = getBed();
         getBed().setupTestDefinitions('basic');
 
         // entity1: has A
-        entity1 = entityManager.createEntityInstance(
+        entity1 = await entityManager.createEntityInstance(
           TestData.DefinitionIDs.BASIC,
           {
             instanceId: 'e1',
@@ -214,7 +214,7 @@ describeEntityManagerSuite(
         );
 
         // entity2: has B, C
-        entity2 = entityManager.createEntityInstance(
+        entity2 = await entityManager.createEntityInstance(
           TestData.DefinitionIDs.BASIC,
           {
             instanceId: 'e2',
@@ -226,7 +226,7 @@ describeEntityManagerSuite(
         );
 
         // entity3: has A, B
-        entity3 = entityManager.createEntityInstance(
+        entity3 = await entityManager.createEntityInstance(
           TestData.DefinitionIDs.BASIC,
           {
             instanceId: 'e3',
@@ -238,7 +238,7 @@ describeEntityManagerSuite(
         );
 
         // entity4: has A, B, C
-        entity4 = entityManager.createEntityInstance(
+        entity4 = await entityManager.createEntityInstance(
           TestData.DefinitionIDs.BASIC,
           {
             instanceId: 'e4',

@@ -153,7 +153,7 @@ export class AnatomyUnitOfWork {
         // Check if entity still exists before trying to delete
         const entity = this.#entityManager.getEntityInstance(entityId);
         if (entity) {
-          this.#entityManager.removeEntityInstance(entityId);
+          await this.#entityManager.removeEntityInstance(entityId);
           this.#logger.debug(
             `AnatomyUnitOfWork: Successfully deleted entity '${entityId}'`
           );

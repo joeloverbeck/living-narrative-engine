@@ -6,8 +6,10 @@ import { InvalidArgumentError } from '../../../src/errors/invalidArgumentError.j
 const createMocks = () => {
   return {
     entityManager: {
-      createEntityInstance: jest.fn((id) => ({ id })),
-      addComponent: jest.fn(),
+      createEntityInstance: jest.fn().mockImplementation((id) => 
+        Promise.resolve({ id })
+      ),
+      addComponent: jest.fn().mockResolvedValue(true),
       removeEntityInstance: jest.fn().mockResolvedValue(undefined),
       getEntityInstance: jest.fn((id) => (id === 'missing' ? null : { id })),
       getComponentData: jest.fn((id, comp) =>
@@ -70,11 +72,11 @@ describe('EntityGraphBuilder', () => {
   });
 
   describe('createRootEntity', () => {
-    it('uses recipe torso override when valid', () => {
+    it('uses recipe torso override when valid', async () => {
       mocks.dataRegistry.get.mockReturnValue({
         components: { 'anatomy:part': { subType: 'torso' } },
       });
-      const id = builder.createRootEntity(
+      const id = await builder.createRootEntity(
         'torsoDefault',
         { slots: { torso: { preferId: 't2' } } },
         'owner'
@@ -91,9 +93,9 @@ describe('EntityGraphBuilder', () => {
       expect(id).toBe('t2');
     });
 
-    it('falls back to default when override not found', () => {
+    it('falls back to default when override not found', async () => {
       mocks.dataRegistry.get.mockReturnValue(undefined);
-      const id = builder.createRootEntity('base', {
+      const id = await builder.createRootEntity('base', {
         slots: { torso: { preferId: 'missing' } },
       });
       expect(mocks.logger.warn).toHaveBeenCalled();
@@ -105,13 +107,13 @@ describe('EntityGraphBuilder', () => {
   });
 
   describe('createAndAttachPart', () => {
-    it('creates and attaches part successfully', () => {
-      const id = builder.createAndAttachPart('torso', 'shoulder', 'armDef');
+    it('creates and attaches part successfully', async () => {
+      const id = await builder.createAndAttachPart('torso', 'shoulder', 'armDef');
       expect(mocks.entityManager.createEntityInstance).toHaveBeenCalledWith(
         'armDef'
       );
       expect(mocks.entityManager.addComponent).toHaveBeenCalledWith(
-        id,
+        'armDef',
         'anatomy:joint',
         {
           parentId: 'torso',
@@ -121,7 +123,7 @@ describe('EntityGraphBuilder', () => {
       expect(id).toBe('armDef');
     });
 
-    it('propagates orientation from socket to child anatomy:part', () => {
+    it('propagates orientation from socket to child anatomy:part', async () => {
       mocks.entityManager.getComponentData.mockImplementation((id, comp) => {
         if (id === 'armDef' && comp === 'anatomy:part') {
           return { subType: 'arm', someOtherField: 'value' };
@@ -129,7 +131,7 @@ describe('EntityGraphBuilder', () => {
         return null;
       });
 
-      const id = builder.createAndAttachPart(
+      const id = await builder.createAndAttachPart(
         'torso',
         'shoulder',
         'armDef',
@@ -152,10 +154,10 @@ describe('EntityGraphBuilder', () => {
       expect(id).toBe('armDef');
     });
 
-    it('creates part without orientation when not provided', () => {
+    it('creates part without orientation when not provided', async () => {
       mocks.entityManager.getComponentData.mockReturnValue(null);
 
-      const id = builder.createAndAttachPart(
+      const id = await builder.createAndAttachPart(
         'torso',
         'shoulder',
         'armDef',
@@ -171,8 +173,8 @@ describe('EntityGraphBuilder', () => {
       expect(id).toBe('armDef');
     });
 
-    it('adds ownership component when ownerId provided', () => {
-      const id = builder.createAndAttachPart(
+    it('adds ownership component when ownerId provided', async () => {
+      const id = await builder.createAndAttachPart(
         'torso',
         'shoulder',
         'armDef',
@@ -187,18 +189,18 @@ describe('EntityGraphBuilder', () => {
       expect(id).toBe('armDef');
     });
 
-    it('logs and returns null on failure', () => {
+    it('logs and returns null on failure', async () => {
       mocks.entityManager.createEntityInstance.mockImplementation(() => {
         throw new Error('fail');
       });
-      const id = builder.createAndAttachPart('torso', 'shoulder', 'armDef');
+      const id = await builder.createAndAttachPart('torso', 'shoulder', 'armDef');
       expect(id).toBeNull();
       expect(mocks.logger.error).toHaveBeenCalled();
     });
   });
 
-  it('setEntityName adds component and logs', () => {
-    builder.setEntityName('ent1', 'Bob');
+  it('setEntityName adds component and logs', async () => {
+    await builder.setEntityName('ent1', 'Bob');
     expect(mocks.entityManager.addComponent).toHaveBeenCalledWith(
       'ent1',
       'core:name',

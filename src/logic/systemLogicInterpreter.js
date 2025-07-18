@@ -211,9 +211,24 @@ class SystemLogicInterpreter extends BaseService {
    *
    * @param {{type:string,payload:any}} event - Event object with type and payload.
    */
-  #handleEvent(event) {
+  async #handleEvent(event) {
+    const startTime = Date.now();
+    this.#logger.debug(
+      `🎯 [SystemLogicInterpreter] Event received: ${event.type}`,
+      { 
+        payload: event.payload,
+        timestamp: startTime,
+        isAsync: true
+      }
+    );
+
     const bucket = this.#ruleCache.get(event.type);
-    if (!bucket) return;
+    if (!bucket) {
+      this.#logger.debug(
+        `🎯 [SystemLogicInterpreter] No rules found for event type: ${event.type}`
+      );
+      return;
+    }
 
     /** @type {SystemRule[]} */
     let rules = bucket.catchAll;
@@ -224,11 +239,26 @@ class SystemLogicInterpreter extends BaseService {
       if (specific) rules = [...specific, ...bucket.catchAll];
     }
 
-    if (rules.length === 0) return;
+    if (rules.length === 0) {
+      this.#logger.debug(
+        `🎯 [SystemLogicInterpreter] No matching rules for event: ${event.type}`
+      );
+      return;
+    }
 
+    // Keep original format for tests
     this.#logger.debug(
       `Received event: ${event.type}. Found ${rules.length} potential rule(s).`,
       { payload: event.payload }
+    );
+    
+    // Add new enhanced debugging
+    this.#logger.debug(
+      `🎯 [SystemLogicInterpreter] Processing event: ${event.type}. Found ${rules.length} potential rule(s).`,
+      { 
+        payload: event.payload,
+        ruleIds: rules.map(r => r.rule_id || 'NO_ID')
+      }
     );
 
     /* assemble shared nested execution context once */
@@ -237,8 +267,14 @@ class SystemLogicInterpreter extends BaseService {
       const actorId = event.payload?.actorId ?? event.payload?.entityId ?? null;
       const targetId = event.payload?.targetId ?? null;
 
+      // Keep original format for tests
       this.#logger.debug(
         `[Event: ${event.type}] Assembling execution context via createNestedExecutionContext... (ActorID: ${actorId}, TargetID: ${targetId})`
+      );
+      
+      // Add new enhanced debugging
+      this.#logger.debug(
+        `🔧 [SystemLogicInterpreter] Assembling execution context via createNestedExecutionContext... (ActorID: ${actorId}, TargetID: ${targetId})`
       );
 
       nestedCtx = createNestedExecutionContext(
@@ -250,16 +286,22 @@ class SystemLogicInterpreter extends BaseService {
         undefined
       );
 
+      // Keep original format for tests
       this.#logger.debug(
         `[Event: ${event.type}] createNestedExecutionContext returned a valid ExecutionContext.`
       );
-
+      
       this.#logger.debug(
         `[Event: ${event.type}] Final ExecutionContext (nested structure) assembled successfully.`
       );
+      
+      // Add new enhanced debugging
+      this.#logger.debug(
+        `🔧 [SystemLogicInterpreter] Final ExecutionContext (nested structure) assembled successfully.`
+      );
     } catch (e) {
       this.#logger.error(
-        'Failed to build JsonLogic context for event',
+        '❌ [SystemLogicInterpreter] Failed to build JsonLogic context for event',
         event,
         e
       );
@@ -267,16 +309,36 @@ class SystemLogicInterpreter extends BaseService {
     }
 
     /* run rules */
-    for (const rule of rules) {
+    this.#logger.debug(
+      `🚀 [SystemLogicInterpreter] Starting rule processing for event: ${event.type} (${rules.length} rules)`
+    );
+    
+    for (let i = 0; i < rules.length; i++) {
+      const rule = rules[i];
+      const ruleId = rule.rule_id || 'NO_ID';
+      
+      this.#logger.debug(
+        `📋 [SystemLogicInterpreter] Processing rule ${i + 1}/${rules.length}: ${ruleId}`
+      );
+      
       try {
-        this.#processRule(rule, event, nestedCtx);
+        await this.#processRule(rule, event, nestedCtx);
+        this.#logger.debug(
+          `✅ [SystemLogicInterpreter] Rule ${ruleId} completed successfully`
+        );
       } catch (err) {
         this.#logger.error(
-          `SystemLogicInterpreter: rule '${rule.rule_id || 'NO_ID'}' threw:`,
+          `❌ [SystemLogicInterpreter] Rule '${ruleId}' threw error:`,
           err
         );
       }
     }
+    
+    const endTime = Date.now();
+    const duration = endTime - startTime;
+    this.#logger.debug(
+      `🏁 [SystemLogicInterpreter] Finished processing event: ${event.type} (${duration}ms total)`
+    );
   }
 
   /* --------------------------------------------------------------------- */
@@ -318,7 +380,14 @@ class SystemLogicInterpreter extends BaseService {
    * @param {{type:string,payload:any}} event
    * @param {any} nestedCtx
    */
-  #processRule(rule, event, nestedCtx) {
+  async #processRule(rule, event, nestedCtx) {
+    const ruleId = rule.rule_id || 'NO_ID';
+    const ruleStartTime = Date.now();
+    
+    this.#logger.debug(
+      `🔍 [SystemLogicInterpreter] Rule ${ruleId}: Starting condition evaluation`
+    );
+    
     const { passed, errored } = this.#evaluateRuleCondition(
       rule,
       nestedCtx.evaluationContext
@@ -328,22 +397,46 @@ class SystemLogicInterpreter extends BaseService {
       const reason = errored
         ? 'due to error during condition evaluation'
         : 'due to condition evaluating to false';
+      // Keep original format for tests
       this.#logger.debug(
-        `Rule '${rule.rule_id}' actions skipped for event '${event.type}' ${reason}.`
+        `Rule '${ruleId}' actions skipped for event '${event.type}' ${reason}.`
+      );
+      
+      // Add new enhanced debugging
+      this.#logger.debug(
+        `⏭️ [SystemLogicInterpreter] Rule '${ruleId}' actions skipped for event '${event.type}' ${reason}.`
       );
       return;
     }
 
+    this.#logger.debug(
+      `✅ [SystemLogicInterpreter] Rule ${ruleId}: Condition passed, proceeding to actions`
+    );
+
     if (Array.isArray(rule.actions) && rule.actions.length) {
+      this.#logger.debug(
+        `🎬 [SystemLogicInterpreter] Rule ${ruleId}: Starting action sequence (${rule.actions.length} actions)`
+      );
+      
       try {
-        this._executeActions(rule.actions, nestedCtx, `Rule '${rule.rule_id}'`);
+        await this._executeActions(rule.actions, nestedCtx, `Rule '${rule.rule_id}'`);
+        
+        const ruleEndTime = Date.now();
+        const ruleDuration = ruleEndTime - ruleStartTime;
+        this.#logger.debug(
+          `🎉 [SystemLogicInterpreter] Rule ${ruleId}: Action sequence completed (${ruleDuration}ms)`
+        );
       } catch (err) {
         this.#logger.error(
-          `[Rule ${rule.rule_id}] Error during action sequence:`,
+          `❌ [SystemLogicInterpreter] Rule ${ruleId}: Error during action sequence:`,
           err
         );
         throw err;
       }
+    } else {
+      this.#logger.debug(
+        `⚠️ [SystemLogicInterpreter] Rule ${ruleId}: No actions to execute`
+      );
     }
   }
 
@@ -356,13 +449,33 @@ class SystemLogicInterpreter extends BaseService {
    * @param {any} nestedCtx
    * @param {string} scopeLabel
    */
-  _executeActions(actions, nestedCtx, scopeLabel) {
-    executeActionSequence(
-      actions,
-      { ...nestedCtx, scopeLabel, jsonLogic: this.#jsonLogic },
-      this.#logger,
-      this.#operationInterpreter
+  async _executeActions(actions, nestedCtx, scopeLabel) {
+    const actionStartTime = Date.now();
+    
+    this.#logger.debug(
+      `🎬 [SystemLogicInterpreter] _executeActions: Starting action sequence for ${scopeLabel} (${actions.length} actions)`
     );
+    
+    try {
+      await executeActionSequence(
+        actions,
+        { ...nestedCtx, scopeLabel, jsonLogic: this.#jsonLogic },
+        this.#logger,
+        this.#operationInterpreter
+      );
+      
+      const actionEndTime = Date.now();
+      const actionDuration = actionEndTime - actionStartTime;
+      this.#logger.debug(
+        `🎉 [SystemLogicInterpreter] _executeActions: Action sequence completed for ${scopeLabel} (${actionDuration}ms)`
+      );
+    } catch (err) {
+      this.#logger.error(
+        `❌ [SystemLogicInterpreter] _executeActions: Error in action sequence for ${scopeLabel}:`,
+        err
+      );
+      throw err;
+    }
   }
 }
 

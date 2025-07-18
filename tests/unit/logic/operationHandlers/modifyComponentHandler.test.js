@@ -115,14 +115,14 @@ describe('ModifyComponentHandler', () => {
   // ---------------------------------------------------------------------------
   //  Validation: Field is required
   // ---------------------------------------------------------------------------
-  test('set mode without field warns and skips', () => {
+  test('set mode without field warns and skips', async () => {
     const params = {
       entity_ref: 'actor',
       component_type: 'ns:c',
       mode: 'set',
       value: { a: 1 },
     };
-    handler.execute(params, buildCtx());
+    await handler.execute(params, buildCtx());
     expect(mockEntityManager.getComponentData).not.toHaveBeenCalled();
     expect(mockEntityManager.addComponent).not.toHaveBeenCalled(); // Should not call addComponent
     expect(mockLogger.warn).toHaveBeenCalledWith(
@@ -133,7 +133,7 @@ describe('ModifyComponentHandler', () => {
   // ---------------------------------------------------------------------------
   //  Field-level SET – path creation
   // ---------------------------------------------------------------------------
-  test('set nested field creates path and assigns value', () => {
+  test('set nested field creates path and assigns value', async () => {
     const initialCompObj = {}; // What getComponentData returns
     mockEntityManager.getComponentData.mockReturnValue(initialCompObj);
 
@@ -144,7 +144,7 @@ describe('ModifyComponentHandler', () => {
       mode: 'set',
       value: 5,
     };
-    handler.execute(params, buildCtx());
+    await handler.execute(params, buildCtx());
 
     expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(
       actorId,
@@ -169,13 +169,13 @@ describe('ModifyComponentHandler', () => {
   // ---------------------------------------------------------------------------
   //  Entity reference resolution paths
   // ---------------------------------------------------------------------------
-  test('resolves "actor", "target", direct id for getComponentData and addComponent', () => {
+  test('resolves "actor", "target", direct id for getComponentData and addComponent', async () => {
     const initialData = { f: 0 };
     mockEntityManager.getComponentData.mockReturnValue(initialData);
     const expectedModifiedData = { f: 1 };
 
     // Actor
-    handler.execute(
+    await handler.execute(
       {
         entity_ref: 'actor',
         component_type: 'c:t',
@@ -196,7 +196,7 @@ describe('ModifyComponentHandler', () => {
     );
 
     // Target
-    handler.execute(
+    await handler.execute(
       {
         entity_ref: 'target',
         component_type: 't:id',
@@ -217,7 +217,7 @@ describe('ModifyComponentHandler', () => {
     );
 
     // Direct ID
-    handler.execute(
+    await handler.execute(
       {
         entity_ref: { entityId: 'specific' },
         component_type: 'x:y',
@@ -238,8 +238,8 @@ describe('ModifyComponentHandler', () => {
     );
   });
 
-  test('fails to resolve bad entity_ref and logs (with field present)', () => {
-    handler.execute(
+  test('fails to resolve bad entity_ref and logs (with field present)', async () => {
+    await handler.execute(
       {
         entity_ref: '  ',
         component_type: 'c',
@@ -260,9 +260,9 @@ describe('ModifyComponentHandler', () => {
   // ---------------------------------------------------------------------------
   // Validation: Component existence and type checks
   // ---------------------------------------------------------------------------
-  test('warns if component does not exist on entity', () => {
+  test('warns if component does not exist on entity', async () => {
     mockEntityManager.getComponentData.mockReturnValue(undefined);
-    handler.execute(
+    await handler.execute(
       {
         entity_ref: 'actor',
         component_type: 'non:existent',
@@ -284,9 +284,9 @@ describe('ModifyComponentHandler', () => {
     expect(mockEntityManager.addComponent).not.toHaveBeenCalled();
   });
 
-  test('warns if retrieved component data is not an object', () => {
+  test('warns if retrieved component data is not an object', async () => {
     mockEntityManager.getComponentData.mockReturnValue('not-an-object');
-    handler.execute(
+    await handler.execute(
       {
         entity_ref: 'actor',
         component_type: 'bad:data',
@@ -311,7 +311,7 @@ describe('ModifyComponentHandler', () => {
   // ---------------------------------------------------------------------------
   //  Context logger precedence
   // ---------------------------------------------------------------------------
-  test('uses logger from execution context when provided', () => {
+  test('uses logger from execution context when provided', async () => {
     const ctxLogger = {
       info: jest.fn(),
       warn: jest.fn(),
@@ -320,7 +320,7 @@ describe('ModifyComponentHandler', () => {
     };
     const ctx = buildCtx({ logger: ctxLogger });
     // Use an invalid mode to trigger a warning
-    handler.execute(
+    await handler.execute(
       {
         entity_ref: 'actor',
         component_type: 'c',
@@ -339,7 +339,7 @@ describe('ModifyComponentHandler', () => {
   // ---------------------------------------------------------------------------
   // EntityManager interaction
   // ---------------------------------------------------------------------------
-  test('logs warning if entityManager.addComponent returns false', () => {
+  test('logs warning if entityManager.addComponent returns false', async () => {
     const initialCompObj = { stats: { hp: 10 } };
     mockEntityManager.getComponentData.mockReturnValue(initialCompObj);
     mockEntityManager.addComponent.mockReturnValue(false); // Simulate addComponent failure
@@ -351,7 +351,7 @@ describe('ModifyComponentHandler', () => {
       mode: 'set',
       value: 25,
     };
-    handler.execute(params, buildCtx());
+    await handler.execute(params, buildCtx());
 
     expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
       actorId,
@@ -365,7 +365,7 @@ describe('ModifyComponentHandler', () => {
     );
   });
 
-  test('logs error if entityManager.addComponent throws', () => {
+  test('logs error if entityManager.addComponent throws', async () => {
     const initialCompObj = { stats: { hp: 10 } };
     mockEntityManager.getComponentData.mockReturnValue(initialCompObj);
     const testError = new Error('Validation failed in EM');
@@ -380,7 +380,7 @@ describe('ModifyComponentHandler', () => {
       mode: 'set',
       value: 25,
     };
-    handler.execute(params, buildCtx());
+    await handler.execute(params, buildCtx());
 
     expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
       actorId,
@@ -398,7 +398,7 @@ describe('ModifyComponentHandler', () => {
   // ---------------------------------------------------------------------------
   //  EntityManager.addComponent return value handling
   // ---------------------------------------------------------------------------
-  test('logs a warning if addComponent returns a falsy value', () => {
+  test('logs a warning if addComponent returns a falsy value', async () => {
     const initialCompObj = { value: 10 };
     mockEntityManager.getComponentData.mockReturnValue(initialCompObj);
     mockEntityManager.addComponent.mockReturnValue(false); // Simulate failure
@@ -410,7 +410,7 @@ describe('ModifyComponentHandler', () => {
       mode: 'set',
       value: 20,
     };
-    handler.execute(params, buildCtx());
+    await handler.execute(params, buildCtx());
 
     expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
       actorId,
@@ -422,7 +422,7 @@ describe('ModifyComponentHandler', () => {
     );
   });
 
-  test('does not log a warning if addComponent returns a truthy value', () => {
+  test('does not log a warning if addComponent returns a truthy value', async () => {
     const initialCompObj = { value: 10 };
     mockEntityManager.getComponentData.mockReturnValue(initialCompObj);
     mockEntityManager.addComponent.mockReturnValue(true); // Simulate success
@@ -434,7 +434,7 @@ describe('ModifyComponentHandler', () => {
       mode: 'set',
       value: 20,
     };
-    handler.execute(params, buildCtx());
+    await handler.execute(params, buildCtx());
 
     expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
       actorId,

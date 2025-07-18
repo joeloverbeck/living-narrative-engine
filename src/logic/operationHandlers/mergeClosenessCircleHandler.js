@@ -113,10 +113,10 @@ class MergeClosenessCircleHandler extends BaseOperationHandler {
    *
    * @param {string} actorId
    * @param {string} targetId
-   * @returns {string[]}
+   * @returns {Promise<string[]>}
    * @private
    */
-  #updatePartners(actorId, targetId) {
+  async #updatePartners(actorId, targetId) {
     const actorComp = this.#entityManager.getComponentData(
       actorId,
       'intimacy:closeness'
@@ -133,7 +133,7 @@ class MergeClosenessCircleHandler extends BaseOperationHandler {
     for (const id of mergedMemberIds) {
       const partners = mergedMemberIds.filter((p) => p !== id);
       try {
-        this.#entityManager.addComponent(id, 'intimacy:closeness', {
+        await this.#entityManager.addComponent(id, 'intimacy:closeness', {
           partners,
         });
       } catch (err) {
@@ -155,10 +155,10 @@ class MergeClosenessCircleHandler extends BaseOperationHandler {
    * @returns {void}
    * @private
    */
-  #lockMovement(mergedMemberIds) {
+  async #lockMovement(mergedMemberIds) {
     for (const id of mergedMemberIds) {
       try {
-        updateMovementLock(this.#entityManager, id, true);
+        await updateMovementLock(this.#entityManager, id, true);
       } catch (err) {
         safeDispatchError(
           this.#dispatcher,
@@ -176,13 +176,13 @@ class MergeClosenessCircleHandler extends BaseOperationHandler {
    * @param {{ actor_id:string, target_id:string, result_variable?:string }} params - Operation parameters.
    * @param {ExecutionContext} executionContext - Execution context.
    */
-  execute(params, executionContext) {
+  async execute(params, executionContext) {
     const validated = this.#validateParams(params, executionContext);
     if (!validated) return;
     const { actorId, targetId, resultVar, logger } = validated;
 
-    const mergedMemberIds = this.#updatePartners(actorId, targetId);
-    this.#lockMovement(mergedMemberIds);
+    const mergedMemberIds = await this.#updatePartners(actorId, targetId);
+    await this.#lockMovement(mergedMemberIds);
 
     if (resultVar) {
       if (

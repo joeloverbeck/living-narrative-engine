@@ -123,10 +123,10 @@ describe('RemoveComponentHandler', () => {
   });
 
   // --- Happy Path - Basic Removal ----------------------------------------
-  test('removes component by calling EntityManager.removeComponent with correct args', () => {
+  test('removes component by calling EntityManager.removeComponent with correct args', async () => {
     const params = { entity_ref: 'actor', component_type: 'core:stats' };
     const ctx = buildCtx();
-    handler.execute(params, ctx);
+    await handler.execute(params, ctx);
 
     expect(mockEntityManager.removeComponent).toHaveBeenCalledTimes(1);
     expect(mockEntityManager.removeComponent).toHaveBeenCalledWith(
@@ -145,14 +145,14 @@ describe('RemoveComponentHandler', () => {
   });
 
   // --- CORRECTED TEST ---
-  test('logs warning when component removal fails (EntityManager returns false)', () => {
+  test('logs warning when component removal fails (EntityManager returns false)', async () => {
     mockEntityManager.removeComponent.mockReturnValue(false); // Simulate component not found or other failure
     const params = {
       entity_ref: 'target',
       component_type: 'custom:nonexistent',
     };
     const ctx = buildCtx();
-    handler.execute(params, ctx);
+    await handler.execute(params, ctx);
 
     expect(mockEntityManager.removeComponent).toHaveBeenCalledTimes(1);
     expect(mockEntityManager.removeComponent).toHaveBeenCalledWith(
@@ -172,13 +172,13 @@ describe('RemoveComponentHandler', () => {
   });
   // --- END CORRECTION ---
 
-  test('trims whitespace from component_type before calling EntityManager', () => {
+  test('trims whitespace from component_type before calling EntityManager', async () => {
     const params = {
       entity_ref: specificEntityId,
       component_type: '  padded:type  ',
     };
     const ctx = buildCtx();
-    handler.execute(params, ctx);
+    await handler.execute(params, ctx);
 
     expect(mockEntityManager.removeComponent).toHaveBeenCalledTimes(1);
     expect(mockEntityManager.removeComponent).toHaveBeenCalledWith(
@@ -196,8 +196,8 @@ describe('RemoveComponentHandler', () => {
     ['missing params', null],
     ['undefined params', undefined],
     ['non-object params', 'invalid'],
-  ])('warns and skips if params are %s', (desc, invalidParams) => {
-    handler.execute(invalidParams, buildCtx());
+  ])('warns and skips if params are %s', async (desc, invalidParams) => {
+    await handler.execute(invalidParams, buildCtx());
     expect(mockLogger.warn).toHaveBeenCalledWith(
       'REMOVE_COMPONENT: params missing or invalid.',
       { params: invalidParams }
@@ -209,8 +209,8 @@ describe('RemoveComponentHandler', () => {
     ['missing property', { component_type: 'c:t' }],
     ['null', { component_type: 'c:t', entity_ref: null }],
     ['undefined', { component_type: 'c:t', entity_ref: undefined }],
-  ])('warns and skips if entity_ref is %s', (desc, params) => {
-    handler.execute(params, buildCtx());
+  ])('warns and skips if entity_ref is %s', async (desc, params) => {
+    await handler.execute(params, buildCtx());
     expect(mockLogger.warn).toHaveBeenCalledWith(
       'REMOVE_COMPONENT: "entity_ref" parameter is required.'
     );
@@ -224,8 +224,8 @@ describe('RemoveComponentHandler', () => {
     ['empty string', { entity_ref: 'actor', component_type: '' }],
     ['whitespace string', { entity_ref: 'actor', component_type: '   ' }],
     ['non-string', { entity_ref: 'actor', component_type: 123 }],
-  ])('warns and skips if component_type is %s', (desc, params) => {
-    handler.execute(params, buildCtx());
+  ])('warns and skips if component_type is %s', async (desc, params) => {
+    await handler.execute(params, buildCtx());
     expect(mockLogger.warn).toHaveBeenCalledWith(
       expect.stringContaining('Invalid or missing "component_type" parameter')
     );
@@ -233,64 +233,64 @@ describe('RemoveComponentHandler', () => {
   });
 
   // --- Entity Reference Resolution (Happy Paths) -------------------------
-  test('resolves "actor" entity reference', () => {
+  test('resolves "actor" entity reference', async () => {
     const params = { entity_ref: 'actor', component_type: 'c:t' };
-    handler.execute(params, buildCtx());
+    await handler.execute(params, buildCtx());
     expect(mockEntityManager.removeComponent).toHaveBeenCalledWith(
       actorId,
       'c:t'
     );
   });
 
-  test('resolves "target" entity reference', () => {
+  test('resolves "target" entity reference', async () => {
     const params = { entity_ref: 'target', component_type: 'c:t' };
-    handler.execute(params, buildCtx());
+    await handler.execute(params, buildCtx());
     expect(mockEntityManager.removeComponent).toHaveBeenCalledWith(
       targetId,
       'c:t'
     );
   });
 
-  test('resolves direct string entity ID reference', () => {
+  test('resolves direct string entity ID reference', async () => {
     const params = { entity_ref: specificEntityId, component_type: 'c:t' };
-    handler.execute(params, buildCtx());
+    await handler.execute(params, buildCtx());
     expect(mockEntityManager.removeComponent).toHaveBeenCalledWith(
       specificEntityId,
       'c:t'
     );
   });
 
-  test('resolves object entity reference {entityId: "..."}', () => {
+  test('resolves object entity reference {entityId: "..."}', async () => {
     const params = {
       entity_ref: { entityId: specificEntityId },
       component_type: 'c:t',
     };
-    handler.execute(params, buildCtx());
+    await handler.execute(params, buildCtx());
     expect(mockEntityManager.removeComponent).toHaveBeenCalledWith(
       specificEntityId,
       'c:t'
     );
   });
 
-  test('resolves and trims object entity reference {entityId: " spaced "}', () => {
+  test('resolves and trims object entity reference {entityId: " spaced "}', async () => {
     const spacedId = '  spaced-id  ';
     const trimmedId = 'spaced-id';
     const params = {
       entity_ref: { entityId: spacedId },
       component_type: 'c:t',
     };
-    handler.execute(params, buildCtx());
+    await handler.execute(params, buildCtx());
     expect(mockEntityManager.removeComponent).toHaveBeenCalledWith(
       trimmedId,
       'c:t'
     );
   });
 
-  test('resolves and trims direct string entity ID reference " spaced "', () => {
+  test('resolves and trims direct string entity ID reference " spaced "', async () => {
     const spacedId = '  direct-spaced-id  ';
     const trimmedId = 'direct-spaced-id';
     const params = { entity_ref: spacedId, component_type: 'c:t' };
-    handler.execute(params, buildCtx());
+    await handler.execute(params, buildCtx());
     expect(mockEntityManager.removeComponent).toHaveBeenCalledWith(
       trimmedId,
       'c:t'
@@ -308,9 +308,9 @@ describe('RemoveComponentHandler', () => {
     ['boolean', true],
   ])(
     'warns and skips if entity_ref cannot be resolved (%s)',
-    (desc, invalidRef) => {
+    async (desc, invalidRef) => {
       const params = { entity_ref: invalidRef, component_type: 'c:t' };
-      handler.execute(params, buildCtx());
+      await handler.execute(params, buildCtx());
       // These cases should pass the initial '!entity_ref' check but fail in resolveEntityId
       expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining('Could not resolve entity id from entity_ref.'),
@@ -320,10 +320,10 @@ describe('RemoveComponentHandler', () => {
     }
   );
 
-  test('warns and skips if context lacks actor for "actor" ref', () => {
+  test('warns and skips if context lacks actor for "actor" ref', async () => {
     const params = { entity_ref: 'actor', component_type: 'c:t' };
     const ctx = buildCtx({ evaluationContext: { actor: null } }); // No actor
-    handler.execute(params, ctx);
+    await handler.execute(params, ctx);
     expect(mockLogger.warn).toHaveBeenCalledWith(
       expect.stringContaining('Could not resolve entity id from entity_ref.'),
       { entity_ref: 'actor' }
@@ -331,10 +331,10 @@ describe('RemoveComponentHandler', () => {
     expect(mockEntityManager.removeComponent).not.toHaveBeenCalled();
   });
 
-  test('warns and skips if context lacks target for "target" ref', () => {
+  test('warns and skips if context lacks target for "target" ref', async () => {
     const params = { entity_ref: 'target', component_type: 'c:t' };
     const ctx = buildCtx({ evaluationContext: { target: null } }); // No target
-    handler.execute(params, ctx);
+    await handler.execute(params, ctx);
     expect(mockLogger.warn).toHaveBeenCalledWith(
       expect.stringContaining('Could not resolve entity id from entity_ref.'),
       { entity_ref: 'target' }
@@ -343,13 +343,13 @@ describe('RemoveComponentHandler', () => {
   });
 
   // --- Error Handling during removeComponent Call ------------------------
-  test('dispatches error event if EntityManager.removeComponent throws', () => {
+  test('dispatches error event if EntityManager.removeComponent throws', async () => {
     const error = new Error('EntityManager failed during removal!');
     mockEntityManager.removeComponent.mockImplementation(() => {
       throw error;
     });
     const params = { entity_ref: 'actor', component_type: 'problem:comp' };
-    handler.execute(params, buildCtx());
+    await handler.execute(params, buildCtx());
 
     expect(mockEntityManager.removeComponent).toHaveBeenCalledWith(
       actorId,
@@ -367,7 +367,7 @@ describe('RemoveComponentHandler', () => {
   });
 
   // --- Context logger precedence -----------------------------------------
-  test('uses logger from execution context when provided', () => {
+  test('uses logger from execution context when provided', async () => {
     const ctxLogger = {
       info: jest.fn(),
       warn: jest.fn(),
@@ -377,7 +377,7 @@ describe('RemoveComponentHandler', () => {
     const ctx = buildCtx({ logger: ctxLogger });
     // Trigger validation warning
     const params = { entity_ref: 'actor', component_type: '' };
-    handler.execute(params, ctx);
+    await handler.execute(params, ctx);
 
     expect(ctxLogger.warn).toHaveBeenCalledWith(
       expect.stringContaining('Invalid or missing "component_type"')
@@ -392,7 +392,7 @@ describe('RemoveComponentHandler', () => {
       entity_ref: 'target',
       component_type: 'removable:comp',
     };
-    handler.execute(successParams, ctx);
+    await handler.execute(successParams, ctx);
 
     expect(ctxLogger.debug).toHaveBeenCalledWith(
       expect.stringContaining('Successfully removed component')

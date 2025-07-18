@@ -137,7 +137,7 @@ describe('handle_peck_on_lips rule integration', () => {
     expect(jsonLogic.evaluate(condition, nonMatchingData)).toBe(false);
   });
 
-  it('performs peck on lips action successfully', () => {
+  it('performs peck on lips action successfully', async () => {
     testEnv.reset([
       {
         id: 'actor1',
@@ -157,7 +157,7 @@ describe('handle_peck_on_lips rule integration', () => {
       },
     ]);
 
-    testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       actorId: 'actor1',
       actionId: 'intimacy:peck_on_lips',
       targetId: 'target1',
@@ -173,7 +173,7 @@ describe('handle_peck_on_lips rule integration', () => {
     );
   });
 
-  it('perceptible event contains correct message', () => {
+  it('perceptible event contains correct message', async () => {
     testEnv.reset([
       {
         id: 'actor1',
@@ -193,7 +193,7 @@ describe('handle_peck_on_lips rule integration', () => {
       },
     ]);
 
-    testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       actorId: 'actor1',
       actionId: 'intimacy:peck_on_lips',
       targetId: 'target1',
@@ -208,7 +208,7 @@ describe('handle_peck_on_lips rule integration', () => {
     );
   });
 
-  it('rule does not fire for different action', () => {
+  it('rule does not fire for different action', async () => {
     testEnv.reset([
       {
         id: 'actor1',
@@ -228,7 +228,7 @@ describe('handle_peck_on_lips rule integration', () => {
       },
     ]);
 
-    testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       actorId: 'actor1',
       actionId: 'intimacy:different_action',
       targetId: 'target1',
@@ -240,7 +240,7 @@ describe('handle_peck_on_lips rule integration', () => {
     expect(types).not.toContain('core:turn_ended');
   });
 
-  it('works with multiple actors in location', () => {
+  it('works with multiple actors in location', async () => {
     testEnv.reset([
       {
         id: 'room1',
@@ -273,7 +273,7 @@ describe('handle_peck_on_lips rule integration', () => {
       },
     ]);
 
-    testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       actorId: 'actor1',
       actionId: 'intimacy:peck_on_lips',
       targetId: 'target1',
@@ -289,7 +289,7 @@ describe('handle_peck_on_lips rule integration', () => {
     );
   });
 
-  it('works with different actor and target names', () => {
+  it('works with different actor and target names', async () => {
     testEnv.reset([
       {
         id: 'actor1',
@@ -309,7 +309,7 @@ describe('handle_peck_on_lips rule integration', () => {
       },
     ]);
 
-    testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       actorId: 'actor1',
       actionId: 'intimacy:peck_on_lips',
       targetId: 'target1',

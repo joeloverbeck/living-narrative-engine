@@ -283,28 +283,6 @@ export class EntityLifecycleManager {
   }
 
   /**
-   * Create a new entity instance from a definition with monitoring.
-   *
-   * @param {string} definitionId - The ID of the entity definition
-   * @param {object} opts - Options for creation
-   * @param {string} [opts.instanceId] - Optional instance ID
-   * @param {Object<string, Object>} [opts.componentOverrides] - Component overrides
-   * @returns {object} The newly created entity
-   * @throws {Error} If creation fails
-   */
-  async createEntityInstanceWithMonitoring(definitionId, opts = {}) {
-    if (!this.#monitoringCoordinator) {
-      return this.createEntityInstance(definitionId, opts);
-    }
-
-    return await this.#monitoringCoordinator.executeMonitored(
-      'createEntityInstance',
-      () => this.createEntityInstance(definitionId, opts),
-      { context: `definition:${definitionId}` }
-    );
-  }
-
-  /**
    * Create a new entity instance from a definition.
    *
    * @param {string} definitionId - The ID of the entity definition
@@ -314,7 +292,29 @@ export class EntityLifecycleManager {
    * @returns {object} The newly created entity
    * @throws {Error} If creation fails
    */
-  createEntityInstance(definitionId, opts = {}) {
+  async createEntityInstance(definitionId, opts = {}) {
+    // If monitoring is enabled, wrap the execution
+    if (this.#monitoringCoordinator) {
+      return await this.#monitoringCoordinator.executeMonitored(
+        'createEntityInstance',
+        () => this.#createEntityInstanceCore(definitionId, opts),
+        { context: `definition:${definitionId}` }
+      );
+    }
+
+    // Otherwise, execute directly
+    return this.#createEntityInstanceCore(definitionId, opts);
+  }
+
+  /**
+   * Core implementation of createEntityInstance.
+   *
+   * @private
+   * @param {string} definitionId - The ID of the entity definition
+   * @param {object} opts - Options for creation
+   * @returns {object} The newly created entity
+   */
+  #createEntityInstanceCore(definitionId, opts = {}) {
     // Validate parameters
     this.#validator.validateCreateEntityParams(definitionId);
     this.#validator.validateCreationOptions(opts);
@@ -368,32 +368,33 @@ export class EntityLifecycleManager {
   }
 
   /**
-   * Remove an entity instance from the manager with monitoring.
-   *
-   * @param {string} instanceId - The ID of the entity instance to remove
-   * @throws {EntityNotFoundError} If the entity is not found
-   * @throws {Error} If removal fails
-   */
-  async removeEntityInstanceWithMonitoring(instanceId) {
-    if (!this.#monitoringCoordinator) {
-      return this.removeEntityInstance(instanceId);
-    }
-
-    return await this.#monitoringCoordinator.executeMonitored(
-      'removeEntityInstance',
-      () => this.removeEntityInstance(instanceId),
-      { context: `instance:${instanceId}` }
-    );
-  }
-
-  /**
    * Remove an entity instance from the manager.
    *
    * @param {string} instanceId - The ID of the entity instance to remove
    * @throws {EntityNotFoundError} If the entity is not found
    * @throws {Error} If removal fails
    */
-  removeEntityInstance(instanceId) {
+  async removeEntityInstance(instanceId) {
+    // If monitoring is enabled, wrap the execution
+    if (this.#monitoringCoordinator) {
+      return await this.#monitoringCoordinator.executeMonitored(
+        'removeEntityInstance',
+        () => this.#removeEntityInstanceCore(instanceId),
+        { context: `instance:${instanceId}` }
+      );
+    }
+
+    // Otherwise, execute directly
+    return this.#removeEntityInstanceCore(instanceId);
+  }
+
+  /**
+   * Core implementation of removeEntityInstance.
+   *
+   * @private
+   * @param {string} instanceId - The ID of the entity instance to remove
+   */
+  #removeEntityInstanceCore(instanceId) {
     // Validate parameters
     this.#validator.validateRemoveEntityInstanceParams(instanceId);
 
@@ -438,13 +439,16 @@ export class EntityLifecycleManager {
    * @param {Array<{definitionId: string, opts?: object}>} entitySpecs - Entity specifications
    * @returns {Array<object>} Created entities
    */
-  batchCreateEntities(entitySpecs) {
+  async batchCreateEntities(entitySpecs) {
     const results = [];
     const errors = [];
 
     for (const spec of entitySpecs) {
       try {
-        const entity = this.createEntityInstance(spec.definitionId, spec.opts);
+        const entity = await this.createEntityInstance(
+          spec.definitionId,
+          spec.opts
+        );
         results.push(entity);
       } catch (error) {
         errors.push({ spec, error });

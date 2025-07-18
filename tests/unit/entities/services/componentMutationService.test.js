@@ -65,24 +65,26 @@ describe('ComponentMutationService.addComponent', () => {
     });
   });
 
-  it('throws EntityNotFoundError when entity missing', () => {
+  it('throws EntityNotFoundError when entity missing', async () => {
     const { service, eventDispatcher } = createService({ entity: undefined });
-    expect(() => service.addComponent('missing', 'c', {})).toThrow(
+    await expect(service.addComponent('missing', 'c', {})).rejects.toThrow(
       EntityNotFoundError
     );
     expect(eventDispatcher.dispatch).not.toHaveBeenCalled();
   });
 
-  it('throws ValidationError when validation fails', () => {
+  it('throws ValidationError when validation fails', async () => {
     const { service, validator } = createService({ entity });
     validator.validate.mockReturnValue({ isValid: false, errors: ['bad'] });
-    expect(() => service.addComponent('e1', 'c', {})).toThrow(ValidationError);
+    await expect(service.addComponent('e1', 'c', {})).rejects.toThrow(
+      ValidationError
+    );
   });
 
-  it('throws when entity update fails', () => {
+  it('throws when entity update fails', async () => {
     entity.addComponent.mockReturnValue(false);
     const { service } = createService({ entity });
-    expect(() => service.addComponent('e1', 'c', {})).toThrow(
+    await expect(service.addComponent('e1', 'c', {})).rejects.toThrow(
       "Failed to add component 'c' to entity 'e1'. Internal entity update failed."
     );
   });

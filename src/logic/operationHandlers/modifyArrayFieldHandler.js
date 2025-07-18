@@ -141,9 +141,9 @@ class ModifyArrayFieldHandler extends ComponentOperationHandler {
    * @returns {boolean} True if commit succeeded.
    * @private
    */
-  #commitChanges(entityId, componentType, data, logger) {
+  async #commitChanges(entityId, componentType, data, logger) {
     try {
-      this.#entityManager.addComponent(entityId, componentType, data);
+      await this.#entityManager.addComponent(entityId, componentType, data);
       logger.debug(
         `MODIFY_ARRAY_FIELD: Successfully committed changes to component '${componentType}' on entity '${entityId}'.`
       );
@@ -285,7 +285,7 @@ class ModifyArrayFieldHandler extends ComponentOperationHandler {
    * @param {string} [params.result_variable] - Optional variable to store the result.
    * @param {ExecutionContext} executionContext - The current execution context.
    */
-  execute(params, executionContext) {
+  async execute(params, executionContext) {
     const logger = this.getLogger(executionContext);
     const validated = this.#validateParams(params, logger, executionContext);
     if (!validated) {
@@ -322,7 +322,7 @@ class ModifyArrayFieldHandler extends ComponentOperationHandler {
 
     // 5. Commit
     if (
-      !this.#commitChanges(entityId, componentType, clonedComponentData, logger)
+      !(await this.#commitChanges(entityId, componentType, clonedComponentData, logger))
     ) {
       return;
     }
