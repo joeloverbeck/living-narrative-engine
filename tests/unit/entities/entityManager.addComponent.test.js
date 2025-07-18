@@ -18,17 +18,21 @@ describeEntityManagerSuite('EntityManager - addComponent', (getBed) => {
     const NEW_COMPONENT_ID = 'core:health';
     const NEW_COMPONENT_DATA = { current: 100, max: 100 };
 
-    it('should add a new component to an existing entity', () => {
+    it('should add a new component to an existing entity', async () => {
       // Arrange
       const { entityManager } = getBed();
       const { PRIMARY } = TestData.InstanceIDs;
-      getBed().createEntity('basic', {
+      await getBed().createEntity('basic', {
         instanceId: PRIMARY,
         resetDispatch: true,
       });
 
       // Act
-      entityManager.addComponent(PRIMARY, NEW_COMPONENT_ID, NEW_COMPONENT_DATA);
+      await entityManager.addComponent(
+        PRIMARY,
+        NEW_COMPONENT_ID,
+        NEW_COMPONENT_DATA
+      );
 
       // Assert
       expect(entityManager.hasComponent(PRIMARY, NEW_COMPONENT_ID)).toBe(true);
@@ -40,17 +44,21 @@ describeEntityManagerSuite('EntityManager - addComponent', (getBed) => {
       expect(addedData).not.toBe(NEW_COMPONENT_DATA); // Ensure it's a clone
     });
 
-    it('should dispatch a COMPONENT_ADDED event with undefined old data for a new component', () => {
+    it('should dispatch a COMPONENT_ADDED event with undefined old data for a new component', async () => {
       // Arrange
       const { entityManager, mocks } = getBed();
       const { PRIMARY } = TestData.InstanceIDs;
-      const entity = getBed().createEntity('basic', {
+      const entity = await getBed().createEntity('basic', {
         instanceId: PRIMARY,
         resetDispatch: true,
       });
 
       // Act
-      entityManager.addComponent(PRIMARY, NEW_COMPONENT_ID, NEW_COMPONENT_DATA);
+      await entityManager.addComponent(
+        PRIMARY,
+        NEW_COMPONENT_ID,
+        NEW_COMPONENT_DATA
+      );
 
       // Assert
       expectComponentAddedDispatch(
@@ -62,17 +70,21 @@ describeEntityManagerSuite('EntityManager - addComponent', (getBed) => {
       );
     });
 
-    it('should update an existing component', () => {
+    it('should update an existing component', async () => {
       // Arrange
       const { entityManager } = getBed();
       const { NAME_COMPONENT_ID } = TestData.ComponentIDs;
       const { PRIMARY } = TestData.InstanceIDs;
       const UPDATED_NAME_DATA = { name: 'Updated Name' };
 
-      getBed().createBasicEntity({ instanceId: PRIMARY });
+      await getBed().createBasicEntity({ instanceId: PRIMARY });
 
       // Act
-      entityManager.addComponent(PRIMARY, NAME_COMPONENT_ID, UPDATED_NAME_DATA);
+      await entityManager.addComponent(
+        PRIMARY,
+        NAME_COMPONENT_ID,
+        UPDATED_NAME_DATA
+      );
 
       // Assert
       const updatedData = entityManager.getComponentData(
@@ -82,21 +94,25 @@ describeEntityManagerSuite('EntityManager - addComponent', (getBed) => {
       expect(updatedData).toEqual(UPDATED_NAME_DATA);
     });
 
-    it('should dispatch a COMPONENT_ADDED event with the previous data for an updated component', () => {
+    it('should dispatch a COMPONENT_ADDED event with the previous data for an updated component', async () => {
       // Arrange
       const { entityManager, mocks } = getBed();
       const { NAME_COMPONENT_ID } = TestData.ComponentIDs;
       const { PRIMARY } = TestData.InstanceIDs;
       const UPDATED_NAME_DATA = { name: 'Updated Name' };
 
-      const entity = getBed().createEntity('basic', {
+      const entity = await getBed().createEntity('basic', {
         instanceId: PRIMARY,
         resetDispatch: true,
       });
       const originalNameData = entity.getComponentData(NAME_COMPONENT_ID);
 
       // Act
-      entityManager.addComponent(PRIMARY, NAME_COMPONENT_ID, UPDATED_NAME_DATA);
+      await entityManager.addComponent(
+        PRIMARY,
+        NAME_COMPONENT_ID,
+        UPDATED_NAME_DATA
+      );
 
       // Assert
       expectComponentAddedDispatch(
@@ -108,22 +124,22 @@ describeEntityManagerSuite('EntityManager - addComponent', (getBed) => {
       );
     });
 
-    it('should throw EntityNotFoundError for a non-existent entity', () => {
+    it('should throw EntityNotFoundError for a non-existent entity', async () => {
       // Arrange
       const { entityManager } = getBed();
       const { GHOST } = TestData.InstanceIDs; // Assuming a non-existent ID
 
       // Act & Assert
-      expect(() =>
+      await expect(
         entityManager.addComponent(GHOST, NEW_COMPONENT_ID, NEW_COMPONENT_DATA)
-      ).toThrow(new EntityNotFoundError(GHOST));
+      ).rejects.toThrow(new EntityNotFoundError(GHOST));
     });
 
-    it('should throw ValidationError if component validation fails', () => {
+    it('should throw ValidationError if component validation fails', async () => {
       // Arrange
       const { entityManager, mocks } = getBed();
       const { PRIMARY } = TestData.InstanceIDs;
-      getBed().createEntity('basic', {
+      await getBed().createEntity('basic', {
         instanceId: PRIMARY,
         resetDispatch: true,
       });
@@ -135,27 +151,27 @@ describeEntityManagerSuite('EntityManager - addComponent', (getBed) => {
       });
 
       // Act & Assert
-      expect(() => {
-        entityManager.addComponent(
+      await expect(async () => {
+        await entityManager.addComponent(
           PRIMARY,
           NEW_COMPONENT_ID,
           NEW_COMPONENT_DATA
         );
-      }).toThrow(ValidationError);
+      }).rejects.toThrow(ValidationError);
       expectNoDispatch(mocks.eventDispatcher.dispatch);
     });
 
-    it('should throw InvalidArgumentError when componentData is null', () => {
+    it('should throw InvalidArgumentError when componentData is null', async () => {
       // Arrange
       const { entityManager, mocks } = getBed();
       const { NAME_COMPONENT_ID } = TestData.ComponentIDs;
       const { PRIMARY } = TestData.InstanceIDs;
-      getBed().createBasicEntity({ instanceId: PRIMARY });
+      await getBed().createBasicEntity({ instanceId: PRIMARY });
 
       // Act & Assert
-      expect(() =>
+      await expect(
         entityManager.addComponent(PRIMARY, NAME_COMPONENT_ID, null)
-      ).toThrow(InvalidArgumentError);
+      ).rejects.toThrow(InvalidArgumentError);
       expect(mocks.validator.validate).not.toHaveBeenCalled();
     });
 
@@ -163,30 +179,33 @@ describeEntityManagerSuite('EntityManager - addComponent', (getBed) => {
       TestData.InvalidValues.componentDataNotObject.filter(
         (v) => v !== null && !Array.isArray(v)
       )
-    )('should throw InvalidArgumentError when componentData is %p', (value) => {
-      // Arrange
-      const { entityManager } = getBed();
-      const { NAME_COMPONENT_ID } = TestData.ComponentIDs;
-      const { PRIMARY } = TestData.InstanceIDs;
-      getBed().createBasicEntity({ instanceId: PRIMARY });
+    )(
+      'should throw InvalidArgumentError when componentData is %p',
+      async (value) => {
+        // Arrange
+        const { entityManager } = getBed();
+        const { NAME_COMPONENT_ID } = TestData.ComponentIDs;
+        const { PRIMARY } = TestData.InstanceIDs;
+        await getBed().createBasicEntity({ instanceId: PRIMARY });
 
-      // Act & Assert
-      expect(() =>
-        entityManager.addComponent(PRIMARY, NAME_COMPONENT_ID, value)
-      ).toThrow(InvalidArgumentError);
-      // The thrown InvalidArgumentError already carries the specific message, so
-      // there's no need to assert on the logger output here.
-    });
+        // Act & Assert
+        await expect(
+          entityManager.addComponent(PRIMARY, NAME_COMPONENT_ID, value)
+        ).rejects.toThrow(InvalidArgumentError);
+        // The thrown InvalidArgumentError already carries the specific message, so
+        // there's no need to assert on the logger output here.
+      }
+    );
 
     runInvalidIdPairTests(getBed, (em, instanceId, componentTypeId) =>
       em.addComponent(instanceId, componentTypeId, {})
     );
 
-    it('should throw an error if the internal entity update fails', () => {
+    it('should throw an error if the internal entity update fails', async () => {
       // Arrange
       const { entityManager, mocks } = getBed();
       const { PRIMARY } = TestData.InstanceIDs;
-      const entity = getBed().createEntity('basic', {
+      const entity = await getBed().createEntity('basic', {
         instanceId: PRIMARY,
         resetDispatch: true,
       });
@@ -197,7 +216,9 @@ describeEntityManagerSuite('EntityManager - addComponent', (getBed) => {
         .mockReturnValue(false);
 
       // Act & Assert
-      expect(() => entityManager.addComponent(PRIMARY, 'any:comp', {})).toThrow(
+      await expect(
+        entityManager.addComponent(PRIMARY, 'any:comp', {})
+      ).rejects.toThrow(
         "Failed to add component 'any:comp' to entity 'test-instance-01'. Internal entity update failed."
       );
       expect(mocks.logger.warn).toHaveBeenCalledWith(

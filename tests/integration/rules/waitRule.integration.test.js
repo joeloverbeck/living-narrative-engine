@@ -65,7 +65,7 @@ describe('core_handle_wait rule integration', () => {
     }
   });
 
-  it('ends turn when wait action is performed', () => {
+  it('ends turn when wait action is performed', async () => {
     testEnv.reset([
       {
         id: 'actor1',
@@ -75,7 +75,7 @@ describe('core_handle_wait rule integration', () => {
       },
     ]);
 
-    testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       actorId: 'actor1',
       actionId: 'core:wait',
     });

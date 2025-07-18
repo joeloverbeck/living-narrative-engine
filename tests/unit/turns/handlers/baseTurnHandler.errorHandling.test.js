@@ -3,7 +3,14 @@
  * This file focuses on error scenarios and edge cases to maximize coverage
  */
 
-import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  jest,
+  beforeEach,
+  afterEach,
+} from '@jest/globals';
 import { BaseTurnHandler } from '../../../../src/turns/handlers/baseTurnHandler.js';
 import { TurnIdleState } from '../../../../src/turns/states/turnIdleState.js';
 import { TurnEndingState } from '../../../../src/turns/states/turnEndingState.js';
@@ -29,7 +36,10 @@ class ErrorTestHandler extends BaseTurnHandler {
   constructor(opts = {}) {
     super({
       logger: opts.logger !== undefined ? opts.logger : mockLogger,
-      turnStateFactory: opts.turnStateFactory !== undefined ? opts.turnStateFactory : mockTurnStateFactory,
+      turnStateFactory:
+        opts.turnStateFactory !== undefined
+          ? opts.turnStateFactory
+          : mockTurnStateFactory,
     });
   }
 
@@ -85,7 +95,7 @@ describe('BaseTurnHandler Error Handling Tests', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     // Setup mock state factory
     mockTurnStateFactory.createIdleState.mockImplementation((h) => {
       const state = new TurnIdleState(h);
@@ -94,12 +104,14 @@ describe('BaseTurnHandler Error Handling Tests', () => {
       return state;
     });
 
-    mockTurnStateFactory.createEndingState.mockImplementation((h, actorId, error) => {
-      const state = new TurnEndingState(h, actorId, error);
-      jest.spyOn(state, 'enterState').mockResolvedValue(undefined);
-      jest.spyOn(state, 'exitState').mockResolvedValue(undefined);
-      return state;
-    });
+    mockTurnStateFactory.createEndingState.mockImplementation(
+      (h, actorId, error) => {
+        const state = new TurnEndingState(h, actorId, error);
+        jest.spyOn(state, 'enterState').mockResolvedValue(undefined);
+        jest.spyOn(state, 'exitState').mockResolvedValue(undefined);
+        return state;
+      }
+    );
 
     mockState = {
       enterState: jest.fn().mockResolvedValue(undefined),
@@ -122,7 +134,10 @@ describe('BaseTurnHandler Error Handling Tests', () => {
   describe('Constructor validation', () => {
     it('should throw error when logger is missing', () => {
       expect(() => {
-        new ErrorTestHandler({ logger: null, turnStateFactory: mockTurnStateFactory });
+        new ErrorTestHandler({
+          logger: null,
+          turnStateFactory: mockTurnStateFactory,
+        });
       }).toThrow('BaseTurnHandler: logger is required');
     });
 
@@ -134,27 +149,34 @@ describe('BaseTurnHandler Error Handling Tests', () => {
 
     it('should log error to console when logger is missing', () => {
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
-      
+
       try {
-        new ErrorTestHandler({ logger: null, turnStateFactory: mockTurnStateFactory });
+        new ErrorTestHandler({
+          logger: null,
+          turnStateFactory: mockTurnStateFactory,
+        });
       } catch (e) {
         // Expected to throw
       }
-      
-      expect(consoleSpy).toHaveBeenCalledWith('BaseTurnHandler: logger is required.');
+
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'BaseTurnHandler: logger is required.'
+      );
       consoleSpy.mockRestore();
     });
 
     it('should log error to console when turnStateFactory is missing', () => {
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
-      
+
       try {
         new ErrorTestHandler({ logger: mockLogger, turnStateFactory: null });
       } catch (e) {
         // Expected to throw
       }
-      
-      expect(consoleSpy).toHaveBeenCalledWith('BaseTurnHandler: turnStateFactory is required.');
+
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'BaseTurnHandler: turnStateFactory is required.'
+      );
       consoleSpy.mockRestore();
     });
   });
@@ -165,27 +187,29 @@ describe('BaseTurnHandler Error Handling Tests', () => {
         getLogger: jest.fn().mockImplementation(() => {
           throw new Error('Logger access error');
         }),
-        getActor: jest.fn().mockReturnValue({ id: 'test-actor' })
+        getActor: jest.fn().mockReturnValue({ id: 'test-actor' }),
       };
       handler._exposeSetCurrentTurnContext(context);
-      
+
       const logger = handler.getLogger();
-      
+
       expect(logger).toBe(mockLogger);
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Error accessing logger from TurnContext: Logger access error')
+        expect.stringContaining(
+          'Error accessing logger from TurnContext: Logger access error'
+        )
       );
     });
 
     it('should fallback to base logger when TurnContext getLogger returns null', () => {
       const context = {
         getLogger: jest.fn().mockReturnValue(null),
-        getActor: jest.fn().mockReturnValue({ id: 'test-actor' })
+        getActor: jest.fn().mockReturnValue({ id: 'test-actor' }),
       };
       handler._exposeSetCurrentTurnContext(context);
-      
+
       const logger = handler.getLogger();
-      
+
       expect(logger).toBe(mockLogger);
     });
   });
@@ -196,24 +220,33 @@ describe('BaseTurnHandler Error Handling Tests', () => {
         ...mockState,
         getStateName: () => 'CurrentState',
         isIdle: jest.fn().mockReturnValue(false),
-        isEnding: jest.fn().mockReturnValue(false)
+        isEnding: jest.fn().mockReturnValue(false),
       };
-      
+
       const failingEndingState = {
         ...mockState,
-        enterState: jest.fn().mockRejectedValue(new Error('Ending state failed')),
+        enterState: jest
+          .fn()
+          .mockRejectedValue(new Error('Ending state failed')),
         getStateName: () => 'TurnEndingState',
         isIdle: jest.fn().mockReturnValue(false),
-        isEnding: jest.fn().mockReturnValue(true)
+        isEnding: jest.fn().mockReturnValue(true),
       };
 
       handler._setTestCurrentState(currentState);
-      mockTurnStateFactory.createEndingState.mockReturnValue(failingEndingState);
+      mockTurnStateFactory.createEndingState.mockReturnValue(
+        failingEndingState
+      );
 
-      await handler._exposeHandleTurnEnd('test-actor', new Error('Original error'));
+      await handler._exposeHandleTurnEnd(
+        'test-actor',
+        new Error('Original error')
+      );
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Error during TurnEndingState.enterState or onEnterState hook'),
+        expect.stringContaining(
+          'Error during TurnEndingState.enterState or onEnterState hook'
+        ),
         expect.any(Error)
       );
       expect(mockTurnStateFactory.createIdleState).toHaveBeenCalled();
@@ -224,14 +257,16 @@ describe('BaseTurnHandler Error Handling Tests', () => {
         ...mockState,
         enterState: jest.fn().mockRejectedValue(new Error('State failed')),
         getStateName: () => 'FailingState',
-        isIdle: jest.fn().mockReturnValue(false)
+        isIdle: jest.fn().mockReturnValue(false),
       };
 
       const failingIdleState = {
         ...mockState,
-        enterState: jest.fn().mockRejectedValue(new Error('Idle state also failed')),
+        enterState: jest
+          .fn()
+          .mockRejectedValue(new Error('Idle state also failed')),
         getStateName: () => 'TurnIdleState',
-        isIdle: jest.fn().mockReturnValue(true)
+        isIdle: jest.fn().mockReturnValue(true),
       };
 
       mockTurnStateFactory.createIdleState.mockReturnValue(failingIdleState);
@@ -239,7 +274,9 @@ describe('BaseTurnHandler Error Handling Tests', () => {
       await handler._exposeTransitionToState(failingState);
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('CRITICAL - Failed to enter TurnIdleState even after an error')
+        expect.stringContaining(
+          'CRITICAL - Failed to enter TurnIdleState even after an error'
+        )
       );
     });
 
@@ -268,7 +305,7 @@ describe('BaseTurnHandler Error Handling Tests', () => {
       };
 
       handler._setTestCurrentState(stateWithoutIsEnding);
-      
+
       await handler._exposeHandleTurnEnd('test-actor');
 
       expect(mockTurnStateFactory.createEndingState).toHaveBeenCalled();
@@ -286,7 +323,7 @@ describe('BaseTurnHandler Error Handling Tests', () => {
       delete stateWithoutDestroy.destroy;
 
       handler._setTestCurrentState(stateWithoutDestroy);
-      
+
       await handler.destroy();
 
       expect(handler._isDestroyed).toBe(true);
@@ -299,7 +336,7 @@ describe('BaseTurnHandler Error Handling Tests', () => {
         // No cancelActivePrompt method
       };
       handler._exposeSetCurrentTurnContext(contextWithoutCancel);
-      
+
       await handler.destroy();
 
       expect(handler._isDestroyed).toBe(true);
@@ -312,10 +349,10 @@ describe('BaseTurnHandler Error Handling Tests', () => {
       const idleState = {
         ...mockState,
         getStateName: () => 'TurnIdleState',
-        isIdle: jest.fn().mockReturnValue(true)
+        isIdle: jest.fn().mockReturnValue(true),
       };
       handler._setTestCurrentState(idleState);
-      
+
       await handler.destroy();
 
       expect(handler._isDestroyed).toBe(true);
@@ -327,19 +364,23 @@ describe('BaseTurnHandler Error Handling Tests', () => {
   describe('Lifecycle assertion errors', () => {
     it('should throw when calling operations on destroyed handler', async () => {
       handler._setTestIsDestroyed(true);
-      
-      await expect(handler.startTurn({ id: 'test' })).rejects.toThrow('ErrorTestHandler: Operation invoked while handler is destroying or has been destroyed.');
+
+      await expect(handler.startTurn({ id: 'test' })).rejects.toThrow(
+        'ErrorTestHandler: Operation invoked while handler is destroying or has been destroyed.'
+      );
     });
 
     it('should throw when calling operations on destroying handler', async () => {
       handler._setTestIsDestroying(true);
-      
-      await expect(handler.startTurn({ id: 'test' })).rejects.toThrow('ErrorTestHandler: Operation invoked while handler is destroying or has been destroyed.');
+
+      await expect(handler.startTurn({ id: 'test' })).rejects.toThrow(
+        'ErrorTestHandler: Operation invoked while handler is destroying or has been destroyed.'
+      );
     });
 
     it('should not throw when calling from destroy process', async () => {
       handler._setTestIsDestroying(true);
-      
+
       await expect(
         handler._exposeHandleTurnEnd('test-actor', null, true)
       ).resolves.toBeUndefined();
@@ -350,10 +391,10 @@ describe('BaseTurnHandler Error Handling Tests', () => {
     it('should handle missing TurnContext methods gracefully', () => {
       const incompleteContext = {
         // Missing getLogger, getActor, getSafeEventDispatcher methods
-        getActor: jest.fn().mockReturnValue({ id: 'test-actor' })
+        getActor: jest.fn().mockReturnValue({ id: 'test-actor' }),
       };
       handler._exposeSetCurrentTurnContext(incompleteContext);
-      
+
       expect(handler.getLogger()).toBe(mockLogger);
       expect(handler.getCurrentActor()).toEqual({ id: 'test-actor' });
       expect(handler.getSafeEventDispatcher()).toBeNull();
@@ -361,10 +402,10 @@ describe('BaseTurnHandler Error Handling Tests', () => {
 
     it('should handle TurnContext.getActor returning null', () => {
       const context = {
-        getActor: jest.fn().mockReturnValue(null)
+        getActor: jest.fn().mockReturnValue(null),
       };
       handler._exposeSetCurrentTurnContext(context);
-      
+
       expect(handler.getCurrentActor()).toBeNull();
     });
 
@@ -372,12 +413,12 @@ describe('BaseTurnHandler Error Handling Tests', () => {
       const context = {
         getSafeEventDispatcher: jest.fn().mockReturnValue({
           // Missing dispatch method
-          invalid: true
+          invalid: true,
         }),
-        getActor: jest.fn().mockReturnValue({ id: 'test-actor' })
+        getActor: jest.fn().mockReturnValue({ id: 'test-actor' }),
       };
       handler._exposeSetCurrentTurnContext(context);
-      
+
       expect(handler.getSafeEventDispatcher()).toBeNull();
     });
   });
@@ -386,9 +427,9 @@ describe('BaseTurnHandler Error Handling Tests', () => {
     it('should handle cleanup when all resources are null', () => {
       handler._exposeSetCurrentTurnContext(null);
       handler._exposeSetCurrentActor(null);
-      
+
       handler._exposeResetTurnStateAndResources('null-resources-test');
-      
+
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining('Base per-turn state reset complete')
       );
@@ -397,12 +438,12 @@ describe('BaseTurnHandler Error Handling Tests', () => {
     it('should handle cleanup when TurnContext has null actor', () => {
       const context = {
         getActor: jest.fn().mockReturnValue(null),
-        cancelActivePrompt: jest.fn()
+        cancelActivePrompt: jest.fn(),
       };
       handler._exposeSetCurrentTurnContext(context);
-      
+
       handler._exposeResetTurnStateAndResources('null-actor-test');
-      
+
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining('Context actor: None')
       );
@@ -410,9 +451,9 @@ describe('BaseTurnHandler Error Handling Tests', () => {
 
     it('should handle cleanup when handler actor is null', () => {
       handler._exposeSetCurrentActor(null);
-      
+
       handler._exposeResetTurnStateAndResources('null-handler-actor-test');
-      
+
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining('Handler actor: None')
       );
@@ -422,9 +463,9 @@ describe('BaseTurnHandler Error Handling Tests', () => {
   describe('Edge cases in state identity checks', () => {
     it('should handle null currentState in isIdle check', async () => {
       handler._setTestCurrentState(null);
-      
+
       await handler._exposeHandleTurnEnd('test-actor');
-      
+
       expect(mockTurnStateFactory.createEndingState).toHaveBeenCalled();
     });
 
@@ -434,12 +475,12 @@ describe('BaseTurnHandler Error Handling Tests', () => {
         isIdle: jest.fn().mockImplementation(() => {
           throw new Error('isIdle error');
         }),
-        getStateName: () => 'ErrorState'
+        getStateName: () => 'ErrorState',
       };
       handler._setTestCurrentState(errorState);
-      
+
       await handler._exposeHandleTurnEnd('test-actor');
-      
+
       expect(mockTurnStateFactory.createEndingState).toHaveBeenCalled();
     });
 
@@ -449,12 +490,12 @@ describe('BaseTurnHandler Error Handling Tests', () => {
         isEnding: jest.fn().mockImplementation(() => {
           throw new Error('isEnding error');
         }),
-        getStateName: () => 'ErrorState'
+        getStateName: () => 'ErrorState',
       };
       handler._setTestCurrentState(errorState);
-      
+
       await handler._exposeHandleTurnEnd('test-actor');
-      
+
       expect(mockTurnStateFactory.createEndingState).toHaveBeenCalled();
     });
   });
@@ -463,9 +504,9 @@ describe('BaseTurnHandler Error Handling Tests', () => {
     it('should handle all actor IDs being null or undefined', async () => {
       handler._exposeSetCurrentTurnContext(null);
       handler._exposeSetCurrentActor(null);
-      
+
       await handler._exposeHandleTurnEnd(null);
-      
+
       expect(mockTurnStateFactory.createEndingState).toHaveBeenCalledWith(
         handler,
         'UNKNOWN_ACTOR_FOR_STATE',
@@ -475,15 +516,15 @@ describe('BaseTurnHandler Error Handling Tests', () => {
 
     it('should handle context actor being null but handler actor existing', async () => {
       const context = {
-        getActor: jest.fn().mockReturnValue(null)
+        getActor: jest.fn().mockReturnValue(null),
       };
       const handlerActor = { id: 'handler-actor' };
-      
+
       handler._exposeSetCurrentTurnContext(context);
       handler._exposeSetCurrentActor(handlerActor);
-      
+
       await handler._exposeHandleTurnEnd('end-actor');
-      
+
       expect(mockTurnStateFactory.createEndingState).toHaveBeenCalledWith(
         handler,
         'end-actor',
@@ -495,13 +536,13 @@ describe('BaseTurnHandler Error Handling Tests', () => {
       const context = {
         getActor: jest.fn().mockImplementation(() => {
           throw new Error('getActor error');
-        })
+        }),
       };
-      
+
       handler._exposeSetCurrentTurnContext(context);
-      
+
       await handler._exposeHandleTurnEnd('end-actor');
-      
+
       expect(mockTurnStateFactory.createEndingState).toHaveBeenCalledWith(
         handler,
         'end-actor',
@@ -517,21 +558,23 @@ describe('BaseTurnHandler Error Handling Tests', () => {
         exitState: jest.fn().mockRejectedValue(new Error('Exit failed')),
         getStateName: () => 'ProblematicState',
         isIdle: jest.fn().mockReturnValue(false),
-        destroy: jest.fn().mockRejectedValue(new Error('Destroy failed'))
+        destroy: jest.fn().mockRejectedValue(new Error('Destroy failed')),
       };
 
       const currentState = {
         ...mockState,
-        getStateName: () => 'CurrentState'
+        getStateName: () => 'CurrentState',
       };
 
       handler._setTestCurrentState(currentState);
-      
+
       // This should trigger multiple error paths
       await handler._exposeTransitionToState(problematicState);
-      
+
       expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Error during ProblematicState.enterState or onEnterState hook –'),
+        expect.stringContaining(
+          'Error during ProblematicState.enterState or onEnterState hook –'
+        ),
         expect.any(Error)
       );
     });
@@ -542,21 +585,21 @@ describe('BaseTurnHandler Error Handling Tests', () => {
         exitState: jest.fn().mockRejectedValue(new Error('Exit failed')),
         getStateName: () => 'ComplexState',
         isIdle: jest.fn().mockReturnValue(false),
-        destroy: jest.fn().mockRejectedValue(new Error('State destroy failed'))
+        destroy: jest.fn().mockRejectedValue(new Error('State destroy failed')),
       };
 
       const problematicContext = {
         getActor: jest.fn().mockReturnValue({ id: 'test-actor' }),
         cancelActivePrompt: jest.fn().mockImplementation(() => {
           throw new Error('Cancel failed');
-        })
+        }),
       };
 
       handler._setTestCurrentState(complexState);
       handler._exposeSetCurrentTurnContext(problematicContext);
-      
+
       await handler.destroy();
-      
+
       expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining('Error during cancelActivePrompt'),
         expect.any(Error)

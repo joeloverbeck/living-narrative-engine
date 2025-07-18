@@ -20,7 +20,7 @@ describe('Anatomy Naming Conventions Integration Tests', () => {
     it('should use effective_orientation template for hands and feet', async () => {
       // Arrange
       const recipeId = 'anatomy:human_female';
-      const actor = testBed.createActor({ recipeId });
+      const actor = await testBed.createActor({ recipeId });
 
       // Generate anatomy for the actor
       const anatomyService = testBed.container.get('AnatomyGenerationService');
@@ -71,7 +71,7 @@ describe('Anatomy Naming Conventions Integration Tests', () => {
     it('should use orientation template for arms and legs', async () => {
       // Arrange
       const recipeId = 'anatomy:human_female';
-      const actor = testBed.createActor({ recipeId });
+      const actor = await testBed.createActor({ recipeId });
 
       // Generate anatomy for the actor
       const anatomyService = testBed.container.get('AnatomyGenerationService');
@@ -114,7 +114,7 @@ describe('Anatomy Naming Conventions Integration Tests', () => {
     it('should use simple type template for non-paired parts', async () => {
       // Arrange
       const recipeId = 'anatomy:human_female';
-      const actor = testBed.createActor({ recipeId });
+      const actor = await testBed.createActor({ recipeId });
 
       // Generate anatomy for the actor
       const anatomyService = testBed.container.get('AnatomyGenerationService');
@@ -145,7 +145,7 @@ describe('Anatomy Naming Conventions Integration Tests', () => {
     it('should handle orientation propagation correctly', async () => {
       // Arrange
       const recipeId = 'anatomy:human_female';
-      const actor = testBed.createActor({ recipeId });
+      const actor = await testBed.createActor({ recipeId });
 
       // Generate anatomy for the actor
       const anatomyService = testBed.container.get('AnatomyGenerationService');
@@ -187,7 +187,7 @@ describe('Anatomy Naming Conventions Integration Tests', () => {
     it('should ensure unique names in parts map', async () => {
       // Arrange
       const recipeId = 'anatomy:human_female';
-      const actor = testBed.createActor({ recipeId });
+      const actor = await testBed.createActor({ recipeId });
 
       // Generate anatomy for the actor
       const anatomyService = testBed.container.get('AnatomyGenerationService');
@@ -221,7 +221,7 @@ describe('Anatomy Naming Conventions Integration Tests', () => {
     it('should handle different entity definitions with same subType', async () => {
       // Arrange
       const recipeId = 'anatomy:human_female';
-      const actor = testBed.createActor({ recipeId });
+      const actor = await testBed.createActor({ recipeId });
 
       // Generate anatomy for the actor
       const anatomyService = testBed.container.get('AnatomyGenerationService');
@@ -275,7 +275,7 @@ describe('Anatomy Naming Conventions Integration Tests', () => {
     it('should verify that socket templates are properly configured', async () => {
       // Arrange
       const recipeId = 'anatomy:human_female';
-      const actor = testBed.createActor({ recipeId });
+      const actor = await testBed.createActor({ recipeId });
 
       // Generate anatomy for the actor
       const anatomyService = testBed.container.get('AnatomyGenerationService');

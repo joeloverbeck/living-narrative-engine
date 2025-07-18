@@ -129,7 +129,7 @@ class AutoMoveFollowersHandler extends BaseOperationHandler {
 
       const originLoc = pos?.locationId ?? null;
 
-      this.#moveHandler.execute(
+      await this.#moveHandler.execute(
         {
           entity_ref: { entityId: followerId },
           target_location_id: destinationId,
@@ -219,7 +219,7 @@ class AutoMoveFollowersHandler extends BaseOperationHandler {
    * @param {AutoMoveFollowersParams} params
    * @param {ExecutionContext} executionContext
    */
-  execute(params, executionContext) {
+  async execute(params, executionContext) {
     const logger = executionContext?.logger ?? this.logger;
     const validated = this.#validateParams(params, logger);
     if (!validated) return;
@@ -237,7 +237,7 @@ class AutoMoveFollowersHandler extends BaseOperationHandler {
       : [];
 
     for (const followerId of followerIds) {
-      this.#moveSingleFollower(
+      await this.#moveSingleFollower(
         followerId,
         leaderId,
         destinationId,

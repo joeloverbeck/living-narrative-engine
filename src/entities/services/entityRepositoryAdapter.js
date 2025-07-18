@@ -63,24 +63,6 @@ export class EntityRepositoryAdapter {
   }
 
   /**
-   * Add an entity to the repository with performance monitoring.
-   *
-   * @param {Entity} entity - Entity to add
-   * @throws {DuplicateEntityError} If entity with same ID already exists
-   */
-  async addWithMonitoring(entity) {
-    if (!this.#monitoringCoordinator) {
-      return this.add(entity);
-    }
-
-    return await this.#monitoringCoordinator.executeMonitored(
-      'repository.add',
-      () => this.add(entity),
-      { context: `entity:${entity.id}` }
-    );
-  }
-
-  /**
    * Add an entity to the repository.
    *
    * @param {Entity} entity - Entity to add
@@ -104,24 +86,6 @@ export class EntityRepositoryAdapter {
   }
 
   /**
-   * Get an entity by ID with performance monitoring.
-   *
-   * @param {string} entityId - Entity ID to lookup
-   * @returns {Promise<Entity|undefined>} Entity if found, undefined otherwise
-   */
-  async getWithMonitoring(entityId) {
-    if (!this.#monitoringCoordinator) {
-      return this.get(entityId);
-    }
-
-    return await this.#monitoringCoordinator.executeMonitored(
-      'repository.get',
-      () => this.get(entityId),
-      { context: `entity:${entityId}` }
-    );
-  }
-
-  /**
    * Get an entity by ID.
    *
    * @param {string} entityId - Entity ID to lookup
@@ -139,25 +103,6 @@ export class EntityRepositoryAdapter {
    */
   has(entityId) {
     return this.#mapManager.has(entityId);
-  }
-
-  /**
-   * Remove an entity from the repository with performance monitoring.
-   *
-   * @param {string} entityId - Entity ID to remove
-   * @returns {Promise<boolean>} True if entity was removed, false if not found
-   * @throws {EntityNotFoundError} If entity is not found
-   */
-  async removeWithMonitoring(entityId) {
-    if (!this.#monitoringCoordinator) {
-      return this.remove(entityId);
-    }
-
-    return await this.#monitoringCoordinator.executeMonitored(
-      'repository.remove',
-      () => this.remove(entityId),
-      { context: `entity:${entityId}` }
-    );
   }
 
   /**
@@ -291,24 +236,6 @@ export class EntityRepositoryAdapter {
   }
 
   /**
-   * Batch add multiple entities with monitoring.
-   *
-   * @param {Entity[]} entities - Entities to add
-   * @returns {Promise<object>} Results with successes and errors
-   */
-  async batchAddWithMonitoring(entities) {
-    if (!this.#monitoringCoordinator) {
-      return this.batchAdd(entities);
-    }
-
-    return await this.#monitoringCoordinator.executeMonitored(
-      'repository.batchAdd',
-      () => this.batchAdd(entities),
-      { context: `entities:${entities.length}` }
-    );
-  }
-
-  /**
    * Batch add multiple entities.
    *
    * @param {Entity[]} entities - Entities to add
@@ -332,24 +259,6 @@ export class EntityRepositoryAdapter {
     }
 
     return { entities: results, errors };
-  }
-
-  /**
-   * Batch remove multiple entities with monitoring.
-   *
-   * @param {string[]} entityIds - Entity IDs to remove
-   * @returns {Promise<object>} Results with successes and errors
-   */
-  async batchRemoveWithMonitoring(entityIds) {
-    if (!this.#monitoringCoordinator) {
-      return this.batchRemove(entityIds);
-    }
-
-    return await this.#monitoringCoordinator.executeMonitored(
-      'repository.batchRemove',
-      () => this.batchRemove(entityIds),
-      { context: `entityIds:${entityIds.length}` }
-    );
   }
 
   /**

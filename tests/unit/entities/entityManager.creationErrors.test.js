@@ -4,7 +4,7 @@ import { EntityManagerTestBed, TestData } from '../../common/entities/index.js';
 import { DuplicateEntityError } from '../../../src/errors/duplicateEntityError.js';
 
 describe('EntityManager - Factory Error Translation (create)', () => {
-  it('translates duplicate ID errors to DuplicateEntityError', () => {
+  it('translates duplicate ID errors to DuplicateEntityError', async () => {
     const bed = new EntityManagerTestBed();
     const message = "Entity with ID 'dup-1' already exists.";
     jest.spyOn(EntityFactory.prototype, 'create').mockImplementation(() => {
@@ -12,11 +12,11 @@ describe('EntityManager - Factory Error Translation (create)', () => {
     });
     bed.setupTestDefinitions('basic');
 
-    expect(() =>
+    await expect(
       bed.entityManager.createEntityInstance(TestData.DefinitionIDs.BASIC, {
         instanceId: 'dup-1',
       })
-    ).toThrow(
+    ).rejects.toThrow(
       new DuplicateEntityError(
         'dup-1',
         "EntityManager.createEntityInstance: Entity with ID 'dup-1' already exists."

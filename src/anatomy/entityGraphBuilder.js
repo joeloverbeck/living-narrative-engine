@@ -49,9 +49,9 @@ export class EntityGraphBuilder {
    * @param {string} rootDefinitionId - Definition ID for the root entity
    * @param {object} recipe - The recipe being used
    * @param {string} [ownerId] - Optional owner entity ID
-   * @returns {string} The created root entity ID
+   * @returns {Promise<string>} The created root entity ID
    */
-  createRootEntity(rootDefinitionId, recipe, ownerId) {
+  async createRootEntity(rootDefinitionId, recipe, ownerId) {
     // Check if recipe has a torso override
     let actualRootDefinitionId = rootDefinitionId;
 
@@ -80,13 +80,13 @@ export class EntityGraphBuilder {
       }
     }
 
-    const rootEntity = this.#entityManager.createEntityInstance(
+    const rootEntity = await this.#entityManager.createEntityInstance(
       actualRootDefinitionId
     );
 
     if (ownerId) {
       // Add ownership component if specified
-      this.#entityManager.addComponent(rootEntity.id, 'core:owned_by', {
+      await this.#entityManager.addComponent(rootEntity.id, 'core:owned_by', {
         ownerId,
       });
     }
@@ -106,9 +106,9 @@ export class EntityGraphBuilder {
    * @param {string} partDefinitionId - Definition ID for the part
    * @param {string} [ownerId] - Owner ID to set on the created part (optional)
    * @param {string} [socketOrientation] - Orientation from the parent socket (optional)
-   * @returns {string|null} Created entity ID or null on failure
+   * @returns {Promise<string|null>} Created entity ID or null on failure
    */
-  createAndAttachPart(
+  async createAndAttachPart(
     parentId,
     socketId,
     partDefinitionId,
@@ -118,17 +118,21 @@ export class EntityGraphBuilder {
     try {
       // Create the child entity
       const childEntity =
-        this.#entityManager.createEntityInstance(partDefinitionId);
+        await this.#entityManager.createEntityInstance(partDefinitionId);
 
       // Add ownership component if specified
       if (ownerId) {
-        this.#entityManager.addComponent(childEntity.id, 'core:owned_by', {
-          ownerId,
-        });
+        await this.#entityManager.addComponent(
+          childEntity.id,
+          'core:owned_by',
+          {
+            ownerId,
+          }
+        );
       }
 
       // Add joint component to establish the connection
-      this.#entityManager.addComponent(childEntity.id, 'anatomy:joint', {
+      await this.#entityManager.addComponent(childEntity.id, 'anatomy:joint', {
         parentId: parentId,
         socketId: socketId,
       });
@@ -141,10 +145,14 @@ export class EntityGraphBuilder {
         );
         if (anatomyPart) {
           // Update the anatomy:part component with the orientation
-          this.#entityManager.addComponent(childEntity.id, 'anatomy:part', {
-            ...anatomyPart,
-            orientation: socketOrientation,
-          });
+          await this.#entityManager.addComponent(
+            childEntity.id,
+            'anatomy:part',
+            {
+              ...anatomyPart,
+              orientation: socketOrientation,
+            }
+          );
           this.#logger.debug(
             `EntityGraphBuilder: Propagated orientation '${socketOrientation}' to child entity '${childEntity.id}'`
           );
@@ -170,9 +178,10 @@ export class EntityGraphBuilder {
    *
    * @param {string} entityId - Entity to name
    * @param {string} name - Name to set
+   * @returns {Promise<void>}
    */
-  setEntityName(entityId, name) {
-    this.#entityManager.addComponent(entityId, 'core:name', {
+  async setEntityName(entityId, name) {
+    await this.#entityManager.addComponent(entityId, 'core:name', {
       text: name,
     });
 

@@ -22,7 +22,7 @@ describe('handleForEach', () => {
     jest.clearAllMocks();
   });
 
-  test('iterates over collection and executes actions for each item', () => {
+  test('iterates over collection and executes actions for each item', async () => {
     const ctx = { evaluationContext: { items: [1, 2], context: {} } };
     const node = {
       parameters: {
@@ -35,7 +35,7 @@ describe('handleForEach', () => {
     executeActionSequence.mockImplementation((a, c) => {
       captured.push(c.evaluationContext.context.i);
     });
-    handleForEach(
+    await handleForEach(
       node,
       { ...ctx, jsonLogic, scopeLabel: 'Loop' },
       logger,
@@ -53,9 +53,9 @@ describe('handleForEach', () => {
     expect(ctx.evaluationContext.context.i).toBeUndefined();
   });
 
-  test('logs warning and skips when parameters invalid', () => {
+  test('logs warning and skips when parameters invalid', async () => {
     const node = { parameters: {} };
-    handleForEach(
+    await handleForEach(
       node,
       { ...baseCtx, jsonLogic, scopeLabel: 'Loop' },
       logger,

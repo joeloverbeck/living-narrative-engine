@@ -69,8 +69,8 @@ describe('core_handle_player_turn_prompt rule integration', () => {
     }
   });
 
-  it('dispatches perceptible event when player turn prompt is triggered', () => {
-    testEnv.eventBus.dispatch('core:player_turn_prompt', {
+  it('dispatches perceptible event when player turn prompt is triggered', async () => {
+    await testEnv.eventBus.dispatch('core:player_turn_prompt', {
       entityId: 'player1',
       availableActions: ['wait', 'go'],
     });

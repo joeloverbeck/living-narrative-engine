@@ -45,8 +45,8 @@ beforeEach(() => {
 });
 
 describe('AutoMoveFollowersHandler.execute', () => {
-  test('dispatches error when leader_id is invalid', () => {
-    handler.execute({ leader_id: '', destination_id: 'dest' }, {});
+  test('dispatches error when leader_id is invalid', async () => {
+    await handler.execute({ leader_id: '', destination_id: 'dest' }, {});
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
       SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({ message: expect.stringContaining('leader_id') })
@@ -54,7 +54,7 @@ describe('AutoMoveFollowersHandler.execute', () => {
     expect(moveHandler.execute).not.toHaveBeenCalled();
   });
 
-  test('moves followers and dispatches events', () => {
+  test('moves followers and dispatches events', async () => {
     entityManager.getComponentData.mockImplementation((id, comp) => {
       if (id === 'leader' && comp === LEADING_COMPONENT_ID)
         return { followers: ['f1'] };
@@ -74,7 +74,7 @@ describe('AutoMoveFollowersHandler.execute', () => {
       event: { payload: { previousLocationId: 'oldLoc' } },
     };
 
-    handler.execute({ leader_id: 'leader', destination_id: 'dest' }, ctx);
+    await handler.execute({ leader_id: 'leader', destination_id: 'dest' }, ctx);
 
     expect(moveHandler.execute).toHaveBeenCalledWith(
       { entity_ref: { entityId: 'f1' }, target_location_id: 'dest' },
@@ -111,8 +111,7 @@ describe('AutoMoveFollowersHandler.execute', () => {
       event: { payload: { previousLocationId: 'oldLoc' } },
     };
 
-    handler.execute({ leader_id: 'leader', destination_id: 'dest' }, ctx);
-    await new Promise((r) => setTimeout(r, 0));
+    await handler.execute({ leader_id: 'leader', destination_id: 'dest' }, ctx);
 
     expect(safeDispatchError).toHaveBeenCalledWith(
       dispatcher,
@@ -141,8 +140,7 @@ describe('AutoMoveFollowersHandler.execute', () => {
       event: { payload: { previousLocationId: 'oldLoc' } },
     };
 
-    handler.execute({ leader_id: 'leader', destination_id: 'dest' }, ctx);
-    await new Promise((r) => setTimeout(r, 0));
+    await handler.execute({ leader_id: 'leader', destination_id: 'dest' }, ctx);
 
     expect(safeDispatchError).toHaveBeenCalledWith(
       dispatcher,
@@ -153,8 +151,8 @@ describe('AutoMoveFollowersHandler.execute', () => {
     expect(safeDispatchError).toHaveBeenCalledTimes(1);
   });
 
-  test('dispatches error when destination_id is invalid', () => {
-    handler.execute({ leader_id: 'leader', destination_id: '' }, {});
+  test('dispatches error when destination_id is invalid', async () => {
+    await handler.execute({ leader_id: 'leader', destination_id: '' }, {});
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
       SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
@@ -164,7 +162,7 @@ describe('AutoMoveFollowersHandler.execute', () => {
     expect(moveHandler.execute).not.toHaveBeenCalled();
   });
 
-  test('skips follower if previous location does not match', () => {
+  test('skips follower if previous location does not match', async () => {
     entityManager.getComponentData.mockImplementation((id, comp) => {
       if (id === 'leader' && comp === LEADING_COMPONENT_ID)
         return { followers: ['f1'] };
@@ -178,7 +176,7 @@ describe('AutoMoveFollowersHandler.execute', () => {
       event: { payload: { previousLocationId: 'oldLoc' } },
     };
 
-    handler.execute({ leader_id: 'leader', destination_id: 'dest' }, ctx);
+    await handler.execute({ leader_id: 'leader', destination_id: 'dest' }, ctx);
 
     expect(moveHandler.execute).not.toHaveBeenCalled();
     expect(dispatcher.dispatch).not.toHaveBeenCalled();
@@ -200,8 +198,7 @@ describe('AutoMoveFollowersHandler.execute', () => {
       event: { payload: { previousLocationId: 'oldLoc' } },
     };
 
-    handler.execute({ leader_id: 'leader', destination_id: 'dest' }, ctx);
-    await new Promise((r) => setTimeout(r, 0));
+    await handler.execute({ leader_id: 'leader', destination_id: 'dest' }, ctx);
 
     expect(safeDispatchError).not.toHaveBeenCalled();
   });
@@ -224,8 +221,7 @@ describe('AutoMoveFollowersHandler.execute', () => {
       event: { payload: { previousLocationId: 'oldLoc' } },
     };
 
-    handler.execute({ leader_id: 'leader', destination_id: 'dest' }, ctx);
-    await new Promise((r) => setTimeout(r, 0));
+    await handler.execute({ leader_id: 'leader', destination_id: 'dest' }, ctx);
 
     expect(safeDispatchError).toHaveBeenCalledWith(
       dispatcher,

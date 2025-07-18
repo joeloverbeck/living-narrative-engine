@@ -63,10 +63,10 @@ class AddComponentHandler extends ComponentOperationHandler {
    *
    * @param {AddComponentOperationParams | null | undefined} params - The parameters for the operation.
    * @param {ExecutionContext} executionContext - The execution context.
-   * @returns {void}
+   * @returns {Promise<void>}
    * @implements {OperationHandler}
    */
-  execute(params, executionContext) {
+  async execute(params, executionContext) {
     const log = this.getLogger(executionContext);
 
     // 1. Validate Parameters
@@ -97,7 +97,7 @@ class AddComponentHandler extends ComponentOperationHandler {
     // 5. Execute Add Component
     try {
       // EntityManager.addComponent handles both adding new and replacing existing
-      this.#entityManager.addComponent(entityId, trimmedComponentType, value);
+      await this.#entityManager.addComponent(entityId, trimmedComponentType, value);
       log.debug(
         `ADD_COMPONENT: Successfully added/replaced component "${trimmedComponentType}" on entity "${entityId}".`
       );

@@ -301,7 +301,7 @@ describe('core_handle_go rule integration', () => {
     expect(valid).toBe(true);
   });
 
-  it('moves actor when pre-resolved targetId provided', () => {
+  it('moves actor when pre-resolved targetId provided', async () => {
     testEnv.reset([
       {
         id: 'actor1',
@@ -339,7 +339,7 @@ describe('core_handle_go rule integration', () => {
       { direction: 'north', target: 'locB' },
     ]);
 
-    testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       actorId: 'actor1',
       actionId: 'core:go',
       targetId: 'locB',
@@ -360,7 +360,7 @@ describe('core_handle_go rule integration', () => {
 
   // DELETED: The invalid test case 'moves actor using direction when targetId missing' was here.
 
-  it('fails when targetId is missing', () => {
+  it('fails when targetId is missing', async () => {
     testEnv.reset([
       {
         id: 'actor1',
@@ -395,7 +395,7 @@ describe('core_handle_go rule integration', () => {
     setupListener();
     testEnv.entityManager.addComponent('locA', EXITS_COMPONENT_ID, []);
 
-    testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       actorId: 'actor1',
       actionId: 'core:go',
       targetId: null,
@@ -413,7 +413,7 @@ describe('core_handle_go rule integration', () => {
     expect(types).not.toContain('core:entity_moved');
   });
 
-  it('movement succeeds when locked flag is false', () => {
+  it('movement succeeds when locked flag is false', async () => {
     testEnv.reset([
       {
         id: 'actor1',
@@ -451,7 +451,7 @@ describe('core_handle_go rule integration', () => {
       { direction: 'north', target: 'locB' },
     ]);
 
-    testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       actorId: 'actor1',
       actionId: 'core:go',
       targetId: 'locB',

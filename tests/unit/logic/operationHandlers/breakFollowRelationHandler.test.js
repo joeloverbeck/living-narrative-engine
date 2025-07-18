@@ -42,9 +42,9 @@ describe('BreakFollowRelationHandler', () => {
     jest.clearAllMocks();
   });
 
-  test('removes following component and rebuilds old leader', () => {
+  test('removes following component and rebuilds old leader', async () => {
     em.getComponentData.mockReturnValue({ leaderId: 'L1' });
-    handler.execute({ follower_id: 'A' }, execCtx);
+    await handler.execute({ follower_id: 'A' }, execCtx);
     expect(em.removeComponent).toHaveBeenCalledWith(
       'A',
       FOLLOWING_COMPONENT_ID
@@ -55,15 +55,15 @@ describe('BreakFollowRelationHandler', () => {
     );
   });
 
-  test('skips when not following', () => {
+  test('skips when not following', async () => {
     em.getComponentData.mockReturnValue(null);
-    handler.execute({ follower_id: 'A' }, execCtx);
+    await handler.execute({ follower_id: 'A' }, execCtx);
     expect(em.removeComponent).not.toHaveBeenCalled();
     expect(rebuild.execute).not.toHaveBeenCalled();
   });
 
-  test('validates parameters', () => {
-    handler.execute({}, execCtx);
+  test('validates parameters', async () => {
+    await handler.execute({}, execCtx);
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
       SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({

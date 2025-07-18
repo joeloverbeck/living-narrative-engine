@@ -136,22 +136,22 @@ describe('AddPerceptionLogEntryHandler', () => {
       });
     });
 
-    test('dispatches error and bails when params object is missing/invalid', () => {
-      [null, undefined, 42, 'str'].forEach((bad) => {
-        h.execute(/** @type {any} */ (bad));
+    test('dispatches error and bails when params object is missing/invalid', async () => {
+      for (const bad of [null, undefined, 42, 'str']) {
+        await h.execute(/** @type {any} */ (bad));
         expect(dispatcher.dispatch).toHaveBeenLastCalledWith(
           SYSTEM_ERROR_OCCURRED_ID,
           expect.objectContaining({
             message: 'ADD_PERCEPTION_LOG_ENTRY: params missing or invalid.',
           })
         );
-      });
+      }
       expect(em.addComponent).not.toHaveBeenCalled();
     });
 
-    test('dispatches error when location_id is missing/blank', () => {
-      [null, undefined, '', '   ', 123].forEach((loc) => {
-        h.execute({
+    test('dispatches error when location_id is missing/blank', async () => {
+      for (const loc of [null, undefined, '', '   ', 123]) {
+        await h.execute({
           location_id: /** @type {any} */ (loc),
           entry: makeEntry(),
         });
@@ -161,20 +161,20 @@ describe('AddPerceptionLogEntryHandler', () => {
             message: 'ADD_PERCEPTION_LOG_ENTRY: location_id is required',
           })
         );
-      });
+      }
       expect(em.addComponent).not.toHaveBeenCalled();
     });
 
-    test('dispatches error when entry is missing/invalid', () => {
-      [null, undefined, 999, 'bad'].forEach((ent) => {
-        h.execute({ location_id: 'loc:test', entry: /** @type {any} */ (ent) });
+    test('dispatches error when entry is missing/invalid', async () => {
+      for (const ent of [null, undefined, 999, 'bad']) {
+        await h.execute({ location_id: 'loc:test', entry: /** @type {any} */ (ent) });
         expect(dispatcher.dispatch).toHaveBeenLastCalledWith(
           SYSTEM_ERROR_OCCURRED_ID,
           expect.objectContaining({
             message: 'ADD_PERCEPTION_LOG_ENTRY: entry object is required',
           })
         );
-      });
+      }
       expect(em.addComponent).not.toHaveBeenCalled();
     });
   });
@@ -195,9 +195,9 @@ describe('AddPerceptionLogEntryHandler', () => {
       });
     });
 
-    test('does nothing when location has no entities', () => {
+    test('does nothing when location has no entities', async () => {
       em.getEntitiesInLocation.mockReturnValue(new Set());
-      h.execute({ location_id: LOC, entry: makeEntry('e0') });
+      await h.execute({ location_id: LOC, entry: makeEntry('e0') });
 
       expect(em.hasComponent).not.toHaveBeenCalled();
       expect(em.addComponent).not.toHaveBeenCalled();
@@ -208,11 +208,11 @@ describe('AddPerceptionLogEntryHandler', () => {
       );
     });
 
-    test('does nothing when no entities have perception log component', () => {
+    test('does nothing when no entities have perception log component', async () => {
       em.getEntitiesInLocation.mockReturnValue(new Set([ROCK]));
       em.hasComponent.mockReturnValue(false);
 
-      h.execute({ location_id: LOC, entry: makeEntry('e1') });
+      await h.execute({ location_id: LOC, entry: makeEntry('e1') });
 
       expect(em.hasComponent).toHaveBeenCalledWith(
         ROCK,
@@ -221,14 +221,14 @@ describe('AddPerceptionLogEntryHandler', () => {
       expect(em.addComponent).not.toHaveBeenCalled();
     });
 
-    test('initialises a log for perceiver lacking component data', () => {
+    test('initialises a log for perceiver lacking component data', async () => {
       const entry = makeEntry('init');
       em.getEntitiesInLocation.mockReturnValue(new Set([NPC1]));
       em.hasComponent.mockReturnValue(true);
       em.getComponentData.mockReturnValue(null);
       em.addComponent.mockReturnValue(true);
 
-      h.execute({ location_id: LOC, entry });
+      await h.execute({ location_id: LOC, entry });
 
       expect(em.addComponent).toHaveBeenCalledWith(
         NPC1,
@@ -237,7 +237,7 @@ describe('AddPerceptionLogEntryHandler', () => {
       );
     });
 
-    test('appends to existing perception log', () => {
+    test('appends to existing perception log', async () => {
       const oldEntry = makeEntry('old');
       const newEntry = makeEntry('new');
       em.getEntitiesInLocation.mockReturnValue(new Set([NPC1]));
@@ -248,7 +248,7 @@ describe('AddPerceptionLogEntryHandler', () => {
       });
       em.addComponent.mockReturnValue(true);
 
-      h.execute({ location_id: LOC, entry: newEntry });
+      await h.execute({ location_id: LOC, entry: newEntry });
 
       expect(em.addComponent).toHaveBeenCalledWith(
         NPC1,
@@ -260,7 +260,7 @@ describe('AddPerceptionLogEntryHandler', () => {
       );
     });
 
-    test('updates multiple perceivers and skips non-perceivers', () => {
+    test('updates multiple perceivers and skips non-perceivers', async () => {
       const entry = makeEntry('multi');
       em.getEntitiesInLocation.mockReturnValue(new Set([NPC1, ROCK, NPC2]));
       em.hasComponent.mockImplementation(
@@ -270,7 +270,7 @@ describe('AddPerceptionLogEntryHandler', () => {
       em.getComponentData.mockReturnValue({ maxEntries: 10, logEntries: [] });
       em.addComponent.mockReturnValue(true);
 
-      h.execute({ location_id: LOC, entry });
+      await h.execute({ location_id: LOC, entry });
 
       expect(em.addComponent).toHaveBeenCalledTimes(2);
       expect(
@@ -304,7 +304,7 @@ describe('AddPerceptionLogEntryHandler', () => {
       em.hasComponent.mockReturnValue(true);
     });
 
-    it('honours maxEntries = 1 (keeps only most-recent entry)', () => {
+    it('honours maxEntries = 1 (keeps only most-recent entry)', async () => {
       const first = makeEntry('one');
       first.eventId = 'first';
       const second = makeEntry('two');
@@ -315,14 +315,14 @@ describe('AddPerceptionLogEntryHandler', () => {
         maxEntries: 1,
         logEntries: [],
       });
-      h.execute({ location_id: LOC, entry: first });
+      await h.execute({ location_id: LOC, entry: first });
 
       // Second write – log already holding `first`
       em.getComponentData.mockReturnValueOnce({
         maxEntries: 1,
         logEntries: [first],
       });
-      h.execute({ location_id: LOC, entry: second });
+      await h.execute({ location_id: LOC, entry: second });
 
       // 2 calls total
       expect(em.addComponent).toHaveBeenCalledTimes(2);
@@ -330,7 +330,7 @@ describe('AddPerceptionLogEntryHandler', () => {
       expect(payload.logEntries).toEqual([second]);
     });
 
-    it('appends without trimming when under maxEntries', () => {
+    it('appends without trimming when under maxEntries', async () => {
       const existing = [makeEntry('a'), makeEntry('b')];
       const fresh = makeEntry('c');
 
@@ -338,13 +338,13 @@ describe('AddPerceptionLogEntryHandler', () => {
         maxEntries: 5,
         logEntries: [...existing],
       });
-      h.execute({ location_id: LOC, entry: fresh });
+      await h.execute({ location_id: LOC, entry: fresh });
 
       const [, , payload] = em.addComponent.mock.calls[0];
       expect(payload.logEntries).toEqual([...existing, fresh]);
     });
 
-    it('trims oldest when exceeding maxEntries', () => {
+    it('trims oldest when exceeding maxEntries', async () => {
       const max = 3;
       const initial = [makeEntry('old1'), makeEntry('old2'), makeEntry('old3')];
       const newest = makeEntry('new');
@@ -353,7 +353,7 @@ describe('AddPerceptionLogEntryHandler', () => {
         maxEntries: max,
         logEntries: [...initial],
       });
-      h.execute({ location_id: LOC, entry: newest });
+      await h.execute({ location_id: LOC, entry: newest });
 
       const [, , payload] = em.addComponent.mock.calls[0];
       expect(payload.logEntries.length).toBe(max);
@@ -364,7 +364,7 @@ describe('AddPerceptionLogEntryHandler', () => {
       ]);
     });
 
-    it('recovers when stored logEntries is not an array', () => {
+    it('recovers when stored logEntries is not an array', async () => {
       const corrupt = /** @type {any} */ ('not-array');
       const entry = makeEntry('fix');
 
@@ -372,29 +372,29 @@ describe('AddPerceptionLogEntryHandler', () => {
         maxEntries: 5,
         logEntries: corrupt,
       });
-      h.execute({ location_id: LOC, entry });
+      await h.execute({ location_id: LOC, entry });
 
       const [, , payload] = em.addComponent.mock.calls[0];
       expect(payload.logEntries).toEqual([entry]);
     });
 
-    it('defaults maxEntries to 50 when stored value is invalid', () => {
+    it('defaults maxEntries to 50 when stored value is invalid', async () => {
       const badVals = [0, -3, null, undefined, 'bad'];
       const entry = makeEntry('default');
 
-      badVals.forEach((bad) => {
+      for (const bad of badVals) {
         em.addComponent.mockClear();
         em.getComponentData.mockReturnValueOnce({
           maxEntries: /** @type {any} */ (bad),
           logEntries: [],
         });
 
-        h.execute({ location_id: LOC, entry });
+        await h.execute({ location_id: LOC, entry });
         const [, , payload] = em.addComponent.mock.calls[0];
 
         expect(payload.maxEntries).toBe(DEFAULT_MAX_LOG_ENTRIES);
         expect(payload.logEntries).toEqual([entry]);
-      });
+      }
     });
   });
 });

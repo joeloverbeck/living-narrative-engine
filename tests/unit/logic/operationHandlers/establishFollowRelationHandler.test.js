@@ -47,27 +47,27 @@ describe('EstablishFollowRelationHandler', () => {
     jest.clearAllMocks();
   });
 
-  test('adds following component and rebuilds cache', () => {
+  test('adds following component and rebuilds cache', async () => {
     em.getComponentData.mockReturnValue(null);
-    handler.execute({ follower_id: 'A', leader_id: 'B' }, execCtx);
+    await handler.execute({ follower_id: 'A', leader_id: 'B' }, execCtx);
     expect(em.addComponent).toHaveBeenCalledWith('A', FOLLOWING_COMPONENT_ID, {
       leaderId: 'B',
     });
     expect(rebuild.execute).toHaveBeenCalledWith({ leaderIds: ['B'] }, execCtx);
   });
 
-  test('rebuilds old and new leaders when switching', () => {
+  test('rebuilds old and new leaders when switching', async () => {
     em.getComponentData.mockReturnValue({ leaderId: 'old' });
-    handler.execute({ follower_id: 'A', leader_id: 'new' }, execCtx);
+    await handler.execute({ follower_id: 'A', leader_id: 'new' }, execCtx);
     expect(rebuild.execute).toHaveBeenCalledWith(
       { leaderIds: ['new', 'old'] },
       execCtx
     );
   });
 
-  test('dispatches error on cycle', () => {
+  test('dispatches error on cycle', async () => {
     wouldCreateCycle.mockReturnValueOnce(true);
-    handler.execute({ follower_id: 'A', leader_id: 'B' }, execCtx);
+    await handler.execute({ follower_id: 'A', leader_id: 'B' }, execCtx);
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
       SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({ message: expect.stringContaining('cycle') })
@@ -75,8 +75,8 @@ describe('EstablishFollowRelationHandler', () => {
     expect(em.addComponent).not.toHaveBeenCalled();
   });
 
-  test('validates parameters', () => {
-    handler.execute({}, execCtx);
+  test('validates parameters', async () => {
+    await handler.execute({}, execCtx);
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
       SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({

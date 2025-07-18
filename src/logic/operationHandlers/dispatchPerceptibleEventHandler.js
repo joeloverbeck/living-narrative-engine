@@ -72,7 +72,7 @@ class DispatchPerceptibleEventHandler {
    * @param {DispatchPerceptibleEventParams} params - Resolved parameters.
    * @param {ExecutionContext} executionContext - Execution context (unused).
    */
-  execute(params, executionContext) {
+  async execute(params, executionContext) {
     void executionContext;
     if (
       !assertParamsObject(
@@ -155,7 +155,7 @@ class DispatchPerceptibleEventHandler {
     this.#dispatcher.dispatch(EVENT_ID, payload);
 
     if (log_entry) {
-      this.#logHandler.execute({
+      await this.#logHandler.execute({
         location_id,
         entry: {
           descriptionText: description_text,

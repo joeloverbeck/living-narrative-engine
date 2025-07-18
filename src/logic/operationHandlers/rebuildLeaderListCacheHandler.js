@@ -56,7 +56,7 @@ class RebuildLeaderListCacheHandler extends BaseOperationHandler {
    * @param {{ leaderIds: string[] }} params
    * @param {import('../defs.js').ExecutionContext} nestedExecutionContext
    */
-  execute(params, nestedExecutionContext) {
+  async execute(params, nestedExecutionContext) {
     const logger = nestedExecutionContext?.logger ?? this.#logger;
     if (!assertParamsObject(params, logger, 'REBUILD_LEADER_LIST_CACHE'))
       return;
@@ -104,12 +104,12 @@ class RebuildLeaderListCacheHandler extends BaseOperationHandler {
       try {
         if (list.length > 0) {
           // has followers → add/update the component
-          this.#entityManager.addComponent(leaderId, LEADING, {
+          await this.#entityManager.addComponent(leaderId, LEADING, {
             followers: list,
           });
         } else {
           // no followers → remove the component entirely
-          this.#entityManager.removeComponent(leaderId, LEADING);
+          await this.#entityManager.removeComponent(leaderId, LEADING);
         }
         updated++;
       } catch (err) {

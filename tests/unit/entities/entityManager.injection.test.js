@@ -34,12 +34,12 @@ describeEntityManagerSuite(
 
       it.each(defaultComponentsTable)(
         'should inject %s if not present',
-        (id, expected) => {
+        async (id, expected) => {
           // Arrange
           const { mocks } = getBed();
 
           // Act
-          const entity = getBed().createEntity('actor');
+          const entity = await getBed().createEntity('actor');
 
           // Assert
           expect(entity.hasComponent(id)).toBe(true);
@@ -48,7 +48,7 @@ describeEntityManagerSuite(
         }
       );
 
-      it('should not override existing default components', () => {
+      it('should not override existing default components', async () => {
         // Arrange
         const { entityManager, mocks } = getBed();
         const {
@@ -78,7 +78,7 @@ describeEntityManagerSuite(
         mocks.validator.validate.mockClear(); // Clear any calls from setup
 
         // Act
-        const entity = entityManager.createEntityInstance(
+        const entity = await entityManager.createEntityInstance(
           'test:actor-with-data'
         );
 
@@ -113,7 +113,7 @@ describeEntityManagerSuite(
     });
 
     describe('for Non-Actors', () => {
-      it('should not inject any default components', () => {
+      it('should not inject any default components', async () => {
         // Arrange
         const {
           GOALS_COMPONENT_ID,
@@ -125,7 +125,7 @@ describeEntityManagerSuite(
         getBed().setupTestDefinitions('basic');
 
         // Act
-        const entity = getBed().createBasicEntity();
+        const entity = await getBed().createBasicEntity();
 
         // Assert
         expect(entity.hasComponent(GOALS_COMPONENT_ID)).toBe(false);

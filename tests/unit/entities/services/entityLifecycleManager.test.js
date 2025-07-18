@@ -101,23 +101,23 @@ beforeEach(() => {
 });
 
 describe('EntityLifecycleManager branches', () => {
-  it('throws EntityNotFoundError when entity is missing', () => {
+  it('throws EntityNotFoundError when entity is missing', async () => {
     const deps = createDeps();
     deps.entityRepository.get.mockReturnValue(undefined);
     const manager = initManager(deps);
-    expect(() => manager.removeEntityInstance('missing')).toThrow(
+    await expect(manager.removeEntityInstance('missing')).rejects.toThrow(
       EntityNotFoundError
     );
     expect(deps.entityRepository.remove).not.toHaveBeenCalled();
   });
 
-  it('throws RepositoryConsistencyError when remove returns false', () => {
+  it('throws RepositoryConsistencyError when remove returns false', async () => {
     const deps = createDeps();
     const entity = { id: 'e1', definitionId: 'def' };
     deps.entityRepository.get.mockReturnValue(entity);
     deps.entityRepository.remove.mockReturnValue(false);
     const manager = initManager(deps);
-    expect(() => manager.removeEntityInstance('e1')).toThrow(
+    await expect(manager.removeEntityInstance('e1')).rejects.toThrow(
       RepositoryConsistencyError
     );
     expect(
@@ -125,7 +125,7 @@ describe('EntityLifecycleManager branches', () => {
     ).not.toHaveBeenCalled();
   });
 
-  it('wraps errors from repository.remove', () => {
+  it('wraps errors from repository.remove', async () => {
     const deps = createDeps();
     const entity = { id: 'e2', definitionId: 'def' };
     deps.entityRepository.get.mockReturnValue(entity);
@@ -133,7 +133,7 @@ describe('EntityLifecycleManager branches', () => {
       throw new Error('fail');
     });
     const manager = initManager(deps);
-    expect(() => manager.removeEntityInstance('e2')).toThrow(
+    await expect(manager.removeEntityInstance('e2')).rejects.toThrow(
       RepositoryConsistencyError
     );
     expect(
@@ -141,16 +141,14 @@ describe('EntityLifecycleManager branches', () => {
     ).not.toHaveBeenCalled();
   });
 
-  it('collects errors during batchCreateEntities', () => {
+  it('collects errors during batchCreateEntities', async () => {
     const deps = createDeps();
     const manager = initManager(deps);
     jest
       .spyOn(manager, 'createEntityInstance')
-      .mockReturnValueOnce({ id: 'a' })
-      .mockImplementationOnce(() => {
-        throw new Error('boom');
-      });
-    const result = manager.batchCreateEntities([
+      .mockResolvedValueOnce({ id: 'a' })
+      .mockRejectedValueOnce(new Error('boom'));
+    const result = await manager.batchCreateEntities([
       { definitionId: 'd1', opts: {} },
       { definitionId: 'd2', opts: {} },
     ]);

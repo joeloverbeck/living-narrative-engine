@@ -13,14 +13,14 @@ import {
 
 describeEntityManagerSuite('EntityManager - removeComponent', (getBed) => {
   describe('removeComponent', () => {
-    it('should remove an existing component override', () => {
+    it('should remove an existing component override', async () => {
       // Arrange
       const { entityManager } = getBed();
       const { NAME_COMPONENT_ID } = TestData.ComponentIDs;
       const { PRIMARY } = TestData.InstanceIDs;
 
       // Add component as an override
-      getBed().createEntityWithOverrides('basic', {
+      await getBed().createEntityWithOverrides('basic', {
         overrides: { [NAME_COMPONENT_ID]: { name: 'Override' } },
         instanceId: PRIMARY,
       });
@@ -29,7 +29,7 @@ describeEntityManagerSuite('EntityManager - removeComponent', (getBed) => {
       ).toBe(true);
 
       // Act
-      entityManager.removeComponent(PRIMARY, NAME_COMPONENT_ID);
+      await entityManager.removeComponent(PRIMARY, NAME_COMPONENT_ID);
 
       // Assert
       expect(
@@ -37,20 +37,20 @@ describeEntityManagerSuite('EntityManager - removeComponent', (getBed) => {
       ).toBe(false);
     });
 
-    it('should dispatch a COMPONENT_REMOVED event with the old data', () => {
+    it('should dispatch a COMPONENT_REMOVED event with the old data', async () => {
       // Arrange
       const { entityManager, mocks } = getBed();
       const { NAME_COMPONENT_ID } = TestData.ComponentIDs;
       const { PRIMARY } = TestData.InstanceIDs;
       const overrideData = { name: 'ToBeRemoved' };
-      const entity = getBed().createEntityWithOverrides('basic', {
+      const entity = await getBed().createEntityWithOverrides('basic', {
         overrides: { [NAME_COMPONENT_ID]: overrideData },
         instanceId: PRIMARY,
         resetDispatch: true,
       });
 
       // Act
-      entityManager.removeComponent(PRIMARY, NAME_COMPONENT_ID);
+      await entityManager.removeComponent(PRIMARY, NAME_COMPONENT_ID);
 
       // Assert
       expectComponentRemovedDispatch(
@@ -61,34 +61,34 @@ describeEntityManagerSuite('EntityManager - removeComponent', (getBed) => {
       );
     });
 
-    it('should throw an error if component is not an override on the instance', () => {
+    it('should throw an error if component is not an override on the instance', async () => {
       // Arrange
       const { entityManager, mocks } = getBed();
       const { NAME_COMPONENT_ID } = TestData.ComponentIDs;
       const { PRIMARY } = TestData.InstanceIDs;
-      getBed().createEntity('basic', {
+      await getBed().createEntity('basic', {
         instanceId: PRIMARY,
         resetDispatch: true,
       });
       // NAME_COMPONENT_ID exists on definition, but not as an override
 
       // Act & Assert
-      expect(() =>
+      await expect(
         entityManager.removeComponent(PRIMARY, NAME_COMPONENT_ID)
-      ).toThrow(ComponentOverrideNotFoundError);
+      ).rejects.toThrow(ComponentOverrideNotFoundError);
       expectNoDispatch(mocks.eventDispatcher.dispatch);
     });
 
-    it('should throw EntityNotFoundError for a non-existent entity', () => {
+    it('should throw EntityNotFoundError for a non-existent entity', async () => {
       // Arrange
       const { entityManager } = getBed();
       const { GHOST } = TestData.InstanceIDs;
       const { NAME_COMPONENT_ID } = TestData.ComponentIDs;
 
       // Act & Assert
-      expect(() =>
+      await expect(
         entityManager.removeComponent(GHOST, NAME_COMPONENT_ID)
-      ).toThrow(new EntityNotFoundError(GHOST));
+      ).rejects.toThrow(new EntityNotFoundError(GHOST));
     });
 
     runInvalidIdPairTests(getBed, (em, instanceId, componentTypeId) =>

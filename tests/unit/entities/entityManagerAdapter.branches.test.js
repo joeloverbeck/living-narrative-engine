@@ -2,17 +2,17 @@ import { describe, it, expect, jest } from '@jest/globals';
 import { EntityManagerAdapter } from '../../../src/entities/entityManagerAdapter.js';
 
 describe('EntityManagerAdapter additional coverage', () => {
-  it('delegates various methods to the wrapped entity manager', () => {
+  it('delegates various methods to the wrapped entity manager', async () => {
     const entityManager = {
       getEntityInstance: jest.fn(() => 'e1'),
-      createEntityInstance: jest.fn(() => 'e2'),
+      createEntityInstance: jest.fn(() => Promise.resolve('e2')),
       reconstructEntity: jest.fn(() => 'e3'),
       getComponentData: jest.fn(() => 'e4'),
       hasComponent: jest.fn(() => true),
       hasComponentOverride: jest.fn(() => false),
       getEntitiesWithComponent: jest.fn(() => ['e5']),
-      addComponent: jest.fn(() => 'added'),
-      removeComponent: jest.fn(() => 'removed'),
+      addComponent: jest.fn(() => Promise.resolve('added')),
+      removeComponent: jest.fn(() => Promise.resolve('removed')),
       getEntityIds: jest.fn(() => ['id']),
       findEntities: jest.fn(() => ['found']),
       getAllComponentTypesForEntity: jest.fn(() => ['comp']),
@@ -28,7 +28,7 @@ describe('EntityManagerAdapter additional coverage', () => {
     expect(adapter.getEntityInstance('id')).toBe('e1');
     expect(entityManager.getEntityInstance).toHaveBeenCalledWith('id');
 
-    expect(adapter.createEntityInstance('def')).toBe('e2');
+    expect(await adapter.createEntityInstance('def')).toBe('e2');
     expect(entityManager.createEntityInstance).toHaveBeenCalledWith('def', {});
 
     expect(adapter.reconstructEntity('data')).toBe('e3');
@@ -51,14 +51,14 @@ describe('EntityManagerAdapter additional coverage', () => {
       'cType'
     );
 
-    expect(adapter.addComponent('id', 'comp', 'data')).toBe('added');
+    expect(await adapter.addComponent('id', 'comp', 'data')).toBe('added');
     expect(entityManager.addComponent).toHaveBeenCalledWith(
       'id',
       'comp',
       'data'
     );
 
-    expect(adapter.removeComponent('id', 'comp')).toBe('removed');
+    expect(await adapter.removeComponent('id', 'comp')).toBe('removed');
     expect(entityManager.removeComponent).toHaveBeenCalledWith('id', 'comp');
 
     expect(adapter.getEntityIds()).toEqual(['id']);

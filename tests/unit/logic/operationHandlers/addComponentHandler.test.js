@@ -119,14 +119,14 @@ describe('AddComponentHandler', () => {
   });
 
   // --- Happy Path - Basic Add/Replace ------------------------------------
-  test('adds component by calling EntityManager.addComponent with correct args', () => {
+  test('adds component by calling EntityManager.addComponent with correct args', async () => {
     const params = {
       entity_ref: 'actor',
       component_type: 'core:stats',
       value: { hp: 10, mp: 5 },
     };
     const ctx = buildCtx();
-    handler.execute(params, ctx);
+    await handler.execute(params, ctx);
     expect(mockEntityManager.addComponent).toHaveBeenCalledTimes(1);
     expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
       actorId,
@@ -140,14 +140,14 @@ describe('AddComponentHandler', () => {
     );
   });
 
-  test('adds component with an empty object value', () => {
+  test('adds component with an empty object value', async () => {
     const params = {
       entity_ref: 'target',
       component_type: 'custom:marker',
       value: {},
     };
     const ctx = buildCtx();
-    handler.execute(params, ctx);
+    await handler.execute(params, ctx);
     expect(mockEntityManager.addComponent).toHaveBeenCalledTimes(1);
     expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
       targetId,
@@ -159,22 +159,22 @@ describe('AddComponentHandler', () => {
   });
 
   // --- Parameter Validation ----------------------------------------------
-  test('warns and skips if params are missing or invalid', () => {
-    handler.execute(null, buildCtx());
+  test('warns and skips if params are missing or invalid', async () => {
+    await handler.execute(null, buildCtx());
     expect(mockLogger.warn).toHaveBeenCalledWith(
       'ADD_COMPONENT: params missing or invalid.',
       { params: null }
     );
     expect(mockEntityManager.addComponent).not.toHaveBeenCalled();
     mockLogger.warn.mockClear();
-    handler.execute(undefined, buildCtx());
+    await handler.execute(undefined, buildCtx());
     expect(mockLogger.warn).toHaveBeenCalledWith(
       'ADD_COMPONENT: params missing or invalid.',
       { params: undefined }
     );
     expect(mockEntityManager.addComponent).not.toHaveBeenCalled();
     mockLogger.warn.mockClear();
-    handler.execute('invalid', buildCtx());
+    await handler.execute('invalid', buildCtx());
     expect(mockLogger.warn).toHaveBeenCalledWith(
       'ADD_COMPONENT: params missing or invalid.',
       { params: 'invalid' }
@@ -187,8 +187,8 @@ describe('AddComponentHandler', () => {
     ['missing property', { component_type: 'c:t', value: {} }],
     ['null', { component_type: 'c:t', value: {}, entity_ref: null }],
     ['undefined', { component_type: 'c:t', value: {}, entity_ref: undefined }],
-  ])('warns and skips if entity_ref is %s', (desc, params) => {
-    handler.execute(params, buildCtx());
+  ])('warns and skips if entity_ref is %s', async (desc, params) => {
+    await handler.execute(params, buildCtx());
     expect(mockLogger.warn).toHaveBeenCalledWith(
       'ADD_COMPONENT: "entity_ref" parameter is required.'
     );
@@ -198,13 +198,13 @@ describe('AddComponentHandler', () => {
 
   test.each([[null], [undefined], [''], ['  '], [123]])(
     'warns and skips if component_type is invalid (%p)',
-    (invalidType) => {
+    async (invalidType) => {
       const params = {
         entity_ref: 'actor',
         component_type: invalidType,
         value: {},
       };
-      handler.execute(params, buildCtx());
+      await handler.execute(params, buildCtx());
       expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining('Invalid or missing "component_type"')
       );
@@ -217,13 +217,13 @@ describe('AddComponentHandler', () => {
     ['non-object value (string)', 'hello'],
     ['null value', null],
     ['undefined value', undefined],
-  ])('warns and skips if value is %s', (desc, invalidValue) => {
+  ])('warns and skips if value is %s', async (desc, invalidValue) => {
     const params = {
       entity_ref: 'actor',
       component_type: 'ns:comp',
       value: invalidValue,
     };
-    handler.execute(params, buildCtx());
+    await handler.execute(params, buildCtx());
     expect(mockLogger.warn).toHaveBeenCalledWith(
       expect.stringContaining(
         'Invalid or missing "value" parameter (must be a non-null object)'
@@ -233,9 +233,9 @@ describe('AddComponentHandler', () => {
   });
 
   // --- Entity Reference Resolution (Happy Paths) -------------------------
-  test('resolves "actor" entity reference', () => {
+  test('resolves "actor" entity reference', async () => {
     const params = { entity_ref: 'actor', component_type: 'c:t', value: {} };
-    handler.execute(params, buildCtx());
+    await handler.execute(params, buildCtx());
     expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
       actorId,
       'c:t',
@@ -243,9 +243,9 @@ describe('AddComponentHandler', () => {
     );
   });
 
-  test('resolves "target" entity reference', () => {
+  test('resolves "target" entity reference', async () => {
     const params = { entity_ref: 'target', component_type: 'c:t', value: {} };
-    handler.execute(params, buildCtx());
+    await handler.execute(params, buildCtx());
     expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
       targetId,
       'c:t',
@@ -253,10 +253,10 @@ describe('AddComponentHandler', () => {
     );
   });
 
-  test('resolves direct string entity ID reference', () => {
+  test('resolves direct string entity ID reference', async () => {
     const specificId = 'entity-directly-by-id-789';
     const params = { entity_ref: specificId, component_type: 'c:t', value: {} };
-    handler.execute(params, buildCtx());
+    await handler.execute(params, buildCtx());
     expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
       specificId,
       'c:t',
@@ -264,14 +264,14 @@ describe('AddComponentHandler', () => {
     );
   });
 
-  test('resolves object entity reference {entityId: "..."}', () => {
+  test('resolves object entity reference {entityId: "..."}', async () => {
     const specificId = 'entity-via-object-ref';
     const params = {
       entity_ref: { entityId: specificId },
       component_type: 'c:t',
       value: {},
     };
-    handler.execute(params, buildCtx());
+    await handler.execute(params, buildCtx());
     expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
       specificId,
       'c:t',
@@ -288,13 +288,13 @@ describe('AddComponentHandler', () => {
     ['object with non-string entityId', { entityId: 123 }],
   ])(
     'warns and skips if entity_ref cannot be resolved (%s)',
-    (desc, invalidRef) => {
+    async (desc, invalidRef) => {
       const params = {
         entity_ref: invalidRef,
         component_type: 'c:t',
         value: {},
       };
-      handler.execute(params, buildCtx());
+      await handler.execute(params, buildCtx());
       // These cases should pass the initial '!entity_ref' check but fail in resolveEntityId
       expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining('Could not resolve entity id'),
@@ -306,13 +306,13 @@ describe('AddComponentHandler', () => {
   // --- End of Updated Test ---
 
   // --- Error Handling during addComponent Call ---------------------------
-  test('dispatches error event if EntityManager.addComponent throws', () => {
+  test('dispatches error event if EntityManager.addComponent throws', async () => {
     const error = new Error('Entity manager failed!');
     mockEntityManager.addComponent.mockImplementation(() => {
       throw error;
     });
     const params = { entity_ref: 'actor', component_type: 'c:t', value: {} };
-    handler.execute(params, buildCtx());
+    await handler.execute(params, buildCtx());
     expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
       actorId,
       'c:t',
@@ -327,7 +327,7 @@ describe('AddComponentHandler', () => {
   });
 
   // --- Context logger precedence -----------------------------------------
-  test('uses logger from execution context when provided', () => {
+  test('uses logger from execution context when provided', async () => {
     const ctxLogger = {
       info: jest.fn(),
       warn: jest.fn(),
@@ -336,7 +336,7 @@ describe('AddComponentHandler', () => {
     };
     const ctx = buildCtx({ logger: ctxLogger });
     const params = { entity_ref: 'actor', component_type: '', value: {} }; // Trigger validation warning
-    handler.execute(params, ctx);
+    await handler.execute(params, ctx);
     expect(ctxLogger.warn).toHaveBeenCalledWith(
       expect.stringContaining('Invalid or missing "component_type"')
     );

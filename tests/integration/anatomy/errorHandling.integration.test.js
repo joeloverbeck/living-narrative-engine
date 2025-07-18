@@ -85,7 +85,7 @@ describe('Anatomy Error Handling Integration', () => {
         },
       });
 
-      const bodyEntity = testBed.entityManager.createEntityInstance(
+      const bodyEntity = await testBed.entityManager.createEntityInstance(
         'test:body_invalid_recipe'
       );
 
@@ -123,7 +123,7 @@ describe('Anatomy Error Handling Integration', () => {
         },
       });
 
-      const bodyEntity = testBed.entityManager.createEntityInstance(
+      const bodyEntity = await testBed.entityManager.createEntityInstance(
         'test:body_malformed_recipe'
       );
 
@@ -171,7 +171,7 @@ describe('Anatomy Error Handling Integration', () => {
         },
       });
 
-      const bodyEntity = testBed.entityManager.createEntityInstance(
+      const bodyEntity = await testBed.entityManager.createEntityInstance(
         'test:body_invalid_slot'
       );
 
@@ -209,7 +209,7 @@ describe('Anatomy Error Handling Integration', () => {
         },
       });
 
-      const bodyEntity = testBed.entityManager.createEntityInstance(
+      const bodyEntity = await testBed.entityManager.createEntityInstance(
         'test:body_missing_blueprint'
       );
 
@@ -261,7 +261,7 @@ describe('Anatomy Error Handling Integration', () => {
         },
       });
 
-      const bodyEntity = testBed.entityManager.createEntityInstance(
+      const bodyEntity = await testBed.entityManager.createEntityInstance(
         'test:body_invalid_attachment'
       );
 
@@ -316,7 +316,7 @@ describe('Anatomy Error Handling Integration', () => {
         },
       });
 
-      const bodyEntity = testBed.entityManager.createEntityInstance(
+      const bodyEntity = await testBed.entityManager.createEntityInstance(
         'test:body_invalid_part'
       );
 
@@ -380,7 +380,7 @@ describe('Anatomy Error Handling Integration', () => {
         },
       });
 
-      const bodyEntity = testBed.entityManager.createEntityInstance(
+      const bodyEntity = await testBed.entityManager.createEntityInstance(
         'test:body_corrupt_sockets'
       );
 
@@ -425,10 +425,10 @@ describe('Anatomy Error Handling Integration', () => {
 
     it('should handle entity manager failures during anatomy operations', async () => {
       const torso =
-        testBed.entityManager.createEntityInstance('test:valid_torso');
-      const arm = testBed.entityManager.createEntityInstance('test:valid_arm');
+        await testBed.entityManager.createEntityInstance('test:valid_torso');
+      const arm = await testBed.entityManager.createEntityInstance('test:valid_arm');
 
-      testBed.entityManager.addComponent(arm.id, ANATOMY_JOINT_COMPONENT_ID, {
+      await testBed.entityManager.addComponent(arm.id, ANATOMY_JOINT_COMPONENT_ID, {
         parentId: torso.id,
         socketId: 'arm_socket',
       });
@@ -482,7 +482,7 @@ describe('Anatomy Error Handling Integration', () => {
       });
 
       const bodyEntity =
-        testBed.entityManager.createEntityInstance('test:retry_body');
+        await testBed.entityManager.createEntityInstance('test:retry_body');
 
       // First attempt should fail with error
       await expect(
@@ -567,7 +567,7 @@ describe('Anatomy Error Handling Integration', () => {
       });
 
       const bodyEntity =
-        testBed.entityManager.createEntityInstance('test:partial_body');
+        await testBed.entityManager.createEntityInstance('test:partial_body');
 
       // Should throw error due to missing part definition
       await expect(
@@ -622,7 +622,7 @@ describe('Anatomy Error Handling Integration', () => {
         },
       });
 
-      const bodyEntity = testBed.entityManager.createEntityInstance(
+      const bodyEntity = await testBed.entityManager.createEntityInstance(
         'test:concurrent_body'
       );
 
@@ -653,17 +653,17 @@ describe('Anatomy Error Handling Integration', () => {
       expect(bodyComponent.body).toBeDefined();
     });
 
-    it('should handle concurrent graph modifications', () => {
+    it('should handle concurrent graph modifications', async () => {
       const torso =
-        testBed.entityManager.createEntityInstance('test:valid_torso');
-      const arm1 = testBed.entityManager.createEntityInstance('test:valid_arm');
-      const arm2 = testBed.entityManager.createEntityInstance('test:valid_arm');
+        await testBed.entityManager.createEntityInstance('test:valid_torso');
+      const arm1 = await testBed.entityManager.createEntityInstance('test:valid_arm');
+      const arm2 = await testBed.entityManager.createEntityInstance('test:valid_arm');
 
-      testBed.entityManager.addComponent(arm1.id, ANATOMY_JOINT_COMPONENT_ID, {
+      await testBed.entityManager.addComponent(arm1.id, ANATOMY_JOINT_COMPONENT_ID, {
         parentId: torso.id,
         socketId: 'arm_socket',
       });
-      testBed.entityManager.addComponent(arm2.id, ANATOMY_JOINT_COMPONENT_ID, {
+      await testBed.entityManager.addComponent(arm2.id, ANATOMY_JOINT_COMPONENT_ID, {
         parentId: torso.id,
         socketId: 'arm_socket',
       });
@@ -729,7 +729,7 @@ describe('Anatomy Error Handling Integration', () => {
       });
 
       const bodyEntity =
-        testBed.entityManager.createEntityInstance('test:circular_body');
+        await testBed.entityManager.createEntityInstance('test:circular_body');
 
       // Should throw error for circular references
       await expect(
@@ -785,7 +785,7 @@ describe('Anatomy Error Handling Integration', () => {
       });
 
       const bodyEntity =
-        testBed.entityManager.createEntityInstance('test:deep_body');
+        await testBed.entityManager.createEntityInstance('test:deep_body');
 
       // Should either succeed or throw error for deep structures
       let result;

@@ -178,7 +178,7 @@ describe('core_handle_turn_ended rule integration', () => {
     }
   });
 
-  it('dispatches turn_started event when turn_ended is received', () => {
+  it('dispatches turn_started event when turn_ended is received', async () => {
     testEnv.reset([
       {
         id: 'entity1',
@@ -188,7 +188,7 @@ describe('core_handle_turn_ended rule integration', () => {
       },
     ]);
 
-    testEnv.eventBus.dispatch('core:turn_ended', {
+    await testEnv.eventBus.dispatch('core:turn_ended', {
       entityId: 'entity1',
     });
 

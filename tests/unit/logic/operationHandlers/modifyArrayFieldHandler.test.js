@@ -116,8 +116,8 @@ describe('ModifyArrayFieldHandler', () => {
       ).toThrow();
     });
 
-    test('execute should return early and log a warning if entity_ref cannot be resolved', () => {
-      handler.execute({ entity_ref: null }, mockExecutionContext);
+    test('execute should return early and log a warning if entity_ref cannot be resolved', async () => {
+      await handler.execute({ entity_ref: null }, mockExecutionContext);
       expect(mockLogger.warn).toHaveBeenCalledWith(
         'MODIFY_ARRAY_FIELD: "entity_ref" parameter is required.'
       );
@@ -125,7 +125,7 @@ describe('ModifyArrayFieldHandler', () => {
       expect(mockEntityManager.addComponent).not.toHaveBeenCalled();
     });
 
-    test('execute should return early and log a warning if the target component does not exist', () => {
+    test('execute should return early and log a warning if the target component does not exist', async () => {
       mockEntityManager.getComponentData.mockReturnValue(undefined);
       const params = {
         entity_ref: ENTITY_ID,
@@ -135,7 +135,7 @@ describe('ModifyArrayFieldHandler', () => {
         value: 'item_1',
       };
 
-      handler.execute(params, mockExecutionContext);
+      await handler.execute(params, mockExecutionContext);
 
       expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(
         ENTITY_ID,
@@ -147,7 +147,7 @@ describe('ModifyArrayFieldHandler', () => {
       expect(mockEntityManager.addComponent).not.toHaveBeenCalled();
     });
 
-    test('execute should return early and log a warning if the field path does not resolve to an array', () => {
+    test('execute should return early and log a warning if the field path does not resolve to an array', async () => {
       const componentData = { items: { not: 'an array' } };
       mockEntityManager.getComponentData.mockReturnValue(componentData);
       const params = {
@@ -158,7 +158,7 @@ describe('ModifyArrayFieldHandler', () => {
         value: 'item_1',
       };
 
-      handler.execute(params, mockExecutionContext);
+      await handler.execute(params, mockExecutionContext);
 
       expect(mockLogger.warn).toHaveBeenCalledWith(
         `MODIFY_ARRAY_FIELD: Field path 'items' in component '${COMPONENT_TYPE}' on entity '${ENTITY_ID}' does not point to an array.`
@@ -166,7 +166,7 @@ describe('ModifyArrayFieldHandler', () => {
       expect(mockEntityManager.addComponent).not.toHaveBeenCalled();
     });
 
-    test('execute should return early and warn for an unknown mode', () => {
+    test('execute should return early and warn for an unknown mode', async () => {
       const originalComponent = { items: [1, 2, 3] };
       mockEntityManager.getComponentData.mockReturnValue(originalComponent);
       const params = {
@@ -177,7 +177,7 @@ describe('ModifyArrayFieldHandler', () => {
         value: 1,
       };
 
-      handler.execute(params, mockExecutionContext);
+      await handler.execute(params, mockExecutionContext);
 
       expect(mockLogger.warn).toHaveBeenCalledWith(
         "MODIFY_ARRAY_FIELD: Unknown mode 'INVALID_MODE'."
@@ -187,7 +187,7 @@ describe('ModifyArrayFieldHandler', () => {
   });
 
   describe('push Mode', () => {
-    test('should add a primitive value to an empty array', () => {
+    test('should add a primitive value to an empty array', async () => {
       const originalComponent = { items: [] };
       mockEntityManager.getComponentData.mockReturnValue(originalComponent);
       const params = {
@@ -198,7 +198,7 @@ describe('ModifyArrayFieldHandler', () => {
         value: 'sword',
       };
 
-      handler.execute(params, mockExecutionContext);
+      await handler.execute(params, mockExecutionContext);
 
       expect(mockEntityManager.addComponent).toHaveBeenCalledTimes(1);
       const [entityId, compType, newComponentData] =
@@ -209,7 +209,7 @@ describe('ModifyArrayFieldHandler', () => {
       expect(newComponentData).not.toBe(originalComponent); // Verify clone-and-replace
     });
 
-    test('should add an object to an existing array', () => {
+    test('should add an object to an existing array', async () => {
       const originalComponent = { items: [{ id: 1, name: 'potion' }] };
       mockEntityManager.getComponentData.mockReturnValue(originalComponent);
       const newItem = { id: 2, name: 'elixir' };
@@ -221,7 +221,7 @@ describe('ModifyArrayFieldHandler', () => {
         value: newItem,
       };
 
-      handler.execute(params, mockExecutionContext);
+      await handler.execute(params, mockExecutionContext);
 
       expect(mockEntityManager.addComponent).toHaveBeenCalledTimes(1);
       const [, , newComponentData] =
@@ -235,7 +235,7 @@ describe('ModifyArrayFieldHandler', () => {
       expect(newComponentData).not.toBe(originalComponent);
     });
 
-    test('should work on a nested array', () => {
+    test('should work on a nested array', async () => {
       const originalComponent = { data: { effects: ['blessed'] } };
       mockEntityManager.getComponentData.mockReturnValue(originalComponent);
       const params = {
@@ -246,7 +246,7 @@ describe('ModifyArrayFieldHandler', () => {
         value: 'cursed',
       };
 
-      handler.execute(params, mockExecutionContext);
+      await handler.execute(params, mockExecutionContext);
 
       expect(mockEntityManager.addComponent).toHaveBeenCalledTimes(1);
       const [, , newComponentData] =
@@ -257,7 +257,7 @@ describe('ModifyArrayFieldHandler', () => {
       expect(newComponentData).not.toBe(originalComponent);
     });
 
-    test('should store the entire modified array in result_variable', () => {
+    test('should store the entire modified array in result_variable', async () => {
       const originalComponent = { items: ['apple'] };
       mockEntityManager.getComponentData.mockReturnValue(originalComponent);
       const params = {
@@ -269,7 +269,7 @@ describe('ModifyArrayFieldHandler', () => {
         result_variable: 'inventory_state',
       };
 
-      handler.execute(params, mockExecutionContext);
+      await handler.execute(params, mockExecutionContext);
 
       expect(
         mockExecutionContext.evaluationContext.context.inventory_state
@@ -279,7 +279,7 @@ describe('ModifyArrayFieldHandler', () => {
       );
     });
 
-    test('should return early and warn if value is not provided for push', () => {
+    test('should return early and warn if value is not provided for push', async () => {
       const originalComponent = { items: [1] };
       mockEntityManager.getComponentData.mockReturnValue(originalComponent);
       const params = {
@@ -289,7 +289,7 @@ describe('ModifyArrayFieldHandler', () => {
         mode: 'push',
       };
 
-      handler.execute(params, mockExecutionContext);
+      await handler.execute(params, mockExecutionContext);
 
       expect(mockLogger.warn).toHaveBeenCalledWith(
         "MODIFY_ARRAY_FIELD: 'push' mode requires a 'value' parameter."
@@ -299,7 +299,7 @@ describe('ModifyArrayFieldHandler', () => {
   });
 
   describe('pop Mode', () => {
-    test('should remove the last item from a populated array and update the component', () => {
+    test('should remove the last item from a populated array and update the component', async () => {
       const originalComponent = { items: ['a', 'b', 'c'] };
       mockEntityManager.getComponentData.mockReturnValue(originalComponent);
       const params = {
@@ -309,7 +309,7 @@ describe('ModifyArrayFieldHandler', () => {
         mode: 'pop',
       };
 
-      handler.execute(params, mockExecutionContext);
+      await handler.execute(params, mockExecutionContext);
 
       expect(mockEntityManager.addComponent).toHaveBeenCalledTimes(1);
       const [, , newComponentData] =
@@ -318,7 +318,7 @@ describe('ModifyArrayFieldHandler', () => {
       expect(newComponentData).not.toBe(originalComponent);
     });
 
-    test('should store the popped item in result_variable', () => {
+    test('should store the popped item in result_variable', async () => {
       const originalComponent = { items: ['a', 'b', 'c'] };
       mockEntityManager.getComponentData.mockReturnValue(originalComponent);
       const params = {
@@ -329,7 +329,7 @@ describe('ModifyArrayFieldHandler', () => {
         result_variable: 'last_item',
       };
 
-      handler.execute(params, mockExecutionContext);
+      await handler.execute(params, mockExecutionContext);
 
       expect(mockExecutionContext.evaluationContext.context.last_item).toBe(
         'c'
@@ -339,7 +339,7 @@ describe('ModifyArrayFieldHandler', () => {
       expect(newComponentData).toEqual({ items: ['a', 'b'] });
     });
 
-    test('pop on an empty array should not throw, results in undefined, and still calls addComponent', () => {
+    test('pop on an empty array should not throw, results in undefined, and still calls addComponent', async () => {
       const originalComponent = { items: [] };
       mockEntityManager.getComponentData.mockReturnValue(originalComponent);
       const params = {
@@ -350,7 +350,7 @@ describe('ModifyArrayFieldHandler', () => {
         result_variable: 'popped_item',
       };
 
-      handler.execute(params, mockExecutionContext);
+      await handler.execute(params, mockExecutionContext);
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
         "MODIFY_ARRAY_FIELD: Attempted to 'pop' from an empty array on field 'items'."
@@ -366,7 +366,7 @@ describe('ModifyArrayFieldHandler', () => {
   });
 
   describe('remove_by_value Mode', () => {
-    test('should remove a primitive value that exists', () => {
+    test('should remove a primitive value that exists', async () => {
       const originalComponent = { quest_ids: [101, 202, 303] };
       mockEntityManager.getComponentData.mockReturnValue(originalComponent);
       const params = {
@@ -377,7 +377,7 @@ describe('ModifyArrayFieldHandler', () => {
         value: 202,
       };
 
-      handler.execute(params, mockExecutionContext);
+      await handler.execute(params, mockExecutionContext);
 
       expect(mockEntityManager.addComponent).toHaveBeenCalledTimes(1);
       const [, , newComponentData] =
@@ -386,7 +386,7 @@ describe('ModifyArrayFieldHandler', () => {
       expect(newComponentData).not.toBe(originalComponent);
     });
 
-    test('should not change the array if value is not found', () => {
+    test('should not change the array if value is not found', async () => {
       const originalComponent = { quest_ids: [101, 202, 303] };
       mockEntityManager.getComponentData.mockReturnValue(originalComponent);
       const params = {
@@ -397,7 +397,7 @@ describe('ModifyArrayFieldHandler', () => {
         value: 999,
       };
 
-      handler.execute(params, mockExecutionContext);
+      await handler.execute(params, mockExecutionContext);
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
         "MODIFY_ARRAY_FIELD: Value for 'remove_by_value' not found in array on field 'quest_ids'."
@@ -408,7 +408,7 @@ describe('ModifyArrayFieldHandler', () => {
       expect(newComponentData).toEqual({ quest_ids: [101, 202, 303] });
     });
 
-    test('should remove only the first occurrence of a duplicate value', () => {
+    test('should remove only the first occurrence of a duplicate value', async () => {
       const originalComponent = { loot: ['gold', 'gem', 'gold', 'sword'] };
       mockEntityManager.getComponentData.mockReturnValue(originalComponent);
       const params = {
@@ -419,7 +419,7 @@ describe('ModifyArrayFieldHandler', () => {
         value: 'gold',
       };
 
-      handler.execute(params, mockExecutionContext);
+      await handler.execute(params, mockExecutionContext);
 
       expect(mockEntityManager.addComponent).toHaveBeenCalledTimes(1);
       const [, , newComponentData] =
@@ -427,7 +427,7 @@ describe('ModifyArrayFieldHandler', () => {
       expect(newComponentData).toEqual({ loot: ['gem', 'gold', 'sword'] });
     });
 
-    test('should remove an object by reference (as per Array.indexOf behavior)', () => {
+    test('should remove an object by reference (as per Array.indexOf behavior)', async () => {
       const item1 = { id: 1 };
       const item2 = { id: 2 }; // This is what we will remove
       const item3 = { id: 3 };
@@ -442,7 +442,7 @@ describe('ModifyArrayFieldHandler', () => {
         value: item2, // Using the exact same object reference
       };
 
-      handler.execute(params, mockExecutionContext);
+      await handler.execute(params, mockExecutionContext);
 
       expect(mockEntityManager.addComponent).toHaveBeenCalledTimes(1);
       const [, , newComponentData] =
@@ -451,7 +451,7 @@ describe('ModifyArrayFieldHandler', () => {
       expect(newComponentData.items.length).toBe(2);
     });
 
-    test('should return early and warn if value is not provided', () => {
+    test('should return early and warn if value is not provided', async () => {
       const originalComponent = { items: [1, 2, 3] };
       mockEntityManager.getComponentData.mockReturnValue(originalComponent);
       const params = {
@@ -461,7 +461,7 @@ describe('ModifyArrayFieldHandler', () => {
         mode: 'remove_by_value',
       };
 
-      handler.execute(params, mockExecutionContext);
+      await handler.execute(params, mockExecutionContext);
 
       expect(mockLogger.warn).toHaveBeenCalledWith(
         "MODIFY_ARRAY_FIELD: 'remove_by_value' mode requires a 'value' parameter."
@@ -469,7 +469,7 @@ describe('ModifyArrayFieldHandler', () => {
       expect(mockEntityManager.addComponent).not.toHaveBeenCalled();
     });
 
-    test('should store the modified array in result_variable', () => {
+    test('should store the modified array in result_variable', async () => {
       const originalComponent = { items: ['a', 'b', 'c'] };
       mockEntityManager.getComponentData.mockReturnValue(originalComponent);
       const params = {
@@ -481,7 +481,7 @@ describe('ModifyArrayFieldHandler', () => {
         result_variable: 'items_after_removal',
       };
 
-      handler.execute(params, mockExecutionContext);
+      await handler.execute(params, mockExecutionContext);
 
       expect(
         mockExecutionContext.evaluationContext.context.items_after_removal

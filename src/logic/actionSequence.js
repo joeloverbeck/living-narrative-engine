@@ -37,7 +37,7 @@ const FLOW_HANDLERS = {
  * @param {OperationInterpreter} operationInterpreter - Interpreter used to
  *   execute individual operations.
  */
-export function executeActionSequence(
+export async function executeActionSequence(
   actions,
   nestedCtx,
   logger,
@@ -45,19 +45,30 @@ export function executeActionSequence(
 ) {
   const { scopeLabel = 'ActionSequence', jsonLogic, ...baseCtx } = nestedCtx;
   const total = actions.length;
+  const sequenceStartTime = Date.now();
+
+  logger.debug(
+    `🎬 [ActionSequence] Starting sequence: ${scopeLabel} (${total} actions)`
+  );
 
   for (let i = 0; i < total; i++) {
     const op = actions[i];
     const opIndex = i + 1;
     const opType = op?.type ?? 'MISSING_TYPE';
     const tag = `[${scopeLabel} - Action ${opIndex}/${total}]`;
+    const actionStartTime = Date.now();
+
+    logger.debug(
+      `🎯 [ActionSequence] ${tag} Starting action: ${opType}`
+    );
 
     if (!op || typeof op !== 'object' || !op.type) {
-      logger.error(`${tag} Invalid operation object. Halting sequence.`, op);
+      logger.error(`❌ ${tag} Invalid operation object. Halting sequence.`, op);
       break;
     }
 
     if (op.condition) {
+      logger.debug(`🔍 ${tag} Evaluating condition for ${opType}`);
       const { result, errored, error } = evaluateConditionWithLogging(
         jsonLogic,
         op.condition,
@@ -66,20 +77,22 @@ export function executeActionSequence(
         tag
       );
       if (errored) {
-        logger.error(`${tag} Condition evaluation failed – op skipped.`, error);
+        logger.error(`❌ ${tag} Condition evaluation failed – op skipped.`, error);
         continue;
       }
       if (!result) {
-        logger.debug(`${tag} Condition=false – op skipped.`);
+        logger.debug(`⏭️ ${tag} Condition=false – op skipped.`);
         continue;
       }
+      logger.debug(`✅ ${tag} Condition passed for ${opType}`);
     }
 
     try {
-      logger.debug(`${tag} About to execute operation of type: ${opType}`);
+      logger.debug(`⚡ ${tag} About to execute operation of type: ${opType}`);
       const flowHandler = FLOW_HANDLERS[opType];
       if (flowHandler) {
-        flowHandler(
+        logger.debug(`🔄 ${tag} Using flow handler for ${opType}`);
+        await flowHandler(
           nodeToOperation(op),
           {
             ...baseCtx,
@@ -90,19 +103,30 @@ export function executeActionSequence(
           operationInterpreter,
           executeActionSequence
         );
-        logger.debug(`${tag} Finished executing ${opType} operation.`);
+        const actionEndTime = Date.now();
+        const actionDuration = actionEndTime - actionStartTime;
+        logger.debug(`✅ ${tag} Finished executing ${opType} operation (${actionDuration}ms)`);
       } else {
-        operationInterpreter.execute(op, baseCtx);
-        logger.debug(`${tag} Finished executing operation of type: ${opType}`);
+        logger.debug(`🔧 ${tag} Using operation interpreter for ${opType}`);
+        await operationInterpreter.execute(op, baseCtx);
+        const actionEndTime = Date.now();
+        const actionDuration = actionEndTime - actionStartTime;
+        logger.debug(`✅ ${tag} Finished executing operation of type: ${opType} (${actionDuration}ms)`);
       }
     } catch (err) {
       logger.error(
-        `${tag} CRITICAL error during execution of Operation ${opType}`,
+        `❌ ${tag} CRITICAL error during execution of Operation ${opType}`,
         err
       );
       throw err;
     }
   }
+
+  const sequenceEndTime = Date.now();
+  const sequenceDuration = sequenceEndTime - sequenceStartTime;
+  logger.debug(
+    `🏁 [ActionSequence] Completed sequence: ${scopeLabel} (${sequenceDuration}ms total)`
+  );
 }
 
 /**

@@ -34,8 +34,8 @@ export class EntityManagerAdapter extends IEntityManager {
   }
 
   /** @inheritdoc */
-  createEntityInstance(definitionId, options = {}) {
-    return this.#entityManager.createEntityInstance(definitionId, options);
+  async createEntityInstance(definitionId, options = {}) {
+    return await this.#entityManager.createEntityInstance(definitionId, options);
   }
 
   /** @inheritdoc */
@@ -67,8 +67,8 @@ export class EntityManagerAdapter extends IEntityManager {
   }
 
   /** @inheritdoc */
-  addComponent(instanceId, componentTypeId, componentData) {
-    return this.#entityManager.addComponent(
+  async addComponent(instanceId, componentTypeId, componentData) {
+    return await this.#entityManager.addComponent(
       instanceId,
       componentTypeId,
       componentData
@@ -76,13 +76,13 @@ export class EntityManagerAdapter extends IEntityManager {
   }
 
   /** @inheritdoc */
-  removeComponent(instanceId, componentTypeId) {
-    return this.#entityManager.removeComponent(instanceId, componentTypeId);
+  async removeComponent(instanceId, componentTypeId) {
+    return await this.#entityManager.removeComponent(instanceId, componentTypeId);
   }
 
   /** @inheritdoc */
-  removeEntityInstance(instanceId) {
-    return this.#entityManager.removeEntityInstance(instanceId);
+  async removeEntityInstance(instanceId) {
+    return await this.#entityManager.removeEntityInstance(instanceId);
   }
 
   /** @inheritdoc */

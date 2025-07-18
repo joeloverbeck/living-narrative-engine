@@ -68,7 +68,7 @@ class IfCoLocatedHandler extends BaseOperationHandler {
    * @param {IfCoLocatedParams} params
    * @param {ExecutionContext} executionContext
    */
-  execute(params, executionContext) {
+  async execute(params, executionContext) {
     const log = this.getLogger(executionContext);
 
     if (!assertParamsObject(params, this.#dispatcher, 'IF_CO_LOCATED')) {
@@ -103,7 +103,7 @@ class IfCoLocatedHandler extends BaseOperationHandler {
     const same = this.#entitiesCoLocated(idA, idB, executionContext);
 
     const actions = same ? then_actions : else_actions;
-    this.#runActions(actions, executionContext);
+    await this.#runActions(actions, executionContext);
   }
 
   /**
@@ -149,11 +149,11 @@ class IfCoLocatedHandler extends BaseOperationHandler {
    * @param {ExecutionContext} executionContext - Current execution context.
    * @returns {void}
    */
-  #runActions(actions, executionContext) {
+  async #runActions(actions, executionContext) {
     if (!Array.isArray(actions)) return;
     for (const op of actions) {
       try {
-        this.#opInterpreter.execute(op, executionContext);
+        await this.#opInterpreter.execute(op, executionContext);
       } catch (err) {
         safeDispatchError(
           this.#dispatcher,

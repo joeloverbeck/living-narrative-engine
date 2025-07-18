@@ -209,7 +209,7 @@ describe('Human Female Body Description Integration Test', () => {
   it('should generate core:description component with expected anatomical features after body graph creation', async () => {
     // Create test entity
     const femaleEntity =
-      entityManager.createEntityInstance('test:human_female');
+      await entityManager.createEntityInstance('test:human_female');
     expect(femaleEntity).toBeDefined();
     expect(femaleEntity.id).toBeDefined();
 
@@ -268,7 +268,7 @@ describe('Human Female Body Description Integration Test', () => {
   it('should generate complete anatomy for human female with all required body parts', async () => {
     // Create test entity
     const femaleEntity =
-      entityManager.createEntityInstance('test:human_female');
+      await entityManager.createEntityInstance('test:human_female');
 
     // Generate anatomy
     const wasGenerated = await anatomyGenerationService.generateAnatomyIfNeeded(

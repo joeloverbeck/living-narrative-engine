@@ -116,18 +116,18 @@ describe('Anatomy Validation Integration', () => {
 
   describe('Socket Limit Validation', () => {
     it('should validate socket occupancy', async () => {
-      const torso = testBed.entityManager.createEntityInstance(
+      const torso = await testBed.entityManager.createEntityInstance(
         'test:multi_socket_torso'
       );
-      const arm1 = testBed.entityManager.createEntityInstance('test:typed_arm');
-      const arm2 = testBed.entityManager.createEntityInstance('test:typed_arm');
+      const arm1 = await testBed.entityManager.createEntityInstance('test:typed_arm');
+      const arm2 = await testBed.entityManager.createEntityInstance('test:typed_arm');
 
       // Connect arms to different sockets
-      testBed.entityManager.addComponent(arm1.id, ANATOMY_JOINT_COMPONENT_ID, {
+      await testBed.entityManager.addComponent(arm1.id, ANATOMY_JOINT_COMPONENT_ID, {
         parentId: torso.id,
         socketId: 'left_arm_socket',
       });
-      testBed.entityManager.addComponent(arm2.id, ANATOMY_JOINT_COMPONENT_ID, {
+      await testBed.entityManager.addComponent(arm2.id, ANATOMY_JOINT_COMPONENT_ID, {
         parentId: torso.id,
         socketId: 'right_arm_socket',
       });
@@ -148,7 +148,7 @@ describe('Anatomy Validation Integration', () => {
     });
 
     it('should fail when socket not found', async () => {
-      const torso = testBed.entityManager.createEntityInstance(
+      const torso = await testBed.entityManager.createEntityInstance(
         'test:multi_socket_torso'
       );
 
@@ -169,7 +169,7 @@ describe('Anatomy Validation Integration', () => {
     });
 
     it('should handle missing socket definition', async () => {
-      const torso = testBed.entityManager.createEntityInstance(
+      const torso = await testBed.entityManager.createEntityInstance(
         'test:multi_socket_torso'
       );
 
@@ -190,7 +190,7 @@ describe('Anatomy Validation Integration', () => {
 
   describe('Recipe Constraint Validation', () => {
     it('should pass when all requires constraints are met', async () => {
-      const part = testBed.entityManager.createEntityInstance(
+      const part = await testBed.entityManager.createEntityInstance(
         'test:constrained_part'
       );
 
@@ -216,11 +216,10 @@ describe('Anatomy Validation Integration', () => {
     });
 
     it('should pass when excludes constraints are satisfied', async () => {
-      const partA = testBed.entityManager.createEntityInstance(
+      const partA = await testBed.entityManager.createEntityInstance(
         'test:excluded_part_a'
       );
-      const regularPart =
-        testBed.entityManager.createEntityInstance('test:typed_arm');
+      const regularPart = await testBed.entityManager.createEntityInstance('test:typed_arm');
 
       const recipe = {
         constraints: {
@@ -264,19 +263,19 @@ describe('Anatomy Validation Integration', () => {
         },
       });
 
-      const torso = testBed.entityManager.createEntityInstance(
+      const torso = await testBed.entityManager.createEntityInstance(
         'test:wildcard_torso'
       );
-      const arm = testBed.entityManager.createEntityInstance('test:typed_arm');
-      const leg = testBed.entityManager.createEntityInstance(
+      const arm = await testBed.entityManager.createEntityInstance('test:typed_arm');
+      const leg = await testBed.entityManager.createEntityInstance(
         'test:wrong_type_part'
       );
 
-      testBed.entityManager.addComponent(arm.id, ANATOMY_JOINT_COMPONENT_ID, {
+      await testBed.entityManager.addComponent(arm.id, ANATOMY_JOINT_COMPONENT_ID, {
         parentId: torso.id,
         socketId: 'universal_socket',
       });
-      testBed.entityManager.addComponent(leg.id, ANATOMY_JOINT_COMPONENT_ID, {
+      await testBed.entityManager.addComponent(leg.id, ANATOMY_JOINT_COMPONENT_ID, {
         parentId: torso.id,
         socketId: 'universal_socket',
       });
@@ -297,33 +296,33 @@ describe('Anatomy Validation Integration', () => {
 
   describe('Complex Validation Scenarios', () => {
     it('should handle graph with multiple validation issues', async () => {
-      const torso = testBed.entityManager.createEntityInstance(
+      const torso = await testBed.entityManager.createEntityInstance(
         'test:multi_socket_torso'
       );
-      const arm1 = testBed.entityManager.createEntityInstance('test:typed_arm');
-      const arm2 = testBed.entityManager.createEntityInstance('test:typed_arm');
-      const arm3 = testBed.entityManager.createEntityInstance('test:typed_arm');
-      const wrongPart = testBed.entityManager.createEntityInstance(
+      const arm1 = await testBed.entityManager.createEntityInstance('test:typed_arm');
+      const arm2 = await testBed.entityManager.createEntityInstance('test:typed_arm');
+      const arm3 = await testBed.entityManager.createEntityInstance('test:typed_arm');
+      const wrongPart = await testBed.entityManager.createEntityInstance(
         'test:wrong_type_part'
       );
 
       // Connect arms to sockets
-      testBed.entityManager.addComponent(arm1.id, ANATOMY_JOINT_COMPONENT_ID, {
+      await testBed.entityManager.addComponent(arm1.id, ANATOMY_JOINT_COMPONENT_ID, {
         parentId: torso.id,
         socketId: 'left_arm_socket',
       });
-      testBed.entityManager.addComponent(arm2.id, ANATOMY_JOINT_COMPONENT_ID, {
+      await testBed.entityManager.addComponent(arm2.id, ANATOMY_JOINT_COMPONENT_ID, {
         parentId: torso.id,
         socketId: 'right_arm_socket',
       });
       // Try to connect third arm to non-existent socket
-      testBed.entityManager.addComponent(arm3.id, ANATOMY_JOINT_COMPONENT_ID, {
+      await testBed.entityManager.addComponent(arm3.id, ANATOMY_JOINT_COMPONENT_ID, {
         parentId: torso.id,
         socketId: 'third_arm_socket', // This socket doesn't exist
       });
 
       // Wrong part type
-      testBed.entityManager.addComponent(
+      await testBed.entityManager.addComponent(
         wrongPart.id,
         ANATOMY_JOINT_COMPONENT_ID,
         {
@@ -372,11 +371,11 @@ describe('Anatomy Validation Integration', () => {
       const parts = [];
       for (let i = 0; i < 10; i++) {
         const part =
-          testBed.entityManager.createEntityInstance('test:nestable_part');
+          await testBed.entityManager.createEntityInstance('test:nestable_part');
         parts.push(part);
 
         if (i > 0) {
-          testBed.entityManager.addComponent(
+          await testBed.entityManager.addComponent(
             part.id,
             ANATOMY_JOINT_COMPONENT_ID,
             {

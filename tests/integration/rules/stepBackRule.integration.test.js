@@ -352,7 +352,7 @@ describe('intimacy_handle_step_back rule integration', () => {
     }
   });
 
-  it('validates step_back.rule.json against schema', () => {
+  it('validates step_back.rule.json against schema', async () => {
     const ajv = new Ajv({ allErrors: true });
     ajv.addSchema(
       commonSchema,
@@ -395,7 +395,7 @@ describe('intimacy_handle_step_back rule integration', () => {
     expect(valid).toBe(true);
   });
 
-  it('actor leaves a triad leaving remaining pair intact', () => {
+  it('actor leaves a triad leaving remaining pair intact', async () => {
     testEnv.reset([
       {
         id: 'a1',
@@ -514,7 +514,7 @@ describe('intimacy_handle_step_back rule integration', () => {
       },
     ]);
 
-    testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       actorId: 'a1',
       actionId: 'intimacy:step_back',
     });
@@ -573,7 +573,7 @@ describe('intimacy_handle_step_back rule integration', () => {
     );
   });
 
-  it('actor stepping back from a pair frees the partner', () => {
+  it('actor stepping back from a pair frees the partner', async () => {
     testEnv.reset([
       {
         id: 'a1',
@@ -654,7 +654,7 @@ describe('intimacy_handle_step_back rule integration', () => {
       },
     ]);
 
-    testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       actorId: 'a1',
       actionId: 'intimacy:step_back',
     });
@@ -696,7 +696,7 @@ describe('intimacy_handle_step_back rule integration', () => {
     );
   });
 
-  it('actor leaves a poly circle leaving remaining triad intact', () => {
+  it('actor leaves a poly circle leaving remaining triad intact', async () => {
     const entities = buildABCDWorld();
     // place all actors in same room and create a poly circle of four
     for (const id of ['a1', 'b1', 'c1', 'd1']) {
@@ -747,7 +747,7 @@ describe('intimacy_handle_step_back rule integration', () => {
 
     testEnv.reset(entities);
 
-    testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       actorId: 'a1',
       actionId: 'intimacy:step_back',
     });

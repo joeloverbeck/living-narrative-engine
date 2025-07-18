@@ -142,7 +142,7 @@ describe('Human Male Body Graph Integration Test', () => {
 
   it('should generate complete anatomy for human male with all required body parts', async () => {
     // Create test entity
-    const maleEntity = entityManager.createEntityInstance('test:human_male');
+    const maleEntity = await entityManager.createEntityInstance('test:human_male');
     expect(maleEntity).toBeDefined();
     expect(maleEntity.id).toBeDefined();
 

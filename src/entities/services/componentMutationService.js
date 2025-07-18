@@ -207,8 +207,32 @@ export class ComponentMutationService {
    * @throws {EntityNotFoundError} If entity not found.
    * @throws {InvalidArgumentError} If parameters are invalid.
    * @throws {ValidationError} If component data validation fails.
+   * @throws {Error} If circuit breaker is open.
    */
-  addComponent(instanceId, componentTypeId, componentData) {
+  async addComponent(instanceId, componentTypeId, componentData) {
+    // If circuit breaker is enabled, wrap the execution
+    if (this.#monitoringCoordinator) {
+      const circuitBreaker =
+        this.#monitoringCoordinator.getCircuitBreaker('addComponent');
+      return await circuitBreaker.execute(() =>
+        this.#addComponentCore(instanceId, componentTypeId, componentData)
+      );
+    }
+
+    // Otherwise, execute directly
+    return this.#addComponentCore(instanceId, componentTypeId, componentData);
+  }
+
+  /**
+   * Core implementation of addComponent.
+   *
+   * @private
+   * @param {string} instanceId - The ID of the entity instance.
+   * @param {string} componentTypeId - The unique ID of the component type.
+   * @param {object} componentData - The data for the component.
+   * @returns {boolean} True if successful
+   */
+  #addComponentCore(instanceId, componentTypeId, componentData) {
     validateAddComponentParamsUtil(
       instanceId,
       componentTypeId,
@@ -255,33 +279,6 @@ export class ComponentMutationService {
   }
 
   /**
-   * Adds or updates a component on an existing entity instance with circuit breaker protection.
-   *
-   * @param {string} instanceId - The ID of the entity instance.
-   * @param {string} componentTypeId - The unique ID of the component type.
-   * @param {object} componentData - The data for the component.
-   * @throws {EntityNotFoundError} If entity not found.
-   * @throws {InvalidArgumentError} If parameters are invalid.
-   * @throws {ValidationError} If component data validation fails.
-   * @throws {Error} If circuit breaker is open.
-   */
-  async addComponentWithCircuitBreaker(
-    instanceId,
-    componentTypeId,
-    componentData
-  ) {
-    if (!this.#monitoringCoordinator) {
-      return this.addComponent(instanceId, componentTypeId, componentData);
-    }
-
-    const circuitBreaker =
-      this.#monitoringCoordinator.getCircuitBreaker('addComponent');
-    return await circuitBreaker.execute(() =>
-      this.addComponent(instanceId, componentTypeId, componentData)
-    );
-  }
-
-  /**
    * Removes a component override from an existing entity instance.
    *
    * @param {string} instanceId - The ID of the entity instance.
@@ -289,9 +286,30 @@ export class ComponentMutationService {
    * @throws {EntityNotFoundError} If entity not found.
    * @throws {InvalidArgumentError} If parameters are invalid.
    * @throws {ComponentOverrideNotFoundError} If component override does not exist.
-   * @throws {Error} If removal fails.
+   * @throws {Error} If removal fails or circuit breaker is open.
    */
-  removeComponent(instanceId, componentTypeId) {
+  async removeComponent(instanceId, componentTypeId) {
+    // If circuit breaker is enabled, wrap the execution
+    if (this.#monitoringCoordinator) {
+      const circuitBreaker =
+        this.#monitoringCoordinator.getCircuitBreaker('removeComponent');
+      return await circuitBreaker.execute(() =>
+        this.#removeComponentCore(instanceId, componentTypeId)
+      );
+    }
+
+    // Otherwise, execute directly
+    return this.#removeComponentCore(instanceId, componentTypeId);
+  }
+
+  /**
+   * Core implementation of removeComponent.
+   *
+   * @private
+   * @param {string} instanceId - The ID of the entity instance.
+   * @param {string} componentTypeId - The unique ID of the component type to remove.
+   */
+  #removeComponentCore(instanceId, componentTypeId) {
     validateRemoveComponentParamsUtil(
       instanceId,
       componentTypeId,
@@ -350,28 +368,6 @@ export class ComponentMutationService {
   }
 
   /**
-   * Removes a component override from an existing entity instance with circuit breaker protection.
-   *
-   * @param {string} instanceId - The ID of the entity instance.
-   * @param {string} componentTypeId - The unique ID of the component type to remove.
-   * @throws {EntityNotFoundError} If entity not found.
-   * @throws {InvalidArgumentError} If parameters are invalid.
-   * @throws {ComponentOverrideNotFoundError} If component override does not exist.
-   * @throws {Error} If removal fails or circuit breaker is open.
-   */
-  async removeComponentWithCircuitBreaker(instanceId, componentTypeId) {
-    if (!this.#monitoringCoordinator) {
-      return this.removeComponent(instanceId, componentTypeId);
-    }
-
-    const circuitBreaker =
-      this.#monitoringCoordinator.getCircuitBreaker('removeComponent');
-    return await circuitBreaker.execute(() =>
-      this.removeComponent(instanceId, componentTypeId)
-    );
-  }
-
-  /**
    * Batch add multiple components to entities.
    *
    * @param {Array<{instanceId: string, componentTypeId: string, componentData: object}>} componentSpecs - Component specifications
@@ -383,7 +379,7 @@ export class ComponentMutationService {
 
     for (const spec of componentSpecs) {
       try {
-        const result = await this.addComponentWithCircuitBreaker(
+        const result = await this.addComponent(
           spec.instanceId,
           spec.componentTypeId,
           spec.componentData

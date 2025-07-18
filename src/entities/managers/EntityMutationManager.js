@@ -66,12 +66,12 @@ export default class EntityMutationManager {
    * @param {string} instanceId - The ID of the entity instance.
    * @param {string} componentTypeId - The unique ID of the component type.
    * @param {object} componentData - The data for the component.
-   * @returns {boolean} True if the component was added or updated successfully.
+   * @returns {Promise<boolean>} True if the component was added or updated successfully.
    * @throws {EntityNotFoundError} If entity not found.
    * @throws {InvalidArgumentError} If parameters are invalid.
    * @throws {ValidationError} If component data validation fails.
    */
-  addComponent(instanceId, componentTypeId, componentData) {
+  async addComponent(instanceId, componentTypeId, componentData) {
     // Validate instanceId and componentTypeId
     validateInstanceAndComponent(
       instanceId,
@@ -90,7 +90,7 @@ export default class EntityMutationManager {
       `EntityMutationManager.addComponent: Adding component '${componentTypeId}' to entity '${instanceId}'`
     );
 
-    return this.#componentMutationService.addComponent(
+    return await this.#componentMutationService.addComponent(
       instanceId,
       componentTypeId,
       componentData
@@ -107,7 +107,7 @@ export default class EntityMutationManager {
    * @throws {ComponentOverrideNotFoundError} If component override does not exist.
    * @throws {Error} If removal fails.
    */
-  removeComponent(instanceId, componentTypeId) {
+  async removeComponent(instanceId, componentTypeId) {
     // Validate instanceId and componentTypeId
     validateInstanceAndComponent(
       instanceId,
@@ -120,7 +120,10 @@ export default class EntityMutationManager {
       `EntityMutationManager.removeComponent: Removing component '${componentTypeId}' from entity '${instanceId}'`
     );
 
-    this.#componentMutationService.removeComponent(instanceId, componentTypeId);
+    await this.#componentMutationService.removeComponent(
+      instanceId,
+      componentTypeId
+    );
   }
 
   /**
@@ -131,11 +134,11 @@ export default class EntityMutationManager {
    * @throws {InvalidArgumentError} If the instanceId is invalid.
    * @throws {Error} If internal removal operation fails.
    */
-  removeEntityInstance(instanceId) {
+  async removeEntityInstance(instanceId) {
     this.#logger.debug(
       `EntityMutationManager.removeEntityInstance: Removing entity '${instanceId}'`
     );
 
-    return this.#lifecycleManager.removeEntityInstance(instanceId);
+    return await this.#lifecycleManager.removeEntityInstance(instanceId);
   }
 }

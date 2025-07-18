@@ -351,7 +351,7 @@ describe('intimacy_handle_get_close rule integration', () => {
     expect(valid).toBe(true);
   });
 
-  it('creates closeness circle between two actors', () => {
+  it('creates closeness circle between two actors', async () => {
     testEnv.reset([
       {
         id: 'a1',
@@ -369,7 +369,7 @@ describe('intimacy_handle_get_close rule integration', () => {
       },
     ]);
 
-    testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       actorId: 'a1',
       actionId: 'intimacy:get_close',
       targetId: 'b1',
@@ -396,7 +396,7 @@ describe('intimacy_handle_get_close rule integration', () => {
     );
   });
 
-  it('merges existing closeness circles', () => {
+  it('merges existing closeness circles', async () => {
     testEnv.reset([
       {
         id: 'a1',
@@ -432,7 +432,7 @@ describe('intimacy_handle_get_close rule integration', () => {
       },
     ]);
 
-    testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       actorId: 'a1',
       actionId: 'intimacy:get_close',
       targetId: 'c1',
@@ -457,7 +457,7 @@ describe('intimacy_handle_get_close rule integration', () => {
     );
   });
 
-  it('handles complex poly relationships', () => {
+  it('handles complex poly relationships', async () => {
     const entities = buildABCDWorld();
     // place all actors in same room
     for (const id of ['a1', 'b1', 'c1', 'd1']) {
@@ -467,19 +467,19 @@ describe('intimacy_handle_get_close rule integration', () => {
     testEnv.reset(entities);
 
     // Create a complex poly relationship
-    testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       actorId: 'a1',
       actionId: 'intimacy:get_close',
       targetId: 'b1',
     });
 
-    testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       actorId: 'b1',
       actionId: 'intimacy:get_close',
       targetId: 'c1',
     });
 
-    testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       actorId: 'c1',
       actionId: 'intimacy:get_close',
       targetId: 'd1',

@@ -11,7 +11,7 @@ import { deepClone } from './cloneUtils.js';
  * @param {boolean} locked - Whether movement should be locked.
  * @returns {object|null} Updated movement component or null if no movement found.
  */
-export function updateMovementLock(entityManager, entityId, locked) {
+export async function updateMovementLock(entityManager, entityId, locked) {
   // Check if entity has anatomy:body component
   const bodyComponent = entityManager.getComponentData(
     entityId,
@@ -40,7 +40,7 @@ export function updateMovementLock(entityManager, entityId, locked) {
           updatedMovement.locked = locked;
 
           // Update the component
-          entityManager.addComponent(partId, 'core:movement', updatedMovement);
+          await entityManager.addComponent(partId, 'core:movement', updatedMovement);
           updatedParts.push({ partId, movement: updatedMovement });
         }
       }
@@ -58,7 +58,7 @@ export function updateMovementLock(entityManager, entityId, locked) {
         ? structuredClone(existing)
         : deepClone(existing);
     move.locked = locked;
-    entityManager.addComponent(entityId, 'core:movement', move);
+    await entityManager.addComponent(entityId, 'core:movement', move);
     return move;
   }
 

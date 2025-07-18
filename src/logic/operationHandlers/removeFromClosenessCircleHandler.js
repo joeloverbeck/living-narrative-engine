@@ -64,13 +64,13 @@ class RemoveFromClosenessCircleHandler extends BaseOperationHandler {
    * @param {{ actor_id: string, result_variable?: string } | null | undefined} params
    * @param {ExecutionContext} executionContext
    */
-  execute(params, executionContext) {
+  async execute(params, executionContext) {
     const validated = this.#validateParams(params, executionContext);
     if (!validated) return;
     const { actorId, resultVar, logger } = validated;
 
-    const { partners, toUnlock } = this.#removePartners(actorId);
-    this.#unlockMovement(toUnlock);
+    const { partners, toUnlock } = await this.#removePartners(actorId);
+    await this.#unlockMovement(toUnlock);
 
     if (resultVar) {
       if (
@@ -126,10 +126,10 @@ class RemoveFromClosenessCircleHandler extends BaseOperationHandler {
    * Remove the actor from partner lists and gather unlock targets.
    *
    * @param {string} actorId
-   * @returns {{ partners:string[], toUnlock:string[] }}
+   * @returns {Promise<{ partners:string[], toUnlock:string[] }>}
    * @private
    */
-  #removePartners(actorId) {
+  async #removePartners(actorId) {
     const closeness = this.#entityManager.getComponentData(
       actorId,
       'intimacy:closeness'
@@ -148,17 +148,17 @@ class RemoveFromClosenessCircleHandler extends BaseOperationHandler {
       const updated = partnerData.partners.filter((p) => p !== actorId);
       const repaired = this.#closenessCircleService.repair(updated);
       if (repaired.length === 0) {
-        this.#entityManager.removeComponent(pid, 'intimacy:closeness');
+        await this.#entityManager.removeComponent(pid, 'intimacy:closeness');
         toUnlock.push(pid);
       } else {
-        this.#entityManager.addComponent(pid, 'intimacy:closeness', {
+        await this.#entityManager.addComponent(pid, 'intimacy:closeness', {
           partners: repaired,
         });
       }
     }
 
     if (closeness) {
-      this.#entityManager.removeComponent(actorId, 'intimacy:closeness');
+      await this.#entityManager.removeComponent(actorId, 'intimacy:closeness');
       toUnlock.push(actorId);
     }
 
@@ -172,9 +172,9 @@ class RemoveFromClosenessCircleHandler extends BaseOperationHandler {
    * @returns {void}
    * @private
    */
-  #unlockMovement(ids) {
+  async #unlockMovement(ids) {
     for (const id of ids) {
-      updateMovementLock(this.#entityManager, id, false);
+      await updateMovementLock(this.#entityManager, id, false);
     }
   }
 }

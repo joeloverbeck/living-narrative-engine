@@ -29,7 +29,7 @@ import { evaluateConditionWithLogging } from '../jsonLogicEvaluationService.js';
  * @param executeActionSequence
  * @returns {void}
  */
-export function handleIf(
+export async function handleIf(
   node,
   nestedCtx,
   logger,
@@ -67,7 +67,7 @@ export function handleIf(
     );
   }
 
-  executeActionSequence(
+  await executeActionSequence(
     result ? thenActs : elseActs,
     { ...baseCtx, scopeLabel, jsonLogic },
     logger,

@@ -456,7 +456,7 @@ export class EquipmentOrchestrator {
       equipmentData.equipped[slotId][layer] = clothingItemId;
 
       // Update entity component
-      this.#entityManager.addComponent(
+      await this.#entityManager.addComponent(
         entityId,
         'clothing:equipment',
         equipmentData
@@ -517,7 +517,7 @@ export class EquipmentOrchestrator {
       }
 
       // Update entity component
-      this.#entityManager.addComponent(
+      await this.#entityManager.addComponent(
         entityId,
         'clothing:equipment',
         equipmentData

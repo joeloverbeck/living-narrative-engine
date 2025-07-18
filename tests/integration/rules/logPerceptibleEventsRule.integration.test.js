@@ -268,7 +268,7 @@ describe('core_handle_log_perceptible_events rule integration', () => {
     }
   });
 
-  it('dispatches perception_log_entry event when perceptible event is received', () => {
+  it('dispatches perception_log_entry event when perceptible event is received', async () => {
     testEnv.reset([
       {
         id: 'actor1',
@@ -279,7 +279,7 @@ describe('core_handle_log_perceptible_events rule integration', () => {
         },
       },
     ]);
-    testEnv.eventBus.dispatch('core:perceptible_event', {
+    await testEnv.eventBus.dispatch('core:perceptible_event', {
       locationId: 'room1',
       descriptionText: 'Something happened',
       perceptionType: 'state_change_observable',

@@ -123,7 +123,7 @@ describe('intimacy_handle_turn_around rule integration', () => {
   });
 
   describe('turning target around (first time)', () => {
-    it('creates facing_away component and emits actor_turned_around event', () => {
+    it('creates facing_away component and emits actor_turned_around event', async () => {
       testEnv.reset([
         {
           id: 'actor1',
@@ -143,7 +143,7 @@ describe('intimacy_handle_turn_around rule integration', () => {
         },
       ]);
 
-      testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
         actorId: 'actor1',
         actionId: 'intimacy:turn_around',
         targetId: 'target1',
@@ -173,7 +173,7 @@ describe('intimacy_handle_turn_around rule integration', () => {
   });
 
   describe('turning target to face forward (already facing away)', () => {
-    it('removes actor from facing_away array and emits actor_faced_forward event', () => {
+    it('removes actor from facing_away array and emits actor_faced_forward event', async () => {
       testEnv.reset([
         {
           id: 'actor1',
@@ -194,7 +194,7 @@ describe('intimacy_handle_turn_around rule integration', () => {
         },
       ]);
 
-      testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
         actorId: 'actor1',
         actionId: 'intimacy:turn_around',
         targetId: 'target1',
@@ -223,7 +223,7 @@ describe('intimacy_handle_turn_around rule integration', () => {
   });
 
   describe('multiple actors in facing_away state', () => {
-    it('maintains other actors in array when one is removed', () => {
+    it('maintains other actors in array when one is removed', async () => {
       testEnv.reset([
         {
           id: 'actor1',
@@ -252,7 +252,7 @@ describe('intimacy_handle_turn_around rule integration', () => {
         },
       ]);
 
-      testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
         actorId: 'actor1',
         actionId: 'intimacy:turn_around',
         targetId: 'target1',
@@ -271,7 +271,7 @@ describe('intimacy_handle_turn_around rule integration', () => {
   });
 
   describe('adding to existing facing_away component', () => {
-    it('adds new actor to existing array', () => {
+    it('adds new actor to existing array', async () => {
       testEnv.reset([
         {
           id: 'actor1',
@@ -300,7 +300,7 @@ describe('intimacy_handle_turn_around rule integration', () => {
         },
       ]);
 
-      testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
         actorId: 'actor1',
         actionId: 'intimacy:turn_around',
         targetId: 'target1',

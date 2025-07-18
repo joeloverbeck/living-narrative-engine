@@ -442,20 +442,20 @@ export default class BatchOperationManager {
   async #executeOperation(item, operation) {
     switch (operation) {
       case 'create':
-        return this.#lifecycleManager.createEntityInstance(
+        return await this.#lifecycleManager.createEntityInstance(
           item.definitionId,
           item.opts
         );
 
       case 'addComponent':
-        return this.#componentMutationService.addComponent(
+        return await this.#componentMutationService.addComponent(
           item.instanceId,
           item.componentTypeId,
           item.componentData
         );
 
       case 'remove':
-        return this.#lifecycleManager.removeEntityInstance(item);
+        return await this.#lifecycleManager.removeEntityInstance(item);
 
       default:
         throw new Error(`Unknown batch operation: ${operation}`);

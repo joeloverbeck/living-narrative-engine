@@ -119,16 +119,22 @@ export class EntityManagerTestBed extends FactoryTestBed {
    * @returns {import('../../../src/entities/entity.js').default} The created
    *   entity instance.
    */
-  createEntity(defKey, { overrides, instanceId, resetDispatch = false } = {}) {
+  async createEntity(
+    defKey,
+    { overrides, instanceId, resetDispatch = false } = {}
+  ) {
     const definition = TestData.Definitions[defKey];
     if (!definition) {
       throw new Error(`Unknown test definition key: ${defKey}`);
     }
     this.setupDefinitions(definition);
-    const entity = this.entityManager.createEntityInstance(definition.id, {
-      instanceId,
-      componentOverrides: overrides,
-    });
+    const entity = await this.entityManager.createEntityInstance(
+      definition.id,
+      {
+        instanceId,
+        componentOverrides: overrides,
+      }
+    );
     if (resetDispatch) {
       this.resetDispatchMock();
     }
@@ -158,8 +164,8 @@ export class EntityManagerTestBed extends FactoryTestBed {
    * @returns {import('../../../src/entities/entity.js').default} The created
    *   entity instance.
    */
-  createBasicEntity(options = {}) {
-    return this.createEntity('basic', options);
+  async createBasicEntity(options = {}) {
+    return await this.createEntity('basic', options);
   }
 
   /**
@@ -173,8 +179,8 @@ export class EntityManagerTestBed extends FactoryTestBed {
    * @returns {import('../../../src/entities/entity.js').default} The created
    *   entity instance.
    */
-  createActorEntity(options = {}) {
-    return this.createEntity('actor', options);
+  async createActorEntity(options = {}) {
+    return await this.createEntity('actor', options);
   }
 
   /**
@@ -194,11 +200,11 @@ export class EntityManagerTestBed extends FactoryTestBed {
    * @returns {import('../../../src/entities/entity.js').default} The created
    *   entity instance.
    */
-  createEntityWithOverrides(
+  async createEntityWithOverrides(
     defKey,
     { overrides = {}, instanceId, resetDispatch = false } = {}
   ) {
-    return this.createEntity(defKey, {
+    return await this.createEntity(defKey, {
       overrides,
       instanceId,
       resetDispatch,

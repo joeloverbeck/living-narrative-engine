@@ -17,7 +17,7 @@ const mockValidator = createMockSchemaValidator();
 const createDispatcher = () => createCapturingEventBus();
 
 describe('EntityManager - core:entity_created event payload', () => {
-  it('should include the entity object and all required fields in the event payload', () => {
+  it('should include the entity object and all required fields in the event payload', async () => {
     const dispatcher = createDispatcher();
     const entityManager = new EntityManager({
       registry: mockRegistry,
@@ -31,7 +31,7 @@ describe('EntityManager - core:entity_created event payload', () => {
     });
     mockRegistry.getEntityDefinition.mockReturnValue(definition);
 
-    const entity = entityManager.createEntityInstance('test:def');
+    const entity = await entityManager.createEntityInstance('test:def');
     const event = dispatcher.events[0];
 
     expect(event).toBeTruthy();
@@ -47,7 +47,7 @@ describe('EntityManager - core:entity_created event payload', () => {
     });
   });
 
-  it('should allow a consumer to call getComponentData on the entity in the payload', () => {
+  it('should allow a consumer to call getComponentData on the entity in the payload', async () => {
     const dispatcher = createDispatcher();
     const entityManager = new EntityManager({
       registry: mockRegistry,
@@ -61,7 +61,7 @@ describe('EntityManager - core:entity_created event payload', () => {
     });
     mockRegistry.getEntityDefinition.mockReturnValue(definition);
 
-    entityManager.createEntityInstance('test:def');
+    await entityManager.createEntityInstance('test:def');
     const event = dispatcher.events[0];
     const pos = event.payload.entity.getComponentData('core:position');
     expect(pos).toEqual({ locationId: 'loc2' });
