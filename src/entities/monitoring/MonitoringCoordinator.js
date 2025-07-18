@@ -7,7 +7,6 @@ import PerformanceMonitor from './PerformanceMonitor.js';
 import CircuitBreaker from './CircuitBreaker.js';
 import { validateDependency } from '../../utils/dependencyUtils.js';
 import { ensureValidLogger } from '../../utils/loggerUtils.js';
-import { getGlobalConfig, isConfigInitialized } from '../utils/configUtils.js';
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 
@@ -39,6 +38,8 @@ export default class MonitoringCoordinator {
   #checkInterval;
   /** @type {number|null} */
   #intervalHandle;
+  /** @type {object} */
+  #defaultCircuitBreakerOptions;
 
   /**
    * Creates a new MonitoringCoordinator instance.
@@ -48,21 +49,28 @@ export default class MonitoringCoordinator {
    * @param {ILogger} deps.logger - Logger instance
    * @param {boolean} [deps.enabled] - Whether monitoring is enabled
    * @param {number} [deps.checkInterval] - Health check interval in ms
+   * @param {object} [deps.circuitBreakerOptions] - Default circuit breaker options
    */
-  constructor({ logger, enabled = true, checkInterval = 30000 }) {
+  constructor({
+    logger,
+    enabled = true,
+    checkInterval = 30000,
+    circuitBreakerOptions = {},
+  }) {
     validateDependency(logger, 'ILogger', console, {
       requiredMethods: ['info', 'error', 'warn', 'debug'],
     });
     this.#logger = ensureValidLogger(logger, 'MonitoringCoordinator');
 
-    // Apply configuration overrides if available
-    const config = isConfigInitialized() ? getGlobalConfig() : null;
-    this.#enabled =
-      config?.isFeatureEnabled('performance.ENABLE_MONITORING') ?? enabled;
+    this.#enabled = enabled;
     this.#checkInterval = checkInterval;
+    this.#defaultCircuitBreakerOptions = circuitBreakerOptions;
 
     // Initialize monitoring components
-    this.#performanceMonitor = new PerformanceMonitor({ logger: this.#logger });
+    this.#performanceMonitor = new PerformanceMonitor({
+      logger: this.#logger,
+      enabled: this.#enabled,
+    });
     this.#circuitBreakers = new Map();
     this.#alerts = [];
 
@@ -97,7 +105,7 @@ export default class MonitoringCoordinator {
     if (!this.#circuitBreakers.has(name)) {
       const circuitBreaker = new CircuitBreaker({
         logger: this.#logger,
-        options: { ...options, name },
+        options: { ...this.#defaultCircuitBreakerOptions, ...options, name },
       });
       this.#circuitBreakers.set(name, circuitBreaker);
       this.#logger.debug(`Created circuit breaker: ${name}`);
@@ -314,9 +322,7 @@ export default class MonitoringCoordinator {
     const metrics = this.#performanceMonitor.getMetrics();
 
     // Check for high average operation time
-    const config = isConfigInitialized() ? getGlobalConfig() : null;
-    const slowThreshold =
-      config?.getValue('performance.SLOW_OPERATION_THRESHOLD') ?? 100;
+    const slowThreshold = 100; // Default threshold in ms
 
     if (metrics.averageOperationTime > slowThreshold * 2) {
       this.#addAlert(

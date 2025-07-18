@@ -31,11 +31,19 @@ const createMockLogger = () => ({
   error: jest.fn(),
 });
 
+const createMockPathConfiguration = () => ({
+  getPromptTextFilename: jest.fn().mockReturnValue('corePromptText.json'),
+  getLLMConfigPath: jest.fn().mockReturnValue('./config/llm-configs.json'),
+  getConfigDirectory: jest.fn().mockReturnValue('./config'),
+  getPromptsDirectory: jest.fn().mockReturnValue('./data/prompts'),
+});
+
 let configuration;
 let pathResolver;
 let dataFetcher;
 let schemaValidator;
 let dataRegistry;
+let pathConfiguration;
 let logger;
 let loader;
 
@@ -49,6 +57,7 @@ beforeEach(() => {
   });
   schemaValidator = createMockSchemaValidator();
   dataRegistry = createMockDataRegistry();
+  pathConfiguration = createMockPathConfiguration();
   logger = createMockLogger();
 
   loader = new PromptTextLoader({
@@ -57,6 +66,7 @@ beforeEach(() => {
     dataFetcher,
     schemaValidator,
     dataRegistry,
+    pathConfiguration,
     logger,
   });
 });

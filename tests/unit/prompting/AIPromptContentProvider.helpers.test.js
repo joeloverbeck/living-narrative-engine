@@ -121,6 +121,7 @@ describe('AIPromptContentProvider helper methods', () => {
       thoughtsArray: ['t'],
       notesArray: [{ text: 'n', timestamp: 't' }],
       goalsArray: [{ text: 'g', timestamp: 't' }],
+      indexedChoicesArray: [],
     });
   });
 

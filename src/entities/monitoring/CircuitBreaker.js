@@ -5,7 +5,6 @@
 
 import { validateDependency } from '../../utils/dependencyUtils.js';
 import { ensureValidLogger } from '../../utils/loggerUtils.js';
-import { getGlobalConfig, isConfigInitialized } from '../utils/configUtils.js';
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 
@@ -81,20 +80,10 @@ export default class CircuitBreaker {
     });
     this.#logger = ensureValidLogger(logger, 'CircuitBreaker');
 
-    // Apply configuration overrides if available
-    const config = isConfigInitialized() ? getGlobalConfig() : null;
-    this.#enabled =
-      config?.isFeatureEnabled('errorHandling.ENABLE_CIRCUIT_BREAKER') ?? true;
-
+    this.#enabled = true;
     this.#name = options.name || 'CircuitBreaker';
-    this.#failureThreshold =
-      config?.getValue('errorHandling.CIRCUIT_BREAKER_THRESHOLD') ??
-      options.failureThreshold ??
-      5;
-    this.#timeout =
-      config?.getValue('errorHandling.CIRCUIT_BREAKER_TIMEOUT') ??
-      options.timeout ??
-      60000;
+    this.#failureThreshold = options.failureThreshold ?? 5;
+    this.#timeout = options.timeout ?? 60000;
     this.#successThreshold = options.successThreshold ?? 2;
 
     // Initialize state

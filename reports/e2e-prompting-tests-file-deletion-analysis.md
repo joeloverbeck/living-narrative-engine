@@ -12,14 +12,22 @@ The E2E prompting tests in `tests/e2e/prompting/` are inadvertently deleting pro
 ## Root Cause Analysis
 
 ### Primary Issue Location
+
 **File**: `/tests/e2e/prompting/common/promptGenerationTestBed.js`  
 **Methods**: `initialize()` and `cleanup()`
 
 ### Problem Pattern
+
 1. **Test Initialization** (Lines 89-102):
+
    ```javascript
    // Copy test files to expected locations
-   console.log('Copying test config from', path.join(this.configDir, 'llm-configs.json'), 'to', path.join(expectedConfigDir, 'llm-configs.json'));
+   console.log(
+     'Copying test config from',
+     path.join(this.configDir, 'llm-configs.json'),
+     'to',
+     path.join(expectedConfigDir, 'llm-configs.json')
+   );
    await fs.copyFile(
      path.join(this.configDir, 'llm-configs.json'),
      path.join(expectedConfigDir, 'llm-configs.json')
@@ -45,23 +53,28 @@ The E2E prompting tests in `tests/e2e/prompting/` are inadvertently deleting pro
    ```
 
 ### Affected Files
+
 - `config/llm-configs.json` - Production LLM configuration (482 lines)
 - `data/prompts/corePromptText.json` - Production prompt templates (6 lines)
 
 ## Impact Assessment
 
 ### Current Production Files
+
 **config/llm-configs.json**:
+
 - Contains 4 production LLM configurations
 - Includes OpenRouter API settings for Claude Sonnet 4, Qwen3, and Valkyrie models
 - Critical for AI functionality in the application
 
 **data/prompts/corePromptText.json**:
+
 - Contains NC-21 content policy and character portrayal guidelines
 - Includes task definitions and final instruction templates
 - Essential for AI prompt generation pipeline
 
 ### What Happens During Test Execution
+
 1. Tests start and create temporary test configuration files
 2. Test files are copied over production files (overwriting them)
 3. Tests run using the temporary test configuration
@@ -71,6 +84,7 @@ The E2E prompting tests in `tests/e2e/prompting/` are inadvertently deleting pro
 ## Test Files Involved
 
 ### Test Suite Structure
+
 ```
 tests/e2e/prompting/
 ├── PromptBuilderComponents.e2e.test.js
@@ -81,7 +95,9 @@ tests/e2e/prompting/
 ```
 
 ### Test Configuration Generated
+
 The test bed creates minimal test configurations:
+
 - Test LLM configs for 'test-llm-toolcalling' and 'test-llm-jsonschema'
 - Simplified prompt templates for testing
 - Mock API keys and endpoints
@@ -89,9 +105,11 @@ The test bed creates minimal test configurations:
 ## Recommended Solutions
 
 ### Option 1: Backup and Restore (Recommended)
+
 **Approach**: Backup production files before overwriting, restore after tests
 
 **Implementation**:
+
 ```javascript
 // In initialize() - before copying test files
 async backupProductionFiles() {
@@ -115,17 +133,21 @@ async restoreProductionFiles() {
 ```
 
 ### Option 2: Environment Variable Override
+
 **Approach**: Use environment variables to redirect config paths during tests
 
 **Implementation**:
+
 - Set `TEST_CONFIG_DIR` and `TEST_PROMPTS_DIR` environment variables
 - Modify config loading services to check for test environment
 - Keep production files untouched
 
 ### Option 3: Test-Specific Config Directory
+
 **Approach**: Create entirely separate test configuration directories
 
 **Implementation**:
+
 - Modify container configuration to use test-specific paths
 - Create isolated test environment without touching production
 - Requires more changes to dependency injection setup
@@ -133,12 +155,15 @@ async restoreProductionFiles() {
 ## Implementation Priority
 
 ### Immediate Action Required
+
 - **Risk Level**: Critical
 - **Urgency**: High
 - **Effort**: Medium (Option 1: 2-3 hours, Option 2: 4-6 hours)
 
 ### Recommended Approach
+
 **Option 1 (Backup and Restore)** is recommended because:
+
 1. Minimal code changes required
 2. Preserves existing test functionality
 3. Provides immediate protection for production files
@@ -148,13 +173,17 @@ async restoreProductionFiles() {
 ## Code Locations to Modify
 
 ### Primary Changes
+
 **File**: `/tests/e2e/prompting/common/promptGenerationTestBed.js`
+
 - **Lines 89-102**: Add backup logic before file copying
 - **Lines 161-164**: Replace `fs.rm()` with restore operations
 - **Add methods**: `backupProductionFiles()`, `restoreProductionFiles()`
 
 ### Testing the Fix
+
 After implementation:
+
 1. Run the E2E prompting tests
 2. Verify production files still exist and are unchanged
 3. Confirm test functionality remains intact

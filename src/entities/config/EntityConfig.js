@@ -124,7 +124,7 @@ export default class EntityConfig {
     };
   }
 
-  // Environment-specific overrides
+  // Environment-specific overrides (deprecated - use IEnvironmentProvider)
   static get ENVIRONMENT() {
     return {
       NODE_ENV: globalThis.process?.env.NODE_ENV || 'development',
@@ -135,7 +135,8 @@ export default class EntityConfig {
   }
 
   /**
-   * Gets the complete configuration object with environment-specific overrides.
+   * Gets the complete configuration object without environment-specific overrides.
+   * Environment-specific overrides should be applied by EntityConfigProvider.
    *
    * @returns {object} Complete configuration object
    */
@@ -153,22 +154,6 @@ export default class EntityConfig {
       monitoring: this.MONITORING,
       environment: this.ENVIRONMENT,
     };
-
-    // Apply environment-specific overrides
-    if (this.ENVIRONMENT.IS_PRODUCTION) {
-      config.logging.ENABLE_DEBUG_LOGGING = false;
-      config.performance.ENABLE_OPERATION_TRACING = false;
-      config.validation.STRICT_MODE = true;
-    } else if (this.ENVIRONMENT.IS_DEVELOPMENT) {
-      config.logging.ENABLE_DEBUG_LOGGING = true;
-      config.performance.ENABLE_OPERATION_TRACING = true;
-      config.validation.STRICT_MODE = false;
-    } else if (this.ENVIRONMENT.IS_TEST) {
-      config.logging.ENABLE_DEBUG_LOGGING = false;
-      config.performance.ENABLE_MONITORING = false;
-      config.cache.ENABLE_VALIDATION_CACHE = false;
-      config.cache.ENABLE_DEFINITION_CACHE = false;
-    }
 
     return config;
   }

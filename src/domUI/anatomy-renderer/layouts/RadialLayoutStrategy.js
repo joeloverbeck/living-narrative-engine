@@ -150,25 +150,47 @@ class RadialLayoutStrategy {
       childrenMap.get(edge.source).push(edge.target);
     }
 
+    // Track visited nodes to prevent infinite recursion
+    const visited = new Set();
+    const visiting = new Set();
+
     // Post-order traversal to calculate leaf counts
     const calculateLeafCount = (nodeId) => {
       const node = nodes.get(nodeId);
       if (!node) return 0;
 
+      // If already calculated, return the stored value
+      if (visited.has(nodeId)) {
+        return node.leafCount || 0;
+      }
+
+      // If currently visiting this node, we have a cycle
+      if (visiting.has(nodeId)) {
+        // Treat cyclic nodes as having no additional leaf contribution
+        return 0;
+      }
+
+      visiting.add(nodeId);
+
       const children = childrenMap.get(nodeId) || [];
       if (children.length === 0) {
         // Leaf node
         node.leafCount = 1;
-        return 1;
+      } else {
+        // Sum children's leaf counts
+        let totalLeafCount = 0;
+        for (const childId of children) {
+          // Skip self-references
+          if (childId !== nodeId) {
+            totalLeafCount += calculateLeafCount(childId);
+          }
+        }
+        node.leafCount = totalLeafCount || 1; // Ensure at least 1 for non-leaf nodes
       }
 
-      // Sum children's leaf counts
-      let totalLeafCount = 0;
-      for (const childId of children) {
-        totalLeafCount += calculateLeafCount(childId);
-      }
-      node.leafCount = totalLeafCount;
-      return totalLeafCount;
+      visiting.delete(nodeId);
+      visited.add(nodeId);
+      return node.leafCount;
     };
 
     // Find root nodes (nodes with depth 0)
@@ -191,7 +213,7 @@ class RadialLayoutStrategy {
   #getDirectChildren(parentId, nodes, edges) {
     const children = [];
     for (const edge of edges) {
-      if (edge.source === parentId) {
+      if (edge.source === parentId && edge.target !== parentId) {
         const childNode = nodes.get(edge.target);
         if (childNode) {
           children.push(childNode);
@@ -208,8 +230,15 @@ class RadialLayoutStrategy {
    * @param {AnatomyNode} parent - Parent node
    * @param {Map<string, AnatomyNode>} nodes - All nodes
    * @param {Array<AnatomyEdge>} edges - All edges
+   * @param {Set<string>} [positioned] - Set of already positioned nodes to prevent cycles
    */
-  #positionChildrenRadially(parent, nodes, edges) {
+  #positionChildrenRadially(parent, nodes, edges, positioned = new Set()) {
+    // Prevent infinite recursion by tracking positioned nodes
+    if (positioned.has(parent.id)) {
+      return;
+    }
+    positioned.add(parent.id);
+
     const children = this.#getDirectChildren(parent.id, nodes, edges);
     if (children.length === 0) return;
 
@@ -226,6 +255,11 @@ class RadialLayoutStrategy {
     let currentAngle = parent.angleStart;
 
     children.forEach((child) => {
+      // Skip if this child has already been positioned (cycle detection)
+      if (positioned.has(child.id)) {
+        return;
+      }
+
       // Proportional angle allocation based on leaf count
       const childAngleRange =
         (child.leafCount / totalLeaves) * parentAngleRange;
@@ -257,7 +291,7 @@ class RadialLayoutStrategy {
       currentAngle += actualAngleRange;
 
       // Recursively position grandchildren
-      this.#positionChildrenRadially(child, nodes, edges);
+      this.#positionChildrenRadially(child, nodes, edges, positioned);
     });
   }
 

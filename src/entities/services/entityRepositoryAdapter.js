@@ -71,7 +71,8 @@ export class EntityRepositoryAdapter {
   add(entity) {
     // If monitoring is enabled, wrap the execution synchronously
     if (this.#monitoringCoordinator) {
-      const performanceMonitor = this.#monitoringCoordinator.getPerformanceMonitor();
+      const performanceMonitor =
+        this.#monitoringCoordinator.getPerformanceMonitor();
       return performanceMonitor.timeSync(
         'repository.add',
         () => this.#addCore(entity),
@@ -116,7 +117,8 @@ export class EntityRepositoryAdapter {
   get(entityId) {
     // If monitoring is enabled, wrap the execution synchronously
     if (this.#monitoringCoordinator) {
-      const performanceMonitor = this.#monitoringCoordinator.getPerformanceMonitor();
+      const performanceMonitor =
+        this.#monitoringCoordinator.getPerformanceMonitor();
       return performanceMonitor.timeSync(
         'repository.get',
         () => this.#getCore(entityId),
@@ -148,7 +150,8 @@ export class EntityRepositoryAdapter {
   has(entityId) {
     // If monitoring is enabled, wrap the execution synchronously
     if (this.#monitoringCoordinator) {
-      const performanceMonitor = this.#monitoringCoordinator.getPerformanceMonitor();
+      const performanceMonitor =
+        this.#monitoringCoordinator.getPerformanceMonitor();
       return performanceMonitor.timeSync(
         'repository.has',
         () => this.#hasCore(entityId),
@@ -181,7 +184,8 @@ export class EntityRepositoryAdapter {
   remove(entityId) {
     // If monitoring is enabled, wrap the execution synchronously
     if (this.#monitoringCoordinator) {
-      const performanceMonitor = this.#monitoringCoordinator.getPerformanceMonitor();
+      const performanceMonitor =
+        this.#monitoringCoordinator.getPerformanceMonitor();
       return performanceMonitor.timeSync(
         'repository.remove',
         () => this.#removeCore(entityId),

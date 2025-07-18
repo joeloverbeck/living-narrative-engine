@@ -1,9 +1,23 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { createDefaultServicesWithConfig } from '../../../../src/entities/utils/createDefaultServicesWithConfig.js';
 import { TestData } from '../../../common/entities/testData.js';
 import EntityManagerIntegrationTestBed from '../../../common/entities/entityManagerIntegrationTestBed.js';
-import { createMockIdGenerator, createMockComponentCloner, createMockDefaultComponentPolicy } from '../../../common/mockFactories/entities.js';
-import { initializeGlobalConfig, resetGlobalConfig } from '../../../../src/entities/utils/configUtils.js';
+import {
+  createMockIdGenerator,
+  createMockComponentCloner,
+  createMockDefaultComponentPolicy,
+} from '../../../common/mockFactories/entities.js';
+import {
+  initializeGlobalConfig,
+  resetGlobalConfig,
+} from '../../../../src/entities/utils/configUtils.js';
 import EntityDefinition from '../../../../src/entities/entityDefinition.js';
 
 describe('Services Monitoring Integration', () => {
@@ -13,13 +27,13 @@ describe('Services Monitoring Integration', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     // Reset global config first to ensure clean state
     resetGlobalConfig();
 
     // Create test bed with dependencies
     testBed = new EntityManagerIntegrationTestBed();
-    
+
     // Initialize configuration with monitoring enabled BEFORE creating services
     const userConfig = {
       performance: {
@@ -46,7 +60,11 @@ describe('Services Monitoring Integration', () => {
         'core:actor': {},
       },
     });
-    testBed.mocks.registry.store('entityDefinitions', 'core:actor', actorDefinition);
+    testBed.mocks.registry.store(
+      'entityDefinitions',
+      'core:actor',
+      actorDefinition
+    );
 
     // Add component definition to registry
     testBed.mocks.registry.store('components', 'core:short_term_memory', {
@@ -89,7 +107,7 @@ describe('Services Monitoring Integration', () => {
     }
     // Clear the global config
     resetGlobalConfig();
-    
+
     // Reset all variables
     services = null;
     testBed = null;
@@ -102,7 +120,7 @@ describe('Services Monitoring Integration', () => {
 
       // Create an entity
       const entityId = `test-entity-creation-${Date.now()}-${Math.random()}`;
-      
+
       await entityLifecycleManager.createEntityInstance('core:actor', {
         instanceId: entityId,
       });
@@ -129,9 +147,7 @@ describe('Services Monitoring Integration', () => {
         instanceId: entityId,
       });
 
-      await entityLifecycleManager.removeEntityInstance(
-        entityId
-      );
+      await entityLifecycleManager.removeEntityInstance(entityId);
 
       // Check monitoring stats
       const performanceMonitor = monitoringCoordinator.getPerformanceMonitor();
@@ -218,7 +234,8 @@ describe('Services Monitoring Integration', () => {
       expect(addStats.length).toBeGreaterThan(0);
 
       // Check circuit breaker status
-      const circuitBreaker = monitoringCoordinator.getCircuitBreaker('addComponent');
+      const circuitBreaker =
+        monitoringCoordinator.getCircuitBreaker('addComponent');
       const cbStats = circuitBreaker.getStats();
       expect(cbStats.state).toBe('CLOSED');
     });
@@ -249,8 +266,9 @@ describe('Services Monitoring Integration', () => {
       const { componentMutationService } = services;
 
       // Get circuit breaker for addComponent operation
-      const circuitBreaker = monitoringCoordinator.getCircuitBreaker('addComponent');
-      
+      const circuitBreaker =
+        monitoringCoordinator.getCircuitBreaker('addComponent');
+
       // Verify initial state
       expect(circuitBreaker.getStats().state).toBe('CLOSED');
 
@@ -258,7 +276,11 @@ describe('Services Monitoring Integration', () => {
       const results = [];
       for (let i = 0; i < 4; i++) {
         try {
-          await componentMutationService.addComponent('non-existent-entity', 'core:short_term_memory', {});
+          await componentMutationService.addComponent(
+            'non-existent-entity',
+            'core:short_term_memory',
+            {}
+          );
           results.push(null); // Shouldn't happen, but handle success case
         } catch (error) {
           results.push(error);
@@ -270,8 +292,10 @@ describe('Services Monitoring Integration', () => {
       expect(results[0].message).toContain('Entity instance not found');
       expect(results[1].message).toContain('Entity instance not found');
       expect(results[2].message).toContain('Entity instance not found');
-      expect(results[3].message).toContain('Circuit breaker \'addComponent\' is OPEN');
-      
+      expect(results[3].message).toContain(
+        "Circuit breaker 'addComponent' is OPEN"
+      );
+
       // Verify circuit breaker state after failures
       const stats = circuitBreaker.getStats();
       expect(stats.state).toBe('OPEN');
@@ -351,9 +375,8 @@ describe('Services Monitoring Integration', () => {
 
       // Check monitoring stats
       const performanceMonitor = monitoringCoordinator.getPerformanceMonitor();
-      const removeStats = performanceMonitor.getOperationsByType(
-        'repository.remove'
-      );
+      const removeStats =
+        performanceMonitor.getOperationsByType('repository.remove');
       expect(removeStats.length).toBeGreaterThan(0);
     });
   });
@@ -431,10 +454,7 @@ describe('Services Monitoring Integration', () => {
     });
 
     it('should track operation performance over time', async () => {
-      const {
-        entityLifecycleManager,
-        componentMutationService,
-      } = services;
+      const { entityLifecycleManager, componentMutationService } = services;
 
       // Perform various operations
       await entityLifecycleManager.createEntityInstance('core:actor', {

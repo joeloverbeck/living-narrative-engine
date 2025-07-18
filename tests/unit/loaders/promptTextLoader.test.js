@@ -13,6 +13,7 @@ import {
 /** @typedef {import('../../../src/interfaces/coreServices.js').ISchemaValidator} ISchemaValidator */
 /** @typedef {import('../../../src/interfaces/coreServices.js').IDataRegistry} IDataRegistry */
 /** @typedef {import('../../../src/interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../../../src/interfaces/IPathConfiguration.js').IPathConfiguration} IPathConfiguration */
 
 const createMockConfiguration = (overrides = {}) => ({
   getContentTypeSchemaId: jest
@@ -41,6 +42,14 @@ const createMockLogger = (overrides = {}) => ({
   ...overrides,
 });
 
+const createMockPathConfiguration = (overrides = {}) => ({
+  getPromptTextFilename: jest.fn().mockReturnValue('corePromptText.json'),
+  getLLMConfigPath: jest.fn().mockReturnValue('./config/llm-configs.json'),
+  getConfigDirectory: jest.fn().mockReturnValue('./config'),
+  getPromptsDirectory: jest.fn().mockReturnValue('./data/prompts'),
+  ...overrides,
+});
+
 /** @type {IConfiguration} */
 let configuration;
 /** @type {IPathResolver} */
@@ -51,6 +60,8 @@ let dataFetcher;
 let schemaValidator;
 /** @type {IDataRegistry} */
 let dataRegistry;
+/** @type {IPathConfiguration} */
+let pathConfiguration;
 /** @type {ILogger} */
 let logger;
 /** @type {PromptTextLoader} */
@@ -66,6 +77,7 @@ beforeEach(() => {
   });
   schemaValidator = createMockSchemaValidator();
   dataRegistry = createMockDataRegistry();
+  pathConfiguration = createMockPathConfiguration();
   logger = createMockLogger();
 
   loader = new PromptTextLoader({
@@ -74,6 +86,7 @@ beforeEach(() => {
     dataFetcher,
     schemaValidator,
     dataRegistry,
+    pathConfiguration,
     logger,
   });
 });
@@ -82,6 +95,7 @@ describe('PromptTextLoader', () => {
   it('loads, validates, stores, and returns the prompt text', async () => {
     const result = await loader.loadPromptText();
 
+    expect(pathConfiguration.getPromptTextFilename).toHaveBeenCalled();
     expect(pathResolver.resolveContentPath).toHaveBeenCalledWith(
       'prompts',
       'corePromptText.json'
@@ -116,6 +130,7 @@ describe('PromptTextLoader', () => {
       dataFetcher,
       schemaValidator,
       dataRegistry,
+      pathConfiguration,
       logger,
     });
 

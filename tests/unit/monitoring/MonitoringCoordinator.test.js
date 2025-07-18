@@ -62,7 +62,10 @@ describe('MonitoringCoordinator', () => {
       coordinator = new MonitoringCoordinator({ logger });
 
       expect(coordinator).toBeDefined();
-      expect(PerformanceMonitor).toHaveBeenCalledWith({ logger });
+      expect(PerformanceMonitor).toHaveBeenCalledWith({
+        logger,
+        enabled: true,
+      });
     });
 
     it('should create coordinator in disabled state when enabled is false', () => {
@@ -321,11 +324,14 @@ describe('MonitoringCoordinator', () => {
   describe('startTimer and stopTimer', () => {
     it('should delegate timer operations to performance monitor', () => {
       coordinator = new MonitoringCoordinator({ logger });
-      
+
       const timerId = coordinator.startTimer('test-op', 'test-context');
-      expect(mockPerformanceMonitor.startTimer).toHaveBeenCalledWith('test-op', 'test-context');
+      expect(mockPerformanceMonitor.startTimer).toHaveBeenCalledWith(
+        'test-op',
+        'test-context'
+      );
       expect(timerId).toBe('timer-123');
-      
+
       const duration = coordinator.stopTimer(timerId);
       expect(mockPerformanceMonitor.stopTimer).toHaveBeenCalledWith(timerId);
       expect(duration).toBe(50);

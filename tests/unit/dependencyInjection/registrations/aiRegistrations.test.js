@@ -51,7 +51,9 @@ import { AIFallbackActionFactory } from '../../../../src/turns/services/AIFallba
 import { AIPromptPipeline } from '../../../../src/prompting/AIPromptPipeline.js';
 import { createMockLogger } from '../../../common/mockFactories';
 import { expectSingleton } from '../../../common/containerAssertions.js';
+import { TestPathConfiguration } from '../../../common/testPathConfiguration.js';
 import { beforeEach, describe, expect, it } from '@jest/globals';
+import os from 'os';
 
 // --- Mocks ---
 const logger = createMockLogger();
@@ -122,6 +124,10 @@ describe('AI registration helpers', () => {
     container.register(tokens.TurnStrategyFactory, {});
     container.register(tokens.ITurnContextFactory, {});
     container.register(tokens.PromptTextLoader, { loadPromptText: jest.fn() });
+
+    // Register IPathConfiguration for tests that need it
+    const testPathConfig = new TestPathConfiguration(os.tmpdir());
+    container.register(tokens.IPathConfiguration, testPathConfig);
   });
 
   it('should log start and end messages', () => {

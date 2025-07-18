@@ -3,12 +3,6 @@
 
 import { jest, describe, beforeEach, test, expect } from '@jest/globals';
 import { LlmConfigLoader } from '../../../../src/llms/services/llmConfigLoader.js'; // Adjust path if needed
-import { fetchWithRetry } from '../../../../src/utils';
-
-// Mock the fetchWithRetry utility
-jest.mock('../../../../src/utils', () => ({
-  fetchWithRetry: jest.fn(),
-}));
 
 /**
  * @returns {jest.Mocked<import('../../src/interfaces/coreServices.js').ILogger>}
@@ -46,6 +40,13 @@ const mockConfigurationInstance = () => ({
   // Add other IConfiguration methods if LlmConfigLoader uses them, otherwise keep minimal
 });
 
+/**
+ * @returns {jest.Mocked<import('../../src/interfaces/coreServices.js').IDataFetcher>}
+ */
+const mockDataFetcherInstance = () => ({
+  fetch: jest.fn(),
+});
+
 const LLM_CONFIG_SCHEMA_ID =
   'schema://living-narrative-engine/llm-configs.schema.json';
 const MOCK_LLM_CONFIG_PATH = 'config/llm-configs.json';
@@ -74,6 +75,8 @@ describe('LlmConfigLoader - Initialization and Schema Handling', () => {
   let schemaValidatorMock;
   /** @type {ReturnType<typeof mockConfigurationInstance>} */
   let configurationMock;
+  /** @type {ReturnType<typeof mockDataFetcherInstance>} */
+  let dataFetcherMock;
   let dispatcherMock;
 
   beforeEach(() => {
@@ -81,10 +84,11 @@ describe('LlmConfigLoader - Initialization and Schema Handling', () => {
     loggerMock = mockLoggerInstance();
     schemaValidatorMock = mockSchemaValidatorInstance();
     configurationMock = mockConfigurationInstance();
+    dataFetcherMock = mockDataFetcherInstance();
     dispatcherMock = { dispatch: jest.fn().mockResolvedValue(true) };
 
     // Default successful fetch for most tests
-    fetchWithRetry.mockResolvedValue(
+    dataFetcherMock.fetch.mockResolvedValue(
       JSON.parse(JSON.stringify(MOCK_RAW_LLM_CONFIG_DATA))
     );
     configurationMock.getContentTypeSchemaId.mockReturnValue(
@@ -96,6 +100,7 @@ describe('LlmConfigLoader - Initialization and Schema Handling', () => {
       schemaValidator: schemaValidatorMock,
       configuration: configurationMock,
       safeEventDispatcher: dispatcherMock,
+      dataFetcher: dataFetcherMock,
     });
   });
 
@@ -117,15 +122,7 @@ describe('LlmConfigLoader - Initialization and Schema Handling', () => {
     const result = await loader.loadConfigs(MOCK_LLM_CONFIG_PATH);
 
     // Assert
-    expect(fetchWithRetry).toHaveBeenCalledWith(
-      MOCK_LLM_CONFIG_PATH,
-      expect.any(Object),
-      expect.any(Number),
-      expect.any(Number),
-      expect.any(Number),
-      dispatcherMock,
-      loggerMock
-    );
+    expect(dataFetcherMock.fetch).toHaveBeenCalledWith(MOCK_LLM_CONFIG_PATH);
     expect(configurationMock.getContentTypeSchemaId).toHaveBeenCalledWith(
       'llm-configs'
     );
@@ -177,8 +174,8 @@ describe('LlmConfigLoader - Initialization and Schema Handling', () => {
         return `schema://living-narrative-engine/${registryKey}.schema.json`;
       }
     );
-    // fetchWithRetry will still be called as this check happens after fetch.
-    fetchWithRetry.mockResolvedValue(
+    // dataFetcher.fetch will still be called as this check happens after fetch.
+    dataFetcherMock.fetch.mockResolvedValue(
       JSON.parse(JSON.stringify(MOCK_RAW_LLM_CONFIG_DATA))
     );
 
@@ -186,7 +183,7 @@ describe('LlmConfigLoader - Initialization and Schema Handling', () => {
     const result = await loader.loadConfigs(MOCK_LLM_CONFIG_PATH);
 
     // Assert
-    expect(fetchWithRetry).toHaveBeenCalledTimes(1); // Ensure fetch was attempted
+    expect(dataFetcherMock.fetch).toHaveBeenCalledTimes(1); // Ensure fetch was attempted
     expect(configurationMock.getContentTypeSchemaId).toHaveBeenCalledWith(
       'llm-configs'
     );

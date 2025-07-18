@@ -4,12 +4,6 @@
 import { jest, describe, beforeEach, test, expect } from '@jest/globals';
 // Using the import path from your test output
 import { LlmConfigLoader } from '../../../src/llms/services/llmConfigLoader.js';
-import { fetchWithRetry } from '../../../src/utils';
-
-// Mock the fetchWithRetry utility
-jest.mock('../../../src/utils', () => ({
-  fetchWithRetry: jest.fn(),
-}));
 
 /**
  * @returns {jest.Mocked<import('../../../src/interfaces/coreServices.js').ILogger>}
@@ -55,6 +49,13 @@ const mockConfigurationInstance = () => ({
   getRuleSchemaId: jest
     .fn()
     .mockReturnValue('schema://living-narrative-engine/rule.schema.json'),
+});
+
+/**
+ * @returns {jest.Mocked<import('../../../src/interfaces/coreServices.js').IDataFetcher>}
+ */
+const mockDataFetcherInstance = () => ({
+  fetch: jest.fn(),
 });
 
 const defaultLlmConfigPath = 'config/llm-configs.json';
@@ -151,6 +152,8 @@ describe('LlmConfigLoader', () => {
   let schemaValidatorMock;
   /** @type {ReturnType<typeof mockConfigurationInstance>} */
   let configurationMock;
+  /** @type {ReturnType<typeof mockDataFetcherInstance>} */
+  let dataFetcherMock;
   let dispatcherMock;
 
   beforeEach(() => {
@@ -158,6 +161,7 @@ describe('LlmConfigLoader', () => {
     loggerMock = mockLoggerInstance();
     schemaValidatorMock = mockSchemaValidatorInstance();
     configurationMock = mockConfigurationInstance();
+    dataFetcherMock = mockDataFetcherInstance();
     dispatcherMock = { dispatch: jest.fn().mockResolvedValue(true) };
 
     loader = new LlmConfigLoader({
@@ -165,21 +169,23 @@ describe('LlmConfigLoader', () => {
       schemaValidator: schemaValidatorMock,
       configuration: configurationMock,
       safeEventDispatcher: dispatcherMock,
+      dataFetcher: dataFetcherMock,
     });
-    fetchWithRetry.mockReset();
   });
 
   describe('constructor', () => {
     test('should use provided logger', () => {
-      fetchWithRetry.mockResolvedValueOnce(
+      const specificLogger = mockLoggerInstance();
+      const specificDataFetcher = mockDataFetcherInstance();
+      specificDataFetcher.fetch.mockResolvedValueOnce(
         JSON.parse(JSON.stringify(minimalValidRootConfigForPathTests))
       );
-      const specificLogger = mockLoggerInstance();
       const specificLoader = new LlmConfigLoader({
         logger: specificLogger,
         schemaValidator: schemaValidatorMock,
         configuration: configurationMock,
         safeEventDispatcher: dispatcherMock,
+        dataFetcher: specificDataFetcher,
       });
       specificLoader.loadConfigs(); // Call loadConfigs to trigger logger usage
       expect(specificLogger.debug).toHaveBeenCalledWith(
@@ -197,6 +203,7 @@ describe('LlmConfigLoader', () => {
           new LlmConfigLoader({
             schemaValidator: schemaValidatorMock,
             configuration: configurationMock,
+            dataFetcher: dataFetcherMock,
           })
       ).toThrow(
         'LlmConfigLoader: Constructor requires a valid ILogger instance.'
@@ -211,51 +218,38 @@ describe('LlmConfigLoader', () => {
         schemaValidator: schemaValidatorMock,
         configuration: configurationMock,
         safeEventDispatcher: dispatcherMock,
+        dataFetcher: dataFetcherMock,
       });
-      fetchWithRetry.mockResolvedValueOnce(
+      dataFetcherMock.fetch.mockResolvedValueOnce(
         JSON.parse(JSON.stringify(minimalValidRootConfigForPathTests))
       );
       loaderWithConsoleLogger.loadConfigs();
     });
 
     test('should use default dependencyInjection path if none provided (verified by loadConfigs call)', async () => {
-      fetchWithRetry.mockResolvedValueOnce(
+      dataFetcherMock.fetch.mockResolvedValueOnce(
         JSON.parse(JSON.stringify(minimalValidRootConfigForPathTests))
       );
       await loader.loadConfigs();
-      expect(fetchWithRetry).toHaveBeenCalledWith(
-        defaultLlmConfigPath,
-        expect.any(Object),
-        expect.any(Number),
-        expect.any(Number),
-        expect.any(Number),
-        dispatcherMock,
-        loggerMock
-      );
+      expect(dataFetcherMock.fetch).toHaveBeenCalledWith(defaultLlmConfigPath);
     });
 
     test('should use provided defaultConfigPath in constructor (verified by loadConfigs call)', async () => {
       const customPath = 'custom/path/to/prompt-configs.json';
+      const customDataFetcher = mockDataFetcherInstance();
       const loaderWithCustomPath = new LlmConfigLoader({
         logger: loggerMock,
         schemaValidator: schemaValidatorMock,
         configuration: configurationMock,
         defaultConfigPath: customPath,
         safeEventDispatcher: dispatcherMock,
+        dataFetcher: customDataFetcher,
       });
-      fetchWithRetry.mockResolvedValueOnce(
+      customDataFetcher.fetch.mockResolvedValueOnce(
         JSON.parse(JSON.stringify(minimalValidRootConfigForPathTests))
       );
       await loaderWithCustomPath.loadConfigs();
-      expect(fetchWithRetry).toHaveBeenCalledWith(
-        customPath,
-        expect.any(Object),
-        expect.any(Number),
-        expect.any(Number),
-        expect.any(Number),
-        dispatcherMock,
-        loggerMock
-      );
+      expect(customDataFetcher.fetch).toHaveBeenCalledWith(customPath);
     });
 
     test('should throw error if schemaValidator is missing', () => {
@@ -264,6 +258,7 @@ describe('LlmConfigLoader', () => {
           new LlmConfigLoader({
             logger: loggerMock,
             configuration: configurationMock,
+            dataFetcher: dataFetcherMock,
           })
       ).toThrow(
         'LlmConfigLoader: Constructor requires a valid ISchemaValidator instance.'
@@ -276,10 +271,25 @@ describe('LlmConfigLoader', () => {
           new LlmConfigLoader({
             logger: loggerMock,
             schemaValidator: schemaValidatorMock,
+            dataFetcher: dataFetcherMock,
           })
       ).toThrow(
         'LlmConfigLoader: Constructor requires a valid IConfiguration instance.'
       ); // Now expects "valid"
+    });
+
+    test('should throw error if dataFetcher is missing', () => {
+      expect(
+        () =>
+          new LlmConfigLoader({
+            logger: loggerMock,
+            schemaValidator: schemaValidatorMock,
+            configuration: configurationMock,
+            safeEventDispatcher: dispatcherMock,
+          })
+      ).toThrow(
+        'LlmConfigLoader: Constructor requires a valid IDataFetcher instance.'
+      );
     });
   });
 
@@ -288,7 +298,7 @@ describe('LlmConfigLoader', () => {
       const expectedRootConfig = JSON.parse(
         JSON.stringify(mockValidRootLLMConfig)
       );
-      fetchWithRetry.mockResolvedValueOnce(expectedRootConfig); // Provide the root object
+      dataFetcherMock.fetch.mockResolvedValueOnce(expectedRootConfig); // Provide the root object
       schemaValidatorMock.validate.mockReturnValueOnce({
         isValid: true,
         errors: null,
@@ -299,15 +309,7 @@ describe('LlmConfigLoader', () => {
       expect(result.error).toBeUndefined(); // Ensure it's not an error object
       expect(result).toEqual(expectedRootConfig); // Result should be the root object
 
-      expect(fetchWithRetry).toHaveBeenCalledWith(
-        defaultLlmConfigPath,
-        { method: 'GET', headers: { Accept: 'application/json' } },
-        3,
-        500,
-        5000,
-        dispatcherMock,
-        loggerMock
-      );
+      expect(dataFetcherMock.fetch).toHaveBeenCalledWith(defaultLlmConfigPath);
       expect(configurationMock.getContentTypeSchemaId).toHaveBeenCalledWith(
         'llm-configs'
       );
@@ -317,11 +319,11 @@ describe('LlmConfigLoader', () => {
       );
     });
 
-    test('AC2: should handle Workspace network errors (simulated by fetchWithRetry rejecting)', async () => {
+    test('AC2: should handle Workspace network errors (simulated by dataFetcher rejecting)', async () => {
       const networkError = new Error(
         'Simulated Network Error: Failed to fetch'
       );
-      fetchWithRetry.mockRejectedValueOnce(networkError);
+      dataFetcherMock.fetch.mockRejectedValueOnce(networkError);
 
       const result = await loader.loadConfigs(defaultLlmConfigPath);
 
@@ -349,7 +351,7 @@ describe('LlmConfigLoader', () => {
       const httpError = new Error(
         `API request to ${defaultLlmConfigPath} failed after 1 attempt(s) with status 404: {"error":"Not Found"}`
       );
-      fetchWithRetry.mockRejectedValueOnce(httpError);
+      dataFetcherMock.fetch.mockRejectedValueOnce(httpError);
       const result = await loader.loadConfigs(defaultLlmConfigPath);
       expect(result.stage).toBe('fetch_not_found');
       // Further assertions as before...
@@ -359,24 +361,24 @@ describe('LlmConfigLoader', () => {
       const httpError = new Error(
         `API request to ${defaultLlmConfigPath} failed after 3 attempt(s) with status 500: {"error":"Server Issue"}`
       );
-      fetchWithRetry.mockRejectedValueOnce(httpError);
+      dataFetcherMock.fetch.mockRejectedValueOnce(httpError);
       const result = await loader.loadConfigs(defaultLlmConfigPath);
       expect(result.stage).toBe('fetch_server_error');
       // Further assertions as before...
     });
 
-    test('AC4: should handle invalid JSON content (fetchWithRetry throws JSON parsing error)', async () => {
+    test('AC4: should handle invalid JSON content (dataFetcher throws JSON parsing error)', async () => {
       const parsingError = new SyntaxError(
         'Unexpected token i in JSON at position 0'
       );
-      fetchWithRetry.mockRejectedValueOnce(parsingError);
+      dataFetcherMock.fetch.mockRejectedValueOnce(parsingError);
       const result = await loader.loadConfigs(defaultLlmConfigPath);
       expect(result.stage).toBe('parse');
       // Further assertions as before...
     });
 
     test('should return error if schema ID cannot be retrieved from configuration', async () => {
-      fetchWithRetry.mockResolvedValueOnce(
+      dataFetcherMock.fetch.mockResolvedValueOnce(
         JSON.parse(JSON.stringify(minimalValidRootConfigForPathTests))
       );
       configurationMock.getContentTypeSchemaId.mockReturnValueOnce(undefined);
@@ -399,7 +401,7 @@ describe('LlmConfigLoader', () => {
         params: { missingProperty: 'defaultConfigId' },
         message: "must have required property 'defaultConfigId'",
       };
-      fetchWithRetry.mockResolvedValueOnce(malformedRootData);
+      dataFetcherMock.fetch.mockResolvedValueOnce(malformedRootData);
       schemaValidatorMock.validate.mockReturnValueOnce({
         isValid: false,
         errors: [mockedAjvError],
@@ -448,7 +450,7 @@ describe('LlmConfigLoader', () => {
           },
         },
       };
-      fetchWithRetry.mockResolvedValueOnce(
+      dataFetcherMock.fetch.mockResolvedValueOnce(
         JSON.parse(JSON.stringify(semanticallyInvalidRoot))
       );
       schemaValidatorMock.validate.mockReturnValueOnce({
@@ -473,7 +475,7 @@ describe('LlmConfigLoader', () => {
         defaultConfigId: 'test',
         configs: ['this is an array, not an object map'], // Invalid type for configs
       };
-      fetchWithRetry.mockResolvedValueOnce(rootWithInvalidConfigsType);
+      dataFetcherMock.fetch.mockResolvedValueOnce(rootWithInvalidConfigsType);
       // Assume schema validation for the root object passes, but the 'configs' type is wrong
       // This specific scenario tests the semantic validator's robustness against `configs` not being a map
       schemaValidatorMock.validate.mockReturnValueOnce({
@@ -502,35 +504,19 @@ describe('LlmConfigLoader', () => {
 
     test('should use custom file path if provided to loadConfigs method', async () => {
       const customPath = 'another/prompt-dependencyInjection.json';
-      fetchWithRetry.mockResolvedValueOnce(
+      dataFetcherMock.fetch.mockResolvedValueOnce(
         JSON.parse(JSON.stringify(minimalValidRootConfigForPathTests))
       );
       await loader.loadConfigs(customPath);
-      expect(fetchWithRetry).toHaveBeenCalledWith(
-        customPath,
-        expect.any(Object),
-        expect.any(Number),
-        expect.any(Number),
-        expect.any(Number),
-        dispatcherMock,
-        loggerMock
-      );
+      expect(dataFetcherMock.fetch).toHaveBeenCalledWith(customPath);
     });
 
     test('should use default path if provided filePath to loadConfigs is empty or whitespace', async () => {
-      fetchWithRetry.mockResolvedValueOnce(
+      dataFetcherMock.fetch.mockResolvedValueOnce(
         JSON.parse(JSON.stringify(minimalValidRootConfigForPathTests))
       );
       await loader.loadConfigs('   ');
-      expect(fetchWithRetry).toHaveBeenCalledWith(
-        defaultLlmConfigPath,
-        expect.any(Object),
-        expect.any(Number),
-        expect.any(Number),
-        expect.any(Number),
-        dispatcherMock,
-        loggerMock
-      );
+      expect(dataFetcherMock.fetch).toHaveBeenCalledWith(defaultLlmConfigPath);
     });
   });
 });

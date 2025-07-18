@@ -162,78 +162,7 @@ describe('ProcessingCommandState', () => {
       getSafeEventDispatcher: jest
         .fn()
         .mockReturnValue(mockSafeEventDispatcher),
-      endTurn: jest.fn().mockImplementation((_err) => {
-        if (
-          mockHandler._currentState === processingState ||
-          mockHandler._currentState?.constructor?.name ===
-            'ProcessingCommandState'
-        ) {
-          const TurnEndingStateActual = jest.requireActual(
-            '../../../../src/turns/states/turnEndingState.js'
-          ).TurnEndingState;
-          const currentActorForEndTurn = mockTurnContext.getActor
-            ? mockTurnContext.getActor()?.id || 'unknownFromEndTurn'
-            : 'unknownNoGetActor';
-          const turnEndingState = new TurnEndingStateActual(
-            mockHandler,
-            currentActorForEndTurn,
-            _err
-          );
-
-          const oldState = mockHandler._currentState;
-          if (oldState && typeof oldState.exitState === 'function') {
-            Promise.resolve(
-              oldState.exitState(mockHandler, turnEndingState)
-            ).catch((e) =>
-              mockLogger.debug(
-                'Error in mock oldState.exitState (during endTurn mock):',
-                e
-              )
-            );
-          }
-          mockHandler._currentState = turnEndingState;
-          if (typeof turnEndingState.enterState === 'function') {
-            Promise.resolve(
-              turnEndingState.enterState(mockHandler, oldState)
-            ).catch((e) =>
-              mockLogger.debug(
-                'Error in mock turnEndingState.enterState (during endTurn mock):',
-                e
-              )
-            );
-          }
-
-          if (mockHandler._currentState === turnEndingState) {
-            const oldEndingState = mockHandler._currentState;
-            const idleState = new TurnIdleState(mockHandler);
-            if (
-              oldEndingState &&
-              typeof oldEndingState.exitState === 'function'
-            ) {
-              Promise.resolve(
-                oldEndingState.exitState(mockHandler, idleState)
-              ).catch((e) =>
-                mockLogger.debug(
-                  'Error in mock oldEndingState.exitState (during endTurn mock):',
-                  e
-                )
-              );
-            }
-            mockHandler._currentState = idleState;
-            if (typeof idleState.enterState === 'function') {
-              Promise.resolve(
-                idleState.enterState(mockHandler, oldEndingState)
-              ).catch((e) =>
-                mockLogger.debug(
-                  'Error in mock idleState.enterState (during endTurn mock):',
-                  e
-                )
-              );
-            }
-          }
-        }
-        return Promise.resolve();
-      }),
+      endTurn: jest.fn().mockResolvedValue(undefined),
       isValid: jest.fn().mockReturnValue(true),
       requestTransition: jest
         .fn()
@@ -567,6 +496,23 @@ describe('ProcessingCommandState', () => {
       );
       expect(wasProcessingLog[0]).toContain(
         `Exiting for actor ${actor.getId()} while processing was true (now false). Transitioning to TurnIdleState.`
+      );
+    });
+
+    it('should log exit when not processing', async () => {
+      // Don't start processing, so isProcessing remains false
+      const nextState = new TurnIdleState(mockHandler);
+      await processingState.exitState(mockHandler, nextState);
+      expect(processingState.isProcessing).toBe(false);
+
+      // Check that the else branch log message is called (line 350)
+      const notProcessingLog = mockLogger.debug.mock.calls.find(
+        (call) =>
+          call[0].includes('Exiting for actor:') &&
+          !call[0].includes('while processing was true')
+      );
+      expect(notProcessingLog[0]).toContain(
+        `Exiting for actor: ${actor.getId()}. Transitioning to TurnIdleState.`
       );
     });
   });
