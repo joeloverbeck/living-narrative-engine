@@ -80,6 +80,68 @@ export class BaseTestBed {
   }
 
   /**
+   * Performs setup before each test run.
+   * Override this method in subclasses for custom setup logic.
+   *
+   * @returns {Promise<void>} Promise resolving when setup is complete.
+   */
+  async setup() {
+    // Initialize basic services for subclasses
+    this._initializeBasicServices();
+    await this._afterSetup();
+  }
+
+  /**
+   * Initialize basic services commonly needed by test beds
+   *
+   * @private
+   */
+  _initializeBasicServices() {
+    // Create basic mock services if not already defined
+    if (!this.logger) {
+      this.logger = {
+        debug: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+        info: jest.fn(),
+        log: jest.fn(),
+      };
+    }
+
+    if (!this.eventDispatcher) {
+      this.eventDispatcher = {
+        dispatch: jest.fn(),
+      };
+    }
+
+    if (!this.entityManager) {
+      this.entityManager = {
+        entities: new Map(),
+        getEntityInstance: jest.fn((id) => this.entityManager.entities.get(id)),
+        setComponentData: jest.fn((entityId, componentId, data) => {
+          const entity = this.entityManager.entities.get(entityId);
+          if (entity) {
+            entity.components[componentId] = data;
+          }
+        }),
+        getComponentData: jest.fn((entityId, componentId) => {
+          const entity = this.entityManager.entities.get(entityId);
+          return entity?.components?.[componentId] || null;
+        }),
+      };
+    }
+  }
+
+  /**
+   * Hook invoked at the end of {@link BaseTestBed#setup} for subclass-specific
+   * setup logic.
+   *
+   * @protected
+   * @returns {Promise<void>} Promise resolving when subclass setup is complete.
+   */
+  async _afterSetup() {}
+
+  /**
    * Performs cleanup after each test run.
    *
    * @returns {Promise<void>} Promise resolving when cleanup is complete.

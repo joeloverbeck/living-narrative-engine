@@ -191,9 +191,13 @@ describe('End-to-End Short-Term Memory Flow', () => {
       logger
     );
 
-    const expected =
-      '\nYour most recent thoughts (oldest first):\n\n- FirstThought\n';
-
-    expect(prompt2).toBe(expected);
+    // Should contain the thoughts section with the thought
+    expect(prompt2).toContain('<thoughts>');
+    expect(prompt2).toContain('- FirstThought');
+    
+    // Verify the prompt contains the expected template structure
+    expect(prompt2).toContain('<task_definition>');
+    expect(prompt2).toContain('<character_persona>');
+    expect(prompt2).toContain('<final_instructions>');
   });
 });

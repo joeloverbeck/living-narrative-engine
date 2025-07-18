@@ -1,0 +1,18 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "descriptors:projection",
+  "description": "Describes the projection characteristics of a surface or object",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "projection": {
+        "type": "string",
+        "description": "The projection type or characteristic",
+        "enum": ["flat", "bubbly", "shelf"],
+        "default": "flat"
+      }
+    },
+    "required": ["projection"],
+    "additionalProperties": false
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "core:material",
+  "description": "Material composition of an entity, supporting both current materials and future material-based features like durability and care requirements.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "material": {
+        "type": "string",
+        "description": "The primary material composition",
+        "enum": [
+          "linen",
+          "silk",
+          "stretch-silk",
+          "leather",
+          "calfskin",
+          "wool",
+          "cotton",
+          "canvas",
+          "steel",
+          "iron",
+          "wood",
+          "glass",
+          "plastic",
+          "ceramic",
+          "stone",
+          "fabric",
+          "synthetic",
+          "organic"
+        ]
+      },
+      "durability": {
+        "type": "number",
+        "description": "Material durability rating (0-100, higher is more durable)",
+        "minimum": 0,
+        "maximum": 100
+      },
+      "careInstructions": {
+        "type": "array",
+        "description": "Care and maintenance instructions for the material",
+        "items": {
+          "type": "string",
+          "enum": [
+            "hand_wash_only",
+            "machine_washable",
+            "dry_clean_only",
+            "waterproof",
+            "heat_sensitive",
+            "requires_oiling",
+            "requires_polishing",
+            "stain_resistant"
+          ]
+        }
+      },
+      "properties": {
+        "type": "array",
+        "description": "Additional material properties",
+        "items": {
+          "type": "string",
+          "enum": [
+            "breathable",
+            "waterproof",
+            "fireproof",
+            "flexible",
+            "rigid",
+            "transparent",
+            "reflective",
+            "magnetic",
+            "conductive",
+            "insulating"
+          ]
+        }
+      }
+    },
+    "required": ["material"],
+    "additionalProperties": false
+  }
+}

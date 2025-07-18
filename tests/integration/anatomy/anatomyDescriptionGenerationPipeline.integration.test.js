@@ -337,8 +337,7 @@ describe('Anatomy Description Generation Pipeline - Integration', () => {
       const bodyEntity = testBed.entityManager.getEntityInstance(entity.id);
 
       // Act - Test description composition directly
-      const composedDescription =
-        testBed.bodyDescriptionComposer.composeDescription(bodyEntity);
+      const composedDescription = await testBed.bodyDescriptionComposer.composeDescription(bodyEntity);
 
       // Assert - Verify composition works without errors
       expect(composedDescription).toBeTruthy();
@@ -453,8 +452,7 @@ describe('Anatomy Description Generation Pipeline - Integration', () => {
       }
 
       // Act - Try to compose description (should use fallback generation)
-      const composedDescription =
-        testBed.bodyDescriptionComposer.composeDescription(bodyEntity);
+      const composedDescription = await testBed.bodyDescriptionComposer.composeDescription(bodyEntity);
 
       // Assert - Should still generate a valid description using fallback
       expect(composedDescription).toBeTruthy();

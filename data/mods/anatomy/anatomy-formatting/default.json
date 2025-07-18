@@ -21,7 +21,8 @@
     "penis",
     "testicle",
     "tail",
-    "wing"
+    "wing",
+    "equipment"
   ],
   "pairedParts": [
     "eye",
@@ -64,5 +65,13 @@
     "firmness",
     "build",
     "weight"
-  ]
+  ],
+  "equipmentIntegration": {
+    "enabled": true,
+    "prefix": "Wearing: ",
+    "suffix": ".",
+    "separator": ", ",
+    "itemSeparator": " | ",
+    "placement": "after_anatomy"
+  }
 }

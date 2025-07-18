@@ -416,4 +416,38 @@ describe('Complete Action Execution Pipeline E2E', () => {
     const avgTime = (rapidEndTime - rapidStartTime) / 10;
     expect(avgTime).toBeLessThan(50); // Average should be under 50ms
   });
+
+  /**
+   * Test: Action execution with assertion helpers
+   * Verifies the new assertion helpers work correctly
+   */
+  test('should use enhanced assertion helpers', async () => {
+    // Arrange
+    const actor = await testBed.getEntity('test-player');
+    const action = testBed.createTurnAction('core:wait', null, 'wait');
+
+    // Act - Execute action
+    const result = await testBed.executeAction(actor.id, action);
+
+    // Assert - Use enhanced assertion helpers
+    testBed.assertActionExecutionSuccess(result, 'core:wait');
+    testBed.assertEventWasDispatched(ATTEMPT_ACTION_ID, {
+      actorId: actor.id,
+      actionId: 'core:wait',
+      originalInput: 'wait',
+    });
+  });
+
+  /**
+   * Test: Trace context creation
+   * Verifies trace context utilities work correctly
+   */
+  test('should create trace context using utilities', async () => {
+    // Act - Create trace context using test bed utilities
+    const traceContext = testBed.createTraceContext();
+
+    // Assert - Trace context is properly created
+    expect(traceContext).toBeDefined();
+    expect(traceContext.constructor.name).toBe('TraceContext');
+  });
 });

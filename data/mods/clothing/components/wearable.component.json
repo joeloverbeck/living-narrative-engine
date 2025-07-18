@@ -10,10 +10,6 @@
         "enum": ["underwear", "base", "outer", "accessories"],
         "description": "Layer priority for stacking"
       },
-      "material": {
-        "type": "string",
-        "description": "Material composition of the clothing item"
-      },
       "equipmentSlots": {
         "type": "object",
         "properties": {

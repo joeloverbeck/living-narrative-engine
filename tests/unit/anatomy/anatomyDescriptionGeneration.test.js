@@ -284,7 +284,7 @@ describe('Anatomy Description Generation - Edge Cases', () => {
       });
     });
 
-    it('should handle case where getAllParts returns entity IDs but some entities have no components', () => {
+    it('should handle case where getAllParts returns entity IDs but some entities have no components', async () => {
       const bodyEntity = {
         hasComponent: jest.fn().mockReturnValue(true),
         getComponentData: jest.fn().mockReturnValue({
@@ -337,25 +337,25 @@ describe('Anatomy Description Generation - Edge Cases', () => {
       });
 
       // Should not throw error
-      const result = bodyDescriptionComposer.composeDescription(bodyEntity);
+      const result = await bodyDescriptionComposer.composeDescription(bodyEntity);
       expect(result).toBeDefined();
       expect(result).toContain('Eye: blue');
     });
 
-    it('should handle completely invalid body entity', () => {
-      const result = bodyDescriptionComposer.composeDescription(null);
+    it('should handle completely invalid body entity', async () => {
+      const result = await bodyDescriptionComposer.composeDescription(null);
       expect(result).toBe('');
     });
 
-    it('should handle body entity without anatomy:body component', () => {
+    it('should handle body entity without anatomy:body component', async () => {
       const bodyEntity = {
         hasComponent: jest.fn().mockReturnValue(false),
       };
-      const result = bodyDescriptionComposer.composeDescription(bodyEntity);
+      const result = await bodyDescriptionComposer.composeDescription(bodyEntity);
       expect(result).toBe('');
     });
 
-    it('should handle empty body parts list', () => {
+    it('should handle empty body parts list', async () => {
       const bodyEntity = {
         hasComponent: jest.fn().mockReturnValue(true),
         getComponentData: jest.fn().mockReturnValue({
@@ -365,7 +365,7 @@ describe('Anatomy Description Generation - Edge Cases', () => {
 
       mockBodyGraphService.getAllParts.mockReturnValue([]);
 
-      const result = bodyDescriptionComposer.composeDescription(bodyEntity);
+      const result = await bodyDescriptionComposer.composeDescription(bodyEntity);
       expect(result).toBe('');
     });
   });

@@ -29,15 +29,9 @@ import { PerceptionLogFormatter } from '../../../../src/formatting/perceptionLog
 import { GameStateValidationServiceForPrompting } from '../../../../src/validation/gameStateValidationServiceForPrompting.js';
 import { HttpConfigurationProvider } from '../../../../src/configuration/httpConfigurationProvider.js';
 import { LlmConfigManager } from '../../../../src/llms/llmConfigManager.js';
-import { PlaceholderResolver } from '../../../../src/utils/placeholderResolverUtils.js';
-import { StandardElementAssembler } from '../../../../src/prompting/assembling/standardElementAssembler.js';
-import { PerceptionLogAssembler } from '../../../../src/prompting/assembling/perceptionLogAssembler.js';
-import ThoughtsSectionAssembler from '../../../../src/prompting/assembling/thoughtsSectionAssembler.js';
-import NotesSectionAssembler from '../../../../src/prompting/assembling/notesSectionAssembler.js';
-import GoalsSectionAssembler from '../../../../src/prompting/assembling/goalsSectionAssembler.js';
-import { IndexedChoicesAssembler } from '../../../../src/prompting/assembling/indexedChoicesAssembler.js';
-import { AssemblerRegistry } from '../../../../src/prompting/assemblerRegistry.js';
 import { PromptBuilder } from '../../../../src/prompting/promptBuilder.js';
+import { PromptTemplateService } from '../../../../src/prompting/promptTemplateService.js';
+import { PromptDataFormatter } from '../../../../src/prompting/promptDataFormatter.js';
 import { EntitySummaryProvider } from '../../../../src/data/providers/entitySummaryProvider.js';
 import { ActorDataExtractor } from '../../../../src/turns/services/actorDataExtractor.js';
 import { ActorStateProvider } from '../../../../src/data/providers/actorStateProvider.js';
@@ -200,20 +194,8 @@ describe('AI registration helpers', () => {
         Class: HttpConfigurationProvider,
       },
       { token: tokens.LlmConfigManager, Class: LlmConfigManager },
-      { token: tokens.PlaceholderResolver, Class: PlaceholderResolver },
-      {
-        token: tokens.StandardElementAssembler,
-        Class: StandardElementAssembler,
-      },
-      { token: tokens.PerceptionLogAssembler, Class: PerceptionLogAssembler },
-      {
-        token: tokens.ThoughtsSectionAssembler,
-        Class: ThoughtsSectionAssembler,
-      },
-      { token: tokens.NotesSectionAssembler, Class: NotesSectionAssembler },
-      { token: tokens.GoalsSectionAssembler, Class: GoalsSectionAssembler },
-      { token: tokens.IndexedChoicesAssembler, Class: IndexedChoicesAssembler },
-      { token: tokens.AssemblerRegistry, Class: AssemblerRegistry },
+      { token: tokens.PromptTemplateService, Class: PromptTemplateService },
+      { token: tokens.PromptDataFormatter, Class: PromptDataFormatter },
       { token: tokens.IPromptBuilder, Class: PromptBuilder },
     ];
 

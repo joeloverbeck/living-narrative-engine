@@ -1,13 +1,8 @@
 import { describe, beforeEach, test, expect, jest } from '@jest/globals';
 import { AIPromptContentProvider } from '../../../src/prompting/AIPromptContentProvider.js';
 import { PromptBuilder } from '../../../src/prompting/promptBuilder.js';
-import { PlaceholderResolver } from '../../../src/utils/placeholderResolverUtils.js';
-import { ThoughtsSectionAssembler } from '../../../src/prompting/assembling/thoughtsSectionAssembler.js';
-import NotesSectionAssembler from '../../../src/prompting/assembling/notesSectionAssembler.js';
-import { GoalsSectionAssembler } from '../../../src/prompting/assembling/goalsSectionAssembler.js';
-import { IndexedChoicesAssembler } from '../../../src/prompting/assembling/indexedChoicesAssembler.js';
-import { AssemblerRegistry } from '../../../src/prompting/assemblerRegistry.js';
-import * as ConditionEvaluator from '../../../src/prompting/elementConditionEvaluator.js';
+import { PromptTemplateService } from '../../../src/prompting/promptTemplateService.js';
+import { PromptDataFormatter } from '../../../src/prompting/promptDataFormatter.js';
 
 /** @typedef {import('../../../src/interfaces/coreServices.js').ILogger} ILogger */
 
@@ -18,7 +13,7 @@ const mockLogger = () => ({
   debug: jest.fn(),
 });
 
-describe('Prompt Assembly with short-term memory', () => {
+describe('Prompt Assembly with template-based system', () => {
   /** @type {AIPromptContentProvider} */
   let provider;
   /** @type {PromptBuilder} */
@@ -27,18 +22,18 @@ describe('Prompt Assembly with short-term memory', () => {
   let logger;
   /** @type {jest.Mocked<any>} */
   let llmConfigService;
+  /** @type {PromptTemplateService} */
+  let templateService;
+  /** @type {PromptDataFormatter} */
+  let dataFormatter;
 
   const testConfig = {
-    configId: 'thoughts_only',
-    modelIdentifier: 'test/model',
-    promptElements: [
-      {
-        key: 'thoughts_wrapper',
-        prefix: '\nYour most recent thoughts (oldest first):\n\n',
-        suffix: '\n\n',
-      },
-    ],
-    promptAssemblyOrder: ['thoughts_wrapper'],
+    configId: 'test-config',
+    displayName: 'Test Config',
+    modelIdentifier: 'test-model',
+    endpointUrl: 'https://test.api',
+    apiType: 'test',
+    jsonOutputStrategy: { method: 'test' },
   };
 
   beforeEach(() => {
@@ -61,75 +56,108 @@ describe('Prompt Assembly with short-term memory', () => {
     });
 
     llmConfigService = { getConfig: jest.fn().mockResolvedValue(testConfig) };
+    templateService = new PromptTemplateService({ logger });
+    dataFormatter = new PromptDataFormatter({ logger });
 
-    const placeholderResolver = new PlaceholderResolver(logger);
-
-    // ──────────────────────────────────────────────────────────────────────────
-    // Build and populate a minimal AssemblerRegistry for our single key:
-    // ──────────────────────────────────────────────────────────────────────────
-    const assemblerRegistry = new AssemblerRegistry();
-    assemblerRegistry.register(
-      'thoughts_wrapper',
-      new ThoughtsSectionAssembler({ logger })
-    );
-
-    // New PromptBuilder signature:
     promptBuilder = new PromptBuilder({
       logger,
       llmConfigService,
-      placeholderResolver,
-      assemblerRegistry,
-      conditionEvaluator: ConditionEvaluator,
+      templateService,
+      dataFormatter,
     });
   });
 
-  const buildPrompt = async (thoughtsArray) => {
-    const gameStateDto = {
-      actorState: {
-        id: 'actor1',
-        components: {
-          'core:short_term_memory': {
-            thoughts: thoughtsArray.map((t) => ({ text: t })),
-          },
+  const createTestDto = (thoughts = []) => ({
+    actorName: 'Test Actor',
+    actorId: 'test-actor',
+    userInputContent: '',
+    currentLocation: {
+      locationId: 'test-location',
+      name: 'Test Location',
+      description: 'A test location',
+    },
+    availableActions: [],
+    perceptionLog: [],
+    actorState: {
+      components: {
+        'core:short_term_memory': {
+          thoughts: thoughts.map((text) => ({ text, timestamp: '2024-01-01' })),
+        },
+        'core:notes': {
+          notes: [],
+        },
+        'core:goals': {
+          goals: [],
         },
       },
-      actorPromptData: { name: 'Test Actor' },
-      currentUserInput: '',
-      perceptionLog: [],
-      currentLocation: undefined,
-      availableActions: [],
-    };
+    },
+  });
 
-    const promptData = await provider.getPromptData(gameStateDto, logger);
-    return promptBuilder.build('thoughts_only', promptData);
+  const buildPrompt = async (thoughts = []) => {
+    const testDto = createTestDto(thoughts);
+    const promptData = await provider.getPromptData(testDto, logger);
+    return await promptBuilder.build('test-llm', promptData);
   };
 
-  test('Entity with zero thoughts omits the section', async () => {
+  test('Entity with zero thoughts includes empty thoughts section', async () => {
     const prompt = await buildPrompt([]);
-    expect(prompt.includes('Your most recent thoughts')).toBe(false);
-    expect(prompt).toBe('');
+
+    // Should include the thoughts section but it should be empty
+    expect(prompt).toContain('<thoughts>\n\n</thoughts>');
+    expect(prompt).not.toContain('Your most recent thoughts');
   });
 
   test('Entity with one thought includes the formatted section', async () => {
     const prompt = await buildPrompt(['OnlyThought']);
-    const expected =
-      '\nYour most recent thoughts (oldest first):\n\n' +
-      '- OnlyThought' +
-      '\n\n';
-    expect(prompt).toBe(expected);
-    expect((prompt.match(/Your most recent thoughts/g) || []).length).toBe(1);
+
+    // Should include the thoughts section with the thought
+    expect(prompt).toContain('<thoughts>\n- OnlyThought\n</thoughts>');
+    expect(prompt).toContain('OnlyThought');
   });
 
-  test('Entity with multiple thoughts lists them oldest to newest', async () => {
-    const prompt = await buildPrompt(['T1', 'T2', 'T3']);
-    const expected =
-      '\nYour most recent thoughts (oldest first):\n\n' +
-      '- T1\n' +
-      '- T2\n' +
-      '- T3' +
-      '\n\n';
-    expect(prompt).toBe(expected);
-    expect(prompt.indexOf('- T1')).toBeLessThan(prompt.indexOf('- T2'));
-    expect(prompt.indexOf('- T2')).toBeLessThan(prompt.indexOf('- T3'));
+  test('Entity with multiple thoughts formats them correctly', async () => {
+    const prompt = await buildPrompt(['First thought', 'Second thought']);
+
+    // Should include both thoughts formatted correctly
+    expect(prompt).toContain(
+      '<thoughts>\n- First thought\n- Second thought\n</thoughts>'
+    );
+    expect(prompt).toContain('First thought');
+    expect(prompt).toContain('Second thought');
+  });
+
+  test('Prompt includes all required sections', async () => {
+    const prompt = await buildPrompt(['Test thought']);
+
+    // Should contain all major sections
+    expect(prompt).toContain('<task_definition>');
+    expect(prompt).toContain('<character_persona>');
+    expect(prompt).toContain('<portrayal_guidelines>');
+    expect(prompt).toContain('<content_policy>');
+    expect(prompt).toContain('<world_context>');
+    expect(prompt).toContain('<perception_log>');
+    expect(prompt).toContain('<thoughts>');
+    expect(prompt).toContain('<notes>');
+    expect(prompt).toContain('<goals>');
+    expect(prompt).toContain('<available_actions_info>');
+    expect(prompt).toContain('<indexed_choices>');
+    expect(prompt).toContain('<user_input>');
+    expect(prompt).toContain('<final_instructions>');
+  });
+
+  test('Prompt sections are in the correct order', async () => {
+    const prompt = await buildPrompt(['Test thought']);
+
+    // Test that sections appear in the expected order
+    const taskDefIndex = prompt.indexOf('<task_definition>');
+    const personaIndex = prompt.indexOf('<character_persona>');
+    const guidelinesIndex = prompt.indexOf('<portrayal_guidelines>');
+    const thoughtsIndex = prompt.indexOf('<thoughts>');
+    const finalIndex = prompt.indexOf('<final_instructions>');
+
+    expect(taskDefIndex).toBeLessThan(personaIndex);
+    expect(personaIndex).toBeLessThan(guidelinesIndex);
+    expect(guidelinesIndex).toBeLessThan(thoughtsIndex);
+    expect(thoughtsIndex).toBeLessThan(finalIndex);
   });
 });

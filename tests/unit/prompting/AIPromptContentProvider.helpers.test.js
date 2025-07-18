@@ -77,7 +77,7 @@ describe('AIPromptContentProvider helper methods', () => {
     };
 
     const res = provider._extractMemoryComponents(componentsMap);
-    expect(res.thoughtsArray).toEqual(['t1']);
+    expect(res.thoughtsArray).toEqual([{ text: 't1' }]);
     expect(res.notesArray).toEqual([{ text: 'n1', timestamp: 't1' }]);
     expect(res.goalsArray).toEqual([{ text: 'g1', timestamp: 't3' }]);
   });

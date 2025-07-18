@@ -3,36 +3,8 @@
 
 import { describe, beforeEach, test, expect, jest } from '@jest/globals';
 import { PromptBuilder } from '../../../src/prompting/promptBuilder.js';
-import { AssemblerRegistry } from '../../../src/prompting/assemblerRegistry.js';
-
-/* ------------------------------------------------------------------------- */
-/* Helpers & simple fakes                                                    */
-
-/* ------------------------------------------------------------------------- */
-
-class DummyAssembler {
-  /**
-   * @param {string} output - String returned by assemble()
-   * @param {boolean} shouldThrow - If true, assemble() throws
-   */
-  constructor(output, shouldThrow = false) {
-    this.output = output;
-    this.shouldThrow = shouldThrow;
-    this.assemble = jest.fn(this.assemble.bind(this));
-  }
-
-  assemble() {
-    if (this.shouldThrow) {
-      throw new Error('dummy assembler forced failure');
-    }
-    return this.output;
-  }
-}
-
-// A minimal placeholder resolver that is effectively a no-op.
-const passthroughPlaceholderResolver = {
-  resolve: (s) => s,
-};
+import { PromptTemplateService } from '../../../src/prompting/promptTemplateService.js';
+import { PromptDataFormatter } from '../../../src/prompting/promptDataFormatter.js';
 
 /* ------------------------------------------------------------------------- */
 /* Shared test data                                                          */
@@ -40,58 +12,59 @@ const passthroughPlaceholderResolver = {
 
 const TEST_LLM_ID = 'unit-llm';
 
-const PROMPT_CONFIG = {
+const BASIC_LLM_CONFIG = {
   configId: 'config-1',
-  promptElements: [
-    { key: 'elem1' },
-    { key: 'elem2' },
-    { key: 'elem3', condition: { promptDataFlag: 'includeElem3' } },
+  displayName: 'Test LLM',
+  modelIdentifier: 'test-model',
+  endpointUrl: 'https://test.api',
+  apiType: 'test',
+  jsonOutputStrategy: { method: 'test' },
+};
+
+const SAMPLE_PROMPT_DATA = {
+  taskDefinitionContent: 'Test task definition',
+  characterPersonaContent: 'Test character persona',
+  portrayalGuidelinesContent: 'Test portrayal guidelines',
+  contentPolicyContent: 'Test content policy',
+  worldContextContent: 'Test world context',
+  availableActionsInfoContent: 'Test available actions',
+  userInputContent: 'Test user input',
+  finalInstructionsContent: 'Test final instructions',
+  assistantResponsePrefix: '\n',
+  perceptionLogArray: [
+    { type: 'visual', content: 'Test perception 1' },
+    { type: 'audio', content: 'Test perception 2' },
   ],
-  promptAssemblyOrder: ['elem1', 'elem2', 'elem3'],
+  thoughtsArray: [
+    { text: 'Test thought 1', timestamp: '2024-01-01' },
+    { text: 'Test thought 2', timestamp: '2024-01-02' },
+  ],
+  notesArray: [
+    { text: 'Test note 1', timestamp: '2024-01-01' },
+    { text: 'Test note 2', timestamp: '2024-01-02' },
+  ],
+  goalsArray: [
+    { text: 'Test goal 1', timestamp: '2024-01-01' },
+    { text: 'Test goal 2', timestamp: '2024-01-02' },
+  ],
+  indexedChoicesArray: [
+    { index: 1, commandString: 'action1', description: 'Do action 1' },
+    { index: 2, commandString: 'action2', description: 'Do action 2' },
+  ],
 };
 
 /* ------------------------------------------------------------------------- */
 /* Test suite                                                                */
 /* ------------------------------------------------------------------------- */
 
-describe('PromptBuilder (orchestrator-only)', () => {
+describe('PromptBuilder (template-based)', () => {
   let logger;
   let llmConfigService;
-  let assemblerRegistry;
-  let conditionEvaluator;
-  let builder; // constructed fresh per test
-
-  const makeBuilder = () =>
-    new PromptBuilder({
-      logger,
-      llmConfigService,
-      placeholderResolver: passthroughPlaceholderResolver,
-      assemblerRegistry,
-      conditionEvaluator,
-    });
-
-  /**
-   * Registers three dummy assemblers (A, B, C) in the shared registry.
-   *
-   * @param opts
-   */
-  const registerAssemblersABC = (opts = {}) => {
-    assemblerRegistry.register(
-      'elem1',
-      new DummyAssembler('A', opts.elem1Throws)
-    );
-    assemblerRegistry.register(
-      'elem2',
-      new DummyAssembler('B', opts.elem2Throws)
-    );
-    assemblerRegistry.register(
-      'elem3',
-      new DummyAssembler('C', opts.elem3Throws)
-    );
-  };
+  let templateService;
+  let dataFormatter;
+  let builder;
 
   beforeEach(() => {
-    /* fresh spies each run */
     logger = {
       debug: jest.fn(),
       error: jest.fn(),
@@ -100,93 +73,123 @@ describe('PromptBuilder (orchestrator-only)', () => {
     };
 
     llmConfigService = {
-      /** @returns {Promise<object|null>} */
       getConfig: jest.fn(async (id) =>
-        id === TEST_LLM_ID ? PROMPT_CONFIG : null
+        id === TEST_LLM_ID ? BASIC_LLM_CONFIG : null
       ),
     };
 
-    assemblerRegistry = new AssemblerRegistry();
+    templateService = new PromptTemplateService({ logger });
+    dataFormatter = new PromptDataFormatter({ logger });
 
-    /* default: every condition passes */
-    conditionEvaluator = {
-      isElementConditionMet: jest.fn(() => true),
+    builder = new PromptBuilder({
+      logger,
+      llmConfigService,
+      templateService,
+      dataFormatter,
+    });
+  });
+
+  /* ──────────────────────────────────────────────────────────────────────── */
+  /* Happy-path prompt generation                                            */
+  /* ──────────────────────────────────────────────────────────────────────── */
+
+  test('generates a complete prompt from template and data', async () => {
+    const prompt = await builder.build(TEST_LLM_ID, SAMPLE_PROMPT_DATA);
+
+    // Check that all major sections are present
+    expect(prompt).toContain(
+      '<task_definition>\nTest task definition\n</task_definition>'
+    );
+    expect(prompt).toContain(
+      '<character_persona>\nTest character persona\n</character_persona>'
+    );
+    expect(prompt).toContain(
+      '<portrayal_guidelines>\nTest portrayal guidelines\n</portrayal_guidelines>'
+    );
+    expect(prompt).toContain(
+      '<content_policy>\nTest content policy\n</content_policy>'
+    );
+    expect(prompt).toContain(
+      '<world_context>\nTest world context\n</world_context>'
+    );
+    expect(prompt).toContain(
+      '<available_actions_info>\nTest available actions\n</available_actions_info>'
+    );
+    expect(prompt).toContain('<user_input>\nTest user input\n</user_input>');
+    expect(prompt).toContain(
+      '<final_instructions>\nTest final instructions\n</final_instructions>'
+    );
+
+    // Check complex sections are formatted correctly
+    expect(prompt).toContain(
+      '<perception_log>\n<entry type="visual">\nTest perception 1\n</entry>\n<entry type="audio">\nTest perception 2\n</entry>\n</perception_log>'
+    );
+    expect(prompt).toContain(
+      '<thoughts>\n- Test thought 1\n- Test thought 2\n</thoughts>'
+    );
+    expect(prompt).toContain('<notes>\n- Test note 1\n- Test note 2\n</notes>');
+    expect(prompt).toContain('<goals>\n- Test goal 1\n- Test goal 2\n</goals>');
+    expect(prompt).toContain(
+      '<indexed_choices>\n[1] action1: Do action 1\n[2] action2: Do action 2\n</indexed_choices>'
+    );
+
+    // Check the assistant response prefix
+    expect(prompt).toEndWith('\n');
+  });
+
+  /* ──────────────────────────────────────────────────────────────────────── */
+  /* Empty sections handling                                                 */
+  /* ──────────────────────────────────────────────────────────────────────── */
+
+  test('handles empty arrays gracefully', async () => {
+    const dataWithEmptyArrays = {
+      ...SAMPLE_PROMPT_DATA,
+      perceptionLogArray: [],
+      thoughtsArray: [],
+      notesArray: [],
+      goalsArray: [],
+      indexedChoicesArray: [],
     };
 
-    builder = makeBuilder();
+    const prompt = await builder.build(TEST_LLM_ID, dataWithEmptyArrays);
+
+    // Empty sections should still have wrapper tags but no content
+    expect(prompt).toContain('<perception_log>\n\n</perception_log>');
+    expect(prompt).toContain('<thoughts>\n\n</thoughts>');
+    expect(prompt).toContain('<notes>\n\n</notes>');
+    expect(prompt).toContain('<goals>\n\n</goals>');
+    expect(prompt).toContain('<indexed_choices>\n\n</indexed_choices>');
   });
 
   /* ──────────────────────────────────────────────────────────────────────── */
-  /* Happy-path concatenation                                                */
+  /* Missing fields handling                                                 */
   /* ──────────────────────────────────────────────────────────────────────── */
 
-  test('concatenates assembler outputs in the declared order', async () => {
-    registerAssemblersABC();
+  test('handles missing string fields with empty strings', async () => {
+    const minimalData = {
+      // Only provide arrays, let string fields be undefined
+      perceptionLogArray: [],
+      thoughtsArray: [],
+      notesArray: [],
+      goalsArray: [],
+      indexedChoicesArray: [],
+    };
 
-    const prompt = await builder.build(TEST_LLM_ID, { includeElem3: true });
+    const prompt = await builder.build(TEST_LLM_ID, minimalData);
 
-    expect(prompt).toBe('ABC');
-    expect(assemblerRegistry.resolve('elem1').assemble).toHaveBeenCalledTimes(
-      1
+    // All sections should still be present but empty
+    expect(prompt).toContain('<task_definition>\n\n</task_definition>');
+    expect(prompt).toContain('<character_persona>\n\n</character_persona>');
+    expect(prompt).toContain(
+      '<portrayal_guidelines>\n\n</portrayal_guidelines>'
     );
-    expect(assemblerRegistry.resolve('elem2').assemble).toHaveBeenCalledTimes(
-      1
+    expect(prompt).toContain('<content_policy>\n\n</content_policy>');
+    expect(prompt).toContain('<world_context>\n\n</world_context>');
+    expect(prompt).toContain(
+      '<available_actions_info>\n\n</available_actions_info>'
     );
-    expect(assemblerRegistry.resolve('elem3').assemble).toHaveBeenCalledTimes(
-      1
-    );
-    expect(conditionEvaluator.isElementConditionMet).toHaveBeenCalledTimes(3);
-  });
-
-  /* ──────────────────────────────────────────────────────────────────────── */
-  /* Conditional element skipping                                            */
-  /* ──────────────────────────────────────────────────────────────────────── */
-
-  test('skips elements whose condition is not met', async () => {
-    registerAssemblersABC();
-
-    /* Custom condition logic: respect the includeElem3 flag */
-    conditionEvaluator.isElementConditionMet.mockImplementation(
-      (cond, data) => {
-        if (!cond) return true; // unconditional elements pass
-        return Boolean(data[cond.promptDataFlag]);
-      }
-    );
-
-    const prompt = await builder.build(TEST_LLM_ID, { includeElem3: false });
-
-    expect(prompt).toBe('AB'); // C omitted
-    expect(assemblerRegistry.resolve('elem3').assemble).not.toHaveBeenCalled();
-  });
-
-  /* ──────────────────────────────────────────────────────────────────────── */
-  /* Registry resolution failures                                            */
-  /* ──────────────────────────────────────────────────────────────────────── */
-
-  test('throws when an assembler key is missing in the registry', async () => {
-    assemblerRegistry.register('elem1', new DummyAssembler('A'));
-    // elem2 intentionally *not* registered
-    assemblerRegistry.register('elem3', new DummyAssembler('C'));
-
-    await expect(
-      builder.build(TEST_LLM_ID, { includeElem3: true })
-    ).rejects.toThrow("No assembler registered for 'elem2'");
-  });
-
-  /* ──────────────────────────────────────────────────────────────────────── */
-  /* Element-level assembler errors are surfaced via logger, prompt builds   */
-  /* ──────────────────────────────────────────────────────────────────────── */
-
-  test('continues building when an assembler throws, logs aggregated error', async () => {
-    registerAssemblersABC({ elem2Throws: true });
-
-    const prompt = await builder.build(TEST_LLM_ID, { includeElem3: true });
-
-    expect(prompt).toBe('AC'); // B failed but others present
-    expect(logger.error).toHaveBeenCalledWith(
-      expect.stringContaining('failed during assembly'),
-      expect.any(Object)
-    );
+    expect(prompt).toContain('<user_input>\n\n</user_input>');
+    expect(prompt).toContain('<final_instructions>\n\n</final_instructions>');
   });
 
   /* ──────────────────────────────────────────────────────────────────────── */
@@ -199,30 +202,122 @@ describe('PromptBuilder (orchestrator-only)', () => {
     const prompt = await builder.build('unknown-llm', {});
 
     expect(prompt).toBe('');
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.stringContaining('No configuration found')
+    );
   });
 
-  test('build returns empty string for bad inputs (null promptData)', async () => {
-    registerAssemblersABC();
+  test('returns empty string when llmId is null', async () => {
+    const prompt = await builder.build(null, {});
 
+    expect(prompt).toBe('');
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.stringContaining('llmId is required')
+    );
+  });
+
+  test('returns empty string when promptData is null', async () => {
     const prompt = await builder.build(TEST_LLM_ID, null);
 
     expect(prompt).toBe('');
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.stringContaining('promptData is required')
+    );
   });
 
   /* ──────────────────────────────────────────────────────────────────────── */
-  /* Constructor dependency validation                                       */
+  /* Complex data formatting                                                 */
   /* ──────────────────────────────────────────────────────────────────────── */
 
-  test('constructor throws when a required dependency is missing', () => {
-    expect(
-      () =>
-        new PromptBuilder({
-          // llmConfigService omitted on purpose
-          logger,
-          placeholderResolver: passthroughPlaceholderResolver,
-          assemblerRegistry,
-          conditionEvaluator,
-        })
-    ).toThrow(/LlmConfigManager/);
+  test('formats perception log entries with proper XML structure', async () => {
+    const dataWithComplexPerceptions = {
+      ...SAMPLE_PROMPT_DATA,
+      perceptionLogArray: [
+        { type: 'visual', content: 'A bright light' },
+        { type: 'audio', content: 'A loud noise' },
+        { type: 'tactile', content: 'A rough surface' },
+      ],
+    };
+
+    const prompt = await builder.build(TEST_LLM_ID, dataWithComplexPerceptions);
+
+    const perceptionSection = prompt.match(
+      /<perception_log>([\s\S]*?)<\/perception_log>/
+    )[1];
+    expect(perceptionSection).toContain(
+      '<entry type="visual">\nA bright light\n</entry>'
+    );
+    expect(perceptionSection).toContain(
+      '<entry type="audio">\nA loud noise\n</entry>'
+    );
+    expect(perceptionSection).toContain(
+      '<entry type="tactile">\nA rough surface\n</entry>'
+    );
+  });
+
+  test('formats indexed choices with proper numbering and descriptions', async () => {
+    const dataWithManyChoices = {
+      ...SAMPLE_PROMPT_DATA,
+      indexedChoicesArray: [
+        {
+          index: 1,
+          commandString: 'look',
+          description: 'Look around the room',
+        },
+        {
+          index: 2,
+          commandString: 'talk',
+          description: 'Talk to the merchant',
+        },
+        { index: 3, commandString: 'leave', description: 'Leave the shop' },
+        {
+          index: 4,
+          commandString: 'buy sword',
+          description: 'Buy the iron sword (50 gold)',
+        },
+      ],
+    };
+
+    const prompt = await builder.build(TEST_LLM_ID, dataWithManyChoices);
+
+    const choicesSection = prompt.match(
+      /<indexed_choices>([\s\S]*?)<\/indexed_choices>/
+    )[1];
+    expect(choicesSection).toContain('[1] look: Look around the room');
+    expect(choicesSection).toContain('[2] talk: Talk to the merchant');
+    expect(choicesSection).toContain('[3] leave: Leave the shop');
+    expect(choicesSection).toContain(
+      '[4] buy sword: Buy the iron sword (50 gold)'
+    );
+  });
+
+  /* ──────────────────────────────────────────────────────────────────────── */
+  /* Integration with custom template service                                */
+  /* ──────────────────────────────────────────────────────────────────────── */
+
+  test('uses injected template service and data formatter', async () => {
+    const mockTemplateService = {
+      processCharacterPrompt: jest.fn().mockReturnValue('MOCK PROMPT OUTPUT'),
+    };
+    const mockDataFormatter = {
+      formatPromptData: jest.fn().mockReturnValue({ mocked: 'data' }),
+    };
+
+    const customBuilder = new PromptBuilder({
+      logger,
+      llmConfigService,
+      templateService: mockTemplateService,
+      dataFormatter: mockDataFormatter,
+    });
+
+    const prompt = await customBuilder.build(TEST_LLM_ID, SAMPLE_PROMPT_DATA);
+
+    expect(prompt).toBe('MOCK PROMPT OUTPUT');
+    expect(mockDataFormatter.formatPromptData).toHaveBeenCalledWith(
+      SAMPLE_PROMPT_DATA
+    );
+    expect(mockTemplateService.processCharacterPrompt).toHaveBeenCalledWith({
+      mocked: 'data',
+    });
   });
 });

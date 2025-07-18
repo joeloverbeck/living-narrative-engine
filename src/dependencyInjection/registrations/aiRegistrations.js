@@ -34,12 +34,8 @@
 /** @typedef {import('../../interfaces/IGameStateValidationServiceForPrompting.js').IGameStateValidationServiceForPrompting} IGameStateValidationServiceForPrompting */
 /** @typedef {import('../../interfaces/IConfigurationProvider.js').IConfigurationProvider} IConfigurationProvider */
 /** @typedef {import('../../llms/llmConfigManager.js').LlmConfigManager} LlmConfigManager_Concrete */
-/** @typedef {import('../../utils/placeholderResolverUtils.js').PlaceholderResolver} PlaceholderResolver_Concrete */
-/** @typedef {import('../../utils/executionPlaceholderResolver.js').ExecutionPlaceholderResolver} ExecutionPlaceholderResolver_Concrete */
-/** @typedef {import('../../prompting/assembling/standardElementAssembler.js').StandardElementAssembler} StandardElementAssembler_Concrete */
-/** @typedef {import('../../prompting/assembling/perceptionLogAssembler.js').PerceptionLogAssembler} PerceptionLogAssembler_Concrete */
-/** @typedef {import('../../prompting/assembling/thoughtsSectionAssembler.js').default} ThoughtsSectionAssembler_Concrete */
-/** @typedef {import('../../prompting/assembling/notesSectionAssembler.js').default} NotesSectionAssembler_Concrete */
+/** @typedef {import('../../prompting/promptTemplateService.js').PromptTemplateService} PromptTemplateService */
+/** @typedef {import('../../prompting/promptDataFormatter.js').PromptDataFormatter} PromptDataFormatter */
 /** @typedef {import('../../turns/handlers/actorTurnHandler.js').default} ActorTurnHandler_Concrete */
 /** @typedef {import('../../llms/LLMStrategyFactory.js').LLMStrategyFactory} LLMStrategyFactory_Concrete */
 
@@ -66,23 +62,9 @@ import { HttpConfigurationProvider } from '../../configuration/httpConfiguration
 import { LlmConfigManager } from '../../llms/llmConfigManager.js';
 import { LlmConfigLoader } from '../../llms/services/llmConfigLoader.js';
 import { LlmJsonService } from '../../llms/llmJsonService.js';
-import { PlaceholderResolver } from '../../utils/placeholderResolverUtils.js';
-import { ExecutionPlaceholderResolver } from '../../utils/executionPlaceholderResolver.js';
-import { StandardElementAssembler } from '../../prompting/assembling/standardElementAssembler.js';
-import {
-  PERCEPTION_LOG_WRAPPER_KEY,
-  PerceptionLogAssembler,
-} from '../../prompting/assembling/perceptionLogAssembler.js';
-import ThoughtsSectionAssembler, {
-  THOUGHTS_WRAPPER_KEY,
-} from '../../prompting/assembling/thoughtsSectionAssembler.js';
-import NotesSectionAssembler, {
-  NOTES_WRAPPER_KEY,
-} from '../../prompting/assembling/notesSectionAssembler.js';
-import GoalsSectionAssembler, {
-  GOALS_WRAPPER_KEY,
-} from '../../prompting/assembling/goalsSectionAssembler.js';
 import { PromptBuilder } from '../../prompting/promptBuilder.js';
+import { PromptTemplateService } from '../../prompting/promptTemplateService.js';
+import { PromptDataFormatter } from '../../prompting/promptDataFormatter.js';
 import { EntitySummaryProvider } from '../../data/providers/entitySummaryProvider.js';
 import { ActorDataExtractor } from '../../turns/services/actorDataExtractor.js';
 import { ActorStateProvider } from '../../data/providers/actorStateProvider.js';
@@ -95,12 +77,6 @@ import { LLMResponseProcessor } from '../../turns/services/LLMResponseProcessor.
 import { AIFallbackActionFactory } from '../../turns/services/AIFallbackActionFactory.js';
 import { AIPromptPipeline } from '../../prompting/AIPromptPipeline.js';
 import { SHUTDOWNABLE, INITIALIZABLE } from '../tags.js';
-import {
-  INDEXED_CHOICES_KEY,
-  IndexedChoicesAssembler,
-} from '../../prompting/assembling/indexedChoicesAssembler.js';
-import { AssemblerRegistry } from '../../prompting/assemblerRegistry.js';
-import * as ConditionEvaluator from '../../prompting/elementConditionEvaluator.js';
 import { LLMChooser } from '../../turns/adapters/llmChooser.js';
 import { ActionIndexerAdapter } from '../../turns/adapters/actionIndexerAdapter.js';
 import { LLMDecisionProvider } from '../../turns/providers/llmDecisionProvider.js';
@@ -224,101 +200,20 @@ export function registerPromptingEngine(registrar, logger) {
   });
 
   registrar.singletonFactory(
-    tokens.PlaceholderResolver,
-    (c) => new PlaceholderResolver(c.resolve(tokens.ILogger))
+    tokens.PromptTemplateService,
+    (c) => new PromptTemplateService({ logger: c.resolve(tokens.ILogger) })
   );
   registrar.singletonFactory(
-    tokens.ExecutionPlaceholderResolver,
-    (c) => new ExecutionPlaceholderResolver(c.resolve(tokens.ILogger))
+    tokens.PromptDataFormatter,
+    (c) => new PromptDataFormatter({ logger: c.resolve(tokens.ILogger) })
   );
-  registrar.singletonFactory(
-    tokens.StandardElementAssembler,
-    (c) =>
-      new StandardElementAssembler({
-        logger: c.resolve(tokens.ILogger),
-        safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
-      })
-  );
-  registrar.singletonFactory(
-    tokens.PerceptionLogAssembler,
-    (c) => new PerceptionLogAssembler({ logger: c.resolve(tokens.ILogger) })
-  );
-  registrar.singletonFactory(
-    tokens.ThoughtsSectionAssembler,
-    (c) => new ThoughtsSectionAssembler({ logger: c.resolve(tokens.ILogger) })
-  );
-  registrar.singletonFactory(
-    tokens.NotesSectionAssembler,
-    (c) => new NotesSectionAssembler({ logger: c.resolve(tokens.ILogger) })
-  );
-  registrar.singletonFactory(
-    tokens.GoalsSectionAssembler,
-    (c) => new GoalsSectionAssembler({ logger: c.resolve(tokens.ILogger) })
-  );
-
-  registrar.singletonFactory(
-    tokens.IndexedChoicesAssembler,
-    (c) => new IndexedChoicesAssembler({ logger: c.resolve(tokens.ILogger) })
-  );
-  logger.debug(
-    `AI Systems Registration: Registered ${tokens.IndexedChoicesAssembler}.`
-  );
-
-  registrar.singletonFactory(tokens.AssemblerRegistry, (c) => {
-    const registry = new AssemblerRegistry();
-    const standardAssembler = c.resolve(tokens.StandardElementAssembler);
-
-    const standardElementKeys = [
-      'task_definition',
-      'character_persona',
-      'portrayal_guidelines',
-      'content_policy',
-      'world_context',
-      'available_actions_info',
-      'user_input',
-      'final_instructions',
-      'assistant_response_prefix',
-    ];
-
-    standardElementKeys.forEach((key) =>
-      registry.register(key, standardAssembler)
-    );
-    logger.debug(
-      `AssemblerRegistry: Registered StandardElementAssembler for ${standardElementKeys.length} keys.`
-    );
-
-    registry.register(
-      PERCEPTION_LOG_WRAPPER_KEY,
-      c.resolve(tokens.PerceptionLogAssembler)
-    );
-    registry.register(
-      THOUGHTS_WRAPPER_KEY,
-      c.resolve(tokens.ThoughtsSectionAssembler)
-    );
-    registry.register(
-      NOTES_WRAPPER_KEY,
-      c.resolve(tokens.NotesSectionAssembler)
-    );
-    registry.register(
-      GOALS_WRAPPER_KEY,
-      c.resolve(tokens.GoalsSectionAssembler)
-    );
-    registry.register(
-      INDEXED_CHOICES_KEY,
-      c.resolve(tokens.IndexedChoicesAssembler)
-    );
-    logger.debug('AssemblerRegistry: Registered all specialized assemblers.');
-
-    return registry;
-  });
 
   registrar.singletonFactory(tokens.IPromptBuilder, (c) => {
     return new PromptBuilder({
       logger: c.resolve(tokens.ILogger),
       llmConfigService: c.resolve(tokens.LlmConfigManager),
-      placeholderResolver: c.resolve(tokens.PlaceholderResolver),
-      assemblerRegistry: c.resolve(tokens.AssemblerRegistry),
-      conditionEvaluator: ConditionEvaluator,
+      templateService: c.resolve(tokens.PromptTemplateService),
+      dataFormatter: c.resolve(tokens.PromptDataFormatter),
     });
   });
   logger.debug(

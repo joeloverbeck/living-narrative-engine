@@ -527,6 +527,7 @@ describe('AIPromptContentProvider', () => {
         availableActionsInfoContent: MOCK_ACTIONS_INFO,
         userInputContent: testUserInput,
         finalInstructionsContent: MOCK_FINAL_INSTR,
+        assistantResponsePrefix: '\n',
         notesArray: [],
         goalsArray: [],
         perceptionLogArray: formattedPerceptions,

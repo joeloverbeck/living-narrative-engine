@@ -63,7 +63,7 @@ describe('AnatomyDescriptionService', () => {
   });
 
   describe('generateAllDescriptions', () => {
-    it('should generate descriptions for all body parts and the body itself', () => {
+    it('should generate descriptions for all body parts and the body itself', async () => {
       // Arrange
       const bodyEntity = createMockEntity('body-1', {
         [ANATOMY_BODY_COMPONENT_ID]: {
@@ -97,12 +97,12 @@ describe('AnatomyDescriptionService', () => {
       mockBodyPartDescriptionBuilder.buildDescription.mockReturnValue(
         'a body part'
       );
-      mockBodyDescriptionComposer.composeDescription.mockReturnValue(
+      mockBodyDescriptionComposer.composeDescription.mockResolvedValue(
         'A complete body description.'
       );
 
       // Act
-      service.generateAllDescriptions(bodyEntity);
+      await service.generateAllDescriptions(bodyEntity);
 
       // Assert
       expect(mockBodyGraphService.getAllParts).toHaveBeenCalledWith({
@@ -126,7 +126,7 @@ describe('AnatomyDescriptionService', () => {
       ).toHaveBeenCalledWith(bodyEntity);
     });
 
-    it('should create description component even when body description is empty', () => {
+    it('should create description component even when body description is empty', async () => {
       // Arrange
       const bodyEntity = createMockEntity('body-1', {
         [ANATOMY_BODY_COMPONENT_ID]: {
@@ -145,10 +145,10 @@ describe('AnatomyDescriptionService', () => {
         })
       );
       mockBodyPartDescriptionBuilder.buildDescription.mockReturnValue('');
-      mockBodyDescriptionComposer.composeDescription.mockReturnValue('');
+      mockBodyDescriptionComposer.composeDescription.mockResolvedValue('');
 
       // Act
-      service.generateAllDescriptions(bodyEntity);
+      await service.generateAllDescriptions(bodyEntity);
 
       // Assert
       // Verify body description was composed even though it's empty
@@ -164,20 +164,20 @@ describe('AnatomyDescriptionService', () => {
       );
     });
 
-    it('should throw error if entity has no anatomy:body component', () => {
+    it('should throw error if entity has no anatomy:body component', async () => {
       const invalidEntity = createMockEntity('invalid-1', {});
 
-      expect(() => service.generateAllDescriptions(invalidEntity)).toThrow(
+      await expect(service.generateAllDescriptions(invalidEntity)).rejects.toThrow(
         'Entity must have an anatomy:body component'
       );
     });
 
-    it('should throw error if body component has no body.root property', () => {
+    it('should throw error if body component has no body.root property', async () => {
       const invalidEntity = createMockEntity('body-1', {
         [ANATOMY_BODY_COMPONENT_ID]: {},
       });
 
-      expect(() => service.generateAllDescriptions(invalidEntity)).toThrow(
+      await expect(service.generateAllDescriptions(invalidEntity)).rejects.toThrow(
         'Body component must have a body.root property'
       );
     });
@@ -257,21 +257,21 @@ describe('AnatomyDescriptionService', () => {
   });
 
   describe('getOrGenerateBodyDescription', () => {
-    it('should return null for null entity', () => {
-      const result = service.getOrGenerateBodyDescription(null);
+    it('should return null for null entity', async () => {
+      const result = await service.getOrGenerateBodyDescription(null);
       expect(result).toBeNull();
     });
 
-    it('should return existing description for non-anatomy entity', () => {
+    it('should return existing description for non-anatomy entity', async () => {
       const entity = createMockEntity('npc-1', {
         [DESCRIPTION_COMPONENT_ID]: { text: 'A regular NPC' },
       });
 
-      const result = service.getOrGenerateBodyDescription(entity);
+      const result = await service.getOrGenerateBodyDescription(entity);
       expect(result).toBe('A regular NPC');
     });
 
-    it('should generate description for anatomy entity without description', () => {
+    it('should generate description for anatomy entity without description', async () => {
       const bodyEntity = createMockEntity('body-1', {
         [ANATOMY_BODY_COMPONENT_ID]: {
           body: {
@@ -290,7 +290,7 @@ describe('AnatomyDescriptionService', () => {
         'Generated body description'
       );
 
-      const result = service.getOrGenerateBodyDescription(bodyEntity);
+      const result = await service.getOrGenerateBodyDescription(bodyEntity);
 
       expect(
         mockBodyDescriptionComposer.composeDescription
@@ -301,7 +301,7 @@ describe('AnatomyDescriptionService', () => {
   });
 
   describe('generateBodyDescription', () => {
-    it('should dispatch error event when description is empty', () => {
+    it('should dispatch error event when description is empty', async () => {
       // Arrange
       const bodyEntity = createMockEntity('body-1', {
         [ANATOMY_BODY_COMPONENT_ID]: {
@@ -312,12 +312,12 @@ describe('AnatomyDescriptionService', () => {
       });
 
       // Mock composer to return empty string
-      mockBodyDescriptionComposer.composeDescription.mockReturnValue('');
+      mockBodyDescriptionComposer.composeDescription.mockResolvedValue('');
       // Mock entityFinder to return the entity when updateDescription is called
       mockEntityFinder.getEntityInstance.mockReturnValue(bodyEntity);
 
       // Act
-      service.generateBodyDescription(bodyEntity);
+      await service.generateBodyDescription(bodyEntity);
 
       // Assert
       expect(mockEventDispatchService.safeDispatchEvent).toHaveBeenCalledWith(
@@ -340,7 +340,7 @@ describe('AnatomyDescriptionService', () => {
       );
     });
 
-    it('should not dispatch error when description is not empty', () => {
+    it('should not dispatch error when description is not empty', async () => {
       // Arrange
       const bodyEntity = createMockEntity('body-1', {
         [ANATOMY_BODY_COMPONENT_ID]: {
@@ -349,14 +349,14 @@ describe('AnatomyDescriptionService', () => {
       });
 
       // Mock composer to return valid description
-      mockBodyDescriptionComposer.composeDescription.mockReturnValue(
+      mockBodyDescriptionComposer.composeDescription.mockResolvedValue(
         'Valid description'
       );
       // Mock entityFinder to return the entity when updateDescription is called
       mockEntityFinder.getEntityInstance.mockReturnValue(bodyEntity);
 
       // Act
-      service.generateBodyDescription(bodyEntity);
+      await service.generateBodyDescription(bodyEntity);
 
       // Assert
       expect(mockEventDispatchService.safeDispatchEvent).not.toHaveBeenCalled();
@@ -367,7 +367,7 @@ describe('AnatomyDescriptionService', () => {
       );
     });
 
-    it('should handle missing eventDispatchService gracefully', () => {
+    it('should handle missing eventDispatchService gracefully', async () => {
       // Create service without eventDispatchService
       const serviceWithoutDispatcher = new AnatomyDescriptionService({
         bodyPartDescriptionBuilder: mockBodyPartDescriptionBuilder,
@@ -384,14 +384,14 @@ describe('AnatomyDescriptionService', () => {
         },
       });
 
-      mockBodyDescriptionComposer.composeDescription.mockReturnValue('');
+      mockBodyDescriptionComposer.composeDescription.mockResolvedValue('');
       // Mock entityFinder to return the entity when updateDescription is called
       mockEntityFinder.getEntityInstance.mockReturnValue(bodyEntity);
 
       // Should not throw error
-      expect(() => {
-        serviceWithoutDispatcher.generateBodyDescription(bodyEntity);
-      }).not.toThrow();
+      await expect(async () => {
+        await serviceWithoutDispatcher.generateBodyDescription(bodyEntity);
+      }).resolves.not.toThrow();
 
       expect(mockComponentManager.addComponent).toHaveBeenCalled();
     });

@@ -53,7 +53,7 @@ describe('AnatomyDescriptionService additional coverage', () => {
     expect(mockComponentManager.addComponent).not.toHaveBeenCalled();
   });
 
-  it('getOrGenerateBodyDescription returns existing when current', () => {
+  it('getOrGenerateBodyDescription returns existing when current', async () => {
     const entity = createEntity('body1', {
       [ANATOMY_BODY_COMPONENT_ID]: { body: { root: 'root' } },
       [DESCRIPTION_COMPONENT_ID]: { text: 'exists' },
@@ -61,7 +61,7 @@ describe('AnatomyDescriptionService additional coverage', () => {
     mockEntityFinder.getEntityInstance.mockReturnValue(entity);
     jest.spyOn(service, 'isDescriptionCurrent').mockReturnValue(true);
 
-    const result = service.getOrGenerateBodyDescription(entity);
+    const result = await service.getOrGenerateBodyDescription(entity);
 
     expect(result).toBe('exists');
     expect(
@@ -70,14 +70,14 @@ describe('AnatomyDescriptionService additional coverage', () => {
     expect(mockComponentManager.addComponent).not.toHaveBeenCalled();
   });
 
-  it('getOrGenerateBodyDescription returns null when composer returns null', () => {
+  it('getOrGenerateBodyDescription returns null when composer returns null', async () => {
     const entity = createEntity('body1', {
       [ANATOMY_BODY_COMPONENT_ID]: { body: { root: 'root' } },
     });
     mockEntityFinder.getEntityInstance.mockReturnValue(entity);
     mockBodyDescriptionComposer.composeDescription.mockReturnValue(null);
 
-    const result = service.getOrGenerateBodyDescription(entity);
+    const result = await service.getOrGenerateBodyDescription(entity);
 
     expect(result).toBeNull();
     expect(mockComponentManager.addComponent).not.toHaveBeenCalled();

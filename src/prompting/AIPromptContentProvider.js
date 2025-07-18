@@ -276,13 +276,13 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
    * @private
    * Extracts memory-related arrays from the provided components map.
    * @param {object} componentsMap - Actor or game components.
-   * @returns {{thoughtsArray: string[], notesArray: Array<{text:string,subject?:string,context?:string,tags?:string[],timestamp?:string}>, goalsArray: Array<{text:string,timestamp:string}>}}
+   * @returns {{thoughtsArray: Array<{text:string,timestamp?:string}>, notesArray: Array<{text:string,subject?:string,context?:string,tags?:string[],timestamp?:string}>, goalsArray: Array<{text:string,timestamp:string}>}}
    *   Object containing memory arrays for prompt data.
    */
   _extractMemoryComponents(componentsMap) {
     const memoryComp = componentsMap[SHORT_TERM_MEMORY_COMPONENT_ID];
     const thoughtsArray = Array.isArray(memoryComp?.thoughts)
-      ? memoryComp.thoughts.map((t) => t.text).filter(Boolean)
+      ? memoryComp.thoughts.filter((t) => t && t.text)
       : [];
 
     const notesComp = componentsMap['core:notes'];
@@ -302,7 +302,7 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
    * @private
    * Combines base values and memory arrays into the final PromptData object.
    * @param {object} baseValues - Preassembled base prompt values.
-   * @param {string[]} thoughtsArray - Extracted short-term memory thoughts.
+   * @param {Array<{text:string,timestamp?:string}>} thoughtsArray - Extracted short-term memory thoughts.
    * @param {Array<{text:string,timestamp:string}>} notesArray - Extracted notes.
    * @param {Array<{text:string,timestamp:string}>} goalsArray - Extracted goals.
    * @param {ActionComposite[]} [indexedChoicesArray] - Array of available actions with indices.
@@ -385,6 +385,7 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
         perceptionLogArray: perceptionLogArray,
         characterName: characterName,
         locationName: locationName,
+        assistantResponsePrefix: '\n', // Standard newline before assistant response
       };
 
       const memoryData = this._extractMemoryComponents(componentsMap);

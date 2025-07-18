@@ -70,6 +70,7 @@ describe('JSON-Schema – core component data contracts', () => {
     'anatomy:joint': { parentId: 'entity-123', socketId: 'ankle' },
     'anatomy:body': { recipeId: 'anatomy:human_female' },
     'core:owned_by': { ownerId: 'entity-123' },
+    'core:material': { material: 'cotton' },
   };
 
   /** @type {Record<string, unknown>} */
@@ -102,6 +103,7 @@ describe('JSON-Schema – core component data contracts', () => {
     'anatomy:joint': {},
     'anatomy:body': {},
     'core:owned_by': {},
+    'core:material': { material: 'invalid_material' },
   };
 
   Object.entries(validators).forEach(([id, validate]) => {

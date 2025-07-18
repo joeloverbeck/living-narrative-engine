@@ -15,6 +15,7 @@
       "hair_style.component.json",
       "length_category.component.json",
       "length_hair.component.json",
+      "projection.component.json",
       "shape_eye.component.json",
       "shape_general.component.json",
       "size_category.component.json",

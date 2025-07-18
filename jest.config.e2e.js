@@ -22,10 +22,10 @@ module.exports = {
   // E2E tests have lower coverage expectations due to their nature
   coverageThreshold: {
     global: {
-      branches: 10,
-      functions: 15,
-      lines: 15,
-      statements: 15,
+      branches: 15,
+      functions: 20,
+      lines: 20,
+      statements: 20,
     },
   },
 };

@@ -8,6 +8,7 @@ describe('BodyDescriptionComposer', () => {
   let mockBodyGraphService;
   let mockEntityFinder;
   let mockAnatomyFormattingService;
+  let mockPartDescriptionGenerator;
 
   // Helper function to create mock entities with proper interface
   const createMockPartEntity = (subType) => ({
@@ -36,40 +37,45 @@ describe('BodyDescriptionComposer', () => {
       getGroupedParts: jest.fn(),
     };
 
+    mockPartDescriptionGenerator = {
+      generatePartDescription: jest.fn(),
+    };
+
     // Create composer instance
     composer = new BodyDescriptionComposer({
       bodyPartDescriptionBuilder: mockBodyPartDescriptionBuilder,
       bodyGraphService: mockBodyGraphService,
       entityFinder: mockEntityFinder,
       anatomyFormattingService: mockAnatomyFormattingService,
+      partDescriptionGenerator: mockPartDescriptionGenerator,
     });
   });
 
   describe('composeDescription', () => {
-    it('should return empty string for null entity', () => {
-      const result = composer.composeDescription(null);
+    it('should return empty string for null entity', async () => {
+      const result = await composer.composeDescription(null);
       expect(result).toBe('');
     });
 
-    it('should return empty string for entity without anatomy:body component', () => {
+    it('should return empty string for entity without anatomy:body component', async () => {
       const entity = {
         hasComponent: jest.fn().mockReturnValue(false),
         getComponentData: jest.fn(),
       };
-      const result = composer.composeDescription(entity);
+      const result = await composer.composeDescription(entity);
       expect(result).toBe('');
     });
 
-    it('should return empty string for entity without body.root', () => {
+    it('should return empty string for entity without body.root', async () => {
       const entity = {
         hasComponent: jest.fn().mockReturnValue(true),
         getComponentData: jest.fn().mockReturnValue({}),
       };
-      const result = composer.composeDescription(entity);
+      const result = await composer.composeDescription(entity);
       expect(result).toBe('');
     });
 
-    it('should return empty string when no parts found', () => {
+    it('should return empty string when no parts found', async () => {
       const entity = {
         hasComponent: jest.fn().mockReturnValue(true),
         getComponentData: jest
@@ -78,11 +84,11 @@ describe('BodyDescriptionComposer', () => {
       };
       mockBodyGraphService.getAllParts.mockReturnValue([]);
 
-      const result = composer.composeDescription(entity);
+      const result = await composer.composeDescription(entity);
       expect(result).toBe('');
     });
 
-    it('should compose complete body description', () => {
+    it('should compose complete body description', async () => {
       const bodyEntity = {
         hasComponent: jest.fn().mockReturnValue(true),
         getComponentData: jest.fn().mockImplementation((componentId) => {
@@ -184,7 +190,7 @@ describe('BodyDescriptionComposer', () => {
         return type + 's';
       });
 
-      const result = composer.composeDescription(bodyEntity);
+      const result = await composer.composeDescription(bodyEntity);
 
       expect(result).toContain('Build: slender');
       expect(result).toContain('Hair: long black hair');
@@ -195,11 +201,12 @@ describe('BodyDescriptionComposer', () => {
       expect(result.split('\n')).toHaveLength(5); // Build, Hair, Eyes, Torso, Arms
     });
 
-    it('should use default values when anatomyFormattingService not provided', () => {
+    it('should use default values when anatomyFormattingService not provided', async () => {
       composer = new BodyDescriptionComposer({
         bodyPartDescriptionBuilder: mockBodyPartDescriptionBuilder,
         bodyGraphService: mockBodyGraphService,
         entityFinder: mockEntityFinder,
+        partDescriptionGenerator: mockPartDescriptionGenerator,
         // No anatomyFormattingService
       });
 
@@ -247,13 +254,13 @@ describe('BodyDescriptionComposer', () => {
         return type + 's';
       });
 
-      const result = composer.composeDescription(bodyEntity);
+      const result = await composer.composeDescription(bodyEntity);
 
       expect(result).toBeTruthy();
       // Should use default description order and grouped parts
     });
 
-    it('should handle parts without subType', () => {
+    it('should handle parts without subType', async () => {
       const bodyEntity = {
         hasComponent: jest.fn().mockReturnValue(true),
         getComponentData: jest.fn().mockImplementation((componentId) => {
@@ -310,7 +317,7 @@ describe('BodyDescriptionComposer', () => {
         return type + 's';
       });
 
-      const result = composer.composeDescription(bodyEntity);
+      const result = await composer.composeDescription(bodyEntity);
 
       expect(result).toContain('Torso: a torso');
     });

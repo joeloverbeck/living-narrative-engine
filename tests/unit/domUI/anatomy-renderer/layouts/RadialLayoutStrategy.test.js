@@ -84,7 +84,7 @@ describe('RadialLayoutStrategy', () => {
     it('should return a copy of required space', () => {
       const space1 = strategy.getRequiredSpace();
       const space2 = strategy.getRequiredSpace();
-      
+
       expect(space1).toEqual({ width: 1200, height: 800 });
       expect(space1).not.toBe(space2); // Different objects
     });
@@ -97,7 +97,7 @@ describe('RadialLayoutStrategy', () => {
       nodes.set('root', node);
 
       strategy.calculate(nodes, [], renderContext);
-      
+
       const space = strategy.getRequiredSpace();
       expect(space.width).toBeGreaterThan(0);
       expect(space.height).toBeGreaterThan(0);
@@ -110,7 +110,7 @@ describe('RadialLayoutStrategy', () => {
       const edges = [];
 
       strategy.calculate(nodes, edges, renderContext);
-      
+
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'RadialLayoutStrategy: Starting layout calculation',
         { nodeCount: 0, edgeCount: 0 }
@@ -125,7 +125,7 @@ describe('RadialLayoutStrategy', () => {
       nodes.set('child', node);
 
       strategy.calculate(nodes, [], renderContext);
-      
+
       expect(mockLogger.warn).toHaveBeenCalledWith(
         'RadialLayoutStrategy: No root nodes found'
       );
@@ -138,7 +138,7 @@ describe('RadialLayoutStrategy', () => {
       nodes.set('root', root);
 
       strategy.calculate(nodes, [], renderContext);
-      
+
       expect(root.x).toBe(600); // Default centerX
       expect(root.y).toBe(400); // Default centerY
       expect(root.angleStart).toBe(0);
@@ -151,18 +151,18 @@ describe('RadialLayoutStrategy', () => {
       root.depth = 0;
       const child = new AnatomyNode('child', { type: 'group', name: 'Child' });
       child.depth = 1;
-      
+
       nodes.set('root', root);
       nodes.set('child', child);
-      
+
       const edges = [new AnatomyEdge('root', 'child', 'contains')];
 
       strategy.calculate(nodes, edges, renderContext);
-      
+
       // Root at center
       expect(root.x).toBe(600);
       expect(root.y).toBe(400);
-      
+
       // Child positioned radially
       expect(child.x).not.toBe(600);
       // Y might be 400 if angle is 0 or π, so check that child was positioned
@@ -176,19 +176,28 @@ describe('RadialLayoutStrategy', () => {
       const nodes = new Map();
       const root = new AnatomyNode('root', { type: 'group', name: 'Root' });
       root.depth = 0;
-      
-      const child1 = new AnatomyNode('child1', { type: 'group', name: 'Child1' });
+
+      const child1 = new AnatomyNode('child1', {
+        type: 'group',
+        name: 'Child1',
+      });
       child1.depth = 1;
-      const child2 = new AnatomyNode('child2', { type: 'group', name: 'Child2' });
+      const child2 = new AnatomyNode('child2', {
+        type: 'group',
+        name: 'Child2',
+      });
       child2.depth = 1;
-      const child3 = new AnatomyNode('child3', { type: 'group', name: 'Child3' });
+      const child3 = new AnatomyNode('child3', {
+        type: 'group',
+        name: 'Child3',
+      });
       child3.depth = 1;
-      
+
       nodes.set('root', root);
       nodes.set('child1', child1);
       nodes.set('child2', child2);
       nodes.set('child3', child3);
-      
+
       const edges = [
         new AnatomyEdge('root', 'child1', 'contains'),
         new AnatomyEdge('root', 'child2', 'contains'),
@@ -196,17 +205,17 @@ describe('RadialLayoutStrategy', () => {
       ];
 
       strategy.calculate(nodes, edges, renderContext);
-      
+
       // Children should be distributed around the circle
       expect(child1.angle).toBeDefined();
       expect(child2.angle).toBeDefined();
       expect(child3.angle).toBeDefined();
-      
+
       // All at same radius
       expect(child1.radius).toBe(150);
       expect(child2.radius).toBe(150);
       expect(child3.radius).toBe(150);
-      
+
       // Different angles
       expect(child1.angle).not.toBe(child2.angle);
       expect(child2.angle).not.toBe(child3.angle);
@@ -218,20 +227,23 @@ describe('RadialLayoutStrategy', () => {
       root.depth = 0;
       const child = new AnatomyNode('child', { type: 'group', name: 'Child' });
       child.depth = 1;
-      const grandchild = new AnatomyNode('grandchild', { type: 'group', name: 'Grandchild' });
+      const grandchild = new AnatomyNode('grandchild', {
+        type: 'group',
+        name: 'Grandchild',
+      });
       grandchild.depth = 2;
-      
+
       nodes.set('root', root);
       nodes.set('child', child);
       nodes.set('grandchild', grandchild);
-      
+
       const edges = [
         new AnatomyEdge('root', 'child', 'contains'),
         new AnatomyEdge('child', 'grandchild', 'contains'),
       ];
 
       strategy.calculate(nodes, edges, renderContext);
-      
+
       expect(root.x).toBe(600);
       expect(root.y).toBe(400);
       expect(child.radius).toBe(150); // depth 1
@@ -242,26 +254,32 @@ describe('RadialLayoutStrategy', () => {
       const nodes = new Map();
       const root = new AnatomyNode('root', { type: 'group', name: 'Root' });
       root.depth = 0;
-      
-      const branch1 = new AnatomyNode('branch1', { type: 'group', name: 'Branch1' });
+
+      const branch1 = new AnatomyNode('branch1', {
+        type: 'group',
+        name: 'Branch1',
+      });
       branch1.depth = 1;
-      const branch2 = new AnatomyNode('branch2', { type: 'group', name: 'Branch2' });
+      const branch2 = new AnatomyNode('branch2', {
+        type: 'group',
+        name: 'Branch2',
+      });
       branch2.depth = 1;
-      
+
       const leaf1 = new AnatomyNode('leaf1', { type: 'item', name: 'Leaf1' });
       leaf1.depth = 2;
       const leaf2 = new AnatomyNode('leaf2', { type: 'item', name: 'Leaf2' });
       leaf2.depth = 2;
       const leaf3 = new AnatomyNode('leaf3', { type: 'item', name: 'Leaf3' });
       leaf3.depth = 2;
-      
+
       nodes.set('root', root);
       nodes.set('branch1', branch1);
       nodes.set('branch2', branch2);
       nodes.set('leaf1', leaf1);
       nodes.set('leaf2', leaf2);
       nodes.set('leaf3', leaf3);
-      
+
       const edges = [
         new AnatomyEdge('root', 'branch1', 'contains'),
         new AnatomyEdge('root', 'branch2', 'contains'),
@@ -271,16 +289,16 @@ describe('RadialLayoutStrategy', () => {
       ];
 
       strategy.calculate(nodes, edges, renderContext);
-      
+
       // Leaf nodes should have leafCount = 1
       expect(leaf1.leafCount).toBe(1);
       expect(leaf2.leafCount).toBe(1);
       expect(leaf3.leafCount).toBe(1);
-      
+
       // Branch nodes should sum their children
       expect(branch1.leafCount).toBe(2);
       expect(branch2.leafCount).toBe(1);
-      
+
       // Root should have total
       expect(root.leafCount).toBe(3);
     });
@@ -289,27 +307,30 @@ describe('RadialLayoutStrategy', () => {
       const nodes = new Map();
       const root = new AnatomyNode('root', { type: 'group', name: 'Root' });
       root.depth = 0;
-      
+
       // Create many children to test crowding
       for (let i = 0; i < 20; i++) {
-        const child = new AnatomyNode(`child${i}`, { type: 'item', name: `Child${i}` });
+        const child = new AnatomyNode(`child${i}`, {
+          type: 'item',
+          name: `Child${i}`,
+        });
         child.depth = 1;
         nodes.set(`child${i}`, child);
       }
-      
+
       nodes.set('root', root);
-      
+
       const edges = [];
       for (let i = 0; i < 20; i++) {
         edges.push(new AnatomyEdge('root', `child${i}`, 'contains'));
       }
 
       strategy.calculate(nodes, edges, renderContext);
-      
+
       // With many children, minimum angle should be enforced
       const child0 = nodes.get('child0');
       const child1 = nodes.get('child1');
-      
+
       const angleDiff = Math.abs(child1.angle - child0.angle);
       expect(angleDiff).toBeGreaterThanOrEqual(Math.PI / 10); // Default minAngle
     });
@@ -318,23 +339,26 @@ describe('RadialLayoutStrategy', () => {
       const nodes = new Map();
       const root = new AnatomyNode('root', { type: 'group', name: 'Root' });
       root.depth = 0;
-      
+
       // Create enough children to trigger crowding
       for (let i = 0; i < 10; i++) {
-        const child = new AnatomyNode(`child${i}`, { type: 'item', name: `Child${i}` });
+        const child = new AnatomyNode(`child${i}`, {
+          type: 'item',
+          name: `Child${i}`,
+        });
         child.depth = 1;
         nodes.set(`child${i}`, child);
       }
-      
+
       nodes.set('root', root);
-      
+
       const edges = [];
       for (let i = 0; i < 10; i++) {
         edges.push(new AnatomyEdge('root', `child${i}`, 'contains'));
       }
 
       strategy.calculate(nodes, edges, renderContext);
-      
+
       // With 10 nodes and crowdingFactor of 8, radius should be increased
       const child0 = nodes.get('child0');
       expect(child0.radius).toBeGreaterThan(150); // More than base radius
@@ -346,14 +370,14 @@ describe('RadialLayoutStrategy', () => {
       root.depth = 0;
       const child = new AnatomyNode('child', { type: 'group', name: 'Child' });
       child.depth = 1;
-      
+
       nodes.set('root', root);
       nodes.set('child', child);
-      
+
       const edges = [new AnatomyEdge('root', 'child', 'contains')];
 
       strategy.calculate(nodes, edges, renderContext);
-      
+
       expect(renderContext.updateViewport).toHaveBeenCalledWith(
         expect.objectContaining({
           x: expect.any(Number),
@@ -367,20 +391,23 @@ describe('RadialLayoutStrategy', () => {
     it('should handle linear chain layout', () => {
       const nodes = new Map();
       const edges = [];
-      
+
       // Create a linear chain: root -> child1 -> child2 -> child3
       for (let i = 0; i < 4; i++) {
-        const node = new AnatomyNode(`node${i}`, { type: 'group', name: `Node${i}` });
+        const node = new AnatomyNode(`node${i}`, {
+          type: 'group',
+          name: `Node${i}`,
+        });
         node.depth = i;
         nodes.set(`node${i}`, node);
-        
+
         if (i > 0) {
-          edges.push(new AnatomyEdge(`node${i-1}`, `node${i}`, 'contains'));
+          edges.push(new AnatomyEdge(`node${i - 1}`, `node${i}`, 'contains'));
         }
       }
 
       strategy.calculate(nodes, edges, renderContext);
-      
+
       // Each node should be at increasing radius
       expect(nodes.get('node0').x).toBe(600);
       expect(nodes.get('node0').y).toBe(400);
@@ -393,19 +420,19 @@ describe('RadialLayoutStrategy', () => {
       const nodes = new Map();
       const root = new AnatomyNode('root', { type: 'group', name: 'Root' });
       root.depth = 0;
-      root.angleStart = 3 * Math.PI / 2; // Start near end of circle
-      root.angleEnd = 5 * Math.PI / 2; // Wrap around
-      
+      root.angleStart = (3 * Math.PI) / 2; // Start near end of circle
+      root.angleEnd = (5 * Math.PI) / 2; // Wrap around
+
       const child = new AnatomyNode('child', { type: 'group', name: 'Child' });
       child.depth = 1;
-      
+
       nodes.set('root', root);
       nodes.set('child', child);
-      
+
       const edges = [new AnatomyEdge('root', 'child', 'contains')];
 
       strategy.calculate(nodes, edges, renderContext);
-      
+
       // Child should be positioned correctly despite wrap-around
       expect(child.angle).toBeDefined();
       expect(child.x).toBeDefined();
@@ -416,24 +443,24 @@ describe('RadialLayoutStrategy', () => {
       const nodes = new Map();
       const root = new AnatomyNode('root', { type: 'group', name: 'Root' });
       root.depth = 0;
-      
+
       // Position root at origin for easier calculation
       strategy.configure({ centerX: 0, centerY: 0 });
-      
+
       const child = new AnatomyNode('child', { type: 'group', name: 'Child' });
       child.depth = 1;
-      
+
       nodes.set('root', root);
       nodes.set('child', child);
-      
+
       const edges = [new AnatomyEdge('root', 'child', 'contains')];
 
       strategy.calculate(nodes, edges, renderContext);
-      
+
       // With root at origin, child position should match polar conversion
       const expectedX = 150 * Math.cos(child.angle);
       const expectedY = 150 * Math.sin(child.angle);
-      
+
       expect(child.x).toBeCloseTo(expectedX, 5);
       expect(child.y).toBeCloseTo(expectedY, 5);
     });
@@ -442,36 +469,48 @@ describe('RadialLayoutStrategy', () => {
       const nodes = new Map();
       const root = new AnatomyNode('root', { type: 'group', name: 'Root' });
       root.depth = 0;
-      
+
       // Branch with many leaves
-      const bigBranch = new AnatomyNode('bigBranch', { type: 'group', name: 'Big Branch' });
+      const bigBranch = new AnatomyNode('bigBranch', {
+        type: 'group',
+        name: 'Big Branch',
+      });
       bigBranch.depth = 1;
-      
+
       // Branch with few leaves
-      const smallBranch = new AnatomyNode('smallBranch', { type: 'group', name: 'Small Branch' });
+      const smallBranch = new AnatomyNode('smallBranch', {
+        type: 'group',
+        name: 'Small Branch',
+      });
       smallBranch.depth = 1;
-      
+
       nodes.set('root', root);
       nodes.set('bigBranch', bigBranch);
       nodes.set('smallBranch', smallBranch);
-      
+
       // Add leaves to big branch
       for (let i = 0; i < 5; i++) {
-        const leaf = new AnatomyNode(`bigLeaf${i}`, { type: 'item', name: `Big Leaf ${i}` });
+        const leaf = new AnatomyNode(`bigLeaf${i}`, {
+          type: 'item',
+          name: `Big Leaf ${i}`,
+        });
         leaf.depth = 2;
         nodes.set(`bigLeaf${i}`, leaf);
       }
-      
+
       // Add one leaf to small branch
-      const smallLeaf = new AnatomyNode('smallLeaf', { type: 'item', name: 'Small Leaf' });
+      const smallLeaf = new AnatomyNode('smallLeaf', {
+        type: 'item',
+        name: 'Small Leaf',
+      });
       smallLeaf.depth = 2;
       nodes.set('smallLeaf', smallLeaf);
-      
+
       const edges = [
         new AnatomyEdge('root', 'bigBranch', 'contains'),
         new AnatomyEdge('root', 'smallBranch', 'contains'),
       ];
-      
+
       // Add edges for leaves
       for (let i = 0; i < 5; i++) {
         edges.push(new AnatomyEdge('bigBranch', `bigLeaf${i}`, 'contains'));
@@ -479,13 +518,14 @@ describe('RadialLayoutStrategy', () => {
       edges.push(new AnatomyEdge('smallBranch', 'smallLeaf', 'contains'));
 
       strategy.calculate(nodes, edges, renderContext);
-      
+
       // Big branch should have larger angle range
       const bigBranchAngleRange = bigBranch.angleEnd - bigBranch.angleStart;
-      const smallBranchAngleRange = smallBranch.angleEnd - smallBranch.angleStart;
-      
+      const smallBranchAngleRange =
+        smallBranch.angleEnd - smallBranch.angleStart;
+
       expect(bigBranchAngleRange).toBeGreaterThan(smallBranchAngleRange);
-      
+
       // Should be proportional to leaf counts (5:1)
       const ratio = bigBranchAngleRange / smallBranchAngleRange;
       expect(ratio).toBeCloseTo(5, 0); // Allow some deviation due to minimum angle
@@ -493,25 +533,28 @@ describe('RadialLayoutStrategy', () => {
 
     it('should update required space with padding', () => {
       const nodes = new Map();
-      
+
       // Create nodes at extreme positions
       const root = new AnatomyNode('root', { type: 'group', name: 'Root' });
       root.depth = 0;
-      const farChild = new AnatomyNode('farChild', { type: 'group', name: 'Far Child' });
+      const farChild = new AnatomyNode('farChild', {
+        type: 'group',
+        name: 'Far Child',
+      });
       farChild.depth = 3; // Will be positioned far from center
-      
+
       nodes.set('root', root);
       nodes.set('farChild', farChild);
-      
+
       // Create intermediate nodes
       const mid1 = new AnatomyNode('mid1', { type: 'group', name: 'Mid 1' });
       mid1.depth = 1;
       const mid2 = new AnatomyNode('mid2', { type: 'group', name: 'Mid 2' });
       mid2.depth = 2;
-      
+
       nodes.set('mid1', mid1);
       nodes.set('mid2', mid2);
-      
+
       const edges = [
         new AnatomyEdge('root', 'mid1', 'contains'),
         new AnatomyEdge('mid1', 'mid2', 'contains'),
@@ -519,9 +562,9 @@ describe('RadialLayoutStrategy', () => {
       ];
 
       strategy.calculate(nodes, edges, renderContext);
-      
+
       const space = strategy.getRequiredSpace();
-      
+
       // Should include padding (100 on each side = 200 total)
       expect(space.width).toBeGreaterThan(200);
       expect(space.height).toBeGreaterThan(200);
@@ -533,17 +576,22 @@ describe('RadialLayoutStrategy', () => {
       const nodes = new Map();
       const root = new AnatomyNode('root', { type: 'group', name: 'Root' });
       root.depth = 0;
-      const orphan = new AnatomyNode('orphan', { type: 'group', name: 'Orphan' });
+      const orphan = new AnatomyNode('orphan', {
+        type: 'group',
+        name: 'Orphan',
+      });
       orphan.depth = 0; // Another root
-      
+
       nodes.set('root', root);
       nodes.set('orphan', orphan);
-      
+
       // No edges connecting them
       const edges = [];
 
-      expect(() => strategy.calculate(nodes, edges, renderContext)).not.toThrow();
-      
+      expect(() =>
+        strategy.calculate(nodes, edges, renderContext)
+      ).not.toThrow();
+
       // Both should be positioned at center
       expect(root.x).toBe(600);
       expect(root.y).toBe(400);
@@ -556,12 +604,14 @@ describe('RadialLayoutStrategy', () => {
       const root = new AnatomyNode('root', { type: 'group', name: 'Root' });
       root.depth = 0;
       nodes.set('root', root);
-      
+
       // Self-referential edge
       const edges = [new AnatomyEdge('root', 'root', 'contains')];
 
-      expect(() => strategy.calculate(nodes, edges, renderContext)).not.toThrow();
-      
+      expect(() =>
+        strategy.calculate(nodes, edges, renderContext)
+      ).not.toThrow();
+
       // Root should still be positioned at center
       expect(root.x).toBe(600);
       expect(root.y).toBe(400);
@@ -577,11 +627,11 @@ describe('RadialLayoutStrategy', () => {
       nodeB.depth = 1;
       const nodeC = new AnatomyNode('nodeC', { type: 'group', name: 'Node C' });
       nodeC.depth = 2;
-      
+
       nodes.set('nodeA', nodeA);
       nodes.set('nodeB', nodeB);
       nodes.set('nodeC', nodeC);
-      
+
       // Create circular dependency: A -> B -> C -> B
       const edges = [
         new AnatomyEdge('nodeA', 'nodeB', 'contains'),
@@ -589,8 +639,10 @@ describe('RadialLayoutStrategy', () => {
         new AnatomyEdge('nodeC', 'nodeB', 'contains'), // Creates cycle
       ];
 
-      expect(() => strategy.calculate(nodes, edges, renderContext)).not.toThrow();
-      
+      expect(() =>
+        strategy.calculate(nodes, edges, renderContext)
+      ).not.toThrow();
+
       // All nodes should have leaf counts
       expect(nodeA.leafCount).toBeDefined();
       expect(nodeB.leafCount).toBeDefined();
@@ -602,11 +654,13 @@ describe('RadialLayoutStrategy', () => {
       const root = new AnatomyNode('root', { type: 'group', name: 'Root' });
       root.depth = 0;
       nodes.set('root', root);
-      
+
       // Edge to non-existent node
       const edges = [new AnatomyEdge('root', 'nonexistent', 'contains')];
 
-      expect(() => strategy.calculate(nodes, edges, renderContext)).not.toThrow();
+      expect(() =>
+        strategy.calculate(nodes, edges, renderContext)
+      ).not.toThrow();
     });
   });
 });

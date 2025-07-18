@@ -7,13 +7,6 @@
  */
 
 /**
- * @typedef {object} LLMConfigPromptElement
- * @property {string} key            – Unique key (e.g. "system_prompt").
- * @property {string} prefix         – String prepended to the element’s content.
- * @property {string} suffix         – String appended to the element’s content.
- */
-
-/**
  * @typedef {object} LLMJsonOutputStrategy
  * @property {string} method                   – Enforcement method.
  * @property {string=} toolName                – Required for "tool_calling".
@@ -38,8 +31,6 @@
  * @property {LLMJsonOutputStrategy}      jsonOutputStrategy
  * @property {object=}                    defaultParameters
  * @property {Record<string,string>=}     providerSpecificHeaders
- * @property {LLMConfigPromptElement[]}   promptElements
- * @property {string[]}                   promptAssemblyOrder
  * @property {number=}                    contextTokenLimit
  * @property {LLMPromptFrame=}            promptFrame
  */

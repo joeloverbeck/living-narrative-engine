@@ -27,10 +27,10 @@ describe('AnatomyDescriptionService missing branch', () => {
     });
   });
 
-  it('returns null for non-anatomy entity without description', () => {
+  it('returns null for non-anatomy entity without description', async () => {
     const entity = createEntity('npc1', {});
 
-    const result = service.getOrGenerateBodyDescription(entity);
+    const result = await service.getOrGenerateBodyDescription(entity);
 
     expect(result).toBeNull();
     expect(mockComposer.composeDescription).not.toHaveBeenCalled();

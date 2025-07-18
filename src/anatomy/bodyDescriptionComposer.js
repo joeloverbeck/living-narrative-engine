@@ -13,12 +13,14 @@ export class BodyDescriptionComposer {
     entityFinder,
     anatomyFormattingService,
     partDescriptionGenerator,
+    equipmentDescriptionService = null,
   } = {}) {
     this.bodyPartDescriptionBuilder = bodyPartDescriptionBuilder;
     this.bodyGraphService = bodyGraphService;
     this.entityFinder = entityFinder;
     this.anatomyFormattingService = anatomyFormattingService;
     this.partDescriptionGenerator = partDescriptionGenerator;
+    this.equipmentDescriptionService = equipmentDescriptionService;
 
     // Initialize configuration and template services
     this.config = new DescriptionConfiguration(anatomyFormattingService);
@@ -33,9 +35,9 @@ export class BodyDescriptionComposer {
    * Compose a full body description from all body parts
    *
    * @param {object} bodyEntity - The entity with anatomy:body component
-   * @returns {string} The composed description
+   * @returns {Promise<string>} The composed description
    */
-  composeDescription(bodyEntity) {
+  async composeDescription(bodyEntity) {
     if (!bodyEntity || !bodyEntity.hasComponent(ANATOMY_BODY_COMPONENT_ID)) {
       return '';
     }
@@ -72,6 +74,19 @@ export class BodyDescriptionComposer {
         const buildDescription = this.extractBuildDescription(bodyEntity);
         if (buildDescription) {
           lines.push(`Build: ${buildDescription}`);
+        }
+        processedTypes.add(partType);
+        continue;
+      }
+
+      // Handle equipment descriptions
+      if (partType === 'equipment' && this.equipmentDescriptionService) {
+        const equipmentDescription =
+          await this.equipmentDescriptionService.generateEquipmentDescription(
+            bodyEntity.id
+          );
+        if (equipmentDescription) {
+          lines.push(equipmentDescription);
         }
         processedTypes.add(partType);
         continue;
