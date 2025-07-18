@@ -463,7 +463,11 @@ export class AnatomyGenerationWorkflow extends BaseService {
       },
     };
 
-    await this.#entityManager.addComponent(entityId, 'anatomy:body', updatedData);
+    await this.#entityManager.addComponent(
+      entityId,
+      'anatomy:body',
+      updatedData
+    );
 
     this.#logger.debug(
       `AnatomyGenerationWorkflow: Updated entity '${entityId}' with body structure (root: '${graphResult.rootId}', ${Object.keys(partsObject).length} parts)`

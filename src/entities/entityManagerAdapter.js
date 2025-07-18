@@ -35,7 +35,10 @@ export class EntityManagerAdapter extends IEntityManager {
 
   /** @inheritdoc */
   async createEntityInstance(definitionId, options = {}) {
-    return await this.#entityManager.createEntityInstance(definitionId, options);
+    return await this.#entityManager.createEntityInstance(
+      definitionId,
+      options
+    );
   }
 
   /** @inheritdoc */
@@ -77,7 +80,10 @@ export class EntityManagerAdapter extends IEntityManager {
 
   /** @inheritdoc */
   async removeComponent(instanceId, componentTypeId) {
-    return await this.#entityManager.removeComponent(instanceId, componentTypeId);
+    return await this.#entityManager.removeComponent(
+      instanceId,
+      componentTypeId
+    );
   }
 
   /** @inheritdoc */

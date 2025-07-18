@@ -167,7 +167,10 @@ describe('AddPerceptionLogEntryHandler', () => {
 
     test('dispatches error when entry is missing/invalid', async () => {
       for (const ent of [null, undefined, 999, 'bad']) {
-        await h.execute({ location_id: 'loc:test', entry: /** @type {any} */ (ent) });
+        await h.execute({
+          location_id: 'loc:test',
+          entry: /** @type {any} */ (ent),
+        });
         expect(dispatcher.dispatch).toHaveBeenLastCalledWith(
           SYSTEM_ERROR_OCCURRED_ID,
           expect.objectContaining({

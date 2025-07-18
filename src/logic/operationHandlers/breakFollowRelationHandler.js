@@ -87,7 +87,10 @@ class BreakFollowRelationHandler extends BaseOperationHandler {
       return;
     }
     try {
-      await this.#entityManager.removeComponent(followerId, FOLLOWING_COMPONENT_ID);
+      await this.#entityManager.removeComponent(
+        followerId,
+        FOLLOWING_COMPONENT_ID
+      );
     } catch (err) {
       safeDispatchError(
         this.#dispatcher,

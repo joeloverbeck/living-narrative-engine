@@ -493,6 +493,30 @@ export class EntityLifecycleManager {
   }
 
   /**
+   * Creates an entity instance with explicit monitoring.
+   * This is a convenience method that ensures monitoring is enabled.
+   *
+   * @param {string} definitionId - The ID of the entity definition
+   * @param {object} [opts] - Options for creation
+   * @returns {object} The newly created entity
+   * @throws {Error} If creation fails
+   */
+  async createEntityInstanceWithMonitoring(definitionId, opts = {}) {
+    if (!this.#monitoringCoordinator) {
+      this.#logger.warn(
+        'createEntityInstanceWithMonitoring called but monitoring is disabled'
+      );
+      return this.createEntityInstance(definitionId, opts);
+    }
+
+    return await this.#monitoringCoordinator.executeMonitored(
+      'createEntityInstance',
+      () => this.#createEntityInstanceCore(definitionId, opts),
+      { context: `definition:${definitionId}` }
+    );
+  }
+
+  /**
    * Gets monitoring statistics if monitoring is enabled.
    *
    * @returns {object|null} Monitoring statistics or null if disabled

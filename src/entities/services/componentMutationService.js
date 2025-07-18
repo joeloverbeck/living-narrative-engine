@@ -210,12 +210,16 @@ export class ComponentMutationService {
    * @throws {Error} If circuit breaker is open.
    */
   async addComponent(instanceId, componentTypeId, componentData) {
-    // If circuit breaker is enabled, wrap the execution
+    // If monitoring is enabled, wrap the execution
     if (this.#monitoringCoordinator) {
-      const circuitBreaker =
-        this.#monitoringCoordinator.getCircuitBreaker('addComponent');
-      return await circuitBreaker.execute(() =>
-        this.#addComponentCore(instanceId, componentTypeId, componentData)
+      return await this.#monitoringCoordinator.executeMonitored(
+        'addComponent',
+        () =>
+          this.#addComponentCore(instanceId, componentTypeId, componentData),
+        {
+          context: `entity:${instanceId},component:${componentTypeId}`,
+          useCircuitBreaker: true,
+        }
       );
     }
 
@@ -289,12 +293,15 @@ export class ComponentMutationService {
    * @throws {Error} If removal fails or circuit breaker is open.
    */
   async removeComponent(instanceId, componentTypeId) {
-    // If circuit breaker is enabled, wrap the execution
+    // If monitoring is enabled, wrap the execution
     if (this.#monitoringCoordinator) {
-      const circuitBreaker =
-        this.#monitoringCoordinator.getCircuitBreaker('removeComponent');
-      return await circuitBreaker.execute(() =>
-        this.#removeComponentCore(instanceId, componentTypeId)
+      return await this.#monitoringCoordinator.executeMonitored(
+        'removeComponent',
+        () => this.#removeComponentCore(instanceId, componentTypeId),
+        {
+          context: `entity:${instanceId},component:${componentTypeId}`,
+          useCircuitBreaker: true,
+        }
       );
     }
 

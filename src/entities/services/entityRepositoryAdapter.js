@@ -69,6 +69,28 @@ export class EntityRepositoryAdapter {
    * @throws {DuplicateEntityError} If entity with same ID already exists
    */
   add(entity) {
+    // If monitoring is enabled, wrap the execution synchronously
+    if (this.#monitoringCoordinator) {
+      const performanceMonitor = this.#monitoringCoordinator.getPerformanceMonitor();
+      return performanceMonitor.timeSync(
+        'repository.add',
+        () => this.#addCore(entity),
+        `entity:${entity.id}`
+      );
+    }
+
+    // Otherwise, execute directly
+    return this.#addCore(entity);
+  }
+
+  /**
+   * Core implementation of add.
+   *
+   * @private
+   * @param {Entity} entity - Entity to add
+   * @throws {DuplicateEntityError} If entity with same ID already exists
+   */
+  #addCore(entity) {
     if (this.#mapManager.has(entity.id)) {
       const msg = `Entity with ID '${entity.id}' already exists in repository.`;
       this.#logger.error(msg);
@@ -92,6 +114,28 @@ export class EntityRepositoryAdapter {
    * @returns {Entity|undefined} Entity if found, undefined otherwise
    */
   get(entityId) {
+    // If monitoring is enabled, wrap the execution synchronously
+    if (this.#monitoringCoordinator) {
+      const performanceMonitor = this.#monitoringCoordinator.getPerformanceMonitor();
+      return performanceMonitor.timeSync(
+        'repository.get',
+        () => this.#getCore(entityId),
+        `entity:${entityId}`
+      );
+    }
+
+    // Otherwise, execute directly
+    return this.#getCore(entityId);
+  }
+
+  /**
+   * Core implementation of get.
+   *
+   * @private
+   * @param {string} entityId - Entity ID to lookup
+   * @returns {Entity|undefined} Entity if found, undefined otherwise
+   */
+  #getCore(entityId) {
     return this.#mapManager.get(entityId);
   }
 
@@ -102,6 +146,28 @@ export class EntityRepositoryAdapter {
    * @returns {boolean} True if entity exists
    */
   has(entityId) {
+    // If monitoring is enabled, wrap the execution synchronously
+    if (this.#monitoringCoordinator) {
+      const performanceMonitor = this.#monitoringCoordinator.getPerformanceMonitor();
+      return performanceMonitor.timeSync(
+        'repository.has',
+        () => this.#hasCore(entityId),
+        `entity:${entityId}`
+      );
+    }
+
+    // Otherwise, execute directly
+    return this.#hasCore(entityId);
+  }
+
+  /**
+   * Core implementation of has.
+   *
+   * @private
+   * @param {string} entityId - Entity ID to check
+   * @returns {boolean} True if entity exists
+   */
+  #hasCore(entityId) {
     return this.#mapManager.has(entityId);
   }
 
@@ -113,6 +179,29 @@ export class EntityRepositoryAdapter {
    * @throws {EntityNotFoundError} If entity is not found
    */
   remove(entityId) {
+    // If monitoring is enabled, wrap the execution synchronously
+    if (this.#monitoringCoordinator) {
+      const performanceMonitor = this.#monitoringCoordinator.getPerformanceMonitor();
+      return performanceMonitor.timeSync(
+        'repository.remove',
+        () => this.#removeCore(entityId),
+        `entity:${entityId}`
+      );
+    }
+
+    // Otherwise, execute directly
+    return this.#removeCore(entityId);
+  }
+
+  /**
+   * Core implementation of remove.
+   *
+   * @private
+   * @param {string} entityId - Entity ID to remove
+   * @returns {boolean} True if entity was removed, false if not found
+   * @throws {EntityNotFoundError} If entity is not found
+   */
+  #removeCore(entityId) {
     const entity = this.#mapManager.get(entityId);
     if (!entity) {
       const msg = `Entity with ID '${entityId}' not found in repository.`;

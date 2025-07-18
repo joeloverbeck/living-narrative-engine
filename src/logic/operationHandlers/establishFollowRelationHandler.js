@@ -111,9 +111,13 @@ class EstablishFollowRelationHandler extends BaseOperationHandler {
       FOLLOWING_COMPONENT_ID
     );
     try {
-      await this.#entityManager.addComponent(followerId, FOLLOWING_COMPONENT_ID, {
-        leaderId: leaderId,
-      });
+      await this.#entityManager.addComponent(
+        followerId,
+        FOLLOWING_COMPONENT_ID,
+        {
+          leaderId: leaderId,
+        }
+      );
     } catch (err) {
       safeDispatchError(
         this.#dispatcher,

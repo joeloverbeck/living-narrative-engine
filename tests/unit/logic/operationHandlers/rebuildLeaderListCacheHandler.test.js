@@ -182,13 +182,18 @@ describe('RebuildLeaderListCacheHandler', () => {
       ['params with no leaderIds', {}],
       ['params with non-array leaderIds', { leaderIds: 'not-an-array' }],
       ['params with empty leaderIds array', { leaderIds: [] }],
-    ])('should log debug and skip execution given %s', async (caseName, params) => {
-      await handler.execute(params, mockExecutionContext);
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        '[RebuildLeaderListCacheHandler] No leaderIds provided; skipping.'
-      );
-      expect(mockEntityManager.getEntitiesWithComponent).not.toHaveBeenCalled();
-    });
+    ])(
+      'should log debug and skip execution given %s',
+      async (caseName, params) => {
+        await handler.execute(params, mockExecutionContext);
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          '[RebuildLeaderListCacheHandler] No leaderIds provided; skipping.'
+        );
+        expect(
+          mockEntityManager.getEntitiesWithComponent
+        ).not.toHaveBeenCalled();
+      }
+    );
 
     test('should filter out invalid leaderIds and skip if the resulting array is empty', async () => {
       const params = { leaderIds: [null, '', '   ', undefined, 123] };

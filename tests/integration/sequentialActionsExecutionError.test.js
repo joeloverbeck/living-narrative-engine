@@ -166,7 +166,9 @@ describe('Sequential Action Execution – Error Path', () => {
     );
     expect(logger.error).toHaveBeenNthCalledWith(
       3,
-      expect.stringContaining("Rule test-sequential-error: Error during action sequence:"),
+      expect.stringContaining(
+        'Rule test-sequential-error: Error during action sequence:'
+      ),
       expect.objectContaining({ message: 'Intentional Test Failure' })
     );
     expect(logger.error).toHaveBeenNthCalledWith(

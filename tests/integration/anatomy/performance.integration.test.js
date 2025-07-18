@@ -81,12 +81,14 @@ describe('Anatomy Performance Integration', () => {
   describe('Cache Performance', () => {
     it('should rebuild cache efficiently after modifications', async () => {
       // Create a simple anatomy
-      const torso = await testBed.entityManager.createEntityInstance('perf:torso');
+      const torso =
+        await testBed.entityManager.createEntityInstance('perf:torso');
       const parts = [torso];
 
       // Create 5 limbs
       for (let i = 0; i < 5; i++) {
-        const limb = await testBed.entityManager.createEntityInstance('perf:limb');
+        const limb =
+          await testBed.entityManager.createEntityInstance('perf:limb');
         parts.push(limb);
         await testBed.entityManager.addComponent(limb.id, 'anatomy:joint', {
           parentId: torso.id,
@@ -116,12 +118,14 @@ describe('Anatomy Performance Integration', () => {
     });
 
     it('should handle frequent cache operations efficiently', async () => {
-      const torso = await testBed.entityManager.createEntityInstance('perf:torso');
+      const torso =
+        await testBed.entityManager.createEntityInstance('perf:torso');
       const limbs = [];
 
       // Create 2 limbs
       for (let i = 0; i < 2; i++) {
-        const limb = await testBed.entityManager.createEntityInstance('perf:limb');
+        const limb =
+          await testBed.entityManager.createEntityInstance('perf:limb');
         limbs.push(limb);
         await testBed.entityManager.addComponent(limb.id, 'anatomy:joint', {
           parentId: torso.id,
@@ -154,12 +158,14 @@ describe('Anatomy Performance Integration', () => {
     it('should validate graphs within time limit', async () => {
       // Create entities for validation
       const entityIds = [];
-      const torso = await testBed.entityManager.createEntityInstance('perf:torso');
+      const torso =
+        await testBed.entityManager.createEntityInstance('perf:torso');
       entityIds.push(torso.id);
 
       // Create 10 limbs
       for (let i = 0; i < 10; i++) {
-        const limb = await testBed.entityManager.createEntityInstance('perf:limb');
+        const limb =
+          await testBed.entityManager.createEntityInstance('perf:limb');
         entityIds.push(limb.id);
         await testBed.entityManager.addComponent(limb.id, 'anatomy:joint', {
           parentId: torso.id,
@@ -205,7 +211,8 @@ describe('Anatomy Performance Integration', () => {
 
       // Create 5 parts
       for (let i = 0; i < 5; i++) {
-        const part = await testBed.entityManager.createEntityInstance('perf:limb');
+        const part =
+          await testBed.entityManager.createEntityInstance('perf:limb');
         entityIds.push(part.id);
       }
 
@@ -236,12 +243,14 @@ describe('Anatomy Performance Integration', () => {
 
   describe('Batch Operations Performance', () => {
     it('should handle batch detachment efficiently', async () => {
-      const torso = await testBed.entityManager.createEntityInstance('perf:torso');
+      const torso =
+        await testBed.entityManager.createEntityInstance('perf:torso');
       const limbsToDetach = [];
 
       // Create 6 limbs to detach
       for (let i = 0; i < 6; i++) {
-        const limb = await testBed.entityManager.createEntityInstance('perf:limb');
+        const limb =
+          await testBed.entityManager.createEntityInstance('perf:limb');
         limbsToDetach.push(limb);
         await testBed.entityManager.addComponent(limb.id, 'anatomy:joint', {
           parentId: torso.id,
@@ -269,12 +278,14 @@ describe('Anatomy Performance Integration', () => {
     });
 
     it('should handle concurrent operations without performance degradation', async () => {
-      const torso = await testBed.entityManager.createEntityInstance('perf:torso');
+      const torso =
+        await testBed.entityManager.createEntityInstance('perf:torso');
       const limbs = [];
 
       // Create 3 limbs
       for (let i = 0; i < 3; i++) {
-        const limb = await testBed.entityManager.createEntityInstance('perf:limb');
+        const limb =
+          await testBed.entityManager.createEntityInstance('perf:limb');
         limbs.push(limb);
         await testBed.entityManager.addComponent(limb.id, 'anatomy:joint', {
           parentId: torso.id,
@@ -317,13 +328,15 @@ describe('Anatomy Performance Integration', () => {
   describe('Performance Summary', () => {
     it('should demonstrate that anatomy operations are performant', async () => {
       // This is a summary test to ensure the anatomy system performs well
-      const torso = await testBed.entityManager.createEntityInstance('perf:torso');
+      const torso =
+        await testBed.entityManager.createEntityInstance('perf:torso');
 
       // Create parts
       const startCreate = Date.now();
       const parts = [];
       for (let i = 0; i < 20; i++) {
-        const limb = await testBed.entityManager.createEntityInstance('perf:limb');
+        const limb =
+          await testBed.entityManager.createEntityInstance('perf:limb');
         parts.push(limb);
       }
       const createTime = Date.now() - startCreate;

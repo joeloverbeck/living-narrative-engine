@@ -65,7 +65,10 @@ export default class EntityCreationManager {
       `EntityCreationManager.createEntityInstance: Creating entity with definition '${definitionId}'`
     );
 
-    return await this.#lifecycleManager.createEntityInstance(definitionId, opts);
+    return await this.#lifecycleManager.createEntityInstance(
+      definitionId,
+      opts
+    );
   }
 
   /**

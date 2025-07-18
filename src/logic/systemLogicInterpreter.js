@@ -215,10 +215,10 @@ class SystemLogicInterpreter extends BaseService {
     const startTime = Date.now();
     this.#logger.debug(
       `🎯 [SystemLogicInterpreter] Event received: ${event.type}`,
-      { 
+      {
         payload: event.payload,
         timestamp: startTime,
-        isAsync: true
+        isAsync: true,
       }
     );
 
@@ -251,13 +251,13 @@ class SystemLogicInterpreter extends BaseService {
       `Received event: ${event.type}. Found ${rules.length} potential rule(s).`,
       { payload: event.payload }
     );
-    
+
     // Add new enhanced debugging
     this.#logger.debug(
       `🎯 [SystemLogicInterpreter] Processing event: ${event.type}. Found ${rules.length} potential rule(s).`,
-      { 
+      {
         payload: event.payload,
-        ruleIds: rules.map(r => r.rule_id || 'NO_ID')
+        ruleIds: rules.map((r) => r.rule_id || 'NO_ID'),
       }
     );
 
@@ -271,7 +271,7 @@ class SystemLogicInterpreter extends BaseService {
       this.#logger.debug(
         `[Event: ${event.type}] Assembling execution context via createNestedExecutionContext... (ActorID: ${actorId}, TargetID: ${targetId})`
       );
-      
+
       // Add new enhanced debugging
       this.#logger.debug(
         `🔧 [SystemLogicInterpreter] Assembling execution context via createNestedExecutionContext... (ActorID: ${actorId}, TargetID: ${targetId})`
@@ -290,11 +290,11 @@ class SystemLogicInterpreter extends BaseService {
       this.#logger.debug(
         `[Event: ${event.type}] createNestedExecutionContext returned a valid ExecutionContext.`
       );
-      
+
       this.#logger.debug(
         `[Event: ${event.type}] Final ExecutionContext (nested structure) assembled successfully.`
       );
-      
+
       // Add new enhanced debugging
       this.#logger.debug(
         `🔧 [SystemLogicInterpreter] Final ExecutionContext (nested structure) assembled successfully.`
@@ -312,15 +312,15 @@ class SystemLogicInterpreter extends BaseService {
     this.#logger.debug(
       `🚀 [SystemLogicInterpreter] Starting rule processing for event: ${event.type} (${rules.length} rules)`
     );
-    
+
     for (let i = 0; i < rules.length; i++) {
       const rule = rules[i];
       const ruleId = rule.rule_id || 'NO_ID';
-      
+
       this.#logger.debug(
         `📋 [SystemLogicInterpreter] Processing rule ${i + 1}/${rules.length}: ${ruleId}`
       );
-      
+
       try {
         await this.#processRule(rule, event, nestedCtx);
         this.#logger.debug(
@@ -333,7 +333,7 @@ class SystemLogicInterpreter extends BaseService {
         );
       }
     }
-    
+
     const endTime = Date.now();
     const duration = endTime - startTime;
     this.#logger.debug(
@@ -383,11 +383,11 @@ class SystemLogicInterpreter extends BaseService {
   async #processRule(rule, event, nestedCtx) {
     const ruleId = rule.rule_id || 'NO_ID';
     const ruleStartTime = Date.now();
-    
+
     this.#logger.debug(
       `🔍 [SystemLogicInterpreter] Rule ${ruleId}: Starting condition evaluation`
     );
-    
+
     const { passed, errored } = this.#evaluateRuleCondition(
       rule,
       nestedCtx.evaluationContext
@@ -401,7 +401,7 @@ class SystemLogicInterpreter extends BaseService {
       this.#logger.debug(
         `Rule '${ruleId}' actions skipped for event '${event.type}' ${reason}.`
       );
-      
+
       // Add new enhanced debugging
       this.#logger.debug(
         `⏭️ [SystemLogicInterpreter] Rule '${ruleId}' actions skipped for event '${event.type}' ${reason}.`
@@ -417,10 +417,14 @@ class SystemLogicInterpreter extends BaseService {
       this.#logger.debug(
         `🎬 [SystemLogicInterpreter] Rule ${ruleId}: Starting action sequence (${rule.actions.length} actions)`
       );
-      
+
       try {
-        await this._executeActions(rule.actions, nestedCtx, `Rule '${rule.rule_id}'`);
-        
+        await this._executeActions(
+          rule.actions,
+          nestedCtx,
+          `Rule '${rule.rule_id}'`
+        );
+
         const ruleEndTime = Date.now();
         const ruleDuration = ruleEndTime - ruleStartTime;
         this.#logger.debug(
@@ -451,11 +455,11 @@ class SystemLogicInterpreter extends BaseService {
    */
   async _executeActions(actions, nestedCtx, scopeLabel) {
     const actionStartTime = Date.now();
-    
+
     this.#logger.debug(
       `🎬 [SystemLogicInterpreter] _executeActions: Starting action sequence for ${scopeLabel} (${actions.length} actions)`
     );
-    
+
     try {
       await executeActionSequence(
         actions,
@@ -463,7 +467,7 @@ class SystemLogicInterpreter extends BaseService {
         this.#logger,
         this.#operationInterpreter
       );
-      
+
       const actionEndTime = Date.now();
       const actionDuration = actionEndTime - actionStartTime;
       this.#logger.debug(

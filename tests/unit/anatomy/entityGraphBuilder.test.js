@@ -6,9 +6,9 @@ import { InvalidArgumentError } from '../../../src/errors/invalidArgumentError.j
 const createMocks = () => {
   return {
     entityManager: {
-      createEntityInstance: jest.fn().mockImplementation((id) => 
-        Promise.resolve({ id })
-      ),
+      createEntityInstance: jest
+        .fn()
+        .mockImplementation((id) => Promise.resolve({ id })),
       addComponent: jest.fn().mockResolvedValue(true),
       removeEntityInstance: jest.fn().mockResolvedValue(undefined),
       getEntityInstance: jest.fn((id) => (id === 'missing' ? null : { id })),
@@ -108,7 +108,11 @@ describe('EntityGraphBuilder', () => {
 
   describe('createAndAttachPart', () => {
     it('creates and attaches part successfully', async () => {
-      const id = await builder.createAndAttachPart('torso', 'shoulder', 'armDef');
+      const id = await builder.createAndAttachPart(
+        'torso',
+        'shoulder',
+        'armDef'
+      );
       expect(mocks.entityManager.createEntityInstance).toHaveBeenCalledWith(
         'armDef'
       );
@@ -193,7 +197,11 @@ describe('EntityGraphBuilder', () => {
       mocks.entityManager.createEntityInstance.mockImplementation(() => {
         throw new Error('fail');
       });
-      const id = await builder.createAndAttachPart('torso', 'shoulder', 'armDef');
+      const id = await builder.createAndAttachPart(
+        'torso',
+        'shoulder',
+        'armDef'
+      );
       expect(id).toBeNull();
       expect(mocks.logger.error).toHaveBeenCalled();
     });

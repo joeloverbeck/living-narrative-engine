@@ -58,9 +58,7 @@ export async function executeActionSequence(
     const tag = `[${scopeLabel} - Action ${opIndex}/${total}]`;
     const actionStartTime = Date.now();
 
-    logger.debug(
-      `🎯 [ActionSequence] ${tag} Starting action: ${opType}`
-    );
+    logger.debug(`🎯 [ActionSequence] ${tag} Starting action: ${opType}`);
 
     if (!op || typeof op !== 'object' || !op.type) {
       logger.error(`❌ ${tag} Invalid operation object. Halting sequence.`, op);
@@ -77,7 +75,10 @@ export async function executeActionSequence(
         tag
       );
       if (errored) {
-        logger.error(`❌ ${tag} Condition evaluation failed – op skipped.`, error);
+        logger.error(
+          `❌ ${tag} Condition evaluation failed – op skipped.`,
+          error
+        );
         continue;
       }
       if (!result) {
@@ -105,13 +106,17 @@ export async function executeActionSequence(
         );
         const actionEndTime = Date.now();
         const actionDuration = actionEndTime - actionStartTime;
-        logger.debug(`✅ ${tag} Finished executing ${opType} operation (${actionDuration}ms)`);
+        logger.debug(
+          `✅ ${tag} Finished executing ${opType} operation (${actionDuration}ms)`
+        );
       } else {
         logger.debug(`🔧 ${tag} Using operation interpreter for ${opType}`);
         await operationInterpreter.execute(op, baseCtx);
         const actionEndTime = Date.now();
         const actionDuration = actionEndTime - actionStartTime;
-        logger.debug(`✅ ${tag} Finished executing operation of type: ${opType} (${actionDuration}ms)`);
+        logger.debug(
+          `✅ ${tag} Finished executing operation of type: ${opType} (${actionDuration}ms)`
+        );
       }
     } catch (err) {
       logger.error(

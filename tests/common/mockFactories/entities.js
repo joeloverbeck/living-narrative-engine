@@ -368,3 +368,37 @@ export const createMockEntityDefinition = (
 
   return definition;
 };
+
+/**
+ * Creates a mock IIdGenerator function.
+ *
+ * @param {string} [prefix] - Optional prefix for generated IDs
+ * @returns {jest.Mock} Mock ID generator function
+ */
+export const createMockIdGenerator = (prefix = 'id') => {
+  let counter = 0;
+  return jest.fn(() => `${prefix}-${++counter}`);
+};
+
+/**
+ * Creates a mock IComponentCloner function.
+ *
+ * @returns {jest.Mock} Mock component cloner function
+ */
+export const createMockComponentCloner = () => {
+  return jest.fn((obj) => JSON.parse(JSON.stringify(obj)));
+};
+
+/**
+ * Creates a mock IDefaultComponentPolicy.
+ *
+ * @returns {{apply: jest.Mock}} Mock default component policy
+ */
+export const createMockDefaultComponentPolicy = () => {
+  return {
+    apply: jest.fn((entity) => {
+      // Mock implementation - does nothing by default
+      return entity;
+    }),
+  };
+};

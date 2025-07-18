@@ -119,18 +119,28 @@ describe('Anatomy Validation Integration', () => {
       const torso = await testBed.entityManager.createEntityInstance(
         'test:multi_socket_torso'
       );
-      const arm1 = await testBed.entityManager.createEntityInstance('test:typed_arm');
-      const arm2 = await testBed.entityManager.createEntityInstance('test:typed_arm');
+      const arm1 =
+        await testBed.entityManager.createEntityInstance('test:typed_arm');
+      const arm2 =
+        await testBed.entityManager.createEntityInstance('test:typed_arm');
 
       // Connect arms to different sockets
-      await testBed.entityManager.addComponent(arm1.id, ANATOMY_JOINT_COMPONENT_ID, {
-        parentId: torso.id,
-        socketId: 'left_arm_socket',
-      });
-      await testBed.entityManager.addComponent(arm2.id, ANATOMY_JOINT_COMPONENT_ID, {
-        parentId: torso.id,
-        socketId: 'right_arm_socket',
-      });
+      await testBed.entityManager.addComponent(
+        arm1.id,
+        ANATOMY_JOINT_COMPONENT_ID,
+        {
+          parentId: torso.id,
+          socketId: 'left_arm_socket',
+        }
+      );
+      await testBed.entityManager.addComponent(
+        arm2.id,
+        ANATOMY_JOINT_COMPONENT_ID,
+        {
+          parentId: torso.id,
+          socketId: 'right_arm_socket',
+        }
+      );
 
       const socketOccupancy = new Set([
         `${torso.id}:left_arm_socket`,
@@ -219,7 +229,8 @@ describe('Anatomy Validation Integration', () => {
       const partA = await testBed.entityManager.createEntityInstance(
         'test:excluded_part_a'
       );
-      const regularPart = await testBed.entityManager.createEntityInstance('test:typed_arm');
+      const regularPart =
+        await testBed.entityManager.createEntityInstance('test:typed_arm');
 
       const recipe = {
         constraints: {
@@ -266,19 +277,28 @@ describe('Anatomy Validation Integration', () => {
       const torso = await testBed.entityManager.createEntityInstance(
         'test:wildcard_torso'
       );
-      const arm = await testBed.entityManager.createEntityInstance('test:typed_arm');
+      const arm =
+        await testBed.entityManager.createEntityInstance('test:typed_arm');
       const leg = await testBed.entityManager.createEntityInstance(
         'test:wrong_type_part'
       );
 
-      await testBed.entityManager.addComponent(arm.id, ANATOMY_JOINT_COMPONENT_ID, {
-        parentId: torso.id,
-        socketId: 'universal_socket',
-      });
-      await testBed.entityManager.addComponent(leg.id, ANATOMY_JOINT_COMPONENT_ID, {
-        parentId: torso.id,
-        socketId: 'universal_socket',
-      });
+      await testBed.entityManager.addComponent(
+        arm.id,
+        ANATOMY_JOINT_COMPONENT_ID,
+        {
+          parentId: torso.id,
+          socketId: 'universal_socket',
+        }
+      );
+      await testBed.entityManager.addComponent(
+        leg.id,
+        ANATOMY_JOINT_COMPONENT_ID,
+        {
+          parentId: torso.id,
+          socketId: 'universal_socket',
+        }
+      );
 
       const socketOccupancy = new Set([`${torso.id}:universal_socket`]);
 
@@ -299,27 +319,42 @@ describe('Anatomy Validation Integration', () => {
       const torso = await testBed.entityManager.createEntityInstance(
         'test:multi_socket_torso'
       );
-      const arm1 = await testBed.entityManager.createEntityInstance('test:typed_arm');
-      const arm2 = await testBed.entityManager.createEntityInstance('test:typed_arm');
-      const arm3 = await testBed.entityManager.createEntityInstance('test:typed_arm');
+      const arm1 =
+        await testBed.entityManager.createEntityInstance('test:typed_arm');
+      const arm2 =
+        await testBed.entityManager.createEntityInstance('test:typed_arm');
+      const arm3 =
+        await testBed.entityManager.createEntityInstance('test:typed_arm');
       const wrongPart = await testBed.entityManager.createEntityInstance(
         'test:wrong_type_part'
       );
 
       // Connect arms to sockets
-      await testBed.entityManager.addComponent(arm1.id, ANATOMY_JOINT_COMPONENT_ID, {
-        parentId: torso.id,
-        socketId: 'left_arm_socket',
-      });
-      await testBed.entityManager.addComponent(arm2.id, ANATOMY_JOINT_COMPONENT_ID, {
-        parentId: torso.id,
-        socketId: 'right_arm_socket',
-      });
+      await testBed.entityManager.addComponent(
+        arm1.id,
+        ANATOMY_JOINT_COMPONENT_ID,
+        {
+          parentId: torso.id,
+          socketId: 'left_arm_socket',
+        }
+      );
+      await testBed.entityManager.addComponent(
+        arm2.id,
+        ANATOMY_JOINT_COMPONENT_ID,
+        {
+          parentId: torso.id,
+          socketId: 'right_arm_socket',
+        }
+      );
       // Try to connect third arm to non-existent socket
-      await testBed.entityManager.addComponent(arm3.id, ANATOMY_JOINT_COMPONENT_ID, {
-        parentId: torso.id,
-        socketId: 'third_arm_socket', // This socket doesn't exist
-      });
+      await testBed.entityManager.addComponent(
+        arm3.id,
+        ANATOMY_JOINT_COMPONENT_ID,
+        {
+          parentId: torso.id,
+          socketId: 'third_arm_socket', // This socket doesn't exist
+        }
+      );
 
       // Wrong part type
       await testBed.entityManager.addComponent(
@@ -371,7 +406,9 @@ describe('Anatomy Validation Integration', () => {
       const parts = [];
       for (let i = 0; i < 10; i++) {
         const part =
-          await testBed.entityManager.createEntityInstance('test:nestable_part');
+          await testBed.entityManager.createEntityInstance(
+            'test:nestable_part'
+          );
         parts.push(part);
 
         if (i > 0) {
