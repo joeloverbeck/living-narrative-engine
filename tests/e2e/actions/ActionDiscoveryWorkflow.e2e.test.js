@@ -31,6 +31,7 @@ import {
   createEntityInstance,
 } from '../../common/entities/entityFactories.js';
 import { TraceContext } from '../../../src/actions/tracing/traceContext.js';
+import { ActionTestUtilities } from '../../common/actions/actionTestUtilities.js';
 
 /**
  * E2E test suite for the complete action discovery workflow
@@ -65,7 +66,10 @@ describe('Complete Action Discovery Workflow E2E', () => {
 
     // Set up test world and actors
     await setupTestWorld();
-    await setupTestActors();
+    testActors = await ActionTestUtilities.createTestActors({
+      entityManager,
+      registry: container.resolve(tokens.IDataRegistry),
+    });
     await setupTestActions();
   });
 
@@ -292,56 +296,11 @@ describe('Complete Action Discovery Workflow E2E', () => {
           'core:movement': { locked: false },
         },
       },
-
-      // NPC actor with different components
-      npc: {
-        id: 'test-npc',
-        components: {
-          'core:name': { name: 'Test NPC' },
-          'core:position': { locationId: 'test-location-1' },
-          'core:actor': { isPlayer: false },
-          'core:closeness': { relationships: {} },
-          'core:movement': { locked: false },
-        },
-      },
-
-      // Follower actor
-      follower: {
-        id: 'test-follower',
-        components: {
-          'core:name': { name: 'Test Follower' },
-          'core:position': { locationId: 'test-location-1' },
-          'core:actor': { isPlayer: false },
-          'core:following': { following: 'test-player', followers: [] },
-          'core:movement': { locked: false },
-        },
-      },
-
-      // Minimal actor with only core components
-      minimal: {
-        id: 'test-minimal',
-        components: {
-          'core:name': { name: 'Minimal Actor' },
-          'core:position': { locationId: 'test-location-2' },
-          'core:actor': { isPlayer: false },
-          'core:movement': { locked: false },
-        },
-      },
     };
 
-    // Create actor definitions and instances
-    for (const actor of Object.values(testActors)) {
-      const definition = createEntityDefinition(actor.id, actor.components);
-      // Add the definition to the registry
-      const registry = container.resolve(tokens.IDataRegistry);
-      registry.store('entityDefinitions', actor.id, definition);
-
-      // Create the entity instance
-      await entityManager.createEntityInstance(actor.id, {
-        instanceId: actor.id,
-        definitionId: actor.id,
-      });
-    }
+    // This function is now handled in beforeEach using ActionTestUtilities
+    // Keeping this function for any tests that might reference it directly
+    return testActors;
   }
 
   /**
@@ -421,7 +380,7 @@ describe('Complete Action Discovery Workflow E2E', () => {
       testActors.player.id
     );
     const minimalEntity = await entityManager.getEntityInstance(
-      testActors.minimal.id
+      testActors.minimalActor.id
     );
 
     const baseContext = {
@@ -449,11 +408,14 @@ describe('Complete Action Discovery Workflow E2E', () => {
     const playerActionIds = playerActions.actions.map((a) => a.id);
     const minimalActionIds = minimalActions.actions.map((a) => a.id);
 
-    // Both should have basic actions
+    // Player should have all actions (has required components)
     expect(playerActionIds).toContain('core:go');
     expect(playerActionIds).toContain('core:wait');
-    expect(minimalActionIds).toContain('core:go');
+    
+    // Minimal actor should only have actions that don't require components
     expect(minimalActionIds).toContain('core:wait');
+    // Minimal actor shouldn't have 'core:go' since it lacks 'core:position' component
+    expect(minimalActionIds).not.toContain('core:go');
 
     // Following-related actions should only be available to actors with following component
     const followingActions = playerActionIds.filter(

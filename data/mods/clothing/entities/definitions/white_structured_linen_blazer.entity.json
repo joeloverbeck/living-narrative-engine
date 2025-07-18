@@ -5,12 +5,21 @@
   "components": {
     "clothing:wearable": {
       "layer": "outer",
-      "material": "linen",
       "equipmentSlots": {
         "primary": "torso_upper",
-        "secondary": ["left_arm_clothing", "right_arm_clothing"]
+        "secondary": [
+          "left_arm_clothing",
+          "right_arm_clothing"
+        ]
       },
-      "allowedLayers": ["underwear", "base", "outer"]
+      "allowedLayers": [
+        "underwear",
+        "base",
+        "outer"
+      ]
+    },
+    "core:material": {
+      "material": "linen"
     },
     "core:name": {
       "text": "structured blazer"

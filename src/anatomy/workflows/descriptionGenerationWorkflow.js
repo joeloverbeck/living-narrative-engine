@@ -67,7 +67,7 @@ export class DescriptionGenerationWorkflow extends BaseService {
 
     try {
       // Generate descriptions for all body parts and the body itself
-      this.#anatomyDescriptionService.generateAllDescriptions(bodyEntity);
+      await this.#anatomyDescriptionService.generateAllDescriptions(bodyEntity);
 
       this.#logger.info(
         `DescriptionGenerationWorkflow: Successfully generated descriptions for entity '${entityId}'`

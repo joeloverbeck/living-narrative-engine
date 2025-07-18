@@ -65,7 +65,7 @@ describe('AnatomyDescriptionService - Delegation Coverage', () => {
   });
 
   describe('generateAllDescriptions with orchestrator delegation', () => {
-    it('should delegate to bodyDescriptionOrchestrator when available', () => {
+    it('should delegate to bodyDescriptionOrchestrator when available', async () => {
       const mockEntity = createMockEntity('entity1', {
         [ANATOMY_BODY_COMPONENT_ID]: { body: { root: 'torso' } },
       });
@@ -77,11 +77,11 @@ describe('AnatomyDescriptionService - Delegation Coverage', () => {
           { entityId: 'part2', description: 'Part 2 description' },
         ],
       };
-      mockBodyDescriptionOrchestrator.generateAllDescriptions.mockReturnValue(
+      mockBodyDescriptionOrchestrator.generateAllDescriptions.mockResolvedValue(
         mockResults
       );
 
-      service.generateAllDescriptions(mockEntity);
+      await service.generateAllDescriptions(mockEntity);
 
       expect(
         mockBodyDescriptionOrchestrator.generateAllDescriptions
@@ -94,7 +94,7 @@ describe('AnatomyDescriptionService - Delegation Coverage', () => {
       ).toHaveBeenCalledWith(mockResults.partDescriptions);
     });
 
-    it('should handle null descriptions from orchestrator gracefully', () => {
+    it('should handle null descriptions from orchestrator gracefully', async () => {
       const mockEntity = createMockEntity('entity1', {
         [ANATOMY_BODY_COMPONENT_ID]: { body: { root: 'torso' } },
       });
@@ -103,11 +103,11 @@ describe('AnatomyDescriptionService - Delegation Coverage', () => {
         bodyDescription: null,
         partDescriptions: [],
       };
-      mockBodyDescriptionOrchestrator.generateAllDescriptions.mockReturnValue(
+      mockBodyDescriptionOrchestrator.generateAllDescriptions.mockResolvedValue(
         mockResults
       );
 
-      expect(() => service.generateAllDescriptions(mockEntity)).not.toThrow();
+      await expect(service.generateAllDescriptions(mockEntity)).resolves.not.toThrow();
 
       expect(
         mockDescriptionPersistenceService.updateDescription
@@ -173,17 +173,17 @@ describe('AnatomyDescriptionService - Delegation Coverage', () => {
   });
 
   describe('generateBodyDescription with orchestrator delegation (lines 129-136)', () => {
-    it('should delegate to bodyDescriptionOrchestrator when available', () => {
+    it('should delegate to bodyDescriptionOrchestrator when available', async () => {
       const mockEntity = createMockEntity('entity1', {
         [ANATOMY_BODY_COMPONENT_ID]: { body: { root: 'torso' } },
       });
       const mockDescription = 'Orchestrated body description';
 
-      mockBodyDescriptionOrchestrator.generateBodyDescription.mockReturnValue(
+      mockBodyDescriptionOrchestrator.generateBodyDescription.mockResolvedValue(
         mockDescription
       );
 
-      service.generateBodyDescription(mockEntity);
+      await service.generateBodyDescription(mockEntity);
 
       expect(
         mockBodyDescriptionOrchestrator.generateBodyDescription
@@ -193,16 +193,16 @@ describe('AnatomyDescriptionService - Delegation Coverage', () => {
       ).toHaveBeenCalledWith('entity1', mockDescription);
     });
 
-    it('should handle null description from orchestrator gracefully', () => {
+    it('should handle null description from orchestrator gracefully', async () => {
       const mockEntity = createMockEntity('entity1', {
         [ANATOMY_BODY_COMPONENT_ID]: { body: { root: 'torso' } },
       });
 
-      mockBodyDescriptionOrchestrator.generateBodyDescription.mockReturnValue(
+      mockBodyDescriptionOrchestrator.generateBodyDescription.mockResolvedValue(
         null
       );
 
-      service.generateBodyDescription(mockEntity);
+      await service.generateBodyDescription(mockEntity);
 
       expect(
         mockBodyDescriptionOrchestrator.generateBodyDescription
@@ -212,16 +212,16 @@ describe('AnatomyDescriptionService - Delegation Coverage', () => {
       ).toHaveBeenCalledWith('entity1', null);
     });
 
-    it('should handle empty string description from orchestrator', () => {
+    it('should handle empty string description from orchestrator', async () => {
       const mockEntity = createMockEntity('entity1', {
         [ANATOMY_BODY_COMPONENT_ID]: { body: { root: 'torso' } },
       });
 
-      mockBodyDescriptionOrchestrator.generateBodyDescription.mockReturnValue(
+      mockBodyDescriptionOrchestrator.generateBodyDescription.mockResolvedValue(
         ''
       );
 
-      service.generateBodyDescription(mockEntity);
+      await service.generateBodyDescription(mockEntity);
 
       expect(
         mockBodyDescriptionOrchestrator.generateBodyDescription
@@ -233,17 +233,17 @@ describe('AnatomyDescriptionService - Delegation Coverage', () => {
   });
 
   describe('getOrGenerateBodyDescription with orchestrator delegation (lines 173-184)', () => {
-    it('should delegate to bodyDescriptionOrchestrator when available for anatomy entity', () => {
+    it('should delegate to bodyDescriptionOrchestrator when available for anatomy entity', async () => {
       const mockEntity = createMockEntity('entity1', {
         [ANATOMY_BODY_COMPONENT_ID]: { body: { root: 'torso' } },
       });
       const mockDescription = 'Orchestrated description';
 
-      mockBodyDescriptionOrchestrator.getOrGenerateBodyDescription.mockReturnValue(
+      mockBodyDescriptionOrchestrator.getOrGenerateBodyDescription.mockResolvedValue(
         mockDescription
       );
 
-      const result = service.getOrGenerateBodyDescription(mockEntity);
+      const result = await service.getOrGenerateBodyDescription(mockEntity);
 
       expect(
         mockBodyDescriptionOrchestrator.getOrGenerateBodyDescription
@@ -254,16 +254,16 @@ describe('AnatomyDescriptionService - Delegation Coverage', () => {
       expect(result).toBe(mockDescription);
     });
 
-    it('should not update persistence when description is null from orchestrator', () => {
+    it('should not update persistence when description is null from orchestrator', async () => {
       const mockEntity = createMockEntity('entity1', {
         [ANATOMY_BODY_COMPONENT_ID]: { body: { root: 'torso' } },
       });
 
-      mockBodyDescriptionOrchestrator.getOrGenerateBodyDescription.mockReturnValue(
+      mockBodyDescriptionOrchestrator.getOrGenerateBodyDescription.mockResolvedValue(
         null
       );
 
-      const result = service.getOrGenerateBodyDescription(mockEntity);
+      const result = await service.getOrGenerateBodyDescription(mockEntity);
 
       expect(
         mockBodyDescriptionOrchestrator.getOrGenerateBodyDescription
@@ -274,16 +274,16 @@ describe('AnatomyDescriptionService - Delegation Coverage', () => {
       expect(result).toBeNull();
     });
 
-    it('should not update persistence when entity lacks anatomy:body component', () => {
+    it('should not update persistence when entity lacks anatomy:body component', async () => {
       const mockEntity = createMockEntity('entity1', {
         [DESCRIPTION_COMPONENT_ID]: { text: 'Non-anatomy description' },
       });
 
-      mockBodyDescriptionOrchestrator.getOrGenerateBodyDescription.mockReturnValue(
+      mockBodyDescriptionOrchestrator.getOrGenerateBodyDescription.mockResolvedValue(
         'Some description'
       );
 
-      const result = service.getOrGenerateBodyDescription(mockEntity);
+      const result = await service.getOrGenerateBodyDescription(mockEntity);
 
       expect(
         mockBodyDescriptionOrchestrator.getOrGenerateBodyDescription
@@ -361,12 +361,12 @@ describe('AnatomyDescriptionService - Delegation Coverage', () => {
       // Should use fallback implementation
     });
 
-    it('should fall back to original implementation when bodyDescriptionOrchestrator is not available', () => {
+    it('should fall back to original implementation when bodyDescriptionOrchestrator is not available', async () => {
       const mockEntity = createMockEntity('entity1', {
         [ANATOMY_BODY_COMPONENT_ID]: { body: { root: 'torso' } },
       });
 
-      serviceWithoutNewServices.generateBodyDescription(mockEntity);
+      await serviceWithoutNewServices.generateBodyDescription(mockEntity);
 
       // Should use fallback implementation
       expect(

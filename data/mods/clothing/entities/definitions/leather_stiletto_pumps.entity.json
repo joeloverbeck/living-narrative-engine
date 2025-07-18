@@ -5,11 +5,13 @@
   "components": {
     "clothing:wearable": {
       "layer": "base",
-      "material": "leather",
       "equipmentSlots": {
         "primary": "feet"
       },
       "allowedLayers": ["base"]
+    },
+    "core:material": {
+      "material": "leather"
     },
     "core:name": {
       "text": "stiletto pumps"

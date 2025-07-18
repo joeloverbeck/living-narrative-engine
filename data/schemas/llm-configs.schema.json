@@ -140,36 +140,6 @@
             "type": "string"
           }
         },
-        "promptElements": {
-          "type": "array",
-          "description": "Defines named prompt parts and their wrappers.",
-          "items": {
-            "type": "object",
-            "properties": {
-              "key": {
-                "type": "string",
-                "description": "Unique key for the prompt element (e.g., 'system_prompt')."
-              },
-              "prefix": {
-                "type": "string",
-                "description": "String to prepend to this part's content."
-              },
-              "suffix": {
-                "type": "string",
-                "description": "String to append to this part's content."
-              }
-            },
-            "required": ["key", "prefix", "suffix"],
-            "additionalProperties": false
-          }
-        },
-        "promptAssemblyOrder": {
-          "type": "array",
-          "description": "Ordered list of 'promptElements' keys, defining the sequence of prompt assembly.",
-          "items": {
-            "type": "string"
-          }
-        },
         "contextTokenLimit": {
           "type": "integer",
           "minimum": 0,
@@ -182,9 +152,7 @@
         "modelIdentifier",
         "endpointUrl",
         "apiType",
-        "jsonOutputStrategy",
-        "promptElements",
-        "promptAssemblyOrder"
+        "jsonOutputStrategy"
       ],
       "additionalProperties": false
     }

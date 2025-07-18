@@ -5,12 +5,14 @@
   "components": {
     "clothing:wearable": {
       "layer": "base",
-      "material": "wool",
       "equipmentSlots": {
         "primary": "legs",
         "secondary": ["torso_lower"]
       },
       "allowedLayers": ["underwear", "base", "outer"]
+    },
+    "core:material": {
+      "material": "wool"
     },
     "core:name": {
       "text": "wide-leg trousers"

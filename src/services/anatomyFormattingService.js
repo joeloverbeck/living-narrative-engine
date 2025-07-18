@@ -100,6 +100,7 @@ export class AnatomyFormattingService {
       noArticleParts: [],
       descriptorOrder: [],
       descriptorValueKeys: [],
+      equipmentIntegration: null,
     };
 
     // Process configs in mod load order
@@ -188,6 +189,19 @@ export class AnatomyFormattingService {
         merged.irregularPlurals = {
           ...merged.irregularPlurals,
           ...overlay.irregularPlurals,
+        };
+      }
+    }
+
+    // Handle equipmentIntegration configuration
+    if (overlay.equipmentIntegration) {
+      if (mergeStrategy.replaceObjects) {
+        merged.equipmentIntegration = { ...overlay.equipmentIntegration };
+      } else {
+        // Deep merge
+        merged.equipmentIntegration = {
+          ...merged.equipmentIntegration,
+          ...overlay.equipmentIntegration,
         };
       }
     }
@@ -293,6 +307,23 @@ export class AnatomyFormattingService {
       'getDescriptorValueKeys'
     );
     return [...descriptorValueKeys];
+  }
+
+  /**
+   * Get equipment integration configuration
+   *
+   * @returns {object} Equipment integration configuration
+   */
+  getEquipmentIntegrationConfig() {
+    this._ensureInitialized();
+    return this._mergedConfig.equipmentIntegration || {
+      enabled: false,
+      prefix: 'Wearing: ',
+      suffix: '.',
+      separator: ', ',
+      itemSeparator: ' | ',
+      placement: 'after_anatomy',
+    };
   }
 
   /**

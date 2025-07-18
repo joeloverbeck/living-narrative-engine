@@ -114,69 +114,75 @@ export class PromptGenerationTestBed {
 
     // Manually register component schemas that we need for testing
     const schemaValidator = this.container.resolve(tokens.ISchemaValidator);
-    
+
     // Register core:notes schema
-    await schemaValidator.addSchema({
-      $schema: 'http://json-schema.org/draft-07/schema#',
-      type: 'object',
-      properties: {
-        notes: {
-          type: 'array',
-          items: {
-            oneOf: [
-              {
-                type: 'object',
-                properties: {
-                  text: { type: 'string', minLength: 1 },
-                  timestamp: { type: 'string', format: 'date-time' }
+    await schemaValidator.addSchema(
+      {
+        $schema: 'http://json-schema.org/draft-07/schema#',
+        type: 'object',
+        properties: {
+          notes: {
+            type: 'array',
+            items: {
+              oneOf: [
+                {
+                  type: 'object',
+                  properties: {
+                    text: { type: 'string', minLength: 1 },
+                    timestamp: { type: 'string', format: 'date-time' },
+                  },
+                  required: ['text'],
+                  additionalProperties: false,
                 },
-                required: ['text'],
-                additionalProperties: false
-              },
-              {
-                type: 'object',
-                properties: {
-                  text: { type: 'string', minLength: 1 },
-                  subject: { type: 'string', minLength: 1 },
-                  context: { type: 'string' },
-                  tags: { type: 'array', items: { type: 'string' } },
-                  timestamp: { type: 'string', format: 'date-time' }
+                {
+                  type: 'object',
+                  properties: {
+                    text: { type: 'string', minLength: 1 },
+                    subject: { type: 'string', minLength: 1 },
+                    context: { type: 'string' },
+                    tags: { type: 'array', items: { type: 'string' } },
+                    timestamp: { type: 'string', format: 'date-time' },
+                  },
+                  required: ['text', 'subject'],
+                  additionalProperties: false,
                 },
-                required: ['text', 'subject'],
-                additionalProperties: false
-              }
-            ]
-          }
-        }
+              ],
+            },
+          },
+        },
+        required: ['notes'],
+        additionalProperties: false,
       },
-      required: ['notes'],
-      additionalProperties: false
-    }, 'core:notes');
+      'core:notes'
+    );
 
     // Register core:perception_log schema
-    await schemaValidator.addSchema({
-      $schema: 'http://json-schema.org/draft-07/schema#',
-      type: 'object',
-      properties: {
-        logEntries: {
-          type: 'array',
-          items: {
-            type: 'object',
-            properties: {
-              descriptionText: { type: 'string' },
-              timestamp: { type: 'string' },
-              perceptionType: { type: 'string' },
-              actorId: { type: 'string' }
+    await schemaValidator.addSchema(
+      {
+        $schema: 'http://json-schema.org/draft-07/schema#',
+        type: 'object',
+        properties: {
+          logEntries: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                descriptionText: { type: 'string' },
+                timestamp: { type: 'string' },
+                perceptionType: { type: 'string' },
+                actorId: { type: 'string' },
+              },
+              required: ['descriptionText'],
+              additionalProperties: true,
             },
-            required: ['descriptionText'],
-            additionalProperties: true
-          }
+          },
+          maxEntries: { type: 'number' },
         },
-        maxEntries: { type: 'number' }
+        required: ['logEntries'],
+        additionalProperties: false,
       },
-      required: ['logEntries'],
-      additionalProperties: false
-    }, 'core:perception_log');
+      'core:perception_log'
+    );
 
     // Initialize all systems tagged with INITIALIZABLE (includes PromptStaticContentService)
     const systemInitializer = this.container.resolve(tokens.SystemInitializer);
@@ -318,24 +324,22 @@ export class PromptGenerationTestBed {
     jest
       .spyOn(this.llmAdapter, 'getCurrentActiveLlmId')
       .mockResolvedValue('test-llm-toolcalling');
-    
+
     // Mock getCurrentActiveLlmConfig to return the test config
-    jest
-      .spyOn(this.llmAdapter, 'getCurrentActiveLlmConfig')
-      .mockResolvedValue({
-        configId: 'test-llm-toolcalling',
-        displayName: 'Test LLM (Tool Calling)',
-        contextTokenLimit: 8000,
-        // Add other config properties as needed
-      });
-    
+    jest.spyOn(this.llmAdapter, 'getCurrentActiveLlmConfig').mockResolvedValue({
+      configId: 'test-llm-toolcalling',
+      displayName: 'Test LLM (Tool Calling)',
+      contextTokenLimit: 8000,
+      // Add other config properties as needed
+    });
+
     // Mock setActiveLlm to handle LLM switching
     jest
       .spyOn(this.llmAdapter, 'setActiveLlm')
       .mockImplementation(async (llmId) => {
         // Update the mocked getCurrentActiveLlmId to return the new ID
         this.llmAdapter.getCurrentActiveLlmId.mockResolvedValue(llmId);
-        
+
         // Update getCurrentActiveLlmConfig based on the new ID
         if (llmId === 'test-llm-jsonschema') {
           this.llmAdapter.getCurrentActiveLlmConfig.mockResolvedValue({
@@ -1072,7 +1076,7 @@ export class PromptGenerationTestBed {
               name: 'Core Mod',
               description: 'Core game content',
               author: 'Test',
-              dependencies: []
+              dependencies: [],
             };
           }
         } else if (identifier.includes('.schema.json')) {
@@ -1101,14 +1105,19 @@ export class PromptGenerationTestBed {
               additionalProperties: true,
             };
           }
-        } else if (identifier.includes('components/') && identifier.includes('.component.json')) {
+        } else if (
+          identifier.includes('components/') &&
+          identifier.includes('.component.json')
+        ) {
           // Handle component files from mod directories
           const fs = require('fs');
           const path = require('path');
-          
+
           // Parse the mod path to get the actual file location
           // Example: data/mods/core/components/notes.component.json
-          const pathMatch = identifier.match(/data\/mods\/([^\/]+)\/components\/(.+\.component\.json)$/);
+          const pathMatch = identifier.match(
+            /data\/mods\/([^\/]+)\/components\/(.+\.component\.json)$/
+          );
           if (pathMatch) {
             const modId = pathMatch[1];
             const componentFile = pathMatch[2];
@@ -1120,29 +1129,36 @@ export class PromptGenerationTestBed {
               'components',
               componentFile
             );
-            
+
             try {
               return JSON.parse(fs.readFileSync(componentPath, 'utf8'));
             } catch (error) {
               // Return a minimal component schema if file doesn't exist
-              const componentName = componentFile.replace('.component.json', '');
+              const componentName = componentFile.replace(
+                '.component.json',
+                ''
+              );
               return {
-                $schema: 'schema://living-narrative-engine/component.schema.json',
+                $schema:
+                  'schema://living-narrative-engine/component.schema.json',
                 id: `${modId}:${componentName}`,
                 description: `Test component ${componentName}`,
                 dataSchema: {
                   $schema: 'http://json-schema.org/draft-07/schema#',
                   type: 'object',
-                  additionalProperties: true
-                }
+                  additionalProperties: true,
+                },
               };
             }
           }
-        } else if (identifier.includes('data/mods/') && !identifier.includes('.schema.json')) {
+        } else if (
+          identifier.includes('data/mods/') &&
+          !identifier.includes('.schema.json')
+        ) {
           // Handle other mod files (actions, entities, rules, etc.)
           const fs = require('fs');
           const path = require('path');
-          
+
           // For now, just try to read the actual file
           const filePath = path.join(process.cwd(), identifier);
           try {
@@ -1150,9 +1166,11 @@ export class PromptGenerationTestBed {
             return JSON.parse(content);
           } catch (error) {
             // Return empty array for directories that might not have content
-            if (identifier.includes('/actions/') || 
-                identifier.includes('/entities/') || 
-                identifier.includes('/rules/')) {
+            if (
+              identifier.includes('/actions/') ||
+              identifier.includes('/entities/') ||
+              identifier.includes('/rules/')
+            ) {
               return [];
             }
             // For other files, throw the error

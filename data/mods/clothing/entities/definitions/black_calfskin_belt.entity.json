@@ -5,11 +5,13 @@
   "components": {
     "clothing:wearable": {
       "layer": "accessories",
-      "material": "calfskin",
       "equipmentSlots": {
         "primary": "torso_lower"
       },
       "allowedLayers": ["accessories"]
+    },
+    "core:material": {
+      "material": "calfskin"
     },
     "core:name": {
       "text": "belt"

@@ -109,7 +109,7 @@ describe('Body Description Generation Integration', () => {
   });
 
   describe('Full body description composition', () => {
-    it('should handle body without descriptors gracefully', () => {
+    it('should handle body without descriptors gracefully', async () => {
       const descriptorFormatter = new DescriptorFormatter();
       const bodyPartDescriptionBuilder = new BodyPartDescriptionBuilder({
         descriptorFormatter,
@@ -166,11 +166,11 @@ describe('Body Description Generation Integration', () => {
         entityFinder: mockEntityFinder,
       });
 
-      const description = composer.composeDescription(minimalBody);
+      const description = await composer.composeDescription(minimalBody);
       expect(description).toBe('');
     });
 
-    it('should compose a simple body with multiple parts', () => {
+    it('should compose a simple body with multiple parts', async () => {
       const descriptorFormatter = new DescriptorFormatter();
       const bodyPartDescriptionBuilder = new BodyPartDescriptionBuilder({
         descriptorFormatter,
@@ -284,7 +284,7 @@ describe('Body Description Generation Integration', () => {
         entityFinder: mockEntityFinder,
       });
 
-      const description = composer.composeDescription(bodyEntity);
+      const description = await composer.composeDescription(bodyEntity);
       expect(description).toContain('Build: athletic');
       expect(description).toContain('Hair: short, blonde');
       expect(description).toContain('Eyes: blue');
@@ -292,7 +292,7 @@ describe('Body Description Generation Integration', () => {
   });
 
   describe('AnatomyDescriptionService integration', () => {
-    it('should update description components correctly', () => {
+    it('should update description components correctly', async () => {
       const descriptorFormatter = new DescriptorFormatter();
       const bodyPartDescriptionBuilder = new BodyPartDescriptionBuilder({
         descriptorFormatter,
@@ -359,7 +359,7 @@ describe('Body Description Generation Integration', () => {
       };
 
       const mockBodyDescriptionComposer = {
-        composeDescription: () => 'A simple body with a torso.',
+        composeDescription: async () => 'A simple body with a torso.',
       };
 
       const service = new AnatomyDescriptionService({
@@ -371,7 +371,7 @@ describe('Body Description Generation Integration', () => {
       });
 
       // Generate descriptions
-      service.generateAllDescriptions(bodyEntity);
+      await service.generateAllDescriptions(bodyEntity);
 
       // Check that descriptions were added
       // The torso has no descriptors, so it won't get a description component

@@ -11,6 +11,8 @@ import AppContainer from '../../../../src/dependencyInjection/appContainer.js';
 import { configureContainer } from '../../../../src/dependencyInjection/containerConfig.js';
 import { createEntityDefinition } from '../../../common/entities/entityFactories.js';
 import { DEFAULT_TEST_WORLD } from '../../../common/constants.js';
+import { ActionTestUtilities } from '../../../common/actions/actionTestUtilities.js';
+import { TestDataFactory } from '../../../common/actions/testDataFactory.js';
 
 /**
  * Test bed for action execution pipeline testing
@@ -133,104 +135,61 @@ export class ActionExecutionTestBed {
   }
 
   /**
-   * Create a test world with locations and exits
+   * Create a test world with locations and exits using shared utilities
    */
   async createTestWorld() {
-    const locations = [
-      {
-        id: 'test-location-1',
-        name: 'Test Room 1',
-        description: 'First test room',
-        components: {
-          'core:name': { name: 'Test Room 1' },
-          'core:description': { description: 'First test room' },
-          'core:position': { x: 0, y: 0, z: 0 },
-          'core:exits': {
-            north: { target: 'test-location-2', blocked: false },
-            south: { target: null, blocked: false },
-            east: { target: null, blocked: false },
-            west: { target: null, blocked: false },
-          },
-        },
-      },
-      {
-        id: 'test-location-2',
-        name: 'Test Room 2',
-        description: 'Second test room',
-        components: {
-          'core:name': { name: 'Test Room 2' },
-          'core:description': { description: 'Second test room' },
-          'core:position': { x: 1, y: 0, z: 0 },
-          'core:exits': {
-            north: { target: null, blocked: false },
-            south: { target: 'test-location-1', blocked: false },
-            east: { target: null, blocked: false },
-            west: { target: null, blocked: false },
-          },
-        },
-      },
-    ];
-
-    const registry = this.container.resolve(tokens.IDataRegistry);
-
-    for (const location of locations) {
-      const definition = createEntityDefinition(
-        location.id,
-        location.components
-      );
-      registry.store('entityDefinitions', location.id, definition);
-
-      await this.entityManager.createEntityInstance(location.id, {
-        instanceId: location.id,
-        definitionId: location.id,
-      });
-    }
-
-    return locations;
+    return await ActionTestUtilities.createStandardTestWorld({
+      entityManager: this.entityManager,
+      registry: this.registry,
+    });
   }
 
   /**
-   * Create test actors with various configurations
+   * Create a test world with additional entities (objects, items)
    */
-  async createTestActors() {
-    const actors = {
-      player: {
-        id: 'test-player',
-        components: {
-          'core:name': { name: 'Test Player' },
-          'core:position': { locationId: 'test-location-1' },
-          'core:actor': { isPlayer: true },
-          'core:closeness': { relationships: {} },
-          'core:following': { following: null, followers: [] },
-          'core:movement': { locked: false },
-        },
-      },
-      npc: {
-        id: 'test-npc',
-        components: {
-          'core:name': { name: 'Test NPC' },
-          'core:position': { locationId: 'test-location-1' },
-          'core:actor': { isPlayer: false },
-          'core:closeness': { relationships: {} },
-          'core:following': { following: null, followers: [] },
-          'core:movement': { locked: false },
-        },
-      },
-      follower: {
-        id: 'test-follower',
-        components: {
-          'core:name': { name: 'Test Follower' },
-          'core:position': { locationId: 'test-location-1' },
-          'core:actor': { isPlayer: false },
-          'core:following': { following: 'test-player', followers: [] },
-          'core:movement': { locked: false },
-        },
-      },
-    };
-
+  async createCompleteTestWorld() {
+    const worldData = TestDataFactory.createTestWorld();
     const registry = this.container.resolve(tokens.IDataRegistry);
 
-    for (const actor of Object.values(actors)) {
+    // Create all entities (locations, objects, items)
+    const allEntities = [
+      ...worldData.locations,
+      ...worldData.objects,
+      ...worldData.items,
+    ];
+
+    for (const entity of allEntities) {
+      const definition = createEntityDefinition(entity.id, entity.components);
+      registry.store('entityDefinitions', entity.id, definition);
+
+      await this.entityManager.createEntityInstance(entity.id, {
+        instanceId: entity.id,
+        definitionId: entity.id,
+      });
+    }
+
+    return worldData;
+  }
+
+  /**
+   * Create test actors with various configurations using shared utilities
+   */
+  async createTestActors() {
+    return await ActionTestUtilities.createTestActors({
+      entityManager: this.entityManager,
+      registry: this.registry,
+    });
+  }
+
+  /**
+   * Create test actors with custom configurations
+   *
+   * @param actorConfigs
+   */
+  async createCustomTestActors(actorConfigs) {
+    const registry = this.container.resolve(tokens.IDataRegistry);
+
+    for (const actor of Object.values(actorConfigs)) {
       const definition = createEntityDefinition(actor.id, actor.components);
       registry.store('entityDefinitions', actor.id, definition);
 
@@ -240,100 +199,75 @@ export class ActionExecutionTestBed {
       });
     }
 
-    return actors;
+    return actorConfigs;
   }
 
   /**
-   * Register test actions and supporting data
+   * Register test actions and supporting data using shared utilities
    */
   async registerTestActions() {
-    // Register basic actions
-    const actions = [
-      {
-        id: 'core:wait',
-        name: 'Wait',
-        description: 'Wait for a moment',
-        scope: 'none',
-        template: 'wait',
-        prerequisites: [],
-        required_components: { actor: [] },
-      },
-      {
-        id: 'core:go',
-        name: 'Go',
-        description: 'Move to another location',
-        scope: 'core:clear_directions',
-        template: 'go to {target}',
-        prerequisites: [],
-        required_components: { actor: ['core:position'] },
-      },
-      {
-        id: 'core:follow',
-        name: 'Follow',
-        description: 'Follow another actor',
-        scope: 'core:other_actors',
-        template: 'follow {target}',
-        prerequisites: [],
-        required_components: { actor: ['core:following'] },
-      },
-    ];
+    // Set up actions
+    const actions = ActionTestUtilities.setupTestActions(this.registry);
 
-    for (const action of actions) {
-      this.registry.store('actions', action.id, action);
-    }
+    // Set up conditions
+    const conditions = ActionTestUtilities.setupTestConditions(this.registry);
 
-    // Build the action index with the registered actions
+    // Set up scope definitions
+    const scopes = ActionTestUtilities.setupScopeDefinitions({
+      scopeRegistry: this.scopeRegistry,
+      dslParser: this.dslParser,
+      logger: this.logger,
+    });
+
+    // Build the action index
     const actionIndex = this.container.resolve(tokens.ActionIndex);
     actionIndex.buildIndex(actions);
     this.logger.debug(`Built action index with ${actions.length} test actions`);
 
-    // Register conditions
-    const conditions = [
-      {
-        id: 'core:actor-can-move',
-        description: 'Actor can move',
-        logic: { '==': [{ var: 'actor.core:movement.locked' }, false] },
-      },
+    return { actions, conditions, scopes };
+  }
+
+  /**
+   * Register comprehensive test data including edge cases
+   */
+  async registerComprehensiveTestData() {
+    const dataset = TestDataFactory.createCompleteTestDataset();
+
+    // Register all actions
+    const allActions = [
+      ...dataset.actions.basic,
+      ...dataset.actions.comprehensive,
     ];
 
-    for (const condition of conditions) {
+    for (const action of allActions) {
+      this.registry.store('actions', action.id, action);
+    }
+
+    // Register all conditions
+    const allConditions = [...dataset.conditions.basic];
+
+    for (const condition of allConditions) {
       this.registry.store('conditions', condition.id, condition);
     }
 
-    // Register scope definitions
-    const clearDirectionsExpr =
-      'location.core:exits[{"condition_ref": "core:exit-is-unblocked"}].target';
-    const otherActorsExpr =
-      'entities(core:actor)[{ var: "id", neq: { var: "actor.id" } }]';
+    // Set up scope definitions
+    const scopeDefinitions = {};
+    for (const scope of dataset.scopes.basic) {
+      let ast;
+      try {
+        ast = this.dslParser.parse(scope.expr);
+      } catch (e) {
+        this.logger.warn(`Failed to parse scope DSL: ${scope.id}`, e);
+        ast = scope.fallbackAst;
+      }
 
-    let clearDirectionsAst, otherActorsAst;
-    try {
-      clearDirectionsAst = this.dslParser.parse(clearDirectionsExpr);
-      otherActorsAst = this.dslParser.parse(otherActorsExpr);
-    } catch (e) {
-      // Use simple fallbacks for testing
-      clearDirectionsAst = { type: 'Source', kind: 'location' };
-      otherActorsAst = {
-        type: 'Source',
-        kind: 'entities',
-        param: 'core:actor',
+      scopeDefinitions[scope.id] = {
+        id: scope.id,
+        expr: scope.expr,
+        ast: ast,
+        description: scope.description,
       };
     }
-
-    const scopeDefinitions = {
-      'core:clear_directions': {
-        id: 'core:clear_directions',
-        expr: clearDirectionsExpr,
-        ast: clearDirectionsAst,
-        description: 'Available exits from current location',
-      },
-      'core:other_actors': {
-        id: 'core:other_actors',
-        expr: otherActorsExpr,
-        ast: otherActorsAst,
-        description: 'Other actors in the game',
-      },
-    };
 
     // Initialize the scope registry
     try {
@@ -342,7 +276,73 @@ export class ActionExecutionTestBed {
       this.logger.warn('Could not initialize scope registry', e);
     }
 
-    return { actions, conditions };
+    // Build the action index
+    const actionIndex = this.container.resolve(tokens.ActionIndex);
+    actionIndex.buildIndex(allActions);
+    this.logger.debug(
+      `Built comprehensive action index with ${allActions.length} actions`
+    );
+
+    return {
+      actions: allActions,
+      conditions: allConditions,
+      scopes: scopeDefinitions,
+    };
+  }
+
+  /**
+   * Register edge case test data for error scenario testing
+   */
+  async registerEdgeCaseTestData() {
+    const dataset = TestDataFactory.createCompleteTestDataset();
+
+    // Register edge case actions
+    const edgeCaseActions = dataset.actions.edgeCase;
+    for (const action of edgeCaseActions) {
+      this.registry.store('actions', action.id, action);
+    }
+
+    // Register edge case conditions
+    const edgeCaseConditions = dataset.conditions.edgeCase;
+    for (const condition of edgeCaseConditions) {
+      this.registry.store('conditions', condition.id, condition);
+    }
+
+    // Set up edge case scope definitions
+    const scopeDefinitions = {};
+    for (const scope of dataset.scopes.edgeCase) {
+      let ast;
+      try {
+        ast = this.dslParser.parse(scope.expr);
+      } catch (e) {
+        // Expected for edge case testing
+        ast = scope.fallbackAst;
+      }
+
+      scopeDefinitions[scope.id] = {
+        id: scope.id,
+        expr: scope.expr,
+        ast: ast,
+        description: scope.description,
+      };
+    }
+
+    // Initialize the scope registry
+    try {
+      this.scopeRegistry.initialize(scopeDefinitions);
+    } catch (e) {
+      // Expected for edge case testing
+      this.logger.warn(
+        'Could not initialize scope registry (expected for edge cases)',
+        e
+      );
+    }
+
+    return {
+      actions: edgeCaseActions,
+      conditions: edgeCaseConditions,
+      scopes: scopeDefinitions,
+    };
   }
 
   /**
@@ -445,6 +445,99 @@ export class ActionExecutionTestBed {
    */
   async getEntity(entityId) {
     return await this.entityManager.getEntityInstance(entityId);
+  }
+
+  /**
+   * Create a trace context for action discovery
+   */
+  createTraceContext() {
+    return ActionTestUtilities.createTraceContext();
+  }
+
+  /**
+   * Performance measurement utilities
+   *
+   * @param actorId
+   * @param turnAction
+   * @param iterations
+   */
+  async measureActionPerformance(actorId, turnAction, iterations = 1) {
+    const results = [];
+
+    for (let i = 0; i < iterations; i++) {
+      const startTime = performance.now();
+      const result = await this.executeAction(actorId, turnAction);
+      const endTime = performance.now();
+
+      results.push({
+        iteration: i + 1,
+        executionTime: endTime - startTime,
+        success: result.success,
+        result: result,
+      });
+    }
+
+    return {
+      results,
+      averageTime:
+        results.reduce((sum, r) => sum + r.executionTime, 0) / results.length,
+      minTime: Math.min(...results.map((r) => r.executionTime)),
+      maxTime: Math.max(...results.map((r) => r.executionTime)),
+      successRate: results.filter((r) => r.success).length / results.length,
+    };
+  }
+
+  /**
+   * Specialized assertion helpers for action testing
+   *
+   * @param result
+   * @param expectedActionId
+   */
+  assertActionExecutionSuccess(result, expectedActionId) {
+    if (!result) {
+      throw new Error('Action execution result is undefined');
+    }
+
+    if (!result.success) {
+      throw new Error(
+        `Action execution failed: ${result.failureMessage || result.internalError || 'Unknown error'}`
+      );
+    }
+
+    if (
+      expectedActionId &&
+      result.actionResult?.actionId !== expectedActionId
+    ) {
+      throw new Error(
+        `Expected action ID ${expectedActionId}, got ${result.actionResult?.actionId}`
+      );
+    }
+  }
+
+  assertEventWasDispatched(eventType, expectedPayload = null) {
+    const events = this.getEventsByType(eventType);
+    if (events.length === 0) {
+      throw new Error(`Expected event ${eventType} was not dispatched`);
+    }
+
+    if (expectedPayload) {
+      const lastEvent = events[events.length - 1];
+      for (const [key, value] of Object.entries(expectedPayload)) {
+        if (lastEvent.payload[key] !== value) {
+          throw new Error(
+            `Event payload mismatch: expected ${key}=${value}, got ${lastEvent.payload[key]}`
+          );
+        }
+      }
+    }
+  }
+
+  assertPerformanceWithinLimits(performanceResult, maxAverageTime = 100) {
+    if (performanceResult.averageTime > maxAverageTime) {
+      throw new Error(
+        `Performance test failed: average time ${performanceResult.averageTime}ms exceeds limit ${maxAverageTime}ms`
+      );
+    }
   }
 
   /**

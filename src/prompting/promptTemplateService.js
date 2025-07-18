@@ -30,26 +30,33 @@ export class PromptTemplateService {
 
   /**
    * Process a template by replacing placeholders with values from data object
+   *
    * @param {string} template - Template string with {placeholder} syntax
    * @param {Record<string, string>} data - Data object with values to substitute
    * @returns {string} Processed template with substituted values
    */
   processTemplate(template, data) {
     if (!template || typeof template !== 'string') {
-      this.#logger.error('PromptTemplateService.processTemplate: Invalid template provided');
+      this.#logger.error(
+        'PromptTemplateService.processTemplate: Invalid template provided'
+      );
       return '';
     }
 
     if (!data || typeof data !== 'object') {
-      this.#logger.error('PromptTemplateService.processTemplate: Invalid data object provided');
+      this.#logger.error(
+        'PromptTemplateService.processTemplate: Invalid data object provided'
+      );
       return template;
     }
 
     let processedTemplate = template;
     const placeholderRegex = /{(\w+)}/g;
     const matches = template.match(placeholderRegex) || [];
-    
-    this.#logger.debug(`PromptTemplateService: Found ${matches.length} placeholders to process`);
+
+    this.#logger.debug(
+      `PromptTemplateService: Found ${matches.length} placeholders to process`
+    );
 
     // Track missing placeholders for debugging
     const missingPlaceholders = [];
@@ -60,7 +67,9 @@ export class PromptTemplateService {
         const value = data[key];
         // Handle null/undefined as empty string
         if (value === null || value === undefined) {
-          this.#logger.debug(`PromptTemplateService: Placeholder '${key}' is null/undefined, using empty string`);
+          this.#logger.debug(
+            `PromptTemplateService: Placeholder '${key}' is null/undefined, using empty string`
+          );
           return '';
         }
         // Ensure we return a string
@@ -83,6 +92,7 @@ export class PromptTemplateService {
 
   /**
    * Get the character prompt template
+   *
    * @returns {string} The character prompt template
    */
   getCharacterTemplate() {
@@ -91,11 +101,14 @@ export class PromptTemplateService {
 
   /**
    * Process the character prompt template with provided data
+   *
    * @param {Record<string, string>} promptData - Data to substitute in template
    * @returns {string} Processed prompt ready for LLM
    */
   processCharacterPrompt(promptData) {
-    this.#logger.debug('PromptTemplateService: Processing character prompt template');
+    this.#logger.debug(
+      'PromptTemplateService: Processing character prompt template'
+    );
     const template = this.getCharacterTemplate();
     return this.processTemplate(template, promptData);
   }

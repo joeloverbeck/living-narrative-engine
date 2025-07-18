@@ -30,7 +30,7 @@ describe('BodyDescriptionComposer Entity Interface Fix', () => {
   });
 
   describe('Entity Interface Methods', () => {
-    it('should use hasComponent and getComponentData instead of direct component access', () => {
+    it('should use hasComponent and getComponentData instead of direct component access', async () => {
       // Create a mock entity with proper interface methods
       const mockEntity = {
         id: 'test-entity',
@@ -75,7 +75,7 @@ describe('BodyDescriptionComposer Entity Interface Fix', () => {
       );
 
       // Call the method
-      const result = composer.composeDescription(mockEntity);
+      const result = await composer.composeDescription(mockEntity);
 
       // Verify Entity interface methods were called
       expect(mockEntity.hasComponent).toHaveBeenCalledWith(
@@ -90,14 +90,14 @@ describe('BodyDescriptionComposer Entity Interface Fix', () => {
       expect(result).toContain('Torso: muscular');
     });
 
-    it('should handle entity without anatomy:body component using interface methods', () => {
+    it('should handle entity without anatomy:body component using interface methods', async () => {
       const mockEntity = {
         id: 'test-entity',
         hasComponent: jest.fn().mockReturnValue(false),
         getComponentData: jest.fn(),
       };
 
-      const result = composer.composeDescription(mockEntity);
+      const result = await composer.composeDescription(mockEntity);
 
       expect(result).toBe('');
       expect(mockEntity.hasComponent).toHaveBeenCalledWith(
@@ -106,7 +106,7 @@ describe('BodyDescriptionComposer Entity Interface Fix', () => {
       expect(mockEntity.getComponentData).not.toHaveBeenCalled();
     });
 
-    it('should handle build descriptor using getComponentData', () => {
+    it('should handle build descriptor using getComponentData', async () => {
       const mockEntity = {
         id: 'test-entity',
         hasComponent: jest.fn().mockReturnValue(true),
@@ -129,7 +129,7 @@ describe('BodyDescriptionComposer Entity Interface Fix', () => {
         getComponentData: jest.fn().mockReturnValue({ subType: 'torso' }),
       });
 
-      const result = composer.composeDescription(mockEntity);
+      const result = await composer.composeDescription(mockEntity);
 
       expect(result).toContain('Build: athletic');
       expect(mockEntity.getComponentData).toHaveBeenCalledWith(
@@ -137,7 +137,7 @@ describe('BodyDescriptionComposer Entity Interface Fix', () => {
       );
     });
 
-    it('should handle parts using Entity interface in groupPartsByType', () => {
+    it('should handle parts using Entity interface in groupPartsByType', async () => {
       const mockEntity = {
         id: 'test-entity',
         hasComponent: jest.fn().mockReturnValue(true),
@@ -179,7 +179,7 @@ describe('BodyDescriptionComposer Entity Interface Fix', () => {
         'arms'
       );
 
-      const result = composer.composeDescription(mockEntity);
+      const result = await composer.composeDescription(mockEntity);
 
       // Verify part entities were checked using interface methods
       expect(mockPart1.hasComponent).toHaveBeenCalledWith('anatomy:part');
@@ -191,7 +191,7 @@ describe('BodyDescriptionComposer Entity Interface Fix', () => {
   });
 
   describe('Error Prevention', () => {
-    it('should not throw "Cannot read properties of undefined" error', () => {
+    it('should not throw "Cannot read properties of undefined" error', async () => {
       // This test specifically addresses the console error
       const mockEntity = {
         id: 'test-entity',
@@ -219,34 +219,34 @@ describe('BodyDescriptionComposer Entity Interface Fix', () => {
       });
 
       // This should not throw
-      expect(() => {
-        composer.composeDescription(mockEntity);
+      await expect(async () => {
+        await composer.composeDescription(mockEntity);
       }).not.toThrow();
     });
 
-    it('should handle null entity gracefully', () => {
-      const result = composer.composeDescription(null);
+    it('should handle null entity gracefully', async () => {
+      const result = await composer.composeDescription(null);
       expect(result).toBe('');
     });
 
-    it('should handle undefined entity gracefully', () => {
-      const result = composer.composeDescription(undefined);
+    it('should handle undefined entity gracefully', async () => {
+      const result = await composer.composeDescription(undefined);
       expect(result).toBe('');
     });
 
-    it('should handle entity with null component data', () => {
+    it('should handle entity with null component data', async () => {
       const mockEntity = {
         hasComponent: jest.fn().mockReturnValue(true),
         getComponentData: jest.fn().mockReturnValue(null),
       };
 
-      const result = composer.composeDescription(mockEntity);
+      const result = await composer.composeDescription(mockEntity);
       expect(result).toBe('');
     });
   });
 
   describe('Backward Compatibility', () => {
-    it('should work with updated test mocks using Entity interface', () => {
+    it('should work with updated test mocks using Entity interface', async () => {
       // This ensures our test updates are correct
       const mockEntity = {
         hasComponent: jest.fn().mockReturnValue(true),
@@ -301,7 +301,7 @@ describe('BodyDescriptionComposer Entity Interface Fix', () => {
         }
       );
 
-      const result = composer.composeDescription(mockEntity);
+      const result = await composer.composeDescription(mockEntity);
 
       expect(result).toBeTruthy();
       expect(result).toContain('Torso: muscular');

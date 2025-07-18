@@ -270,7 +270,9 @@ describe('Complete Prompt Generation Pipeline E2E', () => {
 
     // Assert - Notes section should not contain the previous notes
     const sectionsWithout = testBed.parsePromptSections(promptWithoutNotes);
-    expect(promptWithoutNotes).not.toContain('The innkeeper mentioned something about troubles');
+    expect(promptWithoutNotes).not.toContain(
+      'The innkeeper mentioned something about troubles'
+    );
     expect(promptWithoutNotes).not.toContain('I should perform a song');
   });
 
@@ -301,13 +303,14 @@ describe('Complete Prompt Generation Pipeline E2E', () => {
       availableActions
     );
 
-    // Assert - Different structures
+    // Assert - Both use same template structure (new system uses fixed template)
     expect(toolCallingPrompt).toContain('<task_definition>');
     expect(toolCallingPrompt).toContain('<character_persona>');
+    expect(toolCallingPrompt).toContain('<indexed_choices>');
 
-    expect(jsonSchemaPrompt).toContain('## Task');
-    expect(jsonSchemaPrompt).toContain('## Character');
-    expect(jsonSchemaPrompt).toContain('## Available Actions');
+    expect(jsonSchemaPrompt).toContain('<task_definition>');
+    expect(jsonSchemaPrompt).toContain('<character_persona>');
+    expect(jsonSchemaPrompt).toContain('<indexed_choices>');
 
     // Both should have indexed actions
     const toolCallingActions = testBed.extractIndexedActions(toolCallingPrompt);
@@ -333,7 +336,7 @@ describe('Complete Prompt Generation Pipeline E2E', () => {
         descriptionText: `This is a very long observation entry number ${i} that contains a lot of text to increase the token count of the generated prompt.`,
         timestamp: new Date().toISOString(),
         perceptionType: 'observation',
-        actorId: 'test-ai-actor'
+        actorId: 'test-ai-actor',
       });
     }
     await testBed.updateActorPerception(aiActor.id, longPerceptionLog);
@@ -409,7 +412,7 @@ describe('Complete Prompt Generation Pipeline E2E', () => {
     const sections = testBed.parsePromptSections(prompt);
     const indexedActions = testBed.extractIndexedActions(prompt);
     expect(indexedActions.length).toBe(0);
-    
+
     // The prompt should still be valid even with no actions
     expect(prompt).toContain('Elara the Bard');
   });
@@ -458,7 +461,9 @@ describe('Complete Prompt Generation Pipeline E2E', () => {
             type: 'actor',
           },
         ],
-        actionDefinition: testBed.testActions.find((a) => a.id === 'core:follow'),
+        actionDefinition: testBed.testActions.find(
+          (a) => a.id === 'core:follow'
+        ),
       },
     ];
 
@@ -471,20 +476,20 @@ describe('Complete Prompt Generation Pipeline E2E', () => {
 
     // Assert - Follow action is properly indexed
     const indexedActions = testBed.extractIndexedActions(prompt);
-    
+
     // Debug: Check what actions were found
     // console.log('Indexed actions:', indexedActions);
-    
+
     const followAction = indexedActions.find(
       (a) =>
-        a.description.toLowerCase().includes('follow') && 
+        a.description.toLowerCase().includes('follow') &&
         a.description.toLowerCase().includes('gareth')
     );
-    
+
     // If not found, check for any follow action
     if (!followAction) {
-      const anyFollowAction = indexedActions.find(
-        (a) => a.description.toLowerCase().includes('follow')
+      const anyFollowAction = indexedActions.find((a) =>
+        a.description.toLowerCase().includes('follow')
       );
       if (anyFollowAction) {
         // The follow action exists but doesn't mention Gareth - this is okay

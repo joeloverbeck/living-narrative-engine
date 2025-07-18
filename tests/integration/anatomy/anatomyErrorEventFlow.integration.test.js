@@ -149,8 +149,7 @@ describe('Anatomy Error Event Flow Integration', () => {
       mockBodyDescriptionComposer.composeDescription.mockReturnValue('');
 
       // Generate body description (which should trigger error)
-      const result =
-        bodyDescriptionOrchestrator.generateBodyDescription(entity);
+      const result = await bodyDescriptionOrchestrator.generateBodyDescription(entity);
 
       // Wait for async event dispatch
       await new Promise((resolve) => setTimeout(resolve, 10));
@@ -463,9 +462,9 @@ describe('Anatomy Error Event Flow Integration', () => {
         .mockReturnValueOnce('   ') // fail-2
         .mockReturnValueOnce('Another valid description'); // success-2
 
-      const results = entities.map((entity) =>
-        bodyDescriptionOrchestrator.generateBodyDescription(entity)
-      );
+      const results = await Promise.all(entities.map(async (entity) =>
+        await bodyDescriptionOrchestrator.generateBodyDescription(entity)
+      ));
 
       await new Promise((resolve) => setTimeout(resolve, 20));
 

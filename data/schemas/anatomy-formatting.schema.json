@@ -58,6 +58,38 @@
         "minLength": 1
       },
       "uniqueItems": true
+    },
+    "equipmentIntegration": {
+      "type": "object",
+      "description": "Configuration for integrating equipment descriptions with anatomy",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Whether equipment integration is enabled"
+        },
+        "prefix": {
+          "type": "string",
+          "description": "Text to prepend to equipment list"
+        },
+        "suffix": {
+          "type": "string",
+          "description": "Text to append to equipment list"
+        },
+        "separator": {
+          "type": "string",
+          "description": "Separator between multiple items of the same type"
+        },
+        "itemSeparator": {
+          "type": "string",
+          "description": "Separator between different equipment types"
+        },
+        "placement": {
+          "type": "string",
+          "enum": ["after_anatomy", "before_anatomy"],
+          "description": "Where to place equipment description relative to anatomy"
+        }
+      },
+      "additionalProperties": false
     }
   },
   "required": ["id"]

@@ -1,10 +1,6 @@
 /**
  * @module PromptBuilder
- * @description Orchestrator‑only implementation that delegates all element assembly
- *              to the AssemblerRegistry + PromptAssembler. It is responsible only
- *              for (1) resolving the LLM configuration, (2) filtering elements by
- *              their condition, (3) wiring those elements into PromptAssembler,
- *              and (4) returning the final prompt string.
+ * @description Simplified prompt builder that uses template substitution instead of assemblers
  *
  * Public API surface remains **unchanged**: `async build(llmId, promptData)`.
  */
@@ -13,18 +9,18 @@
 
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../llms/llmConfigManager.js').LlmConfigManager} LlmConfigManager */
-/** @typedef {import('../utils/placeholderResolverUtils.js').PlaceholderResolver} PlaceholderResolver */
 /** @typedef {import('../interfaces/IPromptBuilder.js').IPromptBuilder} IPromptBuilder */
-/** @typedef {import('../prompting/assemblerRegistry.js').AssemblerRegistry} AssemblerRegistry */
-/** @typedef {import('../prompting/elementConditionEvaluator.js')} ConditionEvaluatorModule */
 /** @typedef {import('../types/promptData.js').PromptData} PromptData */
+/** @typedef {import('./promptTemplateService.js').PromptTemplateService} PromptTemplateService */
+/** @typedef {import('./promptDataFormatter.js').PromptDataFormatter} PromptDataFormatter */
 
 import { IPromptBuilder } from '../interfaces/IPromptBuilder.js';
 import { validateDependency } from '../utils/dependencyUtils.js';
-import { PromptAssembler } from './promptAssembler.js';
+import { PromptTemplateService } from './promptTemplateService.js';
+import { PromptDataFormatter } from './promptDataFormatter.js';
 
 const INIT_MSG =
-  'PromptBuilder (orchestrator‑only) initialised with LlmConfigManager, PlaceholderResolver, AssemblerRegistry and ConditionEvaluator.';
+  'PromptBuilder (template-based) initialised with LlmConfigManager, PromptTemplateService, and PromptDataFormatter.';
 
 /**
  * @class PromptBuilder
@@ -33,9 +29,8 @@ const INIT_MSG =
 export class PromptBuilder extends IPromptBuilder {
   /** @type {ILogger} */ #logger;
   /** @type {LlmConfigManager} */ #llmConfigService;
-  /** @type {PlaceholderResolver} */ #placeholderResolver;
-  /** @type {AssemblerRegistry} */ #assemblerRegistry;
-  /** @type {{ isElementConditionMet: Function }} */ #conditionEvaluator;
+  /** @type {PromptTemplateService} */ #templateService;
+  /** @type {PromptDataFormatter} */ #dataFormatter;
 
   /**
    * Creates a new PromptBuilder instance.
@@ -43,16 +38,14 @@ export class PromptBuilder extends IPromptBuilder {
    * @param {object} dependencies
    * @param {ILogger} [dependencies.logger]
    * @param {LlmConfigManager} dependencies.llmConfigService
-   * @param {PlaceholderResolver} dependencies.placeholderResolver
-   * @param {AssemblerRegistry} dependencies.assemblerRegistry
-   * @param {{ isElementConditionMet: Function }} dependencies.conditionEvaluator
+   * @param {PromptTemplateService} [dependencies.templateService]
+   * @param {PromptDataFormatter} [dependencies.dataFormatter]
    */
   constructor({
     logger = console,
     llmConfigService,
-    placeholderResolver,
-    assemblerRegistry,
-    conditionEvaluator,
+    templateService,
+    dataFormatter,
   }) {
     super();
 
@@ -66,22 +59,11 @@ export class PromptBuilder extends IPromptBuilder {
     });
     this.#llmConfigService = llmConfigService;
 
-    validateDependency(
-      placeholderResolver,
-      'PlaceholderResolver',
-      this.#logger
-    );
-    this.#placeholderResolver = placeholderResolver;
-
-    validateDependency(assemblerRegistry, 'AssemblerRegistry', this.#logger, {
-      requiredMethods: ['resolve'],
-    });
-    this.#assemblerRegistry = assemblerRegistry;
-
-    validateDependency(conditionEvaluator, 'ConditionEvaluator', this.#logger, {
-      requiredMethods: ['isElementConditionMet'],
-    });
-    this.#conditionEvaluator = conditionEvaluator;
+    // Create default instances if not provided
+    this.#templateService =
+      templateService || new PromptTemplateService({ logger: this.#logger });
+    this.#dataFormatter =
+      dataFormatter || new PromptDataFormatter({ logger: this.#logger });
 
     this.#logger.debug(INIT_MSG);
   }
@@ -111,7 +93,7 @@ export class PromptBuilder extends IPromptBuilder {
       return '';
     }
 
-    // 1️⃣  Load config for the requested LLM
+    // 1️⃣  Load config for the requested LLM (still needed for validation)
     const cfg = await this.#llmConfigService.getConfig(llmId);
     if (!cfg) {
       this.#logger.error(
@@ -120,67 +102,11 @@ export class PromptBuilder extends IPromptBuilder {
       return '';
     }
 
-    // Re‑index elements for O(1) lookup
-    const elementMap = new Map(cfg.promptElements.map((e) => [e.key, e]));
+    // 2️⃣  Format the prompt data into a flat object for template substitution
+    const formattedData = this.#dataFormatter.formatPromptData(promptData);
 
-    /** @type {import('./promptAssembler.js').PromptAssemblerElement[]} */
-    const assemblerElements = [];
-
-    // 2️⃣  Iterate over declared assemblyOrder, filter by condition, resolve assembler
-    for (const key of cfg.promptAssemblyOrder) {
-      const elementConfig = elementMap.get(key);
-      if (!elementConfig) {
-        this.#logger.warn(
-          `PromptBuilder.build: Key '${key}' missing in promptElements. Skipping.`
-        );
-        continue;
-      }
-
-      const shouldInclude = this.#conditionEvaluator.isElementConditionMet(
-        elementConfig.condition,
-        promptData
-      );
-      if (!shouldInclude) {
-        this.#logger.debug(
-          `PromptBuilder.build: Condition for '${key}' not met – skipped.`
-        );
-        continue;
-      }
-
-      /** @type {import('../interfaces/IPromptElementAssembler.js').IPromptElementAssembler} */
-      let assembler;
-      try {
-        assembler = this.#assemblerRegistry.resolve(key);
-      } catch (err) {
-        // Bubble the error – this is exactly the acceptance‑test expectation
-        this.#logger.error(err.message);
-        throw err;
-      }
-
-      assemblerElements.push({
-        key,
-        assembler,
-        elementConfig,
-        promptData,
-      });
-    }
-
-    // 3️⃣  Delegate concatenation to PromptAssembler
-    const promptAssembler = new PromptAssembler({
-      elements: assemblerElements,
-      placeholderResolver: this.#placeholderResolver,
-      allElementsMap: elementMap,
-    });
-
-    const { prompt, errors } = promptAssembler.build();
-
-    // 4️⃣  Surface non‑fatal assembly errors for diagnostics
-    if (errors.length) {
-      this.#logger.error(
-        `PromptBuilder.build: ${errors.length} element(s) failed during assembly. First error:`,
-        errors[0]
-      );
-    }
+    // 3️⃣  Process the character prompt template
+    const prompt = this.#templateService.processCharacterPrompt(formattedData);
 
     this.#logger.debug(
       `PromptBuilder.build: Completed. Final prompt length = ${prompt.length}.`

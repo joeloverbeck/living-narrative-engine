@@ -647,7 +647,7 @@ class AnatomyVisualizerUI {
         entityId,
         definitionId: entity.definitionId,
         name,
-        material: wearableData.material || 'unknown',
+        material: entity.getComponentData('core:material')?.material || 'unknown',
         color,
         texture,
       };

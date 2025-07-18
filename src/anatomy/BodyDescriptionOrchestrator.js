@@ -68,9 +68,9 @@ export class BodyDescriptionOrchestrator {
    * Generate descriptions for all parts of a body and the body itself
    *
    * @param {object} bodyEntity - The entity with anatomy:body component
-   * @returns {{bodyDescription: string, partDescriptions: Map<string, string>}}
+   * @returns {Promise<{bodyDescription: string, partDescriptions: Map<string, string>}>}
    */
-  generateAllDescriptions(bodyEntity) {
+  async generateAllDescriptions(bodyEntity) {
     if (!bodyEntity || !bodyEntity.hasComponent(ANATOMY_BODY_COMPONENT_ID)) {
       throw new Error('Entity must have an anatomy:body component');
     }
@@ -90,7 +90,7 @@ export class BodyDescriptionOrchestrator {
       );
 
     // Generate the full body description
-    const bodyDescription = this.generateBodyDescription(bodyEntity);
+    const bodyDescription = await this.generateBodyDescription(bodyEntity);
 
     this.#logger.info(
       `BodyDescriptionOrchestrator: Generated descriptions for body '${bodyEntity.id}' with ${partDescriptions.size} parts`
@@ -103,11 +103,10 @@ export class BodyDescriptionOrchestrator {
    * Generate the full body description
    *
    * @param {object} bodyEntity - The entity with anatomy:body component
-   * @returns {string} The generated body description
+   * @returns {Promise<string>} The generated body description
    */
-  generateBodyDescription(bodyEntity) {
-    const description =
-      this.#bodyDescriptionComposer.composeDescription(bodyEntity);
+  async generateBodyDescription(bodyEntity) {
+    const description = await this.#bodyDescriptionComposer.composeDescription(bodyEntity);
 
     // Check if description is empty and dispatch error if so
     if (!description || description.trim() === '') {
@@ -134,9 +133,9 @@ export class BodyDescriptionOrchestrator {
    * Get or generate body description for an entity
    *
    * @param {object} entity - The entity to get description for
-   * @returns {string|null} The description text or null
+   * @returns {Promise<string|null>} The description text or null
    */
-  getOrGenerateBodyDescription(entity) {
+  async getOrGenerateBodyDescription(entity) {
     if (!entity) {
       return null;
     }
@@ -161,8 +160,7 @@ export class BodyDescriptionOrchestrator {
     }
 
     // Generate new description
-    const composedDescription =
-      this.#bodyDescriptionComposer.composeDescription(entity);
+    const composedDescription = await this.#bodyDescriptionComposer.composeDescription(entity);
     if (!composedDescription) {
       return null;
     }

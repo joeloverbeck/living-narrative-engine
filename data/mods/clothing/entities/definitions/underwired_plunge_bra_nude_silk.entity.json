@@ -5,11 +5,13 @@
   "components": {
     "clothing:wearable": {
       "layer": "underwear",
-      "material": "silk",
       "equipmentSlots": {
         "primary": "torso_upper"
       },
       "allowedLayers": ["underwear"]
+    },
+    "core:material": {
+      "material": "silk"
     },
     "core:name": {
       "text": "underwired plunge bra"
@@ -19,9 +21,6 @@
     },
     "descriptors:color_extended": {
       "color": "nude"
-    },
-    "descriptors:texture": {
-      "texture": "silky"
     }
   }
 }

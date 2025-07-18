@@ -418,6 +418,9 @@ describe('AnatomyVisualizerUI - Equipment Handling', () => {
         definitionId: 'test:hat',
         getComponentData: jest.fn((componentType) => {
           if (componentType === 'clothing:wearable') {
+            return {};
+          }
+          if (componentType === 'core:material') {
             return { material: 'cotton' };
           }
           if (componentType === 'core:name') {

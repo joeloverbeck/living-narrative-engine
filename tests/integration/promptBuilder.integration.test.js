@@ -91,44 +91,35 @@ describe('PromptBuilder Integration Test', () => {
     // Assert
     expect(result).not.toBe('');
     // Check for standard element output
-    expect(result).toContain('<task>You are a helpful assistant.</task>');
+    expect(result).toContain('<task_definition>');
+    expect(result).toContain('You are a helpful assistant.');
+    expect(result).toContain('</task_definition>');
     // Check for specialized element output
-    expect(result).toContain('<choices>');
-    expect(result).toContain('index: 1 --> go north (Move to the next area.)');
-    expect(result).toContain('index: 2 --> wait (Do nothing.)');
-    expect(result).toContain('</choices>');
+    expect(result).toContain('<indexed_choices>');
+    expect(result).toContain('[1] go north: Move to the next area.');
+    expect(result).toContain('[2] wait: Do nothing.');
+    expect(result).toContain('</indexed_choices>');
     // Ensure no errors were thrown during resolution
     expect(mockLogger.error).not.toHaveBeenCalled();
   });
 
-  test('should throw an error if a required assembler is not registered', async () => {
-    // Arrange: Create a new registry without the 'task_definition' registration
-    const incompleteRegistry = new AssemblerRegistry();
-    incompleteRegistry.register(
-      'indexed_choices',
-      new IndexedChoicesAssembler({ logger: mockLogger })
-    );
-
-    const builderWithBadRegistry = new PromptBuilder({
+  test('should handle minimal prompt data correctly', async () => {
+    // Arrange: Create a new builder with minimal dependencies
+    const builderWithMinimalData = new PromptBuilder({
       logger: mockLogger,
       llmConfigService: mockLlmConfigService,
-      placeholderResolver,
-      assemblerRegistry: incompleteRegistry, // Use the incomplete registry
-      conditionEvaluator: mockConditionEvaluator,
     });
 
-    const promptData = { taskDefinitionContent: 'This will fail.' };
+    const promptData = { taskDefinitionContent: 'This will work.' };
 
-    // Act & Assert
-    await expect(
-      builderWithBadRegistry.build(TEST_LLM_ID, promptData)
-    ).rejects.toThrow(
-      "AssemblerRegistry.resolve: No assembler registered for 'task_definition'"
-    );
+    // Act
+    const result = await builderWithMinimalData.build(TEST_LLM_ID, promptData);
 
-    // We expect the logger to have been called with the error message before it was thrown
-    expect(mockLogger.error).toHaveBeenCalledWith(
-      "AssemblerRegistry.resolve: No assembler registered for 'task_definition'"
-    );
+    // Assert
+    expect(result).not.toBe('');
+    expect(result).toContain('<task_definition>');
+    expect(result).toContain('This will work.');
+    expect(result).toContain('</task_definition>');
+    expect(mockLogger.error).not.toHaveBeenCalled();
   });
 });

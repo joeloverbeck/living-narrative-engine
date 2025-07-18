@@ -5,11 +5,13 @@
   "components": {
     "clothing:wearable": {
       "layer": "base",
-      "material": "stretch-silk",
       "equipmentSlots": {
         "primary": "full_body"
       },
       "allowedLayers": ["underwear", "base", "outer"]
+    },
+    "core:material": {
+      "material": "stretch-silk"
     },
     "core:name": {
       "text": "bodysuit"
@@ -19,9 +21,6 @@
     },
     "descriptors:color_basic": {
       "color": "black"
-    },
-    "descriptors:texture": {
-      "texture": "silky"
     }
   }
 }

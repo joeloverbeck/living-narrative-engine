@@ -40,11 +40,10 @@ export class AnatomyDescriptionService {
    *
    * @param {object} bodyEntity - The entity with anatomy:body component
    */
-  generateAllDescriptions(bodyEntity) {
+  async generateAllDescriptions(bodyEntity) {
     // Delegate to the orchestrator if available
     if (this.bodyDescriptionOrchestrator) {
-      const { bodyDescription, partDescriptions } =
-        this.bodyDescriptionOrchestrator.generateAllDescriptions(bodyEntity);
+      const { bodyDescription, partDescriptions } = await this.bodyDescriptionOrchestrator.generateAllDescriptions(bodyEntity);
 
       // Persist the descriptions
       if (this.descriptionPersistenceService) {
@@ -78,7 +77,7 @@ export class AnatomyDescriptionService {
     }
 
     // Generate the full body description
-    this.generateBodyDescription(bodyEntity);
+    await this.generateBodyDescription(bodyEntity);
   }
 
   /**
@@ -122,11 +121,10 @@ export class AnatomyDescriptionService {
    *
    * @param {object} bodyEntity - The entity with anatomy:body component
    */
-  generateBodyDescription(bodyEntity) {
+  async generateBodyDescription(bodyEntity) {
     // Delegate to the orchestrator if available
     if (this.bodyDescriptionOrchestrator) {
-      const description =
-        this.bodyDescriptionOrchestrator.generateBodyDescription(bodyEntity);
+      const description = await this.bodyDescriptionOrchestrator.generateBodyDescription(bodyEntity);
       if (this.descriptionPersistenceService) {
         this.descriptionPersistenceService.updateDescription(
           bodyEntity.id,
@@ -137,8 +135,7 @@ export class AnatomyDescriptionService {
     }
 
     // Fallback to original implementation
-    const description =
-      this.bodyDescriptionComposer.composeDescription(bodyEntity);
+    const description = await this.bodyDescriptionComposer.composeDescription(bodyEntity);
 
     // Check if description is empty and dispatch error if so
     if (!description || description.trim() === '') {
@@ -164,13 +161,12 @@ export class AnatomyDescriptionService {
    * Get or generate body description for an entity
    *
    * @param {object} entity - The entity to get description for
-   * @returns {string|null} The description text or null
+   * @returns {Promise<string|null>} The description text or null
    */
-  getOrGenerateBodyDescription(entity) {
+  async getOrGenerateBodyDescription(entity) {
     // Delegate to the orchestrator if available
     if (this.bodyDescriptionOrchestrator) {
-      const description =
-        this.bodyDescriptionOrchestrator.getOrGenerateBodyDescription(entity);
+      const description = await this.bodyDescriptionOrchestrator.getOrGenerateBodyDescription(entity);
       if (
         description &&
         entity.hasComponent(ANATOMY_BODY_COMPONENT_ID) &&
@@ -207,8 +203,7 @@ export class AnatomyDescriptionService {
     }
 
     // Generate new description
-    const composedDescription =
-      this.bodyDescriptionComposer.composeDescription(entity);
+    const composedDescription = await this.bodyDescriptionComposer.composeDescription(entity);
     if (composedDescription) {
       this.updateDescription(entity.id, composedDescription);
       return composedDescription;

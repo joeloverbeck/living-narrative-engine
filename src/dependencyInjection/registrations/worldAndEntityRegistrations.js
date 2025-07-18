@@ -46,6 +46,7 @@ import { BodyPartDescriptionBuilder } from '../../anatomy/bodyPartDescriptionBui
 import { BodyDescriptionComposer } from '../../anatomy/bodyDescriptionComposer.js';
 import { AnatomyDescriptionService } from '../../anatomy/anatomyDescriptionService.js';
 import { AnatomyFormattingService } from '../../services/anatomyFormattingService.js';
+import EquipmentDescriptionService from '../../clothing/services/equipmentDescriptionService.js';
 import { RecipeProcessor } from '../../anatomy/recipeProcessor.js';
 import PartSelectionService from '../../anatomy/partSelectionService.js';
 import { SocketManager } from '../../anatomy/socketManager.js';
@@ -418,6 +419,7 @@ export function registerWorldAndEntity(container) {
     )}.`
   );
 
+
   registrar.singletonFactory(tokens.BodyDescriptionComposer, (c) => {
     return new BodyDescriptionComposer({
       bodyPartDescriptionBuilder: c.resolve(tokens.BodyPartDescriptionBuilder),
@@ -425,6 +427,9 @@ export function registerWorldAndEntity(container) {
       entityFinder: c.resolve(tokens.IEntityManager),
       anatomyFormattingService: c.resolve(tokens.AnatomyFormattingService),
       partDescriptionGenerator: c.resolve(tokens.PartDescriptionGenerator),
+      equipmentDescriptionService: c.resolve(
+        tokens.EquipmentDescriptionService
+      ),
     });
   });
   logger.debug(
@@ -643,6 +648,22 @@ export function registerWorldAndEntity(container) {
   logger.debug(
     `World and Entity Registration: Registered ${String(
       tokens.ClothingManagementService
+    )}.`
+  );
+
+  // Register EquipmentDescriptionService after ClothingManagementService
+  registrar.singletonFactory(tokens.EquipmentDescriptionService, (c) => {
+    return new EquipmentDescriptionService({
+      logger: c.resolve(tokens.ILogger),
+      entityManager: c.resolve(tokens.IEntityManager),
+      descriptorFormatter: c.resolve(tokens.DescriptorFormatter),
+      clothingManagementService: c.resolve(tokens.ClothingManagementService),
+      anatomyFormattingService: c.resolve(tokens.AnatomyFormattingService),
+    });
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.EquipmentDescriptionService
     )}.`
   );
 
