@@ -1,4 +1,4 @@
-// src/actions/actionCandidateProcessor.js
+// src/actions/actionCandidateProcessorWithResult.js
 
 // ────────────────────────────────────────────────────────────────────────────────
 // Type imports
@@ -20,9 +20,10 @@
 // Dependency imports
 import { createActionErrorContext } from './utils/discoveryErrorUtils.js';
 import { ERROR_PHASES } from './errors/actionErrorTypes.js';
+import { ActionResult } from './core/actionResult.js';
 
 /**
- * @typedef {object} ProcessResult
+ * @typedef {object} ProcessResultData
  * @property {DiscoveredActionInfo[]} actions - Valid discovered actions
  * @property {ActionErrorContext[]} errors - Errors encountered during processing
  * @property {string} [cause] - Optional reason why no actions were produced
@@ -31,6 +32,7 @@ import { ERROR_PHASES } from './errors/actionErrorTypes.js';
 /**
  * @class ActionCandidateProcessor
  * @description Processes candidate actions through prerequisite evaluation and target resolution to generate valid action commands.
+ * This version uses ActionResult for consistent error handling throughout the pipeline.
  */
 export class ActionCandidateProcessor {
   #prerequisiteEvaluationService;
@@ -78,69 +80,116 @@ export class ActionCandidateProcessor {
   /**
    * Processes a candidate action definition to generate valid action commands.
    *
+   * This method maintains backward compatibility with the original interface.
+   *
    * @param {ActionDefinition} actionDef - The action definition to process.
    * @param {Entity} actorEntity - The entity performing the action.
    * @param {ActionContext} context - The action discovery context.
    * @param {TraceContext} [trace] - Optional trace context for logging.
-   * @returns {ProcessResult} Result containing valid actions and errors.
+   * @returns {ProcessResultData} Result containing valid actions and errors.
    */
   process(actionDef, actorEntity, context, trace = null) {
-    const source = 'ActionCandidateProcessor.process';
+    const result = this.processWithResult(
+      actionDef,
+      actorEntity,
+      context,
+      trace
+    );
+
+    // Convert ActionResult back to legacy format
+    if (result.success) {
+      return result.value;
+    } else {
+      // For backward compatibility, return errors in the expected format
+      return {
+        actions: [],
+        errors: result.errors.map((err) => {
+          // If error is already an ActionErrorContext, use it directly
+          if (err.timestamp && err.phase) {
+            return err;
+          }
+          // Otherwise, create one
+          return createActionErrorContext(err);
+        }),
+        cause: 'processing-error',
+      };
+    }
+  }
+
+  /**
+   * Processes a candidate action definition using ActionResult pattern.
+   *
+   * @param {ActionDefinition} actionDef - The action definition to process.
+   * @param {Entity} actorEntity - The entity performing the action.
+   * @param {ActionContext} context - The action discovery context.
+   * @param {TraceContext} [trace] - Optional trace context for logging.
+   * @returns {ActionResult<ProcessResultData>} Result containing valid actions and errors.
+   */
+  processWithResult(actionDef, actorEntity, context, trace = null) {
+    const source = 'ActionCandidateProcessor.processWithResult';
     trace?.step(`Processing candidate action: '${actionDef.id}'`, source);
 
     // STEP 1: Check actor prerequisites
-    let meetsPrereqs;
-    try {
-      meetsPrereqs = this.#actorMeetsPrerequisites(
-        actionDef,
-        actorEntity,
-        trace
-      );
-    } catch (error) {
-      return this.#handlePrerequisiteError(
-        actionDef,
-        error,
-        actorEntity.id,
-        trace
-      );
+    const prereqResult = this.#checkActorPrerequisites(
+      actionDef,
+      actorEntity,
+      trace
+    );
+
+    if (!prereqResult.success) {
+      return ActionResult.success({
+        actions: [],
+        errors: prereqResult.errors.map((err) => createActionErrorContext(err)),
+        cause: 'prerequisite-error',
+      });
     }
 
-    if (!meetsPrereqs) {
+    if (!prereqResult.value) {
       trace?.failure(
         `Action '${actionDef.id}' discarded due to failed actor prerequisites.`,
         source
       );
-      return { actions: [], errors: [], cause: 'prerequisites-failed' };
+      return ActionResult.success({
+        actions: [],
+        errors: [],
+        cause: 'prerequisites-failed',
+      });
     }
+
     trace?.success(
       `Action '${actionDef.id}' passed actor prerequisite check.`,
       source
     );
 
     // STEP 2: Resolve targets using the dedicated service
-    const { targets: targetContexts, error: resolutionError } =
-      this.#targetResolutionService.resolveTargets(
-        actionDef.scope,
-        actorEntity,
-        context,
-        trace
-      );
+    const targetResult = this.#resolveTargets(
+      actionDef,
+      actorEntity,
+      context,
+      trace
+    );
 
-    if (resolutionError) {
-      return this.#handleResolutionError(
-        actionDef,
-        resolutionError,
-        actorEntity.id,
-        trace
-      );
+    if (!targetResult.success) {
+      return ActionResult.success({
+        actions: [],
+        errors: targetResult.errors.map((err) => createActionErrorContext(err)),
+        cause: 'resolution-error',
+      });
     }
+
+    const targetContexts = targetResult.value;
 
     if (targetContexts.length === 0) {
       this.#logger.debug(
         `Action '${actionDef.id}' resolved to 0 targets. Skipping.`
       );
-      return { actions: [], errors: [], cause: 'no-targets' };
+      return ActionResult.success({
+        actions: [],
+        errors: [],
+        cause: 'no-targets',
+      });
     }
+
     trace?.info(
       `Scope for action '${actionDef.id}' resolved to ${targetContexts.length} targets.`,
       source,
@@ -162,20 +211,115 @@ export class ActionCandidateProcessor {
    * @param {ActionDefinition} actionDef - The action to check.
    * @param {Entity} actorEntity - The entity performing the action.
    * @param {TraceContext} [trace] - The optional trace context for logging.
-   * @returns {boolean} True if the actor-state prerequisites pass.
+   * @returns {ActionResult<boolean>} Result indicating if prerequisites are met.
    * @private
    */
-  #actorMeetsPrerequisites(actionDef, actorEntity, trace = null) {
+  #checkActorPrerequisites(actionDef, actorEntity, trace = null) {
     if (!actionDef.prerequisites || actionDef.prerequisites.length === 0) {
-      return true; // No prerequisites to check.
+      return ActionResult.success(true); // No prerequisites to check.
     }
-    // Call to prerequisite evaluation is now simpler, as it no longer needs a target context.
-    return this.#prerequisiteEvaluationService.evaluate(
-      actionDef.prerequisites,
-      actionDef,
-      actorEntity,
-      trace // Pass trace down
-    );
+
+    try {
+      const meetsPrereqs = this.#prerequisiteEvaluationService.evaluate(
+        actionDef.prerequisites,
+        actionDef,
+        actorEntity,
+        trace
+      );
+      return ActionResult.success(meetsPrereqs);
+    } catch (error) {
+      const errorContext = this.#actionErrorContextBuilder.buildErrorContext({
+        error,
+        actionDef,
+        actorId: actorEntity.id,
+        phase: ERROR_PHASES.VALIDATION,
+        trace,
+      });
+
+      this.#logger.error(
+        `Error checking prerequisites for action '${actionDef.id}'.`,
+        errorContext
+      );
+
+      return ActionResult.failure(errorContext);
+    }
+  }
+
+  /**
+   * Resolves targets for an action.
+   *
+   * @param {ActionDefinition} actionDef - The action definition.
+   * @param {Entity} actorEntity - The entity performing the action.
+   * @param {ActionContext} context - The action discovery context.
+   * @param {TraceContext} [trace] - Optional trace context.
+   * @returns {ActionResult<ActionTargetContext[]>} Result containing resolved targets.
+   * @private
+   */
+  #resolveTargets(actionDef, actorEntity, context, trace) {
+    try {
+      // Check if the targetResolutionService supports the new Result pattern
+      if (
+        typeof this.#targetResolutionService.resolveTargetsWithResult ===
+        'function'
+      ) {
+        // Use the new method if available
+        return this.#targetResolutionService.resolveTargetsWithResult(
+          actionDef.scope,
+          actorEntity,
+          context,
+          trace,
+          actionDef.id
+        );
+      }
+
+      // Fallback to legacy method
+      const { targets, error } = this.#targetResolutionService.resolveTargets(
+        actionDef.scope,
+        actorEntity,
+        context,
+        trace
+      );
+
+      if (error) {
+        const errorContext = this.#actionErrorContextBuilder.buildErrorContext({
+          error,
+          actionDef,
+          actorId: actorEntity.id,
+          phase: ERROR_PHASES.VALIDATION,
+          trace,
+          additionalContext: {
+            scope: actionDef.scope,
+          },
+        });
+
+        this.#logger.error(
+          `Error resolving scope for action '${actionDef.id}': ${error.message}`,
+          errorContext
+        );
+
+        return ActionResult.failure(errorContext);
+      }
+
+      return ActionResult.success(targets);
+    } catch (error) {
+      const errorContext = this.#actionErrorContextBuilder.buildErrorContext({
+        error,
+        actionDef,
+        actorId: actorEntity.id,
+        phase: ERROR_PHASES.VALIDATION,
+        trace,
+        additionalContext: {
+          scope: actionDef.scope,
+        },
+      });
+
+      this.#logger.error(
+        `Error resolving scope for action '${actionDef.id}': ${error.message}`,
+        errorContext
+      );
+
+      return ActionResult.failure(errorContext);
+    }
   }
 
   /**
@@ -193,129 +337,84 @@ export class ActionCandidateProcessor {
   }
 
   /**
-   * Handles errors that occur during prerequisite evaluation.
-   *
-   * @param {ActionDefinition} actionDef - The action being processed.
-   * @param {Error} error - The encountered error.
-   * @param {string} actorId - The actor entity ID.
-   * @param {TraceContext} [trace] - Optional trace context.
-   * @returns {ProcessResult} Result with the captured error.
-   * @private
-   */
-  #handlePrerequisiteError(actionDef, error, actorId, trace) {
-    const errorContext = this.#actionErrorContextBuilder.buildErrorContext({
-      error,
-      actionDef,
-      actorId,
-      phase: ERROR_PHASES.VALIDATION,
-      trace,
-    });
-
-    this.#logger.error(
-      `Error checking prerequisites for action '${actionDef.id}'.`,
-      errorContext
-    );
-
-    return {
-      actions: [],
-      errors: [createActionErrorContext(errorContext)],
-      cause: 'prerequisite-error',
-    };
-  }
-
-  /**
-   * Handles errors that occur during target resolution.
-   *
-   * @param {ActionDefinition} actionDef - The action being processed.
-   * @param {Error} error - The encountered error.
-   * @param {string} actorId - The actor entity ID.
-   * @param {TraceContext} [trace] - Optional trace context.
-   * @returns {ProcessResult} Result with the captured error.
-   * @private
-   */
-  #handleResolutionError(actionDef, error, actorId, trace) {
-    const errorContext = this.#actionErrorContextBuilder.buildErrorContext({
-      error,
-      actionDef,
-      actorId,
-      phase: ERROR_PHASES.VALIDATION,
-      trace,
-      additionalContext: {
-        scope: actionDef.scope,
-      },
-    });
-
-    this.#logger.error(
-      `Error resolving scope for action '${actionDef.id}': ${error.message}`,
-      errorContext
-    );
-
-    return {
-      actions: [],
-      errors: [createActionErrorContext(errorContext)],
-      cause: 'resolution-error',
-    };
-  }
-
-  /**
    * Formats an action for a given list of targets.
    *
    * @param {ActionDefinition} actionDef - The action definition.
    * @param {ActionTargetContext[]} targetContexts - The target contexts to format.
    * @param {string} actorId - The actor entity ID.
    * @param {TraceContext} [trace] - Optional trace context.
-   * @returns {{actions: DiscoveredActionInfo[], errors: ActionErrorContext[]}} The formatted actions and any errors.
+   * @returns {ActionResult<ProcessResultData>} Result containing formatted actions and any errors.
    * @private
    */
   #formatActionsForTargets(actionDef, targetContexts, actorId, trace) {
     const validActions = [];
     const errors = [];
-    // Options are identical for all targets; compute once for reuse
     const formatterOptions = this.#buildFormatterOptions();
 
     for (const targetContext of targetContexts) {
-      const formatResult = this.#commandFormatter.format(
-        actionDef,
-        targetContext,
-        this.#entityManager,
-        formatterOptions,
-        {
-          displayNameFn: this.#getEntityDisplayNameFn,
+      try {
+        const formatResult = this.#commandFormatter.format(
+          actionDef,
+          targetContext,
+          this.#entityManager,
+          formatterOptions,
+          {
+            displayNameFn: this.#getEntityDisplayNameFn,
+          }
+        );
+
+        if (formatResult.ok) {
+          const actionInfo = {
+            id: actionDef.id,
+            name: actionDef.name,
+            command: formatResult.value,
+            description: actionDef.description || '',
+            params: { targetId: targetContext.entityId },
+          };
+
+          validActions.push(actionInfo);
+        } else {
+          const errorContext =
+            this.#actionErrorContextBuilder.buildErrorContext({
+              error: formatResult.error,
+              actionDef,
+              actorId,
+              phase: ERROR_PHASES.VALIDATION,
+              trace,
+              targetId: targetContext.entityId,
+              additionalContext: {
+                formatDetails: formatResult.details,
+              },
+            });
+
+          errors.push(createActionErrorContext(errorContext));
+
+          this.#logger.warn(
+            `Failed to format command for action '${actionDef.id}' with target '${targetContext.entityId}'.`,
+            errorContext
+          );
         }
-      );
-
-      if (formatResult.ok) {
-        const actionInfo = {
-          id: actionDef.id,
-          name: actionDef.name,
-          command: formatResult.value,
-          description: actionDef.description || '',
-          params: { targetId: targetContext.entityId },
-        };
-
-        validActions.push(actionInfo);
-      } else {
+      } catch (error) {
         const errorContext = this.#actionErrorContextBuilder.buildErrorContext({
-          error: formatResult.error,
+          error,
           actionDef,
           actorId,
           phase: ERROR_PHASES.VALIDATION,
           trace,
           targetId: targetContext.entityId,
-          additionalContext: {
-            formatDetails: formatResult.details,
-          },
         });
 
         errors.push(createActionErrorContext(errorContext));
 
-        this.#logger.warn(
-          `Failed to format command for action '${actionDef.id}' with target '${targetContext.entityId}'.`,
+        this.#logger.error(
+          `Error formatting action '${actionDef.id}' for target '${targetContext.entityId}'.`,
           errorContext
         );
       }
     }
 
-    return { actions: validActions, errors };
+    return ActionResult.success({ actions: validActions, errors });
   }
 }
+
+export default ActionCandidateProcessor;

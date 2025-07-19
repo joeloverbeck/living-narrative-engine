@@ -1,9 +1,9 @@
 /**
- * @file Unit tests for targetResolutionServiceWithResult using ActionResult pattern
+ * @file Unit tests for targetResolutionService using ActionResult pattern
  */
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { TargetResolutionServiceWithResult } from '../../../src/actions/targetResolutionServiceWithResult.js';
+import { TargetResolutionService } from '../../../src/actions/targetResolutionService.js';
 import { ActionResult } from '../../../src/actions/core/actionResult.js';
 import { ActionTargetContext } from '../../../src/models/actionTargetContext.js';
 import {
@@ -12,7 +12,7 @@ import {
 } from '../../../src/constants/targetDomains.js';
 import { ERROR_PHASES } from '../../../src/actions/errors/actionErrorTypes.js';
 
-describe('TargetResolutionServiceWithResult', () => {
+describe('TargetResolutionService', () => {
   let service;
   let mockDependencies;
 
@@ -49,7 +49,7 @@ describe('TargetResolutionServiceWithResult', () => {
       },
     };
 
-    service = new TargetResolutionServiceWithResult(mockDependencies);
+    service = new TargetResolutionService(mockDependencies);
   });
 
   describe('resolveTargetsWithResult', () => {

@@ -1,0 +1,43 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "clothing:slot_metadata",
+  "description": "Metadata about clothing slots and their anatomy socket coverage",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "slotMappings": {
+        "type": "object",
+        "description": "Map of clothing slot IDs to their coverage metadata",
+        "patternProperties": {
+          "^[a-zA-Z][a-zA-Z0-9_]*$": {
+            "type": "object",
+            "description": "Metadata for a specific clothing slot",
+            "properties": {
+              "coveredSockets": {
+                "type": "array",
+                "description": "Array of anatomy socket IDs that this slot covers",
+                "items": { 
+                  "type": "string",
+                  "description": "Socket ID (e.g., 'left_chest', 'vagina')"
+                }
+              },
+              "allowedLayers": {
+                "type": "array",
+                "description": "Clothing layers allowed for this slot",
+                "items": { 
+                  "type": "string",
+                  "enum": ["underwear", "base", "outer", "accessories", "armor"]
+                }
+              }
+            },
+            "required": ["coveredSockets"],
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "required": ["slotMappings"],
+    "additionalProperties": false
+  }
+}

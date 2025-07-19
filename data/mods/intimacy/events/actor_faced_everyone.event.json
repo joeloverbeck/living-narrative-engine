@@ -1,0 +1,19 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "intimacy:actor_faced_everyone",
+  "description": "Dispatched when an actor turns around to face everyone they were facing away from.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "actor": {
+        "type": "string",
+        "description": "The ID of the actor who turned around"
+      },
+      "faced": {
+        "type": "string",
+        "description": "The name of the specific target the action was performed on"
+      }
+    },
+    "required": ["actor", "faced"]
+  }
+}

@@ -53,14 +53,9 @@ describe('TargetResolutionService error paths', () => {
 
     expect(result.targets).toEqual([]);
     expect(result.error).toBeDefined();
-    // Note: Enhanced error context changes return type and logger behavior
-    expect(mockSafeDispatcher.dispatch).toHaveBeenCalledWith(
-      SYSTEM_ERROR_OCCURRED_ID,
-      expect.objectContaining({
-        message: expect.any(String),
-        details: expect.any(Object),
-      })
-    );
+    expect(result.error.name).toBe('ScopeParseError');
+    // Parser errors are now handled internally and returned as part of the result
+    // rather than being dispatched as system errors
   });
 
   it('handles scopeEngine errors during resolution', () => {

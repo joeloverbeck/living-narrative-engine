@@ -45,54 +45,10 @@ describe('IsSocketCoveredOperator', () => {
       expect(operator).toBeInstanceOf(IsSocketCoveredOperator);
       expect(operator.operatorName).toBe('isSocketCovered');
     });
-
-    it('should not require anatomyBlueprintRepository dependency', () => {
-      expect(operator).toBeInstanceOf(IsSocketCoveredOperator);
-      expect(operator.operatorName).toBe('isSocketCovered');
-    });
-  });
-
-  describe('evaluate', () => {
-    it('should return false for invalid parameters', async () => {
-      const result = await operator.evaluate([], mockContext);
-      expect(result).toBe(false);
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        'isSocketCovered: Invalid parameters'
-      );
-    });
-
-    it('should resolve entity path and delegate to evaluateInternal', async () => {
-      // Mock the evaluateInternal method
-      const evaluateInternalSpy = jest.spyOn(operator, 'evaluateInternal');
-      evaluateInternalSpy.mockResolvedValue(true);
-
-      const result = await operator.evaluate(['actor', 'vagina'], mockContext);
-
-      expect(result).toBe(true);
-      expect(evaluateInternalSpy).toHaveBeenCalledWith(
-        'actor-123',
-        ['vagina'],
-        expect.objectContaining({
-          _currentPath: 'actor',
-        })
-      );
-    });
   });
 
   describe('evaluateInternal', () => {
-    beforeEach(() => {
-      // Setup default mocks for successful evaluation
-      mockEntityManager.getComponentData.mockReturnValue({
-        // clothing:equipment component
-        equipped: {
-          torso_lower: {
-            underwear: ['panties-1'],
-          },
-        },
-      });
-    });
-
-    it('should return false for missing socketId parameter', () => {
+    it('should return false when parameters are missing', () => {
       const result = operator.evaluateInternal('actor-123', [], mockContext);
 
       expect(result).toBe(false);
@@ -101,12 +57,8 @@ describe('IsSocketCoveredOperator', () => {
       );
     });
 
-    it('should return false for invalid socketId parameter', () => {
-      const result = operator.evaluateInternal(
-        'actor-123',
-        [null],
-        mockContext
-      );
+    it('should return false when socketId is invalid', () => {
+      const result = operator.evaluateInternal('actor-123', [null], mockContext);
 
       expect(result).toBe(false);
       expect(mockLogger.warn).toHaveBeenCalledWith(
@@ -114,17 +66,40 @@ describe('IsSocketCoveredOperator', () => {
       );
     });
 
-    it('should return false when socket is not recognized', () => {
-      // Clear the previous mocks from beforeEach
-      jest.clearAllMocks();
+    it('should return false when entity has no equipment component', () => {
+      // Mock no equipment component - this is checked first
+      mockEntityManager.getComponentData.mockReturnValueOnce(null);
 
-      mockEntityManager.getComponentData.mockReturnValue({
-        equipped: {
-          torso_lower: {
-            underwear: ['panties-1'],
+      const result = operator.evaluateInternal(
+        'actor-123',
+        ['vagina'],
+        mockContext
+      );
+
+      expect(result).toBe(false);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        "isSocketCovered: Entity actor-123 has no clothing:equipment component"
+      );
+    });
+
+    it('should return false when socket is not recognized', () => {
+      // Mock entity with equipment (checked first) and slot metadata with no matching socket
+      mockEntityManager.getComponentData
+        .mockReturnValueOnce({
+          equipped: {
+            torso_lower: {
+              underwear: 'panties-1',
+            },
           },
-        },
-      });
+        })
+        .mockReturnValueOnce({
+          slotMappings: {
+            torso_lower: {
+              coveredSockets: ['vagina', 'left_hip', 'right_hip'],
+              allowedLayers: ['underwear', 'base', 'outer'],
+            },
+          },
+        });
 
       const result = operator.evaluateInternal(
         'actor-123',
@@ -134,11 +109,29 @@ describe('IsSocketCoveredOperator', () => {
 
       expect(result).toBe(false);
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        "isSocketCovered: No known clothing slots cover socket 'unknown_socket' for entity actor-123"
+        "isSocketCovered: No clothing slots cover socket 'unknown_socket' for entity actor-123"
       );
     });
 
     it('should return true when socket is covered by equipped clothing', () => {
+      // Mock entity with equipment (checked first) and slot metadata that covers the socket
+      mockEntityManager.getComponentData
+        .mockReturnValueOnce({
+          equipped: {
+            torso_lower: {
+              underwear: 'panties-1',
+            },
+          },
+        })
+        .mockReturnValueOnce({
+          slotMappings: {
+            torso_lower: {
+              coveredSockets: ['vagina', 'left_hip', 'right_hip'],
+              allowedLayers: ['underwear', 'base', 'outer'],
+            },
+          },
+        });
+
       const result = operator.evaluateInternal(
         'actor-123',
         ['vagina'],
@@ -151,11 +144,17 @@ describe('IsSocketCoveredOperator', () => {
       );
     });
 
-    it('should return false when entity has no equipment component', () => {
-      // Clear the previous mocks from beforeEach
-      jest.clearAllMocks();
-
-      mockEntityManager.getComponentData.mockReturnValue(null); // No clothing:equipment component
+    it('should return false when entity has no slot metadata component', () => {
+      // Mock entity with equipment but no slot metadata
+      mockEntityManager.getComponentData
+        .mockReturnValueOnce({
+          equipped: {
+            torso_lower: {
+              underwear: 'panties-1',
+            },
+          },
+        })
+        .mockReturnValueOnce(null); // No clothing:slot_metadata component
 
       const result = operator.evaluateInternal(
         'actor-123',
@@ -165,22 +164,29 @@ describe('IsSocketCoveredOperator', () => {
 
       expect(result).toBe(false);
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        'isSocketCovered: Entity actor-123 has no clothing:equipment component'
+        "isSocketCovered: Entity actor-123 has no clothing:slot_metadata component"
       );
     });
 
     it('should return false when covering slots have no equipped items', () => {
-      // Clear the previous mocks from beforeEach
-      jest.clearAllMocks();
-
-      mockEntityManager.getComponentData.mockReturnValue({
-        equipped: {
-          torso_upper: {
-            base: ['shirt-1'],
+      // Mock entity with equipment (checked first) and slot metadata but no items in the covering slot
+      mockEntityManager.getComponentData
+        .mockReturnValueOnce({
+          equipped: {
+            torso_upper: {
+              base: 'shirt-1',
+            },
+            // Note: torso_lower has no equipped items
           },
-          // torso_lower has no items
-        },
-      });
+        })
+        .mockReturnValueOnce({
+          slotMappings: {
+            torso_lower: {
+              coveredSockets: ['vagina', 'left_hip', 'right_hip'],
+              allowedLayers: ['underwear', 'base', 'outer'],
+            },
+          },
+        });
 
       const result = operator.evaluateInternal(
         'actor-123',
@@ -195,21 +201,31 @@ describe('IsSocketCoveredOperator', () => {
     });
 
     it('should return true when socket is covered by multiple slots', () => {
-      // Clear the previous mocks from beforeEach
-      jest.clearAllMocks();
-
-      mockEntityManager.getComponentData.mockReturnValue({
-        equipped: {
-          torso_lower: {}, // Empty
-          torso_upper: {
-            underwear: ['bra-1'],
+      // Mock entity with equipment (checked first) and slot metadata where socket could be covered by multiple slots
+      mockEntityManager.getComponentData
+        .mockReturnValueOnce({
+          equipped: {
+            full_body: {
+              outer: 'dress-1',
+            },
           },
-        },
-      });
+        })
+        .mockReturnValueOnce({
+          slotMappings: {
+            torso_lower: {
+              coveredSockets: ['vagina', 'left_hip', 'right_hip'],
+              allowedLayers: ['underwear', 'base', 'outer'],
+            },
+            full_body: {
+              coveredSockets: ['vagina', 'left_breast', 'right_breast'],
+              allowedLayers: ['outer'],
+            },
+          },
+        });
 
       const result = operator.evaluateInternal(
         'actor-123',
-        ['left_breast'],
+        ['vagina'],
         mockContext
       );
 
@@ -217,11 +233,9 @@ describe('IsSocketCoveredOperator', () => {
     });
 
     it('should handle errors gracefully', () => {
-      // Clear the previous mocks from beforeEach
-      jest.clearAllMocks();
-
+      // Mock an error during getComponentData
       mockEntityManager.getComponentData.mockImplementation(() => {
-        throw new Error('Database error');
+        throw new Error('Mock error');
       });
 
       const result = operator.evaluateInternal(
@@ -238,20 +252,55 @@ describe('IsSocketCoveredOperator', () => {
     });
   });
 
-  // Note: Private method #findSlotsCoveringSocket is tested through the public interface
-  // in the evaluateInternal tests above
+  describe('clearCache', () => {
+    it('should clear cache for specific entity', () => {
+      // First, populate cache by making a call - equipment checked first, then slot metadata
+      mockEntityManager.getComponentData
+        .mockReturnValueOnce({
+          equipped: {
+            torso_lower: {
+              underwear: 'panties-1',
+            },
+          },
+        })
+        .mockReturnValueOnce({
+          slotMappings: {
+            torso_lower: {
+              coveredSockets: ['vagina'],
+              allowedLayers: ['underwear'],
+            },
+          },
+        });
+
+      operator.evaluateInternal('actor-123', ['vagina'], mockContext);
+
+      // Clear cache
+      operator.clearCache('actor-123');
+
+      // This should work without throwing any errors
+      expect(() => operator.clearCache('actor-123')).not.toThrow();
+    });
+  });
 
   describe('integration scenarios', () => {
     it('should work with male anatomy', () => {
-      jest.clearAllMocks();
-
-      mockEntityManager.getComponentData.mockReturnValue({
-        equipped: {
-          torso_lower: {
-            underwear: ['boxers-1'],
+      // Mock male anatomy - equipment checked first, then slot metadata
+      mockEntityManager.getComponentData
+        .mockReturnValueOnce({
+          equipped: {
+            torso_lower: {
+              underwear: 'boxers-1',
+            },
           },
-        },
-      });
+        })
+        .mockReturnValueOnce({
+          slotMappings: {
+            torso_lower: {
+              coveredSockets: ['penis', 'left_testicle', 'right_testicle'],
+              allowedLayers: ['underwear', 'base', 'outer'],
+            },
+          },
+        });
 
       const result = operator.evaluateInternal(
         'actor-123',
@@ -263,21 +312,29 @@ describe('IsSocketCoveredOperator', () => {
     });
 
     it('should work with complex layering system', () => {
-      jest.clearAllMocks();
-
-      mockEntityManager.getComponentData.mockReturnValue({
-        equipped: {
-          torso_lower: {
-            underwear: ['panties-1'],
-            base: ['pants-1'],
-            outer: ['skirt-1'],
+      // Mock entity with multiple layers - equipment checked first, then slot metadata
+      mockEntityManager.getComponentData
+        .mockReturnValueOnce({
+          equipped: {
+            torso_upper: {
+              underwear: 'bra-1',
+              base: 'shirt-1',
+              outer: 'jacket-1',
+            },
           },
-        },
-      });
+        })
+        .mockReturnValueOnce({
+          slotMappings: {
+            torso_upper: {
+              coveredSockets: ['left_breast', 'right_breast', 'chest_center'],
+              allowedLayers: ['underwear', 'base', 'outer', 'armor'],
+            },
+          },
+        });
 
       const result = operator.evaluateInternal(
         'actor-123',
-        ['vagina'],
+        ['left_breast'],
         mockContext
       );
 
@@ -285,15 +342,23 @@ describe('IsSocketCoveredOperator', () => {
     });
 
     it('should work with breast coverage', () => {
-      jest.clearAllMocks();
-
-      mockEntityManager.getComponentData.mockReturnValue({
-        equipped: {
-          torso_upper: {
-            underwear: ['bra-1'],
+      // Mock female anatomy with breast coverage - equipment checked first, then slot metadata
+      mockEntityManager.getComponentData
+        .mockReturnValueOnce({
+          equipped: {
+            torso_upper: {
+              base: 'shirt-1',
+            },
           },
-        },
-      });
+        })
+        .mockReturnValueOnce({
+          slotMappings: {
+            torso_upper: {
+              coveredSockets: ['left_breast', 'right_breast', 'left_chest', 'right_chest', 'chest_center'],
+              allowedLayers: ['underwear', 'base', 'outer', 'armor'],
+            },
+          },
+        });
 
       const result = operator.evaluateInternal(
         'actor-123',

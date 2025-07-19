@@ -96,8 +96,9 @@ describe('TargetResolutionService uncovered branches', () => {
       trace
     );
 
-    expect(result.error).toBeUndefined();
-    expect(result.targets).toEqual([ActionTargetContext.forEntity('e2')]);
+    // When all component loads fail, the service now returns an error
+    expect(result.error).toBeDefined();
+    expect(result.targets).toEqual([]);
     expect(trace.error).toHaveBeenCalledWith(
       `Failed to get component data for c1 on actor hero: ${error.message}`,
       'TargetResolutionService.#resolveScopeToIds'

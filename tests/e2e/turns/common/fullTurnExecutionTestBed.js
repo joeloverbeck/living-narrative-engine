@@ -845,6 +845,32 @@ export class FullTurnExecutionTestBed {
       this.registry.store('actions', action.id, action);
     }
 
+    // Register required scopes
+    // Import the parser function
+    const { parseScopeDefinitions } = await import(
+      '../../../../src/scopeDsl/scopeDefinitionParser.js'
+    );
+
+    const scopeContent = `core:clear_directions := location.core:exits[
+        { "condition_ref": "core:exit-is-unblocked" }
+    ].target`;
+
+    const parsedScopes = parseScopeDefinitions(scopeContent, 'test-scope-file');
+
+    // Initialize the scope registry with the parsed scopes
+    const scopeMap = {};
+    for (const [scopeName, scopeDef] of parsedScopes) {
+      scopeMap[scopeName] = scopeDef;
+    }
+    this.scopeRegistry.initialize(scopeMap);
+
+    // Also register the exit-is-unblocked condition that the scope uses
+    this.registry.store('conditions', 'core:exit-is-unblocked', {
+      id: 'core:exit-is-unblocked',
+      name: 'Exit is unblocked',
+      logic: { '!': { var: 'entity.blocked' } },
+    });
+
     // Build the action index
     const actionIndex = this.container.resolve(tokens.ActionIndex);
     actionIndex.buildIndex(actions);
@@ -1183,6 +1209,14 @@ export class FullTurnExecutionTestBed {
         } else if (identifier.includes('llm-prompt-processor-error.json')) {
           // Return empty error file
           return {};
+        } else if (identifier.includes('logger-config.json')) {
+          // Return mock logger config
+          return {
+            logLevel: 'debug',
+            enableConsole: false,
+            enableFile: false,
+            categories: {}
+          };
         }
 
         // Return empty array for directories

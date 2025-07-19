@@ -121,6 +121,9 @@ export class AnatomyGenerationWorkflow extends BaseService {
       `AnatomyGenerationWorkflow: Built ${slotEntityMappings.size} slot entity mappings`
     );
 
+    // Phase 3.5: Create clothing slot metadata component
+    await this.#createClothingSlotMetadata(ownerId, blueprintId);
+
     // Phase 4: Instantiate clothing if specified in recipe
     let clothingResult;
     if (this.#clothingInstantiationService) {
@@ -472,6 +475,67 @@ export class AnatomyGenerationWorkflow extends BaseService {
     this.#logger.debug(
       `AnatomyGenerationWorkflow: Updated entity '${entityId}' with body structure (root: '${graphResult.rootId}', ${Object.keys(partsObject).length} parts)`
     );
+  }
+
+  /**
+   * Creates the clothing:slot_metadata component with socket coverage mappings
+   *
+   * @private
+   * @param {string} entityId - The entity to add the component to
+   * @param {string} blueprintId - The blueprint ID to get mappings from
+   * @returns {Promise<void>}
+   */
+  async #createClothingSlotMetadata(entityId, blueprintId) {
+    this.#logger.debug(
+      `AnatomyGenerationWorkflow: Creating clothing slot metadata for entity '${entityId}' from blueprint '${blueprintId}'`
+    );
+
+    try {
+      // Get the blueprint data
+      const blueprint = this.#dataRegistry.get(
+        'anatomyBlueprints',
+        blueprintId
+      );
+      
+      if (!blueprint || !blueprint.clothingSlotMappings) {
+        this.#logger.debug(
+          `AnatomyGenerationWorkflow: No clothing slot mappings found in blueprint '${blueprintId}'`
+        );
+        return;
+      }
+
+      // Transform the blueprint mappings into the component format
+      const slotMappings = {};
+      
+      for (const [slotId, mapping] of Object.entries(blueprint.clothingSlotMappings)) {
+        // Only include slots that have anatomySockets (these define coverage)
+        if (mapping.anatomySockets && mapping.anatomySockets.length > 0) {
+          slotMappings[slotId] = {
+            coveredSockets: [...mapping.anatomySockets],
+            allowedLayers: mapping.allowedLayers || []
+          };
+        }
+      }
+
+      // Only create the component if there are actual mappings
+      if (Object.keys(slotMappings).length > 0) {
+        await this.#entityManager.addComponent(
+          entityId,
+          'clothing:slot_metadata',
+          { slotMappings }
+        );
+
+        this.#logger.debug(
+          `AnatomyGenerationWorkflow: Created clothing:slot_metadata component with ${Object.keys(slotMappings).length} slot mappings for entity '${entityId}'`
+        );
+      }
+    } catch (error) {
+      this.#logger.error(
+        `AnatomyGenerationWorkflow: Failed to create clothing slot metadata for entity '${entityId}'`,
+        error
+      );
+      // Don't fail the entire anatomy generation if metadata creation fails
+    }
   }
 
   /**

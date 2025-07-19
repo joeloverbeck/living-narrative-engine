@@ -110,16 +110,7 @@ describe('TargetResolutionService additional coverage', () => {
     expect(result.error).toBeDefined();
     // Note: Enhanced error context changes logger behavior
     expect(trace.error).toHaveBeenCalled();
-    expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
-      SYSTEM_ERROR_OCCURRED_ID,
-      expect.objectContaining({
-        message: expect.stringContaining('Test error'),
-        details: expect.objectContaining({
-          errorContext: expect.objectContaining({
-            phase: 'resolution',
-          }),
-        }),
-      })
-    );
+    // Parser errors are now handled internally and returned as part of the result
+    // rather than being dispatched as system errors
   });
 });
