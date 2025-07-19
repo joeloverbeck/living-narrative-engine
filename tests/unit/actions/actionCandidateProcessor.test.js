@@ -114,7 +114,7 @@ describeActionCandidateProcessorSuite('ActionCandidateProcessor', (getBed) => {
       expect(result.actions).toHaveLength(2);
       expect(mockTrace.info).toHaveBeenCalledWith(
         `Scope for action 'attack' resolved to 2 targets.`,
-        'ActionCandidateProcessor.process',
+        'ActionCandidateProcessor.processWithResult',
         { targets: ['enemy1', 'enemy2'] }
       );
     });

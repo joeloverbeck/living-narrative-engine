@@ -22,9 +22,11 @@ import {
 import { ServiceSetup } from '../utils/serviceInitializerUtils.js';
 import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
 import { ERROR_PHASES } from './errors/actionErrorTypes.js';
+import { ActionResult } from './core/actionResult.js';
 
 /**
- * Service for resolving action target scopes.
+ * Service for resolving action target scopes using the Result pattern.
+ * This is a refactored version that uses ActionResult for consistent error handling.
  *
  * @class TargetResolutionService
  * @augments ITargetResolutionService
@@ -97,6 +99,9 @@ export class TargetResolutionService extends ITargetResolutionService {
   /**
    * Resolves a target scope name into actionable target contexts.
    *
+   * This method maintains the original interface for backward compatibility,
+   * but internally uses ActionResult for better error handling.
+   *
    * @override
    * @param {string} scopeName - The name of the scope to resolve.
    * @param {Entity} actorEntity - The entity performing the action.
@@ -112,10 +117,104 @@ export class TargetResolutionService extends ITargetResolutionService {
     trace = null,
     actionId = null
   ) {
-    const source = 'TargetResolutionService.resolveTargets';
+    const result = this.resolveTargetsWithResult(
+      scopeName,
+      actorEntity,
+      discoveryContext,
+      trace,
+      actionId
+    );
+
+    // Convert ActionResult back to legacy format for backward compatibility
+    if (result.success) {
+      return { targets: result.value };
+    } else {
+      // Extract the first error for backward compatibility
+      const error = result.errors[0];
+      return { targets: [], error };
+    }
+  }
+
+  /**
+   * Resolves a target scope name into actionable target contexts using ActionResult.
+   *
+   * @param {string} scopeName - The name of the scope to resolve.
+   * @param {Entity} actorEntity - The entity performing the action.
+   * @param {ActionContext} discoveryContext - Context for DSL evaluation.
+   * @param {TraceContext|null} [trace] - Optional tracing instance.
+   * @param {string} [actionId] - Optional action ID for error context.
+   * @returns {ActionResult<ActionTargetContext[]>} Result containing resolved targets or errors.
+   */
+  resolveTargetsWithResult(
+    scopeName,
+    actorEntity,
+    discoveryContext,
+    trace = null,
+    actionId = null
+  ) {
+    const source = 'TargetResolutionService.resolveTargetsWithResult';
     trace?.info(`Resolving scope '${scopeName}'.`, source);
 
-    // Comprehensive actor entity validation
+    // Validate actor entity
+    const actorValidation = this.#validateActorEntity(
+      actorEntity,
+      scopeName,
+      trace,
+      actionId
+    );
+    if (!actorValidation.success) {
+      return actorValidation;
+    }
+
+    // Handle special scope names
+    if (scopeName === TARGET_DOMAIN_NONE) {
+      trace?.info(
+        `Scope is 'none'; returning a single no-target context.`,
+        source
+      );
+      return ActionResult.success([ActionTargetContext.noTarget()]);
+    }
+
+    if (scopeName === TARGET_DOMAIN_SELF) {
+      trace?.info(
+        `Scope is 'self'; returning the actor as the target.`,
+        source
+      );
+      return ActionResult.success([
+        ActionTargetContext.forEntity(actorEntity.id),
+      ]);
+    }
+
+    // Resolve DSL scope
+    return this.#resolveScopeToIds(
+      scopeName,
+      actorEntity,
+      discoveryContext,
+      trace,
+      actionId
+    ).map((ids) => {
+      trace?.info(
+        `DSL scope '${scopeName}' resolved to ${ids.size} target(s).`,
+        source,
+        { targetIds: Array.from(ids) }
+      );
+      return Array.from(ids, (id) => ActionTargetContext.forEntity(id));
+    });
+  }
+
+  /**
+   * Validates the actor entity.
+   *
+   * @param {Entity} actorEntity - The entity to validate.
+   * @param {string} scopeName - The scope being resolved.
+   * @param {TraceContext|null} trace - Optional tracing instance.
+   * @param {string} actionId - Optional action ID for error context.
+   * @returns {ActionResult<void>} Success if valid, failure with error context.
+   * @private
+   */
+  #validateActorEntity(actorEntity, scopeName, trace, actionId) {
+    const source = 'TargetResolutionService.#validateActorEntity';
+
     if (!actorEntity) {
       const errorMessage = 'Actor entity is null or undefined';
       this.#logger.error(errorMessage);
@@ -134,7 +233,7 @@ export class TargetResolutionService extends ITargetResolutionService {
           source: source,
         },
       });
-      return { targets: [], error: errorContext };
+      return ActionResult.failure(errorContext);
     }
 
     if (
@@ -168,42 +267,10 @@ export class TargetResolutionService extends ITargetResolutionService {
           source: source,
         },
       });
-      return { targets: [], error: errorContext };
+      return ActionResult.failure(errorContext);
     }
 
-    if (scopeName === TARGET_DOMAIN_NONE) {
-      trace?.info(
-        `Scope is 'none'; returning a single no-target context.`,
-        source
-      );
-      return { targets: [ActionTargetContext.noTarget()] };
-    }
-
-    if (scopeName === TARGET_DOMAIN_SELF) {
-      trace?.info(
-        `Scope is 'self'; returning the actor as the target.`,
-        source
-      );
-      return { targets: [ActionTargetContext.forEntity(actorEntity.id)] };
-    }
-
-    const { ids: targetIds, error } = this.#resolveScopeToIds(
-      scopeName,
-      actorEntity,
-      discoveryContext,
-      trace,
-      actionId
-    );
-
-    trace?.info(
-      `DSL scope '${scopeName}' resolved to ${targetIds.size} target(s).`,
-      source,
-      { targetIds: Array.from(targetIds) }
-    );
-    return {
-      targets: Array.from(targetIds, (id) => ActionTargetContext.forEntity(id)),
-      error,
-    };
+    return ActionResult.success();
   }
 
   /**
@@ -214,7 +281,7 @@ export class TargetResolutionService extends ITargetResolutionService {
    * @param {ActionContext} discoveryContext - Context for evaluating scope rules.
    * @param {TraceContext|null} [trace] - Optional tracing instance.
    * @param {string} [actionId] - Optional action ID for error context.
-   * @returns {{ids: Set<string>, error?: Error}} The set of resolved entity IDs and optional error.
+   * @returns {ActionResult<Set<string>>} Result containing the set of resolved entity IDs or errors.
    * @private
    */
   #resolveScopeToIds(
@@ -226,6 +293,8 @@ export class TargetResolutionService extends ITargetResolutionService {
   ) {
     const source = 'TargetResolutionService.#resolveScopeToIds';
     trace?.info(`Resolving scope '${scopeName}' with DSL.`, source);
+
+    // Get scope definition
     const scopeDefinition = this.#scopeRegistry.getScope(scopeName);
 
     if (
@@ -258,91 +327,55 @@ export class TargetResolutionService extends ITargetResolutionService {
           source: source,
         },
       });
-      return { ids: new Set(), error: errorContext };
+      return ActionResult.failure(errorContext);
     }
 
-    // Declare actorWithComponents outside try block so it's available in catch block
-    let actorWithComponents = actorEntity;
+    // Parse AST if needed
+    const astResult = this.#parseAst(scopeDefinition, scopeName, trace, source);
+    if (!astResult.success) {
+      return astResult;
+    }
 
-    try {
-      let ast = scopeDefinition.ast;
-      if (!ast) {
-        trace?.info(
-          `Parsing expression for scope '${scopeName}' on demand.`,
-          source
-        );
-        ast = this.#dslParser.parse(scopeDefinition.expr);
-      } else {
-        trace?.info(`Using pre-parsed AST for scope '${scopeName}'.`, source);
-      }
+    // Build actor with components
+    const actorResult = this.#buildActorWithComponents(
+      actorEntity,
+      trace,
+      source
+    );
+    if (!actorResult.success) {
+      return actorResult;
+    }
 
-      // Ensure actor entity has components built before passing to scope engine
-      // This is necessary for proper scope evaluation that depends on component state
+    const actorWithComponents = actorResult.value;
+    const ast = astResult.value;
 
-      if (actorEntity && !actorEntity.components) {
-        if (
-          !actorEntity.componentTypeIds ||
-          !Array.isArray(actorEntity.componentTypeIds)
-        ) {
-          trace?.warn(
-            `Actor entity ${actorEntity.id} has no components or componentTypeIds`,
-            source
-          );
-          // Create empty components object to prevent errors
-          // IMPORTANT: Preserve Entity class getters (especially 'id') that are lost with spread operator
-          actorWithComponents = {
-            ...actorEntity,
-            id: actorEntity.id, // Explicitly preserve the ID getter
-            definitionId: actorEntity.definitionId, // Preserve other critical getters
-            componentTypeIds: actorEntity.componentTypeIds,
-            components: {},
-          };
-        } else {
-          // Build components for the actor entity
-          const components = {};
-          for (const componentTypeId of actorEntity.componentTypeIds) {
-            try {
-              const data = this.#entityManager.getComponentData(
-                actorEntity.id,
-                componentTypeId
-              );
-              if (data) {
-                components[componentTypeId] = data;
-              }
-            } catch (error) {
-              trace?.error(
-                `Failed to get component data for ${componentTypeId} on actor ${actorEntity.id}: ${error.message}`,
-                source
-              );
-            }
-          }
+    // Build runtime context
+    const runtimeCtx = this.#buildRuntimeContext(
+      actorWithComponents,
+      discoveryContext
+    );
 
-          // Create a new actor entity object with components
-          // IMPORTANT: Preserve Entity class getters (especially 'id') that are lost with spread operator
-          actorWithComponents = {
-            ...actorEntity,
-            id: actorEntity.id, // Explicitly preserve the ID getter
-            definitionId: actorEntity.definitionId, // Preserve other critical getters
-            componentTypeIds: actorEntity.componentTypeIds,
-            components,
-          };
-          trace?.info(
-            `Built ${Object.keys(components).length} components for actor ${actorEntity.id}`,
-            source
-          );
-        }
-      }
-
-      const runtimeCtx = this.#buildRuntimeContext(
-        actorWithComponents,
-        discoveryContext
+    // Validate runtime context
+    if (!runtimeCtx || !runtimeCtx.entityManager) {
+      const error = new Error(
+        'Invalid runtime context: missing entity manager'
       );
+      const errorContext = this.#actionErrorContextBuilder.buildErrorContext({
+        error: error,
+        actionDef: actionId ? { id: actionId } : null,
+        actorId: actorEntity.id,
+        phase: ERROR_PHASES.VALIDATION,
+        trace: trace,
+        additionalContext: {
+          scopeName: scopeName,
+          source: source,
+        },
+      });
+      return ActionResult.failure(errorContext);
+    }
 
-      // Validate runtime context before proceeding
-      if (!runtimeCtx || !runtimeCtx.entityManager) {
-        throw new Error('Invalid runtime context: missing entity manager');
-      }
-
+    // Resolve scope using engine
+    try {
       const resolvedIds = this.#scopeEngine.resolve(
         ast,
         actorWithComponents,
@@ -357,7 +390,7 @@ export class TargetResolutionService extends ITargetResolutionService {
         );
       }
 
-      return { ids: resolvedIds };
+      return ActionResult.success(resolvedIds);
     } catch (error) {
       const errorMessage = `Error resolving scope '${scopeName}': ${error.message}`;
 
@@ -389,7 +422,127 @@ export class TargetResolutionService extends ITargetResolutionService {
           scopeExpression: scopeDefinition?.expr,
         },
       });
-      return { ids: new Set(), error: errorContext };
+      return ActionResult.failure(errorContext);
+    }
+  }
+
+  /**
+   * Parses the AST for a scope definition.
+   *
+   * @param {object} scopeDefinition - The scope definition.
+   * @param {string} scopeName - The scope name.
+   * @param {TraceContext|null} trace - Optional tracing instance.
+   * @param {string} source - The source method name.
+   * @returns {ActionResult<object>} Result containing the parsed AST or error.
+   * @private
+   */
+  #parseAst(scopeDefinition, scopeName, trace, source) {
+    try {
+      let ast = scopeDefinition.ast;
+      if (!ast) {
+        trace?.info(
+          `Parsing expression for scope '${scopeName}' on demand.`,
+          source
+        );
+        ast = this.#dslParser.parse(scopeDefinition.expr);
+      } else {
+        trace?.info(`Using pre-parsed AST for scope '${scopeName}'.`, source);
+      }
+      return ActionResult.success(ast);
+    } catch (error) {
+      const errorMessage = `Failed to parse scope expression for '${scopeName}': ${error.message}`;
+      this.#logger.error(errorMessage, error);
+      trace?.error(errorMessage, source);
+
+      error.name = 'ScopeParseError';
+      return ActionResult.failure(error);
+    }
+  }
+
+  /**
+   * Builds actor entity with components loaded.
+   *
+   * @param {Entity} actorEntity - The actor entity.
+   * @param {TraceContext|null} trace - Optional tracing instance.
+   * @param {string} source - The source method name.
+   * @returns {ActionResult<Entity>} Result containing actor with components or error.
+   * @private
+   */
+  #buildActorWithComponents(actorEntity, trace, source) {
+    try {
+      // If actor already has components, return as-is
+      if (actorEntity && actorEntity.components) {
+        return ActionResult.success(actorEntity);
+      }
+
+      // If no component type IDs, create empty components
+      if (
+        !actorEntity.componentTypeIds ||
+        !Array.isArray(actorEntity.componentTypeIds)
+      ) {
+        trace?.warn(
+          `Actor entity ${actorEntity.id} has no components or componentTypeIds`,
+          source
+        );
+        // Create empty components object to prevent errors
+        // IMPORTANT: Preserve Entity class getters (especially 'id') that are lost with spread operator
+        const actorWithComponents = {
+          ...actorEntity,
+          id: actorEntity.id, // Explicitly preserve the ID getter
+          definitionId: actorEntity.definitionId, // Preserve other critical getters
+          componentTypeIds: actorEntity.componentTypeIds,
+          components: {},
+        };
+        return ActionResult.success(actorWithComponents);
+      }
+
+      // Build components for the actor entity
+      const components = {};
+      const componentErrors = [];
+
+      for (const componentTypeId of actorEntity.componentTypeIds) {
+        try {
+          const data = this.#entityManager.getComponentData(
+            actorEntity.id,
+            componentTypeId
+          );
+          if (data) {
+            components[componentTypeId] = data;
+          }
+        } catch (error) {
+          const errorMessage = `Failed to get component data for ${componentTypeId} on actor ${actorEntity.id}: ${error.message}`;
+          trace?.error(errorMessage, source);
+          componentErrors.push(new Error(errorMessage));
+        }
+      }
+
+      // If we had errors loading components but got some, continue with partial data
+      if (componentErrors.length > 0 && Object.keys(components).length === 0) {
+        // All component loads failed
+        return ActionResult.failure(componentErrors);
+      }
+
+      // Create a new actor entity object with components
+      // IMPORTANT: Preserve Entity class getters (especially 'id') that are lost with spread operator
+      const actorWithComponents = {
+        ...actorEntity,
+        id: actorEntity.id, // Explicitly preserve the ID getter
+        definitionId: actorEntity.definitionId, // Preserve other critical getters
+        componentTypeIds: actorEntity.componentTypeIds,
+        components,
+      };
+
+      trace?.info(
+        `Built ${Object.keys(components).length} components for actor ${actorEntity.id}`,
+        source
+      );
+
+      return ActionResult.success(actorWithComponents);
+    } catch (error) {
+      const errorMessage = `Failed to build actor with components: ${error.message}`;
+      this.#logger.error(errorMessage, error);
+      trace?.error(errorMessage, source);
+      return ActionResult.failure(error);
     }
   }
 
@@ -497,3 +650,5 @@ export class TargetResolutionService extends ITargetResolutionService {
     );
   }
 }
+
+export default TargetResolutionService;

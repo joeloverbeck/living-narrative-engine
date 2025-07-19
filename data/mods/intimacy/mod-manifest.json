@@ -24,9 +24,13 @@
       "peck_on_lips.action.json",
       "step_back.action.json",
       "thumb_wipe_cheek.action.json",
-      "turn_around.action.json"
+      "turn_around.action.json",
+      "turn_around_to_face.action.json"
     ],
-    "components": ["closeness.component.json", "facing_away.component.json"],
+    "components": [
+      "closeness.component.json",
+      "facing_away.component.json"
+    ],
     "conditions": [
       "actor-has-facing-away.condition.json",
       "actor-in-entity-facing-away.condition.json",
@@ -43,6 +47,7 @@
       "event-is-action-peck_on_lips.condition.json",
       "event-is-action-step-back.condition.json",
       "event-is-action-thumb-wipe-cheek.condition.json",
+      "event-is-action-turn-around-to-face.condition.json",
       "event-is-action-turn-around.condition.json"
     ],
     "entities": {
@@ -50,6 +55,7 @@
       "instances": []
     },
     "events": [
+      "actor_faced_everyone.event.json",
       "actor_faced_forward.event.json",
       "actor_turned_around.event.json"
     ],
@@ -65,10 +71,15 @@
       "peck_on_lips.rule.json",
       "step_back.rule.json",
       "thumb_wipe_cheek.rule.json",
-      "turn_around.rule.json"
+      "turn_around.rule.json",
+      "turn_around_to_face.rule.json"
     ],
-    "ui": ["icons.json", "labels.json"],
+    "ui": [
+      "icons.json",
+      "labels.json"
+    ],
     "scopes": [
+      "actors_im_facing_away_from.scope",
       "actors_with_arms_facing_forward.scope",
       "actors_with_arms_in_intimacy.scope",
       "actors_with_ass_cheeks_facing_forward.scope",

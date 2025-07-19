@@ -17,7 +17,11 @@
   ],
   "gameVersion": ">=0.0.1",
   "content": {
-    "components": ["equipment.component.json", "wearable.component.json"],
+    "components": [
+      "equipment.component.json",
+      "slot_metadata.component.json",
+      "wearable.component.json"
+    ],
     "entities": {
       "definitions": [
         "black_calfskin_belt.entity.json",

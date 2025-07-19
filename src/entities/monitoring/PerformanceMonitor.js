@@ -119,11 +119,6 @@ export default class PerformanceMonitor {
 
     this.#activeTimers.set(timerId, timer);
 
-    this.#logger.debug(`Started timer for operation: ${operation}`, {
-      timerId,
-      context,
-    });
-
     return timerId;
   }
 

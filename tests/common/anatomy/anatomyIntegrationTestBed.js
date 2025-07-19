@@ -24,6 +24,7 @@ import { ClothingManagementService } from '../../../src/clothing/services/clothi
 import AnatomyBlueprintRepository from '../../../src/anatomy/repositories/anatomyBlueprintRepository.js';
 import { AnatomyClothingCache } from '../../../src/anatomy/cache/AnatomyClothingCache.js';
 import { ANATOMY_CLOTHING_CACHE_CONFIG } from '../../../src/anatomy/constants/anatomyConstants.js';
+import { IsSocketCoveredOperator } from '../../../src/logic/operators/isSocketCoveredOperator.js';
 import {
   createMockLogger,
   createMockSafeEventDispatcher,
@@ -337,6 +338,22 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
       anatomyClothingCache: this.anatomyClothingCache,
     });
 
+    // Create isSocketCoveredOperator
+    this.isSocketCoveredOperator = new IsSocketCoveredOperator({
+      entityManager: this.entityManager,
+      logger: mocks.logger,
+    });
+
+    // Create mock logic registry
+    this.logicRegistry = {
+      getCustomOperator: (name) => {
+        if (name === 'isSocketCovered') {
+          return this.isSocketCoveredOperator;
+        }
+        return null;
+      },
+    };
+
     // Create container and register services
     this.container = new Map();
     this.container.set('IEntityManager', this.entityManager);
@@ -347,6 +364,7 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
     this.container.set('SocketManager', this.socketManager);
     this.container.set('BodyGraphService', this.bodyGraphService);
     this.container.set('EntityManager', this.entityManager);
+    this.container.set('ILogicRegistry', this.logicRegistry);
   }
 
   /**
@@ -729,6 +747,62 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
           },
         },
       },
+      'clothing:slot_metadata': {
+        id: 'clothing:slot_metadata',
+        description: 'Metadata about clothing slots and their anatomy socket coverage',
+        dataSchema: {
+          type: 'object',
+          properties: {
+            slotMappings: {
+              type: 'object',
+              patternProperties: {
+                '^[a-zA-Z][a-zA-Z0-9_]*$': {
+                  type: 'object',
+                  properties: {
+                    coveredSockets: {
+                      type: 'array',
+                      items: { type: 'string' },
+                    },
+                    allowedLayers: {
+                      type: 'array',
+                      items: {
+                        type: 'string',
+                        enum: ['underwear', 'base', 'outer', 'accessories', 'armor'],
+                      },
+                    },
+                  },
+                  required: ['coveredSockets'],
+                  additionalProperties: false,
+                },
+              },
+            },
+          },
+          required: ['slotMappings'],
+        },
+      },
+      'clothing:equipment': {
+        id: 'clothing:equipment',
+        description: 'Equipment component for tracking worn clothing',
+        dataSchema: {
+          type: 'object',
+          properties: {
+            equipped: {
+              type: 'object',
+              patternProperties: {
+                '^[a-zA-Z][a-zA-Z0-9_]*$': {
+                  type: 'object',
+                  patternProperties: {
+                    '^(underwear|base|outer|accessories|armor)$': {
+                      type: 'string',
+                    },
+                  },
+                },
+              },
+            },
+          },
+          required: ['equipped'],
+        },
+      },
     });
 
     // Load anatomy entity definitions
@@ -1076,6 +1150,127 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
           },
         },
       },
+      'anatomy:human_male_torso': {
+        id: 'anatomy:human_male_torso',
+        description: 'A human male torso with male-specific anatomy',
+        components: {
+          'anatomy:part': {
+            subType: 'torso',
+          },
+          'anatomy:sockets': {
+            sockets: [
+              {
+                id: 'neck',
+                orientation: 'upper',
+                allowedTypes: ['head', 'neck'],
+                nameTpl: '{{type}}',
+              },
+              {
+                id: 'left_shoulder',
+                orientation: 'left',
+                allowedTypes: ['arm'],
+                nameTpl: '{{orientation}} {{type}}',
+              },
+              {
+                id: 'right_shoulder',
+                orientation: 'right',
+                allowedTypes: ['arm'],
+                nameTpl: '{{orientation}} {{type}}',
+              },
+              {
+                id: 'left_hip',
+                orientation: 'left',
+                allowedTypes: ['leg'],
+                nameTpl: '{{orientation}} {{type}}',
+              },
+              {
+                id: 'right_hip',
+                orientation: 'right',
+                allowedTypes: ['leg'],
+                nameTpl: '{{orientation}} {{type}}',
+              },
+              {
+                id: 'left_chest',
+                orientation: 'left',
+                allowedTypes: ['chest'],
+                nameTpl: '{{orientation}} {{type}}',
+              },
+              {
+                id: 'right_chest',
+                orientation: 'right',
+                allowedTypes: ['chest'],
+                nameTpl: '{{orientation}} {{type}}',
+              },
+              {
+                id: 'penis',
+                allowedTypes: ['penis'],
+                nameTpl: '{{type}}',
+              },
+              {
+                id: 'left_testicle',
+                orientation: 'left',
+                allowedTypes: ['testicle'],
+                nameTpl: '{{orientation}} {{type}}',
+              },
+              {
+                id: 'right_testicle',
+                orientation: 'right',
+                allowedTypes: ['testicle'],
+                nameTpl: '{{orientation}} {{type}}',
+              },
+              {
+                id: 'pubic_hair',
+                allowedTypes: ['pubic_hair'],
+                nameTpl: 'pubic hair',
+              },
+              {
+                id: 'asshole',
+                allowedTypes: ['asshole'],
+                nameTpl: '{{type}}',
+              },
+            ],
+          },
+          'core:name': {
+            text: 'torso',
+          },
+        },
+      },
+      'anatomy:human_vagina': {
+        id: 'anatomy:human_vagina',
+        description: 'A human vagina',
+        components: {
+          'anatomy:part': {
+            subType: 'vagina',
+          },
+        },
+      },
+      'anatomy:human_penis': {
+        id: 'anatomy:human_penis',
+        description: 'A human penis',
+        components: {
+          'anatomy:part': {
+            subType: 'penis',
+          },
+        },
+      },
+      'anatomy:human_testicle': {
+        id: 'anatomy:human_testicle',
+        description: 'A human testicle',
+        components: {
+          'anatomy:part': {
+            subType: 'testicle',
+          },
+        },
+      },
+      'anatomy:human_pubic_hair': {
+        id: 'anatomy:human_pubic_hair',
+        description: 'Human pubic hair',
+        components: {
+          'anatomy:part': {
+            subType: 'pubic_hair',
+          },
+        },
+      },
     });
 
     // Load slot libraries
@@ -1273,24 +1468,176 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
               components: ['anatomy:part'],
             },
           },
+          vagina: {
+            socket: 'vagina',
+            requirements: {
+              partType: 'vagina',
+              components: ['anatomy:part'],
+            },
+          },
+          pubic_hair: {
+            socket: 'pubic_hair',
+            requirements: {
+              partType: 'pubic_hair',
+              components: ['anatomy:part'],
+            },
+          },
+        },
+        clothingSlotMappings: {
+          back_accessory: {
+            anatomySockets: ['upper_back', 'lower_back'],
+            allowedLayers: ['accessory', 'armor'],
+          },
+          torso_lower: {
+            anatomySockets: ['left_hip', 'right_hip', 'pubic_hair', 'vagina'],
+            allowedLayers: ['underwear', 'base', 'outer'],
+          },
+          full_body: {
+            blueprintSlots: [
+              'head',
+              'left_arm',
+              'right_arm',
+              'left_leg',
+              'right_leg',
+              'left_breast',
+              'right_breast',
+            ],
+            allowedLayers: ['outer'],
+          },
+          torso_upper: {
+            anatomySockets: [
+              'left_breast',
+              'right_breast',
+              'left_chest',
+              'right_chest',
+              'chest_center',
+              'left_shoulder',
+              'right_shoulder',
+            ],
+            allowedLayers: ['underwear', 'base', 'outer', 'armor'],
+          },
+          legs: {
+            blueprintSlots: ['left_leg', 'right_leg'],
+            allowedLayers: ['base', 'outer'],
+          },
+          left_arm_clothing: {
+            blueprintSlots: ['left_arm'],
+            allowedLayers: ['base', 'outer'],
+          },
+          right_arm_clothing: {
+            blueprintSlots: ['right_arm'],
+            allowedLayers: ['base', 'outer'],
+          },
+          feet: {
+            blueprintSlots: ['left_foot', 'right_foot'],
+            allowedLayers: ['base', 'outer'],
+          },
+        },
+      },
+      'anatomy:human_male': {
+        id: 'anatomy:human_male',
+        root: 'anatomy:human_male_torso',
+        compose: [
+          {
+            part: 'anatomy:humanoid_core',
+            include: ['slots', 'clothingSlotMappings'],
+          },
+        ],
+        slots: {
+          penis: {
+            socket: 'penis',
+            requirements: {
+              partType: 'penis',
+              components: ['anatomy:part'],
+            },
+          },
+          left_testicle: {
+            socket: 'left_testicle',
+            requirements: {
+              partType: 'testicle',
+              components: ['anatomy:part'],
+            },
+          },
+          right_testicle: {
+            socket: 'right_testicle',
+            requirements: {
+              partType: 'testicle',
+              components: ['anatomy:part'],
+            },
+          },
+          pubic_hair: {
+            socket: 'pubic_hair',
+            requirements: {
+              partType: 'pubic_hair',
+              components: ['anatomy:part'],
+            },
+          },
+        },
+        clothingSlotMappings: {
+          back_accessory: {
+            anatomySockets: ['upper_back', 'lower_back'],
+            allowedLayers: ['accessory', 'armor'],
+          },
+          torso_lower: {
+            anatomySockets: [
+              'left_hip',
+              'right_hip',
+              'pubic_hair',
+              'penis',
+              'left_testicle',
+              'right_testicle',
+            ],
+            allowedLayers: ['underwear', 'base', 'outer'],
+          },
+          full_body: {
+            blueprintSlots: [
+              'head',
+              'left_arm',
+              'right_arm',
+              'left_leg',
+              'right_leg',
+            ],
+            allowedLayers: ['outer'],
+          },
+          torso_upper: {
+            anatomySockets: [
+              'left_chest',
+              'right_chest',
+              'chest_center',
+              'left_shoulder',
+              'right_shoulder',
+            ],
+            allowedLayers: ['underwear', 'base', 'outer', 'armor'],
+          },
+          legs: {
+            blueprintSlots: ['left_leg', 'right_leg'],
+            allowedLayers: ['base', 'outer'],
+          },
+          left_arm_clothing: {
+            blueprintSlots: ['left_arm'],
+            allowedLayers: ['base', 'outer'],
+          },
+          right_arm_clothing: {
+            blueprintSlots: ['right_arm'],
+            allowedLayers: ['base', 'outer'],
+          },
+          feet: {
+            blueprintSlots: ['left_foot', 'right_foot'],
+            allowedLayers: ['base', 'outer'],
+          },
         },
       },
     });
 
     // Load anatomy recipes
     this.loadRecipes({
-      'p_erotica:amaia_castillo_recipe': {
-        recipeId: 'p_erotica:amaia_castillo_recipe',
+      'anatomy:human_female_balanced': {
+        recipeId: 'anatomy:human_female_balanced',
         blueprintId: 'anatomy:human_female',
         slots: {
           torso: {
             partType: 'torso',
             preferId: 'anatomy:human_female_torso',
-            properties: {
-              'descriptors:build': {
-                build: 'shapely',
-              },
-            },
           },
           head: {
             partType: 'head',
@@ -1324,6 +1671,77 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
             matches: ['left_breast', 'right_breast'],
             partType: 'breast',
             preferId: 'anatomy:human_breast_g_cup',
+          },
+          {
+            matches: ['left_hand', 'right_hand'],
+            partType: 'hand',
+            preferId: 'anatomy:human_hand',
+          },
+          {
+            matches: ['left_foot', 'right_foot'],
+            partType: 'foot',
+            preferId: 'anatomy:human_foot',
+          },
+          {
+            matches: ['vagina'],
+            partType: 'vagina',
+            preferId: 'anatomy:human_vagina',
+          },
+          {
+            matches: ['pubic_hair'],
+            partType: 'pubic_hair',
+            preferId: 'anatomy:human_pubic_hair',
+          },
+        ],
+      },
+      'anatomy:human_male_balanced': {
+        recipeId: 'anatomy:human_male_balanced',
+        blueprintId: 'anatomy:human_male',
+        slots: {
+          torso: {
+            partType: 'torso',
+            preferId: 'anatomy:human_male_torso',
+          },
+          head: {
+            partType: 'head',
+            preferId: 'anatomy:humanoid_head',
+          },
+        },
+        patterns: [
+          {
+            matches: ['left_arm', 'right_arm'],
+            partType: 'arm',
+            preferId: 'anatomy:humanoid_arm',
+          },
+          {
+            matches: ['left_leg', 'right_leg'],
+            partType: 'leg',
+            preferId: 'anatomy:human_leg',
+          },
+          {
+            matches: ['left_hand', 'right_hand'],
+            partType: 'hand',
+            preferId: 'anatomy:human_hand',
+          },
+          {
+            matches: ['left_foot', 'right_foot'],
+            partType: 'foot',
+            preferId: 'anatomy:human_foot',
+          },
+          {
+            matches: ['penis'],
+            partType: 'penis',
+            preferId: 'anatomy:human_penis',
+          },
+          {
+            matches: ['left_testicle', 'right_testicle'],
+            partType: 'testicle',
+            preferId: 'anatomy:human_testicle',
+          },
+          {
+            matches: ['pubic_hair'],
+            partType: 'pubic_hair',
+            preferId: 'anatomy:human_pubic_hair',
           },
         ],
       },

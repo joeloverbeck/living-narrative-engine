@@ -16,7 +16,7 @@
 // -----------------------------------------------------------------------------
 
 import { createDefaultDeps } from './utils/createDefaultDeps.js';
-import { createDefaultServices } from './utils/createDefaultServices.js';
+import { createDefaultServicesWithConfig } from './utils/createDefaultServicesWithConfig.js';
 import { validateDependency } from '../utils/dependencyUtils.js';
 import { ensureValidLogger } from '../utils/loggerUtils.js';
 import { IEntityManager } from '../interfaces/IEntityManager.js';
@@ -70,6 +70,7 @@ class EntityManager extends IEntityManager {
   #componentMutationService;
   #definitionCache;
   #lifecycleManager;
+  #monitoringCoordinator;
 
   // Specialized managers
   #creationManager;
@@ -112,6 +113,7 @@ class EntityManager extends IEntityManager {
    * @param {object} [deps.componentMutationService] - ComponentMutationService instance
    * @param {object} [deps.entityLifecycleManager] - EntityLifecycleManager instance
    * @param {DefinitionCache} [deps.definitionCache] - DefinitionCache instance
+   * @param {object} [deps.monitoringCoordinator] - MonitoringCoordinator instance
    * @throws {Error} If any dependency is missing or malformed
    */
   constructor({
@@ -129,6 +131,7 @@ class EntityManager extends IEntityManager {
     componentMutationService,
     definitionCache,
     entityLifecycleManager,
+    monitoringCoordinator,
   } = {}) {
     super();
 
@@ -150,6 +153,7 @@ class EntityManager extends IEntityManager {
       componentMutationService,
       definitionCache,
       entityLifecycleManager,
+      monitoringCoordinator,
     });
 
     this.#initSpecializedManagers();
@@ -246,14 +250,16 @@ class EntityManager extends IEntityManager {
    * @param overrides.componentMutationService
    * @param overrides.definitionCache
    * @param overrides.entityLifecycleManager
+   * @param overrides.monitoringCoordinator
    */
   #initServices({
     entityRepository,
     componentMutationService,
     definitionCache,
     entityLifecycleManager,
+    monitoringCoordinator,
   }) {
-    const serviceDefaults = createDefaultServices({
+    const serviceDefaults = createDefaultServicesWithConfig({
       registry: this.#registry,
       validator: this.#validator,
       logger: this.#logger,
@@ -286,6 +292,10 @@ class EntityManager extends IEntityManager {
     this.#lifecycleManager = resolveOptionalDependency(
       entityLifecycleManager,
       serviceDefaults.entityLifecycleManager
+    );
+    this.#monitoringCoordinator = resolveOptionalDependency(
+      monitoringCoordinator,
+      serviceDefaults.monitoringCoordinator
     );
   }
 

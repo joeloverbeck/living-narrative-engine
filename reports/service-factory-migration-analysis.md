@@ -31,6 +31,7 @@ Replace the import and usage in `src/entities/entityManager.js` to complete the 
 **Last Modified**: Part of original architecture
 
 **Capabilities**:
+
 - ✅ Basic service instantiation (6 services)
 - ✅ Standard dependency injection pattern
 - ❌ No configuration awareness
@@ -39,9 +40,10 @@ Replace the import and usage in `src/entities/entityManager.js` to complete the 
 - ❌ No specialized factory variants
 
 **Services Created**:
+
 ```
 entityRepository: EntityRepositoryAdapter
-componentMutationService: ComponentMutationService  
+componentMutationService: ComponentMutationService
 errorTranslator: ErrorTranslator
 entityFactory: EntityFactory
 definitionCache: DefinitionCache
@@ -55,6 +57,7 @@ entityLifecycleManager: EntityLifecycleManager
 **Last Modified**: Recent refactoring effort
 
 **Capabilities**:
+
 - ✅ Configuration-aware service instantiation (7 services)
 - ✅ Advanced dependency injection with config integration
 - ✅ Monitoring system integration (`MonitoringCoordinator`)
@@ -66,21 +69,23 @@ entityLifecycleManager: EntityLifecycleManager
 - ✅ Development/production environment awareness
 
 **Services Created**:
+
 ```
 entityRepository: EntityRepositoryAdapter (with config)
 componentMutationService: ComponentMutationService (with config)
 errorTranslator: ErrorTranslator (with config)
-entityFactory: EntityFactory  
+entityFactory: EntityFactory
 definitionCache: DefinitionCache (with config)
 entityLifecycleManager: EntityLifecycleManager (with config)
 monitoringCoordinator: MonitoringCoordinator (NEW)
 ```
 
 **Factory Variants**:
+
 - `createDefaultServicesWithConfig()` - Standard configuration-aware factory
 - `createConfiguredServices()` - Factory with configuration overrides
 - `createPerformanceOptimizedServices()` - Performance-tuned variant
-- `createStrictValidationServices()` - Enhanced validation variant  
+- `createStrictValidationServices()` - Enhanced validation variant
 - `createTestOptimizedServices()` - Testing-optimized variant
 
 ### Configuration System Integration
@@ -89,20 +94,20 @@ The enhanced version integrates with the `EntityConfigProvider` system:
 
 ```javascript
 // Configuration paths supported:
-limits.MAX_ENTITIES
-limits.MAX_COMPONENT_SIZE
-cache.ENABLE_DEFINITION_CACHE
-cache.DEFINITION_CACHE_TTL
-cache.COMPONENT_CACHE_SIZE
-validation.STRICT_MODE
-validation.ENABLE_VALIDATION
-performance.ENABLE_MONITORING
-performance.SLOW_OPERATION_THRESHOLD
-performance.MEMORY_WARNING_THRESHOLD
-errorHandling.ENABLE_CIRCUIT_BREAKER
-errorHandling.CIRCUIT_BREAKER_THRESHOLD
-errorHandling.CIRCUIT_BREAKER_TIMEOUT
-monitoring.HEALTH_CHECK_INTERVAL
+limits.MAX_ENTITIES;
+limits.MAX_COMPONENT_SIZE;
+cache.ENABLE_DEFINITION_CACHE;
+cache.DEFINITION_CACHE_TTL;
+cache.COMPONENT_CACHE_SIZE;
+validation.STRICT_MODE;
+validation.ENABLE_VALIDATION;
+performance.ENABLE_MONITORING;
+performance.SLOW_OPERATION_THRESHOLD;
+performance.MEMORY_WARNING_THRESHOLD;
+errorHandling.ENABLE_CIRCUIT_BREAKER;
+errorHandling.CIRCUIT_BREAKER_THRESHOLD;
+errorHandling.CIRCUIT_BREAKER_TIMEOUT;
+monitoring.HEALTH_CHECK_INTERVAL;
 ```
 
 ---
@@ -112,6 +117,7 @@ monitoring.HEALTH_CHECK_INTERVAL
 ### Current Production Usage
 
 **EntityManager (Production)**:
+
 ```javascript
 // src/entities/entityManager.js:19
 import { createDefaultServices } from './utils/createDefaultServices.js';
@@ -131,12 +137,14 @@ const serviceDefaults = createDefaultServices({
 ### Test Usage Patterns
 
 **Unit Tests (Legacy)**:
+
 ```javascript
 // tests/unit/entities/utils/createDefaultServices.test.js
 // tests/unit/entities/entityManager.lifecycle.test.js
 ```
 
 **Integration Tests (Enhanced)**:
+
 ```javascript
 // tests/integration/entities/monitoring/servicesMonitoring.integration.test.js
 import { createDefaultServicesWithConfig } from '../../../../src/entities/utils/createDefaultServicesWithConfig.js';
@@ -145,6 +153,7 @@ import { createDefaultServicesWithConfig } from '../../../../src/entities/utils/
 ### Specification References
 
 The enhanced version is referenced in architectural specifications:
+
 - `specs/phase2-operations-module-integration-spec.md`
 - `specs/monitoring-operations-integration-spec.md`
 
@@ -155,12 +164,14 @@ The enhanced version is referenced in architectural specifications:
 ### Phase 1: Core Migration (Immediate - 1 hour)
 
 1. **Update EntityManager Import**:
+
    ```diff
    - import { createDefaultServices } from './utils/createDefaultServices.js';
    + import { createDefaultServicesWithConfig } from './utils/createDefaultServicesWithConfig.js';
    ```
 
 2. **Update EntityManager Service Creation**:
+
    ```diff
    - const serviceDefaults = createDefaultServices({
    + const serviceDefaults = createDefaultServicesWithConfig({
@@ -178,14 +189,16 @@ The enhanced version is referenced in architectural specifications:
 ### Phase 2: Configuration Integration (Next Sprint - 2-4 hours)
 
 1. **Initialize Global Configuration**:
+
    ```javascript
    // In application bootstrap/initialization
    import { initializeGlobalConfig } from './src/entities/utils/configUtils.js';
-   
+
    initializeGlobalConfig(logger, userConfig);
    ```
 
 2. **Update EntityManager Constructor**:
+
    ```javascript
    constructor({
      // ... existing parameters
@@ -209,12 +222,12 @@ The enhanced version is referenced in architectural specifications:
 
 ### Migration Risks
 
-| Risk | Probability | Impact | Mitigation |
-|------|-------------|---------|------------|
-| **Configuration Dependency** | Low | Medium | Enhanced version gracefully handles missing config |
-| **Additional Service Handling** | Low | Low | MonitoringCoordinator is optional and well-tested |
-| **Performance Regression** | Very Low | Low | Enhanced version includes performance optimizations |
-| **Test Failures** | Low | Low | Existing integration tests already use enhanced version |
+| Risk                            | Probability | Impact | Mitigation                                              |
+| ------------------------------- | ----------- | ------ | ------------------------------------------------------- |
+| **Configuration Dependency**    | Low         | Medium | Enhanced version gracefully handles missing config      |
+| **Additional Service Handling** | Low         | Low    | MonitoringCoordinator is optional and well-tested       |
+| **Performance Regression**      | Very Low    | Low    | Enhanced version includes performance optimizations     |
+| **Test Failures**               | Low         | Low    | Existing integration tests already use enhanced version |
 
 ### Risk Mitigation
 
@@ -247,7 +260,7 @@ checkInterval: config?.getValue('monitoring.HEALTH_CHECK_INTERVAL') ?? 30000,
 
 2. **✅ Priority 2**: Add MonitoringCoordinator handling to EntityManager
    - **File**: `src/entities/entityManager.js`
-   - **Effort**: 30 minutes  
+   - **Effort**: 30 minutes
    - **Risk**: Low
 
 3. **✅ Priority 3**: Run full test suite to verify compatibility
@@ -288,7 +301,7 @@ checkInterval: config?.getValue('monitoring.HEALTH_CHECK_INTERVAL') ?? 30000,
 ### Immediate Benefits (Post-Migration)
 
 - **Monitoring Integration**: Automatic performance and health monitoring
-- **Error Resilience**: Circuit breaker pattern for improved reliability  
+- **Error Resilience**: Circuit breaker pattern for improved reliability
 - **Flexibility**: Configuration-driven service behavior
 - **Debugging**: Enhanced error reporting with configurable detail levels
 
@@ -305,6 +318,7 @@ checkInterval: config?.getValue('monitoring.HEALTH_CHECK_INTERVAL') ?? 30000,
 ## Configuration Schema
 
 ### Monitoring Configuration
+
 ```yaml
 performance:
   ENABLE_MONITORING: true
@@ -317,6 +331,7 @@ monitoring:
 ```
 
 ### Error Handling Configuration
+
 ```yaml
 errorHandling:
   ENABLE_CIRCUIT_BREAKER: true
@@ -326,6 +341,7 @@ errorHandling:
 ```
 
 ### Cache Configuration
+
 ```yaml
 cache:
   ENABLE_DEFINITION_CACHE: true
@@ -335,6 +351,7 @@ cache:
 ```
 
 ### Limits Configuration
+
 ```yaml
 limits:
   MAX_ENTITIES: 10000
@@ -350,13 +367,14 @@ The migration to `createDefaultServicesWithConfig.js` represents a critical arch
 **Recommended Timeline**: Complete the core migration within this sprint to unblock future architecture enhancements and operational improvements.
 
 **Success Metrics**:
-- ✅ EntityManager successfully uses enhanced service factory  
+
+- ✅ EntityManager successfully uses enhanced service factory
 - ✅ All existing tests continue to pass
 - ✅ MonitoringCoordinator integration functional
 - ✅ Configuration system ready for feature enablement
 
 ---
 
-*Report Generated: 2025-01-19*  
-*Analysis Scope: Living Narrative Engine Service Factory Architecture*  
-*Recommendation: Immediate migration to configuration-aware architecture*
+_Report Generated: 2025-01-19_  
+_Analysis Scope: Living Narrative Engine Service Factory Architecture_  
+_Recommendation: Immediate migration to configuration-aware architecture_
