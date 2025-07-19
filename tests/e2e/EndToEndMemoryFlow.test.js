@@ -17,12 +17,8 @@ import {
   LLM_TURN_ACTION_RESPONSE_SCHEMA_ID,
 } from '../../src/turns/schemas/llmOutputSchemas.js';
 
-// New imports for builder adjustments
-import { AssemblerRegistry } from '../../src/prompting/assemblerRegistry.js';
-import * as ConditionEvaluator from '../../src/prompting/elementConditionEvaluator.js';
-import ThoughtsSectionAssembler, {
-  THOUGHTS_WRAPPER_KEY,
-} from '../../src/prompting/assembling/thoughtsSectionAssembler.js';
+// Import for current template-based prompt builder
+// No additional assembler imports needed
 
 const mockLogger = () => ({
   info: jest.fn(),
@@ -114,21 +110,11 @@ describe('End-to-End Short-Term Memory Flow', () => {
     const llmConfigService = {
       getConfig: jest.fn().mockResolvedValue(testConfig),
     };
-    const placeholderResolver = new PlaceholderResolver(logger);
 
-    // Build and register only the thoughts_wrapper assembler
-    const assemblerRegistry = new AssemblerRegistry();
-    assemblerRegistry.register(
-      THOUGHTS_WRAPPER_KEY,
-      new ThoughtsSectionAssembler({ logger })
-    );
-
+    // Use current template-based PromptBuilder (no assemblers needed)
     promptBuilder = new PromptBuilder({
       logger,
       llmConfigService,
-      placeholderResolver,
-      assemblerRegistry,
-      conditionEvaluator: ConditionEvaluator,
     });
 
     schemaValidator = new AjvSchemaValidator({
