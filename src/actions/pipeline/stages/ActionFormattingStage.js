@@ -86,7 +86,6 @@ export class ActionFormattingStage extends PipelineStage {
     for (const { actionDef, targetContexts } of actionsWithTargets) {
       for (const targetContext of targetContexts) {
         try {
-
           const formatResult = this.#commandFormatter.format(
             actionDef,
             targetContext,

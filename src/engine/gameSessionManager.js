@@ -146,13 +146,16 @@ class GameSessionManager {
 
     // Wait for anatomy generation to complete before starting turns
     if (this.#anatomyInitializationService) {
-      const pendingCount = this.#anatomyInitializationService.getPendingGenerationCount();
+      const pendingCount =
+        this.#anatomyInitializationService.getPendingGenerationCount();
       if (pendingCount > 0) {
         this.#logger.info(
           `GameSessionManager._finalizeGameStart: Waiting for ${pendingCount} anatomy generations to complete before starting turns...`
         );
         try {
-          await this.#anatomyInitializationService.waitForAllGenerationsToComplete(15000); // 15 second timeout
+          await this.#anatomyInitializationService.waitForAllGenerationsToComplete(
+            15000
+          ); // 15 second timeout
           this.#logger.info(
             'GameSessionManager._finalizeGameStart: Anatomy generation completed, starting turns.'
           );

@@ -251,7 +251,7 @@ export class EntityRepositoryAdapter {
    * @returns {number} Number of entities
    */
   size() {
-    return this.#mapManager.size;
+    return this.#mapManager.items.size;
   }
 
   /**

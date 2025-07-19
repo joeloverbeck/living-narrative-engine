@@ -4,6 +4,9 @@ import { BaseService } from '../utils/serviceBase.js';
 import { HasPartWithComponentValueOperator } from './operators/hasPartWithComponentValueOperator.js';
 import { HasPartOfTypeOperator } from './operators/hasPartOfTypeOperator.js';
 import { HasPartOfTypeWithComponentValueOperator } from './operators/hasPartOfTypeWithComponentValueOperator.js';
+import { HasClothingInSlotOperator } from './operators/hasClothingInSlotOperator.js';
+import { HasClothingInSlotLayerOperator } from './operators/hasClothingInSlotLayerOperator.js';
+import { IsSocketCoveredOperator } from './operators/isSocketCoveredOperator.js';
 
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('./jsonLogicEvaluationService.js').default} JsonLogicEvaluationService */
@@ -86,6 +89,21 @@ export class JsonLogicCustomOperators extends BaseService {
         logger: this.#logger,
       });
 
+    const hasClothingInSlotOp = new HasClothingInSlotOperator({
+      entityManager: this.#entityManager,
+      logger: this.#logger,
+    });
+
+    const hasClothingInSlotLayerOp = new HasClothingInSlotLayerOperator({
+      entityManager: this.#entityManager,
+      logger: this.#logger,
+    });
+
+    const isSocketCoveredOp = new IsSocketCoveredOperator({
+      entityManager: this.#entityManager,
+      logger: this.#logger,
+    });
+
     // Register hasPartWithComponentValue operator
     jsonLogicEvaluationService.addOperation(
       'hasPartWithComponentValue',
@@ -122,6 +140,36 @@ export class JsonLogicCustomOperators extends BaseService {
           [entityPath, partType, componentId, propertyPath, expectedValue],
           this
         );
+      }
+    );
+
+    // Register hasClothingInSlot operator
+    jsonLogicEvaluationService.addOperation(
+      'hasClothingInSlot',
+      function (entityPath, slotName) {
+        // 'this' is the evaluation context
+        return hasClothingInSlotOp.evaluate([entityPath, slotName], this);
+      }
+    );
+
+    // Register hasClothingInSlotLayer operator
+    jsonLogicEvaluationService.addOperation(
+      'hasClothingInSlotLayer',
+      function (entityPath, slotName, layerName) {
+        // 'this' is the evaluation context
+        return hasClothingInSlotLayerOp.evaluate(
+          [entityPath, slotName, layerName],
+          this
+        );
+      }
+    );
+
+    // Register isSocketCovered operator
+    jsonLogicEvaluationService.addOperation(
+      'isSocketCovered',
+      function (entityPath, socketId) {
+        // 'this' is the evaluation context
+        return isSocketCoveredOp.evaluate([entityPath, socketId], this);
       }
     );
 

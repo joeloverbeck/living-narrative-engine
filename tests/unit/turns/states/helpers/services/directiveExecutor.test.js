@@ -6,7 +6,7 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { DirectiveExecutor } from '../../../../../../src/turns/states/helpers/services/directiveExecutor.js';
 
-// Mock the BaseService to avoid its dependencies  
+// Mock the BaseService to avoid its dependencies
 jest.mock('../../../../../../src/utils/serviceBase.js', () => ({
   BaseService: class MockBaseService {
     _init(serviceName, logger, deps) {
@@ -14,7 +14,7 @@ jest.mock('../../../../../../src/utils/serviceBase.js', () => ({
       if (!logger) {
         throw new Error('Logger is required');
       }
-      
+
       // Validate dependencies if provided
       if (deps) {
         Object.entries(deps).forEach(([key, spec]) => {
@@ -22,7 +22,7 @@ jest.mock('../../../../../../src/utils/serviceBase.js', () => ({
             throw new Error(`${key} is required`);
           }
           if (spec.requiredMethods) {
-            spec.requiredMethods.forEach(method => {
+            spec.requiredMethods.forEach((method) => {
               if (typeof spec.value[method] !== 'function') {
                 throw new Error(`${key} must have method ${method}`);
               }
@@ -30,10 +30,10 @@ jest.mock('../../../../../../src/utils/serviceBase.js', () => ({
           }
         });
       }
-      
+
       return logger;
     }
-  }
+  },
 }));
 
 describe('DirectiveExecutor', () => {
@@ -122,7 +122,7 @@ describe('DirectiveExecutor', () => {
 
     it('should validate directiveStrategyResolver has resolveStrategy method', () => {
       const invalidResolver = {};
-      
+
       expect(() => {
         new DirectiveExecutor({
           directiveStrategyResolver: invalidResolver,
@@ -137,7 +137,7 @@ describe('DirectiveExecutor', () => {
         handleProcessingError: jest.fn(),
         // missing logError method
       };
-      
+
       expect(() => {
         new DirectiveExecutor({
           directiveStrategyResolver: mockDirectiveStrategyResolver,
@@ -163,17 +163,23 @@ describe('DirectiveExecutor', () => {
         stateName,
       });
 
-      expect(mockDirectiveStrategyResolver.resolveStrategy).toHaveBeenCalledWith(directiveType);
+      expect(
+        mockDirectiveStrategyResolver.resolveStrategy
+      ).toHaveBeenCalledWith(directiveType);
       expect(mockStrategy.execute).toHaveBeenCalledWith(
         mockTurnContext,
         directiveType,
         mockCommandResult
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining(`Resolved strategy ${mockStrategy.constructor.name}`)
+        expect.stringContaining(
+          `Resolved strategy ${mockStrategy.constructor.name}`
+        )
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining(`Directive strategy ${mockStrategy.constructor.name} executed`)
+        expect.stringContaining(
+          `Directive strategy ${mockStrategy.constructor.name} executed`
+        )
       );
       expect(result).toEqual({ executed: true, stateChanged: false });
     });
@@ -188,7 +194,9 @@ describe('DirectiveExecutor', () => {
         stateName,
       });
 
-      expect(mockUnifiedErrorHandler.handleProcessingError).toHaveBeenCalledWith(
+      expect(
+        mockUnifiedErrorHandler.handleProcessingError
+      ).toHaveBeenCalledWith(
         expect.any(Error),
         expect.objectContaining({
           actorId: 'test-actor-id',
@@ -214,7 +222,9 @@ describe('DirectiveExecutor', () => {
         stateName,
       });
 
-      expect(mockUnifiedErrorHandler.handleProcessingError).toHaveBeenCalledWith(
+      expect(
+        mockUnifiedErrorHandler.handleProcessingError
+      ).toHaveBeenCalledWith(
         executionError,
         expect.objectContaining({
           actorId: 'test-actor-id',
@@ -277,10 +287,14 @@ describe('DirectiveExecutor', () => {
       });
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining(`Actor ${customActor.id} - Resolved strategy ${mockStrategy.constructor.name} for directive ${customDirective}`)
+        expect.stringContaining(
+          `Actor ${customActor.id} - Resolved strategy ${mockStrategy.constructor.name} for directive ${customDirective}`
+        )
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining(`Actor ${customActor.id} - Directive strategy ${mockStrategy.constructor.name} executed`)
+        expect.stringContaining(
+          `Actor ${customActor.id} - Directive strategy ${mockStrategy.constructor.name} executed`
+        )
       );
     });
   });
@@ -294,34 +308,33 @@ describe('DirectiveExecutor', () => {
     it('should return false for null directive', () => {
       const result = directiveExecutor.validateDirective(null);
       expect(result).toBe(false);
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        'Invalid directive type',
-        { directiveType: null }
-      );
+      expect(mockLogger.error).toHaveBeenCalledWith('Invalid directive type', {
+        directiveType: null,
+      });
     });
 
     it('should return false for undefined directive', () => {
       const result = directiveExecutor.validateDirective(undefined);
       expect(result).toBe(false);
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        'Invalid directive type',
-        { directiveType: undefined }
-      );
+      expect(mockLogger.error).toHaveBeenCalledWith('Invalid directive type', {
+        directiveType: undefined,
+      });
     });
 
     it('should return false for non-string directive', () => {
       const result = directiveExecutor.validateDirective(123);
       expect(result).toBe(false);
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        'Invalid directive type',
-        { directiveType: 123 }
-      );
+      expect(mockLogger.error).toHaveBeenCalledWith('Invalid directive type', {
+        directiveType: 123,
+      });
     });
 
     it('should return false for empty string directive', () => {
       const result = directiveExecutor.validateDirective('');
       expect(result).toBe(false);
-      expect(mockLogger.error).toHaveBeenCalledWith('Invalid directive type', { directiveType: '' });
+      expect(mockLogger.error).toHaveBeenCalledWith('Invalid directive type', {
+        directiveType: '',
+      });
     });
 
     it('should return false for whitespace-only directive', () => {
@@ -331,7 +344,9 @@ describe('DirectiveExecutor', () => {
     });
 
     it('should return true for directive with leading/trailing whitespace', () => {
-      const result = directiveExecutor.validateDirective('  END_TURN_SUCCESS  ');
+      const result = directiveExecutor.validateDirective(
+        '  END_TURN_SUCCESS  '
+      );
       expect(result).toBe(true); // trim() removes whitespace, leaving valid content
       expect(mockLogger.error).not.toHaveBeenCalled();
     });
@@ -339,12 +354,16 @@ describe('DirectiveExecutor', () => {
 
   describe('hasStrategy', () => {
     it('should return true when strategy exists', () => {
-      mockDirectiveStrategyResolver.resolveStrategy.mockReturnValue(mockStrategy);
+      mockDirectiveStrategyResolver.resolveStrategy.mockReturnValue(
+        mockStrategy
+      );
 
       const result = directiveExecutor.hasStrategy('END_TURN_SUCCESS');
 
       expect(result).toBe(true);
-      expect(mockDirectiveStrategyResolver.resolveStrategy).toHaveBeenCalledWith('END_TURN_SUCCESS');
+      expect(
+        mockDirectiveStrategyResolver.resolveStrategy
+      ).toHaveBeenCalledWith('END_TURN_SUCCESS');
     });
 
     it('should return false when strategy does not exist', () => {
@@ -353,7 +372,9 @@ describe('DirectiveExecutor', () => {
       const result = directiveExecutor.hasStrategy('UNKNOWN_DIRECTIVE');
 
       expect(result).toBe(false);
-      expect(mockDirectiveStrategyResolver.resolveStrategy).toHaveBeenCalledWith('UNKNOWN_DIRECTIVE');
+      expect(
+        mockDirectiveStrategyResolver.resolveStrategy
+      ).toHaveBeenCalledWith('UNKNOWN_DIRECTIVE');
     });
 
     it('should return false when strategy resolution throws error', () => {
@@ -384,7 +405,7 @@ describe('DirectiveExecutor', () => {
     it('should handle complete workflow with validation and execution', async () => {
       const directiveType = 'END_TURN_SUCCESS';
       const commandResult = { success: true };
-      
+
       // Validate directive first
       const isValid = directiveExecutor.validateDirective(directiveType);
       expect(isValid).toBe(true);
@@ -408,7 +429,7 @@ describe('DirectiveExecutor', () => {
     it('should handle workflow with invalid directive', async () => {
       const directiveType = '';
       const commandResult = { success: true };
-      
+
       // Validate directive first
       const isValid = directiveExecutor.validateDirective(directiveType);
       expect(isValid).toBe(false);

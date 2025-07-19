@@ -561,4 +561,138 @@ describe('ActionButtonsRenderer', () => {
       }
     });
   });
+
+  describe('Grouping Functionality', () => {
+    it('should group actions by namespace when thresholds are met', async () => {
+      // Need to ensure create returns real elements for these tests
+      mockDomElementFactoryInstance.create.mockReset();
+      jest.spyOn(docContext, 'create').mockImplementation((tagName) => {
+        return document.createElement(tagName);
+      });
+
+      const renderer = new ActionButtonsRenderer({
+        logger: mockLogger,
+        documentContext: docContext,
+        validatedEventDispatcher: mockVed,
+        domElementFactory: mockDomElementFactoryInstance,
+        actionButtonsContainerSelector: ACTION_BUTTONS_CONTAINER_SELECTOR,
+      });
+
+      // Create 12 actions across 3 mods to test grouping
+      const actions = [
+        // Core mod actions (5 actions)
+        createTestComposite(1, 'core:wait', 'Wait', 'Pass time'),
+        createTestComposite(2, 'core:go_n', 'Go North', 'Move north'),
+        createTestComposite(3, 'core:go_s', 'Go South', 'Move south'),
+        createTestComposite(4, 'core:examine', 'Examine', 'Look closely'),
+        createTestComposite(5, 'core:talk', 'Talk', 'Start conversation'),
+        // Intimacy mod actions (4 actions)
+        createTestComposite(6, 'intimacy:hug', 'Hug', 'Give a hug'),
+        createTestComposite(7, 'intimacy:kiss', 'Kiss', 'Give a kiss'),
+        createTestComposite(8, 'intimacy:hold_hand', 'Hold hand', 'Hold hands'),
+        createTestComposite(9, 'intimacy:cuddle', 'Cuddle', 'Cuddle together'),
+        // Sex mod actions (3 actions)
+        createTestComposite(10, 'sex:flirt', 'Flirt', 'Flirt playfully'),
+        createTestComposite(11, 'sex:seduce', 'Seduce', 'Attempt seduction'),
+        createTestComposite(12, 'sex:tease', 'Tease', 'Tease playfully'),
+      ];
+
+      const eventObject = {
+        type: UPDATE_ACTIONS_EVENT_TYPE,
+        payload: { actorId: 'test-actor', actions },
+      };
+
+      // Dispatch the event
+      const capturedHandler = mockVed.subscribe.mock.calls.find(
+        (call) => call[0] === UPDATE_ACTIONS_EVENT_TYPE
+      )[1];
+      await capturedHandler(eventObject);
+
+      // Check that groups were created
+      const container = actionButtonsContainerElement;
+      const sectionHeaders = container.querySelectorAll(
+        '.action-section-header'
+      );
+      const actionGroups = container.querySelectorAll('.action-group');
+
+      // Should have 3 section headers and 3 groups
+      expect(sectionHeaders.length).toBe(3);
+      expect(actionGroups.length).toBe(3);
+
+      // Check header text
+      expect(sectionHeaders[0].textContent).toBe('CORE');
+      expect(sectionHeaders[1].textContent).toBe('INTIMACY');
+      expect(sectionHeaders[2].textContent).toBe('SEX');
+
+      // Check that each group has the right number of buttons
+      const coreButtons = actionGroups[0].querySelectorAll(
+        'button.action-button'
+      );
+      const intimacyButtons = actionGroups[1].querySelectorAll(
+        'button.action-button'
+      );
+      const sexButtons = actionGroups[2].querySelectorAll(
+        'button.action-button'
+      );
+
+      expect(coreButtons.length).toBe(5);
+      expect(intimacyButtons.length).toBe(4);
+      expect(sexButtons.length).toBe(3);
+
+      // Verify total button count
+      const allButtons = container.querySelectorAll('button.action-button');
+      expect(allButtons.length).toBe(12);
+    });
+
+    it('should not group actions when below thresholds', async () => {
+      // Need to ensure create returns real elements for these tests
+      mockDomElementFactoryInstance.create.mockReset();
+      jest.spyOn(docContext, 'create').mockImplementation((tagName) => {
+        return document.createElement(tagName);
+      });
+
+      const renderer = new ActionButtonsRenderer({
+        logger: mockLogger,
+        documentContext: docContext,
+        validatedEventDispatcher: mockVed,
+        domElementFactory: mockDomElementFactoryInstance,
+        actionButtonsContainerSelector: ACTION_BUTTONS_CONTAINER_SELECTOR,
+      });
+
+      // Create only 5 actions from 1 mod (below grouping thresholds)
+      const actions = [
+        createTestComposite(1, 'core:wait', 'Wait', 'Pass time'),
+        createTestComposite(2, 'core:go_n', 'Go North', 'Move north'),
+        createTestComposite(3, 'core:go_s', 'Go South', 'Move south'),
+        createTestComposite(4, 'core:examine', 'Examine', 'Look closely'),
+        createTestComposite(5, 'core:talk', 'Talk', 'Start conversation'),
+      ];
+
+      const eventObject = {
+        type: UPDATE_ACTIONS_EVENT_TYPE,
+        payload: { actorId: 'test-actor', actions },
+      };
+
+      // Dispatch the event
+      const capturedHandler = mockVed.subscribe.mock.calls.find(
+        (call) => call[0] === UPDATE_ACTIONS_EVENT_TYPE
+      )[1];
+      await capturedHandler(eventObject);
+
+      // Check that no groups were created
+      const container = actionButtonsContainerElement;
+      const sectionHeaders = container.querySelectorAll(
+        '.action-section-header'
+      );
+      const actionGroups = container.querySelectorAll('.action-group');
+
+      // Should have no section headers or groups
+      expect(sectionHeaders.length).toBe(0);
+      expect(actionGroups.length).toBe(0);
+
+      // Should have buttons directly in container
+      const allButtons = container.querySelectorAll('button.action-button');
+      expect(allButtons.length).toBe(5);
+    });
+  });
 });

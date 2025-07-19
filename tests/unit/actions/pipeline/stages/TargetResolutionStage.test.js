@@ -76,7 +76,9 @@ describe('TargetResolutionStage', () => {
           })
         );
         expect(mockLogger.warn).toHaveBeenCalledWith(
-          expect.stringContaining('TargetResolutionStage received invalid candidateActions'),
+          expect.stringContaining(
+            'TargetResolutionStage received invalid candidateActions'
+          ),
           expect.any(Object)
         );
       });
@@ -98,7 +100,9 @@ describe('TargetResolutionStage', () => {
           })
         );
         expect(mockLogger.warn).toHaveBeenCalledWith(
-          expect.stringContaining('TargetResolutionStage received invalid candidateActions'),
+          expect.stringContaining(
+            'TargetResolutionStage received invalid candidateActions'
+          ),
           expect.any(Object)
         );
       });
@@ -120,7 +124,9 @@ describe('TargetResolutionStage', () => {
           })
         );
         expect(mockLogger.warn).toHaveBeenCalledWith(
-          expect.stringContaining('TargetResolutionStage received invalid candidateActions'),
+          expect.stringContaining(
+            'TargetResolutionStage received invalid candidateActions'
+          ),
           expect.any(Object)
         );
       });
@@ -163,13 +169,15 @@ describe('TargetResolutionStage', () => {
 
         const result = await stage.execute(context);
 
-        expect(mockTargetResolutionService.resolveTargets).not.toHaveBeenCalled();
+        expect(
+          mockTargetResolutionService.resolveTargets
+        ).not.toHaveBeenCalled();
         expect(result.data.actionsWithTargets).toHaveLength(1);
-        
+
         const actionWithTargets = result.data.actionsWithTargets[0];
         expect(actionWithTargets.actionDef).toBe(noneAction);
         expect(actionWithTargets.targetContexts).toHaveLength(1);
-        
+
         const targetContext = actionWithTargets.targetContexts[0];
         expect(targetContext).toBeInstanceOf(ActionTargetContext);
         expect(targetContext.type).toBe('none');
@@ -194,8 +202,8 @@ describe('TargetResolutionStage', () => {
         const result = await stage.execute(context);
 
         expect(result.data.actionsWithTargets).toHaveLength(2);
-        
-        result.data.actionsWithTargets.forEach(actionWithTargets => {
+
+        result.data.actionsWithTargets.forEach((actionWithTargets) => {
           expect(actionWithTargets.targetContexts).toHaveLength(1);
           const targetContext = actionWithTargets.targetContexts[0];
           expect(targetContext).toBeInstanceOf(ActionTargetContext);
@@ -215,7 +223,9 @@ describe('TargetResolutionStage', () => {
           trace: mockTrace,
         };
 
-        const expectedTargets = [ActionTargetContext.forEntity('target-entity')];
+        const expectedTargets = [
+          ActionTargetContext.forEntity('target-entity'),
+        ];
         mockTargetResolutionService.resolveTargets.mockReturnValue({
           targets: expectedTargets,
           error: undefined,
@@ -278,7 +288,9 @@ describe('TargetResolutionStage', () => {
         });
 
         const expectedErrorContext = { error: 'context' };
-        mockErrorContextBuilder.buildErrorContext.mockReturnValue(expectedErrorContext);
+        mockErrorContextBuilder.buildErrorContext.mockReturnValue(
+          expectedErrorContext
+        );
 
         const result = await stage.execute(context);
 
@@ -319,7 +331,9 @@ describe('TargetResolutionStage', () => {
         });
 
         const expectedErrorContext = { error: 'context' };
-        mockErrorContextBuilder.buildErrorContext.mockReturnValue(expectedErrorContext);
+        mockErrorContextBuilder.buildErrorContext.mockReturnValue(
+          expectedErrorContext
+        );
 
         const result = await stage.execute(context);
 
@@ -357,19 +371,27 @@ describe('TargetResolutionStage', () => {
         const result = await stage.execute(context);
 
         expect(result.data.actionsWithTargets).toHaveLength(2);
-        
+
         // Check wait action (scope: none)
-        const waitResult = result.data.actionsWithTargets.find(a => a.actionDef.id === 'core:wait');
+        const waitResult = result.data.actionsWithTargets.find(
+          (a) => a.actionDef.id === 'core:wait'
+        );
         expect(waitResult.targetContexts).toHaveLength(1);
-        expect(waitResult.targetContexts[0]).toBeInstanceOf(ActionTargetContext);
+        expect(waitResult.targetContexts[0]).toBeInstanceOf(
+          ActionTargetContext
+        );
         expect(waitResult.targetContexts[0].type).toBe('none');
-        
+
         // Check go action (scope: entity)
-        const goResult = result.data.actionsWithTargets.find(a => a.actionDef.id === 'core:go');
+        const goResult = result.data.actionsWithTargets.find(
+          (a) => a.actionDef.id === 'core:go'
+        );
         expect(goResult.targetContexts).toBe(entityTargets);
 
         // Verify service only called for non-none actions
-        expect(mockTargetResolutionService.resolveTargets).toHaveBeenCalledTimes(1);
+        expect(
+          mockTargetResolutionService.resolveTargets
+        ).toHaveBeenCalledTimes(1);
         expect(mockTargetResolutionService.resolveTargets).toHaveBeenCalledWith(
           'entity',
           mockActor,

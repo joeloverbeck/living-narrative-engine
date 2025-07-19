@@ -88,7 +88,7 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
     showCounts: false,
     minActionsForGrouping: 6,
     minNamespacesForGrouping: 2,
-    namespaceOrder: ['core', 'intimacy', 'sex', 'anatomy', 'clothing']
+    namespaceOrder: ['core', 'intimacy', 'sex', 'anatomy', 'clothing'],
   };
 
   /** @type {Map<string, ActionComposite[]>} Grouped actions by namespace */
@@ -303,42 +303,113 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
   }
 
   /**
-   * Groups actions by namespace and renders with section headers
+   * Override renderList to implement grouping functionality
    *
-   * @protected
    * @override
+   * @async
+   * @returns {Promise<void>}
    */
-  _renderList(actionsData) {
-    if (!this.#shouldUseGrouping(actionsData)) {
-      return super._renderList(actionsData);
+  async renderList() {
+    this.logger.debug(
+      `${this._logPrefix} renderList() called with grouping support.`
+    );
+
+    if (!this.elements.listContainerElement) {
+      this.logger.error(
+        `${this._logPrefix} Cannot render list: 'listContainerElement' is not available.`
+      );
+      return;
     }
-    
-    this.#groupedActions = this.#groupActionsByNamespace(actionsData);
-    return this.#renderGroupedActions();
+
+    let itemsData = null;
+    try {
+      // Get the items data
+      itemsData = await this._getListItemsData();
+    } catch (error) {
+      this.logger.error(`${this._logPrefix} Error fetching list data:`, error);
+      const container = this.elements.listContainerElement;
+      while (container.firstChild) {
+        container.removeChild(container.firstChild);
+      }
+      const errorEl = this.documentContext.create('div');
+      errorEl.className = 'error-message';
+      errorEl.textContent = 'Error loading action data.';
+      container.appendChild(errorEl);
+      return;
+    }
+
+    // Clear the container
+    const container = this.elements.listContainerElement;
+    while (container.firstChild) {
+      container.removeChild(container.firstChild);
+    }
+
+    // Handle empty or invalid data
+    if (!itemsData || !Array.isArray(itemsData) || itemsData.length === 0) {
+      const emptyMsg = this._getEmptyListMessage();
+      if (typeof emptyMsg === 'string') {
+        const msgEl = this.documentContext.create('div');
+        msgEl.className = 'empty-list-message';
+        msgEl.textContent = emptyMsg;
+        container.appendChild(msgEl);
+      } else if (emptyMsg instanceof HTMLElement) {
+        container.appendChild(emptyMsg);
+      }
+      this._onListRendered(null, container);
+      return;
+    }
+
+    // Check if we should use grouping
+    if (!this.#shouldUseGrouping(itemsData)) {
+      // Use standard rendering without grouping
+      itemsData.forEach((item) => {
+        const element = this._renderListItem(item);
+        if (element) {
+          container.appendChild(element);
+        }
+      });
+    } else {
+      // Use grouped rendering
+      this.#groupedActions = this.#groupActionsByNamespace(itemsData);
+      const fragment = this.#renderGroupedActions();
+      container.appendChild(fragment);
+    }
+
+    // Call the post-render hook
+    this._onListRendered(itemsData, container);
   }
 
   /**
    * Determines if grouping should be applied based on action count and diversity
    *
    * @private
-   * @param {ActionComposite[]} actions 
+   * @param {ActionComposite[]} actions
    * @returns {boolean}
    */
   #shouldUseGrouping(actions) {
-    const namespaces = new Set(actions.map(action => this.#extractNamespace(action.actionId)));
-    return actions.length >= this.#groupingConfig.minActionsForGrouping &&
-           namespaces.size >= this.#groupingConfig.minNamespacesForGrouping &&
-           this.#groupingConfig.enabled;
+    const namespaces = new Set(
+      actions
+        .filter((action) => action && action.actionId)
+        .map((action) => this.#extractNamespace(action.actionId))
+    );
+    return (
+      actions.length >= this.#groupingConfig.minActionsForGrouping &&
+      namespaces.size >= this.#groupingConfig.minNamespacesForGrouping &&
+      this.#groupingConfig.enabled
+    );
   }
 
   /**
    * Extracts namespace from action ID (e.g., "core:wait" → "core")
    *
    * @private
-   * @param {string} actionId 
+   * @param {string} actionId
    * @returns {string}
    */
   #extractNamespace(actionId) {
+    if (!actionId || typeof actionId !== 'string') {
+      return 'unknown';
+    }
     const colonIndex = actionId.indexOf(':');
     return colonIndex !== -1 ? actionId.substring(0, colonIndex) : 'unknown';
   }
@@ -347,29 +418,32 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
    * Groups actions by namespace with ordering priority
    *
    * @private
-   * @param {ActionComposite[]} actions 
+   * @param {ActionComposite[]} actions
    * @returns {Map<string, ActionComposite[]>}
    */
   #groupActionsByNamespace(actions) {
     const grouped = new Map();
-    
+
     // Group actions
     for (const action of actions) {
-      const namespace = this.#extractNamespace(action.actionId);
+      // Include all actions, even null ones, so _renderListItem can handle validation
+      const namespace = this.#extractNamespace(action?.actionId);
       if (!grouped.has(namespace)) {
         grouped.set(namespace, []);
       }
       grouped.get(namespace).push(action);
     }
-    
+
     // Sort namespaces by priority order
     const sortedGroups = new Map();
-    const orderedNamespaces = this.#getSortedNamespaces(Array.from(grouped.keys()));
-    
+    const orderedNamespaces = this.#getSortedNamespaces(
+      Array.from(grouped.keys())
+    );
+
     for (const namespace of orderedNamespaces) {
       sortedGroups.set(namespace, grouped.get(namespace));
     }
-    
+
     return sortedGroups;
   }
 
@@ -377,25 +451,25 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
    * Sorts namespaces according to priority configuration
    *
    * @private
-   * @param {string[]} namespaces 
+   * @param {string[]} namespaces
    * @returns {string[]}
    */
   #getSortedNamespaces(namespaces) {
     const { namespaceOrder } = this.#groupingConfig;
-    
+
     return namespaces.sort((a, b) => {
       const aIndex = namespaceOrder.indexOf(a);
       const bIndex = namespaceOrder.indexOf(b);
-      
+
       // If both are in priority list, sort by priority order
       if (aIndex !== -1 && bIndex !== -1) {
         return aIndex - bIndex;
       }
-      
+
       // If only one is in priority list, prioritize it
       if (aIndex !== -1) return -1;
       if (bIndex !== -1) return 1;
-      
+
       // If neither is in priority list, sort alphabetically
       return a.localeCompare(b);
     });
@@ -408,16 +482,19 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
    * @returns {DocumentFragment}
    */
   #renderGroupedActions() {
-    const fragment = this.documentContext.createDocumentFragment();
-    
+    const fragment = this.documentContext.document.createDocumentFragment();
+
     for (const [namespace, actions] of this.#groupedActions) {
       // Create section header
-      const sectionHeader = this.#createSectionHeader(namespace, actions.length);
+      const sectionHeader = this.#createSectionHeader(
+        namespace,
+        actions.length
+      );
       fragment.appendChild(sectionHeader);
-      
+
       // Create action group container
       const groupContainer = this.#createGroupContainer(namespace);
-      
+
       // Render actions in this group
       for (const action of actions) {
         const button = this._renderListItem(action);
@@ -425,10 +502,10 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
           groupContainer.appendChild(button);
         }
       }
-      
+
       fragment.appendChild(groupContainer);
     }
-    
+
     return fragment;
   }
 
@@ -436,21 +513,21 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
    * Creates a section header element
    *
    * @private
-   * @param {string} namespace 
-   * @param {number} actionCount 
+   * @param {string} namespace
+   * @param {number} actionCount
    * @returns {HTMLElement}
    */
   #createSectionHeader(namespace, actionCount) {
-    const header = this.documentContext.createElement('div');
+    const header = this.documentContext.create('div');
     header.className = 'action-section-header';
     header.setAttribute('role', 'heading');
     header.setAttribute('aria-level', '3');
-    
+
     const displayName = this.#formatNamespaceDisplayName(namespace);
-    header.textContent = this.#groupingConfig.showCounts 
+    header.textContent = this.#groupingConfig.showCounts
       ? `${displayName} (${actionCount})`
       : displayName;
-    
+
     return header;
   }
 
@@ -458,16 +535,19 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
    * Creates a container for grouped actions
    *
    * @private
-   * @param {string} namespace 
+   * @param {string} namespace
    * @returns {HTMLElement}
    */
   #createGroupContainer(namespace) {
-    const container = this.documentContext.createElement('div');
+    const container = this.documentContext.create('div');
     container.className = 'action-group';
     container.setAttribute('data-namespace', namespace);
     container.setAttribute('role', 'group');
-    container.setAttribute('aria-label', `${this.#formatNamespaceDisplayName(namespace)} actions`);
-    
+    container.setAttribute(
+      'aria-label',
+      `${this.#formatNamespaceDisplayName(namespace)} actions`
+    );
+
     return container;
   }
 
@@ -475,19 +555,19 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
    * Formats namespace for display (e.g., "core" → "CORE")
    *
    * @private
-   * @param {string} namespace 
+   * @param {string} namespace
    * @returns {string}
    */
   #formatNamespaceDisplayName(namespace) {
     // Handle special cases
     const specialCases = {
-      'unknown': 'OTHER'
+      unknown: 'OTHER',
     };
-    
+
     if (specialCases[namespace]) {
       return specialCases[namespace];
     }
-    
+
     return namespace.toUpperCase();
   }
 
@@ -495,11 +575,11 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
    * Updates grouping configuration
    *
    * @public
-   * @param {object} config 
+   * @param {object} config
    */
   updateGroupingConfig(config) {
     this.#groupingConfig = { ...this.#groupingConfig, ...config };
-    
+
     // Re-render if we have current actions
     if (this.availableActions.length > 0) {
       this.refreshList();

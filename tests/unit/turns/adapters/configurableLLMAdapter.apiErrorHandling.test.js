@@ -25,6 +25,41 @@ const mockLlmStrategyFactory = { getStrategy: jest.fn() };
 const mockLlmConfigLoader = { loadConfigs: jest.fn() };
 const mockStrategy = { execute: jest.fn() };
 
+// Mock new services
+const mockConfigurationManager = {
+  init: jest.fn().mockResolvedValue(undefined),
+  getActiveConfiguration: jest.fn(),
+  setActiveConfiguration: jest.fn(),
+  getAvailableOptions: jest.fn(),
+  getActiveConfigId: jest.fn(),
+  validateConfiguration: jest.fn().mockReturnValue([]),
+  isOperational: jest.fn().mockReturnValue(true),
+};
+
+const mockRequestExecutor = {
+  executeRequest: jest.fn(),
+};
+
+const mockErrorMapper = {
+  mapHttpError: jest.fn(),
+  logError: jest.fn(),
+};
+
+const mockTokenEstimator = {
+  estimateTokens: jest.fn().mockResolvedValue(100),
+  getTokenBudget: jest.fn().mockReturnValue({
+    totalLimit: 4096,
+    reservedTokens: 150,
+    availableForPrompt: 3946,
+  }),
+  validateTokenLimit: jest.fn().mockResolvedValue({
+    isValid: true,
+    estimatedTokens: 100,
+    availableTokens: 3946,
+    isNearLimit: false,
+  }),
+};
+
 const baseConfig = (id) => ({
   configId: id,
   displayName: id,
@@ -46,11 +81,20 @@ describe('ConfigurableLLMAdapter API error handling', () => {
       defaultConfigId: 'a',
       configs: { a: baseConfig('a') },
     });
+    // Set up mock behaviors for this test suite
+    mockConfigurationManager.getActiveConfiguration.mockResolvedValue(
+      baseConfig('a')
+    );
+
     adapter = new ConfigurableLLMAdapter({
       logger: mockLogger,
       environmentContext: mockEnvironmentContext,
       apiKeyProvider: mockApiKeyProvider,
       llmStrategyFactory: mockLlmStrategyFactory,
+      configurationManager: mockConfigurationManager,
+      requestExecutor: mockRequestExecutor,
+      errorMapper: mockErrorMapper,
+      tokenEstimator: mockTokenEstimator,
     });
     await adapter.init({ llmConfigLoader: mockLlmConfigLoader });
   });
@@ -60,13 +104,22 @@ describe('ConfigurableLLMAdapter API error handling', () => {
     err.name = 'HttpClientError';
     err.status = 401;
     err.responseBody = { message: 'bad key' };
-    mockStrategy.execute.mockRejectedValueOnce(err);
+
+    // Mock the request executor to throw the error
+    mockRequestExecutor.executeRequest.mockRejectedValueOnce(err);
+
+    // Mock the error mapper to return ApiKeyError
+    const apiKeyError = new ApiKeyError('API key is invalid', {
+      status: 401,
+      llmId: 'a',
+    });
+    mockErrorMapper.mapHttpError.mockReturnValueOnce(apiKeyError);
 
     const caught = await adapter.getAIDecision(summary).catch((e) => e);
     expect(caught).toBeInstanceOf(ApiKeyError);
-    expect(mockLogger.error).toHaveBeenCalledWith(
-      expect.stringContaining('Status: 401'),
-      expect.objectContaining({ status: 401, llmId: 'a' })
+    expect(mockErrorMapper.logError).toHaveBeenCalledWith(
+      err,
+      expect.objectContaining({ llmId: 'a', operation: 'getAIDecision' })
     );
   });
 
@@ -75,7 +128,17 @@ describe('ConfigurableLLMAdapter API error handling', () => {
     err.name = 'HttpClientError';
     err.status = 402;
     err.responseBody = { message: 'pay up' };
-    mockStrategy.execute.mockRejectedValueOnce(err);
+
+    // Mock the request executor to throw the error
+    mockRequestExecutor.executeRequest.mockRejectedValueOnce(err);
+
+    // Mock the error mapper to return InsufficientCreditsError
+    const creditsError = new InsufficientCreditsError('Insufficient credits', {
+      status: 402,
+      llmId: 'a',
+    });
+    mockErrorMapper.mapHttpError.mockReturnValueOnce(creditsError);
+
     const caught = await adapter.getAIDecision(summary).catch((e) => e);
     expect(caught).toBeInstanceOf(InsufficientCreditsError);
   });
@@ -85,7 +148,17 @@ describe('ConfigurableLLMAdapter API error handling', () => {
     err.name = 'HttpClientError';
     err.status = 400;
     err.responseBody = { oops: true };
-    mockStrategy.execute.mockRejectedValueOnce(err);
+
+    // Mock the request executor to throw the error
+    mockRequestExecutor.executeRequest.mockRejectedValueOnce(err);
+
+    // Mock the error mapper to return BadRequestError
+    const badRequestError = new BadRequestError('Bad request', {
+      status: 400,
+      llmId: 'a',
+    });
+    mockErrorMapper.mapHttpError.mockReturnValueOnce(badRequestError);
+
     const caught = await adapter.getAIDecision(summary).catch((e) => e);
     expect(caught).toBeInstanceOf(BadRequestError);
   });

@@ -55,7 +55,12 @@ describe('BrowserStorageProvider file operations', () => {
   let mockLogger;
 
   beforeEach(() => {
-    mockLogger = { debug: jest.fn(), warn: jest.fn(), error: jest.fn() };
+    mockLogger = {
+      info: jest.fn(),
+      debug: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
     const dispatcher = { dispatch: jest.fn() };
     const files = { 'read.sav': new Uint8Array([1, 2, 3]) };
     rootHandle = createMockRootHandle(files);

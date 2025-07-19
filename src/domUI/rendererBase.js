@@ -250,7 +250,8 @@ export class RendererBase {
  * @returns {string} Unique-ish CSS-like path for logging.
  */
 function getElementPath(el) {
-  if (!(el instanceof Element)) return 'Non-Element Target';
+  // Use duck typing instead of instanceof to work in test environments
+  if (!el || typeof el.tagName !== 'string') return 'Non-Element Target';
   const path = [];
   let currentEl = el;
   while (currentEl) {

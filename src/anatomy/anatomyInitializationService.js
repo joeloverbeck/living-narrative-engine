@@ -126,11 +126,11 @@ export class AnatomyInitializationService {
         `AnatomyInitializationService: Failed to generate anatomy for entity '${instanceId}'`,
         { error }
       );
-      
+
       // Mark as completed even on error and reject any waiting promises
       this.#pendingGenerations.delete(instanceId);
       this.#rejectGenerationPromise(instanceId, error);
-      
+
       // Don't throw - we don't want to break entity creation if anatomy generation fails
     }
   }
@@ -171,7 +171,7 @@ export class AnatomyInitializationService {
 
   /**
    * Waits for anatomy generation to complete for all pending entities
-   * 
+   *
    * @param {number} [timeoutMs] - Timeout in milliseconds
    * @returns {Promise<void>} Resolves when all pending generations complete
    * @throws {Error} If timeout is reached or generation fails
@@ -189,14 +189,22 @@ export class AnatomyInitializationService {
     );
 
     const pendingEntityIds = Array.from(this.#pendingGenerations);
-    const promises = pendingEntityIds.map(entityId => this.#getGenerationPromise(entityId));
-    
+    const promises = pendingEntityIds.map((entityId) =>
+      this.#getGenerationPromise(entityId)
+    );
+
     try {
       await Promise.race([
         Promise.allSettled(promises),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error(`Anatomy generation timeout after ${timeoutMs}ms`)), timeoutMs)
-        )
+        new Promise((_, reject) =>
+          setTimeout(
+            () =>
+              reject(
+                new Error(`Anatomy generation timeout after ${timeoutMs}ms`)
+              ),
+            timeoutMs
+          )
+        ),
       ]);
 
       this.#logger.info(
@@ -213,7 +221,7 @@ export class AnatomyInitializationService {
 
   /**
    * Gets the count of pending anatomy generations
-   * 
+   *
    * @returns {number} Number of pending generations
    */
   getPendingGenerationCount() {
@@ -222,7 +230,7 @@ export class AnatomyInitializationService {
 
   /**
    * Gets a promise that resolves when anatomy generation completes for a specific entity
-   * 
+   *
    * @private
    * @param {string} entityId - The entity ID
    * @returns {Promise<boolean>} Promise that resolves with generation result
@@ -242,7 +250,7 @@ export class AnatomyInitializationService {
 
   /**
    * Resolves the generation promise for an entity
-   * 
+   *
    * @private
    * @param {string} entityId - The entity ID
    * @param {boolean} wasGenerated - Whether anatomy was generated
@@ -257,7 +265,7 @@ export class AnatomyInitializationService {
 
   /**
    * Rejects the generation promise for an entity
-   * 
+   *
    * @private
    * @param {string} entityId - The entity ID
    * @param {Error} error - The error that occurred

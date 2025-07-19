@@ -9,10 +9,22 @@
   Common widget container styles are from _widgets-base.css.
 */
 
+/* Limit the height of the actions widget to prevent it from shrinking the chat panel */
+#actions-widget {
+  max-height: 30vh; /* Maximum 30% of viewport height */
+  max-height: min(30vh, 250px); /* Use the smaller of 30vh or 250px */
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0; /* Prevent the widget from shrinking */
+}
+
 #action-buttons {
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-start; /* Aligns buttons to the start of the container */
+  overflow-y: auto; /* Enable vertical scrolling when content exceeds container height */
+  flex: 1; /* Take up remaining space in the actions widget */
+  min-height: 0; /* Allow the container to shrink properly for scrolling */
 }
 
 /* Context-specific button sizing/margin within the actions widget */
@@ -115,6 +127,7 @@
   padding: 0.2em 0;
   border-bottom: 1px solid var(--border-light);
   letter-spacing: 0.5px;
+  flex-basis: 100%; /* Force full width in flex container */
 }
 
 .action-section-header:first-child {
@@ -127,6 +140,7 @@
   flex-wrap: wrap;
   gap: 0.5em;
   margin-bottom: 1em;
+  width: 100%; /* Ensure full width in flex container */
 }
 
 .action-group:last-child {
@@ -145,7 +159,7 @@
     flex-direction: column;
     gap: 0.3em;
   }
-  
+
   .action-section-header {
     font-size: 0.8em;
     margin: 0.6em 0 0.3em 0;

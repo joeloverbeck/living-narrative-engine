@@ -53,4 +53,8 @@ export const aiTokens = freeze({
   PerceptionLogAssembler: 'PerceptionLogAssembler',
   ThoughtsSectionAssembler: 'ThoughtsSectionAssembler',
   PlaceholderResolver: 'PlaceholderResolver',
+  ILLMConfigurationManager: 'ILLMConfigurationManager',
+  ILLMRequestExecutor: 'ILLMRequestExecutor',
+  ILLMErrorMapper: 'ILLMErrorMapper',
+  ITokenEstimator: 'ITokenEstimator',
 });

@@ -186,6 +186,13 @@ describe('WorldInitializer', () => {
     );
   });
 
+  describe('getWorldContext', () => {
+    it('should return the world context when getWorldContext is called', () => {
+      const context = worldInitializer.getWorldContext();
+      expect(context).toBe(mockWorldContext);
+    });
+  });
+
   describe('initializeWorldEntities', () => {
     it('should successfully instantiate entities from world instances in Pass 1', async () => {
       const worldData = {
@@ -522,6 +529,78 @@ describe('WorldInitializer', () => {
       );
     });
 
+    it('should handle world with missing instances property gracefully', async () => {
+      const worldData = {
+        id: 'test:world',
+        name: 'Test World',
+        // Missing instances property
+      };
+
+      mockGameDataRepository.getWorld.mockReturnValue(worldData);
+
+      const result =
+        await worldInitializer.initializeWorldEntities('test:world');
+
+      expect(result).toEqual({
+        entities: [],
+        instantiatedCount: 0,
+        failedCount: 0,
+        totalProcessed: 0,
+      });
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        "WorldInitializer (Pass 1): World 'test:world' has no instances array or it's not an array. Proceeding with zero instances."
+      );
+    });
+
+    it('should handle world with null instances gracefully', async () => {
+      const worldData = {
+        id: 'test:world',
+        name: 'Test World',
+        instances: null,
+      };
+
+      mockGameDataRepository.getWorld.mockReturnValue(worldData);
+
+      const result =
+        await worldInitializer.initializeWorldEntities('test:world');
+
+      expect(result).toEqual({
+        entities: [],
+        instantiatedCount: 0,
+        failedCount: 0,
+        totalProcessed: 0,
+      });
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        "WorldInitializer (Pass 1): World 'test:world' has no instances array or it's not an array. Proceeding with zero instances."
+      );
+    });
+
+    it('should handle world with non-array instances gracefully', async () => {
+      const worldData = {
+        id: 'test:world',
+        name: 'Test World',
+        instances: 'not-an-array',
+      };
+
+      mockGameDataRepository.getWorld.mockReturnValue(worldData);
+
+      const result =
+        await worldInitializer.initializeWorldEntities('test:world');
+
+      expect(result).toEqual({
+        entities: [],
+        instantiatedCount: 0,
+        failedCount: 0,
+        totalProcessed: 0,
+      });
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        "WorldInitializer (Pass 1): World 'test:world' has no instances array or it's not an array. Proceeding with zero instances."
+      );
+    });
+
     it('should skip duplicate instanceIds', async () => {
       const worldData = {
         id: 'test:world',
@@ -559,6 +638,259 @@ describe('WorldInitializer', () => {
       expect(result.instantiatedCount).toBe(1);
       expect(result.failedCount).toBe(0);
       expect(result.totalProcessed).toBe(2);
+    });
+
+    it('should handle missing entity instance definition gracefully', async () => {
+      const worldData = {
+        id: 'test:world',
+        name: 'Test World',
+        instances: [
+          {
+            instanceId: 'test:missing_definition_instance',
+          },
+        ],
+      };
+
+      mockGameDataRepository.getWorld.mockReturnValue(worldData);
+      // Return null to simulate missing entity instance definition
+      mockGameDataRepository.getEntityInstanceDefinition.mockReturnValue(null);
+
+      const result =
+        await worldInitializer.initializeWorldEntities('test:world');
+
+      expect(result.instantiatedCount).toBe(0);
+      expect(result.failedCount).toBe(1);
+      expect(result.totalProcessed).toBe(1);
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        "WorldInitializer (Pass 1): Entity instance definition not found for instance ID: 'test:missing_definition_instance'. Referenced in world 'test:world'. Skipping."
+      );
+
+      expect(safeDispatchError).toHaveBeenCalledWith(
+        mockValidatedEventDispatcher,
+        "Entity instance definition not found for instance ID: 'test:missing_definition_instance'. Referenced in world 'test:world'.",
+        expect.objectContaining({
+          statusCode: 404,
+          raw: 'Context: WorldInitializer.instantiateEntitiesFromWorld, instanceId: test:missing_definition_instance, worldName: test:world',
+          type: 'MissingResource',
+          resourceType: 'EntityInstanceDefinition',
+          resourceId: 'test:missing_definition_instance',
+        })
+      );
+    });
+
+    it('should handle entity instance definition without definitionId gracefully', async () => {
+      const worldData = {
+        id: 'test:world',
+        name: 'Test World',
+        instances: [
+          {
+            instanceId: 'test:invalid_definition_instance',
+          },
+        ],
+      };
+
+      const entityInstanceDefWithoutDefinitionId = {
+        instanceId: 'test:invalid_definition_instance',
+        // Missing definitionId
+        componentOverrides: {},
+      };
+
+      mockGameDataRepository.getWorld.mockReturnValue(worldData);
+      mockGameDataRepository.getEntityInstanceDefinition.mockReturnValue(
+        entityInstanceDefWithoutDefinitionId
+      );
+
+      const result =
+        await worldInitializer.initializeWorldEntities('test:world');
+
+      expect(result.instantiatedCount).toBe(0);
+      expect(result.failedCount).toBe(1);
+      expect(result.totalProcessed).toBe(1);
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        "WorldInitializer (Pass 1): Entity instance definition 'test:invalid_definition_instance' is missing a definitionId. Skipping."
+      );
+
+      // Should not call createEntityInstance since validation failed
+      expect(mockEntityManager.createEntityInstance).not.toHaveBeenCalled();
+    });
+
+    it('should handle entity creation failure with proper error logging', async () => {
+      const worldData = {
+        id: 'test:world',
+        name: 'Test World',
+        instances: [
+          {
+            instanceId: 'test:failing_instance',
+          },
+        ],
+      };
+
+      const entityInstanceDef = {
+        instanceId: 'test:failing_instance',
+        definitionId: 'test:failing',
+        componentOverrides: {},
+      };
+
+      mockGameDataRepository.getWorld.mockReturnValue(worldData);
+      mockGameDataRepository.getEntityInstanceDefinition.mockReturnValue(
+        entityInstanceDef
+      );
+
+      // Make createEntityInstance throw an error to trigger line 251
+      const creationError = new Error('Entity creation failed');
+      mockEntityManager.createEntityInstance.mockRejectedValue(creationError);
+
+      const result =
+        await worldInitializer.initializeWorldEntities('test:world');
+
+      expect(result.instantiatedCount).toBe(0);
+      expect(result.failedCount).toBe(1);
+      expect(result.totalProcessed).toBe(1);
+
+      // Verify error logging on line 251
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        "WorldInitializer (Pass 1): Error during createEntityInstance for instanceId 'test:failing_instance', definitionId 'test:failing':",
+        creationError
+      );
+
+      // Verify failure event is dispatched
+      expect(mockEventDispatchService.dispatchWithLogging).toHaveBeenCalledWith(
+        WORLDINIT_ENTITY_INSTANTIATION_FAILED_ID,
+        expect.objectContaining({
+          instanceId: 'test:failing_instance',
+          definitionId: 'test:failing',
+          worldName: 'test:world',
+          error:
+            'Failed to create entity instance. EntityManager returned null/undefined or threw an error.',
+        }),
+        'instance test:failing_instance',
+        { allowSchemaNotFound: true }
+      );
+    });
+
+    it('should handle critical errors during initialization and re-throw with proper error dispatching', async () => {
+      const worldData = {
+        id: 'test:world',
+        name: 'Test World',
+        instances: [
+          {
+            instanceId: 'test:critical_error_instance',
+          },
+        ],
+      };
+
+      mockGameDataRepository.getWorld.mockReturnValue(worldData);
+
+      // Make the getEntityInstanceDefinition throw a critical error to trigger the catch block
+      const criticalError = new Error('Critical system failure');
+      mockGameDataRepository.getEntityInstanceDefinition.mockImplementation(
+        () => {
+          throw criticalError;
+        }
+      );
+
+      await expect(
+        worldInitializer.initializeWorldEntities('test:world')
+      ).rejects.toThrow('Critical system failure');
+
+      // Verify error logging
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        "WorldInitializer: Critical error during entity initialization for world 'test:world':",
+        criticalError
+      );
+
+      // Verify safeDispatchError was called with proper error details
+      expect(safeDispatchError).toHaveBeenCalledWith(
+        mockValidatedEventDispatcher,
+        "Critical error during world initialization for world 'test:world'. Initialization halted.",
+        expect.objectContaining({
+          statusCode: 500,
+          raw: 'World initialization failed. Context: WorldInitializer.initializeWorldEntities, worldName: test:world, error: Critical system failure',
+          timestamp: expect.any(String),
+          error: criticalError,
+        })
+      );
+    });
+
+    it('should handle critical WorldInitializationError and re-throw as-is', async () => {
+      const worldData = {
+        id: 'test:world',
+        name: 'Test World',
+        instances: [
+          {
+            instanceId: 'test:world_init_error_instance',
+          },
+        ],
+      };
+
+      mockGameDataRepository.getWorld.mockReturnValue(worldData);
+
+      // Make the getEntityInstanceDefinition throw a WorldInitializationError
+      const worldInitError = new WorldInitializationError(
+        'World initialization specific error'
+      );
+      mockGameDataRepository.getEntityInstanceDefinition.mockImplementation(
+        () => {
+          throw worldInitError;
+        }
+      );
+
+      await expect(
+        worldInitializer.initializeWorldEntities('test:world')
+      ).rejects.toThrow(WorldInitializationError);
+
+      await expect(
+        worldInitializer.initializeWorldEntities('test:world')
+      ).rejects.toThrow('World initialization specific error');
+
+      // Verify that the same WorldInitializationError instance is re-thrown
+      try {
+        await worldInitializer.initializeWorldEntities('test:world');
+      } catch (thrownError) {
+        expect(thrownError).toBe(worldInitError);
+      }
+    });
+
+    it('should handle critical error without message and use fallback error text', async () => {
+      const worldData = {
+        id: 'test:world',
+        name: 'Test World',
+        instances: [
+          {
+            instanceId: 'test:no_message_error_instance',
+          },
+        ],
+      };
+
+      mockGameDataRepository.getWorld.mockReturnValue(worldData);
+
+      // Create an error without a message property to trigger 'Unknown error' fallback
+      const errorWithoutMessage = {};
+      Object.setPrototypeOf(errorWithoutMessage, Error.prototype);
+
+      mockGameDataRepository.getEntityInstanceDefinition.mockImplementation(
+        () => {
+          throw errorWithoutMessage;
+        }
+      );
+
+      await expect(
+        worldInitializer.initializeWorldEntities('test:world')
+      ).rejects.toThrow();
+
+      // Verify safeDispatchError was called with 'Unknown error' fallback
+      expect(safeDispatchError).toHaveBeenCalledWith(
+        mockValidatedEventDispatcher,
+        "Critical error during world initialization for world 'test:world'. Initialization halted.",
+        expect.objectContaining({
+          statusCode: 500,
+          raw: 'World initialization failed. Context: WorldInitializer.initializeWorldEntities, worldName: test:world, error: Unknown error',
+          timestamp: expect.any(String),
+          error: errorWithoutMessage,
+        })
+      );
     });
   });
 

@@ -799,4 +799,679 @@ describe('intimacy_handle_step_back rule integration', () => {
       ])
     );
   });
+
+  it('removes facing_away component when actor with facing_away steps back', async () => {
+    testEnv.reset([
+      {
+        id: 'a1',
+        components: {
+          [NAME_COMPONENT_ID]: { text: 'A' },
+          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
+          'intimacy:closeness': { partners: ['b1'] },
+          'intimacy:facing_away': { facing_away_from: ['b1'] },
+          'anatomy:body': {
+            recipeId: 'anatomy:human',
+            body: {
+              root: 'body-a1',
+              parts: {
+                torso: 'body-a1',
+                leg_left: 'leg-left-a1',
+                leg_right: 'leg-right-a1',
+              },
+            },
+          },
+        },
+      },
+      {
+        id: 'body-a1',
+        components: {
+          'anatomy:part': { parentId: null, type: 'body' },
+        },
+      },
+      {
+        id: 'leg-left-a1',
+        components: {
+          'anatomy:part': { parentId: 'body-a1', type: 'leg' },
+          'core:movement': { locked: true },
+        },
+      },
+      {
+        id: 'leg-right-a1',
+        components: {
+          'anatomy:part': { parentId: 'body-a1', type: 'leg' },
+          'core:movement': { locked: true },
+        },
+      },
+      {
+        id: 'b1',
+        components: {
+          [NAME_COMPONENT_ID]: { text: 'B' },
+          'intimacy:closeness': { partners: ['a1'] },
+          'anatomy:body': {
+            recipeId: 'anatomy:human',
+            body: {
+              root: 'body-b1',
+              parts: {
+                torso: 'body-b1',
+                leg_left: 'leg-left-b1',
+                leg_right: 'leg-right-b1',
+              },
+            },
+          },
+        },
+      },
+      {
+        id: 'body-b1',
+        components: {
+          'anatomy:part': { parentId: null, type: 'body' },
+        },
+      },
+      {
+        id: 'leg-left-b1',
+        components: {
+          'anatomy:part': { parentId: 'body-b1', type: 'leg' },
+          'core:movement': { locked: true },
+        },
+      },
+      {
+        id: 'leg-right-b1',
+        components: {
+          'anatomy:part': { parentId: 'body-b1', type: 'leg' },
+          'core:movement': { locked: true },
+        },
+      },
+    ]);
+
+    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      actorId: 'a1',
+      actionId: 'intimacy:step_back',
+    });
+
+    // Verify both closeness and facing_away components are removed
+    expect(
+      testEnv.entityManager.getComponentData('a1', 'intimacy:closeness')
+    ).toBeNull();
+    expect(
+      testEnv.entityManager.getComponentData('a1', 'intimacy:facing_away')
+    ).toBeNull();
+
+    // Verify actor's movement components are unlocked
+    expect(
+      testEnv.entityManager.getComponentData('leg-left-a1', 'core:movement')
+    ).toEqual({
+      locked: false,
+    });
+    expect(
+      testEnv.entityManager.getComponentData('leg-right-a1', 'core:movement')
+    ).toEqual({
+      locked: false,
+    });
+
+    // Verify partner's closeness is removed and movement unlocked
+    expect(
+      testEnv.entityManager.getComponentData('b1', 'intimacy:closeness')
+    ).toBeNull();
+    expect(
+      testEnv.entityManager.getComponentData('leg-left-b1', 'core:movement')
+    ).toEqual({
+      locked: false,
+    });
+    expect(
+      testEnv.entityManager.getComponentData('leg-right-b1', 'core:movement')
+    ).toEqual({
+      locked: false,
+    });
+
+    const types = testEnv.events.map((e) => e.eventType);
+    expect(types).toEqual(
+      expect.arrayContaining([
+        'core:perceptible_event',
+        'core:display_successful_action_result',
+        'core:turn_ended',
+      ])
+    );
+  });
+
+  it('handles actor stepping back when facing away from multiple partners', async () => {
+    testEnv.reset([
+      {
+        id: 'a1',
+        components: {
+          [NAME_COMPONENT_ID]: { text: 'A' },
+          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
+          'intimacy:closeness': { partners: ['b1', 'c1'] },
+          'intimacy:facing_away': { facing_away_from: ['b1', 'c1'] },
+          'anatomy:body': {
+            recipeId: 'anatomy:human',
+            body: {
+              root: 'body-a1',
+              parts: {
+                torso: 'body-a1',
+                leg_left: 'leg-left-a1',
+                leg_right: 'leg-right-a1',
+              },
+            },
+          },
+        },
+      },
+      {
+        id: 'body-a1',
+        components: {
+          'anatomy:part': { parentId: null, type: 'body' },
+        },
+      },
+      {
+        id: 'leg-left-a1',
+        components: {
+          'anatomy:part': { parentId: 'body-a1', type: 'leg' },
+          'core:movement': { locked: true },
+        },
+      },
+      {
+        id: 'leg-right-a1',
+        components: {
+          'anatomy:part': { parentId: 'body-a1', type: 'leg' },
+          'core:movement': { locked: true },
+        },
+      },
+      {
+        id: 'b1',
+        components: {
+          [NAME_COMPONENT_ID]: { text: 'B' },
+          'intimacy:closeness': { partners: ['a1', 'c1'] },
+          'anatomy:body': {
+            recipeId: 'anatomy:human',
+            body: {
+              root: 'body-b1',
+              parts: {
+                torso: 'body-b1',
+                leg_left: 'leg-left-b1',
+                leg_right: 'leg-right-b1',
+              },
+            },
+          },
+        },
+      },
+      {
+        id: 'body-b1',
+        components: {
+          'anatomy:part': { parentId: null, type: 'body' },
+        },
+      },
+      {
+        id: 'leg-left-b1',
+        components: {
+          'anatomy:part': { parentId: 'body-b1', type: 'leg' },
+          'core:movement': { locked: true },
+        },
+      },
+      {
+        id: 'leg-right-b1',
+        components: {
+          'anatomy:part': { parentId: 'body-b1', type: 'leg' },
+          'core:movement': { locked: true },
+        },
+      },
+      {
+        id: 'c1',
+        components: {
+          [NAME_COMPONENT_ID]: { text: 'C' },
+          'intimacy:closeness': { partners: ['a1', 'b1'] },
+          'anatomy:body': {
+            recipeId: 'anatomy:human',
+            body: {
+              root: 'body-c1',
+              parts: {
+                torso: 'body-c1',
+                leg_left: 'leg-left-c1',
+                leg_right: 'leg-right-c1',
+              },
+            },
+          },
+        },
+      },
+      {
+        id: 'body-c1',
+        components: {
+          'anatomy:part': { parentId: null, type: 'body' },
+        },
+      },
+      {
+        id: 'leg-left-c1',
+        components: {
+          'anatomy:part': { parentId: 'body-c1', type: 'leg' },
+          'core:movement': { locked: true },
+        },
+      },
+      {
+        id: 'leg-right-c1',
+        components: {
+          'anatomy:part': { parentId: 'body-c1', type: 'leg' },
+          'core:movement': { locked: true },
+        },
+      },
+    ]);
+
+    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      actorId: 'a1',
+      actionId: 'intimacy:step_back',
+    });
+
+    // Verify actor a1's components are completely cleaned
+    expect(
+      testEnv.entityManager.getComponentData('a1', 'intimacy:closeness')
+    ).toBeNull();
+    expect(
+      testEnv.entityManager.getComponentData('a1', 'intimacy:facing_away')
+    ).toBeNull();
+    expect(
+      testEnv.entityManager.getComponentData('leg-left-a1', 'core:movement')
+    ).toEqual({
+      locked: false,
+    });
+    expect(
+      testEnv.entityManager.getComponentData('leg-right-a1', 'core:movement')
+    ).toEqual({
+      locked: false,
+    });
+
+    // Verify remaining partners (b1, c1) form pair and stay locked
+    expect(
+      testEnv.entityManager.getComponentData('b1', 'intimacy:closeness')
+    ).toEqual({
+      partners: ['c1'],
+    });
+    expect(
+      testEnv.entityManager.getComponentData('c1', 'intimacy:closeness')
+    ).toEqual({
+      partners: ['b1'],
+    });
+    expect(
+      testEnv.entityManager.getComponentData('leg-left-b1', 'core:movement')
+    ).toEqual({
+      locked: true,
+    });
+    expect(
+      testEnv.entityManager.getComponentData('leg-left-c1', 'core:movement')
+    ).toEqual({
+      locked: true,
+    });
+
+    const types = testEnv.events.map((e) => e.eventType);
+    expect(types).toEqual(
+      expect.arrayContaining([
+        'core:perceptible_event',
+        'core:display_successful_action_result',
+        'core:turn_ended',
+      ])
+    );
+  });
+
+  it('step back works normally for actor without facing_away component (regression test)', async () => {
+    testEnv.reset([
+      {
+        id: 'a1',
+        components: {
+          [NAME_COMPONENT_ID]: { text: 'A' },
+          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
+          'intimacy:closeness': { partners: ['b1'] },
+          // No facing_away component
+          'anatomy:body': {
+            recipeId: 'anatomy:human',
+            body: {
+              root: 'body-a1',
+              parts: {
+                torso: 'body-a1',
+                leg_left: 'leg-left-a1',
+                leg_right: 'leg-right-a1',
+              },
+            },
+          },
+        },
+      },
+      {
+        id: 'body-a1',
+        components: {
+          'anatomy:part': { parentId: null, type: 'body' },
+        },
+      },
+      {
+        id: 'leg-left-a1',
+        components: {
+          'anatomy:part': { parentId: 'body-a1', type: 'leg' },
+          'core:movement': { locked: true },
+        },
+      },
+      {
+        id: 'leg-right-a1',
+        components: {
+          'anatomy:part': { parentId: 'body-a1', type: 'leg' },
+          'core:movement': { locked: true },
+        },
+      },
+      {
+        id: 'b1',
+        components: {
+          [NAME_COMPONENT_ID]: { text: 'B' },
+          'intimacy:closeness': { partners: ['a1'] },
+          'anatomy:body': {
+            recipeId: 'anatomy:human',
+            body: {
+              root: 'body-b1',
+              parts: {
+                torso: 'body-b1',
+                leg_left: 'leg-left-b1',
+                leg_right: 'leg-right-b1',
+              },
+            },
+          },
+        },
+      },
+      {
+        id: 'body-b1',
+        components: {
+          'anatomy:part': { parentId: null, type: 'body' },
+        },
+      },
+      {
+        id: 'leg-left-b1',
+        components: {
+          'anatomy:part': { parentId: 'body-b1', type: 'leg' },
+          'core:movement': { locked: true },
+        },
+      },
+      {
+        id: 'leg-right-b1',
+        components: {
+          'anatomy:part': { parentId: 'body-b1', type: 'leg' },
+          'core:movement': { locked: true },
+        },
+      },
+    ]);
+
+    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      actorId: 'a1',
+      actionId: 'intimacy:step_back',
+    });
+
+    // Verify normal step back behavior works (regression test)
+    expect(
+      testEnv.entityManager.getComponentData('a1', 'intimacy:closeness')
+    ).toBeNull();
+    expect(
+      testEnv.entityManager.getComponentData('a1', 'intimacy:facing_away')
+    ).toBeNull(); // Should still be null
+    expect(
+      testEnv.entityManager.getComponentData('leg-left-a1', 'core:movement')
+    ).toEqual({
+      locked: false,
+    });
+    expect(
+      testEnv.entityManager.getComponentData('leg-right-a1', 'core:movement')
+    ).toEqual({
+      locked: false,
+    });
+
+    // Verify partner is freed
+    expect(
+      testEnv.entityManager.getComponentData('b1', 'intimacy:closeness')
+    ).toBeNull();
+    expect(
+      testEnv.entityManager.getComponentData('leg-left-b1', 'core:movement')
+    ).toEqual({
+      locked: false,
+    });
+    expect(
+      testEnv.entityManager.getComponentData('leg-right-b1', 'core:movement')
+    ).toEqual({
+      locked: false,
+    });
+
+    const types = testEnv.events.map((e) => e.eventType);
+    expect(types).toEqual(
+      expect.arrayContaining([
+        'core:perceptible_event',
+        'core:display_successful_action_result',
+        'core:turn_ended',
+      ])
+    );
+  });
+
+  it('complex state scenario: multiple actors with mixed facing states', async () => {
+    testEnv.reset([
+      {
+        id: 'a1',
+        components: {
+          [NAME_COMPONENT_ID]: { text: 'A' },
+          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
+          'intimacy:closeness': { partners: ['b1', 'c1', 'd1'] },
+          'intimacy:facing_away': { facing_away_from: ['b1', 'c1'] }, // facing away from b1 and c1
+          'anatomy:body': {
+            recipeId: 'anatomy:human',
+            body: {
+              root: 'body-a1',
+              parts: {
+                torso: 'body-a1',
+                leg_left: 'leg-left-a1',
+                leg_right: 'leg-right-a1',
+              },
+            },
+          },
+        },
+      },
+      {
+        id: 'body-a1',
+        components: {
+          'anatomy:part': { parentId: null, type: 'body' },
+        },
+      },
+      {
+        id: 'leg-left-a1',
+        components: {
+          'anatomy:part': { parentId: 'body-a1', type: 'leg' },
+          'core:movement': { locked: true },
+        },
+      },
+      {
+        id: 'leg-right-a1',
+        components: {
+          'anatomy:part': { parentId: 'body-a1', type: 'leg' },
+          'core:movement': { locked: true },
+        },
+      },
+      {
+        id: 'b1',
+        components: {
+          [NAME_COMPONENT_ID]: { text: 'B' },
+          'intimacy:closeness': { partners: ['a1', 'c1', 'd1'] },
+          'intimacy:facing_away': { facing_away_from: ['d1'] }, // facing away from d1
+          'anatomy:body': {
+            recipeId: 'anatomy:human',
+            body: {
+              root: 'body-b1',
+              parts: {
+                torso: 'body-b1',
+                leg_left: 'leg-left-b1',
+                leg_right: 'leg-right-b1',
+              },
+            },
+          },
+        },
+      },
+      {
+        id: 'body-b1',
+        components: {
+          'anatomy:part': { parentId: null, type: 'body' },
+        },
+      },
+      {
+        id: 'leg-left-b1',
+        components: {
+          'anatomy:part': { parentId: 'body-b1', type: 'leg' },
+          'core:movement': { locked: true },
+        },
+      },
+      {
+        id: 'leg-right-b1',
+        components: {
+          'anatomy:part': { parentId: 'body-b1', type: 'leg' },
+          'core:movement': { locked: true },
+        },
+      },
+      {
+        id: 'c1',
+        components: {
+          [NAME_COMPONENT_ID]: { text: 'C' },
+          'intimacy:closeness': { partners: ['a1', 'b1', 'd1'] },
+          // No facing_away component
+          'anatomy:body': {
+            recipeId: 'anatomy:human',
+            body: {
+              root: 'body-c1',
+              parts: {
+                torso: 'body-c1',
+                leg_left: 'leg-left-c1',
+                leg_right: 'leg-right-c1',
+              },
+            },
+          },
+        },
+      },
+      {
+        id: 'body-c1',
+        components: {
+          'anatomy:part': { parentId: null, type: 'body' },
+        },
+      },
+      {
+        id: 'leg-left-c1',
+        components: {
+          'anatomy:part': { parentId: 'body-c1', type: 'leg' },
+          'core:movement': { locked: true },
+        },
+      },
+      {
+        id: 'leg-right-c1',
+        components: {
+          'anatomy:part': { parentId: 'body-c1', type: 'leg' },
+          'core:movement': { locked: true },
+        },
+      },
+      {
+        id: 'd1',
+        components: {
+          [NAME_COMPONENT_ID]: { text: 'D' },
+          'intimacy:closeness': { partners: ['a1', 'b1', 'c1'] },
+          'intimacy:facing_away': { facing_away_from: ['a1'] }, // facing away from a1
+          'anatomy:body': {
+            recipeId: 'anatomy:human',
+            body: {
+              root: 'body-d1',
+              parts: {
+                torso: 'body-d1',
+                leg_left: 'leg-left-d1',
+                leg_right: 'leg-right-d1',
+              },
+            },
+          },
+        },
+      },
+      {
+        id: 'body-d1',
+        components: {
+          'anatomy:part': { parentId: null, type: 'body' },
+        },
+      },
+      {
+        id: 'leg-left-d1',
+        components: {
+          'anatomy:part': { parentId: 'body-d1', type: 'leg' },
+          'core:movement': { locked: true },
+        },
+      },
+      {
+        id: 'leg-right-d1',
+        components: {
+          'anatomy:part': { parentId: 'body-d1', type: 'leg' },
+          'core:movement': { locked: true },
+        },
+      },
+    ]);
+
+    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      actorId: 'a1',
+      actionId: 'intimacy:step_back',
+    });
+
+    // Verify a1 is completely removed from the intimate context
+    expect(
+      testEnv.entityManager.getComponentData('a1', 'intimacy:closeness')
+    ).toBeNull();
+    expect(
+      testEnv.entityManager.getComponentData('a1', 'intimacy:facing_away')
+    ).toBeNull();
+    expect(
+      testEnv.entityManager.getComponentData('leg-left-a1', 'core:movement')
+    ).toEqual({
+      locked: false,
+    });
+
+    // Verify remaining partners form triad
+    expect(
+      testEnv.entityManager.getComponentData('b1', 'intimacy:closeness')
+    ).toEqual({
+      partners: ['c1', 'd1'],
+    });
+    expect(
+      testEnv.entityManager.getComponentData('c1', 'intimacy:closeness')
+    ).toEqual({
+      partners: ['b1', 'd1'],
+    });
+    expect(
+      testEnv.entityManager.getComponentData('d1', 'intimacy:closeness')
+    ).toEqual({
+      partners: ['b1', 'c1'],
+    });
+
+    // Verify facing states of remaining partners are preserved correctly
+    expect(
+      testEnv.entityManager.getComponentData('b1', 'intimacy:facing_away')
+    ).toEqual({
+      facing_away_from: ['d1'], // b1 still facing away from d1
+    });
+    expect(
+      testEnv.entityManager.getComponentData('c1', 'intimacy:facing_away')
+    ).toBeNull(); // c1 still has no facing_away component
+    expect(
+      testEnv.entityManager.getComponentData('d1', 'intimacy:facing_away')
+    ).toEqual({
+      facing_away_from: ['a1'], // d1 still faces away from a1, but a1 no longer in closeness circle
+    });
+
+    // Verify remaining partners stay locked
+    expect(
+      testEnv.entityManager.getComponentData('leg-left-b1', 'core:movement')
+    ).toEqual({
+      locked: true,
+    });
+    expect(
+      testEnv.entityManager.getComponentData('leg-left-c1', 'core:movement')
+    ).toEqual({
+      locked: true,
+    });
+    expect(
+      testEnv.entityManager.getComponentData('leg-left-d1', 'core:movement')
+    ).toEqual({
+      locked: true,
+    });
+
+    const types = testEnv.events.map((e) => e.eventType);
+    expect(types).toEqual(
+      expect.arrayContaining([
+        'core:perceptible_event',
+        'core:display_successful_action_result',
+        'core:turn_ended',
+      ])
+    );
+  });
 });

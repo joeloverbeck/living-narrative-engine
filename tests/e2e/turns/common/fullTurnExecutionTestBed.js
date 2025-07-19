@@ -35,34 +35,34 @@ export class FullTurnExecutionTestBed {
     this.registry = null;
     this.scopeRegistry = null;
     this.dslParser = null;
-    
+
     // AI Services
     this.llmAdapter = null;
     this.llmChooser = null;
     this.aiPromptPipeline = null;
     this.llmResponseProcessor = null;
     this.llmDecisionProvider = null;
-    
+
     // Turn Management
     this.turnManager = null;
     this.commandProcessor = null;
-    
+
     // HTTP and Communication
     this.httpClient = null;
-    
+
     // Event Monitoring
     this.events = [];
     this.eventSubscription = null;
-    
+
     // Test Data
     this.testActors = {};
     this.testActions = [];
     this.testWorld = null;
-    
+
     // Configuration
     this.testConfiguration = null;
     this.testConfigurationCleanup = null;
-    
+
     // Mock responses
     this.mockResponses = new Map();
   }
@@ -133,8 +133,12 @@ export class FullTurnExecutionTestBed {
     this.llmAdapter = this.container.resolve(aiTokens.LLMAdapter);
     this.llmChooser = this.container.resolve(aiTokens.ILLMChooser);
     this.aiPromptPipeline = this.container.resolve(aiTokens.IAIPromptPipeline);
-    this.llmResponseProcessor = this.container.resolve(aiTokens.ILLMResponseProcessor);
-    this.llmDecisionProvider = this.container.resolve(aiTokens.ILLMDecisionProvider);
+    this.llmResponseProcessor = this.container.resolve(
+      aiTokens.ILLMResponseProcessor
+    );
+    this.llmDecisionProvider = this.container.resolve(
+      aiTokens.ILLMDecisionProvider
+    );
 
     // Initialize LLM adapter with config loader
     const llmConfigLoader = this.container.resolve(tokens.LlmConfigLoader);
@@ -465,7 +469,7 @@ export class FullTurnExecutionTestBed {
                 reject(error);
               };
               signal.addEventListener('abort', abortListener);
-              
+
               // If already aborted, trigger immediately
               if (signal.aborted) {
                 abortListener();
@@ -475,8 +479,10 @@ export class FullTurnExecutionTestBed {
           });
 
           // Simulate network delay with race condition for abort
-          const delayPromise = new Promise((resolve) => setTimeout(resolve, 50));
-          
+          const delayPromise = new Promise((resolve) =>
+            setTimeout(resolve, 50)
+          );
+
           try {
             // Race between network delay and abort signal
             if (signal) {
@@ -527,7 +533,7 @@ export class FullTurnExecutionTestBed {
 
   /**
    * Set default mock response for LLM proxy server
-   * 
+   *
    * @param {object|Error} response - Response object or error to throw
    */
   setDefaultLLMResponse(response) {

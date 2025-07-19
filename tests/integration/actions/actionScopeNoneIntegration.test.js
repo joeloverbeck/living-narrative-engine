@@ -42,7 +42,7 @@ describe('Action Scope None Integration', () => {
       };
 
       const targetContext = ActionTargetContext.noTarget();
-      
+
       const result = formatter.format(
         waitActionDef,
         targetContext,
@@ -56,13 +56,15 @@ describe('Action Scope None Integration', () => {
 
       expect(result.ok).toBe(true);
       expect(result.value).toBe('wait');
-      
+
       // Verify no warnings were logged
       expect(mockLogger.warn).not.toHaveBeenCalled();
-      
+
       // Verify debug logging worked correctly
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining("Formatting command for action: core:wait, template: \"wait\", targetType: none")
+        expect.stringContaining(
+          'Formatting command for action: core:wait, template: "wait", targetType: none'
+        )
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining(' -> No target type, using template as is.')
@@ -82,7 +84,7 @@ describe('Action Scope None Integration', () => {
       };
 
       const targetContext = ActionTargetContext.noTarget();
-      
+
       const result = formatter.format(
         invalidWaitActionDef,
         targetContext,
@@ -96,10 +98,12 @@ describe('Action Scope None Integration', () => {
 
       expect(result.ok).toBe(true);
       expect(result.value).toBe('wait for {target}'); // Placeholder not replaced for 'none' type
-      
+
       // Verify warning was logged about placeholder in none-scope action
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining("Action custom:wait-with-target has target_domain 'none' but template \"wait for {target}\" contains placeholders.")
+        expect.stringContaining(
+          'Action custom:wait-with-target has target_domain \'none\' but template "wait for {target}" contains placeholders.'
+        )
       );
     });
   });
@@ -115,7 +119,7 @@ describe('Action Scope None Integration', () => {
       };
 
       const targetContext = ActionTargetContext.noTarget();
-      
+
       const result = formatter.format(
         passActionDef,
         targetContext,
@@ -142,7 +146,7 @@ describe('Action Scope None Integration', () => {
       };
 
       const targetContext = ActionTargetContext.noTarget();
-      
+
       const result = formatter.format(
         sleepActionDef,
         targetContext,
@@ -163,7 +167,7 @@ describe('Action Scope None Integration', () => {
   describe('ActionTargetContext.noTarget() properties', () => {
     it('should create target context with correct properties', () => {
       const targetContext = ActionTargetContext.noTarget();
-      
+
       expect(targetContext).toBeInstanceOf(ActionTargetContext);
       expect(targetContext.type).toBe('none');
       expect(targetContext.entityId).toBeNull();
@@ -172,7 +176,7 @@ describe('Action Scope None Integration', () => {
     it('should be equivalent to new ActionTargetContext("none")', () => {
       const noTarget = ActionTargetContext.noTarget();
       const manualNone = new ActionTargetContext('none');
-      
+
       expect(noTarget.type).toBe(manualNone.type);
       expect(noTarget.entityId).toBe(manualNone.entityId);
     });
@@ -187,7 +191,7 @@ describe('Action Scope None Integration', () => {
       };
 
       const targetContext = ActionTargetContext.noTarget();
-      
+
       const result = formatter.format(
         malformedActionDef,
         targetContext,
@@ -200,7 +204,9 @@ describe('Action Scope None Integration', () => {
       );
 
       expect(result.ok).toBe(false);
-      expect(result.error).toContain('Invalid or missing actionDefinition or template');
+      expect(result.error).toContain(
+        'Invalid or missing actionDefinition or template'
+      );
     });
 
     it('should handle invalid target context gracefully', () => {
@@ -235,7 +241,7 @@ describe('Action Scope None Integration', () => {
 
       // Simulate the old bug where a plain object was passed instead of ActionTargetContext
       const plainObjectContext = { entityId: null, entity: null };
-      
+
       const result = formatter.format(
         waitActionDef,
         plainObjectContext,
@@ -249,9 +255,11 @@ describe('Action Scope None Integration', () => {
 
       // This should trigger the warning that we're fixing
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Unknown targetContext type: undefined for action core:wait')
+        expect.stringContaining(
+          'Unknown targetContext type: undefined for action core:wait'
+        )
       );
-      
+
       // But should still return the template unmodified
       expect(result.ok).toBe(true);
       expect(result.value).toBe('wait');

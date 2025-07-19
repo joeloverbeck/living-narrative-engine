@@ -3,7 +3,7 @@
   "id": "intimacy:kiss_cheek",
   "name": "Kiss Cheek",
   "description": "Lean in and softly kiss the target on the cheek.",
-  "scope": "intimacy:close_actors",
+  "scope": "intimacy:close_actors_facing_forward",
   "required_components": {
     "actor": ["intimacy:closeness"]
   },

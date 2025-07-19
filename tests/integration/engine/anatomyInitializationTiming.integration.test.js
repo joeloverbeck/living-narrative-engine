@@ -7,7 +7,12 @@ import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { AnatomyInitializationService } from '../../../src/anatomy/anatomyInitializationService.js';
 import GameSessionManager from '../../../src/engine/gameSessionManager.js';
 import EngineState from '../../../src/engine/engineState.js';
-import { createMockLogger, createMockValidatedEventDispatcherForIntegration, createMockTurnManager, createMockPlaytimeTracker } from '../../common/mockFactories.js';
+import {
+  createMockLogger,
+  createMockValidatedEventDispatcherForIntegration,
+  createMockTurnManager,
+  createMockPlaytimeTracker,
+} from '../../common/mockFactories.js';
 
 describe('Anatomy Initialization Timing Fix', () => {
   let anatomyInitService;
@@ -18,7 +23,7 @@ describe('Anatomy Initialization Timing Fix', () => {
 
   beforeEach(() => {
     mockLogger = createMockLogger();
-    
+
     // Mock anatomy generation service
     mockAnatomyGenerationService = {
       generateAnatomyIfNeeded: jest.fn().mockResolvedValue(true),
@@ -58,9 +63,13 @@ describe('Anatomy Initialization Timing Fix', () => {
   it('should have anatomy initialization service with generation tracking', () => {
     // Verify that the anatomy initialization service exists and has the timing methods
     expect(anatomyInitService).toBeDefined();
-    expect(typeof anatomyInitService.getPendingGenerationCount).toBe('function');
-    expect(typeof anatomyInitService.waitForAllGenerationsToComplete).toBe('function');
-    
+    expect(typeof anatomyInitService.getPendingGenerationCount).toBe(
+      'function'
+    );
+    expect(typeof anatomyInitService.waitForAllGenerationsToComplete).toBe(
+      'function'
+    );
+
     // Verify initial state
     expect(anatomyInitService.getPendingGenerationCount()).toBe(0);
   });
@@ -68,7 +77,7 @@ describe('Anatomy Initialization Timing Fix', () => {
   it('should handle anatomy generation timing in GameSessionManager', async () => {
     // Initialize the service so it listens for events
     anatomyInitService.initialize();
-    
+
     // Simulate entity creation that triggers anatomy generation
     const event = {
       type: 'ENTITY_CREATED',
@@ -81,14 +90,14 @@ describe('Anatomy Initialization Timing Fix', () => {
 
     // Trigger the event through the mock event dispatcher
     // Since it's initialized, the anatomy service should have subscribed to the event
-    const subscribeCall = mockEventDispatcher.subscribe.mock.calls.find(call => 
-      call[0] === 'core:entity_created'
+    const subscribeCall = mockEventDispatcher.subscribe.mock.calls.find(
+      (call) => call[0] === 'core:entity_created'
     );
     expect(subscribeCall).toBeDefined();
-    
+
     // Get the handler that was registered
     const eventHandler = subscribeCall[1];
-    
+
     // Trigger the event handler directly
     const generationPromise = eventHandler(event);
 
@@ -99,16 +108,19 @@ describe('Anatomy Initialization Timing Fix', () => {
     await generationPromise;
 
     // Verify anatomy service was called
-    expect(mockAnatomyGenerationService.generateAnatomyIfNeeded).toHaveBeenCalledWith('test:entity');
-    
+    expect(
+      mockAnatomyGenerationService.generateAnatomyIfNeeded
+    ).toHaveBeenCalledWith('test:entity');
+
     // Verify the generation count is back to 0
     expect(anatomyInitService.getPendingGenerationCount()).toBe(0);
   });
 
   it('should handle timeout when no pending generations exist', async () => {
     // Test that the waitForAllGenerationsToComplete method can handle timeouts
-    const timeoutPromise = anatomyInitService.waitForAllGenerationsToComplete(1); // 1ms timeout
-    
+    const timeoutPromise =
+      anatomyInitService.waitForAllGenerationsToComplete(1); // 1ms timeout
+
     // Should resolve quickly since there are no pending generations
     await expect(timeoutPromise).resolves.toBeUndefined();
   });

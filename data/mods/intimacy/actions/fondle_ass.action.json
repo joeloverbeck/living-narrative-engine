@@ -3,7 +3,7 @@
   "id": "intimacy:fondle_ass",
   "name": "Fondle Ass",
   "description": "Gently fondle the target's ass.",
-  "scope": "intimacy:actors_with_ass_cheeks_in_intimacy",
+  "scope": "intimacy:actors_with_ass_cheeks_facing_forward",
   "required_components": {
     "actor": ["intimacy:closeness"]
   },

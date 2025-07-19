@@ -66,7 +66,7 @@ describe('AwaitingExternalTurnEndState - setTimeout binding fix', () => {
   it('should correctly setup timeout with proper context binding', async () => {
     jest.useFakeTimers();
     const setTimeoutSpy = jest.spyOn(global, 'setTimeout');
-    
+
     const state = new AwaitingExternalTurnEndState(mockHandler, {
       timeoutMs: 100,
     });
@@ -81,7 +81,7 @@ describe('AwaitingExternalTurnEndState - setTimeout binding fix', () => {
 
     // Verify timeout callback was executed without error
     expect(mockCtx.endTurn).toHaveBeenCalled();
-    
+
     setTimeoutSpy.mockRestore();
   });
 
@@ -111,7 +111,7 @@ describe('AwaitingExternalTurnEndState - setTimeout binding fix', () => {
 
   it('should handle timeout callback execution without context binding issues', async () => {
     jest.useFakeTimers();
-    
+
     const state = new AwaitingExternalTurnEndState(mockHandler, {
       timeoutMs: 200,
     });
@@ -129,13 +129,13 @@ describe('AwaitingExternalTurnEndState - setTimeout binding fix', () => {
     jest.useFakeTimers();
     const setTimeoutSpy = jest.spyOn(global, 'setTimeout');
     const clearTimeoutSpy = jest.spyOn(global, 'clearTimeout');
-    
+
     const state = new AwaitingExternalTurnEndState(mockHandler, {
       timeoutMs: 1000,
     });
 
     await state.enterState(mockHandler, null);
-    
+
     // Verify timeout was set
     expect(setTimeoutSpy).toHaveBeenCalled();
 
@@ -150,7 +150,7 @@ describe('AwaitingExternalTurnEndState - setTimeout binding fix', () => {
 
     // Verify endTurn was NOT called (timeout was cleared)
     expect(mockCtx.endTurn).not.toHaveBeenCalled();
-    
+
     setTimeoutSpy.mockRestore();
     clearTimeoutSpy.mockRestore();
   });
@@ -163,7 +163,7 @@ describe('AwaitingExternalTurnEndState - setTimeout binding fix', () => {
     await state.enterState(mockHandler, null);
 
     const internalState = state.getInternalStateForTest();
-    
+
     // Verify internal state is properly maintained
     expect(internalState.timeoutId).toBeDefined();
     expect(internalState.timeoutId).not.toBeNull();
