@@ -369,11 +369,11 @@ describe('RuleLoader Integration (Rule Override via loadItemsForMod)', () => {
       // Adjusted constructor name
       `RuleLoader: Loading ${RULE_TYPE_NAME} definitions for mod '${overrideModId}'.`
     );
-    // Base class logs this format:
-    expect(mockLogger.info).toHaveBeenCalledWith(
+    // Base class logs this format at debug level (changed from info):
+    expect(mockLogger.debug).toHaveBeenCalledWith(
       `Mod [${baseModId}] - Processed 1/1 ${RULE_CONTENT_KEY} items.`
     );
-    expect(mockLogger.info).toHaveBeenCalledWith(
+    expect(mockLogger.debug).toHaveBeenCalledWith(
       `Mod [${overrideModId}] - Processed 1/1 ${RULE_CONTENT_KEY} items.`
     );
 

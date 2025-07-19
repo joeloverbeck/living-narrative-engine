@@ -242,7 +242,7 @@ describe('GoalLoader', () => {
       );
 
       // 4. Check for success logs
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining(`Mod [${modId}] - Processed 1/1 goals items.`)
       );
     });

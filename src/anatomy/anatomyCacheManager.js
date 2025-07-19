@@ -204,7 +204,7 @@ export class AnatomyCacheManager {
       parentToChildren
     );
 
-    this.#logger.info(
+    this.#logger.debug(
       `AnatomyCacheManager: Built cache with ${this.#adjacencyCache.size} nodes`
     );
   }

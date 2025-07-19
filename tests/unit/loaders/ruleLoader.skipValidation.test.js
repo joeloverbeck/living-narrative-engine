@@ -301,7 +301,7 @@ describe('RuleLoader - Skip Validation Scenario (via loadItemsForMod)', () => {
       );
       // The summary log is likely called from the base class's _loadItemsInternal helper, check its message
       // Assuming the message includes count/total and content key:
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining(
           `Mod [${modId}] - Processed 1/1 ${RULE_CONTENT_KEY} items.`
         ) // Use stringContaining if exact message varies

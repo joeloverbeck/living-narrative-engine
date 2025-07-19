@@ -455,7 +455,7 @@ describe('ComponentLoader (Sub-Ticket 6.9: Registry Storage Failure)', () => {
 
     // --- Verify: Final Summary Log ---
     // The log message correctly reflects the counts from the returned object
-    expect(mockLogger.info).toHaveBeenCalledWith(
+    expect(mockLogger.debug).toHaveBeenCalledWith(
       `Mod [${modId}] - Processed 0/1 components items. (1 failed)`
     );
     expect(mockLogger.warn).not.toHaveBeenCalled();

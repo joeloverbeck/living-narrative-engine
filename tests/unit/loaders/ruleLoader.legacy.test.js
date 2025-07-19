@@ -650,7 +650,7 @@ describe('RuleLoader (Sub-Ticket 4.2: Verify Absence of Legacy Discovery)', () =
       `RuleLoader: Loading ${RULE_TYPE_NAME} definitions for mod '${modId}'.`
     );
     // Verify final summary log IS called (because count > 0)
-    expect(mockLogger.info).toHaveBeenCalledWith(
+    expect(mockLogger.debug).toHaveBeenCalledWith(
       `Mod [${modId}] - Processed 1/1 ${RULE_CONTENT_KEY} items.`
     );
     expect(mockLogger.error).not.toHaveBeenCalled();

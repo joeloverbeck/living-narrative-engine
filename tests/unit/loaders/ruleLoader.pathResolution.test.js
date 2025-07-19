@@ -344,7 +344,7 @@ describe('RuleLoader (Path Resolution & Fetching via loadItemsForMod)', () => {
         `RuleLoader: Loading ${RULE_TYPE_NAME} definitions for mod '${modId}'.`
       );
       // Check final summary log from _loadItemsInternal
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         // Base class logs the contentKey in the summary message
         `Mod [${modId}] - Processed 2/2 ${RULE_CONTENT_KEY} items.`
       );

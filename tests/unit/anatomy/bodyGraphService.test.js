@@ -124,7 +124,7 @@ describe('BodyGraphService', () => {
       expect(mockLogger.debug).toHaveBeenCalledWith(
         "AnatomyCacheManager: Building cache for anatomy rooted at 'torso-1'"
       );
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         'AnatomyCacheManager: Built cache with 3 nodes'
       );
     });
@@ -137,7 +137,7 @@ describe('BodyGraphService', () => {
 
       await service.buildAdjacencyCache('entity-1');
 
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         'AnatomyCacheManager: Built cache with 1 nodes'
       );
     });
@@ -173,7 +173,7 @@ describe('BodyGraphService', () => {
       await service.buildAdjacencyCache('entity-1');
 
       // Should handle cycle without infinite loop
-      expect(mockLogger.info).toHaveBeenCalled();
+      expect(mockLogger.debug).toHaveBeenCalled();
     });
 
     it('should log error when entity retrieval fails', async () => {
@@ -221,7 +221,7 @@ describe('BodyGraphService', () => {
       expect(mockLogger.debug).toHaveBeenCalledWith(
         "AnatomyCacheManager: Building cache for anatomy rooted at 'torso-1'"
       );
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         'AnatomyCacheManager: Built cache with 2 nodes'
       );
 

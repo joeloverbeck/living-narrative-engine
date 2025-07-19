@@ -104,6 +104,80 @@
   pointer-events: none;
 }
 
+/* --- Namespace Grouping Styles --- */
+
+/* Action Section Headers */
+.action-section-header {
+  font-weight: bold;
+  font-size: 0.9em;
+  color: var(--text-muted);
+  margin: 0.8em 0 0.4em 0;
+  padding: 0.2em 0;
+  border-bottom: 1px solid var(--border-light);
+  letter-spacing: 0.5px;
+}
+
+.action-section-header:first-child {
+  margin-top: 0.2em;
+}
+
+/* Action Groups */
+.action-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5em;
+  margin-bottom: 1em;
+}
+
+.action-group:last-child {
+  margin-bottom: 0;
+}
+
+/* Action Buttons within Groups */
+.action-group .action-button {
+  min-width: auto;
+  margin: 0; /* Remove default margins since gap handles spacing */
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .action-group {
+    flex-direction: column;
+    gap: 0.3em;
+  }
+  
+  .action-section-header {
+    font-size: 0.8em;
+    margin: 0.6em 0 0.3em 0;
+  }
+}
+
+/* Accessibility Enhancements */
+.action-section-header:focus {
+  outline: 2px solid var(--focus-color);
+  outline-offset: 2px;
+}
+
+/* Animation Support for Grouped Actions */
+.action-group {
+  transition: opacity 0.2s ease-in-out;
+}
+
+#action-buttons.actions-fade-in .action-group {
+  animation: fadeInGroup 0.3s ease-in-out;
+}
+
+@keyframes fadeInGroup {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Note: Styles for specific button states within #action-buttons
    (e.g., #action-buttons button.selected, #action-buttons button.selected:hover)
    should remain in the main style.css or be moved to _buttons.css
