@@ -150,7 +150,13 @@ export function createMockEntityManager({ returnArray = false } = {}) {
         ? Array.from(activeEntities.values())
         : activeEntities.values()
     ),
-    getEntityInstance: jest.fn((id) => activeEntities.get(id)),
+    getEntityInstance: jest.fn((id) => {
+      const entity = activeEntities.get(id);
+      if (!entity) {
+        return { id, type: 'unknown' };
+      }
+      return entity;
+    }),
     removeEntityInstance: jest.fn((id) => {
       activeEntities.delete(id);
       entityComponents.delete(id);

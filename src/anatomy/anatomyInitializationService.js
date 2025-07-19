@@ -25,6 +25,10 @@ export class AnatomyInitializationService {
   #isInitialized = false;
   /** @type {(() => void) | null} */
   #unsubscribeEntityCreated = null;
+  /** @type {Set<string>} */
+  #pendingGenerations = new Set();
+  /** @type {Map<string, {resolve: Function, reject: Function}>} */
+  #generationPromises = new Map();
 
   /**
    * @param {object} deps
@@ -96,6 +100,12 @@ export class AnatomyInitializationService {
     }
 
     try {
+      // Mark as pending before starting generation
+      this.#pendingGenerations.add(instanceId);
+      this.#logger.debug(
+        `AnatomyInitializationService: Starting anatomy generation for entity '${instanceId}'`
+      );
+
       // Attempt to generate anatomy for the newly created entity
       const wasGenerated =
         await this.#anatomyGenerationService.generateAnatomyIfNeeded(
@@ -107,11 +117,20 @@ export class AnatomyInitializationService {
           `AnatomyInitializationService: Generated anatomy for entity '${instanceId}'`
         );
       }
+
+      // Mark as completed and resolve any waiting promises
+      this.#pendingGenerations.delete(instanceId);
+      this.#resolveGenerationPromise(instanceId, wasGenerated);
     } catch (error) {
       this.#logger.error(
         `AnatomyInitializationService: Failed to generate anatomy for entity '${instanceId}'`,
         { error }
       );
+      
+      // Mark as completed even on error and reject any waiting promises
+      this.#pendingGenerations.delete(instanceId);
+      this.#rejectGenerationPromise(instanceId, error);
+      
       // Don't throw - we don't want to break entity creation if anatomy generation fails
     }
   }
@@ -151,6 +170,107 @@ export class AnatomyInitializationService {
   }
 
   /**
+   * Waits for anatomy generation to complete for all pending entities
+   * 
+   * @param {number} [timeoutMs] - Timeout in milliseconds
+   * @returns {Promise<void>} Resolves when all pending generations complete
+   * @throws {Error} If timeout is reached or generation fails
+   */
+  async waitForAllGenerationsToComplete(timeoutMs = 10000) {
+    if (this.#pendingGenerations.size === 0) {
+      this.#logger.debug(
+        'AnatomyInitializationService: No pending anatomy generations'
+      );
+      return;
+    }
+
+    this.#logger.debug(
+      `AnatomyInitializationService: Waiting for ${this.#pendingGenerations.size} anatomy generations to complete`
+    );
+
+    const pendingEntityIds = Array.from(this.#pendingGenerations);
+    const promises = pendingEntityIds.map(entityId => this.#getGenerationPromise(entityId));
+    
+    try {
+      await Promise.race([
+        Promise.allSettled(promises),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error(`Anatomy generation timeout after ${timeoutMs}ms`)), timeoutMs)
+        )
+      ]);
+
+      this.#logger.info(
+        'AnatomyInitializationService: All anatomy generations completed'
+      );
+    } catch (error) {
+      this.#logger.error(
+        'AnatomyInitializationService: Failed to wait for anatomy generations',
+        { error, pendingCount: this.#pendingGenerations.size }
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Gets the count of pending anatomy generations
+   * 
+   * @returns {number} Number of pending generations
+   */
+  getPendingGenerationCount() {
+    return this.#pendingGenerations.size;
+  }
+
+  /**
+   * Gets a promise that resolves when anatomy generation completes for a specific entity
+   * 
+   * @private
+   * @param {string} entityId - The entity ID
+   * @returns {Promise<boolean>} Promise that resolves with generation result
+   */
+  #getGenerationPromise(entityId) {
+    if (!this.#generationPromises.has(entityId)) {
+      const promiseHandlers = {};
+      const promise = new Promise((resolve, reject) => {
+        promiseHandlers.resolve = resolve;
+        promiseHandlers.reject = reject;
+      });
+      promiseHandlers.promise = promise;
+      this.#generationPromises.set(entityId, promiseHandlers);
+    }
+    return this.#generationPromises.get(entityId).promise;
+  }
+
+  /**
+   * Resolves the generation promise for an entity
+   * 
+   * @private
+   * @param {string} entityId - The entity ID
+   * @param {boolean} wasGenerated - Whether anatomy was generated
+   */
+  #resolveGenerationPromise(entityId, wasGenerated) {
+    const promiseHandlers = this.#generationPromises.get(entityId);
+    if (promiseHandlers) {
+      promiseHandlers.resolve(wasGenerated);
+      this.#generationPromises.delete(entityId);
+    }
+  }
+
+  /**
+   * Rejects the generation promise for an entity
+   * 
+   * @private
+   * @param {string} entityId - The entity ID
+   * @param {Error} error - The error that occurred
+   */
+  #rejectGenerationPromise(entityId, error) {
+    const promiseHandlers = this.#generationPromises.get(entityId);
+    if (promiseHandlers) {
+      promiseHandlers.reject(error);
+      this.#generationPromises.delete(entityId);
+    }
+  }
+
+  /**
    * Disposes of the service by removing event listeners
    */
   dispose() {
@@ -166,6 +286,13 @@ export class AnatomyInitializationService {
       this.#unsubscribeEntityCreated();
       this.#unsubscribeEntityCreated = null;
     }
+
+    // Clean up any remaining promises
+    for (const [entityId, promiseHandlers] of this.#generationPromises) {
+      promiseHandlers.reject(new Error('Service disposed'));
+    }
+    this.#generationPromises.clear();
+    this.#pendingGenerations.clear();
 
     this.#isInitialized = false;
     this.#logger.info('AnatomyInitializationService: Disposed');

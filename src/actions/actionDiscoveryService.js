@@ -9,56 +9,45 @@
 /** @typedef {import('./actionIndex.js').ActionIndex} ActionIndex */
 /** @typedef {import('./tracing/traceContext.js').TraceContext} TraceContext */
 /** @typedef {import('./actionTypes.js').TraceContextFactory} TraceContextFactory */
-/** @typedef {import('./actionCandidateProcessor.js').ActionCandidateProcessor} ActionCandidateProcessor */
+/** @typedef {import('./actionPipelineOrchestrator.js').ActionPipelineOrchestrator} ActionPipelineOrchestrator */
 /** @typedef {import('./errors/actionErrorContextBuilder.js').ActionErrorContextBuilder} ActionErrorContextBuilder */
 /** @typedef {import('./errors/actionErrorTypes.js').ActionErrorContext} ActionErrorContext */
 
 import { IActionDiscoveryService } from '../interfaces/IActionDiscoveryService.js';
 import { ServiceSetup } from '../utils/serviceInitializerUtils.js';
 import { getActorLocation } from '../utils/actorLocationUtils.js';
-import {
-  createActionErrorContext,
-  extractTargetId,
-} from './utils/discoveryErrorUtils.js';
 import { InvalidActorEntityError } from '../errors/invalidActorEntityError.js';
 import { isNonBlankString } from '../utils/textUtils.js';
-import { ERROR_PHASES } from './errors/actionErrorTypes.js';
 
 // ────────────────────────────────────────────────────────────────────────────────
 /**
  * @class ActionDiscoveryService
  * @augments IActionDiscoveryService
- * @description Discovers valid actions for entities. Does not extend BaseService because it already inherits from IActionDiscoveryService.
+ * @description Discovers valid actions for entities using a pipeline orchestrator.
  */
 export class ActionDiscoveryService extends IActionDiscoveryService {
   #entityManager;
   #logger;
   #getActorLocationFn;
-  #actionIndex;
   #traceContextFactory;
-  #actionCandidateProcessor;
-  #actionErrorContextBuilder;
+  #actionPipelineOrchestrator;
 
   /**
    * Creates an ActionDiscoveryService instance.
    *
    * @param {object} deps - The dependencies object.
    * @param {EntityManager} deps.entityManager - The entity manager instance.
-   * @param {ActionIndex} deps.actionIndex - The action index for candidate actions.
    * @param {ILogger} deps.logger - Logger for diagnostic output.
-   * @param {ActionCandidateProcessor} deps.actionCandidateProcessor - Processor for candidate actions.
+   * @param {ActionPipelineOrchestrator} deps.actionPipelineOrchestrator - The pipeline orchestrator.
    * @param {TraceContextFactory} deps.traceContextFactory - Factory for creating trace contexts.
    * @param {Function} deps.getActorLocationFn - Function to get actor location.
-   * @param {ActionErrorContextBuilder} deps.actionErrorContextBuilder - Service for building enhanced error context.
    * @param {ServiceSetup} [deps.serviceSetup] - Optional service setup helper.
    */
   constructor({
     entityManager,
-    actionIndex,
     logger,
-    actionCandidateProcessor,
+    actionPipelineOrchestrator,
     traceContextFactory,
-    actionErrorContextBuilder,
     serviceSetup,
     getActorLocationFn = getActorLocation,
   }) {
@@ -68,31 +57,21 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
       entityManager: {
         value: entityManager,
       },
-      actionIndex: {
-        value: actionIndex,
-        requiredMethods: ['getCandidateActions'],
-      },
-      actionCandidateProcessor: {
-        value: actionCandidateProcessor,
-        requiredMethods: ['process'],
-      },
-      actionErrorContextBuilder: {
-        value: actionErrorContextBuilder,
-        requiredMethods: ['buildErrorContext'],
+      actionPipelineOrchestrator: {
+        value: actionPipelineOrchestrator,
+        requiredMethods: ['discoverActions'],
       },
       traceContextFactory: { value: traceContextFactory, isFunction: true },
       getActorLocationFn: { value: getActorLocationFn, isFunction: true },
     });
 
     this.#entityManager = entityManager;
-    this.#actionIndex = actionIndex;
-    this.#actionCandidateProcessor = actionCandidateProcessor;
-    this.#actionErrorContextBuilder = actionErrorContextBuilder;
+    this.#actionPipelineOrchestrator = actionPipelineOrchestrator;
     this.#traceContextFactory = traceContextFactory;
     this.#getActorLocationFn = getActorLocationFn;
 
     this.#logger.debug(
-      'ActionDiscoveryService initialised with streamlined logic.'
+      'ActionDiscoveryService initialised with pipeline orchestrator.'
     );
   }
 
@@ -118,70 +97,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
   }
 
   /**
-   * Retrieves candidate action definitions for the given actor.
-   *
-   * @param {Entity} actorEntity - The actor entity.
-   * @param {TraceContext|null} trace - Optional trace context.
-   * @returns {import('../interfaces/IGameDataRepository.js').ActionDefinition[]} Candidate action definitions.
-   * @throws {Error} Propagates any retrieval errors.
-   * @private
-   */
-  #fetchCandidateActions(actorEntity, trace) {
-    try {
-      return this.#actionIndex.getCandidateActions(actorEntity, trace);
-    } catch (err) {
-      this.#logger.error(
-        `Error retrieving candidate actions: ${err.message}`,
-        err
-      );
-      throw err;
-    }
-  }
-
-  /**
-   * Processes a single candidate action definition.
-   *
-   * @param {import('../interfaces/IGameDataRepository.js').ActionDefinition} actionDef - The action definition.
-   * @param {Entity} actorEntity - The actor performing the action.
-   * @param {ActionContext} discoveryContext - The populated discovery context.
-   * @param {TraceContext|null} trace - Optional trace context.
-   * @returns {Promise<{actions: any[], errors: ActionErrorContext[]}>} Result of processing.
-   * @private
-   */
-  async #processCandidate(actionDef, actorEntity, discoveryContext, trace) {
-    try {
-      const result = await this.#actionCandidateProcessor.process(
-        actionDef,
-        actorEntity,
-        discoveryContext,
-        trace
-      );
-      return result ?? { actions: [], errors: [] };
-    } catch (err) {
-      const errorContext = this.#actionErrorContextBuilder.buildErrorContext({
-        error: err,
-        actionDef,
-        actorId: actorEntity.id,
-        phase: ERROR_PHASES.DISCOVERY,
-        trace,
-        targetId: extractTargetId(err),
-      });
-
-      this.#logger.error(
-        `Error processing candidate action '${actionDef.id}': ${err.message}`,
-        errorContext
-      );
-
-      return {
-        actions: [],
-        errors: [createActionErrorContext(errorContext)],
-      };
-    }
-  }
-
-  /**
-   * The main public method is now a high-level orchestrator.
-   * It is simpler, with its complex inner logic delegated to helpers.
+   * The main public method now delegates to the pipeline orchestrator.
    *
    * @param {Entity} actorEntity - The entity for whom to find actions.
    * @param {ActionContext} [baseContext] - The current action context.
@@ -217,53 +133,23 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
       { withTrace: shouldTrace }
     );
 
-    let candidateDefs = [];
-    try {
-      candidateDefs = this.#fetchCandidateActions(actorEntity, trace);
-    } catch (err) {
-      // For candidate retrieval errors, we don't have a specific action definition
-      const errorContext = this.#actionErrorContextBuilder.buildErrorContext({
-        error: err,
-        actionDef: { id: 'candidateRetrieval', name: 'Candidate Retrieval' },
-        actorId: actorEntity.id,
-        phase: ERROR_PHASES.DISCOVERY,
-        trace,
-        additionalContext: {
-          stage: 'candidate_retrieval',
-        },
-      });
-
-      return {
-        actions: [],
-        errors: [createActionErrorContext(errorContext)],
-        trace,
-      };
-    }
-    const actions = [];
-    const errors = [];
+    // Prepare the discovery context
     const discoveryContext = this.#prepareDiscoveryContext(
       actorEntity,
       baseContext
     );
 
-    const processingPromises = candidateDefs.map((actionDef) =>
-      this.#processCandidate(actionDef, actorEntity, discoveryContext, trace)
+    // Delegate to the pipeline orchestrator
+    const result = await this.#actionPipelineOrchestrator.discoverActions(
+      actorEntity,
+      discoveryContext,
+      { trace }
     );
-    const results = await Promise.all(processingPromises);
-
-    for (const { actions: a, errors: e } of results) {
-      actions.push(...a);
-      errors.push(...e);
-    }
 
     this.#logger.debug(
-      `Finished action discovery for actor ${actorEntity.id}. Found ${actions.length} actions from ${candidateDefs.length} candidates.`
-    );
-    trace?.info(
-      `Finished discovery. Found ${actions.length} valid actions.`,
-      SOURCE
+      `Finished action discovery for actor ${actorEntity.id}. Found ${result.actions.length} actions.`
     );
 
-    return { actions, errors, trace };
+    return result;
   }
 }

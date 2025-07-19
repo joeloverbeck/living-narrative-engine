@@ -82,6 +82,7 @@ describeActionDiscoverySuite(
       expect(
         bed.mocks.prerequisiteEvaluationService.evaluate
       ).not.toHaveBeenCalled();
+      // FIX: The formatter is now called for all actions, including 'none' scope
       expect(bed.mocks.actionCommandFormatter.format).toHaveBeenCalledTimes(1);
     });
 
@@ -144,6 +145,7 @@ describeActionDiscoverySuite(
       expect(
         bed.mocks.prerequisiteEvaluationService.evaluate
       ).toHaveBeenCalledTimes(1);
+      // FIX: The formatter is now called for all actions, including 'none' scope
       expect(bed.mocks.actionCommandFormatter.format).toHaveBeenCalledTimes(1);
     });
   }

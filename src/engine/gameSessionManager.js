@@ -35,6 +35,8 @@ class GameSessionManager {
   #resetCoreGameStateFn;
   /** @type {(worldName: string) => void} */
   #startEngineFn;
+  /** @type {import('../anatomy/anatomyInitializationService.js').AnatomyInitializationService} */
+  #anatomyInitializationService;
 
   /**
    * Creates a new GameSessionManager instance.
@@ -48,6 +50,7 @@ class GameSessionManager {
    * @param {() => Promise<void>} deps.stopFn - Function to stop the engine.
    * @param {() => Promise<void>} deps.resetCoreGameStateFn - Function to reset core state.
    * @param {(worldName: string) => void} deps.startEngineFn - Function to set engine state started.
+   * @param {import('../anatomy/anatomyInitializationService.js').AnatomyInitializationService} deps.anatomyInitializationService - Anatomy initialization service.
    */
   constructor({
     logger,
@@ -58,6 +61,7 @@ class GameSessionManager {
     stopFn,
     resetCoreGameStateFn,
     startEngineFn,
+    anatomyInitializationService,
   }) {
     this.#logger = logger;
     this.#turnManager = turnManager;
@@ -67,6 +71,7 @@ class GameSessionManager {
     this.#stopFn = stopFn;
     this.#resetCoreGameStateFn = resetCoreGameStateFn;
     this.#startEngineFn = startEngineFn;
+    this.#anatomyInitializationService = anatomyInitializationService;
   }
 
   /**
@@ -138,6 +143,35 @@ class GameSessionManager {
       activeWorld: worldName,
       message: 'Enter command...',
     });
+
+    // Wait for anatomy generation to complete before starting turns
+    if (this.#anatomyInitializationService) {
+      const pendingCount = this.#anatomyInitializationService.getPendingGenerationCount();
+      if (pendingCount > 0) {
+        this.#logger.info(
+          `GameSessionManager._finalizeGameStart: Waiting for ${pendingCount} anatomy generations to complete before starting turns...`
+        );
+        try {
+          await this.#anatomyInitializationService.waitForAllGenerationsToComplete(15000); // 15 second timeout
+          this.#logger.info(
+            'GameSessionManager._finalizeGameStart: Anatomy generation completed, starting turns.'
+          );
+        } catch (error) {
+          this.#logger.warn(
+            'GameSessionManager._finalizeGameStart: Anatomy generation did not complete in time, starting turns anyway.',
+            { error: error.message, pendingCount }
+          );
+        }
+      } else {
+        this.#logger.debug(
+          'GameSessionManager._finalizeGameStart: No pending anatomy generations detected.'
+        );
+      }
+    } else {
+      this.#logger.warn(
+        'GameSessionManager._finalizeGameStart: AnatomyInitializationService not available, cannot wait for anatomy generation.'
+      );
+    }
 
     this.#logger.debug(
       'GameSessionManager._finalizeGameStart: Starting TurnManager...'

@@ -116,6 +116,10 @@ class GameEngine {
             stopFn: this.stop.bind(this),
             resetCoreGameStateFn: this.#resetCoreGameState.bind(this),
             startEngineFn: this.#startEngine.bind(this),
+            anatomyInitializationService: container.isRegistered && 
+              container.isRegistered(tokens.AnatomyInitializationService) 
+                ? container.resolve(tokens.AnatomyInitializationService) 
+                : null,
           }));
 
     const shouldResolvePersist =

@@ -88,16 +88,21 @@ describe('UnifiedErrorHandler', () => {
         actorId: 'actor-123',
       });
 
-      expect(mockLogger.error).toHaveBeenCalledWith('Error in discovery phase', {
-        error: 'Test error',
-        stack: 'Test stack trace',
-        actionId: 'test:action',
-        actorId: 'actor-123',
-        targetId: null,
-        phase: ERROR_PHASES.DISCOVERY,
-      });
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Error in discovery phase',
+        {
+          error: 'Test error',
+          stack: 'Test stack trace',
+          actionId: 'test:action',
+          actorId: 'actor-123',
+          targetId: null,
+          phase: ERROR_PHASES.DISCOVERY,
+        }
+      );
 
-      expect(mockActionErrorContextBuilder.buildErrorContext).toHaveBeenCalledWith({
+      expect(
+        mockActionErrorContextBuilder.buildErrorContext
+      ).toHaveBeenCalledWith({
         error: mockError,
         actionDef: mockActionDef,
         actorId: 'actor-123',
@@ -119,16 +124,21 @@ describe('UnifiedErrorHandler', () => {
         targetId: 'target-456',
       });
 
-      expect(mockLogger.error).toHaveBeenCalledWith('Error in execution phase', {
-        error: 'Test error',
-        stack: 'Test stack trace',
-        actionId: 'test:action',
-        actorId: 'actor-123',
-        targetId: 'target-456',
-        phase: ERROR_PHASES.EXECUTION,
-      });
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Error in execution phase',
+        {
+          error: 'Test error',
+          stack: 'Test stack trace',
+          actionId: 'test:action',
+          actorId: 'actor-123',
+          targetId: 'target-456',
+          phase: ERROR_PHASES.EXECUTION,
+        }
+      );
 
-      expect(mockActionErrorContextBuilder.buildErrorContext).toHaveBeenCalledWith({
+      expect(
+        mockActionErrorContextBuilder.buildErrorContext
+      ).toHaveBeenCalledWith({
         error: mockError,
         actionDef: mockActionDef,
         actorId: 'actor-123',
@@ -148,7 +158,9 @@ describe('UnifiedErrorHandler', () => {
         trace: mockTraceContext,
       });
 
-      expect(mockActionErrorContextBuilder.buildErrorContext).toHaveBeenCalledWith({
+      expect(
+        mockActionErrorContextBuilder.buildErrorContext
+      ).toHaveBeenCalledWith({
         error: mockError,
         actionDef: mockActionDef,
         actorId: 'actor-123',
@@ -173,18 +185,23 @@ describe('UnifiedErrorHandler', () => {
         additionalContext,
       });
 
-      expect(mockLogger.error).toHaveBeenCalledWith('Error in execution phase', {
-        error: 'Test error',
-        stack: 'Test stack trace',
-        actionId: 'test:action',
-        actorId: 'actor-123',
-        targetId: null,
-        phase: ERROR_PHASES.EXECUTION,
-        customField: 'custom value',
-        debugInfo: { level: 'critical' },
-      });
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Error in execution phase',
+        {
+          error: 'Test error',
+          stack: 'Test stack trace',
+          actionId: 'test:action',
+          actorId: 'actor-123',
+          targetId: null,
+          phase: ERROR_PHASES.EXECUTION,
+          customField: 'custom value',
+          debugInfo: { level: 'critical' },
+        }
+      );
 
-      expect(mockActionErrorContextBuilder.buildErrorContext).toHaveBeenCalledWith({
+      expect(
+        mockActionErrorContextBuilder.buildErrorContext
+      ).toHaveBeenCalledWith({
         error: mockError,
         actionDef: mockActionDef,
         actorId: 'actor-123',
@@ -203,7 +220,9 @@ describe('UnifiedErrorHandler', () => {
         actorId: 'actor-123',
       });
 
-      expect(mockActionErrorContextBuilder.buildErrorContext).toHaveBeenCalledWith({
+      expect(
+        mockActionErrorContextBuilder.buildErrorContext
+      ).toHaveBeenCalledWith({
         error: mockError,
         actionDef: { id: 'unknown', name: 'Unknown Action' },
         actorId: 'actor-123',
@@ -221,17 +240,22 @@ describe('UnifiedErrorHandler', () => {
         actorId: 'actor-123',
       });
 
-      expect(mockLogger.error).toHaveBeenCalledWith('Error in discovery phase', {
-        error: 'Test error',
-        stack: 'Test stack trace',
-        actionId: undefined,
-        actorId: 'actor-123',
-        targetId: null,
-        phase: ERROR_PHASES.DISCOVERY,
-        stage: 'discovery',
-      });
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Error in discovery phase',
+        {
+          error: 'Test error',
+          stack: 'Test stack trace',
+          actionId: undefined,
+          actorId: 'actor-123',
+          targetId: null,
+          phase: ERROR_PHASES.DISCOVERY,
+          stage: 'discovery',
+        }
+      );
 
-      expect(mockActionErrorContextBuilder.buildErrorContext).toHaveBeenCalledWith({
+      expect(
+        mockActionErrorContextBuilder.buildErrorContext
+      ).toHaveBeenCalledWith({
         error: mockError,
         actionDef: { id: 'unknown', name: 'Unknown Action' },
         actorId: 'actor-123',
@@ -250,7 +274,9 @@ describe('UnifiedErrorHandler', () => {
         actionDef: mockActionDef,
       });
 
-      expect(mockActionErrorContextBuilder.buildErrorContext).toHaveBeenCalledWith({
+      expect(
+        mockActionErrorContextBuilder.buildErrorContext
+      ).toHaveBeenCalledWith({
         error: mockError,
         actionDef: mockActionDef,
         actorId: 'actor-123',
@@ -267,7 +293,9 @@ describe('UnifiedErrorHandler', () => {
         trace: mockTraceContext,
       });
 
-      expect(mockActionErrorContextBuilder.buildErrorContext).toHaveBeenCalledWith({
+      expect(
+        mockActionErrorContextBuilder.buildErrorContext
+      ).toHaveBeenCalledWith({
         error: mockError,
         actionDef: { id: 'unknown', name: 'Unknown Action' },
         actorId: 'actor-123',
@@ -286,7 +314,9 @@ describe('UnifiedErrorHandler', () => {
         additionalContext,
       });
 
-      expect(mockActionErrorContextBuilder.buildErrorContext).toHaveBeenCalledWith({
+      expect(
+        mockActionErrorContextBuilder.buildErrorContext
+      ).toHaveBeenCalledWith({
         error: mockError,
         actionDef: { id: 'unknown', name: 'Unknown Action' },
         actorId: 'actor-123',
@@ -305,17 +335,22 @@ describe('UnifiedErrorHandler', () => {
         actionDef: mockActionDef,
       });
 
-      expect(mockLogger.error).toHaveBeenCalledWith('Error in execution phase', {
-        error: 'Test error',
-        stack: 'Test stack trace',
-        actionId: 'test:action',
-        actorId: 'actor-123',
-        targetId: null,
-        phase: ERROR_PHASES.EXECUTION,
-        stage: 'execution',
-      });
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Error in execution phase',
+        {
+          error: 'Test error',
+          stack: 'Test stack trace',
+          actionId: 'test:action',
+          actorId: 'actor-123',
+          targetId: null,
+          phase: ERROR_PHASES.EXECUTION,
+          stage: 'execution',
+        }
+      );
 
-      expect(mockActionErrorContextBuilder.buildErrorContext).toHaveBeenCalledWith({
+      expect(
+        mockActionErrorContextBuilder.buildErrorContext
+      ).toHaveBeenCalledWith({
         error: mockError,
         actionDef: mockActionDef,
         actorId: 'actor-123',
@@ -335,7 +370,9 @@ describe('UnifiedErrorHandler', () => {
         targetId: 'target-456',
       });
 
-      expect(mockActionErrorContextBuilder.buildErrorContext).toHaveBeenCalledWith({
+      expect(
+        mockActionErrorContextBuilder.buildErrorContext
+      ).toHaveBeenCalledWith({
         error: mockError,
         actionDef: mockActionDef,
         actorId: 'actor-123',
@@ -353,7 +390,9 @@ describe('UnifiedErrorHandler', () => {
         trace: mockTraceContext,
       });
 
-      expect(mockActionErrorContextBuilder.buildErrorContext).toHaveBeenCalledWith({
+      expect(
+        mockActionErrorContextBuilder.buildErrorContext
+      ).toHaveBeenCalledWith({
         error: mockError,
         actionDef: mockActionDef,
         actorId: 'actor-123',
@@ -373,14 +412,19 @@ describe('UnifiedErrorHandler', () => {
         additionalContext,
       });
 
-      expect(mockActionErrorContextBuilder.buildErrorContext).toHaveBeenCalledWith({
+      expect(
+        mockActionErrorContextBuilder.buildErrorContext
+      ).toHaveBeenCalledWith({
         error: mockError,
         actionDef: mockActionDef,
         actorId: 'actor-123',
         phase: ERROR_PHASES.EXECUTION,
         trace: null,
         targetId: null,
-        additionalContext: { stage: 'execution', executionDetail: 'failed at step 3' },
+        additionalContext: {
+          stage: 'execution',
+          executionDetail: 'failed at step 3',
+        },
       });
     });
   });
@@ -392,17 +436,22 @@ describe('UnifiedErrorHandler', () => {
         actionDef: mockActionDef,
       });
 
-      expect(mockLogger.error).toHaveBeenCalledWith('Error in validation phase', {
-        error: 'Test error',
-        stack: 'Test stack trace',
-        actionId: 'test:action',
-        actorId: 'actor-123',
-        targetId: null,
-        phase: ERROR_PHASES.VALIDATION,
-        stage: 'validation',
-      });
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Error in validation phase',
+        {
+          error: 'Test error',
+          stack: 'Test stack trace',
+          actionId: 'test:action',
+          actorId: 'actor-123',
+          targetId: null,
+          phase: ERROR_PHASES.VALIDATION,
+          stage: 'validation',
+        }
+      );
 
-      expect(mockActionErrorContextBuilder.buildErrorContext).toHaveBeenCalledWith({
+      expect(
+        mockActionErrorContextBuilder.buildErrorContext
+      ).toHaveBeenCalledWith({
         error: mockError,
         actionDef: mockActionDef,
         actorId: 'actor-123',
@@ -422,7 +471,9 @@ describe('UnifiedErrorHandler', () => {
         targetId: 'target-789',
       });
 
-      expect(mockActionErrorContextBuilder.buildErrorContext).toHaveBeenCalledWith({
+      expect(
+        mockActionErrorContextBuilder.buildErrorContext
+      ).toHaveBeenCalledWith({
         error: mockError,
         actionDef: mockActionDef,
         actorId: 'actor-123',
@@ -440,7 +491,9 @@ describe('UnifiedErrorHandler', () => {
         trace: mockTraceContext,
       });
 
-      expect(mockActionErrorContextBuilder.buildErrorContext).toHaveBeenCalledWith({
+      expect(
+        mockActionErrorContextBuilder.buildErrorContext
+      ).toHaveBeenCalledWith({
         error: mockError,
         actionDef: mockActionDef,
         actorId: 'actor-123',
@@ -460,14 +513,19 @@ describe('UnifiedErrorHandler', () => {
         additionalContext,
       });
 
-      expect(mockActionErrorContextBuilder.buildErrorContext).toHaveBeenCalledWith({
+      expect(
+        mockActionErrorContextBuilder.buildErrorContext
+      ).toHaveBeenCalledWith({
         error: mockError,
         actionDef: mockActionDef,
         actorId: 'actor-123',
         phase: ERROR_PHASES.VALIDATION,
         trace: null,
         targetId: null,
-        additionalContext: { stage: 'validation', validationRule: 'range_check' },
+        additionalContext: {
+          stage: 'validation',
+          validationRule: 'range_check',
+        },
       });
     });
   });
@@ -479,17 +537,22 @@ describe('UnifiedErrorHandler', () => {
         stage: 'dispatch',
       });
 
-      expect(mockLogger.error).toHaveBeenCalledWith('Error in execution phase', {
-        error: 'Test error',
-        stack: 'Test stack trace',
-        actionId: undefined,
-        actorId: 'actor-123',
-        targetId: null,
-        phase: ERROR_PHASES.EXECUTION,
-        stage: 'command_processing_dispatch',
-      });
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Error in execution phase',
+        {
+          error: 'Test error',
+          stack: 'Test stack trace',
+          actionId: undefined,
+          actorId: 'actor-123',
+          targetId: null,
+          phase: ERROR_PHASES.EXECUTION,
+          stage: 'command_processing_dispatch',
+        }
+      );
 
-      expect(mockActionErrorContextBuilder.buildErrorContext).toHaveBeenCalledWith({
+      expect(
+        mockActionErrorContextBuilder.buildErrorContext
+      ).toHaveBeenCalledWith({
         error: mockError,
         actionDef: { id: 'unknown', name: 'Unknown Action' },
         actorId: 'actor-123',
@@ -508,7 +571,9 @@ describe('UnifiedErrorHandler', () => {
         stage: 'interpretation',
       });
 
-      expect(mockActionErrorContextBuilder.buildErrorContext).toHaveBeenCalledWith({
+      expect(
+        mockActionErrorContextBuilder.buildErrorContext
+      ).toHaveBeenCalledWith({
         error: mockError,
         actionDef: { id: 'unknown', name: 'Unknown Action' },
         actorId: 'actor-123',
@@ -525,7 +590,9 @@ describe('UnifiedErrorHandler', () => {
         stage: 'directive',
       });
 
-      expect(mockActionErrorContextBuilder.buildErrorContext).toHaveBeenCalledWith({
+      expect(
+        mockActionErrorContextBuilder.buildErrorContext
+      ).toHaveBeenCalledWith({
         error: mockError,
         actionDef: { id: 'unknown', name: 'Unknown Action' },
         actorId: 'actor-123',
@@ -543,7 +610,9 @@ describe('UnifiedErrorHandler', () => {
         actionDef: mockActionDef,
       });
 
-      expect(mockActionErrorContextBuilder.buildErrorContext).toHaveBeenCalledWith({
+      expect(
+        mockActionErrorContextBuilder.buildErrorContext
+      ).toHaveBeenCalledWith({
         error: mockError,
         actionDef: mockActionDef,
         actorId: 'actor-123',
@@ -555,7 +624,10 @@ describe('UnifiedErrorHandler', () => {
     });
 
     it('should handle processing error with additional context', () => {
-      const additionalContext = { processingStep: 'validation', attemptCount: 3 };
+      const additionalContext = {
+        processingStep: 'validation',
+        attemptCount: 3,
+      };
 
       handler.handleProcessingError(mockError, {
         actorId: 'actor-123',
@@ -563,7 +635,9 @@ describe('UnifiedErrorHandler', () => {
         additionalContext,
       });
 
-      expect(mockActionErrorContextBuilder.buildErrorContext).toHaveBeenCalledWith({
+      expect(
+        mockActionErrorContextBuilder.buildErrorContext
+      ).toHaveBeenCalledWith({
         error: mockError,
         actionDef: { id: 'unknown', name: 'Unknown Action' },
         actorId: 'actor-123',
@@ -648,7 +722,10 @@ describe('UnifiedErrorHandler', () => {
     it('should always set success to false', () => {
       const results = [
         handler.createSimpleErrorResponse(mockError, 'Error 1'),
-        handler.createSimpleErrorResponse(new Error('Another error'), 'Error 2'),
+        handler.createSimpleErrorResponse(
+          new Error('Another error'),
+          'Error 2'
+        ),
         handler.createSimpleErrorResponse(new Error(''), 'Error 3'),
       ];
 

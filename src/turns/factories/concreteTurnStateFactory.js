@@ -10,6 +10,7 @@ import { TurnIdleState } from '../states/turnIdleState.js';
 import TurnDirectiveStrategyResolver, {
   DEFAULT_STRATEGY_MAP,
 } from '../strategies/turnDirectiveStrategyResolver.js';
+import { CommandProcessingWorkflow } from '../states/helpers/commandProcessingWorkflow.js';
 
 /**
  * @typedef {import('../interfaces/ITurnStateHost.js').ITurnStateHost} BaseTurnHandler
@@ -28,13 +29,25 @@ import TurnDirectiveStrategyResolver, {
 export class ConcreteTurnStateFactory extends ITurnStateFactory {
   #commandProcessor;
   #commandOutcomeInterpreter;
+  #commandDispatcher;
+  #resultInterpreter;
+  #directiveExecutor;
 
   /**
    * @param {object} deps Dependencies
    * @param {ICommandProcessor} deps.commandProcessor The command processor.
    * @param {ICommandOutcomeInterpreter} deps.commandOutcomeInterpreter The command outcome interpreter.
+   * @param {CommandDispatcher} [deps.commandDispatcher] Optional command dispatcher service.
+   * @param {ResultInterpreter} [deps.resultInterpreter] Optional result interpreter service.
+   * @param {DirectiveExecutor} [deps.directiveExecutor] Optional directive executor service.
    */
-  constructor({ commandProcessor, commandOutcomeInterpreter }) {
+  constructor({ 
+    commandProcessor, 
+    commandOutcomeInterpreter,
+    commandDispatcher,
+    resultInterpreter,
+    directiveExecutor,
+  }) {
     super();
     if (!commandProcessor) {
       throw new Error(
@@ -48,6 +61,9 @@ export class ConcreteTurnStateFactory extends ITurnStateFactory {
     }
     this.#commandProcessor = commandProcessor;
     this.#commandOutcomeInterpreter = commandOutcomeInterpreter;
+    this.#commandDispatcher = commandDispatcher;
+    this.#resultInterpreter = resultInterpreter;
+    this.#directiveExecutor = directiveExecutor;
   }
 
   /**
@@ -96,6 +112,15 @@ export class ConcreteTurnStateFactory extends ITurnStateFactory {
     processingWorkflowFactory,
     commandProcessingWorkflowFactory
   ) {
+    // Create enhanced CommandProcessingWorkflow factory that injects services
+    const enhancedCommandProcessingWorkflowFactory = commandProcessingWorkflowFactory || 
+      ((config) => new CommandProcessingWorkflow({
+        ...config,
+        commandDispatcher: this.#commandDispatcher,
+        resultInterpreter: this.#resultInterpreter,
+        directiveExecutor: this.#directiveExecutor,
+      }));
+
     return new ProcessingCommandState({
       handler,
       commandProcessor: this.#commandProcessor,
@@ -104,7 +129,7 @@ export class ConcreteTurnStateFactory extends ITurnStateFactory {
       turnAction,
       directiveResolver,
       processingWorkflowFactory,
-      commandProcessingWorkflowFactory,
+      commandProcessingWorkflowFactory: enhancedCommandProcessingWorkflowFactory,
     });
   }
 

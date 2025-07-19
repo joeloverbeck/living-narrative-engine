@@ -5,7 +5,6 @@
  */
 
 import { BaseService } from '../../../../utils/serviceBase.js';
-import { ServiceLookupError } from '../getServiceFromContext.js';
 
 /**
  * @typedef {import('../../../interfaces/ITurnContext.js').ITurnContext} ITurnContext
@@ -67,18 +66,6 @@ export class CommandDispatcher extends BaseService {
    */
   async dispatch({ turnContext, actor, turnAction, stateName }) {
     const actorId = actor.id;
-
-    if (!this.#commandProcessor) {
-      const error = new ServiceLookupError(
-        'ICommandProcessor could not be resolved from the constructor.'
-      );
-      this.#unifiedErrorHandler.handleProcessingError(error, {
-        actorId,
-        stage: 'dispatch',
-        additionalContext: { stateName },
-      });
-      return null;
-    }
 
     this.#logger.debug(
       `${stateName}: Invoking commandProcessor.dispatchAction() for actor ${actorId}, actionId: ${turnAction.actionDefinitionId}.`

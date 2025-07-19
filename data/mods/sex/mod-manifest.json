@@ -17,7 +17,10 @@
     }
   ],
   "content": {
-    "actions": ["fondle_breasts.action.json", "fondle_penis.action.json"],
+    "actions": [
+      "fondle_breasts.action.json",
+      "fondle_penis.action.json"
+    ],
     "conditions": [
       "event-is-action-fondle-breasts.condition.json",
       "event-is-action-fondle-penis.condition.json"
@@ -30,6 +33,9 @@
       "actors_with_breasts_in_intimacy.scope",
       "actors_with_penis_in_intimacy.scope"
     ],
-    "ui": ["icons.json", "labels.json"]
+    "ui": [
+      "icons.json",
+      "labels.json"
+    ]
   }
 }

@@ -270,7 +270,7 @@ export class FixSuggestionEngine extends BaseService {
     /** @type {SuggestedFix[]} */
     const fixes = [];
 
-    if (actionDef.scope) {
+    if (actionDef?.scope) {
       fixes.push({
         type: FIX_TYPES.SCOPE_RESOLUTION,
         description: `Action scope '${actionDef.scope}' failed to resolve any valid targets`,

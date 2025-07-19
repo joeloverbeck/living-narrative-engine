@@ -13,7 +13,7 @@ import {
 } from '@jest/globals';
 import { SimpleEntityManager } from '../../common/entities/index.js';
 import { ActionDiscoveryService } from '../../../src/actions/actionDiscoveryService.js';
-import { ActionCandidateProcessor } from '../../../src/actions/actionCandidateProcessor.js';
+import { ActionPipelineOrchestrator } from '../../../src/actions/actionPipelineOrchestrator.js';
 import ActionCommandFormatter from '../../../src/actions/actionFormatter.js';
 import { getEntityDisplayName } from '../../../src/utils/entityUtils.js';
 import { GameDataRepository } from '../../../src/data/gameDataRepository.js';
@@ -198,20 +198,8 @@ describe('Scope Integration Tests', () => {
       actionErrorContextBuilder: createMockActionErrorContextBuilder(),
     });
 
-    // Create the ActionCandidateProcessor
-    const actionCandidateProcessor = new ActionCandidateProcessor({
-      prerequisiteEvaluationService,
-      targetResolutionService,
-      entityManager,
-      actionCommandFormatter: new ActionCommandFormatter(),
-      safeEventDispatcher,
-      getEntityDisplayNameFn: getEntityDisplayName,
-      logger,
-    });
-
-    // FIX: Add the new prerequisiteEvaluationService dependency to the constructor
-    actionDiscoveryService = new ActionDiscoveryService({
-      entityManager,
+    // Create the ActionPipelineOrchestrator
+    const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
       actionIndex: {
         getCandidateActions: jest
           .fn()
@@ -219,10 +207,22 @@ describe('Scope Integration Tests', () => {
             gameDataRepository.getAllActionDefinitions()
           ),
       },
+      prerequisiteService: prerequisiteEvaluationService,
+      targetService: targetResolutionService,
+      formatter: new ActionCommandFormatter(),
+      entityManager,
+      safeEventDispatcher,
+      getEntityDisplayNameFn: getEntityDisplayName,
+      errorBuilder: createMockActionErrorContextBuilder(),
       logger,
-      actionCandidateProcessor,
+    });
+
+    // FIX: Add the new prerequisiteEvaluationService dependency to the constructor
+    actionDiscoveryService = new ActionDiscoveryService({
+      entityManager,
+      logger,
+      actionPipelineOrchestrator,
       traceContextFactory: jest.fn(() => ({ addLog: jest.fn(), logs: [] })),
-      actionErrorContextBuilder: createMockActionErrorContextBuilder(),
     });
   });
 

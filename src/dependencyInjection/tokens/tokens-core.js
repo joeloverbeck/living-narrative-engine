@@ -117,6 +117,7 @@ export const coreTokens = freeze({
   ITargetResolutionService: 'ITargetResolutionService',
   ActionIndex: 'ActionIndex',
   ActionCandidateProcessor: 'ActionCandidateProcessor',
+  ActionPipelineOrchestrator: 'ActionPipelineOrchestrator',
   IActionErrorContextBuilder: 'IActionErrorContextBuilder',
   IFixSuggestionEngine: 'IFixSuggestionEngine',
   IInputHandler: 'IInputHandler',
@@ -192,4 +193,9 @@ export const coreTokens = freeze({
   ScopeEngine: 'ScopeEngine',
   DslParser: 'DslParser',
   TraceContextFactory: 'TraceContextFactory',
+  CommandDispatcher: 'CommandDispatcher',
+  DirectiveExecutor: 'DirectiveExecutor',
+  ResultInterpreter: 'ResultInterpreter',
+  UnifiedErrorHandler: 'UnifiedErrorHandler',
+  DirectiveStrategyResolver: 'DirectiveStrategyResolver',
 });

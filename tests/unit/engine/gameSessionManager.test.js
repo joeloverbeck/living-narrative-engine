@@ -25,6 +25,10 @@ function buildManager(state) {
   const stopFn = jest.fn().mockResolvedValue();
   const resetCoreGameStateFn = jest.fn();
   const startEngineFn = jest.fn((world) => state.setStarted(world));
+  const anatomyInitializationService = {
+    getPendingGenerationCount: jest.fn().mockReturnValue(0),
+    waitForAllGenerationsToComplete: jest.fn().mockResolvedValue(),
+  };
 
   const manager = new GameSessionManager({
     logger,
@@ -35,6 +39,7 @@ function buildManager(state) {
     stopFn,
     resetCoreGameStateFn,
     startEngineFn,
+    anatomyInitializationService,
   });
 
   return {
