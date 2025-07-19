@@ -39,7 +39,13 @@ class EquipmentDescriptionService {
   #clothingManagementService;
   #anatomyFormattingService;
 
-  constructor({ logger, entityManager, descriptorFormatter, clothingManagementService, anatomyFormattingService }) {
+  constructor({
+    logger,
+    entityManager,
+    descriptorFormatter,
+    clothingManagementService,
+    anatomyFormattingService,
+  }) {
     this.#logger = ensureValidLogger(logger, this.constructor.name);
 
     validateDependency(entityManager, 'IEntityManager');
@@ -101,8 +107,9 @@ class EquipmentDescriptionService {
    */
   async #getEquippedItems(entityId) {
     try {
-      const response = await this.#clothingManagementService.getEquippedItems(entityId);
-      
+      const response =
+        await this.#clothingManagementService.getEquippedItems(entityId);
+
       // Handle service response format {success: boolean, equipped?: object, errors?: string[]}
       if (!response.success) {
         this.#logger.warn(
@@ -118,7 +125,7 @@ class EquipmentDescriptionService {
 
       // Transform the equipped object structure to array format
       const formattedItems = [];
-      
+
       for (const [slotId, slotData] of Object.entries(equippedData)) {
         if (slotData && typeof slotData === 'object') {
           // Handle nested layer structure like: {base: 'itemId', outer: 'itemId'}
@@ -126,7 +133,7 @@ class EquipmentDescriptionService {
             if (garmentId && typeof garmentId === 'string') {
               // Convert layer name to numeric index for sorting
               const layerIndex = this.#getLayerIndex(layerName);
-              
+
               formattedItems.push({
                 id: garmentId,
                 slotId: slotId,
@@ -158,15 +165,15 @@ class EquipmentDescriptionService {
    */
   #getLayerIndex(layerName) {
     const layerMapping = {
-      'base': 0,
-      'underwear': 1,
-      'inner': 2,
-      'middle': 3,
-      'outer': 4,
-      'accessories': 5,
-      'outerwear': 6,
+      base: 0,
+      underwear: 1,
+      inner: 2,
+      middle: 3,
+      outer: 4,
+      accessories: 5,
+      outerwear: 6,
     };
-    
+
     return layerMapping[layerName] || 0;
   }
 
@@ -278,7 +285,7 @@ class EquipmentDescriptionService {
     try {
       // Extract descriptors from entity components
       const descriptors = [];
-      
+
       // Handle both direct components property and getComponentData method
       let components = entity.components;
       if (!components && entity.getComponentData) {
@@ -286,7 +293,9 @@ class EquipmentDescriptionService {
       }
 
       if (!components) {
-        this.#logger.warn(`No components found for equipment entity: ${entity.id}`);
+        this.#logger.warn(
+          `No components found for equipment entity: ${entity.id}`
+        );
         return '';
       }
 
@@ -316,13 +325,18 @@ class EquipmentDescriptionService {
       let itemName = '';
       if (components['core:name'] && components['core:name'].text) {
         itemName = components['core:name'].text;
-      } else if (components['core:description'] && components['core:description'].text) {
+      } else if (
+        components['core:description'] &&
+        components['core:description'].text
+      ) {
         itemName = components['core:description'].text;
       }
 
       if (!itemName) {
         this.#logger.warn(`No name found for equipment entity: ${entity.id}`);
-        this.#logger.debug(`Available components: ${Object.keys(components).join(', ')}`);
+        this.#logger.debug(
+          `Available components: ${Object.keys(components).join(', ')}`
+        );
         return '';
       }
 
@@ -414,8 +428,9 @@ class EquipmentDescriptionService {
     }
 
     // Get equipment integration configuration
-    const config = this.#anatomyFormattingService.getEquipmentIntegrationConfig();
-    
+    const config =
+      this.#anatomyFormattingService.getEquipmentIntegrationConfig();
+
     // Determine the order of categories to present
     const categoryOrder = [
       'outerwear',

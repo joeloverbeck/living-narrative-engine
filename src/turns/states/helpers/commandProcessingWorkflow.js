@@ -2,6 +2,7 @@
  * @file commandProcessingWorkflow.js
  * @description Workflow for dispatching a command, interpreting the result,
  *   and executing the resolved directive for a ProcessingCommandState.
+ *   Refactored to have better separation of concerns with clearer method responsibilities.
  */
 
 /**
@@ -22,7 +23,8 @@ import { getLogger } from './contextUtils.js';
 
 /**
  * @class CommandProcessingWorkflow
- * @description Handles command processing steps for a ProcessingCommandState.
+ * @description Orchestrates command processing with clear separation of dispatch, interpretation, and execution phases.
+ * Each phase is handled by a dedicated private method for better maintainability and testability.
  */
 export class CommandProcessingWorkflow {
   _state;
@@ -36,8 +38,9 @@ export class CommandProcessingWorkflow {
    *
    * @param {ProcessingCommandStateLike} state - Owning state instance.
    * @param {ProcessingExceptionHandler} [exceptionHandler] - Optional handler for errors.
-   * @param {ICommandProcessor} commandProcessor Injected command processor.
-   * @param {ICommandOutcomeInterpreter} commandOutcomeInterpreter Injected outcome interpreter.
+   * @param {ICommandProcessor} commandProcessor - Injected command processor.
+   * @param {ICommandOutcomeInterpreter} commandOutcomeInterpreter - Injected outcome interpreter.
+   * @param {IDirectiveStrategyResolver} directiveStrategyResolver - Injected directive resolver.
    */
   constructor({
     state,
@@ -47,21 +50,18 @@ export class CommandProcessingWorkflow {
     directiveStrategyResolver,
   }) {
     this._state = state;
-    this._commandProcessor = commandProcessor;
-    this._commandOutcomeInterpreter = commandOutcomeInterpreter;
-    this._directiveStrategyResolver = directiveStrategyResolver;
 
-    if (!this._commandProcessor) {
+    if (!commandProcessor) {
       throw new Error(
         'CommandProcessingWorkflow: commandProcessor is required.'
       );
     }
-    if (!this._commandOutcomeInterpreter) {
+    if (!commandOutcomeInterpreter) {
       throw new Error(
         'CommandProcessingWorkflow: commandOutcomeInterpreter is required.'
       );
     }
-    if (!this._directiveStrategyResolver) {
+    if (!directiveStrategyResolver) {
       throw new Error(
         'CommandProcessingWorkflow: directiveStrategyResolver is required.'
       );
@@ -72,6 +72,50 @@ export class CommandProcessingWorkflow {
     this._exceptionHandler =
       exceptionHandler ||
       new ProcessingExceptionHandler(getLogger(null, this._state._handler));
+
+    // Store the injected services for use by the workflow
+    this._commandProcessor = commandProcessor;
+    this._commandOutcomeInterpreter = commandOutcomeInterpreter;
+    this._directiveStrategyResolver = directiveStrategyResolver;
+  }
+
+  /**
+   * Creates standardized error context for logging and handling.
+   *
+   * @private
+   * @param {string} phase - The phase where the error occurred (dispatch, interpretation, execution)
+   * @param {Error} error - The error that occurred
+   * @param {string} actorId - The actor ID
+   * @param {object} [additionalContext] - Additional context information
+   * @returns {object} Error context object
+   */
+  _createErrorContext(phase, error, actorId, additionalContext = {}) {
+    return {
+      phase: `command_processing_${phase}`,
+      error: error.message,
+      stack: error.stack,
+      actorId,
+      stateName: this._state.getStateName(),
+      timestamp: Date.now(),
+      ...additionalContext,
+    };
+  }
+
+  /**
+   * Validates the turn context is still valid for the expected actor.
+   *
+   * @private
+   * @param {ITurnContext} turnCtx - Turn context to validate
+   * @param {string} expectedActorId - Expected actor ID
+   * @returns {boolean} True if valid, false otherwise
+   */
+  _isContextValid(turnCtx, expectedActorId) {
+    if (!turnCtx || typeof turnCtx.getActor !== 'function') {
+      return false;
+    }
+
+    const currentActorId = turnCtx.getActor()?.id;
+    return currentActorId === expectedActorId;
   }
 
   /**
@@ -86,60 +130,103 @@ export class CommandProcessingWorkflow {
   async _dispatchAction(turnCtx, actor, turnAction) {
     const logger = turnCtx.getLogger();
     const actorId = actor.id;
+    const stateName = this._state.getStateName();
 
-    const commandProcessor = this._commandProcessor;
-
-    if (!commandProcessor) {
+    // Validate command processor availability
+    if (!this._commandProcessor) {
       const error = new ServiceLookupError(
         'ICommandProcessor could not be resolved from the constructor.'
       );
+      const errorContext = this._createErrorContext(
+        'dispatch',
+        error,
+        actorId,
+        {
+          actionId: turnAction.actionDefinitionId,
+        }
+      );
+      logger.error('Command processor not available', errorContext);
       await this._exceptionHandler.handle(turnCtx, error, actorId);
       return null;
     }
 
     logger.debug(
-      `${this._state.getStateName()}: Invoking commandProcessor.dispatchAction() for actor ${actorId}, actionId: ${turnAction.actionDefinitionId}.`
+      `${stateName}: Invoking commandProcessor.dispatchAction() for actor ${actorId}, actionId: ${turnAction.actionDefinitionId}.`
     );
 
-    const commandResult = await commandProcessor.dispatchAction(
-      actor,
-      turnAction
-    );
-
-    if (!this._state.isProcessing) {
-      logger.warn(
-        `${this._state.getStateName()}: processing flag became false after dispatch for ${actorId}.`
+    try {
+      // Dispatch the action
+      const commandResult = await this._commandProcessor.dispatchAction(
+        actor,
+        turnAction
       );
-      return null;
-    }
 
-    const activeTurnCtx = this._state._getTurnContext();
-    if (
-      !activeTurnCtx ||
-      typeof activeTurnCtx.getActor !== 'function' ||
-      activeTurnCtx.getActor()?.id !== actorId
-    ) {
-      logger.warn(
-        `${this._state.getStateName()}: Context invalid or changed after dispatch for ${actorId}. Current context actor: ${activeTurnCtx?.getActor?.()?.id ?? 'N/A'}.`
-      );
-      const contextForException =
-        activeTurnCtx && typeof activeTurnCtx.getActor === 'function'
+      // Validate processing state
+      if (!this._state.isProcessing) {
+        logger.warn(
+          `${stateName}: processing flag became false after dispatch for ${actorId}.`
+        );
+        return null;
+      }
+
+      // Get and validate the active context
+      const activeTurnCtx = this._state._getTurnContext();
+      if (!this._isContextValid(activeTurnCtx, actorId)) {
+        const currentActorId = activeTurnCtx?.getActor?.()?.id ?? 'N/A';
+        const error = new Error(
+          'Context invalid/changed after action dispatch.'
+        );
+        const errorContext = this._createErrorContext(
+          'dispatch',
+          error,
+          actorId,
+          {
+            currentActorId,
+            actionId: turnAction.actionDefinitionId,
+          }
+        );
+
+        logger.warn(
+          `${stateName}: Context validation failed after dispatch`,
+          errorContext
+        );
+
+        const contextForException = this._isContextValid(
+          activeTurnCtx,
+          currentActorId
+        )
           ? activeTurnCtx
           : turnCtx;
-      await this._exceptionHandler.handle(
-        contextForException,
-        new Error('Context invalid/changed after action dispatch.'),
-        actorId,
-        false
+
+        await this._exceptionHandler.handle(
+          contextForException,
+          error,
+          actorId,
+          false
+        );
+        return null;
+      }
+
+      logger.debug(
+        `${stateName}: Action dispatch completed for actor ${actorId}. Result success: ${commandResult.success}.`
       );
+
+      return { activeTurnCtx, commandResult };
+    } catch (dispatchError) {
+      // Handle unexpected errors during dispatch
+      const errorContext = this._createErrorContext(
+        'dispatch',
+        dispatchError,
+        actorId,
+        {
+          actionId: turnAction.actionDefinitionId,
+          commandString: turnAction.commandString,
+        }
+      );
+      logger.error('Error during action dispatch', errorContext);
+      await this._exceptionHandler.handle(turnCtx, dispatchError, actorId);
       return null;
     }
-
-    logger.debug(
-      `${this._state.getStateName()}: Action dispatch completed for actor ${actorId}. Result success: ${commandResult.success}.`
-    );
-
-    return { activeTurnCtx, commandResult };
   }
 
   /**
@@ -152,19 +239,50 @@ export class CommandProcessingWorkflow {
    * @returns {Promise<{directiveType: string}|null>} The directive type or `null` on error.
    */
   async _interpretCommandResult(activeTurnCtx, actorId, commandResult) {
-    const outcomeInterpreter = this._commandOutcomeInterpreter;
+    const logger = activeTurnCtx.getLogger();
+    const stateName = this._state.getStateName();
 
-    const directiveType = await outcomeInterpreter.interpret(
-      commandResult,
-      activeTurnCtx
-    );
-    activeTurnCtx
-      .getLogger()
-      .debug(
-        `${this._state.getStateName()}: Actor ${actorId} - Dispatch result interpreted to directive: ${directiveType}`
+    try {
+      // Validate interpreter availability
+      if (!this._commandOutcomeInterpreter) {
+        throw new Error('Command outcome interpreter not available');
+      }
+
+      // Interpret the command result
+      const directiveType = await this._commandOutcomeInterpreter.interpret(
+        commandResult,
+        activeTurnCtx
       );
 
-    return { directiveType };
+      // Validate the directive type
+      if (!directiveType || typeof directiveType !== 'string') {
+        throw new Error(`Invalid directive type returned: ${directiveType}`);
+      }
+
+      logger.debug(
+        `${stateName}: Actor ${actorId} - Dispatch result interpreted to directive: ${directiveType}`
+      );
+
+      return { directiveType };
+    } catch (interpretError) {
+      // Handle interpretation errors with consistent error context
+      const errorContext = this._createErrorContext(
+        'interpretation',
+        interpretError,
+        actorId,
+        {
+          commandSuccess: commandResult.success,
+          commandError: commandResult.error,
+        }
+      );
+      logger.error('Error during result interpretation', errorContext);
+      await this._exceptionHandler.handle(
+        activeTurnCtx,
+        interpretError,
+        actorId
+      );
+      return null;
+    }
   }
 
   /**
@@ -179,49 +297,74 @@ export class CommandProcessingWorkflow {
   async _executeDirectiveStrategy(activeTurnCtx, directiveType, result) {
     const logger = activeTurnCtx.getLogger();
     const actorId = activeTurnCtx.getActor()?.id ?? 'UnknownActor';
+    const stateName = this._state.getStateName();
 
-    const strategy =
-      this._directiveStrategyResolver.resolveStrategy(directiveType);
-    if (!strategy) {
-      const errorMsg = `${this._state.getStateName()}: Could not resolve ITurnDirectiveStrategy for directive '${directiveType}' (actor ${actorId}).`;
-      logger.error(errorMsg);
-      await this._exceptionHandler.handle(
-        activeTurnCtx,
-        new Error(errorMsg),
-        actorId
-      );
-      return;
-    }
+    try {
+      // Validate strategy resolver availability
+      if (!this._directiveStrategyResolver) {
+        throw new Error('Directive strategy resolver not available');
+      }
 
-    logger.debug(
-      `${this._state.getStateName()}: Actor ${actorId} - Resolved strategy ${strategy.constructor.name} for directive ${directiveType}.`
-    );
+      // Resolve the strategy for the directive
+      const strategy =
+        this._directiveStrategyResolver.resolveStrategy(directiveType);
+      if (!strategy) {
+        throw new Error(
+          `Could not resolve ITurnDirectiveStrategy for directive '${directiveType}'`
+        );
+      }
 
-    await strategy.execute(activeTurnCtx, directiveType, result);
-    logger.debug(
-      `${this._state.getStateName()}: Actor ${actorId} - Directive strategy ${strategy.constructor.name} executed.`
-    );
-
-    if (!this._state.isProcessing) {
       logger.debug(
-        `${this._state.getStateName()}: Processing flag false after directive strategy for ${actorId}.`
+        `${stateName}: Actor ${actorId} - Resolved strategy ${strategy.constructor.name} for directive ${directiveType}.`
       );
-      return;
-    }
 
-    const currentState = this._state._handler.getCurrentState();
-    if (currentState !== this._state) {
+      // Execute the strategy
+      await strategy.execute(activeTurnCtx, directiveType, result);
+
       logger.debug(
-        `${this._state.getStateName()}: Directive strategy executed for ${actorId}, state changed from ${this._state.getStateName()} to ${currentState?.getStateName() ?? 'Unknown'}.`
+        `${stateName}: Actor ${actorId} - Directive strategy ${strategy.constructor.name} executed.`
+      );
+
+      // Check processing state after execution
+      if (!this._state.isProcessing) {
+        logger.debug(
+          `${stateName}: Processing flag false after directive strategy for ${actorId}.`
+        );
+        return;
+      }
+
+      // Check if state has changed
+      const currentState = this._state._handler.getCurrentState();
+      if (currentState !== this._state) {
+        logger.debug(
+          `${stateName}: Directive strategy executed for ${actorId}, state changed from ${stateName} to ${currentState?.getStateName() ?? 'Unknown'}.`
+        );
+        finishProcessing(this._state);
+        return;
+      }
+
+      logger.debug(
+        `${stateName}: Directive strategy executed for ${actorId}, state remains ${stateName}.`
       );
       finishProcessing(this._state);
-      return;
+    } catch (executionError) {
+      // Handle execution errors with consistent error context
+      const errorContext = this._createErrorContext(
+        'execution',
+        executionError,
+        actorId,
+        {
+          directiveType,
+          commandSuccess: result.success,
+        }
+      );
+      logger.error('Error during directive execution', errorContext);
+      await this._exceptionHandler.handle(
+        activeTurnCtx,
+        executionError,
+        actorId
+      );
     }
-
-    logger.debug(
-      `${this._state.getStateName()}: Directive strategy executed for ${actorId}, state remains ${this._state.getStateName()}.`
-    );
-    finishProcessing(this._state);
   }
 
   /**
@@ -264,28 +407,43 @@ export class CommandProcessingWorkflow {
         commandResult
       );
     } catch (error) {
+      // Standardized error handling for the workflow
       const ctxForError = this._state._getTurnContext() ?? turnCtx;
       const actorIdForHandler = ctxForError?.getActor?.()?.id ?? actorId;
+
+      // Ensure we have a proper Error object
       const processingError =
         error instanceof Error
           ? error
           : new Error(String(error.message || error));
+
+      // Preserve stack trace if available
       if (!(error instanceof Error) && error.stack) {
         processingError.stack = error.stack;
       }
-      if (error instanceof ServiceLookupError) {
-        await this._exceptionHandler.handle(
-          ctxForError || turnCtx,
-          processingError,
-          actorIdForHandler
-        );
-      } else {
-        await this._exceptionHandler.handle(
-          ctxForError || turnCtx,
-          processingError,
-          actorIdForHandler
-        );
-      }
+
+      // Create consistent error context
+      const errorContext = this._createErrorContext(
+        'workflow',
+        processingError,
+        actorIdForHandler,
+        {
+          actionId: turnAction.actionDefinitionId,
+          commandString: turnAction.commandString,
+          errorType: error.constructor.name,
+        }
+      );
+
+      // Log the error with full context
+      const logger = ctxForError?.getLogger?.() ?? turnCtx.getLogger();
+      logger.error('Error in command processing workflow', errorContext);
+
+      // Handle the error through the exception handler
+      await this._exceptionHandler.handle(
+        ctxForError || turnCtx,
+        processingError,
+        actorIdForHandler
+      );
     } finally {
       if (
         this._state.isProcessing &&

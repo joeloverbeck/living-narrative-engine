@@ -280,9 +280,10 @@ export class BaseOpenRouterStrategy extends BaseChatLLMStrategy {
    * @param {object} finalPayload - Payload to send.
    * @param {object} headers - Request headers.
    * @param {string} llmId - Identifier of the LLM for logging.
+   * @param {AbortSignal} [abortSignal] - Optional abort signal for request cancellation.
    * @returns {Promise<any>} The raw response data.
    */
-  async #sendRequest(targetUrl, finalPayload, headers, llmId) {
+  async #sendRequest(targetUrl, finalPayload, headers, llmId, abortSignal) {
     this.logger.debug(
       `${this.constructor.name} (${llmId}): Making API call to '${targetUrl}'. Payload length: ${JSON.stringify(finalPayload)?.length}`,
       { llmId }
@@ -299,6 +300,7 @@ export class BaseOpenRouterStrategy extends BaseChatLLMStrategy {
       method: 'POST',
       headers,
       body: JSON.stringify(finalPayload),
+      abortSignal,
     });
 
     logPreview(
@@ -391,6 +393,7 @@ export class BaseOpenRouterStrategy extends BaseChatLLMStrategy {
    * @param {object} providerRequestPayload - Original provider payload for logging.
    * @param {LLMModelConfig} llmConfig - The LLM configuration.
    * @param {string} llmId - Identifier of the LLM for logging.
+   * @param {AbortSignal} [abortSignal] - Optional abort signal for request cancellation.
    * @returns {Promise<string>} Extracted JSON string.
    * @throws {LLMStrategyError|ConfigurationError} On request or processing failure.
    */
@@ -400,7 +403,8 @@ export class BaseOpenRouterStrategy extends BaseChatLLMStrategy {
     headers,
     providerRequestPayload,
     llmConfig,
-    llmId
+    llmId,
+    abortSignal
   ) {
     let responseData;
     try {
@@ -408,7 +412,8 @@ export class BaseOpenRouterStrategy extends BaseChatLLMStrategy {
         targetUrl,
         finalPayload,
         headers,
-        llmId
+        llmId,
+        abortSignal
       );
 
       const extractedJsonString = await this.#extractJson(
@@ -452,7 +457,8 @@ export class BaseOpenRouterStrategy extends BaseChatLLMStrategy {
    * @throws {LLMStrategyError} If there's an error during strategy execution.
    */
   async execute(params) {
-    const { gameSummary, llmConfig, apiKey, environmentContext } = params;
+    const { gameSummary, llmConfig, apiKey, environmentContext, abortSignal } =
+      params;
 
     const { llmId } = this.#validateExecuteParams({
       llmConfig,
@@ -479,7 +485,8 @@ export class BaseOpenRouterStrategy extends BaseChatLLMStrategy {
       headers,
       providerRequestPayload,
       llmConfig,
-      llmId
+      llmId,
+      abortSignal
     );
   }
 }

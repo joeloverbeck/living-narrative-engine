@@ -29,7 +29,7 @@ export class ClothingIntegrationTestBed extends BaseTestBed {
     // Create descriptor formatter
     const descriptorFormatter = new DescriptorFormatter({
       logger: this.logger,
-      anatomyFormattingService: this.createMockAnatomyFormattingService()
+      anatomyFormattingService: this.createMockAnatomyFormattingService(),
     });
 
     // Create clothing management service
@@ -41,7 +41,7 @@ export class ClothingIntegrationTestBed extends BaseTestBed {
       anatomyBlueprintRepository: this.createMockAnatomyBlueprintRepository(),
       clothingSlotValidator: this.createMockClothingSlotValidator(),
       bodyGraphService: this.createMockBodyGraphService(),
-      anatomyClothingCache: this.createMockAnatomyClothingCache()
+      anatomyClothingCache: this.createMockAnatomyClothingCache(),
     });
 
     // Create equipment description service
@@ -50,12 +50,15 @@ export class ClothingIntegrationTestBed extends BaseTestBed {
       entityManager: this.entityManager,
       descriptorFormatter: descriptorFormatter,
       clothingManagementService: clothingManagementService,
-      anatomyFormattingService: this.createMockAnatomyFormattingService()
+      anatomyFormattingService: this.createMockAnatomyFormattingService(),
     });
 
     // Store services
     this.services.set('clothingManagementService', clothingManagementService);
-    this.services.set('equipmentDescriptionService', equipmentDescriptionService);
+    this.services.set(
+      'equipmentDescriptionService',
+      equipmentDescriptionService
+    );
     this.services.set('descriptorFormatter', descriptorFormatter);
   }
 
@@ -77,20 +80,22 @@ export class ClothingIntegrationTestBed extends BaseTestBed {
    */
   async createTestEntity(entityData) {
     const entityId = uuidv4();
-    
+
     // Create entity instance
     const entity = {
       id: entityId,
       components: entityData.components || {},
       getComponentData: (componentId) => entity.components[componentId] || null,
-      hasComponent: (componentId) => !!entity.components[componentId]
+      hasComponent: (componentId) => !!entity.components[componentId],
     };
 
     // Add to entity manager
     this.entityManager.entities.set(entityId, entity);
 
     // Set up component data
-    for (const [componentId, componentData] of Object.entries(entityData.components || {})) {
+    for (const [componentId, componentData] of Object.entries(
+      entityData.components || {}
+    )) {
       this.entityManager.setComponentData(entityId, componentId, componentData);
     }
 
@@ -106,20 +111,22 @@ export class ClothingIntegrationTestBed extends BaseTestBed {
    */
   async createClothingItem(itemData) {
     const itemId = uuidv4();
-    
+
     // Create item entity
     const item = {
       id: itemId,
       components: itemData.components || {},
       getComponentData: (componentId) => item.components[componentId] || null,
-      hasComponent: (componentId) => !!item.components[componentId]
+      hasComponent: (componentId) => !!item.components[componentId],
     };
 
     // Add to entity manager
     this.entityManager.entities.set(itemId, item);
 
     // Set up component data
-    for (const [componentId, componentData] of Object.entries(itemData.components || {})) {
+    for (const [componentId, componentData] of Object.entries(
+      itemData.components || {}
+    )) {
       this.entityManager.setComponentData(itemId, componentId, componentData);
     }
 
@@ -146,8 +153,11 @@ export class ClothingIntegrationTestBed extends BaseTestBed {
     }
 
     // Get existing equipment or create new
-    const existingEquipment = this.entityManager.getComponentData(entityId, 'clothing:equipment') || {
-      equipped: {}
+    const existingEquipment = this.entityManager.getComponentData(
+      entityId,
+      'clothing:equipment'
+    ) || {
+      equipped: {},
     };
 
     // Add item to equipment
@@ -161,7 +171,11 @@ export class ClothingIntegrationTestBed extends BaseTestBed {
     existingEquipment.equipped[slotId][layer] = itemId;
 
     // Update equipment component
-    this.entityManager.setComponentData(entityId, 'clothing:equipment', existingEquipment);
+    this.entityManager.setComponentData(
+      entityId,
+      'clothing:equipment',
+      existingEquipment
+    );
   }
 
   /**
@@ -193,7 +207,7 @@ export class ClothingIntegrationTestBed extends BaseTestBed {
     return {
       orchestrateEquipment: async () => ({ success: true }),
       orchestrateUnequipment: async () => ({ success: true }),
-      validateEquipmentCompatibility: async () => ({ valid: true })
+      validateEquipmentCompatibility: async () => ({ valid: true }),
     };
   }
 
@@ -206,12 +220,18 @@ export class ClothingIntegrationTestBed extends BaseTestBed {
     return {
       getBlueprintByRecipeId: async () => ({
         clothingSlotMappings: {
-          torso_clothing: { blueprintSlots: ['torso'], allowedLayers: ['base', 'outer'] },
+          torso_clothing: {
+            blueprintSlots: ['torso'],
+            allowedLayers: ['base', 'outer'],
+          },
           feet_clothing: { blueprintSlots: ['feet'], allowedLayers: ['base'] },
           head_clothing: { blueprintSlots: ['head'], allowedLayers: ['base'] },
-          jacket_clothing: { blueprintSlots: ['torso'], allowedLayers: ['outer'] }
-        }
-      })
+          jacket_clothing: {
+            blueprintSlots: ['torso'],
+            allowedLayers: ['outer'],
+          },
+        },
+      }),
     };
   }
 
@@ -222,7 +242,7 @@ export class ClothingIntegrationTestBed extends BaseTestBed {
    */
   createMockClothingSlotValidator() {
     return {
-      validateSlotCompatibility: async () => ({ valid: true })
+      validateSlotCompatibility: async () => ({ valid: true }),
     };
   }
 
@@ -234,9 +254,9 @@ export class ClothingIntegrationTestBed extends BaseTestBed {
   createMockBodyGraphService() {
     return {
       getBodyGraph: async () => ({
-        getAllPartIds: () => ['test-root-id']
+        getAllPartIds: () => ['test-root-id'],
       }),
-      getAnatomyData: async () => ({})
+      getAnatomyData: async () => ({}),
     };
   }
 
@@ -249,7 +269,7 @@ export class ClothingIntegrationTestBed extends BaseTestBed {
     return {
       get: () => null,
       set: () => {},
-      invalidateCacheForEntity: () => {}
+      invalidateCacheForEntity: () => {},
     };
   }
 

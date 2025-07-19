@@ -24,33 +24,35 @@ describe('Equipment Name Resolution Integration Tests', () => {
         'clothing:equipment': {
           equipped: {
             torso_clothing: {
-              base: shirtId
+              base: shirtId,
             },
             feet_clothing: {
-              base: bootsId
-            }
-          }
-        }
+              base: bootsId,
+            },
+          },
+        },
       });
 
       // Create equipment entities with core:name components
       testBed.createEquipmentEntity(shirtId, {
         'core:name': { text: 'dress shirt' },
         'core:material': { material: 'cotton' },
-        'descriptors:color_basic': { color: 'blue' }
+        'descriptors:color_basic': { color: 'blue' },
       });
 
       testBed.createEquipmentEntity(bootsId, {
         'core:name': { text: 'boots' },
         'core:material': { material: 'leather' },
-        'descriptors:color_basic': { color: 'brown' }
+        'descriptors:color_basic': { color: 'brown' },
       });
 
       // Act
       const result = await testBed.generateEquipmentDescription(characterId);
 
       // Assert
-      expect(result).toBe('Wearing: cotton, blue dress shirt and leather, brown boots.');
+      expect(result).toBe(
+        'Wearing: cotton, blue dress shirt and leather, brown boots.'
+      );
     });
 
     it('should fallback to core:description when core:name is missing', async () => {
@@ -62,16 +64,16 @@ describe('Equipment Name Resolution Integration Tests', () => {
         'clothing:equipment': {
           equipped: {
             torso_clothing: {
-              base: shirtId
-            }
-          }
-        }
+              base: shirtId,
+            },
+          },
+        },
       });
 
       // Create equipment entity with only core:description
       testBed.createEquipmentEntity(shirtId, {
         'core:description': { text: 'basic shirt' },
-        'core:material': { material: 'cotton' }
+        'core:material': { material: 'cotton' },
       });
 
       // Act
@@ -90,17 +92,17 @@ describe('Equipment Name Resolution Integration Tests', () => {
         'clothing:equipment': {
           equipped: {
             torso_clothing: {
-              base: shirtId
-            }
-          }
-        }
+              base: shirtId,
+            },
+          },
+        },
       });
 
       // Create equipment entity with both components
       testBed.createEquipmentEntity(shirtId, {
         'core:name': { text: 'silk blouse' },
         'core:description': { text: 'generic shirt' },
-        'core:material': { material: 'silk' }
+        'core:material': { material: 'silk' },
       });
 
       // Act
@@ -119,15 +121,15 @@ describe('Equipment Name Resolution Integration Tests', () => {
         'clothing:equipment': {
           equipped: {
             torso_clothing: {
-              base: shirtId
-            }
-          }
-        }
+              base: shirtId,
+            },
+          },
+        },
       });
 
       // Create equipment entity with no name components
       testBed.createEquipmentEntity(shirtId, {
-        'core:material': { material: 'cotton' }
+        'core:material': { material: 'cotton' },
       });
 
       // Act
@@ -154,29 +156,29 @@ describe('Equipment Name Resolution Integration Tests', () => {
           equipped: {
             torso_clothing: {
               base: shirtId,
-              outer: jacketId
+              outer: jacketId,
             },
             feet_clothing: {
-              base: bootsId
-            }
-          }
-        }
+              base: bootsId,
+            },
+          },
+        },
       });
 
       // Mix of core:name and core:description components
       testBed.createEquipmentEntity(shirtId, {
         'core:name': { text: 'dress shirt' },
-        'descriptors:color_basic': { color: 'white' }
+        'descriptors:color_basic': { color: 'white' },
       });
 
       testBed.createEquipmentEntity(jacketId, {
         'core:description': { text: 'blazer' },
-        'descriptors:color_basic': { color: 'navy' }
+        'descriptors:color_basic': { color: 'navy' },
       });
 
       testBed.createEquipmentEntity(bootsId, {
         'core:name': { text: 'boots' },
-        'core:material': { material: 'leather' }
+        'core:material': { material: 'leather' },
       });
 
       // Act
@@ -201,22 +203,22 @@ describe('Equipment Name Resolution Integration Tests', () => {
             torso_clothing: {
               underwear: underwearId,
               base: shirtId,
-              outer: jacketId
-            }
-          }
-        }
+              outer: jacketId,
+            },
+          },
+        },
       });
 
       testBed.createEquipmentEntity(underwearId, {
-        'core:name': { text: 'undershirt' }
+        'core:name': { text: 'undershirt' },
       });
 
       testBed.createEquipmentEntity(shirtId, {
-        'core:name': { text: 'polo shirt' }
+        'core:name': { text: 'polo shirt' },
       });
 
       testBed.createEquipmentEntity(jacketId, {
-        'core:name': { text: 'windbreaker' }
+        'core:name': { text: 'windbreaker' },
       });
 
       // Act
@@ -240,24 +242,24 @@ describe('Equipment Name Resolution Integration Tests', () => {
         'clothing:equipment': {
           equipped: {
             torso_clothing: {
-              base: shirtId
+              base: shirtId,
             },
             feet_clothing: {
-              base: bootsId
-            }
-          }
-        }
+              base: bootsId,
+            },
+          },
+        },
       });
 
       // One item with name, one without
       testBed.createEquipmentEntity(shirtId, {
-        'core:material': { material: 'cotton' }
+        'core:material': { material: 'cotton' },
         // No name components
       });
 
       testBed.createEquipmentEntity(bootsId, {
         'core:name': { text: 'boots' },
-        'core:material': { material: 'leather' }
+        'core:material': { material: 'leather' },
       });
 
       // Act
@@ -279,17 +281,19 @@ describe('Equipment Name Resolution Integration Tests', () => {
         'clothing:equipment': {
           equipped: {
             torso_clothing: {
-              base: shirtId
-            }
-          }
-        }
+              base: shirtId,
+            },
+          },
+        },
       });
 
       // Create equipment entity with malformed name component
       testBed.createEquipmentEntity(shirtId, {
-        'core:name': { /* missing text property */ },
+        'core:name': {
+          /* missing text property */
+        },
         'core:description': { text: 'backup name' },
-        'core:material': { material: 'cotton' }
+        'core:material': { material: 'cotton' },
       });
 
       // Act

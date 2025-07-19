@@ -84,15 +84,21 @@ describe('Async Description Generation', () => {
       };
 
       const expectedDescription = 'A detailed body description';
-      mockBodyDescriptionComposer.composeDescription.mockResolvedValue(expectedDescription);
+      mockBodyDescriptionComposer.composeDescription.mockResolvedValue(
+        expectedDescription
+      );
 
       // Act
       const result = await orchestrator.generateBodyDescription(mockEntity);
 
       // Assert
       expect(result).toBe(expectedDescription);
-      expect(mockBodyDescriptionComposer.composeDescription).toHaveBeenCalledWith(mockEntity);
-      expect(mockBodyDescriptionComposer.composeDescription).toHaveBeenCalledTimes(1);
+      expect(
+        mockBodyDescriptionComposer.composeDescription
+      ).toHaveBeenCalledWith(mockEntity);
+      expect(
+        mockBodyDescriptionComposer.composeDescription
+      ).toHaveBeenCalledTimes(1);
     });
 
     it('should handle async generateAllDescriptions correctly', async () => {
@@ -106,11 +112,17 @@ describe('Async Description Generation', () => {
       };
 
       const expectedDescription = 'A detailed body description';
-      const expectedPartDescriptions = new Map([['part-1', 'Part description']]);
+      const expectedPartDescriptions = new Map([
+        ['part-1', 'Part description'],
+      ]);
 
       mockBodyGraphService.getAllParts.mockReturnValue(['part-1']);
-      mockPartDescriptionGenerator.generateMultiplePartDescriptions.mockReturnValue(expectedPartDescriptions);
-      mockBodyDescriptionComposer.composeDescription.mockResolvedValue(expectedDescription);
+      mockPartDescriptionGenerator.generateMultiplePartDescriptions.mockReturnValue(
+        expectedPartDescriptions
+      );
+      mockBodyDescriptionComposer.composeDescription.mockResolvedValue(
+        expectedDescription
+      );
 
       // Act
       const result = await orchestrator.generateAllDescriptions(mockEntity);
@@ -120,7 +132,9 @@ describe('Async Description Generation', () => {
         bodyDescription: expectedDescription,
         partDescriptions: expectedPartDescriptions,
       });
-      expect(mockBodyDescriptionComposer.composeDescription).toHaveBeenCalledWith(mockEntity);
+      expect(
+        mockBodyDescriptionComposer.composeDescription
+      ).toHaveBeenCalledWith(mockEntity);
     });
 
     it('should handle async getOrGenerateBodyDescription correctly', async () => {
@@ -132,14 +146,19 @@ describe('Async Description Generation', () => {
       };
 
       const expectedDescription = 'A newly generated description';
-      mockBodyDescriptionComposer.composeDescription.mockResolvedValue(expectedDescription);
+      mockBodyDescriptionComposer.composeDescription.mockResolvedValue(
+        expectedDescription
+      );
 
       // Act
-      const result = await orchestrator.getOrGenerateBodyDescription(mockEntity);
+      const result =
+        await orchestrator.getOrGenerateBodyDescription(mockEntity);
 
       // Assert
       expect(result).toBe(expectedDescription);
-      expect(mockBodyDescriptionComposer.composeDescription).toHaveBeenCalledWith(mockEntity);
+      expect(
+        mockBodyDescriptionComposer.composeDescription
+      ).toHaveBeenCalledWith(mockEntity);
     });
 
     it('should handle Promise rejection in generateBodyDescription', async () => {
@@ -150,10 +169,14 @@ describe('Async Description Generation', () => {
       };
 
       const expectedError = new Error('Description generation failed');
-      mockBodyDescriptionComposer.composeDescription.mockRejectedValue(expectedError);
+      mockBodyDescriptionComposer.composeDescription.mockRejectedValue(
+        expectedError
+      );
 
       // Act & Assert
-      await expect(orchestrator.generateBodyDescription(mockEntity)).rejects.toThrow(expectedError);
+      await expect(
+        orchestrator.generateBodyDescription(mockEntity)
+      ).rejects.toThrow(expectedError);
     });
 
     it('should handle empty description returned from async composeDescription', async () => {
@@ -205,13 +228,17 @@ describe('Async Description Generation', () => {
 
       const expectedDescription = 'A detailed body description';
       mockBodyGraphService.getAllParts.mockReturnValue(['part-1']);
-      mockBodyDescriptionComposer.composeDescription.mockResolvedValue(expectedDescription);
+      mockBodyDescriptionComposer.composeDescription.mockResolvedValue(
+        expectedDescription
+      );
 
       // Act
       await anatomyService.generateAllDescriptions(mockEntity);
 
       // Assert
-      expect(mockBodyDescriptionComposer.composeDescription).toHaveBeenCalledWith(mockEntity);
+      expect(
+        mockBodyDescriptionComposer.composeDescription
+      ).toHaveBeenCalledWith(mockEntity);
       expect(mockBodyGraphService.getAllParts).toHaveBeenCalledTimes(1);
     });
 
@@ -223,14 +250,18 @@ describe('Async Description Generation', () => {
       };
 
       const expectedDescription = 'A detailed body description';
-      mockBodyDescriptionComposer.composeDescription.mockResolvedValue(expectedDescription);
+      mockBodyDescriptionComposer.composeDescription.mockResolvedValue(
+        expectedDescription
+      );
       mockEntityFinder.getEntityInstance.mockReturnValue(mockEntity);
 
       // Act
       await anatomyService.generateBodyDescription(mockEntity);
 
       // Assert
-      expect(mockBodyDescriptionComposer.composeDescription).toHaveBeenCalledWith(mockEntity);
+      expect(
+        mockBodyDescriptionComposer.composeDescription
+      ).toHaveBeenCalledWith(mockEntity);
       expect(mockComponentManager.addComponent).toHaveBeenCalledWith(
         'test-entity',
         'core:description',
@@ -247,14 +278,19 @@ describe('Async Description Generation', () => {
       };
 
       const expectedDescription = 'A newly generated description';
-      mockBodyDescriptionComposer.composeDescription.mockResolvedValue(expectedDescription);
+      mockBodyDescriptionComposer.composeDescription.mockResolvedValue(
+        expectedDescription
+      );
 
       // Act
-      const result = await anatomyService.getOrGenerateBodyDescription(mockEntity);
+      const result =
+        await anatomyService.getOrGenerateBodyDescription(mockEntity);
 
       // Assert
       expect(result).toBe(expectedDescription);
-      expect(mockBodyDescriptionComposer.composeDescription).toHaveBeenCalledWith(mockEntity);
+      expect(
+        mockBodyDescriptionComposer.composeDescription
+      ).toHaveBeenCalledWith(mockEntity);
     });
 
     it('should handle Promise rejection in generateBodyDescription', async () => {
@@ -265,11 +301,15 @@ describe('Async Description Generation', () => {
       };
 
       const expectedError = new Error('Description generation failed');
-      mockBodyDescriptionComposer.composeDescription.mockRejectedValue(expectedError);
+      mockBodyDescriptionComposer.composeDescription.mockRejectedValue(
+        expectedError
+      );
       mockEntityFinder.getEntityInstance.mockReturnValue(mockEntity);
 
       // Act & Assert
-      await expect(anatomyService.generateBodyDescription(mockEntity)).rejects.toThrow(expectedError);
+      await expect(
+        anatomyService.generateBodyDescription(mockEntity)
+      ).rejects.toThrow(expectedError);
     });
   });
 
@@ -304,14 +344,20 @@ describe('Async Description Generation', () => {
 
       mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
       mockBodyGraphService.getAllParts.mockReturnValue(['part-1']);
-      mockBodyDescriptionComposer.composeDescription.mockResolvedValue('A detailed body description');
+      mockBodyDescriptionComposer.composeDescription.mockResolvedValue(
+        'A detailed body description'
+      );
 
       // Act
       await workflow.generateAll(entityId);
 
       // Assert
-      expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(entityId);
-      expect(mockBodyDescriptionComposer.composeDescription).toHaveBeenCalledWith(mockEntity);
+      expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(
+        entityId
+      );
+      expect(
+        mockBodyDescriptionComposer.composeDescription
+      ).toHaveBeenCalledWith(mockEntity);
     });
 
     it('should handle Promise rejection in generateAll', async () => {
@@ -328,7 +374,9 @@ describe('Async Description Generation', () => {
       mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
       mockBodyGraphService.getAllParts.mockReturnValue(['part-1']); // Fix: mock getAllParts
       const expectedError = new Error('Description generation failed');
-      mockBodyDescriptionComposer.composeDescription.mockRejectedValue(expectedError);
+      mockBodyDescriptionComposer.composeDescription.mockRejectedValue(
+        expectedError
+      );
 
       // Act & Assert
       await expect(workflow.generateAll(entityId)).rejects.toThrow(
@@ -350,10 +398,14 @@ describe('Async Description Generation', () => {
       mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
       mockBodyGraphService.getAllParts.mockReturnValue(['part-1']); // Fix: mock getAllParts
       const originalError = new Error('Async operation failed');
-      mockBodyDescriptionComposer.composeDescription.mockRejectedValue(originalError);
+      mockBodyDescriptionComposer.composeDescription.mockRejectedValue(
+        originalError
+      );
 
       // Act & Assert
-      await expect(workflow.generateAll(entityId)).rejects.toThrow('Failed to generate descriptions');
+      await expect(workflow.generateAll(entityId)).rejects.toThrow(
+        'Failed to generate descriptions'
+      );
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining('Failed to generate descriptions'),
         expect.objectContaining({
@@ -407,7 +459,9 @@ describe('Async Description Generation', () => {
         getComponentData: jest.fn().mockReturnValue({ text: 'Test Entity' }),
       };
 
-      mockBodyDescriptionComposer.composeDescription.mockResolvedValue(undefined);
+      mockBodyDescriptionComposer.composeDescription.mockResolvedValue(
+        undefined
+      );
 
       // Act
       const result = await orchestrator.generateBodyDescription(mockEntity);
@@ -429,7 +483,9 @@ describe('Async Description Generation', () => {
         getComponentData: jest.fn().mockReturnValue({ text: 'Test Entity' }),
       };
 
-      mockBodyDescriptionComposer.composeDescription.mockResolvedValue('   \n\t   ');
+      mockBodyDescriptionComposer.composeDescription.mockResolvedValue(
+        '   \n\t   '
+      );
 
       // Act
       const result = await orchestrator.generateBodyDescription(mockEntity);

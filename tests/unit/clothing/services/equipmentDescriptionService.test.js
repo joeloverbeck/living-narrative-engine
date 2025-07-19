@@ -59,7 +59,7 @@ describe('EquipmentDescriptionService', () => {
       const entityId = 'character_1';
       mockClothingManagementService.getEquippedItems.mockResolvedValue({
         success: true,
-        equipped: {}
+        equipped: {},
       });
 
       // Act
@@ -67,9 +67,9 @@ describe('EquipmentDescriptionService', () => {
 
       // Assert
       expect(result).toBe('');
-      expect(mockClothingManagementService.getEquippedItems).toHaveBeenCalledWith(
-        entityId
-      );
+      expect(
+        mockClothingManagementService.getEquippedItems
+      ).toHaveBeenCalledWith(entityId);
     });
 
     it('should return empty string when clothing service returns null', async () => {
@@ -77,7 +77,7 @@ describe('EquipmentDescriptionService', () => {
       const entityId = 'character_1';
       mockClothingManagementService.getEquippedItems.mockResolvedValue({
         success: true,
-        equipped: null
+        equipped: null,
       });
 
       // Act
@@ -92,8 +92,8 @@ describe('EquipmentDescriptionService', () => {
       const entityId = 'character_1';
       const equippedData = {
         torso_clothing: {
-          base: 'shirt_1'
-        }
+          base: 'shirt_1',
+        },
       };
 
       const mockShirtEntity = {
@@ -107,7 +107,7 @@ describe('EquipmentDescriptionService', () => {
 
       mockClothingManagementService.getEquippedItems.mockResolvedValue({
         success: true,
-        equipped: equippedData
+        equipped: equippedData,
       });
       mockEntityManager.getEntityInstance.mockResolvedValue(mockShirtEntity);
       mockDescriptorFormatter.formatDescriptors.mockReturnValue('cotton, blue');
@@ -128,11 +128,11 @@ describe('EquipmentDescriptionService', () => {
       const entityId = 'character_1';
       const equippedData = {
         torso_clothing: {
-          base: 'shirt_1'
+          base: 'shirt_1',
         },
         feet_clothing: {
-          base: 'boots_1'
-        }
+          base: 'boots_1',
+        },
       };
 
       const mockShirtEntity = {
@@ -155,7 +155,7 @@ describe('EquipmentDescriptionService', () => {
 
       mockClothingManagementService.getEquippedItems.mockResolvedValue({
         success: true,
-        equipped: equippedData
+        equipped: equippedData,
       });
       mockEntityManager.getEntityInstance
         .mockResolvedValueOnce(mockShirtEntity)
@@ -182,8 +182,8 @@ describe('EquipmentDescriptionService', () => {
       const entityId = 'character_1';
       const equippedData = {
         torso_clothing: {
-          base: 'shirt_1'
-        }
+          base: 'shirt_1',
+        },
       };
 
       const mockShirtEntity = {
@@ -195,7 +195,7 @@ describe('EquipmentDescriptionService', () => {
 
       mockClothingManagementService.getEquippedItems.mockResolvedValue({
         success: true,
-        equipped: equippedData
+        equipped: equippedData,
       });
       mockEntityManager.getEntityInstance.mockResolvedValue(mockShirtEntity);
       mockDescriptorFormatter.formatDescriptors.mockReturnValue('cotton');
@@ -233,14 +233,14 @@ describe('EquipmentDescriptionService', () => {
       const entityId = 'character_1';
       const equippedData = {
         torso_clothing: {
-          base: 'shirt_1'
+          base: 'shirt_1',
         },
         feet_clothing: {
-          base: 'boots_1'
+          base: 'boots_1',
         },
         hands_clothing: {
-          base: 'gloves_1'
-        }
+          base: 'gloves_1',
+        },
       };
 
       const mockShirtEntity = {
@@ -266,7 +266,7 @@ describe('EquipmentDescriptionService', () => {
 
       mockClothingManagementService.getEquippedItems.mockResolvedValue({
         success: true,
-        equipped: equippedData
+        equipped: equippedData,
       });
       mockEntityManager.getEntityInstance
         .mockResolvedValueOnce(mockShirtEntity)
@@ -289,11 +289,11 @@ describe('EquipmentDescriptionService', () => {
       const entityId = 'character_1';
       const equippedData = {
         torso_clothing: {
-          base: 'shirt_1'
+          base: 'shirt_1',
         },
         jacket_clothing: {
-          base: 'jacket_1'
-        }
+          base: 'jacket_1',
+        },
       };
 
       const mockShirtEntity = {
@@ -312,7 +312,7 @@ describe('EquipmentDescriptionService', () => {
 
       mockClothingManagementService.getEquippedItems.mockResolvedValue({
         success: true,
-        equipped: equippedData
+        equipped: equippedData,
       });
       mockEntityManager.getEntityInstance
         .mockResolvedValueOnce(mockJacketEntity) // Outerwear comes first
@@ -333,8 +333,8 @@ describe('EquipmentDescriptionService', () => {
       const entityId = 'character_1';
       const equippedData = {
         torso_clothing: {
-          base: 'shirt_1'
-        }
+          base: 'shirt_1',
+        },
       };
 
       const mockShirtEntity = {
@@ -347,7 +347,7 @@ describe('EquipmentDescriptionService', () => {
 
       mockClothingManagementService.getEquippedItems.mockResolvedValue({
         success: true,
-        equipped: equippedData
+        equipped: equippedData,
       });
       mockEntityManager.getEntityInstance.mockResolvedValue(mockShirtEntity);
       mockDescriptorFormatter.formatDescriptors.mockReturnValue('silk');
@@ -371,13 +371,13 @@ describe('EquipmentDescriptionService', () => {
       const entityId = 'character_1';
       const equippedData = {
         torso_clothing: {
-          base: 'shirt_1'
-        }
+          base: 'shirt_1',
+        },
       };
 
       mockClothingManagementService.getEquippedItems.mockResolvedValue({
         success: true,
-        equipped: equippedData
+        equipped: equippedData,
       });
       mockEntityManager.getEntityInstance.mockResolvedValue(null);
 
@@ -398,8 +398,8 @@ describe('EquipmentDescriptionService', () => {
       const entityId = 'character_1';
       const equippedData = {
         torso_clothing: {
-          base: 'shirt_1'
-        }
+          base: 'shirt_1',
+        },
       };
 
       const mockShirtEntity = {
@@ -415,7 +415,7 @@ describe('EquipmentDescriptionService', () => {
 
       mockClothingManagementService.getEquippedItems.mockResolvedValue({
         success: true,
-        equipped: equippedData
+        equipped: equippedData,
       });
       mockEntityManager.getEntityInstance.mockResolvedValue(mockShirtEntity);
       mockDescriptorFormatter.formatDescriptors.mockReturnValue(
@@ -457,7 +457,7 @@ describe('EquipmentDescriptionService', () => {
       const entityId = 'character_1';
       mockClothingManagementService.getEquippedItems.mockResolvedValue({
         success: false,
-        errors: ['Database connection failed']
+        errors: ['Database connection failed'],
       });
 
       // Act
@@ -475,7 +475,7 @@ describe('EquipmentDescriptionService', () => {
       const entityId = 'character_1';
       mockClothingManagementService.getEquippedItems.mockResolvedValue({
         success: true,
-        equipped: 'invalid-data-type'
+        equipped: 'invalid-data-type',
       });
 
       // Act
@@ -490,7 +490,7 @@ describe('EquipmentDescriptionService', () => {
       const entityId = 'character_1';
       mockClothingManagementService.getEquippedItems.mockResolvedValue({
         success: true,
-        equipped: null
+        equipped: null,
       });
 
       // Act
@@ -505,7 +505,7 @@ describe('EquipmentDescriptionService', () => {
       const entityId = 'character_1';
       mockClothingManagementService.getEquippedItems.mockResolvedValue({
         success: true,
-        equipped: undefined
+        equipped: undefined,
       });
 
       // Act
@@ -522,8 +522,8 @@ describe('EquipmentDescriptionService', () => {
       const entityId = 'character_1';
       const equippedData = {
         torso_clothing: {
-          base: 'shirt_1'
-        }
+          base: 'shirt_1',
+        },
       };
 
       const mockShirtEntity = {
@@ -540,7 +540,7 @@ describe('EquipmentDescriptionService', () => {
 
       mockClothingManagementService.getEquippedItems.mockResolvedValue({
         success: true,
-        equipped: equippedData
+        equipped: equippedData,
       });
       mockEntityManager.getEntityInstance.mockResolvedValue(mockShirtEntity);
       mockDescriptorFormatter.formatDescriptors.mockReturnValue('cotton, blue');
@@ -550,9 +550,15 @@ describe('EquipmentDescriptionService', () => {
 
       // Assert
       expect(result).toBe('Wearing: cotton, blue shirt.');
-      expect(mockShirtEntity.getComponentData).toHaveBeenCalledWith('core:name');
-      expect(mockShirtEntity.getComponentData).toHaveBeenCalledWith('core:material');
-      expect(mockShirtEntity.getComponentData).toHaveBeenCalledWith('descriptors:color_basic');
+      expect(mockShirtEntity.getComponentData).toHaveBeenCalledWith(
+        'core:name'
+      );
+      expect(mockShirtEntity.getComponentData).toHaveBeenCalledWith(
+        'core:material'
+      );
+      expect(mockShirtEntity.getComponentData).toHaveBeenCalledWith(
+        'descriptors:color_basic'
+      );
     });
 
     it('should handle new entity format with missing name component', async () => {
@@ -560,8 +566,8 @@ describe('EquipmentDescriptionService', () => {
       const entityId = 'character_1';
       const equippedData = {
         torso_clothing: {
-          base: 'shirt_1'
-        }
+          base: 'shirt_1',
+        },
       };
 
       const mockShirtEntity = {
@@ -577,7 +583,7 @@ describe('EquipmentDescriptionService', () => {
 
       mockClothingManagementService.getEquippedItems.mockResolvedValue({
         success: true,
-        equipped: equippedData
+        equipped: equippedData,
       });
       mockEntityManager.getEntityInstance.mockResolvedValue(mockShirtEntity);
       mockDescriptorFormatter.formatDescriptors.mockReturnValue('cotton, blue');
@@ -600,8 +606,8 @@ describe('EquipmentDescriptionService', () => {
       const entityId = 'character_1';
       const equippedData = {
         torso_clothing: {
-          base: 'shirt_1'
-        }
+          base: 'shirt_1',
+        },
       };
 
       const mockShirtEntity = {
@@ -617,7 +623,7 @@ describe('EquipmentDescriptionService', () => {
 
       mockClothingManagementService.getEquippedItems.mockResolvedValue({
         success: true,
-        equipped: equippedData
+        equipped: equippedData,
       });
       mockEntityManager.getEntityInstance.mockResolvedValue(mockShirtEntity);
       mockDescriptorFormatter.formatDescriptors.mockReturnValue('cotton');
@@ -627,8 +633,12 @@ describe('EquipmentDescriptionService', () => {
 
       // Assert
       expect(result).toBe('Wearing: cotton A simple shirt.');
-      expect(mockShirtEntity.getComponentData).toHaveBeenCalledWith('core:name');
-      expect(mockShirtEntity.getComponentData).toHaveBeenCalledWith('core:description');
+      expect(mockShirtEntity.getComponentData).toHaveBeenCalledWith(
+        'core:name'
+      );
+      expect(mockShirtEntity.getComponentData).toHaveBeenCalledWith(
+        'core:description'
+      );
     });
 
     it('should handle entity without getComponentData method (legacy format)', async () => {
@@ -636,8 +646,8 @@ describe('EquipmentDescriptionService', () => {
       const entityId = 'character_1';
       const equippedData = {
         torso_clothing: {
-          base: 'shirt_1'
-        }
+          base: 'shirt_1',
+        },
       };
 
       const mockShirtEntity = {
@@ -650,7 +660,7 @@ describe('EquipmentDescriptionService', () => {
 
       mockClothingManagementService.getEquippedItems.mockResolvedValue({
         success: true,
-        equipped: equippedData
+        equipped: equippedData,
       });
       mockEntityManager.getEntityInstance.mockResolvedValue(mockShirtEntity);
       mockDescriptorFormatter.formatDescriptors.mockReturnValue('cotton');
@@ -668,8 +678,8 @@ describe('EquipmentDescriptionService', () => {
       const entityId = 'character_1';
       const equippedData = {
         torso_clothing: {
-          base: 'shirt_1'
-        }
+          base: 'shirt_1',
+        },
       };
 
       const mockShirtEntity = {
@@ -679,7 +689,7 @@ describe('EquipmentDescriptionService', () => {
 
       mockClothingManagementService.getEquippedItems.mockResolvedValue({
         success: true,
-        equipped: equippedData
+        equipped: equippedData,
       });
       mockEntityManager.getEntityInstance.mockResolvedValue(mockShirtEntity);
 
@@ -701,8 +711,8 @@ describe('EquipmentDescriptionService', () => {
       const equippedData = {
         torso_clothing: {
           base: 'shirt_1',
-          outer: 'jacket_1'
-        }
+          outer: 'jacket_1',
+        },
       };
 
       const mockShirtEntity = {
@@ -721,7 +731,7 @@ describe('EquipmentDescriptionService', () => {
 
       mockClothingManagementService.getEquippedItems.mockResolvedValue({
         success: true,
-        equipped: equippedData
+        equipped: equippedData,
       });
       mockEntityManager.getEntityInstance
         .mockResolvedValueOnce(mockJacketEntity) // Outer layer first due to sorting
@@ -744,8 +754,8 @@ describe('EquipmentDescriptionService', () => {
       const equippedData = {
         torso_clothing: {},
         feet_clothing: {
-          base: 'boots_1'
-        }
+          base: 'boots_1',
+        },
       };
 
       const mockBootsEntity = {
@@ -757,7 +767,7 @@ describe('EquipmentDescriptionService', () => {
 
       mockClothingManagementService.getEquippedItems.mockResolvedValue({
         success: true,
-        equipped: equippedData
+        equipped: equippedData,
       });
       mockEntityManager.getEntityInstance.mockResolvedValue(mockBootsEntity);
       mockDescriptorFormatter.formatDescriptors.mockReturnValue('');
@@ -776,8 +786,8 @@ describe('EquipmentDescriptionService', () => {
       const equippedData = {
         torso_clothing: {
           base: null,
-          outer: 'jacket_1'
-        }
+          outer: 'jacket_1',
+        },
       };
 
       const mockJacketEntity = {
@@ -789,7 +799,7 @@ describe('EquipmentDescriptionService', () => {
 
       mockClothingManagementService.getEquippedItems.mockResolvedValue({
         success: true,
-        equipped: equippedData
+        equipped: equippedData,
       });
       mockEntityManager.getEntityInstance.mockResolvedValue(mockJacketEntity);
       mockDescriptorFormatter.formatDescriptors.mockReturnValue('');
@@ -807,8 +817,8 @@ describe('EquipmentDescriptionService', () => {
       const entityId = 'character_1';
       const equippedData = {
         torso_clothing: {
-          unknown_layer: 'shirt_1'
-        }
+          unknown_layer: 'shirt_1',
+        },
       };
 
       const mockShirtEntity = {
@@ -820,7 +830,7 @@ describe('EquipmentDescriptionService', () => {
 
       mockClothingManagementService.getEquippedItems.mockResolvedValue({
         success: true,
-        equipped: equippedData
+        equipped: equippedData,
       });
       mockEntityManager.getEntityInstance.mockResolvedValue(mockShirtEntity);
       mockDescriptorFormatter.formatDescriptors.mockReturnValue('');

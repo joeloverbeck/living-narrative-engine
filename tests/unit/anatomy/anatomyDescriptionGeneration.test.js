@@ -337,7 +337,8 @@ describe('Anatomy Description Generation - Edge Cases', () => {
       });
 
       // Should not throw error
-      const result = await bodyDescriptionComposer.composeDescription(bodyEntity);
+      const result =
+        await bodyDescriptionComposer.composeDescription(bodyEntity);
       expect(result).toBeDefined();
       expect(result).toContain('Eye: blue');
     });
@@ -351,7 +352,8 @@ describe('Anatomy Description Generation - Edge Cases', () => {
       const bodyEntity = {
         hasComponent: jest.fn().mockReturnValue(false),
       };
-      const result = await bodyDescriptionComposer.composeDescription(bodyEntity);
+      const result =
+        await bodyDescriptionComposer.composeDescription(bodyEntity);
       expect(result).toBe('');
     });
 
@@ -365,7 +367,8 @@ describe('Anatomy Description Generation - Edge Cases', () => {
 
       mockBodyGraphService.getAllParts.mockReturnValue([]);
 
-      const result = await bodyDescriptionComposer.composeDescription(bodyEntity);
+      const result =
+        await bodyDescriptionComposer.composeDescription(bodyEntity);
       expect(result).toBe('');
     });
   });

@@ -107,7 +107,9 @@ describe('AnatomyDescriptionService - Delegation Coverage', () => {
         mockResults
       );
 
-      await expect(service.generateAllDescriptions(mockEntity)).resolves.not.toThrow();
+      await expect(
+        service.generateAllDescriptions(mockEntity)
+      ).resolves.not.toThrow();
 
       expect(
         mockDescriptionPersistenceService.updateDescription

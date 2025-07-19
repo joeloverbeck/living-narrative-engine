@@ -164,7 +164,9 @@ export class EquipmentDescriptionIntegrationTestBed extends BaseTestBed {
    */
   async generateEquipmentDescription(characterId) {
     this.#warnings = []; // Clear previous warnings
-    return await this.#equipmentDescriptionService.generateEquipmentDescription(characterId);
+    return await this.#equipmentDescriptionService.generateEquipmentDescription(
+      characterId
+    );
   }
 
   /**

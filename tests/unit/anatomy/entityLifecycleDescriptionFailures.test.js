@@ -92,8 +92,9 @@ describe('Entity Lifecycle During Description Failures', () => {
       mockErrorHandler.handle.mockReturnValue(descriptionError);
 
       // Act & Assert
-      await expect(anatomyOrchestrator.orchestrateGeneration(entityId, recipeId))
-        .rejects.toThrow(descriptionError);
+      await expect(
+        anatomyOrchestrator.orchestrateGeneration(entityId, recipeId)
+      ).rejects.toThrow(descriptionError);
 
       // Verify that anatomy generation was attempted
       expect(mockGenerationWorkflow.generate).toHaveBeenCalledWith(
@@ -103,20 +104,21 @@ describe('Entity Lifecycle During Description Failures', () => {
       );
 
       // Verify that graph building was attempted
-      expect(mockGraphBuildingWorkflow.buildCache).toHaveBeenCalledWith('root-1');
+      expect(mockGraphBuildingWorkflow.buildCache).toHaveBeenCalledWith(
+        'root-1'
+      );
 
       // Verify that description generation was attempted
-      expect(mockDescriptionWorkflow.generateAll).toHaveBeenCalledWith(entityId);
+      expect(mockDescriptionWorkflow.generateAll).toHaveBeenCalledWith(
+        entityId
+      );
 
       // Verify error handling was triggered
-      expect(mockErrorHandler.handle).toHaveBeenCalledWith(
-        descriptionError,
-        {
-          operation: 'orchestration',
-          entityId,
-          recipeId,
-        }
-      );
+      expect(mockErrorHandler.handle).toHaveBeenCalledWith(descriptionError, {
+        operation: 'orchestration',
+        entityId,
+        recipeId,
+      });
     });
 
     it('should track entities for rollback when description generation fails', async () => {
@@ -150,8 +152,9 @@ describe('Entity Lifecycle During Description Failures', () => {
       mockErrorHandler.handle.mockReturnValue(descriptionError);
 
       // Act & Assert
-      await expect(anatomyOrchestrator.orchestrateGeneration(entityId, recipeId))
-        .rejects.toThrow(descriptionError);
+      await expect(
+        anatomyOrchestrator.orchestrateGeneration(entityId, recipeId)
+      ).rejects.toThrow(descriptionError);
 
       // Verify that the error contains information about tracked entities
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -191,21 +194,19 @@ describe('Entity Lifecycle During Description Failures', () => {
       mockErrorHandler.handle.mockReturnValue(graphError);
 
       // Act & Assert
-      await expect(anatomyOrchestrator.orchestrateGeneration(entityId, recipeId))
-        .rejects.toThrow(graphError);
+      await expect(
+        anatomyOrchestrator.orchestrateGeneration(entityId, recipeId)
+      ).rejects.toThrow(graphError);
 
       // Verify that description generation was never attempted
       expect(mockDescriptionWorkflow.generateAll).not.toHaveBeenCalled();
 
       // Verify that error handling was triggered
-      expect(mockErrorHandler.handle).toHaveBeenCalledWith(
-        graphError,
-        {
-          operation: 'orchestration',
-          entityId,
-          recipeId,
-        }
-      );
+      expect(mockErrorHandler.handle).toHaveBeenCalledWith(graphError, {
+        operation: 'orchestration',
+        entityId,
+        recipeId,
+      });
     });
 
     it('should succeed when all phases complete successfully', async () => {
@@ -234,7 +235,10 @@ describe('Entity Lifecycle During Description Failures', () => {
       mockDescriptionWorkflow.generateAll.mockResolvedValue();
 
       // Act
-      const result = await anatomyOrchestrator.orchestrateGeneration(entityId, recipeId);
+      const result = await anatomyOrchestrator.orchestrateGeneration(
+        entityId,
+        recipeId
+      );
 
       // Assert
       expect(result).toEqual({
@@ -249,8 +253,12 @@ describe('Entity Lifecycle During Description Failures', () => {
         recipeId,
         { ownerId: entityId }
       );
-      expect(mockGraphBuildingWorkflow.buildCache).toHaveBeenCalledWith('root-1');
-      expect(mockDescriptionWorkflow.generateAll).toHaveBeenCalledWith(entityId);
+      expect(mockGraphBuildingWorkflow.buildCache).toHaveBeenCalledWith(
+        'root-1'
+      );
+      expect(mockDescriptionWorkflow.generateAll).toHaveBeenCalledWith(
+        entityId
+      );
 
       // Verify parent entity was updated
       expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
@@ -301,8 +309,9 @@ describe('Entity Lifecycle During Description Failures', () => {
       mockErrorHandler.handle.mockReturnValue(descriptionError);
 
       // Act & Assert
-      await expect(anatomyOrchestrator.orchestrateGeneration(entityId, recipeId))
-        .rejects.toThrow(descriptionError);
+      await expect(
+        anatomyOrchestrator.orchestrateGeneration(entityId, recipeId)
+      ).rejects.toThrow(descriptionError);
 
       // Verify that the parent entity was updated but then rolled back
       expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
@@ -355,8 +364,9 @@ describe('Entity Lifecycle During Description Failures', () => {
       mockErrorHandler.handle.mockReturnValue(descriptionError);
 
       // Act & Assert
-      await expect(anatomyOrchestrator.orchestrateGeneration(entityId, recipeId))
-        .rejects.toThrow(descriptionError);
+      await expect(
+        anatomyOrchestrator.orchestrateGeneration(entityId, recipeId)
+      ).rejects.toThrow(descriptionError);
 
       // Verify that rollback was attempted for all tracked entities
       // The first call is about the rollback operation, second is about final failure
@@ -387,22 +397,22 @@ describe('Entity Lifecycle During Description Failures', () => {
       // Mock entity not found during parent entity update
       mockEntityManager.getEntityInstance.mockReturnValue(null);
 
-      const expectedError = new Error("Entity 'test-entity' not found after anatomy generation");
+      const expectedError = new Error(
+        "Entity 'test-entity' not found after anatomy generation"
+      );
       mockErrorHandler.handle.mockReturnValue(expectedError);
 
       // Act & Assert
-      await expect(anatomyOrchestrator.orchestrateGeneration(entityId, recipeId))
-        .rejects.toThrow(expectedError);
+      await expect(
+        anatomyOrchestrator.orchestrateGeneration(entityId, recipeId)
+      ).rejects.toThrow(expectedError);
 
       // Verify error handling was triggered
-      expect(mockErrorHandler.handle).toHaveBeenCalledWith(
-        expect.any(Error),
-        {
-          operation: 'orchestration',
-          entityId,
-          recipeId,
-        }
-      );
+      expect(mockErrorHandler.handle).toHaveBeenCalledWith(expect.any(Error), {
+        operation: 'orchestration',
+        entityId,
+        recipeId,
+      });
     });
 
     it('should verify generation needed before proceeding', () => {
