@@ -19,7 +19,7 @@ describe('Anatomy Orientation Propagation Integration Tests', () => {
   describe('Socket Orientation Propagation', () => {
     it('should propagate orientation from parent socket to child anatomy:part component', async () => {
       // Arrange
-      const recipeId = 'p_erotica:amaia_castillo_recipe';
+      const recipeId = 'anatomy:human_female_balanced';
       const actor = await testBed.createActor({ recipeId });
 
       // Generate anatomy for the actor
@@ -81,7 +81,7 @@ describe('Anatomy Orientation Propagation Integration Tests', () => {
 
     it('should propagate orientation down the hierarchy (arm → hand)', async () => {
       // Arrange
-      const recipeId = 'p_erotica:amaia_castillo_recipe';
+      const recipeId = 'anatomy:human_female_balanced';
       const actor = await testBed.createActor({ recipeId });
 
       // Generate anatomy for the actor
@@ -135,7 +135,7 @@ describe('Anatomy Orientation Propagation Integration Tests', () => {
 
     it('should propagate orientation down the hierarchy (leg → foot)', async () => {
       // Arrange
-      const recipeId = 'p_erotica:amaia_castillo_recipe';
+      const recipeId = 'anatomy:human_female_balanced';
       const actor = await testBed.createActor({ recipeId });
 
       // Generate anatomy for the actor
@@ -189,7 +189,7 @@ describe('Anatomy Orientation Propagation Integration Tests', () => {
 
     it('should handle parts without explicit orientation (single parts)', async () => {
       // Arrange
-      const recipeId = 'p_erotica:amaia_castillo_recipe';
+      const recipeId = 'anatomy:human_female_balanced';
       const actor = await testBed.createActor({ recipeId });
 
       // Generate anatomy for the actor
@@ -219,7 +219,7 @@ describe('Anatomy Orientation Propagation Integration Tests', () => {
   describe('Effective Orientation Resolution', () => {
     it('should resolve effective_orientation template correctly', async () => {
       // Arrange
-      const recipeId = 'p_erotica:amaia_castillo_recipe';
+      const recipeId = 'anatomy:human_female_balanced';
       const actor = await testBed.createActor({ recipeId });
 
       // Generate anatomy for the actor
@@ -279,7 +279,7 @@ describe('Anatomy Orientation Propagation Integration Tests', () => {
 
     it('should handle template resolution when socket has no orientation', async () => {
       // Arrange
-      const recipeId = 'p_erotica:amaia_castillo_recipe';
+      const recipeId = 'anatomy:human_female_balanced';
       const actor = await testBed.createActor({ recipeId });
 
       // Generate anatomy for the actor
@@ -329,7 +329,7 @@ describe('Anatomy Orientation Propagation Integration Tests', () => {
   describe('Orientation Inheritance Chain', () => {
     it('should verify the complete orientation inheritance chain', async () => {
       // Arrange
-      const recipeId = 'p_erotica:amaia_castillo_recipe';
+      const recipeId = 'anatomy:human_female_balanced';
       const actor = await testBed.createActor({ recipeId });
 
       // Generate anatomy for the actor
