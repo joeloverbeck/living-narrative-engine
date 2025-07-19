@@ -14,6 +14,14 @@
       }
     },
     {
+      "type": "REMOVE_COMPONENT",
+      "comment": "Remove facing_away component to ensure actor is no longer facing away from anyone",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "intimacy:facing_away"
+      }
+    },
+    {
       "type": "GET_NAME",
       "comment": "Step 5: Get names for UI event.",
       "parameters": {

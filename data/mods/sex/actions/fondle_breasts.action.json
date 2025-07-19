@@ -3,7 +3,7 @@
   "id": "sex:fondle_breasts",
   "name": "Fondle Breasts",
   "description": "Gently fondle the target's breasts.",
-  "scope": "sex:actors_with_breasts_in_intimacy",
+  "scope": "sex:actors_with_breasts_facing_forward",
   "required_components": {
     "actor": ["intimacy:closeness"]
   },

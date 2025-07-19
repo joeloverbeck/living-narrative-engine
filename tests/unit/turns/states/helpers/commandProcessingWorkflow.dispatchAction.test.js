@@ -15,7 +15,12 @@ describe('CommandProcessingWorkflow _dispatchAction and processCommand', () => {
   let workflow;
 
   beforeEach(() => {
-    logger = { debug: jest.fn(), warn: jest.fn(), error: jest.fn() };
+    logger = {
+      info: jest.fn(),
+      debug: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
     actor = { id: 'actor1' };
     turnCtx = { getLogger: () => logger, getActor: () => actor };
     state = {

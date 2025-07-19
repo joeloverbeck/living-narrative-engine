@@ -59,11 +59,11 @@ describe('E2E: Token Estimation and Limits', () => {
   test('should accurately estimate tokens for various prompt sizes', async () => {
     // Arrange
     const { config } = await testBed.getCurrentLLMConfig();
-    
+
     // Test different prompt sizes
-    const smallPrompt = testBed.createTestPrompt(500);  // ~125 tokens
+    const smallPrompt = testBed.createTestPrompt(500); // ~125 tokens
     const mediumPrompt = testBed.createTestPrompt(2000); // ~500 tokens
-    const largePrompt = testBed.createTestPrompt(4000);  // ~1000 tokens
+    const largePrompt = testBed.createTestPrompt(4000); // ~1000 tokens
 
     const mockResponse = testBed.createToolCallingResponse({
       chosenIndex: 1,
@@ -100,14 +100,15 @@ describe('E2E: Token Estimation and Limits', () => {
     // Arrange - Switch to limited context config for easier testing
     await testBed.switchLLMConfig('test-llm-limited');
     const { config } = await testBed.getCurrentLLMConfig();
-    
+
     // Expected calculation:
-    // contextTokenLimit: 1000, max_tokens: 150 (default), 
+    // contextTokenLimit: 1000, max_tokens: 150 (default),
     // promptTokenSpace = 850, warnThreshold = 90% * 850 = 765 tokens
-    
+
     // Create a prompt in the warning zone (between 765 and 850 tokens)
     // Using repeat(70) to hit ~771 tokens, which exceeds warning threshold of 765
-    const nearLimitPrompt = 'This is a test prompt with words to reach thresholds. '.repeat(70);
+    const nearLimitPrompt =
+      'This is a test prompt with words to reach thresholds. '.repeat(70);
 
     const mockResponse = testBed.createToolCallingResponse({
       chosenIndex: 1,
@@ -132,12 +133,13 @@ describe('E2E: Token Estimation and Limits', () => {
     expect(parsed.chosenIndex).toBe(1);
 
     // Assert - Warning should be logged
-    const warningCalls = loggerSpy.mock.calls.filter(call => 
-      typeof call[0] === 'string' && call[0].includes('nearing the limit')
+    const warningCalls = loggerSpy.mock.calls.filter(
+      (call) =>
+        typeof call[0] === 'string' && call[0].includes('nearing the limit')
     );
-    
+
     expect(warningCalls.length).toBeGreaterThan(0);
-    
+
     // Verify the warning includes the LLM config ID
     expect(warningCalls[0][0]).toContain('test-llm-limited');
 
@@ -151,7 +153,7 @@ describe('E2E: Token Estimation and Limits', () => {
   test('should throw PromptTooLongError when exceeding token limits', async () => {
     // Arrange - Use limited context config
     await testBed.switchLLMConfig('test-llm-limited');
-    
+
     // Create prompt that exceeds limit (target 1200 tokens > 850 available space)
     const oversizedPrompt = testBed.createLongPrompt(1200);
 
@@ -165,7 +167,7 @@ describe('E2E: Token Estimation and Limits', () => {
 
     // Verify error was logged
     const errorSpy = jest.spyOn(testBed.logger, 'error');
-    
+
     try {
       await testBed.getAIDecision(oversizedPrompt);
     } catch (error) {
@@ -190,7 +192,7 @@ describe('E2E: Token Estimation and Limits', () => {
     expect(config.configId).toBe('test-llm-toolcalling');
 
     const testPrompt = testBed.createTestPrompt(2000);
-    
+
     const toolCallingResponse = testBed.createToolCallingResponse({
       chosenIndex: 1,
       speech: 'Tool calling works',
@@ -239,8 +241,9 @@ describe('E2E: Token Estimation and Limits', () => {
     const loggerSpy = jest.spyOn(testBed.logger, 'warn');
 
     // Test small prompt that should NOT warn (~749 tokens < 765 threshold)
-    const smallPrompt = 'This is a test prompt with words to reach thresholds. '.repeat(68);
-    
+    const smallPrompt =
+      'This is a test prompt with words to reach thresholds. '.repeat(68);
+
     const mockResponse = testBed.createToolCallingResponse({
       chosenIndex: 1,
       speech: 'Small prompt response',
@@ -255,22 +258,27 @@ describe('E2E: Token Estimation and Limits', () => {
     await testBed.getAIDecision(smallPrompt);
 
     // Count initial warning calls (should be 0 for small prompt)
-    const initialWarningCalls = loggerSpy.mock.calls.filter(call => 
-      typeof call[0] === 'string' && call[0].includes('nearing the limit')
+    const initialWarningCalls = loggerSpy.mock.calls.filter(
+      (call) =>
+        typeof call[0] === 'string' && call[0].includes('nearing the limit')
     );
 
     // Test prompt in warning zone (~771 tokens > 765 threshold)
-    const largePrompt = 'This is a test prompt with words to reach thresholds. '.repeat(70);
-    
+    const largePrompt =
+      'This is a test prompt with words to reach thresholds. '.repeat(70);
+
     await testBed.getAIDecision(largePrompt);
 
     // Count warning calls after large prompt
-    const finalWarningCalls = loggerSpy.mock.calls.filter(call => 
-      typeof call[0] === 'string' && call[0].includes('nearing the limit')
+    const finalWarningCalls = loggerSpy.mock.calls.filter(
+      (call) =>
+        typeof call[0] === 'string' && call[0].includes('nearing the limit')
     );
-    
+
     // The large prompt should have triggered more warnings than the small one
-    expect(finalWarningCalls.length).toBeGreaterThan(initialWarningCalls.length);
+    expect(finalWarningCalls.length).toBeGreaterThan(
+      initialWarningCalls.length
+    );
 
     loggerSpy.mockRestore();
   });
@@ -282,7 +290,7 @@ describe('E2E: Token Estimation and Limits', () => {
   test('should handle edge cases gracefully', async () => {
     // Test empty prompt
     const emptyPrompt = '';
-    
+
     const mockResponse = testBed.createToolCallingResponse({
       chosenIndex: 1,
       speech: 'Empty prompt response',
@@ -314,7 +322,7 @@ describe('E2E: Token Estimation and Limits', () => {
     // the system handles various prompt formats gracefully
 
     const weirdCharPrompt = 'Strange characters: ñáéíóú 中文 🚀 ♠️ ∑∏∆';
-    
+
     const mockResponse = testBed.createToolCallingResponse({
       chosenIndex: 1,
       speech: 'Handled weird characters',
@@ -331,8 +339,10 @@ describe('E2E: Token Estimation and Limits', () => {
 
     // Test very repetitive prompt that might confuse tokenizer
     const repetitivePrompt = 'repeat '.repeat(1000);
-    
-    await expect(testBed.getAIDecision(repetitivePrompt)).resolves.toBeDefined();
+
+    await expect(
+      testBed.getAIDecision(repetitivePrompt)
+    ).resolves.toBeDefined();
   });
 
   /**
@@ -353,7 +363,8 @@ describe('E2E: Token Estimation and Limits', () => {
 
     // Create a prompt that would be fine for 8000 limit but would
     // fail for 1000 limit to verify configuration is being used
-    const mediumLargePrompt = testBed.createLongPrompt(1100);
+    // Note: createLongPrompt uses ~5.3 chars/token, so 1200 target → ~930 actual tokens
+    const mediumLargePrompt = testBed.createLongPrompt(1200);
 
     const mockResponse = testBed.createToolCallingResponse({
       chosenIndex: 1,
@@ -367,11 +378,13 @@ describe('E2E: Token Estimation and Limits', () => {
     );
 
     // Should succeed with the larger context limit
-    await expect(testBed.getAIDecision(mediumLargePrompt)).resolves.toBeDefined();
+    await expect(
+      testBed.getAIDecision(mediumLargePrompt)
+    ).resolves.toBeDefined();
 
     // Now switch to limited config and verify it fails
     await testBed.switchLLMConfig('test-llm-limited');
-    
+
     // Same prompt should now fail due to lower limit
     await expect(testBed.getAIDecision(mediumLargePrompt)).rejects.toThrow(
       PromptTooLongError
@@ -385,9 +398,10 @@ describe('E2E: Token Estimation and Limits', () => {
   test('should include relevant details in warning messages', async () => {
     // Arrange
     await testBed.switchLLMConfig('test-llm-limited');
-    
+
     // Use a prompt in warning zone to guarantee warning but not error (~771 tokens > 765 threshold)
-    const largePrompt = 'This is a test prompt with words to reach thresholds. '.repeat(70);
+    const largePrompt =
+      'This is a test prompt with words to reach thresholds. '.repeat(70);
 
     const mockResponse = testBed.createToolCallingResponse({
       chosenIndex: 1,
@@ -406,20 +420,21 @@ describe('E2E: Token Estimation and Limits', () => {
     await testBed.getAIDecision(largePrompt);
 
     // Assert - Verify warning message contains key information
-    const warningCalls = loggerSpy.mock.calls.filter(call => 
-      typeof call[0] === 'string' && call[0].includes('nearing the limit')
+    const warningCalls = loggerSpy.mock.calls.filter(
+      (call) =>
+        typeof call[0] === 'string' && call[0].includes('nearing the limit')
     );
-    
+
     expect(warningCalls.length).toBeGreaterThan(0);
-    
+
     const warningMessage = warningCalls[0][0];
-    
+
     // Should contain LLM configuration ID
     expect(warningMessage).toContain('test-llm-limited');
-    
+
     // Should contain "nearing the limit" as specified in the report
     expect(warningMessage).toContain('nearing the limit');
-    
+
     // Should be informative for debugging
     expect(warningMessage.length).toBeGreaterThan(50);
 

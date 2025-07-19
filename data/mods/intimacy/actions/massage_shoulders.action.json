@@ -3,7 +3,7 @@
   "id": "intimacy:massage_shoulders",
   "name": "Massage Shoulders",
   "description": "Gently massage the target's shoulders.",
-  "scope": "intimacy:actors_with_arms_in_intimacy",
+  "scope": "intimacy:actors_with_arms_facing_forward",
   "required_components": {
     "actor": ["intimacy:closeness"]
   },

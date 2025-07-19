@@ -1,7 +1,7 @@
 import { describe, test, expect, jest, beforeEach } from '@jest/globals';
 import { CommandDispatcher } from '../../../../../../src/turns/states/helpers/services/commandDispatcher.js';
 
-// Mock the BaseService to avoid its dependencies  
+// Mock the BaseService to avoid its dependencies
 jest.mock('../../../../../../src/utils/serviceBase.js', () => ({
   BaseService: class MockBaseService {
     _init(serviceName, logger, deps) {
@@ -9,7 +9,7 @@ jest.mock('../../../../../../src/utils/serviceBase.js', () => ({
       if (!logger) {
         throw new Error('Logger is required');
       }
-      
+
       // Validate dependencies if provided
       if (deps) {
         Object.entries(deps).forEach(([key, spec]) => {
@@ -17,7 +17,7 @@ jest.mock('../../../../../../src/utils/serviceBase.js', () => ({
             throw new Error(`${key} is required`);
           }
           if (spec.requiredMethods) {
-            spec.requiredMethods.forEach(method => {
+            spec.requiredMethods.forEach((method) => {
               if (typeof spec.value[method] !== 'function') {
                 throw new Error(`${key} must have method ${method}`);
               }
@@ -25,10 +25,10 @@ jest.mock('../../../../../../src/utils/serviceBase.js', () => ({
           }
         });
       }
-      
+
       return logger;
     }
-  }
+  },
 }));
 
 // Note: TestableCommandDispatcher class was removed as it's not needed for the current test approach
@@ -102,7 +102,7 @@ describe('CommandDispatcher', () => {
 
     test('should throw error when commandProcessor lacks dispatchAction method', () => {
       const invalidCommandProcessor = {};
-      
+
       expect(() => {
         new CommandDispatcher({
           commandProcessor: invalidCommandProcessor,
@@ -117,7 +117,7 @@ describe('CommandDispatcher', () => {
         handleProcessingError: jest.fn(),
         // missing logError method
       };
-      
+
       expect(() => {
         new CommandDispatcher({
           commandProcessor: mockCommandProcessor,
@@ -175,7 +175,6 @@ describe('CommandDispatcher', () => {
       );
     });
 
-
     test('should handle commandProcessor.dispatchAction throwing error', async () => {
       // Arrange
       const mockTurnContext = { id: 'context1' };
@@ -199,21 +198,20 @@ describe('CommandDispatcher', () => {
 
       // Assert
       expect(result).toBeNull();
-      expect(mockUnifiedErrorHandler.handleProcessingError).toHaveBeenCalledWith(
-        dispatchError,
-        {
-          actorId: mockActor.id,
-          stage: 'dispatch',
-          actionDef: {
-            id: mockTurnAction.actionDefinitionId,
-            name: mockTurnAction.commandString,
-          },
-          additionalContext: {
-            stateName,
-            commandString: mockTurnAction.commandString,
-          },
-        }
-      );
+      expect(
+        mockUnifiedErrorHandler.handleProcessingError
+      ).toHaveBeenCalledWith(dispatchError, {
+        actorId: mockActor.id,
+        stage: 'dispatch',
+        actionDef: {
+          id: mockTurnAction.actionDefinitionId,
+          name: mockTurnAction.commandString,
+        },
+        additionalContext: {
+          stateName,
+          commandString: mockTurnAction.commandString,
+        },
+      });
     });
 
     test('should handle command result with success false', async () => {
@@ -589,10 +587,9 @@ describe('CommandDispatcher', () => {
       // Assert
       expect(dispatchResult).toBeNull();
       expect(validationResult).toBe(true);
-      expect(mockUnifiedErrorHandler.handleProcessingError).toHaveBeenCalledWith(
-        dispatchError,
-        expect.any(Object)
-      );
+      expect(
+        mockUnifiedErrorHandler.handleProcessingError
+      ).toHaveBeenCalledWith(dispatchError, expect.any(Object));
     });
   });
 });

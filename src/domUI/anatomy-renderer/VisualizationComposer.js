@@ -131,7 +131,12 @@ class VisualizationComposer {
    * @returns {Promise<void>}
    */
   async renderGraph(rootEntityId, bodyData) {
-    assertNonBlankString(rootEntityId, 'Root entity ID');
+    assertNonBlankString(
+      rootEntityId,
+      'rootEntityId',
+      'VisualizationComposer.renderGraph',
+      this.#logger
+    );
     assertPresent(bodyData, 'Body data is required');
 
     this.#logger.debug(

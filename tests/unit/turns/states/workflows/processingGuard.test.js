@@ -6,7 +6,12 @@ import TurnDirectiveStrategyResolver, {
   DEFAULT_STRATEGY_MAP,
 } from '../../../../../src/turns/strategies/turnDirectiveStrategyResolver.js';
 
-const mockLogger = { debug: jest.fn(), warn: jest.fn(), error: jest.fn() };
+const mockLogger = {
+  info: jest.fn(),
+  debug: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+};
 const makeHandler = () => ({
   getLogger: () => mockLogger,
   resetStateAndResources: jest.fn(),

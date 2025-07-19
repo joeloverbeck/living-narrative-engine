@@ -36,7 +36,12 @@ describe('BrowserStorageProvider listFiles and helpers', () => {
   let dispatcher;
 
   beforeEach(() => {
-    logger = { debug: jest.fn(), warn: jest.fn(), error: jest.fn() };
+    logger = {
+      info: jest.fn(),
+      debug: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
     dispatcher = { dispatch: jest.fn() };
     rootHandle = createMockDirHandle();
     global.window = { showDirectoryPicker: jest.fn(async () => rootHandle) };

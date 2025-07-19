@@ -943,4 +943,228 @@ describe('JsonLogicCustomOperators', () => {
       expect(armResult).toBe(true);
     });
   });
+
+  describe('hasClothingInSlot operator', () => {
+    beforeEach(() => {
+      customOperators.registerOperators(jsonLogicService);
+    });
+
+    test('should return true when entity has clothing in slot', () => {
+      const context = {
+        actor: {
+          id: 'player123',
+          components: {},
+        },
+      };
+
+      const equipmentData = {
+        equipped: {
+          torso_upper: {
+            base: 'shirt123',
+            outer: 'jacket456',
+          },
+        },
+      };
+
+      mockEntityManager.getComponentData.mockReturnValue(equipmentData);
+
+      const rule = {
+        hasClothingInSlot: ['actor', 'torso_upper'],
+      };
+
+      const result = jsonLogicService.evaluate(rule, context);
+
+      expect(result).toBe(true);
+      expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(
+        'player123',
+        'clothing:equipment'
+      );
+    });
+
+    test('should return false when entity has no clothing in slot', () => {
+      const context = {
+        actor: {
+          id: 'player123',
+          components: {},
+        },
+      };
+
+      const equipmentData = {
+        equipped: {
+          torso_upper: {
+            base: 'shirt123',
+          },
+        },
+      };
+
+      mockEntityManager.getComponentData.mockReturnValue(equipmentData);
+
+      const rule = {
+        hasClothingInSlot: ['actor', 'nonexistent_slot'],
+      };
+
+      const result = jsonLogicService.evaluate(rule, context);
+
+      expect(result).toBe(false);
+    });
+
+    test('should return false when entity has no equipment component', () => {
+      const context = {
+        actor: {
+          id: 'player123',
+          components: {},
+        },
+      };
+
+      mockEntityManager.getComponentData.mockReturnValue(null);
+
+      const rule = {
+        hasClothingInSlot: ['actor', 'torso_upper'],
+      };
+
+      const result = jsonLogicService.evaluate(rule, context);
+
+      expect(result).toBe(false);
+    });
+  });
+
+  describe('hasClothingInSlotLayer operator', () => {
+    beforeEach(() => {
+      customOperators.registerOperators(jsonLogicService);
+    });
+
+    test('should return true when entity has clothing in slot and layer', () => {
+      const context = {
+        actor: {
+          id: 'player123',
+          components: {},
+        },
+      };
+
+      const equipmentData = {
+        equipped: {
+          torso_upper: {
+            base: 'shirt123',
+            outer: 'jacket456',
+          },
+        },
+      };
+
+      mockEntityManager.getComponentData.mockReturnValue(equipmentData);
+
+      const rule = {
+        hasClothingInSlotLayer: ['actor', 'torso_upper', 'base'],
+      };
+
+      const result = jsonLogicService.evaluate(rule, context);
+
+      expect(result).toBe(true);
+      expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(
+        'player123',
+        'clothing:equipment'
+      );
+    });
+
+    test('should return false when entity has no clothing in layer', () => {
+      const context = {
+        actor: {
+          id: 'player123',
+          components: {},
+        },
+      };
+
+      const equipmentData = {
+        equipped: {
+          torso_upper: {
+            base: 'shirt123',
+          },
+        },
+      };
+
+      mockEntityManager.getComponentData.mockReturnValue(equipmentData);
+
+      const rule = {
+        hasClothingInSlotLayer: ['actor', 'torso_upper', 'outer'],
+      };
+
+      const result = jsonLogicService.evaluate(rule, context);
+
+      expect(result).toBe(false);
+    });
+
+    test('should return false with invalid layer name', () => {
+      const context = {
+        actor: {
+          id: 'player123',
+          components: {},
+        },
+      };
+
+      const rule = {
+        hasClothingInSlotLayer: ['actor', 'torso_upper', 'invalid_layer'],
+      };
+
+      const result = jsonLogicService.evaluate(rule, context);
+
+      expect(result).toBe(false);
+      // Check that the specific warning was called (among potentially other warnings)
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        "JsonLogicCustomOperators: hasClothingInSlotLayer: Invalid layer name 'invalid_layer'. Valid layers: underwear, base, outer, accessories"
+      );
+    });
+
+    test('should handle array items in accessories layer', () => {
+      const context = {
+        actor: {
+          id: 'player123',
+          components: {},
+        },
+      };
+
+      const equipmentData = {
+        equipped: {
+          hands: {
+            accessories: ['gloves123', 'rings456'],
+          },
+        },
+      };
+
+      mockEntityManager.getComponentData.mockReturnValue(equipmentData);
+
+      const rule = {
+        hasClothingInSlotLayer: ['actor', 'hands', 'accessories'],
+      };
+
+      const result = jsonLogicService.evaluate(rule, context);
+
+      expect(result).toBe(true);
+    });
+
+    test('should return false for empty array in accessories layer', () => {
+      const context = {
+        actor: {
+          id: 'player123',
+          components: {},
+        },
+      };
+
+      const equipmentData = {
+        equipped: {
+          hands: {
+            accessories: [],
+          },
+        },
+      };
+
+      mockEntityManager.getComponentData.mockReturnValue(equipmentData);
+
+      const rule = {
+        hasClothingInSlotLayer: ['actor', 'hands', 'accessories'],
+      };
+
+      const result = jsonLogicService.evaluate(rule, context);
+
+      expect(result).toBe(false);
+    });
+  });
 });

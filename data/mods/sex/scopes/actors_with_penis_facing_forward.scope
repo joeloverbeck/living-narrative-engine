@@ -1,0 +1,8 @@
+// Scope for actors in closeness who have a penis and are facing forward
+// Used by actions that require penis anatomy and face-to-face interaction
+sex:actors_with_penis_facing_forward := actor.intimacy:closeness.partners[][{
+  "and": [
+    {"hasPartOfType": [".", "penis"]},
+    {"condition_ref": "intimacy:entity-not-in-facing-away"}
+  ]
+}]

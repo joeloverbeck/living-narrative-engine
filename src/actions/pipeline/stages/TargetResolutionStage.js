@@ -53,11 +53,11 @@ export class TargetResolutionStage extends PipelineStage {
     // Debug: log everything we receive
     this.#logger.debug(
       `TargetResolutionStage context keys: ${Object.keys(context).join(', ')}`,
-      { 
+      {
         candidateActionsType: typeof candidateActions,
         candidateActionsIsArray: Array.isArray(candidateActions),
         candidateActionsLength: candidateActions?.length,
-        contextKeys: Object.keys(context)
+        contextKeys: Object.keys(context),
       }
     );
 
@@ -75,7 +75,9 @@ export class TargetResolutionStage extends PipelineStage {
 
     this.#logger.debug(
       `TargetResolutionStage received ${candidateActions.length} candidate actions`,
-      { candidateActionIds: candidateActions.map(a => a?.id || 'null-action') }
+      {
+        candidateActionIds: candidateActions.map((a) => a?.id || 'null-action'),
+      }
     );
 
     trace?.step(
@@ -90,7 +92,9 @@ export class TargetResolutionStage extends PipelineStage {
     for (const actionDef of candidateActions) {
       // Guard against null/undefined actions
       if (!actionDef) {
-        this.#logger.warn('Skipping null action definition in candidateActions');
+        this.#logger.warn(
+          'Skipping null action definition in candidateActions'
+        );
         continue;
       }
       // Handle 'none' scope actions specially - they don't need target resolution
@@ -109,7 +113,7 @@ export class TargetResolutionStage extends PipelineStage {
       }
 
       let targetContexts, resolutionError;
-      
+
       try {
         const result = this.#targetResolutionService.resolveTargets(
           actionDef.scope,

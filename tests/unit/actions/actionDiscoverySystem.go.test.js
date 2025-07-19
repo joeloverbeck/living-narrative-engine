@@ -130,7 +130,12 @@ describeActionDiscoverySuite(
       );
       expect(
         bed.mocks.targetResolutionService.resolveTargets
-      ).toHaveBeenCalledWith('core:clear_directions', mockHeroEntity, expect.anything(), null);
+      ).toHaveBeenCalledWith(
+        'core:clear_directions',
+        mockHeroEntity,
+        expect.anything(),
+        null
+      );
 
       const expectedGoTargetContext =
         ActionTargetContext.forEntity(TOWN_INSTANCE_ID);

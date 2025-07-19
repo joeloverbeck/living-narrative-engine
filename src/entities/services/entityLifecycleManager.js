@@ -458,7 +458,9 @@ export class EntityLifecycleManager {
     if (errors.length > 0) {
       this.#logger.warn(`Batch create completed with ${errors.length} errors`);
     } else {
-      this.#logger.info(`Batch entity creation completed: ${results.length} entities created`);
+      this.#logger.info(
+        `Batch entity creation completed: ${results.length} entities created`
+      );
     }
 
     return { entities: results, errors };

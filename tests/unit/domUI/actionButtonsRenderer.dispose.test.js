@@ -10,7 +10,7 @@ import {
 } from '@jest/globals';
 import { JSDOM } from 'jsdom';
 import { ActionButtonsRenderer } from '../../../src/domUI';
-// import DocumentContext from '../../src/domUI/documentContext.js'; // Will use TestSpecificDocumentContext
+import DocumentContext from '../../../src/domUI/documentContext.js';
 import DomElementFactory from '../../../src/domUI/domElementFactory.js';
 import ConsoleLogger from '../../../src/logging/consoleLogger.js';
 import ValidatedEventDispatcher from '../../../src/events/validatedEventDispatcher.js';
@@ -18,41 +18,6 @@ import ValidatedEventDispatcher from '../../../src/events/validatedEventDispatch
 jest.mock('../../../src/logging/consoleLogger.js');
 jest.mock('../../../src/events/validatedEventDispatcher.js');
 jest.mock('../../../src/domUI/domElementFactory.js');
-
-// Test-specific DocumentContext to simplify and isolate potential issues
-class TestSpecificDocumentContext {
-  #doc;
-
-  constructor(docInstance) {
-    this.#doc = docInstance;
-    if (!this.#doc) {
-      // Use console.error directly as this is for test debugging
-      console.error(
-        'TestSpecificDocumentContext: Critical - received null document instance!'
-      );
-    }
-  }
-
-  query(selector) {
-    if (!this.#doc) {
-      // console.warn(`TestSpecificDocumentContext query: No document for selector "${selector}"`);
-      return null;
-    }
-    // console.log(`TestSpecificDocumentContext: Querying for "${selector}"`);
-    const result = this.#doc.querySelector(selector);
-    // console.log(`TestSpecificDocumentContext: Found for "${selector}": ${result ? 'Element' : 'null'}`);
-    return result;
-  }
-
-  create(tagName) {
-    if (!this.#doc) return null;
-    return this.#doc.createElement(tagName);
-  }
-
-  get document() {
-    return this.#doc;
-  }
-}
 
 describe('ActionButtonsRenderer', () => {
   let dom;
@@ -179,12 +144,13 @@ describe('ActionButtonsRenderer', () => {
     // Set globals carefully
     global.window = dom.window;
     global.document = jsdDocument;
+    global.Element = dom.window.Element;
     global.HTMLElement = dom.window.HTMLElement;
     global.HTMLButtonElement = dom.window.HTMLButtonElement;
     global.HTMLInputElement = dom.window.HTMLInputElement;
 
-    // Use TestSpecificDocumentContext
-    docContext = new TestSpecificDocumentContext(jsdDocument);
+    // Use the real DocumentContext like the main test
+    docContext = new DocumentContext(jsdDocument);
 
     // Enhanced logger mock
     mockLogger = new ConsoleLogger();
@@ -286,6 +252,7 @@ describe('ActionButtonsRenderer', () => {
     jsdDocument = null; // Clear the explicit jsdDocument reference
     delete global.window;
     delete global.document;
+    delete global.Element;
     delete global.HTMLElement;
     delete global.HTMLButtonElement;
     delete global.HTMLInputElement;
@@ -302,7 +269,7 @@ describe('ActionButtonsRenderer', () => {
 
     return new ActionButtonsRenderer({
       logger: mockLogger,
-      documentContext: docContext, // Uses TestSpecificDocumentContext now
+      documentContext: docContext, // Uses real DocumentContext now
       validatedEventDispatcher: mockVed,
       domElementFactory: mockDomElementFactoryInstance,
       actionButtonsContainerSelector: actionButtonsContainerSelector,
@@ -325,7 +292,7 @@ describe('ActionButtonsRenderer', () => {
       if (jest.isMockFunction(mockLogger.warn)) mockLogger.warn.mockClear();
       if (jest.isMockFunction(mockLogger.error)) mockLogger.error.mockClear();
 
-      rendererForDispose = createRenderer(); // This will now use TestSpecificDocumentContext
+      rendererForDispose = createRenderer(); // This will now use real DocumentContext
 
       // Spy on removeEventListener of the actual bound element
       if (
@@ -365,7 +332,7 @@ describe('ActionButtonsRenderer', () => {
       );
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringMatching(/Removing 1 DOM event listeners./) // Regex to be flexible with exact count if other listeners exist
+        expect.stringMatching(/Removing 2 DOM event listeners./) // ActionButtonsRenderer registers 2: click (send button) + keydown (container)
       );
     });
 
@@ -421,7 +388,7 @@ describe('ActionButtonsRenderer', () => {
 
       const dummyButton = jsdDocument.createElement('button');
       actionButtonsContainerEl.appendChild(dummyButton);
-      expect(actionButtonsContainerEl.children.length).toBe(1);
+      expect(actionButtonsContainerEl.children.length).toBe(2); // 1 empty list message + 1 dummy button
 
       rendererForDispose.availableActions = [
         {

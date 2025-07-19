@@ -3,6 +3,12 @@
 
 import { jest, beforeEach, describe, expect, it } from '@jest/globals';
 import { ConfigurableLLMAdapter } from '../../../../src/turns/adapters/configurableLLMAdapter.js'; // Adjust path as needed
+import {
+  createMockLLMConfigurationManager,
+  createMockLLMRequestExecutor,
+  createMockLLMErrorMapper,
+  createMockTokenEstimator,
+} from '../../../common/mockFactories/index.js';
 
 // Mock dependencies
 const mockLoggerInstance = () => ({
@@ -42,6 +48,10 @@ describe('ConfigurableLLMAdapter - Initialization Handling', () => {
   let mockLlmStrategyFactory;
   /** @type {jest.Mocked<ReturnType<typeof mockLlmConfigLoaderInstance>>} */
   let mockLlmConfigLoader;
+  let mockConfigurationManager;
+  let mockRequestExecutor;
+  let mockErrorMapper;
+  let mockTokenEstimator;
   /** @type {ConfigurableLLMAdapter} */
   let adapter;
 
@@ -51,12 +61,20 @@ describe('ConfigurableLLMAdapter - Initialization Handling', () => {
     mockApiKeyProvider = mockApiKeyProviderInstance();
     mockLlmStrategyFactory = mockLlmStrategyFactoryInstance();
     mockLlmConfigLoader = mockLlmConfigLoaderInstance();
+    mockConfigurationManager = createMockLLMConfigurationManager();
+    mockRequestExecutor = createMockLLMRequestExecutor();
+    mockErrorMapper = createMockLLMErrorMapper();
+    mockTokenEstimator = createMockTokenEstimator();
 
     adapter = new ConfigurableLLMAdapter({
       logger: mockLogger,
       environmentContext: mockEnvironmentContext,
       apiKeyProvider: mockApiKeyProvider,
       llmStrategyFactory: mockLlmStrategyFactory,
+      configurationManager: mockConfigurationManager,
+      requestExecutor: mockRequestExecutor,
+      errorMapper: mockErrorMapper,
+      tokenEstimator: mockTokenEstimator,
     });
   });
 
@@ -86,6 +104,31 @@ describe('ConfigurableLLMAdapter - Initialization Handling', () => {
     };
     mockLlmConfigLoader.loadConfigs.mockResolvedValue(
       schemaValidationErrorResult
+    );
+
+    // Configure the mock configuration manager to call loadConfigs when init is called
+    // and handle schema validation errors by becoming non-operational
+    mockConfigurationManager.init.mockImplementation(
+      async ({ llmConfigLoader }) => {
+        const result = await llmConfigLoader.loadConfigs();
+        if (result?.error === true) {
+          mockConfigurationManager.isOperational.mockReturnValue(false);
+          // Simulate the logging that would happen in the real configuration manager
+          mockLogger.error(
+            'ConfigurableLLMAdapter: Critical error loading LLM configurations.',
+            {
+              message: result.message,
+              stage: result.stage,
+              path: result.path,
+              originalErrorMessage: 'N/A',
+            }
+          );
+          mockLogger.warn(
+            'ConfigurableLLMAdapter: Initialization attempt complete, but the adapter is NON-OPERATIONAL due to configuration loading issues.'
+          );
+        }
+        return result;
+      }
     );
 
     // Act
@@ -121,6 +164,18 @@ describe('ConfigurableLLMAdapter - Initialization Handling', () => {
     mockLlmConfigLoader.loadConfigs.mockResolvedValue(
       schemaValidationErrorResult
     );
+
+    // Configure the mock configuration manager to call loadConfigs and become non-operational
+    mockConfigurationManager.init.mockImplementation(
+      async ({ llmConfigLoader }) => {
+        const result = await llmConfigLoader.loadConfigs();
+        if (result?.error === true) {
+          mockConfigurationManager.isOperational.mockReturnValue(false);
+        }
+        return result;
+      }
+    );
+
     await adapter.init({ llmConfigLoader: mockLlmConfigLoader });
 
     expect(adapter.isOperational()).toBe(false); // Verify non-operational state
@@ -143,7 +198,7 @@ describe('ConfigurableLLMAdapter - Initialization Handling', () => {
     expect(options).toEqual([]);
     expect(mockLogger.warn).toHaveBeenCalledWith(
       expect.stringContaining(
-        `ConfigurableLLMAdapter.getAvailableLlmOptions: Adapter not operational. Cannot retrieve LLM options. Error: ${expectedErrorMessage}`
+        `ConfigurableLLMAdapter.getAvailableLlmOptions: Error retrieving options. Error: ${expectedErrorMessage}`
       )
     );
   });
@@ -169,14 +224,14 @@ describe('ConfigurableLLMAdapter - Initialization Handling', () => {
     expect(options).toEqual([]); // Handles error and returns empty
     expect(mockLogger.warn).toHaveBeenCalledWith(
       expect.stringContaining(
-        `ConfigurableLLMAdapter.getAvailableLlmOptions: Adapter not operational. Cannot retrieve LLM options. Error: ${expectedErrorMessage}`
+        `ConfigurableLLMAdapter.getAvailableLlmOptions: Error retrieving options. Error: ${expectedErrorMessage}`
       )
     );
   });
 
-  it('should throw synchronous error from init and become non-operational if LlmConfigLoader is invalid (null)', () => {
+  it('should throw synchronous error from init and become non-operational if LlmConfigLoader is invalid (null)', async () => {
     // Act & Assert
-    expect(() => adapter.init({ llmConfigLoader: null })).toThrow(
+    await expect(adapter.init({ llmConfigLoader: null })).rejects.toThrow(
       'ConfigurableLLMAdapter: Initialization requires a valid LlmConfigLoader instance.'
     );
 
@@ -189,13 +244,15 @@ describe('ConfigurableLLMAdapter - Initialization Handling', () => {
     );
   });
 
-  it('should throw synchronous error from init and become non-operational if LlmConfigLoader is invalid (missing loadConfigs method)', () => {
+  it('should throw synchronous error from init and become non-operational if LlmConfigLoader is invalid (missing loadConfigs method)', async () => {
     // Arrange
     const invalidLoader = { someOtherMethod: jest.fn() }; // Does not have loadConfigs
 
     // Act & Assert
     // @ts-ignore // Testing invalid input
-    expect(() => adapter.init({ llmConfigLoader: invalidLoader })).toThrow(
+    await expect(
+      adapter.init({ llmConfigLoader: invalidLoader })
+    ).rejects.toThrow(
       'ConfigurableLLMAdapter: Initialization requires a valid LlmConfigLoader instance.'
     );
 

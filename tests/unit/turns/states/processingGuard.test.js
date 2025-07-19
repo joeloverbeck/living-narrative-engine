@@ -5,7 +5,12 @@ import { ProcessingExceptionHandler } from '../../../../src/turns/states/helpers
 import TurnDirectiveStrategyResolver from '../../../../src/turns/strategies/turnDirectiveStrategyResolver.js';
 
 /** Simple logger mock */
-const mockLogger = { debug: jest.fn(), warn: jest.fn(), error: jest.fn() };
+const mockLogger = {
+  info: jest.fn(),
+  debug: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+};
 
 /** Dummy handler used by ProcessingCommandState */
 const makeHandler = () => ({

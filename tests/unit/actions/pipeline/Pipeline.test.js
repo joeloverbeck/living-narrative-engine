@@ -95,7 +95,9 @@ describe('Pipeline', () => {
       expect(mockStage1.execute).toHaveBeenCalledWith(initialContext);
       expect(result.success).toBe(true);
       expect(result.actions).toEqual([{ id: 'action1' }]);
-      expect(mockLogger.debug).toHaveBeenCalledWith('Executing pipeline stage: Stage1');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Executing pipeline stage: Stage1'
+      );
       expect(mockTrace.info).toHaveBeenCalledWith(
         'Starting pipeline execution with 1 stages',
         'Pipeline.execute'

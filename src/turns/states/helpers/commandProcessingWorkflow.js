@@ -86,7 +86,7 @@ export class CommandProcessingWorkflow {
     this._commandProcessor = commandProcessor;
     this._commandOutcomeInterpreter = commandOutcomeInterpreter;
     this._directiveStrategyResolver = directiveStrategyResolver;
-    
+
     // Store optional service modules for separation of concerns
     this._commandDispatcher = commandDispatcher;
     this._resultInterpreter = resultInterpreter;
@@ -150,25 +150,28 @@ export class CommandProcessingWorkflow {
         turnAction,
         stateName: this._state.getStateName(),
       });
-      
+
       if (!result) {
         return null;
       }
-      
+
       // Validate context after dispatch using the service
       const isValid = this._commandDispatcher.validateContextAfterDispatch({
         turnContext: result.turnContext,
         expectedActorId: actor.id,
         stateName: this._state.getStateName(),
       });
-      
+
       if (!isValid) {
         return null;
       }
-      
-      return { activeTurnCtx: result.turnContext, commandResult: result.commandResult };
+
+      return {
+        activeTurnCtx: result.turnContext,
+        commandResult: result.commandResult,
+      };
     }
-    
+
     // Fallback to original implementation
     const logger = turnCtx.getLogger();
     const actorId = actor.id;
@@ -290,7 +293,7 @@ export class CommandProcessingWorkflow {
         stateName: this._state.getStateName(),
       });
     }
-    
+
     // Fallback to original implementation
     const logger = activeTurnCtx.getLogger();
     const stateName = this._state.getStateName();
@@ -356,13 +359,13 @@ export class CommandProcessingWorkflow {
         commandResult: result,
         stateName: this._state.getStateName(),
       });
-      
+
       // Handle state management after execution
       if (executionResult.executed) {
         const logger = activeTurnCtx.getLogger();
         const actorId = activeTurnCtx.getActor()?.id ?? 'UnknownActor';
         const stateName = this._state.getStateName();
-        
+
         // Check processing state after execution
         if (!this._state.isProcessing) {
           logger.debug(
@@ -388,7 +391,7 @@ export class CommandProcessingWorkflow {
       }
       return;
     }
-    
+
     // Fallback to original implementation
     const logger = activeTurnCtx.getLogger();
     const actorId = activeTurnCtx.getActor()?.id ?? 'UnknownActor';

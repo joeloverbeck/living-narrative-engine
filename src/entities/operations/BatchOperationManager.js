@@ -415,7 +415,12 @@ export default class BatchOperationManager {
 
     for (const promiseResult of results) {
       if (promiseResult.status === 'fulfilled') {
-        const { success, result: operationResult, item, error } = promiseResult.value;
+        const {
+          success,
+          result: operationResult,
+          item,
+          error,
+        } = promiseResult.value;
         if (success) {
           result.successes.push(operationResult);
           result.successCount++;

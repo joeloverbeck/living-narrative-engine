@@ -20,6 +20,12 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { ConfigurableLLMAdapter } from '../../../../src/turns/adapters/configurableLLMAdapter.js';
 import PromptTooLongError from '../../../../src/errors/promptTooLongError.js';
+import {
+  createMockLLMConfigurationManager,
+  createMockLLMRequestExecutor,
+  createMockLLMErrorMapper,
+  createMockTokenEstimator,
+} from '../../../common/mockFactories/index.js';
 
 // ---------- MOCK gpt-tokenizer ------------------------------------------------
 jest.mock('gpt-tokenizer', () => {
@@ -67,6 +73,12 @@ const mockLlmStrategyFactory = { getStrategy: jest.fn() };
 const mockLlmConfigLoader = { loadConfigs: jest.fn() };
 const mockLlmStrategy = { execute: jest.fn() };
 
+// New service mocks
+const mockConfigurationManager = createMockLLMConfigurationManager();
+const mockRequestExecutor = createMockLLMRequestExecutor();
+const mockErrorMapper = createMockLLMErrorMapper();
+const mockTokenEstimator = createMockTokenEstimator();
+
 // ---------- Test suite --------------------------------------------------------
 describe('ConfigurableLLMAdapter context-limit handling', () => {
   beforeEach(() => {
@@ -80,12 +92,24 @@ describe('ConfigurableLLMAdapter context-limit handling', () => {
       environmentContext: mockEnvironmentContext,
       apiKeyProvider: mockApiKeyProvider,
       llmStrategyFactory: mockLlmStrategyFactory,
+      configurationManager: mockConfigurationManager,
+      requestExecutor: mockRequestExecutor,
+      errorMapper: mockErrorMapper,
+      tokenEstimator: mockTokenEstimator,
     });
 
     mockLlmConfigLoader.loadConfigs.mockResolvedValue({
       defaultConfigId: config.configId,
       configs: { [config.configId]: config },
     });
+
+    // Configure mock configuration manager to return the active config
+    mockConfigurationManager.getActiveConfiguration.mockResolvedValue(config);
+    mockConfigurationManager.init.mockImplementation(
+      async ({ llmConfigLoader }) => {
+        await llmConfigLoader.loadConfigs();
+      }
+    );
 
     await adapter.init({ llmConfigLoader: mockLlmConfigLoader });
     return adapter;
@@ -99,12 +123,25 @@ describe('ConfigurableLLMAdapter context-limit handling', () => {
     };
     const adapter = await initAdapterWithConfig(config);
 
-    encodeSpy.mockReturnValue(new Array(16).fill(0)); // 16 tokens > 15 space
+    // Mock token budget: 20 context - 5 max_tokens = 15 available for prompt
+    mockTokenEstimator.getTokenBudget.mockReturnValue({
+      contextTokenLimit: 20,
+      maxTokensForOutput: 5,
+      availableForPrompt: 15,
+    });
+
+    // Mock validation result: 16 tokens > 15 space = invalid
+    mockTokenEstimator.validateTokenLimit.mockResolvedValue({
+      isValid: false,
+      isNearLimit: false,
+      estimatedTokens: 16,
+      promptTokenSpace: 15,
+    });
 
     await expect(adapter.getAIDecision('exceed')).rejects.toThrow(
       PromptTooLongError
     );
-    expect(mockLlmStrategy.execute).not.toHaveBeenCalled();
+    expect(mockRequestExecutor.executeRequest).not.toHaveBeenCalled();
     expect(mockLogger.error).toHaveBeenCalled();
   });
 
@@ -116,13 +153,27 @@ describe('ConfigurableLLMAdapter context-limit handling', () => {
     };
     const adapter = await initAdapterWithConfig(config);
 
-    encodeSpy.mockReturnValue(new Array(14).fill(0)); // 14 tokens < 15 space
-    mockLlmStrategy.execute.mockResolvedValue('ok');
+    // Mock token budget: 20 context - 5 max_tokens = 15 available for prompt
+    mockTokenEstimator.getTokenBudget.mockReturnValue({
+      contextTokenLimit: 20,
+      maxTokensForOutput: 5,
+      availableForPrompt: 15,
+    });
+
+    // Mock validation result: 14 tokens < 15 space = valid but near limit
+    mockTokenEstimator.validateTokenLimit.mockResolvedValue({
+      isValid: true,
+      isNearLimit: true,
+      estimatedTokens: 14,
+      promptTokenSpace: 15,
+    });
+
+    mockRequestExecutor.executeRequest.mockResolvedValue('ok');
 
     const result = await adapter.getAIDecision('warn');
     expect(result).toBe('ok');
     expect(mockLogger.warn).toHaveBeenCalled();
-    expect(mockLlmStrategy.execute).toHaveBeenCalled();
+    expect(mockRequestExecutor.executeRequest).toHaveBeenCalled();
   });
 
   it('uses default max_tokens of 150 when none is specified', async () => {
@@ -133,7 +184,20 @@ describe('ConfigurableLLMAdapter context-limit handling', () => {
     };
     const adapter = await initAdapterWithConfig(config);
 
-    encodeSpy.mockReturnValue(new Array(60).fill(0)); // 60 tokens > 50 space
+    // Mock token budget: 200 context - 150 default max_tokens = 50 available for prompt
+    mockTokenEstimator.getTokenBudget.mockReturnValue({
+      contextTokenLimit: 200,
+      maxTokensForOutput: 150,
+      availableForPrompt: 50,
+    });
+
+    // Mock validation result: 60 tokens > 50 space = invalid
+    mockTokenEstimator.validateTokenLimit.mockResolvedValue({
+      isValid: false,
+      isNearLimit: false,
+      estimatedTokens: 60,
+      promptTokenSpace: 50,
+    });
 
     let caught;
     try {

@@ -38,6 +38,10 @@
 /** @typedef {import('../../prompting/promptDataFormatter.js').PromptDataFormatter} PromptDataFormatter */
 /** @typedef {import('../../turns/handlers/actorTurnHandler.js').default} ActorTurnHandler_Concrete */
 /** @typedef {import('../../llms/LLMStrategyFactory.js').LLMStrategyFactory} LLMStrategyFactory_Concrete */
+/** @typedef {import('../../llms/interfaces/ILLMConfigurationManager.js').ILLMConfigurationManager} ILLMConfigurationManager */
+/** @typedef {import('../../llms/interfaces/ILLMRequestExecutor.js').ILLMRequestExecutor} ILLMRequestExecutor */
+/** @typedef {import('../../llms/interfaces/ILLMErrorMapper.js').ILLMErrorMapper} ILLMErrorMapper */
+/** @typedef {import('../../llms/interfaces/ITokenEstimator.js').ITokenEstimator} ITokenEstimator */
 
 // --- DI & Helper Imports ---
 import { tokens } from '../tokens.js';
@@ -50,6 +54,10 @@ import { ClientApiKeyProvider } from '../../llms/clientApiKeyProvider.js';
 import { RetryHttpClient } from '../../llms/retryHttpClient.js';
 import { LLMStrategyFactory } from '../../llms/LLMStrategyFactory.js';
 import strategyRegistry from '../../llms/strategies/strategyRegistry.js';
+import { LLMConfigurationManager } from '../../llms/services/llmConfigurationManager.js';
+import { LLMRequestExecutor } from '../../llms/services/llmRequestExecutor.js';
+import { LLMErrorMapper } from '../../llms/services/llmErrorMapper.js';
+import { TokenEstimator } from '../../llms/services/tokenEstimator.js';
 
 // --- AI Turn Handler Import ---
 import ActorTurnHandler from '../../turns/handlers/actorTurnHandler.js';
@@ -117,6 +125,44 @@ export function registerLlmInfrastructure(registrar, logger) {
     `AI Systems Registration: Registered ${tokens.LlmConfigLoader}.`
   );
 
+  // Register new modular services
+  registrar.singletonFactory(tokens.ILLMConfigurationManager, (c) => {
+    return new LLMConfigurationManager({
+      logger: c.resolve(tokens.ILogger),
+      // initialLlmId will be passed from ConfigurableLLMAdapter if needed
+    });
+  });
+  logger.debug(
+    `AI Systems Registration: Registered ${tokens.ILLMConfigurationManager}.`
+  );
+
+  registrar.singletonFactory(tokens.ILLMRequestExecutor, (c) => {
+    return new LLMRequestExecutor({
+      logger: c.resolve(tokens.ILogger),
+    });
+  });
+  logger.debug(
+    `AI Systems Registration: Registered ${tokens.ILLMRequestExecutor}.`
+  );
+
+  registrar.singletonFactory(tokens.ILLMErrorMapper, (c) => {
+    return new LLMErrorMapper({
+      logger: c.resolve(tokens.ILogger),
+    });
+  });
+  logger.debug(
+    `AI Systems Registration: Registered ${tokens.ILLMErrorMapper}.`
+  );
+
+  registrar.singletonFactory(tokens.ITokenEstimator, (c) => {
+    return new TokenEstimator({
+      logger: c.resolve(tokens.ILogger),
+    });
+  });
+  logger.debug(
+    `AI Systems Registration: Registered ${tokens.ITokenEstimator}.`
+  );
+
   registrar.singletonFactory(tokens.LLMAdapter, (c) => {
     logger.debug('AI Systems Registration: Starting LLM Adapter setup...');
     const environmentContext = new EnvironmentContext({
@@ -141,6 +187,10 @@ export function registerLlmInfrastructure(registrar, logger) {
       environmentContext,
       apiKeyProvider,
       llmStrategyFactory,
+      configurationManager: c.resolve(tokens.ILLMConfigurationManager),
+      requestExecutor: c.resolve(tokens.ILLMRequestExecutor),
+      errorMapper: c.resolve(tokens.ILLMErrorMapper),
+      tokenEstimator: c.resolve(tokens.ITokenEstimator),
     });
     logger.debug(
       `AI Systems Registration: ConfigurableLLMAdapter instance (token: ${tokens.LLMAdapter}) created. Explicit initialization required.`

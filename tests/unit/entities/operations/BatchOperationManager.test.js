@@ -111,7 +111,7 @@ describe('BatchOperationManager - Constructor and Dependencies', () => {
   it('should validate logger dependency', () => {
     const deps = createMockDependencies();
     // Don't actually pass null logger to avoid runtime error
-    
+
     new BatchOperationManager(deps);
 
     expect(validateDependency).toHaveBeenCalledWith(
@@ -202,7 +202,9 @@ describe('BatchOperationManager - Batch Create Entities', () => {
     expect(result.failureCount).toBe(0);
     expect(result.processingTime).toBeGreaterThanOrEqual(0);
 
-    expect(mockDeps.lifecycleManager.createEntityInstance).toHaveBeenCalledTimes(2);
+    expect(
+      mockDeps.lifecycleManager.createEntityInstance
+    ).toHaveBeenCalledTimes(2);
     expect(mockDeps.logger.info).toHaveBeenCalledWith(
       'Starting batch entity creation: 2 entities'
     );
@@ -273,9 +275,11 @@ describe('BatchOperationManager - Batch Create Entities', () => {
     expect(result.successes).toHaveLength(1);
     expect(result.failures).toHaveLength(1);
     expect(result.totalProcessed).toBe(2);
-    
+
     // Third entity should not be processed at all
-    expect(mockDeps.lifecycleManager.createEntityInstance).toHaveBeenCalledTimes(2);
+    expect(
+      mockDeps.lifecycleManager.createEntityInstance
+    ).toHaveBeenCalledTimes(2);
 
     expect(mockDeps.logger.warn).toHaveBeenCalledWith(
       'Stopping batch creation due to error in batch 1'
@@ -306,7 +310,9 @@ describe('BatchOperationManager - Batch Create Entities', () => {
       opts: {},
     }));
 
-    mockDeps.lifecycleManager.createEntityInstance.mockResolvedValue({ id: 'test' });
+    mockDeps.lifecycleManager.createEntityInstance.mockResolvedValue({
+      id: 'test',
+    });
 
     await manager.batchCreateEntities(entitySpecs, { batchSize: 3 });
 
@@ -341,7 +347,9 @@ describe('BatchOperationManager - Batch Create Entities', () => {
       .mockRejectedValueOnce(new Error('Creation error'))
       .mockResolvedValueOnce({ id: 'entity2' });
 
-    const result = await manager.batchCreateEntities(entitySpecs, { stopOnError: false });
+    const result = await manager.batchCreateEntities(entitySpecs, {
+      stopOnError: false,
+    });
 
     expect(result.failures).toHaveLength(1);
     expect(result.successes).toHaveLength(1);
@@ -350,7 +358,9 @@ describe('BatchOperationManager - Batch Create Entities', () => {
 
   it('should log completion message with statistics', async () => {
     const entitySpecs = [{ definitionId: 'test:entity1', opts: {} }];
-    mockDeps.lifecycleManager.createEntityInstance.mockResolvedValueOnce({ id: 'id1' });
+    mockDeps.lifecycleManager.createEntityInstance.mockResolvedValueOnce({
+      id: 'id1',
+    });
 
     await manager.batchCreateEntities(entitySpecs);
 
@@ -406,7 +416,9 @@ describe('BatchOperationManager - Batch Add Components', () => {
     expect(result.successCount).toBe(2);
     expect(result.failureCount).toBe(0);
 
-    expect(mockDeps.componentMutationService.addComponent).toHaveBeenCalledTimes(2);
+    expect(
+      mockDeps.componentMutationService.addComponent
+    ).toHaveBeenCalledTimes(2);
     expect(mockDeps.logger.info).toHaveBeenCalledWith(
       'Starting batch component addition: 2 components'
     );
@@ -421,7 +433,9 @@ describe('BatchOperationManager - Batch Add Components', () => {
       },
     ];
 
-    mockDeps.componentMutationService.addComponent.mockResolvedValueOnce('success');
+    mockDeps.componentMutationService.addComponent.mockResolvedValueOnce(
+      'success'
+    );
 
     const result = await manager.batchAddComponents(componentSpecs, {
       enableParallel: true,
@@ -472,8 +486,9 @@ describe('BatchOperationManager - Batch Add Components', () => {
       },
     ];
 
-    mockDeps.componentMutationService.addComponent
-      .mockRejectedValueOnce(new Error('Component add failed'));
+    mockDeps.componentMutationService.addComponent.mockRejectedValueOnce(
+      new Error('Component add failed')
+    );
 
     const result = await manager.batchAddComponents(componentSpecs, {
       stopOnError: true,
@@ -523,7 +538,9 @@ describe('BatchOperationManager - Batch Add Components', () => {
       },
     ];
 
-    mockDeps.componentMutationService.addComponent.mockResolvedValueOnce('success');
+    mockDeps.componentMutationService.addComponent.mockResolvedValueOnce(
+      'success'
+    );
 
     await manager.batchAddComponents(componentSpecs);
 
@@ -569,7 +586,9 @@ describe('BatchOperationManager - Batch Remove Entities', () => {
     expect(result.successCount).toBe(3);
     expect(result.failureCount).toBe(0);
 
-    expect(mockDeps.lifecycleManager.removeEntityInstance).toHaveBeenCalledTimes(3);
+    expect(
+      mockDeps.lifecycleManager.removeEntityInstance
+    ).toHaveBeenCalledTimes(3);
     expect(mockDeps.logger.info).toHaveBeenCalledWith(
       'Starting batch entity removal: 3 entities'
     );
@@ -611,8 +630,9 @@ describe('BatchOperationManager - Batch Remove Entities', () => {
   it('should stop on error when stopOnError is true for entity removal', async () => {
     const instanceIds = ['entity1', 'entity2'];
 
-    mockDeps.lifecycleManager.removeEntityInstance
-      .mockRejectedValueOnce(new Error('Removal failed'));
+    mockDeps.lifecycleManager.removeEntityInstance.mockRejectedValueOnce(
+      new Error('Removal failed')
+    );
 
     const result = await manager.batchRemoveEntities(instanceIds, {
       stopOnError: true,
@@ -718,7 +738,9 @@ describe('BatchOperationManager - Configuration Methods', () => {
         }
       });
 
-      expect(() => manager.setDefaultBatchSize(2000)).toThrow('Batch size too large');
+      expect(() => manager.setDefaultBatchSize(2000)).toThrow(
+        'Batch size too large'
+      );
     });
   });
 
@@ -732,7 +754,9 @@ describe('BatchOperationManager - Configuration Methods', () => {
       const stats = customManager.getStats();
       expect(stats.enableTransactions).toBe(true);
 
-      expect(customDeps.logger.debug).toHaveBeenCalledWith('Transactions enabled');
+      expect(customDeps.logger.debug).toHaveBeenCalledWith(
+        'Transactions enabled'
+      );
     });
 
     it('should disable transactions', () => {
@@ -741,7 +765,9 @@ describe('BatchOperationManager - Configuration Methods', () => {
       const stats = manager.getStats();
       expect(stats.enableTransactions).toBe(false);
 
-      expect(mockDeps.logger.debug).toHaveBeenCalledWith('Transactions disabled');
+      expect(mockDeps.logger.debug).toHaveBeenCalledWith(
+        'Transactions disabled'
+      );
     });
   });
 });
@@ -763,16 +789,17 @@ describe('BatchOperationManager - Private Methods Coverage', () => {
   describe('executeOperation method coverage', () => {
     it('should handle create operation', async () => {
       const entitySpec = { definitionId: 'test:entity', opts: {} };
-      mockDeps.lifecycleManager.createEntityInstance.mockResolvedValueOnce({ id: 'test' });
+      mockDeps.lifecycleManager.createEntityInstance.mockResolvedValueOnce({
+        id: 'test',
+      });
 
       // Test create operation through batchCreateEntities
       const result = await manager.batchCreateEntities([entitySpec]);
 
       expect(result.successes).toHaveLength(1);
-      expect(mockDeps.lifecycleManager.createEntityInstance).toHaveBeenCalledWith(
-        'test:entity',
-        {}
-      );
+      expect(
+        mockDeps.lifecycleManager.createEntityInstance
+      ).toHaveBeenCalledWith('test:entity', {});
     });
 
     it('should handle addComponent operation', async () => {
@@ -781,55 +808,65 @@ describe('BatchOperationManager - Private Methods Coverage', () => {
         componentTypeId: 'test:component',
         componentData: { value: 1 },
       };
-      mockDeps.componentMutationService.addComponent.mockResolvedValueOnce('success');
+      mockDeps.componentMutationService.addComponent.mockResolvedValueOnce(
+        'success'
+      );
 
       // Test addComponent operation through batchAddComponents
       const result = await manager.batchAddComponents([componentSpec]);
 
       expect(result.successes).toHaveLength(1);
-      expect(mockDeps.componentMutationService.addComponent).toHaveBeenCalledWith(
-        'entity1',
-        'test:component',
-        { value: 1 }
-      );
+      expect(
+        mockDeps.componentMutationService.addComponent
+      ).toHaveBeenCalledWith('entity1', 'test:component', { value: 1 });
     });
 
     it('should handle remove operation', async () => {
       const instanceId = 'entity1';
-      mockDeps.lifecycleManager.removeEntityInstance.mockResolvedValueOnce(true);
+      mockDeps.lifecycleManager.removeEntityInstance.mockResolvedValueOnce(
+        true
+      );
 
       // Test remove operation through batchRemoveEntities
       const result = await manager.batchRemoveEntities([instanceId]);
 
       expect(result.successes).toHaveLength(1);
-      expect(mockDeps.lifecycleManager.removeEntityInstance).toHaveBeenCalledWith('entity1');
+      expect(
+        mockDeps.lifecycleManager.removeEntityInstance
+      ).toHaveBeenCalledWith('entity1');
     });
 
     it('should handle all three operation types correctly', async () => {
       // Test all operation types are handled correctly by testing each batch method
-      
+
       // Create operation
       const entitySpec = { definitionId: 'test:entity', opts: {} };
-      mockDeps.lifecycleManager.createEntityInstance.mockResolvedValueOnce({ id: 'test' });
-      
+      mockDeps.lifecycleManager.createEntityInstance.mockResolvedValueOnce({
+        id: 'test',
+      });
+
       const createResult = await manager.batchCreateEntities([entitySpec]);
       expect(createResult.successes).toHaveLength(1);
 
-      // AddComponent operation  
+      // AddComponent operation
       const componentSpec = {
         instanceId: 'entity1',
         componentTypeId: 'test:component',
         componentData: { value: 1 },
       };
-      mockDeps.componentMutationService.addComponent.mockResolvedValueOnce('success');
-      
+      mockDeps.componentMutationService.addComponent.mockResolvedValueOnce(
+        'success'
+      );
+
       const addResult = await manager.batchAddComponents([componentSpec]);
       expect(addResult.successes).toHaveLength(1);
 
       // Remove operation
       const instanceId = 'entity1';
-      mockDeps.lifecycleManager.removeEntityInstance.mockResolvedValueOnce(true);
-      
+      mockDeps.lifecycleManager.removeEntityInstance.mockResolvedValueOnce(
+        true
+      );
+
       const removeResult = await manager.batchRemoveEntities([instanceId]);
       expect(removeResult.successes).toHaveLength(1);
     });
@@ -877,8 +914,9 @@ describe('BatchOperationManager - Private Methods Coverage', () => {
     it('should handle parallel processing with all failures', async () => {
       const entitySpecs = [{ definitionId: 'test:entity1', opts: {} }];
 
-      mockDeps.lifecycleManager.createEntityInstance
-        .mockRejectedValueOnce(new Error('Creation failed'));
+      mockDeps.lifecycleManager.createEntityInstance.mockRejectedValueOnce(
+        new Error('Creation failed')
+      );
 
       const result = await manager.batchCreateEntities(entitySpecs, {
         enableParallel: true,
@@ -952,7 +990,9 @@ describe('BatchOperationManager - Error Handling and Edge Cases', () => {
       };
 
       const entitySpecs = [{ definitionId: 'test:entity', opts: {} }];
-      mockDeps.lifecycleManager.createEntityInstance.mockResolvedValueOnce({ id: 'test' });
+      mockDeps.lifecycleManager.createEntityInstance.mockResolvedValueOnce({
+        id: 'test',
+      });
 
       const result = await manager.batchCreateEntities(entitySpecs);
 
@@ -969,7 +1009,9 @@ describe('BatchOperationManager - Error Handling and Edge Cases', () => {
         opts: {},
       }));
 
-      mockDeps.lifecycleManager.createEntityInstance.mockResolvedValue({ id: 'test' });
+      mockDeps.lifecycleManager.createEntityInstance.mockResolvedValue({
+        id: 'test',
+      });
 
       const result = await manager.batchCreateEntities(entitySpecs, {
         batchSize: 3,
@@ -977,12 +1019,16 @@ describe('BatchOperationManager - Error Handling and Edge Cases', () => {
 
       expect(result.totalProcessed).toBe(10);
       expect(result.successCount).toBe(10);
-      expect(mockDeps.lifecycleManager.createEntityInstance).toHaveBeenCalledTimes(10);
+      expect(
+        mockDeps.lifecycleManager.createEntityInstance
+      ).toHaveBeenCalledTimes(10);
     });
 
     it('should handle single item batches', async () => {
       const entitySpec = { definitionId: 'test:entity', opts: {} };
-      mockDeps.lifecycleManager.createEntityInstance.mockResolvedValueOnce({ id: 'test' });
+      mockDeps.lifecycleManager.createEntityInstance.mockResolvedValueOnce({
+        id: 'test',
+      });
 
       const result = await manager.batchCreateEntities([entitySpec]);
 
@@ -1050,7 +1096,9 @@ describe('BatchOperationManager - Error Handling and Edge Cases', () => {
     it('should handle all operations with different batch sizes', async () => {
       // Test entity creation
       const entitySpecs = [{ definitionId: 'test:entity', opts: {} }];
-      mockDeps.lifecycleManager.createEntityInstance.mockResolvedValueOnce({ id: 'e1' });
+      mockDeps.lifecycleManager.createEntityInstance.mockResolvedValueOnce({
+        id: 'e1',
+      });
 
       const createResult = await manager.batchCreateEntities(entitySpecs, {
         batchSize: 1,
@@ -1060,14 +1108,18 @@ describe('BatchOperationManager - Error Handling and Edge Cases', () => {
       const componentSpecs = [
         { instanceId: 'e1', componentTypeId: 'test:comp', componentData: {} },
       ];
-      mockDeps.componentMutationService.addComponent.mockResolvedValueOnce('success');
+      mockDeps.componentMutationService.addComponent.mockResolvedValueOnce(
+        'success'
+      );
 
       const addResult = await manager.batchAddComponents(componentSpecs, {
         batchSize: 1,
       });
 
       // Test entity removal
-      mockDeps.lifecycleManager.removeEntityInstance.mockResolvedValueOnce(true);
+      mockDeps.lifecycleManager.removeEntityInstance.mockResolvedValueOnce(
+        true
+      );
 
       const removeResult = await manager.batchRemoveEntities(['e1'], {
         batchSize: 1,

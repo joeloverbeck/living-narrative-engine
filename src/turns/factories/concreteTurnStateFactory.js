@@ -41,8 +41,8 @@ export class ConcreteTurnStateFactory extends ITurnStateFactory {
    * @param {ResultInterpreter} [deps.resultInterpreter] Optional result interpreter service.
    * @param {DirectiveExecutor} [deps.directiveExecutor] Optional directive executor service.
    */
-  constructor({ 
-    commandProcessor, 
+  constructor({
+    commandProcessor,
     commandOutcomeInterpreter,
     commandDispatcher,
     resultInterpreter,
@@ -113,13 +113,15 @@ export class ConcreteTurnStateFactory extends ITurnStateFactory {
     commandProcessingWorkflowFactory
   ) {
     // Create enhanced CommandProcessingWorkflow factory that injects services
-    const enhancedCommandProcessingWorkflowFactory = commandProcessingWorkflowFactory || 
-      ((config) => new CommandProcessingWorkflow({
-        ...config,
-        commandDispatcher: this.#commandDispatcher,
-        resultInterpreter: this.#resultInterpreter,
-        directiveExecutor: this.#directiveExecutor,
-      }));
+    const enhancedCommandProcessingWorkflowFactory =
+      commandProcessingWorkflowFactory ||
+      ((config) =>
+        new CommandProcessingWorkflow({
+          ...config,
+          commandDispatcher: this.#commandDispatcher,
+          resultInterpreter: this.#resultInterpreter,
+          directiveExecutor: this.#directiveExecutor,
+        }));
 
     return new ProcessingCommandState({
       handler,
@@ -129,7 +131,8 @@ export class ConcreteTurnStateFactory extends ITurnStateFactory {
       turnAction,
       directiveResolver,
       processingWorkflowFactory,
-      commandProcessingWorkflowFactory: enhancedCommandProcessingWorkflowFactory,
+      commandProcessingWorkflowFactory:
+        enhancedCommandProcessingWorkflowFactory,
     });
   }
 

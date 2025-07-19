@@ -67,12 +67,14 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
     docContext = new DocumentContext(document);
 
     // Mock button factory to return real DOM elements
-    mockDomElementFactoryInstance.button.mockImplementation((text, className) => {
-      const button = document.createElement('button');
-      button.textContent = text;
-      if (className) button.className = className;
-      return button;
-    });
+    mockDomElementFactoryInstance.button.mockImplementation(
+      (text, className) => {
+        const button = document.createElement('button');
+        button.textContent = text;
+        if (className) button.className = className;
+        return button;
+      }
+    );
 
     // Create renderer instance
     renderer = new ActionButtonsRenderer({
@@ -94,9 +96,10 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
   describe('Namespace Extraction', () => {
     it('should extract namespace from action ID with colon', () => {
       // Access private method for testing
-      const extractNamespace = renderer._ActionButtonsRenderer__extractNamespace ||
+      const extractNamespace =
+        renderer._ActionButtonsRenderer__extractNamespace ||
         renderer['#extractNamespace'];
-      
+
       // Note: We'll need to access the private method differently
       // For now, let's test through public interface
       const actions = [
@@ -109,7 +112,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
       renderer.updateGroupingConfig({
         enabled: true,
         minActionsForGrouping: 3,
-        minNamespacesForGrouping: 2
+        minNamespacesForGrouping: 2,
       });
 
       // Test by checking grouped actions
@@ -128,7 +131,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
       renderer.updateGroupingConfig({
         enabled: true,
         minActionsForGrouping: 2,
-        minNamespacesForGrouping: 2
+        minNamespacesForGrouping: 2,
       });
 
       // Should not group since only one has a namespace
@@ -151,7 +154,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
       renderer.updateGroupingConfig({
         enabled: true,
         minActionsForGrouping: 6,
-        minNamespacesForGrouping: 2
+        minNamespacesForGrouping: 2,
       });
 
       // Set actions directly and refresh list
@@ -160,7 +163,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
 
       // Check that actions are available
       expect(renderer.availableActions).toHaveLength(6);
-      
+
       // Verify configuration is correct
       const config = renderer.getGroupingConfig();
       expect(config.enabled).toBe(true);
@@ -173,7 +176,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
       expect(config.namespaceOrder).toContain('core');
       expect(config.namespaceOrder).toContain('intimacy');
       expect(config.namespaceOrder).toContain('sex');
-      
+
       // Core should be first in the default order
       expect(config.namespaceOrder[0]).toBe('core');
     });
@@ -189,12 +192,12 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
       renderer.updateGroupingConfig({
         enabled: true,
         minActionsForGrouping: 6,
-        minNamespacesForGrouping: 2
+        minNamespacesForGrouping: 2,
       });
 
       // With only 2 actions (below threshold of 6), should not group
       renderer.availableActions = actions;
-      
+
       // The grouping decision is made internally, so we verify the config is correct
       const config = renderer.getGroupingConfig();
       expect(config.minActionsForGrouping).toBe(6);
@@ -214,12 +217,12 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
       renderer.updateGroupingConfig({
         enabled: true,
         minActionsForGrouping: 6,
-        minNamespacesForGrouping: 2
+        minNamespacesForGrouping: 2,
       });
 
       // All actions from same namespace, should not group
       renderer.availableActions = actions;
-      
+
       const config = renderer.getGroupingConfig();
       expect(config.minNamespacesForGrouping).toBe(2);
       // All actions are from 'core' namespace, so only 1 unique namespace
@@ -238,22 +241,30 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
       renderer.updateGroupingConfig({
         enabled: true,
         minActionsForGrouping: 6,
-        minNamespacesForGrouping: 2
+        minNamespacesForGrouping: 2,
       });
 
       renderer.availableActions = actions;
-      
+
       const config = renderer.getGroupingConfig();
-      
+
       // Verify thresholds are met
-      expect(actions.length).toBeGreaterThanOrEqual(config.minActionsForGrouping);
-      
+      expect(actions.length).toBeGreaterThanOrEqual(
+        config.minActionsForGrouping
+      );
+
       // Count unique namespaces
-      const namespaces = new Set(actions.map(a => {
-        const colonIndex = a.actionId.indexOf(':');
-        return colonIndex !== -1 ? a.actionId.substring(0, colonIndex) : 'unknown';
-      }));
-      expect(namespaces.size).toBeGreaterThanOrEqual(config.minNamespacesForGrouping);
+      const namespaces = new Set(
+        actions.map((a) => {
+          const colonIndex = a.actionId.indexOf(':');
+          return colonIndex !== -1
+            ? a.actionId.substring(0, colonIndex)
+            : 'unknown';
+        })
+      );
+      expect(namespaces.size).toBeGreaterThanOrEqual(
+        config.minNamespacesForGrouping
+      );
     });
   });
 
@@ -261,20 +272,24 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
     it('should update grouping configuration', () => {
       const newConfig = { enabled: false, showCounts: true };
       renderer.updateGroupingConfig(newConfig);
-      
+
       const config = renderer.getGroupingConfig();
       expect(config.enabled).toBe(false);
       expect(config.showCounts).toBe(true);
     });
-    
+
     it('should preserve existing configuration when partially updating', () => {
       const originalConfig = renderer.getGroupingConfig();
       renderer.updateGroupingConfig({ enabled: false });
-      
+
       const updatedConfig = renderer.getGroupingConfig();
       expect(updatedConfig.enabled).toBe(false);
-      expect(updatedConfig.namespaceOrder).toEqual(originalConfig.namespaceOrder);
-      expect(updatedConfig.minActionsForGrouping).toBe(originalConfig.minActionsForGrouping);
+      expect(updatedConfig.namespaceOrder).toEqual(
+        originalConfig.namespaceOrder
+      );
+      expect(updatedConfig.minActionsForGrouping).toBe(
+        originalConfig.minActionsForGrouping
+      );
     });
 
     it('should re-render when configuration changes if actions are available', () => {
@@ -283,24 +298,28 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
         createTestComposite(2, 'intimacy:get_close', 'get close'),
       ];
 
-      const refreshSpy = jest.spyOn(renderer, 'refreshList').mockImplementation(() => {});
-      
+      const refreshSpy = jest
+        .spyOn(renderer, 'refreshList')
+        .mockImplementation(() => {});
+
       renderer.updateGroupingConfig({ enabled: false });
-      
+
       expect(refreshSpy).toHaveBeenCalled();
-      
+
       refreshSpy.mockRestore();
     });
 
     it('should not re-render when configuration changes if no actions available', () => {
       renderer.availableActions = [];
 
-      const refreshSpy = jest.spyOn(renderer, 'refreshList').mockImplementation(() => {});
-      
+      const refreshSpy = jest
+        .spyOn(renderer, 'refreshList')
+        .mockImplementation(() => {});
+
       renderer.updateGroupingConfig({ enabled: false });
-      
+
       expect(refreshSpy).not.toHaveBeenCalled();
-      
+
       refreshSpy.mockRestore();
     });
   });
@@ -321,11 +340,11 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
         enabled: true,
         showCounts: true,
         minActionsForGrouping: 6,
-        minNamespacesForGrouping: 2
+        minNamespacesForGrouping: 2,
       });
 
       renderer.availableActions = actions;
-      
+
       // Verify config was set
       const config = renderer.getGroupingConfig();
       expect(config.showCounts).toBe(true);
@@ -344,17 +363,21 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
       renderer.updateGroupingConfig({
         enabled: true,
         minActionsForGrouping: 6,
-        minNamespacesForGrouping: 2
+        minNamespacesForGrouping: 2,
       });
 
       renderer.availableActions = actions;
-      
+
       // Verify we have the expected actions count and namespaces
       expect(actions.length).toBe(6);
-      const namespaces = new Set(actions.map(a => {
-        const colonIndex = a.actionId.indexOf(':');
-        return colonIndex !== -1 ? a.actionId.substring(0, colonIndex) : 'unknown';
-      }));
+      const namespaces = new Set(
+        actions.map((a) => {
+          const colonIndex = a.actionId.indexOf(':');
+          return colonIndex !== -1
+            ? a.actionId.substring(0, colonIndex)
+            : 'unknown';
+        })
+      );
       expect(namespaces.size).toBe(3); // core, intimacy, sex
     });
   });
@@ -364,7 +387,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
       // We can test this indirectly through the configuration
       const config = renderer.getGroupingConfig();
       expect(config.namespaceOrder).toContain('core');
-      
+
       // The formatting happens in the private method, but we know 'core' becomes 'CORE'
       // We can verify this through the rendered output if needed
     });
@@ -382,11 +405,11 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
       renderer.updateGroupingConfig({
         enabled: true,
         minActionsForGrouping: 6,
-        minNamespacesForGrouping: 2
+        minNamespacesForGrouping: 2,
       });
 
       renderer.availableActions = actions;
-      
+
       // Should handle the action without namespace ('wait' -> 'unknown' namespace)
       expect(actions.length).toBe(6);
     });
@@ -406,11 +429,11 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
       renderer.updateGroupingConfig({
         enabled: false, // Disable grouping
         minActionsForGrouping: 6,
-        minNamespacesForGrouping: 2
+        minNamespacesForGrouping: 2,
       });
 
       renderer.availableActions = actions;
-      
+
       const config = renderer.getGroupingConfig();
       expect(config.enabled).toBe(false);
     });
@@ -428,14 +451,14 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
       renderer.updateGroupingConfig({
         enabled: true,
         minActionsForGrouping: 6,
-        minNamespacesForGrouping: 2
+        minNamespacesForGrouping: 2,
       });
 
       renderer.availableActions = actions;
-      
+
       // The selection behavior should remain the same regardless of grouping
       expect(renderer.selectedAction).toBeNull();
-      
+
       // Test selection (simplified, since we'd need to simulate full rendering)
       renderer.selectedAction = actions[0];
       expect(renderer.selectedAction).toBe(actions[0]);

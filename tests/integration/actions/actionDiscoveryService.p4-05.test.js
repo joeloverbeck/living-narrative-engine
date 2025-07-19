@@ -102,8 +102,12 @@ describe('ADS-P4-05: Streamlined ActionDiscoveryService', () => {
 
       // Assert
       expect(actions).toHaveLength(0);
-      expect(mockActionPipelineOrchestrator.discoverActions).toHaveBeenCalledTimes(1);
-      expect(mockActionPipelineOrchestrator.discoverActions).toHaveBeenCalledWith(
+      expect(
+        mockActionPipelineOrchestrator.discoverActions
+      ).toHaveBeenCalledTimes(1);
+      expect(
+        mockActionPipelineOrchestrator.discoverActions
+      ).toHaveBeenCalledWith(
         actorEntity,
         expect.objectContaining({ getActor: expect.any(Function) }),
         { trace: null }
@@ -126,7 +130,9 @@ describe('ADS-P4-05: Streamlined ActionDiscoveryService', () => {
       const { actions } = await service.getValidActions(actorEntity, {});
 
       expect(actions).toHaveLength(0);
-      expect(mockActionPipelineOrchestrator.discoverActions).toHaveBeenCalledTimes(1);
+      expect(
+        mockActionPipelineOrchestrator.discoverActions
+      ).toHaveBeenCalledTimes(1);
     });
 
     test('should not evaluate prerequisites if the action has none and proceed to scope resolution', async () => {
@@ -146,7 +152,9 @@ describe('ADS-P4-05: Streamlined ActionDiscoveryService', () => {
 
       expect(actions).toHaveLength(1);
       expect(actions[0].id).toBe(actionDef.id);
-      expect(mockActionPipelineOrchestrator.discoverActions).toHaveBeenCalledTimes(1);
+      expect(
+        mockActionPipelineOrchestrator.discoverActions
+      ).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -162,8 +170,18 @@ describe('ADS-P4-05: Streamlined ActionDiscoveryService', () => {
       };
       mockActionPipelineOrchestrator.discoverActions.mockResolvedValue({
         actions: [
-          { id: actionDef.id, params: { targetId: 'goblin1' }, name: 'Attack', commandVerb: 'attack' },
-          { id: actionDef.id, params: { targetId: 'goblin2' }, name: 'Attack', commandVerb: 'attack' },
+          {
+            id: actionDef.id,
+            params: { targetId: 'goblin1' },
+            name: 'Attack',
+            commandVerb: 'attack',
+          },
+          {
+            id: actionDef.id,
+            params: { targetId: 'goblin2' },
+            name: 'Attack',
+            commandVerb: 'attack',
+          },
         ],
         errors: [],
         trace: null,
@@ -175,7 +193,9 @@ describe('ADS-P4-05: Streamlined ActionDiscoveryService', () => {
       expect(actions.map((a) => a.params.targetId)).toEqual(
         expect.arrayContaining(['goblin1', 'goblin2'])
       );
-      expect(mockActionPipelineOrchestrator.discoverActions).toHaveBeenCalledTimes(1);
+      expect(
+        mockActionPipelineOrchestrator.discoverActions
+      ).toHaveBeenCalledTimes(1);
     });
 
     test('should generate one action for TARGET_DOMAIN_SELF scope if prereqs pass', async () => {
@@ -186,7 +206,13 @@ describe('ADS-P4-05: Streamlined ActionDiscoveryService', () => {
         prerequisites: [{ condition: 'is_injured' }],
       };
       mockActionPipelineOrchestrator.discoverActions.mockResolvedValue({
-        actions: [{ id: actionDef.id, params: { targetId: actorEntity.id }, commandVerb: 'heal' }],
+        actions: [
+          {
+            id: actionDef.id,
+            params: { targetId: actorEntity.id },
+            commandVerb: 'heal',
+          },
+        ],
         errors: [],
         trace: null,
       });
@@ -196,7 +222,9 @@ describe('ADS-P4-05: Streamlined ActionDiscoveryService', () => {
       expect(actions).toHaveLength(1);
       expect(actions[0].id).toBe(actionDef.id);
       expect(actions[0].params.targetId).toBe(actorEntity.id);
-      expect(mockActionPipelineOrchestrator.discoverActions).toHaveBeenCalledTimes(1);
+      expect(
+        mockActionPipelineOrchestrator.discoverActions
+      ).toHaveBeenCalledTimes(1);
     });
 
     test('should generate one action for TARGET_DOMAIN_NONE scope if prereqs pass', async () => {
@@ -207,7 +235,13 @@ describe('ADS-P4-05: Streamlined ActionDiscoveryService', () => {
         prerequisites: [{ condition: 'is_vocal' }],
       };
       mockActionPipelineOrchestrator.discoverActions.mockResolvedValue({
-        actions: [{ id: actionDef.id, params: { targetId: null }, commandVerb: 'shout' }],
+        actions: [
+          {
+            id: actionDef.id,
+            params: { targetId: null },
+            commandVerb: 'shout',
+          },
+        ],
         errors: [],
         trace: null,
       });
@@ -217,7 +251,9 @@ describe('ADS-P4-05: Streamlined ActionDiscoveryService', () => {
       expect(actions).toHaveLength(1);
       expect(actions[0].id).toBe(actionDef.id);
       expect(actions[0].params.targetId).toBeNull();
-      expect(mockActionPipelineOrchestrator.discoverActions).toHaveBeenCalledTimes(1);
+      expect(
+        mockActionPipelineOrchestrator.discoverActions
+      ).toHaveBeenCalledTimes(1);
     });
 
     test('should skip action if scope resolves to zero targets', async () => {
@@ -236,7 +272,9 @@ describe('ADS-P4-05: Streamlined ActionDiscoveryService', () => {
       const { actions } = await service.getValidActions(actorEntity, {});
 
       expect(actions).toHaveLength(0);
-      expect(mockActionPipelineOrchestrator.discoverActions).toHaveBeenCalledTimes(1);
+      expect(
+        mockActionPipelineOrchestrator.discoverActions
+      ).toHaveBeenCalledTimes(1);
     });
   });
 });

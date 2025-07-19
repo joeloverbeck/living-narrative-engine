@@ -46,7 +46,9 @@ import { CommandDispatcher } from '../../turns/states/helpers/services/commandDi
 import { DirectiveExecutor } from '../../turns/states/helpers/services/directiveExecutor.js';
 import { ResultInterpreter } from '../../turns/states/helpers/services/resultInterpreter.js';
 import { UnifiedErrorHandler } from '../../actions/errors/unifiedErrorHandler.js';
-import TurnDirectiveStrategyResolver, { DEFAULT_STRATEGY_MAP } from '../../turns/strategies/turnDirectiveStrategyResolver.js';
+import TurnDirectiveStrategyResolver, {
+  DEFAULT_STRATEGY_MAP,
+} from '../../turns/strategies/turnDirectiveStrategyResolver.js';
 
 /**
  * Registers command and action related services.
@@ -231,7 +233,7 @@ export function registerCommandAndAction(container) {
     'Command and Action Registration: Registered UnifiedErrorHandler.'
   );
 
-  // Register DirectiveStrategyResolver  
+  // Register DirectiveStrategyResolver
   registrar.singletonFactory(tokens.DirectiveStrategyResolver, (c) => {
     return new TurnDirectiveStrategyResolver(DEFAULT_STRATEGY_MAP);
   });

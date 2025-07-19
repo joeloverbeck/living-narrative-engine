@@ -26,12 +26,10 @@
       "thumb_wipe_cheek.action.json",
       "turn_around.action.json"
     ],
-    "components": [
-      "closeness.component.json",
-      "facing_away.component.json"
-    ],
+    "components": ["closeness.component.json", "facing_away.component.json"],
     "conditions": [
       "actor-has-facing-away.condition.json",
+      "actor-in-entity-facing-away.condition.json",
       "actor-is-in-closeness.condition.json",
       "entity-in-facing-away.condition.json",
       "entity-not-in-facing-away.condition.json",
@@ -69,15 +67,16 @@
       "thumb_wipe_cheek.rule.json",
       "turn_around.rule.json"
     ],
-    "ui": [
-      "icons.json",
-      "labels.json"
-    ],
+    "ui": ["icons.json", "labels.json"],
     "scopes": [
+      "actors_with_arms_facing_forward.scope",
       "actors_with_arms_in_intimacy.scope",
+      "actors_with_ass_cheeks_facing_forward.scope",
       "actors_with_ass_cheeks_in_intimacy.scope",
       "close_actors.scope",
       "close_actors_facing_away.scope",
+      "close_actors_facing_forward.scope",
+      "close_actors_facing_forward_with_torso_clothing.scope",
       "close_actors_in_front.scope"
     ]
   }

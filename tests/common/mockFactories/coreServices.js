@@ -64,6 +64,245 @@ const simpleFactories = {
   createMockAIPromptContentProvider: ['getPromptData'],
   createMockPromptBuilder: ['build'],
   createMockAIPromptPipeline: ['generatePrompt'],
+  createMockLLMConfigurationManager: {
+    methods: [
+      'loadConfiguration',
+      'getActiveConfiguration',
+      'setActiveConfiguration',
+      'getAllConfigurations',
+      'hasConfiguration',
+      'clearActiveConfiguration',
+      'init',
+      'validateConfiguration',
+      'getAvailableOptions',
+      'getActiveConfigId',
+      'isOperational',
+    ],
+    defaults: {
+      init: jest.fn().mockImplementation(async function ({
+        llmConfigLoader,
+        initialLlmId = null,
+      }) {
+        if (
+          llmConfigLoader &&
+          typeof llmConfigLoader.loadConfigs === 'function'
+        ) {
+          const configResult = await llmConfigLoader.loadConfigs();
+
+          // Check if result indicates an error
+          if (configResult && configResult.error === true) {
+            this.isOperational.mockReturnValue(false);
+            return configResult;
+          }
+
+          // Store the configuration for later use
+          if (
+            configResult &&
+            configResult.configs &&
+            configResult.defaultConfigId
+          ) {
+            this._configs = configResult.configs;
+            this._defaultConfigId = configResult.defaultConfigId;
+
+            // Check if initialLlmId was provided and exists in configs
+            if (
+              initialLlmId &&
+              typeof initialLlmId === 'string' &&
+              configResult.configs[initialLlmId]
+            ) {
+              this._activeConfigId = initialLlmId;
+              this._activeConfig = configResult.configs[initialLlmId];
+            } else if (initialLlmId && typeof initialLlmId === 'string') {
+              // initialLlmId provided but not found - log warning and fall back
+              console.warn(
+                `ConfigurableLLMAdapter.#selectInitialActiveLlm: initialLlmId ('${initialLlmId}') was provided to constructor, but no LLM configuration with this ID exists in the configs map. Falling back to defaultConfigId logic.`
+              );
+              if (configResult.configs[configResult.defaultConfigId]) {
+                this._activeConfigId = configResult.defaultConfigId;
+                this._activeConfig =
+                  configResult.configs[configResult.defaultConfigId];
+              } else {
+                this._activeConfigId = null;
+                this._activeConfig = null;
+                console.warn(
+                  `ConfigurableLLMAdapter: 'defaultConfigId' ("${configResult.defaultConfigId}") is specified in configurations, but no LLM configuration with this ID exists in the configs map. No default LLM set.`
+                );
+              }
+            } else if (configResult.configs[configResult.defaultConfigId]) {
+              // Fall back to default config if it exists
+              this._activeConfigId = configResult.defaultConfigId;
+              this._activeConfig =
+                configResult.configs[configResult.defaultConfigId];
+            } else {
+              // No valid config found
+              this._activeConfigId = null;
+              this._activeConfig = null;
+
+              // Check if defaultConfigId is an empty/invalid string
+              if (
+                typeof configResult.defaultConfigId === 'string' &&
+                configResult.defaultConfigId.trim() === ''
+              ) {
+                console.warn(
+                  `ConfigurableLLMAdapter.#selectInitialActiveLlm: 'defaultConfigId' found in configurations but it is not a valid non-empty string ("${configResult.defaultConfigId}").`
+                );
+              } else {
+                console.warn(
+                  `ConfigurableLLMAdapter: 'defaultConfigId' ("${configResult.defaultConfigId}") is specified in configurations, but no LLM configuration with this ID exists in the configs map. No default LLM set.`
+                );
+              }
+            }
+
+            // Update other methods to return stored data
+            this.getActiveConfiguration.mockResolvedValue(this._activeConfig);
+            this.getActiveConfigId.mockResolvedValue(this._activeConfigId);
+            this.getActiveConfigId.mockImplementation(
+              () => this._activeConfigId
+            ); // Also set sync return
+            this.hasConfiguration.mockImplementation((id) =>
+              Boolean(this._configs && this._configs[id])
+            );
+            this.setActiveConfiguration.mockImplementation(async (id) => {
+              if (this._configs && this._configs[id]) {
+                this._activeConfigId = id;
+                this._activeConfig = this._configs[id];
+                this.getActiveConfiguration.mockResolvedValue(
+                  this._activeConfig
+                );
+                this.getActiveConfigId.mockResolvedValue(this._activeConfigId);
+                this.getActiveConfigId.mockImplementation(
+                  () => this._activeConfigId
+                ); // Also set sync return
+                return true;
+              }
+              return false;
+            });
+            this.getAllConfigurations.mockResolvedValue(configResult);
+
+            // Update getAvailableOptions to return proper format
+            const options = Object.keys(this._configs).map((configId) => ({
+              configId,
+              displayName: this._configs[configId].displayName || configId,
+            }));
+            this.getAvailableOptions.mockResolvedValue(options);
+
+            this.isOperational.mockReturnValue(true);
+          } else {
+            // Invalid configuration structure
+            this.isOperational.mockReturnValue(false);
+            this.getActiveConfiguration.mockResolvedValue(null);
+            this.getActiveConfigId.mockResolvedValue(null);
+            this.getActiveConfigId.mockImplementation(() => null); // Also set sync return
+          }
+
+          return configResult;
+        }
+      }),
+      getActiveConfiguration: jest.fn().mockResolvedValue(null),
+      getAllConfigurations: jest.fn().mockResolvedValue(null),
+      hasConfiguration: jest.fn().mockReturnValue(false),
+      isOperational: jest.fn().mockReturnValue(true),
+      getAvailableOptions: jest.fn().mockResolvedValue([]),
+      validateConfiguration: jest.fn().mockImplementation((config) => {
+        const errors = [];
+        if (!config) return [{ field: 'config', reason: 'Missing or invalid' }];
+
+        if (
+          !config.configId ||
+          typeof config.configId !== 'string' ||
+          config.configId.trim() === ''
+        ) {
+          errors.push({ field: 'configId', reason: 'Missing or invalid' });
+        }
+        if (
+          !config.endpointUrl ||
+          typeof config.endpointUrl !== 'string' ||
+          config.endpointUrl.trim() === ''
+        ) {
+          errors.push({ field: 'endpointUrl', reason: 'Missing or invalid' });
+        }
+        if (
+          !config.modelIdentifier ||
+          typeof config.modelIdentifier !== 'string' ||
+          config.modelIdentifier.trim() === ''
+        ) {
+          errors.push({
+            field: 'modelIdentifier',
+            reason: 'Missing or invalid',
+          });
+        }
+        if (
+          !config.apiType ||
+          typeof config.apiType !== 'string' ||
+          config.apiType.trim() === ''
+        ) {
+          errors.push({ field: 'apiType', reason: 'Missing or invalid' });
+        }
+        if (
+          config.jsonOutputStrategy &&
+          typeof config.jsonOutputStrategy !== 'object'
+        ) {
+          errors.push({
+            field: 'jsonOutputStrategy',
+            reason: 'Is required and must be an object.',
+          });
+        }
+        if (
+          config.jsonOutputStrategy &&
+          (!config.jsonOutputStrategy.method ||
+            typeof config.jsonOutputStrategy.method !== 'string' ||
+            config.jsonOutputStrategy.method.trim() === '')
+        ) {
+          errors.push({
+            field: 'jsonOutputStrategy.method',
+            reason: 'Is required and must be a non-empty string.',
+          });
+        }
+
+        return errors;
+      }),
+      getActiveConfigId: jest.fn().mockImplementation(() => null), // Return sync null by default
+      setActiveConfiguration: jest.fn().mockResolvedValue(false),
+    },
+  },
+  createMockLLMRequestExecutor: {
+    methods: ['executeRequest', 'executeWithRetry', 'handleAbortSignal'],
+    defaults: {
+      executeRequest: jest.fn().mockResolvedValue('{"result": "success"}'),
+    },
+  },
+  createMockLLMErrorMapper: {
+    methods: [
+      'mapHttpError',
+      'mapResponseError',
+      'isRetryableError',
+      'getErrorSeverity',
+      'logError',
+    ],
+    defaults: {
+      mapHttpError: jest.fn((error) => error),
+      isRetryableError: jest.fn().mockReturnValue(false),
+      logError: jest.fn(),
+    },
+  },
+  createMockTokenEstimator: {
+    methods: [
+      'estimateTokens',
+      'estimatePromptTokens',
+      'estimateResponseTokens',
+      'getModelTokenLimit',
+      'getTokenBudget',
+      'validateTokenLimit',
+    ],
+    defaults: {
+      estimateTokens: jest.fn().mockReturnValue(100),
+      getModelTokenLimit: jest.fn().mockReturnValue(4096),
+      getTokenBudget: jest.fn().mockReturnValue(4096),
+      validateTokenLimit: jest
+        .fn()
+        .mockReturnValue({ isValid: true, used: 100, limit: 4096 }),
+    },
+  },
 };
 
 const generatedFactories = generateFactories(simpleFactories);
@@ -76,6 +315,10 @@ export const {
   createMockAIGameStateProvider,
   createMockAIPromptContentProvider,
   createMockPromptBuilder,
+  createMockLLMConfigurationManager,
+  createMockLLMRequestExecutor,
+  createMockLLMErrorMapper,
+  createMockTokenEstimator,
 } = generatedFactories;
 
 const baseCreateMockAIPromptPipeline =

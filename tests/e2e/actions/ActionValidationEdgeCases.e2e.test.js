@@ -176,7 +176,7 @@ describe('Action Validation Edge Cases E2E', () => {
     try {
       // Get existing scopes and add edge case scopes
       const existingScopes = {};
-      
+
       // First, try to get existing scopes if any
       try {
         const existingAction = registry.get('scopes', 'core:other_actors');
@@ -186,14 +186,16 @@ describe('Action Validation Edge Cases E2E', () => {
       } catch (e) {
         // No existing scopes, that's fine
       }
-      
+
       // Add edge case scopes
       Object.assign(existingScopes, scopeDefinitions);
-      
+
       // Initialize scope registry with combined scopes
       scopeRegistry.initialize(existingScopes);
-      
-      logger.debug(`Initialized scope registry with ${Object.keys(existingScopes).length} scopes`);
+
+      logger.debug(
+        `Initialized scope registry with ${Object.keys(existingScopes).length} scopes`
+      );
     } catch (e) {
       logger.warn('Could not initialize edge case scopes', e);
     }
@@ -301,7 +303,8 @@ describe('Action Validation Edge Cases E2E', () => {
           {
             // Add a prerequisite that will always fail to keep this action out of valid results
             logic: { '==': [1, 2] }, // Always false
-            failure_message: 'This action has missing required fields and should fail',
+            failure_message:
+              'This action has missing required fields and should fail',
           },
         ],
         required_components: { actor: [] },
@@ -370,7 +373,7 @@ describe('Action Validation Edge Cases E2E', () => {
 
     // Register existing test actions first
     const existingActions = await testBed.registerTestActions();
-    
+
     // Build action index with all actions including edge cases
     const allActions = [...existingActions.actions, ...edgeCaseActions];
 
@@ -525,13 +528,16 @@ describe('Action Validation Edge Cases E2E', () => {
     const traceMessages = discoveredActions.trace.logs
       .map((l) => l.message)
       .join('\n');
-    
+
     // The action should either appear in trace OR we should see scope resolution errors
     // Since the action has an invalid scope, it should generate scope resolution errors
-    const hasEmptyTargetsInTrace = traceMessages.includes('test:action-empty-targets');
-    const hasScopeResolutionError = traceMessages.includes('test:empty-scope') || 
-                                   traceMessages.includes('Missing scope definition');
-    
+    const hasEmptyTargetsInTrace = traceMessages.includes(
+      'test:action-empty-targets'
+    );
+    const hasScopeResolutionError =
+      traceMessages.includes('test:empty-scope') ||
+      traceMessages.includes('Missing scope definition');
+
     // Either the action appears in trace or we see related scope errors
     expect(hasEmptyTargetsInTrace || hasScopeResolutionError).toBe(true);
   });
@@ -579,16 +585,25 @@ describe('Action Validation Edge Cases E2E', () => {
     const traceMessages = discoveredActions.trace.logs
       .map((l) => l.message)
       .join('\n');
-      
+
     // Either the action appears in trace or we see scope resolution errors
-    const hasInvalidScopeInTrace = traceMessages.includes('test:action-invalid-scope');
-    const hasBrokenFilterInTrace = traceMessages.includes('test:action-broken-filter');
-    const hasScopeResolutionError = traceMessages.includes('test:invalid-dsl') || 
-                                   traceMessages.includes('test:broken-filter') ||
-                                   traceMessages.includes('Missing scope definition');
-    
+    const hasInvalidScopeInTrace = traceMessages.includes(
+      'test:action-invalid-scope'
+    );
+    const hasBrokenFilterInTrace = traceMessages.includes(
+      'test:action-broken-filter'
+    );
+    const hasScopeResolutionError =
+      traceMessages.includes('test:invalid-dsl') ||
+      traceMessages.includes('test:broken-filter') ||
+      traceMessages.includes('Missing scope definition');
+
     // Actions should either appear in trace or generate scope errors
-    expect(hasInvalidScopeInTrace || hasBrokenFilterInTrace || hasScopeResolutionError).toBe(true);
+    expect(
+      hasInvalidScopeInTrace ||
+        hasBrokenFilterInTrace ||
+        hasScopeResolutionError
+    ).toBe(true);
   });
 
   /**

@@ -6,7 +6,7 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { ResultInterpreter } from '../../../../../../src/turns/states/helpers/services/resultInterpreter.js';
 
-// Mock the BaseService to avoid its dependencies  
+// Mock the BaseService to avoid its dependencies
 jest.mock('../../../../../../src/utils/serviceBase.js', () => ({
   BaseService: class MockBaseService {
     _init(serviceName, logger, deps) {
@@ -14,7 +14,7 @@ jest.mock('../../../../../../src/utils/serviceBase.js', () => ({
       if (!logger) {
         throw new Error('Logger is required');
       }
-      
+
       // Validate dependencies if provided
       if (deps) {
         Object.entries(deps).forEach(([key, spec]) => {
@@ -22,7 +22,7 @@ jest.mock('../../../../../../src/utils/serviceBase.js', () => ({
             throw new Error(`${key} is required`);
           }
           if (spec.requiredMethods) {
-            spec.requiredMethods.forEach(method => {
+            spec.requiredMethods.forEach((method) => {
               if (typeof spec.value[method] !== 'function') {
                 throw new Error(`${key} must have method ${method}`);
               }
@@ -30,10 +30,10 @@ jest.mock('../../../../../../src/utils/serviceBase.js', () => ({
           }
         });
       }
-      
+
       return logger;
     }
-  }
+  },
 }));
 
 describe('ResultInterpreter', () => {
@@ -115,7 +115,7 @@ describe('ResultInterpreter', () => {
 
     it('should validate commandOutcomeInterpreter has interpret method', () => {
       const invalidInterpreter = {};
-      
+
       expect(() => {
         new ResultInterpreter({
           commandOutcomeInterpreter: invalidInterpreter,
@@ -130,7 +130,7 @@ describe('ResultInterpreter', () => {
         handleProcessingError: jest.fn(),
         // missing logError method
       };
-      
+
       expect(() => {
         new ResultInterpreter({
           commandOutcomeInterpreter: mockCommandOutcomeInterpreter,
@@ -148,7 +148,9 @@ describe('ResultInterpreter', () => {
 
     it('should successfully interpret command result and return directive type', async () => {
       const expectedDirective = 'END_TURN_SUCCESS';
-      mockCommandOutcomeInterpreter.interpret.mockResolvedValue(expectedDirective);
+      mockCommandOutcomeInterpreter.interpret.mockResolvedValue(
+        expectedDirective
+      );
 
       const result = await resultInterpreter.interpret({
         commandResult: mockCommandResult,
@@ -169,7 +171,9 @@ describe('ResultInterpreter', () => {
 
     it('should handle interpretation errors and return null', async () => {
       const interpretationError = new Error('Interpretation failed');
-      mockCommandOutcomeInterpreter.interpret.mockRejectedValue(interpretationError);
+      mockCommandOutcomeInterpreter.interpret.mockRejectedValue(
+        interpretationError
+      );
 
       const result = await resultInterpreter.interpret({
         commandResult: mockCommandResult,
@@ -178,7 +182,9 @@ describe('ResultInterpreter', () => {
         stateName,
       });
 
-      expect(mockUnifiedErrorHandler.handleProcessingError).toHaveBeenCalledWith(
+      expect(
+        mockUnifiedErrorHandler.handleProcessingError
+      ).toHaveBeenCalledWith(
         interpretationError,
         expect.objectContaining({
           actorId,
@@ -203,7 +209,9 @@ describe('ResultInterpreter', () => {
         stateName,
       });
 
-      expect(mockUnifiedErrorHandler.handleProcessingError).toHaveBeenCalledWith(
+      expect(
+        mockUnifiedErrorHandler.handleProcessingError
+      ).toHaveBeenCalledWith(
         expect.any(Error),
         expect.objectContaining({
           actorId,
@@ -223,7 +231,9 @@ describe('ResultInterpreter', () => {
         stateName,
       });
 
-      expect(mockUnifiedErrorHandler.handleProcessingError).toHaveBeenCalledWith(
+      expect(
+        mockUnifiedErrorHandler.handleProcessingError
+      ).toHaveBeenCalledWith(
         expect.any(Error),
         expect.objectContaining({
           actorId,
@@ -243,9 +253,11 @@ describe('ResultInterpreter', () => {
         stateName,
       });
 
-      expect(mockUnifiedErrorHandler.handleProcessingError).toHaveBeenCalledWith(
+      expect(
+        mockUnifiedErrorHandler.handleProcessingError
+      ).toHaveBeenCalledWith(
         expect.objectContaining({
-          message: 'Invalid directive type returned: 123'
+          message: 'Invalid directive type returned: 123',
         }),
         expect.objectContaining({
           actorId,
@@ -265,9 +277,11 @@ describe('ResultInterpreter', () => {
         stateName,
       });
 
-      expect(mockUnifiedErrorHandler.handleProcessingError).toHaveBeenCalledWith(
+      expect(
+        mockUnifiedErrorHandler.handleProcessingError
+      ).toHaveBeenCalledWith(
         expect.objectContaining({
-          message: 'Invalid directive type returned: '
+          message: 'Invalid directive type returned: ',
         }),
         expect.objectContaining({
           actorId,
@@ -280,7 +294,9 @@ describe('ResultInterpreter', () => {
     it('should handle command result with success false', async () => {
       const failedCommandResult = { success: false, error: 'Command failed' };
       const expectedDirective = 'END_TURN_FAILURE';
-      mockCommandOutcomeInterpreter.interpret.mockResolvedValue(expectedDirective);
+      mockCommandOutcomeInterpreter.interpret.mockResolvedValue(
+        expectedDirective
+      );
 
       const result = await resultInterpreter.interpret({
         commandResult: failedCommandResult,
@@ -296,12 +312,14 @@ describe('ResultInterpreter', () => {
     });
 
     it('should include command error in error context when interpretation fails', async () => {
-      const commandResultWithError = { 
-        success: false, 
-        error: 'Command execution error' 
+      const commandResultWithError = {
+        success: false,
+        error: 'Command execution error',
       };
       const interpretationError = new Error('Interpretation failed');
-      mockCommandOutcomeInterpreter.interpret.mockRejectedValue(interpretationError);
+      mockCommandOutcomeInterpreter.interpret.mockRejectedValue(
+        interpretationError
+      );
 
       const result = await resultInterpreter.interpret({
         commandResult: commandResultWithError,
@@ -310,7 +328,9 @@ describe('ResultInterpreter', () => {
         stateName,
       });
 
-      expect(mockUnifiedErrorHandler.handleProcessingError).toHaveBeenCalledWith(
+      expect(
+        mockUnifiedErrorHandler.handleProcessingError
+      ).toHaveBeenCalledWith(
         interpretationError,
         expect.objectContaining({
           additionalContext: expect.objectContaining({
@@ -326,7 +346,9 @@ describe('ResultInterpreter', () => {
       const customActorId = 'custom-actor-123';
       const customStateName = 'ProcessingCommandState';
       const expectedDirective = 'RE_PROMPT';
-      mockCommandOutcomeInterpreter.interpret.mockResolvedValue(expectedDirective);
+      mockCommandOutcomeInterpreter.interpret.mockResolvedValue(
+        expectedDirective
+      );
 
       await resultInterpreter.interpret({
         commandResult: mockCommandResult,
@@ -344,23 +366,23 @@ describe('ResultInterpreter', () => {
   describe('validateCommandResult', () => {
     it('should return true for valid command result with success true', () => {
       const validResult = { success: true, data: 'test' };
-      
+
       const result = resultInterpreter.validateCommandResult(validResult);
-      
+
       expect(result).toBe(true);
     });
 
     it('should return true for valid command result with success false', () => {
       const validResult = { success: false, error: 'test error' };
-      
+
       const result = resultInterpreter.validateCommandResult(validResult);
-      
+
       expect(result).toBe(true);
     });
 
     it('should return false for null command result', () => {
       const result = resultInterpreter.validateCommandResult(null);
-      
+
       expect(result).toBe(false);
       expect(mockLogger.error).toHaveBeenCalledWith(
         'Invalid command result: not an object',
@@ -370,7 +392,7 @@ describe('ResultInterpreter', () => {
 
     it('should return false for undefined command result', () => {
       const result = resultInterpreter.validateCommandResult(undefined);
-      
+
       expect(result).toBe(false);
       expect(mockLogger.error).toHaveBeenCalledWith(
         'Invalid command result: not an object',
@@ -380,7 +402,7 @@ describe('ResultInterpreter', () => {
 
     it('should return false for non-object command result', () => {
       const result = resultInterpreter.validateCommandResult('not an object');
-      
+
       expect(result).toBe(false);
       expect(mockLogger.error).toHaveBeenCalledWith(
         'Invalid command result: not an object',
@@ -390,9 +412,9 @@ describe('ResultInterpreter', () => {
 
     it('should return false for command result missing success property', () => {
       const invalidResult = { data: 'test' };
-      
+
       const result = resultInterpreter.validateCommandResult(invalidResult);
-      
+
       expect(result).toBe(false);
       expect(mockLogger.error).toHaveBeenCalledWith(
         'Invalid command result: missing success property',
@@ -402,9 +424,9 @@ describe('ResultInterpreter', () => {
 
     it('should return false for command result with non-boolean success property', () => {
       const invalidResult = { success: 'true' };
-      
+
       const result = resultInterpreter.validateCommandResult(invalidResult);
-      
+
       expect(result).toBe(false);
       expect(mockLogger.error).toHaveBeenCalledWith(
         'Invalid command result: missing success property',
@@ -413,14 +435,14 @@ describe('ResultInterpreter', () => {
     });
 
     it('should return true for command result with additional properties', () => {
-      const validResult = { 
-        success: true, 
-        data: 'test', 
-        metadata: { timestamp: Date.now() } 
+      const validResult = {
+        success: true,
+        data: 'test',
+        metadata: { timestamp: Date.now() },
       };
-      
+
       const result = resultInterpreter.validateCommandResult(validResult);
-      
+
       expect(result).toBe(true);
     });
   });
@@ -429,13 +451,15 @@ describe('ResultInterpreter', () => {
     it('should handle complete workflow with validation and interpretation', async () => {
       const commandResult = { success: true, data: 'test result' };
       const expectedDirective = 'END_TURN_SUCCESS';
-      
+
       // Validate command result first
       const isValid = resultInterpreter.validateCommandResult(commandResult);
       expect(isValid).toBe(true);
 
       // Interpret result
-      mockCommandOutcomeInterpreter.interpret.mockResolvedValue(expectedDirective);
+      mockCommandOutcomeInterpreter.interpret.mockResolvedValue(
+        expectedDirective
+      );
       const result = await resultInterpreter.interpret({
         commandResult,
         turnContext: mockTurnContext,
@@ -448,13 +472,16 @@ describe('ResultInterpreter', () => {
 
     it('should handle workflow with invalid command result', async () => {
       const invalidCommandResult = { invalid: 'missing success property' };
-      
+
       // Validate command result first
-      const isValid = resultInterpreter.validateCommandResult(invalidCommandResult);
+      const isValid =
+        resultInterpreter.validateCommandResult(invalidCommandResult);
       expect(isValid).toBe(false);
 
       // Still attempt interpretation to test robustness (will fail due to invalid commandResult)
-      mockCommandOutcomeInterpreter.interpret.mockRejectedValue(new Error('Cannot interpret invalid result'));
+      mockCommandOutcomeInterpreter.interpret.mockRejectedValue(
+        new Error('Cannot interpret invalid result')
+      );
       const result = await resultInterpreter.interpret({
         commandResult: invalidCommandResult,
         turnContext: mockTurnContext,
@@ -468,14 +495,19 @@ describe('ResultInterpreter', () => {
 
     it('should handle workflow with failed command result and interpretation error', async () => {
       const failedCommandResult = { success: false, error: 'Command failed' };
-      const interpretationError = new Error('Could not interpret failed result');
-      
+      const interpretationError = new Error(
+        'Could not interpret failed result'
+      );
+
       // Validate command result
-      const isValid = resultInterpreter.validateCommandResult(failedCommandResult);
+      const isValid =
+        resultInterpreter.validateCommandResult(failedCommandResult);
       expect(isValid).toBe(true);
 
       // Attempt interpretation that fails
-      mockCommandOutcomeInterpreter.interpret.mockRejectedValue(interpretationError);
+      mockCommandOutcomeInterpreter.interpret.mockRejectedValue(
+        interpretationError
+      );
       const result = await resultInterpreter.interpret({
         commandResult: failedCommandResult,
         turnContext: mockTurnContext,
@@ -484,7 +516,9 @@ describe('ResultInterpreter', () => {
       });
 
       expect(result).toBeNull();
-      expect(mockUnifiedErrorHandler.handleProcessingError).toHaveBeenCalledWith(
+      expect(
+        mockUnifiedErrorHandler.handleProcessingError
+      ).toHaveBeenCalledWith(
         interpretationError,
         expect.objectContaining({
           additionalContext: expect.objectContaining({

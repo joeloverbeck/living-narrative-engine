@@ -11,7 +11,12 @@ import { createComponentAccessor } from '../../../src/logic/componentAccessor.js
 const mockEntityManager = {
   getComponentData: jest.fn(),
 };
-const mockLogger = { debug: jest.fn(), warn: jest.fn(), error: jest.fn() };
+const mockLogger = {
+  info: jest.fn(),
+  debug: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+};
 
 beforeEach(() => {
   jest.clearAllMocks();

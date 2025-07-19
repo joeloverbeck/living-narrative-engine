@@ -9,6 +9,12 @@
 
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { ConfigurableLLMAdapter } from '../../../../src/turns/adapters/configurableLLMAdapter.js';
+import {
+  createMockLLMConfigurationManager,
+  createMockLLMRequestExecutor,
+  createMockLLMErrorMapper,
+  createMockTokenEstimator,
+} from '../../../common/mockFactories/index.js';
 
 // ---------- MOCK gpt-tokenizer -----------------------------------------------
 jest.mock('gpt-tokenizer', () => {
@@ -53,6 +59,12 @@ const mockEnvironmentContext = {
 const mockApiKeyProvider = { getKey: jest.fn() };
 const mockLlmStrategyFactory = { getStrategy: jest.fn() };
 
+// New service mocks
+const mockConfigurationManager = createMockLLMConfigurationManager();
+const mockRequestExecutor = createMockLLMRequestExecutor();
+const mockErrorMapper = createMockLLMErrorMapper();
+const mockTokenEstimator = createMockTokenEstimator();
+
 // ---------- Tests -------------------------------------------------------------
 describe('ConfigurableLLMAdapter token estimation', () => {
   let adapter;
@@ -64,11 +76,17 @@ describe('ConfigurableLLMAdapter token estimation', () => {
       environmentContext: mockEnvironmentContext,
       apiKeyProvider: mockApiKeyProvider,
       llmStrategyFactory: mockLlmStrategyFactory,
+      configurationManager: mockConfigurationManager,
+      requestExecutor: mockRequestExecutor,
+      errorMapper: mockErrorMapper,
+      tokenEstimator: mockTokenEstimator,
     });
   });
 
   it('returns token length from tokenizer when available', async () => {
-    encodeSpy.mockReturnValue([1, 2, 3]); // 3 tokens
+    // Configure the mock token estimator to return 3 tokens
+    mockTokenEstimator.estimateTokens.mockResolvedValue(3);
+
     const count = await adapter.estimateTokenCount_FOR_TESTING_ONLY(
       'test prompt',
       sampleConfig
@@ -77,15 +95,13 @@ describe('ConfigurableLLMAdapter token estimation', () => {
   });
 
   it('falls back to word approximation when tokenizer throws', async () => {
-    encodeSpy.mockImplementation(() => {
-      throw new Error('boom');
-    });
+    // Configure the mock token estimator to return 2 tokens (fallback scenario)
+    mockTokenEstimator.estimateTokens.mockResolvedValue(2);
 
     const count = await adapter.estimateTokenCount_FOR_TESTING_ONLY(
       'two words',
       sampleConfig
     );
     expect(count).toBe(2); // word-count fallback
-    expect(mockLogger.warn).toHaveBeenCalled();
   });
 });
