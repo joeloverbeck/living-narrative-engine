@@ -131,7 +131,7 @@ export class ClothingManagementService {
         throw new InvalidArgumentError('clothingItemId is required');
       }
 
-      this.#logger.info(
+      this.#logger.debug(
         `ClothingManagementService: Equipping clothing '${clothingItemId}' on entity '${entityId}'`,
         { options }
       );
@@ -144,7 +144,7 @@ export class ClothingManagementService {
       });
 
       if (result.success) {
-        this.#logger.info(
+        this.#logger.debug(
           `ClothingManagementService: Successfully equipped clothing '${clothingItemId}' on entity '${entityId}'`
         );
       } else {
@@ -186,7 +186,7 @@ export class ClothingManagementService {
         throw new InvalidArgumentError('clothingItemId is required');
       }
 
-      this.#logger.info(
+      this.#logger.debug(
         `ClothingManagementService: Unequipping clothing '${clothingItemId}' from entity '${entityId}'`,
         { options }
       );
@@ -199,7 +199,7 @@ export class ClothingManagementService {
       });
 
       if (result.success) {
-        this.#logger.info(
+        this.#logger.debug(
           `ClothingManagementService: Successfully unequipped clothing '${clothingItemId}' from entity '${entityId}'`
         );
       } else {
@@ -529,7 +529,7 @@ export class ClothingManagementService {
         throw new InvalidArgumentError('clothingItemId is required');
       }
 
-      this.#logger.info(
+      this.#logger.debug(
         `ClothingManagementService: Transferring clothing '${clothingItemId}' from '${fromEntityId}' to '${toEntityId}'`,
         { options }
       );
@@ -571,7 +571,7 @@ export class ClothingManagementService {
         };
       }
 
-      this.#logger.info(
+      this.#logger.debug(
         `ClothingManagementService: Successfully transferred clothing '${clothingItemId}' from '${fromEntityId}' to '${toEntityId}'`
       );
 

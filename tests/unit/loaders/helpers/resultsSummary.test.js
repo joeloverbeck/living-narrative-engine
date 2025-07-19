@@ -30,7 +30,7 @@ describe('summarizeSettledResults', () => {
       failedCount: 1,
       failures: [{ file: 'f3.json', error: err }],
     });
-    expect(logger.info).toHaveBeenCalledWith(
+    expect(logger.debug).toHaveBeenCalledWith(
       'Mod [modA] - Processed 2/3 items items. (1 overrides) (1 failed)'
     );
     expect(logger.debug).toHaveBeenCalled();
@@ -56,7 +56,7 @@ describe('summarizeSettledResults', () => {
       failedCount: 0,
       failures: [],
     });
-    expect(logger.info).toHaveBeenCalledWith(
+    expect(logger.debug).toHaveBeenCalledWith(
       'Mod [modB] - Processed 2/2 components items.'
     );
   });

@@ -329,7 +329,7 @@ export class EntityLifecycleManager {
     // Dispatch event
     this.#eventDispatcher.dispatchEntityCreated(entity, false);
 
-    this.#logger.info(
+    this.#logger.debug(
       `Entity created: ${entity.id} (definition: ${definitionId})`
     );
     return entity;
@@ -361,7 +361,7 @@ export class EntityLifecycleManager {
     // Dispatch event
     this.#eventDispatcher.dispatchEntityCreated(entity, true);
 
-    this.#logger.info(
+    this.#logger.debug(
       `Entity reconstructed: ${entity.id} (definition: ${serializedEntity.definitionId})`
     );
     return entity;
@@ -417,7 +417,7 @@ export class EntityLifecycleManager {
       // Dispatch event
       this.#eventDispatcher.dispatchEntityRemoved(entity);
 
-      this.#logger.info(`Entity removed: ${instanceId}`);
+      this.#logger.debug(`Entity removed: ${instanceId}`);
     } catch (error) {
       // If repository operations fail, wrap in RepositoryConsistencyError
       if (error instanceof RepositoryConsistencyError) {
@@ -457,6 +457,8 @@ export class EntityLifecycleManager {
 
     if (errors.length > 0) {
       this.#logger.warn(`Batch create completed with ${errors.length} errors`);
+    } else {
+      this.#logger.info(`Batch entity creation completed: ${results.length} entities created`);
     }
 
     return { entities: results, errors };

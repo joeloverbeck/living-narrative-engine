@@ -161,7 +161,7 @@ describe('ClothingManagementService', () => {
         entityId: 'entity1',
         clothingItemId: 'clothing1',
       });
-      expect(logger.info).toHaveBeenCalledWith(
+      expect(logger.debug).toHaveBeenCalledWith(
         "ClothingManagementService: Equipping clothing 'clothing1' on entity 'entity1'",
         { options: {} }
       );

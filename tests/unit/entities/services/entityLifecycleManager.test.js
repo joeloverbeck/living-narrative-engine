@@ -223,7 +223,7 @@ describe('EntityLifecycleManager - Core Operations', () => {
     expect(
       global.__eventDispatcherMock.dispatchEntityRemoved
     ).toHaveBeenCalledWith(entity);
-    expect(deps.logger.info).toHaveBeenCalledWith('Entity removed: e3');
+    expect(deps.logger.debug).toHaveBeenCalledWith('Entity removed: e3');
   });
 });
 
@@ -529,7 +529,7 @@ describe('EntityLifecycleManager - Successful Operations', () => {
     expect(
       global.__eventDispatcherMock.dispatchEntityCreated
     ).toHaveBeenCalledWith(mockEntity, false);
-    expect(deps.logger.info).toHaveBeenCalledWith(
+    expect(deps.logger.debug).toHaveBeenCalledWith(
       'Entity created: test-entity (definition: test:def)'
     );
   });
@@ -556,7 +556,7 @@ describe('EntityLifecycleManager - Successful Operations', () => {
     expect(
       global.__eventDispatcherMock.dispatchEntityCreated
     ).toHaveBeenCalledWith(mockEntity, true);
-    expect(deps.logger.info).toHaveBeenCalledWith(
+    expect(deps.logger.debug).toHaveBeenCalledWith(
       'Entity reconstructed: test-entity (definition: test:def)'
     );
   });

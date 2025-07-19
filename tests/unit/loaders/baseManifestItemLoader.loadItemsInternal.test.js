@@ -240,7 +240,7 @@ describe('BaseManifestItemLoader _loadItemsInternal', () => {
       diskFolder,
       registryKey
     );
-    expect(mockLogger.info).toHaveBeenCalledWith(
+    expect(mockLogger.debug).toHaveBeenCalledWith(
       `Mod [${modId}] - Processed 2/2 ${contentKey} items.`
     ); // Assumes 0 overrides/errors
     expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -312,7 +312,7 @@ describe('BaseManifestItemLoader _loadItemsInternal', () => {
       registryKey
     );
     // <<< CORRECTED: Updated expected log message to include overrides and failures
-    expect(mockLogger.info).toHaveBeenCalledWith(
+    expect(mockLogger.debug).toHaveBeenCalledWith(
       `Mod [${modId}] - Processed 2/3 ${contentKey} items. (1 overrides) (1 failed)`
     );
     expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -377,7 +377,7 @@ describe('BaseManifestItemLoader _loadItemsInternal', () => {
       registryKey
     );
     // <<< CORRECTED: Updated expected log message
-    expect(mockLogger.info).toHaveBeenCalledWith(
+    expect(mockLogger.debug).toHaveBeenCalledWith(
       `Mod [${modId}] - Processed 0/2 ${contentKey} items. (2 failed)`
     );
     expect(mockLogger.debug).toHaveBeenCalledWith(

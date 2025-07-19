@@ -515,7 +515,7 @@ describe('ComponentLoader (Happy Path - Core Mod)', () => {
       expect.stringContaining(`Loading components definitions for mod 'core'.`)
     ); // Start log from loadItemsForMod
     const expectedSuccessCount = 2; // Use the count from the result object for consistency
-    expect(mockLogger.info).toHaveBeenCalledWith(
+    expect(mockLogger.debug).toHaveBeenCalledWith(
       // Use the result.count from the actual execution
       expect.stringContaining(
         `Mod [core] - Processed ${result.count}/${expectedSuccessCount} components items.`

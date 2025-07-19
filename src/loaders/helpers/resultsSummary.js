@@ -57,7 +57,7 @@ export function summarizeSettledResults(
   const overrideMessage =
     overrideCount > 0 ? ` (${overrideCount} overrides)` : '';
   const failureMessage = failedCount > 0 ? ` (${failedCount} failed)` : '';
-  logger.info(
+  logger.debug(
     `Mod [${modId}] - Processed ${processedCount}/${totalAttempted} ${contentKey} items.${overrideMessage}${failureMessage}`
   );
 

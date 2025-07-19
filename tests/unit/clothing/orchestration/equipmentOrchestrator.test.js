@@ -286,7 +286,7 @@ describe('EquipmentOrchestrator', () => {
         clothingItemId: 'shirt1',
       });
 
-      expect(logger.info).toHaveBeenCalledWith(
+      expect(logger.debug).toHaveBeenCalledWith(
         "EquipmentOrchestrator: Successfully equipped 'shirt1' on 'entity1' in layer 'base'"
       );
     });
@@ -384,7 +384,7 @@ describe('EquipmentOrchestrator', () => {
         clothingItemId: 'shirt1',
       });
 
-      expect(logger.info).toHaveBeenCalledWith(
+      expect(logger.debug).toHaveBeenCalledWith(
         "EquipmentOrchestrator: Successfully unequipped 'shirt1' from 'entity1' (cascade: 0)"
       );
     });

@@ -384,7 +384,7 @@ describe('RuleLoader (Rule Processing Logic via loadItemsForMod)', () => {
       );
       // --- !!! CORRECTED LOG ASSERTION !!! ---
       // Check the log message from the *base* class - matches the actual output
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         `Mod [${modId}] - Processed ${result.count}/${manifest.content[RULE_CONTENT_KEY].length} ${RULE_CONTENT_KEY} items.` // Removed Overrides/Errors part
       );
       // --- !!! END OF CORRECTION !!! ---

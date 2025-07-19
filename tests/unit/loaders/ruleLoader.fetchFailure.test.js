@@ -297,7 +297,7 @@ describe('RuleLoader - Fetch Failure Handling (via loadItemsForMod)', () => {
         `RuleLoader: Loading ${RULE_TYPE_NAME} definitions for mod '${modId}'.` // Initial log
       );
       // *** UPDATED: Ensure the summary log reflects the numbers from loadResult ***
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         `Mod [${modId}] - Processed ${loadResult.count}/${manifest.content[RULE_CONTENT_KEY].length} ${RULE_CONTENT_KEY} items. (${loadResult.errors} failed)` // Final summary log
       );
 

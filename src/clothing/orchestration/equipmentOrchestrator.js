@@ -155,7 +155,7 @@ export class EquipmentOrchestrator {
           timestamp: Date.now(),
         });
 
-        this.#logger.info(
+        this.#logger.debug(
           `EquipmentOrchestrator: Successfully equipped '${clothingItemId}' on '${entityId}' in layer '${targetLayer}'`
         );
       }
@@ -253,7 +253,7 @@ export class EquipmentOrchestrator {
           timestamp: Date.now(),
         });
 
-        this.#logger.info(
+        this.#logger.debug(
           `EquipmentOrchestrator: Successfully unequipped '${clothingItemId}' from '${entityId}' (cascade: ${cascadeItems.length})`
         );
 

@@ -339,12 +339,12 @@ describe('ComponentLoader (Sub-Ticket 6.7: Path/Fetch Errors)', () => {
     );
 
     // --- Verify: Final Summary Log ---
-    expect(mockLogger.info).toHaveBeenCalledTimes(2); // Start and summary
+    expect(mockLogger.info).toHaveBeenCalledTimes(1); // Start only (summary is now debug)
     expect(mockLogger.info).toHaveBeenCalledWith(
       `ComponentLoader: Loading components definitions for mod '${modId}'.` // Initial log
     );
     // <<< CORRECTION: Match the actual received log format >>>
-    expect(mockLogger.info).toHaveBeenCalledWith(
+    expect(mockLogger.debug).toHaveBeenCalledWith(
       `Mod [${modId}] - Processed 0/1 components items. (1 failed)`
     );
     expect(mockLogger.warn).not.toHaveBeenCalled();
@@ -423,12 +423,12 @@ describe('ComponentLoader (Sub-Ticket 6.7: Path/Fetch Errors)', () => {
     );
 
     // --- Verify: Final Summary Log ---
-    expect(mockLogger.info).toHaveBeenCalledTimes(2); // Start and summary
+    expect(mockLogger.info).toHaveBeenCalledTimes(1); // Start only (summary is now debug)
     expect(mockLogger.info).toHaveBeenCalledWith(
       `ComponentLoader: Loading components definitions for mod '${modId}'.` // Initial log
     );
     // <<< CORRECTION: Match the actual received log format >>>
-    expect(mockLogger.info).toHaveBeenCalledWith(
+    expect(mockLogger.debug).toHaveBeenCalledWith(
       `Mod [${modId}] - Processed 0/1 components items. (1 failed)`
     );
     expect(mockLogger.warn).not.toHaveBeenCalled();

@@ -6,6 +6,7 @@
 import { PipelineStage } from '../PipelineStage.js';
 import { PipelineResult } from '../PipelineResult.js';
 import { ERROR_PHASES } from '../../errors/actionErrorTypes.js';
+import { ActionTargetContext } from '../../../models/actionTargetContext.js';
 
 /** @typedef {import('../../../interfaces/ITargetResolutionService.js').ITargetResolutionService} ITargetResolutionService */
 /** @typedef {import('../../errors/actionErrorContextBuilder.js').ActionErrorContextBuilder} ActionErrorContextBuilder */
@@ -99,10 +100,10 @@ export class TargetResolutionStage extends PipelineStage {
           source
         );
 
-        // Create a special "no-target" context for formatting stage
+        // Create a proper "no-target" context for formatting stage
         actionsWithTargets.push({
           actionDef,
-          targetContexts: [{ entityId: null, entity: null }],
+          targetContexts: [ActionTargetContext.noTarget()],
         });
         continue;
       }

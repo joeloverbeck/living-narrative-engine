@@ -362,7 +362,7 @@ describe('RuleLoader (Manifest Input Handling via loadItemsForMod)', () => {
       expect(mockLogger.info).toHaveBeenCalledWith(
         `RuleLoader: Loading ${RULE_TYPE_NAME} definitions for mod '${modId}'.`
       );
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         `Mod [${modId}] - Processed 2/2 ${RULE_CONTENT_KEY} items.`
       );
       expect(mockLogger.warn).not.toHaveBeenCalled();
@@ -706,7 +706,7 @@ describe('RuleLoader (Manifest Input Handling via loadItemsForMod)', () => {
       expect(mockLogger.info).toHaveBeenCalledWith(
         `RuleLoader: Loading ${RULE_TYPE_NAME} definitions for mod '${modId}'.`
       );
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         `Mod [${modId}] - Processed 1/1 ${RULE_CONTENT_KEY} items.` // Base class logs summary
       );
     });

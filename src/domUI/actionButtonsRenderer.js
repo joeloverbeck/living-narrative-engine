@@ -82,6 +82,18 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
   #currentActorId = null;
   #isDisposed = false;
 
+  /** @type {object} Configuration for grouping behavior */
+  #groupingConfig = {
+    enabled: true,
+    showCounts: false,
+    minActionsForGrouping: 6,
+    minNamespacesForGrouping: 2,
+    namespaceOrder: ['core', 'intimacy', 'sex', 'anatomy', 'clothing']
+  };
+
+  /** @type {Map<string, ActionComposite[]>} Grouped actions by namespace */
+  #groupedActions = new Map();
+
   /**
    * Constructs an ActionButtonsRenderer instance.
    *
@@ -288,6 +300,220 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
    */
   _getEmptyListMessage() {
     return 'No actions available.';
+  }
+
+  /**
+   * Groups actions by namespace and renders with section headers
+   *
+   * @protected
+   * @override
+   */
+  _renderList(actionsData) {
+    if (!this.#shouldUseGrouping(actionsData)) {
+      return super._renderList(actionsData);
+    }
+    
+    this.#groupedActions = this.#groupActionsByNamespace(actionsData);
+    return this.#renderGroupedActions();
+  }
+
+  /**
+   * Determines if grouping should be applied based on action count and diversity
+   *
+   * @private
+   * @param {ActionComposite[]} actions 
+   * @returns {boolean}
+   */
+  #shouldUseGrouping(actions) {
+    const namespaces = new Set(actions.map(action => this.#extractNamespace(action.actionId)));
+    return actions.length >= this.#groupingConfig.minActionsForGrouping &&
+           namespaces.size >= this.#groupingConfig.minNamespacesForGrouping &&
+           this.#groupingConfig.enabled;
+  }
+
+  /**
+   * Extracts namespace from action ID (e.g., "core:wait" → "core")
+   *
+   * @private
+   * @param {string} actionId 
+   * @returns {string}
+   */
+  #extractNamespace(actionId) {
+    const colonIndex = actionId.indexOf(':');
+    return colonIndex !== -1 ? actionId.substring(0, colonIndex) : 'unknown';
+  }
+
+  /**
+   * Groups actions by namespace with ordering priority
+   *
+   * @private
+   * @param {ActionComposite[]} actions 
+   * @returns {Map<string, ActionComposite[]>}
+   */
+  #groupActionsByNamespace(actions) {
+    const grouped = new Map();
+    
+    // Group actions
+    for (const action of actions) {
+      const namespace = this.#extractNamespace(action.actionId);
+      if (!grouped.has(namespace)) {
+        grouped.set(namespace, []);
+      }
+      grouped.get(namespace).push(action);
+    }
+    
+    // Sort namespaces by priority order
+    const sortedGroups = new Map();
+    const orderedNamespaces = this.#getSortedNamespaces(Array.from(grouped.keys()));
+    
+    for (const namespace of orderedNamespaces) {
+      sortedGroups.set(namespace, grouped.get(namespace));
+    }
+    
+    return sortedGroups;
+  }
+
+  /**
+   * Sorts namespaces according to priority configuration
+   *
+   * @private
+   * @param {string[]} namespaces 
+   * @returns {string[]}
+   */
+  #getSortedNamespaces(namespaces) {
+    const { namespaceOrder } = this.#groupingConfig;
+    
+    return namespaces.sort((a, b) => {
+      const aIndex = namespaceOrder.indexOf(a);
+      const bIndex = namespaceOrder.indexOf(b);
+      
+      // If both are in priority list, sort by priority order
+      if (aIndex !== -1 && bIndex !== -1) {
+        return aIndex - bIndex;
+      }
+      
+      // If only one is in priority list, prioritize it
+      if (aIndex !== -1) return -1;
+      if (bIndex !== -1) return 1;
+      
+      // If neither is in priority list, sort alphabetically
+      return a.localeCompare(b);
+    });
+  }
+
+  /**
+   * Renders actions with section headers
+   *
+   * @private
+   * @returns {DocumentFragment}
+   */
+  #renderGroupedActions() {
+    const fragment = this.documentContext.createDocumentFragment();
+    
+    for (const [namespace, actions] of this.#groupedActions) {
+      // Create section header
+      const sectionHeader = this.#createSectionHeader(namespace, actions.length);
+      fragment.appendChild(sectionHeader);
+      
+      // Create action group container
+      const groupContainer = this.#createGroupContainer(namespace);
+      
+      // Render actions in this group
+      for (const action of actions) {
+        const button = this._renderListItem(action);
+        if (button) {
+          groupContainer.appendChild(button);
+        }
+      }
+      
+      fragment.appendChild(groupContainer);
+    }
+    
+    return fragment;
+  }
+
+  /**
+   * Creates a section header element
+   *
+   * @private
+   * @param {string} namespace 
+   * @param {number} actionCount 
+   * @returns {HTMLElement}
+   */
+  #createSectionHeader(namespace, actionCount) {
+    const header = this.documentContext.createElement('div');
+    header.className = 'action-section-header';
+    header.setAttribute('role', 'heading');
+    header.setAttribute('aria-level', '3');
+    
+    const displayName = this.#formatNamespaceDisplayName(namespace);
+    header.textContent = this.#groupingConfig.showCounts 
+      ? `${displayName} (${actionCount})`
+      : displayName;
+    
+    return header;
+  }
+
+  /**
+   * Creates a container for grouped actions
+   *
+   * @private
+   * @param {string} namespace 
+   * @returns {HTMLElement}
+   */
+  #createGroupContainer(namespace) {
+    const container = this.documentContext.createElement('div');
+    container.className = 'action-group';
+    container.setAttribute('data-namespace', namespace);
+    container.setAttribute('role', 'group');
+    container.setAttribute('aria-label', `${this.#formatNamespaceDisplayName(namespace)} actions`);
+    
+    return container;
+  }
+
+  /**
+   * Formats namespace for display (e.g., "core" → "CORE")
+   *
+   * @private
+   * @param {string} namespace 
+   * @returns {string}
+   */
+  #formatNamespaceDisplayName(namespace) {
+    // Handle special cases
+    const specialCases = {
+      'unknown': 'OTHER'
+    };
+    
+    if (specialCases[namespace]) {
+      return specialCases[namespace];
+    }
+    
+    return namespace.toUpperCase();
+  }
+
+  /**
+   * Updates grouping configuration
+   *
+   * @public
+   * @param {object} config 
+   */
+  updateGroupingConfig(config) {
+    this.#groupingConfig = { ...this.#groupingConfig, ...config };
+    
+    // Re-render if we have current actions
+    if (this.availableActions.length > 0) {
+      this.refreshList();
+    }
+  }
+
+  /**
+   * Gets current grouping configuration
+   *
+   * @public
+   * @returns {object}
+   */
+  getGroupingConfig() {
+    return { ...this.#groupingConfig };
   }
 
   /**

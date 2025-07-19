@@ -160,7 +160,7 @@ describe('AnatomyCacheManager', () => {
       expect(mockLogger.debug).toHaveBeenCalledWith(
         "AnatomyCacheManager: Building cache for anatomy rooted at 'torso-1'"
       );
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         'AnatomyCacheManager: Built cache with 3 nodes'
       );
     });
@@ -269,7 +269,7 @@ describe('AnatomyCacheManager', () => {
 
       // Should handle cycle without infinite loop
       expect(cacheManager.size()).toBeGreaterThan(0);
-      expect(mockLogger.info).toHaveBeenCalled();
+      expect(mockLogger.debug).toHaveBeenCalled();
     });
 
     it('should respect max recursion depth', async () => {
