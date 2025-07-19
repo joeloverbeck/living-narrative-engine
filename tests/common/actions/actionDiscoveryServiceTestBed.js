@@ -4,7 +4,7 @@
 
 import { jest } from '@jest/globals';
 import { ActionDiscoveryService } from '../../../src/actions/actionDiscoveryService.js';
-import { ActionCandidateProcessor } from '../../../src/actions/actionCandidateProcessor.js';
+import { ActionPipelineOrchestrator } from '../../../src/actions/actionPipelineOrchestrator.js';
 import {
   createMockLogger,
   createMockEntityManager,
@@ -53,29 +53,27 @@ const ServiceFactoryMixin = createServiceFactoryMixin(
 
     const traceContextFactory = () => new TraceContext();
 
-    // Create the ActionCandidateProcessor with the mocked dependencies
-    const actionCandidateProcessor =
-      overrides.actionCandidateProcessor ??
-      new ActionCandidateProcessor({
-        prerequisiteEvaluationService: mocks.prerequisiteEvaluationService,
-        targetResolutionService: mocks.targetResolutionService,
+    // Create the ActionPipelineOrchestrator with the mocked dependencies
+    const actionPipelineOrchestrator =
+      overrides.actionPipelineOrchestrator ??
+      new ActionPipelineOrchestrator({
+        actionIndex: mocks.actionIndex,
+        prerequisiteService: mocks.prerequisiteEvaluationService,
+        targetService: mocks.targetResolutionService,
+        formatter: mocks.actionCommandFormatter,
         entityManager: mocks.entityManager,
-        actionCommandFormatter: mocks.actionCommandFormatter,
         safeEventDispatcher: mocks.safeEventDispatcher,
         getEntityDisplayNameFn: mocks.getEntityDisplayNameFn,
+        errorBuilder: actionErrorContextBuilder,
         logger: mocks.logger,
-        actionErrorContextBuilder: actionErrorContextBuilder,
-        traceContextFactory: traceContextFactory,
       });
 
     return new ActionDiscoveryService({
       entityManager: mocks.entityManager,
-      actionIndex: mocks.actionIndex,
       logger: mocks.logger,
-      actionCandidateProcessor,
+      actionPipelineOrchestrator,
       traceContextFactory: overrides.traceContextFactory ?? traceContextFactory,
       getActorLocationFn: mocks.getActorLocationFn,
-      actionErrorContextBuilder: actionErrorContextBuilder,
     });
   },
   'service'

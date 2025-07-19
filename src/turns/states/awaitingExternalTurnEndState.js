@@ -38,8 +38,8 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
   #unsubscribeFn = undefined;
   #awaitingActionId = 'unknown-action';
   #timeoutMs = TIMEOUT_MS;
-  #setTimeoutFn = setTimeout;
-  #clearTimeoutFn = clearTimeout;
+  #setTimeoutFn = (...args) => setTimeout(...args);
+  #clearTimeoutFn = (...args) => clearTimeout(...args);
 
   /**
    * Creates an instance of AwaitingExternalTurnEndState.
@@ -54,8 +54,8 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
     handler,
     {
       timeoutMs = TIMEOUT_MS,
-      setTimeoutFn = setTimeout,
-      clearTimeoutFn = clearTimeout,
+      setTimeoutFn = (...args) => setTimeout(...args),
+      clearTimeoutFn = (...args) => clearTimeout(...args),
     } = {}
   ) {
     super(handler);

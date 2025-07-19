@@ -1,0 +1,404 @@
+[ConsoleLogger] Initialized. Log level set to INFO (1).
+containerStages.js:39 Bootstrap Stage: setupDIContainerStage starting...
+consoleLogger.js:72 [ConsoleLogger] Initialized. Log level set to INFO (1).
+consoleLogger.js:151 Loaders Registration: All core services, loaders, and phases registered.
+consoleLogger.js:72 [ConsoleLogger] Initialized. Log level set to INFO (1).
+containerStages.js:51 Bootstrap Stage: setupDIContainerStage completed successfully.
+containerStages.js:69 Bootstrap Stage: Resolving logger service...
+consoleLogger.js:151 SpatialIndexManager initialized.
+consoleLogger.js:151 AnatomyQueryCache: Initialized with maxSize=1000, ttl=300000ms
+consoleLogger.js:151 AnatomyClothingCache: AnatomyClothingCache initialized with maxSize=500, ttl=300000ms, maxMemory=100MB
+consoleLogger.js:151 ClothingManagementService: Using decomposed services architecture
+consoleLogger.js:151 All entities cleared from repository and component index.
+consoleLogger.js:151 All entity instances removed from EntityManager.
+consoleLogger.js:151 Entity definition cache cleared.
+consoleLogger.js:151 All entities cleared from repository and component index.
+consoleLogger.js:151 All entity instances removed from EntityManager.
+consoleLogger.js:151 Entity definition cache cleared.
+consoleLogger.js:151 — SchemaPhase starting —
+consoleLogger.js:151 SchemaLoader: Loaded 60 schemas: http://json-schema.org/draft-07/schema, llmTurnActionResponseSchema/v4, schema://living-narrative-engine/common.schema.json, schema://living-narrative-engine/json-logic.schema.json, schema://living-narrative-engine/condition-container.schema.json, schema://living-narrative-engine/action.schema.json, schema://living-narrative-engine/action-result.schema.json, schema://living-narrative-engine/component.schema.json, schema://living-narrative-engine/condition.schema.json, schema://living-narrative-engine/entity-definition.schema.json, schema://living-narrative-engine/entity-instance.schema.json, schema://living-narrative-engine/event.schema.json, schema://living-narrative-engine/game.schema.json, schema://living-narrative-engine/goal.schema.json, schema://living-narrative-engine/mod-manifest.schema.json, schema://living-narrative-engine/operation.schema.json, schema://living-narrative-engine/rule.schema.json, schema://living-narrative-engine/llm-configs.schema.json, schema://living-narrative-engine/prompt-text.schema.json, schema://living-narrative-engine/macro.schema.json, schema://living-narrative-engine/ui-icons.schema.json, schema://living-narrative-engine/ui-labels.schema.json, schema://living-narrative-engine/world.schema.json, schema://living-narrative-engine/anatomy.recipe.schema.json, schema://living-narrative-engine/anatomy.blueprint.schema.json, schema://living-narrative-engine/anatomy.blueprint-part.schema.json, schema://living-narrative-engine/anatomy.slot-library.schema.json, schema://living-narrative-engine/anatomy-formatting.schema.json, schema://living-narrative-engine/base-operation.schema.json, schema://living-narrative-engine/operations/addComponent.schema.json, schema://living-narrative-engine/operations/addPerceptionLogEntry.schema.json, schema://living-narrative-engine/operations/autoMoveFollowers.schema.json, schema://living-narrative-engine/operations/breakFollowRelation.schema.json, schema://living-narrative-engine/operations/checkFollowCycle.schema.json, schema://living-narrative-engine/operations/dispatchEvent.schema.json, schema://living-narrative-engine/operations/dispatchPerceptibleEvent.schema.json, schema://living-narrative-engine/operations/dispatchSpeech.schema.json, schema://living-narrative-engine/operations/endTurn.schema.json, schema://living-narrative-engine/operations/establishFollowRelation.schema.json, schema://living-narrative-engine/operations/forEach.schema.json, schema://living-narrative-engine/operations/getName.schema.json, schema://living-narrative-engine/operations/getTimestamp.schema.json, schema://living-narrative-engine/operations/hasComponent.schema.json, schema://living-narrative-engine/operations/if.schema.json, schema://living-narrative-engine/operations/ifCoLocated.schema.json, schema://living-narrative-engine/operations/log.schema.json, schema://living-narrative-engine/operations/math.schema.json, schema://living-narrative-engine/operations/mergeClosenessCircle.schema.json, schema://living-narrative-engine/operations/modifyArrayField.schema.json, schema://living-narrative-engine/operations/modifyComponent.schema.json, schema://living-narrative-engine/operations/modifyContextArray.schema.json, schema://living-narrative-engine/operations/queryComponent.schema.json, schema://living-narrative-engine/operations/queryComponents.schema.json, schema://living-narrative-engine/operations/queryEntities.schema.json, schema://living-narrative-engine/operations/rebuildLeaderListCache.schema.json, schema://living-narrative-engine/operations/removeComponent.schema.json, schema://living-narrative-engine/operations/removeFromClosenessCircle.schema.json, schema://living-narrative-engine/operations/resolveDirection.schema.json, schema://living-narrative-engine/operations/setVariable.schema.json, schema://living-narrative-engine/operations/systemMoveEntity.schema.json
+consoleLogger.js:151 — GameConfigPhase starting —
+consoleLogger.js:151 — ManifestPhase starting —
+consoleLogger.js:151 — ContentPhase starting —
+consoleLogger.js:151 ComponentLoader: Loading components definitions for mod 'core'.
+consoleLogger.js:151 Mod [core] - Processed 25/25 components items.
+consoleLogger.js:151 EventLoader: Loading events definitions for mod 'core'.
+consoleLogger.js:151 Mod [core] - Processed 35/35 events items.
+consoleLogger.js:151 ConditionLoader: Loading conditions definitions for mod 'core'.
+consoleLogger.js:151 Mod [core] - Processed 13/13 conditions items.
+consoleLogger.js:151 MacroLoader: Loading macros definitions for mod 'core'.
+consoleLogger.js:151 Mod [core] - Processed 4/4 macros items.
+consoleLogger.js:151 ActionLoader: Loading actions definitions for mod 'core'.
+consoleLogger.js:151 Mod [core] - Processed 5/5 actions items.
+consoleLogger.js:151 RuleLoader: Loading rules definitions for mod 'core'.
+consoleLogger.js:151 Mod [core] - Processed 11/11 rules items.
+consoleLogger.js:151 ScopeLoader: Loading scopes definitions for mod 'core'.
+consoleLogger.js:151 Mod [core] - Processed 5/5 scopes items.
+consoleLogger.js:151 ComponentLoader: Loading components definitions for mod 'descriptors'.
+consoleLogger.js:151 Mod [descriptors] - Processed 14/14 components items.
+consoleLogger.js:151 ComponentLoader: Loading components definitions for mod 'anatomy'.
+consoleLogger.js:151 Mod [anatomy] - Processed 5/5 components items.
+consoleLogger.js:151 EventLoader: Loading events definitions for mod 'anatomy'.
+consoleLogger.js:151 Mod [anatomy] - Processed 6/6 events items.
+consoleLogger.js:151 EntityDefinitionLoader: Loading entityDefinitions definitions for mod 'anatomy'.
+consoleLogger.js:151 Mod [anatomy] - Processed 35/35 entities.definitions items.
+consoleLogger.js:151 AnatomySlotLibraryLoader: Loading anatomySlotLibraries definitions for mod 'anatomy'.
+consoleLogger.js:151 Mod [anatomy] - Processed 1/1 libraries items.
+consoleLogger.js:151 AnatomyBlueprintPartLoader: Loading anatomyBlueprintParts definitions for mod 'anatomy'.
+consoleLogger.js:151 Mod [anatomy] - Processed 1/1 parts items.
+consoleLogger.js:151 AnatomyBlueprintLoader: Loading anatomyBlueprints definitions for mod 'anatomy'.
+consoleLogger.js:151 Mod [anatomy] - Processed 2/2 blueprints items.
+consoleLogger.js:151 AnatomyRecipeLoader: Loading anatomyRecipes definitions for mod 'anatomy'.
+consoleLogger.js:151 Mod [anatomy] - Processed 3/3 recipes items.
+consoleLogger.js:151 AnatomyFormattingLoader: Loading anatomyFormatting definitions for mod 'anatomy'.
+consoleLogger.js:151 Mod [anatomy] - Processed 1/1 anatomyFormatting items.
+consoleLogger.js:151 ComponentLoader: Loading components definitions for mod 'clothing'.
+consoleLogger.js:151 Mod [clothing] - Processed 2/2 components items.
+consoleLogger.js:151 EventLoader: Loading events definitions for mod 'clothing'.
+consoleLogger.js:151 Mod [clothing] - Processed 4/4 events items.
+consoleLogger.js:151 EntityDefinitionLoader: Loading entityDefinitions definitions for mod 'clothing'.
+consoleLogger.js:151 Mod [clothing] - Processed 13/13 entities.definitions items.
+consoleLogger.js:151 ComponentLoader: Loading components definitions for mod 'intimacy'.
+consoleLogger.js:151 Mod [intimacy] - Processed 2/2 components items.
+consoleLogger.js:151 EventLoader: Loading events definitions for mod 'intimacy'.
+consoleLogger.js:151 Mod [intimacy] - Processed 2/2 events items.
+consoleLogger.js:151 ConditionLoader: Loading conditions definitions for mod 'intimacy'.
+consoleLogger.js:151 Mod [intimacy] - Processed 15/15 conditions items.
+consoleLogger.js:151 ActionLoader: Loading actions definitions for mod 'intimacy'.
+consoleLogger.js:151 Mod [intimacy] - Processed 11/11 actions items.
+consoleLogger.js:151 RuleLoader: Loading rules definitions for mod 'intimacy'.
+consoleLogger.js:151 Mod [intimacy] - Processed 11/11 rules items.
+consoleLogger.js:151 ScopeLoader: Loading scopes definitions for mod 'intimacy'.
+consoleLogger.js:151 Mod [intimacy] - Processed 5/5 scopes items.
+consoleLogger.js:151 ConditionLoader: Loading conditions definitions for mod 'sex'.
+consoleLogger.js:151 Mod [sex] - Processed 2/2 conditions items.
+consoleLogger.js:151 ActionLoader: Loading actions definitions for mod 'sex'.
+consoleLogger.js:151 Mod [sex] - Processed 2/2 actions items.
+consoleLogger.js:151 RuleLoader: Loading rules definitions for mod 'sex'.
+consoleLogger.js:151 Mod [sex] - Processed 2/2 rules items.
+consoleLogger.js:151 ScopeLoader: Loading scopes definitions for mod 'sex'.
+consoleLogger.js:151 Mod [sex] - Processed 2/2 scopes items.
+consoleLogger.js:151 EntityDefinitionLoader: Loading entityDefinitions definitions for mod 'p_erotica'.
+consoleLogger.js:151 Mod [p_erotica] - Processed 4/4 entities.definitions items.
+consoleLogger.js:151 AnatomyRecipeLoader: Loading anatomyRecipes definitions for mod 'p_erotica'.
+consoleLogger.js:151 Mod [p_erotica] - Processed 2/2 recipes items.
+consoleLogger.js:151 EntityInstanceLoader: Loading entityInstances definitions for mod 'p_erotica'.
+consoleLogger.js:151 Mod [p_erotica] - Processed 4/4 entities.instances items.
+consoleLogger.js:151 — WorldPhase starting —
+consoleLogger.js:151 --- Starting World File Loading Phase ---
+consoleLogger.js:151 --- World File Loading Phase Complete ---
+consoleLogger.js:151 WorldLoader: Successfully processed and registered 1 worlds, containing 4 entity instances. All 4 definition references were resolved.
+consoleLogger.js:151 — SummaryPhase starting —
+consoleLogger.js:151 — ModsLoader Load Summary (World: 'p_erotica:donostia') —
+consoleLogger.js:151   • Requested Mods (raw): [core, anatomy, clothing, p_erotica]
+consoleLogger.js:151   • Final Load Order     : [core, descriptors, anatomy, clothing, intimacy, sex, p_erotica]
+consoleLogger.js:151   • Content Loading Summary (Totals):
+consoleLogger.js:151      - actions             : 18 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - anatomyBlueprintParts: 1 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - anatomyBlueprints   : 2 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - anatomyFormatting   : 1 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - anatomyRecipes      : 5 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - anatomySlotLibraries: 1 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - components          : 48 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - conditions          : 30 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - entityDefinitions   : 52 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - entityInstances     : 4 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - events              : 47 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - macros              : 4 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - rules               : 24 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - scopes              : 12 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - worlds              : 1 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - ----------------------------------------------
+consoleLogger.js:151      - TOTAL               : C:250, O:0, E:0
+consoleLogger.js:151 ———————————————————————————————————————————
+consoleLogger.js:151 ModsLoader: Load sequence for world 'p_erotica:donostia' completed successfully.
+consoleLogger.js:151 ModsLoader: Load sequence for world 'p_erotica:donostia' completed successfully.
+consoleLogger.js:151 JsonLogicCustomOperators: Custom JSON Logic operators registered successfully
+consoleLogger.js:151 OperationRegistry: OperationRegistry initialized.
+consoleLogger.js:151 AnatomyInitializationService: Initialized
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance 'p_erotica:coffee_shop_instance' (def: 'p_erotica:coffee_shop') created.
+consoleLogger.js:151 Entity created: p_erotica:coffee_shop_instance (definition: p_erotica:coffee_shop)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance 'p_erotica:outside_tables_coffee_shop_instance' (def: 'p_erotica:outside_tables_coffee_shop') created.
+consoleLogger.js:151 Entity created: p_erotica:outside_tables_coffee_shop_instance (definition: p_erotica:outside_tables_coffee_shop)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance 'p_erotica:iker_aguirre_instance' (def: 'p_erotica:iker_aguirre') created.
+consoleLogger.js:151 AnatomyGenerationService: Generating anatomy for entity 'p_erotica:iker_aguirre_instance' using recipe 'p_erotica:iker_aguirre_recipe'
+consoleLogger.js:151 AnatomyOrchestrator: AnatomyOrchestrator: Starting anatomy generation for entity 'p_erotica:iker_aguirre_instance' with recipe 'p_erotica:iker_aguirre_recipe'
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '51c0cefd-593c-4e59-b5ac-ecd54518945a' (def: 'anatomy:human_male_torso_muscular') created.
+consoleLogger.js:151 Entity created: 51c0cefd-593c-4e59-b5ac-ecd54518945a (definition: anatomy:human_male_torso_muscular)
+consoleLogger.js:151 Entity created: p_erotica:iker_aguirre_instance (definition: p_erotica:iker_aguirre)
+consoleLogger.js:151 EntityGraphBuilder: Created root entity '51c0cefd-593c-4e59-b5ac-ecd54518945a' from definition 'anatomy:human_male_torso_muscular'
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance 'c5df2012-9132-42e1-97d4-3a3d8ecff640' (def: 'anatomy:human_penis') created.
+consoleLogger.js:151 Entity created: c5df2012-9132-42e1-97d4-3a3d8ecff640 (definition: anatomy:human_penis)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance 'p_erotica:amaia_castillo_instance' (def: 'p_erotica:amaia_castillo') created.
+consoleLogger.js:151 AnatomyGenerationService: Generating anatomy for entity 'p_erotica:amaia_castillo_instance' using recipe 'p_erotica:amaia_castillo_recipe'
+consoleLogger.js:151 AnatomyOrchestrator: AnatomyOrchestrator: Starting anatomy generation for entity 'p_erotica:amaia_castillo_instance' with recipe 'p_erotica:amaia_castillo_recipe'
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '858888ad-f971-48a4-b6fd-48044351a4ea' (def: 'anatomy:human_female_torso') created.
+consoleLogger.js:151 Entity created: 858888ad-f971-48a4-b6fd-48044351a4ea (definition: anatomy:human_female_torso)
+consoleLogger.js:151 Entity created: p_erotica:amaia_castillo_instance (definition: p_erotica:amaia_castillo)
+consoleLogger.js:151 EntityGraphBuilder: Created root entity '858888ad-f971-48a4-b6fd-48044351a4ea' from definition 'anatomy:human_female_torso'
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '2247c412-9d7b-4b66-be29-a5872988d0a1' (def: 'anatomy:human_breast_g_cup') created.
+consoleLogger.js:151 Entity created: 2247c412-9d7b-4b66-be29-a5872988d0a1 (definition: anatomy:human_breast_g_cup)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '6405a1e3-15cd-4a0f-b948-c4da7845e872' (def: 'anatomy:human_testicle') created.
+consoleLogger.js:151 Entity created: 6405a1e3-15cd-4a0f-b948-c4da7845e872 (definition: anatomy:human_testicle)
+consoleLogger.js:151 SpatialIndexManager: Index cleared.
+consoleLogger.js:151 GameSessionManager._finalizeGameStart: Waiting for 2 anatomy generations to complete before starting turns...
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '3c59e4c9-52ba-4701-8ef5-7c9e21be9dd9' (def: 'anatomy:human_breast_g_cup') created.
+consoleLogger.js:151 Entity created: 3c59e4c9-52ba-4701-8ef5-7c9e21be9dd9 (definition: anatomy:human_breast_g_cup)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '96369160-1db6-4378-b89d-b7c27a936820' (def: 'anatomy:human_testicle') created.
+consoleLogger.js:151 Entity created: 96369160-1db6-4378-b89d-b7c27a936820 (definition: anatomy:human_testicle)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '2376070e-63f0-4ba9-af74-6f4f0b809d17' (def: 'anatomy:humanoid_head') created.
+consoleLogger.js:151 Entity created: 2376070e-63f0-4ba9-af74-6f4f0b809d17 (definition: anatomy:humanoid_head)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '50ae75ec-9606-4678-ac55-7d49411e0807' (def: 'anatomy:human_vagina') created.
+consoleLogger.js:151 Entity created: 50ae75ec-9606-4678-ac55-7d49411e0807 (definition: anatomy:human_vagina)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '5c0312e1-3721-4da4-b0e8-13ada693d498' (def: 'anatomy:humanoid_arm_muscular') created.
+consoleLogger.js:151 Entity created: 5c0312e1-3721-4da4-b0e8-13ada693d498 (definition: anatomy:humanoid_arm_muscular)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance 'c20b9554-b669-4e9f-8fde-11132f1a7559' (def: 'anatomy:humanoid_head') created.
+consoleLogger.js:151 Entity created: c20b9554-b669-4e9f-8fde-11132f1a7559 (definition: anatomy:humanoid_head)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '48b3e026-a397-436b-a63d-b37ed28957e1' (def: 'anatomy:humanoid_arm_muscular') created.
+consoleLogger.js:151 Entity created: 48b3e026-a397-436b-a63d-b37ed28957e1 (definition: anatomy:humanoid_arm_muscular)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '093a9dd4-134d-4403-af9c-94689c3498cc' (def: 'anatomy:humanoid_arm') created.
+consoleLogger.js:151 Entity created: 093a9dd4-134d-4403-af9c-94689c3498cc (definition: anatomy:humanoid_arm)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '499378c7-ae8c-40e3-89f0-0f1c2ecbbf15' (def: 'anatomy:human_leg_muscular') created.
+consoleLogger.js:151 Entity created: 499378c7-ae8c-40e3-89f0-0f1c2ecbbf15 (definition: anatomy:human_leg_muscular)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '461ea728-f67d-47bd-8d24-b06ac9bee56c' (def: 'anatomy:humanoid_arm') created.
+consoleLogger.js:151 Entity created: 461ea728-f67d-47bd-8d24-b06ac9bee56c (definition: anatomy:humanoid_arm)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance 'cc889fe1-7a13-4850-8e67-668688b4dfac' (def: 'anatomy:human_leg_muscular') created.
+consoleLogger.js:151 Entity created: cc889fe1-7a13-4850-8e67-668688b4dfac (definition: anatomy:human_leg_muscular)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '9bc32ac4-b36d-44ff-badb-908c2bbfc739' (def: 'anatomy:human_leg_shapely') created.
+consoleLogger.js:151 Entity created: 9bc32ac4-b36d-44ff-badb-908c2bbfc739 (definition: anatomy:human_leg_shapely)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '56cd47b5-f96c-4575-b8ef-e3722d604533' (def: 'anatomy:human_leg_shapely') created.
+consoleLogger.js:151 Entity created: 56cd47b5-f96c-4575-b8ef-e3722d604533 (definition: anatomy:human_leg_shapely)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance 'a8892c19-834a-4b98-8899-c504c5f38f0e' (def: 'anatomy:human_eye_brown') created.
+consoleLogger.js:151 Entity created: a8892c19-834a-4b98-8899-c504c5f38f0e (definition: anatomy:human_eye_brown)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '3365bdfe-1edf-4f5e-bf36-faec7494515f' (def: 'anatomy:human_eye_amber') created.
+consoleLogger.js:151 Entity created: 3365bdfe-1edf-4f5e-bf36-faec7494515f (definition: anatomy:human_eye_amber)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '0220c254-43dc-4881-bd08-8d641bd23a16' (def: 'anatomy:human_eye_brown') created.
+consoleLogger.js:151 Entity created: 0220c254-43dc-4881-bd08-8d641bd23a16 (definition: anatomy:human_eye_brown)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance 'ca8bc319-caf5-47ad-98f1-c402be00c7f2' (def: 'anatomy:human_eye_amber') created.
+consoleLogger.js:151 Entity created: ca8bc319-caf5-47ad-98f1-c402be00c7f2 (definition: anatomy:human_eye_amber)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance 'b30452e9-cfad-4d8d-8d5b-aaadd64e9f77' (def: 'anatomy:humanoid_ear') created.
+consoleLogger.js:151 Entity created: b30452e9-cfad-4d8d-8d5b-aaadd64e9f77 (definition: anatomy:humanoid_ear)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '8f6d6029-c7d9-4715-8c9f-c4a5429b3475' (def: 'anatomy:humanoid_ear') created.
+consoleLogger.js:151 Entity created: 8f6d6029-c7d9-4715-8c9f-c4a5429b3475 (definition: anatomy:humanoid_ear)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance 'db9f07b2-71ab-4688-a1f5-5b84b57c6a66' (def: 'anatomy:humanoid_ear') created.
+consoleLogger.js:151 Entity created: db9f07b2-71ab-4688-a1f5-5b84b57c6a66 (definition: anatomy:humanoid_ear)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '799217bd-687f-4e68-8987-799f67cc6486' (def: 'anatomy:humanoid_ear') created.
+consoleLogger.js:151 Entity created: 799217bd-687f-4e68-8987-799f67cc6486 (definition: anatomy:humanoid_ear)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance 'aa91b51f-a4eb-4ce1-9ddf-a074ea3b1c97' (def: 'anatomy:humanoid_nose') created.
+consoleLogger.js:151 Entity created: aa91b51f-a4eb-4ce1-9ddf-a074ea3b1c97 (definition: anatomy:humanoid_nose)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '382fbf99-c47c-4cbb-9258-93792fe8112a' (def: 'anatomy:humanoid_mouth') created.
+consoleLogger.js:151 Entity created: 382fbf99-c47c-4cbb-9258-93792fe8112a (definition: anatomy:humanoid_mouth)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '4f2904d7-fb02-4e5d-bd50-04961c1d0965' (def: 'anatomy:humanoid_nose') created.
+consoleLogger.js:151 Entity created: 4f2904d7-fb02-4e5d-bd50-04961c1d0965 (definition: anatomy:humanoid_nose)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '9b7f8511-69c2-4421-bd88-ae733a54c3df' (def: 'anatomy:humanoid_teeth') created.
+consoleLogger.js:151 Entity created: 9b7f8511-69c2-4421-bd88-ae733a54c3df (definition: anatomy:humanoid_teeth)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '5e54b87e-a4b9-4e77-88e7-97ed6272522e' (def: 'anatomy:humanoid_mouth') created.
+consoleLogger.js:151 Entity created: 5e54b87e-a4b9-4e77-88e7-97ed6272522e (definition: anatomy:humanoid_mouth)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '4628a473-c8a9-4d2e-a648-56ee766eddf9' (def: 'anatomy:human_hair') created.
+consoleLogger.js:151 Entity created: 4628a473-c8a9-4d2e-a648-56ee766eddf9 (definition: anatomy:human_hair)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '0e2ddb22-2911-4498-8191-39652a4d7e15' (def: 'anatomy:humanoid_teeth') created.
+consoleLogger.js:151 Entity created: 0e2ddb22-2911-4498-8191-39652a4d7e15 (definition: anatomy:humanoid_teeth)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '9e79bd93-3712-40a0-81c1-22453b8e6783' (def: 'anatomy:human_pubic_hair') created.
+consoleLogger.js:151 Entity created: 9e79bd93-3712-40a0-81c1-22453b8e6783 (definition: anatomy:human_pubic_hair)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '5be88836-ea74-4023-8360-5712573cc502' (def: 'anatomy:human_hair_blonde') created.
+consoleLogger.js:151 Entity created: 5be88836-ea74-4023-8360-5712573cc502 (definition: anatomy:human_hair_blonde)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '625eda68-829e-499b-bda8-155278125109' (def: 'anatomy:human_hand') created.
+consoleLogger.js:151 Entity created: 625eda68-829e-499b-bda8-155278125109 (definition: anatomy:human_hand)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '807eabab-b78b-4c75-880b-31586755d500' (def: 'anatomy:human_pubic_hair') created.
+consoleLogger.js:151 Entity created: 807eabab-b78b-4c75-880b-31586755d500 (definition: anatomy:human_pubic_hair)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance 'd9a14be6-3461-4431-bf14-cadf7da7896b' (def: 'anatomy:human_hand') created.
+consoleLogger.js:151 Entity created: d9a14be6-3461-4431-bf14-cadf7da7896b (definition: anatomy:human_hand)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance 'a35ad9f5-9611-480f-bb1c-5cdc9bc01c07' (def: 'anatomy:human_hand') created.
+consoleLogger.js:151 Entity created: a35ad9f5-9611-480f-bb1c-5cdc9bc01c07 (definition: anatomy:human_hand)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '06cda57c-ce0f-447f-8df4-ec4fb25d8478' (def: 'anatomy:human_hand') created.
+consoleLogger.js:151 Entity created: 06cda57c-ce0f-447f-8df4-ec4fb25d8478 (definition: anatomy:human_hand)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '2f8a485f-b783-427a-b47b-37311dbd19f9' (def: 'anatomy:human_foot') created.
+consoleLogger.js:151 Entity created: 2f8a485f-b783-427a-b47b-37311dbd19f9 (definition: anatomy:human_foot)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '0f29e84e-3427-4966-9227-e157f351a248' (def: 'anatomy:human_foot') created.
+consoleLogger.js:151 Entity created: 0f29e84e-3427-4966-9227-e157f351a248 (definition: anatomy:human_foot)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '79220fd1-1ca3-4047-a648-42aa5a38b4eb' (def: 'anatomy:human_foot') created.
+consoleLogger.js:151 Entity created: 79220fd1-1ca3-4047-a648-42aa5a38b4eb (definition: anatomy:human_foot)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '0cf0c5b3-de44-4394-9baf-1eb702adeb48' (def: 'anatomy:human_foot') created.
+consoleLogger.js:151 Entity created: 0cf0c5b3-de44-4394-9baf-1eb702adeb48 (definition: anatomy:human_foot)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '85ef04f4-2264-4201-a4b1-ac90fb308a2c' (def: 'anatomy:human_asshole') created.
+consoleLogger.js:151 Entity created: 85ef04f4-2264-4201-a4b1-ac90fb308a2c (definition: anatomy:human_asshole)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance 'da2bb367-2c3a-4d19-8a9b-d8b32a1953da' (def: 'anatomy:human_ass_cheek') created.
+consoleLogger.js:151 Entity created: da2bb367-2c3a-4d19-8a9b-d8b32a1953da (definition: anatomy:human_ass_cheek)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance 'baeb154c-1ca6-4aed-9aad-da8a1a21764b' (def: 'anatomy:human_asshole') created.
+consoleLogger.js:151 Entity created: baeb154c-1ca6-4aed-9aad-da8a1a21764b (definition: anatomy:human_asshole)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '094c99ed-024b-42fe-b9e6-3af00e698742' (def: 'anatomy:human_ass_cheek_round') created.
+consoleLogger.js:151 Entity created: 094c99ed-024b-42fe-b9e6-3af00e698742 (definition: anatomy:human_ass_cheek_round)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance 'f4091f1d-bacf-49bf-84c2-10b51bf14435' (def: 'anatomy:human_ass_cheek') created.
+consoleLogger.js:151 Entity created: f4091f1d-bacf-49bf-84c2-10b51bf14435 (definition: anatomy:human_ass_cheek)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '3a9f2ab2-b815-4323-9a5a-a4be9b9a0324' (def: 'anatomy:human_ass_cheek_round') created.
+consoleLogger.js:151 Entity created: 3a9f2ab2-b815-4323-9a5a-a4be9b9a0324 (definition: anatomy:human_ass_cheek_round)
+consoleLogger.js:151 BodyBlueprintFactory: Successfully created anatomy graph with 25 entities
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '4afb15dc-8d9a-4c8e-810a-09805f6aaf87' (def: 'anatomy:blueprint_slot') created.
+consoleLogger.js:151 Entity created: 4afb15dc-8d9a-4c8e-810a-09805f6aaf87 (definition: anatomy:blueprint_slot)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '5612ae44-2ae7-4398-b185-a92362cfbb52' (def: 'anatomy:blueprint_slot') created.
+consoleLogger.js:151 Entity created: 5612ae44-2ae7-4398-b185-a92362cfbb52 (definition: anatomy:blueprint_slot)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '17b6b31b-072d-4ac2-9f16-5f7579a535cc' (def: 'anatomy:blueprint_slot') created.
+consoleLogger.js:151 Entity created: 17b6b31b-072d-4ac2-9f16-5f7579a535cc (definition: anatomy:blueprint_slot)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance 'e6409567-abe6-4762-9a94-8dcfe99ca3f3' (def: 'anatomy:blueprint_slot') created.
+consoleLogger.js:151 Entity created: e6409567-abe6-4762-9a94-8dcfe99ca3f3 (definition: anatomy:blueprint_slot)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance 'f1b8e503-f5f3-4c82-a621-081133dc7908' (def: 'anatomy:blueprint_slot') created.
+consoleLogger.js:151 Entity created: f1b8e503-f5f3-4c82-a621-081133dc7908 (definition: anatomy:blueprint_slot)
+consoleLogger.js:151 BodyBlueprintFactory: Successfully created anatomy graph with 25 entities
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '9994e176-be01-4941-b8a6-d3aa5a41ca8b' (def: 'anatomy:blueprint_slot') created.
+consoleLogger.js:151 Entity created: 9994e176-be01-4941-b8a6-d3aa5a41ca8b (definition: anatomy:blueprint_slot)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '9f94c897-8050-4bdc-94ba-35698ffffe20' (def: 'anatomy:blueprint_slot') created.
+consoleLogger.js:151 Entity created: 9f94c897-8050-4bdc-94ba-35698ffffe20 (definition: anatomy:blueprint_slot)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '533f5721-6ca9-4cf0-95d7-315f86f7cef2' (def: 'anatomy:blueprint_slot') created.
+consoleLogger.js:151 Entity created: 533f5721-6ca9-4cf0-95d7-315f86f7cef2 (definition: anatomy:blueprint_slot)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '7473fa39-301c-4906-bdc6-d7637d68fafe' (def: 'anatomy:blueprint_slot') created.
+consoleLogger.js:151 Entity created: 7473fa39-301c-4906-bdc6-d7637d68fafe (definition: anatomy:blueprint_slot)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance 'bcca0aad-eda6-4c94-b86d-74e2e4014f01' (def: 'anatomy:blueprint_slot') created.
+consoleLogger.js:151 Entity created: bcca0aad-eda6-4c94-b86d-74e2e4014f01 (definition: anatomy:blueprint_slot)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '86fc31d4-49f3-4190-ba61-99fabfefeb78' (def: 'anatomy:blueprint_slot') created.
+consoleLogger.js:151 Entity created: 86fc31d4-49f3-4190-ba61-99fabfefeb78 (definition: anatomy:blueprint_slot)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '15b59cdd-b6b1-43c1-a024-acd001d98ec6' (def: 'anatomy:blueprint_slot') created.
+consoleLogger.js:151 Entity created: 15b59cdd-b6b1-43c1-a024-acd001d98ec6 (definition: anatomy:blueprint_slot)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance 'e273ef0e-dbfa-42e3-bef1-30e3d774d4ab' (def: 'anatomy:blueprint_slot') created.
+consoleLogger.js:151 Entity created: e273ef0e-dbfa-42e3-bef1-30e3d774d4ab (definition: anatomy:blueprint_slot)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '4f25aaae-2916-4319-8d6d-c9cee8e68d4b' (def: 'anatomy:blueprint_slot') created.
+consoleLogger.js:151 Entity created: 4f25aaae-2916-4319-8d6d-c9cee8e68d4b (definition: anatomy:blueprint_slot)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance 'f8a7df97-05c0-4376-b7c8-7bf68d537a27' (def: 'anatomy:blueprint_slot') created.
+consoleLogger.js:151 Entity created: f8a7df97-05c0-4376-b7c8-7bf68d537a27 (definition: anatomy:blueprint_slot)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance 'e5ef6cc3-fca2-4e03-80d2-ece7bc5be785' (def: 'anatomy:blueprint_slot') created.
+consoleLogger.js:151 Entity created: e5ef6cc3-fca2-4e03-80d2-ece7bc5be785 (definition: anatomy:blueprint_slot)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '7f587e30-1b9c-47e5-9ecc-dc0a4ff3853e' (def: 'anatomy:blueprint_slot') created.
+consoleLogger.js:151 Entity created: 7f587e30-1b9c-47e5-9ecc-dc0a4ff3853e (definition: anatomy:blueprint_slot)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance 'd2ff0f6e-cc55-40e7-8948-cb1f6b9b5e4f' (def: 'anatomy:blueprint_slot') created.
+consoleLogger.js:151 Entity created: d2ff0f6e-cc55-40e7-8948-cb1f6b9b5e4f (definition: anatomy:blueprint_slot)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '8606733d-372c-4d80-b935-4f15d56152be' (def: 'anatomy:blueprint_slot') created.
+consoleLogger.js:151 Entity created: 8606733d-372c-4d80-b935-4f15d56152be (definition: anatomy:blueprint_slot)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '7139ab8b-7600-49b8-b9f4-b1ce10d0110b' (def: 'anatomy:blueprint_slot') created.
+consoleLogger.js:151 Entity created: 7139ab8b-7600-49b8-b9f4-b1ce10d0110b (definition: anatomy:blueprint_slot)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '884ccc01-f411-42fe-9c93-6b340afe4de1' (def: 'anatomy:blueprint_slot') created.
+consoleLogger.js:151 Entity created: 884ccc01-f411-42fe-9c93-6b340afe4de1 (definition: anatomy:blueprint_slot)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '1667c00a-221f-426b-951c-07a7537a8192' (def: 'anatomy:blueprint_slot') created.
+consoleLogger.js:151 Entity created: 1667c00a-221f-426b-951c-07a7537a8192 (definition: anatomy:blueprint_slot)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance 'b051cb36-c6be-430b-84e9-14e1b2c4bbc6' (def: 'anatomy:blueprint_slot') created.
+consoleLogger.js:151 Entity created: b051cb36-c6be-430b-84e9-14e1b2c4bbc6 (definition: anatomy:blueprint_slot)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '47e5edd9-5d81-4584-ba4e-59679d770ec9' (def: 'anatomy:blueprint_slot') created.
+consoleLogger.js:151 Entity created: 47e5edd9-5d81-4584-ba4e-59679d770ec9 (definition: anatomy:blueprint_slot)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '99c3d03e-6fb5-4022-a9e4-75e9e135b4f9' (def: 'anatomy:blueprint_slot') created.
+consoleLogger.js:151 Entity created: 99c3d03e-6fb5-4022-a9e4-75e9e135b4f9 (definition: anatomy:blueprint_slot)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance 'b0c1f1b7-cfd9-4d49-826c-68f4b6c00ac9' (def: 'anatomy:blueprint_slot') created.
+consoleLogger.js:151 Entity created: b0c1f1b7-cfd9-4d49-826c-68f4b6c00ac9 (definition: anatomy:blueprint_slot)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance 'fc452062-3f13-46f4-bbec-c5f66c1816a4' (def: 'anatomy:blueprint_slot') created.
+consoleLogger.js:151 Entity created: fc452062-3f13-46f4-bbec-c5f66c1816a4 (definition: anatomy:blueprint_slot)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '1e609a20-eea6-46ac-9fd8-6533cdce5d90' (def: 'anatomy:blueprint_slot') created.
+consoleLogger.js:151 Entity created: 1e609a20-eea6-46ac-9fd8-6533cdce5d90 (definition: anatomy:blueprint_slot)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance 'a7728050-dfc1-4339-9cb5-3ee59b12e077' (def: 'anatomy:blueprint_slot') created.
+consoleLogger.js:151 Entity created: a7728050-dfc1-4339-9cb5-3ee59b12e077 (definition: anatomy:blueprint_slot)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '830493ba-566b-4005-952f-4f9020371865' (def: 'anatomy:blueprint_slot') created.
+consoleLogger.js:151 Entity created: 830493ba-566b-4005-952f-4f9020371865 (definition: anatomy:blueprint_slot)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance 'a98c76d4-3c5d-4af0-b992-c6a389c9d6a6' (def: 'anatomy:blueprint_slot') created.
+consoleLogger.js:151 Entity created: a98c76d4-3c5d-4af0-b992-c6a389c9d6a6 (definition: anatomy:blueprint_slot)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '8b7f8bec-0004-4530-b89d-213f03ecdf82' (def: 'anatomy:blueprint_slot') created.
+consoleLogger.js:151 Entity created: 8b7f8bec-0004-4530-b89d-213f03ecdf82 (definition: anatomy:blueprint_slot)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '8cbc85de-9f08-4e73-b579-2060a680400b' (def: 'anatomy:blueprint_slot') created.
+consoleLogger.js:151 Entity created: 8cbc85de-9f08-4e73-b579-2060a680400b (definition: anatomy:blueprint_slot)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '3aefbac9-6d5c-4744-bdd4-407693d1a840' (def: 'anatomy:blueprint_slot') created.
+consoleLogger.js:151 Entity created: 3aefbac9-6d5c-4744-bdd4-407693d1a840 (definition: anatomy:blueprint_slot)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '56596d17-574f-4432-8400-d60cbedaea7c' (def: 'anatomy:blueprint_slot') created.
+consoleLogger.js:151 Entity created: 56596d17-574f-4432-8400-d60cbedaea7c (definition: anatomy:blueprint_slot)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance 'cc5c19d3-2698-4011-bb10-87f6d67b6970' (def: 'anatomy:blueprint_slot') created.
+consoleLogger.js:151 Entity created: cc5c19d3-2698-4011-bb10-87f6d67b6970 (definition: anatomy:blueprint_slot)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '14a17300-4ed6-4605-9d80-09b1ac158847' (def: 'anatomy:blueprint_slot') created.
+consoleLogger.js:151 Entity created: 14a17300-4ed6-4605-9d80-09b1ac158847 (definition: anatomy:blueprint_slot)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '4e5bc4fb-1382-4b92-bd02-49c0105fccd8' (def: 'anatomy:blueprint_slot') created.
+consoleLogger.js:151 Entity created: 4e5bc4fb-1382-4b92-bd02-49c0105fccd8 (definition: anatomy:blueprint_slot)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '33ea04cb-4aad-494f-a8c6-cf015ebcb2fa' (def: 'anatomy:blueprint_slot') created.
+consoleLogger.js:151 Entity created: 33ea04cb-4aad-494f-a8c6-cf015ebcb2fa (definition: anatomy:blueprint_slot)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '2e17fd8c-122d-4c7b-b62a-2aad84279825' (def: 'anatomy:blueprint_slot') created.
+consoleLogger.js:151 Entity created: 2e17fd8c-122d-4c7b-b62a-2aad84279825 (definition: anatomy:blueprint_slot)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance 'a0340132-b0ff-4ac5-8f48-ce238dc384c3' (def: 'anatomy:blueprint_slot') created.
+consoleLogger.js:151 Entity created: a0340132-b0ff-4ac5-8f48-ce238dc384c3 (definition: anatomy:blueprint_slot)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '0b58b5df-e930-4830-81e4-47685ad7293c' (def: 'anatomy:blueprint_slot') created.
+consoleLogger.js:151 Entity created: 0b58b5df-e930-4830-81e4-47685ad7293c (definition: anatomy:blueprint_slot)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '0976a25f-082b-474d-8d13-69f8225ee041' (def: 'anatomy:blueprint_slot') created.
+consoleLogger.js:151 Entity created: 0976a25f-082b-474d-8d13-69f8225ee041 (definition: anatomy:blueprint_slot)
+consoleLogger.js:151 ClothingInstantiationService: Starting clothing instantiation for actor 'p_erotica:iker_aguirre_instance' with 6 items
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '57000267-dd54-4260-81be-d4fc99b42878' (def: 'clothing:fitted_navy_cotton_boxer_briefs') created.
+consoleLogger.js:151 Entity created: 57000267-dd54-4260-81be-d4fc99b42878 (definition: clothing:fitted_navy_cotton_boxer_briefs)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '44862b62-fe45-437a-87de-e0f72c7cdaf3' (def: 'anatomy:blueprint_slot') created.
+consoleLogger.js:151 Entity created: 44862b62-fe45-437a-87de-e0f72c7cdaf3 (definition: anatomy:blueprint_slot)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance 'f404b81f-e448-42b1-9179-714ba1951887' (def: 'anatomy:blueprint_slot') created.
+consoleLogger.js:151 Entity created: f404b81f-e448-42b1-9179-714ba1951887 (definition: anatomy:blueprint_slot)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '9cea8bd8-3a75-427b-a66a-587e0c81433b' (def: 'anatomy:blueprint_slot') created.
+consoleLogger.js:151 Entity created: 9cea8bd8-3a75-427b-a66a-587e0c81433b (definition: anatomy:blueprint_slot)
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '460b75dd-e178-40e3-ad53-2593a56e23ef' (def: 'anatomy:blueprint_slot') created.
+consoleLogger.js:151 Entity created: 460b75dd-e178-40e3-ad53-2593a56e23ef (definition: anatomy:blueprint_slot)
+consoleLogger.js:151 AnatomyCacheManager: Built cache with 26 nodes
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '6b0c7ad8-760a-4c41-a476-f9fd2101f479' (def: 'anatomy:blueprint_slot') created.
+consoleLogger.js:151 Entity created: 6b0c7ad8-760a-4c41-a476-f9fd2101f479 (definition: anatomy:blueprint_slot)
+consoleLogger.js:151 ClothingInstantiationService: Starting clothing instantiation for actor 'p_erotica:amaia_castillo_instance' with 7 items
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '1d1f5830-3a06-4095-914c-d3000c9f2177' (def: 'clothing:underwired_plunge_bra_nude_silk') created.
+consoleLogger.js:151 Entity created: 1d1f5830-3a06-4095-914c-d3000c9f2177 (definition: clothing:underwired_plunge_bra_nude_silk)
+consoleLogger.js:151 AnatomyCacheManager: Built cache with 26 nodes
+consoleLogger.js:151 EquipmentOrchestrator: Successfully equipped '57000267-dd54-4260-81be-d4fc99b42878' on 'p_erotica:iker_aguirre_instance' in layer 'underwear'
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance 'e80d3285-2f68-41b0-8e13-d57ed985b78e' (def: 'clothing:gray_ribknit_cotton_socks') created.
+consoleLogger.js:151 Entity created: e80d3285-2f68-41b0-8e13-d57ed985b78e (definition: clothing:gray_ribknit_cotton_socks)
+consoleLogger.js:151 AnatomyCacheManager: Built cache with 26 nodes
+consoleLogger.js:151 EquipmentOrchestrator: Successfully equipped '1d1f5830-3a06-4095-914c-d3000c9f2177' on 'p_erotica:amaia_castillo_instance' in layer 'underwear'
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '4eff0146-d8cc-4861-aa46-011068a2a544' (def: 'clothing:nude_thong') created.
+consoleLogger.js:151 Entity created: 4eff0146-d8cc-4861-aa46-011068a2a544 (definition: clothing:nude_thong)
+consoleLogger.js:151 AnatomyCacheManager: Built cache with 26 nodes
+consoleLogger.js:151 EquipmentOrchestrator: Successfully equipped 'e80d3285-2f68-41b0-8e13-d57ed985b78e' on 'p_erotica:iker_aguirre_instance' in layer 'underwear'
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '93bd5a7b-151d-4cab-8181-bc0842343702' (def: 'clothing:white_cotton_crew_tshirt') created.
+consoleLogger.js:151 Entity created: 93bd5a7b-151d-4cab-8181-bc0842343702 (definition: clothing:white_cotton_crew_tshirt)
+consoleLogger.js:151 AnatomyCacheManager: Built cache with 26 nodes
+consoleLogger.js:151 EquipmentOrchestrator: Successfully equipped '4eff0146-d8cc-4861-aa46-011068a2a544' on 'p_erotica:amaia_castillo_instance' in layer 'underwear'
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '0c7e7038-4dc6-4f5c-b9b8-9983dca70d0d' (def: 'clothing:black_stretch_silk_bodysuit') created.
+consoleLogger.js:151 Entity created: 0c7e7038-4dc6-4f5c-b9b8-9983dca70d0d (definition: clothing:black_stretch_silk_bodysuit)
+consoleLogger.js:151 AnatomyCacheManager: Built cache with 26 nodes
+consoleLogger.js:151 EquipmentOrchestrator: Successfully equipped '93bd5a7b-151d-4cab-8181-bc0842343702' on 'p_erotica:iker_aguirre_instance' in layer 'base'
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance 'addc490c-1b0c-4ff7-bdda-bab44f928794' (def: 'clothing:sand_beige_cotton_chinos') created.
+consoleLogger.js:151 Entity created: addc490c-1b0c-4ff7-bdda-bab44f928794 (definition: clothing:sand_beige_cotton_chinos)
+consoleLogger.js:151 AnatomyCacheManager: Built cache with 26 nodes
+consoleLogger.js:151 EquipmentOrchestrator: Successfully equipped '0c7e7038-4dc6-4f5c-b9b8-9983dca70d0d' on 'p_erotica:amaia_castillo_instance' in layer 'base'
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '691b962e-1c07-4ab4-9a5b-9dbafb64843c' (def: 'clothing:white_structured_linen_blazer') created.
+consoleLogger.js:151 Entity created: 691b962e-1c07-4ab4-9a5b-9dbafb64843c (definition: clothing:white_structured_linen_blazer)
+consoleLogger.js:151 EquipmentOrchestrator: Successfully equipped 'addc490c-1b0c-4ff7-bdda-bab44f928794' on 'p_erotica:iker_aguirre_instance' in layer 'base'
+consoleLogger.js:151 AnatomyCacheManager: Built cache with 26 nodes
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance 'fc78160c-c0ad-4852-80f7-9a0fe8b12217' (def: 'clothing:white_leather_sneakers') created.
+consoleLogger.js:151 Entity created: fc78160c-c0ad-4852-80f7-9a0fe8b12217 (definition: clothing:white_leather_sneakers)
+consoleLogger.js:151 AnatomyCacheManager: Built cache with 26 nodes
+consoleLogger.js:151 EquipmentOrchestrator: Successfully equipped 'fc78160c-c0ad-4852-80f7-9a0fe8b12217' on 'p_erotica:iker_aguirre_instance' in layer 'base'
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance 'fd75aec0-0448-4501-8b3d-f526e512b8a8' (def: 'clothing:indigo_denim_trucker_jacket') created.
+consoleLogger.js:151 Entity created: fd75aec0-0448-4501-8b3d-f526e512b8a8 (definition: clothing:indigo_denim_trucker_jacket)
+consoleLogger.js:151 EquipmentOrchestrator: Successfully equipped '691b962e-1c07-4ab4-9a5b-9dbafb64843c' on 'p_erotica:amaia_castillo_instance' in layer 'outer'
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance 'd8daa54b-54c8-4e93-b6ed-2e7310f48ea9' (def: 'clothing:graphite_wool_wide_leg_trousers') created.
+consoleLogger.js:151 Entity created: d8daa54b-54c8-4e93-b6ed-2e7310f48ea9 (definition: clothing:graphite_wool_wide_leg_trousers)
+consoleLogger.js:151 AnatomyCacheManager: Built cache with 26 nodes
+consoleLogger.js:151 EquipmentOrchestrator: Successfully equipped 'd8daa54b-54c8-4e93-b6ed-2e7310f48ea9' on 'p_erotica:amaia_castillo_instance' in layer 'base'
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '338ba1bb-f4b4-458d-8d54-49df76c8d4fd' (def: 'clothing:black_calfskin_belt') created.
+consoleLogger.js:151 Entity created: 338ba1bb-f4b4-458d-8d54-49df76c8d4fd (definition: clothing:black_calfskin_belt)
+consoleLogger.js:151 EquipmentOrchestrator: Successfully equipped 'fd75aec0-0448-4501-8b3d-f526e512b8a8' on 'p_erotica:iker_aguirre_instance' in layer 'outer'
+consoleLogger.js:151 ClothingInstantiationService: Clothing instantiation completed for actor 'p_erotica:iker_aguirre_instance': 6 created, 6 equipped, 0 errors
+consoleLogger.js:151 GraphBuildingWorkflow: GraphBuildingWorkflow: Successfully built adjacency cache for root entity '51c0cefd-593c-4e59-b5ac-ecd54518945a'
+consoleLogger.js:151 PartDescriptionGenerator: Generated 10 descriptions out of 25 parts
+consoleLogger.js:151 BodyDescriptionOrchestrator: Generated descriptions for body 'p_erotica:iker_aguirre_instance' with 10 parts
+consoleLogger.js:151 DescriptionPersistenceService: Updated 10 descriptions, 0 failed
+consoleLogger.js:151 DescriptionGenerationWorkflow: DescriptionGenerationWorkflow: Successfully generated descriptions for entity 'p_erotica:iker_aguirre_instance'
+consoleLogger.js:151 AnatomyOrchestrator: AnatomyOrchestrator: Successfully completed anatomy generation for entity 'p_erotica:iker_aguirre_instance' with 49 parts
+consoleLogger.js:151 AnatomyGenerationService: Successfully generated anatomy for entity 'p_erotica:iker_aguirre_instance' with 49 parts
+consoleLogger.js:151 AnatomyInitializationService: Generated anatomy for entity 'p_erotica:iker_aguirre_instance'
+consoleLogger.js:151 EquipmentOrchestrator: Successfully equipped '338ba1bb-f4b4-458d-8d54-49df76c8d4fd' on 'p_erotica:amaia_castillo_instance' in layer 'accessories'
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '57ea61c2-102f-49a3-84a3-202b9b54fbf7' (def: 'clothing:leather_stiletto_pumps') created.
+consoleLogger.js:151 Entity created: 57ea61c2-102f-49a3-84a3-202b9b54fbf7 (definition: clothing:leather_stiletto_pumps)
+consoleLogger.js:151 EquipmentOrchestrator: Successfully equipped '57ea61c2-102f-49a3-84a3-202b9b54fbf7' on 'p_erotica:amaia_castillo_instance' in layer 'base'
+consoleLogger.js:151 ClothingInstantiationService: Clothing instantiation completed for actor 'p_erotica:amaia_castillo_instance': 7 created, 7 equipped, 0 errors
+consoleLogger.js:151 AnatomyCacheManager: Built cache with 25 nodes
+consoleLogger.js:151 GraphBuildingWorkflow: GraphBuildingWorkflow: Successfully built adjacency cache for root entity '858888ad-f971-48a4-b6fd-48044351a4ea'
+consoleLogger.js:151 PartDescriptionGenerator: Generated 10 descriptions out of 25 parts
+consoleLogger.js:151 BodyDescriptionOrchestrator: Generated descriptions for body 'p_erotica:amaia_castillo_instance' with 10 parts
+consoleLogger.js:151 DescriptionPersistenceService: Updated 10 descriptions, 0 failed
+consoleLogger.js:151 DescriptionGenerationWorkflow: DescriptionGenerationWorkflow: Successfully generated descriptions for entity 'p_erotica:amaia_castillo_instance'
+consoleLogger.js:151 AnatomyOrchestrator: AnatomyOrchestrator: Successfully completed anatomy generation for entity 'p_erotica:amaia_castillo_instance' with 49 parts
+consoleLogger.js:151 AnatomyGenerationService: Successfully generated anatomy for entity 'p_erotica:amaia_castillo_instance' with 49 parts
+consoleLogger.js:151 AnatomyInitializationService: Generated anatomy for entity 'p_erotica:amaia_castillo_instance'
+consoleLogger.js:151 AnatomyInitializationService: All anatomy generations completed
+consoleLogger.js:151 GameSessionManager._finalizeGameStart: Anatomy generation completed, starting turns.

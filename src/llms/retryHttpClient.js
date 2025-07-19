@@ -178,14 +178,14 @@ export class RetryHttpClient extends IHttpClient {
           } → ${url}`
         );
         const silentDispatcher = { dispatch: async () => true };
-        
+
         // Map abortSignal to signal for native fetch API
         const fetchOptions = { ...options };
         if (options.abortSignal) {
           fetchOptions.signal = options.abortSignal;
           delete fetchOptions.abortSignal;
         }
-        
+
         const result = await fetchWithRetry(
           url,
           fetchOptions,

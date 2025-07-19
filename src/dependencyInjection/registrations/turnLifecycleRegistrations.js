@@ -45,6 +45,10 @@ export function registerTurnLifecycle(container) {
       new ConcreteTurnStateFactory({
         commandProcessor: c.resolve(tokens.ICommandProcessor),
         commandOutcomeInterpreter: c.resolve(tokens.ICommandOutcomeInterpreter),
+        // Optionally inject services for enhanced workflow
+        commandDispatcher: c.tryResolve?.(tokens.CommandDispatcher),
+        resultInterpreter: c.tryResolve?.(tokens.ResultInterpreter),
+        directiveExecutor: c.tryResolve?.(tokens.DirectiveExecutor),
       })
   );
 

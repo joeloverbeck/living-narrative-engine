@@ -18,7 +18,11 @@
           "silver",
           "cobalt",
           "hazel",
-          "violet"
+          "violet",
+          "navy",
+          "deep-navy",
+          "sand-beige",
+          "indigo"
         ],
         "default": "raven-black"
       }

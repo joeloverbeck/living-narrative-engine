@@ -32,6 +32,9 @@ export class CommandProcessingWorkflow {
   _commandProcessor;
   _commandOutcomeInterpreter;
   _directiveStrategyResolver;
+  _commandDispatcher;
+  _resultInterpreter;
+  _directiveExecutor;
 
   /**
    * Creates the workflow instance.
@@ -41,6 +44,9 @@ export class CommandProcessingWorkflow {
    * @param {ICommandProcessor} commandProcessor - Injected command processor.
    * @param {ICommandOutcomeInterpreter} commandOutcomeInterpreter - Injected outcome interpreter.
    * @param {IDirectiveStrategyResolver} directiveStrategyResolver - Injected directive resolver.
+   * @param {CommandDispatcher} [commandDispatcher] - Service for command dispatch.
+   * @param {ResultInterpreter} [resultInterpreter] - Service for result interpretation.
+   * @param {DirectiveExecutor} [directiveExecutor] - Service for directive execution.
    */
   constructor({
     state,
@@ -48,6 +54,9 @@ export class CommandProcessingWorkflow {
     commandProcessor,
     commandOutcomeInterpreter,
     directiveStrategyResolver,
+    commandDispatcher,
+    resultInterpreter,
+    directiveExecutor,
   }) {
     this._state = state;
 
@@ -77,6 +86,11 @@ export class CommandProcessingWorkflow {
     this._commandProcessor = commandProcessor;
     this._commandOutcomeInterpreter = commandOutcomeInterpreter;
     this._directiveStrategyResolver = directiveStrategyResolver;
+    
+    // Store optional service modules for separation of concerns
+    this._commandDispatcher = commandDispatcher;
+    this._resultInterpreter = resultInterpreter;
+    this._directiveExecutor = directiveExecutor;
   }
 
   /**
@@ -119,7 +133,7 @@ export class CommandProcessingWorkflow {
   }
 
   /**
-   * Dispatches the provided action via ICommandProcessor.
+   * Dispatches the provided action via CommandDispatcher service or ICommandProcessor.
    *
    * @private
    * @param {ITurnContext} turnCtx - Current turn context.
@@ -128,6 +142,34 @@ export class CommandProcessingWorkflow {
    * @returns {Promise<{activeTurnCtx: ITurnContext, commandResult: CommandResult}|null>} The active context and command result, or `null` on error.
    */
   async _dispatchAction(turnCtx, actor, turnAction) {
+    // Use CommandDispatcher service if available for better separation of concerns
+    if (this._commandDispatcher) {
+      const result = await this._commandDispatcher.dispatch({
+        turnContext: turnCtx,
+        actor,
+        turnAction,
+        stateName: this._state.getStateName(),
+      });
+      
+      if (!result) {
+        return null;
+      }
+      
+      // Validate context after dispatch using the service
+      const isValid = this._commandDispatcher.validateContextAfterDispatch({
+        turnContext: result.turnContext,
+        expectedActorId: actor.id,
+        stateName: this._state.getStateName(),
+      });
+      
+      if (!isValid) {
+        return null;
+      }
+      
+      return { activeTurnCtx: result.turnContext, commandResult: result.commandResult };
+    }
+    
+    // Fallback to original implementation
     const logger = turnCtx.getLogger();
     const actorId = actor.id;
     const stateName = this._state.getStateName();
@@ -230,7 +272,7 @@ export class CommandProcessingWorkflow {
   }
 
   /**
-   * Interprets a command result into a directive.
+   * Interprets a command result into a directive using ResultInterpreter service or fallback.
    *
    * @private
    * @param {ITurnContext} activeTurnCtx - Active turn context after dispatch.
@@ -239,6 +281,17 @@ export class CommandProcessingWorkflow {
    * @returns {Promise<{directiveType: string}|null>} The directive type or `null` on error.
    */
   async _interpretCommandResult(activeTurnCtx, actorId, commandResult) {
+    // Use ResultInterpreter service if available for better separation of concerns
+    if (this._resultInterpreter) {
+      return await this._resultInterpreter.interpret({
+        commandResult,
+        turnContext: activeTurnCtx,
+        actorId,
+        stateName: this._state.getStateName(),
+      });
+    }
+    
+    // Fallback to original implementation
     const logger = activeTurnCtx.getLogger();
     const stateName = this._state.getStateName();
 
@@ -286,7 +339,7 @@ export class CommandProcessingWorkflow {
   }
 
   /**
-   * Executes the strategy associated with the provided directive.
+   * Executes the strategy associated with the provided directive using DirectiveExecutor service or fallback.
    *
    * @private
    * @param {ITurnContext} activeTurnCtx - Active turn context after dispatch.
@@ -295,6 +348,48 @@ export class CommandProcessingWorkflow {
    * @returns {Promise<void>} Resolves when the strategy completes.
    */
   async _executeDirectiveStrategy(activeTurnCtx, directiveType, result) {
+    // Use DirectiveExecutor service if available for better separation of concerns
+    if (this._directiveExecutor) {
+      const executionResult = await this._directiveExecutor.execute({
+        turnContext: activeTurnCtx,
+        directiveType,
+        commandResult: result,
+        stateName: this._state.getStateName(),
+      });
+      
+      // Handle state management after execution
+      if (executionResult.executed) {
+        const logger = activeTurnCtx.getLogger();
+        const actorId = activeTurnCtx.getActor()?.id ?? 'UnknownActor';
+        const stateName = this._state.getStateName();
+        
+        // Check processing state after execution
+        if (!this._state.isProcessing) {
+          logger.debug(
+            `${stateName}: Processing flag false after directive strategy for ${actorId}.`
+          );
+          return;
+        }
+
+        // Check if state has changed
+        const currentState = this._state._handler.getCurrentState();
+        if (currentState !== this._state) {
+          logger.debug(
+            `${stateName}: Directive strategy executed for ${actorId}, state changed from ${stateName} to ${currentState?.getStateName() ?? 'Unknown'}.`
+          );
+          finishProcessing(this._state);
+          return;
+        }
+
+        logger.debug(
+          `${stateName}: Directive strategy executed for ${actorId}, state remains ${stateName}.`
+        );
+        finishProcessing(this._state);
+      }
+      return;
+    }
+    
+    // Fallback to original implementation
     const logger = activeTurnCtx.getLogger();
     const actorId = activeTurnCtx.getActor()?.id ?? 'UnknownActor';
     const stateName = this._state.getStateName();

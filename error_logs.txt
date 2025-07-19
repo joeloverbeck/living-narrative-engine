@@ -1,166 +1,134 @@
-AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Entity 'c9d08f6b-a8f8-4816-a1d3-5fbc0671ec3d' has anatomy:blueprintSlot component: true
-consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Retrieved component data for entity 'c9d08f6b-a8f8-4816-a1d3-5fbc0671ec3d': {"slotId":"left_foot","socketId":"ankle","requirements":{"partType":"foot","components":["anatomy:part"]}}
-consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Successfully mapped slot 'left_foot' to entity 'c9d08f6b-a8f8-4816-a1d3-5fbc0671ec3d'
-consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Checking entity '4f973bf8-ac6b-40ca-aeef-52985545e4f9' - has entity: true
-consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Entity '4f973bf8-ac6b-40ca-aeef-52985545e4f9' has anatomy:blueprintSlot component: true
-consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Retrieved component data for entity '4f973bf8-ac6b-40ca-aeef-52985545e4f9': {"slotId":"right_foot","socketId":"ankle","requirements":{"partType":"foot","components":["anatomy:part"]}}
-consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Successfully mapped slot 'right_foot' to entity '4f973bf8-ac6b-40ca-aeef-52985545e4f9'
-consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Checking entity '40ee8476-f026-4776-8a42-f55497ae5379' - has entity: true
-consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Entity '40ee8476-f026-4776-8a42-f55497ae5379' has anatomy:blueprintSlot component: true
-consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Retrieved component data for entity '40ee8476-f026-4776-8a42-f55497ae5379': {"slotId":"asshole","socketId":"asshole","requirements":{"partType":"asshole","components":["anatomy:part"]}}
-consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Successfully mapped slot 'asshole' to entity '40ee8476-f026-4776-8a42-f55497ae5379'
-consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Checking entity '3d944908-aa68-401c-b793-606105e0f4a4' - has entity: true
-consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Entity '3d944908-aa68-401c-b793-606105e0f4a4' has anatomy:blueprintSlot component: true
-consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Retrieved component data for entity '3d944908-aa68-401c-b793-606105e0f4a4': {"slotId":"left_ass","socketId":"left_ass","requirements":{"partType":"ass_cheek","components":["anatomy:part"]}}
-consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Successfully mapped slot 'left_ass' to entity '3d944908-aa68-401c-b793-606105e0f4a4'
-consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Checking entity '494fed29-340d-4555-b7fb-ed04979e6a99' - has entity: true
-consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Entity '494fed29-340d-4555-b7fb-ed04979e6a99' has anatomy:blueprintSlot component: true
-consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Retrieved component data for entity '494fed29-340d-4555-b7fb-ed04979e6a99': {"slotId":"right_ass","socketId":"right_ass","requirements":{"partType":"ass_cheek","components":["anatomy:part"]}}
-consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Successfully mapped slot 'right_ass' to entity '494fed29-340d-4555-b7fb-ed04979e6a99'
-consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Built 24 slot entity mappings
-consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Built 24 slot entity mappings
-consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Instantiating 7 clothing items for entity '1265204d-f36d-4d06-b05a-a9e789c9974f'
-consoleLogger.js:151 ClothingInstantiationService: Starting clothing instantiation for actor '1265204d-f36d-4d06-b05a-a9e789c9974f' with 7 items
-consoleLogger.js:187 BlueprintSlotStrategy: Updated slot-entity mappings with 24 entries
-consoleLogger.js:187 ClothingInstantiationService: Instantiating clothing entity 'clothing:underwired_plunge_bra_nude_silk' with overrides: undefined
-consoleLogger.js:187 LayerResolutionService: Using entity layer: 'underwear'
-consoleLogger.js:187 ClothingInstantiationService: Resolved layer for 'clothing:underwired_plunge_bra_nude_silk': 'underwear'
-consoleLogger.js:187 EntityCreationManager.createEntityInstance: Creating entity with definition 'clothing:underwired_plunge_bra_nude_silk'
-consoleLogger.js:187 [EntityFactory] Creating entity instance 78749138-6842-42ee-ba22-40f736336769 from definition clothing:underwired_plunge_bra_nude_silk.
-consoleLogger.js:187 [EntityConstructionFactory] Constructing entity '78749138-6842-42ee-ba22-40f736336769' with definition 'clothing:underwired_plunge_bra_nude_silk'
-consoleLogger.js:187 [EntityConstructionFactory] Default components applied to entity '78749138-6842-42ee-ba22-40f736336769'
-consoleLogger.js:151 [EntityConstructionFactory] Entity instance '78749138-6842-42ee-ba22-40f736336769' (def: 'clothing:underwired_plunge_bra_nude_silk') created.
-consoleLogger.js:187 Indexed component 'clothing:wearable' for entity '78749138-6842-42ee-ba22-40f736336769'
-consoleLogger.js:187 Indexed component 'core:material' for entity '78749138-6842-42ee-ba22-40f736336769'
-consoleLogger.js:187 Indexed component 'core:name' for entity '78749138-6842-42ee-ba22-40f736336769'
-consoleLogger.js:187 Indexed component 'core:description' for entity '78749138-6842-42ee-ba22-40f736336769'
-consoleLogger.js:187 Indexed component 'descriptors:color_extended' for entity '78749138-6842-42ee-ba22-40f736336769'
-consoleLogger.js:187 Entity '78749138-6842-42ee-ba22-40f736336769' added to repository with 5 components indexed.
-consoleLogger.js:187 Dispatching ENTITY_CREATED event {instanceId: '78749138-6842-42ee-ba22-40f736336769', definitionId: 'clothing:underwired_plunge_bra_nude_silk', wasReconstructed: false}
-consoleLogger.js:187 VED: Validating payload for event 'core:entity_created' against schema 'core:entity_created#payload'...
-consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:entity_created'.
-consoleLogger.js:187 VED: Dispatching event 'core:entity_created' via EventBus... {instanceId: '78749138-6842-42ee-ba22-40f736336769', definitionId: 'clothing:underwired_plunge_bra_nude_silk', wasReconstructed: false, entity: Entity}
-consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Received payload with entity: Entity {#data: EntityInstanceData}
-consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity type: object
-consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity constructor: Entity
-consoleLogger.js:187 SystemLogicInterpreter: 🎯 [SystemLogicInterpreter] Event received: core:entity_created {payload: {…}, timestamp: 1752902458488, isAsync: true}
-consoleLogger.js:187 SystemLogicInterpreter: 🎯 [SystemLogicInterpreter] No rules found for event type: core:entity_created
-consoleLogger.js:151 Entity created: 78749138-6842-42ee-ba22-40f736336769 (definition: clothing:underwired_plunge_bra_nude_silk)
-2consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:component_added'.
-consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:entity_created'.
-2consoleLogger.js:187 VED: Event 'core:component_added' dispatch successful.
-consoleLogger.js:187 VED: Event 'core:entity_created' dispatch successful.
-consoleLogger.js:187 ClothingInstantiationService: ClothingInstantiationService: Starting post-instantiation validation for clothing '78749138-6842-42ee-ba22-40f736336769' (clothing:underwired_plunge_bra_nude_silk)
-consoleLogger.js:187 ClothingInstantiationService: ClothingInstantiationService: Validating slot compatibility for clothing '78749138-6842-42ee-ba22-40f736336769' in slot 'torso_upper' on actor '1265204d-f36d-4d06-b05a-a9e789c9974f'
-consoleLogger.js:187 BodyGraphService.getAnatomyData: Getting anatomy data for entity '1265204d-f36d-4d06-b05a-a9e789c9974f'
-2consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:component_added'.
-consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:entity_created'.
-consoleLogger.js:187 AnatomyBlueprintRepository: Cached blueprint for recipe 'p_erotica:amaia_castillo_recipe'
-consoleLogger.js:187 AnatomyClothingCache: Cache set: available_slots:available_slots:1265204d-f36d-4d06-b05a-a9e789c9974f
-consoleLogger.js:187 ClothingSlotValidator: Validating slot 'torso_upper' for entity '1265204d-f36d-4d06-b05a-a9e789c9974f' with item '78749138-6842-42ee-ba22-40f736336769'
-consoleLogger.js:187 AnatomyBlueprintRepository: Returning cached blueprint for recipe 'p_erotica:amaia_castillo_recipe'
-consoleLogger.js:187 BodyGraphService.getBodyGraph: Getting body graph for entity '1265204d-f36d-4d06-b05a-a9e789c9974f'
-consoleLogger.js:187 AnatomyCacheManager: Building cache for anatomy rooted at '1265204d-f36d-4d06-b05a-a9e789c9974f'
-consoleLogger.js:187 AnatomyCacheManager: Cache cleared
-consoleLogger.js:187 EntityQueryManager.getEntitiesWithComponent found 24 entities with component 'anatomy:joint' using index
-consoleLogger.js:187 AnatomyCacheManager: Found joint relationship - parent: '3c5d07c2-ccac-449e-9cea-5dd3faaa4718', child: 'cb9f8394-431b-4953-973b-74755f08a943', socket: 'left_chest'
-consoleLogger.js:187 AnatomyCacheManager: Found joint relationship - parent: '3c5d07c2-ccac-449e-9cea-5dd3faaa4718', child: '94228ce1-c677-45d8-afe0-3cdf59e24bd1', socket: 'right_chest'
-consoleLogger.js:187 AnatomyCacheManager: Found joint relationship - parent: '3c5d07c2-ccac-449e-9cea-5dd3faaa4718', child: '440b3f07-2a66-4f06-a010-6cfca1394ab2', socket: 'vagina'
-consoleLogger.js:187 AnatomyCacheManager: Found joint relationship - parent: '3c5d07c2-ccac-449e-9cea-5dd3faaa4718', child: '5adeb300-9333-4952-bedd-158ad18e3ac3', socket: 'neck'
-consoleLogger.js:187 AnatomyCacheManager: Found joint relationship - parent: '3c5d07c2-ccac-449e-9cea-5dd3faaa4718', child: '2107ff28-66e3-4164-a528-a6b944ed688c', socket: 'left_shoulder'
-consoleLogger.js:187 AnatomyCacheManager: Found joint relationship - parent: '3c5d07c2-ccac-449e-9cea-5dd3faaa4718', child: '6104d107-e498-43ff-a438-ee43a1233ea5', socket: 'right_shoulder'
-consoleLogger.js:187 AnatomyCacheManager: Found joint relationship - parent: '3c5d07c2-ccac-449e-9cea-5dd3faaa4718', child: '28b5070f-11c3-4755-a823-fae97f116fb9', socket: 'left_hip'
-consoleLogger.js:187 AnatomyCacheManager: Found joint relationship - parent: '3c5d07c2-ccac-449e-9cea-5dd3faaa4718', child: 'b125ed29-8e28-4ee1-b5db-e3aed3c28291', socket: 'right_hip'
-consoleLogger.js:187 AnatomyCacheManager: Found joint relationship - parent: '5adeb300-9333-4952-bedd-158ad18e3ac3', child: 'ac6c15aa-ed86-4fbb-abd8-90c9308c8a54', socket: 'left_eye'
-consoleLogger.js:187 AnatomyCacheManager: Found joint relationship - parent: '5adeb300-9333-4952-bedd-158ad18e3ac3', child: 'a79c5af3-6d48-4b05-8e0f-a3f8217f330c', socket: 'right_eye'
-consoleLogger.js:187 AnatomyCacheManager: Found joint relationship - parent: '5adeb300-9333-4952-bedd-158ad18e3ac3', child: '596b48d6-83c5-40e0-9a9c-a1b86855e0ef', socket: 'left_ear'
-consoleLogger.js:187 AnatomyCacheManager: Found joint relationship - parent: '5adeb300-9333-4952-bedd-158ad18e3ac3', child: 'c29600a4-bd21-4596-99f6-cc8450f64553', socket: 'right_ear'
-consoleLogger.js:187 AnatomyCacheManager: Found joint relationship - parent: '5adeb300-9333-4952-bedd-158ad18e3ac3', child: '9fb04a43-b62d-473e-9a55-0de833861fe0', socket: 'nose'
-consoleLogger.js:187 AnatomyCacheManager: Found joint relationship - parent: '5adeb300-9333-4952-bedd-158ad18e3ac3', child: '88eeda55-4064-42ad-a933-8db67d8ff645', socket: 'mouth'
-consoleLogger.js:187 AnatomyCacheManager: Found joint relationship - parent: '88eeda55-4064-42ad-a933-8db67d8ff645', child: '1481f81f-6476-4833-ac49-cc6b216b6e66', socket: 'teeth'
-consoleLogger.js:187 AnatomyCacheManager: Found joint relationship - parent: '5adeb300-9333-4952-bedd-158ad18e3ac3', child: '2f80fa13-c3db-4a45-ab86-5a04351b0c76', socket: 'scalp'
-consoleLogger.js:187 AnatomyCacheManager: Found joint relationship - parent: '3c5d07c2-ccac-449e-9cea-5dd3faaa4718', child: 'f728ff16-0bd5-45e7-8a2d-a49be24ba0fa', socket: 'pubic_hair'
-consoleLogger.js:187 AnatomyCacheManager: Found joint relationship - parent: '2107ff28-66e3-4164-a528-a6b944ed688c', child: '9279e85c-c67f-4eca-b1e0-26f782f75a31', socket: 'wrist'
-consoleLogger.js:187 AnatomyCacheManager: Found joint relationship - parent: '6104d107-e498-43ff-a438-ee43a1233ea5', child: '85a2ef0e-63b6-40e6-bf9a-bf582d230fdc', socket: 'wrist'
-consoleLogger.js:187 AnatomyCacheManager: Found joint relationship - parent: '28b5070f-11c3-4755-a823-fae97f116fb9', child: '7a867ca3-0991-4b3f-8566-44279b1cd22c', socket: 'ankle'
-consoleLogger.js:187 AnatomyCacheManager: Found joint relationship - parent: 'b125ed29-8e28-4ee1-b5db-e3aed3c28291', child: '9aa0e6d1-5345-497c-8930-e881531d62ff', socket: 'ankle'
-consoleLogger.js:187 AnatomyCacheManager: Found joint relationship - parent: '3c5d07c2-ccac-449e-9cea-5dd3faaa4718', child: '55497908-cf3d-4d89-ad8f-9a1c99e2b5a7', socket: 'asshole'
-consoleLogger.js:187 AnatomyCacheManager: Found joint relationship - parent: '3c5d07c2-ccac-449e-9cea-5dd3faaa4718', child: '351cabc1-9f2b-46aa-8cb8-681a82985b13', socket: 'left_ass'
-consoleLogger.js:187 AnatomyCacheManager: Found joint relationship - parent: '3c5d07c2-ccac-449e-9cea-5dd3faaa4718', child: '62195723-a27f-489a-8d44-9330eaa08a92', socket: 'right_ass'
-consoleLogger.js:187 AnatomyCacheManager: Built parent-to-children map with 7 parent nodes
-consoleLogger.js:187 AnatomyCacheManager: Entity '1265204d-f36d-4d06-b05a-a9e789c9974f' anatomy:part data: undefined, anatomy:body data: {"recipeId":"p_erotica:amaia_castillo_recipe","body":{"root":"3c5d07c2-ccac-449e-9cea-5dd3faaa4718","parts":{"torso":"3c5d07c2-ccac-449e-9cea-5dd3faaa4718","left breast":"cb9f8394-431b-4953-973b-74755f08a943","right breast":"94228ce1-c677-45d8-afe0-3cdf59e24bd1","vagina":"440b3f07-2a66-4f06-a010-6cfca1394ab2","head":"5adeb300-9333-4952-bedd-158ad18e3ac3","left arm":"2107ff28-66e3-4164-a528-a6b944ed688c","right arm":"6104d107-e498-43ff-a438-ee43a1233ea5","left leg":"28b5070f-11c3-4755-a823-fae97f116fb9","right leg":"b125ed29-8e28-4ee1-b5db-e3aed3c28291","left eye":"ac6c15aa-ed86-4fbb-abd8-90c9308c8a54","right eye":"a79c5af3-6d48-4b05-8e0f-a3f8217f330c","left ear":"596b48d6-83c5-40e0-9a9c-a1b86855e0ef","right ear":"c29600a4-bd21-4596-99f6-cc8450f64553","nose":"9fb04a43-b62d-473e-9a55-0de833861fe0","mouth":"88eeda55-4064-42ad-a933-8db67d8ff645","teeth":"1481f81f-6476-4833-ac49-cc6b216b6e66","hair":"2f80fa13-c3db-4a45-ab86-5a04351b0c76","pubic hair":"f728ff16-0bd5-45e7-8a2d-a49be24ba0fa","left hand":"9279e85c-c67f-4eca-b1e0-26f782f75a31","right hand":"85a2ef0e-63b6-40e6-bf9a-bf582d230fdc","left foot":"7a867ca3-0991-4b3f-8566-44279b1cd22c","right foot":"9aa0e6d1-5345-497c-8930-e881531d62ff","asshole":"55497908-cf3d-4d89-ad8f-9a1c99e2b5a7","left ass_cheek":"351cabc1-9f2b-46aa-8cb8-681a82985b13","right ass_cheek":"62195723-a27f-489a-8d44-9330eaa08a92"}}}
-consoleLogger.js:187 AnatomyCacheManager: Created node for entity '1265204d-f36d-4d06-b05a-a9e789c9974f' with partType: 'body_root'
-consoleLogger.js:187 AnatomyCacheManager: Actor entity '1265204d-f36d-4d06-b05a-a9e789c9974f' has anatomy:body but no joint children, searching for anatomy root
-consoleLogger.js:187 EntityQueryManager.getEntitiesWithComponent found 24 entities with component 'anatomy:joint' using index
-consoleLogger.js:187 AnatomyCacheManager: Found anatomy root '3c5d07c2-ccac-449e-9cea-5dd3faaa4718', adding to cache and connecting to actor
-consoleLogger.js:187 AnatomyCacheManager: Entity '3c5d07c2-ccac-449e-9cea-5dd3faaa4718' anatomy:part data: {"subType":"torso"}, anatomy:body data: undefined
-consoleLogger.js:187 AnatomyCacheManager: Created node for entity '3c5d07c2-ccac-449e-9cea-5dd3faaa4718' with partType: 'torso'
-consoleLogger.js:187 AnatomyCacheManager: Entity 'cb9f8394-431b-4953-973b-74755f08a943' anatomy:part data: {"subType":"breast","orientation":"left"}, anatomy:body data: undefined
-consoleLogger.js:187 AnatomyCacheManager: Created node for entity 'cb9f8394-431b-4953-973b-74755f08a943' with partType: 'breast'
-consoleLogger.js:187 AnatomyCacheManager: Entity '94228ce1-c677-45d8-afe0-3cdf59e24bd1' anatomy:part data: {"subType":"breast","orientation":"right"}, anatomy:body data: undefined
-consoleLogger.js:187 AnatomyCacheManager: Created node for entity '94228ce1-c677-45d8-afe0-3cdf59e24bd1' with partType: 'breast'
-consoleLogger.js:187 AnatomyCacheManager: Entity '440b3f07-2a66-4f06-a010-6cfca1394ab2' anatomy:part data: {"subType":"vagina"}, anatomy:body data: undefined
-consoleLogger.js:187 AnatomyCacheManager: Created node for entity '440b3f07-2a66-4f06-a010-6cfca1394ab2' with partType: 'vagina'
-consoleLogger.js:187 AnatomyCacheManager: Entity '5adeb300-9333-4952-bedd-158ad18e3ac3' anatomy:part data: {"subType":"head","orientation":"upper"}, anatomy:body data: undefined
-consoleLogger.js:187 AnatomyCacheManager: Created node for entity '5adeb300-9333-4952-bedd-158ad18e3ac3' with partType: 'head'
-consoleLogger.js:187 AnatomyCacheManager: Entity 'ac6c15aa-ed86-4fbb-abd8-90c9308c8a54' anatomy:part data: {"subType":"eye","orientation":"left"}, anatomy:body data: undefined
-consoleLogger.js:187 AnatomyCacheManager: Created node for entity 'ac6c15aa-ed86-4fbb-abd8-90c9308c8a54' with partType: 'eye'
-consoleLogger.js:187 AnatomyCacheManager: Entity 'a79c5af3-6d48-4b05-8e0f-a3f8217f330c' anatomy:part data: {"subType":"eye","orientation":"right"}, anatomy:body data: undefined
-consoleLogger.js:187 AnatomyCacheManager: Created node for entity 'a79c5af3-6d48-4b05-8e0f-a3f8217f330c' with partType: 'eye'
-consoleLogger.js:187 AnatomyCacheManager: Entity '596b48d6-83c5-40e0-9a9c-a1b86855e0ef' anatomy:part data: {"subType":"ear","orientation":"left"}, anatomy:body data: undefined
-consoleLogger.js:187 AnatomyCacheManager: Created node for entity '596b48d6-83c5-40e0-9a9c-a1b86855e0ef' with partType: 'ear'
-consoleLogger.js:187 AnatomyCacheManager: Entity 'c29600a4-bd21-4596-99f6-cc8450f64553' anatomy:part data: {"subType":"ear","orientation":"right"}, anatomy:body data: undefined
-consoleLogger.js:187 AnatomyCacheManager: Created node for entity 'c29600a4-bd21-4596-99f6-cc8450f64553' with partType: 'ear'
-consoleLogger.js:187 AnatomyCacheManager: Entity '9fb04a43-b62d-473e-9a55-0de833861fe0' anatomy:part data: {"subType":"nose"}, anatomy:body data: undefined
-consoleLogger.js:187 AnatomyCacheManager: Created node for entity '9fb04a43-b62d-473e-9a55-0de833861fe0' with partType: 'nose'
-consoleLogger.js:187 AnatomyCacheManager: Entity '88eeda55-4064-42ad-a933-8db67d8ff645' anatomy:part data: {"subType":"mouth"}, anatomy:body data: undefined
-consoleLogger.js:187 AnatomyCacheManager: Created node for entity '88eeda55-4064-42ad-a933-8db67d8ff645' with partType: 'mouth'
-consoleLogger.js:187 AnatomyCacheManager: Entity '1481f81f-6476-4833-ac49-cc6b216b6e66' anatomy:part data: {"subType":"teeth"}, anatomy:body data: undefined
-consoleLogger.js:187 AnatomyCacheManager: Created node for entity '1481f81f-6476-4833-ac49-cc6b216b6e66' with partType: 'teeth'
-consoleLogger.js:187 AnatomyCacheManager: Entity '2f80fa13-c3db-4a45-ab86-5a04351b0c76' anatomy:part data: {"subType":"hair"}, anatomy:body data: undefined
-consoleLogger.js:187 AnatomyCacheManager: Created node for entity '2f80fa13-c3db-4a45-ab86-5a04351b0c76' with partType: 'hair'
-consoleLogger.js:187 AnatomyCacheManager: Entity '2107ff28-66e3-4164-a528-a6b944ed688c' anatomy:part data: {"subType":"arm","orientation":"left"}, anatomy:body data: undefined
-consoleLogger.js:187 AnatomyCacheManager: Created node for entity '2107ff28-66e3-4164-a528-a6b944ed688c' with partType: 'arm'
-consoleLogger.js:187 AnatomyCacheManager: Entity '9279e85c-c67f-4eca-b1e0-26f782f75a31' anatomy:part data: {"subType":"hand","orientation":"left"}, anatomy:body data: undefined
-consoleLogger.js:187 AnatomyCacheManager: Created node for entity '9279e85c-c67f-4eca-b1e0-26f782f75a31' with partType: 'hand'
-consoleLogger.js:187 AnatomyCacheManager: Entity '6104d107-e498-43ff-a438-ee43a1233ea5' anatomy:part data: {"subType":"arm","orientation":"right"}, anatomy:body data: undefined
-consoleLogger.js:187 AnatomyCacheManager: Created node for entity '6104d107-e498-43ff-a438-ee43a1233ea5' with partType: 'arm'
-consoleLogger.js:187 AnatomyCacheManager: Entity '85a2ef0e-63b6-40e6-bf9a-bf582d230fdc' anatomy:part data: {"subType":"hand","orientation":"right"}, anatomy:body data: undefined
-consoleLogger.js:187 AnatomyCacheManager: Created node for entity '85a2ef0e-63b6-40e6-bf9a-bf582d230fdc' with partType: 'hand'
-consoleLogger.js:187 AnatomyCacheManager: Entity '28b5070f-11c3-4755-a823-fae97f116fb9' anatomy:part data: {"subType":"leg","orientation":"left"}, anatomy:body data: undefined
-consoleLogger.js:187 AnatomyCacheManager: Created node for entity '28b5070f-11c3-4755-a823-fae97f116fb9' with partType: 'leg'
-consoleLogger.js:187 AnatomyCacheManager: Entity '7a867ca3-0991-4b3f-8566-44279b1cd22c' anatomy:part data: {"subType":"foot","orientation":"left"}, anatomy:body data: undefined
-consoleLogger.js:187 AnatomyCacheManager: Created node for entity '7a867ca3-0991-4b3f-8566-44279b1cd22c' with partType: 'foot'
-consoleLogger.js:187 AnatomyCacheManager: Entity 'b125ed29-8e28-4ee1-b5db-e3aed3c28291' anatomy:part data: {"subType":"leg","orientation":"right"}, anatomy:body data: undefined
-consoleLogger.js:187 AnatomyCacheManager: Created node for entity 'b125ed29-8e28-4ee1-b5db-e3aed3c28291' with partType: 'leg'
-consoleLogger.js:187 AnatomyCacheManager: Entity '9aa0e6d1-5345-497c-8930-e881531d62ff' anatomy:part data: {"subType":"foot","orientation":"right"}, anatomy:body data: undefined
-consoleLogger.js:187 AnatomyCacheManager: Created node for entity '9aa0e6d1-5345-497c-8930-e881531d62ff' with partType: 'foot'
-consoleLogger.js:187 AnatomyCacheManager: Entity 'f728ff16-0bd5-45e7-8a2d-a49be24ba0fa' anatomy:part data: {"subType":"pubic_hair"}, anatomy:body data: undefined
-consoleLogger.js:187 AnatomyCacheManager: Created node for entity 'f728ff16-0bd5-45e7-8a2d-a49be24ba0fa' with partType: 'pubic_hair'
-consoleLogger.js:187 AnatomyCacheManager: Entity '55497908-cf3d-4d89-ad8f-9a1c99e2b5a7' anatomy:part data: {"subType":"asshole"}, anatomy:body data: undefined
-consoleLogger.js:187 AnatomyCacheManager: Created node for entity '55497908-cf3d-4d89-ad8f-9a1c99e2b5a7' with partType: 'asshole'
-consoleLogger.js:187 AnatomyCacheManager: Entity '351cabc1-9f2b-46aa-8cb8-681a82985b13' anatomy:part data: {"subType":"ass_cheek","orientation":"left"}, anatomy:body data: undefined
-consoleLogger.js:187 AnatomyCacheManager: Created node for entity '351cabc1-9f2b-46aa-8cb8-681a82985b13' with partType: 'ass_cheek'
-consoleLogger.js:187 AnatomyCacheManager: Entity '62195723-a27f-489a-8d44-9330eaa08a92' anatomy:part data: {"subType":"ass_cheek","orientation":"right"}, anatomy:body data: undefined
-consoleLogger.js:187 AnatomyCacheManager: Created node for entity '62195723-a27f-489a-8d44-9330eaa08a92' with partType: 'ass_cheek'
-consoleLogger.js:187 AnatomyCacheManager: Successfully connected actor '1265204d-f36d-4d06-b05a-a9e789c9974f' to anatomy root '3c5d07c2-ccac-449e-9cea-5dd3faaa4718'
-consoleLogger.js:151 AnatomyCacheManager: Built cache with 26 nodes
-consoleLogger.js:187 BodyGraphService.getAllParts: Found root ID in bodyComponent.body.root: 3c5d07c2-ccac-449e-9cea-5dd3faaa4718
-consoleLogger.js:187 BodyGraphService: Using actor entity '1265204d-f36d-4d06-b05a-a9e789c9974f' as cache root instead of blueprint root '3c5d07c2-ccac-449e-9cea-5dd3faaa4718' (cache size: 26)
-18consoleLogger.js:187 EntityQueryManager.getEntitiesWithComponent found 24 entities with component 'anatomy:joint' using index
-consoleLogger.js:187 BodyGraphService: AnatomyGraphAlgorithms.getAllParts returned 26 parts for root '1265204d-f36d-4d06-b05a-a9e789c9974f': [1265204d-f36d-4d06-b05a-a9e789c9974f, 3c5d07c2-ccac-449e-9cea-5dd3faaa4718, 62195723-a27f-489a-8d44-9330eaa08a92, 351cabc1-9f2b-46aa-8cb8-681a82985b13, 55497908-cf3d-4d89-ad8f-9a1c99e2b5a7...]
-consoleLogger.js:187 AnatomyQueryCache: Cached result for key 'getAllParts:::1265204d-f36d-4d06-b05a-a9e789c9974f'
-consoleLogger.js:187 Resolved clothing slot 'torso_upper' to 4 attachment points
-consoleLogger.js:187 ClothingSlotValidator: Slot 'torso_upper' has 4 valid attachment points
-consoleLogger.js:187 AnatomyClothingCache: Cache set: validation:1265204d-f36d-4d06-b05a-a9e789c9974f:torso_upper:78749138-6842-42ee-ba22-40f736336769
-consoleLogger.js:187 ClothingInstantiationService: ClothingInstantiationService: Validation passed for clothing '78749138-6842-42ee-ba22-40f736336769' in slot 'torso_upper'
-consoleLogger.js:187 ClothingInstantiationService: ClothingInstantiationService: Validation passed for clothing '78749138-6842-42ee-ba22-40f736336769' (clothing:underwired_plunge_bra_nude_silk)
-consoleLogger.js:187 ClothingInstantiationService: Instantiated clothing 'clothing:underwired_plunge_bra_nude_silk' as entity '78749138-6842-42ee-ba22-40f736336769'
-consoleLogger.js:187 EquipmentOrchestrator: Starting equipment orchestration for '78749138-6842-42ee-ba22-40f736336769' on '1265204d-f36d-4d06-b05a-a9e789c9974f'
-consoleLogger.js:187 LayerCompatibilityService: Checking layer conflicts for '78749138-6842-42ee-ba22-40f736336769' in layer 'underwear' on '1265204d-f36d-4d06-b05a-a9e789c9974f'
-consoleLogger.js:187 EntityMutationManager.addComponent: Adding component 'clothing:equipment' to entity '1265204d-f36d-4d06-b05a-a9e789c9974f'
-consoleLogger.js:187 Indexed component 'clothing:equipment' for entity '1265204d-f36d-4d06-b05a-a9e789c9974f'
-consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
-consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
-consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'clothing:equipment', componentData: {…}, oldComponentData: undefined}
-consoleLogger.js:187 SystemLogicInterpreter: 🎯 [SystemLogicInterpreter] Event received: core:component_added {payload: {…}, timestamp: 1752902458493, isAsync: true}
+SystemLogicInterpreter: Rule 'handle_fondle_breasts' actions skipped for event 'core:attempt_action' due to condition evaluating to false.
+consoleLogger.js:187 SystemLogicInterpreter: ⏭️ [SystemLogicInterpreter] Rule 'handle_fondle_breasts' actions skipped for event 'core:attempt_action' due to condition evaluating to false.
+consoleLogger.js:187 SystemLogicInterpreter: ✅ [SystemLogicInterpreter] Rule handle_fondle_breasts completed successfully
+consoleLogger.js:187 SystemLogicInterpreter: 📋 [SystemLogicInterpreter] Processing rule 18/18: handle_fondle_penis
+consoleLogger.js:187 SystemLogicInterpreter: 🔍 [SystemLogicInterpreter] Rule handle_fondle_penis: Starting condition evaluation
+consoleLogger.js:187 SystemLogicInterpreter: [Rule handle_fondle_penis] Condition found. Evaluating using jsonLogicDataForEval...
+consoleLogger.js:187 JsonLogicEvaluationService: Resolving condition_ref 'sex:event-is-action-fondle-penis'...
+consoleLogger.js:187 JsonLogicEvaluationService: Evaluating rule: {"==":[{"var":"event.payload.actionId"},"sex:fondle_penis"]}. Context keys: event, actor, target, context, globals, entities
+consoleLogger.js:187 JsonLogicEvaluationService: Rule evaluation raw result: false, Final boolean: false
+consoleLogger.js:187 SystemLogicInterpreter: [Rule handle_fondle_penis] Condition evaluation raw result: false
+consoleLogger.js:187 SystemLogicInterpreter: [Rule handle_fondle_penis] Condition evaluation final boolean result: false
+consoleLogger.js:187 SystemLogicInterpreter: Rule 'handle_fondle_penis' actions skipped for event 'core:attempt_action' due to condition evaluating to false.
+consoleLogger.js:187 SystemLogicInterpreter: ⏭️ [SystemLogicInterpreter] Rule 'handle_fondle_penis' actions skipped for event 'core:attempt_action' due to condition evaluating to false.
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:turn_ended'.
+consoleLogger.js:187 SystemLogicInterpreter: ✅ [SystemLogicInterpreter] Rule handle_fondle_penis completed successfully
+consoleLogger.js:187 SystemLogicInterpreter: 🏁 [SystemLogicInterpreter] Finished processing event: core:attempt_action (25ms total)
+consoleLogger.js:187 VED: Event 'core:attempt_action' dispatch successful.
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:attempt_action'.
+consoleLogger.js:187 dispatchWithErrorHandling: Dispatch successful for ATTEMPT_ACTION_ID dispatch for pre-resolved action intimacy:get_close.
+consoleLogger.js:187 CommandProcessor.dispatchAction: Successfully dispatched 'intimacy:get_close' for actor p_erotica:iker_aguirre_instance.
+consoleLogger.js:187 ProcessingCommandState: Action dispatch completed for actor p_erotica:iker_aguirre_instance. Result success: true.
+consoleLogger.js:187 CommandOutcomeInterpreter: Interpreting for p_erotica:iker_aguirre_instance. CP_Success=true, CP_TurnEndedOnFail=false, Input="get close to Amaia Castillo"
+consoleLogger.js:187 Actor p_erotica:iker_aguirre_instance: CommandProcessor success for action 'intimacy:get_close'. Directive: WAIT_FOR_EVENT.
+consoleLogger.js:187 ProcessingCommandState: Actor p_erotica:iker_aguirre_instance - Dispatch result interpreted to directive: WAIT_FOR_EVENT
+consoleLogger.js:187 ProcessingCommandState: Actor p_erotica:iker_aguirre_instance - Resolved strategy WaitForTurnEndEventStrategy for directive WAIT_FOR_EVENT.
+consoleLogger.js:187 WaitForTurnEndEventStrategy: Actor p_erotica:iker_aguirre_instance to wait for external event (e.g., core:turn_ended). Requesting transition to AwaitingExternalTurnEndState.
+consoleLogger.js:187 ActorTurnHandler: Received request to transition to AwaitingExternalTurnEnd state.
+consoleLogger.js:187 ActorTurnHandler: State Transition: ProcessingCommandState → AwaitingExternalTurnEndState
+consoleLogger.js:187 ActorTurnHandler.onExitState hook: Exiting ProcessingCommandState to AwaitingExternalTurnEndState
+consoleLogger.js:187 ProcessingCommandState: Exiting for actor p_erotica:iker_aguirre_instance while processing was true (now false). Transitioning to AwaitingExternalTurnEndState.
+consoleLogger.js:187 ProcessingCommandState: Exiting. Actor: p_erotica:iker_aguirre_instance. Transitioning to AwaitingExternalTurnEndState.
+consoleLogger.js:187 ActorTurnHandler.onEnterState hook: Entering AwaitingExternalTurnEndState from ProcessingCommandState
+consoleLogger.js:187 AwaitingExternalTurnEndState: Entered. Actor: p_erotica:iker_aguirre_instance. Previous state: ProcessingCommandState.
+consoleLogger.js:187 VED: Delegating subscription for event "core:turn_ended" to EventBus.
+consoleLogger.js:187 SafeEventDispatcher: Successfully subscribed to event 'core:turn_ended'.
+consoleLogger.js:187 ActorTurnHandler._markAwaitingTurnEnd: State: Idle → State: Waiting for Actor 'p_erotica:iker_aguirre_instance'
+consoleLogger.js:187 TurnContext for p_erotica:iker_aguirre_instance awaitingExternalEvent → true
+consoleLogger.js:175 ActorTurnHandler: Error during AwaitingExternalTurnEndState.enterState or onEnterState hook – Illegal invocation TypeError: Illegal invocation
+    at AwaitingExternalTurnEndState.enterState (awaitingExternalTurnEndState.js:93:28)
+    at async ActorTurnHandler._transitionToState (baseTurnHandler.js:260:7)
+    at async ActorTurnHandler.requestAwaitingExternalTurnEndStateTransition (baseTurnHandler.js:696:5)
+    at async _TurnContext.requestAwaitingExternalTurnEndStateTransition (turnContext.js:260:5)
+    at async WaitForTurnEndEventStrategy.execute (waitForTurnEndEventStrategy.js:81:7)
+    at async CommandProcessingWorkflow._executeDirectiveStrategy (commandProcessingWorkflow.js:322:7)
+    at async CommandProcessingWorkflow.processCommand (commandProcessingWorkflow.js:404:7)
+    at async ProcessingCommandState._processCommandInternal (processingCommandState.js:333:5)
+    at async ProcessingWorkflow._executeAction (processingWorkflow.js:261:7)
+    at async ProcessingWorkflow.run (processingWorkflow.js:87:5)
+error @ consoleLogger.js:175
+_transitionToState @ baseTurnHandler.js:262
+await in _transitionToState
+requestAwaitingExternalTurnEndStateTransition @ baseTurnHandler.js:696
+requestAwaitingExternalTurnEndStateTransition @ turnContext.js:260
+execute @ waitForTurnEndEventStrategy.js:81
+_executeDirectiveStrategy @ commandProcessingWorkflow.js:322
+processCommand @ commandProcessingWorkflow.js:404
+await in processCommand
+_processCommandInternal @ processingCommandState.js:333
+_executeAction @ processingWorkflow.js:261
+await in _executeAction
+run @ processingWorkflow.js:87
+await in run
+enterState @ processingCommandState.js:290
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestProcessingCommandStateTransition @ baseTurnHandler.js:677
+requestProcessingCommandStateTransition @ turnContext.js:253
+run @ actionDecisionWorkflow.js:62
+await in run
+_handleActionDecision @ awaitingActorDecisionState.js:102
+enterState @ awaitingActorDecisionState.js:119
+await in enterState
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestAwaitingInputStateTransition @ baseTurnHandler.js:661
+requestAwaitingInputStateTransition @ turnContext.js:249
+_requestAwaitingInput @ turnIdleState.js:140
+startTurn @ turnIdleState.js:72
+startTurn @ genericTurnHandler.js:134
+startTurn @ actorTurnHandler.js:64
+advanceTurn @ turnManager.js:438
+await in advanceTurn
+advanceTurn @ turnManager.js:334
+await in advanceTurn
+start @ turnManager.js:200
+#finalizeGameStart @ gameSessionManager.js:180Understand this error
+consoleLogger.js:163 ActorTurnHandler: Forcing transition to TurnIdleState due to error entering AwaitingExternalTurnEndState.
+warn @ consoleLogger.js:163
+_transitionToState @ baseTurnHandler.js:272
+await in _transitionToState
+requestAwaitingExternalTurnEndStateTransition @ baseTurnHandler.js:696
+requestAwaitingExternalTurnEndStateTransition @ turnContext.js:260
+execute @ waitForTurnEndEventStrategy.js:81
+_executeDirectiveStrategy @ commandProcessingWorkflow.js:322
+processCommand @ commandProcessingWorkflow.js:404
+await in processCommand
+_processCommandInternal @ processingCommandState.js:333
+_executeAction @ processingWorkflow.js:261
+await in _executeAction
+run @ processingWorkflow.js:87
+await in run
+enterState @ processingCommandState.js:290
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestProcessingCommandStateTransition @ baseTurnHandler.js:677
+requestProcessingCommandStateTransition @ turnContext.js:253
+run @ actionDecisionWorkflow.js:62
+await in run
+_handleActionDecision @ awaitingActorDecisionState.js:102
+enterState @ awaitingActorDecisionState.js:119
+await in enterState
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestAwaitingInputStateTransition @ baseTurnHandler.js:661
+requestAwaitingInputStateTransition @ turnContext.js:249
+_requestAwaitingInput @ turnIdleState.js:140
+startTurn @ turnIdleState.js:72
+startTurn @ genericTurnHandler.js:134
+startTurn @ actorTurnHandler.js:64
+advanceTurn @ turnManager.js:438
+await in advanceTurn
+advanceTurn @ turnManager.js:334
+await in advanceTurn
+start @ turnManager.js:200
+#finalizeGameStart @ gameSessionManager.js:180Understand this warning
+consoleLogger.js:187 ActorTurnHandler._resetTurnStateAndResources specific cleanup for 'error-entering-AwaitingExternalTurnEndState-for-p_erotica:iker_aguirre_instance'.
+consoleLogger.js:187 ActorTurnHandler._resetTurnStateAndResources (context: 'error-entering-AwaitingExternalTurnEndState-for-p_erotica:iker_aguirre_instance'). Context actor: p_erotica:iker_aguirre_instance. Handler actor: p_erotica:iker_aguirre_instance.
+consoleLogger.js:187 ActorTurnHandler._resetTurnStateAndResources: Cancelling active prompt in current TurnContext before clearing it.
+consoleLogger.js:187 ActorTurnHandler: Clearing current TurnContext (was for actor p_erotica:iker_aguirre_instance).
+consoleLogger.js:187 ActorTurnHandler._setCurrentTurnContextInternal: Setting turn context to null.
+consoleLogger.js:187 ActorTurnHandler: Clearing current handler actor (was p_erotica:iker_aguirre_instance).
+consoleLogger.js:187 ActorTurnHandler._setCurrentActorInternal: Setting current actor to null.
+consoleLogger.js:187 ActorTurnHandler: Base per-turn state reset complete for 'error-entering-AwaitingExternalTurnEndState-for-p_erotica:iker_aguirre_instance'. Subclasses may perform additional cleanup.
+consoleLogger.js:187 ActorTurnHandler: Clearing turn-end waiting state (was State: Waiting for Actor 'p_erotica:iker_aguirre_instance').

@@ -373,11 +373,11 @@ describe('LLM Adapter Integration E2E', () => {
         error.name = 'AbortError';
         throw error;
       }
-      
+
       // Create a promise that listens for abort
       return new Promise((resolve, reject) => {
         const signal = options?.signal || options?.abortSignal;
-        
+
         // Set up abort listener
         if (signal) {
           signal.addEventListener('abort', () => {
@@ -386,7 +386,7 @@ describe('LLM Adapter Integration E2E', () => {
             reject(error);
           });
         }
-        
+
         // Simulate that the request takes some time
         setTimeout(() => {
           // Only resolve if not aborted
@@ -399,9 +399,9 @@ describe('LLM Adapter Integration E2E', () => {
 
     // Act - Start the request and abort it immediately
     const promise = testBed.getAIDecision(testPrompt, abortController.signal);
-    
+
     // Give a tiny delay to ensure the request has started
-    await new Promise(resolve => setTimeout(resolve, 5));
+    await new Promise((resolve) => setTimeout(resolve, 5));
     abortController.abort();
 
     // Assert

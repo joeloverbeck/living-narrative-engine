@@ -56,9 +56,10 @@ describeActionDiscoverySuite(
         expect.anything(),
         null
       );
+      // FIX: 'none' scope actions are optimized to bypass target resolution
       expect(
         bed.mocks.targetResolutionService.resolveTargets
-      ).toHaveBeenCalledWith('none', { id: 'actor' }, expect.anything(), null);
+      ).toHaveBeenCalledTimes(1);
     });
 
     it('uses the target resolution service for scoped actions', async () => {

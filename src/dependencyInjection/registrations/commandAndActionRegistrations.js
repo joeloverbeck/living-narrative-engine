@@ -23,6 +23,7 @@ import { INITIALIZABLE } from '../tags.js';
 // --- Service Imports ---
 import { ActionDiscoveryService } from '../../actions/actionDiscoveryService.js';
 import { ActionCandidateProcessor } from '../../actions/actionCandidateProcessor.js';
+import { ActionPipelineOrchestrator } from '../../actions/actionPipelineOrchestrator.js';
 import { TargetResolutionService } from '../../actions/targetResolutionService.js';
 import { ActionIndex } from '../../actions/actionIndex.js';
 import { ActionValidationContextBuilder } from '../../actions/validation/actionValidationContextBuilder.js';
@@ -39,6 +40,13 @@ import { getEntityDisplayName } from '../../utils/entityUtils.js';
 
 // --- Infrastructure Dependency ---
 import ScopeRegistry from '../../scopeDsl/scopeRegistry.js';
+
+// --- Turn Command Processing Services ---
+import { CommandDispatcher } from '../../turns/states/helpers/services/commandDispatcher.js';
+import { DirectiveExecutor } from '../../turns/states/helpers/services/directiveExecutor.js';
+import { ResultInterpreter } from '../../turns/states/helpers/services/resultInterpreter.js';
+import { UnifiedErrorHandler } from '../../actions/errors/unifiedErrorHandler.js';
+import TurnDirectiveStrategyResolver, { DEFAULT_STRATEGY_MAP } from '../../turns/strategies/turnDirectiveStrategyResolver.js';
 
 /**
  * Registers command and action related services.
@@ -139,17 +147,36 @@ export function registerCommandAndAction(container) {
     'Command and Action Registration: Registered ActionCandidateProcessor.'
   );
 
+  // --- Action Pipeline Orchestrator ---
+  // Must be registered before ActionDiscoveryService
+  registrar.singletonFactory(tokens.ActionPipelineOrchestrator, (c) => {
+    return new ActionPipelineOrchestrator({
+      actionIndex: c.resolve(tokens.ActionIndex),
+      prerequisiteService: c.resolve(tokens.PrerequisiteEvaluationService),
+      targetService: c.resolve(tokens.ITargetResolutionService),
+      formatter: new ActionCommandFormatter(),
+      entityManager: c.resolve(tokens.IEntityManager),
+      safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+      getEntityDisplayNameFn: getEntityDisplayName,
+      errorBuilder: c.resolve(tokens.IActionErrorContextBuilder),
+      logger: c.resolve(tokens.ILogger),
+    });
+  });
+  logger.debug(
+    'Command and Action Registration: Registered ActionPipelineOrchestrator.'
+  );
+
   // --- Action Discovery & Execution ---
   registrar
     .tagged(INITIALIZABLE)
     .singletonFactory(tokens.IActionDiscoveryService, (c) => {
       return new ActionDiscoveryService({
         entityManager: c.resolve(tokens.IEntityManager),
-        actionIndex: c.resolve(tokens.ActionIndex),
         logger: c.resolve(tokens.ILogger),
         serviceSetup: c.resolve(tokens.ServiceSetup),
-        actionCandidateProcessor: c.resolve(tokens.ActionCandidateProcessor),
-        actionErrorContextBuilder: c.resolve(tokens.IActionErrorContextBuilder),
+        actionPipelineOrchestrator: c.resolve(
+          tokens.ActionPipelineOrchestrator
+        ),
         traceContextFactory: c.resolve(tokens.TraceContextFactory),
         getActorLocationFn: getActorLocation,
       });
@@ -188,6 +215,61 @@ export function registerCommandAndAction(container) {
   });
   logger.debug(
     `Command and Action Registration: Registered ${String(tokens.ICommandProcessor)}.`
+  );
+
+  // --- Command Processing Services ---
+  // These services provide separation of concerns for the command processing workflow
+
+  // Register UnifiedErrorHandler
+  registrar.singletonFactory(tokens.UnifiedErrorHandler, (c) => {
+    return new UnifiedErrorHandler({
+      actionErrorContextBuilder: c.resolve(tokens.IActionErrorContextBuilder),
+      logger: c.resolve(tokens.ILogger),
+    });
+  });
+  logger.debug(
+    'Command and Action Registration: Registered UnifiedErrorHandler.'
+  );
+
+  // Register DirectiveStrategyResolver  
+  registrar.singletonFactory(tokens.DirectiveStrategyResolver, (c) => {
+    return new TurnDirectiveStrategyResolver(DEFAULT_STRATEGY_MAP);
+  });
+  logger.debug(
+    'Command and Action Registration: Registered DirectiveStrategyResolver.'
+  );
+
+  registrar.singletonFactory(tokens.CommandDispatcher, (c) => {
+    return new CommandDispatcher({
+      commandProcessor: c.resolve(tokens.ICommandProcessor),
+      unifiedErrorHandler: c.resolve(tokens.UnifiedErrorHandler),
+      logger: c.resolve(tokens.ILogger),
+    });
+  });
+  logger.debug(
+    'Command and Action Registration: Registered CommandDispatcher.'
+  );
+
+  registrar.singletonFactory(tokens.DirectiveExecutor, (c) => {
+    return new DirectiveExecutor({
+      directiveStrategyResolver: c.resolve(tokens.DirectiveStrategyResolver),
+      unifiedErrorHandler: c.resolve(tokens.UnifiedErrorHandler),
+      logger: c.resolve(tokens.ILogger),
+    });
+  });
+  logger.debug(
+    'Command and Action Registration: Registered DirectiveExecutor.'
+  );
+
+  registrar.singletonFactory(tokens.ResultInterpreter, (c) => {
+    return new ResultInterpreter({
+      commandOutcomeInterpreter: c.resolve(tokens.ICommandOutcomeInterpreter),
+      unifiedErrorHandler: c.resolve(tokens.UnifiedErrorHandler),
+      logger: c.resolve(tokens.ILogger),
+    });
+  });
+  logger.debug(
+    'Command and Action Registration: Registered ResultInterpreter.'
   );
 
   logger.debug('Command and Action Registration: Completed.');

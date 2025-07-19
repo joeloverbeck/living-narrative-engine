@@ -10,6 +10,7 @@
         "description": "The primary material composition",
         "enum": [
           "linen",
+          "denim",
           "silk",
           "stretch-silk",
           "leather",

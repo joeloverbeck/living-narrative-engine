@@ -7,7 +7,7 @@
 import { describe, it, beforeEach, expect, jest } from '@jest/globals';
 import { SimpleEntityManager } from '../common/entities/index.js';
 import { ActionDiscoveryService } from '../../src/actions/actionDiscoveryService.js';
-import { ActionCandidateProcessor } from '../../src/actions/actionCandidateProcessor.js';
+import { ActionPipelineOrchestrator } from '../../src/actions/actionPipelineOrchestrator.js';
 import ActionCommandFormatter from '../../src/actions/actionFormatter.js';
 import { getEntityDisplayName } from '../../src/utils/entityUtils.js';
 import { SafeEventDispatcher } from '../../src/events/safeEventDispatcher.js';
@@ -200,24 +200,24 @@ describe('Singleton Scope Engine Location Context', () => {
       ]),
     };
 
-    // Create the ActionCandidateProcessor
-    const actionCandidateProcessor = new ActionCandidateProcessor({
-      prerequisiteEvaluationService,
-      targetResolutionService,
+    // Create the ActionPipelineOrchestrator
+    const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
+      actionIndex,
+      prerequisiteService: prerequisiteEvaluationService,
+      targetService: targetResolutionService,
+      formatter: new ActionCommandFormatter(),
       entityManager,
-      actionCommandFormatter: new ActionCommandFormatter(),
       safeEventDispatcher,
       getEntityDisplayNameFn: getEntityDisplayName,
+      errorBuilder: createMockActionErrorContextBuilder(),
       logger,
     });
 
     actionDiscoveryService = new ActionDiscoveryService({
       entityManager,
-      actionIndex,
       logger,
-      actionCandidateProcessor,
+      actionPipelineOrchestrator,
       traceContextFactory: () => createTraceContext(),
-      actionErrorContextBuilder: createMockActionErrorContextBuilder(),
     });
   });
 
