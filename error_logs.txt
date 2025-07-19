@@ -1,607 +1,166 @@
-AnatomyRecipeLoader [anatomy]: Successfully processed anatomy recipe from human_female.recipe.json. Final registry key: anatomy:human_female, Overwrite: false
-consoleLogger.js:187 [anatomy] Successfully processed human_female.recipe.json. Result: ID=anatomy:human_female, Overwrite=false
-consoleLogger.js:187 [anatomy] Fetched data from ./data/mods/anatomy/recipes/human_male.recipe.json
-consoleLogger.js:187 AnatomyRecipeLoader [anatomy]: Validating 'human_male.recipe.json' against primary schema 'schema://living-narrative-engine/anatomy.recipe.schema.json'.
-consoleLogger.js:187 AnatomyRecipeLoader [anatomy]: Processing fetched item: human_male.recipe.json (Type: anatomyRecipes)
-consoleLogger.js:187 AnatomyRecipeLoader [anatomy]: Storing item in registry. Category: 'anatomyRecipes', Qualified ID: 'anatomy:human_male', Base ID: 'human_male', Filename: 'human_male.recipe.json'
-consoleLogger.js:187 AnatomyRecipeLoader [anatomy]: Item 'anatomy:human_male' (Base: 'human_male') stored successfully in category 'anatomyRecipes'.
-consoleLogger.js:187 AnatomyRecipeLoader [anatomy]: Successfully processed anatomy recipe from human_male.recipe.json. Final registry key: anatomy:human_male, Overwrite: false
-consoleLogger.js:187 [anatomy] Successfully processed human_male.recipe.json. Result: ID=anatomy:human_male, Overwrite=false
-consoleLogger.js:151 Mod [anatomy] - Processed 3/3 recipes items.
-consoleLogger.js:187 ModsLoader [anatomy, definitions]: Processing anatomyFormatting content with 1 files...
-consoleLogger.js:187 ModsLoader [anatomy, definitions]: Found content for 'anatomyFormatting'. Invoking loader 'AnatomyFormattingLoader'.
-consoleLogger.js:151 AnatomyFormattingLoader: Loading anatomyFormatting definitions for mod 'anatomy'.
-consoleLogger.js:187 Found 1 potential anatomyFormatting files to process for mod anatomy.
-consoleLogger.js:187 [anatomy] Resolved path for default.json: ./data/mods/anatomy/anatomy-formatting/default.json
-consoleLogger.js:187 [anatomy] Fetched data from ./data/mods/anatomy/anatomy-formatting/default.json
-consoleLogger.js:187 AnatomyFormattingLoader [anatomy]: Validating 'default.json' against primary schema 'schema://living-narrative-engine/anatomy-formatting.schema.json'.
-consoleLogger.js:175 AnatomyFormattingLoader [anatomy]: Primary schema validation failed for 'default.json' using schema 'schema://living-narrative-engine/anatomy-formatting.schema.json'. {modId: 'anatomy', filename: 'default.json', resolvedPath: './data/mods/anatomy/anatomy-formatting/default.json', schemaId: 'schema://living-narrative-engine/anatomy-formatting.schema.json', validationErrors: Array(1), …}
-error @ consoleLogger.js:175
-validateAgainstSchema @ schemaValidationUtils.js:85
-_validatePrimarySchema @ baseManifestItemLoader.js:210
-validatePrimarySchema @ baseManifestItemLoader.js:408
-_processFileWrapper @ baseManifestItemLoader.js:320
-await in _processFileWrapper
-(anonymous) @ baseManifestItemLoader.js:506
-_loadItemsInternal @ baseManifestItemLoader.js:505
-loadItemsForMod @ baseManifestItemLoader.js:640
-#runLoadersForMod @ ModProcessor.js:164
-await in #runLoadersForMod
-processMod @ ModProcessor.js:80
-await in processMod
-#executeModProcessing @ ContentLoadManager.js:222
-processMod @ ContentLoadManager.js:212
-loadContentForPhase @ ContentLoadManager.js:174
-await in loadContentForPhase
-loadContent @ ContentLoadManager.js:81
-execute @ contentPhase.js:51
-run @ ModsLoadSession.js:19
-await in run
-loadMods @ modsLoader.js:85
-loadModsFromGameConfig @ modLoadingUtils.js:33
-await in loadModsFromGameConfig
-bootstrap @ CommonBootstrapper.js:91
-await in bootstrap
-initialize @ anatomy-visualizer.js:18Understand this error
-consoleLogger.js:175 Error processing file: {modId: 'anatomy', filename: 'default.json', path: './data/mods/anatomy/anatomy-formatting/default.json', registryKey: 'anatomyFormatting', error: 'AnatomyFormattingLoader [anatomy]: Primary schema … "placement": "after_anatomy"\n      }\n    }\n  }\n]'} Error: AnatomyFormattingLoader [anatomy]: Primary schema validation failed for 'default.json' using schema 'schema://living-narrative-engine/anatomy-formatting.schema.json'.
-Details:
-[
-  {
-    "instancePath": "",
-    "schemaPath": "#/additionalProperties",
-    "keyword": "additionalProperties",
-    "params": {
-      "additionalProperty": "equipmentIntegration"
-    },
-    "message": "must NOT have additional properties",
-    "schema": false,
-    "parentSchema": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "$id": "schema://living-narrative-engine/anatomy-formatting.schema.json",
-      "title": "Anatomy Formatting Schema",
-      "description": "Defines formatting rules for anatomy descriptions including part order, pluralization, and descriptor formatting",
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "$schema": {
-          "type": "string",
-          "description": "Optional. A URI reference to the schema for editor support."
-        },
-        "id": {
-          "type": "string",
-          "pattern": "^[a-zA-Z0-9_]+$",
-          "description": "Unique identifier for this formatting configuration"
-        },
-        "descriptionOrder": {
-          "type": "array",
-          "description": "Order in which body part types appear in descriptions",
-          "items": {
-            "type": "string",
-            "minLength": 1
-          },
-          "uniqueItems": true
-        },
-        "pairedParts": {
-          "type": "array",
-          "description": "Body part types that are paired (like eyes, arms, etc.) and should be grouped when they have the same descriptors",
-          "items": {
-            "type": "string",
-            "minLength": 1
-          },
-          "uniqueItems": true
-        },
-        "irregularPlurals": {
-          "type": "object",
-          "description": "Mapping of body part types to their irregular plural forms",
-          "additionalProperties": {
-            "type": "string",
-            "minLength": 1
-          }
-        },
-        "descriptorOrder": {
-          "type": "array",
-          "description": "Order in which descriptor component types appear in descriptions",
-          "items": {
-            "type": "string",
-            "pattern": "^descriptors:[a-zA-Z0-9_]+$"
-          },
-          "uniqueItems": true
-        },
-        "descriptorValueKeys": {
-          "type": "array",
-          "description": "Keys to search for when extracting descriptor values from components",
-          "items": {
-            "type": "string",
-            "minLength": 1
-          },
-          "uniqueItems": true
-        }
-      },
-      "required": [
-        "id"
-      ]
-    },
-    "data": {
-      "$schema": "../../../schemas/anatomy-formatting.schema.json",
-      "id": "default",
-      "descriptionOrder": [
-        "build",
-        "hair",
-        "eye",
-        "face",
-        "ear",
-        "nose",
-        "mouth",
-        "neck",
-        "breast",
-        "torso",
-        "arm",
-        "hand",
-        "leg",
-        "foot",
-        "pubic_hair",
-        "vagina",
-        "penis",
-        "testicle",
-        "tail",
-        "wing",
-        "equipment"
-      ],
-      "pairedParts": [
-        "eye",
-        "ear",
-        "arm",
-        "leg",
-        "hand",
-        "foot",
-        "breast",
-        "wing",
-        "testicle"
-      ],
-      "irregularPlurals": {
-        "foot": "feet",
-        "tooth": "teeth"
-      },
-      "descriptorOrder": [
-        "descriptors:length_category",
-        "descriptors:length_hair",
-        "descriptors:size_category",
-        "descriptors:size_specific",
-        "descriptors:weight_feel",
-        "descriptors:color_basic",
-        "descriptors:color_extended",
-        "descriptors:shape_general",
-        "descriptors:shape_eye",
-        "descriptors:hair_style",
-        "descriptors:texture",
-        "descriptors:firmness",
-        "descriptors:build"
-      ],
-      "descriptorValueKeys": [
-        "value",
-        "color",
-        "size",
-        "shape",
-        "length",
-        "style",
-        "texture",
-        "firmness",
-        "build",
-        "weight"
-      ],
-      "equipmentIntegration": {
-        "enabled": true,
-        "prefix": "Wearing: ",
-        "suffix": ".",
-        "separator": ", ",
-        "itemSeparator": " | ",
-        "placement": "after_anatomy"
-      }
-    }
-  }
-]
-    at validateAgainstSchema (schemaValidationUtils.js:97:11)
-    at AnatomyFormattingLoader._validatePrimarySchema (baseManifestItemLoader.js:210:12)
-    at AnatomyFormattingLoader.validatePrimarySchema (baseManifestItemLoader.js:408:12)
-    at AnatomyFormattingLoader._processFileWrapper (baseManifestItemLoader.js:320:10)
-    at async Promise.allSettled (index 0)
-    at async AnatomyFormattingLoader._loadItemsInternal (baseManifestItemLoader.js:509:28)
-    at async #runLoadersForMod (ModProcessor.js:164:15)
-    at async ModProcessor.processMod (ModProcessor.js:80:52)
-    at async ContentLoadManager.loadContentForPhase (ContentLoadManager.js:174:24)
-    at async ContentLoadManager.loadContent (ContentLoadManager.js:81:7)
-error @ consoleLogger.js:175
-validatePrimarySchema @ baseManifestItemLoader.js:410
-_processFileWrapper @ baseManifestItemLoader.js:320
-await in _processFileWrapper
-(anonymous) @ baseManifestItemLoader.js:506
-_loadItemsInternal @ baseManifestItemLoader.js:505
-loadItemsForMod @ baseManifestItemLoader.js:640
-#runLoadersForMod @ ModProcessor.js:164
-await in #runLoadersForMod
-processMod @ ModProcessor.js:80
-await in processMod
-#executeModProcessing @ ContentLoadManager.js:222
-processMod @ ContentLoadManager.js:212
-loadContentForPhase @ ContentLoadManager.js:174
-await in loadContentForPhase
-loadContent @ ContentLoadManager.js:81
-execute @ contentPhase.js:51
-run @ ModsLoadSession.js:19
-await in run
-loadMods @ modsLoader.js:85
-loadModsFromGameConfig @ modLoadingUtils.js:33
-await in loadModsFromGameConfig
-bootstrap @ CommonBootstrapper.js:91
-await in bootstrap
-initialize @ anatomy-visualizer.js:18Understand this error
-consoleLogger.js:187 [anatomy] Failure recorded for default.json in batch processing. Reason logged previously.
-consoleLogger.js:151 Mod [anatomy] - Processed 0/1 anatomyFormatting items. (1 failed)
-consoleLogger.js:175 ModsLoader [anatomy, definitions]: anatomyFormatting file 'default.json' failed: AnatomyFormattingLoader [anatomy]: Primary schema validation failed for 'default.json' using schema 'schema://living-narrative-engine/anatomy-formatting.schema.json'.
-Details:
-[
-  {
-    "instancePath": "",
-    "schemaPath": "#/additionalProperties",
-    "keyword": "additionalProperties",
-    "params": {
-      "additionalProperty": "equipmentIntegration"
-    },
-    "message": "must NOT have additional properties",
-    "schema": false,
-    "parentSchema": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "$id": "schema://living-narrative-engine/anatomy-formatting.schema.json",
-      "title": "Anatomy Formatting Schema",
-      "description": "Defines formatting rules for anatomy descriptions including part order, pluralization, and descriptor formatting",
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "$schema": {
-          "type": "string",
-          "description": "Optional. A URI reference to the schema for editor support."
-        },
-        "id": {
-          "type": "string",
-          "pattern": "^[a-zA-Z0-9_]+$",
-          "description": "Unique identifier for this formatting configuration"
-        },
-        "descriptionOrder": {
-          "type": "array",
-          "description": "Order in which body part types appear in descriptions",
-          "items": {
-            "type": "string",
-            "minLength": 1
-          },
-          "uniqueItems": true
-        },
-        "pairedParts": {
-          "type": "array",
-          "description": "Body part types that are paired (like eyes, arms, etc.) and should be grouped when they have the same descriptors",
-          "items": {
-            "type": "string",
-            "minLength": 1
-          },
-          "uniqueItems": true
-        },
-        "irregularPlurals": {
-          "type": "object",
-          "description": "Mapping of body part types to their irregular plural forms",
-          "additionalProperties": {
-            "type": "string",
-            "minLength": 1
-          }
-        },
-        "descriptorOrder": {
-          "type": "array",
-          "description": "Order in which descriptor component types appear in descriptions",
-          "items": {
-            "type": "string",
-            "pattern": "^descriptors:[a-zA-Z0-9_]+$"
-          },
-          "uniqueItems": true
-        },
-        "descriptorValueKeys": {
-          "type": "array",
-          "description": "Keys to search for when extracting descriptor values from components",
-          "items": {
-            "type": "string",
-            "minLength": 1
-          },
-          "uniqueItems": true
-        }
-      },
-      "required": [
-        "id"
-      ]
-    },
-    "data": {
-      "$schema": "../../../schemas/anatomy-formatting.schema.json",
-      "id": "default",
-      "descriptionOrder": [
-        "build",
-        "hair",
-        "eye",
-        "face",
-        "ear",
-        "nose",
-        "mouth",
-        "neck",
-        "breast",
-        "torso",
-        "arm",
-        "hand",
-        "leg",
-        "foot",
-        "pubic_hair",
-        "vagina",
-        "penis",
-        "testicle",
-        "tail",
-        "wing",
-        "equipment"
-      ],
-      "pairedParts": [
-        "eye",
-        "ear",
-        "arm",
-        "leg",
-        "hand",
-        "foot",
-        "breast",
-        "wing",
-        "testicle"
-      ],
-      "irregularPlurals": {
-        "foot": "feet",
-        "tooth": "teeth"
-      },
-      "descriptorOrder": [
-        "descriptors:length_category",
-        "descriptors:length_hair",
-        "descriptors:size_category",
-        "descriptors:size_specific",
-        "descriptors:weight_feel",
-        "descriptors:color_basic",
-        "descriptors:color_extended",
-        "descriptors:shape_general",
-        "descriptors:shape_eye",
-        "descriptors:hair_style",
-        "descriptors:texture",
-        "descriptors:firmness",
-        "descriptors:build"
-      ],
-      "descriptorValueKeys": [
-        "value",
-        "color",
-        "size",
-        "shape",
-        "length",
-        "style",
-        "texture",
-        "firmness",
-        "build",
-        "weight"
-      ],
-      "equipmentIntegration": {
-        "enabled": true,
-        "prefix": "Wearing: ",
-        "suffix": ".",
-        "separator": ", ",
-        "itemSeparator": " | ",
-        "placement": "after_anatomy"
-      }
-    }
-  }
-] {modId: 'anatomy', registryKey: 'anatomyFormatting', phase: 'definitions', file: 'default.json', error: 'AnatomyFormattingLoader [anatomy]: Primary schema … "placement": "after_anatomy"\n      }\n    }\n  }\n]'} Error: AnatomyFormattingLoader [anatomy]: Primary schema validation failed for 'default.json' using schema 'schema://living-narrative-engine/anatomy-formatting.schema.json'.
-Details:
-[
-  {
-    "instancePath": "",
-    "schemaPath": "#/additionalProperties",
-    "keyword": "additionalProperties",
-    "params": {
-      "additionalProperty": "equipmentIntegration"
-    },
-    "message": "must NOT have additional properties",
-    "schema": false,
-    "parentSchema": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "$id": "schema://living-narrative-engine/anatomy-formatting.schema.json",
-      "title": "Anatomy Formatting Schema",
-      "description": "Defines formatting rules for anatomy descriptions including part order, pluralization, and descriptor formatting",
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "$schema": {
-          "type": "string",
-          "description": "Optional. A URI reference to the schema for editor support."
-        },
-        "id": {
-          "type": "string",
-          "pattern": "^[a-zA-Z0-9_]+$",
-          "description": "Unique identifier for this formatting configuration"
-        },
-        "descriptionOrder": {
-          "type": "array",
-          "description": "Order in which body part types appear in descriptions",
-          "items": {
-            "type": "string",
-            "minLength": 1
-          },
-          "uniqueItems": true
-        },
-        "pairedParts": {
-          "type": "array",
-          "description": "Body part types that are paired (like eyes, arms, etc.) and should be grouped when they have the same descriptors",
-          "items": {
-            "type": "string",
-            "minLength": 1
-          },
-          "uniqueItems": true
-        },
-        "irregularPlurals": {
-          "type": "object",
-          "description": "Mapping of body part types to their irregular plural forms",
-          "additionalProperties": {
-            "type": "string",
-            "minLength": 1
-          }
-        },
-        "descriptorOrder": {
-          "type": "array",
-          "description": "Order in which descriptor component types appear in descriptions",
-          "items": {
-            "type": "string",
-            "pattern": "^descriptors:[a-zA-Z0-9_]+$"
-          },
-          "uniqueItems": true
-        },
-        "descriptorValueKeys": {
-          "type": "array",
-          "description": "Keys to search for when extracting descriptor values from components",
-          "items": {
-            "type": "string",
-            "minLength": 1
-          },
-          "uniqueItems": true
-        }
-      },
-      "required": [
-        "id"
-      ]
-    },
-    "data": {
-      "$schema": "../../../schemas/anatomy-formatting.schema.json",
-      "id": "default",
-      "descriptionOrder": [
-        "build",
-        "hair",
-        "eye",
-        "face",
-        "ear",
-        "nose",
-        "mouth",
-        "neck",
-        "breast",
-        "torso",
-        "arm",
-        "hand",
-        "leg",
-        "foot",
-        "pubic_hair",
-        "vagina",
-        "penis",
-        "testicle",
-        "tail",
-        "wing",
-        "equipment"
-      ],
-      "pairedParts": [
-        "eye",
-        "ear",
-        "arm",
-        "leg",
-        "hand",
-        "foot",
-        "breast",
-        "wing",
-        "testicle"
-      ],
-      "irregularPlurals": {
-        "foot": "feet",
-        "tooth": "teeth"
-      },
-      "descriptorOrder": [
-        "descriptors:length_category",
-        "descriptors:length_hair",
-        "descriptors:size_category",
-        "descriptors:size_specific",
-        "descriptors:weight_feel",
-        "descriptors:color_basic",
-        "descriptors:color_extended",
-        "descriptors:shape_general",
-        "descriptors:shape_eye",
-        "descriptors:hair_style",
-        "descriptors:texture",
-        "descriptors:firmness",
-        "descriptors:build"
-      ],
-      "descriptorValueKeys": [
-        "value",
-        "color",
-        "size",
-        "shape",
-        "length",
-        "style",
-        "texture",
-        "firmness",
-        "build",
-        "weight"
-      ],
-      "equipmentIntegration": {
-        "enabled": true,
-        "prefix": "Wearing: ",
-        "suffix": ".",
-        "separator": ", ",
-        "itemSeparator": " | ",
-        "placement": "after_anatomy"
-      }
-    }
-  }
-]
-    at validateAgainstSchema (schemaValidationUtils.js:97:11)
-    at AnatomyFormattingLoader._validatePrimarySchema (baseManifestItemLoader.js:210:12)
-    at AnatomyFormattingLoader.validatePrimarySchema (baseManifestItemLoader.js:408:12)
-    at AnatomyFormattingLoader._processFileWrapper (baseManifestItemLoader.js:320:10)
-    at async Promise.allSettled (index 0)
-    at async AnatomyFormattingLoader._loadItemsInternal (baseManifestItemLoader.js:509:28)
-    at async #runLoadersForMod (ModProcessor.js:164:15)
-    at async ModProcessor.processMod (ModProcessor.js:80:52)
-    at async ContentLoadManager.loadContentForPhase (ContentLoadManager.js:174:24)
-    at async ContentLoadManager.loadContent (ContentLoadManager.js:81:7)
-error @ consoleLogger.js:175
-#runLoadersForMod @ ModProcessor.js:177
-await in #runLoadersForMod
-processMod @ ModProcessor.js:80
-await in processMod
-#executeModProcessing @ ContentLoadManager.js:222
-processMod @ ContentLoadManager.js:212
-loadContentForPhase @ ContentLoadManager.js:174
-await in loadContentForPhase
-loadContent @ ContentLoadManager.js:81
-execute @ contentPhase.js:51
-run @ ModsLoadSession.js:19
-await in run
-loadMods @ modsLoader.js:85
-loadModsFromGameConfig @ modLoadingUtils.js:33
-await in loadModsFromGameConfig
-bootstrap @ CommonBootstrapper.js:91
-await in bootstrap
-initialize @ anatomy-visualizer.js:18Understand this error
-consoleLogger.js:187 ModsLoader [anatomy, definitions]: Content loading loop took 60.20 ms.
-consoleLogger.js:187 Mod 'anatomy' phase 'definitions' loaded in 60.20ms: anatomyBlueprintParts(1), anatomyBlueprints(2), anatomyFormatting(0 E:1), anatomyRecipes(3), anatomySlotLibraries(1), components(5), entityDefinitions(33), events(6) -> Overrides(0), Errors(1)
-consoleLogger.js:187 --- Finished loading content for mod: anatomy, phase: definitions ---
-consoleLogger.js:187 ContentLoadManager: Looking up manifest for modId 'clothing' (lowercase: 'clothing'), found: true
-consoleLogger.js:187 ContentLoadManager: Processing mod clothing, manifest found: true
-consoleLogger.js:187 --- Loading content for mod: clothing, phase: definitions ---
-consoleLogger.js:187 ModsLoader [clothing, definitions]: Manifest retrieved successfully. Processing content types...
-consoleLogger.js:187 ModsLoader [clothing, definitions]: Processing components content with 2 files...
-consoleLogger.js:187 ModsLoader [clothing, definitions]: Found content for 'components'. Invoking loader 'ComponentLoader'.
-consoleLogger.js:151 ComponentLoader: Loading components definitions for mod 'clothing'.
-consoleLogger.js:187 Found 2 potential components files to process for mod clothing.
-consoleLogger.js:187 [clothing] Resolved path for equipment.component.json: ./data/mods/clothing/components/equipment.component.json
-consoleLogger.js:187 [clothing] Resolved path for wearable.component.json: ./data/mods/clothing/components/wearable.component.json
-consoleLogger.js:187 [clothing] Fetched data from ./data/mods/clothing/components/equipment.component.json
-consoleLogger.js:187 ComponentLoader [clothing]: Validating 'equipment.component.json' against primary schema 'schema://living-narrative-engine/component.schema.json'.
-consoleLogger.js:187 ComponentLoader [clothing]: Processing fetched item: equipment.component.json (Type: components)
-consoleLogger.js:187 AjvSchemaValidator: Successfully added schema 'clothing:equipment'.
-consoleLogger.js:187 AjvSchemaValidator: Schema 'clothing:equipment' verified as retrievable.
-consoleLogger.js:187 ComponentLoader [clothing]: Registered dataSchema for component ID 'clothing:equipment' from file 'equipment.component.json'.
-consoleLogger.js:187 ComponentLoader [clothing]: Storing item in registry. Category: 'components', Qualified ID: 'clothing:equipment', Base ID: 'equipment', Filename: 'equipment.component.json'
-consoleLogger.js:187 ComponentLoader [clothing]: Item 'clothing:equipment' (Base: 'equipment') stored successfully in category 'components'.
-consoleLogger.js:187 ComponentLoader [clothing]: Successfully processed component definition from equipment.component.json. Returning final registry key: clothing:equipment, Overwrite: false
-consoleLogger.js:187 [clothing] Successfully processed equipment.component.json. Result: ID=clothing:equipment, Overwrite=false
-consoleLogger.js:187 [clothing] Fetched data from ./data/mods/clothing/components/wearable.component.json
-consoleLogger.js:187 ComponentLoader [clothing]: Validating 'wearable.component.json' against primary schema 'schema://living-narrative-engine/component.schema.json'.
-consoleLogger.js:187 ComponentLoader [clothing]: Processing fetched item: wearable.component.json (Type: components)
+AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Entity 'c9d08f6b-a8f8-4816-a1d3-5fbc0671ec3d' has anatomy:blueprintSlot component: true
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Retrieved component data for entity 'c9d08f6b-a8f8-4816-a1d3-5fbc0671ec3d': {"slotId":"left_foot","socketId":"ankle","requirements":{"partType":"foot","components":["anatomy:part"]}}
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Successfully mapped slot 'left_foot' to entity 'c9d08f6b-a8f8-4816-a1d3-5fbc0671ec3d'
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Checking entity '4f973bf8-ac6b-40ca-aeef-52985545e4f9' - has entity: true
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Entity '4f973bf8-ac6b-40ca-aeef-52985545e4f9' has anatomy:blueprintSlot component: true
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Retrieved component data for entity '4f973bf8-ac6b-40ca-aeef-52985545e4f9': {"slotId":"right_foot","socketId":"ankle","requirements":{"partType":"foot","components":["anatomy:part"]}}
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Successfully mapped slot 'right_foot' to entity '4f973bf8-ac6b-40ca-aeef-52985545e4f9'
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Checking entity '40ee8476-f026-4776-8a42-f55497ae5379' - has entity: true
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Entity '40ee8476-f026-4776-8a42-f55497ae5379' has anatomy:blueprintSlot component: true
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Retrieved component data for entity '40ee8476-f026-4776-8a42-f55497ae5379': {"slotId":"asshole","socketId":"asshole","requirements":{"partType":"asshole","components":["anatomy:part"]}}
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Successfully mapped slot 'asshole' to entity '40ee8476-f026-4776-8a42-f55497ae5379'
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Checking entity '3d944908-aa68-401c-b793-606105e0f4a4' - has entity: true
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Entity '3d944908-aa68-401c-b793-606105e0f4a4' has anatomy:blueprintSlot component: true
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Retrieved component data for entity '3d944908-aa68-401c-b793-606105e0f4a4': {"slotId":"left_ass","socketId":"left_ass","requirements":{"partType":"ass_cheek","components":["anatomy:part"]}}
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Successfully mapped slot 'left_ass' to entity '3d944908-aa68-401c-b793-606105e0f4a4'
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Checking entity '494fed29-340d-4555-b7fb-ed04979e6a99' - has entity: true
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Entity '494fed29-340d-4555-b7fb-ed04979e6a99' has anatomy:blueprintSlot component: true
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Retrieved component data for entity '494fed29-340d-4555-b7fb-ed04979e6a99': {"slotId":"right_ass","socketId":"right_ass","requirements":{"partType":"ass_cheek","components":["anatomy:part"]}}
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Successfully mapped slot 'right_ass' to entity '494fed29-340d-4555-b7fb-ed04979e6a99'
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Built 24 slot entity mappings
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Built 24 slot entity mappings
+consoleLogger.js:187 AnatomyGenerationWorkflow: AnatomyGenerationWorkflow: Instantiating 7 clothing items for entity '1265204d-f36d-4d06-b05a-a9e789c9974f'
+consoleLogger.js:151 ClothingInstantiationService: Starting clothing instantiation for actor '1265204d-f36d-4d06-b05a-a9e789c9974f' with 7 items
+consoleLogger.js:187 BlueprintSlotStrategy: Updated slot-entity mappings with 24 entries
+consoleLogger.js:187 ClothingInstantiationService: Instantiating clothing entity 'clothing:underwired_plunge_bra_nude_silk' with overrides: undefined
+consoleLogger.js:187 LayerResolutionService: Using entity layer: 'underwear'
+consoleLogger.js:187 ClothingInstantiationService: Resolved layer for 'clothing:underwired_plunge_bra_nude_silk': 'underwear'
+consoleLogger.js:187 EntityCreationManager.createEntityInstance: Creating entity with definition 'clothing:underwired_plunge_bra_nude_silk'
+consoleLogger.js:187 [EntityFactory] Creating entity instance 78749138-6842-42ee-ba22-40f736336769 from definition clothing:underwired_plunge_bra_nude_silk.
+consoleLogger.js:187 [EntityConstructionFactory] Constructing entity '78749138-6842-42ee-ba22-40f736336769' with definition 'clothing:underwired_plunge_bra_nude_silk'
+consoleLogger.js:187 [EntityConstructionFactory] Default components applied to entity '78749138-6842-42ee-ba22-40f736336769'
+consoleLogger.js:151 [EntityConstructionFactory] Entity instance '78749138-6842-42ee-ba22-40f736336769' (def: 'clothing:underwired_plunge_bra_nude_silk') created.
+consoleLogger.js:187 Indexed component 'clothing:wearable' for entity '78749138-6842-42ee-ba22-40f736336769'
+consoleLogger.js:187 Indexed component 'core:material' for entity '78749138-6842-42ee-ba22-40f736336769'
+consoleLogger.js:187 Indexed component 'core:name' for entity '78749138-6842-42ee-ba22-40f736336769'
+consoleLogger.js:187 Indexed component 'core:description' for entity '78749138-6842-42ee-ba22-40f736336769'
+consoleLogger.js:187 Indexed component 'descriptors:color_extended' for entity '78749138-6842-42ee-ba22-40f736336769'
+consoleLogger.js:187 Entity '78749138-6842-42ee-ba22-40f736336769' added to repository with 5 components indexed.
+consoleLogger.js:187 Dispatching ENTITY_CREATED event {instanceId: '78749138-6842-42ee-ba22-40f736336769', definitionId: 'clothing:underwired_plunge_bra_nude_silk', wasReconstructed: false}
+consoleLogger.js:187 VED: Validating payload for event 'core:entity_created' against schema 'core:entity_created#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:entity_created'.
+consoleLogger.js:187 VED: Dispatching event 'core:entity_created' via EventBus... {instanceId: '78749138-6842-42ee-ba22-40f736336769', definitionId: 'clothing:underwired_plunge_bra_nude_silk', wasReconstructed: false, entity: Entity}
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Received payload with entity: Entity {#data: EntityInstanceData}
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity type: object
+consoleLogger.js:187 SpatialIndexSynchronizer.onEntityAdded: Entity constructor: Entity
+consoleLogger.js:187 SystemLogicInterpreter: 🎯 [SystemLogicInterpreter] Event received: core:entity_created {payload: {…}, timestamp: 1752902458488, isAsync: true}
+consoleLogger.js:187 SystemLogicInterpreter: 🎯 [SystemLogicInterpreter] No rules found for event type: core:entity_created
+consoleLogger.js:151 Entity created: 78749138-6842-42ee-ba22-40f736336769 (definition: clothing:underwired_plunge_bra_nude_silk)
+2consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:component_added'.
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:entity_created'.
+2consoleLogger.js:187 VED: Event 'core:component_added' dispatch successful.
+consoleLogger.js:187 VED: Event 'core:entity_created' dispatch successful.
+consoleLogger.js:187 ClothingInstantiationService: ClothingInstantiationService: Starting post-instantiation validation for clothing '78749138-6842-42ee-ba22-40f736336769' (clothing:underwired_plunge_bra_nude_silk)
+consoleLogger.js:187 ClothingInstantiationService: ClothingInstantiationService: Validating slot compatibility for clothing '78749138-6842-42ee-ba22-40f736336769' in slot 'torso_upper' on actor '1265204d-f36d-4d06-b05a-a9e789c9974f'
+consoleLogger.js:187 BodyGraphService.getAnatomyData: Getting anatomy data for entity '1265204d-f36d-4d06-b05a-a9e789c9974f'
+2consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:component_added'.
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:entity_created'.
+consoleLogger.js:187 AnatomyBlueprintRepository: Cached blueprint for recipe 'p_erotica:amaia_castillo_recipe'
+consoleLogger.js:187 AnatomyClothingCache: Cache set: available_slots:available_slots:1265204d-f36d-4d06-b05a-a9e789c9974f
+consoleLogger.js:187 ClothingSlotValidator: Validating slot 'torso_upper' for entity '1265204d-f36d-4d06-b05a-a9e789c9974f' with item '78749138-6842-42ee-ba22-40f736336769'
+consoleLogger.js:187 AnatomyBlueprintRepository: Returning cached blueprint for recipe 'p_erotica:amaia_castillo_recipe'
+consoleLogger.js:187 BodyGraphService.getBodyGraph: Getting body graph for entity '1265204d-f36d-4d06-b05a-a9e789c9974f'
+consoleLogger.js:187 AnatomyCacheManager: Building cache for anatomy rooted at '1265204d-f36d-4d06-b05a-a9e789c9974f'
+consoleLogger.js:187 AnatomyCacheManager: Cache cleared
+consoleLogger.js:187 EntityQueryManager.getEntitiesWithComponent found 24 entities with component 'anatomy:joint' using index
+consoleLogger.js:187 AnatomyCacheManager: Found joint relationship - parent: '3c5d07c2-ccac-449e-9cea-5dd3faaa4718', child: 'cb9f8394-431b-4953-973b-74755f08a943', socket: 'left_chest'
+consoleLogger.js:187 AnatomyCacheManager: Found joint relationship - parent: '3c5d07c2-ccac-449e-9cea-5dd3faaa4718', child: '94228ce1-c677-45d8-afe0-3cdf59e24bd1', socket: 'right_chest'
+consoleLogger.js:187 AnatomyCacheManager: Found joint relationship - parent: '3c5d07c2-ccac-449e-9cea-5dd3faaa4718', child: '440b3f07-2a66-4f06-a010-6cfca1394ab2', socket: 'vagina'
+consoleLogger.js:187 AnatomyCacheManager: Found joint relationship - parent: '3c5d07c2-ccac-449e-9cea-5dd3faaa4718', child: '5adeb300-9333-4952-bedd-158ad18e3ac3', socket: 'neck'
+consoleLogger.js:187 AnatomyCacheManager: Found joint relationship - parent: '3c5d07c2-ccac-449e-9cea-5dd3faaa4718', child: '2107ff28-66e3-4164-a528-a6b944ed688c', socket: 'left_shoulder'
+consoleLogger.js:187 AnatomyCacheManager: Found joint relationship - parent: '3c5d07c2-ccac-449e-9cea-5dd3faaa4718', child: '6104d107-e498-43ff-a438-ee43a1233ea5', socket: 'right_shoulder'
+consoleLogger.js:187 AnatomyCacheManager: Found joint relationship - parent: '3c5d07c2-ccac-449e-9cea-5dd3faaa4718', child: '28b5070f-11c3-4755-a823-fae97f116fb9', socket: 'left_hip'
+consoleLogger.js:187 AnatomyCacheManager: Found joint relationship - parent: '3c5d07c2-ccac-449e-9cea-5dd3faaa4718', child: 'b125ed29-8e28-4ee1-b5db-e3aed3c28291', socket: 'right_hip'
+consoleLogger.js:187 AnatomyCacheManager: Found joint relationship - parent: '5adeb300-9333-4952-bedd-158ad18e3ac3', child: 'ac6c15aa-ed86-4fbb-abd8-90c9308c8a54', socket: 'left_eye'
+consoleLogger.js:187 AnatomyCacheManager: Found joint relationship - parent: '5adeb300-9333-4952-bedd-158ad18e3ac3', child: 'a79c5af3-6d48-4b05-8e0f-a3f8217f330c', socket: 'right_eye'
+consoleLogger.js:187 AnatomyCacheManager: Found joint relationship - parent: '5adeb300-9333-4952-bedd-158ad18e3ac3', child: '596b48d6-83c5-40e0-9a9c-a1b86855e0ef', socket: 'left_ear'
+consoleLogger.js:187 AnatomyCacheManager: Found joint relationship - parent: '5adeb300-9333-4952-bedd-158ad18e3ac3', child: 'c29600a4-bd21-4596-99f6-cc8450f64553', socket: 'right_ear'
+consoleLogger.js:187 AnatomyCacheManager: Found joint relationship - parent: '5adeb300-9333-4952-bedd-158ad18e3ac3', child: '9fb04a43-b62d-473e-9a55-0de833861fe0', socket: 'nose'
+consoleLogger.js:187 AnatomyCacheManager: Found joint relationship - parent: '5adeb300-9333-4952-bedd-158ad18e3ac3', child: '88eeda55-4064-42ad-a933-8db67d8ff645', socket: 'mouth'
+consoleLogger.js:187 AnatomyCacheManager: Found joint relationship - parent: '88eeda55-4064-42ad-a933-8db67d8ff645', child: '1481f81f-6476-4833-ac49-cc6b216b6e66', socket: 'teeth'
+consoleLogger.js:187 AnatomyCacheManager: Found joint relationship - parent: '5adeb300-9333-4952-bedd-158ad18e3ac3', child: '2f80fa13-c3db-4a45-ab86-5a04351b0c76', socket: 'scalp'
+consoleLogger.js:187 AnatomyCacheManager: Found joint relationship - parent: '3c5d07c2-ccac-449e-9cea-5dd3faaa4718', child: 'f728ff16-0bd5-45e7-8a2d-a49be24ba0fa', socket: 'pubic_hair'
+consoleLogger.js:187 AnatomyCacheManager: Found joint relationship - parent: '2107ff28-66e3-4164-a528-a6b944ed688c', child: '9279e85c-c67f-4eca-b1e0-26f782f75a31', socket: 'wrist'
+consoleLogger.js:187 AnatomyCacheManager: Found joint relationship - parent: '6104d107-e498-43ff-a438-ee43a1233ea5', child: '85a2ef0e-63b6-40e6-bf9a-bf582d230fdc', socket: 'wrist'
+consoleLogger.js:187 AnatomyCacheManager: Found joint relationship - parent: '28b5070f-11c3-4755-a823-fae97f116fb9', child: '7a867ca3-0991-4b3f-8566-44279b1cd22c', socket: 'ankle'
+consoleLogger.js:187 AnatomyCacheManager: Found joint relationship - parent: 'b125ed29-8e28-4ee1-b5db-e3aed3c28291', child: '9aa0e6d1-5345-497c-8930-e881531d62ff', socket: 'ankle'
+consoleLogger.js:187 AnatomyCacheManager: Found joint relationship - parent: '3c5d07c2-ccac-449e-9cea-5dd3faaa4718', child: '55497908-cf3d-4d89-ad8f-9a1c99e2b5a7', socket: 'asshole'
+consoleLogger.js:187 AnatomyCacheManager: Found joint relationship - parent: '3c5d07c2-ccac-449e-9cea-5dd3faaa4718', child: '351cabc1-9f2b-46aa-8cb8-681a82985b13', socket: 'left_ass'
+consoleLogger.js:187 AnatomyCacheManager: Found joint relationship - parent: '3c5d07c2-ccac-449e-9cea-5dd3faaa4718', child: '62195723-a27f-489a-8d44-9330eaa08a92', socket: 'right_ass'
+consoleLogger.js:187 AnatomyCacheManager: Built parent-to-children map with 7 parent nodes
+consoleLogger.js:187 AnatomyCacheManager: Entity '1265204d-f36d-4d06-b05a-a9e789c9974f' anatomy:part data: undefined, anatomy:body data: {"recipeId":"p_erotica:amaia_castillo_recipe","body":{"root":"3c5d07c2-ccac-449e-9cea-5dd3faaa4718","parts":{"torso":"3c5d07c2-ccac-449e-9cea-5dd3faaa4718","left breast":"cb9f8394-431b-4953-973b-74755f08a943","right breast":"94228ce1-c677-45d8-afe0-3cdf59e24bd1","vagina":"440b3f07-2a66-4f06-a010-6cfca1394ab2","head":"5adeb300-9333-4952-bedd-158ad18e3ac3","left arm":"2107ff28-66e3-4164-a528-a6b944ed688c","right arm":"6104d107-e498-43ff-a438-ee43a1233ea5","left leg":"28b5070f-11c3-4755-a823-fae97f116fb9","right leg":"b125ed29-8e28-4ee1-b5db-e3aed3c28291","left eye":"ac6c15aa-ed86-4fbb-abd8-90c9308c8a54","right eye":"a79c5af3-6d48-4b05-8e0f-a3f8217f330c","left ear":"596b48d6-83c5-40e0-9a9c-a1b86855e0ef","right ear":"c29600a4-bd21-4596-99f6-cc8450f64553","nose":"9fb04a43-b62d-473e-9a55-0de833861fe0","mouth":"88eeda55-4064-42ad-a933-8db67d8ff645","teeth":"1481f81f-6476-4833-ac49-cc6b216b6e66","hair":"2f80fa13-c3db-4a45-ab86-5a04351b0c76","pubic hair":"f728ff16-0bd5-45e7-8a2d-a49be24ba0fa","left hand":"9279e85c-c67f-4eca-b1e0-26f782f75a31","right hand":"85a2ef0e-63b6-40e6-bf9a-bf582d230fdc","left foot":"7a867ca3-0991-4b3f-8566-44279b1cd22c","right foot":"9aa0e6d1-5345-497c-8930-e881531d62ff","asshole":"55497908-cf3d-4d89-ad8f-9a1c99e2b5a7","left ass_cheek":"351cabc1-9f2b-46aa-8cb8-681a82985b13","right ass_cheek":"62195723-a27f-489a-8d44-9330eaa08a92"}}}
+consoleLogger.js:187 AnatomyCacheManager: Created node for entity '1265204d-f36d-4d06-b05a-a9e789c9974f' with partType: 'body_root'
+consoleLogger.js:187 AnatomyCacheManager: Actor entity '1265204d-f36d-4d06-b05a-a9e789c9974f' has anatomy:body but no joint children, searching for anatomy root
+consoleLogger.js:187 EntityQueryManager.getEntitiesWithComponent found 24 entities with component 'anatomy:joint' using index
+consoleLogger.js:187 AnatomyCacheManager: Found anatomy root '3c5d07c2-ccac-449e-9cea-5dd3faaa4718', adding to cache and connecting to actor
+consoleLogger.js:187 AnatomyCacheManager: Entity '3c5d07c2-ccac-449e-9cea-5dd3faaa4718' anatomy:part data: {"subType":"torso"}, anatomy:body data: undefined
+consoleLogger.js:187 AnatomyCacheManager: Created node for entity '3c5d07c2-ccac-449e-9cea-5dd3faaa4718' with partType: 'torso'
+consoleLogger.js:187 AnatomyCacheManager: Entity 'cb9f8394-431b-4953-973b-74755f08a943' anatomy:part data: {"subType":"breast","orientation":"left"}, anatomy:body data: undefined
+consoleLogger.js:187 AnatomyCacheManager: Created node for entity 'cb9f8394-431b-4953-973b-74755f08a943' with partType: 'breast'
+consoleLogger.js:187 AnatomyCacheManager: Entity '94228ce1-c677-45d8-afe0-3cdf59e24bd1' anatomy:part data: {"subType":"breast","orientation":"right"}, anatomy:body data: undefined
+consoleLogger.js:187 AnatomyCacheManager: Created node for entity '94228ce1-c677-45d8-afe0-3cdf59e24bd1' with partType: 'breast'
+consoleLogger.js:187 AnatomyCacheManager: Entity '440b3f07-2a66-4f06-a010-6cfca1394ab2' anatomy:part data: {"subType":"vagina"}, anatomy:body data: undefined
+consoleLogger.js:187 AnatomyCacheManager: Created node for entity '440b3f07-2a66-4f06-a010-6cfca1394ab2' with partType: 'vagina'
+consoleLogger.js:187 AnatomyCacheManager: Entity '5adeb300-9333-4952-bedd-158ad18e3ac3' anatomy:part data: {"subType":"head","orientation":"upper"}, anatomy:body data: undefined
+consoleLogger.js:187 AnatomyCacheManager: Created node for entity '5adeb300-9333-4952-bedd-158ad18e3ac3' with partType: 'head'
+consoleLogger.js:187 AnatomyCacheManager: Entity 'ac6c15aa-ed86-4fbb-abd8-90c9308c8a54' anatomy:part data: {"subType":"eye","orientation":"left"}, anatomy:body data: undefined
+consoleLogger.js:187 AnatomyCacheManager: Created node for entity 'ac6c15aa-ed86-4fbb-abd8-90c9308c8a54' with partType: 'eye'
+consoleLogger.js:187 AnatomyCacheManager: Entity 'a79c5af3-6d48-4b05-8e0f-a3f8217f330c' anatomy:part data: {"subType":"eye","orientation":"right"}, anatomy:body data: undefined
+consoleLogger.js:187 AnatomyCacheManager: Created node for entity 'a79c5af3-6d48-4b05-8e0f-a3f8217f330c' with partType: 'eye'
+consoleLogger.js:187 AnatomyCacheManager: Entity '596b48d6-83c5-40e0-9a9c-a1b86855e0ef' anatomy:part data: {"subType":"ear","orientation":"left"}, anatomy:body data: undefined
+consoleLogger.js:187 AnatomyCacheManager: Created node for entity '596b48d6-83c5-40e0-9a9c-a1b86855e0ef' with partType: 'ear'
+consoleLogger.js:187 AnatomyCacheManager: Entity 'c29600a4-bd21-4596-99f6-cc8450f64553' anatomy:part data: {"subType":"ear","orientation":"right"}, anatomy:body data: undefined
+consoleLogger.js:187 AnatomyCacheManager: Created node for entity 'c29600a4-bd21-4596-99f6-cc8450f64553' with partType: 'ear'
+consoleLogger.js:187 AnatomyCacheManager: Entity '9fb04a43-b62d-473e-9a55-0de833861fe0' anatomy:part data: {"subType":"nose"}, anatomy:body data: undefined
+consoleLogger.js:187 AnatomyCacheManager: Created node for entity '9fb04a43-b62d-473e-9a55-0de833861fe0' with partType: 'nose'
+consoleLogger.js:187 AnatomyCacheManager: Entity '88eeda55-4064-42ad-a933-8db67d8ff645' anatomy:part data: {"subType":"mouth"}, anatomy:body data: undefined
+consoleLogger.js:187 AnatomyCacheManager: Created node for entity '88eeda55-4064-42ad-a933-8db67d8ff645' with partType: 'mouth'
+consoleLogger.js:187 AnatomyCacheManager: Entity '1481f81f-6476-4833-ac49-cc6b216b6e66' anatomy:part data: {"subType":"teeth"}, anatomy:body data: undefined
+consoleLogger.js:187 AnatomyCacheManager: Created node for entity '1481f81f-6476-4833-ac49-cc6b216b6e66' with partType: 'teeth'
+consoleLogger.js:187 AnatomyCacheManager: Entity '2f80fa13-c3db-4a45-ab86-5a04351b0c76' anatomy:part data: {"subType":"hair"}, anatomy:body data: undefined
+consoleLogger.js:187 AnatomyCacheManager: Created node for entity '2f80fa13-c3db-4a45-ab86-5a04351b0c76' with partType: 'hair'
+consoleLogger.js:187 AnatomyCacheManager: Entity '2107ff28-66e3-4164-a528-a6b944ed688c' anatomy:part data: {"subType":"arm","orientation":"left"}, anatomy:body data: undefined
+consoleLogger.js:187 AnatomyCacheManager: Created node for entity '2107ff28-66e3-4164-a528-a6b944ed688c' with partType: 'arm'
+consoleLogger.js:187 AnatomyCacheManager: Entity '9279e85c-c67f-4eca-b1e0-26f782f75a31' anatomy:part data: {"subType":"hand","orientation":"left"}, anatomy:body data: undefined
+consoleLogger.js:187 AnatomyCacheManager: Created node for entity '9279e85c-c67f-4eca-b1e0-26f782f75a31' with partType: 'hand'
+consoleLogger.js:187 AnatomyCacheManager: Entity '6104d107-e498-43ff-a438-ee43a1233ea5' anatomy:part data: {"subType":"arm","orientation":"right"}, anatomy:body data: undefined
+consoleLogger.js:187 AnatomyCacheManager: Created node for entity '6104d107-e498-43ff-a438-ee43a1233ea5' with partType: 'arm'
+consoleLogger.js:187 AnatomyCacheManager: Entity '85a2ef0e-63b6-40e6-bf9a-bf582d230fdc' anatomy:part data: {"subType":"hand","orientation":"right"}, anatomy:body data: undefined
+consoleLogger.js:187 AnatomyCacheManager: Created node for entity '85a2ef0e-63b6-40e6-bf9a-bf582d230fdc' with partType: 'hand'
+consoleLogger.js:187 AnatomyCacheManager: Entity '28b5070f-11c3-4755-a823-fae97f116fb9' anatomy:part data: {"subType":"leg","orientation":"left"}, anatomy:body data: undefined
+consoleLogger.js:187 AnatomyCacheManager: Created node for entity '28b5070f-11c3-4755-a823-fae97f116fb9' with partType: 'leg'
+consoleLogger.js:187 AnatomyCacheManager: Entity '7a867ca3-0991-4b3f-8566-44279b1cd22c' anatomy:part data: {"subType":"foot","orientation":"left"}, anatomy:body data: undefined
+consoleLogger.js:187 AnatomyCacheManager: Created node for entity '7a867ca3-0991-4b3f-8566-44279b1cd22c' with partType: 'foot'
+consoleLogger.js:187 AnatomyCacheManager: Entity 'b125ed29-8e28-4ee1-b5db-e3aed3c28291' anatomy:part data: {"subType":"leg","orientation":"right"}, anatomy:body data: undefined
+consoleLogger.js:187 AnatomyCacheManager: Created node for entity 'b125ed29-8e28-4ee1-b5db-e3aed3c28291' with partType: 'leg'
+consoleLogger.js:187 AnatomyCacheManager: Entity '9aa0e6d1-5345-497c-8930-e881531d62ff' anatomy:part data: {"subType":"foot","orientation":"right"}, anatomy:body data: undefined
+consoleLogger.js:187 AnatomyCacheManager: Created node for entity '9aa0e6d1-5345-497c-8930-e881531d62ff' with partType: 'foot'
+consoleLogger.js:187 AnatomyCacheManager: Entity 'f728ff16-0bd5-45e7-8a2d-a49be24ba0fa' anatomy:part data: {"subType":"pubic_hair"}, anatomy:body data: undefined
+consoleLogger.js:187 AnatomyCacheManager: Created node for entity 'f728ff16-0bd5-45e7-8a2d-a49be24ba0fa' with partType: 'pubic_hair'
+consoleLogger.js:187 AnatomyCacheManager: Entity '55497908-cf3d-4d89-ad8f-9a1c99e2b5a7' anatomy:part data: {"subType":"asshole"}, anatomy:body data: undefined
+consoleLogger.js:187 AnatomyCacheManager: Created node for entity '55497908-cf3d-4d89-ad8f-9a1c99e2b5a7' with partType: 'asshole'
+consoleLogger.js:187 AnatomyCacheManager: Entity '351cabc1-9f2b-46aa-8cb8-681a82985b13' anatomy:part data: {"subType":"ass_cheek","orientation":"left"}, anatomy:body data: undefined
+consoleLogger.js:187 AnatomyCacheManager: Created node for entity '351cabc1-9f2b-46aa-8cb8-681a82985b13' with partType: 'ass_cheek'
+consoleLogger.js:187 AnatomyCacheManager: Entity '62195723-a27f-489a-8d44-9330eaa08a92' anatomy:part data: {"subType":"ass_cheek","orientation":"right"}, anatomy:body data: undefined
+consoleLogger.js:187 AnatomyCacheManager: Created node for entity '62195723-a27f-489a-8d44-9330eaa08a92' with partType: 'ass_cheek'
+consoleLogger.js:187 AnatomyCacheManager: Successfully connected actor '1265204d-f36d-4d06-b05a-a9e789c9974f' to anatomy root '3c5d07c2-ccac-449e-9cea-5dd3faaa4718'
+consoleLogger.js:151 AnatomyCacheManager: Built cache with 26 nodes
+consoleLogger.js:187 BodyGraphService.getAllParts: Found root ID in bodyComponent.body.root: 3c5d07c2-ccac-449e-9cea-5dd3faaa4718
+consoleLogger.js:187 BodyGraphService: Using actor entity '1265204d-f36d-4d06-b05a-a9e789c9974f' as cache root instead of blueprint root '3c5d07c2-ccac-449e-9cea-5dd3faaa4718' (cache size: 26)
+18consoleLogger.js:187 EntityQueryManager.getEntitiesWithComponent found 24 entities with component 'anatomy:joint' using index
+consoleLogger.js:187 BodyGraphService: AnatomyGraphAlgorithms.getAllParts returned 26 parts for root '1265204d-f36d-4d06-b05a-a9e789c9974f': [1265204d-f36d-4d06-b05a-a9e789c9974f, 3c5d07c2-ccac-449e-9cea-5dd3faaa4718, 62195723-a27f-489a-8d44-9330eaa08a92, 351cabc1-9f2b-46aa-8cb8-681a82985b13, 55497908-cf3d-4d89-ad8f-9a1c99e2b5a7...]
+consoleLogger.js:187 AnatomyQueryCache: Cached result for key 'getAllParts:::1265204d-f36d-4d06-b05a-a9e789c9974f'
+consoleLogger.js:187 Resolved clothing slot 'torso_upper' to 4 attachment points
+consoleLogger.js:187 ClothingSlotValidator: Slot 'torso_upper' has 4 valid attachment points
+consoleLogger.js:187 AnatomyClothingCache: Cache set: validation:1265204d-f36d-4d06-b05a-a9e789c9974f:torso_upper:78749138-6842-42ee-ba22-40f736336769
+consoleLogger.js:187 ClothingInstantiationService: ClothingInstantiationService: Validation passed for clothing '78749138-6842-42ee-ba22-40f736336769' in slot 'torso_upper'
+consoleLogger.js:187 ClothingInstantiationService: ClothingInstantiationService: Validation passed for clothing '78749138-6842-42ee-ba22-40f736336769' (clothing:underwired_plunge_bra_nude_silk)
+consoleLogger.js:187 ClothingInstantiationService: Instantiated clothing 'clothing:underwired_plunge_bra_nude_silk' as entity '78749138-6842-42ee-ba22-40f736336769'
+consoleLogger.js:187 EquipmentOrchestrator: Starting equipment orchestration for '78749138-6842-42ee-ba22-40f736336769' on '1265204d-f36d-4d06-b05a-a9e789c9974f'
+consoleLogger.js:187 LayerCompatibilityService: Checking layer conflicts for '78749138-6842-42ee-ba22-40f736336769' in layer 'underwear' on '1265204d-f36d-4d06-b05a-a9e789c9974f'
+consoleLogger.js:187 EntityMutationManager.addComponent: Adding component 'clothing:equipment' to entity '1265204d-f36d-4d06-b05a-a9e789c9974f'
+consoleLogger.js:187 Indexed component 'clothing:equipment' for entity '1265204d-f36d-4d06-b05a-a9e789c9974f'
+consoleLogger.js:187 VED: Validating payload for event 'core:component_added' against schema 'core:component_added#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:component_added'.
+consoleLogger.js:187 VED: Dispatching event 'core:component_added' via EventBus... {entity: Entity, componentTypeId: 'clothing:equipment', componentData: {…}, oldComponentData: undefined}
+consoleLogger.js:187 SystemLogicInterpreter: 🎯 [SystemLogicInterpreter] Event received: core:component_added {payload: {…}, timestamp: 1752902458493, isAsync: true}

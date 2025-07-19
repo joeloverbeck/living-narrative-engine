@@ -43,7 +43,10 @@ export class AnatomyDescriptionService {
   async generateAllDescriptions(bodyEntity) {
     // Delegate to the orchestrator if available
     if (this.bodyDescriptionOrchestrator) {
-      const { bodyDescription, partDescriptions } = await this.bodyDescriptionOrchestrator.generateAllDescriptions(bodyEntity);
+      const { bodyDescription, partDescriptions } =
+        await this.bodyDescriptionOrchestrator.generateAllDescriptions(
+          bodyEntity
+        );
 
       // Persist the descriptions
       if (this.descriptionPersistenceService) {
@@ -124,7 +127,10 @@ export class AnatomyDescriptionService {
   async generateBodyDescription(bodyEntity) {
     // Delegate to the orchestrator if available
     if (this.bodyDescriptionOrchestrator) {
-      const description = await this.bodyDescriptionOrchestrator.generateBodyDescription(bodyEntity);
+      const description =
+        await this.bodyDescriptionOrchestrator.generateBodyDescription(
+          bodyEntity
+        );
       if (this.descriptionPersistenceService) {
         this.descriptionPersistenceService.updateDescription(
           bodyEntity.id,
@@ -135,7 +141,8 @@ export class AnatomyDescriptionService {
     }
 
     // Fallback to original implementation
-    const description = await this.bodyDescriptionComposer.composeDescription(bodyEntity);
+    const description =
+      await this.bodyDescriptionComposer.composeDescription(bodyEntity);
 
     // Check if description is empty and dispatch error if so
     if (!description || description.trim() === '') {
@@ -166,7 +173,10 @@ export class AnatomyDescriptionService {
   async getOrGenerateBodyDescription(entity) {
     // Delegate to the orchestrator if available
     if (this.bodyDescriptionOrchestrator) {
-      const description = await this.bodyDescriptionOrchestrator.getOrGenerateBodyDescription(entity);
+      const description =
+        await this.bodyDescriptionOrchestrator.getOrGenerateBodyDescription(
+          entity
+        );
       if (
         description &&
         entity.hasComponent(ANATOMY_BODY_COMPONENT_ID) &&
@@ -203,7 +213,8 @@ export class AnatomyDescriptionService {
     }
 
     // Generate new description
-    const composedDescription = await this.bodyDescriptionComposer.composeDescription(entity);
+    const composedDescription =
+      await this.bodyDescriptionComposer.composeDescription(entity);
     if (composedDescription) {
       this.updateDescription(entity.id, composedDescription);
       return composedDescription;

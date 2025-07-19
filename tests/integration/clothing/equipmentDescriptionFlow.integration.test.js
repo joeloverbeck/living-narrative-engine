@@ -12,7 +12,7 @@ describe('Equipment Description Flow Integration', () => {
 
   beforeEach(() => {
     mockLogger = createMockLogger();
-    
+
     mockEntityManager = {
       getEntityInstance: jest.fn(),
     };
@@ -51,17 +51,17 @@ describe('Equipment Description Flow Integration', () => {
       const characterId = 'test-character';
       const equippedData = {
         torso_upper: {
-          outer: 'blazer-id'
+          outer: 'blazer-id',
         },
         legs: {
-          base: 'trousers-id'
+          base: 'trousers-id',
         },
         torso_lower: {
-          accessories: 'belt-id'
+          accessories: 'belt-id',
         },
         feet: {
-          base: 'pumps-id'
-        }
+          base: 'pumps-id',
+        },
       };
 
       // Mock blazer entity (new format)
@@ -120,7 +120,7 @@ describe('Equipment Description Flow Integration', () => {
       // Setup mocks
       mockClothingManagementService.getEquippedItems.mockResolvedValue({
         success: true,
-        equipped: equippedData
+        equipped: equippedData,
       });
 
       mockEntityManager.getEntityInstance
@@ -140,24 +140,42 @@ describe('Equipment Description Flow Integration', () => {
       const result = await service.generateEquipmentDescription(characterId);
 
       // Assert
-      expect(result).toBe('Wearing: white linen structured blazer | graphite wool wide leg trousers | black calfskin belt, and black leather stiletto pumps.');
-      
+      expect(result).toBe(
+        'Wearing: white linen structured blazer | graphite wool wide leg trousers | black calfskin belt, and black leather stiletto pumps.'
+      );
+
       // Verify that all entities were retrieved
       expect(mockEntityManager.getEntityInstance).toHaveBeenCalledTimes(4);
-      expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith('blazer-id');
-      expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith('trousers-id');
-      expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith('belt-id');
-      expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith('pumps-id');
+      expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(
+        'blazer-id'
+      );
+      expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(
+        'trousers-id'
+      );
+      expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(
+        'belt-id'
+      );
+      expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(
+        'pumps-id'
+      );
 
       // Verify component data was accessed properly
       expect(blazerEntity.getComponentData).toHaveBeenCalledWith('core:name');
-      expect(blazerEntity.getComponentData).toHaveBeenCalledWith('core:material');
-      expect(blazerEntity.getComponentData).toHaveBeenCalledWith('descriptors:color_basic');
-      expect(blazerEntity.getComponentData).toHaveBeenCalledWith('descriptors:texture');
-      
+      expect(blazerEntity.getComponentData).toHaveBeenCalledWith(
+        'core:material'
+      );
+      expect(blazerEntity.getComponentData).toHaveBeenCalledWith(
+        'descriptors:color_basic'
+      );
+      expect(blazerEntity.getComponentData).toHaveBeenCalledWith(
+        'descriptors:texture'
+      );
+
       // Verify descriptor formatting was called
-      expect(mockDescriptorFormatter.formatDescriptors).toHaveBeenCalledTimes(4);
-      
+      expect(mockDescriptorFormatter.formatDescriptors).toHaveBeenCalledTimes(
+        4
+      );
+
       // Verify no errors were logged
       expect(mockLogger.error).not.toHaveBeenCalled();
       expect(mockLogger.warn).not.toHaveBeenCalled();
@@ -168,11 +186,11 @@ describe('Equipment Description Flow Integration', () => {
       const characterId = 'test-character';
       const equippedData = {
         torso_upper: {
-          base: 'shirt-id'
+          base: 'shirt-id',
         },
         feet: {
-          base: 'shoes-id'
-        }
+          base: 'shoes-id',
+        },
       };
 
       // Mock shirt entity (legacy format)
@@ -201,7 +219,7 @@ describe('Equipment Description Flow Integration', () => {
       // Setup mocks
       mockClothingManagementService.getEquippedItems.mockResolvedValue({
         success: true,
-        equipped: equippedData
+        equipped: equippedData,
       });
 
       mockEntityManager.getEntityInstance
@@ -216,16 +234,22 @@ describe('Equipment Description Flow Integration', () => {
       const result = await service.generateEquipmentDescription(characterId);
 
       // Assert
-      expect(result).toBe('Wearing: blue cotton shirt and white canvas sneakers.');
-      
+      expect(result).toBe(
+        'Wearing: blue cotton shirt and white canvas sneakers.'
+      );
+
       // Verify that both entity formats were handled
       expect(mockEntityManager.getEntityInstance).toHaveBeenCalledTimes(2);
-      
+
       // Verify new entity format was accessed properly
       expect(shoesEntity.getComponentData).toHaveBeenCalledWith('core:name');
-      expect(shoesEntity.getComponentData).toHaveBeenCalledWith('core:material');
-      expect(shoesEntity.getComponentData).toHaveBeenCalledWith('descriptors:color_basic');
-      
+      expect(shoesEntity.getComponentData).toHaveBeenCalledWith(
+        'core:material'
+      );
+      expect(shoesEntity.getComponentData).toHaveBeenCalledWith(
+        'descriptors:color_basic'
+      );
+
       // Verify no errors were logged
       expect(mockLogger.error).not.toHaveBeenCalled();
       expect(mockLogger.warn).not.toHaveBeenCalled();

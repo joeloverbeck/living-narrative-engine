@@ -316,14 +316,16 @@ export class AnatomyFormattingService {
    */
   getEquipmentIntegrationConfig() {
     this._ensureInitialized();
-    return this._mergedConfig.equipmentIntegration || {
-      enabled: false,
-      prefix: 'Wearing: ',
-      suffix: '.',
-      separator: ', ',
-      itemSeparator: ' | ',
-      placement: 'after_anatomy',
-    };
+    return (
+      this._mergedConfig.equipmentIntegration || {
+        enabled: false,
+        prefix: 'Wearing: ',
+        suffix: '.',
+        separator: ', ',
+        itemSeparator: ' | ',
+        placement: 'after_anatomy',
+      }
+    );
   }
 
   /**

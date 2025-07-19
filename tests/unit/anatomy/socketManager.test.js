@@ -238,6 +238,37 @@ describe('SocketManager', () => {
 
       expect(name).toBe('left right arm  of Bob');
     });
+
+    it('transforms underscores to spaces in subType', () => {
+      const socket = {
+        nameTpl: '{{orientation}} {{type}}',
+        orientation: 'left',
+      };
+      entityManager.getComponentData.mockImplementation((id, type) => {
+        if (id === 'child' && type === 'anatomy:part')
+          return { subType: 'ass_cheek' };
+        return undefined;
+      });
+
+      const name = manager.generatePartName(socket, 'child', 'parent');
+
+      expect(name).toBe('left ass cheek');
+    });
+
+    it('handles multiple underscores in subType', () => {
+      const socket = {
+        nameTpl: '{{type}}',
+      };
+      entityManager.getComponentData.mockImplementation((id, type) => {
+        if (id === 'child' && type === 'anatomy:part')
+          return { subType: 'complex_body_part_name' };
+        return undefined;
+      });
+
+      const name = manager.generatePartName(socket, 'child', 'parent');
+
+      expect(name).toBe('complex body part name');
+    });
   });
 
   describe('validateOccupiedSockets', () => {

@@ -15,6 +15,7 @@
     "arm",
     "hand",
     "leg",
+    "ass_cheek",
     "foot",
     "pubic_hair",
     "vagina",
@@ -33,11 +34,13 @@
     "foot",
     "breast",
     "wing",
-    "testicle"
+    "testicle",
+    "ass_cheek"
   ],
   "irregularPlurals": {
     "foot": "feet",
-    "tooth": "teeth"
+    "tooth": "teeth",
+    "ass_cheek": "ass"
   },
   "descriptorOrder": [
     "descriptors:length_category",

@@ -419,7 +419,6 @@ export function registerWorldAndEntity(container) {
     )}.`
   );
 
-
   registrar.singletonFactory(tokens.BodyDescriptionComposer, (c) => {
     return new BodyDescriptionComposer({
       bodyPartDescriptionBuilder: c.resolve(tokens.BodyPartDescriptionBuilder),

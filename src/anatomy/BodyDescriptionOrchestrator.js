@@ -106,7 +106,8 @@ export class BodyDescriptionOrchestrator {
    * @returns {Promise<string>} The generated body description
    */
   async generateBodyDescription(bodyEntity) {
-    const description = await this.#bodyDescriptionComposer.composeDescription(bodyEntity);
+    const description =
+      await this.#bodyDescriptionComposer.composeDescription(bodyEntity);
 
     // Check if description is empty and dispatch error if so
     if (!description || description.trim() === '') {
@@ -160,7 +161,8 @@ export class BodyDescriptionOrchestrator {
     }
 
     // Generate new description
-    const composedDescription = await this.#bodyDescriptionComposer.composeDescription(entity);
+    const composedDescription =
+      await this.#bodyDescriptionComposer.composeDescription(entity);
     if (!composedDescription) {
       return null;
     }

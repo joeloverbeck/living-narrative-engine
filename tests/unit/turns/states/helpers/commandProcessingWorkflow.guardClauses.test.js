@@ -44,7 +44,14 @@ describe('_executeDirectiveStrategy guard clauses', () => {
 
     expect(exceptionHandler.handle).toHaveBeenCalled();
     expect(logger.error).toHaveBeenCalledWith(
-      expect.stringContaining('Could not resolve ITurnDirectiveStrategy')
+      'Error during directive execution',
+      expect.objectContaining({
+        error:
+          "Could not resolve ITurnDirectiveStrategy for directive 'missing'",
+        phase: 'command_processing_execution',
+        actorId: 'a1',
+        directiveType: 'missing',
+      })
     );
     expect(spy).not.toHaveBeenCalled();
   });

@@ -222,7 +222,7 @@ describe('Turn-Based Action Processing E2E', () => {
     console.log('Player actions:', playerActionIds);
     console.log('NPC actions:', npcActionIds);
     console.log('Follower actions:', followerActionIds);
-    
+
     // Actors with position component should have movement actions
     // Note: core:go may not be available if prerequisites/scope conditions aren't met
     // expect(playerActionIds).toContain('core:go');

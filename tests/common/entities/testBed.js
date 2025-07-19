@@ -43,7 +43,7 @@ export class TestBedClass extends BaseTestBed {
       if (!schema) {
         return {
           isValid: false,
-          errors: [`Schema not found: ${schemaId}`]
+          errors: [`Schema not found: ${schemaId}`],
         };
       }
 
@@ -54,30 +54,30 @@ export class TestBedClass extends BaseTestBed {
 
       // Use the AjvSchemaValidator directly
       const result = this.schemaValidator.validate(schemaId, data);
-      
+
       if (result.isValid) {
         return {
           isValid: true,
-          errors: []
+          errors: [],
         };
       }
-      
+
       // Extract error messages from the AJV error objects
-      const errors = result.errors.map(err => {
+      const errors = result.errors.map((err) => {
         if (typeof err === 'string') {
           return err;
         }
         return err.message || String(err);
       });
-      
+
       return {
         isValid: false,
-        errors
+        errors,
       };
     } catch (error) {
       return {
         isValid: false,
-        errors: [error.message]
+        errors: [error.message],
       };
     }
   }
@@ -92,24 +92,24 @@ export class TestBedClass extends BaseTestBed {
     const entity = {
       id: entityId,
       components: {},
-      hasComponent: function(componentId) {
+      hasComponent: function (componentId) {
         return componentId in this.components;
       },
-      getComponentData: function(componentId) {
+      getComponentData: function (componentId) {
         return this.components[componentId] || null;
       },
-      addComponent: function(componentId, data) {
+      addComponent: function (componentId, data) {
         this.components[componentId] = data;
-      }
+      },
     };
 
     // Try to load entity definition from disk if it exists
     try {
       const [modId, entityName] = entityId.split(':');
       const entityPath = path.join(
-        process.cwd(), 
-        'data/mods', 
-        modId, 
+        process.cwd(),
+        'data/mods',
+        modId,
         'entities/definitions',
         `${entityName}.entity.json`
       );
@@ -122,7 +122,9 @@ export class TestBedClass extends BaseTestBed {
       }
     } catch (error) {
       // Entity definition not found or invalid, continue with empty entity
-      this.logger.debug(`Could not load entity definition for ${entityId}: ${error.message}`);
+      this.logger.debug(
+        `Could not load entity definition for ${entityId}: ${error.message}`
+      );
     }
 
     return entity;
@@ -166,7 +168,9 @@ export class TestBedClass extends BaseTestBed {
       this.loadedSchemas.set(schemaId, schema);
       return schema;
     } catch (error) {
-      this.logger.error(`Error loading component schema ${schemaId}: ${error.message}`);
+      this.logger.error(
+        `Error loading component schema ${schemaId}: ${error.message}`
+      );
       return null;
     }
   }

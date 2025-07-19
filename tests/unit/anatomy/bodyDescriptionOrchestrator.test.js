@@ -359,9 +359,9 @@ describe('BodyDescriptionOrchestrator', () => {
     it('should throw error if entity has no anatomy:body component', async () => {
       const entity = createMockBodyEntity({ hasAnatomyBody: false });
 
-      await expect(orchestrator.generateAllDescriptions(entity)).rejects.toThrow(
-        'Entity must have an anatomy:body component'
-      );
+      await expect(
+        orchestrator.generateAllDescriptions(entity)
+      ).rejects.toThrow('Entity must have an anatomy:body component');
     });
 
     it('should throw error if body component has no root', async () => {
@@ -369,9 +369,9 @@ describe('BodyDescriptionOrchestrator', () => {
         anatomyBodyData: { body: {} }, // No root
       });
 
-      await expect(orchestrator.generateAllDescriptions(entity)).rejects.toThrow(
-        'Body component must have a body.root property'
-      );
+      await expect(
+        orchestrator.generateAllDescriptions(entity)
+      ).rejects.toThrow('Body component must have a body.root property');
     });
 
     it('should dispatch error event when body description is empty', async () => {

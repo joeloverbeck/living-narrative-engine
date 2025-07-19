@@ -18,7 +18,9 @@ describe('Equipment Description Pipeline Integration', () => {
     await testBed.setup();
 
     // Get services from testBed
-    equipmentDescriptionService = testBed.getService('equipmentDescriptionService');
+    equipmentDescriptionService = testBed.getService(
+      'equipmentDescriptionService'
+    );
     clothingManagementService = testBed.getService('clothingManagementService');
   });
 
@@ -34,9 +36,9 @@ describe('Equipment Description Pipeline Integration', () => {
         components: {
           'anatomy:body': {
             recipeId: 'test:basic_humanoid',
-            root: 'test-root-id'
-          }
-        }
+            root: 'test-root-id',
+          },
+        },
       });
 
       // Create clothing items
@@ -48,9 +50,9 @@ describe('Equipment Description Pipeline Integration', () => {
           'descriptors:color_basic': { color: 'blue' },
           'clothing:wearable': {
             slotId: 'torso_clothing',
-            layer: 'base'
-          }
-        }
+            layer: 'base',
+          },
+        },
       });
 
       const bootsId = await testBed.createClothingItem({
@@ -61,9 +63,9 @@ describe('Equipment Description Pipeline Integration', () => {
           'descriptors:color_basic': { color: 'brown' },
           'clothing:wearable': {
             slotId: 'feet_clothing',
-            layer: 'base'
-          }
-        }
+            layer: 'base',
+          },
+        },
       });
 
       // Set up equipped items on the entity
@@ -71,7 +73,10 @@ describe('Equipment Description Pipeline Integration', () => {
       await testBed.equipClothingItem(entityId, bootsId);
 
       // Act - Generate equipment description
-      const result = await equipmentDescriptionService.generateEquipmentDescription(entityId);
+      const result =
+        await equipmentDescriptionService.generateEquipmentDescription(
+          entityId
+        );
 
       // Assert
       expect(result).toBeDefined();
@@ -92,13 +97,16 @@ describe('Equipment Description Pipeline Integration', () => {
         components: {
           'anatomy:body': {
             recipeId: 'test:basic_humanoid',
-            root: 'test-root-id'
-          }
-        }
+            root: 'test-root-id',
+          },
+        },
       });
 
       // Act
-      const result = await equipmentDescriptionService.generateEquipmentDescription(entityId);
+      const result =
+        await equipmentDescriptionService.generateEquipmentDescription(
+          entityId
+        );
 
       // Assert
       expect(result).toBe('');
@@ -111,9 +119,9 @@ describe('Equipment Description Pipeline Integration', () => {
         components: {
           'anatomy:body': {
             recipeId: 'test:basic_humanoid',
-            root: 'test-root-id'
-          }
-        }
+            root: 'test-root-id',
+          },
+        },
       });
 
       const jacketId = await testBed.createClothingItem({
@@ -124,15 +132,18 @@ describe('Equipment Description Pipeline Integration', () => {
           'descriptors:color_basic': { color: 'black' },
           'clothing:wearable': {
             slotId: 'jacket_clothing',
-            layer: 'outer'
-          }
-        }
+            layer: 'outer',
+          },
+        },
       });
 
       await testBed.equipClothingItem(entityId, jacketId);
 
       // Act
-      const result = await equipmentDescriptionService.generateEquipmentDescription(entityId);
+      const result =
+        await equipmentDescriptionService.generateEquipmentDescription(
+          entityId
+        );
 
       // Assert
       expect(result).toBe('Wearing: leather, black jacket.');
@@ -145,9 +156,9 @@ describe('Equipment Description Pipeline Integration', () => {
         components: {
           'anatomy:body': {
             recipeId: 'test:basic_humanoid',
-            root: 'test-root-id'
-          }
-        }
+            root: 'test-root-id',
+          },
+        },
       });
 
       const shirtId = await testBed.createClothingItem({
@@ -157,9 +168,9 @@ describe('Equipment Description Pipeline Integration', () => {
           'core:material': { material: 'cotton' },
           'clothing:wearable': {
             slotId: 'torso_clothing',
-            layer: 'base'
-          }
-        }
+            layer: 'base',
+          },
+        },
       });
 
       const jacketId = await testBed.createClothingItem({
@@ -169,16 +180,19 @@ describe('Equipment Description Pipeline Integration', () => {
           'core:material': { material: 'leather' },
           'clothing:wearable': {
             slotId: 'torso_clothing',
-            layer: 'outer'
-          }
-        }
+            layer: 'outer',
+          },
+        },
       });
 
       await testBed.equipClothingItem(entityId, shirtId);
       await testBed.equipClothingItem(entityId, jacketId);
 
       // Act
-      const result = await equipmentDescriptionService.generateEquipmentDescription(entityId);
+      const result =
+        await equipmentDescriptionService.generateEquipmentDescription(
+          entityId
+        );
 
       // Assert
       expect(result).toBeDefined();
@@ -198,20 +212,23 @@ describe('Equipment Description Pipeline Integration', () => {
         components: {
           'anatomy:body': {
             recipeId: 'test:basic_humanoid',
-            root: 'test-root-id'
+            root: 'test-root-id',
           },
           'clothing:equipment': {
             equipped: {
               torso_clothing: {
-                base: 'non-existent-item-id'
-              }
-            }
-          }
-        }
+                base: 'non-existent-item-id',
+              },
+            },
+          },
+        },
       });
 
       // Act
-      const result = await equipmentDescriptionService.generateEquipmentDescription(entityId);
+      const result =
+        await equipmentDescriptionService.generateEquipmentDescription(
+          entityId
+        );
 
       // Assert
       expect(result).toBe('');
@@ -224,16 +241,19 @@ describe('Equipment Description Pipeline Integration', () => {
         components: {
           'anatomy:body': {
             recipeId: 'test:basic_humanoid',
-            root: 'test-root-id'
+            root: 'test-root-id',
           },
           'clothing:equipment': {
-            equipped: 'invalid-data-structure'
-          }
-        }
+            equipped: 'invalid-data-structure',
+          },
+        },
       });
 
       // Act
-      const result = await equipmentDescriptionService.generateEquipmentDescription(entityId);
+      const result =
+        await equipmentDescriptionService.generateEquipmentDescription(
+          entityId
+        );
 
       // Assert
       expect(result).toBe('');
@@ -248,9 +268,9 @@ describe('Equipment Description Pipeline Integration', () => {
         components: {
           'anatomy:body': {
             recipeId: 'test:basic_humanoid',
-            root: 'test-root-id'
-          }
-        }
+            root: 'test-root-id',
+          },
+        },
       });
 
       const hatId = await testBed.createClothingItem({
@@ -260,15 +280,16 @@ describe('Equipment Description Pipeline Integration', () => {
           'core:material': { material: 'wool' },
           'clothing:wearable': {
             slotId: 'head_clothing',
-            layer: 'base'
-          }
-        }
+            layer: 'base',
+          },
+        },
       });
 
       await testBed.equipClothingItem(entityId, hatId);
 
       // Act - First verify service returns correct data
-      const serviceResponse = await clothingManagementService.getEquippedItems(entityId);
+      const serviceResponse =
+        await clothingManagementService.getEquippedItems(entityId);
 
       // Assert service response
       expect(serviceResponse.success).toBe(true);
@@ -277,7 +298,10 @@ describe('Equipment Description Pipeline Integration', () => {
       expect(serviceResponse.equipped.head_clothing.base).toBe(hatId);
 
       // Act - Then verify equipment description service uses it correctly
-      const description = await equipmentDescriptionService.generateEquipmentDescription(entityId);
+      const description =
+        await equipmentDescriptionService.generateEquipmentDescription(
+          entityId
+        );
 
       // Assert final description
       expect(description).toBe('Wearing: wool hat.');

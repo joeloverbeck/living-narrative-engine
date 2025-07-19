@@ -198,7 +198,10 @@ export class SocketManager {
       socket.orientation || effectiveOrientation
     );
     name = name.replace('{{effective_orientation}}', effectiveOrientation);
-    name = name.replace('{{type}}', anatomyPart?.subType || 'part');
+    name = name.replace(
+      '{{type}}',
+      anatomyPart?.subType?.replace(/_/g, ' ') || 'part'
+    );
     name = name.replace('{{parent.name}}', parentName);
 
     // TODO: Handle {{index}} for multiple parts of same type

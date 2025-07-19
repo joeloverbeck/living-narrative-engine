@@ -39,8 +39,18 @@ describe('Body Description with Equipment Integration', () => {
     // Create consistent anatomy formatting service mock
     mockAnatomyFormattingService = {
       getFormattingConfiguration: () => ({ separator: ', ' }),
-      getDescriptorOrder: () => ['descriptors:color_basic', 'descriptors:texture', 'core:material'],
-      getDescriptorValueKeys: () => ['value', 'color', 'size', 'texture', 'material'],
+      getDescriptorOrder: () => [
+        'descriptors:color_basic',
+        'descriptors:texture',
+        'core:material',
+      ],
+      getDescriptorValueKeys: () => [
+        'value',
+        'color',
+        'size',
+        'texture',
+        'material',
+      ],
       getEquipmentIntegrationConfig: () => ({
         enabled: true,
         prefix: 'Wearing: ',
@@ -75,15 +85,27 @@ describe('Body Description with Equipment Integration', () => {
         }),
         getAll: jest.fn().mockImplementation((category) => {
           if (category === 'anatomyFormatting') {
-            return [{
-              id: 'default',
-              _modId: 'anatomy',
-              descriptionOrder: ['build', 'hair', 'torso', 'equipment'],
-              pairedParts: ['eye', 'ear', 'arm', 'leg', 'hand', 'foot'],
-              irregularPlurals: { foot: 'feet', tooth: 'teeth' },
-              descriptorOrder: ['descriptors:color_basic', 'descriptors:texture', 'core:material'],
-              descriptorValueKeys: ['value', 'color', 'size', 'texture', 'material']
-            }];
+            return [
+              {
+                id: 'default',
+                _modId: 'anatomy',
+                descriptionOrder: ['build', 'hair', 'torso', 'equipment'],
+                pairedParts: ['eye', 'ear', 'arm', 'leg', 'hand', 'foot'],
+                irregularPlurals: { foot: 'feet', tooth: 'teeth' },
+                descriptorOrder: [
+                  'descriptors:color_basic',
+                  'descriptors:texture',
+                  'core:material',
+                ],
+                descriptorValueKeys: [
+                  'value',
+                  'color',
+                  'size',
+                  'texture',
+                  'material',
+                ],
+              },
+            ];
           }
           return [];
         }),
@@ -100,10 +122,10 @@ describe('Body Description with Equipment Integration', () => {
       logger: mockLogger,
       safeEventDispatcher: { dispatch: jest.fn() },
     });
-    
+
     // Initialize the anatomy formatting service
     anatomyFormattingService.initialize();
-    
+
     const partDescriptionGenerator = new PartDescriptionGenerator({
       logger: mockLogger,
       bodyPartDescriptionBuilder,
@@ -397,7 +419,8 @@ describe('Body Description with Equipment Integration', () => {
     });
 
     // Override the equipment service to one that fails
-    bodyDescriptionComposer.equipmentDescriptionService = failingEquipmentService;
+    bodyDescriptionComposer.equipmentDescriptionService =
+      failingEquipmentService;
 
     // Act
     const result = await bodyDescriptionComposer.composeDescription(bodyEntity);
@@ -542,7 +565,8 @@ describe('Body Description with Equipment Integration', () => {
     });
 
     // Override the equipment service to one with custom items
-    bodyDescriptionComposer.equipmentDescriptionService = customEquipmentService;
+    bodyDescriptionComposer.equipmentDescriptionService =
+      customEquipmentService;
 
     // Act
     const result = await bodyDescriptionComposer.composeDescription(bodyEntity);

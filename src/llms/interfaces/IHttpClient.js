@@ -25,6 +25,9 @@
  * @property {number} [timeout] - Optional. The request timeout in milliseconds. If the request takes
  * longer than this value to complete, it should be aborted, and the promise returned by
  * the `request` method should be rejected.
+ * @property {AbortSignal} [abortSignal] - Optional. An AbortSignal object that can be used to abort
+ * the request. When the signal is aborted, the request should be cancelled and the promise
+ * should be rejected with an AbortError.
  * @property {any} [additionalOptions] - Optional. A placeholder for any other common fetch options
  * that specific implementations might need or support. This allows for extensibility
  * without cluttering the primary interface properties for very specific use cases.

@@ -167,9 +167,9 @@ describe('AnatomyDescriptionService', () => {
     it('should throw error if entity has no anatomy:body component', async () => {
       const invalidEntity = createMockEntity('invalid-1', {});
 
-      await expect(service.generateAllDescriptions(invalidEntity)).rejects.toThrow(
-        'Entity must have an anatomy:body component'
-      );
+      await expect(
+        service.generateAllDescriptions(invalidEntity)
+      ).rejects.toThrow('Entity must have an anatomy:body component');
     });
 
     it('should throw error if body component has no body.root property', async () => {
@@ -177,9 +177,9 @@ describe('AnatomyDescriptionService', () => {
         [ANATOMY_BODY_COMPONENT_ID]: {},
       });
 
-      await expect(service.generateAllDescriptions(invalidEntity)).rejects.toThrow(
-        'Body component must have a body.root property'
-      );
+      await expect(
+        service.generateAllDescriptions(invalidEntity)
+      ).rejects.toThrow('Body component must have a body.root property');
     });
   });
 

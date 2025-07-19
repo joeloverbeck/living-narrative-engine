@@ -136,9 +136,11 @@ describe('Visualization Entity Not Found Scenarios', () => {
         id: 'entity-1',
         getComponentData: jest.fn().mockImplementation((componentId) => {
           if (componentId === 'core:name') return { text: 'Entity 1' };
-          if (componentId === 'core:description') return { text: 'Description 1' };
+          if (componentId === 'core:description')
+            return { text: 'Description 1' };
           if (componentId === 'anatomy:part') return { subType: 'arm' };
-          if (componentId === 'anatomy:joint') return { parentId: rootEntityId, socketId: 'socket-1' };
+          if (componentId === 'anatomy:joint')
+            return { parentId: rootEntityId, socketId: 'socket-1' };
           return null;
         }),
       };
@@ -147,9 +149,11 @@ describe('Visualization Entity Not Found Scenarios', () => {
         id: 'entity-2',
         getComponentData: jest.fn().mockImplementation((componentId) => {
           if (componentId === 'core:name') return { text: 'Entity 2' };
-          if (componentId === 'core:description') return { text: 'Description 2' };
+          if (componentId === 'core:description')
+            return { text: 'Description 2' };
           if (componentId === 'anatomy:part') return { subType: 'leg' };
-          if (componentId === 'anatomy:joint') return { parentId: rootEntityId, socketId: 'socket-2' };
+          if (componentId === 'anatomy:joint')
+            return { parentId: rootEntityId, socketId: 'socket-2' };
           return null;
         }),
       };
@@ -195,7 +199,8 @@ describe('Visualization Entity Not Found Scenarios', () => {
         id: rootEntityId,
         getComponentData: jest.fn().mockImplementation((componentId) => {
           if (componentId === 'core:name') return { text: 'Root Entity' };
-          if (componentId === 'core:description') return { text: 'Root Description' };
+          if (componentId === 'core:description')
+            return { text: 'Root Description' };
           if (componentId === 'anatomy:part') return { subType: 'torso' };
           if (componentId === 'anatomy:joint') return null;
           return null;
@@ -206,9 +211,11 @@ describe('Visualization Entity Not Found Scenarios', () => {
         id: 'entity-1',
         getComponentData: jest.fn().mockImplementation((componentId) => {
           if (componentId === 'core:name') return { text: 'Entity 1' };
-          if (componentId === 'core:description') return { text: 'Description 1' };
+          if (componentId === 'core:description')
+            return { text: 'Description 1' };
           if (componentId === 'anatomy:part') return { subType: 'arm' };
-          if (componentId === 'anatomy:joint') return { parentId: rootEntityId, socketId: 'socket-1' };
+          if (componentId === 'anatomy:joint')
+            return { parentId: rootEntityId, socketId: 'socket-1' };
           return null;
         }),
       };
@@ -217,9 +224,11 @@ describe('Visualization Entity Not Found Scenarios', () => {
         id: 'entity-3',
         getComponentData: jest.fn().mockImplementation((componentId) => {
           if (componentId === 'core:name') return { text: 'Entity 3' };
-          if (componentId === 'core:description') return { text: 'Description 3' };
+          if (componentId === 'core:description')
+            return { text: 'Description 3' };
           if (componentId === 'anatomy:part') return { subType: 'leg' };
-          if (componentId === 'anatomy:joint') return { parentId: rootEntityId, socketId: 'socket-3' };
+          if (componentId === 'anatomy:joint')
+            return { parentId: rootEntityId, socketId: 'socket-3' };
           return null;
         }),
       };
@@ -261,7 +270,8 @@ describe('Visualization Entity Not Found Scenarios', () => {
         id: rootEntityId,
         getComponentData: jest.fn().mockImplementation((componentId) => {
           if (componentId === 'core:name') return { text: 'Root Entity' };
-          if (componentId === 'core:description') return { text: 'Root Description' };
+          if (componentId === 'core:description')
+            return { text: 'Root Description' };
           if (componentId === 'anatomy:part') return { subType: 'torso' };
           if (componentId === 'anatomy:joint') return null;
           return null;
@@ -339,7 +349,8 @@ describe('Visualization Entity Not Found Scenarios', () => {
         id: rootEntityId,
         getComponentData: jest.fn().mockImplementation((componentId) => {
           if (componentId === 'core:name') return { text: 'Root Entity' };
-          if (componentId === 'core:description') return { text: 'Root Description' };
+          if (componentId === 'core:description')
+            return { text: 'Root Description' };
           if (componentId === 'anatomy:part') return { subType: 'torso' };
           if (componentId === 'anatomy:joint') return null;
           return null;
@@ -383,7 +394,8 @@ describe('Visualization Entity Not Found Scenarios', () => {
         id: rootEntityId,
         getComponentData: jest.fn().mockImplementation((componentId) => {
           if (componentId === 'core:name') return { text: 'Root Entity' };
-          if (componentId === 'core:description') return { text: 'Root Description' };
+          if (componentId === 'core:description')
+            return { text: 'Root Description' };
           if (componentId === 'anatomy:part') return { subType: 'torso' };
           if (componentId === 'anatomy:joint') return null;
           return null;
@@ -412,8 +424,10 @@ describe('Visualization Entity Not Found Scenarios', () => {
       const bodyData = null;
 
       // Act & Assert
-      await expect(visualizationComposer.renderGraph(rootEntityId, bodyData)).rejects.toThrow('Body data is required');
-      
+      await expect(
+        visualizationComposer.renderGraph(rootEntityId, bodyData)
+      ).rejects.toThrow('Body data is required');
+
       // Should not get to layout or rendering
       expect(mockLayoutEngine.calculateLayout).not.toHaveBeenCalled();
       expect(mockSvgRenderer.renderNodes).not.toHaveBeenCalled();
@@ -433,7 +447,9 @@ describe('Visualization Entity Not Found Scenarios', () => {
       await visualizationComposer.renderGraph(rootEntityId, bodyData);
 
       // Assert
-      expect(mockLogger.warn).toHaveBeenCalledWith('No body data or root found');
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'No body data or root found'
+      );
       expect(mockLayoutEngine.calculateLayout).not.toHaveBeenCalled();
       expect(mockSvgRenderer.renderNodes).not.toHaveBeenCalled();
     });
@@ -457,7 +473,8 @@ describe('Visualization Entity Not Found Scenarios', () => {
         id: rootEntityId,
         getComponentData: jest.fn().mockImplementation((componentId) => {
           if (componentId === 'core:name') return { text: 'Root Entity' };
-          if (componentId === 'core:description') return { text: 'Root Description' };
+          if (componentId === 'core:description')
+            return { text: 'Root Description' };
           if (componentId === 'anatomy:part') return { subType: 'torso' };
           if (componentId === 'anatomy:joint') return null;
           return null;
@@ -468,9 +485,11 @@ describe('Visualization Entity Not Found Scenarios', () => {
         id: 'entity-4',
         getComponentData: jest.fn().mockImplementation((componentId) => {
           if (componentId === 'core:name') return { text: 'Entity 4' };
-          if (componentId === 'core:description') return { text: 'Description 4' };
+          if (componentId === 'core:description')
+            return { text: 'Description 4' };
           if (componentId === 'anatomy:part') return { subType: 'leg' };
-          if (componentId === 'anatomy:joint') return { parentId: rootEntityId, socketId: 'socket-4' };
+          if (componentId === 'anatomy:joint')
+            return { parentId: rootEntityId, socketId: 'socket-4' };
           return null;
         }),
       };

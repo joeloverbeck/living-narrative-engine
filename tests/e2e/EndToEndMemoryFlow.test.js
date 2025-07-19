@@ -194,7 +194,7 @@ describe('End-to-End Short-Term Memory Flow', () => {
     // Should contain the thoughts section with the thought
     expect(prompt2).toContain('<thoughts>');
     expect(prompt2).toContain('- FirstThought');
-    
+
     // Verify the prompt contains the expected template structure
     expect(prompt2).toContain('<task_definition>');
     expect(prompt2).toContain('<character_persona>');

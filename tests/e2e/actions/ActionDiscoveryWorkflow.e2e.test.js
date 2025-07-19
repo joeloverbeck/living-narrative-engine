@@ -411,7 +411,7 @@ describe('Complete Action Discovery Workflow E2E', () => {
     // Player should have all actions (has required components)
     expect(playerActionIds).toContain('core:go');
     expect(playerActionIds).toContain('core:wait');
-    
+
     // Minimal actor should only have actions that don't require components
     expect(minimalActionIds).toContain('core:wait');
     // Minimal actor shouldn't have 'core:go' since it lacks 'core:position' component
