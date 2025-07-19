@@ -24,12 +24,8 @@ import {
   ACTOR_COMPONENT_ID,
 } from '../../src/constants/componentIds.js';
 
-// NEW imports for the refactored PromptBuilder
-import { AssemblerRegistry } from '../../src/prompting/assemblerRegistry.js';
-import * as ConditionEvaluator from '../../src/prompting/elementConditionEvaluator.js';
-import NotesSectionAssembler, {
-  NOTES_WRAPPER_KEY,
-} from '../../src/prompting/assembling/notesSectionAssembler.js';
+// Import for current template-based prompt builder
+// No additional assembler imports needed
 
 /** @typedef {import('../../src/interfaces/coreServices.js').ILogger} ILogger */
 
@@ -158,23 +154,11 @@ describe('End-to-End Notes Persistence Flow', () => {
     const placeholderResolver = new PlaceholderResolver(logger);
 
     // ──────────────────────────────────────────────────────────────────────────
-    // Build a minimal AssemblerRegistry for 'notes_wrapper'
-    // ──────────────────────────────────────────────────────────────────────────
-    const assemblerRegistry = new AssemblerRegistry();
-    assemblerRegistry.register(
-      NOTES_WRAPPER_KEY,
-      new NotesSectionAssembler({ logger })
-    );
-
-    // ──────────────────────────────────────────────────────────────────────────
-    // Use the new PromptBuilder signature (assemblerRegistry + evaluator)
+    // Use current template-based PromptBuilder (no assemblers needed)
     // ──────────────────────────────────────────────────────────────────────────
     promptBuilder = new PromptBuilder({
       logger,
       llmConfigService,
-      placeholderResolver,
-      assemblerRegistry,
-      conditionEvaluator: ConditionEvaluator,
     });
 
     schemaValidator = new AjvSchemaValidator({
