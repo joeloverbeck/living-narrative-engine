@@ -8,6 +8,10 @@ import { NOTES_COMPONENT_ID } from '../constants/componentIds.js';
 import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
 import { isNonBlankString } from '../utils/textUtils.js';
 import ComponentAccessService from '../entities/componentAccessService.js';
+import {
+  DEFAULT_SUBJECT_TYPE,
+  isValidSubjectType,
+} from '../constants/subjectTypes.js';
 
 /**
  * Persists the "notes" produced during an LLM turn into the actor's
@@ -65,6 +69,33 @@ export function persistNotes(
       isNonBlankString(note.text) &&
       isNonBlankString(note.subject)
     ) {
+      // Apply migration for notes without subjectType
+      if (!note.subjectType) {
+        note.subjectType = DEFAULT_SUBJECT_TYPE;
+        if (dispatcher) {
+          logger?.debug(
+            `NotesPersistenceHook: Auto-assigned default subjectType "${DEFAULT_SUBJECT_TYPE}" to note`,
+            { subject: note.subject }
+          );
+        }
+      }
+
+      // Validate subjectType if present
+      if (note.subjectType && !isValidSubjectType(note.subjectType)) {
+        if (dispatcher) {
+          safeDispatchError(
+            dispatcher,
+            'NotesPersistenceHook: Invalid subjectType, using default',
+            {
+              invalidSubjectType: note.subjectType,
+              subject: note.subject,
+              defaultAssigned: DEFAULT_SUBJECT_TYPE,
+            }
+          );
+        }
+        note.subjectType = DEFAULT_SUBJECT_TYPE;
+      }
+
       validNotes.push(note);
     }
     // Invalid note - dispatch error

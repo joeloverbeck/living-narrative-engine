@@ -27,7 +27,7 @@ import { TestDataFactory } from '../../../common/actions/testDataFactory.js';
  * - Simulating UI action selection
  * - Monitoring event flow and state changes
  * - Asserting execution results
- * 
+ *
  * @deprecated Use turnExecutionFacade from createMockFacades() instead
  */
 export class ActionExecutionTestBed {
@@ -35,10 +35,10 @@ export class ActionExecutionTestBed {
     // Emit deprecation warning
     console.warn(
       'DEPRECATION WARNING: ActionExecutionTestBed is deprecated. ' +
-      'Please migrate to the facade pattern using createMockFacades() and turnExecutionFacade. ' +
-      'See tests/e2e/facades/turnExecutionFacadeExample.e2e.test.js for examples.'
+        'Please migrate to the facade pattern using createMockFacades() and turnExecutionFacade. ' +
+        'See tests/e2e/facades/turnExecutionFacadeExample.e2e.test.js for examples.'
     );
-    
+
     this.container = null;
     this.entityManager = null;
     this.commandProcessor = null;

@@ -178,7 +178,13 @@ describe('End-to-End Notes Persistence Flow', () => {
       chosenIndex: 1,
       speech: '',
       thoughts: 'thinking',
-      notes: ['Remember the password'],
+      notes: [
+        {
+          text: 'Remember the password',
+          subject: 'Password reminder',
+          subjectType: 'concept',
+        },
+      ],
     };
 
     const processingResult = await processor.processResponse(
@@ -188,7 +194,11 @@ describe('End-to-End Notes Persistence Flow', () => {
 
     expect(processingResult.success).toBe(true);
     expect(processingResult.extractedData.notes).toEqual([
-      'Remember the password',
+      {
+        text: 'Remember the password',
+        subject: 'Password reminder',
+        subjectType: 'concept',
+      },
     ]);
 
     // persist it on the entity
@@ -197,9 +207,8 @@ describe('End-to-End Notes Persistence Flow', () => {
         notes: [],
       };
       const newNoteObjects = processingResult.extractedData.notes.map(
-        (text) => ({
-          text,
-          subject: 'Password reminder', // Required field for structured notes
+        (note) => ({
+          ...note,
           timestamp: new Date().toISOString(),
         })
       );

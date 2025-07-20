@@ -37,20 +37,89 @@ describe('JSON-Schema – core:notes component', () => {
     ['core:notes with empty array', { 'core:notes': { notes: [] } }],
     [
       'note with required fields only',
-      { 'core:notes': { notes: [{ text: 'A note about something', subject: 'something' }] } },
+      {
+        'core:notes': {
+          notes: [
+            {
+              text: 'A note about something',
+              subject: 'something',
+              subjectType: 'other',
+            },
+          ],
+        },
+      },
     ],
     [
       'note with all fields',
-      { 
-        'core:notes': { 
-          notes: [{ 
-            text: 'A note about player',
-            subject: 'player',
-            context: 'During combat',
-            tags: ['combat', 'observation'],
-            timestamp: '2025-06-04T12:00:00Z'
-          }] 
-        } 
+      {
+        'core:notes': {
+          notes: [
+            {
+              text: 'A note about player',
+              subject: 'player',
+              subjectType: 'character',
+              context: 'During combat',
+              tags: ['combat', 'observation'],
+              timestamp: '2025-06-04T12:00:00Z',
+            },
+          ],
+        },
+      },
+    ],
+    [
+      'note with valid character subjectType',
+      {
+        'core:notes': {
+          notes: [
+            {
+              text: 'NPC behavior',
+              subject: 'Iker Aguirre',
+              subjectType: 'character',
+            },
+          ],
+        },
+      },
+    ],
+    [
+      'note with valid location subjectType',
+      {
+        'core:notes': {
+          notes: [
+            {
+              text: 'Area description',
+              subject: 'Market Square',
+              subjectType: 'location',
+            },
+          ],
+        },
+      },
+    ],
+    [
+      'note with valid item subjectType',
+      {
+        'core:notes': {
+          notes: [
+            {
+              text: 'Artifact properties',
+              subject: 'Magic Sword',
+              subjectType: 'item',
+            },
+          ],
+        },
+      },
+    ],
+    [
+      'note with valid event subjectType',
+      {
+        'core:notes': {
+          notes: [
+            {
+              text: 'Important meeting',
+              subject: 'Council Meeting',
+              subjectType: 'event',
+            },
+          ],
+        },
       },
     ],
   ])('✓ %s – should validate', (_label, payload) => {
@@ -65,7 +134,15 @@ describe('JSON-Schema – core:notes component', () => {
       'missing required subject field',
       {
         'core:notes': {
-          notes: [{ text: 'A note without subject' }],
+          notes: [{ text: 'A note without subject', subjectType: 'other' }],
+        },
+      },
+    ],
+    [
+      'missing required subjectType field',
+      {
+        'core:notes': {
+          notes: [{ text: 'A note without subjectType', subject: 'player' }],
         },
       },
     ],
@@ -73,7 +150,7 @@ describe('JSON-Schema – core:notes component', () => {
       'empty text',
       {
         'core:notes': {
-          notes: [{ text: '', subject: 'player' }],
+          notes: [{ text: '', subject: 'player', subjectType: 'character' }],
         },
       },
     ],
@@ -81,20 +158,47 @@ describe('JSON-Schema – core:notes component', () => {
       'empty subject',
       {
         'core:notes': {
-          notes: [{ text: 'A note', subject: '' }],
+          notes: [{ text: 'A note', subject: '', subjectType: 'other' }],
+        },
+      },
+    ],
+    [
+      'invalid subjectType',
+      {
+        'core:notes': {
+          notes: [
+            { text: 'A note', subject: 'player', subjectType: 'invalid_type' },
+          ],
         },
       },
     ],
     [
       'malformed timestamp',
-      { 'core:notes': { notes: [{ text: 'foo', subject: 'bar', timestamp: 'not-a-date' }] } },
+      {
+        'core:notes': {
+          notes: [
+            {
+              text: 'foo',
+              subject: 'bar',
+              subjectType: 'other',
+              timestamp: 'not-a-date',
+            },
+          ],
+        },
+      },
     ],
     [
       'extra property',
       {
         'core:notes': {
           notes: [
-            { text: 'foo', subject: 'bar', timestamp: '2025-06-04T12:00:00Z', extra: 123 },
+            {
+              text: 'foo',
+              subject: 'bar',
+              subjectType: 'other',
+              timestamp: '2025-06-04T12:00:00Z',
+              extra: 123,
+            },
           ],
         },
       },

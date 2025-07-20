@@ -1,0 +1,492 @@
+/**
+ * @file Integration tests for notes formatting pipeline
+ * @description Tests end-to-end notes processing from AIPromptContentProvider through PromptDataFormatter
+ */
+
+import { describe, beforeEach, test, expect, jest } from '@jest/globals';
+import { AIPromptContentProvider } from '../../../src/prompting/AIPromptContentProvider.js';
+import { PromptDataFormatter } from '../../../src/prompting/promptDataFormatter.js';
+import { SUBJECT_TYPES } from '../../../src/constants/subjectTypes.js';
+
+describe('Notes Formatting Integration', () => {
+  let promptContentProvider;
+  let promptDataFormatter;
+  let mockLogger;
+
+  // Test setup helpers
+  const createMockLogger = () => ({
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  });
+
+  const createMockServices = () => ({
+    promptStaticContentService: {
+      getCoreTaskDescriptionText: () => 'core-task',
+      getCharacterPortrayalGuidelines: () => 'portrayal',
+      getNc21ContentPolicyText: () => 'content-policy',
+      getFinalLlmInstructionText: () => 'final-instructions',
+    },
+    perceptionLogFormatter: {
+      format: (logArray) =>
+        logArray.map((entry) => ({ content: entry.descriptionText || '' })),
+    },
+    gameStateValidationService: {
+      validate: () => ({ isValid: true, errorContent: null }),
+    },
+  });
+
+  beforeEach(() => {
+    mockLogger = createMockLogger();
+    const mockServices = createMockServices();
+
+    promptContentProvider = new AIPromptContentProvider({
+      logger: mockLogger,
+      ...mockServices,
+    });
+
+    promptDataFormatter = new PromptDataFormatter({ logger: mockLogger });
+  });
+
+  describe('End-to-End Notes Processing Pipeline', () => {
+    test('should process structured notes through complete pipeline with grouping', async () => {
+      // Setup: Create game state with structured notes
+      const gameStateDto = {
+        actorState: {
+          components: {
+            'core:notes': {
+              notes: [
+                {
+                  text: 'John seems nervous about the council meeting',
+                  subject: 'John',
+                  subjectType: SUBJECT_TYPES.CHARACTER,
+                  context: 'tavern conversation',
+                  tags: ['emotion', 'politics'],
+                  timestamp: '2024-01-01T10:00:00Z',
+                },
+                {
+                  text: 'Always carries that strange medallion',
+                  subject: 'John',
+                  subjectType: SUBJECT_TYPES.CHARACTER,
+                  context: 'morning observation',
+                  tags: ['mystery', 'artifact'],
+                  timestamp: '2024-01-01T11:00:00Z',
+                },
+                {
+                  text: 'Guards doubled at the north gate',
+                  subject: 'The North Gate',
+                  subjectType: SUBJECT_TYPES.LOCATION,
+                  context: 'morning patrol',
+                  tags: ['security', 'observation'],
+                  timestamp: '2024-01-01T09:00:00Z',
+                },
+                {
+                  text: 'Strange symbols carved into the gate stones',
+                  subject: 'The North Gate',
+                  subjectType: SUBJECT_TYPES.LOCATION,
+                  context: 'evening inspection',
+                  tags: ['mystery', 'magic'],
+                  timestamp: '2024-01-01T20:00:00Z',
+                },
+                {
+                  text: 'Merchant caravan three days overdue',
+                  subject: 'The Missing Shipment',
+                  subjectType: SUBJECT_TYPES.EVENT,
+                  context: 'marketplace rumors',
+                  tags: ['commerce', 'concern'],
+                  timestamp: '2024-01-01T15:00:00Z',
+                },
+              ],
+            },
+          },
+        },
+        actorPromptData: { name: 'Test Character' },
+        currentUserInput: 'Test input',
+        perceptionLog: [],
+        currentLocation: {
+          name: 'Test Location',
+          description: 'A test location',
+          exits: [],
+          characters: [],
+        },
+        availableActions: [],
+      };
+
+      // Step 1: Extract notes through AIPromptContentProvider
+      const promptData = await promptContentProvider.getPromptData(
+        gameStateDto,
+        mockLogger
+      );
+
+      expect(promptData.notesArray).toHaveLength(5);
+      expect(promptData.notesArray[0]).toEqual({
+        text: 'John seems nervous about the council meeting',
+        subject: 'John',
+        subjectType: SUBJECT_TYPES.CHARACTER,
+        context: 'tavern conversation',
+        tags: ['emotion', 'politics'],
+        timestamp: '2024-01-01T10:00:00Z',
+      });
+
+      // Step 2: Format notes with grouping through PromptDataFormatter
+      const formattedPromptData = promptDataFormatter.formatPromptData({
+        ...promptData,
+        // Override to test with grouping enabled
+      });
+
+      // Test new default behavior - should be grouped format by default
+      expect(formattedPromptData.notesContent).toContain('- John seems nervous about the council meeting');
+      expect(formattedPromptData.notesContent).toContain('## Characters');
+
+      // Step 3: Test grouped formatting explicitly
+      const groupedNotesContent = promptDataFormatter.formatNotes(
+        promptData.notesArray,
+        { groupBySubject: true }
+      );
+
+      expect(groupedNotesContent).toContain('## Characters');
+      expect(groupedNotesContent).toContain('### John');
+      expect(groupedNotesContent).toContain('## Locations');
+      expect(groupedNotesContent).toContain('### The North Gate');
+      expect(groupedNotesContent).toContain('## Events');
+      expect(groupedNotesContent).toContain('### The Missing Shipment');
+
+      // Verify content and formatting
+      expect(groupedNotesContent).toContain('- John seems nervous about the council meeting (tavern conversation) [emotion, politics]');
+      expect(groupedNotesContent).toContain('- Always carries that strange medallion (morning observation) [mystery, artifact]');
+      expect(groupedNotesContent).toContain('- Guards doubled at the north gate (morning patrol) [security, observation]');
+
+      // Step 4: Test complete notes section with grouping
+      const groupedNotesSection = promptDataFormatter.formatNotesSection(
+        promptData.notesArray,
+        { groupBySubject: true }
+      );
+
+      expect(groupedNotesSection).toMatch(/^<notes>\n[\s\S]*\n<\/notes>$/);
+      expect(groupedNotesSection).toContain('## Characters');
+    });
+
+    test('should handle mixed legacy and structured notes gracefully', async () => {
+      const gameStateDto = {
+        actorState: {
+          components: {
+            'core:notes': {
+              notes: [
+                // Legacy note (just text)
+                { text: 'Simple legacy note' },
+                // Structured note
+                {
+                  text: 'Structured note with context',
+                  subject: 'Test Subject',
+                  subjectType: SUBJECT_TYPES.CHARACTER,
+                  context: 'test context',
+                },
+                // Partially structured note
+                {
+                  text: 'Note with subject only',
+                  subject: 'Another Subject',
+                },
+              ],
+            },
+          },
+        },
+        actorPromptData: { name: 'Test Character' },
+        currentUserInput: '',
+        perceptionLog: [],
+        currentLocation: {
+          name: 'Test Location',
+          description: 'A test location',
+          exits: [],
+          characters: [],
+        },
+        availableActions: [],
+      };
+
+      const promptData = await promptContentProvider.getPromptData(
+        gameStateDto,
+        mockLogger
+      );
+
+      expect(promptData.notesArray).toHaveLength(3);
+
+      // Test that extraction preserves all fields correctly
+      expect(promptData.notesArray[0]).toEqual({ text: 'Simple legacy note' });
+      expect(promptData.notesArray[1]).toEqual({
+        text: 'Structured note with context',
+        subject: 'Test Subject',
+        subjectType: SUBJECT_TYPES.CHARACTER,
+        context: 'test context',
+      });
+      expect(promptData.notesArray[2]).toEqual({
+        text: 'Note with subject only',
+        subject: 'Another Subject',
+      });
+
+      // Test grouped formatting handles mixed formats
+      const groupedContent = promptDataFormatter.formatNotes(
+        promptData.notesArray,
+        { groupBySubject: true }
+      );
+
+      expect(groupedContent).toContain('## Characters');
+      expect(groupedContent).toContain('## Other');
+      expect(groupedContent).toContain('### Test Subject');
+      expect(groupedContent).toContain('### Another Subject');
+      expect(groupedContent).toContain('### General'); // For legacy note
+    });
+
+    test('should maintain performance with large note sets', async () => {
+      // Create a large set of notes
+      const largeNotesArray = Array.from({ length: 100 }, (_, index) => ({
+        text: `Note ${index + 1}`,
+        subject: `Subject ${(index % 10) + 1}`,
+        subjectType: Object.values(SUBJECT_TYPES)[index % Object.values(SUBJECT_TYPES).length],
+        context: `Context ${index + 1}`,
+        tags: [`tag${index + 1}`, `category${(index % 5) + 1}`],
+        timestamp: new Date(2024, 0, 1, index % 24).toISOString(),
+      }));
+
+      const gameStateDto = {
+        actorState: {
+          components: {
+            'core:notes': {
+              notes: largeNotesArray,
+            },
+          },
+        },
+        actorPromptData: { name: 'Test Character' },
+        currentUserInput: '',
+        perceptionLog: [],
+        currentLocation: {
+          name: 'Test Location',
+          description: 'A test location',
+          exits: [],
+          characters: [],
+        },
+        availableActions: [],
+      };
+
+      // Measure processing time
+      const startTime = Date.now();
+      
+      const promptData = await promptContentProvider.getPromptData(
+        gameStateDto,
+        mockLogger
+      );
+
+      const groupedContent = promptDataFormatter.formatNotes(
+        promptData.notesArray,
+        { groupBySubject: true }
+      );
+
+      const endTime = Date.now();
+      const processingTime = endTime - startTime;
+
+      // Should process 100 notes in reasonable time (< 100ms)
+      expect(processingTime).toBeLessThan(100);
+      expect(promptData.notesArray).toHaveLength(100);
+      expect(groupedContent).toContain('## Characters');
+      expect(groupedContent).toContain('### Subject 1');
+      
+      // Verify all subjects are present
+      for (let i = 1; i <= 10; i++) {
+        expect(groupedContent).toContain(`### Subject ${i}`);
+      }
+    });
+
+    test('should handle empty notes gracefully in complete pipeline', async () => {
+      const gameStateDto = {
+        actorState: {
+          components: {
+            'core:notes': {
+              notes: [],
+            },
+          },
+        },
+        actorPromptData: { name: 'Test Character' },
+        currentUserInput: '',
+        perceptionLog: [],
+        currentLocation: {
+          name: 'Test Location',
+          description: 'A test location',
+          exits: [],
+          characters: [],
+        },
+        availableActions: [],
+      };
+
+      const promptData = await promptContentProvider.getPromptData(
+        gameStateDto,
+        mockLogger
+      );
+
+      expect(promptData.notesArray).toEqual([]);
+
+      const formattedPromptData = promptDataFormatter.formatPromptData(promptData);
+      expect(formattedPromptData.notesContent).toBe('');
+      expect(formattedPromptData.notesSection).toBe('');
+
+      const groupedContent = promptDataFormatter.formatNotes(
+        promptData.notesArray,
+        { groupBySubject: true }
+      );
+      expect(groupedContent).toBe('');
+    });
+
+    test('should handle missing notes component gracefully', async () => {
+      const gameStateDto = {
+        actorState: {
+          components: {
+            // No 'core:notes' component
+          },
+        },
+        actorPromptData: { name: 'Test Character' },
+        currentUserInput: '',
+        perceptionLog: [],
+        currentLocation: {
+          name: 'Test Location',
+          description: 'A test location',
+          exits: [],
+          characters: [],
+        },
+        availableActions: [],
+      };
+
+      const promptData = await promptContentProvider.getPromptData(
+        gameStateDto,
+        mockLogger
+      );
+
+      expect(promptData.notesArray).toEqual([]);
+
+      const groupedContent = promptDataFormatter.formatNotes(
+        promptData.notesArray,
+        { groupBySubject: true }
+      );
+      expect(groupedContent).toBe('');
+    });
+  });
+
+  describe('Template Substitution Integration', () => {
+    test('should properly format notes for template substitution', async () => {
+      const gameStateDto = {
+        actorState: {
+          components: {
+            'core:notes': {
+              notes: [
+                {
+                  text: 'Test note for template',
+                  subject: 'Template Subject',
+                  subjectType: SUBJECT_TYPES.CHARACTER,
+                  context: 'template context',
+                  tags: ['template', 'test'],
+                },
+              ],
+            },
+          },
+        },
+        actorPromptData: { name: 'Test Character' },
+        currentUserInput: '',
+        perceptionLog: [],
+        currentLocation: {
+          name: 'Test Location',
+          description: 'A test location',
+          exits: [],
+          characters: [],
+        },
+        availableActions: [],
+      };
+
+      const promptData = await promptContentProvider.getPromptData(
+        gameStateDto,
+        mockLogger
+      );
+
+      const formattedPromptData = promptDataFormatter.formatPromptData(promptData);
+
+      // Verify default is now grouped format
+      expect(formattedPromptData.notesContent).toContain('## Characters');
+      expect(formattedPromptData.notesContent).toContain('### Template Subject');
+      expect(formattedPromptData.notesContent).toContain('- Test note for template (template context) [template, test]');
+      expect(formattedPromptData.notesSection).toContain('<notes>\n## Characters\n### Template Subject\n- Test note for template (template context) [template, test]\n</notes>');
+
+      // Test that grouped section formatting can be applied
+      const groupedNotesSection = promptDataFormatter.formatNotesSection(
+        promptData.notesArray,
+        { groupBySubject: true }
+      );
+
+      expect(groupedNotesSection).toContain('<notes>');
+      expect(groupedNotesSection).toContain('## Characters');
+      expect(groupedNotesSection).toContain('### Template Subject');
+      expect(groupedNotesSection).toContain('- Test note for template (template context) [template, test]');
+      expect(groupedNotesSection).toContain('</notes>');
+    });
+  });
+
+  describe('Configuration and Options Integration', () => {
+    test('should respect formatting options throughout pipeline', async () => {
+      const gameStateDto = {
+        actorState: {
+          components: {
+            'core:notes': {
+              notes: [
+                {
+                  text: 'Note with options test',
+                  subject: 'Options Subject',
+                  subjectType: SUBJECT_TYPES.CHARACTER,
+                  context: 'options context',
+                  tags: ['option1', 'option2'],
+                },
+              ],
+            },
+          },
+        },
+        actorPromptData: { name: 'Test Character' },
+        currentUserInput: '',
+        perceptionLog: [],
+        currentLocation: {
+          name: 'Test Location',
+          description: 'A test location',
+          exits: [],
+          characters: [],
+        },
+        availableActions: [],
+      };
+
+      const promptData = await promptContentProvider.getPromptData(
+        gameStateDto,
+        mockLogger
+      );
+
+      // Test different option combinations
+      const optionsTestCases = [
+        {
+          options: { groupBySubject: true, showContext: false, showTags: false },
+          expectedContent: '- Note with options test',
+          expectedNotToContain: ['(options context)', '[option1, option2]'],
+        },
+        {
+          options: { groupBySubject: true, showContext: true, showTags: false },
+          expectedContent: '- Note with options test (options context)',
+          expectedNotToContain: ['[option1, option2]'],
+        },
+        {
+          options: { groupBySubject: true, showContext: false, showTags: true },
+          expectedContent: '- Note with options test [option1, option2]',
+          expectedNotToContain: ['(options context)'],
+        },
+      ];
+
+      optionsTestCases.forEach(({ options, expectedContent, expectedNotToContain }) => {
+        const result = promptDataFormatter.formatNotes(promptData.notesArray, options);
+        
+        expect(result).toContain(expectedContent);
+        expectedNotToContain.forEach((notExpected) => {
+          expect(result).not.toContain(notExpected);
+        });
+      });
+    });
+  });
+});

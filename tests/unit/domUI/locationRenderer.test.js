@@ -954,6 +954,118 @@ describe('LocationRenderer', () => {
     });
   });
 
+  describe('render method error conditions', () => {
+    let renderer;
+
+    beforeEach(() => {
+      // Default setup for renderer
+      mockEntityDisplayDataProvider.getEntityLocationId.mockReturnValue(
+        MOCK_LOCATION_ID
+      );
+      mockEntityDisplayDataProvider.getLocationDetails.mockReturnValue({
+        name: 'Test Location',
+        description: 'A test location.',
+        exits: [],
+      });
+      mockEntityDisplayDataProvider.getLocationPortraitData.mockReturnValue(
+        null
+      );
+      mockEntityManager.getEntitiesInLocation.mockReturnValue(new Set());
+      
+      renderer = new LocationRenderer(rendererDeps);
+    });
+
+    it('should dispatch error and return early if baseContainerElement is missing', () => {
+      // Remove baseContainerElement after construction
+      renderer.baseContainerElement = null;
+      
+      const mockLocationDto = {
+        name: 'Test Location',
+        description: 'Test description',
+        portraitPath: null,
+        portraitAltText: null,
+        exits: [],
+        characters: [],
+      };
+
+      // Call render method directly
+      renderer.render(mockLocationDto);
+
+      // Verify error was dispatched
+      expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
+        SYSTEM_ERROR_OCCURRED_ID,
+        {
+          message: '[LocationRenderer] Cannot render, critical dependencies (baseContainerElement or domElementFactory) missing.',
+        }
+      );
+
+      // Verify no rendering occurred (name display should remain unchanged)
+      expect(mockNameDisplay.innerHTML).toBe('');
+    });
+
+    it('should dispatch error and return early if domElementFactory is missing', () => {
+      // Remove domElementFactory after construction
+      renderer.domElementFactory = null;
+      
+      const mockLocationDto = {
+        name: 'Test Location',
+        description: 'Test description',
+        portraitPath: null,
+        portraitAltText: null,
+        exits: [],
+        characters: [],
+      };
+
+      // Call render method directly
+      renderer.render(mockLocationDto);
+
+      // Verify error was dispatched
+      expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
+        SYSTEM_ERROR_OCCURRED_ID,
+        {
+          message: '[LocationRenderer] Cannot render, critical dependencies (baseContainerElement or domElementFactory) missing.',
+        }
+      );
+
+      // Verify no rendering occurred (name display should remain unchanged)
+      expect(mockNameDisplay.innerHTML).toBe('');
+    });
+
+    it('should warn and clear display if locationDto is null', () => {
+      // Call render method with null
+      renderer.render(null);
+
+      // Verify warning was logged
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        '[LocationRenderer] Received null location DTO. Clearing display.'
+      );
+
+      // Verify clearDisplayWithError was called by checking the description display
+      expect(mockDescriptionDisplay.textContent).toContain('(No location data to display)');
+      
+      // Verify portrait elements are hidden
+      expect(mockLocationPortraitVisualsElement.style.display).toBe('none');
+      expect(mockLocationPortraitImageElement.style.display).toBe('none');
+    });
+
+    it('should warn and clear display if locationDto is undefined', () => {
+      // Call render method with undefined
+      renderer.render(undefined);
+
+      // Verify warning was logged
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        '[LocationRenderer] Received null location DTO. Clearing display.'
+      );
+
+      // Verify clearDisplayWithError was called by checking the description display
+      expect(mockDescriptionDisplay.textContent).toContain('(No location data to display)');
+      
+      // Verify portrait elements are hidden
+      expect(mockLocationPortraitVisualsElement.style.display).toBe('none');
+      expect(mockLocationPortraitImageElement.style.display).toBe('none');
+    });
+  });
+
   describe('dispose', () => {
     it('should handle dispose being called multiple times gracefully', () => {
       const renderer = new LocationRenderer(rendererDeps);

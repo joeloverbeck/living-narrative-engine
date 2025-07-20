@@ -62,8 +62,12 @@ export default class EntityConfig {
       BATCH_OPERATION_THRESHOLD: 10, // Minimum items to trigger batch mode
       BATCH_TIMEOUT_MS: 30000, // Maximum time for batch operation
       // World loading optimization
-      WORLD_LOADING_BATCH_SIZE: 100,
       ENABLE_WORLD_LOADING_OPTIMIZATION: true,
+      WORLD_LOADING_BATCH_SIZE: 25,
+      WORLD_LOADING_MAX_BATCH_SIZE: 100,
+      WORLD_LOADING_ENABLE_PARALLEL: true,
+      WORLD_LOADING_BATCH_THRESHOLD: 5,
+      WORLD_LOADING_TIMEOUT_MS: 30000,
     };
   }
 
@@ -147,6 +151,24 @@ export default class EntityConfig {
     };
   }
 
+  // World loading optimization settings
+  static get WORLD_LOADING() {
+    return {
+      ENABLE_WORLD_LOADING_OPTIMIZATION: true,
+      WORLD_LOADING_BATCH_SIZE: 25,
+      WORLD_LOADING_MAX_BATCH_SIZE: 100,
+      WORLD_LOADING_ENABLE_PARALLEL: true,
+      WORLD_LOADING_BATCH_THRESHOLD: 5,
+      WORLD_LOADING_TIMEOUT_MS: 30000,
+      ENABLE_ADAPTIVE_SIZING: true,
+      MEMORY_THRESHOLD: 0.75,
+      ENABLE_FALLBACK_ON_BATCH_FAILURE: true,
+      MAX_BATCH_FAILURES_BEFORE_FALLBACK: 3,
+      RETRY_FAILED_ENTITIES_INDIVIDUALLY: true,
+      LOG_BATCH_PERFORMANCE_METRICS: true,
+    };
+  }
+
   // Environment-specific overrides (deprecated - use IEnvironmentProvider)
   static get ENVIRONMENT() {
     return {
@@ -176,6 +198,7 @@ export default class EntityConfig {
       spatialIndex: this.SPATIAL_INDEX,
       monitoring: this.MONITORING,
       batchOperations: this.BATCH_OPERATIONS,
+      worldLoading: this.WORLD_LOADING,
       environment: this.ENVIRONMENT,
     };
 
@@ -264,6 +287,32 @@ export default class EntityConfig {
         throw new Error(
           'EntityConfig: BATCH_RETRY_DELAY_MS must be non-negative'
         );
+      }
+    }
+
+    // Validate world loading settings
+    if (config.worldLoading) {
+      if (config.worldLoading.WORLD_LOADING_BATCH_SIZE <= 0) {
+        throw new Error('EntityConfig: WORLD_LOADING_BATCH_SIZE must be positive');
+      }
+      if (config.worldLoading.WORLD_LOADING_MAX_BATCH_SIZE <= 0) {
+        throw new Error('EntityConfig: WORLD_LOADING_MAX_BATCH_SIZE must be positive');
+      }
+      if (config.worldLoading.WORLD_LOADING_BATCH_SIZE > config.worldLoading.WORLD_LOADING_MAX_BATCH_SIZE) {
+        throw new Error('EntityConfig: WORLD_LOADING_BATCH_SIZE must be <= WORLD_LOADING_MAX_BATCH_SIZE');
+      }
+      if (config.worldLoading.WORLD_LOADING_BATCH_THRESHOLD < 0) {
+        throw new Error('EntityConfig: WORLD_LOADING_BATCH_THRESHOLD must be non-negative');
+      }
+      if (config.worldLoading.WORLD_LOADING_TIMEOUT_MS <= 0) {
+        throw new Error('EntityConfig: WORLD_LOADING_TIMEOUT_MS must be positive');
+      }
+      if (config.worldLoading.MEMORY_THRESHOLD && 
+          (config.worldLoading.MEMORY_THRESHOLD <= 0 || config.worldLoading.MEMORY_THRESHOLD > 1)) {
+        throw new Error('EntityConfig: MEMORY_THRESHOLD must be between 0 and 1');
+      }
+      if (config.worldLoading.MAX_BATCH_FAILURES_BEFORE_FALLBACK < 0) {
+        throw new Error('EntityConfig: MAX_BATCH_FAILURES_BEFORE_FALLBACK must be non-negative');
       }
     }
 

@@ -170,11 +170,86 @@ describe('AIPromptContentProvider.getPromptData → goalsArray behavior', () => 
 
     const promptData = await provider.getPromptData(gameStateDto, logger);
     expect(Array.isArray(promptData.goalsArray)).toBe(true);
-    // Only the two valid entries should remain
-    expect(promptData.goalsArray).toHaveLength(2);
+    // Goals with empty text should be filtered out, but empty timestamp is now OK
+    expect(promptData.goalsArray).toHaveLength(3);
     expect(promptData.goalsArray).toEqual([
       { text: 'Save the queen', timestamp: '2025-06-01T13:00:00Z' },
+      { text: 'Defeat the dragon' }, // No timestamp field when empty
       { text: 'Rescue the cat', timestamp: '2025-06-01T13:10:00Z' },
+    ]);
+  });
+
+  test('When goals have no timestamps, they should still be extracted', async () => {
+    const sampleGoals = [
+      { text: 'Find the ancient artifact' },
+      { text: 'Defeat the dark lord' },
+      { text: 'Save the kingdom' },
+    ];
+    const gameStateDto = {
+      actorPromptData: { name: 'Hero' },
+      currentUserInput: '',
+      perceptionLog: [],
+      currentLocation: {
+        name: 'Village',
+        description: 'A peaceful village.',
+        exits: [],
+        characters: [],
+      },
+      actorState: {
+        components: {
+          'core:short_term_memory': { thoughts: [] },
+          'core:notes': { notes: [] },
+          'core:goals': { goals: sampleGoals },
+        },
+      },
+      availableActions: [],
+    };
+
+    const promptData = await provider.getPromptData(gameStateDto, logger);
+    expect(Array.isArray(promptData.goalsArray)).toBe(true);
+    expect(promptData.goalsArray).toHaveLength(3);
+    expect(promptData.goalsArray).toEqual([
+      { text: 'Find the ancient artifact' },
+      { text: 'Defeat the dark lord' },
+      { text: 'Save the kingdom' },
+    ]);
+  });
+
+  test('When goals have mixed timestamp formats, they should all be extracted', async () => {
+    const sampleGoals = [
+      { text: 'Timestamped goal', timestamp: '2025-06-01T13:00:00Z' },
+      { text: 'Non-timestamped goal' },
+      { text: 'Another timestamped goal', timestamp: '2025-06-01T14:00:00Z' },
+      { text: 'Another non-timestamped goal' },
+    ];
+    const gameStateDto = {
+      actorPromptData: { name: 'Adventurer' },
+      currentUserInput: '',
+      perceptionLog: [],
+      currentLocation: {
+        name: 'Dungeon',
+        description: 'A dark dungeon.',
+        exits: [],
+        characters: [],
+      },
+      actorState: {
+        components: {
+          'core:short_term_memory': { thoughts: [] },
+          'core:notes': { notes: [] },
+          'core:goals': { goals: sampleGoals },
+        },
+      },
+      availableActions: [],
+    };
+
+    const promptData = await provider.getPromptData(gameStateDto, logger);
+    expect(Array.isArray(promptData.goalsArray)).toBe(true);
+    expect(promptData.goalsArray).toHaveLength(4);
+    expect(promptData.goalsArray).toEqual([
+      { text: 'Timestamped goal', timestamp: '2025-06-01T13:00:00Z' },
+      { text: 'Non-timestamped goal' },
+      { text: 'Another timestamped goal', timestamp: '2025-06-01T14:00:00Z' },
+      { text: 'Another non-timestamped goal' },
     ]);
   });
 });

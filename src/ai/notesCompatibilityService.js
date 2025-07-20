@@ -302,13 +302,13 @@ class NotesCompatibilityService {
 
     // Simple extraction - look for patterns like "about X" or last meaningful word
     const words = text.trim().split(/\s+/);
-    
+
     // Check for "about" pattern
-    const aboutIndex = words.findIndex(w => w.toLowerCase() === 'about');
+    const aboutIndex = words.findIndex((w) => w.toLowerCase() === 'about');
     if (aboutIndex !== -1 && aboutIndex < words.length - 1) {
       return words[aboutIndex + 1];
     }
-    
+
     // Otherwise find first meaningful word
     for (const word of words) {
       // Skip common words

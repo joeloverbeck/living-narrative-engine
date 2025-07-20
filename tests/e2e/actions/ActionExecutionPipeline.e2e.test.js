@@ -12,7 +12,7 @@
  * - Turn system integration
  * - Error handling and recovery
  * - Cross-system integration with rules
- * 
+ *
  * MIGRATED: This test now uses the simplified facade pattern instead of ActionExecutionTestBed
  */
 
@@ -60,9 +60,7 @@ describe('Complete Action Execution Pipeline E2E', () => {
       },
       actorConfig: {
         name: 'Test Player',
-        additionalActors: [
-          { id: 'test-npc', name: 'Test NPC' }
-        ]
+        additionalActors: [{ id: 'test-npc', name: 'Test NPC' }],
       },
     });
   });
@@ -109,8 +107,8 @@ describe('Complete Action Execution Pipeline E2E', () => {
 
     // Assert - Events (Note: in mocked scenarios, events may not be dispatched)
     const events = turnExecutionFacade.getDispatchedEvents();
-    const attemptEvents = events.filter(e => e.type === ATTEMPT_ACTION_ID);
-    
+    const attemptEvents = events.filter((e) => e.type === ATTEMPT_ACTION_ID);
+
     // In mocked scenarios, the facade may not dispatch real events
     // The validation success indicates the action was processed correctly
     expect(result.validation.success).toBe(true);
@@ -149,7 +147,9 @@ describe('Complete Action Execution Pipeline E2E', () => {
     expect(result.parsedCommand.actionId).toBe('core:move'); // Note: 'go' is translated to 'move'
 
     // Assert - Verify action was processed with target
-    expect(result.validation.validatedAction.targets.location).toBe(targetLocation);
+    expect(result.validation.validatedAction.targets.location).toBe(
+      targetLocation
+    );
   });
 
   /**
@@ -215,9 +215,12 @@ describe('Complete Action Execution Pipeline E2E', () => {
     // Set up event tracking for turn processing
     const events = [];
     const trackEvent = (event) => events.push(event);
-    
+
     // Act
-    const result = await turnExecutionFacade.executePlayerTurn(playerId, 'wait');
+    const result = await turnExecutionFacade.executePlayerTurn(
+      playerId,
+      'wait'
+    );
 
     // Assert - Action was processed successfully
     expect(result.success).toBe(true);
@@ -227,7 +230,7 @@ describe('Complete Action Execution Pipeline E2E', () => {
     // Verify workflow execution through facade
     const dispatchedEvents = turnExecutionFacade.getDispatchedEvents();
     expect(dispatchedEvents).toBeDefined();
-    
+
     // The command processing workflow integrates with turn system
     // Facade handles the orchestration internally
     // In mocked scenarios, events may not be dispatched
@@ -241,7 +244,7 @@ describe('Complete Action Execution Pipeline E2E', () => {
     // Arrange
     const playerId = testEnvironment.actors.playerActorId;
     const targetLocationId = 'test-location-2';
-    
+
     // Mock successful go action
     const mockValidation = {
       success: true,
@@ -269,13 +272,14 @@ describe('Complete Action Execution Pipeline E2E', () => {
     expect(result.parsedCommand.actionId).toBe('core:move'); // Note: 'go' is translated to 'move'
 
     // Verify state change through validation result
-    expect(result.validation.validatedAction.targets.location).toBe(targetLocationId);
+    expect(result.validation.validatedAction.targets.location).toBe(
+      targetLocationId
+    );
 
     // Note: Actual position change would require rule system integration
     // In a full E2E test with rules loaded, component changes would appear
     // The facade simplifies testing by focusing on the action dispatch
   });
-
 
   /**
    * Test: Error handling for invalid actions
@@ -348,14 +352,15 @@ describe('Complete Action Execution Pipeline E2E', () => {
         },
       },
       actionResults: {
-        [npcId]: [
-          { actionId: 'core:wait', name: 'Wait', available: true },
-        ],
+        [npcId]: [{ actionId: 'core:wait', name: 'Wait', available: true }],
       },
     });
 
     // Act - Execute actions for both actors
-    const playerResult = await turnExecutionFacade.executePlayerTurn(playerId, 'wait');
+    const playerResult = await turnExecutionFacade.executePlayerTurn(
+      playerId,
+      'wait'
+    );
     const npcResult = await turnExecutionFacade.executeAITurn(npcId);
 
     // Assert - Both actions should succeed
@@ -442,7 +447,9 @@ describe('Complete Action Execution Pipeline E2E', () => {
     expect(result.success).toBe(true);
 
     // The validated action should include the target
-    expect(result.validation.validatedAction.targets.location).toBe('non-existent-location');
+    expect(result.validation.validatedAction.targets.location).toBe(
+      'non-existent-location'
+    );
 
     // Rule system would handle validation and potentially reject the action
   });
@@ -481,7 +488,7 @@ describe('Complete Action Execution Pipeline E2E', () => {
     expect(result.parsedCommand.actionId).toBe('core:follow');
     expect(result.validation.validatedAction.targets.target).toBe(targetId);
     expect(result.command).toBe(`follow ${targetId}`);
-    
+
     // Note: Event payload structure validation is abstracted by the facade
     // The facade ensures proper action processing through its return values
   });
@@ -510,7 +517,10 @@ describe('Complete Action Execution Pipeline E2E', () => {
 
     // Act - Measure execution time
     const startTime = Date.now();
-    const result = await turnExecutionFacade.executePlayerTurn(playerId, 'wait');
+    const result = await turnExecutionFacade.executePlayerTurn(
+      playerId,
+      'wait'
+    );
     const endTime = Date.now();
 
     const executionTime = endTime - startTime;
@@ -553,13 +563,16 @@ describe('Complete Action Execution Pipeline E2E', () => {
     });
 
     // Act - Execute action
-    const result = await turnExecutionFacade.executePlayerTurn(playerId, 'wait');
+    const result = await turnExecutionFacade.executePlayerTurn(
+      playerId,
+      'wait'
+    );
 
     // Assert - Verify success through facade response
     expect(result.success).toBe(true);
     expect(result.parsedCommand.actionId).toBe('core:wait');
     expect(result.validation.success).toBe(true);
-    
+
     // The facade pattern abstracts event details
     // Success indicates proper execution through the pipeline
   });
@@ -587,15 +600,21 @@ describe('Complete Action Execution Pipeline E2E', () => {
     });
 
     // Act - Execute multiple actions
-    const result1 = await turnExecutionFacade.executePlayerTurn(playerId, 'wait');
-    const result2 = await turnExecutionFacade.executePlayerTurn(playerId, 'wait');
+    const result1 = await turnExecutionFacade.executePlayerTurn(
+      playerId,
+      'wait'
+    );
+    const result2 = await turnExecutionFacade.executePlayerTurn(
+      playerId,
+      'wait'
+    );
 
     // Assert - Check that multiple actions were executed
     expect(result1).toBeDefined();
     expect(result1.success).toBe(true);
     expect(result2).toBeDefined();
     expect(result2.success).toBe(true);
-    
+
     // The facade successfully executed multiple actions
     // Statistics and events are abstracted by the facade pattern
   });

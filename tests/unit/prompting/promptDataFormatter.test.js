@@ -85,9 +85,7 @@ describe('PromptDataFormatter - Conditional Section Rendering', () => {
 
       const result = formatter.formatNotesSection(notes);
 
-      expect(result).toBe(
-        '<notes>\n- Important note\n- Another note\n</notes>'
-      );
+      expect(result).toContain('<notes>\n## Other\n### General\n- Important note\n- Another note\n</notes>');
     });
   });
 
@@ -132,6 +130,39 @@ describe('PromptDataFormatter - Conditional Section Rendering', () => {
       );
       expect(result.notesSection).toBe('');
       expect(result.goalsSection).toBe('<goals>\n- Test goal\n</goals>');
+    });
+
+    test('formatNotes maintains backward compatibility with default options', () => {
+      const notesArray = [
+        { text: 'First note', timestamp: '2024-01-01' },
+        { text: 'Second note', timestamp: '2024-01-02' },
+      ];
+
+      // Test without options (should default to grouped format)
+      const resultDefault = formatter.formatNotes(notesArray);
+      expect(resultDefault).toContain('## Other\n### General\n- First note\n- Second note');
+
+      // Test with explicit legacy options
+      const resultLegacy = formatter.formatNotes(notesArray, { groupBySubject: false });
+      expect(resultLegacy).toBe('- First note\n- Second note');
+
+      // Test with empty options (should default to grouped format)
+      const resultEmpty = formatter.formatNotes(notesArray, {});
+      expect(resultEmpty).toContain('## Other\n### General\n- First note\n- Second note');
+    });
+
+    test('formatNotesSection accepts options parameter', () => {
+      const notesArray = [
+        { text: 'Test note', timestamp: '2024-01-01' },
+      ];
+
+      // Test without options (now defaults to grouped format)
+      const resultDefault = formatter.formatNotesSection(notesArray);
+      expect(resultDefault).toContain('<notes>\n## Other\n### General\n- Test note\n</notes>');
+
+      // Test with options passed through
+      const resultWithOptions = formatter.formatNotesSection(notesArray, {});
+      expect(resultWithOptions).toContain('<notes>\n## Other\n### General\n- Test note\n</notes>');
     });
 
     test('handles all empty sections correctly', () => {

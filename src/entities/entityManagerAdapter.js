@@ -123,6 +123,16 @@ export class EntityManagerAdapter extends IEntityManager {
   clearAll() {
     return this.#entityManager.clearAll();
   }
+
+  /** @inheritdoc */
+  hasBatchSupport() {
+    return this.#entityManager.hasBatchSupport();
+  }
+
+  /** @inheritdoc */
+  async batchCreateEntities(entitySpecs, options = {}) {
+    return await this.#entityManager.batchCreateEntities(entitySpecs, options);
+  }
 }
 
 export default EntityManagerAdapter;

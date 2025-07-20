@@ -1,9 +1,11 @@
 // src/ai/notesService.js
 
+import { DEFAULT_SUBJECT_TYPE } from '../constants/subjectTypes.js';
+
 /**
  * Normalizes note text for duplicate detection by trimming, lower-casing,
  * stripping punctuation, and collapsing internal whitespace.
- * For structured notes, includes subject in normalization.
+ * For structured notes, includes subject and subjectType in normalization.
  *
  * @param {object} noteObject - The structured note object.
  * @returns {string} The normalized text.
@@ -13,9 +15,10 @@ export function normalizeNoteText(noteObject) {
     return '';
   }
 
-  // For structured notes, include subject in normalization to avoid false duplicates
+  // For structured notes, include subject and subjectType in normalization to avoid false duplicates
+  const subjectType = noteObject.subjectType || DEFAULT_SUBJECT_TYPE;
   const text = noteObject.subject
-    ? `${noteObject.subject}:${noteObject.text}`
+    ? `${subjectType}:${noteObject.subject}:${noteObject.text}`
     : noteObject.text || '';
 
   return text
@@ -43,7 +46,7 @@ export default class NotesService {
    * Supports structured note format only.
    *
    * @param {object} notesComp - The notes component data to update. This object is mutated in place.
-   * @param {Array<{text: string, subject: string, context?: string, tags?: string[], timestamp?: string}>} notesComp.notes - The list of existing notes.
+   * @param {Array<{text: string, subject: string, subjectType?: string, context?: string, tags?: string[], timestamp?: string}>} notesComp.notes - The list of existing notes.
    * @param {object[]} newNotes - An array of new structured note objects to add.
    * @param {Date} [now] - The current date/time; defaults to new Date().
    * @returns {{wasModified: boolean, component: object, addedNotes: Array}} - An object containing the
@@ -81,6 +84,7 @@ export default class NotesService {
         const noteEntry = {
           text: note.text.trim(),
           subject: note.subject,
+          subjectType: note.subjectType || DEFAULT_SUBJECT_TYPE,
           context: note.context,
           tags: note.tags,
           timestamp: note.timestamp || now.toISOString(),

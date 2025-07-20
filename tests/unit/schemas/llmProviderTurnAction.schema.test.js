@@ -37,7 +37,18 @@ describe('JSON‑Schema – LLM_PROVIDER_TURN_ACTION_SCHEMA', () => {
         chosenIndex: 2,
         speech: 'action',
         thoughts: 'inner monologue',
-        notes: ['note1', 'another note'],
+        notes: [
+          {
+            text: 'note1',
+            subject: 'test_subject',
+            subjectType: 'other',
+          },
+          {
+            text: 'another note',
+            subject: 'another_subject',
+            subjectType: 'concept',
+          },
+        ],
       },
     ],
   ])('✓ %s – should validate', (_label, payload) => {

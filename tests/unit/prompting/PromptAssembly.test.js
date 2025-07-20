@@ -156,10 +156,13 @@ describe('Prompt Assembly with template-based system', () => {
     const guidelinesIndex = prompt.indexOf('<portrayal_guidelines>');
     const thoughtsIndex = prompt.indexOf('<thoughts>');
     const finalIndex = prompt.indexOf('<final_instructions>');
+    const contentPolicyIndex = prompt.indexOf('<content_policy>');
 
     expect(taskDefIndex).toBeLessThan(personaIndex);
     expect(personaIndex).toBeLessThan(guidelinesIndex);
     expect(guidelinesIndex).toBeLessThan(thoughtsIndex);
     expect(thoughtsIndex).toBeLessThan(finalIndex);
+    // Content policy should now appear after final instructions (as appendix)
+    expect(finalIndex).toBeLessThan(contentPolicyIndex);
   });
 });

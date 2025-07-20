@@ -11,6 +11,8 @@ import DefinitionCache from '../services/definitionCache.js';
 import EntityLifecycleManager from '../services/entityLifecycleManager.js';
 import MonitoringCoordinator from '../monitoring/MonitoringCoordinator.js';
 import BatchOperationManager from '../operations/BatchOperationManager.js';
+import BatchSpatialIndexManager from '../operations/BatchSpatialIndexManager.js';
+import SpatialIndexManager from '../spatialIndexManager.js';
 import { getGlobalConfig, isConfigInitialized } from './configUtils.js';
 
 /** @typedef {import('../services/entityRepositoryAdapter.js').EntityRepositoryAdapter} EntityRepositoryAdapter */
@@ -21,6 +23,8 @@ import { getGlobalConfig, isConfigInitialized } from './configUtils.js';
 /** @typedef {import('../services/entityLifecycleManager.js').EntityLifecycleManager} EntityLifecycleManager */
 /** @typedef {import('../monitoring/MonitoringCoordinator.js').default} MonitoringCoordinator */
 /** @typedef {import('../operations/BatchOperationManager.js').default} BatchOperationManager */
+/** @typedef {import('../operations/BatchSpatialIndexManager.js').default} BatchSpatialIndexManager */
+/** @typedef {import('../spatialIndexManager.js').default} SpatialIndexManager */
 
 /**
  * Assemble default service dependencies for EntityManager with configuration awareness.
@@ -41,6 +45,8 @@ import { getGlobalConfig, isConfigInitialized } from './configUtils.js';
  *   definitionCache: DefinitionCache,
  *   entityLifecycleManager: EntityLifecycleManager,
  *   monitoringCoordinator: MonitoringCoordinator,
+ *   spatialIndexManager: SpatialIndexManager,
+ *   batchSpatialIndexManager: BatchSpatialIndexManager,
  * }} Collection of default service instances configured according to EntityConfig.
  */
 export function createDefaultServicesWithConfig({
@@ -138,6 +144,27 @@ export function createDefaultServicesWithConfig({
   const enableBatchOperations =
     config?.isFeatureEnabled('performance.ENABLE_BATCH_OPERATIONS') ?? true;
 
+  // Create SpatialIndexManager first (without batch manager)
+  const spatialIndexManager = new SpatialIndexManager({
+    logger,
+    batchSpatialIndexManager: null, // Will be set after BatchSpatialIndexManager creation
+    enableBatchOperations,
+  });
+
+  // Create BatchSpatialIndexManager
+  let batchSpatialIndexManager = null;
+  if (enableBatchOperations) {
+    batchSpatialIndexManager = new BatchSpatialIndexManager({
+      spatialIndex: spatialIndexManager,
+      logger,
+      defaultBatchSize:
+        config?.getValue('performance.SPATIAL_INDEX_BATCH_SIZE') ?? 100,
+    });
+
+    // Wire the batch manager into the spatial index manager
+    spatialIndexManager.setBatchSpatialIndexManager(batchSpatialIndexManager);
+  }
+
   // Create EntityLifecycleManager with configuration
   const entityLifecycleManager = new EntityLifecycleManager({
     registry,
@@ -169,6 +196,7 @@ export function createDefaultServicesWithConfig({
 
   logger.info('Default services created with configuration-aware settings', {
     batchOperationsEnabled: enableBatchOperations,
+    spatialIndexingEnabled: true,
   });
 
   return {
@@ -179,6 +207,8 @@ export function createDefaultServicesWithConfig({
     definitionCache,
     entityLifecycleManager,
     monitoringCoordinator,
+    spatialIndexManager,
+    batchSpatialIndexManager,
   };
 }
 

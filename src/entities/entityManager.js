@@ -71,6 +71,7 @@ class EntityManager extends IEntityManager {
   #definitionCache;
   #lifecycleManager;
   #monitoringCoordinator;
+  #batchOperationManager;
 
   // Specialized managers
   #creationManager;
@@ -114,6 +115,7 @@ class EntityManager extends IEntityManager {
    * @param {object} [deps.entityLifecycleManager] - EntityLifecycleManager instance
    * @param {DefinitionCache} [deps.definitionCache] - DefinitionCache instance
    * @param {object} [deps.monitoringCoordinator] - MonitoringCoordinator instance
+   * @param {object} [deps.batchOperationManager] - BatchOperationManager instance
    * @throws {Error} If any dependency is missing or malformed
    */
   constructor({
@@ -132,6 +134,7 @@ class EntityManager extends IEntityManager {
     definitionCache,
     entityLifecycleManager,
     monitoringCoordinator,
+    batchOperationManager,
   } = {}) {
     super();
 
@@ -154,6 +157,7 @@ class EntityManager extends IEntityManager {
       definitionCache,
       entityLifecycleManager,
       monitoringCoordinator,
+      batchOperationManager,
     });
 
     this.#initSpecializedManagers();
@@ -251,6 +255,7 @@ class EntityManager extends IEntityManager {
    * @param overrides.definitionCache
    * @param overrides.entityLifecycleManager
    * @param overrides.monitoringCoordinator
+   * @param overrides.batchOperationManager
    */
   #initServices({
     entityRepository,
@@ -258,6 +263,7 @@ class EntityManager extends IEntityManager {
     definitionCache,
     entityLifecycleManager,
     monitoringCoordinator,
+    batchOperationManager,
   }) {
     const serviceDefaults = createDefaultServicesWithConfig({
       registry: this.#registry,
@@ -296,6 +302,10 @@ class EntityManager extends IEntityManager {
     this.#monitoringCoordinator = resolveOptionalDependency(
       monitoringCoordinator,
       serviceDefaults.monitoringCoordinator
+    );
+    this.#batchOperationManager = resolveOptionalDependency(
+      batchOperationManager,
+      null // Batch operations are handled by entityLifecycleManager
     );
   }
 
@@ -356,6 +366,40 @@ class EntityManager extends IEntityManager {
    */
   reconstructEntity(serializedEntity) {
     return this.#creationManager.reconstructEntity(serializedEntity);
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /* Batch Operations (Delegated to EntityLifecycleManager)                */
+  /* ---------------------------------------------------------------------- */
+
+  /**
+   * Creates multiple entities in a batch operation for improved performance.
+   * 
+   * @param {object[]} entitySpecs - Array of entity specifications for batch creation
+   * @param {string} entitySpecs[].definitionId - Entity definition ID
+   * @param {object} [entitySpecs[].opts] - Creation options
+   * @param {string} [entitySpecs[].opts.instanceId] - Optional instance ID
+   * @param {object} [entitySpecs[].opts.componentOverrides] - Component overrides
+   * @param {object} [options] - Batch operation options
+   * @param {number} [options.batchSize] - Size of each processing batch
+   * @param {boolean} [options.enableParallel] - Enable parallel processing
+   * @param {boolean} [options.stopOnError] - Stop batch on first error
+   * @returns {Promise<object>} Batch operation result with successes, failures, and metrics
+   * @throws {InvalidArgumentError} If entitySpecs is invalid
+   * @throws {Error} If batch operation fails critically
+   */
+  async batchCreateEntities(entitySpecs, options = {}) {
+    return await this.#lifecycleManager.batchCreateEntities(entitySpecs, options);
+  }
+
+  /**
+   * Checks if the entity manager supports batch operations.
+   * 
+   * @returns {boolean} True if batch operations are supported and enabled
+   */
+  hasBatchSupport() {
+    return this.#lifecycleManager && 
+           typeof this.#lifecycleManager.batchCreateEntities === 'function';
   }
 
   /* ---------------------------------------------------------------------- */
