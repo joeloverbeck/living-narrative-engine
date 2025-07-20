@@ -172,6 +172,33 @@ export class IEntityManager {
   }
 
   /**
+   * Creates multiple entities in a batch operation for improved performance.
+   * 
+   * @param {object[]} entitySpecs - Array of entity specifications for batch creation
+   * @param {string} entitySpecs[].definitionId - Entity definition ID
+   * @param {object} [entitySpecs[].opts] - Creation options
+   * @param {string} [entitySpecs[].opts.instanceId] - Optional instance ID
+   * @param {object} [entitySpecs[].opts.componentOverrides] - Component overrides
+   * @param {object} [options] - Batch operation options
+   * @param {number} [options.batchSize] - Size of each processing batch
+   * @param {boolean} [options.enableParallel] - Enable parallel processing
+   * @param {boolean} [options.stopOnError] - Stop batch on first error
+   * @returns {Promise<object>} Batch operation result with successes, failures, and metrics
+   */
+  batchCreateEntities(entitySpecs, options = {}) {
+    throw new Error('IEntityManager.batchCreateEntities not implemented.');
+  }
+
+  /**
+   * Checks if the entity manager supports batch operations.
+   * 
+   * @returns {boolean} True if batch operations are supported and enabled
+   */
+  hasBatchSupport() {
+    throw new Error('IEntityManager.hasBatchSupport not implemented.');
+  }
+
+  /**
    * (Optional) Clears all entity instances and related caches.
    * Implementations required by modules like GameStateRestorer should
    * remove all active entities from memory.

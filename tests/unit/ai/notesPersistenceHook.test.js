@@ -111,7 +111,9 @@ describe('persistNotes', () => {
       SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
         message: INVALID_NOTE_SKIPPED_MESSAGE,
-        details: expect.objectContaining({ reason: 'Missing or blank text field' }),
+        details: expect.objectContaining({
+          reason: 'Missing or blank text field',
+        }),
       })
     );
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
@@ -213,7 +215,7 @@ describe('persistNotes', () => {
 
     expect(notesService.addNotes).toHaveBeenCalledWith(
       actor.components[NOTES_COMPONENT_ID],
-      [{ text: 'x', subject: 'test' }],
+      [{ text: 'x', subject: 'test', subjectType: 'other' }],
       fakeNow
     );
     expect(logger.debug).toHaveBeenCalledWith('Added note: "x" at ts');

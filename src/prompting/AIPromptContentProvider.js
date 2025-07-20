@@ -170,7 +170,7 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
    * @private
    * @description Extracts notes in structured format only.
    * @param {object} notesComp - The notes component.
-   * @returns {Array<{text:string,subject:string,context?:string,tags?:string[],timestamp?:string}>} Array of structured notes.
+   * @returns {Array<{text:string,subject:string,subjectType?:string,context?:string,tags?:string[],timestamp?:string}>} Array of structured notes.
    */
   _extractNotes(notesComp) {
     const notes = Array.isArray(notesComp?.notes) ? notesComp.notes : [];
@@ -187,9 +187,35 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
         // Return structured note with all relevant fields
         const result = { text: note.text };
         if (note.subject) result.subject = note.subject;
+        if (note.subjectType) result.subjectType = note.subjectType;
         if (note.context) result.context = note.context;
         if (note.tags) result.tags = note.tags;
         if (note.timestamp) result.timestamp = note.timestamp;
+        return result;
+      });
+  }
+
+  /**
+   * @private
+   * @description Extracts goals with optional timestamps from a component.
+   * @param {object} goalsComp - The goals component.
+   * @returns {Array<{text:string,timestamp?:string}>} Array of goals with optional timestamps.
+   */
+  _extractGoals(goalsComp) {
+    const goals = Array.isArray(goalsComp?.goals) ? goalsComp.goals : [];
+    return goals
+      .filter((goal) => {
+        return (
+          typeof goal === 'object' &&
+          goal !== null &&
+          typeof goal.text === 'string' &&
+          goal.text.trim().length > 0
+        );
+      })
+      .map((goal) => {
+        // Return goal with text (required) and timestamp (optional)
+        const result = { text: goal.text };
+        if (goal.timestamp) result.timestamp = goal.timestamp;
         return result;
       });
   }
@@ -269,7 +295,7 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
    * @private
    * Extracts memory-related arrays from the provided components map.
    * @param {object} componentsMap - Actor or game components.
-   * @returns {{thoughtsArray: Array<{text:string,timestamp?:string}>, notesArray: Array<{text:string,subject?:string,context?:string,tags?:string[],timestamp?:string}>, goalsArray: Array<{text:string,timestamp:string}>}}
+   * @returns {{thoughtsArray: Array<{text:string,timestamp?:string}>, notesArray: Array<{text:string,subject?:string,subjectType?:string,context?:string,tags?:string[],timestamp?:string}>, goalsArray: Array<{text:string,timestamp?:string}>}}
    *   Object containing memory arrays for prompt data.
    */
   _extractMemoryComponents(componentsMap) {
@@ -282,7 +308,7 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
     const notesArray = this._extractNotes(notesComp);
 
     const goalsComp = componentsMap['core:goals'];
-    const goalsArray = this._extractTimestampedEntries(goalsComp, 'goals');
+    const goalsArray = this._extractGoals(goalsComp);
 
     this.#logger.debug(
       `AIPromptContentProvider.getPromptData: goalsArray contains ${goalsArray.length} entries.`
@@ -296,16 +322,11 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
    * Combines base values and memory arrays into the final PromptData object.
    * @param {object} baseValues - Preassembled base prompt values.
    * @param {Array<{text:string,timestamp?:string}>} thoughtsArray - Extracted short-term memory thoughts.
-   * @param {Array<{text:string,timestamp:string}>} notesArray - Extracted notes.
-   * @param {Array<{text:string,timestamp:string}>} goalsArray - Extracted goals.
+   * @param {Array<{text:string,timestamp?:string}>} notesArray - Extracted notes.
+   * @param {Array<{text:string,timestamp?:string}>} goalsArray - Extracted goals.
    * @returns {PromptData} The assembled PromptData object.
    */
-  _buildPromptData(
-    baseValues,
-    thoughtsArray,
-    notesArray,
-    goalsArray
-  ) {
+  _buildPromptData(baseValues, thoughtsArray, notesArray, goalsArray) {
     const promptData = {
       ...baseValues,
       thoughtsArray,

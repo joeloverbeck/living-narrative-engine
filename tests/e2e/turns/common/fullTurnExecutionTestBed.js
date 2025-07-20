@@ -29,7 +29,7 @@ import { TestConfigurationFactory } from '../../../common/testConfigurationFacto
  * - Complete container with all AI services
  * - Event monitoring for turn lifecycle
  * - Performance monitoring and validation
- * 
+ *
  * @deprecated Use turnExecutionFacade from createMockFacades() instead
  */
 export class FullTurnExecutionTestBed {
@@ -37,10 +37,10 @@ export class FullTurnExecutionTestBed {
     // Emit deprecation warning
     console.warn(
       'DEPRECATION WARNING: FullTurnExecutionTestBed is deprecated. ' +
-      'Please migrate to the facade pattern using createMockFacades() and turnExecutionFacade. ' +
-      'See tests/e2e/facades/turnExecutionFacadeExample.e2e.test.js for examples.'
+        'Please migrate to the facade pattern using createMockFacades() and turnExecutionFacade. ' +
+        'See tests/e2e/facades/turnExecutionFacadeExample.e2e.test.js for examples.'
     );
-    
+
     this.container = null;
     this.entityManager = null;
     this.eventBus = null;

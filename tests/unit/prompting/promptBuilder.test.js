@@ -123,7 +123,7 @@ describe('PromptBuilder (template-based)', () => {
     expect(prompt).toContain(
       '<thoughts>\n- Test thought 1\n- Test thought 2\n</thoughts>'
     );
-    expect(prompt).toContain('<notes>\n- Test note 1\n- Test note 2\n</notes>');
+    expect(prompt).toContain('<notes>\n## Other\n### General\n- Test note 1\n- Test note 2\n</notes>');
     expect(prompt).toContain('<goals>\n- Test goal 1\n- Test goal 2\n</goals>');
 
     // Check the assistant response prefix
@@ -273,7 +273,6 @@ describe('PromptBuilder (template-based)', () => {
       '<entry type="tactile">\nA rough surface\n</entry>'
     );
   });
-
 
   /* ──────────────────────────────────────────────────────────────────────── */
   /* Integration with custom template service                                */

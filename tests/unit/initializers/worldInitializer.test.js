@@ -520,6 +520,7 @@ describe('WorldInitializer', () => {
         instantiatedCount: 0,
         failedCount: 0,
         totalProcessed: 0,
+        optimizationUsed: 'sequential',
       });
 
       expect(mockLogger.debug).toHaveBeenCalledWith(

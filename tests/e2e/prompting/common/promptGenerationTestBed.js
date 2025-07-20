@@ -535,7 +535,7 @@ export class PromptGenerationTestBed {
                 text: 'The innkeeper mentioned something about troubles in the market.',
                 subject: 'Market troubles',
               },
-              { 
+              {
                 text: 'I should perform a song to lighten the mood.',
                 subject: 'Performance plan',
               },
@@ -891,8 +891,10 @@ export class PromptGenerationTestBed {
     const actions = [];
     const sections = this.parsePromptSections(prompt);
     const choicesSection =
-      sections.indexed_choices || sections.available_actions || sections.available_actions_info || '';
-
+      sections.indexed_choices ||
+      sections.available_actions ||
+      sections.available_actions_info ||
+      '';
 
     // Match patterns like [1], [2], [Index: 1], and "index: 1 --> Action (description)"
     const actionRegex =

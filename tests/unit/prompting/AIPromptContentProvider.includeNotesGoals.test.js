@@ -69,8 +69,16 @@ describe('AIPromptContentProvider.getPromptData', () => {
         components: {
           'core:notes': {
             notes: [
-              { text: 'First note', subject: 'Subject 1', timestamp: '2025-06-05T09:00:00Z' },
-              { text: 'Second note', subject: 'Subject 2', timestamp: '2025-06-05T10:00:00Z' },
+              {
+                text: 'First note',
+                subject: 'Subject 1',
+                timestamp: '2025-06-05T09:00:00Z',
+              },
+              {
+                text: 'Second note',
+                subject: 'Subject 2',
+                timestamp: '2025-06-05T10:00:00Z',
+              },
             ],
           },
           'core:goals': {
@@ -96,8 +104,16 @@ describe('AIPromptContentProvider.getPromptData', () => {
     const result = await provider.getPromptData(gameStateDto, dummyLogger);
 
     expect(result.notesArray).toEqual([
-      { text: 'First note', subject: 'Subject 1', timestamp: '2025-06-05T09:00:00Z' },
-      { text: 'Second note', subject: 'Subject 2', timestamp: '2025-06-05T10:00:00Z' },
+      {
+        text: 'First note',
+        subject: 'Subject 1',
+        timestamp: '2025-06-05T09:00:00Z',
+      },
+      {
+        text: 'Second note',
+        subject: 'Subject 2',
+        timestamp: '2025-06-05T10:00:00Z',
+      },
     ]);
 
     expect(result.goalsArray).toEqual([

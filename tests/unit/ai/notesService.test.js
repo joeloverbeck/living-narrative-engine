@@ -28,7 +28,9 @@ describe('NotesService', () => {
 
   test('should add a single valid note to an empty component', () => {
     const component = { notes: [] };
-    const newNotes = [{ text: 'First note', subject: 'Test Subject' }];
+    const newNotes = [
+      { text: 'First note', subject: 'Test Subject', subjectType: 'character' },
+    ];
     jest.spyOn(Date.prototype, 'toISOString').mockReturnValue('TS1');
 
     const result = notesService.addNotes(component, newNotes);
@@ -39,6 +41,7 @@ describe('NotesService', () => {
     expect(result.component.notes[0]).toEqual({
       text: 'First note',
       subject: 'Test Subject',
+      subjectType: 'character',
       timestamp: 'TS1',
     });
   });
@@ -46,8 +49,8 @@ describe('NotesService', () => {
   test('should add multiple unique notes', () => {
     const component = { notes: [] };
     const newNotes = [
-      { text: 'Note A', subject: 'Subject A' },
-      { text: 'Note B', subject: 'Subject B' }
+      { text: 'Note A', subject: 'Subject A', subjectType: 'location' },
+      { text: 'Note B', subject: 'Subject B', subjectType: 'event' },
     ];
     jest
       .spyOn(Date.prototype, 'toISOString')
@@ -59,14 +62,25 @@ describe('NotesService', () => {
     expect(result.wasModified).toBe(true);
     expect(result.component.notes).toHaveLength(2);
     expect(result.component.notes[0].text).toBe('Note A');
+    expect(result.component.notes[0].subjectType).toBe('location');
     expect(result.component.notes[1].text).toBe('Note B');
+    expect(result.component.notes[1].subjectType).toBe('event');
   });
 
   test('should not add notes that are duplicates of existing ones', () => {
     const component = {
-      notes: [{ text: 'Buy Milk', subject: 'Shopping', timestamp: 'EXISTING_TS' }],
+      notes: [
+        {
+          text: 'Buy Milk',
+          subject: 'Shopping',
+          subjectType: 'other',
+          timestamp: 'EXISTING_TS',
+        },
+      ],
     };
-    const newNotes = [{ text: 'buy milk', subject: 'shopping' }]; // Duplicate after normalization
+    const newNotes = [
+      { text: 'buy milk', subject: 'shopping', subjectType: 'other' },
+    ]; // Duplicate after normalization
 
     const result = notesService.addNotes(component, newNotes);
 
@@ -75,12 +89,31 @@ describe('NotesService', () => {
     expect(result.component.notes).toHaveLength(1);
   });
 
+  test('should assign default subjectType when not provided', () => {
+    const component = { notes: [] };
+    const newNotes = [
+      { text: 'Note without subjectType', subject: 'Test Subject' },
+    ];
+    jest.spyOn(Date.prototype, 'toISOString').mockReturnValue('TS1');
+
+    const result = notesService.addNotes(component, newNotes);
+
+    expect(result.wasModified).toBe(true);
+    expect(result.component.notes).toHaveLength(1);
+    expect(result.component.notes[0]).toEqual({
+      text: 'Note without subjectType',
+      subject: 'Test Subject',
+      subjectType: 'other',
+      timestamp: 'TS1',
+    });
+  });
+
   test('should not add notes that are duplicates within the new notes array', () => {
     const component = { notes: [] };
     const newNotes = [
-      { text: 'Alpha', subject: 'Letter' },
-      { text: 'Beta', subject: 'Letter' },
-      { text: 'alpha', subject: 'letter' } // Duplicate after normalization
+      { text: 'Alpha', subject: 'Letter', subjectType: 'concept' },
+      { text: 'Beta', subject: 'Letter', subjectType: 'concept' },
+      { text: 'alpha', subject: 'letter', subjectType: 'concept' }, // Duplicate after normalization
     ];
     jest
       .spyOn(Date.prototype, 'toISOString')
@@ -100,7 +133,9 @@ describe('NotesService', () => {
 
   test('should return wasModified: false if no new unique notes are added', () => {
     const component = {
-      notes: [{ text: 'Existing Note', subject: 'Test', timestamp: 'EXISTING_TS' }],
+      notes: [
+        { text: 'Existing Note', subject: 'Test', timestamp: 'EXISTING_TS' },
+      ],
     };
     const newNotes = [{ text: 'Existing Note', subject: 'Test' }];
 
@@ -111,9 +146,19 @@ describe('NotesService', () => {
   });
 
   test('normalizeNoteText strips punctuation without affecting regular characters', () => {
-    const input = { text: " Hello, world! It's great. ", subject: 'Greeting' };
+    const input = {
+      text: " Hello, world! It's great. ",
+      subject: 'Greeting',
+      subjectType: 'concept',
+    };
     const normalized = normalizeNoteText(input);
-    expect(normalized).toBe('greeting: hello world its great');
+    expect(normalized).toBe('concept:greeting: hello world its great');
+  });
+
+  test('normalizeNoteText uses default subjectType when not provided', () => {
+    const input = { text: 'Test note', subject: 'Greeting' };
+    const normalized = normalizeNoteText(input);
+    expect(normalized).toBe('other:greeting:test note');
   });
 
   test('should throw a TypeError for a malformed component', () => {

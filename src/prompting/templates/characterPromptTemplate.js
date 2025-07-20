@@ -19,10 +19,6 @@ export const CHARACTER_PROMPT_TEMPLATE = `<task_definition>
 {portrayalGuidelinesContent}
 </portrayal_guidelines>
 
-<content_policy>
-{contentPolicyContent}
-</content_policy>
-
 <world_context>
 {worldContextContent}
 </world_context>
@@ -44,6 +40,10 @@ export const CHARACTER_PROMPT_TEMPLATE = `<task_definition>
 <final_instructions>
 {finalInstructionsContent}
 </final_instructions>
+
+<content_policy>
+{contentPolicyContent}
+</content_policy>
 
 {assistantResponsePrefix}`;
 

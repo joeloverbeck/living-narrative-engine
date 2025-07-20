@@ -1,7 +1,7 @@
 /**
  * @file testConfigurationFactory.js
  * @description Factory for creating test configurations with isolated paths
- * 
+ *
  * NOTE: For new tests, consider using the facade pattern with createMockFacades()
  * instead of manually creating test configurations. The facade pattern provides
  * a simpler and more maintainable approach.

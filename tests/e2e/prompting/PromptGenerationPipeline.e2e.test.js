@@ -117,12 +117,14 @@ describe('Complete Prompt Generation Pipeline E2E', () => {
     const thoughtsIndex = prompt.indexOf('<thoughts>');
     const choicesIndex = prompt.indexOf('<available_actions_info>');
     const instructionsIndex = prompt.indexOf('<final_instructions>');
+    const contentPolicyIndex = prompt.indexOf('<content_policy>');
 
     // All required elements should be present
     expect(taskIndex).toBeGreaterThanOrEqual(0);
     expect(personaIndex).toBeGreaterThanOrEqual(0);
     expect(choicesIndex).toBeGreaterThanOrEqual(0);
     expect(instructionsIndex).toBeGreaterThanOrEqual(0);
+    expect(contentPolicyIndex).toBeGreaterThanOrEqual(0);
 
     // They should appear in the configured order
     expect(taskIndex).toBeLessThan(personaIndex);
@@ -130,6 +132,8 @@ describe('Complete Prompt Generation Pipeline E2E', () => {
     expect(worldIndex).toBeLessThan(perceptionIndex);
     expect(perceptionIndex).toBeLessThan(thoughtsIndex);
     expect(choicesIndex).toBeLessThan(instructionsIndex);
+    // Content policy should now appear after final instructions (as appendix)
+    expect(instructionsIndex).toBeLessThan(contentPolicyIndex);
   });
 
   /**

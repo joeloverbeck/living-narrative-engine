@@ -1,7 +1,7 @@
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
   "id": "core:notes",
-  "description": "Stores an array of notes with structured context (subject, context, tags) on an entity.",
+  "description": "Stores an array of notes with structured context (subject, subjectType, context, tags) on an entity.",
   "dataSchema": {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "type": "object",
@@ -22,6 +22,25 @@
               "minLength": 1,
               "description": "Primary subject of the note (entity, location, concept)."
             },
+            "subjectType": {
+              "type": "string",
+              "enum": [
+                "character",
+                "location",
+                "item",
+                "creature",
+                "event",
+                "concept",
+                "relationship",
+                "organization",
+                "quest",
+                "skill",
+                "emotion",
+                "other"
+              ],
+              "default": "other",
+              "description": "Explicit categorization of the note's subject type."
+            },
             "context": {
               "type": "string",
               "description": "Where/how this was observed (optional)."
@@ -37,7 +56,7 @@
               "description": "When the note was created."
             }
           },
-          "required": ["text", "subject"],
+          "required": ["text", "subject", "subjectType"],
           "additionalProperties": false
         }
       }

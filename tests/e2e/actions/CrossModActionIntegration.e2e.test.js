@@ -10,7 +10,7 @@
  * - Action execution from different mods
  * - Mod dependency handling
  * - Error scenarios when mods are missing
- * 
+ *
  * MIGRATED: This test now uses the simplified facade pattern
  * NOTE: Some complex cross-mod setup has been simplified to focus on testable behavior
  */
@@ -24,9 +24,7 @@ import {
   jest,
 } from '@jest/globals';
 import { createMockFacades } from '../../../src/testing/facades/testingFacadeRegistrations.js';
-import {
-  ATTEMPT_ACTION_ID,
-} from '../../../src/constants/eventIds.js';
+import { ATTEMPT_ACTION_ID } from '../../../src/constants/eventIds.js';
 
 /**
  * E2E test suite for cross-mod action integration
@@ -123,13 +121,17 @@ describe('Cross-Mod Action Integration E2E', () => {
     const mockActionResults = {
       [playerId]: [...coreActions, ...intimacyActions, ...sexActions],
       'test-npc-intimate': [...coreActions, ...intimacyActions],
-      'test-npc-anatomical': [...coreActions, ...intimacyActions, ...sexActions],
+      'test-npc-anatomical': [
+        ...coreActions,
+        ...intimacyActions,
+        ...sexActions,
+      ],
       'test-npc-basic': coreActions,
     };
 
     // Mock validation results for various actions
     const mockValidationResults = {};
-    
+
     // Core actions
     for (const actorId of Object.keys(mockActionResults)) {
       mockValidationResults[`${actorId}:core:wait`] = {
@@ -140,7 +142,7 @@ describe('Cross-Mod Action Integration E2E', () => {
           targets: {},
         },
       };
-      
+
       mockValidationResults[`${actorId}:core:move`] = {
         success: true,
         validatedAction: {
@@ -149,7 +151,7 @@ describe('Cross-Mod Action Integration E2E', () => {
           targets: { location: 'test-location-2' },
         },
       };
-      
+
       mockValidationResults[`${actorId}:core:look`] = {
         success: true,
         validatedAction: {
@@ -158,7 +160,7 @@ describe('Cross-Mod Action Integration E2E', () => {
           targets: {},
         },
       };
-      
+
       // Add core versions of other actions that the parser maps to
       mockValidationResults[`${actorId}:core:kiss`] = {
         success: true,
@@ -168,7 +170,7 @@ describe('Cross-Mod Action Integration E2E', () => {
           targets: {},
         },
       };
-      
+
       mockValidationResults[`${actorId}:core:take`] = {
         success: true,
         validatedAction: {
@@ -177,7 +179,7 @@ describe('Cross-Mod Action Integration E2E', () => {
           targets: {},
         },
       };
-      
+
       mockValidationResults[`${actorId}:core:fondle`] = {
         success: true,
         validatedAction: {
@@ -189,7 +191,11 @@ describe('Cross-Mod Action Integration E2E', () => {
     }
 
     // Intimacy actions (only for actors with intimacy components)
-    const intimacyActors = [playerId, 'test-npc-intimate', 'test-npc-anatomical'];
+    const intimacyActors = [
+      playerId,
+      'test-npc-intimate',
+      'test-npc-anatomical',
+    ];
     for (const actorId of intimacyActors) {
       mockValidationResults[`${actorId}:intimacy:get_close`] = {
         success: true,
@@ -199,7 +205,7 @@ describe('Cross-Mod Action Integration E2E', () => {
           targets: { target: 'test-npc-intimate' },
         },
       };
-      
+
       mockValidationResults[`${actorId}:intimacy:kiss_cheek`] = {
         success: true,
         validatedAction: {
@@ -323,7 +329,9 @@ describe('Cross-Mod Action Integration E2E', () => {
     // The parser maps 'get' to core:take
     expect(getCloseResult.parsedCommand.actionId).toBe('core:take');
     // Note: The facade simplifies target handling
-    expect(getCloseResult.parsedCommand.targets.object).toBe('close to test-npc-intimate');
+    expect(getCloseResult.parsedCommand.targets.object).toBe(
+      'close to test-npc-intimate'
+    );
 
     // Test sex action with specific anatomical requirements
     const fondleResult = await turnExecutionFacade.executePlayerTurn(
@@ -335,7 +343,9 @@ describe('Cross-Mod Action Integration E2E', () => {
     expect(fondleResult.success).toBe(true);
     // The parser maps to core:fondle
     expect(fondleResult.parsedCommand.actionId).toBe('core:fondle');
-    expect(fondleResult.parsedCommand.targets.object).toBe("test-npc-anatomical's breasts");
+    expect(fondleResult.parsedCommand.targets.object).toBe(
+      "test-npc-anatomical's breasts"
+    );
 
     // Note: The facade abstracts scope resolution details
     // Our mocks ensure actions target appropriate NPCs based on mod requirements
@@ -367,7 +377,9 @@ describe('Cross-Mod Action Integration E2E', () => {
     expect(getCloseResult.success).toBe(true);
     // Parser maps 'get' to core:take
     expect(getCloseResult.parsedCommand.actionId).toBe('core:take');
-    expect(getCloseResult.parsedCommand.targets.object).toBe('close to test-npc-intimate');
+    expect(getCloseResult.parsedCommand.targets.object).toBe(
+      'close to test-npc-intimate'
+    );
 
     // Test sex mod action
     const fondleResult = await turnExecutionFacade.executePlayerTurn(
@@ -378,7 +390,9 @@ describe('Cross-Mod Action Integration E2E', () => {
     expect(fondleResult.success).toBe(true);
     // Parser maps to core:fondle
     expect(fondleResult.parsedCommand.actionId).toBe('core:fondle');
-    expect(fondleResult.parsedCommand.targets.object).toBe("test-npc-anatomical's breasts");
+    expect(fondleResult.parsedCommand.targets.object).toBe(
+      "test-npc-anatomical's breasts"
+    );
 
     // Events are abstracted by the facade
     const events = turnExecutionFacade.getDispatchedEvents();
@@ -425,7 +439,7 @@ describe('Cross-Mod Action Integration E2E', () => {
       // Verify action ID includes mod namespace
       expect(result.parsedCommand.actionId).toBe(testCase.expectedAction);
       expect(result.parsedCommand.actionId).toMatch(/^(core|intimacy|sex):/);
-      
+
       // Verify namespace matches expected
       const [namespace] = result.parsedCommand.actionId.split(':');
       expect(namespace).toBe(testCase.expectedNamespace);
@@ -517,23 +531,23 @@ describe('Cross-Mod Action Integration E2E', () => {
 
     // Measure execution time for actions from different mods
     const startTime = Date.now();
-    
+
     // Execute actions from different mods
     const coreResult = await turnExecutionFacade.executePlayerTurn(
       playerId,
       'wait'
     );
-    
+
     const moveResult = await turnExecutionFacade.executePlayerTurn(
       playerId,
       'move north'
     );
-    
+
     const lookResult = await turnExecutionFacade.executePlayerTurn(
       playerId,
       'look around'
     );
-    
+
     const endTime = Date.now();
     const totalTime = endTime - startTime;
 
@@ -552,9 +566,9 @@ describe('Cross-Mod Action Integration E2E', () => {
       moveResult.parsedCommand.actionId,
       lookResult.parsedCommand.actionId,
     ];
-    
+
     // All actions should be parsed successfully
-    actionIds.forEach(id => {
+    actionIds.forEach((id) => {
       expect(id).toMatch(/^core:/); // All map to core namespace
     });
   });
@@ -566,7 +580,7 @@ describe('Cross-Mod Action Integration E2E', () => {
   test('should allow AI actors to use cross-mod actions', async () => {
     // Set up AI decision for intimacy action
     const aiActorId = testEnvironment.actors.aiActorId;
-    
+
     const mockAIDecision = {
       actionId: 'intimacy:get_close',
       targets: { target: testEnvironment.actors.playerActorId },
@@ -580,7 +594,11 @@ describe('Cross-Mod Action Integration E2E', () => {
       actionResults: {
         [aiActorId]: [
           { actionId: 'core:wait', name: 'Wait', available: true },
-          { actionId: 'intimacy:get_close', name: 'Get Close', available: true },
+          {
+            actionId: 'intimacy:get_close',
+            name: 'Get Close',
+            available: true,
+          },
         ],
       },
       validationResults: {
@@ -602,7 +620,7 @@ describe('Cross-Mod Action Integration E2E', () => {
     expect(result.success).toBe(true);
     expect(result.aiDecision.actionId).toBe('intimacy:get_close');
     expect(result.validation.success).toBe(true);
-    
+
     // Verify it's from intimacy mod
     const [modNamespace] = result.aiDecision.actionId.split(':');
     expect(modNamespace).toBe('intimacy');

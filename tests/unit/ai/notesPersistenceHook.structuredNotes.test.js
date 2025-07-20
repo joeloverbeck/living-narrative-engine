@@ -209,7 +209,7 @@ describe('persistNotes - structured notes', () => {
     );
 
     expect(actor.components[NOTES_COMPONENT_ID].notes).toHaveLength(3);
-    expect(logger.debug).toHaveBeenCalledTimes(3);
+    expect(logger.debug).toHaveBeenCalledTimes(6);
   });
 
   test('should respect custom timestamp when provided via notesService', () => {
@@ -249,7 +249,7 @@ describe('persistNotes - structured notes', () => {
 
     expect(notesService.addNotes).toHaveBeenCalledWith(
       { notes: [] },
-      [{ text: 'Test note', subject: 'test_subject' }],
+      [{ text: 'Test note', subject: 'test_subject', subjectType: 'other' }],
       customDate
     );
     expect(logger.debug).toHaveBeenCalledWith(

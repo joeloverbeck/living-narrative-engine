@@ -25,7 +25,25 @@ describe('NotesService uncovered branches', () => {
     const result = service.addNotes(comp, [invalidNote, blankNote, validNote]);
 
     expect(result.wasModified).toBe(true);
-    expect(result.addedNotes).toEqual([{ text: 'note', subject: 'test_subject', context: undefined, tags: undefined, timestamp: 'TS' }]);
-    expect(comp.notes).toEqual([{ text: 'note', subject: 'test_subject', context: undefined, tags: undefined, timestamp: 'TS' }]);
+    expect(result.addedNotes).toEqual([
+      {
+        text: 'note',
+        subject: 'test_subject',
+        subjectType: 'other',
+        context: undefined,
+        tags: undefined,
+        timestamp: 'TS',
+      },
+    ]);
+    expect(comp.notes).toEqual([
+      {
+        text: 'note',
+        subject: 'test_subject',
+        subjectType: 'other',
+        context: undefined,
+        tags: undefined,
+        timestamp: 'TS',
+      },
+    ]);
   });
 });

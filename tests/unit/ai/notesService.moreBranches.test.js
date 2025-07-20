@@ -16,7 +16,16 @@ describe('NotesService.addNotes more branches', () => {
     const result = service.addNotes(comp, [invalidObject, validNote]);
 
     expect(result.wasModified).toBe(true);
-    expect(comp.notes).toEqual([{ text: 'ok', subject: 'test_subject', context: undefined, tags: undefined, timestamp: 'TS' }]);
+    expect(comp.notes).toEqual([
+      {
+        text: 'ok',
+        subject: 'test_subject',
+        subjectType: 'other',
+        context: undefined,
+        tags: undefined,
+        timestamp: 'TS',
+      },
+    ]);
   });
 
   test('existing notes with non-string text are ignored when checking duplicates', () => {
@@ -31,6 +40,13 @@ describe('NotesService.addNotes more branches', () => {
 
     expect(result.wasModified).toBe(true);
     expect(comp.notes).toHaveLength(2);
-    expect(comp.notes[1]).toEqual({ text: 'hello', subject: 'test_subject', context: undefined, tags: undefined, timestamp: 'T' });
+    expect(comp.notes[1]).toEqual({
+      text: 'hello',
+      subject: 'test_subject',
+      subjectType: 'other',
+      context: undefined,
+      tags: undefined,
+      timestamp: 'T',
+    });
   });
 });

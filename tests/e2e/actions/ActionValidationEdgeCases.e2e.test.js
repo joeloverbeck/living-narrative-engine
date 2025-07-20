@@ -6,7 +6,7 @@
  * - Failed validation scenarios
  * - Invalid action parameters
  * - Error recovery and fallback mechanisms
- * 
+ *
  * MIGRATED: This test now uses the simplified facade pattern
  * NOTE: Some edge cases that require direct service access have been simplified
  */
@@ -20,9 +20,7 @@ import {
   jest,
 } from '@jest/globals';
 import { createMockFacades } from '../../../src/testing/facades/testingFacadeRegistrations.js';
-import {
-  ATTEMPT_ACTION_ID,
-} from '../../../src/constants/eventIds.js';
+import { ATTEMPT_ACTION_ID } from '../../../src/constants/eventIds.js';
 
 /**
  * E2E test suite for action validation edge cases using facade pattern
@@ -110,7 +108,7 @@ describe('Action Validation Edge Cases E2E', () => {
     // Try to execute action without required parameter
     const result = await turnExecutionFacade.executePlayerTurn(
       playerId,
-      'follow'  // Missing target
+      'follow' // Missing target
     );
 
     expect(result.success).toBe(false);
@@ -267,7 +265,7 @@ describe('Action Validation Edge Cases E2E', () => {
     // Should succeed despite warnings
     expect(result.success).toBe(true);
     expect(result.validation.success).toBe(true);
-    
+
     // Note: The facade abstracts warning details
     // In a real implementation, warnings would be handled appropriately
   });

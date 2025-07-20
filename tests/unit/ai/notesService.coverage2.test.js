@@ -25,9 +25,22 @@ describe('NotesService extra branch coverage', () => {
     const blankNote = { text: '  ', subject: 'test' };
     const invalidObject = { trim: () => 'ignored' };
     const validNote = { text: ' Ok ', subject: 'test_subject' };
-    const result = service.addNotes(comp, [blankNote, invalidObject, validNote]);
+    const result = service.addNotes(comp, [
+      blankNote,
+      invalidObject,
+      validNote,
+    ]);
 
     expect(result.wasModified).toBe(true);
-    expect(comp.notes).toEqual([{ text: 'Ok', subject: 'test_subject', context: undefined, tags: undefined, timestamp: 'TS' }]);
+    expect(comp.notes).toEqual([
+      {
+        text: 'Ok',
+        subject: 'test_subject',
+        subjectType: 'other',
+        context: undefined,
+        tags: undefined,
+        timestamp: 'TS',
+      },
+    ]);
   });
 });

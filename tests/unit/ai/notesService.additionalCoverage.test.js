@@ -25,7 +25,9 @@ describe('NotesService additional coverage', () => {
 
   test('handles mixture of duplicates and punctuation differences', () => {
     const service = new NotesService({ autoMigrate: false });
-    const comp = { notes: [{ text: 'hello there', subject: 'test', timestamp: 'T1' }] };
+    const comp = {
+      notes: [{ text: 'hello there', subject: 'test', timestamp: 'T1' }],
+    };
     jest
       .spyOn(Date.prototype, 'toISOString')
       .mockReturnValueOnce('T2')
@@ -42,7 +44,23 @@ describe('NotesService additional coverage', () => {
     // Both 'Hello there!' and 'hello   there' are considered duplicates of the existing entry after
     // normalization (because they have the same subject:text combo), so only 'Bye.' is added.
     expect(comp.notes).toHaveLength(2);
-    expect(comp.notes[1]).toEqual({ text: 'Bye.', subject: 'other', context: undefined, tags: undefined, timestamp: 'T3' });
-    expect(result.addedNotes).toEqual([{ text: 'Bye.', subject: 'other', context: undefined, tags: undefined, timestamp: 'T3' }]);
+    expect(comp.notes[1]).toEqual({
+      text: 'Bye.',
+      subject: 'other',
+      subjectType: 'other',
+      context: undefined,
+      tags: undefined,
+      timestamp: 'T3',
+    });
+    expect(result.addedNotes).toEqual([
+      {
+        text: 'Bye.',
+        subject: 'other',
+        subjectType: 'other',
+        context: undefined,
+        tags: undefined,
+        timestamp: 'T3',
+      },
+    ]);
   });
 });

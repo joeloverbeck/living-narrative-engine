@@ -38,45 +38,53 @@ export const LLM_TURN_ACTION_RESPONSE_SCHEMA = {
     thoughts: {
       type: 'string',
     },
-    // Optional notes or annotations; supports both string and structured formats
+    // Optional notes or annotations; structured format only
     notes: {
       type: 'array',
       items: {
-        oneOf: [
-          // Legacy format: simple string
-          {
+        type: 'object',
+        properties: {
+          text: {
             type: 'string',
             minLength: 1,
+            description: 'The note content',
           },
-          // New structured format
-          {
-            type: 'object',
-            properties: {
-              text: {
-                type: 'string',
-                minLength: 1,
-                description: 'The note content',
-              },
-              subject: {
-                type: 'string',
-                minLength: 1,
-                description:
-                  'Primary subject of the note (entity, location, concept)',
-              },
-              context: {
-                type: 'string',
-                description: 'Where/how this was observed (optional)',
-              },
-              tags: {
-                type: 'array',
-                items: { type: 'string' },
-                description: 'Additional categorization tags (optional)',
-              },
-            },
-            required: ['text', 'subject'],
-            additionalProperties: false,
+          subject: {
+            type: 'string',
+            minLength: 1,
+            description:
+              'Primary subject of the note (entity, location, concept)',
           },
-        ],
+          subjectType: {
+            type: 'string',
+            enum: [
+              'character',
+              'location',
+              'item',
+              'creature',
+              'event',
+              'concept',
+              'relationship',
+              'organization',
+              'quest',
+              'skill',
+              'emotion',
+              'other',
+            ],
+            description: "Explicit categorization of the note's subject type",
+          },
+          context: {
+            type: 'string',
+            description: 'Where/how this was observed (optional)',
+          },
+          tags: {
+            type: 'array',
+            items: { type: 'string' },
+            description: 'Additional categorization tags (optional)',
+          },
+        },
+        required: ['text', 'subject', 'subjectType'],
+        additionalProperties: false,
       },
     },
   },

@@ -28,9 +28,22 @@ describe('NotesService.addNotes additional branches', () => {
     const blankNote = { text: '  ', subject: 'test' };
     const validNote = { text: ' Valid Note ', subject: 'test_subject' };
     const emptyNote = { text: '', subject: 'test' };
-    const result = service.addNotes(component, [blankNote, validNote, emptyNote]);
+    const result = service.addNotes(component, [
+      blankNote,
+      validNote,
+      emptyNote,
+    ]);
 
     expect(result.wasModified).toBe(true);
-    expect(component.notes).toEqual([{ text: 'Valid Note', subject: 'test_subject', context: undefined, tags: undefined, timestamp: 'TS' }]);
+    expect(component.notes).toEqual([
+      {
+        text: 'Valid Note',
+        subject: 'test_subject',
+        subjectType: 'other',
+        context: undefined,
+        tags: undefined,
+        timestamp: 'TS',
+      },
+    ]);
   });
 });

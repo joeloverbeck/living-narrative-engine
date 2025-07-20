@@ -2,6 +2,7 @@
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import SpatialIndexManager from '../../../src/entities/spatialIndexManager.js';
+import BatchSpatialIndexManager from '../../../src/entities/operations/BatchSpatialIndexManager.js';
 import { POSITION_COMPONENT_ID } from '../../../src/constants/componentIds.js'; // Assuming path is correct
 import { createMockEntityManager } from '../../common/mockFactories.js';
 // Entity, EntityDefinition, EntityInstanceData no longer needed for this simplified mock
@@ -34,7 +35,8 @@ describe('SpatialIndexManager', () => {
       expect(spatialIndexManager.locationIndex.size).toBe(0);
       expect(mockLogger.info).toHaveBeenCalledTimes(1);
       expect(mockLogger.info).toHaveBeenCalledWith(
-        'SpatialIndexManager initialized.'
+        'SpatialIndexManager initialized.',
+        { batchOperationsEnabled: false }
       );
     });
   });
@@ -573,6 +575,397 @@ describe('SpatialIndexManager', () => {
       expect(mockLogger.info).toHaveBeenCalledWith(
         'SpatialIndexManager: Index cleared.'
       );
+    });
+  });
+
+  //------------------------------------------
+  // Adapter Methods Tests
+  //------------------------------------------
+  describe('adapter methods', () => {
+    beforeEach(() => {
+      spatialIndexManager.addEntity('entity1', 'locationA');
+      spatialIndexManager.addEntity('entity2', 'locationB');
+    });
+
+    describe('add', () => {
+      it('should delegate to addEntity method', () => {
+        const addEntitySpy = jest.spyOn(spatialIndexManager, 'addEntity');
+
+        spatialIndexManager.add('entity3', 'locationC');
+
+        expect(addEntitySpy).toHaveBeenCalledWith('entity3', 'locationC');
+        expect(
+          spatialIndexManager.getEntitiesInLocation('locationC').has('entity3')
+        ).toBe(true);
+      });
+    });
+
+    describe('remove', () => {
+      it('should remove entity from all locations', () => {
+        spatialIndexManager.addEntity('entity1', 'locationB'); // entity1 now in both locationA and locationB
+
+        const removed = spatialIndexManager.remove('entity1');
+
+        expect(removed).toBe(true);
+        expect(
+          spatialIndexManager.getEntitiesInLocation('locationA').has('entity1')
+        ).toBe(false);
+        expect(
+          spatialIndexManager.getEntitiesInLocation('locationB').has('entity1')
+        ).toBe(false);
+      });
+
+      it('should return false if entity not found', () => {
+        const removed = spatialIndexManager.remove('nonexistent');
+        expect(removed).toBe(false);
+      });
+    });
+
+    describe('move', () => {
+      it('should delegate to updateEntityLocation method', () => {
+        const updateSpy = jest.spyOn(
+          spatialIndexManager,
+          'updateEntityLocation'
+        );
+
+        const moved = spatialIndexManager.move(
+          'entity1',
+          'locationA',
+          'locationC'
+        );
+
+        expect(moved).toBe(true);
+        expect(updateSpy).toHaveBeenCalledWith(
+          'entity1',
+          'locationA',
+          'locationC'
+        );
+      });
+    });
+
+    describe('getEntitiesAtLocation', () => {
+      it('should return array instead of Set', () => {
+        const entities = spatialIndexManager.getEntitiesAtLocation('locationA');
+
+        expect(Array.isArray(entities)).toBe(true);
+        expect(entities.includes('entity1')).toBe(true);
+      });
+    });
+
+    describe('clear', () => {
+      it('should delegate to clearIndex method', () => {
+        const clearIndexSpy = jest.spyOn(spatialIndexManager, 'clearIndex');
+
+        spatialIndexManager.clear();
+
+        expect(clearIndexSpy).toHaveBeenCalled();
+        expect(spatialIndexManager.locationIndex.size).toBe(0);
+      });
+    });
+
+    describe('size property', () => {
+      it('should return the size of locationIndex', () => {
+        expect(spatialIndexManager.size).toBe(2);
+
+        spatialIndexManager.addEntity('entity3', 'locationC');
+        expect(spatialIndexManager.size).toBe(3);
+      });
+    });
+  });
+
+  //------------------------------------------
+  // Batch Operations Tests
+  //------------------------------------------
+  describe('batch operations', () => {
+    let mockBatchSpatialIndexManager;
+
+    beforeEach(() => {
+      mockBatchSpatialIndexManager = {
+        batchAdd: jest.fn().mockResolvedValue({
+          successful: [{ entityId: 'entity1', locationId: 'locationA' }],
+          failed: [],
+          totalProcessed: 1,
+          indexSize: 1,
+          processingTime: 10,
+        }),
+        batchRemove: jest.fn().mockResolvedValue({
+          successful: [{ entityId: 'entity1', removed: true }],
+          failed: [],
+          totalProcessed: 1,
+          indexSize: 0,
+          processingTime: 5,
+        }),
+        batchMove: jest.fn().mockResolvedValue({
+          successful: [
+            {
+              entityId: 'entity1',
+              oldLocationId: 'locationA',
+              newLocationId: 'locationB',
+            },
+          ],
+          failed: [],
+          totalProcessed: 1,
+          indexSize: 1,
+          processingTime: 8,
+        }),
+        rebuild: jest.fn().mockResolvedValue({
+          successful: [{ entityId: 'entity1', locationId: 'locationA' }],
+          failed: [],
+          totalProcessed: 1,
+          indexSize: 1,
+          processingTime: 15,
+        }),
+      };
+    });
+
+    describe('with batch operations enabled', () => {
+      beforeEach(() => {
+        spatialIndexManager = new SpatialIndexManager({
+          logger: mockLogger,
+          batchSpatialIndexManager: mockBatchSpatialIndexManager,
+          enableBatchOperations: true,
+        });
+      });
+
+      describe('batchAdd', () => {
+        it('should delegate to batch spatial index manager', async () => {
+          const additions = [{ entityId: 'entity1', locationId: 'locationA' }];
+          const options = { batchSize: 10 };
+
+          const result = await spatialIndexManager.batchAdd(additions, options);
+
+          expect(mockBatchSpatialIndexManager.batchAdd).toHaveBeenCalledWith(
+            additions,
+            options
+          );
+          expect(result.successful).toHaveLength(1);
+          expect(result.totalProcessed).toBe(1);
+        });
+
+        it('should log batch operation execution', async () => {
+          const additions = [{ entityId: 'entity1', locationId: 'locationA' }];
+
+          await spatialIndexManager.batchAdd(additions);
+
+          expect(mockLogger.info).toHaveBeenCalledWith(
+            'Executing batch spatial index addition',
+            { entityCount: 1 }
+          );
+        });
+      });
+
+      describe('batchRemove', () => {
+        it('should delegate to batch spatial index manager', async () => {
+          const entityIds = ['entity1', 'entity2'];
+          const options = { batchSize: 5 };
+
+          const result = await spatialIndexManager.batchRemove(
+            entityIds,
+            options
+          );
+
+          expect(mockBatchSpatialIndexManager.batchRemove).toHaveBeenCalledWith(
+            entityIds,
+            options
+          );
+          expect(result.successful).toHaveLength(1);
+        });
+
+        it('should log batch operation execution', async () => {
+          const entityIds = ['entity1'];
+
+          await spatialIndexManager.batchRemove(entityIds);
+
+          expect(mockLogger.info).toHaveBeenCalledWith(
+            'Executing batch spatial index removal',
+            { entityCount: 1 }
+          );
+        });
+      });
+
+      describe('batchMove', () => {
+        it('should delegate to batch spatial index manager', async () => {
+          const updates = [
+            {
+              entityId: 'entity1',
+              oldLocationId: 'locationA',
+              newLocationId: 'locationB',
+            },
+          ];
+          const options = { enableParallel: true };
+
+          const result = await spatialIndexManager.batchMove(updates, options);
+
+          expect(mockBatchSpatialIndexManager.batchMove).toHaveBeenCalledWith(
+            updates,
+            options
+          );
+          expect(result.successful).toHaveLength(1);
+        });
+
+        it('should log batch operation execution', async () => {
+          const updates = [
+            {
+              entityId: 'entity1',
+              oldLocationId: 'locationA',
+              newLocationId: 'locationB',
+            },
+          ];
+
+          await spatialIndexManager.batchMove(updates);
+
+          expect(mockLogger.info).toHaveBeenCalledWith(
+            'Executing batch spatial index move',
+            { updateCount: 1 }
+          );
+        });
+      });
+
+      describe('rebuild', () => {
+        it('should delegate to batch spatial index manager', async () => {
+          const entityLocations = [
+            { entityId: 'entity1', locationId: 'locationA' },
+          ];
+          const options = { batchSize: 20 };
+
+          const result = await spatialIndexManager.rebuild(
+            entityLocations,
+            options
+          );
+
+          expect(mockBatchSpatialIndexManager.rebuild).toHaveBeenCalledWith(
+            entityLocations,
+            options
+          );
+          expect(result.successful).toHaveLength(1);
+        });
+
+        it('should log batch operation execution', async () => {
+          const entityLocations = [
+            { entityId: 'entity1', locationId: 'locationA' },
+          ];
+
+          await spatialIndexManager.rebuild(entityLocations);
+
+          expect(mockLogger.info).toHaveBeenCalledWith(
+            'Executing spatial index rebuild',
+            { entityCount: 1 }
+          );
+        });
+      });
+    });
+
+    describe('with batch operations disabled', () => {
+      beforeEach(() => {
+        spatialIndexManager = new SpatialIndexManager({
+          logger: mockLogger,
+          batchSpatialIndexManager: null,
+          enableBatchOperations: false,
+        });
+      });
+
+      describe('batchAdd fallback', () => {
+        it('should use sequential fallback when batch operations disabled', async () => {
+          const addEntitySpy = jest.spyOn(spatialIndexManager, 'addEntity');
+          const additions = [
+            { entityId: 'entity1', locationId: 'locationA' },
+            { entityId: 'entity2', locationId: 'locationB' },
+          ];
+
+          const result = await spatialIndexManager.batchAdd(additions);
+
+          expect(addEntitySpy).toHaveBeenCalledTimes(2);
+          expect(result.successful).toHaveLength(2);
+          expect(result.totalProcessed).toBe(2);
+          expect(result.processingTime).toBeGreaterThan(0);
+        });
+
+        it('should handle errors in sequential fallback', async () => {
+          const addEntitySpy = jest.spyOn(spatialIndexManager, 'addEntity');
+          addEntitySpy.mockImplementationOnce(() => {
+            throw new Error('Addition failed');
+          });
+
+          const additions = [
+            { entityId: 'entity1', locationId: 'locationA' },
+            { entityId: 'entity2', locationId: 'locationB' },
+          ];
+
+          const result = await spatialIndexManager.batchAdd(additions);
+
+          expect(result.successful).toHaveLength(1);
+          expect(result.failed).toHaveLength(1);
+          expect(result.failed[0].error.message).toBe('Addition failed');
+        });
+      });
+
+      describe('batchRemove fallback', () => {
+        it('should use sequential fallback when batch operations disabled', async () => {
+          spatialIndexManager.addEntity('entity1', 'locationA');
+          spatialIndexManager.addEntity('entity2', 'locationB');
+
+          const removeSpy = jest.spyOn(spatialIndexManager, 'remove');
+          const entityIds = ['entity1', 'entity2'];
+
+          const result = await spatialIndexManager.batchRemove(entityIds);
+
+          expect(removeSpy).toHaveBeenCalledTimes(2);
+          expect(result.successful).toHaveLength(2);
+          expect(result.totalProcessed).toBe(2);
+        });
+      });
+
+      describe('batchMove fallback', () => {
+        it('should use sequential fallback when batch operations disabled', async () => {
+          spatialIndexManager.addEntity('entity1', 'locationA');
+
+          const moveSpy = jest.spyOn(spatialIndexManager, 'move');
+          const updates = [
+            {
+              entityId: 'entity1',
+              oldLocationId: 'locationA',
+              newLocationId: 'locationB',
+            },
+          ];
+
+          const result = await spatialIndexManager.batchMove(updates);
+
+          expect(moveSpy).toHaveBeenCalledTimes(1);
+          expect(result.successful).toHaveLength(1);
+          expect(result.totalProcessed).toBe(1);
+        });
+      });
+
+      describe('rebuild fallback', () => {
+        it('should use sequential fallback when batch operations disabled', async () => {
+          const clearIndexSpy = jest.spyOn(spatialIndexManager, 'clearIndex');
+          const addEntitySpy = jest.spyOn(spatialIndexManager, 'addEntity');
+
+          const entityLocations = [
+            { entityId: 'entity1', locationId: 'locationA' },
+            { entityId: 'entity2', locationId: 'locationB' },
+          ];
+
+          const result = await spatialIndexManager.rebuild(entityLocations);
+
+          expect(clearIndexSpy).toHaveBeenCalledTimes(1);
+          expect(addEntitySpy).toHaveBeenCalledTimes(2);
+          expect(result.successful).toHaveLength(2);
+          expect(result.totalProcessed).toBe(2);
+        });
+      });
+    });
+
+    describe('setBatchSpatialIndexManager', () => {
+      it('should set the batch spatial index manager', () => {
+        spatialIndexManager.setBatchSpatialIndexManager(
+          mockBatchSpatialIndexManager
+        );
+
+        // Test that the manager is now set by trying a batch operation
+        spatialIndexManager.enableBatchOperations = true;
+        expect(() => spatialIndexManager.batchAdd([])).not.toThrow();
+      });
     });
   });
 });

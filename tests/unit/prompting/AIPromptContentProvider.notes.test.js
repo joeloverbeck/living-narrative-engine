@@ -279,5 +279,4 @@ describe('AIPromptContentProvider.getPromptData → notesArray', () => {
       },
     ]);
   });
-
 });
