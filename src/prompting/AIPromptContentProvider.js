@@ -12,6 +12,7 @@
 
 import { IAIPromptContentProvider } from '../turns/interfaces/IAIPromptContentProvider.js';
 import { ensureTerminalPunctuation } from '../utils/textUtils.js';
+import { CharacterDataFormatter } from './CharacterDataFormatter.js';
 import {
   DEFAULT_FALLBACK_CHARACTER_NAME,
   DEFAULT_FALLBACK_DESCRIPTION_RAW,
@@ -44,6 +45,8 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
   #perceptionLogFormatter;
   /** @type {IGameStateValidationServiceForPrompting} */
   #gameStateValidationService;
+  /** @type {CharacterDataFormatter} */
+  #characterDataFormatter;
 
   /**
    * @param {object} dependencies - Object containing required services.
@@ -95,6 +98,7 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
     this.#promptStaticContentService = promptStaticContentService;
     this.#perceptionLogFormatter = perceptionLogFormatter;
     this.#gameStateValidationService = gameStateValidationService;
+    this.#characterDataFormatter = new CharacterDataFormatter({ logger });
     this.#logger.debug(
       'AIPromptContentProvider initialized with new services.'
     );
@@ -144,6 +148,44 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
       }
     }
     return null;
+  }
+
+  /**
+   * @private
+   * Parses structured character description into markdown bullet points.
+   * @param {string} description - Character description to parse.
+   * @returns {string[]} Array of formatted attribute lines.
+   */
+  _parseCharacterDescription(description) {
+    const attributes = [];
+    
+    // Split by semicolons OR newlines, but preserve pipes within values (for clothing lists)
+    const parts = description.split(/[;\n]/);
+    
+    for (const part of parts) {
+      const trimmed = part.trim();
+      if (trimmed.includes(':')) {
+        const colonIndex = trimmed.indexOf(':');
+        const key = trimmed.substring(0, colonIndex).trim();
+        const value = trimmed.substring(colonIndex + 1).trim();
+        
+        if (key && value) {
+          // Capitalize first letter of key and format as bullet point
+          const formattedKey = key.charAt(0).toUpperCase() + key.slice(1);
+          attributes.push(`- **${formattedKey}**: ${value}`);
+        }
+      } else if (trimmed.length > 0) {
+        // Handle non-key-value parts as general description
+        attributes.push(`- **Description**: ${trimmed}`);
+      }
+    }
+    
+    // If no structured attributes found, treat entire description as single item
+    if (attributes.length === 0) {
+      attributes.push(`- **Description**: ${description}`);
+    }
+    
+    return attributes;
   }
 
   /**
@@ -424,7 +466,7 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
    */
   getCharacterPersonaContent(gameState) {
     this.#logger.debug(
-      'AIPromptContentProvider: Formatting character persona content.'
+      'AIPromptContentProvider: Formatting character persona content with markdown structure.'
     );
     const { actorPromptData } = gameState;
 
@@ -437,54 +479,42 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
         : PROMPT_FALLBACK_UNKNOWN_CHARACTER_DETAILS;
     }
 
-    const characterInfo = [];
-    characterInfo.push(
-      `YOU ARE ${
-        actorPromptData.name || DEFAULT_FALLBACK_CHARACTER_NAME
-      }.\nThis is your identity. All thoughts, actions, and words must stem from this core truth.`
-    );
-
-    if (actorPromptData.description) {
-      characterInfo.push(`Your Description: ${actorPromptData.description}`);
-    }
-    const optionalAttributes = [
-      this._formatOptionalAttribute(
-        'Your Personality',
-        actorPromptData.personality
-      ),
-      this._formatOptionalAttribute(
-        'Your Profile / Background',
-        actorPromptData.profile
-      ),
-      this._formatOptionalAttribute('Your Likes', actorPromptData.likes),
-      this._formatOptionalAttribute('Your Dislikes', actorPromptData.dislikes),
-      this._formatOptionalAttribute('Your Secrets', actorPromptData.secrets),
-      this._formatOptionalAttribute('Your Fears', actorPromptData.fears),
-    ];
-    optionalAttributes.forEach((line) => {
-      if (line !== null) characterInfo.push(line);
-    });
-
+    // Check for minimal character details before formatting
     if (
-      actorPromptData.speechPatterns &&
-      actorPromptData.speechPatterns.length > 0
-    ) {
-      characterInfo.push(
-        `Your Speech Patterns:\n- ${actorPromptData.speechPatterns.join('\n- ')}`
-      );
-    }
-
-    if (
-      characterInfo.length <= 1 &&
-      (!actorPromptData.name ||
-        actorPromptData.name === DEFAULT_FALLBACK_CHARACTER_NAME)
+      (!actorPromptData.name || actorPromptData.name === DEFAULT_FALLBACK_CHARACTER_NAME) &&
+      !actorPromptData.description &&
+      !actorPromptData.personality &&
+      !actorPromptData.profile
     ) {
       this.#logger.debug(
-        'AIPromptContentProvider: Character details are minimal or name is default. Using PROMPT_FALLBACK_MINIMAL_CHARACTER_DETAILS.'
+        'AIPromptContentProvider: Character details are minimal. Using PROMPT_FALLBACK_MINIMAL_CHARACTER_DETAILS.'
       );
       return PROMPT_FALLBACK_MINIMAL_CHARACTER_DETAILS;
     }
-    return characterInfo.join('\n');
+
+    // Use the new CharacterDataFormatter for markdown structure
+    try {
+      const formattedPersona = this.#characterDataFormatter.formatCharacterPersona(actorPromptData);
+      
+      if (!formattedPersona || formattedPersona.trim().length === 0) {
+        this.#logger.warn(
+          'AIPromptContentProvider: CharacterDataFormatter returned empty result. Using fallback.'
+        );
+        return PROMPT_FALLBACK_MINIMAL_CHARACTER_DETAILS;
+      }
+      
+      this.#logger.debug(
+        'AIPromptContentProvider: Successfully formatted character persona with markdown structure.'
+      );
+      return formattedPersona;
+    } catch (error) {
+      this.#logger.error(
+        'AIPromptContentProvider: Error formatting character persona with CharacterDataFormatter.',
+        error
+      );
+      // Fallback to basic format if formatter fails
+      return `YOU ARE ${actorPromptData.name || DEFAULT_FALLBACK_CHARACTER_NAME}.\nThis is your identity. All thoughts, actions, and words must stem from this core truth.`;
+    }
   }
 
   /**
@@ -493,7 +523,7 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
    */
   getWorldContextContent(gameState) {
     this.#logger.debug(
-      'AIPromptContentProvider: Formatting world context content.'
+      'AIPromptContentProvider: Formatting world context content with markdown structure.'
     );
     const { currentLocation } = gameState;
 
@@ -504,51 +534,83 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
       return PROMPT_FALLBACK_UNKNOWN_LOCATION;
     }
 
-    const locationDescriptionLines = [];
+    // Build markdown-structured content
+    const segments = [];
+    
+    // Main header
+    segments.push('## Current Situation');
+    segments.push('');
+    
+    // Location section
     const locationName = currentLocation.name || DEFAULT_FALLBACK_LOCATION_NAME;
-    let locationDesc =
-      currentLocation.description || DEFAULT_FALLBACK_DESCRIPTION_RAW;
+    segments.push('### Location');
+    segments.push(locationName);
+    segments.push('');
+    
+    // Description section
+    let locationDesc = currentLocation.description || DEFAULT_FALLBACK_DESCRIPTION_RAW;
     locationDesc = ensureTerminalPunctuation(locationDesc);
-    locationDescriptionLines.push(
-      `CURRENT SITUATION\nLocation: ${locationName}.\nDescription: ${locationDesc}`
-    );
+    segments.push('### Description');
+    segments.push(locationDesc);
+    segments.push('');
 
-    const segments = [locationDescriptionLines.join('\n')];
-    segments.push(
-      this._formatListSegment(
-        'Exits from your current location',
-        currentLocation.exits,
-        (exit) => {
-          const formatDirection = (direction) => {
-            if (direction.startsWith('to ') || direction.startsWith('into ')) {
-              return direction;
-            }
-            return `Towards ${direction}`;
-          };
-          return `- ${formatDirection(exit.direction)} leads to ${
-            exit.targetLocationName ||
-            exit.targetLocationId ||
-            DEFAULT_FALLBACK_LOCATION_NAME
-          }.`;
-        },
-        PROMPT_FALLBACK_NO_EXITS
-      )
-    );
-    segments.push(
-      this._formatListSegment(
-        'Other characters present in this location (you cannot speak as them)',
-        currentLocation.characters,
-        (char) => {
-          const namePart = char.name || DEFAULT_FALLBACK_CHARACTER_NAME;
-          let descriptionText =
-            char.description || DEFAULT_FALLBACK_DESCRIPTION_RAW;
-          descriptionText = ensureTerminalPunctuation(descriptionText);
-          return `- ${namePart} - Description: ${descriptionText}`;
-        },
-        PROMPT_FALLBACK_ALONE_IN_LOCATION
-      )
-    );
-    return segments.join('\n\n');
+    // Exits section
+    segments.push('## Exits from Current Location');
+    if (currentLocation.exits && currentLocation.exits.length > 0) {
+      currentLocation.exits.forEach((exit) => {
+        const formatDirection = (direction) => {
+          if (direction.startsWith('to ') || direction.startsWith('into ')) {
+            return direction;
+          }
+          return `Towards ${direction}`;
+        };
+        const targetName = exit.targetLocationName || 
+                          exit.targetLocationId || 
+                          DEFAULT_FALLBACK_LOCATION_NAME;
+        segments.push(`- **${formatDirection(exit.direction)}** leads to ${targetName}`);
+      });
+      this.#logger.debug(
+        `AIPromptContentProvider: Formatted ${currentLocation.exits.length} exits for location.`
+      );
+    } else {
+      segments.push(PROMPT_FALLBACK_NO_EXITS);
+      this.#logger.debug(
+        'AIPromptContentProvider: No exits found, using fallback message.'
+      );
+    }
+    segments.push('');
+
+    // Characters section  
+    segments.push('## Other Characters Present');
+    if (currentLocation.characters && currentLocation.characters.length > 0) {
+      currentLocation.characters.forEach((char) => {
+        const namePart = char.name || DEFAULT_FALLBACK_CHARACTER_NAME;
+        let descriptionText = char.description || DEFAULT_FALLBACK_DESCRIPTION_RAW;
+        descriptionText = ensureTerminalPunctuation(descriptionText);
+        
+        segments.push(`### ${namePart}`);
+        // Format character description as bullet points if it contains attribute-like information
+        if (descriptionText.includes(':') && descriptionText.includes(',')) {
+          // Parse structured character description into bullet points
+          const attributes = this._parseCharacterDescription(descriptionText);
+          attributes.forEach(attr => segments.push(attr));
+        } else {
+          // Simple description without structure
+          segments.push(`- **Description**: ${descriptionText}`);
+        }
+        segments.push('');
+      });
+      this.#logger.debug(
+        `AIPromptContentProvider: Formatted ${currentLocation.characters.length} characters for location.`
+      );
+    } else {
+      segments.push(PROMPT_FALLBACK_ALONE_IN_LOCATION);
+      this.#logger.debug(
+        'AIPromptContentProvider: No other characters found, using fallback message.'
+      );
+    }
+
+    return segments.join('\n');
   }
 
   /**
